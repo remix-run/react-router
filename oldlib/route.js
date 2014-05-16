@@ -7,7 +7,7 @@ export default {
     return {activeChild: null};
   },
 
-  componentWillMount: function(path) {
+  componentDidMount: function(path) {
     this.handleRouteChange();
     url.subscribe(this.handleRouteChange);
   },
@@ -19,6 +19,10 @@ export default {
   handleRouteChange: function() {
     var path = location.hash.substr(1);
     var match = matchedChildRoute(path, this);
+    console.group('handleRouteChange', this.props.path);
+    console.log(this.state.params);
+    console.log(lastParams);
+    console.groupEnd(this.props.path);
     this.setState({
       activeChild: match,
       params: lastParams

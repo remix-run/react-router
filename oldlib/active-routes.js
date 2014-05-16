@@ -9,8 +9,11 @@ export function clear() {
 };
 
 export function add(route) {
-  console.log('added', route.props.path);
-  routes.push(route);
+  if (routes.indexOf(route) > -1) {
+    return;
+  }
+  // unshift because children come in first
+  routes.unshift(route);
 };
 
 export function pathIsActive(path) {
