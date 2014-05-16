@@ -1,5 +1,8 @@
 /** @jsx React.DOM */
-var api = 'http://addressbook-api.herokuapp.com/contacts';
+//var api = 'http://addressbook-api.herokuapp.com/contacts';
+var api = 'http://localhost:5000/contacts';
+var Routed = rf.router.Route;
+var Link = rf.router.Link;
 
 var App = React.createClass({
   mixins: [Routed],
@@ -7,11 +10,10 @@ var App = React.createClass({
   render: function() {
     return (
       <Root>
-        <Index path="/"/>
-        <Users path="/users/"/>
-        <User path="/user/:id"/>
+        <Users path="/users">
+          <User path="/user/:id"/>
+        </Users>
         <About path="/about">
-          <AboutIndex path="/about/"/>
           <Company path="/about/company"/>
           <Contact path="/contact"/>
         </About>
@@ -24,14 +26,15 @@ var Root = React.createClass({
   mixins: [Routed],
 
   render: function() {
+    var content = this.state.activeChild || <Index/>
     return (
       <div className="Root">
         <ul>
           <li><Link to="/">Home</Link></li>
-          <li><Link to="/about/">About</Link></li>
-          <li><Link to="/users/">Users</Link></li>
+          <li><Link to="/about">About</Link></li>
+          <li><Link to="/users">Users</Link></li>
         </ul>
-        {this.outlet()}
+        {content}
       </div>
     );
   }
@@ -75,7 +78,12 @@ var Users = React.createClass({
       return <Link to={url}>{user.first} {user.last}</Link>;
     });
     var content = !users.length ? 'Loading users...' : users;
-    return <div className="Users">{content}</div>;
+    return (
+      <div className="Users">
+        {content}
+        {this.state.activeChild}
+      </div>
+    );
   }
 });
 
@@ -114,6 +122,7 @@ var User = React.createClass({
 var About = React.createClass({
   mixins: [Routed],
   render: function() {
+    var content = this.state.activeChild || <AboutIndex/>;
     return (
       <div className="About">
         <h1>About</h1>
@@ -121,7 +130,7 @@ var About = React.createClass({
           <li><Link to="/about/company">Company</Link></li>
           <li><Link to="/contact">Contact</Link></li>
         </ul>
-        {this.outlet()}
+        {content}
       </div>
     );
   }
@@ -133,7 +142,7 @@ var AboutIndex = React.createClass({
     return (
       <div className="Index">
         <h1>About Index</h1>
-        <p>Consectetur adipisicing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.</p>
+        <p>Lorem ipsum sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.</p>
       </div>
     );
   }
