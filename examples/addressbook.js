@@ -2,14 +2,21 @@
 var api = 'http://localhost:5000/contacts';
 var Routes = rf.router.Routes;
 var Route = rf.router.Route;
+var Link = rf.router.Link;
 
 var App = React.createClass({
   render: function() {
     return (
-      <Routes>
-        <Route name="contacts" path="/" handler={Contacts}/>
-        <Route name="about" path="/about" handler={About}/>
-      </Routes>
+      <div class="App">
+        <ul>
+          <li><Link to="contacts">Contacts</Link></li>
+          <li><Link to="about">About</Link></li>
+        </ul>
+        <Routes>
+          <Route name="contacts" path="/" handler={Contacts}/>
+          <Route name="about" path="/about" handler={About}/>
+        </Routes>
+      </div>
     );
   }
 });
@@ -33,6 +40,7 @@ var About = React.createClass({
     );
   }
 });
+
 
 
 //var App = React.createClass({
