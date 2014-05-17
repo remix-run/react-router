@@ -43,6 +43,7 @@ var About = React.createClass({
 
 var Contacts = React.createClass({
   render: function() {
+    console.log('render contacts', this.props.path);
     return (
       <div className="Contacts">
         <h2>Contacts</h2>
@@ -57,10 +58,10 @@ var Contacts = React.createClass({
 
 var Contact = React.createClass({
   render: function() {
-    console.log('render Contact');
+    console.log('render contact', this.props.path);
     return (
       <div className="Contact">
-        <h3>Contact</h3>
+        <h3>Contact {this.props.params.id}</h3>
       </div>
     );
   }
