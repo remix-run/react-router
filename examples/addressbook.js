@@ -60,7 +60,7 @@ var Contact = React.createClass({
   render: function() {
     return (
       <div className="Contact">
-        <h3>Contact {this.props.params.id}</h3>
+        <h3>Contact {this.props.id}</h3>
       </div>
     );
   }
