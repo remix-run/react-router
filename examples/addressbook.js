@@ -16,7 +16,9 @@ var Routes = React.createClass({
     return (
       <RootRoute handler={Application}>
         <Route name="about" path="about" handler={About}/>
-        <Route name="contacts" path="contacts" handler={Contacts}/>
+        <Route name="contacts" path="contacts" handler={Contacts}>
+          <Route name="contact" path="contact/:id" handler={Contact} />
+        </Route>
       </RootRoute>
     );
   }
@@ -49,15 +51,13 @@ var About = React.createClass({
 
 var Contacts = React.createClass({
   render: function() {
-    //var active = this.props.activeRoute;
-    var active;
     return (
       <div className="Contacts">
         <h2>Contacts</h2>
         <ul>
-          <li><Link to="contact">Contact</Link></li>
+          <li><Link to="contact" id="123">Contact</Link></li>
         </ul>
-        {active}
+        {this.props.activeRoute}
       </div>
     );
   }
@@ -65,7 +65,6 @@ var Contacts = React.createClass({
 
 var Contact = React.createClass({
   render: function() {
-    console.log('render contact', this.props.path);
     return (
       <div className="Contact">
         <h3>Contact {this.props.params.id}</h3>
