@@ -1,27 +1,27 @@
 /** @jsx React.DOM */
 var api = 'http://localhost:5000/contacts';
-var RootRoute = rf.router.RootRoute;
+var Routes = rf.router.Routes;
 var Route = rf.router.Route;
 var Link = rf.router.Link;
 
-var Routes = React.createClass({
+var App = React.createClass({
   render: function() {
     return (
-      <RootRoute handler={Application}>
+      <Routes handler={Main}>
         <Route name="about" path="about" handler={About}/>
         <Route name="contacts" path="contacts" handler={Contacts}>
           <Route name="contact" path="contact/:id" handler={Contact} />
         </Route>
-      </RootRoute>
+      </Routes>
     );
   }
 });
 
-var Application = React.createClass({
+var Main = React.createClass({
   render: function() {
     return (
-      <div className="Application">
-        <h1>Application</h1>
+      <div className="Main">
+        <h1>Main</h1>
         <ul>
           <li><Link to="about">About</Link></li>
           <li><Link to="contacts">Contacts</Link></li>
@@ -67,7 +67,7 @@ var Contact = React.createClass({
 });
 
 
-React.renderComponent(<Routes/>, document.body);
+React.renderComponent(<App/>, document.body);
 
 
 
