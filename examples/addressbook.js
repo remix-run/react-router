@@ -6,13 +6,6 @@ var Link = rf.router.Link;
 
 var Routes = React.createClass({
   render: function() {
-    /*
-    var other = (
-        <Route name="contacts" path="/contacts" handler={Contacts}>
-          <Route name="contact" path="/contacts/123" handler={Contact} />
-        </Route>
-    );
-    */
     return (
       <RootRoute handler={Application}>
         <Route name="about" path="about" handler={About}/>
