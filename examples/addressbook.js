@@ -25,6 +25,7 @@ var Application = React.createClass({
         <ul>
           <li><Link to="about">About</Link></li>
           <li><Link to="contacts">Contacts</Link></li>
+          <li><Link to="fart">Contacts</Link></li>
         </ul>
         {this.props.activeRoute}
       </div>
