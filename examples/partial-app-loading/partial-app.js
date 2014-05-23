@@ -1,7 +1,10 @@
 /** @jsx React.DOM */
-var Routes = rf.router.Routes;
-var Route = rf.router.Route;
-var Link = rf.router.Link;
+var RfRouter = require('../../lib/main');
+var Routes = RfRouter.Routes;
+var Route = RfRouter.Route;
+var Link = RfRouter.Link;
+
+var React = require('react');
 
 var Main = React.createClass({
   render: function() {
@@ -16,9 +19,17 @@ var Main = React.createClass({
 });
 
 var AsyncJSXRoute = {
+  routeCache: {},
   load: function() {
-    if (window[this.globalName]) return;
-    JSXTransformer.load(this.filePath, this.forceUpdate.bind(this));
+    if (this.routeCache[this.globalName]) {
+      return;
+    }
+
+    require.ensure([], function() {
+      console.log('loading', this.globalName, this.filePath);
+      this.routeCache[this.globalName] = require('./async-components/' + this.filePath);
+      this.forceUpdate();
+    }.bind(this));
   },
 
   componentDidMount: function() {
@@ -26,7 +37,7 @@ var AsyncJSXRoute = {
   },
 
   render: function() {
-    var fullRoute = window[this.globalName];
+    var fullRoute = this.routeCache[this.globalName];
     return fullRoute ? fullRoute(this.props) : this.preRender();
   }
 };

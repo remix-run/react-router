@@ -1,4 +1,7 @@
 /** @jsx React.DOM */
+var React = require('react');
+var Link = require('../../../lib/main').Link;
+
 var Dashboard = React.createClass({
 
   render: function() {
@@ -14,3 +17,4 @@ var Dashboard = React.createClass({
   }
 });
 
+module.exports = Dashboard;
