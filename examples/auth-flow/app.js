@@ -61,14 +61,10 @@ var AuthenticatedRoute = {
   },
 
   componentDidMount: function() {
-    auth.login(function(loggedIn) {
-      if (!loggedIn) {
-        // save off the last location so we can transition back
-        AuthenticatedRoute.lastInfo = rf.router.getCurrentInfo();
-        // replace to prevent entry in history
-        rf.router.replaceWith('login');
-      }
-    });
+    if (!auth.loggedIn()) {
+      AuthenticatedRoute.lastInfo = rf.router.getCurrentInfo();
+      rf.router.replaceWith('login');
+    }
   }
 };
 
