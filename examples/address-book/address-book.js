@@ -1,5 +1,4 @@
 /** @jsx React.DOM */
-var api = 'http://addressbook-api.herokuapp.com/contacts';
 var Routes = rf.router.Routes;
 var Route = rf.router.Route;
 var Link = rf.router.Link;
@@ -98,6 +97,8 @@ var Contact = React.createClass({
   }
 });
 
+var api = 'http://addressbook-api.herokuapp.com/contacts';
+
 var store = {
   contacts: {
     loaded: false,
@@ -160,4 +161,3 @@ function postJSON(url, obj, cb) {
 }
 
 React.renderComponent(<App/>, document.body);
-
