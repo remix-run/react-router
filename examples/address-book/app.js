@@ -3,8 +3,6 @@ var Routes = rf.router.Routes;
 var Route = rf.router.Route;
 var Link = rf.router.Link;
 
-// Routes.setup('history');
-
 var App = React.createClass({
   render: function() {
     return (
