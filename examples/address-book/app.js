@@ -45,13 +45,17 @@ var Contacts = React.createClass({
 
   getInitialState: function() {
     return {
-      contacts: []
+      contacts: [],
+      loading: true
     };
   },
 
   componentDidMount: function() {
     store.getContacts(function(contacts) {
-      this.setState({contacts: contacts});
+      this.setState({
+        contacts: contacts,
+        loading: false
+      });
     }.bind(this));
   },
 
@@ -59,13 +63,14 @@ var Contacts = React.createClass({
     var contacts = this.state.contacts.map(function(contact) {
       return <li><Link to="contact" id={contact.id}>{contact.first}</Link></li>
     });
+    var content = this.state.loading ? <div>Loading...</div> : this.props.activeRoute;
     return (
       <div className="Contacts">
         <h2>Contacts</h2>
         <ul>
           {contacts}
         </ul>
-        {this.props.activeRoute}
+        {content}
       </div>
     );
   }

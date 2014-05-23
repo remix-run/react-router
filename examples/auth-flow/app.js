@@ -44,8 +44,8 @@ var App = React.createClass({
     return (
       <div>
         <h1>Auth User Flow</h1>
-        <div>{loginOrOut}</div>
         <ul>
+          <li>{loginOrOut}</li>
           <li><Link to="about">About</Link></li>
           <li><Link to="dashboard">Dashboard</Link> (authenticated)</li>
         </ul>
@@ -133,7 +133,7 @@ var Logout = React.createClass({
   },
 
   render: function() {
-    return <h1>You are now logged out</h1>;
+    return <p>You are now logged out</p>;
   }
 });
 
