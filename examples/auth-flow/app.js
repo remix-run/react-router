@@ -1,7 +1,7 @@
 /** @jsx React.DOM */
-var Routes = rf.router.Routes;
-var Route = rf.router.Route;
-var Link = rf.router.Link;
+var Routes = ReactRouter.Routes;
+var Route = ReactRouter.Route;
+var Link = ReactRouter.Link;
 
 var Main = React.createClass({
   render: function() {
@@ -63,8 +63,8 @@ var AuthenticatedRoute = {
   componentWillMount: function() {
     if (!auth.loggedIn()) {
       this.render = function() { return <span/>};
-      AuthenticatedRoute.lastInfo = rf.router.getCurrentInfo();
-      rf.router.replaceWith('login');
+      AuthenticatedRoute.lastInfo = ReactRouter.getCurrentInfo();
+      ReactRouter.replaceWith('login');
     }
   }
 };
@@ -102,9 +102,9 @@ var Login = React.createClass({
       }
       var lastInfo = AuthenticatedRoute.lastInfo;
       if (lastInfo) {
-        return rf.router.replaceWith(lastInfo.name, lastInfo.params);
+        return ReactRouter.replaceWith(lastInfo.name, lastInfo.params);
       }
-      rf.router.replaceWith('about');
+      ReactRouter.replaceWith('about');
     }.bind(this));
   },
 

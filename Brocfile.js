@@ -1,5 +1,5 @@
 module.exports = require('broccoli-dist-es6-module')('lib', {
-  global: 'rf.router',
+  global: 'ReactRouter',
   packageName: 'rf-router',
   main: 'main',
   shim: {

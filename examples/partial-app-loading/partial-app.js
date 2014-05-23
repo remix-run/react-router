@@ -1,7 +1,7 @@
 /** @jsx React.DOM */
-var Routes = rf.router.Routes;
-var Route = rf.router.Route;
-var Link = rf.router.Link;
+var Routes = ReactRouter.Routes;
+var Route = ReactRouter.Route;
+var Link = ReactRouter.Link;
 
 var Main = React.createClass({
   render: function() {
