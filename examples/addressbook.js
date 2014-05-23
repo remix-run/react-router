@@ -1,5 +1,5 @@
 /** @jsx React.DOM */
-var api = 'http://localhost:5000/contacts';
+var api = 'http://addressbook-api.herokuapp.com/contacts';
 var Routes = rf.router.Routes;
 var Route = rf.router.Route;
 var Link = rf.router.Link;
@@ -20,7 +20,7 @@ var App = React.createClass({
 var Main = React.createClass({
   render: function() {
     return (
-      <div className="Main">
+      <div className="Contacts">
         <h1>Main</h1>
         <ul>
           <li><Link to="about">About</Link></li>
@@ -43,12 +43,28 @@ var About = React.createClass({
 });
 
 var Contacts = React.createClass({
+
+  getInitialState: function() {
+    return {
+      contacts: []
+    };
+  },
+
+  componentDidMount: function() {
+    store.getContacts(function(contacts) {
+      this.setState({contacts: contacts});
+    }.bind(this));
+  },
+
   render: function() {
+    var contacts = this.state.contacts.map(function(contact) {
+      return <li><Link to="contact" id={contact.id}>{contact.first}</Link></li>
+    });
     return (
       <div className="Contacts">
         <h2>Contacts</h2>
         <ul>
-          <li><Link to="contact" id="123">Contact</Link></li>
+          {contacts}
         </ul>
         {this.props.activeRoute}
       </div>
@@ -57,46 +73,30 @@ var Contacts = React.createClass({
 });
 
 var Contact = React.createClass({
+
+  getInitialState: function() {
+    return {
+      id: this.props.id,
+      loading: true
+    };
+  },
+
+  componentDidMount: function() {
+    store.getContact(this.props.id, function(contact) {
+      contact.loading = false;
+      this.setState(contact);
+    }.bind(this));
+  },
+
   render: function() {
+    var name = this.state.loading ? '' : this.state.first + ' ' + this.state.last;
     return (
       <div className="Contact">
-        <h3>Contact {this.props.id}</h3>
+        <h3>{name}</h3>
       </div>
     );
   }
 });
-
-
-React.renderComponent(<App/>, document.body);
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 var store = {
   contacts: {
@@ -159,4 +159,5 @@ function postJSON(url, obj, cb) {
   cb({contact: obj});
 }
 
+React.renderComponent(<App/>, document.body);
 
