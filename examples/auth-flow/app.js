@@ -30,7 +30,7 @@ var App = React.createClass({
     });
   },
 
-  componentDidMount: function() {
+  componentWillMount: function() {
     auth.onChange = this.setStateOnAuth.bind(this);
     auth.login();
   },
@@ -60,8 +60,9 @@ var AuthenticatedRoute = {
     lastInfo: null
   },
 
-  componentDidMount: function() {
+  componentWillMount: function() {
     if (!auth.loggedIn()) {
+      this.render = function() { return <span/>};
       AuthenticatedRoute.lastInfo = rf.router.getCurrentInfo();
       rf.router.replaceWith('login');
     }
