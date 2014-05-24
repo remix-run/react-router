@@ -2,46 +2,19 @@
 var Routes = ReactRouter.Routes;
 var Route = ReactRouter.Route;
 var Link = ReactRouter.Link;
+var transitionTo = ReactRouter.transitionTo;
 
-var App = React.createClass({
+var Main = React.createClass({
   render: function() {
     return (
-      <Routes handler={Main}>
-        <Route name="about" path="about" handler={About}/>
-        <Route name="contacts" path="contacts" handler={Contacts}>
-          <Route name="contact" path="contact/:id" handler={Contact} />
-        </Route>
+      <Routes handler={App}>
+        <Route name="contact" path="contact/:id" handler={Contact} />
       </Routes>
     );
   }
 });
 
-var Main = React.createClass({
-  render: function() {
-    return (
-      <div className="Contacts">
-        <h1>Main</h1>
-        <ul>
-          <li><Link to="about">About</Link></li>
-          <li><Link to="contacts">Contacts</Link></li>
-        </ul>
-        {this.props.activeRoute}
-      </div>
-    );
-  }
-});
-
-var About = React.createClass({
-  render: function() {
-    return (
-      <div className="About">
-        <h2>About</h2>
-      </div>
-    );
-  }
-});
-
-var Contacts = React.createClass({
+var App = React.createClass({
 
   getInitialState: function() {
     return {
@@ -59,18 +32,37 @@ var Contacts = React.createClass({
     }.bind(this));
   },
 
+  addContact: function() {
+    var id = Math.random().toString(36).substring(7);
+    var contact = {id: id, first: 'No Name', last: 'McGee'};
+    store.addContact(contact, this.updateContacts);
+    transitionTo('contact', {id: id});
+  },
+
+  updateContacts: function() {
+    store.getContacts(function(contacts) {
+      this.setState({contacts: contacts});
+    }.bind(this));
+  },
+
   render: function() {
     var contacts = this.state.contacts.map(function(contact) {
       return <li><Link to="contact" id={contact.id}>{contact.first}</Link></li>
     });
-    var content = this.state.loading ? <div>Loading...</div> : this.props.activeRoute;
+    var content = this.state.loading ? 'Loading...' : this.props.activeRoute;
     return (
-      <div className="Contacts">
-        <h2>Contacts</h2>
-        <ul>
-          {contacts}
-        </ul>
-        {content}
+      <div className="App">
+        <div className="ContactList">
+          <ul>
+            {contacts}
+          </ul>
+          <div className="Toolbar">
+            <button onClick={this.addContact}>New Contact</button>
+          </div>
+        </div>
+        <div className="Content">
+          {content}
+        </div>
       </div>
     );
   }
@@ -93,9 +85,10 @@ var Contact = React.createClass({
   },
 
   render: function() {
-    var name = this.state.loading ? '' : this.state.first + ' ' + this.state.last;
+    var name = this.state.first+' '+this.state.last;
     return (
       <div className="Contact">
+        <img src={this.state.avatar}/>
         <h3>{name}</h3>
       </div>
     );
@@ -143,7 +136,7 @@ var store = {
   },
 
   addContact: function(contact, cb) {
-    postJSON(api, contact, function(res) {
+    postJSON(api, {contact: contact}, function(res) {
       store.contacts.records.push(contact);
       store.contacts.map[contact.id] = contact;
       if (cb) cb(res.contact);
@@ -161,8 +154,13 @@ function getJSON(url, cb) {
 }
 
 function postJSON(url, obj, cb) {
-  obj.id = Date.now();
-  cb({contact: obj});
+  var req = new XMLHttpRequest();
+  req.onload = function() {
+    cb(req.response);
+  };
+  req.open('POST', url);
+  req.setRequestHeader('Content-Type', 'application/json;charset=UTF-8');
+  req.send(JSON.stringify(obj));
 }
 
-React.renderComponent(<App/>, document.body);
+React.renderComponent(<Main/>, document.body);
