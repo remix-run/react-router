@@ -2,7 +2,6 @@
 var Routes = ReactRouter.Routes;
 var Route = ReactRouter.Route;
 var Link = ReactRouter.Link;
-var transitionTo = ReactRouter.transitionTo;
 
 var Main = React.createClass({
   render: function() {
@@ -17,7 +16,6 @@ var Main = React.createClass({
 });
 
 var App = React.createClass({
-
   getInitialState: function() {
     return {
       contacts: [],
@@ -60,7 +58,6 @@ var App = React.createClass({
 });
 
 var Contact = React.createClass({
-
   getInitialState: function() {
     return {
       id: this.props.id,
@@ -78,7 +75,7 @@ var Contact = React.createClass({
 
   destroy: function() {
     store.removeContact(this.state.id);
-    transitionTo('/');
+    ReactRouter.transitionTo('/');
   },
 
   render: function() {
@@ -94,14 +91,13 @@ var Contact = React.createClass({
 });
 
 var NewContact = React.createClass({
-
   createContact: function(event) {
     event.preventDefault();
     store.addContact({
       first: this.refs.first.getDOMNode().value,
       last: this.refs.last.getDOMNode().value
     }, function(contact) {
-      transitionTo('contact', {id: contact.id});
+      ReactRouter.transitionTo('contact', {id: contact.id});
     }.bind(this));
   },
 
@@ -125,6 +121,9 @@ var NotFound = React.createClass({
     return <h2>Not found</h2>;
   }
 });
+
+/*****************************************************************************/
+// data store stuff ...
 
 var api = 'http://addressbook-api.herokuapp.com/contacts';
 

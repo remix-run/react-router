@@ -33,7 +33,7 @@ var AsyncJSXRoute = {
 
 var PreDashboard = React.createClass({
   mixins: [AsyncJSXRoute],
-  filePath: 'partial-app-dashboard.js',
+  filePath: 'dashboard.js',
   globalName: 'Dashboard',
   preRender: function() {
     return <div>Loading dashboard...</div>
@@ -42,7 +42,7 @@ var PreDashboard = React.createClass({
 
 var PreInbox = React.createClass({
   mixins: [AsyncJSXRoute],
-  filePath: 'partial-app-inbox.js',
+  filePath: 'inbox.js',
   globalName: 'Inbox',
   preRender: function() {
     return <div>Loading inbox...</div>
