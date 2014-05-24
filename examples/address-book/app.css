@@ -3,6 +3,10 @@ body {
   font-weight: 200;
 }
 
+a {
+  color: hsl(200, 50%, 50%);
+}
+
 .App {
   position: absolute;
   top: 0;
@@ -18,6 +22,7 @@ body {
   bottom: 0;
   width: 300px;
   overflow: auto;
+  padding: 20px;
 }
 
 .Content {
@@ -25,12 +30,9 @@ body {
   left: 300px;
   top: 0;
   bottom: 0;
+  right: 0;
   border-left: 1px solid #ccc;
   overflow: auto;
-}
-
-.Contact {
   padding: 40px;
 }
-
 

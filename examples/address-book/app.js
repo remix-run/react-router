@@ -8,6 +8,8 @@ var Main = React.createClass({
   render: function() {
     return (
       <Routes handler={App}>
+        <Route name="new" path="contact/new" handler={NewContact} />
+        <Route name="not-found" path="contact/not-found" handler={NotFound} />
         <Route name="contact" path="contact/:id" handler={Contact} />
       </Routes>
     );
@@ -32,33 +34,22 @@ var App = React.createClass({
     }.bind(this));
   },
 
-  addContact: function() {
-    var id = Math.random().toString(36).substring(7);
-    var contact = {id: id, first: 'No Name', last: 'McGee'};
-    store.addContact(contact, this.updateContacts);
-    transitionTo('contact', {id: id});
-  },
-
-  updateContacts: function() {
-    store.getContacts(function(contacts) {
-      this.setState({contacts: contacts});
-    }.bind(this));
+  indexTemplate: function() {
+    return <h1>Address Book</h1>;
   },
 
   render: function() {
     var contacts = this.state.contacts.map(function(contact) {
-      return <li><Link to="contact" id={contact.id}>{contact.first}</Link></li>
+      return <li key={contact.id}><Link to="contact" id={contact.id}>{contact.first}</Link></li>
     });
-    var content = this.state.loading ? 'Loading...' : this.props.activeRoute;
+    var content = (this.props.activeRoute) ? this.props.activeRoute : this.indexTemplate();
     return (
       <div className="App">
         <div className="ContactList">
+          <Link to="new">New Contact</Link>
           <ul>
             {contacts}
           </ul>
-          <div className="Toolbar">
-            <button onClick={this.addContact}>New Contact</button>
-          </div>
         </div>
         <div className="Content">
           {content}
@@ -73,6 +64,7 @@ var Contact = React.createClass({
   getInitialState: function() {
     return {
       id: this.props.id,
+      avatar: 'http://placekitten.com/50/50',
       loading: true
     };
   },
@@ -84,14 +76,53 @@ var Contact = React.createClass({
     }.bind(this));
   },
 
+  destroy: function() {
+    store.removeContact(this.state.id);
+    transitionTo('/');
+  },
+
   render: function() {
     var name = this.state.first+' '+this.state.last;
     return (
       <div className="Contact">
-        <img src={this.state.avatar}/>
+        <img height="50" src={this.state.avatar}/>
         <h3>{name}</h3>
+        <button onClick={this.destroy}>Delete</button>
       </div>
     );
+  }
+});
+
+var NewContact = React.createClass({
+
+  createContact: function(event) {
+    event.preventDefault();
+    store.addContact({
+      first: this.refs.first.getDOMNode().value,
+      last: this.refs.last.getDOMNode().value
+    }, function(contact) {
+      transitionTo('contact', {id: contact.id});
+    }.bind(this));
+  },
+
+  render: function() {
+    return (
+      <form onSubmit={this.createContact}>
+        <p>
+          <input type="text" ref="first" placeholder="First name"/>
+          <input type="text" ref="last" placeholder="Last name"/>
+        </p>
+        <p>
+          <button type="submit">Save</button> <Link to="/">Cancel</Link>
+        </p>
+      </form>
+    );
+  }
+});
+
+var NotFound = React.createClass({
+  render: function() {
+    return <h2>Not found</h2>;
   }
 });
 
@@ -108,7 +139,7 @@ var store = {
     if (store.contacts.loaded) {
       if (cb) cb(store.contacts.records);
     } else {
-      getJSON(api, function(res) {
+      getJSON(api, function(err, res) {
         var contacts = res.contacts;
         store.contacts.loaded = true;
         store.contacts.records = contacts;
@@ -127,7 +158,10 @@ var store = {
       if (cb) cb(contact);
     } else {
       var url = api+'/'+id;
-      getJSON(url, function(res) {
+      getJSON(url, function(err, res) {
+        if (err) {
+          return ReactRouter.replaceWith('not-found');
+        }
         var contact = res.contact;
         store.contacts.map[contact.id] = contact;
         if (cb) cb(contact);
@@ -137,17 +171,30 @@ var store = {
 
   addContact: function(contact, cb) {
     postJSON(api, {contact: contact}, function(res) {
-      store.contacts.records.push(contact);
-      store.contacts.map[contact.id] = contact;
-      if (cb) cb(res.contact);
+      var savedContact = res.contact;
+      store.contacts.records.push(savedContact);
+      store.contacts.map[contact.id] = savedContact;
+      if (cb) cb(savedContact);
     });
+  },
+
+  removeContact: function(id, cb) {
+    var contact = store.contacts.map[id];
+    delete store.contacts.map[id];
+    var index = store.contacts.records.indexOf(contact);
+    store.contacts.records.splice(index, 1);
+    deleteJSON(api+'/'+id, cb);
   }
 };
 
 function getJSON(url, cb) {
   var req = new XMLHttpRequest();
   req.onload = function() {
-    cb(JSON.parse(req.response));
+    if (req.status === 404) {
+      cb(new Error('not found'));
+    } else {
+      cb(null, JSON.parse(req.response));
+    }
   };
   req.open('GET', url);
   req.send();
@@ -156,11 +203,19 @@ function getJSON(url, cb) {
 function postJSON(url, obj, cb) {
   var req = new XMLHttpRequest();
   req.onload = function() {
-    cb(req.response);
+    cb(JSON.parse(req.response));
   };
   req.open('POST', url);
   req.setRequestHeader('Content-Type', 'application/json;charset=UTF-8');
   req.send(JSON.stringify(obj));
 }
 
+function deleteJSON(url, cb) {
+  var req = new XMLHttpRequest();
+  req.onload = cb;
+  req.open('DELETE', url);
+  req.send();
+}
+
 React.renderComponent(<Main/>, document.body);
+
