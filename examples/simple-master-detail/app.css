@@ -19,17 +19,17 @@ a.active {
   bottom: 0;
 }
 
-.ContactList {
+.Master {
   position: absolute;
   left: 0;
   top: 0;
   bottom: 0;
   width: 300px;
   overflow: auto;
-  padding: 20px;
+  padding: 10px 40px;
 }
 
-.Content {
+.Detail {
   position: absolute;
   left: 300px;
   top: 0;
