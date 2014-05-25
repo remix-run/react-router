@@ -7,6 +7,11 @@ h1, h2, h3 {
   font-weight: 100;
 }
 
-.active {
-  color: red;
+a {
+  color: hsl(200, 50%, 50%);
 }
+
+a.active {
+  color: hsl(20, 50%, 50%);
+}
+
