@@ -7,10 +7,10 @@ var Main = React.createClass({
   render: function() {
     return (
       <Routes handler={App}>
-        <Route name="login" path="login" handler={Login}/>
-        <Route name="logout" path="logout" handler={Logout}/>
-        <Route name="about" path="about" handler={About}/>
-        <Route name="dashboard" path="dashboard" handler={Dashboard}/>
+        <Route name="login" handler={Login}/>
+        <Route name="logout" handler={Logout}/>
+        <Route name="about" handler={About}/>
+        <Route name="dashboard" handler={Dashboard}/>
       </Routes>
     );
   }

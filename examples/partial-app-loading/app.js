@@ -7,7 +7,7 @@ var Main = React.createClass({
   render: function() {
     return (
       <Routes handler={App}>
-        <Route name="dashboard" path="dashboard" handler={PreDashboard}>
+        <Route name="dashboard" handler={PreDashboard}>
           <Route name="inbox" path="dashboard/inbox" handler={PreInbox}/>
         </Route>
       </Routes>
