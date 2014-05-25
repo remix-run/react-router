@@ -59,7 +59,7 @@ var Users = React.createClass({
 
 var User = React.createClass({
   render: function() {
-    return <div>{this.props.userId}</div>;
+    return <div>{this.props.params.userId}</div>
   }
 });
 

@@ -57,7 +57,7 @@ var Taco = React.createClass({
   render: function() {
     return (
       <div className="Taco">
-        <h1>{this.props.name}</h1>
+        <h1>{this.props.params.name}</h1>
       </div>
     );
   }

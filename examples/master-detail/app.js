@@ -60,14 +60,14 @@ var App = React.createClass({
 var Contact = React.createClass({
   getInitialState: function() {
     return {
-      id: this.props.id,
+      id: this.props.params.id,
       avatar: 'http://placekitten.com/50/50',
       loading: true
     };
   },
 
   componentDidMount: function() {
-    store.getContact(this.props.id, function(contact) {
+    store.getContact(this.props.params.id, function(contact) {
       contact.loading = false;
       this.setState(contact);
     }.bind(this));

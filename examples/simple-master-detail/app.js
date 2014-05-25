@@ -42,7 +42,7 @@ var App = React.createClass({
 
 var State = React.createClass({
   getInitialState: function() {
-    return findState(this.props.abbr);
+    return findState(this.props.params.abbr);
   },
 
   imageUrl: function() {
