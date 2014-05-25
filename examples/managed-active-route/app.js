@@ -25,20 +25,12 @@ var App = React.createClass({
     var content;
     if (this.props.ActiveRoute) {
       // controlling the ActiveRoute instance yourself is flexible, but
-      // you also have to wire up the params and the child's active
-      // route
+      // you also have to make sure to pass along the props
       var ActiveRoute = this.props.ActiveRoute;
-      var params = this.props.activeParams;
-      var activeGrandchild = this.props.activeRoute.props.activeRoute;
-      content = ActiveRoute({
-        // wire up the userId param
-        userId: params.userId,
-        // wire up the activeRoute so that Task will get rendered in
-        // User::render
-        activeRoute: activeGrandchild
-        // ahh, the flexibility you desire, pass in your own props
-        onDoSomething: this.doSomething
-      });
+      var props = this.props.activeRoute.props;
+      props.onDoSomething = this.doSomething;
+      console.log(props.params);
+      content = ActiveRoute(props);
     }
     return (
       <div>
@@ -54,7 +46,8 @@ var App = React.createClass({
 
 var User = React.createClass({
   handleClick: function() {
-    this.props.onDoSomething(this.props.id);
+    console.log(this.props.params);
+    this.props.onDoSomething(this.props.params.userId);
   },
 
   render: function() {
@@ -63,11 +56,11 @@ var User = React.createClass({
     // make sure to pass it in
     return (
       <div className="User">
-        <h1>User id: {this.props.userId}</h1>
+        <h1>User id: {this.props.params.userId}</h1>
         <button onClick={this.handleClick}>do something</button>
         <ul>
-          <li><Link to="task" userId={this.props.userId} taskId="foo">foo task</Link></li>
-          <li><Link to="task" userId={this.props.userId} taskId="bar">bar task</Link></li>
+          <li><Link to="task" userId={this.props.params.userId} taskId="foo">foo task</Link></li>
+          <li><Link to="task" userId={this.props.params.userId} taskId="bar">bar task</Link></li>
         </ul>
         {this.props.activeRoute}
       </div>
@@ -79,8 +72,8 @@ var Task = React.createClass({
   render: function() {
     return (
       <div className="Task">
-        <h2>User id: {this.props.userId}</h2>
-        <h3>Task id: {this.props.taskId}</h3>
+        <h2>User id: {this.props.params.userId}</h2>
+        <h3>Task id: {this.props.params.taskId}</h3>
       </div>
     );
   }

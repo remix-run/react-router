@@ -34,10 +34,10 @@ var User = React.createClass({
   render: function() {
     return (
       <div className="User">
-        <h1>User id: {this.props.userId}</h1>
+        <h1>User id: {this.props.params.userId}</h1>
         <ul>
-          <li><Link to="task" userId={this.props.userId} taskId="foo">foo task</Link></li>
-          <li><Link to="task" userId={this.props.userId} taskId="bar">bar task</Link></li>
+          <li><Link to="task" userId={this.props.params.userId} taskId="foo">foo task</Link></li>
+          <li><Link to="task" userId={this.props.params.userId} taskId="bar">bar task</Link></li>
         </ul>
         {this.props.activeRoute}
       </div>
@@ -49,8 +49,8 @@ var Task = React.createClass({
   render: function() {
     return (
       <div className="Task">
-        <h2>User id: {this.props.userId}</h2>
-        <h3>Task id: {this.props.taskId}</h3>
+        <h2>User id: {this.props.params.userId}</h2>
+        <h3>Task id: {this.props.params.taskId}</h3>
       </div>
     );
   }
