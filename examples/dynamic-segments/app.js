@@ -1,4 +1,6 @@
 /** @jsx React.DOM */
+var React = require('react');
+var ReactRouter = require('../../lib/main');
 var Routes = ReactRouter.Routes;
 var Route = ReactRouter.Route;
 var Link = ReactRouter.Link;

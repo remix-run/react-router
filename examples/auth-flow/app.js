@@ -1,4 +1,6 @@
 /** @jsx React.DOM */
+var React = require('react');
+var ReactRouter = require('../../lib/main');
 var Routes = ReactRouter.Routes;
 var Route = ReactRouter.Route;
 var Link = ReactRouter.Link;
@@ -102,7 +104,7 @@ var Login = React.createClass({
       }
       var lastInfo = AuthenticatedRoute.lastInfo;
       if (lastInfo) {
-        return ReactRouter.replaceWith(lastInfo.route.name, lastInfo.params);
+        return ReactRouter.replaceWith(lastInfo.route.props.name, lastInfo.params);
       }
       ReactRouter.replaceWith('about');
     }.bind(this));

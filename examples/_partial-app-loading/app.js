@@ -1,24 +1,23 @@
 /** @jsx React.DOM */
+var React = require('react');
+var ReactRouter = require('../../lib/main');
 var Routes = ReactRouter.Routes;
 var Route = ReactRouter.Route;
 var Link = ReactRouter.Link;
 
-var Main = React.createClass({
-  render: function() {
-    return (
-      <Routes handler={App}>
-        <Route name="dashboard" handler={PreDashboard}>
-          <Route name="inbox" path="dashboard/inbox" handler={PreInbox}/>
-        </Route>
-      </Routes>
-    );
-  }
-});
-
 var AsyncJSXRoute = {
+  routeCache: {},
+
   load: function() {
-    if (window[this.globalName]) return;
-    JSXTransformer.load(this.filePath, this.forceUpdate.bind(this));
+    if (this.routeCache[this.globalName]) {
+      return;
+    }
+
+    require.ensure([], function() {
+      console.log('loading', this.globalName, this.filePath);
+      this.routeCache[this.globalName] = require('./async-components/' + this.filePath);
+      this.forceUpdate();
+    }.bind(this));
   },
 
   componentDidMount: function() {
@@ -26,14 +25,26 @@ var AsyncJSXRoute = {
   },
 
   render: function() {
-    var fullRoute = window[this.globalName];
+    var fullRoute = this.routeCache[this.globalName];
     return fullRoute ? fullRoute(this.props) : this.preRender();
   }
 };
 
+var Main = React.createClass({
+  render: function() {
+    return (
+      <Routes handler={App}>
+        <Route name="dashboard" path="dashboard" handler={PreDashboard}>
+          <Route name="inbox" path="dashboard/inbox" handler={PreInbox}/>
+        </Route>
+      </Routes>
+    );
+  }
+});
+
 var PreDashboard = React.createClass({
   mixins: [AsyncJSXRoute],
-  filePath: 'dashboard.js',
+  filePath: 'partial-app-dashboard.js',
   globalName: 'Dashboard',
   preRender: function() {
     return <div>Loading dashboard...</div>
@@ -42,7 +53,7 @@ var PreDashboard = React.createClass({
 
 var PreInbox = React.createClass({
   mixins: [AsyncJSXRoute],
-  filePath: 'inbox.js',
+  filePath: 'partial-app-inbox.js',
   globalName: 'Inbox',
   preRender: function() {
     return <div>Loading inbox...</div>
