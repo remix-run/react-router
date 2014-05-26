@@ -102,7 +102,7 @@ var Login = React.createClass({
       }
       var lastInfo = AuthenticatedRoute.lastInfo;
       if (lastInfo) {
-        return ReactRouter.replaceWith(lastInfo.name, lastInfo.params);
+        return ReactRouter.replaceWith(lastInfo.route.name, lastInfo.params);
       }
       ReactRouter.replaceWith('about');
     }.bind(this));
