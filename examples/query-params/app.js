@@ -1,4 +1,6 @@
 /** @jsx React.DOM */
+var React = require('react');
+var ReactRouter = require('../../lib/main');
 var Routes = ReactRouter.Routes;
 var Route = ReactRouter.Route;
 var Link = ReactRouter.Link;
@@ -31,21 +33,11 @@ var App = React.createClass({
 
 var User = React.createClass({
   render: function() {
+    var age = this.props.query.showAge ? '33' : '';
     return (
       <div className="User">
         <h1>User id: {this.props.params.userId}</h1>
-        {this.props.activeRoute}
-      </div>
-    );
-  }
-});
-
-var Task = React.createClass({
-  render: function() {
-    return (
-      <div className="Task">
-        <h2>User id: {this.props.params.userId}</h2>
-        <h3>Task id: {this.props.params.taskId}</h3>
+        {age}
       </div>
     );
   }

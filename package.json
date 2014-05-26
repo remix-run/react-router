@@ -16,6 +16,7 @@
     "jsx-loader": "^0.10.2"
   },
   "dependencies": {
-    "react": "^0.10.0"
+    "react": "^0.10.0",
+    "querystring": "^0.2.0"
   }
 }
