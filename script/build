@@ -1,4 +1,3 @@
 #!/bin/sh
-rm -rf dist
-broccoli build dist
+echo "No build script yet"
 
