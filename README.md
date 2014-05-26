@@ -71,6 +71,8 @@ Guide
 
 Check out the examples for now.
 
+First run `$ webpack` to build the example files then open them up.
+
 Benefits of This Approach
 -------------------------
 
