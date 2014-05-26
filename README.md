@@ -31,13 +31,15 @@ var Main = React.createClass({
 var App = React.createClass({
   render: function() {
     return (
-      <h1>App</h1>
-      <ul>
-        <li><Link to="about">About</Link></li>
-        <li><Link to="users">Users</Link></li>
-        <li><Link to="user" userId="123">User 123</Link></li>
-      </ul>
-      {this.props.activeRoute}
+      <div className="App">
+        <h1>App</h1>
+        <ul>
+          <li><Link to="about">About</Link></li>
+          <li><Link to="users">Users</Link></li>
+          <li><Link to="user" userId="123">User 123</Link></li>
+        </ul>
+        {this.props.activeRoute}
+      </div>
     );
   }
 });
@@ -51,8 +53,10 @@ var About = React.createClass({
 var Users = React.createClass({
   render: function() {
     return (
-      <h2>Users</h2>
-      {this.props.activeRoute}
+      <div className="Users">
+        <h2>Users</h2>
+        {this.props.activeRoute}
+      </div>
     );
   }
 });
