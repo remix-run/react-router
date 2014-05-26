@@ -2,7 +2,7 @@
   "name": "react-router",
   "version": "0.0.0",
   "description": "",
-  "main": "Brocfile.js",
+  "main": "lib/main",
   "directories": {
     "example": "examples"
   },
@@ -10,9 +10,12 @@
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "author": "",
-  "license": "ISC",
+  "license": "MIT",
   "devDependencies": {
-    "broccoli": "^0.12.0",
-    "broccoli-dist-es6-module": "^0.2.0"
+    "webpack": "^1.2.0-beta4",
+    "jsx-loader": "^0.10.2"
+  },
+  "dependencies": {
+    "react": "^0.10.0"
   }
 }
