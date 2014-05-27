@@ -14,7 +14,6 @@ var AsyncJSXRoute = {
     }
 
     require.ensure([], function() {
-      console.log('loading', this.globalName, this.filePath);
       this.routeCache[this.globalName] = require('./async-components/' + this.filePath);
       this.forceUpdate();
     }.bind(this));
@@ -44,7 +43,7 @@ var Main = React.createClass({
 
 var PreDashboard = React.createClass({
   mixins: [AsyncJSXRoute],
-  filePath: 'partial-app-dashboard.js',
+  filePath: 'dashboard.js',
   globalName: 'Dashboard',
   preRender: function() {
     return <div>Loading dashboard...</div>
@@ -53,7 +52,7 @@ var PreDashboard = React.createClass({
 
 var PreInbox = React.createClass({
   mixins: [AsyncJSXRoute],
-  filePath: 'partial-app-inbox.js',
+  filePath: 'inbox.js',
   globalName: 'Inbox',
   preRender: function() {
     return <div>Loading inbox...</div>

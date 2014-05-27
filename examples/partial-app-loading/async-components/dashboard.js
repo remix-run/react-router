@@ -1,4 +1,9 @@
 /** @jsx React.DOM */
+
+var React = require('react');
+var ReactRouter = require('../../../lib/main');
+var Link = ReactRouter.Link;
+
 var Dashboard = React.createClass({
 
   render: function() {
@@ -14,3 +19,4 @@ var Dashboard = React.createClass({
   }
 });
 
+module.exports = Dashboard;
