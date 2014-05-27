@@ -1,4 +1,7 @@
 /** @jsx React.DOM */
+
+var React = require('react');
+
 var Inbox = React.createClass({
 
   render: function() {
@@ -10,4 +13,4 @@ var Inbox = React.createClass({
   }
 });
 
-
+module.exports = Inbox;

@@ -12,8 +12,9 @@
   "author": "",
   "license": "MIT",
   "devDependencies": {
-    "webpack": "^1.2.0-beta4",
-    "jsx-loader": "^0.10.2"
+    "webpack": "^1.2.0-beta5",
+    "jsx-loader": "^0.10.2",
+    "bundle-loader": "^0.5.0"
   },
   "dependencies": {
     "react": "^0.10.0",

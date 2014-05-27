@@ -1,5 +1,4 @@
 tmp
 node_modules
 dist
-examples/*/app.build.js
-
+examples/build
