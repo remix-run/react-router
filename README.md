@@ -73,50 +73,58 @@ React.renderComponent(<Main/>, document.body);
 Guide
 -----
 
-For a number of different uses of React Router, see the examples.
-
-First run `$ webpack` to build the example files then open them up.
-
+For a number of different uses of React Router, see the examples. The
+example files will need to be built by first running `$ webpack`.
 
 ###Components
 React Router makes three different types of React components available:
-`Routes`, `Route`, and `Link`. `Routes` has one purpose: a wrapper for all
-of the routes of the entire app. All `Route` paths will be nested within a single
+`Routes`, `Route`, and `Link`.
+
+`Routes` has one purpose: a wrapper for all
+of the routes of the entire app.
+
+Every `Route` path will be nested within a single
 `Routes` instance. A `Route`, despite its singular name, can have `Route` children
 nested under it to an arbitrary depth.
+
+A `Link` is simply a `<a href`> link generator to named `Route` paths.
 
 ####Routes
 The `<Routes></Routes>` component wraps the list of route paths for an entire app.
 All `Route` paths will be nested within the `Routes` container. The `Routes` component
 takes two props:
 
-  * `handler`: Required, React compoent. Points to a React component class (generally, whatever
-  component acts as the full App wrapper), which will be rendered and be the parent of all `Route` views
+  * `handler`: Required, React component. Points to a React component class (generally, whatever
+  component acts as the full application wrapper), which will be rendered and be the parent of the tree of views
+  specified by the `Route` layout.
 
-  * `location`: String, one of `hash` (default) or `history`.  Determines whether the React Router
+  * `location`: String, either `hash` (default) or `history`.  Determines whether the React Router
   should use location hashes (default) or the HTML5 History API.
 
 The `handler` React component will receive a special addition to its props: `activeRoute`, which references
 whatever view component should be active for the current URL, as specified in the `Routes` JSX structure.
+The `activeRoute` should be included in the `handler`'s render function, much as the same way `this.props.children`
+is handled in other React components.
 
 ####Route
-The `<Route></Route>` compoent will specify each of the named URL routes in your app. Despite its
-singular name, each `Route` can have more `Route` instances nested within them to arbitrary depths. Each
+The `<Route></Route>` component will specify each of the named URL routes in your app. Despite its
+singular name, each `Route` can have more `Route` instances nested within it to arbitrary depths. Each
 `Route` component takes the following props:
 
   * `handler`: Required, React component. Just as with the `Routes` component above, the `handler` prop points
   to the React component class of the view that will render for this Route path.
 
-  * `path`: String. The URL path that will active this `Route`. Does not need to be proceeded by a slash. The
+  * `path`: String. The URL path that will activate this `Route`. Does not need to be proceeded by a slash. The
   path can accept placeholder params in its definition - e.g. `users/:userId` will create a new `userId` param
   for the `Route` that will accept any value.
 
-  * `name`: String. A reference value for the route, to allow for easy lookup / linking via `Link` components.
+  * `name`: String. A reference value for the route, to allow for easy lookup / linking via `Link` components. Because
+  this is used as a lookup, it needs to be unique.
 
 The `handler` React component will receive a number of additions to its props:
 
   * `activeRoute`: React component instance. A reference to whatever view component should be active for the current URL,
-  if this `Route` has nested values.
+  if this `Route` has nested values. Works the same as the `activeRoute` prop in the `Routes` component.
 
   * `params`: Object hash. A key/value of each of the param placeholders specified in the `Route`'s path.
 
@@ -125,16 +133,16 @@ The `handler` React component will receive a number of additions to its props:
 ####Link
 A `<Link></Link>` component allows for the easy creation of HTML `<a href>`s pointing to named paths
 within the `<Routes>` tree. (Behind the scenes, each `Link` looks up values stored within a route store.)
-`Link` componentsc can detect if they are referring to the currently active path; if they are, they will
+`Link` components can detect if they are referring to the currently active path; if they are, they will
 append an `active` class to their class list.
 
 A `Link` component takes the following props:
 
   * `to`: String. Looks up the path of a `Route` by its `name` prop.
 
-  * `query`: Object. A key/value list of queryparams to append to the generated link.
+  * `query`: Object hash. A key/value list of queryparams to append to the generated link.
 
-  * `className`: String, defaults to ''. The class of the generated anchor component that will be rendered.
+  * `className`: String, defaults to `''`. The class of the generated anchor component that will be rendered.
 
 Note that **additional** props can be provided to the `Link` component as well. Each of these `props` will be used to fill
 in variable `Route` params. For example, if a `Link` is pointing to a path that accepts a `:userId` param, the `Link` can
