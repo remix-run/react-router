@@ -73,9 +73,72 @@ React.renderComponent(<Main/>, document.body);
 Guide
 -----
 
-Check out the examples for now.
+For a number of different uses of React Router, see the examples.
 
 First run `$ webpack` to build the example files then open them up.
+
+
+###Components
+React Router makes three different types of React components available:
+`Routes`, `Route`, and `Link`. `Routes` has one purpose: a wrapper for all
+of the routes of the entire app. All `Route` paths will be nested within a single
+`Routes` instance. A `Route`, despite its singular name, can have `Route` children
+nested under it to an arbitrary depth.
+
+####Routes
+The `<Routes></Routes>` component wraps the list of route paths for an entire app.
+All `Route` paths will be nested within the `Routes` container. The `Routes` component
+takes two props:
+
+  * `handler`: Required, React compoent. Points to a React component class (generally, whatever
+  component acts as the full App wrapper), which will be rendered and be the parent of all `Route` views
+
+  * `location`: String, one of `hash` (default) or `history`.  Determines whether the React Router
+  should use location hashes (default) or the HTML5 History API.
+
+The `handler` React component will receive a special addition to its props: `activeRoute`, which references
+whatever view component should be active for the current URL, as specified in the `Routes` JSX structure.
+
+####Route
+The `<Route></Route>` compoent will specify each of the named URL routes in your app. Despite its
+singular name, each `Route` can have more `Route` instances nested within them to arbitrary depths. Each
+`Route` component takes the following props:
+
+  * `handler`: Required, React component. Just as with the `Routes` component above, the `handler` prop points
+  to the React component class of the view that will render for this Route path.
+
+  * `path`: String. The URL path that will active this `Route`. Does not need to be proceeded by a slash. The
+  path can accept placeholder params in its definition - e.g. `users/:userId` will create a new `userId` param
+  for the `Route` that will accept any value.
+
+  * `name`: String. A reference value for the route, to allow for easy lookup / linking via `Link` components.
+
+The `handler` React component will receive a number of additions to its props:
+
+  * `activeRoute`: React component instance. A reference to whatever view component should be active for the current URL,
+  if this `Route` has nested values.
+
+  * `params`: Object hash. A key/value of each of the param placeholders specified in the `Route`'s path.
+
+  * `query`: Object hash. A key/value of each of the querystrings in the URL.
+
+####Link
+A `<Link></Link>` component allows for the easy creation of HTML `<a href>`s pointing to named paths
+within the `<Routes>` tree. (Behind the scenes, each `Link` looks up values stored within a route store.)
+`Link` componentsc can detect if they are referring to the currently active path; if they are, they will
+append an `active` class to their class list.
+
+A `Link` component takes the following props:
+
+  * `to`: String. Looks up the path of a `Route` by its `name` prop.
+
+  * `query`: Object. A key/value list of queryparams to append to the generated link.
+
+  * `className`: String, defaults to ''. The class of the generated anchor component that will be rendered.
+
+Note that **additional** props can be provided to the `Link` component as well. Each of these `props` will be used to fill
+in variable `Route` params. For example, if a `Link` is pointing to a path that accepts a `:userId` param, the `Link` can
+be specified like so: `<Link to="user" userId="123" />`
 
 Benefits of This Approach
 -------------------------
