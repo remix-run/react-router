@@ -114,12 +114,14 @@ singular name, each `Route` can have more `Route` instances nested within it to 
   * `handler`: Required, React component. Just as with the `Routes` component above, the `handler` prop points
   to the React component class of the view that will render for this Route path.
 
-  * `path`: String. The URL path that will activate this `Route`. Does not need to be proceeded by a slash. The
+  * `name`: String. A reference value for the route, to allow for easy lookup / linking via `Link` components. Because
+  this is used as a lookup, it needs to be unique. The `name` value will also provide the value for the `path` prop below,
+  if no `path` is specified.
+
+  * `path`: String; defaults to the value of `name` above. The URL path that will activate this `Route`. Does not need to be proceeded by a slash. The
   path can accept placeholder params in its definition - e.g. `users/:userId` will create a new `userId` param
   for the `Route` that will accept any value.
 
-  * `name`: String. A reference value for the route, to allow for easy lookup / linking via `Link` components. Because
-  this is used as a lookup, it needs to be unique.
 
 The `handler` React component will receive a number of additions to its props:
 
