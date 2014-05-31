@@ -66,7 +66,7 @@ var AuthenticatedRoute = {
     if (!auth.loggedIn()) {
       this.render = function() { return <span/>};
       AuthenticatedRoute.lastInfo = ReactRouter.getCurrentInfo();
-      ReactRouter.replaceWith('login');
+      ReactRouter.replaceWith('login', {});
     }
   }
 };
@@ -106,7 +106,7 @@ var Login = React.createClass({
       if (lastInfo) {
         return ReactRouter.replaceWith(lastInfo.route.props.name, lastInfo.params);
       }
-      ReactRouter.replaceWith('about');
+      ReactRouter.replaceWith('about', {});
     }.bind(this));
   },
 
