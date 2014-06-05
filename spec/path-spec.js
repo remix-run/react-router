@@ -35,6 +35,20 @@ describe('path.extractParams', function () {
   });
 });
 
+describe('path.extractParamNames', function () {
+  describe('when a pattern contains no dynamic segments', function () {
+    it('returns an empty array', function () {
+      expect(path.extractParamNames('a/b/c')).toEqual([]);
+    });
+  });
+
+  describe('when a pattern contains :a and :b dynamic segments', function () {
+    it('returns the correct names', function () {
+      expect(path.extractParamNames('/comments/:a/:b/edit')).toEqual([ 'a', 'b' ]);
+    });
+  });
+});
+
 describe('path.injectParams', function () {
   describe('when a pattern does not have dynamic segments', function () {
     var pattern = 'a/b/c';
