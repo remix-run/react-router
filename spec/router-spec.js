@@ -67,7 +67,7 @@ describe("when a nested router matches the URL", function () {
   });
 });
 
-describe('when multiple nested routes match the URL', function () {
+describe('when multiple nested routers match the URL', function () {
   it('match() returns the first one in the subtree, depth-first', function () {
     var expectedRouter;
     var router = Router('/', App, function (route) {
