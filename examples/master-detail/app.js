@@ -161,7 +161,7 @@ var store = {
       var url = api+'/'+id;
       getJSON(url, function(err, res) {
         if (err) {
-          return ReactRouter.replaceWith('not-found');
+          return ReactRouter.replaceWith('not-found', {});
         }
         var contact = res.contact;
         store.contacts.map[contact.id] = contact;
