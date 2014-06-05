@@ -14,7 +14,9 @@
   "devDependencies": {
     "webpack": "^1.2.0-beta5",
     "jsx-loader": "^0.10.2",
-    "bundle-loader": "^0.5.0"
+    "bundle-loader": "^0.5.0",
+    "expect": "^0.1.1",
+    "mocha": "^1.20.1"
   },
   "dependencies": {
     "react": "^0.10.0",
