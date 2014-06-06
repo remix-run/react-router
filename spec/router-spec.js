@@ -12,6 +12,7 @@ describe("when a router's pattern matches the URL", function () {
     var router = Router('/a/b/c', App);
 
     var match = router.match('a/b/c');
+    assert(match);
     expect(match.length).toEqual(1);
 
     var rootMatch = lastItem(match);
@@ -24,12 +25,22 @@ describe("when a router's pattern matches the URL", function () {
       var router = Router('/posts/:id/edit', App);
 
       var match = router.match('posts/abc/edit');
+      assert(match);
       expect(match.length).toEqual(1);
 
       var rootMatch = lastItem(match);
       expect(rootMatch.router).toBe(router);
       expect(rootMatch.params).toEqual({ id: 'abc' });
     });
+  });
+});
+
+describe("when a router's pattern does not match the URL", function () {
+  it('match() returns null', function () {
+    var router = Router('/a/b/c', App);
+
+    var match = router.match('not-found');
+    expect(match).toBe(null);
   });
 });
 
@@ -42,6 +53,7 @@ describe("when a nested router matches the URL", function () {
       });
 
       var match = router.match('posts/abc/comments/123');
+      assert(match);
       expect(match.length).toEqual(2);
 
       var rootMatch = lastItem(match);
@@ -79,11 +91,10 @@ describe('when multiple nested routers match the URL', function () {
     });
 
     var match = router.match('a/b');
-
+    assert(match);
     expect(match.length).toEqual(3);
 
     var rootMatch = lastItem(match);
-
     expect(rootMatch.router).toBe(expectedRouter);
   });
 });
