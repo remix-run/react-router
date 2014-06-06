@@ -2,6 +2,7 @@ require('./helper');
 var Router = require('../lib/router');
 
 var App = React.createClass({
+  displayName: 'App',
   render: function () {
     return React.DOM.div();
   }
@@ -96,6 +97,13 @@ describe('when multiple nested routers match the URL', function () {
 
     var rootMatch = lastItem(match);
     expect(rootMatch.router).toBe(expectedRouter);
+  });
+});
+
+describe('a router with a named component', function () {
+  it('has the correct toString representation', function () {
+    var router = Router('/', App);
+    expect(router + '').toEqual('<AppRouter>');
   });
 });
 
