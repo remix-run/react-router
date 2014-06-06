@@ -33,6 +33,38 @@ describe('path.extractParams', function () {
       });
     });
   });
+
+  describe('when a pattern has characters that have special URL encoding', function () {
+    var pattern = 'one, two';
+
+    describe('and the path matches', function () {
+      it('returns an empty object', function () {
+        expect(path.extractParams(pattern, 'one%2C%20two')).toEqual({});
+      });
+    });
+
+    describe('and the path does not match', function () {
+      it('returns null', function () {
+        expect(path.extractParams(pattern, 'one%20two')).toBe(null);
+      });
+    });
+  });
+
+  describe('when a pattern has dynamic segments and characters that have special URL encoding', function () {
+    var pattern = 'comments/:id/edit now';
+
+    describe('and the path matches', function () {
+      it('returns an object with the params', function () {
+        expect(path.extractParams(pattern, 'comments/abc/edit%20now')).toEqual({ id: 'abc' });
+      });
+    });
+
+    describe('and the path does not match', function () {
+      it('returns null', function () {
+        expect(path.extractParams(pattern, 'users/123')).toBe(null);
+      });
+    });
+  });
 });
 
 describe('path.extractParamNames', function () {
@@ -72,6 +104,12 @@ describe('path.injectParams', function () {
     describe('and all params are present', function () {
       it('returns the correct path', function () {
         expect(path.injectParams(pattern, { id: 'abc' })).toEqual('comments/abc/edit');
+      });
+    });
+
+    describe('and some params have special URL encoding', function () {
+      it('returns the correct path', function () {
+        expect(path.injectParams(pattern, { id: 'one, two' })).toEqual('comments/one%2C%20two/edit');
       });
     });
   });
