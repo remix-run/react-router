@@ -1,24 +1,11 @@
 /** @jsx React.DOM */
 var React = require('react');
 var ReactRouter = require('../../lib/main');
-var Routes = ReactRouter.Routes;
+var Router = ReactRouter.Router;
 var Route = ReactRouter.Route;
 var Link = ReactRouter.Link;
 
-var Main = React.createClass({
-  render: function() {
-    return (
-      <Routes handler={App}>
-        <Route name="user" path="user/:userId" handler={User}>
-          <Route name="task" path="user/:userId/tasks/:taskId" handler={Task}/>
-        </Route>
-      </Routes>
-    );
-  }
-});
-
 var App = React.createClass({
-
   render: function() {
     return (
       <div>
@@ -58,5 +45,11 @@ var Task = React.createClass({
   }
 });
 
-React.renderComponent(<Main/>, document.body);
+Router(
+  <Route handler={App}>
+    <Route name="user" path="user/:userId" handler={User}>
+      <Route name="task" path="user/:userId/tasks/:taskId" handler={Task}/>
+    </Route>
+  </Route>
+).renderComponent(document.body);
 

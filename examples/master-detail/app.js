@@ -1,21 +1,9 @@
 /** @jsx React.DOM */
 var React = require('react');
 var ReactRouter = require('../../lib/main');
-var Routes = ReactRouter.Routes;
+var Router = ReactRouter.Router;
 var Route = ReactRouter.Route;
 var Link = ReactRouter.Link;
-
-var Main = React.createClass({
-  render: function() {
-    return (
-      <Routes handler={App}>
-        <Route name="new" path="contact/new" handler={NewContact} />
-        <Route name="not-found" path="contact/not-found" handler={NotFound} />
-        <Route name="contact" path="contact/:id" handler={Contact} />
-      </Routes>
-    );
-  }
-});
 
 var App = React.createClass({
   getInitialState: function() {
@@ -77,7 +65,7 @@ var Contact = React.createClass({
 
   destroy: function() {
     store.removeContact(this.state.id);
-    ReactRouter.transitionTo('/');
+    Router.transitionTo('/');
   },
 
   render: function() {
@@ -99,7 +87,7 @@ var NewContact = React.createClass({
       first: this.refs.first.getDOMNode().value,
       last: this.refs.last.getDOMNode().value
     }, function(contact) {
-      ReactRouter.transitionTo('contact', {id: contact.id});
+      Router.transitionTo('contact', { id: contact.id });
     }.bind(this));
   },
 
@@ -124,7 +112,7 @@ var NotFound = React.createClass({
   }
 });
 
-/*****************************************************************************/
+
 // data store stuff ...
 
 var api = 'http://addressbook-api.herokuapp.com/contacts';
@@ -161,7 +149,7 @@ var store = {
       var url = api+'/'+id;
       getJSON(url, function(err, res) {
         if (err) {
-          return ReactRouter.replaceWith('not-found');
+          return Router.replaceWith('not-found');
         }
         var contact = res.contact;
         store.contacts.map[contact.id] = contact;
@@ -218,5 +206,12 @@ function deleteJSON(url, cb) {
   req.send();
 }
 
-React.renderComponent(<Main/>, document.body);
+
+Router(
+  <Route handler={App}>
+    <Route name="new" path="contact/new" handler={NewContact}/>
+    <Route name="not-found" path="contact/not-found" handler={NotFound}/>
+    <Route name="contact" path="contact/:id" handler={Contact}/>
+  </Route>
+).renderComponent(document.body);
 

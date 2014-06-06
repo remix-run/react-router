@@ -1,7 +1,7 @@
 /** @jsx React.DOM */
 var React = require('react');
 var ReactRouter = require('../../lib/main');
-var Routes = ReactRouter.Routes;
+var Router = ReactRouter.Router;
 var Route = ReactRouter.Route;
 var Link = ReactRouter.Link;
 
@@ -28,18 +28,6 @@ var AsyncJSXRoute = {
     return fullRoute ? fullRoute(this.props) : this.preRender();
   }
 };
-
-var Main = React.createClass({
-  render: function() {
-    return (
-      <Routes handler={App}>
-        <Route name="dashboard" path="dashboard" handler={PreDashboard}>
-          <Route name="inbox" path="dashboard/inbox" handler={PreInbox}/>
-        </Route>
-      </Routes>
-    );
-  }
-});
 
 var PreDashboard = React.createClass({
   mixins: [AsyncJSXRoute],
@@ -73,5 +61,11 @@ var App = React.createClass({
   }
 });
 
-React.renderComponent(<Main/>, document.body);
+Router(
+  <Route handler={App}>
+    <Route name="dashboard" path="dashboard" handler={PreDashboard}>
+      <Route name="inbox" path="dashboard/inbox" handler={PreInbox}/>
+    </Route>
+  </Route>
+).renderComponent(document.body);
 

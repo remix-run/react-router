@@ -1,44 +1,53 @@
 /** @jsx React.DOM */
 var React = require('react');
 var ReactRouter = require('../../lib/main');
-var Routes = ReactRouter.Routes;
+var Router = ReactRouter.Router;
 var Route = ReactRouter.Route;
 var Link = ReactRouter.Link;
 
-var Main = React.createClass({
+// Taco store!
+
+var _tacos = [
+  { name: 'duck confit' },
+  { name: 'carne asada' },
+  { name: 'shrimp' }
+];
+
+var tacoStore = {
+  getAll: function () {
+    return _tacos;
+  },
+  addTaco: function (taco) {
+    _tacos.push(taco);
+    this.onChange();
+  },
+  onChange: function () {}
+};
+
+// Components
+
+var App = React.createClass({
   getInitialState: function() {
     return {
-      tacos: [
-        {name: 'duck confit'},
-        {name: 'carne asada'},
-        {name: 'shrimp'}
-      ]
+      tacos: tacoStore.getAll()
     };
   },
 
-  addTaco: function(name) {
-    this.state.tacos.push({name: name});
-    this.setState({tacos: this.state.tacos});
-  },
-
-  render: function() {
-    return (
-      <Routes handler={App} tacos={this.state.tacos} onAddTaco={this.addTaco}>
-        <Route name="taco" path="taco/:name" handler={Taco} />
-      </Routes>
-    );
-  }
-});
-
-var App = React.createClass({
-
   addTaco: function() {
     var name = prompt('taco name?');
-    this.props.onAddTaco(name);
+    tacoStore.addTaco({ name: name });
+  },
+
+  componentWillMount: function () {
+    tacoStore.onChange = this.updateTacos;
+  },
+
+  updateTacos: function () {
+    this.setState({ tacos: tacoStore.getAll() });
   },
 
   render: function() {
-    var links = this.props.tacos.map(function(taco) {
+    var links = this.state.tacos.map(function(taco) {
       return <li><Link to="taco" name={taco.name}>{taco.name}</Link></li>
     });
     return (
@@ -65,5 +74,9 @@ var Taco = React.createClass({
   }
 });
 
-React.renderComponent(<Main/>, document.body);
+Router(
+  <Route handler={App}>
+    <Route name="taco" path="taco/:name" handler={Taco}/>
+  </Route>
+).renderComponent(document.body);
 

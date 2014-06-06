@@ -1,25 +1,11 @@
 /** @jsx React.DOM */
 var React = require('react');
 var ReactRouter = require('../../lib/main');
-var Routes = ReactRouter.Routes;
+var Router = ReactRouter.Router;
 var Route = ReactRouter.Route;
 var Link = ReactRouter.Link;
 
-var Main = React.createClass({
-  render: function() {
-    return (
-      <Routes handler={App}>
-        <Route name="login" handler={Login}/>
-        <Route name="logout" handler={Logout}/>
-        <Route name="about" handler={About}/>
-        <Route name="dashboard" handler={Dashboard}/>
-      </Routes>
-    );
-  }
-});
-
 var App = React.createClass({
-
   getInitialState: function() {
     return {
       loggedIn: auth.loggedIn()
@@ -59,20 +45,19 @@ var App = React.createClass({
 
 var AuthenticatedRoute = {
   statics: {
-    lastInfo: null
+    lastPath: null
   },
 
   componentWillMount: function() {
     if (!auth.loggedIn()) {
-      this.render = function() { return <span/>};
-      AuthenticatedRoute.lastInfo = ReactRouter.getCurrentInfo();
-      ReactRouter.replaceWith('login');
+      this.render = function() { return <span/> };
+      AuthenticatedRoute.lastPath = Router.getCurrentPath();
+      Router.replaceWith('login');
     }
   }
 };
 
 var Dashboard = React.createClass({
-
   mixins: [AuthenticatedRoute],
 
   render: function() {
@@ -99,14 +84,13 @@ var Login = React.createClass({
     var email = this.refs.email.getDOMNode().value;
     var pass = this.refs.pass.getDOMNode().value;
     auth.login(email, pass, function(loggedIn) {
-      if (!loggedIn) {
+      if (!loggedIn)
         return this.setState({ error: true });
-      }
-      var lastInfo = AuthenticatedRoute.lastInfo;
-      if (lastInfo) {
-        return ReactRouter.replaceWith(lastInfo.route.props.name, lastInfo.params);
-      }
-      ReactRouter.replaceWith('about');
+
+      if (AuthenticatedRoute.lastPath)
+        return Router.replaceWith(AuthenticatedRoute.lastPath);
+
+      Router.replaceWith('about');
     }.bind(this));
   },
 
@@ -179,7 +163,6 @@ var auth = {
   onChange: function() {}
 };
 
-
 function pretendRequest(email, pass, cb) {
   setTimeout(function() {
     if (email === 'joe@example.com' && pass === 'password1') {
@@ -193,4 +176,13 @@ function pretendRequest(email, pass, cb) {
   }, 0);
 }
 
-React.renderComponent(<Main/>, document.body);
+
+Router(
+  <Route handler={App}>
+    <Route name="login" handler={Login}/>
+    <Route name="logout" handler={Logout}/>
+    <Route name="about" handler={About}/>
+    <Route name="dashboard" handler={Dashboard}/>
+  </Route>
+).renderComponent(document.body);
+

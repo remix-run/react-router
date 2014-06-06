@@ -1,19 +1,9 @@
 /** @jsx React.DOM */
 var React = require('react');
 var ReactRouter = require('../../lib/main');
-var Routes = ReactRouter.Routes;
+var Router = ReactRouter.Router;
 var Route = ReactRouter.Route;
 var Link = ReactRouter.Link;
-
-var Main = React.createClass({
-  render: function() {
-    return (
-      <Routes handler={App}>
-        <Route name="state" path="state/:abbr" handler={State} />
-      </Routes>
-    );
-  }
-});
 
 var App = React.createClass({
   getInitialState: function() {
@@ -60,7 +50,12 @@ var State = React.createClass({
   }
 });
 
-React.renderComponent(<Main/>, document.body);
+
+Router(
+  <Route handler={App}>
+    <Route name="state" path="state/:abbr" handler={State}/>
+  </Route>
+).renderComponent(document.body);
 
 /*****************************************************************************/
 // data stuff
