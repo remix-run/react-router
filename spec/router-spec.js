@@ -1,5 +1,5 @@
 require('./helper');
-var Router = ReactRouter.Router;
+var Router = require('../lib/router');
 
 var App = React.createClass({
   displayName: 'App',
