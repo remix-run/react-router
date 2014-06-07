@@ -1,33 +1,36 @@
 React Router
 ============
 
-Ember.js nailed the router. This library is generally a translation of
-the ember routing API for React. All praise be to Yehuda Katz, Tom Dale,
-and the Ember community for nailing down such a beautiful interface. May
-the web be unbroken regardless of your tools.
+Declarative routing with automatic UI nesting for React.
+
+Thanks, Ember
+-------------
+
+This library is highly inspired by the Ember.js routing API. Huge thanks to
+the Ember team.
 
 WIP
 ---
 
 This is a huge work in progress. Don't use it yet.
 
-Example
--------
+Usage Example
+-------------
 
 ```js
-var Main = React.createClass({
-  render: function() {
-    return (
-      <Routes handler={App}>
-        <Route name="about" path="about" handler={About}/>
-        <Route name="users" path="users" handler={Users}>
-          <Route name="user" path="user/:userId" handler={User}/>
-        </Route>
-      </Routes>
-    );
-  }
-});
+Router(
+  <Route handler={App}>
+    <Route name="about" path="about" handler={About}/>
+    <Route name="users" path="users" handler={Users}>
+      <Route name="user" path="user/:userId" handler={User}/>
+    </Route>
+  </Route>
+).renderComponent(document.body);
+```
 
+The rest of the app ...
+
+```js
 var App = React.createClass({
   render: function() {
     return (
@@ -66,89 +69,141 @@ var User = React.createClass({
     return <div>{this.props.params.userId}</div>
   }
 });
-
-React.renderComponent(<Main/>, document.body);
 ```
 
-Guide
------
+API
+---
 
-For a number of different uses of React Router, see the examples. The
-example files will need to be built by first running `$ webpack`.
+### Router (Constructor)
 
-###Components
-React Router makes three different types of React components available:
-`Routes`, `Route`, and `Link`.
+Router config constructor. Has two signatures.
 
-`Routes` has one purpose: a wrapper for all
-of the routes of the entire app.
+#### Signature: `Router(xml)`
 
-Every `Route` path will be nested within a single
-`Routes` instance. A `Route`, despite its singular name, can have `Route` children
-nested under it to an arbitrary depth.
+```jsx
+Router(
+  <Route handler={App}>
+    <Route path="/users" name="userList" handler={UserList}>
+      <Route path="/users/:id" name="user" handler={User}/>
+    </Route>
+  </Route>
+);
+```
 
-A `Link` is simply a `<a href`> link generator to named `Route` paths.
+#### Signature: `Router(path, name, handler, children])`
 
-####Routes
-The `<Routes></Routes>` component wraps the list of route paths for an entire app.
-All `Route` paths will be nested within the `Routes` container. The `Routes` component
-takes two props:
+```jsx
+Router('/', App, function (route) {
+  route('/users', 'userList', UserList, function(route) {
+    route('/users/:id', 'user', User);
+  });
+});
+```
 
-  * `handler`: Required, React component. Points to a React component class (generally, whatever
-  component acts as the full application wrapper), which will be rendered and be the parent of the tree of views
-  specified by the `Route` layout.
+#### Methods
 
-  * `location`: String, either `hash` (default) or `history`.  Determines whether the React Router
-  should use location hashes (default) or the HTML5 History API.
+**renderComponent(Node)** - Renders the top level handler into `Node`.
 
-The `handler` React component will receive a special addition to its props: `activeRoute`, which references
-whatever view component should be active for the current URL, as specified in the `Routes` JSX structure.
-The `activeRoute` should be included in the `handler`'s render function, much as the same way `this.props.children`
-is handled in other React components.
+```js
+var router = Router(xml);
+router.renderComponent(document.body):
+```
 
-####Route
-The `<Route></Route>` component will specify each of the named URL routes in your app. Despite its
-singular name, each `Route` can have more `Route` instances nested within it to arbitrary depths. Each
-`Route` component takes the following props:
+#### Constructor Methods
 
-  * `handler`: Required, React component. Just as with the `Routes` component above, the `handler` prop points
-  to the React component class of the view that will render for this Route path.
+**useHistory()** - Uses the browser's history API instead of hashes.
 
-  * `name`: String. A reference value for the route, to allow for easy lookup / linking via `Link` components. Because
-  this is used as a lookup, it needs to be unique. The `name` value will also provide the value for the `path` prop below,
-  if no `path` is specified.
+```js
+Router.useHistory();
+```
 
-  * `path`: String; defaults to the value of `name` above. The URL path that will activate this `Route`. Does not need to be proceeded by a slash. The
-  path can accept placeholder params in its definition - e.g. `users/:userId` will create a new `userId` param
-  for the `Route` that will accept any value.
+**transitionTo(routeName, [params[, query]])** - Programatically transition to a new route.
+
+```js
+Router.transitionTo('user', {id: 10}, {showAge: true});
+Router.transitionTo('about');
+```
+
+**replaceWith(routeName, [params[, query]])** - Programatically replace current route with a new route. Does not add an entry into the browser history.
+
+```js
+Router.replaceWith('user', {id: 10}, {showAge: true});
+Router.replaceWith('about');
+```
+
+### Route (Component)
+
+Configuration component to declare your application's routes and view hierarchy.
+
+#### Properties
+
+**name** - The name of the route, used in the `Link` component and the
+router's transition methods.
+
+**path** - The path used in the URL, supporting dynamic segments. If
+left undefined, the path will be defined by the `name`.
+
+**handler** - The component to be rendered when the route matches.
+
+#### Children
+
+Routes can be nested. When a child route matches, the parent route's
+handler will have an instance of the child route's handler available on
+`this.props.activeRoute`.
+
+#### Examples
+
+```xml
+<Route handler={App}>
+  <!-- path automitically assigned to the name since it is omitted -->
+  <Route name="about" handler={About} />
+  <Route name="users" handler={Users}>
+    <!-- note the dynamic segment in the path -->
+    <Route name="user" handler={User} path="/user/:id" />
+  </Route>
+</Route>
+```
+
+Or w/o JSX:
+
+```js
+Route({handler: App},
+  Route({name: 'about', handler: About}),
+  Route({name: 'users', handler: Users},
+    Route({name: 'user', handler: User, path: '/user/:id'})
+  )
+);
+```
+
+#### Note
+
+Paths are not inherited from parent routes.
 
 
-The `handler` React component will receive a number of additions to its props:
+### Link (Component)
 
-  * `activeRoute`: React component instance. A reference to whatever view component should be active for the current URL,
-  if this `Route` has nested values. Works the same as the `activeRoute` prop in the `Routes` component.
+Creates an anchor tag that links to a route in the application. Also
+gets the `active` class automatically when the route matches. If you
+change the path of your route, you don't have to change your links.
 
-  * `params`: Object hash. A key/value of each of the param placeholders specified in the `Route`'s path.
+#### Properties
 
-  * `query`: Object hash. A key/value of each of the querystrings in the URL.
+**to** - The name of the route to link to.
 
-####Link
-A `<Link></Link>` component allows for the easy creation of HTML `<a href>`s pointing to named paths
-within the `<Routes>` tree. (Behind the scenes, each `Link` looks up values stored within a route store.)
-`Link` components can detect if they are referring to the currently active path; if they are, they will
-append an `active` class to their class list.
+**[param]** - Any parameters the route defines are passed by name
+through the link's properties.
 
-A `Link` component takes the following props:
+#### Example
 
-  * `to`: String. Looks up the path of a `Route` by its `name` prop.
+Given a route like `<Route name="user" path="/users/:userId"/>`:
 
-  * `query`: Object hash. A key/value list of queryparams to append to the generated link.
-
-  * `className`: String, defaults to `''`. The class of the generated anchor component that will be rendered.
-
-Note that **additional** props can be provided to the `Link` component as well. Each of these `props` will be used to fill
-in variable `Route` params. For example, if a `Link` is pointing to a path that accepts a `:userId` param, the `Link` can
-be specified like so: `<Link to="user" userId="123" />`
+```xml
+<Link to="user" userId={user.id}>{user.name}</Link>
+<!-- becomes one of these depending on your router and if the route is
+active -->
+<a href="/users/123" class="active">Michael</a>
+<a href="#/users/123">Michael</a>
+```
 
 Benefits of This Approach
 -------------------------
