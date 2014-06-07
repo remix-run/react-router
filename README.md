@@ -78,7 +78,7 @@ API
 
 Router config constructor. Has two signatures.
 
-#### Signature: `Router(xml)`
+#### Signature: `Router(routes)`
 
 ```jsx
 Router(
@@ -105,7 +105,7 @@ Router('/', App, function (route) {
 **renderComponent(Node)** - Renders the top level handler into `Node`.
 
 ```js
-var router = Router(xml);
+var router = Router(routes);
 router.renderComponent(document.body):
 ```
 
