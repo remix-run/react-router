@@ -9,6 +9,19 @@ var App = React.createClass({
   }
 });
 
+describe('when a route does not specify a path', function () {
+  it('uses its name to match the URL', function () {
+    var router = Router(
+      Route({ name: 'users', handler: App })
+    );
+
+    expect(router.pattern).toEqual('/users');
+
+    var match = router.match('/users');
+    assert(match);
+  });
+});
+
 describe("when a router's pattern matches the URL", function () {
   it('match() returns an array with that router', function () {
     var router = Router(
