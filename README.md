@@ -76,9 +76,7 @@ API
 
 ### Router (Constructor)
 
-Router config constructor. Has two signatures.
-
-#### Signature: `Router(routes)`
+Router config constructor.
 
 ```jsx
 Router(
@@ -88,16 +86,6 @@ Router(
     </Route>
   </Route>
 );
-```
-
-#### Signature: `Router(path, name, handler, children])`
-
-```jsx
-Router('/', App, function (route) {
-  route('/users', 'userList', UserList, function(route) {
-    route('/users/:id', 'user', User);
-  });
-});
 ```
 
 #### Methods
@@ -155,7 +143,7 @@ handler will have an instance of the child route's handler available on
 
 ```xml
 <Route handler={App}>
-  <!-- path automitically assigned to the name since it is omitted -->
+  <!-- path is automatically assigned to the name since it is omitted -->
   <Route name="about" handler={About} />
   <Route name="users" handler={Users}>
     <!-- note the dynamic segment in the path -->
