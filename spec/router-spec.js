@@ -10,15 +10,30 @@ var App = React.createClass({
 });
 
 describe('when a route does not specify a path', function () {
-  it('uses its name to match the URL', function () {
-    var router = Router(
-      Route({ name: 'users', handler: App })
-    );
+  describe('or a name', function () {
+    it('matches on /', function () {
+      var router = Router(
+        Route({ handler: App })
+      );
 
-    expect(router.pattern).toEqual('/users');
+      expect(router.pattern).toEqual('/');
 
-    var match = router.match('/users');
-    assert(match);
+      var match = router.match('/');
+      assert(match);
+    });
+  });
+
+  describe('but it has a name', function () {
+    it('uses its name to match the URL', function () {
+      var router = Router(
+        Route({ name: 'users', handler: App })
+      );
+
+      expect(router.pattern).toEqual('/users');
+
+      var match = router.match('/users');
+      assert(match);
+    });
   });
 });
 
