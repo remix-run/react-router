@@ -15,7 +15,7 @@ describe("when a router's pattern matches the URL", function () {
       Route({ path: '/a/b/c', handler: App })
     );
 
-    var match = router.match('a/b/c');
+    var match = router.match('/a/b/c');
     assert(match);
     expect(match.length).toEqual(1);
 
@@ -30,7 +30,7 @@ describe("when a router's pattern matches the URL", function () {
         Route({ path: '/posts/:id/edit', handler: App })
       );
 
-      var match = router.match('posts/abc/edit');
+      var match = router.match('/posts/abc/edit');
       assert(match);
       expect(match.length).toEqual(1);
 
@@ -47,7 +47,7 @@ describe("when a router's pattern does not match the URL", function () {
       Route({ path: '/a/b/c', handler: App })
     );
 
-    var match = router.match('not-found');
+    var match = router.match('/not-found');
     expect(match).toBe(null);
   });
 });
@@ -61,7 +61,7 @@ describe("when a nested router matches the URL", function () {
         )
       );
 
-      var match = router.match('posts/abc/comments/123');
+      var match = router.match('/posts/abc/comments/123');
       assert(match);
       expect(match.length).toEqual(2);
 
@@ -84,7 +84,7 @@ describe("when a nested router matches the URL", function () {
       );
 
       expect(function () {
-        router.match('comments/abc/edit');
+        router.match('/comments/abc/edit');
       }).toThrow(Error);
     });
   });
@@ -101,7 +101,7 @@ describe('when multiple nested routers match the URL', function () {
       )
     );
 
-    var match = router.match('a/b');
+    var match = router.match('/a/b');
     assert(match);
     expect(match.length).toEqual(3);
 

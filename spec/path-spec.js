@@ -142,7 +142,21 @@ describe('path.withQuery', function () {
 });
 
 describe('path.normalize', function () {
-  it('removes slashes from the beginning of a path', function () {
-    expect(path.normalize('//a/b/c')).toEqual('a/b/c');
+  describe('on a path with no slashes at the beginning', function () {
+    it('adds a slash', function () {
+      expect(path.normalize('a/b/c')).toEqual('/a/b/c');
+    });
+  });
+
+  describe('on a path with a single slash at the beginning', function () {
+    it('preserves the slash', function () {
+      expect(path.normalize('/a/b/c')).toEqual('/a/b/c');
+    });
+  });
+
+  describe('on a path with many slashes at the beginning', function () {
+    it('reduces them to a single slash', function () {
+      expect(path.normalize('//a/b/c')).toEqual('/a/b/c');
+    });
   });
 });
