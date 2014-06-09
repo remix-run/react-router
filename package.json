@@ -19,8 +19,9 @@
     "mocha": "^1.20.1"
   },
   "dependencies": {
-    "react": "^0.10.0",
+    "es6-promise": "^1.0.0",
+    "event-emitter": "^0.3.1",
     "querystring": "^0.2.0",
-    "event-emitter": "^0.3.1"
+    "react": "^0.10.0"
   }
 }
