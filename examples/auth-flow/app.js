@@ -45,14 +45,11 @@ var App = React.createClass({
 
 var AuthenticatedRoute = {
   statics: {
-    lastPath: null
-  },
-
-  componentWillMount: function() {
-    if (!auth.loggedIn()) {
-      this.render = function() { return <span/> };
-      AuthenticatedRoute.lastPath = Router.getCurrentPath();
-      Router.replaceWith('login');
+    willTransitionTo: function (transition) {
+      if (!auth.loggedIn()) {
+        Login.attemptedTransition = transition;
+        transition.redirect('/login');
+      }
     }
   }
 };
@@ -73,6 +70,10 @@ var Dashboard = React.createClass({
 });
 
 var Login = React.createClass({
+  statics: {
+    attemptedTransition: null
+  },
+
   getInitialState: function() {
     return {
       error: false
@@ -87,10 +88,13 @@ var Login = React.createClass({
       if (!loggedIn)
         return this.setState({ error: true });
 
-      if (AuthenticatedRoute.lastPath)
-        return Router.replaceWith(AuthenticatedRoute.lastPath);
-
-      Router.replaceWith('about');
+      if (Login.attemptedTransition) {
+        var transition = Login.attemptedTransition;
+        Login.attemptedTransition = null;
+        transition.retry();
+      } else {
+        Router.relaceWith('/about');
+      }
     }.bind(this));
   },
 
