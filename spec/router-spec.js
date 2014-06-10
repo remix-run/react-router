@@ -16,7 +16,7 @@ describe('when a route does not specify a path', function () {
         Route({ handler: App })
       );
 
-      expect(router.pattern).toEqual('/');
+      expect(router.path).toEqual('/');
 
       var match = router.match('/');
       assert(match);
@@ -29,7 +29,7 @@ describe('when a route does not specify a path', function () {
         Route({ name: 'users', handler: App })
       );
 
-      expect(router.pattern).toEqual('/users');
+      expect(router.path).toEqual('/users');
 
       var match = router.match('/users');
       assert(match);
