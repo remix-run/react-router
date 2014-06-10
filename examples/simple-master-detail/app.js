@@ -18,14 +18,13 @@ var App = React.createClass({
     var links = this.state.states.map(function(state) {
       return <li><Link to="state" abbr={state.abbr}>{state.name}</Link></li>
     });
-    var content = (this.props.activeRoute) ? this.props.activeRoute : this.indexTemplate();
     return (
       <div className="App">
         <ul className="Master">
           {links}
         </ul>
         <div className="Detail">
-          {content}
+          {this.props.activeRoute || this.indexTemplate()}
         </div>
       </div>
     );
