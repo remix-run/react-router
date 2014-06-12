@@ -1,5 +1,5 @@
 require('./helper');
-var URLStore = require('../lib/stores/url-store');
+var URLStore = require('../lib/stores/URLStore');
 
 describe('when a new path is pushed to the URL', function () {
   describe('with a leading slash', function () {

@@ -1,5 +1,5 @@
 require('./helper');
-var Link = require('../lib/components/link');
+var Link = require('../lib/components/Link');
 
 describe('when a link path does not match the URL', function () {
   it('is not active', function () {
