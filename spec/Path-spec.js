@@ -51,17 +51,33 @@ describe('Path.extractParams', function () {
   });
 
   describe('when a pattern has dynamic segments and characters that have special URL encoding', function () {
-    var pattern = 'comments/:id/edit now';
+    var pattern = '/comments/:id/edit now';
 
     describe('and the path matches', function () {
       it('returns an object with the params', function () {
-        expect(Path.extractParams(pattern, 'comments/abc/edit%20now')).toEqual({ id: 'abc' });
+        expect(Path.extractParams(pattern, '/comments/abc/edit%20now')).toEqual({ id: 'abc' });
       });
     });
 
     describe('and the path does not match', function () {
       it('returns null', function () {
-        expect(Path.extractParams(pattern, 'users/123')).toBe(null);
+        expect(Path.extractParams(pattern, '/users/123')).toBe(null);
+      });
+    });
+  });
+
+  describe('when a pattern has a *', function () {
+    var pattern = '/files/*.jpg';
+
+    describe('and the path matches', function () {
+      it('returns an object with the params', function () {
+        expect(Path.extractParams(pattern, '/files/my/photo.jpg')).toEqual({ splat: 'my/photo' });
+      });
+    });
+
+    describe('and the path does not match', function () {
+      it('returns null', function () {
+        expect(Path.extractParams(pattern, '/files/my/photo.png')).toBe(null);
       });
     });
   });
@@ -77,6 +93,12 @@ describe('Path.extractParamNames', function () {
   describe('when a pattern contains :a and :b dynamic segments', function () {
     it('returns the correct names', function () {
       expect(Path.extractParamNames('/comments/:a/:b/edit')).toEqual([ 'a', 'b' ]);
+    });
+  });
+
+  describe('when a pattern has a *', function () {
+    it('uses the name "splat"', function () {
+      expect(Path.extractParamNames('/files/*.jpg')).toEqual([ 'splat' ]);
     });
   });
 });
