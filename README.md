@@ -219,3 +219,9 @@ Benefits of This Approach
    ReactRouter, you don't get UI on the page without configuring a url
    first. Fortunately, its wildly productive this way, too.
 
+Development
+-----------
+
+`script/test` will fire up a karma runner, `npm test` will do the same
+but with the `--single-run` option.
+
