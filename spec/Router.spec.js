@@ -37,6 +37,18 @@ describe('when a route does not specify a path', function () {
   });
 });
 
+describe('a route that is missing a parameter that its parent needs', function () {
+  it('throws', function () {
+    expect(function () {
+      Router(
+        Route({ path: '/users/:userId', handler: App }, 
+          Route({ path: '/users/:id/comments', handler: App })
+        )
+      );
+    }).toThrow(/missing the "userId" parameter/);
+  });
+});
+
 describe("when a router's pattern matches the URL", function () {
   it('match() returns an array with that router', function () {
     var router = Router(
@@ -100,20 +112,6 @@ describe("when a nested router matches the URL", function () {
       var firstMatch = match[0];
       expect(firstMatch.router.name).toEqual('posts');
       expect(firstMatch.params).toEqual({ id: 'abc' });
-    });
-  });
-
-  describe('but it is missing some dynamic segments of its ancestors', function () {
-    it('match() throws an Error', function () {
-      var router = Router(
-        Route({ path: '/comments/:id', handler: App },
-          Route({ path: '/comments/:commentId/edit', handler: App })
-        )
-      );
-
-      expect(function () {
-        router.match('/comments/abc/edit');
-      }).toThrow(Error);
     });
   });
 });
