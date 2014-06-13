@@ -9,7 +9,7 @@ Features
 - Nested views mapped to nested routes
 - Dynamic segments
 - Query parameters
-- Links
+- Links with automatic `.active` class when their route is active
 - Transition abort / retry
 - Multiple root routes
 - hash or history urls
@@ -228,9 +228,9 @@ transition.
 
 #### transition (object)
 
-##### transition.abort() - aborts a transition
+**transition.abort()** - aborts a transition
 
-##### transition.retry() - retrys a transition
+**transition.retry()** - retrys a transition
 
 #### Example
 
@@ -306,9 +306,8 @@ Benefits of This Approach
    go find the handler for that route. Every entry point into your
    application is represented by these routes.
 
-4. **URLs are your first thought, not an after-thought** - Seriously,
-   don't break the web. Friends don't let friends route alone. With
-   ReactRouter, you don't get UI on the page without configuring a url
+4. **URLs are your first thought, not an after-thought** - With
+   React Router, you don't get UI on the page without configuring a url
    first. Fortunately, its wildly productive this way, too.
 
 Development
