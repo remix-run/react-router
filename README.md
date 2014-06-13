@@ -3,39 +3,64 @@ React Router
 
 Declarative routing with automatic UI nesting for React.
 
-Thanks, Ember
--------------
+Features
+--------
 
-This library is highly inspired by the Ember.js routing API. Huge thanks to
-the Ember team.
+- Nested views mapped to nested routes
+- Dynamic segments
+- Query parameters
+- Links
+- Transition abort / retry
+- Multiple root routes
+- hash or history urls
+
+Check out the examples directory to see how simple previously complex UI
+and workflows are to create.
+
+Installation
+------------
+
+`npm install rpflorence/react-router`
+
+We'll get on npm's registry soon.
 
 WIP
 ---
 
-This is a huge work in progress. Don't use it yet.
+This is a work in progress but the API seems to have settled.
 
-Usage Example
--------------
+Usage
+-----
 
 ```js
+var Router = require('react-router');
+var Route = Router.Route;
+var Link = Router.Link;
+
 Router(
   <Route handler={App}>
-    <Route name="about" path="about" handler={About}/>
-    <Route name="users" path="users" handler={Users}>
+    <Route name="about" handler={About}/>
+    <Route name="users" handler={Users}>
       <Route name="user" path="user/:userId" handler={User}/>
     </Route>
   </Route>
 ).renderComponent(document.body);
 ```
 
-The rest of the app ...
+When a `Route` is active, you'll get an instance of `handler`
+automatically rendered for you. When one of the child routes is active,
+you can render it with `this.props.activeRoute` all the way down the
+view hierarchy. This allows you to create nested layouts without having
+to wire it all up yourself. `Link` components create accessible anchor
+tags to route you around the application.
+
+Here's the rest of the application:
 
 ```js
 var App = React.createClass({
   render: function() {
     return (
-      <div className="App">
-        <h1>App</h1>
+      <div>
         <ul>
           <li><Link to="about">About</Link></li>
           <li><Link to="users">Users</Link></li>
@@ -56,7 +81,7 @@ var About = React.createClass({
 var Users = React.createClass({
   render: function() {
     return (
-      <div className="Users">
+      <div>
         <h2>Users</h2>
         {this.props.activeRoute}
       </div>
@@ -167,6 +192,73 @@ Route({handler: App},
 
 Paths are not inherited from parent routes.
 
+### Handlers
+
+There are some properties and hooks available to the handlers you pass
+to the `handler` property of a `Route`.
+
+#### Properties
+
+**this.props.activeRoute** - The active child route handler instance.
+Use it in your render method to render the child route.
+
+**this.props.params** - When a route has dynamic segments like `<Route
+path="users/:userId"/>` the dynamic values are available at
+`this.props.params.userId`, etc.
+
+**this.props.query** - The query parameters from the url.
+
+### Transition Hooks
+
+You can define static methods on your route handlers that will be called
+during route transitions.
+
+**willTransitionTo(transition, params)** - Called when a route is about
+to render, giving you the opportunity to abort the transition. You can
+return a promise and the whole route hierarchy will wait for the
+promises to resolve before proceeding. This is especially useful for
+server-side rendering when you need to populate some data before the
+handler is rendered.
+
+**willTransitionFrom(transition, component)** - Called when an active
+route is being transitioned out giving you an opportunity to abort the
+transition. The `component` is the current component, you'll probably
+need it to check its state to decide if you want to allow the
+transition.
+
+#### transition (object)
+
+##### transition.abort() - aborts a transition
+
+##### transition.retry() - retrys a transition
+
+#### Example
+
+```js
+var Settings = React.createClass({
+  statics: {
+    willTransitionTo: function(transition, params) {
+      return auth.isLoggedIn().then(function(loggedIn) {
+        if (!loggedIn)
+          return;
+        transition.abort();
+        return auth.logIn({transition: transition});
+        // in auth module call `transition.retry()` after being logged in
+      });
+    },
+
+    willTransitionFrom: function(transition, component) {
+      if (component.formHasUnsavedData())) {
+        if (!confirm('You have unsaved information, are you sure you want to leave this page?')) {
+          transition.abort();
+        }
+      }
+    }
+  }
+
+  //...
+});
+```
 
 ### Link (Component)
 
@@ -224,4 +316,11 @@ Development
 
 `script/test` will fire up a karma runner, `npm test` will do the same
 but with the `--single-run` option.
+
+Thanks, Ember
+-------------
+
+This library is highly inspired by the Ember.js routing API. In general,
+its a translation of the Ember router api to React. Huge thanks to the
+Ember team for solving the hardest part already.
 
