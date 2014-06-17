@@ -41,7 +41,7 @@ describe('a route that is missing a parameter that its parent needs', function (
   it('throws', function () {
     expect(function () {
       Router(
-        Route({ path: '/users/:userId', handler: App }, 
+        Route({ path: '/users/:userId', handler: App },
           Route({ path: '/users/:id/comments', handler: App })
         )
       );
@@ -143,6 +143,26 @@ describe('a router with a named component', function () {
     );
 
     expect(router + '').toEqual('<AppRouter>');
+  });
+});
+
+describe('a top-level route with custom props', function() {
+  it('receives props', function() {
+    var Wrapper = React.createClass({
+      displayName: 'Wrapper',
+      render: function () {
+        return React.DOM.div();
+      }
+    });
+
+    var router = Router(
+      Route({ handler : Wrapper, customProp: 'prop' })
+    );
+
+    var match     = router.match('/');
+    var component = match[0].router.renderComponent(document.createElement('div'));
+
+    assert(component.props.customProp);
   });
 });
 
