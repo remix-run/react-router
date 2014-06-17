@@ -163,6 +163,7 @@ describe('a top-level route with custom props', function() {
     var component = match[0].router.renderComponent(document.createElement('div'));
 
     assert(component.props.customProp);
+    expect(component.props.customProp).toEqual('prop');
   });
 });
 
