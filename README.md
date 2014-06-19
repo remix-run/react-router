@@ -16,7 +16,7 @@ Features
 - Multiple root routes
 - hash or history urls
 
-Check out the examples directory to see how simple previously complex UI
+Check out the `examples` directory to see how simple previously complex UI
 and workflows are to create.
 
 Installation
@@ -329,6 +329,17 @@ Development
   specs directory.
 - `npm test` will do the same but doesn't watch, just runs the tests.
 - `script/build-examples` does exactly that.
+
+### Commit subjects
+
+When releasing, a changelog is created automatically, if your commit
+subject is important to the API or fixes a bug, please use one of the
+following prefixes:
+
+- `[fixed] ...`
+- `[changed] ...`
+- `[added] ...`
+- `[removed] ...`
 
 Thanks, Ember
 -------------
