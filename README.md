@@ -1,7 +1,7 @@
-React Router
-============
+React Nested Router
+===================
 
-Declarative routing with automatic UI nesting for React.
+A complete routing library for React.
 
 Features
 --------
@@ -20,19 +20,15 @@ and workflows are to create.
 Installation
 ------------
 
-`npm install rpflorence/react-router`
-
-We'll get on npm's registry soon.
-
-WIP
----
-
-This is a work in progress but the API seems to have settled.
+`npm install react-nested-router`
 
 Usage
 -----
 
-```js
+This library only ships with common js modules, so you'll need browserify or
+webpack or something that can load/bundle it.
+
+```
 var Router = require('react-router');
 var Route = Router.Route;
 var Link = Router.Link;
@@ -47,12 +43,25 @@ Router(
 ).renderComponent(document.body);
 ```
 
+Or if JSX isn't your jam:
+
+```js
+Router(
+  Route({handler: App},
+    Route({name: "about", handler: About}),
+    Route({name: "users", handler: Users},
+      Route({name="user", path: "user/:userId", handler: User})
+    )
+  )
+).renderComponent(document.body);
+```
+
 When a `Route` is active, you'll get an instance of `handler`
 automatically rendered for you. When one of the child routes is active,
-you can render it with `this.props.activeRoute` all the way down the
-view hierarchy. This allows you to create nested layouts without having
-to wire it all up yourself. `Link` components create accessible anchor
-tags to route you around the application.
+you can render it with `this.props.activeRoute` in the parent all the
+way down the view hierarchy. This allows you to create nested layouts
+without having to wire it all up yourself. `Link` components create
+accessible anchor tags to route you around the application.
 
 Here's the rest of the application:
 
@@ -95,6 +104,31 @@ var User = React.createClass({
   }
 });
 ```
+
+Benefits of This Approach
+-------------------------
+
+1. **Incredible screen-creation productivity** - There is only one
+   use-case when a user visits a route: render something. Every user
+   interface has layers (or nesting) whether its a simple navbar or
+   multiple levels of master-detail. Coupling nested routes to these
+   nested views gets rid of a ton of work for the developer to wire all
+   of it together when the user switches routes. Adding new screens
+   could not get faster.
+
+2. **Immediate understanding of application structure** - When routes
+   are declared in one place, developers can easily construct a mental
+   image of the application. It's essentially a sitemap. There's not a
+   better way to get so much information about your app this quickly.
+
+3. **Code tractability** - When a developer gets a ticket to fix a bug
+   at as specific url they simply 1) look at the route config, then 2)
+   go find the handler for that route. Every entry point into your
+   application is represented by these routes.
+
+4. **URLs are your first thought, not an after-thought** - With React
+   Nested Router, you don't get UI on the page without configuring a url
+   first. Fortunately, its wildly productive this way, too.
 
 API
 ---
@@ -285,36 +319,13 @@ active -->
 <a href="#/users/123">Michael</a>
 ```
 
-Benefits of This Approach
--------------------------
-
-1. **Incredible screen-creation productivity** - There is only one
-   use-case when a user visits a route: render something. Every user
-   interface has layers (or nesting) whether its a simple navbar or
-   multiple levels of master-detail. Coupling nested routes to these
-   nested views gets rid of a ton of work for the developer to wire all
-   of it together when the user switches routes. Adding new screens
-   could not get faster.
-
-2. **Immediate understanding of application structure** - When routes
-   are declared in one place, developers can easily construct a mental
-   image of the application. It's essentially a sitemap. There's not a
-   better way to get so much information about your app this quickly.
-
-3. **Code tractability** - When a developer gets a ticket to fix a bug
-   at as specific url they simply 1) look at the route config, then 2)
-   go find the handler for that route. Every entry point into your
-   application is represented by these routes.
-
-4. **URLs are your first thought, not an after-thought** - With
-   React Router, you don't get UI on the page without configuring a url
-   first. Fortunately, its wildly productive this way, too.
-
 Development
 -----------
 
-`script/test` will fire up a karma runner, `npm test` will do the same
-but with the `--single-run` option.
+- `script/test` will fire up a karma runner and watch for changes in the
+  specs directory.
+- `npm test` will do the same but doesn't watch, just runs the tests.
+- `script/build-examples` does exactly that.
 
 Thanks, Ember
 -------------

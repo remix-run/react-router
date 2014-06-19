@@ -1,6 +1,6 @@
 require('./helper');
-var Router = require('../lib/Router');
-var RouteComponent = require('../lib/components/Route');
+var Router = require('../modules/Router');
+var RouteComponent = require('../modules/components/Route');
 
 var App = React.createClass({
   displayName: 'App',
