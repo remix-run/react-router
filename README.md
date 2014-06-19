@@ -31,7 +31,7 @@ This library only ships with common js modules, so you'll need browserify or
 webpack or something that can load/bundle it.
 
 ```
-var ReactRouter = require('react-router');
+var ReactRouter = require('react-nested-router');
 var Router = ReactRouter.Router;
 var Route = Router.Route;
 var Link = Router.Link;
