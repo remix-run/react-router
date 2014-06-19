@@ -30,7 +30,8 @@
     "karma-mocha": "^0.1.3",
     "karma-chrome-launcher": "^0.1.4",
     "karma-cli": "0.0.4",
-    "rf-release": "^0.1.2"
+    "rf-release": "^0.1.2",
+    "karma-firefox-launcher": "^0.1.3"
   },
   "dependencies": {
     "es6-promise": "^1.0.0",
