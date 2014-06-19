@@ -36,6 +36,8 @@ var Router = ReactRouter.Router;
 var Route = Router.Route;
 var Link = Router.Link;
 
+// note that you always need a root route like `App` here
+
 Router(
   <Route handler={App}>
     <Route name="about" handler={About}/>
