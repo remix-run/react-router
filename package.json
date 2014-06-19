@@ -11,7 +11,7 @@
     "example": "examples"
   },
   "scripts": {
-    "test": "script/test --single-run"
+    "test": "script/test --browsers Firefox --single-run"
   },
   "authors": [
     "Ryan Florence",
