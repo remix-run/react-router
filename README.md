@@ -1,6 +1,8 @@
 React Nested Router
 ===================
 
+[![Build Status](https://travis-ci.org/rpflorence/react-nested-router.svg?branch=master)](https://travis-ci.org/rpflorence/react-nested-router)
+
 A complete routing library for React.
 
 Features
