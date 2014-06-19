@@ -24,8 +24,6 @@ var App = React.createClass({
   },
 
   render: function() {
-    // spans on logout because VD doesn't seem to think anything changed otherwise?
-    // probably a bug in Link
     var loginOrOut = this.state.loggedIn ?
       <Link to="logout">Log out</Link> :
       <Link to="login">Sign in</Link>;
