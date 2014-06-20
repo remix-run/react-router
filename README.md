@@ -33,8 +33,8 @@ webpack or something that can load/bundle it.
 ```
 var ReactRouter = require('react-nested-router');
 var Router = ReactRouter.Router;
-var Route = Router.Route;
-var Link = Router.Link;
+var Route = ReactRouter.Route;
+var Link = ReactRouter.Link;
 
 // note that you always need a root route like `App` here
 
