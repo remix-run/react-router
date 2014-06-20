@@ -1,4 +1,5 @@
 require('./helper');
+var Promise = require('es6-promise').Promise;
 var Router = require('../modules/Router');
 var RouteComponent = require('../modules/components/Route');
 
@@ -120,6 +121,45 @@ describe('a Router with custom props', function() {
     router.dispatch('/').then(function () {
       assert(component.props.customProp);
       expect(component.props.customProp).toEqual('prop');
+      done();
+    });
+  });
+});
+
+describe('a Router that renders on the server', function() {
+  it('works with async willTransitionTo()', function(done) {
+    var dataStore = 'goodbye';
+    var Layout = React.createClass({
+      render: function() {
+        return React.DOM.article(null, this.props.activeRoute);
+      }
+    });
+    var AsyncApp = React.createClass({
+      displayName: 'AsyncApp',
+      statics: {
+        willTransitionTo: function() {
+          return new Promise(function(resolve) {
+            setTimeout(function() {
+              dataStore = 'hello';
+              resolve();
+            }, 0);
+          });
+        }
+      },
+      render: function() {
+        return React.DOM.div(null, dataStore);
+      }
+    });
+
+    var router = Router(
+      RouteComponent({ path: '/', handler: Layout},
+        RouteComponent({ path: '/a', handler: AsyncApp }))
+    );
+
+    router.renderComponentToString('/a').then(function(result) {
+      expect(result.indexOf('div') > -1).toBe(true);
+      expect(result.indexOf('hello') > -1).toBe(true);
+
       done();
     });
   });

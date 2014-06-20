@@ -208,6 +208,25 @@ mergeProperties(Router.prototype, {
     return component;
   },
 
+  /**
+   * Renders this Router's component as a string. Since this may be an asynchronous
+   * process, this returns a Promise.
+   */
+  renderComponentToString: function(path) {
+    invariant(
+      !this.state.props,
+      'You may only call renderComponentToString() on a new Router'
+    );
+
+    return this.dispatch(path).then(function() {
+      var route = this.route;
+      var state = this.state;
+      var descriptor = route.handler(state.props);
+      var markup = React.renderComponentToString(descriptor);
+      return markup;
+    }.bind(this));
+  },
+
   handleRouteChange: function () {
     this.dispatch(URLStore.getCurrentPath());
   }
