@@ -1,3 +1,5 @@
+karma.conf.js
 script
-vendor
+specs
+webpack.config.js
 

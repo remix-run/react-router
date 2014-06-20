@@ -1,4 +1,4 @@
-tmp
-node_modules
 dist
 examples/build
+node_modules
+

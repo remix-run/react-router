@@ -1,15 +1,22 @@
 {
-  "name": "react-router",
+  "name": "react-nested-router",
   "version": "0.0.0",
-  "description": "",
-  "main": "lib/main",
+  "description": "A complete routing library for React",
+  "tags": [
+    "react",
+    "router"
+  ],
+  "main": "modules/main",
   "directories": {
     "example": "examples"
   },
   "scripts": {
     "test": "script/test --single-run"
   },
-  "author": "",
+  "authors": [
+    "Ryan Florence",
+    "Michael Jackson"
+  ],
   "license": "MIT",
   "devDependencies": {
     "webpack": "^1.2.0-beta5",
@@ -22,7 +29,8 @@
     "karma-webpack": "^1.2.1",
     "karma-mocha": "^0.1.3",
     "karma-chrome-launcher": "^0.1.4",
-    "karma-cli": "0.0.4"
+    "karma-cli": "0.0.4",
+    "rf-release": "^0.1.2"
   },
   "dependencies": {
     "es6-promise": "^1.0.0",

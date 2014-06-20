@@ -6,13 +6,13 @@ module.exports = function(config) {
     frameworks: ['mocha'],
 
     files: [
-      'spec/*.spec.*'
+      'specs/*.spec.*'
     ],
 
     exclude: [],
 
     preprocessors: {
-      'spec/*spec.*': ['webpack']
+      'specs/*spec.*': ['webpack']
     },
 
     webpack: {
