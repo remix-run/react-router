@@ -40,7 +40,7 @@ var Form = React.createClass({
   handleSubmit: function(event) {
     event.preventDefault();
     this.refs.userInput.getDOMNode().value = '';
-    Router.transitionTo('/');
+    ReactRouter.transitionTo('/');
   },
 
   render: function() {
@@ -56,10 +56,12 @@ var Form = React.createClass({
   }
 });
 
-Router(
-  <Route handler={App}>
-    <Route name="dashboard" handler={Dashboard} />
-    <Route name="form" handler={Form} />
-  </Route>
-).renderComponent(document.body);
+var router = (
+    <Route handler={App}>
+      <Route name="dashboard" handler={Dashboard} />
+      <Route name="form" handler={Form} />
+    </Route>
+);
+
+React.renderComponent(router, document.body);
 

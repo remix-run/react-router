@@ -45,11 +45,12 @@ var Task = React.createClass({
   }
 });
 
-Router(
+var router = Router({},
   <Route handler={App}>
-    <Route name="user" path="user/:userId" handler={User}>
-      <Route name="task" path="user/:userId/tasks/:taskId" handler={Task}/>
+    <Route name="user" path="/user/:userId" handler={User}>
+      <Route name="task" path="/user/:userId/tasks/:taskId" handler={Task}/>
     </Route>
   </Route>
-).renderComponent(document.body);
+);
 
+React.renderComponent(router, document.body);

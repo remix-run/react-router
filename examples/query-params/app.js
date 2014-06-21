@@ -32,9 +32,12 @@ var User = React.createClass({
   }
 });
 
-Router(
-  <Route handler={App}>
-    <Route name="user" path="user/:userId" handler={User}/>
-  </Route>
-).renderComponent(document.body);
+var router = (
+  <Router>
+    <Route handler={App}>
+      <Route name="user" path="user/:userId" handler={User}/>
+    </Route>
+  </Router>
+);
 
+React.renderComponent(router, document.body);

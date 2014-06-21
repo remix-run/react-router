@@ -1,7 +1,7 @@
 var invariant = require('react/lib/invariant');
 var warning = require('react/lib/warning');
 var ExecutionEnvironment = require('react/lib/ExecutionEnvironment');
-var normalizePath = require('../Path').normalize;
+var normalizePath = require('../helpers/Path').normalize;
 
 var CHANGE_EVENTS = {
   hash: 'hashchange',
@@ -26,8 +26,7 @@ function getWindowPath() {
 /**
  * The URLStore keeps track of the current URL. In DOM environments, it may be
  * attached to window.location to automatically sync with the URL in a browser's
- * location bar. The Router subscribes to the URLStore to know when the URL
- * changes.
+ * location bar. <Route>s subscribe to the URLStore to know when the URL changes.
  */
 var URLStore = {
 
