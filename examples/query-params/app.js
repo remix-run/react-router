@@ -1,9 +1,8 @@
 /** @jsx React.DOM */
 var React = require('react');
-var ReactRouter = require('../../modules/main');
-var Router = ReactRouter.Router;
-var Route = ReactRouter.Route;
-var Link = ReactRouter.Link;
+var Router = require('../../modules/main');
+var Route = Router.Route;
+var Link = Router.Link;
 
 var App = React.createClass({
   render: function() {
@@ -32,12 +31,10 @@ var User = React.createClass({
   }
 });
 
-var router = (
-  <Router>
-    <Route handler={App}>
-      <Route name="user" path="user/:userId" handler={User}/>
-    </Route>
-  </Router>
+var routes = (
+  <Route handler={App}>
+    <Route name="user" path="user/:userId" handler={User}/>
+  </Route>
 );
 
-React.renderComponent(router, document.body);
+React.renderComponent(routes, document.body);

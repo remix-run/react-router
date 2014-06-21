@@ -1,9 +1,8 @@
 /** @jsx React.DOM */
 var React = require('react');
-var ReactRouter = require('../../modules/main');
-var Router = ReactRouter.Router;
-var Route = ReactRouter.Route;
-var Link = ReactRouter.Link;
+var Router = require('../../modules/main');
+var Route = Router.Route;
+var Link = Router.Link;
 
 var App = React.createClass({
   getInitialState: function() {
@@ -179,12 +178,13 @@ function pretendRequest(email, pass, cb) {
 }
 
 
-Router(
+var routes = (
   <Route handler={App}>
     <Route name="login" handler={Login}/>
     <Route name="logout" handler={Logout}/>
     <Route name="about" handler={About}/>
     <Route name="dashboard" handler={Dashboard}/>
   </Route>
-).renderComponent(document.body);
+);
 
+React.renderComponent(routes, document.body);
