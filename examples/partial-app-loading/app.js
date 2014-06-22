@@ -5,16 +5,16 @@ var Router = ReactRouter.Router;
 var Route = ReactRouter.Route;
 var Link = ReactRouter.Link;
 
-var AsyncJSXRoute = {
-  routeCache: {},
+var AsyncReactComponent = {
+  loadedComponent: null,
 
   load: function() {
-    if (this.routeCache[this.globalName]) {
+    if (this.constructor.loadedComponent) {
       return;
     }
 
-    require.ensure([], function() {
-      this.routeCache[this.globalName] = require('./async-components/' + this.filePath);
+    this.bundle(function(component) {
+      this.constructor.loadedComponent = component;
       this.forceUpdate();
     }.bind(this));
   },
@@ -24,24 +24,22 @@ var AsyncJSXRoute = {
   },
 
   render: function() {
-    var fullRoute = this.routeCache[this.globalName];
-    return fullRoute ? fullRoute(this.props) : this.preRender();
+    var component = this.constructor.loadedComponent;
+    return component ? component(this.props) : this.preRender();
   }
 };
 
 var PreDashboard = React.createClass({
-  mixins: [AsyncJSXRoute],
-  filePath: 'dashboard.js',
-  globalName: 'Dashboard',
+  mixins: [AsyncReactComponent],
+  bundle: require('bundle?lazy!./dashboard.js'),
   preRender: function() {
     return <div>Loading dashboard...</div>
   }
 });
 
 var PreInbox = React.createClass({
-  mixins: [AsyncJSXRoute],
-  filePath: 'inbox.js',
-  globalName: 'Inbox',
+  mixins: [AsyncReactComponent],
+  bundle: require('bundle?lazy!./inbox.js'),
   preRender: function() {
     return <div>Loading inbox...</div>
   }
