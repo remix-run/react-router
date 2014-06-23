@@ -231,6 +231,34 @@ Route({handler: App},
 
 Paths are not inherited from parent routes.
 
+### Link (Component)
+
+Creates an anchor tag that links to a route in the application. Also
+gets the `active` class automatically when the route matches. If you
+change the path of your route, you don't have to change your links.
+
+#### Properties
+
+**to** - The name of the route to link to.
+
+**query** - Object, Query parameters to add to the link. Access query
+parameters in your route handler with `this.props.query`.
+
+**[param]** - Any parameters the route defines are passed by name
+through the link's properties.
+
+#### Example
+
+Given a route like `<Route name="user" path="/users/:userId"/>`:
+
+```xml
+<Link to="user" userId={user.id} params={{foo: bar}}>{user.name}</Link>
+<!-- becomes one of these depending on your router and if the route is
+active -->
+<a href="/users/123?foo=bar" class="active">Michael</a>
+<a href="#/users/123?foo=bar">Michael</a>
+```
+
 ### Handlers
 
 There are some properties and hooks available to the handlers you pass
@@ -297,31 +325,6 @@ var Settings = React.createClass({
 
   //...
 });
-```
-
-### Link (Component)
-
-Creates an anchor tag that links to a route in the application. Also
-gets the `active` class automatically when the route matches. If you
-change the path of your route, you don't have to change your links.
-
-#### Properties
-
-**to** - The name of the route to link to.
-
-**[param]** - Any parameters the route defines are passed by name
-through the link's properties.
-
-#### Example
-
-Given a route like `<Route name="user" path="/users/:userId"/>`:
-
-```xml
-<Link to="user" userId={user.id}>{user.name}</Link>
-<!-- becomes one of these depending on your router and if the route is
-active -->
-<a href="/users/123" class="active">Michael</a>
-<a href="#/users/123">Michael</a>
 ```
 
 Development
