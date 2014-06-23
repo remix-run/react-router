@@ -80,7 +80,7 @@ var RouteStore = {
    * Returns the Route object with the given name, if one exists.
    */
   getRouteByName: function (routeName) {
-    return _namedRoutes[routeName];
+    return _namedRoutes[routeName] || null;
   }
 
 };
