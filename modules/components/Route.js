@@ -11,6 +11,7 @@ var Path = require('../helpers/Path');
 var ActiveStore = require('../stores/ActiveStore');
 var RouteStore = require('../stores/RouteStore');
 var URLStore = require('../stores/URLStore');
+var Promise = require('es6-promise').Promise;
 
 var RESERVED_PROPS = {
   location: true,
