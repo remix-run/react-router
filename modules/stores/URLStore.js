@@ -1,7 +1,6 @@
+var ExecutionEnvironment = require('react/lib/ExecutionEnvironment');
 var invariant = require('react/lib/invariant');
 var warning = require('react/lib/warning');
-var ExecutionEnvironment = require('react/lib/ExecutionEnvironment');
-var normalizePath = require('../helpers/Path').normalize;
 
 var CHANGE_EVENTS = {
   hash: 'hashchange',
@@ -61,7 +60,7 @@ var URLStore = {
       window.location.hash = path;
     } else {
       _lastPath = _currentPath;
-      _currentPath = normalizePath(path);
+      _currentPath = path;
       notifyChange();
     }
   },
@@ -77,7 +76,7 @@ var URLStore = {
     } else if (_location === 'hash') {
       window.location.replace(getWindowPath() + '#' + path);
     } else {
-      _currentPath = normalizePath(path);
+      _currentPath = path;
       notifyChange();
     }
   },

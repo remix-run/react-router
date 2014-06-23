@@ -5,4 +5,5 @@ refute = function (condition, message) {
   assert(!condition, message);
 };
 
-React = require('react');
+React = require('react/addons');
+TestUtils = React.addons.TestUtils;
