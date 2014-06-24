@@ -1,3 +1,10 @@
+v0.2.0
+Tue, 24 Jun 2014 04:59:24 GMT
+
+468bf3b [changed] Deprecate Router interface
+31d1a6e [added] renderComponentToString()
+
+
 v0.1.0
 Thu, 19 Jun 2014 19:11:38 GMT
 
