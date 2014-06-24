@@ -1,6 +1,6 @@
 {
   "name": "react-nested-router",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "A complete routing library for React",
   "tags": [
     "react",
@@ -35,10 +35,12 @@
     "rf-release": "^0.1.2",
     "karma-firefox-launcher": "^0.1.3"
   },
+  "peerDependencies": {
+    "react": "^0.10.0"
+  },
   "dependencies": {
     "es6-promise": "^1.0.0",
     "event-emitter": "^0.3.1",
-    "querystring": "^0.2.0",
-    "react": "^0.10.0"
+    "querystring": "^0.2.0"
   }
 }
