@@ -6,17 +6,22 @@ module.exports = function(config) {
     frameworks: ['mocha'],
 
     files: [
-      'specs/*.spec.*'
+      'specs/main.js'
     ],
 
     exclude: [],
 
     preprocessors: {
-      'specs/*spec.*': ['webpack']
+      'specs/main.js': ['webpack']
     },
 
     webpack: {
       cache: true,
+      // TODO: figure out how to get source maps in here, none of this works
+      //devtool: {
+        //'inline-source-map': true,
+        //inlineSourceMap: true
+      //},
       module: {
         loaders: [
           {test: /\.js$/, loader: 'jsx-loader'}

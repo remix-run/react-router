@@ -1,6 +1,6 @@
 require('./helper');
-var Route = require('../modules/Route');
 var ActiveStore = require('../modules/stores/ActiveStore');
+var Route = require('../modules/components/Route');
 
 var App = React.createClass({
   displayName: 'App',
@@ -10,14 +10,15 @@ var App = React.createClass({
 });
 
 describe('when a Route is active', function () {
+  var route;
   beforeEach(function () {
-    Route.clearNamedRoutes();
+    route = Route({ name: 'products', handler: App });
   });
 
   describe('and it has no params', function () {
     beforeEach(function () {
       ActiveStore.update({
-        routes: [ new Route({ name: 'products', handler: App }) ]
+        activeRoutes: [ route ]
       });
     });
 
@@ -29,9 +30,9 @@ describe('when a Route is active', function () {
   describe('and the right params are given', function () {
     beforeEach(function () {
       ActiveStore.update({
-        routes: [ new Route({ name: 'products', handler: App }) ],
-        params: { id: '123', show: 'true' },
-        query: { search: 'abc' }
+        activeRoutes: [ route ],
+        activeParams: { id: '123', show: 'true' },
+        activeQuery: { search: 'abc' }
       });
     });
 
@@ -57,8 +58,8 @@ describe('when a Route is active', function () {
   describe('and the wrong params are given', function () {
     beforeEach(function () {
       ActiveStore.update({
-        routes: [ new Route({ name: 'products', handler: App }) ],
-        params: { id: 123 }
+        activeRoutes: [ route ],
+        activeParams: { id: 123 }
       });
     });
 

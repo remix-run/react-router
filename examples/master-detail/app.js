@@ -1,25 +1,106 @@
 /** @jsx React.DOM */
 var React = require('react');
-var ReactRouter = require('../../modules/main');
-var Router = ReactRouter.Router;
-var Route = ReactRouter.Route;
-var Link = ReactRouter.Link;
+var Router = require('../../modules/main');
+var Route = Router.Route;
+var Link = Router.Link;
+
+var api = 'http://addressbook-api.herokuapp.com/contacts';
+var _contacts = {};
+var _changeListeners = [];
+var _initCalled = false;
+
+var ContactStore = {
+
+  init: function () {
+    if (_initCalled)
+      return;
+
+    _initCalled = true;
+
+    getJSON(api, function (err, res) {
+      res.contacts.forEach(function (contact) {
+        _contacts[contact.id] = contact;
+      });
+
+      ContactStore.notifyChange();
+    });
+  },
+
+  addContact: function (contact, cb) {
+    postJSON(api, { contact: contact }, function (res) {
+      _contacts[res.contact.id] = res.contact;
+      ContactStore.notifyChange();
+      if (cb) cb(res.contact);
+    });
+  },
+
+  removeContact: function (id, cb) {
+    deleteJSON(api + '/' + id, cb);
+    delete _contacts[id];
+    ContactStore.notifyChange();
+  },
+
+  getContacts: function () {
+    var array = [];
+
+    for (var id in _contacts)
+      array.push(_contacts[id]);
+
+    return array;
+  },
+
+  getContact: function (id) {
+    return _contacts[id];
+  },
+
+  notifyChange: function () {
+    _changeListeners.forEach(function (listener) {
+      listener();
+    });
+  },
+
+  addChangeListener: function (listener) {
+    _changeListeners.push(listener);
+  },
+
+  removeChangeListener: function (listener) {
+    _changeListeners = _changeListeners.filter(function (l) {
+      return listener !== l;
+    });
+  }
+
+};
 
 var App = React.createClass({
   getInitialState: function() {
     return {
-      contacts: [],
+      contacts: ContactStore.getContacts(),
       loading: true
     };
   },
 
+  componentWillMount: function () {
+    ContactStore.init();
+  },
+
   componentDidMount: function() {
-    store.getContacts(function(contacts) {
-      this.setState({
-        contacts: contacts,
-        loading: false
-      });
-    }.bind(this));
+    console.log('componentDidMount')
+    ContactStore.addChangeListener(this.updateContacts);
+  },
+
+  componentWillUnmount: function () {
+    console.log('componentWillUnmount')
+    ContactStore.removeChangeListener(this.updateContacts);
+  },
+
+  updateContacts: function (contacts) {
+    if (!this.isMounted())
+      return;
+
+    this.setState({
+      contacts: ContactStore.getContacts(),
+      loading: false
+    });
   },
 
   indexTemplate: function() {
@@ -50,29 +131,39 @@ var App = React.createClass({
 var Contact = React.createClass({
   getInitialState: function() {
     return {
-      id: this.props.params.id,
-      avatar: 'http://placekitten.com/50/50',
-      loading: true
+      contact: ContactStore.getContact(this.props.params.id)
     };
   },
 
   componentDidMount: function() {
-    store.getContact(this.props.params.id, function(contact) {
-      contact.loading = false;
-      this.setState(contact);
-    }.bind(this));
+    ContactStore.addChangeListener(this.updateContact);
+  },
+
+  componentWillUnmount: function () {
+    ContactStore.removeChangeListener(this.updateContact);
+  },
+
+  updateContact: function () {
+    if (!this.isMounted())
+      return;
+
+    this.setState({
+      contact: ContactStore.getContact(this.props.params.id)
+    });
   },
 
   destroy: function() {
-    store.removeContact(this.state.id);
+    ContactStore.removeContact(this.props.params.id);
     Router.transitionTo('/');
   },
 
   render: function() {
-    var name = this.state.first+' '+this.state.last;
+    var contact = this.state.contact || {};
+    var name = contact.first + ' ' + contact.last;
+    var avatar = contact.avatar || 'http://placekitten.com/50/50';
     return (
       <div className="Contact">
-        <img height="50" src={this.state.avatar}/>
+        <img height="50" src={avatar}/>
         <h3>{name}</h3>
         <button onClick={this.destroy}>Delete</button>
       </div>
@@ -83,12 +174,12 @@ var Contact = React.createClass({
 var NewContact = React.createClass({
   createContact: function(event) {
     event.preventDefault();
-    store.addContact({
+    ContactStore.addContact({
       first: this.refs.first.getDOMNode().value,
       last: this.refs.last.getDOMNode().value
     }, function(contact) {
       Router.transitionTo('contact', { id: contact.id });
-    }.bind(this));
+    });
   },
 
   render: function() {
@@ -112,69 +203,17 @@ var NotFound = React.createClass({
   }
 });
 
+var routes = (
+  <Route handler={App}>
+    <Route name="new" path="contact/new" handler={NewContact}/>
+    <Route name="not-found" path="contact/not-found" handler={NotFound}/>
+    <Route name="contact" path="contact/:id" handler={Contact}/>
+  </Route>
+);
 
-// data store stuff ...
+React.renderComponent(routes, document.body);
 
-var api = 'http://addressbook-api.herokuapp.com/contacts';
-
-var store = {
-  contacts: {
-    loaded: false,
-    map: {},
-    records: []
-  },
-
-  getContacts: function(cb) {
-    if (store.contacts.loaded) {
-      if (cb) cb(store.contacts.records);
-    } else {
-      getJSON(api, function(err, res) {
-        var contacts = res.contacts;
-        store.contacts.loaded = true;
-        store.contacts.records = contacts;
-        store.contacts.map = contacts.reduce(function(map, contact) {
-          map[contact.id] = contact;
-          return map;
-        }, {});
-        if (cb) cb(contacts);
-      });
-    }
-  },
-
-  getContact: function(id, cb) {
-    var contact = store.contacts.map[id];
-    if (contact) {
-      if (cb) cb(contact);
-    } else {
-      var url = api+'/'+id;
-      getJSON(url, function(err, res) {
-        if (err) {
-          return Router.replaceWith('not-found');
-        }
-        var contact = res.contact;
-        store.contacts.map[contact.id] = contact;
-        if (cb) cb(contact);
-      });
-    }
-  },
-
-  addContact: function(contact, cb) {
-    postJSON(api, {contact: contact}, function(res) {
-      var savedContact = res.contact;
-      store.contacts.records.push(savedContact);
-      store.contacts.map[contact.id] = savedContact;
-      if (cb) cb(savedContact);
-    });
-  },
-
-  removeContact: function(id, cb) {
-    var contact = store.contacts.map[id];
-    delete store.contacts.map[id];
-    var index = store.contacts.records.indexOf(contact);
-    store.contacts.records.splice(index, 1);
-    deleteJSON(api+'/'+id, cb);
-  }
-};
+// Request utils.
 
 function getJSON(url, cb) {
   var req = new XMLHttpRequest();
@@ -205,13 +244,3 @@ function deleteJSON(url, cb) {
   req.open('DELETE', url);
   req.send();
 }
-
-
-Router(
-  <Route handler={App}>
-    <Route name="new" path="contact/new" handler={NewContact}/>
-    <Route name="not-found" path="contact/not-found" handler={NotFound}/>
-    <Route name="contact" path="contact/:id" handler={Contact}/>
-  </Route>
-).renderComponent(document.body);
-
