@@ -92,6 +92,23 @@ describe('a Route with custom props', function() {
   });
 });
 
+describe('a Route', function() {
+  it('requires a handler');
+});
+
+describe('a child route', function() {
+  describe('path', function() {
+    it('defaults to /');
+    it('is not required to start with /');
+    it('can be inferred from its name');
+    it('must contain all dynamic segments of its parent route path');
+  });
+
+  describe('name', function() {
+    it('cannot be reused');
+  });
+});
+
 // describe('a Router that renders on the server', function() {
 //   it('works with async willTransitionTo()', function(done) {
 //     var dataStore = 'goodbye';
