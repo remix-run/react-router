@@ -74,12 +74,30 @@ var Route = React.createClass({
 
   statics: {
 
-    handleAsyncError: function (error) {
+    getUnreservedProps: function (props) {
+      return withoutProperties(props, RESERVED_PROPS);
+    },
+
+    /**
+     * Handles errors that were thrown asynchronously. By default, the
+     * error is re-thrown so we don't swallow them silently.
+     */
+    handleAsyncError: function (error, route) {
       throw error; // This error probably originated in a transition hook.
     },
 
-    getUnreservedProps: function (props) {
-      return withoutProperties(props, RESERVED_PROPS);
+    /**
+     * Handles cancelled transitions. By default, redirects replace the
+     * current URL and aborts roll it back.
+     */
+    handleCancelledTransition: function (transition, route) {
+      var reason = transition.cancelReason;
+
+      if (reason instanceof Redirect) {
+        replaceWith(reason.to, reason.params, reason.query);
+      } else if (reason instanceof Abort) {
+        goBack();
+      }
     }
 
   },
@@ -169,30 +187,28 @@ var Route = React.createClass({
    */
   dispatch: function (path, returnRejectedPromise) {
     var transition = new Transition(path);
+    var route = this;
 
-    return syncWithTransition(this, transition).then(function (newState) {
+    var promise = syncWithTransition(route, transition).then(function (newState) {
       if (transition.isCancelled) {
-        var reason = transition.cancelReason;
-
-        if (reason instanceof Redirect) {
-          replaceWith(reason.to, reason.params, reason.query);
-        } else if (reason instanceof Abort) {
-          goBack();
-        }
+        Route.handleCancelledTransition(transition, route);
       } else if (newState) {
         ActiveStore.update(newState);
       }
 
       return transition;
-    }).then(undefined, function (error) {
-      if (returnRejectedPromise)
-        throw error;
-
-      // Use setTimeout to break the promise chain.
-      setTimeout(function () {
-        Route.handleAsyncError(error);
-      });
     });
+
+    if (!returnRejectedPromise) {
+      promise = promise.then(undefined, function (error) {
+        // Use setTimeout to break the promise chain.
+        setTimeout(function () {
+          Route.handleAsyncError(error, route);
+        });
+      });
+    }
+
+    return promise;
   },
 
   render: function () {
