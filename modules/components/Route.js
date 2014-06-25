@@ -212,7 +212,7 @@ var Route = React.createClass({
   },
 
   render: function () {
-    return this.props.handler(this.state.handlerProps);
+    return this.props.handler(computeHandlerProps(this.state.matches || [], this.state.query));
   }
 
 });
@@ -341,7 +341,7 @@ function syncWithTransition(route, transition) {
     toMatches = nextMatches;
   }
 
-  return checkTransitionFromHooks(fromMatches, transition).then(function () {
+  return checkTransitionFromHooks(fromMatches, route.refs, transition).then(function () {
     if (transition.isCancelled)
       return; // No need to continue.
 
@@ -355,7 +355,6 @@ function syncWithTransition(route, transition) {
       var state = {
         path: transition.path,
         matches: nextMatches,
-        handlerProps: computeHandlerProps(nextMatches, query),
         activeParams: params,
         activeQuery: query,
         activeRoutes: nextMatches.map(function (match) {
@@ -376,7 +375,7 @@ function syncWithTransition(route, transition) {
  * the route's handler, so that the deepest nested handlers are called first.
  * Returns a promise that resolves after the last handler.
  */
-function checkTransitionFromHooks(matches, transition) {
+function checkTransitionFromHooks(matches, refs, transition) {
   var promise = Promise.resolve();
 
   reversedArray(matches).forEach(function (match) {
@@ -384,7 +383,7 @@ function checkTransitionFromHooks(matches, transition) {
       var handler = match.route.props.handler;
 
       if (!transition.isCancelled && handler.willTransitionFrom)
-        return handler.willTransitionFrom(transition, match.handlerInstance);
+        return handler.willTransitionFrom(transition, refs[match.refName]);
     });
   });
 
@@ -417,31 +416,33 @@ function checkTransitionToHooks(matches, transition) {
  */
 function computeHandlerProps(matches, query) {
   var props = {
+    ref: null,
     key: null,
     params: null,
     query: null,
     activeRoute: null
   };
 
-  var previousMatch;
-  reversedArray(matches).forEach(function (match) {
+  var childDescriptor;
+  reversedArray(matches).forEach(function (match, index) {
     var route = match.route;
 
     props = Route.getUnreservedProps(route.props);
 
+    props.ref = 'route-' + index;
     props.key = Path.injectParams(route.props.path, match.params);
     props.params = match.params;
     props.query = query;
 
-    if (previousMatch) {
-      props.activeRoute = previousMatch.handlerInstance;
+    if (childDescriptor) {
+      props.activeRoute = childDescriptor;
     } else {
       props.activeRoute = null;
     }
 
-    match.handlerInstance = route.props.handler(props);
+    childDescriptor = route.props.handler(props);
 
-    previousMatch = match;
+    match.refName = props.ref;
   });
 
   return props;
