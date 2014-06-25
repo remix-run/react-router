@@ -65,6 +65,18 @@ way down the view hierarchy. This allows you to create nested layouts
 without having to wire it all up yourself. `Link` components create
 accessible anchor tags to route you around the application.
 
+As an example, if the current path is `/user/17`, the following
+component will be rendered:
+
+```js
+<App activeRoute={
+  <Users activeRoute={<User params={{userId: 17}} />} />
+} />
+```
+
+Each component will also receive a `query` prop equal to a dictionary
+of the current query params.
+
 Here's the rest of the application:
 
 ```js
