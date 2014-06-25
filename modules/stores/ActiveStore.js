@@ -2,7 +2,7 @@ var _activeRoutes = [];
 
 function routeIsActive(routeName) {
   return _activeRoutes.some(function (route) {
-    return route.name === routeName;
+    return route.props.name === routeName;
   });
 }
 
@@ -44,9 +44,9 @@ var ActiveStore = {
 
   update: function (state) {
     state = state || {};
-    _activeRoutes = state.routes || [];
-    _activeParams = state.params || {};
-    _activeQuery = state.query || {};
+    _activeRoutes = state.activeRoutes || [];
+    _activeParams = state.activeParams || {};
+    _activeQuery = state.activeQuery || {};
     notifyChange();
   },
 

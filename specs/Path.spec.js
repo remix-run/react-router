@@ -1,5 +1,5 @@
 require('./helper');
-var Path = require('../modules/Path');
+var Path = require('../modules/helpers/Path');
 
 describe('Path.extractParams', function () {
   describe('when a pattern does not have dynamic segments', function () {

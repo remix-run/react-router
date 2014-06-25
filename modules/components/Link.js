@@ -1,7 +1,8 @@
 var React = require('react');
-var withoutProperties = require('../helpers/withoutProperties');
 var ActiveStore = require('../stores/ActiveStore');
-var Router = require('../Router');
+var withoutProperties = require('../helpers/withoutProperties');
+var transitionTo = require('../helpers/transitionTo');
+var makeHref = require('../helpers/makeHref');
 
 var RESERVED_PROPS = {
   to: true,
@@ -11,20 +12,20 @@ var RESERVED_PROPS = {
 };
 
 /**
- * A Link component is used to create an <a> element that links to a route.
+ * <Link> components are used to create an <a> element that links to a route.
  * When that route is active, the link gets an "active" class name (or the
- * value of its activeClassName prop).
+ * value of its `activeClassName` prop).
  *
  * For example, assuming you have the following route:
  *
  *   <Route name="showPost" path="/posts/:postId" handler={Post}/>
  *
- * You could use the following link to transition to that route:
+ * You could use the following component to link to that route:
  * 
  *   <Link to="showPost" postId="123"/>
  *
  * In addition to params, links may pass along query string parameters
- * using the query prop.
+ * using the `query` prop.
  *
  *   <Link to="showPost" postId="123" query={{show:true}}/>
  */
@@ -67,7 +68,7 @@ var Link = React.createClass({
    * Returns the value of the "href" attribute to use on the DOM element.
    */
   getHref: function () {
-    return Router.makeHref(this.props.to, this.getParams(), this.props.query);
+    return makeHref(this.props.to, this.getParams(), this.props.query);
   },
 
   /**
@@ -107,10 +108,12 @@ var Link = React.createClass({
   },
 
   handleClick: function (event) {
-    if (!isModifiedEvent(event)) {
-      event.preventDefault();
-      Router.transitionTo(this.props.to, this.getParams(), this.props.query);
-    }
+    if (isModifiedEvent(event))
+      return;
+
+    event.preventDefault();
+
+    transitionTo(this.props.to, this.getParams(), this.props.query);
   },
 
   render: function () {
