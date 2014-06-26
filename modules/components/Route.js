@@ -212,7 +212,7 @@ var Route = React.createClass({
   },
 
   render: function () {
-    return this.props.handler(computeHandlerProps(this.state.matches || [], this.state.query));
+    return this.props.handler(computeHandlerProps(this.state.matches || [], this.state.activeQuery));
   }
 
 });
