@@ -53,17 +53,34 @@ var Path = {
     if (!match)
       return null;
 
-    var params = {},
-        constraintsPassed = true;
+    var params = {};
 
     compiled.paramNames.forEach(function (paramName, index) {
-      if (constraints[paramName] && ! constraints[paramName].test(match[index + 1]))
-        constraintsPassed = false;
-
       params[paramName] = match[index + 1];
     });
 
-    return constraintsPassed ? params : null;
+    if (this.testConstraints(params, constraints)) {
+      return params;
+    }
+
+    return null;
+  },
+
+  testConstraints: function (params, constraints) {
+    var pass = true;
+
+    if (! constraints || constraints === {})
+      return true;
+
+    Object.keys(params).forEach(function(param) {
+      if (constraints[param]) {
+        if (! constraints[param].test(params[param])) {
+          pass = false;
+        }
+      }
+    });
+
+    return pass;
   },
 
   /**
