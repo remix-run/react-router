@@ -30,6 +30,7 @@ var RESERVED_PROPS = {
  *   <Link to="showPost" postId="123" query={{show:true}}/>
  */
 var Link = React.createClass({
+  displayName: 'Link',
 
   statics: {
 
