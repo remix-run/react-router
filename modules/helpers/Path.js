@@ -69,9 +69,6 @@ var Path = {
   testConstraints: function (params, constraints) {
     var pass = true;
 
-    if (! constraints || constraints === {})
-      return true;
-
     Object.keys(params).forEach(function(param) {
       if (constraints[param]) {
         if (! constraints[param].test(params[param])) {
