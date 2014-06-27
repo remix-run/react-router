@@ -6,6 +6,7 @@ var makeHref = require('../helpers/makeHref');
 
 var RESERVED_PROPS = {
   to: true,
+  className: true,
   activeClassName: true,
   query: true,
   children: true // ReactChildren
