@@ -71,6 +71,7 @@ var RESERVED_PROPS = {
  *   });
  */
 var Route = React.createClass({
+  displayName: 'Route',
 
   statics: {
 
