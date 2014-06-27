@@ -98,6 +98,14 @@ var Link = React.createClass({
     ActiveStore.removeChangeListener(this.handleActiveChange);
   },
 
+  componentWillReceiveProps: function(props) {
+    var params = Link.getUnreservedProps(props);
+
+    this.setState({
+      isActive: ActiveStore.isActive(props.to, params, props.query)
+    });
+  },
+
   handleActiveChange: function () {
     if (this.isMounted())
       this.updateActive();
