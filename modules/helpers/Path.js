@@ -1,6 +1,8 @@
 var invariant = require('react/lib/invariant');
 var merge = require('react/lib/merge');
 var qs = require('querystring');
+var urlDecode = require('./urlDecode');
+var urlEncode = require('./urlEncode');
 
 var paramMatcher = /((?::[a-z_$][a-z0-9_$]*)|\*)/ig;
 var queryMatcher = /\?(.+)/;
@@ -41,14 +43,14 @@ var Path = {
    */
   extractParams: function (pattern, path) {
     if (!isDynamicPattern(pattern)) {
-      if (pattern === decodeURIComponent(path))
+      if (pattern === urlDecode(path))
         return {}; // No dynamic segments, but the paths match.
 
       return null;
     }
 
     var compiled = compilePattern(pattern);
-    var match = decodeURIComponent(path).match(compiled.matcher);
+    var match = urlDecode(path).match(compiled.matcher);
 
     if (!match)
       return null;
@@ -87,7 +89,7 @@ var Path = {
         'Missing "' + paramName + '" parameter for path "' + pattern + '"'
       );
 
-      return encodeURIComponent(params[paramName]);
+      return urlEncode(params[paramName]);
     });
   },
 
