@@ -127,6 +127,10 @@ describe('Path.injectParams', function () {
       it('returns the correct path', function () {
         expect(Path.injectParams(pattern, { id: 'abc' })).toEqual('comments/abc/edit');
       });
+
+      it('returns the correct path when the value is 0', function () {
+        expect(Path.injectParams(pattern, { id: 0 })).toEqual('comments/0/edit');
+      });
     });
 
     describe('and some params have special URL encoding', function () {
