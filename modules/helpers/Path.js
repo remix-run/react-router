@@ -85,7 +85,7 @@ var Path = {
       var paramName = getParamName(pathSegment);
 
       invariant(
-        params[paramName],
+        params[paramName] != null,
         'Missing "' + paramName + '" parameter for path "' + pattern + '"'
       );
 
