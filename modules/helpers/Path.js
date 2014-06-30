@@ -22,7 +22,7 @@ function compilePattern(pattern) {
 
   var source = pattern.replace(paramMatcher, function (match, pathSegment) {
     paramNames.push(getParamName(pathSegment));
-    return pathSegment === '*' ? '(.*?)' : '([^./?#]+)';
+    return pathSegment === '*' ? '(.*?)' : '([^/?#]+)';
   });
 
   compiled.matcher = new RegExp('^' + source + '$', 'i');
