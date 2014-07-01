@@ -7,7 +7,10 @@
     "router"
   ],
   "main": "modules/main",
-  "repository": "https://github.com/rpflorence/react-nested-router.git",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/rpflorence/react-nested-router.git"
+  },
   "homepage": "https://github.com/rpflorence/react-nested-router",
   "directories": {
     "example": "examples"

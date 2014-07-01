@@ -6,6 +6,7 @@ var makeHref = require('../helpers/makeHref');
 
 var RESERVED_PROPS = {
   to: true,
+  className: true,
   activeClassName: true,
   query: true,
   children: true // ReactChildren
@@ -30,6 +31,7 @@ var RESERVED_PROPS = {
  *   <Link to="showPost" postId="123" query={{show:true}}/>
  */
 var Link = React.createClass({
+  displayName: 'Link',
 
   statics: {
 
@@ -94,6 +96,14 @@ var Link = React.createClass({
 
   componentWillUnmount: function () {
     ActiveStore.removeChangeListener(this.handleActiveChange);
+  },
+
+  componentWillReceiveProps: function(props) {
+    var params = Link.getUnreservedProps(props);
+
+    this.setState({
+      isActive: ActiveStore.isActive(props.to, params, props.query)
+    });
   },
 
   handleActiveChange: function () {
