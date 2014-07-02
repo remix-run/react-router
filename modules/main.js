@@ -1,5 +1,6 @@
 exports.Link = require('./components/Link');
 exports.Route = require('./components/Route');
+exports.Constrainable = require('./mixins/constrainable');
 
 exports.goBack = require('./helpers/goBack');
 exports.replaceWith = require('./helpers/replaceWith');

@@ -5,4 +5,4 @@ require('./Path.spec.js');
 require('./Route.spec.js');
 require('./RouteStore.spec.js');
 require('./URLStore.spec.js');
-
+require('./constrainable.spec.js');
