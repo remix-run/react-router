@@ -58,6 +58,8 @@ var URLStore = {
       notifyChange();
     } else if (_location === 'hash') {
       window.location.hash = path;
+      if (!window.addEventListener)
+        window.location.reload();
     } else {
       _lastPath = _currentPath;
       _currentPath = path;
@@ -139,7 +141,10 @@ var URLStore = {
     if (location === 'hash' && window.location.hash === '')
       URLStore.replace('/');
 
-    window.addEventListener(changeEvent, notifyChange, false);
+    if (window.addEventListener)
+      window.addEventListener(changeEvent, notifyChange, false);
+    else
+      window.attachEvent(changeEvent,notifyChange);
 
     notifyChange();
   },
