@@ -1,3 +1,4 @@
+examples/_*
 examples/build
 node_modules
 
