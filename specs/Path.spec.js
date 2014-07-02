@@ -32,6 +32,12 @@ describe('Path.extractParams', function () {
         expect(Path.extractParams(pattern, 'users/123')).toBe(null);
       });
     });
+
+    describe('and the path matches with a segment containing a .', function () {
+      it('returns an object with the params', function () {
+        expect(Path.extractParams(pattern, 'comments/foo.bar/edit')).toEqual({ id: 'foo.bar' });
+      });
+    });
   });
 
   describe('when a pattern has characters that have special URL encoding', function () {
