@@ -146,6 +146,12 @@ Benefits of This Approach
    Nested Router, you don't get UI on the page without configuring a url
    first. Fortunately, its wildly productive this way, too.
 
+Related Modules
+---------------
+
+- https://github.com/bjyoungblood/rnr-constrained-route - validate paths
+  and parameters on route handlers.
+
 API
 ---
 
