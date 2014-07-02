@@ -24,7 +24,7 @@ var RESERVED_PROPS = {
 /**
  * <Route> components specify components that are rendered to the page when the
  * URL matches a given pattern.
- * 
+ *
  * Routes are arranged in a nested tree structure. When a new URL is requested,
  * the tree is searched depth-first to find a route whose path matches the URL.
  * When one is found, all routes in the tree that lead to it are considered
@@ -251,7 +251,9 @@ function Redirect(to, params, query) {
 }
 
 function findMatches(path, route) {
-  var children = route.props.children, matches;
+  var children  = route.props.children,
+    constraints = route.props.constraints || {},
+    matches;
 
   // Check the subtree first to find the most deeply-nested match.
   if (Array.isArray(children)) {
@@ -276,7 +278,7 @@ function findMatches(path, route) {
   }
 
   // No routes in the subtree matched, so check this route.
-  var params = Path.extractParams(route.props.path, path);
+  var params = Path.extractParams(route.props.path, path, constraints);
 
   if (params)
     return [ makeMatch(route, params) ];

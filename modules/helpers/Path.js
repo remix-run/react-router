@@ -41,7 +41,7 @@ var Path = {
    * and returns an object of param name => value pairs. Returns null if the
    * pattern does not match the given path.
    */
-  extractParams: function (pattern, path) {
+  extractParams: function (pattern, path, constraints) {
     if (!isDynamicPattern(pattern)) {
       if (pattern === urlDecode(path))
         return {}; // No dynamic segments, but the paths match.
@@ -61,7 +61,29 @@ var Path = {
       params[paramName] = match[index + 1];
     });
 
-    return params;
+    if (this.testConstraints(params, constraints)) {
+      return params;
+    }
+
+    return null;
+  },
+
+  testConstraints: function (params, constraints) {
+    var pass = true;
+
+    if (! constraints) {
+      return true;
+    }
+
+    Object.keys(params).forEach(function(param) {
+      if (constraints[param]) {
+        if (! constraints[param].test(params[param])) {
+          pass = false;
+        }
+      }
+    });
+
+    return pass;
   },
 
   /**

@@ -87,6 +87,23 @@ describe('Path.extractParams', function () {
       });
     });
   });
+
+  describe('when a pattern has dynamic segments with constraints', function() {
+    var pattern = '/comments/:id/edit',
+        constraints = {
+            id : /\d+/
+        };
+
+    describe('and the constraints match', function() {
+        expect(Path.extractParams(pattern, '/comments/123/edit', constraints))
+            .toEqual({ id : 123 });
+    });
+
+    describe('and the constraints do not match', function() {
+        expect(Path.extractParams(pattern, '/comments/abc/edit', constraints))
+            .toBe(null);
+    });
+  });
 });
 
 describe('Path.extractParamNames', function () {
@@ -124,7 +141,7 @@ describe('Path.injectParams', function () {
     describe('and a param is missing', function () {
       it('throws an Error', function () {
         expect(function () {
-          Path.injectParams(pattern, {})
+          Path.injectParams(pattern, {});
         }).toThrow(Error);
       });
     });
@@ -190,5 +207,35 @@ describe('Path.normalize', function () {
     it('reduces them to a single slash', function () {
       expect(Path.normalize('//a/b/c')).toEqual('/a/b/c');
     });
+  });
+});
+
+describe('Path.testConstraints', function () {
+  it('returns false when one or more constraints fail', function () {
+    var params = {
+      id   : 123,
+      name : 'Abc'
+    };
+
+    var constraints = {
+      id : /^\d+$/,
+      name : /^[a-z]+$/
+    };
+
+    expect(Path.testConstraints(params, constraints)).toBe(false);
+  });
+
+  it('returns true when constraints pass', function () {
+    var params = {
+      id   : 123,
+      name : 'Abc'
+    };
+
+    var constraints = {
+      id : /^\d+$/,
+      name : /^[A-Za-z]+$/
+    };
+
+    expect(Path.testConstraints(params, constraints)).toBe(true);
   });
 });
