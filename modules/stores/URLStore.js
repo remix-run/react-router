@@ -139,7 +139,7 @@ var URLStore = {
     if (location === 'hash' && window.location.hash === '')
       URLStore.replace('/');
 
-    if (window.addEventListener) { //check for IE 8
+    if (window.addEventListener) {
       window.addEventListener(changeEvent, notifyChange, false);
     } else {
       window.attachEvent(changeEvent, notifyChange);
@@ -157,7 +157,7 @@ var URLStore = {
 
     var changeEvent = CHANGE_EVENTS[_location];
 
-    if (window.addEventListener) {
+    if (window.removeEventListener) {
       window.removeEventListener(changeEvent, notifyChange, false);
     } else {
       window.detachEvent(changeEvent, notifyChange);
