@@ -139,10 +139,11 @@ var URLStore = {
     if (location === 'hash' && window.location.hash === '')
       URLStore.replace('/');
 
-    if (window.addEventListener) //check for IE 8
+    if (window.addEventListener) { //check for IE 8
       window.addEventListener(changeEvent, notifyChange, false);
-    else
+    } else {
       window.attachEvent(changeEvent, notifyChange);
+    }
 
     notifyChange();
   },
@@ -156,7 +157,11 @@ var URLStore = {
 
     var changeEvent = CHANGE_EVENTS[_location];
 
-    window.removeEventListener(changeEvent, notifyChange, false);
+    if (window.addEventListener) {
+      window.removeEventListener(changeEvent, notifyChange, false);
+    } else {
+      window.detachEvent(changeEvent, notifyChange);
+    }
 
     _location = null;
   },
