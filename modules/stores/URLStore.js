@@ -3,7 +3,7 @@ var invariant = require('react/lib/invariant');
 var warning = require('react/lib/warning');
 
 var CHANGE_EVENTS = {
-  hash: 'hashchange',
+  hash: (window.addEventListener) ? 'hashchange' : 'onhashchange',
   history: 'popstate'
 };
 
@@ -139,7 +139,10 @@ var URLStore = {
     if (location === 'hash' && window.location.hash === '')
       URLStore.replace('/');
 
-    window.addEventListener(changeEvent, notifyChange, false);
+    if (window.addEventListener) //check for IE 8
+      window.addEventListener(changeEvent, notifyChange, false);
+    else
+      window.attachEvent(changeEvent, notifyChange);
 
     notifyChange();
   },
