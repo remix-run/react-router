@@ -213,6 +213,11 @@ var Route = React.createClass({
   },
 
   render: function () {
+    // TODO: In React 0.11 we will be able to `return null` here.
+    // https://github.com/facebook/react/issues/1058
+    if (!this.state.path)
+      return React.DOM.div();
+
     return this.props.handler(computeHandlerProps(this.state.matches || [], this.state.activeQuery));
   }
 
