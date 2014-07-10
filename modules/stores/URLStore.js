@@ -53,6 +53,11 @@ var URLStore = {
    * Pushes the given path onto the browser navigation stack.
    */
   push: function (path) {
+    // Make push idempotent.
+    if (path === _currentPath) {
+      return;
+    }
+
     if (_location === 'history') {
       window.history.pushState({ path: path }, '', path);
       notifyChange();
