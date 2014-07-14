@@ -1,3 +1,14 @@
+v0.2.1
+Mon, 14 Jul 2014 17:31:21 GMT
+
+0f86654 [fixed] checks for class instead of components
+a3d6e2a [changed] Render empty div before transition hooks
+f474ab1 [changed] '.' is no longer a path delimeter
+f3dcdd7 [fixed] injectParams invariant should not throw on values that coerce to false.
+468bf3b [changed] Deprecate Router interface
+31d1a6e [added] renderComponentToString()
+
+
 v0.2.0
 Tue, 24 Jun 2014 04:59:24 GMT
 
