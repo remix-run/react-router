@@ -105,7 +105,7 @@ var Route = React.createClass({
 
   propTypes: {
     location: React.PropTypes.oneOf([ 'hash', 'history' ]).isRequired,
-    handler: React.PropTypes.component.isRequired,
+    handler: React.PropTypes.any.isRequired,
     path: React.PropTypes.string,
     name: React.PropTypes.string,
   },
