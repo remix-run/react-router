@@ -1,32 +1,6 @@
 var _activeRoutes = [];
-
-function routeIsActive(routeName) {
-  return _activeRoutes.some(function (route) {
-    return route.props.name === routeName;
-  });
-}
-
 var _activeParams = {};
-
-function paramsAreActive(params) {
-  for (var property in params) {
-    if (_activeParams[property] !== String(params[property]))
-      return false;
-  }
-
-  return true;
-}
-
 var _activeQuery = {};
-
-function queryIsActive(query) {
-  for (var property in query) {
-    if (_activeQuery[property] !== String(query[property]))
-      return false;
-  }
-
-  return true;
-}
 
 var EventEmitter = require('event-emitter');
 var _events = EventEmitter();
@@ -42,27 +16,6 @@ function notifyChange() {
  */
 var ActiveStore = {
 
-  update: function (state) {
-    state = state || {};
-    _activeRoutes = state.activeRoutes || [];
-    _activeParams = state.activeParams || {};
-    _activeQuery = state.activeQuery || {};
-    notifyChange();
-  },
-
-  /**
-   * Returns true if the route with the given name, URL parameters, and query
-   * are all currently active.
-   */
-  isActive: function (routeName, params, query) {
-    var isActive = routeIsActive(routeName) && paramsAreActive(params);
-
-    if (query)
-      isActive = isActive && queryIsActive(query);
-
-    return isActive;
-  },
-
   /**
    * Adds a listener that will be called when this store changes.
    */
@@ -75,6 +28,32 @@ var ActiveStore = {
    */
   removeChangeListener: function (listener) {
     _events.off('change', listener);
+  },
+
+  /**
+   * Updates the currently active state and notifies all listeners.
+   * This is automatically called by routes as they become active.
+   */
+  updateState: function (state) {
+    state = state || {};
+
+    _activeRoutes = state.activeRoutes || [];
+    _activeParams = state.activeParams || {};
+    _activeQuery = state.activeQuery || {};
+
+    notifyChange();
+  },
+
+  /**
+   * Returns an object with the currently active `routes`, `params`,
+   * and `query`.
+   */
+  getState: function () {
+    return {
+      routes: _activeRoutes,
+      params: _activeParams,
+      query: _activeQuery
+    };
   }
 
 };

@@ -194,7 +194,7 @@ var Route = React.createClass({
       if (transition.isCancelled) {
         Route.handleCancelledTransition(transition, route);
       } else if (newState) {
-        ActiveStore.update(newState);
+        ActiveStore.updateState(newState);
       }
 
       return transition;

@@ -1,5 +1,5 @@
 var React = require('react');
-var ActiveStore = require('../stores/ActiveStore');
+var ActiveState = require('../mixins/ActiveState');
 var withoutProperties = require('../helpers/withoutProperties');
 var transitionTo = require('../helpers/transitionTo');
 var makeHref = require('../helpers/makeHref');
@@ -31,7 +31,10 @@ var RESERVED_PROPS = {
  *   <Link to="showPost" postId="123" query={{show:true}}/>
  */
 var Link = React.createClass({
+
   displayName: 'Link',
+
+  mixins: [ ActiveState ],
 
   statics: {
 
@@ -86,34 +89,17 @@ var Link = React.createClass({
     return className;
   },
 
-  componentWillMount: function () {
-    ActiveStore.addChangeListener(this.handleActiveChange);
-  },
-
-  componentDidMount: function () {
-    this.updateActive();
-  },
-
-  componentWillUnmount: function () {
-    ActiveStore.removeChangeListener(this.handleActiveChange);
-  },
-
-  componentWillReceiveProps: function(props) {
-    var params = Link.getUnreservedProps(props);
+  componentWillReceiveProps: function (nextProps) {
+    var params = Link.getUnreservedProps(nextProps);
 
     this.setState({
-      isActive: ActiveStore.isActive(props.to, params, props.query)
+      isActive: Link.isActive(nextProps.to, params, nextProps.query)
     });
   },
 
-  handleActiveChange: function () {
-    if (this.isMounted())
-      this.updateActive();
-  },
-
-  updateActive: function () {
+  updateActiveState: function () {
     this.setState({
-      isActive: ActiveStore.isActive(this.props.to, this.getParams(), this.props.query)
+      isActive: Link.isActive(this.props.to, this.getParams(), this.props.query)
     });
   },
 
