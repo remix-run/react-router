@@ -88,7 +88,8 @@ var Path = {
         'Missing "' + paramName + '" parameter for path "' + pattern + '"'
       );
 
-      return URL.encode(params[paramName]);
+      // Preserve forward slashes.
+      return String(params[paramName]).split('/').map(URL.encode).join('/');
     });
   },
 

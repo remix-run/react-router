@@ -144,6 +144,12 @@ describe('Path.injectParams', function () {
         expect(Path.injectParams(pattern, { id: 'one, two' })).toEqual('comments/one%2C+two/edit');
       });
     });
+
+    describe('and a param has a forward slash', function () {
+      it('preserves the forward slash', function () {
+        expect(Path.injectParams(pattern, { id: 'the/id' })).toEqual('comments/the/id/edit');
+      });
+    });
   });
 });
 
