@@ -11,15 +11,15 @@ var _location;
 var _currentPath = '/';
 var _lastPath = null;
 
+function getWindowPath() {
+  return window.location.pathname + window.location.search;
+}
+
 var EventEmitter = require('event-emitter');
 var _events = EventEmitter();
 
 function notifyChange() {
   _events.emit('change');
-}
-
-function getWindowPath() {
-  return window.location.pathname + window.location.search;
 }
 
 /**
@@ -28,6 +28,20 @@ function getWindowPath() {
  * location bar. <Route>s subscribe to the URLStore to know when the URL changes.
  */
 var URLStore = {
+
+  /**
+   * Adds a listener that will be called when this store changes.
+   */
+  addChangeListener: function (listener) {
+    _events.on('change', listener);
+  },
+
+  /**
+   * Removes the given change listener.
+   */
+  removeChangeListener: function (listener) {
+    _events.off('change', listener);
+  },
 
   /**
    * Returns the type of navigation that is currently being used.
@@ -164,20 +178,6 @@ var URLStore = {
     }
 
     _location = null;
-  },
-
-  /**
-   * Adds a listener that will be called when this store changes.
-   */
-  addChangeListener: function (listener) {
-    _events.on('change', listener);
-  },
-
-  /**
-   * Removes the given change listener.
-   */
-  removeChangeListener: function (listener) {
-    _events.off('change', listener);
   }
 
 };
