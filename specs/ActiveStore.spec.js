@@ -17,7 +17,7 @@ describe('when a Route is active', function () {
 
   describe('and it has no params', function () {
     beforeEach(function () {
-      ActiveStore.update({
+      ActiveStore.updateState({
         activeRoutes: [ route ]
       });
     });
@@ -29,7 +29,7 @@ describe('when a Route is active', function () {
 
   describe('and the right params are given', function () {
     beforeEach(function () {
-      ActiveStore.update({
+      ActiveStore.updateState({
         activeRoutes: [ route ],
         activeParams: { id: '123', show: 'true' },
         activeQuery: { search: 'abc' }
@@ -57,7 +57,7 @@ describe('when a Route is active', function () {
 
   describe('and the wrong params are given', function () {
     beforeEach(function () {
-      ActiveStore.update({
+      ActiveStore.updateState({
         activeRoutes: [ route ],
         activeParams: { id: 123 }
       });

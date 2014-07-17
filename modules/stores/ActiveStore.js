@@ -2,6 +2,30 @@ var _activeRoutes = [];
 var _activeParams = {};
 var _activeQuery = {};
 
+function routeIsActive(routeName) {
+  return _activeRoutes.some(function (route) {
+    return route.props.name === routeName;
+  });
+}
+
+function paramsAreActive(params) {
+  for (var property in params) {
+    if (_activeParams[property] !== String(params[property]))
+      return false;
+  }
+
+  return true;
+}
+
+function queryIsActive(query) {
+  for (var property in query) {
+    if (_activeQuery[property] !== String(query[property]))
+      return false;
+  }
+
+  return true;
+}
+
 var EventEmitter = require('event-emitter');
 var _events = EventEmitter();
 
@@ -45,15 +69,16 @@ var ActiveStore = {
   },
 
   /**
-   * Returns an object with the currently active `routes`, `params`,
-   * and `query`.
+   * Returns true if the route with the given name, URL parameters, and query
+   * are all currently active.
    */
-  getState: function () {
-    return {
-      routes: _activeRoutes,
-      params: _activeParams,
-      query: _activeQuery
-    };
+  isActive: function (routeName, params, query) {
+    var isActive = routeIsActive(routeName) && paramsAreActive(params);
+
+    if (query)
+      return isActive && queryIsActive(query);
+
+    return isActive;
   }
 
 };

@@ -1,29 +1,5 @@
 var ActiveStore = require('../stores/ActiveStore');
 
-function routeIsActive(activeRoutes, routeName) {
-  return activeRoutes.some(function (route) {
-    return route.props.name === routeName;
-  });
-}
-
-function paramsAreActive(activeParams, params) {
-  for (var property in params) {
-    if (activeParams[property] !== String(params[property]))
-      return false;
-  }
-
-  return true;
-}
-
-function queryIsActive(activeQuery, query) {
-  for (var property in query) {
-    if (activeQuery[property] !== String(query[property]))
-      return false;
-  }
-
-  return true;
-}
-
 /**
  * A mixin for components that need to know about the routes, params,
  * and query that are currently active. Components that use it get two
@@ -62,15 +38,7 @@ var ActiveState = {
      * Returns true if the route with the given name, URL parameters, and query
      * are all currently active.
      */
-    isActive: function (routeName, params, query) {
-      var state = ActiveStore.getState();
-      var isActive = routeIsActive(state.routes, routeName) && paramsAreActive(state.params, params);
-
-      if (query)
-        return isActive && queryIsActive(state.query, query);
-
-      return isActive;
-    }
+    isActive: ActiveStore.isActive
 
   },
 
