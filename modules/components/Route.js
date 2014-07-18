@@ -447,8 +447,9 @@ function computeHandlerProps(matches, query) {
       props.activeRoute = emptyFunction.thatReturnsNull;
     }
 
-    childHandler = function (props, addedProps, children) {
-      return route.props.handler(mergeProperties(props, addedProps), children);
+    childHandler = function (props, addedProps) {
+      var children = Array.prototype.slice.call(arguments, 2);
+      return route.props.handler.apply(null, [mergeProperties(props, addedProps)].concat(children));
     }.bind(this, props);
 
     match.refName = props.ref;
