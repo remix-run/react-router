@@ -1,3 +1,5 @@
+var mergeProperties = require('../helpers/mergeProperties');
+
 var _activeRoutes = [];
 var _activeParams = {};
 var _activeQuery = {};
@@ -69,24 +71,24 @@ var ActiveStore = {
   },
 
   /**
-   * Returns an array of the currently active routes.
+   * Returns a read-only array of the currently active routes.
    */
   getActiveRoutes: function () {
-    return _activeRoutes;
+    return _activeRoutes.slice(0);
   },
 
   /**
-   * Returns a hash of the currently active params.
+   * Returns a read-only hash of the currently active params.
    */
   getActiveParams: function () {
-    return _activeParams;
+    return mergeProperties({}, _activeParams);
   },
 
   /**
-   * Returns a hash of the currently active query parameters.
+   * Returns a read-only hash of the currently active query parameters.
    */
   getActiveQuery: function () {
-    return _activeQuery;
+    return mergeProperties({}, _activeQuery);
   },
 
   /**
