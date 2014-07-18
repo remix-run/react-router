@@ -443,7 +443,7 @@ function computeHandlerProps(matches, query) {
     if (childHandler) {
       props.activeRoute = childHandler;
     } else {
-      props.activeRoute = null;
+      props.activeRoute = function() { return null; };
     }
 
     childHandler = function (props, addedProps, children) {
