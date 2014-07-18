@@ -164,7 +164,7 @@ Configuration component to declare your application's routes and view hierarchy.
 **location** - The method to use for page navigation when initializing the router.
 May be either "hash" to use URLs with hashes in them and the `hashchange` event or
 "history" to use the HTML5 history API. This prop is only ever used on the root
-route that is rendered into the page.
+route that is rendered into the page. The default is "hash".
 
 **name** - The name of the route, used in the `Link` component and the
 router's transition methods.
