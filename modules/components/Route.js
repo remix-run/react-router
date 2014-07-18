@@ -64,7 +64,7 @@ var RESERVED_PROPS = {
  *     render: function () {
  *       return (
  *         <div class="application">
- *           {this.props.activeRoute}
+ *           {this.props.activeRoute()}
  *         </div>
  *       );
  *     }
@@ -429,7 +429,7 @@ function computeHandlerProps(matches, query) {
     activeRoute: null
   };
 
-  var childDescriptor;
+  var childHandler;
   reversedArray(matches).forEach(function (match, index) {
     var route = match.route;
 
@@ -440,13 +440,15 @@ function computeHandlerProps(matches, query) {
     props.params = match.params;
     props.query = query;
 
-    if (childDescriptor) {
-      props.activeRoute = childDescriptor;
+    if (childHandler) {
+      props.activeRoute = childHandler;
     } else {
       props.activeRoute = null;
     }
 
-    childDescriptor = route.props.handler(props);
+    childHandler = function (props, addedProps, children) {
+      return route.props.handler(mergeProperties(props, addedProps), children);
+    }.bind(this, props);
 
     match.refName = props.ref;
   });

@@ -34,7 +34,7 @@ var App = React.createClass({
           <li><Link to="about">About</Link></li>
           <li><Link to="dashboard">Dashboard</Link> (authenticated)</li>
         </ul>
-        {this.props.activeRoute}
+        {this.props.activeRoute()}
       </div>
     );
   }
@@ -99,7 +99,7 @@ var Login = React.createClass({
     var errors = this.state.error ? <p>Bad login information</p> : '';
     return (
       <form onSubmit={this.handleSubmit}>
-        <label><input ref="email" placeholder="email" defaultValue="joe@example.com"/></label> 
+        <label><input ref="email" placeholder="email" defaultValue="joe@example.com"/></label>
         <label><input ref="pass" placeholder="password"/></label> (hint: password1)<br/>
         <button type="submit">login</button>
         {errors}
