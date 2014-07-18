@@ -1,6 +1,6 @@
 var React = require('react');
 var ActiveState = require('../mixins/ActiveState');
-var ActiveStore = require('../helpers/ActiveStore');
+var ActiveStore = require('../stores/ActiveStore');
 var mergeProperties = require('../helpers/mergeProperties');
 var withoutProperties = require('../helpers/withoutProperties');
 var transitionTo = require('../helpers/transitionTo');
