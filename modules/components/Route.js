@@ -446,7 +446,8 @@ function computeHandlerProps(matches, query) {
       props.activeRoute = null;
     }
 
-    childHandler = function (props, addedProps, children) {
+    childHandler = function (props, addedProps) {
+      var children = Array.prototype.slice.call(arguments, 2);
       return route.props.handler.apply(null, [mergeProperties(props, addedProps)].concat(children));
     }.bind(this, props);
 
