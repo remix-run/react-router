@@ -60,8 +60,8 @@ React.renderComponent((
 
 When a `Route` is active, you'll get an instance of `handler`
 automatically rendered for you. When one of the child routes is active,
-you can render it with `this.props.activeRoute()` in the parent all the
-way down the view hierarchy. This allows you to create nested layouts
+the component will be available as `this.props.activeRoute` in the parent
+all the way down the view hierarchy. This allows you to create nested layouts
 without having to wire it all up yourself. `Link` components create
 accessible anchor tags to route you around the application.
 
@@ -91,7 +91,7 @@ var App = React.createClass({
           <li><Link to="users">Users</Link></li>
           <li><Link to="user" userId="123">User 123</Link></li>
         </ul>
-        {this.props.activeRoute()}
+        <this.props.activeRoute/>
       </div>
     );
   }
@@ -108,7 +108,7 @@ var Users = React.createClass({
     return (
       <div>
         <h2>Users</h2>
-        {this.props.activeRoute()}
+        <this.props.activeRoute/>
       </div>
     );
   }
@@ -179,8 +179,10 @@ routes do not inherit the path of their parent.
 #### Children
 
 Routes can be nested. When a child route matches, the parent route's
-handler will have an instance of the child route's handler available on
-`this.props.activeRoute()`.
+handler will have an instance of the child route's handler available as
+`this.props.activeRoute`. You can then render it in the parent
+passing in any additional props as needed.
+
 #### Examples
 
 ```xml
@@ -213,9 +215,8 @@ props and static methods available to these components.
 
 #### Props
 
-**this.props.activeRoute** - The active child route handler instance.
-Use it in your render method to render the child route. You can pass
-additional props to it for rendering.
+**this.props.activeRoute** - The active child route handler.
+Use it in your render method to render the child route.
 
 **this.props.params** - When a route has dynamic segments like `<Route
 path="users/:userId"/>` the dynamic values are available at
