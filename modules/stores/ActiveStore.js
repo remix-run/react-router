@@ -69,6 +69,27 @@ var ActiveStore = {
   },
 
   /**
+   * Returns an array of the currently active routes.
+   */
+  getActiveRoutes: function () {
+    return _activeRoutes;
+  },
+
+  /**
+   * Returns a hash of the currently active params.
+   */
+  getActiveParams: function () {
+    return _activeParams;
+  },
+
+  /**
+   * Returns a hash of the currently active query parameters.
+   */
+  getActiveQuery: function () {
+    return _activeQuery;
+  },
+
+  /**
    * Returns true if the route with the given name, URL parameters, and query
    * are all currently active.
    */

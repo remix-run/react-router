@@ -1,5 +1,7 @@
 var React = require('react');
 var ActiveState = require('../mixins/ActiveState');
+var ActiveStore = require('../helpers/ActiveStore');
+var mergeProperties = require('../helpers/mergeProperties');
 var withoutProperties = require('../helpers/withoutProperties');
 var transitionTo = require('../helpers/transitionTo');
 var makeHref = require('../helpers/makeHref');
@@ -66,7 +68,8 @@ var Link = React.createClass({
    * Returns a hash of URL parameters to use in this <Link>'s path.
    */
   getParams: function () {
-    return Link.getUnreservedProps(this.props);
+    // Links may omit active params. See #89
+    return mergeProperties(ActiveStore.getActiveParams(), Link.getUnreservedProps(this.props));
   },
 
   /**
