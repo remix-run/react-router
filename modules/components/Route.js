@@ -443,11 +443,11 @@ function computeHandlerProps(matches, query) {
     if (childHandler) {
       props.activeRoute = childHandler;
     } else {
-      props.activeRoute = null;
+      props.activeRoute = function() { return null; };
     }
 
     childHandler = function (props, addedProps, children) {
-      return route.props.handler(mergeProperties(props, addedProps), children);
+      return route.props.handler.apply(null, [mergeProperties(props, addedProps)].concat(children));
     }.bind(this, props);
 
     match.refName = props.ref;
