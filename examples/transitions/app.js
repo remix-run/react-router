@@ -12,7 +12,7 @@ var App = React.createClass({
           <li><Link to="dashboard">Dashboard</Link></li>
           <li><Link to="form">Form</Link></li>
         </ul>
-        {this.props.activeRoute || <h1>Home</h1>}
+        {this.props.activeRoute() || <h1>Home</h1>}
       </div>
     );
   }

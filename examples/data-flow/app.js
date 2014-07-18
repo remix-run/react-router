@@ -56,7 +56,7 @@ var App = React.createClass({
           {links}
         </ul>
         <div className="Detail">
-          {this.props.activeRoute}
+          {this.props.activeRoute()}
         </div>
       </div>
     );
