@@ -50,7 +50,8 @@
   },
   "browserify": {
     "transform": [
-      "browserify-shim"
+      "browserify-shim",
+      "envify"
     ]
   },
   "browserify-shim": {
