@@ -10,11 +10,15 @@ var App = React.createClass({
 
 describe('a Route that matches the URL', function () {
   it('returns an array', function () {
-    var route = Route({ path: '/a/b/c', handler: App });
+    var route = TestUtils.renderIntoDocument(
+      Route({ handler: App },
+        Route({ path: '/a/b/c', handler: App })
+      )
+    );
 
     var matches = route.match('/a/b/c');
     assert(matches);
-    expect(matches.length).toEqual(1);
+    expect(matches.length).toEqual(2);
 
     var rootMatch = getRootMatch(matches);
     expect(rootMatch.params).toEqual({});
@@ -22,11 +26,15 @@ describe('a Route that matches the URL', function () {
 
   describe('that contains dynamic segments', function () {
     it('returns an array with the correct params', function () {
-      var route = Route({ path: '/posts/:id/edit', handler: App });
+      var route = TestUtils.renderIntoDocument(
+        Route({ handler: App },
+          Route({ path: '/posts/:id/edit', handler: App })
+        )
+      );
 
       var matches = route.match('/posts/abc/edit');
       assert(matches);
-      expect(matches.length).toEqual(1);
+      expect(matches.length).toEqual(2);
 
       var rootMatch = getRootMatch(matches);
       expect(rootMatch.params).toEqual({ id: 'abc' });
@@ -36,38 +44,49 @@ describe('a Route that matches the URL', function () {
 
 describe('a Route that does not match the URL', function () {
   it('returns null', function () {
-    var route = Route({ path: '/a/b/c', handler: App });
+    var route = TestUtils.renderIntoDocument(
+      Route({ handler: App },
+        Route({ path: '/a/b/c', handler: App })
+      )
+    );
+
     expect(route.match('/not-found')).toBe(null);
   });
 });
 
 describe('a nested Route that matches the URL', function () {
   it('returns the appropriate params for each match', function () {
-    var route = Route({ name: 'posts', path: '/posts/:id', handler: App },
-      Route({ name: 'comment', path: '/posts/:id/comments/:commentId', handler: App })
+    var route = TestUtils.renderIntoDocument(
+      Route({ handler: App },
+        Route({ name: 'posts', path: '/posts/:id', handler: App },
+          Route({ name: 'comment', path: '/posts/:id/comments/:commentId', handler: App })
+        )
+      )
     );
 
     var matches = route.match('/posts/abc/comments/123');
     assert(matches);
-    expect(matches.length).toEqual(2);
+    expect(matches.length).toEqual(3);
 
     var rootMatch = getRootMatch(matches);
     expect(rootMatch.route.props.name).toEqual('comment');
     expect(rootMatch.params).toEqual({ id: 'abc', commentId: '123' });
 
-    var firstMatch = matches[0];
-    expect(firstMatch.route.props.name).toEqual('posts');
-    expect(firstMatch.params).toEqual({ id: 'abc' });
+    var postsMatch = matches[1];
+    expect(postsMatch.route.props.name).toEqual('posts');
+    expect(postsMatch.params).toEqual({ id: 'abc' });
   });
 });
 
 describe('multiple nested Router that match the URL', function () {
   it('returns the first one in the subtree, depth-first', function () {
-    var route = Route({ path: '/', handler: App },
-      Route({ path: '/a', handler: App },
-        Route({ path: '/a/b', name: 'expected', handler: App })
-      ),
-      Route({ path: '/a/b', handler: App })
+    var route = TestUtils.renderIntoDocument(
+      Route({ handler: App },
+        Route({ path: '/a', handler: App },
+          Route({ path: '/a/b', name: 'expected', handler: App })
+        ),
+        Route({ path: '/a/b', handler: App })
+      )
     );
 
     var matches = route.match('/a/b');
@@ -81,12 +100,13 @@ describe('multiple nested Router that match the URL', function () {
 
 describe('a Route with custom props', function() {
   it('receives props', function (done) {
-    var route = Route({ handler: App, customProp: 'prop' });
-    var component = TestUtils.renderIntoDocument(route);
+    var route = TestUtils.renderIntoDocument(
+      Route({ handler: App, customProp: 'prop' })
+    );
 
     route.dispatch('/').then(function () {
-      assert(component.props.customProp);
-      expect(component.props.customProp).toEqual('prop');
+      assert(route.props.customProp);
+      expect(route.props.customProp).toEqual('prop');
       done();
     });
   });
