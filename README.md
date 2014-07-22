@@ -66,17 +66,17 @@ React.renderComponent((
 ), document.body);
 ```
 
-Urls will be matched to the deepest route, and then all the routes up
+- Urls will be matched to the deepest route, and then all the routes up
 the hierarchy are activated and their "handlers" (normal React
 components) will be rendered.
 
-Each handler will receive a `params` property containing the matched
+- Each handler will receive a `params` property containing the matched
 parameters form the url, like `:userId`.
 
-Handlers also receive a `query` prop equal to a dictionary of the
+- Handlers also receive a `query` prop equal to a dictionary of the
 current query params.
 
-Parent routes will receive a `activeRoute` property. Its a function that
+- Parent routes will receive a `activeRoute` property. Its a function that
 will render the active child route handler.
 
 Here's the rest of the application:
