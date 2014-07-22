@@ -4,45 +4,30 @@ var Router = require('../../modules/main');
 var Route = Router.Route;
 var Link = Router.Link;
 
-// Taco store!
-
-var _tacos = [
-  { name: 'duck confit' },
-  { name: 'carne asada' },
-  { name: 'shrimp' }
-];
-
-var tacoStore = {
-  getAll: function () {
-    return _tacos;
-  },
-  addTaco: function (taco) {
-    _tacos.push(taco);
-    this.onChange();
-  },
-  onChange: function () {}
-};
-
-// Components
-
 var App = React.createClass({
   getInitialState: function() {
     return {
-      tacos: tacoStore.getAll()
+      tacos: [
+        { name: 'duck confit' },
+        { name: 'carne asada' },
+        { name: 'shrimp' }
+      ]
     };
   },
 
   addTaco: function() {
     var name = prompt('taco name?');
-    tacoStore.addTaco({ name: name });
+    this.setState({
+      tacos: this.state.tacos.concat({name: name})
+    });
   },
 
-  componentWillMount: function () {
-    tacoStore.onChange = this.updateTacos;
-  },
-
-  updateTacos: function () {
-    this.setState({ tacos: tacoStore.getAll() });
+  handleRemoveTaco: function(removedTaco) {
+    var tacos = this.state.tacos.filter(function(taco) {
+      return taco.name != removedTaco;
+    });
+    this.setState({tacos: tacos});
+    Router.transitionTo('/');
   },
 
   render: function() {
@@ -56,7 +41,7 @@ var App = React.createClass({
           {links}
         </ul>
         <div className="Detail">
-          {this.props.activeRoute()}
+          {this.props.activeRoute({onRemoveTaco: this.handleRemoveTaco})}
         </div>
       </div>
     );
@@ -64,10 +49,15 @@ var App = React.createClass({
 });
 
 var Taco = React.createClass({
+  remove: function() {
+    this.props.onRemoveTaco(this.props.params.name);
+  },
+
   render: function() {
     return (
       <div className="Taco">
         <h1>{this.props.params.name}</h1>
+        <button onClick={this.remove}>remove</button>
       </div>
     );
   }

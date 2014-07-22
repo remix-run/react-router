@@ -23,7 +23,7 @@ var App = React.createClass({
           {links}
         </ul>
         <div className="Detail">
-          {this.props.activeRoute || this.indexTemplate()}
+          {this.props.activeRoute() || this.indexTemplate()}
         </div>
       </div>
     );
@@ -42,6 +42,7 @@ var State = React.createClass({
   render: function() {
     return (
       <div className="State">
+        <h1>{this.state.name}</h1>
         <img src={this.imageUrl()}/>
       </div>
     );
