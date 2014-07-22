@@ -69,13 +69,13 @@ var REF_NAME = '__activeRoute__';
  *   ), document.body);
  *
  * Handlers for Route components that contain children can render their active
- * child route using the activeRoute prop.
+ * child route using the activeRouteHandler prop.
  *
  *   var App = React.createClass({
  *     render: function () {
  *       return (
  *         <div class="application">
- *           {this.props.activeRoute()}
+ *           {this.props.activeRouteHandler()}
  *         </div>
  *       );
  *     }
@@ -445,7 +445,7 @@ function computeHandlerProps(matches, query) {
     key: null,
     params: null,
     query: null,
-    activeRoute: emptyFunction.thatReturnsNull
+    activeRouteHandler: emptyFunction.thatReturnsNull
   };
 
   var childHandler;
@@ -460,9 +460,9 @@ function computeHandlerProps(matches, query) {
     props.query = query;
 
     if (childHandler) {
-      props.activeRoute = childHandler;
+      props.activeRouteHandler = childHandler;
     } else {
-      props.activeRoute = emptyFunction.thatReturnsNull;
+      props.activeRouteHandler = emptyFunction.thatReturnsNull;
     }
 
     childHandler = function (props, addedProps) {

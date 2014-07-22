@@ -23,7 +23,7 @@ var App = React.createClass({
           {links}
         </ul>
         <div className="Detail">
-          {this.props.activeRoute() || this.indexTemplate()}
+          {this.props.activeRouteHandler() || this.indexTemplate()}
         </div>
       </div>
     );

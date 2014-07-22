@@ -13,7 +13,7 @@ var App = React.createClass({
           <li><Link to="user" userId="123" query={{showAge: true}}>Bob With Query Params</Link></li>
           <li><Link to="user" userId="abc">Sally</Link></li>
         </ul>
-        {this.props.activeRoute()}
+        {this.props.activeRouteHandler()}
       </div>
     );
   }

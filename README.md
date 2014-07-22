@@ -86,7 +86,7 @@ var App = React.createClass({
           <li><Link to="users">Users</Link></li>
           <li><Link to="user" userId="123">User 123</Link></li>
         </ul>
-        <this.props.activeRoute/>
+        <this.props.activeRouteHandler/>
       </div>
     );
   }
@@ -103,7 +103,7 @@ var Users = React.createClass({
     return (
       <div>
         <h2>Users</h2>
-        <this.props.activeRoute/>
+        <this.props.activeRouteHandler/>
       </div>
     );
   }
@@ -116,7 +116,7 @@ var User = React.createClass({
 });
 ```
 
-To better understand what is happening with `activeRoute` perhaps an
+To better understand what is happening with `activeRouteHandler` perhaps an
 example without the router will help. Lets take the scenario where
 `/users/2` has been matched. Your render method, without this router,
 might look something like this:
@@ -124,8 +124,8 @@ might look something like this:
 ```js
 render: function() {
   var user = <User params={{userId: 2}}/>;
-  var users = <User activeRoute={user}/>;
-  return <App activeRoute={users}/>;
+  var users = <User activeRouteHandler={user}/>;
+  return <App activeRouteHandler={users}/>;
 }
 ```
 
@@ -190,7 +190,7 @@ routes do not inherit the path of their parent.
 
 Routes can be nested. When a child route matches, the parent route's
 handler will have an instance of the child route's handler available as
-`this.props.activeRoute()`. You can then render it in the parent
+`this.props.activeRouteHandler()`. You can then render it in the parent
 passing in any additional props as needed.
 
 #### Examples
@@ -225,7 +225,7 @@ props and static methods available to these components.
 
 #### Props
 
-**this.props.activeRoute(extraProps)** - The active child route handler.
+**this.props.activeRouteHandler(extraProps)** - The active child route handler.
 Use it in your render method to render the child route, passing in
 additional properties as needed.
 

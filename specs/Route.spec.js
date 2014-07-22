@@ -134,7 +134,7 @@ describe('a child route', function() {
 //     var dataStore = 'goodbye';
 //     var Layout = React.createClass({
 //       render: function() {
-//         return React.DOM.article(null, this.props.activeRoute());
+//         return React.DOM.article(null, this.props.activeRouteHandler());
 //       }
 //     });
 //     var AsyncApp = React.createClass({

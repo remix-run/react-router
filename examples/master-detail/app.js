@@ -120,7 +120,7 @@ var App = React.createClass({
           </ul>
         </div>
         <div className="Content">
-          {this.props.activeRoute() || this.indexTemplate()}
+          {this.props.activeRouteHandler() || this.indexTemplate()}
         </div>
       </div>
     );

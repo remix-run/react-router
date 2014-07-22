@@ -12,7 +12,7 @@ var App = React.createClass({
           <li><Link to="user" userId="123">Bob</Link></li>
           <li><Link to="user" userId="abc">Sally</Link></li>
         </ul>
-        {this.props.activeRoute()}
+        {this.props.activeRouteHandler()}
       </div>
     );
   }
@@ -27,7 +27,7 @@ var User = React.createClass({
           <li><Link to="task" userId={this.props.params.userId} taskId="foo">foo task</Link></li>
           <li><Link to="task" userId={this.props.params.userId} taskId="bar">bar task</Link></li>
         </ul>
-        {this.props.activeRoute()}
+        {this.props.activeRouteHandler()}
       </div>
     );
   }
