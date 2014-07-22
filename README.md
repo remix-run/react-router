@@ -27,7 +27,7 @@ Installation
 ```sh
 npm install react-nested-router
 # or
-bower install react-nested-router
+bower install react-router
 ```
 
 This library is written with CommonJS modules. If you are using
@@ -35,7 +35,7 @@ browserify, webpack, or similar, you can consume it like anything else
 installed from npm.
 
 There is also a UMD build available on bower, find the library on
-`window.ReactNestedRouter`.
+`window.ReactRouter`.
 
 Usage
 -----

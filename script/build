@@ -1,4 +1,4 @@
 #!/bin/sh
 mkdir -p dist
-NODE_ENV=production node_modules/.bin/browserify modules/main.js --detect-globals false -s ReactNestedRouter > dist/react-nested-router.js
+NODE_ENV=production node_modules/.bin/browserify modules/main.js --detect-globals false -s ReactRouter > dist/react-nested-router.js
 node_modules/.bin/uglifyjs dist/react-nested-router.js --compress warnings=false > dist/react-nested-router.min.js
