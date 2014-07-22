@@ -1,3 +1,22 @@
+v0.3.0
+Tue, 22 Jul 2014 19:34:11 GMT
+
+e827870 [added] bower support
+58e7b98 [changed] activeRoute -> activeRouteHandler
+0177cdd [fixed] Pass the correct component instance to willTransitionFrom hooks
+3b590e0 [changed] Upgrade to React 0.11.0
+51e1be2 [fixed] Use peerDeps
+a8df2f0 [added] Browser builds for version 0.2.1
+bb066b8 [added] Browser build script
+baf79b6 [fixed] Avoid some warnings
+8d30552 [changed] README to make use of activeRoute clearer in JSX.
+991dede [changed] activeRoute is a function that returns null when no child routes are active.
+73570ed [changed] activeRoute can render with props and children.
+8562482 [added] ActiveState mixin
+616f8bf [changed] Preserve forward slashes in URL params
+6c74c69 [changed] Combine URL helpers into URL module
+
+
 v0.2.1
 Mon, 14 Jul 2014 17:31:21 GMT
 
