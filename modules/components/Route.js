@@ -466,8 +466,10 @@ function computeHandlerProps(matches, query) {
     }
 
     childHandler = function (props, addedProps) {
-      var children = Array.prototype.slice.call(arguments, 2);
-      return route.props.handler.apply(null, [ mergeProperties(props, addedProps) ].concat(children));
+      if (arguments.length > 2 && typeof arguments[2] !== 'undefined')
+        throw new Error('Passing children to a route handler is not supported');
+
+      return route.props.handler.apply(null, mergeProperties(props, addedProps));
     }.bind(this, props);
   });
 

@@ -112,6 +112,33 @@ describe('a Route with custom props', function() {
   });
 });
 
+describe('a route handler', function () {
+  it('may not receive children', function (done) {
+    var InvalidHandler = React.createClass({
+      displayName: 'InvalidHandler',
+      render: function () {
+        try {
+          var result = this.props.activeRouteHandler({}, React.DOM.div());
+          assert(false, 'activeRouteHandler rendered with children');
+          return result;
+        } catch (error) {
+          assert(error);
+        }
+
+        done();
+      }
+    });
+
+    var route = TestUtils.renderIntoDocument(
+      Route({ handler: InvalidHandler },
+        Route({ path: '/home', handler: App })
+      )
+    );
+
+    route.dispatch('/home');
+  });
+});
+
 describe('a Route', function() {
   it('requires a handler');
 });
