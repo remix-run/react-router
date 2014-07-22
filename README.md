@@ -76,7 +76,7 @@ parameters form the url, like `:userId`.
 - Handlers also receive a `query` prop equal to a dictionary of the
 current query params.
 
-- Parent routes will receive a `activeRoute` property. Its a function that
+- Parent routes will receive a `activeRouteHandler` property. Its a function that
 will render the active child route handler.
 
 Here's the rest of the application:
