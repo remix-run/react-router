@@ -4,7 +4,7 @@
   "homepage": "https://github.com/rpflorence/react-nested-router",
   "authors": [
     "Ryan Florence",
-    "Michael Jackson",
+    "Michael Jackson"
   ],
   "description": "A complete routing library for React.js",
   "main": "dist/react-nested-router.js",
