@@ -1,6 +1,4 @@
 #!/bin/sh
-BROWSERIFY="node_modules/.bin/browserify"
-VERSION=`node -p "require('./package').version"`
-
-NODE_ENV=production $BROWSERIFY modules/main.js --detect-globals false > build/react-nested-router-$VERSION.js
-NODE_ENV=production $BROWSERIFY modules/main.js --detect-globals false | uglifyjs --compress warnings=false > build/react-nested-router-$VERSION.min.js
+mkdir -p dist
+NODE_ENV=production node_modules/.bin/browserify modules/main.js --detect-globals false -s ReactRouter > dist/react-nested-router.js
+node_modules/.bin/uglifyjs dist/react-nested-router.js --compress warnings=false > dist/react-nested-router.min.js
