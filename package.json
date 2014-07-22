@@ -1,7 +1,7 @@
 {
   "name": "react-nested-router",
   "version": "0.2.1",
-  "description": "A complete routing library for React",
+  "description": "A complete routing library for React.js",
   "tags": [
     "react",
     "router"

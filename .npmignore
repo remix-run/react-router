@@ -1,5 +1,7 @@
+CONTRIBUTING.md
+bower.json
+examples
 karma.conf.js
 script
 specs
 webpack.config.js
-

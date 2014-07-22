@@ -24,14 +24,21 @@ and workflows are to create.
 Installation
 ------------
 
-`npm install react-nested-router`
+```sh
+npm install react-nested-router
+# or
+bower install react-nested-router
+```
+
+This library is written with CommonJS modules. If you are using
+browserify, webpack, or similar, you can consume it like anything else
+installed from npm.
+
+There is also a UMD build available on bower, find the library on
+`window.ReactNestedRouter`.
 
 Usage
 -----
-
-This library only ships with CommonJS modules, so you'll need browserify or
-webpack or something that can load/bundle it, a global build is coming
-soon.
 
 ```
 var Route = require('react-nested-router').Route;
