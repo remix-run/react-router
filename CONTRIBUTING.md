@@ -8,8 +8,8 @@ following prefixes in your commit subject:
 - `[added] ...`
 - `[removed] ...`
 
-When releasing, a changelog is created automatically, from these
-commits.
+That ensures the subject line of your commit makes it into the
+auto-generated changelog.
 
 ### Development
 

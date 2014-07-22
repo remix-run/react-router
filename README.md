@@ -30,7 +30,8 @@ Usage
 -----
 
 This library only ships with CommonJS modules, so you'll need browserify or
-webpack or something that can load/bundle it.
+webpack or something that can load/bundle it, a global build is coming
+soon.
 
 ```
 var Route = require('react-nested-router').Route;
@@ -58,24 +59,18 @@ React.renderComponent((
 ), document.body);
 ```
 
-When a `Route` is active, you'll get an instance of `handler`
-automatically rendered for you. When one of the child routes is active,
-the component will be available as `this.props.activeRoute` in the parent
-all the way down the view hierarchy. This allows you to create nested layouts
-without having to wire it all up yourself. `Link` components create
-accessible anchor tags to route you around the application.
+Urls will be matched to the deepest route, and then all the routes up
+the hierarchy are activated and their "handlers" (normal React
+components) will be rendered.
 
-As an example, if the current path is `/user/17`, the following
-component will be rendered:
+Each handler will receive a `params` property containing the matched
+parameters form the url, like `:userId`.
 
-```js
-<App activeRoute={
-  <Users activeRoute={<User params={{userId: 17}} />} />
-} />
-```
+Handlers also receive a `query` prop equal to a dictionary of the
+current query params.
 
-Each component will also receive a `query` prop equal to a dictionary
-of the current query params.
+Parent routes will receive a `activeRoute` property. Its a function that
+will render the active child route handler.
 
 Here's the rest of the application:
 
@@ -120,6 +115,21 @@ var User = React.createClass({
   }
 });
 ```
+
+To better understand what is happening with `activeRoute` perhaps an
+example without the router will help. Lets take the scenario where
+`/users/2` has been matched. Your render method, without this router,
+might look something like this:
+
+```js
+render: function() {
+  var user = <User params={{userId: 2}}/>;
+  var users = <User activeRoute={user}/>;
+  return <App activeRoute={users}/>;
+}
+```
+
+Instead, the router manages this view hierarchy for you.
 
 Benefits of This Approach
 -------------------------
@@ -180,7 +190,7 @@ routes do not inherit the path of their parent.
 
 Routes can be nested. When a child route matches, the parent route's
 handler will have an instance of the child route's handler available as
-`this.props.activeRoute`. You can then render it in the parent
+`this.props.activeRoute()`. You can then render it in the parent
 passing in any additional props as needed.
 
 #### Examples
@@ -215,8 +225,9 @@ props and static methods available to these components.
 
 #### Props
 
-**this.props.activeRoute** - The active child route handler.
-Use it in your render method to render the child route.
+**this.props.activeRoute(extraProps)** - The active child route handler.
+Use it in your render method to render the child route, passing in
+additional properties as needed.
 
 **this.props.params** - When a route has dynamic segments like `<Route
 path="users/:userId"/>` the dynamic values are available at
@@ -338,21 +349,7 @@ Router.goBack();
 Development
 -----------
 
-- `script/test` will fire up a karma runner and watch for changes in the
-  specs directory.
-- `npm test` will do the same but doesn't watch, just runs the tests.
-- `script/build-examples` does exactly that.
-
-### Commit subjects
-
-When releasing, a changelog is created automatically, if your commit
-subject is important to the API or fixes a bug, please use one of the
-following prefixes:
-
-- `[fixed] ...`
-- `[changed] ...`
-- `[added] ...`
-- `[removed] ...`
+Please see [CONTRIBUTING](CONTRIBUTING.md)
 
 Thanks, Ember
 -------------
