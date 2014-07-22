@@ -14,6 +14,11 @@ var RouteStore = require('../stores/RouteStore');
 var URLStore = require('../stores/URLStore');
 var Promise = require('es6-promise').Promise;
 
+/**
+ * A map of <Route> component props that are reserved for use by the
+ * router. All other props are considered "static" props and are passed
+ * through to the route handler.
+ */
 var RESERVED_PROPS = {
   location: true,
   handler: true,
@@ -21,6 +26,11 @@ var RESERVED_PROPS = {
   path: true,
   children: true // ReactChildren
 };
+
+/**
+ * The ref name that can be used to reference the active route component.
+ */
+var REF_NAME = '__activeRoute__';
 
 /**
  * <Route> components specify components that are rendered to the page when the
@@ -310,6 +320,14 @@ function getRootMatch(matches) {
   return matches[matches.length - 1];
 }
 
+function updateMatchComponents(matches, refs) {
+  var i = 0, component;
+  while (component = refs[REF_NAME]) {
+    matches[i++].component = component;
+    refs = component.refs;
+  }
+}
+
 /**
  * Runs all transition hooks that are required to get from the current state
  * to the state specified by the given transition and updates the current state
@@ -334,6 +352,8 @@ function syncWithTransition(route, transition) {
 
   var fromMatches, toMatches;
   if (currentMatches) {
+    updateMatchComponents(currentMatches, route.refs);
+
     fromMatches = currentMatches.filter(function (match) {
       return !hasMatch(nextMatches, match);
     });
@@ -346,7 +366,7 @@ function syncWithTransition(route, transition) {
     toMatches = nextMatches;
   }
 
-  return checkTransitionFromHooks(fromMatches, route.refs, transition).then(function () {
+  return checkTransitionFromHooks(fromMatches, transition).then(function () {
     if (transition.isCancelled)
       return; // No need to continue.
 
@@ -380,7 +400,7 @@ function syncWithTransition(route, transition) {
  * the route's handler, so that the deepest nested handlers are called first.
  * Returns a promise that resolves after the last handler.
  */
-function checkTransitionFromHooks(matches, refs, transition) {
+function checkTransitionFromHooks(matches, transition) {
   var promise = Promise.resolve();
 
   reversedArray(matches).forEach(function (match) {
@@ -388,7 +408,7 @@ function checkTransitionFromHooks(matches, refs, transition) {
       var handler = match.route.props.handler;
 
       if (!transition.isCancelled && handler.willTransitionFrom)
-        return handler.willTransitionFrom(transition, refs[match.refName]);
+        return handler.willTransitionFrom(transition, match.component);
     });
   });
 
@@ -429,12 +449,12 @@ function computeHandlerProps(matches, query) {
   };
 
   var childHandler;
-  reversedArray(matches).forEach(function (match, index) {
+  reversedArray(matches).forEach(function (match) {
     var route = match.route;
 
     props = Route.getUnreservedProps(route.props);
 
-    props.ref = 'route-' + index;
+    props.ref = REF_NAME;
     props.key = Path.injectParams(route.props.path, match.params);
     props.params = match.params;
     props.query = query;
@@ -447,10 +467,8 @@ function computeHandlerProps(matches, query) {
 
     childHandler = function (props, addedProps) {
       var children = Array.prototype.slice.call(arguments, 2);
-      return route.props.handler.apply(null, [mergeProperties(props, addedProps)].concat(children));
+      return route.props.handler.apply(null, [ mergeProperties(props, addedProps) ].concat(children));
     }.bind(this, props);
-
-    match.refName = props.ref;
   });
 
   return props;
