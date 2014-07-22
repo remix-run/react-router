@@ -4,6 +4,11 @@ var withoutProperties = require('../helpers/withoutProperties');
 var transitionTo = require('../helpers/transitionTo');
 var makeHref = require('../helpers/makeHref');
 
+/**
+ * A map of <Link> component props that are reserved for use by the
+ * router and/or React. All other props are used as params that are
+ * interpolated into the link's path.
+ */
 var RESERVED_PROPS = {
   to: true,
   className: true,

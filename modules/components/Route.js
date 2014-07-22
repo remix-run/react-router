@@ -16,8 +16,8 @@ var Promise = require('es6-promise').Promise;
 
 /**
  * A map of <Route> component props that are reserved for use by the
- * router. All other props are considered "static" props and are passed
- * through to the route handler.
+ * router and/or React. All other props are considered "static" and
+ * are passed through to the route handler.
  */
 var RESERVED_PROPS = {
   location: true,
