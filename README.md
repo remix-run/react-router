@@ -304,7 +304,7 @@ change the path of your route, you don't have to change your links.
 
 #### Properties
 
-**to** - The name of the route to link to.
+**to** - The name of the route to link to, or a full URL.
 
 **query** - Object, Query parameters to add to the link. Access query
 parameters in your route handler with `this.props.query`.
@@ -322,6 +322,9 @@ Given a route like `<Route name="user" path="/users/:userId"/>`:
 active -->
 <a href="/users/123?foo=bar" class="active">Michael</a>
 <a href="#/users/123?foo=bar">Michael</a>
+
+<!-- or if you have the full url already, you can just pass that in -->
+<Link to="/users/123?foo=bar"/>
 ```
 
 
@@ -333,11 +336,12 @@ The router has several top-level methods that may be used to navigate around the
 var Router = require('react-nested-router')
 ```
 
-**transitionTo(routeName, [params[, query]])** - Programatically transition to a new route.
+**transitionTo(routeNameOrPath, [params[, query]])** - Programatically transition to a new route.
 
 ```js
 Router.transitionTo('user', {id: 10}, {showAge: true});
 Router.transitionTo('about');
+Router.transitionTo('/users/10?showAge=true');
 ```
 
 **replaceWith(routeName, [params[, query]])** - Programatically replace current route with a new route. Does not add an entry into the browser history.
@@ -345,6 +349,7 @@ Router.transitionTo('about');
 ```js
 Router.replaceWith('user', {id: 10}, {showAge: true});
 Router.replaceWith('about');
+Router.replaceWith('/users/10?showAge=true');
 ```
 
 **goBack()** - Programatically go back to the last route and remove the most recent entry from the browser history.
