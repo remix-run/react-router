@@ -469,7 +469,7 @@ function computeHandlerProps(matches, query) {
       if (arguments.length > 2 && typeof arguments[2] !== 'undefined')
         throw new Error('Passing children to a route handler is not supported');
 
-      return route.props.handler.apply(null, mergeProperties(props, addedProps));
+      return route.props.handler(mergeProperties(props, addedProps));
     }.bind(this, props);
   });
 
