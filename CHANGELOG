@@ -1,3 +1,10 @@
+v0.3.5
+Wed, 23 Jul 2014 14:52:30 GMT
+
+0a7298c [removed] browserify.transforms from package.json
+ebf54ab [removed] Dependency on react/lib/merge
+
+
 v0.3.4
 Tue, 22 Jul 2014 21:02:48 GMT
 
