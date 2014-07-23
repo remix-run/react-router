@@ -9,6 +9,8 @@ You are viewing docs for the latest code on master. Check out
 [other releases](https://github.com/rpflorence/react-router/releases)
 for the version you have installed.
 
+Also, please refer to the [CHANGELOG](/CHANGELOG) when upgrading.
+
 Features
 --------
 
