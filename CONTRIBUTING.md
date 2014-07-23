@@ -11,6 +11,11 @@ following prefixes in your commit subject:
 That ensures the subject line of your commit makes it into the
 auto-generated changelog.
 
+### README
+
+Please update the readme with any API changes, the code and docs should
+always be in sync.
+
 ### Development
 
 - `script/test` will fire up a karma runner and watch for changes in the
