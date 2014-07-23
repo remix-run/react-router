@@ -1,7 +1,6 @@
 var React = require('react');
 var warning = require('react/lib/warning');
 var invariant = require('react/lib/invariant');
-var emptyFunction = require('react/lib/emptyFunction');
 var ExecutionEnvironment = require('react/lib/ExecutionEnvironment');
 var mergeProperties = require('../helpers/mergeProperties');
 var goBack = require('../helpers/goBack');
@@ -445,7 +444,7 @@ function computeHandlerProps(matches, query) {
     key: null,
     params: null,
     query: null,
-    activeRouteHandler: emptyFunction.thatReturnsNull
+    activeRouteHandler: returnNull
   };
 
   var childHandler;
@@ -462,7 +461,7 @@ function computeHandlerProps(matches, query) {
     if (childHandler) {
       props.activeRouteHandler = childHandler;
     } else {
-      props.activeRouteHandler = emptyFunction.thatReturnsNull;
+      props.activeRouteHandler = returnNull;
     }
 
     childHandler = function (props, addedProps) {
@@ -474,6 +473,10 @@ function computeHandlerProps(matches, query) {
   });
 
   return props;
+}
+
+function returnNull() {
+  return null;
 }
 
 function reversedArray(array) {
