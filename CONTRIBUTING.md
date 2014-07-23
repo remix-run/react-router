@@ -19,3 +19,9 @@ auto-generated changelog.
 - `script/build-examples` does exactly that.
 - `script/build-examples --watch` is a little more useful.
 
+### Build
+
+Please do not include the output of `script/build` in your commits, we
+only do this when we release. (Also, you probably don't need to build
+anyway unless you are fixing something around our global build.)
+
