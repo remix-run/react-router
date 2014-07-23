@@ -197,8 +197,10 @@ routes do not inherit the path of their parent.
 
 Routes can be nested. When a child route matches, the parent route's
 handler will have an instance of the child route's handler available as
-`this.props.activeRouteHandler()`. You can then render it in the parent
+`this.props.activeRouteHandler()`*. You can then render it in the parent
 passing in any additional props as needed.
+
+* This assumes that you are running a version > 0.2.1.
 
 #### Examples
 
