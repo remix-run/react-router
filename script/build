@@ -1,4 +1,4 @@
 #!/bin/sh
 mkdir -p dist
-NODE_ENV=production node_modules/.bin/browserify modules/main.js --detect-globals false -s ReactRouter > dist/react-router.js
+NODE_ENV=production node_modules/.bin/browserify modules/main.js -t browserify-shim -t envify --detect-globals false -s ReactRouter > dist/react-router.js
 node_modules/.bin/uglifyjs dist/react-router.js --compress warnings=false > dist/react-router.min.js

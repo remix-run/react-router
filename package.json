@@ -51,12 +51,6 @@
     "event-emitter": "^0.3.1",
     "querystring": "^0.2.0"
   },
-  "browserify": {
-    "transform": [
-      "browserify-shim",
-      "envify"
-    ]
-  },
   "browserify-shim": {
     "react": "global:React"
   }
