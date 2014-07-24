@@ -331,15 +331,18 @@ change the path of your route, you don't have to change your links.
 **query** - Object, Query parameters to add to the link. Access query
 parameters in your route handler with `this.props.query`.
 
-**[param]** - Any parameters the route defines are passed by name
-through the link's properties.
+**params** - Object, Route parameters to add to the link.  Access route
+parameters in your route handler with `this.props.params`.
+
+**[param]** - As an alternative to the params prop, route params can be
+passed as separate props where the prop name matches the route param name.
 
 #### Example
 
 Given a route like `<Route name="user" path="/users/:userId"/>`:
 
 ```xml
-<Link to="user" userId={user.id} params={{foo: bar}}>{user.name}</Link>
+<Link to="user" userId={user.id} query={{foo: bar}}>{user.name}</Link>
 <!-- becomes one of these depending on your router and if the route is
 active -->
 <a href="/users/123?foo=bar" class="active">Michael</a>

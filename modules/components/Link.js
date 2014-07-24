@@ -14,6 +14,7 @@ var RESERVED_PROPS = {
   className: true,
   activeClassName: true,
   query: true,
+  params: true,
   children: true // ReactChildren
 };
 
@@ -27,7 +28,7 @@ var RESERVED_PROPS = {
  *   <Route name="showPost" path="/posts/:postId" handler={Post}/>
  *
  * You could use the following component to link to that route:
- * 
+ *
  *   <Link to="showPost" postId="123"/>
  *
  * In addition to params, links may pass along query string parameters
@@ -71,7 +72,7 @@ var Link = React.createClass({
    * Returns a hash of URL parameters to use in this <Link>'s path.
    */
   getParams: function () {
-    return Link.getUnreservedProps(this.props);
+    return this.props.params || Link.getUnreservedProps(this.props);
   },
 
   /**
