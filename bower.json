@@ -1,7 +1,7 @@
 {
-  "name": "react-nested-router",
+  "name": "react-router",
   "version": "0.3.5",
-  "homepage": "https://github.com/rpflorence/react-nested-router",
+  "homepage": "https://github.com/rpflorence/react-router",
   "authors": [
     "Ryan Florence",
     "Michael Jackson"
