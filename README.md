@@ -153,7 +153,7 @@ might look something like this:
 ```js
 render: function() {
   var user = <User params={{userId: 2}}/>;
-  var users = <User activeRouteHandler={user}/>;
+  var users = <Users activeRouteHandler={user}/>;
   return <App activeRouteHandler={users}/>;
 }
 ```
