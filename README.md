@@ -339,7 +339,7 @@ through the link's properties.
 Given a route like `<Route name="user" path="/users/:userId"/>`:
 
 ```xml
-<Link to="user" userId={user.id} params={{foo: bar}}>{user.name}</Link>
+<Link to="user" userId={user.id} query={{foo: bar}}>{user.name}</Link>
 <!-- becomes one of these depending on your router and if the route is
 active -->
 <a href="/users/123?foo=bar" class="active">Michael</a>
