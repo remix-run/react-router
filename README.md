@@ -11,7 +11,7 @@ for the version you have installed.
 
 Also, please refer to the [CHANGELOG](/CHANGELOG) when upgrading.
 
-## ****** NPM USERS THIS PACKAGE MOVED RECENTLY ******
+## **** NPM USERS THIS PACKAGE MOVED ****
 
 This package has moved from `react-nested-router` to `react-router`.
 
