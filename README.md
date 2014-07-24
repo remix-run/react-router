@@ -1,12 +1,12 @@
 React Router
 ============
 
-[![Build Status](https://travis-ci.org/rpflorence/react-router.svg?branch=master)](https://travis-ci.org/rpflorence/react-router)
+[![Build Status](https://travis-ci.org/rackt/react-router.svg?branch=master)](https://travis-ci.org/rackt/react-router)
 
 A complete routing library for React.
 
 You are viewing docs for the latest code on master. Check out
-[other releases](https://github.com/rpflorence/react-router/releases)
+[other releases](https://github.com/rackt/react-router/releases)
 for the version you have installed.
 
 Also, please refer to the [CHANGELOG](/CHANGELOG) when upgrading.
