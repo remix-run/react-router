@@ -11,7 +11,7 @@ for the version you have installed.
 
 Also, please refer to the [CHANGELOG](/CHANGELOG) when upgrading.
 
-<h2><span style="color: red">NPM USERS!</span></h2>
+## ****** NPM USERS THIS PACKAGE MOVED RECENTLY ******
 
 This package has moved from `react-nested-router` to `react-router`.
 
