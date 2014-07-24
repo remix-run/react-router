@@ -1,3 +1,10 @@
+v0.4.1
+Thu, 24 Jul 2014 21:35:07 GMT
+
+8152d67 [changed] repo location to rackt/react-router
+0ac4dea [removed] Dependency on react/lib/emptyFunction
+
+
 v0.4.0
 Thu, 24 Jul 2014 19:41:04 GMT
 

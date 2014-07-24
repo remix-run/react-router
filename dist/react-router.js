@@ -160,7 +160,6 @@ module.exports = Link;
 var React = (typeof window !== "undefined" ? window.React : typeof global !== "undefined" ? global.React : null);
 var warning = _dereq_('react/lib/warning');
 var invariant = _dereq_('react/lib/invariant');
-var emptyFunction = _dereq_('react/lib/emptyFunction');
 var ExecutionEnvironment = _dereq_('react/lib/ExecutionEnvironment');
 var mergeProperties = _dereq_('../helpers/mergeProperties');
 var goBack = _dereq_('../helpers/goBack');
@@ -604,7 +603,7 @@ function computeHandlerProps(matches, query) {
     key: null,
     params: null,
     query: null,
-    activeRouteHandler: emptyFunction.thatReturnsNull
+    activeRouteHandler: returnNull
   };
 
   var childHandler;
@@ -621,7 +620,7 @@ function computeHandlerProps(matches, query) {
     if (childHandler) {
       props.activeRouteHandler = childHandler;
     } else {
-      props.activeRouteHandler = emptyFunction.thatReturnsNull;
+      props.activeRouteHandler = returnNull;
     }
 
     childHandler = function (props, addedProps) {
@@ -635,13 +634,17 @@ function computeHandlerProps(matches, query) {
   return props;
 }
 
+function returnNull() {
+  return null;
+}
+
 function reversedArray(array) {
   return array.slice(0).reverse();
 }
 
 module.exports = Route;
 
-},{"../helpers/Path":4,"../helpers/goBack":6,"../helpers/mergeProperties":9,"../helpers/replaceWith":10,"../helpers/transitionTo":11,"../helpers/withoutProperties":12,"../stores/ActiveStore":15,"../stores/RouteStore":16,"../stores/URLStore":17,"es6-promise":21,"react/lib/ExecutionEnvironment":46,"react/lib/emptyFunction":48,"react/lib/invariant":49,"react/lib/warning":50}],4:[function(_dereq_,module,exports){
+},{"../helpers/Path":4,"../helpers/goBack":6,"../helpers/mergeProperties":9,"../helpers/replaceWith":10,"../helpers/transitionTo":11,"../helpers/withoutProperties":12,"../stores/ActiveStore":15,"../stores/RouteStore":16,"../stores/URLStore":17,"es6-promise":21,"react/lib/ExecutionEnvironment":46,"react/lib/invariant":49,"react/lib/warning":50}],4:[function(_dereq_,module,exports){
 var invariant = _dereq_('react/lib/invariant');
 var qs = _dereq_('querystring');
 var mergeProperties = _dereq_('./mergeProperties');
