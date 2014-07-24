@@ -20,6 +20,13 @@ ready to update, make sure your package.json specifically points to
 `0.3.5` or less, `0.3.6` just throws an error telling you the package
 has moved.
 
+SemVer
+------
+
+Before our `1.0` release, breaking API changes will cause a bump to
+`0.x`. For example, `0.4.1` and `0.4.8` will have the same API, but
+`0.5.0` will have breaking changes.
+
 Features
 --------
 
