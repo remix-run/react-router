@@ -11,6 +11,15 @@ for the version you have installed.
 
 Also, please refer to the [CHANGELOG](/CHANGELOG) when upgrading.
 
+<h2><span style="color: red">NPM USERS!</span></h2>
+
+This package has moved from `react-nested-router` to `react-router`.
+
+Update your package.json to point to the new package, or if you aren't
+ready to update, make sure your package.json specifically points to
+`0.3.5` or less, `0.3.6` just throws an error telling you the package
+has moved.
+
 Features
 --------
 
