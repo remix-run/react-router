@@ -109,7 +109,7 @@ var Link = React.createClass({
   },
 
   handleClick: function (event) {
-    if (isModifiedEvent(event))
+    if (isModifiedEvent(event) || !isLeftClick(event))
       return;
 
     event.preventDefault();
@@ -128,6 +128,10 @@ var Link = React.createClass({
   }
 
 });
+
+function isLeftClick(event) {
+  return event.button === 0;
+}
 
 function isModifiedEvent(event) {
   return !!(event.metaKey || event.ctrlKey || event.shiftKey);
