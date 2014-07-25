@@ -1,6 +1,5 @@
 var React = require('react');
 var warning = require('react/lib/warning');
-var invariant = require('react/lib/invariant');
 var ExecutionEnvironment = require('react/lib/ExecutionEnvironment');
 var mergeProperties = require('../helpers/mergeProperties');
 var goBack = require('../helpers/goBack');
@@ -34,7 +33,7 @@ var REF_NAME = '__activeRoute__';
 /**
  * <Route> components specify components that are rendered to the page when the
  * URL matches a given pattern.
- * 
+ *
  * Routes are arranged in a nested tree structure. When a new URL is requested,
  * the tree is searched depth-first to find a route whose path matches the URL.
  * When one is found, all routes in the tree that lead to it are considered
@@ -117,7 +116,7 @@ var Route = React.createClass({
     location: React.PropTypes.oneOf([ 'hash', 'history' ]).isRequired,
     handler: React.PropTypes.any.isRequired,
     path: React.PropTypes.string,
-    name: React.PropTypes.string,
+    name: React.PropTypes.string
   },
 
   getDefaultProps: function () {
@@ -265,6 +264,7 @@ function Redirect(to, params, query) {
 
 function findMatches(path, route) {
   var children = route.props.children, matches;
+  var params;
 
   // Check the subtree first to find the most deeply-nested match.
   if (Array.isArray(children)) {
@@ -277,7 +277,7 @@ function findMatches(path, route) {
 
   if (matches) {
     var rootParams = getRootMatch(matches).params;
-    var params = {};
+    params = {};
 
     Path.extractParamNames(route.props.path).forEach(function (paramName) {
       params[paramName] = rootParams[paramName];
@@ -289,7 +289,7 @@ function findMatches(path, route) {
   }
 
   // No routes in the subtree matched, so check this route.
-  var params = Path.extractParams(route.props.path, path);
+  params = Path.extractParams(route.props.path, path);
 
   if (params)
     return [ makeMatch(route, params) ];
@@ -422,7 +422,7 @@ function checkTransitionFromHooks(matches, transition) {
 function checkTransitionToHooks(matches, transition) {
   var promise = Promise.resolve();
 
-  matches.forEach(function (match, index) {
+  matches.forEach(function (match) {
     promise = promise.then(function () {
       var handler = match.route.props.handler;
 
