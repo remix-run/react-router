@@ -12,6 +12,7 @@
     "no-use-before-define": 0,
     "no-cond-assign": 0,
     "consistent-return": 0,
-    "new-cap": 0
+    "new-cap": 0,
+    "no-unused-vars": 0
   }
 }

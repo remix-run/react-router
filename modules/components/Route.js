@@ -422,7 +422,7 @@ function checkTransitionFromHooks(matches, transition) {
 function checkTransitionToHooks(matches, transition) {
   var promise = Promise.resolve();
 
-  matches.forEach(function (match) {
+  matches.forEach(function (match, index) {
     promise = promise.then(function () {
       var handler = match.route.props.handler;
 
