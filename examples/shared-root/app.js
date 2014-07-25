@@ -2,6 +2,7 @@
 var React = require('react');
 var Router = require('../../modules/main');
 var Route = Router.Route;
+var Routes = Router.Routes;
 var Link = Router.Link;
 
 var App = React.createClass({
@@ -66,15 +67,17 @@ var ForgotPassword = React.createClass({
 });
 
 var routes = (
-  <Route handler={App}>
-    <Route handler={SignedOut}>
-      <Route name="signin" handler={SignIn}/>
-      <Route name="forgot-password" handler={ForgotPassword}/>
+  <Routes>
+    <Route handler={App}>
+      <Route handler={SignedOut}>
+        <Route name="signin" handler={SignIn}/>
+        <Route name="forgot-password" handler={ForgotPassword}/>
+      </Route>
+      <Route handler={SignedIn}>
+        <Route name="home" handler={Home}/>
+      </Route>
     </Route>
-    <Route handler={SignedIn}>
-      <Route name="home" handler={Home}/>
-    </Route>
-  </Route>
+  </Routes>
 );
 
 React.renderComponent(routes, document.body);

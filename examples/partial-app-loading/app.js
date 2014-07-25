@@ -2,6 +2,7 @@
 var React = require('react');
 var Router = require('../../modules/main');
 var Route = Router.Route;
+var Routes = Router.Routes;
 var Link = Router.Link;
 
 var AsyncReactComponent = {
@@ -59,11 +60,13 @@ var App = React.createClass({
 });
 
 var routes = (
-  <Route handler={App}>
-    <Route name="dashboard" path="dashboard" handler={PreDashboard}>
-      <Route name="inbox" path="dashboard/inbox" handler={PreInbox}/>
+  <Routes>
+    <Route handler={App}>
+      <Route name="dashboard" path="dashboard" handler={PreDashboard}>
+        <Route name="inbox" path="dashboard/inbox" handler={PreInbox}/>
+      </Route>
     </Route>
-  </Route>
+  </Routes>
 );
 
 React.renderComponent(routes, document.body);

@@ -41,6 +41,9 @@ var Path = {
    * pattern does not match the given path.
    */
   extractParams: function (pattern, path) {
+    if (!pattern)
+      return null;
+
     if (!isDynamicPattern(pattern)) {
       if (pattern === URL.decode(path))
         return {}; // No dynamic segments, but the paths match.
@@ -67,6 +70,8 @@ var Path = {
    * Returns an array of the names of all parameters in the given pattern.
    */
   extractParamNames: function (pattern) {
+    if (!pattern)
+      return [];
     return compilePattern(pattern).paramNames;
   },
 
@@ -75,6 +80,9 @@ var Path = {
    * if there is a dynamic segment of the route path for which there is no param.
    */
   injectParams: function (pattern, params) {
+    if (!pattern)
+      return null;
+
     if (!isDynamicPattern(pattern))
       return pattern;
 
