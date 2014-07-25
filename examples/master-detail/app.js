@@ -2,6 +2,7 @@
 var React = require('react');
 var Router = require('../../modules/main');
 var Route = Router.Route;
+var Routes = Router.Routes;
 var Link = Router.Link;
 
 var api = 'http://addressbook-api.herokuapp.com/contacts';
@@ -203,11 +204,13 @@ var NotFound = React.createClass({
 });
 
 var routes = (
-  <Route handler={App}>
-    <Route name="new" path="contact/new" handler={NewContact}/>
-    <Route name="not-found" path="contact/not-found" handler={NotFound}/>
-    <Route name="contact" path="contact/:id" handler={Contact}/>
-  </Route>
+  <Routes>
+    <Route handler={App}>
+      <Route name="new" path="contact/new" handler={NewContact}/>
+      <Route name="not-found" path="contact/not-found" handler={NotFound}/>
+      <Route name="contact" path="contact/:id" handler={Contact}/>
+    </Route>
+  </Routes>
 );
 
 React.renderComponent(routes, document.body);

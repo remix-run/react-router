@@ -2,6 +2,7 @@
 var React = require('react');
 var Router = require('../../modules/main');
 var Route = Router.Route;
+var Routes = Router.Routes;
 var Link = Router.Link;
 
 var App = React.createClass({
@@ -45,11 +46,13 @@ var Task = React.createClass({
 });
 
 var routes = (
-  <Route handler={App}>
-    <Route name="user" path="/user/:userId" handler={User}>
-      <Route name="task" path="/user/:userId/tasks/:taskId" handler={Task}/>
+  <Routes>
+    <Route handler={App}>
+      <Route name="user" path="/user/:userId" handler={User}>
+        <Route name="task" path="/user/:userId/tasks/:taskId" handler={Task}/>
+      </Route>
     </Route>
-  </Route>
+  </Routes>
 );
 
 React.renderComponent(routes, document.body);

@@ -66,12 +66,14 @@ Usage
 var Route = require('react-router').Route;
 
 React.renderComponent((
-  <Route handler={App}>
-    <Route name="about" handler={About}/>
-    <Route name="users" handler={Users}>
-      <Route name="user" path="/user/:userId" handler={User}/>
+  <Routes>
+    <Route handler={App}>
+      <Route name="about" handler={About}/>
+      <Route name="users" handler={Users}>
+        <Route name="user" path="/user/:userId" handler={User}/>
+      </Route>
     </Route>
-  </Route>
+  </Routes>
 ), document.body);
 ```
 
@@ -79,18 +81,22 @@ Or if JSX isn't your jam:
 
 ```js
 React.renderComponent((
-  Route({handler: App},
-    Route({name: "about", handler: About}),
-    Route({name: "users", handler: Users},
-      Route({name: "user", path: "/user/:userId", handler: User})
+  Routes({}, 
+    Route({handler: App},
+      Route({name: "about", handler: About}),
+      Route({name: "users", handler: Users},
+        Route({name: "user", path: "/user/:userId", handler: User})
+      )
     )
   )
 ), document.body);
 ```
 
-- Urls will be matched to the deepest route, and then all the routes up
+- URLs will be matched to the deepest route, and then all the routes up
 the hierarchy are activated and their "handlers" (normal React
 components) will be rendered.
+
+- Paths are assumed from names unless specified.
 
 - Each handler will receive a `params` property containing the matched
 parameters form the url, like `:userId`.
@@ -194,24 +200,33 @@ Related Modules
 API
 ---
 
+### Routes (component)
+
+Configuration component for your router, all `<Route/>`s must be
+children of a `<Routes/>`. It is the component you provide to
+`React.renderComponent(routes, el)`.
+
+#### Props
+
+**location** - `"hash"` or `"history"`, defaults to `"hash"`. Configures
+what type of url you want, hash includes `#/` in the url and works
+without a server, if you use `history` your server will need to support
+it.
+
 ### Route (component)
 
 Configuration component to declare your application's routes and view hierarchy.
 
 #### Props
 
-**location** - The method to use for page navigation when initializing the router.
-May be either "hash" to use URLs with hashes in them and the `hashchange` event or
-"history" to use the HTML5 history API. This prop is only ever used on the root
-route that is rendered into the page. The default is "hash".
-
 **name** - The name of the route, used in the `Link` component and the
 router's transition methods.
 
 **path** - The path used in the URL, supporting dynamic segments. If
-left undefined, the path will be defined by the `name`. This path is always
-absolute from the URL "root", even if the leading slash is left off. Nested
-routes do not inherit the path of their parent.
+left undefined, the path will be defined by the `name`, and if there is
+no name, will default to `/`. This path is always absolute from the URL
+"root", even if the leading slash is left off. Nested routes do not
+inherit the path of their parent.
 
 **handler** - The component to be rendered when the route matches.
 
@@ -225,14 +240,17 @@ passing in any additional props as needed.
 #### Examples
 
 ```xml
-<Route handler={App}>
-  <!-- path is automatically assigned to the name since it is omitted -->
-  <Route name="about" handler={About}/>
-  <Route name="users" handler={Users}>
-    <!-- note the dynamic segment in the path -->
-    <Route name="user" handler={User} path="/user/:id"/>
+<Routes>
+  <!-- path defaults to '/' since no name or path provided -->
+  <Route handler={App}>
+    <!-- path is automatically assigned to the name since it is omitted -->
+    <Route name="about" handler={About}/>
+    <Route name="users" handler={Users}>
+      <!-- note the dynamic segment in the path -->
+      <Route name="user" handler={User} path="/user/:id"/>
+    </Route>
   </Route>
-</Route>
+</Routes>
 ```
 
 Or w/o JSX:
