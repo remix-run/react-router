@@ -159,7 +159,6 @@ module.exports = Link;
 },{"../helpers/makeHref":7,"../helpers/transitionTo":11,"../helpers/withoutProperties":12,"../mixins/ActiveState":14}],3:[function(_dereq_,module,exports){
 var React = (typeof window !== "undefined" ? window.React : typeof global !== "undefined" ? global.React : null);
 var warning = _dereq_('react/lib/warning');
-var invariant = _dereq_('react/lib/invariant');
 var ExecutionEnvironment = _dereq_('react/lib/ExecutionEnvironment');
 var mergeProperties = _dereq_('../helpers/mergeProperties');
 var goBack = _dereq_('../helpers/goBack');
@@ -193,7 +192,7 @@ var REF_NAME = '__activeRoute__';
 /**
  * <Route> components specify components that are rendered to the page when the
  * URL matches a given pattern.
- * 
+ *
  * Routes are arranged in a nested tree structure. When a new URL is requested,
  * the tree is searched depth-first to find a route whose path matches the URL.
  * When one is found, all routes in the tree that lead to it are considered
@@ -276,7 +275,7 @@ var Route = React.createClass({
     location: React.PropTypes.oneOf([ 'hash', 'history' ]).isRequired,
     handler: React.PropTypes.any.isRequired,
     path: React.PropTypes.string,
-    name: React.PropTypes.string,
+    name: React.PropTypes.string
   },
 
   getDefaultProps: function () {
@@ -424,6 +423,7 @@ function Redirect(to, params, query) {
 
 function findMatches(path, route) {
   var children = route.props.children, matches;
+  var params;
 
   // Check the subtree first to find the most deeply-nested match.
   if (Array.isArray(children)) {
@@ -436,7 +436,7 @@ function findMatches(path, route) {
 
   if (matches) {
     var rootParams = getRootMatch(matches).params;
-    var params = {};
+    params = {};
 
     Path.extractParamNames(route.props.path).forEach(function (paramName) {
       params[paramName] = rootParams[paramName];
@@ -448,7 +448,7 @@ function findMatches(path, route) {
   }
 
   // No routes in the subtree matched, so check this route.
-  var params = Path.extractParams(route.props.path, path);
+  params = Path.extractParams(route.props.path, path);
 
   if (params)
     return [ makeMatch(route, params) ];
@@ -644,7 +644,7 @@ function reversedArray(array) {
 
 module.exports = Route;
 
-},{"../helpers/Path":4,"../helpers/goBack":6,"../helpers/mergeProperties":9,"../helpers/replaceWith":10,"../helpers/transitionTo":11,"../helpers/withoutProperties":12,"../stores/ActiveStore":15,"../stores/RouteStore":16,"../stores/URLStore":17,"es6-promise":21,"react/lib/ExecutionEnvironment":46,"react/lib/invariant":49,"react/lib/warning":50}],4:[function(_dereq_,module,exports){
+},{"../helpers/Path":4,"../helpers/goBack":6,"../helpers/mergeProperties":9,"../helpers/replaceWith":10,"../helpers/transitionTo":11,"../helpers/withoutProperties":12,"../stores/ActiveStore":15,"../stores/RouteStore":16,"../stores/URLStore":17,"es6-promise":21,"react/lib/ExecutionEnvironment":46,"react/lib/warning":50}],4:[function(_dereq_,module,exports){
 var invariant = _dereq_('react/lib/invariant');
 var qs = _dereq_('querystring');
 var mergeProperties = _dereq_('./mergeProperties');
