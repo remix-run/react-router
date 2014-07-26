@@ -1,6 +1,7 @@
 v0.4.2
 Sat, 26 Jul 2014 18:23:43 GMT
 
+2fc9976 [fixed] eslint cleanup; trailing comma fix for IE
 b8018b1 [added] animation example
 
 
