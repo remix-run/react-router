@@ -1,0 +1,37 @@
+<!doctype html public "restroom">
+<title>Dynamic Segments Example</title>
+<link href="../app.css" rel="stylesheet"/>
+<style>
+.Image {
+  position: relative;
+}
+
+.Image img {
+  position: absolute;
+  top: 0;
+  left: 0;
+  height: 400;
+  width: 400;
+  background: gray;
+}
+
+.example-enter {
+  opacity: 0.01;
+  transition: opacity .5s ease-in;
+}
+
+.example-enter.example-enter-active {
+  opacity: 1;
+}
+
+.example-leave {
+  opacity: 1;
+  transition: opacity .5s ease-in;
+}
+
+.example-leave.example-leave-active {
+  opacity: 0.01;
+}
+</style>
+<body>
+<script src="../build/animations.js"></script>
