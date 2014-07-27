@@ -63,6 +63,7 @@ Usage
 -----
 
 ```
+var Routes = require('react-router').Routes;
 var Route = require('react-router').Route;
 
 React.renderComponent((
