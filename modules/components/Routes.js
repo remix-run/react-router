@@ -58,6 +58,7 @@ var Routes = React.createClass({
   },
 
   propTypes: {
+    initialPath: React.PropTypes.string,
     location: React.PropTypes.oneOf([ 'hash', 'history' ]).isRequired,
   },
 
@@ -68,7 +69,10 @@ var Routes = React.createClass({
   },
 
   getInitialState: function () {
-    return {};
+    return {
+      path: this.props.initialPath,
+      matches: []
+    };
   },
 
   componentWillMount: function () {
@@ -83,7 +87,7 @@ var Routes = React.createClass({
   },
 
   componentDidMount: function () {
-    this.dispatch(URLStore.getCurrentPath());
+    this.dispatch(this.state.path || URLStore.getCurrentPath());
   },
 
   componentWillUnmount: function () {
@@ -174,16 +178,12 @@ var Routes = React.createClass({
   },
 
   render: function () {
-    if (!this.state.path)
+    var matches = this.state.matches;
+
+    if (matches.length === 0)
       return null;
 
-    var matches = this.state.matches;
-    if (matches.length) {
-      // matches[0] corresponds to the top-most match
-      return matches[0].route.props.handler(computeHandlerProps(matches, this.state.activeQuery));
-    } else {
-      return null;
-    }
+    return getRootMatch(matches).route.props.handler(computeHandlerProps(matches, this.state.activeQuery));
   }
 
 });
