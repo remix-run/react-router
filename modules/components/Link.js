@@ -27,7 +27,7 @@ var RESERVED_PROPS = {
  *   <Route name="showPost" path="/posts/:postId" handler={Post}/>
  *
  * You could use the following component to link to that route:
- * 
+ *
  *   <Link to="showPost" postId="123"/>
  *
  * In addition to params, links may pass along query string parameters
@@ -134,7 +134,7 @@ function isLeftClick(event) {
 }
 
 function isModifiedEvent(event) {
-  return !!(event.metaKey || event.ctrlKey || event.shiftKey);
+  return !!(event.metaKey || event.altKey || event.ctrlKey || event.shiftKey);
 }
 
 module.exports = Link;
