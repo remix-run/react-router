@@ -101,14 +101,14 @@ var Routes = React.createClass({
    * object that contains the URL parameters relevant to that route. Returns
    * null if no route in the tree matches the path.
    *
-   *   ( <Routes handler={App}>
-   *       <Route name="posts" handler={Posts}>
-   *         <Route name="newPost" path="/posts/new" handler={NewPost}/>
-   *         <Route name="showPost" path="/posts/:id" handler={Post}/>
+   *   React.renderComponent(
+   *     <Routes>
+   *       <Route handler={App}>
+   *         <Route name="posts" handler={Posts}/>
+   *         <Route name="post" path="/posts/:id" handler={Post}/>
    *       </Route>
    *     </Routes>
    *   ).match('/posts/123'); => [ { route: <AppRoute>, params: {} },
-   *                               { route: <PostsRoute>, params: {} },
    *                               { route: <PostRoute>, params: { id: '123' } } ]
    */
   match: function (path) {
