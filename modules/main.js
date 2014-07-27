@@ -7,6 +7,7 @@ exports.replaceWith = require('./helpers/replaceWith');
 exports.transitionTo = require('./helpers/transitionTo');
 
 exports.ActiveState = require('./mixins/ActiveState');
+exports.AsyncState = require('./mixins/AsyncState');
 
 // Backwards compat with 0.1. We should
 // remove this when we ship 1.0.
