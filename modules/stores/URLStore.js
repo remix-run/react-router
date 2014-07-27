@@ -70,6 +70,9 @@ var URLStore = {
     if (path === _currentPath)
       return;
 
+    if (_location === 'disabledHistory')
+      return window.location = path;
+
     if (_location === 'history') {
       window.history.pushState({ path: path }, '', path);
       notifyChange();
@@ -87,7 +90,9 @@ var URLStore = {
    * to the browser's history.
    */
   replace: function (path) {
-    if (_location === 'history') {
+    if (_location === 'disabledHistory') {
+      window.location.replace(path);
+    } else if (_location === 'history') {
       window.history.replaceState({ path: path }, '', path);
       notifyChange();
     } else if (_location === 'hash') {
@@ -143,10 +148,15 @@ var URLStore = {
       return; // Don't setup twice.
     }
 
+    if (location === 'history' && !supportsHistory()) {
+      location = 'disabledHistory';
+      return;
+    }
+
     var changeEvent = CHANGE_EVENTS[location];
 
     invariant(
-      changeEvent,
+      changeEvent || location === 'disabledHistory',
       'The URL store location "' + location + '" is not valid. ' +
       'It must be either "hash" or "history"'
     );
@@ -184,5 +194,20 @@ var URLStore = {
   }
 
 };
+
+function supportsHistory() {
+  /*! taken from modernizr
+   * https://github.com/Modernizr/Modernizr/blob/master/LICENSE
+   * https://github.com/Modernizr/Modernizr/blob/master/feature-detects/history.js
+   */
+  var ua = navigator.userAgent;
+  if ((ua.indexOf('Android 2.') !== -1 ||
+      (ua.indexOf('Android 4.0') !== -1)) &&
+      ua.indexOf('Mobile Safari') !== -1 &&
+      ua.indexOf('Chrome') === -1) {
+    return false;
+  }
+  return (window.history && 'pushState' in window.history);
+}
 
 module.exports = URLStore;
