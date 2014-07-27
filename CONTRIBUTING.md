@@ -1,6 +1,6 @@
-### Commit subjects
+### Commit Subjects
 
-If your patch changes the API or fixes a bug please use one of the
+If your patch **changes the API or fixes a bug** please use one of the
 following prefixes in your commit subject:
 
 - `[fixed] ...`
@@ -9,7 +9,17 @@ following prefixes in your commit subject:
 - `[removed] ...`
 
 That ensures the subject line of your commit makes it into the
-auto-generated changelog.
+auto-generated changelog. Do not use these tags if your change doesn't
+fix a bug and doesn't change the public API.
+
+Commits with changed, added, or removed, must be reviewed by another
+collaborator.
+
+#### When using `[changed]` or `[removed]`...
+
+Please include an upgrade path with example code in the commit message.
+If it doesn't make sense to do this, then it doesn't make sense to use
+`[changed]` or `[removed]` :)
 
 ### README
 
