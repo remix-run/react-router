@@ -18,7 +18,7 @@ var routes = (
   </Route>
 );
 
-// 0.4.x
+// 0.5.x
 var routes = (
   <Routes location="history">
     <Route handler={App}>
