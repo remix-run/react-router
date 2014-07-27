@@ -9,7 +9,7 @@ var resolveAsyncState = require('../helpers/resolveAsyncState');
  * arguments: 1) the current route params, 2) the current query and
  * 3) a function that can be used to set state as it is received.
  *
- * Much like the familiar getInitialState method, getInitialAsyncState
+ * Much like the familiar `getInitialState` method, `getInitialAsyncState`
  * should return a hash of key/value pairs to use in the component's
  * state. The difference is that the values may be promises. As these
  * values resolve, the component's state is updated. You should only
@@ -23,20 +23,15 @@ var resolveAsyncState = require('../helpers/resolveAsyncState');
  *     statics: {
  *   
  *       getInitialAsyncState: function (params, query, setState) {
- *         // If you don't need to do anything async, just update
- *         // the state immediately and you're done.
- *         setState({
- *           user: UserStore.getUserByID(params.userID)
- *         });
- *   
- *         // Or, ignore the setState argument entirely and return a
- *         // hash with keys named after the state variables you want
- *         // to set. The values may be immediate values or promises.
+ *         // Return a hash with keys named after the state variables
+ *         // you want to set, as you normally do in getInitialState,
+ *         // except the values may be immediate values or promises.
+ *         // The state is automatically updated as promises resolve.
  *         return {
  *           user: getUserByID(params.userID) // may be a promise
  *         };
  *   
- *         // Or, stream your data!
+ *         // Or, use the setState function to stream data!
  *         var buffer = '';
  *   
  *         return {
