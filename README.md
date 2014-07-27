@@ -9,7 +9,8 @@ You are viewing docs for the latest code on master. Check out
 [other releases](https://github.com/rackt/react-router/releases)
 for the version you have installed.
 
-Also, please refer to the [CHANGELOG](/CHANGELOG) when upgrading.
+Please refer to the [upgrade guide](/UPGRADE_GUIDE.md) and
+[changelog](/CHANGELOG) when upgrading.
 
 ## **** NPM USERS THIS PACKAGE MOVED ****
 
