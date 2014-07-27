@@ -2,14 +2,16 @@ var ExecutionEnvironment = require('react/lib/ExecutionEnvironment');
 var invariant = require('react/lib/invariant');
 var warning = require('react/lib/warning');
 
-var CHANGE_EVENTS = {
-  hash: (window.addEventListener) ? 'hashchange' : 'onhashchange',
-  history: 'popstate'
-};
-
 var _location;
 var _currentPath = '/';
 var _lastPath = null;
+
+function getWindowChangeEvent(location) {
+  if (location === 'history')
+    return 'popstate';
+
+  return window.addEventListener ? 'hashchange' : 'onhashchange';
+}
 
 function getWindowPath() {
   return window.location.pathname + window.location.search;
@@ -153,7 +155,7 @@ var URLStore = {
       return;
     }
 
-    var changeEvent = CHANGE_EVENTS[location];
+    var changeEvent = getWindowChangeEvent(location);
 
     invariant(
       changeEvent || location === 'disabledHistory',
@@ -182,7 +184,7 @@ var URLStore = {
     if (_location == null)
       return;
 
-    var changeEvent = CHANGE_EVENTS[_location];
+    var changeEvent = getWindowChangeEvent(_location);
 
     if (window.removeEventListener) {
       window.removeEventListener(changeEvent, notifyChange, false);
