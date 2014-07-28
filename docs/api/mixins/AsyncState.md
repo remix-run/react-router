@@ -81,8 +81,9 @@ var User = React.createClass({
         activity: {}, // an immediate value (not a promise)
         stream: getStreamingData(params.userID, function (chunk) {
           // `getStreamingData` returns a promise, but also calls back as
-          // data is received, giving use a chance to update the UI with
-          // progress
+          // data is received, giving us a chance to update the UI with
+          // progress using the `AsyncState` specific `setState`
+          // function
           buffer += chunk;
           setState({ streamBuffer: buffer });
         })
