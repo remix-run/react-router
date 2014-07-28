@@ -12,7 +12,7 @@ React Router API
 - Misc 
   - [`transition`](/docs/api/misc/transition.md)
 
-- mixins
+- Mixins
   - [`ActiveState`](/docs/api/mixins/ActiveState.md)
   - [`AsyncState`](/docs/api/mixins/AsyncState.md)
 
