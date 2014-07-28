@@ -45,6 +45,8 @@ Example
 
 ```js
 var User = React.createClass({
+
+  mixins: [ Router.AsyncState ],
  
   statics: {
  
