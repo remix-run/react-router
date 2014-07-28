@@ -22,10 +22,6 @@ describe('when a route is looked up by name', function () {
     RouteStore.registerRoute(route);
   });
 
-  afterEach(function () {
-    RouteStore.unregisterRoute(route);
-  });
-
   it('returns that route', function () {
     expect(RouteStore.getRouteByName('products')).toEqual(route);
   });
@@ -55,6 +51,18 @@ describe('when registering a route', function () {
       RouteStore.registerRoute(route);
       expect(route.props.path).toEqual('/users');
       RouteStore.unregisterRoute(route);
+    });
+  });
+
+  describe('with the same name as another route', function () {
+    beforeEach(function () {
+      RouteStore.registerRoute(Route({ name: 'users', handler: App }));
+    });
+
+    it('throws an error', function () {
+      expect(function () {
+        RouteStore.registerRoute(Route({ name: 'users', handler: App }));
+      }).toThrow(Error);
     });
   });
 

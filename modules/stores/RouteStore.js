@@ -14,7 +14,28 @@ var _namedRoutes = {};
 var RouteStore = {
 
   /**
-   * Registers a <Route> and all of its children with the RouteStore. Also,
+   * Removes all references to <Route>s from the store. Should only ever
+   * really be used in tests to clear the store between test runs.
+   */
+  unregisterAllRoutes: function () {
+    _namedRoutes = {};
+  },
+
+  /**
+   * Removes the reference to the given <Route> and all of its children
+   * from the store.
+   */
+  unregisterRoute: function (route) {
+    if (route.props.name)
+      delete _namedRoutes[route.props.name];
+
+    React.Children.forEach(route.props.children, function (child) {
+      RouteStore.unregisterRoute(route);
+    });
+  },
+
+  /**
+   * Registers a <Route> and all of its children with the store. Also,
    * does some normalization and validation on route props.
    */
   registerRoute: function (route, _parentRoute) {
@@ -61,19 +82,6 @@ var RouteStore = {
 
     React.Children.forEach(route.props.children, function (child) {
       RouteStore.registerRoute(child, route);
-    });
-  },
-
-  /**
-   * Removes the reference to the given <Route> and all of its children from
-   * the RouteStore.
-   */
-  unregisterRoute: function (route) {
-    if (route.props.name)
-      delete _namedRoutes[route.props.name];
-
-    React.Children.forEach(route.props.children, function (child) {
-      RouteStore.unregisterRoute(route);
     });
   },
 

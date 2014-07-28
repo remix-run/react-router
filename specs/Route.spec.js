@@ -9,9 +9,9 @@ var App = React.createClass({
   }
 });
 
-describe('a Route that matches the URL', function () {
+describe('a Route that matches a URL', function () {
   it('returns an array', function () {
-    var routes = TestUtils.renderIntoDocument(
+    var routes = renderComponent(
       Routes(null,
         Route({ handler: App },
           Route({ path: '/a/b/c', handler: App })
@@ -25,11 +25,13 @@ describe('a Route that matches the URL', function () {
 
     var rootMatch = getRootMatch(matches);
     expect(rootMatch.params).toEqual({});
+
+    removeComponent(routes);
   });
 
   describe('that contains dynamic segments', function () {
     it('returns an array with the correct params', function () {
-      var routes = TestUtils.renderIntoDocument(
+      var routes = renderComponent(
         Routes(null,
           Route({ handler: App },
             Route({ path: '/posts/:id/edit', handler: App })
@@ -43,13 +45,15 @@ describe('a Route that matches the URL', function () {
 
       var rootMatch = getRootMatch(matches);
       expect(rootMatch.params).toEqual({ id: 'abc' });
+
+      removeComponent(routes);
     });
   });
 });
 
 describe('a Route that does not match the URL', function () {
   it('returns null', function () {
-    var routes = TestUtils.renderIntoDocument(
+    var routes = renderComponent(
       Routes(null,
         Route({ handler: App },
           Route({ path: '/a/b/c', handler: App })
@@ -58,12 +62,14 @@ describe('a Route that does not match the URL', function () {
     );
 
     expect(routes.match('/not-found')).toBe(null);
+
+    removeComponent(routes);
   });
 });
 
 describe('a nested Route that matches the URL', function () {
   it('returns the appropriate params for each match', function () {
-    var routes = TestUtils.renderIntoDocument(
+    var routes = renderComponent(
       Routes(null,
         Route({ handler: App },
           Route({ name: 'posts', path: '/posts/:id', handler: App },
@@ -84,12 +90,14 @@ describe('a nested Route that matches the URL', function () {
     var postsMatch = matches[1];
     expect(postsMatch.route.props.name).toEqual('posts');
     expect(postsMatch.params).toEqual({ id: 'abc' });
+
+    removeComponent(routes);
   });
 });
 
 describe('multiple nested Router that match the URL', function () {
   it('returns the first one in the subtree, depth-first', function () {
-    var routes = TestUtils.renderIntoDocument(
+    var routes = renderComponent(
       Routes(null,
         Route({ handler: App },
           Route({ path: '/a', handler: App },
@@ -106,52 +114,8 @@ describe('multiple nested Router that match the URL', function () {
 
     var rootMatch = getRootMatch(matches);
     expect(rootMatch.route.props.name).toEqual('expected');
-  });
-});
 
-describe('a route handler', function () {
-  it('may not receive children', function (done) {
-    var InvalidHandler = React.createClass({
-      displayName: 'InvalidHandler',
-      render: function () {
-        try {
-          var result = this.props.activeRouteHandler({}, React.DOM.div());
-          assert(false, 'activeRouteHandler rendered with children');
-          return result;
-        } catch (error) {
-          assert(error);
-        }
-
-        done();
-      }
-    });
-
-    var routes = TestUtils.renderIntoDocument(
-      Routes(null,
-        Route({ handler: InvalidHandler },
-          Route({ path: '/home', handler: App })
-        )
-      )
-    );
-
-    routes.dispatch('/home');
-  });
-});
-
-describe('a Route', function() {
-  it('requires a handler');
-});
-
-describe('a child route', function() {
-  describe('path', function() {
-    it('defaults to /');
-    it('is not required to start with /');
-    it('can be inferred from its name');
-    it('must contain all dynamic segments of its parent route path');
-  });
-
-  describe('name', function() {
-    it('cannot be reused');
+    removeComponent(routes);
   });
 });
 

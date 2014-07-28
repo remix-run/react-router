@@ -31,7 +31,7 @@ describe('AsyncState', function () {
         }
       });
 
-      var user = TestUtils.renderIntoDocument(
+      var user = ReactTestUtils.renderIntoDocument(
         User()
       );
 
