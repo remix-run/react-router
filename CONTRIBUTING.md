@@ -21,9 +21,9 @@ Please include an upgrade path with example code in the commit message.
 If it doesn't make sense to do this, then it doesn't make sense to use
 `[changed]` or `[removed]` :)
 
-### README
+### Docs
 
-Please update the readme with any API changes, the code and docs should
+Please update the docs with any API changes, the code and docs should
 always be in sync.
 
 ### Development
