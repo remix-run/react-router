@@ -67,43 +67,27 @@ var User = React.createClass({
 ```
 
 But you can get fancier...
- 
 
 ```js
 var User = React.createClass({
-
   mixins: [ Router.AsyncState ],
  
   statics: {
- 
     getInitialAsyncState: function (params, query, setState) {
-      // Return a hash with keys named after the state variables
-      // you want to set, as you normally do in getInitialState,
-      // except the values may be immediate values or promises.
-      // The state is automatically updated as promises resolve.
+      var buffer = '';
+
       return {
         user: getUserByID(params.userID) // may be a promise
-      };
- 
-      // Or, use the setState function to stream data!
-      var buffer = '';
- 
-      return {
-
-        // Same as above, the stream state variable is set to the
-        // value returned by this promise when it resolves.
+        activity: {}, // an immediate value (not a promise)
         stream: getStreamingData(params.userID, function (chunk) {
+          // `getStreamingData` returns a promise, but also calls back as
+          // data is received, giving use a chance to update the UI with
+          // progress
           buffer += chunk;
- 
-          // Notify of progress.
-          setState({
-            streamBuffer: buffer
-          });
+          setState({ streamBuffer: buffer });
         })
- 
       };
     }
- 
   },
  
   getInitialState: function () {
