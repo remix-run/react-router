@@ -40,8 +40,34 @@ When testing, use the `initialAsyncState` prop to simulate asynchronous
 data fetching. When this prop is present, no attempt is made to retrieve
 additional state via `getInitialAsyncState`.
 
-Example
--------
+Examples
+--------
+
+In it simplest form, just return a hash of promises, they become state:
+
+```js
+var User = React.createClass({
+  mixins: [ Router.AsyncState ],
+ 
+  statics: {
+    getInitialAsyncState: function (params, query, setState) {
+      return {
+        user: fetchUser(params.userId),
+        activity: fetchActivityForUser(params.userId)
+      }
+    }
+  },
+
+  render: function() {
+    return this.state.user ?
+      <LoadingUserProfile/> :
+      <UserProfile user={this.state.user} activity={this.state.activity} />;
+  }
+});
+```
+
+But you can get fancier...
+ 
 
 ```js
 var User = React.createClass({
