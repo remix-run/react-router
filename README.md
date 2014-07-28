@@ -9,7 +9,7 @@ Docs
 ----
 
 - [Guide: Overview](/docs/guides/overview.md)
-- [API](/docs/api/index.md)
+- [API](/docs/api/)
 
 Important Notes
 ---------------

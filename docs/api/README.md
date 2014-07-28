@@ -1,5 +1,5 @@
-API: Index
-===========
+React Router API 
+================
 
 - [`Router`](/docs/api/Router.md)
 
