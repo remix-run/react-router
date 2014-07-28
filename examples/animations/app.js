@@ -1,6 +1,7 @@
 /** @jsx React.DOM */
 var React = require('react');
 var Router = require('../../modules/main');
+var Routes = Router.Routes;
 var Route = Router.Route;
 var Link = Router.Link;
 var Transition = require('react/lib/ReactCSSTransitionGroup');
@@ -33,9 +34,11 @@ var Image = React.createClass({
 });
 
 var routes = (
-  <Route handler={App}>
-    <Route name="image" path="/:service" handler={Image}/>
-  </Route>
+  <Routes>
+    <Route handler={App}>
+      <Route name="image" path="/:service" handler={Image}/>
+    </Route>
+  </Routes>
 );
 
 React.renderComponent(routes, document.body);
