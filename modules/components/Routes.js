@@ -5,7 +5,6 @@ var mergeProperties = require('../helpers/mergeProperties');
 var goBack = require('../helpers/goBack');
 var replaceWith = require('../helpers/replaceWith');
 var transitionTo = require('../helpers/transitionTo');
-var withoutProperties = require('../helpers/withoutProperties');
 var Route = require('../components/Route');
 var Path = require('../helpers/Path');
 var ActiveStore = require('../stores/ActiveStore');
@@ -28,10 +27,6 @@ var Routes = React.createClass({
   displayName: 'Routes',
 
   statics: {
-
-    getUnreservedProps: function (props) {
-      return withoutProperties(props, RESERVED_PROPS);
-    },
 
     /**
      * Handles errors that were thrown asynchronously. By default, the
