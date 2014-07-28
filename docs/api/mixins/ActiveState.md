@@ -39,7 +39,7 @@ var Tab = React.createClass({
 
   updateActiveState: function () {
     this.setState({
-      isActive: Tab.isActive(routeName, params, query)
+      isActive: Tab.isActive(this.props.to, this.props.params, this.props.query)
     })
   },
 
