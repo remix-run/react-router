@@ -53,6 +53,6 @@ var Tab = React.createClass({
 
 // use it just like <Link/>, and you'll get an anchor wrapped in an `li`
 // with an automatic `active` class on both.
-<Tab route="foo">Foo</Tab>
+<Tab to="foo">Foo</Tab>
 ```
 
