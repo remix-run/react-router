@@ -31,6 +31,36 @@ var NAMED_LOCATIONS = {
 };
 
 /**
+ * The default handler for aborted transitions. Redirects replace
+ * the current URL and all others roll it back.
+ */
+function defaultAbortedTransitionHandler(transition) {
+  var reason = transition.abortReason;
+
+  if (reason instanceof Redirect) {
+    replaceWith(reason.to, reason.params, reason.query);
+  } else {
+    goBack();
+  }
+}
+
+/**
+ * The default handler for active state updates.
+ */
+function defaultActiveStateChangeHandler(state) {
+  ActiveStore.updateState(state);
+}
+
+/**
+ * The default handler for errors that were thrown asynchronously
+ * while transitioning. The default behavior is to re-throw the
+ * error so that it isn't silently swallowed.
+ */
+function defaultTransitionErrorHandler(error) {
+  throw error; // This error probably originated in a transition hook.
+}
+
+/**
  * The <Routes> component configures the route hierarchy and renders the
  * route matching the current location when rendered into a document.
  *
@@ -39,33 +69,10 @@ var NAMED_LOCATIONS = {
 var Routes = React.createClass({
   displayName: 'Routes',
 
-  statics: {
-
-    /**
-     * Handles errors that were thrown asynchronously. By default, the
-     * error is re-thrown so we don't swallow them silently.
-     */
-    handleAsyncError: function (error, route) {
-      throw error; // This error probably originated in a transition hook.
-    },
-
-    /**
-     * Handles aborted transitions. By default, redirects replace the
-     * current URL and all others roll it back.
-     */
-    handleAbortedTransition: function (transition, routes) {
-      var reason = transition.abortReason;
-
-      if (reason instanceof Redirect) {
-        replaceWith(reason.to, reason.params, reason.query);
-      } else {
-        goBack();
-      }
-    }
-
-  },
-
   propTypes: {
+    onAbortedTransition: React.PropTypes.func.isRequired,
+    onActiveStateChange: React.PropTypes.func.isRequired,
+    onTransitionError: React.PropTypes.func.isRequired,
     preserveScrollPosition: React.PropTypes.bool,
     location: function (props, propName, componentName) {
       var location = props[propName];
@@ -77,6 +84,9 @@ var Routes = React.createClass({
 
   getDefaultProps: function () {
     return {
+      onAbortedTransition: defaultAbortedTransitionHandler,
+      onActiveStateChange: defaultActiveStateChangeHandler,
+      onTransitionError: defaultTransitionErrorHandler,
       preserveScrollPosition: false,
       location: HashLocation
     };
@@ -176,9 +186,9 @@ var Routes = React.createClass({
 
     var promise = syncWithTransition(routes, transition).then(function (newState) {
       if (transition.isAborted) {
-        Routes.handleAbortedTransition(transition, routes);
+        routes.props.onAbortedTransition(transition);
       } else if (newState) {
-        ActiveStore.updateState(newState);
+        routes.props.onActiveStateChange(newState);
       }
 
       return transition;
@@ -188,7 +198,7 @@ var Routes = React.createClass({
       promise = promise.then(undefined, function (error) {
         // Use setTimeout to break the promise chain.
         setTimeout(function () {
-          Routes.handleAsyncError(error, routes);
+          routes.props.onTransitionError(error);
         });
       });
     }
