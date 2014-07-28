@@ -27,7 +27,7 @@ Router.transitionTo('about');
 Router.transitionTo('/users/10?showAge=true');
 ```
 
-### `replaceWith(routeName, [params[, query]])`
+### `replaceWith(routeNameOrPath, [params[, query]])`
 
 Programatically replace current route with a new route. Does not add an
 entry into the browser history.
