@@ -15,3 +15,6 @@ a.active {
   color: hsl(20, 50%, 50%);
 }
 
+.breadcrumbs a {
+  text-decoration: none;
+}
