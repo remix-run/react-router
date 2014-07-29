@@ -29,7 +29,6 @@ var App = React.createClass({
       <Link to="login">Sign in</Link>;
     return (
       <div>
-        <h1>Auth User Flow</h1>
         <ul>
           <li>{loginOrOut}</li>
           <li><Link to="about">About</Link></li>
@@ -190,4 +189,4 @@ var routes = (
   </Routes>
 );
 
-React.renderComponent(routes, document.body);
+React.renderComponent(routes, document.getElementById('example'));
