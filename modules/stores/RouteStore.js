@@ -30,7 +30,7 @@ var RouteStore = {
       delete _namedRoutes[route.props.name];
 
     React.Children.forEach(route.props.children, function (child) {
-      RouteStore.unregisterRoute(route);
+      RouteStore.unregisterRoute(child);
     });
   },
 
