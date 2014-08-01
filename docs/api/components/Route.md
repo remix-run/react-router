@@ -30,6 +30,35 @@ handler will have the child route's handler available as
 `this.props.activeRouteHandler`. You can then render it in the parent
 passing in any additional props as needed.
 
+### [prop]
+
+Any additional, user-defined, properties will be become properties of
+the rendered handler.
+
+#### Example:
+
+```js
+var App;
+var foo = "hello";
+
+var routes = (
+  <Routes>
+    // pass `foo` to `something`
+    <Route handler={App} something={foo}/>
+  </Routes>
+);
+
+App = React.createClass({
+  render: function() {
+    // access `something` on props
+    return <div>{this.props.something}</div>
+  }
+});
+
+React.renderComponent(routes, document.body);
+document.body.innerHTML // -> <div>hello</div>
+```
+
 Example
 -------
 
