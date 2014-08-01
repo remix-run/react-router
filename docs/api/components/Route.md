@@ -30,7 +30,7 @@ handler will have the child route's handler available as
 `this.props.activeRouteHandler`. You can then render it in the parent
 passing in any additional props as needed.
 
-### [prop]
+### `[prop]`
 
 Any additional, user-defined, properties will be become properties of
 the rendered handler.
