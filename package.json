@@ -6,7 +6,7 @@
     "react",
     "router"
   ],
-  "main": "modules/main",
+  "main": "./index",
   "repository": {
     "type": "git",
     "url": "https://github.com/rackt/react-router.git"
