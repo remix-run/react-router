@@ -56,3 +56,26 @@ describe('when going back in history', function () {
     expect(error).toEqual(true);
   });
 });
+
+describe('when navigating back to the root', function() {
+  beforeEach(function () {
+    // not all tests are constructing and tearing down the URLStore.
+    // Let's set it up correctly once and then tear it down to ensure that all
+    // variables in the URLStore module are reset.
+    URLStore.setup('hash');
+    URLStore.teardown();
+
+    // simulating that the browser opens a page with #/dashboard
+    window.location.hash = '/dashboard';
+    URLStore.setup('hash');
+  });
+
+  afterEach(function () {
+    URLStore.teardown();
+  });
+
+  it('should have the correct path', function () {
+    URLStore.push('/');
+    expect(window.location.hash).toEqual('#/');
+  });
+});
