@@ -58,10 +58,10 @@ var URLStore = {
   getCurrentPath: function () {
     if (_location === 'history')
       return getWindowPath();
-    
+
     if (_location === 'hash')
       return window.location.hash.substr(1);
-    
+
     return _currentPath;
   },
 
@@ -69,7 +69,7 @@ var URLStore = {
    * Pushes the given path onto the browser navigation stack.
    */
   push: function (path) {
-    if (path === _currentPath)
+    if (path === this.getCurrentPath())
       return;
 
     if (_location === 'disabledHistory')
@@ -193,6 +193,7 @@ var URLStore = {
     }
 
     _location = null;
+    _currentPath = '/';
   }
 
 };
