@@ -18,7 +18,7 @@ function Router(route) {
 
 module.exports = Router;
 
-},{"react/lib/warning":51}],2:[function(_dereq_,module,exports){
+},{"react/lib/warning":53}],2:[function(_dereq_,module,exports){
 var React = (typeof window !== "undefined" ? window.React : typeof global !== "undefined" ? global.React : null);
 var ActiveState = _dereq_('../mixins/ActiveState');
 var withoutProperties = _dereq_('../helpers/withoutProperties');
@@ -48,7 +48,7 @@ var RESERVED_PROPS = {
  *   <Route name="showPost" path="/posts/:postId" handler={Post}/>
  *
  * You could use the following component to link to that route:
- * 
+ *
  *   <Link to="showPost" postId="123"/>
  *
  * In addition to params, links may pass along query string parameters
@@ -130,7 +130,7 @@ var Link = React.createClass({
   },
 
   handleClick: function (event) {
-    if (isModifiedEvent(event))
+    if (isModifiedEvent(event) || !isLeftClick(event))
       return;
 
     event.preventDefault();
@@ -150,13 +150,17 @@ var Link = React.createClass({
 
 });
 
+function isLeftClick(event) {
+  return event.button === 0;
+}
+
 function isModifiedEvent(event) {
-  return !!(event.metaKey || event.ctrlKey || event.shiftKey);
+  return !!(event.metaKey || event.altKey || event.ctrlKey || event.shiftKey);
 }
 
 module.exports = Link;
 
-},{"../helpers/makeHref":8,"../helpers/transitionTo":12,"../helpers/withoutProperties":13,"../mixins/ActiveState":15}],3:[function(_dereq_,module,exports){
+},{"../helpers/makeHref":8,"../helpers/transitionTo":13,"../helpers/withoutProperties":14,"../mixins/ActiveState":16}],3:[function(_dereq_,module,exports){
 var React = (typeof window !== "undefined" ? window.React : typeof global !== "undefined" ? global.React : null);
 var withoutProperties = _dereq_('../helpers/withoutProperties');
 
@@ -248,7 +252,7 @@ var Route = React.createClass({
 
 module.exports = Route;
 
-},{"../helpers/withoutProperties":13}],4:[function(_dereq_,module,exports){
+},{"../helpers/withoutProperties":14}],4:[function(_dereq_,module,exports){
 var React = (typeof window !== "undefined" ? window.React : typeof global !== "undefined" ? global.React : null);
 var warning = _dereq_('react/lib/warning');
 var ExecutionEnvironment = _dereq_('react/lib/ExecutionEnvironment');
@@ -256,7 +260,6 @@ var mergeProperties = _dereq_('../helpers/mergeProperties');
 var goBack = _dereq_('../helpers/goBack');
 var replaceWith = _dereq_('../helpers/replaceWith');
 var transitionTo = _dereq_('../helpers/transitionTo');
-var withoutProperties = _dereq_('../helpers/withoutProperties');
 var Route = _dereq_('../components/Route');
 var Path = _dereq_('../helpers/Path');
 var ActiveStore = _dereq_('../stores/ActiveStore');
@@ -279,10 +282,6 @@ var Routes = React.createClass({
   displayName: 'Routes',
 
   statics: {
-
-    getUnreservedProps: function (props) {
-      return withoutProperties(props, RESERVED_PROPS);
-    },
 
     /**
      * Handles errors that were thrown asynchronously. By default, the
@@ -352,14 +351,14 @@ var Routes = React.createClass({
    * object that contains the URL parameters relevant to that route. Returns
    * null if no route in the tree matches the path.
    *
-   *   ( <Routes handler={App}>
-   *       <Route name="posts" handler={Posts}>
-   *         <Route name="newPost" path="/posts/new" handler={NewPost}/>
-   *         <Route name="showPost" path="/posts/:id" handler={Post}/>
+   *   React.renderComponent(
+   *     <Routes>
+   *       <Route handler={App}>
+   *         <Route name="posts" handler={Posts}/>
+   *         <Route name="post" path="/posts/:id" handler={Post}/>
    *       </Route>
    *     </Routes>
    *   ).match('/posts/123'); => [ { route: <AppRoute>, params: {} },
-   *                               { route: <PostsRoute>, params: {} },
    *                               { route: <PostRoute>, params: { id: '123' } } ]
    */
   match: function (path) {
@@ -694,7 +693,7 @@ function reversedArray(array) {
 
 module.exports = Routes;
 
-},{"../components/Route":3,"../helpers/Path":5,"../helpers/goBack":7,"../helpers/mergeProperties":10,"../helpers/replaceWith":11,"../helpers/transitionTo":12,"../helpers/withoutProperties":13,"../stores/ActiveStore":16,"../stores/RouteStore":17,"../stores/URLStore":18,"es6-promise":22,"react/lib/ExecutionEnvironment":47,"react/lib/warning":51}],5:[function(_dereq_,module,exports){
+},{"../components/Route":3,"../helpers/Path":5,"../helpers/goBack":7,"../helpers/mergeProperties":10,"../helpers/replaceWith":11,"../helpers/transitionTo":13,"../stores/ActiveStore":18,"../stores/RouteStore":19,"../stores/URLStore":20,"es6-promise":24,"react/lib/ExecutionEnvironment":49,"react/lib/warning":53}],5:[function(_dereq_,module,exports){
 var invariant = _dereq_('react/lib/invariant');
 var qs = _dereq_('querystring');
 var mergeProperties = _dereq_('./mergeProperties');
@@ -843,7 +842,7 @@ var Path = {
 
 module.exports = Path;
 
-},{"./URL":6,"./mergeProperties":10,"querystring":21,"react/lib/invariant":50}],6:[function(_dereq_,module,exports){
+},{"./URL":6,"./mergeProperties":10,"querystring":23,"react/lib/invariant":52}],6:[function(_dereq_,module,exports){
 var urlEncodedSpaceRE = /\+/g;
 var encodedSpaceRE = /%20/g;
 
@@ -876,7 +875,7 @@ function goBack() {
 
 module.exports = goBack;
 
-},{"../stores/URLStore":18}],8:[function(_dereq_,module,exports){
+},{"../stores/URLStore":20}],8:[function(_dereq_,module,exports){
 var URLStore = _dereq_('../stores/URLStore');
 var makePath = _dereq_('./makePath');
 
@@ -895,7 +894,7 @@ function makeHref(routeName, params, query) {
 
 module.exports = makeHref;
 
-},{"../stores/URLStore":18,"./makePath":9}],9:[function(_dereq_,module,exports){
+},{"../stores/URLStore":20,"./makePath":9}],9:[function(_dereq_,module,exports){
 var invariant = _dereq_('react/lib/invariant');
 var RouteStore = _dereq_('../stores/RouteStore');
 var Path = _dereq_('./Path');
@@ -925,7 +924,7 @@ function makePath(to, params, query) {
 
 module.exports = makePath;
 
-},{"../stores/RouteStore":17,"./Path":5,"react/lib/invariant":50}],10:[function(_dereq_,module,exports){
+},{"../stores/RouteStore":19,"./Path":5,"react/lib/invariant":52}],10:[function(_dereq_,module,exports){
 function mergeProperties(object, properties) {
   for (var property in properties) {
     if (properties.hasOwnProperty(property))
@@ -951,7 +950,34 @@ function replaceWith(to, params, query) {
 
 module.exports = replaceWith;
 
-},{"../stores/URLStore":18,"./makePath":9}],12:[function(_dereq_,module,exports){
+},{"../stores/URLStore":20,"./makePath":9}],12:[function(_dereq_,module,exports){
+var Promise = _dereq_('es6-promise').Promise;
+
+/**
+ * Resolves all values in asyncState and calls the setState
+ * function with new state as they resolve. Returns a promise
+ * that resolves after all values are resolved.
+ */
+function resolveAsyncState(asyncState, setState) {
+  if (asyncState == null)
+    return Promise.resolve();
+
+  var keys = Object.keys(asyncState);
+  
+  return Promise.all(
+    keys.map(function (key) {
+      return Promise.resolve(asyncState[key]).then(function (value) {
+        var newState = {};
+        newState[key] = value;
+        setState(newState);
+      });
+    })
+  );
+}
+
+module.exports = resolveAsyncState;
+
+},{"es6-promise":24}],13:[function(_dereq_,module,exports){
 var URLStore = _dereq_('../stores/URLStore');
 var makePath = _dereq_('./makePath');
 
@@ -965,7 +991,7 @@ function transitionTo(to, params, query) {
 
 module.exports = transitionTo;
 
-},{"../stores/URLStore":18,"./makePath":9}],13:[function(_dereq_,module,exports){
+},{"../stores/URLStore":20,"./makePath":9}],14:[function(_dereq_,module,exports){
 function withoutProperties(object, properties) {
   var result = {};
 
@@ -979,7 +1005,7 @@ function withoutProperties(object, properties) {
 
 module.exports = withoutProperties;
 
-},{}],14:[function(_dereq_,module,exports){
+},{}],15:[function(_dereq_,module,exports){
 exports.Link = _dereq_('./components/Link');
 exports.Route = _dereq_('./components/Route');
 exports.Routes = _dereq_('./components/Routes');
@@ -989,12 +1015,13 @@ exports.replaceWith = _dereq_('./helpers/replaceWith');
 exports.transitionTo = _dereq_('./helpers/transitionTo');
 
 exports.ActiveState = _dereq_('./mixins/ActiveState');
+exports.AsyncState = _dereq_('./mixins/AsyncState');
 
 // Backwards compat with 0.1. We should
 // remove this when we ship 1.0.
 exports.Router = _dereq_('./Router');
 
-},{"./Router":1,"./components/Link":2,"./components/Route":3,"./components/Routes":4,"./helpers/goBack":7,"./helpers/replaceWith":11,"./helpers/transitionTo":12,"./mixins/ActiveState":15}],15:[function(_dereq_,module,exports){
+},{"./Router":1,"./components/Link":2,"./components/Route":3,"./components/Routes":4,"./helpers/goBack":7,"./helpers/replaceWith":11,"./helpers/transitionTo":13,"./mixins/ActiveState":16,"./mixins/AsyncState":17}],16:[function(_dereq_,module,exports){
 var ActiveStore = _dereq_('../stores/ActiveStore');
 
 /**
@@ -1061,7 +1088,117 @@ var ActiveState = {
 
 module.exports = ActiveState;
 
-},{"../stores/ActiveStore":16}],16:[function(_dereq_,module,exports){
+},{"../stores/ActiveStore":18}],17:[function(_dereq_,module,exports){
+var React = (typeof window !== "undefined" ? window.React : typeof global !== "undefined" ? global.React : null);
+var resolveAsyncState = _dereq_('../helpers/resolveAsyncState');
+
+/**
+ * A mixin for route handler component classes that fetch at least
+ * part of their state asynchronously. Classes that use it should
+ * declare a static `getInitialAsyncState` method that fetches state
+ * for a component after it mounts. This function is given three
+ * arguments: 1) the current route params, 2) the current query and
+ * 3) a function that can be used to set state as it is received.
+ *
+ * Much like the familiar `getInitialState` method, `getInitialAsyncState`
+ * should return a hash of key/value pairs to use in the component's
+ * state. The difference is that the values may be promises. As these
+ * values resolve, the component's state is updated. You should only
+ * ever need to use the setState function for doing things like
+ * streaming data and/or updating progress.
+ *
+ * Example:
+ *
+ *   var User = React.createClass({
+ *   
+ *     statics: {
+ *   
+ *       getInitialAsyncState: function (params, query, setState) {
+ *         // Return a hash with keys named after the state variables
+ *         // you want to set, as you normally do in getInitialState,
+ *         // except the values may be immediate values or promises.
+ *         // The state is automatically updated as promises resolve.
+ *         return {
+ *           user: getUserByID(params.userID) // may be a promise
+ *         };
+ *   
+ *         // Or, use the setState function to stream data!
+ *         var buffer = '';
+ *   
+ *         return {
+ *
+ *           // Same as above, the stream state variable is set to the
+ *           // value returned by this promise when it resolves.
+ *           stream: getStreamingData(params.userID, function (chunk) {
+ *             buffer += chunk;
+ *   
+ *             // Notify of progress.
+ *             setState({
+ *               streamBuffer: buffer
+ *             });
+ *           })
+ *   
+ *         };
+ *       }
+ *   
+ *     },
+ *   
+ *     getInitialState: function () {
+ *       return {
+ *         user: null,        // Receives a value when getUserByID resolves.
+ *         stream: null,      // Receives a value when getStreamingData resolves.
+ *         streamBuffer: ''   // Used to track data as it loads.
+ *       };
+ *     },
+ *   
+ *     render: function () {
+ *       if (!this.state.user)
+ *         return <LoadingUser/>;
+ *   
+ *       return (
+ *         <div>
+ *           <p>Welcome {this.state.user.name}!</p>
+ *           <p>So far, you've received {this.state.streamBuffer.length} data!</p>
+ *         </div>
+ *       );
+ *     }
+ *   
+ *   });
+ *
+ * When testing, use the `initialAsyncState` prop to simulate asynchronous
+ * data fetching. When this prop is present, no attempt is made to retrieve
+ * additional state via `getInitialAsyncState`.
+ */
+var AsyncState = {
+
+  propTypes: {
+    initialAsyncState: React.PropTypes.object
+  },
+
+  getInitialState: function () {
+    return this.props.initialAsyncState || null;
+  },
+
+  updateAsyncState: function (state) {
+    if (this.isMounted())
+      this.setState(state);
+  },
+
+  componentDidMount: function () {
+    if (this.props.initialAsyncState || !this.constructor.getInitialAsyncState)
+      return;
+
+    resolveAsyncState(
+      this.constructor.getInitialAsyncState(this.props.params, this.props.query, this.updateAsyncState),
+      this.updateAsyncState
+    );
+  }
+
+};
+
+module.exports = AsyncState;
+
+},{"../helpers/resolveAsyncState":12}],18:[function(_dereq_,module,exports){
 var _activeRoutes = [];
 var _activeParams = {};
 var _activeQuery = {};
@@ -1149,7 +1286,7 @@ var ActiveStore = {
 
 module.exports = ActiveStore;
 
-},{"event-emitter":32}],17:[function(_dereq_,module,exports){
+},{"event-emitter":34}],19:[function(_dereq_,module,exports){
 var React = (typeof window !== "undefined" ? window.React : typeof global !== "undefined" ? global.React : null);
 var invariant = _dereq_('react/lib/invariant');
 var warning = _dereq_('react/lib/warning');
@@ -1166,7 +1303,28 @@ var _namedRoutes = {};
 var RouteStore = {
 
   /**
-   * Registers a <Route> and all of its children with the RouteStore. Also,
+   * Removes all references to <Route>s from the store. Should only ever
+   * really be used in tests to clear the store between test runs.
+   */
+  unregisterAllRoutes: function () {
+    _namedRoutes = {};
+  },
+
+  /**
+   * Removes the reference to the given <Route> and all of its children
+   * from the store.
+   */
+  unregisterRoute: function (route) {
+    if (route.props.name)
+      delete _namedRoutes[route.props.name];
+
+    React.Children.forEach(route.props.children, function (child) {
+      RouteStore.unregisterRoute(child);
+    });
+  },
+
+  /**
+   * Registers a <Route> and all of its children with the store. Also,
    * does some normalization and validation on route props.
    */
   registerRoute: function (route, _parentRoute) {
@@ -1217,19 +1375,6 @@ var RouteStore = {
   },
 
   /**
-   * Removes the reference to the given <Route> and all of its children from
-   * the RouteStore.
-   */
-  unregisterRoute: function (route) {
-    if (route.props.name)
-      delete _namedRoutes[route.props.name];
-
-    React.Children.forEach(route.props.children, function (child) {
-      RouteStore.unregisterRoute(route);
-    });
-  },
-
-  /**
    * Returns the Route object with the given name, if one exists.
    */
   getRouteByName: function (routeName) {
@@ -1240,19 +1385,21 @@ var RouteStore = {
 
 module.exports = RouteStore;
 
-},{"../helpers/Path":5,"react/lib/invariant":50,"react/lib/warning":51}],18:[function(_dereq_,module,exports){
+},{"../helpers/Path":5,"react/lib/invariant":52,"react/lib/warning":53}],20:[function(_dereq_,module,exports){
 var ExecutionEnvironment = _dereq_('react/lib/ExecutionEnvironment');
 var invariant = _dereq_('react/lib/invariant');
 var warning = _dereq_('react/lib/warning');
 
-var CHANGE_EVENTS = {
-  hash: (window.addEventListener) ? 'hashchange' : 'onhashchange',
-  history: 'popstate'
-};
-
 var _location;
 var _currentPath = '/';
 var _lastPath = null;
+
+function getWindowChangeEvent(location) {
+  if (location === 'history')
+    return 'popstate';
+
+  return window.addEventListener ? 'hashchange' : 'onhashchange';
+}
 
 function getWindowPath() {
   return window.location.pathname + window.location.search;
@@ -1297,12 +1444,12 @@ var URLStore = {
    * Returns the value of the current URL path.
    */
   getCurrentPath: function () {
-    if (_location === 'history')
+    if (_location === 'history' || _location === 'disabledHistory')
       return getWindowPath();
-    
+
     if (_location === 'hash')
       return window.location.hash.substr(1);
-    
+
     return _currentPath;
   },
 
@@ -1310,6 +1457,12 @@ var URLStore = {
    * Pushes the given path onto the browser navigation stack.
    */
   push: function (path) {
+    if (path === this.getCurrentPath())
+      return;
+
+    if (_location === 'disabledHistory')
+      return window.location = path;
+
     if (_location === 'history') {
       window.history.pushState({ path: path }, '', path);
       notifyChange();
@@ -1327,7 +1480,9 @@ var URLStore = {
    * to the browser's history.
    */
   replace: function (path) {
-    if (_location === 'history') {
+    if (_location === 'disabledHistory') {
+      window.location.replace(path);
+    } else if (_location === 'history') {
       window.history.replaceState({ path: path }, '', path);
       notifyChange();
     } else if (_location === 'hash') {
@@ -1383,10 +1538,15 @@ var URLStore = {
       return; // Don't setup twice.
     }
 
-    var changeEvent = CHANGE_EVENTS[location];
+    if (location === 'history' && !supportsHistory()) {
+      _location = 'disabledHistory';
+      return;
+    }
+
+    var changeEvent = getWindowChangeEvent(location);
 
     invariant(
-      changeEvent,
+      changeEvent || location === 'disabledHistory',
       'The URL store location "' + location + '" is not valid. ' +
       'It must be either "hash" or "history"'
     );
@@ -1412,7 +1572,7 @@ var URLStore = {
     if (_location == null)
       return;
 
-    var changeEvent = CHANGE_EVENTS[_location];
+    var changeEvent = getWindowChangeEvent(_location);
 
     if (window.removeEventListener) {
       window.removeEventListener(changeEvent, notifyChange, false);
@@ -1421,13 +1581,29 @@ var URLStore = {
     }
 
     _location = null;
+    _currentPath = '/';
   }
 
 };
 
+function supportsHistory() {
+  /*! taken from modernizr
+   * https://github.com/Modernizr/Modernizr/blob/master/LICENSE
+   * https://github.com/Modernizr/Modernizr/blob/master/feature-detects/history.js
+   */
+  var ua = navigator.userAgent;
+  if ((ua.indexOf('Android 2.') !== -1 ||
+      (ua.indexOf('Android 4.0') !== -1)) &&
+      ua.indexOf('Mobile Safari') !== -1 &&
+      ua.indexOf('Chrome') === -1) {
+    return false;
+  }
+  return (window.history && 'pushState' in window.history);
+}
+
 module.exports = URLStore;
 
-},{"event-emitter":32,"react/lib/ExecutionEnvironment":47,"react/lib/invariant":50,"react/lib/warning":51}],19:[function(_dereq_,module,exports){
+},{"event-emitter":34,"react/lib/ExecutionEnvironment":49,"react/lib/invariant":52,"react/lib/warning":53}],21:[function(_dereq_,module,exports){
 // Copyright Joyent, Inc. and other Node contributors.
 //
 // Permission is hereby granted, free of charge, to any person obtaining a
@@ -1513,7 +1689,7 @@ var isArray = Array.isArray || function (xs) {
   return Object.prototype.toString.call(xs) === '[object Array]';
 };
 
-},{}],20:[function(_dereq_,module,exports){
+},{}],22:[function(_dereq_,module,exports){
 // Copyright Joyent, Inc. and other Node contributors.
 //
 // Permission is hereby granted, free of charge, to any person obtaining a
@@ -1600,19 +1776,19 @@ var objectKeys = Object.keys || function (obj) {
   return res;
 };
 
-},{}],21:[function(_dereq_,module,exports){
+},{}],23:[function(_dereq_,module,exports){
 'use strict';
 
 exports.decode = exports.parse = _dereq_('./decode');
 exports.encode = exports.stringify = _dereq_('./encode');
 
-},{"./decode":19,"./encode":20}],22:[function(_dereq_,module,exports){
+},{"./decode":21,"./encode":22}],24:[function(_dereq_,module,exports){
 "use strict";
 var Promise = _dereq_("./promise/promise").Promise;
 var polyfill = _dereq_("./promise/polyfill").polyfill;
 exports.Promise = Promise;
 exports.polyfill = polyfill;
-},{"./promise/polyfill":26,"./promise/promise":27}],23:[function(_dereq_,module,exports){
+},{"./promise/polyfill":28,"./promise/promise":29}],25:[function(_dereq_,module,exports){
 "use strict";
 /* global toString */
 
@@ -1706,7 +1882,7 @@ function all(promises) {
 }
 
 exports.all = all;
-},{"./utils":31}],24:[function(_dereq_,module,exports){
+},{"./utils":33}],26:[function(_dereq_,module,exports){
 "use strict";
 var browserGlobal = (typeof window !== 'undefined') ? window : {};
 var BrowserMutationObserver = browserGlobal.MutationObserver || browserGlobal.WebKitMutationObserver;
@@ -1768,7 +1944,7 @@ function asap(callback, arg) {
 }
 
 exports.asap = asap;
-},{}],25:[function(_dereq_,module,exports){
+},{}],27:[function(_dereq_,module,exports){
 "use strict";
 var config = {
   instrument: false
@@ -1784,7 +1960,7 @@ function configure(name, value) {
 
 exports.config = config;
 exports.configure = configure;
-},{}],26:[function(_dereq_,module,exports){
+},{}],28:[function(_dereq_,module,exports){
 "use strict";
 /*global self*/
 var RSVPPromise = _dereq_("./promise").Promise;
@@ -1823,7 +1999,7 @@ function polyfill() {
 }
 
 exports.polyfill = polyfill;
-},{"./promise":27,"./utils":31}],27:[function(_dereq_,module,exports){
+},{"./promise":29,"./utils":33}],29:[function(_dereq_,module,exports){
 "use strict";
 var config = _dereq_("./config").config;
 var configure = _dereq_("./config").configure;
@@ -2035,7 +2211,7 @@ function publishRejection(promise) {
 }
 
 exports.Promise = Promise;
-},{"./all":23,"./asap":24,"./config":25,"./race":28,"./reject":29,"./resolve":30,"./utils":31}],28:[function(_dereq_,module,exports){
+},{"./all":25,"./asap":26,"./config":27,"./race":30,"./reject":31,"./resolve":32,"./utils":33}],30:[function(_dereq_,module,exports){
 "use strict";
 /* global toString */
 var isArray = _dereq_("./utils").isArray;
@@ -2125,7 +2301,7 @@ function race(promises) {
 }
 
 exports.race = race;
-},{"./utils":31}],29:[function(_dereq_,module,exports){
+},{"./utils":33}],31:[function(_dereq_,module,exports){
 "use strict";
 /**
   `RSVP.reject` returns a promise that will become rejected with the passed
@@ -2173,7 +2349,7 @@ function reject(reason) {
 }
 
 exports.reject = reject;
-},{}],30:[function(_dereq_,module,exports){
+},{}],32:[function(_dereq_,module,exports){
 "use strict";
 function resolve(value) {
   /*jshint validthis:true */
@@ -2189,7 +2365,7 @@ function resolve(value) {
 }
 
 exports.resolve = resolve;
-},{}],31:[function(_dereq_,module,exports){
+},{}],33:[function(_dereq_,module,exports){
 "use strict";
 function objectOrFunction(x) {
   return isFunction(x) || (typeof x === "object" && x !== null);
@@ -2212,7 +2388,7 @@ exports.objectOrFunction = objectOrFunction;
 exports.isFunction = isFunction;
 exports.isArray = isArray;
 exports.now = now;
-},{}],32:[function(_dereq_,module,exports){
+},{}],34:[function(_dereq_,module,exports){
 'use strict';
 
 var d        = _dereq_('d')
@@ -2346,7 +2522,7 @@ module.exports = exports = function (o) {
 };
 exports.methods = methods;
 
-},{"d":33,"es5-ext/object/valid-callable":42}],33:[function(_dereq_,module,exports){
+},{"d":35,"es5-ext/object/valid-callable":44}],35:[function(_dereq_,module,exports){
 'use strict';
 
 var assign        = _dereq_('es5-ext/object/assign')
@@ -2411,14 +2587,14 @@ d.gs = function (dscr, get, set/*, options*/) {
 	return !options ? desc : assign(normalizeOpts(options), desc);
 };
 
-},{"es5-ext/object/assign":34,"es5-ext/object/is-callable":37,"es5-ext/object/normalize-options":41,"es5-ext/string/#/contains":44}],34:[function(_dereq_,module,exports){
+},{"es5-ext/object/assign":36,"es5-ext/object/is-callable":39,"es5-ext/object/normalize-options":43,"es5-ext/string/#/contains":46}],36:[function(_dereq_,module,exports){
 'use strict';
 
 module.exports = _dereq_('./is-implemented')()
 	? Object.assign
 	: _dereq_('./shim');
 
-},{"./is-implemented":35,"./shim":36}],35:[function(_dereq_,module,exports){
+},{"./is-implemented":37,"./shim":38}],37:[function(_dereq_,module,exports){
 'use strict';
 
 module.exports = function () {
@@ -2429,7 +2605,7 @@ module.exports = function () {
 	return (obj.foo + obj.bar + obj.trzy) === 'razdwatrzy';
 };
 
-},{}],36:[function(_dereq_,module,exports){
+},{}],38:[function(_dereq_,module,exports){
 'use strict';
 
 var keys  = _dereq_('../keys')
@@ -2453,21 +2629,21 @@ module.exports = function (dest, src/*, …srcn*/) {
 	return dest;
 };
 
-},{"../keys":38,"../valid-value":43}],37:[function(_dereq_,module,exports){
+},{"../keys":40,"../valid-value":45}],39:[function(_dereq_,module,exports){
 // Deprecated
 
 'use strict';
 
 module.exports = function (obj) { return typeof obj === 'function'; };
 
-},{}],38:[function(_dereq_,module,exports){
+},{}],40:[function(_dereq_,module,exports){
 'use strict';
 
 module.exports = _dereq_('./is-implemented')()
 	? Object.keys
 	: _dereq_('./shim');
 
-},{"./is-implemented":39,"./shim":40}],39:[function(_dereq_,module,exports){
+},{"./is-implemented":41,"./shim":42}],41:[function(_dereq_,module,exports){
 'use strict';
 
 module.exports = function () {
@@ -2477,7 +2653,7 @@ module.exports = function () {
 	} catch (e) { return false; }
 };
 
-},{}],40:[function(_dereq_,module,exports){
+},{}],42:[function(_dereq_,module,exports){
 'use strict';
 
 var keys = Object.keys;
@@ -2486,7 +2662,7 @@ module.exports = function (object) {
 	return keys(object == null ? object : Object(object));
 };
 
-},{}],41:[function(_dereq_,module,exports){
+},{}],43:[function(_dereq_,module,exports){
 'use strict';
 
 var assign = _dereq_('./assign')
@@ -2510,7 +2686,7 @@ module.exports = function (options/*, …options*/) {
 	return result;
 };
 
-},{"./assign":34}],42:[function(_dereq_,module,exports){
+},{"./assign":36}],44:[function(_dereq_,module,exports){
 'use strict';
 
 module.exports = function (fn) {
@@ -2518,7 +2694,7 @@ module.exports = function (fn) {
 	return fn;
 };
 
-},{}],43:[function(_dereq_,module,exports){
+},{}],45:[function(_dereq_,module,exports){
 'use strict';
 
 module.exports = function (value) {
@@ -2526,14 +2702,14 @@ module.exports = function (value) {
 	return value;
 };
 
-},{}],44:[function(_dereq_,module,exports){
+},{}],46:[function(_dereq_,module,exports){
 'use strict';
 
 module.exports = _dereq_('./is-implemented')()
 	? String.prototype.contains
 	: _dereq_('./shim');
 
-},{"./is-implemented":45,"./shim":46}],45:[function(_dereq_,module,exports){
+},{"./is-implemented":47,"./shim":48}],47:[function(_dereq_,module,exports){
 'use strict';
 
 var str = 'razdwatrzy';
@@ -2543,7 +2719,7 @@ module.exports = function () {
 	return ((str.contains('dwa') === true) && (str.contains('foo') === false));
 };
 
-},{}],46:[function(_dereq_,module,exports){
+},{}],48:[function(_dereq_,module,exports){
 'use strict';
 
 var indexOf = String.prototype.indexOf;
@@ -2552,7 +2728,7 @@ module.exports = function (searchString/*, position*/) {
 	return indexOf.call(this, searchString, arguments[1]) > -1;
 };
 
-},{}],47:[function(_dereq_,module,exports){
+},{}],49:[function(_dereq_,module,exports){
 /**
  * Copyright 2013-2014 Facebook, Inc.
  *
@@ -2604,7 +2780,7 @@ var ExecutionEnvironment = {
 
 module.exports = ExecutionEnvironment;
 
-},{}],48:[function(_dereq_,module,exports){
+},{}],50:[function(_dereq_,module,exports){
 /**
  * Copyright 2013-2014 Facebook, Inc.
  *
@@ -2660,7 +2836,7 @@ function copyProperties(obj, a, b, c, d, e, f) {
 
 module.exports = copyProperties;
 
-},{}],49:[function(_dereq_,module,exports){
+},{}],51:[function(_dereq_,module,exports){
 /**
  * Copyright 2013-2014 Facebook, Inc.
  *
@@ -2705,7 +2881,7 @@ copyProperties(emptyFunction, {
 
 module.exports = emptyFunction;
 
-},{"./copyProperties":48}],50:[function(_dereq_,module,exports){
+},{"./copyProperties":50}],52:[function(_dereq_,module,exports){
 /**
  * Copyright 2013-2014 Facebook, Inc.
  *
@@ -2767,7 +2943,7 @@ var invariant = function(condition, format, a, b, c, d, e, f) {
 
 module.exports = invariant;
 
-},{}],51:[function(_dereq_,module,exports){
+},{}],53:[function(_dereq_,module,exports){
 /**
  * Copyright 2014 Facebook, Inc.
  *
@@ -2817,6 +2993,6 @@ if ("production" !== "production") {
 
 module.exports = warning;
 
-},{"./emptyFunction":49}]},{},[14])
-(14)
+},{"./emptyFunction":51}]},{},[15])
+(15)
 });
