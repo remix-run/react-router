@@ -151,7 +151,7 @@ var URLStore = {
     }
 
     if (location === 'history' && !supportsHistory()) {
-      location = 'disabledHistory';
+      _location = 'disabledHistory';
       return;
     }
 
