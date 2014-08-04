@@ -56,7 +56,7 @@ var URLStore = {
    * Returns the value of the current URL path.
    */
   getCurrentPath: function () {
-    if (_location === 'history')
+    if (_location === 'history' || _location === 'disabledHistory')
       return getWindowPath();
 
     if (_location === 'hash')
