@@ -1,5 +1,5 @@
-React = require('react');
-ActiveState = require('./ActiveState');
+var React = require('react');
+var ActiveState = require('./ActiveState');
 var makeHref = require('../helpers/makeHref');
 var transitionTo = require('../helpers/transitionTo');
 var withoutProperties = require('../helpers/withoutProperties');
@@ -18,7 +18,7 @@ var RESERVED_PROPS = {
   children: true // ReactChildren
 };
 
-LinkMixin = {
+var LinkMixin = {
   mixins: [ ActiveState ],
 
   statics: {
