@@ -2,19 +2,6 @@ var React = require('react');
 var LinkMixin = require('../mixins/LinkMixin');
 
 /**
- * A map of <Link> component props that are reserved for use by the
- * router and/or React. All other props are used as params that are
- * interpolated into the link's path.
- */
-var RESERVED_PROPS = {
-  to: true,
-  className: true,
-  activeClassName: true,
-  query: true,
-  children: true // ReactChildren
-};
-
-/**
  * <Link> components are used to create an <a> element that links to a route.
  * When that route is active, the link gets an "active" class name (or the
  * value of its `activeClassName` prop).
