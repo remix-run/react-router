@@ -1,8 +1,5 @@
 var React = require('react');
-var ActiveState = require('../mixins/ActiveState');
-var withoutProperties = require('../helpers/withoutProperties');
-var transitionTo = require('../helpers/transitionTo');
-var makeHref = require('../helpers/makeHref');
+var LinkMixin = require('../mixins/LinkMixin');
 
 /**
  * A map of <Link> component props that are reserved for use by the
@@ -39,46 +36,16 @@ var Link = React.createClass({
 
   displayName: 'Link',
 
-  mixins: [ ActiveState ],
-
-  statics: {
-
-    getUnreservedProps: function (props) {
-      return withoutProperties(props, RESERVED_PROPS);
-    }
-
-  },
+  mixins: [ LinkMixin ],
 
   propTypes: {
-    to: React.PropTypes.string.isRequired,
     activeClassName: React.PropTypes.string.isRequired,
-    query: React.PropTypes.object
   },
 
   getDefaultProps: function () {
     return {
       activeClassName: 'active'
     };
-  },
-
-  getInitialState: function () {
-    return {
-      isActive: false
-    };
-  },
-
-  /**
-   * Returns a hash of URL parameters to use in this <Link>'s path.
-   */
-  getParams: function () {
-    return Link.getUnreservedProps(this.props);
-  },
-
-  /**
-   * Returns the value of the "href" attribute to use on the DOM element.
-   */
-  getHref: function () {
-    return makeHref(this.props.to, this.getParams(), this.props.query);
   },
 
   /**
@@ -94,29 +61,6 @@ var Link = React.createClass({
     return className;
   },
 
-  componentWillReceiveProps: function (nextProps) {
-    var params = Link.getUnreservedProps(nextProps);
-
-    this.setState({
-      isActive: Link.isActive(nextProps.to, params, nextProps.query)
-    });
-  },
-
-  updateActiveState: function () {
-    this.setState({
-      isActive: Link.isActive(this.props.to, this.getParams(), this.props.query)
-    });
-  },
-
-  handleClick: function (event) {
-    if (isModifiedEvent(event) || !isLeftClick(event))
-      return;
-
-    event.preventDefault();
-
-    transitionTo(this.props.to, this.getParams(), this.props.query);
-  },
-
   render: function () {
     var props = {
       href: this.getHref(),
@@ -128,13 +72,5 @@ var Link = React.createClass({
   }
 
 });
-
-function isLeftClick(event) {
-  return event.button === 0;
-}
-
-function isModifiedEvent(event) {
-  return !!(event.metaKey || event.altKey || event.ctrlKey || event.shiftKey);
-}
 
 module.exports = Link;
