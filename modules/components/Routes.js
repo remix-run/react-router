@@ -5,6 +5,7 @@ var mergeProperties = require('../helpers/mergeProperties');
 var goBack = require('../helpers/goBack');
 var replaceWith = require('../helpers/replaceWith');
 var transitionTo = require('../helpers/transitionTo');
+var Location = require('../helpers/Location');
 var Route = require('../components/Route');
 var Path = require('../helpers/Path');
 var ActiveStore = require('../stores/ActiveStore');
@@ -53,8 +54,15 @@ var Routes = React.createClass({
   },
 
   propTypes: {
-    location: React.PropTypes.oneOf([ 'hash', 'history' ]).isRequired,
-    preserveScrollPosition: React.PropTypes.bool
+    preserveScrollPosition: React.PropTypes.bool,
+    location: function(props, propName, componentName) {
+      var location = props[propName];
+      if (!Location[location]) {
+        return new Error('No matching location: "' + location +
+          '".  Must be one of: ' + Object.keys(Location) +
+          '. See: ' + componentName);
+      }
+    }
   },
 
   getDefaultProps: function () {
