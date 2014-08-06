@@ -2,8 +2,8 @@ Guide: Overview
 ===============
 
 ```
-var Routes = require('react-router').Routes;
-var Route = require('react-router').Route;
+var Routes = require('react-router/Routes');
+var Route = require('react-router/Route');
 
 React.renderComponent((
   <Routes>
@@ -50,7 +50,7 @@ will render the active child route handler.
 Here's the rest of the application:
 
 ```js
-var Link = require('react-router').Link;
+var Link = require('react-router/Link');
 
 var App = React.createClass({
   render: function() {
