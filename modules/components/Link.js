@@ -52,7 +52,8 @@ var Link = React.createClass({
   propTypes: {
     to: React.PropTypes.string.isRequired,
     activeClassName: React.PropTypes.string.isRequired,
-    query: React.PropTypes.object
+    query: React.PropTypes.object,
+    stopPropagation: React.PropTypes.bool
   },
 
   getDefaultProps: function () {
@@ -111,6 +112,10 @@ var Link = React.createClass({
   handleClick: function (event) {
     if (isModifiedEvent(event) || !isLeftClick(event))
       return;
+
+    if (this.props.stopPropagation) {
+      event.stopPropagation();
+    }
 
     event.preventDefault();
 
