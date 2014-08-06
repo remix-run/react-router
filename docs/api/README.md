@@ -5,6 +5,7 @@ React Router API
 
 - Components
   - [`Link`](/docs/api/components/Link.md)
+  - [`Redirect`](/docs/api/components/Redirect.md)
   - [`Route`](/docs/api/components/Route.md)
   - [`RouteHandler`](/docs/api/components/RouteHandler.md)
   - [`Routes`](/docs/api/components/Routes.md)
