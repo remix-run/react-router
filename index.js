@@ -6,3 +6,4 @@ exports.Routes = require('./Routes');
 exports.goBack = require('./goBack');
 exports.replaceWith = require('./replaceWith');
 exports.transitionTo = require('./transitionTo');
+exports.makeHref = require('./makeHref');

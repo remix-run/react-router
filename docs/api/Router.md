@@ -51,3 +51,16 @@ entry from the browser history.
 Router.goBack();
 ```
 
+### `makeHref(routeName, params, query)`
+
+Creates an `href` to a route. Use this along with `ActiveState` when you
+need to build components similar to `Link`.
+
+#### Example
+
+```js
+// given a route like this:
+<Route name="user" path="users/:userId"/>
+Router.makeHref('user', {userId: 123}); // "users/123"
+```
+
