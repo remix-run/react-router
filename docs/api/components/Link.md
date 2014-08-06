@@ -27,6 +27,10 @@ name through the link's properties to the resulting url.
 The className a `Link` receives when it's route is active. Defaults to
 `active`.
 
+### *others*
+
+You can also pass props you'd like to be on the `<a>` such as a title, id, or className.
+
 Example
 -------
 
