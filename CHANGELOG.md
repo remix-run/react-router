@@ -3,7 +3,7 @@ v0.5.2 - Thu, 07 Aug 2014 18:25:47 GMT
 
 - [21f4f57](../../commit/21f4f57) [added] preserveScrollPosition Route/Routes props
 - [f3b4de8](../../commit/f3b4de8) [added] support for extra props in Links, fixes #170
-- [829a9ec](../../commit/829a9ec) [added] <Redirect/> component
+- [829a9ec](../../commit/829a9ec) [added] `<Redirect/>` component
 - [0a49665](../../commit/0a49665) [added] Router.makeHref
 - [2100b8c](../../commit/2100b8c) [changed] handlers receive route name
 - [154afba](../../commit/154afba) [changed] location of public modules
@@ -19,13 +19,13 @@ v0.5.1 - Mon, 04 Aug 2014 22:16:38 GMT
 - [395a590](../../commit/395a590) [changed] fallback to window.location for history
 - [2a3582e](../../commit/2a3582e) [changed] make URLStore.push idempotent
 - [4c4f87b](../../commit/4c4f87b) [fixed] alt click on Link should count as modified
-- [97c02f1](../../commit/97c02f1) [fixed] middle click on <Link/>
+- [97c02f1](../../commit/97c02f1) [fixed] middle click on `<Link/>`
 
 
 v0.5.0 - Sat, 26 Jul 2014 22:38:36 GMT
 --------------------------------------
 
-- [5af49d4](../../commit/5af49d4) [changed] Split <Routes> component from <Route>
+- [5af49d4](../../commit/5af49d4) [changed] Split `<Routes>` component from `<Route>`
 
 
 v0.4.2 - Sat, 26 Jul 2014 18:23:43 GMT
