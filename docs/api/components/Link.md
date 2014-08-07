@@ -27,6 +27,13 @@ name through the link's properties to the resulting url.
 The className a `Link` receives when it's route is active. Defaults to
 `active`.
 
+### `stopPropagation`
+
+If set, the click handler for the link will call
+[`event.stopPropagation`][stopPropagation] on the click event.
+
+[stopPropagation]:https://developer.mozilla.org/en-US/docs/Web/API/event.stopPropagation
+
 Example
 -------
 
