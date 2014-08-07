@@ -30,7 +30,7 @@ Before our `1.0` release, breaking API changes will cause a bump to
 `0.5.0` will have breaking changes.
 
 Please refer to the [upgrade guide](/UPGRADE_GUIDE.md) and
-[changelog](/CHANGELOG.md) when upgrading.
+[changelog](/CHANGELOG) when upgrading.
 
 Installation
 ------------
