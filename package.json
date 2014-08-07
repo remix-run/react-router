@@ -38,7 +38,7 @@
     "karma-webpack": "1.2.1",
     "mocha": "1.20.1",
     "react": ">=0.11.0",
-    "rf-release": "0.1.2",
+    "rf-release": "0.3.0",
     "uglify-js": "2.4.15",
     "webpack": "1.2.0-beta5",
     "webpack-dev-server": "1.4.2"
