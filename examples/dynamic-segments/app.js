@@ -3,6 +3,7 @@ var React = require('react');
 var Router = require('../../index');
 var Route = Router.Route;
 var Routes = Router.Routes;
+var Redirect = Router.Redirect;
 var Link = Router.Link;
 
 var App = React.createClass({
@@ -50,6 +51,7 @@ var routes = (
     <Route handler={App}>
       <Route name="user" path="/user/:userId" handler={User}>
         <Route name="task" path="/user/:userId/tasks/:taskId" handler={Task}/>
+        <Redirect from="/user/:userId/todos/:taskId" to="task"/>
       </Route>
     </Route>
   </Routes>
