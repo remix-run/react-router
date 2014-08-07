@@ -15,9 +15,7 @@ v0.5.1 - Mon, 04 Aug 2014 22:16:38 GMT
 - [08f5a69](../../commit/08f5a69) [fixed] location="history" fallback
 - [87b1c2a](../../commit/87b1c2a) [fixed] Navigation to root URL can fail
 - [760f021](../../commit/760f021) [fixed] infinite loop in RouteStore.unregisterRoute
-- [5663924](../../commit/5663924) Revert "[added] initialPath prop to <Routes>"
 - [5fea685](../../commit/5fea685) [added] Router.AsyncState mixin
-- [b0aa491](../../commit/b0aa491) [added] initialPath prop to <Routes>
 - [395a590](../../commit/395a590) [changed] fallback to window.location for history
 - [2a3582e](../../commit/2a3582e) [changed] make URLStore.push idempotent
 - [4c4f87b](../../commit/4c4f87b) [fixed] alt click on Link should count as modified
