@@ -1,24 +1,13 @@
 var ExecutionEnvironment = require('react/lib/ExecutionEnvironment');
 var invariant = require('react/lib/invariant');
 var warning = require('react/lib/warning');
-
-var _location;
-var _currentPath = '/';
-var _lastPath = null;
-
-function getWindowChangeEvent(location) {
-  if (location === 'history')
-    return 'popstate';
-
-  return window.addEventListener ? 'hashchange' : 'onhashchange';
-}
-
-function getWindowPath() {
-  return window.location.pathname + window.location.search;
-}
+var Location = require('../helpers/Location');
 
 var EventEmitter = require('event-emitter');
 var _events = EventEmitter();
+
+var _location;
+var _locationHandler;
 
 function notifyChange() {
   _events.emit('change');
@@ -56,13 +45,7 @@ var URLStore = {
    * Returns the value of the current URL path.
    */
   getCurrentPath: function () {
-    if (_location === 'history' || _location === 'disabledHistory')
-      return getWindowPath();
-
-    if (_location === 'hash')
-      return window.location.hash.substr(1);
-
-    return _currentPath;
+    return _locationHandler.getCurrentPath();
   },
 
   /**
@@ -72,19 +55,7 @@ var URLStore = {
     if (path === this.getCurrentPath())
       return;
 
-    if (_location === 'disabledHistory')
-      return window.location = path;
-
-    if (_location === 'history') {
-      window.history.pushState({ path: path }, '', path);
-      notifyChange();
-    } else if (_location === 'hash') {
-      window.location.hash = path;
-    } else {
-      _lastPath = _currentPath;
-      _currentPath = path;
-      notifyChange();
-    }
+    _locationHandler.push(path);
   },
 
   /**
@@ -92,35 +63,14 @@ var URLStore = {
    * to the browser's history.
    */
   replace: function (path) {
-    if (_location === 'disabledHistory') {
-      window.location.replace(path);
-    } else if (_location === 'history') {
-      window.history.replaceState({ path: path }, '', path);
-      notifyChange();
-    } else if (_location === 'hash') {
-      window.location.replace(getWindowPath() + '#' + path);
-    } else {
-      _currentPath = path;
-      notifyChange();
-    }
+    _locationHandler.replace(path);
   },
 
   /**
    * Reverts the URL to whatever it was before the last update.
    */
   back: function () {
-    if (_location != null) {
-      window.history.back();
-    } else {
-      invariant(
-        _lastPath,
-        'You cannot make the URL store go back more than once when it does not use the DOM'
-      );
-
-      _currentPath = _lastPath;
-      _lastPath = null;
-      notifyChange();
-    }
+    _locationHandler.back();
   },
 
   /**
@@ -151,30 +101,19 @@ var URLStore = {
     }
 
     if (location === 'history' && !supportsHistory()) {
-      _location = 'disabledHistory';
-      return;
+      location = 'disabled';
     }
-
-    var changeEvent = getWindowChangeEvent(location);
-
-    invariant(
-      changeEvent || location === 'disabledHistory',
-      'The URL store location "' + location + '" is not valid. ' +
-      'It must be either "hash" or "history"'
-    );
 
     _location = location;
+    _locationHandler = Location[location];
 
-    if (location === 'hash' && window.location.hash === '')
-      URLStore.replace('/');
+    invariant(
+      _locationHandler,
+      'The URL store location "' + location + '" is not valid. ' +
+      'It must be any of: ' + Object.keys(Location)
+    );
 
-    if (window.addEventListener) {
-      window.addEventListener(changeEvent, notifyChange, false);
-    } else {
-      window.attachEvent(changeEvent, notifyChange);
-    }
-
-    notifyChange();
+    _locationHandler.init(notifyChange);
   },
 
   /**
@@ -184,16 +123,9 @@ var URLStore = {
     if (_location == null)
       return;
 
-    var changeEvent = getWindowChangeEvent(_location);
-
-    if (window.removeEventListener) {
-      window.removeEventListener(changeEvent, notifyChange, false);
-    } else {
-      window.detachEvent(changeEvent, notifyChange);
-    }
-
+    _locationHandler.destroy();
     _location = null;
-    _currentPath = '/';
+    _locationHandler = null;
   }
 
 };
