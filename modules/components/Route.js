@@ -72,10 +72,17 @@ var Route = React.createClass({
 
   },
 
+  getDefaultProps: function() {
+    return {
+      preserveScrollPosition: false
+    };
+  },
+
   propTypes: {
     handler: React.PropTypes.any.isRequired,
     path: React.PropTypes.string,
-    name: React.PropTypes.string
+    name: React.PropTypes.string,
+    preserveScrollPosition: React.PropTypes.bool
   },
 
   render: function () {

@@ -23,6 +23,12 @@ inherit the path of their parent.
 
 The component to be rendered when the route is active.
 
+### `preserveScrollPosition`
+
+If `true`, the router will not scroll the window up when the route is
+transitioned to. Defaults to `false`. Ignored if the parent `<Routes/>`
+has been set to `true`.
+
 ### `children`
 
 Routes can be nested. When a child route matches, the parent route's
