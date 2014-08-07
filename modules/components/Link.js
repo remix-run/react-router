@@ -3,7 +3,7 @@ var ActiveState = require('../mixins/ActiveState');
 var withoutProperties = require('../helpers/withoutProperties');
 var transitionTo = require('../helpers/transitionTo');
 var makeHref = require('../helpers/makeHref');
-
+var hasOwn = Function.prototype.call.bind(Object.prototype.hasOwnProperty);
 /**
  * A map of <Link> component props that are reserved for use by the
  * router and/or React. All other props are used as params that are
@@ -123,6 +123,13 @@ var Link = React.createClass({
       className: this.getClassName(),
       onClick: this.handleClick
     };
+
+    // pull in props without overriding
+    for (var propName in this.props) {
+      if (hasOwn(this.props, propName) && hasOwn(props, propName) === false) {
+        props[propName] = this.props[propName];
+      }
+    }
 
     return React.DOM.a(props, this.props.children);
   }
