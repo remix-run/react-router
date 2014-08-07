@@ -69,13 +69,14 @@ What's it look like?
 
 ```js
 React.renderComponent((
-  <Routes>
+  <Routes location="history">
     <Route handler={App}>
       <Route name="about" handler={About}/>
       <Route name="users" handler={Users}>
         <Route name="user" path="/user/:userId" handler={User}/>
       </Route>
     </Route>
+    <Route path="*" handler={NotFound}/>
   </Routes>
 ), document.body);
 ```
