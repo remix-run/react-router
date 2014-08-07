@@ -27,6 +27,13 @@ name through the link's properties to the resulting url.
 The className a `Link` receives when it's route is active. Defaults to
 `active`.
 
+### `onClick`
+
+A custom handler for the click event. Works just like a handler on an `<a>`
+tag - calling `e.preventDefault()` or returning `false` will prevent the
+transition from firing, while `e.stopPropagation()` will prevent the event
+from bubbling.
+
 ### *others*
 
 You can also pass props you'd like to be on the `<a>` such as a title, id, or className.
