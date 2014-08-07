@@ -1,3 +1,15 @@
+v0.5.2
+Thu, 07 Aug 2014 18:25:47 GMT
+
+21f4f57 [added] preserveScrollPosition Route/Routes props
+f3b4de8 [added] support for extra props in Links, fixes #170
+f7342b0 [added] Link to react-router-bootstrap related module in readme
+829a9ec [added] <Redirect/> component
+0a49665 [added] Router.makeHref
+2100b8c [changed] handlers receive route name
+154afba [changed] location of public modules
+
+
 v0.5.1
 Mon, 04 Aug 2014 22:16:38 GMT
 

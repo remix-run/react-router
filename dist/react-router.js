@@ -1,30 +1,46 @@
 !function(e){if("object"==typeof exports&&"undefined"!=typeof module)module.exports=e();else if("function"==typeof define&&define.amd)define([],e);else{var f;"undefined"!=typeof window?f=window:"undefined"!=typeof global?f=global:"undefined"!=typeof self&&(f=self),f.ReactRouter=e()}}(function(){var define,module,exports;return (function e(t,n,r){function s(o,u){if(!n[o]){if(!t[o]){var a=typeof require=="function"&&require;if(!u&&a)return a(o,!0);if(i)return i(o,!0);throw new Error("Cannot find module '"+o+"'")}var f=n[o]={exports:{}};t[o][0].call(f.exports,function(e){var n=t[o][1][e];return s(n?n:e)},f,f.exports,e,t,n,r)}return n[o].exports}var i=typeof require=="function"&&require;for(var o=0;o<r.length;o++)s(r[o]);return s})({1:[function(_dereq_,module,exports){
-var React = (typeof window !== "undefined" ? window.React : typeof global !== "undefined" ? global.React : null);
-var warning = _dereq_('react/lib/warning');
+module.exports = _dereq_('./modules/mixins/ActiveState');
 
-function Router(route) {
-  warning(
-    false,
-    'The Router(<Route>).renderComponent(container) interface is deprecated and ' +
-    'will be removed soon. Use React.renderComponent(<Route>, container) instead'
-  );
+},{"./modules/mixins/ActiveState":24}],2:[function(_dereq_,module,exports){
+module.exports = _dereq_('./modules/mixins/AsyncState');
 
-  return {
-    renderComponent: function (container, callback) {
-      return React.renderComponent(route, container, callback);
-    }
-  };
-}
+},{"./modules/mixins/AsyncState":25}],3:[function(_dereq_,module,exports){
+module.exports = _dereq_('./modules/components/Link');
 
-module.exports = Router;
+},{"./modules/components/Link":10}],4:[function(_dereq_,module,exports){
+module.exports = _dereq_('./modules/components/Redirect');
 
-},{"react/lib/warning":53}],2:[function(_dereq_,module,exports){
+},{"./modules/components/Redirect":11}],5:[function(_dereq_,module,exports){
+module.exports = _dereq_('./modules/components/Route');
+
+},{"./modules/components/Route":12}],6:[function(_dereq_,module,exports){
+module.exports = _dereq_('./modules/components/Routes');
+
+},{"./modules/components/Routes":13}],7:[function(_dereq_,module,exports){
+module.exports = _dereq_('./modules/helpers/goBack');
+
+},{"./modules/helpers/goBack":16}],8:[function(_dereq_,module,exports){
+exports.ActiveState = _dereq_('./ActiveState');
+exports.AsyncState = _dereq_('./AsyncState');
+exports.Link = _dereq_('./Link');
+exports.Redirect = _dereq_('./Redirect');
+exports.Route = _dereq_('./Route');
+exports.Routes = _dereq_('./Routes');
+exports.goBack = _dereq_('./goBack');
+exports.replaceWith = _dereq_('./replaceWith');
+exports.transitionTo = _dereq_('./transitionTo');
+exports.makeHref = _dereq_('./makeHref');
+
+},{"./ActiveState":1,"./AsyncState":2,"./Link":3,"./Redirect":4,"./Route":5,"./Routes":6,"./goBack":7,"./makeHref":9,"./replaceWith":62,"./transitionTo":63}],9:[function(_dereq_,module,exports){
+module.exports = _dereq_('./modules/helpers/makeHref');
+
+},{"./modules/helpers/makeHref":17}],10:[function(_dereq_,module,exports){
 var React = (typeof window !== "undefined" ? window.React : typeof global !== "undefined" ? global.React : null);
 var ActiveState = _dereq_('../mixins/ActiveState');
 var withoutProperties = _dereq_('../helpers/withoutProperties');
 var transitionTo = _dereq_('../helpers/transitionTo');
 var makeHref = _dereq_('../helpers/makeHref');
-
+var hasOwn = Function.prototype.call.bind(Object.prototype.hasOwnProperty);
 /**
  * A map of <Link> component props that are reserved for use by the
  * router and/or React. All other props are used as params that are
@@ -145,6 +161,13 @@ var Link = React.createClass({
       onClick: this.handleClick
     };
 
+    // pull in props without overriding
+    for (var propName in this.props) {
+      if (hasOwn(this.props, propName) && hasOwn(props, propName) === false) {
+        props[propName] = this.props[propName];
+      }
+    }
+
     return React.DOM.a(props, this.props.children);
   }
 
@@ -160,7 +183,34 @@ function isModifiedEvent(event) {
 
 module.exports = Link;
 
-},{"../helpers/makeHref":8,"../helpers/transitionTo":13,"../helpers/withoutProperties":14,"../mixins/ActiveState":16}],3:[function(_dereq_,module,exports){
+},{"../helpers/makeHref":17,"../helpers/transitionTo":22,"../helpers/withoutProperties":23,"../mixins/ActiveState":24}],11:[function(_dereq_,module,exports){
+var React = (typeof window !== "undefined" ? window.React : typeof global !== "undefined" ? global.React : null);
+var Route = _dereq_('./Route');
+
+function Redirect(props) {
+  return Route({
+    path: props.from,
+    handler: createRedirectClass(props.to)
+  });
+}
+
+function createRedirectClass(to) {
+  return React.createClass({
+    statics: {
+      willTransitionTo: function(transition, params, query) {
+        transition.redirect(to, params, query);
+      }
+    },
+
+    render: function() {
+      return null;
+    }
+  });
+}
+
+module.exports = Redirect;
+
+},{"./Route":12}],12:[function(_dereq_,module,exports){
 var React = (typeof window !== "undefined" ? window.React : typeof global !== "undefined" ? global.React : null);
 var withoutProperties = _dereq_('../helpers/withoutProperties');
 
@@ -171,7 +221,6 @@ var withoutProperties = _dereq_('../helpers/withoutProperties');
  */
 var RESERVED_PROPS = {
   handler: true,
-  name: true,
   path: true,
   children: true // ReactChildren
 };
@@ -236,10 +285,17 @@ var Route = React.createClass({
 
   },
 
+  getDefaultProps: function() {
+    return {
+      preserveScrollPosition: false
+    };
+  },
+
   propTypes: {
     handler: React.PropTypes.any.isRequired,
     path: React.PropTypes.string,
-    name: React.PropTypes.string
+    name: React.PropTypes.string,
+    preserveScrollPosition: React.PropTypes.bool
   },
 
   render: function () {
@@ -252,7 +308,7 @@ var Route = React.createClass({
 
 module.exports = Route;
 
-},{"../helpers/withoutProperties":14}],4:[function(_dereq_,module,exports){
+},{"../helpers/withoutProperties":23}],13:[function(_dereq_,module,exports){
 var React = (typeof window !== "undefined" ? window.React : typeof global !== "undefined" ? global.React : null);
 var warning = _dereq_('react/lib/warning');
 var ExecutionEnvironment = _dereq_('react/lib/ExecutionEnvironment');
@@ -309,11 +365,13 @@ var Routes = React.createClass({
 
   propTypes: {
     location: React.PropTypes.oneOf([ 'hash', 'history' ]).isRequired,
+    preserveScrollPosition: React.PropTypes.bool
   },
 
   getDefaultProps: function () {
     return {
-      location: 'hash'
+      location: 'hash',
+      preserveScrollPosition: false
     };
   },
 
@@ -594,6 +652,8 @@ function syncWithTransition(routes, transition) {
         })
       };
 
+      // TODO: add functional test
+      maybeScrollWindow(routes, toMatches[toMatches.length - 1]);
       routes.setState(state);
 
       return state;
@@ -691,9 +751,19 @@ function reversedArray(array) {
   return array.slice(0).reverse();
 }
 
+function maybeScrollWindow(routes, match) {
+  if (routes.props.preserveScrollPosition)
+    return;
+
+  if (!match || match.route.props.preserveScrollPosition)
+    return;
+
+  window.scrollTo(0, 0);
+}
+
 module.exports = Routes;
 
-},{"../components/Route":3,"../helpers/Path":5,"../helpers/goBack":7,"../helpers/mergeProperties":10,"../helpers/replaceWith":11,"../helpers/transitionTo":13,"../stores/ActiveStore":18,"../stores/RouteStore":19,"../stores/URLStore":20,"es6-promise":24,"react/lib/ExecutionEnvironment":49,"react/lib/warning":53}],5:[function(_dereq_,module,exports){
+},{"../components/Route":12,"../helpers/Path":14,"../helpers/goBack":16,"../helpers/mergeProperties":19,"../helpers/replaceWith":20,"../helpers/transitionTo":22,"../stores/ActiveStore":26,"../stores/RouteStore":27,"../stores/URLStore":28,"es6-promise":32,"react/lib/ExecutionEnvironment":57,"react/lib/warning":61}],14:[function(_dereq_,module,exports){
 var invariant = _dereq_('react/lib/invariant');
 var qs = _dereq_('querystring');
 var mergeProperties = _dereq_('./mergeProperties');
@@ -842,7 +912,7 @@ var Path = {
 
 module.exports = Path;
 
-},{"./URL":6,"./mergeProperties":10,"querystring":23,"react/lib/invariant":52}],6:[function(_dereq_,module,exports){
+},{"./URL":15,"./mergeProperties":19,"querystring":31,"react/lib/invariant":60}],15:[function(_dereq_,module,exports){
 var urlEncodedSpaceRE = /\+/g;
 var encodedSpaceRE = /%20/g;
 
@@ -866,7 +936,7 @@ var URL = {
 
 module.exports = URL;
 
-},{}],7:[function(_dereq_,module,exports){
+},{}],16:[function(_dereq_,module,exports){
 var URLStore = _dereq_('../stores/URLStore');
 
 function goBack() {
@@ -875,7 +945,7 @@ function goBack() {
 
 module.exports = goBack;
 
-},{"../stores/URLStore":20}],8:[function(_dereq_,module,exports){
+},{"../stores/URLStore":28}],17:[function(_dereq_,module,exports){
 var URLStore = _dereq_('../stores/URLStore');
 var makePath = _dereq_('./makePath');
 
@@ -894,7 +964,7 @@ function makeHref(routeName, params, query) {
 
 module.exports = makeHref;
 
-},{"../stores/URLStore":20,"./makePath":9}],9:[function(_dereq_,module,exports){
+},{"../stores/URLStore":28,"./makePath":18}],18:[function(_dereq_,module,exports){
 var invariant = _dereq_('react/lib/invariant');
 var RouteStore = _dereq_('../stores/RouteStore');
 var Path = _dereq_('./Path');
@@ -924,7 +994,7 @@ function makePath(to, params, query) {
 
 module.exports = makePath;
 
-},{"../stores/RouteStore":19,"./Path":5,"react/lib/invariant":52}],10:[function(_dereq_,module,exports){
+},{"../stores/RouteStore":27,"./Path":14,"react/lib/invariant":60}],19:[function(_dereq_,module,exports){
 function mergeProperties(object, properties) {
   for (var property in properties) {
     if (properties.hasOwnProperty(property))
@@ -936,7 +1006,7 @@ function mergeProperties(object, properties) {
 
 module.exports = mergeProperties;
 
-},{}],11:[function(_dereq_,module,exports){
+},{}],20:[function(_dereq_,module,exports){
 var URLStore = _dereq_('../stores/URLStore');
 var makePath = _dereq_('./makePath');
 
@@ -950,7 +1020,7 @@ function replaceWith(to, params, query) {
 
 module.exports = replaceWith;
 
-},{"../stores/URLStore":20,"./makePath":9}],12:[function(_dereq_,module,exports){
+},{"../stores/URLStore":28,"./makePath":18}],21:[function(_dereq_,module,exports){
 var Promise = _dereq_('es6-promise').Promise;
 
 /**
@@ -977,7 +1047,7 @@ function resolveAsyncState(asyncState, setState) {
 
 module.exports = resolveAsyncState;
 
-},{"es6-promise":24}],13:[function(_dereq_,module,exports){
+},{"es6-promise":32}],22:[function(_dereq_,module,exports){
 var URLStore = _dereq_('../stores/URLStore');
 var makePath = _dereq_('./makePath');
 
@@ -991,7 +1061,7 @@ function transitionTo(to, params, query) {
 
 module.exports = transitionTo;
 
-},{"../stores/URLStore":20,"./makePath":9}],14:[function(_dereq_,module,exports){
+},{"../stores/URLStore":28,"./makePath":18}],23:[function(_dereq_,module,exports){
 function withoutProperties(object, properties) {
   var result = {};
 
@@ -1005,23 +1075,7 @@ function withoutProperties(object, properties) {
 
 module.exports = withoutProperties;
 
-},{}],15:[function(_dereq_,module,exports){
-exports.Link = _dereq_('./components/Link');
-exports.Route = _dereq_('./components/Route');
-exports.Routes = _dereq_('./components/Routes');
-
-exports.goBack = _dereq_('./helpers/goBack');
-exports.replaceWith = _dereq_('./helpers/replaceWith');
-exports.transitionTo = _dereq_('./helpers/transitionTo');
-
-exports.ActiveState = _dereq_('./mixins/ActiveState');
-exports.AsyncState = _dereq_('./mixins/AsyncState');
-
-// Backwards compat with 0.1. We should
-// remove this when we ship 1.0.
-exports.Router = _dereq_('./Router');
-
-},{"./Router":1,"./components/Link":2,"./components/Route":3,"./components/Routes":4,"./helpers/goBack":7,"./helpers/replaceWith":11,"./helpers/transitionTo":13,"./mixins/ActiveState":16,"./mixins/AsyncState":17}],16:[function(_dereq_,module,exports){
+},{}],24:[function(_dereq_,module,exports){
 var ActiveStore = _dereq_('../stores/ActiveStore');
 
 /**
@@ -1088,7 +1142,7 @@ var ActiveState = {
 
 module.exports = ActiveState;
 
-},{"../stores/ActiveStore":18}],17:[function(_dereq_,module,exports){
+},{"../stores/ActiveStore":26}],25:[function(_dereq_,module,exports){
 var React = (typeof window !== "undefined" ? window.React : typeof global !== "undefined" ? global.React : null);
 var resolveAsyncState = _dereq_('../helpers/resolveAsyncState');
 
@@ -1198,7 +1252,7 @@ var AsyncState = {
 
 module.exports = AsyncState;
 
-},{"../helpers/resolveAsyncState":12}],18:[function(_dereq_,module,exports){
+},{"../helpers/resolveAsyncState":21}],26:[function(_dereq_,module,exports){
 var _activeRoutes = [];
 var _activeParams = {};
 var _activeQuery = {};
@@ -1286,7 +1340,7 @@ var ActiveStore = {
 
 module.exports = ActiveStore;
 
-},{"event-emitter":34}],19:[function(_dereq_,module,exports){
+},{"event-emitter":42}],27:[function(_dereq_,module,exports){
 var React = (typeof window !== "undefined" ? window.React : typeof global !== "undefined" ? global.React : null);
 var invariant = _dereq_('react/lib/invariant');
 var warning = _dereq_('react/lib/warning');
@@ -1385,7 +1439,7 @@ var RouteStore = {
 
 module.exports = RouteStore;
 
-},{"../helpers/Path":5,"react/lib/invariant":52,"react/lib/warning":53}],20:[function(_dereq_,module,exports){
+},{"../helpers/Path":14,"react/lib/invariant":60,"react/lib/warning":61}],28:[function(_dereq_,module,exports){
 var ExecutionEnvironment = _dereq_('react/lib/ExecutionEnvironment');
 var invariant = _dereq_('react/lib/invariant');
 var warning = _dereq_('react/lib/warning');
@@ -1603,7 +1657,7 @@ function supportsHistory() {
 
 module.exports = URLStore;
 
-},{"event-emitter":34,"react/lib/ExecutionEnvironment":49,"react/lib/invariant":52,"react/lib/warning":53}],21:[function(_dereq_,module,exports){
+},{"event-emitter":42,"react/lib/ExecutionEnvironment":57,"react/lib/invariant":60,"react/lib/warning":61}],29:[function(_dereq_,module,exports){
 // Copyright Joyent, Inc. and other Node contributors.
 //
 // Permission is hereby granted, free of charge, to any person obtaining a
@@ -1689,7 +1743,7 @@ var isArray = Array.isArray || function (xs) {
   return Object.prototype.toString.call(xs) === '[object Array]';
 };
 
-},{}],22:[function(_dereq_,module,exports){
+},{}],30:[function(_dereq_,module,exports){
 // Copyright Joyent, Inc. and other Node contributors.
 //
 // Permission is hereby granted, free of charge, to any person obtaining a
@@ -1776,19 +1830,19 @@ var objectKeys = Object.keys || function (obj) {
   return res;
 };
 
-},{}],23:[function(_dereq_,module,exports){
+},{}],31:[function(_dereq_,module,exports){
 'use strict';
 
 exports.decode = exports.parse = _dereq_('./decode');
 exports.encode = exports.stringify = _dereq_('./encode');
 
-},{"./decode":21,"./encode":22}],24:[function(_dereq_,module,exports){
+},{"./decode":29,"./encode":30}],32:[function(_dereq_,module,exports){
 "use strict";
 var Promise = _dereq_("./promise/promise").Promise;
 var polyfill = _dereq_("./promise/polyfill").polyfill;
 exports.Promise = Promise;
 exports.polyfill = polyfill;
-},{"./promise/polyfill":28,"./promise/promise":29}],25:[function(_dereq_,module,exports){
+},{"./promise/polyfill":36,"./promise/promise":37}],33:[function(_dereq_,module,exports){
 "use strict";
 /* global toString */
 
@@ -1882,7 +1936,7 @@ function all(promises) {
 }
 
 exports.all = all;
-},{"./utils":33}],26:[function(_dereq_,module,exports){
+},{"./utils":41}],34:[function(_dereq_,module,exports){
 "use strict";
 var browserGlobal = (typeof window !== 'undefined') ? window : {};
 var BrowserMutationObserver = browserGlobal.MutationObserver || browserGlobal.WebKitMutationObserver;
@@ -1944,7 +1998,7 @@ function asap(callback, arg) {
 }
 
 exports.asap = asap;
-},{}],27:[function(_dereq_,module,exports){
+},{}],35:[function(_dereq_,module,exports){
 "use strict";
 var config = {
   instrument: false
@@ -1960,7 +2014,7 @@ function configure(name, value) {
 
 exports.config = config;
 exports.configure = configure;
-},{}],28:[function(_dereq_,module,exports){
+},{}],36:[function(_dereq_,module,exports){
 "use strict";
 /*global self*/
 var RSVPPromise = _dereq_("./promise").Promise;
@@ -1999,7 +2053,7 @@ function polyfill() {
 }
 
 exports.polyfill = polyfill;
-},{"./promise":29,"./utils":33}],29:[function(_dereq_,module,exports){
+},{"./promise":37,"./utils":41}],37:[function(_dereq_,module,exports){
 "use strict";
 var config = _dereq_("./config").config;
 var configure = _dereq_("./config").configure;
@@ -2211,7 +2265,7 @@ function publishRejection(promise) {
 }
 
 exports.Promise = Promise;
-},{"./all":25,"./asap":26,"./config":27,"./race":30,"./reject":31,"./resolve":32,"./utils":33}],30:[function(_dereq_,module,exports){
+},{"./all":33,"./asap":34,"./config":35,"./race":38,"./reject":39,"./resolve":40,"./utils":41}],38:[function(_dereq_,module,exports){
 "use strict";
 /* global toString */
 var isArray = _dereq_("./utils").isArray;
@@ -2301,7 +2355,7 @@ function race(promises) {
 }
 
 exports.race = race;
-},{"./utils":33}],31:[function(_dereq_,module,exports){
+},{"./utils":41}],39:[function(_dereq_,module,exports){
 "use strict";
 /**
   `RSVP.reject` returns a promise that will become rejected with the passed
@@ -2349,7 +2403,7 @@ function reject(reason) {
 }
 
 exports.reject = reject;
-},{}],32:[function(_dereq_,module,exports){
+},{}],40:[function(_dereq_,module,exports){
 "use strict";
 function resolve(value) {
   /*jshint validthis:true */
@@ -2365,7 +2419,7 @@ function resolve(value) {
 }
 
 exports.resolve = resolve;
-},{}],33:[function(_dereq_,module,exports){
+},{}],41:[function(_dereq_,module,exports){
 "use strict";
 function objectOrFunction(x) {
   return isFunction(x) || (typeof x === "object" && x !== null);
@@ -2388,7 +2442,7 @@ exports.objectOrFunction = objectOrFunction;
 exports.isFunction = isFunction;
 exports.isArray = isArray;
 exports.now = now;
-},{}],34:[function(_dereq_,module,exports){
+},{}],42:[function(_dereq_,module,exports){
 'use strict';
 
 var d        = _dereq_('d')
@@ -2522,7 +2576,7 @@ module.exports = exports = function (o) {
 };
 exports.methods = methods;
 
-},{"d":35,"es5-ext/object/valid-callable":44}],35:[function(_dereq_,module,exports){
+},{"d":43,"es5-ext/object/valid-callable":52}],43:[function(_dereq_,module,exports){
 'use strict';
 
 var assign        = _dereq_('es5-ext/object/assign')
@@ -2587,14 +2641,14 @@ d.gs = function (dscr, get, set/*, options*/) {
 	return !options ? desc : assign(normalizeOpts(options), desc);
 };
 
-},{"es5-ext/object/assign":36,"es5-ext/object/is-callable":39,"es5-ext/object/normalize-options":43,"es5-ext/string/#/contains":46}],36:[function(_dereq_,module,exports){
+},{"es5-ext/object/assign":44,"es5-ext/object/is-callable":47,"es5-ext/object/normalize-options":51,"es5-ext/string/#/contains":54}],44:[function(_dereq_,module,exports){
 'use strict';
 
 module.exports = _dereq_('./is-implemented')()
 	? Object.assign
 	: _dereq_('./shim');
 
-},{"./is-implemented":37,"./shim":38}],37:[function(_dereq_,module,exports){
+},{"./is-implemented":45,"./shim":46}],45:[function(_dereq_,module,exports){
 'use strict';
 
 module.exports = function () {
@@ -2605,7 +2659,7 @@ module.exports = function () {
 	return (obj.foo + obj.bar + obj.trzy) === 'razdwatrzy';
 };
 
-},{}],38:[function(_dereq_,module,exports){
+},{}],46:[function(_dereq_,module,exports){
 'use strict';
 
 var keys  = _dereq_('../keys')
@@ -2629,21 +2683,21 @@ module.exports = function (dest, src/*, …srcn*/) {
 	return dest;
 };
 
-},{"../keys":40,"../valid-value":45}],39:[function(_dereq_,module,exports){
+},{"../keys":48,"../valid-value":53}],47:[function(_dereq_,module,exports){
 // Deprecated
 
 'use strict';
 
 module.exports = function (obj) { return typeof obj === 'function'; };
 
-},{}],40:[function(_dereq_,module,exports){
+},{}],48:[function(_dereq_,module,exports){
 'use strict';
 
 module.exports = _dereq_('./is-implemented')()
 	? Object.keys
 	: _dereq_('./shim');
 
-},{"./is-implemented":41,"./shim":42}],41:[function(_dereq_,module,exports){
+},{"./is-implemented":49,"./shim":50}],49:[function(_dereq_,module,exports){
 'use strict';
 
 module.exports = function () {
@@ -2653,7 +2707,7 @@ module.exports = function () {
 	} catch (e) { return false; }
 };
 
-},{}],42:[function(_dereq_,module,exports){
+},{}],50:[function(_dereq_,module,exports){
 'use strict';
 
 var keys = Object.keys;
@@ -2662,7 +2716,7 @@ module.exports = function (object) {
 	return keys(object == null ? object : Object(object));
 };
 
-},{}],43:[function(_dereq_,module,exports){
+},{}],51:[function(_dereq_,module,exports){
 'use strict';
 
 var assign = _dereq_('./assign')
@@ -2686,7 +2740,7 @@ module.exports = function (options/*, …options*/) {
 	return result;
 };
 
-},{"./assign":36}],44:[function(_dereq_,module,exports){
+},{"./assign":44}],52:[function(_dereq_,module,exports){
 'use strict';
 
 module.exports = function (fn) {
@@ -2694,7 +2748,7 @@ module.exports = function (fn) {
 	return fn;
 };
 
-},{}],45:[function(_dereq_,module,exports){
+},{}],53:[function(_dereq_,module,exports){
 'use strict';
 
 module.exports = function (value) {
@@ -2702,14 +2756,14 @@ module.exports = function (value) {
 	return value;
 };
 
-},{}],46:[function(_dereq_,module,exports){
+},{}],54:[function(_dereq_,module,exports){
 'use strict';
 
 module.exports = _dereq_('./is-implemented')()
 	? String.prototype.contains
 	: _dereq_('./shim');
 
-},{"./is-implemented":47,"./shim":48}],47:[function(_dereq_,module,exports){
+},{"./is-implemented":55,"./shim":56}],55:[function(_dereq_,module,exports){
 'use strict';
 
 var str = 'razdwatrzy';
@@ -2719,7 +2773,7 @@ module.exports = function () {
 	return ((str.contains('dwa') === true) && (str.contains('foo') === false));
 };
 
-},{}],48:[function(_dereq_,module,exports){
+},{}],56:[function(_dereq_,module,exports){
 'use strict';
 
 var indexOf = String.prototype.indexOf;
@@ -2728,7 +2782,7 @@ module.exports = function (searchString/*, position*/) {
 	return indexOf.call(this, searchString, arguments[1]) > -1;
 };
 
-},{}],49:[function(_dereq_,module,exports){
+},{}],57:[function(_dereq_,module,exports){
 /**
  * Copyright 2013-2014 Facebook, Inc.
  *
@@ -2780,7 +2834,7 @@ var ExecutionEnvironment = {
 
 module.exports = ExecutionEnvironment;
 
-},{}],50:[function(_dereq_,module,exports){
+},{}],58:[function(_dereq_,module,exports){
 /**
  * Copyright 2013-2014 Facebook, Inc.
  *
@@ -2836,7 +2890,7 @@ function copyProperties(obj, a, b, c, d, e, f) {
 
 module.exports = copyProperties;
 
-},{}],51:[function(_dereq_,module,exports){
+},{}],59:[function(_dereq_,module,exports){
 /**
  * Copyright 2013-2014 Facebook, Inc.
  *
@@ -2881,7 +2935,7 @@ copyProperties(emptyFunction, {
 
 module.exports = emptyFunction;
 
-},{"./copyProperties":50}],52:[function(_dereq_,module,exports){
+},{"./copyProperties":58}],60:[function(_dereq_,module,exports){
 /**
  * Copyright 2013-2014 Facebook, Inc.
  *
@@ -2943,7 +2997,7 @@ var invariant = function(condition, format, a, b, c, d, e, f) {
 
 module.exports = invariant;
 
-},{}],53:[function(_dereq_,module,exports){
+},{}],61:[function(_dereq_,module,exports){
 /**
  * Copyright 2014 Facebook, Inc.
  *
@@ -2993,6 +3047,12 @@ if ("production" !== "production") {
 
 module.exports = warning;
 
-},{"./emptyFunction":51}]},{},[15])
-(15)
+},{"./emptyFunction":59}],62:[function(_dereq_,module,exports){
+module.exports = _dereq_('./modules/helpers/replaceWith');
+
+},{"./modules/helpers/replaceWith":20}],63:[function(_dereq_,module,exports){
+module.exports = _dereq_('./modules/helpers/transitionTo');
+
+},{"./modules/helpers/transitionTo":22}]},{},[8])
+(8)
 });
