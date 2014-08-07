@@ -110,9 +110,9 @@ Benefits of This Approach
 Related Modules
 ---------------
 
-- https://github.com/bjyoungblood/rnr-constrained-route - validate paths
+- [rnr-constrained-route](https://github.com/bjyoungblood/rnr-constrained-route) - validate paths
   and parameters on route handlers.
-
+- [react-router-bootstrap](https://github.com/mtscout6/react-router-bootstrap) - Integration with [react-bootstrap](https://github.com/react-bootstrap/react-bootstrap) components.
 
 Contributing
 ------------
