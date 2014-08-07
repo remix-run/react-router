@@ -2,7 +2,7 @@ Upgrade Guide
 =============
 
 To see discussion around these API changes, please refer to the
-[CHANGELOG](/CHANGELOG) and git log the commits to find the issues
+[CHANGELOG](/CHANGELOG.md) and git log the commits to find the issues
 they refer to.
 
 0.4.x -> 0.5.x
