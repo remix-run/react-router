@@ -52,7 +52,8 @@ var Link = React.createClass({
   propTypes: {
     to: React.PropTypes.string.isRequired,
     activeClassName: React.PropTypes.string.isRequired,
-    query: React.PropTypes.object
+    query: React.PropTypes.object,
+    onClick: React.PropTypes.func
   },
 
   getDefaultProps: function () {
@@ -108,13 +109,23 @@ var Link = React.createClass({
     });
   },
 
-  handleClick: function (event) {
+  handleClick: function(event) {
+    var allowTransition = true;
+    var ret;
+
+    if (this.props.onClick)
+      ret = this.props.onClick(event);
+
     if (isModifiedEvent(event) || !isLeftClick(event))
       return;
 
+    if (ret === false || event.preventDefaulted === true)
+      allowTransition = false;
+
     event.preventDefault();
 
-    transitionTo(this.props.to, this.getParams(), this.props.query);
+    if (allowTransition)
+      transitionTo(this.props.to, this.getParams(), this.props.query);
   },
 
   render: function () {
