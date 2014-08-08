@@ -119,7 +119,7 @@ var Link = React.createClass({
     if (isModifiedEvent(event) || !isLeftClick(event))
       return;
 
-    if (ret === false || event.preventDefaulted === true)
+    if (ret === false || event.defaultPrevented === true)
       allowTransition = false;
 
     event.preventDefault();
