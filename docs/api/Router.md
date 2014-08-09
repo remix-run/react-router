@@ -17,7 +17,7 @@ Methods
 
 ### `transitionTo(routeNameOrPath, [params[, query]])`
 
-Programatically transition to a new route.
+Programmatically transition to a new route.
 
 #### Examples
 
@@ -29,7 +29,7 @@ Router.transitionTo('/users/10?showAge=true');
 
 ### `replaceWith(routeNameOrPath, [params[, query]])`
 
-Programatically replace current route with a new route. Does not add an
+Programmatically replace current route with a new route. Does not add an
 entry into the browser history.
 
 #### Examples
@@ -42,7 +42,7 @@ Router.replaceWith('/users/10?showAge=true');
 
 ### `goBack()`
 
-Programatically go back to the last route and remove the most recent
+Programmatically go back to the last route and remove the most recent
 entry from the browser history.
 
 #### Example
@@ -63,4 +63,3 @@ need to build components similar to `Link`.
 <Route name="user" path="users/:userId"/>
 Router.makeHref('user', {userId: 123}); // "users/123"
 ```
-
