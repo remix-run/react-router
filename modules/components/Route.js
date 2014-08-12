@@ -72,7 +72,7 @@ var Route = React.createClass({
 
   },
 
-  getDefaultProps: function() {
+  getDefaultProps: function () {
     return {
       preserveScrollPosition: false
     };

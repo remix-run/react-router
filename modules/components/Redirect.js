@@ -12,12 +12,12 @@ function Redirect(props) {
 function createRedirectClass(to) {
   return React.createClass({
     statics: {
-      willTransitionTo: function(transition, params, query) {
+      willTransitionTo: function (transition, params, query) {
         transition.redirect(to, params, query);
       }
     },
 
-    render: function() {
+    render: function () {
       return null;
     }
   });

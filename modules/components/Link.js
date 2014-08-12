@@ -109,7 +109,7 @@ var Link = React.createClass({
     });
   },
 
-  handleClick: function(event) {
+  handleClick: function (event) {
     var allowTransition = true;
     var ret;
 
