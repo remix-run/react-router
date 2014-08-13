@@ -1,4 +1,4 @@
-var URLStore = require('../stores/URLStore');
+var PathStore = require('../stores/PathStore');
 var makePath = require('./makePath');
 
 /**
@@ -6,7 +6,7 @@ var makePath = require('./makePath');
  * a new URL onto the history stack.
  */
 function transitionTo(to, params, query) {
-  URLStore.push(makePath(to, params, query));
+  PathStore.push(makePath(to, params, query));
 }
 
 module.exports = transitionTo;

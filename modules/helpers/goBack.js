@@ -1,7 +1,10 @@
-var URLStore = require('../stores/URLStore');
+var PathStore = require('../stores/PathStore');
 
+/**
+ * Transitions to the previous URL.
+ */
 function goBack() {
-  URLStore.back();
+  PathStore.pop();
 }
 
 module.exports = goBack;

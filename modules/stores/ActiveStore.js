@@ -1,3 +1,12 @@
+var EventEmitter = require('events').EventEmitter;
+
+var CHANGE_EVENT = 'change';
+var _events = new EventEmitter;
+
+function notifyChange() {
+  _events.emit(CHANGE_EVENT);
+}
+
 var _activeRoutes = [];
 var _activeParams = {};
 var _activeQuery = {};
@@ -26,13 +35,6 @@ function queryIsActive(query) {
   return true;
 }
 
-var EventEmitter = require('event-emitter');
-var _events = EventEmitter();
-
-function notifyChange() {
-  _events.emit('change');
-}
-
 /**
  * The ActiveStore keeps track of which routes, URL and query parameters are
  * currently active on a page. <Link>s subscribe to the ActiveStore to know
@@ -40,18 +42,12 @@ function notifyChange() {
  */
 var ActiveStore = {
 
-  /**
-   * Adds a listener that will be called when this store changes.
-   */
   addChangeListener: function (listener) {
-    _events.on('change', listener);
+    _events.on(CHANGE_EVENT, listener);
   },
 
-  /**
-   * Removes the given change listener.
-   */
   removeChangeListener: function (listener) {
-    _events.off('change', listener);
+    _events.removeListener(CHANGE_EVENT, listener);
   },
 
   /**

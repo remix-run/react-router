@@ -1,4 +1,4 @@
-var URLStore = require('../stores/URLStore');
+var PathStore = require('../stores/PathStore');
 var makePath = require('./makePath');
 
 /**
@@ -6,7 +6,7 @@ var makePath = require('./makePath');
  * the current URL in the history stack.
  */
 function replaceWith(to, params, query) {
-  URLStore.replace(makePath(to, params, query));
+  PathStore.replace(makePath(to, params, query));
 }
 
 module.exports = replaceWith;

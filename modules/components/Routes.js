@@ -1,22 +1,33 @@
 var React = require('react');
 var warning = require('react/lib/warning');
-var ExecutionEnvironment = require('react/lib/ExecutionEnvironment');
-var mergeProperties = require('../helpers/mergeProperties');
+var Promise = require('es6-promise').Promise;
 var goBack = require('../helpers/goBack');
+var mergeProperties = require('../helpers/mergeProperties');
 var replaceWith = require('../helpers/replaceWith');
 var transitionTo = require('../helpers/transitionTo');
-var Location = require('../helpers/Location');
 var Route = require('../components/Route');
 var Path = require('../helpers/Path');
+var HashLocation = require('../locations/HashLocation');
+var HistoryLocation = require('../locations/HistoryLocation');
+var RefreshLocation = require('../locations/RefreshLocation');
 var ActiveStore = require('../stores/ActiveStore');
+var PathStore = require('../stores/PathStore');
 var RouteStore = require('../stores/RouteStore');
-var URLStore = require('../stores/URLStore');
-var Promise = require('es6-promise').Promise;
 
 /**
  * The ref name that can be used to reference the active route component.
  */
 var REF_NAME = '__activeRoute__';
+
+/**
+ * A hash of { name, location } pairs of all locations.
+ */
+var NAMED_LOCATIONS = {
+  hash: HashLocation,
+  history: HistoryLocation,
+  refresh: RefreshLocation,
+  disabled: RefreshLocation // TODO: Remove
+};
 
 /**
  * The <Routes> component configures the route hierarchy and renders the
@@ -55,20 +66,18 @@ var Routes = React.createClass({
 
   propTypes: {
     preserveScrollPosition: React.PropTypes.bool,
-    location: function(props, propName, componentName) {
+    location: function (props, propName, componentName) {
       var location = props[propName];
-      if (!Location[location]) {
-        return new Error('No matching location: "' + location +
-          '".  Must be one of: ' + Object.keys(Location) +
-          '. See: ' + componentName);
-      }
+
+      if (typeof location === 'string' && !(location in NAMED_LOCATIONS))
+        return new Error('Unknown location "' + location + '", see ' + componentName);
     }
   },
 
   getDefaultProps: function () {
     return {
-      location: 'hash',
-      preserveScrollPosition: false
+      preserveScrollPosition: false,
+      location: HashLocation
     };
   },
 
@@ -76,27 +85,35 @@ var Routes = React.createClass({
     return {};
   },
 
+  getLocation: function () {
+    var location = this.props.location;
+
+    if (typeof location === 'string')
+      return NAMED_LOCATIONS[location];
+
+    return location;
+  },
+
   componentWillMount: function () {
     React.Children.forEach(this.props.children, function (child) {
       RouteStore.registerRoute(child);
     });
 
-    if (!URLStore.isSetup() && ExecutionEnvironment.canUseDOM)
-      URLStore.setup(this.props.location);
+    PathStore.setup(this.getLocation());
 
-    URLStore.addChangeListener(this.handleRouteChange);
+    PathStore.addChangeListener(this.handlePathChange);
   },
 
   componentDidMount: function () {
-    this.dispatch(URLStore.getCurrentPath());
+    this.handlePathChange();
   },
 
   componentWillUnmount: function () {
-    URLStore.removeChangeListener(this.handleRouteChange);
+    PathStore.removeChangeListener(this.handlePathChange);
   },
 
-  handleRouteChange: function () {
-    this.dispatch(URLStore.getCurrentPath());
+  handlePathChange: function () {
+    this.dispatch(PathStore.getCurrentPath());
   },
 
   /**
