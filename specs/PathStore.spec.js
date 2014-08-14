@@ -48,7 +48,6 @@ describe('PathStore', function () {
     it('has the correct path', function () {
       expect(PathStore.getCurrentPath()).toEqual('/one');
     });
-
   });
 
 });

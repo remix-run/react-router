@@ -42,7 +42,7 @@ describe('when registering a DefaultRoute', function () {
 describe('when no child routes match a URL, but the parent matches', function () {
   it('matches the default route', function () {
     var defaultRoute;
-    var routes = renderComponent(
+    var routes = ReactTestUtils.renderIntoDocument(
       Routes(null,
         Route({ name: 'user', path: '/users/:id', handler: App },
           Route({ name: 'home', path: '/users/:id/home', handler: App }),
@@ -60,7 +60,5 @@ describe('when no child routes match a URL, but the parent matches', function ()
     expect(matches[1].route).toBe(defaultRoute);
 
     expect(matches[0].route.props.name).toEqual('user');
-
-    removeComponent(routes);
   });
 });
