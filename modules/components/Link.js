@@ -3,7 +3,16 @@ var ActiveState = require('../mixins/ActiveState');
 var withoutProperties = require('../helpers/withoutProperties');
 var transitionTo = require('../helpers/transitionTo');
 var makeHref = require('../helpers/makeHref');
-var hasOwn = Function.prototype.call.bind(Object.prototype.hasOwnProperty);
+var hasOwnProperty = Function.prototype.call.bind(Object.prototype.hasOwnProperty);
+
+function isLeftClickEvent(event) {
+  return event.button === 0;
+}
+
+function isModifiedEvent(event) {
+  return !!(event.metaKey || event.altKey || event.ctrlKey || event.shiftKey);
+}
+
 /**
  * A map of <Link> component props that are reserved for use by the
  * router and/or React. All other props are used as params that are
@@ -116,7 +125,7 @@ var Link = React.createClass({
     if (this.props.onClick)
       ret = this.props.onClick(event);
 
-    if (isModifiedEvent(event) || !isLeftClick(event))
+    if (isModifiedEvent(event) || !isLeftClickEvent(event))
       return;
 
     if (ret === false || event.defaultPrevented === true)
@@ -137,22 +146,13 @@ var Link = React.createClass({
 
     // pull in props without overriding
     for (var propName in this.props) {
-      if (hasOwn(this.props, propName) && hasOwn(props, propName) === false) {
+      if (hasOwnProperty(this.props, propName) && hasOwnProperty(props, propName) === false)
         props[propName] = this.props[propName];
-      }
     }
 
     return React.DOM.a(props, this.props.children);
   }
 
 });
-
-function isLeftClick(event) {
-  return event.button === 0;
-}
-
-function isModifiedEvent(event) {
-  return !!(event.metaKey || event.altKey || event.ctrlKey || event.shiftKey);
-}
 
 module.exports = Link;
