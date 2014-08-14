@@ -242,7 +242,21 @@ function Redirect(to, params, query) {
   this.query = query;
 }
 
-function findMatches(path, route) {
+function findMatches(path,route){
+  var matches = null;
+
+  if (Array.isArray(route)) {
+    for (var i = 0, len = route.length; matches == null && i < len; ++i) {
+      matches = findMatches(path, route[i]);
+    }
+  } else {
+    matches = findMatchesForRoute(path,route);
+  }
+
+  return matches;
+}
+
+function findMatchesForRoute(path, route) {
   var children = route.props.children, matches;
   var params;
 
