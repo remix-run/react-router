@@ -9,6 +9,8 @@ var withoutProperties = require('../helpers/withoutProperties');
 var RESERVED_PROPS = {
   handler: true,
   path: true,
+  defaultRoute: true,
+  paramNames: true,
   children: true // ReactChildren
 };
 

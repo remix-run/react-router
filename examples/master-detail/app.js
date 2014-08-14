@@ -2,6 +2,7 @@
 var React = require('react');
 var Router = require('../../index');
 var Route = Router.Route;
+var DefaultRoute = Router.DefaultRoute;
 var Routes = Router.Routes;
 var Link = Router.Link;
 
@@ -85,12 +86,10 @@ var App = React.createClass({
   },
 
   componentDidMount: function() {
-    console.log('componentDidMount')
     ContactStore.addChangeListener(this.updateContacts);
   },
 
   componentWillUnmount: function () {
-    console.log('componentWillUnmount')
     ContactStore.removeChangeListener(this.updateContacts);
   },
 
@@ -102,10 +101,6 @@ var App = React.createClass({
       contacts: ContactStore.getContacts(),
       loading: false
     });
-  },
-
-  indexTemplate: function() {
-    return <h1>Address Book</h1>;
   },
 
   render: function() {
@@ -121,10 +116,16 @@ var App = React.createClass({
           </ul>
         </div>
         <div className="Content">
-          {this.props.activeRouteHandler() || this.indexTemplate()}
+          {this.props.activeRouteHandler()}
         </div>
       </div>
     );
+  }
+});
+
+var Index = React.createClass({
+  render: function() {
+    return <h1>Address Book</h1>;
   }
 });
 
@@ -204,16 +205,18 @@ var NotFound = React.createClass({
 });
 
 var routes = (
-  <Routes>
-    <Route handler={App}>
-      <Route name="new" path="contact/new" handler={NewContact}/>
-      <Route name="not-found" path="contact/not-found" handler={NotFound}/>
-      <Route name="contact" path="contact/:id" handler={Contact}/>
-    </Route>
-  </Routes>
+  <Route handler={App}>
+    <DefaultRoute handler={Index}/>
+    <Route name="new" path="contact/new" handler={NewContact}/>
+    <Route name="not-found" path="contact/not-found" handler={NotFound}/>
+    <Route name="contact" path="contact/:id" handler={Contact}/>
+  </Route>
 );
 
-React.renderComponent(routes, document.getElementById('example'));
+React.renderComponent(
+  <Routes children={routes}/>,
+  document.getElementById('example')
+);
 
 // Request utils.
 

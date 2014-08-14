@@ -71,7 +71,7 @@ describe('a nested Route that matches the URL', function () {
       Routes(null,
         Route({ handler: App },
           Route({ name: 'posts', path: '/posts/:id', handler: App },
-            Route({ name: 'comment', path: '/posts/:id/comments/:commentId', handler: App })
+            Route({ name: 'comment', path: '/posts/:id/comments/:commentID', handler: App })
           )
         )
       )
@@ -83,7 +83,7 @@ describe('a nested Route that matches the URL', function () {
 
     var rootMatch = getRootMatch(matches);
     expect(rootMatch.route.props.name).toEqual('comment');
-    expect(rootMatch.params).toEqual({ id: 'abc', commentId: '123' });
+    expect(rootMatch.params).toEqual({ id: 'abc', commentID: '123' });
 
     var postsMatch = matches[1];
     expect(postsMatch.route.props.name).toEqual('posts');

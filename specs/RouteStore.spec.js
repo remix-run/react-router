@@ -43,6 +43,19 @@ describe('when registering a route', function () {
       expect(route.props.path).toEqual('/');
       RouteStore.unregisterRoute(route);
     });
+
+    describe('that is nested inside another route', function () {
+      it('uses the parent\'s path', function () {
+        var child;
+        var route = Route({ name: 'home', handler: App },
+          child = Route({ handler: App })
+        );
+
+        RouteStore.registerRoute(route);
+        expect(child.props.path).toEqual(route.props.path);
+        RouteStore.unregisterRoute(route);
+      });
+    });
   });
 
   describe('with a name but no path', function () {

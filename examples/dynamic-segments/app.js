@@ -47,14 +47,15 @@ var Task = React.createClass({
 });
 
 var routes = (
-  <Routes>
-    <Route handler={App}>
-      <Route name="user" path="/user/:userId" handler={User}>
-        <Route name="task" path="/user/:userId/tasks/:taskId" handler={Task}/>
-        <Redirect from="/user/:userId/todos/:taskId" to="task"/>
-      </Route>
+  <Route handler={App}>
+    <Route name="user" path="/user/:userId" handler={User}>
+      <Route name="task" path="/user/:userId/tasks/:taskId" handler={Task}/>
+      <Redirect from="/user/:userId/todos/:taskId" to="task"/>
     </Route>
-  </Routes>
+  </Route>
 );
 
-React.renderComponent(routes, document.getElementById('example'));
+React.renderComponent(
+  <Routes children={routes}/>,
+  document.getElementById('example')
+);
