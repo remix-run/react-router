@@ -438,6 +438,7 @@ function computeHandlerProps(matches, query) {
   var props = {
     ref: null,
     key: null,
+    routeString: null,
     params: null,
     query: null,
     activeRouteHandler: returnNull
@@ -450,7 +451,10 @@ function computeHandlerProps(matches, query) {
     props = Route.getUnreservedProps(route.props);
 
     props.ref = REF_NAME;
-    props.key = Path.injectParams(route.props.path, match.params);
+    props.routeString = Path.injectParams(route.props.path, match.params);
+    if (!props.key) {
+      props.key = props.routeString;
+    }
     props.params = match.params;
     props.query = query;
 
