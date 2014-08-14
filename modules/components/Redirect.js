@@ -1,15 +1,7 @@
 var React = require('react');
 var Route = require('./Route');
 
-function Redirect(props) {
-  return Route({
-    name: props.name,
-    path: props.from,
-    handler: createRedirectClass(props.to)
-  });
-}
-
-function createRedirectClass(to) {
+function createRedirectHandler(to) {
   return React.createClass({
     statics: {
       willTransitionTo: function (transition, params, query) {
@@ -20,6 +12,18 @@ function createRedirectClass(to) {
     render: function () {
       return null;
     }
+  });
+}
+
+/**
+ * A <Redirect> component is a special kind of <Route> that always
+ * redirects when it matches.
+ */
+function Redirect(props) {
+  return Route({
+    name: props.name,
+    path: props.from || props.path,
+    handler: createRedirectHandler(props.to)
   });
 }
 
