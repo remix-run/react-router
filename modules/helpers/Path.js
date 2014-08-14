@@ -1,6 +1,6 @@
 var invariant = require('react/lib/invariant');
+var copyProperties = require('react/lib/copyProperties');
 var qs = require('querystring');
-var mergeProperties = require('./mergeProperties');
 var URL = require('./URL');
 
 var paramMatcher = /((?::[a-z_$][a-z0-9_$]*)|\*)/ig;
@@ -125,7 +125,7 @@ var Path = {
     var existingQuery = Path.extractQuery(path);
 
     if (existingQuery)
-      query = query ? mergeProperties(existingQuery, query) : existingQuery;
+      query = query ? copyProperties(existingQuery, query) : existingQuery;
 
     var queryString = query && qs.stringify(query);
 

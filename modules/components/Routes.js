@@ -1,8 +1,8 @@
 var React = require('react');
 var warning = require('react/lib/warning');
+var copyProperties = require('react/lib/copyProperties');
 var Promise = require('es6-promise').Promise;
 var goBack = require('../helpers/goBack');
-var mergeProperties = require('../helpers/mergeProperties');
 var replaceWith = require('../helpers/replaceWith');
 var transitionTo = require('../helpers/transitionTo');
 var Route = require('../components/Route');
@@ -216,7 +216,7 @@ function Transition(path) {
   this.isCancelled = false;
 }
 
-mergeProperties(Transition.prototype, {
+copyProperties(Transition.prototype, {
 
   abort: function () {
     this.cancelReason = new Abort();
@@ -450,7 +450,7 @@ function computeHandlerProps(matches, query) {
       if (arguments.length > 2 && typeof arguments[2] !== 'undefined')
         throw new Error('Passing children to a route handler is not supported');
 
-      return route.props.handler(mergeProperties(props, addedProps));
+      return route.props.handler(copyProperties(props, addedProps));
     }.bind(this, props);
   });
 
