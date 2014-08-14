@@ -61,7 +61,7 @@ var App = React.createClass({
           <li><Link to="users">Users</Link></li>
           <li><Link to="user" userId="123">User 123</Link></li>
         </ul>
-        <{this.props.activeRouteHandler}/>
+        <p>{this.props.activeRouteHandler}</p>
       </div>
     );
   }
@@ -78,7 +78,7 @@ var Users = React.createClass({
     return (
       <div>
         <h2>Users</h2>
-        <{this.props.activeRouteHandler}/>
+        <p>{this.props.activeRouteHandler}</p>
       </div>
     );
   }
