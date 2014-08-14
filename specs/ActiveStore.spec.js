@@ -1,6 +1,6 @@
 require('./helper');
-var ActiveStore = require('../modules/stores/ActiveStore');
 var Route = require('../modules/components/Route');
+var ActiveStore = require('../modules/stores/ActiveStore');
 
 var App = React.createClass({
   displayName: 'App',

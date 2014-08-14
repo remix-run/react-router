@@ -67,6 +67,7 @@ function defaultTransitionErrorHandler(error) {
  * See the <Route> component for more details.
  */
 var Routes = React.createClass({
+
   displayName: 'Routes',
 
   propTypes: {
@@ -184,11 +185,18 @@ var Routes = React.createClass({
     var transition = new Transition(path);
     var routes = this;
 
-    var promise = syncWithTransition(routes, transition).then(function (newState) {
+    var promise = runTransitionHooks(routes, transition).then(function (nextState) {
       if (transition.isAborted) {
         routes.props.onAbortedTransition(transition);
-      } else if (newState) {
-        routes.props.onActiveStateChange(newState);
+      } else if (nextState) {
+        routes.setState(nextState);
+        routes.props.onActiveStateChange(nextState);
+
+        // TODO: add functional test
+        var rootMatch = getRootMatch(nextState.matches);
+
+        if (rootMatch)
+          maybeScrollWindow(routes, rootMatch.route);
       }
 
       return transition;
@@ -306,7 +314,7 @@ function updateMatchComponents(matches, refs) {
  * if they all pass successfully. Returns a promise that resolves to the new
  * state if it needs to be updated, or undefined if not.
  */
-function syncWithTransition(routes, transition) {
+function runTransitionHooks(routes, transition) {
   if (routes.state.path === transition.path)
     return Promise.resolve(); // Nothing to do!
 
@@ -338,18 +346,19 @@ function syncWithTransition(routes, transition) {
     toMatches = nextMatches;
   }
 
-  return checkTransitionFromHooks(fromMatches, transition).then(function () {
+  return runTransitionFromHooks(fromMatches, transition).then(function () {
     if (transition.isAborted)
       return; // No need to continue.
 
-    return checkTransitionToHooks(toMatches, transition).then(function () {
+    return runTransitionToHooks(toMatches, transition).then(function () {
       if (transition.isAborted)
         return; // No need to continue.
 
       var rootMatch = getRootMatch(nextMatches);
       var params = (rootMatch && rootMatch.params) || {};
       var query = Path.extractQuery(transition.path) || {};
-      var state = {
+
+      return {
         path: transition.path,
         matches: nextMatches,
         activeParams: params,
@@ -358,12 +367,6 @@ function syncWithTransition(routes, transition) {
           return match.route;
         })
       };
-
-      // TODO: add functional test
-      maybeScrollWindow(routes, toMatches[toMatches.length - 1]);
-      routes.setState(state);
-
-      return state;
     });
   });
 }
@@ -374,7 +377,7 @@ function syncWithTransition(routes, transition) {
  * the route's handler, so that the deepest nested handlers are called first.
  * Returns a promise that resolves after the last handler.
  */
-function checkTransitionFromHooks(matches, transition) {
+function runTransitionFromHooks(matches, transition) {
   var promise = Promise.resolve();
 
   reversedArray(matches).forEach(function (match) {
@@ -394,7 +397,7 @@ function checkTransitionFromHooks(matches, transition) {
  * with the transition object and any params that apply to that handler. Returns
  * a promise that resolves after the last handler.
  */
-function checkTransitionToHooks(matches, transition) {
+function runTransitionToHooks(matches, transition) {
   var promise = Promise.resolve();
 
   matches.forEach(function (match) {
@@ -458,11 +461,8 @@ function reversedArray(array) {
   return array.slice(0).reverse();
 }
 
-function maybeScrollWindow(routes, match) {
-  if (routes.props.preserveScrollPosition)
-    return;
-
-  if (!match || match.route.props.preserveScrollPosition)
+function maybeScrollWindow(routes, rootRoute) {
+  if (routes.props.preserveScrollPosition || rootRoute.props.preserveScrollPosition)
     return;
 
   window.scrollTo(0, 0);

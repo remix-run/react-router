@@ -5,12 +5,7 @@ var PathStore = require('../modules/stores/PathStore');
 describe('PathStore', function () {
 
   beforeEach(function () {
-    PathStore.setup(MemoryLocation);
     PathStore.push('/one');
-  });
-
-  afterEach(function () {
-    PathStore.teardown();
   });
 
   describe('when a new path is pushed to the URL', function () {
@@ -53,6 +48,7 @@ describe('PathStore', function () {
     it('has the correct path', function () {
       expect(PathStore.getCurrentPath()).toEqual('/one');
     });
+
   });
 
 });

@@ -4,7 +4,6 @@ var AsyncState = require('../modules/mixins/AsyncState');
 
 describe('AsyncState', function () {
 
-
   describe('a component that fetches part of its state asynchronously', function () {
     it('resolves all state variables correctly', function (done) {
       var User = React.createClass({

@@ -13,20 +13,14 @@ beforeEach(function () {
   RouteStore.unregisterAllRoutes();
 });
 
-var ExecutionEnvironment = require('react/lib/ExecutionEnvironment');
+var MemoryLocation = require('../modules/locations/MemoryLocation');
+var PathStore = require('../modules/stores/PathStore');
 
-// TODO: Use this as a guard for tests that require DOM.
-__DOM__ = ExecutionEnvironment.canUseDOM;
+beforeEach(function () {
+  PathStore.setup(MemoryLocation);
+  PathStore.push('/');
+});
 
-if (__DOM__) {
-  var ROOT_NODE = document.createElement('div');
-  document.body.appendChild(ROOT_NODE);
-
-  renderComponent = function (component) {
-    return React.renderComponent(component, ROOT_NODE);
-  };
-
-  removeComponent = function (component) {
-    React.unmountComponentAtNode(ROOT_NODE);
-  };
-}
+afterEach(function () {
+  PathStore.teardown();
+});

@@ -1,39 +1,11 @@
 require('./helper');
-var URLStore = require('../modules/stores/URLStore');
 var Route = require('../modules/components/Route');
 var Routes = require('../modules/components/Routes');
 
-describe('Routes', function() {
+describe('a Routes', function () {
 
-  afterEach(function() {
-    URLStore.teardown();
-    window.location.hash = '';
-  });
-
-  describe('a change in active state', function () {
-    it('triggers onActiveStateChange', function (done) {
-      var App = React.createClass({
-        render: function () {
-          return React.DOM.div();
-        }
-      });
-
-      function handleActiveStateChange(state) {
-        assert(state);
-        removeComponent(routes);
-        done();
-      }
-
-      var routes = renderComponent(
-        Routes({ onActiveStateChange: handleActiveStateChange },
-          Route({ handler: App })
-        )
-      );
-    });
-  });
-
-  describe('a cancelled transition', function () {
-    it('triggers onCancelledTransition', function (done) {
+  describe('when a transition is aborted', function () {
+    it('triggers onAbortedTransition', function (done) {
       var App = React.createClass({
         statics: {
           willTransitionTo: function (transition) {
@@ -45,21 +17,41 @@ describe('Routes', function() {
         }
       });
 
-      function handleCancelledTransition(transition) {
+      function handleAbortedTransition(transition) {
         assert(transition);
-        removeComponent(routes);
         done();
       }
 
-      var routes = renderComponent(
-        Routes({ onCancelledTransition: handleCancelledTransition },
+      var routes = ReactTestUtils.renderIntoDocument(
+        Routes({ onAbortedTransition: handleAbortedTransition },
           Route({ handler: App })
         )
       );
     });
   });
 
-  describe('an error in a transition hook', function () {
+  describe('when there is a change in active state', function () {
+    it('triggers onActiveStateChange', function (done) {
+      var App = React.createClass({
+        render: function () {
+          return React.DOM.div();
+        }
+      });
+
+      function handleActiveStateChange(state) {
+        assert(state);
+        done();
+      }
+
+      var routes = ReactTestUtils.renderIntoDocument(
+        Routes({ onActiveStateChange: handleActiveStateChange },
+          Route({ handler: App })
+        )
+      );
+    });
+  });
+
+  describe('when there is an error in a transition hook', function () {
     it('triggers onTransitionError', function (done) {
       var App = React.createClass({
         statics: {
@@ -75,11 +67,10 @@ describe('Routes', function() {
       function handleTransitionError(error) {
         assert(error);
         expect(error.message).toEqual('boom!');
-        removeComponent(routes);
         done();
       }
 
-      var routes = renderComponent(
+      var routes = ReactTestUtils.renderIntoDocument(
         Routes({ onTransitionError: handleTransitionError },
           Route({ handler: App })
         )

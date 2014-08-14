@@ -1,7 +1,6 @@
 require('./helper');
 var Route = require('../modules/components/Route');
 var Routes = require('../modules/components/Routes');
-var URLStore = require('../modules/stores/URLStore');
 
 var App = React.createClass({
   displayName: 'App',
@@ -10,16 +9,11 @@ var App = React.createClass({
   }
 });
 
-describe('Route', function() {
+describe('a Route', function () {
 
-  afterEach(function() {
-    URLStore.teardown();
-    window.location.hash = '';
-  });
-
-  describe('a Route that matches a URL', function () {
+  describe('that matches the URL', function () {
     it('returns an array', function () {
-      var routes = renderComponent(
+      var routes = ReactTestUtils.renderIntoDocument(
         Routes(null,
           Route({ handler: App },
             Route({ path: '/a/b/c', handler: App })
@@ -33,14 +27,11 @@ describe('Route', function() {
 
       var rootMatch = getRootMatch(matches);
       expect(rootMatch.params).toEqual({});
-
-      // this causes tests to fail, no clue why ...
-      //removeComponent(routes);
     });
 
     describe('that contains dynamic segments', function () {
       it('returns an array with the correct params', function () {
-        var routes = renderComponent(
+        var routes = ReactTestUtils.renderIntoDocument(
           Routes(null,
             Route({ handler: App },
               Route({ path: '/posts/:id/edit', handler: App })
@@ -54,15 +45,13 @@ describe('Route', function() {
 
         var rootMatch = getRootMatch(matches);
         expect(rootMatch.params).toEqual({ id: 'abc' });
-
-        //removeComponent(routes);
       });
     });
   });
 
-  describe('a Route that does not match the URL', function () {
+  describe('that does not match the URL', function () {
     it('returns null', function () {
-      var routes = renderComponent(
+      var routes = ReactTestUtils.renderIntoDocument(
         Routes(null,
           Route({ handler: App },
             Route({ path: '/a/b/c', handler: App })
@@ -71,102 +60,58 @@ describe('Route', function() {
       );
 
       expect(routes.match('/not-found')).toBe(null);
-
-      //removeComponent(routes);
     });
   });
 
-  describe('a nested Route that matches the URL', function () {
-    it('returns the appropriate params for each match', function () {
-      var routes = renderComponent(
-        Routes(null,
-          Route({ handler: App },
-            Route({ name: 'posts', path: '/posts/:id', handler: App },
-              Route({ name: 'comment', path: '/posts/:id/comments/:commentId', handler: App })
-            )
+});
+
+describe('a nested Route that matches the URL', function () {
+  it('returns the appropriate params for each match', function () {
+    var routes = ReactTestUtils.renderIntoDocument(
+      Routes(null,
+        Route({ handler: App },
+          Route({ name: 'posts', path: '/posts/:id', handler: App },
+            Route({ name: 'comment', path: '/posts/:id/comments/:commentId', handler: App })
           )
         )
-      );
+      )
+    );
 
-      var matches = routes.match('/posts/abc/comments/123');
-      assert(matches);
-      expect(matches.length).toEqual(3);
+    var matches = routes.match('/posts/abc/comments/123');
+    assert(matches);
+    expect(matches.length).toEqual(3);
 
-      var rootMatch = getRootMatch(matches);
-      expect(rootMatch.route.props.name).toEqual('comment');
-      expect(rootMatch.params).toEqual({ id: 'abc', commentId: '123' });
+    var rootMatch = getRootMatch(matches);
+    expect(rootMatch.route.props.name).toEqual('comment');
+    expect(rootMatch.params).toEqual({ id: 'abc', commentId: '123' });
 
-      var postsMatch = matches[1];
-      expect(postsMatch.route.props.name).toEqual('posts');
-      expect(postsMatch.params).toEqual({ id: 'abc' });
-
-      //removeComponent(routes);
-    });
-  });
-
-  describe('multiple nested Router that match the URL', function () {
-    it('returns the first one in the subtree, depth-first', function () {
-      var routes = renderComponent(
-        Routes(null,
-          Route({ handler: App },
-            Route({ path: '/a', handler: App },
-              Route({ path: '/a/b', name: 'expected', handler: App })
-            ),
-            Route({ path: '/a/b', handler: App })
-          )
-        )
-      );
-
-      var matches = routes.match('/a/b');
-      assert(matches);
-      expect(matches.length).toEqual(3);
-
-      var rootMatch = getRootMatch(matches);
-      expect(rootMatch.route.props.name).toEqual('expected');
-
-      //removeComponent(routes);
-    });
+    var postsMatch = matches[1];
+    expect(postsMatch.route.props.name).toEqual('posts');
+    expect(postsMatch.params).toEqual({ id: 'abc' });
   });
 });
 
-// describe('a Router that renders on the server', function() {
-//   it('works with async willTransitionTo()', function(done) {
-//     var dataStore = 'goodbye';
-//     var Layout = React.createClass({
-//       render: function() {
-//         return React.DOM.article(null, this.props.activeRouteHandler());
-//       }
-//     });
-//     var AsyncApp = React.createClass({
-//       displayName: 'AsyncApp',
-//       statics: {
-//         willTransitionTo: function() {
-//           return new Promise(function(resolve) {
-//             setTimeout(function() {
-//               dataStore = 'hello';
-//               resolve();
-//             }, 0);
-//           });
-//         }
-//       },
-//       render: function() {
-//         return React.DOM.div(null, dataStore);
-//       }
-//     });
+describe('multiple nested Routes that match the URL', function () {
+  it('returns the first one in the subtree, depth-first', function () {
+    var routes = ReactTestUtils.renderIntoDocument(
+      Routes(null,
+        Route({ handler: App },
+          Route({ path: '/a', handler: App },
+            Route({ path: '/a/b', name: 'expected', handler: App })
+          ),
+          Route({ path: '/a/b', handler: App })
+        )
+      )
+    );
 
-//     var router = Router(
-//       RouteComponent({ handler: Layout},
-//         RouteComponent({ path: '/a', handler: AsyncApp }))
-//     );
+    var matches = routes.match('/a/b');
+    assert(matches);
+    expect(matches.length).toEqual(3);
 
-//     router.renderComponentToString('/a').then(function(result) {
-//       expect(result.indexOf('div') > -1).toBe(true);
-//       expect(result.indexOf('hello') > -1).toBe(true);
-
-//       done();
-//     });
-//   });
-// });
+    var rootMatch = getRootMatch(matches);
+    expect(rootMatch.route.props.name).toEqual('expected');
+  });
+});
 
 function getRootMatch(matches) {
   return matches[matches.length - 1];
