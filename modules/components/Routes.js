@@ -94,7 +94,20 @@ var Routes = React.createClass({
   },
 
   getInitialState: function () {
-    return {};
+    return {
+      routes: this.getRoutes()
+    };
+  },
+
+  getRoutes: function () {
+    var routes = [];
+
+    React.Children.forEach(this.props.children, function (child) {
+      if (child = RouteStore.registerRoute(child, this))
+        routes.push(child);
+    }, this);
+
+    return routes;
   },
 
   getLocation: function () {
@@ -107,12 +120,7 @@ var Routes = React.createClass({
   },
 
   componentWillMount: function () {
-    React.Children.forEach(this.props.children, function (child) {
-      RouteStore.registerRoute(child);
-    });
-
     PathStore.setup(this.getLocation());
-
     PathStore.addChangeListener(this.handlePathChange);
   },
 
@@ -146,15 +154,7 @@ var Routes = React.createClass({
    *                               { route: <PostRoute>, params: { id: '123' } } ]
    */
   match: function (path) {
-    var rootRoutes = this.props.children;
-    if (!Array.isArray(rootRoutes)) {
-      rootRoutes = [rootRoutes];
-    }
-    var matches = null;
-    for (var i = 0; matches == null && i < rootRoutes.length; i++) {
-      matches = findMatches(Path.withoutQuery(path), rootRoutes[i]);
-    }
-    return matches;
+    return findMatches(Path.withoutQuery(path), this.state.routes, this.props.defaultRoute);
   },
 
   /**
@@ -229,53 +229,42 @@ var Routes = React.createClass({
 
 });
 
-function findMatches(path,route){
-  var matches = null;
+function findMatches(path, routes, defaultRoute) {
+  var matches = null, route, params;
 
-  if (Array.isArray(route)) {
-    for (var i = 0, len = route.length; matches == null && i < len; ++i) {
-      matches = findMatches(path, route[i]);
+  for (var i = 0, len = routes.length; i < len; ++i) {
+    route = routes[i];
+
+    // Check the subtree first to find the most deeply-nested match.
+    matches = findMatches(path, route.props.children, route.props.defaultRoute);
+
+    if (matches != null) {
+      var rootParams = getRootMatch(matches).params;
+      
+      params = route.props.paramNames.reduce(function (params, paramName) {
+        params[paramName] = rootParams[paramName];
+        return params;
+      }, {});
+
+      matches.unshift(makeMatch(route, params));
+
+      return matches;
     }
-  } else {
-    matches = findMatchesForRoute(path,route);
+
+    // No routes in the subtree matched, so check this route.
+    params = Path.extractParams(route.props.path, path);
+
+    if (params)
+      return [ makeMatch(route, params) ];
   }
 
-  return matches;
-}
-
-function findMatchesForRoute(path, route) {
-  var children = route.props.children, matches;
-  var params;
-
-  // Check the subtree first to find the most deeply-nested match.
-  if (Array.isArray(children)) {
-    for (var i = 0, len = children.length; matches == null && i < len; ++i) {
-      matches = findMatches(path, children[i]);
-    }
-  } else if (children) {
-    matches = findMatches(path, children);
-  }
-
-  if (matches) {
-    var rootParams = getRootMatch(matches).params;
-    params = {};
-
-    Path.extractParamNames(route.props.path).forEach(function (paramName) {
-      params[paramName] = rootParams[paramName];
-    });
-
-    matches.unshift(makeMatch(route, params));
-
-    return matches;
-  }
-
-  // No routes in the subtree matched, so check this route.
-  params = Path.extractParams(route.props.path, path);
+  // No routes matched, so try the default route if there is one.
+  params = defaultRoute && Path.extractParams(defaultRoute.props.path, path);
 
   if (params)
-    return [ makeMatch(route, params) ];
+    return [ makeMatch(defaultRoute, params) ];
 
-  return null;
+  return matches;
 }
 
 function makeMatch(route, params) {
