@@ -2,11 +2,12 @@ var React = require('react');
 var warning = require('react/lib/warning');
 var copyProperties = require('react/lib/copyProperties');
 var Promise = require('es6-promise').Promise;
+var Route = require('../components/Route');
 var goBack = require('../helpers/goBack');
 var replaceWith = require('../helpers/replaceWith');
-var transitionTo = require('../helpers/transitionTo');
-var Route = require('../components/Route');
 var Path = require('../helpers/Path');
+var Redirect = require('../helpers/Redirect');
+var Transition = require('../helpers/Transition');
 var HashLocation = require('../locations/HashLocation');
 var HistoryLocation = require('../locations/HistoryLocation');
 var RefreshLocation = require('../locations/RefreshLocation');
@@ -49,15 +50,15 @@ var Routes = React.createClass({
     },
 
     /**
-     * Handles cancelled transitions. By default, redirects replace the
-     * current URL and aborts roll it back.
+     * Handles aborted transitions. By default, redirects replace the
+     * current URL and all others roll it back.
      */
-    handleCancelledTransition: function (transition, routes) {
-      var reason = transition.cancelReason;
+    handleAbortedTransition: function (transition, routes) {
+      var reason = transition.abortReason;
 
       if (reason instanceof Redirect) {
         replaceWith(reason.to, reason.params, reason.query);
-      } else if (reason instanceof Abort) {
+      } else {
         goBack();
       }
     }
@@ -174,8 +175,8 @@ var Routes = React.createClass({
     var routes = this;
 
     var promise = syncWithTransition(routes, transition).then(function (newState) {
-      if (transition.isCancelled) {
-        Routes.handleCancelledTransition(transition, routes);
+      if (transition.isAborted) {
+        Routes.handleAbortedTransition(transition, routes);
       } else if (newState) {
         ActiveStore.updateState(newState);
       }
@@ -209,38 +210,6 @@ var Routes = React.createClass({
   }
 
 });
-
-function Transition(path) {
-  this.path = path;
-  this.cancelReason = null;
-  this.isCancelled = false;
-}
-
-copyProperties(Transition.prototype, {
-
-  abort: function () {
-    this.cancelReason = new Abort();
-    this.isCancelled = true;
-  },
-
-  redirect: function (to, params, query) {
-    this.cancelReason = new Redirect(to, params, query);
-    this.isCancelled = true;
-  },
-
-  retry: function () {
-    transitionTo(this.path);
-  }
-
-});
-
-function Abort() {}
-
-function Redirect(to, params, query) {
-  this.to = to;
-  this.params = params;
-  this.query = query;
-}
 
 function findMatches(path,route){
   var matches = null;
@@ -360,11 +329,11 @@ function syncWithTransition(routes, transition) {
   }
 
   return checkTransitionFromHooks(fromMatches, transition).then(function () {
-    if (transition.isCancelled)
+    if (transition.isAborted)
       return; // No need to continue.
 
     return checkTransitionToHooks(toMatches, transition).then(function () {
-      if (transition.isCancelled)
+      if (transition.isAborted)
         return; // No need to continue.
 
       var rootMatch = getRootMatch(nextMatches);
@@ -402,7 +371,7 @@ function checkTransitionFromHooks(matches, transition) {
     promise = promise.then(function () {
       var handler = match.route.props.handler;
 
-      if (!transition.isCancelled && handler.willTransitionFrom)
+      if (!transition.isAborted && handler.willTransitionFrom)
         return handler.willTransitionFrom(transition, match.component);
     });
   });
@@ -422,7 +391,7 @@ function checkTransitionToHooks(matches, transition) {
     promise = promise.then(function () {
       var handler = match.route.props.handler;
 
-      if (!transition.isCancelled && handler.willTransitionTo)
+      if (!transition.isAborted && handler.willTransitionTo)
         return handler.willTransitionTo(transition, match.params);
     });
   });
