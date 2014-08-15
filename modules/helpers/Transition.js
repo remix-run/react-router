@@ -1,4 +1,4 @@
-var copyProperties = require('react/lib/copyProperties');
+var mixInto = require('react/lib/mixInto');
 var transitionTo = require('./transitionTo');
 var Redirect = require('./Redirect');
 
@@ -14,7 +14,7 @@ function Transition(path) {
   this.isAborted = false;
 }
 
-copyProperties(Transition.prototype, {
+mixInto(Transition, {
 
   abort: function (reason) {
     this.abortReason = reason;
