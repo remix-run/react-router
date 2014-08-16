@@ -119,8 +119,8 @@ Here's how it works:
    them with a React component to handle the route when its active.
 
 2. React Router will match the deepest route against the URL, and then
-   then activate the entire tree of routes on that branch, nesting all
-   the UI.
+   activate the entire tree of routes on that branch, nesting all the
+   UI.
 
 3. You access the active route handler in the props of the parent route.
 
