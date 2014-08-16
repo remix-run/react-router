@@ -294,7 +294,7 @@ Links
 -----
 
 The `<Link/>` component allows you to conveniently navigate users around
-the application with accessibel anchor tags that don't break normal link
+the application with accessible anchor tags that don't break normal link
 functionality like control/command clicking to open in a new tab. Also,
 when the route a link references is active, you get the `active` css
 class to easily style your UI.
