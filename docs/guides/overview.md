@@ -306,6 +306,6 @@ That's the gist of what this router is all about, but there's a lot more
 it has to offer. Check out the [API Docs][API] to learn about
 redirecting transitions, query parameters and more.
 
-  [AsyncState]:./api/mixins/AsyncState.md
-  [API]:./api/
+  [AsyncState]:../api/mixins/AsyncState.md
+  [API]:../api/
 
