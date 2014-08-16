@@ -170,8 +170,7 @@ now `Calendar` is the `activeRouteHandler` in `App`'s render method.
 Finally, when the user navigates to the path `/`, `App` is active, and
 notices that it has a `DefaultRoute`, so it receives `Dashboard` as the
 `activeRouteHandler`. If a `DefaultRoute` is defined, it will be active
-when the parent's route is matched exactly (we'll talk about
-`<NotFoundRoute/>` later).
+when the parent's route is matched exactly.
 
 Note that we don't need the `<Header/>` component since we don't have to
 repeat it anymore. React Router shares that UI for us from one place.
