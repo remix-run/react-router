@@ -254,9 +254,9 @@ You simply nest some routes and render them with `activeRouteHandler`.
 **Note**: the paths are not inherited from parent to child. This gives
 you the flexibility to have any url you need. Were the paths to be
 inherited, you'd be forced to couple your urls to your route hierarchy.
-For example, we may want `/inbox` and `/messages/123` instead of `inbox`
+For example, we may want `/inbox` and `/messages/123` instead of `/inbox`
 and `/inbox/123`. We can just change the path on the `message` route and
-still get view nesting even though the urls are not.
+still get view nesting even though the urls are not nested.
 
 Dynamic Segments
 ----------------
