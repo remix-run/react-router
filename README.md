@@ -105,8 +105,8 @@ Benefits of This Approach
    application is represented by these routes.
 
 4. **URLs are your first thought, not an after-thought** - With React
-   Nested Router, you don't get UI on the page without configuring a url
-   first. Fortunately, its wildly productive this way, too.
+   Router, you don't get UI on the page without configuring a url first.
+   Fortunately, its wildly productive this way, too.
 
 Related Modules
 ---------------
