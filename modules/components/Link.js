@@ -2,8 +2,8 @@ var React = require('react');
 var ActiveState = require('../mixins/ActiveState');
 var withoutProperties = require('../helpers/withoutProperties');
 var transitionTo = require('../helpers/transitionTo');
+var hasOwnProperty = require('../helpers/hasOwnProperty');
 var makeHref = require('../helpers/makeHref');
-var hasOwnProperty = Function.prototype.call.bind(Object.prototype.hasOwnProperty);
 
 function isLeftClickEvent(event) {
   return event.button === 0;
