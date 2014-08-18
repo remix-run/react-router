@@ -100,7 +100,7 @@ var RouteStore = {
     props.children = RouteStore.registerChildren(props.children, route);
 
     return route;
-  }
+  },
 
   /**
    * Registers many children routes at once, always returning an array.
