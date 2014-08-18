@@ -20,6 +20,7 @@ function isModifiedEvent(event) {
  */
 var RESERVED_PROPS = {
   to: true,
+  key: true,
   className: true,
   activeClassName: true,
   query: true,
