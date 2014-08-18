@@ -1,7 +1,7 @@
-var invariant = require('react/lib/invariant');
+var warning = require('react/lib/warning');
 
-var _lastPath;
-var _currentPath = '/';
+var _lastPath = null;
+var _currentPath = null;
 var _onChange;
 
 /**
@@ -25,7 +25,7 @@ var MemoryLocation = {
   },
 
   pop: function () {
-    invariant(
+    warning(
       _lastPath != null,
       'You cannot use MemoryLocation to go back more than once'
     );
@@ -36,7 +36,7 @@ var MemoryLocation = {
   },
 
   getCurrentPath: function () {
-    return _currentPath;
+    return _currentPath || '/';
   },
 
   toString: function () {
