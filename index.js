@@ -9,3 +9,5 @@ exports.goBack = require('./goBack');
 exports.replaceWith = require('./replaceWith');
 exports.transitionTo = require('./transitionTo');
 exports.makeHref = require('./makeHref');
+exports.renderRoutesToString = require('./renderRoutesToString');
+exports.renderRoutesToStaticMarkup = require('./renderRoutesToStaticMarkup');
