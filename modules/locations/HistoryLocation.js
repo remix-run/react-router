@@ -5,7 +5,7 @@ var getWindowPath = require('../helpers/getWindowPath');
 var _onChange;
 
 /**
- * Location handler that uses HTML5 history.
+ * A Location that uses HTML5 history.
  */
 var HistoryLocation = {
 

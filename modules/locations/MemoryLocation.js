@@ -5,7 +5,7 @@ var _currentPath = '/';
 var _onChange;
 
 /**
- * Location handler that does not require a DOM.
+ * A Location that does not require a DOM.
  */
 var MemoryLocation = {
 

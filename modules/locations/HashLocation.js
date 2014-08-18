@@ -5,7 +5,7 @@ var getWindowPath = require('../helpers/getWindowPath');
 var _onChange;
 
 /**
- * Location handler that uses `window.location.hash`.
+ * A Location that uses `window.location.hash`.
  */
 var HashLocation = {
 
