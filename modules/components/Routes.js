@@ -95,20 +95,10 @@ var Routes = React.createClass({
 
   getInitialState: function () {
     return {
-      routes: this.getRoutes()
+      routes: RouteStore.registerChildren(this.props.children, this)
     };
   },
 
-  getRoutes: function () {
-    var routes = [];
-
-    React.Children.forEach(this.props.children, function (child) {
-      if (child = RouteStore.registerRoute(child, this))
-        routes.push(child);
-    }, this);
-
-    return routes;
-  },
 
   getLocation: function () {
     var location = this.props.location;

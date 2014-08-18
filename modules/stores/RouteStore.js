@@ -38,10 +38,8 @@ var RouteStore = {
    * Registers a <Route> and all of its children with the store. Also,
    * does some normalization and validation on route props.
    */
-  registerRoute: function (route, _parentRoute) {
-    // Note: When route is a top-level route, _parentRoute
-    // is actually a <Routes>, not a <Route>. We do this so
-    // <Routes> can get a defaultRoute like <Route> does.
+  registerRoute: function (route, parentRoute) {
+    // Note: parentRoute may be a <Route> _or_ a <Routes>.
     var props = route.props;
 
     invariant(
@@ -55,8 +53,8 @@ var RouteStore = {
 
     if (props.path || props.name) {
       props.path = Path.normalize(props.path || props.name);
-    } else if (_parentRoute && _parentRoute.props.path) {
-      props.path = _parentRoute.props.path;
+    } else if (parentRoute && parentRoute.props.path) {
+      props.path = parentRoute.props.path;
     } else {
       props.path = '/';
     }
@@ -64,12 +62,12 @@ var RouteStore = {
     props.paramNames = Path.extractParamNames(props.path);
 
     // Make sure the route's path has all params its parent needs.
-    if (_parentRoute && Array.isArray(_parentRoute.props.paramNames)) {
-      _parentRoute.props.paramNames.forEach(function (paramName) {
+    if (parentRoute && Array.isArray(parentRoute.props.paramNames)) {
+      parentRoute.props.paramNames.forEach(function (paramName) {
         invariant(
           props.paramNames.indexOf(paramName) !== -1,
           'The nested route path "%s" is missing the "%s" parameter of its parent path "%s"',
-          props.path, paramName, _parentRoute.props.path
+          props.path, paramName, parentRoute.props.path
         );
       });
     }
@@ -87,28 +85,36 @@ var RouteStore = {
       _namedRoutes[props.name] = route;
     }
 
-    if (_parentRoute && isDefault) {
+    if (parentRoute && isDefault) {
       invariant(
-        _parentRoute.props.defaultRoute == null,
+        parentRoute.props.defaultRoute == null,
         'You may not have more than one <DefaultRoute> per <Route>'
       );
 
-      _parentRoute.props.defaultRoute = route;
+      parentRoute.props.defaultRoute = route;
 
       return null;
     }
 
-    // Make sure children is an array, excluding <DefaultRoute>s.
-    var children = [];
-
-    React.Children.forEach(props.children, function (child) {
-      if (child = RouteStore.registerRoute(child, route))
-        children.push(child);
-    });
-
-    props.children = children;
+    // Make sure children is an array.
+    props.children = RouteStore.registerChildren(props.children, route);
 
     return route;
+  }
+
+  /**
+   * Registers many children routes at once, always returning an array.
+   */
+  registerChildren: function (children, parentRoute) {
+    var routes = [];
+
+    React.Children.forEach(children, function (child) {
+      // Exclude <DefaultRoute>s.
+      if (child = RouteStore.registerRoute(child, parentRoute))
+        routes.push(child);
+    });
+
+    return routes;
   },
 
   /**
