@@ -94,7 +94,7 @@ var AsyncState = {
   },
 
   componentDidMount: function () {
-    if (this.props.initialAsyncState || !this.constructor.getInitialAsyncState)
+    if (this.props.initialAsyncState || typeof this.constructor.getInitialAsyncState !== 'function')
       return;
 
     resolveAsyncState(
