@@ -1,4 +1,4 @@
-var copyProperties = require('react/lib/copyProperties');
+var merge = require('react/lib/merge');
 var Route = require('./Route');
 
 /**
@@ -9,7 +9,7 @@ var Route = require('./Route');
  */
 function DefaultRoute(props) {
   return Route(
-    copyProperties(props, {
+    merge(props, {
       name: null,
       path: null
     })
