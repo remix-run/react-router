@@ -5,6 +5,7 @@ var Route = Router.Route;
 var DefaultRoute = Router.DefaultRoute;
 var Routes = Router.Routes;
 var Link = Router.Link;
+var NotFoundRoute = Router.NotFoundRoute;
 
 var api = 'http://addressbook-api.herokuapp.com/contacts';
 var _contacts = {};
@@ -114,6 +115,7 @@ var App = React.createClass({
           <ul>
             {contacts}
           </ul>
+          <Link to="/nothing-here">Invalid Link (not found)</Link>
         </div>
         <div className="Content">
           {this.props.activeRouteHandler()}
@@ -247,8 +249,8 @@ var routes = (
   <Route handler={App}>
     <DefaultRoute handler={Index}/>
     <Route name="new" path="contact/new" handler={NewContact}/>
-    <Route name="not-found" path="contact/not-found" handler={NotFound}/>
     <Route name="contact" path="contact/:id" handler={Contact}/>
+    <NotFoundRoute handler={NotFound}/>
   </Route>
 );
 

@@ -48,13 +48,17 @@ var RouteStore = {
       props.name || props.path
     );
 
-    // Default routes have no name, path, or children.
-    var isDefault = !(props.path || props.name || props.children);
-
-    if (props.path || props.name) {
+    if ((props.path || props.name) && !props.catchAll) {
       props.path = Path.normalize(props.path || props.name);
-    } else if (parentRoute && parentRoute.props.path) {
-      props.path = parentRoute.props.path;
+    } else if (parentRoute) {
+      // <Routes> have no path prop.
+      props.path = parentRoute.props.path || '/';
+
+      if (props.catchAll) {
+        props.path += '*';
+      } else if (!props.children) {
+        props.isDefault = true;
+      }
     } else {
       props.path = '/';
     }
@@ -85,7 +89,28 @@ var RouteStore = {
       _namedRoutes[props.name] = route;
     }
 
-    if (parentRoute && isDefault) {
+    if (props.catchAll) {
+      invariant(
+        parentRoute,
+        '<NotFoundRoute> must have a parent <Route>'
+      );
+
+      invariant(
+        parentRoute.props.notFoundRoute == null,
+        'You may not have more than one <NotFoundRoute> per <Route>'
+      );
+
+      parentRoute.props.notFoundRoute = route;
+
+      return null;
+    }
+
+    if (props.isDefault) {
+      invariant(
+        parentRoute,
+        '<DefaultRoute> must have a parent <Route>'
+      );
+
       invariant(
         parentRoute.props.defaultRoute == null,
         'You may not have more than one <DefaultRoute> per <Route>'
