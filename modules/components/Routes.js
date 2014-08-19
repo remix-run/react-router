@@ -143,7 +143,7 @@ var Routes = React.createClass({
    *                               { route: <PostRoute>, params: { id: '123' } } ]
    */
   match: function (path) {
-    return findMatches(Path.withoutQuery(path), this.state.routes, this.props.defaultRoute);
+    return findMatches(Path.withoutQuery(path), this.state.routes, this.props.defaultRoute, this.props.notFoundRoute);
   },
 
   /**
@@ -218,14 +218,14 @@ var Routes = React.createClass({
 
 });
 
-function findMatches(path, routes, defaultRoute) {
+function findMatches(path, routes, defaultRoute, notFoundRoute) {
   var matches = null, route, params;
 
   for (var i = 0, len = routes.length; i < len; ++i) {
     route = routes[i];
 
     // Check the subtree first to find the most deeply-nested match.
-    matches = findMatches(path, route.props.children, route.props.defaultRoute);
+    matches = findMatches(path, route.props.children, route.props.defaultRoute, route.props.notFoundRoute);
 
     if (matches != null) {
       var rootParams = getRootMatch(matches).params;
@@ -248,10 +248,12 @@ function findMatches(path, routes, defaultRoute) {
   }
 
   // No routes matched, so try the default route if there is one.
-  params = defaultRoute && Path.extractParams(defaultRoute.props.path, path);
-
-  if (params)
+  if (defaultRoute && (params = Path.extractParams(defaultRoute.props.path, path)))
     return [ makeMatch(defaultRoute, params) ];
+
+  // Last attempt: does the "not found" route match?
+  if (notFoundRoute && (params = Path.extractParams(notFoundRoute.props.path, path)))
+    return [ makeMatch(notFoundRoute, params) ];
 
   return matches;
 }
