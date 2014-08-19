@@ -1,39 +1,56 @@
 var invariant = require('react/lib/invariant');
-var copyProperties = require('react/lib/copyProperties');
-var qs = require('querystring');
-var URL = require('./URL');
+var merge = require('qs/lib/utils').merge;
+var qs = require('qs');
 
-var paramMatcher = /((?::[a-z_$][a-z0-9_$]*)|\*)/ig;
-var queryMatcher = /\?(.+)/;
-
-function getParamName(pathSegment) {
-  return pathSegment === '*' ? 'splat' : pathSegment.substr(1);
+function encodeURL(url) {
+  return encodeURIComponent(url).replace(/%20/g, '+');
 }
+
+function decodeURL(url) {
+  return decodeURIComponent(url.replace(/\+/g, ' '));
+}
+
+function encodeURLPath(path) {
+  return String(path).split('/').map(encodeURL).join('/');
+}
+
+var paramMatcher = /:([a-zA-Z_$][a-zA-Z0-9_$]*)|[*.()\[\]\\+|{}^$]/g;
+var queryMatcher = /\?(.+)/;
 
 var _compiledPatterns = {};
 
 function compilePattern(pattern) {
-  if (_compiledPatterns[pattern])
-    return _compiledPatterns[pattern];
+  if (!(pattern in _compiledPatterns)) {
+    var paramNames = [];
+    var source = pattern.replace(paramMatcher, function (match, paramName) {
+      if (paramName) {
+        paramNames.push(paramName);
+        return '([^./?#]+)';
+      } else if (match === '*') {
+        paramNames.push('splat');
+        return '(.*?)';
+      } else {
+        return '\\' + match;
+      }
+    });
 
-  var compiled = _compiledPatterns[pattern] = {};
-  var paramNames = compiled.paramNames = [];
+    _compiledPatterns[pattern] = {
+      matcher: new RegExp('^' + source + '$', 'i'),
+      paramNames: paramNames
+    };
+  }
 
-  var source = pattern.replace(paramMatcher, function (match, pathSegment) {
-    paramNames.push(getParamName(pathSegment));
-    return pathSegment === '*' ? '(.*?)' : '([^/?#]+)';
-  });
-
-  compiled.matcher = new RegExp('^' + source + '$', 'i');
-
-  return compiled;
-}
-
-function isDynamicPattern(pattern) {
-  return pattern.indexOf(':') !== -1 || pattern.indexOf('*') !== -1;
+  return _compiledPatterns[pattern];
 }
 
 var Path = {
+
+  /**
+   * Returns an array of the names of all parameters in the given pattern.
+   */
+  extractParamNames: function (pattern) {
+    return compilePattern(pattern).paramNames;
+  },
 
   /**
    * Extracts the portions of the given URL path that match the given pattern
@@ -41,25 +58,15 @@ var Path = {
    * pattern does not match the given path.
    */
   extractParams: function (pattern, path) {
-    if (!pattern)
-      return null;
-
-    if (!isDynamicPattern(pattern)) {
-      if (pattern === URL.decode(path))
-        return {}; // No dynamic segments, but the paths match.
-
-      return null;
-    }
-
-    var compiled = compilePattern(pattern);
-    var match = URL.decode(path).match(compiled.matcher);
+    var object = compilePattern(pattern);
+    var match = decodeURL(path).match(object.matcher);
 
     if (!match)
       return null;
 
     var params = {};
 
-    compiled.paramNames.forEach(function (paramName, index) {
+    object.paramNames.forEach(function (paramName, index) {
       params[paramName] = match[index + 1];
     });
 
@@ -67,46 +74,44 @@ var Path = {
   },
 
   /**
-   * Returns an array of the names of all parameters in the given pattern.
-   */
-  extractParamNames: function (pattern) {
-    if (!pattern)
-      return [];
-    return compilePattern(pattern).paramNames;
-  },
-
-  /**
    * Returns a version of the given route path with params interpolated. Throws
    * if there is a dynamic segment of the route path for which there is no param.
    */
   injectParams: function (pattern, params) {
-    if (!pattern)
-      return null;
-
-    if (!isDynamicPattern(pattern))
-      return pattern;
-
     params = params || {};
 
-    return pattern.replace(paramMatcher, function (match, pathSegment) {
-      var paramName = getParamName(pathSegment);
+    var splatIndex = 0;
+
+    return pattern.replace(paramMatcher, function (match, paramName) {
+      paramName = paramName || 'splat';
 
       invariant(
         params[paramName] != null,
         'Missing "' + paramName + '" parameter for path "' + pattern + '"'
       );
 
-      // Preserve forward slashes.
-      return String(params[paramName]).split('/').map(URL.encode).join('/');
+      var segment;
+      if (paramName === 'splat' && Array.isArray(params[paramName])) {
+        segment = params[paramName][splatIndex++];
+
+        invariant(
+          segment != null,
+          'Missing splat # ' + splatIndex + ' for path "' + pattern + '"'
+        );
+      } else {
+        segment = params[paramName];
+      }
+
+      return encodeURLPath(segment);
     });
   },
 
   /**
-   * Returns an object that is the result of parsing any query string contained in
-   * the given path, null if the path contains no query string.
+   * Returns an object that is the result of parsing any query string contained
+   * in the given path, null if the path contains no query string.
    */
   extractQuery: function (path) {
-    var match = path.match(queryMatcher);
+    var match = decodeURL(path).match(queryMatcher);
     return match && qs.parse(match[1]);
   },
 
@@ -118,14 +123,14 @@ var Path = {
   },
 
   /**
-   * Returns a version of the given path with the parameters in the given query
-   * added to the query string.
+   * Returns a version of the given path with the parameters in the given
+   * query merged into the query string.
    */
   withQuery: function (path, query) {
     var existingQuery = Path.extractQuery(path);
 
     if (existingQuery)
-      query = query ? copyProperties(existingQuery, query) : existingQuery;
+      query = query ? merge(existingQuery, query) : existingQuery;
 
     var queryString = query && qs.stringify(query);
 

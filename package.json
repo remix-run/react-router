@@ -50,7 +50,7 @@
   "dependencies": {
     "es6-promise": "^1.0.0",
     "events": "^1.0.1",
-    "querystring": "^0.2.0"
+    "qs": "^1.2.2"
   },
   "keywords": [
     "react",
