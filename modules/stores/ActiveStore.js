@@ -3,6 +3,8 @@ var EventEmitter = require('events').EventEmitter;
 var CHANGE_EVENT = 'change';
 var _events = new EventEmitter;
 
+_events.setMaxListeners(0);
+
 function notifyChange() {
   _events.emit(CHANGE_EVENT);
 }
