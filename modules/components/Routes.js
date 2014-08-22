@@ -230,7 +230,7 @@ function findMatches(path, routes, defaultRoute) {
 
     if (matches != null) {
       var rootParams = getRootMatch(matches).params;
-
+      
       params = route.props.paramNames.reduce(function (params, paramName) {
         params[paramName] = rootParams[paramName];
         return params;
@@ -281,7 +281,7 @@ function getRootMatch(matches) {
 
 function updateMatchComponents(matches, refs) {
   var i = 0, component;
-  while ((component = refs[REF_NAME]) && (matches[i+1] !== undefined)) {
+  while (component = refs[REF_NAME]) {
     matches[i++].component = component;
     refs = component.refs;
   }
