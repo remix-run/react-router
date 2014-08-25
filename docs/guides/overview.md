@@ -263,7 +263,7 @@ Dynamic Segments
 
 When we added the `message` route, we introduced a "dynamic segment" to
 the URL. These segements get parsed from the url and passed into your
-route handler as `props`.
+route handler on `this.props.params`.
 
 Remember our message route looks like this:
 
@@ -277,7 +277,7 @@ Lets look at accessing the `messageId` in `Message`.
 var Message = React.createClass({
   render: function() {
     return (
-      <div>{this.props.messageId}</div>
+      <div>{this.props.params.messageId}</div>
     );
   }
 });
