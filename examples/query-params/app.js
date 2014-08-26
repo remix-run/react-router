@@ -10,9 +10,9 @@ var App = React.createClass({
     return (
       <div>
         <ul>
-          <li><Link to="user" userId="123">Bob</Link></li>
-          <li><Link to="user" userId="123" query={{showAge: true}}>Bob With Query Params</Link></li>
-          <li><Link to="user" userId="abc">Sally</Link></li>
+          <li><Link to="user" params={{userId: "123"}}>Bob</Link></li>
+          <li><Link to="user" params={{userId: "123"}} query={{showAge: true}}>Bob With Query Params</Link></li>
+          <li><Link to="user" params={{userId: "abc"}}>Sally</Link></li>
         </ul>
         {this.props.activeRouteHandler()}
       </div>
