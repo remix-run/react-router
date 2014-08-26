@@ -26,10 +26,12 @@ it will be removed by `v1.0`
 
 If you have dynamic segments and are depending on `getInitialState`,
 `componentWillMount`, or `componentDidMount` to fire between transitions
-to the same route--like `users/123` and `users/456`, then you have two
-options: add `addHandlerKey={true}` to your route and keep the previous
-behavior (but lose out on performance), or implement
-`componentWillReceiveProps`.
+to the same route--like `users/123` and `users/456`--then you have two
+options:
+
+- add `addHandlerKey={true}` to your route and keep the previous
+  behavior (but lose out on performance), or
+- implement `componentWillReceiveProps`.
 
 ```js
 // 0.5.x
