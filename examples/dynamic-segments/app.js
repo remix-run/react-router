@@ -11,8 +11,8 @@ var App = React.createClass({
     return (
       <div>
         <ul>
-          <li><Link to="user" userId="123">Bob</Link></li>
-          <li><Link to="user" userId="abc">Sally</Link></li>
+          <li><Link to="user" params={{userId: "123"}}>Bob</Link></li>
+          <li><Link to="user" params={{userId: "abc"}}>Sally</Link></li>
         </ul>
         {this.props.activeRouteHandler()}
       </div>
@@ -26,8 +26,8 @@ var User = React.createClass({
       <div className="User">
         <h1>User id: {this.props.params.userId}</h1>
         <ul>
-          <li><Link to="task" userId={this.props.params.userId} taskId="foo">foo task</Link></li>
-          <li><Link to="task" userId={this.props.params.userId} taskId="bar">bar task</Link></li>
+          <li><Link to="task" params={{userId: this.props.params.userId, taskId: "foo"}}>foo task</Link></li>
+          <li><Link to="task" params={{userId: this.props.params.userId, taskId: "bar"}}>bar task</Link></li>
         </ul>
         {this.props.activeRouteHandler()}
       </div>

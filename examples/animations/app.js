@@ -11,8 +11,8 @@ var App = React.createClass({
     return (
       <div>
         <ul>
-          <li><Link to="image" service="kitten">Kitten</Link></li>
-          <li><Link to="image" service="cage">Cage</Link></li>
+          <li><Link to="image" params={{service: "kitten"}}>Kitten</Link></li>
+          <li><Link to="image" params={{service: "cage"}}>Cage</Link></li>
         </ul>
         <Transition transitionName="example">
           {this.props.activeRouteHandler()}

@@ -105,7 +105,7 @@ var App = React.createClass({
 
   render: function() {
     var contacts = this.state.contacts.map(function(contact) {
-      return <li key={contact.id}><Link to="contact" id={contact.id}>{contact.first}</Link></li>
+      return <li key={contact.id}><Link to="contact" params={contact}>{contact.first}</Link></li>
     });
     return (
       <div className="App">

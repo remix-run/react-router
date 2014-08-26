@@ -12,15 +12,27 @@ Props
 
 The name of the route to link to, or a full URL.
 
+### `params`
+
+Object, the parameters to fill in the dynamic segments of your route.
+
+#### Example
+
+```js
+// given a route config like this
+<Route name="user" path="/user/:userId"/>
+
+// create a link with this
+<Link to="user" params={{userId: "123"}}/>
+
+// though, if your user properties match up to the dynamic segements:
+<Link to="user" params={user}/>
+```
+
 ### `query`
 
 Object, Query parameters to add to the link. Access query parameters in
 your route handler with `this.props.query`.
-
-### `[param]`
-
-Any dynamic segments the route defines (like `:userId`) are passed by
-name through the link's properties to the resulting url.
 
 ### `activeClassName`
 
@@ -44,7 +56,7 @@ Example
 Given a route like `<Route name="user" path="/users/:userId"/>`:
 
 ```xml
-<Link to="user" userId={user.id} query={{foo: bar}}>{user.name}</Link>
+<Link to="user" params={{userId: user.id}} query={{foo: bar}}>{user.name}</Link>
 <!-- becomes one of these depending on your router and if the route is
 active -->
 <a href="/users/123?foo=bar" class="active">Michael</a>
@@ -54,6 +66,6 @@ active -->
 <Link to="/users/123?foo=bar">{user.name}</Link>
 
 <!-- change the activeClassName -->
-<Link activeClassName="current" to="user" userId={user.id}>{user.name}</Link>
+<Link activeClassName="current" to="user" params={{userId: user.id}}>{user.name}</Link>
 ```
 
