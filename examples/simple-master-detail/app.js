@@ -53,7 +53,7 @@ var State = React.createClass({
 var routes = (
   <Routes>
     <Route handler={App}>
-      <Route name="state" path="state/:abbr" handler={State}/>
+      <Route name="state" path="state/:abbr" addHandlerKey={true} handler={State}/>
     </Route>
   </Routes>
 );
