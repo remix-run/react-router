@@ -1,16 +1,16 @@
 v0.5.3 - Tue, 26 Aug 2014 03:36:42 GMT
 --------------------------------------
 
-- [273625a](../../commit/273625a) [fixed] Active state on <Link>s with key prop
+- [273625a](../../commit/273625a) [fixed] Active state on `<Link>`s with key prop
 - [283d3f6](../../commit/283d3f6) [added] RouteStore#registerChildren
 - [a030648](../../commit/a030648) [changed] Relaxed MemoryStore invariant
-- [e028768](../../commit/e028768) [added] <DefaultRoute> component
+- [e028768](../../commit/e028768) [added] `<DefaultRoute>` component
 - [6878120](../../commit/6878120) [added] onAbortedTransition, onActiveStateChange, onTransitionError Routes props
 - [58073ca](../../commit/58073ca) [changed] Transition#cancelReason => abortReason
 - [6d1ae95](../../commit/6d1ae95) [fixed] sibling array route configs
 - [0e7a182](../../commit/0e7a182) [added] pluggable history implementations closes #166
 - [ca96f86](../../commit/ca96f86) [fixed] typo in Link
-- [f3dc513](../../commit/f3dc513) [added] onClick handler to <Link />
+- [f3dc513](../../commit/f3dc513) [added] onClick handler to `<Link />`
 - [b9f92f9](../../commit/b9f92f9) [changed] updated rf-changelog
 
 
