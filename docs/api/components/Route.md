@@ -23,6 +23,26 @@ inherit the path of their parent.
 
 The component to be rendered when the route is active.
 
+### `addHandlerKey`
+
+Defaults to `false`.
+
+If you have dynamic segments in your URL, a transition from `/users/123`
+to `/users/456` does not call `getInitialState`, `componentWillMount` or
+`componentWillUnmount`. If you are using those lifecycle hooks to fetch
+data and set state, you will also need to implement
+`componentWillReceiveProps` on your handler, just like any other
+component with changing props. This way, you can leverage the
+performance of the React DOM diff algorithm. Look at the `Contact`
+handler in the `master-detail` example.
+
+If you'd rather be lazy, set this to `true` and the router will add a
+key to your route, causing all new DOM to be built, and then the life
+cycle hooks will all be called.
+
+You will want this to be `true` if you're doing animations with React's
+TransitionGroup component.
+
 ### `preserveScrollPosition`
 
 If `true`, the router will not scroll the window up when the route is

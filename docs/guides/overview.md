@@ -289,6 +289,22 @@ how you can turn this parameter into state on your component. Or for a
 more basic approach, make an ajax call in `componentDidMount` with the
 value.
 
+Important Note About Dynamic Segments
+-------------------------------------
+
+If you have dynamic segments in your URL, a transition from `/users/123`
+to `/users/456` does not call `getInitialState`, `componentWillMount` or
+`componentWillUnmount`. If you are using those lifecycle hooks to fetch
+data and set state, you will also need to implement
+`componentWillReceiveProps` on your handler, just like any other
+component whose props are changing. This way you can leverage the
+performance of the React DOM diff algorithm. Look at the `Contact`
+handler in the `master-detail` example.
+
+If you'd rather be lazy, you can use the `addHandlerKey` option and set
+it to `true` on your route to opt-out of the performance. See also
+[Route][Route].
+
 Links
 -----
 
@@ -306,5 +322,6 @@ it has to offer. Check out the [API Docs][API] to learn about
 redirecting transitions, query parameters and more.
 
   [AsyncState]:../api/mixins/AsyncState.md
+  [Route]:../api/components/Route.md
   [API]:../api/
 

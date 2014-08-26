@@ -411,9 +411,11 @@ function computeHandlerProps(matches, query) {
     props = Route.getUnreservedProps(route.props);
 
     props.ref = REF_NAME;
-    props.key = Path.injectParams(route.props.path, match.params);
     props.params = match.params;
     props.query = query;
+
+    if (route.props.addHandlerKey)
+      props.key = Path.injectParams(route.props.path, match.params);
 
     if (childHandler) {
       props.activeRouteHandler = childHandler;
