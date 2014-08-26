@@ -283,7 +283,7 @@ var Message = React.createClass({
 });
 ```
 
-Assuming the user navigates to `/inbox/123`, `this.props.messageId` is
+Assuming the user navigates to `/inbox/123`, `this.props.params.messageId` is
 going to be `'123'`. Check out the [AsyncState][AsyncState] mixin to see
 how you can turn this parameter into state on your component. Or for a
 more basic approach, make an ajax call in `componentDidMount` with the
