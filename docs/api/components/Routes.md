@@ -27,12 +27,36 @@ If `true`, the router will not scroll the window up globally when any
 route is transitioned to. Defaults to `false`. When `false`, the
 `<Route/>` gets to decide whether or not to scroll on transition.
 
+### `onAbortedTransition`
+
+A function called when any transition is aborted.
+
+### `onActiveStateChange`
+
+A function called when the active routes change.
+
+#### signature
+
+`function(nextState)`
+
+### `onTransitionError`
+
+A function called when a transition has an error.
+
+#### signature
+
+`function(error)`
+
 Example
 -------
 
 ```jsx
+function onError(error) {
+  handleError(error);
+}
+
 var routes = (
-  <Routes location="history">
+  <Routes location="history" onTransitionError={onError}>
     <Route handler={App}/>
   </Routes>
 );
