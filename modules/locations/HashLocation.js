@@ -2,7 +2,27 @@ var invariant = require('react/lib/invariant');
 var ExecutionEnvironment = require('react/lib/ExecutionEnvironment');
 var getWindowPath = require('../helpers/getWindowPath');
 
+function getHashPath() {
+  return window.location.hash.substr(1);
+}
+
+function ensureSlash() {
+  var path = getHashPath();
+
+  if (path.charAt(0) === '/')
+    return true;
+
+  HashLocation.replace('/' + path);
+
+  return false;
+}
+
 var _onChange;
+
+function handleHashChange() {
+  if (ensureSlash())
+    _onChange();
+}
 
 /**
  * A Location that uses `window.location.hash`.
@@ -17,22 +37,20 @@ var HashLocation = {
 
     _onChange = onChange;
 
-    // Make sure the hash is at least / to begin with.
-    if (window.location.hash === '')
-      window.location.replace(getWindowPath() + '#/');
+    ensureSlash();
 
     if (window.addEventListener) {
-      window.addEventListener('hashchange', _onChange, false);
+      window.addEventListener('hashchange', handleHashChange, false);
     } else {
-      window.attachEvent('onhashchange', _onChange);
+      window.attachEvent('onhashchange', handleHashChange);
     }
   },
 
   teardown: function () {
     if (window.removeEventListener) {
-      window.removeEventListener('hashchange', _onChange, false);
+      window.removeEventListener('hashchange', handleHashChange, false);
     } else {
-      window.detachEvent('onhashchange', _onChange);
+      window.detachEvent('onhashchange', handleHashChange);
     }
   },
 
@@ -48,9 +66,7 @@ var HashLocation = {
     window.history.back();
   },
 
-  getCurrentPath: function () {
-    return window.location.hash.substr(1);
-  },
+  getCurrentPath: getHashPath,
 
   toString: function () {
     return '<HashLocation>';
