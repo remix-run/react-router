@@ -44,9 +44,7 @@ var ActiveState = {
 
   componentWillMount: function () {
     ActiveStore.addChangeListener(this.handleActiveStateChange);
-  },
-
-  componentDidMount: function () {
+    
     if (this.updateActiveState)
       this.updateActiveState();
   },

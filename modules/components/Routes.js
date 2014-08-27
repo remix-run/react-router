@@ -14,6 +14,7 @@ var RefreshLocation = require('../locations/RefreshLocation');
 var ActiveStore = require('../stores/ActiveStore');
 var PathStore = require('../stores/PathStore');
 var RouteStore = require('../stores/RouteStore');
+var ExecutionEnvironment = require('react/lib/ExecutionEnvironment');
 
 /**
  * The ref name that can be used to reference the active route component.
@@ -69,6 +70,11 @@ var Routes = React.createClass({
 
   displayName: 'Routes',
 
+  statics: {
+    findMatches: findMatches,
+    defaultAbortedTransitionHandler: defaultAbortedTransitionHandler
+  },
+
   propTypes: {
     onAbortedTransition: React.PropTypes.func.isRequired,
     onActiveStateChange: React.PropTypes.func.isRequired,
@@ -79,7 +85,9 @@ var Routes = React.createClass({
 
       if (typeof location === 'string' && !(location in NAMED_LOCATIONS))
         return new Error('Unknown location "' + location + '", see ' + componentName);
-    }
+    },
+    initialPath: React.PropTypes.string,
+    initialData: React.PropTypes.object
   },
 
   getDefaultProps: function () {
@@ -97,8 +105,6 @@ var Routes = React.createClass({
       routes: RouteStore.registerChildren(this.props.children, this)
     };
   },
-
-
   getLocation: function () {
     var location = this.props.location;
 
@@ -110,7 +116,34 @@ var Routes = React.createClass({
 
   componentWillMount: function () {
     PathStore.setup(this.getLocation());
-    PathStore.addChangeListener(this.handlePathChange);
+        
+    if (ExecutionEnvironment.canUseDOM) {
+      //if initial data from server - setState, else allow state to be set by this.dispatch
+      if (window.__ReactRouter_initialData)
+        this.setStateFromPath(PathStore.getCurrentPath(), window.__ReactRouter_initialData);
+      
+      PathStore.addChangeListener(this.handlePathChange);
+    } else {
+      this.setStateFromPath(this.props.initialPath, this.props.initialData || null);
+    }    
+  },
+
+  setStateFromPath: function (path, initialData) {
+    var matches = this.match(path);
+    var rootMatch = (matches && getRootMatch(matches)) || false;
+    var params = (rootMatch && rootMatch.params) || {};
+    var newState = {
+      initialData: initialData,
+      matches: matches,
+      path: path,
+      activeQuery: Path.extractQuery(path) || {},
+      activeParams: params,
+      activeRoutes: matches && matches.map(function (match) {
+        return match.route;
+      })
+    };
+    this.setState(newState);
+    this.props.onActiveStateChange(newState);
   },
 
   componentDidMount: function () {
@@ -178,6 +211,8 @@ var Routes = React.createClass({
       if (transition.isAborted) {
         routes.props.onAbortedTransition(transition);
       } else if (nextState) {
+        //remove initial data from state
+        nextState.initialData = undefined;
         routes.setState(nextState);
         routes.props.onActiveStateChange(nextState);
 
@@ -208,7 +243,21 @@ var Routes = React.createClass({
       return null;
 
     var matches = this.state.matches;
-    if (matches.length) {
+    if (matches && matches.length) {
+
+      for (var i=0; i<matches.length; i++) {
+        //clear all initial state data
+        matches[i].route.props.initialAsyncState = null;
+      }
+      //set initial data on matched routes.
+      if (this.state.initialData) {
+        for (var i=0; i<matches.length; i++) {
+          if (this.state.initialData[i]) {
+            matches[i].route.props.initialAsyncState = this.state.initialData[i];
+          }
+        }
+      }
+
       // matches[0] corresponds to the top-most match
       return matches[0].route.props.handler(computeHandlerProps(matches, this.state.activeQuery));
     } else {
@@ -220,6 +269,7 @@ var Routes = React.createClass({
 
 function findMatches(path, routes, defaultRoute) {
   var matches = null, route, params;
+  var query = Path.extractQuery(path) || {};
 
   for (var i = 0, len = routes.length; i < len; ++i) {
     route = routes[i];
@@ -256,7 +306,7 @@ function findMatches(path, routes, defaultRoute) {
   return matches;
 }
 
-function makeMatch(route, params) {
+function makeMatch(route, params, query) {
   return { route: route, params: params };
 }
 
@@ -275,7 +325,10 @@ function hasMatch(matches, match) {
 }
 
 function getRootMatch(matches) {
-  return matches[matches.length - 1];
+  if (matches)
+    return matches[matches.length - 1];
+
+  return false;
 }
 
 function updateMatchComponents(matches, refs) {

@@ -63,3 +63,64 @@ need to build components similar to `Link`.
 <Route name="user" path="users/:userId"/>
 Router.makeHref('user', {userId: 123}); // "users/123"
 ```
+
+### `renderRoutesToString(routes, path)`
+
+* `routes` is the `<Routes/>` component
+* `path` is the full path with query string
+
+Returns a Promise resolving with a `data` object:
+
+```js
+{
+	html: string
+}
+```
+
+* `html` is the string returned from React.renderComponentToString
+
+The Promise may reject with an error. If this error has a `httpStatus`
+302 and `location` it should be sent to the client for redirect.
+
+#### Example
+
+```js
+Router.renderRoutesToString(routes, path).then(function (data) {
+  //merge a template with `data.html`
+
+  res.send(html);
+
+}).catch(function (error){
+  //if error is from a `<Redirect />` route.
+  if (error.httpStatus == 302) {
+    return res.redirect(error.location);
+  }
+
+  //else pass error to server error handler.
+  res.send(error);
+});
+```
+
+### `renderRoutesToStaticMarkup(routes, path)`
+
+Same as `renderRoutesToString` except it uses 
+`React.renderComponentToStaticMarkup`.
+However, the resulting `data.html` will not contain the `initalData` 
+to be sent to the client.
+
+```js
+Router.renderRoutesToStaticMarkup(routes, path).then(function (data) {
+  //merge a template with `data.html`
+
+  res.send(html);
+
+}).catch(function (error){
+  //if error is from a `<Redirect />` route.
+  if (error.httpStatus == 302) {
+    return res.redirect(error.location);
+  }
+
+  //else pass error to server error handler.
+  res.send(error);
+});
+```

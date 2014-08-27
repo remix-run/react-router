@@ -1,3 +1,4 @@
+var ExecutionEnvironment = require('react/lib/ExecutionEnvironment');
 var EventEmitter = require('events').EventEmitter;
 
 var CHANGE_EVENT = 'change';
@@ -45,6 +46,9 @@ function queryIsActive(query) {
 var ActiveStore = {
 
   addChangeListener: function (listener) {
+    if (!ExecutionEnvironment.canUseDOM) 
+      return;
+    
     _events.on(CHANGE_EVENT, listener);
   },
 

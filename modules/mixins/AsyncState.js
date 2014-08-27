@@ -85,7 +85,7 @@ var AsyncState = {
   },
 
   getInitialState: function () {
-    return this.props.initialAsyncState || null;
+    return this.props.initialAsyncState || {};
   },
 
   updateAsyncState: function (state) {
