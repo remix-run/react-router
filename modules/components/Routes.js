@@ -26,8 +26,7 @@ var REF_NAME = '__activeRoute__';
 var NAMED_LOCATIONS = {
   hash: HashLocation,
   history: HistoryLocation,
-  refresh: RefreshLocation,
-  disabled: RefreshLocation // TODO: Remove
+  refresh: RefreshLocation
 };
 
 /**
