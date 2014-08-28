@@ -25,6 +25,7 @@ var RESERVED_PROPS = {
   className: true,
   activeClassName: true,
   query: true,
+  onClick:true,
   children: true // ReactChildren
 };
 
