@@ -10,8 +10,8 @@ var Route = require('./Route');
 function DefaultRoute(props) {
   return Route(
     merge(props, {
-      name: null,
-      path: null
+      path: null,
+      isDefault: true
     })
   );
 }

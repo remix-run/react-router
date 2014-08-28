@@ -37,6 +37,19 @@ describe('when registering a DefaultRoute', function () {
       RouteStore.unregisterRoute(defaultRoute);
     });
   });
+
+  describe('that has a name', function () {
+    it('is able to be looked up by name', function () {
+      var defaultRoute;
+      var routes = Routes({ handler: App },
+        defaultRoute = DefaultRoute({ name: 'home', handler: App })
+      );
+
+      RouteStore.registerRoute(defaultRoute, routes);
+      expect(RouteStore.getRouteByName('home')).toBe(defaultRoute);
+      RouteStore.unregisterRoute(defaultRoute);
+    });
+  });
 });
 
 describe('when no child routes match a URL, but the parent matches', function () {

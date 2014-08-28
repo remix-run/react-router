@@ -48,19 +48,13 @@ var RouteStore = {
       props.name || props.path
     );
 
-    if ((props.path || props.name) && !props.catchAll) {
+    if ((props.path || props.name) && !props.isDefault && !props.catchAll) {
       props.path = Path.normalize(props.path || props.name);
-    } else if (parentRoute) {
-      // <Routes> have no path prop.
-      props.path = parentRoute.props.path || '/';
-
-      if (props.catchAll) {
-        props.path += '*';
-      } else if (!props.children) {
-        props.isDefault = true;
-      }
     } else {
-      props.path = '/';
+      props.path = (parentRoute && parentRoute.props.path) || '/';
+
+      if (props.catchAll)
+        props.path += '*';
     }
 
     props.paramNames = Path.extractParamNames(props.path);
