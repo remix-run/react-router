@@ -2,9 +2,8 @@ var React = require('react');
 var warning = require('react/lib/warning');
 var copyProperties = require('react/lib/copyProperties');
 var Promise = require('es6-promise').Promise;
+var LocationActions = require('../actions/LocationActions');
 var Route = require('../components/Route');
-var goBack = require('../helpers/goBack');
-var replaceWith = require('../helpers/replaceWith');
 var Path = require('../helpers/Path');
 var Redirect = require('../helpers/Redirect');
 var Transition = require('../helpers/Transition');
@@ -37,9 +36,9 @@ function defaultAbortedTransitionHandler(transition) {
   var reason = transition.abortReason;
 
   if (reason instanceof Redirect) {
-    replaceWith(reason.to, reason.params, reason.query);
+    LocationActions.replaceWith(reason.to, reason.params, reason.query);
   } else {
-    goBack();
+    LocationActions.goBack();
   }
 }
 
@@ -57,6 +56,11 @@ function defaultActiveStateChangeHandler(state) {
  */
 function defaultTransitionErrorHandler(error) {
   throw error; // This error probably originated in a transition hook.
+}
+
+function maybeUpdateScroll(routes, rootRoute) {
+  if (!routes.props.preserveScrollPosition && !rootRoute.props.preserveScrollPosition)
+    LocationActions.updateScroll();
 }
 
 /**
@@ -97,7 +101,6 @@ var Routes = React.createClass({
       routes: RouteStore.registerChildren(this.props.children, this)
     };
   },
-
 
   getLocation: function () {
     var location = this.props.location;
@@ -185,7 +188,7 @@ var Routes = React.createClass({
         var rootMatch = getRootMatch(nextState.matches);
 
         if (rootMatch)
-          maybeScrollWindow(routes, rootMatch.route);
+          maybeUpdateScroll(routes, rootMatch.route);
       }
 
       return transition;
@@ -441,13 +444,6 @@ function returnNull() {
 
 function reversedArray(array) {
   return array.slice(0).reverse();
-}
-
-function maybeScrollWindow(routes, rootRoute) {
-  if (routes.props.preserveScrollPosition || rootRoute.props.preserveScrollPosition)
-    return;
-
-  window.scrollTo(0, 0);
 }
 
 module.exports = Routes;

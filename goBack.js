@@ -1,1 +1,1 @@
-module.exports = require('./modules/helpers/goBack');
+module.exports = require('./modules/actions/LocationActions').goBack;

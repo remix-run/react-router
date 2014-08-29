@@ -1,5 +1,7 @@
 var warning = require('react/lib/warning');
 var EventEmitter = require('events').EventEmitter;
+var LocationActions = require('../actions/LocationActions');
+var LocationDispatcher = require('../dispatchers/LocationDispatcher');
 var supportsHistory = require('../helpers/supportsHistory');
 var HistoryLocation = require('../locations/HistoryLocation');
 var RefreshLocation = require('../locations/RefreshLocation');
@@ -9,6 +11,15 @@ var _events = new EventEmitter;
 
 function notifyChange() {
   _events.emit(CHANGE_EVENT);
+}
+
+var _scrollPositions = {};
+
+function recordScrollPosition(path) {
+  _scrollPositions[path] = {
+    x: window.scrollX,
+    y: window.scrollY
+  };
 }
 
 var _location;
@@ -58,27 +69,57 @@ var PathStore = {
     _location = null;
   },
 
+  /**
+   * Returns the location object currently in use.
+   */
   getLocation: function () {
     return _location;
   },
 
-  push: function (path) {
-    if (_location.getCurrentPath() !== path)
-      _location.push(path);
-  },
-
-  replace: function (path) {
-    if (_location.getCurrentPath() !== path)
-      _location.replace(path);
-  },
-
-  pop: function () {
-    _location.pop();
-  },
-
+  /**
+   * Returns the current URL path.
+   */
   getCurrentPath: function () {
     return _location.getCurrentPath();
-  }
+  },
+
+  /**
+   * Returns the last known scroll position for the given path.
+   */
+  getScrollPosition: function (path) {
+    return _scrollPositions[path] || { x: 0, y: 0 };
+  },
+
+  dispatchToken: LocationDispatcher.register(function (payload) {
+    var action = payload.action;
+    var currentPath = _location.getCurrentPath();
+
+    switch (action.type) {
+      case LocationActions.PUSH:
+        if (currentPath !== action.path) {
+          recordScrollPosition(currentPath);
+          _location.push(action.path);
+        }
+        break;
+
+      case LocationActions.REPLACE:
+        if (currentPath !== action.path) {
+          recordScrollPosition(currentPath);
+          _location.replace(action.path);
+        }
+        break;
+
+      case LocationActions.POP:
+        recordScrollPosition(currentPath);
+        _location.pop();
+        break;
+
+      case LocationActions.UPDATE_SCROLL:
+        var p = PathStore.getScrollPosition(currentPath);
+        window.scrollTo(p.x, p.y);
+        break;
+    }
+  })
 
 };
 

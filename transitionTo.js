@@ -1,1 +1,1 @@
-module.exports = require('./modules/helpers/transitionTo');
+module.exports = require('./modules/actions/LocationActions').transitionTo;

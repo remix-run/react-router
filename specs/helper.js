@@ -13,12 +13,13 @@ beforeEach(function () {
   RouteStore.unregisterAllRoutes();
 });
 
+var transitionTo = require('../modules/actions/LocationActions').transitionTo;
 var MemoryLocation = require('../modules/locations/MemoryLocation');
 var PathStore = require('../modules/stores/PathStore');
 
 beforeEach(function () {
   PathStore.setup(MemoryLocation);
-  PathStore.push('/');
+  transitionTo('/');
 });
 
 afterEach(function () {
