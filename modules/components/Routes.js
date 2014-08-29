@@ -329,17 +329,18 @@ function runTransitionHooks(routes, transition) {
     toMatches = nextMatches;
   }
 
+  var query = Path.extractQuery(transition.path) || {};
+
   return runTransitionFromHooks(fromMatches, transition).then(function () {
     if (transition.isAborted)
       return; // No need to continue.
 
-    return runTransitionToHooks(toMatches, transition).then(function () {
+    return runTransitionToHooks(toMatches, transition, query).then(function () {
       if (transition.isAborted)
         return; // No need to continue.
 
       var rootMatch = getRootMatch(nextMatches);
       var params = (rootMatch && rootMatch.params) || {};
-      var query = Path.extractQuery(transition.path) || {};
 
       return {
         path: transition.path,
@@ -380,7 +381,7 @@ function runTransitionFromHooks(matches, transition) {
  * with the transition object and any params that apply to that handler. Returns
  * a promise that resolves after the last handler.
  */
-function runTransitionToHooks(matches, transition) {
+function runTransitionToHooks(matches, transition, query) {
   var promise = Promise.resolve();
 
   matches.forEach(function (match) {
@@ -388,7 +389,7 @@ function runTransitionToHooks(matches, transition) {
       var handler = match.route.props.handler;
 
       if (!transition.isAborted && handler.willTransitionTo)
-        return handler.willTransitionTo(transition, match.params);
+        return handler.willTransitionTo(transition, match.params, query);
     });
   });
 
