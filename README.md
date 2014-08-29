@@ -74,7 +74,7 @@ React.renderComponent((
       <DefaultRoute handler={Home} />
       <Route name="about" handler={About} />
       <Route name="users" handler={Users}>
-        <Route name="recent-users" path="recent" handler={User} />
+        <Route name="recent-users" path="recent" handler={RecentUsers} />
         <Route name="user" path="/user/:userId" handler={User} />
         <NotFoundRoute handler={UserRouteNotFound}/>
       </Route>
