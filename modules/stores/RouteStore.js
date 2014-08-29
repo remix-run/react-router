@@ -48,10 +48,18 @@ var RouteStore = {
       props.name || props.path
     );
 
+    var parentPath = (parentRoute && parentRoute.props.path) || '/';
+
     if ((props.path || props.name) && !props.isDefault && !props.catchAll) {
-      props.path = Path.normalize(props.path || props.name);
+      var path = props.path || props.name;
+
+      // Relative paths extend their parent.
+      if (!Path.isAbsolute(path))
+        path = Path.join(parentPath, path);
+
+      props.path = Path.normalize(path);
     } else {
-      props.path = (parentRoute && parentRoute.props.path) || '/';
+      props.path = parentPath;
 
       if (props.catchAll)
         props.path += '*';

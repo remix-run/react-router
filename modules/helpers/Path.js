@@ -141,10 +141,24 @@ var Path = {
   },
 
   /**
+   * Returns true if the given path is absolute.
+   */
+  isAbsolute: function (path) {
+    return path.charAt(0) === '/';
+  },
+
+  /**
    * Returns a normalized version of the given path.
    */
-  normalize: function (path) {
+  normalize: function (path, parentRoute) {
     return path.replace(/^\/*/, '/');
+  },
+
+  /**
+   * Joins two URL paths together.
+   */
+  join: function (a, b) {
+    return a.replace(/\/*$/, '/') + b;
   }
 
 };
