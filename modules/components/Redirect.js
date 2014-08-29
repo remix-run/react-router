@@ -17,12 +17,12 @@ function createRedirectHandler(to) {
 
 /**
  * A <Redirect> component is a special kind of <Route> that always
- * redirects when it matches.
+ * redirects to another route when it matches.
  */
 function Redirect(props) {
   return Route({
     name: props.name,
-    path: props.from || props.path,
+    path: props.from || props.path || '*',
     handler: createRedirectHandler(props.to)
   });
 }
