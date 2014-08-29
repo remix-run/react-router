@@ -56,7 +56,7 @@ var ActiveState = {
   },
 
   handleActiveStateChange: function () {
-    if (this.isMounted() && this.updateActiveState)
+    if (this.isMounted() && typeof this.updateActiveState === 'function')
       this.updateActiveState();
   }
 
