@@ -11,7 +11,7 @@ var DefaultLocation = require('../locations/DefaultLocation');
 var HashLocation = require('../locations/HashLocation');
 var HistoryLocation = require('../locations/HistoryLocation');
 var RefreshLocation = require('../locations/RefreshLocation');
-var ActiveStore = require('../stores/ActiveStore');
+var ActiveDelegate = require('../mixins/ActiveDelegate');
 var PathStore = require('../stores/PathStore');
 var RouteStore = require('../stores/RouteStore');
 
@@ -44,13 +44,6 @@ function defaultAbortedTransitionHandler(transition) {
 }
 
 /**
- * The default handler for active state updates.
- */
-function defaultActiveStateChangeHandler(state) {
-  ActiveStore.updateState(state);
-}
-
-/**
  * The default handler for errors that were thrown asynchronously
  * while transitioning. The default behavior is to re-throw the
  * error so that it isn't silently swallowed.
@@ -74,9 +67,10 @@ var Routes = React.createClass({
 
   displayName: 'Routes',
 
+  mixins: [ ActiveDelegate ],
+
   propTypes: {
     onAbortedTransition: React.PropTypes.func.isRequired,
-    onActiveStateChange: React.PropTypes.func.isRequired,
     onTransitionError: React.PropTypes.func.isRequired,
     preserveScrollPosition: React.PropTypes.bool,
     location: function (props, propName, componentName) {
@@ -90,7 +84,6 @@ var Routes = React.createClass({
   getDefaultProps: function () {
     return {
       onAbortedTransition: defaultAbortedTransitionHandler,
-      onActiveStateChange: defaultActiveStateChangeHandler,
       onTransitionError: defaultTransitionErrorHandler,
       preserveScrollPosition: false,
       location: DefaultLocation
@@ -182,8 +175,7 @@ var Routes = React.createClass({
       if (transition.isAborted) {
         routes.props.onAbortedTransition(transition);
       } else if (nextState) {
-        routes.setState(nextState);
-        routes.props.onActiveStateChange(nextState);
+        routes.setState(nextState, routes.emitChange);
 
         // TODO: add functional test
         var rootMatch = getRootMatch(nextState.matches);
