@@ -1,4 +1,4 @@
-require('./ActiveStore.spec.js');
+require('./ActiveDelegate.spec.js');
 require('./AsyncState.spec.js');
 require('./DefaultRoute.spec.js');
 require('./NotFoundRoute.spec.js');

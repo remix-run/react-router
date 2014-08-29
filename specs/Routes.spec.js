@@ -30,27 +30,6 @@ describe('a Routes', function () {
     });
   });
 
-  describe('when there is a change in active state', function () {
-    it('triggers onActiveStateChange', function (done) {
-      var App = React.createClass({
-        render: function () {
-          return React.DOM.div();
-        }
-      });
-
-      function handleActiveStateChange(state) {
-        assert(state);
-        done();
-      }
-
-      var routes = ReactTestUtils.renderIntoDocument(
-        Routes({ onActiveStateChange: handleActiveStateChange },
-          Route({ handler: App })
-        )
-      );
-    });
-  });
-
   describe('when there is an error in a transition hook', function () {
     it('triggers onTransitionError', function (done) {
       var App = React.createClass({

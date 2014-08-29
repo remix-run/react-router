@@ -119,13 +119,13 @@ var Link = React.createClass({
     var params = Link.getParams(nextProps);
 
     this.setState({
-      isActive: Link.isActive(nextProps.to, params, nextProps.query)
+      isActive: this.isActive(nextProps.to, params, nextProps.query)
     });
   },
 
   updateActiveState: function () {
     this.setState({
-      isActive: Link.isActive(this.props.to, Link.getParams(this.props), this.props.query)
+      isActive: this.isActive(this.props.to, Link.getParams(this.props), this.props.query)
     });
   },
 
