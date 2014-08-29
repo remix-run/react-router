@@ -1,5 +1,5 @@
 var mixInto = require('react/lib/mixInto');
-var transitionTo = require('./transitionTo');
+var transitionTo = require('../actions/LocationActions').transitionTo;
 var Redirect = require('./Redirect');
 
 /**

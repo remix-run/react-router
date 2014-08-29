@@ -1,1 +1,1 @@
-module.exports = require('./modules/helpers/replaceWith');
+module.exports = require('./modules/actions/LocationActions').replaceWith;
