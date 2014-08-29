@@ -1,5 +1,5 @@
 var copyProperties = require('react/lib/copyProperties');
-var Dispatcher = require('react-dispatcher');
+var Dispatcher = require('flux').Dispatcher;
 
 /**
  * Dispatches actions that modify the URL.
