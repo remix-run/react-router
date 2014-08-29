@@ -37,15 +37,15 @@ parsed and available by name in your route handler on
 Splats
 ------
 
-Splats are defined with `*` and are available in your route handler as
+Splats are defined with `*` and will non-greedily match anything. The
+value will be available in your route handler as
 `this.props.params.splat`. If there are multiple, you'll get an array of
 values.
 
 Question Mark
 -------------
 
-Question marks will optionally match the preceeding segment
-non-greedily.
+Question marks will optionally match the preceeding segment.
 
 Examples
 --------

@@ -51,7 +51,7 @@ Also `.` is no longer matched in dynamic segments.
 <Route path="/file/:filename" />
 
 <!-- 0.6.x -->
-<Route path="/file/:filename.:ext?" />
+<Route path="/file/:filename.?:ext?" />
 
 <!--
   or for a looser match to allow for multiple `.` note that the data

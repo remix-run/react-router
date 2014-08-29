@@ -1,7 +1,7 @@
 API: `NotFoundRoute` (component)
 ===============================
 
-When a parent's url partially matches, but none of the children do, a
+When a parent's URL partially matches, but none of the children do, a
 `NotFoundRoute` will be matched and its handler rendered at any level of
 your route/view hierarchy.
 
@@ -29,7 +29,8 @@ Example
 </Routes>
 ```
 
-The last `NotFoundRoute` will render inside the `App`, the first 
+The last `NotFoundRoute` will render inside the `App`, the first will
+rendering inside of `Course`.
 
   [routeProps]:/docs/api/components/Route.md#props
 
