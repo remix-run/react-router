@@ -148,8 +148,8 @@ var App = React.createClass({
 var routes = (
   <Routes location="history">
     <Route name="app" path="/" handler={App}>
-      <Route name="inbox" path="/inbox" handler={Inbox}/>
-      <Route name="calendar" path="/calendar" handler={Calendar}/>
+      <Route name="inbox" handler={Inbox}/>
+      <Route name="calendar" handler={Calendar}/>
       <DefaultRoute handler={Dashboard}/>
     </Route>
   </Routes>
@@ -228,14 +228,14 @@ var Inbox = React.createClass({
 
 var routes = (
   <Routes location="history">
-    <Route path="/" handler={App}>
+    <Route handler={App}>
 
-      <Route name="inbox" path="/inbox" handler={Inbox}>
-        <Route name="message" path="/inbox/:messageId" handler={Message}/>
+      <Route name="inbox" handler={Inbox}>
+        <Route name="message" path=":messageId" handler={Message}/>
         <DefaultRoute handler={InboxStats}/>
       </Route>
 
-      <Route name="calendar" path="/calendar" handler={Calendar}/>
+      <Route name="calendar" handler={Calendar}/>
       <DefaultRoute handler={Dashboard}/>
 
     </Route>
@@ -251,13 +251,6 @@ var routes = (
 Nesting a new level of UI does not increase the complexity of your code.
 You simply nest some routes and render them with `activeRouteHandler`.
 
-**Note**: the paths are not inherited from parent to child. This gives
-you the flexibility to have any url you need. Were the paths to be
-inherited, you'd be forced to couple your urls to your route hierarchy.
-For example, we may want `/inbox` and `/messages/123` instead of `/inbox`
-and `/inbox/123`. We can just change the path on the `message` route and
-still get view nesting even though the urls are not nested.
-
 Dynamic Segments
 ----------------
 
@@ -268,7 +261,7 @@ route handler on `this.props.params`.
 Remember our message route looks like this:
 
 ```xml
-<Route name="message" path="/inbox/:messageId" handler={Message}/>
+<Route name="message" path=":messageId" handler={Message}/>
 ```
 
 Lets look at accessing the `messageId` in `Message`.
@@ -305,14 +298,65 @@ If you'd rather be lazy, you can use the `addHandlerKey` option and set
 it to `true` on your route to opt-out of the performance. See also
 [Route][Route].
 
-Links
------
+Scrolling
+---------
+
+By default, the router will manage the scroll position between route
+transitions. When a user clicks "back" or "forward", it will restore
+their scroll position. If they visit a new route, it will automatically
+scroll the window to the top. You can opt out of this with the
+`preserverScrollPosition` option on [Routes][Routes] or [Route][Route].
+
+Bells and Whistles
+------------------
+
+### `<Link/>`
 
 The `<Link/>` component allows you to conveniently navigate users around
 the application with accessible anchor tags that don't break normal link
 functionality like control/command clicking to open in a new tab. Also,
 when the route a link references is active, you get the `active` css
 class to easily style your UI.
+
+### `<NotFoundRoute/>`
+
+At any level of your UI nesting, you can render a handler if the url
+beyond what was matched isn't recognized.
+
+```xml
+<Routes location="history">
+  <Route path="/" handler={App}>
+    <Route name="inbox" path="/inbox" handler={Inbox}>
+      <!--
+        will render inside the `Inbox` UI for any paths not recognized
+        after the parent route's path `/inbox/*`
+      -->
+      <NotFoundRoute handler={InboxNotFound}
+      <Route name="message" path="/inbox/:messageId" handler={Message}/>
+      <DefaultRoute handler={InboxStats}/>
+    </Route>
+    <Route name="calendar" path="/calendar" handler={Calendar}/>
+    <DefaultRoute handler={Dashboard}/>
+  </Route>
+  <!-- will catch any route that isn't recognized at all -->
+  <NotFoundRoute handler={NotFound}
+</Routes>
+```
+
+### `<Redirect/>`
+
+URLs in an app change, so we made it easy to not break the old ones.
+
+```xml
+<Route name="message" path="/inbox/:messageId" handler={Message} />
+<Redirect path="/messages/:messageId" to="message" />
+```
+
+Path Matching
+-------------
+
+There's a lot more to be said about path matching, check out the [Path
+Matching Guide][path-matching].
 
 API Documentation
 -----------------
@@ -323,5 +367,7 @@ redirecting transitions, query parameters and more.
 
   [AsyncState]:../api/mixins/AsyncState.md
   [Route]:../api/components/Route.md
+  [Routes]:../api/components/Routes.md
   [API]:../api/
+  [path-matching]:./path-matching.md
 

@@ -8,7 +8,8 @@ Props
 
 ### `from`
 
-The path you want to redirect from, including dynamic segments.
+The path you want to redirect from, including dynamic segments. Defaults
+to `*` so you can redirect anything not found to somewhere else.
 
 ### `to`
 
@@ -26,9 +27,20 @@ Example
   <Route handler={App}>
     <Route name="contact" handler={Contact}/>
     <Route name="about-user" path="about/:userId" handler={UserProfile}/>
+    <Route name="course" path="course/:courseId">
+      <Route name="course-dashboard" path="dashboard" handler={Dashboard}/>
+      <Route name="course-assignments" path="assignments" handler={Assignments}/>
+      <!--
+        anything like `/course/123/invalid` redirects to
+        `/course/123/dashboard`
+      -->
+      <Redirect to="course-dashboard" />
+    </Route>
   </Route>
   
+  <!-- `/get-in-touch` -> `/contact` -->
   <Redirect from="get-in-touch" to="contact" />
+  <!-- `/profile/123` -> `/about/123` -->
   <Redirect from="profile/:userId" to="about-user" />
 </Routes>
 ```

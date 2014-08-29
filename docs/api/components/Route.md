@@ -13,11 +13,11 @@ transition methods.
 
 ### `path`
 
-The path used in the URL, supporting dynamic segments. If left
-undefined, the path will be defined by the `name`, and if there is no
-name, will default to `/`. This path is always absolute from the URL
-"root", even if the leading slash is left off. Nested routes do not
-inherit the path of their parent.
+The path used in the URL. If left undefined, the path will be defined by
+the `name`, and if there is no name, will default to `/`.
+
+Please refer to the [Path Matching Guide][path-matching] to learn more
+about supported path matching syntax.
 
 ### `handler`
 
@@ -102,3 +102,4 @@ Example
 </Routes>
 ```
 
+  [path-matching]:/docs/guides/path-matching.md

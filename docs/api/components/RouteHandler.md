@@ -61,7 +61,7 @@ Static Lifecycle Methods
 You can define static methods on your route handlers that will be called
 during route transitions.
 
-### `willTransitionTo(transition, params)`
+### `willTransitionTo(transition, params, query)`
 
 Called when a route is about to render, giving you the opportunity to
 abort or redirect the transition. You can return a promise and the whole

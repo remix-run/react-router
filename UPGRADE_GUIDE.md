@@ -8,6 +8,59 @@ they refer to.
 0.5.x -> master
 ---------------
 
+### Path Matching
+
+Paths that start with `/` are absolute and work exactly as they used to.
+Paths that don't start with `/` are now relative, meaning they extend
+their parent route.
+
+Simply add `/` in front of all your paths to keep things working.
+
+```xml
+<!-- 0.5.x -->
+<Route path="/foo">
+  <Route path="bar"/>
+</Route>
+
+<!-- 0.6.x -->
+<Route path="/foo">
+  <Route path="/bar"/>
+</Route>
+```
+
+Though, you may want to embrace this new feature:
+
+```js
+<!-- 0.5.x -->
+<Route path="/course/:courseId">
+  <Route path="/course/:courseId/assignments"/>
+  <Route path="/course/:courseId/announcements"/>
+</Route>
+
+<!-- 0.6.x -->
+<Route path="/course/:courseId">
+  <Route path="assignments"/>
+  <Route path="announcements"/>
+</Route>
+```
+
+Also `.` is no longer matched in dynamic segments.
+
+```js
+<!-- 0.5.x -->
+<Route path="/file/:filename" />
+
+<!-- 0.6.x -->
+<Route path="/file/:filename.:ext?" />
+
+<!--
+  or for a looser match to allow for multiple `.` note that the data
+  will be available on `this.props.params.splat` instead of
+  `this.props.params.filename`
+-->
+<Route path="/file/*" />
+```
+
 ### Link params
 
 Links should now pass their params in the `params` property, though the

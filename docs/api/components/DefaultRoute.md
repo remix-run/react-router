@@ -10,15 +10,7 @@ route path is matched exactly.
 Props
 -----
 
-### `handler`
-
-The component to be rendered when the route is active.
-
-### `preserveScrollPosition`
-
-If `true`, the router will not scroll the window up when the route is
-transitioned to. Defaults to `false`. Ignored if the parent `<Routes/>`
-has been set to `true`.
+See [Route::props][routeProps]
 
 Example
 -------
@@ -60,3 +52,4 @@ same functionality:
 `DefaultRoute` feels more natural, so you can name and transition to the
 parent route.
 
+  [routeProps]:/docs/api/components/Route.md#props

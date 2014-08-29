@@ -70,16 +70,22 @@ What's it look like?
 ```js
 React.renderComponent((
   <Routes location="history">
-    <Route handler={App}>
-      <Route name="about" handler={About}/>
+    <Route path="/" handler={App}>
+      <DefaultRoute handler={Home} />
+      <Route name="about" handler={About} />
       <Route name="users" handler={Users}>
-        <Route name="user" path="/user/:userId" handler={User}/>
+        <Route name="recent-users" path="recent" handler={User} />
+        <Route name="user" path="/user/:userId" handler={User} />
+        <NotFoundRoute handler={UserRouteNotFound}/>
       </Route>
     </Route>
-    <Route path="*" handler={NotFound}/>
+    <NotFoundRoute handler={NotFound}/>
+    <Redirect path="company" to="about" />
   </Routes>
 ), document.body);
 ```
+
+All of the `handler`s will render inside their parent route `handler`.
 
 See more in the [overview guide](/docs/guides/overview.md).
 
