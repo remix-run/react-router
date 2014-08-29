@@ -22,6 +22,11 @@ function recordScrollPosition(path) {
   };
 }
 
+function updateScrollPosition(path) {
+  var p = PathStore.getScrollPosition(path);
+  window.scrollTo(p.x, p.y);
+}
+
 var _location;
 
 /**
@@ -115,8 +120,7 @@ var PathStore = {
         break;
 
       case LocationActions.UPDATE_SCROLL:
-        var p = PathStore.getScrollPosition(currentPath);
-        window.scrollTo(p.x, p.y);
+        updateScrollPosition(currentPath);
         break;
     }
   })
