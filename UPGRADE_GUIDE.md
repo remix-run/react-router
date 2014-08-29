@@ -5,8 +5,8 @@ To see discussion around these API changes, please refer to the
 [changelog](/CHANGELOG.md) and git log the commits to find the issues
 they refer to.
 
-0.5.x -> master
----------------
+0.5.x -> 0.6.x
+--------------
 
 ### Path Matching
 

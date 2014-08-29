@@ -7,38 +7,101 @@ module.exports = _dereq_('./modules/mixins/AsyncState');
 },{"./modules/mixins/AsyncState":34}],3:[function(_dereq_,module,exports){
 module.exports = _dereq_('./modules/components/DefaultRoute');
 
-},{"./modules/components/DefaultRoute":11}],4:[function(_dereq_,module,exports){
+},{"./modules/components/DefaultRoute":13}],4:[function(_dereq_,module,exports){
 module.exports = _dereq_('./modules/components/Link');
 
-},{"./modules/components/Link":12}],5:[function(_dereq_,module,exports){
+},{"./modules/components/Link":14}],5:[function(_dereq_,module,exports){
+module.exports = _dereq_('./modules/components/NotFoundRoute');
+
+},{"./modules/components/NotFoundRoute":15}],6:[function(_dereq_,module,exports){
 module.exports = _dereq_('./modules/components/Redirect');
 
-},{"./modules/components/Redirect":13}],6:[function(_dereq_,module,exports){
+},{"./modules/components/Redirect":16}],7:[function(_dereq_,module,exports){
 module.exports = _dereq_('./modules/components/Route');
 
-},{"./modules/components/Route":14}],7:[function(_dereq_,module,exports){
+},{"./modules/components/Route":17}],8:[function(_dereq_,module,exports){
 module.exports = _dereq_('./modules/components/Routes');
 
-},{"./modules/components/Routes":15}],8:[function(_dereq_,module,exports){
-module.exports = _dereq_('./modules/helpers/goBack');
+},{"./modules/components/Routes":18}],9:[function(_dereq_,module,exports){
+module.exports = _dereq_('./modules/actions/LocationActions').goBack;
 
-},{"./modules/helpers/goBack":21}],9:[function(_dereq_,module,exports){
+},{"./modules/actions/LocationActions":12}],10:[function(_dereq_,module,exports){
 exports.ActiveState = _dereq_('./ActiveState');
 exports.AsyncState = _dereq_('./AsyncState');
 exports.DefaultRoute = _dereq_('./DefaultRoute');
 exports.Link = _dereq_('./Link');
+exports.NotFoundRoute = _dereq_('./NotFoundRoute');
 exports.Redirect = _dereq_('./Redirect');
 exports.Route = _dereq_('./Route');
 exports.Routes = _dereq_('./Routes');
 exports.goBack = _dereq_('./goBack');
+exports.makeHref = _dereq_('./makeHref');
 exports.replaceWith = _dereq_('./replaceWith');
 exports.transitionTo = _dereq_('./transitionTo');
-exports.makeHref = _dereq_('./makeHref');
 
-},{"./ActiveState":1,"./AsyncState":2,"./DefaultRoute":3,"./Link":4,"./Redirect":5,"./Route":6,"./Routes":7,"./goBack":8,"./makeHref":10,"./replaceWith":62,"./transitionTo":63}],10:[function(_dereq_,module,exports){
+},{"./ActiveState":1,"./AsyncState":2,"./DefaultRoute":3,"./Link":4,"./NotFoundRoute":5,"./Redirect":6,"./Route":7,"./Routes":8,"./goBack":9,"./makeHref":11,"./replaceWith":67,"./transitionTo":68}],11:[function(_dereq_,module,exports){
 module.exports = _dereq_('./modules/helpers/makeHref');
 
-},{"./modules/helpers/makeHref":23}],11:[function(_dereq_,module,exports){
+},{"./modules/helpers/makeHref":25}],12:[function(_dereq_,module,exports){
+var LocationDispatcher = _dereq_('../dispatchers/LocationDispatcher');
+var makePath = _dereq_('../helpers/makePath');
+
+/**
+ * Actions that modify the URL.
+ */
+var LocationActions = {
+
+  PUSH: 'push',
+  REPLACE: 'replace',
+  POP: 'pop',
+  UPDATE_SCROLL: 'update-scroll',
+
+  /**
+   * Transitions to the URL specified in the arguments by pushing
+   * a new URL onto the history stack.
+   */
+  transitionTo: function (to, params, query) {
+    LocationDispatcher.handleViewAction({
+      type: LocationActions.PUSH,
+      path: makePath(to, params, query)
+    });
+  },
+
+  /**
+   * Transitions to the URL specified in the arguments by replacing
+   * the current URL in the history stack.
+   */
+  replaceWith: function (to, params, query) {
+    LocationDispatcher.handleViewAction({
+      type: LocationActions.REPLACE,
+      path: makePath(to, params, query)
+    });
+  },
+
+  /**
+   * Transitions to the previous URL.
+   */
+  goBack: function () {
+    LocationDispatcher.handleViewAction({
+      type: LocationActions.POP
+    });
+  },
+
+  /**
+   * Updates the window's scroll position to the last known position
+   * for the current URL path.
+   */
+  updateScroll: function () {
+    LocationDispatcher.handleViewAction({
+      type: LocationActions.UPDATE_SCROLL
+    });
+  }
+
+};
+
+module.exports = LocationActions;
+
+},{"../dispatchers/LocationDispatcher":19,"../helpers/makePath":26}],13:[function(_dereq_,module,exports){
 var merge = _dereq_('react/lib/merge');
 var Route = _dereq_('./Route');
 
@@ -51,21 +114,22 @@ var Route = _dereq_('./Route');
 function DefaultRoute(props) {
   return Route(
     merge(props, {
-      name: null,
-      path: null
+      path: null,
+      isDefault: true
     })
   );
 }
 
 module.exports = DefaultRoute;
 
-},{"./Route":14,"react/lib/merge":57}],12:[function(_dereq_,module,exports){
+},{"./Route":17,"react/lib/merge":62}],14:[function(_dereq_,module,exports){
 var React = (typeof window !== "undefined" ? window.React : typeof global !== "undefined" ? global.React : null);
 var ActiveState = _dereq_('../mixins/ActiveState');
+var transitionTo = _dereq_('../actions/LocationActions').transitionTo;
 var withoutProperties = _dereq_('../helpers/withoutProperties');
-var transitionTo = _dereq_('../helpers/transitionTo');
 var hasOwnProperty = _dereq_('../helpers/hasOwnProperty');
 var makeHref = _dereq_('../helpers/makeHref');
+var warning = _dereq_('react/lib/warning');
 
 function isLeftClickEvent(event) {
   return event.button === 0;
@@ -76,7 +140,7 @@ function isModifiedEvent(event) {
 }
 
 /**
- * A map of <Link> component props that are reserved for use by the
+ * DEPRECATED: A map of <Link> component props that are reserved for use by the
  * router and/or React. All other props are used as params that are
  * interpolated into the link's path.
  */
@@ -86,6 +150,7 @@ var RESERVED_PROPS = {
   className: true,
   activeClassName: true,
   query: true,
+  onClick:true,
   children: true // ReactChildren
 };
 
@@ -100,12 +165,12 @@ var RESERVED_PROPS = {
  *
  * You could use the following component to link to that route:
  *
- *   <Link to="showPost" postId="123"/>
+ *   <Link to="showPost" params={{postId: "123"}} />
  *
  * In addition to params, links may pass along query string parameters
  * using the `query` prop.
  *
- *   <Link to="showPost" postId="123" query={{show:true}}/>
+ *   <Link to="showPost" params={{postId: "123"}} query={{show:true}}/>
  */
 var Link = React.createClass({
 
@@ -115,8 +180,21 @@ var Link = React.createClass({
 
   statics: {
 
+    // TODO: Deprecate passing props as params in v1.0
     getUnreservedProps: function (props) {
+      warning(
+        false,
+        'Passing props for params on <Link>s is deprecated, '+
+        'please use the `params` property.'
+      );
       return withoutProperties(props, RESERVED_PROPS);
+    },
+
+    /**
+     * Returns a hash of URL parameters to use in this <Link>'s path.
+     */
+    getParams: function (props) {
+      return props.params || Link.getUnreservedProps(props);
     }
 
   },
@@ -124,6 +202,7 @@ var Link = React.createClass({
   propTypes: {
     to: React.PropTypes.string.isRequired,
     activeClassName: React.PropTypes.string.isRequired,
+    params: React.PropTypes.object,
     query: React.PropTypes.object,
     onClick: React.PropTypes.func
   },
@@ -141,17 +220,10 @@ var Link = React.createClass({
   },
 
   /**
-   * Returns a hash of URL parameters to use in this <Link>'s path.
-   */
-  getParams: function () {
-    return Link.getUnreservedProps(this.props);
-  },
-
-  /**
    * Returns the value of the "href" attribute to use on the DOM element.
    */
   getHref: function () {
-    return makeHref(this.props.to, this.getParams(), this.props.query);
+    return makeHref(this.props.to, Link.getParams(this.props), this.props.query);
   },
 
   /**
@@ -168,7 +240,7 @@ var Link = React.createClass({
   },
 
   componentWillReceiveProps: function (nextProps) {
-    var params = Link.getUnreservedProps(nextProps);
+    var params = Link.getParams(nextProps);
 
     this.setState({
       isActive: Link.isActive(nextProps.to, params, nextProps.query)
@@ -177,7 +249,7 @@ var Link = React.createClass({
 
   updateActiveState: function () {
     this.setState({
-      isActive: Link.isActive(this.props.to, this.getParams(), this.props.query)
+      isActive: Link.isActive(this.props.to, Link.getParams(this.props), this.props.query)
     });
   },
 
@@ -197,7 +269,7 @@ var Link = React.createClass({
     event.preventDefault();
 
     if (allowTransition)
-      transitionTo(this.props.to, this.getParams(), this.props.query);
+      transitionTo(this.props.to, Link.getParams(this.props), this.props.query);
   },
 
   render: function () {
@@ -220,7 +292,29 @@ var Link = React.createClass({
 
 module.exports = Link;
 
-},{"../helpers/hasOwnProperty":22,"../helpers/makeHref":23,"../helpers/transitionTo":28,"../helpers/withoutProperties":29,"../mixins/ActiveState":33}],13:[function(_dereq_,module,exports){
+},{"../actions/LocationActions":12,"../helpers/hasOwnProperty":24,"../helpers/makeHref":25,"../helpers/withoutProperties":29,"../mixins/ActiveState":33,"react/lib/warning":66}],15:[function(_dereq_,module,exports){
+var merge = _dereq_('react/lib/merge');
+var Route = _dereq_('./Route');
+
+/**
+ * A <NotFoundRoute> is a special kind of <Route> that
+ * renders when the beginning of its parent's path matches
+ * but none of its siblings do, including any <DefaultRoute>.
+ * Only one such route may be used at any given level in the
+ * route hierarchy.
+ */
+function NotFoundRoute(props) {
+  return Route(
+    merge(props, {
+      path: null,
+      catchAll: true
+    })
+  );
+}
+
+module.exports = NotFoundRoute;
+
+},{"./Route":17,"react/lib/merge":62}],16:[function(_dereq_,module,exports){
 var React = (typeof window !== "undefined" ? window.React : typeof global !== "undefined" ? global.React : null);
 var Route = _dereq_('./Route');
 
@@ -240,19 +334,19 @@ function createRedirectHandler(to) {
 
 /**
  * A <Redirect> component is a special kind of <Route> that always
- * redirects when it matches.
+ * redirects to another route when it matches.
  */
 function Redirect(props) {
   return Route({
     name: props.name,
-    path: props.from || props.path,
+    path: props.from || props.path || '*',
     handler: createRedirectHandler(props.to)
   });
 }
 
 module.exports = Redirect;
 
-},{"./Route":14}],14:[function(_dereq_,module,exports){
+},{"./Route":17}],17:[function(_dereq_,module,exports){
 var React = (typeof window !== "undefined" ? window.React : typeof global !== "undefined" ? global.React : null);
 var withoutProperties = _dereq_('../helpers/withoutProperties');
 
@@ -354,14 +448,13 @@ var Route = React.createClass({
 
 module.exports = Route;
 
-},{"../helpers/withoutProperties":29}],15:[function(_dereq_,module,exports){
+},{"../helpers/withoutProperties":29}],18:[function(_dereq_,module,exports){
 var React = (typeof window !== "undefined" ? window.React : typeof global !== "undefined" ? global.React : null);
 var warning = _dereq_('react/lib/warning');
 var copyProperties = _dereq_('react/lib/copyProperties');
 var Promise = _dereq_('es6-promise').Promise;
+var LocationActions = _dereq_('../actions/LocationActions');
 var Route = _dereq_('../components/Route');
-var goBack = _dereq_('../helpers/goBack');
-var replaceWith = _dereq_('../helpers/replaceWith');
 var Path = _dereq_('../helpers/Path');
 var Redirect = _dereq_('../helpers/Redirect');
 var Transition = _dereq_('../helpers/Transition');
@@ -383,8 +476,7 @@ var REF_NAME = '__activeRoute__';
 var NAMED_LOCATIONS = {
   hash: HashLocation,
   history: HistoryLocation,
-  refresh: RefreshLocation,
-  disabled: RefreshLocation // TODO: Remove
+  refresh: RefreshLocation
 };
 
 /**
@@ -395,9 +487,9 @@ function defaultAbortedTransitionHandler(transition) {
   var reason = transition.abortReason;
 
   if (reason instanceof Redirect) {
-    replaceWith(reason.to, reason.params, reason.query);
+    LocationActions.replaceWith(reason.to, reason.params, reason.query);
   } else {
-    goBack();
+    LocationActions.goBack();
   }
 }
 
@@ -415,6 +507,11 @@ function defaultActiveStateChangeHandler(state) {
  */
 function defaultTransitionErrorHandler(error) {
   throw error; // This error probably originated in a transition hook.
+}
+
+function maybeUpdateScroll(routes, rootRoute) {
+  if (!routes.props.preserveScrollPosition && !rootRoute.props.preserveScrollPosition)
+    LocationActions.updateScroll();
 }
 
 /**
@@ -455,7 +552,6 @@ var Routes = React.createClass({
       routes: RouteStore.registerChildren(this.props.children, this)
     };
   },
-
 
   getLocation: function () {
     var location = this.props.location;
@@ -501,7 +597,7 @@ var Routes = React.createClass({
    *                               { route: <PostRoute>, params: { id: '123' } } ]
    */
   match: function (path) {
-    return findMatches(Path.withoutQuery(path), this.state.routes, this.props.defaultRoute);
+    return findMatches(Path.withoutQuery(path), this.state.routes, this.props.defaultRoute, this.props.notFoundRoute);
   },
 
   /**
@@ -543,7 +639,7 @@ var Routes = React.createClass({
         var rootMatch = getRootMatch(nextState.matches);
 
         if (rootMatch)
-          maybeScrollWindow(routes, rootMatch.route);
+          maybeUpdateScroll(routes, rootMatch.route);
       }
 
       return transition;
@@ -576,14 +672,14 @@ var Routes = React.createClass({
 
 });
 
-function findMatches(path, routes, defaultRoute) {
+function findMatches(path, routes, defaultRoute, notFoundRoute) {
   var matches = null, route, params;
 
   for (var i = 0, len = routes.length; i < len; ++i) {
     route = routes[i];
 
     // Check the subtree first to find the most deeply-nested match.
-    matches = findMatches(path, route.props.children, route.props.defaultRoute);
+    matches = findMatches(path, route.props.children, route.props.defaultRoute, route.props.notFoundRoute);
 
     if (matches != null) {
       var rootParams = getRootMatch(matches).params;
@@ -606,10 +702,12 @@ function findMatches(path, routes, defaultRoute) {
   }
 
   // No routes matched, so try the default route if there is one.
-  params = defaultRoute && Path.extractParams(defaultRoute.props.path, path);
-
-  if (params)
+  if (defaultRoute && (params = Path.extractParams(defaultRoute.props.path, path)))
     return [ makeMatch(defaultRoute, params) ];
+
+  // Last attempt: does the "not found" route match?
+  if (notFoundRoute && (params = Path.extractParams(notFoundRoute.props.path, path)))
+    return [ makeMatch(notFoundRoute, params) ];
 
   return matches;
 }
@@ -682,17 +780,18 @@ function runTransitionHooks(routes, transition) {
     toMatches = nextMatches;
   }
 
+  var query = Path.extractQuery(transition.path) || {};
+
   return runTransitionFromHooks(fromMatches, transition).then(function () {
     if (transition.isAborted)
       return; // No need to continue.
 
-    return runTransitionToHooks(toMatches, transition).then(function () {
+    return runTransitionToHooks(toMatches, transition, query).then(function () {
       if (transition.isAborted)
         return; // No need to continue.
 
       var rootMatch = getRootMatch(nextMatches);
       var params = (rootMatch && rootMatch.params) || {};
-      var query = Path.extractQuery(transition.path) || {};
 
       return {
         path: transition.path,
@@ -733,7 +832,7 @@ function runTransitionFromHooks(matches, transition) {
  * with the transition object and any params that apply to that handler. Returns
  * a promise that resolves after the last handler.
  */
-function runTransitionToHooks(matches, transition) {
+function runTransitionToHooks(matches, transition, query) {
   var promise = Promise.resolve();
 
   matches.forEach(function (match) {
@@ -741,7 +840,7 @@ function runTransitionToHooks(matches, transition) {
       var handler = match.route.props.handler;
 
       if (!transition.isAborted && handler.willTransitionTo)
-        return handler.willTransitionTo(transition, match.params);
+        return handler.willTransitionTo(transition, match.params, query);
     });
   });
 
@@ -768,9 +867,11 @@ function computeHandlerProps(matches, query) {
     props = Route.getUnreservedProps(route.props);
 
     props.ref = REF_NAME;
-    props.key = Path.injectParams(route.props.path, match.params);
     props.params = match.params;
     props.query = query;
+
+    if (route.props.addHandlerKey)
+      props.key = Path.injectParams(route.props.path, match.params);
 
     if (childHandler) {
       props.activeRouteHandler = childHandler;
@@ -797,52 +898,82 @@ function reversedArray(array) {
   return array.slice(0).reverse();
 }
 
-function maybeScrollWindow(routes, rootRoute) {
-  if (routes.props.preserveScrollPosition || rootRoute.props.preserveScrollPosition)
-    return;
-
-  window.scrollTo(0, 0);
-}
-
 module.exports = Routes;
 
-},{"../components/Route":14,"../helpers/Path":16,"../helpers/Redirect":17,"../helpers/Transition":18,"../helpers/goBack":21,"../helpers/replaceWith":25,"../locations/HashLocation":30,"../locations/HistoryLocation":31,"../locations/RefreshLocation":32,"../stores/ActiveStore":35,"../stores/PathStore":36,"../stores/RouteStore":37,"es6-promise":42,"react/lib/copyProperties":53,"react/lib/warning":61}],16:[function(_dereq_,module,exports){
-var invariant = _dereq_('react/lib/invariant');
+},{"../actions/LocationActions":12,"../components/Route":17,"../helpers/Path":20,"../helpers/Redirect":21,"../helpers/Transition":22,"../locations/HashLocation":30,"../locations/HistoryLocation":31,"../locations/RefreshLocation":32,"../stores/ActiveStore":35,"../stores/PathStore":36,"../stores/RouteStore":37,"es6-promise":38,"react/lib/copyProperties":58,"react/lib/warning":66}],19:[function(_dereq_,module,exports){
 var copyProperties = _dereq_('react/lib/copyProperties');
-var qs = _dereq_('querystring');
-var URL = _dereq_('./URL');
+var Dispatcher = _dereq_('flux').Dispatcher;
 
-var paramMatcher = /((?::[a-z_$][a-z0-9_$]*)|\*)/ig;
-var queryMatcher = /\?(.+)/;
+/**
+ * Dispatches actions that modify the URL.
+ */
+var LocationDispatcher = copyProperties(new Dispatcher, {
 
-function getParamName(pathSegment) {
-  return pathSegment === '*' ? 'splat' : pathSegment.substr(1);
+  handleViewAction: function (action) {
+    this.dispatch({
+      source: 'VIEW_ACTION',
+      action: action
+    });
+  }
+
+});
+
+module.exports = LocationDispatcher;
+
+},{"flux":49,"react/lib/copyProperties":58}],20:[function(_dereq_,module,exports){
+var invariant = _dereq_('react/lib/invariant');
+var merge = _dereq_('qs/lib/utils').merge;
+var qs = _dereq_('qs');
+
+function encodeURL(url) {
+  return encodeURIComponent(url).replace(/%20/g, '+');
 }
+
+function decodeURL(url) {
+  return decodeURIComponent(url.replace(/\+/g, ' '));
+}
+
+function encodeURLPath(path) {
+  return String(path).split('/').map(encodeURL).join('/');
+}
+
+var paramMatcher = /:([a-zA-Z_$][a-zA-Z0-9_$]*)|[*.()\[\]\\+|{}^$]/g;
+var queryMatcher = /\?(.+)/;
 
 var _compiledPatterns = {};
 
 function compilePattern(pattern) {
-  if (_compiledPatterns[pattern])
-    return _compiledPatterns[pattern];
+  if (!(pattern in _compiledPatterns)) {
+    var paramNames = [];
+    var source = pattern.replace(paramMatcher, function (match, paramName) {
+      if (paramName) {
+        paramNames.push(paramName);
+        return '([^./?#]+)';
+      } else if (match === '*') {
+        paramNames.push('splat');
+        return '(.*?)';
+      } else {
+        return '\\' + match;
+      }
+    });
 
-  var compiled = _compiledPatterns[pattern] = {};
-  var paramNames = compiled.paramNames = [];
+    _compiledPatterns[pattern] = {
+      matcher: new RegExp('^' + source + '$', 'i'),
+      paramNames: paramNames
+    };
+  }
 
-  var source = pattern.replace(paramMatcher, function (match, pathSegment) {
-    paramNames.push(getParamName(pathSegment));
-    return pathSegment === '*' ? '(.*?)' : '([^/?#]+)';
-  });
-
-  compiled.matcher = new RegExp('^' + source + '$', 'i');
-
-  return compiled;
-}
-
-function isDynamicPattern(pattern) {
-  return pattern.indexOf(':') !== -1 || pattern.indexOf('*') !== -1;
+  return _compiledPatterns[pattern];
 }
 
 var Path = {
+
+  /**
+   * Returns an array of the names of all parameters in the given pattern.
+   */
+  extractParamNames: function (pattern) {
+    return compilePattern(pattern).paramNames;
+  },
 
   /**
    * Extracts the portions of the given URL path that match the given pattern
@@ -850,25 +981,15 @@ var Path = {
    * pattern does not match the given path.
    */
   extractParams: function (pattern, path) {
-    if (!pattern)
-      return null;
-
-    if (!isDynamicPattern(pattern)) {
-      if (pattern === URL.decode(path))
-        return {}; // No dynamic segments, but the paths match.
-
-      return null;
-    }
-
-    var compiled = compilePattern(pattern);
-    var match = URL.decode(path).match(compiled.matcher);
+    var object = compilePattern(pattern);
+    var match = decodeURL(path).match(object.matcher);
 
     if (!match)
       return null;
 
     var params = {};
 
-    compiled.paramNames.forEach(function (paramName, index) {
+    object.paramNames.forEach(function (paramName, index) {
       params[paramName] = match[index + 1];
     });
 
@@ -876,46 +997,44 @@ var Path = {
   },
 
   /**
-   * Returns an array of the names of all parameters in the given pattern.
-   */
-  extractParamNames: function (pattern) {
-    if (!pattern)
-      return [];
-    return compilePattern(pattern).paramNames;
-  },
-
-  /**
    * Returns a version of the given route path with params interpolated. Throws
    * if there is a dynamic segment of the route path for which there is no param.
    */
   injectParams: function (pattern, params) {
-    if (!pattern)
-      return null;
-
-    if (!isDynamicPattern(pattern))
-      return pattern;
-
     params = params || {};
 
-    return pattern.replace(paramMatcher, function (match, pathSegment) {
-      var paramName = getParamName(pathSegment);
+    var splatIndex = 0;
+
+    return pattern.replace(paramMatcher, function (match, paramName) {
+      paramName = paramName || 'splat';
 
       invariant(
         params[paramName] != null,
         'Missing "' + paramName + '" parameter for path "' + pattern + '"'
       );
 
-      // Preserve forward slashes.
-      return String(params[paramName]).split('/').map(URL.encode).join('/');
+      var segment;
+      if (paramName === 'splat' && Array.isArray(params[paramName])) {
+        segment = params[paramName][splatIndex++];
+
+        invariant(
+          segment != null,
+          'Missing splat # ' + splatIndex + ' for path "' + pattern + '"'
+        );
+      } else {
+        segment = params[paramName];
+      }
+
+      return encodeURLPath(segment);
     });
   },
 
   /**
-   * Returns an object that is the result of parsing any query string contained in
-   * the given path, null if the path contains no query string.
+   * Returns an object that is the result of parsing any query string contained
+   * in the given path, null if the path contains no query string.
    */
   extractQuery: function (path) {
-    var match = path.match(queryMatcher);
+    var match = decodeURL(path).match(queryMatcher);
     return match && qs.parse(match[1]);
   },
 
@@ -927,14 +1046,14 @@ var Path = {
   },
 
   /**
-   * Returns a version of the given path with the parameters in the given query
-   * added to the query string.
+   * Returns a version of the given path with the parameters in the given
+   * query merged into the query string.
    */
   withQuery: function (path, query) {
     var existingQuery = Path.extractQuery(path);
 
     if (existingQuery)
-      query = query ? copyProperties(existingQuery, query) : existingQuery;
+      query = query ? merge(existingQuery, query) : existingQuery;
 
     var queryString = query && qs.stringify(query);
 
@@ -945,17 +1064,31 @@ var Path = {
   },
 
   /**
+   * Returns true if the given path is absolute.
+   */
+  isAbsolute: function (path) {
+    return path.charAt(0) === '/';
+  },
+
+  /**
    * Returns a normalized version of the given path.
    */
-  normalize: function (path) {
+  normalize: function (path, parentRoute) {
     return path.replace(/^\/*/, '/');
+  },
+
+  /**
+   * Joins two URL paths together.
+   */
+  join: function (a, b) {
+    return a.replace(/\/*$/, '/') + b;
   }
 
 };
 
 module.exports = Path;
 
-},{"./URL":19,"querystring":41,"react/lib/copyProperties":53,"react/lib/invariant":55}],17:[function(_dereq_,module,exports){
+},{"qs":52,"qs/lib/utils":56,"react/lib/invariant":60}],21:[function(_dereq_,module,exports){
 /**
  * Encapsulates a redirect to the given route.
  */
@@ -967,9 +1100,9 @@ function Redirect(to, params, query) {
 
 module.exports = Redirect;
 
-},{}],18:[function(_dereq_,module,exports){
+},{}],22:[function(_dereq_,module,exports){
 var mixInto = _dereq_('react/lib/mixInto');
-var transitionTo = _dereq_('./transitionTo');
+var transitionTo = _dereq_('../actions/LocationActions').transitionTo;
 var Redirect = _dereq_('./Redirect');
 
 /**
@@ -1003,31 +1136,7 @@ mixInto(Transition, {
 
 module.exports = Transition;
 
-},{"./Redirect":17,"./transitionTo":28,"react/lib/mixInto":60}],19:[function(_dereq_,module,exports){
-var urlEncodedSpaceRE = /\+/g;
-var encodedSpaceRE = /%20/g;
-
-var URL = {
-
-  /* These functions were copied from the https://github.com/cujojs/rest source, MIT licensed */
-
-  decode: function (str) {
-    // spec says space should be encoded as '+'
-    str = str.replace(urlEncodedSpaceRE, ' ');
-    return decodeURIComponent(str);
-  },
-
-  encode: function (str) {
-    str = encodeURIComponent(str);
-    // spec says space should be encoded as '+'
-    return str.replace(encodedSpaceRE, '+');
-  }
-
-};
-
-module.exports = URL;
-
-},{}],20:[function(_dereq_,module,exports){
+},{"../actions/LocationActions":12,"./Redirect":21,"react/lib/mixInto":65}],23:[function(_dereq_,module,exports){
 /**
  * Returns the current URL path from `window.location`, including query string
  */
@@ -1038,22 +1147,10 @@ function getWindowPath() {
 module.exports = getWindowPath;
 
 
-},{}],21:[function(_dereq_,module,exports){
-var PathStore = _dereq_('../stores/PathStore');
-
-/**
- * Transitions to the previous URL.
- */
-function goBack() {
-  PathStore.pop();
-}
-
-module.exports = goBack;
-
-},{"../stores/PathStore":36}],22:[function(_dereq_,module,exports){
+},{}],24:[function(_dereq_,module,exports){
 module.exports = Function.prototype.call.bind(Object.prototype.hasOwnProperty);
 
-},{}],23:[function(_dereq_,module,exports){
+},{}],25:[function(_dereq_,module,exports){
 var HashLocation = _dereq_('../locations/HashLocation');
 var PathStore = _dereq_('../stores/PathStore');
 var makePath = _dereq_('./makePath');
@@ -1073,7 +1170,7 @@ function makeHref(to, params, query) {
 
 module.exports = makeHref;
 
-},{"../locations/HashLocation":30,"../stores/PathStore":36,"./makePath":24}],24:[function(_dereq_,module,exports){
+},{"../locations/HashLocation":30,"../stores/PathStore":36,"./makePath":26}],26:[function(_dereq_,module,exports){
 var invariant = _dereq_('react/lib/invariant');
 var RouteStore = _dereq_('../stores/RouteStore');
 var Path = _dereq_('./Path');
@@ -1084,8 +1181,8 @@ var Path = _dereq_('./Path');
  */
 function makePath(to, params, query) {
   var path;
-  if (to.charAt(0) === '/') {
-    path = Path.normalize(to); // Absolute path.
+  if (Path.isAbsolute(to)) {
+    path = Path.normalize(to);
   } else {
     var route = RouteStore.getRouteByName(to);
 
@@ -1103,21 +1200,7 @@ function makePath(to, params, query) {
 
 module.exports = makePath;
 
-},{"../stores/RouteStore":37,"./Path":16,"react/lib/invariant":55}],25:[function(_dereq_,module,exports){
-var PathStore = _dereq_('../stores/PathStore');
-var makePath = _dereq_('./makePath');
-
-/**
- * Transitions to the URL specified in the arguments by replacing
- * the current URL in the history stack.
- */
-function replaceWith(to, params, query) {
-  PathStore.replace(makePath(to, params, query));
-}
-
-module.exports = replaceWith;
-
-},{"../stores/PathStore":36,"./makePath":24}],26:[function(_dereq_,module,exports){
+},{"../stores/RouteStore":37,"./Path":20,"react/lib/invariant":60}],27:[function(_dereq_,module,exports){
 var Promise = _dereq_('es6-promise').Promise;
 
 /**
@@ -1144,7 +1227,7 @@ function resolveAsyncState(asyncState, setState) {
 
 module.exports = resolveAsyncState;
 
-},{"es6-promise":42}],27:[function(_dereq_,module,exports){
+},{"es6-promise":38}],28:[function(_dereq_,module,exports){
 function supportsHistory() {
   /*! taken from modernizr
    * https://github.com/Modernizr/Modernizr/blob/master/LICENSE
@@ -1162,21 +1245,7 @@ function supportsHistory() {
 
 module.exports = supportsHistory;
 
-},{}],28:[function(_dereq_,module,exports){
-var PathStore = _dereq_('../stores/PathStore');
-var makePath = _dereq_('./makePath');
-
-/**
- * Transitions to the URL specified in the arguments by pushing
- * a new URL onto the history stack.
- */
-function transitionTo(to, params, query) {
-  PathStore.push(makePath(to, params, query));
-}
-
-module.exports = transitionTo;
-
-},{"../stores/PathStore":36,"./makePath":24}],29:[function(_dereq_,module,exports){
+},{}],29:[function(_dereq_,module,exports){
 function withoutProperties(object, properties) {
   var result = {};
 
@@ -1195,7 +1264,27 @@ var invariant = _dereq_('react/lib/invariant');
 var ExecutionEnvironment = _dereq_('react/lib/ExecutionEnvironment');
 var getWindowPath = _dereq_('../helpers/getWindowPath');
 
+function getHashPath() {
+  return window.location.hash.substr(1);
+}
+
+function ensureSlash() {
+  var path = getHashPath();
+
+  if (path.charAt(0) === '/')
+    return true;
+
+  HashLocation.replace('/' + path);
+
+  return false;
+}
+
 var _onChange;
+
+function handleHashChange() {
+  if (ensureSlash())
+    _onChange();
+}
 
 /**
  * A Location that uses `window.location.hash`.
@@ -1210,22 +1299,20 @@ var HashLocation = {
 
     _onChange = onChange;
 
-    // Make sure the hash is at least / to begin with.
-    if (window.location.hash === '')
-      window.location.replace(getWindowPath() + '#/');
+    ensureSlash();
 
     if (window.addEventListener) {
-      window.addEventListener('hashchange', _onChange, false);
+      window.addEventListener('hashchange', handleHashChange, false);
     } else {
-      window.attachEvent('onhashchange', _onChange);
+      window.attachEvent('onhashchange', handleHashChange);
     }
   },
 
   teardown: function () {
     if (window.removeEventListener) {
-      window.removeEventListener('hashchange', _onChange, false);
+      window.removeEventListener('hashchange', handleHashChange, false);
     } else {
-      window.detachEvent('onhashchange', _onChange);
+      window.detachEvent('onhashchange', handleHashChange);
     }
   },
 
@@ -1241,9 +1328,7 @@ var HashLocation = {
     window.history.back();
   },
 
-  getCurrentPath: function () {
-    return window.location.hash.substr(1);
-  },
+  getCurrentPath: getHashPath,
 
   toString: function () {
     return '<HashLocation>';
@@ -1253,7 +1338,7 @@ var HashLocation = {
 
 module.exports = HashLocation;
 
-},{"../helpers/getWindowPath":20,"react/lib/ExecutionEnvironment":52,"react/lib/invariant":55}],31:[function(_dereq_,module,exports){
+},{"../helpers/getWindowPath":23,"react/lib/ExecutionEnvironment":57,"react/lib/invariant":60}],31:[function(_dereq_,module,exports){
 var invariant = _dereq_('react/lib/invariant');
 var ExecutionEnvironment = _dereq_('react/lib/ExecutionEnvironment');
 var getWindowPath = _dereq_('../helpers/getWindowPath');
@@ -1312,7 +1397,7 @@ var HistoryLocation = {
 
 module.exports = HistoryLocation;
 
-},{"../helpers/getWindowPath":20,"react/lib/ExecutionEnvironment":52,"react/lib/invariant":55}],32:[function(_dereq_,module,exports){
+},{"../helpers/getWindowPath":23,"react/lib/ExecutionEnvironment":57,"react/lib/invariant":60}],32:[function(_dereq_,module,exports){
 var invariant = _dereq_('react/lib/invariant');
 var ExecutionEnvironment = _dereq_('react/lib/ExecutionEnvironment');
 var getWindowPath = _dereq_('../helpers/getWindowPath');
@@ -1353,7 +1438,7 @@ var RefreshLocation = {
 
 module.exports = RefreshLocation;
 
-},{"../helpers/getWindowPath":20,"react/lib/ExecutionEnvironment":52,"react/lib/invariant":55}],33:[function(_dereq_,module,exports){
+},{"../helpers/getWindowPath":23,"react/lib/ExecutionEnvironment":57,"react/lib/invariant":60}],33:[function(_dereq_,module,exports){
 var ActiveStore = _dereq_('../stores/ActiveStore');
 
 /**
@@ -1412,7 +1497,7 @@ var ActiveState = {
   },
 
   handleActiveStateChange: function () {
-    if (this.isMounted() && this.updateActiveState)
+    if (this.isMounted() && typeof this.updateActiveState === 'function')
       this.updateActiveState();
   }
 
@@ -1530,7 +1615,7 @@ var AsyncState = {
 
 module.exports = AsyncState;
 
-},{"../helpers/resolveAsyncState":26}],35:[function(_dereq_,module,exports){
+},{"../helpers/resolveAsyncState":27}],35:[function(_dereq_,module,exports){
 var EventEmitter = _dereq_('events').EventEmitter;
 
 var CHANGE_EVENT = 'change';
@@ -1616,9 +1701,11 @@ var ActiveStore = {
 
 module.exports = ActiveStore;
 
-},{"events":38}],36:[function(_dereq_,module,exports){
+},{"events":48}],36:[function(_dereq_,module,exports){
 var warning = _dereq_('react/lib/warning');
 var EventEmitter = _dereq_('events').EventEmitter;
+var LocationActions = _dereq_('../actions/LocationActions');
+var LocationDispatcher = _dereq_('../dispatchers/LocationDispatcher');
 var supportsHistory = _dereq_('../helpers/supportsHistory');
 var HistoryLocation = _dereq_('../locations/HistoryLocation');
 var RefreshLocation = _dereq_('../locations/RefreshLocation');
@@ -1628,6 +1715,20 @@ var _events = new EventEmitter;
 
 function notifyChange() {
   _events.emit(CHANGE_EVENT);
+}
+
+var _scrollPositions = {};
+
+function recordScrollPosition(path) {
+  _scrollPositions[path] = {
+    x: window.scrollX,
+    y: window.scrollY
+  };
+}
+
+function updateScrollPosition(path) {
+  var p = PathStore.getScrollPosition(path);
+  window.scrollTo(p.x, p.y);
 }
 
 var _location;
@@ -1677,33 +1778,62 @@ var PathStore = {
     _location = null;
   },
 
+  /**
+   * Returns the location object currently in use.
+   */
   getLocation: function () {
     return _location;
   },
 
-  push: function (path) {
-    if (_location.getCurrentPath() !== path)
-      _location.push(path);
-  },
-
-  replace: function (path) {
-    if (_location.getCurrentPath() !== path)
-      _location.replace(path);
-  },
-
-  pop: function () {
-    _location.pop();
-  },
-
+  /**
+   * Returns the current URL path.
+   */
   getCurrentPath: function () {
     return _location.getCurrentPath();
-  }
+  },
+
+  /**
+   * Returns the last known scroll position for the given path.
+   */
+  getScrollPosition: function (path) {
+    return _scrollPositions[path] || { x: 0, y: 0 };
+  },
+
+  dispatchToken: LocationDispatcher.register(function (payload) {
+    var action = payload.action;
+    var currentPath = _location.getCurrentPath();
+
+    switch (action.type) {
+      case LocationActions.PUSH:
+        if (currentPath !== action.path) {
+          recordScrollPosition(currentPath);
+          _location.push(action.path);
+        }
+        break;
+
+      case LocationActions.REPLACE:
+        if (currentPath !== action.path) {
+          recordScrollPosition(currentPath);
+          _location.replace(action.path);
+        }
+        break;
+
+      case LocationActions.POP:
+        recordScrollPosition(currentPath);
+        _location.pop();
+        break;
+
+      case LocationActions.UPDATE_SCROLL:
+        updateScrollPosition(currentPath);
+        break;
+    }
+  })
 
 };
 
 module.exports = PathStore;
 
-},{"../helpers/supportsHistory":27,"../locations/HistoryLocation":31,"../locations/RefreshLocation":32,"events":38,"react/lib/warning":61}],37:[function(_dereq_,module,exports){
+},{"../actions/LocationActions":12,"../dispatchers/LocationDispatcher":19,"../helpers/supportsHistory":28,"../locations/HistoryLocation":31,"../locations/RefreshLocation":32,"events":48,"react/lib/warning":66}],37:[function(_dereq_,module,exports){
 var React = (typeof window !== "undefined" ? window.React : typeof global !== "undefined" ? global.React : null);
 var invariant = _dereq_('react/lib/invariant');
 var warning = _dereq_('react/lib/warning');
@@ -1754,15 +1884,21 @@ var RouteStore = {
       props.name || props.path
     );
 
-    // Default routes have no name, path, or children.
-    var isDefault = !(props.path || props.name || props.children);
+    var parentPath = (parentRoute && parentRoute.props.path) || '/';
 
-    if (props.path || props.name) {
-      props.path = Path.normalize(props.path || props.name);
-    } else if (parentRoute && parentRoute.props.path) {
-      props.path = parentRoute.props.path;
+    if ((props.path || props.name) && !props.isDefault && !props.catchAll) {
+      var path = props.path || props.name;
+
+      // Relative paths extend their parent.
+      if (!Path.isAbsolute(path))
+        path = Path.join(parentPath, path);
+
+      props.path = Path.normalize(path);
     } else {
-      props.path = '/';
+      props.path = parentPath;
+
+      if (props.catchAll)
+        props.path += '*';
     }
 
     props.paramNames = Path.extractParamNames(props.path);
@@ -1791,7 +1927,28 @@ var RouteStore = {
       _namedRoutes[props.name] = route;
     }
 
-    if (parentRoute && isDefault) {
+    if (props.catchAll) {
+      invariant(
+        parentRoute,
+        '<NotFoundRoute> must have a parent <Route>'
+      );
+
+      invariant(
+        parentRoute.props.notFoundRoute == null,
+        'You may not have more than one <NotFoundRoute> per <Route>'
+      );
+
+      parentRoute.props.notFoundRoute = route;
+
+      return null;
+    }
+
+    if (props.isDefault) {
+      invariant(
+        parentRoute,
+        '<DefaultRoute> must have a parent <Route>'
+      );
+
       invariant(
         parentRoute.props.defaultRoute == null,
         'You may not have more than one <DefaultRoute> per <Route>'
@@ -1834,7 +1991,613 @@ var RouteStore = {
 
 module.exports = RouteStore;
 
-},{"../helpers/Path":16,"react/lib/invariant":55,"react/lib/warning":61}],38:[function(_dereq_,module,exports){
+},{"../helpers/Path":20,"react/lib/invariant":60,"react/lib/warning":66}],38:[function(_dereq_,module,exports){
+"use strict";
+var Promise = _dereq_("./promise/promise").Promise;
+var polyfill = _dereq_("./promise/polyfill").polyfill;
+exports.Promise = Promise;
+exports.polyfill = polyfill;
+},{"./promise/polyfill":42,"./promise/promise":43}],39:[function(_dereq_,module,exports){
+"use strict";
+/* global toString */
+
+var isArray = _dereq_("./utils").isArray;
+var isFunction = _dereq_("./utils").isFunction;
+
+/**
+  Returns a promise that is fulfilled when all the given promises have been
+  fulfilled, or rejected if any of them become rejected. The return promise
+  is fulfilled with an array that gives all the values in the order they were
+  passed in the `promises` array argument.
+
+  Example:
+
+  ```javascript
+  var promise1 = RSVP.resolve(1);
+  var promise2 = RSVP.resolve(2);
+  var promise3 = RSVP.resolve(3);
+  var promises = [ promise1, promise2, promise3 ];
+
+  RSVP.all(promises).then(function(array){
+    // The array here would be [ 1, 2, 3 ];
+  });
+  ```
+
+  If any of the `promises` given to `RSVP.all` are rejected, the first promise
+  that is rejected will be given as an argument to the returned promises's
+  rejection handler. For example:
+
+  Example:
+
+  ```javascript
+  var promise1 = RSVP.resolve(1);
+  var promise2 = RSVP.reject(new Error("2"));
+  var promise3 = RSVP.reject(new Error("3"));
+  var promises = [ promise1, promise2, promise3 ];
+
+  RSVP.all(promises).then(function(array){
+    // Code here never runs because there are rejected promises!
+  }, function(error) {
+    // error.message === "2"
+  });
+  ```
+
+  @method all
+  @for RSVP
+  @param {Array} promises
+  @param {String} label
+  @return {Promise} promise that is fulfilled when all `promises` have been
+  fulfilled, or rejected if any of them become rejected.
+*/
+function all(promises) {
+  /*jshint validthis:true */
+  var Promise = this;
+
+  if (!isArray(promises)) {
+    throw new TypeError('You must pass an array to all.');
+  }
+
+  return new Promise(function(resolve, reject) {
+    var results = [], remaining = promises.length,
+    promise;
+
+    if (remaining === 0) {
+      resolve([]);
+    }
+
+    function resolver(index) {
+      return function(value) {
+        resolveAll(index, value);
+      };
+    }
+
+    function resolveAll(index, value) {
+      results[index] = value;
+      if (--remaining === 0) {
+        resolve(results);
+      }
+    }
+
+    for (var i = 0; i < promises.length; i++) {
+      promise = promises[i];
+
+      if (promise && isFunction(promise.then)) {
+        promise.then(resolver(i), reject);
+      } else {
+        resolveAll(i, promise);
+      }
+    }
+  });
+}
+
+exports.all = all;
+},{"./utils":47}],40:[function(_dereq_,module,exports){
+"use strict";
+var browserGlobal = (typeof window !== 'undefined') ? window : {};
+var BrowserMutationObserver = browserGlobal.MutationObserver || browserGlobal.WebKitMutationObserver;
+var local = (typeof global !== 'undefined') ? global : (this === undefined? window:this);
+
+// node
+function useNextTick() {
+  return function() {
+    process.nextTick(flush);
+  };
+}
+
+function useMutationObserver() {
+  var iterations = 0;
+  var observer = new BrowserMutationObserver(flush);
+  var node = document.createTextNode('');
+  observer.observe(node, { characterData: true });
+
+  return function() {
+    node.data = (iterations = ++iterations % 2);
+  };
+}
+
+function useSetTimeout() {
+  return function() {
+    local.setTimeout(flush, 1);
+  };
+}
+
+var queue = [];
+function flush() {
+  for (var i = 0; i < queue.length; i++) {
+    var tuple = queue[i];
+    var callback = tuple[0], arg = tuple[1];
+    callback(arg);
+  }
+  queue = [];
+}
+
+var scheduleFlush;
+
+// Decide what async method to use to triggering processing of queued callbacks:
+if (typeof process !== 'undefined' && {}.toString.call(process) === '[object process]') {
+  scheduleFlush = useNextTick();
+} else if (BrowserMutationObserver) {
+  scheduleFlush = useMutationObserver();
+} else {
+  scheduleFlush = useSetTimeout();
+}
+
+function asap(callback, arg) {
+  var length = queue.push([callback, arg]);
+  if (length === 1) {
+    // If length is 1, that means that we need to schedule an async flush.
+    // If additional callbacks are queued before the queue is flushed, they
+    // will be processed by this flush that we are scheduling.
+    scheduleFlush();
+  }
+}
+
+exports.asap = asap;
+},{}],41:[function(_dereq_,module,exports){
+"use strict";
+var config = {
+  instrument: false
+};
+
+function configure(name, value) {
+  if (arguments.length === 2) {
+    config[name] = value;
+  } else {
+    return config[name];
+  }
+}
+
+exports.config = config;
+exports.configure = configure;
+},{}],42:[function(_dereq_,module,exports){
+"use strict";
+/*global self*/
+var RSVPPromise = _dereq_("./promise").Promise;
+var isFunction = _dereq_("./utils").isFunction;
+
+function polyfill() {
+  var local;
+
+  if (typeof global !== 'undefined') {
+    local = global;
+  } else if (typeof window !== 'undefined' && window.document) {
+    local = window;
+  } else {
+    local = self;
+  }
+
+  var es6PromiseSupport = 
+    "Promise" in local &&
+    // Some of these methods are missing from
+    // Firefox/Chrome experimental implementations
+    "resolve" in local.Promise &&
+    "reject" in local.Promise &&
+    "all" in local.Promise &&
+    "race" in local.Promise &&
+    // Older version of the spec had a resolver object
+    // as the arg rather than a function
+    (function() {
+      var resolve;
+      new local.Promise(function(r) { resolve = r; });
+      return isFunction(resolve);
+    }());
+
+  if (!es6PromiseSupport) {
+    local.Promise = RSVPPromise;
+  }
+}
+
+exports.polyfill = polyfill;
+},{"./promise":43,"./utils":47}],43:[function(_dereq_,module,exports){
+"use strict";
+var config = _dereq_("./config").config;
+var configure = _dereq_("./config").configure;
+var objectOrFunction = _dereq_("./utils").objectOrFunction;
+var isFunction = _dereq_("./utils").isFunction;
+var now = _dereq_("./utils").now;
+var all = _dereq_("./all").all;
+var race = _dereq_("./race").race;
+var staticResolve = _dereq_("./resolve").resolve;
+var staticReject = _dereq_("./reject").reject;
+var asap = _dereq_("./asap").asap;
+
+var counter = 0;
+
+config.async = asap; // default async is asap;
+
+function Promise(resolver) {
+  if (!isFunction(resolver)) {
+    throw new TypeError('You must pass a resolver function as the first argument to the promise constructor');
+  }
+
+  if (!(this instanceof Promise)) {
+    throw new TypeError("Failed to construct 'Promise': Please use the 'new' operator, this object constructor cannot be called as a function.");
+  }
+
+  this._subscribers = [];
+
+  invokeResolver(resolver, this);
+}
+
+function invokeResolver(resolver, promise) {
+  function resolvePromise(value) {
+    resolve(promise, value);
+  }
+
+  function rejectPromise(reason) {
+    reject(promise, reason);
+  }
+
+  try {
+    resolver(resolvePromise, rejectPromise);
+  } catch(e) {
+    rejectPromise(e);
+  }
+}
+
+function invokeCallback(settled, promise, callback, detail) {
+  var hasCallback = isFunction(callback),
+      value, error, succeeded, failed;
+
+  if (hasCallback) {
+    try {
+      value = callback(detail);
+      succeeded = true;
+    } catch(e) {
+      failed = true;
+      error = e;
+    }
+  } else {
+    value = detail;
+    succeeded = true;
+  }
+
+  if (handleThenable(promise, value)) {
+    return;
+  } else if (hasCallback && succeeded) {
+    resolve(promise, value);
+  } else if (failed) {
+    reject(promise, error);
+  } else if (settled === FULFILLED) {
+    resolve(promise, value);
+  } else if (settled === REJECTED) {
+    reject(promise, value);
+  }
+}
+
+var PENDING   = void 0;
+var SEALED    = 0;
+var FULFILLED = 1;
+var REJECTED  = 2;
+
+function subscribe(parent, child, onFulfillment, onRejection) {
+  var subscribers = parent._subscribers;
+  var length = subscribers.length;
+
+  subscribers[length] = child;
+  subscribers[length + FULFILLED] = onFulfillment;
+  subscribers[length + REJECTED]  = onRejection;
+}
+
+function publish(promise, settled) {
+  var child, callback, subscribers = promise._subscribers, detail = promise._detail;
+
+  for (var i = 0; i < subscribers.length; i += 3) {
+    child = subscribers[i];
+    callback = subscribers[i + settled];
+
+    invokeCallback(settled, child, callback, detail);
+  }
+
+  promise._subscribers = null;
+}
+
+Promise.prototype = {
+  constructor: Promise,
+
+  _state: undefined,
+  _detail: undefined,
+  _subscribers: undefined,
+
+  then: function(onFulfillment, onRejection) {
+    var promise = this;
+
+    var thenPromise = new this.constructor(function() {});
+
+    if (this._state) {
+      var callbacks = arguments;
+      config.async(function invokePromiseCallback() {
+        invokeCallback(promise._state, thenPromise, callbacks[promise._state - 1], promise._detail);
+      });
+    } else {
+      subscribe(this, thenPromise, onFulfillment, onRejection);
+    }
+
+    return thenPromise;
+  },
+
+  'catch': function(onRejection) {
+    return this.then(null, onRejection);
+  }
+};
+
+Promise.all = all;
+Promise.race = race;
+Promise.resolve = staticResolve;
+Promise.reject = staticReject;
+
+function handleThenable(promise, value) {
+  var then = null,
+  resolved;
+
+  try {
+    if (promise === value) {
+      throw new TypeError("A promises callback cannot return that same promise.");
+    }
+
+    if (objectOrFunction(value)) {
+      then = value.then;
+
+      if (isFunction(then)) {
+        then.call(value, function(val) {
+          if (resolved) { return true; }
+          resolved = true;
+
+          if (value !== val) {
+            resolve(promise, val);
+          } else {
+            fulfill(promise, val);
+          }
+        }, function(val) {
+          if (resolved) { return true; }
+          resolved = true;
+
+          reject(promise, val);
+        });
+
+        return true;
+      }
+    }
+  } catch (error) {
+    if (resolved) { return true; }
+    reject(promise, error);
+    return true;
+  }
+
+  return false;
+}
+
+function resolve(promise, value) {
+  if (promise === value) {
+    fulfill(promise, value);
+  } else if (!handleThenable(promise, value)) {
+    fulfill(promise, value);
+  }
+}
+
+function fulfill(promise, value) {
+  if (promise._state !== PENDING) { return; }
+  promise._state = SEALED;
+  promise._detail = value;
+
+  config.async(publishFulfillment, promise);
+}
+
+function reject(promise, reason) {
+  if (promise._state !== PENDING) { return; }
+  promise._state = SEALED;
+  promise._detail = reason;
+
+  config.async(publishRejection, promise);
+}
+
+function publishFulfillment(promise) {
+  publish(promise, promise._state = FULFILLED);
+}
+
+function publishRejection(promise) {
+  publish(promise, promise._state = REJECTED);
+}
+
+exports.Promise = Promise;
+},{"./all":39,"./asap":40,"./config":41,"./race":44,"./reject":45,"./resolve":46,"./utils":47}],44:[function(_dereq_,module,exports){
+"use strict";
+/* global toString */
+var isArray = _dereq_("./utils").isArray;
+
+/**
+  `RSVP.race` allows you to watch a series of promises and act as soon as the
+  first promise given to the `promises` argument fulfills or rejects.
+
+  Example:
+
+  ```javascript
+  var promise1 = new RSVP.Promise(function(resolve, reject){
+    setTimeout(function(){
+      resolve("promise 1");
+    }, 200);
+  });
+
+  var promise2 = new RSVP.Promise(function(resolve, reject){
+    setTimeout(function(){
+      resolve("promise 2");
+    }, 100);
+  });
+
+  RSVP.race([promise1, promise2]).then(function(result){
+    // result === "promise 2" because it was resolved before promise1
+    // was resolved.
+  });
+  ```
+
+  `RSVP.race` is deterministic in that only the state of the first completed
+  promise matters. For example, even if other promises given to the `promises`
+  array argument are resolved, but the first completed promise has become
+  rejected before the other promises became fulfilled, the returned promise
+  will become rejected:
+
+  ```javascript
+  var promise1 = new RSVP.Promise(function(resolve, reject){
+    setTimeout(function(){
+      resolve("promise 1");
+    }, 200);
+  });
+
+  var promise2 = new RSVP.Promise(function(resolve, reject){
+    setTimeout(function(){
+      reject(new Error("promise 2"));
+    }, 100);
+  });
+
+  RSVP.race([promise1, promise2]).then(function(result){
+    // Code here never runs because there are rejected promises!
+  }, function(reason){
+    // reason.message === "promise2" because promise 2 became rejected before
+    // promise 1 became fulfilled
+  });
+  ```
+
+  @method race
+  @for RSVP
+  @param {Array} promises array of promises to observe
+  @param {String} label optional string for describing the promise returned.
+  Useful for tooling.
+  @return {Promise} a promise that becomes fulfilled with the value the first
+  completed promises is resolved with if the first completed promise was
+  fulfilled, or rejected with the reason that the first completed promise
+  was rejected with.
+*/
+function race(promises) {
+  /*jshint validthis:true */
+  var Promise = this;
+
+  if (!isArray(promises)) {
+    throw new TypeError('You must pass an array to race.');
+  }
+  return new Promise(function(resolve, reject) {
+    var results = [], promise;
+
+    for (var i = 0; i < promises.length; i++) {
+      promise = promises[i];
+
+      if (promise && typeof promise.then === 'function') {
+        promise.then(resolve, reject);
+      } else {
+        resolve(promise);
+      }
+    }
+  });
+}
+
+exports.race = race;
+},{"./utils":47}],45:[function(_dereq_,module,exports){
+"use strict";
+/**
+  `RSVP.reject` returns a promise that will become rejected with the passed
+  `reason`. `RSVP.reject` is essentially shorthand for the following:
+
+  ```javascript
+  var promise = new RSVP.Promise(function(resolve, reject){
+    reject(new Error('WHOOPS'));
+  });
+
+  promise.then(function(value){
+    // Code here doesn't run because the promise is rejected!
+  }, function(reason){
+    // reason.message === 'WHOOPS'
+  });
+  ```
+
+  Instead of writing the above, your code now simply becomes the following:
+
+  ```javascript
+  var promise = RSVP.reject(new Error('WHOOPS'));
+
+  promise.then(function(value){
+    // Code here doesn't run because the promise is rejected!
+  }, function(reason){
+    // reason.message === 'WHOOPS'
+  });
+  ```
+
+  @method reject
+  @for RSVP
+  @param {Any} reason value that the returned promise will be rejected with.
+  @param {String} label optional string for identifying the returned promise.
+  Useful for tooling.
+  @return {Promise} a promise that will become rejected with the given
+  `reason`.
+*/
+function reject(reason) {
+  /*jshint validthis:true */
+  var Promise = this;
+
+  return new Promise(function (resolve, reject) {
+    reject(reason);
+  });
+}
+
+exports.reject = reject;
+},{}],46:[function(_dereq_,module,exports){
+"use strict";
+function resolve(value) {
+  /*jshint validthis:true */
+  if (value && typeof value === 'object' && value.constructor === this) {
+    return value;
+  }
+
+  var Promise = this;
+
+  return new Promise(function(resolve) {
+    resolve(value);
+  });
+}
+
+exports.resolve = resolve;
+},{}],47:[function(_dereq_,module,exports){
+"use strict";
+function objectOrFunction(x) {
+  return isFunction(x) || (typeof x === "object" && x !== null);
+}
+
+function isFunction(x) {
+  return typeof x === "function";
+}
+
+function isArray(x) {
+  return Object.prototype.toString.call(x) === "[object Array]";
+}
+
+// Date.now is not available in browsers < IE9
+// https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Date/now#Compatibility
+var now = Date.now || function() { return new Date().getTime(); };
+
+
+exports.objectOrFunction = objectOrFunction;
+exports.isFunction = isFunction;
+exports.isArray = isArray;
+exports.now = now;
+},{}],48:[function(_dereq_,module,exports){
 // Copyright Joyent, Inc. and other Node contributors.
 //
 // Permission is hereby granted, free of charge, to any person obtaining a
@@ -2139,792 +2902,693 @@ function isUndefined(arg) {
   return arg === void 0;
 }
 
-},{}],39:[function(_dereq_,module,exports){
-// Copyright Joyent, Inc. and other Node contributors.
-//
-// Permission is hereby granted, free of charge, to any person obtaining a
-// copy of this software and associated documentation files (the
-// "Software"), to deal in the Software without restriction, including
-// without limitation the rights to use, copy, modify, merge, publish,
-// distribute, sublicense, and/or sell copies of the Software, and to permit
-// persons to whom the Software is furnished to do so, subject to the
-// following conditions:
-//
-// The above copyright notice and this permission notice shall be included
-// in all copies or substantial portions of the Software.
-//
-// THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS
-// OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
-// MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN
-// NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM,
-// DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR
-// OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE
-// USE OR OTHER DEALINGS IN THE SOFTWARE.
+},{}],49:[function(_dereq_,module,exports){
+/**
+ * Copyright (c) 2014, Facebook, Inc.
+ * All rights reserved.
+ *
+ * This source code is licensed under the BSD-style license found in the
+ * LICENSE file in the root directory of this source tree. An additional grant
+ * of patent rights can be found in the PATENTS file in the same directory.
+ */
 
-'use strict';
+module.exports.Dispatcher = _dereq_('./lib/Dispatcher')
 
-// If obj.hasOwnProperty has been overridden, then calling
-// obj.hasOwnProperty(prop) will break.
-// See: https://github.com/joyent/node/issues/1707
-function hasOwnProperty(obj, prop) {
-  return Object.prototype.hasOwnProperty.call(obj, prop);
-}
+},{"./lib/Dispatcher":50}],50:[function(_dereq_,module,exports){
+/*
+ * Copyright (c) 2014, Facebook, Inc.
+ * All rights reserved.
+ *
+ * This source code is licensed under the BSD-style license found in the
+ * LICENSE file in the root directory of this source tree. An additional grant
+ * of patent rights can be found in the PATENTS file in the same directory.
+ *
+ * @providesModule Dispatcher
+ * @typechecks
+ */
 
-module.exports = function(qs, sep, eq, options) {
-  sep = sep || '&';
-  eq = eq || '=';
-  var obj = {};
+var invariant = _dereq_('./invariant');
 
-  if (typeof qs !== 'string' || qs.length === 0) {
-    return obj;
-  }
-
-  var regexp = /\+/g;
-  qs = qs.split(sep);
-
-  var maxKeys = 1000;
-  if (options && typeof options.maxKeys === 'number') {
-    maxKeys = options.maxKeys;
-  }
-
-  var len = qs.length;
-  // maxKeys <= 0 means that we should not limit keys count
-  if (maxKeys > 0 && len > maxKeys) {
-    len = maxKeys;
-  }
-
-  for (var i = 0; i < len; ++i) {
-    var x = qs[i].replace(regexp, '%20'),
-        idx = x.indexOf(eq),
-        kstr, vstr, k, v;
-
-    if (idx >= 0) {
-      kstr = x.substr(0, idx);
-      vstr = x.substr(idx + 1);
-    } else {
-      kstr = x;
-      vstr = '';
-    }
-
-    k = decodeURIComponent(kstr);
-    v = decodeURIComponent(vstr);
-
-    if (!hasOwnProperty(obj, k)) {
-      obj[k] = v;
-    } else if (isArray(obj[k])) {
-      obj[k].push(v);
-    } else {
-      obj[k] = [obj[k], v];
-    }
-  }
-
-  return obj;
-};
-
-var isArray = Array.isArray || function (xs) {
-  return Object.prototype.toString.call(xs) === '[object Array]';
-};
-
-},{}],40:[function(_dereq_,module,exports){
-// Copyright Joyent, Inc. and other Node contributors.
-//
-// Permission is hereby granted, free of charge, to any person obtaining a
-// copy of this software and associated documentation files (the
-// "Software"), to deal in the Software without restriction, including
-// without limitation the rights to use, copy, modify, merge, publish,
-// distribute, sublicense, and/or sell copies of the Software, and to permit
-// persons to whom the Software is furnished to do so, subject to the
-// following conditions:
-//
-// The above copyright notice and this permission notice shall be included
-// in all copies or substantial portions of the Software.
-//
-// THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS
-// OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
-// MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN
-// NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM,
-// DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR
-// OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE
-// USE OR OTHER DEALINGS IN THE SOFTWARE.
-
-'use strict';
-
-var stringifyPrimitive = function(v) {
-  switch (typeof v) {
-    case 'string':
-      return v;
-
-    case 'boolean':
-      return v ? 'true' : 'false';
-
-    case 'number':
-      return isFinite(v) ? v : '';
-
-    default:
-      return '';
-  }
-};
-
-module.exports = function(obj, sep, eq, name) {
-  sep = sep || '&';
-  eq = eq || '=';
-  if (obj === null) {
-    obj = undefined;
-  }
-
-  if (typeof obj === 'object') {
-    return map(objectKeys(obj), function(k) {
-      var ks = encodeURIComponent(stringifyPrimitive(k)) + eq;
-      if (isArray(obj[k])) {
-        return map(obj[k], function(v) {
-          return ks + encodeURIComponent(stringifyPrimitive(v));
-        }).join(sep);
-      } else {
-        return ks + encodeURIComponent(stringifyPrimitive(obj[k]));
-      }
-    }).join(sep);
-
-  }
-
-  if (!name) return '';
-  return encodeURIComponent(stringifyPrimitive(name)) + eq +
-         encodeURIComponent(stringifyPrimitive(obj));
-};
-
-var isArray = Array.isArray || function (xs) {
-  return Object.prototype.toString.call(xs) === '[object Array]';
-};
-
-function map (xs, f) {
-  if (xs.map) return xs.map(f);
-  var res = [];
-  for (var i = 0; i < xs.length; i++) {
-    res.push(f(xs[i], i));
-  }
-  return res;
-}
-
-var objectKeys = Object.keys || function (obj) {
-  var res = [];
-  for (var key in obj) {
-    if (Object.prototype.hasOwnProperty.call(obj, key)) res.push(key);
-  }
-  return res;
-};
-
-},{}],41:[function(_dereq_,module,exports){
-'use strict';
-
-exports.decode = exports.parse = _dereq_('./decode');
-exports.encode = exports.stringify = _dereq_('./encode');
-
-},{"./decode":39,"./encode":40}],42:[function(_dereq_,module,exports){
-"use strict";
-var Promise = _dereq_("./promise/promise").Promise;
-var polyfill = _dereq_("./promise/polyfill").polyfill;
-exports.Promise = Promise;
-exports.polyfill = polyfill;
-},{"./promise/polyfill":46,"./promise/promise":47}],43:[function(_dereq_,module,exports){
-"use strict";
-/* global toString */
-
-var isArray = _dereq_("./utils").isArray;
-var isFunction = _dereq_("./utils").isFunction;
+var _lastID = 1;
+var _prefix = 'ID_';
 
 /**
-  Returns a promise that is fulfilled when all the given promises have been
-  fulfilled, or rejected if any of them become rejected. The return promise
-  is fulfilled with an array that gives all the values in the order they were
-  passed in the `promises` array argument.
+ * Dispatcher is used to broadcast payloads to registered callbacks. This is
+ * different from generic pub-sub systems in two ways:
+ *
+ *   1) Callbacks are not subscribed to particular events. Every payload is
+ *      dispatched to every registered callback.
+ *   2) Callbacks can be deferred in whole or part until other callbacks have
+ *      been executed.
+ *
+ * For example, consider this hypothetical flight destination form, which
+ * selects a default city when a country is selected:
+ *
+ *   var flightDispatcher = new Dispatcher();
+ *
+ *   // Keeps track of which country is selected
+ *   var CountryStore = {country: null};
+ *
+ *   // Keeps track of which city is selected
+ *   var CityStore = {city: null};
+ *
+ *   // Keeps track of the base flight price of the selected city
+ *   var FlightPriceStore = {price: null}
+ *
+ * When a user changes the selected city, we dispatch the payload:
+ *
+ *   flightDispatcher.dispatch({
+ *     actionType: 'city-update',
+ *     selectedCity: 'paris'
+ *   });
+ *
+ * This payload is digested by `CityStore`:
+ *
+ *   flightDispatcher.register(function(payload) {
+ *     if (payload.actionType === 'city-update') {
+ *       CityStore.city = payload.selectedCity;
+ *     }
+ *   });
+ *
+ * When the user selects a country, we dispatch the payload:
+ *
+ *   flightDispatcher.dispatch({
+ *     actionType: 'country-update',
+ *     selectedCountry: 'australia'
+ *   });
+ *
+ * This payload is digested by both stores:
+ *
+ *    CountryStore.dispatchToken = flightDispatcher.register(function(payload) {
+ *     if (payload.actionType === 'country-update') {
+ *       CountryStore.country = payload.selectedCountry;
+ *     }
+ *   });
+ *
+ * When the callback to update `CountryStore` is registered, we save a reference
+ * to the returned token. Using this token with `waitFor()`, we can guarantee
+ * that `CountryStore` is updated before the callback that updates `CityStore`
+ * needs to query its data.
+ *
+ *   CityStore.dispatchToken = flightDispatcher.register(function(payload) {
+ *     if (payload.actionType === 'country-update') {
+ *       // `CountryStore.country` may not be updated.
+ *       flightDispatcher.waitFor([CountryStore.dispatchToken]);
+ *       // `CountryStore.country` is now guaranteed to be updated.
+ *
+ *       // Select the default city for the new country
+ *       CityStore.city = getDefaultCityForCountry(CountryStore.country);
+ *     }
+ *   });
+ *
+ * The usage of `waitFor()` can be chained, for example:
+ *
+ *   FlightPriceStore.dispatchToken =
+ *     flightDispatcher.register(function(payload) {
+ *       switch (payload.actionType) {
+ *         case 'country-update':
+ *           flightDispatcher.waitFor([CityStore.dispatchToken]);
+ *           FlightPriceStore.price =
+ *             getFlightPriceStore(CountryStore.country, CityStore.city);
+ *           break;
+ *
+ *         case 'city-update':
+ *           FlightPriceStore.price =
+ *             FlightPriceStore(CountryStore.country, CityStore.city);
+ *           break;
+ *     }
+ *   });
+ *
+ * The `country-update` payload will be guaranteed to invoke the stores'
+ * registered callbacks in order: `CountryStore`, `CityStore`, then
+ * `FlightPriceStore`.
+ */
 
-  Example:
-
-  ```javascript
-  var promise1 = RSVP.resolve(1);
-  var promise2 = RSVP.resolve(2);
-  var promise3 = RSVP.resolve(3);
-  var promises = [ promise1, promise2, promise3 ];
-
-  RSVP.all(promises).then(function(array){
-    // The array here would be [ 1, 2, 3 ];
-  });
-  ```
-
-  If any of the `promises` given to `RSVP.all` are rejected, the first promise
-  that is rejected will be given as an argument to the returned promises's
-  rejection handler. For example:
-
-  Example:
-
-  ```javascript
-  var promise1 = RSVP.resolve(1);
-  var promise2 = RSVP.reject(new Error("2"));
-  var promise3 = RSVP.reject(new Error("3"));
-  var promises = [ promise1, promise2, promise3 ];
-
-  RSVP.all(promises).then(function(array){
-    // Code here never runs because there are rejected promises!
-  }, function(error) {
-    // error.message === "2"
-  });
-  ```
-
-  @method all
-  @for RSVP
-  @param {Array} promises
-  @param {String} label
-  @return {Promise} promise that is fulfilled when all `promises` have been
-  fulfilled, or rejected if any of them become rejected.
-*/
-function all(promises) {
-  /*jshint validthis:true */
-  var Promise = this;
-
-  if (!isArray(promises)) {
-    throw new TypeError('You must pass an array to all.');
+  function Dispatcher() {"use strict";
+    this.$Dispatcher_callbacks = {};
+    this.$Dispatcher_isPending = {};
+    this.$Dispatcher_isHandled = {};
+    this.$Dispatcher_isDispatching = false;
+    this.$Dispatcher_pendingPayload = null;
   }
 
-  return new Promise(function(resolve, reject) {
-    var results = [], remaining = promises.length,
-    promise;
+  /**
+   * Registers a callback to be invoked with every dispatched payload. Returns
+   * a token that can be used with `waitFor()`.
+   *
+   * @param {function} callback
+   * @return {string}
+   */
+  Dispatcher.prototype.register=function(callback) {"use strict";
+    var id = _prefix + _lastID++;
+    this.$Dispatcher_callbacks[id] = callback;
+    return id;
+  };
 
-    if (remaining === 0) {
-      resolve([]);
-    }
+  /**
+   * Removes a callback based on its token.
+   *
+   * @param {string} id
+   */
+  Dispatcher.prototype.unregister=function(id) {"use strict";
+    invariant(
+      this.$Dispatcher_callbacks[id],
+      'Dispatcher.unregister(...): `%s` does not map to a registered callback.',
+      id
+    );
+    delete this.$Dispatcher_callbacks[id];
+  };
 
-    function resolver(index) {
-      return function(value) {
-        resolveAll(index, value);
-      };
-    }
-
-    function resolveAll(index, value) {
-      results[index] = value;
-      if (--remaining === 0) {
-        resolve(results);
+  /**
+   * Waits for the callbacks specified to be invoked before continuing execution
+   * of the current callback. This method should only be used by a callback in
+   * response to a dispatched payload.
+   *
+   * @param {array<string>} ids
+   */
+  Dispatcher.prototype.waitFor=function(ids) {"use strict";
+    invariant(
+      this.$Dispatcher_isDispatching,
+      'Dispatcher.waitFor(...): Must be invoked while dispatching.'
+    );
+    for (var ii = 0; ii < ids.length; ii++) {
+      var id = ids[ii];
+      if (this.$Dispatcher_isPending[id]) {
+        invariant(
+          this.$Dispatcher_isHandled[id],
+          'Dispatcher.waitFor(...): Circular dependency detected while ' +
+          'waiting for `%s`.',
+          id
+        );
+        continue;
       }
+      invariant(
+        this.$Dispatcher_callbacks[id],
+        'Dispatcher.waitFor(...): `%s` does not map to a registered callback.',
+        id
+      );
+      this.$Dispatcher_invokeCallback(id);
     }
-
-    for (var i = 0; i < promises.length; i++) {
-      promise = promises[i];
-
-      if (promise && isFunction(promise.then)) {
-        promise.then(resolver(i), reject);
-      } else {
-        resolveAll(i, promise);
-      }
-    }
-  });
-}
-
-exports.all = all;
-},{"./utils":51}],44:[function(_dereq_,module,exports){
-"use strict";
-var browserGlobal = (typeof window !== 'undefined') ? window : {};
-var BrowserMutationObserver = browserGlobal.MutationObserver || browserGlobal.WebKitMutationObserver;
-var local = (typeof global !== 'undefined') ? global : (this === undefined? window:this);
-
-// node
-function useNextTick() {
-  return function() {
-    process.nextTick(flush);
   };
-}
 
-function useMutationObserver() {
-  var iterations = 0;
-  var observer = new BrowserMutationObserver(flush);
-  var node = document.createTextNode('');
-  observer.observe(node, { characterData: true });
-
-  return function() {
-    node.data = (iterations = ++iterations % 2);
-  };
-}
-
-function useSetTimeout() {
-  return function() {
-    local.setTimeout(flush, 1);
-  };
-}
-
-var queue = [];
-function flush() {
-  for (var i = 0; i < queue.length; i++) {
-    var tuple = queue[i];
-    var callback = tuple[0], arg = tuple[1];
-    callback(arg);
-  }
-  queue = [];
-}
-
-var scheduleFlush;
-
-// Decide what async method to use to triggering processing of queued callbacks:
-if (typeof process !== 'undefined' && {}.toString.call(process) === '[object process]') {
-  scheduleFlush = useNextTick();
-} else if (BrowserMutationObserver) {
-  scheduleFlush = useMutationObserver();
-} else {
-  scheduleFlush = useSetTimeout();
-}
-
-function asap(callback, arg) {
-  var length = queue.push([callback, arg]);
-  if (length === 1) {
-    // If length is 1, that means that we need to schedule an async flush.
-    // If additional callbacks are queued before the queue is flushed, they
-    // will be processed by this flush that we are scheduling.
-    scheduleFlush();
-  }
-}
-
-exports.asap = asap;
-},{}],45:[function(_dereq_,module,exports){
-"use strict";
-var config = {
-  instrument: false
-};
-
-function configure(name, value) {
-  if (arguments.length === 2) {
-    config[name] = value;
-  } else {
-    return config[name];
-  }
-}
-
-exports.config = config;
-exports.configure = configure;
-},{}],46:[function(_dereq_,module,exports){
-"use strict";
-/*global self*/
-var RSVPPromise = _dereq_("./promise").Promise;
-var isFunction = _dereq_("./utils").isFunction;
-
-function polyfill() {
-  var local;
-
-  if (typeof global !== 'undefined') {
-    local = global;
-  } else if (typeof window !== 'undefined' && window.document) {
-    local = window;
-  } else {
-    local = self;
-  }
-
-  var es6PromiseSupport = 
-    "Promise" in local &&
-    // Some of these methods are missing from
-    // Firefox/Chrome experimental implementations
-    "resolve" in local.Promise &&
-    "reject" in local.Promise &&
-    "all" in local.Promise &&
-    "race" in local.Promise &&
-    // Older version of the spec had a resolver object
-    // as the arg rather than a function
-    (function() {
-      var resolve;
-      new local.Promise(function(r) { resolve = r; });
-      return isFunction(resolve);
-    }());
-
-  if (!es6PromiseSupport) {
-    local.Promise = RSVPPromise;
-  }
-}
-
-exports.polyfill = polyfill;
-},{"./promise":47,"./utils":51}],47:[function(_dereq_,module,exports){
-"use strict";
-var config = _dereq_("./config").config;
-var configure = _dereq_("./config").configure;
-var objectOrFunction = _dereq_("./utils").objectOrFunction;
-var isFunction = _dereq_("./utils").isFunction;
-var now = _dereq_("./utils").now;
-var all = _dereq_("./all").all;
-var race = _dereq_("./race").race;
-var staticResolve = _dereq_("./resolve").resolve;
-var staticReject = _dereq_("./reject").reject;
-var asap = _dereq_("./asap").asap;
-
-var counter = 0;
-
-config.async = asap; // default async is asap;
-
-function Promise(resolver) {
-  if (!isFunction(resolver)) {
-    throw new TypeError('You must pass a resolver function as the first argument to the promise constructor');
-  }
-
-  if (!(this instanceof Promise)) {
-    throw new TypeError("Failed to construct 'Promise': Please use the 'new' operator, this object constructor cannot be called as a function.");
-  }
-
-  this._subscribers = [];
-
-  invokeResolver(resolver, this);
-}
-
-function invokeResolver(resolver, promise) {
-  function resolvePromise(value) {
-    resolve(promise, value);
-  }
-
-  function rejectPromise(reason) {
-    reject(promise, reason);
-  }
-
-  try {
-    resolver(resolvePromise, rejectPromise);
-  } catch(e) {
-    rejectPromise(e);
-  }
-}
-
-function invokeCallback(settled, promise, callback, detail) {
-  var hasCallback = isFunction(callback),
-      value, error, succeeded, failed;
-
-  if (hasCallback) {
+  /**
+   * Dispatches a payload to all registered callbacks.
+   *
+   * @param {object} payload
+   */
+  Dispatcher.prototype.dispatch=function(payload) {"use strict";
+    invariant(
+      !this.$Dispatcher_isDispatching,
+      'Dispatch.dispatch(...): Cannot dispatch in the middle of a dispatch.'
+    );
+    this.$Dispatcher_startDispatching(payload);
     try {
-      value = callback(detail);
-      succeeded = true;
-    } catch(e) {
-      failed = true;
-      error = e;
+      for (var id in this.$Dispatcher_callbacks) {
+        if (this.$Dispatcher_isPending[id]) {
+          continue;
+        }
+        this.$Dispatcher_invokeCallback(id);
+      }
+    } finally {
+      this.$Dispatcher_stopDispatching();
     }
-  } else {
-    value = detail;
-    succeeded = true;
+  };
+
+  /**
+   * Is this Dispatcher currently dispatching.
+   *
+   * @return {boolean}
+   */
+  Dispatcher.prototype.isDispatching=function() {"use strict";
+    return this.$Dispatcher_isDispatching;
+  };
+
+  /**
+   * Call the callback stored with the given id. Also do some internal
+   * bookkeeping.
+   *
+   * @param {string} id
+   * @internal
+   */
+  Dispatcher.prototype.$Dispatcher_invokeCallback=function(id) {"use strict";
+    this.$Dispatcher_isPending[id] = true;
+    this.$Dispatcher_callbacks[id](this.$Dispatcher_pendingPayload);
+    this.$Dispatcher_isHandled[id] = true;
+  };
+
+  /**
+   * Set up bookkeeping needed when dispatching.
+   *
+   * @param {object} payload
+   * @internal
+   */
+  Dispatcher.prototype.$Dispatcher_startDispatching=function(payload) {"use strict";
+    for (var id in this.$Dispatcher_callbacks) {
+      this.$Dispatcher_isPending[id] = false;
+      this.$Dispatcher_isHandled[id] = false;
+    }
+    this.$Dispatcher_pendingPayload = payload;
+    this.$Dispatcher_isDispatching = true;
+  };
+
+  /**
+   * Clear bookkeeping used for dispatching.
+   *
+   * @internal
+   */
+  Dispatcher.prototype.$Dispatcher_stopDispatching=function() {"use strict";
+    this.$Dispatcher_pendingPayload = null;
+    this.$Dispatcher_isDispatching = false;
+  };
+
+
+module.exports = Dispatcher;
+
+},{"./invariant":51}],51:[function(_dereq_,module,exports){
+/**
+ * Copyright (c) 2014, Facebook, Inc.
+ * All rights reserved.
+ *
+ * This source code is licensed under the BSD-style license found in the
+ * LICENSE file in the root directory of this source tree. An additional grant
+ * of patent rights can be found in the PATENTS file in the same directory.
+ *
+ * @providesModule invariant
+ */
+
+"use strict";
+
+/**
+ * Use invariant() to assert state which your program assumes to be true.
+ *
+ * Provide sprintf-style format (only %s is supported) and arguments
+ * to provide information about what broke and what you were
+ * expecting.
+ *
+ * The invariant message will be stripped in production, but the invariant
+ * will remain to ensure logic does not differ in production.
+ */
+
+var invariant = function(condition, format, a, b, c, d, e, f) {
+  if (false) {
+    if (format === undefined) {
+      throw new Error('invariant requires an error message argument');
+    }
   }
 
-  if (handleThenable(promise, value)) {
-    return;
-  } else if (hasCallback && succeeded) {
-    resolve(promise, value);
-  } else if (failed) {
-    reject(promise, error);
-  } else if (settled === FULFILLED) {
-    resolve(promise, value);
-  } else if (settled === REJECTED) {
-    reject(promise, value);
-  }
-}
-
-var PENDING   = void 0;
-var SEALED    = 0;
-var FULFILLED = 1;
-var REJECTED  = 2;
-
-function subscribe(parent, child, onFulfillment, onRejection) {
-  var subscribers = parent._subscribers;
-  var length = subscribers.length;
-
-  subscribers[length] = child;
-  subscribers[length + FULFILLED] = onFulfillment;
-  subscribers[length + REJECTED]  = onRejection;
-}
-
-function publish(promise, settled) {
-  var child, callback, subscribers = promise._subscribers, detail = promise._detail;
-
-  for (var i = 0; i < subscribers.length; i += 3) {
-    child = subscribers[i];
-    callback = subscribers[i + settled];
-
-    invokeCallback(settled, child, callback, detail);
-  }
-
-  promise._subscribers = null;
-}
-
-Promise.prototype = {
-  constructor: Promise,
-
-  _state: undefined,
-  _detail: undefined,
-  _subscribers: undefined,
-
-  then: function(onFulfillment, onRejection) {
-    var promise = this;
-
-    var thenPromise = new this.constructor(function() {});
-
-    if (this._state) {
-      var callbacks = arguments;
-      config.async(function invokePromiseCallback() {
-        invokeCallback(promise._state, thenPromise, callbacks[promise._state - 1], promise._detail);
-      });
+  if (!condition) {
+    var error;
+    if (format === undefined) {
+      error = new Error(
+        'Minified exception occurred; use the non-minified dev environment ' +
+        'for the full error message and additional helpful warnings.'
+      );
     } else {
-      subscribe(this, thenPromise, onFulfillment, onRejection);
+      var args = [a, b, c, d, e, f];
+      var argIndex = 0;
+      error = new Error(
+        'Invariant Violation: ' +
+        format.replace(/%s/g, function() { return args[argIndex++]; })
+      );
     }
 
-    return thenPromise;
-  },
-
-  'catch': function(onRejection) {
-    return this.then(null, onRejection);
+    error.framesToPop = 1; // we don't care about invariant's own frame
+    throw error;
   }
 };
 
-Promise.all = all;
-Promise.race = race;
-Promise.resolve = staticResolve;
-Promise.reject = staticReject;
+module.exports = invariant;
 
-function handleThenable(promise, value) {
-  var then = null,
-  resolved;
-
-  try {
-    if (promise === value) {
-      throw new TypeError("A promises callback cannot return that same promise.");
-    }
-
-    if (objectOrFunction(value)) {
-      then = value.then;
-
-      if (isFunction(then)) {
-        then.call(value, function(val) {
-          if (resolved) { return true; }
-          resolved = true;
-
-          if (value !== val) {
-            resolve(promise, val);
-          } else {
-            fulfill(promise, val);
-          }
-        }, function(val) {
-          if (resolved) { return true; }
-          resolved = true;
-
-          reject(promise, val);
-        });
-
-        return true;
-      }
-    }
-  } catch (error) {
-    if (resolved) { return true; }
-    reject(promise, error);
-    return true;
-  }
-
-  return false;
-}
-
-function resolve(promise, value) {
-  if (promise === value) {
-    fulfill(promise, value);
-  } else if (!handleThenable(promise, value)) {
-    fulfill(promise, value);
-  }
-}
-
-function fulfill(promise, value) {
-  if (promise._state !== PENDING) { return; }
-  promise._state = SEALED;
-  promise._detail = value;
-
-  config.async(publishFulfillment, promise);
-}
-
-function reject(promise, reason) {
-  if (promise._state !== PENDING) { return; }
-  promise._state = SEALED;
-  promise._detail = reason;
-
-  config.async(publishRejection, promise);
-}
-
-function publishFulfillment(promise) {
-  publish(promise, promise._state = FULFILLED);
-}
-
-function publishRejection(promise) {
-  publish(promise, promise._state = REJECTED);
-}
-
-exports.Promise = Promise;
-},{"./all":43,"./asap":44,"./config":45,"./race":48,"./reject":49,"./resolve":50,"./utils":51}],48:[function(_dereq_,module,exports){
-"use strict";
-/* global toString */
-var isArray = _dereq_("./utils").isArray;
-
-/**
-  `RSVP.race` allows you to watch a series of promises and act as soon as the
-  first promise given to the `promises` argument fulfills or rejects.
-
-  Example:
-
-  ```javascript
-  var promise1 = new RSVP.Promise(function(resolve, reject){
-    setTimeout(function(){
-      resolve("promise 1");
-    }, 200);
-  });
-
-  var promise2 = new RSVP.Promise(function(resolve, reject){
-    setTimeout(function(){
-      resolve("promise 2");
-    }, 100);
-  });
-
-  RSVP.race([promise1, promise2]).then(function(result){
-    // result === "promise 2" because it was resolved before promise1
-    // was resolved.
-  });
-  ```
-
-  `RSVP.race` is deterministic in that only the state of the first completed
-  promise matters. For example, even if other promises given to the `promises`
-  array argument are resolved, but the first completed promise has become
-  rejected before the other promises became fulfilled, the returned promise
-  will become rejected:
-
-  ```javascript
-  var promise1 = new RSVP.Promise(function(resolve, reject){
-    setTimeout(function(){
-      resolve("promise 1");
-    }, 200);
-  });
-
-  var promise2 = new RSVP.Promise(function(resolve, reject){
-    setTimeout(function(){
-      reject(new Error("promise 2"));
-    }, 100);
-  });
-
-  RSVP.race([promise1, promise2]).then(function(result){
-    // Code here never runs because there are rejected promises!
-  }, function(reason){
-    // reason.message === "promise2" because promise 2 became rejected before
-    // promise 1 became fulfilled
-  });
-  ```
-
-  @method race
-  @for RSVP
-  @param {Array} promises array of promises to observe
-  @param {String} label optional string for describing the promise returned.
-  Useful for tooling.
-  @return {Promise} a promise that becomes fulfilled with the value the first
-  completed promises is resolved with if the first completed promise was
-  fulfilled, or rejected with the reason that the first completed promise
-  was rejected with.
-*/
-function race(promises) {
-  /*jshint validthis:true */
-  var Promise = this;
-
-  if (!isArray(promises)) {
-    throw new TypeError('You must pass an array to race.');
-  }
-  return new Promise(function(resolve, reject) {
-    var results = [], promise;
-
-    for (var i = 0; i < promises.length; i++) {
-      promise = promises[i];
-
-      if (promise && typeof promise.then === 'function') {
-        promise.then(resolve, reject);
-      } else {
-        resolve(promise);
-      }
-    }
-  });
-}
-
-exports.race = race;
-},{"./utils":51}],49:[function(_dereq_,module,exports){
-"use strict";
-/**
-  `RSVP.reject` returns a promise that will become rejected with the passed
-  `reason`. `RSVP.reject` is essentially shorthand for the following:
-
-  ```javascript
-  var promise = new RSVP.Promise(function(resolve, reject){
-    reject(new Error('WHOOPS'));
-  });
-
-  promise.then(function(value){
-    // Code here doesn't run because the promise is rejected!
-  }, function(reason){
-    // reason.message === 'WHOOPS'
-  });
-  ```
-
-  Instead of writing the above, your code now simply becomes the following:
-
-  ```javascript
-  var promise = RSVP.reject(new Error('WHOOPS'));
-
-  promise.then(function(value){
-    // Code here doesn't run because the promise is rejected!
-  }, function(reason){
-    // reason.message === 'WHOOPS'
-  });
-  ```
-
-  @method reject
-  @for RSVP
-  @param {Any} reason value that the returned promise will be rejected with.
-  @param {String} label optional string for identifying the returned promise.
-  Useful for tooling.
-  @return {Promise} a promise that will become rejected with the given
-  `reason`.
-*/
-function reject(reason) {
-  /*jshint validthis:true */
-  var Promise = this;
-
-  return new Promise(function (resolve, reject) {
-    reject(reason);
-  });
-}
-
-exports.reject = reject;
-},{}],50:[function(_dereq_,module,exports){
-"use strict";
-function resolve(value) {
-  /*jshint validthis:true */
-  if (value && typeof value === 'object' && value.constructor === this) {
-    return value;
-  }
-
-  var Promise = this;
-
-  return new Promise(function(resolve) {
-    resolve(value);
-  });
-}
-
-exports.resolve = resolve;
-},{}],51:[function(_dereq_,module,exports){
-"use strict";
-function objectOrFunction(x) {
-  return isFunction(x) || (typeof x === "object" && x !== null);
-}
-
-function isFunction(x) {
-  return typeof x === "function";
-}
-
-function isArray(x) {
-  return Object.prototype.toString.call(x) === "[object Array]";
-}
-
-// Date.now is not available in browsers < IE9
-// https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Date/now#Compatibility
-var now = Date.now || function() { return new Date().getTime(); };
-
-
-exports.objectOrFunction = objectOrFunction;
-exports.isFunction = isFunction;
-exports.isArray = isArray;
-exports.now = now;
 },{}],52:[function(_dereq_,module,exports){
+module.exports = _dereq_('./lib');
+
+},{"./lib":53}],53:[function(_dereq_,module,exports){
+// Load modules
+
+var Stringify = _dereq_('./stringify');
+var Parse = _dereq_('./parse');
+
+
+// Declare internals
+
+var internals = {};
+
+
+module.exports = {
+    stringify: Stringify,
+    parse: Parse
+};
+
+},{"./parse":54,"./stringify":55}],54:[function(_dereq_,module,exports){
+// Load modules
+
+var Utils = _dereq_('./utils');
+
+
+// Declare internals
+
+var internals = {
+    delimiter: '&',
+    depth: 5,
+    arrayLimit: 20,
+    parametersLimit: 1000
+};
+
+
+internals.parseValues = function (str, delimiter) {
+
+    delimiter = typeof delimiter === 'string' ? delimiter : internals.delimiter;
+
+    var obj = {};
+    var parts = str.split(delimiter, internals.parametersLimit);
+
+    for (var i = 0, il = parts.length; i < il; ++i) {
+        var part = parts[i];
+        var pos = part.indexOf(']=') === -1 ? part.indexOf('=') : part.indexOf(']=') + 1;
+
+        if (pos === -1) {
+            obj[Utils.decode(part)] = '';
+        }
+        else {
+            var key = Utils.decode(part.slice(0, pos));
+            var val = Utils.decode(part.slice(pos + 1));
+
+            if (!obj[key]) {
+                obj[key] = val;
+            }
+            else {
+                obj[key] = [].concat(obj[key]).concat(val);
+            }
+        }
+    }
+
+    return obj;
+};
+
+
+internals.parseObject = function (chain, val) {
+
+    if (!chain.length) {
+        return val;
+    }
+
+    var root = chain.shift();
+
+    var obj = {};
+    if (root === '[]') {
+        obj = [];
+        obj = obj.concat(internals.parseObject(chain, val));
+    }
+    else {
+        var cleanRoot = root[0] === '[' && root[root.length - 1] === ']' ? root.slice(1, root.length - 1) : root;
+        var index = parseInt(cleanRoot, 10);
+        if (!isNaN(index) &&
+            root !== cleanRoot &&
+            index <= internals.arrayLimit) {
+
+            obj = [];
+            obj[index] = internals.parseObject(chain, val);
+        }
+        else {
+            obj[cleanRoot] = internals.parseObject(chain, val);
+        }
+    }
+
+    return obj;
+};
+
+
+internals.parseKeys = function (key, val, depth) {
+
+    if (!key) {
+        return;
+    }
+
+    // The regex chunks
+
+    var parent = /^([^\[\]]*)/;
+    var child = /(\[[^\[\]]*\])/g;
+
+    // Get the parent
+
+    var segment = parent.exec(key);
+
+    // Don't allow them to overwrite object prototype properties
+
+    if (Object.prototype.hasOwnProperty(segment[1])) {
+        return;
+    }
+
+    // Stash the parent if it exists
+
+    var keys = [];
+    if (segment[1]) {
+        keys.push(segment[1]);
+    }
+
+    // Loop through children appending to the array until we hit depth
+
+    var i = 0;
+    while ((segment = child.exec(key)) !== null && i < depth) {
+
+        ++i;
+        if (!Object.prototype.hasOwnProperty(segment[1].replace(/\[|\]/g, ''))) {
+            keys.push(segment[1]);
+        }
+    }
+
+    // If there's a remainder, just add whatever is left
+
+    if (segment) {
+        keys.push('[' + key.slice(segment.index) + ']');
+    }
+
+    return internals.parseObject(keys, val);
+};
+
+
+module.exports = function (str, depth, delimiter) {
+
+    if (str === '' ||
+        str === null ||
+        typeof str === 'undefined') {
+
+        return {};
+    }
+
+    if (typeof depth !== 'number') {
+        delimiter = depth;
+        depth = internals.depth;
+    }
+
+    var tempObj = typeof str === 'string' ? internals.parseValues(str, delimiter) : Utils.clone(str);
+    var obj = {};
+
+    // Iterate over the keys and setup the new object
+    //
+    for (var key in tempObj) {
+        if (tempObj.hasOwnProperty(key)) {
+            var newObj = internals.parseKeys(key, tempObj[key], depth);
+            obj = Utils.merge(obj, newObj);
+        }
+    }
+
+    return Utils.compact(obj);
+};
+
+},{"./utils":56}],55:[function(_dereq_,module,exports){
+// Load modules
+
+
+// Declare internals
+
+var internals = {
+    delimiter: '&'
+};
+
+
+internals.stringify = function (obj, prefix) {
+
+    if (Buffer.isBuffer(obj)) {
+        obj = obj.toString();
+    }
+    else if (obj instanceof Date) {
+        obj = obj.toISOString();
+    }
+    else if (obj === null) {
+        obj = '';
+    }
+
+    if (typeof obj === 'string' ||
+        typeof obj === 'number' ||
+        typeof obj === 'boolean') {
+
+        return [encodeURIComponent(prefix) + '=' + encodeURIComponent(obj)];
+    }
+
+    var values = [];
+
+    for (var key in obj) {
+        if (obj.hasOwnProperty(key)) {
+            values = values.concat(internals.stringify(obj[key], prefix + '[' + key + ']'));
+        }
+    }
+
+    return values;
+};
+
+
+module.exports = function (obj, delimiter) {
+
+    delimiter = typeof delimiter === 'undefined' ? internals.delimiter : delimiter;
+
+    var keys = [];
+
+    for (var key in obj) {
+        if (obj.hasOwnProperty(key)) {
+            keys = keys.concat(internals.stringify(obj[key], key));
+        }
+    }
+
+    return keys.join(delimiter);
+};
+
+},{}],56:[function(_dereq_,module,exports){
+// Load modules
+
+
+// Declare internals
+
+var internals = {};
+
+
+exports.arrayToObject = function (source) {
+
+    var obj = {};
+    for (var i = 0, il = source.length; i < il; ++i) {
+        if (typeof source[i] !== 'undefined') {
+
+            obj[i] = source[i];
+        }
+    }
+
+    return obj;
+};
+
+
+exports.clone = function (source) {
+
+    if (typeof source !== 'object' ||
+        source === null) {
+
+        return source;
+    }
+
+    if (Buffer.isBuffer(source)) {
+        return source.toString();
+    }
+
+    var obj = Array.isArray(source) ? [] : {};
+    for (var i in source) {
+        if (source.hasOwnProperty(i)) {
+            obj[i] = exports.clone(source[i]);
+        }
+    }
+
+    return obj;
+};
+
+
+exports.merge = function (target, source) {
+
+    if (!source) {
+        return target;
+    }
+
+    var obj = exports.clone(target);
+
+    if (Array.isArray(source)) {
+        for (var i = 0, il = source.length; i < il; ++i) {
+            if (typeof source[i] !== 'undefined') {
+                if (typeof obj[i] === 'object') {
+                    obj[i] = exports.merge(obj[i], source[i]);
+                }
+                else {
+                    obj[i] = source[i];
+                }
+            }
+        }
+
+        return obj;
+    }
+
+    if (Array.isArray(obj)) {
+        obj = exports.arrayToObject(obj);
+    }
+
+    var keys = Object.keys(source);
+    for (var k = 0, kl = keys.length; k < kl; ++k) {
+        var key = keys[k];
+        var value = source[key];
+
+        if (value &&
+            typeof value === 'object') {
+
+            if (!obj[key]) {
+                obj[key] = exports.clone(value);
+            }
+            else {
+                obj[key] = exports.merge(obj[key], value);
+            }
+        }
+        else {
+            obj[key] = value;
+        }
+    }
+
+    return obj;
+};
+
+
+exports.decode = function (str) {
+
+    try {
+        return decodeURIComponent(str.replace(/\+/g, ' '));
+    } catch (e) {
+        return str;
+    }
+};
+
+
+exports.compact = function (obj) {
+
+    if (typeof obj !== 'object' || obj === null) {
+        return obj;
+    }
+
+    var compacted = {};
+
+    for (var key in obj) {
+        if (obj.hasOwnProperty(key)) {
+            if (Array.isArray(obj[key])) {
+                compacted[key] = [];
+
+                for (var i = 0, l = obj[key].length; i < l; i++) {
+                    if (typeof obj[key][i] !== 'undefined') {
+                        compacted[key].push(obj[key][i]);
+                    }
+                }
+            }
+            else {
+                compacted[key] = exports.compact(obj[key]);
+            }
+        }
+    }
+
+    return compacted;
+};
+
+},{}],57:[function(_dereq_,module,exports){
 /**
  * Copyright 2013-2014 Facebook, Inc.
  *
@@ -2976,7 +3640,7 @@ var ExecutionEnvironment = {
 
 module.exports = ExecutionEnvironment;
 
-},{}],53:[function(_dereq_,module,exports){
+},{}],58:[function(_dereq_,module,exports){
 /**
  * Copyright 2013-2014 Facebook, Inc.
  *
@@ -3032,7 +3696,7 @@ function copyProperties(obj, a, b, c, d, e, f) {
 
 module.exports = copyProperties;
 
-},{}],54:[function(_dereq_,module,exports){
+},{}],59:[function(_dereq_,module,exports){
 /**
  * Copyright 2013-2014 Facebook, Inc.
  *
@@ -3077,7 +3741,7 @@ copyProperties(emptyFunction, {
 
 module.exports = emptyFunction;
 
-},{"./copyProperties":53}],55:[function(_dereq_,module,exports){
+},{"./copyProperties":58}],60:[function(_dereq_,module,exports){
 /**
  * Copyright 2013-2014 Facebook, Inc.
  *
@@ -3139,7 +3803,7 @@ var invariant = function(condition, format, a, b, c, d, e, f) {
 
 module.exports = invariant;
 
-},{}],56:[function(_dereq_,module,exports){
+},{}],61:[function(_dereq_,module,exports){
 /**
  * Copyright 2013-2014 Facebook, Inc.
  *
@@ -3199,7 +3863,7 @@ var keyMirror = function(obj) {
 
 module.exports = keyMirror;
 
-},{"./invariant":55}],57:[function(_dereq_,module,exports){
+},{"./invariant":60}],62:[function(_dereq_,module,exports){
 /**
  * Copyright 2013-2014 Facebook, Inc.
  *
@@ -3238,7 +3902,7 @@ var merge = function(one, two) {
 
 module.exports = merge;
 
-},{"./mergeInto":59}],58:[function(_dereq_,module,exports){
+},{"./mergeInto":64}],63:[function(_dereq_,module,exports){
 /**
  * Copyright 2013-2014 Facebook, Inc.
  *
@@ -3387,7 +4051,7 @@ var mergeHelpers = {
 
 module.exports = mergeHelpers;
 
-},{"./invariant":55,"./keyMirror":56}],59:[function(_dereq_,module,exports){
+},{"./invariant":60,"./keyMirror":61}],64:[function(_dereq_,module,exports){
 /**
  * Copyright 2013-2014 Facebook, Inc.
  *
@@ -3435,7 +4099,7 @@ function mergeInto(one, two) {
 
 module.exports = mergeInto;
 
-},{"./mergeHelpers":58}],60:[function(_dereq_,module,exports){
+},{"./mergeHelpers":63}],65:[function(_dereq_,module,exports){
 /**
  * Copyright 2013-2014 Facebook, Inc.
  *
@@ -3471,7 +4135,7 @@ var mixInto = function(constructor, methodBag) {
 
 module.exports = mixInto;
 
-},{}],61:[function(_dereq_,module,exports){
+},{}],66:[function(_dereq_,module,exports){
 /**
  * Copyright 2014 Facebook, Inc.
  *
@@ -3521,12 +4185,12 @@ if ("production" !== "production") {
 
 module.exports = warning;
 
-},{"./emptyFunction":54}],62:[function(_dereq_,module,exports){
-module.exports = _dereq_('./modules/helpers/replaceWith');
+},{"./emptyFunction":59}],67:[function(_dereq_,module,exports){
+module.exports = _dereq_('./modules/actions/LocationActions').replaceWith;
 
-},{"./modules/helpers/replaceWith":25}],63:[function(_dereq_,module,exports){
-module.exports = _dereq_('./modules/helpers/transitionTo');
+},{"./modules/actions/LocationActions":12}],68:[function(_dereq_,module,exports){
+module.exports = _dereq_('./modules/actions/LocationActions').transitionTo;
 
-},{"./modules/helpers/transitionTo":28}]},{},[9])
-(9)
+},{"./modules/actions/LocationActions":12}]},{},[10])
+(10)
 });
