@@ -8,7 +8,7 @@ var Path = require('./Path');
  */
 function makePath(to, params, query) {
   var path;
-  if (Path.isAbsolute(path)) {
+  if (Path.isAbsolute(to)) {
     path = Path.normalize(to);
   } else {
     var route = RouteStore.getRouteByName(to);
