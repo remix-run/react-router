@@ -143,7 +143,10 @@ var Path = {
   /**
    * Returns a normalized version of the given path.
    */
-  normalize: function (path) {
+  normalize: function (path, parentRoute) {
+    if (parentRoute && path.charAt(0) !== '/')
+      path = parentRoute.props.path + '/' + path;
+
     return path.replace(/^\/*/, '/');
   }
 

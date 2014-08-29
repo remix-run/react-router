@@ -36,7 +36,7 @@ var Image = React.createClass({
 var routes = (
   <Routes>
     <Route handler={App}>
-      <Route name="image" path="/:service" handler={Image} addHandlerKey={true} />
+      <Route name="image" path=":service" handler={Image} addHandlerKey={true} />
     </Route>
   </Routes>
 );

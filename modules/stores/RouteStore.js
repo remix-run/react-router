@@ -49,7 +49,7 @@ var RouteStore = {
     );
 
     if ((props.path || props.name) && !props.catchAll) {
-      props.path = Path.normalize(props.path || props.name);
+      props.path = Path.normalize(props.path || props.name, parentRoute);
     } else if (parentRoute) {
       // <Routes> have no path prop.
       props.path = parentRoute.props.path || '/';

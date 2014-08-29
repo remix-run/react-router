@@ -28,6 +28,31 @@ describe('when a route is looked up by name', function () {
 });
 
 describe('when registering a route', function () {
+
+  describe('that starts with /', function() {
+    it('does not inherit the parent path', function() {
+      var child;
+      var route = Route({ name: 'home', handler: App },
+        child = Route({ path: '/foo', handler: App })
+      );
+      RouteStore.registerRoute(route);
+      expect(child.props.path).toEqual('/foo');
+      RouteStore.unregisterRoute(route);
+    });
+  });
+
+  describe('that does not start with /', function() {
+    it('inherits the parent path', function() {
+      var child;
+      var route = Route({ name: 'home', handler: App },
+        child = Route({ path: 'foo', handler: App })
+      );
+      RouteStore.registerRoute(route);
+      expect(child.props.path).toEqual('/home/foo');
+      RouteStore.unregisterRoute(route);
+    });
+  });
+
   describe('with no handler', function () {
     it('throws an Error', function () {
       expect(function () {
