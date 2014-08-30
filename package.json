@@ -48,10 +48,10 @@
     "react": ">=0.11.0"
   },
   "dependencies": {
-    "es6-promise": "1.0.0",
     "events": "1.0.1",
     "flux": "2.0.0",
-    "qs": "1.2.2"
+    "qs": "1.2.2",
+    "when": "^3.4.4"
   },
   "keywords": [
     "react",

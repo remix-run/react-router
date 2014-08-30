@@ -1,4 +1,4 @@
-var Promise = require('es6-promise').Promise;
+var Promise = require('when/lib/Promise');
 
 /**
  * Resolves all values in asyncState and calls the setState

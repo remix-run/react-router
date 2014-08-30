@@ -1,5 +1,5 @@
 require('./helper');
-var Promise = require('es6-promise').Promise;
+var Promise = require('when/lib/Promise');
 var AsyncState = require('../modules/mixins/AsyncState');
 
 describe('AsyncState', function () {
