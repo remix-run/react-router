@@ -30,7 +30,7 @@ Simply add `/` in front of all your paths to keep things working.
 
 Though, you may want to embrace this new feature:
 
-```js
+```xml
 <!-- 0.5.x -->
 <Route path="/course/:courseId">
   <Route path="/course/:courseId/assignments"/>
@@ -46,7 +46,7 @@ Though, you may want to embrace this new feature:
 
 Also `.` is no longer matched in dynamic segments.
 
-```js
+```xml
 <!-- 0.5.x -->
 <Route path="/file/:filename" />
 
