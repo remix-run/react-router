@@ -105,7 +105,7 @@ var User = React.createClass({
 // 0.6.x
 var User = React.createClass({
   getInitialState: function() {
-    return this.getState();{
+    return this.getState();
   },
 
   componentWillReceiveProps: function(newProps) {
