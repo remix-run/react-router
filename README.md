@@ -32,6 +32,18 @@ Before our `1.0` release, breaking API changes will cause a bump to
 Please refer to the [upgrade guide](/UPGRADE_GUIDE.md) and
 [changelog](/CHANGELOG.md) when upgrading.
 
+### App Dependencies
+
+We use the following dependencies from npm:
+
+- `when` for promises
+- `flux` for a dispatcher
+- `events` for event emitters.
+
+It is likely that your app will need dependencies like these. We
+recommend you use the same modules that the router uses to decrease the
+overall size of your application.
+
 Installation
 ------------
 
