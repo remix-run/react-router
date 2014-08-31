@@ -45,13 +45,6 @@ module.exports = function(config) {
 
     captureTimeout: 60000,
 
-    singleRun: false,
-
-    plugins: [
-      require("karma-mocha"),
-      require("karma-chrome-launcher"),
-      require("karma-firefox-launcher"),
-      require("karma-webpack")
-    ]
+    singleRun: false
   });
 };
