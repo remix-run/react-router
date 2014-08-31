@@ -17,11 +17,7 @@ module.exports = function(config) {
 
     webpack: {
       cache: true,
-      // TODO: figure out how to get source maps in here, none of this works
-      //devtool: {
-        //'inline-source-map': true,
-        //inlineSourceMap: true
-      //},
+      devtool: 'inline-source-map',
       module: {
         loaders: [
           {test: /\.js$/, loader: 'jsx-loader'}
