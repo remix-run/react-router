@@ -57,12 +57,13 @@ var Link = React.createClass({
 
     // TODO: Deprecate passing props as params in v1.0
     getUnreservedProps: function (props) {
+      var props = withoutProperties(props, RESERVED_PROPS);
       warning(
-        false,
+        Object.keys(props).length === 0,
         'Passing props for params on <Link>s is deprecated, '+
         'please use the `params` property.'
       );
-      return withoutProperties(props, RESERVED_PROPS);
+      return props;
     },
 
     /**
