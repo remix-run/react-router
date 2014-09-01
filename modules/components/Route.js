@@ -1,5 +1,5 @@
 var React = require('react');
-var withoutProperties = require('../helpers/withoutProperties');
+var withoutProperties = require('../utils/withoutProperties');
 
 /**
  * A map of <Route> component props that are reserved for use by the

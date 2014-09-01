@@ -1,7 +1,7 @@
 var React = require('react');
 var invariant = require('react/lib/invariant');
 var warning = require('react/lib/warning');
-var Path = require('../helpers/Path');
+var Path = require('../utils/Path');
 
 var _namedRoutes = {};
 

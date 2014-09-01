@@ -2,7 +2,7 @@ var warning = require('react/lib/warning');
 var EventEmitter = require('events').EventEmitter;
 var LocationActions = require('../actions/LocationActions');
 var LocationDispatcher = require('../dispatchers/LocationDispatcher');
-var supportsHistory = require('../helpers/supportsHistory');
+var supportsHistory = require('../utils/supportsHistory');
 var HistoryLocation = require('../locations/HistoryLocation');
 var RefreshLocation = require('../locations/RefreshLocation');
 

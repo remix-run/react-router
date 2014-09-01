@@ -2,11 +2,7 @@
   "name": "react-router",
   "version": "0.6.1",
   "description": "A complete routing library for React.js",
-  "tags": [
-    "react",
-    "router"
-  ],
-  "main": "./index",
+  "main": "./modules/index",
   "repository": {
     "type": "git",
     "url": "https://github.com/rackt/react-router.git"
@@ -54,6 +50,10 @@
     "qs": "2.2.2",
     "when": "^3.4.4"
   },
+  "tags": [
+    "react",
+    "router"
+  ],
   "keywords": [
     "react",
     "react-component",

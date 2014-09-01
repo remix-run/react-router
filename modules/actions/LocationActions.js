@@ -1,5 +1,5 @@
 var LocationDispatcher = require('../dispatchers/LocationDispatcher');
-var makePath = require('../helpers/makePath');
+var makePath = require('../utils/makePath');
 
 /**
  * Actions that modify the URL.

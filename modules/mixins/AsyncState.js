@@ -1,5 +1,5 @@
 var React = require('react');
-var resolveAsyncState = require('../helpers/resolveAsyncState');
+var resolveAsyncState = require('../utils/resolveAsyncState');
 
 /**
  * A mixin for route handler component classes that fetch at least

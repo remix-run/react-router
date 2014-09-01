@@ -1,7 +1,7 @@
 /** @jsx React.DOM */
 
 var React = require('react');
-var ReactRouter = require('../../index');
+var ReactRouter = require('../../modules');
 var Link = ReactRouter.Link;
 
 var Dashboard = React.createClass({

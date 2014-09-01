@@ -1,6 +1,6 @@
 /** @jsx React.DOM */
 var React = require('react');
-var Router = require('../../index');
+var Router = require('../../modules');
 var Route = Router.Route;
 var DefaultRoute = Router.DefaultRoute;
 var Routes = Router.Routes;

@@ -1,48 +1,4 @@
 !function(e){if("object"==typeof exports&&"undefined"!=typeof module)module.exports=e();else if("function"==typeof define&&define.amd)define([],e);else{var f;"undefined"!=typeof window?f=window:"undefined"!=typeof global?f=global:"undefined"!=typeof self&&(f=self),f.ReactRouter=e()}}(function(){var define,module,exports;return (function e(t,n,r){function s(o,u){if(!n[o]){if(!t[o]){var a=typeof require=="function"&&require;if(!u&&a)return a(o,!0);if(i)return i(o,!0);throw new Error("Cannot find module '"+o+"'")}var f=n[o]={exports:{}};t[o][0].call(f.exports,function(e){var n=t[o][1][e];return s(n?n:e)},f,f.exports,e,t,n,r)}return n[o].exports}var i=typeof require=="function"&&require;for(var o=0;o<r.length;o++)s(r[o]);return s})({1:[function(_dereq_,module,exports){
-module.exports = _dereq_('./modules/mixins/ActiveState');
-
-},{"./modules/mixins/ActiveState":33}],2:[function(_dereq_,module,exports){
-module.exports = _dereq_('./modules/mixins/AsyncState');
-
-},{"./modules/mixins/AsyncState":34}],3:[function(_dereq_,module,exports){
-module.exports = _dereq_('./modules/components/DefaultRoute');
-
-},{"./modules/components/DefaultRoute":13}],4:[function(_dereq_,module,exports){
-module.exports = _dereq_('./modules/components/Link');
-
-},{"./modules/components/Link":14}],5:[function(_dereq_,module,exports){
-module.exports = _dereq_('./modules/components/NotFoundRoute');
-
-},{"./modules/components/NotFoundRoute":15}],6:[function(_dereq_,module,exports){
-module.exports = _dereq_('./modules/components/Redirect');
-
-},{"./modules/components/Redirect":16}],7:[function(_dereq_,module,exports){
-module.exports = _dereq_('./modules/components/Route');
-
-},{"./modules/components/Route":17}],8:[function(_dereq_,module,exports){
-module.exports = _dereq_('./modules/components/Routes');
-
-},{"./modules/components/Routes":18}],9:[function(_dereq_,module,exports){
-module.exports = _dereq_('./modules/actions/LocationActions').goBack;
-
-},{"./modules/actions/LocationActions":12}],10:[function(_dereq_,module,exports){
-exports.ActiveState = _dereq_('./ActiveState');
-exports.AsyncState = _dereq_('./AsyncState');
-exports.DefaultRoute = _dereq_('./DefaultRoute');
-exports.Link = _dereq_('./Link');
-exports.NotFoundRoute = _dereq_('./NotFoundRoute');
-exports.Redirect = _dereq_('./Redirect');
-exports.Route = _dereq_('./Route');
-exports.Routes = _dereq_('./Routes');
-exports.goBack = _dereq_('./goBack');
-exports.makeHref = _dereq_('./makeHref');
-exports.replaceWith = _dereq_('./replaceWith');
-exports.transitionTo = _dereq_('./transitionTo');
-
-},{"./ActiveState":1,"./AsyncState":2,"./DefaultRoute":3,"./Link":4,"./NotFoundRoute":5,"./Redirect":6,"./Route":7,"./Routes":8,"./goBack":9,"./makeHref":11,"./replaceWith":62,"./transitionTo":63}],11:[function(_dereq_,module,exports){
-module.exports = _dereq_('./modules/helpers/makeHref');
-
-},{"./modules/helpers/makeHref":25}],12:[function(_dereq_,module,exports){
 var LocationDispatcher = _dereq_('../dispatchers/LocationDispatcher');
 var makePath = _dereq_('../helpers/makePath');
 
@@ -101,7 +57,7 @@ var LocationActions = {
 
 module.exports = LocationActions;
 
-},{"../dispatchers/LocationDispatcher":19,"../helpers/makePath":26}],13:[function(_dereq_,module,exports){
+},{"../dispatchers/LocationDispatcher":8,"../helpers/makePath":15}],2:[function(_dereq_,module,exports){
 var merge = _dereq_('react/lib/merge');
 var Route = _dereq_('./Route');
 
@@ -122,7 +78,7 @@ function DefaultRoute(props) {
 
 module.exports = DefaultRoute;
 
-},{"./Route":17,"react/lib/merge":52}],14:[function(_dereq_,module,exports){
+},{"./Route":6,"react/lib/merge":42}],3:[function(_dereq_,module,exports){
 var React = (typeof window !== "undefined" ? window.React : typeof global !== "undefined" ? global.React : null);
 var ActiveState = _dereq_('../mixins/ActiveState');
 var transitionTo = _dereq_('../actions/LocationActions').transitionTo;
@@ -293,7 +249,7 @@ var Link = React.createClass({
 
 module.exports = Link;
 
-},{"../actions/LocationActions":12,"../helpers/hasOwnProperty":24,"../helpers/makeHref":25,"../helpers/withoutProperties":29,"../mixins/ActiveState":33,"react/lib/warning":56}],15:[function(_dereq_,module,exports){
+},{"../actions/LocationActions":1,"../helpers/hasOwnProperty":13,"../helpers/makeHref":14,"../helpers/withoutProperties":18,"../mixins/ActiveState":23,"react/lib/warning":46}],4:[function(_dereq_,module,exports){
 var merge = _dereq_('react/lib/merge');
 var Route = _dereq_('./Route');
 
@@ -315,7 +271,7 @@ function NotFoundRoute(props) {
 
 module.exports = NotFoundRoute;
 
-},{"./Route":17,"react/lib/merge":52}],16:[function(_dereq_,module,exports){
+},{"./Route":6,"react/lib/merge":42}],5:[function(_dereq_,module,exports){
 var React = (typeof window !== "undefined" ? window.React : typeof global !== "undefined" ? global.React : null);
 var Route = _dereq_('./Route');
 
@@ -347,7 +303,7 @@ function Redirect(props) {
 
 module.exports = Redirect;
 
-},{"./Route":17}],17:[function(_dereq_,module,exports){
+},{"./Route":6}],6:[function(_dereq_,module,exports){
 var React = (typeof window !== "undefined" ? window.React : typeof global !== "undefined" ? global.React : null);
 var withoutProperties = _dereq_('../helpers/withoutProperties');
 
@@ -449,7 +405,7 @@ var Route = React.createClass({
 
 module.exports = Route;
 
-},{"../helpers/withoutProperties":29}],18:[function(_dereq_,module,exports){
+},{"../helpers/withoutProperties":18}],7:[function(_dereq_,module,exports){
 var React = (typeof window !== "undefined" ? window.React : typeof global !== "undefined" ? global.React : null);
 var warning = _dereq_('react/lib/warning');
 var copyProperties = _dereq_('react/lib/copyProperties');
@@ -901,7 +857,7 @@ function reversedArray(array) {
 
 module.exports = Routes;
 
-},{"../actions/LocationActions":12,"../components/Route":17,"../helpers/Path":20,"../helpers/Redirect":21,"../helpers/Transition":22,"../locations/HashLocation":30,"../locations/HistoryLocation":31,"../locations/RefreshLocation":32,"../stores/ActiveStore":35,"../stores/PathStore":36,"../stores/RouteStore":37,"react/lib/copyProperties":48,"react/lib/warning":56,"when/lib/Promise":57}],19:[function(_dereq_,module,exports){
+},{"../actions/LocationActions":1,"../components/Route":6,"../helpers/Path":9,"../helpers/Redirect":10,"../helpers/Transition":11,"../locations/HashLocation":20,"../locations/HistoryLocation":21,"../locations/RefreshLocation":22,"../stores/ActiveStore":25,"../stores/PathStore":26,"../stores/RouteStore":27,"react/lib/copyProperties":38,"react/lib/warning":46,"when/lib/Promise":47}],8:[function(_dereq_,module,exports){
 var copyProperties = _dereq_('react/lib/copyProperties');
 var Dispatcher = _dereq_('flux').Dispatcher;
 
@@ -921,7 +877,7 @@ var LocationDispatcher = copyProperties(new Dispatcher, {
 
 module.exports = LocationDispatcher;
 
-},{"flux":39,"react/lib/copyProperties":48}],20:[function(_dereq_,module,exports){
+},{"flux":29,"react/lib/copyProperties":38}],9:[function(_dereq_,module,exports){
 var invariant = _dereq_('react/lib/invariant');
 var merge = _dereq_('qs/lib/utils').merge;
 var qs = _dereq_('qs');
@@ -1089,7 +1045,7 @@ var Path = {
 
 module.exports = Path;
 
-},{"qs":42,"qs/lib/utils":46,"react/lib/invariant":50}],21:[function(_dereq_,module,exports){
+},{"qs":32,"qs/lib/utils":36,"react/lib/invariant":40}],10:[function(_dereq_,module,exports){
 /**
  * Encapsulates a redirect to the given route.
  */
@@ -1101,7 +1057,7 @@ function Redirect(to, params, query) {
 
 module.exports = Redirect;
 
-},{}],22:[function(_dereq_,module,exports){
+},{}],11:[function(_dereq_,module,exports){
 var mixInto = _dereq_('react/lib/mixInto');
 var transitionTo = _dereq_('../actions/LocationActions').transitionTo;
 var Redirect = _dereq_('./Redirect');
@@ -1137,7 +1093,7 @@ mixInto(Transition, {
 
 module.exports = Transition;
 
-},{"../actions/LocationActions":12,"./Redirect":21,"react/lib/mixInto":55}],23:[function(_dereq_,module,exports){
+},{"../actions/LocationActions":1,"./Redirect":10,"react/lib/mixInto":45}],12:[function(_dereq_,module,exports){
 /**
  * Returns the current URL path from `window.location`, including query string
  */
@@ -1148,10 +1104,10 @@ function getWindowPath() {
 module.exports = getWindowPath;
 
 
-},{}],24:[function(_dereq_,module,exports){
+},{}],13:[function(_dereq_,module,exports){
 module.exports = Function.prototype.call.bind(Object.prototype.hasOwnProperty);
 
-},{}],25:[function(_dereq_,module,exports){
+},{}],14:[function(_dereq_,module,exports){
 var HashLocation = _dereq_('../locations/HashLocation');
 var PathStore = _dereq_('../stores/PathStore');
 var makePath = _dereq_('./makePath');
@@ -1171,7 +1127,7 @@ function makeHref(to, params, query) {
 
 module.exports = makeHref;
 
-},{"../locations/HashLocation":30,"../stores/PathStore":36,"./makePath":26}],26:[function(_dereq_,module,exports){
+},{"../locations/HashLocation":20,"../stores/PathStore":26,"./makePath":15}],15:[function(_dereq_,module,exports){
 var invariant = _dereq_('react/lib/invariant');
 var RouteStore = _dereq_('../stores/RouteStore');
 var Path = _dereq_('./Path');
@@ -1201,7 +1157,7 @@ function makePath(to, params, query) {
 
 module.exports = makePath;
 
-},{"../stores/RouteStore":37,"./Path":20,"react/lib/invariant":50}],27:[function(_dereq_,module,exports){
+},{"../stores/RouteStore":27,"./Path":9,"react/lib/invariant":40}],16:[function(_dereq_,module,exports){
 var Promise = _dereq_('when/lib/Promise');
 
 /**
@@ -1228,7 +1184,7 @@ function resolveAsyncState(asyncState, setState) {
 
 module.exports = resolveAsyncState;
 
-},{"when/lib/Promise":57}],28:[function(_dereq_,module,exports){
+},{"when/lib/Promise":47}],17:[function(_dereq_,module,exports){
 function supportsHistory() {
   /*! taken from modernizr
    * https://github.com/Modernizr/Modernizr/blob/master/LICENSE
@@ -1246,7 +1202,7 @@ function supportsHistory() {
 
 module.exports = supportsHistory;
 
-},{}],29:[function(_dereq_,module,exports){
+},{}],18:[function(_dereq_,module,exports){
 function withoutProperties(object, properties) {
   var result = {};
 
@@ -1260,7 +1216,24 @@ function withoutProperties(object, properties) {
 
 module.exports = withoutProperties;
 
-},{}],30:[function(_dereq_,module,exports){
+},{}],19:[function(_dereq_,module,exports){
+exports.goBack = _dereq_('./actions/LocationActions').goBack;
+exports.replaceWith = _dereq_('./actions/LocationActions').replaceWith;
+exports.transitionTo = _dereq_('./actions/LocationActions').transitionTo;
+
+exports.DefaultRoute = _dereq_('./components/DefaultRoute');
+exports.Link = _dereq_('./components/Link');
+exports.NotFoundRoute = _dereq_('./components/NotFoundRoute');
+exports.Redirect = _dereq_('./components/Redirect');
+exports.Route = _dereq_('./components/Route');
+exports.Routes = _dereq_('./components/Routes');
+
+exports.makeHref = _dereq_('./helpers/makeHref');
+
+exports.ActiveState = _dereq_('./mixins/ActiveState');
+exports.AsyncState = _dereq_('./mixins/AsyncState');
+
+},{"./actions/LocationActions":1,"./components/DefaultRoute":2,"./components/Link":3,"./components/NotFoundRoute":4,"./components/Redirect":5,"./components/Route":6,"./components/Routes":7,"./helpers/makeHref":14,"./mixins/ActiveState":23,"./mixins/AsyncState":24}],20:[function(_dereq_,module,exports){
 var invariant = _dereq_('react/lib/invariant');
 var ExecutionEnvironment = _dereq_('react/lib/ExecutionEnvironment');
 var getWindowPath = _dereq_('../helpers/getWindowPath');
@@ -1339,7 +1312,7 @@ var HashLocation = {
 
 module.exports = HashLocation;
 
-},{"../helpers/getWindowPath":23,"react/lib/ExecutionEnvironment":47,"react/lib/invariant":50}],31:[function(_dereq_,module,exports){
+},{"../helpers/getWindowPath":12,"react/lib/ExecutionEnvironment":37,"react/lib/invariant":40}],21:[function(_dereq_,module,exports){
 var invariant = _dereq_('react/lib/invariant');
 var ExecutionEnvironment = _dereq_('react/lib/ExecutionEnvironment');
 var getWindowPath = _dereq_('../helpers/getWindowPath');
@@ -1398,7 +1371,7 @@ var HistoryLocation = {
 
 module.exports = HistoryLocation;
 
-},{"../helpers/getWindowPath":23,"react/lib/ExecutionEnvironment":47,"react/lib/invariant":50}],32:[function(_dereq_,module,exports){
+},{"../helpers/getWindowPath":12,"react/lib/ExecutionEnvironment":37,"react/lib/invariant":40}],22:[function(_dereq_,module,exports){
 var invariant = _dereq_('react/lib/invariant');
 var ExecutionEnvironment = _dereq_('react/lib/ExecutionEnvironment');
 var getWindowPath = _dereq_('../helpers/getWindowPath');
@@ -1439,7 +1412,7 @@ var RefreshLocation = {
 
 module.exports = RefreshLocation;
 
-},{"../helpers/getWindowPath":23,"react/lib/ExecutionEnvironment":47,"react/lib/invariant":50}],33:[function(_dereq_,module,exports){
+},{"../helpers/getWindowPath":12,"react/lib/ExecutionEnvironment":37,"react/lib/invariant":40}],23:[function(_dereq_,module,exports){
 var ActiveStore = _dereq_('../stores/ActiveStore');
 
 /**
@@ -1506,7 +1479,7 @@ var ActiveState = {
 
 module.exports = ActiveState;
 
-},{"../stores/ActiveStore":35}],34:[function(_dereq_,module,exports){
+},{"../stores/ActiveStore":25}],24:[function(_dereq_,module,exports){
 var React = (typeof window !== "undefined" ? window.React : typeof global !== "undefined" ? global.React : null);
 var resolveAsyncState = _dereq_('../helpers/resolveAsyncState');
 
@@ -1616,7 +1589,7 @@ var AsyncState = {
 
 module.exports = AsyncState;
 
-},{"../helpers/resolveAsyncState":27}],35:[function(_dereq_,module,exports){
+},{"../helpers/resolveAsyncState":16}],25:[function(_dereq_,module,exports){
 var EventEmitter = _dereq_('events').EventEmitter;
 
 var CHANGE_EVENT = 'change';
@@ -1702,7 +1675,7 @@ var ActiveStore = {
 
 module.exports = ActiveStore;
 
-},{"events":38}],36:[function(_dereq_,module,exports){
+},{"events":28}],26:[function(_dereq_,module,exports){
 var warning = _dereq_('react/lib/warning');
 var EventEmitter = _dereq_('events').EventEmitter;
 var LocationActions = _dereq_('../actions/LocationActions');
@@ -1834,7 +1807,7 @@ var PathStore = {
 
 module.exports = PathStore;
 
-},{"../actions/LocationActions":12,"../dispatchers/LocationDispatcher":19,"../helpers/supportsHistory":28,"../locations/HistoryLocation":31,"../locations/RefreshLocation":32,"events":38,"react/lib/warning":56}],37:[function(_dereq_,module,exports){
+},{"../actions/LocationActions":1,"../dispatchers/LocationDispatcher":8,"../helpers/supportsHistory":17,"../locations/HistoryLocation":21,"../locations/RefreshLocation":22,"events":28,"react/lib/warning":46}],27:[function(_dereq_,module,exports){
 var React = (typeof window !== "undefined" ? window.React : typeof global !== "undefined" ? global.React : null);
 var invariant = _dereq_('react/lib/invariant');
 var warning = _dereq_('react/lib/warning');
@@ -1992,7 +1965,7 @@ var RouteStore = {
 
 module.exports = RouteStore;
 
-},{"../helpers/Path":20,"react/lib/invariant":50,"react/lib/warning":56}],38:[function(_dereq_,module,exports){
+},{"../helpers/Path":9,"react/lib/invariant":40,"react/lib/warning":46}],28:[function(_dereq_,module,exports){
 // Copyright Joyent, Inc. and other Node contributors.
 //
 // Permission is hereby granted, free of charge, to any person obtaining a
@@ -2297,7 +2270,7 @@ function isUndefined(arg) {
   return arg === void 0;
 }
 
-},{}],39:[function(_dereq_,module,exports){
+},{}],29:[function(_dereq_,module,exports){
 /**
  * Copyright (c) 2014, Facebook, Inc.
  * All rights reserved.
@@ -2309,7 +2282,7 @@ function isUndefined(arg) {
 
 module.exports.Dispatcher = _dereq_('./lib/Dispatcher')
 
-},{"./lib/Dispatcher":40}],40:[function(_dereq_,module,exports){
+},{"./lib/Dispatcher":30}],30:[function(_dereq_,module,exports){
 /*
  * Copyright (c) 2014, Facebook, Inc.
  * All rights reserved.
@@ -2559,7 +2532,7 @@ var _prefix = 'ID_';
 
 module.exports = Dispatcher;
 
-},{"./invariant":41}],41:[function(_dereq_,module,exports){
+},{"./invariant":31}],31:[function(_dereq_,module,exports){
 /**
  * Copyright (c) 2014, Facebook, Inc.
  * All rights reserved.
@@ -2614,10 +2587,10 @@ var invariant = function(condition, format, a, b, c, d, e, f) {
 
 module.exports = invariant;
 
-},{}],42:[function(_dereq_,module,exports){
+},{}],32:[function(_dereq_,module,exports){
 module.exports = _dereq_('./lib');
 
-},{"./lib":43}],43:[function(_dereq_,module,exports){
+},{"./lib":33}],33:[function(_dereq_,module,exports){
 // Load modules
 
 var Stringify = _dereq_('./stringify');
@@ -2634,7 +2607,7 @@ module.exports = {
     parse: Parse
 };
 
-},{"./parse":44,"./stringify":45}],44:[function(_dereq_,module,exports){
+},{"./parse":34,"./stringify":35}],34:[function(_dereq_,module,exports){
 // Load modules
 
 var Utils = _dereq_('./utils');
@@ -2646,16 +2619,14 @@ var internals = {
     delimiter: '&',
     depth: 5,
     arrayLimit: 20,
-    parametersLimit: 1000
+    parameterLimit: 1000
 };
 
 
-internals.parseValues = function (str, delimiter) {
-
-    delimiter = typeof delimiter === 'string' ? delimiter : internals.delimiter;
+internals.parseValues = function (str, options) {
 
     var obj = {};
-    var parts = str.split(delimiter, internals.parametersLimit);
+    var parts = str.split(options.delimiter, options.parameterLimit === Infinity ? undefined : options.parameterLimit);
 
     for (var i = 0, il = parts.length; i < il; ++i) {
         var part = parts[i];
@@ -2681,7 +2652,7 @@ internals.parseValues = function (str, delimiter) {
 };
 
 
-internals.parseObject = function (chain, val) {
+internals.parseObject = function (chain, val, options) {
 
     if (!chain.length) {
         return val;
@@ -2692,20 +2663,20 @@ internals.parseObject = function (chain, val) {
     var obj = {};
     if (root === '[]') {
         obj = [];
-        obj = obj.concat(internals.parseObject(chain, val));
+        obj = obj.concat(internals.parseObject(chain, val, options));
     }
     else {
         var cleanRoot = root[0] === '[' && root[root.length - 1] === ']' ? root.slice(1, root.length - 1) : root;
         var index = parseInt(cleanRoot, 10);
         if (!isNaN(index) &&
             root !== cleanRoot &&
-            index <= internals.arrayLimit) {
+            index <= options.arrayLimit) {
 
             obj = [];
-            obj[index] = internals.parseObject(chain, val);
+            obj[index] = internals.parseObject(chain, val, options);
         }
         else {
-            obj[cleanRoot] = internals.parseObject(chain, val);
+            obj[cleanRoot] = internals.parseObject(chain, val, options);
         }
     }
 
@@ -2713,7 +2684,7 @@ internals.parseObject = function (chain, val) {
 };
 
 
-internals.parseKeys = function (key, val, depth) {
+internals.parseKeys = function (key, val, options) {
 
     if (!key) {
         return;
@@ -2744,7 +2715,7 @@ internals.parseKeys = function (key, val, depth) {
     // Loop through children appending to the array until we hit depth
 
     var i = 0;
-    while ((segment = child.exec(key)) !== null && i < depth) {
+    while ((segment = child.exec(key)) !== null && i < options.depth) {
 
         ++i;
         if (!Object.prototype.hasOwnProperty(segment[1].replace(/\[|\]/g, ''))) {
@@ -2758,11 +2729,11 @@ internals.parseKeys = function (key, val, depth) {
         keys.push('[' + key.slice(segment.index) + ']');
     }
 
-    return internals.parseObject(keys, val);
+    return internals.parseObject(keys, val, options);
 };
 
 
-module.exports = function (str, depth, delimiter) {
+module.exports = function (str, options) {
 
     if (str === '' ||
         str === null ||
@@ -2771,28 +2742,31 @@ module.exports = function (str, depth, delimiter) {
         return {};
     }
 
-    if (typeof depth !== 'number') {
-        delimiter = depth;
-        depth = internals.depth;
-    }
+    options = options || {};
+    options.delimiter = typeof options.delimiter === 'string' || Utils.isRegExp(options.delimiter) ? options.delimiter : internals.delimiter;
+    options.depth = typeof options.depth === 'number' ? options.depth : internals.depth;
+    options.arrayLimit = typeof options.arrayLimit === 'number' ? options.arrayLimit : internals.arrayLimit;
+    options.parameterLimit = typeof options.parameterLimit === 'number' ? options.parameterLimit : internals.parameterLimit;
 
-    var tempObj = typeof str === 'string' ? internals.parseValues(str, delimiter) : Utils.clone(str);
+    var tempObj = typeof str === 'string' ? internals.parseValues(str, options) : str;
     var obj = {};
 
     // Iterate over the keys and setup the new object
-    //
-    for (var key in tempObj) {
-        if (tempObj.hasOwnProperty(key)) {
-            var newObj = internals.parseKeys(key, tempObj[key], depth);
-            obj = Utils.merge(obj, newObj);
-        }
+
+    var keys = Object.keys(tempObj);
+    for (var i = 0, il = keys.length; i < il; ++i) {
+        var key = keys[i];
+        var newObj = internals.parseKeys(key, tempObj[key], options);
+        obj = Utils.merge(obj, newObj);
     }
 
     return Utils.compact(obj);
 };
 
-},{"./utils":46}],45:[function(_dereq_,module,exports){
+},{"./utils":36}],35:[function(_dereq_,module,exports){
 // Load modules
+
+var Utils = _dereq_('./utils');
 
 
 // Declare internals
@@ -2804,7 +2778,7 @@ var internals = {
 
 internals.stringify = function (obj, prefix) {
 
-    if (Buffer.isBuffer(obj)) {
+    if (Utils.isBuffer(obj)) {
         obj = obj.toString();
     }
     else if (obj instanceof Date) {
@@ -2833,9 +2807,10 @@ internals.stringify = function (obj, prefix) {
 };
 
 
-module.exports = function (obj, delimiter) {
+module.exports = function (obj, options) {
 
-    delimiter = typeof delimiter === 'undefined' ? internals.delimiter : delimiter;
+    options = options || {};
+    var delimiter = typeof options.delimiter === 'undefined' ? internals.delimiter : options.delimiter;
 
     var keys = [];
 
@@ -2848,7 +2823,7 @@ module.exports = function (obj, delimiter) {
     return keys.join(delimiter);
 };
 
-},{}],46:[function(_dereq_,module,exports){
+},{"./utils":36}],36:[function(_dereq_,module,exports){
 // Load modules
 
 
@@ -2871,54 +2846,35 @@ exports.arrayToObject = function (source) {
 };
 
 
-exports.clone = function (source) {
-
-    if (typeof source !== 'object' ||
-        source === null) {
-
-        return source;
-    }
-
-    if (Buffer.isBuffer(source)) {
-        return source.toString();
-    }
-
-    var obj = Array.isArray(source) ? [] : {};
-    for (var i in source) {
-        if (source.hasOwnProperty(i)) {
-            obj[i] = exports.clone(source[i]);
-        }
-    }
-
-    return obj;
-};
-
-
 exports.merge = function (target, source) {
 
     if (!source) {
         return target;
     }
 
-    var obj = exports.clone(target);
-
     if (Array.isArray(source)) {
         for (var i = 0, il = source.length; i < il; ++i) {
             if (typeof source[i] !== 'undefined') {
-                if (typeof obj[i] === 'object') {
-                    obj[i] = exports.merge(obj[i], source[i]);
+                if (typeof target[i] === 'object') {
+                    target[i] = exports.merge(target[i], source[i]);
                 }
                 else {
-                    obj[i] = source[i];
+                    target[i] = source[i];
                 }
             }
         }
 
-        return obj;
+        return target;
     }
 
-    if (Array.isArray(obj)) {
-        obj = exports.arrayToObject(obj);
+    if (Array.isArray(target)) {
+        if (typeof source !== 'object') {
+            target.push(source);
+            return target;
+        }
+        else {
+            target = exports.arrayToObject(target);
+        }
     }
 
     var keys = Object.keys(source);
@@ -2929,19 +2885,19 @@ exports.merge = function (target, source) {
         if (value &&
             typeof value === 'object') {
 
-            if (!obj[key]) {
-                obj[key] = exports.clone(value);
+            if (!target[key]) {
+                target[key] = value;
             }
             else {
-                obj[key] = exports.merge(obj[key], value);
+                target[key] = exports.merge(target[key], value);
             }
         }
         else {
-            obj[key] = value;
+            target[key] = value;
         }
     }
 
-    return obj;
+    return target;
 };
 
 
@@ -2955,35 +2911,60 @@ exports.decode = function (str) {
 };
 
 
-exports.compact = function (obj) {
+exports.compact = function (obj, refs) {
 
-    if (typeof obj !== 'object' || obj === null) {
+    if (typeof obj !== 'object' ||
+        obj === null) {
+
         return obj;
     }
 
-    var compacted = {};
-
-    for (var key in obj) {
-        if (obj.hasOwnProperty(key)) {
-            if (Array.isArray(obj[key])) {
-                compacted[key] = [];
-
-                for (var i = 0, l = obj[key].length; i < l; i++) {
-                    if (typeof obj[key][i] !== 'undefined') {
-                        compacted[key].push(obj[key][i]);
-                    }
-                }
-            }
-            else {
-                compacted[key] = exports.compact(obj[key]);
-            }
-        }
+    refs = refs || [];
+    var lookup = refs.indexOf(obj);
+    if (lookup !== -1) {
+        return refs[lookup];
     }
 
-    return compacted;
+    refs.push(obj);
+
+    if (Array.isArray(obj)) {
+        var compacted = [];
+
+        for (var i = 0, l = obj.length; i < l; ++i) {
+            if (typeof obj[i] !== 'undefined') {
+                compacted.push(obj[i]);
+            }
+        }
+
+        return compacted;
+    }
+
+    var keys = Object.keys(obj);
+    for (var i = 0, il = keys.length; i < il; ++i) {
+        var key = keys[i];
+        obj[key] = exports.compact(obj[key], refs);
+    }
+
+    return obj;
 };
 
-},{}],47:[function(_dereq_,module,exports){
+
+exports.isRegExp = function (obj) {
+    return Object.prototype.toString.call(obj) === '[object RegExp]';
+};
+
+
+exports.isBuffer = function (obj) {
+
+    if (typeof Buffer !== 'undefined') {
+        return Buffer.isBuffer(obj);
+    }
+    else {
+        return false;
+    }
+};
+
+},{}],37:[function(_dereq_,module,exports){
 /**
  * Copyright 2013-2014 Facebook, Inc.
  *
@@ -3035,7 +3016,7 @@ var ExecutionEnvironment = {
 
 module.exports = ExecutionEnvironment;
 
-},{}],48:[function(_dereq_,module,exports){
+},{}],38:[function(_dereq_,module,exports){
 /**
  * Copyright 2013-2014 Facebook, Inc.
  *
@@ -3091,7 +3072,7 @@ function copyProperties(obj, a, b, c, d, e, f) {
 
 module.exports = copyProperties;
 
-},{}],49:[function(_dereq_,module,exports){
+},{}],39:[function(_dereq_,module,exports){
 /**
  * Copyright 2013-2014 Facebook, Inc.
  *
@@ -3136,7 +3117,7 @@ copyProperties(emptyFunction, {
 
 module.exports = emptyFunction;
 
-},{"./copyProperties":48}],50:[function(_dereq_,module,exports){
+},{"./copyProperties":38}],40:[function(_dereq_,module,exports){
 /**
  * Copyright 2013-2014 Facebook, Inc.
  *
@@ -3198,7 +3179,7 @@ var invariant = function(condition, format, a, b, c, d, e, f) {
 
 module.exports = invariant;
 
-},{}],51:[function(_dereq_,module,exports){
+},{}],41:[function(_dereq_,module,exports){
 /**
  * Copyright 2013-2014 Facebook, Inc.
  *
@@ -3258,7 +3239,7 @@ var keyMirror = function(obj) {
 
 module.exports = keyMirror;
 
-},{"./invariant":50}],52:[function(_dereq_,module,exports){
+},{"./invariant":40}],42:[function(_dereq_,module,exports){
 /**
  * Copyright 2013-2014 Facebook, Inc.
  *
@@ -3297,7 +3278,7 @@ var merge = function(one, two) {
 
 module.exports = merge;
 
-},{"./mergeInto":54}],53:[function(_dereq_,module,exports){
+},{"./mergeInto":44}],43:[function(_dereq_,module,exports){
 /**
  * Copyright 2013-2014 Facebook, Inc.
  *
@@ -3446,7 +3427,7 @@ var mergeHelpers = {
 
 module.exports = mergeHelpers;
 
-},{"./invariant":50,"./keyMirror":51}],54:[function(_dereq_,module,exports){
+},{"./invariant":40,"./keyMirror":41}],44:[function(_dereq_,module,exports){
 /**
  * Copyright 2013-2014 Facebook, Inc.
  *
@@ -3494,7 +3475,7 @@ function mergeInto(one, two) {
 
 module.exports = mergeInto;
 
-},{"./mergeHelpers":53}],55:[function(_dereq_,module,exports){
+},{"./mergeHelpers":43}],45:[function(_dereq_,module,exports){
 /**
  * Copyright 2013-2014 Facebook, Inc.
  *
@@ -3530,7 +3511,7 @@ var mixInto = function(constructor, methodBag) {
 
 module.exports = mixInto;
 
-},{}],56:[function(_dereq_,module,exports){
+},{}],46:[function(_dereq_,module,exports){
 /**
  * Copyright 2014 Facebook, Inc.
  *
@@ -3580,7 +3561,7 @@ if ("production" !== "production") {
 
 module.exports = warning;
 
-},{"./emptyFunction":49}],57:[function(_dereq_,module,exports){
+},{"./emptyFunction":39}],47:[function(_dereq_,module,exports){
 /** @license MIT License (c) copyright 2010-2014 original author or authors */
 /** @author Brian Cavalier */
 /** @author John Hann */
@@ -3599,7 +3580,7 @@ define(function (_dereq_) {
 });
 })(typeof define === 'function' && define.amd ? define : function (factory) { module.exports = factory(_dereq_); });
 
-},{"./Scheduler":59,"./async":60,"./makePromise":61}],58:[function(_dereq_,module,exports){
+},{"./Scheduler":49,"./async":50,"./makePromise":51}],48:[function(_dereq_,module,exports){
 /** @license MIT License (c) copyright 2010-2014 original author or authors */
 /** @author Brian Cavalier */
 /** @author John Hann */
@@ -3671,7 +3652,7 @@ define(function() {
 });
 }(typeof define === 'function' && define.amd ? define : function(factory) { module.exports = factory(); }));
 
-},{}],59:[function(_dereq_,module,exports){
+},{}],49:[function(_dereq_,module,exports){
 /** @license MIT License (c) copyright 2010-2014 original author or authors */
 /** @author Brian Cavalier */
 /** @author John Hann */
@@ -3755,7 +3736,7 @@ define(function(_dereq_) {
 });
 }(typeof define === 'function' && define.amd ? define : function(factory) { module.exports = factory(_dereq_); }));
 
-},{"./Queue":58}],60:[function(_dereq_,module,exports){
+},{"./Queue":48}],50:[function(_dereq_,module,exports){
 /** @license MIT License (c) copyright 2010-2014 original author or authors */
 /** @author Brian Cavalier */
 /** @author John Hann */
@@ -3818,7 +3799,7 @@ define(function(_dereq_) {
 });
 }(typeof define === 'function' && define.amd ? define : function(factory) { module.exports = factory(_dereq_); }));
 
-},{}],61:[function(_dereq_,module,exports){
+},{}],51:[function(_dereq_,module,exports){
 /** @license MIT License (c) copyright 2010-2014 original author or authors */
 /** @author Brian Cavalier */
 /** @author John Hann */
@@ -4591,12 +4572,6 @@ define(function() {
 });
 }(typeof define === 'function' && define.amd ? define : function(factory) { module.exports = factory(); }));
 
-},{}],62:[function(_dereq_,module,exports){
-module.exports = _dereq_('./modules/actions/LocationActions').replaceWith;
-
-},{"./modules/actions/LocationActions":12}],63:[function(_dereq_,module,exports){
-module.exports = _dereq_('./modules/actions/LocationActions').transitionTo;
-
-},{"./modules/actions/LocationActions":12}]},{},[10])
-(10)
+},{}]},{},[19])
+(19)
 });

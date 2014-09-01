@@ -1,4 +1,3 @@
 #!/bin/sh
-script/build
+scripts/build
 node_modules/.bin/release
-

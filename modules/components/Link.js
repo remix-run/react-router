@@ -1,9 +1,9 @@
 var React = require('react');
 var ActiveState = require('../mixins/ActiveState');
 var transitionTo = require('../actions/LocationActions').transitionTo;
-var withoutProperties = require('../helpers/withoutProperties');
-var hasOwnProperty = require('../helpers/hasOwnProperty');
-var makeHref = require('../helpers/makeHref');
+var withoutProperties = require('../utils/withoutProperties');
+var hasOwnProperty = require('../utils/hasOwnProperty');
+var makeHref = require('../utils/makeHref');
 var warning = require('react/lib/warning');
 
 function isLeftClickEvent(event) {

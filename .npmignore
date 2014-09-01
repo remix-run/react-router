@@ -2,6 +2,6 @@ CONTRIBUTING.md
 bower.json
 examples
 karma.conf.js
-script
+scripts
 specs
 webpack.config.js

@@ -1,6 +1,6 @@
 var invariant = require('react/lib/invariant');
 var ExecutionEnvironment = require('react/lib/ExecutionEnvironment');
-var getWindowPath = require('../helpers/getWindowPath');
+var getWindowPath = require('../utils/getWindowPath');
 
 function getHashPath() {
   return window.location.hash.substr(1);
