@@ -1,2 +1,2 @@
 #!/bin/sh
-node_modules/.bin/karma start "$@"
+NODE_ENV=test node_modules/.bin/karma start "$@"

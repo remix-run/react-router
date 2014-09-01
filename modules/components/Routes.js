@@ -7,6 +7,7 @@ var Route = require('../components/Route');
 var Path = require('../utils/Path');
 var Redirect = require('../utils/Redirect');
 var Transition = require('../utils/Transition');
+var DefaultLocation = require('../locations/DefaultLocation');
 var HashLocation = require('../locations/HashLocation');
 var HistoryLocation = require('../locations/HistoryLocation');
 var RefreshLocation = require('../locations/RefreshLocation');
@@ -92,7 +93,7 @@ var Routes = React.createClass({
       onActiveStateChange: defaultActiveStateChangeHandler,
       onTransitionError: defaultTransitionErrorHandler,
       preserveScrollPosition: false,
-      location: HashLocation
+      location: DefaultLocation
     };
   },
 

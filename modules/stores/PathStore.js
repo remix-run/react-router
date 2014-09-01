@@ -68,6 +68,8 @@ var PathStore = {
   },
 
   teardown: function () {
+    _events.removeAllListeners(CHANGE_EVENT);
+
     if (_location && typeof _location.teardown === 'function')
       _location.teardown();
 

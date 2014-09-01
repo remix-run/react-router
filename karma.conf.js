@@ -16,6 +16,7 @@ module.exports = function(config) {
     },
 
     browserify: {
+      transform: ['envify'],
       watch: true,
       debug: true
     },
