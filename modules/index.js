@@ -9,7 +9,7 @@ exports.Redirect = require('./components/Redirect');
 exports.Route = require('./components/Route');
 exports.Routes = require('./components/Routes');
 
-exports.makeHref = require('./utils/makeHref');
-
 exports.ActiveState = require('./mixins/ActiveState');
 exports.AsyncState = require('./mixins/AsyncState');
+
+exports.makeHref = require('./utils/makeHref');
