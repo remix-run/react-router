@@ -23,23 +23,18 @@
   "devDependencies": {
     "browserify": "4.2.3",
     "browserify-shim": "3.6.0",
-    "bundle-loader": "0.5.0",
     "envify": "1.2.0",
     "expect": "0.1.1",
-    "jsx-loader": "0.10.2",
     "karma": "0.12.16",
+    "karma-browserify": "^0.2.1",
     "karma-chrome-launcher": "0.1.4",
     "karma-cli": "0.0.4",
     "karma-firefox-launcher": "0.1.3",
     "karma-mocha": "0.1.3",
-    "karma-sourcemap-loader": "^0.2.0",
-    "karma-webpack": "1.2.1",
     "mocha": "1.20.1",
     "react": ">=0.11.0",
     "rf-release": "0.3.1",
-    "uglify-js": "2.4.15",
-    "webpack": "1.2.0-beta5",
-    "webpack-dev-server": "1.4.2"
+    "uglify-js": "2.4.15"
   },
   "peerDependencies": {
     "react": ">=0.11.0"

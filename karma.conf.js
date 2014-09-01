@@ -3,7 +3,7 @@ module.exports = function(config) {
 
     basePath: '',
 
-    frameworks: ['mocha'],
+    frameworks: ['mocha', 'browserify'],
 
     files: [
       'specs/main.js'
@@ -12,23 +12,12 @@ module.exports = function(config) {
     exclude: [],
 
     preprocessors: {
-      'specs/main.js': ['webpack', 'sourcemap']
+      'specs/main.js': ['browserify']
     },
 
-    webpack: {
-      cache: true,
-      devtool: 'inline-source-map',
-      module: {
-        loaders: [
-          {test: /\.js$/, loader: 'jsx-loader'}
-        ]
-      }
-    },
-
-    webpackServer: {
-      stats: {
-        colors: true
-      }
+    browserify: {
+      watch: true,
+      debug: true
     },
 
     reporters: ['progress'],
