@@ -1,6 +1,6 @@
 /** @jsx React.DOM */
 var React = require('react');
-var Router = require('../../modules');
+var Router = require('react-router');
 var Route = Router.Route;
 var Routes = Router.Routes;
 var Link = Router.Link;
@@ -130,4 +130,3 @@ function findStates() {
 function underscore(str) {
   return str.toLowerCase().replace(/ /, '_');
 }
-

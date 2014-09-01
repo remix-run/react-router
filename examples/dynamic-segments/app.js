@@ -1,6 +1,6 @@
 /** @jsx React.DOM */
 var React = require('react');
-var Router = require('../../modules');
+var Router = require('react-router');
 var Route = Router.Route;
 var Routes = Router.Routes;
 var Redirect = Router.Redirect;

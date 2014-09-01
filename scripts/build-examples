@@ -1,2 +1,18 @@
 #!/bin/sh
-webpack --devtool inline-source-map "$@"
+BROWSERIFY="node_modules/.bin/browserify --debug --detect-globals false"
+BUNDLE_EXAMPLE="$BROWSERIFY -t reactify -x react -x react/lib/ReactCSSTransitionGroup -x when -x react-router"
+
+$BROWSERIFY -t envify -r react -r react/lib/ReactCSSTransitionGroup -r when -r ./modules:react-router > examples/global-bundle.js
+
+$BUNDLE_EXAMPLE examples/animations/app.js > examples/animations/app-bundle.js
+$BUNDLE_EXAMPLE examples/auth-flow/app.js > examples/auth-flow/app-bundle.js
+$BUNDLE_EXAMPLE examples/data-flow/app.js > examples/data-flow/app-bundle.js
+$BUNDLE_EXAMPLE examples/dynamic-segments/app.js > examples/dynamic-segments/app-bundle.js
+$BUNDLE_EXAMPLE examples/master-detail/app.js > examples/master-detail/app-bundle.js
+# $BUNDLE_EXAMPLE examples/partial-app-loading/app.js > examples/partial-app-loading/app-bundle.js
+# $BUNDLE_EXAMPLE examples/partial-app-loading/dashboard.js > examples/partial-app-loading/dashboard-bundle.js
+# $BUNDLE_EXAMPLE examples/partial-app-loading/inbox.js > examples/partial-app-loading/inbox-bundle.js
+$BUNDLE_EXAMPLE examples/query-params/app.js > examples/query-params/app-bundle.js
+$BUNDLE_EXAMPLE examples/shared-root/app.js > examples/shared-root/app-bundle.js
+$BUNDLE_EXAMPLE examples/simple-master-detail/app.js > examples/simple-master-detail/app-bundle.js
+$BUNDLE_EXAMPLE examples/transitions/app.js > examples/transitions/app-bundle.js

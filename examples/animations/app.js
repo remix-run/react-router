@@ -1,10 +1,10 @@
 /** @jsx React.DOM */
 var React = require('react');
-var Router = require('../../modules');
+var CSSTransitionGroup = require('react/lib/ReactCSSTransitionGroup');
+var Router = require('react-router');
 var Routes = Router.Routes;
 var Route = Router.Route;
 var Link = Router.Link;
-var Transition = require('react/lib/ReactCSSTransitionGroup');
 
 var App = React.createClass({
   render: function() {
@@ -14,9 +14,9 @@ var App = React.createClass({
           <li><Link to="image" params={{service: "kitten"}}>Kitten</Link></li>
           <li><Link to="image" params={{service: "cage"}}>Cage</Link></li>
         </ul>
-        <Transition transitionName="example">
+        <CSSTransitionGroup transitionName="example">
           {this.props.activeRouteHandler()}
-        </Transition>
+        </CSSTransitionGroup>
       </div>
     );
   }
