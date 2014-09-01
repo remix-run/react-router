@@ -50,7 +50,7 @@
   "dependencies": {
     "events": "1.0.1",
     "flux": "2.0.0",
-    "qs": "1.2.2",
+    "qs": "2.2.2",
     "when": "^3.4.4"
   },
   "keywords": [
