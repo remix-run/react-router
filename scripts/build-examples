@@ -2,7 +2,7 @@
 BROWSERIFY="node_modules/.bin/browserify --debug --detect-globals false"
 BUNDLE_EXAMPLE="$BROWSERIFY -t reactify -x react -x react/lib/ReactCSSTransitionGroup -x when -x react-router"
 
-$BROWSERIFY -t envify -r react -r react/lib/ReactCSSTransitionGroup -r when -r ./modules:react-router > examples/global-bundle.js
+NODE_ENV=development $BROWSERIFY -t envify -r react -r react/lib/ReactCSSTransitionGroup -r when -r ./modules:react-router > examples/global-bundle.js
 
 $BUNDLE_EXAMPLE examples/animations/app.js > examples/animations/app-bundle.js
 $BUNDLE_EXAMPLE examples/auth-flow/app.js > examples/auth-flow/app-bundle.js
