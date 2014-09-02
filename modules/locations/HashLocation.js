@@ -1,5 +1,5 @@
 var invariant = require('react/lib/invariant');
-var ExecutionEnvironment = require('react/lib/ExecutionEnvironment');
+var canUseDOM = require('react/lib/ExecutionEnvironment').canUseDOM;
 var getWindowPath = require('../utils/getWindowPath');
 
 function getHashPath() {
@@ -31,7 +31,7 @@ var HashLocation = {
 
   setup: function (onChange) {
     invariant(
-      ExecutionEnvironment.canUseDOM,
+      canUseDOM,
       'You cannot use HashLocation in an environment with no DOM'
     );
 

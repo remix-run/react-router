@@ -1,5 +1,5 @@
 var invariant = require('react/lib/invariant');
-var ExecutionEnvironment = require('react/lib/ExecutionEnvironment');
+var canUseDOM = require('react/lib/ExecutionEnvironment').canUseDOM;
 var getWindowPath = require('../utils/getWindowPath');
 
 var _onChange;
@@ -11,7 +11,7 @@ var HistoryLocation = {
 
   setup: function (onChange) {
     invariant(
-      ExecutionEnvironment.canUseDOM,
+      canUseDOM,
       'You cannot use HistoryLocation in an environment with no DOM'
     );
 

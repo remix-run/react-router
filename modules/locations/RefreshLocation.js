@@ -1,5 +1,5 @@
 var invariant = require('react/lib/invariant');
-var ExecutionEnvironment = require('react/lib/ExecutionEnvironment');
+var canUseDOM = require('react/lib/ExecutionEnvironment').canUseDOM;
 var getWindowPath = require('../utils/getWindowPath');
 
 /**
@@ -11,7 +11,7 @@ var RefreshLocation = {
 
   setup: function () {
     invariant(
-      ExecutionEnvironment.canUseDOM,
+      canUseDOM,
       'You cannot use RefreshLocation in an environment with no DOM'
     );
   },
