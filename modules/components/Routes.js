@@ -1,6 +1,7 @@
 var React = require('react');
 var warning = require('react/lib/warning');
 var copyProperties = require('react/lib/copyProperties');
+var canUseDOM = require('react/lib/ExecutionEnvironment').canUseDOM;
 var Promise = require('when/lib/Promise');
 var LocationActions = require('../actions/LocationActions');
 var Route = require('../components/Route');
@@ -34,6 +35,9 @@ var NAMED_LOCATIONS = {
  * the current URL and all others roll it back.
  */
 function defaultAbortedTransitionHandler(transition) {
+  if (!canUseDOM)
+    return;
+
   var reason = transition.abortReason;
 
   if (reason instanceof Redirect) {
