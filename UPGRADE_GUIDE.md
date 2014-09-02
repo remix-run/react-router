@@ -2,8 +2,23 @@ Upgrade Guide
 =============
 
 To see discussion around these API changes, please refer to the
-[changelog](/CHANGELOG.md) and git log the commits to find the issues
-they refer to.
+[changelog](/CHANGELOG.md) and visit the commits and issues they
+reference.
+
+0.6.x -> 0.7.x
+--------------
+
+The package root modules were removed. Please import modules from the
+`Router` default export.
+
+```js
+// 0.6.x
+var Link = require('react-router/Link');
+
+// 0.7.x
+var Router = require('react-router');
+var Link = Router.Link;
+```
 
 0.5.x -> 0.6.x
 --------------
