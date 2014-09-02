@@ -4,6 +4,7 @@ v0.7.0 - Tue, 02 Sep 2014 16:42:28 GMT
 - [3796371](../../commit/3796371) [changed] Use Browserify to run specs
 - [0e649be](../../commit/0e649be) [changed] Use Browserify to build examples
 - [bb7b666](../../commit/bb7b666) [removed] .js files from repo root
+- [96122dd](../../commit/96122dd) [fixed] undefined Buffer in query strings
 
 
 v0.6.1 - Sun, 31 Aug 2014 03:21:20 GMT
