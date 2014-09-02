@@ -1,6 +1,6 @@
 !function(e){if("object"==typeof exports&&"undefined"!=typeof module)module.exports=e();else if("function"==typeof define&&define.amd)define([],e);else{var f;"undefined"!=typeof window?f=window:"undefined"!=typeof global?f=global:"undefined"!=typeof self&&(f=self),f.ReactRouter=e()}}(function(){var define,module,exports;return (function e(t,n,r){function s(o,u){if(!n[o]){if(!t[o]){var a=typeof require=="function"&&require;if(!u&&a)return a(o,!0);if(i)return i(o,!0);throw new Error("Cannot find module '"+o+"'")}var f=n[o]={exports:{}};t[o][0].call(f.exports,function(e){var n=t[o][1][e];return s(n?n:e)},f,f.exports,e,t,n,r)}return n[o].exports}var i=typeof require=="function"&&require;for(var o=0;o<r.length;o++)s(r[o]);return s})({1:[function(_dereq_,module,exports){
 var LocationDispatcher = _dereq_('../dispatchers/LocationDispatcher');
-var makePath = _dereq_('../helpers/makePath');
+var makePath = _dereq_('../utils/makePath');
 
 /**
  * Actions that modify the URL.
@@ -57,7 +57,7 @@ var LocationActions = {
 
 module.exports = LocationActions;
 
-},{"../dispatchers/LocationDispatcher":8,"../helpers/makePath":15}],2:[function(_dereq_,module,exports){
+},{"../dispatchers/LocationDispatcher":8,"../utils/makePath":26}],2:[function(_dereq_,module,exports){
 var merge = _dereq_('react/lib/merge');
 var Route = _dereq_('./Route');
 
@@ -78,13 +78,13 @@ function DefaultRoute(props) {
 
 module.exports = DefaultRoute;
 
-},{"./Route":6,"react/lib/merge":42}],3:[function(_dereq_,module,exports){
+},{"./Route":6,"react/lib/merge":44}],3:[function(_dereq_,module,exports){
 var React = (typeof window !== "undefined" ? window.React : typeof global !== "undefined" ? global.React : null);
 var ActiveState = _dereq_('../mixins/ActiveState');
 var transitionTo = _dereq_('../actions/LocationActions').transitionTo;
-var withoutProperties = _dereq_('../helpers/withoutProperties');
-var hasOwnProperty = _dereq_('../helpers/hasOwnProperty');
-var makeHref = _dereq_('../helpers/makeHref');
+var withoutProperties = _dereq_('../utils/withoutProperties');
+var hasOwnProperty = _dereq_('../utils/hasOwnProperty');
+var makeHref = _dereq_('../utils/makeHref');
 var warning = _dereq_('react/lib/warning');
 
 function isLeftClickEvent(event) {
@@ -249,7 +249,7 @@ var Link = React.createClass({
 
 module.exports = Link;
 
-},{"../actions/LocationActions":1,"../helpers/hasOwnProperty":13,"../helpers/makeHref":14,"../helpers/withoutProperties":18,"../mixins/ActiveState":23,"react/lib/warning":46}],4:[function(_dereq_,module,exports){
+},{"../actions/LocationActions":1,"../mixins/ActiveState":15,"../utils/hasOwnProperty":24,"../utils/makeHref":25,"../utils/withoutProperties":29,"react/lib/warning":48}],4:[function(_dereq_,module,exports){
 var merge = _dereq_('react/lib/merge');
 var Route = _dereq_('./Route');
 
@@ -271,7 +271,7 @@ function NotFoundRoute(props) {
 
 module.exports = NotFoundRoute;
 
-},{"./Route":6,"react/lib/merge":42}],5:[function(_dereq_,module,exports){
+},{"./Route":6,"react/lib/merge":44}],5:[function(_dereq_,module,exports){
 var React = (typeof window !== "undefined" ? window.React : typeof global !== "undefined" ? global.React : null);
 var Route = _dereq_('./Route');
 
@@ -305,7 +305,7 @@ module.exports = Redirect;
 
 },{"./Route":6}],6:[function(_dereq_,module,exports){
 var React = (typeof window !== "undefined" ? window.React : typeof global !== "undefined" ? global.React : null);
-var withoutProperties = _dereq_('../helpers/withoutProperties');
+var withoutProperties = _dereq_('../utils/withoutProperties');
 
 /**
  * A map of <Route> component props that are reserved for use by the
@@ -405,16 +405,17 @@ var Route = React.createClass({
 
 module.exports = Route;
 
-},{"../helpers/withoutProperties":18}],7:[function(_dereq_,module,exports){
+},{"../utils/withoutProperties":29}],7:[function(_dereq_,module,exports){
 var React = (typeof window !== "undefined" ? window.React : typeof global !== "undefined" ? global.React : null);
 var warning = _dereq_('react/lib/warning');
 var copyProperties = _dereq_('react/lib/copyProperties');
 var Promise = _dereq_('when/lib/Promise');
 var LocationActions = _dereq_('../actions/LocationActions');
 var Route = _dereq_('../components/Route');
-var Path = _dereq_('../helpers/Path');
-var Redirect = _dereq_('../helpers/Redirect');
-var Transition = _dereq_('../helpers/Transition');
+var Path = _dereq_('../utils/Path');
+var Redirect = _dereq_('../utils/Redirect');
+var Transition = _dereq_('../utils/Transition');
+var DefaultLocation = _dereq_('../locations/DefaultLocation');
 var HashLocation = _dereq_('../locations/HashLocation');
 var HistoryLocation = _dereq_('../locations/HistoryLocation');
 var RefreshLocation = _dereq_('../locations/RefreshLocation');
@@ -500,7 +501,7 @@ var Routes = React.createClass({
       onActiveStateChange: defaultActiveStateChangeHandler,
       onTransitionError: defaultTransitionErrorHandler,
       preserveScrollPosition: false,
-      location: HashLocation
+      location: DefaultLocation
     };
   },
 
@@ -857,7 +858,7 @@ function reversedArray(array) {
 
 module.exports = Routes;
 
-},{"../actions/LocationActions":1,"../components/Route":6,"../helpers/Path":9,"../helpers/Redirect":10,"../helpers/Transition":11,"../locations/HashLocation":20,"../locations/HistoryLocation":21,"../locations/RefreshLocation":22,"../stores/ActiveStore":25,"../stores/PathStore":26,"../stores/RouteStore":27,"react/lib/copyProperties":38,"react/lib/warning":46,"when/lib/Promise":47}],8:[function(_dereq_,module,exports){
+},{"../actions/LocationActions":1,"../components/Route":6,"../locations/DefaultLocation":10,"../locations/HashLocation":11,"../locations/HistoryLocation":12,"../locations/RefreshLocation":14,"../stores/ActiveStore":17,"../stores/PathStore":18,"../stores/RouteStore":19,"../utils/Path":20,"../utils/Redirect":21,"../utils/Transition":22,"react/lib/copyProperties":40,"react/lib/warning":48,"when/lib/Promise":49}],8:[function(_dereq_,module,exports){
 var copyProperties = _dereq_('react/lib/copyProperties');
 var Dispatcher = _dereq_('flux').Dispatcher;
 
@@ -877,7 +878,813 @@ var LocationDispatcher = copyProperties(new Dispatcher, {
 
 module.exports = LocationDispatcher;
 
-},{"flux":29,"react/lib/copyProperties":38}],9:[function(_dereq_,module,exports){
+},{"flux":31,"react/lib/copyProperties":40}],9:[function(_dereq_,module,exports){
+exports.goBack = _dereq_('./actions/LocationActions').goBack;
+exports.replaceWith = _dereq_('./actions/LocationActions').replaceWith;
+exports.transitionTo = _dereq_('./actions/LocationActions').transitionTo;
+
+exports.DefaultRoute = _dereq_('./components/DefaultRoute');
+exports.Link = _dereq_('./components/Link');
+exports.NotFoundRoute = _dereq_('./components/NotFoundRoute');
+exports.Redirect = _dereq_('./components/Redirect');
+exports.Route = _dereq_('./components/Route');
+exports.Routes = _dereq_('./components/Routes');
+
+exports.ActiveState = _dereq_('./mixins/ActiveState');
+exports.AsyncState = _dereq_('./mixins/AsyncState');
+
+exports.makeHref = _dereq_('./utils/makeHref');
+
+},{"./actions/LocationActions":1,"./components/DefaultRoute":2,"./components/Link":3,"./components/NotFoundRoute":4,"./components/Redirect":5,"./components/Route":6,"./components/Routes":7,"./mixins/ActiveState":15,"./mixins/AsyncState":16,"./utils/makeHref":25}],10:[function(_dereq_,module,exports){
+module.exports = "production" === 'test'
+  ? _dereq_('./MemoryLocation')
+  : _dereq_('./HashLocation');
+
+},{"./HashLocation":11,"./MemoryLocation":13}],11:[function(_dereq_,module,exports){
+var invariant = _dereq_('react/lib/invariant');
+var ExecutionEnvironment = _dereq_('react/lib/ExecutionEnvironment');
+var getWindowPath = _dereq_('../utils/getWindowPath');
+
+function getHashPath() {
+  return window.location.hash.substr(1);
+}
+
+function ensureSlash() {
+  var path = getHashPath();
+
+  if (path.charAt(0) === '/')
+    return true;
+
+  HashLocation.replace('/' + path);
+
+  return false;
+}
+
+var _onChange;
+
+function handleHashChange() {
+  if (ensureSlash())
+    _onChange();
+}
+
+/**
+ * A Location that uses `window.location.hash`.
+ */
+var HashLocation = {
+
+  setup: function (onChange) {
+    invariant(
+      ExecutionEnvironment.canUseDOM,
+      'You cannot use HashLocation in an environment with no DOM'
+    );
+
+    _onChange = onChange;
+
+    ensureSlash();
+
+    if (window.addEventListener) {
+      window.addEventListener('hashchange', handleHashChange, false);
+    } else {
+      window.attachEvent('onhashchange', handleHashChange);
+    }
+  },
+
+  teardown: function () {
+    if (window.removeEventListener) {
+      window.removeEventListener('hashchange', handleHashChange, false);
+    } else {
+      window.detachEvent('onhashchange', handleHashChange);
+    }
+  },
+
+  push: function (path) {
+    window.location.hash = path;
+  },
+
+  replace: function (path) {
+    window.location.replace(getWindowPath() + '#' + path);
+  },
+
+  pop: function () {
+    window.history.back();
+  },
+
+  getCurrentPath: getHashPath,
+
+  toString: function () {
+    return '<HashLocation>';
+  }
+
+};
+
+module.exports = HashLocation;
+
+},{"../utils/getWindowPath":23,"react/lib/ExecutionEnvironment":39,"react/lib/invariant":42}],12:[function(_dereq_,module,exports){
+var invariant = _dereq_('react/lib/invariant');
+var ExecutionEnvironment = _dereq_('react/lib/ExecutionEnvironment');
+var getWindowPath = _dereq_('../utils/getWindowPath');
+
+var _onChange;
+
+/**
+ * A Location that uses HTML5 history.
+ */
+var HistoryLocation = {
+
+  setup: function (onChange) {
+    invariant(
+      ExecutionEnvironment.canUseDOM,
+      'You cannot use HistoryLocation in an environment with no DOM'
+    );
+
+    _onChange = onChange;
+
+    if (window.addEventListener) {
+      window.addEventListener('popstate', _onChange, false);
+    } else {
+      window.attachEvent('popstate', _onChange);
+    }
+  },
+
+  teardown: function () {
+    if (window.removeEventListener) {
+      window.removeEventListener('popstate', _onChange, false);
+    } else {
+      window.detachEvent('popstate', _onChange);
+    }
+  },
+
+  push: function (path) {
+    window.history.pushState({ path: path }, '', path);
+    _onChange();
+  },
+
+  replace: function (path) {
+    window.history.replaceState({ path: path }, '', path);
+    _onChange();
+  },
+
+  pop: function () {
+    window.history.back();
+  },
+
+  getCurrentPath: getWindowPath,
+
+  toString: function () {
+    return '<HistoryLocation>';
+  }
+
+};
+
+module.exports = HistoryLocation;
+
+},{"../utils/getWindowPath":23,"react/lib/ExecutionEnvironment":39,"react/lib/invariant":42}],13:[function(_dereq_,module,exports){
+var warning = _dereq_('react/lib/warning');
+
+var _lastPath = null;
+var _currentPath = null;
+var _onChange;
+
+/**
+ * A Location that does not require a DOM.
+ */
+var MemoryLocation = {
+
+  setup: function (onChange) {
+    _onChange = onChange;
+  },
+
+  push: function (path) {
+    _lastPath = _currentPath;
+    _currentPath = path;
+    _onChange();
+  },
+
+  replace: function (path) {
+    _currentPath = path;
+    _onChange();
+  },
+
+  pop: function () {
+    warning(
+      _lastPath != null,
+      'You cannot use MemoryLocation to go back more than once'
+    );
+
+    _currentPath = _lastPath;
+    _lastPath = null;
+    _onChange();
+  },
+
+  getCurrentPath: function () {
+    return _currentPath || '/';
+  },
+
+  toString: function () {
+    return '<MemoryLocation>';
+  }
+
+};
+
+module.exports = MemoryLocation;
+
+},{"react/lib/warning":48}],14:[function(_dereq_,module,exports){
+var invariant = _dereq_('react/lib/invariant');
+var ExecutionEnvironment = _dereq_('react/lib/ExecutionEnvironment');
+var getWindowPath = _dereq_('../utils/getWindowPath');
+
+/**
+ * A Location that uses full page refreshes. This is used as
+ * the fallback for HistoryLocation in browsers that do not
+ * support the HTML5 history API.
+ */
+var RefreshLocation = {
+
+  setup: function () {
+    invariant(
+      ExecutionEnvironment.canUseDOM,
+      'You cannot use RefreshLocation in an environment with no DOM'
+    );
+  },
+
+  push: function (path) {
+    window.location = path;
+  },
+
+  replace: function (path) {
+    window.location.replace(path);
+  },
+
+  pop: function () {
+    window.history.back();
+  },
+
+  getCurrentPath: getWindowPath,
+
+  toString: function () {
+    return '<RefreshLocation>';
+  }
+
+};
+
+module.exports = RefreshLocation;
+
+},{"../utils/getWindowPath":23,"react/lib/ExecutionEnvironment":39,"react/lib/invariant":42}],15:[function(_dereq_,module,exports){
+var ActiveStore = _dereq_('../stores/ActiveStore');
+
+/**
+ * A mixin for components that need to know about the routes, params,
+ * and query that are currently active. Components that use it get two
+ * things:
+ *
+ *   1. An `isActive` static method they can use to check if a route,
+ *      params, and query are active.
+ *   2. An `updateActiveState` instance method that is called when the
+ *      active state changes.
+ *
+ * Example:
+ *
+ *   var Tab = React.createClass({
+ *     
+ *     mixins: [ Router.ActiveState ],
+ *
+ *     getInitialState: function () {
+ *       return {
+ *         isActive: false
+ *       };
+ *     },
+ *   
+ *     updateActiveState: function () {
+ *       this.setState({
+ *         isActive: Tab.isActive(routeName, params, query)
+ *       })
+ *     }
+ *   
+ *   });
+ */
+var ActiveState = {
+
+  statics: {
+
+    /**
+     * Returns true if the route with the given name, URL parameters, and query
+     * are all currently active.
+     */
+    isActive: ActiveStore.isActive
+
+  },
+
+  componentWillMount: function () {
+    ActiveStore.addChangeListener(this.handleActiveStateChange);
+  },
+
+  componentDidMount: function () {
+    if (this.updateActiveState)
+      this.updateActiveState();
+  },
+
+  componentWillUnmount: function () {
+    ActiveStore.removeChangeListener(this.handleActiveStateChange);
+  },
+
+  handleActiveStateChange: function () {
+    if (this.isMounted() && typeof this.updateActiveState === 'function')
+      this.updateActiveState();
+  }
+
+};
+
+module.exports = ActiveState;
+
+},{"../stores/ActiveStore":17}],16:[function(_dereq_,module,exports){
+var React = (typeof window !== "undefined" ? window.React : typeof global !== "undefined" ? global.React : null);
+var resolveAsyncState = _dereq_('../utils/resolveAsyncState');
+
+/**
+ * A mixin for route handler component classes that fetch at least
+ * part of their state asynchronously. Classes that use it should
+ * declare a static `getInitialAsyncState` method that fetches state
+ * for a component after it mounts. This function is given three
+ * arguments: 1) the current route params, 2) the current query and
+ * 3) a function that can be used to set state as it is received.
+ *
+ * Much like the familiar `getInitialState` method, `getInitialAsyncState`
+ * should return a hash of key/value pairs to use in the component's
+ * state. The difference is that the values may be promises. As these
+ * values resolve, the component's state is updated. You should only
+ * ever need to use the setState function for doing things like
+ * streaming data and/or updating progress.
+ *
+ * Example:
+ *
+ *   var User = React.createClass({
+ *   
+ *     statics: {
+ *   
+ *       getInitialAsyncState: function (params, query, setState) {
+ *         // Return a hash with keys named after the state variables
+ *         // you want to set, as you normally do in getInitialState,
+ *         // except the values may be immediate values or promises.
+ *         // The state is automatically updated as promises resolve.
+ *         return {
+ *           user: getUserByID(params.userID) // may be a promise
+ *         };
+ *   
+ *         // Or, use the setState function to stream data!
+ *         var buffer = '';
+ *   
+ *         return {
+ *
+ *           // Same as above, the stream state variable is set to the
+ *           // value returned by this promise when it resolves.
+ *           stream: getStreamingData(params.userID, function (chunk) {
+ *             buffer += chunk;
+ *   
+ *             // Notify of progress.
+ *             setState({
+ *               streamBuffer: buffer
+ *             });
+ *           })
+ *   
+ *         };
+ *       }
+ *   
+ *     },
+ *   
+ *     getInitialState: function () {
+ *       return {
+ *         user: null,        // Receives a value when getUserByID resolves.
+ *         stream: null,      // Receives a value when getStreamingData resolves.
+ *         streamBuffer: ''   // Used to track data as it loads.
+ *       };
+ *     },
+ *   
+ *     render: function () {
+ *       if (!this.state.user)
+ *         return <LoadingUser/>;
+ *   
+ *       return (
+ *         <div>
+ *           <p>Welcome {this.state.user.name}!</p>
+ *           <p>So far, you've received {this.state.streamBuffer.length} data!</p>
+ *         </div>
+ *       );
+ *     }
+ *   
+ *   });
+ *
+ * When testing, use the `initialAsyncState` prop to simulate asynchronous
+ * data fetching. When this prop is present, no attempt is made to retrieve
+ * additional state via `getInitialAsyncState`.
+ */
+var AsyncState = {
+
+  propTypes: {
+    initialAsyncState: React.PropTypes.object
+  },
+
+  getInitialState: function () {
+    return this.props.initialAsyncState || null;
+  },
+
+  updateAsyncState: function (state) {
+    if (this.isMounted())
+      this.setState(state);
+  },
+
+  componentDidMount: function () {
+    if (this.props.initialAsyncState || typeof this.constructor.getInitialAsyncState !== 'function')
+      return;
+
+    resolveAsyncState(
+      this.constructor.getInitialAsyncState(this.props.params, this.props.query, this.updateAsyncState),
+      this.updateAsyncState
+    );
+  }
+
+};
+
+module.exports = AsyncState;
+
+},{"../utils/resolveAsyncState":27}],17:[function(_dereq_,module,exports){
+var EventEmitter = _dereq_('events').EventEmitter;
+
+var CHANGE_EVENT = 'change';
+var _events = new EventEmitter;
+
+_events.setMaxListeners(0);
+
+function notifyChange() {
+  _events.emit(CHANGE_EVENT);
+}
+
+var _activeRoutes = [];
+var _activeParams = {};
+var _activeQuery = {};
+
+function routeIsActive(routeName) {
+  return _activeRoutes.some(function (route) {
+    return route.props.name === routeName;
+  });
+}
+
+function paramsAreActive(params) {
+  for (var property in params) {
+    if (_activeParams[property] !== String(params[property]))
+      return false;
+  }
+
+  return true;
+}
+
+function queryIsActive(query) {
+  for (var property in query) {
+    if (_activeQuery[property] !== String(query[property]))
+      return false;
+  }
+
+  return true;
+}
+
+/**
+ * The ActiveStore keeps track of which routes, URL and query parameters are
+ * currently active on a page. <Link>s subscribe to the ActiveStore to know
+ * whether or not they are active.
+ */
+var ActiveStore = {
+
+  addChangeListener: function (listener) {
+    _events.on(CHANGE_EVENT, listener);
+  },
+
+  removeChangeListener: function (listener) {
+    _events.removeListener(CHANGE_EVENT, listener);
+  },
+
+  /**
+   * Updates the currently active state and notifies all listeners.
+   * This is automatically called by routes as they become active.
+   */
+  updateState: function (state) {
+    state = state || {};
+
+    _activeRoutes = state.activeRoutes || [];
+    _activeParams = state.activeParams || {};
+    _activeQuery = state.activeQuery || {};
+
+    notifyChange();
+  },
+
+  /**
+   * Returns true if the route with the given name, URL parameters, and query
+   * are all currently active.
+   */
+  isActive: function (routeName, params, query) {
+    var isActive = routeIsActive(routeName) && paramsAreActive(params);
+
+    if (query)
+      return isActive && queryIsActive(query);
+
+    return isActive;
+  }
+
+};
+
+module.exports = ActiveStore;
+
+},{"events":30}],18:[function(_dereq_,module,exports){
+var warning = _dereq_('react/lib/warning');
+var EventEmitter = _dereq_('events').EventEmitter;
+var LocationActions = _dereq_('../actions/LocationActions');
+var LocationDispatcher = _dereq_('../dispatchers/LocationDispatcher');
+var supportsHistory = _dereq_('../utils/supportsHistory');
+var HistoryLocation = _dereq_('../locations/HistoryLocation');
+var RefreshLocation = _dereq_('../locations/RefreshLocation');
+
+var CHANGE_EVENT = 'change';
+var _events = new EventEmitter;
+
+function notifyChange() {
+  _events.emit(CHANGE_EVENT);
+}
+
+var _scrollPositions = {};
+
+function recordScrollPosition(path) {
+  _scrollPositions[path] = {
+    x: window.scrollX,
+    y: window.scrollY
+  };
+}
+
+function updateScrollPosition(path) {
+  var p = PathStore.getScrollPosition(path);
+  window.scrollTo(p.x, p.y);
+}
+
+var _location;
+
+/**
+ * The PathStore keeps track of the current URL path and manages
+ * the location strategy that is used to update the URL.
+ */
+var PathStore = {
+
+  addChangeListener: function (listener) {
+    _events.on(CHANGE_EVENT, listener);
+  },
+
+  removeChangeListener: function (listener) {
+    _events.removeListener(CHANGE_EVENT, listener);
+
+    // Automatically teardown when the last listener is removed.
+    if (EventEmitter.listenerCount(_events, CHANGE_EVENT) === 0)
+      PathStore.teardown();
+  },
+
+  setup: function (location) {
+    // When using HistoryLocation, automatically fallback
+    // to RefreshLocation in browsers that do not support
+    // the HTML5 history API.
+    if (location === HistoryLocation && !supportsHistory())
+      location = RefreshLocation;
+
+    if (_location == null) {
+      _location = location;
+
+      if (_location && typeof _location.setup === 'function')
+        _location.setup(notifyChange);
+    } else {
+      warning(
+        _location === location,
+        'Cannot use location %s, already using %s', location, _location
+      );
+    }
+  },
+
+  teardown: function () {
+    _events.removeAllListeners(CHANGE_EVENT);
+
+    if (_location && typeof _location.teardown === 'function')
+      _location.teardown();
+
+    _location = null;
+  },
+
+  /**
+   * Returns the location object currently in use.
+   */
+  getLocation: function () {
+    return _location;
+  },
+
+  /**
+   * Returns the current URL path.
+   */
+  getCurrentPath: function () {
+    return _location.getCurrentPath();
+  },
+
+  /**
+   * Returns the last known scroll position for the given path.
+   */
+  getScrollPosition: function (path) {
+    return _scrollPositions[path] || { x: 0, y: 0 };
+  },
+
+  dispatchToken: LocationDispatcher.register(function (payload) {
+    var action = payload.action;
+    var currentPath = _location.getCurrentPath();
+
+    switch (action.type) {
+      case LocationActions.PUSH:
+        if (currentPath !== action.path) {
+          recordScrollPosition(currentPath);
+          _location.push(action.path);
+        }
+        break;
+
+      case LocationActions.REPLACE:
+        if (currentPath !== action.path) {
+          recordScrollPosition(currentPath);
+          _location.replace(action.path);
+        }
+        break;
+
+      case LocationActions.POP:
+        recordScrollPosition(currentPath);
+        _location.pop();
+        break;
+
+      case LocationActions.UPDATE_SCROLL:
+        updateScrollPosition(currentPath);
+        break;
+    }
+  })
+
+};
+
+module.exports = PathStore;
+
+},{"../actions/LocationActions":1,"../dispatchers/LocationDispatcher":8,"../locations/HistoryLocation":12,"../locations/RefreshLocation":14,"../utils/supportsHistory":28,"events":30,"react/lib/warning":48}],19:[function(_dereq_,module,exports){
+var React = (typeof window !== "undefined" ? window.React : typeof global !== "undefined" ? global.React : null);
+var invariant = _dereq_('react/lib/invariant');
+var warning = _dereq_('react/lib/warning');
+var Path = _dereq_('../utils/Path');
+
+var _namedRoutes = {};
+
+/**
+ * The RouteStore contains a directory of all <Route>s in the system. It is
+ * used primarily for looking up routes by name so that <Link>s can use a
+ * route name in the "to" prop and users can use route names in `Router.transitionTo`
+ * and other high-level utility methods.
+ */
+var RouteStore = {
+
+  /**
+   * Removes all references to <Route>s from the store. Should only ever
+   * really be used in tests to clear the store between test runs.
+   */
+  unregisterAllRoutes: function () {
+    _namedRoutes = {};
+  },
+
+  /**
+   * Removes the reference to the given <Route> and all of its children
+   * from the store.
+   */
+  unregisterRoute: function (route) {
+    var props = route.props;
+
+    if (props.name)
+      delete _namedRoutes[props.name];
+
+    React.Children.forEach(props.children, RouteStore.unregisterRoute);
+  },
+
+  /**
+   * Registers a <Route> and all of its children with the store. Also,
+   * does some normalization and validation on route props.
+   */
+  registerRoute: function (route, parentRoute) {
+    // Note: parentRoute may be a <Route> _or_ a <Routes>.
+    var props = route.props;
+
+    invariant(
+      React.isValidClass(props.handler),
+      'The handler for the "%s" route must be a valid React class',
+      props.name || props.path
+    );
+
+    var parentPath = (parentRoute && parentRoute.props.path) || '/';
+
+    if ((props.path || props.name) && !props.isDefault && !props.catchAll) {
+      var path = props.path || props.name;
+
+      // Relative paths extend their parent.
+      if (!Path.isAbsolute(path))
+        path = Path.join(parentPath, path);
+
+      props.path = Path.normalize(path);
+    } else {
+      props.path = parentPath;
+
+      if (props.catchAll)
+        props.path += '*';
+    }
+
+    props.paramNames = Path.extractParamNames(props.path);
+
+    // Make sure the route's path has all params its parent needs.
+    if (parentRoute && Array.isArray(parentRoute.props.paramNames)) {
+      parentRoute.props.paramNames.forEach(function (paramName) {
+        invariant(
+          props.paramNames.indexOf(paramName) !== -1,
+          'The nested route path "%s" is missing the "%s" parameter of its parent path "%s"',
+          props.path, paramName, parentRoute.props.path
+        );
+      });
+    }
+
+    // Make sure the route can be looked up by <Link>s.
+    if (props.name) {
+      var existingRoute = _namedRoutes[props.name];
+
+      invariant(
+        !existingRoute || route === existingRoute,
+        'You cannot use the name "%s" for more than one route',
+        props.name
+      );
+
+      _namedRoutes[props.name] = route;
+    }
+
+    if (props.catchAll) {
+      invariant(
+        parentRoute,
+        '<NotFoundRoute> must have a parent <Route>'
+      );
+
+      invariant(
+        parentRoute.props.notFoundRoute == null,
+        'You may not have more than one <NotFoundRoute> per <Route>'
+      );
+
+      parentRoute.props.notFoundRoute = route;
+
+      return null;
+    }
+
+    if (props.isDefault) {
+      invariant(
+        parentRoute,
+        '<DefaultRoute> must have a parent <Route>'
+      );
+
+      invariant(
+        parentRoute.props.defaultRoute == null,
+        'You may not have more than one <DefaultRoute> per <Route>'
+      );
+
+      parentRoute.props.defaultRoute = route;
+
+      return null;
+    }
+
+    // Make sure children is an array.
+    props.children = RouteStore.registerChildren(props.children, route);
+
+    return route;
+  },
+
+  /**
+   * Registers many children routes at once, always returning an array.
+   */
+  registerChildren: function (children, parentRoute) {
+    var routes = [];
+
+    React.Children.forEach(children, function (child) {
+      // Exclude <DefaultRoute>s.
+      if (child = RouteStore.registerRoute(child, parentRoute))
+        routes.push(child);
+    });
+
+    return routes;
+  },
+
+  /**
+   * Returns the Route object with the given name, if one exists.
+   */
+  getRouteByName: function (routeName) {
+    return _namedRoutes[routeName] || null;
+  }
+
+};
+
+module.exports = RouteStore;
+
+},{"../utils/Path":20,"react/lib/invariant":42,"react/lib/warning":48}],20:[function(_dereq_,module,exports){
 var invariant = _dereq_('react/lib/invariant');
 var merge = _dereq_('qs/lib/utils').merge;
 var qs = _dereq_('qs');
@@ -1045,7 +1852,7 @@ var Path = {
 
 module.exports = Path;
 
-},{"qs":32,"qs/lib/utils":36,"react/lib/invariant":40}],10:[function(_dereq_,module,exports){
+},{"qs":34,"qs/lib/utils":38,"react/lib/invariant":42}],21:[function(_dereq_,module,exports){
 /**
  * Encapsulates a redirect to the given route.
  */
@@ -1057,7 +1864,7 @@ function Redirect(to, params, query) {
 
 module.exports = Redirect;
 
-},{}],11:[function(_dereq_,module,exports){
+},{}],22:[function(_dereq_,module,exports){
 var mixInto = _dereq_('react/lib/mixInto');
 var transitionTo = _dereq_('../actions/LocationActions').transitionTo;
 var Redirect = _dereq_('./Redirect');
@@ -1093,7 +1900,7 @@ mixInto(Transition, {
 
 module.exports = Transition;
 
-},{"../actions/LocationActions":1,"./Redirect":10,"react/lib/mixInto":45}],12:[function(_dereq_,module,exports){
+},{"../actions/LocationActions":1,"./Redirect":21,"react/lib/mixInto":47}],23:[function(_dereq_,module,exports){
 /**
  * Returns the current URL path from `window.location`, including query string
  */
@@ -1104,10 +1911,10 @@ function getWindowPath() {
 module.exports = getWindowPath;
 
 
-},{}],13:[function(_dereq_,module,exports){
+},{}],24:[function(_dereq_,module,exports){
 module.exports = Function.prototype.call.bind(Object.prototype.hasOwnProperty);
 
-},{}],14:[function(_dereq_,module,exports){
+},{}],25:[function(_dereq_,module,exports){
 var HashLocation = _dereq_('../locations/HashLocation');
 var PathStore = _dereq_('../stores/PathStore');
 var makePath = _dereq_('./makePath');
@@ -1127,7 +1934,7 @@ function makeHref(to, params, query) {
 
 module.exports = makeHref;
 
-},{"../locations/HashLocation":20,"../stores/PathStore":26,"./makePath":15}],15:[function(_dereq_,module,exports){
+},{"../locations/HashLocation":11,"../stores/PathStore":18,"./makePath":26}],26:[function(_dereq_,module,exports){
 var invariant = _dereq_('react/lib/invariant');
 var RouteStore = _dereq_('../stores/RouteStore');
 var Path = _dereq_('./Path');
@@ -1157,7 +1964,7 @@ function makePath(to, params, query) {
 
 module.exports = makePath;
 
-},{"../stores/RouteStore":27,"./Path":9,"react/lib/invariant":40}],16:[function(_dereq_,module,exports){
+},{"../stores/RouteStore":19,"./Path":20,"react/lib/invariant":42}],27:[function(_dereq_,module,exports){
 var Promise = _dereq_('when/lib/Promise');
 
 /**
@@ -1184,7 +1991,7 @@ function resolveAsyncState(asyncState, setState) {
 
 module.exports = resolveAsyncState;
 
-},{"when/lib/Promise":47}],17:[function(_dereq_,module,exports){
+},{"when/lib/Promise":49}],28:[function(_dereq_,module,exports){
 function supportsHistory() {
   /*! taken from modernizr
    * https://github.com/Modernizr/Modernizr/blob/master/LICENSE
@@ -1202,7 +2009,7 @@ function supportsHistory() {
 
 module.exports = supportsHistory;
 
-},{}],18:[function(_dereq_,module,exports){
+},{}],29:[function(_dereq_,module,exports){
 function withoutProperties(object, properties) {
   var result = {};
 
@@ -1216,756 +2023,7 @@ function withoutProperties(object, properties) {
 
 module.exports = withoutProperties;
 
-},{}],19:[function(_dereq_,module,exports){
-exports.goBack = _dereq_('./actions/LocationActions').goBack;
-exports.replaceWith = _dereq_('./actions/LocationActions').replaceWith;
-exports.transitionTo = _dereq_('./actions/LocationActions').transitionTo;
-
-exports.DefaultRoute = _dereq_('./components/DefaultRoute');
-exports.Link = _dereq_('./components/Link');
-exports.NotFoundRoute = _dereq_('./components/NotFoundRoute');
-exports.Redirect = _dereq_('./components/Redirect');
-exports.Route = _dereq_('./components/Route');
-exports.Routes = _dereq_('./components/Routes');
-
-exports.makeHref = _dereq_('./helpers/makeHref');
-
-exports.ActiveState = _dereq_('./mixins/ActiveState');
-exports.AsyncState = _dereq_('./mixins/AsyncState');
-
-},{"./actions/LocationActions":1,"./components/DefaultRoute":2,"./components/Link":3,"./components/NotFoundRoute":4,"./components/Redirect":5,"./components/Route":6,"./components/Routes":7,"./helpers/makeHref":14,"./mixins/ActiveState":23,"./mixins/AsyncState":24}],20:[function(_dereq_,module,exports){
-var invariant = _dereq_('react/lib/invariant');
-var ExecutionEnvironment = _dereq_('react/lib/ExecutionEnvironment');
-var getWindowPath = _dereq_('../helpers/getWindowPath');
-
-function getHashPath() {
-  return window.location.hash.substr(1);
-}
-
-function ensureSlash() {
-  var path = getHashPath();
-
-  if (path.charAt(0) === '/')
-    return true;
-
-  HashLocation.replace('/' + path);
-
-  return false;
-}
-
-var _onChange;
-
-function handleHashChange() {
-  if (ensureSlash())
-    _onChange();
-}
-
-/**
- * A Location that uses `window.location.hash`.
- */
-var HashLocation = {
-
-  setup: function (onChange) {
-    invariant(
-      ExecutionEnvironment.canUseDOM,
-      'You cannot use HashLocation in an environment with no DOM'
-    );
-
-    _onChange = onChange;
-
-    ensureSlash();
-
-    if (window.addEventListener) {
-      window.addEventListener('hashchange', handleHashChange, false);
-    } else {
-      window.attachEvent('onhashchange', handleHashChange);
-    }
-  },
-
-  teardown: function () {
-    if (window.removeEventListener) {
-      window.removeEventListener('hashchange', handleHashChange, false);
-    } else {
-      window.detachEvent('onhashchange', handleHashChange);
-    }
-  },
-
-  push: function (path) {
-    window.location.hash = path;
-  },
-
-  replace: function (path) {
-    window.location.replace(getWindowPath() + '#' + path);
-  },
-
-  pop: function () {
-    window.history.back();
-  },
-
-  getCurrentPath: getHashPath,
-
-  toString: function () {
-    return '<HashLocation>';
-  }
-
-};
-
-module.exports = HashLocation;
-
-},{"../helpers/getWindowPath":12,"react/lib/ExecutionEnvironment":37,"react/lib/invariant":40}],21:[function(_dereq_,module,exports){
-var invariant = _dereq_('react/lib/invariant');
-var ExecutionEnvironment = _dereq_('react/lib/ExecutionEnvironment');
-var getWindowPath = _dereq_('../helpers/getWindowPath');
-
-var _onChange;
-
-/**
- * A Location that uses HTML5 history.
- */
-var HistoryLocation = {
-
-  setup: function (onChange) {
-    invariant(
-      ExecutionEnvironment.canUseDOM,
-      'You cannot use HistoryLocation in an environment with no DOM'
-    );
-
-    _onChange = onChange;
-
-    if (window.addEventListener) {
-      window.addEventListener('popstate', _onChange, false);
-    } else {
-      window.attachEvent('popstate', _onChange);
-    }
-  },
-
-  teardown: function () {
-    if (window.removeEventListener) {
-      window.removeEventListener('popstate', _onChange, false);
-    } else {
-      window.detachEvent('popstate', _onChange);
-    }
-  },
-
-  push: function (path) {
-    window.history.pushState({ path: path }, '', path);
-    _onChange();
-  },
-
-  replace: function (path) {
-    window.history.replaceState({ path: path }, '', path);
-    _onChange();
-  },
-
-  pop: function () {
-    window.history.back();
-  },
-
-  getCurrentPath: getWindowPath,
-
-  toString: function () {
-    return '<HistoryLocation>';
-  }
-
-};
-
-module.exports = HistoryLocation;
-
-},{"../helpers/getWindowPath":12,"react/lib/ExecutionEnvironment":37,"react/lib/invariant":40}],22:[function(_dereq_,module,exports){
-var invariant = _dereq_('react/lib/invariant');
-var ExecutionEnvironment = _dereq_('react/lib/ExecutionEnvironment');
-var getWindowPath = _dereq_('../helpers/getWindowPath');
-
-/**
- * A Location that uses full page refreshes. This is used as
- * the fallback for HistoryLocation in browsers that do not
- * support the HTML5 history API.
- */
-var RefreshLocation = {
-
-  setup: function () {
-    invariant(
-      ExecutionEnvironment.canUseDOM,
-      'You cannot use RefreshLocation in an environment with no DOM'
-    );
-  },
-
-  push: function (path) {
-    window.location = path;
-  },
-
-  replace: function (path) {
-    window.location.replace(path);
-  },
-
-  pop: function () {
-    window.history.back();
-  },
-
-  getCurrentPath: getWindowPath,
-
-  toString: function () {
-    return '<RefreshLocation>';
-  }
-
-};
-
-module.exports = RefreshLocation;
-
-},{"../helpers/getWindowPath":12,"react/lib/ExecutionEnvironment":37,"react/lib/invariant":40}],23:[function(_dereq_,module,exports){
-var ActiveStore = _dereq_('../stores/ActiveStore');
-
-/**
- * A mixin for components that need to know about the routes, params,
- * and query that are currently active. Components that use it get two
- * things:
- *
- *   1. An `isActive` static method they can use to check if a route,
- *      params, and query are active.
- *   2. An `updateActiveState` instance method that is called when the
- *      active state changes.
- *
- * Example:
- *
- *   var Tab = React.createClass({
- *     
- *     mixins: [ Router.ActiveState ],
- *
- *     getInitialState: function () {
- *       return {
- *         isActive: false
- *       };
- *     },
- *   
- *     updateActiveState: function () {
- *       this.setState({
- *         isActive: Tab.isActive(routeName, params, query)
- *       })
- *     }
- *   
- *   });
- */
-var ActiveState = {
-
-  statics: {
-
-    /**
-     * Returns true if the route with the given name, URL parameters, and query
-     * are all currently active.
-     */
-    isActive: ActiveStore.isActive
-
-  },
-
-  componentWillMount: function () {
-    ActiveStore.addChangeListener(this.handleActiveStateChange);
-  },
-
-  componentDidMount: function () {
-    if (this.updateActiveState)
-      this.updateActiveState();
-  },
-
-  componentWillUnmount: function () {
-    ActiveStore.removeChangeListener(this.handleActiveStateChange);
-  },
-
-  handleActiveStateChange: function () {
-    if (this.isMounted() && typeof this.updateActiveState === 'function')
-      this.updateActiveState();
-  }
-
-};
-
-module.exports = ActiveState;
-
-},{"../stores/ActiveStore":25}],24:[function(_dereq_,module,exports){
-var React = (typeof window !== "undefined" ? window.React : typeof global !== "undefined" ? global.React : null);
-var resolveAsyncState = _dereq_('../helpers/resolveAsyncState');
-
-/**
- * A mixin for route handler component classes that fetch at least
- * part of their state asynchronously. Classes that use it should
- * declare a static `getInitialAsyncState` method that fetches state
- * for a component after it mounts. This function is given three
- * arguments: 1) the current route params, 2) the current query and
- * 3) a function that can be used to set state as it is received.
- *
- * Much like the familiar `getInitialState` method, `getInitialAsyncState`
- * should return a hash of key/value pairs to use in the component's
- * state. The difference is that the values may be promises. As these
- * values resolve, the component's state is updated. You should only
- * ever need to use the setState function for doing things like
- * streaming data and/or updating progress.
- *
- * Example:
- *
- *   var User = React.createClass({
- *   
- *     statics: {
- *   
- *       getInitialAsyncState: function (params, query, setState) {
- *         // Return a hash with keys named after the state variables
- *         // you want to set, as you normally do in getInitialState,
- *         // except the values may be immediate values or promises.
- *         // The state is automatically updated as promises resolve.
- *         return {
- *           user: getUserByID(params.userID) // may be a promise
- *         };
- *   
- *         // Or, use the setState function to stream data!
- *         var buffer = '';
- *   
- *         return {
- *
- *           // Same as above, the stream state variable is set to the
- *           // value returned by this promise when it resolves.
- *           stream: getStreamingData(params.userID, function (chunk) {
- *             buffer += chunk;
- *   
- *             // Notify of progress.
- *             setState({
- *               streamBuffer: buffer
- *             });
- *           })
- *   
- *         };
- *       }
- *   
- *     },
- *   
- *     getInitialState: function () {
- *       return {
- *         user: null,        // Receives a value when getUserByID resolves.
- *         stream: null,      // Receives a value when getStreamingData resolves.
- *         streamBuffer: ''   // Used to track data as it loads.
- *       };
- *     },
- *   
- *     render: function () {
- *       if (!this.state.user)
- *         return <LoadingUser/>;
- *   
- *       return (
- *         <div>
- *           <p>Welcome {this.state.user.name}!</p>
- *           <p>So far, you've received {this.state.streamBuffer.length} data!</p>
- *         </div>
- *       );
- *     }
- *   
- *   });
- *
- * When testing, use the `initialAsyncState` prop to simulate asynchronous
- * data fetching. When this prop is present, no attempt is made to retrieve
- * additional state via `getInitialAsyncState`.
- */
-var AsyncState = {
-
-  propTypes: {
-    initialAsyncState: React.PropTypes.object
-  },
-
-  getInitialState: function () {
-    return this.props.initialAsyncState || null;
-  },
-
-  updateAsyncState: function (state) {
-    if (this.isMounted())
-      this.setState(state);
-  },
-
-  componentDidMount: function () {
-    if (this.props.initialAsyncState || typeof this.constructor.getInitialAsyncState !== 'function')
-      return;
-
-    resolveAsyncState(
-      this.constructor.getInitialAsyncState(this.props.params, this.props.query, this.updateAsyncState),
-      this.updateAsyncState
-    );
-  }
-
-};
-
-module.exports = AsyncState;
-
-},{"../helpers/resolveAsyncState":16}],25:[function(_dereq_,module,exports){
-var EventEmitter = _dereq_('events').EventEmitter;
-
-var CHANGE_EVENT = 'change';
-var _events = new EventEmitter;
-
-_events.setMaxListeners(0);
-
-function notifyChange() {
-  _events.emit(CHANGE_EVENT);
-}
-
-var _activeRoutes = [];
-var _activeParams = {};
-var _activeQuery = {};
-
-function routeIsActive(routeName) {
-  return _activeRoutes.some(function (route) {
-    return route.props.name === routeName;
-  });
-}
-
-function paramsAreActive(params) {
-  for (var property in params) {
-    if (_activeParams[property] !== String(params[property]))
-      return false;
-  }
-
-  return true;
-}
-
-function queryIsActive(query) {
-  for (var property in query) {
-    if (_activeQuery[property] !== String(query[property]))
-      return false;
-  }
-
-  return true;
-}
-
-/**
- * The ActiveStore keeps track of which routes, URL and query parameters are
- * currently active on a page. <Link>s subscribe to the ActiveStore to know
- * whether or not they are active.
- */
-var ActiveStore = {
-
-  addChangeListener: function (listener) {
-    _events.on(CHANGE_EVENT, listener);
-  },
-
-  removeChangeListener: function (listener) {
-    _events.removeListener(CHANGE_EVENT, listener);
-  },
-
-  /**
-   * Updates the currently active state and notifies all listeners.
-   * This is automatically called by routes as they become active.
-   */
-  updateState: function (state) {
-    state = state || {};
-
-    _activeRoutes = state.activeRoutes || [];
-    _activeParams = state.activeParams || {};
-    _activeQuery = state.activeQuery || {};
-
-    notifyChange();
-  },
-
-  /**
-   * Returns true if the route with the given name, URL parameters, and query
-   * are all currently active.
-   */
-  isActive: function (routeName, params, query) {
-    var isActive = routeIsActive(routeName) && paramsAreActive(params);
-
-    if (query)
-      return isActive && queryIsActive(query);
-
-    return isActive;
-  }
-
-};
-
-module.exports = ActiveStore;
-
-},{"events":28}],26:[function(_dereq_,module,exports){
-var warning = _dereq_('react/lib/warning');
-var EventEmitter = _dereq_('events').EventEmitter;
-var LocationActions = _dereq_('../actions/LocationActions');
-var LocationDispatcher = _dereq_('../dispatchers/LocationDispatcher');
-var supportsHistory = _dereq_('../helpers/supportsHistory');
-var HistoryLocation = _dereq_('../locations/HistoryLocation');
-var RefreshLocation = _dereq_('../locations/RefreshLocation');
-
-var CHANGE_EVENT = 'change';
-var _events = new EventEmitter;
-
-function notifyChange() {
-  _events.emit(CHANGE_EVENT);
-}
-
-var _scrollPositions = {};
-
-function recordScrollPosition(path) {
-  _scrollPositions[path] = {
-    x: window.scrollX,
-    y: window.scrollY
-  };
-}
-
-function updateScrollPosition(path) {
-  var p = PathStore.getScrollPosition(path);
-  window.scrollTo(p.x, p.y);
-}
-
-var _location;
-
-/**
- * The PathStore keeps track of the current URL path and manages
- * the location strategy that is used to update the URL.
- */
-var PathStore = {
-
-  addChangeListener: function (listener) {
-    _events.on(CHANGE_EVENT, listener);
-  },
-
-  removeChangeListener: function (listener) {
-    _events.removeListener(CHANGE_EVENT, listener);
-
-    // Automatically teardown when the last listener is removed.
-    if (EventEmitter.listenerCount(_events, CHANGE_EVENT) === 0)
-      PathStore.teardown();
-  },
-
-  setup: function (location) {
-    // When using HistoryLocation, automatically fallback
-    // to RefreshLocation in browsers that do not support
-    // the HTML5 history API.
-    if (location === HistoryLocation && !supportsHistory())
-      location = RefreshLocation;
-
-    if (_location == null) {
-      _location = location;
-
-      if (_location && typeof _location.setup === 'function')
-        _location.setup(notifyChange);
-    } else {
-      warning(
-        _location === location,
-        'Cannot use location %s, already using %s', location, _location
-      );
-    }
-  },
-
-  teardown: function () {
-    if (_location && typeof _location.teardown === 'function')
-      _location.teardown();
-
-    _location = null;
-  },
-
-  /**
-   * Returns the location object currently in use.
-   */
-  getLocation: function () {
-    return _location;
-  },
-
-  /**
-   * Returns the current URL path.
-   */
-  getCurrentPath: function () {
-    return _location.getCurrentPath();
-  },
-
-  /**
-   * Returns the last known scroll position for the given path.
-   */
-  getScrollPosition: function (path) {
-    return _scrollPositions[path] || { x: 0, y: 0 };
-  },
-
-  dispatchToken: LocationDispatcher.register(function (payload) {
-    var action = payload.action;
-    var currentPath = _location.getCurrentPath();
-
-    switch (action.type) {
-      case LocationActions.PUSH:
-        if (currentPath !== action.path) {
-          recordScrollPosition(currentPath);
-          _location.push(action.path);
-        }
-        break;
-
-      case LocationActions.REPLACE:
-        if (currentPath !== action.path) {
-          recordScrollPosition(currentPath);
-          _location.replace(action.path);
-        }
-        break;
-
-      case LocationActions.POP:
-        recordScrollPosition(currentPath);
-        _location.pop();
-        break;
-
-      case LocationActions.UPDATE_SCROLL:
-        updateScrollPosition(currentPath);
-        break;
-    }
-  })
-
-};
-
-module.exports = PathStore;
-
-},{"../actions/LocationActions":1,"../dispatchers/LocationDispatcher":8,"../helpers/supportsHistory":17,"../locations/HistoryLocation":21,"../locations/RefreshLocation":22,"events":28,"react/lib/warning":46}],27:[function(_dereq_,module,exports){
-var React = (typeof window !== "undefined" ? window.React : typeof global !== "undefined" ? global.React : null);
-var invariant = _dereq_('react/lib/invariant');
-var warning = _dereq_('react/lib/warning');
-var Path = _dereq_('../helpers/Path');
-
-var _namedRoutes = {};
-
-/**
- * The RouteStore contains a directory of all <Route>s in the system. It is
- * used primarily for looking up routes by name so that <Link>s can use a
- * route name in the "to" prop and users can use route names in `Router.transitionTo`
- * and other high-level utility methods.
- */
-var RouteStore = {
-
-  /**
-   * Removes all references to <Route>s from the store. Should only ever
-   * really be used in tests to clear the store between test runs.
-   */
-  unregisterAllRoutes: function () {
-    _namedRoutes = {};
-  },
-
-  /**
-   * Removes the reference to the given <Route> and all of its children
-   * from the store.
-   */
-  unregisterRoute: function (route) {
-    var props = route.props;
-
-    if (props.name)
-      delete _namedRoutes[props.name];
-
-    React.Children.forEach(props.children, RouteStore.unregisterRoute);
-  },
-
-  /**
-   * Registers a <Route> and all of its children with the store. Also,
-   * does some normalization and validation on route props.
-   */
-  registerRoute: function (route, parentRoute) {
-    // Note: parentRoute may be a <Route> _or_ a <Routes>.
-    var props = route.props;
-
-    invariant(
-      React.isValidClass(props.handler),
-      'The handler for the "%s" route must be a valid React class',
-      props.name || props.path
-    );
-
-    var parentPath = (parentRoute && parentRoute.props.path) || '/';
-
-    if ((props.path || props.name) && !props.isDefault && !props.catchAll) {
-      var path = props.path || props.name;
-
-      // Relative paths extend their parent.
-      if (!Path.isAbsolute(path))
-        path = Path.join(parentPath, path);
-
-      props.path = Path.normalize(path);
-    } else {
-      props.path = parentPath;
-
-      if (props.catchAll)
-        props.path += '*';
-    }
-
-    props.paramNames = Path.extractParamNames(props.path);
-
-    // Make sure the route's path has all params its parent needs.
-    if (parentRoute && Array.isArray(parentRoute.props.paramNames)) {
-      parentRoute.props.paramNames.forEach(function (paramName) {
-        invariant(
-          props.paramNames.indexOf(paramName) !== -1,
-          'The nested route path "%s" is missing the "%s" parameter of its parent path "%s"',
-          props.path, paramName, parentRoute.props.path
-        );
-      });
-    }
-
-    // Make sure the route can be looked up by <Link>s.
-    if (props.name) {
-      var existingRoute = _namedRoutes[props.name];
-
-      invariant(
-        !existingRoute || route === existingRoute,
-        'You cannot use the name "%s" for more than one route',
-        props.name
-      );
-
-      _namedRoutes[props.name] = route;
-    }
-
-    if (props.catchAll) {
-      invariant(
-        parentRoute,
-        '<NotFoundRoute> must have a parent <Route>'
-      );
-
-      invariant(
-        parentRoute.props.notFoundRoute == null,
-        'You may not have more than one <NotFoundRoute> per <Route>'
-      );
-
-      parentRoute.props.notFoundRoute = route;
-
-      return null;
-    }
-
-    if (props.isDefault) {
-      invariant(
-        parentRoute,
-        '<DefaultRoute> must have a parent <Route>'
-      );
-
-      invariant(
-        parentRoute.props.defaultRoute == null,
-        'You may not have more than one <DefaultRoute> per <Route>'
-      );
-
-      parentRoute.props.defaultRoute = route;
-
-      return null;
-    }
-
-    // Make sure children is an array.
-    props.children = RouteStore.registerChildren(props.children, route);
-
-    return route;
-  },
-
-  /**
-   * Registers many children routes at once, always returning an array.
-   */
-  registerChildren: function (children, parentRoute) {
-    var routes = [];
-
-    React.Children.forEach(children, function (child) {
-      // Exclude <DefaultRoute>s.
-      if (child = RouteStore.registerRoute(child, parentRoute))
-        routes.push(child);
-    });
-
-    return routes;
-  },
-
-  /**
-   * Returns the Route object with the given name, if one exists.
-   */
-  getRouteByName: function (routeName) {
-    return _namedRoutes[routeName] || null;
-  }
-
-};
-
-module.exports = RouteStore;
-
-},{"../helpers/Path":9,"react/lib/invariant":40,"react/lib/warning":46}],28:[function(_dereq_,module,exports){
+},{}],30:[function(_dereq_,module,exports){
 // Copyright Joyent, Inc. and other Node contributors.
 //
 // Permission is hereby granted, free of charge, to any person obtaining a
@@ -2270,7 +2328,7 @@ function isUndefined(arg) {
   return arg === void 0;
 }
 
-},{}],29:[function(_dereq_,module,exports){
+},{}],31:[function(_dereq_,module,exports){
 /**
  * Copyright (c) 2014, Facebook, Inc.
  * All rights reserved.
@@ -2282,7 +2340,7 @@ function isUndefined(arg) {
 
 module.exports.Dispatcher = _dereq_('./lib/Dispatcher')
 
-},{"./lib/Dispatcher":30}],30:[function(_dereq_,module,exports){
+},{"./lib/Dispatcher":32}],32:[function(_dereq_,module,exports){
 /*
  * Copyright (c) 2014, Facebook, Inc.
  * All rights reserved.
@@ -2532,7 +2590,7 @@ var _prefix = 'ID_';
 
 module.exports = Dispatcher;
 
-},{"./invariant":31}],31:[function(_dereq_,module,exports){
+},{"./invariant":33}],33:[function(_dereq_,module,exports){
 /**
  * Copyright (c) 2014, Facebook, Inc.
  * All rights reserved.
@@ -2587,10 +2645,10 @@ var invariant = function(condition, format, a, b, c, d, e, f) {
 
 module.exports = invariant;
 
-},{}],32:[function(_dereq_,module,exports){
+},{}],34:[function(_dereq_,module,exports){
 module.exports = _dereq_('./lib');
 
-},{"./lib":33}],33:[function(_dereq_,module,exports){
+},{"./lib":35}],35:[function(_dereq_,module,exports){
 // Load modules
 
 var Stringify = _dereq_('./stringify');
@@ -2607,7 +2665,7 @@ module.exports = {
     parse: Parse
 };
 
-},{"./parse":34,"./stringify":35}],34:[function(_dereq_,module,exports){
+},{"./parse":36,"./stringify":37}],36:[function(_dereq_,module,exports){
 // Load modules
 
 var Utils = _dereq_('./utils');
@@ -2763,7 +2821,7 @@ module.exports = function (str, options) {
     return Utils.compact(obj);
 };
 
-},{"./utils":36}],35:[function(_dereq_,module,exports){
+},{"./utils":38}],37:[function(_dereq_,module,exports){
 // Load modules
 
 var Utils = _dereq_('./utils');
@@ -2823,7 +2881,7 @@ module.exports = function (obj, options) {
     return keys.join(delimiter);
 };
 
-},{"./utils":36}],36:[function(_dereq_,module,exports){
+},{"./utils":38}],38:[function(_dereq_,module,exports){
 // Load modules
 
 
@@ -2964,7 +3022,7 @@ exports.isBuffer = function (obj) {
     }
 };
 
-},{}],37:[function(_dereq_,module,exports){
+},{}],39:[function(_dereq_,module,exports){
 /**
  * Copyright 2013-2014 Facebook, Inc.
  *
@@ -3016,7 +3074,7 @@ var ExecutionEnvironment = {
 
 module.exports = ExecutionEnvironment;
 
-},{}],38:[function(_dereq_,module,exports){
+},{}],40:[function(_dereq_,module,exports){
 /**
  * Copyright 2013-2014 Facebook, Inc.
  *
@@ -3072,7 +3130,7 @@ function copyProperties(obj, a, b, c, d, e, f) {
 
 module.exports = copyProperties;
 
-},{}],39:[function(_dereq_,module,exports){
+},{}],41:[function(_dereq_,module,exports){
 /**
  * Copyright 2013-2014 Facebook, Inc.
  *
@@ -3117,7 +3175,7 @@ copyProperties(emptyFunction, {
 
 module.exports = emptyFunction;
 
-},{"./copyProperties":38}],40:[function(_dereq_,module,exports){
+},{"./copyProperties":40}],42:[function(_dereq_,module,exports){
 /**
  * Copyright 2013-2014 Facebook, Inc.
  *
@@ -3179,7 +3237,7 @@ var invariant = function(condition, format, a, b, c, d, e, f) {
 
 module.exports = invariant;
 
-},{}],41:[function(_dereq_,module,exports){
+},{}],43:[function(_dereq_,module,exports){
 /**
  * Copyright 2013-2014 Facebook, Inc.
  *
@@ -3239,7 +3297,7 @@ var keyMirror = function(obj) {
 
 module.exports = keyMirror;
 
-},{"./invariant":40}],42:[function(_dereq_,module,exports){
+},{"./invariant":42}],44:[function(_dereq_,module,exports){
 /**
  * Copyright 2013-2014 Facebook, Inc.
  *
@@ -3278,7 +3336,7 @@ var merge = function(one, two) {
 
 module.exports = merge;
 
-},{"./mergeInto":44}],43:[function(_dereq_,module,exports){
+},{"./mergeInto":46}],45:[function(_dereq_,module,exports){
 /**
  * Copyright 2013-2014 Facebook, Inc.
  *
@@ -3427,7 +3485,7 @@ var mergeHelpers = {
 
 module.exports = mergeHelpers;
 
-},{"./invariant":40,"./keyMirror":41}],44:[function(_dereq_,module,exports){
+},{"./invariant":42,"./keyMirror":43}],46:[function(_dereq_,module,exports){
 /**
  * Copyright 2013-2014 Facebook, Inc.
  *
@@ -3475,7 +3533,7 @@ function mergeInto(one, two) {
 
 module.exports = mergeInto;
 
-},{"./mergeHelpers":43}],45:[function(_dereq_,module,exports){
+},{"./mergeHelpers":45}],47:[function(_dereq_,module,exports){
 /**
  * Copyright 2013-2014 Facebook, Inc.
  *
@@ -3511,7 +3569,7 @@ var mixInto = function(constructor, methodBag) {
 
 module.exports = mixInto;
 
-},{}],46:[function(_dereq_,module,exports){
+},{}],48:[function(_dereq_,module,exports){
 /**
  * Copyright 2014 Facebook, Inc.
  *
@@ -3561,7 +3619,7 @@ if ("production" !== "production") {
 
 module.exports = warning;
 
-},{"./emptyFunction":39}],47:[function(_dereq_,module,exports){
+},{"./emptyFunction":41}],49:[function(_dereq_,module,exports){
 /** @license MIT License (c) copyright 2010-2014 original author or authors */
 /** @author Brian Cavalier */
 /** @author John Hann */
@@ -3580,7 +3638,7 @@ define(function (_dereq_) {
 });
 })(typeof define === 'function' && define.amd ? define : function (factory) { module.exports = factory(_dereq_); });
 
-},{"./Scheduler":49,"./async":50,"./makePromise":51}],48:[function(_dereq_,module,exports){
+},{"./Scheduler":51,"./async":52,"./makePromise":53}],50:[function(_dereq_,module,exports){
 /** @license MIT License (c) copyright 2010-2014 original author or authors */
 /** @author Brian Cavalier */
 /** @author John Hann */
@@ -3652,7 +3710,7 @@ define(function() {
 });
 }(typeof define === 'function' && define.amd ? define : function(factory) { module.exports = factory(); }));
 
-},{}],49:[function(_dereq_,module,exports){
+},{}],51:[function(_dereq_,module,exports){
 /** @license MIT License (c) copyright 2010-2014 original author or authors */
 /** @author Brian Cavalier */
 /** @author John Hann */
@@ -3736,7 +3794,7 @@ define(function(_dereq_) {
 });
 }(typeof define === 'function' && define.amd ? define : function(factory) { module.exports = factory(_dereq_); }));
 
-},{"./Queue":48}],50:[function(_dereq_,module,exports){
+},{"./Queue":50}],52:[function(_dereq_,module,exports){
 /** @license MIT License (c) copyright 2010-2014 original author or authors */
 /** @author Brian Cavalier */
 /** @author John Hann */
@@ -3799,7 +3857,7 @@ define(function(_dereq_) {
 });
 }(typeof define === 'function' && define.amd ? define : function(factory) { module.exports = factory(_dereq_); }));
 
-},{}],51:[function(_dereq_,module,exports){
+},{}],53:[function(_dereq_,module,exports){
 /** @license MIT License (c) copyright 2010-2014 original author or authors */
 /** @author Brian Cavalier */
 /** @author John Hann */
@@ -4572,6 +4630,6 @@ define(function() {
 });
 }(typeof define === 'function' && define.amd ? define : function(factory) { module.exports = factory(); }));
 
-},{}]},{},[19])
-(19)
+},{}]},{},[9])
+(9)
 });
