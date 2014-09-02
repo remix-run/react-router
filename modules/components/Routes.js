@@ -5,9 +5,6 @@ var canUseDOM = require('react/lib/ExecutionEnvironment').canUseDOM;
 var Promise = require('when/lib/Promise');
 var LocationActions = require('../actions/LocationActions');
 var Route = require('../components/Route');
-var Path = require('../utils/Path');
-var Redirect = require('../utils/Redirect');
-var Transition = require('../utils/Transition');
 var DefaultLocation = require('../locations/DefaultLocation');
 var HashLocation = require('../locations/HashLocation');
 var HistoryLocation = require('../locations/HistoryLocation');
@@ -15,6 +12,9 @@ var RefreshLocation = require('../locations/RefreshLocation');
 var ActiveDelegate = require('../mixins/ActiveDelegate');
 var PathStore = require('../stores/PathStore');
 var RouteStore = require('../stores/RouteStore');
+var Path = require('../utils/Path');
+var Redirect = require('../utils/Redirect');
+var Transition = require('../utils/Transition');
 
 /**
  * The ref name that can be used to reference the active route component.
@@ -53,11 +53,21 @@ function defaultAbortedTransitionHandler(transition) {
  * error so that it isn't silently swallowed.
  */
 function defaultTransitionErrorHandler(error) {
-  throw error; // This error probably originated in a transition hook.
+  setTimeout(function () { // Use setTimeout to break the promise chain.
+    throw error; // This error probably originated in a transition hook.
+  });
 }
 
-function maybeUpdateScroll(routes, rootRoute) {
-  if (!routes.props.preserveScrollPosition && !rootRoute.props.preserveScrollPosition)
+/**
+ * Updates the window's scroll position given the current route.
+ */
+function maybeUpdateScroll(routes) {
+  if (!canUseDOM)
+    return;
+
+  var currentRoute = routes.getCurrentRoute();
+
+  if (!routes.props.preserveScrollPosition && currentRoute && !currentRoute.props.preserveScrollPosition)
     LocationActions.updateScroll();
 }
 
@@ -100,6 +110,26 @@ var Routes = React.createClass({
     };
   },
 
+  componentWillMount: function () {
+    PathStore.setup(this.getLocation());
+  },
+
+  componentDidMount: function () {
+    PathStore.addChangeListener(this.handlePathChange);
+    this.handlePathChange();
+  },
+
+  componentWillUnmount: function () {
+    PathStore.removeChangeListener(this.handlePathChange);
+  },
+
+  handlePathChange: function () {
+    this.transitionTo(PathStore.getCurrentPath());
+  },
+
+  /**
+   * Gets the location object this component uses to watch for URL changes.
+   */
   getLocation: function () {
     var location = this.props.location;
 
@@ -109,21 +139,12 @@ var Routes = React.createClass({
     return location;
   },
 
-  componentWillMount: function () {
-    PathStore.setup(this.getLocation());
-    PathStore.addChangeListener(this.handlePathChange);
-  },
-
-  componentDidMount: function () {
-    this.handlePathChange();
-  },
-
-  componentWillUnmount: function () {
-    PathStore.removeChangeListener(this.handlePathChange);
-  },
-
-  handlePathChange: function () {
-    this.dispatch(PathStore.getCurrentPath());
+  /**
+   * Gets the <Route> component that is currently active.
+   */
+  getCurrentRoute: function () {
+    var rootMatch = getRootMatch(this.state.matches);
+    return rootMatch && rootMatch.route;
   },
 
   /**
@@ -163,44 +184,31 @@ var Routes = React.createClass({
    * redirect the transition. If they need to resolve asynchronously, they may
    * return a promise.
    *
-   * Any error that occurs asynchronously during the transition is re-thrown in
-   * the top-level scope unless returnRejectedPromise is true, in which case a
-   * rejected promise is returned so the caller may handle the error.
-   *
    * Note: This function does not update the URL in a browser's location bar.
    * If you want to keep the URL in sync with transitions, use Router.transitionTo,
    * Router.replaceWith, or Router.goBack instead.
    */
-  dispatch: function (path, returnRejectedPromise) {
-    var transition = new Transition(path);
+  transitionTo: function (path) {
     var routes = this;
+    var transition = new Transition(path);
 
-    var promise = runTransitionHooks(routes, transition).then(function (nextState) {
-      if (transition.isAborted) {
-        routes.props.onAbortedTransition(transition);
-      } else if (nextState) {
-        routes.setState(nextState, routes.emitChange);
+    return runTransitionHooks(routes, transition)
+      .then(function (newState) {
+        if (transition.isAborted)
+          routes.props.onAbortedTransition(transition);
 
-        // TODO: add functional test
-        var rootMatch = getRootMatch(nextState.matches);
+        if (newState == null)
+          return transition;
 
-        if (rootMatch)
-          maybeUpdateScroll(routes, rootMatch.route);
-      }
-
-      return transition;
-    });
-
-    if (!returnRejectedPromise) {
-      promise = promise.then(undefined, function (error) {
-        // Use setTimeout to break the promise chain.
-        setTimeout(function () {
-          routes.props.onTransitionError(error);
+        return new Promise(function (resolve) {
+          routes.setState(newState, function () {
+            routes.emitChange();
+            maybeUpdateScroll(routes);
+            resolve(transition);
+          });
         });
-      });
-    }
-
-    return promise;
+      })
+      .then(undefined, this.props.onTransitionError);
   },
 
   render: function () {
