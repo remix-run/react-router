@@ -5,12 +5,8 @@ var canUseDOM = require('react/lib/ExecutionEnvironment').canUseDOM;
 var Promise = require('when/lib/Promise');
 var LocationActions = require('../actions/LocationActions');
 var Route = require('../components/Route');
-var DefaultLocation = require('../locations/DefaultLocation');
-var HashLocation = require('../locations/HashLocation');
-var HistoryLocation = require('../locations/HistoryLocation');
-var RefreshLocation = require('../locations/RefreshLocation');
 var ActiveDelegate = require('../mixins/ActiveDelegate');
-var PathStore = require('../stores/PathStore');
+var PathListener = require('../mixins/PathListener');
 var RouteStore = require('../stores/RouteStore');
 var Path = require('../utils/Path');
 var Redirect = require('../utils/Redirect');
@@ -20,15 +16,6 @@ var Transition = require('../utils/Transition');
  * The ref name that can be used to reference the active route component.
  */
 var REF_NAME = '__activeRoute__';
-
-/**
- * A hash of { name, location } pairs of all locations.
- */
-var NAMED_LOCATIONS = {
-  hash: HashLocation,
-  history: HistoryLocation,
-  refresh: RefreshLocation
-};
 
 /**
  * The default handler for aborted transitions. Redirects replace
@@ -81,26 +68,19 @@ var Routes = React.createClass({
 
   displayName: 'Routes',
 
-  mixins: [ ActiveDelegate ],
+  mixins: [ ActiveDelegate, PathListener ],
 
   propTypes: {
     onAbortedTransition: React.PropTypes.func.isRequired,
     onTransitionError: React.PropTypes.func.isRequired,
-    preserveScrollPosition: React.PropTypes.bool,
-    location: function (props, propName, componentName) {
-      var location = props[propName];
-
-      if (typeof location === 'string' && !(location in NAMED_LOCATIONS))
-        return new Error('Unknown location "' + location + '", see ' + componentName);
-    }
+    preserveScrollPosition: React.PropTypes.bool
   },
 
   getDefaultProps: function () {
     return {
       onAbortedTransition: defaultAbortedTransitionHandler,
       onTransitionError: defaultTransitionErrorHandler,
-      preserveScrollPosition: false,
-      location: DefaultLocation
+      preserveScrollPosition: false
     };
   },
 
@@ -108,35 +88,6 @@ var Routes = React.createClass({
     return {
       routes: RouteStore.registerChildren(this.props.children, this)
     };
-  },
-
-  componentWillMount: function () {
-    PathStore.setup(this.getLocation());
-  },
-
-  componentDidMount: function () {
-    PathStore.addChangeListener(this.handlePathChange);
-    this.handlePathChange();
-  },
-
-  componentWillUnmount: function () {
-    PathStore.removeChangeListener(this.handlePathChange);
-  },
-
-  handlePathChange: function () {
-    this.transitionTo(PathStore.getCurrentPath());
-  },
-
-  /**
-   * Gets the location object this component uses to watch for URL changes.
-   */
-  getLocation: function () {
-    var location = this.props.location;
-
-    if (typeof location === 'string')
-      return NAMED_LOCATIONS[location];
-
-    return location;
   },
 
   /**
@@ -188,7 +139,7 @@ var Routes = React.createClass({
    * If you want to keep the URL in sync with transitions, use Router.transitionTo,
    * Router.replaceWith, or Router.goBack instead.
    */
-  transitionTo: function (path) {
+  updatePath: function (path) {
     var routes = this;
     var transition = new Transition(path);
 
