@@ -10,6 +10,7 @@ var RESERVED_PROPS = {
   handler: true,
   path: true,
   defaultRoute: true,
+  notFoundRoute: true,
   paramNames: true,
   children: true // ReactChildren
 };
@@ -76,8 +77,8 @@ var Route = React.createClass({
   },
 
   propTypes: {
-    preserveScrollPosition: React.PropTypes.bool.isRequired,
     handler: React.PropTypes.any.isRequired,
+    preserveScrollPosition: React.PropTypes.bool.isRequired,
     path: React.PropTypes.string,
     name: React.PropTypes.string
   },
