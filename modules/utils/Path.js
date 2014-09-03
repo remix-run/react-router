@@ -25,7 +25,7 @@ function compilePattern(pattern) {
     var source = pattern.replace(paramMatcher, function (match, paramName) {
       if (paramName) {
         paramNames.push(paramName);
-        return '([^./?#]+)';
+        return '([^/?#]+)';
       } else if (match === '*') {
         paramNames.push('splat');
         return '(.*?)';

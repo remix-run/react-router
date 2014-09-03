@@ -126,6 +126,24 @@ describe('Path.extractParams', function () {
       });
     });
   });
+
+  describe('when a param has dots', function () {
+    var pattern = '/:query/with/:domain';
+
+    describe('and the path matches', function () {
+      it('returns an object with the params', function () {
+        expect(Path.extractParams(pattern, '/foo/with/foo.app')).toEqual({ query: 'foo', domain: 'foo.app' });
+        expect(Path.extractParams(pattern, '/foo.ap/with/foo')).toEqual({ query: 'foo.ap', domain: 'foo' });
+        expect(Path.extractParams(pattern, '/foo.ap/with/foo.app')).toEqual({ query: 'foo.ap', domain: 'foo.app' });
+      });
+    });
+
+    describe('and the path does not match', function () {
+      it('returns null', function () {
+        expect(Path.extractParams(pattern, '/foo.ap')).toBe(null);
+      });
+    });
+  });
 });
 
 describe('Path.injectParams', function () {
@@ -167,6 +185,12 @@ describe('Path.injectParams', function () {
     describe('and a param has a forward slash', function () {
       it('preserves the forward slash', function () {
         expect(Path.injectParams(pattern, { id: 'the/id' })).toEqual('comments/the/id/edit');
+      });
+    });
+
+    describe('and some params contain dots', function () {
+      it('returns the correct path', function () {
+        expect(Path.injectParams(pattern, { id: 'alt.black.helicopter' })).toEqual('comments/alt.black.helicopter/edit');
       });
     });
   });
