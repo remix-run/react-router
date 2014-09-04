@@ -1,5 +1,10 @@
 var LocationDispatcher = require('../dispatchers/LocationDispatcher');
+var isAbsoluteURL = require('../utils/isAbsoluteURL');
 var makePath = require('../utils/makePath');
+
+function loadURL(url) {
+  window.location = url;
+}
 
 /**
  * Actions that modify the URL.
@@ -16,10 +21,14 @@ var LocationActions = {
    * a new URL onto the history stack.
    */
   transitionTo: function (to, params, query) {
-    LocationDispatcher.handleViewAction({
-      type: LocationActions.PUSH,
-      path: makePath(to, params, query)
-    });
+    if (isAbsoluteURL(to)) {
+      loadURL(to);
+    } else {
+      LocationDispatcher.handleViewAction({
+        type: LocationActions.PUSH,
+        path: makePath(to, params, query)
+      });
+    }
   },
 
   /**
@@ -27,10 +36,14 @@ var LocationActions = {
    * the current URL in the history stack.
    */
   replaceWith: function (to, params, query) {
-    LocationDispatcher.handleViewAction({
-      type: LocationActions.REPLACE,
-      path: makePath(to, params, query)
-    });
+    if (isAbsoluteURL(to)) {
+      loadURL(to);
+    } else {
+      LocationDispatcher.handleViewAction({
+        type: LocationActions.REPLACE,
+        path: makePath(to, params, query)
+      });
+    }
   },
 
   /**
