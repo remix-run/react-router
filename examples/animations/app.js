@@ -15,7 +15,7 @@ var App = React.createClass({
           <li><Link to="image" params={{service: "cage"}}>Cage</Link></li>
         </ul>
         <CSSTransitionGroup transitionName="example">
-          {this.props.activeRouteHandler()}
+          <this.props.activeRouteHandler />
         </CSSTransitionGroup>
       </div>
     );
