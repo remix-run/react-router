@@ -331,7 +331,7 @@ beyond what was matched isn't recognized.
         will render inside the `Inbox` UI for any paths not recognized
         after the parent route's path `/inbox/*`
       -->
-      <NotFoundRoute handler={InboxNotFound}
+      <NotFoundRoute handler={InboxNotFound}/>
       <Route name="message" path="/inbox/:messageId" handler={Message}/>
       <DefaultRoute handler={InboxStats}/>
     </Route>
@@ -339,7 +339,7 @@ beyond what was matched isn't recognized.
     <DefaultRoute handler={Dashboard}/>
   </Route>
   <!-- will catch any route that isn't recognized at all -->
-  <NotFoundRoute handler={NotFound}
+  <NotFoundRoute handler={NotFound}/>
 </Routes>
 ```
 
