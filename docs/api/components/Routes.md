@@ -35,7 +35,7 @@ A function called when any transition is aborted.
 
 ### `onActiveStateChange`
 
-A function called when the active routes change.
+A function called when the active routes change. Note: If you attach your own function here, remember to call the ActiveStore or the ActiveState mixin will stop working. 
 
 #### signature
 
