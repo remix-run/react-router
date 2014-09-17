@@ -9,7 +9,7 @@ function routeIsActive(activeRoutes, routeName) {
 
 function paramsAreActive(activeParams, params) {
   for (var property in params) {
-    if (activeParams[property] !== String(params[property]))
+    if (activeParams[property] != params[property])
       return false;
   }
 
@@ -18,7 +18,7 @@ function paramsAreActive(activeParams, params) {
 
 function queryIsActive(activeQuery, query) {
   for (var property in query) {
-    if (activeQuery[property] !== String(query[property]))
+    if (activeQuery[property] != query[property])
       return false;
   }
 
