@@ -43,8 +43,8 @@ describe('when a Route is active', function () {
         App({
           initialState: {
             activeRoutes: [ route ],
-            activeParams: { id: '123', show: 'true' },
-            activeQuery: { search: 'abc' }
+            activeParams: { id: '123', show: 'true', variant: 456 },
+            activeQuery: { search: 'abc', limit: 789 }
           }
         })
       );
@@ -52,19 +52,19 @@ describe('when a Route is active', function () {
 
     describe('and no query is used', function () {
       it('is active', function () {
-        assert(app.isActive('products', { id: 123 }));
+        assert(app.isActive('products', { id: 123, variant: '456' }));
       });
     });
 
     describe('and a matching query is used', function () {
       it('is active', function () {
-        assert(app.isActive('products', { id: 123 }, { search: 'abc' }));
+        assert(app.isActive('products', { id: 123 }, { search: 'abc', limit: '789' }));
       });
     });
 
     describe('but the query does not match', function () {
       it('is not active', function () {
-        refute(app.isActive('products', { id: 123 }, { search: 'def' }));
+        refute(app.isActive('products', { id: 123 }, { search: 'def', limit: '123' }));
       });
     });
   });
