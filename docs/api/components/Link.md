@@ -29,6 +29,10 @@ Object, the parameters to fill in the dynamic segments of your route.
 <Link to="user" params={user}/>
 ```
 
+### `tag`
+
+The component to act as a link. `React.DOM.a` by default.
+
 ### `query`
 
 Object, Query parameters to add to the link. Access query parameters in

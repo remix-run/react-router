@@ -22,6 +22,7 @@ function isModifiedEvent(event) {
 var RESERVED_PROPS = {
   to: true,
   key: true,
+  tag: true,
   className: true,
   activeClassName: true,
   query: true,
@@ -77,6 +78,7 @@ var Link = React.createClass({
 
   propTypes: {
     to: React.PropTypes.string.isRequired,
+    tag: React.PropTypes.component,
     activeClassName: React.PropTypes.string.isRequired,
     params: React.PropTypes.object,
     query: React.PropTypes.object,
@@ -161,7 +163,9 @@ var Link = React.createClass({
         props[propName] = this.props[propName];
     }
 
-    return React.DOM.a(props, this.props.children);
+    var tag = this.props.tag || React.DOM.a;
+
+    return tag(props, this.props.children);
   }
 
 });
