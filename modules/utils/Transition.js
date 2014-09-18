@@ -1,6 +1,6 @@
 var mixInto = require('react/lib/mixInto');
-var transitionTo = require('../actions/LocationActions').transitionTo;
 var Redirect = require('./Redirect');
+var replaceWith = require('../actions/LocationActions').replaceWith;
 
 /**
  * Encapsulates a transition to a given path.
@@ -26,7 +26,7 @@ mixInto(Transition, {
   },
 
   retry: function () {
-    transitionTo(this.path);
+    replaceWith(this.path);
   }
 
 });
