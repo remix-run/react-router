@@ -371,3 +371,15 @@ redirecting transitions, query parameters and more.
   [API]:../api/
   [path-matching]:./path-matching.md
 
+CommonJS Guide
+--------------
+
+In order for the above examples to work in a CommonJS environment you'll need to `require` the following:
+
+```
+var Router = require('react-router');
+var Route = Router.Route;
+var Routes = Router.Routes;
+var DefaultRoute = Router.DefaultRoute;
+var Link = Router.Link;
+```
