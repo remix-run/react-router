@@ -57,7 +57,6 @@ var PathListener = {
 
   componentDidMount: function () {
     PathStore.addChangeListener(this.handlePathChange);
-    this.handlePathChange();
   },
 
   componentWillUnmount: function () {

@@ -52,7 +52,6 @@ var ActiveState = {
 
   componentDidMount: function () {
     this.getActiveDelegate().addChangeListener(this.handleActiveStateChange);
-    this.handleActiveStateChange();
   },
 
   componentWillUnmount: function () {
