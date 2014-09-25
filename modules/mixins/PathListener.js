@@ -50,6 +50,9 @@ var PathListener = {
 
   componentWillMount: function () {
     PathStore.setup(this.getLocation());
+
+    if (this.updatePath)
+      this.updatePath(PathStore.getCurrentPath());
   },
 
   componentDidMount: function () {
