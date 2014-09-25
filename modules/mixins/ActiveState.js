@@ -45,6 +45,11 @@ var ActiveState = {
     return this.context.activeDelegate;
   },
 
+  componentWillMount: function () {
+    if (this.updateActiveState)
+      this.updateActiveState();
+  },
+
   componentDidMount: function () {
     this.getActiveDelegate().addChangeListener(this.handleActiveStateChange);
     this.handleActiveStateChange();
@@ -55,7 +60,7 @@ var ActiveState = {
   },
 
   handleActiveStateChange: function () {
-    if (this.isMounted() && typeof this.updateActiveState === 'function')
+    if (this.isMounted() && this.updateActiveState)
       this.updateActiveState();
   },
 
