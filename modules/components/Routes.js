@@ -84,6 +84,7 @@ var Routes = React.createClass({
 
   getInitialState: function () {
     return {
+      matches: [],
       routes: RouteStore.registerChildren(this.props.children, this)
     };
   },
@@ -270,7 +271,7 @@ function computeNextState(routes, transition, callback) {
     nextMatches = [];
 
   var fromMatches, toMatches;
-  if (currentMatches) {
+  if (currentMatches.length) {
     updateMatchComponents(currentMatches, routes.refs);
 
     fromMatches = currentMatches.filter(function (match) {
@@ -295,17 +296,19 @@ function computeNextState(routes, transition, callback) {
       if (error || transition.isAborted)
         return callback(error);
 
-      var rootMatch = getRootMatch(nextMatches);
+      var matches = currentMatches.slice(0, -fromMatches.length).concat(toMatches);
+      var rootMatch = getRootMatch(matches);
       var params = (rootMatch && rootMatch.params) || {};
+      var routes = matches.map(function (match) {
+        return match.route;
+      });
 
       callback(null, {
         path: transition.path,
-        matches: nextMatches,
+        matches: matches,
+        activeRoutes: routes,
         activeParams: params,
-        activeQuery: query,
-        activeRoutes: nextMatches.map(function (match) {
-          return match.route;
-        })
+        activeQuery: query
       });
     });
   });
