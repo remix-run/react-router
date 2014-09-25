@@ -2,13 +2,13 @@ var React = require('react');
 var warning = require('react/lib/warning');
 var copyProperties = require('react/lib/copyProperties');
 var canUseDOM = require('react/lib/ExecutionEnvironment').canUseDOM;
-var Promise = require('when/lib/Promise');
 var LocationActions = require('../actions/LocationActions');
 var Route = require('../components/Route');
 var ActiveDelegate = require('../mixins/ActiveDelegate');
 var PathListener = require('../mixins/PathListener');
 var RouteStore = require('../stores/RouteStore');
 var Path = require('../utils/Path');
+var Promise = require('../utils/Promise');
 var Redirect = require('../utils/Redirect');
 var Transition = require('../utils/Transition');
 
@@ -40,9 +40,7 @@ function defaultAbortedTransitionHandler(transition) {
  * error so that it isn't silently swallowed.
  */
 function defaultTransitionErrorHandler(error) {
-  setTimeout(function () { // Use setTimeout to break the promise chain.
-    throw error; // This error probably originated in a transition hook.
-  });
+  throw error; // This error probably originated in a transition hook.
 }
 
 /**
@@ -119,47 +117,50 @@ var Routes = React.createClass({
     return findMatches(Path.withoutQuery(path), this.state.routes, this.props.defaultRoute, this.props.notFoundRoute);
   },
 
+  updatePath: function (path) {
+    var self = this;
+
+    this.dispatch(path, function (error, transition) {
+      if (error) {
+        self.props.onTransitionError(error);
+      } else if (transition.isAborted) {
+        self.props.onAbortedTransition(transition);
+      } else {
+        self.emitChange();
+        maybeUpdateScroll(self);
+      }
+    });
+  },
+
   /**
-   * Performs a transition to the given path and returns a promise for the
-   * Transition object that was used.
+   * Performs a transition to the given path and calls callback(error, transition)
+   * with the Transition object when the transition is finished and the component's
+   * state has been updated accordingly.
    *
-   * In order to do this, the router first determines which routes are involved
-   * in the transition beginning with the current route, up the route tree to
-   * the first parent route that is shared with the destination route, and back
-   * down the tree to the destination route. The willTransitionFrom static
-   * method is invoked on all route handlers we're transitioning away from, in
-   * reverse nesting order. Likewise, the willTransitionTo static method
-   * is invoked on all route handlers we're transitioning to.
+   * In a transition, the router first determines which routes are involved by
+   * beginning with the current route, up the route tree to the first parent route
+   * that is shared with the destination route, and back down the tree to the
+   * destination route. The willTransitionFrom hook is invoked on all route handlers
+   * we're transitioning away from, in reverse nesting order. Likewise, the
+   * willTransitionTo hook is invoked on all route handlers we're transitioning to.
    *
-   * Both willTransitionFrom and willTransitionTo hooks may either abort or
-   * redirect the transition. If they need to resolve asynchronously, they may
-   * return a promise.
+   * Both willTransitionFrom and willTransitionTo hooks may either abort or redirect
+   * the transition. To resolve asynchronously, they may use transition.wait(promise).
    *
    * Note: This function does not update the URL in a browser's location bar.
-   * If you want to keep the URL in sync with transitions, use Router.transitionTo,
-   * Router.replaceWith, or Router.goBack instead.
    */
-  updatePath: function (path) {
-    var routes = this;
+  dispatch: function (path, callback) {
     var transition = new Transition(path);
+    var self = this;
 
-    return runTransitionHooks(routes, transition)
-      .then(function (newState) {
-        if (transition.isAborted)
-          routes.props.onAbortedTransition(transition);
+    computeNextState(this, transition, function (error, nextState) {
+      if (error || nextState == null)
+        return callback(error, transition);
 
-        if (newState == null)
-          return transition;
-
-        return new Promise(function (resolve) {
-          routes.setState(newState, function () {
-            routes.emitChange();
-            maybeUpdateScroll(routes);
-            resolve(transition);
-          });
-        });
-      })
-      .then(undefined, this.props.onTransitionError);
+      self.setState(nextState, function () {
+        callback(null, transition);
+      });
+    });
   },
 
   render: function () {
@@ -248,14 +249,13 @@ function updateMatchComponents(matches, refs) {
 }
 
 /**
- * Runs all transition hooks that are required to get from the current state
- * to the state specified by the given transition and updates the current state
- * if they all pass successfully. Returns a promise that resolves to the new
- * state if it needs to be updated, or undefined if not.
+ * Computes the next state for the given <Routes> component and calls
+ * callback(error, nextState) when finished. Also runs all transition
+ * hooks along the way.
  */
-function runTransitionHooks(routes, transition) {
+function computeNextState(routes, transition, callback) {
   if (routes.state.path === transition.path)
-    return Promise.resolve(); // Nothing to do!
+    return callback(); // Nothing to do!
 
   var currentMatches = routes.state.matches;
   var nextMatches = routes.match(transition.path);
@@ -287,18 +287,18 @@ function runTransitionHooks(routes, transition) {
 
   var query = Path.extractQuery(transition.path) || {};
 
-  return runTransitionFromHooks(fromMatches, transition).then(function () {
-    if (transition.isAborted)
-      return; // No need to continue.
+  runTransitionFromHooks(fromMatches, transition, function (error) {
+    if (error || transition.isAborted)
+      return callback(error);
 
-    return runTransitionToHooks(toMatches, transition, query).then(function () {
-      if (transition.isAborted)
-        return; // No need to continue.
+    runTransitionToHooks(toMatches, transition, query, function (error) {
+      if (error || transition.isAborted)
+        return callback(error);
 
       var rootMatch = getRootMatch(nextMatches);
       var params = (rootMatch && rootMatch.params) || {};
 
-      return {
+      callback(null, {
         path: transition.path,
         matches: nextMatches,
         activeParams: params,
@@ -306,7 +306,7 @@ function runTransitionHooks(routes, transition) {
         activeRoutes: nextMatches.map(function (match) {
           return match.route;
         })
-      };
+      });
     });
   });
 }
@@ -315,41 +315,76 @@ function runTransitionHooks(routes, transition) {
  * Calls the willTransitionFrom hook of all handlers in the given matches
  * serially in reverse with the transition object and the current instance of
  * the route's handler, so that the deepest nested handlers are called first.
- * Returns a promise that resolves after the last handler.
+ * Calls callback(error) when finished.
  */
-function runTransitionFromHooks(matches, transition) {
-  var promise = Promise.resolve();
-
-  reversedArray(matches).forEach(function (match) {
-    promise = promise.then(function () {
+function runTransitionFromHooks(matches, transition, callback) {
+  var hooks = reversedArray(matches).map(function (match) {
+    return function () {
       var handler = match.route.props.handler;
 
       if (!transition.isAborted && handler.willTransitionFrom)
         return handler.willTransitionFrom(transition, match.component);
-    });
+
+      var promise = transition.promise;
+      delete transition.promise;
+
+      return promise;
+    };
   });
 
-  return promise;
+  runHooks(hooks, callback);
 }
 
 /**
- * Calls the willTransitionTo hook of all handlers in the given matches serially
- * with the transition object and any params that apply to that handler. Returns
- * a promise that resolves after the last handler.
+ * Calls the willTransitionTo hook of all handlers in the given matches
+ * serially with the transition object and any params that apply to that
+ * handler. Calls callback(error) when finished.
  */
-function runTransitionToHooks(matches, transition, query) {
-  var promise = Promise.resolve();
-
-  matches.forEach(function (match) {
-    promise = promise.then(function () {
+function runTransitionToHooks(matches, transition, query, callback) {
+  var hooks = matches.map(function (match) {
+    return function () {
       var handler = match.route.props.handler;
 
       if (!transition.isAborted && handler.willTransitionTo)
-        return handler.willTransitionTo(transition, match.params, query);
-    });
+        handler.willTransitionTo(transition, match.params, query);
+
+      var promise = transition.promise;
+      delete transition.promise;
+
+      return promise;
+    };
   });
 
-  return promise;
+  runHooks(hooks, callback);
+}
+
+/**
+ * Runs all hook functions serially and calls callback(error) when finished.
+ * A hook may return a promise if it needs to execute asynchronously.
+ */
+function runHooks(hooks, callback) {
+  try {
+    var promise = hooks.reduce(function (promise, hook) {
+      // The first hook to use transition.wait makes the rest
+      // of the transition async from that point forward.
+      return promise ? promise.then(hook) : hook();
+    }, null);
+  } catch (error) {
+    return callback(error); // Sync error.
+  }
+
+  if (promise) {
+    // Use setTimeout to break the promise chain.
+    promise.then(function () {
+      setTimeout(callback);
+    }, function (error) {
+      setTimeout(function () {
+        callback(error);
+      });
+    });
+  } else {
+    callback();
+  }
 }
 
 /**

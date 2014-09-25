@@ -1,4 +1,5 @@
 var mixInto = require('react/lib/mixInto');
+var Promise = require('./Promise');
 var Redirect = require('./Redirect');
 var replaceWith = require('../actions/LocationActions').replaceWith;
 
@@ -23,6 +24,10 @@ mixInto(Transition, {
 
   redirect: function (to, params, query) {
     this.abort(new Redirect(to, params, query));
+  },
+
+  wait: function (value) {
+    this.promise = Promise.resolve(value);
   },
 
   retry: function () {
