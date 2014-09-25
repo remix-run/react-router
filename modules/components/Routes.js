@@ -254,12 +254,12 @@ function updateMatchComponents(matches, refs) {
  * callback(error, nextState) when finished. Also runs all transition
  * hooks along the way.
  */
-function computeNextState(routes, transition, callback) {
-  if (routes.state.path === transition.path)
+function computeNextState(component, transition, callback) {
+  if (component.state.path === transition.path)
     return callback(); // Nothing to do!
 
-  var currentMatches = routes.state.matches;
-  var nextMatches = routes.match(transition.path);
+  var currentMatches = component.state.matches;
+  var nextMatches = component.match(transition.path);
 
   warning(
     nextMatches,
@@ -272,7 +272,7 @@ function computeNextState(routes, transition, callback) {
 
   var fromMatches, toMatches;
   if (currentMatches.length) {
-    updateMatchComponents(currentMatches, routes.refs);
+    updateMatchComponents(currentMatches, component.refs);
 
     fromMatches = currentMatches.filter(function (match) {
       return !hasMatch(nextMatches, match);
