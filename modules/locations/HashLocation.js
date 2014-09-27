@@ -1,9 +1,11 @@
 var invariant = require('react/lib/invariant');
 var canUseDOM = require('react/lib/ExecutionEnvironment').canUseDOM;
+var LocationActions = require('../actions/LocationActions');
+var LocationDispatcher = require('../dispatchers/LocationDispatcher');
 var getWindowPath = require('../utils/getWindowPath');
 
 function getHashPath() {
-  return window.location.hash.substr(1);
+  return window.location.hash.substr(1) || '/';
 }
 
 function ensureSlash() {
@@ -12,61 +14,83 @@ function ensureSlash() {
   if (path.charAt(0) === '/')
     return true;
 
-  HashLocation.replace('/' + path);
+  HashLocation.replace('/' + path, _actionSender);
 
   return false;
 }
 
-var _onChange;
+var _actionType, _actionSender;
 
-function handleHashChange() {
-  if (ensureSlash())
-    _onChange();
+function onHashChange() {
+  if (ensureSlash()) {
+    LocationDispatcher.handleViewAction({
+      type: _actionType,
+      path: getHashPath(),
+      sender: _actionSender || window
+    });
+
+    _actionSender = null;
+  }
 }
+
+var _isSetup = false;
 
 /**
  * A Location that uses `window.location.hash`.
  */
 var HashLocation = {
 
-  setup: function (onChange) {
+  setup: function () {
+    if (_isSetup)
+      return;
+
     invariant(
       canUseDOM,
       'You cannot use HashLocation in an environment with no DOM'
     );
 
-    _onChange = onChange;
-
-    ensureSlash();
-
     if (window.addEventListener) {
-      window.addEventListener('hashchange', handleHashChange, false);
+      window.addEventListener('hashchange', onHashChange, false);
     } else {
-      window.attachEvent('onhashchange', handleHashChange);
+      window.attachEvent('onhashchange', onHashChange);
     }
+
+    LocationDispatcher.handleViewAction({
+      type: LocationActions.SETUP,
+      path: getHashPath(),
+      sender: window
+    });
+
+    _isSetup = true;
   },
 
   teardown: function () {
     if (window.removeEventListener) {
-      window.removeEventListener('hashchange', handleHashChange, false);
+      window.removeEventListener('hashchange', onHashChange, false);
     } else {
-      window.detachEvent('onhashchange', handleHashChange);
+      window.detachEvent('onhashchange', onHashChange);
     }
+
+    _isSetup = false;
   },
 
-  push: function (path) {
+  push: function (path, sender) {
+    _actionType = LocationActions.PUSH;
+    _actionSender = sender;
     window.location.hash = path;
   },
 
-  replace: function (path) {
+  replace: function (path, sender) {
+    _actionType = LocationActions.REPLACE;
+    _actionSender = sender;
     window.location.replace(getWindowPath() + '#' + path);
   },
 
-  pop: function () {
+  pop: function (sender) {
+    _actionType = LocationActions.POP;
+    _actionSender = sender;
     window.history.back();
   },
-
-  getCurrentPath: getHashPath,
 
   toString: function () {
     return '<HashLocation>';

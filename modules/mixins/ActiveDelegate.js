@@ -43,19 +43,24 @@ var ActiveDelegate = {
     };
   },
 
+  getInitialState: function () {
+    return {
+      activeRoutes: [],
+      activeParams: {},
+      activeQuery: {}
+    };
+  },
+
   /**
    * Returns true if the route with the given name, URL parameters, and
    * query are all currently active.
    */
   isActive: function (routeName, params, query) {
-    var activeRoutes = this.state.activeRoutes || [];
-    var activeParams = this.state.activeParams || {};
-    var activeQuery = this.state.activeQuery || {};
-
-    var isActive = routeIsActive(activeRoutes, routeName) && paramsAreActive(activeParams, params);
+    var isActive = routeIsActive(this.state.activeRoutes, routeName) &&
+                   paramsAreActive(this.state.activeParams, params);
 
     if (query)
-      return isActive && queryIsActive(activeQuery, query);
+      return isActive && queryIsActive(this.state.activeQuery, query);
 
     return isActive;
   }

@@ -1,10 +1,10 @@
 var React = require('react');
+var warning = require('react/lib/warning');
 var ActiveState = require('../mixins/ActiveState');
-var transitionTo = require('../actions/LocationActions').transitionTo;
+var RouteLookup = require('../mixins/RouteLookup');
+var Transitions = require('../mixins/Transitions');
 var withoutProperties = require('../utils/withoutProperties');
 var hasOwnProperty = require('../utils/hasOwnProperty');
-var makeHref = require('../utils/makeHref');
-var warning = require('react/lib/warning');
 
 function isLeftClickEvent(event) {
   return event.button === 0;
@@ -51,7 +51,7 @@ var Link = React.createClass({
 
   displayName: 'Link',
 
-  mixins: [ ActiveState ],
+  mixins: [ ActiveState, RouteLookup, Transitions ],
 
   statics: {
 
@@ -99,7 +99,7 @@ var Link = React.createClass({
    * Returns the value of the "href" attribute to use on the DOM element.
    */
   getHref: function () {
-    return makeHref(this.props.to, Link.getParams(this.props), this.props.query);
+    return this.makeHref(this.props.to, Link.getParams(this.props), this.props.query);
   },
 
   /**
@@ -145,7 +145,7 @@ var Link = React.createClass({
     event.preventDefault();
 
     if (allowTransition)
-      transitionTo(this.props.to, Link.getParams(this.props), this.props.query);
+      this.transitionTo(this.props.to, Link.getParams(this.props), this.props.query);
   },
 
   render: function () {
