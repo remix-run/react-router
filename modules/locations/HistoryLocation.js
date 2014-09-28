@@ -34,12 +34,10 @@ var HistoryLocation = {
 
   push: function (path) {
     window.history.pushState({ path: path }, '', path);
-    _onChange();
   },
 
   replace: function (path) {
     window.history.replaceState({ path: path }, '', path);
-    _onChange();
   },
 
   pop: function () {

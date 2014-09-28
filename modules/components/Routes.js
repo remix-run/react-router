@@ -7,6 +7,7 @@ var Route = require('../components/Route');
 var ActiveDelegate = require('../mixins/ActiveDelegate');
 var PathListener = require('../mixins/PathListener');
 var RouteStore = require('../stores/RouteStore');
+var ScrollStore = require('../stores/ScrollStore');
 var Path = require('../utils/Path');
 var Promise = require('../utils/Promise');
 var Redirect = require('../utils/Redirect');
@@ -51,9 +52,11 @@ function maybeUpdateScroll(routes) {
     return;
 
   var currentRoute = routes.getCurrentRoute();
+  var scrollPosition = ScrollStore.getScrollPosition();
 
-  if (!routes.props.preserveScrollPosition && currentRoute && !currentRoute.props.preserveScrollPosition)
-    LocationActions.updateScroll();
+  if (currentRoute && scrollPosition) {
+    window.scrollTo(scrollPosition.x, scrollPosition.y);
+  }
 }
 
 /**
