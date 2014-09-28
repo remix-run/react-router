@@ -52,8 +52,10 @@ function maybeUpdateScroll(routes) {
 
   var currentRoute = routes.getCurrentRoute();
 
-  if (!routes.props.preserveScrollPosition && currentRoute && !currentRoute.props.preserveScrollPosition)
-    LocationActions.updateScroll();
+  if (!routes.props.preserveScrollPosition && currentRoute && !currentRoute.props.preserveScrollPosition) {
+    //LocationActions.updateScroll();
+    //TODO!
+  }
 }
 
 /**

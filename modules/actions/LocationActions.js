@@ -1,4 +1,9 @@
+var supportsHistory = require('../utils/supportsHistory');
+var HistoryLocation = require('../locations/HistoryLocation');
+var RefreshLocation = require('../locations/RefreshLocation');
 var LocationDispatcher = require('../dispatchers/LocationDispatcher');
+var ActionTypes = require('../constants/ActionTypes');
+var warning = require('react/lib/warning');
 var isAbsoluteURL = require('../utils/isAbsoluteURL');
 var makePath = require('../utils/makePath');
 
@@ -6,15 +11,57 @@ function loadURL(url) {
   window.location = url;
 }
 
+var _location = null;
+
+function handlePop() {
+  LocationDispatcher.handleBrowserAction({
+    type: ActionTypes.POP,
+    path: _location.getCurrentPath()
+  });
+}
+
 /**
  * Actions that modify the URL.
  */
 var LocationActions = {
 
-  PUSH: 'push',
-  REPLACE: 'replace',
-  POP: 'pop',
-  UPDATE_SCROLL: 'update-scroll',
+  getLocation: function () {
+    return _location;
+  },
+
+  setup: function (location) {
+    // When using HistoryLocation, automatically fallback
+    // to RefreshLocation in browsers that do not support
+    // the HTML5 history API.
+    if (location === HistoryLocation && !supportsHistory())
+      location = RefreshLocation;
+
+    if (_location != null) {
+      warning(
+        _location === location,
+        'Cannot use location %s, already using %s', location, _location
+      );
+      return;
+    }
+
+    _location = location;
+
+    if (!_location)
+      return;
+
+    _location.setup(handlePop);
+    LocationDispatcher.handleBrowserAction({
+      type: ActionTypes.SETUP,
+      path: _location.getCurrentPath()
+    });
+  },
+
+  teardown: function () {
+    if (_location !== null) {
+      _location.teardown();
+      _location = null;
+    }
+  },
 
   /**
    * Transitions to the URL specified in the arguments by pushing
@@ -24,9 +71,12 @@ var LocationActions = {
     if (isAbsoluteURL(to)) {
       loadURL(to);
     } else {
+      var path = makePath(to, params, query);
+      _location.push(path);
+
       LocationDispatcher.handleViewAction({
-        type: LocationActions.PUSH,
-        path: makePath(to, params, query)
+        type: ActionTypes.PUSH,
+        path: _location.getCurrentPath()
       });
     }
   },
@@ -39,9 +89,12 @@ var LocationActions = {
     if (isAbsoluteURL(to)) {
       loadURL(to);
     } else {
+      var path = makePath(to, params, query);
+      _location.replace(path);
+
       LocationDispatcher.handleViewAction({
-        type: LocationActions.REPLACE,
-        path: makePath(to, params, query)
+        type: ActionTypes.REPLACE,
+        path: _location.getCurrentPath()
       });
     }
   },
@@ -50,18 +103,11 @@ var LocationActions = {
    * Transitions to the previous URL.
    */
   goBack: function () {
-    LocationDispatcher.handleViewAction({
-      type: LocationActions.POP
-    });
-  },
+    _location.pop();
 
-  /**
-   * Updates the window's scroll position to the last known position
-   * for the current URL path.
-   */
-  updateScroll: function () {
     LocationDispatcher.handleViewAction({
-      type: LocationActions.UPDATE_SCROLL
+      type: ActionTypes.POP,
+      path: _location.getCurrentPath()
     });
   }
 
