@@ -1,3 +1,4 @@
+var ActionTypes = require('../constants/ActionTypes');
 var LocationDispatcher = require('../dispatchers/LocationDispatcher');
 var isAbsoluteURL = require('../utils/isAbsoluteURL');
 var makePath = require('../utils/makePath');
@@ -11,11 +12,6 @@ function loadURL(url) {
  */
 var LocationActions = {
 
-  PUSH: 'push',
-  REPLACE: 'replace',
-  POP: 'pop',
-  UPDATE_SCROLL: 'update-scroll',
-
   /**
    * Transitions to the URL specified in the arguments by pushing
    * a new URL onto the history stack.
@@ -25,7 +21,7 @@ var LocationActions = {
       loadURL(to);
     } else {
       LocationDispatcher.handleViewAction({
-        type: LocationActions.PUSH,
+        type: ActionTypes.PUSH,
         path: makePath(to, params, query)
       });
     }
@@ -40,7 +36,7 @@ var LocationActions = {
       loadURL(to);
     } else {
       LocationDispatcher.handleViewAction({
-        type: LocationActions.REPLACE,
+        type: ActionTypes.REPLACE,
         path: makePath(to, params, query)
       });
     }
@@ -51,7 +47,7 @@ var LocationActions = {
    */
   goBack: function () {
     LocationDispatcher.handleViewAction({
-      type: LocationActions.POP
+      type: ActionTypes.POP
     });
   },
 
@@ -61,7 +57,7 @@ var LocationActions = {
    */
   updateScroll: function () {
     LocationDispatcher.handleViewAction({
-      type: LocationActions.UPDATE_SCROLL
+      type: ActionTypes.UPDATE_SCROLL
     });
   }
 

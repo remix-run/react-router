@@ -1,6 +1,6 @@
 var warning = require('react/lib/warning');
 var EventEmitter = require('events').EventEmitter;
-var LocationActions = require('../actions/LocationActions');
+var ActionTypes = require('../constants/ActionTypes');
 var LocationDispatcher = require('../dispatchers/LocationDispatcher');
 var supportsHistory = require('../utils/supportsHistory');
 var HistoryLocation = require('../locations/HistoryLocation');
@@ -102,26 +102,26 @@ var PathStore = {
     var currentPath = _location.getCurrentPath();
 
     switch (action.type) {
-      case LocationActions.PUSH:
+      case ActionTypes.PUSH:
         if (currentPath !== action.path) {
           recordScrollPosition(currentPath);
           _location.push(action.path);
         }
         break;
 
-      case LocationActions.REPLACE:
+      case ActionTypes.REPLACE:
         if (currentPath !== action.path) {
           recordScrollPosition(currentPath);
           _location.replace(action.path);
         }
         break;
 
-      case LocationActions.POP:
+      case ActionTypes.POP:
         recordScrollPosition(currentPath);
         _location.pop();
         break;
 
-      case LocationActions.UPDATE_SCROLL:
+      case ActionTypes.UPDATE_SCROLL:
         updateScrollPosition(currentPath);
         break;
     }
