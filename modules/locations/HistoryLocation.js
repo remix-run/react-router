@@ -1,52 +1,73 @@
+var LocationDispatcher = require('../dispatchers/LocationDispatcher');
+var ActionTypes = require('../constants/ActionTypes');
 var invariant = require('react/lib/invariant');
 var canUseDOM = require('react/lib/ExecutionEnvironment').canUseDOM;
 var getWindowPath = require('../utils/getWindowPath');
-
-var _onChange;
 
 /**
  * A Location that uses HTML5 history.
  */
 var HistoryLocation = {
 
-  setup: function (onChange) {
+  setup: function () {
     invariant(
       canUseDOM,
       'You cannot use HistoryLocation in an environment with no DOM'
     );
 
-    _onChange = onChange;
-
     if (window.addEventListener) {
-      window.addEventListener('popstate', _onChange, false);
+      window.addEventListener('popstate', this._handlePopState, false);
     } else {
-      window.attachEvent('popstate', _onChange);
+      window.attachEvent('popstate', this._handlePopState);
     }
+
+    LocationDispatcher.handleBrowserAction({
+      type: ActionTypes.SETUP,
+      path: getWindowPath()
+    });
   },
 
   teardown: function () {
     if (window.removeEventListener) {
-      window.removeEventListener('popstate', _onChange, false);
+      window.removeEventListener('popstate', this._handlePopState, false);
     } else {
-      window.detachEvent('popstate', _onChange);
+      window.detachEvent('popstate', this._handlePopState);
     }
   },
 
   push: function (path) {
     window.history.pushState({ path: path }, '', path);
-    _onChange();
+
+    LocationDispatcher.handleViewAction({
+      type: ActionTypes.PUSH,
+      path: path
+    });
   },
 
   replace: function (path) {
     window.history.replaceState({ path: path }, '', path);
-    _onChange();
+
+    LocationDispatcher.handleViewAction({
+      type: ActionTypes.REPLACE,
+      path: path
+    });
   },
 
   pop: function () {
     window.history.back();
+
+    LocationDispatcher.handleViewAction({
+      type: ActionTypes.POP,
+      path: getWindowPath()
+    });
   },
 
-  getCurrentPath: getWindowPath,
+  _handlePopState: function () {
+    LocationDispatcher.handleBrowserAction({
+      type: ActionTypes.POP,
+      path: getWindowPath()
+    });
+  },
 
   toString: function () {
     return '<HistoryLocation>';

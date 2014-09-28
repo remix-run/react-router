@@ -1,33 +1,14 @@
-var warning = require('react/lib/warning');
 var EventEmitter = require('events').EventEmitter;
 var ActionTypes = require('../constants/ActionTypes');
 var LocationDispatcher = require('../dispatchers/LocationDispatcher');
-var supportsHistory = require('../utils/supportsHistory');
-var HistoryLocation = require('../locations/HistoryLocation');
-var RefreshLocation = require('../locations/RefreshLocation');
 
 var CHANGE_EVENT = 'change';
 var _events = new EventEmitter;
+var _currentPath = null;
 
 function notifyChange() {
   _events.emit(CHANGE_EVENT);
 }
-
-var _scrollPositions = {};
-
-function recordScrollPosition(path) {
-  _scrollPositions[path] = {
-    x: window.scrollX,
-    y: window.scrollY
-  };
-}
-
-function updateScrollPosition(path) {
-  var p = PathStore.getScrollPosition(path);
-  window.scrollTo(p.x, p.y);
-}
-
-var _location;
 
 /**
  * The PathStore keeps track of the current URL path and manages
@@ -41,88 +22,38 @@ var PathStore = {
 
   removeChangeListener: function (listener) {
     _events.removeListener(CHANGE_EVENT, listener);
-
-    // Automatically teardown when the last listener is removed.
-    if (EventEmitter.listenerCount(_events, CHANGE_EVENT) === 0)
-      PathStore.teardown();
-  },
-
-  setup: function (location) {
-    // When using HistoryLocation, automatically fallback
-    // to RefreshLocation in browsers that do not support
-    // the HTML5 history API.
-    if (location === HistoryLocation && !supportsHistory())
-      location = RefreshLocation;
-
-    if (_location == null) {
-      _location = location;
-
-      if (_location && typeof _location.setup === 'function')
-        _location.setup(notifyChange);
-    } else {
-      warning(
-        _location === location,
-        'Cannot use location %s, already using %s', location, _location
-      );
-    }
-  },
-
-  teardown: function () {
-    _events.removeAllListeners(CHANGE_EVENT);
-
-    if (_location && typeof _location.teardown === 'function')
-      _location.teardown();
-
-    _location = null;
-  },
-
-  /**
-   * Returns the location object currently in use.
-   */
-  getLocation: function () {
-    return _location;
   },
 
   /**
    * Returns the current URL path.
    */
   getCurrentPath: function () {
-    return _location.getCurrentPath();
+    return _currentPath;
   },
 
   /**
    * Returns the last known scroll position for the given path.
    */
   getScrollPosition: function (path) {
-    return _scrollPositions[path] || { x: 0, y: 0 };
+    return { x: 0, y: 0 };
   },
 
   dispatchToken: LocationDispatcher.register(function (payload) {
     var action = payload.action;
-    var currentPath = _location.getCurrentPath();
 
     switch (action.type) {
+      case ActionTypes.SETUP:
       case ActionTypes.PUSH:
-        if (currentPath !== action.path) {
-          recordScrollPosition(currentPath);
-          _location.push(action.path);
-        }
-        break;
-
       case ActionTypes.REPLACE:
-        if (currentPath !== action.path) {
-          recordScrollPosition(currentPath);
-          _location.replace(action.path);
-        }
-        break;
-
       case ActionTypes.POP:
-        recordScrollPosition(currentPath);
-        _location.pop();
+        if (_currentPath !== action.path) {
+          _currentPath = action.path;
+          notifyChange();
+        }
         break;
 
       case ActionTypes.UPDATE_SCROLL:
-        updateScrollPosition(currentPath);
+        // TODO!
         break;
     }
   })

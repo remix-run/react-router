@@ -1,5 +1,5 @@
 var HashLocation = require('../locations/HashLocation');
-var PathStore = require('../stores/PathStore');
+var LocationActions = require('../actions/LocationActions');
 var makePath = require('./makePath');
 
 /**
@@ -9,7 +9,7 @@ var makePath = require('./makePath');
 function makeHref(to, params, query) {
   var path = makePath(to, params, query);
 
-  if (PathStore.getLocation() === HashLocation)
+  if (LocationActions.getLocation() === HashLocation)
     return '#' + path;
 
   return path;

@@ -1,4 +1,4 @@
-var React = require('react');
+var LocationActions = require('../actions/LocationActions');
 var DefaultLocation = require('../locations/DefaultLocation');
 var HashLocation = require('../locations/HashLocation');
 var HistoryLocation = require('../locations/HistoryLocation');
@@ -49,7 +49,7 @@ var PathListener = {
   },
 
   componentWillMount: function () {
-    PathStore.setup(this.getLocation());
+    LocationActions.setup(this.getLocation());
 
     if (this.updatePath)
       this.updatePath(PathStore.getCurrentPath());
@@ -61,6 +61,7 @@ var PathListener = {
 
   componentWillUnmount: function () {
     PathStore.removeChangeListener(this.handlePathChange);
+    LocationActions.teardown();
   },
 
   handlePathChange: function () {
