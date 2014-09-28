@@ -4,8 +4,7 @@ var ActionTypes = keyMirror({
   SETUP: null,
   PUSH: null,
   REPLACE: null,
-  POP: null,
-  UPDATE_SCROLL: null
+  POP: null
 });
 
 module.exports = ActionTypes;

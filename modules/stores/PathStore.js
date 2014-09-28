@@ -31,13 +31,6 @@ var PathStore = {
     return _currentPath;
   },
 
-  /**
-   * Returns the last known scroll position for the given path.
-   */
-  getScrollPosition: function (path) {
-    return { x: 0, y: 0 };
-  },
-
   dispatchToken: LocationDispatcher.register(function (payload) {
     var action = payload.action;
 
@@ -50,10 +43,6 @@ var PathStore = {
           _currentPath = action.path;
           notifyChange();
         }
-        break;
-
-      case ActionTypes.UPDATE_SCROLL:
-        // TODO!
         break;
     }
   })
