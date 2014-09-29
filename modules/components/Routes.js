@@ -74,6 +74,7 @@ var Routes = React.createClass({
   propTypes: {
     onAbortedTransition: React.PropTypes.func.isRequired,
     onTransitionError: React.PropTypes.func.isRequired,
+    onPathChange: React.PropTypes.func,
     preserveScrollPosition: React.PropTypes.bool
   },
 
@@ -132,6 +133,9 @@ var Routes = React.createClass({
       } else {
         self.emitChange();
         maybeUpdateScroll(self);
+
+        if (self.props.onPathChange)
+          self.props.onPathChange(path);
       }
     });
   },
@@ -164,6 +168,12 @@ var Routes = React.createClass({
       self.setState(nextState, function () {
         callback(null, transition);
       });
+
+      if (!self.isMounted()) {
+        // React will not trigger setState callback
+        // if component has not yet been mounted
+        callback(null, transition);
+      }
     });
   },
 
