@@ -4,6 +4,7 @@ var RefreshLocation = require('../locations/RefreshLocation');
 var LocationDispatcher = require('../dispatchers/LocationDispatcher');
 var ActionTypes = require('../constants/ActionTypes');
 var warning = require('react/lib/warning');
+var invariant = require('react/lib/invariant');
 var isAbsoluteURL = require('../utils/isAbsoluteURL');
 var makePath = require('../utils/makePath');
 
@@ -12,14 +13,46 @@ function loadURL(url) {
 }
 
 var _location = null;
+var _pendingActions = [];
 var _isDispatching = false;
 var _previousPath = null;
 
+/**
+ * Safely enqueues action for dispatch in current tick.
+ * If a different action is being dispatched, this action
+ * will be dispatched right after it.
+ */
 function dispatchAction(actionType, operation) {
-  if (_isDispatching)
-    throw new Error('Cannot handle ' + actionType + ' in the middle of another action.');
+  _pendingActions.push({
+    actionType: actionType,
+    operation: operation
+  });
 
+  if (!_isDispatching) {
+    dispatchPendingActions();
+  }
+}
+
+/**
+ * Dispatches all pending actions one by one.
+ * If more pending actions are enqueued during the loop, they will be processed in the same tick.
+ */
+function dispatchPendingActions() {
+  invariant(!_isDispatching, 'Cannot dispatch in the middle of dispatch');
   _isDispatching = true;
+
+  while (_pendingActions.length > 0) {
+    dispatchNextPendingAction();
+  }
+
+  _isDispatching = false;
+}
+
+function dispatchNextPendingAction() {
+  var pendingAction = _pendingActions.shift();
+
+  var operation = pendingAction.operation;
+  var actionType = pendingAction.actionType;
 
   var scrollPosition = {
     x: window.scrollX,
@@ -30,23 +63,25 @@ function dispatchAction(actionType, operation) {
     operation(_location);
 
   var path = _location.getCurrentPath();
+
   LocationDispatcher.handleViewAction({
     type: actionType,
     path: path,
     scrollPosition: scrollPosition
   });
 
-  _isDispatching = false;
   _previousPath = path;
 }
 
 function handleChange() {
   var path = _location.getCurrentPath();
 
-  // Ignore changes inside or caused by dispatchAction
-  if (!_isDispatching && path !== _previousPath) {
-    dispatchAction(ActionTypes.POP);
+  // Ignore location change inside or caused by dispatchAction
+  if (_isDispatching || path === _previousPath) {
+    return;
   }
+
+  dispatchAction(ActionTypes.POP);
 }
 
 /**
