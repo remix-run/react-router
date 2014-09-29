@@ -5,11 +5,11 @@ var LocationDispatcher = require('../dispatchers/LocationDispatcher');
 var CHANGE_EVENT = 'change';
 var _events = new EventEmitter;
 
-function notifyChange(sender) {
-  _events.emit(CHANGE_EVENT, sender);
+function notifyChange() {
+  _events.emit(CHANGE_EVENT);
 }
 
-var _currentPath;
+var _currentPath, _currentActionType;
 
 /**
  * The PathStore keeps track of the current URL path.
@@ -31,6 +31,13 @@ var PathStore = {
     return _currentPath;
   },
 
+  /**
+   * Returns the type of the action that changed the URL.
+   */
+  getCurrentActionType: function () {
+    return _currentActionType;
+  },
+
   dispatchToken: LocationDispatcher.register(function (payload) {
     var action = payload.action;
 
@@ -41,7 +48,8 @@ var PathStore = {
       case LocationActions.POP:
         if (_currentPath !== action.path) {
           _currentPath = action.path;
-          notifyChange(action.sender);
+          _currentActionType = action.type;
+          notifyChange();
         }
         break;
     }

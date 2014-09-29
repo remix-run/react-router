@@ -5,8 +5,10 @@ var LocationDispatcher = require('../dispatchers/LocationDispatcher');
 var getWindowPath = require('../utils/getWindowPath');
 
 function getHashPath() {
-  return window.location.hash.substr(1) || '/';
+  return window.location.hash.substr(1);
 }
+
+var _actionType;
 
 function ensureSlash() {
   var path = getHashPath();
@@ -14,22 +16,24 @@ function ensureSlash() {
   if (path.charAt(0) === '/')
     return true;
 
-  HashLocation.replace('/' + path, _actionSender);
+  HashLocation.replace('/' + path);
 
   return false;
 }
 
-var _actionType, _actionSender;
-
 function onHashChange() {
   if (ensureSlash()) {
+    var path = getHashPath();
+
     LocationDispatcher.handleViewAction({
-      type: _actionType,
-      path: getHashPath(),
-      sender: _actionSender || window
+      // If we don't have an _actionType then all we know is the hash
+      // changed. It was probably caused by the user clicking the Back
+      // button, but may have also been the Forward button.
+      type: _actionType || LocationActions.POP,
+      path: getHashPath()
     });
 
-    _actionSender = null;
+    _actionType = null;
   }
 }
 
@@ -49,17 +53,18 @@ var HashLocation = {
       'You cannot use HashLocation in an environment with no DOM'
     );
 
+    ensureSlash();
+
+    LocationDispatcher.handleViewAction({
+      type: LocationActions.SETUP,
+      path: getHashPath()
+    });
+
     if (window.addEventListener) {
       window.addEventListener('hashchange', onHashChange, false);
     } else {
       window.attachEvent('onhashchange', onHashChange);
     }
-
-    LocationDispatcher.handleViewAction({
-      type: LocationActions.SETUP,
-      path: getHashPath(),
-      sender: window
-    });
 
     _isSetup = true;
   },
@@ -74,21 +79,18 @@ var HashLocation = {
     _isSetup = false;
   },
 
-  push: function (path, sender) {
+  push: function (path) {
     _actionType = LocationActions.PUSH;
-    _actionSender = sender;
     window.location.hash = path;
   },
 
-  replace: function (path, sender) {
+  replace: function (path) {
     _actionType = LocationActions.REPLACE;
-    _actionSender = sender;
     window.location.replace(getWindowPath() + '#' + path);
   },
 
-  pop: function (sender) {
+  pop: function () {
     _actionType = LocationActions.POP;
-    _actionSender = sender;
     window.history.back();
   },
 

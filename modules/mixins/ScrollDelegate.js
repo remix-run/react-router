@@ -24,13 +24,13 @@ var ScrollDelegate = {
    * Updates the current scroll position according to the last
    * one that was recorded for the given path.
    */
-  updateScroll: function (path, sender) {
+  updateScroll: function (path, actionType) {
     if (this._scrollPositions) {
       var behavior = this.getScrollBehavior();
       var position = this._scrollPositions[path];
 
       if (behavior && position)
-        behavior.updateScrollPosition(position, sender);
+        behavior.updateScrollPosition(position, actionType);
     }
   }
 

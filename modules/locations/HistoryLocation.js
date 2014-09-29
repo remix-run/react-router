@@ -4,16 +4,11 @@ var LocationActions = require('../actions/LocationActions');
 var LocationDispatcher = require('../dispatchers/LocationDispatcher');
 var getWindowPath = require('../utils/getWindowPath');
 
-var _actionSender;
-
 function onPopState() {
   LocationDispatcher.handleViewAction({
     type: LocationActions.POP,
-    path: getWindowPath(),
-    sender: _actionSender || window
+    path: getWindowPath()
   });
-
-  _actionSender = null;
 }
 
 var _isSetup = false;
@@ -32,17 +27,16 @@ var HistoryLocation = {
       'You cannot use HistoryLocation in an environment with no DOM'
     );
 
+    LocationDispatcher.handleViewAction({
+      type: LocationActions.SETUP,
+      path: getWindowPath()
+    });
+
     if (window.addEventListener) {
       window.addEventListener('popstate', onPopState, false);
     } else {
       window.attachEvent('popstate', onPopState);
     }
-
-    LocationDispatcher.handleViewAction({
-      type: LocationActions.SETUP,
-      path: getWindowPath(),
-      sender: window
-    });
 
     _isSetup = true;
   },
@@ -57,28 +51,25 @@ var HistoryLocation = {
     _isSetup = false;
   },
 
-  push: function (path, sender) {
+  push: function (path) {
     window.history.pushState({ path: path }, '', path);
 
     LocationDispatcher.handleViewAction({
       type: LocationActions.PUSH,
-      path: getWindowPath(),
-      sender: sender
+      path: getWindowPath()
     });
   },
 
-  replace: function (path, sender) {
+  replace: function (path) {
     window.history.replaceState({ path: path }, '', path);
 
     LocationDispatcher.handleViewAction({
       type: LocationActions.REPLACE,
-      path: getWindowPath(),
-      sender: sender
+      path: getWindowPath()
     });
   },
 
-  pop: function (sender) {
-    _actionSender = sender;
+  pop: function () {
     window.history.back();
   },
 

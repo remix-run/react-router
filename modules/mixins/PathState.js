@@ -1,9 +1,11 @@
+var React = require('react');
+var invariant = require('react/lib/invariant');
 var canUseDOM = require('react/lib/ExecutionEnvironment').canUseDOM;
 var HashLocation = require('../locations/HashLocation');
 var HistoryLocation = require('../locations/HistoryLocation');
 var RefreshLocation = require('../locations/RefreshLocation');
-var PathStore = require('../stores/PathStore');
 var supportsHistory = require('../utils/supportsHistory');
+var PathStore = require('../stores/PathStore');
 
 /**
  * A hash of { name: location } pairs.
@@ -16,13 +18,12 @@ var NAMED_LOCATIONS = {
 
 /**
  * A mixin for components that need to know the current URL path. Components
- * that use it may specify a `location` prop that they use to track changes
- * to the URL. They also get:
+ * that use it get two things:
  *
- *   1. An `updatePath` method that is called when the
+ *   1. An optional `location` prop that they use to track
+ *      changes to the URL
+ *   2. An `updatePath` method that is called when the
  *      current URL path changes
- *   2. A `getCurrentPath` method they can use to get
- *      the current URL path
  *
  * Example:
  *
@@ -30,15 +31,9 @@ var NAMED_LOCATIONS = {
  *     
  *     mixins: [ Router.PathState ],
  *   
- *     getInitialState: function () {
- *       return {
- *         currentPath: this.getCurrentPath()
- *       };
- *     },
- *   
- *     updatePath: function () {
+ *     updatePath: function (path, actionType) {
  *       this.setState({
- *         currentPath: this.getCurrentPath()
+ *         currentPath: path
  *       });
  *     }
  *   
@@ -47,6 +42,8 @@ var NAMED_LOCATIONS = {
 var PathState = {
 
   propTypes: {
+
+    fixedPath: React.PropTypes.string,
 
     location: function (props, propName, componentName) {
       var location = props[propName];
@@ -59,8 +56,8 @@ var PathState = {
 
   getDefaultProps: function () {
     return {
-      location: canUseDOM ? HashLocation : null,
-      path: null
+      fixedPath: null,
+      location: canUseDOM ? HashLocation : null
     };
   },
 
@@ -84,11 +81,16 @@ var PathState = {
   componentWillMount: function () {
     var location = this.getLocation();
 
+    invariant(
+      this.props.fixedPath == null || this.getLocation() == null,
+      'You cannot use a fixed path with a location. Choose one or the other'
+    );
+
     if (location && location.setup)
       location.setup();
 
     if (this.updatePath)
-      this.updatePath(this.getCurrentPath(), this);
+      this.updatePath(this.getCurrentPath(), this.getCurrentActionType());
   },
 
   componentDidMount: function () {
@@ -99,16 +101,17 @@ var PathState = {
     PathStore.removeChangeListener(this.handlePathChange);
   },
 
-  handlePathChange: function (sender) {
+  handlePathChange: function () {
     if (this.isMounted() && this.updatePath)
-      this.updatePath(this.getCurrentPath(), sender);
+      this.updatePath(this.getCurrentPath(), this.getCurrentActionType());
   },
 
-  /**
-   * Returns the current URL path.
-   */
   getCurrentPath: function () {
-    return PathStore.getCurrentPath();
+    return this.props.fixedPath || PathStore.getCurrentPath();
+  },
+
+  getCurrentActionType: function () {
+    return PathStore.getCurrentActionType();
   }
 
 };

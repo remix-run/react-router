@@ -335,7 +335,7 @@ var TransitionHandler = {
   /**
    * See PathState.
    */
-  updatePath: function (path, sender) {
+  updatePath: function (path, actionType) {
     if (this.state.path === path)
       return; // Nothing to do!
 
@@ -351,7 +351,7 @@ var TransitionHandler = {
         self.props.onAbortedTransition.call(self, transition);
       } else {
         self.emitChange();
-        self.updateScroll(path, sender);
+        self.updateScroll(path, actionType);
       }
     });
   },

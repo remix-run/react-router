@@ -19,6 +19,13 @@ var RouteLookup = {
   },
 
   /**
+   * See RouteContainer#getNamedRoutes.
+   */
+  getNamedRoutes: function () {
+    return this.context.routeContainer.getNamedRoutes();
+  },
+
+  /**
    * See RouteContainer#getRouteByName.
    */
   getRouteByName: function (routeName) {

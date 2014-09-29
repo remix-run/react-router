@@ -2,6 +2,7 @@ var React = require('react');
 var invariant = require('react/lib/invariant');
 var PathState = require('./PathState');
 var RouteContainer = require('./RouteContainer');
+var LocationActions = require('../actions/LocationActions');
 var HashLocation = require('../locations/HashLocation');
 var Path = require('../utils/Path');
 
@@ -62,17 +63,16 @@ var PathDelegate = {
    * Transitions to the URL specified in the arguments by pushing
    * a new URL onto the history stack.
    */
-  transitionTo: function (to, params, query, sender) {
-    sender = sender || this;
-
+  transitionTo: function (to, params, query) {
     var path = this.makePath(to, params, query);
     var location = this.getLocation();
 
-    // If we have a location, route the transition through it.
+    // If we have a location, route the transition
+    // through it so the URL is updated as well.
     if (location) {
-      location.push(path, this);
+      location.push(path);
     } else if (this.updatePath) {
-      this.updatePath(path, this);
+      this.updatePath(path, LocationActions.PUSH);
     }
   },
 
@@ -80,26 +80,23 @@ var PathDelegate = {
    * Transitions to the URL specified in the arguments by replacing
    * the current URL in the history stack.
    */
-  replaceWith: function (to, params, query, sender) {
-    sender = sender || this;
-
+  replaceWith: function (to, params, query) {
     var path = this.makePath(to, params, query);
     var location = this.getLocation();
 
-    // If we have a location, route the transition through it.
+    // If we have a location, route the transition
+    // through it so the URL is updated as well.
     if (location) {
-      location.replace(path, sender);
+      location.replace(path);
     } else if (this.updatePath) {
-      this.updatePath(path, sender);
+      this.updatePath(path, LocationActions.REPLACE);
     }
   },
 
   /**
    * Transitions to the previous URL.
    */
-  goBack: function (sender) {
-    sender = sender || this;
-
+  goBack: function () {
     var location = this.getLocation();
 
     invariant(
@@ -107,7 +104,7 @@ var PathDelegate = {
       'You cannot goBack without a location'
     );
 
-    location.pop(sender);
+    location.pop();
   }
 
 };

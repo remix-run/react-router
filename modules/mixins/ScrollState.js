@@ -1,5 +1,6 @@
-var canUseDOM = require('react/lib/ExecutionEnvironment').canUseDOM;
 var invariant = require('react/lib/invariant');
+var canUseDOM = require('react/lib/ExecutionEnvironment').canUseDOM;
+var LocationActions = require('../actions/LocationActions');
 
 /**
  * A scroll behavior that attempts to imitate the default behavior
@@ -7,12 +8,15 @@ var invariant = require('react/lib/invariant');
  */
 var ImitateBrowserBehavior = {
 
-  updateScrollPosition: function (position, sender) {
-    if (sender === window) {
-      window.scrollTo(position.x, position.y);
-    } else {
-      // Clicking on links always scrolls the window to the top.
-      window.scrollTo(0, 0);
+  updateScrollPosition: function (position, actionType) {
+    switch (actionType) {
+      case LocationActions.PUSH:
+      case LocationActions.REPLACE:
+        window.scrollTo(0, 0);
+        break;
+      case LocationActions.POP:
+        window.scrollTo(position.x, position.y);
+        break;
     }
   }
 
@@ -69,7 +73,7 @@ var ScrollState = {
     var behavior = this.props.scrollBehavior;
 
     if (typeof behavior === 'string')
-      behavior = NAMED_SCROLL_STRATEGIES[behavior];
+      behavior = NAMED_SCROLL_BEHAVIORS[behavior];
 
     return behavior;
   },

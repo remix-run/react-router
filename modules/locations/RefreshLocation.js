@@ -19,8 +19,7 @@ var RefreshLocation = {
 
     LocationDispatcher.handleViewAction({
       type: LocationActions.SETUP,
-      path: getWindowPath(),
-      sender: window
+      path: getWindowPath()
     });
   },
 
