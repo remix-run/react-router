@@ -1,6 +1,7 @@
 require('./helper');
 var Route = require('../modules/components/Route');
 var Routes = require('../modules/components/Routes');
+var RouteStore = require('../modules/stores/RouteStore');
 
 describe('a Routes', function () {
 
@@ -54,6 +55,30 @@ describe('a Routes', function () {
           Route({ handler: App })
         )
       );
+    });
+  });
+  
+  describe('when unmounted', function() {
+    it('unregisters all routes', function() {
+      var App = React.createClass({
+        render: function () {
+          return React.DOM.div();
+        }
+      });
+
+      // Cannot unmount with .renderIntoDocument
+      var container = document.createElement('div');
+      var routes = React.renderComponent(
+        Routes(
+          null, Route({ path: '/', name: 'main', handler: App })
+        )
+      , container);
+      
+      expect(RouteStore.getRouteByName('main')).toNotBe(null);
+      
+      React.unmountComponentAtNode(container);
+      
+      expect(RouteStore.getRouteByName('main')).toBe(null);
     });
   });
 

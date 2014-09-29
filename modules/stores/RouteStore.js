@@ -143,6 +143,15 @@ var RouteStore = {
 
     return routes;
   },
+  
+  /**
+   * Unregisters many children routes at once.
+   */
+  unregisterChildren: function (children) {
+    React.Children.forEach(children, function (child) {
+      RouteStore.unregisterRoute(child)
+    });
+  },
 
   /**
    * Returns the Route object with the given name, if one exists.

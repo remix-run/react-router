@@ -91,6 +91,10 @@ var Routes = React.createClass({
       routes: RouteStore.registerChildren(this.props.children, this)
     };
   },
+  
+  componentWillUnmount: function() {
+    RouteStore.unregisterChildren(this.props.children);
+  },
 
   /**
    * Gets the <Route> component that is currently active.
