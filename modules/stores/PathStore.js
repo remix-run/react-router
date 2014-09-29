@@ -39,8 +39,11 @@ var PathStore = {
       case LocationActions.PUSH:
       case LocationActions.REPLACE:
       case LocationActions.POP:
-        _currentPath = action.path;
-        notifyChange(action.sender);
+        if (_currentPath !== action.path) {
+          _currentPath = action.path;
+          notifyChange(action.sender);
+        }
+        break;
     }
   })
 

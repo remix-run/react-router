@@ -7,7 +7,7 @@
     "type": "git",
     "url": "https://github.com/rackt/react-router.git"
   },
-  "homepage": "https://github.com/rackt/react-router",
+  "homepage": "https://github.com/rackt/react-router/blob/latest/README.md",
   "bugs": "https://github.com/rackt/react-router/issues",
   "directories": {
     "example": "examples"
@@ -34,7 +34,7 @@
     "mocha": "1.20.1",
     "react": ">=0.11.0",
     "reactify": "^0.14.0",
-    "rf-release": "0.3.1",
+    "rf-release": "0.3.2",
     "uglify-js": "2.4.15"
   },
   "peerDependencies": {

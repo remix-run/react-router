@@ -127,7 +127,7 @@ function computeNextState(component, transition, callback) {
       if (error || transition.isAborted)
         return callback(error);
 
-      var matches = currentMatches.slice(0, -fromMatches.length).concat(toMatches);
+      var matches = currentMatches.slice(0, currentMatches.length - fromMatches.length).concat(toMatches);
       var rootMatch = getRootMatch(matches);
       var params = (rootMatch && rootMatch.params) || {};
       var routes = matches.map(function (match) {
