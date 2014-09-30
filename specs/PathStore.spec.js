@@ -20,6 +20,13 @@ describe('PathStore', function () {
     });
   });
 
+  describe('when a new path with a dot is pushed to the URL', function() {
+    it('has the correct path', function() {
+      transitionTo('/two.json');
+      expect(getCurrentPath()).toEqual('/two.json');
+    });
+  });
+
   describe('when a new path is used to replace the URL', function () {
     beforeEach(function () {
       transitionTo('/two');
