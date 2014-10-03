@@ -73,15 +73,13 @@ var Routes = React.createClass({
 
   propTypes: {
     onAbortedTransition: React.PropTypes.func.isRequired,
-    onTransitionError: React.PropTypes.func.isRequired,
-    preserveScrollPosition: React.PropTypes.bool
+    onTransitionError: React.PropTypes.func.isRequired
   },
 
   getDefaultProps: function () {
     return {
       onAbortedTransition: defaultAbortedTransitionHandler,
-      onTransitionError: defaultTransitionErrorHandler,
-      preserveScrollPosition: false
+      onTransitionError: defaultTransitionErrorHandler
     };
   },
 
