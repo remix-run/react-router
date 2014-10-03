@@ -11,6 +11,7 @@ var PathStore = require('../stores/PathStore');
  * A hash of { name: location } pairs.
  */
 var NAMED_LOCATIONS = {
+  none: null,
   hash: HashLocation,
   history: HistoryLocation,
   refresh: RefreshLocation
