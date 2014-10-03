@@ -172,6 +172,16 @@ var Routes = React.createClass({
     var matches = this.state.matches;
     if (matches.length) {
       // matches[0] corresponds to the top-most match
+      React.Children.forEach(this.props.children, function(child) {
+        var childProps = child.props, matchProps = matches[0].route.props;
+        if (childProps.path && childProps.path === matchProps.path) {
+          for (var key in childProps) {
+            if (childProps.hasOwnProperty(key)) {
+              matchProps[key] = childProps[key];
+            }
+          }
+        }
+      });
       return matches[0].route.props.handler(computeHandlerProps(matches, this.state.activeQuery));
     } else {
       return null;
@@ -191,7 +201,7 @@ function findMatches(path, routes, defaultRoute, notFoundRoute) {
 
     if (matches != null) {
       var rootParams = getRootMatch(matches).params;
-      
+
       params = route.props.paramNames.reduce(function (params, paramName) {
         params[paramName] = rootParams[paramName];
         return params;
