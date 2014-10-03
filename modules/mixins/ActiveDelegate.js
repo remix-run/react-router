@@ -41,11 +41,23 @@ var ActiveDelegate = {
     };
   },
 
-  getInitialState: function () {
+  propTypes: {
+    initialState: React.PropTypes.object
+  },
+
+  getDefaultProps: function () {
     return {
-      activeRoutes: [],
-      activeParams: {},
-      activeQuery: {}
+      initialState: {}
+    };
+  },
+
+  getInitialState: function () {
+    var initialState = this.props.initialState;
+
+    return {
+      activeRoutes: initialState.activeRoutes || [],
+      activeParams: initialState.activeParams || {},
+      activeQuery: initialState.activeQuery || {}
     };
   },
 
