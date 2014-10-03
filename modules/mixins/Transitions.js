@@ -10,24 +10,38 @@ var Transitions = {
   },
 
   /**
+   * See PathDelegate#makePath.
+   */
+  makePath: function (to, params, query) {
+    return this.context.pathDelegate.makePath(to, params, query);
+  },
+
+  /**
+   * See PathDelegate#makeHref.
+   */
+  makeHref: function (to, params, query) {
+    return this.context.pathDelegate.makeHref(to, params, query);
+  },
+
+  /**
    * See PathDelegate#transitionTo.
    */
   transitionTo: function (to, params, query) {
-    return this.context.pathDelegate.transitionTo(to, params, query, this);
+    return this.context.pathDelegate.transitionTo(to, params, query);
   },
 
   /**
    * See PathDelegate#replaceWith.
    */
   replaceWith: function (to, params, query) {
-    return this.context.pathDelegate.replaceWith(to, params, query, this);
+    return this.context.pathDelegate.replaceWith(to, params, query);
   },
 
   /**
    * See PathDelegate#goBack.
    */
   goBack: function () {
-    return this.context.pathDelegate.goBack(this);
+    return this.context.pathDelegate.goBack();
   }
 
 };

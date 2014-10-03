@@ -7,8 +7,7 @@ var React = require('react');
 var RouteLookup = {
 
   contextTypes: {
-    routeContainer: React.PropTypes.any.isRequired,
-    pathDelegate: React.PropTypes.any.isRequired
+    routeContainer: React.PropTypes.any.isRequired
   },
 
   /**
@@ -30,20 +29,6 @@ var RouteLookup = {
    */
   getRouteByName: function (routeName) {
     return this.context.routeContainer.getRouteByName(routeName);
-  },
-
-  /**
-   * See PathDelegate#makePath.
-   */
-  makePath: function (to, params, query) {
-    return this.context.pathDelegate.makePath(to, params, query);
-  },
-
-  /**
-   * See PathDelegate#makeHref.
-   */
-  makeHref: function (to, params, query) {
-    return this.context.pathDelegate.makeHref(to, params, query);
   }
 
 };
