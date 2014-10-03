@@ -139,7 +139,7 @@ var App = React.createClass({
         </header>
 
         {/* this is the important part */}
-        <this.props.activeRouteHandler/>
+        {this.props.activeRouteHandler/}
       </div>
     );
   }
@@ -220,7 +220,7 @@ var Inbox = React.createClass({
       <div>
         <Toolbar/>
         <Messages/>
-        <this.props.activeRouteHandler/>
+        {this.props.activeRouteHandler}
       </div>
     );
   }
