@@ -4,8 +4,8 @@ API: `ActiveState` (mixin)
 A mixin for components that need to know about the routes, params, and
 query that are currently active (like links).
 
-Static Methods
---------------
+Instance Methods
+----------------
 
 ### `isActive(routeName, params, query)`
 
@@ -39,7 +39,7 @@ var Tab = React.createClass({
 
   updateActiveState: function () {
     this.setState({
-      isActive: Tab.isActive(this.props.to, this.props.params, this.props.query)
+      isActive: this.isActive(this.props.to, this.props.params, this.props.query)
     })
   },
 

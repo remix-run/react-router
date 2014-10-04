@@ -68,8 +68,8 @@ during route transitions.
 ### `willTransitionTo(transition, params, query)`
 
 Called when a route is about to render, giving you the opportunity to
-abort or redirect the transition. You can return a promise and the whole
-route hierarchy will wait for the promises to resolve before proceeding.
+abort or redirect the transition. You can pause the transition while you
+do some asynchonous work with `transition.wait(promise)`.
 
 See also: [transition](/docs/api/misc/transition.md)
 

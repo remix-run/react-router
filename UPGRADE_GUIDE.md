@@ -5,6 +5,181 @@ To see discussion around these API changes, please refer to the
 [changelog](/CHANGELOG.md) and visit the commits and issues they
 reference.
 
+0.7.x -> 0.8.x
+--------------
+
+### `ActiveState` mixin `isActive`
+
+`isActive` is now an instance method.
+
+```js
+// 0.7.x
+var SomethingActive = React.createClass({
+  mixins: [ActiveState],
+
+  updateActiveState: function () {
+    this.setState({
+      isActive: SomethingActive.isActive(...)
+    })
+  }
+});
+
+// 0.8.x
+var SomethingActive = React.createClass({
+  mixins: [ActiveState],
+
+  updateActiveState: function () {
+    this.setState({
+      isActive: this.isActive(...)
+    })
+  }
+});
+```
+
+### `<Routes onActiveStateChange/>` -> `PathState`
+
+```js
+// 0.7.x
+<Routes onActiveStateChange={fn} />
+
+// 0.8.x
+var App = React.createClass({
+  mixins: [PathState],
+  updatePath: fn
+});
+```
+
+You may need access to the current routes, use the `RouteLookup` mixin
+for that along with `PathState`.
+
+### `.` in params support
+
+`.` used to be a delimiter like `/`, but now its a valid character in
+your params. If you were using this feature you'll need to do the split
+yourself.
+
+```
+// 0.7.x
+var route = <Route path=":foo.:bar" />;
+
+// 0.8.x
+var route = <Route path=":foobar" handler={Handler}/>
+
+Handler = React.createClass({
+  render: function() {
+    var split = this.props.params.foobar.split('.');
+    var foo = split[0];
+    var bar = split[1];
+    // ...
+  }
+});
+```
+
+### `transition.retry()`
+
+`transition.retry()` used to use `transitionTo`, creating a new history
+entry, it now uses `replaceWith`.
+
+```js
+// 0.7.x
+React.createClass({
+  login: function() {
+    // ...
+    transition.retry();
+  }
+});
+
+// 0.8.x
+React.createClass({
+  mixins: [Transitions],
+  login: function() {
+    // ...
+    this.transitionTo(transition.path);
+  }
+});
+```
+
+### Returning promises from transition hooks
+
+Transition hooks are now sync, unless you opt-in to async with
+`transition.wait(promise)`.
+
+```js
+// 0.7.x
+React.createClass({
+  statics: {
+    willTransitionTo: function(transition) {
+      return somePromise();
+    }
+  }
+});
+
+// 0.8.x
+React.createClass({
+  statics: {
+    willTransitionTo: function(transition) {
+      transition.wait(somePromise());
+    }
+  }
+});
+```
+
+### `preserveScrollPosition` -> `scrollBehavior`
+
+`preserveScrollPosition` was totally broken and should have been named
+`perverseScrollPosition`.
+
+There are now three scroll behaviors you can use:
+
+- `'imitateBrowser'`
+- `'scrollToTop'`
+- `'none'`
+
+`imitateBrowser` is the default, and imitates what browsers do in a
+typical page reload scenario (preserves scroll positions when using the
+back button, scrolls up when you come to a new page, etc.)
+
+Also, you can't specify scroll behavior per `<Route/>` anymore.
+
+```
+<Routes scrollBehavior="scrollToTop"/>
+```
+
+### RouteStore
+
+This was not a public module, but we know some people were using it.
+It's gone now. We have made getting at the current routes incredibly
+convenient now with the `RouteLookup` mixin.
+
+### `Router.transitionTo, replaceWith, goBack`
+
+These methods have been moved to mixins.
+
+```js
+var Router = require('react-router');
+
+// 0.7.x
+React.createClass({
+  whenever: function() {
+    Router.transitionTo('something');
+    Router.replaceWith('something');
+    Router.goBack();
+  }
+});
+
+// 0.8.x
+React.createClass({
+  mixins: [Router.Transitions],
+  whenever: function() {
+    this.transitionTo('something');
+    this.replaceWith('something');
+    this.goBack();
+  }
+});
+```
+
+
+
 0.6.x -> 0.7.x
 --------------
 

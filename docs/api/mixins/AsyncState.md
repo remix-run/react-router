@@ -1,6 +1,11 @@
 API: `AsyncState` (mixin)
 =========================
 
+**WARNING**: This API is not going to be around much longer, don't use
+it. We are taking a different approach that will be added very soon.
+
+So, anyway, you may continue...
+
 A mixin for route handlers that fetch at least part of their state
 asynchronously.
 

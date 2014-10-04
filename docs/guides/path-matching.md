@@ -32,7 +32,7 @@ Dynamic Segments
 
 Dynamic segements are defined with a `:`, like `:userId`. They will be
 parsed and available by name in your route handler on
-`this.props.params`. They match most characters except `. / ? #`.
+`this.props.params`. They match most characters except `/ ? #`.
 
 Splats
 ------
@@ -51,19 +51,39 @@ Examples
 --------
 
 ```
-path: /file/:name.?:ext?
+path: /file/:name
 matches:
   /file/foo.js
-    this.props.params: {name: 'foo', ext: 'js'}
-  /file/foo
-    this.props.params: {name: 'foo'}
+    this.props.params: {name: 'foo.js'}
 does not match:
-  /file/foo.bar.js
+  /file/quux/baz.gif
+  /file/
+  /file
+
+path: /file/:name?
+matches:
+  /file/foo.js
+    this.props.params: {name: 'foo.js'}
+  /file/
+    this.props.params: {}
+does not match:
+  /file
+  /file/quux/baz.js
+
+path: /file/?:name?
+matches:
+  /file/foo.js
+    this.props.params: {name: 'foo.js'}
+  /file/
+    this.props.params: {}
+  /file
+    this.props.params: {}
+does not match:
   /file/quux/baz.js
 
 path: /file/*
 matches:
-  /file/foo.bar.js
+  /file/foo.js
     this.props.params: {splat: 'foo.bar.js'}
   /file/quux/baz.js
     this.props.params: {splat: 'quux/baz.js'}

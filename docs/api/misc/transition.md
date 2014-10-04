@@ -17,8 +17,13 @@ Redirect to another route.
 
 ### `retry()`
 
-Retrys a transition. Typically you save off a transition you care to
-return to, finish the workflow, then retry.
+Retries a transition. Typically you save off a transition you care to
+return to, finish the workflow, then retry. This does not create a new
+entry in the browser history.
+
+### `wait(promise)`
+
+Will pause the transition until the promise resolves.
 
   [transition-hooks]:/docs/api/components/RouteHandler.md#static-lifecycle-methods
 
