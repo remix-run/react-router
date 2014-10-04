@@ -18,15 +18,19 @@ React Router API
 - Mixins
   - [`ActiveState`](/docs/api/mixins/ActiveState.md)
   - [`AsyncState`](/docs/api/mixins/AsyncState.md)
-
+  - [`PathState`](/docs/api/mixins/PathState.md)
+  - [`RouteLookup`](/docs/api/mixins/RouteLookup.md)
+  - [`Transitions`](/docs/api/mixins/Transitions.md)
 
 Public Modules
 --------------
 
-All modules found at the repository root are considered public. You can
-require them conveniently with `var Route = require('react-router/Route');` etc.
+While there are many modules in this repository, only those found on the
+default export are considered public.
 
-Note that we do not support requiring modules from our `modules`
-directory. (No notes in the changelog, no changes to the versioning of
-the lib, etc.)
+```js
+var Router = require('react-router');
+var Link = Router.Link // yes
+var Link = require('react-router/modules/components/Link') // no
+```
 
