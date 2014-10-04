@@ -24,6 +24,10 @@ var PathStore = {
     _events.removeListener(CHANGE_EVENT, listener);
   },
 
+  removeAllChangeListeners: function () {
+    _events.removeAllListeners(CHANGE_EVENT);
+  },
+
   /**
    * Returns the current URL path.
    */
