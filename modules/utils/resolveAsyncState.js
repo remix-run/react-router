@@ -14,9 +14,12 @@ function resolveAsyncState(asyncState, setState) {
   return Promise.all(
     keys.map(function (key) {
       return Promise.resolve(asyncState[key]).then(function (value) {
-        var newState = {};
-        newState[key] = value;
-        setState(newState);
+        // use a timeout to set state, so errors aren't swallowed by the Promise
+        setTimeout(function () {
+          var newState = {};
+          newState[key] = value;
+          setState(newState);
+        }, 0);
       });
     })
   );
