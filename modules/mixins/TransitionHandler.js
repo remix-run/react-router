@@ -411,6 +411,13 @@ var TransitionHandler = {
    */
   getHandlerProps: function () {
     return computeHandlerProps(this.state.matches, this.state.activeQuery);
+  },
+
+  /**
+   * Returns a reference to the active route handler's component instance.
+   */
+  getActiveRoute: function () {
+    return this.refs.__activeRoute__;
   }
 
 };
