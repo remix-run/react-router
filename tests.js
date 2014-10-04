@@ -1,4 +1,5 @@
 require('./modules/components/__tests__/DefaultRoute-test');
+require('./modules/components/__tests__/Link-test');
 require('./modules/components/__tests__/NotFoundRoute-test');
 require('./modules/mixins/__tests__/ActiveDelegate-test');
 require('./modules/mixins/__tests__/AsyncState-test');
