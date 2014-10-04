@@ -1,28 +1,31 @@
 var EventEmitter = require('events').EventEmitter;
-var ActionTypes = require('../constants/ActionTypes');
+var LocationActions = require('../actions/LocationActions');
 var LocationDispatcher = require('../dispatchers/LocationDispatcher');
-var ScrollStore = require('./ScrollStore');
 
 var CHANGE_EVENT = 'change';
 var _events = new EventEmitter;
-var _currentPath = null;
 
 function notifyChange() {
   _events.emit(CHANGE_EVENT);
 }
 
+var _currentPath, _currentActionType;
+
 /**
- * The PathStore keeps track of the current URL path and manages
- * the location strategy that is used to update the URL.
+ * The PathStore keeps track of the current URL path.
  */
 var PathStore = {
 
   addChangeListener: function (listener) {
-    _events.on(CHANGE_EVENT, listener);
+    _events.addListener(CHANGE_EVENT, listener);
   },
 
   removeChangeListener: function (listener) {
     _events.removeListener(CHANGE_EVENT, listener);
+  },
+
+  removeAllChangeListeners: function () {
+    _events.removeAllListeners(CHANGE_EVENT);
   },
 
   /**
@@ -32,21 +35,26 @@ var PathStore = {
     return _currentPath;
   },
 
-  dispatchToken: LocationDispatcher.register(function (payload) {
-    LocationDispatcher.waitFor([ScrollStore.dispatchToken]);
+  /**
+   * Returns the type of the action that changed the URL.
+   */
+  getCurrentActionType: function () {
+    return _currentActionType;
+  },
 
+  dispatchToken: LocationDispatcher.register(function (payload) {
     var action = payload.action;
-    if (_currentPath === action.path) {
-      return;
-    }
 
     switch (action.type) {
-      case ActionTypes.SETUP:
-      case ActionTypes.PUSH:
-      case ActionTypes.REPLACE:
-      case ActionTypes.POP:
-        _currentPath = action.path;
-        notifyChange();
+      case LocationActions.SETUP:
+      case LocationActions.PUSH:
+      case LocationActions.REPLACE:
+      case LocationActions.POP:
+        if (_currentPath !== action.path) {
+          _currentPath = action.path;
+          _currentActionType = action.type;
+          notifyChange();
+        }
         break;
     }
   })

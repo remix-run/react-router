@@ -6,4 +6,3 @@ function getWindowPath() {
 }
 
 module.exports = getWindowPath;
-

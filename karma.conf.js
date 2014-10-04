@@ -6,13 +6,13 @@ module.exports = function(config) {
     frameworks: ['mocha', 'browserify'],
 
     files: [
-      'specs/main.js'
+      'tests.js'
     ],
 
     exclude: [],
 
     preprocessors: {
-      'specs/main.js': ['browserify']
+      'tests.js': ['browserify']
     },
 
     browserify: {

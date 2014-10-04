@@ -132,6 +132,9 @@ var Index = React.createClass({
 });
 
 var Contact = React.createClass({
+
+  mixins: [ Router.Transitions ],
+
   getStateFromStore: function(props) {
     props = props || this.props;
     return {
@@ -164,7 +167,7 @@ var Contact = React.createClass({
 
   destroy: function() {
     ContactStore.removeContact(this.props.params.id);
-    Router.transitionTo('/');
+    this.transitionTo('/');
   },
 
   render: function() {
@@ -182,14 +185,17 @@ var Contact = React.createClass({
 });
 
 var NewContact = React.createClass({
+
+  mixins: [ Router.Transitions ],
+
   createContact: function(event) {
     event.preventDefault();
     ContactStore.addContact({
       first: this.refs.first.getDOMNode().value,
       last: this.refs.last.getDOMNode().value
     }, function(contact) {
-      Router.transitionTo('contact', { id: contact.id });
-    });
+      this.transitionTo('contact', { id: contact.id });
+    }.bind(this));
   },
 
   render: function() {

@@ -6,6 +6,9 @@ var Routes = Router.Routes;
 var Link = Router.Link;
 
 var App = React.createClass({
+
+  mixins: [ Router.Transitions ],
+
   getInitialState: function() {
     return {
       tacos: [
@@ -28,7 +31,7 @@ var App = React.createClass({
       return taco.name != removedTaco;
     });
     this.setState({tacos: tacos});
-    Router.transitionTo('/');
+    this.transitionTo('/');
   },
 
   render: function() {
