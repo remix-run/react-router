@@ -42,22 +42,22 @@ var ActiveDelegate = {
   },
 
   propTypes: {
-    initialState: React.PropTypes.object
+    initialActiveState: React.PropTypes.object // Mainly for testing.
   },
 
   getDefaultProps: function () {
     return {
-      initialState: {}
+      initialActiveState: {}
     };
   },
 
   getInitialState: function () {
-    var initialState = this.props.initialState;
+    var state = this.props.initialActiveState;
 
     return {
-      activeRoutes: initialState.activeRoutes || [],
-      activeParams: initialState.activeParams || {},
-      activeQuery: initialState.activeQuery || {}
+      activeRoutes: state.activeRoutes || [],
+      activeParams: state.activeParams || {},
+      activeQuery: state.activeQuery || {}
     };
   },
 

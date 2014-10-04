@@ -23,7 +23,7 @@ describe('ActiveDelegate', function () {
       beforeEach(function () {
         component = ReactTestUtils.renderIntoDocument(
           App({
-            initialState: {
+            initialActiveState: {
               activeRoutes: [ route ]
             }
           })
@@ -44,7 +44,7 @@ describe('ActiveDelegate', function () {
       beforeEach(function () {
         component = ReactTestUtils.renderIntoDocument(
           App({
-            initialState: {
+            initialActiveState: {
               activeRoutes: [ route ],
               activeParams: { id: '123', show: 'true', variant: 456 },
               activeQuery: { search: 'abc', limit: 789 }
@@ -81,7 +81,7 @@ describe('ActiveDelegate', function () {
       beforeEach(function () {
         component = ReactTestUtils.renderIntoDocument(
           App({
-            initialState: {
+            initialActiveState: {
               activeRoutes: [ route ],
               activeParams: { id: 123 }
             }
