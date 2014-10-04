@@ -1,3 +1,24 @@
+v0.8.0 - Sat, 04 Oct 2014 05:39:02 GMT
+--------------------------------------
+
+- [4d8026f](../../commit/4d8026f) [fixed] Corrected CONTRIBUTING.md by replacing 'script' path with 'scripts'
+- [d2aa7cb](../../commit/d2aa7cb) [added] <Routes location="none">
+- [637c0ac](../../commit/637c0ac) [added] <Routes fixedPath>
+- [f2bf4bd](../../commit/f2bf4bd) [removed] RouteStore
+- [47f0599](../../commit/47f0599) [changed] Remove preserveScrollPosition, add scrollStrategy
+- [2f014b7](../../commit/2f014b7) [fixed] Document the name prop passed to RouteHandlers
+- [97dbf2d](../../commit/97dbf2d) [added] transition.wait(promise)
+- [cc9f145](../../commit/cc9f145) [changed] Give path listeners a chance to update state before mounting
+- [6af24bd](../../commit/6af24bd) [changed] Give ActiveState a chance to update state before mounting
+- [3787179](../../commit/3787179) [changed] Transition retry now uses replaceWith.
+- [1b16b56](../../commit/1b16b56) [fixed] syntax error in documentation overview
+- [e0b708f](../../commit/e0b708f) [added] Ability to transitionTo absolute URLs
+- [c1493b5](../../commit/c1493b5) [changed] #259 support dots in named params
+- [4849166](../../commit/4849166) [changed] Renamed Routes#dispatch => Routes#transitionTo
+- [c373d10](../../commit/c373d10) [changed] Only replaceWith/goBack when DOM is available
+- [a4ce7c8](../../commit/a4ce7c8) [changed] isActive is an instance method [removed] <Routes onActiveStateChange>
+
+
 v0.7.0 - Tue, 02 Sep 2014 16:42:28 GMT
 --------------------------------------
 
