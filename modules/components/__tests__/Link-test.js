@@ -2,8 +2,9 @@ var assert = require('assert');
 var expect = require('expect');
 var React = require('react/addons');
 var ReactTestUtils = React.addons.TestUtils;
-var Routes = require('../Routes');
+var PathStore = require('../../stores/PathStore');
 var DefaultRoute = require('../DefaultRoute');
+var Routes = require('../Routes');
 var Link = require('../Link');
 
 describe('A Link', function () {
@@ -25,6 +26,8 @@ describe('A Link', function () {
 
     afterEach(function () {
       React.unmountComponentAtNode(component.getDOMNode());
+      // For some reason unmountComponentAtNode doesn't call componentWillUnmount :/
+      PathStore.removeAllChangeListeners();
     });
 
     it('is active', function () {
