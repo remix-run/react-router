@@ -8,6 +8,11 @@ var PathStore = require('../../stores/PathStore');
 var Route = require('../Route');
 var DefaultRoute = require('../DefaultRoute');
 
+afterEach(function () {
+  // For some reason unmountComponentAtNode doesn't call componentWillUnmount :/
+  PathStore.removeAllChangeListeners();
+});
+
 describe('A DefaultRoute', function () {
   it('has a null path', function () {
     expect(DefaultRoute({ path: '/' }).props.path).toBe(null);
@@ -85,8 +90,6 @@ describe('when no child routes match a URL, but the parent\'s path matches', fun
 
   afterEach(function () {
     React.unmountComponentAtNode(component.getDOMNode());
-    // For some reason unmountComponentAtNode doesn't call componentWillUnmount :/
-    PathStore.removeAllChangeListeners();
   });
 
   it('matches the default route', function () {

@@ -10,6 +10,11 @@ function getRootMatch(matches) {
   return matches[matches.length - 1];
 }
 
+afterEach(function () {
+  // For some reason unmountComponentAtNode doesn't call componentWillUnmount :/
+  PathStore.removeAllChangeListeners();
+});
+
 describe('A Routes', function () {
 
   var App = React.createClass({
@@ -32,8 +37,6 @@ describe('A Routes', function () {
 
     afterEach(function () {
       React.unmountComponentAtNode(component.getDOMNode());
-      // For some reason unmountComponentAtNode doesn't call componentWillUnmount :/
-      PathStore.removeAllChangeListeners();
     });
 
     it('returns an array', function () {
@@ -60,8 +63,6 @@ describe('A Routes', function () {
 
     afterEach(function () {
       React.unmountComponentAtNode(component.getDOMNode());
-      // For some reason unmountComponentAtNode doesn't call componentWillUnmount :/
-      PathStore.removeAllChangeListeners();
     });
 
     it('returns an array with the correct params', function () {
@@ -71,6 +72,60 @@ describe('A Routes', function () {
 
       var rootMatch = getRootMatch(matches);
       expect(rootMatch.params).toEqual({ id: 'abc' });
+    });
+  });
+
+
+  describe('when a transition is aborted', function () {
+    it('triggers onAbortedTransition', function (done) {
+      var App = React.createClass({
+        statics: {
+          willTransitionTo: function (transition) {
+            transition.abort();
+          }
+        },
+        render: function () {
+          return React.DOM.div();
+        }
+      });
+
+      function handleAbortedTransition(transition) {
+        assert(transition);
+        done();
+      }
+
+      ReactTestUtils.renderIntoDocument(
+        Routes({ onAbortedTransition: handleAbortedTransition },
+          Route({ handler: App })
+        )
+      );
+    });
+  });
+
+  describe('when there is an error in a transition hook', function () {
+    it('triggers onTransitionError', function (done) {
+      var App = React.createClass({
+        statics: {
+          willTransitionTo: function (transition) {
+            throw new Error('boom!');
+          }
+        },
+        render: function () {
+          return React.DOM.div();
+        }
+      });
+
+      function handleTransitionError(error) {
+        assert(error);
+        expect(error.message).toEqual('boom!');
+        done();
+      }
+
+      ReactTestUtils.renderIntoDocument(
+        Routes({ onTransitionError: handleTransitionError },
+          Route({ handler: App })
+        )
+      );
     });
   });
 

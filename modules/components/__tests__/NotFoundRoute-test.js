@@ -8,6 +8,11 @@ var PathStore = require('../../stores/PathStore');
 var Route = require('../Route');
 var NotFoundRoute = require('../NotFoundRoute');
 
+afterEach(function () {
+  // For some reason unmountComponentAtNode doesn't call componentWillUnmount :/
+  PathStore.removeAllChangeListeners();
+});
+
 describe('A NotFoundRoute', function () {
   it('has a null path', function () {
     expect(NotFoundRoute({ path: '/' }).props.path).toBe(null);
@@ -85,8 +90,6 @@ describe('when no child routes match a URL, but the beginning of the parent\'s p
 
   afterEach(function () {
     React.unmountComponentAtNode(component.getDOMNode());
-    // For some reason unmountComponentAtNode doesn't call componentWillUnmount :/
-    PathStore.removeAllChangeListeners();
   });
 
   it('matches the NotFoundRoute', function () {
