@@ -145,6 +145,10 @@ var RouteContainer = {
     return this.state.routes;
   },
 
+  getActiveRoutes: function () {
+    return this.state.activeRoutes;
+  },
+
   /**
    * Returns a hash { name: route } of all named <Route>s in this container.
    */
