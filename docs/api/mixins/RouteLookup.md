@@ -9,7 +9,7 @@ Instance Methods
 
 ### `getRoutes()`
 
-Returns an array of the active routes in order of their hierarchy.
+Returns an array of all routes.
 
 ```js
 [route, route, ...]
@@ -17,7 +17,7 @@ Returns an array of the active routes in order of their hierarchy.
 
 ### `getNamedRoutes()`
 
-Returns an object hash of active routes by name.
+Returns an object hash of all routes by name.
 
 ```js
 {user: route, users: route, ...}
@@ -31,13 +31,11 @@ Example
 -------
 
 ```js
-var TopLevelApp = React.createClass({
-  mixins: [RouteLookup, PathState],
+React.createClass({
+  mixins: [RouteLookup],
 
-  // `updatePath` is from `PathState`
-  updatePath: function() {
-    var deepestRoute = this.getRoutes().reverse()[0];
-    document.title = deepestRoute.props.title;
+  componentDidMount: function() {
+    console.log(this.getRoutes())
   }
 });
 ```
