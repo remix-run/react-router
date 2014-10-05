@@ -205,6 +205,12 @@ describe('Path.injectParams', function () {
     it('returns the correct path', function () {
       expect(Path.injectParams('/a/*/c/*', { splat: [ 'b', 'd' ] })).toEqual('/a/b/c/d');
     });
+
+    it('complains if not given enough splat values', function () {
+      expect(function() {
+        Path.injectParams('/a/*/c/*', { splat: [ 'b' ] });
+      }).toThrow(Error);
+    });
   });
 });
 
