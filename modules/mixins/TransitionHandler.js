@@ -232,6 +232,7 @@ function computeHandlerProps(matches, query) {
     params: null,
     query: null,
     activeRouteHandler: handler,
+    activeRoute: null,
     key: null
   };
 
@@ -243,6 +244,7 @@ function computeHandlerProps(matches, query) {
     props.ref = '__activeRoute__';
     props.params = match.params;
     props.query = query;
+    props.activeRoute = route;
     props.activeRouteHandler = handler;
 
     // TODO: Can we remove addHandlerKey?
