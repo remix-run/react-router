@@ -212,6 +212,12 @@ describe('Path.injectParams', function () {
       }).toThrow(Error);
     });
   });
+
+  describe('when a pattern has dots', function() {
+    it('returns the correct path', function() {
+      expect(Path.injectParams('/foo.bar.baz')).toEqual('/foo.bar.baz');
+    });
+  });
 });
 
 describe('Path.extractQuery', function () {
