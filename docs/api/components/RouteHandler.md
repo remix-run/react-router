@@ -45,6 +45,10 @@ var routes = (
 React.renderComponent(routes, document.body);
 ```
 
+### `activeRoute`
+
+The active child route, useful for inspection.
+
 ### `name`
 
 The current route name.
