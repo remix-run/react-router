@@ -16,3 +16,4 @@ $BUNDLE_EXAMPLE examples/query-params/app.js > examples/query-params/app-bundle.
 $BUNDLE_EXAMPLE examples/shared-root/app.js > examples/shared-root/app-bundle.js
 $BUNDLE_EXAMPLE examples/simple-master-detail/app.js > examples/simple-master-detail/app-bundle.js
 $BUNDLE_EXAMPLE examples/transitions/app.js > examples/transitions/app-bundle.js
+$BUNDLE_EXAMPLE examples/sidebar/app.js > examples/sidebar/app-bundle.js
