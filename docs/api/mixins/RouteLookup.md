@@ -7,6 +7,17 @@ and links.
 Instance Methods
 ----------------
 
+### `getActiveRoutes()`
+
+Returns an array of the active routes in order of hierarchy, closest to
+root first.
+
+```js
+[route, route, ...]
+```
+
+
+
 ### `getRoutes()`
 
 Returns an array of all routes.

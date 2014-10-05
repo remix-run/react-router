@@ -18,6 +18,13 @@ var RouteLookup = {
   },
 
   /**
+   * See RouteContainer#getActiveRoutes.
+   */
+  getActiveRoutes: function() {
+    return this.context.routeContainer.getActiveRoutes();
+  },
+
+  /**
    * See RouteContainer#getNamedRoutes.
    */
   getNamedRoutes: function () {
