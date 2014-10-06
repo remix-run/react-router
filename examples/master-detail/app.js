@@ -94,7 +94,7 @@ var App = React.createClass({
     ContactStore.removeChangeListener(this.updateContacts);
   },
 
-  updateContacts: function (contacts) {
+  updateContacts: function () {
     if (!this.isMounted())
       return;
 
