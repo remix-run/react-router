@@ -27,7 +27,7 @@ var Dashboard = React.createClass({
 
 var Form = React.createClass({
 
-  mixins: [ Router.Transitions ],
+  mixins: [ Router.Navigation ],
 
   statics: {
     willTransitionFrom: function(transition, component) {

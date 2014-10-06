@@ -7,7 +7,7 @@ var Link = Router.Link;
 
 var App = React.createClass({
 
-  mixins: [ Router.Transitions ],
+  mixins: [ Router.Navigation ],
 
   getInitialState: function() {
     return {

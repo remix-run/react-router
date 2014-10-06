@@ -67,7 +67,7 @@ var Index = React.createClass({
 
 var Contact = React.createClass({
 
-  mixins: [ Router.Transitions ],
+  mixins: [ Router.Navigation ],
 
   getStateFromStore: function(props) {
     props = props || this.props;
@@ -120,7 +120,7 @@ var Contact = React.createClass({
 
 var NewContact = React.createClass({
 
-  mixins: [ Router.Transitions ],
+  mixins: [ Router.Navigation ],
 
   createContact: function(event) {
     event.preventDefault();
