@@ -72,7 +72,7 @@ var Route = React.createClass({
 
     getUnreservedProps: function (props) {
       return withoutProperties(props, RESERVED_PROPS);
-    },
+    }
 
   },
 
