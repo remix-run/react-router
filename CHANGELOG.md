@@ -1,3 +1,10 @@
+v0.9.0 - Mon, 06 Oct 2014 19:37:27 GMT
+--------------------------------------
+
+- [5aae2a8](../../commit/5aae2a8) [added] onChange event to Routes
+- [ba65269](../../commit/ba65269) [removed] AsyncState
+
+
 v0.8.0 - Sat, 04 Oct 2014 05:39:02 GMT
 --------------------------------------
 
