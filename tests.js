@@ -4,7 +4,6 @@ require('./modules/components/__tests__/NotFoundRoute-test');
 require('./modules/components/__tests__/Routes-test');
 
 require('./modules/mixins/__tests__/ActiveContext-test');
-require('./modules/mixins/__tests__/AsyncState-test');
 require('./modules/mixins/__tests__/LocationContext-test');
 require('./modules/mixins/__tests__/Navigation-test');
 require('./modules/mixins/__tests__/RouteContext-test');

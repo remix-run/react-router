@@ -6,6 +6,5 @@ exports.Route = require('./components/Route');
 exports.Routes = require('./components/Routes');
 
 exports.ActiveState = require('./mixins/ActiveState');
-exports.AsyncState = require('./mixins/AsyncState'); // TODO: Remove.
 exports.CurrentPath = require('./mixins/CurrentPath');
 exports.Navigation = require('./mixins/Navigation');
