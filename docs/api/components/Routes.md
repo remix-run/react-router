@@ -39,10 +39,6 @@ One of:
 - `'none'` - doesn't do anything (you should probably do something about
   that).
 
-### `fixedPath`
-
-TODO
-
 ### `onAbortedTransition`
 
 A function called when any transition is aborted.

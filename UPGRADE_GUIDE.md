@@ -5,7 +5,7 @@ To see discussion around these API changes, please refer to the
 [changelog](/CHANGELOG.md) and visit the commits and issues they
 reference.
 
-0.7.x -> 0.8.x
+0.7.x -> 0.9.x
 --------------
 
 ### `ActiveState` mixin `isActive`
@@ -24,7 +24,7 @@ var SomethingActive = React.createClass({
   }
 });
 
-// 0.8.x
+// 0.9.x
 var SomethingActive = React.createClass({
   mixins: [ActiveState],
 
@@ -36,17 +36,26 @@ var SomethingActive = React.createClass({
 });
 ```
 
-### `<Routes onActiveStateChange/>` -> `PathState`
+### `<Routes onActiveStateChange/>` -> `<Routes onChange />`
 
 ```js
 // 0.7.x
 <Routes onActiveStateChange={fn} />
 
-// 0.8.x
-var App = React.createClass({
-  mixins: [PathState],
-  updatePath: fn
-});
+function fn(nextState) {}
+
+// 0.9.x
+<Routes onActiveStateChange={fn} />
+
+function fn() {
+  // no arguments
+  // `this` is the routes instance
+  // here are some useful methods to get at the data you probably need
+  this.getCurrentPath();
+  this.getActiveRoutes();
+  this.getActiveParams();
+  this.getActiveQuery();
+}
 ```
 
 You may need access to the current routes, use the `RouteLookup` mixin
@@ -55,25 +64,7 @@ for that along with `PathState`.
 ### `.` in params support
 
 `.` used to be a delimiter like `/`, but now its a valid character in
-your params. If you were using this feature you'll need to do the split
-yourself.
-
-```
-// 0.7.x
-var route = <Route path=":foo.:bar" />;
-
-// 0.8.x
-var route = <Route path=":foobar" handler={Handler}/>
-
-Handler = React.createClass({
-  render: function() {
-    var split = this.props.params.foobar.split('.');
-    var foo = split[0];
-    var bar = split[1];
-    // ...
-  }
-});
-```
+your params.
 
 ### `transition.retry()`
 
@@ -89,9 +80,9 @@ React.createClass({
   }
 });
 
-// 0.8.x
+// 0.9.x
 React.createClass({
-  mixins: [Transitions],
+  mixins: [Navigation],
   login: function() {
     // ...
     this.transitionTo(transition.path);
@@ -114,7 +105,7 @@ React.createClass({
   }
 });
 
-// 0.8.x
+// 0.9.x
 React.createClass({
   statics: {
     willTransitionTo: function(transition) {
@@ -129,17 +120,17 @@ React.createClass({
 `preserveScrollPosition` was totally broken and should have been named
 `perverseScrollPosition`.
 
+
 There are now three scroll behaviors you can use:
 
-- `'imitateBrowser'`
+- `'browser'`
 - `'scrollToTop'`
 - `'none'`
 
-`imitateBrowser` is the default, and imitates what browsers do in a
-typical page reload scenario (preserves scroll positions when using the
-back button, scrolls up when you come to a new page, etc.)
-
-Also, you can't specify scroll behavior per `<Route/>` anymore.
+`browser` is the default, and imitates what browsers do in a typical
+page reload scenario (preserves scroll positions when using the back
+button, scrolls up when you come to a new page, etc.) Also, you can no
+longer specify scroll behavior per `<Route/>` anymore, only `<Routes/>`
 
 ```
 <Routes scrollBehavior="scrollToTop"/>
@@ -149,7 +140,7 @@ Also, you can't specify scroll behavior per `<Route/>` anymore.
 
 This was not a public module, but we know some people were using it.
 It's gone now. We have made getting at the current routes incredibly
-convenient now with the `RouteLookup` mixin.
+convenient now with additions to the `ActiveState` mixin.
 
 ### `Router.transitionTo, replaceWith, goBack`
 
@@ -167,9 +158,11 @@ React.createClass({
   }
 });
 
-// 0.8.x
+// 0.9.x
+var Navigation = Router.Navigation;
+
 React.createClass({
-  mixins: [Router.Transitions],
+  mixins: [Navigation],
   whenever: function() {
     this.transitionTo('something');
     this.replaceWith('something');
@@ -178,7 +171,15 @@ React.createClass({
 });
 ```
 
+0.7.x -> 0.8.x
+--------------
 
+Please don't upgrade to `0.8.0`, just skip to `0.9.x`.
+
+`0.8.0` had some transient mixins we didn't intend to document, but had
+some miscommunication :( If you were one of three people who used some
+of these mixins and need help upgrading from `0.8.0 -> 0.9.x` find us on
+freenode in `#rackt` or open a ticket. Thanks!
 
 0.6.x -> 0.7.x
 --------------
