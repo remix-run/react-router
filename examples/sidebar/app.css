@@ -1,0 +1,23 @@
+.Sidebar {
+  float: left;
+  background: #eee;
+  padding: 20px;
+  margin: 0 20px 20px 20px;
+  width: 200px;
+  cursor: pointer;
+}
+
+.Content {
+  padding: 20px 20px 20px 300px;
+}
+
+.CategoryNav__Toggle:before {
+  display: inline-block;
+  width: 1em;
+  content: '▸';
+}
+
+.CategoryNav__Toggle--is-open:before {
+  content: '▾';
+}
+

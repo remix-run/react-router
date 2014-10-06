@@ -195,9 +195,21 @@ describe('Path.injectParams', function () {
     });
   });
 
+  describe('when a pattern has one splat', function () {
+    it('returns the correct path', function () {
+      expect(Path.injectParams('/a/*/d', { splat: 'b/c' })).toEqual('/a/b/c/d');
+    });
+  });
+
   describe('when a pattern has multiple splats', function () {
     it('returns the correct path', function () {
       expect(Path.injectParams('/a/*/c/*', { splat: [ 'b', 'd' ] })).toEqual('/a/b/c/d');
+    });
+
+    it('complains if not given enough splat values', function () {
+      expect(function() {
+        Path.injectParams('/a/*/c/*', { splat: [ 'b' ] });
+      }).toThrow(Error);
     });
   });
 });

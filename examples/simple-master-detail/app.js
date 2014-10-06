@@ -16,7 +16,7 @@ var App = React.createClass({
 
   render: function() {
     var links = this.state.states.map(function(state) {
-      return <li><Link to="state" abbr={state.abbr}>{state.name}</Link></li>
+      return <li><Link to="state" params={{ abbr: state.abbr }}>{state.name}</Link></li>
     });
     return (
       <div className="App">
