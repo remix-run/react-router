@@ -14,7 +14,7 @@ var App = React.createClass({
           <li><Link to="signin">Sign in</Link></li>
           <li><Link to="forgot-password">Forgot Password</Link></li>
         </ol>
-        {this.props.activeRouteHandler()}
+        <this.props.activeRouteHandler />
       </div>
     );
   }
@@ -25,7 +25,7 @@ var SignedIn = React.createClass({
     return (
       <div>
         <h2>Signed In</h2>
-        {this.props.activeRouteHandler()}
+        <this.props.activeRouteHandler />
       </div>
     );
   }
@@ -44,7 +44,7 @@ var SignedOut = React.createClass({
     return (
       <div>
         <h2>Signed Out</h2>
-        {this.props.activeRouteHandler()}
+        <this.props.activeRouteHandler />
       </div>
     );
   }

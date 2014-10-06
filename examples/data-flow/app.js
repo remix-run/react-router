@@ -45,7 +45,7 @@ var App = React.createClass({
           {links}
         </ul>
         <div className="Detail">
-          {this.props.activeRouteHandler({onRemoveTaco: this.handleRemoveTaco})}
+          <this.props.activeRouteHandler onRemoveTaco={this.handleRemoveTaco} />
         </div>
       </div>
     );

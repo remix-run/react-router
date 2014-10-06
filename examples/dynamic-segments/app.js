@@ -14,7 +14,7 @@ var App = React.createClass({
           <li><Link to="user" params={{userId: "123"}}>Bob</Link></li>
           <li><Link to="user" params={{userId: "abc"}}>Sally</Link></li>
         </ul>
-        {this.props.activeRouteHandler()}
+        <this.props.activeRouteHandler />
       </div>
     );
   }
@@ -29,7 +29,7 @@ var User = React.createClass({
           <li><Link to="task" params={{userId: this.props.params.userId, taskId: "foo"}}>foo task</Link></li>
           <li><Link to="task" params={{userId: this.props.params.userId, taskId: "bar"}}>bar task</Link></li>
         </ul>
-        {this.props.activeRouteHandler()}
+        <this.props.activeRouteHandler />
       </div>
     );
   }
