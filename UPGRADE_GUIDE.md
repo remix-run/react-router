@@ -17,10 +17,8 @@ reference.
 var SomethingActive = React.createClass({
   mixins: [ActiveState],
 
-  updateActiveState: function () {
-    this.setState({
-      isActive: SomethingActive.isActive(...)
-    })
+  render: function () {
+    var isActive = SomethingActive.isActive(...);
   }
 });
 
@@ -28,10 +26,8 @@ var SomethingActive = React.createClass({
 var SomethingActive = React.createClass({
   mixins: [ActiveState],
 
-  updateActiveState: function () {
-    this.setState({
-      isActive: this.isActive(...)
-    })
+  render: function () {
+    var isActive = this.isActive(...);
   }
 });
 ```
