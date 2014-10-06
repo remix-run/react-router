@@ -5,7 +5,7 @@ var Routes = Router.Routes;
 var Route = Router.Route;
 var DefaultRoute = Router.DefaultRoute;
 var Link = Router.Link;
-var RouteLookup = Router.RouteLookup;
+var ActiveState = Router.ActiveState;
 var data = require('./data');
 
 var CategoryNav = React.createClass({
@@ -78,15 +78,15 @@ var Sidebar = React.createClass({
 });
 
 var App = React.createClass({
+  mixins: [ActiveState],
+
   render: function() {
-    var activeRouteHandler = this.props.activeRouteHandler();
-    var activeCategory = activeRouteHandler ?
-      activeRouteHandler.props.params.category : null;
+    var activeCategory = this.getActiveParams().category;
     return (
       <div>
         <Sidebar activeCategory={activeCategory} categories={data.getAll()}/>
         <div className="Content">
-          {activeRouteHandler}
+          <this.props.activeRouteHandler />
         </div>
       </div>
     );
