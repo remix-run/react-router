@@ -2,19 +2,41 @@ var assert = require('assert');
 var expect = require('expect');
 var React = require('react/addons');
 var ReactTestUtils = React.addons.TestUtils;
-var PathStore = require('../../stores/PathStore');
 var DefaultRoute = require('../DefaultRoute');
 var Routes = require('../Routes');
+var Route = require('../Route');
 var Link = require('../Link');
 
-afterEach(function () {
-  // For some reason unmountComponentAtNode doesn't call componentWillUnmount :/
-  PathStore.removeAllChangeListeners();
-});
-
 describe('A Link', function () {
+
+  describe('with params and a query', function () {
+    var HomeHandler = React.createClass({
+      render: function () {
+        return Link({ ref: 'link', to: 'home', params: { username: 'mjackson' }, query: { awesome: true } });
+      }
+    });
+
+    var component;
+    beforeEach(function () {
+      component = ReactTestUtils.renderIntoDocument(
+        Routes({ location: 'history', initialPath: '/mjackson/home' },
+          Route({ name: 'home', path: '/:username/home', handler: HomeHandler })
+        )
+      );
+    });
+
+    afterEach(function () {
+      React.unmountComponentAtNode(component.getDOMNode());
+    });
+
+    it('knows how to make its href', function () {
+      var linkComponent = component.getActiveComponent().refs.link;
+      expect(linkComponent.getHref()).toEqual('/mjackson/home?awesome=true');
+    });
+  });
+
   describe('when its route is active', function () {
-    var Home = React.createClass({
+    var HomeHandler = React.createClass({
       render: function () {
         return Link({ ref: 'link', to: 'home', className: 'a-link', activeClassName: 'highlight' });
       }
@@ -24,7 +46,7 @@ describe('A Link', function () {
     beforeEach(function () {
       component = ReactTestUtils.renderIntoDocument(
         Routes(null,
-          DefaultRoute({ name: 'home', handler: Home })
+          DefaultRoute({ name: 'home', handler: HomeHandler })
         )
       );
     });
@@ -33,14 +55,10 @@ describe('A Link', function () {
       React.unmountComponentAtNode(component.getDOMNode());
     });
 
-    it('is active', function () {
-      var linkComponent = component.getActiveRoute().refs.link;
-      assert(linkComponent.isActive);
-    });
-
     it('has its active class name', function () {
-      var linkComponent = component.getActiveRoute().refs.link;
+      var linkComponent = component.getActiveComponent().refs.link;
       expect(linkComponent.getClassName()).toEqual('a-link highlight');
     });
   });
+
 });

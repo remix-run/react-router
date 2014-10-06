@@ -2,35 +2,28 @@ var assert = require('assert');
 var expect = require('expect');
 var React = require('react/addons');
 var ReactTestUtils = React.addons.TestUtils;
-var RouteContainer = require('../../mixins/RouteContainer');
-var TransitionHandler = require('../../mixins/TransitionHandler');
-var PathStore = require('../../stores/PathStore');
-var Route = require('../Route');
 var DefaultRoute = require('../DefaultRoute');
+var Routes = require('../Routes');
+var Route = require('../Route');
 
-afterEach(function () {
-  // For some reason unmountComponentAtNode doesn't call componentWillUnmount :/
-  PathStore.removeAllChangeListeners();
+var NullHandler = React.createClass({
+  render: function () {
+    return null;
+  }
 });
 
 describe('A DefaultRoute', function () {
+
   it('has a null path', function () {
     expect(DefaultRoute({ path: '/' }).props.path).toBe(null);
-  });
-
-  var App = React.createClass({
-    mixins: [ RouteContainer ],
-    render: function () {
-      return React.DOM.div();
-    }
   });
 
   describe('at the root of a container', function () {
     var component, route;
     beforeEach(function () {
       component = ReactTestUtils.renderIntoDocument(
-        App(null,
-          route = DefaultRoute({ handler: App })
+        Routes({ location: 'none' },
+          route = DefaultRoute({ handler: NullHandler })
         )
       );
     });
@@ -48,9 +41,9 @@ describe('A DefaultRoute', function () {
     var component, route, defaultRoute;
     beforeEach(function () {
       component = ReactTestUtils.renderIntoDocument(
-        App(null,
-          route = Route({ handler: App },
-            defaultRoute = DefaultRoute({ handler: App })
+        Routes({ location: 'none' },
+          route = Route({ handler: NullHandler },
+            defaultRoute = DefaultRoute({ handler: NullHandler })
           )
         )
       );
@@ -64,25 +57,20 @@ describe('A DefaultRoute', function () {
       expect(route.props.defaultRoute).toBe(defaultRoute);
     });
   });
+
 });
 
 describe('when no child routes match a URL, but the parent\'s path matches', function () {
-  var App = React.createClass({
-    mixins: [ TransitionHandler ],
-    render: function () {
-      return React.DOM.div();
-    }
-  });
 
   var component, rootRoute, defaultRoute;
   beforeEach(function () {
     component = ReactTestUtils.renderIntoDocument(
-      App({ location: 'none' },
-        rootRoute = Route({ name: 'user', path: '/users/:id', handler: App },
-          Route({ name: 'home', path: '/users/:id/home', handler: App }),
+      Routes({ location: 'none' },
+        rootRoute = Route({ name: 'user', path: '/users/:id', handler: NullHandler },
+          Route({ name: 'home', path: '/users/:id/home', handler: NullHandler }),
           // Make it the middle sibling to test order independence.
-          defaultRoute = DefaultRoute({ handler: App }),
-          Route({ name: 'news', path: '/users/:id/news', handler: App })
+          defaultRoute = DefaultRoute({ handler: NullHandler }),
+          Route({ name: 'news', path: '/users/:id/news', handler: NullHandler })
         )
       )
     )
@@ -99,4 +87,5 @@ describe('when no child routes match a URL, but the parent\'s path matches', fun
     expect(matches[0].route).toBe(rootRoute);
     expect(matches[1].route).toBe(defaultRoute);
   });
+
 });

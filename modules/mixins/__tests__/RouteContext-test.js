@@ -2,11 +2,12 @@ var expect = require('expect');
 var React = require('react/addons');
 var ReactTestUtils = React.addons.TestUtils;
 var Route = require('../../components/Route');
-var RouteContainer = require('../RouteContainer');
+var RouteContext = require('../RouteContext');
 
-describe('RouteContainer', function () {
+describe('RouteContext', function () {
+
   var App = React.createClass({
-    mixins: [ RouteContainer ],
+    mixins: [ RouteContext ],
     render: function () {
       return React.DOM.div();
     }
@@ -17,8 +18,10 @@ describe('RouteContainer', function () {
       var component, route;
       beforeEach(function () {
         component = ReactTestUtils.renderIntoDocument(
-          App(null, route = Route({ name: 'home', handler: App }))
-        )
+          App(null,
+            route = Route({ name: 'home', handler: App })
+          )
+        );
       });
 
       afterEach(function () {
@@ -34,8 +37,10 @@ describe('RouteContainer', function () {
       var component;
       beforeEach(function () {
         component = ReactTestUtils.renderIntoDocument(
-          App(null, Route({ name: 'home', handler: App }))
-        )
+          App(null,
+            Route({ name: 'home', handler: App })
+          )
+        );
       });
 
       afterEach(function () {
@@ -127,4 +132,5 @@ describe('RouteContainer', function () {
       expect(childRoute.props.path).toEqual('/sub');
     });
   });
+
 });

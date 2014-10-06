@@ -2,13 +2,14 @@ var assert = require('assert');
 var React = require('react/addons');
 var ReactTestUtils = React.addons.TestUtils;
 var Route = require('../../components/Route');
-var ActiveDelegate = require('../ActiveDelegate');
+var ActiveContext = require('../ActiveContext');
 
-describe('ActiveDelegate', function () {
+describe('ActiveContext', function () {
+
   var App = React.createClass({
-    mixins: [ ActiveDelegate ],
+    mixins: [ ActiveContext ],
     render: function () {
-      return React.DOM.div();
+      return null;
     }
   });
 

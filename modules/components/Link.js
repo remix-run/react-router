@@ -1,7 +1,7 @@
 var React = require('react');
 var merge = require('react/lib/merge');
 var ActiveState = require('../mixins/ActiveState');
-var Transitions = require('../mixins/Transitions');
+var Navigation = require('../mixins/Navigation');
 
 function isLeftClickEvent(event) {
   return event.button === 0;
@@ -33,11 +33,11 @@ var Link = React.createClass({
 
   displayName: 'Link',
 
-  mixins: [ ActiveState, Transitions ],
+  mixins: [ ActiveState, Navigation ],
 
   propTypes: {
-    to: React.PropTypes.string.isRequired,
     activeClassName: React.PropTypes.string.isRequired,
+    to: React.PropTypes.string.isRequired,
     params: React.PropTypes.object,
     query: React.PropTypes.object,
     onClick: React.PropTypes.func
@@ -49,35 +49,17 @@ var Link = React.createClass({
     };
   },
 
-  getInitialState: function () {
-    return {
-      isActive: false
-    };
-  },
-
-  updateActiveState: function () {
-    this.setState({
-      isActive: this.isActive(this.props.to, this.props.params, this.props.query)
-    });
-  },
-
-  componentWillReceiveProps: function (nextProps) {
-    this.setState({
-      isActive: this.isActive(nextProps.to, nextProps.params, nextProps.query)
-    });
-  },
-
   handleClick: function (event) {
     var allowTransition = true;
-    var onClickResult;
+    var clickResult;
 
     if (this.props.onClick)
-      onClickResult = this.props.onClick(event);
+      clickResult = this.props.onClick(event);
 
     if (isModifiedEvent(event) || !isLeftClickEvent(event))
       return;
 
-    if (onClickResult === false || event.defaultPrevented === true)
+    if (clickResult === false || event.defaultPrevented === true)
       allowTransition = false;
 
     event.preventDefault();
@@ -100,7 +82,7 @@ var Link = React.createClass({
   getClassName: function () {
     var className = this.props.className || '';
 
-    if (this.state.isActive)
+    if (this.isActive(this.props.to, this.props.params, this.props.query))
       className += ' ' + this.props.activeClassName;
 
     return className;

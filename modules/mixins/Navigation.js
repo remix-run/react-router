@@ -1,26 +1,16 @@
 var React = require('react');
 var invariant = require('react/lib/invariant');
-var PathState = require('./PathState');
-var RouteContainer = require('./RouteContainer');
-var LocationActions = require('../actions/LocationActions');
 var HashLocation = require('../locations/HashLocation');
 var Path = require('../utils/Path');
 
 /**
- * A mixin for components that manage the current URL path.
+ * A mixin for components that modify the URL.
  */
-var PathDelegate = {
+var Navigation = {
 
-  mixins: [ PathState, RouteContainer ],
-
-  childContextTypes: {
-    pathDelegate: React.PropTypes.any.isRequired
-  },
-
-  getChildContext: function () {
-    return {
-      pathDelegate: this
-    };
+  contextTypes: {
+    location: React.PropTypes.object, // Not required on the server.
+    namedRoutes: React.PropTypes.object.isRequired
   },
 
   /**
@@ -32,7 +22,7 @@ var PathDelegate = {
     if (Path.isAbsolute(to)) {
       path = Path.normalize(to);
     } else {
-      var route = this.getRouteByName(to);
+      var route = this.context.namedRoutes[to];
 
       invariant(
         route,
@@ -53,7 +43,7 @@ var PathDelegate = {
   makeHref: function (to, params, query) {
     var path = this.makePath(to, params, query);
 
-    if (this.getLocation() === HashLocation)
+    if (this.context.location === HashLocation)
       return '#' + path;
 
     return path;
@@ -64,16 +54,14 @@ var PathDelegate = {
    * a new URL onto the history stack.
    */
   transitionTo: function (to, params, query) {
-    var path = this.makePath(to, params, query);
-    var location = this.getLocation();
+    var location = this.context.location;
 
-    // If we have a location, route the transition
-    // through it so the URL is updated as well.
-    if (location) {
-      location.push(path);
-    } else if (this.updatePath) {
-      this.updatePath(path, LocationActions.PUSH);
-    }
+    invariant(
+      location,
+      'You cannot use transitionTo without a location'
+    );
+
+    location.push(this.makePath(to, params, query));
   },
 
   /**
@@ -81,27 +69,25 @@ var PathDelegate = {
    * the current URL in the history stack.
    */
   replaceWith: function (to, params, query) {
-    var path = this.makePath(to, params, query);
-    var location = this.getLocation();
+    var location = this.context.location;
 
-    // If we have a location, route the transition
-    // through it so the URL is updated as well.
-    if (location) {
-      location.replace(path);
-    } else if (this.updatePath) {
-      this.updatePath(path, LocationActions.REPLACE);
-    }
+    invariant(
+      location,
+      'You cannot use replaceWith without a location'
+    );
+
+    location.replace(this.makePath(to, params, query));
   },
 
   /**
    * Transitions to the previous URL.
    */
   goBack: function () {
-    var location = this.getLocation();
+    var location = this.context.location;
 
     invariant(
       location,
-      'You cannot goBack without a location'
+      'You cannot use goBack without a location'
     );
 
     location.pop();
@@ -109,4 +95,4 @@ var PathDelegate = {
 
 };
 
-module.exports = PathDelegate;
+module.exports = Navigation;

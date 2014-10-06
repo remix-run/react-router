@@ -5,6 +5,7 @@ var LocationDispatcher = require('../../dispatchers/LocationDispatcher');
 var PathStore = require('../PathStore');
 
 describe('PathStore', function () {
+
   beforeEach(function () {
     LocationDispatcher.handleViewAction({
       type: LocationActions.PUSH,
@@ -97,4 +98,5 @@ describe('PathStore', function () {
       assert(changeWasFired);
     });
   });
+
 });

@@ -1,5 +1,4 @@
 var React = require('react');
-var ChangeEmitter = require('./ChangeEmitter');
 
 function routeIsActive(activeRoutes, routeName) {
   return activeRoutes.some(function (route) {
@@ -27,22 +26,10 @@ function queryIsActive(activeQuery, query) {
  * A mixin for components that store the active state of routes, URL
  * parameters, and query.
  */
-var ActiveDelegate = {
-
-  mixins: [ ChangeEmitter ],
-
-  childContextTypes: {
-    activeDelegate: React.PropTypes.any.isRequired
-  },
-
-  getChildContext: function () {
-    return {
-      activeDelegate: this
-    };
-  },
+var ActiveContext = {
 
   propTypes: {
-    initialActiveState: React.PropTypes.object // Mainly for testing.
+    initialActiveState: React.PropTypes.object
   },
 
   getDefaultProps: function () {
@@ -62,6 +49,27 @@ var ActiveDelegate = {
   },
 
   /**
+   * Returns an array of the currently active routes.
+   */
+  getActiveRoutes: function () {
+    return this.state.activeRoutes;
+  },
+
+  /**
+   * Returns an object of the currently active URL parameters.
+   */
+  getActiveParams: function () {
+    return this.state.activeParams;
+  },
+
+  /**
+   * Returns an object of the currently active query parameters.
+   */
+  getActiveQuery: function () {
+    return this.state.activeQuery;
+  },
+
+  /**
    * Returns true if the route with the given name, URL parameters, and
    * query are all currently active.
    */
@@ -73,8 +81,24 @@ var ActiveDelegate = {
       return isActive && queryIsActive(this.state.activeQuery, query);
 
     return isActive;
+  },
+
+  childContextTypes: {
+    activeRoutes: React.PropTypes.array.isRequired,
+    activeParams: React.PropTypes.object.isRequired,
+    activeQuery: React.PropTypes.object.isRequired,
+    isActive: React.PropTypes.func.isRequired
+  },
+
+  getChildContext: function () {
+    return {
+      activeRoutes: this.getActiveRoutes(),
+      activeParams: this.getActiveParams(),
+      activeQuery: this.getActiveQuery(),
+      isActive: this.isActive
+    };
   }
 
 };
 
-module.exports = ActiveDelegate;
+module.exports = ActiveContext;

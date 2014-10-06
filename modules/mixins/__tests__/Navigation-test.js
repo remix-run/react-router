@@ -1,15 +1,17 @@
+var assert = require('assert');
 var expect = require('expect');
 var React = require('react/addons');
 var ReactTestUtils = React.addons.TestUtils;
+var Routes = require('../../components/Routes');
 var Route = require('../../components/Route');
-var PathDelegate = require('../PathDelegate');
+var Navigation = require('../Navigation');
 
-describe('PathDelegate', function () {
+describe('Navigation', function () {
 
-  var App = React.createClass({
-    mixins: [ PathDelegate ],
+  var NavigationHandler = React.createClass({
+    mixins: [ Navigation ],
     render: function () {
-      return React.DOM.div();
+      return null;
     }
   });
 
@@ -18,8 +20,8 @@ describe('PathDelegate', function () {
       var component;
       beforeEach(function () {
         component = ReactTestUtils.renderIntoDocument(
-          App(null, 
-            Route({ name: 'home', path: '/:username/home', handler: App })
+          Routes({ initialPath: '/anybody/home' }, 
+            Route({ name: 'home', path: '/:username/home', handler: NavigationHandler })
           )
         );
       });
@@ -29,7 +31,9 @@ describe('PathDelegate', function () {
       });
 
       it('creates the correct path', function () {
-        expect(component.makePath('home', { username: 'mjackson' })).toEqual('/mjackson/home');
+        var activeComponent = component.getActiveComponent();
+        assert(activeComponent);
+        expect(activeComponent.makePath('home', { username: 'mjackson' })).toEqual('/mjackson/home');
       });
     });
 
@@ -37,7 +41,9 @@ describe('PathDelegate', function () {
       var component;
       beforeEach(function () {
         component = ReactTestUtils.renderIntoDocument(
-          App()
+          Routes({ initialPath: '/home' },
+            Route({ name: 'home', handler: NavigationHandler })
+          )
         );
       });
 
@@ -46,9 +52,12 @@ describe('PathDelegate', function () {
       });
 
       it('creates the correct path', function () {
+        var activeComponent = component.getActiveComponent();
+        assert(activeComponent);
+
         expect(function () {
-          component.makePath('home');
-        }).toThrow('Unable to find a route named "home". Make sure you have a <Route name="home"> defined somewhere in your <Routes>');
+          activeComponent.makePath('about');
+        }).toThrow('Unable to find a route named "about". Make sure you have a <Route name="about"> defined somewhere in your <Routes>');
       });
     });
   });
@@ -58,8 +67,8 @@ describe('PathDelegate', function () {
       var component;
       beforeEach(function () {
         component = ReactTestUtils.renderIntoDocument(
-          App({ location: 'hash' }, 
-            Route({ name: 'home', handler: App })
+          Routes({ location: 'hash', initialPath: '/home' }, 
+            Route({ name: 'home', handler: NavigationHandler })
           )
         );
       });
@@ -69,7 +78,9 @@ describe('PathDelegate', function () {
       });
 
       it('puts a # in front of the URL', function () {
-        expect(component.makeHref('home')).toEqual('#/home');
+        var activeComponent = component.getActiveComponent();
+        assert(activeComponent);
+        expect(activeComponent.makeHref('home')).toEqual('#/home');
       });
     });
 
@@ -77,8 +88,8 @@ describe('PathDelegate', function () {
       var component;
       beforeEach(function () {
         component = ReactTestUtils.renderIntoDocument(
-          App({ location: 'history' }, 
-            Route({ name: 'home', handler: App })
+          Routes({ location: 'history', initialPath: '/home' }, 
+            Route({ name: 'home', handler: NavigationHandler })
           )
         );
       });
@@ -88,7 +99,9 @@ describe('PathDelegate', function () {
       });
 
       it('returns the correct URL', function () {
-        expect(component.makeHref('home')).toEqual('/home');
+        var activeComponent = component.getActiveComponent();
+        assert(activeComponent);
+        expect(activeComponent.makeHref('home')).toEqual('/home');
       });
     });
   });

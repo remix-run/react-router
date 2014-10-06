@@ -1,0 +1,76 @@
+var React = require('react');
+var invariant = require('react/lib/invariant');
+var canUseDOM = require('react/lib/ExecutionEnvironment').canUseDOM;
+var ImitateBrowserBehavior = require('../behaviors/ImitateBrowserBehavior');
+var ScrollToTopBehavior = require('../behaviors/ScrollToTopBehavior');
+
+/**
+ * A hash of { name: scrollBehavior } pairs.
+ */
+var NAMED_SCROLL_BEHAVIORS = {
+  none: null,
+  browser: ImitateBrowserBehavior,
+  imitateBrowser: ImitateBrowserBehavior,
+  scrollToTop: ScrollToTopBehavior
+};
+
+/**
+ * A mixin for components that manage scroll position.
+ */
+var ScrollContext = {
+
+  propTypes: {
+    scrollBehavior: function (props, propName, componentName) {
+      var behavior = props[propName];
+
+      if (typeof behavior === 'string' && !(behavior in NAMED_SCROLL_BEHAVIORS))
+        return new Error('Unknown scroll behavior "' + behavior + '", see ' + componentName);
+    }
+  },
+
+  getDefaultProps: function () {
+    return {
+      scrollBehavior: canUseDOM ? ImitateBrowserBehavior : null
+    };
+  },
+
+  getInitialState: function () {
+    var behavior = this.props.scrollBehavior;
+
+    if (typeof behavior === 'string')
+      behavior = NAMED_SCROLL_BEHAVIORS[behavior];
+
+    return {
+      scrollBehavior: behavior
+    };
+  },
+
+  componentWillMount: function () {
+    var behavior = this.getScrollBehavior();
+
+    invariant(
+      behavior == null || canUseDOM,
+      'Cannot use scroll behavior without a DOM'
+    );
+  },
+
+  /**
+   * Returns the scroll behavior object this component uses.
+   */
+  getScrollBehavior: function () {
+    return this.state.scrollBehavior;
+  },
+
+  childContextTypes: {
+    scrollBehavior: React.PropTypes.object // Not required on the server.
+  },
+
+  getChildContext: function () {
+    return {
+      scrollBehavior: this.getScrollBehavior()
+    };
+  }
+
+};
+
+module.exports = ScrollContext;

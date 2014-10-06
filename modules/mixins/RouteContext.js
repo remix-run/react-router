@@ -117,24 +117,14 @@ function processRoutes(children, container, namedRoutes) {
 /**
  * A mixin for components that have <Route> children.
  */
-var RouteContainer = {
-
-  childContextTypes: {
-    routeContainer: React.PropTypes.any.isRequired
-  },
-
-  getChildContext: function () {
-    return {
-      routeContainer: this
-    };
-  },
+var RouteContext = {
 
   getInitialState: function () {
     var namedRoutes = {};
 
     return {
-      namedRoutes: namedRoutes,
-      routes: processRoutes(this.props.children, this, namedRoutes)
+      routes: processRoutes(this.props.children, this, namedRoutes),
+      namedRoutes: namedRoutes
     };
   },
 
@@ -153,12 +143,24 @@ var RouteContainer = {
   },
 
   /**
-   * Returns the <Route> with the given name, null if no such route exists.
+   * Returns the route with the given name.
    */
   getRouteByName: function (routeName) {
     return this.state.namedRoutes[routeName] || null;
+  },
+
+  childContextTypes: {
+    routes: React.PropTypes.array.isRequired,
+    namedRoutes: React.PropTypes.object.isRequired
+  },
+
+  getChildContext: function () {
+    return {
+      routes: this.getRoutes(),
+      namedRoutes: this.getNamedRoutes(),
+    };
   }
 
 };
 
-module.exports = RouteContainer;
+module.exports = RouteContext;

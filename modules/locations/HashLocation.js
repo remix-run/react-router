@@ -28,7 +28,8 @@ function onHashChange() {
     LocationDispatcher.handleViewAction({
       // If we don't have an _actionType then all we know is the hash
       // changed. It was probably caused by the user clicking the Back
-      // button, but may have also been the Forward button.
+      // button, but may have also been the Forward button or manual
+      // manipulation. So just guess 'pop'.
       type: _actionType || LocationActions.POP,
       path: getHashPath()
     });

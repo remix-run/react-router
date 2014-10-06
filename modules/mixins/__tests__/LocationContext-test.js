@@ -3,17 +3,18 @@ var React = require('react/addons');
 var ReactTestUtils = React.addons.TestUtils;
 var HashLocation = require('../../locations/HashLocation');
 var HistoryLocation = require('../../locations/HistoryLocation');
-var PathState = require('../PathState');
+var LocationContext = require('../LocationContext');
 
-describe('PathState', function () {
+describe('LocationContext', function () {
+
   var App = React.createClass({
-    mixins: [ PathState ],
+    mixins: [ LocationContext ],
     render: function () {
       return React.DOM.div();
     }
   });
 
-  describe('when using location="none"', function () {
+  describe('when location="none"', function () {
     var component;
     beforeEach(function () {
       component = ReactTestUtils.renderIntoDocument(
@@ -30,7 +31,7 @@ describe('PathState', function () {
     });
   });
 
-  describe('when using location="hash"', function () {
+  describe('when location="hash"', function () {
     var component;
     beforeEach(function () {
       component = ReactTestUtils.renderIntoDocument(
@@ -42,12 +43,12 @@ describe('PathState', function () {
       React.unmountComponentAtNode(component.getDOMNode());
     });
 
-    it('has a null location', function () {
+    it('uses HashLocation', function () {
       expect(component.getLocation()).toBe(HashLocation);
     });
   });
 
-  describe('when using location="history"', function () {
+  describe('when location="history"', function () {
     var component;
     beforeEach(function () {
       component = ReactTestUtils.renderIntoDocument(
@@ -59,8 +60,9 @@ describe('PathState', function () {
       React.unmountComponentAtNode(component.getDOMNode());
     });
 
-    it('has a null location', function () {
+    it('uses HistoryLocation', function () {
       expect(component.getLocation()).toBe(HistoryLocation);
     });
   });
+
 });
