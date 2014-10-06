@@ -67,6 +67,8 @@ var Dashboard = React.createClass({
 });
 
 var Login = React.createClass({
+  mixins: [ Router.Navigation ],
+
   statics: {
     attemptedTransition: null
   },
@@ -90,7 +92,7 @@ var Login = React.createClass({
         Login.attemptedTransition = null;
         transition.retry();
       } else {
-        Router.replaceWith('/about');
+        this.replaceWith('/about');
       }
     }.bind(this));
   },

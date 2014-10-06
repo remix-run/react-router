@@ -8,8 +8,8 @@ var Redirect = require('./Redirect');
  * The willTransitionTo and willTransitionFrom handlers receive
  * an instance of this class as their first argument.
  */
-function Transition(pathDelegate, path) {
-  this.pathDelegate = pathDelegate;
+function Transition(routesComponent, path) {
+  this.routesComponent = routesComponent;
   this.path = path;
   this.abortReason = null;
   this.isAborted = false;
@@ -31,7 +31,7 @@ mixInto(Transition, {
   },
 
   retry: function () {
-    this.pathDelegate.replaceWith(this.path);
+    this.routesComponent.replaceWith(this.path);
   }
 
 });

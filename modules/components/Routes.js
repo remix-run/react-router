@@ -1,8 +1,10 @@
 var React = require('react');
 var warning = require('react/lib/warning');
+var invariant = require('react/lib/invariant');
 var canUseDOM = require('react/lib/ExecutionEnvironment').canUseDOM;
 var copyProperties = require('react/lib/copyProperties');
 var PathStore = require('../stores/PathStore');
+var HashLocation = require('../locations/HashLocation');
 var reversedArray = require('../utils/reversedArray');
 var Transition = require('../utils/Transition');
 var Redirect = require('../utils/Redirect');
@@ -262,17 +264,17 @@ function computeHandlerProps(matches, query) {
 
 var BrowserTransitionHandling = {
 
-  handleTransitionError: function (error) {
+  handleTransitionError: function (component, error) {
     throw error; // This error probably originated in a transition hook.
   },
 
-  handleAbortedTransition: function (transition) {
+  handleAbortedTransition: function (component, transition) {
     var reason = transition.abortReason;
 
     if (reason instanceof Redirect) {
-      this.replaceWith(reason.to, reason.params, reason.query);
+      component.replaceWith(reason.to, reason.params, reason.query);
     } else {
-      this.goBack();
+      component.goBack();
     }
   }
 
@@ -280,18 +282,12 @@ var BrowserTransitionHandling = {
 
 var ServerTransitionHandling = {
 
-  handleTransitionError: function (error) {
+  handleTransitionError: function (component, error) {
     // TODO
   },
 
-  handleAbortedTransition: function (transition) {
-    var reason = transition.abortReason;
-
-    if (reason instanceof Redirect) {
-      // TODO
-    } else {
-      // TODO
-    }
+  handleAbortedTransition: function (component, transition) {
+    // TODO
   }
 
 };
@@ -351,9 +347,9 @@ var Routes = React.createClass({
 
     this.dispatch(path, function (error, transition) {
       if (error) {
-        TransitionHandling.handleTransitionError.call(self, error);
+        TransitionHandling.handleTransitionError(self, error);
       } else if (transition.isAborted) {
-        TransitionHandling.handleAbortedTransition.call(self, transition);
+        TransitionHandling.handleAbortedTransition(self, transition);
       } else {
         self.updateScroll(path, actionType);
       }
@@ -418,6 +414,13 @@ var Routes = React.createClass({
   },
 
   /**
+   * Returns a reference to the active route handler's component instance.
+   */
+  getActiveComponent: function () {
+    return this.refs.__activeRoute__;
+  },
+
+  /**
    * Returns the current URL path.
    */
   getCurrentPath: function () {
@@ -425,10 +428,84 @@ var Routes = React.createClass({
   },
 
   /**
-   * Returns a reference to the active route handler's component instance.
+   * Returns an absolute URL path created from the given route
+   * name, URL parameters, and query values.
    */
-  getActiveComponent: function () {
-    return this.refs.__activeRoute__;
+  makePath: function (to, params, query) {
+    var path;
+    if (Path.isAbsolute(to)) {
+      path = Path.normalize(to);
+    } else {
+      var namedRoutes = this.getNamedRoutes();
+      var route = namedRoutes[to];
+
+      invariant(
+        route,
+        'Unable to find a route named "' + to + '". Make sure you have ' +
+        'a <Route name="' + to + '"> defined somewhere in your <Routes>'
+      );
+
+      path = route.props.path;
+    }
+
+    return Path.withQuery(Path.injectParams(path, params), query);
+  },
+
+  /**
+   * Returns a string that may safely be used as the href of a
+   * link to the route with the given name.
+   */
+  makeHref: function (to, params, query) {
+    var path = this.makePath(to, params, query);
+
+    if (this.getLocation() === HashLocation)
+      return '#' + path;
+
+    return path;
+  },
+
+    /**
+   * Transitions to the URL specified in the arguments by pushing
+   * a new URL onto the history stack.
+   */
+  transitionTo: function (to, params, query) {
+    var location = this.getLocation();
+
+    invariant(
+      location,
+      'You cannot use transitionTo without a location'
+    );
+
+    location.push(this.makePath(to, params, query));
+  },
+
+  /**
+   * Transitions to the URL specified in the arguments by replacing
+   * the current URL in the history stack.
+   */
+  replaceWith: function (to, params, query) {
+    var location = this.getLocation();
+
+    invariant(
+      location,
+      'You cannot use replaceWith without a location'
+    );
+
+    location.replace(this.makePath(to, params, query));
+  },
+
+  /**
+   * Transitions to the previous URL.
+   */
+  goBack: function () {
+    var location = this.getLocation();
+
+    invariant(
+      location,
+      'You cannot use goBack without a location'
+    );
+
+    location.pop();
   },
 
   render: function () {
@@ -443,12 +520,22 @@ var Routes = React.createClass({
   },
 
   childContextTypes: {
-    currentPath: React.PropTypes.string
+    currentPath: React.PropTypes.string,
+    makePath: React.PropTypes.func.isRequired,
+    makeHref: React.PropTypes.func.isRequired,
+    transitionTo: React.PropTypes.func.isRequired,
+    replaceWith: React.PropTypes.func.isRequired,
+    goBack: React.PropTypes.func.isRequired
   },
 
   getChildContext: function () {
     return {
-      currentPath: this.getCurrentPath()
+      currentPath: this.getCurrentPath(),
+      makePath: this.makePath,
+      makeHref: this.makeHref,
+      transitionTo: this.transitionTo,
+      replaceWith: this.replaceWith,
+      goBack: this.goBack
     };
   }
 
