@@ -312,7 +312,8 @@ var Routes = React.createClass({
   mixins: [ ActiveContext, LocationContext, RouteContext, ScrollContext ],
 
   propTypes: {
-    initialPath: React.PropTypes.string
+    initialPath: React.PropTypes.string,
+    onChange: React.PropTypes.func
   },
 
   getInitialState: function () {
@@ -352,6 +353,7 @@ var Routes = React.createClass({
         TransitionHandling.handleAbortedTransition(self, transition);
       } else {
         self.updateScroll(path, actionType);
+        if (self.props.onChange) self.props.onChange.call(self);
       }
     });
   },
