@@ -1,4 +1,5 @@
 var React = require('react');
+var copyProperties = require('react/lib/copyProperties');
 
 function routeIsActive(activeRoutes, routeName) {
   return activeRoutes.some(function (route) {
@@ -49,24 +50,24 @@ var ActiveContext = {
   },
 
   /**
-   * Returns an array of the currently active routes.
+   * Returns a read-only array of the currently active routes.
    */
   getActiveRoutes: function () {
-    return this.state.activeRoutes;
+    return this.state.activeRoutes.slice(0);
   },
 
   /**
-   * Returns an object of the currently active URL parameters.
+   * Returns a read-only object of the currently active URL parameters.
    */
   getActiveParams: function () {
-    return this.state.activeParams;
+    return copyProperties({}, this.state.activeParams);
   },
 
   /**
-   * Returns an object of the currently active query parameters.
+   * Returns a read-only object of the currently active query parameters.
    */
   getActiveQuery: function () {
-    return this.state.activeQuery;
+    return copyProperties({}, this.state.activeQuery);
   },
 
   /**
