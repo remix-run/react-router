@@ -39,14 +39,6 @@ One of:
 - `'none'` - doesn't do anything (you should probably do something about
   that).
 
-### `onAbortedTransition`
-
-A function called when any transition is aborted.
-
-### `onTransitionError`
-
-A function called when a transition has an error.
-
 #### signature
 
 `function(error)`

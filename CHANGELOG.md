@@ -3,6 +3,17 @@ v0.9.0 - Mon, 06 Oct 2014 19:37:27 GMT
 
 - [5aae2a8](../../commit/5aae2a8) [added] onChange event to Routes
 - [ba65269](../../commit/ba65269) [removed] AsyncState
+- [4d8c7a1](../../commit/4d8c7a1) [removed] `<Routes onTransitionError>`
+- [4d8c7a1](../../commit/4d8c7a1) [removed] `<Routes onAbortedTransition>`
+- [ed0cf62](../../commit/ed0cf62) [added] Navigation mixin for components that need to modify the URL
+- [ed0cf62](../../commit/ed0cf62) [added] CurrentPath mixin for components that need to know the current URL path
+- [ed0cf62](../../commit/ed0cf62) [added] getActiveRoutes, getActiveParams, and getActiveQuery methods to ActiveState mixin
+- [ed0cf62](../../commit/ed0cf62) [removed] Awkward updateActiveState callback from ActiveState mixin
+- [ed0cf62](../../commit/ed0cf62) [removed] Router.PathState (use Router.CurrentPath instead)
+- [ed0cf62](../../commit/ed0cf62) [removed] Router.Transitions (use Router.Navigation instead)
+- [ed0cf62](../../commit/ed0cf62) [removed] Router.RouteLookup (because it was useless)
+- [ed0cf62](../../commit/ed0cf62) [added] `<Routes scrollBehavior="browser">` alias of "imitateBrowser"
+- [ed0cf62](../../commit/ed0cf62) [changed] `<Routes fixedPath>` => `<Routes initialPath>` will be useful for SSR
 
 
 v0.8.0 - Sat, 04 Oct 2014 05:39:02 GMT

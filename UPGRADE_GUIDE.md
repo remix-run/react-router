@@ -171,6 +171,23 @@ React.createClass({
 });
 ```
 
+### `<Routes onTransitionError onAbortedTransition/>`
+
+These were removed, there is no upgrade path in `0.9.0` but we will have
+something soon. These weren't intended to be used.
+
+### `ActiveState` lifecycle method `updateActiveState` removed
+
+We didn't actually need this. Just use `this.isActive(to, params,
+query)`.
+
+### `AsyncState` mixin removed
+
+There is no upgrade path. Just use `comoponentDidMount` to request
+state. This was some groundwork for server-side rendering but we are
+going a different direction now (using props passed in to route
+handlers) so we've removed it.
+
 0.7.x -> 0.8.x
 --------------
 
