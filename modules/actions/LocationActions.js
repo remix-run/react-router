@@ -21,12 +21,7 @@ var LocationActions = {
   /**
    * Indicates the most recent entry should be removed from the history stack.
    */
-  POP: 'pop',
-
-  /**
-   * Indicates that a route transition is finished.
-   */
-  FINISHED_TRANSITION: 'finished-transition'
+  POP: 'pop'
 
 };
 

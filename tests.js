@@ -16,10 +16,8 @@ require('./modules/utils/__tests__/Path-test');
 
 
 var PathStore = require('./modules/stores/PathStore');
-var ScrollStore = require('./modules/stores/ScrollStore');
 
 afterEach(function () {
   // For some reason unmountComponentAtNode doesn't call componentWillUnmount :/
   PathStore.removeAllChangeListeners();
-  ScrollStore.removeAllChangeListeners();
 });

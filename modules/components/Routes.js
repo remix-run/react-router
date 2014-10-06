@@ -2,10 +2,7 @@ var React = require('react');
 var warning = require('react/lib/warning');
 var canUseDOM = require('react/lib/ExecutionEnvironment').canUseDOM;
 var copyProperties = require('react/lib/copyProperties');
-var LocationActions = require('../actions/LocationActions');
-var LocationDispatcher = require('../dispatchers/LocationDispatcher');
 var PathStore = require('../stores/PathStore');
-var ScrollStore = require('../stores/ScrollStore');
 var reversedArray = require('../utils/reversedArray');
 var Transition = require('../utils/Transition');
 var Redirect = require('../utils/Redirect');
@@ -265,13 +262,6 @@ function computeHandlerProps(matches, query) {
 
 var BrowserTransitionHandling = {
 
-  handleTransition: function (transition) {
-    LocationDispatcher.handleViewAction({
-      type: LocationActions.FINISHED_TRANSITION,
-      path: transition.path
-    });
-  },
-
   handleTransitionError: function (error) {
     throw error; // This error probably originated in a transition hook.
   },
@@ -289,10 +279,6 @@ var BrowserTransitionHandling = {
 };
 
 var ServerTransitionHandling = {
-
-  handleTransition: function (transition) {
-    // TODO
-  },
 
   handleTransitionError: function (error) {
     // TODO
@@ -330,18 +316,7 @@ var Routes = React.createClass({
   mixins: [ ActiveContext, LocationContext, RouteContext, ScrollContext ],
 
   propTypes: {
-    onTransition: React.PropTypes.func.isRequired,
-    onTransitionError: React.PropTypes.func.isRequired,
-    onAbortedTransition: React.PropTypes.func.isRequired,
     initialPath: React.PropTypes.string
-  },
-
-  getDefaultProps: function () {
-    return {
-      onTransition: TransitionHandling.handleTransition,
-      onTransitionError: TransitionHandling.handleTransitionError,
-      onAbortedTransition: TransitionHandling.handleAbortedTransition
-    };
   },
 
   getInitialState: function () {
@@ -356,39 +331,33 @@ var Routes = React.createClass({
 
   componentDidMount: function () {
     PathStore.addChangeListener(this.handlePathChange);
-    ScrollStore.addChangeListener(this.handleScrollChange);
   },
 
   componentWillUnmount: function () {
-    ScrollStore.removeChangeListener(this.handleScrollChange);
     PathStore.removeChangeListener(this.handlePathChange);
   },
 
   handlePathChange: function (_path) {
     var path = _path || PathStore.getCurrentPath();
+    var actionType = PathStore.getCurrentActionType();
 
     if (this.state.path === path)
       return; // Nothing to do!
+
+    if (this.state.path)
+      this.recordScroll(this.state.path);
 
     var self = this;
 
     this.dispatch(path, function (error, transition) {
       if (error) {
-        self.props.onTransitionError.call(self, error);
+        TransitionHandling.handleTransitionError.call(self, error);
       } else if (transition.isAborted) {
-        self.props.onAbortedTransition.call(self, transition);
+        TransitionHandling.handleAbortedTransition.call(self, transition);
       } else {
-        self.props.onTransition.call(self, transition);
+        self.updateScroll(path, actionType);
       }
     });
-  },
-
-  handleScrollChange: function () {
-    var behavior = this.getScrollBehavior();
-    var position = ScrollStore.getCurrentScrollPosition();
-
-    if (behavior && position)
-      behavior.updateScrollPosition(position, PathStore.getCurrentActionType());
   },
 
   /**

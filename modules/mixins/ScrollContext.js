@@ -4,6 +4,18 @@ var canUseDOM = require('react/lib/ExecutionEnvironment').canUseDOM;
 var ImitateBrowserBehavior = require('../behaviors/ImitateBrowserBehavior');
 var ScrollToTopBehavior = require('../behaviors/ScrollToTopBehavior');
 
+function getWindowScrollPosition() {
+  invariant(
+    canUseDOM,
+    'Cannot get current scroll position without a DOM'
+  );
+
+  return {
+    x: window.scrollX,
+    y: window.scrollY
+  };
+}
+
 /**
  * A hash of { name: scrollBehavior } pairs.
  */
@@ -52,6 +64,22 @@ var ScrollContext = {
       behavior == null || canUseDOM,
       'Cannot use scroll behavior without a DOM'
     );
+
+    if (behavior != null)
+      this._scrollPositions = {};
+  },
+
+  recordScroll: function (path) {
+    if (this._scrollPositions)
+      this._scrollPositions[path] = getWindowScrollPosition();
+  },
+
+  updateScroll: function (path, actionType) {
+    var behavior = this.getScrollBehavior();
+    var position = this._scrollPositions[path];
+
+    if (behavior && position)
+      behavior.updateScrollPosition(position, actionType);
   },
 
   /**

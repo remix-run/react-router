@@ -1,7 +1,6 @@
 var EventEmitter = require('events').EventEmitter;
 var LocationActions = require('../actions/LocationActions');
 var LocationDispatcher = require('../dispatchers/LocationDispatcher');
-var ScrollStore = require('./ScrollStore');
 
 var CHANGE_EVENT = 'change';
 var _events = new EventEmitter;
@@ -51,8 +50,6 @@ var PathStore = {
       case LocationActions.PUSH:
       case LocationActions.REPLACE:
       case LocationActions.POP:
-        LocationDispatcher.waitFor([ ScrollStore.dispatchToken ]);
-
         if (_currentPath !== action.path) {
           _currentPath = action.path;
           _currentActionType = action.type;
