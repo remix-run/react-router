@@ -1,7 +1,7 @@
-API: `Transitions` (mixin)
+API: `Navigation` (mixin)
 ==========================
 
-A mixin for components that need to initiate transitions to other routes.
+A mixin for components that need to create URLs and/or initiate transitions to other routes.
 
 Instance Methods
 ----------------
@@ -43,6 +43,10 @@ entry from the browser history.
 this.goBack();
 ```
 
+### `makePath(routeName, params, query)`
+
+Creates a URL path to a route.
+
 ### `makeHref(routeName, params, query)`
 
 Creates an `href` to a route. Use this along with `ActiveState` when you
@@ -60,8 +64,10 @@ Example
 -------
 
 ```js
+var Navigation = require('react-router').Navigation;
+
 React.createClass({
-  mixins: [Transitions],
+  mixins: [Navigation],
 
   whenever: function() {
     this.transitionTo('something');
@@ -70,4 +76,3 @@ React.createClass({
   }
 });
 ```
-

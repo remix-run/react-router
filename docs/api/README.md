@@ -12,15 +12,14 @@ React Router API
   - [`RouteHandler`](/docs/api/components/RouteHandler.md)
   - [`Routes`](/docs/api/components/Routes.md)
 
-- Misc 
-  - [`transition`](/docs/api/misc/transition.md)
-
 - Mixins
   - [`ActiveState`](/docs/api/mixins/ActiveState.md)
   - [`AsyncState`](/docs/api/mixins/AsyncState.md)
-  - [`PathState`](/docs/api/mixins/PathState.md)
-  - [`RouteLookup`](/docs/api/mixins/RouteLookup.md)
-  - [`Transitions`](/docs/api/mixins/Transitions.md)
+  - [`CurrentPath`](/docs/api/mixins/CurrentPath.md)
+  - [`Navigation`](/docs/api/mixins/Navigation.md)
+
+- Misc 
+  - [`transition`](/docs/api/misc/transition.md)
 
 Public Modules
 --------------
