@@ -41,7 +41,7 @@ var SomethingActive = React.createClass({
 function fn(nextState) {}
 
 // 0.9.x
-<Routes onActiveStateChange={fn} />
+<Routes onChange={fn} />
 
 function fn() {
   // no arguments
@@ -53,9 +53,6 @@ function fn() {
   this.getActiveQuery();
 }
 ```
-
-You may need access to the current routes, use the `RouteLookup` mixin
-for that along with `PathState`.
 
 ### `.` in params support
 
