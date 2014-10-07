@@ -353,7 +353,9 @@ var Routes = React.createClass({
         TransitionHandling.handleAbortedTransition(self, transition);
       } else {
         self.updateScroll(path, actionType);
-        if (self.props.onChange) self.props.onChange.call(self);
+
+        if (self.props.onChange)
+          self.props.onChange.call(self);
       }
     });
   },
