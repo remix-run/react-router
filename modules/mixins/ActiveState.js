@@ -3,6 +3,20 @@ var React = require('react');
 /**
  * A mixin for components that need to know the routes, URL
  * params and query that are currently active.
+ *
+ * Example:
+ *
+ *   var AboutLink = React.createClass({
+ *     mixins: [ Router.ActiveState ],
+ *     render: function () {
+ *       var className = this.props.className;
+ *   
+ *       if (this.isActive('about'))
+ *         className += ' is-active';
+ *   
+ *       return React.DOM.a({ className: className }, this.props.children);
+ *     }
+ *   });
  */
 var ActiveState = {
 
