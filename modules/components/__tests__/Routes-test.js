@@ -69,4 +69,31 @@ describe('A Routes', function () {
     });
   });
 
+  describe('with `handlerProps`', function () {
+    var component;
+    var expectedResult = "passed in from handlerProps";
+
+
+    beforeEach(function () {
+      component = ReactTestUtils.renderIntoDocument(
+        Routes({ handlerProps: { echo: expectedResult } },
+          Route({ handler: NullHandler },
+            Route({ handler: NullHandler })
+          )
+        )
+      );
+    });
+
+    afterEach(function () {
+      React.unmountComponentAtNode(component.getDOMNode());
+    });
+
+    it('returns an array with the correct params', function () {
+      // component.props gives you <Routes>'s props
+      // component.render().props appears to give you the deepest child's props
+      // this is my first time unit testing a React component,
+      // so please show me the right way to do this.  =)
+      expect(component.render().props.echo).toEqual(expectedResult);
+    });
+  });
 });

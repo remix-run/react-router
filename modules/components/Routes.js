@@ -30,7 +30,7 @@ function findMatches(path, routes, defaultRoute, notFoundRoute) {
 
     if (matches != null) {
       var rootParams = getRootMatch(matches).params;
-      
+
       params = route.props.paramNames.reduce(function (params, paramName) {
         params[paramName] = rootParams[paramName];
         return params;
@@ -225,7 +225,21 @@ function returnNull() {
   return null;
 }
 
-function computeHandlerProps(matches, query) {
+function computeHandlerProps(matches, query, userSuppliedHandlerProps) {
+  /**
+   * In the tree:
+   *
+   *   <Routes>
+   *     <Route handler = { require("./Trunk.jsx") } >
+   *       <Route handler = { require("./Branch.jsx") } >
+   *         <Route handler = { require("./Leaf.jsx") } />
+   *       </Route>
+   *     </Route>
+   *   </Routes>
+   *
+   * `computeHandlerProps` constructs the `props` that get passed into <Trunk>.
+   */
+
   var handler = returnNull;
   var props = {
     ref: null,
@@ -235,10 +249,26 @@ function computeHandlerProps(matches, query) {
     key: null
   };
 
+  /**
+   * Recursively passes `handler`s down the tree, effectively creating:
+   *
+   *   <Trunk activeRouteHandler = {
+   *     <Branch activeRouteHandler = {
+   *       <Leaf activeRouteHandler = {
+   *          () => null
+   *       }/>
+   *     }/>
+   *   }/>
+   */
   reversedArray(matches).forEach(function (match) {
     var route = match.route;
 
+    // DEPRECATED (unreserved props)
     props = Route.getUnreservedProps(route.props);
+    // TODO: remove the above line and move the following line
+    // into the parent scope (below `var props`)
+    props = copyProperties(props, userSuppliedHandlerProps);
+
 
     props.ref = '__activeRoute__';
     props.params = match.params;
@@ -412,7 +442,7 @@ var Routes = React.createClass({
    * Returns the props that should be used for the top-level route handler.
    */
   getHandlerProps: function () {
-    return computeHandlerProps(this.state.matches, this.state.activeQuery);
+    return computeHandlerProps(this.state.matches, this.state.activeQuery, this.props.handlerProps);
   },
 
   /**
