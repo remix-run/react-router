@@ -112,7 +112,7 @@ var Path = {
    * in the given path, null if the path contains no query string.
    */
   extractQuery: function (path) {
-    var match = decodeURL(path).match(queryMatcher);
+    var match = path.match(queryMatcher);
     return match && qs.parse(match[1]);
   },
 
