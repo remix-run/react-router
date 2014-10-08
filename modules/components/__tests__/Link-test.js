@@ -9,8 +9,6 @@ var Link = require('../Link');
 
 describe('A Link', function () {
 
-  afterEach(require('../../stores/PathStore').teardown);
-
   describe('with params and a query', function () {
     var HomeHandler = React.createClass({
       render: function () {

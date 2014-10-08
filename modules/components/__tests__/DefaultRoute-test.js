@@ -12,8 +12,6 @@ var NullHandler = React.createClass({
   }
 });
 
-afterEach(require('../../stores/PathStore').teardown);
-
 describe('A DefaultRoute', function () {
 
   it('has a null path', function () {
