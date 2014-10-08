@@ -1,17 +1,28 @@
 var assert = require('assert');
 var expect = require('expect');
 var LocationActions = require('../../actions/LocationActions');
-var LocationDispatcher = require('../../dispatchers/LocationDispatcher');
 var PathStore = require('../PathStore');
 
 describe('PathStore', function () {
 
+  var _onChange;
+  var MockLocation = {
+    setup: function (onChange) {
+      _onChange = onChange;
+    },
+    getCurrentPath: function () {
+      return '/';
+    },
+    toString: function () {
+      return '<MockLocation>';
+    }
+  };
+
   beforeEach(function () {
-    LocationDispatcher.handleViewAction({
-      type: LocationActions.PUSH,
-      path: '/'
-    });
+    PathStore.setup(MockLocation);
   });
+
+  afterEach(PathStore.teardown);
 
   var changeWasFired;
   function changeListener() {
@@ -30,7 +41,7 @@ describe('PathStore', function () {
   describe('when a new URL path is pushed', function () {
     beforeEach(setupChangeListener);
     beforeEach(function () {
-      LocationDispatcher.handleViewAction({
+      _onChange({
         type: LocationActions.PUSH,
         path: '/push'
       });
@@ -54,7 +65,7 @@ describe('PathStore', function () {
   describe('when a URL path is replaced', function () {
     beforeEach(setupChangeListener);
     beforeEach(function () {
-      LocationDispatcher.handleViewAction({
+      _onChange({
         type: LocationActions.REPLACE,
         path: '/replace'
       });
@@ -78,7 +89,7 @@ describe('PathStore', function () {
   describe('when a URL path is popped', function () {
     beforeEach(setupChangeListener);
     beforeEach(function () {
-      LocationDispatcher.handleViewAction({
+      _onChange({
         type: LocationActions.POP,
         path: '/pop'
       });

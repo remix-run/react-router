@@ -62,7 +62,7 @@ var LocationContext = {
     );
 
     if (location)
-      PathStore.useLocation(location);
+      PathStore.setup(location);
   },
 
   /**

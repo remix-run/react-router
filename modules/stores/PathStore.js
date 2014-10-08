@@ -9,7 +9,8 @@ function notifyChange() {
   _events.emit(CHANGE_EVENT);
 }
 
-var _currentLocation, _currentPath, _currentActionType;
+var _currentLocation, _currentActionType;
+var _currentPath = '/';
 
 function handleLocationChangeAction(action) {
   if (_currentPath !== action.path) {
@@ -39,7 +40,7 @@ var PathStore = {
   /**
    * Setup the PathStore to use the given location.
    */
-  useLocation: function (location) {
+  setup: function (location) {
     invariant(
       _currentLocation == null || _currentLocation === location,
       'You cannot use %s and %s on the same page',
@@ -54,6 +55,19 @@ var PathStore = {
     }
 
     _currentLocation = location;
+  },
+
+  /**
+   * Tear down the PathStore. Really only used for testing.
+   */
+  teardown: function () {
+    if (_currentLocation && _currentLocation.teardown)
+      _currentLocation.teardown();
+
+    _currentLocation = _currentActionType = null;
+    _currentPath = '/';
+
+    PathStore.removeAllChangeListeners();
   },
 
   /**
