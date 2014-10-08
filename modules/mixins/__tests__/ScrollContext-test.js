@@ -29,6 +29,12 @@ describe('ScrollContext', function () {
     it('has a null scroll behavior', function () {
       expect(component.getScrollBehavior()).toBe(null);
     });
+
+    it('does not throw when updating scroll position', function () {
+      expect(function() {
+        component.updateScroll('/');
+      }).toNotThrow();
+    });
   });
 
   describe('when using scrollBehavior="browser"', function () {
