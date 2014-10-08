@@ -8,6 +8,8 @@ var Navigation = require('../Navigation');
 
 describe('Navigation', function () {
 
+  afterEach(require('../../stores/PathStore').teardown);
+
   var NavigationHandler = React.createClass({
     mixins: [ Navigation ],
     render: function () {

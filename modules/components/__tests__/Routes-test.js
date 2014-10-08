@@ -21,7 +21,7 @@ describe('A Routes', function () {
     var component;
     beforeEach(function () {
       component = ReactTestUtils.renderIntoDocument(
-        Routes(null,
+        Routes({ location: 'none' },
           Route({ handler: NullHandler },
             Route({ path: '/a/b/c', handler: NullHandler })
           )
@@ -47,7 +47,7 @@ describe('A Routes', function () {
     var component;
     beforeEach(function () {
       component = ReactTestUtils.renderIntoDocument(
-        Routes(null,
+        Routes({ location: 'none' },
           Route({ handler: NullHandler },
             Route({ path: '/posts/:id/edit', handler: NullHandler })
           )

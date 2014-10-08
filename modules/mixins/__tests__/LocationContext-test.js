@@ -7,6 +7,8 @@ var LocationContext = require('../LocationContext');
 
 describe('LocationContext', function () {
 
+  afterEach(require('../../stores/PathStore').teardown);
+
   var App = React.createClass({
     mixins: [ LocationContext ],
     render: function () {

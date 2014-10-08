@@ -65,7 +65,7 @@ describe('when no child routes match a URL, but the beginning of the parent\'s p
   var component, rootRoute, notFoundRoute;
   beforeEach(function () {
     component = ReactTestUtils.renderIntoDocument(
-      Routes({ location: 'none' },
+      Routes({ location: 'none', initialPath: '/users/5' },
         rootRoute = Route({ name: 'user', path: '/users/:id', handler: NullHandler },
           Route({ name: 'home', path: '/users/:id/home', handler: NullHandler }),
           // Make it the middle sibling to test order independence.

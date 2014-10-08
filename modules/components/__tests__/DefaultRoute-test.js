@@ -12,6 +12,8 @@ var NullHandler = React.createClass({
   }
 });
 
+afterEach(require('../../stores/PathStore').teardown);
+
 describe('A DefaultRoute', function () {
 
   it('has a null path', function () {
@@ -65,7 +67,7 @@ describe('when no child routes match a URL, but the parent\'s path matches', fun
   var component, rootRoute, defaultRoute;
   beforeEach(function () {
     component = ReactTestUtils.renderIntoDocument(
-      Routes({ location: 'none' },
+      Routes({ location: 'none', initialPath: '/users/5' },
         rootRoute = Route({ name: 'user', path: '/users/:id', handler: NullHandler },
           Route({ name: 'home', path: '/users/:id/home', handler: NullHandler }),
           // Make it the middle sibling to test order independence.

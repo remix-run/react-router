@@ -9,6 +9,8 @@ var Link = require('../Link');
 
 describe('A Link', function () {
 
+  afterEach(require('../../stores/PathStore').teardown);
+
   describe('with params and a query', function () {
     var HomeHandler = React.createClass({
       render: function () {
@@ -19,7 +21,7 @@ describe('A Link', function () {
     var component;
     beforeEach(function () {
       component = ReactTestUtils.renderIntoDocument(
-        Routes({ location: 'history', initialPath: '/mjackson/home' },
+        Routes({ location: 'none', initialPath: '/mjackson/home' },
           Route({ name: 'home', path: '/:username/home', handler: HomeHandler })
         )
       );
@@ -45,7 +47,7 @@ describe('A Link', function () {
     var component;
     beforeEach(function () {
       component = ReactTestUtils.renderIntoDocument(
-        Routes(null,
+        Routes({ location: 'none', initialPath: '/' },
           DefaultRoute({ name: 'home', handler: HomeHandler })
         )
       );
