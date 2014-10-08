@@ -7,9 +7,10 @@ following methods must be implemented:
 Methods
 -------
 
-### `setup()`
+### `setup(onChange)`
 
-Called when the router is first setup.
+Called when the router is first setup. The `onChange` function should be
+called without any arguments when the location changes.
 
 ### `teardown`
 
@@ -28,6 +29,11 @@ another.
 
 Called when the router attempts to go back one entry in the history.
 
+### `getCurrentPath`
+
+Should return the current URL path, complete with query string (if applicable).
+This method should be ready to go immediately after setup.
+
 ### `toString`
 
 Should return a useful string for logging and debugging.
@@ -35,23 +41,5 @@ Should return a useful string for logging and debugging.
 Example
 -------
 
-This is a terrible example, you're probably better off looking at the
-implementations in this repository.
-
-```js
-var MyLocation = {
-
-  setup: function () {},
-
-  teardown: function () {},
-
-  push: function (path) {},
-
-  replace: function (path) {},
-
-  pop: function () {},
-
-  toString: function () {}
-
-};
-```
+For examples of how to implement your own location, please see the locations
+included in this repository.

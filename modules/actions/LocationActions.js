@@ -4,11 +4,6 @@
 var LocationActions = {
 
   /**
-   * Indicates a location is being setup for the first time.
-   */
-  SETUP: 'setup',
-
-  /**
    * Indicates a new location is being pushed to the history stack.
    */
   PUSH: 'push',

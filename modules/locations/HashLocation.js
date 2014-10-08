@@ -1,7 +1,4 @@
-var invariant = require('react/lib/invariant');
-var canUseDOM = require('react/lib/ExecutionEnvironment').canUseDOM;
 var LocationActions = require('../actions/LocationActions');
-var LocationDispatcher = require('../dispatchers/LocationDispatcher');
 var getWindowPath = require('../utils/getWindowPath');
 
 function getHashPath() {
@@ -21,11 +18,13 @@ function ensureSlash() {
   return false;
 }
 
+var _onChange;
+
 function onHashChange() {
   if (ensureSlash()) {
     var path = getHashPath();
 
-    LocationDispatcher.handleViewAction({
+    _onChange({
       // If we don't have an _actionType then all we know is the hash
       // changed. It was probably caused by the user clicking the Back
       // button, but may have also been the Forward button or manual
@@ -38,36 +37,22 @@ function onHashChange() {
   }
 }
 
-var _isSetup = false;
-
 /**
  * A Location that uses `window.location.hash`.
  */
 var HashLocation = {
 
-  setup: function () {
-    if (_isSetup)
-      return;
+  setup: function (onChange) {
+    _onChange = onChange;
 
-    invariant(
-      canUseDOM,
-      'You cannot use HashLocation in an environment with no DOM'
-    );
-
+    // Do this BEFORE listening for hashchange.
     ensureSlash();
-
-    LocationDispatcher.handleViewAction({
-      type: LocationActions.SETUP,
-      path: getHashPath()
-    });
 
     if (window.addEventListener) {
       window.addEventListener('hashchange', onHashChange, false);
     } else {
       window.attachEvent('onhashchange', onHashChange);
     }
-
-    _isSetup = true;
   },
 
   teardown: function () {
@@ -76,8 +61,6 @@ var HashLocation = {
     } else {
       window.detachEvent('onhashchange', onHashChange);
     }
-
-    _isSetup = false;
   },
 
   push: function (path) {
@@ -94,6 +77,8 @@ var HashLocation = {
     _actionType = LocationActions.POP;
     window.history.back();
   },
+
+  getCurrentPath: getHashPath,
 
   toString: function () {
     return '<HashLocation>';

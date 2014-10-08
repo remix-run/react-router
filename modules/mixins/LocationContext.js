@@ -4,6 +4,7 @@ var canUseDOM = require('react/lib/ExecutionEnvironment').canUseDOM;
 var HashLocation = require('../locations/HashLocation');
 var HistoryLocation = require('../locations/HistoryLocation');
 var RefreshLocation = require('../locations/RefreshLocation');
+var PathStore = require('../stores/PathStore');
 var supportsHistory = require('../utils/supportsHistory');
 
 /**
@@ -60,8 +61,8 @@ var LocationContext = {
       'Cannot use location without a DOM'
     );
 
-    if (location && location.setup)
-      location.setup();
+    if (location)
+      PathStore.useLocation(location);
   },
 
   /**
