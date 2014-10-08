@@ -229,6 +229,10 @@ describe('Path.extractQuery', function () {
     it('properly handles arrays', function () {
       expect(Path.extractQuery('/?id%5B%5D=a&id%5B%5D=b')).toEqual({ id: [ 'a', 'b' ] });
     });
+
+    it('properly handles encoded ampersands', function () {
+      expect(Path.extractQuery('/?id=a%26b')).toEqual({ id: 'a&b' });
+    });
   });
 
   describe('when the path does not contain a query string', function () {
