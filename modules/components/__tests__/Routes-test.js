@@ -26,7 +26,7 @@ describe('A Routes', function () {
             Route({ path: '/a/b/c', handler: NullHandler })
           )
         )
-      );    
+      );
     });
 
     afterEach(function () {
@@ -52,7 +52,7 @@ describe('A Routes', function () {
             Route({ path: '/posts/:id/edit', handler: NullHandler })
           )
         )
-      );    
+      );
     });
 
     afterEach(function () {

@@ -20,7 +20,7 @@ describe('Navigation', function () {
       var component;
       beforeEach(function () {
         component = ReactTestUtils.renderIntoDocument(
-          Routes({ initialPath: '/anybody/home' }, 
+          Routes({ initialPath: '/anybody/home' },
             Route({ name: 'home', path: '/:username/home', handler: NavigationHandler })
           )
         );
@@ -67,7 +67,7 @@ describe('Navigation', function () {
       var component;
       beforeEach(function () {
         component = ReactTestUtils.renderIntoDocument(
-          Routes({ location: 'hash', initialPath: '/home' }, 
+          Routes({ location: 'hash', initialPath: '/home' },
             Route({ name: 'home', handler: NavigationHandler })
           )
         );
@@ -88,7 +88,7 @@ describe('Navigation', function () {
       var component;
       beforeEach(function () {
         component = ReactTestUtils.renderIntoDocument(
-          Routes({ location: 'history', initialPath: '/home' }, 
+          Routes({ location: 'history', initialPath: '/home' },
             Route({ name: 'home', handler: NavigationHandler })
           )
         );
