@@ -19,12 +19,14 @@ describe('A Link', function () {
     });
 
     var component;
-    beforeEach(function () {
+    beforeEach(function (done) {
       component = ReactTestUtils.renderIntoDocument(
-        Routes({ location: 'none', initialPath: '/mjackson/home' },
+        Routes({ location: 'none' },
           Route({ name: 'home', path: '/:username/home', handler: HomeHandler })
         )
       );
+
+      component.dispatch('/mjackson/home', done);
     });
 
     afterEach(function () {
@@ -45,12 +47,14 @@ describe('A Link', function () {
     });
 
     var component;
-    beforeEach(function () {
+    beforeEach(function (done) {
       component = ReactTestUtils.renderIntoDocument(
-        Routes({ location: 'none', initialPath: '/' },
+        Routes({ location: 'none' },
           DefaultRoute({ name: 'home', handler: HomeHandler })
         )
       );
+
+      component.dispatch('/', done);
     });
 
     afterEach(function () {

@@ -65,9 +65,9 @@ describe('A DefaultRoute', function () {
 describe('when no child routes match a URL, but the parent\'s path matches', function () {
 
   var component, rootRoute, defaultRoute;
-  beforeEach(function () {
+  beforeEach(function (done) {
     component = ReactTestUtils.renderIntoDocument(
-      Routes({ location: 'none', initialPath: '/users/5' },
+      Routes({ location: 'none' },
         rootRoute = Route({ name: 'user', path: '/users/:id', handler: NullHandler },
           Route({ name: 'home', path: '/users/:id/home', handler: NullHandler }),
           // Make it the middle sibling to test order independence.
@@ -75,7 +75,9 @@ describe('when no child routes match a URL, but the parent\'s path matches', fun
           Route({ name: 'news', path: '/users/:id/news', handler: NullHandler })
         )
       )
-    )
+    );
+
+    component.dispatch('/users/5', done);
   });
 
   afterEach(function () {

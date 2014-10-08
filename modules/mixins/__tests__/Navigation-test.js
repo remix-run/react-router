@@ -20,12 +20,14 @@ describe('Navigation', function () {
   describe('makePath', function () {
     describe('when there is a route with the given name', function () {
       var component;
-      beforeEach(function () {
+      beforeEach(function (done) {
         component = ReactTestUtils.renderIntoDocument(
-          Routes({ initialPath: '/anybody/home' }, 
+          Routes({ location: 'none' }, 
             Route({ name: 'home', path: '/:username/home', handler: NavigationHandler })
           )
         );
+
+        component.dispatch('/anybody/home', done);
       });
 
       afterEach(function () {
@@ -41,12 +43,14 @@ describe('Navigation', function () {
 
     describe('when there is no route with the given name', function () {
       var component;
-      beforeEach(function () {
+      beforeEach(function (done) {
         component = ReactTestUtils.renderIntoDocument(
-          Routes({ initialPath: '/home' },
+          Routes({ location: 'none' },
             Route({ name: 'home', handler: NavigationHandler })
           )
         );
+
+        component.dispatch('/home', done);
       });
 
       afterEach(function () {
@@ -67,12 +71,14 @@ describe('Navigation', function () {
   describe('makeHref', function () {
     describe('when using "hash" location', function () {
       var component;
-      beforeEach(function () {
+      beforeEach(function (done) {
         component = ReactTestUtils.renderIntoDocument(
-          Routes({ location: 'hash', initialPath: '/home' }, 
+          Routes({ location: 'hash' }, 
             Route({ name: 'home', handler: NavigationHandler })
           )
         );
+
+        component.dispatch('/home', done);
       });
 
       afterEach(function () {
@@ -88,12 +94,14 @@ describe('Navigation', function () {
 
     describe('when using "history" location', function () {
       var component;
-      beforeEach(function () {
+      beforeEach(function (done) {
         component = ReactTestUtils.renderIntoDocument(
-          Routes({ location: 'history', initialPath: '/home' }, 
+          Routes({ location: 'history' }, 
             Route({ name: 'home', handler: NavigationHandler })
           )
         );
+
+        component.dispatch('/home', done);
       });
 
       afterEach(function () {
