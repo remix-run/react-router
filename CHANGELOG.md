@@ -1,3 +1,12 @@
+v0.9.2 - Wed, 08 Oct 2014 05:33:30 GMT
+--------------------------------------
+
+- [d57f830](../../commit/d57f830) [changed] Public interface for Location objects
+- [6723dc5](../../commit/6723dc5) [added] ability to set params/query in Redirect
+- [60f9eb4](../../commit/60f9eb4) [fixed] encoded ampersands in query params
+- [668773c](../../commit/668773c) [fixed] transitioning to paths with .
+
+
 v0.9.1 - Mon, 06 Oct 2014 20:55:32 GMT
 --------------------------------------
 

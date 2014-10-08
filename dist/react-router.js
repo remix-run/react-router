@@ -5,11 +5,6 @@
 var LocationActions = {
 
   /**
-   * Indicates a location is being setup for the first time.
-   */
-  SETUP: 'setup',
-
-  /**
    * Indicates a new location is being pushed to the history stack.
    */
   PUSH: 'push',
@@ -89,7 +84,7 @@ function DefaultRoute(props) {
 
 module.exports = DefaultRoute;
 
-},{"./Route":8,"react/lib/merge":45}],5:[function(_dereq_,module,exports){
+},{"./Route":8,"react/lib/merge":41}],5:[function(_dereq_,module,exports){
 var React = (typeof window !== "undefined" ? window.React : typeof global !== "undefined" ? global.React : null);
 var merge = _dereq_('react/lib/merge');
 var ActiveState = _dereq_('../mixins/ActiveState');
@@ -194,7 +189,7 @@ var Link = React.createClass({
 
 module.exports = Link;
 
-},{"../mixins/ActiveState":16,"../mixins/Navigation":19,"react/lib/merge":45}],6:[function(_dereq_,module,exports){
+},{"../mixins/ActiveState":15,"../mixins/Navigation":18,"react/lib/merge":41}],6:[function(_dereq_,module,exports){
 var merge = _dereq_('react/lib/merge');
 var Route = _dereq_('./Route');
 
@@ -216,15 +211,15 @@ function NotFoundRoute(props) {
 
 module.exports = NotFoundRoute;
 
-},{"./Route":8,"react/lib/merge":45}],7:[function(_dereq_,module,exports){
+},{"./Route":8,"react/lib/merge":41}],7:[function(_dereq_,module,exports){
 var React = (typeof window !== "undefined" ? window.React : typeof global !== "undefined" ? global.React : null);
 var Route = _dereq_('./Route');
 
-function createRedirectHandler(to) {
+function createRedirectHandler(to, _params, _query) {
   return React.createClass({
     statics: {
       willTransitionTo: function (transition, params, query) {
-        transition.redirect(to, params, query);
+        transition.redirect(to, _params || params, _query || query);
       }
     },
 
@@ -242,7 +237,7 @@ function Redirect(props) {
   return Route({
     name: props.name,
     path: props.from || props.path || '*',
-    handler: createRedirectHandler(props.to)
+    handler: createRedirectHandler(props.to, props.params, props.query)
   });
 }
 
@@ -344,7 +339,7 @@ var Route = React.createClass({
 
 module.exports = Route;
 
-},{"../utils/withoutProperties":30}],9:[function(_dereq_,module,exports){
+},{"../utils/withoutProperties":29}],9:[function(_dereq_,module,exports){
 var React = (typeof window !== "undefined" ? window.React : typeof global !== "undefined" ? global.React : null);
 var warning = _dereq_('react/lib/warning');
 var invariant = _dereq_('react/lib/invariant');
@@ -700,7 +695,9 @@ var Routes = React.createClass({
         TransitionHandling.handleAbortedTransition(self, transition);
       } else {
         self.updateScroll(path, actionType);
-        if (self.props.onChange) self.props.onChange.call(self);
+
+        if (self.props.onChange)
+          self.props.onChange.call(self);
       }
     });
   },
@@ -892,27 +889,7 @@ var Routes = React.createClass({
 
 module.exports = Routes;
 
-},{"../locations/HashLocation":12,"../mixins/ActiveContext":15,"../mixins/LocationContext":18,"../mixins/RouteContext":20,"../mixins/ScrollContext":21,"../stores/PathStore":22,"../utils/Path":23,"../utils/Redirect":25,"../utils/Transition":26,"../utils/reversedArray":28,"./Route":8,"react/lib/ExecutionEnvironment":40,"react/lib/copyProperties":41,"react/lib/invariant":43,"react/lib/warning":49}],10:[function(_dereq_,module,exports){
-var copyProperties = _dereq_('react/lib/copyProperties');
-var Dispatcher = _dereq_('flux').Dispatcher;
-
-/**
- * Dispatches actions that modify the URL.
- */
-var LocationDispatcher = copyProperties(new Dispatcher, {
-
-  handleViewAction: function (action) {
-    this.dispatch({
-      source: 'VIEW_ACTION',
-      action: action
-    });
-  }
-
-});
-
-module.exports = LocationDispatcher;
-
-},{"flux":32,"react/lib/copyProperties":41}],11:[function(_dereq_,module,exports){
+},{"../locations/HashLocation":11,"../mixins/ActiveContext":14,"../mixins/LocationContext":17,"../mixins/RouteContext":19,"../mixins/ScrollContext":20,"../stores/PathStore":21,"../utils/Path":22,"../utils/Redirect":24,"../utils/Transition":25,"../utils/reversedArray":27,"./Route":8,"react/lib/ExecutionEnvironment":36,"react/lib/copyProperties":37,"react/lib/invariant":39,"react/lib/warning":45}],10:[function(_dereq_,module,exports){
 exports.DefaultRoute = _dereq_('./components/DefaultRoute');
 exports.Link = _dereq_('./components/Link');
 exports.NotFoundRoute = _dereq_('./components/NotFoundRoute');
@@ -924,11 +901,8 @@ exports.ActiveState = _dereq_('./mixins/ActiveState');
 exports.CurrentPath = _dereq_('./mixins/CurrentPath');
 exports.Navigation = _dereq_('./mixins/Navigation');
 
-},{"./components/DefaultRoute":4,"./components/Link":5,"./components/NotFoundRoute":6,"./components/Redirect":7,"./components/Route":8,"./components/Routes":9,"./mixins/ActiveState":16,"./mixins/CurrentPath":17,"./mixins/Navigation":19}],12:[function(_dereq_,module,exports){
-var invariant = _dereq_('react/lib/invariant');
-var canUseDOM = _dereq_('react/lib/ExecutionEnvironment').canUseDOM;
+},{"./components/DefaultRoute":4,"./components/Link":5,"./components/NotFoundRoute":6,"./components/Redirect":7,"./components/Route":8,"./components/Routes":9,"./mixins/ActiveState":15,"./mixins/CurrentPath":16,"./mixins/Navigation":18}],11:[function(_dereq_,module,exports){
 var LocationActions = _dereq_('../actions/LocationActions');
-var LocationDispatcher = _dereq_('../dispatchers/LocationDispatcher');
 var getWindowPath = _dereq_('../utils/getWindowPath');
 
 function getHashPath() {
@@ -948,11 +922,13 @@ function ensureSlash() {
   return false;
 }
 
+var _onChange;
+
 function onHashChange() {
   if (ensureSlash()) {
     var path = getHashPath();
 
-    LocationDispatcher.handleViewAction({
+    _onChange({
       // If we don't have an _actionType then all we know is the hash
       // changed. It was probably caused by the user clicking the Back
       // button, but may have also been the Forward button or manual
@@ -965,36 +941,22 @@ function onHashChange() {
   }
 }
 
-var _isSetup = false;
-
 /**
  * A Location that uses `window.location.hash`.
  */
 var HashLocation = {
 
-  setup: function () {
-    if (_isSetup)
-      return;
+  setup: function (onChange) {
+    _onChange = onChange;
 
-    invariant(
-      canUseDOM,
-      'You cannot use HashLocation in an environment with no DOM'
-    );
-
+    // Do this BEFORE listening for hashchange.
     ensureSlash();
-
-    LocationDispatcher.handleViewAction({
-      type: LocationActions.SETUP,
-      path: getHashPath()
-    });
 
     if (window.addEventListener) {
       window.addEventListener('hashchange', onHashChange, false);
     } else {
       window.attachEvent('onhashchange', onHashChange);
     }
-
-    _isSetup = true;
   },
 
   teardown: function () {
@@ -1003,8 +965,6 @@ var HashLocation = {
     } else {
       window.detachEvent('onhashchange', onHashChange);
     }
-
-    _isSetup = false;
   },
 
   push: function (path) {
@@ -1022,6 +982,8 @@ var HashLocation = {
     window.history.back();
   },
 
+  getCurrentPath: getHashPath,
+
   toString: function () {
     return '<HashLocation>';
   }
@@ -1030,48 +992,32 @@ var HashLocation = {
 
 module.exports = HashLocation;
 
-},{"../actions/LocationActions":1,"../dispatchers/LocationDispatcher":10,"../utils/getWindowPath":27,"react/lib/ExecutionEnvironment":40,"react/lib/invariant":43}],13:[function(_dereq_,module,exports){
-var invariant = _dereq_('react/lib/invariant');
-var canUseDOM = _dereq_('react/lib/ExecutionEnvironment').canUseDOM;
+},{"../actions/LocationActions":1,"../utils/getWindowPath":26}],12:[function(_dereq_,module,exports){
 var LocationActions = _dereq_('../actions/LocationActions');
-var LocationDispatcher = _dereq_('../dispatchers/LocationDispatcher');
 var getWindowPath = _dereq_('../utils/getWindowPath');
 
+var _onChange;
+
 function onPopState() {
-  LocationDispatcher.handleViewAction({
+  _onChange({
     type: LocationActions.POP,
     path: getWindowPath()
   });
 }
-
-var _isSetup = false;
 
 /**
  * A Location that uses HTML5 history.
  */
 var HistoryLocation = {
 
-  setup: function () {
-    if (_isSetup)
-      return;
-
-    invariant(
-      canUseDOM,
-      'You cannot use HistoryLocation in an environment with no DOM'
-    );
-
-    LocationDispatcher.handleViewAction({
-      type: LocationActions.SETUP,
-      path: getWindowPath()
-    });
+  setup: function (onChange) {
+    _onChange = onChange;
 
     if (window.addEventListener) {
       window.addEventListener('popstate', onPopState, false);
     } else {
       window.attachEvent('popstate', onPopState);
     }
-
-    _isSetup = true;
   },
 
   teardown: function () {
@@ -1080,14 +1026,12 @@ var HistoryLocation = {
     } else {
       window.detachEvent('popstate', onPopState);
     }
-
-    _isSetup = false;
   },
 
   push: function (path) {
     window.history.pushState({ path: path }, '', path);
 
-    LocationDispatcher.handleViewAction({
+    _onChange({
       type: LocationActions.PUSH,
       path: getWindowPath()
     });
@@ -1096,7 +1040,7 @@ var HistoryLocation = {
   replace: function (path) {
     window.history.replaceState({ path: path }, '', path);
 
-    LocationDispatcher.handleViewAction({
+    _onChange({
       type: LocationActions.REPLACE,
       path: getWindowPath()
     });
@@ -1106,6 +1050,8 @@ var HistoryLocation = {
     window.history.back();
   },
 
+  getCurrentPath: getWindowPath,
+
   toString: function () {
     return '<HistoryLocation>';
   }
@@ -1114,11 +1060,7 @@ var HistoryLocation = {
 
 module.exports = HistoryLocation;
 
-},{"../actions/LocationActions":1,"../dispatchers/LocationDispatcher":10,"../utils/getWindowPath":27,"react/lib/ExecutionEnvironment":40,"react/lib/invariant":43}],14:[function(_dereq_,module,exports){
-var invariant = _dereq_('react/lib/invariant');
-var canUseDOM = _dereq_('react/lib/ExecutionEnvironment').canUseDOM;
-var LocationActions = _dereq_('../actions/LocationActions');
-var LocationDispatcher = _dereq_('../dispatchers/LocationDispatcher');
+},{"../actions/LocationActions":1,"../utils/getWindowPath":26}],13:[function(_dereq_,module,exports){
 var getWindowPath = _dereq_('../utils/getWindowPath');
 
 /**
@@ -1127,18 +1069,6 @@ var getWindowPath = _dereq_('../utils/getWindowPath');
  * support the HTML5 history API.
  */
 var RefreshLocation = {
-
-  setup: function () {
-    invariant(
-      canUseDOM,
-      'You cannot use RefreshLocation in an environment with no DOM'
-    );
-
-    LocationDispatcher.handleViewAction({
-      type: LocationActions.SETUP,
-      path: getWindowPath()
-    });
-  },
 
   push: function (path) {
     window.location = path;
@@ -1152,6 +1082,8 @@ var RefreshLocation = {
     window.history.back();
   },
 
+  getCurrentPath: getWindowPath,
+
   toString: function () {
     return '<RefreshLocation>';
   }
@@ -1160,7 +1092,7 @@ var RefreshLocation = {
 
 module.exports = RefreshLocation;
 
-},{"../actions/LocationActions":1,"../dispatchers/LocationDispatcher":10,"../utils/getWindowPath":27,"react/lib/ExecutionEnvironment":40,"react/lib/invariant":43}],15:[function(_dereq_,module,exports){
+},{"../utils/getWindowPath":26}],14:[function(_dereq_,module,exports){
 var React = (typeof window !== "undefined" ? window.React : typeof global !== "undefined" ? global.React : null);
 var copyProperties = _dereq_('react/lib/copyProperties');
 
@@ -1267,12 +1199,26 @@ var ActiveContext = {
 
 module.exports = ActiveContext;
 
-},{"react/lib/copyProperties":41}],16:[function(_dereq_,module,exports){
+},{"react/lib/copyProperties":37}],15:[function(_dereq_,module,exports){
 var React = (typeof window !== "undefined" ? window.React : typeof global !== "undefined" ? global.React : null);
 
 /**
  * A mixin for components that need to know the routes, URL
  * params and query that are currently active.
+ *
+ * Example:
+ *
+ *   var AboutLink = React.createClass({
+ *     mixins: [ Router.ActiveState ],
+ *     render: function () {
+ *       var className = this.props.className;
+ *   
+ *       if (this.isActive('about'))
+ *         className += ' is-active';
+ *   
+ *       return React.DOM.a({ className: className }, this.props.children);
+ *     }
+ *   });
  */
 var ActiveState = {
 
@@ -1316,7 +1262,7 @@ var ActiveState = {
 
 module.exports = ActiveState;
 
-},{}],17:[function(_dereq_,module,exports){
+},{}],16:[function(_dereq_,module,exports){
 var React = (typeof window !== "undefined" ? window.React : typeof global !== "undefined" ? global.React : null);
 
 /**
@@ -1350,13 +1296,14 @@ var CurrentPath = {
 
 module.exports = CurrentPath;
 
-},{}],18:[function(_dereq_,module,exports){
+},{}],17:[function(_dereq_,module,exports){
 var React = (typeof window !== "undefined" ? window.React : typeof global !== "undefined" ? global.React : null);
 var invariant = _dereq_('react/lib/invariant');
 var canUseDOM = _dereq_('react/lib/ExecutionEnvironment').canUseDOM;
 var HashLocation = _dereq_('../locations/HashLocation');
 var HistoryLocation = _dereq_('../locations/HistoryLocation');
 var RefreshLocation = _dereq_('../locations/RefreshLocation');
+var PathStore = _dereq_('../stores/PathStore');
 var supportsHistory = _dereq_('../utils/supportsHistory');
 
 /**
@@ -1413,8 +1360,8 @@ var LocationContext = {
       'Cannot use location without a DOM'
     );
 
-    if (location && location.setup)
-      location.setup();
+    if (location)
+      PathStore.setup(location);
   },
 
   /**
@@ -1438,7 +1385,7 @@ var LocationContext = {
 
 module.exports = LocationContext;
 
-},{"../locations/HashLocation":12,"../locations/HistoryLocation":13,"../locations/RefreshLocation":14,"../utils/supportsHistory":29,"react/lib/ExecutionEnvironment":40,"react/lib/invariant":43}],19:[function(_dereq_,module,exports){
+},{"../locations/HashLocation":11,"../locations/HistoryLocation":12,"../locations/RefreshLocation":13,"../stores/PathStore":21,"../utils/supportsHistory":28,"react/lib/ExecutionEnvironment":36,"react/lib/invariant":39}],18:[function(_dereq_,module,exports){
 var React = (typeof window !== "undefined" ? window.React : typeof global !== "undefined" ? global.React : null);
 
 /**
@@ -1497,7 +1444,7 @@ var Navigation = {
 
 module.exports = Navigation;
 
-},{}],20:[function(_dereq_,module,exports){
+},{}],19:[function(_dereq_,module,exports){
 var React = (typeof window !== "undefined" ? window.React : typeof global !== "undefined" ? global.React : null);
 var invariant = _dereq_('react/lib/invariant');
 var Path = _dereq_('../utils/Path');
@@ -1665,7 +1612,7 @@ var RouteContext = {
 
 module.exports = RouteContext;
 
-},{"../utils/Path":23,"react/lib/invariant":43}],21:[function(_dereq_,module,exports){
+},{"../utils/Path":22,"react/lib/invariant":39}],20:[function(_dereq_,module,exports){
 var React = (typeof window !== "undefined" ? window.React : typeof global !== "undefined" ? global.React : null);
 var invariant = _dereq_('react/lib/invariant');
 var canUseDOM = _dereq_('react/lib/ExecutionEnvironment').canUseDOM;
@@ -1771,10 +1718,10 @@ var ScrollContext = {
 
 module.exports = ScrollContext;
 
-},{"../behaviors/ImitateBrowserBehavior":2,"../behaviors/ScrollToTopBehavior":3,"react/lib/ExecutionEnvironment":40,"react/lib/invariant":43}],22:[function(_dereq_,module,exports){
+},{"../behaviors/ImitateBrowserBehavior":2,"../behaviors/ScrollToTopBehavior":3,"react/lib/ExecutionEnvironment":36,"react/lib/invariant":39}],21:[function(_dereq_,module,exports){
+var invariant = _dereq_('react/lib/invariant');
 var EventEmitter = _dereq_('events').EventEmitter;
 var LocationActions = _dereq_('../actions/LocationActions');
-var LocationDispatcher = _dereq_('../dispatchers/LocationDispatcher');
 
 var CHANGE_EVENT = 'change';
 var _events = new EventEmitter;
@@ -1783,7 +1730,16 @@ function notifyChange() {
   _events.emit(CHANGE_EVENT);
 }
 
-var _currentPath, _currentActionType;
+var _currentLocation, _currentActionType;
+var _currentPath = '/';
+
+function handleLocationChangeAction(action) {
+  if (_currentPath !== action.path) {
+    _currentPath = action.path;
+    _currentActionType = action.type;
+    notifyChange();
+  }
+}
 
 /**
  * The PathStore keeps track of the current URL path.
@@ -1803,6 +1759,39 @@ var PathStore = {
   },
 
   /**
+   * Setup the PathStore to use the given location.
+   */
+  setup: function (location) {
+    invariant(
+      _currentLocation == null || _currentLocation === location,
+      'You cannot use %s and %s on the same page',
+      _currentLocation, location
+    );
+
+    if (_currentLocation !== location) {
+      if (location.setup)
+        location.setup(handleLocationChangeAction);
+
+      _currentPath = location.getCurrentPath();
+    }
+
+    _currentLocation = location;
+  },
+
+  /**
+   * Tear down the PathStore. Really only used for testing.
+   */
+  teardown: function () {
+    if (_currentLocation && _currentLocation.teardown)
+      _currentLocation.teardown();
+
+    _currentLocation = _currentActionType = null;
+    _currentPath = '/';
+
+    PathStore.removeAllChangeListeners();
+  },
+
+  /**
    * Returns the current URL path.
    */
   getCurrentPath: function () {
@@ -1814,30 +1803,13 @@ var PathStore = {
    */
   getCurrentActionType: function () {
     return _currentActionType;
-  },
-
-  dispatchToken: LocationDispatcher.register(function (payload) {
-    var action = payload.action;
-
-    switch (action.type) {
-      case LocationActions.SETUP:
-      case LocationActions.PUSH:
-      case LocationActions.REPLACE:
-      case LocationActions.POP:
-        if (_currentPath !== action.path) {
-          _currentPath = action.path;
-          _currentActionType = action.type;
-          notifyChange();
-        }
-        break;
-    }
-  })
+  }
 
 };
 
 module.exports = PathStore;
 
-},{"../actions/LocationActions":1,"../dispatchers/LocationDispatcher":10,"events":31}],23:[function(_dereq_,module,exports){
+},{"../actions/LocationActions":1,"events":30,"react/lib/invariant":39}],22:[function(_dereq_,module,exports){
 var invariant = _dereq_('react/lib/invariant');
 var merge = _dereq_('qs/lib/utils').merge;
 var qs = _dereq_('qs');
@@ -1854,7 +1826,8 @@ function encodeURLPath(path) {
   return String(path).split('/').map(encodeURL).join('/');
 }
 
-var paramMatcher = /:([a-zA-Z_$][a-zA-Z0-9_$]*)|[*.()\[\]\\+|{}^$]/g;
+var paramCompileMatcher = /:([a-zA-Z_$][a-zA-Z0-9_$]*)|[*.()\[\]\\+|{}^$]/g;
+var paramInjectMatcher = /:([a-zA-Z_$][a-zA-Z0-9_$]*)|[*]/g;
 var queryMatcher = /\?(.+)/;
 
 var _compiledPatterns = {};
@@ -1862,7 +1835,7 @@ var _compiledPatterns = {};
 function compilePattern(pattern) {
   if (!(pattern in _compiledPatterns)) {
     var paramNames = [];
-    var source = pattern.replace(paramMatcher, function (match, paramName) {
+    var source = pattern.replace(paramCompileMatcher, function (match, paramName) {
       if (paramName) {
         paramNames.push(paramName);
         return '([^/?#]+)';
@@ -1922,7 +1895,7 @@ var Path = {
 
     var splatIndex = 0;
 
-    return pattern.replace(paramMatcher, function (match, paramName) {
+    return pattern.replace(paramInjectMatcher, function (match, paramName) {
       paramName = paramName || 'splat';
 
       invariant(
@@ -1951,7 +1924,7 @@ var Path = {
    * in the given path, null if the path contains no query string.
    */
   extractQuery: function (path) {
-    var match = decodeURL(path).match(queryMatcher);
+    var match = path.match(queryMatcher);
     return match && qs.parse(match[1]);
   },
 
@@ -2005,7 +1978,7 @@ var Path = {
 
 module.exports = Path;
 
-},{"qs":35,"qs/lib/utils":39,"react/lib/invariant":43}],24:[function(_dereq_,module,exports){
+},{"qs":31,"qs/lib/utils":35,"react/lib/invariant":39}],23:[function(_dereq_,module,exports){
 var Promise = _dereq_('when/lib/Promise');
 
 // TODO: Use process.env.NODE_ENV check + envify to enable
@@ -2013,7 +1986,7 @@ var Promise = _dereq_('when/lib/Promise');
 
 module.exports = Promise;
 
-},{"when/lib/Promise":50}],25:[function(_dereq_,module,exports){
+},{"when/lib/Promise":46}],24:[function(_dereq_,module,exports){
 /**
  * Encapsulates a redirect to the given route.
  */
@@ -2025,7 +1998,7 @@ function Redirect(to, params, query) {
 
 module.exports = Redirect;
 
-},{}],26:[function(_dereq_,module,exports){
+},{}],25:[function(_dereq_,module,exports){
 var mixInto = _dereq_('react/lib/mixInto');
 var Promise = _dereq_('./Promise');
 var Redirect = _dereq_('./Redirect');
@@ -2066,7 +2039,7 @@ mixInto(Transition, {
 
 module.exports = Transition;
 
-},{"./Promise":24,"./Redirect":25,"react/lib/mixInto":48}],27:[function(_dereq_,module,exports){
+},{"./Promise":23,"./Redirect":24,"react/lib/mixInto":44}],26:[function(_dereq_,module,exports){
 /**
  * Returns the current URL path from `window.location`, including query string
  */
@@ -2076,14 +2049,14 @@ function getWindowPath() {
 
 module.exports = getWindowPath;
 
-},{}],28:[function(_dereq_,module,exports){
+},{}],27:[function(_dereq_,module,exports){
 function reversedArray(array) {
   return array.slice(0).reverse();
 }
 
 module.exports = reversedArray;
 
-},{}],29:[function(_dereq_,module,exports){
+},{}],28:[function(_dereq_,module,exports){
 function supportsHistory() {
   /*! taken from modernizr
    * https://github.com/Modernizr/Modernizr/blob/master/LICENSE
@@ -2101,7 +2074,7 @@ function supportsHistory() {
 
 module.exports = supportsHistory;
 
-},{}],30:[function(_dereq_,module,exports){
+},{}],29:[function(_dereq_,module,exports){
 function withoutProperties(object, properties) {
   var result = {};
 
@@ -2115,7 +2088,7 @@ function withoutProperties(object, properties) {
 
 module.exports = withoutProperties;
 
-},{}],31:[function(_dereq_,module,exports){
+},{}],30:[function(_dereq_,module,exports){
 // Copyright Joyent, Inc. and other Node contributors.
 //
 // Permission is hereby granted, free of charge, to any person obtaining a
@@ -2420,329 +2393,10 @@ function isUndefined(arg) {
   return arg === void 0;
 }
 
-},{}],32:[function(_dereq_,module,exports){
-/**
- * Copyright (c) 2014, Facebook, Inc.
- * All rights reserved.
- *
- * This source code is licensed under the BSD-style license found in the
- * LICENSE file in the root directory of this source tree. An additional grant
- * of patent rights can be found in the PATENTS file in the same directory.
- */
-
-module.exports.Dispatcher = _dereq_('./lib/Dispatcher')
-
-},{"./lib/Dispatcher":33}],33:[function(_dereq_,module,exports){
-/*
- * Copyright (c) 2014, Facebook, Inc.
- * All rights reserved.
- *
- * This source code is licensed under the BSD-style license found in the
- * LICENSE file in the root directory of this source tree. An additional grant
- * of patent rights can be found in the PATENTS file in the same directory.
- *
- * @providesModule Dispatcher
- * @typechecks
- */
-
-"use strict";
-
-var invariant = _dereq_('./invariant');
-
-var _lastID = 1;
-var _prefix = 'ID_';
-
-/**
- * Dispatcher is used to broadcast payloads to registered callbacks. This is
- * different from generic pub-sub systems in two ways:
- *
- *   1) Callbacks are not subscribed to particular events. Every payload is
- *      dispatched to every registered callback.
- *   2) Callbacks can be deferred in whole or part until other callbacks have
- *      been executed.
- *
- * For example, consider this hypothetical flight destination form, which
- * selects a default city when a country is selected:
- *
- *   var flightDispatcher = new Dispatcher();
- *
- *   // Keeps track of which country is selected
- *   var CountryStore = {country: null};
- *
- *   // Keeps track of which city is selected
- *   var CityStore = {city: null};
- *
- *   // Keeps track of the base flight price of the selected city
- *   var FlightPriceStore = {price: null}
- *
- * When a user changes the selected city, we dispatch the payload:
- *
- *   flightDispatcher.dispatch({
- *     actionType: 'city-update',
- *     selectedCity: 'paris'
- *   });
- *
- * This payload is digested by `CityStore`:
- *
- *   flightDispatcher.register(function(payload) {
- *     if (payload.actionType === 'city-update') {
- *       CityStore.city = payload.selectedCity;
- *     }
- *   });
- *
- * When the user selects a country, we dispatch the payload:
- *
- *   flightDispatcher.dispatch({
- *     actionType: 'country-update',
- *     selectedCountry: 'australia'
- *   });
- *
- * This payload is digested by both stores:
- *
- *    CountryStore.dispatchToken = flightDispatcher.register(function(payload) {
- *     if (payload.actionType === 'country-update') {
- *       CountryStore.country = payload.selectedCountry;
- *     }
- *   });
- *
- * When the callback to update `CountryStore` is registered, we save a reference
- * to the returned token. Using this token with `waitFor()`, we can guarantee
- * that `CountryStore` is updated before the callback that updates `CityStore`
- * needs to query its data.
- *
- *   CityStore.dispatchToken = flightDispatcher.register(function(payload) {
- *     if (payload.actionType === 'country-update') {
- *       // `CountryStore.country` may not be updated.
- *       flightDispatcher.waitFor([CountryStore.dispatchToken]);
- *       // `CountryStore.country` is now guaranteed to be updated.
- *
- *       // Select the default city for the new country
- *       CityStore.city = getDefaultCityForCountry(CountryStore.country);
- *     }
- *   });
- *
- * The usage of `waitFor()` can be chained, for example:
- *
- *   FlightPriceStore.dispatchToken =
- *     flightDispatcher.register(function(payload) {
- *       switch (payload.actionType) {
- *         case 'country-update':
- *           flightDispatcher.waitFor([CityStore.dispatchToken]);
- *           FlightPriceStore.price =
- *             getFlightPriceStore(CountryStore.country, CityStore.city);
- *           break;
- *
- *         case 'city-update':
- *           FlightPriceStore.price =
- *             FlightPriceStore(CountryStore.country, CityStore.city);
- *           break;
- *     }
- *   });
- *
- * The `country-update` payload will be guaranteed to invoke the stores'
- * registered callbacks in order: `CountryStore`, `CityStore`, then
- * `FlightPriceStore`.
- */
-
-  function Dispatcher() {
-    this.$Dispatcher_callbacks = {};
-    this.$Dispatcher_isPending = {};
-    this.$Dispatcher_isHandled = {};
-    this.$Dispatcher_isDispatching = false;
-    this.$Dispatcher_pendingPayload = null;
-  }
-
-  /**
-   * Registers a callback to be invoked with every dispatched payload. Returns
-   * a token that can be used with `waitFor()`.
-   *
-   * @param {function} callback
-   * @return {string}
-   */
-  Dispatcher.prototype.register=function(callback) {
-    var id = _prefix + _lastID++;
-    this.$Dispatcher_callbacks[id] = callback;
-    return id;
-  };
-
-  /**
-   * Removes a callback based on its token.
-   *
-   * @param {string} id
-   */
-  Dispatcher.prototype.unregister=function(id) {
-    invariant(
-      this.$Dispatcher_callbacks[id],
-      'Dispatcher.unregister(...): `%s` does not map to a registered callback.',
-      id
-    );
-    delete this.$Dispatcher_callbacks[id];
-  };
-
-  /**
-   * Waits for the callbacks specified to be invoked before continuing execution
-   * of the current callback. This method should only be used by a callback in
-   * response to a dispatched payload.
-   *
-   * @param {array<string>} ids
-   */
-  Dispatcher.prototype.waitFor=function(ids) {
-    invariant(
-      this.$Dispatcher_isDispatching,
-      'Dispatcher.waitFor(...): Must be invoked while dispatching.'
-    );
-    for (var ii = 0; ii < ids.length; ii++) {
-      var id = ids[ii];
-      if (this.$Dispatcher_isPending[id]) {
-        invariant(
-          this.$Dispatcher_isHandled[id],
-          'Dispatcher.waitFor(...): Circular dependency detected while ' +
-          'waiting for `%s`.',
-          id
-        );
-        continue;
-      }
-      invariant(
-        this.$Dispatcher_callbacks[id],
-        'Dispatcher.waitFor(...): `%s` does not map to a registered callback.',
-        id
-      );
-      this.$Dispatcher_invokeCallback(id);
-    }
-  };
-
-  /**
-   * Dispatches a payload to all registered callbacks.
-   *
-   * @param {object} payload
-   */
-  Dispatcher.prototype.dispatch=function(payload) {
-    invariant(
-      !this.$Dispatcher_isDispatching,
-      'Dispatch.dispatch(...): Cannot dispatch in the middle of a dispatch.'
-    );
-    this.$Dispatcher_startDispatching(payload);
-    try {
-      for (var id in this.$Dispatcher_callbacks) {
-        if (this.$Dispatcher_isPending[id]) {
-          continue;
-        }
-        this.$Dispatcher_invokeCallback(id);
-      }
-    } finally {
-      this.$Dispatcher_stopDispatching();
-    }
-  };
-
-  /**
-   * Is this Dispatcher currently dispatching.
-   *
-   * @return {boolean}
-   */
-  Dispatcher.prototype.isDispatching=function() {
-    return this.$Dispatcher_isDispatching;
-  };
-
-  /**
-   * Call the callback stored with the given id. Also do some internal
-   * bookkeeping.
-   *
-   * @param {string} id
-   * @internal
-   */
-  Dispatcher.prototype.$Dispatcher_invokeCallback=function(id) {
-    this.$Dispatcher_isPending[id] = true;
-    this.$Dispatcher_callbacks[id](this.$Dispatcher_pendingPayload);
-    this.$Dispatcher_isHandled[id] = true;
-  };
-
-  /**
-   * Set up bookkeeping needed when dispatching.
-   *
-   * @param {object} payload
-   * @internal
-   */
-  Dispatcher.prototype.$Dispatcher_startDispatching=function(payload) {
-    for (var id in this.$Dispatcher_callbacks) {
-      this.$Dispatcher_isPending[id] = false;
-      this.$Dispatcher_isHandled[id] = false;
-    }
-    this.$Dispatcher_pendingPayload = payload;
-    this.$Dispatcher_isDispatching = true;
-  };
-
-  /**
-   * Clear bookkeeping used for dispatching.
-   *
-   * @internal
-   */
-  Dispatcher.prototype.$Dispatcher_stopDispatching=function() {
-    this.$Dispatcher_pendingPayload = null;
-    this.$Dispatcher_isDispatching = false;
-  };
-
-
-module.exports = Dispatcher;
-
-},{"./invariant":34}],34:[function(_dereq_,module,exports){
-/**
- * Copyright (c) 2014, Facebook, Inc.
- * All rights reserved.
- *
- * This source code is licensed under the BSD-style license found in the
- * LICENSE file in the root directory of this source tree. An additional grant
- * of patent rights can be found in the PATENTS file in the same directory.
- *
- * @providesModule invariant
- */
-
-"use strict";
-
-/**
- * Use invariant() to assert state which your program assumes to be true.
- *
- * Provide sprintf-style format (only %s is supported) and arguments
- * to provide information about what broke and what you were
- * expecting.
- *
- * The invariant message will be stripped in production, but the invariant
- * will remain to ensure logic does not differ in production.
- */
-
-var invariant = function(condition, format, a, b, c, d, e, f) {
-  if (false) {
-    if (format === undefined) {
-      throw new Error('invariant requires an error message argument');
-    }
-  }
-
-  if (!condition) {
-    var error;
-    if (format === undefined) {
-      error = new Error(
-        'Minified exception occurred; use the non-minified dev environment ' +
-        'for the full error message and additional helpful warnings.'
-      );
-    } else {
-      var args = [a, b, c, d, e, f];
-      var argIndex = 0;
-      error = new Error(
-        'Invariant Violation: ' +
-        format.replace(/%s/g, function() { return args[argIndex++]; })
-      );
-    }
-
-    error.framesToPop = 1; // we don't care about invariant's own frame
-    throw error;
-  }
-};
-
-module.exports = invariant;
-
-},{}],35:[function(_dereq_,module,exports){
+},{}],31:[function(_dereq_,module,exports){
 module.exports = _dereq_('./lib');
 
-},{"./lib":36}],36:[function(_dereq_,module,exports){
+},{"./lib":32}],32:[function(_dereq_,module,exports){
 // Load modules
 
 var Stringify = _dereq_('./stringify');
@@ -2759,7 +2413,7 @@ module.exports = {
     parse: Parse
 };
 
-},{"./parse":37,"./stringify":38}],37:[function(_dereq_,module,exports){
+},{"./parse":33,"./stringify":34}],33:[function(_dereq_,module,exports){
 // Load modules
 
 var Utils = _dereq_('./utils');
@@ -2915,7 +2569,7 @@ module.exports = function (str, options) {
     return Utils.compact(obj);
 };
 
-},{"./utils":39}],38:[function(_dereq_,module,exports){
+},{"./utils":35}],34:[function(_dereq_,module,exports){
 // Load modules
 
 var Utils = _dereq_('./utils');
@@ -2975,7 +2629,7 @@ module.exports = function (obj, options) {
     return keys.join(delimiter);
 };
 
-},{"./utils":39}],39:[function(_dereq_,module,exports){
+},{"./utils":35}],35:[function(_dereq_,module,exports){
 // Load modules
 
 
@@ -3116,7 +2770,7 @@ exports.isBuffer = function (obj) {
     }
 };
 
-},{}],40:[function(_dereq_,module,exports){
+},{}],36:[function(_dereq_,module,exports){
 /**
  * Copyright 2013-2014 Facebook, Inc.
  *
@@ -3168,7 +2822,7 @@ var ExecutionEnvironment = {
 
 module.exports = ExecutionEnvironment;
 
-},{}],41:[function(_dereq_,module,exports){
+},{}],37:[function(_dereq_,module,exports){
 /**
  * Copyright 2013-2014 Facebook, Inc.
  *
@@ -3224,7 +2878,7 @@ function copyProperties(obj, a, b, c, d, e, f) {
 
 module.exports = copyProperties;
 
-},{}],42:[function(_dereq_,module,exports){
+},{}],38:[function(_dereq_,module,exports){
 /**
  * Copyright 2013-2014 Facebook, Inc.
  *
@@ -3269,7 +2923,7 @@ copyProperties(emptyFunction, {
 
 module.exports = emptyFunction;
 
-},{"./copyProperties":41}],43:[function(_dereq_,module,exports){
+},{"./copyProperties":37}],39:[function(_dereq_,module,exports){
 /**
  * Copyright 2013-2014 Facebook, Inc.
  *
@@ -3331,7 +2985,7 @@ var invariant = function(condition, format, a, b, c, d, e, f) {
 
 module.exports = invariant;
 
-},{}],44:[function(_dereq_,module,exports){
+},{}],40:[function(_dereq_,module,exports){
 /**
  * Copyright 2013-2014 Facebook, Inc.
  *
@@ -3391,7 +3045,7 @@ var keyMirror = function(obj) {
 
 module.exports = keyMirror;
 
-},{"./invariant":43}],45:[function(_dereq_,module,exports){
+},{"./invariant":39}],41:[function(_dereq_,module,exports){
 /**
  * Copyright 2013-2014 Facebook, Inc.
  *
@@ -3430,7 +3084,7 @@ var merge = function(one, two) {
 
 module.exports = merge;
 
-},{"./mergeInto":47}],46:[function(_dereq_,module,exports){
+},{"./mergeInto":43}],42:[function(_dereq_,module,exports){
 /**
  * Copyright 2013-2014 Facebook, Inc.
  *
@@ -3579,7 +3233,7 @@ var mergeHelpers = {
 
 module.exports = mergeHelpers;
 
-},{"./invariant":43,"./keyMirror":44}],47:[function(_dereq_,module,exports){
+},{"./invariant":39,"./keyMirror":40}],43:[function(_dereq_,module,exports){
 /**
  * Copyright 2013-2014 Facebook, Inc.
  *
@@ -3627,7 +3281,7 @@ function mergeInto(one, two) {
 
 module.exports = mergeInto;
 
-},{"./mergeHelpers":46}],48:[function(_dereq_,module,exports){
+},{"./mergeHelpers":42}],44:[function(_dereq_,module,exports){
 /**
  * Copyright 2013-2014 Facebook, Inc.
  *
@@ -3663,7 +3317,7 @@ var mixInto = function(constructor, methodBag) {
 
 module.exports = mixInto;
 
-},{}],49:[function(_dereq_,module,exports){
+},{}],45:[function(_dereq_,module,exports){
 /**
  * Copyright 2014 Facebook, Inc.
  *
@@ -3713,7 +3367,7 @@ if ("production" !== "production") {
 
 module.exports = warning;
 
-},{"./emptyFunction":42}],50:[function(_dereq_,module,exports){
+},{"./emptyFunction":38}],46:[function(_dereq_,module,exports){
 /** @license MIT License (c) copyright 2010-2014 original author or authors */
 /** @author Brian Cavalier */
 /** @author John Hann */
@@ -3732,7 +3386,7 @@ define(function (_dereq_) {
 });
 })(typeof define === 'function' && define.amd ? define : function (factory) { module.exports = factory(_dereq_); });
 
-},{"./Scheduler":52,"./async":53,"./makePromise":54}],51:[function(_dereq_,module,exports){
+},{"./Scheduler":48,"./async":49,"./makePromise":50}],47:[function(_dereq_,module,exports){
 /** @license MIT License (c) copyright 2010-2014 original author or authors */
 /** @author Brian Cavalier */
 /** @author John Hann */
@@ -3804,7 +3458,7 @@ define(function() {
 });
 }(typeof define === 'function' && define.amd ? define : function(factory) { module.exports = factory(); }));
 
-},{}],52:[function(_dereq_,module,exports){
+},{}],48:[function(_dereq_,module,exports){
 /** @license MIT License (c) copyright 2010-2014 original author or authors */
 /** @author Brian Cavalier */
 /** @author John Hann */
@@ -3888,7 +3542,7 @@ define(function(_dereq_) {
 });
 }(typeof define === 'function' && define.amd ? define : function(factory) { module.exports = factory(_dereq_); }));
 
-},{"./Queue":51}],53:[function(_dereq_,module,exports){
+},{"./Queue":47}],49:[function(_dereq_,module,exports){
 /** @license MIT License (c) copyright 2010-2014 original author or authors */
 /** @author Brian Cavalier */
 /** @author John Hann */
@@ -3961,7 +3615,7 @@ define(function(_dereq_) {
 });
 }(typeof define === 'function' && define.amd ? define : function(factory) { module.exports = factory(_dereq_); }));
 
-},{}],54:[function(_dereq_,module,exports){
+},{}],50:[function(_dereq_,module,exports){
 /** @license MIT License (c) copyright 2010-2014 original author or authors */
 /** @author Brian Cavalier */
 /** @author John Hann */
@@ -4759,6 +4413,6 @@ define(function() {
 });
 }(typeof define === 'function' && define.amd ? define : function(factory) { module.exports = factory(); }));
 
-},{}]},{},[11])
-(11)
+},{}]},{},[10])
+(10)
 });
