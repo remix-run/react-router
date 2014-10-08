@@ -14,15 +14,6 @@ Docs
 Important Notes
 ---------------
 
-### **** NPM USERS THIS PACKAGE MOVED ****
-
-This package has moved from `react-nested-router` to `react-router`.
-
-Update your package.json to point to the new package, or if you aren't
-ready to update, make sure your package.json specifically points to
-`0.3.5` or less, `0.3.6` just throws an error telling you the package
-has moved.
-
 ### SemVer
 
 Before our `1.0` release, breaking API changes will cause a bump to
@@ -37,7 +28,6 @@ Please refer to the [upgrade guide](/UPGRADE_GUIDE.md) and
 We use the following dependencies from npm:
 
 - `when` for promises
-- `flux` for a dispatcher
 - `events` for event emitters.
 
 It is likely that your app will need dependencies like these. We
