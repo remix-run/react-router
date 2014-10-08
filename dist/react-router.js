@@ -1691,10 +1691,10 @@ var ScrollContext = {
 
   updateScroll: function (path, actionType) {
     var behavior = this.getScrollBehavior();
-    var position = this._scrollPositions[path];
 
-    if (behavior && position)
-      behavior.updateScrollPosition(position, actionType);
+    if (behavior != null && this._scrollPositions.hasOwnProperty(path)) {
+      behavior.updateScrollPosition(this._scrollPositions[path], actionType);
+    }
   },
 
   /**
