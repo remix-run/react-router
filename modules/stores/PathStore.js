@@ -1,6 +1,6 @@
+var invariant = require('react/lib/invariant');
 var EventEmitter = require('events').EventEmitter;
 var LocationActions = require('../actions/LocationActions');
-var LocationDispatcher = require('../dispatchers/LocationDispatcher');
 
 var CHANGE_EVENT = 'change';
 var _events = new EventEmitter;
@@ -9,7 +9,15 @@ function notifyChange() {
   _events.emit(CHANGE_EVENT);
 }
 
-var _currentPath, _currentActionType;
+var _currentLocation, _currentPath, _currentActionType;
+
+function handleLocationChangeAction(action) {
+  if (_currentPath !== action.path) {
+    _currentPath = action.path;
+    _currentActionType = action.type;
+    notifyChange();
+  }
+}
 
 /**
  * The PathStore keeps track of the current URL path.
@@ -29,6 +37,26 @@ var PathStore = {
   },
 
   /**
+   * Setup the PathStore to use the given location.
+   */
+  useLocation: function (location) {
+    invariant(
+      _currentLocation == null || _currentLocation === location,
+      'You cannot use %s and %s on the same page',
+      _currentLocation, location
+    );
+
+    if (_currentLocation !== location) {
+      if (location.setup)
+        location.setup(handleLocationChangeAction);
+
+      _currentPath = location.getCurrentPath();
+    }
+
+    _currentLocation = location;
+  },
+
+  /**
    * Returns the current URL path.
    */
   getCurrentPath: function () {
@@ -40,24 +68,7 @@ var PathStore = {
    */
   getCurrentActionType: function () {
     return _currentActionType;
-  },
-
-  dispatchToken: LocationDispatcher.register(function (payload) {
-    var action = payload.action;
-
-    switch (action.type) {
-      case LocationActions.SETUP:
-      case LocationActions.PUSH:
-      case LocationActions.REPLACE:
-      case LocationActions.POP:
-        if (_currentPath !== action.path) {
-          _currentPath = action.path;
-          _currentActionType = action.type;
-          notifyChange();
-        }
-        break;
-    }
-  })
+  }
 
 };
 
