@@ -3,7 +3,6 @@ var warning = require('react/lib/warning');
 var invariant = require('react/lib/invariant');
 var canUseDOM = require('react/lib/ExecutionEnvironment').canUseDOM;
 var copyProperties = require('react/lib/copyProperties');
-var PathStore = require('../stores/PathStore');
 var HashLocation = require('../locations/HashLocation');
 var reversedArray = require('../utils/reversedArray');
 var Transition = require('../utils/Transition');
@@ -264,13 +263,11 @@ function computeHandlerProps(matches, query) {
 
 var BrowserTransitionHandling = {
 
-  handleTransitionError: function (component, error) {
+  handleError: function (component, error) {
     throw error; // This error probably originated in a transition hook.
   },
 
-  handleAbortedTransition: function (component, transition) {
-    var reason = transition.abortReason;
-
+  handleAbort: function (component, reason) {
     if (reason instanceof Redirect) {
       component.replaceWith(reason.to, reason.params, reason.query);
     } else {
@@ -282,11 +279,11 @@ var BrowserTransitionHandling = {
 
 var ServerTransitionHandling = {
 
-  handleTransitionError: function (component, error) {
+  handleError: function (component, error) {
     // TODO
   },
 
-  handleAbortedTransition: function (component, transition) {
+  handleAbort: function (component, reason) {
     // TODO
   }
 
@@ -312,7 +309,6 @@ var Routes = React.createClass({
   mixins: [ ActiveContext, LocationContext, RouteContext, ScrollContext ],
 
   propTypes: {
-    initialPath: React.PropTypes.string,
     onChange: React.PropTypes.func
   },
 
@@ -320,44 +316,6 @@ var Routes = React.createClass({
     return {
       matches: []
     };
-  },
-
-  componentWillMount: function () {
-    this.handlePathChange(this.props.initialPath);
-  },
-
-  componentDidMount: function () {
-    PathStore.addChangeListener(this.handlePathChange);
-  },
-
-  componentWillUnmount: function () {
-    PathStore.removeChangeListener(this.handlePathChange);
-  },
-
-  handlePathChange: function (_path) {
-    var path = _path || PathStore.getCurrentPath();
-    var actionType = PathStore.getCurrentActionType();
-
-    if (this.state.path === path)
-      return; // Nothing to do!
-
-    if (this.state.path)
-      this.recordScroll(this.state.path);
-
-    var self = this;
-
-    this.dispatch(path, function (error, transition) {
-      if (error) {
-        TransitionHandling.handleTransitionError(self, error);
-      } else if (transition.isAborted) {
-        TransitionHandling.handleAbortedTransition(self, transition);
-      } else {
-        self.updateScroll(path, actionType);
-
-        if (self.props.onChange)
-          self.props.onChange.call(self);
-      }
-    });
   },
 
   /**
@@ -381,10 +339,32 @@ var Routes = React.createClass({
     return findMatches(Path.withoutQuery(path), this.getRoutes(), this.props.defaultRoute, this.props.notFoundRoute);
   },
 
+  updateLocation: function (path, actionType) {
+    if (this.state.path === path)
+      return; // Nothing to do!
+
+    if (this.state.path)
+      this.recordScroll(this.state.path);
+
+    this.dispatch(path, actionType, function (error, abortReason) {
+      if (error) {
+        TransitionHandling.handleError(this, error);
+      } else if (abortReason) {
+        TransitionHandling.handleAbort(this, abortReason);
+      } else {
+        this.updateScroll(path, actionType);
+
+        if (this.props.onChange)
+          this.props.onChange.call(this);
+      }
+    }.bind(this));
+  },
+
   /**
-   * Performs a transition to the given path and calls callback(error, transition)
-   * with the Transition object when the transition is finished and the component's
-   * state has been updated accordingly.
+   * Performs a transition to the given path and calls callback(error, abortReason)
+   * when the transition is finished and the component's state has been updated. If
+   * there was an error, the first argument will not be null. Otherwise, if the
+   * transition was aborted for some reason, it will be given in the second arg.
    *
    * In a transition, the router first determines which routes are involved by
    * beginning with the current route, up the route tree to the first parent route
@@ -398,16 +378,13 @@ var Routes = React.createClass({
    */
   dispatch: function (path, callback) {
     var transition = new Transition(this, path);
-    var self = this;
 
     computeNextState(this, transition, function (error, nextState) {
-      if (error || nextState == null)
-        return callback(error, transition);
+      if (error || transition.isAborted || nextState == null)
+        return callback(error, transition.abortReason);
 
-      self.setState(nextState, function () {
-        callback(null, transition);
-      });
-    });
+      this.setState(nextState, callback);
+    }.bind(this));
   },
 
   /**

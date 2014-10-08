@@ -61,8 +61,25 @@ var LocationContext = {
       'Cannot use location without a DOM'
     );
 
-    if (location)
+    if (location) {
       PathStore.setup(location);
+      this.handlePathChange();
+    }
+  },
+
+  componentDidMount: function () {
+    if (this.getLocation())
+      PathStore.addChangeListener(this.handlePathChange);
+  },
+
+  componentWillUnmount: function () {
+    if (this.getLocation())
+      PathStore.removeChangeListener(this.handlePathChange);
+  },
+
+  handlePathChange: function () {
+    if (this.updateLocation)
+      this.updateLocation(PathStore.getCurrentPath(), PathStore.getCurrentActionType());
   },
 
   /**
