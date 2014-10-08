@@ -1,7 +1,7 @@
 v0.9.3 - Wed, 08 Oct 2014 14:44:52 GMT
 --------------------------------------
 
-- 
+- [caf3a2b](../../commit/caf3a2b) [fixed] scrollBehavior='none' on path update
 
 
 v0.9.2 - Wed, 08 Oct 2014 05:33:30 GMT
