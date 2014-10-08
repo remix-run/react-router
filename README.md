@@ -11,6 +11,8 @@ Docs
 - [Guide: Overview](/docs/guides/overview.md)
 - [API](/docs/api/)
 
+[Try it out on JSBin](http://jsbin.com/sixose/1/edit)
+
 Important Notes
 ---------------
 
