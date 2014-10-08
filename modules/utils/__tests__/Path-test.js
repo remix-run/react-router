@@ -58,6 +58,15 @@ describe('Path.extractParams', function () {
         expect(Path.extractParams(pattern, 'comments/foo.bar/edit')).toEqual({ id: 'foo', ext: 'bar' });
       });
     });
+
+    describe('and a param has encoded characters', function() {
+      it('returns an object with the params', function () {
+        var pattern = '/user/:id';
+        expect(Path.extractParams(pattern, '/user/a%26b')).toEqual({ id: 'a&b' });
+        expect(Path.extractParams(pattern, '/user/a%2Fb')).toEqual({ id: 'a/b' });
+      });
+
+    });
   });
 
   describe('when a pattern has characters that have special URL encoding', function () {
