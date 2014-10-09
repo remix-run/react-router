@@ -37,22 +37,6 @@ var LocationContext = {
     };
   },
 
-  getInitialState: function () {
-    var location = this.props.location;
-
-    if (typeof location === 'string')
-      location = NAMED_LOCATIONS[location];
-
-    // Automatically fall back to full page refreshes in
-    // browsers that do not support HTML5 history.
-    if (location === HistoryLocation && !supportsHistory())
-      location = RefreshLocation;
-
-    return {
-      location: location
-    };
-  },
-
   componentWillMount: function () {
     var location = this.getLocation();
 
@@ -63,7 +47,9 @@ var LocationContext = {
 
     if (location) {
       PathStore.setup(location);
-      this.handlePathChange();
+
+      if (this.updateLocation)
+        this.updateLocation(PathStore.getCurrentPath(), PathStore.getCurrentActionType());
     }
   },
 
@@ -86,7 +72,21 @@ var LocationContext = {
    * Returns the location object this component uses.
    */
   getLocation: function () {
-    return this.state.location;
+    if (this._location == null) {
+      var location = this.props.location;
+
+      if (typeof location === 'string')
+        location = NAMED_LOCATIONS[location];
+
+      // Automatically fall back to full page refreshes in
+      // browsers that do not support HTML5 history.
+      if (location === HistoryLocation && !supportsHistory())
+        location = RefreshLocation;
+
+      this._location = location;
+    }
+
+    return this._location;
   },
 
   childContextTypes: {
