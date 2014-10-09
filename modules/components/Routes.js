@@ -70,14 +70,6 @@ function hasMatch(matches, match) {
   });
 }
 
-function updateMatchComponents(matches, refs) {
-  var i = 0, component;
-  while (component = refs.__activeRoute__) {
-    matches[i++].component = component;
-    refs = component.refs;
-  }
-}
-
 /**
  * Computes the next state for the given component and calls
  * callback(error, nextState) when finished. Also runs all
@@ -101,8 +93,6 @@ function computeNextState(component, transition, callback) {
 
   var fromMatches, toMatches;
   if (currentMatches.length) {
-    updateMatchComponents(currentMatches, component.refs);
-
     fromMatches = currentMatches.filter(function (match) {
       return !hasMatch(nextMatches, match);
     });
@@ -219,6 +209,14 @@ function runHooks(hooks, callback) {
   }
 }
 
+function updateMatchComponents(matches, refs) {
+  var i = 0, component;
+  while (component = refs.__activeRoute__) {
+    matches[i++].component = component;
+    refs = component.refs;
+  }
+}
+
 function returnNull() {
   return null;
 }
@@ -329,6 +327,8 @@ var Routes = React.createClass({
       } else if (abortReason) {
         this.goBack();
       } else {
+        updateMatchComponents(this.state.matches, this.refs);
+
         this.updateScroll(path, actionType);
 
         if (this.props.onChange)
