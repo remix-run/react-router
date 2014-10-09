@@ -119,34 +119,37 @@ function processRoutes(children, container, namedRoutes) {
  */
 var RouteContext = {
 
-  getInitialState: function () {
-    var namedRoutes = {};
-
-    return {
-      routes: processRoutes(this.props.children, this, namedRoutes),
-      namedRoutes: namedRoutes
-    };
+  _processRoutes: function () {
+    this._namedRoutes = {};
+    this._routes = processRoutes(this.props.children, this, this._namedRoutes);
   },
 
   /**
    * Returns an array of <Route>s in this container.
    */
   getRoutes: function () {
-    return this.state.routes;
+    if (this._routes == null)
+      this._processRoutes();
+
+    return this._routes;
   },
 
   /**
    * Returns a hash { name: route } of all named <Route>s in this container.
    */
   getNamedRoutes: function () {
-    return this.state.namedRoutes;
+    if (this._namedRoutes == null)
+      this._processRoutes();
+
+    return this._namedRoutes;
   },
 
   /**
    * Returns the route with the given name.
    */
   getRouteByName: function (routeName) {
-    return this.state.namedRoutes[routeName] || null;
+    var namedRoutes = this.getNamedRoutes();
+    return namedRoutes[routeName] || null;
   },
 
   childContextTypes: {
