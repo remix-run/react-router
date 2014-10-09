@@ -1,7 +1,6 @@
 var React = require('react');
 var warning = require('react/lib/warning');
 var invariant = require('react/lib/invariant');
-var canUseDOM = require('react/lib/ExecutionEnvironment').canUseDOM;
 var copyProperties = require('react/lib/copyProperties');
 var HashLocation = require('../locations/HashLocation');
 var reversedArray = require('../utils/reversedArray');
@@ -261,36 +260,6 @@ function computeHandlerProps(matches, query) {
   return props;
 }
 
-var BrowserTransitionHandling = {
-
-  handleError: function (component, error) {
-    throw error; // This error probably originated in a transition hook.
-  },
-
-  handleAbort: function (component, reason) {
-    if (reason instanceof Redirect) {
-      component.replaceWith(reason.to, reason.params, reason.query);
-    } else {
-      component.goBack();
-    }
-  }
-
-};
-
-var ServerTransitionHandling = {
-
-  handleError: function (component, error) {
-    // TODO
-  },
-
-  handleAbort: function (component, reason) {
-    // TODO
-  }
-
-};
-
-var TransitionHandling = canUseDOM ? BrowserTransitionHandling : ServerTransitionHandling;
-
 var ActiveContext = require('../mixins/ActiveContext');
 var LocationContext = require('../mixins/LocationContext');
 var RouteContext = require('../mixins/RouteContext');
@@ -348,9 +317,12 @@ var Routes = React.createClass({
 
     this.dispatch(path, actionType, function (error, abortReason) {
       if (error) {
-        TransitionHandling.handleError(this, error);
+        // Throw so we don't silently swallow errors.
+        throw error; // This error probably originated in a transition hook.
+      } else if (abortReason instanceof Redirect) {
+        this.replaceWith(abortReason.to, abortReason.params, abortReason.query);
       } else if (abortReason) {
-        TransitionHandling.handleAbort(this, abortReason);
+        this.goBack();
       } else {
         this.updateScroll(path, actionType);
 
