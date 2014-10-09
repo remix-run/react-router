@@ -58,37 +58,57 @@ var ScrollContext = {
   },
 
   componentWillMount: function () {
-    var behavior = this.getScrollBehavior();
-
     invariant(
-      behavior == null || canUseDOM,
+      this.getScrollBehavior() == null || canUseDOM,
       'Cannot use scroll behavior without a DOM'
     );
-
-    if (behavior != null)
-      this._scrollPositions = {};
   },
 
   recordScroll: function (path) {
-    if (this._scrollPositions)
-      this._scrollPositions[path] = getWindowScrollPosition();
+    var positions = this.getScrollPositions();
+    positions[path] = getWindowScrollPosition();
   },
 
   updateScroll: function (path, actionType) {
-    if (this._scrollPositions) {
-      var behavior = this.getScrollBehavior();
-      var position = this._scrollPositions[path];
+    var behavior = this.getScrollBehavior();
+    var position = this.getScrollPosition(path);
 
-      if (behavior && position)
-        behavior.updateScrollPosition(position, actionType);
-    }
+    if (behavior && position)
+      behavior.updateScrollPosition(position, actionType);
   },
 
   /**
    * Returns the scroll behavior object this component uses.
    */
   getScrollBehavior: function () {
-    return this.state.scrollBehavior;
+    if (this._scrollBehavior == null) {
+      var behavior = this.props.scrollBehavior;
+
+      if (typeof behavior === 'string')
+        behavior = NAMED_SCROLL_BEHAVIORS[behavior];
+
+      this._scrollBehavior = behavior;
+    }
+
+    return this._scrollBehavior;
+  },
+
+  /**
+   * Returns a hash of URL paths to their last known scroll positions.
+   */
+  getScrollPositions: function () {
+    if (this._scrollPositions == null)
+      this._scrollPositions = {};
+
+    return this._scrollPositions;
+  },
+
+  /**
+   * Returns the last known scroll position for the given URL path.
+   */
+  getScrollPosition: function (path) {
+    var positions = this.getScrollPositions();
+    return positions[path];
   },
 
   childContextTypes: {
