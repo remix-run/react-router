@@ -278,7 +278,8 @@ var Routes = React.createClass({
   mixins: [ ActiveContext, LocationContext, RouteContext, ScrollContext ],
 
   propTypes: {
-    onChange: React.PropTypes.func
+    onChange: React.PropTypes.func,
+    onError: React.PropTypes.func
   },
 
   getInitialState: function () {
@@ -317,8 +318,12 @@ var Routes = React.createClass({
 
     this.dispatch(path, actionType, function (error, abortReason) {
       if (error) {
-        // Throw so we don't silently swallow errors.
-        throw error; // This error probably originated in a transition hook.
+        if (this.props.onError) {
+          this.props.onError.call(this, error);
+        } else {
+          // Throw so we don't silently swallow errors.
+          throw error; // This error probably originated in a transition hook.
+        }
       } else if (abortReason instanceof Redirect) {
         this.replaceWith(abortReason.to, abortReason.params, abortReason.query);
       } else if (abortReason) {
