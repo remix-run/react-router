@@ -75,22 +75,7 @@ function hasMatch(matches, match) {
  * callback(error, nextState) when finished. Also runs all
  * transition hooks along the way.
  */
-function computeNextState(component, transition, callback) {
-  if (component.state.path === transition.path)
-    return callback(); // Nothing to do!
-
-  var currentMatches = component.state.matches;
-  var nextMatches = component.match(transition.path);
-
-  warning(
-    nextMatches,
-    'No route matches path "' + transition.path + '". Make sure you have ' +
-    '<Route path="' + transition.path + '"> somewhere in your routes'
-  );
-
-  if (!nextMatches)
-    nextMatches = [];
-
+function computeNextState(currentMatches, nextMatches, transition, callback) {
   var fromMatches, toMatches;
   if (currentMatches.length) {
     fromMatches = currentMatches.filter(function (match) {
@@ -354,9 +339,20 @@ var Routes = React.createClass({
    * the transition. To resolve asynchronously, they may use transition.wait(promise).
    */
   dispatch: function (path, callback) {
-    var transition = new Transition(this, path);
+    if (this.state.path === path)
+      return callback(); // Nothing to do!
 
-    computeNextState(this, transition, function (error, nextState) {
+    var transition = new Transition(this, path);
+    var currentMatches = this.state.matches || [];
+    var nextMatches = this.match(path) || [];
+
+    warning(
+      nextMatches,
+      'No route matches path "%s". Make sure you have <Route path="%s"> somewhere in your routes',
+      path, path
+    );
+
+    computeNextState(currentMatches, nextMatches, transition, function (error, nextState) {
       if (error || transition.isAborted || nextState == null)
         return callback(error, transition.abortReason);
 
