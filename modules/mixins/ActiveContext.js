@@ -30,22 +30,24 @@ function queryIsActive(activeQuery, query) {
 var ActiveContext = {
 
   propTypes: {
-    initialActiveState: React.PropTypes.object
+    initialActiveRoutes: React.PropTypes.array.isRequired,
+    initialActiveParams: React.PropTypes.object.isRequired,
+    initialActiveQuery: React.PropTypes.object.isRequired
   },
 
   getDefaultProps: function () {
     return {
-      initialActiveState: {}
+      initialActiveRoutes: [],
+      initialActiveParams: {},
+      initialActiveQuery: {}
     };
   },
 
   getInitialState: function () {
-    var state = this.props.initialActiveState;
-
     return {
-      activeRoutes: state.activeRoutes || [],
-      activeParams: state.activeParams || {},
-      activeQuery: state.activeQuery || {}
+      activeRoutes: this.props.initialActiveRoutes,
+      activeParams: this.props.initialActiveParams,
+      activeQuery: this.props.initialActiveQuery
     };
   },
 

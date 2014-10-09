@@ -24,9 +24,7 @@ describe('ActiveContext', function () {
       beforeEach(function () {
         component = ReactTestUtils.renderIntoDocument(
           App({
-            initialActiveState: {
-              activeRoutes: [ route ]
-            }
+            initialActiveRoutes: [ route ]
           })
         );
       });
@@ -45,11 +43,9 @@ describe('ActiveContext', function () {
       beforeEach(function () {
         component = ReactTestUtils.renderIntoDocument(
           App({
-            initialActiveState: {
-              activeRoutes: [ route ],
-              activeParams: { id: '123', show: 'true', variant: 456 },
-              activeQuery: { search: 'abc', limit: 789 }
-            }
+            initialActiveRoutes: [ route ],
+            initialActiveParams: { id: '123', show: 'true', variant: 456 },
+            initialActiveQuery: { search: 'abc', limit: 789 }
           })
         );
       });
@@ -82,10 +78,8 @@ describe('ActiveContext', function () {
       beforeEach(function () {
         component = ReactTestUtils.renderIntoDocument(
           App({
-            initialActiveState: {
-              activeRoutes: [ route ],
-              activeParams: { id: 123 }
-            }
+            initialActiveRoutes: [ route ],
+            initialActiveParams: { id: 123 }
           })
         );
       });
