@@ -46,17 +46,6 @@ var ScrollContext = {
     };
   },
 
-  getInitialState: function () {
-    var behavior = this.props.scrollBehavior;
-
-    if (typeof behavior === 'string')
-      behavior = NAMED_SCROLL_BEHAVIORS[behavior];
-
-    return {
-      scrollBehavior: behavior
-    };
-  },
-
   componentWillMount: function () {
     invariant(
       this.getScrollBehavior() == null || canUseDOM,
