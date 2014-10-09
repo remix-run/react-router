@@ -59,5 +59,11 @@
   ],
   "browserify-shim": {
     "react": "global:React"
+  },
+  "jspm": {
+    "directories": {
+      "lib": "dist"
+    },
+    "main": "react-router"
   }
 }
