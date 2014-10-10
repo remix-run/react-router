@@ -1,4 +1,5 @@
 var React = require('react');
+var classSet = require('react/lib/cx');
 var merge = require('react/lib/merge');
 var ActiveState = require('../mixins/ActiveState');
 var Navigation = require('../mixins/Navigation');
@@ -80,12 +81,15 @@ var Link = React.createClass({
    * the value of the activeClassName property when this <Link> is active.
    */
   getClassName: function () {
-    var className = this.props.className || '';
+    var classNames = {};
+
+    if (this.props.className)
+      classNames[this.props.className] = true;
 
     if (this.isActive(this.props.to, this.props.params, this.props.query))
-      className += ' ' + this.props.activeClassName;
+      classNames[this.props.activeClassName] = true;
 
-    return className;
+    return classSet(classNames);
   },
 
   render: function () {
