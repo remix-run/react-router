@@ -151,10 +151,16 @@ function runHooks(hooks, callback) {
 }
 
 function updateMatchComponents(matches, refs) {
-  matches.forEach(function (match) {
+  var match;
+  for (var i = 0, len = matches.length; i < len; ++i) {
+    match = matches[i];
     match.component = refs.__activeRoute__;
+
+    if (match.component == null)
+      break; // End of the tree.
+
     refs = match.component.refs;
-  });
+  }
 }
 
 function returnNull() {
@@ -195,9 +201,16 @@ var Routes = React.createClass({
   },
 
   componentDidMount: function () {
-    if (this._initialSetStateCallback) {
-      this._initialSetStateCallback();
-      delete this._initialSetStateCallback;
+    if (this._handleStateChange) {
+      this._handleStateChange();
+      delete this._handleStateChange;
+    }
+  },
+
+  componentDidUpdate: function () {
+    if (this._handleStateChange) {
+      this._handleStateChange();
+      delete this._handleStateChange;
     }
   },
 
@@ -243,26 +256,19 @@ var Routes = React.createClass({
       } else if (abortReason) {
         this.goBack();
       } else {
-        var handleStateChange = function () {
-          updateMatchComponents(this.state.matches, this.refs);
-
-          this.updateScroll(path, actionType);
-
-          if (this.props.onChange)
-            this.props.onChange.call(this);
-        }.bind(this);
-
-        if (this.isMounted()) {
-          this.setState(nextState, handleStateChange);
-        } else {
-          // React does not invoke setState callback if we're still mounting
-          // so we have to store it and invoke in componentDidMount.
-          // https://github.com/facebook/react/blob/3bbed150ab58a07b0c4faf64126b4c9349eecfea/src/core/ReactCompositeComponent.js#L900
-          this._initialSetStateCallback = handleStateChange;
-          this.setState(nextState);
-        }
+        this._handleStateChange = this.handleStateChange.bind(this, path, actionType);
+        this.setState(nextState);
       }
     }.bind(this));
+  },
+
+  handleStateChange: function (path, actionType) {
+    updateMatchComponents(this.state.matches, this.refs);
+
+    this.updateScroll(path, actionType);
+
+    if (this.props.onChange)
+      this.props.onChange.call(this);
   },
 
   /**
