@@ -47,15 +47,11 @@ var LocationContext = {
 
     if (location) {
       PathStore.setup(location);
+      PathStore.addChangeListener(this.handlePathChange);
 
       if (this.updateLocation)
         this.updateLocation(PathStore.getCurrentPath(), PathStore.getCurrentActionType());
     }
-  },
-
-  componentDidMount: function () {
-    if (this.getLocation())
-      PathStore.addChangeListener(this.handlePathChange);
   },
 
   componentWillUnmount: function () {
