@@ -151,11 +151,10 @@ function runHooks(hooks, callback) {
 }
 
 function updateMatchComponents(matches, refs) {
-  var i = 0, component;
-  while (component = refs.__activeRoute__) {
-    matches[i++].component = component;
-    refs = component.refs;
-  }
+  matches.forEach(function (match) {
+    match.component = refs.__activeRoute__;
+    refs = match.component.refs;
+  });
 }
 
 function returnNull() {
