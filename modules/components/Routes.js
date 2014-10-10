@@ -175,15 +175,15 @@ var Routes = React.createClass({
   mixins: [ RouteContext, ActiveContext, LocationContext, ScrollContext ],
 
   propTypes: {
-    initialPath: React.PropTypes.string.isRequired,
-    initialMatches: React.PropTypes.array.isRequired,
+    initialPath: React.PropTypes.string,
+    initialMatches: React.PropTypes.array,
     onChange: React.PropTypes.func,
     onError: React.PropTypes.func
   },
 
   getDefaultProps: function () {
     return {
-      initialPath: '/',
+      initialPath: null,
       initialMatches: []
     };
   },
