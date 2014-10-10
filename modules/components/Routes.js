@@ -257,6 +257,7 @@ var Routes = React.createClass({
         } else {
           // React does not invoke setState callback if we're still mounting
           // so we have to store it and invoke in componentDidMount.
+          // https://github.com/facebook/react/blob/3bbed150ab58a07b0c4faf64126b4c9349eecfea/src/core/ReactCompositeComponent.js#L900
           this._initialSetStateCallback = handleStateChange;
           this.setState(nextState);
         }
