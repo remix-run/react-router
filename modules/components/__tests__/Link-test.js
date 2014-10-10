@@ -24,7 +24,11 @@ describe('A Link', function () {
         )
       );
 
-      component.dispatch('/mjackson/home', done);
+      component.dispatch('/mjackson/home', function (error, abortReason, nextState) {
+        expect(error).toBe(null);
+        expect(abortReason).toBe(null);
+        component.setState(nextState, done);
+      });
     });
 
     afterEach(function () {
@@ -52,7 +56,11 @@ describe('A Link', function () {
         )
       );
 
-      component.dispatch('/', done);
+      component.dispatch('/', function (error, abortReason, nextState) {
+        expect(error).toBe(null);
+        expect(abortReason).toBe(null);
+        component.setState(nextState, done);
+      });
     });
 
     afterEach(function () {

@@ -22,12 +22,16 @@ describe('Navigation', function () {
       var component;
       beforeEach(function (done) {
         component = ReactTestUtils.renderIntoDocument(
-          Routes({ location: 'none' }, 
+          Routes({ location: 'none', onChange: done }, 
             Route({ name: 'home', path: '/:username/home', handler: NavigationHandler })
           )
         );
 
-        component.dispatch('/anybody/home', done);
+        component.dispatch('/anybody/home', function (error, abortReason, nextState) {
+          expect(error).toBe(null);
+          expect(abortReason).toBe(null);
+          component.setState(nextState, done);
+        });
       });
 
       afterEach(function () {
@@ -50,7 +54,11 @@ describe('Navigation', function () {
           )
         );
 
-        component.dispatch('/home', done);
+        component.dispatch('/home', function (error, abortReason, nextState) {
+          expect(error).toBe(null);
+          expect(abortReason).toBe(null);
+          component.setState(nextState, done);
+        });
       });
 
       afterEach(function () {
@@ -78,7 +86,11 @@ describe('Navigation', function () {
           )
         );
 
-        component.dispatch('/home', done);
+        component.dispatch('/home', function (error, abortReason, nextState) {
+          expect(error).toBe(null);
+          expect(abortReason).toBe(null);
+          component.setState(nextState, done);
+        });
       });
 
       afterEach(function () {
@@ -101,7 +113,11 @@ describe('Navigation', function () {
           )
         );
 
-        component.dispatch('/home', done);
+        component.dispatch('/home', function (error, abortReason, nextState) {
+          expect(error).toBe(null);
+          expect(abortReason).toBe(null);
+          component.setState(nextState, done);
+        });
       });
 
       afterEach(function () {
