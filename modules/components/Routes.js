@@ -71,54 +71,6 @@ function hasMatch(matches, match) {
 }
 
 /**
- * Computes the next state for the given component and calls
- * callback(error, nextState) when finished. Also runs all
- * transition hooks along the way.
- */
-function computeNextState(currentMatches, nextMatches, transition, callback) {
-  var fromMatches, toMatches;
-  if (currentMatches.length) {
-    fromMatches = currentMatches.filter(function (match) {
-      return !hasMatch(nextMatches, match);
-    });
-
-    toMatches = nextMatches.filter(function (match) {
-      return !hasMatch(currentMatches, match);
-    });
-  } else {
-    fromMatches = [];
-    toMatches = nextMatches;
-  }
-
-  var query = Path.extractQuery(transition.path) || {};
-
-  runTransitionFromHooks(fromMatches, transition, function (error) {
-    if (error || transition.isAborted)
-      return callback(error);
-
-    runTransitionToHooks(toMatches, transition, query, function (error) {
-      if (error || transition.isAborted)
-        return callback(error);
-
-      var matches = currentMatches.slice(0, currentMatches.length - fromMatches.length).concat(toMatches);
-      var rootMatch = getRootMatch(matches);
-      var params = (rootMatch && rootMatch.params) || {};
-      var routes = matches.map(function (match) {
-        return match.route;
-      });
-
-      callback(null, {
-        path: transition.path,
-        matches: matches,
-        activeRoutes: routes,
-        activeParams: params,
-        activeQuery: query
-      });
-    });
-  });
-}
-
-/**
  * Calls the willTransitionFrom hook of all handlers in the given matches
  * serially in reverse with the transition object and the current instance of
  * the route's handler, so that the deepest nested handlers are called first.
@@ -206,43 +158,6 @@ function returnNull() {
   return null;
 }
 
-function computeHandlerProps(matches, query) {
-  var handler = returnNull;
-  var props = {
-    ref: null,
-    params: null,
-    query: null,
-    activeRouteHandler: handler,
-    key: null
-  };
-
-  reversedArray(matches).forEach(function (match) {
-    var route = match.route;
-
-    props = Route.getUnreservedProps(route.props);
-
-    props.ref = '__activeRoute__';
-    props.params = match.params;
-    props.query = query;
-    props.activeRouteHandler = handler;
-
-    // TODO: Can we remove addHandlerKey?
-    if (route.props.addHandlerKey)
-      props.key = Path.injectParams(route.props.path, match.params);
-
-    handler = function (props, addedProps) {
-      if (arguments.length > 2 && typeof arguments[2] !== 'undefined')
-        throw new Error('Passing children to a route handler is not supported');
-
-      return route.props.handler(
-        copyProperties(props, addedProps)
-      );
-    }.bind(this, props);
-  });
-
-  return props;
-}
-
 var ActiveContext = require('../mixins/ActiveContext');
 var LocationContext = require('../mixins/LocationContext');
 var RouteContext = require('../mixins/RouteContext');
@@ -312,59 +227,126 @@ var Routes = React.createClass({
       } else if (abortReason) {
         this.goBack();
       } else {
-        updateMatchComponents(this.state.matches, this.refs);
+        this.setState(nextState, function () {
+          updateMatchComponents(this.state.matches, this.refs);
 
-        this.updateScroll(path, actionType);
+          this.updateScroll(path, actionType);
 
-        if (this.props.onChange)
-          this.props.onChange.call(this);
+          if (this.props.onChange)
+            this.props.onChange.call(this);
+        }.bind(this));
       }
     }.bind(this));
   },
 
   /**
-   * Performs a transition to the given path and calls callback(error, abortReason)
-   * when the transition is finished and the component's state has been updated. If
-   * there was an error, the first argument will not be null. Otherwise, if the
-   * transition was aborted for some reason, it will be given in the second arg.
+   * Performs a transition to the given path and calls callback(error, abortReason, nextState)
+   * when the transition is finished. If there was an error, the first argument will not be null.
+   * Otherwise, if the transition was aborted for some reason, it will be given in the second arg.
    *
-   * In a transition, the router first determines which routes are involved by
-   * beginning with the current route, up the route tree to the first parent route
-   * that is shared with the destination route, and back down the tree to the
-   * destination route. The willTransitionFrom hook is invoked on all route handlers
-   * we're transitioning away from, in reverse nesting order. Likewise, the
+   * In a transition, the router first determines which routes are involved by beginning with the
+   * current route, up the route tree to the first parent route that is shared with the destination
+   * route, and back down the tree to the destination route. The willTransitionFrom hook is invoked
+   * on all route handlers we're transitioning away from, in reverse nesting order. Likewise, the
    * willTransitionTo hook is invoked on all route handlers we're transitioning to.
    *
-   * Both willTransitionFrom and willTransitionTo hooks may either abort or redirect
-   * the transition. To resolve asynchronously, they may use transition.wait(promise).
+   * Both willTransitionFrom and willTransitionTo hooks may either abort or redirect the transition.
+   * To resolve asynchronously, they may use transition.wait(promise). If no hooks wait, the
+   * transition will be synchronous.
    */
   dispatch: function (path, callback) {
-    if (this.state.path === path)
-      return callback(); // Nothing to do!
-
     var transition = new Transition(this, path);
-    var currentMatches = this.state.matches || [];
+    var currentMatches = this.state ? this.state.matches : []; // No state server-side.
     var nextMatches = this.match(path) || [];
 
     warning(
-      nextMatches,
+      nextMatches.length,
       'No route matches path "%s". Make sure you have <Route path="%s"> somewhere in your routes',
       path, path
     );
 
-    computeNextState(currentMatches, nextMatches, transition, function (error, nextState) {
-      if (error || transition.isAborted || nextState == null)
+    var fromMatches, toMatches;
+    if (currentMatches.length) {
+      fromMatches = currentMatches.filter(function (match) {
+        return !hasMatch(nextMatches, match);
+      });
+
+      toMatches = nextMatches.filter(function (match) {
+        return !hasMatch(currentMatches, match);
+      });
+    } else {
+      fromMatches = [];
+      toMatches = nextMatches;
+    }
+
+    var query = Path.extractQuery(path) || {};
+
+    runTransitionFromHooks(fromMatches, transition, function (error) {
+      if (error || transition.isAborted)
         return callback(error, transition.abortReason);
 
-      this.setState(nextState, callback);
-    }.bind(this));
+      runTransitionToHooks(toMatches, transition, query, function (error) {
+        if (error || transition.isAborted)
+          return callback(error, transition.abortReason);
+
+        var matches = currentMatches.slice(0, currentMatches.length - fromMatches.length).concat(toMatches);
+        var rootMatch = getRootMatch(matches);
+        var params = (rootMatch && rootMatch.params) || {};
+        var routes = matches.map(function (match) {
+          return match.route;
+        });
+
+        callback(null, null, {
+          path: path,
+          matches: matches,
+          activeRoutes: routes,
+          activeParams: params,
+          activeQuery: query
+        });
+      });
+    });
   },
 
   /**
    * Returns the props that should be used for the top-level route handler.
    */
   getHandlerProps: function () {
-    return computeHandlerProps(this.state.matches, this.state.activeQuery);
+    var matches = this.state.matches;
+    var query = this.state.activeQuery;
+    var handler = returnNull;
+    var props = {
+      ref: null,
+      params: null,
+      query: null,
+      activeRouteHandler: handler,
+      key: null
+    };
+
+    reversedArray(matches).forEach(function (match) {
+      var route = match.route;
+
+      props = Route.getUnreservedProps(route.props);
+
+      props.ref = '__activeRoute__';
+      props.params = match.params;
+      props.query = query;
+      props.activeRouteHandler = handler;
+
+      // TODO: Can we remove addHandlerKey?
+      if (route.props.addHandlerKey)
+        props.key = Path.injectParams(route.props.path, match.params);
+
+      handler = function (props, addedProps) {
+        if (arguments.length > 2 && typeof arguments[2] !== 'undefined')
+          throw new Error('Passing children to a route handler is not supported');
+
+        return route.props.handler(
+          copyProperties(props, addedProps)
+        );
+      }.bind(this, props);
+    });
+
+    return props;
   },
 
   /**
