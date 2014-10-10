@@ -194,6 +194,13 @@ var Routes = React.createClass({
     };
   },
 
+  componentDidMount: function () {
+    if (this._initialSetStateCallback) {
+      this._initialSetStateCallback();
+      delete this._initialSetStateCallback;
+    }
+  },
+
   /**
    * Performs a depth-first search for the first route in the tree that matches on
    * the given path. Returns an array of all routes in the tree leading to the one
@@ -236,14 +243,23 @@ var Routes = React.createClass({
       } else if (abortReason) {
         this.goBack();
       } else {
-        this.setState(nextState, function () {
+        var handleStateChange = function () {
           updateMatchComponents(this.state.matches, this.refs);
 
           this.updateScroll(path, actionType);
 
           if (this.props.onChange)
             this.props.onChange.call(this);
-        }.bind(this));
+        }.bind(this);
+
+        if (this.isMounted()) {
+          this.setState(nextState, handleStateChange);
+        } else {
+          // React does not invoke setState callback if we're still mounting
+          // so we have to store it and invoke in componentDidMount.
+          this._initialSetStateCallback = handleStateChange;
+          this.setState(nextState);
+        }
       }
     }.bind(this));
   },
