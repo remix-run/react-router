@@ -3,6 +3,10 @@ var warning = require('react/lib/warning');
 var invariant = require('react/lib/invariant');
 var copyProperties = require('react/lib/copyProperties');
 var HashLocation = require('../locations/HashLocation');
+var ActiveContext = require('../mixins/ActiveContext');
+var LocationContext = require('../mixins/LocationContext');
+var RouteContext = require('../mixins/RouteContext');
+var ScrollContext = require('../mixins/ScrollContext');
 var reversedArray = require('../utils/reversedArray');
 var Transition = require('../utils/Transition');
 var Redirect = require('../utils/Redirect');
@@ -158,11 +162,6 @@ function returnNull() {
   return null;
 }
 
-var ActiveContext = require('../mixins/ActiveContext');
-var LocationContext = require('../mixins/LocationContext');
-var RouteContext = require('../mixins/RouteContext');
-var ScrollContext = require('../mixins/ScrollContext');
-
 /**
  * The <Routes> component configures the route hierarchy and renders the
  * route matching the current location when rendered into a document.
@@ -173,16 +172,26 @@ var Routes = React.createClass({
 
   displayName: 'Routes',
 
-  mixins: [ ActiveContext, LocationContext, RouteContext, ScrollContext ],
+  mixins: [ RouteContext, ActiveContext, LocationContext, ScrollContext ],
 
   propTypes: {
+    initialPath: React.PropTypes.string.isRequired,
+    initialMatches: React.PropTypes.array.isRequired,
     onChange: React.PropTypes.func,
     onError: React.PropTypes.func
   },
 
+  getDefaultProps: function () {
+    return {
+      initialPath: '/',
+      initialMatches: []
+    };
+  },
+
   getInitialState: function () {
     return {
-      matches: []
+      path: this.props.initialPath,
+      matches: this.props.initialMatches
     };
   },
 
@@ -204,7 +213,8 @@ var Routes = React.createClass({
    *                               { route: <PostRoute>, params: { id: '123' } } ]
    */
   match: function (path) {
-    return findMatches(Path.withoutQuery(path), this.getRoutes(), this.props.defaultRoute, this.props.notFoundRoute);
+    var routes = this.getRoutes();
+    return findMatches(Path.withoutQuery(path), routes, this.props.defaultRoute, this.props.notFoundRoute);
   },
 
   updateLocation: function (path, actionType) {
@@ -214,7 +224,7 @@ var Routes = React.createClass({
     if (this.state.path)
       this.recordScroll(this.state.path);
 
-    this.dispatch(path, actionType, function (error, abortReason) {
+    this.dispatch(path, function (error, abortReason, nextState) {
       if (error) {
         if (this.props.onError) {
           this.props.onError.call(this, error);
