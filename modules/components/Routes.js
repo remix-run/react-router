@@ -322,7 +322,7 @@ var Routes = React.createClass({
 
     warning(
       nextMatches.length,
-      'No route matches path "%s". Make sure you have <Route path="%s"> somewhere in your routes',
+      'No route matches path "%s". Make sure you have <Route path="%s"> somewhere in your <Routes>',
       path, path
     );
 
@@ -438,8 +438,8 @@ var Routes = React.createClass({
 
       invariant(
         route,
-        'Unable to find a route named "' + to + '". Make sure you have ' +
-        'a <Route name="' + to + '"> defined somewhere in your <Routes>'
+        'Unable to find a route named "%s". Make sure you have <Route name="%s"> somewhere in your <Routes>',
+        to, to
       );
 
       path = route.props.path;
