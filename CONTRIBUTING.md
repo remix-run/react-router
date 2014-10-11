@@ -1,4 +1,4 @@
-### Commit Subjects
+### Commit Subjects for Public API Changes
 
 If your patch **changes the API or fixes a bug** please use one of the
 following prefixes in your commit subject:
@@ -12,8 +12,8 @@ That ensures the subject line of your commit makes it into the
 auto-generated changelog. Do not use these tags if your change doesn't
 fix a bug and doesn't change the public API.
 
-Commits with changed, added, or removed, must be reviewed by another
-collaborator.
+Commits with changed, added, or removed, should probably be reviewed by
+another collaborator.
 
 #### When using `[changed]` or `[removed]`...
 
@@ -31,7 +31,8 @@ always be in sync.
 - `scripts/test` will fire up a karma runner and watch for changes in the
   specs directory.
 - `npm test` will do the same but doesn't watch, just runs the tests.
-- `scripts/build-examples` does exactly that.
+- `scripts/dev-examples` fires up a webpack dev server that will watch
+  for changes and build the examples.
 
 ### Build
 

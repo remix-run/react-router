@@ -23,8 +23,10 @@
   "devDependencies": {
     "browserify": "4.2.3",
     "browserify-shim": "3.6.0",
+    "bundle-loader": "0.5.1",
     "envify": "1.2.0",
     "expect": "0.1.1",
+    "jsx-loader": "0.11.2",
     "karma": "0.12.16",
     "karma-browserify": "^0.2.1",
     "karma-chrome-launcher": "0.1.4",
@@ -35,7 +37,9 @@
     "react": ">=0.11.0",
     "reactify": "^0.14.0",
     "rf-release": "0.3.2",
-    "uglify-js": "2.4.15"
+    "uglify-js": "2.4.15",
+    "webpack": "1.4.5",
+    "webpack-dev-server": "1.6.5"
   },
   "peerDependencies": {
     "react": ">=0.11.0"

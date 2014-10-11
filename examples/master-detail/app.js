@@ -110,7 +110,7 @@ var Contact = React.createClass({
     var avatar = contact.avatar || 'http://placekitten.com/50/50';
     return (
       <div className="Contact">
-        <img height="50" src={avatar}/>
+        <img height="50" src={avatar} key={avatar}/>
         <h3>{name}</h3>
         <button onClick={this.destroy}>Delete</button>
       </div>

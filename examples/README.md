@@ -1,9 +1,10 @@
-### React Router Examples
+React Router Examples
+=====================
 
-In order to try out the examples, you need to follow these steps:
+To run and development examples:
 
 1. Clone this repo
-1. Run `npm -g install webpack`, if you don't have it installed already
-1. Run `npm install` from the repo's root directory
-1. Run `./scripts/build-examples` from the repo's root directory
-1. Point your browser to the `index.html` location in this directory
+1. Run `npm install`
+1. Run `scripts/dev-examples` from the repo's root directory
+1. Point your browser to http://localhost:8080
+
