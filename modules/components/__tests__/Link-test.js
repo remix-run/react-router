@@ -67,7 +67,39 @@ describe('A Link', function () {
       React.unmountComponentAtNode(component.getDOMNode());
     });
 
-    it('has its active class name', function () {
+    it('is active', function () {
+      var linkComponent = component.getActiveComponent().refs.link;
+      expect(linkComponent.getClassName()).toEqual('a-link highlight');
+    });
+  });
+
+  describe('when the path it links to is active', function () {
+    var HomeHandler = React.createClass({
+      render: function () {
+        return Link({ ref: 'link', to: '/home', className: 'a-link', activeClassName: 'highlight' });
+      }
+    });
+
+    var component;
+    beforeEach(function (done) {
+      component = ReactTestUtils.renderIntoDocument(
+        Routes({ location: 'none' },
+          Route({ path: '/home', handler: HomeHandler })
+        )
+      );
+
+      component.dispatch('/home', function (error, abortReason, nextState) {
+        expect(error).toBe(null);
+        expect(abortReason).toBe(null);
+        component.setState(nextState, done);
+      });
+    });
+
+    afterEach(function () {
+      React.unmountComponentAtNode(component.getDOMNode());
+    });
+
+    it('is active', function () {
       var linkComponent = component.getActiveComponent().refs.link;
       expect(linkComponent.getClassName()).toEqual('a-link highlight');
     });

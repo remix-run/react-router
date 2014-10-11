@@ -167,6 +167,28 @@ function returnNull() {
   return null;
 }
 
+function routeIsActive(activeRoutes, routeName) {
+  return activeRoutes.some(function (route) {
+    return route.props.name === routeName;
+  });
+}
+
+function paramsAreActive(activeParams, params) {
+  for (var property in params)
+    if (String(activeParams[property]) !== String(params[property]))
+      return false;
+
+  return true;
+}
+
+function queryIsActive(activeQuery, query) {
+  for (var property in query)
+    if (String(activeQuery[property]) !== String(query[property]))
+      return false;
+
+  return true;
+}
+
 /**
  * The <Routes> component configures the route hierarchy and renders the
  * route matching the current location when rendered into a document.
@@ -476,6 +498,18 @@ var Routes = React.createClass({
     location.pop();
   },
 
+  /**
+   * Returns true if the given route, params, and query are active.
+   */
+  isActive: function (to, params, query) {
+    if (Path.isAbsolute(to))
+      return to === this.getCurrentPath();
+
+    return routeIsActive(this.getActiveRoutes(), to) &&
+      paramsAreActive(this.getActiveParams(), params) &&
+      (query == null || queryIsActive(this.getActiveQuery(), query));
+  },
+
   render: function () {
     var match = this.state.matches[0];
 
@@ -493,7 +527,8 @@ var Routes = React.createClass({
     makeHref: React.PropTypes.func.isRequired,
     transitionTo: React.PropTypes.func.isRequired,
     replaceWith: React.PropTypes.func.isRequired,
-    goBack: React.PropTypes.func.isRequired
+    goBack: React.PropTypes.func.isRequired,
+    isActive: React.PropTypes.func.isRequired
   },
 
   getChildContext: function () {
@@ -503,7 +538,8 @@ var Routes = React.createClass({
       makeHref: this.makeHref,
       transitionTo: this.transitionTo,
       replaceWith: this.replaceWith,
-      goBack: this.goBack
+      goBack: this.goBack,
+      isActive: this.isActive
     };
   }
 
