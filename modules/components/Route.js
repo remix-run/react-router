@@ -49,13 +49,6 @@ var Route = React.createClass({
 
   displayName: 'Route',
 
-  propTypes: {
-    handler: React.PropTypes.any.isRequired,
-    getAsyncProps: React.PropTypes.func,
-    path: React.PropTypes.string,
-    name: React.PropTypes.string
-  },
-
   render: function () {
     throw new Error(
       'The <Route> component should not be rendered directly. You may be ' +
