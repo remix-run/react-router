@@ -189,6 +189,11 @@ function queryIsActive(activeQuery, query) {
   return true;
 }
 
+function defaultTransitionErrorHandler(error) {
+  // Throw so we don't silently swallow async errors.
+  throw error; // This error probably originated in a transition hook.
+}
+
 /**
  * The <Routes> component configures the route hierarchy and renders the
  * route matching the current location when rendered into a document.
@@ -205,13 +210,14 @@ var Routes = React.createClass({
     initialPath: React.PropTypes.string,
     initialMatches: React.PropTypes.array,
     onChange: React.PropTypes.func,
-    onError: React.PropTypes.func
+    onError: React.PropTypes.func.isRequired
   },
 
   getDefaultProps: function () {
     return {
       initialPath: null,
-      initialMatches: []
+      initialMatches: [],
+      onError: defaultTransitionErrorHandler
     };
   },
 
@@ -267,12 +273,7 @@ var Routes = React.createClass({
 
     this.dispatch(path, function (error, abortReason, nextState) {
       if (error) {
-        if (this.props.onError) {
-          this.props.onError.call(this, error);
-        } else {
-          // Throw so we don't silently swallow errors.
-          throw error; // This error probably originated in a transition hook.
-        }
+        this.props.onError.call(this, error);
       } else if (abortReason instanceof Redirect) {
         this.replaceWith(abortReason.to, abortReason.params, abortReason.query);
       } else if (abortReason) {
