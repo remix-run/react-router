@@ -229,6 +229,11 @@ var Routes = React.createClass({
   },
 
   componentDidMount: function () {
+    warning(
+      this.getDOMNode() == null || this.getDOMNode().parentNode === document.body,
+      '<Routes> should probably be the outermost component on the page'
+    );
+
     if (this._handleStateChange) {
       this._handleStateChange();
       delete this._handleStateChange;
