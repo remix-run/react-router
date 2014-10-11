@@ -58,7 +58,7 @@ function renderRoutesToString(routes, path, callback) {
       var id = ReactInstanceHandles.createReactRootID();
       transaction = ReactServerRenderingTransaction.getPooled(false);
 
-      transaction.perform(function() {
+      transaction.perform(function () {
         var markup = component.mountComponent(id, transaction, 0);
         callback(null, null, ReactMarkupChecksum.addChecksumToMarkup(markup));
       }, null);
@@ -93,7 +93,7 @@ function renderRoutesToStaticMarkup(routes, path, callback) {
       var id = ReactInstanceHandles.createReactRootID();
       transaction = ReactServerRenderingTransaction.getPooled(false);
 
-      transaction.perform(function() {
+      transaction.perform(function () {
         callback(null, null, component.mountComponent(id, transaction, 0));
       }, null);
     } finally {
