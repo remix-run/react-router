@@ -380,6 +380,7 @@ In order for the above examples to work in a CommonJS environment you'll need to
 var Router = require('react-router');
 var Route = Router.Route;
 var Routes = Router.Routes;
+var NotFoundRoute = Router.NotFoundRoute;
 var DefaultRoute = Router.DefaultRoute;
 var Link = Router.Link;
 ```
