@@ -25,10 +25,6 @@ var RESERVED_PROPS = {
  * "active" and their components are rendered into the DOM, nested in the same
  * order as they are in the tree.
  *
- * Unlike Ember, a nested route's path does not build upon that of its parents.
- * This may seem like it creates more work up front in specifying URLs, but it
- * has the nice benefit of decoupling nested UI from "nested" URLs.
- *
  * The preferred way to configure a router is using JSX. The XML-like syntax is
  * a great way to visualize how routes are laid out in an application.
  *
