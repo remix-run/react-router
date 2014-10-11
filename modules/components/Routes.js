@@ -230,8 +230,9 @@ var Routes = React.createClass({
 
   componentDidMount: function () {
     warning(
-      this.getDOMNode() == null || this.getDOMNode().parentNode === document.body,
-      '<Routes> should probably be the outermost component on the page'
+      this._owner == null,
+      '<Routes> should be rendered directly using React.renderComponent, not ' +
+      'inside some other component\'s render method'
     );
 
     if (this._handleStateChange) {
