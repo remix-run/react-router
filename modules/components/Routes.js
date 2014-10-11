@@ -288,7 +288,7 @@ var Routes = React.createClass({
         this._handleStateChange = this.handleStateChange.bind(this, path, actionType);
         this.setState(nextState);
       }
-    }.bind(this));
+    });
   },
 
   handleStateChange: function (path, actionType) {
@@ -340,15 +340,16 @@ var Routes = React.createClass({
       toMatches = nextMatches;
     }
 
+    var callbackScope = this;
     var query = Path.extractQuery(path) || {};
 
     runTransitionFromHooks(fromMatches, transition, function (error) {
       if (error || transition.isAborted)
-        return callback(error, transition.abortReason);
+        return callback.call(callbackScope, error, transition.abortReason);
 
       runTransitionToHooks(toMatches, transition, query, function (error) {
         if (error || transition.isAborted)
-          return callback(error, transition.abortReason);
+          return callback.call(callbackScope, error, transition.abortReason);
 
         var matches = currentMatches.slice(0, currentMatches.length - fromMatches.length).concat(toMatches);
         var rootMatch = getRootMatch(matches);
@@ -357,7 +358,7 @@ var Routes = React.createClass({
           return match.route;
         });
 
-        callback(null, null, {
+        callback.call(callbackScope, null, null, {
           path: path,
           matches: matches,
           activeRoutes: routes,
