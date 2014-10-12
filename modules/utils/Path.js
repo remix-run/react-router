@@ -95,6 +95,9 @@ var Path = {
         );
       } else {
         paramName = paramName.slice(0, -1)
+        if (params[paramName] == null) {
+            return '';
+        }
       }
 
       var segment;
