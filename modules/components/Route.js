@@ -1,4 +1,19 @@
 var React = require('react');
+var withoutProperties = require('../utils/withoutProperties');
+
+/**
+ * A map of <Route> component props that are reserved for use by the
+ * router and/or React. All other props are considered "static" and
+ * are passed through to the route handler.
+ */
+var RESERVED_PROPS = {
+  handler: true,
+  path: true,
+  defaultRoute: true,
+  notFoundRoute: true,
+  paramNames: true,
+  children: true // ReactChildren
+};
 
 /**
  * <Route> components specify components that are rendered to the page when the
@@ -49,9 +64,16 @@ var Route = React.createClass({
 
   displayName: 'Route',
 
+  statics: {
+
+    getUnreservedProps: function (props) {
+      return withoutProperties(props, RESERVED_PROPS);
+    }
+
+  },
+
   propTypes: {
     handler: React.PropTypes.any.isRequired,
-    getAsyncProps: React.PropTypes.func,
     path: React.PropTypes.string,
     name: React.PropTypes.string
   },
