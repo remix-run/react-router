@@ -16,6 +16,7 @@ function encodeURLPath(path) {
 
 var paramCompileMatcher = /:([a-zA-Z_$][a-zA-Z0-9_$]*)|[*.()\[\]\\+|{}^$]/g;
 var paramInjectMatcher = /:([a-zA-Z_$?][a-zA-Z0-9_$?]*)|[*]/g;
+var paramInjectTrailingSlashMatcher = /\/\/\?|\/\?/g;
 var queryMatcher = /\?(.+)/;
 
 var _compiledPatterns = {};
@@ -83,11 +84,10 @@ var Path = {
 
     var splatIndex = 0;
 
-    return pattern.replace(paramInjectMatcher, function (match, paramName) {
-    console.log(pattern, match, paramName);
+    var url = pattern.replace(paramInjectMatcher, function (match, paramName) {
       paramName = paramName || 'splat';
 
-      // If param is optional dont check for existance
+      // If param is optional don't check for existence
       if (paramName.slice(-1) !== '?') {
         invariant(
           params[paramName] != null,
@@ -114,6 +114,11 @@ var Path = {
 
       return encodeURLPath(segment);
     });
+    url = url.replace(paramInjectTrailingSlashMatcher, '/');
+
+    console.log(url);
+
+    return url;
   },
 
   /**
