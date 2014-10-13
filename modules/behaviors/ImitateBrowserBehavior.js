@@ -13,7 +13,11 @@ var ImitateBrowserBehavior = {
         window.scrollTo(0, 0);
         break;
       case LocationActions.POP:
-        window.scrollTo(position.x, position.y);
+        if (position) {
+          window.scrollTo(position.x, position.y);
+        } else {
+          window.scrollTo(0, 0);
+        }
         break;
     }
   }
