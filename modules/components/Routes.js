@@ -416,7 +416,7 @@ var Routes = React.createClass({
     }
 
     matches.forEach(function (match) {
-      var getRouteProps = match.route.handler.getRouteProps;
+      var getRouteProps = match.route.props.handler.getRouteProps;
 
       if (match.props || getRouteProps == null) {
         tryToFinish();
