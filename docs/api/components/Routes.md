@@ -29,7 +29,7 @@ Determines the scrolling behavior after route transitions.
 
 One of:
 
-- `'imitateBrowser'` - default, imitates what browsers do in a typical
+- `'browser'` - default, imitates what browsers do in a typical
   page reload scenario: preserves scroll positions when using the back
   button, scrolls up when you come to a new route by clicking a link,
   etc.
@@ -39,12 +39,15 @@ One of:
 - `'none'` - doesn't do anything (you should probably do something about
   that).
 
+### `onError`
+
+Called when a transition throws an error.
+
 #### signature
 
 `function(error)`
 
-Example
--------
+#### Example
 
 ```jsx
 function onError(error) {

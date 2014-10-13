@@ -26,5 +26,19 @@ Router.AsyncState
 Router.PathState
 Router.RouteLookup
 Router.Transitions
+
+// methods
+Router.renderRoutesToString
 ```
+
+Methods
+-------
+
+### `renderRoutesToString(routes, path, callback)`
+
+We will document this more when the data loading story finalizes.
+
+### `renderRoutesToStaticMarkup(routes, path, callback)`
+
+We will document this more when the data loading story finalizes.
 
