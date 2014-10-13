@@ -43,7 +43,7 @@ describe('resolveAsyncValues', function () {
     });
   });
 
-  describe.only('when asyncValues has more than one async value', function () {
+  describe('when asyncValues has more than one async value', function () {
     it('resolves asynchronously', function (done) {
       var resolved = false;
 
