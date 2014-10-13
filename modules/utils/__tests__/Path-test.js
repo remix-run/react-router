@@ -62,7 +62,7 @@ describe('Path.extractParams', function () {
       });
     });
     describe('and the pattern and forward slash are optional', function () {
-      var pattern = 'comments/:id?/edit'
+      var pattern = 'comments/:id?/?edit'
 
       describe('and the path matches with supplied param', function () {
         it('returns an object with the params', function () {

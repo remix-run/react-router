@@ -84,7 +84,7 @@ var Path = {
 
     var splatIndex = 0;
 
-    var url = pattern.replace(paramInjectMatcher, function (match, paramName) {
+    return pattern.replace(paramInjectMatcher, function (match, paramName) {
       paramName = paramName || 'splat';
 
       // If param is optional don't check for existence
@@ -113,12 +113,7 @@ var Path = {
       }
 
       return encodeURLPath(segment);
-    });
-    url = url.replace(paramInjectTrailingSlashMatcher, '/');
-
-    console.log(url);
-
-    return url;
+    }).replace(paramInjectTrailingSlashMatcher, '/');
   },
 
   /**
