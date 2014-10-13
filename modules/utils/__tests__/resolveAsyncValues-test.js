@@ -43,6 +43,22 @@ describe('resolveAsyncValues', function () {
     });
   });
 
+  describe.only('when asyncValues has more than one async value', function () {
+    it('resolves asynchronously', function (done) {
+      var resolved = false;
+
+      resolveAsyncValues({ a: Promise.resolve('a'), b: Promise.resolve('b') }, setValues, function (error) {
+        assert(error == null);
+        expect(receivedValues).toEqual({ a: 'a', b: 'b' });
+        resolved = true;
+        done(error);
+      });
+
+      assert(!resolved);
+    });
+  });
+
+
   describe('when asyncValues has a rejected async value', function () {
     it('passes the error/reason to the callback', function (done) {
       resolveAsyncValues({ a: Promise.reject('boom!') }, setValues, function (error) {

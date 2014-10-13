@@ -18,12 +18,11 @@ function resolveAsyncValues(asyncValues, setValues, callback) {
   var immediateValues = {};
   var promises = [];
 
-  var value;
-  for (var property in asyncValues) {
+  Object.keys(asyncValues).forEach(function(property) {
     if (!asyncValues.hasOwnProperty(property))
-      continue;
+      return;
 
-    value = asyncValues[property];
+    var value = asyncValues[property];
 
     if (isPromise(value)) {
       promises.push(
@@ -36,7 +35,7 @@ function resolveAsyncValues(asyncValues, setValues, callback) {
     } else {
       immediateValues[property] = value;
     }
-  }
+  });
 
   setValues(immediateValues);
 
