@@ -1,14 +1,12 @@
 v0.9.4 - Mon, 13 Oct 2014 19:53:10 GMT
 --------------------------------------
 
-- [0cd20cf](../../commit/0cd20cf) Revert "[removed] "static" <Route> props"
-- [db26b7d](../../commit/db26b7d) [removed] "static" <Route> props
-- [e571c27](../../commit/e571c27) [fixed] Add .active class to <Link>s with absolute hrefs
+- [e571c27](../../commit/e571c27) [fixed] Add .active class to `<Link>`s with absolute hrefs
 - [ea5a380](../../commit/ea5a380) [fixed] Make sure onChange is fired at synchronous first render
 - [dee374f](../../commit/dee374f) [fixed] Listen to path changes caused by initial redirect, fixes #360
 - [d47d7dd](../../commit/d47d7dd) [fixed] potential infinite loop during transitions
 - [1b1a62b](../../commit/1b1a62b) [added] Server-side rendering
-- [c7ca87e](../../commit/c7ca87e) [added] <Routes onError>
+- [c7ca87e](../../commit/c7ca87e) [added] `<Routes onError>`
 
 
 v0.9.3 - Wed, 08 Oct 2014 14:44:52 GMT
