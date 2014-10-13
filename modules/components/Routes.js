@@ -32,7 +32,7 @@ function findMatches(path, routes, defaultRoute, notFoundRoute) {
 
     if (matches != null) {
       var rootParams = getRootMatch(matches).params;
-      
+
       params = route.props.paramNames.reduce(function (params, paramName) {
         params[paramName] = rootParams[paramName];
         return params;
