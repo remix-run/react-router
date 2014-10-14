@@ -92,9 +92,9 @@ function updateProps(component, matches, query, callback) {
   }
 
   matches.forEach(function (match) {
-    var getRouteProps = match.route.props.handler.getRouteProps;
+    var getHandlerProps = match.route.props.handler.getHandlerProps;
 
-    if (match.props || getRouteProps == null) {
+    if (match.props || getHandlerProps == null) {
       tryToFinish();
     } else {
       match.props = {};
@@ -107,7 +107,7 @@ function updateProps(component, matches, query, callback) {
         data[match.route.props.name] = match.props;
       }
 
-      resolveAsyncValues(getRouteProps(match.params, query), setProps, tryToFinish);
+      resolveAsyncValues(getHandlerProps(match.params, query), setProps, tryToFinish);
     }
   });
 }

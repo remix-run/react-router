@@ -331,7 +331,7 @@ var Routes = React.createClass({
           return callback.call(component, error, transition.abortReason);
 
         // Mark all old matches as stale so async props
-        // from getRouteProps don't trigger a forceUpdate.
+        // from getHandlerProps don't trigger a forceUpdate.
         fromMatches.forEach(function (match) {
           match.isStale = true;
         });
@@ -416,9 +416,9 @@ var Routes = React.createClass({
     }
 
     matches.forEach(function (match) {
-      var getRouteProps = match.route.props.handler.getRouteProps;
+      var getHandlerProps = match.route.props.handler.getHandlerProps;
 
-      if (match.props || getRouteProps == null) {
+      if (match.props || getHandlerProps == null) {
         tryToFinish();
       } else {
         match.props = {};
@@ -433,7 +433,7 @@ var Routes = React.createClass({
             component.forceUpdate();
         }
 
-        resolveAsyncValues(getRouteProps(match.params, query), setProps, tryToFinish);
+        resolveAsyncValues(getHandlerProps(match.params, query), setProps, tryToFinish);
       }
     });
   },
