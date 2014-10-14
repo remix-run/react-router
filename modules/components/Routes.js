@@ -441,38 +441,37 @@ var Routes = React.createClass({
   _getHandlerProps: function () {
     var matches = this.state.matches;
     var query = this.state.activeQuery;
+    var handler = returnNull;
+    var props = {
+      ref: null,
+      params: null,
+      query: null,
+      activeRouteHandler: handler,
+      key: null
+    };
 
-    var props = {};
-    var parentProps = props;
-
-    matches.forEach(function (match) {
+    reversedArray(matches).forEach(function (match) {
       var route = match.route;
 
-      props = merge(parentProps, match.props);
+      props = merge({}, match.props);
+
+      props.ref = '__activeRoute__';
       props.params = match.params;
       props.query = query;
-      props.activeRouteHandler = returnNull;
-      props.ref = '__activeRoute__';
+      props.activeRouteHandler = handler;
 
       // TODO: Can we remove addHandlerKey?
-      if (route.props.addHandlerKey) {
+      if (route.props.addHandlerKey)
         props.key = Path.injectParams(route.props.path, match.params);
-      } else {
-        delete props.key;
-      }
 
-      parentProps.activeRouteHandler = function (props, extraProps, children) {
-        invariant(
-          children == null,
-          'Passing children to a route handler is not supported'
-        );
+      handler = function (props, addedProps) {
+        if (arguments.length > 2 && typeof arguments[2] !== 'undefined')
+          throw new Error('Passing children to a route handler is not supported');
 
         return route.props.handler(
-          merge(props, extraProps)
+          copyProperties(props, addedProps)
         );
       }.bind(this, props);
-
-      parentProps = props;
     });
 
     return props;
