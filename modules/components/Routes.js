@@ -245,17 +245,11 @@ var Routes = React.createClass({
       'inside some other component\'s render method'
     );
 
-    if (this._handleStateChange) {
-      this._handleStateChange();
-      delete this._handleStateChange;
-    }
+    this._handleStateChange();
   },
 
   componentDidUpdate: function () {
-    if (this._handleStateChange) {
-      this._handleStateChange();
-      delete this._handleStateChange;
-    }
+    this._handleStateChange();
   },
 
   /**
@@ -295,19 +289,25 @@ var Routes = React.createClass({
       } else if (abortReason) {
         this.goBack();
       } else {
-        this._handleStateChange = this.handleStateChange.bind(this, path, actionType, this.state.matches);
+        this._nextStateChangeHandler = this._finishTransitionTo.bind(this, path, actionType, this.state.matches);
         this.setState(nextState);
       }
     });
   },
 
-  handleStateChange: function (path, actionType, previousMatches) {
+  _handleStateChange: function () {
+    if (this._nextStateChangeHandler) {
+      this._nextStateChangeHandler();
+      delete this._nextStateChangeHandler;
+    }
+  },
+
+  _finishTransitionTo: function (path, actionType, previousMatches) {
     var currentMatches = this.state.matches;
     updateMatchComponents(currentMatches, this.refs);
 
-    if (shouldUpdateScroll(currentMatches, previousMatches)) {
+    if (shouldUpdateScroll(currentMatches, previousMatches))
       this.updateScroll(path, actionType);
-    }
 
     if (this.props.onChange)
       this.props.onChange.call(this);
