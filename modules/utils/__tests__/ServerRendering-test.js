@@ -2,9 +2,11 @@ var assert = require('assert');
 var expect = require('expect');
 var React = require('react');
 var Link = require('../../components/Link');
+var Router = require('../../index');
 var Routes = require('../../components/Routes');
 var Route = require('../../components/Route');
 var ServerRendering = require('../ServerRendering');
+var Promise = require('../Promise');
 
 describe('ServerRendering', function () {
 
@@ -149,4 +151,55 @@ describe('ServerRendering', function () {
     });
   });
 
+  describe('renderRoutesToString with async route props', function () {
+    var div, FAKE_ENV, serverProps;
+
+    var Home = React.createClass({
+      statics: {
+        getHandlerProps: function() {
+          return {
+            name: FAKE_ENV === 'server' ?
+              Promise.resolve('skillet') :
+              serverProps.root.name
+          };
+        }
+      },
+
+      render: function () {
+        return React.DOM.div(null, 'Hello ' + this.props.name + '!');
+      }
+    });
+
+    function switchToClient() {
+      FAKE_ENV = 'client';
+    }
+
+    beforeEach(function() {
+      FAKE_ENV = 'server';
+      serverProps = {};
+      div = document.createElement('div');
+      document.body.appendChild(div);
+    });
+
+    afterEach(function() {
+      document.body.removeChild(div);
+    });
+
+    it('does not blow away HTML with async route props', function (done) {
+      var routes = Routes({}, Route({name: 'root', path: '/', handler: Home}));
+      Router.renderRoutesToString(routes, '/', function(err, ar, html, propData) {
+        serverProps = propData;
+        div.innerHTML = html;
+        assert.ok(div.querySelector('[data-react-checksum]'));
+        assert.ok(div.innerHTML.match('skillet'));
+        switchToClient();
+        React.renderComponent(routes, div, function() {
+          assert.ok(div.querySelector('[data-react-checksum]'));
+          assert.ok(div.innerHTML.match('skillet'));
+          React.unmountComponentAtNode(div);
+          done();
+        });
+      });
+    });
+  });
 });

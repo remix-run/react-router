@@ -1,4 +1,5 @@
 var React = require('react');
+var merge = require('react/lib/merge');
 var warning = require('react/lib/warning');
 var invariant = require('react/lib/invariant');
 var copyProperties = require('react/lib/copyProperties');
@@ -7,15 +8,13 @@ var ActiveContext = require('../mixins/ActiveContext');
 var LocationContext = require('../mixins/LocationContext');
 var RouteContext = require('../mixins/RouteContext');
 var ScrollContext = require('../mixins/ScrollContext');
+var resolveAsyncValues = require('../utils/resolveAsyncValues');
 var reversedArray = require('../utils/reversedArray');
 var Transition = require('../utils/Transition');
 var Redirect = require('../utils/Redirect');
+var Match = require('../utils/Match');
 var Path = require('../utils/Path');
 var Route = require('./Route');
-
-function makeMatch(route, params) {
-  return { route: route, params: params };
-}
 
 function getRootMatch(matches) {
   return matches[matches.length - 1];
@@ -38,7 +37,7 @@ function findMatches(path, routes, defaultRoute, notFoundRoute) {
         return params;
       }, {});
 
-      matches.unshift(makeMatch(route, params));
+      matches.unshift(new Match(route, params));
 
       return matches;
     }
@@ -47,16 +46,16 @@ function findMatches(path, routes, defaultRoute, notFoundRoute) {
     params = Path.extractParams(route.props.path, path);
 
     if (params)
-      return [ makeMatch(route, params) ];
+      return [ new Match(route, params) ];
   }
 
   // No routes matched, so try the default route if there is one.
   if (defaultRoute && (params = Path.extractParams(defaultRoute.props.path, path)))
-    return [ makeMatch(defaultRoute, params) ];
+    return [ new Match(defaultRoute, params) ];
 
   // Last attempt: does the "not found" route match?
   if (notFoundRoute && (params = Path.extractParams(notFoundRoute.props.path, path)))
-    return [ makeMatch(notFoundRoute, params) ];
+    return [ new Match(notFoundRoute, params) ];
 
   return matches;
 }
@@ -189,7 +188,7 @@ function queryIsActive(activeQuery, query) {
   return true;
 }
 
-function defaultTransitionErrorHandler(error) {
+function defaultAsyncErrorHandler(error) {
   // Throw so we don't silently swallow async errors.
   throw error; // This error probably originated in a transition hook.
 }
@@ -217,7 +216,7 @@ var Routes = React.createClass({
     return {
       initialPath: null,
       initialMatches: [],
-      onError: defaultTransitionErrorHandler
+      onError: defaultAsyncErrorHandler
     };
   },
 
@@ -235,17 +234,25 @@ var Routes = React.createClass({
       'inside some other component\'s render method'
     );
 
-    if (this._handleStateChange) {
-      this._handleStateChange();
-      delete this._handleStateChange;
-    }
+    this._handleStateUpdate();
   },
 
   componentDidUpdate: function () {
-    if (this._handleStateChange) {
-      this._handleStateChange();
-      delete this._handleStateChange;
-    }
+    this._handleStateUpdate();
+  },
+
+  /**
+   * Returns the current URL path.
+   */
+  getCurrentPath: function () {
+    return this.state.path;
+  },
+
+  /**
+   * Returns a reference to the active route handler's component instance.
+   */
+  getActiveComponent: function () {
+    return this.refs.__activeRoute__;
   },
 
   /**
@@ -270,50 +277,22 @@ var Routes = React.createClass({
     return findMatches(Path.withoutQuery(path), routes, this.props.defaultRoute, this.props.notFoundRoute);
   },
 
-  updateLocation: function (path, actionType) {
-    if (this.state.path === path)
-      return; // Nothing to do!
-
-    if (this.state.path)
-      this.recordScroll(this.state.path);
-
-    this.dispatch(path, function (error, abortReason, nextState) {
-      if (error) {
-        this.props.onError.call(this, error);
-      } else if (abortReason instanceof Redirect) {
-        this.replaceWith(abortReason.to, abortReason.params, abortReason.query);
-      } else if (abortReason) {
-        this.goBack();
-      } else {
-        this._handleStateChange = this.handleStateChange.bind(this, path, actionType);
-        this.setState(nextState);
-      }
-    });
-  },
-
-  handleStateChange: function (path, actionType) {
-    updateMatchComponents(this.state.matches, this.refs);
-
-    this.updateScroll(path, actionType);
-
-    if (this.props.onChange)
-      this.props.onChange.call(this);
-  },
-
   /**
-   * Performs a transition to the given path and calls callback(error, abortReason, nextState)
-   * when the transition is finished. If there was an error, the first argument will not be null.
-   * Otherwise, if the transition was aborted for some reason, it will be given in the second arg.
+   * Performs a transition to the given path and calls
+   * callback(error, abortReason, nextState) when the transition is finished. If
+   * there was an error, the first argument will not be null. Otherwise, if the
+   * transition was aborted for some reason, it will be given in the second arg.
    *
-   * In a transition, the router first determines which routes are involved by beginning with the
-   * current route, up the route tree to the first parent route that is shared with the destination
-   * route, and back down the tree to the destination route. The willTransitionFrom hook is invoked
-   * on all route handlers we're transitioning away from, in reverse nesting order. Likewise, the
+   * In a transition, the router first determines which routes are involved by
+   * beginning with the current route, up the route tree to the first parent route
+   * that is shared with the destination route, and back down the tree to the
+   * destination route. The willTransitionFrom hook is invoked on all route handlers
+   * we're transitioning away from, in reverse nesting order. Likewise, the
    * willTransitionTo hook is invoked on all route handlers we're transitioning to.
    *
-   * Both willTransitionFrom and willTransitionTo hooks may either abort or redirect the transition.
-   * To resolve asynchronously, they may use transition.wait(promise). If no hooks wait, the
-   * transition will be synchronous.
+   * Both willTransitionFrom and willTransitionTo hooks may either abort or redirect
+   * the transition. To resolve asynchronously, they may use transition.wait(promise).
+   * If no hooks wait, the transition will be synchronous.
    */
   dispatch: function (path, callback) {
     var transition = new Transition(this, path);
@@ -340,16 +319,22 @@ var Routes = React.createClass({
       toMatches = nextMatches;
     }
 
-    var callbackScope = this;
+    var component = this;
     var query = Path.extractQuery(path) || {};
 
     runTransitionFromHooks(fromMatches, transition, function (error) {
       if (error || transition.isAborted)
-        return callback.call(callbackScope, error, transition.abortReason);
+        return callback.call(component, error, transition.abortReason);
 
       runTransitionToHooks(toMatches, transition, query, function (error) {
         if (error || transition.isAborted)
-          return callback.call(callbackScope, error, transition.abortReason);
+          return callback.call(component, error, transition.abortReason);
+
+        // Mark all old matches as stale so async props
+        // from getHandlerProps don't trigger a forceUpdate.
+        fromMatches.forEach(function (match) {
+          match.isStale = true;
+        });
 
         var matches = currentMatches.slice(0, currentMatches.length - fromMatches.length).concat(toMatches);
         var rootMatch = getRootMatch(matches);
@@ -358,7 +343,7 @@ var Routes = React.createClass({
           return match.route;
         });
 
-        callback.call(callbackScope, null, null, {
+        callback.call(component, null, null, {
           path: path,
           matches: matches,
           activeRoutes: routes,
@@ -369,10 +354,91 @@ var Routes = React.createClass({
     });
   },
 
-  /**
-   * Returns the props that should be used for the top-level route handler.
-   */
-  getHandlerProps: function () {
+  updateLocation: function (path, actionType) {
+    if (this.state.path === path)
+      return; // Nothing to do!
+
+    if (this.state.path)
+      this.recordScroll(this.state.path);
+
+    this.dispatch(path, function (error, abortReason, nextState) {
+      if (error) {
+        this.props.onError.call(this, error);
+      } else if (abortReason instanceof Redirect) {
+        this.replaceWith(abortReason.to, abortReason.params, abortReason.query);
+      } else if (abortReason) {
+        this.goBack();
+      } else {
+        this._updateProps(nextState.matches, nextState.activeQuery, function (error) {
+          if (error)
+            this.props.onError.call(this, error);
+        });
+
+        this._nextStateChangeHandler = this._finishTransitionTo.bind(this, path, actionType);
+        this.setState(nextState);
+      }
+    });
+  },
+
+  _handleStateUpdate: function () {
+    if (this._nextStateChangeHandler) {
+      this._nextStateChangeHandler();
+      delete this._nextStateChangeHandler;
+    }
+  },
+
+  _finishTransitionTo: function (path, actionType) {
+    updateMatchComponents(this.state.matches, this.refs);
+
+    this.updateScroll(path, actionType);
+
+    if (this.props.onChange)
+      this.props.onChange.call(this);
+  },
+
+  _updateProps: function (matches, query, callback) {
+    var component = this;
+    var pending = matches.length;
+
+    if (!pending)
+      return callback.call(component);
+
+    var completed = 0;
+    var callbackWasCalled = false;
+
+    function tryToFinish(error) {
+      completed += 1;
+
+      if (!callbackWasCalled && (error || pending === completed)) {
+        callbackWasCalled = true;
+        callback.call(component, error);
+      }
+    }
+
+    matches.forEach(function (match) {
+      var getHandlerProps = match.route.props.handler.getHandlerProps;
+
+      if (match.props || getHandlerProps == null) {
+        tryToFinish();
+      } else {
+        match.props = {};
+
+        function setProps(props) {
+          if (match.isStale)
+            return; // Do nothing.
+
+          copyProperties(match.props, props);
+
+          if (component.isMounted())
+            component.forceUpdate();
+        }
+
+        resolveAsyncValues(getHandlerProps(match.params, query), setProps, tryToFinish);
+      }
+    });
+  },
+
+  _getHandlerProps: function () {
     var matches = this.state.matches;
     var query = this.state.activeQuery;
     var handler = returnNull;
@@ -387,7 +453,7 @@ var Routes = React.createClass({
     reversedArray(matches).forEach(function (match) {
       var route = match.route;
 
-      props = {};
+      props = merge({}, match.props);
 
       props.ref = '__activeRoute__';
       props.params = match.params;
@@ -411,18 +477,15 @@ var Routes = React.createClass({
     return props;
   },
 
-  /**
-   * Returns a reference to the active route handler's component instance.
-   */
-  getActiveComponent: function () {
-    return this.refs.__activeRoute__;
-  },
+  render: function () {
+    var match = this.state.matches[0];
 
-  /**
-   * Returns the current URL path.
-   */
-  getCurrentPath: function () {
-    return this.state.path;
+    if (match == null)
+      return null;
+
+    return match.route.props.handler(
+      this._getHandlerProps()
+    );
   },
 
   /**
@@ -516,17 +579,6 @@ var Routes = React.createClass({
     return routeIsActive(this.getActiveRoutes(), to) &&
       paramsAreActive(this.getActiveParams(), params) &&
       (query == null || queryIsActive(this.getActiveQuery(), query));
-  },
-
-  render: function () {
-    var match = this.state.matches[0];
-
-    if (match == null)
-      return null;
-
-    return match.route.props.handler(
-      this.getHandlerProps()
-    );
   },
 
   childContextTypes: {

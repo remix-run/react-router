@@ -7,6 +7,7 @@ var cloneWithProps = require('react/lib/cloneWithProps');
 var copyProperties = require('react/lib/copyProperties');
 var instantiateReactComponent = require('react/lib/instantiateReactComponent');
 var invariant = require('react/lib/invariant');
+var resolveAsyncValues = require('./resolveAsyncValues');
 
 function cloneRoutesForServerRendering(routes) {
   return cloneWithProps(routes, {
@@ -53,20 +54,65 @@ function renderRoutesToString(routes, path, callback) {
 
     mergeStateIntoInitialProps(nextState, component.props);
 
-    var transaction;
-    try {
-      var id = ReactInstanceHandles.createReactRootID();
-      transaction = ReactServerRenderingTransaction.getPooled(false);
+    updateProps(component, nextState.matches, nextState.query, function(err, data) {
+      var transaction;
+      try {
+        var id = ReactInstanceHandles.createReactRootID();
+        transaction = ReactServerRenderingTransaction.getPooled(false);
 
-      transaction.perform(function () {
-        var markup = component.mountComponent(id, transaction, 0);
-        callback(null, null, ReactMarkupChecksum.addChecksumToMarkup(markup));
-      }, null);
-    } finally {
-      ReactServerRenderingTransaction.release(transaction);
+        transaction.perform(function () {
+          var markup = component.mountComponent(id, transaction, 0);
+          callback(null, null, ReactMarkupChecksum.addChecksumToMarkup(markup), data);
+        }, null);
+      } finally {
+        ReactServerRenderingTransaction.release(transaction);
+      }
+    });
+
+  });
+}
+
+function updateProps(component, matches, query, callback) {
+  var pending = matches.length;
+  var data = {};
+
+  if (!pending)
+    return callback.call(component, data);
+
+  var completed = 0;
+  var callbackWasCalled = false;
+
+  function tryToFinish(error) {
+    completed += 1;
+
+    if (!callbackWasCalled && (error || pending === completed)) {
+      callbackWasCalled = true;
+      callback.call(component, error, data);
+    }
+  }
+
+  matches.forEach(function (match) {
+    var getHandlerProps = match.route.props.handler.getHandlerProps;
+
+    if (match.props || getHandlerProps == null) {
+      tryToFinish();
+    } else {
+      match.props = {};
+
+      function setProps(props) {
+        if (match.isStale)
+          return; // Do nothing.
+
+        copyProperties(match.props, props);
+        data[match.route.props.name] = match.props;
+      }
+
+      resolveAsyncValues(getHandlerProps(match.params, query), setProps, tryToFinish);
     }
   });
 }
+
+
 
 /**
  * Renders a <Routes> component to static markup at the given URL
