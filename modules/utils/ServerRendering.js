@@ -54,7 +54,13 @@ function renderRoutesToString(routes, path, callback) {
 
     mergeStateIntoInitialProps(nextState, component.props);
 
-    updateProps(component, nextState.matches, nextState.query, function(err, data) {
+    component._updateProps(nextState.matches, nextState.activeQuery, function (error) {
+      // Data is keyed by route name.
+      var data = nextState.matches.reduce(function (memo, match) {
+        memo[match.route.props.name] = match.props;
+        return memo;
+      }, {});
+
       var transaction;
       try {
         var id = ReactInstanceHandles.createReactRootID();
@@ -68,51 +74,8 @@ function renderRoutesToString(routes, path, callback) {
         ReactServerRenderingTransaction.release(transaction);
       }
     });
-
   });
 }
-
-function updateProps(component, matches, query, callback) {
-  var pending = matches.length;
-  var data = {};
-
-  if (!pending)
-    return callback.call(component, data);
-
-  var completed = 0;
-  var callbackWasCalled = false;
-
-  function tryToFinish(error) {
-    completed += 1;
-
-    if (!callbackWasCalled && (error || pending === completed)) {
-      callbackWasCalled = true;
-      callback.call(component, error, data);
-    }
-  }
-
-  matches.forEach(function (match) {
-    var getHandlerProps = match.route.props.handler.getHandlerProps;
-
-    if (match.props || getHandlerProps == null) {
-      tryToFinish();
-    } else {
-      match.props = {};
-
-      function setProps(props) {
-        if (match.isStale)
-          return; // Do nothing.
-
-        copyProperties(match.props, props);
-        data[match.route.props.name] = match.props;
-      }
-
-      resolveAsyncValues(getHandlerProps(match.params, query), setProps, tryToFinish);
-    }
-  });
-}
-
-
 
 /**
  * Renders a <Routes> component to static markup at the given URL
