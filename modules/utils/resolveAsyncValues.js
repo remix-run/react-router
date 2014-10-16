@@ -18,10 +18,7 @@ function resolveAsyncValues(asyncValues, setValues, callback) {
   var immediateValues = {};
   var promises = [];
 
-  Object.keys(asyncValues).forEach(function(property) {
-    if (!asyncValues.hasOwnProperty(property))
-      return;
-
+  Object.keys(asyncValues).forEach(function (property) {
     var value = asyncValues[property];
 
     if (isPromise(value)) {
