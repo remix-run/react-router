@@ -6,12 +6,13 @@ var PathStore = require('../PathStore');
 describe('PathStore', function () {
 
   var _onChange;
+  var _currentPath = '/';
   var MockLocation = {
     setup: function (onChange) {
       _onChange = onChange;
     },
     getCurrentPath: function () {
-      return '/';
+      return _currentPath;
     },
     toString: function () {
       return '<MockLocation>';
@@ -108,6 +109,20 @@ describe('PathStore', function () {
     it('emits a change event', function () {
       assert(changeWasFired);
     });
+  });
+  
+  describe('when a URL path is externally mutated', function() {
+    
+    afterEach(function() {
+      _currentPath = '/';
+    });
+    
+    it('updates the path when .setup is called', function() {
+      _currentPath = '/new-path';
+      PathStore.setup(MockLocation);
+      expect(PathStore.getCurrentPath()).toEqual('/new-path');
+    });
+    
   });
 
 });
