@@ -156,7 +156,7 @@ describe('ServerRendering', function () {
 
     var Home = React.createClass({
       statics: {
-        getHandlerProps: function() {
+        getAsyncProps: function() {
           return {
             name: FAKE_ENV === 'server' ?
               Promise.resolve('skillet') :
