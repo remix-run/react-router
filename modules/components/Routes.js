@@ -15,6 +15,26 @@ var Redirect = require('../utils/Redirect');
 var Match = require('../utils/Match');
 var Path = require('../utils/Path');
 var Route = require('./Route');
+var canUseDOM = require('react/lib/ExecutionEnvironment').canUseDOM;
+
+function hasAsyncData(match) {
+  var name = match.route.props.name;
+  return (
+    canUseDOM &&
+    // extra check here for tests, canUseDOM is always true in the tests, but
+    // __REACT_ROUTER_ASYNC_PROPS__ won't exist yet so the code still passes
+    // the test
+    window.__REACT_ROUTER_ASYNC_PROPS__ &&
+    window.__REACT_ROUTER_ASYNC_PROPS__[name]
+  );
+}
+
+function asyncDataFor(match) {
+  var name = match.route.props.name;
+  var props = window.__REACT_ROUTER_ASYNC_PROPS__[name];
+  delete window.__REACT_ROUTER_ASYNC_PROPS__[name];
+  return props;
+}
 
 function getRootMatch(matches) {
   return matches[matches.length - 1];
@@ -417,9 +437,12 @@ var Routes = React.createClass({
 
     matches.forEach(function (match) {
       var getAsyncProps = match.route.props.handler.getAsyncProps;
+      var routeName = match.route.props.name;
 
       if (match.props || getAsyncProps == null) {
         tryToFinish();
+      } else if (hasAsyncData(match)) {
+        match.props = asyncDataFor(match);
       } else {
         match.props = {};
 

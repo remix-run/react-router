@@ -152,14 +152,14 @@ describe('ServerRendering', function () {
   });
 
   describe('renderRoutesToString with async route props', function () {
-    var div, FAKE_ENV, serverProps;
+    var html, div, routes;
 
     var Home = React.createClass({
       statics: {
         getAsyncProps: function() {
-          return FAKE_ENV === 'server' ? {
+          return {
             name: Promise.resolve('skillet')
-          } : window.__REACT_ROUTER_ASYNC_PROPS__.root;
+          };
         }
       },
 
@@ -168,35 +168,49 @@ describe('ServerRendering', function () {
       }
     });
 
-    function switchToClient() {
-      FAKE_ENV = 'client';
-    }
-
-    beforeEach(function() {
-      FAKE_ENV = 'server';
-      delete window.__REACT_ROUTER_ASYNC_PROPS__;
+    beforeEach(function(done) {
+      routes = Routes({}, Route({name: 'root', path: '/', handler: Home}));
       div = document.createElement('div');
       document.body.appendChild(div);
+
+      Router.renderRoutesToString(routes, '/', function(err, ar, html) {
+        fakeServerRender(html);
+        done();
+      });
     });
 
     afterEach(function() {
+      delete window.__REACT_ROUTER_ASYNC_PROPS__;
+      React.unmountComponentAtNode(div);
       document.body.removeChild(div);
     });
 
+    function renderClient(done) {
+      React.renderComponent(routes, div, done);
+    }
+
+    function fakeServerRender(html) {
+      div.innerHTML = html;
+      executeScript(div);
+    }
+
     it('does not blow away HTML with async route props', function (done) {
-      var routes = Routes({}, Route({name: 'root', path: '/', handler: Home}));
-      Router.renderRoutesToString(routes, '/', function(err, ar, html) {
-        div.innerHTML = html;
-        executeScript(div);
+      assert.ok(div.querySelector('[data-react-checksum]'));
+      assert.ok(div.innerHTML.match('skillet'));
+      renderClient(function() {
         assert.ok(div.querySelector('[data-react-checksum]'));
         assert.ok(div.innerHTML.match('skillet'));
-        switchToClient();
-        React.renderComponent(routes, div, function() {
-          assert.ok(div.querySelector('[data-react-checksum]'));
-          assert.ok(div.innerHTML.match('skillet'));
-          React.unmountComponentAtNode(div);
-          done();
-        });
+        done();
+      });
+    });
+
+    it('deletes server rendered async props after first use', function (done) {
+      // delete the props so that navigating to the same route with different
+      // params doesn't continually return the same data.
+      expect(window.__REACT_ROUTER_ASYNC_PROPS__.root).toEqual({name: 'skillet'});
+      renderClient(function() {
+        expect(window.__REACT_ROUTER_ASYNC_PROPS__.root).toEqual(undefined);
+        done();
       });
     });
   });
