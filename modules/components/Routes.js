@@ -15,7 +15,7 @@ var Redirect = require('../utils/Redirect');
 var Match = require('../utils/Match');
 var Path = require('../utils/Path');
 var Route = require('./Route');
-var getAsyncPropsFor = require('../utils/getAsyncPropsFor');
+var getAsyncPropsFor = require('../utils/getAsyncPropsForRoute');
 
 function getRootMatch(matches) {
   return matches[matches.length - 1];

@@ -218,7 +218,8 @@ describe('ServerRendering', function () {
 
 function executeScript(node) {
   // inserting script tags with innerHTML doesn't execute them, so we have to
-  // foce it here, when you're actually rendering on a server the script will
+  // force it here, when you're actually rendering on a server the script will
   // execute normally. Any chance to use eval you should take it.
   eval(node.querySelector('script').textContent);
 }
+

@@ -11,3 +11,5 @@ exports.Navigation = require('./mixins/Navigation');
 
 exports.renderRoutesToString = require('./utils/ServerRendering').renderRoutesToString;
 exports.renderRoutesToStaticMarkup = require('./utils/ServerRendering').renderRoutesToStaticMarkup;
+exports.getAsyncPropsForRoute = require('./utils/getAsyncPropsForRoute');
+
