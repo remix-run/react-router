@@ -57,7 +57,9 @@ function renderRoutesToString(routes, path, callback) {
     component._updateProps(nextState.matches, nextState.activeQuery, function (error) {
       // Data is keyed by route name.
       var data = nextState.matches.reduce(function (memo, match) {
-        memo[match.route.props.name] = match.props;
+        if (match.props && Object.keys(match.props).length)
+          memo[match.route.props.name] = match.props;
+
         return memo;
       }, {});
 
@@ -67,8 +69,10 @@ function renderRoutesToString(routes, path, callback) {
         transaction = ReactServerRenderingTransaction.getPooled(false);
 
         transaction.perform(function () {
-          var markup = component.mountComponent(id, transaction, 0);
-          callback(null, null, ReactMarkupChecksum.addChecksumToMarkup(markup), data);
+          var markup = ReactMarkupChecksum.addChecksumToMarkup(
+            component.mountComponent(id, transaction, 0)
+          ) + scriptTagData(data);
+          callback(null, null, markup, data);
         }, null);
       } finally {
         ReactServerRenderingTransaction.release(transaction);
@@ -109,6 +113,18 @@ function renderRoutesToStaticMarkup(routes, path, callback) {
       ReactServerRenderingTransaction.release(transaction);
     }
   });
+}
+
+function scriptTagData(data) {
+  if (!Object.keys(data).length)
+    return '';
+
+  return [
+    '\n',
+    '<script>window.__REACT_ROUTER_ASYNC_PROPS__ = ',
+    JSON.stringify(data),
+    '</script>'
+  ].join('');
 }
 
 module.exports = {

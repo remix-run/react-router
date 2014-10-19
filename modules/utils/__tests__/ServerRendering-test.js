@@ -33,7 +33,7 @@ describe('ServerRendering', function () {
       });
 
       it('has the correct output', function () {
-        expect(output).toMatch(/^<b data-reactid="[\.a-z0-9]+">Hello mjackson!<\/b>$/);
+        expect(output).toMatch(/^<b data-reactid="[\.a-z0-9]+">Hello mjackson!<\/b>/);
       });
     });
 
@@ -157,11 +157,9 @@ describe('ServerRendering', function () {
     var Home = React.createClass({
       statics: {
         getAsyncProps: function() {
-          return {
-            name: FAKE_ENV === 'server' ?
-              Promise.resolve('skillet') :
-              serverProps.root.name
-          };
+          return FAKE_ENV === 'server' ? {
+            name: Promise.resolve('skillet')
+          } : window.__REACT_ROUTER_ASYNC_PROPS__.root;
         }
       },
 
@@ -176,7 +174,7 @@ describe('ServerRendering', function () {
 
     beforeEach(function() {
       FAKE_ENV = 'server';
-      serverProps = {};
+      delete window.__REACT_ROUTER_ASYNC_PROPS__;
       div = document.createElement('div');
       document.body.appendChild(div);
     });
@@ -187,9 +185,9 @@ describe('ServerRendering', function () {
 
     it('does not blow away HTML with async route props', function (done) {
       var routes = Routes({}, Route({name: 'root', path: '/', handler: Home}));
-      Router.renderRoutesToString(routes, '/', function(err, ar, html, propData) {
-        serverProps = propData;
+      Router.renderRoutesToString(routes, '/', function(err, ar, html) {
         div.innerHTML = html;
+        executeScript(div);
         assert.ok(div.querySelector('[data-react-checksum]'));
         assert.ok(div.innerHTML.match('skillet'));
         switchToClient();
@@ -203,3 +201,10 @@ describe('ServerRendering', function () {
     });
   });
 });
+
+function executeScript(node) {
+  // inserting script tags with innerHTML doesn't execute them, so we have to
+  // foce it here, when you're actually rendering on a server the script will
+  // execute normally. Any chance to use eval you should take it.
+  eval(node.querySelector('script').textContent);
+}
