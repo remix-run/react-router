@@ -139,7 +139,7 @@ var App = React.createClass({
         </header>
 
         {/* this is the important part */}
-        <this.props.activeRouteHandler/>
+        {this.props.activeRouteHandler()}
       </div>
     );
   }
