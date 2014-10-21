@@ -14,7 +14,6 @@ React Router API
 
 - Mixins
   - [`ActiveState`](/docs/api/mixins/ActiveState.md)
-  - [`AsyncState`](/docs/api/mixins/AsyncState.md)
   - [`CurrentPath`](/docs/api/mixins/CurrentPath.md)
   - [`Navigation`](/docs/api/mixins/Navigation.md)
 
