@@ -22,13 +22,12 @@ Router.Routes
 
 // mixins
 Router.ActiveState
-Router.AsyncState
-Router.PathState
-Router.RouteLookup
-Router.Transitions
+Router.CurrentPath
+Router.Navigation
 
 // methods
 Router.renderRoutesToString
+Router.renderRoutesToStaticMarkup
 ```
 
 Methods
