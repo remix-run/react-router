@@ -1,13 +1,17 @@
-exports.DefaultRoute = require('./components/DefaultRoute');
-exports.Link = require('./components/Link');
-exports.NotFoundRoute = require('./components/NotFoundRoute');
-exports.Redirect = require('./components/Redirect');
-exports.Route = require('./components/Route');
-exports.Routes = require('./components/Routes');
+var Router = require('./Router');
 
-exports.ActiveState = require('./mixins/ActiveState');
-exports.CurrentPath = require('./mixins/CurrentPath');
-exports.Navigation = require('./mixins/Navigation');
+Router.DefaultRoute = require('./components/DefaultRoute');
+Router.Link = require('./components/Link');
+Router.NotFoundRoute = require('./components/NotFoundRoute');
+Router.Redirect = require('./components/Redirect');
+Router.Route = require('./components/Route');
 
-exports.renderRoutesToString = require('./utils/ServerRendering').renderRoutesToString;
-exports.renderRoutesToStaticMarkup = require('./utils/ServerRendering').renderRoutesToStaticMarkup;
+Router.HashLocation = require('./locations/HashLocation');
+Router.HistoryLocation = require('./locations/HistoryLocation');
+Router.RefreshLocation = require('./locations/RefreshLocation');
+
+Router.ActiveState = require('./mixins/ActiveState');
+Router.CurrentPath = require('./mixins/CurrentPath');
+Router.Navigation = require('./mixins/Navigation');
+
+module.exports = Router;
