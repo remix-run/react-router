@@ -1,4 +1,4 @@
-var ReactDescriptor = require('react/lib/ReactDescriptor');
+var ReactElement = require('react/lib/ReactElement');
 var ReactInstanceHandles = require('react/lib/ReactInstanceHandles');
 var ReactMarkupChecksum = require('react/lib/ReactMarkupChecksum');
 var ReactServerRenderingTransaction = require('react/lib/ReactServerRenderingTransaction');
@@ -39,7 +39,7 @@ function mergeStateIntoInitialProps(state, props) {
  */
 function renderRoutesToString(routes, path, callback) {
   invariant(
-    ReactDescriptor.isValidDescriptor(routes),
+    ReactElement.isValidElement(routes),
     'You must pass a valid ReactComponent to renderRoutesToString'
   );
 
@@ -74,7 +74,7 @@ function renderRoutesToString(routes, path, callback) {
  */
 function renderRoutesToStaticMarkup(routes, path, callback) {
   invariant(
-    ReactDescriptor.isValidDescriptor(routes),
+    ReactElement.isValidElement(routes),
     'You must pass a valid ReactComponent to renderRoutesToStaticMarkup'
   );
 

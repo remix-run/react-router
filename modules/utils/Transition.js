@@ -1,4 +1,3 @@
-var mixInto = require('react/lib/mixInto');
 var Promise = require('./Promise');
 var Redirect = require('./Redirect');
 
@@ -15,7 +14,7 @@ function Transition(routesComponent, path) {
   this.isAborted = false;
 }
 
-mixInto(Transition, {
+Transition.prototype = {
 
   abort: function (reason) {
     this.abortReason = reason;
@@ -34,6 +33,6 @@ mixInto(Transition, {
     this.routesComponent.replaceWith(this.path);
   }
 
-});
+};
 
 module.exports = Transition;
