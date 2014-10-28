@@ -39,7 +39,7 @@ function mergeStateIntoInitialProps(state, props) {
  */
 function renderRoutesToString(routes, path, callback) {
   invariant(
-    ReactElement.isValidDescriptor(routes),
+    ReactElement.isValidElement(routes),
     'You must pass a valid ReactComponent to renderRoutesToString'
   );
 
@@ -74,7 +74,7 @@ function renderRoutesToString(routes, path, callback) {
  */
 function renderRoutesToStaticMarkup(routes, path, callback) {
   invariant(
-    ReactElement.isValidDescriptor(routes),
+    ReactElement.isValidElement(routes),
     'You must pass a valid ReactComponent to renderRoutesToStaticMarkup'
   );
 
