@@ -14,7 +14,7 @@ function Transition(routesComponent, path) {
   this.isAborted = false;
 }
 
-Object.assign(Transition.prototype, {
+Transition.prototype = {
 
   abort: function (reason) {
     this.abortReason = reason;
@@ -33,6 +33,6 @@ Object.assign(Transition.prototype, {
     this.routesComponent.replaceWith(this.path);
   }
 
-});
+};
 
 module.exports = Transition;
