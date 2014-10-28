@@ -1,4 +1,3 @@
-var mixInto = require('react/lib/mixInto');
 var Promise = require('./Promise');
 var Redirect = require('./Redirect');
 
@@ -15,7 +14,7 @@ function Transition(routesComponent, path) {
   this.isAborted = false;
 }
 
-mixInto(Transition, {
+Object.assign(Transition.prototype, {
 
   abort: function (reason) {
     this.abortReason = reason;
