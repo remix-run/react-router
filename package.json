@@ -34,7 +34,7 @@
     "karma-firefox-launcher": "0.1.3",
     "karma-mocha": "0.1.3",
     "mocha": "1.20.1",
-    "react": ">=0.11.0",
+    "react": "^0.12.0",
     "reactify": "^0.14.0",
     "rf-release": "0.3.2",
     "uglify-js": "2.4.15",
@@ -46,6 +46,7 @@
   },
   "dependencies": {
     "events": "1.0.1",
+    "object-assign": "1.0.0",
     "qs": "2.2.2",
     "when": "3.4.6"
   },

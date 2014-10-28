@@ -1,6 +1,6 @@
-var mixInto = require('react/lib/mixInto');
 var Promise = require('./Promise');
 var Redirect = require('./Redirect');
+var objectAssign = require('object-assign');
 
 /**
  * Encapsulates a transition to a given path.
@@ -15,7 +15,7 @@ function Transition(routesComponent, path) {
   this.isAborted = false;
 }
 
-mixInto(Transition, {
+objectAssign(Transition.prototype, {
 
   abort: function (reason) {
     this.abortReason = reason;
