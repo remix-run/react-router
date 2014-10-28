@@ -1,5 +1,6 @@
 var Promise = require('./Promise');
 var Redirect = require('./Redirect');
+var objectAssign = require('object-assign');
 
 /**
  * Encapsulates a transition to a given path.
@@ -14,7 +15,7 @@ function Transition(routesComponent, path) {
   this.isAborted = false;
 }
 
-Object.assign(Transition.prototype, {
+objectAssign(Transition.prototype, {
 
   abort: function (reason) {
     this.abortReason = reason;

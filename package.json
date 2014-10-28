@@ -46,6 +46,7 @@
   },
   "dependencies": {
     "events": "1.0.1",
+    "object-assign": "1.0.0",
     "qs": "2.2.2",
     "when": "3.4.6"
   },
