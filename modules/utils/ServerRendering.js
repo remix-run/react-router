@@ -102,7 +102,28 @@ function renderRoutesToStaticMarkup(routes, path, callback) {
   });
 }
 
+function matchRoutes(routes, path, callback) {
+  invariant(
+    ReactDescriptor.isValidDescriptor(routes),
+    'You must pass a valid ReactComponent to matchRoutes'
+  );
+
+  var component = instantiateReactComponent(
+    cloneRoutesForServerRendering(routes)
+  );
+
+  component.dispatch(path, function (error, abortReason, nextState) {
+    if (error || abortReason)
+      return callback(error, abortReason);
+
+    mergeStateIntoInitialProps(nextState, component.props);
+
+    callback(null, null, nextState);
+  });
+}
+
 module.exports = {
   renderRoutesToString: renderRoutesToString,
-  renderRoutesToStaticMarkup: renderRoutesToStaticMarkup
+  renderRoutesToStaticMarkup: renderRoutesToStaticMarkup,
+  matchRoutes: matchRoutes
 };

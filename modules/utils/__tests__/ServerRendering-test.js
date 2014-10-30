@@ -149,4 +149,32 @@ describe('ServerRendering', function () {
     });
   });
 
+  describe('matchRoutes', function () {
+    var Home = React.createClass({
+      render: function () {
+        return React.DOM.b(null, 'Hello ' + this.props.params.username + '!');
+      }
+    });
+
+    var state = null;
+
+    beforeEach(function (done) {
+      var routes = Routes(null,
+        Route({ path: '/home/:username', handler: Home })
+      );
+
+      ServerRendering.matchRoutes(routes, '/home/rpflo', function (error, abortReason, _state) {
+        assert(error == null);
+        assert(abortReason == null);
+        state = _state;
+        done();
+      });
+    });
+
+    it('has the correct output', function () {
+      expect(state.matches.length).toEqual(1);
+    });
+  });
+
+
 });
