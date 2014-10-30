@@ -400,7 +400,7 @@ var Routes = React.createClass({
     reversedArray(matches).forEach(function (match) {
       var route = match.route;
 
-      props = {};
+      props = Route.getUnreservedProps(route.props);
 
       props.ref = '__activeRoute__';
       props.params = match.params;
