@@ -138,8 +138,12 @@ var App = React.createClass({
           Logged in as Joe
         </header>
 
-        {/* this is the important part */}
-        <this.props.activeRouteHandler/>
+        {/* This is the important part.
+          * Also, in case you have some props you want to pass down to 
+          * the active view from its parent, you could do this:
+          * {this.transferPropsTo(this.props.activeRouteHandler())}
+          */}
+        {this.props.activeRouteHandler()}
       </div>
     );
   }
@@ -150,7 +154,7 @@ var routes = (
     <Route name="app" path="/" handler={App}>
       <Route name="inbox" handler={Inbox}/>
       <Route name="calendar" handler={Calendar}/>
-      <DefaultRoute handler={Dashboard}/>
+      <Route name="/" handler={Dashboard}/>
     </Route>
   </Routes>
 );
@@ -167,10 +171,8 @@ angular.
 When the user navigates to `/calendar`, the same thing happens except
 now `Calendar` is the `activeRouteHandler` in `App`'s render method.
 
-Finally, when the user navigates to the path `/`, `App` is active, and
-notices that it has a `DefaultRoute`, so it receives `Dashboard` as the
-`activeRouteHandler`. If a `DefaultRoute` is defined, it will be active
-when the parent's route is matched exactly.
+Finally, when the user navigates to the path `/`, `App` is active, so it receives `Dashboard` as the
+`activeRouteHandler`. This replaces `DefaultRoute` which doesn't currently work.
 
 Note that we don't need the `<Header/>` component since we don't have to
 repeat it anymore. React Router shares that UI for us from one place.
@@ -232,11 +234,11 @@ var routes = (
 
       <Route name="inbox" handler={Inbox}>
         <Route name="message" path=":messageId" handler={Message}/>
-        <DefaultRoute handler={InboxStats}/>
+        <Route name='/' handler={InboxStats}/>
       </Route>
 
       <Route name="calendar" handler={Calendar}/>
-      <DefaultRoute handler={Dashboard}/>
+      <Route name='/' handler={Dashboard}/>
 
     </Route>
   </Routes>
@@ -330,10 +332,10 @@ beyond what was matched isn't recognized.
       -->
       <NotFoundRoute handler={InboxNotFound}/>
       <Route name="message" path="/inbox/:messageId" handler={Message}/>
-      <DefaultRoute handler={InboxStats}/>
+      <Route name='/' handler={InboxStats}/>
     </Route>
     <Route name="calendar" path="/calendar" handler={Calendar}/>
-    <DefaultRoute handler={Dashboard}/>
+    <Route name='/' handler={Dashboard}/>
   </Route>
   <!-- will catch any route that isn't recognized at all -->
   <NotFoundRoute handler={NotFound}/>
@@ -378,6 +380,5 @@ var Router = require('react-router');
 var Route = Router.Route;
 var Routes = Router.Routes;
 var NotFoundRoute = Router.NotFoundRoute;
-var DefaultRoute = Router.DefaultRoute;
 var Link = Router.Link;
 ```
