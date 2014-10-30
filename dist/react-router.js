@@ -329,7 +329,8 @@ var Route = React.createClass({
   propTypes: {
     handler: React.PropTypes.any.isRequired,
     path: React.PropTypes.string,
-    name: React.PropTypes.string
+    name: React.PropTypes.string,
+    ignoreScrollBehavior: React.PropTypes.bool
   },
 
   render: function () {
@@ -509,6 +510,16 @@ function updateMatchComponents(matches, refs) {
   }
 }
 
+function shouldUpdateScroll(currentMatches, previousMatches) {
+  var commonMatches = currentMatches.filter(function (match) {
+    return previousMatches.indexOf(match) !== -1;
+  });
+
+  return !commonMatches.some(function (match) {
+    return match.route.props.ignoreScrollBehavior;
+  });
+}
+
 function returnNull() {
   return null;
 }
@@ -581,17 +592,11 @@ var Routes = React.createClass({
       'inside some other component\'s render method'
     );
 
-    if (this._handleStateChange) {
-      this._handleStateChange();
-      delete this._handleStateChange;
-    }
+    this._handleStateChange();
   },
 
   componentDidUpdate: function () {
-    if (this._handleStateChange) {
-      this._handleStateChange();
-      delete this._handleStateChange;
-    }
+    this._handleStateChange();
   },
 
   /**
@@ -631,16 +636,25 @@ var Routes = React.createClass({
       } else if (abortReason) {
         this.goBack();
       } else {
-        this._handleStateChange = this.handleStateChange.bind(this, path, actionType);
+        this._nextStateChangeHandler = this._finishTransitionTo.bind(this, path, actionType, this.state.matches);
         this.setState(nextState);
       }
     });
   },
 
-  handleStateChange: function (path, actionType) {
-    updateMatchComponents(this.state.matches, this.refs);
+  _handleStateChange: function () {
+    if (this._nextStateChangeHandler) {
+      this._nextStateChangeHandler();
+      delete this._nextStateChangeHandler;
+    }
+  },
 
-    this.updateScroll(path, actionType);
+  _finishTransitionTo: function (path, actionType, previousMatches) {
+    var currentMatches = this.state.matches;
+    updateMatchComponents(currentMatches, this.refs);
+
+    if (shouldUpdateScroll(currentMatches, previousMatches))
+      this.updateScroll(path, actionType);
 
     if (this.props.onChange)
       this.props.onChange.call(this);
