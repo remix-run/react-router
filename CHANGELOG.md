@@ -1,8 +1,12 @@
+v0.10.0 - Thu, 30 Oct 2014 05:09:44 GMT
+---------------------------------------
+
+- [70b442a](../../commit/70b442a) [added] React 0.12 compatibility
+
+
 v0.9.5 - Thu, 30 Oct 2014 04:50:09 GMT
 --------------------------------------
 
-- [fb87b23](../../commit/fb87b23) Revert "Revert "Revert "[removed] "static" <Route> props"""
-- [53bc0fb](../../commit/53bc0fb) Revert "Revert "[removed] "static" <Route> props""
 - [6192285](../../commit/6192285) [added] <Route ignoreScrollBehavior /> to opt out of scroll behavior for itself and descendants
 
 
