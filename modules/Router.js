@@ -255,9 +255,9 @@ assign(Router.prototype, {
 
 /**
  * Runs a router (or an array of Route objects) using the given location and
- * calls callback(Handler, state) when finished. The Handler is the React class
+ * calls callback(Handler, state) when finished. The Handler is a React class
  * that should be used at the root of the component hierarchy. The state argument
- * contains the current state of the router.
+ * is the current state of the router.
  *
  * Using `window.location.hash` to manage the URL, you could do:
  *
