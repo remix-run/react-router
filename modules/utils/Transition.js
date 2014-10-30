@@ -14,25 +14,21 @@ function Transition(routesComponent, path) {
   this.isAborted = false;
 }
 
-Transition.prototype = {
+Transition.prototype.abort = function (reason) {
+  this.abortReason = reason;
+  this.isAborted = true;
+};
 
-  abort: function (reason) {
-    this.abortReason = reason;
-    this.isAborted = true;
-  },
+Transition.prototype.redirect = function (to, params, query) {
+  this.abort(new Redirect(to, params, query));
+};
 
-  redirect: function (to, params, query) {
-    this.abort(new Redirect(to, params, query));
-  },
+Transition.prototype.wait = function (value) {
+  this.promise = Promise.resolve(value);
+};
 
-  wait: function (value) {
-    this.promise = Promise.resolve(value);
-  },
-
-  retry: function () {
-    this.routesComponent.replaceWith(this.path);
-  }
-
+Transition.prototype.retry = function () {
+  this.routesComponent.replaceWith(this.path);
 };
 
 module.exports = Transition;
