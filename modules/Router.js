@@ -8,6 +8,7 @@ var Transition = require('./utils/Transition');
 var runRouter = require('./utils/runRouter');
 var Match = require('./utils/Match');
 var Path = require('./utils/Path');
+var reversedArray = require('./utils/reversedArray');
 
 function getRootMatch(matches) {
   return matches[matches.length - 1];

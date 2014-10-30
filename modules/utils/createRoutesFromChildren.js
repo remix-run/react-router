@@ -1,5 +1,7 @@
 var React = require('react');
 var Route = require('./Route');
+var invariant = require('react/lib/invariant');
+var Path = require('./Path');
 
 /**
  * Performs some normalization and validation on a <Route> component and
