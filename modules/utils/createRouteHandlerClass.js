@@ -4,6 +4,7 @@ var assign = require('react/lib/Object.assign');
 var HashLocation = require('../locations/HashLocation');
 var Route = require('./Route');
 var Path = require('./Path');
+var ActiveRouteHandler = require('../components/ActiveRouteHandler');
 
 function routeIsActive(activeRoutes, routeName) {
   return activeRoutes.some(function (route) {
@@ -33,6 +34,18 @@ function queryIsActive(activeQuery, query) {
  */
 function createRouteHandlerClass(router, location) {
   var state = router.state;
+
+  var handlersCopy;
+
+  var activeHandlers = state.matches.map(function(match) {
+    return match.route.handler;
+  });
+
+  function copyHandlers() {
+    handlersCopy = activeHandlers.slice(0);
+  }
+
+  copyHandlers();
 
   var ActiveContext = {
 
@@ -261,11 +274,45 @@ function createRouteHandlerClass(router, location) {
 
   };
 
+  var ActiveRouteHandlerContext = {
+
+    childContextTypes: {
+      lookupActiveRouteHandler: React.PropTypes.func.isRequired
+    },
+
+    getChildContext: function() {
+      return {
+        lookupActiveRouteHandler: this.lookupActiveRouteHandler
+      }
+    },
+
+    componentWillUpdate: function() {
+      copyHandlers();
+    },
+
+    lookupActiveRouteHandler: function() {
+      // TODO: figure out a way to prevent calling <ActiveRouteHandler/> twice
+      // in a single owner's render, could maybe attach it to the matches
+      // before any rendering and then not manage an array here at the top?
+      var Handler = handlersCopy.shift();
+      invariant(Handler, 'You tried to render too many <ActiveRouteHandlers/>');
+      return Handler;
+    }
+
+  };
+
   return React.createClass({
 
     displayName: 'RouteHandler',
 
-    mixins: [ ActiveContext, LocationContext, NavigationContext, PathContext, RouteContext ],
+    mixins: [
+      ActiveContext,
+      LocationContext,
+      NavigationContext,
+      PathContext,
+      RouteContext,
+      ActiveRouteHandlerContext
+    ],
 
     propTypes: {
       children: function () {
@@ -275,7 +322,7 @@ function createRouteHandlerClass(router, location) {
 
     render: function () {
       var route = state.activeRoutes[0];
-      return route ? route.handler(this.props) : null;
+      return route ? ActiveRouteHandler(this.props) : null;
     }
 
   });

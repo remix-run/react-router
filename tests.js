@@ -3,6 +3,7 @@ require('./modules/components/__tests__/Link-test');
 require('./modules/components/__tests__/NotFoundRoute-test');
 require('./modules/components/__tests__/Routes-test');
 require('./modules/components/__tests__/Redirect-test');
+require('./modules/components/__tests__/ActiveRouteHandler-test');
 
 require('./modules/mixins/__tests__/ActiveContext-test');
 require('./modules/mixins/__tests__/LocationContext-test');
@@ -16,7 +17,6 @@ require('./modules/utils/__tests__/Path-test');
 require('./modules/utils/__tests__/ServerRendering-test');
 
 require('./modules/utils/__tests__/runRouter-test');
-
 
 var PathStore = require('./modules/stores/PathStore');
 
