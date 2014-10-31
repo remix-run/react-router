@@ -5,6 +5,7 @@ Router.Link = require('./components/Link');
 Router.NotFoundRoute = require('./components/NotFoundRoute');
 Router.Redirect = require('./components/Redirect');
 Router.Route = require('./components/Route');
+Router.ActiveRouteHandler = require('./components/ActiveRouteHandler');
 
 Router.HashLocation = require('./locations/HashLocation');
 Router.HistoryLocation = require('./locations/HistoryLocation');
