@@ -84,7 +84,7 @@ describe('runRouter', function () {
     });
   });
 
-  it.only('supports nested dynamic segments', function(done) {
+  it('supports nested dynamic segments', function(done) {
     var router = new Router(
       Route({handler: Nested, path: '/:foo'},
         Route({handler: ParamEcho, path: ':name'})
