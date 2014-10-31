@@ -1,13 +1,19 @@
 var React = require('react');
 
-var ActiveHandler = module.exports = React.createClass({
+var ActiveRouteHandler = module.exports = React.createClass({
   contextTypes: {
-    lookupActiveRouteHandler: React.PropTypes.func.isRequired
+    getActiveHandlers: React.PropTypes.func.isRequired
+  },
+
+  componentWillMount: function() {
+    if (!this._activeRouteHandler) {
+      var handlers = this.context.getActiveHandlers();
+      this._activeRouteHandler = handlers.shift();
+    }
   },
 
   render: function() {
-    var Handler = this.context.lookupActiveRouteHandler();
-    return Handler ? Handler(this.props) : null;
+    return this._activeRouteHandler ? this._activeRouteHandler(this.props) : null;
   }
 });
 

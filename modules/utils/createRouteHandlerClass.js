@@ -5,6 +5,7 @@ var HashLocation = require('../locations/HashLocation');
 var Route = require('./Route');
 var Path = require('./Path');
 var ActiveRouteHandler = require('../components/ActiveRouteHandler');
+var Match = require('./Match');
 
 function routeIsActive(activeRoutes, routeName) {
   return activeRoutes.some(function (route) {
@@ -258,24 +259,17 @@ function createRouteHandlerClass(router, location) {
   var ActiveRouteHandlerContext = {
 
     childContextTypes: {
-      lookupActiveRouteHandler: React.PropTypes.func.isRequired
+      getActiveHandlers: React.PropTypes.func.isRequired
     },
 
     getChildContext: function() {
       return {
-        lookupActiveRouteHandler: this.lookupActiveRouteHandler
+        getActiveHandlers: this.getActiveHandlers
       }
     },
 
-    componentWillUpdate: function() {
-      copyHandlers();
-    },
-
-    lookupActiveRouteHandler: function() {
-      // TODO: figure out a way to prevent calling <ActiveRouteHandler/> twice
-      // in a single owner's render, could maybe attach it to the matches
-      // before any rendering and then not manage an array here at the top?
-      return handlersCopy.shift();
+    getActiveHandlers: function() {
+      return handlersCopy;
     }
 
   };
@@ -297,6 +291,10 @@ function createRouteHandlerClass(router, location) {
       children: function () {
         return new Error('You cannot pass children to a RouteHandler');
       }
+    },
+
+    componentWillUpdate: function() {
+      copyHandlers();
     },
 
     render: function () {
