@@ -26,7 +26,7 @@
     "bundle-loader": "0.5.1",
     "envify": "1.2.0",
     "expect": "0.1.1",
-    "jsx-loader": "0.11.2",
+    "jsx-loader": "0.12.0",
     "karma": "0.12.16",
     "karma-browserify": "^0.2.1",
     "karma-chrome-launcher": "0.1.4",
