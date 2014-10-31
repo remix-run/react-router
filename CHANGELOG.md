@@ -1,3 +1,11 @@
+v0.10.2 - Fri, 31 Oct 2014 16:23:27 GMT
+---------------------------------------
+
+- [940a0d0](../../commit/940a0d0) [changed] use `Object.assign` instead of `copyProperties`
+- [f8cb7f9](../../commit/f8cb7f9) [changed] use `Object.assign` instead of `merge`
+- [70b442a](../../commit/70b442a) [added] React 0.12 compatibility
+
+
 v0.10.1 - Fri, 31 Oct 2014 15:46:20 GMT
 ---------------------------------------
 
