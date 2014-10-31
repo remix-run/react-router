@@ -1,5 +1,5 @@
 var React = require('react');
-var copyProperties = require('react/lib/copyProperties');
+var objectAssign = require('react/lib/Object.assign');
 
 /**
  * A mixin for components that store the active state of routes,
@@ -40,14 +40,14 @@ var ActiveContext = {
    * Returns a read-only object of the currently active URL parameters.
    */
   getActiveParams: function () {
-    return copyProperties({}, this.state.activeParams);
+    return objectAssign({}, this.state.activeParams);
   },
 
   /**
    * Returns a read-only object of the currently active query parameters.
    */
   getActiveQuery: function () {
-    return copyProperties({}, this.state.activeQuery);
+    return objectAssign({}, this.state.activeQuery);
   },
 
   childContextTypes: {

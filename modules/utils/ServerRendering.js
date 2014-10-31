@@ -4,7 +4,7 @@ var ReactMarkupChecksum = require('react/lib/ReactMarkupChecksum');
 var ReactServerRenderingTransaction = require('react/lib/ReactServerRenderingTransaction');
 
 var cloneWithProps = require('react/lib/cloneWithProps');
-var copyProperties = require('react/lib/copyProperties');
+var objectAssign = require('react/lib/Object.assign');
 var instantiateReactComponent = require('react/lib/instantiateReactComponent');
 var invariant = require('react/lib/invariant');
 
@@ -16,7 +16,7 @@ function cloneRoutesForServerRendering(routes) {
 }
 
 function mergeStateIntoInitialProps(state, props) {
-  copyProperties(props, {
+  objectAssign(props, {
     initialPath: state.path,
     initialMatches: state.matches,
     initialActiveRoutes: state.activeRoutes,

@@ -1,7 +1,7 @@
 var React = require('react');
 var warning = require('react/lib/warning');
 var invariant = require('react/lib/invariant');
-var copyProperties = require('react/lib/copyProperties');
+var objectAssign = require('react/lib/Object.assign');
 var HashLocation = require('../locations/HashLocation');
 var ActiveContext = require('../mixins/ActiveContext');
 var LocationContext = require('../mixins/LocationContext');
@@ -416,7 +416,7 @@ var Routes = React.createClass({
           throw new Error('Passing children to a route handler is not supported');
 
         return route.props.handler(
-          copyProperties(props, addedProps)
+          objectAssign(props, addedProps)
         );
       }.bind(this, props);
     });
