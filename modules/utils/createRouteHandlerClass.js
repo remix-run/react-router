@@ -294,9 +294,7 @@ function createRouteHandlerClass(router, location) {
       // TODO: figure out a way to prevent calling <ActiveRouteHandler/> twice
       // in a single owner's render, could maybe attach it to the matches
       // before any rendering and then not manage an array here at the top?
-      var Handler = handlersCopy.shift();
-      invariant(Handler, 'You tried to render too many <ActiveRouteHandlers/>');
-      return Handler;
+      return handlersCopy.shift();
     }
 
   };

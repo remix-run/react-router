@@ -7,7 +7,7 @@ var ActiveHandler = module.exports = React.createClass({
 
   render: function() {
     var Handler = this.context.lookupActiveRouteHandler();
-    return Handler(this.props);
+    return Handler ? Handler(this.props) : null;
   }
 });
 
