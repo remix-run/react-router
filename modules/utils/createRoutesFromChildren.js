@@ -34,7 +34,7 @@ function processRoute(component, parentRoute, namedRoutes) {
       route.path += '*';
   }
 
-  route.paramNames = Path.extractParamNames(props.path);
+  route.paramNames = Path.extractParamNames(route.path);
 
   // Make sure the route's path has all params its parent needs.
   if (parentRoute && Array.isArray(parentRoute.paramNames)) {

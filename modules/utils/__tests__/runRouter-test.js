@@ -5,6 +5,7 @@ var Route = require('../../components/Route');
 var Router = require('../../Router');
 var runRouter = require('../runRouter');
 var ActiveRouteHandler = require('../../components/ActiveRouteHandler');
+var ActiveState = require('../../mixins/ActiveState');
 
 describe('runRouter', function () {
 
@@ -20,6 +21,12 @@ describe('runRouter', function () {
   var Echo = React.createClass({
     render: function() { return React.DOM.div({}, this.props.name); }
   });
+
+  var ParamEcho = React.createClass({
+    mixins: [ActiveState],
+    render: function() { return React.DOM.div({}, this.getActiveParams().name); }
+  });
+
 
   var RPFlo = React.createClass({
     render: function() { return React.DOM.div({}, 'rpflo'); }
@@ -65,6 +72,32 @@ describe('runRouter', function () {
       done();
     });
   });
+
+  it('supports dynamic segments', function(done) {
+    var router = new Router(
+      Route({handler: ParamEcho, path: '/:name'})
+    );
+    runRouter(router, '/d00d3tt3', function(Handler, state) {
+      var html = React.renderToString(Handler());
+      expect(html).toMatch(/d00d3tt3/);
+      done();
+    });
+  });
+
+  it.only('supports nested dynamic segments', function(done) {
+    var router = new Router(
+      Route({handler: Nested, path: '/:foo'},
+        Route({handler: ParamEcho, path: ':name'})
+      )
+    );
+    runRouter(router, '/foo/bar', function(Handler, state) {
+      var html = React.renderToString(Handler());
+      expect(html).toMatch(/bar/);
+      done();
+    });
+  });
+
+
 
   describe('RouteHandler', function() {
     it('throws if called after the router transitions to a new state');

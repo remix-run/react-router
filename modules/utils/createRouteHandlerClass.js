@@ -143,7 +143,7 @@ function createRouteHandlerClass(router, location) {
           to
         );
 
-        path = route.props.path;
+        path = route.path;
       }
 
       return Path.withQuery(Path.injectParams(path, params), query);
