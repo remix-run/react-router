@@ -1,4 +1,4 @@
-var merge = require('react/lib/merge');
+var objectAssign = require('react/lib/Object.assign');
 var Route = require('./Route');
 
 /**
@@ -10,7 +10,7 @@ var Route = require('./Route');
  */
 function NotFoundRoute(props) {
   return Route(
-    merge(props, {
+    objectAssign({}, props, {
       path: null,
       catchAll: true
     })
