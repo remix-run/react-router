@@ -10,11 +10,12 @@ function processRoute(route, container, namedRoutes) {
   // Note: parentRoute may be a <Route> _or_ a <Routes>.
   var props = route.props;
 
-  invariant(
-    React.isValidClass(props.handler),
-    'The handler for the "%s" route must be a valid React class',
-    props.name || props.path
-  );
+  // TODO: use isValidElement when we update everything for React 0.12
+  //invariant(
+    //React.isValidClass(props.handler),
+    //'The handler for the "%s" route must be a valid React class',
+    //props.name || props.path
+  //);
 
   var parentPath = (container && container.props.path) || '/';
 
