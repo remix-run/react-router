@@ -1,12 +1,16 @@
 /** @jsx React.DOM */
 var React = require('react');
 var Router = require('react-router');
-var Route = Router.Route;
-var DefaultRoute = Router.DefaultRoute;
-var Routes = Router.Routes;
-var Link = Router.Link;
-var NotFoundRoute = Router.NotFoundRoute;
 var ContactStore = require('./ContactStore');
+var {
+  Route,
+  DefaultRoute,
+  Link,
+  NotFoundRoute,
+  ActiveRouteHandler,
+  Navigation,
+  ActiveState
+} = Router;
 
 var App = React.createClass({
   getInitialState: function() {
@@ -52,7 +56,7 @@ var App = React.createClass({
           <Link to="/nothing-here">Invalid Link (not found)</Link>
         </div>
         <div className="Content">
-          {this.props.activeRouteHandler()}
+          <ActiveRouteHandler/>
         </div>
       </div>
     );
@@ -67,12 +71,12 @@ var Index = React.createClass({
 
 var Contact = React.createClass({
 
-  mixins: [ Router.Navigation ],
+  mixins: [ Navigation, ActiveState ],
 
-  getStateFromStore: function(props) {
-    props = props || this.props;
+  getStateFromStore: function(id) {
+    var id = this.getActiveParams().id;
     return {
-      contact: ContactStore.getContact(props.params.id)
+      contact: ContactStore.getContact(id)
     };
   },
 
@@ -88,8 +92,8 @@ var Contact = React.createClass({
     ContactStore.removeChangeListener(this.updateContact);
   },
 
-  componentWillReceiveProps: function(newProps) {
-    this.setState(this.getStateFromStore(newProps));
+  componentWillReceiveProps: function() {
+    this.setState(this.getStateFromStore());
   },
 
   updateContact: function () {
@@ -100,14 +104,15 @@ var Contact = React.createClass({
   },
 
   destroy: function() {
-    ContactStore.removeContact(this.props.params.id);
+    var id = this.getActiveParams().id;
+    ContactStore.removeContact(id);
     this.transitionTo('/');
   },
 
   render: function() {
     var contact = this.state.contact || {};
     var name = contact.first + ' ' + contact.last;
-    var avatar = contact.avatar || 'http://placekitten.com/50/50';
+    var avatar = contact.avatar || 'http://placecage.com/50/50';
     return (
       <div className="Contact">
         <img height="50" src={avatar} key={avatar}/>
@@ -162,8 +167,7 @@ var routes = (
   </Route>
 );
 
-React.renderComponent(
-  <Routes children={routes}/>,
-  document.getElementById('example')
-);
+Router.run(routes, function(Root) {
+  React.renderComponent(<Root/>, document.getElementById('example'));
+});
 
