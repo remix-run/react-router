@@ -1,44 +1,55 @@
 /** @jsx React.DOM */
+// TODO: animations aren't happening, think we need to implement addHandlerKey somewhere
 var React = require('react');
-var CSSTransitionGroup = require('react/lib/ReactCSSTransitionGroup');
+var TransitionGroup = require('react/lib/ReactCSSTransitionGroup');
 var Router = require('react-router');
-var Routes = Router.Routes;
-var Route = Router.Route;
-var Link = Router.Link;
+var { Route, Link, ActiveRouteHandler } = Router;
 
 var App = React.createClass({
   render: function() {
     return (
       <div>
         <ul>
-          <li><Link to="image" params={{service: "kitten"}}>Kitten</Link></li>
-          <li><Link to="image" params={{service: "cage"}}>Cage</Link></li>
+          <li><Link to="page1">Page 1</Link></li>
+          <li><Link to="page2">Page 2</Link></li>
         </ul>
-        <CSSTransitionGroup transitionName="example">
-          <this.props.activeRouteHandler />
-        </CSSTransitionGroup>
+        <TransitionGroup component="div" transitionName="example">
+          <ActiveRouteHandler key={Date.now()} />
+        </TransitionGroup>
       </div>
     );
   }
 });
 
-var Image = React.createClass({
+var Page1 = React.createClass({
   render: function() {
-    var src = "http://place"+this.props.params.service+".com/400/400";
     return (
       <div className="Image">
-        <img src={src}/>
+        <h1>Page 1</h1>
+        <p>Lorem ipsum dolor sit amet, consectetur adipisicing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.</p>
+      </div>
+    );
+  }
+});
+
+var Page2 = React.createClass({
+  render: function() {
+    return (
+      <div className="Image">
+        <h1>Page 2</h1>
+        <p>Consectetur adipisicing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.</p>
       </div>
     );
   }
 });
 
 var routes = (
-  <Routes>
-    <Route handler={App}>
-      <Route name="image" path=":service" handler={Image} addHandlerKey={true} />
-    </Route>
-  </Routes>
+  <Route handler={App}>
+    <Route name="page1" handler={Page1} addHandlerKey={true} />
+    <Route name="page2" handler={Page2} addHandlerKey={true} />
+  </Route>
 );
 
-React.renderComponent(routes, document.getElementById('example'));
+var el = document.getElementById('example');
+Router.run(routes, (Handler) => React.render(<Handler/>, el));
+

@@ -1,15 +1,10 @@
 /** @jsx React.DOM */
 var React = require('react');
 var Router = require('react-router');
-var Route = Router.Route;
-var Routes = Router.Routes;
-var Redirect = Router.Redirect;
-var Link = Router.Link;
-var ActiveRouteHandler = Router.ActiveRouteHandler;
-var ActiveState = Router.ActiveState;
+var { Route, Redirect, ActiveState, Link, ActiveRouteHandler } = Router;
 
-var App = React.createClass({
-  render: function() {
+var App = module.exports = React.createClass({
+  render () {
     return (
       <div>
         <ul>
@@ -22,10 +17,11 @@ var App = React.createClass({
   }
 });
 
-var User = React.createClass({
+var User = module.exports = React.createClass({
   mixins: [ActiveState],
-  render: function() {
-    var userId = this.getActiveParams().userId;
+
+  render () {
+    var { userId } = this.getActiveParams();
     return (
       <div className="User">
         <h1>User id: {userId}</h1>
@@ -39,14 +35,16 @@ var User = React.createClass({
   }
 });
 
-var Task = React.createClass({
+
+var Task = module.exports = React.createClass({
   mixins: [ActiveState],
-  render: function() {
-    var params = this.getActiveParams();
+
+  render () {
+    var { userId, taskId } = this.getActiveParams();
     return (
       <div className="Task">
-        <h2>User id: {params.userId}</h2>
-        <h3>Task id: {params.taskId}</h3>
+        <h2>User id: {userId}</h2>
+        <h3>Task id: {taskId}</h3>
       </div>
     );
   }
@@ -61,6 +59,6 @@ var routes = (
   </Route>
 );
 
-Router.run(routes, function(Handler) {
-  React.render(Handler(), document.getElementById('example'));
-});
+var el = document.getElementById('example');
+Router.run(routes, (Handler) => React.render(<Handler/>, el));
+

@@ -1,9 +1,7 @@
 /** @jsx React.DOM */
 var React = require('react');
 var Router = require('react-router');
-var Route = Router.Route;
-var Routes = Router.Routes;
-var Link = Router.Link;
+var { Route, Link, ActiveRouteHandler, Navigation } = Router;
 
 var App = React.createClass({
   getInitialState: function() {
@@ -34,7 +32,7 @@ var App = React.createClass({
           <li><Link to="about">About</Link></li>
           <li><Link to="dashboard">Dashboard</Link> (authenticated)</li>
         </ul>
-        <this.props.activeRouteHandler />
+        <ActiveRouteHandler />
       </div>
     );
   }
@@ -67,7 +65,7 @@ var Dashboard = React.createClass({
 });
 
 var Login = React.createClass({
-  mixins: [ Router.Navigation ],
+  mixins: [ Navigation ],
 
   statics: {
     attemptedTransition: null
@@ -181,14 +179,14 @@ function pretendRequest(email, pass, cb) {
 
 
 var routes = (
-  <Routes>
-    <Route handler={App}>
-      <Route name="login" handler={Login}/>
-      <Route name="logout" handler={Logout}/>
-      <Route name="about" handler={About}/>
-      <Route name="dashboard" handler={Dashboard}/>
-    </Route>
-  </Routes>
+  <Route handler={App}>
+    <Route name="login" handler={Login}/>
+    <Route name="logout" handler={Logout}/>
+    <Route name="about" handler={About}/>
+    <Route name="dashboard" handler={Dashboard}/>
+  </Route>
 );
 
-React.renderComponent(routes, document.getElementById('example'));
+Router.run(routes, (Handler) => {
+  React.renderComponent(<Handler />, document.getElementById('example'));
+});
