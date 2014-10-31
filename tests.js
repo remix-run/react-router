@@ -1,3 +1,5 @@
+require('./modules/__tests__/Router-test');
+
 require('./modules/components/__tests__/DefaultRoute-test');
 require('./modules/components/__tests__/Link-test');
 require('./modules/components/__tests__/NotFoundRoute-test');
