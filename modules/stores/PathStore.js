@@ -47,12 +47,11 @@ var PathStore = {
       _currentLocation, location
     );
 
-    if (_currentLocation !== location) {
-      if (location.setup)
-        location.setup(handleLocationChangeAction);
-
-      _currentPath = location.getCurrentPath();
+    if (_currentLocation !== location && location.setup) {
+      location.setup(handleLocationChangeAction);
     }
+    
+    _currentPath = location.getCurrentPath();
 
     _currentLocation = location;
   },
