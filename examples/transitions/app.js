@@ -6,7 +6,7 @@ var Routes = Router.Routes;
 var Link = Router.Link;
 
 var App = React.createClass({
-  render: function() {
+  render: function () {
     return (
       <div>
         <ul>
@@ -20,7 +20,7 @@ var App = React.createClass({
 });
 
 var Dashboard = React.createClass({
-  render: function() {
+  render: function () {
     return <h1>Dashboard</h1>
   }
 });
@@ -30,7 +30,7 @@ var Form = React.createClass({
   mixins: [ Router.Navigation ],
 
   statics: {
-    willTransitionFrom: function(transition, component) {
+    willTransitionFrom: function (transition, component) {
       if (component.refs.userInput.getDOMNode().value !== '') {
         if (!confirm('You have unsaved information, are you sure you want to leave this page?')) {
           transition.abort();
@@ -39,13 +39,13 @@ var Form = React.createClass({
     }
   },
 
-  handleSubmit: function(event) {
+  handleSubmit: function (event) {
     event.preventDefault();
     this.refs.userInput.getDOMNode().value = '';
     this.transitionTo('/');
   },
 
-  render: function() {
+  render: function () {
     return (
       <div>
         <form onSubmit={this.handleSubmit}>

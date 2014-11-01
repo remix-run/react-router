@@ -6,7 +6,7 @@ var Link = ReactRouter.Link;
 
 var Dashboard = React.createClass({
 
-  render: function() {
+  render: function () {
     return (
       <div>
         <h1>Dashboard!</h1>

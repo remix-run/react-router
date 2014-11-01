@@ -10,7 +10,7 @@ var ActiveState = require('../../mixins/ActiveState');
 describe('runRouter', function () {
 
   var Nested = React.createClass({
-    render: function() {
+    render: function () {
       return React.DOM.div({},
         React.DOM.h1({}, 'hello'),
         ActiveRouteHandler()
@@ -19,26 +19,26 @@ describe('runRouter', function () {
   });
 
   var Echo = React.createClass({
-    render: function() { return React.DOM.div({}, this.props.name); }
+    render: function () { return React.DOM.div({}, this.props.name); }
   });
 
   var ParamEcho = React.createClass({
     mixins: [ActiveState],
-    render: function() { return React.DOM.div({}, this.getActiveParams().name); }
+    render: function () { return React.DOM.div({}, this.getActiveParams().name); }
   });
 
 
   var RPFlo = React.createClass({
-    render: function() { return React.DOM.div({}, 'rpflo'); }
+    render: function () { return React.DOM.div({}, 'rpflo'); }
   });
 
   var MJ = React.createClass({
-    render: function() { return React.DOM.div({}, 'mj'); }
+    render: function () { return React.DOM.div({}, 'mj'); }
   });
 
-  it('matches a root route', function(done) {
+  it('matches a root route', function (done) {
     var router = new Router(Route({handler: Echo, path: '/'}));
-    runRouter(router, '/', function(Handler, state) {
+    runRouter(router, '/', function (Handler, state) {
       // TODO: figure out why we're getting this warning here
       // WARN: 'Warning: You cannot pass children to a RouteHandler'
       var html = React.renderToString(Handler({name: 'ryan'}));
@@ -47,25 +47,25 @@ describe('runRouter', function () {
     });
   });
 
-  it('matches an array of routes', function(done) {
+  it('matches an array of routes', function (done) {
     var router = new Router([
       Route({handler: RPFlo, path: '/rpflo'}),
       Route({handler: MJ, path: '/mj'})
     ]);
-    runRouter(router, '/mj', function(Handler, state) {
+    runRouter(router, '/mj', function (Handler, state) {
       var html = React.renderToString(Handler());
       expect(html).toMatch(/mj/);
       done();
     });
   });
 
-  it('matches nested routes', function(done) {
+  it('matches nested routes', function (done) {
     var router = new Router(
       Route({handler: Nested, path: '/'},
         Route({handler: MJ, path: '/mj'})
       )
     );
-    runRouter(router, '/mj', function(Handler, state) {
+    runRouter(router, '/mj', function (Handler, state) {
       var html = React.renderToString(Handler());
       expect(html).toMatch(/hello/);
       expect(html).toMatch(/mj/);
@@ -73,24 +73,24 @@ describe('runRouter', function () {
     });
   });
 
-  it('supports dynamic segments', function(done) {
+  it('supports dynamic segments', function (done) {
     var router = new Router(
       Route({handler: ParamEcho, path: '/:name'})
     );
-    runRouter(router, '/d00d3tt3', function(Handler, state) {
+    runRouter(router, '/d00d3tt3', function (Handler, state) {
       var html = React.renderToString(Handler());
       expect(html).toMatch(/d00d3tt3/);
       done();
     });
   });
 
-  it('supports nested dynamic segments', function(done) {
+  it('supports nested dynamic segments', function (done) {
     var router = new Router(
       Route({handler: Nested, path: '/:foo'},
         Route({handler: ParamEcho, path: ':name'})
       )
     );
-    runRouter(router, '/foo/bar', function(Handler, state) {
+    runRouter(router, '/foo/bar', function (Handler, state) {
       var html = React.renderToString(Handler());
       expect(html).toMatch(/bar/);
       done();
@@ -99,7 +99,7 @@ describe('runRouter', function () {
 
 
 
-  describe('RouteHandler', function() {
+  describe('RouteHandler', function () {
     it('throws if called after the router transitions to a new state');
   });
 

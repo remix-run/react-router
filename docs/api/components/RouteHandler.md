@@ -18,7 +18,7 @@ effortless nested UI.
 
 ```js
 var App = React.createClass({
-  render: function() {
+  render: function () {
     <div>
       <h1>Address Book</h1>
       {/* the active child route handler will be rendered here */}
@@ -29,7 +29,7 @@ var App = React.createClass({
 });
 
 var Contact = React.createClass({
-  render: function() {
+  render: function () {
     return <h1>{this.props.params.id}</h1>
   }
 });
@@ -87,8 +87,8 @@ See also: [transition](/docs/api/misc/transition.md)
 ```js
 var Settings = React.createClass({
   statics: {
-    willTransitionTo: function(transition, params) {
-      return auth.isLoggedIn().then(function(loggedIn) {
+    willTransitionTo: function (transition, params) {
+      return auth.isLoggedIn().then(function (loggedIn) {
         if (!loggedIn)
           return;
         transition.abort();
@@ -97,7 +97,7 @@ var Settings = React.createClass({
       });
     },
 
-    willTransitionFrom: function(transition, component) {
+    willTransitionFrom: function (transition, component) {
       if (component.formHasUnsavedData())) {
         if (!confirm('You have unsaved information, are you sure you want to leave this page?')) {
           transition.abort();

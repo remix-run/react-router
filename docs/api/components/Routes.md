@@ -45,7 +45,7 @@ Called when a transition throws an error.
 
 #### signature
 
-`function(error)`
+`function (error)`
 
 #### Example
 

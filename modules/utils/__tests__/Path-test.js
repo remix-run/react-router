@@ -259,14 +259,14 @@ describe('Path.injectParams', function () {
     });
 
     it('complains if not given enough splat values', function () {
-      expect(function() {
+      expect(function () {
         Path.injectParams('/a/*/c/*', { splat: [ 'b' ] });
       }).toThrow(Error);
     });
   });
 
-  describe('when a pattern has dots', function() {
-    it('returns the correct path', function() {
+  describe('when a pattern has dots', function () {
+    it('returns the correct path', function () {
       expect(Path.injectParams('/foo.bar.baz')).toEqual('/foo.bar.baz');
     });
   });

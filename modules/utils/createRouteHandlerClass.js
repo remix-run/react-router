@@ -38,7 +38,7 @@ function createRouteHandlerClass(router, location) {
 
   var handlersCopy;
 
-  var activeHandlers = state.matches.map(function(match) {
+  var activeHandlers = state.matches.map(function (match) {
     return match.route.handler;
   });
 
@@ -262,13 +262,13 @@ function createRouteHandlerClass(router, location) {
       getActiveHandlers: React.PropTypes.func.isRequired
     },
 
-    getChildContext: function() {
+    getChildContext: function () {
       return {
         getActiveHandlers: this.getActiveHandlers
       }
     },
 
-    getActiveHandlers: function() {
+    getActiveHandlers: function () {
       return handlersCopy;
     }
 
@@ -293,7 +293,7 @@ function createRouteHandlerClass(router, location) {
       }
     },
 
-    componentWillUpdate: function() {
+    componentWillUpdate: function () {
       copyHandlers();
     },
 

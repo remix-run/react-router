@@ -9,7 +9,7 @@ function isDirectory(dir) {
 }
 
 function buildEntries() {
-  return fs.readdirSync(EXAMPLES_DIR).reduce(function(entries, dir) {
+  return fs.readdirSync(EXAMPLES_DIR).reduce(function (entries, dir) {
     if (dir === 'build')
       return entries;
 

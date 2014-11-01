@@ -67,7 +67,7 @@ var ContactStore = module.exports = {
 
 function getJSON(url, cb) {
   var req = new XMLHttpRequest();
-  req.onload = function() {
+  req.onload = function () {
     if (req.status === 404) {
       cb(new Error('not found'));
     } else {
@@ -80,7 +80,7 @@ function getJSON(url, cb) {
 
 function postJSON(url, obj, cb) {
   var req = new XMLHttpRequest();
-  req.onload = function() {
+  req.onload = function () {
     cb(JSON.parse(req.response));
   };
   req.open('POST', url);

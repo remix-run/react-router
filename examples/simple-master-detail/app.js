@@ -6,16 +6,16 @@ var Routes = Router.Routes;
 var Link = Router.Link;
 
 var App = React.createClass({
-  getInitialState: function() {
+  getInitialState: function () {
     return { states: findStates() }
   },
 
-  indexTemplate: function() {
+  indexTemplate: function () {
     return <p>Select a state from the left</p>;
   },
 
-  render: function() {
-    var links = this.state.states.map(function(state) {
+  render: function () {
+    var links = this.state.states.map(function (state) {
       return <li><Link to="state" params={{ abbr: state.abbr }}>{state.name}</Link></li>
     });
     return (
@@ -32,15 +32,15 @@ var App = React.createClass({
 });
 
 var State = React.createClass({
-  getInitialState: function() {
+  getInitialState: function () {
     return findState(this.props.params.abbr);
   },
 
-  imageUrl: function() {
+  imageUrl: function () {
     return "http://www.50states.com/maps/"+underscore(this.state.name)+".gif";
   },
 
-  render: function() {
+  render: function () {
     return (
       <div className="State">
         <h1>{this.state.name}</h1>

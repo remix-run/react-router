@@ -6,7 +6,7 @@ var Routes = Router.Routes;
 var Link = Router.Link;
 
 var App = React.createClass({
-  render: function() {
+  render: function () {
     return (
       <div>
         <ul>
@@ -21,7 +21,7 @@ var App = React.createClass({
 });
 
 var User = React.createClass({
-  render: function() {
+  render: function () {
     var age = this.props.query.showAge ? '33' : '';
     return (
       <div className="User">

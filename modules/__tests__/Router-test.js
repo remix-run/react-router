@@ -8,7 +8,7 @@ var ActiveRouteHandler = require('../components/ActiveRouteHandler');
 var ActiveState = require('../mixins/ActiveState');
 
 describe('Router', function () {
-  describe('transitions', function() {
+  describe('transitions', function () {
 
     function redirect(transition) { transition.redirect('/foo'); }
 
@@ -25,7 +25,7 @@ describe('Router', function () {
     });
 
     var Foo = React.createClass({
-      render: function() { return React.DOM.div('foo'); }
+      render: function () { return React.DOM.div('foo'); }
     });
 
     var routes = [
@@ -34,13 +34,13 @@ describe('Router', function () {
       Route({path: '/foo', handler: Foo})
     ];
 
-    describe('redirect', function() {
-      it('in willTransitionTo', function(done) {
+    describe('redirect', function () {
+      it('in willTransitionTo', function (done) {
         assert.ok(true); done();
         // TODO: figure out how to test transitions and such
         //var div = document.createElement('div');
-        //Router.run(routes, function(App, state) {
-          //React.render(App(), div, function() {
+        //Router.run(routes, function (App, state) {
+          //React.render(App(), div, function () {
             //expect(div.innerHTML).toMatch(/foo/);
             //setTimeout(done, 1000);
           //});
@@ -50,7 +50,7 @@ describe('Router', function () {
       it('in willTransitionFrom');
     });
 
-    describe('abort', function() {
+    describe('abort', function () {
       it('in willTransitionTo');
       it('in willTransitionFrom');
     });

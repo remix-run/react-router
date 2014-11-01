@@ -6,7 +6,7 @@ var Router = require('react-router');
 var { Route, Link, ActiveRouteHandler } = Router;
 
 var App = React.createClass({
-  render: function() {
+  render: function () {
     return (
       <div>
         <ul>
@@ -22,7 +22,7 @@ var App = React.createClass({
 });
 
 var Page1 = React.createClass({
-  render: function() {
+  render: function () {
     return (
       <div className="Image">
         <h1>Page 1</h1>
@@ -33,7 +33,7 @@ var Page1 = React.createClass({
 });
 
 var Page2 = React.createClass({
-  render: function() {
+  render: function () {
     return (
       <div className="Image">
         <h1>Page 2</h1>

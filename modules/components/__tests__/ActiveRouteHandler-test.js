@@ -9,12 +9,12 @@ describe('ActiveRouteHandler', function () {
 
   it('accepts properties');
 
-  it('renders after an update', function(done) {
+  it('renders after an update', function (done) {
     var Nested = React.createClass({
-      componentDidMount: function() {
+      componentDidMount: function () {
         this.forceUpdate(finishTest);
       },
-      render: function() {
+      render: function () {
         return React.DOM.div({},
           React.DOM.h1({}, 'hello'),
           ActiveRouteHandler()
@@ -23,12 +23,12 @@ describe('ActiveRouteHandler', function () {
     });
 
     var Foo = React.createClass({
-      render: function() { return React.DOM.div({}, 'foo'); }
+      render: function () { return React.DOM.div({}, 'foo'); }
     });
 
     var routes = Route({path: '/', handler: Nested}, Route({path: 'foo', handler: Foo}));
     var div = document.createElement('div');
-    Router.run(routes, '/foo', function(App) {
+    Router.run(routes, '/foo', function (App) {
       React.render(App(), div);
     });
 

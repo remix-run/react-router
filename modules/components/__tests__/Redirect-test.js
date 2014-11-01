@@ -13,7 +13,7 @@ describe('a Redirect', function () {
     expect(descriptor.props.path).toEqual('old');
 
     var fakeTransition = {
-      redirect: function(to) {
+      redirect: function (to) {
         expect(to).toEqual('new');
         done();
       }
@@ -28,7 +28,7 @@ describe('a Redirect', function () {
     var expectedQuery = { baz: 'qux' };
 
     var fakeTransition = {
-      redirect: function(to, params, query) {
+      redirect: function (to, params, query) {
         expect(params).toEqual(expectedParams);
         expect(query).toEqual(expectedQuery);
         done();
@@ -52,7 +52,7 @@ describe('a Redirect', function () {
     });
 
     var fakeTransition = {
-      redirect: function(to, params, query) {
+      redirect: function (to, params, query) {
         expect(params).toEqual(expectedParams);
         expect(query).toEqual(expectedQuery);
         done();

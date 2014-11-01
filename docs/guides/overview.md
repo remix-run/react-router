@@ -40,7 +40,7 @@ your views, probably with a `<Header/>` component:
 
 ```js
 var Header = React.createClass({
-  render: function() {
+  render: function () {
     return (
       <header>
         <ul>
@@ -55,7 +55,7 @@ var Header = React.createClass({
 });
 
 var DashboardRoute = React.createClass({
-  render: function() {
+  render: function () {
     return (
       <div>
         <Header/>
@@ -66,7 +66,7 @@ var DashboardRoute = React.createClass({
 });
 
 var InboxRoute = React.createClass({
-  render: function() {
+  render: function () {
     return (
       <div>
         <Header/>
@@ -77,7 +77,7 @@ var InboxRoute = React.createClass({
 });
 
 var CalendarRoute = React.createClass({
-  render: function() {
+  render: function () {
     return (
       <div>
         <Header/>
@@ -88,15 +88,15 @@ var CalendarRoute = React.createClass({
 });
 
 // Not React Router API
-otherRouter.route('/', function() {
+otherRouter.route('/', function () {
   React.renderComponent(<DashboardRoute/>, document.body);
 });
 
-otherRouter.route('/inbox', function() {
+otherRouter.route('/inbox', function () {
   React.renderComponent(<InboxRoute/>, document.body);
 });
 
-otherRouter.route('/calendar', function() {
+otherRouter.route('/calendar', function () {
   React.renderComponent(<CalendarRoute/>, document.body);
 });
 
@@ -126,7 +126,7 @@ Here's how it works:
 
 ```js
 var App = React.createClass({
-  render: function() {
+  render: function () {
     return (
       <div>
         <header>
@@ -215,7 +215,7 @@ Let's see how React Router handles this:
 
 ```js
 var Inbox = React.createClass({
-  render: function() {
+  render: function () {
     return (
       <div>
         <Toolbar/>
@@ -268,7 +268,7 @@ Lets look at accessing the `messageId` in `Message`.
 
 ```js
 var Message = React.createClass({
-  render: function() {
+  render: function () {
     return (
       <div>{this.props.params.messageId}</div>
     );

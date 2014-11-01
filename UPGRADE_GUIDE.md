@@ -67,7 +67,7 @@ entry, it now uses `replaceWith`.
 ```js
 // 0.7.x
 React.createClass({
-  login: function() {
+  login: function () {
     // ...
     transition.retry();
   }
@@ -76,7 +76,7 @@ React.createClass({
 // 0.9.x
 React.createClass({
   mixins: [Navigation],
-  login: function() {
+  login: function () {
     // ...
     this.transitionTo(transition.path);
   }
@@ -92,7 +92,7 @@ Transition hooks are now sync, unless you opt-in to async with
 // 0.7.x
 React.createClass({
   statics: {
-    willTransitionTo: function(transition) {
+    willTransitionTo: function (transition) {
       return somePromise();
     }
   }
@@ -101,7 +101,7 @@ React.createClass({
 // 0.9.x
 React.createClass({
   statics: {
-    willTransitionTo: function(transition) {
+    willTransitionTo: function (transition) {
       transition.wait(somePromise());
     }
   }
@@ -144,7 +144,7 @@ var Router = require('react-router');
 
 // 0.7.x
 React.createClass({
-  whenever: function() {
+  whenever: function () {
     Router.transitionTo('something');
     Router.replaceWith('something');
     Router.goBack();
@@ -156,7 +156,7 @@ var Navigation = Router.Navigation;
 
 React.createClass({
   mixins: [Navigation],
-  whenever: function() {
+  whenever: function () {
     this.transitionTo('something');
     this.replaceWith('something');
     this.goBack();
@@ -296,7 +296,7 @@ options:
 
 // 0.5.x
 var User = React.createClass({
-  getInitialState: function() {
+  getInitialState: function () {
     return {
       user: getUser(this.props.params.userId);
     }
@@ -305,15 +305,15 @@ var User = React.createClass({
 
 // 0.6.x
 var User = React.createClass({
-  getInitialState: function() {
+  getInitialState: function () {
     return this.getState();
   },
 
-  componentWillReceiveProps: function(newProps) {
+  componentWillReceiveProps: function (newProps) {
     this.setState(this.getState(newProps));
   },
 
-  getState: function(props) {
+  getState: function (props) {
     props = props || this.props;
     return {
       user: getUser(props.params.userId)
@@ -361,7 +361,7 @@ NPM users should point their apps to `react-router` instead of
 // 0.2.x
 
 var App = React.createClass({
-  render: function() {
+  render: function () {
     return (
       <div>
         {this.props.activeRoute}
@@ -372,7 +372,7 @@ var App = React.createClass({
 
 // 0.3.x
 var App = React.createClass({
-  render: function() {
+  render: function () {
     // now you can send extra props to the active route handler
     // and use the new jsx syntax
     // <this.props.activeRouteHandler extraProp={something}/>

@@ -25,8 +25,8 @@ var data = [
   }
 ];
 
-var dataMap = data.reduce(function(map, category) {
-  category.itemsMap = category.items.reduce(function(itemsMap, item) {
+var dataMap = data.reduce(function (map, category) {
+  category.itemsMap = category.items.reduce(function (itemsMap, item) {
     itemsMap[item.name] = item;
     return itemsMap;
   }, {});
@@ -34,15 +34,15 @@ var dataMap = data.reduce(function(map, category) {
   return map;
 }, {});
 
-exports.getAll = function() {
+exports.getAll = function () {
   return data;
 };
 
-exports.lookupCategory = function(name) {
+exports.lookupCategory = function (name) {
   return dataMap[name];
 };
 
-exports.lookupItem = function(category, item) {
+exports.lookupItem = function (category, item) {
   return dataMap[category].itemsMap[item];
 };
 

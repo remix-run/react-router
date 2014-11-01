@@ -69,7 +69,7 @@ var routes = (
 );
 
 App = React.createClass({
-  render: function() {
+  render: function () {
     // access `something` on props
     return <div>{this.props.something}</div>
   }

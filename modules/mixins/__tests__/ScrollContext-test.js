@@ -31,7 +31,7 @@ describe('ScrollContext', function () {
     });
 
     it('does not throw when updating scroll position', function () {
-      expect(function() {
+      expect(function () {
         component.updateScroll('/');
       }).toNotThrow();
     });

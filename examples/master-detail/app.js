@@ -13,7 +13,7 @@ var {
 } = Router;
 
 var App = React.createClass({
-  getInitialState: function() {
+  getInitialState: function () {
     return {
       contacts: ContactStore.getContacts(),
       loading: true
@@ -24,7 +24,7 @@ var App = React.createClass({
     ContactStore.init();
   },
 
-  componentDidMount: function() {
+  componentDidMount: function () {
     ContactStore.addChangeListener(this.updateContacts);
   },
 
@@ -42,8 +42,8 @@ var App = React.createClass({
     });
   },
 
-  render: function() {
-    var contacts = this.state.contacts.map(function(contact) {
+  render: function () {
+    var contacts = this.state.contacts.map(function (contact) {
       return <li key={contact.id}><Link to="contact" params={contact}>{contact.first}</Link></li>
     });
     return (
@@ -64,7 +64,7 @@ var App = React.createClass({
 });
 
 var Index = React.createClass({
-  render: function() {
+  render: function () {
     return <h1>Address Book</h1>;
   }
 });
@@ -73,18 +73,18 @@ var Contact = React.createClass({
 
   mixins: [ Navigation, ActiveState ],
 
-  getStateFromStore: function(id) {
+  getStateFromStore: function (id) {
     var id = this.getActiveParams().id;
     return {
       contact: ContactStore.getContact(id)
     };
   },
 
-  getInitialState: function() {
+  getInitialState: function () {
     return this.getStateFromStore();
   },
 
-  componentDidMount: function() {
+  componentDidMount: function () {
     ContactStore.addChangeListener(this.updateContact);
   },
 
@@ -92,7 +92,7 @@ var Contact = React.createClass({
     ContactStore.removeChangeListener(this.updateContact);
   },
 
-  componentWillReceiveProps: function() {
+  componentWillReceiveProps: function () {
     this.setState(this.getStateFromStore());
   },
 
@@ -103,13 +103,13 @@ var Contact = React.createClass({
     this.setState(this.getStateFromStore())
   },
 
-  destroy: function() {
+  destroy: function () {
     var id = this.getActiveParams().id;
     ContactStore.removeContact(id);
     this.transitionTo('/');
   },
 
-  render: function() {
+  render: function () {
     var contact = this.state.contact || {};
     var name = contact.first + ' ' + contact.last;
     var avatar = contact.avatar || 'http://placecage.com/50/50';
@@ -127,17 +127,17 @@ var NewContact = React.createClass({
 
   mixins: [ Router.Navigation ],
 
-  createContact: function(event) {
+  createContact: function (event) {
     event.preventDefault();
     ContactStore.addContact({
       first: this.refs.first.getDOMNode().value,
       last: this.refs.last.getDOMNode().value
-    }, function(contact) {
+    }, function (contact) {
       this.transitionTo('contact', { id: contact.id });
     }.bind(this));
   },
 
-  render: function() {
+  render: function () {
     return (
       <form onSubmit={this.createContact}>
         <p>
@@ -153,7 +153,7 @@ var NewContact = React.createClass({
 });
 
 var NotFound = React.createClass({
-  render: function() {
+  render: function () {
     return <h2>Not found</h2>;
   }
 });
@@ -167,7 +167,7 @@ var routes = (
   </Route>
 );
 
-Router.run(routes, function(Root) {
+Router.run(routes, function (Root) {
   React.renderComponent(<Root/>, document.getElementById('example'));
 });
 

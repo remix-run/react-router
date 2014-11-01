@@ -4,24 +4,24 @@ var Router = require('react-router');
 var { Route, Link, ActiveRouteHandler, Navigation } = Router;
 
 var App = React.createClass({
-  getInitialState: function() {
+  getInitialState: function () {
     return {
       loggedIn: auth.loggedIn()
     };
   },
 
-  setStateOnAuth: function(loggedIn) {
+  setStateOnAuth: function (loggedIn) {
     this.setState({
       loggedIn: loggedIn
     });
   },
 
-  componentWillMount: function() {
+  componentWillMount: function () {
     auth.onChange = this.setStateOnAuth;
     auth.login();
   },
 
-  render: function() {
+  render: function () {
     var loginOrOut = this.state.loggedIn ?
       <Link to="logout">Log out</Link> :
       <Link to="login">Sign in</Link>;
@@ -52,7 +52,7 @@ var AuthenticatedRoute = {
 var Dashboard = React.createClass({
   mixins: [AuthenticatedRoute],
 
-  render: function() {
+  render: function () {
     var token = auth.getToken();
     return (
       <div>
@@ -71,17 +71,17 @@ var Login = React.createClass({
     attemptedTransition: null
   },
 
-  getInitialState: function() {
+  getInitialState: function () {
     return {
       error: false
     };
   },
 
-  handleSubmit: function(event) {
+  handleSubmit: function (event) {
     event.preventDefault();
     var email = this.refs.email.getDOMNode().value;
     var pass = this.refs.pass.getDOMNode().value;
-    auth.login(email, pass, function(loggedIn) {
+    auth.login(email, pass, function (loggedIn) {
       if (!loggedIn)
         return this.setState({ error: true });
 
@@ -95,7 +95,7 @@ var Login = React.createClass({
     }.bind(this));
   },
 
-  render: function() {
+  render: function () {
     var errors = this.state.error ? <p>Bad login information</p> : '';
     return (
       <form onSubmit={this.handleSubmit}>
@@ -109,17 +109,17 @@ var Login = React.createClass({
 });
 
 var About = React.createClass({
-  render: function() {
+  render: function () {
     return <h1>About</h1>;
   }
 });
 
 var Logout = React.createClass({
-  componentDidMount: function() {
+  componentDidMount: function () {
     auth.logout();
   },
 
-  render: function() {
+  render: function () {
     return <p>You are now logged out</p>;
   }
 });
@@ -128,14 +128,14 @@ var Logout = React.createClass({
 // Fake authentication lib
 
 var auth = {
-  login: function(email, pass, cb) {
+  login: function (email, pass, cb) {
     var cb = arguments[arguments.length - 1];
     if (localStorage.token) {
       cb && cb(true);
       this.onChange(true);
       return;
     }
-    pretendRequest(email, pass, function(res) {
+    pretendRequest(email, pass, function (res) {
       if (res.authenticated) {
         localStorage.token = res.token;
         cb && cb(true);
@@ -147,25 +147,25 @@ var auth = {
     }.bind(this));
   },
 
-  getToken: function() {
+  getToken: function () {
     return localStorage.token;
   },
 
-  logout: function(cb) {
+  logout: function (cb) {
     delete localStorage.token;
     cb && cb();
     this.onChange(false);
   },
 
-  loggedIn: function() {
+  loggedIn: function () {
     return !!localStorage.token;
   },
 
-  onChange: function() {}
+  onChange: function () {}
 };
 
 function pretendRequest(email, pass, cb) {
-  setTimeout(function() {
+  setTimeout(function () {
     if (email === 'joe@example.com' && pass === 'password1') {
       cb({
         authenticated: true,

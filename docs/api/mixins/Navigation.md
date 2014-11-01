@@ -69,7 +69,7 @@ var Navigation = require('react-router').Navigation;
 React.createClass({
   mixins: [Navigation],
 
-  whenever: function() {
+  whenever: function () {
     this.transitionTo('something');
     this.replaceWith('something');
     this.goBack();
