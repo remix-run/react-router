@@ -11,7 +11,7 @@ function processRoute(component, parentRoute, namedRoutes) {
   var props = component.props;
 
   invariant(
-    React.isValidClass(props.handler),
+    typeof props.handler === 'function',
     'The handler for the "%s" route must be a React component class',
     props.name || props.path
   );
