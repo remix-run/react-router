@@ -3,7 +3,7 @@ var React = require('react');
 var Router = require('react-router');
 var { Route, Redirect, ActiveState, Link, ActiveRouteHandler } = Router;
 
-var App = module.exports = React.createClass({
+var App = React.createClass({
   render () {
     return (
       <div>
@@ -17,7 +17,7 @@ var App = module.exports = React.createClass({
   }
 });
 
-var User = module.exports = React.createClass({
+var User = React.createClass({
   mixins: [ActiveState],
 
   render () {
@@ -36,7 +36,7 @@ var User = module.exports = React.createClass({
 });
 
 
-var Task = module.exports = React.createClass({
+var Task = React.createClass({
   mixins: [ActiveState],
 
   render () {
@@ -59,6 +59,6 @@ var routes = (
   </Route>
 );
 
-var el = document.getElementById('example');
-Router.run(routes, (Handler) => React.render(<Handler/>, el));
-
+Router.run(routes, function (Handler) {
+  React.render(<Handler/>, document.getElementById('example'))
+});
