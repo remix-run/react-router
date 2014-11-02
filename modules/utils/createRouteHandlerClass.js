@@ -2,7 +2,6 @@ var React = require('react');
 var invariant = require('react/lib/invariant');
 var assign = require('react/lib/Object.assign');
 var HashLocation = require('../locations/HashLocation');
-var ActiveRouteHandler = require('../components/ActiveRouteHandler');
 var Route = require('./Route');
 var Match = require('./Match');
 var Path = require('./Path');
@@ -254,17 +253,16 @@ function createRouteHandlerClass(router, location) {
      * Returns the active child route handler class for the given
      * route handler class.
      */
-    getActiveRouteHandlerFor: function (routeHandler) {
-      var activeRoutes = state.activeRoutes;
-      var index = activeRoutes.length;
-
-      var childHandler = null;
+    getActiveRouteHandlerFor: function (handler) {
+      var routes = state.activeRoutes;
+      var index = routes.length;
+      var childRoute;
 
       while (index--) {
-        if (activeRoutes[index].handler === routeHandler)
-          return childHandler;
+        if (routes[index].handler.type === handler)
+          return childRoute ? childRoute.handler : null;
 
-        childHandler = activeRoutes[index].handler;
+        childRoute = routes[index];
       }
 
       return null;
@@ -303,7 +301,8 @@ function createRouteHandlerClass(router, location) {
     },
 
     render: function () {
-      return state.activeRoutes.length ? React.createElement(ActiveRouteHandler, this.props) : null;
+      var route = state.activeRoutes[0];
+      return route ? React.createElement(route.handler, this.props) : null;
     }
 
   });
