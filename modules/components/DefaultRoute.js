@@ -1,4 +1,4 @@
-var objectAssign = require('react/lib/Object.assign');
+var assign = require('react/lib/Object.assign');
 var Route = require('./Route');
 
 /**
@@ -9,7 +9,7 @@ var Route = require('./Route');
  */
 function DefaultRoute(props) {
   return Route(
-    objectAssign({}, props, {
+    assign({}, props, {
       path: null,
       isDefault: true
     })

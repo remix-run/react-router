@@ -1,6 +1,6 @@
 var React = require('react');
 var classSet = require('react/lib/cx');
-var objectAssign = require('react/lib/Object.assign');
+var assign = require('react/lib/Object.assign');
 var ActiveState = require('../mixins/ActiveState');
 var Navigation = require('../mixins/Navigation');
 
@@ -93,7 +93,7 @@ var Link = React.createClass({
   },
 
   render: function () {
-    var props = objectAssign({}, this.props, {
+    var props = assign({}, this.props, {
       href: this.getHref(),
       className: this.getClassName(),
       onClick: this.handleClick

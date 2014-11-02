@@ -7,8 +7,6 @@ var Route = require('./Route');
 var Match = require('./Match');
 var Path = require('./Path');
 
-var ActiveRouteHandlerFactory = React.createFactory(ActiveRouteHandler);
-
 function routeIsActive(activeRoutes, routeName) {
   return activeRoutes.some(function (route) {
     return route.name === routeName;
@@ -304,7 +302,7 @@ function createRouteHandlerClass(router, location) {
     },
 
     render: function () {
-      return state.activeRoutes.length ? ActiveRouteHandlerFactory(this.props) : null;
+      return state.activeRoutes.length ? React.createElement(ActiveRouteHandler, this.props) : null;
     }
 
   });
