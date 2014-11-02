@@ -6,6 +6,7 @@ var Router = require('../../Router');
 var runRouter = require('../runRouter');
 var ActiveRouteHandler = require('../../components/ActiveRouteHandler');
 var ActiveState = require('../../mixins/ActiveState');
+var testLocation = require('../../locations/TestLocation');
 
 describe('runRouter', function () {
 
@@ -97,7 +98,30 @@ describe('runRouter', function () {
     });
   });
 
-
+  it.only('does not blow away the previous HTML', function(done) {
+    var router = new Router(
+      Route({handler: Nested, path: '/'},
+        Route({handler: ParamEcho, path: ':name'})
+      )
+    );
+    var div = document.createElement('div');
+    var count = 0;
+    var location = testLocation('/foo');
+    runRouter(router, location, function(Handler, state) {
+      React.render(Handler(), div, function() {
+        count++;
+        if (count == 1) {
+          expect(div.innerHTML).toMatch(/foo/);
+          div.querySelector('h1').innerHTML = 'lol i changed you';
+          location.push('/bar');
+        } else if (count == 2) {
+          expect(div.innerHTML).toMatch(/bar/);
+          expect(div.innerHTML).toMatch(/lol i changed you/);
+          done();
+        }
+      });
+    });
+  });
 
   describe('RouteHandler', function () {
     it('throws if called after the router transitions to a new state');

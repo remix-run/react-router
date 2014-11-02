@@ -1,12 +1,15 @@
 /** @jsx React.DOM */
-// TODO: animations aren't happening, think we need to implement addHandlerKey somewhere
+// TODO: animations aren't happening, not sure what the problem is
 var React = require('react');
 var TransitionGroup = require('react/lib/ReactCSSTransitionGroup');
 var Router = require('react-router');
-var { Route, Link, ActiveRouteHandler } = Router;
+var { Route, Link, ActiveRouteHandler, ActiveState } = Router;
 
 var App = React.createClass({
+  mixins: [ActiveState],
+
   render: function () {
+    var name = this.getActiveRoutes().reverse()[0].name;
     return (
       <div>
         <ul>
@@ -14,7 +17,7 @@ var App = React.createClass({
           <li><Link to="page2">Page 2</Link></li>
         </ul>
         <TransitionGroup component="div" transitionName="example">
-          <ActiveRouteHandler key={Date.now()} />
+          <ActiveRouteHandler key={name} />
         </TransitionGroup>
       </div>
     );
