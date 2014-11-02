@@ -296,8 +296,9 @@ function createRouteHandlerClass(router, location) {
     ],
 
     propTypes: {
-      children: function () {
-        return new Error('You cannot pass children to a RouteHandler');
+      children: function (props, propName, componentName) {
+        if (props[propName] != null)
+          return new Error('You cannot pass children to a RouteHandler');
       }
     },
 
