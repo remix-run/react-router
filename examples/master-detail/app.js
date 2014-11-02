@@ -168,6 +168,5 @@ var routes = (
 );
 
 Router.run(routes, function (Root) {
-  React.renderComponent(<Root/>, document.getElementById('example'));
+  React.render(<Root/>, document.getElementById('example'));
 });
-
