@@ -12,7 +12,7 @@ var ActiveRouteHandler = React.createClass({
 
   render: function () {
     var handler = this.context.getActiveRouteHandlerFor(this._owner);
-    return handler ? handler(this.props) : null;
+    return handler ? React.createElement(handler, this.props) : null;
   }
 
 });
