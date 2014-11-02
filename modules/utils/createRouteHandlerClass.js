@@ -264,12 +264,12 @@ function createRouteHandlerClass(router, location) {
 
       while (index--) {
         if (activeRoutes[index].handler === routeHandler)
-          break;
+          return childHandler;
 
         childHandler = activeRoutes[index].handler;
       }
 
-      return childHandler;
+      return null;
     },
 
     childContextTypes: {
