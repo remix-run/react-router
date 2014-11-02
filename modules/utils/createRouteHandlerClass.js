@@ -36,18 +36,6 @@ function queryIsActive(activeQuery, query) {
 function createRouteHandlerClass(router, location) {
   var state = router.state;
 
-  var handlersCopy;
-
-  var activeHandlers = state.matches.map(function (match) {
-    return match.route.handler;
-  });
-
-  function copyHandlers() {
-    handlersCopy = activeHandlers.slice(0);
-  }
-
-  copyHandlers();
-
   var ActiveContext = {
 
     /**
@@ -277,18 +265,34 @@ function createRouteHandlerClass(router, location) {
 
   var ActiveRouteHandlerContext = {
 
+    /**
+     * Returns the active child route handler class for the given
+     * route handler class.
+     */
+    getActiveRouteHandlerFor: function (routeHandler) {
+      var activeRoutes = state.activeRoutes;
+      var index = activeRoutes.length;
+
+      var childHandler = null;
+
+      while (index--) {
+        if (activeRoutes[index].handler === routeHandler)
+          break;
+
+        childHandler = activeRoutes[index].handler;
+      }
+
+      return childHandler;
+    },
+
     childContextTypes: {
-      getActiveHandlers: React.PropTypes.func.isRequired
+      getActiveRouteHandlerFor: React.PropTypes.func.isRequired
     },
 
     getChildContext: function () {
       return {
-        getActiveHandlers: this.getActiveHandlers
-      }
-    },
-
-    getActiveHandlers: function () {
-      return handlersCopy;
+        getActiveRouteHandlerFor: this.getActiveRouteHandlerFor
+      };
     }
 
   };
@@ -312,13 +316,8 @@ function createRouteHandlerClass(router, location) {
       }
     },
 
-    componentWillUpdate: function () {
-      copyHandlers();
-    },
-
     render: function () {
-      var route = state.activeRoutes[0];
-      return route ? ActiveRouteHandler(this.props) : null;
+      return state.activeRoutes.length ? ActiveRouteHandler(this.props) : null;
     }
 
   });

@@ -1,19 +1,20 @@
 var React = require('react');
 
-var ActiveRouteHandler = module.exports = React.createClass({
-  contextTypes: {
-    getActiveHandlers: React.PropTypes.func.isRequired
-  },
+/**
+ * An <ActiveRouteHandler> component renders the active child route handler
+ * when routes are nested.
+ */
+var ActiveRouteHandler = React.createClass({
 
-  componentWillMount: function () {
-    if (!this._activeRouteHandler) {
-      var handlers = this.context.getActiveHandlers();
-      this._activeRouteHandler = handlers.shift();
-    }
+  contextTypes: {
+    getActiveRouteHandlerFor: React.PropTypes.func.isRequired
   },
 
   render: function () {
-    return this._activeRouteHandler ? this._activeRouteHandler(this.props) : null;
+    var handler = this.context.getActiveRouteHandlerFor(this._owner);
+    return handler ? handler(this.props) : null;
   }
+
 });
 
+module.exports = ActiveRouteHandler;
