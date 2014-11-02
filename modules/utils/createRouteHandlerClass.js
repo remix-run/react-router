@@ -120,22 +120,7 @@ function createRouteHandlerClass(router, location) {
      * name, URL parameters, and query.
      */
     makePath: function (to, params, query) {
-      var path;
-      if (Path.isAbsolute(to)) {
-        path = Path.normalize(to);
-      } else {
-        var route = this.namedRoutes[to];
-
-        invariant(
-          route,
-          'Unable to find a <Route> with name="%s"',
-          to
-        );
-
-        path = route.path;
-      }
-
-      return Path.withQuery(Path.injectParams(path, params), query);
+      return router.makePath(to, params, query);
     },
 
     /**

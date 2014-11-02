@@ -5,9 +5,9 @@ var canUseDOM = require('react/lib/ExecutionEnvironment').canUseDOM;
 var HashLocation = require('../locations/HashLocation');
 var HistoryLocation = require('../locations/HistoryLocation');
 var RefreshLocation = require('../locations/RefreshLocation');
+var createRouteHandlerClass = require('./createRouteHandlerClass');
 var supportsHistory = require('./supportsHistory');
 var Redirect = require('./Redirect');
-var createRouteHandlerClass = require('./createRouteHandlerClass');
 
 function defaultStaticAbortHandler(abortReason) {
   throw new Error('Unhandled aborted transition! Reason: ' + abortReason);
