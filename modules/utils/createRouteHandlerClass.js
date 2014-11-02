@@ -2,10 +2,12 @@ var React = require('react');
 var invariant = require('react/lib/invariant');
 var assign = require('react/lib/Object.assign');
 var HashLocation = require('../locations/HashLocation');
-var Route = require('./Route');
-var Path = require('./Path');
 var ActiveRouteHandler = require('../components/ActiveRouteHandler');
+var Route = require('./Route');
 var Match = require('./Match');
+var Path = require('./Path');
+
+var ActiveRouteHandlerFactory = React.createFactory(ActiveRouteHandler);
 
 function routeIsActive(activeRoutes, routeName) {
   return activeRoutes.some(function (route) {
@@ -302,7 +304,7 @@ function createRouteHandlerClass(router, location) {
     },
 
     render: function () {
-      return state.activeRoutes.length ? ActiveRouteHandler(this.props) : null;
+      return state.activeRoutes.length ? ActiveRouteHandlerFactory(this.props) : null;
     }
 
   });
