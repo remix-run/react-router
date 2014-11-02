@@ -4,11 +4,11 @@ var warning = require('react/lib/warning');
 var invariant = require('react/lib/invariant');
 var canUseDOM = require('react/lib/ExecutionEnvironment').canUseDOM;
 var createRoutesFromChildren = require('./utils/createRoutesFromChildren');
+var reversedArray = require('./utils/reversedArray');
 var Transition = require('./utils/Transition');
 var runRouter = require('./utils/runRouter');
 var Match = require('./utils/Match');
 var Path = require('./utils/Path');
-var reversedArray = require('./utils/reversedArray');
 
 function getRootMatch(matches) {
   return matches[matches.length - 1];
@@ -250,29 +250,6 @@ assign(Router.prototype, {
         callback.call(router);
       });
     });
-  },
-
-  /**
-   * Returns an absolute URL path created from the given route
-   * name, URL parameters, and query.
-   */
-  makePath: function (to, params, query) {
-    var path;
-    if (Path.isAbsolute(to)) {
-      path = Path.normalize(to);
-    } else {
-      var route = this.namedRoutes[to];
-
-      invariant(
-        route,
-        'Unable to find a <Route> with name="%s"',
-        to
-      );
-
-      path = route.path;
-    }
-
-    return Path.withQuery(Path.injectParams(path, params), query);
   }
 
 });
