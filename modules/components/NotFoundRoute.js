@@ -1,5 +1,6 @@
+var React = require('react');
 var objectAssign = require('react/lib/Object.assign');
-var Route = require('./Route');
+var Route = React.createFactory(require('./Route'));
 
 /**
  * A <NotFoundRoute> is a special kind of <Route> that

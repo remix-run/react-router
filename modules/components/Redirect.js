@@ -1,5 +1,5 @@
 var React = require('react');
-var Route = require('./Route');
+var Route = React.createFactory(require('./Route'));
 
 function createRedirectHandler(to, _params, _query) {
   return React.createClass({
