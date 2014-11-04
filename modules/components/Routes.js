@@ -537,7 +537,8 @@ var Routes = React.createClass({
     if (match == null)
       return null;
 
-    return match.route.props.handler(
+    return React.createElement(
+      match.route.props.handler,
       this.getHandlerProps()
     );
   },
