@@ -8,7 +8,7 @@ var ActiveRouteHandler = require('../../components/ActiveRouteHandler');
 var ActiveState = require('../../mixins/ActiveState');
 var testLocation = require('../../locations/TestLocation');
 
-describe('runRouter', function () {
+describe.only('runRouter', function () {
 
   var Nested = React.createClass({
     render: function () {
@@ -38,8 +38,8 @@ describe('runRouter', function () {
   });
 
   it('matches a root route', function (done) {
-    var router = new Router(Route({handler: Echo, path: '/'}));
-    runRouter(router, '/', function (Handler, state) {
+    var routes = Route({handler: Echo, path: '/'});
+    Router.run(routes, '/', function (Handler, state) {
       // TODO: figure out why we're getting this warning here
       // WARN: 'Warning: You cannot pass children to a RouteHandler'
       var html = React.renderToString(Handler({name: 'ryan'}));
@@ -49,11 +49,11 @@ describe('runRouter', function () {
   });
 
   it('matches an array of routes', function (done) {
-    var router = new Router([
+    var routes = [
       Route({handler: RPFlo, path: '/rpflo'}),
       Route({handler: MJ, path: '/mj'})
-    ]);
-    runRouter(router, '/mj', function (Handler, state) {
+    ];
+    Router.run(routes, '/mj', function (Handler, state) {
       var html = React.renderToString(Handler());
       expect(html).toMatch(/mj/);
       done();
@@ -61,12 +61,12 @@ describe('runRouter', function () {
   });
 
   it('matches nested routes', function (done) {
-    var router = new Router(
+    var routes = (
       Route({handler: Nested, path: '/'},
         Route({handler: MJ, path: '/mj'})
       )
     );
-    runRouter(router, '/mj', function (Handler, state) {
+    Router.run(routes, '/mj', function (Handler, state) {
       var html = React.renderToString(Handler());
       expect(html).toMatch(/hello/);
       expect(html).toMatch(/mj/);
@@ -75,10 +75,8 @@ describe('runRouter', function () {
   });
 
   it('supports dynamic segments', function (done) {
-    var router = new Router(
-      Route({handler: ParamEcho, path: '/:name'})
-    );
-    runRouter(router, '/d00d3tt3', function (Handler, state) {
+    var routes = Route({handler: ParamEcho, path: '/:name'});
+    Router.run(routes, '/d00d3tt3', function (Handler, state) {
       var html = React.renderToString(Handler());
       expect(html).toMatch(/d00d3tt3/);
       done();
@@ -86,28 +84,29 @@ describe('runRouter', function () {
   });
 
   it('supports nested dynamic segments', function (done) {
-    var router = new Router(
+    var routes = (
       Route({handler: Nested, path: '/:foo'},
         Route({handler: ParamEcho, path: ':name'})
       )
     );
-    runRouter(router, '/foo/bar', function (Handler, state) {
+    Router.run(routes, '/foo/bar', function (Handler, state) {
       var html = React.renderToString(Handler());
       expect(html).toMatch(/bar/);
       done();
     });
   });
 
-  it.only('does not blow away the previous HTML', function(done) {
-    var router = new Router(
+  it('does not blow away the previous HTML', function(done) {
+    var location = testLocation('/foo');
+    var routes = (
       Route({handler: Nested, path: '/'},
         Route({handler: ParamEcho, path: ':name'})
       )
     );
+    var router = new Router(routes, location);
     var div = document.createElement('div');
     var count = 0;
-    var location = testLocation('/foo');
-    runRouter(router, location, function(Handler, state) {
+    runRouter(router, function(Handler, state) {
       React.render(Handler(), div, function() {
         count++;
         if (count == 1) {

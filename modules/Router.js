@@ -9,6 +9,10 @@ var reversedArray = require('./utils/reversedArray');
 var runRouter = require('./utils/runRouter');
 var Match = require('./utils/Match');
 var Path = require('./utils/Path');
+var createRootHandler = require('./utils/createRootHandler');
+var HashLocation = require('./locations/HashLocation');
+var HistoryLocation = require('./locations/HistoryLocation');
+var supportsHistory = require('./utils/supportsHistory');
 
 function getRootMatch(matches) {
   return matches[matches.length - 1];
@@ -151,12 +155,14 @@ function defaultErrorHandler(error) {
 /**
  * A Router is a container for a set of routes and state.
  */
-function Router(routes, onError, onAbort) {
+function Router(routes, location, onError, onAbort) {
   this.defaultRoute = null;
   this.notFoundRoute = null;
   this.routes = createRoutesFromChildren(routes, this, this.namedRoutes = {});
+  this.location = location;
   this.onError = onError || defaultErrorHandler;
   this.onAbort = onAbort;
+  this.RootHandler = createRootHandler(this);
   this.state = {};
 }
 
@@ -296,9 +302,19 @@ assign(Router.prototype, {
  *   });
  */
 Router.run = function (router, location, callback) {
+  if (typeof location === 'function') {
+    callback = location;
+    location = HashLocation;
+  }
+
+  // Automatically fall back to full page refreshes in
+  // browsers that do not support HTML5 history.
+  if (location === HistoryLocation && !supportsHistory())
+    location = RefreshLocation;
+
   runRouter(
-    router instanceof Router ? router : new Router(router),
-    location, callback
+    router instanceof Router ? router : new Router(router, location),
+    callback
   );
 };
 

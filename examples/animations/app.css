@@ -2,13 +2,10 @@
   position: relative;
 }
 
-.Image img {
+.Image {
   position: absolute;
-  top: 0;
-  left: 0;
   height: 400;
   width: 400;
-  background: gray;
 }
 
 .example-enter {

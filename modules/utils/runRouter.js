@@ -2,11 +2,7 @@ var React = require('react');
 var warning = require('react/lib/warning');
 var invariant = require('react/lib/invariant');
 var canUseDOM = require('react/lib/ExecutionEnvironment').canUseDOM;
-var HashLocation = require('../locations/HashLocation');
-var HistoryLocation = require('../locations/HistoryLocation');
 var RefreshLocation = require('../locations/RefreshLocation');
-var createRouteHandlerClass = require('./createRouteHandlerClass');
-var supportsHistory = require('./supportsHistory');
 var Redirect = require('./Redirect');
 
 function defaultStaticAbortHandler(abortReason) {
@@ -44,27 +40,17 @@ var _currentLocation;
  * should be one of the Router.*Location objects (e.g. Router.HashLocation or
  * Router.HistoryLocation).
  */ 
-function runRouter(router, location, callback) {
-  if (typeof location === 'function') {
-    callback = location;
-    location = HashLocation;
-  }
-
-  // Automatically fall back to full page refreshes in
-  // browsers that do not support HTML5 history.
-  if (location === HistoryLocation && !supportsHistory())
-    location = RefreshLocation;
-
+function runRouter(router, callback) {
   var onAbort;
+  var location = router.location;
+
   function dispatchHandler(error, abortReason) {
     if (error) {
       router.onError(error);
     } else if (abortReason) {
       onAbort.call(router, abortReason);
     } else {
-      callback(
-        createRouteHandlerClass(router, location), router.state
-      );
+      callback(router.RootHandler, router.state);
     }
   }
 

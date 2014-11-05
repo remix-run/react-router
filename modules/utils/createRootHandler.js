@@ -32,8 +32,8 @@ function queryIsActive(activeQuery, query) {
  * Returns a React class that can be used to render the current state of
  * the given Router.
  */
-function createRouteHandlerClass(router, location) {
-  var state = router.state;
+function createRootHandler(router) {
+  var location = router.location;
 
   var ActiveContext = {
 
@@ -41,21 +41,21 @@ function createRouteHandlerClass(router, location) {
      * Returns a read-only array of the currently active routes.
      */
     getActiveRoutes: function () {
-      return state.activeRoutes.slice(0);
+      return router.state.activeRoutes.slice(0);
     },
 
     /**
      * Returns a read-only object of the currently active URL parameters.
      */
     getActiveParams: function () {
-      return assign({}, state.activeParams);
+      return assign({}, router.state.activeParams);
     },
 
     /**
      * Returns a read-only object of the currently active query parameters.
      */
     getActiveQuery: function () {
-      return assign({}, state.activeQuery);
+      return assign({}, router.state.activeQuery);
     },
 
     /**
@@ -63,11 +63,11 @@ function createRouteHandlerClass(router, location) {
      */
     isActive: function (to, params, query) {
       if (Path.isAbsolute(to))
-        return to === state.path;
+        return to === router.state.path;
 
-      return routeIsActive(state.activeRoutes, to) &&
-        paramsAreActive(state.activeParams, params) &&
-        (query == null || queryIsActive(state.activeQuery, query));
+      return routeIsActive(router.state.activeRoutes, to) &&
+        paramsAreActive(router.state.activeParams, params) &&
+        (query == null || queryIsActive(router.state.activeQuery, query));
     },
 
     childContextTypes: {
@@ -195,7 +195,7 @@ function createRouteHandlerClass(router, location) {
      * Returns the current URL path + query string.
      */
     getCurrentPath: function () {
-      return state.path;
+      return router.state.path;
     },
 
     childContextTypes: {
@@ -254,7 +254,7 @@ function createRouteHandlerClass(router, location) {
      * route handler class.
      */
     getActiveRouteHandlerFor: function (handler) {
-      var routes = state.activeRoutes;
+      var routes = router.state.activeRoutes;
       var index = routes.length;
       var childRoute;
 
@@ -301,11 +301,11 @@ function createRouteHandlerClass(router, location) {
     },
 
     render: function () {
-      var route = state.activeRoutes[0];
+      var route = router.state.activeRoutes[0];
       return route ? React.createElement(route.handler, this.props) : null;
     }
 
   });
 }
 
-module.exports = createRouteHandlerClass;
+module.exports = createRootHandler;
