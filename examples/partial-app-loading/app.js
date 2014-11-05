@@ -4,6 +4,7 @@ var Router = require('react-router');
 var Route = Router.Route;
 var Routes = Router.Routes;
 var Link = Router.Link;
+var ActiveRouteHandler = Router.ActiveRouteHandler;
 
 var AsyncReactComponent = {
   loadedComponent: null,
@@ -25,7 +26,13 @@ var AsyncReactComponent = {
 
   render: function () {
     var component = this.constructor.loadedComponent;
-    return component ? component(this.props) : this.preRender();
+    if (component) {
+      // can't find ActiveRouteHandler in the loaded component, so we just grab
+      // it here first.
+      this.props.activeRoute = <ActiveRouteHandler />;
+      return component(this.props);
+    }
+    return this.preRender();
   }
 };
 
@@ -53,20 +60,21 @@ var App = React.createClass({
         <ul>
           <li><Link to="dashboard">Dashboard</Link></li>
         </ul>
-        {this.props.activeRouteHandler()}
+        <ActiveRouteHandler/>
       </div>
     );
   }
 });
 
 var routes = (
-  <Routes>
-    <Route handler={App}>
-      <Route name="dashboard" path="dashboard" handler={PreDashboard}>
-        <Route name="inbox" path="dashboard/inbox" handler={PreInbox}/>
-      </Route>
+  <Route handler={App}>
+    <Route name="dashboard" path="dashboard" handler={PreDashboard}>
+      <Route name="inbox" path="dashboard/inbox" handler={PreInbox}/>
     </Route>
-  </Routes>
+  </Route>
 );
 
-React.renderComponent(routes, document.getElementById('example'));
+Router.run(routes, function(Handler) {
+  React.renderComponent(<Handler/>, document.getElementById('example'));
+});
+
