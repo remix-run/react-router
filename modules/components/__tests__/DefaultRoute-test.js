@@ -1,11 +1,9 @@
 /** @jsx React.DOM */
-
 var assert = require('assert');
 var expect = require('expect');
 var React = require('react/addons');
 var DefaultRoute = require('../DefaultRoute');
 var Route = require('../Route');
-var DefaultRoute = require('../DefaultRoute');
 var Router = require('../../Router');
 var ActiveRouteHandler = require('../../components/ActiveRouteHandler');
 

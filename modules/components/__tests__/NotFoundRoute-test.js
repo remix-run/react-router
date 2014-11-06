@@ -1,93 +1,92 @@
+/** @jsx React.DOM */
 var assert = require('assert');
 var expect = require('expect');
 var React = require('react/addons');
-var ReactTestUtils = React.addons.TestUtils;
 var NotFoundRoute = require('../NotFoundRoute');
-var Routes = require('../Routes');
 var Route = require('../Route');
+var Router = require('../../Router');
+var ActiveRouteHandler = require('../../components/ActiveRouteHandler');
 
-var NullHandler = React.createClass({
+var Nested = React.createClass({
   render: function () {
-    return null;
+    return (
+      <div>
+        hello
+        <ActiveRouteHandler />
+      </div>
+    );
   }
 });
 
-describe('A NotFoundRoute', function () {
-
-  it('has a null path', function () {
-    expect(NotFoundRoute({ path: '/' }).props.path).toBe(null);
-  });
-
-  describe('at the root of a container', function () {
-    var component, route;
-    beforeEach(function () {
-      component = ReactTestUtils.renderIntoDocument(
-        Routes({ location: 'none' },
-          route = NotFoundRoute({ handler: NullHandler })
-        )
-      );
-    });
-
-    afterEach(function () {
-      React.unmountComponentAtNode(component.getDOMNode());
-    });
-
-    it('becomes its container\'s notFoundRoute', function () {
-      expect(component.props.notFoundRoute).toBe(route);
-    });
-  });
-
-  describe('nested in another Route', function () {
-    var component, route, notFoundRoute;
-    beforeEach(function () {
-      component = ReactTestUtils.renderIntoDocument(
-        Routes({ location: 'none' },
-          route = Route({ handler: NullHandler },
-            notFoundRoute = NotFoundRoute({ handler: NullHandler })
-          )
-        )
-      );
-    });
-
-    afterEach(function () {
-      React.unmountComponentAtNode(component.getDOMNode());
-    });
-
-    it('becomes that route\'s notFoundRoute', function () {
-      expect(route.props.notFoundRoute).toBe(notFoundRoute);
-    });
-  });
-
+var Foo = React.createClass({
+  render: function () {
+    return <div>foo</div>;
+  }
 });
 
-describe('when no child routes match a URL, but the beginning of the parent\'s path matches', function () {
+var NotFound = React.createClass({
+  render: function () {
+    return <div>not found</div>;
+  }
+});
 
-  var component, rootRoute, notFoundRoute;
-  beforeEach(function (done) {
-    component = ReactTestUtils.renderIntoDocument(
-      Routes({ location: 'none' },
-        rootRoute = Route({ name: 'user', path: '/users/:id', handler: NullHandler },
-          Route({ name: 'home', path: '/users/:id/home', handler: NullHandler }),
-          // Make it the middle sibling to test order independence.
-          notFoundRoute = NotFoundRoute({ handler: NullHandler }),
-          Route({ name: 'news', path: '/users/:id/news', handler: NullHandler })
-        )
-      )
+
+
+describe('NotFoundRoute', function() {
+
+  describe('at the root of the config', function() {
+    it('renders when no routes match', function () {
+      var routes = <NotFoundRoute handler={NotFound}/>;
+      Router.run(routes, '/ryans-patience', function (Handler) {
+        var html = React.renderToString(<Handler />);
+        expect(html).toMatch(/not found/);
+      });
+    });
+  });
+
+  describe('nested in the config', function() {
+    it('renders', function () {
+      var routes = (
+        <Route path='/' handler={Nested}>
+          <Route path='/foo' handler={Foo}/>
+          <NotFoundRoute handler={NotFound} />
+        </Route>
+      );
+
+      Router.run(routes, '/ryans-mind', function (App) {
+        var html = React.renderToString(App());
+        expect(html).toMatch(/not found/);
+      });
+    });
+  });
+
+  describe('deeply nested in the config', function() {
+    var routes = (
+      <Route path='/' handler={Nested}>
+        <Route path='ryans' handler={Nested}>
+          {/* order shouldn't matter here, so we put it first */}
+          <NotFoundRoute handler={NotFound} />
+          <Route path='happiness' handler={Foo}/>
+        </Route>
+      </Route>
     );
 
-    component.dispatch('/users/5', done);
-  });
+    it('renders the matching parents and itself', function () {
+      Router.run(routes, '/ryans/compassion', function (App) {
+        var html = React.renderToString(<App />);
+        expect(html).toMatch(/hello/);
+        expect(html).toMatch(/not found/);
+      });
+    });
 
-  afterEach(function () {
-    React.unmountComponentAtNode(component.getDOMNode());
-  });
-
-  it('matches the NotFoundRoute', function () {
-    var matches = component.match('/users/5/not-found');
-    assert(matches);
-    expect(matches.length).toEqual(2);
-    expect(matches[0].route).toBe(rootRoute);
-    expect(matches[1].route).toBe(notFoundRoute);
+    it('does not match if a sibling matches', function () {
+      Router.run(routes, '/ryans/happiness', function (App) {
+        var html = React.renderToString(<App />);
+        expect(html).toMatch(/hello/);
+        expect(html).toMatch(/foo/);
+      });
+    });
   });
 
 });
+
