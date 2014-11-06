@@ -1,66 +1,87 @@
+/** @jsx React.DOM */
 var assert = require('assert');
 var expect = require('expect');
 var React = require('react/addons');
-var Route = require('../Route');
 var Redirect = require('../Redirect');
-var Routes = require('../Routes');
+var Route = require('../Route');
+var Router = require('../../Router');
+var ActiveRouteHandler = require('../../components/ActiveRouteHandler');
+var testLocation = require('../../locations/TestLocation');
 
-describe('a Redirect', function () {
+var Nested = React.createClass({
+  render: function () {
+    return (
+      <div>
+        hello
+        <ActiveRouteHandler />
+      </div>
+    );
+  }
+});
 
-  it('redirects from old to new', function (done) {
-    var descriptor = Redirect({ from: 'old', to: 'new' });
+var Foo = React.createClass({
+  render: function () {
+    return <div>foo</div>;
+  }
+});
 
-    expect(descriptor.props.path).toEqual('old');
+var RedirectTarget = React.createClass({
+  render: function () {
+    return <div>redirected</div>;
+  }
+});
 
-    var fakeTransition = {
-      redirect: function (to) {
-        expect(to).toEqual('new');
-        done();
-      }
-    };
 
-    descriptor.props.handler.willTransitionTo(fakeTransition);
+
+describe.only('Redirect', function() {
+
+  describe('at the root of the config', function() {
+    it('redirects', function () {
+      var location = testLocation('/foo');
+      var div = document.createElement('div');
+      var routes = [
+        <Redirect from="/foo" to="/bar"/>,
+        <Route path="/bar" handler={RedirectTarget}/>
+      ];
+      Router.run(routes, location, function (Handler) {
+        var html = React.render(<Handler />, div);
+        expect(div.innerHTML).toMatch(/redirected/);
+      });
+    });
   });
 
-  it('uses params and query from current path', function (done) {
-    var descriptor = Redirect({ from: 'old', to: 'new' });
-    var expectedParams = { foo: 'bar' };
-    var expectedQuery = { baz: 'qux' };
-
-    var fakeTransition = {
-      redirect: function (to, params, query) {
-        expect(params).toEqual(expectedParams);
-        expect(query).toEqual(expectedQuery);
-        done();
-      }
-    };
-
-    descriptor.props.handler.willTransitionTo(fakeTransition, expectedParams, expectedQuery);
-  });
-
-  it('uses params and query from the Redirect definition', function (done) {
-    var expectedParams = { foo: 'bar' };
-    var expectedQuery = { baz: 'qux' };
-    var fakePathParams = { hooba: 'scooba' };
-    var fakePathQuery = { doobie: 'scoobie' };
-
-    var descriptor = Redirect({
-      from: 'old',
-      to: 'new',
-      params: expectedParams,
-      query: expectedQuery
+  describe('nested deeply in the config', function() {
+    it('redirects with absolute paths', function () {
+      var div = document.createElement('div');
+      var routes = (
+        <Route path="/" handler={Nested}>
+          <Route path="foo" handler={Nested}>
+            <Redirect from="/foo/bar" to="/baz" />
+          </Route>
+          <Route path="baz" handler={RedirectTarget}/>
+        </Route>
+      );
+      Router.run(routes, testLocation('/foo/bar'), function (Handler) {
+        var html = React.render(<Handler />, div);
+        expect(div.innerHTML).toMatch(/redirected/);
+      });
     });
 
-    var fakeTransition = {
-      redirect: function (to, params, query) {
-        expect(params).toEqual(expectedParams);
-        expect(query).toEqual(expectedQuery);
-        done();
-      }
-    };
-
-    descriptor.props.handler.willTransitionTo(fakeTransition, fakePathParams, fakePathQuery);
+    it('redirects with relative paths', function () {
+      var div = document.createElement('div');
+      var routes = (
+        <Route path="/" handler={Nested}>
+          <Route path="foo" handler={Nested}>
+            <Redirect from="bar" to="/baz" />
+          </Route>
+          <Route path="baz" handler={RedirectTarget}/>
+        </Route>
+      );
+      Router.run(routes, testLocation('/foo/bar'), function (Handler) {
+        var html = React.render(<Handler />, div);
+        expect(div.innerHTML).toMatch(/redirected/);
+      });
+    });
   });
-
 });
 
