@@ -1,5 +1,5 @@
-var assign = require('react/lib/Object.assign');
-var Route = require('./Route');
+var React = require('react');
+var ConfigRoute = require('../mixins/ConfigRoute');
 
 /**
  * A <NotFoundRoute> is a special kind of <Route> that
@@ -8,13 +8,18 @@ var Route = require('./Route');
  * Only one such route may be used at any given level in the
  * route hierarchy.
  */
-function NotFoundRoute(props) {
-  return Route(
-    assign({}, props, {
+var NotFoundRoute = React.createClass({
+  mixins: [ ConfigRoute ],
+
+  getDefaultProps: function() {
+    return {
+      // TODO: make sure we ignore any path the user might supply, or
+      // throw/warn when we encounter it
       path: null,
       catchAll: true
-    })
-  );
-}
+    };
+  }
+});
 
 module.exports = NotFoundRoute;
+
