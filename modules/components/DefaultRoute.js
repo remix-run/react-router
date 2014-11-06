@@ -1,5 +1,5 @@
-var assign = require('react/lib/Object.assign');
-var Route = require('./Route');
+var React = require('react');
+var ConfigRoute = require('../mixins/ConfigRoute');
 
 /**
  * A <DefaultRoute> component is a special kind of <Route> that
@@ -7,13 +7,16 @@ var Route = require('./Route');
  * Only one such route may be used at any given level in the
  * route hierarchy.
  */
-function DefaultRoute(props) {
-  return Route(
-    assign({}, props, {
+var DefaultRoute = React.createClass({
+  mixins: [ ConfigRoute ],
+
+  getDefaultProps: function() {
+    return {
       path: null,
       isDefault: true
-    })
-  );
-}
+    };
+  }
+});
 
 module.exports = DefaultRoute;
+

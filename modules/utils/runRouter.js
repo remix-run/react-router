@@ -44,7 +44,7 @@ function runRouter(router, callback) {
 
   if (typeof location === 'string') {
     warning(
-      !canUseDOM,
+      !canUseDOM || process.env.NODE_ENV === 'test',
       'You should not use a static location in a DOM environment because ' +
       'the router will not be kept in sync with the current URL'
     );

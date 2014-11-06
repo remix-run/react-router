@@ -1,19 +1,5 @@
 var React = require('react');
-var withoutProperties = require('../utils/withoutProperties');
-
-/**
- * A map of <Route> component props that are reserved for use by the
- * router and/or React. All other props are considered "static" and
- * are passed through to the route handler.
- */
-var RESERVED_PROPS = {
-  handler: true,
-  path: true,
-  defaultRoute: true,
-  notFoundRoute: true,
-  paramNames: true,
-  children: true // ReactChildren
-};
+var ConfigRoute = require('../mixins/ConfigRoute');
 
 /**
  * <Route> components specify components that are rendered to the page when the
@@ -64,26 +50,10 @@ var Route = React.createClass({
 
   displayName: 'Route',
 
-  statics: {
-
-    getUnreservedProps: function (props) {
-      return withoutProperties(props, RESERVED_PROPS);
-    }
-
-  },
+  mixins: [ ConfigRoute ],
 
   propTypes: {
-    handler: React.PropTypes.any.isRequired,
-    path: React.PropTypes.string,
-    name: React.PropTypes.string,
     ignoreScrollBehavior: React.PropTypes.bool
-  },
-
-  render: function () {
-    throw new Error(
-      'The <Route> component should not be rendered directly. You may be ' +
-      'missing a <Routes> wrapper around your list of routes.'
-    );
   }
 
 });
