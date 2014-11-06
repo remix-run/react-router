@@ -12,29 +12,34 @@ describe('runRouter', function () {
 
   var Nested = React.createClass({
     render: function () {
-      return React.DOM.div({},
-        React.DOM.h1({}, 'hello'),
-        ActiveRouteHandler()
+      return (
+        <div>
+          <h1>hello</h1>
+          <ActiveRouteHandler/>
+        </div>
       );
     }
   });
 
   var Echo = React.createClass({
-    render: function () { return React.DOM.div({}, this.props.name); }
+    render: function () {
+      return <div>{this.props.name}</div>;
+    }
   });
 
   var ParamEcho = React.createClass({
     mixins: [ActiveState],
-    render: function () { return React.DOM.div({}, this.getActiveParams().name); }
+    render: function () {
+      return <div>{this.getActiveParams().name}</div>
+    }
   });
 
-
   var RPFlo = React.createClass({
-    render: function () { return React.DOM.div({}, 'rpflo'); }
+    render: function () { return <div>rpflo</div>; }
   });
 
   var MJ = React.createClass({
-    render: function () { return React.DOM.div({}, 'mj'); }
+    render: function () { return <div>mj</div>; }
   });
 
   it('matches a root route', function (done) {
@@ -62,12 +67,12 @@ describe('runRouter', function () {
 
   it('matches nested routes', function (done) {
     var routes = (
-      Route({handler: Nested, path: '/'},
-        Route({handler: MJ, path: '/mj'})
-      )
+      <Route handler={Nested} path='/'>
+        <Route handler={MJ} path='/mj'/>
+      </Route>
     );
     Router.run(routes, '/mj', function (Handler, state) {
-      var html = React.renderToString(Handler());
+      var html = React.renderToString(<Handler/>);
       expect(html).toMatch(/hello/);
       expect(html).toMatch(/mj/);
       done();
@@ -77,7 +82,7 @@ describe('runRouter', function () {
   it('supports dynamic segments', function (done) {
     var routes = Route({handler: ParamEcho, path: '/:name'});
     Router.run(routes, '/d00d3tt3', function (Handler, state) {
-      var html = React.renderToString(Handler());
+      var html = React.renderToString(<Handler/>);
       expect(html).toMatch(/d00d3tt3/);
       done();
     });
@@ -99,15 +104,14 @@ describe('runRouter', function () {
   it('does not blow away the previous HTML', function(done) {
     var location = testLocation('/foo');
     var routes = (
-      Route({handler: Nested, path: '/'},
-        Route({handler: ParamEcho, path: ':name'})
-      )
+      <Route handler={Nested} path='/'>
+        <Route handler={ParamEcho} path=':name'/>
+      </Route>
     );
-    var router = new Router(routes, location);
     var div = document.createElement('div');
     var count = 0;
-    runRouter(router, function(Handler, state) {
-      React.render(Handler(), div, function() {
+    Router.run(routes, location, function(Handler, state) {
+      React.render(<Handler/>, div, function() {
         count++;
         if (count == 1) {
           expect(div.innerHTML).toMatch(/foo/);

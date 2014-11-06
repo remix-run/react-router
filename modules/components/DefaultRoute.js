@@ -12,6 +12,8 @@ var DefaultRoute = React.createClass({
 
   getDefaultProps: function() {
     return {
+      // TODO: make sure we ignore any path the user might supply, or
+      // throw/warn when we encounter it
       path: null,
       isDefault: true
     };

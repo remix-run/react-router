@@ -26,7 +26,7 @@ var Foo = React.createClass({
   }
 });
 
-describe.only('DefaultRoute', function() {
+describe('DefaultRoute', function() {
 
   it('renders when the parent route path matches', function () {
     var routes = (

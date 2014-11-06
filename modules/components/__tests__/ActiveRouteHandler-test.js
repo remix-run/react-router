@@ -1,3 +1,5 @@
+/** @jsx React.DOM */
+
 var assert = require('assert');
 var expect = require('expect');
 var React = require('react');
@@ -15,21 +17,31 @@ describe('ActiveRouteHandler', function () {
         this.forceUpdate(finishTest);
       },
       render: function () {
-        return React.DOM.div({},
-          React.DOM.h1({}, 'hello'),
-          ActiveRouteHandler()
+        return (
+          <div>
+            hello
+            <ActiveRouteHandler />
+          </div>
         );
       }
     });
 
     var Foo = React.createClass({
-      render: function () { return React.DOM.div({}, 'foo'); }
+      render: function () {
+        return <div>foo</div>;
+      }
     });
 
-    var routes = Route({path: '/', handler: Nested}, Route({path: 'foo', handler: Foo}));
+    var routes = (
+      <Route path='/' handler={Nested}>
+        <Route path='foo' handler={Foo}/>
+      </Route>
+    );
+
     var div = document.createElement('div');
+
     Router.run(routes, '/foo', function (App) {
-      React.render(App(), div);
+      React.render(<App />, div);
     });
 
     function finishTest() {
