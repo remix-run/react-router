@@ -43,11 +43,11 @@ describe('runRouter', function () {
   });
 
   it('matches a root route', function (done) {
-    var routes = Route({handler: Echo, path: '/'});
+    var routes = <Route path="/" handler={Echo} />;
     Router.run(routes, '/', function (Handler, state) {
       // TODO: figure out why we're getting this warning here
       // WARN: 'Warning: You cannot pass children to a RouteHandler'
-      var html = React.renderToString(Handler({name: 'ryan'}));
+      var html = React.renderToString(<Handler name="ryan"/>);
       expect(html).toMatch(/ryan/);
       done();
     });
@@ -55,11 +55,11 @@ describe('runRouter', function () {
 
   it('matches an array of routes', function (done) {
     var routes = [
-      Route({handler: RPFlo, path: '/rpflo'}),
-      Route({handler: MJ, path: '/mj'})
+      <Route handler={RPFlo} path="/rpflo"/>,
+      <Route handler={MJ} path="/mj"/>
     ];
     Router.run(routes, '/mj', function (Handler, state) {
-      var html = React.renderToString(Handler());
+      var html = React.renderToString(<Handler/>);
       expect(html).toMatch(/mj/);
       done();
     });
@@ -80,7 +80,7 @@ describe('runRouter', function () {
   });
 
   it('supports dynamic segments', function (done) {
-    var routes = Route({handler: ParamEcho, path: '/:name'});
+    var routes = <Route handler={ParamEcho} path='/:name'/>;
     Router.run(routes, '/d00d3tt3', function (Handler, state) {
       var html = React.renderToString(<Handler/>);
       expect(html).toMatch(/d00d3tt3/);
@@ -90,12 +90,12 @@ describe('runRouter', function () {
 
   it('supports nested dynamic segments', function (done) {
     var routes = (
-      Route({handler: Nested, path: '/:foo'},
-        Route({handler: ParamEcho, path: ':name'})
-      )
+      <Route handler={Nested} path="/:foo">
+        <Route handler={ParamEcho} path=":name"/>
+      </Route>
     );
     Router.run(routes, '/foo/bar', function (Handler, state) {
-      var html = React.renderToString(Handler());
+      var html = React.renderToString(<Handler />);
       expect(html).toMatch(/bar/);
       done();
     });
