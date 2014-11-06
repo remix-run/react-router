@@ -166,10 +166,26 @@ function Router(routes, location, onError, onAbort) {
   this.onAbort = onAbort;
   this.RootHandler = createRootHandler(this);
   this.activeRefs = [];
+  this.changeHandlers = [];
+  this.lastChange;
+  this.locationChangeHandler = this.locationChangeHandler.bind(this);
   this.state = {};
 }
 
 assign(Router.prototype, {
+
+  pushChangeHandler: function(handler) {
+    this.changeHandlers.push(handler);
+  },
+
+  locationChangeHandler: function(change) {
+    var i = 0;
+
+    while (i < this.changeHandlers.length)
+      this.changeHandlers[i++].call(this, change);
+
+    this.lastChange = change;
+  },
 
   /**
    * Returns an absolute URL path created from the given route
@@ -327,10 +343,9 @@ Router.run = function (router, location, callback) {
   if (location === HistoryLocation && !supportsHistory())
     location = RefreshLocation;
 
-  runRouter(
-    router instanceof Router ? router : new Router(router, location),
-    callback
-  );
+  router = router instanceof Router ? router : new Router(router, location);
+
+  runRouter(router, callback);
 };
 
 module.exports = Router;

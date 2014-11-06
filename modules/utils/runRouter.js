@@ -19,19 +19,7 @@ function createDynamicAbortHandler(router, location) {
   };
 }
 
-var _changeHandlers = [];
-var _lastChange;
-
-function locationChangeHandler(change) {
-  var i = 0;
-
-  while (i < _changeHandlers.length)
-    _changeHandlers[i++].call(this, change);
-
-  _lastChange = change;
-}
-
-var _currentLocation;
+//var _currentLocation;
 
 /**
  * Runs a router using the given location and calls callback(Handler, state)
@@ -72,18 +60,16 @@ function runRouter(router, callback) {
       location
     );
 
-    invariant(
-      _currentLocation == null || _currentLocation === location,
-      'You are already using %s. You cannot use %s on the same page',
-      _currentLocation, location
-    );
+    //invariant(
+      //_currentLocation == null || _currentLocation === location,
+      //'You are already using %s. You cannot use %s on the same page',
+      //_currentLocation, location
+    //);
 
-    // Setup the location if it needs it.
-    if (_currentLocation !== location) {
-      _currentLocation = location;
-
-      if (location.setup)
-        location.setup(locationChangeHandler);
+    // TODO: fix this hack
+    if (location.setup && !location._setup) {
+      location._setup = true;
+      location.setup(router.locationChangeHandler);
     }
 
     // Listen for changes to the location.
@@ -92,14 +78,14 @@ function runRouter(router, callback) {
         router.dispatch(change.path, dispatchHandler);
     }
 
-    _changeHandlers.push(changeHandler);
+    router.pushChangeHandler(changeHandler);
 
     onAbort = router.onAbort || createDynamicAbortHandler(router, location);
 
     // Bootstrap using the most recent location change
     // or the current path if there is none.
     router.dispatch(
-      _lastChange ? _lastChange.path : location.getCurrentPath(),
+      router.lastChange ? router.lastChange.path : location.getCurrentPath(),
       dispatchHandler
     );
   }

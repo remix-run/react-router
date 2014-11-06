@@ -11,49 +11,41 @@ var testLocation = require('../locations/TestLocation');
 describe('Router', function () {
   describe('transitions', function () {
 
-    function redirect(transition) { transition.redirect('/foo'); }
+    function redirect(transition) {
+      transition.redirect('/foo');
+    }
 
     function returnNull() { return null; }
 
-    var To = React.createClass({
+    var Redirect = React.createClass({
       statics: { willTransitionTo: redirect },
-      render: returnNull 
-    });
-
-    var From = React.createClass({
-      statics: { willTransitionFrom: redirect },
-      render: returnNull 
+      render: returnNull
     });
 
     var Foo = React.createClass({
-      render: function () { return React.DOM.div('foo'); }
+      render: function () { return React.DOM.div({}, 'foo'); }
     });
 
     var routes = [
-      Route({path: '/from', handler: From}),
-      Route({path: '/to', handler: To}),
+      Route({path: '/redirect', handler: Redirect}),
       Route({path: '/foo', handler: Foo})
     ];
 
-    describe('redirect', function () {
-      it('in willTransitionTo', function (done) {
-        assert.ok(true); done();
-        // TODO: figure out how to test transitions and such
-        //var div = document.createElement('div');
-        //Router.run(routes, function (App, state) {
-          //React.render(App(), div, function () {
-            //expect(div.innerHTML).toMatch(/foo/);
-            //setTimeout(done, 1000);
-          //});
-        //});
+    describe('transition.redirect', function () {
+      it('redirects in willTransitionTo', function (done) {
+        var div = document.createElement('div');
+        var location = testLocation('/redirect');
+        Router.run(routes, location, function (Handler, state) {
+          React.render(Handler(), div, function () {
+            expect(div.innerHTML).toMatch(/foo/);
+            done();
+          });
+        });
       });
-
-      it('in willTransitionFrom');
     });
 
-    describe('abort', function () {
-      it('in willTransitionTo');
-      it('in willTransitionFrom');
+    describe('transition.abort', function () {
+      it('aborts in willTransitionTo');
     });
   });
 
@@ -78,7 +70,7 @@ describe('Router', function () {
 
       var Foo = React.createClass({
         render: function () {
-          return React.DOM.div({}, ActiveRouteHandler());
+          return React.DOM.div({}, React.createElement(ActiveRouteHandler));
         }
       });
 
@@ -95,19 +87,23 @@ describe('Router', function () {
         }
       });
 
-      var location = testLocation('/bar');
       var routes = (
         Route({handler: Foo, path: '/'},
           Route({name: 'bar', handler: Bar}),
           Route({name: 'baz', handler: Bar})
         )
       );
+
+      var location = testLocation('/bar');
+
       Router.run(routes, location, function (Handler, state) {
-        React.render(Handler(), div, function() {
+        React.render(React.createElement(Handler), div, function() {
           location.push('/baz');
         });
       });
     });
+
+
   });
 
 });

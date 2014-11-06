@@ -1,4 +1,5 @@
 var LocationActions = require('../actions/LocationActions');
+
 var makeTestLocation = function(path) {
 
   return {
