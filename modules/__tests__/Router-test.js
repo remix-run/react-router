@@ -6,6 +6,7 @@ var Router = require('../Router');
 var runRouter = require('../utils/runRouter');
 var ActiveRouteHandler = require('../components/ActiveRouteHandler');
 var ActiveState = require('../mixins/ActiveState');
+var testLocation = require('../locations/TestLocation');
 
 describe('Router', function () {
   describe('transitions', function () {
@@ -70,4 +71,43 @@ describe('Router', function () {
       });
     });
   });
+
+  describe('transitionFrom', function() {
+    it('sends a rendered component', function(done) {
+      var div = document.createElement('div');
+
+      var Foo = React.createClass({
+        render: function () {
+          return React.DOM.div({}, ActiveRouteHandler());
+        }
+      });
+
+      var Bar = React.createClass({
+        statics: {
+          willTransitionFrom: function(transition, component) {
+            expect(div.querySelector('#bar')).toEqual(component.getDOMNode());
+            done();
+          }
+        },
+
+        render: function () {
+          return React.DOM.div({id: 'bar'}, 'bar');
+        }
+      });
+
+      var location = testLocation('/bar');
+      var routes = (
+        Route({handler: Foo, path: '/'},
+          Route({name: 'bar', handler: Bar}),
+          Route({name: 'baz', handler: Bar})
+        )
+      );
+      Router.run(routes, location, function (Handler, state) {
+        React.render(Handler(), div, function() {
+          location.push('/baz');
+        });
+      });
+    });
+  });
+
 });

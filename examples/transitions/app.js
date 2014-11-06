@@ -2,8 +2,10 @@
 var React = require('react');
 var Router = require('react-router');
 var Route = Router.Route;
+var DefaultRoute = Router.DefaultRoute;
 var Routes = Router.Routes;
 var Link = Router.Link;
+var ActiveRouteHandler = Router.ActiveRouteHandler;
 
 var App = React.createClass({
   render: function () {
@@ -13,9 +15,15 @@ var App = React.createClass({
           <li><Link to="dashboard">Dashboard</Link></li>
           <li><Link to="form">Form</Link></li>
         </ul>
-        {this.props.activeRouteHandler() || <h1>Home</h1>}
+        <ActiveRouteHandler />
       </div>
     );
+  }
+});
+
+var Home = React.createClass({
+  render: function() {
+    return <h1>Home</h1>;
   }
 });
 
@@ -59,12 +67,13 @@ var Form = React.createClass({
 });
 
 var routes = (
-  <Routes>
-    <Route handler={App}>
-      <Route name="dashboard" handler={Dashboard}/>
-      <Route name="form" handler={Form}/>
-    </Route>
-  </Routes>
+  <Route handler={App}>
+    <DefaultRoute handler={Home}/>
+    <Route name="dashboard" handler={Dashboard}/>
+    <Route name="form" handler={Form}/>
+  </Route>
 );
 
-React.renderComponent(routes, document.getElementById('example'));
+Router.run(routes, function(Handler) {
+  React.render(<Handler />, document.getElementById('example'));
+});

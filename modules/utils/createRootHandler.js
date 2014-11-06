@@ -268,13 +268,25 @@ function createRootHandler(router) {
       return null;
     },
 
+    registerRef: function(ref, index) {
+      return router.registerRef(ref, index);
+    },
+
+    unregisterRef: function(index) {
+      router.unregisterRef(index);
+    },
+
     childContextTypes: {
-      getActiveRouteHandlerFor: React.PropTypes.func.isRequired
+      getActiveRouteHandlerFor: React.PropTypes.func.isRequired,
+      registerRef: React.PropTypes.func.isRequired,
+      unregisterRef: React.PropTypes.func.isRequired
     },
 
     getChildContext: function () {
       return {
-        getActiveRouteHandlerFor: this.getActiveRouteHandlerFor
+        getActiveRouteHandlerFor: this.getActiveRouteHandlerFor,
+        registerRef: this.registerRef,
+        unregisterRef: this.unregisterRef
       };
     }
 
