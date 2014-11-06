@@ -8,7 +8,7 @@ var ActiveRouteHandler = require('../../components/ActiveRouteHandler');
 var ActiveState = require('../../mixins/ActiveState');
 var testLocation = require('../../locations/TestLocation');
 
-describe.only('runRouter', function () {
+describe('runRouter', function () {
 
   var Nested = React.createClass({
     render: function () {

@@ -4,6 +4,8 @@ var Router = require('react-router');
 var Route = Router.Route;
 var Routes = Router.Routes;
 var Link = Router.Link;
+var ActiveRouteHandler = Router.ActiveRouteHandler;
+var ActiveState = Router.ActiveState;
 
 var App = React.createClass({
   render: function () {
@@ -14,18 +16,21 @@ var App = React.createClass({
           <li><Link to="user" params={{userId: "123"}} query={{showAge: true}}>Bob With Query Params</Link></li>
           <li><Link to="user" params={{userId: "abc"}}>Sally</Link></li>
         </ul>
-        <this.props.activeRouteHandler />
+        <ActiveRouteHandler />
       </div>
     );
   }
 });
 
 var User = React.createClass({
+  mixins: [ ActiveState ],
+
   render: function () {
-    var age = this.props.query.showAge ? '33' : '';
+    var age = this.getActiveQuery().showAge ? '33' : '';
+    var userId = this.getActiveParams().userId;
     return (
       <div className="User">
-        <h1>User id: {this.props.params.userId}</h1>
+        <h1>User id: {userId}</h1>
         {age}
       </div>
     );
@@ -33,11 +38,12 @@ var User = React.createClass({
 });
 
 var routes = (
-  <Routes>
-    <Route handler={App}>
-      <Route name="user" path="user/:userId" handler={User}/>
-    </Route>
-  </Routes>
+  <Route handler={App}>
+    <Route name="user" path="user/:userId" handler={User}/>
+  </Route>
 );
 
-React.renderComponent(routes, document.getElementById('example'));
+Router.run(routes, function(Handler, state) {
+  React.renderComponent(<Handler />, document.getElementById('example'));
+});
+

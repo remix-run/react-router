@@ -206,7 +206,7 @@ assign(Router.prototype, {
    *                               { route: <PostRoute>, params: { id: '123' } } ]
    */
   match: function (path) {
-    return findMatches(path, this.routes, this.defaultRoute, this.notFoundRoute);
+    return findMatches(Path.withoutQuery(path), this.routes, this.defaultRoute, this.notFoundRoute);
   },
 
   /**

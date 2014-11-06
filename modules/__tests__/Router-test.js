@@ -55,4 +55,19 @@ describe('Router', function () {
       it('in willTransitionFrom');
     });
   });
+
+  describe('query params', function() {
+    var Foo = React.createClass({
+      render: function () { return React.DOM.div({}, this.props.query); }
+    });
+
+    it('renders with query params', function(done) {
+      var routes = Route({handler: Foo, path: '/'});
+      Router.run(routes, '/?foo=bar', function (Handler, state) {
+        var html = React.renderToString(Handler({query: state.activeQuery.foo}));
+        expect(html).toMatch(/bar/);
+        done();
+      });
+    });
+  });
 });
