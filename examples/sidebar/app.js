@@ -6,6 +6,7 @@ var Route = Router.Route;
 var DefaultRoute = Router.DefaultRoute;
 var Link = Router.Link;
 var ActiveState = Router.ActiveState;
+var ActiveRouteHandler = Router.ActiveRouteHandler;
 var data = require('./data');
 
 var CategoryNav = React.createClass({
@@ -86,7 +87,7 @@ var App = React.createClass({
       <div>
         <Sidebar activeCategory={activeCategory} categories={data.getAll()}/>
         <div className="Content">
-          <this.props.activeRouteHandler />
+          <ActiveRouteHandler />
         </div>
       </div>
     );
@@ -94,8 +95,10 @@ var App = React.createClass({
 });
 
 var Item = React.createClass({
+  mixins: [ ActiveState ],
+
   render: function () {
-    var params = this.props.params;
+    var params = this.getActiveParams();
     var category = data.lookupCategory(params.category);
     var item = data.lookupItem(params.category, params.name);
     return (
@@ -136,13 +139,13 @@ var Index = React.createClass({
 });
 
 var routes = (
-  <Routes>
-    <Route handler={App}>
-      <DefaultRoute handler={Index}/>
-      <Route name="item" path=":category/:name" handler={Item} />
-    </Route>
-  </Routes>
+  <Route handler={App}>
+    <DefaultRoute handler={Index}/>
+    <Route name="item" path=":category/:name" handler={Item} />
+  </Route>
 );
 
-React.renderComponent(routes, document.getElementById('example'));
+Router.run(routes, function(Handler) {
+  React.renderComponent(<Handler />, document.getElementById('example'));
+});
 
