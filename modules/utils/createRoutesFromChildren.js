@@ -1,5 +1,7 @@
 var React = require('react');
 var Route = require('./Route');
+var Redirect = require('./Redirect');
+var RedirectComponent = require('../components/Redirect');
 var invariant = require('react/lib/invariant');
 var Path = require('./Path');
 
@@ -8,6 +10,9 @@ var Path = require('./Path');
  * all of its children.
  */
 function processRoute(component, parentRoute, namedRoutes) {
+  if (component.props.isRedirect)
+    component = RedirectComponent.createRoute(component.props);
+
   var props = component.props;
 
   invariant(

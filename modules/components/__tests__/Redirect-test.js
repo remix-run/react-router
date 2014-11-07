@@ -33,7 +33,7 @@ var RedirectTarget = React.createClass({
 
 
 
-describe.only('Redirect', function() {
+describe('Redirect', function() {
 
   describe('at the root of the config', function() {
     it('redirects', function () {
