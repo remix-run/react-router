@@ -84,9 +84,17 @@ function runTransitionFromHooks(matches, transition, callback) {
   var hooks = reversedArray(matches).map(function (match) {
     return function () {
       var handler = match.route.props.handler;
+      var willTransitionFrom = handler.willTransitionFrom;
 
-      if (!transition.isAborted && handler.willTransitionFrom)
-        return handler.willTransitionFrom(transition, match.component);
+      // React components used without JSX (eg. using React.createFactory)
+      // do not proxy their static properties to the factory. There is however a
+      // "type"-property on the factory referring to the actual class.
+      if (!willTransitionFrom && handler.type && handler.type.willTransitionFrom) {
+        willTransitionFrom = handler.type.willTransitionFrom;
+      }
+
+      if (!transition.isAborted && willTransitionFrom)
+        return willTransitionFrom(transition, match.component);
 
       var promise = transition.promise;
       delete transition.promise;
@@ -107,9 +115,14 @@ function runTransitionToHooks(matches, transition, query, callback) {
   var hooks = matches.map(function (match) {
     return function () {
       var handler = match.route.props.handler;
+      var willTransitionTo = handler.willTransitionTo;
 
-      if (!transition.isAborted && handler.willTransitionTo)
-        handler.willTransitionTo(transition, match.params, query);
+      if (!willTransitionTo && handler.type && handler.type.willTransitionTo) {
+        willTransitionTo = handler.type.willTransitionTo;
+      }
+
+      if (!transition.isAborted && willTransitionTo)
+        willTransitionTo(transition, match.params, query);
 
       var promise = transition.promise;
       delete transition.promise;
