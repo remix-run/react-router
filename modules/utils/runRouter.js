@@ -38,7 +38,7 @@ function runRouter(router, callback) {
     } else if (abortReason) {
       onAbort.call(router, abortReason);
     } else {
-      callback(router.RootHandler, router.state);
+      callback(router.RootHandler, router._nextState);
     }
   }
 

@@ -78,6 +78,10 @@ function createRootHandler(router) {
     },
 
     getChildContext: function () {
+      // TODO: move this somewhere better? it was in the `render` method but
+      // context all gets setup before render is called, so this is our chance to
+      // flip the switch
+      router.flipSwitch();
       return {
         activeRoutes: this.getActiveRoutes(),
         activeParams: this.getActiveParams(),

@@ -287,7 +287,7 @@ assign(Router.prototype, {
           return match.route;
         });
 
-        router.state = {
+        router._nextState = {
           path: path,
           matches: matches,
           activeRoutes: routes,
@@ -310,6 +310,11 @@ assign(Router.prototype, {
 
   unregisterRef: function(index) {
     activeRefs.splice(index, 1);
+  },
+
+  flipSwitch: function() {
+    this.state = this._nextState;
+    delete this._nextState;
   }
 
 });

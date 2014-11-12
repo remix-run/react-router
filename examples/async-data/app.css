@@ -1,0 +1,52 @@
+body {
+  font-family: "Helvetica Neue", Arial;
+  font-weight: 200;
+}
+
+a {
+  color: hsl(200, 50%, 50%);
+}
+
+a.active {
+  color: hsl(20, 50%, 50%);
+}
+
+.loading {
+  opacity: 0.5;
+}
+
+#example {
+  position: absolute;
+}
+
+.App {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  width: 500px;
+  height: 500px;
+}
+
+.ContactList {
+  position: absolute;
+  left: 0;
+  top: 0;
+  bottom: 0;
+  width: 300px;
+  overflow: auto;
+  padding: 20px;
+}
+
+.Content {
+  position: absolute;
+  left: 300px;
+  top: 0;
+  bottom: 0;
+  right: 0;
+  border-left: 1px solid #ccc;
+  overflow: auto;
+  padding: 40px;
+}
+
