@@ -7,14 +7,9 @@ following methods must be implemented:
 Methods
 -------
 
-### `setup(onChange)`
+### `addChangeListener(listener)`
 
-Called when the router is first setup. The `onChange` function should be
-called without any arguments when the location changes.
-
-### `teardown`
-
-Called when the router is torn down.
+Adds a function to the location that should be called when it changes.
 
 ### `push`
 
