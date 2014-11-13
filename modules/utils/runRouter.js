@@ -3,6 +3,7 @@ var warning = require('react/lib/warning');
 var invariant = require('react/lib/invariant');
 var canUseDOM = require('react/lib/ExecutionEnvironment').canUseDOM;
 var RefreshLocation = require('../locations/RefreshLocation');
+var createRouteHandler = require('./createRouteHandler');
 var Redirect = require('./Redirect');
 
 function defaultStaticAbortHandler(abortReason) {
@@ -19,8 +20,6 @@ function createDynamicAbortHandler(router, location) {
   };
 }
 
-//var _currentLocation;
-
 /**
  * Runs a router using the given location and calls callback(Handler, state)
  * when the route changes. If the location is static (i.e. a URL path in a web
@@ -28,9 +27,9 @@ function createDynamicAbortHandler(router, location) {
  * should be one of the Router.*Location objects (e.g. Router.HashLocation or
  * Router.HistoryLocation).
  */ 
-function runRouter(router, callback) {
+function runRouter(router, location, callback) {
+  var Handler = createRouteHandler(router, location);
   var onAbort;
-  var location = router.location;
 
   function dispatchHandler(error, abortReason) {
     if (error) {
@@ -38,7 +37,7 @@ function runRouter(router, callback) {
     } else if (abortReason) {
       onAbort.call(router, abortReason);
     } else {
-      callback(router.RootHandler, router._nextState);
+      callback(Handler, router._nextState);
     }
   }
 

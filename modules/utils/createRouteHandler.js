@@ -32,9 +32,7 @@ function queryIsActive(activeQuery, query) {
  * Returns a React class that can be used to render the current state of
  * the given Router.
  */
-function createRootHandler(router) {
-  var location = router.location;
-
+function createRouteHandler(router, location) {
   var ActiveContext = {
 
     /**
@@ -324,4 +322,4 @@ function createRootHandler(router) {
   });
 }
 
-module.exports = createRootHandler;
+module.exports = createRouteHandler;
