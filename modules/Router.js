@@ -159,14 +159,25 @@ function defaultErrorHandler(error) {
 function Router(routes, onError, onAbort) {
   this.defaultRoute = null;
   this.notFoundRoute = null;
-  this.routes = createRoutesFromChildren(routes, this, this.namedRoutes = {});
+  this.routes = [];
+  this.namedRoutes = {};
   this.onError = onError || defaultErrorHandler;
   this.onAbort = onAbort;
   this.activeRefs = [];
   this.state = {};
+
+  if (routes)
+    this.addRoutes(routes);
 }
 
 assign(Router.prototype, {
+
+  /**
+   * Adds all routes in the given nested routes config to this router.
+   */
+  addRoutes: function (routes) {
+    this.routes.push.apply(this.routes, createRoutesFromChildren(routes, this, this.namedRoutes));
+  },
 
   /**
    * Returns an absolute URL path created from the given route
