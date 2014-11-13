@@ -1,40 +1,34 @@
 var LocationActions = require('../actions/LocationActions');
 
-var _onChange;
+var _listener;
+
+function notifyChange(type) {
+  if (_listener)
+    _listener({ type: type, path: TestLocation.getCurrentPath() });
+}
 
 var TestLocation = {
 
   history: [],
 
-  setup: function (onChange) {
-    _onChange = onChange;
+  addChangeListener: function (listener) {
+    // TestLocation only ever supports a single listener at a time.
+    _listener = listener;
   },
 
   push: function (path) {
     TestLocation.history.push(path);
-
-    _onChange({
-      path: path,
-      type: LocationActions.PUSH
-    });
+    notifyChange(LocationActions.PUSH);
   },
 
   replace: function (path) {
     TestLocation.history[TestLocation.history.length - 1] = path;
-
-    _onChange({
-      path: path,
-      type: LocationActions.REPLACE
-    });
+    notifyChange(LocationActions.REPLACE);
   },
 
   pop: function () {
     TestLocation.history.pop();
-
-    _onChange({
-      path: TestLocation.getCurrentPath(),
-      type: LocationActions.POP
-    });
+    notifyChange(LocationActions.POP);
   },
 
   getCurrentPath: function () {

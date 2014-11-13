@@ -60,23 +60,20 @@ function runRouter(router, callback) {
       location
     );
 
-    if (location.setup)
-      location.setup(router.locationChangeHandler);
-
     // Listen for changes to the location.
-    function changeHandler(change) {
+    function changeListener(change) {
       if (router.state.path !== change.path)
         router.dispatch(change.path, dispatchHandler);
     }
 
-    router.pushChangeHandler(changeHandler);
+    if (location.addChangeListener)
+      location.addChangeListener(changeListener);
 
     onAbort = router.onAbort || createDynamicAbortHandler(router, location);
 
-    // Bootstrap using the most recent location change
-    // or the current path if there is none.
+    // Bootstrap using the current path.
     router.dispatch(
-      router.lastChange ? router.lastChange.path : location.getCurrentPath(),
+      location.getCurrentPath(),
       dispatchHandler
     );
   }

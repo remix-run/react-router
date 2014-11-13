@@ -18,21 +18,28 @@ function ensureSlash() {
   return false;
 }
 
-var _onChange, _isListening;
+var _changeListeners = [];
+
+function notifyChange(type) {
+  var change = {
+    type: type,
+    path: getHashPath()
+  };
+
+  _changeListeners.forEach(function (listener) {
+    listener(change);
+  });
+}
+
+var _isListening = false;
 
 function onHashChange() {
   if (ensureSlash()) {
-    var path = getHashPath();
-
-    _onChange({
-      // If we don't have an _actionType then all we know is the hash
-      // changed. It was probably caused by the user clicking the Back
-      // button, but may have also been the Forward button or manual
-      // manipulation. So just guess 'pop'.
-      type: _actionType || LocationActions.POP,
-      path: getHashPath()
-    });
-
+    // If we don't have an _actionType then all we know is the hash
+    // changed. It was probably caused by the user clicking the Back
+    // button, but may have also been the Forward button or manual
+    // manipulation. So just guess 'pop'.
+    notifyChange(_actionType || LocationActions.POP);
     _actionType = null;
   }
 }
@@ -42,8 +49,8 @@ function onHashChange() {
  */
 var HashLocation = {
 
-  setup: function (onChange) {
-    _onChange = onChange;
+  addChangeListener: function (listener) {
+    _changeListeners.push(listener);
 
     // Do this BEFORE listening for hashchange.
     ensureSlash();
@@ -58,16 +65,6 @@ var HashLocation = {
     }
 
     _isListening = true;
-  },
-
-  teardown: function () {
-    if (window.removeEventListener) {
-      window.removeEventListener('hashchange', onHashChange, false);
-    } else {
-      window.detachEvent('onhashchange', onHashChange);
-    }
-
-    _isListening = false;
   },
 
   push: function (path) {

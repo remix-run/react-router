@@ -1,13 +1,23 @@
 var LocationActions = require('../actions/LocationActions');
 var getWindowPath = require('../utils/getWindowPath');
 
-var _onChange, _isListening;
+var _changeListeners = [];
+
+function notifyChange(type) {
+  var change = {
+    type: type,
+    path: getWindowPath()
+  };
+
+  _changeListeners.forEach(function (listener) {
+    listener(change);
+  });
+}
+
+var _isListening = false;
 
 function onPopState() {
-  _onChange({
-    type: LocationActions.POP,
-    path: getWindowPath()
-  });
+  notifyChange(LocationActions.POP);
 }
 
 /**
@@ -15,8 +25,8 @@ function onPopState() {
  */
 var HistoryLocation = {
 
-  setup: function (onChange) {
-    _onChange = onChange;
+  addChangeListener: function (listener) {
+    _changeListeners.push(listener);
 
     if (_isListening)
       return;
@@ -30,32 +40,14 @@ var HistoryLocation = {
     _isListening = true;
   },
 
-  teardown: function () {
-    if (window.removeEventListener) {
-      window.removeEventListener('popstate', onPopState, false);
-    } else {
-      window.detachEvent('popstate', onPopState);
-    }
-
-    _isListening = false;
-  },
-
   push: function (path) {
     window.history.pushState({ path: path }, '', path);
-
-    _onChange({
-      type: LocationActions.PUSH,
-      path: getWindowPath()
-    });
+    notifyChange(LocationActions.PUSH);
   },
 
   replace: function (path) {
     window.history.replaceState({ path: path }, '', path);
-
-    _onChange({
-      type: LocationActions.REPLACE,
-      path: getWindowPath()
-    });
+    notifyChange(LocationActions.REPLACE);
   },
 
   pop: function () {
