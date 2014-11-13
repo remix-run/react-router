@@ -43,7 +43,7 @@ var routes = (
   </Route>
 );
 
-Router.run(routes, function(Handler, state) {
+Router.run(routes, function (Handler, state) {
   React.renderComponent(<Handler />, document.getElementById('example'));
 });
 

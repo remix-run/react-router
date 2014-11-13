@@ -10,7 +10,7 @@ var ConfigRoute = require('../mixins/ConfigRoute');
 var DefaultRoute = React.createClass({
   mixins: [ ConfigRoute ],
 
-  getDefaultProps: function() {
+  getDefaultProps: function () {
     return {
       // TODO: make sure we ignore any path the user might supply, or
       // throw/warn when we encounter it

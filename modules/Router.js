@@ -284,7 +284,7 @@ assign(Router.prototype, {
     });
   },
 
-  registerRef: function(ref, index) {
+  registerRef: function (ref, index) {
     if (index != null)
       this.activeRefs[index] = ref;
     else
@@ -292,11 +292,11 @@ assign(Router.prototype, {
     return index;
   },
 
-  unregisterRef: function(index) {
+  unregisterRef: function (index) {
     activeRefs.splice(index, 1);
   },
 
-  flipSwitch: function() {
+  flipSwitch: function () {
     this.state = this._nextState;
     delete this._nextState;
   }

@@ -33,9 +33,9 @@ var RedirectTarget = React.createClass({
 
 
 
-describe('Redirect', function() {
+describe('Redirect', function () {
 
-  describe('at the root of the config', function() {
+  describe('at the root of the config', function () {
     it('redirects', function () {
       TestLocation.history = [ '/foo' ];
 
@@ -52,7 +52,7 @@ describe('Redirect', function() {
     });
   });
 
-  describe('nested deeply in the config', function() {
+  describe('nested deeply in the config', function () {
     it('redirects with absolute paths', function () {
       TestLocation.history = [ '/foo/bar' ];
 

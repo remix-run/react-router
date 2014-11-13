@@ -32,9 +32,9 @@ var NotFound = React.createClass({
 
 
 
-describe('NotFoundRoute', function() {
+describe('NotFoundRoute', function () {
 
-  describe('at the root of the config', function() {
+  describe('at the root of the config', function () {
     it('renders when no routes match', function () {
       var routes = <NotFoundRoute handler={NotFound}/>;
       Router.run(routes, '/ryans-patience', function (Handler) {
@@ -44,7 +44,7 @@ describe('NotFoundRoute', function() {
     });
   });
 
-  describe('nested in the config', function() {
+  describe('nested in the config', function () {
     it('renders', function () {
       var routes = (
         <Route path='/' handler={Nested}>
@@ -60,7 +60,7 @@ describe('NotFoundRoute', function() {
     });
   });
 
-  describe('deeply nested in the config', function() {
+  describe('deeply nested in the config', function () {
     var routes = (
       <Route path='/' handler={Nested}>
         <Route path='ryans' handler={Nested}>

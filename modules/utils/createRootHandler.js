@@ -272,11 +272,11 @@ function createRootHandler(router) {
       return null;
     },
 
-    registerRef: function(ref, index) {
+    registerRef: function (ref, index) {
       return router.registerRef(ref, index);
     },
 
-    unregisterRef: function(index) {
+    unregisterRef: function (index) {
       router.unregisterRef(index);
     },
 

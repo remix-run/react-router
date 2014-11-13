@@ -101,7 +101,7 @@ describe('runRouter', function () {
     });
   });
 
-  it('does not blow away the previous HTML', function(done) {
+  it('does not blow away the previous HTML', function (done) {
     TestLocation.history = [ '/foo' ];
 
     var routes = (
@@ -112,8 +112,8 @@ describe('runRouter', function () {
     var div = document.createElement('div');
     var count = 0;
 
-    Router.run(routes, TestLocation, function(Handler, state) {
-      React.render(<Handler/>, div, function() {
+    Router.run(routes, TestLocation, function (Handler, state) {
+      React.render(<Handler/>, div, function () {
         count++;
         if (count == 1) {
           expect(div.innerHTML).toMatch(/foo/);

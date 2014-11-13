@@ -51,12 +51,12 @@ describe('Router', function () {
     });
   });
 
-  describe('query params', function() {
+  describe('query params', function () {
     var Foo = React.createClass({
       render: function () { return React.DOM.div({}, this.props.query); }
     });
 
-    it('renders with query params', function(done) {
+    it('renders with query params', function (done) {
       var routes = Route({handler: Foo, path: '/'});
       Router.run(routes, '/?foo=bar', function (Handler, state) {
         var html = React.renderToString(Handler({query: state.activeQuery.foo}));
@@ -66,8 +66,8 @@ describe('Router', function () {
     });
   });
 
-  describe('willTransitionFrom', function() {
-    it('sends a rendered component', function(done) {
+  describe('willTransitionFrom', function () {
+    it('sends a rendered component', function (done) {
       var div = document.createElement('div');
 
       var Foo = React.createClass({
@@ -78,7 +78,7 @@ describe('Router', function () {
 
       var Bar = React.createClass({
         statics: {
-          willTransitionFrom: function(transition, component) {
+          willTransitionFrom: function (transition, component) {
             expect(div.querySelector('#bar')).toEqual(component.getDOMNode());
             done();
           }
@@ -99,7 +99,7 @@ describe('Router', function () {
       TestLocation.history = [ '/bar' ];
 
       Router.run(routes, TestLocation, function (Handler, state) {
-        React.render(React.createElement(Handler), div, function() {
+        React.render(React.createElement(Handler), div, function () {
           TestLocation.push('/baz');
         });
       });

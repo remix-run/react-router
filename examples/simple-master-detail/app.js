@@ -38,7 +38,7 @@ var App = React.createClass({
 });
 
 var Index = React.createClass({
-  render: function() {
+  render: function () {
     return <p>Select a state from the left</p>;
   }
 });
@@ -68,7 +68,7 @@ var routes = (
   </Route>
 );
 
-Router.run(routes, function(Handler) {
+Router.run(routes, function (Handler) {
   React.renderComponent(<Handler />, document.getElementById('example'));
 });
 

@@ -79,7 +79,7 @@ var routes = (
   </Route>
 );
 
-Router.run(routes, function(Handler) {
+Router.run(routes, function (Handler) {
   React.renderComponent(<Handler />, document.getElementById('example'));
 });
 

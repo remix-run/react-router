@@ -20,7 +20,7 @@ function getJSON(url) {
         reject(new Error('not found'));
       } else {
         // fake a slow response every now and then
-        setTimeout(function() {
+        setTimeout(function () {
           var data = JSON.parse(req.response);
           resolve(data);
           getJSON._cache[url] = data;

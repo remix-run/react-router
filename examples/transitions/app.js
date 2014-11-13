@@ -22,7 +22,7 @@ var App = React.createClass({
 });
 
 var Home = React.createClass({
-  render: function() {
+  render: function () {
     return <h1>Home</h1>;
   }
 });
@@ -74,6 +74,6 @@ var routes = (
   </Route>
 );
 
-Router.run(routes, function(Handler) {
+Router.run(routes, function (Handler) {
   React.render(<Handler />, document.getElementById('example'));
 });

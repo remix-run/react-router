@@ -13,19 +13,19 @@ var ActiveRouteHandler = React.createClass({
     unregisterRef: React.PropTypes.func.isRequired
   },
 
-  registerRef: function() {
+  registerRef: function () {
     this._refIndex = this.context.registerRef(this.refs[REF_NAME], this._refIndex);
   },
 
-  componentDidUpdate: function() {
+  componentDidUpdate: function () {
     this.registerRef();
   },
 
-  componentDidMount: function() {
+  componentDidMount: function () {
     this.registerRef();
   },
 
-  componentWillUnmount: function() {
+  componentWillUnmount: function () {
     this.context.unregisterRef(this._refIndex);
   },
 

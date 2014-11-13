@@ -21,7 +21,7 @@ function createRedirectHandler(to, _params, _query) {
  */
 var Redirect = React.createClass({
   statics: {
-    createRoute: function(props) {
+    createRoute: function (props) {
       return Route({
         name: props.name,
         path: props.from,
@@ -38,13 +38,13 @@ var Redirect = React.createClass({
     isRedirect: React.PropTypes.bool
   },
 
-  getDefaultProps: function() {
+  getDefaultProps: function () {
     return {
       isRedirect: true
     };
   },
 
-  render: function() {
+  render: function () {
     return null;
   }
 });
