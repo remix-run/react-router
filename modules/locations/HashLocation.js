@@ -18,7 +18,7 @@ function ensureSlash() {
   return false;
 }
 
-var _onChange;
+var _onChange, _isListening;
 
 function onHashChange() {
   if (ensureSlash()) {
@@ -48,11 +48,16 @@ var HashLocation = {
     // Do this BEFORE listening for hashchange.
     ensureSlash();
 
+    if (_isListening)
+      return;
+
     if (window.addEventListener) {
       window.addEventListener('hashchange', onHashChange, false);
     } else {
       window.attachEvent('onhashchange', onHashChange);
     }
+
+    _isListening = true;
   },
 
   teardown: function () {
@@ -61,6 +66,8 @@ var HashLocation = {
     } else {
       window.detachEvent('onhashchange', onHashChange);
     }
+
+    _isListening = false;
   },
 
   push: function (path) {

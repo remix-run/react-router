@@ -6,7 +6,7 @@ var Router = require('../../Router');
 var runRouter = require('../runRouter');
 var ActiveRouteHandler = require('../../components/ActiveRouteHandler');
 var ActiveState = require('../../mixins/ActiveState');
-var testLocation = require('../../locations/TestLocation');
+var TestLocation = require('../../locations/TestLocation');
 
 describe('runRouter', function () {
 
@@ -102,7 +102,8 @@ describe('runRouter', function () {
   });
 
   it('does not blow away the previous HTML', function(done) {
-    var location = testLocation('/foo');
+    TestLocation.history = [ '/foo' ];
+
     var routes = (
       <Route handler={Nested} path='/'>
         <Route handler={ParamEcho} path=':name'/>
@@ -110,13 +111,14 @@ describe('runRouter', function () {
     );
     var div = document.createElement('div');
     var count = 0;
-    Router.run(routes, location, function(Handler, state) {
+
+    Router.run(routes, TestLocation, function(Handler, state) {
       React.render(<Handler/>, div, function() {
         count++;
         if (count == 1) {
           expect(div.innerHTML).toMatch(/foo/);
           div.querySelector('h1').innerHTML = 'lol i changed you';
-          location.push('/bar');
+          TestLocation.push('/bar');
         } else if (count == 2) {
           expect(div.innerHTML).toMatch(/bar/);
           expect(div.innerHTML).toMatch(/lol i changed you/);

@@ -1,7 +1,7 @@
 var LocationActions = require('../actions/LocationActions');
 var getWindowPath = require('../utils/getWindowPath');
 
-var _onChange;
+var _onChange, _isListening;
 
 function onPopState() {
   _onChange({
@@ -18,11 +18,16 @@ var HistoryLocation = {
   setup: function (onChange) {
     _onChange = onChange;
 
+    if (_isListening)
+      return;
+
     if (window.addEventListener) {
       window.addEventListener('popstate', onPopState, false);
     } else {
       window.attachEvent('popstate', onPopState);
     }
+
+    _isListening = true;
   },
 
   teardown: function () {
@@ -31,6 +36,8 @@ var HistoryLocation = {
     } else {
       window.detachEvent('popstate', onPopState);
     }
+
+    _isListening = false;
   },
 
   push: function (path) {

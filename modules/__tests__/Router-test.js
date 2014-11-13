@@ -6,7 +6,7 @@ var Router = require('../Router');
 var runRouter = require('../utils/runRouter');
 var ActiveRouteHandler = require('../components/ActiveRouteHandler');
 var ActiveState = require('../mixins/ActiveState');
-var testLocation = require('../locations/TestLocation');
+var TestLocation = require('../locations/TestLocation');
 
 describe('Router', function () {
   describe('transitions', function () {
@@ -33,10 +33,12 @@ describe('Router', function () {
 
     describe('transition.redirect', function () {
       it('redirects in willTransitionTo', function (done) {
+        TestLocation.history = [ '/redirect' ];
+
         var div = document.createElement('div');
-        var location = testLocation('/redirect');
-        Router.run(routes, location, function (Handler, state) {
-          React.render(Handler(), div, function () {
+
+        Router.run(routes, TestLocation, function (Handler, state) {
+          React.render(React.createElement(Handler), div, function () {
             expect(div.innerHTML).toMatch(/foo/);
             done();
           });
@@ -64,7 +66,7 @@ describe('Router', function () {
     });
   });
 
-  describe('transitionFrom', function() {
+  describe('willTransitionFrom', function() {
     it('sends a rendered component', function(done) {
       var div = document.createElement('div');
 
@@ -94,15 +96,14 @@ describe('Router', function () {
         )
       );
 
-      var location = testLocation('/bar');
+      TestLocation.history = [ '/bar' ];
 
-      Router.run(routes, location, function (Handler, state) {
+      Router.run(routes, TestLocation, function (Handler, state) {
         React.render(React.createElement(Handler), div, function() {
-          location.push('/baz');
+          TestLocation.push('/baz');
         });
       });
     });
-
 
   });
 

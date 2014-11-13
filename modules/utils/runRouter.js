@@ -60,17 +60,8 @@ function runRouter(router, callback) {
       location
     );
 
-    //invariant(
-      //_currentLocation == null || _currentLocation === location,
-      //'You are already using %s. You cannot use %s on the same page',
-      //_currentLocation, location
-    //);
-
-    // TODO: fix this hack
-    if (location.setup && !location._setup) {
-      location._setup = true;
+    if (location.setup)
       location.setup(router.locationChangeHandler);
-    }
 
     // Listen for changes to the location.
     function changeHandler(change) {

@@ -1,51 +1,50 @@
 var LocationActions = require('../actions/LocationActions');
 
-var makeTestLocation = function(path) {
+var _onChange;
 
-  return {
+var TestLocation = {
 
-    path: '',
+  history: [],
 
-    history: [],
+  setup: function (onChange) {
+    _onChange = onChange;
+  },
 
-    onChange: function(){},
+  push: function (path) {
+    TestLocation.history.push(path);
 
-    setup: function(onChange) {
-      this.onChange = onChange;
-      if (path)
-        this.push(path);
-    },
+    _onChange({
+      path: path,
+      type: LocationActions.PUSH
+    });
+  },
 
-    setPath: function(type) {
-      this.path = this.history[this.history.length - 1];
-      this.onChange({type: type, path: this.path});
-    },
+  replace: function (path) {
+    TestLocation.history[TestLocation.history.length - 1] = path;
 
-    push: function (path) {
-      this.history.push(path);
-      this.setPath(LocationActions.PUSH);
-    },
+    _onChange({
+      path: path,
+      type: LocationActions.REPLACE
+    });
+  },
 
-    replace: function (path) {
-      this.history[this.history.length - 1] = path;
-      this.setPath(LocationActions.REPLACE);
-    },
+  pop: function () {
+    TestLocation.history.pop();
 
-    pop: function () {
-      this.history.pop();
-      this.setPath(LocationActions.POP);
-    },
+    _onChange({
+      path: TestLocation.getCurrentPath(),
+      type: LocationActions.POP
+    });
+  },
 
-    getCurrentPath: function() {
-      return this.path;
-    },
+  getCurrentPath: function () {
+    return TestLocation.history[TestLocation.history.length - 1];
+  },
 
-    toString: function () {
-      return '<TestLocation>';
-    }
-
-  };
+  toString: function () {
+    return '<TestLocation>';
+  }
 
 };
 
-module.exports = makeTestLocation;
+module.exports = TestLocation;
