@@ -18,8 +18,6 @@ require('./modules/stores/__tests__/PathStore-test');
 require('./modules/utils/__tests__/Path-test');
 require('./modules/utils/__tests__/ServerRendering-test');
 
-require('./modules/utils/__tests__/runRouter-test');
-
 var PathStore = require('./modules/stores/PathStore');
 
 afterEach(function () {

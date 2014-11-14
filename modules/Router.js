@@ -4,14 +4,15 @@ var warning = require('react/lib/warning');
 var invariant = require('react/lib/invariant');
 var canUseDOM = require('react/lib/ExecutionEnvironment').canUseDOM;
 var createRoutesFromChildren = require('./utils/createRoutesFromChildren');
+var createRouteHandler = require('./utils/createRouteHandler');
 var Transition = require('./utils/Transition');
 var reversedArray = require('./utils/reversedArray');
-var runRouter = require('./utils/runRouter');
-var Match = require('./utils/Match');
-var Path = require('./utils/Path');
 var HashLocation = require('./locations/HashLocation');
 var HistoryLocation = require('./locations/HistoryLocation');
 var supportsHistory = require('./utils/supportsHistory');
+var Redirect = require('./utils/Redirect');
+var Match = require('./utils/Match');
+var Path = require('./utils/Path');
 
 function getRootMatch(matches) {
   return matches[matches.length - 1];
@@ -151,16 +152,27 @@ function defaultErrorHandler(error) {
   throw error; // This error probably originated in a transition hook.
 }
 
+function defaultAbortHandler(abortReason, location) {
+  if (typeof location === 'string')
+    throw new Error('Unhandled aborted transition! Reason: ' + abortReason);
+
+  if (abortReason instanceof Redirect) {
+    location.replace(this.makePath(abortReason.to, abortReason.params, abortReason.query));
+  } else {
+    location.pop();
+  }
+}
+
 /**
  * A Router is a container for a set of routes and state.
  */
 function Router(routes, onError, onAbort) {
-  this.defaultRoute = null;
-  this.notFoundRoute = null;
   this.routes = [];
   this.namedRoutes = {};
-  this.onError = onError || defaultErrorHandler;
-  this.onAbort = onAbort;
+  this.defaultRoute = null;
+  this.notFoundRoute = null;
+  this.onAbort = (onAbort || defaultAbortHandler).bind(this);
+  this.onError = (onError || defaultErrorHandler).bind(this);
   this.state = {};
 
   if (routes)
@@ -297,10 +309,14 @@ assign(Router.prototype, {
 });
 
 /**
- * Runs a router (or an array of Route objects) using the given location and
- * calls callback(Handler, state) when finished. The Handler is a React class
- * that should be used at the root of the component hierarchy. The state argument
+ * Runs a router (or a route config) using the given location and calls
+ * callback(Handler, state) when the route changes. The Handler is a ReactElement
+ * class that is used to render the current route hierarchy. The state argument
  * is the current state of the router.
+ *
+ * If the location is static (i.e. a URL path in a server environment) the callback
+ * is only called once. Otherwise, the location should be one of the Router.*Location
+ * objects (e.g. Router.HashLocation or Router.HistoryLocation).
  *
  * Using `window.location.hash` to manage the URL, you could do:
  *
@@ -325,10 +341,52 @@ Router.run = function (router, location, callback) {
   if (location === HistoryLocation && !supportsHistory())
     location = RefreshLocation;
 
-  runRouter(
-    router instanceof Router ? router : new Router(router),
-    location, callback
-  );
+  if (!(router instanceof Router))
+    router = new Router(router);
+
+  var Handler = createRouteHandler(router, location);
+
+  function dispatchHandler(error, abortReason) {
+    if (error) {
+      router.onError(error);
+    } else if (abortReason) {
+      router.onAbort(abortReason, location);
+    } else {
+      callback(Handler, router._nextState);
+    }
+  }
+
+  if (typeof location === 'string') {
+    warning(
+      !canUseDOM || process.env.NODE_ENV === 'test',
+      'You should not use a static location in a DOM environment because ' +
+      'the router will not be kept in sync with the current URL'
+    );
+
+    // Dispatch the location.
+    router.dispatch(location, dispatchHandler);
+  } else {
+    invariant(
+      canUseDOM,
+      'You cannot use %s in a non-DOM environment',
+      location
+    );
+
+    // Listen for changes to the location.
+    function changeListener(change) {
+      if (router.state.path !== change.path)
+        router.dispatch(change.path, dispatchHandler);
+    }
+
+    if (location.addChangeListener)
+      location.addChangeListener(changeListener);
+
+    // Bootstrap using the current path.
+    router.dispatch(
+      location.getCurrentPath(),
+      dispatchHandler
+    );
+  }
 };
 
 module.exports = Router;
