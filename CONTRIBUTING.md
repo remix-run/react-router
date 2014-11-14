@@ -1,3 +1,9 @@
+### Tests
+
+All commits that fix bugs or add features need a test.
+
+`<blink>` Do not merge code without tests.`</blink>`
+
 ### Commit Subjects for Public API Changes
 
 If your patch **changes the API or fixes a bug** please use one of the
