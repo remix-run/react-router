@@ -5,6 +5,7 @@ var HashLocation = require('../locations/HashLocation');
 var Route = require('../Route');
 var Match = require('../Match');
 var Path = require('./Path');
+var ActiveRouteHandler = require('../components/ActiveRouteHandler');
 
 function routeIsActive(activeRoutes, routeName) {
   return activeRoutes.some(function (route) {
@@ -328,7 +329,7 @@ function createRouteHandler(router, location) {
 
     render: function () {
       var route = router.state.activeRoutes[0];
-      return route ? React.createElement(route.handler, this.props) : null;
+      return route ? React.createElement(ActiveRouteHandler, this.props) : null;
     }
 
   });
