@@ -5,14 +5,14 @@ var invariant = require('react/lib/invariant');
 var canUseDOM = require('react/lib/ExecutionEnvironment').canUseDOM;
 var createRoutesFromChildren = require('./utils/createRoutesFromChildren');
 var createRouteHandler = require('./utils/createRouteHandler');
-var Transition = require('./utils/Transition');
 var reversedArray = require('./utils/reversedArray');
 var HashLocation = require('./locations/HashLocation');
 var HistoryLocation = require('./locations/HistoryLocation');
 var supportsHistory = require('./utils/supportsHistory');
 var Redirect = require('./utils/Redirect');
-var Match = require('./utils/Match');
 var Path = require('./utils/Path');
+var Transition = require('./Transition');
+var Match = require('./Match');
 
 function getRootMatch(matches) {
   return matches[matches.length - 1];

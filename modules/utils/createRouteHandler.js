@@ -1,9 +1,9 @@
 var React = require('react');
-var invariant = require('react/lib/invariant');
 var assign = require('react/lib/Object.assign');
+var invariant = require('react/lib/invariant');
 var HashLocation = require('../locations/HashLocation');
-var Route = require('./Route');
-var Match = require('./Match');
+var Route = require('../Route');
+var Match = require('../Match');
 var Path = require('./Path');
 
 function routeIsActive(activeRoutes, routeName) {

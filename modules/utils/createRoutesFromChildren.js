@@ -1,8 +1,8 @@
 var React = require('react');
-var Route = require('./Route');
-var Redirect = require('./Redirect');
-var RedirectComponent = require('../components/Redirect');
 var invariant = require('react/lib/invariant');
+var RedirectComponent = require('../components/Redirect');
+var Route = require('../Route');
+var Redirect = require('./Redirect');
 var Path = require('./Path');
 
 /**
