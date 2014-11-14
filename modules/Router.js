@@ -76,15 +76,13 @@ function hasMatch(matches, match) {
  * the route's handler, so that the deepest nested handlers are called first.
  * Calls callback(error) when finished.
  */
-function runTransitionFromHooks(router, matches, transition, callback) {
-  var hooks = reversedArray(matches).map(function (match, index) {
+function runTransitionFromHooks(matches, transition, callback) {
+  var hooks = reversedArray(matches).map(function (match) {
     return function () {
       var handler = match.route.handler;
 
-      if (!transition.isAborted && handler.willTransitionFrom) {
-        var component = router.activeRefs[matches.length - 1 - index];
-        return handler.willTransitionFrom(transition, component);
-      }
+      if (!transition.isAborted && handler.willTransitionFrom)
+        return handler.willTransitionFrom(transition, match.element);
 
       var promise = transition.promise;
       delete transition.promise;
@@ -163,7 +161,6 @@ function Router(routes, onError, onAbort) {
   this.namedRoutes = {};
   this.onError = onError || defaultErrorHandler;
   this.onAbort = onAbort;
-  this.activeRefs = [];
   this.state = {};
 
   if (routes)
@@ -264,7 +261,7 @@ assign(Router.prototype, {
     var router = this;
     var query = Path.extractQuery(path) || {};
 
-    runTransitionFromHooks(router, fromMatches, transition, function (error) {
+    runTransitionFromHooks(fromMatches, transition, function (error) {
       if (error || transition.isAborted)
         return callback.call(router, error, transition.abortReason);
 
@@ -290,18 +287,6 @@ assign(Router.prototype, {
         callback.call(router);
       });
     });
-  },
-
-  registerRef: function (ref, index) {
-    if (index != null)
-      this.activeRefs[index] = ref;
-    else
-      index = this.activeRefs.push(ref) - 1;
-    return index;
-  },
-
-  unregisterRef: function (index) {
-    activeRefs.splice(index, 1);
   },
 
   flipSwitch: function () {

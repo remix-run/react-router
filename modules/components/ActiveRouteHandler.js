@@ -1,5 +1,4 @@
 var React = require('react');
-var REF_NAME = '__activeRouteHandler__';
 
 /**
  * An <ActiveRouteHandler> component renders the active child route handler
@@ -8,37 +7,48 @@ var REF_NAME = '__activeRouteHandler__';
 var ActiveRouteHandler = React.createClass({
 
   contextTypes: {
-    getActiveRouteHandlerFor: React.PropTypes.func.isRequired,
-    registerRef: React.PropTypes.func.isRequired,
-    unregisterRef: React.PropTypes.func.isRequired
+    registerActiveRouteHandlerElement: React.PropTypes.func.isRequired,
+    unregisterActiveRouteHandlerElement: React.PropTypes.func.isRequired,
+    getRouteMatchAtDepth: React.PropTypes.func.isRequired
   },
 
-  registerRef: function () {
-    this._refIndex = this.context.registerRef(this.refs[REF_NAME], this._refIndex);
+  getDefaultProps: function () {
+    return {
+      ref: '__activeRouteHandler__'
+    };
   },
 
-  componentDidUpdate: function () {
-    this.registerRef();
+  getMatch: function () {
+    return this.context.getRouteMatchAtDepth(this._routeDepth);
+  },
+
+  componentWillMount: function () {
+    this._routeDepth = this.context.registerActiveRouteHandlerElement(this);
   },
 
   componentDidMount: function () {
-    this.registerRef();
+    this._updateMatchElement();
+  },
+
+  componentDidUpdate: function () {
+    this._updateMatchElement();
+  },
+
+  _updateMatchElement: function () {
+    this.getMatch().element = this.refs[this.props.ref];
   },
 
   componentWillUnmount: function () {
-    this.context.unregisterRef(this._refIndex);
+    this.context.unregisterActiveRouteHandlerElement(this);
   },
 
   render: function () {
-    var Handler = this.context.getActiveRouteHandlerFor(this._owner.constructor);
+    var match = this.getMatch();
 
-    if (!Handler)
+    if (!match)
       return null;
 
-    this.props.ref = REF_NAME;
-    var handler = React.createElement(Handler, this.props);
-
-    return handler;
+    return React.createElement(match.route.handler, this.props);
   }
 
 });

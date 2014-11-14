@@ -251,44 +251,56 @@ function createRouteHandler(router, location) {
 
   var ActiveRouteHandlerContext = {
 
-    /**
-     * Returns the active child route handler class for the given
-     * route handler class.
-     */
-    getActiveRouteHandlerFor: function (handler) {
-      var routes = router.state.activeRoutes;
-      var index = routes.length;
-      var childRoute;
-
-      while (index--) {
-        if (routes[index].handler.type === handler)
-          return childRoute ? childRoute.handler : null;
-
-        childRoute = routes[index];
-      }
-
-      return null;
+    componentWillMount: function () {
+      this._activeRouteHandlerElements = [];
     },
 
-    registerRef: function (ref, index) {
-      return router.registerRef(ref, index);
+    registerActiveRouteHandlerElement: function (element) {
+      var elements = this._activeRouteHandlerElements;
+
+      invariant(
+        !elements.some(function (el) {
+          return el._owner === element._owner
+        }),
+        'Using <ActiveRouteHandler> twice in the same render method is not allowed'
+      );
+
+      elements.push(element);
+
+      return elements.length - 1;
     },
 
-    unregisterRef: function (index) {
-      router.unregisterRef(index);
+    unregisterActiveRouteHandlerElement: function (element) {
+      var elements = this._activeRouteHandlerElements;
+
+      // We're assuming that elements are unmounted starting
+      // at children. If that is incorrect, we need to revise.
+
+      // TODO: Put this inside a __DEV__ guard. Right
+      // now it's just a sanity check.
+      invariant(
+        elements[elements.length - 1] === element,
+        'The <ActiveRouteHandler> stack is corrupt'
+      );
+
+      elements.pop();
+    },
+
+    getRouteMatchAtDepth: function (depth) {
+      return router.state.matches[depth];
     },
 
     childContextTypes: {
-      getActiveRouteHandlerFor: React.PropTypes.func.isRequired,
-      registerRef: React.PropTypes.func.isRequired,
-      unregisterRef: React.PropTypes.func.isRequired
+      registerActiveRouteHandlerElement: React.PropTypes.func.isRequired,
+      unregisterActiveRouteHandlerElement: React.PropTypes.func.isRequired,
+      getRouteMatchAtDepth: React.PropTypes.func.isRequired
     },
 
     getChildContext: function () {
       return {
-        getActiveRouteHandlerFor: this.getActiveRouteHandlerFor,
-        registerRef: this.registerRef,
-        unregisterRef: this.unregisterRef
+        registerActiveRouteHandlerElement: this.registerActiveRouteHandlerElement,
+        unregisterActiveRouteHandlerElement: this.unregisterActiveRouteHandlerElement,
+        getRouteMatchAtDepth: this.getRouteMatchAtDepth
       };
     }
 
