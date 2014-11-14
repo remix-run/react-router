@@ -113,7 +113,7 @@ describe('Router.run', function () {
   var Nested = React.createClass({
     render: function () {
       return (
-        <div>
+        <div className="Nested">
           <h1>hello</h1>
           <ActiveRouteHandler/>
         </div>
@@ -176,6 +176,21 @@ describe('Router.run', function () {
       expect(html).toMatch(/hello/);
       expect(html).toMatch(/mj/);
       done();
+    });
+  });
+
+  it('renders root handler only once', function (done) {
+    var div = document.createElement('div');
+    var routes = (
+      <Route handler={Nested} path='/'>
+        <Route handler={MJ} path='/mj'/>
+      </Route>
+    );
+    Router.run(routes, '/mj', function (Handler, state) {
+      React.render(<Handler/>, div, function() {
+        expect(div.querySelectorAll('.Nested').length).toEqual(1);
+        done();
+      });
     });
   });
 
