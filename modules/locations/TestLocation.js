@@ -7,6 +7,11 @@ function notifyChange(type) {
     _listener({ type: type, path: TestLocation.getCurrentPath() });
 }
 
+/**
+ * A location that is convenient for testing and does not
+ * require a DOM. You should manually setup TestLocation.history
+ * with the URL paths your test needs before it runs.
+ */
 var TestLocation = {
 
   history: [],
