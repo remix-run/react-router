@@ -178,20 +178,23 @@ describe('Router.run', function () {
       </Route>
     );
     var div = document.createElement('div');
-    var count = 0;
+    var steps = [];
+
+    steps.push(function() {
+      expect(div.innerHTML).toMatch(/foo/);
+      div.querySelector('h1').innerHTML = 'lol i changed you';
+      TestLocation.push('/bar');
+    });
+
+    steps.push(function() {
+      expect(div.innerHTML).toMatch(/bar/);
+      expect(div.innerHTML).toMatch(/lol i changed you/);
+      done();
+    });
 
     Router.run(routes, TestLocation, function (Handler, state) {
       React.render(<Handler/>, div, function () {
-        count++;
-        if (count == 1) {
-          expect(div.innerHTML).toMatch(/foo/);
-          div.querySelector('h1').innerHTML = 'lol i changed you';
-          TestLocation.push('/bar');
-        } else if (count == 2) {
-          expect(div.innerHTML).toMatch(/bar/);
-          expect(div.innerHTML).toMatch(/lol i changed you/);
-          done();
-        }
+        steps.shift()();
       });
     });
   });

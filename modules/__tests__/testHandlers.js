@@ -43,7 +43,7 @@ exports.EchoFooProp = React.createClass({
   }
 });
 
-exports.EchoBarParam= React.createClass({
+exports.EchoBarParam = React.createClass({
   mixins: [ActiveState],
   render: function () {
     return <div className="EchoBarParam">{this.getActiveParams().bar}</div>
