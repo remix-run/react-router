@@ -24,3 +24,5 @@ afterEach(function () {
   // For some reason unmountComponentAtNode doesn't call componentWillUnmount :/
   PathStore.removeAllChangeListeners();
 });
+
+

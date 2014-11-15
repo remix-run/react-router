@@ -6,28 +6,23 @@ var Router = require('../Router');
 var ActiveRouteHandler = require('../components/ActiveRouteHandler');
 var ActiveState = require('../mixins/ActiveState');
 var TestLocation = require('../locations/TestLocation');
+var {
+  Bar,
+  EchoFooProp,
+  Foo,
+  Nested,
+  EchoBarParam,
+  MJ,
+  RedirectToFoo,
+  RPFlo
+} = require('./testHandlers');
 
 describe('Router', function () {
   describe('transitions', function () {
 
-    function redirect(transition) {
-      transition.redirect('/foo');
-    }
-
-    function returnNull() { return null; }
-
-    var Redirect = React.createClass({
-      statics: { willTransitionTo: redirect },
-      render: returnNull
-    });
-
-    var Foo = React.createClass({
-      render: function () { return React.DOM.div({}, 'foo'); }
-    });
-
     var routes = [
-      Route({path: '/redirect', handler: Redirect}),
-      Route({path: '/foo', handler: Foo})
+      <Route path="/redirect" handler={RedirectToFoo}/>,
+      <Route path="/foo" handler={Foo}/>
     ];
 
     describe('transition.redirect', function () {
@@ -37,8 +32,8 @@ describe('Router', function () {
         var div = document.createElement('div');
 
         Router.run(routes, TestLocation, function (Handler, state) {
-          React.render(React.createElement(Handler), div, function () {
-            expect(div.innerHTML).toMatch(/foo/);
+          React.render(<Handler/>, div, function () {
+            expect(div.innerHTML).toMatch(/Foo/);
             done();
           });
         });
@@ -51,14 +46,10 @@ describe('Router', function () {
   });
 
   describe('query params', function () {
-    var Foo = React.createClass({
-      render: function () { return React.DOM.div({}, this.props.query); }
-    });
-
     it('renders with query params', function (done) {
-      var routes = Route({handler: Foo, path: '/'});
+      var routes = <Route handler={EchoFooProp} path='/'/>;
       Router.run(routes, '/?foo=bar', function (Handler, state) {
-        var html = React.renderToString(Handler({query: state.activeQuery.foo}));
+        var html = React.renderToString(<Handler foo={state.activeQuery.foo} />);
         expect(html).toMatch(/bar/);
         done();
       });
@@ -69,12 +60,6 @@ describe('Router', function () {
     it('sends a rendered component', function (done) {
       var div = document.createElement('div');
 
-      var Foo = React.createClass({
-        render: function () {
-          return React.DOM.div({}, React.createElement(ActiveRouteHandler));
-        }
-      });
-
       var Bar = React.createClass({
         statics: {
           willTransitionFrom: function (transition, component) {
@@ -84,21 +69,21 @@ describe('Router', function () {
         },
 
         render: function () {
-          return React.DOM.div({id: 'bar'}, 'bar');
+          return <div id="bar">bar</div>;
         }
       });
 
       var routes = (
-        Route({handler: Foo, path: '/'},
-          Route({name: 'bar', handler: Bar}),
-          Route({name: 'baz', handler: Bar})
-        )
+        <Route handler={Nested} path='/'>
+          <Route name="bar" handler={Bar}/>
+          <Route name="baz" handler={Bar}/>
+        </Route>
       );
 
       TestLocation.history = [ '/bar' ];
 
       Router.run(routes, TestLocation, function (Handler, state) {
-        React.render(React.createElement(Handler), div, function () {
+        React.render(<Handler/>, div, function () {
           TestLocation.push('/baz');
         });
       });
@@ -110,57 +95,25 @@ describe('Router', function () {
 
 describe('Router.run', function () {
 
-  var Nested = React.createClass({
-    render: function () {
-      return (
-        <div className="Nested">
-          <h1>hello</h1>
-          <ActiveRouteHandler/>
-        </div>
-      );
-    }
-  });
-
-  var Echo = React.createClass({
-    render: function () {
-      return <div>{this.props.name}</div>;
-    }
-  });
-
-  var ParamEcho = React.createClass({
-    mixins: [ActiveState],
-    render: function () {
-      return <div>{this.getActiveParams().name}</div>
-    }
-  });
-
-  var RPFlo = React.createClass({
-    render: function () { return <div>rpflo</div>; }
-  });
-
-  var MJ = React.createClass({
-    render: function () { return <div>mj</div>; }
-  });
-
   it('matches a root route', function (done) {
-    var routes = <Route path="/" handler={Echo} />;
+    var routes = <Route path="/" handler={EchoFooProp} />;
     Router.run(routes, '/', function (Handler, state) {
       // TODO: figure out why we're getting this warning here
       // WARN: 'Warning: You cannot pass children to a RouteHandler'
-      var html = React.renderToString(<Handler name="ryan"/>);
-      expect(html).toMatch(/ryan/);
+      var html = React.renderToString(<Handler foo="bar"/>);
+      expect(html).toMatch(/bar/);
       done();
     });
   });
 
   it('matches an array of routes', function (done) {
     var routes = [
-      <Route handler={RPFlo} path="/rpflo"/>,
-      <Route handler={MJ} path="/mj"/>
+      <Route handler={Foo} path="/foo"/>,
+      <Route handler={Bar} path="/bar"/>
     ];
-    Router.run(routes, '/mj', function (Handler, state) {
+    Router.run(routes, '/foo', function (Handler, state) {
       var html = React.renderToString(<Handler/>);
-      expect(html).toMatch(/mj/);
+      expect(html).toMatch(/Foo/);
       done();
     });
   });
@@ -168,13 +121,13 @@ describe('Router.run', function () {
   it('matches nested routes', function (done) {
     var routes = (
       <Route handler={Nested} path='/'>
-        <Route handler={MJ} path='/mj'/>
+        <Route handler={Foo} path='/foo'/>
       </Route>
     );
-    Router.run(routes, '/mj', function (Handler, state) {
+    Router.run(routes, '/foo', function (Handler, state) {
       var html = React.renderToString(<Handler/>);
-      expect(html).toMatch(/hello/);
-      expect(html).toMatch(/mj/);
+      expect(html).toMatch(/Nested/);
+      expect(html).toMatch(/Foo/);
       done();
     });
   });
@@ -183,10 +136,10 @@ describe('Router.run', function () {
     var div = document.createElement('div');
     var routes = (
       <Route handler={Nested} path='/'>
-        <Route handler={MJ} path='/mj'/>
+        <Route handler={Foo} path='/Foo'/>
       </Route>
     );
-    Router.run(routes, '/mj', function (Handler, state) {
+    Router.run(routes, '/Foo', function (Handler, state) {
       React.render(<Handler/>, div, function() {
         expect(div.querySelectorAll('.Nested').length).toEqual(1);
         done();
@@ -195,7 +148,7 @@ describe('Router.run', function () {
   });
 
   it('supports dynamic segments', function (done) {
-    var routes = <Route handler={ParamEcho} path='/:name'/>;
+    var routes = <Route handler={EchoBarParam} path='/:bar'/>;
     Router.run(routes, '/d00d3tt3', function (Handler, state) {
       var html = React.renderToString(<Handler/>);
       expect(html).toMatch(/d00d3tt3/);
@@ -206,7 +159,7 @@ describe('Router.run', function () {
   it('supports nested dynamic segments', function (done) {
     var routes = (
       <Route handler={Nested} path="/:foo">
-        <Route handler={ParamEcho} path=":name"/>
+        <Route handler={EchoBarParam} path=":bar"/>
       </Route>
     );
     Router.run(routes, '/foo/bar', function (Handler, state) {
@@ -221,7 +174,7 @@ describe('Router.run', function () {
 
     var routes = (
       <Route handler={Nested} path='/'>
-        <Route handler={ParamEcho} path=':name'/>
+        <Route handler={EchoBarParam} path=':bar'/>
       </Route>
     );
     var div = document.createElement('div');

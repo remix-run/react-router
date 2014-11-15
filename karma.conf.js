@@ -16,7 +16,7 @@ module.exports = function (config) {
     },
 
     browserify: {
-      transform: ['envify', 'reactify'],
+      transform: [ ['reactify', {'es6': true}], 'envify' ],
       watch: true,
       debug: true
     },

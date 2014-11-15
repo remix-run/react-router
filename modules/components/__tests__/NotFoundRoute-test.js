@@ -6,40 +6,16 @@ var NotFoundRoute = require('../NotFoundRoute');
 var Route = require('../Route');
 var Router = require('../../Router');
 var ActiveRouteHandler = require('../../components/ActiveRouteHandler');
-
-var Nested = React.createClass({
-  render: function () {
-    return (
-      <div>
-        hello
-        <ActiveRouteHandler />
-      </div>
-    );
-  }
-});
-
-var Foo = React.createClass({
-  render: function () {
-    return <div>foo</div>;
-  }
-});
-
-var NotFound = React.createClass({
-  render: function () {
-    return <div>not found</div>;
-  }
-});
-
-
+var { Nested, Foo, Bar } = require('../../__tests__/testHandlers');
 
 describe('NotFoundRoute', function () {
 
   describe('at the root of the config', function () {
     it('renders when no routes match', function () {
-      var routes = <NotFoundRoute handler={NotFound}/>;
+      var routes = <NotFoundRoute handler={Bar}/>;
       Router.run(routes, '/ryans-patience', function (Handler) {
         var html = React.renderToString(<Handler />);
-        expect(html).toMatch(/not found/);
+        expect(html).toMatch(/Bar/);
       });
     });
   });
@@ -49,13 +25,13 @@ describe('NotFoundRoute', function () {
       var routes = (
         <Route path='/' handler={Nested}>
           <Route path='/foo' handler={Foo}/>
-          <NotFoundRoute handler={NotFound} />
+          <NotFoundRoute handler={Bar} />
         </Route>
       );
 
-      Router.run(routes, '/ryans-mind', function (App) {
-        var html = React.renderToString(App());
-        expect(html).toMatch(/not found/);
+      Router.run(routes, '/ryans-mind', function (Handler) {
+        var html = React.renderToString(<Handler/>);
+        expect(html).toMatch(/Bar/);
       });
     });
   });
@@ -65,25 +41,25 @@ describe('NotFoundRoute', function () {
       <Route path='/' handler={Nested}>
         <Route path='ryans' handler={Nested}>
           {/* order shouldn't matter here, so we put it first */}
-          <NotFoundRoute handler={NotFound} />
+          <NotFoundRoute handler={Bar} />
           <Route path='happiness' handler={Foo}/>
         </Route>
       </Route>
     );
 
     it('renders the matching parents and itself', function () {
-      Router.run(routes, '/ryans/compassion', function (App) {
-        var html = React.renderToString(<App />);
-        expect(html).toMatch(/hello/);
-        expect(html).toMatch(/not found/);
+      Router.run(routes, '/ryans/compassion', function (Handler) {
+        var html = React.renderToString(<Handler />);
+        expect(html).toMatch(/Nested/);
+        expect(html).toMatch(/Bar/);
       });
     });
 
     it('does not match if a sibling matches', function () {
-      Router.run(routes, '/ryans/happiness', function (App) {
-        var html = React.renderToString(<App />);
-        expect(html).toMatch(/hello/);
-        expect(html).toMatch(/foo/);
+      Router.run(routes, '/ryans/happiness', function (Handler) {
+        var html = React.renderToString(<Handler />);
+        expect(html).toMatch(/Nested/);
+        expect(html).toMatch(/Foo/);
       });
     });
   });
