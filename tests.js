@@ -8,7 +8,6 @@ require('./modules/components/__tests__/Redirect-test');
 require('./modules/components/__tests__/ActiveRouteHandler-test');
 
 require('./modules/mixins/__tests__/ActiveState-test');
-require('./modules/mixins/__tests__/LocationContext-test');
 require('./modules/mixins/__tests__/Navigation-test');
 require('./modules/mixins/__tests__/RouteContext-test');
 require('./modules/mixins/__tests__/ScrollContext-test');

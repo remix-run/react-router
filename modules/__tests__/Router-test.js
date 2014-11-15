@@ -203,4 +203,17 @@ describe('Router.run', function () {
     it('throws if called after the router transitions to a new state');
   });
 
+  describe('locations', function() {
+    it('defaults to HashLocation', function(done) {
+      var routes = <Route path="/" handler={Foo}/>
+      var div = document.createElement('div');
+      Router.run(routes, function(Handler) {
+        React.render(<Handler/>, div, function() {
+          this.getLocation() === Router.HashLocation;
+          done();
+        });
+      });
+    });
+  });
+
 });
