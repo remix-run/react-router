@@ -4,34 +4,9 @@ var expect = require('expect');
 var React = require('react/addons');
 var Router = require('../../Router');
 var TestLocation = require('../../locations/TestLocation');
+var { Nested, Bar } = require('../../__tests__/testHandlers');
 var Redirect = require('../Redirect');
 var Route = require('../Route');
-var RouteHandler = require('../RouteHandler');
-
-var Nested = React.createClass({
-  render: function () {
-    return (
-      <div>
-        hello
-        <RouteHandler />
-      </div>
-    );
-  }
-});
-
-var Foo = React.createClass({
-  render: function () {
-    return <div>foo</div>;
-  }
-});
-
-var RedirectTarget = React.createClass({
-  render: function () {
-    return <div>redirected</div>;
-  }
-});
-
-
 
 describe('Redirect', function () {
 
@@ -42,12 +17,12 @@ describe('Redirect', function () {
       var div = document.createElement('div');
       var routes = [
         <Redirect from="/foo" to="/bar"/>,
-        <Route path="/bar" handler={RedirectTarget}/>
+        <Route path="/bar" handler={Bar}/>
       ];
 
       Router.run(routes, TestLocation, function (Handler) {
         var html = React.render(<Handler />, div);
-        expect(div.innerHTML).toMatch(/redirected/);
+        expect(div.innerHTML).toMatch(/Bar/);
       });
     });
   });
@@ -62,13 +37,13 @@ describe('Redirect', function () {
           <Route path="foo" handler={Nested}>
             <Redirect from="/foo/bar" to="/baz" />
           </Route>
-          <Route path="baz" handler={RedirectTarget}/>
+          <Route path="baz" handler={Bar}/>
         </Route>
       );
 
       Router.run(routes, TestLocation, function (Handler) {
         var html = React.render(<Handler />, div);
-        expect(div.innerHTML).toMatch(/redirected/);
+        expect(div.innerHTML).toMatch(/Bar/);
       });
     });
 
@@ -81,15 +56,15 @@ describe('Redirect', function () {
           <Route path="foo" handler={Nested}>
             <Redirect from="bar" to="/baz" />
           </Route>
-          <Route path="baz" handler={RedirectTarget}/>
+          <Route path="baz" handler={Bar}/>
         </Route>
       );
 
       Router.run(routes, TestLocation, function (Handler) {
         var html = React.render(<Handler />, div);
-        expect(div.innerHTML).toMatch(/redirected/);
+        expect(div.innerHTML).toMatch(/Bar/);
       });
     });
   });
-});
 
+});

@@ -6,31 +6,7 @@ var Router = require('../../Router');
 var DefaultRoute = require('../DefaultRoute');
 var Route = require('../Route');
 var RouteHandler = require('../RouteHandler');
-
-var Nested = React.createClass({
-  render: function () {
-    return (
-      <div>
-        hello
-        <RouteHandler />
-      </div>
-    );
-  }
-});
-
-var Foo = React.createClass({
-  render: function () {
-    return <div>foo</div>;
-  }
-});
-
-var Bar = React.createClass({
-  render: function () {
-    return <div>bar</div>;
-  }
-});
-
-
+var { Foo, Bar, Nested } = require('../../__tests__/testHandlers.js');
 
 describe('DefaultRoute', function () {
 
@@ -43,8 +19,8 @@ describe('DefaultRoute', function () {
 
     Router.run(routes, '/', function (App) {
       var html = React.renderToString(App());
-      expect(html).toMatch(/hello/);
-      expect(html).toMatch(/foo/);
+      expect(html).toMatch(/Nested/);
+      expect(html).toMatch(/Foo/);
     });
   });
 
@@ -59,7 +35,7 @@ describe('DefaultRoute', function () {
 
     Router.run(routes, '/foo', function (App) {
       var html = React.renderToString(App());
-      expect(html).toMatch(/foo/);
+      expect(html).toMatch(/Foo/);
     });
   });
 
@@ -75,12 +51,9 @@ describe('DefaultRoute', function () {
 
     Router.run(routes, '/foo', function (App) {
       var html = React.renderToString(App());
-      expect(html).toMatch(/foo/);
-      expect(html.match(/bar/)).toEqual(null);
+      expect(html).toMatch(/Foo/);
+      expect(html.match(/Bar/)).toEqual(null);
     });
   });
 
-
-
 });
-

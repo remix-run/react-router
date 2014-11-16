@@ -9,8 +9,6 @@ var RouteHandler = require('../RouteHandler');
 
 describe('RouteHandler', function () {
 
-  it('accepts properties');
-
   it('renders after an update', function (done) {
     var Nested = React.createClass({
       componentDidMount: function () {
@@ -52,6 +50,4 @@ describe('RouteHandler', function () {
   });
 
 });
-
-
 
