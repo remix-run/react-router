@@ -6,7 +6,7 @@ var Router = require('../../Router');
 var DefaultRoute = require('../DefaultRoute');
 var Route = require('../Route');
 var RouteHandler = require('../RouteHandler');
-var { Foo, Bar, Nested } = require('../../__tests__/testHandlers.js');
+var { Foo, Bar, Nested } = require('../../__tests__/TestHandlers.js');
 
 describe('DefaultRoute', function () {
 

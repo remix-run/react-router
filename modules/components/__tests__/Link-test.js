@@ -6,7 +6,7 @@ var ReactTestUtils = React.addons.TestUtils;
 var Route = require('../Route');
 var Link = require('../Link');
 var TestLocation = require('../../locations/TestLocation');
-var { Foo } = require('../../__tests__/testHandlers');
+var { Foo } = require('../../__tests__/TestHandlers');
 var { click } = React.addons.TestUtils.Simulate;
 
 describe('A Link', function () {

@@ -1,13 +1,13 @@
 var React = require('react');
-var ActiveRouteHandler = require('../components/ActiveRouteHandler');
-var ActiveState = require('../mixins/ActiveState');
+var RouteHandler = require('../components/RouteHandler');
+var State = require('../mixins/State');
 
 exports.Nested = React.createClass({
   render: function () {
     return (
       <div>
         <h1 className="Nested">Nested</h1>
-        <ActiveRouteHandler />
+        <RouteHandler />
       </div>
     );
   }
@@ -44,9 +44,8 @@ exports.EchoFooProp = React.createClass({
 });
 
 exports.EchoBarParam = React.createClass({
-  mixins: [ActiveState],
+  mixins: [ State ],
   render: function () {
-    return <div className="EchoBarParam">{this.getActiveParams().bar}</div>
+    return <div className="EchoBarParam">{this.getParams().bar}</div>
   }
 });
-

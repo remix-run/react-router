@@ -4,7 +4,7 @@ var React = require('react/addons');
 var Route = require('../../components/Route');
 var Router = require('../../Router');
 var TestLocation = require('../../locations/TestLocation');
-var { Foo } = require('../../__tests__/testHandlers');
+var { Foo } = require('../../__tests__/TestHandlers');
 
 describe('ActiveState', function () {
 

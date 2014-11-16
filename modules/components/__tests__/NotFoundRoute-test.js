@@ -6,7 +6,7 @@ var Router = require('../../Router');
 var NotFoundRoute = require('../NotFoundRoute');
 var Route = require('../Route');
 var RouteHandler = require('../RouteHandler');
-var { Nested, Foo, Bar } = require('../../__tests__/testHandlers');
+var { Nested, Foo, Bar } = require('../../__tests__/TestHandlers');
 
 describe('NotFoundRoute', function () {
 

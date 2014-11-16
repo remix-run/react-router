@@ -13,7 +13,7 @@ var {
   Nested,
   EchoBarParam,
   RedirectToFoo
-} = require('./testHandlers');
+} = require('./TestHandlers');
 
 describe('Router', function () {
   describe('transitions', function () {

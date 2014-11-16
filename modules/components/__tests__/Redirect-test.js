@@ -4,7 +4,7 @@ var expect = require('expect');
 var React = require('react/addons');
 var Router = require('../../Router');
 var TestLocation = require('../../locations/TestLocation');
-var { Nested, Bar } = require('../../__tests__/testHandlers');
+var { Nested, Bar } = require('../../__tests__/TestHandlers');
 var Redirect = require('../Redirect');
 var Route = require('../Route');
 
