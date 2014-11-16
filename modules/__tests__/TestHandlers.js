@@ -27,12 +27,12 @@ exports.Bar = React.createClass({
 
 exports.RedirectToFoo = React.createClass({
   statics: {
-    willTransitionTo: function(transition) {
+    willTransitionTo: function (transition) {
       transition.redirect('/foo');
     }
   },
 
-  render: function() {
+  render: function () {
     return null;
   }
 });

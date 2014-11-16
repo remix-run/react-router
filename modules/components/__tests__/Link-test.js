@@ -13,7 +13,7 @@ describe('A Link', function () {
   describe('with params and a query', function () {
     it('knows how to make its href', function () {
       var LinkHandler = React.createClass({
-        render: function() {
+        render: function () {
           return <Link to="foo" params={{bar: 'baz'}} query={{qux: 'quux'}}>Link</Link>
         }
       });
@@ -26,8 +26,8 @@ describe('A Link', function () {
       var div = document.createElement('div');
       TestLocation.history = ['/link'];
 
-      Router.run(routes, TestLocation, function(Handler) {
-        React.render(<Handler/>, div, function() {
+      Router.run(routes, TestLocation, function (Handler) {
+        React.render(<Handler/>, div, function () {
           var a = div.querySelector('a');
           expect(a.getAttribute('href')).toEqual('/foo/baz?qux=quux');
         });
@@ -38,7 +38,7 @@ describe('A Link', function () {
   describe('when its route is active', function () {
     it('has an active class name', function () {
       var LinkHandler = React.createClass({
-        render: function() {
+        render: function () {
           return <Link
             to="foo"
             className="dontKillMe"
@@ -51,8 +51,8 @@ describe('A Link', function () {
       var div = document.createElement('div');
       TestLocation.history = ['/foo'];
 
-      Router.run(routes, TestLocation, function(Handler) {
-        React.render(<Handler/>, div, function() {
+      Router.run(routes, TestLocation, function (Handler) {
+        React.render(<Handler/>, div, function () {
           var a = div.querySelector('a');
           expect(a.className.split(' ').sort().join(' ')).toEqual('dontKillMe highlight');
         });
@@ -60,15 +60,15 @@ describe('A Link', function () {
     });
   });
 
-  describe('when clicked', function() {
+  describe('when clicked', function () {
     it('calls a user defined click handler', function (done) {
       var LinkHandler = React.createClass({
-        handleClick: function(event) {
+        handleClick: function (event) {
           assert.ok(true);
           done();
         },
 
-        render: function() {
+        render: function () {
           return <Link to="foo" onClick={this.handleClick}>Link</Link>;
         }
       });
@@ -80,8 +80,8 @@ describe('A Link', function () {
       var div = document.createElement('div');
       TestLocation.history = ['/link'];
 
-      Router.run(routes, TestLocation, function(Handler) {
-        React.render(<Handler/>, div, function() {
+      Router.run(routes, TestLocation, function (Handler) {
+        React.render(<Handler/>, div, function () {
           click(div.querySelector('a'));
         });
       });
@@ -92,11 +92,11 @@ describe('A Link', function () {
       TestLocation.history = ['/link'];
 
       var LinkHandler = React.createClass({
-        handleClick: function() {
+        handleClick: function () {
           // just here to make sure click handlers don't prevent it from happening
         },
 
-        render: function() {
+        render: function () {
           return <Link to="foo" onClick={this.handleClick}>Link</Link>;
         }
       });
@@ -108,17 +108,17 @@ describe('A Link', function () {
 
       var steps = [];
 
-      steps.push(function() {
+      steps.push(function () {
         click(div.querySelector('a'), {button: 0});
       });
 
-      steps.push(function() {
+      steps.push(function () {
         expect(div.innerHTML).toMatch(/Foo/);
         done();
       });
 
-      Router.run(routes, TestLocation, function(Handler) {
-        React.render(<Handler/>, div, function() {
+      Router.run(routes, TestLocation, function (Handler) {
+        React.render(<Handler/>, div, function () {
           steps.shift()();
         });
       });

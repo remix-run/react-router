@@ -75,7 +75,7 @@ Examples
 Basic Usage:
 
 ```js
-Router.run(routes, function(Handler) {
+Router.run(routes, function (Handler) {
   // whenever the url changes, this callback is called again
   React.render(<Handler/>, document.body);
 });
@@ -90,26 +90,26 @@ var resolveHash = require('when/keys').all;
 var SampleHandler = React.createClass({
   statics: {
     // this is going to be called in the `run` callback
-    fetchData: function(params) {
+    fetchData: function (params) {
       return fetchStuff(params);
     }
   },
   // ...
 });
 
-Router.run(routes, Router.HistoryLocation, function(Handler, state) {
+Router.run(routes, Router.HistoryLocation, function (Handler, state) {
   
   // create the promises hash
-  var promises = state.matches.filter(function(match) {
+  var promises = state.matches.filter(function (match) {
     // gather up the handlers that have a static `fetchData` method
     return match.route.handler.fetchData;
-  }).reduce(function(promises, match) {
+  }).reduce(function (promises, match) {
     // reduce to a hash of `key:promise`
     promises[match.route.name] = match.route.handler.fetchData(state.activeParams)
     return promises;
   }, {});
 
-  resolveHash(promises).then(function(data) {
+  resolveHash(promises).then(function (data) {
     // wait until we have data to render, the old screen stays up until
     // we render
     React.render(<Handler data={data}/>, document.body);
@@ -120,10 +120,10 @@ Router.run(routes, Router.HistoryLocation, function(Handler, state) {
 Server Rendering
 
 ```js
-something.serve(function(req, res) {
-  Router.run(routes, req.path, function(Handler, state) {
+something.serve(function (req, res) {
+  Router.run(routes, req.path, function (Handler, state) {
     // could fetch data like in the previous example
-    fetchData(state.matches).then(function(data) {
+    fetchData(state.matches).then(function (data) {
       var html = React.renderToString(<Handler data={data} />);
       req.send(html);
     });

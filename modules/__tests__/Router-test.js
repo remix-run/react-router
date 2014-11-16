@@ -138,7 +138,7 @@ describe('Router.run', function () {
       </Route>
     );
     Router.run(routes, '/Foo', function (Handler, state) {
-      React.render(<Handler/>, div, function() {
+      React.render(<Handler/>, div, function () {
         expect(div.querySelectorAll('.Nested').length).toEqual(1);
         done();
       });
@@ -178,13 +178,13 @@ describe('Router.run', function () {
     var div = document.createElement('div');
     var steps = [];
 
-    steps.push(function() {
+    steps.push(function () {
       expect(div.innerHTML).toMatch(/foo/);
       div.querySelector('h1').innerHTML = 'lol i changed you';
       TestLocation.push('/bar');
     });
 
-    steps.push(function() {
+    steps.push(function () {
       expect(div.innerHTML).toMatch(/bar/);
       expect(div.innerHTML).toMatch(/lol i changed you/);
       done();
@@ -201,12 +201,12 @@ describe('Router.run', function () {
     it('throws if called after the router transitions to a new state');
   });
 
-  describe('locations', function() {
-    it('defaults to HashLocation', function(done) {
+  describe('locations', function () {
+    it('defaults to HashLocation', function (done) {
       var routes = <Route path="/" handler={Foo}/>
       var div = document.createElement('div');
-      Router.run(routes, function(Handler) {
-        React.render(<Handler/>, div, function() {
+      Router.run(routes, function (Handler) {
+        React.render(<Handler/>, div, function () {
           this.getLocation() === Router.HashLocation;
           done();
         });

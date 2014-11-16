@@ -16,8 +16,8 @@ describe('ActiveState', function () {
         var routes = (
           <Route name="foo" handler={Foo}/>
         );
-        Router.run(routes, TestLocation, function(Handler) {
-          React.render(<Handler/>, div, function() {
+        Router.run(routes, TestLocation, function (Handler) {
+          React.render(<Handler/>, div, function () {
             assert(this.isActive('foo'));
             done();
           });
@@ -30,17 +30,17 @@ describe('ActiveState', function () {
       var div = document.createElement('div');
       var routes = <Route name="products" path="/products/:id/:variant" handler={Foo}/>
 
-      beforeEach(function(done) {
+      beforeEach(function (done) {
         TestLocation.history = ['/products/123/456?search=abc&limit=789'];
-        Router.run(routes, TestLocation, function(Handler) {
-          React.render(<Handler/>, div, function() {
+        Router.run(routes, TestLocation, function (Handler) {
+          React.render(<Handler/>, div, function () {
             component = this;
             done();
           });
         });
       });
 
-      afterEach(function() {
+      afterEach(function () {
         React.unmountComponentAtNode(div);
       });
 
