@@ -289,11 +289,11 @@ assign(Router.prototype, {
         });
 
         router._nextState = {
-          path: path,
           matches: matches,
-          activeRoutes: routes,
-          activeParams: params,
-          activeQuery: query
+          path: path,
+          routes: routes,
+          params: params,
+          query: query
         };
 
         callback.call(router);

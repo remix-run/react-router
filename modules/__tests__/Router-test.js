@@ -3,9 +3,9 @@ var expect = require('expect');
 var React = require('react');
 var Route = require('../components/Route');
 var Router = require('../Router');
-var ActiveRouteHandler = require('../components/ActiveRouteHandler');
-var ActiveState = require('../mixins/ActiveState');
+var RouteHandler = require('../components/RouteHandler');
 var TestLocation = require('../locations/TestLocation');
+var State = require('../mixins/State');
 
 describe('Router', function () {
   describe('transitions', function () {
@@ -58,7 +58,7 @@ describe('Router', function () {
     it('renders with query params', function (done) {
       var routes = Route({handler: Foo, path: '/'});
       Router.run(routes, '/?foo=bar', function (Handler, state) {
-        var html = React.renderToString(Handler({query: state.activeQuery.foo}));
+        var html = React.renderToString(Handler({ query: state.query.foo }));
         expect(html).toMatch(/bar/);
         done();
       });
@@ -71,7 +71,7 @@ describe('Router', function () {
 
       var Foo = React.createClass({
         render: function () {
-          return React.DOM.div({}, React.createElement(ActiveRouteHandler));
+          return React.DOM.div({}, React.createElement(RouteHandler));
         }
       });
 
@@ -115,7 +115,7 @@ describe('Router.run', function () {
       return (
         <div className="Nested">
           <h1>hello</h1>
-          <ActiveRouteHandler/>
+          <RouteHandler/>
         </div>
       );
     }
@@ -128,9 +128,9 @@ describe('Router.run', function () {
   });
 
   var ParamEcho = React.createClass({
-    mixins: [ActiveState],
+    mixins: [ State ],
     render: function () {
-      return <div>{this.getActiveParams().name}</div>
+      return <div>{this.getParams().name}</div>
     }
   });
 

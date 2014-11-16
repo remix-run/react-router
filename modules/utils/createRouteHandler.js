@@ -1,11 +1,11 @@
 var React = require('react');
 var assign = require('react/lib/Object.assign');
 var invariant = require('react/lib/invariant');
+var RouteHandler = require('../components/RouteHandler');
 var HashLocation = require('../locations/HashLocation');
 var Route = require('../Route');
 var Match = require('../Match');
 var Path = require('./Path');
-var ActiveRouteHandler = require('../components/ActiveRouteHandler');
 
 function routeIsActive(activeRoutes, routeName) {
   return activeRoutes.some(function (route) {
@@ -34,63 +34,6 @@ function queryIsActive(activeQuery, query) {
  * the given Router.
  */
 function createRouteHandler(router, location) {
-  var ActiveContext = {
-
-    /**
-     * Returns a read-only array of the currently active routes.
-     */
-    getActiveRoutes: function () {
-      return router.state.activeRoutes.slice(0);
-    },
-
-    /**
-     * Returns a read-only object of the currently active URL parameters.
-     */
-    getActiveParams: function () {
-      return assign({}, router.state.activeParams);
-    },
-
-    /**
-     * Returns a read-only object of the currently active query parameters.
-     */
-    getActiveQuery: function () {
-      return assign({}, router.state.activeQuery);
-    },
-
-    /**
-     * Returns true if the given route, params, and query are active.
-     */
-    isActive: function (to, params, query) {
-      if (Path.isAbsolute(to))
-        return to === router.state.path;
-
-      return routeIsActive(router.state.activeRoutes, to) &&
-        paramsAreActive(router.state.activeParams, params) &&
-        (query == null || queryIsActive(router.state.activeQuery, query));
-    },
-
-    childContextTypes: {
-      activeRoutes: React.PropTypes.arrayOf(React.PropTypes.instanceOf(Route)).isRequired,
-      activeParams: React.PropTypes.object.isRequired,
-      activeQuery: React.PropTypes.object.isRequired,
-      isActive: React.PropTypes.func.isRequired
-    },
-
-    getChildContext: function () {
-      // TODO: move this somewhere better? it was in the `render` method but
-      // context all gets setup before render is called, so this is our chance to
-      // flip the switch
-      router.flipSwitch();
-      return {
-        activeRoutes: this.getActiveRoutes(),
-        activeParams: this.getActiveParams(),
-        activeQuery: this.getActiveQuery(),
-        isActive: this.isActive
-      };
-    }
-
-  };
-
   var LocationContext = {
 
     /**
@@ -108,8 +51,75 @@ function createRouteHandler(router, location) {
     },
 
     getChildContext: function () {
+      // TODO: move this somewhere better? it was in the `render` method but
+      // context all gets setup before render is called, so this is our chance to
+      // flip the switch
+      router.flipSwitch();
+
       return {
         location: this.getLocation()
+      };
+    }
+
+  };
+
+  var StateContext = {
+
+    /**
+     * Returns the current URL path + query string.
+     */
+    getCurrentPath: function () {
+      return router.state.path;
+    },
+
+    /**
+     * Returns a read-only array of the currently active routes.
+     */
+    getCurrentRoutes: function () {
+      return router.state.routes.slice(0);
+    },
+
+    /**
+     * Returns a read-only object of the currently active URL parameters.
+     */
+    getCurrentParams: function () {
+      return assign({}, router.state.params);
+    },
+
+    /**
+     * Returns a read-only object of the currently active query parameters.
+     */
+    getCurrentQuery: function () {
+      return assign({}, router.state.query);
+    },
+
+    /**
+     * Returns true if the given route, params, and query are active.
+     */
+    isActive: function (to, params, query) {
+      if (Path.isAbsolute(to))
+        return to === router.state.path;
+
+      return routeIsActive(router.state.routes, to) &&
+        paramsAreActive(router.state.params, params) &&
+        (query == null || queryIsActive(router.state.query, query));
+    },
+
+    childContextTypes: {
+      currentPath: React.PropTypes.string.isRequired,
+      currentRoutes: React.PropTypes.arrayOf(React.PropTypes.instanceOf(Route)).isRequired,
+      currentParams: React.PropTypes.object.isRequired,
+      currentQuery: React.PropTypes.object.isRequired,
+      isActive: React.PropTypes.func.isRequired
+    },
+
+    getChildContext: function () {
+      return {
+        currentPath: this.getCurrentPath(),
+        currentRoutes: this.getCurrentRoutes(),
+        currentParams: this.getCurrentParams(),
+        currentQuery: this.getCurrentQuery(),
+        isActive: this.isActive
       };
     }
 
@@ -192,78 +202,20 @@ function createRouteHandler(router, location) {
 
   };
 
-  var PathContext = {
-
-    /**
-     * Returns the current URL path + query string.
-     */
-    getCurrentPath: function () {
-      return router.state.path;
-    },
-
-    childContextTypes: {
-      currentPath: React.PropTypes.string.isRequired
-    },
-
-    getChildContext: function () {
-      return {
-        currentPath: this.getCurrentPath()
-      };
-    }
-
-  };
-
-  var RouteContext = {
-
-    /**
-     * Returns a read-only array of all available <Route>s.
-     */
-    getRoutes: function () {
-      return router.routes.slice(0);
-    },
-
-    /**
-     * Returns a read-only hash { name: <Route> } of all named <Route>s.
-     */
-    getNamedRoutes: function () {
-      return assign({}, router.namedRoutes);
-    },
-
-    /**
-     * Returns the <Route> with the given name.
-     */
-    getRouteByName: function (routeName) {
-      return router.namedRoutes[routeName] || null;
-    },
-
-    childContextTypes: {
-      routes: React.PropTypes.array.isRequired,
-      namedRoutes: React.PropTypes.object.isRequired
-    },
-
-    getChildContext: function () {
-      return {
-        routes: this.getRoutes(),
-        namedRoutes: this.getNamedRoutes(),
-      };
-    }
-
-  };
-
-  var ActiveRouteHandlerContext = {
+  var RouteHandlerContext = {
 
     componentWillMount: function () {
-      this._activeRouteHandlerElements = [];
+      this._routeHandlerElements = [];
     },
 
-    registerActiveRouteHandlerElement: function (element) {
-      var elements = this._activeRouteHandlerElements;
+    registerRouteHandlerElement: function (element) {
+      var elements = this._routeHandlerElements;
 
       invariant(
         !elements.some(function (el) {
           return el._owner === element._owner
         }),
-        'Using <ActiveRouteHandler> twice in the same render method is not allowed'
+        'Using <RouteHandler> twice in the same render method is not allowed'
       );
 
       elements.push(element);
@@ -271,8 +223,8 @@ function createRouteHandler(router, location) {
       return elements.length - 1;
     },
 
-    unregisterActiveRouteHandlerElement: function (element) {
-      var elements = this._activeRouteHandlerElements;
+    unregisterRouteHandlerElement: function (element) {
+      var elements = this._routeHandlerElements;
 
       // We're assuming that elements are unmounted starting
       // at children. If that is incorrect, we need to revise.
@@ -281,7 +233,7 @@ function createRouteHandler(router, location) {
       // now it's just a sanity check.
       invariant(
         elements[elements.length - 1] === element,
-        'The <ActiveRouteHandler> stack is corrupt'
+        'The <RouteHandler> stack is corrupt'
       );
 
       elements.pop();
@@ -292,15 +244,15 @@ function createRouteHandler(router, location) {
     },
 
     childContextTypes: {
-      registerActiveRouteHandlerElement: React.PropTypes.func.isRequired,
-      unregisterActiveRouteHandlerElement: React.PropTypes.func.isRequired,
+      registerRouteHandlerElement: React.PropTypes.func.isRequired,
+      unregisterRouteHandlerElement: React.PropTypes.func.isRequired,
       getRouteMatchAtDepth: React.PropTypes.func.isRequired
     },
 
     getChildContext: function () {
       return {
-        registerActiveRouteHandlerElement: this.registerActiveRouteHandlerElement,
-        unregisterActiveRouteHandlerElement: this.unregisterActiveRouteHandlerElement,
+        registerRouteHandlerElement: this.registerRouteHandlerElement,
+        unregisterRouteHandlerElement: this.unregisterRouteHandlerElement,
         getRouteMatchAtDepth: this.getRouteMatchAtDepth
       };
     }
@@ -311,14 +263,7 @@ function createRouteHandler(router, location) {
 
     displayName: 'RouteHandler',
 
-    mixins: [
-      ActiveContext,
-      LocationContext,
-      NavigationContext,
-      PathContext,
-      RouteContext,
-      ActiveRouteHandlerContext
-    ],
+    mixins: [ LocationContext, StateContext, NavigationContext, RouteHandlerContext ],
 
     propTypes: {
       children: function (props, propName, componentName) {
@@ -328,8 +273,8 @@ function createRouteHandler(router, location) {
     },
 
     render: function () {
-      var route = router.state.activeRoutes[0];
-      return route ? React.createElement(ActiveRouteHandler, this.props) : null;
+      var route = router.state.routes[0];
+      return route ? React.createElement(RouteHandler, this.props) : null;
     }
 
   });

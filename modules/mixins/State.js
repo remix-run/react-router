@@ -1,13 +1,13 @@
 var React = require('react');
 
 /**
- * A mixin for components that need to know the routes, URL
+ * A mixin for components that need to know the path, routes, URL
  * params and query that are currently active.
  *
  * Example:
  *
  *   var AboutLink = React.createClass({
- *     mixins: [ Router.ActiveState ],
+ *     mixins: [ Router.State ],
  *     render: function () {
  *       var className = this.props.className;
  *   
@@ -18,34 +18,42 @@ var React = require('react');
  *     }
  *   });
  */
-var ActiveState = {
+var State = {
 
   contextTypes: {
-    activeRoutes: React.PropTypes.array.isRequired,
-    activeParams: React.PropTypes.object.isRequired,
-    activeQuery: React.PropTypes.object.isRequired,
+    currentPath: React.PropTypes.string.isRequired,
+    currentRoutes: React.PropTypes.array.isRequired,
+    currentParams: React.PropTypes.object.isRequired,
+    currentQuery: React.PropTypes.object.isRequired,
     isActive: React.PropTypes.func.isRequired
+  },
+
+  /**
+   * Returns the current URL path.
+   */
+  getPath: function () {
+    return this.context.currentPath;
   },
 
   /**
    * Returns an array of the routes that are currently active.
    */
-  getActiveRoutes: function () {
-    return this.context.activeRoutes;
+  getRoutes: function () {
+    return this.context.currentRoutes;
   },
 
   /**
    * Returns an object of the URL params that are currently active.
    */
-  getActiveParams: function () {
-    return this.context.activeParams;
+  getParams: function () {
+    return this.context.currentParams;
   },
 
   /**
    * Returns an object of the query params that are currently active.
    */
-  getActiveQuery: function () {
-    return this.context.activeQuery;
+  getQuery: function () {
+    return this.context.currentQuery;
   },
 
   /**
@@ -58,4 +66,4 @@ var ActiveState = {
 
 };
 
-module.exports = ActiveState;
+module.exports = State;

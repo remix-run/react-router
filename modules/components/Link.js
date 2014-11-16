@@ -1,8 +1,8 @@
 var React = require('react');
 var classSet = require('react/lib/cx');
 var assign = require('react/lib/Object.assign');
-var ActiveState = require('../mixins/ActiveState');
 var Navigation = require('../mixins/Navigation');
+var State = require('../mixins/State');
 
 function isLeftClickEvent(event) {
   return event.button === 0;
@@ -34,7 +34,7 @@ var Link = React.createClass({
 
   displayName: 'Link',
 
-  mixins: [ ActiveState, Navigation ],
+  mixins: [ Navigation, State ],
 
   propTypes: {
     activeClassName: React.PropTypes.string.isRequired,

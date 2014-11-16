@@ -2,17 +2,17 @@
 var assert = require('assert');
 var expect = require('expect');
 var React = require('react/addons');
+var Router = require('../../Router');
 var NotFoundRoute = require('../NotFoundRoute');
 var Route = require('../Route');
-var Router = require('../../Router');
-var ActiveRouteHandler = require('../../components/ActiveRouteHandler');
+var RouteHandler = require('../RouteHandler');
 
 var Nested = React.createClass({
   render: function () {
     return (
       <div>
         hello
-        <ActiveRouteHandler />
+        <RouteHandler />
       </div>
     );
   }

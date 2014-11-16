@@ -1,20 +1,22 @@
 var React = require('react');
 
 /**
- * An <ActiveRouteHandler> component renders the active child route handler
+ * An <RouteHandler> component renders the active child route handler
  * when routes are nested.
  */
-var ActiveRouteHandler = React.createClass({
+var RouteHandler = React.createClass({
+
+  displayName: 'RouteHandler',
 
   contextTypes: {
-    registerActiveRouteHandlerElement: React.PropTypes.func.isRequired,
-    unregisterActiveRouteHandlerElement: React.PropTypes.func.isRequired,
+    registerRouteHandlerElement: React.PropTypes.func.isRequired,
+    unregisterRouteHandlerElement: React.PropTypes.func.isRequired,
     getRouteMatchAtDepth: React.PropTypes.func.isRequired
   },
 
   getDefaultProps: function () {
     return {
-      ref: '__activeRouteHandler__'
+      ref: '__routeHandler__'
     };
   },
 
@@ -23,7 +25,7 @@ var ActiveRouteHandler = React.createClass({
   },
 
   componentWillMount: function () {
-    this._routeDepth = this.context.registerActiveRouteHandlerElement(this);
+    this._routeDepth = this.context.registerRouteHandlerElement(this);
   },
 
   componentDidMount: function () {
@@ -39,18 +41,14 @@ var ActiveRouteHandler = React.createClass({
   },
 
   componentWillUnmount: function () {
-    this.context.unregisterActiveRouteHandlerElement(this);
+    this.context.unregisterRouteHandlerElement(this);
   },
 
   render: function () {
     var match = this.getMatch();
-
-    if (!match)
-      return null;
-
-    return React.createElement(match.route.handler, this.props);
+    return match ? React.createElement(match.route.handler, this.props) : null;
   }
 
 });
 
-module.exports = ActiveRouteHandler;
+module.exports = RouteHandler;

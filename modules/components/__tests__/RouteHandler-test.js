@@ -5,9 +5,9 @@ var expect = require('expect');
 var React = require('react');
 var Router = require('../../Router');
 var Route = require('../Route');
-var ActiveRouteHandler = require('../ActiveRouteHandler');
+var RouteHandler = require('../RouteHandler');
 
-describe('ActiveRouteHandler', function () {
+describe('RouteHandler', function () {
 
   it('accepts properties');
 
@@ -20,7 +20,7 @@ describe('ActiveRouteHandler', function () {
         return (
           <div>
             hello
-            <ActiveRouteHandler />
+            <RouteHandler />
           </div>
         );
       }
