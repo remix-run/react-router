@@ -161,7 +161,7 @@ var RouteContext = {
   getChildContext: function () {
     return {
       routes: this.getRoutes(),
-      namedRoutes: this.getNamedRoutes(),
+      namedRoutes: this.getNamedRoutes()
     };
   }
 
