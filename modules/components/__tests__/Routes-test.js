@@ -79,6 +79,7 @@ describe('A Routes', function () {
             Route({ path: '/discover', handler: NullHandler })
           ),
           Route({ path: '/search', handler: NullHandler, ignoreScrollBehavior: true }),
+          Route({ path: '/users/:userId/posts', handler: NullHandler }),
           Route({ path: '/about', handler: NullHandler })
         )
       );
@@ -126,11 +127,31 @@ describe('A Routes', function () {
       expect(calledUpdateScroll).toEqual(true);
     });
 
-    it('calls updateScroll when source is same as target and does not ignore scroll', function () {
-      component.updateLocation('/about');
+    it('does not call updateScroll when only query changes though route does not ignore scroll', function () {
+      component.updateLocation('/users/3/posts?after=60');
 
       var calledUpdateScroll = spyOnUpdateScroll(function () {
-        component.updateLocation('/about?page=2');
+        component.updateLocation('/users/3/posts?after=120');
+      });
+
+      expect(calledUpdateScroll).toEqual(false);
+    });
+
+    it('calls updateScroll when only parameters change and route does not ignore scroll', function () {
+      component.updateLocation('/users/3/posts?after=120');
+
+      var calledUpdateScroll = spyOnUpdateScroll(function () {
+        component.updateLocation('/users/5/posts?after=120');
+      });
+
+      expect(calledUpdateScroll).toEqual(true);
+    });
+
+    it('calls updateScroll when both query and parameters change and route does not ignore scroll', function () {
+      component.updateLocation('/users/3/posts?after=60');
+
+      var calledUpdateScroll = spyOnUpdateScroll(function () {
+        component.updateLocation('/users/5/posts?after=120');
       });
 
       expect(calledUpdateScroll).toEqual(true);
