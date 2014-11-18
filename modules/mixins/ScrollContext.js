@@ -3,6 +3,7 @@ var invariant = require('react/lib/invariant');
 var canUseDOM = require('react/lib/ExecutionEnvironment').canUseDOM;
 var ImitateBrowserBehavior = require('../behaviors/ImitateBrowserBehavior');
 var ScrollToTopBehavior = require('../behaviors/ScrollToTopBehavior');
+var LocationActions = require('../actions/LocationActions');
 
 function getWindowScrollPosition() {
   invariant(
@@ -53,9 +54,11 @@ var ScrollContext = {
     );
   },
 
-  recordScroll: function (path) {
-    var positions = this.getScrollPositions();
-    positions[path] = getWindowScrollPosition();
+  recordScroll: function (path, actionType) {
+    if (actionType !== LocationActions.REPLACE) {
+      var positions = this.getScrollPositions();
+      positions[path] = getWindowScrollPosition();
+    }
   },
 
   updateScroll: function (path, actionType) {

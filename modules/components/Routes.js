@@ -279,7 +279,7 @@ var Routes = React.createClass({
       return; // Nothing to do!
 
     if (this.state.path)
-      this.recordScroll(this.state.path);
+      this.recordScroll(this.state.path, actionType);
 
     this.dispatch(path, function (error, abortReason, nextState) {
       if (error) {
