@@ -1,6 +1,8 @@
 var Promise = require('./Promise');
 var Redirect = require('./Redirect');
 
+function DefaultAbortReason() {}
+
 /**
  * Encapsulates a transition to a given path.
  *
@@ -15,7 +17,7 @@ function Transition(routesComponent, path) {
 }
 
 Transition.prototype.abort = function (reason) {
-  this.abortReason = reason;
+  this.abortReason = reason || new DefaultAbortReason();
   this.isAborted = true;
 };
 
