@@ -2,11 +2,11 @@
 var assert = require('assert');
 var expect = require('expect');
 var React = require('react/addons');
-var Router = require('../../Router');
+var Router = require('../../index');
 var DefaultRoute = require('../DefaultRoute');
 var Route = require('../Route');
 var RouteHandler = require('../RouteHandler');
-var { Foo, Bar, Nested } = require('../../__tests__/TestHandlers.js');
+var { Foo, Bar, Nested } = require('../../__tests__/TestHandlers');
 
 describe('DefaultRoute', function () {
 
@@ -18,7 +18,7 @@ describe('DefaultRoute', function () {
     );
 
     Router.run(routes, '/', function (App) {
-      var html = React.renderToString(App());
+      var html = React.renderToString(<App/>);
       expect(html).toMatch(/Nested/);
       expect(html).toMatch(/Foo/);
     });
@@ -34,7 +34,7 @@ describe('DefaultRoute', function () {
     );
 
     Router.run(routes, '/foo', function (App) {
-      var html = React.renderToString(App());
+      var html = React.renderToString(<App/>);
       expect(html).toMatch(/Foo/);
     });
   });
@@ -50,7 +50,7 @@ describe('DefaultRoute', function () {
     );
 
     Router.run(routes, '/foo', function (App) {
-      var html = React.renderToString(App());
+      var html = React.renderToString(<App/>);
       expect(html).toMatch(/Foo/);
       expect(html.match(/Bar/)).toEqual(null);
     });

@@ -15,7 +15,7 @@ var {
   RedirectToFoo
 } = require('./TestHandlers');
 
-describe.only('Router', function () {
+describe('Router', function () {
   describe('transitions', function () {
 
     var routes = [
