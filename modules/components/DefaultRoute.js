@@ -1,5 +1,5 @@
 var React = require('react');
-var ConfigRoute = require('../mixins/ConfigRoute');
+var FakeNode = require('../mixins/FakeNode');
 
 /**
  * A <DefaultRoute> component is a special kind of <Route> that
@@ -8,7 +8,10 @@ var ConfigRoute = require('../mixins/ConfigRoute');
  * route hierarchy.
  */
 var DefaultRoute = React.createClass({
-  mixins: [ ConfigRoute ],
+
+  displayName: 'DefaultRoute',
+
+  mixins: [ FakeNode ],
 
   getDefaultProps: function () {
     return {
@@ -18,7 +21,7 @@ var DefaultRoute = React.createClass({
       isDefault: true
     };
   }
+
 });
 
 module.exports = DefaultRoute;
-

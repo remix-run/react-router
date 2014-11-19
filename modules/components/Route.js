@@ -1,5 +1,5 @@
 var React = require('react');
-var ConfigRoute = require('../mixins/ConfigRoute');
+var FakeNode = require('../mixins/FakeNode');
 
 /**
  * <Route> components specify components that are rendered to the page when the
@@ -50,7 +50,7 @@ var Route = React.createClass({
 
   displayName: 'Route',
 
-  mixins: [ ConfigRoute ],
+  mixins: [ FakeNode ],
 
   propTypes: {
     ignoreScrollBehavior: React.PropTypes.bool

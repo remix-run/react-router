@@ -1,5 +1,5 @@
 var React = require('react');
-var ConfigRoute = require('../mixins/ConfigRoute');
+var FakeNode = require('../mixins/FakeNode');
 
 /**
  * A <NotFoundRoute> is a special kind of <Route> that
@@ -9,7 +9,10 @@ var ConfigRoute = require('../mixins/ConfigRoute');
  * route hierarchy.
  */
 var NotFoundRoute = React.createClass({
-  mixins: [ ConfigRoute ],
+
+  displayName: 'NotFoundRoute',
+
+  mixins: [ FakeNode ],
 
   getDefaultProps: function () {
     return {
@@ -19,7 +22,7 @@ var NotFoundRoute = React.createClass({
       catchAll: true
     };
   }
+
 });
 
 module.exports = NotFoundRoute;
-
