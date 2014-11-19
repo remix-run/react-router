@@ -21,10 +21,10 @@ var React = require('react');
 var State = {
 
   contextTypes: {
-    currentPath: React.PropTypes.string.isRequired,
-    currentRoutes: React.PropTypes.array.isRequired,
-    currentParams: React.PropTypes.object.isRequired,
-    currentQuery: React.PropTypes.object.isRequired,
+    getCurrentPath: React.PropTypes.func.isRequired,
+    getCurrentRoutes: React.PropTypes.func.isRequired,
+    getCurrentParams: React.PropTypes.func.isRequired,
+    getCurrentQuery: React.PropTypes.func.isRequired,
     isActive: React.PropTypes.func.isRequired
   },
 
@@ -32,28 +32,28 @@ var State = {
    * Returns the current URL path.
    */
   getPath: function () {
-    return this.context.currentPath;
+    return this.context.getCurrentPath();
   },
 
   /**
    * Returns an array of the routes that are currently active.
    */
   getRoutes: function () {
-    return this.context.currentRoutes;
+    return this.context.getCurrentRoutes();
   },
 
   /**
    * Returns an object of the URL params that are currently active.
    */
   getParams: function () {
-    return this.context.currentParams;
+    return this.context.getCurrentParams();
   },
 
   /**
    * Returns an object of the query params that are currently active.
    */
   getQuery: function () {
-    return this.context.currentQuery;
+    return this.context.getCurrentQuery();
   },
 
   /**

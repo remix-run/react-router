@@ -1,17 +1,16 @@
-var Router = require('./Router');
+exports.DefaultRoute = require('./components/DefaultRoute');
+exports.Link = require('./components/Link');
+exports.NotFoundRoute = require('./components/NotFoundRoute');
+exports.Redirect = require('./components/Redirect');
+exports.Route = require('./components/Route');
+exports.RouteHandler = require('./components/RouteHandler');
 
-Router.DefaultRoute = require('./components/DefaultRoute');
-Router.Link = require('./components/Link');
-Router.NotFoundRoute = require('./components/NotFoundRoute');
-Router.Redirect = require('./components/Redirect');
-Router.Route = require('./components/Route');
-Router.RouteHandler = require('./components/RouteHandler');
+exports.HashLocation = require('./locations/HashLocation');
+exports.HistoryLocation = require('./locations/HistoryLocation');
+exports.RefreshLocation = require('./locations/RefreshLocation');
 
-Router.HashLocation = require('./locations/HashLocation');
-Router.HistoryLocation = require('./locations/HistoryLocation');
-Router.RefreshLocation = require('./locations/RefreshLocation');
+exports.Navigation = require('./mixins/Navigation');
+exports.State = require('./mixins/State');
 
-Router.Navigation = require('./mixins/Navigation');
-Router.State = require('./mixins/State');
-
-module.exports = Router;
+exports.create = require('./utils/createRouter');
+exports.run = require('./utils/runRouter');
