@@ -49,8 +49,8 @@ function runTransitionFromHooks(transition, routes, elements, callback) {
       if (!transition.isAborted && handler.willTransitionFrom)
         return handler.willTransitionFrom(transition, element && element.getHandlerElement());
 
-      var promise = transition.promise;
-      delete transition.promise;
+      var promise = transition._promise;
+      transition._promise = null;
 
       return promise;
     };
@@ -72,8 +72,8 @@ function runTransitionToHooks(transition, routes, params, query, callback) {
       if (!transition.isAborted && handler.willTransitionTo)
         handler.willTransitionTo(transition, params, query);
 
-      var promise = transition.promise;
-      delete transition.promise;
+      var promise = transition._promise;
+      transition._promise = null;
 
       return promise;
     };
@@ -93,6 +93,7 @@ function Transition(path, retry) {
   this.abortReason = null;
   this.isAborted = false;
   this.retry = retry.bind(this);
+  this._promise = null;
 }
 
 assign(Transition.prototype, {
@@ -107,7 +108,7 @@ assign(Transition.prototype, {
   },
 
   wait: function (value) {
-    this.promise = Promise.resolve(value);
+    this._promise = Promise.resolve(value);
   },
 
   from: function (routes, elements, callback) {
