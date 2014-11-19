@@ -4,7 +4,7 @@ require('./modules/components/__tests__/DefaultRoute-test');
 require('./modules/components/__tests__/Link-test');
 require('./modules/components/__tests__/NotFoundRoute-test');
 require('./modules/components/__tests__/Redirect-test');
-// require('./modules/components/__tests__/RouteHandler-test');
+require('./modules/components/__tests__/RouteHandler-test');
 // require('./modules/components/__tests__/Routes-test');
 
 // require('./modules/mixins/__tests__/ActiveState-test');
