@@ -301,7 +301,7 @@ function createRouter(options) {
           toRoutes = nextRoutes;
         }
 
-        var transition = new Transition(path);
+        var transition = new Transition(path, this.replaceWith.bind(this, path));
 
         transition.from(fromRoutes, elements, function (error) {
           if (error || transition.isAborted)
