@@ -20,14 +20,17 @@ function createRedirectHandler(to, _params, _query) {
  * redirects to another route when it matches.
  */
 var Redirect = React.createClass({
+
   statics: {
+
     createRoute: function (props) {
-      return Route({
+      return React.createElement(Route, {
         name: props.name,
         path: props.from,
         handler: createRedirectHandler(props.to, props.params, props.query)
       });
     }
+
   },
 
   propTypes: {
@@ -47,7 +50,7 @@ var Redirect = React.createClass({
   render: function () {
     return null;
   }
+
 });
 
 module.exports = Redirect;
-
