@@ -396,7 +396,8 @@ function createRouter(options) {
     },
 
     render: function () {
-      return this.state.routes.length ? React.createElement(RouteHandler, this.props) : null;
+      var routes = this.state.routes;
+      return routes && routes.length ? React.createElement(RouteHandler, this.props) : null;
     }
 
   });
