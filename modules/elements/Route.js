@@ -53,6 +53,9 @@ var Route = React.createClass({
   mixins: [ FakeNode ],
 
   propTypes: {
+    name: React.PropTypes.string,
+    path: React.PropTypes.string,
+    handler: React.PropTypes.func.isRequired,
     ignoreScrollBehavior: React.PropTypes.bool
   }
 

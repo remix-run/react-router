@@ -62,12 +62,6 @@ function createRoute(element, parentRoute, namedRoutes) {
     route.handler = props.handler;
   }
 
-  invariant(
-    typeof route.handler === 'function',
-    'The handler for "%s" must be a ReactElement',
-    props.name || props.path
-  );
-
   var parentPath = (parentRoute && parentRoute.path) || '/';
 
   if ((props.path || props.name) && type !== DefaultRoute.type && type !== NotFoundRoute.type) {

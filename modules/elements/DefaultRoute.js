@@ -15,7 +15,9 @@ var DefaultRoute = React.createClass({
   mixins: [ FakeNode ],
 
   propTypes: {
-    path: PropTypes.falsy
+    name: React.PropTypes.string,
+    path: PropTypes.falsy,
+    handler: React.PropTypes.func.isRequired
   }
 
 });

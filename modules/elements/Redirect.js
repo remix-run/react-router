@@ -13,6 +13,9 @@ var Redirect = React.createClass({
   mixins: [ FakeNode ],
 
   propTypes: {
+    path: React.PropTypes.string,
+    from: React.PropTypes.string, // Alias for path.
+    to: React.PropTypes.string,
     handler: PropTypes.falsy
   }
 
