@@ -10,11 +10,11 @@ var NavigationContext = require('../mixins/NavigationContext');
 var StateContext = require('../mixins/StateContext');
 var RouteHandlerContext = require('../mixins/RouteHandlerContext');
 var Scrolling = require('../mixins/Scrolling');
-var createRoutesFromChildren = require('../utils/createRoutesFromChildren');
-var supportsHistory = require('../utils/supportsHistory');
-var Transition = require('../utils/Transition');
-var Redirect = require('../utils/Redirect');
-var Path = require('../utils/Path');
+var createRoutesFromChildren = require('./createRoutesFromChildren');
+var supportsHistory = require('./supportsHistory');
+var Transition = require('./Transition');
+var Redirect = require('./Redirect');
+var Path = require('./Path');
 
 /**
  * The default location for new routers.
