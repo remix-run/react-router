@@ -9,6 +9,9 @@ var RouteHandlerContext = {
   pushRouteHandlerElement: function (element) {
     var elements = this.getElements();
 
+
+    // TODO: This breaks the animation example because the old element
+    // is still in the page while we transition to the new one.
     invariant(
       !elements.some(function (el) {
         return el._owner === element._owner

@@ -1,15 +1,15 @@
-/** @jsx React.DOM */
 // TODO: animations aren't happening, not sure what the problem is
 var React = require('react');
 var TransitionGroup = require('react/lib/ReactCSSTransitionGroup');
 var Router = require('react-router');
-var { Route, Link, ActiveRouteHandler, ActiveState } = Router;
+var { Route, RouteHandler, Link } = Router;
 
 var App = React.createClass({
-  mixins: [ActiveState],
+  mixins: [ Router.State ],
 
   render: function () {
-    var name = this.getActiveRoutes().reverse()[0].name;
+    var name = this.getRoutes().reverse()[0].name;
+
     return (
       <div>
         <ul>
@@ -17,7 +17,7 @@ var App = React.createClass({
           <li><Link to="page2">Page 2</Link></li>
         </ul>
         <TransitionGroup component="div" transitionName="example">
-          <ActiveRouteHandler key={name} />
+          <RouteHandler key={name}/>
         </TransitionGroup>
       </div>
     );
@@ -53,6 +53,6 @@ var routes = (
   </Route>
 );
 
-var el = document.getElementById('example');
-Router.run(routes, (Handler) => React.render(<Handler/>, el));
-
+Router.run(routes, function (Handler) {
+  React.render(<Handler/>, document.getElementById('example'));
+});
