@@ -1,5 +1,6 @@
 var React = require('react');
 var FakeNode = require('../mixins/FakeNode');
+var PropTypes = require('../utils/PropTypes');
 
 /**
  * A <NotFoundRoute> is a special kind of <Route> that
@@ -14,13 +15,8 @@ var NotFoundRoute = React.createClass({
 
   mixins: [ FakeNode ],
 
-  getDefaultProps: function () {
-    return {
-      // TODO: make sure we ignore any path the user might supply, or
-      // throw/warn when we encounter it
-      path: null,
-      catchAll: true
-    };
+  propTypes: {
+    path: PropTypes.falsy
   }
 
 });
