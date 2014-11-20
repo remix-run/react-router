@@ -4,7 +4,7 @@ var _listener;
 
 function notifyChange(type) {
   if (_listener)
-    _listener({ type: type, path: TestLocation.getCurrentPath() });
+    _listener({ path: TestLocation.getCurrentPath(), type: type });
 }
 
 /**

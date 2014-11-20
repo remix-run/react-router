@@ -22,8 +22,8 @@ var _changeListeners = [];
 
 function notifyChange(type) {
   var change = {
-    type: type,
-    path: getHashPath()
+    path: getHashPath(),
+    type: type
   };
 
   _changeListeners.forEach(function (listener) {

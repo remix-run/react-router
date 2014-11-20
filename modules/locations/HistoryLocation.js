@@ -5,8 +5,8 @@ var _changeListeners = [];
 
 function notifyChange(type) {
   var change = {
-    type: type,
-    path: getWindowPath()
+    path: getWindowPath(),
+    type: type
   };
 
   _changeListeners.forEach(function (listener) {

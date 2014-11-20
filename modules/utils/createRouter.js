@@ -82,7 +82,7 @@ function findMatch(pathname, routes, defaultRoute, notFoundRoute) {
 }
 
 function createMatch(route, params) {
-  return { path: null, routes: [ route ], params: params, query: null };
+  return { routes: [ route ], params: params };
 }
 
 function hasMatch(routes, route, prevParams, nextParams) {
@@ -238,16 +238,7 @@ function createRouter(options) {
        * the { path, routes, params, query } that match. Returns null if no match can be made.
        */
       match: function (path) {
-        var pathname = Path.withoutQuery(path);
-        var match = findMatch(pathname, routes, this.defaultRoute, this.notFoundRoute);
-
-        if (match == null)
-          return null;
-
-        match.path = path;
-        match.query = Path.extractQuery(path) || {};
-
-        return match;
+        return findMatch(Path.withoutQuery(path), routes, this.defaultRoute, this.notFoundRoute) || null;
       },
 
       /**
@@ -266,27 +257,27 @@ function createRouter(options) {
        * transition. To resolve asynchronously, they may use transition.wait(promise). If no
        * hooks wait, the transition is fully synchronous.
        */
-      dispatch: function (action, path, callback) {
+      dispatch: function (path, action, callback) {
         if (state.path === path)
           return; // Nothing to do!
 
-        var nextState = this.match(path);
+        var match = this.match(path);
 
         warning(
-          nextState != null,
+          match != null,
           'No route matches path "%s". Make sure you have <Route path="%s"> somewhere in your routes',
           path, path
         );
 
-        if (nextState == null)
-          nextState = {};
+        if (match == null)
+          match = {};
 
         var prevRoutes = state.routes || [];
         var prevParams = state.params || {};
 
-        var nextRoutes = nextState.routes || [];
-        var nextParams = nextState.params || {};
-        var nextQuery = nextState.query || {};
+        var nextRoutes = match.routes || [];
+        var nextParams = match.params || {};
+        var nextQuery = Path.extractQuery(path) || {};
 
         var fromRoutes, toRoutes;
         if (prevRoutes.length) {
@@ -312,8 +303,11 @@ function createRouter(options) {
             if (error || transition.isAborted)
               return callback.call(router, error, transition);
 
-            state = nextState;
+            state.path = path;
             state.action = action;
+            state.routes = nextRoutes;
+            state.params = nextParams;
+            state.query = nextQuery;
 
             callback.call(router, null, transition);
           });
@@ -346,7 +340,7 @@ function createRouter(options) {
           );
 
           // Dispatch the location.
-          router.dispatch(null, location, dispatchHandler);
+          router.dispatch(location, null, dispatchHandler);
         } else {
           invariant(
             canUseDOM,
@@ -356,14 +350,14 @@ function createRouter(options) {
 
           // Listen for changes to the location.
           function changeListener(change) {
-            router.dispatch(change.type, change.path, dispatchHandler);
+            router.dispatch(change.path, change.type, dispatchHandler);
           }
 
           if (location.addChangeListener)
             location.addChangeListener(changeListener);
 
           // Bootstrap using the current path.
-          router.dispatch(null, location.getCurrentPath(), dispatchHandler);
+          router.dispatch(location.getCurrentPath(), null, dispatchHandler);
         }
       }
 
