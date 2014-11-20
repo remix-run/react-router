@@ -1,8 +1,6 @@
-/** @jsx React.DOM */
-
 var React = require('react');
 var Router = require('react-router');
-var Link = Router.Link;
+var { RouteHandler, Link } = Router;
 
 var Dashboard = React.createClass({
 
@@ -13,7 +11,7 @@ var Dashboard = React.createClass({
         <ul>
           <li><Link to="inbox">Inbox</Link></li>
         </ul>
-        {this.props.activeRoute}
+        <RouteHandler/>
       </div>
     );
   }

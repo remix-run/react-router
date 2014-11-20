@@ -1,18 +1,13 @@
-/** @jsx React.DOM */
 var React = require('react');
 var Router = require('react-router');
-var Route = Router.Route;
-var Routes = Router.Routes;
-var Link = Router.Link;
-var ActiveRouteHandler = Router.ActiveRouteHandler;
+var { Route, RouteHandler, Link } = Router;
 
-var AsyncReactComponent = {
+var AsyncElement = {
   loadedComponent: null,
 
   load: function () {
-    if (this.constructor.loadedComponent) {
+    if (this.constructor.loadedComponent)
       return;
-    }
 
     this.bundle(function (component) {
       this.constructor.loadedComponent = component;
@@ -27,9 +22,9 @@ var AsyncReactComponent = {
   render: function () {
     var component = this.constructor.loadedComponent;
     if (component) {
-      // can't find ActiveRouteHandler in the loaded component, so we just grab
+      // can't find RouteHandler in the loaded component, so we just grab
       // it here first.
-      this.props.activeRoute = <ActiveRouteHandler />;
+      this.props.activeRoute = <RouteHandler/>;
       return component(this.props);
     }
     return this.preRender();
@@ -37,7 +32,7 @@ var AsyncReactComponent = {
 };
 
 var PreDashboard = React.createClass({
-  mixins: [AsyncReactComponent],
+  mixins: [ AsyncElement ],
   bundle: require('bundle?lazy!./dashboard.js'),
   preRender: function () {
     return <div>Loading dashboard...</div>
@@ -45,7 +40,7 @@ var PreDashboard = React.createClass({
 });
 
 var PreInbox = React.createClass({
-  mixins: [AsyncReactComponent],
+  mixins: [ AsyncElement ],
   bundle: require('bundle?lazy!./inbox.js'),
   preRender: function () {
     return <div>Loading inbox...</div>
@@ -60,7 +55,7 @@ var App = React.createClass({
         <ul>
           <li><Link to="dashboard">Dashboard</Link></li>
         </ul>
-        <ActiveRouteHandler/>
+        <RouteHandler/>
       </div>
     );
   }
@@ -75,6 +70,5 @@ var routes = (
 );
 
 Router.run(routes, function (Handler) {
-  React.renderComponent(<Handler/>, document.getElementById('example'));
+  React.render(<Handler/>, document.getElementById('example'));
 });
-
