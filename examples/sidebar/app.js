@@ -14,11 +14,11 @@ var CategoryNav = React.createClass({
 
   componentWillReceiveProps: function (newProps) {
     if (!this.state.isOpen)
-      this.setState({isOpen: newProps.defaultIsOpen});
+      this.setState({ isOpen: newProps.defaultIsOpen });
   },
 
   toggle: function () {
-    this.setState({isOpen: !this.state.isOpen});
+    this.setState({ isOpen: !this.state.isOpen });
   },
 
   buildToggleClassName: function () {
