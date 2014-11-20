@@ -131,7 +131,7 @@ something.serve(function (req, res) {
 });
 ```
 
-  [1]:./components/Route.md
+  [1]:./elements/Route.md
   [2]:./locations/HashLocation.md
   [3]:./classes/Route.md
   [4]:https://github.com/rackt/react-router/tree/latest/examples/async-data

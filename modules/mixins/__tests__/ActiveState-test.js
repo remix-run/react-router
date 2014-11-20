@@ -1,7 +1,7 @@
 var assert = require('assert');
 var expect = require('expect');
 var React = require('react/addons');
-var Route = require('../../components/Route');
+var Route = require('../../elements/Route');
 var Router = require('../../Router');
 var TestLocation = require('../../locations/TestLocation');
 var { Foo } = require('../../__tests__/TestHandlers');

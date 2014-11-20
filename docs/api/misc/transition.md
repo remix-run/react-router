@@ -25,5 +25,5 @@ entry in the browser history.
 
 Will pause the transition until the promise resolves.
 
-  [transition-hooks]:/docs/api/components/RouteHandler.md#static-lifecycle-methods
+  [transition-hooks]:/docs/api/elements/RouteHandler.md#static-lifecycle-methods
 

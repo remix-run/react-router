@@ -2,8 +2,8 @@ var assert = require('assert');
 var expect = require('expect');
 var React = require('react/addons');
 var ReactTestUtils = React.addons.TestUtils;
-var Routes = require('../../components/Routes');
-var Route = require('../../components/Route');
+var Routes = require('../../elements/Routes');
+var Route = require('../../elements/Route');
 var Navigation = require('../Navigation');
 
 describe('Navigation', function () {

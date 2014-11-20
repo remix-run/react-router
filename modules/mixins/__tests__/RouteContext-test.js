@@ -1,7 +1,7 @@
 var expect = require('expect');
 var React = require('react/addons');
 var ReactTestUtils = React.addons.TestUtils;
-var Route = require('../../components/Route');
+var Route = require('../../elements/Route');
 var RouteContext = require('../RouteContext');
 
 describe('RouteContext', function () {

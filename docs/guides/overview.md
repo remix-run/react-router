@@ -363,8 +363,8 @@ it has to offer. Check out the [API Docs][API] to learn about
 redirecting transitions, query parameters and more.
 
   [AsyncState]:../api/mixins/AsyncState.md
-  [Route]:../api/components/Route.md
-  [Routes]:../api/components/Routes.md
+  [Route]:../api/elements/Route.md
+  [Routes]:../api/elements/Routes.md
   [API]:../api/
   [path-matching]:./path-matching.md
 

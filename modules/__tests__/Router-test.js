@@ -1,8 +1,8 @@
 var assert = require('assert');
 var expect = require('expect');
 var React = require('react');
-var Route = require('../components/Route');
-var RouteHandler = require('../components/RouteHandler');
+var Route = require('../elements/Route');
+var RouteHandler = require('../elements/RouteHandler');
 var TestLocation = require('../locations/TestLocation');
 var Router = require('../index');
 

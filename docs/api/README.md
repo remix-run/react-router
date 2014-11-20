@@ -4,13 +4,13 @@ React Router API
 - [`Router`](/docs/api/Router.md)
 
 - Components
-  - [`DefaultRoute`](/docs/api/components/DefaultRoute.md)
-  - [`Link`](/docs/api/components/Link.md)
-  - [`NotFoundRoute`](/docs/api/components/NotFoundRoute.md)
-  - [`Redirect`](/docs/api/components/Redirect.md)
-  - [`Route`](/docs/api/components/Route.md)
-  - [`RouteHandler`](/docs/api/components/RouteHandler.md)
-  - [`Routes`](/docs/api/components/Routes.md)
+  - [`DefaultRoute`](/docs/api/elements/DefaultRoute.md)
+  - [`Link`](/docs/api/elements/Link.md)
+  - [`NotFoundRoute`](/docs/api/elements/NotFoundRoute.md)
+  - [`Redirect`](/docs/api/elements/Redirect.md)
+  - [`Route`](/docs/api/elements/Route.md)
+  - [`RouteHandler`](/docs/api/elements/RouteHandler.md)
+  - [`Routes`](/docs/api/elements/Routes.md)
 
 - Mixins
   - [`ActiveState`](/docs/api/mixins/ActiveState.md)
@@ -29,6 +29,5 @@ default export are considered public.
 ```js
 var Router = require('react-router');
 var Link = Router.Link // yes
-var Link = require('react-router/modules/components/Link') // no
+var Link = require('react-router/modules/elements/Link') // no
 ```
-
