@@ -2,11 +2,9 @@
 var React = require('react');
 var Router = require('react-router');
 var Route = Router.Route;
-var Routes = Router.Routes;
-var Link = Router.Link;
-var ActiveRouteHandler = Router.ActiveRouteHandler;
-var ActiveState = Router.ActiveState;
 var DefaultRoute = Router.DefaultRoute;
+var RouteHandler = Router.RouteHandler;
+var Link = Router.Link;
 
 var App = React.createClass({
   getInitialState: function () {
@@ -30,7 +28,7 @@ var App = React.createClass({
           {links}
         </ul>
         <div className="Detail">
-          <ActiveRouteHandler />
+          <RouteHandler/>
         </div>
       </div>
     );
@@ -44,14 +42,14 @@ var Index = React.createClass({
 });
 
 var State = React.createClass({
-  mixins: [ ActiveState ],
+  mixins: [ Router.State ],
 
   imageUrl: function (name) {
-    return "http://www.50states.com/maps/"+underscore(name)+".gif";
+    return "http://www.50states.com/maps/" + underscore(name) + ".gif";
   },
 
   render: function () {
-    var unitedState = findState(this.getActiveParams().abbr);
+    var unitedState = findState(this.getParams().abbr);
     return (
       <div className="State">
         <h1>{unitedState.name}</h1>
@@ -64,12 +62,12 @@ var State = React.createClass({
 var routes = (
   <Route handler={App}>
     <DefaultRoute handler={Index}/>
-    <Route name="state" path="state/:abbr" addHandlerKey={true} handler={State}/>
+    <Route name="state" path="state/:abbr" handler={State}/>
   </Route>
 );
 
 Router.run(routes, function (Handler) {
-  React.renderComponent(<Handler />, document.getElementById('example'));
+  React.render(<Handler/>, document.getElementById('example'));
 });
 
 /*****************************************************************************/
