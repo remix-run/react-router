@@ -1,12 +1,12 @@
 var assert = require('assert');
 var expect = require('expect');
 var React = require('react/addons');
+var Router = require('../../index');
 var Route = require('../../elements/Route');
-var Router = require('../../Router');
 var TestLocation = require('../../locations/TestLocation');
 var { Foo } = require('../../__tests__/TestHandlers');
 
-describe('ActiveState', function () {
+describe('State', function () {
 
   describe('when a route is active', function () {
     describe('and it has no params', function () {

@@ -7,7 +7,7 @@ require('./modules/elements/__tests__/Redirect-test');
 require('./modules/elements/__tests__/RouteHandler-test');
 // require('./modules/elements/__tests__/Routes-test');
 
-// require('./modules/mixins/__tests__/ActiveState-test');
+require('./modules/mixins/__tests__/State-test');
 // require('./modules/mixins/__tests__/Navigation-test');
 // require('./modules/mixins/__tests__/RouteContext-test');
 // require('./modules/mixins/__tests__/ScrollContext-test');
