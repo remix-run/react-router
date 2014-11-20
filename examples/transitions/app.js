@@ -1,11 +1,6 @@
-/** @jsx React.DOM */
 var React = require('react');
 var Router = require('react-router');
-var Route = Router.Route;
-var DefaultRoute = Router.DefaultRoute;
-var Routes = Router.Routes;
-var Link = Router.Link;
-var ActiveRouteHandler = Router.ActiveRouteHandler;
+var { Route, DefaultRoute, RouteHandler, Link } = Router;
 
 var App = React.createClass({
   render: function () {
@@ -15,7 +10,7 @@ var App = React.createClass({
           <li><Link to="dashboard">Dashboard</Link></li>
           <li><Link to="form">Form</Link></li>
         </ul>
-        <ActiveRouteHandler />
+        <RouteHandler/>
       </div>
     );
   }
@@ -38,8 +33,8 @@ var Form = React.createClass({
   mixins: [ Router.Navigation ],
 
   statics: {
-    willTransitionFrom: function (transition, component) {
-      if (component.refs.userInput.getDOMNode().value !== '') {
+    willTransitionFrom: function (transition, element) {
+      if (element.refs.userInput.getDOMNode().value !== '') {
         if (!confirm('You have unsaved information, are you sure you want to leave this page?')) {
           transition.abort();
         }
@@ -75,5 +70,5 @@ var routes = (
 );
 
 Router.run(routes, function (Handler) {
-  React.render(<Handler />, document.getElementById('example'));
+  React.render(<Handler/>, document.getElementById('example'));
 });
