@@ -175,7 +175,7 @@ function createRouter(options) {
 
           invariant(
             route,
-            'Unable to find a <Route> with name="%s"',
+            'Unable to find <Route name="%s">',
             to
           );
 

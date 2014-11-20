@@ -8,8 +8,6 @@ require('./modules/elements/__tests__/RouteHandler-test');
 // require('./modules/elements/__tests__/Routes-test');
 
 require('./modules/mixins/__tests__/State-test');
-// require('./modules/mixins/__tests__/Navigation-test');
-// require('./modules/mixins/__tests__/RouteContext-test');
 // require('./modules/mixins/__tests__/ScrollContext-test');
 
 require('./modules/utils/__tests__/Path-test');

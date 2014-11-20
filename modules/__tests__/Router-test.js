@@ -214,4 +214,39 @@ describe('Router.run', function () {
     });
   });
 
+  describe('makePath', function () {
+    var router;
+    beforeEach(function () {
+      router = Router.create({
+        routes: [
+          <Route name="home" handler={Foo}>
+            <Route name="users" handler={Foo}>
+              <Route name="user" path=":id" handler={Foo}/>
+            </Route>
+          </Route>
+        ]
+      });
+    });
+
+    describe('when given an absolute path', function () {
+      it('returns that path', function () {
+        expect(router.makePath('/about')).toEqual('/about');
+      });
+    });
+
+    describe('when there is a route with the given name', function () {
+      it('returns the correct path', function () {
+        expect(router.makePath('user', { id: 6 })).toEqual('/home/users/6');
+      });
+    });
+
+    describe('when there is no route with the given name', function () {
+      it('throws an error', function () {
+        expect(function () {
+          router.makePath('not-found');
+        }).toThrow();
+      });
+    });
+  });
+
 });
