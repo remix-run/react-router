@@ -1,10 +1,6 @@
-/** @jsx React.DOM */
 var React = require('react');
 var Router = require('react-router');
-var Route = Router.Route;
-var Routes = Router.Routes;
-var Link = Router.Link;
-var ActiveRouteHandler = Router.ActiveRouteHandler;
+var { Route, RouteHandler, Link } = Router;
 
 var App = React.createClass({
   render: function () {
@@ -15,7 +11,7 @@ var App = React.createClass({
           <li><Link to="signin">Sign in</Link></li>
           <li><Link to="forgot-password">Forgot Password</Link></li>
         </ol>
-        <ActiveRouteHandler />
+        <RouteHandler/>
       </div>
     );
   }
@@ -26,7 +22,7 @@ var SignedIn = React.createClass({
     return (
       <div>
         <h2>Signed In</h2>
-        <ActiveRouteHandler />
+        <RouteHandler/>
       </div>
     );
   }
@@ -45,7 +41,7 @@ var SignedOut = React.createClass({
     return (
       <div>
         <h2>Signed Out</h2>
-        <ActiveRouteHandler />
+        <RouteHandler/>
       </div>
     );
   }
@@ -80,6 +76,5 @@ var routes = (
 );
 
 Router.run(routes, function (Handler) {
-  React.renderComponent(<Handler />, document.getElementById('example'));
+  React.render(<Handler/>, document.getElementById('example'));
 });
-
