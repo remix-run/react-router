@@ -207,7 +207,7 @@ describe('Router.run', function () {
       var div = document.createElement('div');
       Router.run(routes, function (Handler) {
         React.render(<Handler/>, div, function () {
-          this.getLocation() === Router.HashLocation;
+          expect(this.getLocation()).toBe(Router.HashLocation);
           done();
         });
       });
