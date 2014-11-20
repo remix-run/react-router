@@ -5,11 +5,9 @@ var ContactStore = require('./ContactStore');
 var {
   Route,
   DefaultRoute,
-  Link,
   NotFoundRoute,
-  ActiveRouteHandler,
-  Navigation,
-  ActiveState
+  RouteHandler,
+  Link
 } = Router;
 
 var App = React.createClass({
@@ -56,7 +54,7 @@ var App = React.createClass({
           <Link to="/nothing-here">Invalid Link (not found)</Link>
         </div>
         <div className="Content">
-          <ActiveRouteHandler/>
+          <RouteHandler/>
         </div>
       </div>
     );
@@ -71,10 +69,10 @@ var Index = React.createClass({
 
 var Contact = React.createClass({
 
-  mixins: [ Navigation, ActiveState ],
+  mixins: [ Router.Navigation, Router.State ],
 
   getStateFromStore: function (id) {
-    var id = this.getActiveParams().id;
+    var id = this.getParams().id;
     return {
       contact: ContactStore.getContact(id)
     };
@@ -104,7 +102,7 @@ var Contact = React.createClass({
   },
 
   destroy: function () {
-    var id = this.getActiveParams().id;
+    var id = this.getParams().id;
     ContactStore.removeContact(id);
     this.transitionTo('/');
   },
@@ -167,6 +165,6 @@ var routes = (
   </Route>
 );
 
-Router.run(routes, function (Root) {
-  React.render(<Root/>, document.getElementById('example'));
+Router.run(routes, function (Handler) {
+  React.render(<Handler/>, document.getElementById('example'));
 });
