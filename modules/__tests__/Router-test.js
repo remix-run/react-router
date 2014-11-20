@@ -29,8 +29,8 @@ describe('Router', function () {
 
         var div = document.createElement('div');
 
-        Router.run(routes, TestLocation, function (Element) {
-          React.render(<Element/>, div, function () {
+        Router.run(routes, TestLocation, function (Handler) {
+          React.render(<Handler/>, div, function () {
             expect(div.innerHTML).toMatch(/Foo/);
             done();
           });
@@ -46,8 +46,8 @@ describe('Router', function () {
   describe('query params', function () {
     it('renders with query params', function (done) {
       var routes = <Route handler={EchoFooProp} path='/'/>;
-      Router.run(routes, '/?foo=bar', function (Element, state) {
-        var html = React.renderToString(<Element foo={state.query.foo} />);
+      Router.run(routes, '/?foo=bar', function (Handler, state) {
+        var html = React.renderToString(<Handler foo={state.query.foo} />);
         expect(html).toMatch(/bar/);
         done();
       });
@@ -80,8 +80,8 @@ describe('Router', function () {
 
       TestLocation.history = [ '/bar' ];
 
-      Router.run(routes, TestLocation, function (Element, state) {
-        React.render(<Element/>, div, function () {
+      Router.run(routes, TestLocation, function (Handler, state) {
+        React.render(<Handler/>, div, function () {
           TestLocation.push('/baz');
         });
       });
@@ -95,10 +95,10 @@ describe('Router.run', function () {
 
   it('matches a root route', function (done) {
     var routes = <Route path="/" handler={EchoFooProp} />;
-    Router.run(routes, '/', function (Element, state) {
+    Router.run(routes, '/', function (Handler, state) {
       // TODO: figure out why we're getting this warning here
       // WARN: 'Warning: You cannot pass children to a RouteHandler'
-      var html = React.renderToString(<Element foo="bar"/>);
+      var html = React.renderToString(<Handler foo="bar"/>);
       expect(html).toMatch(/bar/);
       done();
     });
@@ -109,8 +109,8 @@ describe('Router.run', function () {
       <Route handler={Foo} path="/foo"/>,
       <Route handler={Bar} path="/bar"/>
     ];
-    Router.run(routes, '/foo', function (Element, state) {
-      var html = React.renderToString(<Element/>);
+    Router.run(routes, '/foo', function (Handler, state) {
+      var html = React.renderToString(<Handler/>);
       expect(html).toMatch(/Foo/);
       done();
     });
@@ -122,8 +122,8 @@ describe('Router.run', function () {
         <Route handler={Foo} path='/foo'/>
       </Route>
     );
-    Router.run(routes, '/foo', function (Element, state) {
-      var html = React.renderToString(<Element/>);
+    Router.run(routes, '/foo', function (Handler, state) {
+      var html = React.renderToString(<Handler/>);
       expect(html).toMatch(/Nested/);
       expect(html).toMatch(/Foo/);
       done();
@@ -137,8 +137,8 @@ describe('Router.run', function () {
         <Route handler={Foo} path='/Foo'/>
       </Route>
     );
-    Router.run(routes, '/Foo', function (Element, state) {
-      React.render(<Element/>, div, function () {
+    Router.run(routes, '/Foo', function (Handler, state) {
+      React.render(<Handler/>, div, function () {
         expect(div.querySelectorAll('.Nested').length).toEqual(1);
         done();
       });
@@ -147,8 +147,8 @@ describe('Router.run', function () {
 
   it('supports dynamic segments', function (done) {
     var routes = <Route handler={EchoBarParam} path='/:bar'/>;
-    Router.run(routes, '/d00d3tt3', function (Element, state) {
-      var html = React.renderToString(<Element/>);
+    Router.run(routes, '/d00d3tt3', function (Handler, state) {
+      var html = React.renderToString(<Handler/>);
       expect(html).toMatch(/d00d3tt3/);
       done();
     });
@@ -160,8 +160,8 @@ describe('Router.run', function () {
         <Route handler={EchoBarParam} path=":bar"/>
       </Route>
     );
-    Router.run(routes, '/foo/bar', function (Element, state) {
-      var html = React.renderToString(<Element />);
+    Router.run(routes, '/foo/bar', function (Handler, state) {
+      var html = React.renderToString(<Handler />);
       expect(html).toMatch(/bar/);
       done();
     });
@@ -190,8 +190,8 @@ describe('Router.run', function () {
       done();
     });
 
-    Router.run(routes, TestLocation, function (Element, state) {
-      React.render(<Element/>, div, function () {
+    Router.run(routes, TestLocation, function (Handler, state) {
+      React.render(<Handler/>, div, function () {
         steps.shift()();
       });
     });
@@ -205,8 +205,8 @@ describe('Router.run', function () {
     it('defaults to HashLocation', function (done) {
       var routes = <Route path="/" handler={Foo}/>
       var div = document.createElement('div');
-      Router.run(routes, function (Element) {
-        React.render(<Element/>, div, function () {
+      Router.run(routes, function (Handler) {
+        React.render(<Handler/>, div, function () {
           this.getLocation() === Router.HashLocation;
           done();
         });
