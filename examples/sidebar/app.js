@@ -1,12 +1,6 @@
-/** @jsx React.DOM */
 var React = require('react');
 var Router = require('react-router');
-var Routes = Router.Routes;
-var Route = Router.Route;
-var DefaultRoute = Router.DefaultRoute;
-var Link = Router.Link;
-var ActiveState = Router.ActiveState;
-var ActiveRouteHandler = Router.ActiveRouteHandler;
+var { Route, DefaultRoute, RouteHandler, Link } = Router;
 var data = require('./data');
 
 var CategoryNav = React.createClass({
@@ -79,15 +73,15 @@ var Sidebar = React.createClass({
 });
 
 var App = React.createClass({
-  mixins: [ActiveState],
+  mixins: [ Router.State ],
 
   render: function () {
-    var activeCategory = this.getActiveParams().category;
+    var activeCategory = this.getParams().category;
     return (
       <div>
         <Sidebar activeCategory={activeCategory} categories={data.getAll()}/>
         <div className="Content">
-          <ActiveRouteHandler />
+          <RouteHandler/>
         </div>
       </div>
     );
@@ -95,10 +89,10 @@ var App = React.createClass({
 });
 
 var Item = React.createClass({
-  mixins: [ ActiveState ],
+  mixins: [ Router.State ],
 
   render: function () {
-    var params = this.getActiveParams();
+    var params = this.getParams();
     var category = data.lookupCategory(params.category);
     var item = data.lookupItem(params.category, params.name);
     return (
@@ -146,6 +140,5 @@ var routes = (
 );
 
 Router.run(routes, function (Handler) {
-  React.renderComponent(<Handler />, document.getElementById('example'));
+  React.render(<Handler/>, document.getElementById('example'));
 });
-
