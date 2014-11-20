@@ -1,9 +1,6 @@
-/** @jsx React.DOM */
 var React = require('react');
 var Router = require('react-router');
-var Route = Router.Route;
-var Routes = Router.Routes;
-var Link = Router.Link;
+var { Route, RouteHandler, Link } = Router;
 
 var App = React.createClass({
 
@@ -45,7 +42,7 @@ var App = React.createClass({
           {links}
         </ul>
         <div className="Detail">
-          <this.props.activeRouteHandler onRemoveTaco={this.handleRemoveTaco} />
+          <RouteHandler onRemoveTaco={this.handleRemoveTaco}/>
         </div>
       </div>
     );
@@ -53,14 +50,16 @@ var App = React.createClass({
 });
 
 var Taco = React.createClass({
+  mixins: [ Router.State ],
+
   remove: function () {
-    this.props.onRemoveTaco(this.props.params.name);
+    this.props.onRemoveTaco(this.getParams().name);
   },
 
   render: function () {
     return (
       <div className="Taco">
-        <h1>{this.props.params.name}</h1>
+        <h1>{this.getParams().name}</h1>
         <button onClick={this.remove}>remove</button>
       </div>
     );
@@ -68,11 +67,11 @@ var Taco = React.createClass({
 });
 
 var routes = (
-  <Routes>
-    <Route handler={App}>
-      <Route name="taco" path="taco/:name" handler={Taco}/>
-    </Route>
-  </Routes>
+  <Route handler={App}>
+    <Route name="taco" path="taco/:name" handler={Taco}/>
+  </Route>
 );
 
-React.renderComponent(routes, document.getElementById('example'));
+Router.run(routes, function (Handler) {
+  React.render(<Handler/>, document.getElementById('example'));
+});
