@@ -1,10 +1,8 @@
-/** @jsx React.DOM */
 var React = require('react');
 var Router = require('react-router');
 var whenKeys = require('when/keys');
 var EventEmitter = require('events').EventEmitter;
-var { Route, DefaultRoute, NotFoundRoute, ActiveRouteHandler } = Router;
-var { Link, Navigation, ActiveState } = Router;
+var { Route, DefaultRoute, RouteHandler, Link } = Router;
 
 var API = 'http://addressbook-api.herokuapp.com';
 var loadingEvents = new EventEmitter();
@@ -33,7 +31,6 @@ function getJSON(url) {
 }
 getJSON._cache = {};
 
-
 var App = React.createClass({
 
   statics: {
@@ -54,13 +51,13 @@ var App = React.createClass({
       // otherwise its fast enough to just wait for the
       // data to load
       timer = setTimeout(() => {
-        this.setState({loading: true});
+        this.setState({ loading: true });
       }, 300);
     });
 
     loadingEvents.on('loadEnd', () => {
       clearTimeout(timer);
-      this.setState({loading: false});
+      this.setState({ loading: false });
     });
   },
 
@@ -80,7 +77,7 @@ var App = React.createClass({
         <ul>
           {this.renderContacts()}
         </ul>
-        <ActiveRouteHandler {...this.props}/>
+        <RouteHandler {...this.props}/>
       </div>
     );
   }
@@ -115,8 +112,6 @@ var Index = React.createClass({
   }
 });
 
-
-
 var routes = (
   <Route name="contacts" path="/" handler={App}>
     <DefaultRoute handler={Index}/>
@@ -124,23 +119,20 @@ var routes = (
   </Route>
 );
 
-function fetchData(matches, params) {
-  return whenKeys.all(matches.filter((match) => {
-    return match.route.handler.fetchData;
-  }).reduce((data, match) => {
-    var {name, handler} = match.route;
-    data[name] = handler.fetchData(params);
+function fetchData(routes, params) {
+  return whenKeys.all(routes.filter((route) => {
+    return route.handler.fetchData;
+  }).reduce((data, route) => {
+    data[route.name] = route.handler.fetchData(params);
     return data;
   }, {}));
 }
 
-function render (Handler, state) {
+Router.run(routes, function (Handler, state) {
   loadingEvents.emit('loadStart');
-  fetchData(state.matches, state.activeParams).then((data) => {
+
+  fetchData(state.routes, state.params).then((data) => {
     loadingEvents.emit('loadEnd');
-    React.render(<Handler data={data} />, document.getElementById('example'));
+    React.render(<Handler data={data}/>, document.getElementById('example'));
   });
-}
-
-Router.run(routes, render);
-
+});
