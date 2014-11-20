@@ -13,6 +13,7 @@ var Scrolling = require('../mixins/Scrolling');
 var createRoutesFromChildren = require('./createRoutesFromChildren');
 var supportsHistory = require('./supportsHistory');
 var Transition = require('./Transition');
+var PropTypes = require('./PropTypes');
 var Redirect = require('./Redirect');
 var Path = require('./Path');
 
@@ -369,10 +370,7 @@ function createRouter(options) {
     },
 
     propTypes: {
-      children: function (props, propName, componentName) {
-        if (props[propName] != null)
-          return new Error('You cannot pass children to a Router');
-      }
+      children: PropTypes.falsy
     },
 
     getLocation: function () {
