@@ -1,10 +1,10 @@
 var React = require('react');
 var warning = require('react/lib/warning');
 var invariant = require('react/lib/invariant');
-var DefaultRoute = require('../elements/DefaultRoute');
-var NotFoundRoute = require('../elements/NotFoundRoute');
-var Redirect = require('../elements/Redirect');
-var Route = require('../elements/Route');
+var DefaultRoute = require('../components/DefaultRoute');
+var NotFoundRoute = require('../components/NotFoundRoute');
+var Redirect = require('../components/Redirect');
+var Route = require('../components/Route');
 var Path = require('./Path');
 
 var CONFIG_ELEMENT_TYPES = [
@@ -28,10 +28,10 @@ function createRedirectHandler(to, _params, _query) {
   });
 }
 
-function checkPropTypes(elementName, propTypes, props) {
+function checkPropTypes(componentName, propTypes, props) {
   for (var propName in propTypes) {
     if (propTypes.hasOwnProperty(propName)) {
-      var error = propTypes[propName](props, propName, elementName);
+      var error = propTypes[propName](props, propName, componentName);
 
       if (error instanceof Error)
         warning(false, error.message);
@@ -42,16 +42,16 @@ function checkPropTypes(elementName, propTypes, props) {
 function createRoute(element, parentRoute, namedRoutes) {
   var type = element.type;
   var props = element.props;
-  var elementName = (type && type.displayName) || 'UnknownElement';
+  var componentName = (type && type.displayName) || 'UnknownComponent';
 
   invariant(
     CONFIG_ELEMENT_TYPES.indexOf(type) !== -1,
     'Unrecognized route configuration element "<%s>"',
-    elementName
+    componentName
   );
 
   if (type.propTypes)
-    checkPropTypes(elementName, type.propTypes, props);
+    checkPropTypes(componentName, type.propTypes, props);
 
   var route = { name: props.name };
 

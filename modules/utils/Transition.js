@@ -38,15 +38,15 @@ function runHooks(hooks, callback) {
  * the route's handler, so that the deepest nested handlers are called first.
  * Calls callback(error) when finished.
  */
-function runTransitionFromHooks(transition, routes, elements, callback) {
-  elements = reversedArray(elements);
+function runTransitionFromHooks(transition, routes, components, callback) {
+  components = reversedArray(components);
 
   var hooks = reversedArray(routes).map(function (route, index) {
     return function () {
       var handler = route.handler;
 
       if (!transition.isAborted && handler.willTransitionFrom)
-        return handler.willTransitionFrom(transition, elements[index]);
+        return handler.willTransitionFrom(transition, components[index]);
 
       var promise = transition._promise;
       transition._promise = null;
@@ -110,8 +110,8 @@ assign(Transition.prototype, {
     this._promise = Promise.resolve(value);
   },
 
-  from: function (routes, elements, callback) {
-    return runTransitionFromHooks(this, routes, elements, callback);
+  from: function (routes, components, callback) {
+    return runTransitionFromHooks(this, routes, components, callback);
   },
 
   to: function (routes, params, query, callback) {

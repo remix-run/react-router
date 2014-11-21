@@ -1,5 +1,5 @@
 var React = require('react');
-var RouteHandler = require('../elements/RouteHandler');
+var RouteHandler = require('../components/RouteHandler');
 var State = require('../mixins/State');
 
 exports.Nested = React.createClass({

@@ -8,14 +8,14 @@ var createRouter = require('./createRouter');
  *
  * Using `window.location.hash` to manage the URL, you could do:
  *
- *   Router.run(routes, function (Element) {
- *     React.render(<Element/>, document.body);
+ *   Router.run(routes, function (Handler) {
+ *     React.render(<Handler/>, document.body);
  *   });
  * 
  * Using HTML5 history and a custom "cursor" prop:
  * 
- *   Router.run(routes, Router.HistoryLocation, function (Element) {
- *     React.render(<Element cursor={cursor}/>, document.body);
+ *   Router.run(routes, Router.HistoryLocation, function (Handler) {
+ *     React.render(<Handler cursor={cursor}/>, document.body);
  *   });
  *
  * Returns the newly created router.
@@ -25,7 +25,7 @@ var createRouter = require('./createRouter');
  * instead.
  *
  *   var router = Router.create(options);
- *   router.run(function (Element) {
+ *   router.run(function (Handler) {
  *     // ...
  *   });
  */

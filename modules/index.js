@@ -1,9 +1,9 @@
-exports.DefaultRoute = require('./elements/DefaultRoute');
-exports.Link = require('./elements/Link');
-exports.NotFoundRoute = require('./elements/NotFoundRoute');
-exports.Redirect = require('./elements/Redirect');
-exports.Route = require('./elements/Route');
-exports.RouteHandler = require('./elements/RouteHandler');
+exports.DefaultRoute = require('./components/DefaultRoute');
+exports.Link = require('./components/Link');
+exports.NotFoundRoute = require('./components/NotFoundRoute');
+exports.Redirect = require('./components/Redirect');
+exports.Route = require('./components/Route');
+exports.RouteHandler = require('./components/RouteHandler');
 
 exports.HashLocation = require('./locations/HashLocation');
 exports.HistoryLocation = require('./locations/HistoryLocation');

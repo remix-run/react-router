@@ -15,8 +15,8 @@ var RouteHandler = React.createClass({
   },
 
   contextTypes: {
-    getElements: React.PropTypes.func.isRequired,
     getRouteAtDepth: React.PropTypes.func.isRequired,
+    getRouteComponents: React.PropTypes.func.isRequired,
     routeHandlers: React.PropTypes.array.isRequired
   },
 
@@ -35,17 +35,17 @@ var RouteHandler = React.createClass({
   },
 
   componentDidMount: function () {
-    this._updateElement();
+    this._updateRouteComponent();
   },
 
   componentDidUpdate: function () {
-    this._updateElement();
+    this._updateRouteComponent();
   },
 
-  _updateElement: function () {
+  _updateRouteComponent: function () {
     var depth = this.getRouteDepth();
-    var elements = this.context.getElements();
-    elements[depth] = this.refs[this.props.ref];
+    var components = this.context.getRouteComponents();
+    components[depth] = this.refs[this.props.ref];
   },
 
   render: function () {

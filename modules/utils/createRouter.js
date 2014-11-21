@@ -3,7 +3,7 @@ var warning = require('react/lib/warning');
 var invariant = require('react/lib/invariant');
 var canUseDOM = require('react/lib/ExecutionEnvironment').canUseDOM;
 var ImitateBrowserBehavior = require('../behaviors/ImitateBrowserBehavior');
-var RouteHandler = require('../elements/RouteHandler');
+var RouteHandler = require('../components/RouteHandler');
 var HashLocation = require('../locations/HashLocation');
 var HistoryLocation = require('../locations/HistoryLocation');
 var NavigationContext = require('../mixins/NavigationContext');
@@ -105,8 +105,8 @@ function hasMatch(routes, route, prevParams, nextParams) {
 
 /**
  * Creates and returns a new router using the given options. A router
- * is a ReactElement class that knows how to react to changes in the URL
- * and keep the contents of the page in sync.
+ * is a ReactComponent class that knows how to react to changes in the
+ * URL and keep the contents of the page in sync.
  *
  * Options may be any of the following:
  *
@@ -132,7 +132,7 @@ function createRouter(options) {
 
   var routes = [];
   var namedRoutes = {};
-  var elements = [];
+  var components = [];
   var location = options.location || DEFAULT_LOCATION;
   var scrollBehavior = options.scrollBehavior || DEFAULT_SCROLL_BEHAVIOR;
   var onError = options.onError || defaultErrorHandler;
@@ -294,7 +294,7 @@ function createRouter(options) {
 
         var transition = new Transition(path, this.replaceWith.bind(this, path));
 
-        transition.from(fromRoutes, elements, function (error) {
+        transition.from(fromRoutes, components, function (error) {
           if (error || transition.isAborted)
             return callback.call(router, error, transition);
 
@@ -374,13 +374,13 @@ function createRouter(options) {
       return scrollBehavior;
     },
 
-    getElements: function () {
-      return elements;
-    },
-
     getRouteAtDepth: function (depth) {
       var routes = this.state.routes;
       return routes && routes[depth];
+    },
+
+    getRouteComponents: function () {
+      return components;
     },
 
     getInitialState: function () {
@@ -396,14 +396,14 @@ function createRouter(options) {
     },
 
     childContextTypes: {
-      getElements: React.PropTypes.func.isRequired,
       getRouteAtDepth: React.PropTypes.func.isRequired,
+      getRouteComponents: React.PropTypes.func.isRequired,
       routeHandlers: React.PropTypes.array.isRequired
     },
 
     getChildContext: function () {
       return {
-        getElements: this.getElements,
+        getRouteComponents: this.getRouteComponents,
         getRouteAtDepth: this.getRouteAtDepth,
         routeHandlers: [ this ]
       };
