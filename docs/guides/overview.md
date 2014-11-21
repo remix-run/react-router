@@ -36,7 +36,7 @@ Without React Router
 --------------------
 
 Without this router, you'd share that UI by repeating render code across
-your views, probably with a `<Header/>` component:
+your views, probably with a `<Header/>` element:
 
 ```js
 var Header = React.createClass({
@@ -184,7 +184,7 @@ its parent route, `app`, is also matched. The `run` callback receives
 
 Rendering `Handler` is really just rendering `App` since its the highest
 matched route handler. Since `inbox` is the active child route,
-rendering `<RouteHandler/>` in `App` renders the `Inbox` component.
+rendering `<RouteHandler/>` in `App` renders the `Inbox` element.
 `<RouteHandler/>` is nearly identical to `{{outlet}}` from Ember or
 `<div ng-view/>` from angular.
 
@@ -196,7 +196,7 @@ notices that it has a `DefaultRoute`, so `Dashboard` becomes the new
 `<RouteHandler/>`. If a `DefaultRoute` is defined, it will be active
 when the parent's route is matched exactly.
 
-Note that we don't need the `<Header/>` component since we don't have to
+Note that we don't need the `<Header/>` element since we don't have to
 repeat it anymore. React Router shares that UI for us from one place.
 
 More Nesting
@@ -365,7 +365,7 @@ Bells and Whistles
 
 ### `<Link/>`
 
-The `<Link/>` component allows you to conveniently navigate users around
+The `<Link/>` element allows you to conveniently navigate users around
 the application with accessible anchor tags that don't break normal link
 functionality like control/command clicking to open in a new tab. Also,
 when the route a link references is active, you get the `active` css
@@ -417,8 +417,8 @@ it has to offer. Check out the [API Docs][API] to learn about
 redirecting transitions, query parameters and more.
 
   [AsyncState]:../api/mixins/AsyncState.md
-  [Route]:../api/components/Route.md
-  [Routes]:../api/components/Routes.md
+  [Route]:../api/elements/Route.md
+  [Routes]:../api/elements/Routes.md
   [API]:../api/
   [path-matching]:./path-matching.md
 
