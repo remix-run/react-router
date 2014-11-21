@@ -93,13 +93,13 @@ describe('Path.extractParams', function () {
 
     describe('and the path matches', function () {
       it('returns an empty object', function () {
-        expect(Path.extractParams(pattern, 'one%2C+two')).toEqual({});
+        expect(Path.extractParams(pattern, 'one, two')).toEqual({});
       });
     });
 
     describe('and the path does not match', function () {
       it('returns null', function () {
-        expect(Path.extractParams(pattern, 'one+two')).toBe(null);
+        expect(Path.extractParams(pattern, 'one two')).toBe(null);
       });
     });
   });
@@ -109,7 +109,7 @@ describe('Path.extractParams', function () {
 
     describe('and the path matches', function () {
       it('returns an object with the params', function () {
-        expect(Path.extractParams(pattern, '/comments/abc/edit+now')).toEqual({ id: 'abc' });
+        expect(Path.extractParams(pattern, '/comments/abc/edit now')).toEqual({ id: 'abc' });
       });
     });
 
@@ -198,7 +198,7 @@ describe('Path.injectParams', function () {
       var pattern = 'comments/:id?/edit';
 
       it('returns the correct path when param is supplied', function () {
-        expect(Path.injectParams(pattern, {id:'123'})).toEqual('comments/123/edit');
+        expect(Path.injectParams(pattern, { id:'123' })).toEqual('comments/123/edit');
       });
 
       it('returns the correct path when param is not supplied', function () {
@@ -210,7 +210,7 @@ describe('Path.injectParams', function () {
       var pattern = 'comments/:id?/?edit';
 
       it('returns the correct path when param is supplied', function () {
-        expect(Path.injectParams(pattern, {id:'123'})).toEqual('comments/123/edit');
+        expect(Path.injectParams(pattern, { id:'123' })).toEqual('comments/123/edit');
       });
 
       it('returns the correct path when param is not supplied', function () {
@@ -230,7 +230,7 @@ describe('Path.injectParams', function () {
 
     describe('and some params have special URL encoding', function () {
       it('returns the correct path', function () {
-        expect(Path.injectParams(pattern, { id: 'one, two' })).toEqual('comments/one%2C+two/edit');
+        expect(Path.injectParams(pattern, { id: 'one, two' })).toEqual('comments/one, two/edit');
       });
     });
 

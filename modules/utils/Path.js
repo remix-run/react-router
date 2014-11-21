@@ -2,16 +2,12 @@ var invariant = require('react/lib/invariant');
 var merge = require('qs/lib/utils').merge;
 var qs = require('qs');
 
-function encodeURL(url) {
-  return encodeURIComponent(url).replace(/%20/g, '+');
+function decodePathSegment(string) {
+  return decodeURIComponent(string.replace(/\+/g, ' '));
 }
 
-function decodeURL(url) {
-  return decodeURIComponent(url.replace(/\+/g, ' '));
-}
-
-function encodeURLPath(path) {
-  return String(path).split('/').map(encodeURL).join('/');
+function encodePathSegment(string) {
+  return encodeURIComponent(string).replace(/%20/g, '+');
 }
 
 var paramCompileMatcher = /:([a-zA-Z_$][a-zA-Z0-9_$]*)|[*.()\[\]\\+|{}^$]/g;
@@ -48,6 +44,20 @@ function compilePattern(pattern) {
 var Path = {
 
   /**
+   * Safely decodes special characters in the given URL path.
+   */
+  decode: function decodePath(path) {
+    return String(path).split('/').map(decodePathSegment).join('/');
+  },
+
+  /**
+   * Safely encodes special characters in the given URL path.
+   */
+  encode: function encodePath(path) {
+    return String(path).split('/').map(encodePathSegment).join('/');
+  },
+
+  /**
    * Returns an array of the names of all parameters in the given pattern.
    */
   extractParamNames: function (pattern) {
@@ -61,7 +71,7 @@ var Path = {
    */
   extractParams: function (pattern, path) {
     var object = compilePattern(pattern);
-    var match = decodeURL(path).match(object.matcher);
+    var match = path.match(object.matcher);
 
     if (!match)
       return null;
@@ -94,10 +104,10 @@ var Path = {
           'Missing "' + paramName + '" parameter for path "' + pattern + '"'
         );
       } else {
-        paramName = paramName.slice(0, -1)
-        if (params[paramName] == null) {
-            return '';
-        }
+        paramName = paramName.slice(0, -1);
+
+        if (params[paramName] == null)
+          return '';
       }
 
       var segment;
@@ -112,7 +122,7 @@ var Path = {
         segment = params[paramName];
       }
 
-      return encodeURLPath(segment);
+      return segment;
     }).replace(paramInjectTrailingSlashMatcher, '/');
   },
 

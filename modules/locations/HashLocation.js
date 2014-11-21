@@ -1,8 +1,20 @@
+var invariant = require('react/lib/invariant');
+var canUseDOM = require('react/lib/ExecutionEnvironment').canUseDOM;
 var LocationActions = require('../actions/LocationActions');
-var getWindowPath = require('../utils/getWindowPath');
+var Path = require('../utils/Path');
 
+/**
+ * Returns the current URL path from `window.location.hash`, including query string
+ */
 function getHashPath() {
-  return window.location.hash.substr(1);
+  invariant(
+    canUseDOM,
+    'getHashPath needs a DOM'
+  );
+
+  return Path.decode(
+    window.location.hash.substr(1)
+  );
 }
 
 var _actionType;
@@ -69,12 +81,12 @@ var HashLocation = {
 
   push: function (path) {
     _actionType = LocationActions.PUSH;
-    window.location.hash = path;
+    window.location.hash = Path.encode(path);
   },
 
   replace: function (path) {
     _actionType = LocationActions.REPLACE;
-    window.location.replace(getWindowPath() + '#' + path);
+    window.location.replace(window.location.pathname + '#' + Path.encode(path));
   },
 
   pop: function () {

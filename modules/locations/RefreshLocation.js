@@ -1,4 +1,5 @@
-var getWindowPath = require('../utils/getWindowPath');
+var HistoryLocation = require('./HistoryLocation');
+var Path = require('../utils/Path');
 
 /**
  * A Location that uses full page refreshes. This is used as
@@ -8,18 +9,18 @@ var getWindowPath = require('../utils/getWindowPath');
 var RefreshLocation = {
 
   push: function (path) {
-    window.location = path;
+    window.location = Path.encode(path);
   },
 
   replace: function (path) {
-    window.location.replace(path);
+    window.location.replace(Path.encode(path));
   },
 
   pop: function () {
     window.history.back();
   },
 
-  getCurrentPath: getWindowPath,
+  getCurrentPath: HistoryLocation.getCurrentPath,
 
   toString: function () {
     return '<RefreshLocation>';
