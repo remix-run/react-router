@@ -89,15 +89,15 @@ var CalendarRoute = React.createClass({
 
 // Not React Router API
 otherRouter.route('/', function () {
-  React.renderComponent(<DashboardRoute/>, document.body);
+  React.render(<DashboardRoute/>, document.body);
 });
 
 otherRouter.route('/inbox', function () {
-  React.renderComponent(<InboxRoute/>, document.body);
+  React.render(<InboxRoute/>, document.body);
 });
 
 otherRouter.route('/calendar', function () {
-  React.renderComponent(<CalendarRoute/>, document.body);
+  React.render(<CalendarRoute/>, document.body);
 });
 ```
 
@@ -172,8 +172,8 @@ var routes = (
   </Route>
 );
 
-Router.run(routes, function(Handler) {
-  React.renderComponent(<Handler/>, document.body);
+Router.run(routes, function (Handler) {
+  React.render(<Handler/>, document.body);
 });
 
 ```
@@ -308,9 +308,9 @@ hierarchy from the `run` callback and access the params with
 `this.props.params`.
 
 ```js
-Router.run(routes, function(Handler, state) {
+Router.run(routes, function (Handler, state) {
   var params = state.params;
-  React.renderComponent(<Handler params={params}/>, document.body);
+  React.render(<Handler params={params}/>, document.body);
 });
 
 // and then pass the params down to every use of `<RouteHandler/>`
