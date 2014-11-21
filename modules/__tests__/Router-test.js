@@ -56,13 +56,13 @@ describe('Router', function () {
   });
 
   describe('willTransitionFrom', function () {
-    it('sends a rendered component', function (done) {
+    it('sends a rendered element', function (done) {
       var div = document.createElement('div');
 
       var Bar = React.createClass({
         statics: {
-          willTransitionFrom: function (transition, component) {
-            expect(div.querySelector('#bar')).toEqual(component.getDOMNode());
+          willTransitionFrom: function (transition, element) {
+            expect(div.querySelector('#bar')).toEqual(element.getDOMNode());
             done();
           }
         },

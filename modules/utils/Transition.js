@@ -44,10 +44,9 @@ function runTransitionFromHooks(transition, routes, elements, callback) {
   var hooks = reversedArray(routes).map(function (route, index) {
     return function () {
       var handler = route.handler;
-      var element = elements[index];
 
       if (!transition.isAborted && handler.willTransitionFrom)
-        return handler.willTransitionFrom(transition, element && element.getHandlerElement());
+        return handler.willTransitionFrom(transition, elements[index]);
 
       var promise = transition._promise;
       transition._promise = null;

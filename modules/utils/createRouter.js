@@ -8,7 +8,6 @@ var HashLocation = require('../locations/HashLocation');
 var HistoryLocation = require('../locations/HistoryLocation');
 var NavigationContext = require('../mixins/NavigationContext');
 var StateContext = require('../mixins/StateContext');
-var RouteHandlerContext = require('../mixins/RouteHandlerContext');
 var Scrolling = require('../mixins/Scrolling');
 var createRoutesFromChildren = require('./createRoutesFromChildren');
 var supportsHistory = require('./supportsHistory');
@@ -149,7 +148,7 @@ function createRouter(options) {
 
     displayName: 'Router',
 
-    mixins: [ NavigationContext, StateContext, RouteHandlerContext, Scrolling ],
+    mixins: [ NavigationContext, StateContext, Scrolling ],
 
     statics: {
 
@@ -379,6 +378,11 @@ function createRouter(options) {
       return elements;
     },
 
+    getRouteAtDepth: function (depth) {
+      var routes = this.state.routes;
+      return routes && routes[depth];
+    },
+
     getInitialState: function () {
       return state;
     },
@@ -388,8 +392,21 @@ function createRouter(options) {
     },
 
     render: function () {
-      var routes = this.state.routes;
-      return routes && routes.length ? React.createElement(RouteHandler, this.props) : null;
+      return this.getRouteAtDepth(0) ? React.createElement(RouteHandler, this.props) : null;
+    },
+
+    childContextTypes: {
+      getElements: React.PropTypes.func.isRequired,
+      getRouteAtDepth: React.PropTypes.func.isRequired,
+      routeHandlers: React.PropTypes.array.isRequired
+    },
+
+    getChildContext: function () {
+      return {
+        getElements: this.getElements,
+        getRouteAtDepth: this.getRouteAtDepth,
+        routeHandlers: [ this ]
+      };
     }
 
   });

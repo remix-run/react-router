@@ -15,28 +15,41 @@ var RouteHandler = React.createClass({
   },
 
   contextTypes: {
-    pushRouteHandlerElement: React.PropTypes.func.isRequired,
-    popRouteHandlerElement: React.PropTypes.func.isRequired,
-    getCurrentRouteAtDepth: React.PropTypes.func.isRequired
+    getElements: React.PropTypes.func.isRequired,
+    getRouteAtDepth: React.PropTypes.func.isRequired,
+    routeHandlers: React.PropTypes.array.isRequired
   },
 
-  componentWillMount: function () {
-    this._routeDepth = this.context.pushRouteHandlerElement(this);
+  childContextTypes: {
+    routeHandlers: React.PropTypes.array.isRequired
   },
 
-  componentWillUnmount: function () {
-    this.context.popRouteHandlerElement(this);
+  getChildContext: function () {
+    return {
+      routeHandlers: this.context.routeHandlers.concat([ this ])
+    };
   },
 
-  /**
-   * Returns the route handler's element.
-   */
-  getHandlerElement: function () {
-    return this.refs[this.props.ref];
+  getRouteDepth: function () {
+    return this.context.routeHandlers.length - 1;
+  },
+
+  componentDidMount: function () {
+    this._updateElement();
+  },
+
+  componentDidUpdate: function () {
+    this._updateElement();
+  },
+
+  _updateElement: function () {
+    var depth = this.getRouteDepth();
+    var elements = this.context.getElements();
+    elements[depth] = this.refs[this.props.ref];
   },
 
   render: function () {
-    var route = this.context.getCurrentRouteAtDepth(this._routeDepth);
+    var route = this.context.getRouteAtDepth(this.getRouteDepth());
     return route ? React.createElement(route.handler, this.props) : null;
   }
 
