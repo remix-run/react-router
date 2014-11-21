@@ -215,7 +215,7 @@ describe('Router.run', function () {
     });
   });
 
-  describe('ImitateBrowserBehavior scrolling', function () {
+  describe.skip('ImitateBrowserBehavior scrolling', function () {
     var BigPage = React.createClass({
       render: function () {
         return <div style={{ width: 10000, height: 10000, background: 'green' }}/>;
