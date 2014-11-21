@@ -314,7 +314,7 @@ function createRouter(options) {
       },
 
       /**
-       * Starts this router and calls callback(state, router) when the route changes.
+       * Starts this router and calls callback(router, state) when the route changes.
        *
        * If the router's location is static (i.e. a URL path in a server environment)
        * the callback is called only once. Otherwise, the location should be one of the
