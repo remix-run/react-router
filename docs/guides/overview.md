@@ -10,7 +10,7 @@ Let's imagine a little app with a dashboard, inbox, and calendar.
 ```
 +---------------------------------------------------------+
 | +---------+ +-------+ +--------+                        |
-| |Dashboard| | Inbox | |Calendar|      Logged in as Joe  |
+| |Dashboard| | Inbox | |Calendar|      Logged in as Jane |
 | +---------+ +-------+ +--------+                        |
 +---------------------------------------------------------+
 |                                                         |
@@ -48,7 +48,7 @@ var Header = React.createClass({
           <li><a href="/inbox">Inbox</a></li>
           <li><a href="/calendar">Calendar</a></li>
         </ul>
-        Logged in as Joe
+        Logged in as Jane
       </header>
     );
   }
@@ -99,16 +99,34 @@ otherRouter.route('/inbox', function () {
 otherRouter.route('/calendar', function () {
   React.renderComponent(<CalendarRoute/>, document.body);
 });
-
 ```
 
 The three main view's render methods are nearly identical. While one
 level of shared UI like this is pretty easy to handle, getting deeper
-and deeper adds more complexity, along with lots of `switch` branching,
-etc.
+and deeper adds more complexity.
 
-React Router embraces this common pattern among user interfaces by
-nesting the views for you. 
+Other approaches might introduce a lot of `if/else` or `switch/case`
+into your app if you pass the route information down through the app
+hierarchy via props.
+
+```js
+var App = React.createClass({
+  render: function () {
+    var page;
+    switch (this.props.page) {
+      case 'dashboard': page = <Dashboard/>; break;
+      case 'inbox': page = <Dashboard/>; break;
+      default: page = <Index/>; break;
+    }
+    return (
+      <div>{page}</div>
+    );
+  }
+});
+```
+
+React Router embraces the common pattern of shared UI among user
+interfaces by nesting the views for you, decreasing boilerplate.
 
 With React Router
 -----------------
@@ -116,13 +134,14 @@ With React Router
 Here's how it works:
 
 1. You declare your view hierarchy with nested `<Route/>`s and provide
-   them with a React component to handle the route when its active.
+   them with a React element to handle the route when its active.
 
 2. React Router will match the deepest route against the URL, and then
    activate the entire tree of routes on that branch, nesting all the
    UI.
 
-3. You access the active route handler in the props of the parent route.
+3. You simply call `<RouteHandler/>` and it will render the active child
+   route.
 
 ```js
 var App = React.createClass({
@@ -135,41 +154,46 @@ var App = React.createClass({
             <li><Link to="inbox">Inbox</Link></li>
             <li><Link to="calendar">Calendar</Link></li>
           </ul>
-          Logged in as Joe
+          Logged in as Jane
         </header>
 
         {/* this is the important part */}
-        <this.props.activeRouteHandler/>
+        <RouteHandler/>
       </div>
     );
   }
 });
 
 var routes = (
-  <Routes location="history">
-    <Route name="app" path="/" handler={App}>
-      <Route name="inbox" handler={Inbox}/>
-      <Route name="calendar" handler={Calendar}/>
-      <DefaultRoute handler={Dashboard}/>
-    </Route>
-  </Routes>
+  <Route name="app" path="/" handler={App}>
+    <Route name="inbox" handler={Inbox}/>
+    <Route name="calendar" handler={Calendar}/>
+    <DefaultRoute handler={Dashboard}/>
+  </Route>
 );
 
-React.renderComponent(routes, document.body);
+Router.run(routes, function(Handler) {
+  React.renderComponent(<Handler/>, document.body);
+});
+
 ```
 
 When the user lands at `/inbox`, the route named `inbox` gets matched so
-its parent route will render the `App` component, and since `inbox` is
-active, you get `Inbox` as `this.props.activeRouteHandler`. This is
-nearly identical to `{{outlet}}` from Ember or `<div ng-view/>` from
-angular.
+its parent route, `app`, is also matched. The `run` callback receives
+`Handler`, that has all of this match information wrapped up in it.
+
+Rendering `Handler` is really just rendering `App` since its the highest
+matched route handler. Since `inbox` is the active child route,
+rendering `<RouteHandler/>` in `App` renders the `Inbox` component.
+`<RouteHandler/>` is nearly identical to `{{outlet}}` from Ember or
+`<div ng-view/>` from angular.
 
 When the user navigates to `/calendar`, the same thing happens except
-now `Calendar` is the `activeRouteHandler` in `App`'s render method.
+now `Calendar` is the `<RouteHandler/>` in `App`'s render method.
 
 Finally, when the user navigates to the path `/`, `App` is active, and
-notices that it has a `DefaultRoute`, so it receives `Dashboard` as the
-`activeRouteHandler`. If a `DefaultRoute` is defined, it will be active
+notices that it has a `DefaultRoute`, so `Dashboard` becomes the new
+`<RouteHandler/>`. If a `DefaultRoute` is defined, it will be active
 when the parent's route is matched exactly.
 
 Note that we don't need the `<Header/>` component since we don't have to
@@ -187,7 +211,7 @@ navigates through the messages.
 ```
 +---------------------------------------------------------------------+
 | +---------+ +-------+ +--------+                                    |
-| |Dashboard| | Inbox | |Calendar|                   Logged in as Joe |
+| |Dashboard| | Inbox | |Calendar|                  Logged in as Jane |
 | +---------+ +-------+ +--------+                                    |
 +---------------------------------------------------------------------+
 | +---------+ +-------+                              +--------------+ |
@@ -220,43 +244,42 @@ var Inbox = React.createClass({
       <div>
         <Toolbar/>
         <Messages/>
-        <this.props.activeRouteHandler/>
+        <RouteHandler/>
       </div>
     );
   }
 });
 
 var routes = (
-  <Routes location="history">
-    <Route handler={App}>
+  <Route handler={App}>
 
-      <Route name="inbox" handler={Inbox}>
-        <Route name="message" path=":messageId" handler={Message}/>
-        <DefaultRoute handler={InboxStats}/>
-      </Route>
-
-      <Route name="calendar" handler={Calendar}/>
-      <DefaultRoute handler={Dashboard}/>
-
+    <Route name="inbox" handler={Inbox}>
+      <Route name="message" path=":messageId" handler={Message}/>
+      <DefaultRoute handler={InboxStats}/>
     </Route>
-  </Routes>
+
+    <Route name="calendar" handler={Calendar}/>
+    <DefaultRoute handler={Dashboard}/>
+
+  </Route>
 );
 ```
 
-- Inbox now has `this.props.activeRouteHandler` in its render method,
+- Inbox now has a `<RouteHandler/>` in its render method,
   exactly like its parent.
-- We added a child routes to `inbox`; messages or the stats page can now
+- We added child routes to `inbox`; the messages or stats page can now
   render into it.
 
 Nesting a new level of UI does not increase the complexity of your code.
-You simply nest some routes and render them with `activeRouteHandler`.
+You simply nest some routes and render them with `<RouteHandler/>`.
 
 Dynamic Segments
 ----------------
 
 When we added the `message` route, we introduced a "dynamic segment" to
-the URL. These segements get parsed from the url and passed into your
-route handler on `this.props.params`.
+the URL. These segements get parsed from the url and are available in
+the `run` callback, or from the `State` mixin. Let's see how we can
+access the params.
 
 Remember our message route looks like this:
 
@@ -268,6 +291,46 @@ Lets look at accessing the `messageId` in `Message`.
 
 ```js
 var Message = React.createClass({
+  mixins: [Router.State],
+  render: function () {
+    return (
+      <div>{this.getParams().messageId}</div>
+    );
+  }
+});
+```
+
+Assuming the user navigates to `/inbox/123`, `this.getParams().messageId` is
+going to be `'123'`.
+
+Alternatively, you can pass the param data down through the view
+hierarchy from the `run` callback and access the params with
+`this.props.params`.
+
+```js
+Router.run(routes, function(Handler, state) {
+  var params = state.params;
+  React.renderComponent(<Handler params={params}/>, document.body);
+});
+
+// and then pass the params down to every use of `<RouteHandler/>`
+<RouteHandler {...this.props}/>
+
+// Inbox ends up looking like this
+var Inbox = React.createClass({
+  render: function () {
+    return (
+      <div>
+        <Toolbar/>
+        <Messages/>
+        <RouteHandler {...this.props}/>
+      </div>
+    );
+  }
+});
+
+// and Message changes to:
+var Message = React.createClass({
   render: function () {
     return (
       <div>{this.props.params.messageId}</div>
@@ -275,9 +338,6 @@ var Message = React.createClass({
   }
 });
 ```
-
-Assuming the user navigates to `/inbox/123`, `this.props.params.messageId` is
-going to be `'123'`.
 
 Important Note About Dynamic Segments
 -------------------------------------
@@ -290,10 +350,6 @@ data and set state, you will also need to implement
 component whose props are changing. This way you can leverage the
 performance of the React DOM diff algorithm. Look at the `Contact`
 handler in the `master-detail` example.
-
-If you'd rather be lazy, you can use the `addHandlerKey` option and set
-it to `true` on your route to opt-out of the performance. See also
-[Route][Route].
 
 Scrolling
 ---------
@@ -321,23 +377,21 @@ At any level of your UI nesting, you can render a handler if the url
 beyond what was matched isn't recognized.
 
 ```xml
-<Routes location="history">
-  <Route path="/" handler={App}>
-    <Route name="inbox" path="/inbox" handler={Inbox}>
-      <!--
-        will render inside the `Inbox` UI for any paths not recognized
-        after the parent route's path `/inbox/*`
-      -->
-      <NotFoundRoute handler={InboxNotFound}/>
-      <Route name="message" path="/inbox/:messageId" handler={Message}/>
-      <DefaultRoute handler={InboxStats}/>
-    </Route>
-    <Route name="calendar" path="/calendar" handler={Calendar}/>
-    <DefaultRoute handler={Dashboard}/>
+<Route path="/" handler={App}>
+  <Route name="inbox" path="/inbox" handler={Inbox}>
+    <!--
+      will render inside the `Inbox` UI for any paths not recognized
+      after the parent route's path `/inbox/*`
+    -->
+    <NotFoundRoute handler={InboxNotFound}/>
+    <Route name="message" path="/inbox/:messageId" handler={Message}/>
+    <DefaultRoute handler={InboxStats}/>
   </Route>
-  <!-- will catch any route that isn't recognized at all -->
-  <NotFoundRoute handler={NotFound}/>
-</Routes>
+  <Route name="calendar" path="/calendar" handler={Calendar}/>
+  <DefaultRoute handler={Dashboard}/>
+</Route>
+<!-- will catch any route that isn't recognized at all -->
+<NotFoundRoute handler={NotFound}/>
 ```
 
 ### `<Redirect/>`
@@ -346,7 +400,7 @@ URLs in an app change, so we made it easy to not break the old ones.
 
 ```xml
 <Route name="message" path="/inbox/:messageId" handler={Message} />
-<Redirect path="/messages/:messageId" to="message" />
+<Redirect from="/messages/:messageId" to="message" />
 ```
 
 Path Matching
@@ -363,8 +417,8 @@ it has to offer. Check out the [API Docs][API] to learn about
 redirecting transitions, query parameters and more.
 
   [AsyncState]:../api/mixins/AsyncState.md
-  [Route]:../api/elements/Route.md
-  [Routes]:../api/elements/Routes.md
+  [Route]:../api/components/Route.md
+  [Routes]:../api/components/Routes.md
   [API]:../api/
   [path-matching]:./path-matching.md
 
@@ -376,7 +430,6 @@ In order for the above examples to work in a CommonJS environment you'll need to
 ```
 var Router = require('react-router');
 var Route = Router.Route;
-var Routes = Router.Routes;
 var NotFoundRoute = Router.NotFoundRoute;
 var DefaultRoute = Router.DefaultRoute;
 var Link = Router.Link;
