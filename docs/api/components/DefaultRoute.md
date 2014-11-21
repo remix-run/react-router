@@ -52,4 +52,4 @@ same functionality:
 `DefaultRoute` feels more natural, so you can name and transition to the
 parent route.
 
-  [routeProps]:/docs/api/elements/Route.md#props
+  [routeProps]:/docs/api/components/Route.md#props

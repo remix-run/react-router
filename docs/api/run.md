@@ -43,7 +43,7 @@ The callback receives two arguments:
 
 #### `Handler`
 
-A react element with the current match all wrapped up inside it, ready
+A ReactComponent class with the current match all wrapped up inside it, ready
 for you to render.
 
 #### `state`
@@ -131,7 +131,7 @@ something.serve(function (req, res) {
 });
 ```
 
-  [1]:./elements/Route.md
+  [1]:./components/Route.md
   [2]:./locations/HashLocation.md
   [3]:./classes/Route.md
   [4]:https://github.com/rackt/react-router/tree/latest/examples/async-data
