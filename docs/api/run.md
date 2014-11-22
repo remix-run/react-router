@@ -1,9 +1,14 @@
-API: `Router.run(routes, [location,] callback)`
+API: `Router.run`
 =================
 
 The main API into react router. It runs your routes, matching them
 against a location, and then calls back with the next state for you to
 render.
+
+Signature
+---------
+
+`Router.run(routes, [location,] callback)`
 
 Arguments
 ---------

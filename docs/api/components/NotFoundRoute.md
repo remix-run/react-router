@@ -2,8 +2,8 @@ API: `NotFoundRoute` (component)
 ===============================
 
 When a parent's URL partially matches, but none of the children do, a
-`NotFoundRoute` will be matched and its handler rendered at any level of
-your route/view hierarchy.
+`NotFoundRoute` will be matched and its handler activated at any level
+of your route hierarchy.
 
 Props
 -----
@@ -14,19 +14,17 @@ Example
 -------
 
 ```xml
-<Routes>
-  <Route path="/" handler={App}>
-    <Route name="course" path="course/:courseId" handler={Course}>
-      <Route name="course-dashboard" path="dashboard" />
+<Route path="/" handler={App}>
+  <Route name="course" path="course/:courseId" handler={Course}>
+    <Route name="course-dashboard" path="dashboard" handler={Dashboard}/>
 
-      <!-- ie: `/course/123/foo` -->
-      <NotFoundRoute handler={CourseRouteNotFound} />
-    </Route>
-
-    <!-- ie: `/flkjasdf` -->
-    <NotFoundRoute handler={NotFound} />
+    <!-- ie: `/course/123/foo` -->
+    <NotFoundRoute handler={CourseRouteNotFound} />
   </Route>
-</Routes>
+
+  <!-- ie: `/flkjasdf` -->
+  <NotFoundRoute handler={NotFound} />
+</Route>
 ```
 
 The last `NotFoundRoute` will render inside the `App`, the first will

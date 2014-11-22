@@ -140,8 +140,8 @@ Here's how it works:
    activate the entire tree of routes on that branch, nesting all the
    UI.
 
-3. You simply call `<RouteHandler/>` and it will render the active child
-   route.
+3. You simply use the `<RouteHandler/>` component and it will render the
+   active child route.
 
 ```js
 var App = React.createClass({

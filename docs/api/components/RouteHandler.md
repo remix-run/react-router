@@ -1,63 +1,9 @@
 API: `RouteHandler` (component)
 ===============================
 
-The component supplied to a route is called a "Route Handler". They are
-rendered when their route is active. There are some special props and
-static methods available to these components.
-
-Props
------
-
-### `activeRouteHandler(extraProps)`
-
-Render the active nested route handler with this property, passing in
-additional properties as needed. This is the mechanism by which you get
-effortless nested UI.
-
-#### Example
-
-```js
-var App = React.createClass({
-  render: function () {
-    <div>
-      <h1>Address Book</h1>
-      {/* the active child route handler will be rendered here */}
-      {/* you can "trickle down" props to the active child */}
-      <this.props.activeRouteHandler someProp="foo" /> 
-    </div>
-  }
-});
-
-var Contact = React.createClass({
-  render: function () {
-    return <h1>{this.props.params.id}</h1>
-  }
-});
-
-var routes = (
-  <Routes>
-    <Route handler={App}>
-      <Route name="contact" path="/contact/:id" handler={Contact}>
-    </Route>
-  </Routes>
-);
-
-React.renderComponent(routes, document.body);
-```
-
-### `name`
-
-The current route name.
-
-### `params`
-
-When a route has dynamic segments like `<Route path="users/:userId"/>`,
-the dynamic values from the url are available at
-`this.props.params.userId`, etc.
-
-### `query`
-
-The query parameters from the url.
+The component supplied to a route is called a "Route Handler". They can
+be rendered by the parent handler with `<RouteHandler/>`.  There are
+some special static methods available to these components.
 
 Static Lifecycle Methods
 ------------------------
@@ -67,7 +13,7 @@ during route transitions.
 
 ### `willTransitionTo(transition, params, query)`
 
-Called when a route is about to render, giving you the opportunity to
+Called when a handler is about to render, giving you the opportunity to
 abort or redirect the transition. You can pause the transition while you
 do some asynchonous work with `transition.wait(promise)`.
 
@@ -78,7 +24,7 @@ See also: [transition](/docs/api/misc/transition.md)
 Called when an active route is being transitioned out giving you an
 opportunity to abort the transition. The `component` is the current
 component, you'll probably need it to check its state to decide if you
-want to allow the transition.
+want to allow the transition (like form fields).
 
 See also: [transition](/docs/api/misc/transition.md)
 
@@ -92,7 +38,7 @@ var Settings = React.createClass({
         if (!loggedIn)
           return;
         transition.abort();
-        return auth.logIn({transition: transition});
+        auth.logIn({transition: transition});
         // in auth module call `transition.retry()` after being logged in
       });
     },
@@ -109,4 +55,3 @@ var Settings = React.createClass({
   //...
 });
 ```
-

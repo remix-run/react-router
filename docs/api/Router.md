@@ -14,6 +14,7 @@ var Router = window.ReactRouter
 
 // methods
 Router.run
+Router.create
 
 // components
 Router.DefaultRoute
@@ -23,8 +24,7 @@ Router.Redirect
 Router.Route
 
 // mixins
-Router.ActiveState
-Router.CurrentPath
+Router.State
 Router.Navigation
 ```
 

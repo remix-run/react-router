@@ -1,8 +1,7 @@
 API: `DefaultRoute` (component)
 ===============================
 
-A route that is active when the parent route's path matches exactly. Or,
-in other words, the default child route for a parent.
+A `DefaultRoute` is active when the parent route's path matches exactly.
 
 Note, this is not a `NotFoundRoute`. It is only active when the parent's
 route path is matched exactly.
@@ -20,8 +19,8 @@ Example
   <Route path="/" handler={App}>
 
     <!--
-      when the url is `/`, this handler will be active, or in other
-      words, will be `this.props.activeRouteHandler in the `App` handler
+      When the url is `/`, this route will be active. In other
+      words, `Home` will be the `<RouteHandler/>` in `App`.
     -->
     <DefaultRoute handler={Home}/>
 
@@ -30,7 +29,7 @@ Example
       <Route name="user" handler={User} path="/user/:id"/>
 
       <!-- when the url is `/users`, this will be active -->
-      <DefaultRoute handler={UsersIndex}/>
+      <DefaultRoute name="users-index" handler={UsersIndex}/>
 
     </Route>
   </Route>
@@ -41,15 +40,14 @@ This is all really just a shortcut for the less intuitive version of the
 same functionality:
 
 ```xml
-<!-- no path or name on what was previously the "users" route -->
-<Route handler={Users}>
-  <!-- the path moved down to the child -->
+<!-- don't do this -->
+
+<!-- this route has a path but it'll never match directly because ... -->
+<Route path="/users" handler={Users}>
+  <!-- this child has the same path, and the child matches first -->
   <Route name="users-index" path="/users" handler={UsersIndex}/>
   <Route name="user" handler={User} path="/user/:id"/>
 </Route>
 ```
-
-`DefaultRoute` feels more natural, so you can name and transition to the
-parent route.
 
   [routeProps]:/docs/api/components/Route.md#props

@@ -13,8 +13,7 @@ React Router API
   - [`Routes`](/docs/api/components/Routes.md)
 
 - Mixins
-  - [`ActiveState`](/docs/api/mixins/ActiveState.md)
-  - [`CurrentPath`](/docs/api/mixins/CurrentPath.md)
+  - [`State`](/docs/api/mixins/State.md)
   - [`Navigation`](/docs/api/mixins/Navigation.md)
 
 - Misc 

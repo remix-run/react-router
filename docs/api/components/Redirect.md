@@ -33,41 +33,36 @@ Example
   lets say we want to change from `/profile/123` to `/about/123`
   and redirect `/get-in-touch` to `/contact`
 -->
-<Routes>
-  <Route handler={App}>
-    <Route name="contact" handler={Contact}/>
-    <Route name="about-user" path="about/:userId" handler={UserProfile}/>
-    <Route name="course" path="course/:courseId">
-      <Route name="course-dashboard" path="dashboard" handler={Dashboard}/>
-      <Route name="course-assignments" path="assignments" handler={Assignments}/>
-      <!--
-        anything like `/course/123/invalid` redirects to
-        `/course/123/dashboard`
-      -->
-      <Redirect to="course-dashboard" />
-    </Route>
+<Route handler={App}>
+  <Route name="contact" handler={Contact}/>
+  <Route name="about-user" path="about/:userId" handler={UserProfile}/>
+  <Route name="course" path="course/:courseId">
+    <Route name="course-dashboard" path="dashboard" handler={Dashboard}/>
+    <Route name="course-assignments" path="assignments" handler={Assignments}/>
   </Route>
-  
+
   <!-- `/get-in-touch` -> `/contact` -->
   <Redirect from="get-in-touch" to="contact" />
 
   <!-- `/profile/123` -> `/about/123` -->
   <Redirect from="profile/:userId" to="about-user" />
 
-  <!-- `/profile/jasmin` -> `/about-user/123` -->
-  <Redirect from="profile/jasmin" to="about-user" params={{userId: 123}} />
-</Routes>
+  <!-- `/profile/me` -> `/about-user/123` -->
+  <Redirect from="profile/me" to="about-user" params={{userId: SESSION.USER_ID}} />
+</Route>
 ```
 
 Note that the `<Redirect/>` can be placed anywhere in the route
 hierarchy, if you'd prefer the redirects to be next to their respective
-routes.
+routes, the `from` path will match the same as a regular route `path`.
 
 ```xml
-<Routes>
-  <Route handler={App}>
-    <Route name="contact" handler={Contact}/>
-    <Redirect from="get-in-touch" to="contact" />
+<Route handler={App}>
+  <Route name="course" path="course/:courseId">
+    <Route name="course-dashboard" path="dashboard" handler={Dashboard}/>
+    <!-- /course/123/home -> /course/123/dashboard -->
+    <Redirect from="home" to="course-dashboard" />
   </Route>
-</Routes>
+</Route>
 ```
+

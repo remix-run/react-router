@@ -38,3 +38,16 @@ Example
 
 For examples of how to implement your own location, please see the locations
 included in this repository.
+
+
+```js
+var MyLocation = {
+  addChangeListener: function (listener) {},
+  push: function (path) {},
+  replace: function (path) {},
+  pop: function () {},
+  getCurrentPath: function () {}
+};
+
+Router.run(routes, MyLocation, callback);
+```

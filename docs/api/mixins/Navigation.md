@@ -1,7 +1,8 @@
 API: `Navigation` (mixin)
 ==========================
 
-A mixin for components that need to create URLs and/or initiate transitions to other routes.
+A mixin for components that need to create URLs and/or initiate
+transitions to other routes.
 
 Instance Methods
 ----------------
@@ -49,7 +50,7 @@ Creates a URL path to a route.
 
 ### `makeHref(routeName, params, query)`
 
-Creates an `href` to a route. Use this along with `ActiveState` when you
+Creates an `href` to a route. Use this along with `State` when you
 need to build components similar to `Link`.
 
 #### Example
