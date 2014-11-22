@@ -1,6 +1,18 @@
 var expect = require('expect');
 var Path = require('../Path');
 
+describe('Path.decode', function () {
+  it('properly decodes a path with a query string', function () {
+    expect(Path.decode('/my/short+path?a=b&c=d')).toEqual('/my/short path?a=b&c=d');
+  });
+});
+
+describe('Path.encode', function () {
+  it('properly encodes a path with a query string', function () {
+    expect(Path.encode('/my/short path?a=b&c=d')).toEqual('/my/short+path?a=b&c=d');
+  });
+});
+
 describe('Path.extractParamNames', function () {
   describe('when a pattern contains no dynamic segments', function () {
     it('returns an empty array', function () {

@@ -2,14 +2,6 @@ var invariant = require('react/lib/invariant');
 var merge = require('qs/lib/utils').merge;
 var qs = require('qs');
 
-function decodePathSegment(string) {
-  return decodeURIComponent(string.replace(/\+/g, ' '));
-}
-
-function encodePathSegment(string) {
-  return encodeURIComponent(string).replace(/%20/g, '+');
-}
-
 var paramCompileMatcher = /:([a-zA-Z_$][a-zA-Z0-9_$]*)|[*.()\[\]\\+|{}^$]/g;
 var paramInjectMatcher = /:([a-zA-Z_$][a-zA-Z0-9_$?]*[?]?)|[*]/g;
 var paramInjectTrailingSlashMatcher = /\/\/\?|\/\?/g;
@@ -46,15 +38,15 @@ var Path = {
   /**
    * Safely decodes special characters in the given URL path.
    */
-  decode: function decodePath(path) {
-    return String(path).split('/').map(decodePathSegment).join('/');
+  decode: function (path) {
+    return decodeURI(path.replace(/\+/g, ' '));
   },
 
   /**
    * Safely encodes special characters in the given URL path.
    */
-  encode: function encodePath(path) {
-    return String(path).split('/').map(encodePathSegment).join('/');
+  encode: function (path) {
+    return encodeURI(path).replace(/%20/g, '+');
   },
 
   /**
