@@ -25,6 +25,7 @@
     "browserify-shim": "3.6.0",
     "bundle-loader": "0.5.1",
     "envify": "1.2.0",
+    "events": "1.0.2",
     "expect": "0.1.1",
     "jsx-loader": "0.12.0",
     "karma": "0.12.16",
@@ -37,6 +38,7 @@
     "react": "0.12.x",
     "reactify": "0.15.x",
     "rf-release": "0.3.2",
+    "rx": "2.3.18",
     "uglify-js": "2.4.15",
     "webpack": "1.4.5",
     "webpack-dev-server": "1.6.5"
