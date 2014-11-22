@@ -67,12 +67,14 @@ describe('Path.extractParams', function () {
           expect(Path.extractParams(pattern, 'comments/123/edit')).toEqual({ id: '123' });
         });
       });
+
       describe('and the path matches without supplied param', function () {
-        it('returns an object with param set to null', function () {
-          expect(Path.extractParams(pattern, 'comments//edit')).toEqual({id: null});
+        it('returns an object with an undefined param', function () {
+          expect(Path.extractParams(pattern, 'comments//edit')).toEqual({ id: undefined });
         });
       });
     });
+
     describe('and the pattern and forward slash are optional', function () {
       var pattern = 'comments/:id?/?edit'
 
@@ -81,12 +83,14 @@ describe('Path.extractParams', function () {
           expect(Path.extractParams(pattern, 'comments/123/edit')).toEqual({ id: '123' });
         });
       });
+
       describe('and the path matches without supplied param', function () {
-        it('returns an object with param set to null', function () {
-          expect(Path.extractParams(pattern, 'comments/edit')).toEqual({id: null});
+        it('returns an object with an undefined param', function () {
+          expect(Path.extractParams(pattern, 'comments/edit')).toEqual({ id: undefined });
         });
       });
     });
+
     describe('and the path does not match', function () {
       it('returns null', function () {
         expect(Path.extractParams(pattern, 'users/123')).toBe(null);
