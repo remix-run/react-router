@@ -5,6 +5,219 @@ To see discussion around these API changes, please refer to the
 [changelog](/CHANGELOG.md) and visit the commits and issues they
 reference.
 
+0.10.x -> 0.11.x
+----------------
+
+The router changed **a lot** in this release. While you won't have to
+change too much of your app, you will have to change it in a lot of
+places. The fundamental change is that you, rather than the router, get
+to have control of your view instances.
+
+If you find anything is missing from this list, please open an issue and
+we will get it added here ASAP.
+
+### React 0.12
+
+You must upgrade to `0.12.x` before you can use version `0.11.x` of the
+router.
+
+### `<Routes/>` and starting the router
+
+`<Routes/>` is gone, there is a new API that gives you complete control
+of your views.
+
+```js
+// 0.10.x
+React.render(routes, el);
+
+// 0.11.x
+Router.run(routes, function (Handler) {
+  React.render(<Handler/>, el);
+});
+
+// or if using history location
+Router.run(routes, Router.HistoryLocation, function (Handler) {
+  React.render(<Handler/>, el);
+});
+```
+
+### `this.props.activeRouteHandler()` -> `<RouteHandler/>`
+
+```js
+// 0.10.x
+var Something = React.createClass({
+  render: function () {
+    return (
+      <div>
+        <this.props.activeRouteHandler />
+      </div>
+    );
+  }
+});
+
+// 0.11.x
+var RouteHandler = Router.RouteHandler;
+
+var Something = React.createClass({
+  render: function () {
+    return (
+      <div>
+        <RouteHandler />
+      </div>
+    );
+  }
+});
+```
+
+### `this.props.params` and `this.props.query`
+
+They are no longer available on props, use the `State` mixin.
+
+```js
+// 0.10.x
+var Something = React.createClass({
+  render: function () {
+    var name = this.props.params.name;
+    var something = this.props.query.something;
+    // ...
+  }
+});
+
+// 0.11.x
+var Something = React.createClass({
+  mixins: [ Router.State ],
+  render: function () {
+    var name = this.getParams().name;
+    var something = this.getQuery().something;
+    // ...
+  }
+});
+
+// or pass it down the view hierarchy
+Router.run(routes, function (Handler, state) {
+  React.render(<Handler params={state.params} query={state.query} />, el);
+  // make sure to `<RouteHandler {...this.props}/>` to continue
+  // passing it down the hierarchy
+});
+```
+
+### `ActiveState` -> `State`, and methods too
+
+This mixin's name has changed, and all of its methods that had the word
+`active` in it, too. For example, `getActiveParams()` becomes `getParams()`.
+
+```js
+// v0.10.x
+var Something = React.createClass({
+  mixins: [ Router.ActiveState ],
+  render: function () {
+    var name = this.getActiveParams().name;
+    // ...
+  }
+});
+
+// v0.11.x
+var Something = React.createClass({
+  mixins: [ Router.State ]
+  render: function () {
+    var name = this.getParams().name;
+    // ...
+  }
+});
+```
+
+### `CurrentPath` -> `State`
+
+You can find `this.getPath()` on the `Router.State` mixin.
+
+```js
+// v0.10.x
+var Something = React.createClass({
+  mixins: [ Router.CurrentPath ],
+  render: function () {
+    var path = this.getCurrentPath();
+    // ...
+  }
+});
+
+// v0.11.x
+var Something = React.createClass({
+  mixins: [ Router.State ],
+  render: function () {
+    var path = this.getPath();
+    // ...
+  }
+});
+```
+
+### Route `addHandlerKey` prop
+
+This option has been removed, you will need to add handler keys
+yourself:
+
+```js
+// 0.10.x
+<Route handler={App}>
+  <Route addHandlerKey={true}/>
+</Route>
+
+// 0.11.x
+var App = React.createClass({
+  mixins: [ Router.State ],
+  render: function () {
+    var key = this.getPath();
+    return (
+      <div>
+        <RouteHandler key={key} />
+      </div>
+    );
+  }
+});
+```
+
+### `<Routes onError={fn}/>`
+
+`<Routes/>` is gone, instead create a router with your error handler as
+an option:
+
+```js
+// 0.10.x
+<Routes onError={fn}>
+  // ...
+</Routes>
+
+// 0.11.x
+var router = Router.create({
+  onErorr: fn,
+  // ...
+});
+router.run(callback);
+```
+
+### `Router.renderRoutesTo*`
+
+These methods have been removed because you, not the router, are in
+control of rendering.
+
+```js
+// v0.10.x
+Router.renderRoutesToString(routes, path, function(html) {
+ // do something with `html`
+});
+
+// v0.11.x
+Router.run(routes, path, function(Handler) {
+  var html = React.renderToString(<Handler/>);
+});
+```
+
+0.9.x -> 0.10.x
+---------------
+
+Nothing changed, this was simply React `0.12.0` compatibility. Note,
+your code needs to use the React `0.11.x` API for things to work, there
+will be lots of warnings in the console.
+
 0.7.x -> 0.9.x
 --------------
 

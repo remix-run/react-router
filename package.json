@@ -45,7 +45,6 @@
     "react": "0.12.x"
   },
   "dependencies": {
-    "events": "1.0.1",
     "qs": "2.2.2",
     "when": "3.4.6"
   },
