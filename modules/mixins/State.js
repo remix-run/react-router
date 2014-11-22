@@ -10,10 +10,10 @@ var React = require('react');
  *     mixins: [ Router.State ],
  *     render: function () {
  *       var className = this.props.className;
- *   
+ *
  *       if (this.isActive('about'))
  *         className += ' is-active';
- *   
+ *
  *       return React.DOM.a({ className: className }, this.props.children);
  *     }
  *   });
@@ -45,15 +45,25 @@ var State = {
   /**
    * Returns an object of the URL params that are currently active.
    */
-  getParams: function () {
-    return this.context.getCurrentParams();
+  getParams: function (key) {
+    var params = this.context.getCurrentParams();
+    if (key) {
+      return params[key];
+    } else {
+      return params;
+    }
   },
 
   /**
    * Returns an object of the query params that are currently active.
    */
-  getQuery: function () {
-    return this.context.getCurrentQuery();
+  getQuery: function (key) {
+    var query = this.context.getCurrentQuery();
+    if (key) {
+      return query[key];
+    } else {
+      return query;
+    }
   },
 
   /**
