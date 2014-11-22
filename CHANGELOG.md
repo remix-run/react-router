@@ -2,7 +2,7 @@ v0.11.0 - Sat, 22 Nov 2014 06:03:21 GMT
 ---------------------------------------
 
 - Everything ... seriously. Please review the [upgrade
-  guide](./UPGRADE_GUIDE.md).
+  guide](./UPGRADE_GUIDE.md#010x---011x).
 
 
 v0.10.2 - Fri, 31 Oct 2014 16:23:27 GMT
