@@ -198,10 +198,6 @@ describe('Router.run', function () {
     });
   });
 
-  describe('RouteHandler', function () {
-    it('throws if called after the router transitions to a new state');
-  });
-
   describe('locations', function () {
     it('defaults to HashLocation', function (done) {
       var routes = <Route path="/" handler={Foo}/>

@@ -138,6 +138,12 @@ function createRouter(options) {
   var onError = options.onError || defaultErrorHandler;
   var onAbort = options.onAbort || defaultAbortHandler;
   var state = {};
+  var nextState = {};
+
+  function updateState() {
+    state = nextState;
+    nextState = {};
+  }
 
   // Automatically fall back to full page refreshes in
   // browsers that don't support the HTML history API.
@@ -302,11 +308,11 @@ function createRouter(options) {
             if (error || transition.isAborted)
               return callback.call(router, error, transition);
 
-            state.path = path;
-            state.action = action;
-            state.routes = nextRoutes;
-            state.params = nextParams;
-            state.query = nextQuery;
+            nextState.path = path;
+            nextState.action = action;
+            nextState.routes = nextRoutes;
+            nextState.params = nextParams;
+            nextState.query = nextQuery;
 
             callback.call(router, null, transition);
           });
@@ -327,7 +333,7 @@ function createRouter(options) {
           } else if (transition.isAborted) {
             onAbort.call(router, transition.abortReason, location);
           } else {
-            callback.call(router, router, state);
+            callback.call(router, router, nextState);
           }
         }
 
@@ -384,10 +390,12 @@ function createRouter(options) {
     },
 
     getInitialState: function () {
+      updateState();
       return state;
     },
 
     componentWillReceiveProps: function () {
+      updateState();
       this.setState(state);
     },
 
