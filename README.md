@@ -11,8 +11,6 @@ Docs
 - [Guide: Overview](/docs/guides/overview.md)
 - [API](/docs/api/)
 
-[Try it out on JSBin](http://jsbin.com/sixose/1/edit)
-
 Important Notes
 ---------------
 
@@ -24,17 +22,6 @@ Before our `1.0` release, breaking API changes will cause a bump to
 
 Please refer to the [upgrade guide](/UPGRADE_GUIDE.md) and
 [changelog](/CHANGELOG.md) when upgrading.
-
-### App Dependencies
-
-We use the following dependencies from npm:
-
-- `when` for promises
-- `events` for event emitters.
-
-It is likely that your app will need dependencies like these. We
-recommend you use the same modules that the router uses to decrease the
-overall size of your application.
 
 Installation
 ------------
@@ -75,24 +62,24 @@ What's it look like?
 --------------------
 
 ```js
-React.renderComponent((
-  <Routes location="history">
-    <Route path="/" handler={App}>
-      <DefaultRoute handler={Home} />
-      <Route name="about" handler={About} />
-      <Route name="users" handler={Users}>
-        <Route name="recent-users" path="recent" handler={RecentUsers} />
-        <Route name="user" path="/user/:userId" handler={User} />
-        <NotFoundRoute handler={UserRouteNotFound}/>
-      </Route>
+var routes = (
+  <Route handler={App} path="/">
+    <DefaultRoute handler={Home} />
+    <Route name="about" handler={About} />
+    <Route name="users" handler={Users}>
+      <Route name="recent-users" path="recent" handler={RecentUsers} />
+      <Route name="user" path="/user/:userId" handler={User} />
+      <NotFoundRoute handler={UserRouteNotFound}/>
     </Route>
     <NotFoundRoute handler={NotFound}/>
-    <Redirect path="company" to="about" />
-  </Routes>
-), document.body);
-```
+    <Redirect from="company" to="about" />
+  </Route>
+);
 
-All of the `handler`s will render inside their parent route `handler`.
+Router.run(routes, function(Handler) {
+  React.render(<Handler/>, document.body);
+});
+```
 
 See more in the [overview guide](/docs/guides/overview.md).
 
