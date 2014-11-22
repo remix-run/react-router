@@ -63,9 +63,6 @@ var Link = React.createClass({
     if (clickResult === false || event.defaultPrevented === true)
       allowTransition = false;
 
-    if(event.nativeEvent.type == 'touchend') {
-      event.nativeEvent.preventDefault();
-    }
     event.preventDefault();
 
     if (allowTransition)
