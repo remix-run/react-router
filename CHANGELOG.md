@@ -1,11 +1,8 @@
 v0.11.0 - Sat, 22 Nov 2014 06:03:21 GMT
 ---------------------------------------
 
-- [5695b9a](../../commit/5695b9a) [removed] addHandlerKey
-- [97d7a05](../../commit/97d7a05) [added] ActiveRouteHandler
-- [940a0d0](../../commit/940a0d0) [changed] use `Object.assign` instead of `copyProperties`
-- [f8cb7f9](../../commit/f8cb7f9) [changed] use `Object.assign` instead of `merge`
-- [70b442a](../../commit/70b442a) [added] React 0.12 compatibility
+- Everything ... seriously. Please review the [upgrade
+  guide](./UPGRADE_GUIDE.md).
 
 
 v0.10.2 - Fri, 31 Oct 2014 16:23:27 GMT
