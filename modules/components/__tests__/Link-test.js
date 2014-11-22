@@ -7,7 +7,7 @@ var Route = require('../Route');
 var Link = require('../Link');
 var TestLocation = require('../../locations/TestLocation');
 var { Foo } = require('../../__tests__/TestHandlers');
-var { click } = React.addons.TestUtils.Simulate;
+var { click, touchEnd } = React.addons.TestUtils.Simulate;
 
 describe('A Link', function () {
   describe('with params and a query', function () {
@@ -110,6 +110,72 @@ describe('A Link', function () {
 
       steps.push(function () {
         click(div.querySelector('a'), {button: 0});
+      });
+
+      steps.push(function () {
+        expect(div.innerHTML).toMatch(/Foo/);
+        done();
+      });
+
+      Router.run(routes, TestLocation, function (Handler) {
+        React.render(<Handler/>, div, function () {
+          steps.shift()();
+        });
+      });
+    });
+
+  });
+
+  describe('when touched', function () {
+    it('calls a user defined click handler', function (done) {
+      var LinkHandler = React.createClass({
+        handleClick: function (event) {
+          assert.ok(true);
+          done();
+        },
+
+        render: function () {
+          return <Link to="foo" onClick={this.handleClick}>Link</Link>;
+        }
+      });
+
+      var routes = [
+        <Route name="foo" handler={Foo} />,
+        <Route name="link" handler={LinkHandler} />
+      ];
+      var div = document.createElement('div');
+      TestLocation.history = ['/link'];
+
+      Router.run(routes, TestLocation, function (Handler) {
+        React.render(<Handler/>, div, function () {
+          touchEnd(div.querySelector('a'));
+        });
+      });
+    });
+
+    it('transitions to the correct route', function (done) {
+      var div = document.createElement('div');
+      TestLocation.history = ['/link'];
+
+      var LinkHandler = React.createClass({
+        handleClick: function () {
+          // just here to make sure click handlers don't prevent it from happening
+        },
+
+        render: function () {
+          return <Link to="foo" onClick={this.handleClick}>Link</Link>;
+        }
+      });
+
+      var routes = [
+        <Route name="foo" handler={Foo} />,
+        <Route name="link" handler={LinkHandler} />
+      ];
+
+      var steps = [];
+
+      steps.push(function () {
+        touchEnd(div.querySelector('a'), {button: 0});
       });
 
       steps.push(function () {

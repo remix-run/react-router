@@ -63,6 +63,9 @@ var Link = React.createClass({
     if (clickResult === false || event.defaultPrevented === true)
       allowTransition = false;
 
+    if(event.nativeEvent.type == 'touchend') {
+      event.nativeEvent.preventDefault();
+    }
     event.preventDefault();
 
     if (allowTransition)
@@ -96,7 +99,8 @@ var Link = React.createClass({
     var props = assign({}, this.props, {
       href: this.getHref(),
       className: this.getClassName(),
-      onClick: this.handleClick
+      onClick: this.handleClick,
+      onTouchEnd: this.handleClick
     });
 
     return React.DOM.a(props, this.props.children);
