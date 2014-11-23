@@ -96,7 +96,8 @@ var Link = React.createClass({
     var props = assign({}, this.props, {
       href: this.getHref(),
       className: this.getClassName(),
-      onClick: this.handleClick
+      onClick: this.handleClick,
+      onTouchEnd: this.handleClick
     });
 
     return React.DOM.a(props, this.props.children);
