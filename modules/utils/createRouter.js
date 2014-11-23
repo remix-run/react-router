@@ -6,6 +6,7 @@ var ImitateBrowserBehavior = require('../behaviors/ImitateBrowserBehavior');
 var RouteHandler = require('../components/RouteHandler');
 var HashLocation = require('../locations/HashLocation');
 var HistoryLocation = require('../locations/HistoryLocation');
+var RefreshLocation = require('../locations/RefreshLocation');
 var NavigationContext = require('../mixins/NavigationContext');
 var StateContext = require('../mixins/StateContext');
 var Scrolling = require('../mixins/Scrolling');
