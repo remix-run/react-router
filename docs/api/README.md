@@ -3,6 +3,10 @@ React Router API
 
 - [`Router`](/docs/api/Router.md)
 
+- [`Router.run`](/docs/api/run.md)
+
+- [`Router.create`](/docs/api/create.md)
+
 - Components
   - [`DefaultRoute`](/docs/api/components/DefaultRoute.md)
   - [`Link`](/docs/api/components/Link.md)
@@ -10,13 +14,13 @@ React Router API
   - [`Redirect`](/docs/api/components/Redirect.md)
   - [`Route`](/docs/api/components/Route.md)
   - [`RouteHandler`](/docs/api/components/RouteHandler.md)
-  - [`Routes`](/docs/api/components/Routes.md)
 
 - Mixins
   - [`State`](/docs/api/mixins/State.md)
   - [`Navigation`](/docs/api/mixins/Navigation.md)
 
 - Misc 
+  - [`Location`](/docs/api/misc/Location.md)
   - [`transition`](/docs/api/misc/transition.md)
 
 Public Modules
