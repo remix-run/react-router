@@ -298,6 +298,16 @@ function createRouter(options) {
           toRoutes = nextRoutes;
         }
 
+        // If routes' hooks arrays are empty, then we transition to current route.
+        // But path is somehow still get changed.
+        // That could be only because of route query changes.
+        // Need to push current route to routes' hooks arrays.
+        if (!toRoutes.length && !fromRoutes.length) {
+          var currentRoute = state.routes[state.routes.length-1];
+          fromRoutes = [currentRoute];
+          toRoutes = [currentRoute];
+        }
+
         var transition = new Transition(path, this.replaceWith.bind(this, path));
 
         transition.from(fromRoutes, components, function (error) {

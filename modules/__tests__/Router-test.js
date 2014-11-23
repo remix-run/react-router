@@ -53,6 +53,46 @@ describe('Router', function () {
         done();
       });
     });
+
+    it('execute willTransition* callbacks when query changes', function (done) {
+      var fromCallbackExecuted = false;
+      var Spoon = React.createClass({
+        statics: {
+          willTransitionTo: function (transition, params, query) {
+            if (query['filter'] === 'first') {
+              return; // skip first transition
+            }
+
+            expect(query['filter']).toEqual('second');
+            expect(fromCallbackExecuted).toBe(true);
+            done();
+          },
+
+          willTransitionFrom: function (transition, element) {
+            fromCallbackExecuted = true;
+          }
+        },
+
+        render: function () {
+          return <h1>Spoon</h1>;
+        }
+      });
+
+      var routes = (
+        <Route handler={Nested} path='/'>
+          <Route name="spoon" handler={Spoon}/>
+        </Route>
+      );
+
+      TestLocation.history = [ '/spoon?filter=first' ];
+
+      var div = document.createElement('div');
+      Router.run(routes, TestLocation, function (Handler, state) {
+        React.render(<Handler/>, div);
+      });
+
+      TestLocation.push('/spoon?filter=second');
+    });
   });
 
   describe('willTransitionFrom', function () {
@@ -87,7 +127,6 @@ describe('Router', function () {
         });
       });
     });
-
   });
 
 });
