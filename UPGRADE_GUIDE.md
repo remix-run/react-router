@@ -164,11 +164,20 @@ yourself:
 // 0.11.x
 var App = React.createClass({
   mixins: [ Router.State ],
+
+  handlerKey: function () {
+    // this will all depend on your needs, but here's a typical
+    // scenario that's pretty much what the old prop did
+    var childDepth = 1; // have to know your depth
+    var childName = this.getRoutes()[childDepth].name;
+    var id = this.getParams().id;
+    var key = childName+id;
+  },
+
   render: function () {
-    var key = this.getPath();
     return (
       <div>
-        <RouteHandler key={key} />
+        <RouteHandler key={this.handlerKey()} />
       </div>
     );
   }
@@ -208,6 +217,51 @@ Router.renderRoutesToString(routes, path, function(html) {
 // v0.11.x
 Router.run(routes, path, function(Handler) {
   var html = React.renderToString(<Handler/>);
+});
+```
+
+### Route Props Passed to Handlers
+
+In `0.10.x` you could add props to your route that would make their way
+down to your handlers. While convenient, conflating routes with their
+handlers was confusing to a lot of folks.
+
+To get the same effect, you can either create your handlers with a
+function and close over the information you need, or simply define those
+properties on your handlers.
+
+```js
+// 0.10.x
+<Route name="users" foo="bar" handler={Something}/>
+
+var Something = React.createClass({
+  render () {
+    return <div>{this.props.name} {this.props.foo}</div>
+  }
+});
+
+// 0.11.x
+
+// close over technique
+<Route name="users" handler={makeSomething("users", "bar")}/>
+
+function makeSomething(name, foo) {
+  return React.createClass({
+    render () {
+      return <div>{name} {foo}</div>
+    }
+  });
+}
+
+// handler definition technique
+<Route name="users" handler={Something}/>
+
+var Something = React.createClass({
+  foo: "bar",
+  name: "users",
+  render () {
+    return <div>{this.name} {this.foo}</div>
+  }
 });
 ```
 
