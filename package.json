@@ -37,7 +37,7 @@
     "mocha": "1.20.1",
     "react": "0.12.x",
     "reactify": "0.15.x",
-    "rf-release": "0.3.2",
+    "rf-release": "0.4.0",
     "rx": "2.3.18",
     "uglify-js": "2.4.15",
     "webpack": "1.4.5",
