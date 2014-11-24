@@ -2,7 +2,6 @@ React Router in a Flux App
 ==========================
 
 ```js
-///////////////////////////////////////////////////////////
 // router.js
 var routes = require('./routes');
 var Router = require('react-router');
@@ -14,9 +13,10 @@ var router = Router.create({
 });
 
 module.exports = router;
+```
 
-///////////////////////////////////////////////////////////
-//SomeActions.js
+```js
+// SomeActions.js
 
 // and then action creators can require it like other
 // singletons in the app (or if you don't use singletons,
@@ -29,8 +29,9 @@ module.exports = {
     router.transitionTo('somewhere');
   }
 };
+```
 
-///////////////////////////////////////////////////////////
+```js
 // main.js
 
 // finally, run it in your main script
