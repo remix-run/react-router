@@ -62,11 +62,11 @@ rendering.
 
 See also: [Route][3].
 
-##### `state.activeParams`
+##### `state.params`
 
 The active params in the location match.
 
-##### `state.activeQuery`
+##### `state.query`
 
 The active query in the location match.
 
@@ -110,7 +110,7 @@ Router.run(routes, Router.HistoryLocation, function (Handler, state) {
     return match.route.handler.fetchData;
   }).reduce(function (promises, match) {
     // reduce to a hash of `key:promise`
-    promises[match.route.name] = match.route.handler.fetchData(state.activeParams)
+    promises[match.route.name] = match.route.handler.fetchData(state.params)
     return promises;
   }, {});
 
