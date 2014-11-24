@@ -950,14 +950,6 @@ var invariant = _dereq_('react/lib/invariant');
 var merge = _dereq_('qs/lib/utils').merge;
 var qs = _dereq_('qs');
 
-function decodePathSegment(string) {
-  return decodeURIComponent(string.replace(/\+/g, ' '));
-}
-
-function encodePathSegment(string) {
-  return encodeURIComponent(string).replace(/%20/g, '+');
-}
-
 var paramCompileMatcher = /:([a-zA-Z_$][a-zA-Z0-9_$]*)|[*.()\[\]\\+|{}^$]/g;
 var paramInjectMatcher = /:([a-zA-Z_$][a-zA-Z0-9_$?]*[?]?)|[*]/g;
 var paramInjectTrailingSlashMatcher = /\/\/\?|\/\?/g;
@@ -994,15 +986,15 @@ var Path = {
   /**
    * Safely decodes special characters in the given URL path.
    */
-  decode: function decodePath(path) {
-    return String(path).split('/').map(decodePathSegment).join('/');
+  decode: function (path) {
+    return decodeURI(path.replace(/\+/g, ' '));
   },
 
   /**
    * Safely encodes special characters in the given URL path.
    */
-  encode: function encodePath(path) {
-    return String(path).split('/').map(encodePathSegment).join('/');
+  encode: function (path) {
+    return encodeURI(path).replace(/%20/g, '+');
   },
 
   /**
@@ -1302,6 +1294,7 @@ var ImitateBrowserBehavior = _dereq_('../behaviors/ImitateBrowserBehavior');
 var RouteHandler = _dereq_('../components/RouteHandler');
 var HashLocation = _dereq_('../locations/HashLocation');
 var HistoryLocation = _dereq_('../locations/HistoryLocation');
+var RefreshLocation = _dereq_('../locations/RefreshLocation');
 var NavigationContext = _dereq_('../mixins/NavigationContext');
 var StateContext = _dereq_('../mixins/StateContext');
 var Scrolling = _dereq_('../mixins/Scrolling');
@@ -1723,7 +1716,7 @@ function createRouter(options) {
 
 module.exports = createRouter;
 
-},{"../behaviors/ImitateBrowserBehavior":2,"../components/RouteHandler":8,"../locations/HashLocation":10,"../locations/HistoryLocation":11,"../mixins/NavigationContext":15,"../mixins/Scrolling":16,"../mixins/StateContext":18,"./Path":19,"./PropTypes":21,"./Redirect":22,"./Transition":23,"./createRoutesFromChildren":25,"./supportsHistory":29,"react/lib/ExecutionEnvironment":35,"react/lib/invariant":39,"react/lib/warning":40}],25:[function(_dereq_,module,exports){
+},{"../behaviors/ImitateBrowserBehavior":2,"../components/RouteHandler":8,"../locations/HashLocation":10,"../locations/HistoryLocation":11,"../locations/RefreshLocation":12,"../mixins/NavigationContext":15,"../mixins/Scrolling":16,"../mixins/StateContext":18,"./Path":19,"./PropTypes":21,"./Redirect":22,"./Transition":23,"./createRoutesFromChildren":25,"./supportsHistory":29,"react/lib/ExecutionEnvironment":35,"react/lib/invariant":39,"react/lib/warning":40}],25:[function(_dereq_,module,exports){
 var React = (typeof window !== "undefined" ? window.React : typeof global !== "undefined" ? global.React : null);
 var warning = _dereq_('react/lib/warning');
 var invariant = _dereq_('react/lib/invariant');
@@ -1783,7 +1776,7 @@ function createRoute(element, parentRoute, namedRoutes) {
 
   if (type === Redirect.type) {
     route.handler = createRedirectHandler(props.to, props.params, props.query);
-    props.path = props.path || props.from;
+    props.path = props.path || props.from || '*';
   } else {
     route.handler = props.handler;
   }

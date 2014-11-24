@@ -1,3 +1,11 @@
+v0.11.2 - Mon, 24 Nov 2014 16:56:52 GMT
+---------------------------------------
+
+- [017363d](../../commit/017363d) [fixed] default redirect path to '*'
+- [187eb0e](../../commit/187eb0e) [fixed] Added missing require statement
+- [5a1ed33](../../commit/5a1ed33) [fixed] Path.decode/encode with query string
+
+
 v0.11.1 - Sat, 22 Nov 2014 15:00:37 GMT
 ---------------------------------------
 
