@@ -19,7 +19,7 @@ Your route config. See [Route][1]
 
 ### `location` optional
 
-Defaults to [`Router.HashLocation`][2]. If given a `Location` object, it
+Defaults to `Router.HashLocation`. If given a `Location` object, it
 will setup and listen for changes on it, if given a string path, the
 router will immediately match that path and callback.
 
@@ -57,10 +57,10 @@ An object containing the matched state.
 
 ##### `state.matches`
 
-An array of the matched [routes][3]. Very useful for fetching data before
+An array of the matched [routes][1]. Very useful for fetching data before
 rendering.
 
-See also: [Route][3].
+See also: [Route][1].
 
 ##### `state.params`
 
@@ -87,7 +87,7 @@ Router.run(routes, function (Handler) {
 ```
 
 Sample data fetching using `state.matches`. Check out the
-[async-data][4] example.
+[async-data][2] example.
 
 ```js
 var resolveHash = require('when/keys').all;
@@ -137,7 +137,5 @@ something.serve(function (req, res) {
 ```
 
   [1]:./components/Route.md
-  [2]:./locations/HashLocation.md
-  [3]:./classes/Route.md
-  [4]:https://github.com/rackt/react-router/tree/latest/examples/async-data
+  [2]:https://github.com/rackt/react-router/tree/latest/examples/async-data
 
