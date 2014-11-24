@@ -83,8 +83,6 @@ var Something = React.createClass({
   }
 });
 
-
-
 // 0.11.x
 
 // pass it down the view hierarchy to get the same lifecycle hooks to
@@ -94,7 +92,6 @@ Router.run(routes, function (Handler, state) {
   // make sure to `<RouteHandler {...this.props}/>` to continue
   // passing it down the hierarchy
 });
-
 
 // or use the `State` mixin
 var Something = React.createClass({
