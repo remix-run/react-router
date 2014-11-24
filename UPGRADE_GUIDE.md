@@ -109,7 +109,7 @@ var Something = React.createClass({
 // Also, if you're using a flux-style app, you can trigger a "transition"
 // action in the `run` callback with the params/query in the payload, then
 // subscribe in your handlers to the store that grabs the data.
-``
+```
 
 ### `ActiveState` -> `State`, and methods too
 
