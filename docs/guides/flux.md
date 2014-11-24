@@ -6,7 +6,7 @@ React Router in a Flux App
 var routes = require('./routes');
 var Router = require('react-router');
 
-// we can create a router instance before "running" it
+// we can create a router before "running" it
 var router = Router.create({
   routes: routes,
   location: Router.HistoryLocation
