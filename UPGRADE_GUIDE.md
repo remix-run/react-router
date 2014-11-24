@@ -83,7 +83,20 @@ var Something = React.createClass({
   }
 });
 
+
+
 // 0.11.x
+
+// pass it down the view hierarchy to get the same lifecycle hooks to
+// trigger as before
+Router.run(routes, function (Handler, state) {
+  React.render(<Handler params={state.params} query={state.query} />, el);
+  // make sure to `<RouteHandler {...this.props}/>` to continue
+  // passing it down the hierarchy
+});
+`
+
+// or use the `State` mixin
 var Something = React.createClass({
   mixins: [ Router.State ],
   render: function () {
@@ -93,13 +106,10 @@ var Something = React.createClass({
   }
 });
 
-// or pass it down the view hierarchy
-Router.run(routes, function (Handler, state) {
-  React.render(<Handler params={state.params} query={state.query} />, el);
-  // make sure to `<RouteHandler {...this.props}/>` to continue
-  // passing it down the hierarchy
-});
-```
+// Also, if you're using a flux-style app, you can trigger a "transition"
+// action in the `run` callback with the params/query in the payload, then
+// subscribe in your handlers to the store that grabs the data.
+``
 
 ### `ActiveState` -> `State`, and methods too
 
