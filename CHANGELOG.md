@@ -2,11 +2,6 @@ v0.11.1 - Sat, 22 Nov 2014 15:00:37 GMT
 ---------------------------------------
 
 - [b75f648](../../commit/b75f648) [fixed] rendering current handlers before rendering root
-- [5695b9a](../../commit/5695b9a) [removed] addHandlerKey
-- [97d7a05](../../commit/97d7a05) [added] ActiveRouteHandler
-- [940a0d0](../../commit/940a0d0) [changed] use `Object.assign` instead of `copyProperties`
-- [f8cb7f9](../../commit/f8cb7f9) [changed] use `Object.assign` instead of `merge`
-- [70b442a](../../commit/70b442a) [added] React 0.12 compatibility
 
 
 v0.11.0 - Sat, 22 Nov 2014 06:03:21 GMT
