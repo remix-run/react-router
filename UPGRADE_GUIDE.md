@@ -94,7 +94,7 @@ Router.run(routes, function (Handler, state) {
   // make sure to `<RouteHandler {...this.props}/>` to continue
   // passing it down the hierarchy
 });
-`
+
 
 // or use the `State` mixin
 var Something = React.createClass({
