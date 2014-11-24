@@ -57,7 +57,7 @@ function createRoute(element, parentRoute, namedRoutes) {
 
   if (type === Redirect.type) {
     route.handler = createRedirectHandler(props.to, props.params, props.query);
-    props.path = props.path || props.from;
+    props.path = props.path || props.from || '*';
   } else {
     route.handler = props.handler;
   }

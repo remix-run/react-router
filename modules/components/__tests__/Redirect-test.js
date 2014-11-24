@@ -10,6 +10,21 @@ var Route = require('../Route');
 
 describe('Redirect', function () {
 
+  it('defaults the path to "*"', function () {
+    TestLocation.history = [ '/kljfsdlfkjsdf' ];
+
+    var div = document.createElement('div');
+    var routes = [
+      <Route path="/bar" handler={Bar}/>,
+      <Redirect to="/bar"/>
+    ];
+
+    Router.run(routes, TestLocation, function (Handler) {
+      var html = React.render(<Handler />, div);
+      expect(div.innerHTML).toMatch(/Bar/);
+    });
+  });
+
   describe('at the root of the config', function () {
     it('redirects', function () {
       TestLocation.history = [ '/foo' ];
