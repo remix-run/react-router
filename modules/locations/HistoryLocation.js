@@ -57,12 +57,12 @@ var HistoryLocation = {
   },
 
   push: function (path) {
-    window.history.pushState({ path: path }, '', Path.encode(path));
+    window.history.pushState({ path: path }, '', path);
     notifyChange(LocationActions.PUSH);
   },
 
   replace: function (path) {
-    window.history.replaceState({ path: path }, '', Path.encode(path));
+    window.history.replaceState({ path: path }, '', path);
     notifyChange(LocationActions.REPLACE);
   },
 
