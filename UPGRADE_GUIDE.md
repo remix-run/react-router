@@ -28,15 +28,29 @@ of your views.
 
 ```js
 // 0.10.x
+var routes = (
+  <Routes location="history">
+    <Route handler={App}>
+      <Route name="dashboard" handler={Dashboard}/>
+    </Route>
+  </Routes>
+);
+
 React.render(routes, el);
 
 // 0.11.x
-Router.run(routes, function (Handler) {
+var routes = (
+  <Route handler={App}>
+    <Route name="dashboard" handler={Dashboard}/>
+  </Route>
+);
+
+Router.run(routes, Router.HistoryLocation, function (Handler) {
   React.render(<Handler/>, el);
 });
 
-// or if using history location
-Router.run(routes, Router.HistoryLocation, function (Handler) {
+// or default to hash location
+Router.run(routes, function (Handler) {
   React.render(<Handler/>, el);
 });
 ```
