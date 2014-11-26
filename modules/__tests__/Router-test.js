@@ -4,6 +4,7 @@ var React = require('react');
 var Route = require('../components/Route');
 var RouteHandler = require('../components/RouteHandler');
 var TestLocation = require('../locations/TestLocation');
+var ScrollToTopBehavior = require('../behaviors/ScrollToTopBehavior');
 var getWindowScrollPosition = require('../utils/getWindowScrollPosition');
 var Router = require('../index');
 
@@ -206,6 +207,75 @@ describe('Router.run', function () {
         React.render(<Handler/>, div, function () {
           expect(this.getLocation()).toBe(Router.HashLocation);
           done();
+        });
+      });
+    });
+  });
+
+  describe('ScrollToTop scrolling', function () {
+    var BigPage = React.createClass({
+      render: function () {
+        return <div style={{ width: 10000, height: 10000, background: 'green' }}/>;
+      }
+    });
+
+    var routes = [
+      <Route name="one" handler={BigPage}/>,
+      <Route name="two" handler={BigPage}/>
+    ];
+
+    describe('when a page is scrolled', function () {
+      var position, div, renderCount;
+      beforeEach(function (done) {
+        TestLocation.history = [ '/one' ];
+
+        div = document.createElement('div');
+        document.body.appendChild(div);
+
+        renderCount = 0;
+
+        Router.create({
+          routes: routes,
+          location: TestLocation,
+          scrollBehavior: ScrollToTopBehavior
+        }).run(function (Handler) {
+          React.render(<Handler/>, div, function () {
+            if (renderCount === 0) {
+              position = { x: 20, y: 50 };
+              window.scrollTo(position.x, position.y);
+
+              setTimeout(function () {
+                expect(getWindowScrollPosition()).toEqual(position);
+                done();
+              }, 20);
+            }
+
+            renderCount += 1;
+          });
+        });
+      });
+
+      afterEach(function () {
+        div.parentNode.removeChild(div);
+      });
+
+      describe('navigating to a new page', function () {
+        beforeEach(function () {
+          TestLocation.push('/two');
+        });
+
+        it('resets the scroll position', function () {
+          expect(getWindowScrollPosition()).toEqual({ x: 0, y: 0 });
+        });
+
+        describe('then returning to the previous page', function () {
+          beforeEach(function () {
+            TestLocation.pop();
+          });
+
+          it('resets the scroll position', function () {
+            expect(getWindowScrollPosition()).toEqual({ x: 0, y: 0});
+          });
         });
       });
     });
