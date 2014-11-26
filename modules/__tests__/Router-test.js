@@ -4,6 +4,7 @@ var React = require('react');
 var Route = require('../components/Route');
 var RouteHandler = require('../components/RouteHandler');
 var TestLocation = require('../locations/TestLocation');
+var ScrollToTopBehavior = require('../behaviors/ScrollToTopBehavior');
 var getWindowScrollPosition = require('../utils/getWindowScrollPosition');
 var Router = require('../index');
 
@@ -211,6 +212,75 @@ describe('Router.run', function () {
     });
   });
 
+  describe('ScrollToTop scrolling', function () {
+    var BigPage = React.createClass({
+      render: function () {
+        return <div style={{ width: 10000, height: 10000, background: 'green' }}/>;
+      }
+    });
+
+    var routes = [
+      <Route name="one" handler={BigPage}/>,
+      <Route name="two" handler={BigPage}/>
+    ];
+
+    describe('when a page is scrolled', function () {
+      var position, div, renderCount;
+      beforeEach(function (done) {
+        TestLocation.history = [ '/one' ];
+
+        div = document.createElement('div');
+        document.body.appendChild(div);
+
+        renderCount = 0;
+
+        Router.create({
+          routes: routes,
+          location: TestLocation,
+          scrollBehavior: ScrollToTopBehavior
+        }).run(function (Handler) {
+          React.render(<Handler/>, div, function () {
+            if (renderCount === 0) {
+              position = { x: 20, y: 50 };
+              window.scrollTo(position.x, position.y);
+
+              setTimeout(function () {
+                expect(getWindowScrollPosition()).toEqual(position);
+                done();
+              }, 20);
+            }
+
+            renderCount += 1;
+          });
+        });
+      });
+
+      afterEach(function () {
+        div.parentNode.removeChild(div);
+      });
+
+      describe('navigating to a new page', function () {
+        beforeEach(function () {
+          TestLocation.push('/two');
+        });
+
+        it('resets the scroll position', function () {
+          expect(getWindowScrollPosition()).toEqual({ x: 0, y: 0 });
+        });
+
+        describe('then returning to the previous page', function () {
+          beforeEach(function () {
+            TestLocation.pop();
+          });
+
+          it('resets the scroll position', function () {
+            expect(getWindowScrollPosition()).toEqual({ x: 0, y: 0});
+          });
+        });
+      });
+    });
+  });
+
   describe('ImitateBrowserBehavior scrolling', function () {
     var BigPage = React.createClass({
       render: function () {
@@ -272,6 +342,116 @@ describe('Router.run', function () {
             expect(getWindowScrollPosition()).toEqual(position);
           });
         });
+      });
+    });
+  });
+
+  describe('ignoreScrollBehavior', function () {
+    var routes = (
+      <Route handler={Nested}>
+        <Route handler={Foo} ignoreScrollBehavior>
+          <Route handler={Foo} path='/feed' />
+          <Route handler={Foo} path='/discover' />
+        </Route>
+        <Route path='/search/:q' handler={Foo} ignoreScrollBehavior />
+        <Route path='/users/:id/posts' handler={Foo} />
+        <Route path='/about' handler={Foo} />
+      </Route>
+    );
+
+    var div, didUpdateScroll;
+    beforeEach(function (done) {
+      TestLocation.history = [ '/feed' ];
+
+      div = document.createElement('div');
+      document.body.appendChild(div);
+
+      var MockScrollBehavior = {
+        updateScrollPosition() {
+          didUpdateScroll = true;
+        }
+      };
+
+      Router.create({
+        routes: routes,
+        location: TestLocation,
+        scrollBehavior: MockScrollBehavior
+      }).run(function (Handler) {
+        React.render(<Handler/>, div, function () {
+          done();
+        });
+      });
+    });
+
+    afterEach(function () {
+      div.parentNode.removeChild(div);
+      didUpdateScroll = false;
+    });
+
+    it('calls updateScroll the first time', function () {
+      expect(didUpdateScroll).toBe(true);
+    });
+
+    describe('decides whether to update scroll on transition', function () {
+      beforeEach(function () {
+        didUpdateScroll = false;
+      });
+
+      afterEach(function () {
+        TestLocation.pop();
+      });
+
+      it('calls updateScroll when no ancestors ignore scroll', function () {
+        TestLocation.push('/about');
+        expect(didUpdateScroll).toBe(true);
+      });
+
+      it('calls updateScroll when no ancestors ignore scroll although source and target do', function () {
+        TestLocation.push('/search/foo');
+        expect(didUpdateScroll).toBe(true);
+      });
+
+      it('calls updateScroll when route does not ignore scroll and only params change', function () {
+        TestLocation.replace('/users/3/posts');
+        didUpdateScroll = false;
+
+        TestLocation.push('/users/5/posts');
+        expect(didUpdateScroll).toBe(true);
+      });
+
+      it('calls updateScroll when route does not ignore scroll and both params and query change', function () {
+        TestLocation.replace('/users/3/posts');
+        didUpdateScroll = false;
+
+        TestLocation.push('/users/5/posts?page=2');
+        expect(didUpdateScroll).toBe(true);
+      });
+
+      it('does not call updateScroll when route does not ignore scroll but only query changes', function () {
+        TestLocation.replace('/users/3/posts');
+        didUpdateScroll = false;
+
+        TestLocation.push('/users/3/posts?page=2');
+        expect(didUpdateScroll).toBe(false);
+      });
+
+      it('does not call updateScroll when common ancestor ignores scroll', function () {
+        TestLocation.push('/discover');
+        expect(didUpdateScroll).toBe(false);
+      });
+
+      it('does not call updateScroll when route ignores scroll', function () {
+        TestLocation.replace('/search/foo');
+        didUpdateScroll = false;
+
+        TestLocation.push('/search/bar');
+        expect(didUpdateScroll).toBe(false);
+
+        TestLocation.replace('/search/bar?safe=0');
+        expect(didUpdateScroll).toBe(false);
+
+        TestLocation.replace('/search/whatever');
+        expect(didUpdateScroll).toBe(false);
       });
     });
   });
