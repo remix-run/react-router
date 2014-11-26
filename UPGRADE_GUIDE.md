@@ -186,19 +186,20 @@ yourself:
 var App = React.createClass({
   mixins: [ Router.State ],
 
-  handlerKey: function () {
+  getHandlerKey: function () {
     // this will all depend on your needs, but here's a typical
     // scenario that's pretty much what the old prop did
     var childDepth = 1; // have to know your depth
     var childName = this.getRoutes()[childDepth].name;
     var id = this.getParams().id;
     var key = childName+id;
+    return key;
   },
 
   render: function () {
     return (
       <div>
-        <RouteHandler key={this.handlerKey()} />
+        <RouteHandler key={this.getHandlerKey()} />
       </div>
     );
   }
