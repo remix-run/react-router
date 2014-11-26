@@ -32,36 +32,41 @@ function shouldUpdateScroll(state, prevState) {
  */
 var Scrolling = {
 
+  statics: {
+    /**
+     * Records curent scroll position as the last known position for the given URL path.
+     */
+    recordScrollPosition: function (path) {
+      if (!this.scrollHistory)
+        this.scrollHistory = {};
+
+      this.scrollHistory[path] = getWindowScrollPosition();
+    },
+
+    /**
+     * Returns the last known scroll position for the given URL path.
+     */
+    getScrollPosition: function (path) {
+      if (!this.scrollHistory)
+        this.scrollHistory = {};
+
+      return this.scrollHistory[path] || null;
+    }
+  },
+
   componentWillMount: function () {
     invariant(
       this.getScrollBehavior() == null || canUseDOM,
       'Cannot use scroll behavior without a DOM'
     );
-
-    this._scrollHistory = {};
   },
 
   componentDidMount: function () {
     this._updateScroll();
   },
 
-  componentWillUpdate: function () {
-    this._scrollHistory[this.state.path] = getWindowScrollPosition();
-  },
-
   componentDidUpdate: function (prevProps, prevState) {
     this._updateScroll(prevState);
-  },
-
-  componentWillUnmount: function () {
-    delete this._scrollHistory;
-  },
-
-  /**
-   * Returns the last known scroll position for the given URL path.
-   */
-  getScrollPosition: function (path) {
-    return this._scrollHistory[path] || null;
   },
 
   _updateScroll: function (prevState) {
@@ -73,7 +78,7 @@ var Scrolling = {
 
     if (scrollBehavior)
       scrollBehavior.updateScrollPosition(
-        this.getScrollPosition(this.state.path),
+        this.constructor.getScrollPosition(this.state.path),
         this.state.action
       );
   }
