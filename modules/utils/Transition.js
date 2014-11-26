@@ -98,6 +98,11 @@ function Transition(path, retry) {
 assign(Transition.prototype, {
 
   abort: function (reason) {
+    if (this.isAborted) {
+      // First abort wins.
+      return;
+    }
+
     this.abortReason = reason;
     this.isAborted = true;
   },
