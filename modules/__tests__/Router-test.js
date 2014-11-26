@@ -346,6 +346,90 @@ describe('Router.run', function () {
     });
   });
 
+  describe('ignoreScrollBehavior', function () {
+    var routes = (
+      <Route handler={Nested}>
+        <Route handler={Foo} ignoreScrollBehavior>
+          <Route handler={Foo} path='/feed' />
+          <Route handler={Foo} path='/discover' />
+        </Route>
+        <Route path='/search' handler={Foo} ignoreScrollBehavior />
+        <Route path='/about' handler={Foo} />
+      </Route>
+    );
+
+    var div, didUpdateScroll;
+    beforeEach(function (done) {
+      TestLocation.history = [ '/feed' ];
+
+      div = document.createElement('div');
+      document.body.appendChild(div);
+
+      var MockScrollBehavior = {
+        updateScrollPosition() {
+          didUpdateScroll = true;
+        }
+      };
+
+      Router.create({
+        routes: routes,
+        location: TestLocation,
+        scrollBehavior: MockScrollBehavior
+      }).run(function (Handler) {
+        React.render(<Handler/>, div, function () {
+          done();
+        });
+      });
+    });
+
+    afterEach(function () {
+      div.parentNode.removeChild(div);
+      didUpdateScroll = false;
+    });
+
+    it('calls updateScroll the first time', function () {
+      expect(didUpdateScroll).toBe(true);
+    });
+
+    describe('decides whether to update scroll on transition', function () {
+      beforeEach(function () {
+        didUpdateScroll = false;
+      });
+
+      afterEach(function () {
+        TestLocation.pop();
+      });
+
+      it('calls updateScroll when no ancestors ignore scroll', function () {
+        TestLocation.push('/about');
+        expect(didUpdateScroll).toBe(true);
+      });
+
+      it('calls updateScroll when no ancestors ignore scroll although source and target do', function () {
+        TestLocation.push('/search');
+        expect(didUpdateScroll).toBe(true);
+      });
+
+      it('calls updateScroll when source is same as target and does not ignore scroll', function () {
+        TestLocation.push('/about?page=2');
+        expect(didUpdateScroll).toBe(true);
+      });
+
+      it('does not call updateScroll when common ancestor ignores scroll', function () {
+        TestLocation.push('/discover');
+        expect(didUpdateScroll).toBe(false);
+      });
+
+      it('does not call updateScroll when source is same as target and ignores scroll', function () {
+        TestLocation.push('/search');
+        didUpdateScroll = false;
+
+        TestLocation.push('/search?q=test');
+        expect(didUpdateScroll).toBe(false);
+      });
+    });
+  });
+
   describe('makePath', function () {
     var router;
     beforeEach(function () {

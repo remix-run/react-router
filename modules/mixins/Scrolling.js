@@ -2,6 +2,23 @@ var invariant = require('react/lib/invariant');
 var canUseDOM = require('react/lib/ExecutionEnvironment').canUseDOM;
 var getWindowScrollPosition = require('../utils/getWindowScrollPosition');
 
+function shouldUpdateScroll(state, prevState) {
+  if (!prevState) {
+    return true;
+  }
+
+  var routes = state.routes;
+  var prevRoutes = prevState.routes;
+
+  var sharedAncestorRoutes = routes.filter(function (route) {
+    return prevRoutes.indexOf(route) !== -1;
+  });
+
+  return !sharedAncestorRoutes.some(function (route) {
+    return route.ignoreScrollBehavior;
+  });
+}
+
 /**
  * Provides the router with the ability to manage window scroll position
  * according to its scroll behavior.
@@ -25,8 +42,8 @@ var Scrolling = {
     this._scrollHistory[this.state.path] = getWindowScrollPosition();
   },
 
-  componentDidUpdate: function () {
-    this._updateScroll();
+  componentDidUpdate: function (prevProps, prevState) {
+    this._updateScroll(prevState);
   },
 
   componentWillUnmount: function () {
@@ -40,7 +57,11 @@ var Scrolling = {
     return this._scrollHistory[path] || null;
   },
 
-  _updateScroll: function () {
+  _updateScroll: function (prevState) {
+    if (!shouldUpdateScroll(this.state, prevState)) {
+      return;
+    }
+
     var scrollBehavior = this.getScrollBehavior();
 
     if (scrollBehavior)

@@ -55,6 +55,10 @@ function createRoute(element, parentRoute, namedRoutes) {
 
   var route = { name: props.name };
 
+  if (props.ignoreScrollBehavior) {
+    route.ignoreScrollBehavior = true;
+  }
+
   if (type === Redirect.type) {
     route.handler = createRedirectHandler(props.to, props.params, props.query);
     props.path = props.path || props.from || '*';
