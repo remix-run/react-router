@@ -353,7 +353,8 @@ describe('Router.run', function () {
           <Route handler={Foo} path='/feed' />
           <Route handler={Foo} path='/discover' />
         </Route>
-        <Route path='/search' handler={Foo} ignoreScrollBehavior />
+        <Route path='/search/:q' handler={Foo} ignoreScrollBehavior />
+        <Route path='/users/:id/posts' handler={Foo} />
         <Route path='/about' handler={Foo} />
       </Route>
     );
@@ -406,13 +407,32 @@ describe('Router.run', function () {
       });
 
       it('calls updateScroll when no ancestors ignore scroll although source and target do', function () {
-        TestLocation.push('/search');
+        TestLocation.push('/search/foo');
         expect(didUpdateScroll).toBe(true);
       });
 
-      it('calls updateScroll when source is same as target and does not ignore scroll', function () {
-        TestLocation.push('/about?page=2');
+      it('calls updateScroll when route does not ignore scroll and only params change', function () {
+        TestLocation.replace('/users/3/posts');
+        didUpdateScroll = false;
+
+        TestLocation.push('/users/5/posts');
         expect(didUpdateScroll).toBe(true);
+      });
+
+      it('calls updateScroll when route does not ignore scroll and both params and query change', function () {
+        TestLocation.replace('/users/3/posts');
+        didUpdateScroll = false;
+
+        TestLocation.push('/users/5/posts?page=2');
+        expect(didUpdateScroll).toBe(true);
+      });
+
+      it('does not call updateScroll when route does not ignore scroll but only query changes', function () {
+        TestLocation.replace('/users/3/posts');
+        didUpdateScroll = false;
+
+        TestLocation.push('/users/3/posts?page=2');
+        expect(didUpdateScroll).toBe(false);
       });
 
       it('does not call updateScroll when common ancestor ignores scroll', function () {
@@ -420,11 +440,17 @@ describe('Router.run', function () {
         expect(didUpdateScroll).toBe(false);
       });
 
-      it('does not call updateScroll when source is same as target and ignores scroll', function () {
-        TestLocation.push('/search');
+      it('does not call updateScroll when route ignores scroll', function () {
+        TestLocation.replace('/search/foo');
         didUpdateScroll = false;
 
-        TestLocation.push('/search?q=test');
+        TestLocation.push('/search/bar');
+        expect(didUpdateScroll).toBe(false);
+
+        TestLocation.replace('/search/bar?safe=0');
+        expect(didUpdateScroll).toBe(false);
+
+        TestLocation.replace('/search/whatever');
         expect(didUpdateScroll).toBe(false);
       });
     });
