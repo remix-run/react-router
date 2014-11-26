@@ -4,6 +4,7 @@ var invariant = require('react/lib/invariant');
 var canUseDOM = require('react/lib/ExecutionEnvironment').canUseDOM;
 var ImitateBrowserBehavior = require('../behaviors/ImitateBrowserBehavior');
 var RouteHandler = require('../components/RouteHandler');
+var LocationActions = require('../actions/LocationActions');
 var HashLocation = require('../locations/HashLocation');
 var HistoryLocation = require('../locations/HistoryLocation');
 var RefreshLocation = require('../locations/RefreshLocation');
@@ -264,8 +265,13 @@ function createRouter(options) {
        * hooks wait, the transition is fully synchronous.
        */
       dispatch: function (path, action, callback) {
-        if (state.path === path)
+        var prevPath = state.path;
+        if (prevPath === path)
           return; // Nothing to do!
+
+        if (prevPath && action !== LocationActions.REPLACE) {
+          this.recordScrollPosition(prevPath);
+        }
 
         var match = this.match(path);
 
