@@ -12,9 +12,13 @@ var {
   Bar,
   EchoFooProp,
   Foo,
+  Async,
   Nested,
   EchoBarParam,
-  RedirectToFoo
+  RedirectToFoo,
+  RedirectToFooAsync,
+  Abort,
+  AbortAsync
 } = require('./TestHandlers');
 
 describe('Router', function () {
@@ -22,11 +26,46 @@ describe('Router', function () {
 
     var routes = [
       <Route path="/redirect" handler={RedirectToFoo}/>,
-      <Route path="/foo" handler={Foo}/>
+      <Route path="/redirect-async" handler={RedirectToFooAsync}/>,
+      <Route path="/abort" handler={Abort}/>,
+      <Route path="/abort-async" handler={AbortAsync}/>,
+      <Route path="/foo" handler={Foo}/>,
+      <Route path="/bar" handler={Bar}/>,
+      <Route path="/async" handler={Async}/>
     ];
 
+    describe('transition.wait', function () {
+      it('waits asynchronously in willTransitionTo', function (done) {
+        TestLocation.history = [ '/bar' ];
+
+        var div = document.createElement('div');
+        var steps = [];
+
+        steps.push(function () {
+          expect(div.innerHTML).toMatch(/Bar/);
+          TestLocation.push('/async');
+          expect(div.innerHTML).toMatch(/Bar/);
+
+          setTimeout(function () {
+            expect(div.innerHTML).toMatch(/Async/);
+            done();
+          }, Async.delay + 10);
+        });
+
+        steps.push(function () {
+          expect(div.innerHTML).toMatch(/Async/);
+        });
+
+        Router.run(routes, TestLocation, function (Handler) {
+          React.render(<Handler/>, div, function () {
+            steps.shift()();
+          });
+        });
+      });
+    });
+
     describe('transition.redirect', function () {
-      it('redirects in willTransitionTo', function (done) {
+      it('redirects synchronously in willTransitionTo', function (done) {
         TestLocation.history = [ '/redirect' ];
 
         var div = document.createElement('div');
@@ -38,10 +77,80 @@ describe('Router', function () {
           });
         });
       });
+
+      it('redirects asynchronously in willTransitionTo', function (done) {
+        TestLocation.history = [ '/bar' ];
+
+        var div = document.createElement('div');
+        var steps = [];
+
+        steps.push(function () {
+          expect(div.innerHTML).toMatch(/Bar/);
+          TestLocation.push('/redirect-async');
+          expect(div.innerHTML).toMatch(/Bar/);
+
+          setTimeout(function () {
+            expect(div.innerHTML).toMatch(/Foo/);
+            done();
+          }, RedirectToFooAsync.delay + 10);
+        });
+
+        steps.push(function () {
+          expect(div.innerHTML).toMatch(/Foo/);
+          done();
+        });
+
+        Router.run(routes, TestLocation, function (Handler) {
+          React.render(<Handler/>, div, function () {
+            steps.shift()();
+          });
+        });
+      });
     });
 
     describe('transition.abort', function () {
-      it('aborts in willTransitionTo');
+      it('aborts synchronously in willTransitionTo', function (done) {
+        TestLocation.history = [ '/foo' ];
+
+        var div = document.createElement('div');
+
+        Router.run(routes, TestLocation, function (Handler) {
+          React.render(<Handler/>, div, function () {
+            TestLocation.push('/abort');
+            expect(div.innerHTML).toMatch(/Foo/);
+            expect(TestLocation.getCurrentPath() === 'foo');
+            done();
+          });
+        });
+      });
+
+      it('aborts asynchronously in willTransitionTo', function (done) {
+        TestLocation.history = [ '/bar' ];
+
+        var div = document.createElement('div');
+        var steps = [];
+
+        steps.push(function () {
+          expect(div.innerHTML).toMatch(/Bar/);
+          TestLocation.push('/abort-async');
+          expect(div.innerHTML).toMatch(/Bar/);
+
+          setTimeout(function () {
+            expect(div.innerHTML).toMatch(/Bar/);
+            done();
+          }, AbortAsync.delay + 10);
+        });
+
+        steps.push(function () {
+          expect(div.innerHTML).toMatch(/Bar/);
+        });
+
+        Router.run(routes, TestLocation, function (Handler) {
+          React.render(<Handler/>, div, function () {
+            steps.shift()();
+          });
+        });
+      });
     });
   });
 
