@@ -66,9 +66,8 @@ var Scrolling = {
   },
 
   _updateScroll: function (prevState) {
-    if (!shouldUpdateScroll(this.state, prevState)) {
+    if (!shouldUpdateScroll(this.state, prevState))
       return;
-    }
 
     var scrollBehavior = this.getScrollBehavior();
 

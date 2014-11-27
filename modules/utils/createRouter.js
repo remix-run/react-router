@@ -277,7 +277,7 @@ function createRouter(options) {
        */
       dispatch: function (path, action, callback) {
         if (pendingTransition) {
-          pendingTransition.abort(new Cancellation());
+          pendingTransition.abort(new Cancellation);
           pendingTransition = null;
         }
 
@@ -285,9 +285,10 @@ function createRouter(options) {
         if (prevPath === path)
           return; // Nothing to do!
 
-        if (prevPath && action !== LocationActions.REPLACE) {
+        // Record the scroll position as early as possible to
+        // get it before browsers try update it automatically.
+        if (prevPath && action !== LocationActions.REPLACE)
           this.recordScrollPosition(prevPath);
-        }
 
         var pathname = Path.withoutQuery(path);
         var match = this.match(pathname);
