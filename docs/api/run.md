@@ -55,12 +55,17 @@ for you to render.
 
 An object containing the matched state.
 
-##### `state.routes`
+#### `state.path`
 
-An array of the matched [routes][1]. Very useful for fetching data before
-rendering.
+The current URL path with query string.
 
-See also: [Route][1].
+#### `state.action`
+
+The action that lead to the route change.
+
+#### `state.pathname`
+
+The current URL path without the query string.
 
 ##### `state.params`
 
@@ -70,13 +75,12 @@ The active params in the location match.
 
 The active query in the location match.
 
-#### `state.path`
+##### `state.routes`
 
-The path matched.
+An array of the matched [routes][1]. Very useful for fetching data before
+rendering.
 
-#### `state.action`
-
-The action that lead to the route change.
+See also: [Route][1].
 
 Examples
 --------
