@@ -20,6 +20,18 @@ exports.Foo = React.createClass({
   }
 });
 
+exports.Bar = React.createClass({
+  render: function () {
+    return <div className="Bar">Bar</div>
+  }
+});
+
+exports.Baz = React.createClass({
+  render: function () {
+    return <div className="Baz">Baz</div>
+  }
+});
+
 exports.Async = React.createClass({
   statics: {
     delay: 10,
@@ -31,12 +43,6 @@ exports.Async = React.createClass({
 
   render: function () {
     return <div className="Async">Async</div>
-  }
-});
-
-exports.Bar = React.createClass({
-  render: function () {
-    return <div className="Bar">Bar</div>
   }
 });
 
