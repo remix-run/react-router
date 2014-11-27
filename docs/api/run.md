@@ -55,7 +55,7 @@ for you to render.
 
 An object containing the matched state.
 
-##### `state.matches`
+##### `state.routes`
 
 An array of the matched [routes][1]. Very useful for fetching data before
 rendering.
@@ -73,6 +73,10 @@ The active query in the location match.
 #### `state.path`
 
 The path matched.
+
+#### `state.action`
+
+The action that lead to the route change.
 
 Examples
 --------
