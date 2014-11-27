@@ -53,6 +53,21 @@ var ImitateBrowserBehavior = {
 module.exports = ImitateBrowserBehavior;
 
 },{"../actions/LocationActions":1}],3:[function(_dereq_,module,exports){
+/**
+ * A scroll behavior that always scrolls to the top of the page
+ * after a transition.
+ */
+var ScrollToTopBehavior = {
+
+  updateScrollPosition: function () {
+    window.scrollTo(0, 0);
+  }
+
+};
+
+module.exports = ScrollToTopBehavior;
+
+},{}],4:[function(_dereq_,module,exports){
 var React = (typeof window !== "undefined" ? window.React : typeof global !== "undefined" ? global.React : null);
 var FakeNode = _dereq_('../mixins/FakeNode');
 var PropTypes = _dereq_('../utils/PropTypes');
@@ -79,7 +94,7 @@ var DefaultRoute = React.createClass({
 
 module.exports = DefaultRoute;
 
-},{"../mixins/FakeNode":13,"../utils/PropTypes":21}],4:[function(_dereq_,module,exports){
+},{"../mixins/FakeNode":14,"../utils/PropTypes":23}],5:[function(_dereq_,module,exports){
 var React = (typeof window !== "undefined" ? window.React : typeof global !== "undefined" ? global.React : null);
 var classSet = _dereq_('react/lib/cx');
 var assign = _dereq_('react/lib/Object.assign');
@@ -188,7 +203,7 @@ var Link = React.createClass({
 
 module.exports = Link;
 
-},{"../mixins/Navigation":14,"../mixins/State":17,"react/lib/Object.assign":36,"react/lib/cx":37}],5:[function(_dereq_,module,exports){
+},{"../mixins/Navigation":15,"../mixins/State":18,"react/lib/Object.assign":38,"react/lib/cx":39}],6:[function(_dereq_,module,exports){
 var React = (typeof window !== "undefined" ? window.React : typeof global !== "undefined" ? global.React : null);
 var FakeNode = _dereq_('../mixins/FakeNode');
 var PropTypes = _dereq_('../utils/PropTypes');
@@ -216,7 +231,7 @@ var NotFoundRoute = React.createClass({
 
 module.exports = NotFoundRoute;
 
-},{"../mixins/FakeNode":13,"../utils/PropTypes":21}],6:[function(_dereq_,module,exports){
+},{"../mixins/FakeNode":14,"../utils/PropTypes":23}],7:[function(_dereq_,module,exports){
 var React = (typeof window !== "undefined" ? window.React : typeof global !== "undefined" ? global.React : null);
 var FakeNode = _dereq_('../mixins/FakeNode');
 var PropTypes = _dereq_('../utils/PropTypes');
@@ -242,7 +257,7 @@ var Redirect = React.createClass({
 
 module.exports = Redirect;
 
-},{"../mixins/FakeNode":13,"../utils/PropTypes":21}],7:[function(_dereq_,module,exports){
+},{"../mixins/FakeNode":14,"../utils/PropTypes":23}],8:[function(_dereq_,module,exports){
 var React = (typeof window !== "undefined" ? window.React : typeof global !== "undefined" ? global.React : null);
 var FakeNode = _dereq_('../mixins/FakeNode');
 
@@ -301,7 +316,7 @@ var Route = React.createClass({
 
 module.exports = Route;
 
-},{"../mixins/FakeNode":13}],8:[function(_dereq_,module,exports){
+},{"../mixins/FakeNode":14}],9:[function(_dereq_,module,exports){
 var React = (typeof window !== "undefined" ? window.React : typeof global !== "undefined" ? global.React : null);
 
 /**
@@ -361,7 +376,7 @@ var RouteHandler = React.createClass({
 
 module.exports = RouteHandler;
 
-},{}],9:[function(_dereq_,module,exports){
+},{}],10:[function(_dereq_,module,exports){
 exports.DefaultRoute = _dereq_('./components/DefaultRoute');
 exports.Link = _dereq_('./components/Link');
 exports.NotFoundRoute = _dereq_('./components/NotFoundRoute');
@@ -373,13 +388,16 @@ exports.HashLocation = _dereq_('./locations/HashLocation');
 exports.HistoryLocation = _dereq_('./locations/HistoryLocation');
 exports.RefreshLocation = _dereq_('./locations/RefreshLocation');
 
+exports.ImitateBrowserBehavior = _dereq_('./behaviors/ImitateBrowserBehavior');
+exports.ScrollToTopBehavior = _dereq_('./behaviors/ScrollToTopBehavior');
+
 exports.Navigation = _dereq_('./mixins/Navigation');
 exports.State = _dereq_('./mixins/State');
 
 exports.create = _dereq_('./utils/createRouter');
 exports.run = _dereq_('./utils/runRouter');
 
-},{"./components/DefaultRoute":3,"./components/Link":4,"./components/NotFoundRoute":5,"./components/Redirect":6,"./components/Route":7,"./components/RouteHandler":8,"./locations/HashLocation":10,"./locations/HistoryLocation":11,"./locations/RefreshLocation":12,"./mixins/Navigation":14,"./mixins/State":17,"./utils/createRouter":24,"./utils/runRouter":28}],10:[function(_dereq_,module,exports){
+},{"./behaviors/ImitateBrowserBehavior":2,"./behaviors/ScrollToTopBehavior":3,"./components/DefaultRoute":4,"./components/Link":5,"./components/NotFoundRoute":6,"./components/Redirect":7,"./components/Route":8,"./components/RouteHandler":9,"./locations/HashLocation":11,"./locations/HistoryLocation":12,"./locations/RefreshLocation":13,"./mixins/Navigation":15,"./mixins/State":18,"./utils/createRouter":26,"./utils/runRouter":30}],11:[function(_dereq_,module,exports){
 var invariant = _dereq_('react/lib/invariant');
 var canUseDOM = _dereq_('react/lib/ExecutionEnvironment').canUseDOM;
 var LocationActions = _dereq_('../actions/LocationActions');
@@ -486,7 +504,7 @@ var HashLocation = {
 
 module.exports = HashLocation;
 
-},{"../actions/LocationActions":1,"../utils/Path":19,"react/lib/ExecutionEnvironment":35,"react/lib/invariant":39}],11:[function(_dereq_,module,exports){
+},{"../actions/LocationActions":1,"../utils/Path":21,"react/lib/ExecutionEnvironment":37,"react/lib/invariant":41}],12:[function(_dereq_,module,exports){
 var invariant = _dereq_('react/lib/invariant');
 var canUseDOM = _dereq_('react/lib/ExecutionEnvironment').canUseDOM;
 var LocationActions = _dereq_('../actions/LocationActions');
@@ -569,7 +587,7 @@ var HistoryLocation = {
 
 module.exports = HistoryLocation;
 
-},{"../actions/LocationActions":1,"../utils/Path":19,"react/lib/ExecutionEnvironment":35,"react/lib/invariant":39}],12:[function(_dereq_,module,exports){
+},{"../actions/LocationActions":1,"../utils/Path":21,"react/lib/ExecutionEnvironment":37,"react/lib/invariant":41}],13:[function(_dereq_,module,exports){
 var HistoryLocation = _dereq_('./HistoryLocation');
 var Path = _dereq_('../utils/Path');
 
@@ -602,7 +620,7 @@ var RefreshLocation = {
 
 module.exports = RefreshLocation;
 
-},{"../utils/Path":19,"./HistoryLocation":11}],13:[function(_dereq_,module,exports){
+},{"../utils/Path":21,"./HistoryLocation":12}],14:[function(_dereq_,module,exports){
 var invariant = _dereq_('react/lib/invariant');
 
 var FakeNode = {
@@ -619,7 +637,7 @@ var FakeNode = {
 
 module.exports = FakeNode;
 
-},{"react/lib/invariant":39}],14:[function(_dereq_,module,exports){
+},{"react/lib/invariant":41}],15:[function(_dereq_,module,exports){
 var React = (typeof window !== "undefined" ? window.React : typeof global !== "undefined" ? global.React : null);
 
 /**
@@ -693,7 +711,7 @@ var Navigation = {
 
 module.exports = Navigation;
 
-},{}],15:[function(_dereq_,module,exports){
+},{}],16:[function(_dereq_,module,exports){
 var React = (typeof window !== "undefined" ? window.React : typeof global !== "undefined" ? global.React : null);
 
 /**
@@ -723,10 +741,34 @@ var NavigationContext = {
 
 module.exports = NavigationContext;
 
-},{}],16:[function(_dereq_,module,exports){
+},{}],17:[function(_dereq_,module,exports){
 var invariant = _dereq_('react/lib/invariant');
 var canUseDOM = _dereq_('react/lib/ExecutionEnvironment').canUseDOM;
 var getWindowScrollPosition = _dereq_('../utils/getWindowScrollPosition');
+var Path = _dereq_('../utils/Path');
+
+function shouldUpdateScroll(state, prevState) {
+  if (!prevState) {
+    return true;
+  }
+
+  var path = state.path;
+  var routes = state.routes;
+  var prevPath = prevState.path;
+  var prevRoutes = prevState.routes;
+
+  if (Path.withoutQuery(path) === Path.withoutQuery(prevPath)) {
+    return false;
+  }
+
+  var sharedAncestorRoutes = routes.filter(function (route) {
+    return prevRoutes.indexOf(route) !== -1;
+  });
+
+  return !sharedAncestorRoutes.some(function (route) {
+    return route.ignoreScrollBehavior;
+  });
+}
 
 /**
  * Provides the router with the ability to manage window scroll position
@@ -734,44 +776,53 @@ var getWindowScrollPosition = _dereq_('../utils/getWindowScrollPosition');
  */
 var Scrolling = {
 
+  statics: {
+    /**
+     * Records curent scroll position as the last known position for the given URL path.
+     */
+    recordScrollPosition: function (path) {
+      if (!this.scrollHistory)
+        this.scrollHistory = {};
+
+      this.scrollHistory[path] = getWindowScrollPosition();
+    },
+
+    /**
+     * Returns the last known scroll position for the given URL path.
+     */
+    getScrollPosition: function (path) {
+      if (!this.scrollHistory)
+        this.scrollHistory = {};
+
+      return this.scrollHistory[path] || null;
+    }
+  },
+
   componentWillMount: function () {
     invariant(
       this.getScrollBehavior() == null || canUseDOM,
       'Cannot use scroll behavior without a DOM'
     );
-
-    this._scrollHistory = {};
   },
 
   componentDidMount: function () {
     this._updateScroll();
   },
 
-  componentWillUpdate: function () {
-    this._scrollHistory[this.state.path] = getWindowScrollPosition();
+  componentDidUpdate: function (prevProps, prevState) {
+    this._updateScroll(prevState);
   },
 
-  componentDidUpdate: function () {
-    this._updateScroll();
-  },
+  _updateScroll: function (prevState) {
+    if (!shouldUpdateScroll(this.state, prevState)) {
+      return;
+    }
 
-  componentWillUnmount: function () {
-    delete this._scrollHistory;
-  },
-
-  /**
-   * Returns the last known scroll position for the given URL path.
-   */
-  getScrollPosition: function (path) {
-    return this._scrollHistory[path] || null;
-  },
-
-  _updateScroll: function () {
     var scrollBehavior = this.getScrollBehavior();
 
     if (scrollBehavior)
       scrollBehavior.updateScrollPosition(
-        this.getScrollPosition(this.state.path),
+        this.constructor.getScrollPosition(this.state.path),
         this.state.action
       );
   }
@@ -780,7 +831,7 @@ var Scrolling = {
 
 module.exports = Scrolling;
 
-},{"../utils/getWindowScrollPosition":26,"react/lib/ExecutionEnvironment":35,"react/lib/invariant":39}],17:[function(_dereq_,module,exports){
+},{"../utils/Path":21,"../utils/getWindowScrollPosition":28,"react/lib/ExecutionEnvironment":37,"react/lib/invariant":41}],18:[function(_dereq_,module,exports){
 var React = (typeof window !== "undefined" ? window.React : typeof global !== "undefined" ? global.React : null);
 
 /**
@@ -851,7 +902,7 @@ var State = {
 
 module.exports = State;
 
-},{}],18:[function(_dereq_,module,exports){
+},{}],19:[function(_dereq_,module,exports){
 var React = (typeof window !== "undefined" ? window.React : typeof global !== "undefined" ? global.React : null);
 var assign = _dereq_('react/lib/Object.assign');
 var Path = _dereq_('../utils/Path');
@@ -945,7 +996,16 @@ var StateContext = {
 
 module.exports = StateContext;
 
-},{"../utils/Path":19,"react/lib/Object.assign":36}],19:[function(_dereq_,module,exports){
+},{"../utils/Path":21,"react/lib/Object.assign":38}],20:[function(_dereq_,module,exports){
+/**
+ * Represents a cancellation caused by navigating away
+ * before the previous transition has fully resolved.
+ */
+function Cancellation() { }
+
+module.exports = Cancellation;
+
+},{}],21:[function(_dereq_,module,exports){
 var invariant = _dereq_('react/lib/invariant');
 var merge = _dereq_('qs/lib/utils').merge;
 var qs = _dereq_('qs');
@@ -1125,7 +1185,7 @@ var Path = {
 
 module.exports = Path;
 
-},{"qs":30,"qs/lib/utils":34,"react/lib/invariant":39}],20:[function(_dereq_,module,exports){
+},{"qs":32,"qs/lib/utils":36,"react/lib/invariant":41}],22:[function(_dereq_,module,exports){
 var Promise = _dereq_('when/lib/Promise');
 
 // TODO: Use process.env.NODE_ENV check + envify to enable
@@ -1133,7 +1193,7 @@ var Promise = _dereq_('when/lib/Promise');
 
 module.exports = Promise;
 
-},{"when/lib/Promise":41}],21:[function(_dereq_,module,exports){
+},{"when/lib/Promise":43}],23:[function(_dereq_,module,exports){
 var PropTypes = {
 
   /**
@@ -1148,7 +1208,7 @@ var PropTypes = {
 
 module.exports = PropTypes;
 
-},{}],22:[function(_dereq_,module,exports){
+},{}],24:[function(_dereq_,module,exports){
 /**
  * Encapsulates a redirect to the given route.
  */
@@ -1160,7 +1220,7 @@ function Redirect(to, params, query) {
 
 module.exports = Redirect;
 
-},{}],23:[function(_dereq_,module,exports){
+},{}],25:[function(_dereq_,module,exports){
 var assign = _dereq_('react/lib/Object.assign');
 var reversedArray = _dereq_('./reversedArray');
 var Redirect = _dereq_('./Redirect');
@@ -1261,6 +1321,11 @@ function Transition(path, retry) {
 assign(Transition.prototype, {
 
   abort: function (reason) {
+    if (this.isAborted) {
+      // First abort wins.
+      return;
+    }
+
     this.abortReason = reason;
     this.isAborted = true;
   },
@@ -1285,13 +1350,14 @@ assign(Transition.prototype, {
 
 module.exports = Transition;
 
-},{"./Promise":20,"./Redirect":22,"./reversedArray":27,"react/lib/Object.assign":36}],24:[function(_dereq_,module,exports){
+},{"./Promise":22,"./Redirect":24,"./reversedArray":29,"react/lib/Object.assign":38}],26:[function(_dereq_,module,exports){
 var React = (typeof window !== "undefined" ? window.React : typeof global !== "undefined" ? global.React : null);
 var warning = _dereq_('react/lib/warning');
 var invariant = _dereq_('react/lib/invariant');
 var canUseDOM = _dereq_('react/lib/ExecutionEnvironment').canUseDOM;
 var ImitateBrowserBehavior = _dereq_('../behaviors/ImitateBrowserBehavior');
 var RouteHandler = _dereq_('../components/RouteHandler');
+var LocationActions = _dereq_('../actions/LocationActions');
 var HashLocation = _dereq_('../locations/HashLocation');
 var HistoryLocation = _dereq_('../locations/HistoryLocation');
 var RefreshLocation = _dereq_('../locations/RefreshLocation');
@@ -1303,6 +1369,7 @@ var supportsHistory = _dereq_('./supportsHistory');
 var Transition = _dereq_('./Transition');
 var PropTypes = _dereq_('./PropTypes');
 var Redirect = _dereq_('./Redirect');
+var Cancellation = _dereq_('./Cancellation');
 var Path = _dereq_('./Path');
 
 /**
@@ -1330,7 +1397,9 @@ function defaultAbortHandler(abortReason, location) {
   if (typeof location === 'string')
     throw new Error('Unhandled aborted transition! Reason: ' + abortReason);
 
-  if (abortReason instanceof Redirect) {
+  if (abortReason instanceof Cancellation) {
+    return;
+  } else if (abortReason instanceof Redirect) {
     location.replace(this.makePath(abortReason.to, abortReason.params, abortReason.query));
   } else {
     location.pop();
@@ -1428,6 +1497,7 @@ function createRouter(options) {
   var onAbort = options.onAbort || defaultAbortHandler;
   var state = {};
   var nextState = {};
+  var pendingTransition = null;
 
   function updateState() {
     state = nextState;
@@ -1499,7 +1569,14 @@ function createRouter(options) {
           'You cannot use transitionTo with a static location'
         );
 
-        location.push(this.makePath(to, params, query));
+        var path = this.makePath(to, params, query);
+
+        if (pendingTransition) {
+          // Replace so pending location does not stay in history.
+          location.replace(path);
+        } else {
+          location.push(path);
+        }
       },
 
       /**
@@ -1552,8 +1629,18 @@ function createRouter(options) {
        * hooks wait, the transition is fully synchronous.
        */
       dispatch: function (path, action, callback) {
-        if (state.path === path)
+        if (pendingTransition) {
+          pendingTransition.abort(new Cancellation());
+          pendingTransition = null;
+        }
+
+        var prevPath = state.path;
+        if (prevPath === path)
           return; // Nothing to do!
+
+        if (prevPath && action !== LocationActions.REPLACE) {
+          this.recordScrollPosition(prevPath);
+        }
 
         var match = this.match(path);
 
@@ -1588,6 +1675,7 @@ function createRouter(options) {
         }
 
         var transition = new Transition(path, this.replaceWith.bind(this, path));
+        pendingTransition = transition;
 
         transition.from(fromRoutes, components, function (error) {
           if (error || transition.isAborted)
@@ -1617,6 +1705,8 @@ function createRouter(options) {
        */
       run: function (callback) {
         function dispatchHandler(error, transition) {
+          pendingTransition = null;
+
           if (error) {
             onError.call(router, error);
           } else if (transition.isAborted) {
@@ -1716,7 +1806,7 @@ function createRouter(options) {
 
 module.exports = createRouter;
 
-},{"../behaviors/ImitateBrowserBehavior":2,"../components/RouteHandler":8,"../locations/HashLocation":10,"../locations/HistoryLocation":11,"../locations/RefreshLocation":12,"../mixins/NavigationContext":15,"../mixins/Scrolling":16,"../mixins/StateContext":18,"./Path":19,"./PropTypes":21,"./Redirect":22,"./Transition":23,"./createRoutesFromChildren":25,"./supportsHistory":29,"react/lib/ExecutionEnvironment":35,"react/lib/invariant":39,"react/lib/warning":40}],25:[function(_dereq_,module,exports){
+},{"../actions/LocationActions":1,"../behaviors/ImitateBrowserBehavior":2,"../components/RouteHandler":9,"../locations/HashLocation":11,"../locations/HistoryLocation":12,"../locations/RefreshLocation":13,"../mixins/NavigationContext":16,"../mixins/Scrolling":17,"../mixins/StateContext":19,"./Cancellation":20,"./Path":21,"./PropTypes":23,"./Redirect":24,"./Transition":25,"./createRoutesFromChildren":27,"./supportsHistory":31,"react/lib/ExecutionEnvironment":37,"react/lib/invariant":41,"react/lib/warning":42}],27:[function(_dereq_,module,exports){
 var React = (typeof window !== "undefined" ? window.React : typeof global !== "undefined" ? global.React : null);
 var warning = _dereq_('react/lib/warning');
 var invariant = _dereq_('react/lib/invariant');
@@ -1773,6 +1863,10 @@ function createRoute(element, parentRoute, namedRoutes) {
     checkPropTypes(componentName, type.propTypes, props);
 
   var route = { name: props.name };
+
+  if (props.ignoreScrollBehavior) {
+    route.ignoreScrollBehavior = true;
+  }
 
   if (type === Redirect.type) {
     route.handler = createRedirectHandler(props.to, props.params, props.query);
@@ -1878,7 +1972,7 @@ function createRoutesFromChildren(children, parentRoute, namedRoutes) {
 
 module.exports = createRoutesFromChildren;
 
-},{"../components/DefaultRoute":3,"../components/NotFoundRoute":5,"../components/Redirect":6,"../components/Route":7,"./Path":19,"react/lib/invariant":39,"react/lib/warning":40}],26:[function(_dereq_,module,exports){
+},{"../components/DefaultRoute":4,"../components/NotFoundRoute":6,"../components/Redirect":7,"../components/Route":8,"./Path":21,"react/lib/invariant":41,"react/lib/warning":42}],28:[function(_dereq_,module,exports){
 var invariant = _dereq_('react/lib/invariant');
 var canUseDOM = _dereq_('react/lib/ExecutionEnvironment').canUseDOM;
 
@@ -1899,14 +1993,14 @@ function getWindowScrollPosition() {
 
 module.exports = getWindowScrollPosition;
 
-},{"react/lib/ExecutionEnvironment":35,"react/lib/invariant":39}],27:[function(_dereq_,module,exports){
+},{"react/lib/ExecutionEnvironment":37,"react/lib/invariant":41}],29:[function(_dereq_,module,exports){
 function reversedArray(array) {
   return array.slice(0).reverse();
 }
 
 module.exports = reversedArray;
 
-},{}],28:[function(_dereq_,module,exports){
+},{}],30:[function(_dereq_,module,exports){
 var createRouter = _dereq_('./createRouter');
 
 /**
@@ -1956,7 +2050,7 @@ function runRouter(routes, location, callback) {
 
 module.exports = runRouter;
 
-},{"./createRouter":24}],29:[function(_dereq_,module,exports){
+},{"./createRouter":26}],31:[function(_dereq_,module,exports){
 function supportsHistory() {
   /*! taken from modernizr
    * https://github.com/Modernizr/Modernizr/blob/master/LICENSE
@@ -1974,10 +2068,10 @@ function supportsHistory() {
 
 module.exports = supportsHistory;
 
-},{}],30:[function(_dereq_,module,exports){
+},{}],32:[function(_dereq_,module,exports){
 module.exports = _dereq_('./lib');
 
-},{"./lib":31}],31:[function(_dereq_,module,exports){
+},{"./lib":33}],33:[function(_dereq_,module,exports){
 // Load modules
 
 var Stringify = _dereq_('./stringify');
@@ -1994,7 +2088,7 @@ module.exports = {
     parse: Parse
 };
 
-},{"./parse":32,"./stringify":33}],32:[function(_dereq_,module,exports){
+},{"./parse":34,"./stringify":35}],34:[function(_dereq_,module,exports){
 // Load modules
 
 var Utils = _dereq_('./utils');
@@ -2150,7 +2244,7 @@ module.exports = function (str, options) {
     return Utils.compact(obj);
 };
 
-},{"./utils":34}],33:[function(_dereq_,module,exports){
+},{"./utils":36}],35:[function(_dereq_,module,exports){
 // Load modules
 
 var Utils = _dereq_('./utils');
@@ -2210,7 +2304,7 @@ module.exports = function (obj, options) {
     return keys.join(delimiter);
 };
 
-},{"./utils":34}],34:[function(_dereq_,module,exports){
+},{"./utils":36}],36:[function(_dereq_,module,exports){
 // Load modules
 
 
@@ -2351,7 +2445,7 @@ exports.isBuffer = function (obj) {
     }
 };
 
-},{}],35:[function(_dereq_,module,exports){
+},{}],37:[function(_dereq_,module,exports){
 /**
  * Copyright 2013-2014, Facebook, Inc.
  * All rights reserved.
@@ -2396,7 +2490,7 @@ var ExecutionEnvironment = {
 
 module.exports = ExecutionEnvironment;
 
-},{}],36:[function(_dereq_,module,exports){
+},{}],38:[function(_dereq_,module,exports){
 /**
  * Copyright 2014, Facebook, Inc.
  * All rights reserved.
@@ -2443,7 +2537,7 @@ function assign(target, sources) {
 
 module.exports = assign;
 
-},{}],37:[function(_dereq_,module,exports){
+},{}],39:[function(_dereq_,module,exports){
 /**
  * Copyright 2013-2014, Facebook, Inc.
  * All rights reserved.
@@ -2482,7 +2576,7 @@ function cx(classNames) {
 
 module.exports = cx;
 
-},{}],38:[function(_dereq_,module,exports){
+},{}],40:[function(_dereq_,module,exports){
 /**
  * Copyright 2013-2014, Facebook, Inc.
  * All rights reserved.
@@ -2516,7 +2610,7 @@ emptyFunction.thatReturnsArgument = function(arg) { return arg; };
 
 module.exports = emptyFunction;
 
-},{}],39:[function(_dereq_,module,exports){
+},{}],41:[function(_dereq_,module,exports){
 /**
  * Copyright 2013-2014, Facebook, Inc.
  * All rights reserved.
@@ -2571,7 +2665,7 @@ var invariant = function(condition, format, a, b, c, d, e, f) {
 
 module.exports = invariant;
 
-},{}],40:[function(_dereq_,module,exports){
+},{}],42:[function(_dereq_,module,exports){
 /**
  * Copyright 2014, Facebook, Inc.
  * All rights reserved.
@@ -2597,7 +2691,7 @@ var emptyFunction = _dereq_("./emptyFunction");
 var warning = emptyFunction;
 
 if ("production" !== "production") {
-  warning = function(condition, format ) {var args=Array.prototype.slice.call(arguments,2);
+  warning = function(condition, format ) {for (var args=[],$__0=2,$__1=arguments.length;$__0<$__1;$__0++) args.push(arguments[$__0]);
     if (format === undefined) {
       throw new Error(
         '`warning(condition, format, ...args)` requires a warning ' +
@@ -2614,7 +2708,7 @@ if ("production" !== "production") {
 
 module.exports = warning;
 
-},{"./emptyFunction":38}],41:[function(_dereq_,module,exports){
+},{"./emptyFunction":40}],43:[function(_dereq_,module,exports){
 /** @license MIT License (c) copyright 2010-2014 original author or authors */
 /** @author Brian Cavalier */
 /** @author John Hann */
@@ -2633,7 +2727,7 @@ define(function (_dereq_) {
 });
 })(typeof define === 'function' && define.amd ? define : function (factory) { module.exports = factory(_dereq_); });
 
-},{"./Scheduler":43,"./async":44,"./makePromise":45}],42:[function(_dereq_,module,exports){
+},{"./Scheduler":45,"./async":46,"./makePromise":47}],44:[function(_dereq_,module,exports){
 /** @license MIT License (c) copyright 2010-2014 original author or authors */
 /** @author Brian Cavalier */
 /** @author John Hann */
@@ -2705,7 +2799,7 @@ define(function() {
 });
 }(typeof define === 'function' && define.amd ? define : function(factory) { module.exports = factory(); }));
 
-},{}],43:[function(_dereq_,module,exports){
+},{}],45:[function(_dereq_,module,exports){
 /** @license MIT License (c) copyright 2010-2014 original author or authors */
 /** @author Brian Cavalier */
 /** @author John Hann */
@@ -2789,7 +2883,7 @@ define(function(_dereq_) {
 });
 }(typeof define === 'function' && define.amd ? define : function(factory) { module.exports = factory(_dereq_); }));
 
-},{"./Queue":42}],44:[function(_dereq_,module,exports){
+},{"./Queue":44}],46:[function(_dereq_,module,exports){
 /** @license MIT License (c) copyright 2010-2014 original author or authors */
 /** @author Brian Cavalier */
 /** @author John Hann */
@@ -2862,7 +2956,7 @@ define(function(_dereq_) {
 });
 }(typeof define === 'function' && define.amd ? define : function(factory) { module.exports = factory(_dereq_); }));
 
-},{}],45:[function(_dereq_,module,exports){
+},{}],47:[function(_dereq_,module,exports){
 /** @license MIT License (c) copyright 2010-2014 original author or authors */
 /** @author Brian Cavalier */
 /** @author John Hann */
@@ -3660,6 +3754,6 @@ define(function() {
 });
 }(typeof define === 'function' && define.amd ? define : function(factory) { module.exports = factory(); }));
 
-},{}]},{},[9])
-(9)
+},{}]},{},[10])
+(10)
 });

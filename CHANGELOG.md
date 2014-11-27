@@ -1,3 +1,10 @@
+v0.11.3 - Thu, 27 Nov 2014 05:29:48 GMT
+---------------------------------------
+
+- [91d4380](../../commit/91d4380) [fixed] Abort pending transition on user navigation
+- [5fe6c08](../../commit/5fe6c08) [changed] Don't update scroll if only query has changed
+
+
 v0.11.2 - Mon, 24 Nov 2014 16:56:52 GMT
 ---------------------------------------
 
