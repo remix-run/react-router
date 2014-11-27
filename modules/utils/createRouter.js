@@ -252,8 +252,8 @@ function createRouter(options) {
       },
 
       /**
-       * Performs a match of the given path against this router and returns an object with
-       * the { path, routes, params, query } that match. Returns null if no match can be made.
+       * Performs a match of the given pathname against this router and returns an object
+       * with the { routes, params } that match. Returns null if no match can be made.
        */
       match: function (path) {
         return findMatch(Path.withoutQuery(path), routes, this.defaultRoute, this.notFoundRoute) || null;
