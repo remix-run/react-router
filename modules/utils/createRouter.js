@@ -16,6 +16,7 @@ var supportsHistory = require('./supportsHistory');
 var Transition = require('./Transition');
 var PropTypes = require('./PropTypes');
 var Redirect = require('./Redirect');
+var Cancellation = require('./Cancellation');
 var Path = require('./Path');
 
 /**
@@ -43,7 +44,9 @@ function defaultAbortHandler(abortReason, location) {
   if (typeof location === 'string')
     throw new Error('Unhandled aborted transition! Reason: ' + abortReason);
 
-  if (abortReason instanceof Redirect) {
+  if (abortReason instanceof Cancellation) {
+    return;
+  } else if (abortReason instanceof Redirect) {
     location.replace(this.makePath(abortReason.to, abortReason.params, abortReason.query));
   } else {
     location.pop();
@@ -141,6 +144,7 @@ function createRouter(options) {
   var onAbort = options.onAbort || defaultAbortHandler;
   var state = {};
   var nextState = {};
+  var pendingTransition = null;
 
   function updateState() {
     state = nextState;
@@ -212,7 +216,14 @@ function createRouter(options) {
           'You cannot use transitionTo with a static location'
         );
 
-        location.push(this.makePath(to, params, query));
+        var path = this.makePath(to, params, query);
+
+        if (pendingTransition) {
+          // Replace so pending location does not stay in history.
+          location.replace(path);
+        } else {
+          location.push(path);
+        }
       },
 
       /**
@@ -265,6 +276,11 @@ function createRouter(options) {
        * hooks wait, the transition is fully synchronous.
        */
       dispatch: function (path, action, callback) {
+        if (pendingTransition) {
+          pendingTransition.abort(new Cancellation());
+          pendingTransition = null;
+        }
+
         var prevPath = state.path;
         if (prevPath === path)
           return; // Nothing to do!
@@ -306,6 +322,7 @@ function createRouter(options) {
         }
 
         var transition = new Transition(path, this.replaceWith.bind(this, path));
+        pendingTransition = transition;
 
         transition.from(fromRoutes, components, function (error) {
           if (error || transition.isAborted)
@@ -335,6 +352,8 @@ function createRouter(options) {
        */
       run: function (callback) {
         function dispatchHandler(error, transition) {
+          pendingTransition = null;
+
           if (error) {
             onError.call(router, error);
           } else if (transition.isAborted) {

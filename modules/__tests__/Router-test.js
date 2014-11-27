@@ -9,12 +9,17 @@ var getWindowScrollPosition = require('../utils/getWindowScrollPosition');
 var Router = require('../index');
 
 var {
-  Bar,
-  EchoFooProp,
   Foo,
+  Bar,
+  Baz,
+  Async,
   Nested,
+  EchoFooProp,
   EchoBarParam,
-  RedirectToFoo
+  RedirectToFoo,
+  RedirectToFooAsync,
+  Abort,
+  AbortAsync
 } = require('./TestHandlers');
 
 describe('Router', function () {
@@ -22,11 +27,170 @@ describe('Router', function () {
 
     var routes = [
       <Route path="/redirect" handler={RedirectToFoo}/>,
-      <Route path="/foo" handler={Foo}/>
+      <Route path="/redirect-async" handler={RedirectToFooAsync}/>,
+      <Route path="/abort" handler={Abort}/>,
+      <Route path="/abort-async" handler={AbortAsync}/>,
+      <Route path="/foo" handler={Foo}/>,
+      <Route path="/bar" handler={Bar}/>,
+      <Route path="/baz" handler={Baz}/>,
+      <Route path="/async" handler={Async}/>
     ];
 
+    describe('transition.wait', function () {
+      it('waits asynchronously in willTransitionTo', function (done) {
+        TestLocation.history = [ '/bar' ];
+
+        var div = document.createElement('div');
+        var steps = [];
+        var router;
+
+        steps.push(function () {
+          expect(div.innerHTML).toMatch(/Bar/);
+          router.transitionTo('/async');
+          expect(div.innerHTML).toMatch(/Bar/);
+
+          setTimeout(function () {
+            expect(div.innerHTML).toMatch(/Async/);
+            done();
+          }, Async.delay + 10);
+        });
+
+        steps.push(function () {
+          expect(div.innerHTML).toMatch(/Async/);
+        });
+
+        router = Router.create({
+          routes: routes,
+          location: TestLocation
+        });
+
+        router.run(function (Handler) {
+          React.render(<Handler/>, div, function () {
+            steps.shift()();
+          });
+        });
+      });
+
+      it('stops waiting asynchronously in willTransitionTo on location.pop', function (done) {
+        TestLocation.history = [ '/bar' ];
+
+        var div = document.createElement('div');
+        var steps = [];
+        var router;
+
+        steps.push(function () {
+          expect(div.innerHTML).toMatch(/Bar/);
+          router.transitionTo('/async');
+          expect(div.innerHTML).toMatch(/Bar/);
+
+          setTimeout(function () {
+            expect(div.innerHTML).toMatch(/Bar/);
+            TestLocation.pop();
+            expect(div.innerHTML).toMatch(/Bar/);
+          }, Async.delay / 2);
+
+          setTimeout(function () {
+            expect(div.innerHTML).toMatch(/Bar/);
+            done();
+          }, Async.delay + 10);
+        });
+
+        router = Router.create({
+          routes: routes,
+          location: TestLocation
+        });
+
+        router.run(function (Handler) {
+          React.render(<Handler/>, div, function () {
+            steps.shift()();
+          });
+        });
+      });
+
+      it('stops waiting asynchronously in willTransitionTo on router.transitionTo', function (done) {
+        TestLocation.history = [ '/bar' ];
+
+        var div = document.createElement('div');
+        var steps = [];
+        var router;
+
+        steps.push(function () {
+          expect(div.innerHTML).toMatch(/Bar/);
+          router.transitionTo('/async');
+          expect(div.innerHTML).toMatch(/Bar/);
+
+          setTimeout(function () {
+            expect(div.innerHTML).toMatch(/Bar/);
+            router.transitionTo('/foo');
+            expect(div.innerHTML).toMatch(/Foo/);
+          }, Async.delay / 2);
+        });
+
+        steps.push(function () {
+          setTimeout(function () {
+            expect(div.innerHTML).toMatch(/Foo/);
+            TestLocation.pop();
+          }, Async.delay / 2 + 10);
+        });
+
+        steps.push(function () {
+          expect(div.innerHTML).toMatch(/Bar/);
+          done();
+        });
+
+        router = Router.create({
+          routes: routes,
+          location: TestLocation
+        });
+
+        router.run(function (Handler) {
+          React.render(<Handler/>, div, function () {
+            steps.shift()();
+          });
+        });
+      });
+
+      it('stops waiting asynchronously in willTransitionTo on router.replaceWith', function (done) {
+        TestLocation.history = [ '/bar' ];
+
+        var div = document.createElement('div');
+        var steps = [];
+        var router;
+
+        steps.push(function () {
+          expect(div.innerHTML).toMatch(/Bar/);
+          router.transitionTo('/async');
+          expect(div.innerHTML).toMatch(/Bar/);
+
+          setTimeout(function () {
+            expect(div.innerHTML).toMatch(/Bar/);
+            router.replaceWith('/foo');
+            expect(div.innerHTML).toMatch(/Foo/);
+          }, Async.delay / 2);
+        });
+
+        steps.push(function () {
+          setTimeout(function () {
+            expect(div.innerHTML).toMatch(/Foo/);
+            done();
+          }, Async.delay / 2 + 10);
+        });
+
+        router = Router.create({
+          routes: routes,
+          location: TestLocation
+        });
+
+        router.run(function (Handler) {
+          React.render(<Handler/>, div, function () {
+            steps.shift()();
+          });
+        });
+      });
+    });
+
     describe('transition.redirect', function () {
-      it('redirects in willTransitionTo', function (done) {
+      it('redirects synchronously in willTransitionTo', function (done) {
         TestLocation.history = [ '/redirect' ];
 
         var div = document.createElement('div');
@@ -38,10 +202,326 @@ describe('Router', function () {
           });
         });
       });
+
+      it('redirects asynchronously in willTransitionTo', function (done) {
+        TestLocation.history = [ '/bar' ];
+
+        var div = document.createElement('div');
+        var steps = [];
+        var router;
+
+        steps.push(function () {
+          expect(div.innerHTML).toMatch(/Bar/);
+          router.transitionTo('/redirect-async');
+          expect(div.innerHTML).toMatch(/Bar/);
+
+          setTimeout(function () {
+            expect(div.innerHTML).toMatch(/Foo/);
+            done();
+          }, RedirectToFooAsync.delay + 10);
+        });
+
+        steps.push(function () {
+          expect(div.innerHTML).toMatch(/Foo/);
+          done();
+        });
+
+        router = Router.create({
+          routes: routes,
+          location: TestLocation
+        });
+
+        router.run(function (Handler) {
+          React.render(<Handler/>, div, function () {
+            steps.shift()();
+          });
+        });
+      });
+
+      it('cancels redirecting asynchronously in willTransitionTo on location.pop', function (done) {
+        TestLocation.history = [ '/bar' ];
+
+        var div = document.createElement('div');
+        var steps = [];
+        var router;
+
+        steps.push(function () {
+          expect(div.innerHTML).toMatch(/Bar/);
+          router.transitionTo('/redirect-async');
+          expect(div.innerHTML).toMatch(/Bar/);
+
+          setTimeout(function () {
+            expect(div.innerHTML).toMatch(/Bar/);
+            TestLocation.pop();
+            expect(div.innerHTML).toMatch(/Bar/);
+          }, RedirectToFooAsync.delay / 2);
+
+          setTimeout(function () {
+            expect(div.innerHTML).toMatch(/Bar/);
+            done();
+          }, RedirectToFooAsync.delay + 10);
+        });
+
+        router = Router.create({
+          routes: routes,
+          location: TestLocation
+        });
+
+        router.run(function (Handler) {
+          React.render(<Handler/>, div, function () {
+            steps.shift()();
+          });
+        });
+      });
+
+      it('cancels redirecting asynchronously in willTransitionTo on router.transitionTo', function (done) {
+        TestLocation.history = [ '/bar' ];
+
+        var div = document.createElement('div');
+        var steps = [];
+        var router;
+
+        steps.push(function () {
+          expect(div.innerHTML).toMatch(/Bar/);
+          router.transitionTo('/redirect-async');
+          expect(div.innerHTML).toMatch(/Bar/);
+
+          setTimeout(function () {
+            expect(div.innerHTML).toMatch(/Bar/);
+            router.transitionTo('/baz');
+            expect(div.innerHTML).toMatch(/Baz/);
+          }, RedirectToFooAsync.delay / 2);
+        });
+
+        steps.push(function () {
+          setTimeout(function () {
+            expect(div.innerHTML).toMatch(/Baz/);
+            TestLocation.pop();
+          }, RedirectToFooAsync.delay / 2 + 10);
+        });
+
+        steps.push(function () {
+          expect(div.innerHTML).toMatch(/Bar/);
+          done();
+        });
+
+        router = Router.create({
+          routes: routes,
+          location: TestLocation
+        });
+
+        router.run(function (Handler) {
+          React.render(<Handler/>, div, function () {
+            steps.shift()();
+          });
+        });
+      });
+
+      it('cancels redirecting asynchronously in willTransitionTo on router.replaceWith', function (done) {
+        TestLocation.history = [ '/bar' ];
+
+        var div = document.createElement('div');
+        var steps = [];
+        var router;
+
+        steps.push(function () {
+          expect(div.innerHTML).toMatch(/Bar/);
+          router.transitionTo('/redirect-async');
+          expect(div.innerHTML).toMatch(/Bar/);
+
+          setTimeout(function () {
+            expect(div.innerHTML).toMatch(/Bar/);
+            router.replaceWith('/baz');
+            expect(div.innerHTML).toMatch(/Baz/);
+          }, RedirectToFooAsync.delay / 2);
+        });
+
+        steps.push(function () {
+          setTimeout(function () {
+            expect(div.innerHTML).toMatch(/Baz/);
+            done();
+          }, RedirectToFooAsync.delay / 2 + 10);
+        });
+
+        router = Router.create({
+          routes: routes,
+          location: TestLocation
+        });
+
+        router.run(function (Handler) {
+          React.render(<Handler/>, div, function () {
+            steps.shift()();
+          });
+        });
+      });
     });
 
     describe('transition.abort', function () {
-      it('aborts in willTransitionTo');
+      it('aborts synchronously in willTransitionTo', function (done) {
+        TestLocation.history = [ '/foo' ];
+
+        var div = document.createElement('div');
+
+        Router.run(routes, TestLocation, function (Handler) {
+          React.render(<Handler/>, div, function () {
+            TestLocation.push('/abort');
+            expect(div.innerHTML).toMatch(/Foo/);
+            expect(TestLocation.getCurrentPath()).toEqual('/foo');
+            done();
+          });
+        });
+      });
+
+      it('aborts asynchronously in willTransitionTo', function (done) {
+        TestLocation.history = [ '/bar' ];
+
+        var div = document.createElement('div');
+        var steps = [];
+        var router;
+
+        steps.push(function () {
+          expect(div.innerHTML).toMatch(/Bar/);
+          router.transitionTo('/abort-async');
+          expect(div.innerHTML).toMatch(/Bar/);
+
+          setTimeout(function () {
+            expect(div.innerHTML).toMatch(/Bar/);
+            done();
+          }, AbortAsync.delay + 10);
+        });
+
+        steps.push(function () {
+          expect(div.innerHTML).toMatch(/Bar/);
+        });
+
+        router = Router.create({
+          routes: routes,
+          location: TestLocation
+        });
+
+        router.run(function (Handler) {
+          React.render(<Handler/>, div, function () {
+            steps.shift()();
+          });
+        });
+      });
+
+      it('ignores aborting asynchronously in willTransitionTo on location.pop', function (done) {
+        TestLocation.history = [ '/bar' ];
+
+        var div = document.createElement('div');
+        var steps = [];
+        var router;
+
+        steps.push(function () {
+          expect(div.innerHTML).toMatch(/Bar/);
+          router.transitionTo('/abort-async');
+          expect(div.innerHTML).toMatch(/Bar/);
+
+          setTimeout(function () {
+            expect(div.innerHTML).toMatch(/Bar/);
+            TestLocation.pop();
+            expect(div.innerHTML).toMatch(/Bar/);
+          }, Async.delay / 2);
+
+          setTimeout(function () {
+            expect(div.innerHTML).toMatch(/Bar/);
+            done();
+          }, Async.delay + 10);
+        });
+
+        router = Router.create({
+          routes: routes,
+          location: TestLocation
+        });
+
+        router.run(function (Handler) {
+          React.render(<Handler/>, div, function () {
+            steps.shift()();
+          });
+        });
+      });
+
+      it('ignores aborting asynchronously in willTransitionTo on router.transitionTo', function (done) {
+        TestLocation.history = [ '/bar' ];
+
+        var div = document.createElement('div');
+        var steps = [];
+        var router;
+
+        steps.push(function () {
+          expect(div.innerHTML).toMatch(/Bar/);
+          router.transitionTo('/abort-async');
+          expect(div.innerHTML).toMatch(/Bar/);
+
+          setTimeout(function () {
+            expect(div.innerHTML).toMatch(/Bar/);
+            router.transitionTo('/foo');
+            expect(div.innerHTML).toMatch(/Foo/);
+          }, Async.delay / 2);
+        });
+
+        steps.push(function () {
+          setTimeout(function () {
+            expect(div.innerHTML).toMatch(/Foo/);
+            TestLocation.pop();
+          }, Async.delay / 2 + 10);
+        });
+
+        steps.push(function () {
+          expect(div.innerHTML).toMatch(/Bar/);
+          done();
+        });
+
+        router = Router.create({
+          routes: routes,
+          location: TestLocation
+        });
+
+        router.run(function (Handler) {
+          React.render(<Handler/>, div, function () {
+            steps.shift()();
+          });
+        });
+      });
+
+      it('ignores aborting asynchronously in willTransitionTo on router.replaceWith', function (done) {
+        TestLocation.history = [ '/bar' ];
+
+        var div = document.createElement('div');
+        var steps = [];
+        var router;
+
+        steps.push(function () {
+          expect(div.innerHTML).toMatch(/Bar/);
+          router.transitionTo('/abort-async');
+          expect(div.innerHTML).toMatch(/Bar/);
+
+          setTimeout(function () {
+            expect(div.innerHTML).toMatch(/Bar/);
+            router.replaceWith('/foo');
+            expect(div.innerHTML).toMatch(/Foo/);
+          }, Async.delay / 2);
+        });
+
+        steps.push(function () {
+          setTimeout(function () {
+            expect(div.innerHTML).toMatch(/Foo/);
+            done();
+          }, Async.delay / 2 + 10);
+        });
+
+        router = Router.create({
+          routes: routes,
+          location: TestLocation
+        });
+
+        router.run(function (Handler) {
+          React.render(<Handler/>, div, function () {
+            steps.shift()();
+          });
+        });
+      });
     });
   });
 
