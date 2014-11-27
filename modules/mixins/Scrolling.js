@@ -1,21 +1,17 @@
 var invariant = require('react/lib/invariant');
 var canUseDOM = require('react/lib/ExecutionEnvironment').canUseDOM;
 var getWindowScrollPosition = require('../utils/getWindowScrollPosition');
-var Path = require('../utils/Path');
 
 function shouldUpdateScroll(state, prevState) {
-  if (!prevState) {
+  if (!prevState)
     return true;
-  }
 
-  var path = state.path;
-  var routes = state.routes;
-  var prevPath = prevState.path;
-  var prevRoutes = prevState.routes;
-
-  if (Path.withoutQuery(path) === Path.withoutQuery(prevPath)) {
+  // Don't update scroll position when only the query has changed.
+  if (state.pathname === prevState.pathname)
     return false;
-  }
+
+  var routes = state.routes;
+  var prevRoutes = prevState.routes;
 
   var sharedAncestorRoutes = routes.filter(function (route) {
     return prevRoutes.indexOf(route) !== -1;

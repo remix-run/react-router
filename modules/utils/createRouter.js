@@ -255,8 +255,8 @@ function createRouter(options) {
        * Performs a match of the given pathname against this router and returns an object
        * with the { routes, params } that match. Returns null if no match can be made.
        */
-      match: function (path) {
-        return findMatch(Path.withoutQuery(path), routes, this.defaultRoute, this.notFoundRoute) || null;
+      match: function (pathname) {
+        return findMatch(pathname, routes, this.defaultRoute, this.notFoundRoute) || null;
       },
 
       /**
@@ -289,7 +289,8 @@ function createRouter(options) {
           this.recordScrollPosition(prevPath);
         }
 
-        var match = this.match(path);
+        var pathname = Path.withoutQuery(path);
+        var match = this.match(pathname);
 
         warning(
           match != null,
@@ -334,6 +335,7 @@ function createRouter(options) {
 
             nextState.path = path;
             nextState.action = action;
+            nextState.pathname = pathname;
             nextState.routes = nextRoutes;
             nextState.params = nextParams;
             nextState.query = nextQuery;

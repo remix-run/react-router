@@ -23,6 +23,7 @@ var State = {
   contextTypes: {
     getCurrentPath: React.PropTypes.func.isRequired,
     getCurrentRoutes: React.PropTypes.func.isRequired,
+    getCurrentPathname: React.PropTypes.func.isRequired,
     getCurrentParams: React.PropTypes.func.isRequired,
     getCurrentQuery: React.PropTypes.func.isRequired,
     isActive: React.PropTypes.func.isRequired
@@ -40,6 +41,13 @@ var State = {
    */
   getRoutes: function () {
     return this.context.getCurrentRoutes();
+  },
+
+  /**
+   * Returns the current URL path without the query string.
+   */
+  getPathname: function () {
+    return this.context.getCurrentPathname();
   },
 
   /**
