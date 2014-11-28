@@ -1,3 +1,11 @@
+v0.11.4 - Fri, 28 Nov 2014 16:10:06 GMT
+---------------------------------------
+
+- [b9079c9](../../commit/b9079c9) [added] getPathname to Router.State
+- [91d4380](../../commit/91d4380) [fixed] Abort pending transition on user navigation
+- [5fe6c08](../../commit/5fe6c08) [changed] Don't update scroll if only query has changed
+
+
 v0.11.3 - Thu, 27 Nov 2014 05:29:48 GMT
 ---------------------------------------
 

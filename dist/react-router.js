@@ -745,21 +745,17 @@ module.exports = NavigationContext;
 var invariant = _dereq_('react/lib/invariant');
 var canUseDOM = _dereq_('react/lib/ExecutionEnvironment').canUseDOM;
 var getWindowScrollPosition = _dereq_('../utils/getWindowScrollPosition');
-var Path = _dereq_('../utils/Path');
 
 function shouldUpdateScroll(state, prevState) {
-  if (!prevState) {
+  if (!prevState)
     return true;
-  }
 
-  var path = state.path;
-  var routes = state.routes;
-  var prevPath = prevState.path;
-  var prevRoutes = prevState.routes;
-
-  if (Path.withoutQuery(path) === Path.withoutQuery(prevPath)) {
+  // Don't update scroll position when only the query has changed.
+  if (state.pathname === prevState.pathname)
     return false;
-  }
+
+  var routes = state.routes;
+  var prevRoutes = prevState.routes;
 
   var sharedAncestorRoutes = routes.filter(function (route) {
     return prevRoutes.indexOf(route) !== -1;
@@ -814,9 +810,8 @@ var Scrolling = {
   },
 
   _updateScroll: function (prevState) {
-    if (!shouldUpdateScroll(this.state, prevState)) {
+    if (!shouldUpdateScroll(this.state, prevState))
       return;
-    }
 
     var scrollBehavior = this.getScrollBehavior();
 
@@ -831,7 +826,7 @@ var Scrolling = {
 
 module.exports = Scrolling;
 
-},{"../utils/Path":21,"../utils/getWindowScrollPosition":28,"react/lib/ExecutionEnvironment":37,"react/lib/invariant":41}],18:[function(_dereq_,module,exports){
+},{"../utils/getWindowScrollPosition":28,"react/lib/ExecutionEnvironment":37,"react/lib/invariant":41}],18:[function(_dereq_,module,exports){
 var React = (typeof window !== "undefined" ? window.React : typeof global !== "undefined" ? global.React : null);
 
 /**
@@ -857,6 +852,7 @@ var State = {
   contextTypes: {
     getCurrentPath: React.PropTypes.func.isRequired,
     getCurrentRoutes: React.PropTypes.func.isRequired,
+    getCurrentPathname: React.PropTypes.func.isRequired,
     getCurrentParams: React.PropTypes.func.isRequired,
     getCurrentQuery: React.PropTypes.func.isRequired,
     isActive: React.PropTypes.func.isRequired
@@ -874,6 +870,13 @@ var State = {
    */
   getRoutes: function () {
     return this.context.getCurrentRoutes();
+  },
+
+  /**
+   * Returns the current URL path without the query string.
+   */
+  getPathname: function () {
+    return this.context.getCurrentPathname();
   },
 
   /**
@@ -949,6 +952,13 @@ var StateContext = {
   },
 
   /**
+   * Returns the current URL path without the query string.
+   */
+  getCurrentPathname: function () {
+    return this.state.pathname;
+  },
+
+  /**
    * Returns a read-only object of the currently active URL parameters.
    */
   getCurrentParams: function () {
@@ -977,6 +987,7 @@ var StateContext = {
   childContextTypes: {
     getCurrentPath: React.PropTypes.func.isRequired,
     getCurrentRoutes: React.PropTypes.func.isRequired,
+    getCurrentPathname: React.PropTypes.func.isRequired,
     getCurrentParams: React.PropTypes.func.isRequired,
     getCurrentQuery: React.PropTypes.func.isRequired,
     isActive: React.PropTypes.func.isRequired
@@ -986,6 +997,7 @@ var StateContext = {
     return {
       getCurrentPath: this.getCurrentPath,
       getCurrentRoutes: this.getCurrentRoutes,
+      getCurrentPathname: this.getCurrentPathname,
       getCurrentParams: this.getCurrentParams,
       getCurrentQuery: this.getCurrentQuery,
       isActive: this.isActive
@@ -1605,11 +1617,11 @@ function createRouter(options) {
       },
 
       /**
-       * Performs a match of the given path against this router and returns an object with
-       * the { path, routes, params, query } that match. Returns null if no match can be made.
+       * Performs a match of the given pathname against this router and returns an object
+       * with the { routes, params } that match. Returns null if no match can be made.
        */
-      match: function (path) {
-        return findMatch(Path.withoutQuery(path), routes, this.defaultRoute, this.notFoundRoute) || null;
+      match: function (pathname) {
+        return findMatch(pathname, routes, this.defaultRoute, this.notFoundRoute) || null;
       },
 
       /**
@@ -1630,7 +1642,7 @@ function createRouter(options) {
        */
       dispatch: function (path, action, callback) {
         if (pendingTransition) {
-          pendingTransition.abort(new Cancellation());
+          pendingTransition.abort(new Cancellation);
           pendingTransition = null;
         }
 
@@ -1638,11 +1650,13 @@ function createRouter(options) {
         if (prevPath === path)
           return; // Nothing to do!
 
-        if (prevPath && action !== LocationActions.REPLACE) {
+        // Record the scroll position as early as possible to
+        // get it before browsers try update it automatically.
+        if (prevPath && action !== LocationActions.REPLACE)
           this.recordScrollPosition(prevPath);
-        }
 
-        var match = this.match(path);
+        var pathname = Path.withoutQuery(path);
+        var match = this.match(pathname);
 
         warning(
           match != null,
@@ -1687,6 +1701,7 @@ function createRouter(options) {
 
             nextState.path = path;
             nextState.action = action;
+            nextState.pathname = pathname;
             nextState.routes = nextRoutes;
             nextState.params = nextParams;
             nextState.query = nextQuery;
@@ -2691,7 +2706,7 @@ var emptyFunction = _dereq_("./emptyFunction");
 var warning = emptyFunction;
 
 if ("production" !== "production") {
-  warning = function(condition, format ) {for (var args=[],$__0=2,$__1=arguments.length;$__0<$__1;$__0++) args.push(arguments[$__0]);
+  warning = function(condition, format ) {var args=Array.prototype.slice.call(arguments,2);
     if (format === undefined) {
       throw new Error(
         '`warning(condition, format, ...args)` requires a warning ' +
