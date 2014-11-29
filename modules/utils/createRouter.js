@@ -351,7 +351,7 @@ function createRouter(options) {
        * Router.*Location objects (e.g. Router.HashLocation or Router.HistoryLocation).
        */
       run: function (callback) {
-        function dispatchHandler(error, transition) {
+        var dispatchHandler = function(error, transition) {
           pendingTransition = null;
 
           if (error) {
@@ -380,7 +380,7 @@ function createRouter(options) {
           );
 
           // Listen for changes to the location.
-          function changeListener(change) {
+          var changeListener = function(change) {
             router.dispatch(change.path, change.type, dispatchHandler);
           }
 
