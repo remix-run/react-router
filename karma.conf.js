@@ -1,27 +1,30 @@
+var glob = require('glob');
+
 module.exports = function (config) {
   config.set({
 
     basePath: '',
 
-    frameworks: ['mocha', 'browserify'],
+    frameworks: [ 'mocha', 'browserify' ],
 
-    files: [
-      'tests.js'
-    ],
+    files: glob.sync('modules/**/__tests__/*-test.js'),
 
     exclude: [],
 
     preprocessors: {
-      'tests.js': ['browserify']
+      'modules/**/__tests__/*-test.js': [ 'browserify' ]
     },
 
     browserify: {
-      transform: [ ['reactify', {'es6': true}], 'envify' ],
+      debug: true,
       watch: true,
-      debug: true
+      transform: [
+        [ 'reactify', { 'es6': true } ],
+        'envify'
+      ]
     },
 
-    reporters: ['progress'],
+    reporters: [ 'progress' ],
 
     port: 9876,
 
@@ -31,7 +34,7 @@ module.exports = function (config) {
 
     autoWatch: true,
 
-    browsers: ['Chrome'],
+    browsers: [ 'Chrome' ],
 
     captureTimeout: 60000,
 
