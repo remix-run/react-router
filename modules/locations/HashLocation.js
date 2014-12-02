@@ -4,7 +4,7 @@ var LocationActions = require('../actions/LocationActions');
 var Path = require('../utils/Path');
 
 /**
- * Returns the current URL path from `window.location.hash`, including query string
+ * Returns the current URL path from the `hash` section of the URL, including query string
  */
 function getHashPath() {
   invariant(
@@ -13,7 +13,9 @@ function getHashPath() {
   );
 
   return Path.decode(
-    window.location.hash.substr(1)
+    //cannot use window.location.hash because its not consistent
+    //across browsers - Firefox will pre-decode it
+    window.location.href.split('#')[1] || ''
   );
 }
 
