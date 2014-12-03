@@ -67,15 +67,15 @@ The action that lead to the route change.
 
 The current URL path without the query string.
 
-##### `state.params`
+#### `state.params`
 
 The active params in the location match.
 
-##### `state.query`
+#### `state.query`
 
 The active query in the location match.
 
-##### `state.routes`
+#### `state.routes`
 
 An array of the matched [routes][1]. Very useful for fetching data before
 rendering.
