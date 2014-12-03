@@ -185,11 +185,11 @@ function createRouter(options) {
         } else {
           var route = namedRoutes[to];
 
-          invariant(
+          ("production" !== process.env.NODE_ENV ? invariant(
             route,
             'Unable to find <Route name="%s">',
             to
-          );
+          ) : invariant(route));
 
           path = route.path;
         }
@@ -211,10 +211,10 @@ function createRouter(options) {
        * a new URL onto the history stack.
        */
       transitionTo: function (to, params, query) {
-        invariant(
+        ("production" !== process.env.NODE_ENV ? invariant(
           typeof location !== 'string',
           'You cannot use transitionTo with a static location'
-        );
+        ) : invariant(typeof location !== 'string'));
 
         var path = this.makePath(to, params, query);
 
@@ -231,10 +231,10 @@ function createRouter(options) {
        * the current URL in the history stack.
        */
       replaceWith: function (to, params, query) {
-        invariant(
+        ("production" !== process.env.NODE_ENV ? invariant(
           typeof location !== 'string',
           'You cannot use replaceWith with a static location'
-        );
+        ) : invariant(typeof location !== 'string'));
 
         location.replace(this.makePath(to, params, query));
       },
@@ -243,10 +243,10 @@ function createRouter(options) {
        * Transitions to the previous URL.
        */
       goBack: function () {
-        invariant(
+        ("production" !== process.env.NODE_ENV ? invariant(
           typeof location !== 'string',
           'You cannot use goBack with a static location'
-        );
+        ) : invariant(typeof location !== 'string'));
 
         location.pop();
       },
@@ -293,11 +293,11 @@ function createRouter(options) {
         var pathname = Path.withoutQuery(path);
         var match = this.match(pathname);
 
-        warning(
+        ("production" !== process.env.NODE_ENV ? warning(
           match != null,
           'No route matches path "%s". Make sure you have <Route path="%s"> somewhere in your routes',
           path, path
-        );
+        ) : null);
 
         if (match == null)
           match = {};
@@ -367,20 +367,20 @@ function createRouter(options) {
         }
 
         if (typeof location === 'string') {
-          warning(
+          ("production" !== process.env.NODE_ENV ? warning(
             !canUseDOM || process.env.NODE_ENV === 'test',
             'You should not use a static location in a DOM environment because ' +
             'the router will not be kept in sync with the current URL'
-          );
+          ) : null);
 
           // Dispatch the location.
           router.dispatch(location, null, dispatchHandler);
         } else {
-          invariant(
+          ("production" !== process.env.NODE_ENV ? invariant(
             canUseDOM,
             'You cannot use %s in a non-DOM environment',
             location
-          );
+          ) : invariant(canUseDOM));
 
           // Listen for changes to the location.
           var changeListener = function(change) {

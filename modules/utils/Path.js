@@ -91,10 +91,10 @@ var Path = {
 
       // If param is optional don't check for existence
       if (paramName.slice(-1) !== '?') {
-        invariant(
+        ("production" !== process.env.NODE_ENV ? invariant(
           params[paramName] != null,
           'Missing "' + paramName + '" parameter for path "' + pattern + '"'
-        );
+        ) : invariant(params[paramName] != null));
       } else {
         paramName = paramName.slice(0, -1);
 
@@ -106,10 +106,10 @@ var Path = {
       if (paramName === 'splat' && Array.isArray(params[paramName])) {
         segment = params[paramName][splatIndex++];
 
-        invariant(
+        ("production" !== process.env.NODE_ENV ? invariant(
           segment != null,
           'Missing splat # ' + splatIndex + ' for path "' + pattern + '"'
-        );
+        ) : invariant(segment != null));
       } else {
         segment = params[paramName];
       }

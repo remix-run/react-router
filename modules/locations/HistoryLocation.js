@@ -7,10 +7,10 @@ var Path = require('../utils/Path');
  * Returns the current URL path from `window.location`, including query string
  */
 function getWindowPath() {
-  invariant(
+  ("production" !== process.env.NODE_ENV ? invariant(
     canUseDOM,
     'getWindowPath needs a DOM'
-  );
+  ) : invariant(canUseDOM));
 
   return Path.decode(
     window.location.pathname + window.location.search

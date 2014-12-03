@@ -7,10 +7,10 @@ var Path = require('../utils/Path');
  * Returns the current URL path from the `hash` section of the URL, including query string
  */
 function getHashPath() {
-  invariant(
+  ("production" !== process.env.NODE_ENV ? invariant(
     canUseDOM,
     'getHashPath needs a DOM'
-  );
+  ) : invariant(canUseDOM));
 
   return Path.decode(
     //cannot use window.location.hash because its not consistent

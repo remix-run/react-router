@@ -51,10 +51,10 @@ var Scrolling = {
   },
 
   componentWillMount: function () {
-    invariant(
+    ("production" !== process.env.NODE_ENV ? invariant(
       this.getScrollBehavior() == null || canUseDOM,
       'Cannot use scroll behavior without a DOM'
-    );
+    ) : invariant(this.getScrollBehavior() == null || canUseDOM));
   },
 
   componentDidMount: function () {
