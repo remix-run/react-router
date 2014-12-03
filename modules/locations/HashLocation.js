@@ -1,5 +1,4 @@
 var invariant = require('react/lib/invariant');
-var canUseDOM = require('react/lib/ExecutionEnvironment').canUseDOM;
 var LocationActions = require('../actions/LocationActions');
 var Path = require('../utils/Path');
 
@@ -8,11 +7,6 @@ var Path = require('../utils/Path');
  * query string.
  */
 function getHashPath() {
-  invariant(
-    canUseDOM,
-    'getHashPath needs a DOM'
-  );
-
   return Path.decode(
     // We can't use window.location.hash here because it's not
     // consistent across browsers - Firefox will pre-decode it!
