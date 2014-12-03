@@ -25,7 +25,7 @@ describe('RouteHandler', function () {
         }.bind(this);
       },
 
-      render: function() {
+      render: function () {
         return (
           <div>
             <h1>Root</h1>
@@ -45,15 +45,15 @@ describe('RouteHandler', function () {
     var div = document.createElement('div');
     var steps = [];
 
-    steps.push(function(Handler, state) {
+    steps.push(function (Handler, state) {
       React.render(<Handler/>, div, function () {
         expect(div.innerHTML).toMatch(/Foo/);
         TestLocation.push('/bar');
       });
     });
 
-    steps.push(function(Handler, state) {
-      updateComponentBeforeNextRender(function() {
+    steps.push(function (Handler, state) {
+      updateComponentBeforeNextRender(function () {
         expect(div.innerHTML).toMatch(/Foo/);
         React.render(<Handler/>, div, function () {
           expect(div.innerHTML).toMatch(/Bar/);

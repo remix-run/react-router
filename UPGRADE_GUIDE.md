@@ -232,12 +232,12 @@ control of rendering.
 
 ```js
 // v0.10.x
-Router.renderRoutesToString(routes, path, function(html) {
+Router.renderRoutesToString(routes, path, function (html) {
  // do something with `html`
 });
 
 // v0.11.x
-Router.run(routes, path, function(Handler) {
+Router.run(routes, path, function (Handler) {
   var html = React.renderToString(<Handler/>);
 });
 ```

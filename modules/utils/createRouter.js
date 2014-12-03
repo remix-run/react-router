@@ -354,7 +354,7 @@ function createRouter(options) {
        * Router.*Location objects (e.g. Router.HashLocation or Router.HistoryLocation).
        */
       run: function (callback) {
-        var dispatchHandler = function(error, transition) {
+        var dispatchHandler = function (error, transition) {
           pendingTransition = null;
 
           if (error) {
@@ -364,7 +364,7 @@ function createRouter(options) {
           } else {
             callback.call(router, router, nextState);
           }
-        }
+        };
 
         if (typeof location === 'string') {
           warning(
@@ -383,9 +383,9 @@ function createRouter(options) {
           );
 
           // Listen for changes to the location.
-          var changeListener = function(change) {
+          var changeListener = function (change) {
             router.dispatch(change.path, change.type, dispatchHandler);
-          }
+          };
 
           if (location.addChangeListener)
             location.addChangeListener(changeListener);

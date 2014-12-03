@@ -4,7 +4,7 @@ var LocationActions = require('../actions/LocationActions');
 var Path = require('../utils/Path');
 
 /**
- * Returns the current URL path from `window.location`, including query string
+ * Returns the current URL path from `window.location`, including query string.
  */
 function getWindowPath() {
   invariant(

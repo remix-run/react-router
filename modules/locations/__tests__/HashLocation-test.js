@@ -1,11 +1,11 @@
 var expect = require('expect');
 var HashLocation = require('../HashLocation');
 
-describe('HashLocation.getCurrentPath', function() {
+describe('HashLocation.getCurrentPath', function () {
 
   //this test is needed because Firefox will pre-decode the value retrieved from
   //window.location.hash
-  it('returns a properly decoded equivalent of what window.location.hash is set to', function() {
+  it('returns a properly decoded equivalent of what window.location.hash is set to', function () {
     window.location.hash = '';
     expect(HashLocation.getCurrentPath()).toBe('');
 
@@ -26,7 +26,7 @@ describe('HashLocation.getCurrentPath', function() {
 
     //decodeURI doesn't handle lone percents
     window.location.hash = '%';
-    expect(function() {
+    expect(function () {
       HashLocation.getCurrentPath();
     }).toThrow(URIError);
 
@@ -39,7 +39,7 @@ describe('HashLocation.getCurrentPath', function() {
         .toBe('complicated string/full%2Fof%3Fspecial%chars%20and%23escapesሴ');
   });
 
-  afterEach(function() {
+  afterEach(function () {
     window.location.hash = '';
   });
 });
