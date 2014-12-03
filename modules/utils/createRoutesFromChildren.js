@@ -34,7 +34,7 @@ function checkPropTypes(componentName, propTypes, props) {
       var error = propTypes[propName](props, propName, componentName);
 
       if (error instanceof Error)
-        warning(false, error.message);
+        ("production" !== process.env.NODE_ENV ? warning(false, error.message) : null);
     }
   }
 }
@@ -44,11 +44,11 @@ function createRoute(element, parentRoute, namedRoutes) {
   var props = element.props;
   var componentName = (type && type.displayName) || 'UnknownComponent';
 
-  invariant(
+  ("production" !== process.env.NODE_ENV ? invariant(
     CONFIG_ELEMENT_TYPES.indexOf(type) !== -1,
     'Unrecognized route configuration element "<%s>"',
     componentName
-  );
+  ) : invariant(CONFIG_ELEMENT_TYPES.indexOf(type) !== -1));
 
   if (type.propTypes)
     checkPropTypes(componentName, type.propTypes, props);
@@ -88,36 +88,36 @@ function createRoute(element, parentRoute, namedRoutes) {
   // Make sure the route's path has all params its parent needs.
   if (parentRoute && Array.isArray(parentRoute.paramNames)) {
     parentRoute.paramNames.forEach(function (paramName) {
-      invariant(
+      ("production" !== process.env.NODE_ENV ? invariant(
         route.paramNames.indexOf(paramName) !== -1,
         'The nested route path "%s" is missing the "%s" parameter of its parent path "%s"',
         route.path, paramName, parentRoute.path
-      );
+      ) : invariant(route.paramNames.indexOf(paramName) !== -1));
     });
   }
 
   // Make sure the route can be looked up by <Link>s.
   if (props.name) {
-    invariant(
+    ("production" !== process.env.NODE_ENV ? invariant(
       namedRoutes[props.name] == null,
       'You cannot use the name "%s" for more than one route',
       props.name
-    );
+    ) : invariant(namedRoutes[props.name] == null));
 
     namedRoutes[props.name] = route;
   }
 
   // Handle <NotFoundRoute>.
   if (type === NotFoundRoute.type) {
-    invariant(
+    ("production" !== process.env.NODE_ENV ? invariant(
       parentRoute,
       '<NotFoundRoute> must have a parent <Route>'
-    );
+    ) : invariant(parentRoute));
 
-    invariant(
+    ("production" !== process.env.NODE_ENV ? invariant(
       parentRoute.notFoundRoute == null,
       'You may not have more than one <NotFoundRoute> per <Route>'
-    );
+    ) : invariant(parentRoute.notFoundRoute == null));
 
     parentRoute.notFoundRoute = route;
 
@@ -126,15 +126,15 @@ function createRoute(element, parentRoute, namedRoutes) {
 
   // Handle <DefaultRoute>.
   if (type === DefaultRoute.type) {
-    invariant(
+    ("production" !== process.env.NODE_ENV ? invariant(
       parentRoute,
       '<DefaultRoute> must have a parent <Route>'
-    );
+    ) : invariant(parentRoute));
 
-    invariant(
+    ("production" !== process.env.NODE_ENV ? invariant(
       parentRoute.defaultRoute == null,
       'You may not have more than one <DefaultRoute> per <Route>'
-    );
+    ) : invariant(parentRoute.defaultRoute == null));
 
     parentRoute.defaultRoute = route;
 
