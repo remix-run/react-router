@@ -8,8 +8,9 @@ var Promise = require('./Promise');
  * A hook may return a promise if it needs to execute asynchronously.
  */
 function runHooks(hooks, callback) {
+  var promise;
   try {
-    var promise = hooks.reduce(function (promise, hook) {
+    promise = hooks.reduce(function (promise, hook) {
       // The first hook to use transition.wait makes the rest
       // of the transition async from that point forward.
       return promise ? promise.then(hook) : hook();
