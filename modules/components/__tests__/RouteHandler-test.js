@@ -1,16 +1,10 @@
-/** @jsx React.DOM */
-var assert = require('assert');
 var expect = require('expect');
 var React = require('react');
 var Router = require('../../index');
 var Route = require('../Route');
 var RouteHandler = require('../RouteHandler');
 var TestLocation = require('../../locations/TestLocation');
-var {
-  Bar,
-  Foo
-} = require('../../__tests__/TestHandlers');
-
+var { Bar, Foo } = require('../../__tests__/TestHandlers');
 
 describe('RouteHandler', function () {
 

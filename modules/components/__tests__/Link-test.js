@@ -2,7 +2,6 @@ var assert = require('assert');
 var expect = require('expect');
 var React = require('react/addons');
 var Router = require('../../index');
-var ReactTestUtils = React.addons.TestUtils;
 var Route = require('../Route');
 var Link = require('../Link');
 var RouteHandler = require('../RouteHandler');
@@ -15,7 +14,7 @@ describe('A Link', function () {
     it('knows how to make its href', function () {
       var LinkHandler = React.createClass({
         render: function () {
-          return <Link to="foo" params={{bar: 'baz'}} query={{qux: 'quux'}}>Link</Link>
+          return <Link to="foo" params={{bar: 'baz'}} query={{qux: 'quux'}}>Link</Link>;
         }
       });
 

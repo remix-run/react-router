@@ -1,12 +1,10 @@
-var assert = require('assert');
 var expect = require('expect');
 var React = require('react');
+var Router = require('../index');
 var Route = require('../components/Route');
-var RouteHandler = require('../components/RouteHandler');
 var TestLocation = require('../locations/TestLocation');
 var ScrollToTopBehavior = require('../behaviors/ScrollToTopBehavior');
 var getWindowScrollPosition = require('../utils/getWindowScrollPosition');
-var Router = require('../index');
 
 var {
   Foo,
@@ -681,7 +679,7 @@ describe('Router.run', function () {
 
   describe('locations', function () {
     it('defaults to HashLocation', function (done) {
-      var routes = <Route path="/" handler={Foo}/>
+      var routes = <Route path="/" handler={Foo}/>;
       var div = document.createElement('div');
       Router.run(routes, function (Handler) {
         React.render(<Handler/>, div, function () {

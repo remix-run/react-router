@@ -1,7 +1,5 @@
-/** @jsx React.DOM */
-var assert = require('assert');
 var expect = require('expect');
-var React = require('react/addons');
+var React = require('react');
 var Router = require('../../index');
 var TestLocation = require('../../locations/TestLocation');
 var { Nested, Bar } = require('../../__tests__/TestHandlers');
@@ -20,7 +18,7 @@ describe('Redirect', function () {
     ];
 
     Router.run(routes, TestLocation, function (Handler) {
-      var html = React.render(<Handler />, div);
+      React.render(<Handler />, div);
       expect(div.innerHTML).toMatch(/Bar/);
     });
   });
@@ -36,7 +34,7 @@ describe('Redirect', function () {
       ];
 
       Router.run(routes, TestLocation, function (Handler) {
-        var html = React.render(<Handler />, div);
+        React.render(<Handler />, div);
         expect(div.innerHTML).toMatch(/Bar/);
       });
     });
@@ -57,7 +55,7 @@ describe('Redirect', function () {
       );
 
       Router.run(routes, TestLocation, function (Handler) {
-        var html = React.render(<Handler />, div);
+        React.render(<Handler />, div);
         expect(div.innerHTML).toMatch(/Bar/);
       });
     });
@@ -76,7 +74,7 @@ describe('Redirect', function () {
       );
 
       Router.run(routes, TestLocation, function (Handler) {
-        var html = React.render(<Handler />, div);
+        React.render(<Handler />, div);
         expect(div.innerHTML).toMatch(/Bar/);
       });
     });

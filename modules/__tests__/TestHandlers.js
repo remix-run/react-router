@@ -16,19 +16,19 @@ exports.Nested = React.createClass({
 
 exports.Foo = React.createClass({
   render: function () {
-    return <div className="Foo">Foo</div>
+    return <div className="Foo">Foo</div>;
   }
 });
 
 exports.Bar = React.createClass({
   render: function () {
-    return <div className="Bar">Bar</div>
+    return <div className="Bar">Bar</div>;
   }
 });
 
 exports.Baz = React.createClass({
   render: function () {
-    return <div className="Baz">Baz</div>
+    return <div className="Baz">Baz</div>;
   }
 });
 
@@ -42,7 +42,7 @@ exports.Async = React.createClass({
   },
 
   render: function () {
-    return <div className="Async">Async</div>
+    return <div className="Async">Async</div>;
   }
 });
 
@@ -112,6 +112,6 @@ exports.EchoFooProp = React.createClass({
 exports.EchoBarParam = React.createClass({
   mixins: [ State ],
   render: function () {
-    return <div className="EchoBarParam">{this.getParams().bar}</div>
+    return <div className="EchoBarParam">{this.getParams().bar}</div>;
   }
 });

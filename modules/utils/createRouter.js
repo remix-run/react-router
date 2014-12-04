@@ -1,3 +1,5 @@
+/* jshint -W058 */
+
 var React = require('react');
 var warning = require('react/lib/warning');
 var invariant = require('react/lib/invariant');

@@ -1,11 +1,8 @@
-/** @jsx React.DOM */
-var assert = require('assert');
 var expect = require('expect');
-var React = require('react/addons');
+var React = require('react');
 var Router = require('../../index');
 var DefaultRoute = require('../DefaultRoute');
 var Route = require('../Route');
-var RouteHandler = require('../RouteHandler');
 var { Foo, Bar, Nested } = require('../../__tests__/TestHandlers');
 
 describe('DefaultRoute', function () {

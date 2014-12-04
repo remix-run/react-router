@@ -1,6 +1,5 @@
 var assert = require('assert');
-var expect = require('expect');
-var React = require('react/addons');
+var React = require('react');
 var Router = require('../../index');
 var Route = require('../../components/Route');
 var TestLocation = require('../../locations/TestLocation');
@@ -28,7 +27,7 @@ describe('State', function () {
     describe('and the right params are given', function () {
       var component;
       var div = document.createElement('div');
-      var routes = <Route name="products" path="/products/:id/:variant" handler={Foo}/>
+      var routes = <Route name="products" path="/products/:id/:variant" handler={Foo}/>;
 
       beforeEach(function (done) {
         TestLocation.history = ['/products/123/456?search=abc&limit=789'];
