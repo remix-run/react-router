@@ -1,4 +1,5 @@
 var HistoryLocation = require('./HistoryLocation');
+var History = require('../utils/History');
 var Path = require('../utils/Path');
 
 /**
@@ -16,11 +17,7 @@ var RefreshLocation = {
     window.location.replace(Path.encode(path));
   },
 
-  pop: function () {
-    // History will always have length 1 when using full
-    // page refreshes, so use window.history directly.
-    window.history.back();
-  },
+  pop: History.back,
 
   getCurrentPath: HistoryLocation.getCurrentPath,
 
