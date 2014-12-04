@@ -35,7 +35,7 @@ module.exports = {
     components[depth] = this.refs[this.props.ref || '__routeHandler__'];
   },
 
-  getRouteHandler(props) {
+  getRouteHandler: function (props) {
     var route = this.context.getRouteAtDepth(this.getRouteDepth());
     return route ? React.createElement(route.handler, props || this.props) : null;
   }
