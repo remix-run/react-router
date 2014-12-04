@@ -60,7 +60,7 @@ describe('Path.extractParams', function () {
     });
 
     describe('and the pattern is optional', function () {
-      var pattern = 'comments/:id?/edit'
+      var pattern = 'comments/:id?/edit';
 
       describe('and the path matches with supplied param', function () {
         it('returns an object with the params', function () {
@@ -76,7 +76,7 @@ describe('Path.extractParams', function () {
     });
 
     describe('and the pattern and forward slash are optional', function () {
-      var pattern = 'comments/:id?/?edit'
+      var pattern = 'comments/:id?/?edit';
 
       describe('and the path matches with supplied param', function () {
         it('returns an object with the params', function () {
@@ -205,7 +205,7 @@ describe('Path.injectParams', function () {
     describe('and a param is missing', function () {
       it('throws an Error', function () {
         expect(function () {
-          Path.injectParams(pattern, {})
+          Path.injectParams(pattern, {});
         }).toThrow(Error);
       });
     });
