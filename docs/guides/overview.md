@@ -254,7 +254,7 @@ var routes = (
   <Route handler={App}>
 
     <Route name="inbox" handler={Inbox}>
-      <Route name="message" path=":messageId" handler={Message}/>
+      <Route name="messages" path=":messageId" handler={Messages}/>
       <DefaultRoute handler={InboxStats}/>
     </Route>
 
@@ -284,13 +284,13 @@ access the params.
 Remember our message route looks like this:
 
 ```xml
-<Route name="message" path=":messageId" handler={Message}/>
+<Route name="messages" path=":messageId" handler={Messages}/>
 ```
 
 Lets look at accessing the `messageId` in `Message`.
 
 ```js
-var Message = React.createClass({
+var Messages = React.createClass({
   mixins: [Router.State],
   render: function () {
     return (
@@ -330,7 +330,7 @@ var Inbox = React.createClass({
 });
 
 // and Message changes to:
-var Message = React.createClass({
+var Messages = React.createClass({
   render: function () {
     return (
       <div>{this.props.params.messageId}</div>
@@ -384,7 +384,7 @@ beyond what was matched isn't recognized.
       after the parent route's path `/inbox/*`
     -->
     <NotFoundRoute handler={InboxNotFound}/>
-    <Route name="message" path="/inbox/:messageId" handler={Message}/>
+    <Route name="messages" path="/inbox/:messageId" handler={Messages}/>
     <DefaultRoute handler={InboxStats}/>
   </Route>
   <Route name="calendar" path="/calendar" handler={Calendar}/>
@@ -399,7 +399,7 @@ beyond what was matched isn't recognized.
 URLs in an app change, so we made it easy to not break the old ones.
 
 ```xml
-<Route name="message" path="/inbox/:messageId" handler={Message} />
+<Route name="messages" path="/inbox/:messageId" handler={Messages} />
 <Redirect from="/messages/:messageId" to="message" />
 ```
 
