@@ -1,4 +1,3 @@
-var invariant = require('react/lib/invariant');
 var LocationActions = require('../actions/LocationActions');
 var Path = require('../utils/Path');
 
