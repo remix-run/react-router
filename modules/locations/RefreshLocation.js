@@ -17,6 +17,8 @@ var RefreshLocation = {
   },
 
   pop: function () {
+    // History will always have length 1 when using full
+    // page refreshes, so use window.history directly.
     window.history.back();
   },
 

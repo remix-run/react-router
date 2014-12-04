@@ -17,3 +17,5 @@ exports.State = require('./mixins/State');
 
 exports.create = require('./utils/createRouter');
 exports.run = require('./utils/runRouter');
+
+exports.History = require('./utils/History');

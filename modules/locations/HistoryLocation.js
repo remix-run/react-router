@@ -1,4 +1,5 @@
 var LocationActions = require('../actions/LocationActions');
+var History = require('../utils/History');
 var Path = require('../utils/Path');
 
 /**
@@ -51,6 +52,7 @@ var HistoryLocation = {
 
   push: function (path) {
     window.history.pushState({ path: path }, '', Path.encode(path));
+    History.length += 1;
     notifyChange(LocationActions.PUSH);
   },
 
@@ -60,7 +62,7 @@ var HistoryLocation = {
   },
 
   pop: function () {
-    window.history.back();
+    History.back();
   },
 
   getCurrentPath: getWindowPath,

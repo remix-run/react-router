@@ -18,6 +18,7 @@ var supportsHistory = require('./supportsHistory');
 var Transition = require('./Transition');
 var PropTypes = require('./PropTypes');
 var Redirect = require('./Redirect');
+var History = require('./History');
 var Cancellation = require('./Cancellation');
 var Path = require('./Path');
 
@@ -242,7 +243,8 @@ function createRouter(options) {
       },
 
       /**
-       * Transitions to the previous URL.
+       * Transitions to the previous URL. Returns true if the router
+       * was able to go back, false otherwise.
        */
       goBack: function () {
         invariant(
@@ -250,7 +252,14 @@ function createRouter(options) {
           'You cannot use goBack with a static location'
         );
 
-        location.pop();
+        if (History.length > 1) {
+          location.pop();
+          return true;
+        }
+
+        warning(false, 'goBack() was ignored because there is no router history');
+
+        return false;
       },
 
       /**

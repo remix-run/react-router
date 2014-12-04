@@ -1,4 +1,5 @@
 var LocationActions = require('../actions/LocationActions');
+var History = require('../utils/History');
 var Path = require('../utils/Path');
 
 /**
@@ -29,6 +30,9 @@ function ensureSlash() {
 var _changeListeners = [];
 
 function notifyChange(type) {
+  if (type === LocationActions.PUSH)
+    History.length += 1;
+
   var change = {
     path: getHashPath(),
     type: type
@@ -87,7 +91,7 @@ var HashLocation = {
 
   pop: function () {
     _actionType = LocationActions.POP;
-    window.history.back();
+    History.back();
   },
 
   getCurrentPath: getHashPath,
