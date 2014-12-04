@@ -33,7 +33,7 @@ var App = React.createClass({
 
   render: function () {
     var links = this.state.tacos.map(function (taco) {
-      return <li><Link to="taco" params={taco}>{taco.name}</Link></li>
+      return <li><Link to="taco" params={taco}>{taco.name}</Link></li>;
     });
     return (
       <div className="App">

@@ -14,7 +14,7 @@
   },
   "scripts": {
     "test": "scripts/test --browsers Firefox --single-run",
-    "lint": "jsxhint modules"
+    "lint": "jsxhint examples modules"
   },
   "authors": [
     "Ryan Florence",

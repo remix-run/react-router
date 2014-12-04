@@ -35,7 +35,7 @@ var PreDashboard = React.createClass({
   mixins: [ AsyncElement ],
   bundle: require('bundle?lazy!./dashboard.js'),
   preRender: function () {
-    return <div>Loading dashboard...</div>
+    return <div>Loading dashboard...</div>;
   }
 });
 
@@ -43,7 +43,7 @@ var PreInbox = React.createClass({
   mixins: [ AsyncElement ],
   bundle: require('bundle?lazy!./inbox.js'),
   preRender: function () {
-    return <div>Loading inbox...</div>
+    return <div>Loading inbox...</div>;
   }
 });
 

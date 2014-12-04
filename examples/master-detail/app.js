@@ -41,7 +41,7 @@ var App = React.createClass({
 
   render: function () {
     var contacts = this.state.contacts.map(function (contact) {
-      return <li key={contact.id}><Link to="contact" params={contact}>{contact.first}</Link></li>
+      return <li key={contact.id}><Link to="contact" params={contact}>{contact.first}</Link></li>;
     });
     return (
       <div className="App">
@@ -71,7 +71,7 @@ var Contact = React.createClass({
   mixins: [ Router.Navigation, Router.State ],
 
   getStateFromStore: function (id) {
-    var id = this.getParams().id;
+    id = this.getParams().id;
     return {
       contact: ContactStore.getContact(id)
     };
@@ -97,7 +97,7 @@ var Contact = React.createClass({
     if (!this.isMounted())
       return;
 
-    this.setState(this.getStateFromStore())
+    this.setState(this.getStateFromStore());
   },
 
   destroy: function () {

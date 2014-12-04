@@ -128,19 +128,19 @@ var Logout = React.createClass({
 
 var auth = {
   login: function (email, pass, cb) {
-    var cb = arguments[arguments.length - 1];
+    cb = arguments[arguments.length - 1];
     if (localStorage.token) {
-      cb && cb(true);
+      if (cb) cb(true);
       this.onChange(true);
       return;
     }
     pretendRequest(email, pass, function (res) {
       if (res.authenticated) {
         localStorage.token = res.token;
-        cb && cb(true);
+        if (cb) cb(true);
         this.onChange(true);
       } else {
-        cb && cb(false);
+        if (cb) cb(false);
         this.onChange(false);
       }
     }.bind(this));
@@ -152,7 +152,7 @@ var auth = {
 
   logout: function (cb) {
     delete localStorage.token;
-    cb && cb();
+    if (cb) cb();
     this.onChange(false);
   },
 

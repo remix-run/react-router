@@ -4,7 +4,7 @@ var { Route, DefaultRoute, RouteHandler, Link } = Router;
 
 var App = React.createClass({
   getInitialState: function () {
-    return { states: findStates() }
+    return { states: findStates() };
   },
 
   render: function () {

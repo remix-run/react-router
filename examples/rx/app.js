@@ -1,6 +1,6 @@
 var React = require('react');
 var Router = require('react-router');
-var { Route, Redirect, RouteHandler, Link } = Router;
+var { Route, RouteHandler, Link } = Router;
 var Rx = require('rx');
 
 var App = React.createClass({
@@ -41,6 +41,5 @@ var source = Rx.Observable.fromEventPattern(function(h) {
 });
 
 source.subscribe(function (Handler) {
-  React.render(<Handler/>, document.getElementById('example'))
+  React.render(<Handler/>, document.getElementById('example'));
 });
-
