@@ -19,8 +19,8 @@ var routes = (
 
 // if using express it might look like this
 app.use(function (req, res) {
-  // pass in `req.path` and the router will immediately match
-  Router.run(routes, req.path, function (Handler) {
+  // pass in `req.url` and the router will immediately match
+  Router.run(routes, req.url, function (Handler) {
     var content = React.renderToString(<Handler/>);
     res.render('main', {content: content});
   });
