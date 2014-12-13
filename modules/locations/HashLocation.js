@@ -7,11 +7,13 @@ var Path = require('../utils/Path');
  * query string.
  */
 function getHashPath() {
-  return Path.decode(
-    // We can't use window.location.hash here because it's not
-    // consistent across browsers - Firefox will pre-decode it!
-    window.location.href.split('#')[1] || ''
-  );
+  // We can't use window.location.hash here because it's not
+  // consistent across browsers - Firefox will pre-decode it!
+  var hash = window.location.href.split('#')[1] || '';
+  if ( HashLocation.hashbangEnabled && hash.match('!') !== null ) {
+    hash = hash.substr(1);
+  }
+  return Path.decode(hash);
 }
 
 var _actionType;
@@ -60,6 +62,8 @@ function onHashChange() {
  * A Location that uses `window.location.hash`.
  */
 var HashLocation = {
+  
+  hashbangEnabled: false,
 
   addChangeListener: function (listener) {
     _changeListeners.push(listener);
@@ -81,12 +85,12 @@ var HashLocation = {
 
   push: function (path) {
     _actionType = LocationActions.PUSH;
-    window.location.hash = Path.encode(path);
+    window.location.hash = (this.hashbangEnabled ? '!' : '') + Path.encode(path);
   },
 
   replace: function (path) {
     _actionType = LocationActions.REPLACE;
-    window.location.replace(window.location.pathname + '#' + Path.encode(path));
+    window.location.replace(window.location.pathname + '#' + (this.hashbangEnabled ? '!' : '') + Path.encode(path));
   },
 
   pop: function () {
