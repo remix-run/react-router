@@ -11,8 +11,8 @@ function getWindowScrollPosition() {
   );
 
   return {
-    x: window.scrollX,
-    y: window.scrollY
+    x: window.pageXOffset || document.documentElement.scrollLeft,
+    y: window.pageYOffset || document.documentElement.scrollTop
   };
 }
 
