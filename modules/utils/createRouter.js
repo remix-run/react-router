@@ -148,10 +148,19 @@ function createRouter(options) {
   var state = {};
   var nextState = {};
   var pendingTransition = null;
+  var isRunning = false;
+  var changeListener = null;
 
   function updateState() {
     state = nextState;
     nextState = {};
+  }
+
+  function cancelPendingTransition() {
+    if (pendingTransition) {
+      pendingTransition.abort(new Cancellation);
+      pendingTransition = null;
+    }
   }
 
   // Automatically fall back to full page refreshes in
@@ -175,6 +184,18 @@ function createRouter(options) {
        */
       addRoutes: function (children) {
         routes.push.apply(routes, createRoutesFromChildren(children, this, namedRoutes));
+      },
+
+      replaceRoutes: function (children) {
+        invariant(
+          !isRunning,
+          'You cannot call replaceRoutes() while router is running. Call pause() to pause the router first.'
+        );
+
+        routes = [];
+        namedRoutes = {};
+
+        this.addRoutes(children);
       },
 
       /**
@@ -286,14 +307,11 @@ function createRouter(options) {
        * transition. To resolve asynchronously, they may use transition.wait(promise). If no
        * hooks wait, the transition is fully synchronous.
        */
-      dispatch: function (path, action, callback) {
-        if (pendingTransition) {
-          pendingTransition.abort(new Cancellation);
-          pendingTransition = null;
-        }
+      dispatch: function (path, action, callback, force) {
+        cancelPendingTransition();
 
         var prevPath = state.path;
-        if (prevPath === path)
+        if (prevPath === path && !force)
           return; // Nothing to do!
 
         // Record the scroll position as early as possible to
@@ -365,6 +383,11 @@ function createRouter(options) {
        * Router.*Location objects (e.g. Router.HashLocation or Router.HistoryLocation).
        */
       run: function (callback) {
+        invariant(
+          !isRunning,
+          'You cannot call run() while router is running. Call pause() to pause the router.'
+        );
+
         var dispatchHandler = function (error, transition) {
           pendingTransition = null;
 
@@ -394,7 +417,7 @@ function createRouter(options) {
           );
 
           // Listen for changes to the location.
-          var changeListener = function (change) {
+          changeListener = function (change) {
             router.dispatch(change.path, change.type, dispatchHandler);
           };
 
@@ -402,10 +425,24 @@ function createRouter(options) {
             location.addChangeListener(changeListener);
 
           // Bootstrap using the current path.
-          router.dispatch(location.getCurrentPath(), null, dispatchHandler);
+          isRunning = true;
+          router.dispatch(location.getCurrentPath(), null, dispatchHandler, true);
         }
-      }
+      },
 
+      pause: function () {
+        invariant(
+          isRunning,
+          'You cannot call pause() while router is not running. Call start() to resume the router.'
+        );
+
+        cancelPendingTransition();
+
+        if (location.removeChangeListener)
+          location.removeChangeListener(changeListener);
+
+        isRunning = false;
+      }
     },
 
     propTypes: {

@@ -50,6 +50,21 @@ var HistoryLocation = {
     _isListening = true;
   },
 
+  removeChangeListener: function (listener) {
+    _changeListeners.splice(_changeListeners.indexOf(listener), 1);
+
+    if (!_isListening)
+      return;
+
+    if (window.removeEventListener) {
+      window.removeEventListener('popstate', onPopState, false);
+    } else {
+      window.detachEvent('popstate', onPopState);
+    }
+
+    _isListening = false;
+  },
+
   push: function (path) {
     window.history.pushState({ path: path }, '', Path.encode(path));
     History.length += 1;
