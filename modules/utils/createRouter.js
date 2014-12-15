@@ -130,34 +130,30 @@ function hasMatch(routes, route, prevParams, nextParams) {
  * be the URL path that was used in the request, including the query string.
  */
 function createRouter(options) {
-  options = options || {};
-
-  if (typeof options === 'function') {
-    options = { routes: options }; // Router.create(<Route>)
-  } else if (Array.isArray(options)) {
-    options = { routes: options }; // Router.create([ <Route>, <Route> ])
-  }
-
   var routes = [];
   var namedRoutes = {};
   var components = [];
-  var location = options.location || DEFAULT_LOCATION;
-  var scrollBehavior = options.scrollBehavior || DEFAULT_SCROLL_BEHAVIOR;
-  var onError = options.onError || defaultErrorHandler;
-  var onAbort = options.onAbort || defaultAbortHandler;
+  var location = null;
+  var scrollBehavior = null;
+  var onError = null;
+  var onAbort = null;
   var state = {};
   var nextState = {};
   var pendingTransition = null;
+  var isRunning = false;
+  var changeListener = null;
 
   function updateState() {
     state = nextState;
     nextState = {};
   }
 
-  // Automatically fall back to full page refreshes in
-  // browsers that don't support the HTML history API.
-  if (location === HistoryLocation && !supportsHistory())
-    location = RefreshLocation;
+  function cancelPendingTransition() {
+    if (pendingTransition) {
+      pendingTransition.abort(new Cancellation);
+      pendingTransition = null;
+    }
+  }
 
   var router = React.createClass({
 
@@ -169,6 +165,31 @@ function createRouter(options) {
 
       defaultRoute: null,
       notFoundRoute: null,
+
+      setOptions: function (options) {
+        if (options.location)
+          location = options.location;
+
+        // Automatically fall back to full page refreshes in
+        // browsers that don't support the HTML history API.
+        if (location === HistoryLocation && !supportsHistory())
+          location = RefreshLocation;
+
+        if (options.scrollBehavior)
+          scrollBehavior = options.scrollBehavior;
+
+        if (options.onError)
+          onError = options.onError;
+
+        if (options.onAbort)
+          onAbort = options.onAbort;
+
+        if (options.routes) {
+          routes = [];
+          namedRoutes = {};
+          this.addRoutes(options.routes);
+        }
+      },
 
       /**
        * Adds routes to this router from the given children object (see ReactChildren).
@@ -286,14 +307,11 @@ function createRouter(options) {
        * transition. To resolve asynchronously, they may use transition.wait(promise). If no
        * hooks wait, the transition is fully synchronous.
        */
-      dispatch: function (path, action, callback) {
-        if (pendingTransition) {
-          pendingTransition.abort(new Cancellation);
-          pendingTransition = null;
-        }
+      dispatch: function (path, action, callback, force) {
+        cancelPendingTransition();
 
         var prevPath = state.path;
-        if (prevPath === path)
+        if (prevPath === path && !force)
           return; // Nothing to do!
 
         // Record the scroll position as early as possible to
@@ -365,6 +383,11 @@ function createRouter(options) {
        * Router.*Location objects (e.g. Router.HashLocation or Router.HistoryLocation).
        */
       run: function (callback) {
+        invariant(
+          !isRunning,
+          'You cannot call run() while router is running. Call stop() to stop the router.'
+        );
+
         var dispatchHandler = function (error, transition) {
           pendingTransition = null;
 
@@ -394,7 +417,7 @@ function createRouter(options) {
           );
 
           // Listen for changes to the location.
-          var changeListener = function (change) {
+          changeListener = function (change) {
             router.dispatch(change.path, change.type, dispatchHandler);
           };
 
@@ -402,10 +425,24 @@ function createRouter(options) {
             location.addChangeListener(changeListener);
 
           // Bootstrap using the current path.
-          router.dispatch(location.getCurrentPath(), null, dispatchHandler);
+          isRunning = true;
+          router.dispatch(location.getCurrentPath(), null, dispatchHandler, true);
         }
-      }
+      },
 
+      stop: function () {
+        invariant(
+          isRunning,
+          'You cannot call stop() while router is not running. Call run() to run the router.'
+        );
+
+        cancelPendingTransition();
+
+        if (location.removeChangeListener)
+          location.removeChangeListener(changeListener);
+
+        isRunning = false;
+      }
     },
 
     propTypes: {
@@ -459,8 +496,27 @@ function createRouter(options) {
 
   });
 
-  if (options.routes)
-    router.addRoutes(options.routes);
+  options = options || {};
+
+  if (typeof options === 'function') {
+    options = { routes: options }; // Router.create(<Route>)
+  } else if (Array.isArray(options)) {
+    options = { routes: options }; // Router.create([ <Route>, <Route> ])
+  }
+
+  if (!options.location)
+    options.location = DEFAULT_LOCATION;
+
+  if (!options.scrollBehavior)
+    options.scrollBehavior = DEFAULT_SCROLL_BEHAVIOR;
+
+  if (!options.onError)
+    options.onError = defaultErrorHandler;
+
+  if (!options.onAbort)
+    options.onAbort = defaultAbortHandler;
+
+  router.setOptions(options);
 
   return router;
 }

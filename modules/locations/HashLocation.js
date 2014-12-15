@@ -79,6 +79,21 @@ var HashLocation = {
     _isListening = true;
   },
 
+  removeChangeListener: function (listener) {
+    _changeListeners.splice(_changeListeners.indexOf(listener), 1);
+
+    if (!_isListening)
+      return;
+
+    if (window.removeEventListener) {
+      window.removeEventListener('hashchange', onHashChange, false);
+    } else {
+      window.detachEvent('onhashchange', onHashChange);
+    }
+
+    _isListening = false;
+  },
+
   push: function (path) {
     _actionType = LocationActions.PUSH;
     window.location.hash = Path.encode(path);
