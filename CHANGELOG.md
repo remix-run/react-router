@@ -1,3 +1,13 @@
+v0.11.5 - Mon, 15 Dec 2014 22:32:38 GMT
+---------------------------------------
+
+- [31e1eb2](../../commit/31e1eb2) [fixed] supportsHistory false negatives on WP 8.1
+- [6417285](../../commit/6417285) [fixed] tearing down location listeners
+- [457d944](../../commit/457d944) [added] Router.History
+- [a07003e](../../commit/a07003e) [fixed] URL hash consistency across browsers
+- [c6aa4d3](../../commit/c6aa4d3) [fixed] Now execute willTransition* hooks even if only query part was changed
+
+
 v0.11.4 - Fri, 28 Nov 2014 16:10:06 GMT
 ---------------------------------------
 

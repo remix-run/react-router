@@ -94,7 +94,7 @@ var DefaultRoute = React.createClass({
 
 module.exports = DefaultRoute;
 
-},{"../mixins/FakeNode":14,"../utils/PropTypes":23}],5:[function(_dereq_,module,exports){
+},{"../mixins/FakeNode":14,"../utils/PropTypes":25}],5:[function(_dereq_,module,exports){
 var React = (typeof window !== "undefined" ? window.React : typeof global !== "undefined" ? global.React : null);
 var classSet = _dereq_('react/lib/cx');
 var assign = _dereq_('react/lib/Object.assign');
@@ -203,7 +203,7 @@ var Link = React.createClass({
 
 module.exports = Link;
 
-},{"../mixins/Navigation":15,"../mixins/State":18,"react/lib/Object.assign":38,"react/lib/cx":39}],6:[function(_dereq_,module,exports){
+},{"../mixins/Navigation":15,"../mixins/State":19,"react/lib/Object.assign":40,"react/lib/cx":41}],6:[function(_dereq_,module,exports){
 var React = (typeof window !== "undefined" ? window.React : typeof global !== "undefined" ? global.React : null);
 var FakeNode = _dereq_('../mixins/FakeNode');
 var PropTypes = _dereq_('../utils/PropTypes');
@@ -231,7 +231,7 @@ var NotFoundRoute = React.createClass({
 
 module.exports = NotFoundRoute;
 
-},{"../mixins/FakeNode":14,"../utils/PropTypes":23}],7:[function(_dereq_,module,exports){
+},{"../mixins/FakeNode":14,"../utils/PropTypes":25}],7:[function(_dereq_,module,exports){
 var React = (typeof window !== "undefined" ? window.React : typeof global !== "undefined" ? global.React : null);
 var FakeNode = _dereq_('../mixins/FakeNode');
 var PropTypes = _dereq_('../utils/PropTypes');
@@ -257,7 +257,7 @@ var Redirect = React.createClass({
 
 module.exports = Redirect;
 
-},{"../mixins/FakeNode":14,"../utils/PropTypes":23}],8:[function(_dereq_,module,exports){
+},{"../mixins/FakeNode":14,"../utils/PropTypes":25}],8:[function(_dereq_,module,exports){
 var React = (typeof window !== "undefined" ? window.React : typeof global !== "undefined" ? global.React : null);
 var FakeNode = _dereq_('../mixins/FakeNode');
 
@@ -318,6 +318,7 @@ module.exports = Route;
 
 },{"../mixins/FakeNode":14}],9:[function(_dereq_,module,exports){
 var React = (typeof window !== "undefined" ? window.React : typeof global !== "undefined" ? global.React : null);
+var RouteHandlerMixin = _dereq_('../mixins/RouteHandler');
 
 /**
  * A <RouteHandler> component renders the active child route handler
@@ -327,56 +328,23 @@ var RouteHandler = React.createClass({
 
   displayName: 'RouteHandler',
 
+  mixins: [RouteHandlerMixin],
+
   getDefaultProps: function () {
     return {
       ref: '__routeHandler__'
     };
   },
 
-  contextTypes: {
-    getRouteAtDepth: React.PropTypes.func.isRequired,
-    getRouteComponents: React.PropTypes.func.isRequired,
-    routeHandlers: React.PropTypes.array.isRequired
-  },
-
-  childContextTypes: {
-    routeHandlers: React.PropTypes.array.isRequired
-  },
-
-  getChildContext: function () {
-    return {
-      routeHandlers: this.context.routeHandlers.concat([ this ])
-    };
-  },
-
-  getRouteDepth: function () {
-    return this.context.routeHandlers.length - 1;
-  },
-
-  componentDidMount: function () {
-    this._updateRouteComponent();
-  },
-
-  componentDidUpdate: function () {
-    this._updateRouteComponent();
-  },
-
-  _updateRouteComponent: function () {
-    var depth = this.getRouteDepth();
-    var components = this.context.getRouteComponents();
-    components[depth] = this.refs[this.props.ref];
-  },
-
   render: function () {
-    var route = this.context.getRouteAtDepth(this.getRouteDepth());
-    return route ? React.createElement(route.handler, this.props) : null;
+    return this.getRouteHandler();
   }
 
 });
 
 module.exports = RouteHandler;
 
-},{}],10:[function(_dereq_,module,exports){
+},{"../mixins/RouteHandler":17}],10:[function(_dereq_,module,exports){
 exports.DefaultRoute = _dereq_('./components/DefaultRoute');
 exports.Link = _dereq_('./components/Link');
 exports.NotFoundRoute = _dereq_('./components/NotFoundRoute');
@@ -397,23 +365,22 @@ exports.State = _dereq_('./mixins/State');
 exports.create = _dereq_('./utils/createRouter');
 exports.run = _dereq_('./utils/runRouter');
 
-},{"./behaviors/ImitateBrowserBehavior":2,"./behaviors/ScrollToTopBehavior":3,"./components/DefaultRoute":4,"./components/Link":5,"./components/NotFoundRoute":6,"./components/Redirect":7,"./components/Route":8,"./components/RouteHandler":9,"./locations/HashLocation":11,"./locations/HistoryLocation":12,"./locations/RefreshLocation":13,"./mixins/Navigation":15,"./mixins/State":18,"./utils/createRouter":26,"./utils/runRouter":30}],11:[function(_dereq_,module,exports){
-var invariant = _dereq_('react/lib/invariant');
-var canUseDOM = _dereq_('react/lib/ExecutionEnvironment').canUseDOM;
+exports.History = _dereq_('./utils/History');
+
+},{"./behaviors/ImitateBrowserBehavior":2,"./behaviors/ScrollToTopBehavior":3,"./components/DefaultRoute":4,"./components/Link":5,"./components/NotFoundRoute":6,"./components/Redirect":7,"./components/Route":8,"./components/RouteHandler":9,"./locations/HashLocation":11,"./locations/HistoryLocation":12,"./locations/RefreshLocation":13,"./mixins/Navigation":15,"./mixins/State":19,"./utils/History":22,"./utils/createRouter":28,"./utils/runRouter":32}],11:[function(_dereq_,module,exports){
 var LocationActions = _dereq_('../actions/LocationActions');
+var History = _dereq_('../utils/History');
 var Path = _dereq_('../utils/Path');
 
 /**
- * Returns the current URL path from `window.location.hash`, including query string
+ * Returns the current URL path from the `hash` portion of the URL, including
+ * query string.
  */
 function getHashPath() {
-  invariant(
-    canUseDOM,
-    'getHashPath needs a DOM'
-  );
-
   return Path.decode(
-    window.location.hash.substr(1)
+    // We can't use window.location.hash here because it's not
+    // consistent across browsers - Firefox will pre-decode it!
+    window.location.href.split('#')[1] || ''
   );
 }
 
@@ -433,6 +400,9 @@ function ensureSlash() {
 var _changeListeners = [];
 
 function notifyChange(type) {
+  if (type === LocationActions.PUSH)
+    History.length += 1;
+
   var change = {
     path: getHashPath(),
     type: type
@@ -479,6 +449,26 @@ var HashLocation = {
     _isListening = true;
   },
 
+  removeChangeListener: function(listener) {
+    for (var i = 0, l = _changeListeners.length; i < l; i ++) {
+      if (_changeListeners[i] === listener) {
+        _changeListeners.splice(i, 1);
+        break;
+      }
+    }
+
+    if (window.removeEventListener) {
+      window.removeEventListener('hashchange', onHashChange, false);
+    } else {
+      window.removeEvent('onhashchange', onHashChange);
+    }
+
+    if (_changeListeners.length === 0)
+      _isListening = false;
+  },
+
+
+
   push: function (path) {
     _actionType = LocationActions.PUSH;
     window.location.hash = Path.encode(path);
@@ -491,7 +481,7 @@ var HashLocation = {
 
   pop: function () {
     _actionType = LocationActions.POP;
-    window.history.back();
+    History.back();
   },
 
   getCurrentPath: getHashPath,
@@ -504,21 +494,15 @@ var HashLocation = {
 
 module.exports = HashLocation;
 
-},{"../actions/LocationActions":1,"../utils/Path":21,"react/lib/ExecutionEnvironment":37,"react/lib/invariant":41}],12:[function(_dereq_,module,exports){
-var invariant = _dereq_('react/lib/invariant');
-var canUseDOM = _dereq_('react/lib/ExecutionEnvironment').canUseDOM;
+},{"../actions/LocationActions":1,"../utils/History":22,"../utils/Path":23}],12:[function(_dereq_,module,exports){
 var LocationActions = _dereq_('../actions/LocationActions');
+var History = _dereq_('../utils/History');
 var Path = _dereq_('../utils/Path');
 
 /**
- * Returns the current URL path from `window.location`, including query string
+ * Returns the current URL path from `window.location`, including query string.
  */
 function getWindowPath() {
-  invariant(
-    canUseDOM,
-    'getWindowPath needs a DOM'
-  );
-
   return Path.decode(
     window.location.pathname + window.location.search
   );
@@ -563,8 +547,29 @@ var HistoryLocation = {
     _isListening = true;
   },
 
+  removeChangeListener: function(listener) {
+    for (var i = 0, l = _changeListeners.length; i < l; i ++) {
+      if (_changeListeners[i] === listener) {
+        _changeListeners.splice(i, 1);
+        break;
+      }
+    }
+
+    if (window.addEventListener) {
+      window.removeEventListener('popstate', onPopState);
+    } else {
+      window.removeEvent('popstate', onPopState);
+    }
+
+    if (_changeListeners.length === 0)
+      _isListening = false;
+  },
+
+
+
   push: function (path) {
     window.history.pushState({ path: path }, '', Path.encode(path));
+    History.length += 1;
     notifyChange(LocationActions.PUSH);
   },
 
@@ -574,7 +579,7 @@ var HistoryLocation = {
   },
 
   pop: function () {
-    window.history.back();
+    History.back();
   },
 
   getCurrentPath: getWindowPath,
@@ -587,8 +592,9 @@ var HistoryLocation = {
 
 module.exports = HistoryLocation;
 
-},{"../actions/LocationActions":1,"../utils/Path":21,"react/lib/ExecutionEnvironment":37,"react/lib/invariant":41}],13:[function(_dereq_,module,exports){
+},{"../actions/LocationActions":1,"../utils/History":22,"../utils/Path":23}],13:[function(_dereq_,module,exports){
 var HistoryLocation = _dereq_('./HistoryLocation');
+var History = _dereq_('../utils/History');
 var Path = _dereq_('../utils/Path');
 
 /**
@@ -606,9 +612,7 @@ var RefreshLocation = {
     window.location.replace(Path.encode(path));
   },
 
-  pop: function () {
-    window.history.back();
-  },
+  pop: History.back,
 
   getCurrentPath: HistoryLocation.getCurrentPath,
 
@@ -620,7 +624,7 @@ var RefreshLocation = {
 
 module.exports = RefreshLocation;
 
-},{"../utils/Path":21,"./HistoryLocation":12}],14:[function(_dereq_,module,exports){
+},{"../utils/History":22,"../utils/Path":23,"./HistoryLocation":12}],14:[function(_dereq_,module,exports){
 var invariant = _dereq_('react/lib/invariant');
 
 var FakeNode = {
@@ -637,7 +641,7 @@ var FakeNode = {
 
 module.exports = FakeNode;
 
-},{"react/lib/invariant":41}],15:[function(_dereq_,module,exports){
+},{"react/lib/invariant":43}],15:[function(_dereq_,module,exports){
 var React = (typeof window !== "undefined" ? window.React : typeof global !== "undefined" ? global.React : null);
 
 /**
@@ -742,6 +746,49 @@ var NavigationContext = {
 module.exports = NavigationContext;
 
 },{}],17:[function(_dereq_,module,exports){
+var React = (typeof window !== "undefined" ? window.React : typeof global !== "undefined" ? global.React : null);
+
+module.exports = {
+  contextTypes: {
+    getRouteAtDepth: React.PropTypes.func.isRequired,
+    getRouteComponents: React.PropTypes.func.isRequired,
+    routeHandlers: React.PropTypes.array.isRequired
+  },
+
+  childContextTypes: {
+    routeHandlers: React.PropTypes.array.isRequired
+  },
+
+  getChildContext: function () {
+    return {
+      routeHandlers: this.context.routeHandlers.concat([ this ])
+    };
+  },
+
+  getRouteDepth: function () {
+    return this.context.routeHandlers.length - 1;
+  },
+
+  componentDidMount: function () {
+    this._updateRouteComponent();
+  },
+
+  componentDidUpdate: function () {
+    this._updateRouteComponent();
+  },
+
+  _updateRouteComponent: function () {
+    var depth = this.getRouteDepth();
+    var components = this.context.getRouteComponents();
+    components[depth] = this.refs[this.props.ref || '__routeHandler__'];
+  },
+
+  getRouteHandler: function (props) {
+    var route = this.context.getRouteAtDepth(this.getRouteDepth());
+    return route ? React.createElement(route.handler, props || this.props) : null;
+  }
+};
+},{}],18:[function(_dereq_,module,exports){
 var invariant = _dereq_('react/lib/invariant');
 var canUseDOM = _dereq_('react/lib/ExecutionEnvironment').canUseDOM;
 var getWindowScrollPosition = _dereq_('../utils/getWindowScrollPosition');
@@ -826,7 +873,7 @@ var Scrolling = {
 
 module.exports = Scrolling;
 
-},{"../utils/getWindowScrollPosition":28,"react/lib/ExecutionEnvironment":37,"react/lib/invariant":41}],18:[function(_dereq_,module,exports){
+},{"../utils/getWindowScrollPosition":30,"react/lib/ExecutionEnvironment":39,"react/lib/invariant":43}],19:[function(_dereq_,module,exports){
 var React = (typeof window !== "undefined" ? window.React : typeof global !== "undefined" ? global.React : null);
 
 /**
@@ -905,7 +952,7 @@ var State = {
 
 module.exports = State;
 
-},{}],19:[function(_dereq_,module,exports){
+},{}],20:[function(_dereq_,module,exports){
 var React = (typeof window !== "undefined" ? window.React : typeof global !== "undefined" ? global.React : null);
 var assign = _dereq_('react/lib/Object.assign');
 var Path = _dereq_('../utils/Path');
@@ -1008,7 +1055,7 @@ var StateContext = {
 
 module.exports = StateContext;
 
-},{"../utils/Path":21,"react/lib/Object.assign":38}],20:[function(_dereq_,module,exports){
+},{"../utils/Path":23,"react/lib/Object.assign":40}],21:[function(_dereq_,module,exports){
 /**
  * Represents a cancellation caused by navigating away
  * before the previous transition has fully resolved.
@@ -1017,7 +1064,38 @@ function Cancellation() { }
 
 module.exports = Cancellation;
 
-},{}],21:[function(_dereq_,module,exports){
+},{}],22:[function(_dereq_,module,exports){
+var invariant = _dereq_('react/lib/invariant');
+var canUseDOM = _dereq_('react/lib/ExecutionEnvironment').canUseDOM;
+
+var History = {
+
+  /**
+   * Sends the browser back one entry in the history, if one is available.
+   */
+  back: function () {
+    invariant(
+      canUseDOM,
+      'Cannot use History.back without a DOM'
+    );
+
+    // Do this first so that History.length will
+    // be accurate in location change listeners.
+    History.length -= 1;
+
+    window.history.back();
+  },
+
+  /**
+   * The current number of entries in the history.
+   */
+  length: 1
+
+};
+
+module.exports = History;
+
+},{"react/lib/ExecutionEnvironment":39,"react/lib/invariant":43}],23:[function(_dereq_,module,exports){
 var invariant = _dereq_('react/lib/invariant');
 var merge = _dereq_('qs/lib/utils').merge;
 var qs = _dereq_('qs');
@@ -1197,7 +1275,7 @@ var Path = {
 
 module.exports = Path;
 
-},{"qs":32,"qs/lib/utils":36,"react/lib/invariant":41}],22:[function(_dereq_,module,exports){
+},{"qs":34,"qs/lib/utils":38,"react/lib/invariant":43}],24:[function(_dereq_,module,exports){
 var Promise = _dereq_('when/lib/Promise');
 
 // TODO: Use process.env.NODE_ENV check + envify to enable
@@ -1205,22 +1283,22 @@ var Promise = _dereq_('when/lib/Promise');
 
 module.exports = Promise;
 
-},{"when/lib/Promise":43}],23:[function(_dereq_,module,exports){
+},{"when/lib/Promise":45}],25:[function(_dereq_,module,exports){
 var PropTypes = {
 
   /**
    * Requires that the value of a prop be falsy.
    */
-  falsy: function (props, propName, elementName) {
+  falsy: function (props, propName, componentName) {
     if (props[propName])
-      return new Error('<' + elementName + '> may not have a "' + propName + '" prop');
+      return new Error('<' + componentName + '> may not have a "' + propName + '" prop');
   }
 
 };
 
 module.exports = PropTypes;
 
-},{}],24:[function(_dereq_,module,exports){
+},{}],26:[function(_dereq_,module,exports){
 /**
  * Encapsulates a redirect to the given route.
  */
@@ -1232,7 +1310,7 @@ function Redirect(to, params, query) {
 
 module.exports = Redirect;
 
-},{}],25:[function(_dereq_,module,exports){
+},{}],27:[function(_dereq_,module,exports){
 var assign = _dereq_('react/lib/Object.assign');
 var reversedArray = _dereq_('./reversedArray');
 var Redirect = _dereq_('./Redirect');
@@ -1243,8 +1321,9 @@ var Promise = _dereq_('./Promise');
  * A hook may return a promise if it needs to execute asynchronously.
  */
 function runHooks(hooks, callback) {
+  var promise;
   try {
-    var promise = hooks.reduce(function (promise, hook) {
+    promise = hooks.reduce(function (promise, hook) {
       // The first hook to use transition.wait makes the rest
       // of the transition async from that point forward.
       return promise ? promise.then(hook) : hook();
@@ -1362,7 +1441,9 @@ assign(Transition.prototype, {
 
 module.exports = Transition;
 
-},{"./Promise":22,"./Redirect":24,"./reversedArray":29,"react/lib/Object.assign":38}],26:[function(_dereq_,module,exports){
+},{"./Promise":24,"./Redirect":26,"./reversedArray":31,"react/lib/Object.assign":40}],28:[function(_dereq_,module,exports){
+/* jshint -W058 */
+
 var React = (typeof window !== "undefined" ? window.React : typeof global !== "undefined" ? global.React : null);
 var warning = _dereq_('react/lib/warning');
 var invariant = _dereq_('react/lib/invariant');
@@ -1381,6 +1462,7 @@ var supportsHistory = _dereq_('./supportsHistory');
 var Transition = _dereq_('./Transition');
 var PropTypes = _dereq_('./PropTypes');
 var Redirect = _dereq_('./Redirect');
+var History = _dereq_('./History');
 var Cancellation = _dereq_('./Cancellation');
 var Path = _dereq_('./Path');
 
@@ -1605,7 +1687,8 @@ function createRouter(options) {
       },
 
       /**
-       * Transitions to the previous URL.
+       * Transitions to the previous URL. Returns true if the router
+       * was able to go back, false otherwise.
        */
       goBack: function () {
         invariant(
@@ -1613,7 +1696,14 @@ function createRouter(options) {
           'You cannot use goBack with a static location'
         );
 
-        location.pop();
+        if (History.length > 1) {
+          location.pop();
+          return true;
+        }
+
+        warning(false, 'goBack() was ignored because there is no router history');
+
+        return false;
       },
 
       /**
@@ -1688,6 +1778,16 @@ function createRouter(options) {
           toRoutes = nextRoutes;
         }
 
+        // If routes' hooks arrays are empty, then we transition to current route.
+        // But path is somehow still get changed.
+        // That could be only because of route query changes.
+        // Need to push current route to routes' hooks arrays.
+        if (!toRoutes.length && !fromRoutes.length) {
+          var currentRoute = state.routes[state.routes.length-1];
+          fromRoutes = [currentRoute];
+          toRoutes = [currentRoute];
+        }
+
         var transition = new Transition(path, this.replaceWith.bind(this, path));
         pendingTransition = transition;
 
@@ -1719,7 +1819,7 @@ function createRouter(options) {
        * Router.*Location objects (e.g. Router.HashLocation or Router.HistoryLocation).
        */
       run: function (callback) {
-        function dispatchHandler(error, transition) {
+        var dispatchHandler = function (error, transition) {
           pendingTransition = null;
 
           if (error) {
@@ -1729,7 +1829,7 @@ function createRouter(options) {
           } else {
             callback.call(router, router, nextState);
           }
-        }
+        };
 
         if (typeof location === 'string') {
           warning(
@@ -1748,9 +1848,9 @@ function createRouter(options) {
           );
 
           // Listen for changes to the location.
-          function changeListener(change) {
+          var changeListener = function (change) {
             router.dispatch(change.path, change.type, dispatchHandler);
-          }
+          };
 
           if (location.addChangeListener)
             location.addChangeListener(changeListener);
@@ -1758,6 +1858,10 @@ function createRouter(options) {
           // Bootstrap using the current path.
           router.dispatch(location.getCurrentPath(), null, dispatchHandler);
         }
+      },
+
+      teardown: function() {
+        location.removeChangeListener(this.changeListener);
       }
 
     },
@@ -1793,6 +1897,10 @@ function createRouter(options) {
       this.setState(state);
     },
 
+    componentWillUnmount: function() {
+      router.teardown();
+    },
+
     render: function () {
       return this.getRouteAtDepth(0) ? React.createElement(RouteHandler, this.props) : null;
     },
@@ -1821,7 +1929,9 @@ function createRouter(options) {
 
 module.exports = createRouter;
 
-},{"../actions/LocationActions":1,"../behaviors/ImitateBrowserBehavior":2,"../components/RouteHandler":9,"../locations/HashLocation":11,"../locations/HistoryLocation":12,"../locations/RefreshLocation":13,"../mixins/NavigationContext":16,"../mixins/Scrolling":17,"../mixins/StateContext":19,"./Cancellation":20,"./Path":21,"./PropTypes":23,"./Redirect":24,"./Transition":25,"./createRoutesFromChildren":27,"./supportsHistory":31,"react/lib/ExecutionEnvironment":37,"react/lib/invariant":41,"react/lib/warning":42}],27:[function(_dereq_,module,exports){
+},{"../actions/LocationActions":1,"../behaviors/ImitateBrowserBehavior":2,"../components/RouteHandler":9,"../locations/HashLocation":11,"../locations/HistoryLocation":12,"../locations/RefreshLocation":13,"../mixins/NavigationContext":16,"../mixins/Scrolling":18,"../mixins/StateContext":20,"./Cancellation":21,"./History":22,"./Path":23,"./PropTypes":25,"./Redirect":26,"./Transition":27,"./createRoutesFromChildren":29,"./supportsHistory":33,"react/lib/ExecutionEnvironment":39,"react/lib/invariant":43,"react/lib/warning":44}],29:[function(_dereq_,module,exports){
+/* jshint -W084 */
+
 var React = (typeof window !== "undefined" ? window.React : typeof global !== "undefined" ? global.React : null);
 var warning = _dereq_('react/lib/warning');
 var invariant = _dereq_('react/lib/invariant');
@@ -1987,7 +2097,7 @@ function createRoutesFromChildren(children, parentRoute, namedRoutes) {
 
 module.exports = createRoutesFromChildren;
 
-},{"../components/DefaultRoute":4,"../components/NotFoundRoute":6,"../components/Redirect":7,"../components/Route":8,"./Path":21,"react/lib/invariant":41,"react/lib/warning":42}],28:[function(_dereq_,module,exports){
+},{"../components/DefaultRoute":4,"../components/NotFoundRoute":6,"../components/Redirect":7,"../components/Route":8,"./Path":23,"react/lib/invariant":43,"react/lib/warning":44}],30:[function(_dereq_,module,exports){
 var invariant = _dereq_('react/lib/invariant');
 var canUseDOM = _dereq_('react/lib/ExecutionEnvironment').canUseDOM;
 
@@ -2001,21 +2111,21 @@ function getWindowScrollPosition() {
   );
 
   return {
-    x: window.scrollX,
-    y: window.scrollY
+    x: window.pageXOffset || document.documentElement.scrollLeft,
+    y: window.pageYOffset || document.documentElement.scrollTop
   };
 }
 
 module.exports = getWindowScrollPosition;
 
-},{"react/lib/ExecutionEnvironment":37,"react/lib/invariant":41}],29:[function(_dereq_,module,exports){
+},{"react/lib/ExecutionEnvironment":39,"react/lib/invariant":43}],31:[function(_dereq_,module,exports){
 function reversedArray(array) {
   return array.slice(0).reverse();
 }
 
 module.exports = reversedArray;
 
-},{}],30:[function(_dereq_,module,exports){
+},{}],32:[function(_dereq_,module,exports){
 var createRouter = _dereq_('./createRouter');
 
 /**
@@ -2065,17 +2175,19 @@ function runRouter(routes, location, callback) {
 
 module.exports = runRouter;
 
-},{"./createRouter":26}],31:[function(_dereq_,module,exports){
+},{"./createRouter":28}],33:[function(_dereq_,module,exports){
 function supportsHistory() {
   /*! taken from modernizr
    * https://github.com/Modernizr/Modernizr/blob/master/LICENSE
    * https://github.com/Modernizr/Modernizr/blob/master/feature-detects/history.js
+   * changed to avoid false negatives for Windows Phones: https://github.com/rackt/react-router/issues/586
    */
   var ua = navigator.userAgent;
   if ((ua.indexOf('Android 2.') !== -1 ||
       (ua.indexOf('Android 4.0') !== -1)) &&
       ua.indexOf('Mobile Safari') !== -1 &&
-      ua.indexOf('Chrome') === -1) {
+      ua.indexOf('Chrome') === -1 &&
+      ua.indexOf('Windows Phone') === -1) {
     return false;
   }
   return (window.history && 'pushState' in window.history);
@@ -2083,10 +2195,10 @@ function supportsHistory() {
 
 module.exports = supportsHistory;
 
-},{}],32:[function(_dereq_,module,exports){
+},{}],34:[function(_dereq_,module,exports){
 module.exports = _dereq_('./lib');
 
-},{"./lib":33}],33:[function(_dereq_,module,exports){
+},{"./lib":35}],35:[function(_dereq_,module,exports){
 // Load modules
 
 var Stringify = _dereq_('./stringify');
@@ -2103,7 +2215,7 @@ module.exports = {
     parse: Parse
 };
 
-},{"./parse":34,"./stringify":35}],34:[function(_dereq_,module,exports){
+},{"./parse":36,"./stringify":37}],36:[function(_dereq_,module,exports){
 // Load modules
 
 var Utils = _dereq_('./utils');
@@ -2259,7 +2371,7 @@ module.exports = function (str, options) {
     return Utils.compact(obj);
 };
 
-},{"./utils":36}],35:[function(_dereq_,module,exports){
+},{"./utils":38}],37:[function(_dereq_,module,exports){
 // Load modules
 
 var Utils = _dereq_('./utils');
@@ -2319,7 +2431,7 @@ module.exports = function (obj, options) {
     return keys.join(delimiter);
 };
 
-},{"./utils":36}],36:[function(_dereq_,module,exports){
+},{"./utils":38}],38:[function(_dereq_,module,exports){
 // Load modules
 
 
@@ -2460,7 +2572,7 @@ exports.isBuffer = function (obj) {
     }
 };
 
-},{}],37:[function(_dereq_,module,exports){
+},{}],39:[function(_dereq_,module,exports){
 /**
  * Copyright 2013-2014, Facebook, Inc.
  * All rights reserved.
@@ -2505,7 +2617,7 @@ var ExecutionEnvironment = {
 
 module.exports = ExecutionEnvironment;
 
-},{}],38:[function(_dereq_,module,exports){
+},{}],40:[function(_dereq_,module,exports){
 /**
  * Copyright 2014, Facebook, Inc.
  * All rights reserved.
@@ -2552,7 +2664,7 @@ function assign(target, sources) {
 
 module.exports = assign;
 
-},{}],39:[function(_dereq_,module,exports){
+},{}],41:[function(_dereq_,module,exports){
 /**
  * Copyright 2013-2014, Facebook, Inc.
  * All rights reserved.
@@ -2591,7 +2703,7 @@ function cx(classNames) {
 
 module.exports = cx;
 
-},{}],40:[function(_dereq_,module,exports){
+},{}],42:[function(_dereq_,module,exports){
 /**
  * Copyright 2013-2014, Facebook, Inc.
  * All rights reserved.
@@ -2625,7 +2737,7 @@ emptyFunction.thatReturnsArgument = function(arg) { return arg; };
 
 module.exports = emptyFunction;
 
-},{}],41:[function(_dereq_,module,exports){
+},{}],43:[function(_dereq_,module,exports){
 /**
  * Copyright 2013-2014, Facebook, Inc.
  * All rights reserved.
@@ -2680,7 +2792,7 @@ var invariant = function(condition, format, a, b, c, d, e, f) {
 
 module.exports = invariant;
 
-},{}],42:[function(_dereq_,module,exports){
+},{}],44:[function(_dereq_,module,exports){
 /**
  * Copyright 2014, Facebook, Inc.
  * All rights reserved.
@@ -2723,7 +2835,7 @@ if ("production" !== "production") {
 
 module.exports = warning;
 
-},{"./emptyFunction":40}],43:[function(_dereq_,module,exports){
+},{"./emptyFunction":42}],45:[function(_dereq_,module,exports){
 /** @license MIT License (c) copyright 2010-2014 original author or authors */
 /** @author Brian Cavalier */
 /** @author John Hann */
@@ -2742,7 +2854,7 @@ define(function (_dereq_) {
 });
 })(typeof define === 'function' && define.amd ? define : function (factory) { module.exports = factory(_dereq_); });
 
-},{"./Scheduler":45,"./async":46,"./makePromise":47}],44:[function(_dereq_,module,exports){
+},{"./Scheduler":47,"./async":48,"./makePromise":49}],46:[function(_dereq_,module,exports){
 /** @license MIT License (c) copyright 2010-2014 original author or authors */
 /** @author Brian Cavalier */
 /** @author John Hann */
@@ -2814,7 +2926,7 @@ define(function() {
 });
 }(typeof define === 'function' && define.amd ? define : function(factory) { module.exports = factory(); }));
 
-},{}],45:[function(_dereq_,module,exports){
+},{}],47:[function(_dereq_,module,exports){
 /** @license MIT License (c) copyright 2010-2014 original author or authors */
 /** @author Brian Cavalier */
 /** @author John Hann */
@@ -2898,7 +3010,7 @@ define(function(_dereq_) {
 });
 }(typeof define === 'function' && define.amd ? define : function(factory) { module.exports = factory(_dereq_); }));
 
-},{"./Queue":44}],46:[function(_dereq_,module,exports){
+},{"./Queue":46}],48:[function(_dereq_,module,exports){
 /** @license MIT License (c) copyright 2010-2014 original author or authors */
 /** @author Brian Cavalier */
 /** @author John Hann */
@@ -2971,7 +3083,7 @@ define(function(_dereq_) {
 });
 }(typeof define === 'function' && define.amd ? define : function(factory) { module.exports = factory(_dereq_); }));
 
-},{}],47:[function(_dereq_,module,exports){
+},{}],49:[function(_dereq_,module,exports){
 /** @license MIT License (c) copyright 2010-2014 original author or authors */
 /** @author Brian Cavalier */
 /** @author John Hann */
