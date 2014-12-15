@@ -130,21 +130,13 @@ function hasMatch(routes, route, prevParams, nextParams) {
  * be the URL path that was used in the request, including the query string.
  */
 function createRouter(options) {
-  options = options || {};
-
-  if (typeof options === 'function') {
-    options = { routes: options }; // Router.create(<Route>)
-  } else if (Array.isArray(options)) {
-    options = { routes: options }; // Router.create([ <Route>, <Route> ])
-  }
-
   var routes = [];
   var namedRoutes = {};
   var components = [];
-  var location = options.location || DEFAULT_LOCATION;
-  var scrollBehavior = options.scrollBehavior || DEFAULT_SCROLL_BEHAVIOR;
-  var onError = options.onError || defaultErrorHandler;
-  var onAbort = options.onAbort || defaultAbortHandler;
+  var location = null;
+  var scrollBehavior = null;
+  var onError = null;
+  var onAbort = null;
   var state = {};
   var nextState = {};
   var pendingTransition = null;
@@ -163,11 +155,6 @@ function createRouter(options) {
     }
   }
 
-  // Automatically fall back to full page refreshes in
-  // browsers that don't support the HTML history API.
-  if (location === HistoryLocation && !supportsHistory())
-    location = RefreshLocation;
-
   var router = React.createClass({
 
     displayName: 'Router',
@@ -179,23 +166,36 @@ function createRouter(options) {
       defaultRoute: null,
       notFoundRoute: null,
 
+      setOptions: function (options) {
+        if (options.location)
+          location = options.location;
+
+        // Automatically fall back to full page refreshes in
+        // browsers that don't support the HTML history API.
+        if (location === HistoryLocation && !supportsHistory())
+          location = RefreshLocation;
+
+        if (options.scrollBehavior)
+          scrollBehavior = options.scrollBehavior;
+
+        if (options.onError)
+          onError = options.onError;
+
+        if (options.onAbort)
+          onAbort = options.onAbort;
+
+        if (options.routes) {
+          routes = [];
+          namedRoutes = {};
+          this.addRoutes(options.routes);
+        }
+      },
+
       /**
        * Adds routes to this router from the given children object (see ReactChildren).
        */
       addRoutes: function (children) {
         routes.push.apply(routes, createRoutesFromChildren(children, this, namedRoutes));
-      },
-
-      replaceRoutes: function (children) {
-        invariant(
-          !isRunning,
-          'You cannot call replaceRoutes() while router is running. Call pause() to pause the router first.'
-        );
-
-        routes = [];
-        namedRoutes = {};
-
-        this.addRoutes(children);
       },
 
       /**
@@ -385,7 +385,7 @@ function createRouter(options) {
       run: function (callback) {
         invariant(
           !isRunning,
-          'You cannot call run() while router is running. Call pause() to pause the router.'
+          'You cannot call run() while router is running. Call stop() to stop the router.'
         );
 
         var dispatchHandler = function (error, transition) {
@@ -430,10 +430,10 @@ function createRouter(options) {
         }
       },
 
-      pause: function () {
+      stop: function () {
         invariant(
           isRunning,
-          'You cannot call pause() while router is not running. Call start() to resume the router.'
+          'You cannot call stop() while router is not running. Call run() to run the router.'
         );
 
         cancelPendingTransition();
@@ -496,8 +496,27 @@ function createRouter(options) {
 
   });
 
-  if (options.routes)
-    router.addRoutes(options.routes);
+  options = options || {};
+
+  if (typeof options === 'function') {
+    options = { routes: options }; // Router.create(<Route>)
+  } else if (Array.isArray(options)) {
+    options = { routes: options }; // Router.create([ <Route>, <Route> ])
+  }
+
+  if (!options.location)
+    options.location = DEFAULT_LOCATION;
+
+  if (!options.scrollBehavior)
+    options.scrollBehavior = DEFAULT_SCROLL_BEHAVIOR;
+
+  if (!options.onError)
+    options.onError = defaultErrorHandler;
+
+  if (!options.onAbort)
+    options.onAbort = defaultAbortHandler;
+
+  router.setOptions(options);
 
   return router;
 }
