@@ -50,6 +50,26 @@ var HistoryLocation = {
     _isListening = true;
   },
 
+  removeChangeListener: function(listener) {
+    for (var i = 0, l = _changeListeners.length; i < l; i ++) {
+      if (_changeListeners[i] === listener) {
+        _changeListeners.splice(i, 1);
+        break;
+      }
+    }
+
+    if (window.addEventListener) {
+      window.removeEventListener('popstate', onPopState);
+    } else {
+      window.removeEvent('popstate', onPopState);
+    }
+
+    if (_changeListeners.length === 0)
+      _isListening = false;
+  },
+
+
+
   push: function (path) {
     window.history.pushState({ path: path }, '', Path.encode(path));
     History.length += 1;

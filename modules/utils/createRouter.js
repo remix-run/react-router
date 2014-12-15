@@ -404,6 +404,10 @@ function createRouter(options) {
           // Bootstrap using the current path.
           router.dispatch(location.getCurrentPath(), null, dispatchHandler);
         }
+      },
+
+      teardown: function() {
+        location.removeChangeListener(this.changeListener);
       }
 
     },
@@ -437,6 +441,10 @@ function createRouter(options) {
     componentWillReceiveProps: function () {
       updateState();
       this.setState(state);
+    },
+
+    componentWillUnmount: function() {
+      router.teardown();
     },
 
     render: function () {

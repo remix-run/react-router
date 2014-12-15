@@ -79,6 +79,26 @@ var HashLocation = {
     _isListening = true;
   },
 
+  removeChangeListener: function(listener) {
+    for (var i = 0, l = _changeListeners.length; i < l; i ++) {
+      if (_changeListeners[i] === listener) {
+        _changeListeners.splice(i, 1);
+        break;
+      }
+    }
+
+    if (window.removeEventListener) {
+      window.removeEventListener('hashchange', onHashChange, false);
+    } else {
+      window.removeEvent('onhashchange', onHashChange);
+    }
+
+    if (_changeListeners.length === 0)
+      _isListening = false;
+  },
+
+
+
   push: function (path) {
     _actionType = LocationActions.PUSH;
     window.location.hash = Path.encode(path);
