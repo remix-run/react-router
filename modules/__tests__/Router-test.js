@@ -1011,23 +1011,22 @@ describe('Router.run', function () {
 });
 
 describe('unmounting', function () {
-  afterEach(function() {
+  afterEach(function () {
     window.location.hash = '';
   });
 
   it('removes location change listeners', function (done) {
     var c = 0;
     var div = document.createElement('div');
-    Router.run(<Route handler={Foo} path="*"/>, Router.HashLocation, function(Handler) {
+    Router.run(<Route handler={Foo} path="*"/>, Router.HashLocation, function (Handler) {
       c++;
       expect(c).toEqual(1);
-      React.renderComponent(<Handler/>, div, function() {
+      React.render(<Handler/>, div, function () {
         React.unmountComponentAtNode(div);
         Router.HashLocation.push('/foo');
         // might be flakey? I wish I knew right now a better way to do this
         setTimeout(done, 0);
       });
     });
-
   });
 });
