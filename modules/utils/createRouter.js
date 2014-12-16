@@ -154,6 +154,20 @@ function createRouter(options) {
     nextState = {};
   }
 
+  if (typeof location === 'string') {
+    warning(
+      !canUseDOM || process.env.NODE_ENV === 'test',
+      'You should not use a static location in a DOM environment because ' +
+      'the router will not be kept in sync with the current URL'
+    );
+  } else {
+    invariant(
+      canUseDOM,
+      'You cannot use %s without a DOM',
+      location
+    );
+  }
+
   // Automatically fall back to full page refreshes in
   // browsers that don't support the HTML history API.
   if (location === HistoryLocation && !supportsHistory())
@@ -388,21 +402,8 @@ function createRouter(options) {
         };
 
         if (typeof location === 'string') {
-          warning(
-            !canUseDOM || process.env.NODE_ENV === 'test',
-            'You should not use a static location in a DOM environment because ' +
-            'the router will not be kept in sync with the current URL'
-          );
-
-          // Dispatch the location.
           router.dispatch(location, null, dispatchHandler);
         } else {
-          invariant(
-            canUseDOM,
-            'You cannot use %s in a non-DOM environment',
-            location
-          );
-
           // Listen for changes to the location.
           var changeListener = function (change) {
             router.dispatch(change.path, change.type, dispatchHandler);
