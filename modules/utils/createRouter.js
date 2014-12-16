@@ -257,8 +257,15 @@ function createRouter(options) {
       },
 
       /**
-       * Transitions to the previous URL. Returns true if the router
-       * was able to go back, false otherwise.
+       * Transitions to the previous URL if one is available. Returns true if the
+       * router was able to go back, false otherwise.
+       *
+       * Note: The router only tracks history entries in your application, not the
+       * current browser session, so you can safely call this function without guarding
+       * against sending the user back to some other site. However, when using
+       * RefreshLocation (which is the fallback for HistoryLocation in browsers that
+       * don't support HTML5 history) this method will *always* send the client back
+       * because we cannot reliably track history length.
        */
       goBack: function () {
         invariant(
@@ -266,7 +273,7 @@ function createRouter(options) {
           'You cannot use goBack with a static location'
         );
 
-        if (History.length > 1) {
+        if (History.length > 1 || location === RefreshLocation) {
           location.pop();
           return true;
         }

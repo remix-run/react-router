@@ -4,7 +4,7 @@ var canUseDOM = require('react/lib/ExecutionEnvironment').canUseDOM;
 var History = {
 
   /**
-   * Sends the browser back one entry in the history, if one is available.
+   * Sends the browser back one entry in the history.
    */
   back: function () {
     invariant(
