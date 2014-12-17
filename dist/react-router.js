@@ -578,9 +578,7 @@ var HistoryLocation = {
     notifyChange(LocationActions.REPLACE);
   },
 
-  pop: function () {
-    History.back();
-  },
+  pop: History.back,
 
   getCurrentPath: getWindowPath,
 
@@ -1071,7 +1069,7 @@ var canUseDOM = _dereq_('react/lib/ExecutionEnvironment').canUseDOM;
 var History = {
 
   /**
-   * Sends the browser back one entry in the history, if one is available.
+   * Sends the browser back one entry in the history.
    */
   back: function () {
     invariant(
@@ -1443,7 +1441,6 @@ module.exports = Transition;
 
 },{"./Promise":24,"./Redirect":26,"./reversedArray":31,"react/lib/Object.assign":40}],28:[function(_dereq_,module,exports){
 /* jshint -W058 */
-
 var React = (typeof window !== "undefined" ? window.React : typeof global !== "undefined" ? global.React : null);
 var warning = _dereq_('react/lib/warning');
 var invariant = _dereq_('react/lib/invariant');
@@ -1536,7 +1533,15 @@ function createMatch(route, params) {
   return { routes: [ route ], params: params };
 }
 
-function hasMatch(routes, route, prevParams, nextParams) {
+function hasProperties(object, properties) {
+  for (var propertyName in properties)
+    if (properties.hasOwnProperty(propertyName) && object[propertyName] !== properties[propertyName])
+      return false;
+
+  return true;
+}
+
+function hasMatch(routes, route, prevParams, nextParams, prevQuery, nextQuery) {
   return routes.some(function (r) {
     if (r !== route)
       return false;
@@ -1544,6 +1549,7 @@ function hasMatch(routes, route, prevParams, nextParams) {
     var paramNames = route.paramNames;
     var paramName;
 
+    // Ensure that all params the route cares about did not change.
     for (var i = 0, len = paramNames.length; i < len; ++i) {
       paramName = paramNames[i];
 
@@ -1551,7 +1557,8 @@ function hasMatch(routes, route, prevParams, nextParams) {
         return false;
     }
 
-    return true;
+    // Ensure the query hasn't changed.
+    return hasProperties(prevQuery, nextQuery) && hasProperties(nextQuery, prevQuery);
   });
 }
 
@@ -1596,6 +1603,20 @@ function createRouter(options) {
   function updateState() {
     state = nextState;
     nextState = {};
+  }
+
+  if (typeof location === 'string') {
+    warning(
+      !canUseDOM || "production" === 'test',
+      'You should not use a static location in a DOM environment because ' +
+      'the router will not be kept in sync with the current URL'
+    );
+  } else {
+    invariant(
+      canUseDOM,
+      'You cannot use %s without a DOM',
+      location
+    );
   }
 
   // Automatically fall back to full page refreshes in
@@ -1687,8 +1708,15 @@ function createRouter(options) {
       },
 
       /**
-       * Transitions to the previous URL. Returns true if the router
-       * was able to go back, false otherwise.
+       * Transitions to the previous URL if one is available. Returns true if the
+       * router was able to go back, false otherwise.
+       *
+       * Note: The router only tracks history entries in your application, not the
+       * current browser session, so you can safely call this function without guarding
+       * against sending the user back to some other site. However, when using
+       * RefreshLocation (which is the fallback for HistoryLocation in browsers that
+       * don't support HTML5 history) this method will *always* send the client back
+       * because we cannot reliably track history length.
        */
       goBack: function () {
         invariant(
@@ -1696,7 +1724,7 @@ function createRouter(options) {
           'You cannot use goBack with a static location'
         );
 
-        if (History.length > 1) {
+        if (History.length > 1 || location === RefreshLocation) {
           location.pop();
           return true;
         }
@@ -1759,6 +1787,7 @@ function createRouter(options) {
 
         var prevRoutes = state.routes || [];
         var prevParams = state.params || {};
+        var prevQuery = state.query || {};
 
         var nextRoutes = match.routes || [];
         var nextParams = match.params || {};
@@ -1767,25 +1796,15 @@ function createRouter(options) {
         var fromRoutes, toRoutes;
         if (prevRoutes.length) {
           fromRoutes = prevRoutes.filter(function (route) {
-            return !hasMatch(nextRoutes, route, prevParams, nextParams);
+            return !hasMatch(nextRoutes, route, prevParams, nextParams, prevQuery, nextQuery);
           });
 
           toRoutes = nextRoutes.filter(function (route) {
-            return !hasMatch(prevRoutes, route, prevParams, nextParams);
+            return !hasMatch(prevRoutes, route, prevParams, nextParams, prevQuery, nextQuery);
           });
         } else {
           fromRoutes = [];
           toRoutes = nextRoutes;
-        }
-
-        // If routes' hooks arrays are empty, then we transition to current route.
-        // But path is somehow still get changed.
-        // That could be only because of route query changes.
-        // Need to push current route to routes' hooks arrays.
-        if (!toRoutes.length && !fromRoutes.length) {
-          var currentRoute = state.routes[state.routes.length-1];
-          fromRoutes = [currentRoute];
-          toRoutes = [currentRoute];
         }
 
         var transition = new Transition(path, this.replaceWith.bind(this, path));
@@ -1832,21 +1851,8 @@ function createRouter(options) {
         };
 
         if (typeof location === 'string') {
-          warning(
-            !canUseDOM || "production" === 'test',
-            'You should not use a static location in a DOM environment because ' +
-            'the router will not be kept in sync with the current URL'
-          );
-
-          // Dispatch the location.
           router.dispatch(location, null, dispatchHandler);
         } else {
-          invariant(
-            canUseDOM,
-            'You cannot use %s in a non-DOM environment',
-            location
-          );
-
           // Listen for changes to the location.
           var changeListener = function (change) {
             router.dispatch(change.path, change.type, dispatchHandler);
@@ -1931,7 +1937,6 @@ module.exports = createRouter;
 
 },{"../actions/LocationActions":1,"../behaviors/ImitateBrowserBehavior":2,"../components/RouteHandler":9,"../locations/HashLocation":11,"../locations/HistoryLocation":12,"../locations/RefreshLocation":13,"../mixins/NavigationContext":16,"../mixins/Scrolling":18,"../mixins/StateContext":20,"./Cancellation":21,"./History":22,"./Path":23,"./PropTypes":25,"./Redirect":26,"./Transition":27,"./createRoutesFromChildren":29,"./supportsHistory":33,"react/lib/ExecutionEnvironment":39,"react/lib/invariant":43,"react/lib/warning":44}],29:[function(_dereq_,module,exports){
 /* jshint -W084 */
-
 var React = (typeof window !== "undefined" ? window.React : typeof global !== "undefined" ? global.React : null);
 var warning = _dereq_('react/lib/warning');
 var invariant = _dereq_('react/lib/invariant');
@@ -2818,7 +2823,7 @@ var emptyFunction = _dereq_("./emptyFunction");
 var warning = emptyFunction;
 
 if ("production" !== "production") {
-  warning = function(condition, format ) {var args=Array.prototype.slice.call(arguments,2);
+  warning = function(condition, format ) {for (var args=[],$__0=2,$__1=arguments.length;$__0<$__1;$__0++) args.push(arguments[$__0]);
     if (format === undefined) {
       throw new Error(
         '`warning(condition, format, ...args)` requires a warning ' +

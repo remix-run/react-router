@@ -1,3 +1,9 @@
+v0.11.6 - Wed, 17 Dec 2014 19:29:53 GMT
+---------------------------------------
+
+- [90cd750](../../commit/90cd750) [fixed] Call all transition hooks on query changes
+
+
 v0.11.5 - Mon, 15 Dec 2014 22:32:38 GMT
 ---------------------------------------
 
