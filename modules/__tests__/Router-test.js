@@ -2,6 +2,7 @@ var expect = require('expect');
 var React = require('react');
 var Router = require('../index');
 var Route = require('../components/Route');
+var RouteHandler = require('../components/RouteHandler');
 var TestLocation = require('../locations/TestLocation');
 var ScrollToTopBehavior = require('../behaviors/ScrollToTopBehavior');
 var getWindowScrollPosition = require('../utils/getWindowScrollPosition');
@@ -533,8 +534,22 @@ describe('Router', function () {
       });
     });
 
-    it('execute willTransition* callbacks when query changes', function (done) {
-      var fromCallbackExecuted = false;
+    it('executes transition hooks when only the query changes', function (done) {
+      var fromKnifeCalled = false;
+      var fromSpoonCalled = false;
+
+      var Knife = React.createClass({
+        statics: {
+          willTransitionFrom: function () {
+            fromKnifeCalled = true;
+          }
+        },
+
+        render: function () {
+          return <RouteHandler/>;
+        }
+      });
+
       var Spoon = React.createClass({
         statics: {
           willTransitionTo: function (transition, params, query) {
@@ -543,12 +558,13 @@ describe('Router', function () {
             }
 
             expect(query['filter']).toEqual('second');
-            expect(fromCallbackExecuted).toBe(true);
+            expect(fromKnifeCalled).toBe(true);
+            expect(fromSpoonCalled).toBe(true);
             done();
           },
 
           willTransitionFrom: function (transition, element) {
-            fromCallbackExecuted = true;
+            fromSpoonCalled = true;
           }
         },
 
@@ -558,7 +574,7 @@ describe('Router', function () {
       });
 
       var routes = (
-        <Route handler={Nested} path='/'>
+        <Route handler={Knife}>
           <Route name="spoon" handler={Spoon}/>
         </Route>
       );

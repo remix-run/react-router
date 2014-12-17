@@ -91,7 +91,15 @@ function createMatch(route, params) {
   return { routes: [ route ], params: params };
 }
 
-function hasMatch(routes, route, prevParams, nextParams) {
+function hasProperties(object, properties) {
+  for (var propertyName in properties)
+    if (properties.hasOwnProperty(propertyName) && object[propertyName] !== properties[propertyName])
+      return false;
+
+  return true;
+}
+
+function hasMatch(routes, route, prevParams, nextParams, prevQuery, nextQuery) {
   return routes.some(function (r) {
     if (r !== route)
       return false;
@@ -99,6 +107,7 @@ function hasMatch(routes, route, prevParams, nextParams) {
     var paramNames = route.paramNames;
     var paramName;
 
+    // Ensure that all params the route cares about did not change.
     for (var i = 0, len = paramNames.length; i < len; ++i) {
       paramName = paramNames[i];
 
@@ -106,7 +115,8 @@ function hasMatch(routes, route, prevParams, nextParams) {
         return false;
     }
 
-    return true;
+    // Ensure the query hasn't changed.
+    return hasProperties(prevQuery, nextQuery) && hasProperties(nextQuery, prevQuery);
   });
 }
 
@@ -335,6 +345,7 @@ function createRouter(options) {
 
         var prevRoutes = state.routes || [];
         var prevParams = state.params || {};
+        var prevQuery = state.query || {};
 
         var nextRoutes = match.routes || [];
         var nextParams = match.params || {};
@@ -343,25 +354,15 @@ function createRouter(options) {
         var fromRoutes, toRoutes;
         if (prevRoutes.length) {
           fromRoutes = prevRoutes.filter(function (route) {
-            return !hasMatch(nextRoutes, route, prevParams, nextParams);
+            return !hasMatch(nextRoutes, route, prevParams, nextParams, prevQuery, nextQuery);
           });
 
           toRoutes = nextRoutes.filter(function (route) {
-            return !hasMatch(prevRoutes, route, prevParams, nextParams);
+            return !hasMatch(prevRoutes, route, prevParams, nextParams, prevQuery, nextQuery);
           });
         } else {
           fromRoutes = [];
           toRoutes = nextRoutes;
-        }
-
-        // If routes' hooks arrays are empty, then we transition to current route.
-        // But path is somehow still get changed.
-        // That could be only because of route query changes.
-        // Need to push current route to routes' hooks arrays.
-        if (!toRoutes.length && !fromRoutes.length) {
-          var currentRoute = state.routes[state.routes.length-1];
-          fromRoutes = [currentRoute];
-          toRoutes = [currentRoute];
         }
 
         var transition = new Transition(path, this.replaceWith.bind(this, path));
