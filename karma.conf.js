@@ -1,41 +1,39 @@
+var webpack = require('webpack');
+
 module.exports = function (config) {
   config.set({
 
-    basePath: '',
+    browsers: [ process.env.CONTINUOUS_INTEGRATION ? 'Firefox' : 'Chrome' ],
 
-    frameworks: [ 'mocha', 'browserify' ],
+    singleRun: process.env.CONTINUOUS_INTEGRATION === 'true',
+
+    frameworks: [ 'mocha' ],
 
     files: [
-      'modules/**/__tests__/*-test.js'
+      'tests.webpack.js'
     ],
 
     preprocessors: {
-      'modules/**/__tests__/*-test.js': [ 'browserify' ]
+      'tests.webpack.js': [ 'webpack', 'sourcemap' ]
     },
 
-    browserify: {
-      debug: true,
-      watch: true,
-      transform: [
-        [ 'reactify', { 'es6': true } ],
-        'envify'
+    webpack: {
+      devtool: 'inline-source-map',
+      module: {
+        loaders: [
+          { test: /\.js$/, loader: 'jsx-loader?harmony' }
+        ]
+      },
+      plugins: [
+        new webpack.DefinePlugin({
+          'process.env.NODE_ENV': JSON.stringify('test')
+        })
       ]
     },
 
-    reporters: [ 'progress' ],
+    webpackServer: {
+      noInfo: true
+    }
 
-    port: 9876,
-
-    colors: true,
-
-    logLevel: config.LOG_INFO,
-
-    autoWatch: true,
-
-    browsers: [ 'Chrome' ],
-
-    captureTimeout: 60000,
-
-    singleRun: false
   });
 };
