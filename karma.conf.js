@@ -1,5 +1,3 @@
-var glob = require('glob');
-
 module.exports = function (config) {
   config.set({
 
@@ -7,9 +5,9 @@ module.exports = function (config) {
 
     frameworks: [ 'mocha', 'browserify' ],
 
-    files: glob.sync('modules/**/__tests__/*-test.js'),
-
-    exclude: [],
+    files: [
+      'modules/**/__tests__/*-test.js'
+    ],
 
     preprocessors: {
       'modules/**/__tests__/*-test.js': [ 'browserify' ]
