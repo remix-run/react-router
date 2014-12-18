@@ -37,7 +37,7 @@ always be in sync.
 - `scripts/test` will fire up a karma runner and watch for changes in the
   specs directory.
 - `npm test` will do the same but doesn't watch, just runs the tests.
-- `scripts/dev-examples` fires up a webpack dev server that will watch
+- `npm run examples` fires up a webpack dev server that will watch
   for changes and build the examples.
 
 ### Build

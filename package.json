@@ -13,8 +13,10 @@
     "example": "examples"
   },
   "scripts": {
+    "examples": "webpack-dev-server --inline --no-info --content-base examples",
     "test": "scripts/test --browsers Firefox --single-run",
     "lint": "jsxhint examples modules"
+
   },
   "authors": [
     "Ryan Florence",
