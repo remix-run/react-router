@@ -7,6 +7,10 @@ module.exports = {
     libraryTarget: 'var'
   },
 
+  externals: {
+    react: 'React'
+  },
+
   plugins: [
     new webpack.DefinePlugin({
       'process.env.NODE_ENV': JSON.stringify(process.env.NODE_ENV || 'production')
