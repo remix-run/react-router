@@ -13,8 +13,8 @@
     "example": "examples"
   },
   "scripts": {
-    "build": "webpack modules/index.js dist/react-router.js",
-    "build-min": "uglifyjs dist/react-router.js --compress warnings=false > dist/react-router.min.js",
+    "build": "NODE_ENV=production webpack modules/index.js dist/react-router.js",
+    "build-min": "NODE_ENV=production COMPRESS=1 webpack modules/index.js dist/react-router.min.js",
     "examples": "webpack-dev-server --config examples/webpack.config.js --no-info --content-base examples",
     "test": "jsxhint . && karma start"
   },
@@ -40,7 +40,6 @@
     "react": "0.12.x",
     "rf-release": "0.4.0",
     "rx": "2.3.18",
-    "uglify-js": "^2.4.16",
     "webpack": "^1.4.13",
     "webpack-dev-server": "^1.6.6"
   },
