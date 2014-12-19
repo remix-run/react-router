@@ -13,8 +13,10 @@
     "example": "examples"
   },
   "scripts": {
-    "test": "scripts/test --browsers Firefox --single-run",
-    "lint": "jsxhint examples modules"
+    "build": "NODE_ENV=production webpack modules/index.js dist/react-router.js",
+    "build-min": "NODE_ENV=production COMPRESS=1 webpack modules/index.js dist/react-router.min.js",
+    "examples": "webpack-dev-server --config examples/webpack.config.js --no-info --content-base examples",
+    "test": "jsxhint . && karma start"
   },
   "authors": [
     "Ryan Florence",
@@ -22,29 +24,24 @@
   ],
   "license": "MIT",
   "devDependencies": {
-    "browserify": "4.2.3",
-    "browserify-shim": "3.6.0",
-    "bundle-loader": "0.5.1",
-    "envify": "1.2.0",
+    "bundle-loader": "^0.5.2",
     "events": "1.0.2",
-    "expect": "0.1.1",
-    "glob": "4.2.1",
-    "jsx-loader": "0.12.0",
+    "expect": "^1.1.0",
+    "jsx-loader": "^0.12.2",
     "jsxhint": "^0.8.1",
-    "karma": "0.12.16",
-    "karma-browserify": "1.0.0",
-    "karma-chrome-launcher": "0.1.4",
+    "karma": "^0.12.28",
+    "karma-chrome-launcher": "^0.1.7",
     "karma-cli": "0.0.4",
-    "karma-firefox-launcher": "0.1.3",
-    "karma-mocha": "0.1.3",
-    "mocha": "1.20.1",
+    "karma-firefox-launcher": "^0.1.3",
+    "karma-mocha": "^0.1.10",
+    "karma-sourcemap-loader": "^0.3.2",
+    "karma-webpack": "^1.3.1",
+    "mocha": "^2.0.1",
     "react": "0.12.x",
-    "reactify": "0.15.x",
     "rf-release": "0.4.0",
     "rx": "2.3.18",
-    "uglify-js": "2.4.15",
-    "webpack": "1.4.5",
-    "webpack-dev-server": "1.6.5"
+    "webpack": "^1.4.13",
+    "webpack-dev-server": "^1.6.6"
   },
   "peerDependencies": {
     "react": "0.12.x"
@@ -64,8 +61,5 @@
     "route",
     "routes",
     "router"
-  ],
-  "browserify-shim": {
-    "react": "global:React"
-  }
+  ]
 }

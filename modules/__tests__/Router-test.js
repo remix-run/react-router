@@ -553,11 +553,11 @@ describe('Router', function () {
       var Spoon = React.createClass({
         statics: {
           willTransitionTo: function (transition, params, query) {
-            if (query['filter'] === 'first') {
+            if (query.filter === 'first') {
               return; // skip first transition
             }
 
-            expect(query['filter']).toEqual('second');
+            expect(query.filter).toEqual('second');
             expect(fromKnifeCalled).toBe(true);
             expect(fromSpoonCalled).toBe(true);
             done();
