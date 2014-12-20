@@ -115,7 +115,7 @@ var App = React.createClass({
     var page;
     switch (this.props.page) {
       case 'dashboard': page = <Dashboard/>; break;
-      case 'inbox': page = <Dashboard/>; break;
+      case 'inbox': page = <InboxRoute/>; break;
       default: page = <Index/>; break;
     }
     return (
