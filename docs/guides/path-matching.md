@@ -45,7 +45,7 @@ values.
 Question Mark
 -------------
 
-Question marks will optionally match the preceeding segment.
+Question marks will optionally match the preceding segment.
 
 Examples
 --------

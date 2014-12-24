@@ -17,7 +17,7 @@ Called when the router is transitioning from one path to another.
 
 ### `replace`
 
-Called when ther router is replacing (not transitioning) one url with
+Called when the router is replacing (not transitioning) one url with
 another.
 
 ### `pop`
