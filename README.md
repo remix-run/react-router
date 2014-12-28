@@ -41,6 +41,10 @@ installed from npm.
 There is also a global build available on bower, find the library on
 `window.ReactRouter`.
 
+### CDN
+
+The library is also available on the popular CDN [cdnjs](https://cdnjs.com/libraries/react-router).
+
 Features
 --------
 
