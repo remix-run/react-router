@@ -30,7 +30,7 @@ automatic view nesting of the router.
 Dynamic Segments
 ----------------
 
-Dynamic segements are defined with a `:`, like `:userId`. They will be
+Dynamic segments are defined with a `:`, like `:userId`. They will be
 parsed and available by name in your route handler on
 `this.props.params`. They match most characters except `/ ? #`.
 
