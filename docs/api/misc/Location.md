@@ -11,6 +11,10 @@ Methods
 
 Adds a function to the location that should be called when it changes.
 
+### `removeChangeListener(listener)`
+
+Stop calling the given function when the location changes.
+
 ### `push`
 
 Called when the router is transitioning from one path to another.
@@ -33,21 +37,15 @@ This method should be ready to go immediately after setup.
 
 Should return a useful string for logging and debugging.
 
-Example
+History
 -------
 
-For examples of how to implement your own location, please see the locations
-included in this repository.
+Additionally, location objects must:
 
+- Increment `ReactRouter.History.length` immediately **after** the URL changes
+- Decrement `ReactRouter.History.length` immediately **before** going back to the
+  previous URL
 
-```js
-var MyLocation = {
-  addChangeListener: function (listener) {},
-  push: function (path) {},
-  replace: function (path) {},
-  pop: function () {},
-  getCurrentPath: function () {}
-};
+Please refer to the [built-in location objects][locations] to get an idea for how this is done.
 
-Router.run(routes, MyLocation, callback);
-```
+[locations]: /modules/locations
