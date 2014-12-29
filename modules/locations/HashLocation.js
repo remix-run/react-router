@@ -67,37 +67,32 @@ var HashLocation = {
     // Do this BEFORE listening for hashchange.
     ensureSlash();
 
-    if (_isListening)
-      return;
+    if (!_isListening) {
+      if (window.addEventListener) {
+        window.addEventListener('hashchange', onHashChange, false);
+      } else {
+        window.attachEvent('onhashchange', onHashChange);
+      }
 
-    if (window.addEventListener) {
-      window.addEventListener('hashchange', onHashChange, false);
-    } else {
-      window.attachEvent('onhashchange', onHashChange);
+      _isListening = true;
     }
-
-    _isListening = true;
   },
 
   removeChangeListener: function(listener) {
-    for (var i = 0, l = _changeListeners.length; i < l; i ++) {
-      if (_changeListeners[i] === listener) {
-        _changeListeners.splice(i, 1);
-        break;
+    _changeListeners = _changeListeners.filter(function (l) {
+      return l !== listener;
+    });
+
+    if (_changeListeners.length === 0) {
+      if (window.removeEventListener) {
+        window.removeEventListener('hashchange', onHashChange, false);
+      } else {
+        window.removeEvent('onhashchange', onHashChange);
       }
-    }
 
-    if (window.removeEventListener) {
-      window.removeEventListener('hashchange', onHashChange, false);
-    } else {
-      window.removeEvent('onhashchange', onHashChange);
-    }
-
-    if (_changeListeners.length === 0)
       _isListening = false;
+    }
   },
-
-
 
   push: function (path) {
     _actionType = LocationActions.PUSH;

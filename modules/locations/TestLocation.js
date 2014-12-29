@@ -28,8 +28,6 @@ var TestLocation = {
     updateHistoryLength();
   },
 
-  removeChangeListener: function () {},
-
   push: function (path) {
     TestLocation.history.push(path);
     updateHistoryLength();

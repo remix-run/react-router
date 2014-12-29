@@ -38,37 +38,32 @@ var HistoryLocation = {
   addChangeListener: function (listener) {
     _changeListeners.push(listener);
 
-    if (_isListening)
-      return;
+    if (!_isListening) {
+      if (window.addEventListener) {
+        window.addEventListener('popstate', onPopState, false);
+      } else {
+        window.attachEvent('popstate', onPopState);
+      }
 
-    if (window.addEventListener) {
-      window.addEventListener('popstate', onPopState, false);
-    } else {
-      window.attachEvent('popstate', onPopState);
+      _isListening = true;
     }
-
-    _isListening = true;
   },
 
   removeChangeListener: function(listener) {
-    for (var i = 0, l = _changeListeners.length; i < l; i ++) {
-      if (_changeListeners[i] === listener) {
-        _changeListeners.splice(i, 1);
-        break;
+    _changeListeners = _changeListeners.filter(function (l) {
+      return l !== listener;
+    });
+
+    if (_changeListeners.length === 0) {
+      if (window.addEventListener) {
+        window.removeEventListener('popstate', onPopState);
+      } else {
+        window.removeEvent('popstate', onPopState);
       }
-    }
 
-    if (window.addEventListener) {
-      window.removeEventListener('popstate', onPopState);
-    } else {
-      window.removeEvent('popstate', onPopState);
-    }
-
-    if (_changeListeners.length === 0)
       _isListening = false;
+    }
   },
-
-
 
   push: function (path) {
     window.history.pushState({ path: path }, '', Path.encode(path));

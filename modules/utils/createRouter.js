@@ -157,6 +157,14 @@ function createRouter(options) {
   var state = {};
   var nextState = {};
   var pendingTransition = null;
+  var changeListener = null;
+
+  function cancelPendingTransition() {
+    if (pendingTransition) {
+      pendingTransition.abort(new Cancellation);
+      pendingTransition = null;
+    }
+  }
 
   function updateState() {
     state = nextState;
@@ -192,6 +200,7 @@ function createRouter(options) {
 
       defaultRoute: null,
       notFoundRoute: null,
+      isRunning: false,
 
       /**
        * Adds routes to this router from the given children object (see ReactChildren).
@@ -317,10 +326,7 @@ function createRouter(options) {
        * hooks wait, the transition is fully synchronous.
        */
       dispatch: function (path, action, callback) {
-        if (pendingTransition) {
-          pendingTransition.abort(new Cancellation);
-          pendingTransition = null;
-        }
+        cancelPendingTransition();
 
         var prevPath = state.path;
         if (prevPath === path)
@@ -396,6 +402,11 @@ function createRouter(options) {
        * Router.*Location objects (e.g. Router.HashLocation or Router.HistoryLocation).
        */
       run: function (callback) {
+        invariant(
+          !this.isRunning,
+          'Router is already running'
+        );
+
         var dispatchHandler = function (error, transition) {
           pendingTransition = null;
 
@@ -412,7 +423,7 @@ function createRouter(options) {
           router.dispatch(location, null, dispatchHandler);
         } else {
           // Listen for changes to the location.
-          var changeListener = function (change) {
+          changeListener = function (change) {
             router.dispatch(change.path, change.type, dispatchHandler);
           };
 
@@ -421,11 +432,20 @@ function createRouter(options) {
 
           // Bootstrap using the current path.
           router.dispatch(location.getCurrentPath(), null, dispatchHandler);
+
+          this.isRunning = true;
         }
       },
 
-      teardown: function() {
-        location.removeChangeListener(this.changeListener);
+      stop: function () {
+        cancelPendingTransition();
+
+        if (location.removeChangeListener && changeListener) {
+          location.removeChangeListener(changeListener);
+          changeListener = null;
+        }
+
+        this.isRunning = false;
       }
 
     },
@@ -461,8 +481,8 @@ function createRouter(options) {
       this.setState(state);
     },
 
-    componentWillUnmount: function() {
-      router.teardown();
+    componentWillUnmount: function () {
+      router.stop();
     },
 
     render: function () {
