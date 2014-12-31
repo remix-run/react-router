@@ -1,37 +1,5 @@
 var assign = require('react/lib/Object.assign');
-var reversedArray = require('./reversedArray');
 var Redirect = require('./Redirect');
-var Promise = require('./Promise');
-
-/**
- * Runs all hook functions serially and calls callback(error) when finished.
- * A hook may return a promise if it needs to execute asynchronously.
- */
-function runHooks(hooks, callback) {
-  var promise;
-  try {
-    promise = hooks.reduce(function (promise, hook) {
-      // The first hook to use transition.wait makes the rest
-      // of the transition async from that point forward.
-      return promise ? promise.then(hook) : hook();
-    }, null);
-  } catch (error) {
-    return callback(error); // Sync error.
-  }
-
-  if (promise) {
-    // Use setTimeout to break the promise chain.
-    promise.then(function () {
-      setTimeout(callback);
-    }, function (error) {
-      setTimeout(function () {
-        callback(error);
-      });
-    });
-  } else {
-    callback();
-  }
-}
 
 /**
  * Calls the willTransitionFrom hook of all handlers in the given matches
@@ -40,23 +8,27 @@ function runHooks(hooks, callback) {
  * Calls callback(error) when finished.
  */
 function runTransitionFromHooks(transition, routes, components, callback) {
-  components = reversedArray(components);
+  var runHooks = routes.reduce(function (callback, route, index) {
+    return function (error) {
+      if (error || transition.isAborted) {
+        callback(error);
+      } else if (route.handler.willTransitionFrom) {
+        try {
+          route.handler.willTransitionFrom(transition, components[index], callback);
 
-  var hooks = reversedArray(routes).map(function (route, index) {
-    return function () {
-      var handler = route.handler;
-
-      if (!transition.isAborted && handler.willTransitionFrom)
-        return handler.willTransitionFrom(transition, components[index]);
-
-      var promise = transition._promise;
-      transition._promise = null;
-
-      return promise;
+          // If there is no callback in the argument list, call it automatically.
+          if (route.handler.willTransitionFrom.length < 3)
+            callback();
+        } catch (e) {
+          callback(e);
+        }
+      } else {
+        callback();
+      }
     };
-  });
+  }, callback);
 
-  runHooks(hooks, callback);
+  runHooks();
 }
 
 /**
@@ -65,21 +37,27 @@ function runTransitionFromHooks(transition, routes, components, callback) {
  * handler. Calls callback(error) when finished.
  */
 function runTransitionToHooks(transition, routes, params, query, callback) {
-  var hooks = routes.map(function (route) {
-    return function () {
-      var handler = route.handler;
+  var runHooks = routes.reduceRight(function (callback, route) {
+    return function (error) {
+      if (error || transition.isAborted) {
+        callback(error);
+      } else if (route.handler.willTransitionTo) {
+        try {
+          route.handler.willTransitionTo(transition, params, query, callback);
 
-      if (!transition.isAborted && handler.willTransitionTo)
-        handler.willTransitionTo(transition, params, query);
-
-      var promise = transition._promise;
-      transition._promise = null;
-
-      return promise;
+          // If there is no callback in the argument list, call it automatically.
+          if (route.handler.willTransitionTo.length < 4)
+            callback();
+        } catch (e) {
+          callback(e);
+        }
+      } else {
+        callback();
+      }
     };
-  });
+  }, callback);
 
-  runHooks(hooks, callback);
+  runHooks();
 }
 
 /**
@@ -93,7 +71,6 @@ function Transition(path, retry) {
   this.abortReason = null;
   this.isAborted = false;
   this.retry = retry.bind(this);
-  this._promise = null;
 }
 
 assign(Transition.prototype, {
@@ -110,10 +87,6 @@ assign(Transition.prototype, {
 
   redirect: function (to, params, query) {
     this.abort(new Redirect(to, params, query));
-  },
-
-  wait: function (value) {
-    this._promise = Promise.resolve(value);
   },
 
   from: function (routes, components, callback) {

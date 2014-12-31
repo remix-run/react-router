@@ -35,8 +35,8 @@ describe('Router', function () {
       <Route path="/async" handler={Async}/>
     ];
 
-    describe('transition.wait', function () {
-      it('waits asynchronously in willTransitionTo', function (done) {
+    describe('asynchronous willTransitionTo', function () {
+      it('waits', function (done) {
         TestLocation.history = [ '/bar' ];
 
         var div = document.createElement('div');
@@ -70,7 +70,7 @@ describe('Router', function () {
         });
       });
 
-      it('stops waiting asynchronously in willTransitionTo on location.pop', function (done) {
+      it('stops waiting on location.pop', function (done) {
         TestLocation.history = [ '/bar' ];
 
         var div = document.createElement('div');
@@ -106,7 +106,7 @@ describe('Router', function () {
         });
       });
 
-      it('stops waiting asynchronously in willTransitionTo on router.transitionTo', function (done) {
+      it('stops waiting on router.transitionTo', function (done) {
         TestLocation.history = [ '/bar' ];
 
         var div = document.createElement('div');
@@ -149,7 +149,7 @@ describe('Router', function () {
         });
       });
 
-      it('stops waiting asynchronously in willTransitionTo on router.replaceWith', function (done) {
+      it('stops waiting on router.replaceWith', function (done) {
         TestLocation.history = [ '/bar' ];
 
         var div = document.createElement('div');
@@ -597,7 +597,7 @@ describe('Router', function () {
       var Bar = React.createClass({
         statics: {
           willTransitionFrom: function (transition, component) {
-            expect(div.querySelector('#bar')).toEqual(component.getDOMNode());
+            expect(div.querySelector('#bar')).toBe(component.getDOMNode());
             done();
           }
         },

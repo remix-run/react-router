@@ -11,15 +11,16 @@ Static Lifecycle Methods
 You can define static methods on your route handlers that will be called
 during route transitions.
 
-### `willTransitionTo(transition, params, query)`
+### `willTransitionTo(transition, params, query, callback)`
 
 Called when a handler is about to render, giving you the opportunity to
 abort or redirect the transition. You can pause the transition while you
-do some asynchonous work with `transition.wait(promise)`.
+do some asynchonous work and call `callback(error)` when you're done, or
+omit the callback in your argument list and it will be called for you.
 
 See also: [transition](/docs/api/misc/transition.md)
 
-### `willTransitionFrom(transition, component)`
+### `willTransitionFrom(transition, component, callback)`
 
 Called when an active route is being transitioned out giving you an
 opportunity to abort the transition. The `component` is the current
@@ -34,13 +35,11 @@ See also: [transition](/docs/api/misc/transition.md)
 var Settings = React.createClass({
   statics: {
     willTransitionTo: function (transition, params) {
-      return auth.isLoggedIn().then(function (loggedIn) {
-        if (!loggedIn)
-          return;
+      if (!auth.isLoggedIn()) {
         transition.abort();
         auth.logIn({transition: transition});
         // in auth module call `transition.retry()` after being logged in
-      });
+      }
     },
 
     willTransitionFrom: function (transition, component) {

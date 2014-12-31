@@ -1,7 +1,6 @@
 var React = require('react');
 var RouteHandler = require('../components/RouteHandler');
 var State = require('../mixins/State');
-var delay = require('when/delay');
 
 exports.Nested = React.createClass({
   render: function () {
@@ -36,8 +35,8 @@ exports.Async = React.createClass({
   statics: {
     delay: 10,
 
-    willTransitionTo: function (transition) {
-      transition.wait(delay(this.delay));
+    willTransitionTo: function (transition, params, query, callback) {
+      setTimeout(callback, this.delay);
     }
   },
 
@@ -62,10 +61,11 @@ exports.RedirectToFooAsync = React.createClass({
   statics: {
     delay: 10,
 
-    willTransitionTo: function (transition) {
-      transition.wait(delay(this.delay).then(function () {
+    willTransitionTo: function (transition, params, query, callback) {
+      setTimeout(function () {
         transition.redirect('/foo');
-      }));
+        callback();
+      }, this.delay);
     }
   },
 
@@ -91,10 +91,11 @@ exports.AbortAsync = React.createClass({
   statics: {
     delay: 10,
 
-    willTransitionTo: function (transition) {
-      transition.wait(delay(this.delay).then(function () {
+    willTransitionTo: function (transition, params, query, callback) {
+      setTimeout(function () {
         transition.abort();
-      }));
+        callback();
+      }, this.delay);
     }
   },
 
