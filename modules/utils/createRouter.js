@@ -322,7 +322,7 @@ function createRouter(options) {
        * all route handlers we're transitioning to.
        *
        * Both willTransitionFrom and willTransitionTo hooks may either abort or redirect the
-       * transition. To resolve asynchronously, they may use transition.wait(promise). If no
+       * transition. To resolve asynchronously, they may use the callback argument. If no
        * hooks wait, the transition is fully synchronous.
        */
       dispatch: function (path, action, callback) {
@@ -374,7 +374,9 @@ function createRouter(options) {
         var transition = new Transition(path, this.replaceWith.bind(this, path));
         pendingTransition = transition;
 
-        transition.from(fromRoutes, components, function (error) {
+        var fromComponents = components.slice(prevRoutes.length - fromRoutes.length);
+
+        transition.from(fromRoutes, fromComponents, function (error) {
           if (error || transition.isAborted)
             return callback.call(router, error, transition);
 
