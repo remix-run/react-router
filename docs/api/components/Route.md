@@ -30,6 +30,14 @@ Routes can be nested. When a child route path matches, the parent route
 is also activated. Please refer to the [overview][overview] since this
 is a very critical part of the router's design.
 
+### `ignoreScrollBehavior`
+
+When route or its `params` change, router adjusts window scroll position according to [`scrollBehavior`](https://github.com/rackt/react-router/blob/master/docs/api/create.md#scrollbehavior). This is generally desirable but you might want to opt out of scrolling adjustment for a specific route or a group of routes.
+
+If you specify `ignoreScrollBehavior` attribute on a route, changes in `params` or any transitions within its `children` will not adjust scroll position. This can be useful on a search page or in a tabbed interface.
+
+Note that changes in `query` never adjust scroll position, regardless of the value of this attribute.
+
 Example
 -------
 
