@@ -4,6 +4,10 @@ function supportsHistory() {
    * https://github.com/Modernizr/Modernizr/blob/master/feature-detects/history.js
    * changed to avoid false negatives for Windows Phones: https://github.com/rackt/react-router/issues/586
    */
+  if (typeof window === 'undefined') {
+    return false;
+  } 
+   
   var ua = navigator.userAgent;
   if ((ua.indexOf('Android 2.') !== -1 ||
       (ua.indexOf('Android 4.0') !== -1)) &&
