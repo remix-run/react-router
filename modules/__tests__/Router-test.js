@@ -186,6 +186,66 @@ describe('Router', function () {
           });
         });
       });
+
+      it('stops waiting on router.transitionTo after another asynchronous transition ended ', function (done) {
+        var LongAsync = React.createClass({
+          statics: {
+            delay: Async.delay * 2,
+
+            willTransitionTo: function (transition, params, query, callback) {
+              setTimeout(callback, this.delay);
+            }
+          },
+
+          render: function () {
+            return <div className="Async2">Async2</div>;
+          }
+        });
+
+        TestLocation.history = [ '/foo' ];
+        var routes = [
+          <Route handler={Foo} path='/foo' />,
+          <Route handler={Bar} path='/bar' />,
+          <Route handler={Async} path='/async1' />,
+          <Route handler={LongAsync} path='/async2' />
+        ];
+
+        var div = document.createElement('div');
+        var steps = [];
+        var router = Router.create({
+          routes: routes,
+          location: TestLocation
+        });
+
+        steps.push(function () {
+          router.transitionTo('/async1');
+          setTimeout(function () {
+            router.transitionTo('/async2');
+            expect(div.innerHTML).toMatch(/Foo/);
+            setTimeout(function () {
+              expect(div.innerHTML).toMatch(/Foo/);
+              router.transitionTo('/bar');
+              expect(div.innerHTML).toMatch(/Bar/);
+            }, Async.delay);
+          }, Async.delay / 2);
+        });
+
+        steps.push(function () {
+          setTimeout(function () {
+            expect(div.innerHTML).toMatch(/Bar/);
+            done();
+          }, Async.delay);
+        });
+
+        steps.push(function () {
+        });
+
+        router.run(function (Handler, state) {
+          React.render(<Handler />, div, function () {
+            steps.shift()();
+          });
+        });
+      });
     });
 
     describe('transition.redirect', function () {
@@ -517,6 +577,60 @@ describe('Router', function () {
 
         router.run(function (Handler) {
           React.render(<Handler/>, div, function () {
+            steps.shift()();
+          });
+        });
+      });
+
+      it('ignores aborting asynchronously in willTransitionTo when aborted before router.transitionTo', function (done) {
+        var AbortAsync2 = React.createClass({
+          statics: {
+            willTransitionTo: function (transition, params, query, callback) {
+              transition.abort();
+              setTimeout(callback, Async.delay);
+            }
+          },
+
+          render: function () {
+            return <div>Abort</div>;
+          }
+        });
+
+        TestLocation.history = [ '/foo' ];
+        var routes = [
+          <Route handler={Foo} path='/foo' />,
+          <Route handler={Bar} path='/bar' />,
+          <Route handler={AbortAsync2} path='/abort' />
+        ];
+
+        var div = document.createElement('div');
+        var steps = [];
+        var router = Router.create({
+          routes: routes,
+          location: TestLocation
+        });
+
+        steps.push(function () {
+          router.transitionTo('/abort');
+          expect(div.innerHTML).toMatch(/Foo/);
+
+          router.transitionTo('/bar');
+          expect(div.innerHTML).toMatch(/Bar/);
+        });
+
+        steps.push(function () {
+          setTimeout(function () {
+            expect(div.innerHTML).toMatch(/Bar/);
+            expect(TestLocation.history).toEqual(['/foo', '/bar']);
+            done();
+          }, Async.delay + 10);
+        });
+
+        steps.push(function () {
+        });
+
+        router.run(function (Handler, state) {
+          React.render(<Handler />, div, function () {
             steps.shift()();
           });
         });
