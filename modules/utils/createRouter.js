@@ -410,11 +410,15 @@ function createRouter(options) {
         );
 
         var dispatchHandler = function (error, transition) {
+          if (error)
+            onError.call(router, error);
+
+          if (pendingTransition !== transition)
+            return;
+
           pendingTransition = null;
 
-          if (error) {
-            onError.call(router, error);
-          } else if (transition.isAborted) {
+          if (transition.isAborted) {
             onAbort.call(router, transition.abortReason, location);
           } else {
             callback.call(router, router, nextState);
