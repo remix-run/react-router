@@ -277,7 +277,7 @@ Dynamic Segments
 ----------------
 
 When we added the `message` route, we introduced a "dynamic segment" to
-the URL. These segements get parsed from the url and are available in
+the URL. These segments get parsed from the url and are available in
 the `run` callback, or from the `State` mixin. Let's see how we can
 access the params.
 
