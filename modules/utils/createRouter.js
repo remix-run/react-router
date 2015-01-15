@@ -157,6 +157,7 @@ function createRouter(options) {
   var state = {};
   var nextState = {};
   var pendingTransition = null;
+  var dispatchHandler = null;
   var changeListener = null;
 
   function cancelPendingTransition() {
@@ -207,6 +208,19 @@ function createRouter(options) {
        */
       addRoutes: function (children) {
         routes.push.apply(routes, createRoutesFromChildren(children, this, namedRoutes));
+      },
+
+      /**
+       * Replaces routes of this router from the given children object (see ReactChildren).
+       */
+      replaceRoutes: function (children) {
+        cancelPendingTransition();
+
+        routes = [];
+        namedRoutes = {};
+
+        this.addRoutes(children);
+        this.refresh();
       },
 
       /**
@@ -325,11 +339,13 @@ function createRouter(options) {
        * transition. To resolve asynchronously, they may use the callback argument. If no
        * hooks wait, the transition is fully synchronous.
        */
-      dispatch: function (path, action, callback) {
+      dispatch: function (path, action) {
         cancelPendingTransition();
 
         var prevPath = state.path;
-        if (prevPath === path)
+        var isRefreshing = action == null;
+
+        if (prevPath === path && !isRefreshing)
           return; // Nothing to do!
 
         // Record the scroll position as early as possible to
@@ -378,11 +394,11 @@ function createRouter(options) {
 
         transition.from(fromRoutes, fromComponents, function (error) {
           if (error || transition.isAborted)
-            return callback.call(router, error, transition);
+            return dispatchHandler.call(router, error, transition);
 
           transition.to(toRoutes, nextParams, nextQuery, function (error) {
             if (error || transition.isAborted)
-              return callback.call(router, error, transition);
+              return dispatchHandler.call(router, error, transition);
 
             nextState.path = path;
             nextState.action = action;
@@ -391,7 +407,7 @@ function createRouter(options) {
             nextState.params = nextParams;
             nextState.query = nextQuery;
 
-            callback.call(router, null, transition);
+            dispatchHandler.call(router, null, transition);
           });
         });
       },
@@ -409,7 +425,7 @@ function createRouter(options) {
           'Router is already running'
         );
 
-        var dispatchHandler = function (error, transition) {
+        dispatchHandler = function (error, transition) {
           if (error)
             onError.call(router, error);
 
@@ -426,18 +442,18 @@ function createRouter(options) {
         };
 
         if (typeof location === 'string') {
-          router.dispatch(location, null, dispatchHandler);
+          router.dispatch(location, null);
         } else {
           // Listen for changes to the location.
           changeListener = function (change) {
-            router.dispatch(change.path, change.type, dispatchHandler);
+            router.dispatch(change.path, change.type);
           };
 
           if (location.addChangeListener)
             location.addChangeListener(changeListener);
 
           // Bootstrap using the current path.
-          router.dispatch(location.getCurrentPath(), null, dispatchHandler);
+          this.refresh();
 
           this.isRunning = true;
         }
@@ -452,6 +468,10 @@ function createRouter(options) {
         }
 
         this.isRunning = false;
+      },
+
+      refresh: function () {
+        router.dispatch(location.getCurrentPath(), null);
       }
 
     },
