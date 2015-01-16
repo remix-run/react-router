@@ -149,7 +149,7 @@ var Path = {
     if (queryString)
       return Path.withoutQuery(path) + '?' + queryString;
 
-    return Path.withoutQuery(path);
+    return path;
   },
 
   /**
