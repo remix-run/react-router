@@ -1,6 +1,13 @@
-CONTRIBUTING.md
-bower.json
+.jshintignore
+.jshintrc
+.travis.yml
+dist
 examples
-karma.conf.js
 scripts
+CHANGELOG.md
+CONTRIBUTING.md
+UPGRADE_GUIDE.md
+bower.json
+karma.conf.js
+tests.webpack.js
 webpack.config.js
