@@ -22,6 +22,8 @@ var TestLocation = {
 
   history: [],
 
+  needsDOM: false,
+
   addChangeListener: function (listener) {
     // TestLocation only ever supports a single listener at a time.
     _listener = listener;
