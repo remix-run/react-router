@@ -17,6 +17,8 @@ module.exports = function (config) {
       'tests.webpack.js': [ 'webpack', 'sourcemap' ]
     },
 
+    reporters: [ 'dots' ],
+
     webpack: {
       devtool: 'inline-source-map',
       module: {
