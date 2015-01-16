@@ -2,7 +2,7 @@ var expect = require('expect');
 var React = require('react');
 var Router = require('../../index');
 var TestLocation = require('../../locations/TestLocation');
-var { Nested, Bar } = require('../../__tests__/TestHandlers');
+var { Nested, Bar } = require('../../utils/TestHandlers');
 var Redirect = require('../Redirect');
 var Route = require('../Route');
 

@@ -3,7 +3,7 @@ var React = require('react');
 var Router = require('../../index');
 var NotFoundRoute = require('../NotFoundRoute');
 var Route = require('../Route');
-var { Nested, Foo, Bar } = require('../../__tests__/TestHandlers');
+var { Nested, Foo, Bar } = require('../../utils/TestHandlers');
 
 describe('NotFoundRoute', function () {
 

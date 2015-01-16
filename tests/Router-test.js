@@ -19,7 +19,7 @@ var {
   RedirectToFooAsync,
   Abort,
   AbortAsync
-} = require('./TestHandlers');
+} = require('../utils/TestHandlers');
 
 describe('Router', function () {
   describe('transitions', function () {

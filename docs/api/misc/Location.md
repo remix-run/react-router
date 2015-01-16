@@ -48,4 +48,4 @@ Additionally, location objects must:
 
 Please refer to the [built-in location objects][locations] to get an idea for how this is done.
 
-[locations]: /modules/locations
+[locations]: /locations

@@ -32,5 +32,5 @@ default export are considered public.
 ```js
 var Router = require('react-router');
 var Link = Router.Link // yes
-var Link = require('react-router/modules/components/Link') // no
+var Link = require('react-router/components/Link') // no
 ```
