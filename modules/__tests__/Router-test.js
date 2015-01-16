@@ -736,6 +736,73 @@ describe('Router', function () {
         });
       });
     });
+
+    it('should be called when Handler is rendered multiple times on same route', function (done) {
+
+      var div = document.createElement('div');
+
+      var counter = 0;
+
+      var Foo = React.createClass({
+        statics: {
+          willTransitionFrom: function (transition, component) {
+            counter++;
+          }
+        },
+
+        render: function () {
+          return <div id="foo">Foo</div>;
+        }
+      });
+
+      var Bar = React.createClass({
+        statics: {
+          willTransitionFrom: function (transition, component) {
+            counter++;
+          }
+        },
+
+        render: function () {
+          return <div id="bar">Bar</div>;
+        }
+      });
+      var routes = (
+        <Route handler={Nested} path='/'>
+          <Route name="foo" handler={Foo}/>
+          <Route name="bar" handler={Bar}/>
+        </Route>
+      );
+
+      TestLocation.history = [ '/bar' ];
+
+      var steps = [];
+
+      steps.push(function () {
+        TestLocation.push('/foo');
+      });
+
+      steps.push(function () {
+        TestLocation.push('/bar');
+      });
+
+      steps.push(function () {
+        expect(counter).toEqual(2);
+        done();
+      });
+
+      Router.run(routes, TestLocation, function (Handler, state) {
+
+        // Calling render on the handler twice should be allowed
+        React.render(<Handler data={{FooBar: 1}}/>, div);
+
+        React.render(<Handler data={{FooBar: 1}}/>, div, function () {
+          setTimeout(function() {
+            steps.shift()();
+          }, 1);
+        });
+      });
+    });
+
   });
 
 });
