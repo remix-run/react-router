@@ -167,10 +167,6 @@ function createRouter(options) {
     }
   }
 
-  function updateState() {
-    state = nextState;
-  }
-
   if (typeof location === 'string') {
     warning(
       !canUseDOM || process.env.NODE_ENV === 'test',
@@ -399,13 +395,14 @@ function createRouter(options) {
             if (error || transition.isAborted)
               return dispatchHandler.call(router, error, transition);
 
-            nextState = {};
-            nextState.path = path;
-            nextState.action = action;
-            nextState.pathname = pathname;
-            nextState.routes = nextRoutes;
-            nextState.params = nextParams;
-            nextState.query = nextQuery;
+            nextState = {
+              path: path,
+              action: action,
+              pathname: pathname,
+              routes: nextRoutes,
+              params: nextParams,
+              query: nextQuery
+            };
 
             dispatchHandler.call(router, null, transition);
           });
@@ -498,13 +495,11 @@ function createRouter(options) {
     },
 
     getInitialState: function () {
-      updateState();
-      return state;
+      return (state = nextState);
     },
 
     componentWillReceiveProps: function () {
-      updateState();
-      this.setState(state);
+      this.setState(state = nextState);
     },
 
     componentWillUnmount: function () {
