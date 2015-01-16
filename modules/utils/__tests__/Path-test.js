@@ -321,10 +321,6 @@ describe('Path.withQuery', function () {
     expect(Path.withQuery('/a/b/c', { id: 'def' })).toEqual('/a/b/c?id=def');
   });
 
-  it('removes query string', function () {
-    expect(Path.withQuery('/a/b/c?a=b', { a: undefined })).toEqual('/a/b/c');
-  });
-
   it('merges two query strings', function () {
     expect(Path.withQuery('/path?a=b', { c: [ 'd', 'e' ]})).toEqual('/path?a=b&c%5B0%5D=d&c%5B1%5D=e');
   });
