@@ -28,7 +28,7 @@ module.exports = {
   },
 
   node: {
-    buffer: false
+    Buffer: false
   },
 
   plugins: plugins
