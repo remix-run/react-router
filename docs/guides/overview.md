@@ -144,6 +144,9 @@ Here's how it works:
    active child route.
 
 ```js
+var Router = require('react-router'); // or var Router = ReactRouter; in browsers
+var Route = Router.Route, DefaultRoute = Router.DefaultRoute;
+
 var App = React.createClass({
   render: function () {
     return (
