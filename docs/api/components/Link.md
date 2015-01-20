@@ -32,7 +32,7 @@ Object, the parameters to fill in the dynamic segments of your route.
 ### `query`
 
 Object, Query parameters to add to the link. Access query parameters in
-your route handler with `this.props.query`.
+your route handler with `this.getQuery()`.
 
 ### `activeClassName`
 
