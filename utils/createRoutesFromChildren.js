@@ -154,8 +154,8 @@ function createRoutesFromChildren(children, parentRoute, namedRoutes) {
   var routes = [];
 
   React.Children.forEach(children, function (child) {
-    // Exclude <DefaultRoute>s and <NotFoundRoute>s.
-    if (child = createRoute(child, parentRoute, namedRoutes))
+    // Exclude null values, <DefaultRoute>s and <NotFoundRoute>s.
+    if (child && (child = createRoute(child, parentRoute, namedRoutes)))
       routes.push(child);
   });
 
