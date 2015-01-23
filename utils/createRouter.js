@@ -32,6 +32,19 @@ var DEFAULT_LOCATION = canUseDOM ? HashLocation : '/';
 var DEFAULT_SCROLL_BEHAVIOR = canUseDOM ? ImitateBrowserBehavior : null;
 
 /**
+ * Don't serialize array query params indices between the [] in the query string.
+ *
+ * For example, serializing { foo: [ 'a', 'b' ] } will turn into:
+ *
+ *     // when option is set to false:
+ *     // ?foo[]=a&foo[]=b
+ *
+ *     // when option is set to true:
+ *     // ?foo[0]=a&foo[1]=b
+ */
+var DEFAULT_USE_QUERY_INDICES = false;
+
+/**
  * The default error handler for new routers.
  */
 function defaultErrorHandler(error) {
@@ -132,6 +145,8 @@ function hasMatch(routes, route, prevParams, nextParams, prevQuery, nextQuery) {
  *                    the DOM is available, "/" otherwise
  * - scrollBehavior   The scroll behavior to use. Defaults to ImitateBrowserBehavior
  *                    when the DOM is available, null otherwise
+ * - useQueryIndices  Whether array query parameters should be serialized with
+ *                    indices in the query string.
  * - onError          A function that is used to handle errors
  * - onAbort          A function that is used to handle aborted transitions
  *
@@ -152,6 +167,7 @@ function createRouter(options) {
   var components = [];
   var location = options.location || DEFAULT_LOCATION;
   var scrollBehavior = options.scrollBehavior || DEFAULT_SCROLL_BEHAVIOR;
+  var useQueryIndices = options.useQueryIndices || DEFAULT_USE_QUERY_INDICES;
   var onError = options.onError || defaultErrorHandler;
   var onAbort = options.onAbort || defaultAbortHandler;
   var state = {};
@@ -238,7 +254,7 @@ function createRouter(options) {
           path = route.path;
         }
 
-        return Path.withQuery(Path.injectParams(path, params), query);
+        return Path.withQuery(Path.injectParams(path, params), query, useQueryIndices);
       },
 
       /**

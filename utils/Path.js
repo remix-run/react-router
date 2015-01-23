@@ -138,16 +138,21 @@ var Path = {
    * Returns a version of the given path with the parameters in the given
    * query merged into the query string.
    */
-  withQuery: function (path, query) {
+  withQuery: function (path, query, useIndices) {
     var existingQuery = Path.extractQuery(path);
+    var queryString;
 
-    if (existingQuery)
+    if (existingQuery) {
       query = query ? merge(existingQuery, query) : existingQuery;
+    }
 
-    var queryString = query && qs.stringify(query);
+    if (query) {
+      queryString = decodeURIComponent(qs.stringify(query, {
+        indices: useIndices
+      }));
 
-    if (queryString)
       return Path.withoutQuery(path) + '?' + queryString;
+    }
 
     return path;
   },
