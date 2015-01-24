@@ -104,6 +104,11 @@ function createRoute(element, parentRoute, namedRoutes) {
       'You may not have more than one <NotFoundRoute> per <Route>'
     );
 
+    invariant(
+      props.children == null,
+      '<NotFoundRoute> must not have children'
+    );
+
     parentRoute.notFoundRoute = route;
 
     return null;
@@ -119,6 +124,11 @@ function createRoute(element, parentRoute, namedRoutes) {
     invariant(
       parentRoute.defaultRoute == null,
       'You may not have more than one <DefaultRoute> per <Route>'
+    );
+
+    invariant(
+      props.children == null,
+      '<DefaultRoute> must not have children'
     );
 
     parentRoute.defaultRoute = route;
