@@ -15,11 +15,11 @@ var NavigationContext = {
 
   getChildContext: function () {
     return {
-      makePath: this.constructor.makePath,
-      makeHref: this.constructor.makeHref,
-      transitionTo: this.constructor.transitionTo,
-      replaceWith: this.constructor.replaceWith,
-      goBack: this.constructor.goBack
+      makePath: this.constructor.makePath.bind(this.constructor),
+      makeHref: this.constructor.makeHref.bind(this.constructor),
+      transitionTo: this.constructor.transitionTo.bind(this.constructor),
+      replaceWith: this.constructor.replaceWith.bind(this.constructor),
+      goBack: this.constructor.goBack.bind(this.constructor)
     };
   }
 
