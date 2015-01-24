@@ -1,5 +1,8 @@
 var React = require('react');
+var assign = require('react/lib/Object.assign');
 var PropTypes = require('./PropTypes');
+
+var REF_NAME = '__routeHandler__';
 
 var RouteHandlerMixin = {
 
@@ -19,12 +22,6 @@ var RouteHandlerMixin = {
     };
   },
 
-  getDefaultProps: function () {
-    return {
-      ref: '__routeHandler__'
-    };
-  },
-
   componentDidMount: function () {
     this._updateRouteComponent();
   },
@@ -34,7 +31,7 @@ var RouteHandlerMixin = {
   },
 
   _updateRouteComponent: function () {
-    this.context.setRouteComponentAtDepth(this.getRouteDepth(), this.refs[this.props.ref]);
+    this.context.setRouteComponentAtDepth(this.getRouteDepth(), this.refs[REF_NAME]);
   },
 
   getRouteDepth: function () {
@@ -43,7 +40,7 @@ var RouteHandlerMixin = {
 
   createChildRouteHandler: function (props) {
     var route = this.context.getRouteAtDepth(this.getRouteDepth());
-    return route ? React.createElement(route.handler, props || this.props) : null;
+    return route ? React.createElement(route.handler, assign({}, props || this.props, { ref: REF_NAME })) : null;
   }
 
 };
