@@ -352,7 +352,7 @@ data and set state, you will also need to implement
 `componentWillReceiveProps` on your handler, just like any other
 component whose props are changing. This way you can leverage the
 performance of the React DOM diff algorithm. Look at the `Contact`
-handler in the `master-detail` example.
+handler [in the `master-detail` example](https://github.com/rackt/react-router/blob/master/examples/master-detail/app.js).
 
 Scrolling
 ---------
