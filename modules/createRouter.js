@@ -31,30 +31,6 @@ var DEFAULT_LOCATION = canUseDOM ? HashLocation : '/';
  */
 var DEFAULT_SCROLL_BEHAVIOR = canUseDOM ? ImitateBrowserBehavior : null;
 
-/**
- * The default error handler for new routers.
- */
-function defaultErrorHandler(error) {
-  // Throw so we don't silently swallow async errors.
-  throw error; // This error probably originated in a transition hook.
-}
-
-/**
- * The default aborted transition handler for new routers.
- */
-function defaultAbortHandler(abortReason, location) {
-  if (typeof location === 'string')
-    throw new Error('Unhandled aborted transition! Reason: ' + abortReason);
-
-  if (abortReason instanceof Cancellation) {
-    return;
-  } else if (abortReason instanceof Redirect) {
-    location.replace(this.makePath(abortReason.to, abortReason.params, abortReason.query));
-  } else {
-    location.pop();
-  }
-}
-
 function createMatch(route, params, pathname, query) {
   return {
     routes: [ route ],
@@ -152,13 +128,10 @@ function createRouter(options) {
   var mountedComponents = [];
   var location = options.location || DEFAULT_LOCATION;
   var scrollBehavior = options.scrollBehavior || DEFAULT_SCROLL_BEHAVIOR;
-  var onError = options.onError || defaultErrorHandler;
-  var onAbort = options.onAbort || defaultAbortHandler;
   var state = {};
   var nextState = {};
   var pendingTransition = null;
   var dispatchHandler = null;
-  var changeListener = null;
 
   if (typeof location === 'string') {
     warning(
@@ -322,6 +295,28 @@ function createRouter(options) {
         return false;
       },
 
+      handleAbort: options.onAbort || function (abortReason) {
+        if (typeof location === 'string')
+          throw new Error('Unhandled aborted transition! Reason: ' + abortReason);
+
+        if (abortReason instanceof Cancellation) {
+          return;
+        } else if (abortReason instanceof Redirect) {
+          location.replace(this.makePath(abortReason.to, abortReason.params, abortReason.query));
+        } else {
+          location.pop();
+        }
+      },
+
+      handleError: options.onError || function (error) {
+        // Throw so we don't silently swallow async errors.
+        throw error; // This error probably originated in a transition hook.
+      },
+
+      handleLocationChange: function (change) {
+        this.dispatch(change.path, change.type);
+      },
+
       /**
        * Performs a transition to the given path and calls callback(error, abortReason)
        * when the transition is finished. If both arguments are null the router's state
@@ -392,22 +387,17 @@ function createRouter(options) {
 
         transition.from(fromRoutes, fromComponents, function (error) {
           if (error || transition.abortReason)
-            return dispatchHandler.call(Router, error, transition);
+            return dispatchHandler.call(Router, error, transition); // No need to continue.
 
           transition.to(toRoutes, nextParams, nextQuery, function (error) {
-            if (error || transition.abortReason)
-              return dispatchHandler.call(Router, error, transition);
-
-            nextState = {
+            dispatchHandler.call(Router, error, transition, {
               path: path,
               action: action,
               pathname: match.pathname,
               routes: nextRoutes,
               params: nextParams,
               query: nextQuery
-            };
-
-            dispatchHandler.call(Router, null, transition);
+            });
           });
         });
       },
@@ -425,9 +415,9 @@ function createRouter(options) {
           'Router is already running'
         );
 
-        dispatchHandler = function (error, transition) {
+        dispatchHandler = function (error, transition, newState) {
           if (error)
-            onError.call(Router, error);
+            Router.handleError(error);
 
           if (pendingTransition !== transition)
             return;
@@ -435,43 +425,36 @@ function createRouter(options) {
           pendingTransition = null;
 
           if (transition.abortReason) {
-            onAbort.call(Router, transition.abortReason, location);
+            Router.handleAbort(transition.abortReason);
           } else {
-            callback.call(Router, Router, nextState);
+            callback.call(this, this, nextState = newState);
           }
         };
 
         if (typeof location === 'string') {
           Router.dispatch(location, null);
         } else {
-          // Listen for changes to the location.
-          changeListener = function (change) {
-            Router.dispatch(change.path, change.type);
-          };
-
           if (location.addChangeListener)
-            location.addChangeListener(changeListener);
+            location.addChangeListener(Router.handleLocationChange);
+
+          this.isRunning = true;
 
           // Bootstrap using the current path.
           this.refresh();
-
-          this.isRunning = true;
         }
+      },
+
+      refresh: function () {
+        Router.dispatch(location.getCurrentPath(), null);
       },
 
       stop: function () {
         this.cancelPendingTransition();
 
-        if (location.removeChangeListener && changeListener) {
-          location.removeChangeListener(changeListener);
-          changeListener = null;
-        }
+        if (location.removeChangeListener)
+          location.removeChangeListener(Router.handleLocationChange);
 
         this.isRunning = false;
-      },
-
-      refresh: function () {
-        Router.dispatch(location.getCurrentPath(), null);
       }
 
     },
