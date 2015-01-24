@@ -144,10 +144,10 @@ var Path = {
     if (existingQuery)
       query = query ? merge(existingQuery, query) : existingQuery;
 
-    var queryString = query && qs.stringify(query);
+    var queryString = qs.stringify(query, { indices: false });
 
     if (queryString)
-      return Path.withoutQuery(path) + '?' + queryString;
+      return Path.withoutQuery(path) + '?' + decodeURIComponent(queryString);
 
     return path;
   },
