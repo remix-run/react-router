@@ -830,20 +830,6 @@ describe('Router.run', function () {
     });
   });
 
-  it('does not break on falsy routes', function (done) {
-    var routes = [
-      <Route handler={Foo} path="/foo"/>,
-      null,
-      <Route handler={Bar} path="/bar"/>,
-      undefined
-    ];
-    Router.run(routes, '/foo', function (Handler, state) {
-      var html = React.renderToString(<Handler/>);
-      expect(html).toMatch(/Foo/);
-      done();
-    });
-  });  
-
   it('matches nested routes', function (done) {
     var routes = (
       <Route handler={Nested} path='/'>

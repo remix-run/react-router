@@ -149,7 +149,7 @@ function createRoutesFromReactChildren(children, parentRoute, namedRoutes) {
 
   React.Children.forEach(children, function (child) {
     // Exclude null values, <DefaultRoute>s and <NotFoundRoute>s.
-    if (child && (child = createRoute(child, parentRoute, namedRoutes)))
+    if (React.isValidElement(child) && (child = createRoute(child, parentRoute, namedRoutes)))
       routes.push(child);
   });
 
