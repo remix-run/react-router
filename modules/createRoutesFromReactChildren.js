@@ -5,7 +5,6 @@ var invariant = require('react/lib/invariant');
 var DefaultRoute = require('./components/DefaultRoute');
 var NotFoundRoute = require('./components/NotFoundRoute');
 var Redirect = require('./components/Redirect');
-var Route = require('./components/Route');
 var Path = require('./utils/Path');
 
 function createRedirectHandler(to, _params, _query) {
@@ -127,7 +126,7 @@ function createRoute(element, parentRoute, namedRoutes) {
     return null;
   }
 
-  route.childRoutes = createRoutesFromChildren(props.children, route, namedRoutes);
+  route.childRoutes = createRoutesFromReactChildren(props.children, route, namedRoutes);
 
   return route;
 }
@@ -135,7 +134,7 @@ function createRoute(element, parentRoute, namedRoutes) {
 /**
  * Creates and returns an array of route objects from the given ReactChildren.
  */
-function createRoutesFromChildren(children, parentRoute, namedRoutes) {
+function createRoutesFromReactChildren(children, parentRoute, namedRoutes) {
   var routes = [];
 
   React.Children.forEach(children, function (child) {
@@ -147,4 +146,4 @@ function createRoutesFromChildren(children, parentRoute, namedRoutes) {
   return routes;
 }
 
-module.exports = createRoutesFromChildren;
+module.exports = createRoutesFromReactChildren;

@@ -812,8 +812,6 @@ describe('Router.run', function () {
   it('matches a root route', function (done) {
     var routes = <Route path="/" handler={EchoFooProp} />;
     Router.run(routes, '/', function (Handler, state) {
-      // TODO: figure out why we're getting this warning here
-      // WARN: 'Warning: You cannot pass children to a RouteHandler'
       var html = React.renderToString(<Handler foo="bar"/>);
       expect(html).toMatch(/bar/);
       done();

@@ -11,7 +11,8 @@ var RefreshLocation = require('./locations/RefreshLocation');
 var NavigationContext = require('./NavigationContext');
 var StateContext = require('./StateContext');
 var Scrolling = require('./Scrolling');
-var createRoutesFromChildren = require('./createRoutesFromChildren');
+var createRoutesFromReactChildren = require('./createRoutesFromReactChildren');
+var isReactChildren = require('./isReactChildren');
 var Transition = require('./Transition');
 var PropTypes = require('./PropTypes');
 var Redirect = require('./Redirect');
@@ -140,11 +141,8 @@ function hasMatch(routes, route, prevParams, nextParams, prevQuery, nextQuery) {
 function createRouter(options) {
   options = options || {};
 
-  if (typeof options === 'function') {
-    options = { routes: options }; // Router.create(<Route>)
-  } else if (Array.isArray(options)) {
-    options = { routes: options }; // Router.create([ <Route>, <Route> ])
-  }
+  if (isReactChildren(options))
+    options = { routes: options };
 
   var routes = [];
   var namedRoutes = {};
@@ -200,20 +198,23 @@ function createRouter(options) {
       /**
        * Adds routes to this router from the given children object (see ReactChildren).
        */
-      addRoutes: function (children) {
-        routes.push.apply(routes, createRoutesFromChildren(children, this, namedRoutes));
+      addRoutes: function (newRoutes) {
+        if (isReactChildren(newRoutes))
+          newRoutes = createRoutesFromReactChildren(newRoutes, this, namedRoutes);
+
+        routes.push.apply(routes, newRoutes);
       },
 
       /**
        * Replaces routes of this router from the given children object (see ReactChildren).
        */
-      replaceRoutes: function (children) {
+      replaceRoutes: function (newRoutes) {
         cancelPendingTransition();
 
         routes = [];
         namedRoutes = {};
 
-        this.addRoutes(children);
+        this.addRoutes(newRoutes);
         this.refresh();
       },
 
