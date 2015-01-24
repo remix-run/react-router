@@ -8,13 +8,6 @@ var Redirect = require('./components/Redirect');
 var Route = require('./components/Route');
 var Path = require('./utils/Path');
 
-var CONFIG_ELEMENT_TYPES = [
-  DefaultRoute.type,
-  NotFoundRoute.type,
-  Redirect.type,
-  Route.type
-];
-
 function createRedirectHandler(to, _params, _query) {
   return React.createClass({
     statics: {
@@ -43,22 +36,14 @@ function checkPropTypes(componentName, propTypes, props) {
 function createRoute(element, parentRoute, namedRoutes) {
   var type = element.type;
   var props = element.props;
-  var componentName = (type && type.displayName) || 'UnknownComponent';
-
-  invariant(
-    CONFIG_ELEMENT_TYPES.indexOf(type) !== -1,
-    'Unrecognized route configuration element "<%s>"',
-    componentName
-  );
 
   if (type.propTypes)
-    checkPropTypes(componentName, type.propTypes, props);
+    checkPropTypes(type.displayName, type.propTypes, props);
 
   var route = { name: props.name };
 
-  if (props.ignoreScrollBehavior) {
+  if (props.ignoreScrollBehavior)
     route.ignoreScrollBehavior = true;
-  }
 
   if (type === Redirect.type) {
     route.handler = createRedirectHandler(props.to, props.params, props.query);
