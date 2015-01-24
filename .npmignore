@@ -2,6 +2,7 @@
 .jshintrc
 .travis.yml
 dist
+docs
 examples
 scripts
 CHANGELOG.md
