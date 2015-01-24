@@ -482,6 +482,32 @@ function createRouter(options) {
       children: PropTypes.falsy
     },
 
+    childContextTypes: {
+      getRouteAtDepth: React.PropTypes.func.isRequired,
+      setRouteComponentAtDepth: React.PropTypes.func.isRequired,
+      routeHandlers: React.PropTypes.array.isRequired
+    },
+
+    getChildContext: function () {
+      return {
+        getRouteAtDepth: this.getRouteAtDepth,
+        setRouteComponentAtDepth: this.setRouteComponentAtDepth,
+        routeHandlers: [ this ]
+      };
+    },
+
+    getInitialState: function () {
+      return (state = nextState);
+    },
+
+    componentWillReceiveProps: function () {
+      this.setState(state = nextState);
+    },
+
+    componentWillUnmount: function () {
+      Router.stop();
+    },
+
     getLocation: function () {
       return location;
     },
@@ -499,35 +525,9 @@ function createRouter(options) {
       mountedComponents[depth] = component;
     },
 
-    getInitialState: function () {
-      return (state = nextState);
-    },
-
-    componentWillReceiveProps: function () {
-      this.setState(state = nextState);
-    },
-
-    componentWillUnmount: function () {
-      Router.stop();
-    },
-
     render: function () {
       var route = this.getRouteAtDepth(0);
       return route ? React.createElement(route.handler, this.props) : null;
-    },
-
-    childContextTypes: {
-      getRouteAtDepth: React.PropTypes.func.isRequired,
-      setRouteComponentAtDepth: React.PropTypes.func.isRequired,
-      routeHandlers: React.PropTypes.array.isRequired
-    },
-
-    getChildContext: function () {
-      return {
-        getRouteAtDepth: this.getRouteAtDepth,
-        setRouteComponentAtDepth: this.setRouteComponentAtDepth,
-        routeHandlers: [ this ]
-      };
     }
 
   });
