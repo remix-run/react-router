@@ -126,7 +126,7 @@ function createRoute(element, parentRoute, namedRoutes) {
     return null;
   }
 
-  route.childRoutes = createRoutesFromReactChildren(props.children, route, namedRoutes);
+  route.routes = createRoutesFromReactChildren(props.children, route, namedRoutes);
 
   return route;
 }

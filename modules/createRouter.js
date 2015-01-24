@@ -55,14 +55,23 @@ function defaultAbortHandler(abortReason, location) {
   }
 }
 
-function findMatch(pathname, routes, defaultRoute, notFoundRoute) {
-  var match, route, params;
+function createMatch(route, params, pathname, query) {
+  return {
+    routes: [ route ],
+    params: params,
+    pathname: pathname,
+    query: query
+  };
+}
+
+function findMatch(routes, defaultRoute, notFoundRoute, pathname, query) {
+  var route, match, params;
 
   for (var i = 0, len = routes.length; i < len; ++i) {
     route = routes[i];
 
     // Check the subtree first to find the most deeply-nested match.
-    match = findMatch(pathname, route.childRoutes, route.defaultRoute, route.notFoundRoute);
+    match = findMatch(route.routes, route.defaultRoute, route.notFoundRoute, pathname, query);
 
     if (match != null) {
       match.routes.unshift(route);
@@ -73,22 +82,18 @@ function findMatch(pathname, routes, defaultRoute, notFoundRoute) {
     params = Path.extractParams(route.path, pathname);
 
     if (params)
-      return createMatch(route, params);
+      return createMatch(route, params, pathname, query);
   }
 
   // No routes matched, so try the default route if there is one.
   if (defaultRoute && (params = Path.extractParams(defaultRoute.path, pathname)))
-    return createMatch(defaultRoute, params);
+    return createMatch(defaultRoute, params, pathname, query);
 
   // Last attempt: does the "not found" route match?
   if (notFoundRoute && (params = Path.extractParams(notFoundRoute.path, pathname)))
-    return createMatch(notFoundRoute, params);
+    return createMatch(notFoundRoute, params, pathname, query);
 
-  return match;
-}
-
-function createMatch(route, params) {
-  return { routes: [ route ], params: params };
+  return null;
 }
 
 function hasProperties(object, properties) {
@@ -144,8 +149,6 @@ function createRouter(options) {
   if (isReactChildren(options))
     options = { routes: options };
 
-  var routes = [];
-  var namedRoutes = {};
   var mountedComponents = [];
   var location = options.location || DEFAULT_LOCATION;
   var scrollBehavior = options.scrollBehavior || DEFAULT_SCROLL_BEHAVIOR;
@@ -156,13 +159,6 @@ function createRouter(options) {
   var pendingTransition = null;
   var dispatchHandler = null;
   var changeListener = null;
-
-  function cancelPendingTransition() {
-    if (pendingTransition) {
-      pendingTransition.abort(new Cancellation);
-      pendingTransition = null;
-    }
-  }
 
   if (typeof location === 'string') {
     warning(
@@ -183,39 +179,55 @@ function createRouter(options) {
   if (location === HistoryLocation && !supportsHistory())
     location = RefreshLocation;
 
-  var router = React.createClass({
+  var Router = React.createClass({
 
     displayName: 'Router',
 
-    mixins: [ NavigationContext, StateContext, Scrolling ],
-
     statics: {
 
-      defaultRoute: null,
-      notFoundRoute: null,
       isRunning: false,
+
+      cancelPendingTransition: function () {
+        if (pendingTransition) {
+          pendingTransition.abort(new Cancellation);
+          pendingTransition = null;
+        }
+      },
+
+      clearAllRoutes: function () {
+        this.cancelPendingTransition();
+        this.defaultRoute = null;
+        this.notFoundRoute = null;
+        this.namedRoutes = {};
+        this.routes = [];
+      },
 
       /**
        * Adds routes to this router from the given children object (see ReactChildren).
        */
-      addRoutes: function (newRoutes) {
-        if (isReactChildren(newRoutes))
-          newRoutes = createRoutesFromReactChildren(newRoutes, this, namedRoutes);
+      addRoutes: function (routes) {
+        if (isReactChildren(routes))
+          routes = createRoutesFromReactChildren(routes, this, this.namedRoutes);
 
-        routes.push.apply(routes, newRoutes);
+        this.routes.push.apply(this.routes, routes);
       },
 
       /**
        * Replaces routes of this router from the given children object (see ReactChildren).
        */
-      replaceRoutes: function (newRoutes) {
-        cancelPendingTransition();
-
-        routes = [];
-        namedRoutes = {};
-
-        this.addRoutes(newRoutes);
+      replaceRoutes: function (routes) {
+        this.clearAllRoutes();
+        this.addRoutes(routes);
         this.refresh();
+      },
+
+      /**
+       * Performs a match of the given path against this router and returns an object
+       * with the { routes, params, pathname, query } that match. Returns null if no
+       * match can be made.
+       */
+      match: function (path) {
+        return findMatch(this.routes, this.defaultRoute, this.notFoundRoute, Path.withoutQuery(path), Path.extractQuery(path));
       },
 
       /**
@@ -227,7 +239,7 @@ function createRouter(options) {
         if (Path.isAbsolute(to)) {
           path = Path.normalize(to);
         } else {
-          var route = namedRoutes[to];
+          var route = this.namedRoutes[to];
 
           invariant(
             route,
@@ -311,14 +323,6 @@ function createRouter(options) {
       },
 
       /**
-       * Performs a match of the given pathname against this router and returns an object
-       * with the { routes, params } that match. Returns null if no match can be made.
-       */
-      match: function (pathname) {
-        return findMatch(pathname, routes, this.defaultRoute, this.notFoundRoute) || null;
-      },
-
-      /**
        * Performs a transition to the given path and calls callback(error, abortReason)
        * when the transition is finished. If both arguments are null the router's state
        * was updated. Otherwise the transition did not complete.
@@ -335,7 +339,7 @@ function createRouter(options) {
        * hooks wait, the transition is fully synchronous.
        */
       dispatch: function (path, action) {
-        cancelPendingTransition();
+        this.cancelPendingTransition();
 
         var prevPath = state.path;
         var isRefreshing = action == null;
@@ -348,8 +352,7 @@ function createRouter(options) {
         if (prevPath && action !== LocationActions.REPLACE)
           this.recordScrollPosition(prevPath);
 
-        var pathname = Path.withoutQuery(path);
-        var match = this.match(pathname);
+        var match = this.match(path);
 
         warning(
           match != null,
@@ -366,7 +369,7 @@ function createRouter(options) {
 
         var nextRoutes = match.routes || [];
         var nextParams = match.params || {};
-        var nextQuery = Path.extractQuery(path) || {};
+        var nextQuery = match.query || {};
 
         var fromRoutes, toRoutes;
         if (prevRoutes.length) {
@@ -389,22 +392,22 @@ function createRouter(options) {
 
         transition.from(fromRoutes, fromComponents, function (error) {
           if (error || transition.abortReason)
-            return dispatchHandler.call(router, error, transition);
+            return dispatchHandler.call(Router, error, transition);
 
           transition.to(toRoutes, nextParams, nextQuery, function (error) {
             if (error || transition.abortReason)
-              return dispatchHandler.call(router, error, transition);
+              return dispatchHandler.call(Router, error, transition);
 
             nextState = {
               path: path,
               action: action,
-              pathname: pathname,
+              pathname: match.pathname,
               routes: nextRoutes,
               params: nextParams,
               query: nextQuery
             };
 
-            dispatchHandler.call(router, null, transition);
+            dispatchHandler.call(Router, null, transition);
           });
         });
       },
@@ -424,7 +427,7 @@ function createRouter(options) {
 
         dispatchHandler = function (error, transition) {
           if (error)
-            onError.call(router, error);
+            onError.call(Router, error);
 
           if (pendingTransition !== transition)
             return;
@@ -432,18 +435,18 @@ function createRouter(options) {
           pendingTransition = null;
 
           if (transition.abortReason) {
-            onAbort.call(router, transition.abortReason, location);
+            onAbort.call(Router, transition.abortReason, location);
           } else {
-            callback.call(router, router, nextState);
+            callback.call(Router, Router, nextState);
           }
         };
 
         if (typeof location === 'string') {
-          router.dispatch(location, null);
+          Router.dispatch(location, null);
         } else {
           // Listen for changes to the location.
           changeListener = function (change) {
-            router.dispatch(change.path, change.type);
+            Router.dispatch(change.path, change.type);
           };
 
           if (location.addChangeListener)
@@ -457,7 +460,7 @@ function createRouter(options) {
       },
 
       stop: function () {
-        cancelPendingTransition();
+        this.cancelPendingTransition();
 
         if (location.removeChangeListener && changeListener) {
           location.removeChangeListener(changeListener);
@@ -468,10 +471,12 @@ function createRouter(options) {
       },
 
       refresh: function () {
-        router.dispatch(location.getCurrentPath(), null);
+        Router.dispatch(location.getCurrentPath(), null);
       }
 
     },
+
+    mixins: [ NavigationContext, StateContext, Scrolling ],
 
     propTypes: {
       children: PropTypes.falsy
@@ -503,7 +508,7 @@ function createRouter(options) {
     },
 
     componentWillUnmount: function () {
-      router.stop();
+      Router.stop();
     },
 
     render: function () {
@@ -527,10 +532,12 @@ function createRouter(options) {
 
   });
 
-  if (options.routes)
-    router.addRoutes(options.routes);
+  Router.clearAllRoutes();
 
-  return router;
+  if (options.routes)
+    Router.addRoutes(options.routes);
+
+  return Router;
 }
 
 module.exports = createRouter;
