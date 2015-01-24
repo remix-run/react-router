@@ -1,5 +1,5 @@
 [![npm package](https://img.shields.io/npm/v/react-router.svg?style=flat-square)](https://www.npmjs.org/package/react-router)
-[![build status](https://img.shields.io/travis/rackt/react-router.svg?style=flat-square)](https://travis-ci.org/rackt/react-router)
+[![build status](https://img.shields.io/travis/rackt/react-router/master.svg?style=flat-square)](https://travis-ci.org/rackt/react-router)
 [![dependency status](https://img.shields.io/david/rackt/react-router.svg?style=flat-square)](https://david-dm.org/rackt/react-router)
 
 React Router
