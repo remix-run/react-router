@@ -8,6 +8,7 @@ exports.RouteHandler = require('./components/RouteHandler');
 exports.HashLocation = require('./locations/HashLocation');
 exports.HistoryLocation = require('./locations/HistoryLocation');
 exports.RefreshLocation = require('./locations/RefreshLocation');
+exports.TestLocation = require('./locations/TestLocation');
 
 exports.ImitateBrowserBehavior = require('./behaviors/ImitateBrowserBehavior');
 exports.ScrollToTopBehavior = require('./behaviors/ScrollToTopBehavior');
