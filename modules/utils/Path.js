@@ -36,20 +36,6 @@ function compilePattern(pattern) {
 var Path = {
 
   /**
-   * Safely decodes special characters in the given URL path.
-   */
-  decode: function (path) {
-    return decodeURI(path.replace(/\+/g, ' '));
-  },
-
-  /**
-   * Safely encodes special characters in the given URL path.
-   */
-  encode: function (path) {
-    return encodeURI(path).replace(/%20/g, '+');
-  },
-
-  /**
    * Returns an array of the names of all parameters in the given pattern.
    */
   extractParamNames: function (pattern) {

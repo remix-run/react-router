@@ -1,12 +1,11 @@
 var LocationActions = require('../actions/LocationActions');
 var History = require('../History');
-var Path = require('../utils/Path');
 
 /**
  * Returns the current URL path from `window.location`, including query string.
  */
 function getWindowPath() {
-  return Path.decode(
+  return decodeURI(
     window.location.pathname + window.location.search
   );
 }
@@ -66,13 +65,13 @@ var HistoryLocation = {
   },
 
   push: function (path) {
-    window.history.pushState({ path: path }, '', Path.encode(path));
+    window.history.pushState({ path: path }, '', encodeURI(path));
     History.length += 1;
     notifyChange(LocationActions.PUSH);
   },
 
   replace: function (path) {
-    window.history.replaceState({ path: path }, '', Path.encode(path));
+    window.history.replaceState({ path: path }, '', encodeURI(path));
     notifyChange(LocationActions.REPLACE);
   },
 

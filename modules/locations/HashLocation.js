@@ -1,13 +1,12 @@
 var LocationActions = require('../actions/LocationActions');
 var History = require('../History');
-var Path = require('../utils/Path');
 
 /**
  * Returns the current URL path from the `hash` portion of the URL, including
  * query string.
  */
 function getHashPath() {
-  return Path.decode(
+  return decodeURI(
     // We can't use window.location.hash here because it's not
     // consistent across browsers - Firefox will pre-decode it!
     window.location.href.split('#')[1] || ''
@@ -96,12 +95,14 @@ var HashLocation = {
 
   push: function (path) {
     _actionType = LocationActions.PUSH;
-    window.location.hash = Path.encode(path);
+    window.location.hash = encodeURI(path);
   },
 
   replace: function (path) {
     _actionType = LocationActions.REPLACE;
-    window.location.replace(window.location.pathname + window.location.search + '#' + Path.encode(path));
+    window.location.replace(
+      window.location.pathname + window.location.search + '#' + encodeURI(path)
+    );
   },
 
   pop: function () {
