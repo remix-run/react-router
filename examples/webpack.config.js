@@ -34,7 +34,7 @@ module.exports = {
 
   resolve: {
     alias: {
-      'react-router': '../../index'
+      'react-router': '../../modules/index'
     }
   },
 
