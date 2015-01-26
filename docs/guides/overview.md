@@ -101,7 +101,7 @@ otherRouter.route('/calendar', function () {
 });
 ```
 
-The three main view's render methods are nearly identical. While one
+The three main views' render methods are nearly identical. While one
 level of shared UI like this is pretty easy to handle, getting deeper
 and deeper adds more complexity.
 
