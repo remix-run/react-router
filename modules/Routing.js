@@ -6,18 +6,10 @@ var NotFoundRoute = require('./components/NotFoundRoute');
 var Redirect = require('./components/Redirect');
 var Path = require('./utils/Path');
 
-function createRedirectHandler(to, _params, _query) {
-  return React.createClass({
-    statics: {
-      willTransitionTo: function (transition, params, query) {
-        transition.redirect(to, _params || params, _query || query);
-      }
-    },
-
-    render: function () {
-      return null;
-    }
-  });
+function createTransitionToHook(to, _params, _query) {
+  return function (transition, params, query) {
+    transition.redirect(to, _params || params, _query || query);
+  };
 }
 
 function createRoute(element, parentRoute, namedRoutes) {
@@ -27,16 +19,18 @@ function createRoute(element, parentRoute, namedRoutes) {
   if (type.validateProps)
     type.validateProps(props);
 
-  var route = {
+  var options = {
     name: props.name,
     ignoreScrollBehavior: !!props.ignoreScrollBehavior
   };
 
   if (type === Redirect.type) {
-    route.handler = createRedirectHandler(props.to, props.params, props.query);
+    options.willTransitionTo = createTransitionToHook(props.to, props.params, props.query);
     props.path = props.path || props.from || '*';
   } else {
-    route.handler = props.handler;
+    options.handler = props.handler;
+    options.willTransitionTo = props.handler && props.handler.willTransitionTo;
+    options.willTransitionFrom = props.handler && props.handler.willTransitionFrom;
   }
 
   var parentPath = (parentRoute && parentRoute.path) || '/';
@@ -48,26 +42,28 @@ function createRoute(element, parentRoute, namedRoutes) {
     if (!Path.isAbsolute(path))
       path = Path.join(parentPath, path);
 
-    route.path = Path.normalize(path);
+    options.path = Path.normalize(path);
   } else {
-    route.path = parentPath;
+    options.path = parentPath;
 
     if (type === NotFoundRoute.type)
-      route.path += '*';
+      options.path += '*';
   }
 
-  route.paramNames = Path.extractParamNames(route.path);
+  options.paramNames = Path.extractParamNames(options.path);
 
   // Make sure the route's path has all params its parent needs.
   if (parentRoute && Array.isArray(parentRoute.paramNames)) {
     parentRoute.paramNames.forEach(function (paramName) {
       invariant(
-        route.paramNames.indexOf(paramName) !== -1,
+        options.paramNames.indexOf(paramName) !== -1,
         'The nested route path "%s" is missing the "%s" parameter of its parent path "%s"',
-        route.path, paramName, parentRoute.path
+        options.path, paramName, parentRoute.path
       );
     });
   }
+
+  var route = new Route(options);
 
   // Make sure the route can be looked up by <Link>s.
   if (props.name) {
@@ -144,4 +140,19 @@ function createRoutesFromReactChildren(children, parentRoute, namedRoutes) {
   return routes;
 }
 
-module.exports = createRoutesFromReactChildren;
+function Route(options) {
+  options = options || {};
+
+  this.name = options.name;
+  this.path = options.path || '/';
+  this.paramNames = options.paramNames || Path.extractParamNames(this.path);
+  this.ignoreScrollBehavior = !!options.ignoreScrollBehavior;
+  this.willTransitionTo = options.willTransitionTo;
+  this.willTransitionFrom = options.willTransitionFrom;
+  this.handler = options.handler;
+}
+
+module.exports = {
+  createRoutesFromReactChildren: createRoutesFromReactChildren,
+  Route: Route
+};
