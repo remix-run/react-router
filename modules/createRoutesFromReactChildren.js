@@ -1,6 +1,5 @@
 /* jshint -W084 */
 var React = require('react');
-var warning = require('react/lib/warning');
 var invariant = require('react/lib/invariant');
 var DefaultRoute = require('./components/DefaultRoute');
 var NotFoundRoute = require('./components/NotFoundRoute');
@@ -21,28 +20,17 @@ function createRedirectHandler(to, _params, _query) {
   });
 }
 
-function checkPropTypes(componentName, propTypes, props) {
-  for (var propName in propTypes) {
-    if (propTypes.hasOwnProperty(propName)) {
-      var error = propTypes[propName](props, propName, componentName);
-
-      if (error instanceof Error)
-        warning(false, error.message);
-    }
-  }
-}
-
 function createRoute(element, parentRoute, namedRoutes) {
   var type = element.type;
   var props = element.props;
 
-  if (type.propTypes)
-    checkPropTypes(type.displayName, type.propTypes, props);
+  if (type.validateProps)
+    type.validateProps(props);
 
-  var route = { name: props.name };
-
-  if (props.ignoreScrollBehavior)
-    route.ignoreScrollBehavior = true;
+  var route = {
+    name: props.name,
+    ignoreScrollBehavior: !!props.ignoreScrollBehavior
+  };
 
   if (type === Redirect.type) {
     route.handler = createRedirectHandler(props.to, props.params, props.query);

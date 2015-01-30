@@ -1,5 +1,5 @@
 var React = require('react');
-var NonRenderable = require('../NonRenderable');
+var Configuration = require('../Configuration');
 var PropTypes = require('../PropTypes');
 
 /**
@@ -44,7 +44,7 @@ var Route = React.createClass({
 
   displayName: 'Route',
 
-  mixins: [ NonRenderable ],
+  mixins: [ Configuration ],
 
   propTypes: {
     name: PropTypes.string,

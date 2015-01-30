@@ -1,5 +1,5 @@
 var React = require('react');
-var NonRenderable = require('../NonRenderable');
+var Configuration = require('../Configuration');
 var PropTypes = require('../PropTypes');
 
 /**
@@ -10,7 +10,7 @@ var Redirect = React.createClass({
 
   displayName: 'Redirect',
 
-  mixins: [ NonRenderable ],
+  mixins: [ Configuration ],
 
   propTypes: {
     path: PropTypes.string,

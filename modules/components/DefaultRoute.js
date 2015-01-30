@@ -1,5 +1,5 @@
 var React = require('react');
-var NonRenderable = require('../NonRenderable');
+var Configuration = require('../Configuration');
 var PropTypes = require('../PropTypes');
 
 /**
@@ -12,11 +12,12 @@ var DefaultRoute = React.createClass({
 
   displayName: 'DefaultRoute',
 
-  mixins: [ NonRenderable ],
+  mixins: [ Configuration ],
 
   propTypes: {
     name: PropTypes.string,
     path: PropTypes.falsy,
+    children: PropTypes.falsy,
     handler: PropTypes.func.isRequired
   }
 
