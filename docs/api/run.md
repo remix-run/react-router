@@ -98,7 +98,29 @@ Sample data fetching using `state.routes`. Check out the
 [async-data][2] example.
 
 ```js
-var resolveHash = require('when/keys').all;
+function resolveRoutes(state) {
+  var _data = [];
+  var routes = state.routes;
+  var params = state.params;
+
+  return Promise.all(routes.filter(function(route) {
+    _data.push({});
+    route.depth = _data.length - 1;
+    return route.handler.fetchData;
+  }).map(function(route) {
+    return route.handler.fetchData(context, state).then(function(d) {
+      _data[route.depth] = d;
+    });
+  })).then(function() {
+    var data = _data[0];
+    var pointer = data;
+    for (var i = 1, l = _data.length; i < l; i++) {
+      pointer.nestedData = _data[i];
+      pointer = pointer.nestedData;
+    }
+    return data;
+  });
+}
 
 var SampleHandler = React.createClass({
   statics: {
@@ -111,18 +133,7 @@ var SampleHandler = React.createClass({
 });
 
 Router.run(routes, Router.HistoryLocation, function (Handler, state) {
-  
-  // create the promises hash
-  var promises = state.routes.filter(function (route) {
-    // gather up the handlers that have a static `fetchData` method
-    return route.handler.fetchData;
-  }).reduce(function (promises, route) {
-    // reduce to a hash of `key:promise`
-    promises[route.name] = route.handler.fetchData(state.params);
-    return promises;
-  }, {});
-
-  resolveHash(promises).then(function (data) {
+  resolveRoutes(state).then(function (data) {
     // wait until we have data to render, the old screen stays up until
     // we render
     React.render(<Handler data={data}/>, document.body);
@@ -146,4 +157,3 @@ something.serve(function (req, res) {
 
   [1]:./components/Route.md
   [2]:https://github.com/rackt/react-router/tree/master/examples/async-data
-
