@@ -71,7 +71,6 @@ var Tab = React.createClass({
   render: function () {
     var isActive = this.isActive(this.props.to, this.props.params, this.props.query);
     var className = isActive ? 'active' : '';
-    var link = Link(this.props);
     var link = (
       <Link {...this.props} />
     );
