@@ -76,8 +76,13 @@ React.render(<TestWrapper/>, testElement);
 ```
 
 This is handy because now you can force the code down certain paths if
-you add some behavior to the stubbed context. It's also a lot of junk to
-write, copy/paste this into your test utils to make things a bit easier:
+you add some behavior to the stubbed context. But It's also a lot of junk to
+write.
+
+`stubRouterContext`
+-------------------
+
+Copy/paste this helper into your test utils to make things a bit easier:
 
 ```js
 var stubRouterContext = (Component, props, stubs) => {
