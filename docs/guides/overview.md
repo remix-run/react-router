@@ -347,8 +347,7 @@ Important Note About Dynamic Segments
 -------------------------------------
 
 If you have dynamic segments in your URL, a transition from `/users/123`
-to `/users/456` does not call `getInitialState`, `componentWillMount` or
-`componentWillUnmount`. If you are using those lifecycle hooks to fetch
+to `/users/456` does not call `getInitialState`, `componentWillMount`, `componentWillUnmount` or `componentDidMount`. If you are using those lifecycle hooks to fetch
 data and set state, you will also need to implement
 `componentWillReceiveProps` on your handler, just like any other
 component whose props are changing. This way you can leverage the
