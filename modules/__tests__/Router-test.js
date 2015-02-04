@@ -1173,7 +1173,7 @@ describe('Router.run', function () {
     beforeEach(function () {
       router = Router.create({
         routes: [
-          <Route name="home" handler={Foo}>
+          <Route name="home" handler={Foo} path="/?">
             <Route name="users" handler={Foo}>
               <Route name="user" path=":id" handler={Foo}/>
             </Route>
