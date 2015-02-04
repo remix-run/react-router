@@ -145,8 +145,11 @@ Here's how it works:
 
 ```js
 var Router = require('react-router'); // or var Router = ReactRouter; in browsers
-var Route = Router.Route, DefaultRoute = Router.DefaultRoute,
-  Link=Router.Link, RouteHandler = Router.RouteHandler;
+
+var DefaultRoute = Router.DefaultRoute;
+var Link = Router.Link;
+var Route = Router.Route;
+var RouteHandler = Router.RouteHandler;
 
 var App = React.createClass({
   render: function () {
