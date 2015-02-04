@@ -11,7 +11,7 @@ creating a cycle indirectly.
 
 `router.js -> routes.js -> SomeComponent.js -> actions.js -> router.js`
 
-To avoid this, you can do one of two things:
+To avoid this, you can do one of three things:
 
 1. Send the component to the action, think of it like `event.target` in
    DOM events if it bothers you.
@@ -56,6 +56,67 @@ To avoid this, you can do one of two things:
     }
     ```
 
+3. Proxy calls to `router` instance and export the proxy early so action creators can `require` it.
+
+    ```js
+     // router.js
+     // The trick is to assign module.exports before any require()s
+
+     var router;
+
+     module.exports = {
+      getCurrentPath() {
+        return router.getCurrentPath();
+      },
+
+      makePath(to, params, query) {
+        return router.makePath(to, params, query);
+      },
+
+      makeHref(to, params, query) {
+        return router.makeHref(to, params, query);
+      },
+
+      transitionTo(to, params, query) {
+        router.transitionTo(to, params, query);
+      },
+
+      replaceWith(to, params, query) {
+        router.replaceWith(to, params, query);
+      },
+
+      goBack() {
+        router.goBack();
+      },
+
+      run(render) {
+        router.run(render);
+      }
+    };
+
+    // By the time route config is require()-d,
+    // require('./router') already returns a valid object
+
+    var routes = require('./routes'),
+        Router = require('react-router');
+
+    router = Router.create({
+      routes: routes,
+      location: Router.HistoryLocation
+    });
+    ```
+
+   and then in your `ActionCreators.js`
+
+    ```js
+    var router = require('./router');
+    exports.doStuff = (payload) => {
+      // stuff
+      router.transitionTo(...);
+    }
+    ```
+
+    
 Handling route changes as actions
 ---------------------------------
 
