@@ -70,10 +70,12 @@ var Navigation = require('react-router').Navigation;
 React.createClass({
   mixins: [Navigation],
 
-  whenever: function () {
-    this.transitionTo('something');
-    this.replaceWith('something');
-    this.goBack();
+  render: function() {
+    return (
+      <div onClick={() => this.transitionTo('foo')}>Go to foo</div>
+      <div onClick={() => this.replaceWith('bar')}>Go to bar without creating a new history entry</div>
+      <div onClick={() => this.goBack()}>Go back</div>
+    );
   }
 });
 ```
