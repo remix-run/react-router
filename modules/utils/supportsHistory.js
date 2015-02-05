@@ -16,6 +16,7 @@ function supportsHistory() {
   try {
     var path = window.location.pathname + window.location.search + window.location.hash;
     window.history.replaceState({path: path}, '', path);
+    return true;
   }
   catch (e) {
     return false;
