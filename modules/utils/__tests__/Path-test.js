@@ -274,6 +274,12 @@ describe('Path.injectParams', function () {
       expect(Path.injectParams('/foo.bar.baz')).toEqual('/foo.bar.baz');
     });
   });
+
+  describe('when a pattern has optional slashes', function () {
+    it('returns the correct path', function () {
+      expect(Path.injectParams('/foo/?/bar/?/baz/?')).toEqual('/foo/bar/baz/');
+    });
+  });
 });
 
 describe('Path.extractQuery', function () {
