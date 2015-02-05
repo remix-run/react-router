@@ -2,6 +2,6 @@
  * Represents a cancellation caused by navigating away
  * before the previous transition has fully resolved.
  */
-function Cancellation() { }
+function Cancellation() {}
 
 module.exports = Cancellation;

@@ -1,2 +1,3 @@
 dist
+examples/**/*-bundle.js
 node_modules

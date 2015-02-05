@@ -1,9 +1,9 @@
 var assert = require('assert');
 var React = require('react');
-var Router = require('../../index');
-var Route = require('../../components/Route');
-var TestLocation = require('../../locations/TestLocation');
-var { Foo } = require('../../__tests__/TestHandlers');
+var Router = require('../index');
+var Route = require('../components/Route');
+var TestLocation = require('../locations/TestLocation');
+var { Foo } = require('../utils/TestHandlers');
 
 describe('State', function () {
 

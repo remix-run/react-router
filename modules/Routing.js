@@ -1,71 +1,36 @@
 /* jshint -W084 */
-
 var React = require('react');
-var warning = require('react/lib/warning');
 var invariant = require('react/lib/invariant');
-var DefaultRoute = require('../components/DefaultRoute');
-var NotFoundRoute = require('../components/NotFoundRoute');
-var Redirect = require('../components/Redirect');
-var Route = require('../components/Route');
-var Path = require('./Path');
+var DefaultRoute = require('./components/DefaultRoute');
+var NotFoundRoute = require('./components/NotFoundRoute');
+var Redirect = require('./components/Redirect');
+var Path = require('./utils/Path');
 
-var CONFIG_ELEMENT_TYPES = [
-  DefaultRoute.type,
-  NotFoundRoute.type,
-  Redirect.type,
-  Route.type
-];
-
-function createRedirectHandler(to, _params, _query) {
-  return React.createClass({
-    statics: {
-      willTransitionTo: function (transition, params, query) {
-        transition.redirect(to, _params || params, _query || query);
-      }
-    },
-
-    render: function () {
-      return null;
-    }
-  });
-}
-
-function checkPropTypes(componentName, propTypes, props) {
-  for (var propName in propTypes) {
-    if (propTypes.hasOwnProperty(propName)) {
-      var error = propTypes[propName](props, propName, componentName);
-
-      if (error instanceof Error)
-        warning(false, error.message);
-    }
-  }
+function createTransitionToHook(to, _params, _query) {
+  return function (transition, params, query) {
+    transition.redirect(to, _params || params, _query || query);
+  };
 }
 
 function createRoute(element, parentRoute, namedRoutes) {
   var type = element.type;
   var props = element.props;
-  var componentName = (type && type.displayName) || 'UnknownComponent';
 
-  invariant(
-    CONFIG_ELEMENT_TYPES.indexOf(type) !== -1,
-    'Unrecognized route configuration element "<%s>"',
-    componentName
-  );
+  if (type.validateProps)
+    type.validateProps(props);
 
-  if (type.propTypes)
-    checkPropTypes(componentName, type.propTypes, props);
-
-  var route = { name: props.name };
-
-  if (props.ignoreScrollBehavior) {
-    route.ignoreScrollBehavior = true;
-  }
+  var options = {
+    name: props.name,
+    ignoreScrollBehavior: !!props.ignoreScrollBehavior
+  };
 
   if (type === Redirect.type) {
-    route.handler = createRedirectHandler(props.to, props.params, props.query);
+    options.willTransitionTo = createTransitionToHook(props.to, props.params, props.query);
     props.path = props.path || props.from || '*';
   } else {
-    route.handler = props.handler;
+    options.handler = props.handler;
+    options.willTransitionTo = props.handler && props.handler.willTransitionTo;
+    options.willTransitionFrom = props.handler && props.handler.willTransitionFrom;
   }
 
   var parentPath = (parentRoute && parentRoute.path) || '/';
@@ -77,26 +42,28 @@ function createRoute(element, parentRoute, namedRoutes) {
     if (!Path.isAbsolute(path))
       path = Path.join(parentPath, path);
 
-    route.path = Path.normalize(path);
+    options.path = Path.normalize(path);
   } else {
-    route.path = parentPath;
+    options.path = parentPath;
 
     if (type === NotFoundRoute.type)
-      route.path += '*';
+      options.path += '*';
   }
 
-  route.paramNames = Path.extractParamNames(route.path);
+  options.paramNames = Path.extractParamNames(options.path);
 
   // Make sure the route's path has all params its parent needs.
   if (parentRoute && Array.isArray(parentRoute.paramNames)) {
     parentRoute.paramNames.forEach(function (paramName) {
       invariant(
-        route.paramNames.indexOf(paramName) !== -1,
+        options.paramNames.indexOf(paramName) !== -1,
         'The nested route path "%s" is missing the "%s" parameter of its parent path "%s"',
-        route.path, paramName, parentRoute.path
+        options.path, paramName, parentRoute.path
       );
     });
   }
+
+  var route = new Route(options);
 
   // Make sure the route can be looked up by <Link>s.
   if (props.name) {
@@ -121,6 +88,11 @@ function createRoute(element, parentRoute, namedRoutes) {
       'You may not have more than one <NotFoundRoute> per <Route>'
     );
 
+    invariant(
+      props.children == null,
+      '<NotFoundRoute> must not have children'
+    );
+
     parentRoute.notFoundRoute = route;
 
     return null;
@@ -138,12 +110,17 @@ function createRoute(element, parentRoute, namedRoutes) {
       'You may not have more than one <DefaultRoute> per <Route>'
     );
 
+    invariant(
+      props.children == null,
+      '<DefaultRoute> must not have children'
+    );
+
     parentRoute.defaultRoute = route;
 
     return null;
   }
 
-  route.childRoutes = createRoutesFromChildren(props.children, route, namedRoutes);
+  route.routes = createRoutesFromReactChildren(props.children, route, namedRoutes);
 
   return route;
 }
@@ -151,16 +128,31 @@ function createRoute(element, parentRoute, namedRoutes) {
 /**
  * Creates and returns an array of route objects from the given ReactChildren.
  */
-function createRoutesFromChildren(children, parentRoute, namedRoutes) {
+function createRoutesFromReactChildren(children, parentRoute, namedRoutes) {
   var routes = [];
 
   React.Children.forEach(children, function (child) {
-    // Exclude <DefaultRoute>s and <NotFoundRoute>s.
-    if (child = createRoute(child, parentRoute, namedRoutes))
+    // Exclude null values, <DefaultRoute>s and <NotFoundRoute>s.
+    if (React.isValidElement(child) && (child = createRoute(child, parentRoute, namedRoutes)))
       routes.push(child);
   });
 
   return routes;
 }
 
-module.exports = createRoutesFromChildren;
+function Route(options) {
+  options = options || {};
+
+  this.name = options.name;
+  this.path = options.path || '/';
+  this.paramNames = options.paramNames || Path.extractParamNames(this.path);
+  this.ignoreScrollBehavior = !!options.ignoreScrollBehavior;
+  this.willTransitionTo = options.willTransitionTo;
+  this.willTransitionFrom = options.willTransitionFrom;
+  this.handler = options.handler;
+}
+
+module.exports = {
+  createRoutesFromReactChildren: createRoutesFromReactChildren,
+  Route: Route
+};

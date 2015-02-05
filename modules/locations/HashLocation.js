@@ -1,13 +1,12 @@
 var LocationActions = require('../actions/LocationActions');
-var History = require('../utils/History');
-var Path = require('../utils/Path');
+var History = require('../History');
 
 /**
  * Returns the current URL path from the `hash` portion of the URL, including
  * query string.
  */
 function getHashPath() {
-  return Path.decode(
+  return decodeURI(
     // We can't use window.location.hash here because it's not
     // consistent across browsers - Firefox will pre-decode it!
     window.location.href.split('#')[1] || ''
@@ -67,26 +66,43 @@ var HashLocation = {
     // Do this BEFORE listening for hashchange.
     ensureSlash();
 
-    if (_isListening)
-      return;
+    if (!_isListening) {
+      if (window.addEventListener) {
+        window.addEventListener('hashchange', onHashChange, false);
+      } else {
+        window.attachEvent('onhashchange', onHashChange);
+      }
 
-    if (window.addEventListener) {
-      window.addEventListener('hashchange', onHashChange, false);
-    } else {
-      window.attachEvent('onhashchange', onHashChange);
+      _isListening = true;
     }
+  },
 
-    _isListening = true;
+  removeChangeListener: function(listener) {
+    _changeListeners = _changeListeners.filter(function (l) {
+      return l !== listener;
+    });
+
+    if (_changeListeners.length === 0) {
+      if (window.removeEventListener) {
+        window.removeEventListener('hashchange', onHashChange, false);
+      } else {
+        window.removeEvent('onhashchange', onHashChange);
+      }
+
+      _isListening = false;
+    }
   },
 
   push: function (path) {
     _actionType = LocationActions.PUSH;
-    window.location.hash = Path.encode(path);
+    window.location.hash = encodeURI(path);
   },
 
   replace: function (path) {
     _actionType = LocationActions.REPLACE;
-    window.location.replace(window.location.pathname + '#' + Path.encode(path));
+    window.location.replace(
+      window.location.pathname + window.location.search + '#' + encodeURI(path)
+    );
   },
 
   pop: function () {

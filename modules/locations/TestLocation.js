@@ -1,6 +1,6 @@
 var invariant = require('react/lib/invariant');
 var LocationActions = require('../actions/LocationActions');
-var History = require('../utils/History');
+var History = require('../History');
 
 var _listener;
 
@@ -21,6 +21,8 @@ function updateHistoryLength() {
 var TestLocation = {
 
   history: [],
+
+  needsDOM: false,
 
   addChangeListener: function (listener) {
     // TestLocation only ever supports a single listener at a time.

@@ -1,6 +1,6 @@
 var React = require('react');
-var FakeNode = require('../mixins/FakeNode');
-var PropTypes = require('../utils/PropTypes');
+var Configuration = require('../Configuration');
+var PropTypes = require('../PropTypes');
 
 /**
  * A <NotFoundRoute> is a special kind of <Route> that
@@ -13,12 +13,13 @@ var NotFoundRoute = React.createClass({
 
   displayName: 'NotFoundRoute',
 
-  mixins: [ FakeNode ],
+  mixins: [ Configuration ],
 
   propTypes: {
-    name: React.PropTypes.string,
+    name: PropTypes.string,
     path: PropTypes.falsy,
-    handler: React.PropTypes.func.isRequired
+    children: PropTypes.falsy,
+    handler: PropTypes.func.isRequired
   }
 
 });

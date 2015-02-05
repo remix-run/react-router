@@ -4,7 +4,14 @@ var canUseDOM = require('react/lib/ExecutionEnvironment').canUseDOM;
 var History = {
 
   /**
-   * Sends the browser back one entry in the history, if one is available.
+   * The current number of entries in the history.
+   *
+   * Note: This property is read-only.
+   */
+  length: 1,
+
+  /**
+   * Sends the browser back one entry in the history.
    */
   back: function () {
     invariant(
@@ -17,12 +24,7 @@ var History = {
     History.length -= 1;
 
     window.history.back();
-  },
-
-  /**
-   * The current number of entries in the history.
-   */
-  length: 1
+  }
 
 };
 

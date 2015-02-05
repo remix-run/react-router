@@ -20,7 +20,7 @@ Object, the parameters to fill in the dynamic segments of your route.
 
 ```js
 // given a route config like this
-<Route name="user" path="/user/:userId"/>
+<Route name="user" path="/users/:userId"/>
 
 // create a link with this
 <Link to="user" params={{userId: "123"}}/>
@@ -32,7 +32,7 @@ Object, the parameters to fill in the dynamic segments of your route.
 ### `query`
 
 Object, Query parameters to add to the link. Access query parameters in
-your route handler with `this.props.query`.
+your route handler with `this.getQuery()`.
 
 ### `activeClassName`
 

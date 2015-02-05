@@ -1,8 +1,9 @@
 var React = require('react');
 var classSet = require('react/lib/cx');
 var assign = require('react/lib/Object.assign');
-var Navigation = require('../mixins/Navigation');
-var State = require('../mixins/State');
+var Navigation = require('../Navigation');
+var State = require('../State');
+var PropTypes = require('../PropTypes');
 
 function isLeftClickEvent(event) {
   return event.button === 0;
@@ -37,11 +38,11 @@ var Link = React.createClass({
   mixins: [ Navigation, State ],
 
   propTypes: {
-    activeClassName: React.PropTypes.string.isRequired,
-    to: React.PropTypes.string.isRequired,
-    params: React.PropTypes.object,
-    query: React.PropTypes.object,
-    onClick: React.PropTypes.func
+    activeClassName: PropTypes.string.isRequired,
+    to: PropTypes.string.isRequired,
+    params: PropTypes.object,
+    query: PropTypes.object,
+    onClick: PropTypes.func
   },
 
   getDefaultProps: function () {

@@ -1,6 +1,5 @@
 var React = require('react');
 var Router = require('react-router');
-var whenKeys = require('when/keys');
 var EventEmitter = require('events').EventEmitter;
 var { Route, DefaultRoute, RouteHandler, Link } = Router;
 
@@ -62,9 +61,9 @@ var App = React.createClass({
   },
 
   renderContacts () {
-    return this.props.data.contacts.map((contact) => {
+    return this.props.data.contacts.map((contact, i) => {
       return (
-        <li>
+        <li key={i}>
           <Link to="contact" params={contact}>{contact.first} {contact.last}</Link>
         </li>
       );
@@ -120,12 +119,13 @@ var routes = (
 );
 
 function fetchData(routes, params) {
-  return whenKeys.all(routes.filter((route) => {
-    return route.handler.fetchData;
-  }).reduce((data, route) => {
-    data[route.name] = route.handler.fetchData(params);
-    return data;
-  }, {}));
+  var data = {};
+  return Promise.all(routes
+    .filter(route => route.handler.fetchData)
+    .map(route => {
+      return route.handler.fetchData(params).then(d => {data[route.name] = d;});
+    })
+  ).then(() => data);
 }
 
 Router.run(routes, function (Handler, state) {

@@ -1,6 +1,6 @@
-var React = require('react');
 var assign = require('react/lib/Object.assign');
-var Path = require('../utils/Path');
+var PropTypes = require('./PropTypes');
+var Path = require('./utils/Path');
 
 function routeIsActive(activeRoutes, routeName) {
   return activeRoutes.some(function (route) {
@@ -77,12 +77,12 @@ var StateContext = {
   },
 
   childContextTypes: {
-    getCurrentPath: React.PropTypes.func.isRequired,
-    getCurrentRoutes: React.PropTypes.func.isRequired,
-    getCurrentPathname: React.PropTypes.func.isRequired,
-    getCurrentParams: React.PropTypes.func.isRequired,
-    getCurrentQuery: React.PropTypes.func.isRequired,
-    isActive: React.PropTypes.func.isRequired
+    getCurrentPath: PropTypes.func.isRequired,
+    getCurrentRoutes: PropTypes.func.isRequired,
+    getCurrentPathname: PropTypes.func.isRequired,
+    getCurrentParams: PropTypes.func.isRequired,
+    getCurrentQuery: PropTypes.func.isRequired,
+    isActive: PropTypes.func.isRequired
   },
 
   getChildContext: function () {

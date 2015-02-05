@@ -1,6 +1,6 @@
 var React = require('react');
-var FakeNode = require('../mixins/FakeNode');
-var PropTypes = require('../utils/PropTypes');
+var Configuration = require('../Configuration');
+var PropTypes = require('../PropTypes');
 
 /**
  * A <Redirect> component is a special kind of <Route> that always
@@ -10,12 +10,12 @@ var Redirect = React.createClass({
 
   displayName: 'Redirect',
 
-  mixins: [ FakeNode ],
+  mixins: [ Configuration ],
 
   propTypes: {
-    path: React.PropTypes.string,
-    from: React.PropTypes.string, // Alias for path.
-    to: React.PropTypes.string,
+    path: PropTypes.string,
+    from: PropTypes.string, // Alias for path.
+    to: PropTypes.string,
     handler: PropTypes.falsy
   }
 

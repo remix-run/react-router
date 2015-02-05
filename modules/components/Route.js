@@ -1,5 +1,6 @@
 var React = require('react');
-var FakeNode = require('../mixins/FakeNode');
+var Configuration = require('../Configuration');
+var PropTypes = require('../PropTypes');
 
 /**
  * <Route> components specify components that are rendered to the page when the
@@ -43,13 +44,13 @@ var Route = React.createClass({
 
   displayName: 'Route',
 
-  mixins: [ FakeNode ],
+  mixins: [ Configuration ],
 
   propTypes: {
-    name: React.PropTypes.string,
-    path: React.PropTypes.string,
-    handler: React.PropTypes.func.isRequired,
-    ignoreScrollBehavior: React.PropTypes.bool
+    name: PropTypes.string,
+    path: PropTypes.string,
+    handler: PropTypes.func.isRequired,
+    ignoreScrollBehavior: PropTypes.bool
   }
 
 });

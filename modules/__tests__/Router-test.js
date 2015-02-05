@@ -2,6 +2,7 @@ var expect = require('expect');
 var React = require('react');
 var Router = require('../index');
 var Route = require('../components/Route');
+var RouteHandler = require('../components/RouteHandler');
 var TestLocation = require('../locations/TestLocation');
 var ScrollToTopBehavior = require('../behaviors/ScrollToTopBehavior');
 var getWindowScrollPosition = require('../utils/getWindowScrollPosition');
@@ -18,7 +19,7 @@ var {
   RedirectToFooAsync,
   Abort,
   AbortAsync
-} = require('./TestHandlers');
+} = require('../utils/TestHandlers');
 
 describe('Router', function () {
   describe('transitions', function () {
@@ -34,8 +35,8 @@ describe('Router', function () {
       <Route path="/async" handler={Async}/>
     ];
 
-    describe('transition.wait', function () {
-      it('waits asynchronously in willTransitionTo', function (done) {
+    describe('asynchronous willTransitionTo', function () {
+      it('waits', function (done) {
         TestLocation.history = [ '/bar' ];
 
         var div = document.createElement('div');
@@ -69,7 +70,7 @@ describe('Router', function () {
         });
       });
 
-      it('stops waiting asynchronously in willTransitionTo on location.pop', function (done) {
+      it('stops waiting on location.pop', function (done) {
         TestLocation.history = [ '/bar' ];
 
         var div = document.createElement('div');
@@ -105,7 +106,7 @@ describe('Router', function () {
         });
       });
 
-      it('stops waiting asynchronously in willTransitionTo on router.transitionTo', function (done) {
+      it('stops waiting on router.transitionTo', function (done) {
         TestLocation.history = [ '/bar' ];
 
         var div = document.createElement('div');
@@ -148,7 +149,7 @@ describe('Router', function () {
         });
       });
 
-      it('stops waiting asynchronously in willTransitionTo on router.replaceWith', function (done) {
+      it('stops waiting on router.replaceWith', function (done) {
         TestLocation.history = [ '/bar' ];
 
         var div = document.createElement('div');
@@ -181,6 +182,66 @@ describe('Router', function () {
 
         router.run(function (Handler) {
           React.render(<Handler/>, div, function () {
+            steps.shift()();
+          });
+        });
+      });
+
+      it('stops waiting on router.transitionTo after another asynchronous transition ended ', function (done) {
+        var LongAsync = React.createClass({
+          statics: {
+            delay: Async.delay * 2,
+
+            willTransitionTo: function (transition, params, query, callback) {
+              setTimeout(callback, this.delay);
+            }
+          },
+
+          render: function () {
+            return <div className="Async2">Async2</div>;
+          }
+        });
+
+        TestLocation.history = [ '/foo' ];
+        var routes = [
+          <Route handler={Foo} path='/foo' />,
+          <Route handler={Bar} path='/bar' />,
+          <Route handler={Async} path='/async1' />,
+          <Route handler={LongAsync} path='/async2' />
+        ];
+
+        var div = document.createElement('div');
+        var steps = [];
+        var router = Router.create({
+          routes: routes,
+          location: TestLocation
+        });
+
+        steps.push(function () {
+          router.transitionTo('/async1');
+          setTimeout(function () {
+            router.transitionTo('/async2');
+            expect(div.innerHTML).toMatch(/Foo/);
+            setTimeout(function () {
+              expect(div.innerHTML).toMatch(/Foo/);
+              router.transitionTo('/bar');
+              expect(div.innerHTML).toMatch(/Bar/);
+            }, Async.delay);
+          }, Async.delay / 2);
+        });
+
+        steps.push(function () {
+          setTimeout(function () {
+            expect(div.innerHTML).toMatch(/Bar/);
+            done();
+          }, Async.delay);
+        });
+
+        steps.push(function () {
+        });
+
+        router.run(function (Handler, state) {
+          React.render(<Handler />, div, function () {
             steps.shift()();
           });
         });
@@ -520,6 +581,60 @@ describe('Router', function () {
           });
         });
       });
+
+      it('ignores aborting asynchronously in willTransitionTo when aborted before router.transitionTo', function (done) {
+        var AbortAsync2 = React.createClass({
+          statics: {
+            willTransitionTo: function (transition, params, query, callback) {
+              transition.abort();
+              setTimeout(callback, Async.delay);
+            }
+          },
+
+          render: function () {
+            return <div>Abort</div>;
+          }
+        });
+
+        TestLocation.history = [ '/foo' ];
+        var routes = [
+          <Route handler={Foo} path='/foo' />,
+          <Route handler={Bar} path='/bar' />,
+          <Route handler={AbortAsync2} path='/abort' />
+        ];
+
+        var div = document.createElement('div');
+        var steps = [];
+        var router = Router.create({
+          routes: routes,
+          location: TestLocation
+        });
+
+        steps.push(function () {
+          router.transitionTo('/abort');
+          expect(div.innerHTML).toMatch(/Foo/);
+
+          router.transitionTo('/bar');
+          expect(div.innerHTML).toMatch(/Bar/);
+        });
+
+        steps.push(function () {
+          setTimeout(function () {
+            expect(div.innerHTML).toMatch(/Bar/);
+            expect(TestLocation.history).toEqual(['/foo', '/bar']);
+            done();
+          }, Async.delay + 10);
+        });
+
+        steps.push(function () {
+        });
+
+        router.run(function (Handler, state) {
+          React.render(<Handler />, div, function () {
+            steps.shift()();
+          });
+        });
+      });
     });
   });
 
@@ -532,6 +647,61 @@ describe('Router', function () {
         done();
       });
     });
+
+    it('executes transition hooks when only the query changes', function (done) {
+      var fromKnifeCalled = false;
+      var fromSpoonCalled = false;
+
+      var Knife = React.createClass({
+        statics: {
+          willTransitionFrom: function () {
+            fromKnifeCalled = true;
+          }
+        },
+
+        render: function () {
+          return <RouteHandler/>;
+        }
+      });
+
+      var Spoon = React.createClass({
+        statics: {
+          willTransitionTo: function (transition, params, query) {
+            if (query.filter === 'first') {
+              return; // skip first transition
+            }
+
+            expect(query.filter).toEqual('second');
+            expect(fromKnifeCalled).toBe(true);
+            expect(fromSpoonCalled).toBe(true);
+            done();
+          },
+
+          willTransitionFrom: function (transition, element) {
+            fromSpoonCalled = true;
+          }
+        },
+
+        render: function () {
+          return <h1>Spoon</h1>;
+        }
+      });
+
+      var routes = (
+        <Route handler={Knife}>
+          <Route name="spoon" handler={Spoon}/>
+        </Route>
+      );
+
+      TestLocation.history = [ '/spoon?filter=first' ];
+
+      var div = document.createElement('div');
+      Router.run(routes, TestLocation, function (Handler, state) {
+        React.render(<Handler/>, div);
+      });
+
+      TestLocation.push('/spoon?filter=second');
+    });
   });
 
   describe('willTransitionFrom', function () {
@@ -541,7 +711,7 @@ describe('Router', function () {
       var Bar = React.createClass({
         statics: {
           willTransitionFrom: function (transition, component) {
-            expect(div.querySelector('#bar')).toEqual(component.getDOMNode());
+            expect(div.querySelector('#bar')).toBe(component.getDOMNode());
             done();
           }
         },
@@ -567,6 +737,72 @@ describe('Router', function () {
       });
     });
 
+    it('should be called when Handler is rendered multiple times on same route', function (done) {
+
+      var div = document.createElement('div');
+
+      var counter = 0;
+
+      var Foo = React.createClass({
+        statics: {
+          willTransitionFrom: function (transition, component) {
+            counter++;
+          }
+        },
+
+        render: function () {
+          return <div id="foo">Foo</div>;
+        }
+      });
+
+      var Bar = React.createClass({
+        statics: {
+          willTransitionFrom: function (transition, component) {
+            counter++;
+          }
+        },
+
+        render: function () {
+          return <div id="bar">Bar</div>;
+        }
+      });
+      var routes = (
+        <Route handler={Nested} path='/'>
+          <Route name="foo" handler={Foo}/>
+          <Route name="bar" handler={Bar}/>
+        </Route>
+      );
+
+      TestLocation.history = [ '/bar' ];
+
+      var steps = [];
+
+      steps.push(function () {
+        TestLocation.push('/foo');
+      });
+
+      steps.push(function () {
+        TestLocation.push('/bar');
+      });
+
+      steps.push(function () {
+        expect(counter).toEqual(2);
+        done();
+      });
+
+      Router.run(routes, TestLocation, function (Handler, state) {
+
+        // Calling render on the handler twice should be allowed
+        React.render(<Handler data={{FooBar: 1}}/>, div);
+
+        React.render(<Handler data={{FooBar: 1}}/>, div, function () {
+          setTimeout(function() {
+            steps.shift()();
+          }, 1);
+        });
+      });
+    });
+
   });
 
 });
@@ -576,8 +812,6 @@ describe('Router.run', function () {
   it('matches a root route', function (done) {
     var routes = <Route path="/" handler={EchoFooProp} />;
     Router.run(routes, '/', function (Handler, state) {
-      // TODO: figure out why we're getting this warning here
-      // WARN: 'Warning: You cannot pass children to a RouteHandler'
       var html = React.renderToString(<Handler foo="bar"/>);
       expect(html).toMatch(/bar/);
       done();
@@ -969,4 +1203,25 @@ describe('Router.run', function () {
     });
   });
 
+});
+
+describe.skip('unmounting', function () {
+  afterEach(function () {
+    window.location.hash = '';
+  });
+
+  it('removes location change listeners', function (done) {
+    var c = 0;
+    var div = document.createElement('div');
+    Router.run(<Route handler={Foo} path="*"/>, Router.HashLocation, function (Handler) {
+      c++;
+      expect(c).toEqual(1);
+      React.render(<Handler/>, div, function () {
+        React.unmountComponentAtNode(div);
+        Router.HashLocation.push('/foo');
+        // might be flakey? I wish I knew right now a better way to do this
+        setTimeout(done, 0);
+      });
+    });
+  });
 });

@@ -1,12 +1,11 @@
 var LocationActions = require('../actions/LocationActions');
-var History = require('../utils/History');
-var Path = require('../utils/Path');
+var History = require('../History');
 
 /**
  * Returns the current URL path from `window.location`, including query string.
  */
 function getWindowPath() {
-  return Path.decode(
+  return decodeURI(
     window.location.pathname + window.location.search
   );
 }
@@ -38,32 +37,45 @@ var HistoryLocation = {
   addChangeListener: function (listener) {
     _changeListeners.push(listener);
 
-    if (_isListening)
-      return;
+    if (!_isListening) {
+      if (window.addEventListener) {
+        window.addEventListener('popstate', onPopState, false);
+      } else {
+        window.attachEvent('popstate', onPopState);
+      }
 
-    if (window.addEventListener) {
-      window.addEventListener('popstate', onPopState, false);
-    } else {
-      window.attachEvent('popstate', onPopState);
+      _isListening = true;
     }
+  },
 
-    _isListening = true;
+  removeChangeListener: function(listener) {
+    _changeListeners = _changeListeners.filter(function (l) {
+      return l !== listener;
+    });
+
+    if (_changeListeners.length === 0) {
+      if (window.addEventListener) {
+        window.removeEventListener('popstate', onPopState);
+      } else {
+        window.removeEvent('popstate', onPopState);
+      }
+
+      _isListening = false;
+    }
   },
 
   push: function (path) {
-    window.history.pushState({ path: path }, '', Path.encode(path));
+    window.history.pushState({ path: path }, '', encodeURI(path));
     History.length += 1;
     notifyChange(LocationActions.PUSH);
   },
 
   replace: function (path) {
-    window.history.replaceState({ path: path }, '', Path.encode(path));
+    window.history.replaceState({ path: path }, '', encodeURI(path));
     notifyChange(LocationActions.REPLACE);
   },
 
-  pop: function () {
-    History.back();
-  },
+  pop: History.back,
 
   getCurrentPath: getWindowPath,
 

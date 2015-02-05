@@ -1,4 +1,4 @@
-var React = require('react');
+var PropTypes = require('./PropTypes');
 
 /**
  * A mixin for components that need to know the path, routes, URL
@@ -21,12 +21,12 @@ var React = require('react');
 var State = {
 
   contextTypes: {
-    getCurrentPath: React.PropTypes.func.isRequired,
-    getCurrentRoutes: React.PropTypes.func.isRequired,
-    getCurrentPathname: React.PropTypes.func.isRequired,
-    getCurrentParams: React.PropTypes.func.isRequired,
-    getCurrentQuery: React.PropTypes.func.isRequired,
-    isActive: React.PropTypes.func.isRequired
+    getCurrentPath: PropTypes.func.isRequired,
+    getCurrentRoutes: PropTypes.func.isRequired,
+    getCurrentPathname: PropTypes.func.isRequired,
+    getCurrentParams: PropTypes.func.isRequired,
+    getCurrentQuery: PropTypes.func.isRequired,
+    isActive: PropTypes.func.isRequired
   },
 
   /**

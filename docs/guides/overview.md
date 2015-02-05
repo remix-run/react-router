@@ -101,7 +101,7 @@ otherRouter.route('/calendar', function () {
 });
 ```
 
-The three main view's render methods are nearly identical. While one
+The three main views' render methods are nearly identical. While one
 level of shared UI like this is pretty easy to handle, getting deeper
 and deeper adds more complexity.
 
@@ -115,7 +115,7 @@ var App = React.createClass({
     var page;
     switch (this.props.page) {
       case 'dashboard': page = <Dashboard/>; break;
-      case 'inbox': page = <Dashboard/>; break;
+      case 'inbox': page = <InboxRoute/>; break;
       default: page = <Index/>; break;
     }
     return (
@@ -144,6 +144,13 @@ Here's how it works:
    active child route.
 
 ```js
+var Router = require('react-router'); // or var Router = ReactRouter; in browsers
+
+var DefaultRoute = Router.DefaultRoute;
+var Link = Router.Link;
+var Route = Router.Route;
+var RouteHandler = Router.RouteHandler;
+
 var App = React.createClass({
   render: function () {
     return (
@@ -277,7 +284,7 @@ Dynamic Segments
 ----------------
 
 When we added the `message` route, we introduced a "dynamic segment" to
-the URL. These segements get parsed from the url and are available in
+the URL. These segments get parsed from the url and are available in
 the `run` callback, or from the `State` mixin. Let's see how we can
 access the params.
 
@@ -343,13 +350,12 @@ Important Note About Dynamic Segments
 -------------------------------------
 
 If you have dynamic segments in your URL, a transition from `/users/123`
-to `/users/456` does not call `getInitialState`, `componentWillMount` or
-`componentWillUnmount`. If you are using those lifecycle hooks to fetch
+to `/users/456` does not call `getInitialState`, `componentWillMount`, `componentWillUnmount` or `componentDidMount`. If you are using those lifecycle hooks to fetch
 data and set state, you will also need to implement
 `componentWillReceiveProps` on your handler, just like any other
 component whose props are changing. This way you can leverage the
 performance of the React DOM diff algorithm. Look at the `Contact`
-handler in the `master-detail` example.
+handler [in the `master-detail` example](https://github.com/rackt/react-router/blob/master/examples/master-detail/app.js).
 
 Scrolling
 ---------

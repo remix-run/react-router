@@ -6,7 +6,7 @@ var Route = require('../Route');
 var Link = require('../Link');
 var RouteHandler = require('../RouteHandler');
 var TestLocation = require('../../locations/TestLocation');
-var { Foo, Bar } = require('../../__tests__/TestHandlers');
+var { Foo, Bar } = require('../../utils/TestHandlers');
 var { click } = React.addons.TestUtils.Simulate;
 
 describe('A Link', function () {
@@ -24,7 +24,7 @@ describe('A Link', function () {
       ];
 
       var div = document.createElement('div');
-      TestLocation.history = ['/link'];
+      TestLocation.history = [ '/link' ];
 
       Router.run(routes, TestLocation, function (Handler) {
         React.render(<Handler/>, div, function () {
@@ -114,7 +114,7 @@ describe('A Link', function () {
         <Route name="link" handler={LinkHandler} />
       ];
       var div = document.createElement('div');
-      TestLocation.history = ['/link'];
+      TestLocation.history = [ '/link' ];
 
       Router.run(routes, TestLocation, function (Handler) {
         React.render(<Handler/>, div, function () {
@@ -125,7 +125,7 @@ describe('A Link', function () {
 
     it('transitions to the correct route', function (done) {
       var div = document.createElement('div');
-      TestLocation.history = ['/link'];
+      TestLocation.history = [ '/link' ];
 
       var LinkHandler = React.createClass({
         handleClick: function () {

@@ -1,6 +1,6 @@
 var React = require('react');
-var FakeNode = require('../mixins/FakeNode');
-var PropTypes = require('../utils/PropTypes');
+var Configuration = require('../Configuration');
+var PropTypes = require('../PropTypes');
 
 /**
  * A <DefaultRoute> component is a special kind of <Route> that
@@ -12,12 +12,13 @@ var DefaultRoute = React.createClass({
 
   displayName: 'DefaultRoute',
 
-  mixins: [ FakeNode ],
+  mixins: [ Configuration ],
 
   propTypes: {
-    name: React.PropTypes.string,
+    name: PropTypes.string,
     path: PropTypes.falsy,
-    handler: React.PropTypes.func.isRequired
+    children: PropTypes.falsy,
+    handler: PropTypes.func.isRequired
   }
 
 });

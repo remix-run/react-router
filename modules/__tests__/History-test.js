@@ -1,10 +1,10 @@
 var expect = require('expect');
 var React = require('react');
-var { Foo, RedirectToFoo } = require('../../__tests__/TestHandlers');
-var TestLocation = require('../../locations/TestLocation');
-var Route = require('../../components/Route');
-var Router = require('../../index');
+var { Foo, RedirectToFoo } = require('../utils/TestHandlers');
+var TestLocation = require('../locations/TestLocation');
+var Route = require('../components/Route');
 var History = require('../History');
+var Router = require('../index');
 
 describe('History', function () {
   describe('on the initial page load', function () {

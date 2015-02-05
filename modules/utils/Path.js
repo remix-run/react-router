@@ -36,20 +36,6 @@ function compilePattern(pattern) {
 var Path = {
 
   /**
-   * Safely decodes special characters in the given URL path.
-   */
-  decode: function (path) {
-    return decodeURI(path.replace(/\+/g, ' '));
-  },
-
-  /**
-   * Safely encodes special characters in the given URL path.
-   */
-  encode: function (path) {
-    return encodeURI(path).replace(/%20/g, '+');
-  },
-
-  /**
    * Returns an array of the names of all parameters in the given pattern.
    */
   extractParamNames: function (pattern) {
@@ -144,10 +130,10 @@ var Path = {
     if (existingQuery)
       query = query ? merge(existingQuery, query) : existingQuery;
 
-    var queryString = query && qs.stringify(query);
+    var queryString = qs.stringify(query, { indices: false });
 
     if (queryString)
-      return Path.withoutQuery(path) + '?' + queryString;
+      return Path.withoutQuery(path) + '?' + decodeURIComponent(queryString);
 
     return path;
   },

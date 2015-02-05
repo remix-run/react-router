@@ -12,10 +12,11 @@ exports.RefreshLocation = require('./locations/RefreshLocation');
 exports.ImitateBrowserBehavior = require('./behaviors/ImitateBrowserBehavior');
 exports.ScrollToTopBehavior = require('./behaviors/ScrollToTopBehavior');
 
-exports.Navigation = require('./mixins/Navigation');
-exports.State = require('./mixins/State');
+exports.History = require('./History');
+exports.Navigation = require('./Navigation');
+exports.RouteHandlerMixin = require('./RouteHandlerMixin');
+exports.State = require('./State');
 
-exports.create = require('./utils/createRouter');
-exports.run = require('./utils/runRouter');
+exports.create = require('./createRouter');
+exports.run = require('./runRouter');
 
-exports.History = require('./utils/History');
