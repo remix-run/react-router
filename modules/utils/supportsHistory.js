@@ -14,15 +14,12 @@ function supportsHistory() {
   }
 
   try {
-    // TODO: better way to use replaceState that doesn't actually change the current url?
-    var path = window.location.pathname + window.location.search;
+    var path = window.location.pathname + window.location.search + window.location.hash;
     window.history.replaceState({path: path}, '', path);
   }
   catch (e) {
     return false;
   }
-
-  return (window.history && 'pushState' in window.history);
 }
 
 module.exports = supportsHistory;
