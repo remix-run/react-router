@@ -4,8 +4,8 @@ Path Matching
 Relative v. Absolute Paths
 --------------------------
 
-Paths that start with `/` are absolute, paths that don't are relative,
-meaning they extend their parent's path.
+Paths that start with `/` are absolute paths that are not relative,
+meaning they do not extend their parent's path.
 
 ```xml
 <Route path="/">
