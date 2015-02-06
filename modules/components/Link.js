@@ -42,7 +42,8 @@ var Link = React.createClass({
     to: PropTypes.string.isRequired,
     params: PropTypes.object,
     query: PropTypes.object,
-    onClick: PropTypes.func
+    onClick: PropTypes.func,
+    replace: PropTypes.bool
   },
 
   getDefaultProps: function () {
@@ -66,8 +67,12 @@ var Link = React.createClass({
 
     event.preventDefault();
 
-    if (allowTransition)
-      this.transitionTo(this.props.to, this.props.params, this.props.query);
+    if (allowTransition) {
+      if (this.props.replace)
+        this.replaceWith(this.props.to, this.props.params, this.props.query);
+      else
+        this.transitionTo(this.props.to, this.props.params, this.props.query);
+    }
   },
 
   /**
