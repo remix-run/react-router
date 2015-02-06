@@ -384,6 +384,7 @@ function createRouter(options) {
         pendingTransition = transition;
 
         var fromComponents = mountedComponents.slice(prevRoutes.length - fromRoutes.length);
+        mountedComponents = [];
 
         transition.from(fromRoutes, fromComponents, function (error) {
           if (error || transition.abortReason)
