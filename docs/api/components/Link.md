@@ -46,6 +46,11 @@ tag - calling `e.preventDefault()` or returning `false` will prevent the
 transition from firing, while `e.stopPropagation()` will prevent the event
 from bubbling.
 
+### `replace`
+
+Boolean declaring whether to use `replaceWith()` instead of `transitionTo()`
+when the user clicks on the link.
+
 ### *others*
 
 You can also pass props you'd like to be on the `<a>` such as a title, id, or className.

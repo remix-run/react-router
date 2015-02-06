@@ -162,4 +162,46 @@ describe('A Link', function () {
 
   });
 
+  describe('when replace=true', function () {
+
+    it('transitions to the correct route and does *not* create new entry in history', function (done) {
+      var div = document.createElement('div');
+      TestLocation.history = [ '/link' ];
+
+      var LinkHandler = React.createClass({
+        handleClick: function () {
+          // just here to make sure click handlers don't prevent it from happening
+        },
+
+        render: function () {
+          return <Link to="foo" replace={true} onClick={this.handleClick}>Link</Link>;
+        }
+      });
+
+      var routes = [
+        <Route name="foo" handler={Foo} />,
+        <Route name="link" handler={LinkHandler} />
+      ];
+
+      var steps = [];
+
+      steps.push(function () {
+        click(div.querySelector('a'), {button: 0});
+      });
+
+      steps.push(function () {
+        expect(div.innerHTML).toMatch(/Foo/);
+        expect(TestLocation.history.length).toBe(1);
+        done();
+      });
+
+      Router.run(routes, TestLocation, function (Handler) {
+        React.render(<Handler/>, div, function () {
+          steps.shift()();
+        });
+      });
+    });
+
+  });
+
 });
