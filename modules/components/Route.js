@@ -1,7 +1,7 @@
 var React = require('react');
 var Configuration = require('../Configuration');
 var PropTypes = require('../PropTypes');
-
+var RouteHandler = require('./RouteHandler');
 /**
  * <Route> components specify components that are rendered to the page when the
  * URL matches a given pattern.
@@ -39,6 +39,8 @@ var PropTypes = require('../PropTypes');
  *       );
  *     }
  *   });
+ *
+ * If no handler is provided for the route, it will render a matched child route.
  */
 var Route = React.createClass({
 
@@ -49,8 +51,14 @@ var Route = React.createClass({
   propTypes: {
     name: PropTypes.string,
     path: PropTypes.string,
-    handler: PropTypes.func.isRequired,
+    handler: PropTypes.func,
     ignoreScrollBehavior: PropTypes.bool
+  },
+
+  getDefaultProps: function(){
+    return {
+      handler: RouteHandler
+    };
   }
 
 });
