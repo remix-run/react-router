@@ -56,11 +56,11 @@ var Route = React.createClass({
   },
 
   getDefaultProps: function(){
-  	return {
-  	  handler: React.createClass({
-  	    render: function(){ return React.createElement(RouteHandler, React.__spread({},  this.props)); }
-  	  })
-  	};
+    return {
+      handler: React.createClass({
+        render: function(){ return React.createElement(RouteHandler, React.__spread({},  this.props)); }
+      })
+    };
   }
 
 });
