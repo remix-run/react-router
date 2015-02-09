@@ -134,7 +134,7 @@ With React Router
 Here's how it works:
 
 1. You declare your view hierarchy with nested `<Route/>`s and provide
-   them with a React element to handle the route when its active.
+   them with a React element to handle the route when it's active.
 
 2. React Router will match the deepest route against the URL, and then
    activate the entire tree of routes on that branch, nesting all the
@@ -189,7 +189,7 @@ When the user lands at `/inbox`, the route named `inbox` gets matched so
 its parent route, `app`, is also matched. The `run` callback receives
 `Handler`, that has all of this match information wrapped up in it.
 
-Rendering `Handler` is really just rendering `App` since its the highest
+Rendering `Handler` is really just rendering `App` since it's the highest
 matched route handler. Since `inbox` is the active child route,
 rendering `<RouteHandler/>` in `App` renders the `Inbox` element.
 `<RouteHandler/>` is nearly identical to `{{outlet}}` from Ember or
