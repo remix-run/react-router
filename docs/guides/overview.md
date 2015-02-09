@@ -360,13 +360,12 @@ handler [in the `master-detail` example](https://github.com/rackt/react-router/b
 If you would rather force route handlers to re-mount when transitioning between dynamic segments, you can assign a unique key to your route handler component to bypass this optimization:
 
 ```js
-// assuming App is top-level route
 var App = React.createClass({
 
   mixins: [Router.State],
 
   getHandlerKey: function () {
-    var childDepth = 1;
+    var childDepth = 1; // assuming App is top-level route
     var key = this.getRoutes()[childDepth].name;
     var id = this.getParams().id;
     if (id) { key += id; }
