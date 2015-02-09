@@ -1,5 +1,6 @@
 var React = require('react');
 var RouteHandler = require('../components/RouteHandler');
+var Route = require('../components/Route');
 var State = require('../State');
 
 exports.Nested = React.createClass({
@@ -28,6 +29,24 @@ exports.Bar = React.createClass({
 exports.Baz = React.createClass({
   render: function () {
     return <div className="Baz">Baz</div>;
+  }
+});
+
+exports.Static = React.createClass({
+  statics: {
+    routes: [
+      <Route path="/bar" handler={exports.Bar}/>,
+      <Route path="/baz" handler={exports.Baz}/>
+    ]
+  },
+
+  render: function () {
+    return (
+      <div>
+        <h1 className="Static">Static</h1>
+        <RouteHandler />
+      </div>
+    );
   }
 });
 

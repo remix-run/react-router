@@ -2,7 +2,7 @@ var expect = require('expect');
 var React = require('react');
 var Router = require('../index');
 var Route = require('../components/Route');
-var { Foo, Bar, Nested } = require('../utils/TestHandlers');
+var { Foo, Bar, Nested, Static } = require('../utils/TestHandlers');
 
 describe('creating routes from ReactChildren', function () {
   it('works with falsy children', function (done) {
@@ -34,4 +34,17 @@ describe('creating routes from ReactChildren', function () {
       done();
     });
   });
+
+  it('works with static routes', function (done) {
+    var routes = [
+      <Route handler={Static} path="/baz" />
+    ]; 
+    debugger;
+    Router.run(routes, '/bar', function (Handler, state) {
+      var html = React.renderToString(<Handler/>);
+      expect(html).toMatch(/Bar/);
+      done();
+    });
+  });
+
 });

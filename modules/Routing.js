@@ -122,6 +122,10 @@ function createRoute(element, parentRoute, namedRoutes) {
 
   route.routes = createRoutesFromReactChildren(props.children, route, namedRoutes);
 
+  if (props.handler && props.handler.routes){
+    route.routes = route.routes.concat(createRoutesFromReactChildren(props.handler.routes, route, namedRoutes));
+  }
+
   return route;
 }
 
