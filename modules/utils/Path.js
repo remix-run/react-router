@@ -133,7 +133,7 @@ var Path = {
     var queryString = qs.stringify(query, { indices: false });
 
     if (queryString)
-      return Path.withoutQuery(path) + '?' + decodeURIComponent(queryString);
+      return Path.withoutQuery(path) + '?' + queryString;
 
     return path;
   },
