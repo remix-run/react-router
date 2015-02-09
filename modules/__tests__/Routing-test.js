@@ -39,7 +39,6 @@ describe('creating routes from ReactChildren', function () {
     var routes = [
       <Route handler={Static} path="/baz" />
     ]; 
-    debugger;
     Router.run(routes, '/bar', function (Handler, state) {
       var html = React.renderToString(<Handler/>);
       expect(html).toMatch(/Bar/);
