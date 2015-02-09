@@ -352,10 +352,36 @@ Important Note About Dynamic Segments
 If you have dynamic segments in your URL, a transition from `/users/123`
 to `/users/456` does not call `getInitialState`, `componentWillMount`, `componentWillUnmount` or `componentDidMount`. If you are using those lifecycle hooks to fetch
 data and set state, you will also need to implement
-`componentWillReceiveProps` on your handler, just like any other
+`componentWillReceiveProps` on your handler and its stateful children, just like any other
 component whose props are changing. This way you can leverage the
 performance of the React DOM diff algorithm. Look at the `Contact`
 handler [in the `master-detail` example](https://github.com/rackt/react-router/blob/master/examples/master-detail/app.js).
+
+If you would rather force route handlers to re-mount when transitioning between dynamic segments, you can assign a unique key to your route handler component to bypass this optimization:
+
+```js
+// assuming App is top-level route
+var App = React.createClass({
+
+  mixins: [Router.State],
+
+  getHandlerKey: function () {
+    var childDepth = 1;
+    var key = this.getRoutes()[childDepth].name;
+    var id = this.getParams().id;
+    if (id) { key += id; }
+    return key;
+  },
+
+  render: function () {
+    return (
+      <div>
+        <RouteHandler key={this.getHandlerKey()} />
+      </div>
+    );
+  }
+});
+```
 
 Scrolling
 ---------
