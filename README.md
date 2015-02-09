@@ -93,12 +93,12 @@ Router.run(routes, Router.HistoryLocation, function (Handler) {
 
 See more in the [overview guide](/docs/guides/overview.md).
 
-Benefits of This Approach
+Benefits of this Approach
 -------------------------
 
 1. **Incredible screen-creation productivity** - There is only one
    use-case when a user visits a route: render something. Every user
-   interface has layers (or nesting) whether its a simple navbar or
+   interface has layers (or nesting) whether it's a simple navbar or
    multiple levels of master-detail. Coupling nested routes to these
    nested views gets rid of a ton of work for the developer to wire all
    of it together when the user switches routes. Adding new screens
@@ -116,7 +116,7 @@ Benefits of This Approach
 
 4. **URLs are your first thought, not an after-thought** - With React
    Router, you don't get UI on the page without configuring a url first.
-   Fortunately, its wildly productive this way, too.
+   Fortunately, it's wildly productive this way, too.
 
 Related Modules
 ---------------
@@ -134,6 +134,6 @@ Thanks, Ember
 -------------
 
 This library is highly inspired by the Ember.js routing API. In general,
-its a translation of the Ember router api to React. Huge thanks to the
+it's a translation of the Ember router api to React. Huge thanks to the
 Ember team for solving the hardest part already.
 
