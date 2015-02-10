@@ -20,17 +20,24 @@ module.exports = {
 
   output: {
     library: 'ReactRouter',
-    libraryTarget: 'var'
+    libraryTarget: 'umd'
   },
 
-  externals: {
-    react: 'React'
-  },
+  externals: [
+    {
+      "react": {
+        root: "React",
+        commonjs2: "react",
+        commonjs: "react",
+        amd: "react"
+      }
+    }
+  ],
 
   node: {
     Buffer: false
   },
 
   plugins: plugins
-  
+
 };
