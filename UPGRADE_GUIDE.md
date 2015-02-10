@@ -5,6 +5,31 @@ To see discussion around these API changes, please refer to the
 [changelog](/CHANGELOG.md) and visit the commits and issues they
 reference.
 
+0.11.x -> 0.12.0
+----------------
+
+`transition.wait` was removed, you now use a callback instead:
+
+```js
+// 0.11.x
+var SomeHandler = React.createClass({
+  statics: {
+    willTransitionTo (transition) {
+      transition.wait(somePromise());
+    }
+  }
+});
+
+// 0.12.0
+var SomeHandler = React.createClass({
+  statics: {
+    willTransitionTo (transition, params, query, callback) {
+      somePromise().then(callback);
+    }
+  }
+});
+```
+
 0.10.x -> 0.11.x
 ----------------
 

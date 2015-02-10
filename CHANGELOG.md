@@ -4,24 +4,18 @@ v0.12.0 - Tue, 10 Feb 2015 20:12:42 GMT
 - [cd2087d](../../commit/cd2087d) [added] default handler to routes
 - [848361e](../../commit/848361e) [fixed] Clean up mounted route component on unmount so we don't leak references
 - [5bcf653](../../commit/5bcf653) [fixed] Double slash in href when parent route has optional trailing slash
-- [26cb7d1](../../commit/26cb7d1) [added] node_modules to gitignore
 - [e280efd](../../commit/e280efd) [changed] Don't restore scroll position on Forward
 - [20c2c9b](../../commit/20c2c9b) [fixed] Do not decode + in pathname
 - [fe5ec39](../../commit/fe5ec39) [fixed] Double-encoding of query strings
 - [df38294](../../commit/df38294) [fixed] Allow comments in JSX config
 - [84056ba](../../commit/84056ba) [fixed] Ignore falsy routes
-- [81c7a57](../../commit/81c7a57) [changed] Removed "modules" directory
 - [4a770e8](../../commit/4a770e8) [fixed] Using TestLocation without DOM
-- [e24cf0f](../../commit/e24cf0f) Revert "[fixed] Path.withQuery strips query if query is empty"
 - [2ac2510](../../commit/2ac2510) [added] router.replaceRoutes(children)
 - [1f81286](../../commit/1f81286) [fixed] Ignore stale transitions
 - [c6ed6fa](../../commit/c6ed6fa) [removed] transition.wait, use callbacks instead
 - [75c6206](../../commit/75c6206) [added] router.stop()
 - [4e96256](../../commit/4e96256) [fixed] Preserve original query with HashLocation
 - [2f19e63](../../commit/2f19e63) [changed] Bump qs dependency version
-- [b98f5a1](../../commit/b98f5a1) [changed] Use webpack instead of Browserify
-- [94dc231](../../commit/94dc231) [changed] Run the examples with `npm run examples`
-- [0862ea2](../../commit/0862ea2) [fixed] Path.withQuery strips query if query is empty
 
 
 v0.11.6 - Wed, 17 Dec 2014 19:29:53 GMT
