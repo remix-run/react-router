@@ -294,7 +294,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	var React = __webpack_require__(18);
 	var Configuration = __webpack_require__(19);
 	var PropTypes = __webpack_require__(20);
-
+	var RouteHandler = __webpack_require__(6);
 	/**
 	 * <Route> components specify components that are rendered to the page when the
 	 * URL matches a given pattern.
@@ -332,6 +332,8 @@ return /******/ (function(modules) { // webpackBootstrap
 	 *       );
 	 *     }
 	 *   });
+	 *
+	 * If no handler is provided for the route, it will render a matched child route.
 	 */
 	var Route = React.createClass({
 
@@ -342,8 +344,14 @@ return /******/ (function(modules) { // webpackBootstrap
 	  propTypes: {
 	    name: PropTypes.string,
 	    path: PropTypes.string,
-	    handler: PropTypes.func.isRequired,
+	    handler: PropTypes.func,
 	    ignoreScrollBehavior: PropTypes.bool
+	  },
+
+	  getDefaultProps: function(){
+	    return {
+	      handler: RouteHandler
+	    };
 	  }
 
 	});
@@ -834,6 +842,10 @@ return /******/ (function(modules) { // webpackBootstrap
 
 	  componentDidUpdate: function () {
 	    this._updateRouteComponent();
+	  },
+
+	  componentWillUnmount: function () {
+	    this.context.setRouteComponentAtDepth(this.getRouteDepth(), null);
 	  },
 
 	  _updateRouteComponent: function () {
