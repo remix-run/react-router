@@ -15,7 +15,8 @@ function isModifiedEvent(event) {
 
 /**
  * <Link> components are used to create an <a> element that links to a route.
- * When that route is active, the link gets an "active" class name (or the
+ * You can also ask it to be wrapped in a tag by supplying a `wraptag` prop.
+ * When the route is active, the link gets an "active" class name (or the
  * value of its `activeClassName` prop).
  *
  * For example, assuming you have the following route:
@@ -42,7 +43,13 @@ var Link = React.createClass({
     to: PropTypes.string.isRequired,
     params: PropTypes.object,
     query: PropTypes.object,
-    onClick: PropTypes.func
+    onClick: PropTypes.func,
+    wraptag: function(props){
+      var tag = props.wraptag;
+      if (tag && !React.DOM[tag]){
+        return new Error('Wraptag must be a valid DOM tag, but was "'+tag+'"!');
+      }
+    }
   },
 
   getDefaultProps: function () {
@@ -94,13 +101,14 @@ var Link = React.createClass({
   },
 
   render: function () {
+    var wraptag = this.props.wraptag;
     var props = assign({}, this.props, {
       href: this.getHref(),
-      className: this.getClassName(),
+      className: wraptag ? "" : this.getClassName(),
       onClick: this.handleClick
     });
-
-    return React.DOM.a(props, this.props.children);
+    var link = React.DOM.a(props, this.props.children);
+    return wraptag ? React.DOM[wraptag]({className: this.getClassName()},link) : link;
   }
 
 });
