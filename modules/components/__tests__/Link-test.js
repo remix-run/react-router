@@ -10,6 +10,7 @@ var { Foo, Bar } = require('../../utils/TestHandlers');
 var { click } = React.addons.TestUtils.Simulate;
 
 describe('A Link', function () {
+
   describe('with params and a query', function () {
     it('knows how to make its href', function () {
       var LinkHandler = React.createClass({
@@ -91,6 +92,44 @@ describe('A Link', function () {
       Router.run(routes, TestLocation, function (Handler) {
         React.render(<Handler/>, div, () => {
           steps.shift()();
+        });
+      });
+    });
+  });
+
+  describe('when given a wraptag', function () {
+    it('renders inside that tag, and wraptag gets the classnames', function (done) {
+      var LinkHandler = React.createClass({
+        render: function () {
+          return (
+            <div>
+              <Link
+                to="foo"
+                className="dontKillMe"
+                activeClassName="highlight"
+                wraptag="li"
+              >Link</Link>
+              <RouteHandler/>
+            </div>
+          );
+        }
+      });
+
+      var routes = (
+        <Route path="/" handler={LinkHandler}>
+          <Route name="foo" handler={Foo} />
+        </Route>
+      );
+
+      var div = document.createElement('div');
+
+      TestLocation.history = ['/foo'];
+
+      Router.run(routes, TestLocation, function (Handler) {
+        React.render(<Handler/>, div, function(){
+          var li = div.querySelector('li');
+          expect(li.className.split(' ').sort().join(' ')).toEqual('dontKillMe highlight');
+          done();
         });
       });
     });
