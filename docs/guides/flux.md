@@ -117,6 +117,21 @@ To avoid this, you can do one of three things:
     ```
 
     
+Accessing route and params from action creators
+---------------------------------
+
+You can create your own `RouterStore` and fire an action in `run` callback:
+
+```js
+Router.run(routes, (Handler, state) => {
+  ActionCreators.changeRoute({ state });
+  React.render(<Handler/>, document.body);
+});
+```
+
+Let `RouterStore` keep router state and add a public method to obtain it.  
+This way your action creators and other stores can learn about current router state.
+
 Handling route changes as actions
 ---------------------------------
 
