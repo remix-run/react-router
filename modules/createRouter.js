@@ -8,6 +8,7 @@ var ImitateBrowserBehavior = require('./behaviors/ImitateBrowserBehavior');
 var HashLocation = require('./locations/HashLocation');
 var HistoryLocation = require('./locations/HistoryLocation');
 var RefreshLocation = require('./locations/RefreshLocation');
+var StaticLocation = require('./locations/StaticLocation');
 var NavigationContext = require('./NavigationContext');
 var StateContext = require('./StateContext');
 var Scrolling = require('./Scrolling');
@@ -139,6 +140,8 @@ function createRouter(options) {
       'You should not use a static location in a DOM environment because ' +
       'the router will not be kept in sync with the current URL'
     );
+
+    location = new StaticLocation(location);
   } else {
     invariant(
       canUseDOM || location.needsDOM === false,
@@ -240,11 +243,6 @@ function createRouter(options) {
        * a new URL onto the history stack.
        */
       transitionTo: function (to, params, query) {
-        invariant(
-          typeof location !== 'string',
-          'You cannot use transitionTo with a static location'
-        );
-
         var path = this.makePath(to, params, query);
 
         if (pendingTransition) {
@@ -260,11 +258,6 @@ function createRouter(options) {
        * the current URL in the history stack.
        */
       replaceWith: function (to, params, query) {
-        invariant(
-          typeof location !== 'string',
-          'You cannot use replaceWith with a static location'
-        );
-
         location.replace(this.makePath(to, params, query));
       },
 
@@ -280,11 +273,6 @@ function createRouter(options) {
        * because we cannot reliably track history length.
        */
       goBack: function () {
-        invariant(
-          typeof location !== 'string',
-          'You cannot use goBack with a static location'
-        );
-
         if (History.length > 1 || location === RefreshLocation) {
           location.pop();
           return true;
@@ -296,7 +284,7 @@ function createRouter(options) {
       },
 
       handleAbort: options.onAbort || function (abortReason) {
-        if (typeof location === 'string')
+        if (location instanceof StaticLocation)
           throw new Error('Unhandled aborted transition! Reason: ' + abortReason);
 
         if (abortReason instanceof Cancellation) {
@@ -431,17 +419,15 @@ function createRouter(options) {
           }
         };
 
-        if (typeof location === 'string') {
-          Router.dispatch(location, null);
-        } else {
+        if (!(location instanceof StaticLocation)) {
           if (location.addChangeListener)
             location.addChangeListener(Router.handleLocationChange);
 
           this.isRunning = true;
-
-          // Bootstrap using the current path.
-          this.refresh();
         }
+
+        // Bootstrap using the current path.
+        this.refresh();
       },
 
       refresh: function () {
