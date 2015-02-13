@@ -94,6 +94,65 @@ describe('A Link', function () {
         });
       });
     });
+
+    it('has applies activeStyle', function (done) {
+      var LinkHandler = React.createClass({
+        render: function () {
+          return (
+            <div>
+              <Link
+                to="foo"
+                style={{color: 'white'}}
+                activeStyle={{color: 'red'}}
+              >Link</Link>
+              <RouteHandler/>
+            </div>
+          );
+        }
+      });
+
+      var routes = (
+        <Route path="/" handler={LinkHandler}>
+          <Route name="foo" handler={Foo} />
+          <Route name="bar" handler={Bar} />
+        </Route>
+      );
+
+      var div = document.createElement('div');
+      TestLocation.history = ['/foo'];
+      var steps = [];
+
+      function assertActive () {
+        var a = div.querySelector('a');
+        expect(a.style.color).toEqual('red');
+      }
+
+      function assertInactive () {
+        var a = div.querySelector('a');
+        expect(a.style.color).toEqual('white');
+      }
+
+      steps.push(() => {
+        assertActive();
+        TestLocation.push('/bar');
+      });
+
+      steps.push(() => {
+        assertInactive();
+        TestLocation.push('/foo');
+      });
+
+      steps.push(() => {
+        assertActive();
+        done();
+      });
+
+      Router.run(routes, TestLocation, function (Handler) {
+        React.render(<Handler/>, div, () => {
+          steps.shift()();
+        });
+      });
+    });
   });
 
   describe('when clicked', function () {

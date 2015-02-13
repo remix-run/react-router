@@ -36,8 +36,12 @@ your route handler with `this.getQuery()`.
 
 ### `activeClassName`
 
-The className a `Link` receives when it's route is active. Defaults to
+The className a `Link` receives when its route is active. Defaults to
 `active`.
+
+### `activeStyle`
+
+Object, the styles to apply to the link element when its route is active.
 
 ### `onClick`
 
@@ -67,5 +71,8 @@ active -->
 
 <!-- change the activeClassName -->
 <Link activeClassName="current" to="user" params={{userId: user.id}}>{user.name}</Link>
+
+<!-- change style when link is active -->
+<Link style={{color: 'white'}} activeStyle={{color: 'red'}} to="user" params={{userId: user.id}} query={{foo: bar}}>{user.name}</Link>
 ```
 
