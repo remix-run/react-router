@@ -1,5 +1,6 @@
 /* jshint -W058 */
-var assign = require('react/lib/Object.assign');
+
+var Cancellation = require('./Cancellation');
 var Redirect = require('./Redirect');
 
 /**
@@ -14,69 +15,61 @@ function Transition(path, retry) {
   this.retry = retry.bind(this);
 }
 
-assign(Transition.prototype, {
+Transition.prototype.abort = function (reason) {
+  if (this.abortReason == null)
+    this.abortReason = reason || 'ABORT';
+};
 
-  abort: function (reason) {
-    if (this.abortReason == null)
-      this.abortReason = reason || 'ABORT';
-  },
+Transition.prototype.redirect = function (to, params, query) {
+  this.abort(new Redirect(to, params, query));
+};
 
-  redirect: function (to, params, query) {
-    this.abort(new Redirect(to, params, query));
-  },
+Transition.prototype.cancel = function () {
+  this.abort(new Cancellation);
+};
 
-  from: function (routes, components, callback) {
-    var self = this;
+Transition.from = function (transition, routes, components, callback) {
+  routes.reduce(function (callback, route, index) {
+    return function (error) {
+      if (error || transition.abortReason) {
+        callback(error);
+      } else if (route.willTransitionFrom) {
+        try {
+          route.willTransitionFrom(transition, components[index], callback);
 
-    var runHooks = routes.reduce(function (callback, route, index) {
-      return function (error) {
-        if (error || self.abortReason) {
-          callback(error);
-        } else if (route.willTransitionFrom) {
-          try {
-            route.willTransitionFrom(self, components[index], callback);
-
-            // If there is no callback in the argument list, call it automatically.
-            if (route.willTransitionFrom.length < 3)
-              callback();
-          } catch (e) {
-            callback(e);
-          }
-        } else {
-          callback();
+          // If there is no callback in the argument list, call it automatically.
+          if (route.willTransitionFrom.length < 3)
+            callback();
+        } catch (e) {
+          callback(e);
         }
-      };
-    }, callback);
+      } else {
+        callback();
+      }
+    };
+  }, callback)();
+};
 
-    runHooks();
-  },
+Transition.to = function (transition, routes, params, query, callback) {
+  routes.reduceRight(function (callback, route) {
+    return function (error) {
+      if (error || transition.abortReason) {
+        callback(error);
+      } else if (route.willTransitionTo) {
+        try {
+          route.willTransitionTo(transition, params, query, callback);
 
-  to: function (routes, params, query, callback) {
-    var self = this;
-
-    var runHooks = routes.reduceRight(function (callback, route) {
-      return function (error) {
-        if (error || self.abortReason) {
-          callback(error);
-        } else if (route.willTransitionTo) {
-          try {
-            route.willTransitionTo(self, params, query, callback);
-
-            // If there is no callback in the argument list, call it automatically.
-            if (route.willTransitionTo.length < 4)
-              callback();
-          } catch (e) {
-            callback(e);
-          }
-        } else {
-          callback();
+          // If there is no callback in the argument list, call it automatically.
+          if (route.willTransitionTo.length < 4)
+            callback();
+        } catch (e) {
+          callback(e);
         }
-      };
-    }, callback);
-
-    runHooks();
-  }
-
-});
+      } else {
+        callback();
+      }
+    };
+  }, callback)();
+};
 
 module.exports = Transition;

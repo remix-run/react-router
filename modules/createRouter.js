@@ -162,7 +162,7 @@ function createRouter(options) {
 
       cancelPendingTransition: function () {
         if (pendingTransition) {
-          pendingTransition.abort(new Cancellation);
+          pendingTransition.cancel();
           pendingTransition = null;
         }
       },
@@ -385,11 +385,11 @@ function createRouter(options) {
 
         var fromComponents = mountedComponents.slice(prevRoutes.length - fromRoutes.length);
 
-        transition.from(fromRoutes, fromComponents, function (error) {
+        Transition.from(transition, fromRoutes, fromComponents, function (error) {
           if (error || transition.abortReason)
             return dispatchHandler.call(Router, error, transition); // No need to continue.
 
-          transition.to(toRoutes, nextParams, nextQuery, function (error) {
+          Transition.to(transition, toRoutes, nextParams, nextQuery, function (error) {
             dispatchHandler.call(Router, error, transition, {
               path: path,
               action: action,
