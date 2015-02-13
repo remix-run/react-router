@@ -9,7 +9,7 @@ var Route = require('../Route');
 describe('Redirect', function () {
 
   it('defaults the path to "*"', function () {
-    TestLocation.history = [ '/kljfsdlfkjsdf' ];
+    var location = new TestLocation([ '/kljfsdlfkjsdf' ]);
 
     var div = document.createElement('div');
     var routes = [
@@ -17,7 +17,7 @@ describe('Redirect', function () {
       <Redirect to="/bar"/>
     ];
 
-    Router.run(routes, TestLocation, function (Handler) {
+    Router.run(routes, location, function (Handler) {
       React.render(<Handler />, div);
       expect(div.innerHTML).toMatch(/Bar/);
     });
@@ -25,7 +25,7 @@ describe('Redirect', function () {
 
   describe('at the root of the config', function () {
     it('redirects', function () {
-      TestLocation.history = [ '/foo' ];
+      var location = new TestLocation([ '/foo' ]);
 
       var div = document.createElement('div');
       var routes = [
@@ -33,7 +33,7 @@ describe('Redirect', function () {
         <Route path="/bar" handler={Bar}/>
       ];
 
-      Router.run(routes, TestLocation, function (Handler) {
+      Router.run(routes, location, function (Handler) {
         React.render(<Handler />, div);
         expect(div.innerHTML).toMatch(/Bar/);
       });
@@ -42,7 +42,7 @@ describe('Redirect', function () {
 
   describe('nested deeply in the config', function () {
     it('redirects with absolute paths', function () {
-      TestLocation.history = [ '/foo/bar' ];
+      var location = new TestLocation([ '/foo/bar' ]);
 
       var div = document.createElement('div');
       var routes = (
@@ -54,14 +54,14 @@ describe('Redirect', function () {
         </Route>
       );
 
-      Router.run(routes, TestLocation, function (Handler) {
+      Router.run(routes, location, function (Handler) {
         React.render(<Handler />, div);
         expect(div.innerHTML).toMatch(/Bar/);
       });
     });
 
     it('redirects with relative paths', function () {
-      TestLocation.history = [ '/foo/bar' ];
+      var location = new TestLocation([ '/foo/bar' ]);
 
       var div = document.createElement('div');
       var routes = (
@@ -73,7 +73,7 @@ describe('Redirect', function () {
         </Route>
       );
 
-      Router.run(routes, TestLocation, function (Handler) {
+      Router.run(routes, location, function (Handler) {
         React.render(<Handler />, div);
         expect(div.innerHTML).toMatch(/Bar/);
       });

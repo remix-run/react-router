@@ -10,7 +10,7 @@ describe('RouteHandler', function () {
 
   it('uses the old handler until the top-level component is rendered again', function (done) {
     var updateComponentBeforeNextRender;
-    TestLocation.history = [ '/foo' ];
+    var location = new TestLocation([ '/foo' ]);
 
     var Root = React.createClass({
       componentDidMount: function () {
@@ -42,7 +42,7 @@ describe('RouteHandler', function () {
     steps.push(function (Handler, state) {
       React.render(<Handler/>, div, function () {
         expect(div.innerHTML).toMatch(/Foo/);
-        TestLocation.push('/bar');
+        location.push('/bar');
       });
     });
 
@@ -56,7 +56,7 @@ describe('RouteHandler', function () {
       });
     });
 
-    Router.run(routes, TestLocation, function () {
+    Router.run(routes, location, function () {
       steps.shift().apply(this, arguments);
     });
   });

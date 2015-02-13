@@ -10,12 +10,14 @@ describe('State', function () {
   describe('when a route is active', function () {
     describe('and it has no params', function () {
       it('is active', function (done) {
+        var location = new TestLocation([ '/foo' ]);
         var div = document.createElement('div');
-        TestLocation.history = ['/foo'];
+
         var routes = (
           <Route name="foo" handler={Foo}/>
         );
-        Router.run(routes, TestLocation, function (Handler) {
+
+        Router.run(routes, location, function (Handler) {
           React.render(<Handler/>, div, function () {
             assert(this.isActive('foo'));
             done();
@@ -25,13 +27,13 @@ describe('State', function () {
     });
 
     describe('and the right params are given', function () {
-      var component;
+      var component, location;
       var div = document.createElement('div');
       var routes = <Route name="products" path="/products/:id/:variant" handler={Foo}/>;
 
       beforeEach(function (done) {
-        TestLocation.history = ['/products/123/456?search=abc&limit=789'];
-        Router.run(routes, TestLocation, function (Handler) {
+        location = new TestLocation([ '/products/123/456?search=abc&limit=789' ]);
+        Router.run(routes, location, function (Handler) {
           React.render(<Handler/>, div, function () {
             component = this;
             done();

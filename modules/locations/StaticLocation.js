@@ -4,6 +4,11 @@ function throwCannotModify() {
   invariant(false, 'You cannot modify a static location');
 }
 
+/**
+ * A location that only ever contains a single path. Useful in
+ * stateless environments like servers where there is no path history,
+ * only the path that was used in the request.
+ */
 function StaticLocation(path) {
   this.path = path;
 }

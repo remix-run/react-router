@@ -2,64 +2,65 @@ var invariant = require('react/lib/invariant');
 var LocationActions = require('../actions/LocationActions');
 var History = require('../History');
 
-var _listener;
-
-function notifyChange(type) {
-  if (_listener)
-    _listener({ path: TestLocation.getCurrentPath(), type: type });
-}
-
-function updateHistoryLength() {
-  History.length = TestLocation.history.length;
-}
-
 /**
- * A location that is convenient for testing and does not
- * require a DOM. You should manually setup TestLocation.history
- * with the URL paths your test needs before it runs.
+ * A location that is convenient for testing and does not require a DOM.
  */
-var TestLocation = {
+function TestLocation(history) {
+  this.history = history || [];
+  this.listeners = [];
+  this._updateHistoryLength();
+}
 
-  history: [],
+TestLocation.prototype.needsDOM = false;
 
-  needsDOM: false,
+TestLocation.prototype._updateHistoryLength = function () {
+  History.length = this.history.length;
+};
 
-  addChangeListener: function (listener) {
-    // TestLocation only ever supports a single listener at a time.
-    _listener = listener;
-    updateHistoryLength();
-  },
+TestLocation.prototype._notifyChange = function (type) {
+  for (var i = 0, len = this.listeners.length; i < len; ++i)
+    this.listeners[i].call(this, { path: this.getCurrentPath(), type: type });
+};
 
-  push: function (path) {
-    TestLocation.history.push(path);
-    updateHistoryLength();
-    notifyChange(LocationActions.PUSH);
-  },
+TestLocation.prototype.addChangeListener = function (listener) {
+  this.listeners.push(listener);
+};
 
-  replace: function (path) {
-    invariant(
-      History.length,
-      'You cannot replace the current path with no history'
-    );
+TestLocation.prototype.removeChangeListener = function (listener) {
+  this.listeners = this.listeners.filter(function (l) {
+    return l !== listener;
+  });
+};
 
-    TestLocation.history[TestLocation.history.length - 1] = path;
-    notifyChange(LocationActions.REPLACE);
-  },
+TestLocation.prototype.push = function (path) {
+  this.history.push(path);
+  this._updateHistoryLength();
+  this._notifyChange(LocationActions.PUSH);
+};
 
-  pop: function () {
-    TestLocation.history.pop();
-    updateHistoryLength();
-    notifyChange(LocationActions.POP);
-  },
+TestLocation.prototype.replace = function (path) {
+  invariant(
+    this.history.length,
+    'You cannot replace the current path with no history'
+  );
 
-  getCurrentPath: function () {
-    return TestLocation.history[TestLocation.history.length - 1];
-  },
+  this.history[this.history.length - 1] = path;
 
-  toString: function () {
-    return '<TestLocation>';
-  }
+  this._notifyChange(LocationActions.REPLACE);
+};
 
+TestLocation.prototype.pop = function () {
+  this.history.pop();
+  this._updateHistoryLength();
+  this._notifyChange(LocationActions.POP);
+};
+
+TestLocation.prototype.getCurrentPath = function () {
+  return this.history[this.history.length - 1];
+};
+
+TestLocation.prototype.toString = function () {
+  return '<TestLocation>';
 };
 
 module.exports = TestLocation;

@@ -14,8 +14,9 @@ describe('History', function () {
   });
 
   describe('after navigating to a route', function () {
+    var location;
     beforeEach(function () {
-      TestLocation.history = [ '/foo' ];
+      location = new TestLocation([ '/foo' ]);
     });
 
     it('has length 2', function (done) {
@@ -26,7 +27,7 @@ describe('History', function () {
 
       var count = 0;
 
-      var router = Router.run(routes, TestLocation, function (Handler) {
+      var router = Router.run(routes, location, function (Handler) {
         count += 1;
 
         if (count === 2) {
@@ -47,7 +48,7 @@ describe('History', function () {
 
         var count = 0;
 
-        var router = Router.run(routes, TestLocation, function (Handler) {
+        var router = Router.run(routes, location, function (Handler) {
           count += 1;
 
           if (count === 2) {
