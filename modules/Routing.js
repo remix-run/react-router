@@ -30,7 +30,7 @@ function createRoute(element, parentRoute, namedRoutes) {
     props.path = props.path || props.from || '*';
   } else {
     invariant(
-      !(props.handler  === RouteHandler && !React.Children.count(props.children)),
+      !(props.handler === RouteHandler && !React.Children.count(props.children)),
       "A route without children must specify a handler that isn't RouteHandler"
     );
     options.handler = props.handler;

@@ -38,7 +38,7 @@ describe('creating routes from ReactChildren', function () {
 
 describe('creating route with RouteHandler as handler but no children',function(){
   it('should throw a descriptive error',function(){
-    var routes = [<Route />];
+    var routes = [<Route />]; // if no handler is provided, RouteHandler is used as default
     var test = function(){
       Router.run(routes,function(){});
     }
