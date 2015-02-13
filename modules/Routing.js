@@ -4,6 +4,7 @@ var invariant = require('react/lib/invariant');
 var DefaultRoute = require('./components/DefaultRoute');
 var NotFoundRoute = require('./components/NotFoundRoute');
 var Redirect = require('./components/Redirect');
+var RouteHandler = require('./components/RouteHandler');
 var Path = require('./utils/Path');
 
 function createTransitionToHook(to, _params, _query) {
@@ -28,6 +29,10 @@ function createRoute(element, parentRoute, namedRoutes) {
     options.willTransitionTo = createTransitionToHook(props.to, props.params, props.query);
     props.path = props.path || props.from || '*';
   } else {
+    invariant(
+      !(props.handler  === RouteHandler && !React.Children.count(props.children)),
+      'Cannot use (default) RouteHandler without children'
+    );
     options.handler = props.handler;
     options.willTransitionTo = props.handler && props.handler.willTransitionTo;
     options.willTransitionFrom = props.handler && props.handler.willTransitionFrom;
