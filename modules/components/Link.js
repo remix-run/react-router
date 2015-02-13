@@ -67,14 +67,25 @@ var Link = React.createClass({
     event.preventDefault();
 
     if (allowTransition)
-      this.transitionTo(this.props.to, this.props.params, this.props.query);
+      this.transitionTo(this.getTo(), this.props.params, this.props.query);
+  },
+
+  /**
+   * Returns the value of the 'to' prop if specified, otherwise returns the
+   * name of the currently active route.
+   */
+  getTo: function() {
+    if (this.props.to)
+      return this.props.to;
+    var currentRoutes = this.context.getCurrentRoutes()
+    return currentRoutes[currentRoutes.length - 1].name
   },
 
   /**
    * Returns the value of the "href" attribute to use on the DOM element.
    */
   getHref: function () {
-    return this.makeHref(this.props.to, this.props.params, this.props.query);
+    return this.makeHref(this.getTo(), this.props.params, this.props.query);
   },
 
   /**
@@ -87,7 +98,7 @@ var Link = React.createClass({
     if (this.props.className)
       classNames[this.props.className] = true;
 
-    if (this.isActive(this.props.to, this.props.params, this.props.query))
+    if (this.isActive(this.getTo(), this.props.params, this.props.query))
       classNames[this.props.activeClassName] = true;
 
     return classSet(classNames);

@@ -33,6 +33,28 @@ describe('A Link', function () {
         });
       });
     });
+
+    it('knows how to make its href when `to=""`', function () {
+      var LinkHandler = React.createClass({
+        render: function () {
+          return <Link to="" query={{qux: 'quux'}}>Link</Link>;
+        }
+      });
+
+      var routes = [
+        <Route name="link" handler={LinkHandler} />
+      ];
+
+      var div = document.createElement('div');
+      TestLocation.history = [ '/link' ];
+
+      Router.run(routes, TestLocation, function (Handler) {
+        React.render(<Handler/>, div, function () {
+          var a = div.querySelector('a');
+          expect(a.getAttribute('href')).toEqual('/link?qux=quux');
+        });
+      });
+    });
   });
 
   describe('when its route is active', function () {

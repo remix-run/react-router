@@ -11,6 +11,8 @@ Props
 ### `to`
 
 The name of the route to link to, or a full URL.
+If an empty string is passed, the Link's target will be the currently
+active route.
 
 ### `params`
 
@@ -27,6 +29,10 @@ Object, the parameters to fill in the dynamic segments of your route.
 
 // though, if your user properties match up to the dynamic segements:
 <Link to="user" params={user}/>
+
+// assuming the /users/:userId route is active,
+// change the active user like this
+<Link to="" params={{userId: "456"}}/>
 ```
 
 ### `query`
@@ -68,4 +74,3 @@ active -->
 <!-- change the activeClassName -->
 <Link activeClassName="current" to="user" params={{userId: user.id}}>{user.name}</Link>
 ```
-
