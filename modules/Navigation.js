@@ -64,7 +64,7 @@ var Navigation = {
    * Transitions to the previous URL.
    */
   goBack: function () {
-    this.context.goBack();
+    return this.context.goBack();
   }
 
 };
