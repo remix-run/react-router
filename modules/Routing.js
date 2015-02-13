@@ -89,7 +89,7 @@ function createRoute(element, parentRoute, namedRoutes) {
     );
 
     invariant(
-      props.children == null,
+      React.Children.count(props.children) === 0,
       '<NotFoundRoute> must not have children'
     );
 
@@ -111,7 +111,7 @@ function createRoute(element, parentRoute, namedRoutes) {
     );
 
     invariant(
-      props.children == null,
+      React.Children.count(props.children) === 0,
       '<DefaultRoute> must not have children'
     );
 
