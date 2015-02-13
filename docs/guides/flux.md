@@ -65,10 +65,6 @@ To avoid this, you can do one of three things:
      var router;
 
      module.exports = {
-      getCurrentPath() {
-        return router.getCurrentPath();
-      },
-
       makePath(to, params, query) {
         return router.makePath(to, params, query);
       },
