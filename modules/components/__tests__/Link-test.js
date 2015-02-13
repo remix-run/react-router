@@ -73,23 +73,23 @@ describe('A Link', function () {
         expect(a.className).toEqual('dontKillMe');
       }
 
-      steps.push(() => {
+      steps.push(function () {
         assertActive();
         TestLocation.push('/bar');
       });
 
-      steps.push(() => {
+      steps.push(function () {
         assertInactive();
         TestLocation.push('/foo');
       });
 
-      steps.push(() => {
+      steps.push(function () {
         assertActive();
         done();
       });
 
       Router.run(routes, TestLocation, function (Handler) {
-        React.render(<Handler/>, div, () => {
+        React.render(<Handler/>, div, function () {
           steps.shift()();
         });
       });
@@ -132,23 +132,23 @@ describe('A Link', function () {
         expect(a.style.color).toEqual('white');
       }
 
-      steps.push(() => {
+      steps.push(function () {
         assertActive();
         TestLocation.push('/bar');
       });
 
-      steps.push(() => {
+      steps.push(function () {
         assertInactive();
         TestLocation.push('/foo');
       });
 
-      steps.push(() => {
+      steps.push(function () {
         assertActive();
         done();
       });
 
       Router.run(routes, TestLocation, function (Handler) {
-        React.render(<Handler/>, div, () => {
+        React.render(<Handler/>, div, function () {
           steps.shift()();
         });
       });
