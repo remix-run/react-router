@@ -37,12 +37,12 @@ describe('creating routes from ReactChildren', function () {
   });
 });
 
-describe('creating route with RouteHandler as handler but no children',function(){
-  it('should throw a descriptive error',function(){
+describe('creating route with RouteHandler as handler but no children', function () {
+  it('should throw a descriptive error', function () {
     var routes = [<Route handler={RouteHandler}/>];
-    var test = function(){
-      Router.run(routes,function(){});
+    var test = function () {
+      Router.run(routes,function () {});
     }
-    expect(test).toThrow(/without children/);
+    expect(test).toThrow(/with no children/);
   });
 });

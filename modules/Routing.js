@@ -31,7 +31,7 @@ function createRoute(element, parentRoute, namedRoutes) {
   } else {
     invariant(
       React.Children.count(props.children) || props.handler !== RouteHandler,
-      "A route without children must specify a handler that isn't RouteHandler"
+      "RouteHandler may not be used as the handler for a route with no children"
     );
     options.handler = props.handler;
     options.willTransitionTo = props.handler && props.handler.willTransitionTo;
