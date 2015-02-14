@@ -26,9 +26,10 @@ function shouldUpdateScroll(state, prevState) {
  * Provides the router with the ability to manage window scroll position
  * according to its scroll behavior.
  */
-var Scrolling = {
+var ScrollHistory = {
 
   statics: {
+
     /**
      * Records curent scroll position as the last known position for the given URL path.
      */
@@ -48,11 +49,12 @@ var Scrolling = {
 
       return this.scrollHistory[path] || null;
     }
+
   },
 
   componentWillMount: function () {
     invariant(
-      this.getScrollBehavior() == null || canUseDOM,
+      this.constructor.getScrollBehavior() == null || canUseDOM,
       'Cannot use scroll behavior without a DOM'
     );
   },
@@ -69,7 +71,7 @@ var Scrolling = {
     if (!shouldUpdateScroll(this.state, prevState))
       return;
 
-    var scrollBehavior = this.getScrollBehavior();
+    var scrollBehavior = this.constructor.getScrollBehavior();
 
     if (scrollBehavior)
       scrollBehavior.updateScrollPosition(
@@ -80,4 +82,4 @@ var Scrolling = {
 
 };
 
-module.exports = Scrolling;
+module.exports = ScrollHistory;

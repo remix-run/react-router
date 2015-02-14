@@ -10,8 +10,8 @@ var HistoryLocation = require('./locations/HistoryLocation');
 var RefreshLocation = require('./locations/RefreshLocation');
 var StaticLocation = require('./locations/StaticLocation');
 var NavigationContext = require('./NavigationContext');
+var ScrollHistory = require('./ScrollHistory');
 var StateContext = require('./StateContext');
-var Scrolling = require('./Scrolling');
 var createRoutesFromReactChildren = require('./Routing').createRoutesFromReactChildren;
 var isReactChildren = require('./isReactChildren');
 var Transition = require('./Transition');
@@ -442,11 +442,15 @@ function createRouter(options) {
           location.removeChangeListener(Router.handleLocationChange);
 
         this.isRunning = false;
+      },
+
+      getScrollBehavior: function () {
+        return scrollBehavior;
       }
 
     },
 
-    mixins: [ NavigationContext, StateContext, Scrolling ],
+    mixins: [ NavigationContext, StateContext, ScrollHistory ],
 
     propTypes: {
       children: PropTypes.falsy
@@ -480,10 +484,6 @@ function createRouter(options) {
 
     getLocation: function () {
       return location;
-    },
-
-    getScrollBehavior: function () {
-      return scrollBehavior;
     },
 
     getRouteAtDepth: function (depth) {
