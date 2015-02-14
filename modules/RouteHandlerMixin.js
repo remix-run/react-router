@@ -23,19 +23,19 @@ var RouteHandlerMixin = {
   },
 
   componentDidMount: function () {
-    this._updateRouteComponent();
+    this._updateRouteComponent(this.refs[REF_NAME]);
   },
 
   componentDidUpdate: function () {
-    this._updateRouteComponent();
+    this._updateRouteComponent(this.refs[REF_NAME]);
   },
 
   componentWillUnmount: function () {
-    this.context.setRouteComponentAtDepth(this.getRouteDepth(), null);
+    this._updateRouteComponent(null);
   },
 
-  _updateRouteComponent: function () {
-    this.context.setRouteComponentAtDepth(this.getRouteDepth(), this.refs[REF_NAME]);
+  _updateRouteComponent: function (component) {
+    this.context.setRouteComponentAtDepth(this.getRouteDepth(), component);
   },
 
   getRouteDepth: function () {
