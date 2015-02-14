@@ -134,14 +134,15 @@ function createRouter(options) {
   var pendingTransition = null;
   var dispatchHandler = null;
 
-  if (typeof location === 'string') {
+  if (typeof location === 'string')
+    location = new StaticLocation(location);
+
+  if (location instanceof StaticLocation) {
     warning(
       !canUseDOM || process.env.NODE_ENV === 'test',
       'You should not use a static location in a DOM environment because ' +
       'the router will not be kept in sync with the current URL'
     );
-
-    location = new StaticLocation(location);
   } else {
     invariant(
       canUseDOM || location.needsDOM === false,
