@@ -1,7 +1,6 @@
 .jshintignore
 .jshintrc
 .travis.yml
-dist
 docs
 examples
 scripts
