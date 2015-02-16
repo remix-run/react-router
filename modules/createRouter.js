@@ -342,7 +342,7 @@ function createRouter(options) {
         // Record the scroll position as early as possible to
         // get it before browsers try update it automatically.
         if (prevPath && action === LocationActions.PUSH)
-          this.recordScrollPosition(prevPath);
+          this.recordScrollPosition(state.history ? state.history.key : prevPath);
 
         var match = this.match(path);
 

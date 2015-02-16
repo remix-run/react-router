@@ -30,23 +30,23 @@ var Scrolling = {
 
   statics: {
     /**
-     * Records curent scroll position as the last known position for the given URL path.
+     * Records curent scroll position as the last known position for the given key.
      */
-    recordScrollPosition: function (path) {
+    recordScrollPosition: function (key) {
       if (!this.scrollHistory)
         this.scrollHistory = {};
 
-      this.scrollHistory[path] = getWindowScrollPosition();
+      this.scrollHistory[key] = getWindowScrollPosition();
     },
 
     /**
-     * Returns the last known scroll position for the given URL path.
+     * Returns the last known scroll position for the given key.
      */
-    getScrollPosition: function (path) {
+    getScrollPosition: function (key) {
       if (!this.scrollHistory)
         this.scrollHistory = {};
 
-      return this.scrollHistory[path] || null;
+      return this.scrollHistory[key] || null;
     }
   },
 
@@ -73,7 +73,7 @@ var Scrolling = {
 
     if (scrollBehavior)
       scrollBehavior.updateScrollPosition(
-        this.constructor.getScrollPosition(this.state.path),
+        this.constructor.getScrollPosition(this.state.history ? this.state.history.key : this.state.path),
         this.state.action
       );
   }
