@@ -18,6 +18,7 @@ var Transition = require('./Transition');
 var PropTypes = require('./PropTypes');
 var Redirect = require('./Redirect');
 var History = require('./History');
+var Session = require('./Session');
 var Cancellation = require('./Cancellation');
 var supportsHistory = require('./utils/supportsHistory');
 var Path = require('./utils/Path');
@@ -133,6 +134,7 @@ function createRouter(options) {
   var nextState = {};
   var pendingTransition = null;
   var dispatchHandler = null;
+  var session = null;
 
   if (typeof location === 'string')
     location = new StaticLocation(location);
@@ -245,12 +247,13 @@ function createRouter(options) {
        */
       transitionTo: function (to, params, query) {
         var path = this.makePath(to, params, query);
+        var state = session && session.next();
 
         if (pendingTransition) {
           // Replace so pending location does not stay in history.
-          location.replace(path);
+          location.replace(path, state);
         } else {
-          location.push(path);
+          location.push(path, state);
         }
       },
 
@@ -259,7 +262,7 @@ function createRouter(options) {
        * the current URL in the history stack.
        */
       replaceWith: function (to, params, query) {
-        location.replace(this.makePath(to, params, query));
+        location.replace(this.makePath(to, params, query), session && session.getState());
       },
 
       /**
@@ -274,7 +277,8 @@ function createRouter(options) {
        * because we cannot reliably track history length.
        */
       goBack: function () {
-        if (History.length > 1 || location === RefreshLocation) {
+        var hasHistory = session ? session.getState().current > 1 : History.length > 1;
+        if (hasHistory || location === RefreshLocation) {
           location.pop();
           return true;
         }
@@ -303,7 +307,12 @@ function createRouter(options) {
       },
 
       handleLocationChange: function (change) {
-        this.dispatch(change.path, change.type);
+        var sessionState = null;
+
+        if (session && session.setState(change.state))
+          sessionState = session.getState();
+
+        this.dispatch(change.path, change.type, sessionState);
       },
 
       /**
@@ -322,7 +331,7 @@ function createRouter(options) {
        * transition. To resolve asynchronously, they may use the callback argument. If no
        * hooks wait, the transition is fully synchronous.
        */
-      dispatch: function (path, action) {
+      dispatch: function (path, action, sessionState) {
         this.cancelPendingTransition();
 
         var prevPath = state.path;
@@ -334,7 +343,7 @@ function createRouter(options) {
         // Record the scroll position as early as possible to
         // get it before browsers try update it automatically.
         if (prevPath && action === LocationActions.PUSH)
-          this.recordScrollPosition(prevPath);
+          this.recordScrollPosition(state.history ? state.history.key : prevPath);
 
         var match = this.match(path);
 
@@ -382,6 +391,11 @@ function createRouter(options) {
             dispatchHandler.call(Router, error, transition, {
               path: path,
               action: action,
+              history: sessionState && {
+                id: sessionState.id,
+                current: sessionState.current,
+                key: sessionState.id + sessionState.current
+              },
               pathname: match.pathname,
               routes: nextRoutes,
               params: nextParams,
@@ -427,12 +441,19 @@ function createRouter(options) {
           this.isRunning = true;
         }
 
+        if (location.supportsState) {
+          session = new Session();
+          var success = session.setState(location.getCurrentState());
+          if (!success)
+            location.replaceState(session.getState(), true);
+        }
+
         // Bootstrap using the current path.
         this.refresh();
       },
 
       refresh: function () {
-        Router.dispatch(location.getCurrentPath(), null);
+        Router.dispatch(location.getCurrentPath(), null, session && session.getState());
       },
 
       stop: function () {

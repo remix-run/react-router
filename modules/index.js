@@ -10,6 +10,8 @@ exports.HistoryLocation = require('./locations/HistoryLocation');
 exports.RefreshLocation = require('./locations/RefreshLocation');
 exports.StaticLocation = require('./locations/StaticLocation');
 
+exports.addLocationState = require('./utils/addLocationState');
+
 exports.ImitateBrowserBehavior = require('./behaviors/ImitateBrowserBehavior');
 exports.ScrollToTopBehavior = require('./behaviors/ScrollToTopBehavior');
 
