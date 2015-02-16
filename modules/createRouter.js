@@ -172,7 +172,7 @@ function createRouter(options) {
       makePath: function (to, params, query) {
         var path;
         if (Path.isAbsolute(to)) {
-          path = Path.normalize(to);
+          path = to;
         } else {
           var route = (to instanceof Route) ? to : Route.findRouteByName(this.routes, to);
 
