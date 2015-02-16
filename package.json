@@ -16,7 +16,7 @@
     "build": "NODE_ENV=production webpack modules/index.js dist/react-router.js",
     "build-min": "NODE_ENV=production COMPRESS=1 webpack modules/index.js dist/react-router.min.js",
     "examples": "webpack-dev-server --config examples/webpack.config.js --no-info --content-base examples",
-    "test": "jsxhint . && karma start --single-run"
+    "test": "jsxhint . && karma start"
   },
   "authors": [
     "Ryan Florence",
