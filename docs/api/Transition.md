@@ -1,7 +1,7 @@
-API: `transition` (object)
+API: `Transition` (object)
 ==========================
 
-This object is sent to the [transition hooks][transition-hooks] as the
+A `Transition` object is sent to the [transition hooks][transition-hooks] as the
 first argument.
 
 Methods

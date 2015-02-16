@@ -1,9 +1,11 @@
 API: `Link` (component)
 =========================
 
-Creates an anchor tag that links to a route in the application. Also
-gets the `active` class automatically when the route matches. If you
-change the path of your route, you don't have to change your links.
+A `<Link>` renders an `<a>` tag that links to a route in the application. If
+you change the path of your route, you don't also have to change your links.
+
+A `<Link>` also knows when the route it links to is active and automatically
+applies its `activeClassName` and/or `activeStyle` when it is.
 
 Props
 -----
@@ -14,7 +16,7 @@ The name of the route to link to, or a full URL.
 
 ### `params`
 
-Object, the parameters to fill in the dynamic segments of your route.
+An object of the names/values that correspond with dynamic segments in your route path.
 
 #### Example
 
@@ -31,17 +33,15 @@ Object, the parameters to fill in the dynamic segments of your route.
 
 ### `query`
 
-Object, Query parameters to add to the link. Access query parameters in
-your route handler with `this.getQuery()`.
+The query string parameters as a JavaScript object.
 
 ### `activeClassName`
 
-The className a `Link` receives when its route is active. Defaults to
-`active`.
+The className a `Link` receives when its route is active. Defaults to `active`.
 
 ### `activeStyle`
 
-Object, the styles to apply to the link element when its route is active.
+The styles to apply to the link element when its route is active.
 
 ### `onClick`
 

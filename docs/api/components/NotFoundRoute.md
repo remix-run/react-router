@@ -1,14 +1,14 @@
 API: `NotFoundRoute` (component)
 ===============================
 
-When a parent's URL partially matches, but none of the children do, a
-`NotFoundRoute` will be matched and its handler activated at any level
-of your route hierarchy.
+A `<NotFoundRoute>` is active when the beginning of its parent's path
+matches the URL but none of its siblings do. It can be found at any level
+of your hierarchy, allowing you to have a context-aware "not found" page.
 
 Props
 -----
 
-See [Route::props][routeProps]
+See [<Route props>][routeProps]
 
 Example
 -------

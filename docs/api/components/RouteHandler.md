@@ -1,15 +1,14 @@
 API: `RouteHandler` (component)
 ===============================
 
-The component supplied to a route is called a "Route Handler". They can
-be rendered by the parent handler with `<RouteHandler/>`.  There are
-some special static methods available to these components.
+A `<RouteHandler>` renders the handler of the route at the level of the
+route hierarchy in which it is used.
 
 Static Lifecycle Methods
 ------------------------
 
-You can define static methods on your route handlers that will be called
-during route transitions.
+You can define some static methods on your route handlers that will be
+called during route transitions.
 
 ### `willTransitionTo(transition, params, query, callback)`
 
@@ -18,7 +17,7 @@ abort or redirect the transition. You can pause the transition while you
 do some asynchonous work and call `callback(error)` when you're done, or
 omit the callback in your argument list and it will be called for you.
 
-See also: [transition](/docs/api/misc/transition.md)
+See also: [Transition](/docs/api/Transition.md)
 
 ### `willTransitionFrom(transition, component, callback)`
 
@@ -27,7 +26,7 @@ opportunity to abort the transition. The `component` is the current
 component, you'll probably need it to check its state to decide if you
 want to allow the transition (like form fields).
 
-See also: [transition](/docs/api/misc/transition.md)
+See also: [Transition](/docs/api/Transition.md)
 
 #### Example
 

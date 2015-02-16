@@ -1,16 +1,14 @@
 API: `Route` (component)
 =========================
 
-Configuration component to declare your application's routes and entry
-view hierarchy.
+A `<Route>` is used to declare your application's routes and entry view hierarchy.
 
 Props
 -----
 
 ### `name`
 
-The name of the route, used in the `Link` component and the router's
-transition methods.
+The name of the route, used in the `Link` component and the router's transition methods.
 
 ### `path`
 

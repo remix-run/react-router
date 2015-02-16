@@ -1,15 +1,15 @@
 API: `DefaultRoute` (component)
 ===============================
 
-A `DefaultRoute` is active when the parent route's path matches exactly.
+A `<DefaultRoute>` is active when the parent route's path matches exactly.
 
-Note, this is not a `NotFoundRoute`. It is only active when the parent's
+Note, this is not a `<NotFoundRoute>`. It is only active when the parent's
 route path is matched exactly.
 
 Props
 -----
 
-See [Route::props][routeProps]
+See [<Route props>][routeProps]
 
 Example
 -------
