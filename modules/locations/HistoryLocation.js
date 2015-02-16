@@ -12,10 +12,11 @@ function getWindowPath() {
 
 var _changeListeners = [];
 
-function notifyChange(type) {
+function notifyChange(type, state) {
   var change = {
     path: getWindowPath(),
-    type: type
+    type: type,
+    state: state || window.history.state
   };
 
   _changeListeners.forEach(function (listener) {
@@ -25,14 +26,16 @@ function notifyChange(type) {
 
 var _isListening = false;
 
-function onPopState() {
-  notifyChange(LocationActions.POP);
+function onPopState (event) {
+  notifyChange(LocationActions.POP, event.state);
 }
 
 /**
  * A Location that uses HTML5 history.
  */
 var HistoryLocation = {
+
+  supportsState: true,
 
   addChangeListener: function (listener) {
     _changeListeners.push(listener);
@@ -64,20 +67,31 @@ var HistoryLocation = {
     }
   },
 
-  push: function (path) {
-    window.history.pushState({ path: path }, '', encodeURI(path));
+  push: function (path, state) {
+    window.history.pushState(state, '', encodeURI(path));
     History.length += 1;
     notifyChange(LocationActions.PUSH);
   },
 
-  replace: function (path) {
-    window.history.replaceState({ path: path }, '', encodeURI(path));
+  replace: function (path, state) {
+    window.history.replaceState(state, '', encodeURI(path));
     notifyChange(LocationActions.REPLACE);
+  },
+
+  replaceState: function (state, silent) {
+    window.history.replaceState(state, '', encodeURI(getWindowPath()));
+    if (!silent) {
+      notifyChange(LocationActions.REPLACE);
+    }
   },
 
   pop: History.back,
 
   getCurrentPath: getWindowPath,
+
+  getCurrentState: function () {
+    return window.history.state;
+  },
 
   toString: function () {
     return '<HistoryLocation>';
