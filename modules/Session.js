@@ -1,5 +1,3 @@
-var assign = require('react/lib/Object.assign');
-var Path = require('./utils/Path');
 
 function Session () {
 }

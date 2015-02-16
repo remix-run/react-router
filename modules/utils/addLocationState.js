@@ -55,7 +55,9 @@ function addLocationState (location) {
       _changeListeners.push(listener);
 
       if (!_isListening) {
-        location.addChangeListener && location.addChangeListener(onLocationChange);
+        if (location.addChangeListener)
+          location.addChangeListener(onLocationChange);
+
         _isListening = true;
       }
     },
@@ -66,7 +68,9 @@ function addLocationState (location) {
       });
 
       if (_changeListeners.length === 0) {
-        location.removeChangeListener && location.removeChangeListener(onLocationChange);
+        if (location.removeChangeListener)
+          location.removeChangeListener(onLocationChange);
+
         _isListening = false;
       }
     },
@@ -88,7 +92,7 @@ function addLocationState (location) {
     },
 
     replaceState: function (state, silent) {
-      if (silent === true)
+      if (silent)
         _ignoreNext = true;
 
       location.replace(withState(location.getCurrentPath(), state));
