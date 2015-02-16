@@ -4,6 +4,7 @@ var assign = require('react/lib/Object.assign');
 var Navigation = require('../Navigation');
 var State = require('../State');
 var PropTypes = require('../PropTypes');
+var Route = require('../Route');
 
 function isLeftClickEvent(event) {
   return event.button === 0;
@@ -39,7 +40,10 @@ var Link = React.createClass({
 
   propTypes: {
     activeClassName: PropTypes.string.isRequired,
-    to: PropTypes.string.isRequired,
+    to: PropTypes.oneOfType([
+      PropTypes.string,
+      PropTypes.instanceOf(Route)
+    ]),
     params: PropTypes.object,
     query: PropTypes.object,
     activeStyle: PropTypes.object,

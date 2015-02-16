@@ -12,13 +12,15 @@ var StaticLocation = require('./locations/StaticLocation');
 var NavigationContext = require('./NavigationContext');
 var ScrollHistory = require('./ScrollHistory');
 var StateContext = require('./StateContext');
-var createRoutesFromReactChildren = require('./Routing').createRoutesFromReactChildren;
+var createRoutesFromReactChildren = require('./createRoutesFromReactChildren');
 var isReactChildren = require('./isReactChildren');
 var Transition = require('./Transition');
 var PropTypes = require('./PropTypes');
 var Redirect = require('./Redirect');
 var History = require('./History');
 var Cancellation = require('./Cancellation');
+var Match = require('./Match');
+var Route = require('./Route');
 var supportsHistory = require('./utils/supportsHistory');
 var Path = require('./utils/Path');
 
@@ -31,47 +33,6 @@ var DEFAULT_LOCATION = canUseDOM ? HashLocation : '/';
  * The default scroll behavior for new routers.
  */
 var DEFAULT_SCROLL_BEHAVIOR = canUseDOM ? ImitateBrowserBehavior : null;
-
-function createMatch(route, params, pathname, query) {
-  return {
-    routes: [ route ],
-    params: params,
-    pathname: pathname,
-    query: query
-  };
-}
-
-function findMatch(routes, defaultRoute, notFoundRoute, pathname, query) {
-  var route, match, params;
-
-  for (var i = 0, len = routes.length; i < len; ++i) {
-    route = routes[i];
-
-    // Check the subtree first to find the most deeply-nested match.
-    match = findMatch(route.routes, route.defaultRoute, route.notFoundRoute, pathname, query);
-
-    if (match != null) {
-      match.routes.unshift(route);
-      return match;
-    }
-
-    // No routes in the subtree matched, so check this route.
-    params = Path.extractParams(route.path, pathname);
-
-    if (params)
-      return createMatch(route, params, pathname, query);
-  }
-
-  // No routes matched, so try the default route if there is one.
-  if (defaultRoute && (params = Path.extractParams(defaultRoute.path, pathname)))
-    return createMatch(defaultRoute, params, pathname, query);
-
-  // Last attempt: does the "not found" route match?
-  if (notFoundRoute && (params = Path.extractParams(notFoundRoute.path, pathname)))
-    return createMatch(notFoundRoute, params, pathname, query);
-
-  return null;
-}
 
 function hasProperties(object, properties) {
   for (var propertyName in properties)
@@ -173,9 +134,6 @@ function createRouter(options) {
 
       clearAllRoutes: function () {
         this.cancelPendingTransition();
-        this.defaultRoute = null;
-        this.notFoundRoute = null;
-        this.namedRoutes = {};
         this.routes = [];
       },
 
@@ -184,7 +142,7 @@ function createRouter(options) {
        */
       addRoutes: function (routes) {
         if (isReactChildren(routes))
-          routes = createRoutesFromReactChildren(routes, this, this.namedRoutes);
+          routes = createRoutesFromReactChildren(routes);
 
         this.routes.push.apply(this.routes, routes);
       },
@@ -204,7 +162,7 @@ function createRouter(options) {
        * match can be made.
        */
       match: function (path) {
-        return findMatch(this.routes, this.defaultRoute, this.notFoundRoute, Path.withoutQuery(path), Path.extractQuery(path));
+        return Match.findMatchForPath(this.routes, path);
       },
 
       /**
@@ -216,11 +174,11 @@ function createRouter(options) {
         if (Path.isAbsolute(to)) {
           path = Path.normalize(to);
         } else {
-          var route = this.namedRoutes[to];
+          var route = (to instanceof Route) ? to : Route.findRouteByName(this.routes, to);
 
           invariant(
-            route,
-            'Unable to find <Route name="%s">',
+            route instanceof Route,
+            'Cannot find a route named "%s"',
             to
           );
 
