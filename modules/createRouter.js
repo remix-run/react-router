@@ -277,7 +277,8 @@ function createRouter(options) {
        * because we cannot reliably track history length.
        */
       goBack: function () {
-        if (History.length > 1 || location === RefreshLocation) {
+        var hasHistory = session ? session.getState().current > 1 : History.length > 1;
+        if (hasHistory || location === RefreshLocation) {
           location.pop();
           return true;
         }
