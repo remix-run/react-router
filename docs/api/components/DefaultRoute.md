@@ -9,7 +9,7 @@ route path is matched exactly.
 Props
 -----
 
-See [<Route props>][routeProps]
+See [`<Route props>`][routeProps]
 
 Example
 -------

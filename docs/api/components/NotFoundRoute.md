@@ -8,7 +8,7 @@ of your hierarchy, allowing you to have a context-aware "not found" page.
 Props
 -----
 
-See [<Route props>][routeProps]
+See [`<Route props>`][routeProps]
 
 Example
 -------
