@@ -25,7 +25,10 @@ function notifyChange(type) {
 
 var _isListening = false;
 
-function onPopState() {
+function onPopState(event) {
+  if (event.state === undefined)
+    return; // Ignore extraneous popstate events in WebKit.
+
   notifyChange(LocationActions.POP);
 }
 
