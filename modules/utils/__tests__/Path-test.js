@@ -318,4 +318,8 @@ describe('Path.withQuery', function () {
   it('merges two query strings', function () {
     expect(Path.withQuery('/path?a=b', { c: [ 'd', 'e' ] })).toEqual('/path?a=b&c=d&c=e');
   });
+
+  it('handles special characters', function () {
+    expect(Path.withQuery('/path?a=b', { c: [ 'd#e', 'f&a=i#j+k' ] })).toEqual('/path?a=b&c=d%23e&c=f%26a%3Di%23j%2Bk');
+  });
 });
