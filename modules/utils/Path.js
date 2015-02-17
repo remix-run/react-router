@@ -36,6 +36,20 @@ function compilePattern(pattern) {
 var Path = {
 
   /**
+   * Returns true if the given path is absolute.
+   */
+  isAbsolute: function (path) {
+    return path.charAt(0) === '/';
+  },
+
+  /**
+   * Joins two URL paths together.
+   */
+  join: function (a, b) {
+    return a.replace(/\/*$/, '/') + b;
+  },
+
+  /**
    * Returns an array of the names of all parameters in the given pattern.
    */
   extractParamNames: function (pattern) {
@@ -48,15 +62,15 @@ var Path = {
    * pattern does not match the given path.
    */
   extractParams: function (pattern, path) {
-    var object = compilePattern(pattern);
-    var match = path.match(object.matcher);
+    var { matcher, paramNames } = compilePattern(pattern);
+    var match = path.match(matcher);
 
     if (!match)
       return null;
 
     var params = {};
 
-    object.paramNames.forEach(function (paramName, index) {
+    paramNames.forEach(function (paramName, index) {
       params[paramName] = match[index + 1];
     });
 
@@ -76,16 +90,17 @@ var Path = {
       paramName = paramName || 'splat';
 
       // If param is optional don't check for existence
-      if (paramName.slice(-1) !== '?') {
-        invariant(
-          params[paramName] != null,
-          'Missing "' + paramName + '" parameter for path "' + pattern + '"'
-        );
-      } else {
+      if (paramName.slice(-1) === '?') {
         paramName = paramName.slice(0, -1);
 
         if (params[paramName] == null)
           return '';
+      } else {
+        invariant(
+          params[paramName] != null,
+          'Missing "%s" parameter for path "%s"',
+          paramName, pattern
+        );
       }
 
       var segment;
@@ -94,7 +109,8 @@ var Path = {
 
         invariant(
           segment != null,
-          'Missing splat # ' + splatIndex + ' for path "' + pattern + '"'
+          'Missing splat # %s for path "%s"',
+          splatIndex, pattern
         );
       } else {
         segment = params[paramName];
@@ -136,20 +152,6 @@ var Path = {
       return Path.withoutQuery(path) + '?' + queryString;
 
     return path;
-  },
-
-  /**
-   * Returns true if the given path is absolute.
-   */
-  isAbsolute: function (path) {
-    return path.charAt(0) === '/';
-  },
-
-  /**
-   * Joins two URL paths together.
-   */
-  join: function (a, b) {
-    return a.replace(/\/*$/, '/') + b;
   }
 
 };
