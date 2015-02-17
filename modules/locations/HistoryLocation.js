@@ -41,7 +41,7 @@ var HistoryLocation = {
       if (window.addEventListener) {
         window.addEventListener('popstate', onPopState, false);
       } else {
-        window.attachEvent('popstate', onPopState);
+        window.attachEvent('onpopstate', onPopState);
       }
 
       _isListening = true;
@@ -57,7 +57,7 @@ var HistoryLocation = {
       if (window.addEventListener) {
         window.removeEventListener('popstate', onPopState);
       } else {
-        window.removeEvent('popstate', onPopState);
+        window.removeEvent('onpopstate', onPopState);
       }
 
       _isListening = false;
