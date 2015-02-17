@@ -55,7 +55,7 @@ var HistoryLocation = {
 
     if (_changeListeners.length === 0) {
       if (window.addEventListener) {
-        window.removeEventListener('popstate', onPopState);
+        window.removeEventListener('popstate', onPopState, false);
       } else {
         window.removeEvent('onpopstate', onPopState);
       }
