@@ -18,6 +18,11 @@ exports.Navigation = require('./Navigation');
 exports.RouteHandlerMixin = require('./RouteHandlerMixin');
 exports.State = require('./State');
 
+exports.createRoute = require('./Route').createRoute;
+exports.createDefaultRoute = require('./Route').createDefaultRoute;
+exports.createNotFoundRoute = require('./Route').createNotFoundRoute;
+exports.createRedirect = require('./Route').createRedirect;
+exports.createRoutesFromReactChildren = require('./createRoutesFromReactChildren');
 exports.create = require('./createRouter');
 exports.run = require('./runRouter');
 

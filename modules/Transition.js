@@ -12,6 +12,7 @@ var Redirect = require('./Redirect');
 function Transition(path, retry) {
   this.path = path;
   this.abortReason = null;
+  // TODO: Change this to router.retryTransition(transition)
   this.retry = retry.bind(this);
 }
 
@@ -33,12 +34,12 @@ Transition.from = function (transition, routes, components, callback) {
     return function (error) {
       if (error || transition.abortReason) {
         callback(error);
-      } else if (route.willTransitionFrom) {
+      } else if (route.onLeave) {
         try {
-          route.willTransitionFrom(transition, components[index], callback);
+          route.onLeave(transition, components[index], callback);
 
           // If there is no callback in the argument list, call it automatically.
-          if (route.willTransitionFrom.length < 3)
+          if (route.onLeave.length < 3)
             callback();
         } catch (e) {
           callback(e);
@@ -55,12 +56,12 @@ Transition.to = function (transition, routes, params, query, callback) {
     return function (error) {
       if (error || transition.abortReason) {
         callback(error);
-      } else if (route.willTransitionTo) {
+      } else if (route.onEnter) {
         try {
-          route.willTransitionTo(transition, params, query, callback);
+          route.onEnter(transition, params, query, callback);
 
           // If there is no callback in the argument list, call it automatically.
-          if (route.willTransitionTo.length < 4)
+          if (route.onEnter.length < 4)
             callback();
         } catch (e) {
           callback(e);
