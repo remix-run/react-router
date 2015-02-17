@@ -95,13 +95,13 @@ var HashLocation = {
 
   push: function (path) {
     _actionType = LocationActions.PUSH;
-    window.location.hash = encodeURI(path);
+    window.location.hash = path;
   },
 
   replace: function (path) {
     _actionType = LocationActions.REPLACE;
     window.location.replace(
-      window.location.pathname + window.location.search + '#' + encodeURI(path)
+      window.location.pathname + window.location.search + '#' + path
     );
   },
 

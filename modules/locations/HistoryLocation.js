@@ -65,13 +65,13 @@ var HistoryLocation = {
   },
 
   push: function (path) {
-    window.history.pushState({ path: path }, '', encodeURI(path));
+    window.history.pushState({ path: path }, '', path);
     History.length += 1;
     notifyChange(LocationActions.PUSH);
   },
 
   replace: function (path) {
-    window.history.replaceState({ path: path }, '', encodeURI(path));
+    window.history.replaceState({ path: path }, '', path);
     notifyChange(LocationActions.REPLACE);
   },
 

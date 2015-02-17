@@ -9,11 +9,11 @@ var History = require('../History');
 var RefreshLocation = {
 
   push: function (path) {
-    window.location = encodeURI(path);
+    window.location = path;
   },
 
   replace: function (path) {
-    window.location.replace(encodeURI(path));
+    window.location.replace(path);
   },
 
   pop: History.back,
