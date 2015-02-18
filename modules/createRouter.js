@@ -389,6 +389,36 @@ function createRouter(options) {
         this.refresh();
       },
 
+      /**
+       * Starts this router and returns {Handler, state} for a given URL path.
+       *
+       * This is the synchronous version of `run`, useful in server environments
+       * that are able to evaluate JavaScript but have no notion of callbacks.
+       */
+      runSync: function (path) {
+        var match = this.match(path);
+
+        warning(
+          match != null,
+          'No route matches path "%s". Make sure you have <Route path="%s"> somewhere in your routes',
+          path, path
+        );
+
+        if (match == null)
+          match = {};
+
+        nextState = {
+          path: path,
+          action: null,
+          pathname: match.pathname,
+          routes: match.routes || [],
+          params: match.params || {},
+          query: match.query || {}
+        };
+
+        return { Handler: Router, state: nextState };
+      },
+
       refresh: function () {
         Router.dispatch(location.getCurrentPath(), null);
       },

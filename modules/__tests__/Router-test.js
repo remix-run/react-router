@@ -1202,6 +1202,17 @@ describe('Router.run', function () {
   });
 });
 
+describe('Router#runSync', function () {
+  it('returns {Handler, state} for a given URL path', function () {
+    var routes = <Route handler={Foo} path="/foo"/>;
+    var router = Router.create(routes);
+    var {Handler, state} = router.runSync('/foo');
+    var html = React.renderToString(<Handler/>);
+    expect(html).toMatch(/Foo/);
+    expect(state.path).toEqual('/foo');
+  });
+});
+
 describe.skip('unmounting', function () {
   afterEach(function () {
     window.location.hash = '';
