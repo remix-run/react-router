@@ -307,12 +307,15 @@ function createRouter(options) {
       },
 
       handleLocationChange: function (change) {
-        var sessionState = null;
+        if (session) {
+          if (session.isValidState(change.state)) {
+            session.setState(change.state);
+          } else {
+            location.replaceState(session.getState(), true);
+          }
+        }
 
-        if (session && session.setState(change.state))
-          sessionState = session.getState();
-
-        this.dispatch(change.path, change.type, sessionState);
+        this.dispatch(change.path, change.type, session && session.getState());
       },
 
       /**
@@ -443,9 +446,14 @@ function createRouter(options) {
 
         if (location.supportsState) {
           session = new Session();
-          var success = session.setState(location.getCurrentState());
-          if (!success)
-            location.replaceState(session.getState(), true);
+          var state = location.getCurrentState();
+
+          if (session.isValidState(state)) {
+            session.setState(state);
+          } else {
+            state = session.reset();
+            location.replaceState(state, true);
+          }
         }
 
         // Bootstrap using the current path.

@@ -2,6 +2,10 @@
 function Session () {
 }
 
+Session.prototype.isValidState = function (state) {
+  return state && state.id && state.current;
+};
+
 Session.prototype.getState = function () {
   return {
     id: this._id,
@@ -15,15 +19,14 @@ Session.prototype.next = function () {
 };
 
 Session.prototype.setState = function (state) {
-  if (state && state.id && state.current) {
-    this._id = state.id;
-    this._current = parseInt(state.current);
-    return true;
-  } else {
-    this._id = Math.random().toString(36).substr(2, 9); // https://gist.github.com/gordonbrander/2230317
-    this._current = 1;
-    return false;
-  }
+  this._id = state.id;
+  this._current = parseInt(state.current);
+};
+
+Session.prototype.reset = function () {
+  this._id = Math.random().toString(36).substr(2, 9); // https://gist.github.com/gordonbrander/2230317
+  this._current = 1;
+  return this.getState();
 };
 
 

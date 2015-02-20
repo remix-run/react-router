@@ -16,7 +16,7 @@ function notifyChange(type, state) {
   var change = {
     path: getWindowPath(),
     type: type,
-    state: state || window.history.state
+    state: (typeof state  !== 'undefined') ? state : window.history.state
   };
 
   _changeListeners.forEach(function (listener) {
@@ -79,7 +79,11 @@ var HistoryLocation = {
   },
 
   replaceState: function (state, silent) {
-    window.history.replaceState(state, '', encodeURI(getWindowPath()));
+    var hash = window.location.href.split('#')[1];
+    hash = hash ? '#' + hash : '';
+
+    window.history.replaceState(state, '', encodeURI(getWindowPath() + hash));
+
     if (!silent) {
       notifyChange(LocationActions.REPLACE);
     }
