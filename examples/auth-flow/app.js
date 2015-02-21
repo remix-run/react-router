@@ -1,6 +1,6 @@
 var React = require('react');
 var Router = require('react-router');
-var { Route, RouteHandler, Link } = Router;
+var { Route, RouteHandler, Link, State } = Router;
 
 var App = React.createClass({
   getInitialState: function () {
@@ -40,9 +40,10 @@ var App = React.createClass({
 var Authentication = {
   statics: {
     willTransitionTo: function (transition) {
+      var nextPath = transition.path;
       if (!auth.loggedIn()) {
-        Login.attemptedTransition = transition;
-        transition.redirect('/login');
+        transition.redirect('/login',{},
+          { 'nextPath' : nextPath });
       }
     }
   }
@@ -64,11 +65,7 @@ var Dashboard = React.createClass({
 });
 
 var Login = React.createClass({
-  mixins: [ Router.Navigation ],
-
-  statics: {
-    attemptedTransition: null
-  },
+  mixins: [ Router.Navigation, State],
 
   getInitialState: function () {
     return {
@@ -78,16 +75,15 @@ var Login = React.createClass({
 
   handleSubmit: function (event) {
     event.preventDefault();
+    var nextPath = this.getQuery().nextPath;
     var email = this.refs.email.getDOMNode().value;
     var pass = this.refs.pass.getDOMNode().value;
     auth.login(email, pass, function (loggedIn) {
       if (!loggedIn)
         return this.setState({ error: true });
 
-      if (Login.attemptedTransition) {
-        var transition = Login.attemptedTransition;
-        Login.attemptedTransition = null;
-        transition.retry();
+      if (nextPath) {
+        this.transitionTo(nextPath);
       } else {
         this.replaceWith('/about');
       }
