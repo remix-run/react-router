@@ -32,6 +32,8 @@ git commit -am "Version $next_version"
 git tag $next_ref
 git tag latest -f
 
-git push origin master --tags
+git push origin master
+git push origin $next_ref
+git push origin latest -f
 
 npm publish build/npm
