@@ -12,7 +12,15 @@ function supportsHistory() {
       ua.indexOf('Windows Phone') === -1) {
     return false;
   }
-  return (window.history && 'pushState' in window.history);
+
+  try {
+    var path = window.location.pathname + window.location.search + window.location.hash;
+    window.history.replaceState({path: path}, '', path);
+    return true;
+  }
+  catch (e) {
+    return false;
+  }
 }
 
 module.exports = supportsHistory;
