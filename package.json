@@ -40,7 +40,7 @@
     "karma-webpack": "^1.3.1",
     "mocha": "^2.0.1",
     "react": "0.12.x",
-    "rf-release": "0.4.0",
+    "rf-changelog": "^0.4.0",
     "rx": "2.3.18",
     "webpack": "^1.4.13",
     "webpack-dev-server": "^1.6.6"
