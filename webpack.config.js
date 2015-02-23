@@ -34,6 +34,12 @@ module.exports = {
     }
   ],
 
+  module: {
+    loaders: [
+      { test: /\.js$/, loader: 'jsx-loader?harmony' }
+    ]
+  },
+
   node: {
     Buffer: false
   },

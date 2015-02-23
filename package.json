@@ -13,8 +13,7 @@
     "example": "examples"
   },
   "scripts": {
-    "build": "NODE_ENV=production webpack modules/index.js dist/react-router.js",
-    "build-min": "NODE_ENV=production COMPRESS=1 webpack modules/index.js dist/react-router.min.js",
+    "build-global": "NODE_ENV=production webpack modules/index.js build/global/ReactRouter.js && NODE_ENV=production COMPRESS=1 webpack modules/index.js build/global/ReactRouter.min.js && echo \"gzipped, the global build is `gzip -c build/global/ReactRouter.min.js | wc -c` bytes\"",
     "build-npm": "babel -d npm/lib ./modules && cp README.md npm && node -p \"p=require('./package');p.main='lib/index.js';p.scripts=undefined;JSON.stringify(p,null,2)\" > npm/package.json",
     "examples": "webpack-dev-server --config examples/webpack.config.js --no-info --content-base examples",
     "prepublish": "npm run build-npm",

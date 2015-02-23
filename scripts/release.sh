@@ -1,3 +1,3 @@
 #!/bin/sh
-scripts/build.sh
+npm run build-global
 node_modules/.bin/release

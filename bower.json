@@ -1,13 +1,13 @@
 {
   "name": "react-router",
   "version": "0.12.0",
+  "description": "A complete routing library for React.js",
+  "main": "build/global/ReactRouter.js",
   "homepage": "https://github.com/rackt/react-router",
   "authors": [
     "Ryan Florence",
     "Michael Jackson"
   ],
-  "description": "A complete routing library for React.js",
-  "main": "dist/react-router.js",
   "keywords": [
     "react",
     "router"
