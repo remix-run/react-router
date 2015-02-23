@@ -15,7 +15,9 @@
   "scripts": {
     "build": "NODE_ENV=production webpack modules/index.js dist/react-router.js",
     "build-min": "NODE_ENV=production COMPRESS=1 webpack modules/index.js dist/react-router.min.js",
+    "build-npm": "babel -d npm/lib ./modules && cp README.md npm && node -p \"p=require('./package');p.main='lib/index.js';p.scripts=undefined;JSON.stringify(p,null,2)\" > npm/package.json",
     "examples": "webpack-dev-server --config examples/webpack.config.js --no-info --content-base examples",
+    "prepublish": "npm run build-npm",
     "test": "jsxhint . && karma start"
   },
   "authors": [
@@ -24,6 +26,7 @@
   ],
   "license": "MIT",
   "devDependencies": {
+    "babel": "^4.4.5",
     "bundle-loader": "^0.5.2",
     "events": "1.0.2",
     "expect": "^1.1.0",
