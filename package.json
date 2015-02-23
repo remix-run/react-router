@@ -2,19 +2,19 @@
   "name": "react-router",
   "version": "0.12.0",
   "description": "A complete routing library for React.js",
-  "main": "modules/index.js",
+  "main": "modules",
   "repository": {
     "type": "git",
     "url": "https://github.com/rackt/react-router.git"
   },
   "homepage": "https://github.com/rackt/react-router/blob/latest/README.md",
   "bugs": "https://github.com/rackt/react-router/issues",
-  "directories": {
-    "example": "examples"
-  },
+  "files": [
+    "build/npm"
+  ],
   "scripts": {
     "build-global": "NODE_ENV=production webpack modules/index.js build/global/ReactRouter.js && NODE_ENV=production COMPRESS=1 webpack modules/index.js build/global/ReactRouter.min.js && echo \"gzipped, the global build is `gzip -c build/global/ReactRouter.min.js | wc -c` bytes\"",
-    "build-npm": "babel -d npm/lib ./modules && cp README.md npm && node -p \"p=require('./package');p.main='lib/index.js';p.scripts=undefined;JSON.stringify(p,null,2)\" > npm/package.json",
+    "build-npm": "babel -d build/npm/lib ./modules && cp README.md build/npm && find -X build/npm/lib -type d -name __tests__ | xargs rm -rf && node -p 'p=require(\"./package\");p.main=\"lib\";p.files=p.scripts=p.devDependencies=undefined;JSON.stringify(p,null,2)' > build/npm/package.json",
     "examples": "webpack-dev-server --config examples/webpack.config.js --no-info --content-base examples",
     "prepublish": "npm run build-npm",
     "test": "jsxhint . && karma start"
