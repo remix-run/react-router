@@ -1,3 +1,20 @@
+v0.12.1 - Mon, 23 Feb 2015 22:54:19 GMT
+---------------------------------------
+
+- [3d8a883](../../commit/3d8a883) [fixed] Ignore extraneous popstate events in WebKit
+- [db2607d](../../commit/db2607d) [fixed] Double-encoding of URLs
+- [c5a24a5](../../commit/c5a24a5) [added] Route/Match classes
+- [ae6fcda](../../commit/ae6fcda) [changed] Rename Scrolling => ScrollHistory
+- [f975bdf](../../commit/f975bdf) [fixed] allow a StaticLocation to be passed directly when creating a router
+- [7d52d55](../../commit/7d52d55) [changed] TestLocation is a constructor
+- [193222e](../../commit/193222e) [added] StaticLocation, for server-side rendering
+- [e05e229](../../commit/e05e229) [added] Transition#cancel
+- [04ba639](../../commit/04ba639) [added] Link activeStyle property
+- [585d8ec](../../commit/585d8ec) [fixed] Use more correct children invariant
+- [62c49d2](../../commit/62c49d2) [changed] Change Navigation to return the result of goBack()
+- [83c8f59](../../commit/83c8f59) [fixed] Allow special characters in query
+
+
 v0.12.0 - Tue, 10 Feb 2015 20:12:42 GMT
 ---------------------------------------
 
