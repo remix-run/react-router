@@ -1,17 +1,5 @@
 /* jshint -W084 */
-
 var PathUtils = require('./PathUtils');
-
-class Match {
-
-  constructor(pathname, params, query, routes) {
-    this.pathname = pathname;
-    this.params = params;
-    this.query = query;
-    this.routes = routes;
-  }
-
-}
 
 function deepSearch(route, pathname, query) {
   // Check the subtree first to find the most deeply-nested match.
@@ -50,20 +38,31 @@ function deepSearch(route, pathname, query) {
   return null;
 }
 
-/**
- * Attempts to match depth-first a route in the given route's
- * subtree against the given path and returns the match if it
- * succeeds, null if no match can be made.
- */
-Match.findMatchForPath = function (routes, path) {
-  var pathname = PathUtils.withoutQuery(path);
-  var query = PathUtils.extractQuery(path);
-  var match = null;
+class Match {
 
-  for (var i = 0, len = routes.length; match == null && i < len; ++i)
-    match = deepSearch(routes[i], pathname, query);
+  /**
+   * Attempts to match depth-first a route in the given route's
+   * subtree against the given path and returns the match if it
+   * succeeds, null if no match can be made.
+   */
+  static findMatch(routes, path) {
+    var pathname = PathUtils.withoutQuery(path);
+    var query = PathUtils.extractQuery(path);
+    var match = null;
 
-  return match;
-};
+    for (var i = 0, len = routes.length; match == null && i < len; ++i)
+      match = deepSearch(routes[i], pathname, query);
+
+    return match;
+  }
+
+  constructor(pathname, params, query, routes) {
+    this.pathname = pathname;
+    this.params = params;
+    this.query = query;
+    this.routes = routes;
+  }
+
+}
 
 module.exports = Match;

@@ -185,7 +185,7 @@ function createRouter(options) {
        * match can be made.
        */
       match: function (path) {
-        return Match.findMatchForPath(this.routes, path);
+        return Match.findMatch(this.routes, path);
       },
 
       /**
