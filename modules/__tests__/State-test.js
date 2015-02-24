@@ -3,7 +3,7 @@ var React = require('react');
 var Router = require('../index');
 var Route = require('../components/Route');
 var TestLocation = require('../locations/TestLocation');
-var { Foo } = require('../utils/TestHandlers');
+var { Foo } = require('../TestUtils');
 
 describe('State', function () {
 

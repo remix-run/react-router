@@ -5,7 +5,7 @@ var Route = require('../components/Route');
 var RouteHandler = require('../components/RouteHandler');
 var TestLocation = require('../locations/TestLocation');
 var ScrollToTopBehavior = require('../behaviors/ScrollToTopBehavior');
-var getWindowScrollPosition = require('../utils/getWindowScrollPosition');
+var getWindowScrollPosition = require('../getWindowScrollPosition');
 
 var {
   Foo,
@@ -19,7 +19,7 @@ var {
   RedirectToFooAsync,
   Abort,
   AbortAsync
-} = require('../utils/TestHandlers');
+} = require('../TestUtils');
 
 describe('Router', function () {
   describe('transitions', function () {

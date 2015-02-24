@@ -1,14 +1,14 @@
 var assign = require('react/lib/Object.assign');
 var invariant = require('react/lib/invariant');
 var warning = require('react/lib/warning');
-var Path = require('./utils/Path');
+var PathUtils = require('./PathUtils');
 
 class Route {
 
   constructor(name, path, ignoreScrollBehavior, isDefault, isNotFound, onEnter, onLeave, handler) {
     this.name = name;
     this.path = path;
-    this.paramNames = Path.extractParamNames(this.path);
+    this.paramNames = PathUtils.extractParamNames(this.path);
     this.ignoreScrollBehavior = !!ignoreScrollBehavior;
     this.isDefault = !!isDefault;
     this.isNotFound = !!isNotFound;
@@ -104,7 +104,7 @@ Route.createRoute = function (options, callback) {
   var path = options.path || name;
 
   if (path) {
-    if (Path.isAbsolute(path)) {
+    if (PathUtils.isAbsolute(path)) {
       if (parentRoute) {
         invariant(
           parentRoute.paramNames.length === 0,
@@ -114,7 +114,7 @@ Route.createRoute = function (options, callback) {
       }
     } else if (parentRoute) {
       // Relative paths extend their parent.
-      path = Path.join(parentRoute.path, path);
+      path = PathUtils.join(parentRoute.path, path);
     } else {
       path = '/' + path;
     }

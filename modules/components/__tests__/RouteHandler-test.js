@@ -4,7 +4,7 @@ var Router = require('../../index');
 var Route = require('../Route');
 var RouteHandler = require('../RouteHandler');
 var TestLocation = require('../../locations/TestLocation');
-var { Bar, Foo } = require('../../utils/TestHandlers');
+var { Bar, Foo } = require('../../TestUtils');
 
 describe('RouteHandler', function () {
 

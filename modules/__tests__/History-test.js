@@ -1,6 +1,6 @@
 var expect = require('expect');
 var React = require('react');
-var { Foo, RedirectToFoo } = require('../utils/TestHandlers');
+var { Foo, RedirectToFoo } = require('../TestUtils');
 var TestLocation = require('../locations/TestLocation');
 var Route = require('../components/Route');
 var History = require('../History');

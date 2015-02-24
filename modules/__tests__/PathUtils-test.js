@@ -1,39 +1,39 @@
 var expect = require('expect');
-var Path = require('../Path');
+var PathUtils = require('../PathUtils');
 
-describe('Path.extractParamNames', function () {
+describe('PathUtils.extractParamNames', function () {
   describe('when a pattern contains no dynamic segments', function () {
     it('returns an empty array', function () {
-      expect(Path.extractParamNames('a/b/c')).toEqual([]);
+      expect(PathUtils.extractParamNames('a/b/c')).toEqual([]);
     });
   });
 
   describe('when a pattern contains :a and :b dynamic segments', function () {
     it('returns the correct names', function () {
-      expect(Path.extractParamNames('/comments/:a/:b/edit')).toEqual([ 'a', 'b' ]);
+      expect(PathUtils.extractParamNames('/comments/:a/:b/edit')).toEqual([ 'a', 'b' ]);
     });
   });
 
   describe('when a pattern has a *', function () {
     it('uses the name "splat"', function () {
-      expect(Path.extractParamNames('/files/*.jpg')).toEqual([ 'splat' ]);
+      expect(PathUtils.extractParamNames('/files/*.jpg')).toEqual([ 'splat' ]);
     });
   });
 });
 
-describe('Path.extractParams', function () {
+describe('PathUtils.extractParams', function () {
   describe('when a pattern does not have dynamic segments', function () {
     var pattern = 'a/b/c';
 
     describe('and the path matches', function () {
       it('returns an empty object', function () {
-        expect(Path.extractParams(pattern, pattern)).toEqual({});
+        expect(PathUtils.extractParams(pattern, pattern)).toEqual({});
       });
     });
 
     describe('and the path does not match', function () {
       it('returns null', function () {
-        expect(Path.extractParams(pattern, 'd/e/f')).toBe(null);
+        expect(PathUtils.extractParams(pattern, 'd/e/f')).toBe(null);
       });
     });
   });
@@ -43,7 +43,7 @@ describe('Path.extractParams', function () {
 
     describe('and the path matches', function () {
       it('returns an object with the params', function () {
-        expect(Path.extractParams(pattern, 'comments/abc.js/edit')).toEqual({ id: 'abc', ext: 'js' });
+        expect(PathUtils.extractParams(pattern, 'comments/abc.js/edit')).toEqual({ id: 'abc', ext: 'js' });
       });
     });
 
@@ -52,13 +52,13 @@ describe('Path.extractParams', function () {
 
       describe('and the path matches with supplied param', function () {
         it('returns an object with the params', function () {
-          expect(Path.extractParams(pattern, 'comments/123/edit')).toEqual({ id: '123' });
+          expect(PathUtils.extractParams(pattern, 'comments/123/edit')).toEqual({ id: '123' });
         });
       });
 
       describe('and the path matches without supplied param', function () {
         it('returns an object with an undefined param', function () {
-          expect(Path.extractParams(pattern, 'comments//edit')).toEqual({ id: undefined });
+          expect(PathUtils.extractParams(pattern, 'comments//edit')).toEqual({ id: undefined });
         });
       });
     });
@@ -68,26 +68,26 @@ describe('Path.extractParams', function () {
 
       describe('and the path matches with supplied param', function () {
         it('returns an object with the params', function () {
-          expect(Path.extractParams(pattern, 'comments/123/edit')).toEqual({ id: '123' });
+          expect(PathUtils.extractParams(pattern, 'comments/123/edit')).toEqual({ id: '123' });
         });
       });
 
       describe('and the path matches without supplied param', function () {
         it('returns an object with an undefined param', function () {
-          expect(Path.extractParams(pattern, 'comments/edit')).toEqual({ id: undefined });
+          expect(PathUtils.extractParams(pattern, 'comments/edit')).toEqual({ id: undefined });
         });
       });
     });
 
     describe('and the path does not match', function () {
       it('returns null', function () {
-        expect(Path.extractParams(pattern, 'users/123')).toBe(null);
+        expect(PathUtils.extractParams(pattern, 'users/123')).toBe(null);
       });
     });
 
     describe('and the path matches with a segment containing a .', function () {
       it('returns an object with the params', function () {
-        expect(Path.extractParams(pattern, 'comments/foo.bar/edit')).toEqual({ id: 'foo', ext: 'bar' });
+        expect(PathUtils.extractParams(pattern, 'comments/foo.bar/edit')).toEqual({ id: 'foo', ext: 'bar' });
       });
     });
   });
@@ -97,13 +97,13 @@ describe('Path.extractParams', function () {
 
     describe('and the path matches', function () {
       it('returns an empty object', function () {
-        expect(Path.extractParams(pattern, 'one, two')).toEqual({});
+        expect(PathUtils.extractParams(pattern, 'one, two')).toEqual({});
       });
     });
 
     describe('and the path does not match', function () {
       it('returns null', function () {
-        expect(Path.extractParams(pattern, 'one two')).toBe(null);
+        expect(PathUtils.extractParams(pattern, 'one two')).toBe(null);
       });
     });
   });
@@ -113,13 +113,13 @@ describe('Path.extractParams', function () {
 
     describe('and the path matches', function () {
       it('returns an object with the params', function () {
-        expect(Path.extractParams(pattern, '/comments/abc/edit now')).toEqual({ id: 'abc' });
+        expect(PathUtils.extractParams(pattern, '/comments/abc/edit now')).toEqual({ id: 'abc' });
       });
     });
 
     describe('and the path does not match', function () {
       it('returns null', function () {
-        expect(Path.extractParams(pattern, '/users/123')).toBe(null);
+        expect(PathUtils.extractParams(pattern, '/users/123')).toBe(null);
       });
     });
   });
@@ -127,15 +127,15 @@ describe('Path.extractParams', function () {
   describe('when a pattern has a *', function () {
     describe('and the path matches', function () {
       it('returns an object with the params', function () {
-        expect(Path.extractParams('/files/*', '/files/my/photo.jpg')).toEqual({ splat: 'my/photo.jpg' });
-        expect(Path.extractParams('/files/*', '/files/my/photo.jpg.zip')).toEqual({ splat: 'my/photo.jpg.zip' });
-        expect(Path.extractParams('/files/*.jpg', '/files/my/photo.jpg')).toEqual({ splat: 'my/photo' });
+        expect(PathUtils.extractParams('/files/*', '/files/my/photo.jpg')).toEqual({ splat: 'my/photo.jpg' });
+        expect(PathUtils.extractParams('/files/*', '/files/my/photo.jpg.zip')).toEqual({ splat: 'my/photo.jpg.zip' });
+        expect(PathUtils.extractParams('/files/*.jpg', '/files/my/photo.jpg')).toEqual({ splat: 'my/photo' });
       });
     });
 
     describe('and the path does not match', function () {
       it('returns null', function () {
-        expect(Path.extractParams('/files/*.jpg', '/files/my/photo.png')).toBe(null);
+        expect(PathUtils.extractParams('/files/*.jpg', '/files/my/photo.png')).toBe(null);
       });
     });
   });
@@ -145,16 +145,16 @@ describe('Path.extractParams', function () {
 
     describe('and the path matches', function () {
       it('returns an object with the params', function () {
-        expect(Path.extractParams(pattern, '/archive')).toEqual({ name: undefined });
-        expect(Path.extractParams(pattern, '/archive/')).toEqual({ name: undefined });
-        expect(Path.extractParams(pattern, '/archive/foo')).toEqual({ name: 'foo' });
-        expect(Path.extractParams(pattern, '/archivefoo')).toEqual({ name: 'foo' });
+        expect(PathUtils.extractParams(pattern, '/archive')).toEqual({ name: undefined });
+        expect(PathUtils.extractParams(pattern, '/archive/')).toEqual({ name: undefined });
+        expect(PathUtils.extractParams(pattern, '/archive/foo')).toEqual({ name: 'foo' });
+        expect(PathUtils.extractParams(pattern, '/archivefoo')).toEqual({ name: 'foo' });
       });
     });
 
     describe('and the path does not match', function () {
       it('returns null', function () {
-        expect(Path.extractParams(pattern, '/archiv')).toBe(null);
+        expect(PathUtils.extractParams(pattern, '/archiv')).toBe(null);
       });
     });
   });
@@ -164,26 +164,26 @@ describe('Path.extractParams', function () {
 
     describe('and the path matches', function () {
       it('returns an object with the params', function () {
-        expect(Path.extractParams(pattern, '/foo/with/foo.app')).toEqual({ query: 'foo', domain: 'foo.app' });
-        expect(Path.extractParams(pattern, '/foo.ap/with/foo')).toEqual({ query: 'foo.ap', domain: 'foo' });
-        expect(Path.extractParams(pattern, '/foo.ap/with/foo.app')).toEqual({ query: 'foo.ap', domain: 'foo.app' });
+        expect(PathUtils.extractParams(pattern, '/foo/with/foo.app')).toEqual({ query: 'foo', domain: 'foo.app' });
+        expect(PathUtils.extractParams(pattern, '/foo.ap/with/foo')).toEqual({ query: 'foo.ap', domain: 'foo' });
+        expect(PathUtils.extractParams(pattern, '/foo.ap/with/foo.app')).toEqual({ query: 'foo.ap', domain: 'foo.app' });
       });
     });
 
     describe('and the path does not match', function () {
       it('returns null', function () {
-        expect(Path.extractParams(pattern, '/foo.ap')).toBe(null);
+        expect(PathUtils.extractParams(pattern, '/foo.ap')).toBe(null);
       });
     });
   });
 });
 
-describe('Path.injectParams', function () {
+describe('PathUtils.injectParams', function () {
   describe('when a pattern does not have dynamic segments', function () {
     var pattern = 'a/b/c';
 
     it('returns the pattern', function () {
-      expect(Path.injectParams(pattern, {})).toEqual(pattern);
+      expect(PathUtils.injectParams(pattern, {})).toEqual(pattern);
     });
   });
 
@@ -193,7 +193,7 @@ describe('Path.injectParams', function () {
     describe('and a param is missing', function () {
       it('throws an Error', function () {
         expect(function () {
-          Path.injectParams(pattern, {});
+          PathUtils.injectParams(pattern, {});
         }).toThrow(Error);
       });
     });
@@ -202,11 +202,11 @@ describe('Path.injectParams', function () {
       var pattern = 'comments/:id?/edit';
 
       it('returns the correct path when param is supplied', function () {
-        expect(Path.injectParams(pattern, { id:'123' })).toEqual('comments/123/edit');
+        expect(PathUtils.injectParams(pattern, { id:'123' })).toEqual('comments/123/edit');
       });
 
       it('returns the correct path when param is not supplied', function () {
-        expect(Path.injectParams(pattern, {})).toEqual('comments//edit');
+        expect(PathUtils.injectParams(pattern, {})).toEqual('comments//edit');
       });
     });
 
@@ -214,112 +214,112 @@ describe('Path.injectParams', function () {
       var pattern = 'comments/:id?/?edit';
 
       it('returns the correct path when param is supplied', function () {
-        expect(Path.injectParams(pattern, { id:'123' })).toEqual('comments/123/edit');
+        expect(PathUtils.injectParams(pattern, { id:'123' })).toEqual('comments/123/edit');
       });
 
       it('returns the correct path when param is not supplied', function () {
-        expect(Path.injectParams(pattern, {})).toEqual('comments/edit');
+        expect(PathUtils.injectParams(pattern, {})).toEqual('comments/edit');
       });
     });
 
     describe('and all params are present', function () {
       it('returns the correct path', function () {
-        expect(Path.injectParams(pattern, { id: 'abc' })).toEqual('comments/abc/edit');
+        expect(PathUtils.injectParams(pattern, { id: 'abc' })).toEqual('comments/abc/edit');
       });
 
       it('returns the correct path when the value is 0', function () {
-        expect(Path.injectParams(pattern, { id: 0 })).toEqual('comments/0/edit');
+        expect(PathUtils.injectParams(pattern, { id: 0 })).toEqual('comments/0/edit');
       });
     });
 
     describe('and some params have special URL encoding', function () {
       it('returns the correct path', function () {
-        expect(Path.injectParams(pattern, { id: 'one, two' })).toEqual('comments/one, two/edit');
+        expect(PathUtils.injectParams(pattern, { id: 'one, two' })).toEqual('comments/one, two/edit');
       });
     });
 
     describe('and a param has a forward slash', function () {
       it('preserves the forward slash', function () {
-        expect(Path.injectParams(pattern, { id: 'the/id' })).toEqual('comments/the/id/edit');
+        expect(PathUtils.injectParams(pattern, { id: 'the/id' })).toEqual('comments/the/id/edit');
       });
     });
 
     describe('and some params contain dots', function () {
       it('returns the correct path', function () {
-        expect(Path.injectParams(pattern, { id: 'alt.black.helicopter' })).toEqual('comments/alt.black.helicopter/edit');
+        expect(PathUtils.injectParams(pattern, { id: 'alt.black.helicopter' })).toEqual('comments/alt.black.helicopter/edit');
       });
     });
   });
 
   describe('when a pattern has one splat', function () {
     it('returns the correct path', function () {
-      expect(Path.injectParams('/a/*/d', { splat: 'b/c' })).toEqual('/a/b/c/d');
+      expect(PathUtils.injectParams('/a/*/d', { splat: 'b/c' })).toEqual('/a/b/c/d');
     });
   });
 
   describe('when a pattern has multiple splats', function () {
     it('returns the correct path', function () {
-      expect(Path.injectParams('/a/*/c/*', { splat: [ 'b', 'd' ] })).toEqual('/a/b/c/d');
+      expect(PathUtils.injectParams('/a/*/c/*', { splat: [ 'b', 'd' ] })).toEqual('/a/b/c/d');
     });
 
     it('complains if not given enough splat values', function () {
       expect(function () {
-        Path.injectParams('/a/*/c/*', { splat: [ 'b' ] });
+        PathUtils.injectParams('/a/*/c/*', { splat: [ 'b' ] });
       }).toThrow(Error);
     });
   });
 
   describe('when a pattern has dots', function () {
     it('returns the correct path', function () {
-      expect(Path.injectParams('/foo.bar.baz')).toEqual('/foo.bar.baz');
+      expect(PathUtils.injectParams('/foo.bar.baz')).toEqual('/foo.bar.baz');
     });
   });
 
   describe('when a pattern has optional slashes', function () {
     it('returns the correct path', function () {
-      expect(Path.injectParams('/foo/?/bar/?/baz/?')).toEqual('/foo/bar/baz/');
+      expect(PathUtils.injectParams('/foo/?/bar/?/baz/?')).toEqual('/foo/bar/baz/');
     });
   });
 });
 
-describe('Path.extractQuery', function () {
+describe('PathUtils.extractQuery', function () {
   describe('when the path contains a query string', function () {
     it('returns the parsed query object', function () {
-      expect(Path.extractQuery('/?id=def&show=true')).toEqual({ id: 'def', show: 'true' });
+      expect(PathUtils.extractQuery('/?id=def&show=true')).toEqual({ id: 'def', show: 'true' });
     });
 
     it('properly handles arrays', function () {
-      expect(Path.extractQuery('/?id%5B%5D=a&id%5B%5D=b')).toEqual({ id: [ 'a', 'b' ] });
+      expect(PathUtils.extractQuery('/?id%5B%5D=a&id%5B%5D=b')).toEqual({ id: [ 'a', 'b' ] });
     });
 
     it('properly handles encoded ampersands', function () {
-      expect(Path.extractQuery('/?id=a%26b')).toEqual({ id: 'a&b' });
+      expect(PathUtils.extractQuery('/?id=a%26b')).toEqual({ id: 'a&b' });
     });
   });
 
   describe('when the path does not contain a query string', function () {
     it('returns null', function () {
-      expect(Path.extractQuery('/a/b/c')).toBe(null);
+      expect(PathUtils.extractQuery('/a/b/c')).toBe(null);
     });
   });
 });
 
-describe('Path.withoutQuery', function () {
+describe('PathUtils.withoutQuery', function () {
   it('removes the query string', function () {
-    expect(Path.withoutQuery('/a/b/c?id=def')).toEqual('/a/b/c');
+    expect(PathUtils.withoutQuery('/a/b/c?id=def')).toEqual('/a/b/c');
   });
 });
 
-describe('Path.withQuery', function () {
+describe('PathUtils.withQuery', function () {
   it('appends the query string', function () {
-    expect(Path.withQuery('/a/b/c', { id: 'def' })).toEqual('/a/b/c?id=def');
+    expect(PathUtils.withQuery('/a/b/c', { id: 'def' })).toEqual('/a/b/c?id=def');
   });
 
   it('merges two query strings', function () {
-    expect(Path.withQuery('/path?a=b', { c: [ 'd', 'e' ] })).toEqual('/path?a=b&c=d&c=e');
+    expect(PathUtils.withQuery('/path?a=b', { c: [ 'd', 'e' ] })).toEqual('/path?a=b&c=d&c=e');
   });
 
   it('handles special characters', function () {
-    expect(Path.withQuery('/path?a=b', { c: [ 'd#e', 'f&a=i#j+k' ] })).toEqual('/path?a=b&c=d%23e&c=f%26a%3Di%23j%2Bk');
+    expect(PathUtils.withQuery('/path?a=b', { c: [ 'd#e', 'f&a=i#j+k' ] })).toEqual('/path?a=b&c=d%23e&c=f%26a%3Di%23j%2Bk');
   });
 });

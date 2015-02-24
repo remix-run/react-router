@@ -21,8 +21,8 @@ var History = require('./History');
 var Cancellation = require('./Cancellation');
 var Match = require('./Match');
 var Route = require('./Route');
-var supportsHistory = require('./utils/supportsHistory');
-var Path = require('./utils/Path');
+var supportsHistory = require('./supportsHistory');
+var PathUtils = require('./PathUtils');
 
 /**
  * The default location for new routers.
@@ -194,7 +194,7 @@ function createRouter(options) {
        */
       makePath: function (to, params, query) {
         var path;
-        if (Path.isAbsolute(to)) {
+        if (PathUtils.isAbsolute(to)) {
           path = to;
         } else {
           var route = (to instanceof Route) ? to : this.namedRoutes[to];
@@ -208,7 +208,7 @@ function createRouter(options) {
           path = route.path;
         }
 
-        return Path.withQuery(Path.injectParams(path, params), query);
+        return PathUtils.withQuery(PathUtils.injectParams(path, params), query);
       },
 
       /**

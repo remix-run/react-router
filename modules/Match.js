@@ -1,6 +1,6 @@
 /* jshint -W084 */
 
-var Path = require('./utils/Path');
+var PathUtils = require('./PathUtils');
 
 class Match {
 
@@ -34,16 +34,16 @@ function deepSearch(route, pathname, query) {
 
   // No child routes matched; try the default route.
   var defaultRoute = route.defaultRoute;
-  if (defaultRoute && (params = Path.extractParams(defaultRoute.path, pathname)))
+  if (defaultRoute && (params = PathUtils.extractParams(defaultRoute.path, pathname)))
     return new Match(pathname, params, query, [ route, defaultRoute ]);
 
   // Does the "not found" route match?
   var notFoundRoute = route.notFoundRoute;
-  if (notFoundRoute && (params = Path.extractParams(notFoundRoute.path, pathname)))
+  if (notFoundRoute && (params = PathUtils.extractParams(notFoundRoute.path, pathname)))
     return new Match(pathname, params, query, [ route, notFoundRoute ]);
 
   // Last attempt: check this route.
-  var params = Path.extractParams(route.path, pathname);
+  var params = PathUtils.extractParams(route.path, pathname);
   if (params)
     return new Match(pathname, params, query, [ route ]);
 
@@ -56,8 +56,8 @@ function deepSearch(route, pathname, query) {
  * succeeds, null if no match can be made.
  */
 Match.findMatchForPath = function (routes, path) {
-  var pathname = Path.withoutQuery(path);
-  var query = Path.extractQuery(path);
+  var pathname = PathUtils.withoutQuery(path);
+  var query = PathUtils.extractQuery(path);
   var match = null;
 
   for (var i = 0, len = routes.length; match == null && i < len; ++i)
