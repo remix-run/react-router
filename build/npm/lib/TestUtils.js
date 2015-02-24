@@ -1,8 +1,8 @@
 "use strict";
 
 var React = require("react");
-var RouteHandler = require("../components/RouteHandler");
-var State = require("../State");
+var RouteHandler = require("./components/RouteHandler");
+var State = require("./State");
 
 exports.Nested = React.createClass({
   displayName: "Nested",

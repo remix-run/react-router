@@ -1,19 +1,11 @@
 "use strict";
 
+var _prototypeProperties = function (child, staticProps, instanceProps) { if (staticProps) Object.defineProperties(child, staticProps); if (instanceProps) Object.defineProperties(child.prototype, instanceProps); };
+
 var _classCallCheck = function (instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } };
 
 /* jshint -W084 */
-
 var PathUtils = require("./PathUtils");
-
-var Match = function Match(pathname, params, query, routes) {
-  _classCallCheck(this, Match);
-
-  this.pathname = pathname;
-  this.params = params;
-  this.query = query;
-  this.routes = routes;
-};
 
 function deepSearch(route, pathname, query) {
   // Check the subtree first to find the most deeply-nested match.
@@ -48,19 +40,40 @@ function deepSearch(route, pathname, query) {
   }return null;
 }
 
-/**
- * Attempts to match depth-first a route in the given route's
- * subtree against the given path and returns the match if it
- * succeeds, null if no match can be made.
- */
-Match.findMatchForPath = function (routes, path) {
-  var pathname = PathUtils.withoutQuery(path);
-  var query = PathUtils.extractQuery(path);
-  var match = null;
+var Match = (function () {
+  function Match(pathname, params, query, routes) {
+    _classCallCheck(this, Match);
 
-  for (var i = 0, len = routes.length; match == null && i < len; ++i) match = deepSearch(routes[i], pathname, query);
+    this.pathname = pathname;
+    this.params = params;
+    this.query = query;
+    this.routes = routes;
+  }
 
-  return match;
-};
+  _prototypeProperties(Match, {
+    findMatch: {
+
+      /**
+       * Attempts to match depth-first a route in the given route's
+       * subtree against the given path and returns the match if it
+       * succeeds, null if no match can be made.
+       */
+
+      value: function findMatch(routes, path) {
+        var pathname = PathUtils.withoutQuery(path);
+        var query = PathUtils.extractQuery(path);
+        var match = null;
+
+        for (var i = 0, len = routes.length; match == null && i < len; ++i) match = deepSearch(routes[i], pathname, query);
+
+        return match;
+      },
+      writable: true,
+      configurable: true
+    }
+  });
+
+  return Match;
+})();
 
 module.exports = Match;

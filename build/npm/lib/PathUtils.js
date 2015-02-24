@@ -35,7 +35,7 @@ function compilePattern(pattern) {
   return _compiledPatterns[pattern];
 }
 
-var Path = {
+var PathUtils = {
 
   /**
    * Returns true if the given path is absolute.
@@ -137,17 +137,17 @@ var Path = {
    * query merged into the query string.
    */
   withQuery: function withQuery(path, query) {
-    var existingQuery = Path.extractQuery(path);
+    var existingQuery = PathUtils.extractQuery(path);
 
     if (existingQuery) query = query ? merge(existingQuery, query) : existingQuery;
 
     var queryString = qs.stringify(query, { indices: false });
 
     if (queryString) {
-      return Path.withoutQuery(path) + "?" + queryString;
+      return PathUtils.withoutQuery(path) + "?" + queryString;
     }return path;
   }
 
 };
 
-module.exports = Path;
+module.exports = PathUtils;
