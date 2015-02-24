@@ -23,7 +23,7 @@ module.exports = function (config) {
       devtool: 'inline-source-map',
       module: {
         loaders: [
-          { test: /\.js$/, loader: 'jsx-loader?harmony' }
+          { test: /\.js$/, loader: 'babel-loader' }
         ]
       },
       plugins: [

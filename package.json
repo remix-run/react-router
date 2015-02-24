@@ -22,10 +22,11 @@
   "license": "MIT",
   "devDependencies": {
     "babel": "^4.4.5",
+    "babel-core": "^4.4.6",
+    "babel-loader": "^4.0.0",
     "bundle-loader": "^0.5.2",
     "events": "1.0.2",
     "expect": "^1.1.0",
-    "jsx-loader": "^0.12.2",
     "jsxhint": "^0.8.1",
     "karma": "^0.12.28",
     "karma-chrome-launcher": "^0.1.7",
