@@ -1,6 +1,7 @@
 var React = require('react');
-var Configuration = require('../Configuration');
+var invariant = require('react/lib/invariant');
 var PropTypes = require('../PropTypes');
+var RouteHandler = require('./RouteHandler');
 
 /**
  * <Route> components specify components that are rendered to the page when the
@@ -42,19 +43,31 @@ var PropTypes = require('../PropTypes');
  *
  * If no handler is provided for the route, it will render a matched child route.
  */
-var Route = React.createClass({
+class Route extends React.Component {
 
-  displayName: 'Route',
-
-  mixins: [ Configuration ],
-
-  propTypes: {
-    name: PropTypes.string,
-    path: PropTypes.string,
-    handler: PropTypes.func,
-    ignoreScrollBehavior: PropTypes.bool
+  render() {
+    invariant(
+      false,
+      '%s elements are for router configuration only and should not be rendered',
+      this.constructor.name
+    );
   }
 
-});
+}
+
+// TODO: Include these in the above class definition
+// once we can use ES7 property initializers.
+// https://github.com/babel/babel/issues/619
+
+Route.propTypes = {
+  name: PropTypes.string,
+  path: PropTypes.string,
+  handler: PropTypes.func,
+  ignoreScrollBehavior: PropTypes.bool
+};
+
+Route.defaultProps = {
+  handler: RouteHandler
+};
 
 module.exports = Route;
