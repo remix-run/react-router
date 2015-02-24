@@ -1,5 +1,4 @@
 /* jshint -W084 */
-
 var React = require('react');
 var assign = require('react/lib/Object.assign');
 var warning = require('react/lib/warning');
