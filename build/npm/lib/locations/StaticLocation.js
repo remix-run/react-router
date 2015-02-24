@@ -1,5 +1,9 @@
 "use strict";
 
+var _prototypeProperties = function (child, staticProps, instanceProps) { if (staticProps) Object.defineProperties(child, staticProps); if (instanceProps) Object.defineProperties(child.prototype, instanceProps); };
+
+var _classCallCheck = function (instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } };
+
 var invariant = require("react/lib/invariant");
 
 function throwCannotModify() {
@@ -11,20 +15,38 @@ function throwCannotModify() {
  * stateless environments like servers where there is no path history,
  * only the path that was used in the request.
  */
-function StaticLocation(path) {
-  this.path = path;
-}
 
+var StaticLocation = (function () {
+  function StaticLocation(path) {
+    _classCallCheck(this, StaticLocation);
+
+    this.path = path;
+  }
+
+  _prototypeProperties(StaticLocation, null, {
+    getCurrentPath: {
+      value: function getCurrentPath() {
+        return this.path;
+      },
+      writable: true,
+      configurable: true
+    },
+    toString: {
+      value: function toString() {
+        return "<StaticLocation path=\"" + this.path + "\">";
+      },
+      writable: true,
+      configurable: true
+    }
+  });
+
+  return StaticLocation;
+})();
+
+// TODO: Include these in the above class definition
+// once we can use ES7 property initializers.
 StaticLocation.prototype.push = throwCannotModify;
 StaticLocation.prototype.replace = throwCannotModify;
 StaticLocation.prototype.pop = throwCannotModify;
-
-StaticLocation.prototype.getCurrentPath = function () {
-  return this.path;
-};
-
-StaticLocation.prototype.toString = function () {
-  return "<StaticLocation path=\"" + this.path + "\">";
-};
 
 module.exports = StaticLocation;

@@ -1,3 +1,9 @@
+v0.12.3 - Tue, 24 Feb 2015 21:37:49 GMT
+---------------------------------------
+
+- [aef0dce](../../commit/aef0dce) [fixed] DefaultRoute/NotFoundRoute name regression
+
+
 v0.12.2 - Tue, 24 Feb 2015 00:34:16 GMT
 ---------------------------------------
 

@@ -54,6 +54,8 @@ return /******/ (function(modules) { // webpackBootstrap
 /* 0 */
 /***/ function(module, exports, __webpack_require__) {
 
+	"use strict";
+
 	exports.DefaultRoute = __webpack_require__(1);
 	exports.Link = __webpack_require__(2);
 	exports.NotFoundRoute = __webpack_require__(3);
@@ -82,11 +84,11 @@ return /******/ (function(modules) { // webpackBootstrap
 	exports.create = __webpack_require__(19);
 	exports.run = __webpack_require__(20);
 
-
-
 /***/ },
 /* 1 */
 /***/ function(module, exports, __webpack_require__) {
+
+	"use strict";
 
 	var React = __webpack_require__(21);
 	var Configuration = __webpack_require__(22);
@@ -100,9 +102,9 @@ return /******/ (function(modules) { // webpackBootstrap
 	 */
 	var DefaultRoute = React.createClass({
 
-	  displayName: 'DefaultRoute',
+	  displayName: "DefaultRoute",
 
-	  mixins: [ Configuration ],
+	  mixins: [Configuration],
 
 	  propTypes: {
 	    name: PropTypes.string,
@@ -115,10 +117,11 @@ return /******/ (function(modules) { // webpackBootstrap
 
 	module.exports = DefaultRoute;
 
-
 /***/ },
 /* 2 */
 /***/ function(module, exports, __webpack_require__) {
+
+	"use strict";
 
 	var React = __webpack_require__(21);
 	var classSet = __webpack_require__(35);
@@ -156,51 +159,44 @@ return /******/ (function(modules) { // webpackBootstrap
 	 */
 	var Link = React.createClass({
 
-	  displayName: 'Link',
+	  displayName: "Link",
 
-	  mixins: [ Navigation, State ],
+	  mixins: [Navigation, State],
 
 	  propTypes: {
 	    activeClassName: PropTypes.string.isRequired,
-	    to: PropTypes.oneOfType([
-	      PropTypes.string,
-	      PropTypes.instanceOf(Route)
-	    ]),
+	    to: PropTypes.oneOfType([PropTypes.string, PropTypes.instanceOf(Route)]),
 	    params: PropTypes.object,
 	    query: PropTypes.object,
 	    activeStyle: PropTypes.object,
 	    onClick: PropTypes.func
 	  },
 
-	  getDefaultProps: function () {
+	  getDefaultProps: function getDefaultProps() {
 	    return {
-	      activeClassName: 'active'
+	      activeClassName: "active"
 	    };
 	  },
 
-	  handleClick: function (event) {
+	  handleClick: function handleClick(event) {
 	    var allowTransition = true;
 	    var clickResult;
 
-	    if (this.props.onClick)
-	      clickResult = this.props.onClick(event);
+	    if (this.props.onClick) clickResult = this.props.onClick(event);
 
-	    if (isModifiedEvent(event) || !isLeftClickEvent(event))
+	    if (isModifiedEvent(event) || !isLeftClickEvent(event)) {
 	      return;
-
-	    if (clickResult === false || event.defaultPrevented === true)
-	      allowTransition = false;
+	    }if (clickResult === false || event.defaultPrevented === true) allowTransition = false;
 
 	    event.preventDefault();
 
-	    if (allowTransition)
-	      this.transitionTo(this.props.to, this.props.params, this.props.query);
+	    if (allowTransition) this.transitionTo(this.props.to, this.props.params, this.props.query);
 	  },
 
 	  /**
 	   * Returns the value of the "href" attribute to use on the DOM element.
 	   */
-	  getHref: function () {
+	  getHref: function getHref() {
 	    return this.makeHref(this.props.to, this.props.params, this.props.query);
 	  },
 
@@ -208,31 +204,28 @@ return /******/ (function(modules) { // webpackBootstrap
 	   * Returns the value of the "class" attribute to use on the DOM element, which contains
 	   * the value of the activeClassName property when this <Link> is active.
 	   */
-	  getClassName: function () {
+	  getClassName: function getClassName() {
 	    var classNames = {};
 
-	    if (this.props.className)
-	      classNames[this.props.className] = true;
+	    if (this.props.className) classNames[this.props.className] = true;
 
-	    if (this.getActiveState())
-	      classNames[this.props.activeClassName] = true;
+	    if (this.getActiveState()) classNames[this.props.activeClassName] = true;
 
 	    return classSet(classNames);
 	  },
 
-	  getActiveState: function () {
+	  getActiveState: function getActiveState() {
 	    return this.isActive(this.props.to, this.props.params, this.props.query);
 	  },
 
-	  render: function () {
+	  render: function render() {
 	    var props = assign({}, this.props, {
 	      href: this.getHref(),
 	      className: this.getClassName(),
 	      onClick: this.handleClick
 	    });
 
-	    if (props.activeStyle && this.getActiveState())
-	      props.style = props.activeStyle;
+	    if (props.activeStyle && this.getActiveState()) props.style = props.activeStyle;
 
 	    return React.DOM.a(props, this.props.children);
 	  }
@@ -241,10 +234,11 @@ return /******/ (function(modules) { // webpackBootstrap
 
 	module.exports = Link;
 
-
 /***/ },
 /* 3 */
 /***/ function(module, exports, __webpack_require__) {
+
+	"use strict";
 
 	var React = __webpack_require__(21);
 	var Configuration = __webpack_require__(22);
@@ -259,9 +253,9 @@ return /******/ (function(modules) { // webpackBootstrap
 	 */
 	var NotFoundRoute = React.createClass({
 
-	  displayName: 'NotFoundRoute',
+	  displayName: "NotFoundRoute",
 
-	  mixins: [ Configuration ],
+	  mixins: [Configuration],
 
 	  propTypes: {
 	    name: PropTypes.string,
@@ -274,10 +268,11 @@ return /******/ (function(modules) { // webpackBootstrap
 
 	module.exports = NotFoundRoute;
 
-
 /***/ },
 /* 4 */
 /***/ function(module, exports, __webpack_require__) {
+
+	"use strict";
 
 	var React = __webpack_require__(21);
 	var Configuration = __webpack_require__(22);
@@ -289,9 +284,9 @@ return /******/ (function(modules) { // webpackBootstrap
 	 */
 	var Redirect = React.createClass({
 
-	  displayName: 'Redirect',
+	  displayName: "Redirect",
 
-	  mixins: [ Configuration ],
+	  mixins: [Configuration],
 
 	  propTypes: {
 	    path: PropTypes.string,
@@ -304,10 +299,11 @@ return /******/ (function(modules) { // webpackBootstrap
 
 	module.exports = Redirect;
 
-
 /***/ },
 /* 5 */
 /***/ function(module, exports, __webpack_require__) {
+
+	"use strict";
 
 	var React = __webpack_require__(21);
 	var Configuration = __webpack_require__(22);
@@ -355,9 +351,9 @@ return /******/ (function(modules) { // webpackBootstrap
 	 */
 	var Route = React.createClass({
 
-	  displayName: 'Route',
+	  displayName: "Route",
 
-	  mixins: [ Configuration ],
+	  mixins: [Configuration],
 
 	  propTypes: {
 	    name: PropTypes.string,
@@ -366,7 +362,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	    ignoreScrollBehavior: PropTypes.bool
 	  },
 
-	  getDefaultProps: function(){
+	  getDefaultProps: function getDefaultProps() {
 	    return {
 	      handler: RouteHandler
 	    };
@@ -376,10 +372,11 @@ return /******/ (function(modules) { // webpackBootstrap
 
 	module.exports = Route;
 
-
 /***/ },
 /* 6 */
 /***/ function(module, exports, __webpack_require__) {
+
+	"use strict";
 
 	var React = __webpack_require__(21);
 	var RouteHandlerMixin = __webpack_require__(15);
@@ -390,11 +387,11 @@ return /******/ (function(modules) { // webpackBootstrap
 	 */
 	var RouteHandler = React.createClass({
 
-	  displayName: 'RouteHandler',
+	  displayName: "RouteHandler",
 
-	  mixins: [ RouteHandlerMixin ],
+	  mixins: [RouteHandlerMixin],
 
-	  render: function () {
+	  render: function render() {
 	    return this.createChildRouteHandler();
 	  }
 
@@ -402,10 +399,11 @@ return /******/ (function(modules) { // webpackBootstrap
 
 	module.exports = RouteHandler;
 
-
 /***/ },
 /* 7 */
 /***/ function(module, exports, __webpack_require__) {
+
+	"use strict";
 
 	var LocationActions = __webpack_require__(24);
 	var History = __webpack_require__(13);
@@ -416,10 +414,9 @@ return /******/ (function(modules) { // webpackBootstrap
 	 */
 	function getHashPath() {
 	  return decodeURI(
-	    // We can't use window.location.hash here because it's not
-	    // consistent across browsers - Firefox will pre-decode it!
-	    window.location.href.split('#')[1] || ''
-	  );
+	  // We can't use window.location.hash here because it's not
+	  // consistent across browsers - Firefox will pre-decode it!
+	  window.location.href.split("#")[1] || "");
 	}
 
 	var _actionType;
@@ -427,10 +424,9 @@ return /******/ (function(modules) { // webpackBootstrap
 	function ensureSlash() {
 	  var path = getHashPath();
 
-	  if (path.charAt(0) === '/')
+	  if (path.charAt(0) === "/") {
 	    return true;
-
-	  HashLocation.replace('/' + path);
+	  }HashLocation.replace("/" + path);
 
 	  return false;
 	}
@@ -438,8 +434,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	var _changeListeners = [];
 
 	function notifyChange(type) {
-	  if (type === LocationActions.PUSH)
-	    History.length += 1;
+	  if (type === LocationActions.PUSH) History.length += 1;
 
 	  var change = {
 	    path: getHashPath(),
@@ -469,7 +464,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	 */
 	var HashLocation = {
 
-	  addChangeListener: function (listener) {
+	  addChangeListener: function addChangeListener(listener) {
 	    _changeListeners.push(listener);
 
 	    // Do this BEFORE listening for hashchange.
@@ -477,62 +472,61 @@ return /******/ (function(modules) { // webpackBootstrap
 
 	    if (!_isListening) {
 	      if (window.addEventListener) {
-	        window.addEventListener('hashchange', onHashChange, false);
+	        window.addEventListener("hashchange", onHashChange, false);
 	      } else {
-	        window.attachEvent('onhashchange', onHashChange);
+	        window.attachEvent("onhashchange", onHashChange);
 	      }
 
 	      _isListening = true;
 	    }
 	  },
 
-	  removeChangeListener: function(listener) {
+	  removeChangeListener: function removeChangeListener(listener) {
 	    _changeListeners = _changeListeners.filter(function (l) {
 	      return l !== listener;
 	    });
 
 	    if (_changeListeners.length === 0) {
 	      if (window.removeEventListener) {
-	        window.removeEventListener('hashchange', onHashChange, false);
+	        window.removeEventListener("hashchange", onHashChange, false);
 	      } else {
-	        window.removeEvent('onhashchange', onHashChange);
+	        window.removeEvent("onhashchange", onHashChange);
 	      }
 
 	      _isListening = false;
 	    }
 	  },
 
-	  push: function (path) {
+	  push: function push(path) {
 	    _actionType = LocationActions.PUSH;
 	    window.location.hash = path;
 	  },
 
-	  replace: function (path) {
+	  replace: function replace(path) {
 	    _actionType = LocationActions.REPLACE;
-	    window.location.replace(
-	      window.location.pathname + window.location.search + '#' + path
-	    );
+	    window.location.replace(window.location.pathname + window.location.search + "#" + path);
 	  },
 
-	  pop: function () {
+	  pop: function pop() {
 	    _actionType = LocationActions.POP;
 	    History.back();
 	  },
 
 	  getCurrentPath: getHashPath,
 
-	  toString: function () {
-	    return '<HashLocation>';
+	  toString: function toString() {
+	    return "<HashLocation>";
 	  }
 
 	};
 
 	module.exports = HashLocation;
 
-
 /***/ },
 /* 8 */
 /***/ function(module, exports, __webpack_require__) {
+
+	"use strict";
 
 	var LocationActions = __webpack_require__(24);
 	var History = __webpack_require__(13);
@@ -541,9 +535,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	 * Returns the current URL path from `window.location`, including query string.
 	 */
 	function getWindowPath() {
-	  return decodeURI(
-	    window.location.pathname + window.location.search
-	  );
+	  return decodeURI(window.location.pathname + window.location.search);
 	}
 
 	var _changeListeners = [];
@@ -562,8 +554,9 @@ return /******/ (function(modules) { // webpackBootstrap
 	var _isListening = false;
 
 	function onPopState(event) {
-	  if (event.state === undefined)
-	    return; // Ignore extraneous popstate events in WebKit.
+	  if (event.state === undefined) {
+	    return;
+	  } // Ignore extraneous popstate events in WebKit.
 
 	  notifyChange(LocationActions.POP);
 	}
@@ -573,44 +566,44 @@ return /******/ (function(modules) { // webpackBootstrap
 	 */
 	var HistoryLocation = {
 
-	  addChangeListener: function (listener) {
+	  addChangeListener: function addChangeListener(listener) {
 	    _changeListeners.push(listener);
 
 	    if (!_isListening) {
 	      if (window.addEventListener) {
-	        window.addEventListener('popstate', onPopState, false);
+	        window.addEventListener("popstate", onPopState, false);
 	      } else {
-	        window.attachEvent('onpopstate', onPopState);
+	        window.attachEvent("onpopstate", onPopState);
 	      }
 
 	      _isListening = true;
 	    }
 	  },
 
-	  removeChangeListener: function(listener) {
+	  removeChangeListener: function removeChangeListener(listener) {
 	    _changeListeners = _changeListeners.filter(function (l) {
 	      return l !== listener;
 	    });
 
 	    if (_changeListeners.length === 0) {
 	      if (window.addEventListener) {
-	        window.removeEventListener('popstate', onPopState, false);
+	        window.removeEventListener("popstate", onPopState, false);
 	      } else {
-	        window.removeEvent('onpopstate', onPopState);
+	        window.removeEvent("onpopstate", onPopState);
 	      }
 
 	      _isListening = false;
 	    }
 	  },
 
-	  push: function (path) {
-	    window.history.pushState({ path: path }, '', path);
+	  push: function push(path) {
+	    window.history.pushState({ path: path }, "", path);
 	    History.length += 1;
 	    notifyChange(LocationActions.PUSH);
 	  },
 
-	  replace: function (path) {
-	    window.history.replaceState({ path: path }, '', path);
+	  replace: function replace(path) {
+	    window.history.replaceState({ path: path }, "", path);
 	    notifyChange(LocationActions.REPLACE);
 	  },
 
@@ -618,18 +611,19 @@ return /******/ (function(modules) { // webpackBootstrap
 
 	  getCurrentPath: getWindowPath,
 
-	  toString: function () {
-	    return '<HistoryLocation>';
+	  toString: function toString() {
+	    return "<HistoryLocation>";
 	  }
 
 	};
 
 	module.exports = HistoryLocation;
 
-
 /***/ },
 /* 9 */
 /***/ function(module, exports, __webpack_require__) {
+
+	"use strict";
 
 	var HistoryLocation = __webpack_require__(8);
 	var History = __webpack_require__(13);
@@ -641,11 +635,11 @@ return /******/ (function(modules) { // webpackBootstrap
 	 */
 	var RefreshLocation = {
 
-	  push: function (path) {
+	  push: function push(path) {
 	    window.location = path;
 	  },
 
-	  replace: function (path) {
+	  replace: function replace(path) {
 	    window.location.replace(path);
 	  },
 
@@ -653,23 +647,28 @@ return /******/ (function(modules) { // webpackBootstrap
 
 	  getCurrentPath: HistoryLocation.getCurrentPath,
 
-	  toString: function () {
-	    return '<RefreshLocation>';
+	  toString: function toString() {
+	    return "<RefreshLocation>";
 	  }
 
 	};
 
 	module.exports = RefreshLocation;
 
-
 /***/ },
 /* 10 */
 /***/ function(module, exports, __webpack_require__) {
 
+	"use strict";
+
+	var _prototypeProperties = function (child, staticProps, instanceProps) { if (staticProps) Object.defineProperties(child, staticProps); if (instanceProps) Object.defineProperties(child.prototype, instanceProps); };
+
+	var _classCallCheck = function (instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } };
+
 	var invariant = __webpack_require__(37);
 
 	function throwCannotModify() {
-	  invariant(false, 'You cannot modify a static location');
+	  invariant(false, "You cannot modify a static location");
 	}
 
 	/**
@@ -677,28 +676,47 @@ return /******/ (function(modules) { // webpackBootstrap
 	 * stateless environments like servers where there is no path history,
 	 * only the path that was used in the request.
 	 */
-	function StaticLocation(path) {
-	  this.path = path;
-	}
 
+	var StaticLocation = (function () {
+	  function StaticLocation(path) {
+	    _classCallCheck(this, StaticLocation);
+
+	    this.path = path;
+	  }
+
+	  _prototypeProperties(StaticLocation, null, {
+	    getCurrentPath: {
+	      value: function getCurrentPath() {
+	        return this.path;
+	      },
+	      writable: true,
+	      configurable: true
+	    },
+	    toString: {
+	      value: function toString() {
+	        return "<StaticLocation path=\"" + this.path + "\">";
+	      },
+	      writable: true,
+	      configurable: true
+	    }
+	  });
+
+	  return StaticLocation;
+	})();
+
+	// TODO: Include these in the above class definition
+	// once we can use ES7 property initializers.
 	StaticLocation.prototype.push = throwCannotModify;
 	StaticLocation.prototype.replace = throwCannotModify;
 	StaticLocation.prototype.pop = throwCannotModify;
 
-	StaticLocation.prototype.getCurrentPath = function () {
-	  return this.path;
-	};
-
-	StaticLocation.prototype.toString = function () {
-	  return '<StaticLocation path="' + this.path + '">';
-	};
-
 	module.exports = StaticLocation;
-
 
 /***/ },
 /* 11 */
 /***/ function(module, exports, __webpack_require__) {
+
+	"use strict";
 
 	var LocationActions = __webpack_require__(24);
 
@@ -708,7 +726,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	 */
 	var ImitateBrowserBehavior = {
 
-	  updateScrollPosition: function (position, actionType) {
+	  updateScrollPosition: function updateScrollPosition(position, actionType) {
 	    switch (actionType) {
 	      case LocationActions.PUSH:
 	      case LocationActions.REPLACE:
@@ -728,10 +746,11 @@ return /******/ (function(modules) { // webpackBootstrap
 
 	module.exports = ImitateBrowserBehavior;
 
-
 /***/ },
 /* 12 */
 /***/ function(module, exports, __webpack_require__) {
+
+	"use strict";
 
 	/**
 	 * A scroll behavior that always scrolls to the top of the page
@@ -739,7 +758,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	 */
 	var ScrollToTopBehavior = {
 
-	  updateScrollPosition: function () {
+	  updateScrollPosition: function updateScrollPosition() {
 	    window.scrollTo(0, 0);
 	  }
 
@@ -747,10 +766,11 @@ return /******/ (function(modules) { // webpackBootstrap
 
 	module.exports = ScrollToTopBehavior;
 
-
 /***/ },
 /* 13 */
 /***/ function(module, exports, __webpack_require__) {
+
+	"use strict";
 
 	var invariant = __webpack_require__(37);
 	var canUseDOM = __webpack_require__(38).canUseDOM;
@@ -767,11 +787,8 @@ return /******/ (function(modules) { // webpackBootstrap
 	  /**
 	   * Sends the browser back one entry in the history.
 	   */
-	  back: function () {
-	    invariant(
-	      canUseDOM,
-	      'Cannot use History.back without a DOM'
-	    );
+	  back: function back() {
+	    invariant(canUseDOM, "Cannot use History.back without a DOM");
 
 	    // Do this first so that History.length will
 	    // be accurate in location change listeners.
@@ -784,10 +801,11 @@ return /******/ (function(modules) { // webpackBootstrap
 
 	module.exports = History;
 
-
 /***/ },
 /* 14 */
 /***/ function(module, exports, __webpack_require__) {
+
+	"use strict";
 
 	var PropTypes = __webpack_require__(23);
 
@@ -823,7 +841,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	   * Returns an absolute URL path created from the given route
 	   * name, URL parameters, and query values.
 	   */
-	  makePath: function (to, params, query) {
+	  makePath: function makePath(to, params, query) {
 	    return this.context.makePath(to, params, query);
 	  },
 
@@ -831,7 +849,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	   * Returns a string that may safely be used as the href of a
 	   * link to the route with the given name.
 	   */
-	  makeHref: function (to, params, query) {
+	  makeHref: function makeHref(to, params, query) {
 	    return this.context.makeHref(to, params, query);
 	  },
 
@@ -839,7 +857,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	   * Transitions to the URL specified in the arguments by pushing
 	   * a new URL onto the history stack.
 	   */
-	  transitionTo: function (to, params, query) {
+	  transitionTo: function transitionTo(to, params, query) {
 	    this.context.transitionTo(to, params, query);
 	  },
 
@@ -847,14 +865,14 @@ return /******/ (function(modules) { // webpackBootstrap
 	   * Transitions to the URL specified in the arguments by replacing
 	   * the current URL in the history stack.
 	   */
-	  replaceWith: function (to, params, query) {
+	  replaceWith: function replaceWith(to, params, query) {
 	    this.context.replaceWith(to, params, query);
 	  },
 
 	  /**
 	   * Transitions to the previous URL.
 	   */
-	  goBack: function () {
+	  goBack: function goBack() {
 	    return this.context.goBack();
 	  }
 
@@ -862,16 +880,17 @@ return /******/ (function(modules) { // webpackBootstrap
 
 	module.exports = Navigation;
 
-
 /***/ },
 /* 15 */
 /***/ function(module, exports, __webpack_require__) {
+
+	"use strict";
 
 	var React = __webpack_require__(21);
 	var assign = __webpack_require__(36);
 	var PropTypes = __webpack_require__(23);
 
-	var REF_NAME = '__routeHandler__';
+	var REF_NAME = "__routeHandler__";
 
 	var RouteHandlerMixin = {
 
@@ -885,33 +904,33 @@ return /******/ (function(modules) { // webpackBootstrap
 	    routeHandlers: PropTypes.array.isRequired
 	  },
 
-	  getChildContext: function () {
+	  getChildContext: function getChildContext() {
 	    return {
-	      routeHandlers: this.context.routeHandlers.concat([ this ])
+	      routeHandlers: this.context.routeHandlers.concat([this])
 	    };
 	  },
 
-	  componentDidMount: function () {
+	  componentDidMount: function componentDidMount() {
 	    this._updateRouteComponent(this.refs[REF_NAME]);
 	  },
 
-	  componentDidUpdate: function () {
+	  componentDidUpdate: function componentDidUpdate() {
 	    this._updateRouteComponent(this.refs[REF_NAME]);
 	  },
 
-	  componentWillUnmount: function () {
+	  componentWillUnmount: function componentWillUnmount() {
 	    this._updateRouteComponent(null);
 	  },
 
-	  _updateRouteComponent: function (component) {
+	  _updateRouteComponent: function _updateRouteComponent(component) {
 	    this.context.setRouteComponentAtDepth(this.getRouteDepth(), component);
 	  },
 
-	  getRouteDepth: function () {
+	  getRouteDepth: function getRouteDepth() {
 	    return this.context.routeHandlers.length;
 	  },
 
-	  createChildRouteHandler: function (props) {
+	  createChildRouteHandler: function createChildRouteHandler(props) {
 	    var route = this.context.getRouteAtDepth(this.getRouteDepth());
 	    return route ? React.createElement(route.handler, assign({}, props || this.props, { ref: REF_NAME })) : null;
 	  }
@@ -920,10 +939,11 @@ return /******/ (function(modules) { // webpackBootstrap
 
 	module.exports = RouteHandlerMixin;
 
-
 /***/ },
 /* 16 */
 /***/ function(module, exports, __webpack_require__) {
+
+	"use strict";
 
 	var PropTypes = __webpack_require__(23);
 
@@ -959,35 +979,35 @@ return /******/ (function(modules) { // webpackBootstrap
 	  /**
 	   * Returns the current URL path.
 	   */
-	  getPath: function () {
+	  getPath: function getPath() {
 	    return this.context.getCurrentPath();
 	  },
 
 	  /**
 	   * Returns an array of the routes that are currently active.
 	   */
-	  getRoutes: function () {
+	  getRoutes: function getRoutes() {
 	    return this.context.getCurrentRoutes();
 	  },
 
 	  /**
 	   * Returns the current URL path without the query string.
 	   */
-	  getPathname: function () {
+	  getPathname: function getPathname() {
 	    return this.context.getCurrentPathname();
 	  },
 
 	  /**
 	   * Returns an object of the URL params that are currently active.
 	   */
-	  getParams: function () {
+	  getParams: function getParams() {
 	    return this.context.getCurrentParams();
 	  },
 
 	  /**
 	   * Returns an object of the query params that are currently active.
 	   */
-	  getQuery: function () {
+	  getQuery: function getQuery() {
 	    return this.context.getCurrentQuery();
 	  },
 
@@ -995,7 +1015,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	   * A helper method to determine if a given route, params, and query
 	   * are active.
 	   */
-	  isActive: function (to, params, query) {
+	  isActive: function isActive(to, params, query) {
 	    return this.context.isActive(to, params, query);
 	  }
 
@@ -1003,228 +1023,235 @@ return /******/ (function(modules) { // webpackBootstrap
 
 	module.exports = State;
 
-
 /***/ },
 /* 17 */
 /***/ function(module, exports, __webpack_require__) {
 
+	"use strict";
+
+	var _prototypeProperties = function (child, staticProps, instanceProps) { if (staticProps) Object.defineProperties(child, staticProps); if (instanceProps) Object.defineProperties(child.prototype, instanceProps); };
+
+	var _classCallCheck = function (instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } };
+
 	var assign = __webpack_require__(36);
 	var invariant = __webpack_require__(37);
 	var warning = __webpack_require__(39);
-	var Path = __webpack_require__(34);
-
-	function Route(name, path, ignoreScrollBehavior, isDefault, isNotFound, onEnter, onLeave, handler) {
-	  this.name = name;
-	  this.path = path;
-	  this.paramNames = Path.extractParamNames(this.path);
-	  this.ignoreScrollBehavior = !!ignoreScrollBehavior;
-	  this.isDefault = !!isDefault;
-	  this.isNotFound = !!isNotFound;
-	  this.onEnter = onEnter;
-	  this.onLeave = onLeave;
-	  this.handler = handler;
-	}
-
-	/**
-	 * Appends the given route to this route's child routes.
-	 */
-	Route.prototype.appendChild = function (route) {
-	  invariant(
-	    route instanceof Route,
-	    'route.appendChild must use a valid Route'
-	  );
-
-	  if (!this.childRoutes)
-	    this.childRoutes = [];
-
-	  this.childRoutes.push(route);
-	};
-
-	Route.prototype.toString = function () {
-	  var string = '<Route';
-
-	  if (this.name)
-	    string += (" name=\"" + this.name + "\"");
-
-	  string += (" path=\"" + this.path + "\">");
-
-	  return string;
-	};
+	var PathUtils = __webpack_require__(25);
 
 	var _currentRoute;
 
-	/**
-	 * Creates and returns a new route. Options may be a URL pathname string
-	 * with placeholders for named params or an object with any of the following
-	 * properties:
-	 *
-	 * - name                     The name of the route. This is used to lookup a
-	 *                            route relative to its parent route and should be
-	 *                            unique among all child routes of the same parent
-	 * - path                     A URL pathname string with optional placeholders
-	 *                            that specify the names of params to extract from
-	 *                            the URL when the path matches. Defaults to `/${name}`
-	 *                            when there is a name given, or the path of the parent
-	 *                            route, or /
-	 * - ignoreScrollBehavior     True to make this route (and all descendants) ignore
-	 *                            the scroll behavior of the router
-	 * - isDefault                True to make this route the default route among all
-	 *                            its siblings
-	 * - isNotFound               True to make this route the "not found" route among
-	 *                            all its siblings
-	 * - onEnter                  A transition hook that will be called when the
-	 *                            router is going to enter this route
-	 * - onLeave                  A transition hook that will be called when the
-	 *                            router is going to leave this route
-	 * - handler                  A React component that will be rendered when
-	 *                            this route is active
-	 * - parentRoute              The parent route to use for this route. This option
-	 *                            is automatically supplied when creating routes inside
-	 *                            the callback to another invocation of createRoute. You
-	 *                            only ever need to use this when declaring routes
-	 *                            independently of one another to manually piece together
-	 *                            the route hierarchy
-	 *
-	 * The callback may be used to structure your route hierarchy. Any call to
-	 * createRoute, createDefaultRoute, createNotFoundRoute, or createRedirect
-	 * inside the callback automatically uses this route as its parent.
-	 */
-	Route.createRoute = function (options, callback) {
-	  options = options || {};
+	var Route = (function () {
+	  function Route(name, path, ignoreScrollBehavior, isDefault, isNotFound, onEnter, onLeave, handler) {
+	    _classCallCheck(this, Route);
 
-	  if (typeof options === 'string')
-	    options = { path: options };
-
-	  var parentRoute = _currentRoute;
-
-	  if (parentRoute) {
-	    warning(
-	      options.parentRoute == null || options.parentRoute === parentRoute,
-	      'You should not use parentRoute with createRoute inside another route\'s child callback; it is ignored'
-	    );
-	  } else {
-	    parentRoute = options.parentRoute;
+	    this.name = name;
+	    this.path = path;
+	    this.paramNames = PathUtils.extractParamNames(this.path);
+	    this.ignoreScrollBehavior = !!ignoreScrollBehavior;
+	    this.isDefault = !!isDefault;
+	    this.isNotFound = !!isNotFound;
+	    this.onEnter = onEnter;
+	    this.onLeave = onLeave;
+	    this.handler = handler;
 	  }
 
-	  var name = options.name;
-	  var path = options.path || name;
+	  _prototypeProperties(Route, {
+	    createRoute: {
 
-	  if (path) {
-	    if (Path.isAbsolute(path)) {
-	      if (parentRoute) {
-	        invariant(
-	          parentRoute.paramNames.length === 0,
-	          'You cannot nest path "%s" inside "%s"; the parent requires URL parameters',
-	          path, parentRoute.path
-	        );
-	      }
-	    } else if (parentRoute) {
-	      // Relative paths extend their parent.
-	      path = Path.join(parentRoute.path, path);
-	    } else {
-	      path = '/' + path;
+	      /**
+	       * Creates and returns a new route. Options may be a URL pathname string
+	       * with placeholders for named params or an object with any of the following
+	       * properties:
+	       *
+	       * - name                     The name of the route. This is used to lookup a
+	       *                            route relative to its parent route and should be
+	       *                            unique among all child routes of the same parent
+	       * - path                     A URL pathname string with optional placeholders
+	       *                            that specify the names of params to extract from
+	       *                            the URL when the path matches. Defaults to `/${name}`
+	       *                            when there is a name given, or the path of the parent
+	       *                            route, or /
+	       * - ignoreScrollBehavior     True to make this route (and all descendants) ignore
+	       *                            the scroll behavior of the router
+	       * - isDefault                True to make this route the default route among all
+	       *                            its siblings
+	       * - isNotFound               True to make this route the "not found" route among
+	       *                            all its siblings
+	       * - onEnter                  A transition hook that will be called when the
+	       *                            router is going to enter this route
+	       * - onLeave                  A transition hook that will be called when the
+	       *                            router is going to leave this route
+	       * - handler                  A React component that will be rendered when
+	       *                            this route is active
+	       * - parentRoute              The parent route to use for this route. This option
+	       *                            is automatically supplied when creating routes inside
+	       *                            the callback to another invocation of createRoute. You
+	       *                            only ever need to use this when declaring routes
+	       *                            independently of one another to manually piece together
+	       *                            the route hierarchy
+	       *
+	       * The callback may be used to structure your route hierarchy. Any call to
+	       * createRoute, createDefaultRoute, createNotFoundRoute, or createRedirect
+	       * inside the callback automatically uses this route as its parent.
+	       */
+
+	      value: function createRoute(options, callback) {
+	        options = options || {};
+
+	        if (typeof options === "string") options = { path: options };
+
+	        var parentRoute = _currentRoute;
+
+	        if (parentRoute) {
+	          warning(options.parentRoute == null || options.parentRoute === parentRoute, "You should not use parentRoute with createRoute inside another route's child callback; it is ignored");
+	        } else {
+	          parentRoute = options.parentRoute;
+	        }
+
+	        var name = options.name;
+	        var path = options.path || name;
+
+	        if (path && !(options.isDefault || options.isNotFound)) {
+	          if (PathUtils.isAbsolute(path)) {
+	            if (parentRoute) {
+	              invariant(parentRoute.paramNames.length === 0, "You cannot nest path \"%s\" inside \"%s\"; the parent requires URL parameters", path, parentRoute.path);
+	            }
+	          } else if (parentRoute) {
+	            // Relative paths extend their parent.
+	            path = PathUtils.join(parentRoute.path, path);
+	          } else {
+	            path = "/" + path;
+	          }
+	        } else {
+	          path = parentRoute ? parentRoute.path : "/";
+	        }
+
+	        if (options.isNotFound && !/\*$/.test(path)) path += "*"; // Auto-append * to the path of not found routes.
+
+	        var route = new Route(name, path, options.ignoreScrollBehavior, options.isDefault, options.isNotFound, options.onEnter, options.onLeave, options.handler);
+
+	        if (parentRoute) {
+	          if (route.isDefault) {
+	            invariant(parentRoute.defaultRoute == null, "%s may not have more than one default route", parentRoute);
+
+	            parentRoute.defaultRoute = route;
+	          } else if (route.isNotFound) {
+	            invariant(parentRoute.notFoundRoute == null, "%s may not have more than one not found route", parentRoute);
+
+	            parentRoute.notFoundRoute = route;
+	          }
+
+	          parentRoute.appendChild(route);
+	        }
+
+	        // Any routes created in the callback
+	        // use this route as their parent.
+	        if (typeof callback === "function") {
+	          var currentRoute = _currentRoute;
+	          _currentRoute = route;
+	          callback.call(route, route);
+	          _currentRoute = currentRoute;
+	        }
+
+	        return route;
+	      },
+	      writable: true,
+	      configurable: true
+	    },
+	    createDefaultRoute: {
+
+	      /**
+	       * Creates and returns a route that is rendered when its parent matches
+	       * the current URL.
+	       */
+
+	      value: function createDefaultRoute(options) {
+	        return Route.createRoute(assign({}, options, { isDefault: true }));
+	      },
+	      writable: true,
+	      configurable: true
+	    },
+	    createNotFoundRoute: {
+
+	      /**
+	       * Creates and returns a route that is rendered when its parent matches
+	       * the current URL but none of its siblings do.
+	       */
+
+	      value: function createNotFoundRoute(options) {
+	        return Route.createRoute(assign({}, options, { isNotFound: true }));
+	      },
+	      writable: true,
+	      configurable: true
+	    },
+	    createRedirect: {
+
+	      /**
+	       * Creates and returns a route that automatically redirects the transition
+	       * to another route. In addition to the normal options to createRoute, this
+	       * function accepts the following options:
+	       *
+	       * - from         An alias for the `path` option. Defaults to *
+	       * - to           The path/route/route name to redirect to
+	       * - params       The params to use in the redirect URL. Defaults
+	       *                to using the current params
+	       * - query        The query to use in the redirect URL. Defaults
+	       *                to using the current query
+	       */
+
+	      value: function createRedirect(options) {
+	        return Route.createRoute(assign({}, options, {
+	          path: options.path || options.from || "*",
+	          onEnter: function onEnter(transition, params, query) {
+	            transition.redirect(options.to, options.params || params, options.query || query);
+	          }
+	        }));
+	      },
+	      writable: true,
+	      configurable: true
 	    }
-	  } else {
-	    path = parentRoute ? parentRoute.path : '/';
-	  }
+	  }, {
+	    appendChild: {
 
-	  if (options.isNotFound && !(/\*$/).test(path))
-	    path += '*'; // Auto-append * to the path of not found routes.
+	      /**
+	       * Appends the given route to this route's child routes.
+	       */
 
-	  var route = new Route(
-	    name,
-	    path,
-	    options.ignoreScrollBehavior,
-	    options.isDefault,
-	    options.isNotFound,
-	    options.onEnter,
-	    options.onLeave,
-	    options.handler
-	  );
+	      value: function appendChild(route) {
+	        invariant(route instanceof Route, "route.appendChild must use a valid Route");
 
-	  if (parentRoute) {
-	    if (route.isDefault) {
-	      invariant(
-	        parentRoute.defaultRoute == null,
-	        '%s may not have more than one default route',
-	        parentRoute
-	      );
+	        if (!this.childRoutes) this.childRoutes = [];
 
-	      parentRoute.defaultRoute = route;
-	    } else if (route.isNotFound) {
-	      invariant(
-	        parentRoute.notFoundRoute == null,
-	        '%s may not have more than one not found route',
-	        parentRoute
-	      );
+	        this.childRoutes.push(route);
+	      },
+	      writable: true,
+	      configurable: true
+	    },
+	    toString: {
+	      value: function toString() {
+	        var string = "<Route";
 
-	      parentRoute.notFoundRoute = route;
+	        if (this.name) string += " name=\"" + this.name + "\"";
+
+	        string += " path=\"" + this.path + "\">";
+
+	        return string;
+	      },
+	      writable: true,
+	      configurable: true
 	    }
+	  });
 
-	    parentRoute.appendChild(route);
-	  }
-
-	  // Any routes created in the callback
-	  // use this route as their parent.
-	  if (typeof callback === 'function') {
-	    var currentRoute = _currentRoute;
-	    _currentRoute = route;
-	    callback.call(route, route);
-	    _currentRoute = currentRoute;
-	  }
-
-	  return route;
-	};
-
-	/**
-	 * Creates and returns a route that is rendered when its parent matches
-	 * the current URL.
-	 */
-	Route.createDefaultRoute = function (options) {
-	  return Route.createRoute(
-	    assign({}, options, { isDefault: true })
-	  );
-	};
-
-	/**
-	 * Creates and returns a route that is rendered when its parent matches
-	 * the current URL but none of its siblings do.
-	 */
-	Route.createNotFoundRoute = function (options) {
-	  return Route.createRoute(
-	    assign({}, options, { isNotFound: true })
-	  );
-	};
-
-	/**
-	 * Creates and returns a route that automatically redirects the transition
-	 * to another route. In addition to the normal options to createRoute, this
-	 * function accepts the following options:
-	 *
-	 * - from         An alias for the `path` option. Defaults to *
-	 * - to           The path/route/route name to redirect to
-	 * - params       The params to use in the redirect URL. Defaults
-	 *                to using the current params
-	 * - query        The query to use in the redirect URL. Defaults
-	 *                to using the current query
-	 */
-	Route.createRedirect = function (options) {
-	  return Route.createRoute(
-	    assign({}, options, {
-	      path: options.path || options.from || '*',
-	      onEnter: function (transition, params, query) {
-	        transition.redirect(options.to, options.params || params, options.query || query);
-	      }
-	    })
-	  );
-	};
+	  return Route;
+	})();
 
 	module.exports = Route;
-
 
 /***/ },
 /* 18 */
 /***/ function(module, exports, __webpack_require__) {
+
+	"use strict";
 
 	/* jshint -W084 */
 
@@ -1237,14 +1264,13 @@ return /******/ (function(modules) { // webpackBootstrap
 	var Route = __webpack_require__(17);
 
 	function checkPropTypes(componentName, propTypes, props) {
-	  componentName = componentName || 'UnknownComponent';
+	  componentName = componentName || "UnknownComponent";
 
 	  for (var propName in propTypes) {
 	    if (propTypes.hasOwnProperty(propName)) {
 	      var error = propTypes[propName](props, propName, componentName);
 
-	      if (error instanceof Error)
-	        warning(false, error.message);
+	      if (error instanceof Error) warning(false, error.message);
 	    }
 	  }
 	}
@@ -1262,27 +1288,21 @@ return /******/ (function(modules) { // webpackBootstrap
 	}
 
 	function createRouteFromReactElement(element) {
-	  if (!React.isValidElement(element))
+	  if (!React.isValidElement(element)) {
 	    return;
-
-	  var type = element.type;
+	  }var type = element.type;
 	  var props = element.props;
 
-	  if (type.propTypes)
-	    checkPropTypes(type.displayName, type.propTypes, props);
+	  if (type.propTypes) checkPropTypes(type.displayName, type.propTypes, props);
 
-	  if (type === DefaultRouteType)
+	  if (type === DefaultRouteType) {
 	    return Route.createDefaultRoute(createRouteOptions(props));
-
-	  if (type === NotFoundRouteType)
+	  }if (type === NotFoundRouteType) {
 	    return Route.createNotFoundRoute(createRouteOptions(props));
-
-	  if (type === RedirectType)
+	  }if (type === RedirectType) {
 	    return Route.createRedirect(createRouteOptions(props));
-
-	  return Route.createRoute(createRouteOptions(props), function () {
-	    if (props.children)
-	      createRoutesFromReactChildren(props.children);
+	  }return Route.createRoute(createRouteOptions(props), function () {
+	    if (props.children) createRoutesFromReactChildren(props.children);
 	  });
 	}
 
@@ -1306,8 +1326,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	  var routes = [];
 
 	  React.Children.forEach(children, function (child) {
-	    if (child = createRouteFromReactElement(child))
-	      routes.push(child);
+	    if (child = createRouteFromReactElement(child)) routes.push(child);
 	  });
 
 	  return routes;
@@ -1315,10 +1334,11 @@ return /******/ (function(modules) { // webpackBootstrap
 
 	module.exports = createRoutesFromReactChildren;
 
-
 /***/ },
 /* 19 */
 /***/ function(module, exports, __webpack_require__) {
+
+	"use strict";
 
 	/* jshint -W058 */
 	var React = __webpack_require__(21);
@@ -1331,25 +1351,25 @@ return /******/ (function(modules) { // webpackBootstrap
 	var HistoryLocation = __webpack_require__(8);
 	var RefreshLocation = __webpack_require__(9);
 	var StaticLocation = __webpack_require__(10);
-	var NavigationContext = __webpack_require__(25);
-	var ScrollHistory = __webpack_require__(26);
-	var StateContext = __webpack_require__(27);
+	var NavigationContext = __webpack_require__(26);
+	var ScrollHistory = __webpack_require__(27);
+	var StateContext = __webpack_require__(28);
 	var createRoutesFromReactChildren = __webpack_require__(18);
-	var isReactChildren = __webpack_require__(28);
-	var Transition = __webpack_require__(29);
+	var isReactChildren = __webpack_require__(29);
+	var Transition = __webpack_require__(30);
 	var PropTypes = __webpack_require__(23);
-	var Redirect = __webpack_require__(30);
+	var Redirect = __webpack_require__(31);
 	var History = __webpack_require__(13);
-	var Cancellation = __webpack_require__(31);
-	var Match = __webpack_require__(32);
+	var Cancellation = __webpack_require__(32);
+	var Match = __webpack_require__(33);
 	var Route = __webpack_require__(17);
-	var supportsHistory = __webpack_require__(33);
-	var Path = __webpack_require__(34);
+	var supportsHistory = __webpack_require__(34);
+	var PathUtils = __webpack_require__(25);
 
 	/**
 	 * The default location for new routers.
 	 */
-	var DEFAULT_LOCATION = canUseDOM ? HashLocation : '/';
+	var DEFAULT_LOCATION = canUseDOM ? HashLocation : "/";
 
 	/**
 	 * The default scroll behavior for new routers.
@@ -1357,17 +1377,14 @@ return /******/ (function(modules) { // webpackBootstrap
 	var DEFAULT_SCROLL_BEHAVIOR = canUseDOM ? ImitateBrowserBehavior : null;
 
 	function hasProperties(object, properties) {
-	  for (var propertyName in properties)
-	    if (properties.hasOwnProperty(propertyName) && object[propertyName] !== properties[propertyName])
-	      return false;
-
-	  return true;
+	  for (var propertyName in properties) if (properties.hasOwnProperty(propertyName) && object[propertyName] !== properties[propertyName]) {
+	    return false;
+	  }return true;
 	}
 
 	function hasMatch(routes, route, prevParams, nextParams, prevQuery, nextQuery) {
 	  return routes.some(function (r) {
-	    if (r !== route)
-	      return false;
+	    if (r !== route) return false;
 
 	    var paramNames = route.paramNames;
 	    var paramName;
@@ -1376,8 +1393,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	    for (var i = 0, len = paramNames.length; i < len; ++i) {
 	      paramName = paramNames[i];
 
-	      if (nextParams[paramName] !== prevParams[paramName])
-	        return false;
+	      if (nextParams[paramName] !== prevParams[paramName]) return false;
 	    }
 
 	    // Ensure the query hasn't changed.
@@ -1391,17 +1407,12 @@ return /******/ (function(modules) { // webpackBootstrap
 	    route = routes[i];
 
 	    if (route.name) {
-	      invariant(
-	        namedRoutes[route.name] == null,
-	        'You may not have more than one route named "%s"',
-	        route.name
-	      );
+	      invariant(namedRoutes[route.name] == null, "You may not have more than one route named \"%s\"", route.name);
 
 	      namedRoutes[route.name] = route;
 	    }
 
-	    if (route.childRoutes)
-	      addRoutesToNamedRoutes(route.childRoutes, namedRoutes);
+	    if (route.childRoutes) addRoutesToNamedRoutes(route.childRoutes, namedRoutes);
 	  }
 	}
 
@@ -1426,8 +1437,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	function createRouter(options) {
 	  options = options || {};
 
-	  if (isReactChildren(options))
-	    options = { routes: options };
+	  if (isReactChildren(options)) options = { routes: options };
 
 	  var mountedComponents = [];
 	  var location = options.location || DEFAULT_LOCATION;
@@ -1437,44 +1447,34 @@ return /******/ (function(modules) { // webpackBootstrap
 	  var pendingTransition = null;
 	  var dispatchHandler = null;
 
-	  if (typeof location === 'string')
-	    location = new StaticLocation(location);
+	  if (typeof location === "string") location = new StaticLocation(location);
 
 	  if (location instanceof StaticLocation) {
-	    warning(
-	      !canUseDOM || ("production") === 'test',
-	      'You should not use a static location in a DOM environment because ' +
-	      'the router will not be kept in sync with the current URL'
-	    );
+	    warning(!canUseDOM || ("production") === "test", "You should not use a static location in a DOM environment because " + "the router will not be kept in sync with the current URL");
 	  } else {
-	    invariant(
-	      canUseDOM || location.needsDOM === false,
-	      'You cannot use %s without a DOM',
-	      location
-	    );
+	    invariant(canUseDOM || location.needsDOM === false, "You cannot use %s without a DOM", location);
 	  }
 
 	  // Automatically fall back to full page refreshes in
 	  // browsers that don't support the HTML history API.
-	  if (location === HistoryLocation && !supportsHistory())
-	    location = RefreshLocation;
+	  if (location === HistoryLocation && !supportsHistory()) location = RefreshLocation;
 
 	  var Router = React.createClass({
 
-	    displayName: 'Router',
+	    displayName: "Router",
 
 	    statics: {
 
 	      isRunning: false,
 
-	      cancelPendingTransition: function () {
+	      cancelPendingTransition: function cancelPendingTransition() {
 	        if (pendingTransition) {
 	          pendingTransition.cancel();
 	          pendingTransition = null;
 	        }
 	      },
 
-	      clearAllRoutes: function () {
+	      clearAllRoutes: function clearAllRoutes() {
 	        this.cancelPendingTransition();
 	        this.namedRoutes = {};
 	        this.routes = [];
@@ -1483,9 +1483,8 @@ return /******/ (function(modules) { // webpackBootstrap
 	      /**
 	       * Adds routes to this router from the given children object (see ReactChildren).
 	       */
-	      addRoutes: function (routes) {
-	        if (isReactChildren(routes))
-	          routes = createRoutesFromReactChildren(routes);
+	      addRoutes: function addRoutes(routes) {
+	        if (isReactChildren(routes)) routes = createRoutesFromReactChildren(routes);
 
 	        addRoutesToNamedRoutes(routes, this.namedRoutes);
 
@@ -1495,7 +1494,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	      /**
 	       * Replaces routes of this router from the given children object (see ReactChildren).
 	       */
-	      replaceRoutes: function (routes) {
+	      replaceRoutes: function replaceRoutes(routes) {
 	        this.clearAllRoutes();
 	        this.addRoutes(routes);
 	        this.refresh();
@@ -1506,7 +1505,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	       * with the { routes, params, pathname, query } that match. Returns null if no
 	       * match can be made.
 	       */
-	      match: function (path) {
+	      match: function match(path) {
 	        return Match.findMatchForPath(this.routes, path);
 	      },
 
@@ -1514,39 +1513,35 @@ return /******/ (function(modules) { // webpackBootstrap
 	       * Returns an absolute URL path created from the given route
 	       * name, URL parameters, and query.
 	       */
-	      makePath: function (to, params, query) {
+	      makePath: function makePath(to, params, query) {
 	        var path;
-	        if (Path.isAbsolute(to)) {
+	        if (PathUtils.isAbsolute(to)) {
 	          path = to;
 	        } else {
-	          var route = (to instanceof Route) ? to : this.namedRoutes[to];
+	          var route = to instanceof Route ? to : this.namedRoutes[to];
 
-	          invariant(
-	            route instanceof Route,
-	            'Cannot find a route named "%s"',
-	            to
-	          );
+	          invariant(route instanceof Route, "Cannot find a route named \"%s\"", to);
 
 	          path = route.path;
 	        }
 
-	        return Path.withQuery(Path.injectParams(path, params), query);
+	        return PathUtils.withQuery(PathUtils.injectParams(path, params), query);
 	      },
 
 	      /**
 	       * Returns a string that may safely be used as the href of a link
 	       * to the route with the given name, URL parameters, and query.
 	       */
-	      makeHref: function (to, params, query) {
+	      makeHref: function makeHref(to, params, query) {
 	        var path = this.makePath(to, params, query);
-	        return (location === HashLocation) ? '#' + path : path;
+	        return location === HashLocation ? "#" + path : path;
 	      },
 
 	      /**
 	       * Transitions to the URL specified in the arguments by pushing
 	       * a new URL onto the history stack.
 	       */
-	      transitionTo: function (to, params, query) {
+	      transitionTo: function transitionTo(to, params, query) {
 	        var path = this.makePath(to, params, query);
 
 	        if (pendingTransition) {
@@ -1561,7 +1556,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	       * Transitions to the URL specified in the arguments by replacing
 	       * the current URL in the history stack.
 	       */
-	      replaceWith: function (to, params, query) {
+	      replaceWith: function replaceWith(to, params, query) {
 	        location.replace(this.makePath(to, params, query));
 	      },
 
@@ -1576,20 +1571,19 @@ return /******/ (function(modules) { // webpackBootstrap
 	       * don't support HTML5 history) this method will *always* send the client back
 	       * because we cannot reliably track history length.
 	       */
-	      goBack: function () {
+	      goBack: function goBack() {
 	        if (History.length > 1 || location === RefreshLocation) {
 	          location.pop();
 	          return true;
 	        }
 
-	        warning(false, 'goBack() was ignored because there is no router history');
+	        warning(false, "goBack() was ignored because there is no router history");
 
 	        return false;
 	      },
 
 	      handleAbort: options.onAbort || function (abortReason) {
-	        if (location instanceof StaticLocation)
-	          throw new Error('Unhandled aborted transition! Reason: ' + abortReason);
+	        if (location instanceof StaticLocation) throw new Error("Unhandled aborted transition! Reason: " + abortReason);
 
 	        if (abortReason instanceof Cancellation) {
 	          return;
@@ -1605,7 +1599,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	        throw error; // This error probably originated in a transition hook.
 	      },
 
-	      handleLocationChange: function (change) {
+	      handleLocationChange: function handleLocationChange(change) {
 	        this.dispatch(change.path, change.type);
 	      },
 
@@ -1625,30 +1619,25 @@ return /******/ (function(modules) { // webpackBootstrap
 	       * transition. To resolve asynchronously, they may use the callback argument. If no
 	       * hooks wait, the transition is fully synchronous.
 	       */
-	      dispatch: function (path, action) {
+	      dispatch: function dispatch(path, action) {
 	        this.cancelPendingTransition();
 
 	        var prevPath = state.path;
 	        var isRefreshing = action == null;
 
-	        if (prevPath === path && !isRefreshing)
-	          return; // Nothing to do!
+	        if (prevPath === path && !isRefreshing) {
+	          return;
+	        } // Nothing to do!
 
 	        // Record the scroll position as early as possible to
 	        // get it before browsers try update it automatically.
-	        if (prevPath && action === LocationActions.PUSH)
-	          this.recordScrollPosition(prevPath);
+	        if (prevPath && action === LocationActions.PUSH) this.recordScrollPosition(prevPath);
 
 	        var match = this.match(path);
 
-	        warning(
-	          match != null,
-	          'No route matches path "%s". Make sure you have <Route path="%s"> somewhere in your routes',
-	          path, path
-	        );
+	        warning(match != null, "No route matches path \"%s\". Make sure you have <Route path=\"%s\"> somewhere in your routes", path, path);
 
-	        if (match == null)
-	          match = {};
+	        if (match == null) match = {};
 
 	        var prevRoutes = state.routes || [];
 	        var prevParams = state.params || {};
@@ -1678,8 +1667,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	        var fromComponents = mountedComponents.slice(prevRoutes.length - fromRoutes.length);
 
 	        Transition.from(transition, fromRoutes, fromComponents, function (error) {
-	          if (error || transition.abortReason)
-	            return dispatchHandler.call(Router, error, transition); // No need to continue.
+	          if (error || transition.abortReason) return dispatchHandler.call(Router, error, transition); // No need to continue.
 
 	          Transition.to(transition, toRoutes, nextParams, nextQuery, function (error) {
 	            dispatchHandler.call(Router, error, transition, {
@@ -1701,18 +1689,13 @@ return /******/ (function(modules) { // webpackBootstrap
 	       * the callback is called only once. Otherwise, the location should be one of the
 	       * Router.*Location objects (e.g. Router.HashLocation or Router.HistoryLocation).
 	       */
-	      run: function (callback) {
-	        invariant(
-	          !this.isRunning,
-	          'Router is already running'
-	        );
+	      run: function run(callback) {
+	        invariant(!this.isRunning, "Router is already running");
 
 	        dispatchHandler = function (error, transition, newState) {
-	          if (error)
-	            Router.handleError(error);
+	          if (error) Router.handleError(error);
 
-	          if (pendingTransition !== transition)
-	            return;
+	          if (pendingTransition !== transition) return;
 
 	          pendingTransition = null;
 
@@ -1724,8 +1707,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	        };
 
 	        if (!(location instanceof StaticLocation)) {
-	          if (location.addChangeListener)
-	            location.addChangeListener(Router.handleLocationChange);
+	          if (location.addChangeListener) location.addChangeListener(Router.handleLocationChange);
 
 	          this.isRunning = true;
 	        }
@@ -1734,26 +1716,25 @@ return /******/ (function(modules) { // webpackBootstrap
 	        this.refresh();
 	      },
 
-	      refresh: function () {
+	      refresh: function refresh() {
 	        Router.dispatch(location.getCurrentPath(), null);
 	      },
 
-	      stop: function () {
+	      stop: function stop() {
 	        this.cancelPendingTransition();
 
-	        if (location.removeChangeListener)
-	          location.removeChangeListener(Router.handleLocationChange);
+	        if (location.removeChangeListener) location.removeChangeListener(Router.handleLocationChange);
 
 	        this.isRunning = false;
 	      },
 
-	      getScrollBehavior: function () {
+	      getScrollBehavior: function getScrollBehavior() {
 	        return scrollBehavior;
 	      }
 
 	    },
 
-	    mixins: [ NavigationContext, StateContext, ScrollHistory ],
+	    mixins: [NavigationContext, StateContext, ScrollHistory],
 
 	    propTypes: {
 	      children: PropTypes.falsy
@@ -1765,40 +1746,40 @@ return /******/ (function(modules) { // webpackBootstrap
 	      routeHandlers: React.PropTypes.array.isRequired
 	    },
 
-	    getChildContext: function () {
+	    getChildContext: function getChildContext() {
 	      return {
 	        getRouteAtDepth: this.getRouteAtDepth,
 	        setRouteComponentAtDepth: this.setRouteComponentAtDepth,
-	        routeHandlers: [ this ]
+	        routeHandlers: [this]
 	      };
 	    },
 
-	    getInitialState: function () {
-	      return (state = nextState);
+	    getInitialState: function getInitialState() {
+	      return state = nextState;
 	    },
 
-	    componentWillReceiveProps: function () {
+	    componentWillReceiveProps: function componentWillReceiveProps() {
 	      this.setState(state = nextState);
 	    },
 
-	    componentWillUnmount: function () {
+	    componentWillUnmount: function componentWillUnmount() {
 	      Router.stop();
 	    },
 
-	    getLocation: function () {
+	    getLocation: function getLocation() {
 	      return location;
 	    },
 
-	    getRouteAtDepth: function (depth) {
+	    getRouteAtDepth: function getRouteAtDepth(depth) {
 	      var routes = this.state.routes;
 	      return routes && routes[depth];
 	    },
 
-	    setRouteComponentAtDepth: function (depth, component) {
+	    setRouteComponentAtDepth: function setRouteComponentAtDepth(depth, component) {
 	      mountedComponents[depth] = component;
 	    },
 
-	    render: function () {
+	    render: function render() {
 	      var route = this.getRouteAtDepth(0);
 	      return route ? React.createElement(route.handler, this.props) : null;
 	    }
@@ -1807,18 +1788,18 @@ return /******/ (function(modules) { // webpackBootstrap
 
 	  Router.clearAllRoutes();
 
-	  if (options.routes)
-	    Router.addRoutes(options.routes);
+	  if (options.routes) Router.addRoutes(options.routes);
 
 	  return Router;
 	}
 
 	module.exports = createRouter;
 
-
 /***/ },
 /* 20 */
 /***/ function(module, exports, __webpack_require__) {
+
+	"use strict";
 
 	var createRouter = __webpack_require__(19);
 
@@ -1852,7 +1833,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	 *   });
 	 */
 	function runRouter(routes, location, callback) {
-	  if (typeof location === 'function') {
+	  if (typeof location === "function") {
 	    callback = location;
 	    location = null;
 	  }
@@ -1869,7 +1850,6 @@ return /******/ (function(modules) { // webpackBootstrap
 
 	module.exports = runRouter;
 
-
 /***/ },
 /* 21 */
 /***/ function(module, exports, __webpack_require__) {
@@ -1880,6 +1860,8 @@ return /******/ (function(modules) { // webpackBootstrap
 /* 22 */
 /***/ function(module, exports, __webpack_require__) {
 
+	"use strict";
+
 	var warning = __webpack_require__(39);
 	var invariant = __webpack_require__(37);
 
@@ -1888,8 +1870,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	    if (propTypes.hasOwnProperty(propName)) {
 	      var error = propTypes[propName](props, propName, componentName);
 
-	      if (error instanceof Error)
-	        warning(false, error.message);
+	      if (error instanceof Error) warning(false, error.message);
 	    }
 	  }
 	}
@@ -1898,28 +1879,25 @@ return /******/ (function(modules) { // webpackBootstrap
 
 	  statics: {
 
-	    validateProps: function (props) {
+	    validateProps: function validateProps(props) {
 	      checkPropTypes(this.displayName, this.propTypes, props);
 	    }
 
 	  },
 
-	  render: function () {
-	    invariant(
-	      false,
-	      '%s elements are for router configuration only and should not be rendered',
-	      this.constructor.displayName
-	    );
+	  render: function render() {
+	    invariant(false, "%s elements are for router configuration only and should not be rendered", this.constructor.displayName);
 	  }
 
 	};
 
 	module.exports = Configuration;
 
-
 /***/ },
 /* 23 */
 /***/ function(module, exports, __webpack_require__) {
+
+	"use strict";
 
 	var assign = __webpack_require__(36);
 	var ReactPropTypes = __webpack_require__(21).PropTypes;
@@ -1929,19 +1907,21 @@ return /******/ (function(modules) { // webpackBootstrap
 	  /**
 	   * Requires that the value of a prop be falsy.
 	   */
-	  falsy: function (props, propName, componentName) {
-	    if (props[propName])
-	      return new Error('<' + componentName + '> may not have a "' + propName + '" prop');
+	  falsy: function falsy(props, propName, componentName) {
+	    if (props[propName]) {
+	      return new Error("<" + componentName + "> may not have a \"" + propName + "\" prop");
+	    }
 	  }
 
 	}, ReactPropTypes);
 
 	module.exports = PropTypes;
 
-
 /***/ },
 /* 24 */
 /***/ function(module, exports, __webpack_require__) {
+
+	"use strict";
 
 	/**
 	 * Actions that modify the URL.
@@ -1951,26 +1931,185 @@ return /******/ (function(modules) { // webpackBootstrap
 	  /**
 	   * Indicates a new location is being pushed to the history stack.
 	   */
-	  PUSH: 'push',
+	  PUSH: "push",
 
 	  /**
 	   * Indicates the current location should be replaced.
 	   */
-	  REPLACE: 'replace',
+	  REPLACE: "replace",
 
 	  /**
 	   * Indicates the most recent entry should be removed from the history stack.
 	   */
-	  POP: 'pop'
+	  POP: "pop"
 
 	};
 
 	module.exports = LocationActions;
 
-
 /***/ },
 /* 25 */
 /***/ function(module, exports, __webpack_require__) {
+
+	"use strict";
+
+	var invariant = __webpack_require__(37);
+	var merge = __webpack_require__(42).merge;
+	var qs = __webpack_require__(41);
+
+	var paramCompileMatcher = /:([a-zA-Z_$][a-zA-Z0-9_$]*)|[*.()\[\]\\+|{}^$]/g;
+	var paramInjectMatcher = /:([a-zA-Z_$][a-zA-Z0-9_$?]*[?]?)|[*]/g;
+	var paramInjectTrailingSlashMatcher = /\/\/\?|\/\?\/|\/\?/g;
+	var queryMatcher = /\?(.+)/;
+
+	var _compiledPatterns = {};
+
+	function compilePattern(pattern) {
+	  if (!(pattern in _compiledPatterns)) {
+	    var paramNames = [];
+	    var source = pattern.replace(paramCompileMatcher, function (match, paramName) {
+	      if (paramName) {
+	        paramNames.push(paramName);
+	        return "([^/?#]+)";
+	      } else if (match === "*") {
+	        paramNames.push("splat");
+	        return "(.*?)";
+	      } else {
+	        return "\\" + match;
+	      }
+	    });
+
+	    _compiledPatterns[pattern] = {
+	      matcher: new RegExp("^" + source + "$", "i"),
+	      paramNames: paramNames
+	    };
+	  }
+
+	  return _compiledPatterns[pattern];
+	}
+
+	var PathUtils = {
+
+	  /**
+	   * Returns true if the given path is absolute.
+	   */
+	  isAbsolute: function isAbsolute(path) {
+	    return path.charAt(0) === "/";
+	  },
+
+	  /**
+	   * Joins two URL paths together.
+	   */
+	  join: function join(a, b) {
+	    return a.replace(/\/*$/, "/") + b;
+	  },
+
+	  /**
+	   * Returns an array of the names of all parameters in the given pattern.
+	   */
+	  extractParamNames: function extractParamNames(pattern) {
+	    return compilePattern(pattern).paramNames;
+	  },
+
+	  /**
+	   * Extracts the portions of the given URL path that match the given pattern
+	   * and returns an object of param name => value pairs. Returns null if the
+	   * pattern does not match the given path.
+	   */
+	  extractParams: function extractParams(pattern, path) {
+	    var _compilePattern = compilePattern(pattern);
+
+	    var matcher = _compilePattern.matcher;
+	    var paramNames = _compilePattern.paramNames;
+
+	    var match = path.match(matcher);
+
+	    if (!match) {
+	      return null;
+	    }var params = {};
+
+	    paramNames.forEach(function (paramName, index) {
+	      params[paramName] = match[index + 1];
+	    });
+
+	    return params;
+	  },
+
+	  /**
+	   * Returns a version of the given route path with params interpolated. Throws
+	   * if there is a dynamic segment of the route path for which there is no param.
+	   */
+	  injectParams: function injectParams(pattern, params) {
+	    params = params || {};
+
+	    var splatIndex = 0;
+
+	    return pattern.replace(paramInjectMatcher, function (match, paramName) {
+	      paramName = paramName || "splat";
+
+	      // If param is optional don't check for existence
+	      if (paramName.slice(-1) === "?") {
+	        paramName = paramName.slice(0, -1);
+
+	        if (params[paramName] == null) return "";
+	      } else {
+	        invariant(params[paramName] != null, "Missing \"%s\" parameter for path \"%s\"", paramName, pattern);
+	      }
+
+	      var segment;
+	      if (paramName === "splat" && Array.isArray(params[paramName])) {
+	        segment = params[paramName][splatIndex++];
+
+	        invariant(segment != null, "Missing splat # %s for path \"%s\"", splatIndex, pattern);
+	      } else {
+	        segment = params[paramName];
+	      }
+
+	      return segment;
+	    }).replace(paramInjectTrailingSlashMatcher, "/");
+	  },
+
+	  /**
+	   * Returns an object that is the result of parsing any query string contained
+	   * in the given path, null if the path contains no query string.
+	   */
+	  extractQuery: function extractQuery(path) {
+	    var match = path.match(queryMatcher);
+	    return match && qs.parse(match[1]);
+	  },
+
+	  /**
+	   * Returns a version of the given path without the query string.
+	   */
+	  withoutQuery: function withoutQuery(path) {
+	    return path.replace(queryMatcher, "");
+	  },
+
+	  /**
+	   * Returns a version of the given path with the parameters in the given
+	   * query merged into the query string.
+	   */
+	  withQuery: function withQuery(path, query) {
+	    var existingQuery = PathUtils.extractQuery(path);
+
+	    if (existingQuery) query = query ? merge(existingQuery, query) : existingQuery;
+
+	    var queryString = qs.stringify(query, { indices: false });
+
+	    if (queryString) {
+	      return PathUtils.withoutQuery(path) + "?" + queryString;
+	    }return path;
+	  }
+
+	};
+
+	module.exports = PathUtils;
+
+/***/ },
+/* 26 */
+/***/ function(module, exports, __webpack_require__) {
+
+	"use strict";
 
 	var PropTypes = __webpack_require__(23);
 
@@ -1987,7 +2126,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	    goBack: PropTypes.func.isRequired
 	  },
 
-	  getChildContext: function () {
+	  getChildContext: function getChildContext() {
 	    return {
 	      makePath: this.constructor.makePath.bind(this.constructor),
 	      makeHref: this.constructor.makeHref.bind(this.constructor),
@@ -2001,24 +2140,23 @@ return /******/ (function(modules) { // webpackBootstrap
 
 	module.exports = NavigationContext;
 
-
 /***/ },
-/* 26 */
+/* 27 */
 /***/ function(module, exports, __webpack_require__) {
+
+	"use strict";
 
 	var invariant = __webpack_require__(37);
 	var canUseDOM = __webpack_require__(38).canUseDOM;
 	var getWindowScrollPosition = __webpack_require__(40);
 
 	function shouldUpdateScroll(state, prevState) {
-	  if (!prevState)
+	  if (!prevState) {
 	    return true;
-
-	  // Don't update scroll position when only the query has changed.
-	  if (state.pathname === prevState.pathname)
+	  } // Don't update scroll position when only the query has changed.
+	  if (state.pathname === prevState.pathname) {
 	    return false;
-
-	  var routes = state.routes;
+	  }var routes = state.routes;
 	  var prevRoutes = prevState.routes;
 
 	  var sharedAncestorRoutes = routes.filter(function (route) {
@@ -2041,9 +2179,8 @@ return /******/ (function(modules) { // webpackBootstrap
 	    /**
 	     * Records curent scroll position as the last known position for the given URL path.
 	     */
-	    recordScrollPosition: function (path) {
-	      if (!this.scrollHistory)
-	        this.scrollHistory = {};
+	    recordScrollPosition: function recordScrollPosition(path) {
+	      if (!this.scrollHistory) this.scrollHistory = {};
 
 	      this.scrollHistory[path] = getWindowScrollPosition();
 	    },
@@ -2051,55 +2188,47 @@ return /******/ (function(modules) { // webpackBootstrap
 	    /**
 	     * Returns the last known scroll position for the given URL path.
 	     */
-	    getScrollPosition: function (path) {
-	      if (!this.scrollHistory)
-	        this.scrollHistory = {};
+	    getScrollPosition: function getScrollPosition(path) {
+	      if (!this.scrollHistory) this.scrollHistory = {};
 
 	      return this.scrollHistory[path] || null;
 	    }
 
 	  },
 
-	  componentWillMount: function () {
-	    invariant(
-	      this.constructor.getScrollBehavior() == null || canUseDOM,
-	      'Cannot use scroll behavior without a DOM'
-	    );
+	  componentWillMount: function componentWillMount() {
+	    invariant(this.constructor.getScrollBehavior() == null || canUseDOM, "Cannot use scroll behavior without a DOM");
 	  },
 
-	  componentDidMount: function () {
+	  componentDidMount: function componentDidMount() {
 	    this._updateScroll();
 	  },
 
-	  componentDidUpdate: function (prevProps, prevState) {
+	  componentDidUpdate: function componentDidUpdate(prevProps, prevState) {
 	    this._updateScroll(prevState);
 	  },
 
-	  _updateScroll: function (prevState) {
-	    if (!shouldUpdateScroll(this.state, prevState))
+	  _updateScroll: function _updateScroll(prevState) {
+	    if (!shouldUpdateScroll(this.state, prevState)) {
 	      return;
+	    }var scrollBehavior = this.constructor.getScrollBehavior();
 
-	    var scrollBehavior = this.constructor.getScrollBehavior();
-
-	    if (scrollBehavior)
-	      scrollBehavior.updateScrollPosition(
-	        this.constructor.getScrollPosition(this.state.path),
-	        this.state.action
-	      );
+	    if (scrollBehavior) scrollBehavior.updateScrollPosition(this.constructor.getScrollPosition(this.state.path), this.state.action);
 	  }
 
 	};
 
 	module.exports = ScrollHistory;
 
-
 /***/ },
-/* 27 */
+/* 28 */
 /***/ function(module, exports, __webpack_require__) {
+
+	"use strict";
 
 	var assign = __webpack_require__(36);
 	var PropTypes = __webpack_require__(23);
-	var Path = __webpack_require__(34);
+	var PathUtils = __webpack_require__(25);
 
 	function routeIsActive(activeRoutes, routeName) {
 	  return activeRoutes.some(function (route) {
@@ -2108,19 +2237,15 @@ return /******/ (function(modules) { // webpackBootstrap
 	}
 
 	function paramsAreActive(activeParams, params) {
-	  for (var property in params)
-	    if (String(activeParams[property]) !== String(params[property]))
-	      return false;
-
-	  return true;
+	  for (var property in params) if (String(activeParams[property]) !== String(params[property])) {
+	    return false;
+	  }return true;
 	}
 
 	function queryIsActive(activeQuery, query) {
-	  for (var property in query)
-	    if (String(activeQuery[property]) !== String(query[property]))
-	      return false;
-
-	  return true;
+	  for (var property in query) if (String(activeQuery[property]) !== String(query[property])) {
+	    return false;
+	  }return true;
 	}
 
 	/**
@@ -2131,48 +2256,45 @@ return /******/ (function(modules) { // webpackBootstrap
 	  /**
 	   * Returns the current URL path + query string.
 	   */
-	  getCurrentPath: function () {
+	  getCurrentPath: function getCurrentPath() {
 	    return this.state.path;
 	  },
 
 	  /**
 	   * Returns a read-only array of the currently active routes.
 	   */
-	  getCurrentRoutes: function () {
+	  getCurrentRoutes: function getCurrentRoutes() {
 	    return this.state.routes.slice(0);
 	  },
 
 	  /**
 	   * Returns the current URL path without the query string.
 	   */
-	  getCurrentPathname: function () {
+	  getCurrentPathname: function getCurrentPathname() {
 	    return this.state.pathname;
 	  },
 
 	  /**
 	   * Returns a read-only object of the currently active URL parameters.
 	   */
-	  getCurrentParams: function () {
+	  getCurrentParams: function getCurrentParams() {
 	    return assign({}, this.state.params);
 	  },
 
 	  /**
 	   * Returns a read-only object of the currently active query parameters.
 	   */
-	  getCurrentQuery: function () {
+	  getCurrentQuery: function getCurrentQuery() {
 	    return assign({}, this.state.query);
 	  },
 
 	  /**
 	   * Returns true if the given route, params, and query are active.
 	   */
-	  isActive: function (to, params, query) {
-	    if (Path.isAbsolute(to))
+	  isActive: function isActive(to, params, query) {
+	    if (PathUtils.isAbsolute(to)) {
 	      return to === this.state.path;
-
-	    return routeIsActive(this.state.routes, to) &&
-	      paramsAreActive(this.state.params, params) &&
-	      (query == null || queryIsActive(this.state.query, query));
+	    }return routeIsActive(this.state.routes, to) && paramsAreActive(this.state.params, params) && (query == null || queryIsActive(this.state.query, query));
 	  },
 
 	  childContextTypes: {
@@ -2184,7 +2306,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	    isActive: PropTypes.func.isRequired
 	  },
 
-	  getChildContext: function () {
+	  getChildContext: function getChildContext() {
 	    return {
 	      getCurrentPath: this.getCurrentPath,
 	      getCurrentRoutes: this.getCurrentRoutes,
@@ -2199,10 +2321,11 @@ return /******/ (function(modules) { // webpackBootstrap
 
 	module.exports = StateContext;
 
-
 /***/ },
-/* 28 */
+/* 29 */
 /***/ function(module, exports, __webpack_require__) {
+
+	"use strict";
 
 	var React = __webpack_require__(21);
 
@@ -2211,20 +2334,21 @@ return /******/ (function(modules) { // webpackBootstrap
 	}
 
 	function isReactChildren(object) {
-	  return isValidChild(object) || (Array.isArray(object) && object.every(isValidChild));
+	  return isValidChild(object) || Array.isArray(object) && object.every(isValidChild);
 	}
 
 	module.exports = isReactChildren;
 
-
 /***/ },
-/* 29 */
+/* 30 */
 /***/ function(module, exports, __webpack_require__) {
+
+	"use strict";
 
 	/* jshint -W058 */
 
-	var Cancellation = __webpack_require__(31);
-	var Redirect = __webpack_require__(30);
+	var Cancellation = __webpack_require__(32);
+	var Redirect = __webpack_require__(31);
 
 	/**
 	 * Encapsulates a transition to a given path.
@@ -2240,8 +2364,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	}
 
 	Transition.prototype.abort = function (reason) {
-	  if (this.abortReason == null)
-	    this.abortReason = reason || 'ABORT';
+	  if (this.abortReason == null) this.abortReason = reason || "ABORT";
 	};
 
 	Transition.prototype.redirect = function (to, params, query) {
@@ -2249,7 +2372,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	};
 
 	Transition.prototype.cancel = function () {
-	  this.abort(new Cancellation);
+	  this.abort(new Cancellation());
 	};
 
 	Transition.from = function (transition, routes, components, callback) {
@@ -2262,8 +2385,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	          route.onLeave(transition, components[index], callback);
 
 	          // If there is no callback in the argument list, call it automatically.
-	          if (route.onLeave.length < 3)
-	            callback();
+	          if (route.onLeave.length < 3) callback();
 	        } catch (e) {
 	          callback(e);
 	        }
@@ -2284,8 +2406,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	          route.onEnter(transition, params, query, callback);
 
 	          // If there is no callback in the argument list, call it automatically.
-	          if (route.onEnter.length < 4)
-	            callback();
+	          if (route.onEnter.length < 4) callback();
 	        } catch (e) {
 	          callback(e);
 	        }
@@ -2298,10 +2419,11 @@ return /******/ (function(modules) { // webpackBootstrap
 
 	module.exports = Transition;
 
-
 /***/ },
-/* 30 */
+/* 31 */
 /***/ function(module, exports, __webpack_require__) {
+
+	"use strict";
 
 	/**
 	 * Encapsulates a redirect to the given route.
@@ -2314,10 +2436,11 @@ return /******/ (function(modules) { // webpackBootstrap
 
 	module.exports = Redirect;
 
-
 /***/ },
-/* 31 */
+/* 32 */
 /***/ function(module, exports, __webpack_require__) {
+
+	"use strict";
 
 	/**
 	 * Represents a cancellation caused by navigating away
@@ -2327,21 +2450,26 @@ return /******/ (function(modules) { // webpackBootstrap
 
 	module.exports = Cancellation;
 
-
 /***/ },
-/* 32 */
+/* 33 */
 /***/ function(module, exports, __webpack_require__) {
+
+	"use strict";
+
+	var _classCallCheck = function (instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } };
 
 	/* jshint -W084 */
 
-	var Path = __webpack_require__(34);
+	var PathUtils = __webpack_require__(25);
 
-	function Match(pathname, params, query, routes) {
+	var Match = function Match(pathname, params, query, routes) {
+	  _classCallCheck(this, Match);
+
 	  this.pathname = pathname;
 	  this.params = params;
 	  this.query = query;
 	  this.routes = routes;
-	}
+	};
 
 	function deepSearch(route, pathname, query) {
 	  // Check the subtree first to find the most deeply-nested match.
@@ -2351,8 +2479,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	    for (var i = 0, len = childRoutes.length; i < len; ++i) {
 	      childRoute = childRoutes[i];
 
-	      if (childRoute.isDefault || childRoute.isNotFound)
-	        continue; // Check these in order later.
+	      if (childRoute.isDefault || childRoute.isNotFound) continue; // Check these in order later.
 
 	      if (match = deepSearch(childRoute, pathname, query)) {
 	        // A route in the subtree matched! Add this route and we're done.
@@ -2364,20 +2491,17 @@ return /******/ (function(modules) { // webpackBootstrap
 
 	  // No child routes matched; try the default route.
 	  var defaultRoute = route.defaultRoute;
-	  if (defaultRoute && (params = Path.extractParams(defaultRoute.path, pathname)))
-	    return new Match(pathname, params, query, [ route, defaultRoute ]);
-
-	  // Does the "not found" route match?
+	  if (defaultRoute && (params = PathUtils.extractParams(defaultRoute.path, pathname))) {
+	    return new Match(pathname, params, query, [route, defaultRoute]);
+	  } // Does the "not found" route match?
 	  var notFoundRoute = route.notFoundRoute;
-	  if (notFoundRoute && (params = Path.extractParams(notFoundRoute.path, pathname)))
-	    return new Match(pathname, params, query, [ route, notFoundRoute ]);
-
-	  // Last attempt: check this route.
-	  var params = Path.extractParams(route.path, pathname);
-	  if (params)
-	    return new Match(pathname, params, query, [ route ]);
-
-	  return null;
+	  if (notFoundRoute && (params = PathUtils.extractParams(notFoundRoute.path, pathname))) {
+	    return new Match(pathname, params, query, [route, notFoundRoute]);
+	  } // Last attempt: check this route.
+	  var params = PathUtils.extractParams(route.path, pathname);
+	  if (params) {
+	    return new Match(pathname, params, query, [route]);
+	  }return null;
 	}
 
 	/**
@@ -2386,22 +2510,22 @@ return /******/ (function(modules) { // webpackBootstrap
 	 * succeeds, null if no match can be made.
 	 */
 	Match.findMatchForPath = function (routes, path) {
-	  var pathname = Path.withoutQuery(path);
-	  var query = Path.extractQuery(path);
+	  var pathname = PathUtils.withoutQuery(path);
+	  var query = PathUtils.extractQuery(path);
 	  var match = null;
 
-	  for (var i = 0, len = routes.length; match == null && i < len; ++i)
-	    match = deepSearch(routes[i], pathname, query);
+	  for (var i = 0, len = routes.length; match == null && i < len; ++i) match = deepSearch(routes[i], pathname, query);
 
 	  return match;
 	};
 
 	module.exports = Match;
 
-
 /***/ },
-/* 33 */
+/* 34 */
 /***/ function(module, exports, __webpack_require__) {
+
+	"use strict";
 
 	function supportsHistory() {
 	  /*! taken from modernizr
@@ -2410,187 +2534,19 @@ return /******/ (function(modules) { // webpackBootstrap
 	   * changed to avoid false negatives for Windows Phones: https://github.com/rackt/react-router/issues/586
 	   */
 	  var ua = navigator.userAgent;
-	  if ((ua.indexOf('Android 2.') !== -1 ||
-	      (ua.indexOf('Android 4.0') !== -1)) &&
-	      ua.indexOf('Mobile Safari') !== -1 &&
-	      ua.indexOf('Chrome') === -1 &&
-	      ua.indexOf('Windows Phone') === -1) {
+	  if ((ua.indexOf("Android 2.") !== -1 || ua.indexOf("Android 4.0") !== -1) && ua.indexOf("Mobile Safari") !== -1 && ua.indexOf("Chrome") === -1 && ua.indexOf("Windows Phone") === -1) {
 	    return false;
 	  }
-	  return (window.history && 'pushState' in window.history);
+	  return window.history && "pushState" in window.history;
 	}
 
 	module.exports = supportsHistory;
 
-
-/***/ },
-/* 34 */
-/***/ function(module, exports, __webpack_require__) {
-
-	var invariant = __webpack_require__(37);
-	var merge = __webpack_require__(42).merge;
-	var qs = __webpack_require__(41);
-
-	var paramCompileMatcher = /:([a-zA-Z_$][a-zA-Z0-9_$]*)|[*.()\[\]\\+|{}^$]/g;
-	var paramInjectMatcher = /:([a-zA-Z_$][a-zA-Z0-9_$?]*[?]?)|[*]/g;
-	var paramInjectTrailingSlashMatcher = /\/\/\?|\/\?\/|\/\?/g;
-	var queryMatcher = /\?(.+)/;
-
-	var _compiledPatterns = {};
-
-	function compilePattern(pattern) {
-	  if (!(pattern in _compiledPatterns)) {
-	    var paramNames = [];
-	    var source = pattern.replace(paramCompileMatcher, function (match, paramName) {
-	      if (paramName) {
-	        paramNames.push(paramName);
-	        return '([^/?#]+)';
-	      } else if (match === '*') {
-	        paramNames.push('splat');
-	        return '(.*?)';
-	      } else {
-	        return '\\' + match;
-	      }
-	    });
-
-	    _compiledPatterns[pattern] = {
-	      matcher: new RegExp('^' + source + '$', 'i'),
-	      paramNames: paramNames
-	    };
-	  }
-
-	  return _compiledPatterns[pattern];
-	}
-
-	var Path = {
-
-	  /**
-	   * Returns true if the given path is absolute.
-	   */
-	  isAbsolute: function (path) {
-	    return path.charAt(0) === '/';
-	  },
-
-	  /**
-	   * Joins two URL paths together.
-	   */
-	  join: function (a, b) {
-	    return a.replace(/\/*$/, '/') + b;
-	  },
-
-	  /**
-	   * Returns an array of the names of all parameters in the given pattern.
-	   */
-	  extractParamNames: function (pattern) {
-	    return compilePattern(pattern).paramNames;
-	  },
-
-	  /**
-	   * Extracts the portions of the given URL path that match the given pattern
-	   * and returns an object of param name => value pairs. Returns null if the
-	   * pattern does not match the given path.
-	   */
-	  extractParams: function (pattern, path) {
-	    var $__0=     compilePattern(pattern),matcher=$__0.matcher,paramNames=$__0.paramNames;
-	    var match = path.match(matcher);
-
-	    if (!match)
-	      return null;
-
-	    var params = {};
-
-	    paramNames.forEach(function (paramName, index) {
-	      params[paramName] = match[index + 1];
-	    });
-
-	    return params;
-	  },
-
-	  /**
-	   * Returns a version of the given route path with params interpolated. Throws
-	   * if there is a dynamic segment of the route path for which there is no param.
-	   */
-	  injectParams: function (pattern, params) {
-	    params = params || {};
-
-	    var splatIndex = 0;
-
-	    return pattern.replace(paramInjectMatcher, function (match, paramName) {
-	      paramName = paramName || 'splat';
-
-	      // If param is optional don't check for existence
-	      if (paramName.slice(-1) === '?') {
-	        paramName = paramName.slice(0, -1);
-
-	        if (params[paramName] == null)
-	          return '';
-	      } else {
-	        invariant(
-	          params[paramName] != null,
-	          'Missing "%s" parameter for path "%s"',
-	          paramName, pattern
-	        );
-	      }
-
-	      var segment;
-	      if (paramName === 'splat' && Array.isArray(params[paramName])) {
-	        segment = params[paramName][splatIndex++];
-
-	        invariant(
-	          segment != null,
-	          'Missing splat # %s for path "%s"',
-	          splatIndex, pattern
-	        );
-	      } else {
-	        segment = params[paramName];
-	      }
-
-	      return segment;
-	    }).replace(paramInjectTrailingSlashMatcher, '/');
-	  },
-
-	  /**
-	   * Returns an object that is the result of parsing any query string contained
-	   * in the given path, null if the path contains no query string.
-	   */
-	  extractQuery: function (path) {
-	    var match = path.match(queryMatcher);
-	    return match && qs.parse(match[1]);
-	  },
-
-	  /**
-	   * Returns a version of the given path without the query string.
-	   */
-	  withoutQuery: function (path) {
-	    return path.replace(queryMatcher, '');
-	  },
-
-	  /**
-	   * Returns a version of the given path with the parameters in the given
-	   * query merged into the query string.
-	   */
-	  withQuery: function (path, query) {
-	    var existingQuery = Path.extractQuery(path);
-
-	    if (existingQuery)
-	      query = query ? merge(existingQuery, query) : existingQuery;
-
-	    var queryString = qs.stringify(query, { indices: false });
-
-	    if (queryString)
-	      return Path.withoutQuery(path) + '?' + queryString;
-
-	    return path;
-	  }
-
-	};
-
-	module.exports = Path;
-
-
 /***/ },
 /* 35 */
 /***/ function(module, exports, __webpack_require__) {
+
+	"use strict";
 
 	/**
 	 * Copyright 2013-2014, Facebook, Inc.
@@ -2619,21 +2575,22 @@ return /******/ (function(modules) { // webpackBootstrap
 	 * @return string       Renderable space-separated CSS className.
 	 */
 	function cx(classNames) {
-	  if (typeof classNames == 'object') {
-	    return Object.keys(classNames).filter(function(className) {
+	  if (typeof classNames == "object") {
+	    return Object.keys(classNames).filter(function (className) {
 	      return classNames[className];
-	    }).join(' ');
+	    }).join(" ");
 	  } else {
-	    return Array.prototype.join.call(arguments, ' ');
+	    return Array.prototype.join.call(arguments, " ");
 	  }
 	}
 
 	module.exports = cx;
 
-
 /***/ },
 /* 36 */
 /***/ function(module, exports, __webpack_require__) {
+
+	"use strict";
 
 	/**
 	 * Copyright 2014, Facebook, Inc.
@@ -2650,7 +2607,7 @@ return /******/ (function(modules) { // webpackBootstrap
 
 	function assign(target, sources) {
 	  if (target == null) {
-	    throw new TypeError('Object.assign target cannot be null or undefined');
+	    throw new TypeError("Object.assign target cannot be null or undefined");
 	  }
 
 	  var to = Object(target);
@@ -2681,21 +2638,9 @@ return /******/ (function(modules) { // webpackBootstrap
 
 	module.exports = assign;
 
-
 /***/ },
 /* 37 */
 /***/ function(module, exports, __webpack_require__) {
-
-	/**
-	 * Copyright 2013-2014, Facebook, Inc.
-	 * All rights reserved.
-	 *
-	 * This source code is licensed under the BSD-style license found in the
-	 * LICENSE file in the root directory of this source tree. An additional grant
-	 * of patent rights can be found in the PATENTS file in the same directory.
-	 *
-	 * @providesModule invariant
-	 */
 
 	"use strict";
 
@@ -2710,27 +2655,23 @@ return /******/ (function(modules) { // webpackBootstrap
 	 * will remain to ensure logic does not differ in production.
 	 */
 
-	var invariant = function(condition, format, a, b, c, d, e, f) {
+	var invariant = function invariant(condition, format, a, b, c, d, e, f) {
 	  if (false) {
 	    if (format === undefined) {
-	      throw new Error('invariant requires an error message argument');
+	      throw new Error("invariant requires an error message argument");
 	    }
 	  }
 
 	  if (!condition) {
 	    var error;
 	    if (format === undefined) {
-	      error = new Error(
-	        'Minified exception occurred; use the non-minified dev environment ' +
-	        'for the full error message and additional helpful warnings.'
-	      );
+	      error = new Error("Minified exception occurred; use the non-minified dev environment " + "for the full error message and additional helpful warnings.");
 	    } else {
 	      var args = [a, b, c, d, e, f];
 	      var argIndex = 0;
-	      error = new Error(
-	        'Invariant Violation: ' +
-	        format.replace(/%s/g, function() { return args[argIndex++]; })
-	      );
+	      error = new Error("Invariant Violation: " + format.replace(/%s/g, function () {
+	        return args[argIndex++];
+	      }));
 	    }
 
 	    error.framesToPop = 1; // we don't care about invariant's own frame
@@ -2739,12 +2680,46 @@ return /******/ (function(modules) { // webpackBootstrap
 	};
 
 	module.exports = invariant;
-
+	/**
+	 * Copyright 2013-2014, Facebook, Inc.
+	 * All rights reserved.
+	 *
+	 * This source code is licensed under the BSD-style license found in the
+	 * LICENSE file in the root directory of this source tree. An additional grant
+	 * of patent rights can be found in the PATENTS file in the same directory.
+	 *
+	 * @providesModule invariant
+	 */
 
 /***/ },
 /* 38 */
 /***/ function(module, exports, __webpack_require__) {
 
+	"use strict";
+
+	var canUseDOM = !!(typeof window !== "undefined" && window.document && window.document.createElement);
+
+	/**
+	 * Simple, lightweight module assisting with the detection and context of
+	 * Worker. Helps avoid circular dependencies and allows code to reason about
+	 * whether or not they are in a Worker, even if they never include the main
+	 * `ReactWorker` dependency.
+	 */
+	var ExecutionEnvironment = {
+
+	  canUseDOM: canUseDOM,
+
+	  canUseWorkers: typeof Worker !== "undefined",
+
+	  canUseEventListeners: canUseDOM && !!(window.addEventListener || window.attachEvent),
+
+	  canUseViewport: canUseDOM && !!window.screen,
+
+	  isInWorker: !canUseDOM // For now, this is true - might change in the future.
+
+	};
+
+	module.exports = ExecutionEnvironment;
 	/**
 	 * Copyright 2013-2014, Facebook, Inc.
 	 * All rights reserved.
@@ -2758,52 +2733,9 @@ return /******/ (function(modules) { // webpackBootstrap
 
 	/*jslint evil: true */
 
-	"use strict";
-
-	var canUseDOM = !!(
-	  typeof window !== 'undefined' &&
-	  window.document &&
-	  window.document.createElement
-	);
-
-	/**
-	 * Simple, lightweight module assisting with the detection and context of
-	 * Worker. Helps avoid circular dependencies and allows code to reason about
-	 * whether or not they are in a Worker, even if they never include the main
-	 * `ReactWorker` dependency.
-	 */
-	var ExecutionEnvironment = {
-
-	  canUseDOM: canUseDOM,
-
-	  canUseWorkers: typeof Worker !== 'undefined',
-
-	  canUseEventListeners:
-	    canUseDOM && !!(window.addEventListener || window.attachEvent),
-
-	  canUseViewport: canUseDOM && !!window.screen,
-
-	  isInWorker: !canUseDOM // For now, this is true - might change in the future.
-
-	};
-
-	module.exports = ExecutionEnvironment;
-
-
 /***/ },
 /* 39 */
 /***/ function(module, exports, __webpack_require__) {
-
-	/**
-	 * Copyright 2014, Facebook, Inc.
-	 * All rights reserved.
-	 *
-	 * This source code is licensed under the BSD-style license found in the
-	 * LICENSE file in the root directory of this source tree. An additional grant
-	 * of patent rights can be found in the PATENTS file in the same directory.
-	 *
-	 * @providesModule warning
-	 */
 
 	"use strict";
 
@@ -2819,27 +2751,38 @@ return /******/ (function(modules) { // webpackBootstrap
 	var warning = emptyFunction;
 
 	if (false) {
-	  warning = function(condition, format ) {for (var args=[],$__0=2,$__1=arguments.length;$__0<$__1;$__0++) args.push(arguments[$__0]);
+	  warning = function (condition, format) {
+	    for (var args = [], $__0 = 2, $__1 = arguments.length; $__0 < $__1; $__0++) args.push(arguments[$__0]);
 	    if (format === undefined) {
-	      throw new Error(
-	        '`warning(condition, format, ...args)` requires a warning ' +
-	        'message argument'
-	      );
+	      throw new Error("`warning(condition, format, ...args)` requires a warning " + "message argument");
 	    }
 
 	    if (!condition) {
 	      var argIndex = 0;
-	      console.warn('Warning: ' + format.replace(/%s/g, function()  {return args[argIndex++];}));
+	      console.warn("Warning: " + format.replace(/%s/g, function () {
+	        return args[argIndex++];
+	      }));
 	    }
 	  };
 	}
 
 	module.exports = warning;
-
+	/**
+	 * Copyright 2014, Facebook, Inc.
+	 * All rights reserved.
+	 *
+	 * This source code is licensed under the BSD-style license found in the
+	 * LICENSE file in the root directory of this source tree. An additional grant
+	 * of patent rights can be found in the PATENTS file in the same directory.
+	 *
+	 * @providesModule warning
+	 */
 
 /***/ },
 /* 40 */
 /***/ function(module, exports, __webpack_require__) {
+
+	"use strict";
 
 	var invariant = __webpack_require__(37);
 	var canUseDOM = __webpack_require__(38).canUseDOM;
@@ -2848,10 +2791,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	 * Returns the current scroll position of the window as { x, y }.
 	 */
 	function getWindowScrollPosition() {
-	  invariant(
-	    canUseDOM,
-	    'Cannot get current scroll position without a DOM'
-	  );
+	  invariant(canUseDOM, "Cannot get current scroll position without a DOM");
 
 	  return {
 	    x: window.pageXOffset || document.documentElement.scrollLeft,
@@ -2861,31 +2801,31 @@ return /******/ (function(modules) { // webpackBootstrap
 
 	module.exports = getWindowScrollPosition;
 
-
 /***/ },
 /* 41 */
 /***/ function(module, exports, __webpack_require__) {
 
-	module.exports = __webpack_require__(44);
+	"use strict";
 
+	module.exports = __webpack_require__(44);
 
 /***/ },
 /* 42 */
 /***/ function(module, exports, __webpack_require__) {
 
-	// Load modules
+	"use strict";
 
+	// Load modules
 
 	// Declare internals
 
 	var internals = {};
 
-
 	exports.arrayToObject = function (source) {
 
 	    var obj = {};
 	    for (var i = 0, il = source.length; i < il; ++i) {
-	        if (typeof source[i] !== 'undefined') {
+	        if (typeof source[i] !== "undefined") {
 
 	            obj[i] = source[i];
 	        }
@@ -2894,31 +2834,28 @@ return /******/ (function(modules) { // webpackBootstrap
 	    return obj;
 	};
 
-
 	exports.merge = function (target, source) {
 
 	    if (!source) {
 	        return target;
 	    }
 
-	    if (typeof source !== 'object') {
+	    if (typeof source !== "object") {
 	        if (Array.isArray(target)) {
 	            target.push(source);
-	        }
-	        else {
+	        } else {
 	            target[source] = true;
 	        }
 
 	        return target;
 	    }
 
-	    if (typeof target !== 'object') {
+	    if (typeof target !== "object") {
 	        target = [target].concat(source);
 	        return target;
 	    }
 
-	    if (Array.isArray(target) &&
-	        !Array.isArray(source)) {
+	    if (Array.isArray(target) && !Array.isArray(source)) {
 
 	        target = exports.arrayToObject(target);
 	    }
@@ -2930,8 +2867,7 @@ return /******/ (function(modules) { // webpackBootstrap
 
 	        if (!target[key]) {
 	            target[key] = value;
-	        }
-	        else {
+	        } else {
 	            target[key] = exports.merge(target[key], value);
 	        }
 	    }
@@ -2939,21 +2875,18 @@ return /******/ (function(modules) { // webpackBootstrap
 	    return target;
 	};
 
-
 	exports.decode = function (str) {
 
 	    try {
-	        return decodeURIComponent(str.replace(/\+/g, ' '));
+	        return decodeURIComponent(str.replace(/\+/g, " "));
 	    } catch (e) {
 	        return str;
 	    }
 	};
 
-
 	exports.compact = function (obj, refs) {
 
-	    if (typeof obj !== 'object' ||
-	        obj === null) {
+	    if (typeof obj !== "object" || obj === null) {
 
 	        return obj;
 	    }
@@ -2970,7 +2903,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	        var compacted = [];
 
 	        for (var i = 0, il = obj.length; i < il; ++i) {
-	            if (typeof obj[i] !== 'undefined') {
+	            if (typeof obj[i] !== "undefined") {
 	                compacted.push(obj[i]);
 	            }
 	        }
@@ -2987,29 +2920,25 @@ return /******/ (function(modules) { // webpackBootstrap
 	    return obj;
 	};
 
-
 	exports.isRegExp = function (obj) {
-	    return Object.prototype.toString.call(obj) === '[object RegExp]';
+	    return Object.prototype.toString.call(obj) === "[object RegExp]";
 	};
-
 
 	exports.isBuffer = function (obj) {
 
-	    if (obj === null ||
-	        typeof obj === 'undefined') {
+	    if (obj === null || typeof obj === "undefined") {
 
 	        return false;
 	    }
 
-	    return !!(obj.constructor &&
-	        obj.constructor.isBuffer &&
-	        obj.constructor.isBuffer(obj));
+	    return !!(obj.constructor && obj.constructor.isBuffer && obj.constructor.isBuffer(obj));
 	};
-
 
 /***/ },
 /* 43 */
 /***/ function(module, exports, __webpack_require__) {
+
+	"use strict";
 
 	/**
 	 * Copyright 2013-2014, Facebook, Inc.
@@ -3023,7 +2952,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	 */
 
 	function makeEmptyFunction(arg) {
-	  return function() {
+	  return function () {
 	    return arg;
 	  };
 	}
@@ -3039,104 +2968,98 @@ return /******/ (function(modules) { // webpackBootstrap
 	emptyFunction.thatReturnsFalse = makeEmptyFunction(false);
 	emptyFunction.thatReturnsTrue = makeEmptyFunction(true);
 	emptyFunction.thatReturnsNull = makeEmptyFunction(null);
-	emptyFunction.thatReturnsThis = function() { return this; };
-	emptyFunction.thatReturnsArgument = function(arg) { return arg; };
+	emptyFunction.thatReturnsThis = function () {
+	  return this;
+	};
+	emptyFunction.thatReturnsArgument = function (arg) {
+	  return arg;
+	};
 
 	module.exports = emptyFunction;
-
 
 /***/ },
 /* 44 */
 /***/ function(module, exports, __webpack_require__) {
+
+	"use strict";
 
 	// Load modules
 
 	var Stringify = __webpack_require__(45);
 	var Parse = __webpack_require__(46);
 
-
 	// Declare internals
 
 	var internals = {};
-
 
 	module.exports = {
 	    stringify: Stringify,
 	    parse: Parse
 	};
 
-
 /***/ },
 /* 45 */
 /***/ function(module, exports, __webpack_require__) {
+
+	"use strict";
 
 	// Load modules
 
 	var Utils = __webpack_require__(42);
 
-
 	// Declare internals
 
 	var internals = {
-	    delimiter: '&',
+	    delimiter: "&",
 	    indices: true
 	};
-
 
 	internals.stringify = function (obj, prefix, options) {
 
 	    if (Utils.isBuffer(obj)) {
 	        obj = obj.toString();
-	    }
-	    else if (obj instanceof Date) {
+	    } else if (obj instanceof Date) {
 	        obj = obj.toISOString();
-	    }
-	    else if (obj === null) {
-	        obj = '';
+	    } else if (obj === null) {
+	        obj = "";
 	    }
 
-	    if (typeof obj === 'string' ||
-	        typeof obj === 'number' ||
-	        typeof obj === 'boolean') {
+	    if (typeof obj === "string" || typeof obj === "number" || typeof obj === "boolean") {
 
-	        return [encodeURIComponent(prefix) + '=' + encodeURIComponent(obj)];
+	        return [encodeURIComponent(prefix) + "=" + encodeURIComponent(obj)];
 	    }
 
 	    var values = [];
 
-	    if (typeof obj === 'undefined') {
+	    if (typeof obj === "undefined") {
 	        return values;
 	    }
 
 	    var objKeys = Object.keys(obj);
 	    for (var i = 0, il = objKeys.length; i < il; ++i) {
 	        var key = objKeys[i];
-	        if (!options.indices &&
-	            Array.isArray(obj)) {
+	        if (!options.indices && Array.isArray(obj)) {
 
 	            values = values.concat(internals.stringify(obj[key], prefix, options));
-	        }
-	        else {
-	            values = values.concat(internals.stringify(obj[key], prefix + '[' + key + ']', options));
+	        } else {
+	            values = values.concat(internals.stringify(obj[key], prefix + "[" + key + "]", options));
 	        }
 	    }
 
 	    return values;
 	};
 
-
 	module.exports = function (obj, options) {
 
 	    options = options || {};
-	    var delimiter = typeof options.delimiter === 'undefined' ? internals.delimiter : options.delimiter;
-	    options.indices = typeof options.indices === 'boolean' ? options.indices : internals.indices;
+	    var delimiter = typeof options.delimiter === "undefined" ? internals.delimiter : options.delimiter;
+	    options.indices = typeof options.indices === "boolean" ? options.indices : internals.indices;
 
 	    var keys = [];
 
-	    if (typeof obj !== 'object' ||
-	        obj === null) {
+	    if (typeof obj !== "object" || obj === null) {
 
-	        return '';
+	        return "";
 	    }
 
 	    var objKeys = Object.keys(obj);
@@ -3148,25 +3071,24 @@ return /******/ (function(modules) { // webpackBootstrap
 	    return keys.join(delimiter);
 	};
 
-
 /***/ },
 /* 46 */
 /***/ function(module, exports, __webpack_require__) {
+
+	"use strict";
 
 	// Load modules
 
 	var Utils = __webpack_require__(42);
 
-
 	// Declare internals
 
 	var internals = {
-	    delimiter: '&',
+	    delimiter: "&",
 	    depth: 5,
 	    arrayLimit: 20,
 	    parameterLimit: 1000
 	};
-
 
 	internals.parseValues = function (str, options) {
 
@@ -3175,19 +3097,17 @@ return /******/ (function(modules) { // webpackBootstrap
 
 	    for (var i = 0, il = parts.length; i < il; ++i) {
 	        var part = parts[i];
-	        var pos = part.indexOf(']=') === -1 ? part.indexOf('=') : part.indexOf(']=') + 1;
+	        var pos = part.indexOf("]=") === -1 ? part.indexOf("=") : part.indexOf("]=") + 1;
 
 	        if (pos === -1) {
-	            obj[Utils.decode(part)] = '';
-	        }
-	        else {
+	            obj[Utils.decode(part)] = "";
+	        } else {
 	            var key = Utils.decode(part.slice(0, pos));
 	            var val = Utils.decode(part.slice(pos + 1));
 
 	            if (!obj.hasOwnProperty(key)) {
 	                obj[key] = val;
-	            }
-	            else {
+	            } else {
 	                obj[key] = [].concat(obj[key]).concat(val);
 	            }
 	        }
@@ -3195,7 +3115,6 @@ return /******/ (function(modules) { // webpackBootstrap
 
 	    return obj;
 	};
-
 
 	internals.parseObject = function (chain, val, options) {
 
@@ -3206,31 +3125,24 @@ return /******/ (function(modules) { // webpackBootstrap
 	    var root = chain.shift();
 
 	    var obj = {};
-	    if (root === '[]') {
+	    if (root === "[]") {
 	        obj = [];
 	        obj = obj.concat(internals.parseObject(chain, val, options));
-	    }
-	    else {
-	        var cleanRoot = root[0] === '[' && root[root.length - 1] === ']' ? root.slice(1, root.length - 1) : root;
+	    } else {
+	        var cleanRoot = root[0] === "[" && root[root.length - 1] === "]" ? root.slice(1, root.length - 1) : root;
 	        var index = parseInt(cleanRoot, 10);
-	        var indexString = '' + index;
-	        if (!isNaN(index) &&
-	            root !== cleanRoot &&
-	            indexString === cleanRoot &&
-	            index >= 0 &&
-	            index <= options.arrayLimit) {
+	        var indexString = "" + index;
+	        if (!isNaN(index) && root !== cleanRoot && indexString === cleanRoot && index >= 0 && index <= options.arrayLimit) {
 
 	            obj = [];
 	            obj[index] = internals.parseObject(chain, val, options);
-	        }
-	        else {
+	        } else {
 	            obj[cleanRoot] = internals.parseObject(chain, val, options);
 	        }
 	    }
 
 	    return obj;
 	};
-
 
 	internals.parseKeys = function (key, val, options) {
 
@@ -3266,7 +3178,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	    while ((segment = child.exec(key)) !== null && i < options.depth) {
 
 	        ++i;
-	        if (!Object.prototype.hasOwnProperty(segment[1].replace(/\[|\]/g, ''))) {
+	        if (!Object.prototype.hasOwnProperty(segment[1].replace(/\[|\]/g, ""))) {
 	            keys.push(segment[1]);
 	        }
 	    }
@@ -3274,29 +3186,26 @@ return /******/ (function(modules) { // webpackBootstrap
 	    // If there's a remainder, just add whatever is left
 
 	    if (segment) {
-	        keys.push('[' + key.slice(segment.index) + ']');
+	        keys.push("[" + key.slice(segment.index) + "]");
 	    }
 
 	    return internals.parseObject(keys, val, options);
 	};
 
-
 	module.exports = function (str, options) {
 
-	    if (str === '' ||
-	        str === null ||
-	        typeof str === 'undefined') {
+	    if (str === "" || str === null || typeof str === "undefined") {
 
 	        return {};
 	    }
 
 	    options = options || {};
-	    options.delimiter = typeof options.delimiter === 'string' || Utils.isRegExp(options.delimiter) ? options.delimiter : internals.delimiter;
-	    options.depth = typeof options.depth === 'number' ? options.depth : internals.depth;
-	    options.arrayLimit = typeof options.arrayLimit === 'number' ? options.arrayLimit : internals.arrayLimit;
-	    options.parameterLimit = typeof options.parameterLimit === 'number' ? options.parameterLimit : internals.parameterLimit;
+	    options.delimiter = typeof options.delimiter === "string" || Utils.isRegExp(options.delimiter) ? options.delimiter : internals.delimiter;
+	    options.depth = typeof options.depth === "number" ? options.depth : internals.depth;
+	    options.arrayLimit = typeof options.arrayLimit === "number" ? options.arrayLimit : internals.arrayLimit;
+	    options.parameterLimit = typeof options.parameterLimit === "number" ? options.parameterLimit : internals.parameterLimit;
 
-	    var tempObj = typeof str === 'string' ? internals.parseValues(str, options) : str;
+	    var tempObj = typeof str === "string" ? internals.parseValues(str, options) : str;
 	    var obj = {};
 
 	    // Iterate over the keys and setup the new object
@@ -3310,7 +3219,6 @@ return /******/ (function(modules) { // webpackBootstrap
 
 	    return Utils.compact(obj);
 	};
-
 
 /***/ }
 /******/ ])

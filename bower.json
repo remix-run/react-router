@@ -1,6 +1,6 @@
 {
   "name": "react-router",
-  "version": "0.12.2",
+  "version": "0.12.3",
   "description": "A complete routing library for React.js",
   "main": "build/global/ReactRouter.js",
   "homepage": "https://github.com/rackt/react-router",

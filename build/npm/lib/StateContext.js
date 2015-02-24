@@ -2,7 +2,7 @@
 
 var assign = require("react/lib/Object.assign");
 var PropTypes = require("./PropTypes");
-var Path = require("./utils/Path");
+var PathUtils = require("./PathUtils");
 
 function routeIsActive(activeRoutes, routeName) {
   return activeRoutes.some(function (route) {
@@ -66,7 +66,7 @@ var StateContext = {
    * Returns true if the given route, params, and query are active.
    */
   isActive: function isActive(to, params, query) {
-    if (Path.isAbsolute(to)) {
+    if (PathUtils.isAbsolute(to)) {
       return to === this.state.path;
     }return routeIsActive(this.state.routes, to) && paramsAreActive(this.state.params, params) && (query == null || queryIsActive(this.state.query, query));
   },

@@ -1,15 +1,19 @@
 "use strict";
 
+var _classCallCheck = function (instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } };
+
 /* jshint -W084 */
 
-var Path = require("./utils/Path");
+var PathUtils = require("./PathUtils");
 
-function Match(pathname, params, query, routes) {
+var Match = function Match(pathname, params, query, routes) {
+  _classCallCheck(this, Match);
+
   this.pathname = pathname;
   this.params = params;
   this.query = query;
   this.routes = routes;
-}
+};
 
 function deepSearch(route, pathname, query) {
   // Check the subtree first to find the most deeply-nested match.
@@ -31,14 +35,14 @@ function deepSearch(route, pathname, query) {
 
   // No child routes matched; try the default route.
   var defaultRoute = route.defaultRoute;
-  if (defaultRoute && (params = Path.extractParams(defaultRoute.path, pathname))) {
+  if (defaultRoute && (params = PathUtils.extractParams(defaultRoute.path, pathname))) {
     return new Match(pathname, params, query, [route, defaultRoute]);
   } // Does the "not found" route match?
   var notFoundRoute = route.notFoundRoute;
-  if (notFoundRoute && (params = Path.extractParams(notFoundRoute.path, pathname))) {
+  if (notFoundRoute && (params = PathUtils.extractParams(notFoundRoute.path, pathname))) {
     return new Match(pathname, params, query, [route, notFoundRoute]);
   } // Last attempt: check this route.
-  var params = Path.extractParams(route.path, pathname);
+  var params = PathUtils.extractParams(route.path, pathname);
   if (params) {
     return new Match(pathname, params, query, [route]);
   }return null;
@@ -50,8 +54,8 @@ function deepSearch(route, pathname, query) {
  * succeeds, null if no match can be made.
  */
 Match.findMatchForPath = function (routes, path) {
-  var pathname = Path.withoutQuery(path);
-  var query = Path.extractQuery(path);
+  var pathname = PathUtils.withoutQuery(path);
+  var query = PathUtils.extractQuery(path);
   var match = null;
 
   for (var i = 0, len = routes.length; match == null && i < len; ++i) match = deepSearch(routes[i], pathname, query);
