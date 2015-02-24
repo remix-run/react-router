@@ -9,20 +9,26 @@ function throwCannotModify() {
  * stateless environments like servers where there is no path history,
  * only the path that was used in the request.
  */
-function StaticLocation(path) {
-  this.path = path;
+class StaticLocation {
+
+  constructor(path) {
+    this.path = path;
+  }
+
+  getCurrentPath() {
+    return this.path;
+  }
+
+  toString() {
+    return `<StaticLocation path="${this.path}">`;
+  }
+
 }
 
+// TODO: Include these in the above class definition
+// once we can use ES7 property initializers.
 StaticLocation.prototype.push = throwCannotModify;
 StaticLocation.prototype.replace = throwCannotModify;
 StaticLocation.prototype.pop = throwCannotModify;
-
-StaticLocation.prototype.getCurrentPath = function () {
-  return this.path;
-};
-
-StaticLocation.prototype.toString = function () {
-  return '<StaticLocation path="' + this.path + '">';
-};
 
 module.exports = StaticLocation;

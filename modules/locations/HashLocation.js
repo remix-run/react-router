@@ -60,7 +60,7 @@ function onHashChange() {
  */
 var HashLocation = {
 
-  addChangeListener: function (listener) {
+  addChangeListener(listener) {
     _changeListeners.push(listener);
 
     // Do this BEFORE listening for hashchange.
@@ -77,7 +77,7 @@ var HashLocation = {
     }
   },
 
-  removeChangeListener: function(listener) {
+  removeChangeListener(listener) {
     _changeListeners = _changeListeners.filter(function (l) {
       return l !== listener;
     });
@@ -93,26 +93,26 @@ var HashLocation = {
     }
   },
 
-  push: function (path) {
+  push(path) {
     _actionType = LocationActions.PUSH;
     window.location.hash = path;
   },
 
-  replace: function (path) {
+  replace(path) {
     _actionType = LocationActions.REPLACE;
     window.location.replace(
       window.location.pathname + window.location.search + '#' + path
     );
   },
 
-  pop: function () {
+  pop() {
     _actionType = LocationActions.POP;
     History.back();
   },
 
   getCurrentPath: getHashPath,
 
-  toString: function () {
+  toString() {
     return '<HashLocation>';
   }
 

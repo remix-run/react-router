@@ -8,11 +8,11 @@ var History = require('../History');
  */
 var RefreshLocation = {
 
-  push: function (path) {
+  push(path) {
     window.location = path;
   },
 
-  replace: function (path) {
+  replace(path) {
     window.location.replace(path);
   },
 
@@ -20,7 +20,7 @@ var RefreshLocation = {
 
   getCurrentPath: HistoryLocation.getCurrentPath,
 
-  toString: function () {
+  toString() {
     return '<RefreshLocation>';
   }
 

@@ -5,62 +5,68 @@ var History = require('../History');
 /**
  * A location that is convenient for testing and does not require a DOM.
  */
-function TestLocation(history) {
-  this.history = history || [];
-  this.listeners = [];
-  this._updateHistoryLength();
+class TestLocation {
+
+  constructor(history) {
+    this.history = history || [];
+    this.listeners = [];
+    this._updateHistoryLength();
+  }
+
+  get needsDOM() {
+    return false;
+  }
+
+  _updateHistoryLength() {
+    History.length = this.history.length;
+  }
+
+  _notifyChange(type) {
+    for (var i = 0, len = this.listeners.length; i < len; ++i)
+      this.listeners[i].call(this, { path: this.getCurrentPath(), type: type });
+  }
+
+  addChangeListener(listener) {
+    this.listeners.push(listener);
+  }
+
+  removeChangeListener(listener) {
+    this.listeners = this.listeners.filter(function (l) {
+      return l !== listener;
+    });
+  }
+
+  push(path) {
+    this.history.push(path);
+    this._updateHistoryLength();
+    this._notifyChange(LocationActions.PUSH);
+  }
+
+  replace(path) {
+    invariant(
+      this.history.length,
+      'You cannot replace the current path with no history'
+    );
+
+    this.history[this.history.length - 1] = path;
+
+    this._notifyChange(LocationActions.REPLACE);
+  }
+
+  pop() {
+    this.history.pop();
+    this._updateHistoryLength();
+    this._notifyChange(LocationActions.POP);
+  }
+
+  getCurrentPath() {
+    return this.history[this.history.length - 1];
+  }
+
+  toString() {
+    return '<TestLocation>';
+  }
+
 }
-
-TestLocation.prototype.needsDOM = false;
-
-TestLocation.prototype._updateHistoryLength = function () {
-  History.length = this.history.length;
-};
-
-TestLocation.prototype._notifyChange = function (type) {
-  for (var i = 0, len = this.listeners.length; i < len; ++i)
-    this.listeners[i].call(this, { path: this.getCurrentPath(), type: type });
-};
-
-TestLocation.prototype.addChangeListener = function (listener) {
-  this.listeners.push(listener);
-};
-
-TestLocation.prototype.removeChangeListener = function (listener) {
-  this.listeners = this.listeners.filter(function (l) {
-    return l !== listener;
-  });
-};
-
-TestLocation.prototype.push = function (path) {
-  this.history.push(path);
-  this._updateHistoryLength();
-  this._notifyChange(LocationActions.PUSH);
-};
-
-TestLocation.prototype.replace = function (path) {
-  invariant(
-    this.history.length,
-    'You cannot replace the current path with no history'
-  );
-
-  this.history[this.history.length - 1] = path;
-
-  this._notifyChange(LocationActions.REPLACE);
-};
-
-TestLocation.prototype.pop = function () {
-  this.history.pop();
-  this._updateHistoryLength();
-  this._notifyChange(LocationActions.POP);
-};
-
-TestLocation.prototype.getCurrentPath = function () {
-  return this.history[this.history.length - 1];
-};
-
-TestLocation.prototype.toString = function () {
-  return '<TestLocation>';
-};
 
 module.exports = TestLocation;

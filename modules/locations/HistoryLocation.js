@@ -37,7 +37,7 @@ function onPopState(event) {
  */
 var HistoryLocation = {
 
-  addChangeListener: function (listener) {
+  addChangeListener(listener) {
     _changeListeners.push(listener);
 
     if (!_isListening) {
@@ -51,7 +51,7 @@ var HistoryLocation = {
     }
   },
 
-  removeChangeListener: function(listener) {
+  removeChangeListener(listener) {
     _changeListeners = _changeListeners.filter(function (l) {
       return l !== listener;
     });
@@ -67,13 +67,13 @@ var HistoryLocation = {
     }
   },
 
-  push: function (path) {
+  push(path) {
     window.history.pushState({ path: path }, '', path);
     History.length += 1;
     notifyChange(LocationActions.PUSH);
   },
 
-  replace: function (path) {
+  replace(path) {
     window.history.replaceState({ path: path }, '', path);
     notifyChange(LocationActions.REPLACE);
   },
@@ -82,7 +82,7 @@ var HistoryLocation = {
 
   getCurrentPath: getWindowPath,
 
-  toString: function () {
+  toString() {
     return '<HistoryLocation>';
   }
 
