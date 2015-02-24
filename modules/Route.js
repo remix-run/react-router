@@ -63,7 +63,7 @@ class Route {
     var name = options.name;
     var path = options.path || name;
 
-    if (path) {
+    if (path && !(options.isDefault || options.isNotFound)) {
       if (PathUtils.isAbsolute(path)) {
         if (parentRoute) {
           invariant(

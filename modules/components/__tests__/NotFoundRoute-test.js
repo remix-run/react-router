@@ -8,7 +8,7 @@ var { Nested, Foo, Bar } = require('../../TestUtils');
 describe('NotFoundRoute', function () {
 
   describe('at the root of the config', function () {
-    it('renders when no routes match', function () {
+    it('renders when no other routes match', function () {
       var routes = <NotFoundRoute handler={Bar}/>;
       Router.run(routes, '/ryans-patience', function (Handler) {
         var html = React.renderToString(<Handler />);
@@ -18,7 +18,7 @@ describe('NotFoundRoute', function () {
   });
 
   describe('nested in the config', function () {
-    it('renders', function () {
+    it('renders when none of its siblings match', function () {
       var routes = (
         <Route path='/' handler={Nested}>
           <Route path='/foo' handler={Foo}/>
@@ -57,6 +57,22 @@ describe('NotFoundRoute', function () {
         var html = React.renderToString(<Handler />);
         expect(html).toMatch(/Nested/);
         expect(html).toMatch(/Foo/);
+      });
+    });
+  });
+
+  describe('with a name', function () {
+    it('renders when none of its siblings match', function () {
+      var routes = (
+        <Route path='/' handler={Nested}>
+          <Route path='/foo' handler={Foo}/>
+          <NotFoundRoute name="not-found" handler={Bar} />
+        </Route>
+      );
+
+      Router.run(routes, '/ryans-mind', function (Handler) {
+        var html = React.renderToString(<Handler/>);
+        expect(html).toMatch(/Bar/);
       });
     });
   });
