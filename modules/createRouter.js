@@ -379,37 +379,68 @@ function createRouter(options) {
        * the callback is called only once. Otherwise, the location should be one of the
        * Router.*Location objects (e.g. Router.HashLocation or Router.HistoryLocation).
        */
-      run: function (callback) {
+      run: function (path, callback) {
+        if (typeof path === 'function') {
+          callback = path;
+        }
+
         invariant(
           !this.isRunning,
           'Router is already running'
         );
 
-        dispatchHandler = function (error, transition, newState) {
-          if (error)
-            Router.handleError(error);
+        if (callback) {
+          dispatchHandler = function (error, transition, newState) {
+            if (error)
+              Router.handleError(error);
 
-          if (pendingTransition !== transition)
-            return;
+            if (pendingTransition !== transition)
+              return;
 
-          pendingTransition = null;
+            pendingTransition = null;
 
-          if (transition.abortReason) {
-            Router.handleAbort(transition.abortReason);
-          } else {
-            callback.call(this, this, nextState = newState);
+            if (transition.abortReason) {
+              Router.handleAbort(transition.abortReason);
+            } else {
+              callback.call(this, this, nextState = newState);
+            }
+          };
+
+          if (typeof path === 'string')
+            location = new StaticLocation(path);
+
+          if (!(location instanceof StaticLocation)) {
+            if (location.addChangeListener)
+              location.addChangeListener(Router.handleLocationChange);
+
+            this.isRunning = true;
           }
-        };
 
-        if (!(location instanceof StaticLocation)) {
-          if (location.addChangeListener)
-            location.addChangeListener(Router.handleLocationChange);
+          // Bootstrap using the current path.
+          this.refresh();
+        } else {
+          var match = this.match(path);
 
-          this.isRunning = true;
+          warning(
+            match != null,
+            'No route matches path "%s". Make sure you have <Route path="%s"> somewhere in your routes',
+            path, path
+          );
+
+          if (match == null)
+            match = {};
+
+          nextState = {
+            path: path,
+            action: null,
+            pathname: match.pathname,
+            routes: match.routes || [],
+            params: match.params || {},
+            query: match.query || {}
+          };
+
+          return { Handler: Router, state: nextState };
         }
-
-        // Bootstrap using the current path.
-        this.refresh();
       },
 
       refresh: function () {

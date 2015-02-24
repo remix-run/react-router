@@ -1202,6 +1202,32 @@ describe('Router.run', function () {
   });
 });
 
+describe('router.run', function () {
+  describe('with both a path and a callback argument', function () {
+    it('respects the path and calls the callback', function (done) {
+      var routes = <Route handler={Foo} path="/foo"/>;
+      var router = Router.create(routes);
+      router.run('/foo', function(Handler, state) {
+        var html = React.renderToString(<Handler/>);
+        expect(html).toMatch(/Foo/);
+        expect(state.path).toEqual('/foo');
+        done();
+      });
+    });
+  });
+
+  describe('with only a path argument', function () {
+    it('returns a {Handler, state} object for the given URL path', function () {
+      var routes = <Route handler={Foo} path="/foo"/>;
+      var router = Router.create(routes);
+      var {Handler, state} = router.run('/foo');
+      var html = React.renderToString(<Handler/>);
+      expect(html).toMatch(/Foo/);
+      expect(state.path).toEqual('/foo');
+    });
+  });
+});
+
 describe.skip('unmounting', function () {
   afterEach(function () {
     window.location.hash = '';
