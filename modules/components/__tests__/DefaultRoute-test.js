@@ -3,7 +3,7 @@ var React = require('react');
 var Router = require('../../index');
 var DefaultRoute = require('../DefaultRoute');
 var Route = require('../Route');
-var { Foo, Bar, Nested } = require('../../TestUtils');
+var { Foo, Nested } = require('../../TestUtils');
 
 describe('DefaultRoute', function () {
 
