@@ -1011,7 +1011,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	var assign = __webpack_require__(36);
 	var invariant = __webpack_require__(37);
 	var warning = __webpack_require__(39);
-	var Path = __webpack_require__(25);
+	var Path = __webpack_require__(34);
 
 	function Route(name, path, ignoreScrollBehavior, isDefault, isNotFound, onEnter, onLeave, handler) {
 	  this.name = name;
@@ -1025,6 +1025,21 @@ return /******/ (function(modules) { // webpackBootstrap
 	  this.handler = handler;
 	}
 
+	/**
+	 * Appends the given route to this route's child routes.
+	 */
+	Route.prototype.appendChild = function (route) {
+	  invariant(
+	    route instanceof Route,
+	    'route.appendChild must use a valid Route'
+	  );
+
+	  if (!this.childRoutes)
+	    this.childRoutes = [];
+
+	  this.childRoutes.push(route);
+	};
+
 	Route.prototype.toString = function () {
 	  var string = '<Route';
 
@@ -1034,93 +1049,6 @@ return /******/ (function(modules) { // webpackBootstrap
 	  string += (" path=\"" + this.path + "\">");
 
 	  return string;
-	};
-
-	/**
-	 * Appends the given route to this route's child routes.
-	 */
-	Route.prototype.appendChildRoute = function (route) {
-	  invariant(
-	    route instanceof Route,
-	    'route.appendChildRoute must use a valid Route'
-	  );
-
-	  if (!this.childRoutes)
-	    this.childRoutes = [];
-
-	  if (route.name) {
-	    invariant(
-	      this.childRoutes.every(function (childRoute) {
-	        return childRoute.name !== route.name;
-	      }),
-	      'Route %s may not have more than one child route named "%s"',
-	      this, route.name
-	    );
-	  }
-
-	  this.childRoutes.push(route);
-	};
-
-	/**
-	 * Allows looking up a child route using a "." delimited string, e.g.:
-	 *
-	 *   route.appendChildRoute(
-	 *     Router.createRoute({ name: 'user' }, function () {
-	 *       Router.createRoute({ name: 'new' });
-	 *     })
-	 *   );
-	 *
-	 *   var NewUserRoute = route.lookupChildRoute('user.new');
-	 *
-	 * See also Route.findRouteByName.
-	 */
-	Route.prototype.lookupChildRoute = function (names) {
-	  if (!this.childRoutes)
-	    return null;
-
-	  return Route.findRouteByName(this.childRoutes, names);
-	};
-
-	/**
-	 * Searches the given array of routes and returns the route that matches
-	 * the given name. The name should be a . delimited string like "user.new"
-	 * that specifies the names of nested routes. Routes in the hierarchy that
-	 * do not have a name do not need to be specified in the search string.
-	 *
-	 *   var routes = [
-	 *     Router.createRoute({ name: 'user' }, function () {
-	 *       Router.createRoute({ name: 'new' });
-	 *     })
-	 *   ];
-	 *
-	 *   var NewUserRoute = Route.findRouteByName(routes, 'user.new');
-	 */
-	Route.findRouteByName = function (routes, names) {
-	  if (typeof names === 'string')
-	    names = names.split('.');
-
-	  var route, foundRoute;
-	  for (var i = 0, len = routes.length; i < len; ++i) {
-	    route = routes[i];
-
-	    if (route.name === names[0]) {
-	      if (names.length === 1)
-	        return route;
-
-	      if (!route.childRoutes)
-	        return null;
-
-	      return Route.findRouteByName(route.childRoutes, names.slice(1));
-	    } else if (route.name == null) {
-	      // Transparently skip over unnamed routes in the tree.
-	      foundRoute = route.lookupChildRoute(names);
-
-	      if (foundRoute != null)
-	        return foundRoute;
-	    }
-	  }
-
-	  return null;
 	};
 
 	var _currentRoute;
@@ -1233,7 +1161,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	      parentRoute.notFoundRoute = route;
 	    }
 
-	    parentRoute.appendChildRoute(route);
+	    parentRoute.appendChild(route);
 	  }
 
 	  // Any routes created in the callback
@@ -1403,20 +1331,20 @@ return /******/ (function(modules) { // webpackBootstrap
 	var HistoryLocation = __webpack_require__(8);
 	var RefreshLocation = __webpack_require__(9);
 	var StaticLocation = __webpack_require__(10);
-	var NavigationContext = __webpack_require__(26);
-	var ScrollHistory = __webpack_require__(27);
-	var StateContext = __webpack_require__(28);
+	var NavigationContext = __webpack_require__(25);
+	var ScrollHistory = __webpack_require__(26);
+	var StateContext = __webpack_require__(27);
 	var createRoutesFromReactChildren = __webpack_require__(18);
-	var isReactChildren = __webpack_require__(29);
-	var Transition = __webpack_require__(30);
+	var isReactChildren = __webpack_require__(28);
+	var Transition = __webpack_require__(29);
 	var PropTypes = __webpack_require__(23);
-	var Redirect = __webpack_require__(31);
+	var Redirect = __webpack_require__(30);
 	var History = __webpack_require__(13);
-	var Cancellation = __webpack_require__(32);
-	var Match = __webpack_require__(33);
+	var Cancellation = __webpack_require__(31);
+	var Match = __webpack_require__(32);
 	var Route = __webpack_require__(17);
-	var supportsHistory = __webpack_require__(34);
-	var Path = __webpack_require__(25);
+	var supportsHistory = __webpack_require__(33);
+	var Path = __webpack_require__(34);
 
 	/**
 	 * The default location for new routers.
@@ -1455,6 +1383,26 @@ return /******/ (function(modules) { // webpackBootstrap
 	    // Ensure the query hasn't changed.
 	    return hasProperties(prevQuery, nextQuery) && hasProperties(nextQuery, prevQuery);
 	  });
+	}
+
+	function addRoutesToNamedRoutes(routes, namedRoutes) {
+	  var route;
+	  for (var i = 0, len = routes.length; i < len; ++i) {
+	    route = routes[i];
+
+	    if (route.name) {
+	      invariant(
+	        namedRoutes[route.name] == null,
+	        'You may not have more than one route named "%s"',
+	        route.name
+	      );
+
+	      namedRoutes[route.name] = route;
+	    }
+
+	    if (route.childRoutes)
+	      addRoutesToNamedRoutes(route.childRoutes, namedRoutes);
+	  }
 	}
 
 	/**
@@ -1528,6 +1476,7 @@ return /******/ (function(modules) { // webpackBootstrap
 
 	      clearAllRoutes: function () {
 	        this.cancelPendingTransition();
+	        this.namedRoutes = {};
 	        this.routes = [];
 	      },
 
@@ -1537,6 +1486,8 @@ return /******/ (function(modules) { // webpackBootstrap
 	      addRoutes: function (routes) {
 	        if (isReactChildren(routes))
 	          routes = createRoutesFromReactChildren(routes);
+
+	        addRoutesToNamedRoutes(routes, this.namedRoutes);
 
 	        this.routes.push.apply(this.routes, routes);
 	      },
@@ -1568,7 +1519,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	        if (Path.isAbsolute(to)) {
 	          path = to;
 	        } else {
-	          var route = (to instanceof Route) ? to : Route.findRouteByName(this.routes, to);
+	          var route = (to instanceof Route) ? to : this.namedRoutes[to];
 
 	          invariant(
 	            route instanceof Route,
@@ -2021,6 +1972,461 @@ return /******/ (function(modules) { // webpackBootstrap
 /* 25 */
 /***/ function(module, exports, __webpack_require__) {
 
+	var PropTypes = __webpack_require__(23);
+
+	/**
+	 * Provides the router with context for Router.Navigation.
+	 */
+	var NavigationContext = {
+
+	  childContextTypes: {
+	    makePath: PropTypes.func.isRequired,
+	    makeHref: PropTypes.func.isRequired,
+	    transitionTo: PropTypes.func.isRequired,
+	    replaceWith: PropTypes.func.isRequired,
+	    goBack: PropTypes.func.isRequired
+	  },
+
+	  getChildContext: function () {
+	    return {
+	      makePath: this.constructor.makePath.bind(this.constructor),
+	      makeHref: this.constructor.makeHref.bind(this.constructor),
+	      transitionTo: this.constructor.transitionTo.bind(this.constructor),
+	      replaceWith: this.constructor.replaceWith.bind(this.constructor),
+	      goBack: this.constructor.goBack.bind(this.constructor)
+	    };
+	  }
+
+	};
+
+	module.exports = NavigationContext;
+
+
+/***/ },
+/* 26 */
+/***/ function(module, exports, __webpack_require__) {
+
+	var invariant = __webpack_require__(37);
+	var canUseDOM = __webpack_require__(38).canUseDOM;
+	var getWindowScrollPosition = __webpack_require__(40);
+
+	function shouldUpdateScroll(state, prevState) {
+	  if (!prevState)
+	    return true;
+
+	  // Don't update scroll position when only the query has changed.
+	  if (state.pathname === prevState.pathname)
+	    return false;
+
+	  var routes = state.routes;
+	  var prevRoutes = prevState.routes;
+
+	  var sharedAncestorRoutes = routes.filter(function (route) {
+	    return prevRoutes.indexOf(route) !== -1;
+	  });
+
+	  return !sharedAncestorRoutes.some(function (route) {
+	    return route.ignoreScrollBehavior;
+	  });
+	}
+
+	/**
+	 * Provides the router with the ability to manage window scroll position
+	 * according to its scroll behavior.
+	 */
+	var ScrollHistory = {
+
+	  statics: {
+
+	    /**
+	     * Records curent scroll position as the last known position for the given URL path.
+	     */
+	    recordScrollPosition: function (path) {
+	      if (!this.scrollHistory)
+	        this.scrollHistory = {};
+
+	      this.scrollHistory[path] = getWindowScrollPosition();
+	    },
+
+	    /**
+	     * Returns the last known scroll position for the given URL path.
+	     */
+	    getScrollPosition: function (path) {
+	      if (!this.scrollHistory)
+	        this.scrollHistory = {};
+
+	      return this.scrollHistory[path] || null;
+	    }
+
+	  },
+
+	  componentWillMount: function () {
+	    invariant(
+	      this.constructor.getScrollBehavior() == null || canUseDOM,
+	      'Cannot use scroll behavior without a DOM'
+	    );
+	  },
+
+	  componentDidMount: function () {
+	    this._updateScroll();
+	  },
+
+	  componentDidUpdate: function (prevProps, prevState) {
+	    this._updateScroll(prevState);
+	  },
+
+	  _updateScroll: function (prevState) {
+	    if (!shouldUpdateScroll(this.state, prevState))
+	      return;
+
+	    var scrollBehavior = this.constructor.getScrollBehavior();
+
+	    if (scrollBehavior)
+	      scrollBehavior.updateScrollPosition(
+	        this.constructor.getScrollPosition(this.state.path),
+	        this.state.action
+	      );
+	  }
+
+	};
+
+	module.exports = ScrollHistory;
+
+
+/***/ },
+/* 27 */
+/***/ function(module, exports, __webpack_require__) {
+
+	var assign = __webpack_require__(36);
+	var PropTypes = __webpack_require__(23);
+	var Path = __webpack_require__(34);
+
+	function routeIsActive(activeRoutes, routeName) {
+	  return activeRoutes.some(function (route) {
+	    return route.name === routeName;
+	  });
+	}
+
+	function paramsAreActive(activeParams, params) {
+	  for (var property in params)
+	    if (String(activeParams[property]) !== String(params[property]))
+	      return false;
+
+	  return true;
+	}
+
+	function queryIsActive(activeQuery, query) {
+	  for (var property in query)
+	    if (String(activeQuery[property]) !== String(query[property]))
+	      return false;
+
+	  return true;
+	}
+
+	/**
+	 * Provides the router with context for Router.State.
+	 */
+	var StateContext = {
+
+	  /**
+	   * Returns the current URL path + query string.
+	   */
+	  getCurrentPath: function () {
+	    return this.state.path;
+	  },
+
+	  /**
+	   * Returns a read-only array of the currently active routes.
+	   */
+	  getCurrentRoutes: function () {
+	    return this.state.routes.slice(0);
+	  },
+
+	  /**
+	   * Returns the current URL path without the query string.
+	   */
+	  getCurrentPathname: function () {
+	    return this.state.pathname;
+	  },
+
+	  /**
+	   * Returns a read-only object of the currently active URL parameters.
+	   */
+	  getCurrentParams: function () {
+	    return assign({}, this.state.params);
+	  },
+
+	  /**
+	   * Returns a read-only object of the currently active query parameters.
+	   */
+	  getCurrentQuery: function () {
+	    return assign({}, this.state.query);
+	  },
+
+	  /**
+	   * Returns true if the given route, params, and query are active.
+	   */
+	  isActive: function (to, params, query) {
+	    if (Path.isAbsolute(to))
+	      return to === this.state.path;
+
+	    return routeIsActive(this.state.routes, to) &&
+	      paramsAreActive(this.state.params, params) &&
+	      (query == null || queryIsActive(this.state.query, query));
+	  },
+
+	  childContextTypes: {
+	    getCurrentPath: PropTypes.func.isRequired,
+	    getCurrentRoutes: PropTypes.func.isRequired,
+	    getCurrentPathname: PropTypes.func.isRequired,
+	    getCurrentParams: PropTypes.func.isRequired,
+	    getCurrentQuery: PropTypes.func.isRequired,
+	    isActive: PropTypes.func.isRequired
+	  },
+
+	  getChildContext: function () {
+	    return {
+	      getCurrentPath: this.getCurrentPath,
+	      getCurrentRoutes: this.getCurrentRoutes,
+	      getCurrentPathname: this.getCurrentPathname,
+	      getCurrentParams: this.getCurrentParams,
+	      getCurrentQuery: this.getCurrentQuery,
+	      isActive: this.isActive
+	    };
+	  }
+
+	};
+
+	module.exports = StateContext;
+
+
+/***/ },
+/* 28 */
+/***/ function(module, exports, __webpack_require__) {
+
+	var React = __webpack_require__(21);
+
+	function isValidChild(object) {
+	  return object == null || React.isValidElement(object);
+	}
+
+	function isReactChildren(object) {
+	  return isValidChild(object) || (Array.isArray(object) && object.every(isValidChild));
+	}
+
+	module.exports = isReactChildren;
+
+
+/***/ },
+/* 29 */
+/***/ function(module, exports, __webpack_require__) {
+
+	/* jshint -W058 */
+
+	var Cancellation = __webpack_require__(31);
+	var Redirect = __webpack_require__(30);
+
+	/**
+	 * Encapsulates a transition to a given path.
+	 *
+	 * The willTransitionTo and willTransitionFrom handlers receive
+	 * an instance of this class as their first argument.
+	 */
+	function Transition(path, retry) {
+	  this.path = path;
+	  this.abortReason = null;
+	  // TODO: Change this to router.retryTransition(transition)
+	  this.retry = retry.bind(this);
+	}
+
+	Transition.prototype.abort = function (reason) {
+	  if (this.abortReason == null)
+	    this.abortReason = reason || 'ABORT';
+	};
+
+	Transition.prototype.redirect = function (to, params, query) {
+	  this.abort(new Redirect(to, params, query));
+	};
+
+	Transition.prototype.cancel = function () {
+	  this.abort(new Cancellation);
+	};
+
+	Transition.from = function (transition, routes, components, callback) {
+	  routes.reduce(function (callback, route, index) {
+	    return function (error) {
+	      if (error || transition.abortReason) {
+	        callback(error);
+	      } else if (route.onLeave) {
+	        try {
+	          route.onLeave(transition, components[index], callback);
+
+	          // If there is no callback in the argument list, call it automatically.
+	          if (route.onLeave.length < 3)
+	            callback();
+	        } catch (e) {
+	          callback(e);
+	        }
+	      } else {
+	        callback();
+	      }
+	    };
+	  }, callback)();
+	};
+
+	Transition.to = function (transition, routes, params, query, callback) {
+	  routes.reduceRight(function (callback, route) {
+	    return function (error) {
+	      if (error || transition.abortReason) {
+	        callback(error);
+	      } else if (route.onEnter) {
+	        try {
+	          route.onEnter(transition, params, query, callback);
+
+	          // If there is no callback in the argument list, call it automatically.
+	          if (route.onEnter.length < 4)
+	            callback();
+	        } catch (e) {
+	          callback(e);
+	        }
+	      } else {
+	        callback();
+	      }
+	    };
+	  }, callback)();
+	};
+
+	module.exports = Transition;
+
+
+/***/ },
+/* 30 */
+/***/ function(module, exports, __webpack_require__) {
+
+	/**
+	 * Encapsulates a redirect to the given route.
+	 */
+	function Redirect(to, params, query) {
+	  this.to = to;
+	  this.params = params;
+	  this.query = query;
+	}
+
+	module.exports = Redirect;
+
+
+/***/ },
+/* 31 */
+/***/ function(module, exports, __webpack_require__) {
+
+	/**
+	 * Represents a cancellation caused by navigating away
+	 * before the previous transition has fully resolved.
+	 */
+	function Cancellation() {}
+
+	module.exports = Cancellation;
+
+
+/***/ },
+/* 32 */
+/***/ function(module, exports, __webpack_require__) {
+
+	/* jshint -W084 */
+
+	var Path = __webpack_require__(34);
+
+	function Match(pathname, params, query, routes) {
+	  this.pathname = pathname;
+	  this.params = params;
+	  this.query = query;
+	  this.routes = routes;
+	}
+
+	function deepSearch(route, pathname, query) {
+	  // Check the subtree first to find the most deeply-nested match.
+	  var childRoutes = route.childRoutes;
+	  if (childRoutes) {
+	    var match, childRoute;
+	    for (var i = 0, len = childRoutes.length; i < len; ++i) {
+	      childRoute = childRoutes[i];
+
+	      if (childRoute.isDefault || childRoute.isNotFound)
+	        continue; // Check these in order later.
+
+	      if (match = deepSearch(childRoute, pathname, query)) {
+	        // A route in the subtree matched! Add this route and we're done.
+	        match.routes.unshift(route);
+	        return match;
+	      }
+	    }
+	  }
+
+	  // No child routes matched; try the default route.
+	  var defaultRoute = route.defaultRoute;
+	  if (defaultRoute && (params = Path.extractParams(defaultRoute.path, pathname)))
+	    return new Match(pathname, params, query, [ route, defaultRoute ]);
+
+	  // Does the "not found" route match?
+	  var notFoundRoute = route.notFoundRoute;
+	  if (notFoundRoute && (params = Path.extractParams(notFoundRoute.path, pathname)))
+	    return new Match(pathname, params, query, [ route, notFoundRoute ]);
+
+	  // Last attempt: check this route.
+	  var params = Path.extractParams(route.path, pathname);
+	  if (params)
+	    return new Match(pathname, params, query, [ route ]);
+
+	  return null;
+	}
+
+	/**
+	 * Attempts to match depth-first a route in the given route's
+	 * subtree against the given path and returns the match if it
+	 * succeeds, null if no match can be made.
+	 */
+	Match.findMatchForPath = function (routes, path) {
+	  var pathname = Path.withoutQuery(path);
+	  var query = Path.extractQuery(path);
+	  var match = null;
+
+	  for (var i = 0, len = routes.length; match == null && i < len; ++i)
+	    match = deepSearch(routes[i], pathname, query);
+
+	  return match;
+	};
+
+	module.exports = Match;
+
+
+/***/ },
+/* 33 */
+/***/ function(module, exports, __webpack_require__) {
+
+	function supportsHistory() {
+	  /*! taken from modernizr
+	   * https://github.com/Modernizr/Modernizr/blob/master/LICENSE
+	   * https://github.com/Modernizr/Modernizr/blob/master/feature-detects/history.js
+	   * changed to avoid false negatives for Windows Phones: https://github.com/rackt/react-router/issues/586
+	   */
+	  var ua = navigator.userAgent;
+	  if ((ua.indexOf('Android 2.') !== -1 ||
+	      (ua.indexOf('Android 4.0') !== -1)) &&
+	      ua.indexOf('Mobile Safari') !== -1 &&
+	      ua.indexOf('Chrome') === -1 &&
+	      ua.indexOf('Windows Phone') === -1) {
+	    return false;
+	  }
+	  return (window.history && 'pushState' in window.history);
+	}
+
+	module.exports = supportsHistory;
+
+
+/***/ },
+/* 34 */
+/***/ function(module, exports, __webpack_require__) {
+
 	var invariant = __webpack_require__(37);
 	var merge = __webpack_require__(42).merge;
 	var qs = __webpack_require__(41);
@@ -2180,461 +2586,6 @@ return /******/ (function(modules) { // webpackBootstrap
 	};
 
 	module.exports = Path;
-
-
-/***/ },
-/* 26 */
-/***/ function(module, exports, __webpack_require__) {
-
-	var PropTypes = __webpack_require__(23);
-
-	/**
-	 * Provides the router with context for Router.Navigation.
-	 */
-	var NavigationContext = {
-
-	  childContextTypes: {
-	    makePath: PropTypes.func.isRequired,
-	    makeHref: PropTypes.func.isRequired,
-	    transitionTo: PropTypes.func.isRequired,
-	    replaceWith: PropTypes.func.isRequired,
-	    goBack: PropTypes.func.isRequired
-	  },
-
-	  getChildContext: function () {
-	    return {
-	      makePath: this.constructor.makePath.bind(this.constructor),
-	      makeHref: this.constructor.makeHref.bind(this.constructor),
-	      transitionTo: this.constructor.transitionTo.bind(this.constructor),
-	      replaceWith: this.constructor.replaceWith.bind(this.constructor),
-	      goBack: this.constructor.goBack.bind(this.constructor)
-	    };
-	  }
-
-	};
-
-	module.exports = NavigationContext;
-
-
-/***/ },
-/* 27 */
-/***/ function(module, exports, __webpack_require__) {
-
-	var invariant = __webpack_require__(37);
-	var canUseDOM = __webpack_require__(38).canUseDOM;
-	var getWindowScrollPosition = __webpack_require__(40);
-
-	function shouldUpdateScroll(state, prevState) {
-	  if (!prevState)
-	    return true;
-
-	  // Don't update scroll position when only the query has changed.
-	  if (state.pathname === prevState.pathname)
-	    return false;
-
-	  var routes = state.routes;
-	  var prevRoutes = prevState.routes;
-
-	  var sharedAncestorRoutes = routes.filter(function (route) {
-	    return prevRoutes.indexOf(route) !== -1;
-	  });
-
-	  return !sharedAncestorRoutes.some(function (route) {
-	    return route.ignoreScrollBehavior;
-	  });
-	}
-
-	/**
-	 * Provides the router with the ability to manage window scroll position
-	 * according to its scroll behavior.
-	 */
-	var ScrollHistory = {
-
-	  statics: {
-
-	    /**
-	     * Records curent scroll position as the last known position for the given URL path.
-	     */
-	    recordScrollPosition: function (path) {
-	      if (!this.scrollHistory)
-	        this.scrollHistory = {};
-
-	      this.scrollHistory[path] = getWindowScrollPosition();
-	    },
-
-	    /**
-	     * Returns the last known scroll position for the given URL path.
-	     */
-	    getScrollPosition: function (path) {
-	      if (!this.scrollHistory)
-	        this.scrollHistory = {};
-
-	      return this.scrollHistory[path] || null;
-	    }
-
-	  },
-
-	  componentWillMount: function () {
-	    invariant(
-	      this.constructor.getScrollBehavior() == null || canUseDOM,
-	      'Cannot use scroll behavior without a DOM'
-	    );
-	  },
-
-	  componentDidMount: function () {
-	    this._updateScroll();
-	  },
-
-	  componentDidUpdate: function (prevProps, prevState) {
-	    this._updateScroll(prevState);
-	  },
-
-	  _updateScroll: function (prevState) {
-	    if (!shouldUpdateScroll(this.state, prevState))
-	      return;
-
-	    var scrollBehavior = this.constructor.getScrollBehavior();
-
-	    if (scrollBehavior)
-	      scrollBehavior.updateScrollPosition(
-	        this.constructor.getScrollPosition(this.state.path),
-	        this.state.action
-	      );
-	  }
-
-	};
-
-	module.exports = ScrollHistory;
-
-
-/***/ },
-/* 28 */
-/***/ function(module, exports, __webpack_require__) {
-
-	var assign = __webpack_require__(36);
-	var PropTypes = __webpack_require__(23);
-	var Path = __webpack_require__(25);
-
-	function routeIsActive(activeRoutes, routeName) {
-	  return activeRoutes.some(function (route) {
-	    return route.name === routeName;
-	  });
-	}
-
-	function paramsAreActive(activeParams, params) {
-	  for (var property in params)
-	    if (String(activeParams[property]) !== String(params[property]))
-	      return false;
-
-	  return true;
-	}
-
-	function queryIsActive(activeQuery, query) {
-	  for (var property in query)
-	    if (String(activeQuery[property]) !== String(query[property]))
-	      return false;
-
-	  return true;
-	}
-
-	/**
-	 * Provides the router with context for Router.State.
-	 */
-	var StateContext = {
-
-	  /**
-	   * Returns the current URL path + query string.
-	   */
-	  getCurrentPath: function () {
-	    return this.state.path;
-	  },
-
-	  /**
-	   * Returns a read-only array of the currently active routes.
-	   */
-	  getCurrentRoutes: function () {
-	    return this.state.routes.slice(0);
-	  },
-
-	  /**
-	   * Returns the current URL path without the query string.
-	   */
-	  getCurrentPathname: function () {
-	    return this.state.pathname;
-	  },
-
-	  /**
-	   * Returns a read-only object of the currently active URL parameters.
-	   */
-	  getCurrentParams: function () {
-	    return assign({}, this.state.params);
-	  },
-
-	  /**
-	   * Returns a read-only object of the currently active query parameters.
-	   */
-	  getCurrentQuery: function () {
-	    return assign({}, this.state.query);
-	  },
-
-	  /**
-	   * Returns true if the given route, params, and query are active.
-	   */
-	  isActive: function (to, params, query) {
-	    if (Path.isAbsolute(to))
-	      return to === this.state.path;
-
-	    return routeIsActive(this.state.routes, to) &&
-	      paramsAreActive(this.state.params, params) &&
-	      (query == null || queryIsActive(this.state.query, query));
-	  },
-
-	  childContextTypes: {
-	    getCurrentPath: PropTypes.func.isRequired,
-	    getCurrentRoutes: PropTypes.func.isRequired,
-	    getCurrentPathname: PropTypes.func.isRequired,
-	    getCurrentParams: PropTypes.func.isRequired,
-	    getCurrentQuery: PropTypes.func.isRequired,
-	    isActive: PropTypes.func.isRequired
-	  },
-
-	  getChildContext: function () {
-	    return {
-	      getCurrentPath: this.getCurrentPath,
-	      getCurrentRoutes: this.getCurrentRoutes,
-	      getCurrentPathname: this.getCurrentPathname,
-	      getCurrentParams: this.getCurrentParams,
-	      getCurrentQuery: this.getCurrentQuery,
-	      isActive: this.isActive
-	    };
-	  }
-
-	};
-
-	module.exports = StateContext;
-
-
-/***/ },
-/* 29 */
-/***/ function(module, exports, __webpack_require__) {
-
-	var React = __webpack_require__(21);
-
-	function isValidChild(object) {
-	  return object == null || React.isValidElement(object);
-	}
-
-	function isReactChildren(object) {
-	  return isValidChild(object) || (Array.isArray(object) && object.every(isValidChild));
-	}
-
-	module.exports = isReactChildren;
-
-
-/***/ },
-/* 30 */
-/***/ function(module, exports, __webpack_require__) {
-
-	/* jshint -W058 */
-
-	var Cancellation = __webpack_require__(32);
-	var Redirect = __webpack_require__(31);
-
-	/**
-	 * Encapsulates a transition to a given path.
-	 *
-	 * The willTransitionTo and willTransitionFrom handlers receive
-	 * an instance of this class as their first argument.
-	 */
-	function Transition(path, retry) {
-	  this.path = path;
-	  this.abortReason = null;
-	  // TODO: Change this to router.retryTransition(transition)
-	  this.retry = retry.bind(this);
-	}
-
-	Transition.prototype.abort = function (reason) {
-	  if (this.abortReason == null)
-	    this.abortReason = reason || 'ABORT';
-	};
-
-	Transition.prototype.redirect = function (to, params, query) {
-	  this.abort(new Redirect(to, params, query));
-	};
-
-	Transition.prototype.cancel = function () {
-	  this.abort(new Cancellation);
-	};
-
-	Transition.from = function (transition, routes, components, callback) {
-	  routes.reduce(function (callback, route, index) {
-	    return function (error) {
-	      if (error || transition.abortReason) {
-	        callback(error);
-	      } else if (route.onLeave) {
-	        try {
-	          route.onLeave(transition, components[index], callback);
-
-	          // If there is no callback in the argument list, call it automatically.
-	          if (route.onLeave.length < 3)
-	            callback();
-	        } catch (e) {
-	          callback(e);
-	        }
-	      } else {
-	        callback();
-	      }
-	    };
-	  }, callback)();
-	};
-
-	Transition.to = function (transition, routes, params, query, callback) {
-	  routes.reduceRight(function (callback, route) {
-	    return function (error) {
-	      if (error || transition.abortReason) {
-	        callback(error);
-	      } else if (route.onEnter) {
-	        try {
-	          route.onEnter(transition, params, query, callback);
-
-	          // If there is no callback in the argument list, call it automatically.
-	          if (route.onEnter.length < 4)
-	            callback();
-	        } catch (e) {
-	          callback(e);
-	        }
-	      } else {
-	        callback();
-	      }
-	    };
-	  }, callback)();
-	};
-
-	module.exports = Transition;
-
-
-/***/ },
-/* 31 */
-/***/ function(module, exports, __webpack_require__) {
-
-	/**
-	 * Encapsulates a redirect to the given route.
-	 */
-	function Redirect(to, params, query) {
-	  this.to = to;
-	  this.params = params;
-	  this.query = query;
-	}
-
-	module.exports = Redirect;
-
-
-/***/ },
-/* 32 */
-/***/ function(module, exports, __webpack_require__) {
-
-	/**
-	 * Represents a cancellation caused by navigating away
-	 * before the previous transition has fully resolved.
-	 */
-	function Cancellation() {}
-
-	module.exports = Cancellation;
-
-
-/***/ },
-/* 33 */
-/***/ function(module, exports, __webpack_require__) {
-
-	/* jshint -W084 */
-
-	var Path = __webpack_require__(25);
-
-	function Match(pathname, params, query, routes) {
-	  this.pathname = pathname;
-	  this.params = params;
-	  this.query = query;
-	  this.routes = routes;
-	}
-
-	function deepSearch(route, pathname, query) {
-	  // Check the subtree first to find the most deeply-nested match.
-	  var childRoutes = route.childRoutes;
-	  if (childRoutes) {
-	    var match, childRoute;
-	    for (var i = 0, len = childRoutes.length; i < len; ++i) {
-	      childRoute = childRoutes[i];
-
-	      if (childRoute.isDefault || childRoute.isNotFound)
-	        continue; // Check these in order later.
-
-	      if (match = deepSearch(childRoute, pathname, query)) {
-	        // A route in the subtree matched! Add this route and we're done.
-	        match.routes.unshift(route);
-	        return match;
-	      }
-	    }
-	  }
-
-	  // No child routes matched; try the default route.
-	  var defaultRoute = route.defaultRoute;
-	  if (defaultRoute && (params = Path.extractParams(defaultRoute.path, pathname)))
-	    return new Match(pathname, params, query, [ route, defaultRoute ]);
-
-	  // Does the "not found" route match?
-	  var notFoundRoute = route.notFoundRoute;
-	  if (notFoundRoute && (params = Path.extractParams(notFoundRoute.path, pathname)))
-	    return new Match(pathname, params, query, [ route, notFoundRoute ]);
-
-	  // Last attempt: check this route.
-	  var params = Path.extractParams(route.path, pathname);
-	  if (params)
-	    return new Match(pathname, params, query, [ route ]);
-
-	  return null;
-	}
-
-	/**
-	 * Attempts to match depth-first a route in the given route's
-	 * subtree against the given path and returns the match if it
-	 * succeeds, null if no match can be made.
-	 */
-	Match.findMatchForPath = function (routes, path) {
-	  var pathname = Path.withoutQuery(path);
-	  var query = Path.extractQuery(path);
-	  var match = null;
-
-	  for (var i = 0, len = routes.length; match == null && i < len; ++i)
-	    match = deepSearch(routes[i], pathname, query);
-
-	  return match;
-	};
-
-	module.exports = Match;
-
-
-/***/ },
-/* 34 */
-/***/ function(module, exports, __webpack_require__) {
-
-	function supportsHistory() {
-	  /*! taken from modernizr
-	   * https://github.com/Modernizr/Modernizr/blob/master/LICENSE
-	   * https://github.com/Modernizr/Modernizr/blob/master/feature-detects/history.js
-	   * changed to avoid false negatives for Windows Phones: https://github.com/rackt/react-router/issues/586
-	   */
-	  var ua = navigator.userAgent;
-	  if ((ua.indexOf('Android 2.') !== -1 ||
-	      (ua.indexOf('Android 4.0') !== -1)) &&
-	      ua.indexOf('Mobile Safari') !== -1 &&
-	      ua.indexOf('Chrome') === -1 &&
-	      ua.indexOf('Windows Phone') === -1) {
-	    return false;
-	  }
-	  return (window.history && 'pushState' in window.history);
-	}
-
-	module.exports = supportsHistory;
 
 
 /***/ },
