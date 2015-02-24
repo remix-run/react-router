@@ -10,8 +10,8 @@
   "homepage": "https://github.com/rackt/react-router/blob/latest/README.md",
   "bugs": "https://github.com/rackt/react-router/issues",
   "scripts": {
-    "build-global": "NODE_ENV=production webpack modules/index.js build/global/ReactRouter.js && NODE_ENV=production COMPRESS=1 webpack modules/index.js build/global/ReactRouter.min.js && echo \"gzipped, the global build is `gzip -c build/global/ReactRouter.min.js | wc -c` bytes\"",
-    "build-npm": "babel -d build/npm/lib ./modules && cp README.md build/npm && find -X build/npm/lib -type d -name __tests__ | xargs rm -rf && node -p 'p=require(\"./package\");p.main=\"lib\";p.scripts=p.devDependencies=undefined;JSON.stringify(p,null,2)' > build/npm/package.json",
+    "build-global": "rm -rf build/global && NODE_ENV=production webpack modules/index.js build/global/ReactRouter.js && NODE_ENV=production COMPRESS=1 webpack modules/index.js build/global/ReactRouter.min.js && echo \"gzipped, the global build is `gzip -c build/global/ReactRouter.min.js | wc -c` bytes\"",
+    "build-npm": "rm -rf build/npm && babel -d build/npm/lib ./modules && cp README.md build/npm && find -X build/npm/lib -type d -name __tests__ | xargs rm -rf && node -p 'p=require(\"./package\");p.main=\"lib\";p.scripts=p.devDependencies=undefined;JSON.stringify(p,null,2)' > build/npm/package.json",
     "examples": "webpack-dev-server --config examples/webpack.config.js --no-info --content-base examples",
     "test": "jsxhint . && karma start"
   },
