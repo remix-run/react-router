@@ -2,11 +2,15 @@
 
 var Path = require('./utils/Path');
 
-function Match(pathname, params, query, routes) {
-  this.pathname = pathname;
-  this.params = params;
-  this.query = query;
-  this.routes = routes;
+class Match {
+
+  constructor(pathname, params, query, routes) {
+    this.pathname = pathname;
+    this.params = params;
+    this.query = query;
+    this.routes = routes;
+  }
+
 }
 
 function deepSearch(route, pathname, query) {

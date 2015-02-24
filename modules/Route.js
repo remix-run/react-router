@@ -3,43 +3,47 @@ var invariant = require('react/lib/invariant');
 var warning = require('react/lib/warning');
 var Path = require('./utils/Path');
 
-function Route(name, path, ignoreScrollBehavior, isDefault, isNotFound, onEnter, onLeave, handler) {
-  this.name = name;
-  this.path = path;
-  this.paramNames = Path.extractParamNames(this.path);
-  this.ignoreScrollBehavior = !!ignoreScrollBehavior;
-  this.isDefault = !!isDefault;
-  this.isNotFound = !!isNotFound;
-  this.onEnter = onEnter;
-  this.onLeave = onLeave;
-  this.handler = handler;
+class Route {
+
+  constructor(name, path, ignoreScrollBehavior, isDefault, isNotFound, onEnter, onLeave, handler) {
+    this.name = name;
+    this.path = path;
+    this.paramNames = Path.extractParamNames(this.path);
+    this.ignoreScrollBehavior = !!ignoreScrollBehavior;
+    this.isDefault = !!isDefault;
+    this.isNotFound = !!isNotFound;
+    this.onEnter = onEnter;
+    this.onLeave = onLeave;
+    this.handler = handler;
+  }
+
+  /**
+   * Appends the given route to this route's child routes.
+   */
+  appendChild(route) {
+    invariant(
+      route instanceof Route,
+      'route.appendChild must use a valid Route'
+    );
+
+    if (!this.childRoutes)
+      this.childRoutes = [];
+
+    this.childRoutes.push(route);
+  }
+
+  toString() {
+    var string = '<Route';
+
+    if (this.name)
+      string += ` name="${this.name}"`;
+
+    string += ` path="${this.path}">`;
+
+    return string;
+  }
+
 }
-
-/**
- * Appends the given route to this route's child routes.
- */
-Route.prototype.appendChild = function (route) {
-  invariant(
-    route instanceof Route,
-    'route.appendChild must use a valid Route'
-  );
-
-  if (!this.childRoutes)
-    this.childRoutes = [];
-
-  this.childRoutes.push(route);
-};
-
-Route.prototype.toString = function () {
-  var string = '<Route';
-
-  if (this.name)
-    string += ` name="${this.name}"`;
-
-  string += ` path="${this.path}">`;
-
-  return string;
-};
 
 var _currentRoute;
 
