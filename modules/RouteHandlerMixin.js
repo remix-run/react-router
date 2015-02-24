@@ -7,9 +7,8 @@ var REF_NAME = '__routeHandler__';
 var RouteHandlerMixin = {
 
   contextTypes: {
-    getRouteAtDepth: PropTypes.func.isRequired,
-    setRouteComponentAtDepth: PropTypes.func.isRequired,
-    routeHandlers: PropTypes.array.isRequired
+    routeHandlers: PropTypes.array.isRequired,
+    router: PropTypes.router.isRequired
   },
 
   childContextTypes: {
@@ -35,7 +34,7 @@ var RouteHandlerMixin = {
   },
 
   _updateRouteComponent: function (component) {
-    this.context.setRouteComponentAtDepth(this.getRouteDepth(), component);
+    this.context.router.setRouteComponentAtDepth(this.getRouteDepth(), component);
   },
 
   getRouteDepth: function () {
@@ -43,7 +42,7 @@ var RouteHandlerMixin = {
   },
 
   createChildRouteHandler: function (props) {
-    var route = this.context.getRouteAtDepth(this.getRouteDepth());
+    var route = this.context.router.getRouteAtDepth(this.getRouteDepth());
     return route ? React.createElement(route.handler, assign({}, props || this.props, { ref: REF_NAME })) : null;
   }
 

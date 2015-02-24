@@ -12,14 +12,16 @@ describe('State', function () {
       it('is active', function (done) {
         var location = new TestLocation([ '/foo' ]);
         var div = document.createElement('div');
-
         var routes = (
           <Route name="foo" handler={Foo}/>
         );
 
+        var router;
+
         Router.run(routes, location, function (Handler) {
+          router = this;
           React.render(<Handler/>, div, function () {
-            assert(this.isActive('foo'));
+            assert(router.isActive('foo'));
             done();
           });
         });
@@ -27,15 +29,15 @@ describe('State', function () {
     });
 
     describe('and the right params are given', function () {
-      var component, location;
+      var location, router;
       var div = document.createElement('div');
       var routes = <Route name="products" path="/products/:id/:variant" handler={Foo}/>;
 
       beforeEach(function (done) {
         location = new TestLocation([ '/products/123/456?search=abc&limit=789' ]);
         Router.run(routes, location, function (Handler) {
+          router = this;
           React.render(<Handler/>, div, function () {
-            component = this;
             done();
           });
         });
@@ -47,25 +49,25 @@ describe('State', function () {
 
       describe('and no query is used', function () {
         it('is active', function () {
-          assert(component.isActive('products', { id: 123, variant: '456' }));
+          assert(router.isActive('products', { id: 123, variant: '456' }));
         });
       });
 
       describe('and a matching query is used', function () {
         it('is active', function () {
-          assert(component.isActive('products', { id: 123 }, { search: 'abc' }));
+          assert(router.isActive('products', { id: 123 }, { search: 'abc' }));
         });
       });
 
       describe('but the query does not match', function () {
         it('is not active', function () {
-          assert(component.isActive('products', { id: 123 }, { search: 'def' }) === false);
+          assert(router.isActive('products', { id: 123 }, { search: 'def' }) === false);
         });
       });
 
       describe('and the wrong params are given', function () {
         it('is not active', function () {
-          assert(component.isActive('products', { id: 345 }) === false);
+          assert(router.isActive('products', { id: 345 }) === false);
         });
       });
 

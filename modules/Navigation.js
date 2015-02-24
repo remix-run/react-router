@@ -1,4 +1,16 @@
+var warning = require('react/lib/warning');
 var PropTypes = require('./PropTypes');
+
+function deprecatedMethod(routerMethodName, fn) {
+  return function () {
+    warning(
+      false,
+      `Router.Navigation is deprecated. Please use this.context.router.${routerMethodName}() instead`
+    );
+
+    return fn.apply(this, arguments);
+  };
+}
 
 /**
  * A mixin for components that modify the URL.
@@ -7,11 +19,11 @@ var PropTypes = require('./PropTypes');
  *
  *   var MyLink = React.createClass({
  *     mixins: [ Router.Navigation ],
- *     handleClick: function (event) {
+ *     handleClick(event) {
  *       event.preventDefault();
  *       this.transitionTo('aRoute', { the: 'params' }, { the: 'query' });
  *     },
- *     render: function () {
+ *     render() {
  *       return (
  *         <a onClick={this.handleClick}>Click me!</a>
  *       );
@@ -21,51 +33,47 @@ var PropTypes = require('./PropTypes');
 var Navigation = {
 
   contextTypes: {
-    makePath: PropTypes.func.isRequired,
-    makeHref: PropTypes.func.isRequired,
-    transitionTo: PropTypes.func.isRequired,
-    replaceWith: PropTypes.func.isRequired,
-    goBack: PropTypes.func.isRequired
+    router: PropTypes.router.isRequired
   },
 
   /**
    * Returns an absolute URL path created from the given route
    * name, URL parameters, and query values.
    */
-  makePath: function (to, params, query) {
-    return this.context.makePath(to, params, query);
-  },
+  makePath: deprecatedMethod('makePath', function (to, params, query) {
+    return this.context.router.makePath(to, params, query);
+  }),
 
   /**
    * Returns a string that may safely be used as the href of a
    * link to the route with the given name.
    */
-  makeHref: function (to, params, query) {
-    return this.context.makeHref(to, params, query);
-  },
+  makeHref: deprecatedMethod('makeHref', function (to, params, query) {
+    return this.context.router.makeHref(to, params, query);
+  }),
 
   /**
    * Transitions to the URL specified in the arguments by pushing
    * a new URL onto the history stack.
    */
-  transitionTo: function (to, params, query) {
-    this.context.transitionTo(to, params, query);
-  },
+  transitionTo: deprecatedMethod('transitionTo', function (to, params, query) {
+    this.context.router.transitionTo(to, params, query);
+  }),
 
   /**
    * Transitions to the URL specified in the arguments by replacing
    * the current URL in the history stack.
    */
-  replaceWith: function (to, params, query) {
-    this.context.replaceWith(to, params, query);
-  },
+  replaceWith: deprecatedMethod('replaceWith', function (to, params, query) {
+    this.context.router.replaceWith(to, params, query);
+  }),
 
   /**
    * Transitions to the previous URL.
    */
-  goBack: function () {
-    return this.context.goBack();
-  }
+  goBack: deprecatedMethod('goBack', function () {
+    return this.context.router.goBack();
+  })
 
 };
 

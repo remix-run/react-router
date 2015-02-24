@@ -1,10 +1,7 @@
 var React = require('react');
 var classSet = require('react/lib/cx');
 var assign = require('react/lib/Object.assign');
-var Navigation = require('../Navigation');
-var State = require('../State');
 var PropTypes = require('../PropTypes');
-var Route = require('../Route');
 
 function isLeftClickEvent(event) {
   return event.button === 0;
@@ -36,13 +33,15 @@ var Link = React.createClass({
 
   displayName: 'Link',
 
-  mixins: [ Navigation, State ],
+  contextTypes: {
+    router: PropTypes.router.isRequired
+  },
 
   propTypes: {
     activeClassName: PropTypes.string.isRequired,
     to: PropTypes.oneOfType([
       PropTypes.string,
-      PropTypes.instanceOf(Route)
+      PropTypes.route
     ]),
     params: PropTypes.object,
     query: PropTypes.object,
@@ -72,14 +71,14 @@ var Link = React.createClass({
     event.preventDefault();
 
     if (allowTransition)
-      this.transitionTo(this.props.to, this.props.params, this.props.query);
+      this.context.router.transitionTo(this.props.to, this.props.params, this.props.query);
   },
 
   /**
    * Returns the value of the "href" attribute to use on the DOM element.
    */
   getHref: function () {
-    return this.makeHref(this.props.to, this.props.params, this.props.query);
+    return this.context.router.makeHref(this.props.to, this.props.params, this.props.query);
   },
 
   /**
@@ -99,7 +98,7 @@ var Link = React.createClass({
   },
 
   getActiveState: function () {
-    return this.isActive(this.props.to, this.props.params, this.props.query);
+    return this.context.router.isActive(this.props.to, this.props.params, this.props.query);
   },
 
   render: function () {

@@ -9,9 +9,7 @@ var HashLocation = require('./locations/HashLocation');
 var HistoryLocation = require('./locations/HistoryLocation');
 var RefreshLocation = require('./locations/RefreshLocation');
 var StaticLocation = require('./locations/StaticLocation');
-var NavigationContext = require('./NavigationContext');
 var ScrollHistory = require('./ScrollHistory');
-var StateContext = require('./StateContext');
 var createRoutesFromReactChildren = require('./createRoutesFromReactChildren');
 var isReactChildren = require('./isReactChildren');
 var Transition = require('./Transition');
@@ -81,6 +79,28 @@ function addRoutesToNamedRoutes(routes, namedRoutes) {
     if (route.childRoutes)
       addRoutesToNamedRoutes(route.childRoutes, namedRoutes);
   }
+}
+
+function routeIsActive(activeRoutes, routeName) {
+  return activeRoutes.some(function (route) {
+    return route.name === routeName;
+  });
+}
+
+function paramsAreActive(activeParams, params) {
+  for (var property in params)
+    if (String(activeParams[property]) !== String(params[property]))
+      return false;
+
+  return true;
+}
+
+function queryIsActive(activeQuery, query) {
+  for (var property in query)
+    if (String(activeQuery[property]) !== String(query[property]))
+      return false;
+
+  return true;
 }
 
 /**
@@ -425,29 +445,87 @@ function createRouter(options) {
         this.isRunning = false;
       },
 
+      getLocation: function () {
+        return location;
+      },
+
       getScrollBehavior: function () {
         return scrollBehavior;
+      },
+
+      getRouteAtDepth: function (depth) {
+        var routes = state.routes;
+        return routes && routes[depth];
+      },
+
+      setRouteComponentAtDepth: function (depth, component) {
+        mountedComponents[depth] = component;
+      },
+
+      /**
+       * Returns the current URL path + query string.
+       */
+      getCurrentPath: function () {
+        return state.path;
+      },
+
+      /**
+       * Returns the current URL path without the query string.
+       */
+      getCurrentPathname: function () {
+        return state.pathname;
+      },
+
+      /**
+       * Returns an object of the currently active URL parameters.
+       */
+      getCurrentParams: function () {
+        return state.params;
+      },
+
+      /**
+       * Returns an object of the currently active query parameters.
+       */
+      getCurrentQuery: function () {
+        return state.query;
+      },
+
+      /**
+       * Returns an array of the currently active routes.
+       */
+      getCurrentRoutes: function () {
+        return state.routes;
+      },
+
+      /**
+       * Returns true if the given route, params, and query are active.
+       */
+      isActive: function (to, params, query) {
+        if (PathUtils.isAbsolute(to))
+          return to === state.path;
+
+        return routeIsActive(state.routes, to) &&
+          paramsAreActive(state.params, params) &&
+          (query == null || queryIsActive(state.query, query));
       }
 
     },
 
-    mixins: [ NavigationContext, StateContext, ScrollHistory ],
+    mixins: [ ScrollHistory ],
 
     propTypes: {
       children: PropTypes.falsy
     },
 
     childContextTypes: {
-      getRouteAtDepth: React.PropTypes.func.isRequired,
-      setRouteComponentAtDepth: React.PropTypes.func.isRequired,
-      routeHandlers: React.PropTypes.array.isRequired
+      routeHandlers: PropTypes.array.isRequired,
+      router: PropTypes.router.isRequired
     },
 
     getChildContext: function () {
       return {
-        getRouteAtDepth: this.getRouteAtDepth,
-        setRouteComponentAtDepth: this.setRouteComponentAtDepth,
-        routeHandlers: [ this ]
+        routeHandlers: [ this ],
+        router: Router
       };
     },
 
@@ -463,21 +541,8 @@ function createRouter(options) {
       Router.stop();
     },
 
-    getLocation: function () {
-      return location;
-    },
-
-    getRouteAtDepth: function (depth) {
-      var routes = this.state.routes;
-      return routes && routes[depth];
-    },
-
-    setRouteComponentAtDepth: function (depth, component) {
-      mountedComponents[depth] = component;
-    },
-
     render: function () {
-      var route = this.getRouteAtDepth(0);
+      var route = Router.getRouteAtDepth(0);
       return route ? React.createElement(route.handler, this.props) : null;
     }
 

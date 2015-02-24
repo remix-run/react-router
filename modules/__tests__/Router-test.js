@@ -945,14 +945,10 @@ describe('Router.run', function () {
   });
 
   describe('locations', function () {
-    it('defaults to HashLocation', function (done) {
+    it('defaults to HashLocation', function () {
       var routes = <Route path="/" handler={Foo}/>;
-      var div = document.createElement('div');
       Router.run(routes, function (Handler) {
-        React.render(<Handler/>, div, function () {
-          expect(this.getLocation()).toBe(Router.HashLocation);
-          done();
-        });
+        expect(this.getLocation()).toBe(Router.HashLocation);
       });
     });
   });

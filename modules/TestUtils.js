@@ -1,6 +1,6 @@
 var React = require('react');
 var RouteHandler = require('./components/RouteHandler');
-var State = require('./State');
+var PropTypes = require('./PropTypes');
 
 exports.Nested = React.createClass({
   render: function () {
@@ -111,8 +111,10 @@ exports.EchoFooProp = React.createClass({
 });
 
 exports.EchoBarParam = React.createClass({
-  mixins: [ State ],
+  contextTypes: {
+    router: PropTypes.router.isRequired
+  },
   render: function () {
-    return <div className="EchoBarParam">{this.getParams().bar}</div>;
+    return <div className="EchoBarParam">{this.context.router.getCurrentParams().bar}</div>;
   }
 });
