@@ -1,24 +1,21 @@
-var React = require('react');
-var Configuration = require('../Configuration');
 var PropTypes = require('../PropTypes');
+var Route = require('./Route');
 
 /**
  * A <Redirect> component is a special kind of <Route> that always
  * redirects to another route when it matches.
  */
-var Redirect = React.createClass({
+class Redirect extends Route {}
 
-  displayName: 'Redirect',
+// TODO: Include these in the above class definition
+// once we can use ES7 property initializers.
+// https://github.com/babel/babel/issues/619
 
-  mixins: [ Configuration ],
-
-  propTypes: {
-    path: PropTypes.string,
-    from: PropTypes.string, // Alias for path.
-    to: PropTypes.string,
-    handler: PropTypes.falsy
-  }
-
-});
+Redirect.propTypes = {
+  path: PropTypes.string,
+  from: PropTypes.string, // Alias for path.
+  to: PropTypes.string,
+  handler: PropTypes.falsy
+};
 
 module.exports = Redirect;
