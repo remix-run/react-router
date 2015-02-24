@@ -15,6 +15,21 @@ function Route(name, path, ignoreScrollBehavior, isDefault, isNotFound, onEnter,
   this.handler = handler;
 }
 
+/**
+ * Appends the given route to this route's child routes.
+ */
+Route.prototype.appendChild = function (route) {
+  invariant(
+    route instanceof Route,
+    'route.appendChild must use a valid Route'
+  );
+
+  if (!this.childRoutes)
+    this.childRoutes = [];
+
+  this.childRoutes.push(route);
+};
+
 Route.prototype.toString = function () {
   var string = '<Route';
 
@@ -24,93 +39,6 @@ Route.prototype.toString = function () {
   string += ` path="${this.path}">`;
 
   return string;
-};
-
-/**
- * Appends the given route to this route's child routes.
- */
-Route.prototype.appendChildRoute = function (route) {
-  invariant(
-    route instanceof Route,
-    'route.appendChildRoute must use a valid Route'
-  );
-
-  if (!this.childRoutes)
-    this.childRoutes = [];
-
-  if (route.name) {
-    invariant(
-      this.childRoutes.every(function (childRoute) {
-        return childRoute.name !== route.name;
-      }),
-      'Route %s may not have more than one child route named "%s"',
-      this, route.name
-    );
-  }
-
-  this.childRoutes.push(route);
-};
-
-/**
- * Allows looking up a child route using a "." delimited string, e.g.:
- *
- *   route.appendChildRoute(
- *     Router.createRoute({ name: 'user' }, function () {
- *       Router.createRoute({ name: 'new' });
- *     })
- *   );
- *
- *   var NewUserRoute = route.lookupChildRoute('user.new');
- *
- * See also Route.findRouteByName.
- */
-Route.prototype.lookupChildRoute = function (names) {
-  if (!this.childRoutes)
-    return null;
-
-  return Route.findRouteByName(this.childRoutes, names);
-};
-
-/**
- * Searches the given array of routes and returns the route that matches
- * the given name. The name should be a . delimited string like "user.new"
- * that specifies the names of nested routes. Routes in the hierarchy that
- * do not have a name do not need to be specified in the search string.
- *
- *   var routes = [
- *     Router.createRoute({ name: 'user' }, function () {
- *       Router.createRoute({ name: 'new' });
- *     })
- *   ];
- *
- *   var NewUserRoute = Route.findRouteByName(routes, 'user.new');
- */
-Route.findRouteByName = function (routes, names) {
-  if (typeof names === 'string')
-    names = names.split('.');
-
-  var route, foundRoute;
-  for (var i = 0, len = routes.length; i < len; ++i) {
-    route = routes[i];
-
-    if (route.name === names[0]) {
-      if (names.length === 1)
-        return route;
-
-      if (!route.childRoutes)
-        return null;
-
-      return Route.findRouteByName(route.childRoutes, names.slice(1));
-    } else if (route.name == null) {
-      // Transparently skip over unnamed routes in the tree.
-      foundRoute = route.lookupChildRoute(names);
-
-      if (foundRoute != null)
-        return foundRoute;
-    }
-  }
-
-  return null;
 };
 
 var _currentRoute;
@@ -223,7 +151,7 @@ Route.createRoute = function (options, callback) {
       parentRoute.notFoundRoute = route;
     }
 
-    parentRoute.appendChildRoute(route);
+    parentRoute.appendChild(route);
   }
 
   // Any routes created in the callback

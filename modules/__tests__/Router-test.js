@@ -827,7 +827,7 @@ describe('Router.makePath', function () {
 
   describe('when there is a route with the given name', function () {
     it('returns the correct path', function () {
-      expect(router.makePath('home.users.user', { id: 6 })).toEqual('/home/users/6');
+      expect(router.makePath('user', { id: 6 })).toEqual('/home/users/6');
     });
   });
 

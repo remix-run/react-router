@@ -9,7 +9,7 @@ var Dashboard = React.createClass({
       <div>
         <h1>Dashboard!</h1>
         <ul>
-          <li><Link to="dashboard.inbox">Inbox</Link></li>
+          <li><Link to="inbox">Inbox</Link></li>
         </ul>
         <RouteHandler/>
       </div>

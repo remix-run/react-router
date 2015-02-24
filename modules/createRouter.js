@@ -63,6 +63,26 @@ function hasMatch(routes, route, prevParams, nextParams, prevQuery, nextQuery) {
   });
 }
 
+function addRoutesToNamedRoutes(routes, namedRoutes) {
+  var route;
+  for (var i = 0, len = routes.length; i < len; ++i) {
+    route = routes[i];
+
+    if (route.name) {
+      invariant(
+        namedRoutes[route.name] == null,
+        'You may not have more than one route named "%s"',
+        route.name
+      );
+
+      namedRoutes[route.name] = route;
+    }
+
+    if (route.childRoutes)
+      addRoutesToNamedRoutes(route.childRoutes, namedRoutes);
+  }
+}
+
 /**
  * Creates and returns a new router using the given options. A router
  * is a ReactComponent class that knows how to react to changes in the
@@ -134,6 +154,7 @@ function createRouter(options) {
 
       clearAllRoutes: function () {
         this.cancelPendingTransition();
+        this.namedRoutes = {};
         this.routes = [];
       },
 
@@ -143,6 +164,8 @@ function createRouter(options) {
       addRoutes: function (routes) {
         if (isReactChildren(routes))
           routes = createRoutesFromReactChildren(routes);
+
+        addRoutesToNamedRoutes(routes, this.namedRoutes);
 
         this.routes.push.apply(this.routes, routes);
       },
@@ -174,7 +197,7 @@ function createRouter(options) {
         if (Path.isAbsolute(to)) {
           path = to;
         } else {
-          var route = (to instanceof Route) ? to : Route.findRouteByName(this.routes, to);
+          var route = (to instanceof Route) ? to : this.namedRoutes[to];
 
           invariant(
             route instanceof Route,

@@ -25,8 +25,8 @@ var User = React.createClass({
       <div className="User">
         <h1>User id: {userId}</h1>
         <ul>
-          <li><Link to="user.task" params={{userId: userId, taskId: "foo"}}>foo task</Link></li>
-          <li><Link to="user.task" params={{userId: userId, taskId: "bar"}}>bar task</Link></li>
+          <li><Link to="task" params={{userId: userId, taskId: "foo"}}>foo task</Link></li>
+          <li><Link to="task" params={{userId: userId, taskId: "bar"}}>bar task</Link></li>
         </ul>
         <RouteHandler/>
       </div>
@@ -53,7 +53,7 @@ var routes = (
   <Route path="/" handler={App}>
     <Route name="user" path="/user/:userId" handler={User}>
       <Route name="task" path="tasks/:taskId" handler={Task}/>
-      <Redirect from="todos/:taskId" to="user.task"/>
+      <Redirect from="todos/:taskId" to="task"/>
     </Route>
   </Route>
 );
