@@ -67,7 +67,7 @@ class Route {
       if (PathUtils.isAbsolute(path)) {
         if (parentRoute) {
           invariant(
-            parentRoute.paramNames.length === 0,
+            path === parentRoute.path || parentRoute.paramNames.length === 0,
             'You cannot nest path "%s" inside "%s"; the parent requires URL parameters',
             path, parentRoute.path
           );
