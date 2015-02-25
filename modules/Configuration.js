@@ -1,5 +1,5 @@
 var invariant = require('react/lib/invariant');
-var RouteHandler = require('./RouteHandler');
+var RouteHandler = require('./components/RouteHandler');
 
 var Configuration = {
 
