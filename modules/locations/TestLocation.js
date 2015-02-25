@@ -22,8 +22,13 @@ class TestLocation {
   }
 
   _notifyChange(type) {
+    var change = {
+      path: this.getCurrentPath(),
+      type: type
+    };
+
     for (var i = 0, len = this.listeners.length; i < len; ++i)
-      this.listeners[i].call(this, { path: this.getCurrentPath(), type: type });
+      this.listeners[i].call(this, change);
   }
 
   addChangeListener(listener) {
