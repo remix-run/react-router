@@ -1,8 +1,15 @@
 var invariant = require('react/lib/invariant');
+var RouteHandler = require('./RouteHandler');
 
 var Configuration = {
 
-  render: function () {
+  getDefaultProps() {
+    return {
+      handler: RouteHandler
+    };
+  },
+
+  render() {
     invariant(
       false,
       '%s elements are for router configuration only and should not be rendered',

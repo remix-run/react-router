@@ -37,7 +37,7 @@ function createRouteFromReactElement(element) {
     return;
 
   var type = element.type;
-  var props = element.props;
+  var props = assign({}, type.defaultProps, element.props);
 
   if (type.propTypes)
     checkPropTypes(type.displayName, type.propTypes, props);
