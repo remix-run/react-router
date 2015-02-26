@@ -81,7 +81,7 @@ class Link extends React.Component {
     var props = assign({}, this.props, {
       href: this.getHref(),
       className: this.getClassName(),
-      onClick: this.handleClick
+      onClick: this.handleClick.bind(this)
     });
 
     if (props.activeStyle && this.getActiveState())
