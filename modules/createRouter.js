@@ -423,7 +423,7 @@ function createRouter(options) {
 
         if (!(location instanceof StaticLocation)) {
           if (location.addChangeListener)
-            location.addChangeListener(Router.handleLocationChange);
+            location.addChangeListener(Router.handleLocationChange.bind(Router));
 
           this.isRunning = true;
         }
@@ -440,7 +440,7 @@ function createRouter(options) {
         this.cancelPendingTransition();
 
         if (location.removeChangeListener)
-          location.removeChangeListener(Router.handleLocationChange);
+          location.removeChangeListener(Router.handleLocationChange.bind(Router));
 
         this.isRunning = false;
       },
