@@ -10,8 +10,7 @@ var App = React.createClass({
   },
 
   render: function () {
-    var name = this.context.router.getCurrentRoutes().slice(0).reverse()[0].name;
-
+    var name = this.context.router.getCurrentPath();
     return (
       <div>
         <ul>
