@@ -2,7 +2,7 @@
   "name": "react-router",
   "version": "0.12.4",
   "description": "A complete routing library for React.js",
-  "main": "modules",
+  "main": "build/npm/lib",
   "repository": {
     "type": "git",
     "url": "https://github.com/rackt/react-router.git"
