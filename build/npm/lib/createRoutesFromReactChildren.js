@@ -1,7 +1,6 @@
 "use strict";
 
 /* jshint -W084 */
-
 var React = require("react");
 var assign = require("react/lib/Object.assign");
 var warning = require("react/lib/warning");
@@ -38,7 +37,7 @@ function createRouteFromReactElement(element) {
   if (!React.isValidElement(element)) {
     return;
   }var type = element.type;
-  var props = element.props;
+  var props = assign({}, type.defaultProps, element.props);
 
   if (type.propTypes) checkPropTypes(type.displayName, type.propTypes, props);
 

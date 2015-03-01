@@ -3,27 +3,19 @@
 var LocationActions = require("../actions/LocationActions");
 var History = require("../History");
 
-/**
- * Returns the current URL path from `window.location`, including query string.
- */
-function getWindowPath() {
-  return decodeURI(window.location.pathname + window.location.search);
-}
-
-var _changeListeners = [];
+var _listeners = [];
+var _isListening = false;
 
 function notifyChange(type) {
   var change = {
-    path: getWindowPath(),
+    path: HistoryLocation.getCurrentPath(),
     type: type
   };
 
-  _changeListeners.forEach(function (listener) {
-    listener(change);
+  _listeners.forEach(function (listener) {
+    listener.call(HistoryLocation, change);
   });
 }
-
-var _isListening = false;
 
 function onPopState(event) {
   if (event.state === undefined) {
@@ -39,7 +31,7 @@ function onPopState(event) {
 var HistoryLocation = {
 
   addChangeListener: function addChangeListener(listener) {
-    _changeListeners.push(listener);
+    _listeners.push(listener);
 
     if (!_isListening) {
       if (window.addEventListener) {
@@ -53,11 +45,11 @@ var HistoryLocation = {
   },
 
   removeChangeListener: function removeChangeListener(listener) {
-    _changeListeners = _changeListeners.filter(function (l) {
+    _listeners = _listeners.filter(function (l) {
       return l !== listener;
     });
 
-    if (_changeListeners.length === 0) {
+    if (_listeners.length === 0) {
       if (window.addEventListener) {
         window.removeEventListener("popstate", onPopState, false);
       } else {
@@ -81,7 +73,9 @@ var HistoryLocation = {
 
   pop: History.back,
 
-  getCurrentPath: getWindowPath,
+  getCurrentPath: function getCurrentPath() {
+    return decodeURI(window.location.pathname + window.location.search);
+  },
 
   toString: function toString() {
     return "<HistoryLocation>";
