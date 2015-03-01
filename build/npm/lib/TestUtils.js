@@ -2,7 +2,7 @@
 
 var React = require("react");
 var RouteHandler = require("./components/RouteHandler");
-var State = require("./State");
+var PropTypes = require("./PropTypes");
 
 exports.Nested = React.createClass({
   displayName: "Nested",
@@ -158,12 +158,14 @@ exports.EchoFooProp = React.createClass({
 exports.EchoBarParam = React.createClass({
   displayName: "EchoBarParam",
 
-  mixins: [State],
+  contextTypes: {
+    router: PropTypes.router.isRequired
+  },
   render: function render() {
     return React.createElement(
       "div",
       { className: "EchoBarParam" },
-      this.getParams().bar
+      this.context.router.getCurrentParams().bar
     );
   }
 });

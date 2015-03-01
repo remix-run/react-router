@@ -37,7 +37,12 @@ var TestLocation = (function () {
     },
     _notifyChange: {
       value: function _notifyChange(type) {
-        for (var i = 0, len = this.listeners.length; i < len; ++i) this.listeners[i].call(this, { path: this.getCurrentPath(), type: type });
+        var change = {
+          path: this.getCurrentPath(),
+          type: type
+        };
+
+        for (var i = 0, len = this.listeners.length; i < len; ++i) this.listeners[i].call(this, change);
       },
       writable: true,
       configurable: true

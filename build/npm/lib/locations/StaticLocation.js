@@ -45,6 +45,8 @@ var StaticLocation = (function () {
 
 // TODO: Include these in the above class definition
 // once we can use ES7 property initializers.
+// https://github.com/babel/babel/issues/619
+
 StaticLocation.prototype.push = throwCannotModify;
 StaticLocation.prototype.replace = throwCannotModify;
 StaticLocation.prototype.pop = throwCannotModify;

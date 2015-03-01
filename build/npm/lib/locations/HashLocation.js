@@ -3,21 +3,25 @@
 var LocationActions = require("../actions/LocationActions");
 var History = require("../History");
 
-/**
- * Returns the current URL path from the `hash` portion of the URL, including
- * query string.
- */
-function getHashPath() {
-  return decodeURI(
-  // We can't use window.location.hash here because it's not
-  // consistent across browsers - Firefox will pre-decode it!
-  window.location.href.split("#")[1] || "");
-}
-
+var _listeners = [];
+var _isListening = false;
 var _actionType;
 
+function notifyChange(type) {
+  if (type === LocationActions.PUSH) History.length += 1;
+
+  var change = {
+    path: HashLocation.getCurrentPath(),
+    type: type
+  };
+
+  _listeners.forEach(function (listener) {
+    listener.call(HashLocation, change);
+  });
+}
+
 function ensureSlash() {
-  var path = getHashPath();
+  var path = HashLocation.getCurrentPath();
 
   if (path.charAt(0) === "/") {
     return true;
@@ -25,23 +29,6 @@ function ensureSlash() {
 
   return false;
 }
-
-var _changeListeners = [];
-
-function notifyChange(type) {
-  if (type === LocationActions.PUSH) History.length += 1;
-
-  var change = {
-    path: getHashPath(),
-    type: type
-  };
-
-  _changeListeners.forEach(function (listener) {
-    listener(change);
-  });
-}
-
-var _isListening = false;
 
 function onHashChange() {
   if (ensureSlash()) {
@@ -60,7 +47,7 @@ function onHashChange() {
 var HashLocation = {
 
   addChangeListener: function addChangeListener(listener) {
-    _changeListeners.push(listener);
+    _listeners.push(listener);
 
     // Do this BEFORE listening for hashchange.
     ensureSlash();
@@ -77,11 +64,11 @@ var HashLocation = {
   },
 
   removeChangeListener: function removeChangeListener(listener) {
-    _changeListeners = _changeListeners.filter(function (l) {
+    _listeners = _listeners.filter(function (l) {
       return l !== listener;
     });
 
-    if (_changeListeners.length === 0) {
+    if (_listeners.length === 0) {
       if (window.removeEventListener) {
         window.removeEventListener("hashchange", onHashChange, false);
       } else {
@@ -107,7 +94,12 @@ var HashLocation = {
     History.back();
   },
 
-  getCurrentPath: getHashPath,
+  getCurrentPath: function getCurrentPath() {
+    return decodeURI(
+    // We can't use window.location.hash here because it's not
+    // consistent across browsers - Firefox will pre-decode it!
+    window.location.href.split("#")[1] || "");
+  },
 
   toString: function toString() {
     return "<HashLocation>";

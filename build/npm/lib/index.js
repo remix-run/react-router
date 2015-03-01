@@ -17,7 +17,6 @@ exports.ScrollToTopBehavior = require("./behaviors/ScrollToTopBehavior");
 
 exports.History = require("./History");
 exports.Navigation = require("./Navigation");
-exports.RouteHandlerMixin = require("./RouteHandlerMixin");
 exports.State = require("./State");
 
 exports.createRoute = require("./Route").createRoute;
