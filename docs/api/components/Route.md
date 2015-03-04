@@ -8,7 +8,7 @@ Props
 
 ### `name`
 
-The name of the route, used in the `Link` component and the router's transition methods.
+The unique name of the route, used in the `Link` component and the router's transition methods.
 
 ### `path`
 
