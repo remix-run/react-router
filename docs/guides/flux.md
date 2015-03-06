@@ -18,16 +18,16 @@ To avoid this, you can do one of three things:
 
     ```js
     var SomeActionCreators = require('./SomeActionCreators');
-    var Something = React.createClass({
-      mixins: [ Router.Navigation ],
+    class Something extends React.Component {
       handleClick () {
         SomeActionCreators.doStuff({ sourceComponent: this });
       }
-    });
+    }
+    Something.contextTypes = { router: Router.PropType.router.isRequired }
     ```
 
    and then in `SomeActionCreators.doStuff` call
-   `payload.sourceComponent.transitionTo(...)`
+   `payload.sourceComponent.context.router.transitionTo(...)`
 
 2. Use some sort of application container, or module container for the
    router instance.
@@ -112,7 +112,7 @@ To avoid this, you can do one of three things:
     }
     ```
 
-    
+
 Accessing route and params from action creators
 ---------------------------------
 
@@ -125,7 +125,7 @@ Router.run(routes, (Handler, state) => {
 });
 ```
 
-Let `RouterStore` keep router state and add a public method to obtain it.  
+Let `RouterStore` keep router state and add a public method to obtain it.
 This way your action creators and other stores can learn about current router state.
 
 Handling route changes as actions
