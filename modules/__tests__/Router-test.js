@@ -1197,3 +1197,103 @@ describe('Router.run', function () {
     });
   });
 });
+
+describe('Router.setGlobalCriteria', function () {
+
+  describe('when filtering by regexp', function () {
+    var routes;
+    beforeEach(function () {
+      routes = [
+        <Route path="/" handler={Nested} criteria={ { match: /^filtered\./ } }>
+          <Route path="users" handler={Foo} />
+        </Route>,
+        <Route path="/" handler={Nested}>
+          <Route path="users" handler={Baz} />
+        </Route>
+      ];
+      Router.setGlobalCriteria({ match: 'filtered.string' });
+    });
+
+    it('returns nested route', function (done) {
+      Router.run(routes, '/users', function (Handler, state) {
+        var html = React.renderToString(<Handler />);
+        expect(html).toMatch(/Nested/);
+        expect(html).toMatch(/Foo/);
+        done();
+      });
+    });
+  });
+
+  describe('when filtering by equality', function () {
+    var routes;
+    beforeEach(function () {
+      routes = [
+        <Route path="/" handler={Nested} criteria={ { match: 'filtered.string' } }>
+          <Route path="users" handler={Foo} />
+        </Route>,
+        <Route path="/" handler={Nested}>
+          <Route path="users" handler={Baz} />
+        </Route>
+      ];
+      Router.setGlobalCriteria({ match: 'filtered.string' });
+    });
+
+    it('returns nested route', function (done) {
+      Router.run(routes, '/users', function (Handler, state) {
+        var html = React.renderToString(<Handler/>);
+        expect(html).toMatch(/Nested/);
+        expect(html).toMatch(/Foo/);
+        done();
+      });
+    });
+  });
+
+  describe('when filtering does not match regexp', function () {
+    var routes;
+    beforeEach(function () {
+      routes = [
+        <Route path="/" handler={Nested} criteria={ { match: /^filtered\./ } }>
+          <Route path="users" handler={Foo}  />
+        </Route>,
+        <Route path="/" handler={Nested}>
+          <Route path="users" handler={Baz} />
+        </Route>
+      ];
+      Router.setGlobalCriteria({ match: 'some.other.string' });
+    });
+
+    it('returns nested route', function (done) {
+      Router.run(routes, '/users', function (Handler, state) {
+        var html = React.renderToString(<Handler/>);
+        expect(html).toMatch(/Nested/);
+        expect(html).toMatch(/Baz/);
+        done();
+      });
+    });
+  });
+
+  describe('when filtering does not match equality', function () {
+    var routes;
+    beforeEach(function () {
+      routes = [
+        <Route path="/" handler={Nested} criteria={ { match: 'filtered.string' } }>
+          <Route path="users" handler={Foo} />
+        </Route>,
+        <Route path="/" handler={Nested}>
+          <Route path="users" handler={Baz} />
+        </Route>
+      ];
+      Router.setGlobalCriteria({ match: 'some.other.string' });
+    });
+
+    it('returns nested route', function (done) {
+      Router.run(routes, '/users', function (Handler, state) {
+        var html = React.renderToString(<Handler/>);
+        expect(html).toMatch(/Nested/);
+        expect(html).toMatch(/Baz/);
+        done();
+      });
+    });
+  });
+
+});
