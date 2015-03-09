@@ -70,8 +70,8 @@ var Contact = React.createClass({
 
   mixins: [ Router.Navigation, Router.State ],
 
-  getStateFromStore: function (id) {
-    id = this.getParams().id;
+  getStateFromStore: function () {
+    var id = this.getParams().id;
     return {
       contact: ContactStore.getContact(id)
     };
