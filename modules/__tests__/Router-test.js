@@ -648,6 +648,15 @@ describe('Router', function () {
       });
     });
 
+    it('renders with empty query string', function (done) {
+      var routes = <Route handler={Foo} path='/'/>;
+      Router.run(routes, '/?', function (Handler, state) {
+        var html = React.renderToString(<Handler />);
+        expect(html).toMatch(/Foo/);
+        done();
+      });
+    });
+
     it('executes transition hooks when only the query changes', function (done) {
       var fromKnifeCalled = false;
       var fromSpoonCalled = false;
