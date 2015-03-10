@@ -43,6 +43,27 @@ There is also a global build available on bower, find the library on
 
 The library is also available on the popular CDN [cdnjs](https://cdnjs.com/libraries/react-router).
 
+Route Params
+--------
+- **name**
+  - The name of the route. This is used to lookup a route relative to its parent route and should be unique among all child routes of the same parent
+- **path**
+  - A URL pathname string with optional placeholders that specify the names of params to extract from the URL when the path matches. Defaults to `/${name}` when there is a name given, or the path of the parent route, or /
+- **ignoreScrollBehavior**
+  - True to make this route (and all descendants) ignore the scroll behavior of the router
+- **isDefault**
+  - True to make this route the default route among all its siblings
+- **isNotFound**
+  - True to make this route the "not found" route among all its siblings
+- **onEnter**
+  - A transition hook that will be called when the router is going to enter this route
+- **onLeave**
+  - A transition hook that will be called when the router is going to leave this route
+- **handler**
+  - A React component that will be rendered when this route is active
+- **parentRoute**
+  - The parent route to use for this route. This option is automatically supplied when creating routes inside the callback to another invocation of createRoute. You only ever need to use this when declaring routes independently of one another to manually piece together the route hierarchy
+
 Features
 --------
 
