@@ -518,13 +518,13 @@ function createRouter(options) {
     },
 
     childContextTypes: {
-      routeHandlers: PropTypes.array.isRequired,
+      depth: PropTypes.number.isRequired,
       router: PropTypes.router.isRequired
     },
 
     getChildContext: function () {
       return {
-        routeHandlers: [ this ],
+        depth: 1,
         router: Router
       };
     },

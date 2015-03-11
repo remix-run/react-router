@@ -36,7 +36,7 @@ exports.Async = React.createClass({
     delay: 10,
 
     willTransitionTo: function (transition, params, query, callback) {
-      setTimeout(callback, this.delay);
+      setTimeout(callback, exports.Async.delay);
     }
   },
 
@@ -65,7 +65,7 @@ exports.RedirectToFooAsync = React.createClass({
       setTimeout(function () {
         transition.redirect('/foo');
         callback();
-      }, this.delay);
+      }, exports.RedirectToFooAsync.delay);
     }
   },
 
@@ -95,7 +95,7 @@ exports.AbortAsync = React.createClass({
       setTimeout(function () {
         transition.abort();
         callback();
-      }, this.delay);
+      }, exports.AbortAsync.delay);
     }
   },
 

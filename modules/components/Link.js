@@ -1,5 +1,5 @@
 var React = require('react');
-var classSet = require('react/lib/cx');
+var classSet = require('classnames');
 var assign = require('react/lib/Object.assign');
 var PropTypes = require('../PropTypes');
 

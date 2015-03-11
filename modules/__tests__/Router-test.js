@@ -193,7 +193,7 @@ describe('Router', function () {
             delay: Async.delay * 2,
 
             willTransitionTo: function (transition, params, query, callback) {
-              setTimeout(callback, this.delay);
+              setTimeout(callback, LongAsync.delay);
             }
           },
 
