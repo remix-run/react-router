@@ -83,7 +83,7 @@ var Login = React.createClass({
         return this.setState({ error: true });
 
       if (nextPath) {
-        this.transitionTo(nextPath);
+        this.replaceWith(nextPath);
       } else {
         this.replaceWith('/about');
       }
