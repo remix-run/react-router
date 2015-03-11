@@ -112,7 +112,7 @@ var Index = React.createClass({
 });
 
 var routes = (
-  <Route handler={App}>
+  <Route name="contacts" path="/" handler={App}>
     <DefaultRoute name="index" handler={Index}/>
     <Route name="contact" path="contact/:id" handler={Contact}/>
   </Route>
