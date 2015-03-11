@@ -25,7 +25,6 @@
     "babel-core": "^4.4.6",
     "babel-loader": "^4.0.0",
     "bundle-loader": "^0.5.2",
-    "classnames": "^1.1.4",
     "events": "1.0.2",
     "expect": "^1.1.0",
     "jsxhint": "^0.12.1",
@@ -44,11 +43,11 @@
     "webpack-dev-server": "^1.6.6"
   },
   "peerDependencies": {
-    "react": "0.13.x",
-    "classnames": "^1.1.4"
+    "react": "0.13.x"
   },
   "dependencies": {
-    "qs": "2.4.1"
+    "qs": "2.4.1",
+    "classnames": "1.1.x"
   },
   "tags": [
     "react",
