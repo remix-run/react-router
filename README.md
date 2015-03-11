@@ -7,6 +7,13 @@ React Router
 
 A complete routing library for React.
 
+React 0.13 Support
+==================
+
+Please help out, we will be shipping 0.13 support ASAP.
+
+https://github.com/rackt/react-router/issues/638
+
 Docs
 ----
 
