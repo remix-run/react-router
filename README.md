@@ -138,7 +138,7 @@ Contributing
 
 Please see [CONTRIBUTING](CONTRIBUTING.md)
 
-Thanks, Ember
+A Sincere Thank you to Ember
 -------------
 
 This library is highly inspired by the Ember.js routing API. In general,
