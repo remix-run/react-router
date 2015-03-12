@@ -1,5 +1,4 @@
 var React = require('react');
-var classSet = require('classnames');
 var assign = require('react/lib/Object.assign');
 var PropTypes = require('../PropTypes');
 
@@ -62,15 +61,12 @@ class Link extends React.Component {
    * the value of the activeClassName property when this <Link> is active.
    */
   getClassName() {
-    var classNames = {};
-
-    if (this.props.className)
-      classNames[this.props.className] = true;
+    var className = this.props.className
 
     if (this.getActiveState())
-      classNames[this.props.activeClassName] = true;
+      className += ` ${ this.props.activeClassName }`
 
-    return classSet(classNames);
+    return className
   }
 
   getActiveState() {
@@ -110,7 +106,8 @@ Link.propTypes = {
 };
 
 Link.defaultProps = {
-  activeClassName: 'active'
+  activeClassName: 'active',
+  className: ''
 };
 
 module.exports = Link;
