@@ -20,6 +20,6 @@ Redirect.propTypes = {
 };
 
 // Redirects should not have a default handler
-Redirect.defaultProps = {}
+Redirect.defaultProps = {};
 
 module.exports = Redirect;
