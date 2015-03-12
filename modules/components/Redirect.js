@@ -11,11 +11,15 @@ class Redirect extends Route {}
 // once we can use ES7 property initializers.
 // https://github.com/babel/babel/issues/619
 
+
 Redirect.propTypes = {
   path: PropTypes.string,
   from: PropTypes.string, // Alias for path.
   to: PropTypes.string,
   handler: PropTypes.falsy
 };
+
+// Redirects should not have a default handler
+Redirect.defaultProps = {}
 
 module.exports = Redirect;
