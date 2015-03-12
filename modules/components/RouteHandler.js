@@ -12,7 +12,7 @@ class RouteHandler extends React.Component {
 
   getChildContext() {
     return {
-      depth: this.context.depth + 1
+      routeDepth: this.context.routeDepth + 1
     };
   }
 
@@ -33,7 +33,7 @@ class RouteHandler extends React.Component {
   }
 
   getRouteDepth() {
-    return this.context.depth;
+    return this.context.routeDepth;
   }
 
   createChildRouteHandler(props) {
@@ -55,12 +55,12 @@ class RouteHandler extends React.Component {
 // https://github.com/babel/babel/issues/619
 
 RouteHandler.contextTypes = {
-  depth: PropTypes.number.isRequired,
+  routeDepth: PropTypes.number.isRequired,
   router: PropTypes.router.isRequired
 };
 
 RouteHandler.childContextTypes = {
-  depth: PropTypes.number.isRequired
+  routeDepth: PropTypes.number.isRequired
 };
 
 module.exports = RouteHandler;
