@@ -28,7 +28,7 @@ var App = React.createClass({
       return taco.name != removedTaco;
     });
     this.setState({tacos: tacos});
-    this.transitionTo('/');
+    this.context.router.transitionTo('/');
   },
 
   render: function () {
@@ -57,13 +57,13 @@ var Taco = React.createClass({
   mixins: [ Router.State ],
 
   remove: function () {
-    this.props.onRemoveTaco(this.getParams().name);
+    this.props.onRemoveTaco(this.context.router.getCurrentParams().name);
   },
 
   render: function () {
     return (
       <div className="Taco">
-        <h1>{this.getParams().name}</h1>
+        <h1>{this.context.router.getCurrentParams().name}</h1>
         <button onClick={this.remove}>remove</button>
       </div>
     );

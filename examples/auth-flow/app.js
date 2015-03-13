@@ -75,7 +75,7 @@ var Login = React.createClass({
 
   handleSubmit: function (event) {
     event.preventDefault();
-    var nextPath = this.getQuery().nextPath;
+    var nextPath = this.context.router.getCurrentQuery().nextPath;
     var email = this.refs.email.getDOMNode().value;
     var pass = this.refs.pass.getDOMNode().value;
     auth.login(email, pass, function (loggedIn) {
@@ -83,9 +83,9 @@ var Login = React.createClass({
         return this.setState({ error: true });
 
       if (nextPath) {
-        this.replaceWith(nextPath);
+        this.context.router.replaceWith(nextPath);
       } else {
-        this.replaceWith('/about');
+        this.context.router.replaceWith('/about');
       }
     }.bind(this));
   },
