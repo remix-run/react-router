@@ -319,6 +319,10 @@ describe('PathUtils.withQuery', function () {
     expect(PathUtils.withQuery('/path?a=b', { c: [ 'd', 'e' ] })).toEqual('/path?a=b&c=d&c=e');
   });
 
+  it('removes query string', function () {
+    expect(Path.withQuery('/a/b/c?a=b', { a: undefined })).toEqual('/a/b/c');
+  });
+
   it('handles special characters', function () {
     expect(PathUtils.withQuery('/path?a=b', { c: [ 'd#e', 'f&a=i#j+k' ] })).toEqual('/path?a=b&c=d%23e&c=f%26a%3Di%23j%2Bk');
   });
