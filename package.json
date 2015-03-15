@@ -47,7 +47,8 @@
   },
   "dependencies": {
     "qs": "2.4.1",
-    "classnames": "1.1.x"
+    "classnames": "1.1.x",
+    "object-assign": "^2.0.0"
   },
   "tags": [
     "react",
