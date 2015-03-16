@@ -46,7 +46,7 @@
     "react": "0.12.x"
   },
   "dependencies": {
-    "qs": "2.3.3"
+    "qs": "2.4.1"
   },
   "tags": [
     "react",

@@ -316,10 +316,10 @@ describe('PathUtils.withQuery', function () {
   });
 
   it('merges two query strings', function () {
-    expect(PathUtils.withQuery('/path?a=b', { c: [ 'd', 'e' ] })).toEqual('/path?a=b&c=d&c=e');
+    expect(PathUtils.withQuery('/path?a=b', { c: [ 'd', 'e' ] })).toEqual('/path?a=b&c%5B%5D=d&c%5B%5D=e');
   });
 
   it('handles special characters', function () {
-    expect(PathUtils.withQuery('/path?a=b', { c: [ 'd#e', 'f&a=i#j+k' ] })).toEqual('/path?a=b&c=d%23e&c=f%26a%3Di%23j%2Bk');
+    expect(PathUtils.withQuery('/path?a=b', { c: [ 'd#e', 'f&a=i#j+k' ] })).toEqual('/path?a=b&c%5B%5D=d%23e&c%5B%5D=f%26a%3Di%23j%2Bk');
   });
 });

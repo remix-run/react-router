@@ -146,7 +146,7 @@ var PathUtils = {
     if (existingQuery)
       query = query ? merge(existingQuery, query) : existingQuery;
 
-    var queryString = qs.stringify(query, { indices: false });
+    var queryString = qs.stringify(query, { arrayFormat: 'brackets' });
 
     if (queryString)
       return PathUtils.withoutQuery(path) + '?' + queryString;
