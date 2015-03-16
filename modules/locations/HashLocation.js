@@ -36,8 +36,9 @@ function onHashChange() {
     // changed. It was probably caused by the user clicking the Back
     // button, but may have also been the Forward button or manual
     // manipulation. So just guess 'pop'.
-    notifyChange(_actionType || LocationActions.POP);
+    var curActionType = _actionType;
     _actionType = null;
+    notifyChange(curActionType || LocationActions.POP);
   }
 }
 
