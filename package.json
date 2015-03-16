@@ -46,6 +46,7 @@
     "react": "0.12.x"
   },
   "dependencies": {
+    "object-assign": "^2.0.0",
     "qs": "2.4.1"
   },
   "tags": [

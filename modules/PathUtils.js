@@ -1,5 +1,5 @@
 var invariant = require('react/lib/invariant');
-var merge = require('qs/lib/utils').merge;
+var objectAssign = require('object-assign');
 var qs = require('qs');
 
 var paramCompileMatcher = /:([a-zA-Z_$][a-zA-Z0-9_$]*)|[*.()\[\]\\+|{}^$]/g;
@@ -144,14 +144,14 @@ var PathUtils = {
     var existingQuery = PathUtils.extractQuery(path);
 
     if (existingQuery)
-      query = query ? merge(existingQuery, query) : existingQuery;
+      query = query ? objectAssign(existingQuery, query) : existingQuery;
 
     var queryString = qs.stringify(query, { arrayFormat: 'brackets' });
 
     if (queryString)
       return PathUtils.withoutQuery(path) + '?' + queryString;
 
-    return path;
+    return Path.withoutQuery(path);
   }
 
 };
