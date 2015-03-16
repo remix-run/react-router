@@ -1,4 +1,5 @@
 var React = require('react');
+var ContextWrapper = require('./ContextWrapper')
 var assign = require('react/lib/Object.assign');
 var PropTypes = require('../PropTypes');
 
@@ -42,10 +43,7 @@ class RouteHandler extends React.Component {
   }
 
   render() {
-    // IMPORTANT: This span "soaks" up owner context, keeping
-    // React 0.13.0 from throwing a warning.
-    // TODO: Why should this even be necessary?
-    return <span>{ this.createChildRouteHandler() }</span>
+    return <ContextWrapper>{ this.createChildRouteHandler() }</ContextWrapper>
   }
 
 }
