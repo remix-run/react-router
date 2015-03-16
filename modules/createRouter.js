@@ -524,13 +524,17 @@ function createRouter(options) {
 
     getChildContext: function () {
       return {
-        routeHandlers: [ this ],
+        routeHandlers: this._routeHandlers,
         router: Router
       };
     },
 
     getInitialState: function () {
       return (state = nextState);
+    },
+
+    componentWillMount: function() {
+      this._routeHandlers = [ this ];
     },
 
     componentWillReceiveProps: function () {

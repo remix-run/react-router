@@ -12,8 +12,12 @@ class RouteHandler extends React.Component {
 
   getChildContext() {
     return {
-      routeHandlers: this.context.routeHandlers.concat([ this ])
+      routeHandlers: this._routeHandlers
     };
+  }
+
+  componentWillMount() {
+    this._routeHandlers = this.context.routeHandlers.concat([ this ]);
   }
 
   componentDidMount() {
@@ -42,7 +46,7 @@ class RouteHandler extends React.Component {
   }
 
   render() {
-    return this.createChildRouteHandler();
+    return React.createElement('div', null, this.createChildRouteHandler());
   }
 
 }
