@@ -1,4 +1,5 @@
 var React = require('react');
+var ContextWrapper = require('./ContextWrapper')
 var assign = require('react/lib/Object.assign');
 var PropTypes = require('../PropTypes');
 
@@ -12,7 +13,7 @@ class RouteHandler extends React.Component {
 
   getChildContext() {
     return {
-      routeHandlers: this.context.routeHandlers.concat([ this ])
+      routeDepth: this.context.routeDepth + 1
     };
   }
 
@@ -33,7 +34,7 @@ class RouteHandler extends React.Component {
   }
 
   getRouteDepth() {
-    return this.context.routeHandlers.length;
+    return this.context.routeDepth;
   }
 
   createChildRouteHandler(props) {
@@ -42,7 +43,7 @@ class RouteHandler extends React.Component {
   }
 
   render() {
-    return this.createChildRouteHandler();
+    return <ContextWrapper>{ this.createChildRouteHandler() }</ContextWrapper>
   }
 
 }
@@ -52,12 +53,12 @@ class RouteHandler extends React.Component {
 // https://github.com/babel/babel/issues/619
 
 RouteHandler.contextTypes = {
-  routeHandlers: PropTypes.array.isRequired,
+  routeDepth: PropTypes.number.isRequired,
   router: PropTypes.router.isRequired
 };
 
 RouteHandler.childContextTypes = {
-  routeHandlers: PropTypes.array.isRequired
+  routeDepth: PropTypes.number.isRequired
 };
 
 module.exports = RouteHandler;

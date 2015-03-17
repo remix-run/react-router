@@ -453,13 +453,13 @@ function createRouter(options) {
         return scrollBehavior;
       },
 
-      getRouteAtDepth: function (depth) {
+      getRouteAtDepth: function (routeDepth) {
         var routes = state.routes;
-        return routes && routes[depth];
+        return routes && routes[routeDepth];
       },
 
-      setRouteComponentAtDepth: function (depth, component) {
-        mountedComponents[depth] = component;
+      setRouteComponentAtDepth: function (routeDepth, component) {
+        mountedComponents[routeDepth] = component;
       },
 
       /**
@@ -518,13 +518,13 @@ function createRouter(options) {
     },
 
     childContextTypes: {
-      routeHandlers: PropTypes.array.isRequired,
+      routeDepth: PropTypes.number.isRequired,
       router: PropTypes.router.isRequired
     },
 
     getChildContext: function () {
       return {
-        routeHandlers: [ this ],
+        routeDepth: 1,
         router: Router
       };
     },
