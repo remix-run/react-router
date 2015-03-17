@@ -1,8 +1,4 @@
 .Image {
-  position: relative;
-}
-
-.Image {
   position: absolute;
   height: 400px;
   width: 400px;
