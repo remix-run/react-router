@@ -53,7 +53,7 @@ var App = React.createClass({
           <Link to="/nothing-here">Invalid Link (not found)</Link>
         </div>
         <div className="Content">
-          <RouteHandler/>
+          <RouteHandler {...this.props} />
         </div>
       </div>
     );
@@ -68,41 +68,24 @@ var Index = React.createClass({
 
 var Contact = React.createClass({
 
-  mixins: [ Router.Navigation, Router.State ],
+  mixins: [ Router.Navigation ],
 
-  requestContact: function () {
-    if (this.state.isFetching)
-      return;
-
-    var currentId = this.state.currentId;
-    var id = this.getParams().id;
-    ContactStore.fetchContact(id);
-    this.setState({isFetching: true});
-  },
-
-  getInitialState: function () {
-    let id = this.getParams().id
+  getStateFromStore: function(props) {
+    var id = props.params.id;
     return {
-      currentId: undefined,
-      isFetching: true,
       contact: ContactStore.getContact(id)
     }
   },
 
-  shouldComponentUpdate: function (nextProps, nextState) {
-    if (nextState.isFetching)
-      return true;
-
-    if (nextState.currentId) {
-      let shouldUpdate = this.state.currentId !== nextState.currentId;
-      return shouldUpdate;
-    } else
-      return true;
+  getInitialState: function () {
+    return this.getStateFromStore(this.props);
   },
 
-  componentWillMount: function () {
-    var id = this.getParams().id;
-    ContactStore.fetchContact(id)
+  componentDidUpdate: function (prevProps, prevState) {
+    var id = this.props.params.id;
+    if (prevProps.params.id !== id) {
+      ContactStore.fetchContact(id);
+    }
   },
 
   componentDidMount: function () {
@@ -114,19 +97,14 @@ var Contact = React.createClass({
   },
 
   componentWillReceiveProps: function (nextProps) {
-    this.requestContact();
+    this.setState(this.getStateFromStore(nextProps));
   },
 
   updateContact: function () {
     if (!this.isMounted())
       return;
 
-    var id = this.getParams().id;
-    this.setState({
-      currentId: id,
-      isFetching: false,
-      contact: ContactStore.getContact(id)
-    });
+    this.setState(this.getStateFromStore(this.props));
   },
 
   destroy: function () {
@@ -137,15 +115,15 @@ var Contact = React.createClass({
 
   render: function () {
     var content;
+    var contact = this.state.contact;
 
-    if (this.state.isFetching) {
+    if (!contact) {
       content = (
         <div className="Contact">
           <p>Loading...</p>
         </div>
       );
     } else {
-      var contact = this.state.contact || {};
       var name = contact.first + ' ' + contact.last;
       var avatar = contact.avatar || 'http://placecage.com/50/50';
       content = (
@@ -205,6 +183,6 @@ var routes = (
   </Route>
 );
 
-Router.run(routes, function (Handler) {
-  React.render(<Handler/>, document.getElementById('example'));
+Router.run(routes, function (Handler, state) {
+  React.render(<Handler {...state} />, document.getElementById('example'));
 });
