@@ -47,6 +47,13 @@ var ContactStore = module.exports = {
     return _contacts[id];
   },
 
+  fetchContact: function (id) {
+    getJSON(API + '/' + id, function (err, res) {
+      _contacts[res.contact.id] = res.contact
+      ContactStore.notifyChange();
+    });
+  },
+
   notifyChange: function () {
     _changeListeners.forEach(function (listener) {
       listener();

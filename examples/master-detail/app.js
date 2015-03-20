@@ -53,7 +53,7 @@ var App = React.createClass({
           <Link to="/nothing-here">Invalid Link (not found)</Link>
         </div>
         <div className="Content">
-          <RouteHandler/>
+          <RouteHandler {...this.props} />
         </div>
       </div>
     );
@@ -68,17 +68,24 @@ var Index = React.createClass({
 
 var Contact = React.createClass({
 
-  mixins: [ Router.Navigation, Router.State ],
+  mixins: [ Router.Navigation ],
 
-  getStateFromStore: function () {
-    var id = this.getParams().id;
+  getStateFromStore: function(props) {
+    var id = props.params.id;
     return {
       contact: ContactStore.getContact(id)
-    };
+    }
   },
 
   getInitialState: function () {
-    return this.getStateFromStore();
+    return this.getStateFromStore(this.props);
+  },
+
+  componentDidUpdate: function (prevProps, prevState) {
+    var id = this.props.params.id;
+    if (prevProps.params.id !== id) {
+      ContactStore.fetchContact(id);
+    }
   },
 
   componentDidMount: function () {
@@ -89,15 +96,15 @@ var Contact = React.createClass({
     ContactStore.removeChangeListener(this.updateContact);
   },
 
-  componentWillReceiveProps: function () {
-    this.setState(this.getStateFromStore());
+  componentWillReceiveProps: function (nextProps) {
+    this.setState(this.getStateFromStore(nextProps));
   },
 
   updateContact: function () {
     if (!this.isMounted())
       return;
 
-    this.setState(this.getStateFromStore());
+    this.setState(this.getStateFromStore(this.props));
   },
 
   destroy: function () {
@@ -107,16 +114,28 @@ var Contact = React.createClass({
   },
 
   render: function () {
-    var contact = this.state.contact || {};
-    var name = contact.first + ' ' + contact.last;
-    var avatar = contact.avatar || 'http://placecage.com/50/50';
-    return (
-      <div className="Contact">
-        <img height="50" src={avatar} key={avatar}/>
-        <h3>{name}</h3>
-        <button onClick={this.destroy}>Delete</button>
-      </div>
-    );
+    var content;
+    var contact = this.state.contact;
+
+    if (!contact) {
+      content = (
+        <div className="Contact">
+          <p>Loading...</p>
+        </div>
+      );
+    } else {
+      var name = contact.first + ' ' + contact.last;
+      var avatar = contact.avatar || 'http://placecage.com/50/50';
+      content = (
+        <div className="Contact">
+          <img height="50" src={avatar} key={avatar}/>
+          <h3>{name}</h3>
+          <button onClick={this.destroy}>Delete</button>
+        </div>
+      );
+    }
+
+    return content;
   }
 });
 
@@ -164,6 +183,6 @@ var routes = (
   </Route>
 );
 
-Router.run(routes, function (Handler) {
-  React.render(<Handler/>, document.getElementById('example'));
+Router.run(routes, function (Handler, state) {
+  React.render(<Handler {...state} />, document.getElementById('example'));
 });
