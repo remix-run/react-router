@@ -25,4 +25,5 @@ exports.createRedirect = require('./Route').createRedirect;
 exports.createRoutesFromReactChildren = require('./createRoutesFromReactChildren');
 exports.create = require('./createRouter');
 exports.run = require('./runRouter');
+exports.runSync = require('./runRouterSync');
 
