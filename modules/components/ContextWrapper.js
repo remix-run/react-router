@@ -9,7 +9,7 @@ var React = require('react');
 class ContextWrapper extends React.Component {
 
   render() {
-    return React.Children.only(this.props.children);
+    return this.props.children;
   }
 
 }
