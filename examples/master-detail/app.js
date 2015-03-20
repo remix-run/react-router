@@ -101,9 +101,9 @@ var Contact = React.createClass({
   },
 
   destroy: function () {
-    var id = this.getParams().id;
+    var id = this.context.router.getCurrentParams().id;
     ContactStore.removeContact(id);
-    this.transitionTo('/');
+    this.context.router.transitionTo('/');
   },
 
   render: function () {
@@ -130,7 +130,7 @@ var NewContact = React.createClass({
       first: this.refs.first.getDOMNode().value,
       last: this.refs.last.getDOMNode().value
     }, function (contact) {
-      this.transitionTo('contact', { id: contact.id });
+      this.context.router.transitionTo('contact', { id: contact.id });
     }.bind(this));
   },
 

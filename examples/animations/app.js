@@ -8,7 +8,7 @@ var App = React.createClass({
   mixins: [ Router.State ],
 
   render: function () {
-    var name = this.getRoutes().slice(0).reverse()[0].name;
+    var name = this.context.router.getCurrentRoutes().slice(0).reverse()[0].name;
 
     return (
       <div>

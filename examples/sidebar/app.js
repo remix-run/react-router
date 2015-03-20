@@ -76,7 +76,7 @@ var App = React.createClass({
   mixins: [ Router.State ],
 
   render: function () {
-    var activeCategory = this.getParams().category;
+    var activeCategory = this.context.router.getCurrentParams().category;
     return (
       <div>
         <Sidebar activeCategory={activeCategory} categories={data.getAll()}/>
@@ -92,7 +92,7 @@ var Item = React.createClass({
   mixins: [ Router.State ],
 
   render: function () {
-    var params = this.getParams();
+    var params = this.context.router.getCurrentParams();
     var category = data.lookupCategory(params.category);
     var item = data.lookupItem(params.category, params.name);
     return (

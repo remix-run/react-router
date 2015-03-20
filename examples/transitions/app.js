@@ -45,7 +45,7 @@ var Form = React.createClass({
   handleSubmit: function (event) {
     event.preventDefault();
     this.refs.userInput.getDOMNode().value = '';
-    this.transitionTo('/');
+    this.context.router.transitionTo('/');
   },
 
   render: function () {

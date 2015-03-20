@@ -21,8 +21,8 @@ var User = React.createClass({
   mixins: [ Router.State ],
 
   render: function () {
-    var age = this.getQuery().showAge ? '33' : '';
-    var userID = this.getParams().userID;
+    var age = this.context.router.getCurrentQuery().showAge ? '33' : '';
+    var userID = this.context.router.getCurrentParams().userID;
     return (
       <div className="User">
         <h1>User id: {userID}</h1>

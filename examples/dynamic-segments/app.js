@@ -20,7 +20,7 @@ var User = React.createClass({
   mixins: [ Router.State ],
 
   render () {
-    var { userId } = this.getParams();
+    var { userId } = this.context.router.getCurrentParams();
     return (
       <div className="User">
         <h1>User id: {userId}</h1>
@@ -39,7 +39,7 @@ var Task = React.createClass({
   mixins: [ Router.State ],
 
   render () {
-    var { userId, taskId } = this.getParams();
+    var { userId, taskId } = this.context.router.getCurrentParams();
     return (
       <div className="Task">
         <h2>User id: {userId}</h2>

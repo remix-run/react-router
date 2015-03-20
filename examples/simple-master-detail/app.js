@@ -45,7 +45,7 @@ var State = React.createClass({
   },
 
   render: function () {
-    var unitedState = findState(this.getParams().abbr);
+    var unitedState = findState(this.context.router.getCurrentParams().abbr);
     return (
       <div className="State">
         <h1>{unitedState.name}</h1>
