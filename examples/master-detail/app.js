@@ -70,15 +70,39 @@ var Contact = React.createClass({
 
   mixins: [ Router.Navigation, Router.State ],
 
-  getStateFromStore: function () {
+  requestContact: function () {
+    if (this.state.isFetching)
+      return;
+
+    var currentId = this.state.currentId;
     var id = this.getParams().id;
-    return {
-      contact: ContactStore.getContact(id)
-    };
+    ContactStore.fetchContact(id);
+    this.setState({isFetching: true});
   },
 
   getInitialState: function () {
-    return this.getStateFromStore();
+    let id = this.getParams().id
+    return {
+      currentId: undefined,
+      isFetching: true,
+      contact: ContactStore.getContact(id)
+    }
+  },
+
+  shouldComponentUpdate: function (nextProps, nextState) {
+    if (nextState.isFetching)
+      return true;
+
+    if (nextState.currentId) {
+      let shouldUpdate = this.state.currentId !== nextState.currentId;
+      return shouldUpdate;
+    } else
+      return true;
+  },
+
+  componentWillMount: function () {
+    var id = this.getParams().id;
+    ContactStore.fetchContact(id)
   },
 
   componentDidMount: function () {
@@ -89,15 +113,20 @@ var Contact = React.createClass({
     ContactStore.removeChangeListener(this.updateContact);
   },
 
-  componentWillReceiveProps: function () {
-    this.setState(this.getStateFromStore());
+  componentWillReceiveProps: function (nextProps) {
+    this.requestContact();
   },
 
   updateContact: function () {
     if (!this.isMounted())
       return;
 
-    this.setState(this.getStateFromStore());
+    var id = this.getParams().id;
+    this.setState({
+      currentId: id,
+      isFetching: false,
+      contact: ContactStore.getContact(id)
+    });
   },
 
   destroy: function () {
@@ -107,16 +136,28 @@ var Contact = React.createClass({
   },
 
   render: function () {
-    var contact = this.state.contact || {};
-    var name = contact.first + ' ' + contact.last;
-    var avatar = contact.avatar || 'http://placecage.com/50/50';
-    return (
-      <div className="Contact">
-        <img height="50" src={avatar} key={avatar}/>
-        <h3>{name}</h3>
-        <button onClick={this.destroy}>Delete</button>
-      </div>
-    );
+    var content;
+
+    if (this.state.isFetching) {
+      content = (
+        <div className="Contact">
+          <p>Loading...</p>
+        </div>
+      );
+    } else {
+      var contact = this.state.contact || {};
+      var name = contact.first + ' ' + contact.last;
+      var avatar = contact.avatar || 'http://placecage.com/50/50';
+      content = (
+        <div className="Contact">
+          <img height="50" src={avatar} key={avatar}/>
+          <h3>{name}</h3>
+          <button onClick={this.destroy}>Delete</button>
+        </div>
+      );
+    }
+
+    return content;
   }
 });
 
