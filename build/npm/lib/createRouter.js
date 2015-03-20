@@ -151,9 +151,9 @@ function createRouter(options) {
       },
 
       clearAllRoutes: function clearAllRoutes() {
-        this.cancelPendingTransition();
-        this.namedRoutes = {};
-        this.routes = [];
+        Router.cancelPendingTransition();
+        Router.namedRoutes = {};
+        Router.routes = [];
       },
 
       /**
@@ -162,18 +162,18 @@ function createRouter(options) {
       addRoutes: function addRoutes(routes) {
         if (isReactChildren(routes)) routes = createRoutesFromReactChildren(routes);
 
-        addRoutesToNamedRoutes(routes, this.namedRoutes);
+        addRoutesToNamedRoutes(routes, Router.namedRoutes);
 
-        this.routes.push.apply(this.routes, routes);
+        Router.routes.push.apply(Router.routes, routes);
       },
 
       /**
        * Replaces routes of this router from the given children object (see ReactChildren).
        */
       replaceRoutes: function replaceRoutes(routes) {
-        this.clearAllRoutes();
-        this.addRoutes(routes);
-        this.refresh();
+        Router.clearAllRoutes();
+        Router.addRoutes(routes);
+        Router.refresh();
       },
 
       /**
@@ -182,7 +182,7 @@ function createRouter(options) {
        * match can be made.
        */
       match: function match(path) {
-        return Match.findMatch(this.routes, path);
+        return Match.findMatch(Router.routes, path);
       },
 
       /**
@@ -194,7 +194,7 @@ function createRouter(options) {
         if (PathUtils.isAbsolute(to)) {
           path = to;
         } else {
-          var route = to instanceof Route ? to : this.namedRoutes[to];
+          var route = to instanceof Route ? to : Router.namedRoutes[to];
 
           invariant(route instanceof Route, "Cannot find a route named \"%s\"", to);
 
@@ -209,7 +209,7 @@ function createRouter(options) {
        * to the route with the given name, URL parameters, and query.
        */
       makeHref: function makeHref(to, params, query) {
-        var path = this.makePath(to, params, query);
+        var path = Router.makePath(to, params, query);
         return location === HashLocation ? "#" + path : path;
       },
 
@@ -218,7 +218,7 @@ function createRouter(options) {
        * a new URL onto the history stack.
        */
       transitionTo: function transitionTo(to, params, query) {
-        var path = this.makePath(to, params, query);
+        var path = Router.makePath(to, params, query);
 
         if (pendingTransition) {
           // Replace so pending location does not stay in history.
@@ -233,7 +233,7 @@ function createRouter(options) {
        * the current URL in the history stack.
        */
       replaceWith: function replaceWith(to, params, query) {
-        location.replace(this.makePath(to, params, query));
+        location.replace(Router.makePath(to, params, query));
       },
 
       /**
@@ -264,7 +264,7 @@ function createRouter(options) {
         if (abortReason instanceof Cancellation) {
           return;
         } else if (abortReason instanceof Redirect) {
-          location.replace(this.makePath(abortReason.to, abortReason.params, abortReason.query));
+          location.replace(Router.makePath(abortReason.to, abortReason.params, abortReason.query));
         } else {
           location.pop();
         }
@@ -276,7 +276,7 @@ function createRouter(options) {
       },
 
       handleLocationChange: function handleLocationChange(change) {
-        this.dispatch(change.path, change.type);
+        Router.dispatch(change.path, change.type);
       },
 
       /**
@@ -296,7 +296,7 @@ function createRouter(options) {
        * hooks wait, the transition is fully synchronous.
        */
       dispatch: function dispatch(path, action) {
-        this.cancelPendingTransition();
+        Router.cancelPendingTransition();
 
         var prevPath = state.path;
         var isRefreshing = action == null;
@@ -307,9 +307,9 @@ function createRouter(options) {
 
         // Record the scroll position as early as possible to
         // get it before browsers try update it automatically.
-        if (prevPath && action === LocationActions.PUSH) this.recordScrollPosition(prevPath);
+        if (prevPath && action === LocationActions.PUSH) Router.recordScrollPosition(prevPath);
 
-        var match = this.match(path);
+        var match = Router.match(path);
 
         warning(match != null, "No route matches path \"%s\". Make sure you have <Route path=\"%s\"> somewhere in your routes", path, path);
 
@@ -337,7 +337,7 @@ function createRouter(options) {
           toRoutes = nextRoutes;
         }
 
-        var transition = new Transition(path, this.replaceWith.bind(this, path));
+        var transition = new Transition(path, Router.replaceWith.bind(Router, path));
         pendingTransition = transition;
 
         var fromComponents = mountedComponents.slice(prevRoutes.length - fromRoutes.length);
@@ -366,7 +366,7 @@ function createRouter(options) {
        * Router.*Location objects (e.g. Router.HashLocation or Router.HistoryLocation).
        */
       run: function run(callback) {
-        invariant(!this.isRunning, "Router is already running");
+        invariant(!Router.isRunning, "Router is already running");
 
         dispatchHandler = function (error, transition, newState) {
           if (error) Router.handleError(error);
@@ -378,18 +378,18 @@ function createRouter(options) {
           if (transition.abortReason) {
             Router.handleAbort(transition.abortReason);
           } else {
-            callback.call(this, this, nextState = newState);
+            callback.call(Router, Router, nextState = newState);
           }
         };
 
         if (!(location instanceof StaticLocation)) {
-          if (location.addChangeListener) location.addChangeListener(Router.handleLocationChange.bind(Router));
+          if (location.addChangeListener) location.addChangeListener(Router.handleLocationChange);
 
-          this.isRunning = true;
+          Router.isRunning = true;
         }
 
         // Bootstrap using the current path.
-        this.refresh();
+        Router.refresh();
       },
 
       refresh: function refresh() {
@@ -397,11 +397,11 @@ function createRouter(options) {
       },
 
       stop: function stop() {
-        this.cancelPendingTransition();
+        Router.cancelPendingTransition();
 
-        if (location.removeChangeListener) location.removeChangeListener(Router.handleLocationChange.bind(Router));
+        if (location.removeChangeListener) location.removeChangeListener(Router.handleLocationChange);
 
-        this.isRunning = false;
+        Router.isRunning = false;
       },
 
       getLocation: function getLocation() {

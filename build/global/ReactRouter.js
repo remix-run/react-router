@@ -1594,9 +1594,9 @@ return /******/ (function(modules) { // webpackBootstrap
 	      },
 
 	      clearAllRoutes: function clearAllRoutes() {
-	        this.cancelPendingTransition();
-	        this.namedRoutes = {};
-	        this.routes = [];
+	        Router.cancelPendingTransition();
+	        Router.namedRoutes = {};
+	        Router.routes = [];
 	      },
 
 	      /**
@@ -1605,18 +1605,18 @@ return /******/ (function(modules) { // webpackBootstrap
 	      addRoutes: function addRoutes(routes) {
 	        if (isReactChildren(routes)) routes = createRoutesFromReactChildren(routes);
 
-	        addRoutesToNamedRoutes(routes, this.namedRoutes);
+	        addRoutesToNamedRoutes(routes, Router.namedRoutes);
 
-	        this.routes.push.apply(this.routes, routes);
+	        Router.routes.push.apply(Router.routes, routes);
 	      },
 
 	      /**
 	       * Replaces routes of this router from the given children object (see ReactChildren).
 	       */
 	      replaceRoutes: function replaceRoutes(routes) {
-	        this.clearAllRoutes();
-	        this.addRoutes(routes);
-	        this.refresh();
+	        Router.clearAllRoutes();
+	        Router.addRoutes(routes);
+	        Router.refresh();
 	      },
 
 	      /**
@@ -1625,7 +1625,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	       * match can be made.
 	       */
 	      match: function match(path) {
-	        return Match.findMatch(this.routes, path);
+	        return Match.findMatch(Router.routes, path);
 	      },
 
 	      /**
@@ -1637,7 +1637,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	        if (PathUtils.isAbsolute(to)) {
 	          path = to;
 	        } else {
-	          var route = to instanceof Route ? to : this.namedRoutes[to];
+	          var route = to instanceof Route ? to : Router.namedRoutes[to];
 
 	          invariant(route instanceof Route, "Cannot find a route named \"%s\"", to);
 
@@ -1652,7 +1652,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	       * to the route with the given name, URL parameters, and query.
 	       */
 	      makeHref: function makeHref(to, params, query) {
-	        var path = this.makePath(to, params, query);
+	        var path = Router.makePath(to, params, query);
 	        return location === HashLocation ? "#" + path : path;
 	      },
 
@@ -1661,7 +1661,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	       * a new URL onto the history stack.
 	       */
 	      transitionTo: function transitionTo(to, params, query) {
-	        var path = this.makePath(to, params, query);
+	        var path = Router.makePath(to, params, query);
 
 	        if (pendingTransition) {
 	          // Replace so pending location does not stay in history.
@@ -1676,7 +1676,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	       * the current URL in the history stack.
 	       */
 	      replaceWith: function replaceWith(to, params, query) {
-	        location.replace(this.makePath(to, params, query));
+	        location.replace(Router.makePath(to, params, query));
 	      },
 
 	      /**
@@ -1707,7 +1707,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	        if (abortReason instanceof Cancellation) {
 	          return;
 	        } else if (abortReason instanceof Redirect) {
-	          location.replace(this.makePath(abortReason.to, abortReason.params, abortReason.query));
+	          location.replace(Router.makePath(abortReason.to, abortReason.params, abortReason.query));
 	        } else {
 	          location.pop();
 	        }
@@ -1719,7 +1719,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	      },
 
 	      handleLocationChange: function handleLocationChange(change) {
-	        this.dispatch(change.path, change.type);
+	        Router.dispatch(change.path, change.type);
 	      },
 
 	      /**
@@ -1739,7 +1739,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	       * hooks wait, the transition is fully synchronous.
 	       */
 	      dispatch: function dispatch(path, action) {
-	        this.cancelPendingTransition();
+	        Router.cancelPendingTransition();
 
 	        var prevPath = state.path;
 	        var isRefreshing = action == null;
@@ -1750,9 +1750,9 @@ return /******/ (function(modules) { // webpackBootstrap
 
 	        // Record the scroll position as early as possible to
 	        // get it before browsers try update it automatically.
-	        if (prevPath && action === LocationActions.PUSH) this.recordScrollPosition(prevPath);
+	        if (prevPath && action === LocationActions.PUSH) Router.recordScrollPosition(prevPath);
 
-	        var match = this.match(path);
+	        var match = Router.match(path);
 
 	        warning(match != null, "No route matches path \"%s\". Make sure you have <Route path=\"%s\"> somewhere in your routes", path, path);
 
@@ -1780,7 +1780,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	          toRoutes = nextRoutes;
 	        }
 
-	        var transition = new Transition(path, this.replaceWith.bind(this, path));
+	        var transition = new Transition(path, Router.replaceWith.bind(Router, path));
 	        pendingTransition = transition;
 
 	        var fromComponents = mountedComponents.slice(prevRoutes.length - fromRoutes.length);
@@ -1809,7 +1809,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	       * Router.*Location objects (e.g. Router.HashLocation or Router.HistoryLocation).
 	       */
 	      run: function run(callback) {
-	        invariant(!this.isRunning, "Router is already running");
+	        invariant(!Router.isRunning, "Router is already running");
 
 	        dispatchHandler = function (error, transition, newState) {
 	          if (error) Router.handleError(error);
@@ -1821,18 +1821,18 @@ return /******/ (function(modules) { // webpackBootstrap
 	          if (transition.abortReason) {
 	            Router.handleAbort(transition.abortReason);
 	          } else {
-	            callback.call(this, this, nextState = newState);
+	            callback.call(Router, Router, nextState = newState);
 	          }
 	        };
 
 	        if (!(location instanceof StaticLocation)) {
-	          if (location.addChangeListener) location.addChangeListener(Router.handleLocationChange.bind(Router));
+	          if (location.addChangeListener) location.addChangeListener(Router.handleLocationChange);
 
-	          this.isRunning = true;
+	          Router.isRunning = true;
 	        }
 
 	        // Bootstrap using the current path.
-	        this.refresh();
+	        Router.refresh();
 	      },
 
 	      refresh: function refresh() {
@@ -1840,11 +1840,11 @@ return /******/ (function(modules) { // webpackBootstrap
 	      },
 
 	      stop: function stop() {
-	        this.cancelPendingTransition();
+	        Router.cancelPendingTransition();
 
-	        if (location.removeChangeListener) location.removeChangeListener(Router.handleLocationChange.bind(Router));
+	        if (location.removeChangeListener) location.removeChangeListener(Router.handleLocationChange);
 
-	        this.isRunning = false;
+	        Router.isRunning = false;
 	      },
 
 	      getLocation: function getLocation() {
