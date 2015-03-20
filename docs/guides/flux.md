@@ -13,21 +13,19 @@ creating a cycle indirectly.
 
 To avoid this, you can do one of three things:
 
-1. Send the component to the action, think of it like `event.target` in
-   DOM events if it bothers you.
+1. Send the router context to the action:
 
     ```js
     var SomeActionCreators = require('./SomeActionCreators');
     var Something = React.createClass({
-      mixins: [ Router.Navigation ],
       handleClick () {
-        SomeActionCreators.doStuff({ sourceComponent: this });
+        SomeActionCreators.doStuff({ router: this.context.router });
       }
     });
     ```
 
    and then in `SomeActionCreators.doStuff` call
-   `payload.sourceComponent.transitionTo(...)`
+   `payload.router.transitionTo(...)`
 
 2. Use some sort of application container, or module container for the
    router instance.
@@ -112,9 +110,8 @@ To avoid this, you can do one of three things:
     }
     ```
 
-    
 Accessing route and params from action creators
----------------------------------
+-----------------------------------------------
 
 You can create your own `RouterStore` and fire an action in `run` callback:
 

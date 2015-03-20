@@ -4,6 +4,14 @@ API: `RouteHandler` (component)
 A `<RouteHandler>` renders the handler of the route at the level of the
 route hierarchy in which it is used.
 
+Router Context
+--------------
+
+Router handlers are rendered with a router in their context with useful
+methods.
+
+Please see [`Router Context`](/docs/api/RouterContext.md)
+
 Static Lifecycle Methods
 ------------------------
 
@@ -53,3 +61,4 @@ var Settings = React.createClass({
   //...
 });
 ```
+

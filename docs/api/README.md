@@ -1,8 +1,9 @@
-React Router API 
+React Router API
 ================
 
 - [`Router.run`](/docs/api/run.md)
 - [`Router.create`](/docs/api/create.md)
+- [`Router Context`](/docs/api/RouterContext.md)
 - [`Location`](/docs/api/Location.md)
 - [`Transition`](/docs/api/Transition.md)
 

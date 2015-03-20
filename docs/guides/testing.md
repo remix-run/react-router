@@ -3,7 +3,7 @@ React Router Testing
 
 Because the router relies heavily on the lesser known `context` feature
 of React, it can be a pain in the neck to test your components that have
-things like `<Link>` or mixin `State` and `Navigation`.
+things like `<Link>` or rely on `this.context.router`.
 
 You simply have to stub out the context you need.
 
@@ -15,17 +15,7 @@ React.render(<IndividualComponent/>, testElement);
 You'll get something like:
 
 ```
-"Warning: Required context `makePath` was not specified in `Link`. Check the render method of `IndividualComponent`."
-"Warning: Required context `makeHref` was not specified in `Link`. Check the render method of `IndividualComponent`."
-"Warning: Required context `transitionTo` was not specified in `Link`. Check the render method of `IndividualComponent`."
-"Warning: Required context `replaceWith` was not specified in `Link`. Check the render method of `IndividualComponent`."
-"Warning: Required context `goBack` was not specified in `Link`. Check the render method of `IndividualComponent`."
-"Warning: Required context `getCurrentPath` was not specified in `Link`. Check the render method of `IndividualComponent`."
-"Warning: Required context `getCurrentRoutes` was not specified in `Link`. Check the render method of `IndividualComponent`."
-"Warning: Required context `getCurrentPathname` was not specified in `Link`. Check the render method of `IndividualComponent`."
-"Warning: Required context `getCurrentParams` was not specified in `Link`. Check the render method of `IndividualComponent`."
-"Warning: Required context `getCurrentQuery` was not specified in `Link`. Check the render method of `IndividualComponent`."
-"Warning: Required context `isActive` was not specified in `Link`. Check the render method of `IndividualComponent`."
+"Warning: Required context `router` was not specified in `Link`. Check the render method of `IndividualComponent`."
 ```
 
 So we can just wrap up the thing we want to test in a different
@@ -33,36 +23,18 @@ component and stub out the `context` stuff.
 
 ```js
 // wrap it up first:
-var { func } = React.PropTypes;
-
 var TestWrapper = React.createClass({
   childContextTypes: {
-    makePath: func,
-    makeHref: func,
-    transitionTo: func,
-    replaceWith: func,
-    goBack: func,
-    getCurrentPath: func,
-    getCurrentRoutes: func,
-    getCurrentPathname: func,
-    getCurrentParams: func,
-    getCurrentQuery: func,
-    isActive: func,
+    router: React.PropTypes.object
   },
 
   getChildContext () {
-    return {
-      makePath () {},
-      makeHref () {},
-      transitionTo () {},
-      replaceWith () {},
-      goBack () {},
-      getCurrentPath () {},
-      getCurrentRoutes () {},
-      getCurrentPathname () {},
-      getCurrentParams () {},
-      getCurrentQuery () {},
-      isActive () {},
+    return router: {
+        makePath () {},
+        makeHref () {},
+        isActive () {},
+        // and whichever router methods your component uses
+      }
     };
   },
 
@@ -88,33 +60,25 @@ Copy/paste this helper into your test utils to make things a bit easier:
 var stubRouterContext = (Component, props, stubs) => {
   return React.createClass({
     childContextTypes: {
-      makePath: func,
-      makeHref: func,
-      transitionTo: func,
-      replaceWith: func,
-      goBack: func,
-      getCurrentPath: func,
-      getCurrentRoutes: func,
-      getCurrentPathname: func,
-      getCurrentParams: func,
-      getCurrentQuery: func,
-      isActive: func,
+      router: object
     },
 
     getChildContext () {
-      return Object.assign({
-        makePath () {},
-        makeHref () {},
-        transitionTo () {},
-        replaceWith () {},
-        goBack () {},
-        getCurrentPath () {},
-        getCurrentRoutes () {},
-        getCurrentPathname () {},
-        getCurrentParams () {},
-        getCurrentQuery () {},
-        isActive () {},
-      }, stubs);
+      return {
+        router: Object.assign({
+          makePath () {},
+          makeHref () {},
+          transitionTo () {},
+          replaceWith () {},
+          goBack () {},
+          getCurrentPath () {},
+          getCurrentRoutes () {},
+          getCurrentPathname () {},
+          getCurrentParams () {},
+          getCurrentQuery () {},
+          isActive () {},
+        }, stubs)
+      };
     },
 
     render () {
