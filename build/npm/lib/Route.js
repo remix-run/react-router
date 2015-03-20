@@ -1,6 +1,6 @@
 "use strict";
 
-var _prototypeProperties = function (child, staticProps, instanceProps) { if (staticProps) Object.defineProperties(child, staticProps); if (instanceProps) Object.defineProperties(child.prototype, instanceProps); };
+var _createClass = (function () { function defineProperties(target, props) { for (var key in props) { var prop = props[key]; prop.configurable = true; if (prop.value) prop.writable = true; } Object.defineProperties(target, props); } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; })();
 
 var _classCallCheck = function (instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } };
 
@@ -26,7 +26,33 @@ var Route = (function () {
     this.handler = handler;
   }
 
-  _prototypeProperties(Route, {
+  _createClass(Route, {
+    appendChild: {
+
+      /**
+       * Appends the given route to this route's child routes.
+       */
+
+      value: function appendChild(route) {
+        invariant(route instanceof Route, "route.appendChild must use a valid Route");
+
+        if (!this.childRoutes) this.childRoutes = [];
+
+        this.childRoutes.push(route);
+      }
+    },
+    toString: {
+      value: function toString() {
+        var string = "<Route";
+
+        if (this.name) string += " name=\"" + this.name + "\"";
+
+        string += " path=\"" + this.path + "\">";
+
+        return string;
+      }
+    }
+  }, {
     createRoute: {
 
       /**
@@ -85,7 +111,7 @@ var Route = (function () {
         if (path && !(options.isDefault || options.isNotFound)) {
           if (PathUtils.isAbsolute(path)) {
             if (parentRoute) {
-              invariant(parentRoute.paramNames.length === 0, "You cannot nest path \"%s\" inside \"%s\"; the parent requires URL parameters", path, parentRoute.path);
+              invariant(path === parentRoute.path || parentRoute.paramNames.length === 0, "You cannot nest path \"%s\" inside \"%s\"; the parent requires URL parameters", path, parentRoute.path);
             }
           } else if (parentRoute) {
             // Relative paths extend their parent.
@@ -125,9 +151,7 @@ var Route = (function () {
         }
 
         return route;
-      },
-      writable: true,
-      configurable: true
+      }
     },
     createDefaultRoute: {
 
@@ -138,9 +162,7 @@ var Route = (function () {
 
       value: function createDefaultRoute(options) {
         return Route.createRoute(assign({}, options, { isDefault: true }));
-      },
-      writable: true,
-      configurable: true
+      }
     },
     createNotFoundRoute: {
 
@@ -151,9 +173,7 @@ var Route = (function () {
 
       value: function createNotFoundRoute(options) {
         return Route.createRoute(assign({}, options, { isNotFound: true }));
-      },
-      writable: true,
-      configurable: true
+      }
     },
     createRedirect: {
 
@@ -177,39 +197,7 @@ var Route = (function () {
             transition.redirect(options.to, options.params || params, options.query || query);
           }
         }));
-      },
-      writable: true,
-      configurable: true
-    }
-  }, {
-    appendChild: {
-
-      /**
-       * Appends the given route to this route's child routes.
-       */
-
-      value: function appendChild(route) {
-        invariant(route instanceof Route, "route.appendChild must use a valid Route");
-
-        if (!this.childRoutes) this.childRoutes = [];
-
-        this.childRoutes.push(route);
-      },
-      writable: true,
-      configurable: true
-    },
-    toString: {
-      value: function toString() {
-        var string = "<Route";
-
-        if (this.name) string += " name=\"" + this.name + "\"";
-
-        string += " path=\"" + this.path + "\">";
-
-        return string;
-      },
-      writable: true,
-      configurable: true
+      }
     }
   });
 

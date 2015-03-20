@@ -7,6 +7,13 @@ React Router
 
 A complete routing library for React.
 
+React 0.13 Support
+==================
+
+Please help out, we will be shipping 0.13 support ASAP.
+
+https://github.com/rackt/react-router/issues/638
+
 Docs
 ----
 
@@ -124,6 +131,7 @@ Related Modules
 - [rnr-constrained-route](https://github.com/bjyoungblood/rnr-constrained-route) - validate paths
   and parameters on route handlers.
 - [react-router-bootstrap](https://github.com/mtscout6/react-router-bootstrap) - Integration with [react-bootstrap](https://github.com/react-bootstrap/react-bootstrap) components.
+- [react-router-proxy-loader](https://github.com/odysseyscience/react-router-proxy-loader) - A Webpack loader to dynamically load react-router components on-demand
 
 Contributing
 ------------

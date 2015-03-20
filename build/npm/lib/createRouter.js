@@ -11,9 +11,7 @@ var HashLocation = require("./locations/HashLocation");
 var HistoryLocation = require("./locations/HistoryLocation");
 var RefreshLocation = require("./locations/RefreshLocation");
 var StaticLocation = require("./locations/StaticLocation");
-var NavigationContext = require("./NavigationContext");
 var ScrollHistory = require("./ScrollHistory");
-var StateContext = require("./StateContext");
 var createRoutesFromReactChildren = require("./createRoutesFromReactChildren");
 var isReactChildren = require("./isReactChildren");
 var Transition = require("./Transition");
@@ -74,6 +72,24 @@ function addRoutesToNamedRoutes(routes, namedRoutes) {
 
     if (route.childRoutes) addRoutesToNamedRoutes(route.childRoutes, namedRoutes);
   }
+}
+
+function routeIsActive(activeRoutes, routeName) {
+  return activeRoutes.some(function (route) {
+    return route.name === routeName;
+  });
+}
+
+function paramsAreActive(activeParams, params) {
+  for (var property in params) if (String(activeParams[property]) !== String(params[property])) {
+    return false;
+  }return true;
+}
+
+function queryIsActive(activeQuery, query) {
+  for (var property in query) if (String(activeQuery[property]) !== String(query[property])) {
+    return false;
+  }return true;
 }
 
 /**
@@ -367,7 +383,7 @@ function createRouter(options) {
         };
 
         if (!(location instanceof StaticLocation)) {
-          if (location.addChangeListener) location.addChangeListener(Router.handleLocationChange);
+          if (location.addChangeListener) location.addChangeListener(Router.handleLocationChange.bind(Router));
 
           this.isRunning = true;
         }
@@ -383,34 +399,89 @@ function createRouter(options) {
       stop: function stop() {
         this.cancelPendingTransition();
 
-        if (location.removeChangeListener) location.removeChangeListener(Router.handleLocationChange);
+        if (location.removeChangeListener) location.removeChangeListener(Router.handleLocationChange.bind(Router));
 
         this.isRunning = false;
       },
 
+      getLocation: function getLocation() {
+        return location;
+      },
+
       getScrollBehavior: function getScrollBehavior() {
         return scrollBehavior;
+      },
+
+      getRouteAtDepth: function getRouteAtDepth(routeDepth) {
+        var routes = state.routes;
+        return routes && routes[routeDepth];
+      },
+
+      setRouteComponentAtDepth: function setRouteComponentAtDepth(routeDepth, component) {
+        mountedComponents[routeDepth] = component;
+      },
+
+      /**
+       * Returns the current URL path + query string.
+       */
+      getCurrentPath: function getCurrentPath() {
+        return state.path;
+      },
+
+      /**
+       * Returns the current URL path without the query string.
+       */
+      getCurrentPathname: function getCurrentPathname() {
+        return state.pathname;
+      },
+
+      /**
+       * Returns an object of the currently active URL parameters.
+       */
+      getCurrentParams: function getCurrentParams() {
+        return state.params;
+      },
+
+      /**
+       * Returns an object of the currently active query parameters.
+       */
+      getCurrentQuery: function getCurrentQuery() {
+        return state.query;
+      },
+
+      /**
+       * Returns an array of the currently active routes.
+       */
+      getCurrentRoutes: function getCurrentRoutes() {
+        return state.routes;
+      },
+
+      /**
+       * Returns true if the given route, params, and query are active.
+       */
+      isActive: function isActive(to, params, query) {
+        if (PathUtils.isAbsolute(to)) {
+          return to === state.path;
+        }return routeIsActive(state.routes, to) && paramsAreActive(state.params, params) && (query == null || queryIsActive(state.query, query));
       }
 
     },
 
-    mixins: [NavigationContext, StateContext, ScrollHistory],
+    mixins: [ScrollHistory],
 
     propTypes: {
       children: PropTypes.falsy
     },
 
     childContextTypes: {
-      getRouteAtDepth: React.PropTypes.func.isRequired,
-      setRouteComponentAtDepth: React.PropTypes.func.isRequired,
-      routeHandlers: React.PropTypes.array.isRequired
+      routeDepth: PropTypes.number.isRequired,
+      router: PropTypes.router.isRequired
     },
 
     getChildContext: function getChildContext() {
       return {
-        getRouteAtDepth: this.getRouteAtDepth,
-        setRouteComponentAtDepth: this.setRouteComponentAtDepth,
-        routeHandlers: [this]
+        routeDepth: 1,
+        router: Router
       };
     },
 
@@ -426,21 +497,8 @@ function createRouter(options) {
       Router.stop();
     },
 
-    getLocation: function getLocation() {
-      return location;
-    },
-
-    getRouteAtDepth: function getRouteAtDepth(depth) {
-      var routes = this.state.routes;
-      return routes && routes[depth];
-    },
-
-    setRouteComponentAtDepth: function setRouteComponentAtDepth(depth, component) {
-      mountedComponents[depth] = component;
-    },
-
     render: function render() {
-      var route = this.getRouteAtDepth(0);
+      var route = Router.getRouteAtDepth(0);
       return route ? React.createElement(route.handler, this.props) : null;
     }
 

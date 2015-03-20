@@ -1,6 +1,6 @@
 {
   "name": "react-router",
-  "version": "0.12.4",
+  "version": "0.13.0",
   "description": "A complete routing library for React.js",
   "main": "lib",
   "repository": {
@@ -15,10 +15,11 @@
   ],
   "license": "MIT",
   "peerDependencies": {
-    "react": "0.12.x"
+    "react": "0.13.x"
   },
   "dependencies": {
-    "qs": "2.3.3"
+    "qs": "2.4.1",
+    "classnames": "1.1.x"
   },
   "tags": [
     "react",

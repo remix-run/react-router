@@ -1,9 +1,16 @@
 "use strict";
 
+var _createClass = (function () { function defineProperties(target, props) { for (var key in props) { var prop = props[key]; prop.configurable = true; if (prop.value) prop.writable = true; } Object.defineProperties(target, props); } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; })();
+
+var _inherits = function (subClass, superClass) { if (typeof superClass !== "function" && superClass !== null) { throw new TypeError("Super expression must either be null or a function, not " + typeof superClass); } subClass.prototype = Object.create(superClass && superClass.prototype, { constructor: { value: subClass, enumerable: false, writable: true, configurable: true } }); if (superClass) subClass.__proto__ = superClass; };
+
+var _classCallCheck = function (instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } };
+
 var React = require("react");
-var Configuration = require("../Configuration");
+var invariant = require("react/lib/invariant");
 var PropTypes = require("../PropTypes");
 var RouteHandler = require("./RouteHandler");
+
 /**
  * <Route> components specify components that are rendered to the page when the
  * URL matches a given pattern.
@@ -44,25 +51,42 @@ var RouteHandler = require("./RouteHandler");
  *
  * If no handler is provided for the route, it will render a matched child route.
  */
-var Route = React.createClass({
 
-  displayName: "Route",
+var Route = (function (_React$Component) {
+  function Route() {
+    _classCallCheck(this, Route);
 
-  mixins: [Configuration],
-
-  propTypes: {
-    name: PropTypes.string,
-    path: PropTypes.string,
-    handler: PropTypes.func,
-    ignoreScrollBehavior: PropTypes.bool
-  },
-
-  getDefaultProps: function getDefaultProps() {
-    return {
-      handler: RouteHandler
-    };
+    if (_React$Component != null) {
+      _React$Component.apply(this, arguments);
+    }
   }
 
-});
+  _inherits(Route, _React$Component);
+
+  _createClass(Route, {
+    render: {
+      value: function render() {
+        invariant(false, "%s elements are for router configuration only and should not be rendered", this.constructor.name);
+      }
+    }
+  });
+
+  return Route;
+})(React.Component);
+
+// TODO: Include these in the above class definition
+// once we can use ES7 property initializers.
+// https://github.com/babel/babel/issues/619
+
+Route.propTypes = {
+  name: PropTypes.string,
+  path: PropTypes.string,
+  handler: PropTypes.func,
+  ignoreScrollBehavior: PropTypes.bool
+};
+
+Route.defaultProps = {
+  handler: RouteHandler
+};
 
 module.exports = Route;

@@ -1,3 +1,13 @@
+v0.13.0 - Fri, 20 Mar 2015 21:25:35 GMT
+---------------------------------------
+
+- [f3a44f1](../../commit/f3a44f1) [fixed] React 0.13 compatibility
+- [559c604](../../commit/559c604) [changed] Use empty bracket notation for arrays
+- [07b4972](../../commit/07b4972) [fixed] Allow repetition in child paths
+- [696a706](../../commit/696a706) [fixed] Use defaultProps of config components
+- [61f0a8c](../../commit/61f0a8c) [changed] Deprecate Navigation/State mixins
+
+
 v0.12.4 - Tue, 24 Feb 2015 21:53:02 GMT
 ---------------------------------------
 
