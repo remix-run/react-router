@@ -23,3 +23,20 @@ entry in the browser history.
 
   [transition-hooks]:/docs/api/components/RouteHandler.md#static-lifecycle-methods
 
+### `context`
+
+An optional context object that can be accessed by the willTransitionTo and
+willTransitionFrom static methods on components.
+
+When creating the router instance:
+
+    var context = {};
+    Router.create({transitionContext: context});
+
+And then in a component:
+
+    statics: {
+      willTransitionTo: function(transition) {
+        //do something with transition.context
+      }
+    }
