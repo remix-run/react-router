@@ -151,7 +151,7 @@ var PathUtils = {
     if (queryString)
       return PathUtils.withoutQuery(path) + '?' + queryString;
 
-    return Path.withoutQuery(path);
+    return PathUtils.withoutQuery(path);
   }
 
 };
