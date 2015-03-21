@@ -2,6 +2,10 @@
 var PathUtils = require('./PathUtils');
 
 function deepSearch(route, pathname, query) {
+  // Check this route path meets the set criteria (if any)
+  if (!route.meetsCriteria())
+    return null;
+
   // Check the subtree first to find the most deeply-nested match.
   var childRoutes = route.childRoutes;
   if (childRoutes) {

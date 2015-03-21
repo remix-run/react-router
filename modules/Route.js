@@ -4,6 +4,7 @@ var warning = require('react/lib/warning');
 var PathUtils = require('./PathUtils');
 
 var _currentRoute;
+var _globalCriteria = {};
 
 class Route {
 
@@ -38,6 +39,12 @@ class Route {
    *                            only ever need to use this when declaring routes
    *                            independently of one another to manually piece together
    *                            the route hierarchy
+   *
+   * - criteria                 An optional object whose keys will be matched against
+   *                            the object set with Route.setGlobalCriteria().
+   *                            The values will be compared with strict equality,
+   *                            with the exception of RegExp values, which will be
+   *                            tested.
    *
    * The callback may be used to structure your route hierarchy. Any call to
    * createRoute, createDefaultRoute, createNotFoundRoute, or createRedirect
@@ -93,7 +100,8 @@ class Route {
       options.isNotFound,
       options.onEnter,
       options.onLeave,
-      options.handler
+      options.handler,
+      options.criteria
     );
 
     if (parentRoute) {
@@ -173,7 +181,17 @@ class Route {
     );
   }
 
-  constructor(name, path, ignoreScrollBehavior, isDefault, isNotFound, onEnter, onLeave, handler) {
+  static setGlobalCriteria(criteria) {
+    invariant(
+      typeof criteria === 'object',
+      'setGlobalCriteria must accept an object'
+    );
+
+    for (let i in criteria)
+      _globalCriteria[i] = criteria[i];
+  }
+
+  constructor(name, path, ignoreScrollBehavior, isDefault, isNotFound, onEnter, onLeave, handler, criteria) {
     this.name = name;
     this.path = path;
     this.paramNames = PathUtils.extractParamNames(this.path);
@@ -183,6 +201,7 @@ class Route {
     this.onEnter = onEnter;
     this.onLeave = onLeave;
     this.handler = handler;
+    this.criteria = criteria;
   }
 
   /**
@@ -198,6 +217,24 @@ class Route {
       this.childRoutes = [];
 
     this.childRoutes.push(route);
+  }
+
+  /**
+   * Returns whether this route's criteria matches against the static criteria set
+   */
+  meetsCriteria() {
+    var valid = true;
+    if (!this.criteria)
+      return true;
+
+    for (let i in this.criteria) {
+      if (this.criteria[i] instanceof RegExp)
+        valid = valid && (this.criteria[i].test(_globalCriteria[i]));
+      else
+        valid = valid && (this.criteria[i] === _globalCriteria[i]);
+    }
+
+    return valid;
   }
 
   toString() {

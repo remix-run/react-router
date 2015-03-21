@@ -101,3 +101,28 @@ path: *
 matches everything, but you probably want `<NotFoundRoute/>`
 ```
 
+
+Matching Global Criteria
+------------------------
+
+Setting a global criteria (`Router.setGlobalCriteria(object)`) filters all routes
+against an optional `criteria` property on each route. This can be used for
+filtering routes based on hostname, enabled feature branches, or other global
+flag.
+
+Examples
+--------
+
+
+Routes.jsx
+```
+<Route criteria={ { host: /^auth\./ } }>
+  <Route name="register" handler={ RegisterRoute } />
+  <Route name="login" handler={ LoginRoute } />
+  <!-- matches LoginRoute when 'host' starts with 'auth.' -->
+  <DefaultRoute handler={ LoginRoute } />
+</Route>
+<Route name="home" path="/" handler={ DashboardRoute } />
+<!-- matches DashboardRoute when host does not match -->
+<DefaultRoute handler={ DashboardRoute } />
+```

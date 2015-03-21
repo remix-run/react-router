@@ -21,6 +21,7 @@ exports.createRoute = require('./Route').createRoute;
 exports.createDefaultRoute = require('./Route').createDefaultRoute;
 exports.createNotFoundRoute = require('./Route').createNotFoundRoute;
 exports.createRedirect = require('./Route').createRedirect;
+exports.setGlobalCriteria = require('./Route').setGlobalCriteria;
 exports.createRoutesFromReactChildren = require('./createRoutesFromReactChildren');
 exports.create = require('./createRouter');
 exports.run = require('./runRouter');

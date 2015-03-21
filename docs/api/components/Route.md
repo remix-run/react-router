@@ -36,6 +36,12 @@ If you specify `ignoreScrollBehavior` attribute on a route, changes in `params` 
 
 Note that changes in `query` never adjust scroll position, regardless of the value of this attribute.
 
+### `criteria`
+
+An object of strings or RegExps whose keys must match against the values set by
+`Router.setGlobalCriteria(object)`. This can be used for filtering routes based
+on hostname, enabled feature branches, or other global flags.
+
 Example
 -------
 
