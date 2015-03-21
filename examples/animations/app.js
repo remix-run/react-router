@@ -1,14 +1,16 @@
-// TODO: animations aren't happening, not sure what the problem is
 var React = require('react');
 var TransitionGroup = require('react/lib/ReactCSSTransitionGroup');
 var Router = require('react-router');
 var { Route, RouteHandler, Link } = Router;
 
 var App = React.createClass({
-  mixins: [ Router.State ],
+
+  contextTypes: {
+    router: React.PropTypes.func.isRequired
+  },
 
   render: function () {
-    var name = this.getRoutes().slice(0).reverse()[0].name;
+    var name = this.context.router.getCurrentRoutes().slice(0).reverse()[0].name;
 
     return (
       <div>
@@ -48,8 +50,8 @@ var Page2 = React.createClass({
 
 var routes = (
   <Route handler={App}>
-    <Route name="page1" handler={Page1} addHandlerKey={true} />
-    <Route name="page2" handler={Page2} addHandlerKey={true} />
+    <Route name="page1" handler={Page1} />
+    <Route name="page2" handler={Page2} />
   </Route>
 );
 

@@ -4,7 +4,9 @@ var { Route, RouteHandler, Link } = Router;
 
 var App = React.createClass({
 
-  mixins: [ Router.Navigation ],
+  contextTypes: {
+    router: React.PropTypes.func.isRequired
+  },
 
   getInitialState: function () {
     return {
@@ -28,7 +30,7 @@ var App = React.createClass({
       return taco.name != removedTaco;
     });
     this.setState({tacos: tacos});
-    this.transitionTo('/');
+    this.context.router.transitionTo('/');
   },
 
   render: function () {
@@ -54,16 +56,19 @@ var App = React.createClass({
 });
 
 var Taco = React.createClass({
-  mixins: [ Router.State ],
+
+  contextTypes: {
+    router: React.PropTypes.func.isRequired
+  },
 
   remove: function () {
-    this.props.onRemoveTaco(this.getParams().name);
+    this.props.onRemoveTaco(this.context.router.getCurrentParams().name);
   },
 
   render: function () {
     return (
       <div className="Taco">
-        <h1>{this.getParams().name}</h1>
+        <h1>{this.context.router.getCurrentParams().name}</h1>
         <button onClick={this.remove}>remove</button>
       </div>
     );

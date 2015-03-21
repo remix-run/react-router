@@ -1,6 +1,6 @@
 var React = require('react');
 var Router = require('react-router');
-var { Route, RouteHandler, Link, State } = Router;
+var { Route, RouteHandler, Link } = Router;
 
 var App = React.createClass({
   getInitialState: function () {
@@ -65,7 +65,10 @@ var Dashboard = React.createClass({
 });
 
 var Login = React.createClass({
-  mixins: [ Router.Navigation, State],
+
+  contextTypes: {
+    router: React.PropTypes.func.isRequired
+  },
 
   getInitialState: function () {
     return {
@@ -75,7 +78,8 @@ var Login = React.createClass({
 
   handleSubmit: function (event) {
     event.preventDefault();
-    var nextPath = this.getQuery().nextPath;
+    var { router } = this.context;
+    var nextPath = router.getCurrentQuery().nextPath;
     var email = this.refs.email.getDOMNode().value;
     var pass = this.refs.pass.getDOMNode().value;
     auth.login(email, pass, function (loggedIn) {
@@ -83,9 +87,9 @@ var Login = React.createClass({
         return this.setState({ error: true });
 
       if (nextPath) {
-        this.replaceWith(nextPath);
+        router.replaceWith(nextPath);
       } else {
-        this.replaceWith('/about');
+        router.replaceWith('/about');
       }
     }.bind(this));
   },
@@ -164,7 +168,7 @@ function pretendRequest(email, pass, cb) {
     if (email === 'joe@example.com' && pass === 'password1') {
       cb({
         authenticated: true,
-        token: Math.random().toString(36).substring(7),
+        token: Math.random().toString(36).substring(7)
       });
     } else {
       cb({authenticated: false});

@@ -30,7 +30,9 @@ var Dashboard = React.createClass({
 
 var Form = React.createClass({
 
-  mixins: [ Router.Navigation ],
+  contextTypes: {
+    router: React.PropTypes.func.isRequired
+  },
 
   statics: {
     willTransitionFrom: function (transition, element) {
@@ -45,7 +47,7 @@ var Form = React.createClass({
   handleSubmit: function (event) {
     event.preventDefault();
     this.refs.userInput.getDOMNode().value = '';
-    this.transitionTo('/');
+    this.context.router.transitionTo('/');
   },
 
   render: function () {

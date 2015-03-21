@@ -68,10 +68,12 @@ var Index = React.createClass({
 
 var Contact = React.createClass({
 
-  mixins: [ Router.Navigation, Router.State ],
+  contextTypes: {
+    router: React.PropTypes.func.isRequired
+  },
 
   getStateFromStore: function () {
-    var id = this.getParams().id;
+    var id = this.context.router.getCurrentParams().id;
     return {
       contact: ContactStore.getContact(id)
     };
@@ -101,9 +103,10 @@ var Contact = React.createClass({
   },
 
   destroy: function () {
-    var id = this.getParams().id;
+    var { router } = this.context;
+    var id = router.getCurrentParams().id;
     ContactStore.removeContact(id);
-    this.transitionTo('/');
+    router.transitionTo('/');
   },
 
   render: function () {
@@ -122,7 +125,9 @@ var Contact = React.createClass({
 
 var NewContact = React.createClass({
 
-  mixins: [ Router.Navigation ],
+  contextTypes: {
+    router: React.PropTypes.func.isRequired
+  },
 
   createContact: function (event) {
     event.preventDefault();
@@ -130,7 +135,7 @@ var NewContact = React.createClass({
       first: this.refs.first.getDOMNode().value,
       last: this.refs.last.getDOMNode().value
     }, function (contact) {
-      this.transitionTo('contact', { id: contact.id });
+      this.context.router.transitionTo('contact', { id: contact.id });
     }.bind(this));
   },
 
