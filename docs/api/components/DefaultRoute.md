@@ -15,25 +15,23 @@ Example
 -------
 
 ```xml
-<Routes>
-  <Route path="/" handler={App}>
+<Route path="/" handler={App}>
 
-    <!--
-      When the url is `/`, this route will be active. In other
-      words, `Home` will be the `<RouteHandler/>` in `App`.
-    -->
-    <DefaultRoute handler={Home}/>
+  <!--
+    When the url is `/`, this route will be active. In other
+    words, `Home` will be the `<RouteHandler/>` in `App`.
+  -->
+  <DefaultRoute handler={Home}/>
 
-    <Route name="about" handler={About}/>
-    <Route name="users" handler={Users}>
-      <Route name="user" handler={User} path="/user/:id"/>
+  <Route name="about" handler={About}/>
+  <Route name="users" handler={Users}>
+    <Route name="user" handler={User} path="/user/:id"/>
 
-      <!-- when the url is `/users`, this will be active -->
-      <DefaultRoute name="users-index" handler={UsersIndex}/>
+    <!-- when the url is `/users`, this will be active -->
+    <DefaultRoute name="users-index" handler={UsersIndex}/>
 
-    </Route>
   </Route>
-</Routes>
+</Route>
 ```
 
 This is all really just a shortcut for the less intuitive version of the
