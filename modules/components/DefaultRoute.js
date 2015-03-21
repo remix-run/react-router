@@ -1,6 +1,6 @@
-var React = require('react');
-var Configuration = require('../Configuration');
 var PropTypes = require('../PropTypes');
+var RouteHandler = require('./RouteHandler');
+var Route = require('./Route');
 
 /**
  * A <DefaultRoute> component is a special kind of <Route> that
@@ -8,19 +8,21 @@ var PropTypes = require('../PropTypes');
  * Only one such route may be used at any given level in the
  * route hierarchy.
  */
-var DefaultRoute = React.createClass({
+class DefaultRoute extends Route {}
 
-  displayName: 'DefaultRoute',
+// TODO: Include these in the above class definition
+// once we can use ES7 property initializers.
+// https://github.com/babel/babel/issues/619
 
-  mixins: [ Configuration ],
+DefaultRoute.propTypes = {
+  name: PropTypes.string,
+  path: PropTypes.falsy,
+  children: PropTypes.falsy,
+  handler: PropTypes.func.isRequired
+};
 
-  propTypes: {
-    name: PropTypes.string,
-    path: PropTypes.falsy,
-    children: PropTypes.falsy,
-    handler: PropTypes.func.isRequired
-  }
-
-});
+DefaultRoute.defaultProps = {
+  handler: RouteHandler
+};
 
 module.exports = DefaultRoute;

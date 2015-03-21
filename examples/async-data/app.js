@@ -93,7 +93,7 @@ var Contact = React.createClass({
     var { contact } = this.props.data;
     return (
       <div>
-        <p><Link to="contacts">Back</Link></p>
+        <p><Link to="/">Back</Link></p>
         <h1>{contact.first} {contact.last}</h1>
         <img key={contact.avatar} src={contact.avatar}/>
       </div>

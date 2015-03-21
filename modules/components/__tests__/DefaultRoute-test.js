@@ -3,7 +3,7 @@ var React = require('react');
 var Router = require('../../index');
 var DefaultRoute = require('../DefaultRoute');
 var Route = require('../Route');
-var { Foo, Bar, Nested } = require('../../utils/TestHandlers');
+var { Foo, Nested } = require('../../TestUtils');
 
 describe('DefaultRoute', function () {
 
@@ -32,24 +32,24 @@ describe('DefaultRoute', function () {
 
     Router.run(routes, '/foo', function (App) {
       var html = React.renderToString(<App/>);
+      expect(html).toMatch(/Nested/);
       expect(html).toMatch(/Foo/);
     });
   });
 
-  it('renders when no siblings match', function () {
-    var routes = (
-      <Route path='/' handler={Nested}>
-        <Route path='/foo' handler={Nested}>
-          <DefaultRoute handler={Foo} />
-          <Route path="/bar" handler={Bar} />
+  describe('with a name', function () {
+    it('renders when the parent route path matches', function () {
+      var routes = (
+        <Route path='/' handler={Nested}>
+          <DefaultRoute name="root" handler={Foo} />
         </Route>
-      </Route>
-    );
+      );
 
-    Router.run(routes, '/foo', function (App) {
-      var html = React.renderToString(<App/>);
-      expect(html).toMatch(/Foo/);
-      expect(html.match(/Bar/)).toEqual(null);
+      Router.run(routes, '/', function (App) {
+        var html = React.renderToString(<App/>);
+        expect(html).toMatch(/Nested/);
+        expect(html).toMatch(/Foo/);
+      });
     });
   });
 

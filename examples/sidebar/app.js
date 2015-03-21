@@ -73,10 +73,13 @@ var Sidebar = React.createClass({
 });
 
 var App = React.createClass({
-  mixins: [ Router.State ],
+
+  contextTypes: {
+    router: React.PropTypes.func.isRequired
+  },
 
   render: function () {
-    var activeCategory = this.getParams().category;
+    var activeCategory = this.context.router.getCurrentParams().category;
     return (
       <div>
         <Sidebar activeCategory={activeCategory} categories={data.getAll()}/>
@@ -89,10 +92,13 @@ var App = React.createClass({
 });
 
 var Item = React.createClass({
-  mixins: [ Router.State ],
+
+  contextTypes: {
+    router: React.PropTypes.func.isRequired
+  },
 
   render: function () {
-    var params = this.getParams();
+    var params = this.context.router.getCurrentParams();
     var category = data.lookupCategory(params.category);
     var item = data.lookupItem(params.category, params.name);
     return (

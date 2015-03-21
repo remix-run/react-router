@@ -3,7 +3,7 @@ var React = require('react');
 var Router = require('../index');
 var Route = require('../components/Route');
 var RouteHandler = require('../components/RouteHandler');
-var { Foo, Bar, Nested } = require('../utils/TestHandlers');
+var { Foo, Bar, Nested } = require('../TestUtils');
 
 describe('creating routes from ReactChildren', function () {
   it('works with falsy children', function (done) {

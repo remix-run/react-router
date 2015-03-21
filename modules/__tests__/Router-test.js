@@ -5,7 +5,7 @@ var Route = require('../components/Route');
 var RouteHandler = require('../components/RouteHandler');
 var TestLocation = require('../locations/TestLocation');
 var ScrollToTopBehavior = require('../behaviors/ScrollToTopBehavior');
-var getWindowScrollPosition = require('../utils/getWindowScrollPosition');
+var getWindowScrollPosition = require('../getWindowScrollPosition');
 
 var {
   Foo,
@@ -19,7 +19,7 @@ var {
   RedirectToFooAsync,
   Abort,
   AbortAsync
-} = require('../utils/TestHandlers');
+} = require('../TestUtils');
 
 describe('Router', function () {
   describe('transitions', function () {
@@ -37,7 +37,7 @@ describe('Router', function () {
 
     describe('asynchronous willTransitionTo', function () {
       it('waits', function (done) {
-        TestLocation.history = [ '/bar' ];
+        var location = new TestLocation([ '/bar' ]);
 
         var div = document.createElement('div');
         var steps = [];
@@ -60,7 +60,7 @@ describe('Router', function () {
 
         router = Router.create({
           routes: routes,
-          location: TestLocation
+          location: location
         });
 
         router.run(function (Handler) {
@@ -71,7 +71,7 @@ describe('Router', function () {
       });
 
       it('stops waiting on location.pop', function (done) {
-        TestLocation.history = [ '/bar' ];
+        var location = new TestLocation([ '/bar' ]);
 
         var div = document.createElement('div');
         var steps = [];
@@ -84,7 +84,7 @@ describe('Router', function () {
 
           setTimeout(function () {
             expect(div.innerHTML).toMatch(/Bar/);
-            TestLocation.pop();
+            location.pop();
             expect(div.innerHTML).toMatch(/Bar/);
           }, Async.delay / 2);
 
@@ -96,7 +96,7 @@ describe('Router', function () {
 
         router = Router.create({
           routes: routes,
-          location: TestLocation
+          location: location
         });
 
         router.run(function (Handler) {
@@ -107,7 +107,7 @@ describe('Router', function () {
       });
 
       it('stops waiting on router.transitionTo', function (done) {
-        TestLocation.history = [ '/bar' ];
+        var location = new TestLocation([ '/bar' ]);
 
         var div = document.createElement('div');
         var steps = [];
@@ -128,7 +128,7 @@ describe('Router', function () {
         steps.push(function () {
           setTimeout(function () {
             expect(div.innerHTML).toMatch(/Foo/);
-            TestLocation.pop();
+            location.pop();
           }, Async.delay / 2 + 10);
         });
 
@@ -139,7 +139,7 @@ describe('Router', function () {
 
         router = Router.create({
           routes: routes,
-          location: TestLocation
+          location: location
         });
 
         router.run(function (Handler) {
@@ -150,7 +150,7 @@ describe('Router', function () {
       });
 
       it('stops waiting on router.replaceWith', function (done) {
-        TestLocation.history = [ '/bar' ];
+        var location = new TestLocation([ '/bar' ]);
 
         var div = document.createElement('div');
         var steps = [];
@@ -177,7 +177,7 @@ describe('Router', function () {
 
         router = Router.create({
           routes: routes,
-          location: TestLocation
+          location: location
         });
 
         router.run(function (Handler) {
@@ -193,7 +193,7 @@ describe('Router', function () {
             delay: Async.delay * 2,
 
             willTransitionTo: function (transition, params, query, callback) {
-              setTimeout(callback, this.delay);
+              setTimeout(callback, LongAsync.delay);
             }
           },
 
@@ -202,7 +202,7 @@ describe('Router', function () {
           }
         });
 
-        TestLocation.history = [ '/foo' ];
+        var location = new TestLocation([ '/foo' ]);
         var routes = [
           <Route handler={Foo} path='/foo' />,
           <Route handler={Bar} path='/bar' />,
@@ -214,7 +214,7 @@ describe('Router', function () {
         var steps = [];
         var router = Router.create({
           routes: routes,
-          location: TestLocation
+          location: location
         });
 
         steps.push(function () {
@@ -250,11 +250,11 @@ describe('Router', function () {
 
     describe('transition.redirect', function () {
       it('redirects synchronously in willTransitionTo', function (done) {
-        TestLocation.history = [ '/redirect' ];
+        var location = new TestLocation([ '/redirect' ]);
 
         var div = document.createElement('div');
 
-        Router.run(routes, TestLocation, function (Handler) {
+        Router.run(routes, location, function (Handler) {
           React.render(<Handler/>, div, function () {
             expect(div.innerHTML).toMatch(/Foo/);
             done();
@@ -263,7 +263,7 @@ describe('Router', function () {
       });
 
       it('redirects asynchronously in willTransitionTo', function (done) {
-        TestLocation.history = [ '/bar' ];
+        var location = new TestLocation([ '/bar' ]);
 
         var div = document.createElement('div');
         var steps = [];
@@ -287,7 +287,7 @@ describe('Router', function () {
 
         router = Router.create({
           routes: routes,
-          location: TestLocation
+          location: location
         });
 
         router.run(function (Handler) {
@@ -298,7 +298,7 @@ describe('Router', function () {
       });
 
       it('cancels redirecting asynchronously in willTransitionTo on location.pop', function (done) {
-        TestLocation.history = [ '/bar' ];
+        var location = new TestLocation([ '/bar' ]);
 
         var div = document.createElement('div');
         var steps = [];
@@ -311,7 +311,7 @@ describe('Router', function () {
 
           setTimeout(function () {
             expect(div.innerHTML).toMatch(/Bar/);
-            TestLocation.pop();
+            location.pop();
             expect(div.innerHTML).toMatch(/Bar/);
           }, RedirectToFooAsync.delay / 2);
 
@@ -323,7 +323,7 @@ describe('Router', function () {
 
         router = Router.create({
           routes: routes,
-          location: TestLocation
+          location: location
         });
 
         router.run(function (Handler) {
@@ -334,7 +334,7 @@ describe('Router', function () {
       });
 
       it('cancels redirecting asynchronously in willTransitionTo on router.transitionTo', function (done) {
-        TestLocation.history = [ '/bar' ];
+        var location = new TestLocation([ '/bar' ]);
 
         var div = document.createElement('div');
         var steps = [];
@@ -355,7 +355,7 @@ describe('Router', function () {
         steps.push(function () {
           setTimeout(function () {
             expect(div.innerHTML).toMatch(/Baz/);
-            TestLocation.pop();
+            location.pop();
           }, RedirectToFooAsync.delay / 2 + 10);
         });
 
@@ -366,7 +366,7 @@ describe('Router', function () {
 
         router = Router.create({
           routes: routes,
-          location: TestLocation
+          location: location
         });
 
         router.run(function (Handler) {
@@ -377,7 +377,7 @@ describe('Router', function () {
       });
 
       it('cancels redirecting asynchronously in willTransitionTo on router.replaceWith', function (done) {
-        TestLocation.history = [ '/bar' ];
+        var location = new TestLocation([ '/bar' ]);
 
         var div = document.createElement('div');
         var steps = [];
@@ -404,7 +404,7 @@ describe('Router', function () {
 
         router = Router.create({
           routes: routes,
-          location: TestLocation
+          location: location
         });
 
         router.run(function (Handler) {
@@ -417,22 +417,22 @@ describe('Router', function () {
 
     describe('transition.abort', function () {
       it('aborts synchronously in willTransitionTo', function (done) {
-        TestLocation.history = [ '/foo' ];
+        var location = new TestLocation([ '/foo' ]);
 
         var div = document.createElement('div');
 
-        Router.run(routes, TestLocation, function (Handler) {
+        Router.run(routes, location, function (Handler) {
           React.render(<Handler/>, div, function () {
-            TestLocation.push('/abort');
+            location.push('/abort');
             expect(div.innerHTML).toMatch(/Foo/);
-            expect(TestLocation.getCurrentPath()).toEqual('/foo');
+            expect(location.getCurrentPath()).toEqual('/foo');
             done();
           });
         });
       });
 
       it('aborts asynchronously in willTransitionTo', function (done) {
-        TestLocation.history = [ '/bar' ];
+        var location = new TestLocation([ '/bar' ]);
 
         var div = document.createElement('div');
         var steps = [];
@@ -455,7 +455,7 @@ describe('Router', function () {
 
         router = Router.create({
           routes: routes,
-          location: TestLocation
+          location: location
         });
 
         router.run(function (Handler) {
@@ -466,7 +466,7 @@ describe('Router', function () {
       });
 
       it('ignores aborting asynchronously in willTransitionTo on location.pop', function (done) {
-        TestLocation.history = [ '/bar' ];
+        var location = new TestLocation([ '/bar' ]);
 
         var div = document.createElement('div');
         var steps = [];
@@ -479,7 +479,7 @@ describe('Router', function () {
 
           setTimeout(function () {
             expect(div.innerHTML).toMatch(/Bar/);
-            TestLocation.pop();
+            location.pop();
             expect(div.innerHTML).toMatch(/Bar/);
           }, Async.delay / 2);
 
@@ -491,7 +491,7 @@ describe('Router', function () {
 
         router = Router.create({
           routes: routes,
-          location: TestLocation
+          location: location
         });
 
         router.run(function (Handler) {
@@ -502,7 +502,7 @@ describe('Router', function () {
       });
 
       it('ignores aborting asynchronously in willTransitionTo on router.transitionTo', function (done) {
-        TestLocation.history = [ '/bar' ];
+        var location = new TestLocation([ '/bar' ]);
 
         var div = document.createElement('div');
         var steps = [];
@@ -523,7 +523,7 @@ describe('Router', function () {
         steps.push(function () {
           setTimeout(function () {
             expect(div.innerHTML).toMatch(/Foo/);
-            TestLocation.pop();
+            location.pop();
           }, Async.delay / 2 + 10);
         });
 
@@ -534,7 +534,7 @@ describe('Router', function () {
 
         router = Router.create({
           routes: routes,
-          location: TestLocation
+          location: location
         });
 
         router.run(function (Handler) {
@@ -545,7 +545,7 @@ describe('Router', function () {
       });
 
       it('ignores aborting asynchronously in willTransitionTo on router.replaceWith', function (done) {
-        TestLocation.history = [ '/bar' ];
+        var location = new TestLocation([ '/bar' ]);
 
         var div = document.createElement('div');
         var steps = [];
@@ -572,7 +572,7 @@ describe('Router', function () {
 
         router = Router.create({
           routes: routes,
-          location: TestLocation
+          location: location
         });
 
         router.run(function (Handler) {
@@ -596,7 +596,7 @@ describe('Router', function () {
           }
         });
 
-        TestLocation.history = [ '/foo' ];
+        var location = new TestLocation([ '/foo' ]);
         var routes = [
           <Route handler={Foo} path='/foo' />,
           <Route handler={Bar} path='/bar' />,
@@ -607,7 +607,7 @@ describe('Router', function () {
         var steps = [];
         var router = Router.create({
           routes: routes,
-          location: TestLocation
+          location: location
         });
 
         steps.push(function () {
@@ -621,7 +621,7 @@ describe('Router', function () {
         steps.push(function () {
           setTimeout(function () {
             expect(div.innerHTML).toMatch(/Bar/);
-            expect(TestLocation.history).toEqual(['/foo', '/bar']);
+            expect(location.history).toEqual(['/foo', '/bar']);
             done();
           }, Async.delay + 10);
         });
@@ -693,14 +693,14 @@ describe('Router', function () {
         </Route>
       );
 
-      TestLocation.history = [ '/spoon?filter=first' ];
+      var location = new TestLocation([ '/spoon?filter=first' ]);
 
       var div = document.createElement('div');
-      Router.run(routes, TestLocation, function (Handler, state) {
+      Router.run(routes, location, function (Handler, state) {
         React.render(<Handler/>, div);
       });
 
-      TestLocation.push('/spoon?filter=second');
+      location.push('/spoon?filter=second');
     });
   });
 
@@ -728,11 +728,11 @@ describe('Router', function () {
         </Route>
       );
 
-      TestLocation.history = [ '/bar' ];
+      var location = new TestLocation([ '/bar' ]);
 
-      Router.run(routes, TestLocation, function (Handler, state) {
+      Router.run(routes, location, function (Handler, state) {
         React.render(<Handler/>, div, function () {
-          TestLocation.push('/baz');
+          location.push('/baz');
         });
       });
     });
@@ -773,16 +773,16 @@ describe('Router', function () {
         </Route>
       );
 
-      TestLocation.history = [ '/bar' ];
+      var location = new TestLocation([ '/bar' ]);
 
       var steps = [];
 
       steps.push(function () {
-        TestLocation.push('/foo');
+        location.push('/foo');
       });
 
       steps.push(function () {
-        TestLocation.push('/bar');
+        location.push('/bar');
       });
 
       steps.push(function () {
@@ -790,7 +790,7 @@ describe('Router', function () {
         done();
       });
 
-      Router.run(routes, TestLocation, function (Handler, state) {
+      Router.run(routes, location, function (Handler, state) {
 
         // Calling render on the handler twice should be allowed
         React.render(<Handler data={{FooBar: 1}}/>, div);
@@ -805,6 +805,39 @@ describe('Router', function () {
 
   });
 
+});
+
+describe('Router.makePath', function () {
+  var router;
+  beforeEach(function () {
+    router = Router.create(
+      <Route name="home" handler={Foo}>
+        <Route name="users" handler={Foo}>
+          <Route name="user" path=":id" handler={Foo}/>
+        </Route>
+      </Route>
+    );
+  });
+
+  describe('when given an absolute path', function () {
+    it('returns that path', function () {
+      expect(router.makePath('/about')).toEqual('/about');
+    });
+  });
+
+  describe('when there is a route with the given name', function () {
+    it('returns the correct path', function () {
+      expect(router.makePath('user', { id: 6 })).toEqual('/home/users/6');
+    });
+  });
+
+  describe('when there is no route with the given name', function () {
+    it('throws an error', function () {
+      expect(function () {
+        router.makePath('not-found');
+      }).toThrow();
+    });
+  });
 });
 
 describe('Router.run', function () {
@@ -882,7 +915,7 @@ describe('Router.run', function () {
   });
 
   it('does not blow away the previous HTML', function (done) {
-    TestLocation.history = [ '/foo' ];
+    var location = new TestLocation([ '/foo' ]);
 
     var routes = (
       <Route handler={Nested} path='/'>
@@ -895,7 +928,7 @@ describe('Router.run', function () {
     steps.push(function () {
       expect(div.innerHTML).toMatch(/foo/);
       div.querySelector('h1').innerHTML = 'lol i changed you';
-      TestLocation.push('/bar');
+      location.push('/bar');
     });
 
     steps.push(function () {
@@ -904,7 +937,7 @@ describe('Router.run', function () {
       done();
     });
 
-    Router.run(routes, TestLocation, function (Handler, state) {
+    Router.run(routes, location, function (Handler, state) {
       React.render(<Handler/>, div, function () {
         steps.shift()();
       });
@@ -912,14 +945,10 @@ describe('Router.run', function () {
   });
 
   describe('locations', function () {
-    it('defaults to HashLocation', function (done) {
+    it('defaults to HashLocation', function () {
       var routes = <Route path="/" handler={Foo}/>;
-      var div = document.createElement('div');
       Router.run(routes, function (Handler) {
-        React.render(<Handler/>, div, function () {
-          expect(this.getLocation()).toBe(Router.HashLocation);
-          done();
-        });
+        expect(this.getLocation()).toBe(Router.HashLocation);
       });
     });
   });
@@ -937,9 +966,9 @@ describe('Router.run', function () {
     ];
 
     describe('when a page is scrolled', function () {
-      var position, div, renderCount;
+      var position, div, renderCount, location;
       beforeEach(function (done) {
-        TestLocation.history = [ '/one' ];
+        location = new TestLocation([ '/one' ]);
 
         div = document.createElement('div');
         document.body.appendChild(div);
@@ -948,7 +977,7 @@ describe('Router.run', function () {
 
         Router.create({
           routes: routes,
-          location: TestLocation,
+          location: location,
           scrollBehavior: ScrollToTopBehavior
         }).run(function (Handler) {
           React.render(<Handler/>, div, function () {
@@ -973,7 +1002,7 @@ describe('Router.run', function () {
 
       describe('navigating to a new page', function () {
         beforeEach(function () {
-          TestLocation.push('/two');
+          location.push('/two');
         });
 
         it('resets the scroll position', function () {
@@ -982,7 +1011,7 @@ describe('Router.run', function () {
 
         describe('then returning to the previous page', function () {
           beforeEach(function () {
-            TestLocation.pop();
+            location.pop();
           });
 
           it('resets the scroll position', function () {
@@ -1006,16 +1035,16 @@ describe('Router.run', function () {
     ];
 
     describe('when a page is scrolled', function () {
-      var position, div, renderCount;
+      var position, div, renderCount, location;
       beforeEach(function (done) {
-        TestLocation.history = [ '/one' ];
+        location = new TestLocation([ '/one' ]);
 
         div = document.createElement('div');
         document.body.appendChild(div);
 
         renderCount = 0;
 
-        Router.run(routes, TestLocation, function (Handler) {
+        Router.run(routes, location, function (Handler) {
           React.render(<Handler/>, div, function () {
             if (renderCount === 0) {
               position = { x: 20, y: 50 };
@@ -1038,7 +1067,7 @@ describe('Router.run', function () {
 
       describe('navigating to a new page', function () {
         beforeEach(function () {
-          TestLocation.push('/two');
+          location.push('/two');
         });
 
         it('resets the scroll position', function () {
@@ -1047,7 +1076,7 @@ describe('Router.run', function () {
 
         describe('then returning to the previous page', function () {
           beforeEach(function () {
-            TestLocation.pop();
+            location.pop();
           });
 
           it('remembers the scroll position', function () {
@@ -1071,9 +1100,9 @@ describe('Router.run', function () {
       </Route>
     );
 
-    var div, didUpdateScroll;
+    var div, didUpdateScroll, location;
     beforeEach(function (done) {
-      TestLocation.history = [ '/feed' ];
+      location = new TestLocation([ '/feed' ]);
 
       div = document.createElement('div');
       document.body.appendChild(div);
@@ -1086,7 +1115,7 @@ describe('Router.run', function () {
 
       Router.create({
         routes: routes,
-        location: TestLocation,
+        location: location,
         scrollBehavior: MockScrollBehavior
       }).run(function (Handler) {
         React.render(<Handler/>, div, function () {
@@ -1110,117 +1139,60 @@ describe('Router.run', function () {
       });
 
       afterEach(function () {
-        TestLocation.pop();
+        location.pop();
       });
 
       it('calls updateScroll when no ancestors ignore scroll', function () {
-        TestLocation.push('/about');
+        location.push('/about');
         expect(didUpdateScroll).toBe(true);
       });
 
       it('calls updateScroll when no ancestors ignore scroll although source and target do', function () {
-        TestLocation.push('/search/foo');
+        location.push('/search/foo');
         expect(didUpdateScroll).toBe(true);
       });
 
       it('calls updateScroll when route does not ignore scroll and only params change', function () {
-        TestLocation.replace('/users/3/posts');
+        location.replace('/users/3/posts');
         didUpdateScroll = false;
 
-        TestLocation.push('/users/5/posts');
+        location.push('/users/5/posts');
         expect(didUpdateScroll).toBe(true);
       });
 
       it('calls updateScroll when route does not ignore scroll and both params and query change', function () {
-        TestLocation.replace('/users/3/posts');
+        location.replace('/users/3/posts');
         didUpdateScroll = false;
 
-        TestLocation.push('/users/5/posts?page=2');
+        location.push('/users/5/posts?page=2');
         expect(didUpdateScroll).toBe(true);
       });
 
       it('does not call updateScroll when route does not ignore scroll but only query changes', function () {
-        TestLocation.replace('/users/3/posts');
+        location.replace('/users/3/posts');
         didUpdateScroll = false;
 
-        TestLocation.push('/users/3/posts?page=2');
+        location.push('/users/3/posts?page=2');
         expect(didUpdateScroll).toBe(false);
       });
 
       it('does not call updateScroll when common ancestor ignores scroll', function () {
-        TestLocation.push('/discover');
+        location.push('/discover');
         expect(didUpdateScroll).toBe(false);
       });
 
       it('does not call updateScroll when route ignores scroll', function () {
-        TestLocation.replace('/search/foo');
+        location.replace('/search/foo');
         didUpdateScroll = false;
 
-        TestLocation.push('/search/bar');
+        location.push('/search/bar');
         expect(didUpdateScroll).toBe(false);
 
-        TestLocation.replace('/search/bar?safe=0');
+        location.replace('/search/bar?safe=0');
         expect(didUpdateScroll).toBe(false);
 
-        TestLocation.replace('/search/whatever');
+        location.replace('/search/whatever');
         expect(didUpdateScroll).toBe(false);
-      });
-    });
-  });
-
-  describe('makePath', function () {
-    var router;
-    beforeEach(function () {
-      router = Router.create({
-        routes: [
-          <Route name="home" handler={Foo}>
-            <Route name="users" handler={Foo}>
-              <Route name="user" path=":id" handler={Foo}/>
-            </Route>
-          </Route>
-        ]
-      });
-    });
-
-    describe('when given an absolute path', function () {
-      it('returns that path', function () {
-        expect(router.makePath('/about')).toEqual('/about');
-      });
-    });
-
-    describe('when there is a route with the given name', function () {
-      it('returns the correct path', function () {
-        expect(router.makePath('user', { id: 6 })).toEqual('/home/users/6');
-      });
-    });
-
-    describe('when there is no route with the given name', function () {
-      it('throws an error', function () {
-        expect(function () {
-          router.makePath('not-found');
-        }).toThrow();
-      });
-    });
-  });
-
-});
-
-describe.skip('unmounting', function () {
-  afterEach(function () {
-    window.location.hash = '';
-  });
-
-  it('removes location change listeners', function (done) {
-    var c = 0;
-    var div = document.createElement('div');
-    Router.run(<Route handler={Foo} path="*"/>, Router.HashLocation, function (Handler) {
-      c++;
-      expect(c).toEqual(1);
-      React.render(<Handler/>, div, function () {
-        React.unmountComponentAtNode(div);
-        Router.HashLocation.push('/foo');
-        // might be flakey? I wish I knew right now a better way to do this
-        setTimeout(done, 0);
       });
     });
   });

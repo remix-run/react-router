@@ -6,7 +6,7 @@ var Route = require('../Route');
 var Link = require('../Link');
 var RouteHandler = require('../RouteHandler');
 var TestLocation = require('../../locations/TestLocation');
-var { Foo, Bar } = require('../../utils/TestHandlers');
+var { Foo, Bar } = require('../../TestUtils');
 var { click } = React.addons.TestUtils.Simulate;
 
 describe('A Link', function () {
@@ -24,9 +24,9 @@ describe('A Link', function () {
       ];
 
       var div = document.createElement('div');
-      TestLocation.history = [ '/link' ];
+      var location = new TestLocation([ '/link' ]);
 
-      Router.run(routes, TestLocation, function (Handler) {
+      Router.run(routes, location, function (Handler) {
         React.render(<Handler/>, div, function () {
           var a = div.querySelector('a');
           expect(a.getAttribute('href')).toEqual('/foo/baz?qux=quux');
@@ -60,7 +60,7 @@ describe('A Link', function () {
       );
 
       var div = document.createElement('div');
-      TestLocation.history = ['/foo'];
+      var location = new TestLocation([ '/foo' ]);
       var steps = [];
 
       function assertActive () {
@@ -73,23 +73,82 @@ describe('A Link', function () {
         expect(a.className).toEqual('dontKillMe');
       }
 
-      steps.push(() => {
+      steps.push(function () {
         assertActive();
-        TestLocation.push('/bar');
+        location.push('/bar');
       });
 
-      steps.push(() => {
+      steps.push(function () {
         assertInactive();
-        TestLocation.push('/foo');
+        location.push('/foo');
       });
 
-      steps.push(() => {
+      steps.push(function () {
         assertActive();
         done();
       });
 
-      Router.run(routes, TestLocation, function (Handler) {
-        React.render(<Handler/>, div, () => {
+      Router.run(routes, location, function (Handler) {
+        React.render(<Handler/>, div, function () {
+          steps.shift()();
+        });
+      });
+    });
+
+    it('has applies activeStyle', function (done) {
+      var LinkHandler = React.createClass({
+        render: function () {
+          return (
+            <div>
+              <Link
+                to="foo"
+                style={{color: 'white'}}
+                activeStyle={{color: 'red'}}
+              >Link</Link>
+              <RouteHandler/>
+            </div>
+          );
+        }
+      });
+
+      var routes = (
+        <Route path="/" handler={LinkHandler}>
+          <Route name="foo" handler={Foo} />
+          <Route name="bar" handler={Bar} />
+        </Route>
+      );
+
+      var div = document.createElement('div');
+      var location = new TestLocation([ '/foo' ]);
+      var steps = [];
+
+      function assertActive () {
+        var a = div.querySelector('a');
+        expect(a.style.color).toEqual('red');
+      }
+
+      function assertInactive () {
+        var a = div.querySelector('a');
+        expect(a.style.color).toEqual('white');
+      }
+
+      steps.push(function () {
+        assertActive();
+        location.push('/bar');
+      });
+
+      steps.push(function () {
+        assertInactive();
+        location.push('/foo');
+      });
+
+      steps.push(function () {
+        assertActive();
+        done();
+      });
+
+      Router.run(routes, location, function (Handler) {
+        React.render(<Handler/>, div, function () {
           steps.shift()();
         });
       });
@@ -114,9 +173,9 @@ describe('A Link', function () {
         <Route name="link" handler={LinkHandler} />
       ];
       var div = document.createElement('div');
-      TestLocation.history = [ '/link' ];
+      var location = new TestLocation([ '/link' ]);
 
-      Router.run(routes, TestLocation, function (Handler) {
+      Router.run(routes, location, function (Handler) {
         React.render(<Handler/>, div, function () {
           click(div.querySelector('a'));
         });
@@ -125,7 +184,7 @@ describe('A Link', function () {
 
     it('transitions to the correct route', function (done) {
       var div = document.createElement('div');
-      TestLocation.history = [ '/link' ];
+      var location = new TestLocation([ '/link' ]);
 
       var LinkHandler = React.createClass({
         handleClick: function () {
@@ -153,7 +212,7 @@ describe('A Link', function () {
         done();
       });
 
-      Router.run(routes, TestLocation, function (Handler) {
+      Router.run(routes, location, function (Handler) {
         React.render(<Handler/>, div, function () {
           steps.shift()();
         });

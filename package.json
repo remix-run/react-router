@@ -1,22 +1,19 @@
 {
   "name": "react-router",
-  "version": "0.12.0",
+  "version": "0.13.1",
   "description": "A complete routing library for React.js",
-  "main": "modules/index.js",
+  "main": "modules",
   "repository": {
     "type": "git",
     "url": "https://github.com/rackt/react-router.git"
   },
   "homepage": "https://github.com/rackt/react-router/blob/latest/README.md",
   "bugs": "https://github.com/rackt/react-router/issues",
-  "directories": {
-    "example": "examples"
-  },
   "scripts": {
-    "build": "NODE_ENV=production webpack modules/index.js dist/react-router.js",
-    "build-min": "NODE_ENV=production COMPRESS=1 webpack modules/index.js dist/react-router.min.js",
-    "examples": "webpack-dev-server --config examples/webpack.config.js --no-info --content-base examples",
-    "test": "jsxhint . && karma start --single-run"
+    "build-global": "rm -rf build/global && NODE_ENV=production webpack modules/index.js build/global/ReactRouter.js && NODE_ENV=production COMPRESS=1 webpack modules/index.js build/global/ReactRouter.min.js && echo \"gzipped, the global build is `gzip -c build/global/ReactRouter.min.js | wc -c` bytes\"",
+    "build-npm": "rm -rf build/npm && babel -d build/npm/lib ./modules && cp README.md build/npm && find -X build/npm/lib -type d -name __tests__ | xargs rm -rf && node -p 'p=require(\"./package\");p.main=\"lib\";p.scripts=p.devDependencies=undefined;JSON.stringify(p,null,2)' > build/npm/package.json",
+    "examples": "webpack-dev-server --config examples/webpack.config.js --content-base examples",
+    "test": "jsxhint . && karma start"
   },
   "authors": [
     "Ryan Florence",
@@ -24,11 +21,13 @@
   ],
   "license": "MIT",
   "devDependencies": {
+    "babel": "^4.4.5",
+    "babel-core": "^4.4.6",
+    "babel-loader": "^4.0.0",
     "bundle-loader": "^0.5.2",
     "events": "1.0.2",
     "expect": "^1.1.0",
-    "jsx-loader": "^0.12.2",
-    "jsxhint": "^0.8.1",
+    "jsxhint": "^0.12.1",
     "karma": "^0.12.28",
     "karma-chrome-launcher": "^0.1.7",
     "karma-cli": "0.0.4",
@@ -37,17 +36,18 @@
     "karma-sourcemap-loader": "^0.3.2",
     "karma-webpack": "^1.3.1",
     "mocha": "^2.0.1",
-    "react": "0.12.x",
-    "rf-release": "0.4.0",
+    "react": "0.13.x",
+    "rf-changelog": "^0.4.0",
     "rx": "2.3.18",
     "webpack": "^1.4.13",
     "webpack-dev-server": "^1.6.6"
   },
   "peerDependencies": {
-    "react": "0.12.x"
+    "react": "0.13.x"
   },
   "dependencies": {
-    "qs": "2.3.3"
+    "qs": "2.4.1",
+    "classnames": "1.1.x"
   },
   "tags": [
     "react",

@@ -38,14 +38,17 @@ var Index = React.createClass({
 });
 
 var State = React.createClass({
-  mixins: [ Router.State ],
+
+  contextTypes: {
+    router: React.PropTypes.func.isRequired
+  },
 
   imageUrl: function (name) {
     return "http://www.50states.com/maps/" + underscore(name) + ".gif";
   },
 
   render: function () {
-    var unitedState = findState(this.getParams().abbr);
+    var unitedState = findState(this.context.router.getCurrentParams().abbr);
     return (
       <div className="State">
         <h1>{unitedState.name}</h1>

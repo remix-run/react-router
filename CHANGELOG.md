@@ -1,3 +1,54 @@
+v0.13.1 - Fri, 20 Mar 2015 22:21:57 GMT
+---------------------------------------
+
+- 
+
+
+v0.13.0 - Fri, 20 Mar 2015 21:25:35 GMT
+---------------------------------------
+
+- [f3a44f1](../../commit/f3a44f1) [fixed] React 0.13 compatibility
+- [559c604](../../commit/559c604) [changed] Use empty bracket notation for arrays
+- [07b4972](../../commit/07b4972) [fixed] Allow repetition in child paths
+- [696a706](../../commit/696a706) [fixed] Use defaultProps of config components
+- [61f0a8c](../../commit/61f0a8c) [changed] Deprecate Navigation/State mixins
+
+
+v0.12.4 - Tue, 24 Feb 2015 21:53:02 GMT
+---------------------------------------
+
+- [5768506](../../commit/5768506) [fixed] Build generation
+
+
+v0.12.3 - Tue, 24 Feb 2015 21:37:49 GMT
+---------------------------------------
+
+- [aef0dce](../../commit/aef0dce) [fixed] DefaultRoute/NotFoundRoute name regression
+
+
+v0.12.2 - Tue, 24 Feb 2015 00:34:16 GMT
+---------------------------------------
+
+- [196390f](../../commit/196390f) [fixed] Make <Route name>s global, again
+
+
+v0.12.1 - Mon, 23 Feb 2015 22:54:19 GMT
+---------------------------------------
+
+- [3d8a883](../../commit/3d8a883) [fixed] Ignore extraneous popstate events in WebKit
+- [db2607d](../../commit/db2607d) [fixed] Double-encoding of URLs
+- [c5a24a5](../../commit/c5a24a5) [added] Route/Match classes
+- [ae6fcda](../../commit/ae6fcda) [changed] Rename Scrolling => ScrollHistory
+- [f975bdf](../../commit/f975bdf) [fixed] allow a StaticLocation to be passed directly when creating a router
+- [7d52d55](../../commit/7d52d55) [changed] TestLocation is a constructor
+- [193222e](../../commit/193222e) [added] StaticLocation, for server-side rendering
+- [e05e229](../../commit/e05e229) [added] Transition#cancel
+- [04ba639](../../commit/04ba639) [added] Link activeStyle property
+- [585d8ec](../../commit/585d8ec) [fixed] Use more correct children invariant
+- [62c49d2](../../commit/62c49d2) [changed] Change Navigation to return the result of goBack()
+- [83c8f59](../../commit/83c8f59) [fixed] Allow special characters in query
+
+
 v0.12.0 - Tue, 10 Feb 2015 20:12:42 GMT
 ---------------------------------------
 

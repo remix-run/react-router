@@ -18,11 +18,15 @@ var App = React.createClass({
 });
 
 var User = React.createClass({
-  mixins: [ Router.State ],
+
+  contextTypes: {
+    router: React.PropTypes.func.isRequired
+  },
 
   render: function () {
-    var age = this.getQuery().showAge ? '33' : '';
-    var userID = this.getParams().userID;
+    var { router } = this.context;
+    var age = router.getCurrentQuery().showAge ? '33' : '';
+    var userID = router.getCurrentParams().userID;
     return (
       <div className="User">
         <h1>User id: {userID}</h1>

@@ -8,18 +8,19 @@ var ImitateBrowserBehavior = require('./behaviors/ImitateBrowserBehavior');
 var HashLocation = require('./locations/HashLocation');
 var HistoryLocation = require('./locations/HistoryLocation');
 var RefreshLocation = require('./locations/RefreshLocation');
-var NavigationContext = require('./NavigationContext');
-var StateContext = require('./StateContext');
-var Scrolling = require('./Scrolling');
-var createRoutesFromReactChildren = require('./Routing').createRoutesFromReactChildren;
+var StaticLocation = require('./locations/StaticLocation');
+var ScrollHistory = require('./ScrollHistory');
+var createRoutesFromReactChildren = require('./createRoutesFromReactChildren');
 var isReactChildren = require('./isReactChildren');
 var Transition = require('./Transition');
 var PropTypes = require('./PropTypes');
 var Redirect = require('./Redirect');
 var History = require('./History');
 var Cancellation = require('./Cancellation');
-var supportsHistory = require('./utils/supportsHistory');
-var Path = require('./utils/Path');
+var Match = require('./Match');
+var Route = require('./Route');
+var supportsHistory = require('./supportsHistory');
+var PathUtils = require('./PathUtils');
 
 /**
  * The default location for new routers.
@@ -30,47 +31,6 @@ var DEFAULT_LOCATION = canUseDOM ? HashLocation : '/';
  * The default scroll behavior for new routers.
  */
 var DEFAULT_SCROLL_BEHAVIOR = canUseDOM ? ImitateBrowserBehavior : null;
-
-function createMatch(route, params, pathname, query) {
-  return {
-    routes: [ route ],
-    params: params,
-    pathname: pathname,
-    query: query
-  };
-}
-
-function findMatch(routes, defaultRoute, notFoundRoute, pathname, query) {
-  var route, match, params;
-
-  for (var i = 0, len = routes.length; i < len; ++i) {
-    route = routes[i];
-
-    // Check the subtree first to find the most deeply-nested match.
-    match = findMatch(route.routes, route.defaultRoute, route.notFoundRoute, pathname, query);
-
-    if (match != null) {
-      match.routes.unshift(route);
-      return match;
-    }
-
-    // No routes in the subtree matched, so check this route.
-    params = Path.extractParams(route.path, pathname);
-
-    if (params)
-      return createMatch(route, params, pathname, query);
-  }
-
-  // No routes matched, so try the default route if there is one.
-  if (defaultRoute && (params = Path.extractParams(defaultRoute.path, pathname)))
-    return createMatch(defaultRoute, params, pathname, query);
-
-  // Last attempt: does the "not found" route match?
-  if (notFoundRoute && (params = Path.extractParams(notFoundRoute.path, pathname)))
-    return createMatch(notFoundRoute, params, pathname, query);
-
-  return null;
-}
 
 function hasProperties(object, properties) {
   for (var propertyName in properties)
@@ -99,6 +59,48 @@ function hasMatch(routes, route, prevParams, nextParams, prevQuery, nextQuery) {
     // Ensure the query hasn't changed.
     return hasProperties(prevQuery, nextQuery) && hasProperties(nextQuery, prevQuery);
   });
+}
+
+function addRoutesToNamedRoutes(routes, namedRoutes) {
+  var route;
+  for (var i = 0, len = routes.length; i < len; ++i) {
+    route = routes[i];
+
+    if (route.name) {
+      invariant(
+        namedRoutes[route.name] == null,
+        'You may not have more than one route named "%s"',
+        route.name
+      );
+
+      namedRoutes[route.name] = route;
+    }
+
+    if (route.childRoutes)
+      addRoutesToNamedRoutes(route.childRoutes, namedRoutes);
+  }
+}
+
+function routeIsActive(activeRoutes, routeName) {
+  return activeRoutes.some(function (route) {
+    return route.name === routeName;
+  });
+}
+
+function paramsAreActive(activeParams, params) {
+  for (var property in params)
+    if (String(activeParams[property]) !== String(params[property]))
+      return false;
+
+  return true;
+}
+
+function queryIsActive(activeQuery, query) {
+  for (var property in query)
+    if (String(activeQuery[property]) !== String(query[property]))
+      return false;
+
+  return true;
 }
 
 /**
@@ -133,7 +135,10 @@ function createRouter(options) {
   var pendingTransition = null;
   var dispatchHandler = null;
 
-  if (typeof location === 'string') {
+  if (typeof location === 'string')
+    location = new StaticLocation(location);
+
+  if (location instanceof StaticLocation) {
     warning(
       !canUseDOM || process.env.NODE_ENV === 'test',
       'You should not use a static location in a DOM environment because ' +
@@ -162,17 +167,15 @@ function createRouter(options) {
 
       cancelPendingTransition: function () {
         if (pendingTransition) {
-          pendingTransition.abort(new Cancellation);
+          pendingTransition.cancel();
           pendingTransition = null;
         }
       },
 
       clearAllRoutes: function () {
-        this.cancelPendingTransition();
-        this.defaultRoute = null;
-        this.notFoundRoute = null;
-        this.namedRoutes = {};
-        this.routes = [];
+        Router.cancelPendingTransition();
+        Router.namedRoutes = {};
+        Router.routes = [];
       },
 
       /**
@@ -180,18 +183,20 @@ function createRouter(options) {
        */
       addRoutes: function (routes) {
         if (isReactChildren(routes))
-          routes = createRoutesFromReactChildren(routes, this, this.namedRoutes);
+          routes = createRoutesFromReactChildren(routes);
 
-        this.routes.push.apply(this.routes, routes);
+        addRoutesToNamedRoutes(routes, Router.namedRoutes);
+
+        Router.routes.push.apply(Router.routes, routes);
       },
 
       /**
        * Replaces routes of this router from the given children object (see ReactChildren).
        */
       replaceRoutes: function (routes) {
-        this.clearAllRoutes();
-        this.addRoutes(routes);
-        this.refresh();
+        Router.clearAllRoutes();
+        Router.addRoutes(routes);
+        Router.refresh();
       },
 
       /**
@@ -200,7 +205,7 @@ function createRouter(options) {
        * match can be made.
        */
       match: function (path) {
-        return findMatch(this.routes, this.defaultRoute, this.notFoundRoute, Path.withoutQuery(path), Path.extractQuery(path));
+        return Match.findMatch(Router.routes, path);
       },
 
       /**
@@ -209,21 +214,21 @@ function createRouter(options) {
        */
       makePath: function (to, params, query) {
         var path;
-        if (Path.isAbsolute(to)) {
-          path = Path.normalize(to);
+        if (PathUtils.isAbsolute(to)) {
+          path = to;
         } else {
-          var route = this.namedRoutes[to];
+          var route = (to instanceof Route) ? to : Router.namedRoutes[to];
 
           invariant(
-            route,
-            'Unable to find <Route name="%s">',
+            route instanceof Route,
+            'Cannot find a route named "%s"',
             to
           );
 
           path = route.path;
         }
 
-        return Path.withQuery(Path.injectParams(path, params), query);
+        return PathUtils.withQuery(PathUtils.injectParams(path, params), query);
       },
 
       /**
@@ -231,7 +236,7 @@ function createRouter(options) {
        * to the route with the given name, URL parameters, and query.
        */
       makeHref: function (to, params, query) {
-        var path = this.makePath(to, params, query);
+        var path = Router.makePath(to, params, query);
         return (location === HashLocation) ? '#' + path : path;
       },
 
@@ -240,12 +245,7 @@ function createRouter(options) {
        * a new URL onto the history stack.
        */
       transitionTo: function (to, params, query) {
-        invariant(
-          typeof location !== 'string',
-          'You cannot use transitionTo with a static location'
-        );
-
-        var path = this.makePath(to, params, query);
+        var path = Router.makePath(to, params, query);
 
         if (pendingTransition) {
           // Replace so pending location does not stay in history.
@@ -260,12 +260,7 @@ function createRouter(options) {
        * the current URL in the history stack.
        */
       replaceWith: function (to, params, query) {
-        invariant(
-          typeof location !== 'string',
-          'You cannot use replaceWith with a static location'
-        );
-
-        location.replace(this.makePath(to, params, query));
+        location.replace(Router.makePath(to, params, query));
       },
 
       /**
@@ -280,11 +275,6 @@ function createRouter(options) {
        * because we cannot reliably track history length.
        */
       goBack: function () {
-        invariant(
-          typeof location !== 'string',
-          'You cannot use goBack with a static location'
-        );
-
         if (History.length > 1 || location === RefreshLocation) {
           location.pop();
           return true;
@@ -296,13 +286,13 @@ function createRouter(options) {
       },
 
       handleAbort: options.onAbort || function (abortReason) {
-        if (typeof location === 'string')
+        if (location instanceof StaticLocation)
           throw new Error('Unhandled aborted transition! Reason: ' + abortReason);
 
         if (abortReason instanceof Cancellation) {
           return;
         } else if (abortReason instanceof Redirect) {
-          location.replace(this.makePath(abortReason.to, abortReason.params, abortReason.query));
+          location.replace(Router.makePath(abortReason.to, abortReason.params, abortReason.query));
         } else {
           location.pop();
         }
@@ -314,7 +304,7 @@ function createRouter(options) {
       },
 
       handleLocationChange: function (change) {
-        this.dispatch(change.path, change.type);
+        Router.dispatch(change.path, change.type);
       },
 
       /**
@@ -334,7 +324,7 @@ function createRouter(options) {
        * hooks wait, the transition is fully synchronous.
        */
       dispatch: function (path, action) {
-        this.cancelPendingTransition();
+        Router.cancelPendingTransition();
 
         var prevPath = state.path;
         var isRefreshing = action == null;
@@ -345,9 +335,9 @@ function createRouter(options) {
         // Record the scroll position as early as possible to
         // get it before browsers try update it automatically.
         if (prevPath && action === LocationActions.PUSH)
-          this.recordScrollPosition(prevPath);
+          Router.recordScrollPosition(prevPath);
 
-        var match = this.match(path);
+        var match = Router.match(path);
 
         warning(
           match != null,
@@ -380,16 +370,16 @@ function createRouter(options) {
           toRoutes = nextRoutes;
         }
 
-        var transition = new Transition(path, this.replaceWith.bind(this, path));
+        var transition = new Transition(path, Router.replaceWith.bind(Router, path));
         pendingTransition = transition;
 
         var fromComponents = mountedComponents.slice(prevRoutes.length - fromRoutes.length);
 
-        transition.from(fromRoutes, fromComponents, function (error) {
+        Transition.from(transition, fromRoutes, fromComponents, function (error) {
           if (error || transition.abortReason)
             return dispatchHandler.call(Router, error, transition); // No need to continue.
 
-          transition.to(toRoutes, nextParams, nextQuery, function (error) {
+          Transition.to(transition, toRoutes, nextParams, nextQuery, function (error) {
             dispatchHandler.call(Router, error, transition, {
               path: path,
               action: action,
@@ -411,7 +401,7 @@ function createRouter(options) {
        */
       run: function (callback) {
         invariant(
-          !this.isRunning,
+          !Router.isRunning,
           'Router is already running'
         );
 
@@ -427,21 +417,19 @@ function createRouter(options) {
           if (transition.abortReason) {
             Router.handleAbort(transition.abortReason);
           } else {
-            callback.call(this, this, nextState = newState);
+            callback.call(Router, Router, nextState = newState);
           }
         };
 
-        if (typeof location === 'string') {
-          Router.dispatch(location, null);
-        } else {
+        if (!(location instanceof StaticLocation)) {
           if (location.addChangeListener)
             location.addChangeListener(Router.handleLocationChange);
 
-          this.isRunning = true;
-
-          // Bootstrap using the current path.
-          this.refresh();
+          Router.isRunning = true;
         }
+
+        // Bootstrap using the current path.
+        Router.refresh();
       },
 
       refresh: function () {
@@ -449,33 +437,95 @@ function createRouter(options) {
       },
 
       stop: function () {
-        this.cancelPendingTransition();
+        Router.cancelPendingTransition();
 
         if (location.removeChangeListener)
           location.removeChangeListener(Router.handleLocationChange);
 
-        this.isRunning = false;
+        Router.isRunning = false;
+      },
+
+      getLocation: function () {
+        return location;
+      },
+
+      getScrollBehavior: function () {
+        return scrollBehavior;
+      },
+
+      getRouteAtDepth: function (routeDepth) {
+        var routes = state.routes;
+        return routes && routes[routeDepth];
+      },
+
+      setRouteComponentAtDepth: function (routeDepth, component) {
+        mountedComponents[routeDepth] = component;
+      },
+
+      /**
+       * Returns the current URL path + query string.
+       */
+      getCurrentPath: function () {
+        return state.path;
+      },
+
+      /**
+       * Returns the current URL path without the query string.
+       */
+      getCurrentPathname: function () {
+        return state.pathname;
+      },
+
+      /**
+       * Returns an object of the currently active URL parameters.
+       */
+      getCurrentParams: function () {
+        return state.params;
+      },
+
+      /**
+       * Returns an object of the currently active query parameters.
+       */
+      getCurrentQuery: function () {
+        return state.query;
+      },
+
+      /**
+       * Returns an array of the currently active routes.
+       */
+      getCurrentRoutes: function () {
+        return state.routes;
+      },
+
+      /**
+       * Returns true if the given route, params, and query are active.
+       */
+      isActive: function (to, params, query) {
+        if (PathUtils.isAbsolute(to))
+          return to === state.path;
+
+        return routeIsActive(state.routes, to) &&
+          paramsAreActive(state.params, params) &&
+          (query == null || queryIsActive(state.query, query));
       }
 
     },
 
-    mixins: [ NavigationContext, StateContext, Scrolling ],
+    mixins: [ ScrollHistory ],
 
     propTypes: {
       children: PropTypes.falsy
     },
 
     childContextTypes: {
-      getRouteAtDepth: React.PropTypes.func.isRequired,
-      setRouteComponentAtDepth: React.PropTypes.func.isRequired,
-      routeHandlers: React.PropTypes.array.isRequired
+      routeDepth: PropTypes.number.isRequired,
+      router: PropTypes.router.isRequired
     },
 
     getChildContext: function () {
       return {
-        getRouteAtDepth: this.getRouteAtDepth,
-        setRouteComponentAtDepth: this.setRouteComponentAtDepth,
-        routeHandlers: [ this ]
+        routeDepth: 1,
+        router: Router
       };
     },
 
@@ -491,25 +541,8 @@ function createRouter(options) {
       Router.stop();
     },
 
-    getLocation: function () {
-      return location;
-    },
-
-    getScrollBehavior: function () {
-      return scrollBehavior;
-    },
-
-    getRouteAtDepth: function (depth) {
-      var routes = this.state.routes;
-      return routes && routes[depth];
-    },
-
-    setRouteComponentAtDepth: function (depth, component) {
-      mountedComponents[depth] = component;
-    },
-
     render: function () {
-      var route = this.getRouteAtDepth(0);
+      var route = Router.getRouteAtDepth(0);
       return route ? React.createElement(route.handler, this.props) : null;
     }
 

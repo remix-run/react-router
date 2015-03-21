@@ -2,64 +2,76 @@ var invariant = require('react/lib/invariant');
 var LocationActions = require('../actions/LocationActions');
 var History = require('../History');
 
-var _listener;
-
-function notifyChange(type) {
-  if (_listener)
-    _listener({ path: TestLocation.getCurrentPath(), type: type });
-}
-
-function updateHistoryLength() {
-  History.length = TestLocation.history.length;
-}
-
 /**
- * A location that is convenient for testing and does not
- * require a DOM. You should manually setup TestLocation.history
- * with the URL paths your test needs before it runs.
+ * A location that is convenient for testing and does not require a DOM.
  */
-var TestLocation = {
+class TestLocation {
 
-  history: [],
+  constructor(history) {
+    this.history = history || [];
+    this.listeners = [];
+    this._updateHistoryLength();
+  }
 
-  needsDOM: false,
+  get needsDOM() {
+    return false;
+  }
 
-  addChangeListener: function (listener) {
-    // TestLocation only ever supports a single listener at a time.
-    _listener = listener;
-    updateHistoryLength();
-  },
+  _updateHistoryLength() {
+    History.length = this.history.length;
+  }
 
-  push: function (path) {
-    TestLocation.history.push(path);
-    updateHistoryLength();
-    notifyChange(LocationActions.PUSH);
-  },
+  _notifyChange(type) {
+    var change = {
+      path: this.getCurrentPath(),
+      type: type
+    };
 
-  replace: function (path) {
+    for (var i = 0, len = this.listeners.length; i < len; ++i)
+      this.listeners[i].call(this, change);
+  }
+
+  addChangeListener(listener) {
+    this.listeners.push(listener);
+  }
+
+  removeChangeListener(listener) {
+    this.listeners = this.listeners.filter(function (l) {
+      return l !== listener;
+    });
+  }
+
+  push(path) {
+    this.history.push(path);
+    this._updateHistoryLength();
+    this._notifyChange(LocationActions.PUSH);
+  }
+
+  replace(path) {
     invariant(
-      History.length,
+      this.history.length,
       'You cannot replace the current path with no history'
     );
 
-    TestLocation.history[TestLocation.history.length - 1] = path;
-    notifyChange(LocationActions.REPLACE);
-  },
+    this.history[this.history.length - 1] = path;
 
-  pop: function () {
-    TestLocation.history.pop();
-    updateHistoryLength();
-    notifyChange(LocationActions.POP);
-  },
+    this._notifyChange(LocationActions.REPLACE);
+  }
 
-  getCurrentPath: function () {
-    return TestLocation.history[TestLocation.history.length - 1];
-  },
+  pop() {
+    this.history.pop();
+    this._updateHistoryLength();
+    this._notifyChange(LocationActions.POP);
+  }
 
-  toString: function () {
+  getCurrentPath() {
+    return this.history[this.history.length - 1];
+  }
+
+  toString() {
     return '<TestLocation>';
   }
 
-};
+}
 
 module.exports = TestLocation;

@@ -8,19 +8,19 @@ var History = require('../History');
  */
 var RefreshLocation = {
 
-  push: function (path) {
-    window.location = encodeURI(path);
+  push(path) {
+    window.location = path;
   },
 
-  replace: function (path) {
-    window.location.replace(encodeURI(path));
+  replace(path) {
+    window.location.replace(path);
   },
 
   pop: History.back,
 
   getCurrentPath: HistoryLocation.getCurrentPath,
 
-  toString: function () {
+  toString() {
     return '<RefreshLocation>';
   }
 

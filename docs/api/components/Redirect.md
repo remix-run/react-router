@@ -1,7 +1,7 @@
 API: `Redirect` (component)
 ===========================
 
-Configures a redirect for a path in your route declarations.
+A `<Redirect>` sets up a redirect to another route in your application. 
 
 Props
 -----

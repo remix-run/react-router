@@ -1,8 +1,5 @@
 var React = require('react');
-var classSet = require('react/lib/cx');
 var assign = require('react/lib/Object.assign');
-var Navigation = require('../Navigation');
-var State = require('../State');
 var PropTypes = require('../PropTypes');
 
 function isLeftClickEvent(event) {
@@ -31,27 +28,9 @@ function isModifiedEvent(event) {
  *
  *   <Link to="showPost" params={{ postID: "123" }} query={{ show:true }}/>
  */
-var Link = React.createClass({
+class Link extends React.Component {
 
-  displayName: 'Link',
-
-  mixins: [ Navigation, State ],
-
-  propTypes: {
-    activeClassName: PropTypes.string.isRequired,
-    to: PropTypes.string.isRequired,
-    params: PropTypes.object,
-    query: PropTypes.object,
-    onClick: PropTypes.func
-  },
-
-  getDefaultProps: function () {
-    return {
-      activeClassName: 'active'
-    };
-  },
-
-  handleClick: function (event) {
+  handleClick(event) {
     var allowTransition = true;
     var clickResult;
 
@@ -67,42 +46,68 @@ var Link = React.createClass({
     event.preventDefault();
 
     if (allowTransition)
-      this.transitionTo(this.props.to, this.props.params, this.props.query);
-  },
+      this.context.router.transitionTo(this.props.to, this.props.params, this.props.query);
+  }
 
   /**
    * Returns the value of the "href" attribute to use on the DOM element.
    */
-  getHref: function () {
-    return this.makeHref(this.props.to, this.props.params, this.props.query);
-  },
+  getHref() {
+    return this.context.router.makeHref(this.props.to, this.props.params, this.props.query);
+  }
 
   /**
    * Returns the value of the "class" attribute to use on the DOM element, which contains
    * the value of the activeClassName property when this <Link> is active.
    */
-  getClassName: function () {
-    var classNames = {};
+  getClassName() {
+    var className = this.props.className
 
-    if (this.props.className)
-      classNames[this.props.className] = true;
+    if (this.getActiveState())
+      className += ` ${ this.props.activeClassName }`
 
-    if (this.isActive(this.props.to, this.props.params, this.props.query))
-      classNames[this.props.activeClassName] = true;
+    return className
+  }
 
-    return classSet(classNames);
-  },
+  getActiveState() {
+    return this.context.router.isActive(this.props.to, this.props.params, this.props.query);
+  }
 
-  render: function () {
+  render() {
     var props = assign({}, this.props, {
       href: this.getHref(),
       className: this.getClassName(),
-      onClick: this.handleClick
+      onClick: this.handleClick.bind(this)
     });
+
+    if (props.activeStyle && this.getActiveState())
+      props.style = props.activeStyle;
 
     return React.DOM.a(props, this.props.children);
   }
 
-});
+}
+
+// TODO: Include these in the above class definition
+// once we can use ES7 property initializers.
+// https://github.com/babel/babel/issues/619
+
+Link.contextTypes = {
+  router: PropTypes.router.isRequired
+};
+
+Link.propTypes = {
+  activeClassName: PropTypes.string.isRequired,
+  to: PropTypes.oneOfType([ PropTypes.string, PropTypes.route ]).isRequired,
+  params: PropTypes.object,
+  query: PropTypes.object,
+  activeStyle: PropTypes.object,
+  onClick: PropTypes.func
+};
+
+Link.defaultProps = {
+  activeClassName: 'active',
+  className: ''
+};
 
 module.exports = Link;
