@@ -71,19 +71,19 @@ Creates an `href` to a route.
 this.context.router.makeHref('user', {userId: 123}); // "users/123"
 ```
 
-### `getPath()`
+### `getCurrentPath()`
 
 Returns the current URL path, including query string.
 
-### `getPathname()`
+### `getCurrentPathname()`
 
 Returns the current URL path without the query string.
 
-### `getParams()`
+### `getCurrentParams()`
 
 Returns a hash of the currently active URL params.
 
-### `getQuery()`
+### `getCurrentQuery()`
 
 Returns a hash of the currently active query params.
 
@@ -92,7 +92,7 @@ Returns a hash of the currently active query params.
 Returns `true` if a route, params, and query are active, `false`
 otherwise.
 
-### `getRoutes()`
+### `getCurrentRoutes()`
 
 Returns an array of the currently active routes, in nesting order.
 
@@ -108,7 +108,7 @@ Often you'll want access to params and query:
 // handler
 var User = React.createClass({
   render: function () {
-    var name = this.context.router.getParams().name;
+    var name = this.context.router.getCurrentParams().name;
     return (
       <div>
         <h1>{name}</h1>
