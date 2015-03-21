@@ -193,7 +193,7 @@ Rendering `Handler` is really just rendering `App` since it's the highest
 matched route handler. Since `inbox` is the active child route,
 rendering `<RouteHandler/>` in `App` renders the `Inbox` element.
 `<RouteHandler/>` is nearly identical to `{{outlet}}` from Ember or
-`<div ng-view/>` from angular.
+`<div ng-view/>` from Angular.
 
 When the user navigates to `/calendar`, the same thing happens except
 now `Calendar` is the `<RouteHandler/>` in `App`'s render method.
