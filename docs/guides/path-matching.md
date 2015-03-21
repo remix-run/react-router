@@ -84,6 +84,8 @@ does not match:
 path: /file/*
 matches:
   /file/foo.js
+    this.props.params: {splat: 'foo.js'}
+  /file/foo.bar.js
     this.props.params: {splat: 'foo.bar.js'}
   /file/quux/baz.js
     this.props.params: {splat: 'quux/baz.js'}
