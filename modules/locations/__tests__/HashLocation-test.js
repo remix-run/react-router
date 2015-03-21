@@ -42,4 +42,23 @@ describe('HashLocation.getCurrentPath', function () {
     expect(HashLocation.getCurrentPath())
         .toBe('complicated+string/full%2Fof%3Fspecial%chars%20and%23escapesሴ');
   });
+
+});
+
+describe('HashLocation.ensureSlash', function () {
+  it('re-encodes the path before replacing it', function() {
+      var changeListener = function() {};
+
+      HashLocation.push('no leading slash');
+
+      HashLocation.addChangeListener(changeListener);
+      HashLocation.removeChangeListener(changeListener);
+
+      expect(HashLocation.getCurrentPath())
+          .toBe('/no leading slash');
+
+      expect(window.location.href.split('#')[1])
+          .toBe('/no%20leading%20slash');
+
+  });
 });
