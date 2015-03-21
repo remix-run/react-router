@@ -35,14 +35,17 @@ Transition.from = function (transition, routes, components, callback) {
       if (error || transition.abortReason) {
         callback(error);
       } else if (route.onLeave) {
-        try {
+        if (route.onLeave.length > 2) {
           route.onLeave(transition, components[index], callback);
-
-          // If there is no callback in the argument list, call it automatically.
-          if (route.onLeave.length < 3)
-            callback();
-        } catch (e) {
-          callback(e);
+        } else {
+          // Catch errors if there is no callback in the argument list.
+          var err = null;
+          try {
+            route.onLeave(transition, components[index]);
+          } catch (e) {
+            err = e;
+          }
+          callback(err);
         }
       } else {
         callback();
@@ -57,14 +60,17 @@ Transition.to = function (transition, routes, params, query, callback) {
       if (error || transition.abortReason) {
         callback(error);
       } else if (route.onEnter) {
-        try {
+        if (route.onEnter.length > 3) {
           route.onEnter(transition, params, query, callback);
-
-          // If there is no callback in the argument list, call it automatically.
-          if (route.onEnter.length < 4)
-            callback();
-        } catch (e) {
-          callback(e);
+        } else {
+          // Catch errors if there is no callback in the argument list.
+          var err = null;
+          try {
+            route.onEnter(transition, params, query);
+          } catch (e) {
+            err = e;
+          }
+          callback(err);
         }
       } else {
         callback();
