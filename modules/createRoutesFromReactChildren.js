@@ -58,7 +58,7 @@ function createRouteFromReactElement(element) {
       createRoutesFromReactChildren(props.children);
     else
       invariant(
-        React.Children.count(props.children) || props.handler !== RouteHandler,
+        props.handler !== RouteHandler,
         "RouteHandler may not be used as the handler for a route with no children"
       );
   });
