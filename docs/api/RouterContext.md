@@ -55,6 +55,10 @@ if (!this.context.router.goBack()) {
 }
 ```
 
+### `goBackOrTransitionTo(routeNameOrPath, [params[, query]])`
+
+This is a convenience method for the use case shown in the preceding example.
+
 ### `makePath(routeName, params, query)`
 
 Creates a URL path to a route.
