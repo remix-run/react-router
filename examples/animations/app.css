@@ -1,11 +1,7 @@
 .Image {
-  position: relative;
-}
-
-.Image {
   position: absolute;
-  height: 400;
-  width: 400;
+  height: 400px;
+  width: 400px;
 }
 
 .example-enter {
