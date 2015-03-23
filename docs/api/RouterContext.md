@@ -6,6 +6,34 @@ completely baked yet, however, it is commited to by the React team and
 we use it with great effect in the Router. There are plans to make
 reliance on context optional, but for now, this is what we use.
 
+In order for this to work, **you must add `contextTypes` to your class declaration.**
+
+For old-style React classes:
+
+```js
+var User = React.createClass({
+  contextTypes: {
+    router: React.PropTypes.object.isRequired
+  },
+  
+  ...
+});
+```
+
+For new-style ES6 classes:
+
+```js
+class User extends React.Component {
+  ...
+}
+
+User.contextTypes = {
+  router: React.PropTypes.object.isRequired
+};
+```
+
+Unlike `propTypes`, `contextTypes` are required. If you don't specify them, you won't get `this.context.router`.
+
 You access the router inside of route handlers with
 `this.context.router`. Its got a few useful methods on it.
 
@@ -107,6 +135,10 @@ Often you'll want access to params and query:
 
 // handler
 var User = React.createClass({
+  contextTypes: {
+    router: React.PropTypes.object.isRequired
+  },
+
   render: function () {
     var name = this.context.router.getCurrentParams().name;
     return (
@@ -125,6 +157,10 @@ tags for the Tabs:
 var Link = require('react-router').Link;
 
 var Tab = React.createClass({
+  contextTypes: {
+    router: React.PropTypes.object.isRequired
+  },
+
   render: function () {
     var { router } = this.context;
     var isActive = router.isActive(this.props.to, this.props.params, this.props.query);
@@ -146,6 +182,10 @@ Some navigation:
 
 ```js
 React.createClass({
+  contextTypes: {
+    router: React.PropTypes.object.isRequired
+  },
+
   render: function() {
     var { router } = this.context;
     return (
