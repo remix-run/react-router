@@ -13,9 +13,9 @@ For old-style React classes:
 ```js
 var User = React.createClass({
   contextTypes: {
-    router: React.PropTypes.object.isRequired
+    router: React.PropTypes.func.isRequired
   },
-  
+
   ...
 });
 ```
@@ -28,7 +28,7 @@ class User extends React.Component {
 }
 
 User.contextTypes = {
-  router: React.PropTypes.object.isRequired
+  router: React.PropTypes.func.isRequired
 };
 ```
 
@@ -196,5 +196,3 @@ React.createClass({
   }
 });
 ```
-
-
