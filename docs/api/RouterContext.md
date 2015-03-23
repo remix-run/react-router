@@ -136,7 +136,7 @@ Often you'll want access to params and query:
 // handler
 var User = React.createClass({
   contextTypes: {
-    router: React.PropTypes.object.isRequired
+    router: React.PropTypes.func.isRequired
   },
 
   render: function () {
@@ -158,7 +158,7 @@ var Link = require('react-router').Link;
 
 var Tab = React.createClass({
   contextTypes: {
-    router: React.PropTypes.object.isRequired
+    router: React.PropTypes.func.isRequired
   },
 
   render: function () {
@@ -183,7 +183,7 @@ Some navigation:
 ```js
 React.createClass({
   contextTypes: {
-    router: React.PropTypes.object.isRequired
+    router: React.PropTypes.func.isRequired
   },
 
   render: function() {
