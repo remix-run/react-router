@@ -6,7 +6,7 @@ var { Route, RouteHandler, Link } = Router;
 var App = React.createClass({
 
   contextTypes: {
-    router: React.PropTypes.func.isRequired
+    router: React.PropTypes.func
   },
 
   render: function () {

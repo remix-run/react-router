@@ -40,7 +40,7 @@ var Index = React.createClass({
 var State = React.createClass({
 
   contextTypes: {
-    router: React.PropTypes.func.isRequired
+    router: React.PropTypes.func
   },
 
   imageUrl: function (name) {

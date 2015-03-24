@@ -67,7 +67,7 @@ var Dashboard = React.createClass({
 var Login = React.createClass({
 
   contextTypes: {
-    router: React.PropTypes.func.isRequired
+    router: React.PropTypes.func
   },
 
   getInitialState: function () {

@@ -69,7 +69,7 @@ var Index = React.createClass({
 var Contact = React.createClass({
 
   contextTypes: {
-    router: React.PropTypes.func.isRequired
+    router: React.PropTypes.func
   },
 
   getStateFromStore: function () {
@@ -126,7 +126,7 @@ var Contact = React.createClass({
 var NewContact = React.createClass({
 
   contextTypes: {
-    router: React.PropTypes.func.isRequired
+    router: React.PropTypes.func
   },
 
   createContact: function (event) {
