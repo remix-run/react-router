@@ -63,7 +63,8 @@ Route.propTypes = {
   name: PropTypes.string,
   path: PropTypes.string,
   handler: PropTypes.func,
-  ignoreScrollBehavior: PropTypes.bool
+  ignoreScrollBehavior: PropTypes.bool,
+  meta: PropTypes.object
 };
 
 Route.defaultProps = {
