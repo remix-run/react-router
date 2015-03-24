@@ -1,6 +1,6 @@
 {
   "name": "react-router",
-  "version": "0.13.1",
+  "version": "0.13.2",
   "description": "A complete routing library for React.js",
   "main": "lib",
   "repository": {
@@ -19,7 +19,8 @@
   },
   "dependencies": {
     "qs": "2.4.1",
-    "classnames": "1.1.x"
+    "classnames": "1.1.x",
+    "object-assign": "^2.0.0"
   },
   "tags": [
     "react",

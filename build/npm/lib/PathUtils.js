@@ -1,13 +1,13 @@
 "use strict";
 
 var invariant = require("react/lib/invariant");
-var merge = require("qs/lib/utils").merge;
+var objectAssign = require("object-assign");
 var qs = require("qs");
 
 var paramCompileMatcher = /:([a-zA-Z_$][a-zA-Z0-9_$]*)|[*.()\[\]\\+|{}^$]/g;
 var paramInjectMatcher = /:([a-zA-Z_$][a-zA-Z0-9_$?]*[?]?)|[*]/g;
 var paramInjectTrailingSlashMatcher = /\/\/\?|\/\?\/|\/\?/g;
-var queryMatcher = /\?(.+)/;
+var queryMatcher = /\?(.*)$/;
 
 var _compiledPatterns = {};
 
@@ -139,13 +139,13 @@ var PathUtils = {
   withQuery: function withQuery(path, query) {
     var existingQuery = PathUtils.extractQuery(path);
 
-    if (existingQuery) query = query ? merge(existingQuery, query) : existingQuery;
+    if (existingQuery) query = query ? objectAssign(existingQuery, query) : existingQuery;
 
     var queryString = qs.stringify(query, { arrayFormat: "brackets" });
 
     if (queryString) {
       return PathUtils.withoutQuery(path) + "?" + queryString;
-    }return path;
+    }return PathUtils.withoutQuery(path);
   }
 
 };

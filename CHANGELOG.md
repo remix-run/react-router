@@ -1,3 +1,13 @@
+v0.13.2 - Tue, 24 Mar 2015 14:22:07 GMT
+---------------------------------------
+
+- [4a8b756](../../commit/4a8b756) [fixed] empty query strings not being removed
+- [1b2293b](../../commit/1b2293b) [fixed] use context in examples
+- [4af3c18](../../commit/4af3c18) [fixed] HashLocation triggers 'replace' state on transition.redirect()
+- [59c28de](../../commit/59c28de) [fixed] Empty query string now routes correctly
+- [f5d4f36](../../commit/f5d4f36) [fixed] Docs Update
+
+
 v0.13.1 - Fri, 20 Mar 2015 22:21:57 GMT
 ---------------------------------------
 
