@@ -14,8 +14,6 @@ anymore. Our mixins like `State` and `Navigation` just proxied calls to
 some methods on an undocumented feature of React called `context`, that
 in turn called methods on the router instance under the hood.
 
-Note, you can still use our mixins, you'll just get a deprecation warning.
-
 Without mixins we needed a way for you to get access to these methods.
 We decided the simplest solution was to stop hiding the router instance
 and just put the whole thing on context.
@@ -24,6 +22,8 @@ You can think about context as values that are floating around a render
 tree that parent components (`Handler` in the `Router.run` callback) can
 explicitly define and descendent components can explicitly ask for. The
 stuff on context doesn't show up in a component unless you ask for it.
+
+**Note:** You can still use our mixins, you'll just get a deprecation warning.
 
 ```js
 // 0.12.x
