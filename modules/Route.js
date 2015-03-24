@@ -93,7 +93,8 @@ class Route {
       options.isNotFound,
       options.onEnter,
       options.onLeave,
-      options.handler
+      options.handler,
+      options.meta
     );
 
     if (parentRoute) {
@@ -173,7 +174,7 @@ class Route {
     );
   }
 
-  constructor(name, path, ignoreScrollBehavior, isDefault, isNotFound, onEnter, onLeave, handler) {
+  constructor(name, path, ignoreScrollBehavior, isDefault, isNotFound, onEnter, onLeave, handler, meta) {
     this.name = name;
     this.path = path;
     this.paramNames = PathUtils.extractParamNames(this.path);
@@ -183,6 +184,7 @@ class Route {
     this.onEnter = onEnter;
     this.onLeave = onLeave;
     this.handler = handler;
+    this.meta = meta;
   }
 
   /**
