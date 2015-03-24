@@ -298,15 +298,19 @@ Lets look at accessing the `messageId` in `Message`.
 
 ```js
 var Message = React.createClass({
+  contextTypes: {
+    router: React.PropTypes.func
+  },
+
   render: function () {
     return (
-      <div>{this.context.router.getParams().messageId}</div>
+      <div>{this.context.router.getCurrentParams().messageId}</div>
     );
   }
 });
 ```
 
-Assuming the user navigates to `/inbox/123`, `this.context.router.getParams().messageId` is
+Assuming the user navigates to `/inbox/123`, `this.context.router.getCurrentParams().messageId` is
 going to be `'123'`.
 
 Alternatively, you can pass the param data down through the view
@@ -360,6 +364,10 @@ If you would rather force route handlers to re-mount when transitioning between 
 
 ```js
 var App = React.createClass({
+   contextTypes: {
+    router: React.PropTypes.func
+  },
+
   getHandlerKey: function () {
     var childDepth = 1; // assuming App is top-level route
     var { router } = this.context;
