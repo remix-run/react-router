@@ -5,6 +5,80 @@ To see discussion around these API changes, please refer to the
 [changelog](/CHANGELOG.md) and visit the commits and issues they
 reference.
 
+0.12.x -> 0.13.x
+----------------
+
+React introduced the ability to use ES6 classes for component
+definitions, which has the side-effect of mixins not being "the thing"
+anymore. Our mixins like `State` and `Navigation` just proxied calls to
+some methods on an undocumented feature of React called `context`, that
+in turn called methods on the router instance under the hood.
+
+Without mixins we needed a way for you to get access to these methods.
+We decided the simplest solution was to stop hiding the router instance
+and just put the whole thing on context.
+
+You can think about context as values that are floating around a render
+tree that parent components (`Handler` in the `Router.run` callback) can
+explicitly define and descendent components can explicitly ask for. The
+stuff on context doesn't show up in a component unless you ask for it.
+
+```js
+// 0.12.x
+var Foo = React.createClass({
+  mixins: [ Router.State ],
+  render: function () {
+    var id = this.getParams().id;
+    var searchTerm = this.getQuery().searchTerm;
+    // etc. ...
+  }
+});
+
+// 0.13.x w/o ES6 fanciness
+var Foo = React.createClass({
+  contextTypes: {
+    router: React.PropTypes.func
+  },
+
+  render: function () {
+    var router = this.context.router;
+    var id = router.getCurrentParams().id;
+    var searchTerm = touer.getCurrentQuery().searchTerm;
+    // etc.
+  }
+});
+
+// 0.13.x w/ ES6 fanciness
+class Foo extends React.Component {
+  render () {
+    var { router } = this.context;
+    var id = router.getCurrentParams().id;
+    var searchTerm = touer.getCurrentQuery().searchTerm;
+    // etc.
+  }
+}
+
+Foo.contextTypes = {
+  router: React.PropTypes.func
+};
+```
+
+Most of the time we prefer to just pass the state down the props tree
+and not mess with context:
+
+```js
+Router.run(routes, (Handler, state) => {
+  React.render(<Handler {...state}/>, document.body);
+});
+
+// and then when rendering route handlers, keep passing it down
+<RouteHandler {...this.props}/>
+
+// and then in your methods you have what you need on props
+var id = this.props.params.id;
+var searchTerm = this.props.query.searchTerm;
+```
+
 0.11.x -> 0.12.0
 ----------------
 
