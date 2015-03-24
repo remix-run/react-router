@@ -45,7 +45,7 @@ var Foo = React.createClass({
   render: function () {
     var router = this.context.router;
     var id = router.getCurrentParams().id;
-    var searchTerm = touer.getCurrentQuery().searchTerm;
+    var searchTerm = router.getCurrentQuery().searchTerm;
     // etc.
   }
 });
@@ -55,7 +55,7 @@ class Foo extends React.Component {
   render () {
     var { router } = this.context;
     var id = router.getCurrentParams().id;
-    var searchTerm = touer.getCurrentQuery().searchTerm;
+    var searchTerm = router.getCurrentQuery().searchTerm;
     // etc.
   }
 }
