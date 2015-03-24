@@ -31,7 +31,7 @@ var Dashboard = React.createClass({
 var Form = React.createClass({
 
   contextTypes: {
-    router: React.PropTypes.func.isRequired
+    router: React.PropTypes.func
   },
 
   statics: {

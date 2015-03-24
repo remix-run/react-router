@@ -19,7 +19,7 @@ var App = React.createClass({
 var User = React.createClass({
 
   contextTypes: {
-    router: React.PropTypes.func.isRequired
+    router: React.PropTypes.func
   },
 
   render () {
@@ -41,7 +41,7 @@ var User = React.createClass({
 var Task = React.createClass({
 
   contextTypes: {
-    router: React.PropTypes.func.isRequired
+    router: React.PropTypes.func
   },
 
   render () {

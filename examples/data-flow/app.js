@@ -5,7 +5,7 @@ var { Route, RouteHandler, Link } = Router;
 var App = React.createClass({
 
   contextTypes: {
-    router: React.PropTypes.func.isRequired
+    router: React.PropTypes.func
   },
 
   getInitialState: function () {
@@ -58,7 +58,7 @@ var App = React.createClass({
 var Taco = React.createClass({
 
   contextTypes: {
-    router: React.PropTypes.func.isRequired
+    router: React.PropTypes.func
   },
 
   remove: function () {
