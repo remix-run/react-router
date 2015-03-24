@@ -21,6 +21,7 @@ var Match = require('./Match');
 var Route = require('./Route');
 var supportsHistory = require('./supportsHistory');
 var PathUtils = require('./PathUtils');
+var assign = require('object-assign');
 
 /**
  * The default location for new routers.
@@ -543,7 +544,7 @@ function createRouter(options) {
 
     render: function () {
       var route = Router.getRouteAtDepth(0);
-      return route ? React.createElement(route.handler, this.props) : null;
+      return route ? React.createElement(route.handler, assign({}, this.props, {router: Router})) : null;
     }
 
   });
