@@ -5,6 +5,8 @@
 React Router
 ============
 
+[![Join the chat at https://gitter.im/rackt/react-router](https://badges.gitter.im/Join%20Chat.svg)](https://gitter.im/rackt/react-router?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge)
+
 A complete routing library for React.
 
 Docs
@@ -124,6 +126,7 @@ Related Modules
 - [rnr-constrained-route](https://github.com/bjyoungblood/rnr-constrained-route) - validate paths
   and parameters on route handlers.
 - [react-router-bootstrap](https://github.com/mtscout6/react-router-bootstrap) - Integration with [react-bootstrap](https://github.com/react-bootstrap/react-bootstrap) components.
+- [react-router-proxy-loader](https://github.com/odysseyscience/react-router-proxy-loader) - A Webpack loader to dynamically load react-router components on-demand
 
 Contributing
 ------------
@@ -136,4 +139,3 @@ Thanks, Ember
 This library is highly inspired by the Ember.js routing API. In general,
 it's a translation of the Ember router api to React. Huge thanks to the
 Ember team for solving the hardest part already.
-
