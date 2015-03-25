@@ -21,8 +21,8 @@ Transition.prototype.abort = function (reason) {
     this.abortReason = reason || 'ABORT';
 };
 
-Transition.prototype.redirect = function (to, params, query) {
-  this.abort(new Redirect(to, params, query));
+Transition.prototype.redirect = function (to, params, query, data) {
+  this.abort(new Redirect(to, params, query, data));
 };
 
 Transition.prototype.cancel = function () {
@@ -51,14 +51,14 @@ Transition.from = function (transition, routes, components, callback) {
   }, callback)();
 };
 
-Transition.to = function (transition, routes, params, query, callback) {
+Transition.to = function (transition, routes, params, query, data, callback) {
   routes.reduceRight(function (callback, route) {
     return function (error) {
       if (error || transition.abortReason) {
         callback(error);
       } else if (route.onEnter) {
         try {
-          route.onEnter(transition, params, query, callback);
+          route.onEnter(transition, params, query, callback, data);
 
           // If there is no callback in the argument list, call it automatically.
           if (route.onEnter.length < 4)

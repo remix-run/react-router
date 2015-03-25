@@ -44,16 +44,16 @@ var Navigation = {
    * Transitions to the URL specified in the arguments by pushing
    * a new URL onto the history stack.
    */
-  transitionTo(to, params, query) {
-    this.context.router.transitionTo(to, params, query);
+  transitionTo(to, params, query, data) {
+    this.context.router.transitionTo(to, params, query, data);
   },
 
   /**
    * Transitions to the URL specified in the arguments by replacing
    * the current URL in the history stack.
    */
-  replaceWith(to, params, query) {
-    this.context.router.replaceWith(to, params, query);
+  replaceWith(to, params, query, data) {
+    this.context.router.replaceWith(to, params, query, data);
   },
 
   /**

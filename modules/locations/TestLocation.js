@@ -41,13 +41,13 @@ class TestLocation {
     });
   }
 
-  push(path) {
+  push(path, data) {
     this.history.push(path);
     this._updateHistoryLength();
-    this._notifyChange(LocationActions.PUSH);
+    this._notifyChange(LocationActions.PUSH, data);
   }
 
-  replace(path) {
+  replace(path, data) {
     invariant(
       this.history.length,
       'You cannot replace the current path with no history'
@@ -55,7 +55,7 @@ class TestLocation {
 
     this.history[this.history.length - 1] = path;
 
-    this._notifyChange(LocationActions.REPLACE);
+    this._notifyChange(LocationActions.REPLACE, data);
   }
 
   pop() {
