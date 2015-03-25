@@ -60,7 +60,7 @@ Copy/paste this helper into your test utils to make things a bit easier:
 var stubRouterContext = (Component, props, stubs) => {
   return React.createClass({
     childContextTypes: {
-      router: object
+      router: React.PropTypes.object
     },
 
     getChildContext () {
