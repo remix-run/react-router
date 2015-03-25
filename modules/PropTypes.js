@@ -9,7 +9,7 @@ var PropTypes = assign({}, ReactPropTypes, {
    */
   falsy(props, propName, componentName) {
     if (props[propName])
-      return new Error(`<${componentName}> may not have a "${propName}" prop`);
+      return new Error(`<${componentName}> should not have a "${propName}" prop`);
   },
 
   /**
