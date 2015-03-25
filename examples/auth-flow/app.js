@@ -2,32 +2,35 @@ var React = require('react');
 var Router = require('react-router');
 var { Route, RouteHandler, Link } = Router;
 
-var App = React.createClass({
-  getInitialState: function () {
-    return {
+class App extends React.Component {
+  constructor () {
+    this.state = {
       loggedIn: auth.loggedIn()
     };
-  },
+  }
 
-  setStateOnAuth: function (loggedIn) {
+  setStateOnAuth (loggedIn) {
     this.setState({
       loggedIn: loggedIn
     });
-  },
+  }
 
-  componentWillMount: function () {
-    auth.onChange = this.setStateOnAuth;
+  componentWillMount () {
+    auth.onChange = this.setStateOnAuth.bind(this);
     auth.login();
-  },
+  }
 
-  render: function () {
-    var loginOrOut = this.state.loggedIn ?
-      <Link to="logout">Log out</Link> :
-      <Link to="login">Sign in</Link>;
+  render () {
     return (
       <div>
         <ul>
-          <li>{loginOrOut}</li>
+          <li>
+            {this.state.loggedIn ? (
+              <Link to="logout">Log out</Link>
+            ) : (
+              <Link to="login">Sign in</Link>
+            )}
+          </li>
           <li><Link to="about">About</Link></li>
           <li><Link to="dashboard">Dashboard</Link> (authenticated)</li>
         </ul>
@@ -35,24 +38,28 @@ var App = React.createClass({
       </div>
     );
   }
-});
+}
 
-var Authentication = {
-  statics: {
-    willTransitionTo: function (transition) {
-      var nextPath = transition.path;
-      if (!auth.loggedIn()) {
-        transition.redirect('/login',{},
-          { 'nextPath' : nextPath });
-      }
+var requireAuth = (Component) => {
+  class Authenticated extends React.Component {
+    render () {
+      return <Component {...this.props}/>
     }
   }
+
+  Authenticated.willTransitionTo = function (transition) {
+    var nextPath = transition.path;
+    if (!auth.loggedIn()) {
+      transition.redirect('/login',{},
+        { 'nextPath' : nextPath });
+    }
+  };
+
+  return Authenticated;
 };
 
-var Dashboard = React.createClass({
-  mixins: [ Authentication ],
-
-  render: function () {
+var Dashboard = requireAuth(class extends React.Component {
+  render () {
     var token = auth.getToken();
     return (
       <div>
@@ -64,77 +71,78 @@ var Dashboard = React.createClass({
   }
 });
 
-var Login = React.createClass({
+class Login extends React.Component {
 
-  contextTypes: {
-    router: React.PropTypes.func
-  },
-
-  getInitialState: function () {
-    return {
+  constructor () {
+    this.handleSubmit = this.handleSubmit.bind(this);
+    this.state = {
       error: false
     };
-  },
+  }
 
-  handleSubmit: function (event) {
+  handleSubmit (event) {
     event.preventDefault();
     var { router } = this.context;
     var nextPath = router.getCurrentQuery().nextPath;
     var email = this.refs.email.getDOMNode().value;
     var pass = this.refs.pass.getDOMNode().value;
-    auth.login(email, pass, function (loggedIn) {
+    auth.login(email, pass, (loggedIn) => {
       if (!loggedIn)
         return this.setState({ error: true });
-
       if (nextPath) {
         router.replaceWith(nextPath);
       } else {
         router.replaceWith('/about');
       }
-    }.bind(this));
-  },
+    });
+  }
 
-  render: function () {
-    var errors = this.state.error ? <p>Bad login information</p> : '';
+  render () {
     return (
       <form onSubmit={this.handleSubmit}>
         <label><input ref="email" placeholder="email" defaultValue="joe@example.com"/></label>
         <label><input ref="pass" placeholder="password"/></label> (hint: password1)<br/>
         <button type="submit">login</button>
-        {errors}
+        {this.state.error && (
+          <p>Bad login information</p>
+        )}
       </form>
     );
   }
-});
+}
 
-var About = React.createClass({
-  render: function () {
+Login.contextTypes = {
+  router: React.PropTypes.func
+};
+
+class About extends React.Component {
+  render () {
     return <h1>About</h1>;
   }
-});
+}
 
-var Logout = React.createClass({
-  componentDidMount: function () {
+class Logout extends React.Component {
+  componentDidMount () {
     auth.logout();
-  },
+  }
 
-  render: function () {
+  render () {
     return <p>You are now logged out</p>;
   }
-});
+}
 
 
 // Fake authentication lib
 
 var auth = {
-  login: function (email, pass, cb) {
+  login (email, pass, cb) {
     cb = arguments[arguments.length - 1];
     if (localStorage.token) {
       if (cb) cb(true);
       this.onChange(true);
       return;
     }
-    pretendRequest(email, pass, function (res) {
+    pretendRequest(email, pass, (res) => {
       if (res.authenticated) {
         localStorage.token = res.token;
         if (cb) cb(true);
@@ -143,7 +151,7 @@ var auth = {
         if (cb) cb(false);
         this.onChange(false);
       }
-    }.bind(this));
+    });
   },
 
   getToken: function () {
@@ -164,7 +172,7 @@ var auth = {
 };
 
 function pretendRequest(email, pass, cb) {
-  setTimeout(function () {
+  setTimeout(() => {
     if (email === 'joe@example.com' && pass === 'password1') {
       cb({
         authenticated: true,
