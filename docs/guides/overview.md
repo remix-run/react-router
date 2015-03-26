@@ -443,13 +443,13 @@ Path Matching
 -------------
 
 There's a lot more to be said about path matching, check out the [Path
-Matching Guide][path-matching].
+Matching Guide](path-matching.md).
 
 API Documentation
 -----------------
 
 That's the gist of what this router is all about, but there's a lot more
-it has to offer. Check out the [API Docs][API] to learn about
+it has to offer. Check out the [API Docs](../api) to learn about
 redirecting transitions, query parameters and more.
 
 CommonJS Guide
