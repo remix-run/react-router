@@ -35,4 +35,13 @@ describe('Route', function () {
     });
   });
 
+  it('supports meta data', function (done) {
+    var routes = <Route handler={Foo} path='/' meta={{foo: 'bar'}}/>;
+    Router.run(routes, '/', function (Handler, state) {
+      var route = state.routes[0];
+      expect(route.meta).toEqual({foo: 'bar'});
+      done();
+    });
+  });
+
 });
