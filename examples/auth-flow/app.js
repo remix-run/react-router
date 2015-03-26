@@ -41,21 +41,16 @@ class App extends React.Component {
 }
 
 var requireAuth = (Component) => {
-  class Authenticated extends React.Component {
+  return class Authenticated extends React.Component {
+    static willTransitionTo(transition) {
+      if (!auth.loggedIn()) {
+        transition.redirect('/login', {}, {'nextPath' : transition.path});
+      }  
+    }
     render () {
       return <Component {...this.props}/>
     }
   }
-
-  Authenticated.willTransitionTo = function (transition) {
-    var nextPath = transition.path;
-    if (!auth.loggedIn()) {
-      transition.redirect('/login',{},
-        { 'nextPath' : nextPath });
-    }
-  };
-
-  return Authenticated;
 };
 
 var Dashboard = requireAuth(class extends React.Component {
