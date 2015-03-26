@@ -2,6 +2,7 @@
 var React = require('react');
 var warning = require('react/lib/warning');
 var invariant = require('react/lib/invariant');
+var assign = require('react/lib/Object.assign');
 var canUseDOM = require('react/lib/ExecutionEnvironment').canUseDOM;
 var LocationActions = require('./actions/LocationActions');
 var ImitateBrowserBehavior = require('./behaviors/ImitateBrowserBehavior');
@@ -480,21 +481,21 @@ function createRouter(options) {
        * Returns an object of the currently active URL parameters.
        */
       getCurrentParams: function () {
-        return state.params;
+        return assign({}, state.params);
       },
 
       /**
        * Returns an object of the currently active query parameters.
        */
       getCurrentQuery: function () {
-        return state.query;
+        return assign({}, state.query);
       },
 
       /**
        * Returns an array of the currently active routes.
        */
       getCurrentRoutes: function () {
-        return state.routes;
+        return state.routes.slice(0);
       },
 
       /**
