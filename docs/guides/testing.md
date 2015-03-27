@@ -71,6 +71,7 @@ var stubRouterContext = (Component, props, stubs) => {
           transitionTo () {},
           replaceWith () {},
           goBack () {},
+          goBackOrTransitionTo () {},
           getCurrentPath () {},
           getCurrentRoutes () {},
           getCurrentPathname () {},

@@ -274,15 +274,25 @@ function createRouter(options) {
        * don't support HTML5 history) this method will *always* send the client back
        * because we cannot reliably track history length.
        */
-      goBack: function () {
+      goBack: function (suppressWarning = false) {
         if (History.length > 1 || location === RefreshLocation) {
           location.pop();
           return true;
         }
 
-        warning(false, 'goBack() was ignored because there is no router history');
+        warning(suppressWarning, 'goBack() was ignored because there is no router history');
 
         return false;
+      },
+
+      /**
+       * Transitions to the previous URL if one is available, otherwise transitions
+       * to the URL specified in the arguments.
+       */
+      goBackOrTransitionTo: function () {
+        if (!Router.goBack(true)) {
+          Router.transitionTo.apply(Router, arguments);
+        }
       },
 
       handleAbort: options.onAbort || function (abortReason) {

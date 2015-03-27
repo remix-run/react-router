@@ -80,8 +80,12 @@ To avoid this, you can do one of three things:
       },
 
       goBack() {
-        router.goBack();
+        return router.goBack();
       },
+
+      goBackOrTransitionTo() {
+        router.goBackOrTransitionTo.apply(router, arguments);
+      }
 
       run(render) {
         router.run(render);
@@ -122,7 +126,7 @@ Router.run(routes, (Handler, state) => {
 });
 ```
 
-Let `RouterStore` keep router state and add a public method to obtain it.  
+Let `RouterStore` keep router state and add a public method to obtain it.
 This way your action creators and other stores can learn about current router state.
 
 Handling route changes as actions
