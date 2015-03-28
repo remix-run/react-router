@@ -22,19 +22,19 @@ So we can just wrap up the thing we want to test in a different
 component and stub out the `context` stuff.
 
 ```js
-// wrap it up first:
+// add whichever router methods your component uses:
+function RouterStub() { }
+RouterStub.makePath = function () { }
+
+// wrap it up:
 var TestWrapper = React.createClass({
   childContextTypes: {
-    router: React.PropTypes.object
+    router: React.PropTypes.func
   },
 
   getChildContext () {
-    return router: {
-        makePath () {},
-        makeHref () {},
-        isActive () {},
-        // and whichever router methods your component uses
-      }
+    return {
+      router: RouterStub
     };
   },
 
@@ -58,26 +58,30 @@ Copy/paste this helper into your test utils to make things a bit easier:
 
 ```js
 var stubRouterContext = (Component, props, stubs) => {
+  function RouterStub() { }
+
+  Object.assign(RouterStub, {
+    makePath () {},
+    makeHref () {},
+    transitionTo () {},
+    replaceWith () {},
+    goBack () {},
+    getCurrentPath () {},
+    getCurrentRoutes () {},
+    getCurrentPathname () {},
+    getCurrentParams () {},
+    getCurrentQuery () {},
+    isActive () {},
+  }, stubs)
+
   return React.createClass({
     childContextTypes: {
-      router: object
+      router: React.PropTypes.func
     },
 
     getChildContext () {
       return {
-        router: Object.assign({
-          makePath () {},
-          makeHref () {},
-          transitionTo () {},
-          replaceWith () {},
-          goBack () {},
-          getCurrentPath () {},
-          getCurrentRoutes () {},
-          getCurrentPathname () {},
-          getCurrentParams () {},
-          getCurrentQuery () {},
-          isActive () {},
-        }, stubs)
+        router: RouterStub
       };
     },
 
