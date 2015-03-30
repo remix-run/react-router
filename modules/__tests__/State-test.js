@@ -22,6 +22,32 @@ describe('State', function () {
           router = this;
           React.render(<Handler/>, div, function () {
             assert(router.isActive('foo'));
+            assert(router.isLastActive('foo'));
+            done();
+          });
+        });
+      });
+    });
+
+    describe('and it is nested', function () {
+      it('is active', function (done) {
+        var location = new TestLocation([ '/foo/foo2' ]);
+        var div = document.createElement('div');
+        var routes = (
+          <Route name="foo" handler={Foo}>
+            <Route name="foo2" handler={Foo}/>
+          </Route>
+        );
+
+        var router;
+
+        Router.run(routes, location, function (Handler) {
+          router = this;
+          React.render(<Handler/>, div, function () {
+            assert(router.isActive('foo'));
+            assert(router.isActive('foo2'));
+            assert(!router.isLastActive('foo'));
+            assert(router.isLastActive('foo2'));
             done();
           });
         });

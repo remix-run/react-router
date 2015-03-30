@@ -120,6 +120,10 @@ Returns a hash of the currently active query params.
 Returns `true` if a route, params, and query are active, `false`
 otherwise.
 
+### `isLastActive(routeName, params, query)`
+
+Same as above, but only checks the final active route.
+
 ### `getCurrentRoutes()`
 
 Returns an array of the currently active routes, in nesting order.
