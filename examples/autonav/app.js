@@ -2,9 +2,6 @@ var React = require('react');
 var Router = require('react-router');
 var { Route, RouteHandler, Link, DefaultRoute } = Router;
 
-var ignoreSplatRoutes = a => !/\*$/.test(a.path);
-var ignoreDefaultRoutes = (a, b) => a !== b.defaultRoute;
-
 class Nav extends React.Component {
   render() {
     var routes = this.context.router.getCurrentRoutes()[0].childRoutes;
