@@ -327,10 +327,6 @@ function createRouter(options) {
         Router.cancelPendingTransition();
 
         var prevPath = state.path;
-        var isRefreshing = action == null;
-
-        if (prevPath === path && !isRefreshing)
-          return; // Nothing to do!
 
         // Record the scroll position as early as possible to
         // get it before browsers try update it automatically.
