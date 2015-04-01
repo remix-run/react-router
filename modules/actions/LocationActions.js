@@ -16,7 +16,12 @@ var LocationActions = {
   /**
    * Indicates the most recent entry should be removed from the history stack.
    */
-  POP: 'pop'
+  POP: 'pop',
+
+  /**
+   * Indicates the current location should be refreshed.
+   */
+  REFRESH: 'refresh'
 
 };
 

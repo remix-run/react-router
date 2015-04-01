@@ -429,7 +429,7 @@ function createRouter(options) {
       },
 
       refresh: function () {
-        Router.dispatch(location.getCurrentPath(), null);
+        Router.dispatch(location.getCurrentPath(), LocationActions.REFRESH);
       },
 
       stop: function () {
