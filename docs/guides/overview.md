@@ -372,7 +372,7 @@ var App = React.createClass({
     var childDepth = 1; // assuming App is top-level route
     var { router } = this.context;
     var key = router.getCurrentRoutes()[childDepth].name;
-    var id = router.getParams().id;
+    var id = router.getCurrentParams().id;
     if (id) { key += id; }
     return key;
   },
