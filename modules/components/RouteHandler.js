@@ -39,7 +39,17 @@ class RouteHandler extends React.Component {
 
   createChildRouteHandler(props) {
     var route = this.context.router.getRouteAtDepth(this.getRouteDepth());
-    return route ? React.createElement(route.handler, assign({}, props || this.props, { ref: REF_NAME })) : null;
+
+    if (route == null)
+      return null;
+
+    var childProps = assign({}, props || this.props, {
+      ref: REF_NAME,
+      params: this.context.router.getCurrentParams(),
+      query: this.context.router.getCurrentQuery()
+    });
+
+    return React.createElement(route.handler, childProps);
   }
 
   render() {
