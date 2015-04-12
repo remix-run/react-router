@@ -72,16 +72,20 @@ var stubRouterContext = (Component, props, stubs) => {
     getCurrentParams () {},
     getCurrentQuery () {},
     isActive () {},
+    getRouteAtDepth() {},
+    setRouteComponentAtDepth() {}
   }, stubs)
 
   return React.createClass({
     childContextTypes: {
-      router: React.PropTypes.func
+      router: React.PropTypes.func,
+      routeDepth: React.PropTypes.number
     },
 
     getChildContext () {
       return {
-        router: RouterStub
+        router: RouterStub,
+        routeDepth: 0
       };
     },
 
