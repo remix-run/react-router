@@ -21,9 +21,9 @@
   ],
   "license": "MIT",
   "devDependencies": {
-    "babel": "^4.4.5",
-    "babel-core": "^4.4.6",
-    "babel-loader": "^4.0.0",
+    "babel": "^5.0.12",
+    "babel-core": "^5.0.12",
+    "babel-loader": "^5.0.0",
     "bundle-loader": "^0.5.2",
     "events": "1.0.2",
     "expect": "^1.1.0",
@@ -46,8 +46,8 @@
     "react": "0.13.x"
   },
   "dependencies": {
-    "qs": "2.4.1",
-    "object-assign": "^2.0.0"
+    "object-assign": "^2.0.0",
+    "qs": "2.4.1"
   },
   "tags": [
     "react",
