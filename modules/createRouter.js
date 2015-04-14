@@ -87,6 +87,10 @@ function routeIsActive(activeRoutes, routeName) {
   });
 }
 
+function routeIsLastActive(activeRoutes, routeName) {
+  return activeRoutes[activeRoutes.length - 1].name === routeName;
+}
+
 function paramsAreActive(activeParams, params) {
   for (var property in params)
     if (String(activeParams[property]) !== String(params[property]))
@@ -505,6 +509,15 @@ function createRouter(options) {
           return to === state.path;
 
         return routeIsActive(state.routes, to) &&
+          paramsAreActive(state.params, params) &&
+          (query == null || queryIsActive(state.query, query));
+      },
+
+      /**
+       * Returns true if the given route, params, and query are the last active route.
+       */
+      isLastActive: function (to, params, query) {
+        return routeIsLastActive(state.routes, to) &&
           paramsAreActive(state.params, params) &&
           (query == null || queryIsActive(state.query, query));
       }
