@@ -33,8 +33,8 @@ To avoid this, you can do one of three things:
     ```js
     // RouterContainer.js
     var _router = null;
-    exports.set(router => _router = router);
-    exports.get(() => _router);
+    exports.set = router => _router = router;
+    exports.get = () => _router;
     ```
 
     ```js
