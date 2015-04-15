@@ -1,6 +1,6 @@
 /**
  * This component is necessary to get around a context warning
- * present in React 0.13.0. It sovles this by providing a separation
+ * present in React 0.13.0. It solves this by providing a separation
  * between the "owner" and "parent" contexts.
  */
 
