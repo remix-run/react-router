@@ -371,8 +371,8 @@ var App = React.createClass({
   getHandlerKey: function () {
     var childDepth = 1; // assuming App is top-level route
     var { router } = this.context;
-    var key = router.getRoutes()[childDepth].name;
-    var id = router.getParams().id;
+    var key = router.getCurrentRoutes()[childDepth].name;
+    var id = router.getCurrentParams().id;
     if (id) { key += id; }
     return key;
   },
