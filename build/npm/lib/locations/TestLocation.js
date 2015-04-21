@@ -23,9 +23,7 @@ var TestLocation = (function () {
 
   _createClass(TestLocation, {
     needsDOM: {
-      get: function () {
-        return false;
-      }
+      value: false
     },
     _updateHistoryLength: {
       value: function _updateHistoryLength() {
