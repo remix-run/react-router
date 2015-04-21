@@ -18,7 +18,8 @@ var {
   RedirectToFoo,
   RedirectToFooAsync,
   Abort,
-  AbortAsync
+  AbortAsync,
+  TransitionContext
 } = require('../TestUtils');
 
 describe('Router', function () {
@@ -32,7 +33,8 @@ describe('Router', function () {
       <Route path="/foo" handler={Foo}/>,
       <Route path="/bar" handler={Bar}/>,
       <Route path="/baz" handler={Baz}/>,
-      <Route path="/async" handler={Async}/>
+      <Route path="/async" handler={Async}/>,
+      <Route path="/transition-context" handler={TransitionContext}/>
     ];
 
     describe('asynchronous willTransitionTo', function () {
@@ -634,6 +636,36 @@ describe('Router', function () {
             steps.shift()();
           });
         });
+      });
+    });
+
+    describe('transition.context', function() {
+      it('can provide a context object to the transition hooks', function(done) {
+        var location = new TestLocation([ '/transition-context' ]);
+
+        //if isLoggedIn is false, will redirect to /foo otherwise shows /transition-context
+        var transitionContext = {
+          getService: function() {
+            return {
+              isLoggedIn: true
+            }
+          }
+        };
+
+        var router = Router.create({
+          routes: routes,
+          location: location,
+          transitionContext: transitionContext
+        });
+
+        var div = document.createElement('div');
+        router.run(function(Handler){
+          React.render(<Handler/>, div, function () {
+            expect(div.innerHTML).toMatch(/TransitionContext/);
+            done();
+          });
+        });
+
       });
     });
   });
