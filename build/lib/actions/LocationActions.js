@@ -1,8 +1,8 @@
-"use strict";
-
 /**
  * Actions that modify the URL.
  */
+"use strict";
+
 var LocationActions = {
 
   /**

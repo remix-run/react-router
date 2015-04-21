@@ -11,41 +11,41 @@
 return /******/ (function(modules) { // webpackBootstrap
 /******/ 	// The module cache
 /******/ 	var installedModules = {};
-/******/
+
 /******/ 	// The require function
 /******/ 	function __webpack_require__(moduleId) {
-/******/
+
 /******/ 		// Check if module is in cache
 /******/ 		if(installedModules[moduleId])
 /******/ 			return installedModules[moduleId].exports;
-/******/
+
 /******/ 		// Create a new module (and put it into the cache)
 /******/ 		var module = installedModules[moduleId] = {
 /******/ 			exports: {},
 /******/ 			id: moduleId,
 /******/ 			loaded: false
 /******/ 		};
-/******/
+
 /******/ 		// Execute the module function
 /******/ 		modules[moduleId].call(module.exports, module, module.exports, __webpack_require__);
-/******/
+
 /******/ 		// Flag the module as loaded
 /******/ 		module.loaded = true;
-/******/
+
 /******/ 		// Return the exports of the module
 /******/ 		return module.exports;
 /******/ 	}
-/******/
-/******/
+
+
 /******/ 	// expose the modules object (__webpack_modules__)
 /******/ 	__webpack_require__.m = modules;
-/******/
+
 /******/ 	// expose the module cache
 /******/ 	__webpack_require__.c = installedModules;
-/******/
+
 /******/ 	// __webpack_public_path__
 /******/ 	__webpack_require__.p = "";
-/******/
+
 /******/ 	// Load entry module and return exports
 /******/ 	return __webpack_require__(0);
 /******/ })
@@ -548,7 +548,16 @@ return /******/ (function(modules) { // webpackBootstrap
 	    createChildRouteHandler: {
 	      value: function createChildRouteHandler(props) {
 	        var route = this.context.router.getRouteAtDepth(this.getRouteDepth());
-	        return route ? React.createElement(route.handler, assign({}, props || this.props, { ref: REF_NAME })) : null;
+
+	        if (route == null) {
+	          return null;
+	        }var childProps = assign({}, props || this.props, {
+	          ref: REF_NAME,
+	          params: this.context.router.getCurrentParams(),
+	          query: this.context.router.getCurrentQuery()
+	        });
+
+	        return React.createElement(route.handler, childProps);
 	      }
 	    },
 	    render: {
@@ -1018,12 +1027,12 @@ return /******/ (function(modules) { // webpackBootstrap
 /* 13 */
 /***/ function(module, exports, __webpack_require__) {
 
-	"use strict";
-
 	/**
 	 * A scroll behavior that always scrolls to the top of the page
 	 * after a transition.
 	 */
+	"use strict";
+
 	var ScrollToTopBehavior = {
 
 	  updateScrollPosition: function updateScrollPosition() {
@@ -1075,16 +1084,7 @@ return /******/ (function(modules) { // webpackBootstrap
 
 	"use strict";
 
-	var warning = __webpack_require__(36);
 	var PropTypes = __webpack_require__(22);
-
-	function deprecatedMethod(routerMethodName, fn) {
-	  return function () {
-	    warning(false, "Router.Navigation is deprecated. Please use this.context.router." + routerMethodName + "() instead");
-
-	    return fn.apply(this, arguments);
-	  };
-	}
 
 	/**
 	 * A mixin for components that modify the URL.
@@ -1114,40 +1114,40 @@ return /******/ (function(modules) { // webpackBootstrap
 	   * Returns an absolute URL path created from the given route
 	   * name, URL parameters, and query values.
 	   */
-	  makePath: deprecatedMethod("makePath", function (to, params, query) {
+	  makePath: function makePath(to, params, query) {
 	    return this.context.router.makePath(to, params, query);
-	  }),
+	  },
 
 	  /**
 	   * Returns a string that may safely be used as the href of a
 	   * link to the route with the given name.
 	   */
-	  makeHref: deprecatedMethod("makeHref", function (to, params, query) {
+	  makeHref: function makeHref(to, params, query) {
 	    return this.context.router.makeHref(to, params, query);
-	  }),
+	  },
 
 	  /**
 	   * Transitions to the URL specified in the arguments by pushing
 	   * a new URL onto the history stack.
 	   */
-	  transitionTo: deprecatedMethod("transitionTo", function (to, params, query) {
+	  transitionTo: function transitionTo(to, params, query) {
 	    this.context.router.transitionTo(to, params, query);
-	  }),
+	  },
 
 	  /**
 	   * Transitions to the URL specified in the arguments by replacing
 	   * the current URL in the history stack.
 	   */
-	  replaceWith: deprecatedMethod("replaceWith", function (to, params, query) {
+	  replaceWith: function replaceWith(to, params, query) {
 	    this.context.router.replaceWith(to, params, query);
-	  }),
+	  },
 
 	  /**
 	   * Transitions to the previous URL.
 	   */
-	  goBack: deprecatedMethod("goBack", function () {
+	  goBack: function goBack() {
 	    return this.context.router.goBack();
-	  })
+	  }
 
 	};
 
@@ -1159,16 +1159,7 @@ return /******/ (function(modules) { // webpackBootstrap
 
 	"use strict";
 
-	var warning = __webpack_require__(36);
 	var PropTypes = __webpack_require__(22);
-
-	function deprecatedMethod(routerMethodName, fn) {
-	  return function () {
-	    warning(false, "Router.State is deprecated. Please use this.context.router." + routerMethodName + "() instead");
-
-	    return fn.apply(this, arguments);
-	  };
-	}
 
 	/**
 	 * A mixin for components that need to know the path, routes, URL
@@ -1180,10 +1171,10 @@ return /******/ (function(modules) { // webpackBootstrap
 	 *     mixins: [ Router.State ],
 	 *     render() {
 	 *       var className = this.props.className;
-	 *   
+	 *
 	 *       if (this.isActive('about'))
 	 *         className += ' is-active';
-	 *   
+	 *
 	 *       return React.DOM.a({ className: className }, this.props.children);
 	 *     }
 	 *   });
@@ -1197,45 +1188,45 @@ return /******/ (function(modules) { // webpackBootstrap
 	  /**
 	   * Returns the current URL path.
 	   */
-	  getPath: deprecatedMethod("getCurrentPath", function () {
+	  getPath: function getPath() {
 	    return this.context.router.getCurrentPath();
-	  }),
+	  },
 
 	  /**
 	   * Returns the current URL path without the query string.
 	   */
-	  getPathname: deprecatedMethod("getCurrentPathname", function () {
+	  getPathname: function getPathname() {
 	    return this.context.router.getCurrentPathname();
-	  }),
+	  },
 
 	  /**
 	   * Returns an object of the URL params that are currently active.
 	   */
-	  getParams: deprecatedMethod("getCurrentParams", function () {
+	  getParams: function getParams() {
 	    return this.context.router.getCurrentParams();
-	  }),
+	  },
 
 	  /**
 	   * Returns an object of the query params that are currently active.
 	   */
-	  getQuery: deprecatedMethod("getCurrentQuery", function () {
+	  getQuery: function getQuery() {
 	    return this.context.router.getCurrentQuery();
-	  }),
+	  },
 
 	  /**
 	   * Returns an array of the routes that are currently active.
 	   */
-	  getRoutes: deprecatedMethod("getCurrentRoutes", function () {
+	  getRoutes: function getRoutes() {
 	    return this.context.router.getCurrentRoutes();
-	  }),
+	  },
 
 	  /**
 	   * A helper method to determine if a given route, params, and query
 	   * are active.
 	   */
-	  isActive: deprecatedMethod("isActive", function (to, params, query) {
+	  isActive: function isActive(to, params, query) {
 	    return this.context.router.isActive(to, params, query);
-	  })
+	  }
 
 	};
 
@@ -1457,9 +1448,9 @@ return /******/ (function(modules) { // webpackBootstrap
 /* 18 */
 /***/ function(module, exports, __webpack_require__) {
 
+	/* jshint -W084 */
 	"use strict";
 
-	/* jshint -W084 */
 	var React = __webpack_require__(21);
 	var assign = __webpack_require__(33);
 	var warning = __webpack_require__(36);
@@ -1543,9 +1534,9 @@ return /******/ (function(modules) { // webpackBootstrap
 /* 19 */
 /***/ function(module, exports, __webpack_require__) {
 
+	/* jshint -W058 */
 	"use strict";
 
-	/* jshint -W058 */
 	var React = __webpack_require__(21);
 	var warning = __webpack_require__(36);
 	var invariant = __webpack_require__(34);
@@ -2136,7 +2127,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	   */
 	  falsy: function falsy(props, propName, componentName) {
 	    if (props[propName]) {
-	      return new Error("<" + componentName + "> may not have a \"" + propName + "\" prop");
+	      return new Error("<" + componentName + "> should not have a \"" + propName + "\" prop");
 	    }
 	  },
 
@@ -2203,11 +2194,11 @@ return /******/ (function(modules) { // webpackBootstrap
 /* 24 */
 /***/ function(module, exports, __webpack_require__) {
 
-	"use strict";
-
 	/**
 	 * Actions that modify the URL.
 	 */
+	"use strict";
+
 	var LocationActions = {
 
 	  /**
@@ -2233,39 +2224,67 @@ return /******/ (function(modules) { // webpackBootstrap
 /* 25 */
 /***/ function(module, exports, __webpack_require__) {
 
+	/* jshint -W084 */
 	"use strict";
 
 	var invariant = __webpack_require__(34);
-	var objectAssign = __webpack_require__(38);
+	var assign = __webpack_require__(38);
 	var qs = __webpack_require__(39);
 
-	var paramCompileMatcher = /:([a-zA-Z_$][a-zA-Z0-9_$]*)|[*.()\[\]\\+|{}^$]/g;
-	var paramInjectMatcher = /:([a-zA-Z_$][a-zA-Z0-9_$?]*[?]?)|[*]/g;
-	var paramInjectTrailingSlashMatcher = /\/\/\?|\/\?\/|\/\?/g;
 	var queryMatcher = /\?(.*)$/;
+
+	function escapeRegExp(string) {
+	  return string.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+	}
+
+	function _compilePattern(pattern) {
+	  var escapedSource = "";
+	  var paramNames = [];
+	  var tokens = [];
+
+	  var match,
+	      lastIndex = 0,
+	      matcher = /:([a-zA-Z_$][a-zA-Z0-9_$]*)|\*|\(|\)/g;
+	  while (match = matcher.exec(pattern)) {
+	    if (match.index !== lastIndex) {
+	      tokens.push(pattern.slice(lastIndex, match.index));
+	      escapedSource += escapeRegExp(pattern.slice(lastIndex, match.index));
+	    }
+
+	    if (match[1]) {
+	      escapedSource += "([^/?#]+)";
+	      paramNames.push(match[1]);
+	    } else if (match[0] === "*") {
+	      escapedSource += "(.*?)";
+	      paramNames.push("splat");
+	    } else if (match[0] === "(") {
+	      escapedSource += "(?:";
+	    } else if (match[0] === ")") {
+	      escapedSource += ")?";
+	    }
+
+	    tokens.push(match[0]);
+
+	    lastIndex = matcher.lastIndex;
+	  }
+
+	  if (lastIndex !== pattern.length) {
+	    tokens.push(pattern.slice(lastIndex, pattern.length));
+	    escapedSource += escapeRegExp(pattern.slice(lastIndex, pattern.length));
+	  }
+
+	  return {
+	    pattern: pattern,
+	    escapedSource: escapedSource,
+	    paramNames: paramNames,
+	    tokens: tokens
+	  };
+	}
 
 	var _compiledPatterns = {};
 
 	function compilePattern(pattern) {
-	  if (!(pattern in _compiledPatterns)) {
-	    var paramNames = [];
-	    var source = pattern.replace(paramCompileMatcher, function (match, paramName) {
-	      if (paramName) {
-	        paramNames.push(paramName);
-	        return "([^/?#]+)";
-	      } else if (match === "*") {
-	        paramNames.push("splat");
-	        return "(.*?)";
-	      } else {
-	        return "\\" + match;
-	      }
-	    });
-
-	    _compiledPatterns[pattern] = {
-	      matcher: new RegExp("^" + source + "$", "i"),
-	      paramNames: paramNames
-	    };
-	  }
+	  if (!(pattern in _compiledPatterns)) _compiledPatterns[pattern] = _compilePattern(pattern);
 
 	  return _compiledPatterns[pattern];
 	}
@@ -2299,11 +2318,12 @@ return /******/ (function(modules) { // webpackBootstrap
 	   * pattern does not match the given path.
 	   */
 	  extractParams: function extractParams(pattern, path) {
-	    var _compilePattern = compilePattern(pattern);
+	    var _compilePattern2 = compilePattern(pattern);
 
-	    var matcher = _compilePattern.matcher;
-	    var paramNames = _compilePattern.paramNames;
+	    var escapedSource = _compilePattern2.escapedSource;
+	    var paramNames = _compilePattern2.paramNames;
 
+	    var matcher = new RegExp("^" + escapedSource + "$", "i");
 	    var match = path.match(matcher);
 
 	    if (!match) {
@@ -2324,31 +2344,41 @@ return /******/ (function(modules) { // webpackBootstrap
 	  injectParams: function injectParams(pattern, params) {
 	    params = params || {};
 
-	    var splatIndex = 0;
+	    var _compilePattern2 = compilePattern(pattern);
 
-	    return pattern.replace(paramInjectMatcher, function (match, paramName) {
-	      paramName = paramName || "splat";
+	    var tokens = _compilePattern2.tokens;
 
-	      // If param is optional don't check for existence
-	      if (paramName.slice(-1) === "?") {
-	        paramName = paramName.slice(0, -1);
+	    var parenCount = 0,
+	        pathname = "",
+	        splatIndex = 0;
 
-	        if (params[paramName] == null) return "";
+	    var token, paramName, paramValue;
+	    for (var i = 0, len = tokens.length; i < len; ++i) {
+	      token = tokens[i];
+
+	      if (token === "*") {
+	        paramValue = Array.isArray(params.splat) ? params.splat[splatIndex++] : params.splat;
+
+	        invariant(paramValue != null || parenCount > 0, "Missing splat #%s for path \"%s\"", splatIndex, pattern);
+
+	        if (paramValue != null) pathname += paramValue;
+	      } else if (token === "(") {
+	        parenCount += 1;
+	      } else if (token === ")") {
+	        parenCount -= 1;
+	      } else if (token.charAt(0) === ":") {
+	        paramName = token.substring(1);
+	        paramValue = params[paramName];
+
+	        invariant(paramValue != null || parenCount > 0, "Missing \"%s\" parameter for path \"%s\"", paramName, pattern);
+
+	        if (paramValue != null) pathname += paramValue;
 	      } else {
-	        invariant(params[paramName] != null, "Missing \"%s\" parameter for path \"%s\"", paramName, pattern);
+	        pathname += token;
 	      }
+	    }
 
-	      var segment;
-	      if (paramName === "splat" && Array.isArray(params[paramName])) {
-	        segment = params[paramName][splatIndex++];
-
-	        invariant(segment != null, "Missing splat # %s for path \"%s\"", splatIndex, pattern);
-	      } else {
-	        segment = params[paramName];
-	      }
-
-	      return segment;
-	    }).replace(paramInjectTrailingSlashMatcher, "/");
+	    return pathname.replace(/\/+/g, "/");
 	  },
 
 	  /**
@@ -2374,7 +2404,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	  withQuery: function withQuery(path, query) {
 	    var existingQuery = PathUtils.extractQuery(path);
 
-	    if (existingQuery) query = query ? objectAssign(existingQuery, query) : existingQuery;
+	    if (existingQuery) query = query ? assign(existingQuery, query) : existingQuery;
 
 	    var queryString = qs.stringify(query, { arrayFormat: "brackets" });
 
@@ -2489,9 +2519,9 @@ return /******/ (function(modules) { // webpackBootstrap
 /* 28 */
 /***/ function(module, exports, __webpack_require__) {
 
-	"use strict";
-
 	/* jshint -W058 */
+
+	"use strict";
 
 	var Cancellation = __webpack_require__(30);
 	var Redirect = __webpack_require__(29);
@@ -2569,11 +2599,11 @@ return /******/ (function(modules) { // webpackBootstrap
 /* 29 */
 /***/ function(module, exports, __webpack_require__) {
 
-	"use strict";
-
 	/**
 	 * Encapsulates a redirect to the given route.
 	 */
+	"use strict";
+
 	function Redirect(to, params, query) {
 	  this.to = to;
 	  this.params = params;
@@ -2586,12 +2616,12 @@ return /******/ (function(modules) { // webpackBootstrap
 /* 30 */
 /***/ function(module, exports, __webpack_require__) {
 
-	"use strict";
-
 	/**
 	 * Represents a cancellation caused by navigating away
 	 * before the previous transition has fully resolved.
 	 */
+	"use strict";
+
 	function Cancellation() {}
 
 	module.exports = Cancellation;
@@ -2703,6 +2733,19 @@ return /******/ (function(modules) { // webpackBootstrap
 /* 33 */
 /***/ function(module, exports, __webpack_require__) {
 
+	/**
+	 * Copyright 2014-2015, Facebook, Inc.
+	 * All rights reserved.
+	 *
+	 * This source code is licensed under the BSD-style license found in the
+	 * LICENSE file in the root directory of this source tree. An additional grant
+	 * of patent rights can be found in the PATENTS file in the same directory.
+	 *
+	 * @providesModule Object.assign
+	 */
+
+	// https://people.mozilla.org/~jorendorff/es6-draft.html#sec-object.assign
+
 	"use strict";
 
 	function assign(target, sources) {
@@ -2737,22 +2780,21 @@ return /******/ (function(modules) { // webpackBootstrap
 	}
 
 	module.exports = assign;
+
+/***/ },
+/* 34 */
+/***/ function(module, exports, __webpack_require__) {
+
 	/**
-	 * Copyright 2014-2015, Facebook, Inc.
+	 * Copyright 2013-2015, Facebook, Inc.
 	 * All rights reserved.
 	 *
 	 * This source code is licensed under the BSD-style license found in the
 	 * LICENSE file in the root directory of this source tree. An additional grant
 	 * of patent rights can be found in the PATENTS file in the same directory.
 	 *
-	 * @providesModule Object.assign
+	 * @providesModule invariant
 	 */
-
-	// https://people.mozilla.org/~jorendorff/es6-draft.html#sec-object.assign
-
-/***/ },
-/* 34 */
-/***/ function(module, exports, __webpack_require__) {
 
 	"use strict";
 
@@ -2792,6 +2834,11 @@ return /******/ (function(modules) { // webpackBootstrap
 	};
 
 	module.exports = invariant;
+
+/***/ },
+/* 35 */
+/***/ function(module, exports, __webpack_require__) {
+
 	/**
 	 * Copyright 2013-2015, Facebook, Inc.
 	 * All rights reserved.
@@ -2800,12 +2847,10 @@ return /******/ (function(modules) { // webpackBootstrap
 	 * LICENSE file in the root directory of this source tree. An additional grant
 	 * of patent rights can be found in the PATENTS file in the same directory.
 	 *
-	 * @providesModule invariant
+	 * @providesModule ExecutionEnvironment
 	 */
 
-/***/ },
-/* 35 */
-/***/ function(module, exports, __webpack_require__) {
+	/*jslint evil: true */
 
 	"use strict";
 
@@ -2832,22 +2877,21 @@ return /******/ (function(modules) { // webpackBootstrap
 	};
 
 	module.exports = ExecutionEnvironment;
+
+/***/ },
+/* 36 */
+/***/ function(module, exports, __webpack_require__) {
+
 	/**
-	 * Copyright 2013-2015, Facebook, Inc.
+	 * Copyright 2014-2015, Facebook, Inc.
 	 * All rights reserved.
 	 *
 	 * This source code is licensed under the BSD-style license found in the
 	 * LICENSE file in the root directory of this source tree. An additional grant
 	 * of patent rights can be found in the PATENTS file in the same directory.
 	 *
-	 * @providesModule ExecutionEnvironment
+	 * @providesModule warning
 	 */
-
-	/*jslint evil: true */
-
-/***/ },
-/* 36 */
-/***/ function(module, exports, __webpack_require__) {
 
 	"use strict";
 
@@ -2894,16 +2938,6 @@ return /******/ (function(modules) { // webpackBootstrap
 	}
 
 	module.exports = warning;
-	/**
-	 * Copyright 2014-2015, Facebook, Inc.
-	 * All rights reserved.
-	 *
-	 * This source code is licensed under the BSD-style license found in the
-	 * LICENSE file in the root directory of this source tree. An additional grant
-	 * of patent rights can be found in the PATENTS file in the same directory.
-	 *
-	 * @providesModule warning
-	 */
 
 /***/ },
 /* 37 */
@@ -2971,8 +3005,6 @@ return /******/ (function(modules) { // webpackBootstrap
 /* 40 */
 /***/ function(module, exports, __webpack_require__) {
 
-	"use strict";
-
 	/**
 	 * Copyright 2013-2015, Facebook, Inc.
 	 * All rights reserved.
@@ -2983,6 +3015,8 @@ return /******/ (function(modules) { // webpackBootstrap
 	 *
 	 * @providesModule emptyFunction
 	 */
+
+	"use strict";
 
 	function makeEmptyFunction(arg) {
 	  return function () {
@@ -3014,9 +3048,9 @@ return /******/ (function(modules) { // webpackBootstrap
 /* 41 */
 /***/ function(module, exports, __webpack_require__) {
 
-	"use strict";
-
 	// Load modules
+
+	"use strict";
 
 	var Stringify = __webpack_require__(42);
 	var Parse = __webpack_require__(43);
@@ -3034,9 +3068,9 @@ return /******/ (function(modules) { // webpackBootstrap
 /* 42 */
 /***/ function(module, exports, __webpack_require__) {
 
-	"use strict";
-
 	// Load modules
+
+	"use strict";
 
 	var Utils = __webpack_require__(44);
 
@@ -3127,9 +3161,9 @@ return /******/ (function(modules) { // webpackBootstrap
 /* 43 */
 /***/ function(module, exports, __webpack_require__) {
 
-	"use strict";
-
 	// Load modules
+
+	"use strict";
 
 	var Utils = __webpack_require__(44);
 
@@ -3280,11 +3314,11 @@ return /******/ (function(modules) { // webpackBootstrap
 /* 44 */
 /***/ function(module, exports, __webpack_require__) {
 
-	"use strict";
-
 	// Load modules
 
 	// Declare internals
+
+	"use strict";
 
 	var internals = {};
 
@@ -3404,3 +3438,4 @@ return /******/ (function(modules) { // webpackBootstrap
 /***/ }
 /******/ ])
 });
+;
