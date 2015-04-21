@@ -60,25 +60,14 @@ does not match:
   /file/
   /file
 
-path: /file/:name?
+path: /file(/:name)
 matches:
   /file/foo.js
     this.props.params: {name: 'foo.js'}
-  /file/
-    this.props.params: {}
-does not match:
   /file
-  /file/quux/baz.js
-
-path: /file/?:name?
-matches:
-  /file/foo.js
-    this.props.params: {name: 'foo.js'}
-  /file/
-    this.props.params: {}
-  /file
-    this.props.params: {}
+    this.props.params: {name: undefined}
 does not match:
+  /file/
   /file/quux/baz.js
 
 path: /file/*
@@ -90,16 +79,16 @@ matches:
   /file/quux/baz.js
     this.props.params: {splat: 'quux/baz.js'}
 
-path: /foo/*/:bar/?*?
+path: /foo/*/:bar(/*)
 matches:
   /foo/a.b.c/taco/def
     this.props.params: {bar: 'taco', splat: ['a.b.c', 'def']}
   /foo/a.b.c/taco
     this.props.params: {bar: 'taco', splat: 'a.b.c'}
 does not match:
+  /foo/a.b.c/taco/
   /foo/a.b.c
 
 path: *
 matches everything, but you probably want `<NotFoundRoute/>`
 ```
-
