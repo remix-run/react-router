@@ -394,7 +394,7 @@ By default, the router will manage the scroll position between route
 transitions. When a user clicks "back" or "forward", it will restore
 their scroll position. If they visit a new route, it will automatically
 scroll the window to the top. You can configure this option with
-[Router.create][create].
+[Router.create](../api/create.md).
 
 Bells and Whistles
 ------------------
