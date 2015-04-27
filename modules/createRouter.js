@@ -21,6 +21,7 @@ var Match = require('./Match');
 var Route = require('./Route');
 var supportsHistory = require('./supportsHistory');
 var PathUtils = require('./PathUtils');
+var NotFoundReason = require('./NotFoundReason');
 
 /**
  * The default location for new routers.
@@ -101,6 +102,20 @@ function queryIsActive(activeQuery, query) {
       return false;
 
   return true;
+}
+
+function lookupNotFoundRoute(routes) {
+  var newRoutes = routes.slice(0, -1);
+
+  while (newRoutes.length > 0 && !newRoutes[newRoutes.length - 1].notFoundRoute) {
+    newRoutes.pop();
+  }
+
+  if (newRoutes.length > 0) {
+    newRoutes.push(newRoutes[newRoutes.length - 1].notFoundRoute);
+  }
+
+  return newRoutes;
 }
 
 /**
@@ -348,6 +363,11 @@ function createRouter(options) {
         if (match == null)
           match = {};
 
+        this.doTransition(match, path, action);
+      },
+
+      doTransition: function (match, path, action) {
+        var self = this;
         var prevRoutes = state.routes || [];
         var prevParams = state.params || {};
         var prevQuery = state.query || {};
@@ -380,6 +400,17 @@ function createRouter(options) {
             return dispatchHandler.call(Router, error, transition); // No need to continue.
 
           Transition.to(transition, toRoutes, nextParams, nextQuery, function (error) {
+            if (transition.abortReason instanceof NotFoundReason) {
+              var lastRoute = nextRoutes[nextRoutes.length - 1];
+
+              if (!lastRoute.isNotFound) {
+                match.routes = lookupNotFoundRoute(nextRoutes);
+                self.doTransition(match, path, action);
+
+                return;
+              }
+            }
+
             dispatchHandler.call(Router, error, transition, {
               path: path,
               action: action,
