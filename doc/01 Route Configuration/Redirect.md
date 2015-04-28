@@ -1,7 +1,5 @@
-API: `Redirect` (component)
-===========================
-
-A `<Redirect>` sets up a redirect to another route in your application. 
+A `Redirect` sets up a redirect to another route in your application to
+maintain old URLs.
 
 Props
 -----

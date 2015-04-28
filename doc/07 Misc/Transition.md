@@ -1,8 +1,5 @@
-API: `Transition` (object)
-==========================
-
-A `Transition` object is sent to the [transition hooks][transition-hooks] as the
-first argument.
+A `Transition` object is sent to the [transition
+hooks][transition-hooks] of a `RouteHandler` as the first argument.
 
 Methods
 -------
@@ -21,5 +18,5 @@ Retries a transition. Typically you save off a transition you care to
 return to, finish the workflow, then retry. This does not create a new
 entry in the browser history.
 
-  [transition-hooks]:/docs/api/components/RouteHandler.md#static-lifecycle-methods
+  [transition-hooks]:#TODO
 

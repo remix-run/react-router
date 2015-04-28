@@ -1,7 +1,4 @@
-API: `Router.create`
-====================
-
-Creates a router. Useful to pass around your app to be able to call
+Creates a new router. Useful to pass around your app to be able to call
 `transitionTo` and friends w/o being inside of a component.
 
 Signature
@@ -12,24 +9,22 @@ Signature
 Options
 -------
 
-### routes
+### `routes`
 
-A set of routes.
+### `location`
 
-### location
+### `scrollBehavior`
 
-The location to use.
+### `onAbort`
 
-### scrollBehavior
-
-The scroll behavior to use.
+Used server-side to know when a route was redirected.
 
 Methods
 -------
 
 ### `run(callback)`
 
-Runs the router, the same as the more common `Router.run` method.
+Runs the router, the same as `Router.run`.
 
 Example
 -------
@@ -43,5 +38,6 @@ var router = Router.create({
   routes: routes,
   location: Router.HistoryLocation
 });
+
 router.run(callback);
 ```

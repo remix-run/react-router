@@ -1,10 +1,7 @@
-API: `Link` (component)
-=========================
+The primary way to allow users to navigate around your application.
+`Link` will render a fully accesible anchor tag with the proper href.
 
-A `<Link>` renders an `<a>` tag that links to a route in the application. If
-you change the path of your route, you don't also have to change your links.
-
-A `<Link>` also knows when the route it links to is active and automatically
+A `Link` also knows when the route it links to is active and automatically
 applies its `activeClassName` and/or `activeStyle` when it is.
 
 Props
@@ -17,6 +14,11 @@ The name of the route to link to, or a full URL.
 ### `params`
 
 An object of the names/values that correspond with dynamic segments in your route path.
+
+### `query`
+
+An object of the names/values that will become the query parameters in
+the path.
 
 #### Example
 
@@ -52,7 +54,7 @@ from bubbling.
 
 ### *others*
 
-You can also pass props you'd like to be on the `<a>` such as a title, id, or className.
+You can also pass props you'd like to be on the `<a>` such as a title, id, className, etc.
 
 Example
 -------
@@ -75,4 +77,5 @@ active -->
 <!-- change style when link is active -->
 <Link style={{color: 'white'}} activeStyle={{color: 'red'}} to="user" params={{userId: user.id}} query={{foo: bar}}>{user.name}</Link>
 ```
+
 

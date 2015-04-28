@@ -1,21 +1,7 @@
-API: `Location` (object)
-========================
-
 The router uses "location" objects to determine the current state of
 the application and update it when needed. In a browser environment,
 the location represents the URL in the browser's location bar. On the
 server, the location is the URL path that was used in the request.
-
-ReactRouter ships with several locations that make it convenient to
-use in many different scenarios. They are listed below.
-
-Location            | Description
-------------------- | -----------
-`HashLocation`      | Stores the current URL in `window.location.hash`. Use this if you need to support browsers that don't support the HTML5 history API
-`HistoryLocation`   | Uses the HTML5 history API to store state in clean URLs
-`RefreshLocation`   | A fallback that uses clean URLs in browsers that do not support the HTML5 history API by updating `window.location` whenever the route changes. The router automatically falls back to this when you try to use `HistoryLocation` in old browsers
-`StaticLocation`    | A location for stateless environments (like servers) where the URL is given once
-`TestLocation`      | A location that allows you to easily stub out URL history when writing tests
 
 You can also supply the router with your own location implementation. The
 following methods must be implemented:
@@ -62,6 +48,3 @@ Additionally, location objects must:
 - Decrement `ReactRouter.History.length` immediately **before** going back to the
   previous URL
 
-Please refer to the [built-in location objects][locations] to get an idea for how this is done.
-
-[locations]: /modules/locations

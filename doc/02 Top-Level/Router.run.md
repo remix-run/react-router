@@ -1,6 +1,3 @@
-API: `Router.run`
-=================
-
 The main API into react router. It runs your routes, matching them
 against a location, and then calls back with the next state for you to
 render.
@@ -15,7 +12,7 @@ Arguments
 
 ### `routes`
 
-Your route config. See [Route][1]
+Your route config. See [Route][route]
 
 ### `location` optional
 
@@ -39,14 +36,14 @@ Router.run(routes, Router.HistoryLocation, callback);
 Router.run(routes, '/some/path', callback);
 ```
 
-### `callback(Handler, state)`
+### `callback(Root, state)`
 
 The callback receives two arguments:
 
-1. `Handler`
+1. `Root`
 2. `state`
 
-#### `Handler`
+#### `Root`
 
 A ReactComponent class with the current match all wrapped up inside it, ready
 for you to render.
@@ -77,10 +74,10 @@ The active query in the location match.
 
 #### `state.routes`
 
-An array of the matched [routes][1]. Very useful for fetching data before
+An array of the matched [routes][route]. Very useful for fetching data before
 rendering.
 
-See also: [Route][1].
+See also: [Route][route].
 
 Examples
 --------
@@ -88,14 +85,14 @@ Examples
 Basic Usage:
 
 ```js
-Router.run(routes, function (Handler) {
+Router.run(routes, function (Root) {
   // whenever the url changes, this callback is called again
-  React.render(<Handler/>, document.body);
+  React.render(<Root/>, document.body);
 });
 ```
 
 Sample data fetching using `state.routes`. Check out the
-[async-data][2] example.
+[async-data][async-data] example.
 
 ```js
 var resolveHash = require('when/keys').all;
@@ -110,7 +107,7 @@ var SampleHandler = React.createClass({
   // ...
 });
 
-Router.run(routes, Router.HistoryLocation, function (Handler, state) {
+Router.run(routes, Router.HistoryLocation, function (Root, state) {
   
   // create the promises hash
   var promises = state.routes.filter(function (route) {
@@ -125,7 +122,7 @@ Router.run(routes, Router.HistoryLocation, function (Handler, state) {
   resolveHash(promises).then(function (data) {
     // wait until we have data to render, the old screen stays up until
     // we render
-    React.render(<Handler data={data}/>, document.body);
+    React.render(<Root data={data}/>, document.body);
   });
 });
 ```
@@ -134,16 +131,16 @@ Server Rendering
 
 ```js
 something.serve(function (req, res) {
-  Router.run(routes, req.path, function (Handler, state) {
+  Router.run(routes, req.path, function (Root, state) {
     // could fetch data like in the previous example
     fetchData(state.matches).then(function (data) {
-      var html = React.renderToString(<Handler data={data} />);
+      var html = React.renderToString(<Root data={data} />);
       res.send(html);
     });
   });
 });
 ```
 
-  [1]:./components/Route.md
-  [2]:https://github.com/rackt/react-router/tree/master/examples/async-data
+  [route]:#TODO
+  [async-data]:#TODO
 

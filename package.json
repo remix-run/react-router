@@ -12,7 +12,8 @@
   "scripts": {
     "build": "scripts/build.sh",
     "examples": "webpack-dev-server --config examples/webpack.config.js --content-base examples",
-    "test": "jsxhint . && karma start"
+    "test": "jsxhint . && karma start",
+    "build-website": "babel-node website/scripts/build.js > website/index.html"
   },
   "authors": [
     "Ryan Florence",
@@ -34,7 +35,9 @@
     "karma-mocha": "^0.1.10",
     "karma-sourcemap-loader": "^0.3.2",
     "karma-webpack": "^1.3.1",
+    "marked": "0.3.3",
     "mocha": "^2.0.1",
+    "pygmentize-bundled": "^2.3.0",
     "react": "0.13.x",
     "rf-changelog": "^0.4.0",
     "rx": "2.3.18",

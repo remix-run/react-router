@@ -3,7 +3,8 @@ exports.Link = require('./components/Link');
 exports.NotFoundRoute = require('./components/NotFoundRoute');
 exports.Redirect = require('./components/Redirect');
 exports.Route = require('./components/Route');
-exports.RouteHandler = require('./components/RouteHandler');
+exports.ActiveHandler = require('./components/RouteHandler');
+exports.RouteHandler = exports.ActiveHandler;
 
 exports.HashLocation = require('./locations/HashLocation');
 exports.HistoryLocation = require('./locations/HistoryLocation');
@@ -23,6 +24,7 @@ exports.createDefaultRoute = require('./Route').createDefaultRoute;
 exports.createNotFoundRoute = require('./Route').createNotFoundRoute;
 exports.createRedirect = require('./Route').createRedirect;
 exports.createRoutesFromReactChildren = require('./createRoutesFromReactChildren');
+
 exports.create = require('./createRouter');
 exports.run = require('./runRouter');
 

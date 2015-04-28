@@ -1,16 +1,15 @@
-API: `Route` (component)
-=========================
-
-A `<Route>` is used to declare your application's routes and entry view hierarchy.
+A `Route` is used to declaratively map routes to your application's
+screen hiearchy.
 
 Props
 -----
 
-### `name`
+### `name` (optional)
 
-The unique name of the route, used in the `Link` component and the router's transition methods.
+The unique name of the route, used in the `Link` component and the
+router's transition methods.
 
-### `path`
+### `path` (optional)
 
 The path used in the URL. If left undefined, the path will be defined by
 the `name`, and if there is no name, will default to `/`.
@@ -20,7 +19,7 @@ about supported path matching syntax.
 
 ### `handler`
 
-The component to be rendered when the route is active.
+The `RouteHandler` component to be rendered when the route is active.
 
 ### `children`
 
@@ -30,11 +29,17 @@ is a very critical part of the router's design.
 
 ### `ignoreScrollBehavior`
 
-When route or its `params` change, router adjusts window scroll position according to [`scrollBehavior`](https://github.com/rackt/react-router/blob/master/docs/api/create.md#scrollbehavior). This is generally desirable but you might want to opt out of scrolling adjustment for a specific route or a group of routes.
+When a route or its `params` change, the router adjusts window scroll
+position according to the [`scrollBehavior`][scrollbehavior].  This is
+generally desirable but you might want to opt-out of scrolling
+adjustment for a specific route or a group of routes.
 
-If you specify `ignoreScrollBehavior` attribute on a route, changes in `params` or any transitions within its `children` will not adjust scroll position. This can be useful on a search page or in a tabbed interface.
+If you specify `ignoreScrollBehavior`, changes in `params` or any
+transitions within its `children` will not adjust scroll position. This
+can be useful on a search page or in a tabbed interface.
 
-Note that changes in `query` never adjust scroll position, regardless of the value of this attribute.
+Note that changes in `query` never adjust scroll position, regardless of
+the value of this attribute.
 
 Example
 -------
@@ -55,5 +60,7 @@ Example
 </Route>
 ```
 
-  [overview]:/docs/guides/overview.md
-  [path-matching]:/docs/guides/path-matching.md
+  [overview]:#TODO
+  [path-matching]:#TODO
+  [ignoreScrollBehavior]:#TODO
+
