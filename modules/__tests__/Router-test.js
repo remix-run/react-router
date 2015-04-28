@@ -2,6 +2,7 @@ var expect = require('expect');
 var React = require('react');
 var Router = require('../index');
 var Route = require('../components/Route');
+var NotFoundRoute = require('../components/NotFoundRoute');
 var RouteHandler = require('../components/RouteHandler');
 var TestLocation = require('../locations/TestLocation');
 var ScrollToTopBehavior = require('../behaviors/ScrollToTopBehavior');
@@ -400,6 +401,213 @@ describe('Router', function () {
             expect(div.innerHTML).toMatch(/Baz/);
             done();
           }, RedirectToFooAsync.delay / 2 + 10);
+        });
+
+        router = Router.create({
+          routes: routes,
+          location: location
+        });
+
+        router.run(function (Handler) {
+          React.render(<Handler/>, div, function () {
+            steps.shift()();
+          });
+        });
+      });
+    });
+
+    describe('transition.notFound', function () {
+
+      var NotFoundAbort = React.createClass({
+        statics: {
+          willTransitionTo: function (transition) {
+            transition.notFound();
+          }
+        },
+
+        render: function () {
+          return null;
+        }
+      });
+
+      var NotFoundAbortAsync = React.createClass({
+        statics: {
+          delay: 10,
+
+          willTransitionTo: function (transition, params, query, callback) {
+            setTimeout(function () {
+              transition.notFound();
+              callback();
+            }, NotFoundAbortAsync.delay);
+          }
+        },
+
+        render: function () {
+          return null;
+        }
+      });
+
+      var routes = (
+        <Route path="/" handler={Nested}>
+          <Route path="/bar" handler={Bar} />
+          <Route path="/baz" handler={Baz} />
+          <Route path="/not-found-abort" handler={NotFoundAbort} />
+          <Route path="/not-found-abort-async" handler={NotFoundAbortAsync} />
+          <NotFoundRoute handler={Foo} />
+        </Route>
+      );
+
+      it('renders NotFound route synchronously in willTransitionTo', function (done) {
+        var location = new TestLocation([ '/not-found-abort' ]);
+
+        var div = document.createElement('div');
+
+        Router.run(routes, location, function (Handler) {
+          React.render(<Handler/>, div, function () {
+            expect(div.innerHTML).toMatch(/Foo/);
+            done();
+          });
+        });
+      });
+
+      it('renders NotFound route asynchronously in willTransitionTo', function (done) {
+        var location = new TestLocation([ '/bar' ]);
+
+        var div = document.createElement('div');
+        var steps = [];
+        var router;
+
+        steps.push(function () {
+          expect(div.innerHTML).toMatch(/Bar/);
+          router.transitionTo('/not-found-abort-async');
+          expect(div.innerHTML).toMatch(/Bar/);
+
+          setTimeout(function () {
+            expect(div.innerHTML).toMatch(/Foo/);
+            done();
+          }, NotFoundAbortAsync.delay + 10);
+        });
+
+        steps.push(function () {
+          expect(div.innerHTML).toMatch(/Foo/);
+          done();
+        });
+
+        router = Router.create({
+          routes: routes,
+          location: location
+        });
+
+        router.run(function (Handler) {
+          React.render(<Handler/>, div, function () {
+            steps.shift()();
+          });
+        });
+      });
+
+      it('cancels rendering NotFound route asynchronously in willTransitionTo on location.pop', function (done) {
+        var location = new TestLocation([ '/bar' ]);
+
+        var div = document.createElement('div');
+        var steps = [];
+        var router;
+
+        steps.push(function () {
+          expect(div.innerHTML).toMatch(/Bar/);
+          router.transitionTo('/not-found-abort-async');
+          expect(div.innerHTML).toMatch(/Bar/);
+
+          setTimeout(function () {
+            expect(div.innerHTML).toMatch(/Bar/);
+            location.pop();
+            expect(div.innerHTML).toMatch(/Bar/);
+          }, NotFoundAbortAsync.delay / 2);
+
+          setTimeout(function () {
+            expect(div.innerHTML).toMatch(/Bar/);
+            done();
+          }, NotFoundAbortAsync.delay + 10);
+        });
+
+        router = Router.create({
+          routes: routes,
+          location: location
+        });
+
+        router.run(function (Handler) {
+          React.render(<Handler/>, div, function () {
+            steps.shift()();
+          });
+        });
+      });
+
+      it('cancels rendering NotFound route asynchronously in willTransitionTo on router.transitionTo', function (done) {
+        var location = new TestLocation([ '/bar' ]);
+
+        var div = document.createElement('div');
+        var steps = [];
+        var router;
+
+        steps.push(function () {
+          expect(div.innerHTML).toMatch(/Bar/);
+          router.transitionTo('/not-found-abort-async');
+          expect(div.innerHTML).toMatch(/Bar/);
+
+          setTimeout(function () {
+            expect(div.innerHTML).toMatch(/Bar/);
+            router.transitionTo('/baz');
+            expect(div.innerHTML).toMatch(/Baz/);
+          }, NotFoundAbortAsync.delay / 2);
+        });
+
+        steps.push(function () {
+          setTimeout(function () {
+            expect(div.innerHTML).toMatch(/Baz/);
+            location.pop();
+          }, NotFoundAbortAsync.delay + 10);
+        });
+
+        steps.push(function () {
+          expect(div.innerHTML).toMatch(/Bar/);
+          done();
+        });
+
+        router = Router.create({
+          routes: routes,
+          location: location
+        });
+
+        router.run(function (Handler) {
+          React.render(<Handler/>, div, function () {
+            steps.shift()();
+          });
+        });
+      });
+
+      it('cancels rendering NotFound route asynchronously in willTransitionTo on router.replaceWith', function (done) {
+        var location = new TestLocation([ '/bar' ]);
+
+        var div = document.createElement('div');
+        var steps = [];
+        var router;
+
+        steps.push(function () {
+          expect(div.innerHTML).toMatch(/Bar/);
+          router.transitionTo('/not-found-abort-async');
+          expect(div.innerHTML).toMatch(/Bar/);
+
+          setTimeout(function () {
+            expect(div.innerHTML).toMatch(/Bar/);
+            router.replaceWith('/baz');
+            expect(div.innerHTML).toMatch(/Baz/);
+          }, NotFoundAbortAsync.delay / 2);
+        });
+
+        steps.push(function () {
+          setTimeout(function () {
+            expect(div.innerHTML).toMatch(/Baz/);
+            done();
+          }, NotFoundAbortAsync.delay + 10);
         });
 
         router = Router.create({
