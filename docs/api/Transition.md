@@ -15,6 +15,10 @@ Aborts a transition.
 
 Redirect to another route.
 
+### `notFound()`
+
+Render nearest NotFoundRoute.
+
 ### `retry()`
 
 Retries a transition. Typically you save off a transition you care to

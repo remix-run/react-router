@@ -2,6 +2,7 @@
 
 var Cancellation = require('./Cancellation');
 var Redirect = require('./Redirect');
+var NotFoundReason = require('./NotFoundReason');
 
 /**
  * Encapsulates a transition to a given path.
@@ -27,6 +28,10 @@ Transition.prototype.redirect = function (to, params, query) {
 
 Transition.prototype.cancel = function () {
   this.abort(new Cancellation);
+};
+
+Transition.prototype.notFound = function () {
+  this.abort(new NotFoundReason);
 };
 
 Transition.from = function (transition, routes, components, callback) {
