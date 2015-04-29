@@ -42,10 +42,10 @@ value will be available in your route handler as
 `this.props.params.splat`. If there are multiple, you'll get an array of
 values.
 
-Question Mark
--------------
+Parens
+------
 
-Question marks will optionally match the preceding segment.
+Parens will optionally match a url segment.
 
 Examples
 --------
