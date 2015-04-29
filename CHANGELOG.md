@@ -1,8 +1,9 @@
 v0.13.3 - Wed, 29 Apr 2015 01:47:08 GMT
 ---------------------------------------
 
-- 
-
+- [e5ad53b](../../commit/e5ad53b) [added] Un-deprecate Navigation and State mixins
+- [793e35e](../../commit/793e35e) [added] Pass params/query to route handlers
+- [a141ab5](../../commit/a141ab5) [added] Include umd build in npm package
 
 v0.13.2 - Tue, 24 Mar 2015 14:22:07 GMT
 ---------------------------------------
