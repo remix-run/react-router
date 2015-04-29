@@ -48,7 +48,7 @@ describe('PathUtils.extractParams', function () {
     });
 
     describe('and the pattern is optional', function () {
-      var pattern = 'comments/(:id)/edit';
+      var pattern = 'comments/:id?/edit';
 
       describe('and the path matches with supplied param', function () {
         it('returns an object with the params', function () {
@@ -64,7 +64,7 @@ describe('PathUtils.extractParams', function () {
     });
 
     describe('and the pattern and forward slash are optional', function () {
-      var pattern = 'comments(/:id)/edit';
+      var pattern = 'comments/:id?/?edit';
 
       describe('and the path matches with supplied param', function () {
         it('returns an object with the params', function () {
@@ -140,13 +140,15 @@ describe('PathUtils.extractParams', function () {
     });
   });
 
-  describe('when a pattern has an optional group', function () {
-    var pattern = '/archive(/:name)';
+  describe('when a pattern has a ?', function () {
+    var pattern = '/archive/?:name?';
 
     describe('and the path matches', function () {
       it('returns an object with the params', function () {
-        expect(PathUtils.extractParams(pattern, '/archive/foo')).toEqual({ name: 'foo' });
         expect(PathUtils.extractParams(pattern, '/archive')).toEqual({ name: undefined });
+        expect(PathUtils.extractParams(pattern, '/archive/')).toEqual({ name: undefined });
+        expect(PathUtils.extractParams(pattern, '/archive/foo')).toEqual({ name: 'foo' });
+        expect(PathUtils.extractParams(pattern, '/archivefoo')).toEqual({ name: 'foo' });
       });
     });
 
@@ -197,19 +199,19 @@ describe('PathUtils.injectParams', function () {
     });
 
     describe('and a param is optional', function () {
-      var pattern = 'comments/(:id)/edit';
+      var pattern = 'comments/:id?/edit';
 
       it('returns the correct path when param is supplied', function () {
         expect(PathUtils.injectParams(pattern, { id:'123' })).toEqual('comments/123/edit');
       });
 
       it('returns the correct path when param is not supplied', function () {
-        expect(PathUtils.injectParams(pattern, {})).toEqual('comments/edit');
+        expect(PathUtils.injectParams(pattern, {})).toEqual('comments//edit');
       });
     });
 
     describe('and a param and forward slash are optional', function () {
-      var pattern = 'comments(/:id)/edit';
+      var pattern = 'comments/:id?/?edit';
 
       it('returns the correct path when param is supplied', function () {
         expect(PathUtils.injectParams(pattern, { id:'123' })).toEqual('comments/123/edit');
@@ -270,6 +272,12 @@ describe('PathUtils.injectParams', function () {
   describe('when a pattern has dots', function () {
     it('returns the correct path', function () {
       expect(PathUtils.injectParams('/foo.bar.baz')).toEqual('/foo.bar.baz');
+    });
+  });
+
+  describe('when a pattern has optional slashes', function () {
+    it('returns the correct path', function () {
+      expect(PathUtils.injectParams('/foo/?/bar/?/baz/?')).toEqual('/foo/bar/baz/');
     });
   });
 });

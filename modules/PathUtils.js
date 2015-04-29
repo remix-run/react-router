@@ -1,61 +1,34 @@
-/* jshint -W084 */
 var invariant = require('react/lib/invariant');
 var assign = require('object-assign');
 var qs = require('qs');
 
+var paramCompileMatcher = /:([a-zA-Z_$][a-zA-Z0-9_$]*)|[*.()\[\]\\+|{}^$]/g;
+var paramInjectMatcher = /:([a-zA-Z_$][a-zA-Z0-9_$?]*[?]?)|[*]/g;
+var paramInjectTrailingSlashMatcher = /\/\/\?|\/\?\/|\/\?/g;
 var queryMatcher = /\?(.*)$/;
-
-function escapeRegExp(string) {
-  return string.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
-}
-
-function _compilePattern(pattern) {
-  var escapedSource = '';
-  var paramNames = [];
-  var tokens = [];
-
-  var match, lastIndex = 0, matcher = /:([a-zA-Z_$][a-zA-Z0-9_$]*)|\*|\(|\)/g;
-  while (match = matcher.exec(pattern)) {
-    if (match.index !== lastIndex) {
-      tokens.push(pattern.slice(lastIndex, match.index));
-      escapedSource += escapeRegExp(pattern.slice(lastIndex, match.index));
-    }
-
-    if (match[1]) {
-      escapedSource += '([^/?#]+)';
-      paramNames.push(match[1]);
-    } else if (match[0] === '*') {
-      escapedSource += '(.*?)';
-      paramNames.push('splat');
-    } else if (match[0] === '(') {
-      escapedSource += '(?:';
-    } else if (match[0] === ')') {
-      escapedSource += ')?';
-    }
-
-    tokens.push(match[0]);
-
-    lastIndex = matcher.lastIndex;
-  }
-
-  if (lastIndex !== pattern.length) {
-    tokens.push(pattern.slice(lastIndex, pattern.length));
-    escapedSource += escapeRegExp(pattern.slice(lastIndex, pattern.length));
-  }
-
-  return {
-    pattern,
-    escapedSource,
-    paramNames,
-    tokens
-  };
-}
 
 var _compiledPatterns = {};
 
 function compilePattern(pattern) {
-  if (!(pattern in _compiledPatterns))
-    _compiledPatterns[pattern] = _compilePattern(pattern);
+  if (!(pattern in _compiledPatterns)) {
+    var paramNames = [];
+    var source = pattern.replace(paramCompileMatcher, function (match, paramName) {
+      if (paramName) {
+        paramNames.push(paramName);
+        return '([^/?#]+)';
+      } else if (match === '*') {
+        paramNames.push('splat');
+        return '(.*?)';
+      } else {
+        return '\\' + match;
+      }
+    });
+
+    _compiledPatterns[pattern] = {
+      matcher: new RegExp('^' + source + '$', 'i'),
+      paramNames: paramNames
+    };
+  }
 
   return _compiledPatterns[pattern];
 }
@@ -89,8 +62,7 @@ var PathUtils = {
    * pattern does not match the given path.
    */
   extractParams: function (pattern, path) {
-    var { escapedSource, paramNames } = compilePattern(pattern);
-    var matcher = new RegExp('^' + escapedSource + '$', 'i');
+    var { matcher, paramNames } = compilePattern(pattern);
     var match = path.match(matcher);
 
     if (!match)
@@ -112,46 +84,40 @@ var PathUtils = {
   injectParams: function (pattern, params) {
     params = params || {};
 
-    var { tokens } = compilePattern(pattern);
-    var parenCount = 0, pathname = '', splatIndex = 0;
+    var splatIndex = 0;
 
-    var token, paramName, paramValue;
-    for (var i = 0, len = tokens.length; i < len; ++i) {
-      token = tokens[i];
+    return pattern.replace(paramInjectMatcher, function (match, paramName) {
+      paramName = paramName || 'splat';
 
-      if (token === '*') {
-        paramValue = Array.isArray(params.splat) ? params.splat[splatIndex++] : params.splat;
+      // If param is optional don't check for existence
+      if (paramName.slice(-1) === '?') {
+        paramName = paramName.slice(0, -1);
 
+        if (params[paramName] == null)
+          return '';
+      } else {
         invariant(
-          paramValue != null || parenCount > 0,
-          'Missing splat #%s for path "%s"',
-          splatIndex, pattern
-        );
-
-        if (paramValue != null)
-          pathname += paramValue;
-      } else if (token === '(') {
-        parenCount += 1;
-      } else if (token === ')') {
-        parenCount -= 1;
-      } else if (token.charAt(0) === ':') {
-        paramName = token.substring(1);
-        paramValue = params[paramName];
-
-        invariant(
-          paramValue != null || parenCount > 0,
+          params[paramName] != null,
           'Missing "%s" parameter for path "%s"',
           paramName, pattern
         );
-
-        if (paramValue != null)
-          pathname += paramValue;
-      } else {
-        pathname += token;
       }
-    }
 
-    return pathname.replace(/\/+/g, '/');
+      var segment;
+      if (paramName === 'splat' && Array.isArray(params[paramName])) {
+        segment = params[paramName][splatIndex++];
+
+        invariant(
+          segment != null,
+          'Missing splat # %s for path "%s"',
+          splatIndex, pattern
+        );
+      } else {
+        segment = params[paramName];
+      }
+
+      return segment;
+    }).replace(paramInjectTrailingSlashMatcher, '/');
   },
 
   /**
