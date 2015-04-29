@@ -12,7 +12,7 @@
   "scripts": {
     "build": "scripts/build.sh",
     "examples": "webpack-dev-server --config examples/webpack.config.js --content-base examples",
-    "test": "jsxhint . && karma start",
+    "test": "jsxhint modules && karma start",
     "build-website": "babel-node website/scripts/build.js > website/index.html"
   },
   "authors": [
