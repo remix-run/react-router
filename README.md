@@ -3,16 +3,11 @@
 [![dependency status](https://img.shields.io/david/rackt/react-router.svg?style=flat-square)](https://david-dm.org/rackt/react-router)
 [![Gitter](https://badges.gitter.im/Join%20Chat.svg)](https://gitter.im/rackt/react-router?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge)
 
-React Router
-============
+<img src="https://rackt.github.io/react-router/img/vertical.png" width="300"/>
 
 A complete routing library for React.
 
-Docs
-----
-
-- [Guide: Overview](/docs/guides/overview.md)
-- [API](/docs/api/)
+[View the docs](https://rackt.github.io/react-router)
 
 Important Notes
 ---------------
