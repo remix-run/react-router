@@ -1,20 +1,20 @@
-"use strict";
+'use strict';
 
-var React = require("react");
-var RouteHandler = require("./components/RouteHandler");
-var PropTypes = require("./PropTypes");
+var React = require('react');
+var RouteHandler = require('./components/RouteHandler');
+var PropTypes = require('./PropTypes');
 
 exports.Nested = React.createClass({
-  displayName: "Nested",
+  displayName: 'Nested',
 
   render: function render() {
     return React.createElement(
-      "div",
+      'div',
       null,
       React.createElement(
-        "h1",
-        { className: "Nested" },
-        "Nested"
+        'h1',
+        { className: 'Nested' },
+        'Nested'
       ),
       React.createElement(RouteHandler, null)
     );
@@ -22,43 +22,43 @@ exports.Nested = React.createClass({
 });
 
 exports.Foo = React.createClass({
-  displayName: "Foo",
+  displayName: 'Foo',
 
   render: function render() {
     return React.createElement(
-      "div",
-      { className: "Foo" },
-      "Foo"
+      'div',
+      { className: 'Foo' },
+      'Foo'
     );
   }
 });
 
 exports.Bar = React.createClass({
-  displayName: "Bar",
+  displayName: 'Bar',
 
   render: function render() {
     return React.createElement(
-      "div",
-      { className: "Bar" },
-      "Bar"
+      'div',
+      { className: 'Bar' },
+      'Bar'
     );
   }
 });
 
 exports.Baz = React.createClass({
-  displayName: "Baz",
+  displayName: 'Baz',
 
   render: function render() {
     return React.createElement(
-      "div",
-      { className: "Baz" },
-      "Baz"
+      'div',
+      { className: 'Baz' },
+      'Baz'
     );
   }
 });
 
 exports.Async = React.createClass({
-  displayName: "Async",
+  displayName: 'Async',
 
   statics: {
     delay: 10,
@@ -70,19 +70,19 @@ exports.Async = React.createClass({
 
   render: function render() {
     return React.createElement(
-      "div",
-      { className: "Async" },
-      "Async"
+      'div',
+      { className: 'Async' },
+      'Async'
     );
   }
 });
 
 exports.RedirectToFoo = React.createClass({
-  displayName: "RedirectToFoo",
+  displayName: 'RedirectToFoo',
 
   statics: {
     willTransitionTo: function willTransitionTo(transition) {
-      transition.redirect("/foo");
+      transition.redirect('/foo');
     }
   },
 
@@ -92,14 +92,14 @@ exports.RedirectToFoo = React.createClass({
 });
 
 exports.RedirectToFooAsync = React.createClass({
-  displayName: "RedirectToFooAsync",
+  displayName: 'RedirectToFooAsync',
 
   statics: {
     delay: 10,
 
     willTransitionTo: function willTransitionTo(transition, params, query, callback) {
       setTimeout(function () {
-        transition.redirect("/foo");
+        transition.redirect('/foo');
         callback();
       }, exports.RedirectToFooAsync.delay);
     }
@@ -111,7 +111,7 @@ exports.RedirectToFooAsync = React.createClass({
 });
 
 exports.Abort = React.createClass({
-  displayName: "Abort",
+  displayName: 'Abort',
 
   statics: {
     willTransitionTo: function willTransitionTo(transition) {
@@ -125,7 +125,7 @@ exports.Abort = React.createClass({
 });
 
 exports.AbortAsync = React.createClass({
-  displayName: "AbortAsync",
+  displayName: 'AbortAsync',
 
   statics: {
     delay: 10,
@@ -144,11 +144,11 @@ exports.AbortAsync = React.createClass({
 });
 
 exports.EchoFooProp = React.createClass({
-  displayName: "EchoFooProp",
+  displayName: 'EchoFooProp',
 
   render: function render() {
     return React.createElement(
-      "div",
+      'div',
       null,
       this.props.foo
     );
@@ -156,15 +156,15 @@ exports.EchoFooProp = React.createClass({
 });
 
 exports.EchoBarParam = React.createClass({
-  displayName: "EchoBarParam",
+  displayName: 'EchoBarParam',
 
   contextTypes: {
     router: PropTypes.router.isRequired
   },
   render: function render() {
     return React.createElement(
-      "div",
-      { className: "EchoBarParam" },
+      'div',
+      { className: 'EchoBarParam' },
       this.context.router.getCurrentParams().bar
     );
   }

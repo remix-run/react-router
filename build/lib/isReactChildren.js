@@ -1,6 +1,6 @@
-"use strict";
+'use strict';
 
-var React = require("react");
+var React = require('react');
 
 function isValidChild(object) {
   return object == null || React.isValidElement(object);

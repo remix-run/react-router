@@ -1,9 +1,9 @@
 /* jshint -W058 */
 
-"use strict";
+'use strict';
 
-var Cancellation = require("./Cancellation");
-var Redirect = require("./Redirect");
+var Cancellation = require('./Cancellation');
+var Redirect = require('./Redirect');
 
 /**
  * Encapsulates a transition to a given path.
@@ -19,7 +19,7 @@ function Transition(path, retry) {
 }
 
 Transition.prototype.abort = function (reason) {
-  if (this.abortReason == null) this.abortReason = reason || "ABORT";
+  if (this.abortReason == null) this.abortReason = reason || 'ABORT';
 };
 
 Transition.prototype.redirect = function (to, params, query) {

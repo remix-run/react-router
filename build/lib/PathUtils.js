@@ -1,64 +1,36 @@
-/* jshint -W084 */
-"use strict";
+'use strict';
 
-var invariant = require("react/lib/invariant");
-var assign = require("object-assign");
-var qs = require("qs");
+var invariant = require('react/lib/invariant');
+var assign = require('object-assign');
+var qs = require('qs');
 
+var paramCompileMatcher = /:([a-zA-Z_$][a-zA-Z0-9_$]*)|[*.()\[\]\\+|{}^$]/g;
+var paramInjectMatcher = /:([a-zA-Z_$][a-zA-Z0-9_$?]*[?]?)|[*]/g;
+var paramInjectTrailingSlashMatcher = /\/\/\?|\/\?\/|\/\?/g;
 var queryMatcher = /\?(.*)$/;
-
-function escapeRegExp(string) {
-  return string.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
-}
-
-function _compilePattern(pattern) {
-  var escapedSource = "";
-  var paramNames = [];
-  var tokens = [];
-
-  var match,
-      lastIndex = 0,
-      matcher = /:([a-zA-Z_$][a-zA-Z0-9_$]*)|\*|\(|\)/g;
-  while (match = matcher.exec(pattern)) {
-    if (match.index !== lastIndex) {
-      tokens.push(pattern.slice(lastIndex, match.index));
-      escapedSource += escapeRegExp(pattern.slice(lastIndex, match.index));
-    }
-
-    if (match[1]) {
-      escapedSource += "([^/?#]+)";
-      paramNames.push(match[1]);
-    } else if (match[0] === "*") {
-      escapedSource += "(.*?)";
-      paramNames.push("splat");
-    } else if (match[0] === "(") {
-      escapedSource += "(?:";
-    } else if (match[0] === ")") {
-      escapedSource += ")?";
-    }
-
-    tokens.push(match[0]);
-
-    lastIndex = matcher.lastIndex;
-  }
-
-  if (lastIndex !== pattern.length) {
-    tokens.push(pattern.slice(lastIndex, pattern.length));
-    escapedSource += escapeRegExp(pattern.slice(lastIndex, pattern.length));
-  }
-
-  return {
-    pattern: pattern,
-    escapedSource: escapedSource,
-    paramNames: paramNames,
-    tokens: tokens
-  };
-}
 
 var _compiledPatterns = {};
 
 function compilePattern(pattern) {
-  if (!(pattern in _compiledPatterns)) _compiledPatterns[pattern] = _compilePattern(pattern);
+  if (!(pattern in _compiledPatterns)) {
+    var paramNames = [];
+    var source = pattern.replace(paramCompileMatcher, function (match, paramName) {
+      if (paramName) {
+        paramNames.push(paramName);
+        return '([^/?#]+)';
+      } else if (match === '*') {
+        paramNames.push('splat');
+        return '(.*?)';
+      } else {
+        return '\\' + match;
+      }
+    });
+
+    _compiledPatterns[pattern] = {
+      matcher: new RegExp('^' + source + '$', 'i'),
+      paramNames: paramNames
+    };
+  }
 
   return _compiledPatterns[pattern];
 }
@@ -69,14 +41,14 @@ var PathUtils = {
    * Returns true if the given path is absolute.
    */
   isAbsolute: function isAbsolute(path) {
-    return path.charAt(0) === "/";
+    return path.charAt(0) === '/';
   },
 
   /**
    * Joins two URL paths together.
    */
   join: function join(a, b) {
-    return a.replace(/\/*$/, "/") + b;
+    return a.replace(/\/*$/, '/') + b;
   },
 
   /**
@@ -92,12 +64,11 @@ var PathUtils = {
    * pattern does not match the given path.
    */
   extractParams: function extractParams(pattern, path) {
-    var _compilePattern2 = compilePattern(pattern);
+    var _compilePattern = compilePattern(pattern);
 
-    var escapedSource = _compilePattern2.escapedSource;
-    var paramNames = _compilePattern2.paramNames;
+    var matcher = _compilePattern.matcher;
+    var paramNames = _compilePattern.paramNames;
 
-    var matcher = new RegExp("^" + escapedSource + "$", "i");
     var match = path.match(matcher);
 
     if (!match) {
@@ -118,41 +89,31 @@ var PathUtils = {
   injectParams: function injectParams(pattern, params) {
     params = params || {};
 
-    var _compilePattern2 = compilePattern(pattern);
+    var splatIndex = 0;
 
-    var tokens = _compilePattern2.tokens;
+    return pattern.replace(paramInjectMatcher, function (match, paramName) {
+      paramName = paramName || 'splat';
 
-    var parenCount = 0,
-        pathname = "",
-        splatIndex = 0;
+      // If param is optional don't check for existence
+      if (paramName.slice(-1) === '?') {
+        paramName = paramName.slice(0, -1);
 
-    var token, paramName, paramValue;
-    for (var i = 0, len = tokens.length; i < len; ++i) {
-      token = tokens[i];
-
-      if (token === "*") {
-        paramValue = Array.isArray(params.splat) ? params.splat[splatIndex++] : params.splat;
-
-        invariant(paramValue != null || parenCount > 0, "Missing splat #%s for path \"%s\"", splatIndex, pattern);
-
-        if (paramValue != null) pathname += paramValue;
-      } else if (token === "(") {
-        parenCount += 1;
-      } else if (token === ")") {
-        parenCount -= 1;
-      } else if (token.charAt(0) === ":") {
-        paramName = token.substring(1);
-        paramValue = params[paramName];
-
-        invariant(paramValue != null || parenCount > 0, "Missing \"%s\" parameter for path \"%s\"", paramName, pattern);
-
-        if (paramValue != null) pathname += paramValue;
+        if (params[paramName] == null) return '';
       } else {
-        pathname += token;
+        invariant(params[paramName] != null, 'Missing "%s" parameter for path "%s"', paramName, pattern);
       }
-    }
 
-    return pathname.replace(/\/+/g, "/");
+      var segment;
+      if (paramName === 'splat' && Array.isArray(params[paramName])) {
+        segment = params[paramName][splatIndex++];
+
+        invariant(segment != null, 'Missing splat # %s for path "%s"', splatIndex, pattern);
+      } else {
+        segment = params[paramName];
+      }
+
+      return segment;
+    }).replace(paramInjectTrailingSlashMatcher, '/');
   },
 
   /**
@@ -168,7 +129,7 @@ var PathUtils = {
    * Returns a version of the given path without the query string.
    */
   withoutQuery: function withoutQuery(path) {
-    return path.replace(queryMatcher, "");
+    return path.replace(queryMatcher, '');
   },
 
   /**
@@ -180,10 +141,10 @@ var PathUtils = {
 
     if (existingQuery) query = query ? assign(existingQuery, query) : existingQuery;
 
-    var queryString = qs.stringify(query, { arrayFormat: "brackets" });
+    var queryString = qs.stringify(query, { arrayFormat: 'brackets' });
 
     if (queryString) {
-      return PathUtils.withoutQuery(path) + "?" + queryString;
+      return PathUtils.withoutQuery(path) + '?' + queryString;
     }return PathUtils.withoutQuery(path);
   }
 

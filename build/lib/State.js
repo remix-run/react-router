@@ -1,6 +1,6 @@
-"use strict";
+'use strict';
 
-var PropTypes = require("./PropTypes");
+var PropTypes = require('./PropTypes');
 
 /**
  * A mixin for components that need to know the path, routes, URL
