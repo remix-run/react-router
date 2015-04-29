@@ -6,7 +6,7 @@ body {
 }
 
 h1 {
-  font-family: "Arial Black";
+  font-family: "Arial Black", Arial, sans-serif;
 }
 
 h2 {
@@ -20,7 +20,7 @@ h1, h2, h3, h4, h5, h6 {
 pre {
   margin: 0;
   line-height: 1.3;
-  font-family: "Source Code Pro";
+  font-family: "Source Code Pro", monospace;
   overflow: auto;
 }
 
@@ -30,7 +30,7 @@ a {
 }
 
 code {
-  font-family: "Source Code Pro";
+  font-family: "Source Code Pro", monospace;
   background: #f9f9f9;
   border: 1px solid #ddd;
   padding: 0 4px;
@@ -111,7 +111,7 @@ pre > code {
 }
 
 .Category__Name {
-  font-family: "Arial Black";
+  font-family: "Arial Black", sans-serif;
   color: #4e4e4e;
 }
 
@@ -119,7 +119,7 @@ pre > code {
   margin: 0;
   list-style-type: none;
   padding: 0;
-  font-family: "Source Code Pro";
+  font-family: "Source Code Pro", mono-space;
 }
 
 .Version {
