@@ -117,7 +117,7 @@ class Page extends React.Component {
               </div>
             ))}
           </nav>
-          <script src="/app.js"></script>
+          <script src="app.js"></script>
         </body>
       </html>
     );
