@@ -13,10 +13,6 @@ class TestLocation {
     this._updateHistoryLength();
   }
 
-  get needsDOM() {
-    return false;
-  }
-
   _updateHistoryLength() {
     History.length = this.history.length;
   }
@@ -73,5 +69,7 @@ class TestLocation {
   }
 
 }
+
+TestLocation.needsDOM = false;
 
 module.exports = TestLocation;
