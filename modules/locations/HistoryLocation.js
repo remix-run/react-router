@@ -58,14 +58,24 @@ var HistoryLocation = {
   },
 
   push(path) {
-    window.history.pushState({ path: path }, '', path);
-    History.length += 1;
-    notifyChange(LocationActions.PUSH);
+    // don't push state if path has not changed
+    if (path !== HistoryLocation.getCurrentPath()) {
+      window.history.pushState({ path: path }, '', path);
+      History.length += 1;
+      notifyChange(LocationActions.PUSH);
+    } else {
+      notifyChange(LocationActions.REFRESH);
+    }
   },
 
   replace(path) {
-    window.history.replaceState({ path: path }, '', path);
-    notifyChange(LocationActions.REPLACE);
+    // don't replace state if path has not changed
+    if (path !== HistoryLocation.getCurrentPath()) {
+      window.history.replaceState({ path: path }, '', path);
+      notifyChange(LocationActions.REPLACE);
+    } else {
+      notifyChange(LocationActions.REFRESH);
+    }
   },
 
   pop: History.back,

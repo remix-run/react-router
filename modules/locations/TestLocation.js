@@ -42,9 +42,13 @@ class TestLocation {
   }
 
   push(path) {
-    this.history.push(path);
-    this._updateHistoryLength();
-    this._notifyChange(LocationActions.PUSH);
+    if (!this.history.length || path !== this.getCurrentPath()) {
+      this.history.push(path);
+      this._updateHistoryLength();
+      this._notifyChange(LocationActions.PUSH);
+    } else {
+      this._notifyChange(LocationActions.REFRESH);
+    }
   }
 
   replace(path) {
@@ -53,9 +57,13 @@ class TestLocation {
       'You cannot replace the current path with no history'
     );
 
-    this.history[this.history.length - 1] = path;
+    if (path !== this.getCurrentPath()) {
+      this.history[this.history.length - 1] = path;
+      this._notifyChange(LocationActions.REPLACE);
+    } else {
+      this._notifyChange(LocationActions.REFRESH);
+    }
 
-    this._notifyChange(LocationActions.REPLACE);
   }
 
   pop() {

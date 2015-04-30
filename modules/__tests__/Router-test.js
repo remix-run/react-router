@@ -87,11 +87,11 @@ describe('Router', function () {
             location.pop();
             expect(div.innerHTML).toMatch(/Bar/);
           }, Async.delay / 2);
+        });
 
-          setTimeout(function () {
-            expect(div.innerHTML).toMatch(/Bar/);
-            done();
-          }, Async.delay + 10);
+        steps.push(function () {
+          expect(div.innerHTML).toMatch(/Bar/);
+          done();
         });
 
         router = Router.create({
@@ -314,11 +314,11 @@ describe('Router', function () {
             location.pop();
             expect(div.innerHTML).toMatch(/Bar/);
           }, RedirectToFooAsync.delay / 2);
+        });
 
-          setTimeout(function () {
-            expect(div.innerHTML).toMatch(/Bar/);
-            done();
-          }, RedirectToFooAsync.delay + 10);
+        steps.push(function () {
+          expect(div.innerHTML).toMatch(/Bar/);
+          done();
         });
 
         router = Router.create({
@@ -421,9 +421,14 @@ describe('Router', function () {
 
         var div = document.createElement('div');
 
+        var runCount = 0;
         Router.run(routes, location, function (Handler) {
+          runCount += 1;
           React.render(<Handler/>, div, function () {
-            location.push('/abort');
+            if (runCount === 1){
+              location.push('/abort');
+              return;
+            }
             expect(div.innerHTML).toMatch(/Foo/);
             expect(location.getCurrentPath()).toEqual('/foo');
             done();
@@ -482,11 +487,11 @@ describe('Router', function () {
             location.pop();
             expect(div.innerHTML).toMatch(/Bar/);
           }, Async.delay / 2);
+        });
 
-          setTimeout(function () {
-            expect(div.innerHTML).toMatch(/Bar/);
-            done();
-          }, Async.delay + 10);
+        steps.push(function () {
+          expect(div.innerHTML).toMatch(/Bar/);
+          done();
         });
 
         router = Router.create({
@@ -741,7 +746,8 @@ describe('Router', function () {
 
       Router.run(routes, location, function (Handler, state) {
         React.render(<Handler/>, div, function () {
-          location.push('/baz');
+          if (state.path !== '/baz')
+            location.push('/baz');
         });
       });
     });
