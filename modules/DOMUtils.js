@@ -1,7 +1,16 @@
-var PathUtils = require('./PathUtils');
+/**
+ * Returns the current URL path.
+ */
+function getWindowPath() {
+  return decodeURI(
+    window.location.pathname + window.location.search
+  );
+}
 
-var STATE_KEY_QUERY_PARAM = '_sk';
-
+/**
+ * Returns the URL path contained in the hash portion of the URL,
+ * which HashHistory uses to store the current path.
+ */
 function getHashPath() {
   return decodeURI(
     // We can't use window.location.hash here because it's not
@@ -10,66 +19,18 @@ function getHashPath() {
   );
 }
 
-function getWindowPath() {
-  return decodeURI(
-    window.location.pathname + window.location.search
-  );
-}
-
-function getState(path) {
-  var stateID = getStateID(path);
-  var serializedState = stateID && window.sessionStorage.getItem(stateID);
-  return serializedState ? JSON.parse(serializedState) : null;
-}
-
-function getStateID(path) {
-  var query = PathUtils.extractQuery(path);
-  return query && query[STATE_KEY_QUERY_PARAM];
-}
-
-function withStateID(path, stateID) {
-  var query = Path.extractQuery(path) || {};
-  query[STATE_KEY_QUERY_PARAM] = stateID;
-  return PathUtils.withQuery(PathUtils.withoutQuery(path), query);
-}
-
-function withoutStateID(path) {
-  var query = PathUtils.extractQuery(path);
-
-  if (STATE_KEY_QUERY_PARAM in query) {
-    delete query[STATE_KEY_QUERY_PARAM];
-    return PathUtils.withQuery(PathUtils.withoutQuery(path), query);
-  }
-
-  return path;
-}
-
-function saveState(state) {
-  var stateID = state.id;
-
-  if (stateID == null)
-    stateID = state.id = Math.random().toString(36).slice(2);
-
-  window.sessionStorage.setItem(
-    stateID,
-    JSON.stringify(state)
-  );
-
-  return stateID;
-}
-
-function withState(path, state) {
-  var stateID = state != null && saveState(state);
-  return stateID ? withStateID(path, stateID) : withoutStateID(path);
+/**
+ * Returns the current scroll position of the window as { x, y }.
+ */
+function getWindowScrollPosition() {
+  return {
+    x: window.pageXOffset || document.documentElement.scrollLeft,
+    y: window.pageYOffset || document.documentElement.scrollTop
+  };
 }
 
 module.exports = {
-  getHashPath,
   getWindowPath,
-  getState,
-  getStateID,
-  withStateID,
-  withoutStateID,
-  saveState,
-  withState
+  getHashPath,
+  getWindowScrollPosition
 };
