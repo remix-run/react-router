@@ -7,39 +7,39 @@ var { Foo, Bar, Nested } = require('../TestUtils');
 describe('createRoutesFromReactChildren', function () {
   it('works with falsy children', function () {
     var routes = createRoutesFromReactChildren([
-      <Route path="/foo" handler={Foo}/>,
+      <Route path="/foo" component={Foo}/>,
       null,
-      <Route path="/bar" handler={Bar}/>,
+      <Route path="/bar" component={Bar}/>,
       undefined
     ]);
 
     expect(routes).toEqual([
       {
         path: '/foo',
-        handler: Foo
+        component: Foo
       }, {
         path: '/bar',
-        handler: Bar
+        component: Bar
       }
     ]);
   });
 
   it('works with comments', function () {
     var routes = createRoutesFromReactChildren(
-      <Route path="/foo" handler={Nested}>
+      <Route path="/foo" component={Nested}>
         // This is a comment.
-        <Route path="/bar" handler={Bar}/>
+        <Route path="/bar" component={Bar}/>
       </Route>
     );
 
     expect(routes).toEqual([
       {
         path: '/foo',
-        handler: Nested,
+        component: Nested,
         childRoutes: [
           {
             path: '/bar',
-            handler: Bar
+            component: Bar
           }
         ]
       }
