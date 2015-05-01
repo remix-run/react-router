@@ -1,28 +1,5 @@
 var { withoutQuery, extractQuery, extractParams, compilePattern } = require('./PathUtils');
-
-function loopAsync(turns, work, callback) {
-  var currentTurn = 0;
-  var isDone = false;
-
-  function done() {
-    isDone = true;
-    callback.apply(this, arguments);
-  }
-
-  function next() {
-    if (isDone)
-      return;
-
-    if (currentTurn < turns) {
-      currentTurn += 1;
-      work(currentTurn - 1, next, done);
-    } else {
-      done.apply(this, arguments);
-    }
-  }
-
-  next();
-}
+var { loopAsync } = require('./AsyncUtils');
 
 function getChildRoutes(route, callback) {
   if (route.childRoutes) {
