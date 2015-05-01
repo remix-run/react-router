@@ -1,3 +1,4 @@
+var warning = require('react/lib/warning');
 var invariant = require('react/lib/invariant');
 var canUseDOM = require('react/lib/ExecutionEnvironment').canUseDOM;
 var History = require('./History');
@@ -18,7 +19,7 @@ class DOMHistory extends History {
     if (n === 0)
       return;
 
-    invariant(
+    warning(
       this.canGo(n),
       'Cannot go(%s); there is not enough history',
       n
