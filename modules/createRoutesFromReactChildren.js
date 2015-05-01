@@ -1,11 +1,11 @@
-/* jshint -W084 */
 var React = require('react');
-var assign = require('react/lib/Object.assign');
+var assign = require('object-assign');
 var warning = require('react/lib/warning');
+var invariant = require('react/lib/invariant');
+var validateRoute = require('./validateRoute');
 var DefaultRoute = require('./components/DefaultRoute');
-var NotFoundRoute = require('./components/NotFoundRoute');
+var CatchAllRoute = require('./components/CatchAllRoute');
 var Redirect = require('./components/Redirect');
-var Route = require('./Route');
 
 function checkPropTypes(componentName, propTypes, props) {
   componentName = componentName || 'UnknownComponent';
@@ -20,66 +20,125 @@ function checkPropTypes(componentName, propTypes, props) {
   }
 }
 
-function createRouteOptions(props) {
-  var options = assign({}, props);
-  var handler = options.handler;
-
-  if (handler) {
-    options.onEnter = handler.willTransitionTo;
-    options.onLeave = handler.willTransitionFrom;
-  }
-
-  return options;
-}
-
 function createRouteFromReactElement(element) {
-  if (!React.isValidElement(element))
-    return;
-
   var type = element.type;
-  var props = assign({}, type.defaultProps, element.props);
+  var route = assign({}, type.defaultProps, element.props);
 
   if (type.propTypes)
-    checkPropTypes(type.displayName, type.propTypes, props);
+    checkPropTypes(type.displayName, type.propTypes, route);
 
-  if (type === DefaultRoute)
-    return Route.createDefaultRoute(createRouteOptions(props));
+  if (type === DefaultRoute) {
+    invariant(
+      route.children == null,
+      'A <DefaultRoute> may not have child routes'
+    );
 
-  if (type === NotFoundRoute)
-    return Route.createNotFoundRoute(createRouteOptions(props));
+    warning(
+      route.path == null || route.path === '',
+      'A <DefaultRoute>\'s route.path is always ""; ignoring "%s"',
+      route.path
+    );
 
-  if (type === Redirect)
-    return Route.createRedirect(createRouteOptions(props));
+    route.path = '';
+  } else if (type === CatchAllRoute) {
+    invariant(
+      route.children == null,
+      'A <CatchAllRoute> may not have child routes'
+    );
 
-  return Route.createRoute(createRouteOptions(props), function () {
-    if (props.children)
-      createRoutesFromReactChildren(props.children);
-  });
+    warning(
+      route.path == null || route.path === '*',
+      'A <CatchAllRoute>\'s route.path is always "*"; ignoring "%s"',
+      route.path
+    );
+
+    route.path = '*';
+  } else if (type === Redirect) {
+    invariant(
+      route.children == null,
+      'A <Redirect> may not have child routes'
+    );
+
+    route.path = route.path || route.from || '*';
+    route.onEnter = function (transition, params, query) {
+      transition.redirect(route.to, route.params || params, route.query || query);
+    };
+  } else {
+    if (route.children) {
+      route.childRoutes = createRoutesFromReactChildren(route.children, route);
+      delete route.children;
+    }
+  }
+
+  validateRoute(route);
+
+  return route;
 }
 
 /**
- * Creates and returns an array of routes created from the given
- * ReactChildren, all of which should be one of <Route>, <DefaultRoute>,
- * <NotFoundRoute>, or <Redirect>, e.g.:
+ * Creates and returns a routes object from the given ReactChildren. JSX
+ * provides a convenient way to visualize how routes in the hierarchy are
+ * nested.
  *
- *   var { createRoutesFromReactChildren, Route, Redirect } = require('react-router');
- *
+ *   var { Route, DefaultRoute, CatchAllRoute } = require('react-router');
+ *   
  *   var routes = createRoutesFromReactChildren(
- *     <Route path="/" handler={App}>
- *       <Route name="user" path="/user/:userId" handler={User}>
- *         <Route name="task" path="tasks/:taskId" handler={Task}/>
- *         <Redirect from="todos/:taskId" to="task"/>
- *       </Route>
+ *     <Route handler={App}>
+ *       <DefaultRoute handler={Dashboard}/>
+ *       <Route path="news" handler={NewsFeed}/>
+ *       <CatchAllRoute handler={NotFound}/>
  *     </Route>
  *   );
+ *
+ * This method is automatically used when you provide a ReactChildren
+ * object as your routes.
+ *
+ *   var RootComponent = React.createClass({
+ *     statics: {
+ *       routes: (
+ *         <Route .../>
+ *       )
+ *     }
+ *   });
+ *
+ *   var Router = createRouter(RootComponent);
  */
-function createRoutesFromReactChildren(children) {
+function createRoutesFromReactChildren(children, _parentRoute) {
   var routes = [];
+  var defaultRoute, catchAllRoute;
 
-  React.Children.forEach(children, function (child) {
-    if (child = createRouteFromReactElement(child))
-      routes.push(child);
+  React.Children.forEach(children, function (element) {
+    if (!React.isValidElement(element))
+      return;
+
+    var route = createRouteFromReactElement(element);
+
+    if (element.type === DefaultRoute) {
+      invariant(
+        _parentRoute == null || defaultRoute == null,
+        'A route may not have more than one <DefaultRoute>'
+      );
+
+      defaultRoute = route;
+    } else if (element.type === CatchAllRoute) {
+      invariant(
+        _parentRoute == null || catchAllRoute == null,
+        'A route may not have more than one <CatchAllRoute>'
+      );
+
+      catchAllRoute = route;
+    } else {
+      routes.push(route);
+    }
   });
+
+  // Order here is important. We want to try the default route
+  // before the catch-all but *after* all other routes.
+  if (defaultRoute)
+    routes.push(defaultRoute);
+
+  if (catchAllRoute)
+    routes.push(catchAllRoute);
 
   return routes;
 }
