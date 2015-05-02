@@ -21,26 +21,24 @@ class NativeHistory extends History {
       if (error) {
         callback(error);
       } else {
-        var data;
+        var state;
         try {
-          data = JSON.parse(value);
+          state = JSON.parse(value);
         } catch (e) {
-          // Invalid data in AsyncStorage?
-          data = {};
+          // Invalid state in AsyncStorage?
+          state = {};
         }
 
-        callback(null, new NativeHistory(data.entries, data.current));
+        callback(
+          null,
+          new NativeHistory(state.entries, state.current, state.navigationType)
+        );
       }
     });
   }
 
   saveToAsyncStorage(callback) {
-    var value = JSON.stringify({
-      entries: this._entries,
-      current: this._current
-    });
-
-    AsyncStorage.setItem(AsyncStorageKey, value, callback);
+    AsyncStorage.setItem(AsyncStorageKey, JSON.stringify(this), callback);
   }
 
 }

@@ -1,5 +1,5 @@
 /* jshint -W058 */
-var assign = require('react/lib/Object.assign');
+var assign = require('object-assign');
 var warning = require('react/lib/warning');
 var { getWindowPath } = require('../DOMUtils');
 var DOMHistory = require('./DOMHistory');
@@ -9,7 +9,7 @@ var DOMHistory = require('./DOMHistory');
  * that lack support for HTML5 history. Automatically used as the
  * fallback when HTML5 history is desired but not available.
  */
-var RefreshHistory = assign(new DOMHistory, {
+var RefreshHistory = assign(new DOMHistory(1), {
 
   getCurrentPath: getWindowPath,
 

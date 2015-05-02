@@ -1,14 +1,12 @@
 /* jshint -W058 */
-var assign = require('react/lib/Object.assign');
+var assign = require('object-assign');
 var warning = require('react/lib/warning');
 var NavigationTypes = require('../NavigationTypes');
 var { getHashPath } = require('../DOMUtils');
 var DOMHistory = require('./DOMHistory');
 
-var currentNavigationType;
-
 function ensureSlash() {
-  var path = HashHistory.getCurrentPath();
+  var path = HashHistory.getPath();
 
   if (path.charAt(0) === '/')
     return true;
@@ -20,11 +18,10 @@ function ensureSlash() {
 
 function handleHashChange() {
   if (ensureSlash()) {
-    HashHistory.notifyChange(
-      currentNavigationType || NavigationTypes.POP
-    );
+    HashHistory._notifyChange();
 
-    currentNavigationType = null;
+    // On the next hashchange we want this to be accurate.
+    HashHistory.navigationType = null;
   }
 }
 
@@ -36,7 +33,7 @@ function handleHashChange() {
  * without requiring server-side changes. However, the canGo* methods are not
  * reliable.
  */
-var HashHistory = assign(new DOMHistory, {
+var HashHistory = assign(new DOMHistory(1), {
 
   addChangeListener(listener) {
     DOMHistory.prototype.addChangeListener.call(this, listener);
@@ -65,15 +62,17 @@ var HashHistory = assign(new DOMHistory, {
     }
   },
 
-  getCurrentPath: getHashPath,
+  getPath: getHashPath,
 
   push(path) {
-    currentNavigationType = NavigationTypes.PUSH;
+    this.current += 1;
+    this.length = Math.min(this.length, this.current + 1);
+    this.navigationType = NavigationTypes.PUSH;
     window.location.hash = path;
   },
 
   replace(path) {
-    currentNavigationType = NavigationTypes.REPLACE;
+    this.navigationType = NavigationTypes.REPLACE;
 
     window.location.replace(
       window.location.pathname + window.location.search + '#' + path
@@ -83,10 +82,14 @@ var HashHistory = assign(new DOMHistory, {
   canGo(n) {
     warning(
       false,
-      'HashHistory.canGo(n) is not reliable. Use HTML5History instead'
+      'HashHistory keeps session length in memory, so canGo(n) is not durable. Use HTML5History instead'
     );
 
     return DOMHistory.prototype.canGo.call(this, n);
+  },
+
+  makeHref(path) {
+    return '#' + path;
   }
 
 });

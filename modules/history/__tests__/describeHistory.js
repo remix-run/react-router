@@ -1,22 +1,10 @@
 var expect = require('expect');
 var { createSpy, spyOn } = expect;
-var History = require('../History');
+var AbstractHistory = require('../AbstractHistory');
 
 function describeHistory(history) {
   it('is an instanceof History', function () {
-    expect(history).toBeA(History);
-  });
-
-  describe('.listen', function () {
-    it('calls new listeners immediately', function () {
-      var outerLocation;
-
-      history.listen(function (location) {
-        outerLocation = location;
-      });
-
-      expect(outerLocation).toBeAn('object');
-    });
+    expect(history).toBeAn(AbstractHistory);
   });
 
   describe('adding/removing a listener', function () {
@@ -27,10 +15,10 @@ function describeHistory(history) {
       // out push/go to only notify listeners ... but we can't make
       // assertions on the location because it will be wrong.
       push = history.push;
-      pushSpy = spyOn(history, 'push').andCall(history.notifyChange);
+      pushSpy = spyOn(history, 'push').andCall(history._notifyChange);
 
       go = history.go;
-      goSpy = spyOn(history, 'go').andCall(history.notifyChange);
+      goSpy = spyOn(history, 'go').andCall(history._notifyChange);
     });
 
     afterEach(function () {

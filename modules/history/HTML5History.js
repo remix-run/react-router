@@ -1,43 +1,47 @@
 /* jshint -W058 */
-var assign = require('react/lib/Object.assign');
+var assign = require('object-assign');
 var NavigationTypes = require('../NavigationTypes');
-var { getWindowPath } = require('../DOMUtils');
+var { getWindowPath, supportsHistory } = require('../DOMUtils');
+var RefreshHistory = require('./RefreshHistory');
 var DOMHistory = require('./DOMHistory');
 
-function createState(state) {
-  var length = state && state.length;
-  var current = state && state.current;
-
-  if (typeof length !== 'number' || isNaN(length) || length < 1)
-    length = 1;
-
-  if (typeof current !== 'number' || isNaN(current) || current >= length)
-    current = length - 1;
-
+function getSerializableState(history) {
   return {
-    length,
-    current
+    length: history.length,
+    current: history.current,
+    navigationType: history.navigationType
   };
 }
-
-var state = createState(window.history.state);
 
 function handlePopState(event) {
   if (event.state === undefined)
     return; // Ignore extraneous popstate events in WebKit.
 
-  state = createState(event.state);
+  var state = event.state;
 
-  HTML5History.notifyChange(NavigationTypes.POP);
+  if ('length' in state)
+    HTML5History.length = state.length
+
+  if ('current' in state)
+    HTML5History.current = state.current;
+
+  HTML5History.navigationType = NavigationTypes.POP;
+  HTML5History._notifyChange();
 }
+
+var state = window.history.state || {};
 
 /**
  * A history implementation for DOM environments that support the
- * HTML5 history API (pushState and replaceState). Provides the
- * cleanest URLs and a reliable canGo(n) in browser environments.
- * Should always be used if possible in browsers.
+ * HTML5 history API (pushState, replaceState, and the popstate event).
+ * Provides the cleanest URLs and a reliable canGo(n) in browser
+ * environments. Should always be used in browsers if possible.
  */
-var HTML5History = assign(new DOMHistory, {
+var HTML5History = assign(new DOMHistory(state.length || 1, state.current, state.navigationType), {
+
+  // Fall back to full page refreshes in browsers
+  // that do not support the HTML5 history API.
+  fallback: (supportsHistory() ? null : RefreshHistory),
 
   addChangeListener(listener) {
     DOMHistory.prototype.addChangeListener.call(this, listener);
@@ -63,28 +67,22 @@ var HTML5History = assign(new DOMHistory, {
     }
   },
 
-  getLength() {
-    return state.length;
-  },
-
-  getCurrent() {
-    return state.current;
-  },
-
-  getCurrentPath: getWindowPath,
+  getPath: getWindowPath,
 
   push(path) {
     // http://www.w3.org/TR/2011/WD-html5-20110113/history.html#dom-history-pushstate
-    state.current += 1;
-    state.length = state.current + 1;
-    window.history.pushState(state, '', path);
-    this.notifyChange(NavigationTypes.PUSH);
+    this.navigationType = NavigationTypes.PUSH;
+    this.current += 1;
+    this.length = this.current + 1;
+    window.history.pushState(getSerializableState(this), '', path);
+    this._notifyChange();
   },
 
   replace(path) {
     // http://www.w3.org/TR/2011/WD-html5-20110113/history.html#dom-history-replacestate
-    window.history.replaceState(state, '', path);
-    this.notifyChange(NavigationTypes.REPLACE);
+    this.navigationType = NavigationTypes.REPLACE;
+    window.history.replaceState(getSerializableState(this), '', path);
+    this._notifyChange();
   }
 
 });

@@ -1,21 +1,19 @@
 var invariant = require('react/lib/invariant');
 var NavigationTypes = require('../NavigationTypes');
-var Location = require('../Location');
+var AbstractHistory = require('./AbstractHistory');
 
 /**
- * A history interface that normalizes the differences across
- * various environments and implementations.
+ * A concrete History class that doesn't require a DOM. Ideal
+ * for testing because it allows you to specify route history
+ * entries in the constructor.
  */
-class History {
-
-  constructor(entries, current) {
-    if (!(this instanceof History))
-      return new History(entries, current);
-
+class History extends AbstractHistory {
+  
+  constructor(entries, current, navigationType) {
     if (entries == null) {
       entries = [ '/' ];
     } else if (typeof entries === 'string') {
-      entries = [ entries ];
+      entries = [ entries ]; // Allow a single path argument.
     }
 
     invariant(
@@ -23,72 +21,28 @@ class History {
       'History needs at least one entry'
     );
 
-    if (current == null)
-      current = entries.length - 1;
-
-    invariant(
-      current < entries.length,
-      'History current value is out of bounds'
-    );
-
-    this._entries = entries;
-    this._current = current;
+    super(entries.length, current, navigationType);
+    this.entries = entries;
   }
 
-  listen(listener) {
-    this.addChangeListener(listener);
-    listener.call(this, new Location(this.getCurrentPath()));
-  }
-
-  addChangeListener(listener) {
-    if (!this.changeListeners)
-      this.changeListeners = [];
-
-    this.changeListeners.push(listener);
-  }
-
-  removeChangeListener(listener) {
-    if (!this.changeListeners)
-      return;
-
-    this.changeListeners = this.changeListeners.filter(function (li) {
-      return li !== listener;
-    });
-  }
-
-  notifyChange(navigationType) {
-    if (!this.changeListeners)
-      return;
-
-    var location = new Location(this.getCurrentPath(), navigationType);
-
-    for (var i = 0, len = this.changeListeners.length; i < len; ++i)
-      this.changeListeners[i].call(this, location);
-  }
-
-  getLength() {
-    return this._entries.length;
-  }
-
-  getCurrent() {
-    return this._current;
-  }
-
-  getCurrentPath() {
-    return this._entries[this.getCurrent()];
+  getPath() {
+    return this.entries[this.current];
   }
 
   push(path) {
     // http://www.w3.org/TR/2011/WD-html5-20110113/history.html#dom-history-pushstate
-    this._current += 1;
-    this._entries = this._entries.slice(0, this._current).concat([ path ]);
-    this.notifyChange(NavigationTypes.PUSH);
+    this.navigationType = NavigationTypes.PUSH;
+    this.current += 1;
+    this.entries = this.entries.slice(0, this.current).concat([ path ]);
+    this.length = this.entries.length;
+    this._notifyChange();
   }
 
   replace(path) {
     // http://www.w3.org/TR/2011/WD-html5-20110113/history.html#dom-history-replacestate
-    this._entries[this._current] = path;
-    this.notifyChange(NavigationTypes.REPLACE);
+    this.navigationType = NavigationTypes.REPLACE;
+    this.entries[this.current] = path;
+    this._notifyChange();
   }
 
   go(n) {
@@ -101,33 +55,17 @@ class History {
       n
     );
 
-    this._current += n;
-
-    this.notifyChange(NavigationTypes.POP);
+    this.navigationType = NavigationTypes.POP;
+    this.current += n;
+    this._notifyChange();
   }
 
-  back() {
-    this.go(-1);
-  }
-
-  forward() {
-    this.go(1);
-  }
-
-  canGo(n) {
-    if (n === 0)
-      return true;
-
-    var next = this.getCurrent() + n;
-    return next >= 0 && next < this.getLength();
-  }
-
-  canGoBack() {
-    return this.canGo(-1);
-  }
-
-  canGoForward() {
-    return this.canGo(1);
+  toJSON() {
+    return {
+      entries: this.entries,
+      current: this.current,
+      navigationType: this.navigationType
+    };
   }
 
 }

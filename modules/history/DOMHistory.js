@@ -1,19 +1,7 @@
 var warning = require('react/lib/warning');
-var invariant = require('react/lib/invariant');
-var canUseDOM = require('react/lib/ExecutionEnvironment').canUseDOM;
-var History = require('./History');
+var AbstractHistory = require('./AbstractHistory');
 
-class DOMHistory extends History {
-
-  listen() {
-    invariant(
-      canUseDOM,
-      'You cannot use %s without a DOM',
-      this.constructor.displayName
-    );
-    
-    return History.prototype.listen.apply(this, arguments);
-  }
+class DOMHistory extends AbstractHistory {
 
   go(n) {
     if (n === 0)
@@ -24,6 +12,9 @@ class DOMHistory extends History {
       'Cannot go(%s); there is not enough history',
       n
     );
+
+    this.navigationType = NavigationTypes.POP;
+    this.current += n;
 
     window.history.go(n);
   }
