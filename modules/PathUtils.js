@@ -9,6 +9,10 @@ function escapeRegExp(string) {
   return string.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
 }
 
+function escapeSource(string) {
+  return escapeRegExp(string).replace(/\/+/g, '/+');
+}
+
 function _compilePattern(pattern) {
   var escapedSource = '';
   var paramNames = [];
@@ -18,7 +22,7 @@ function _compilePattern(pattern) {
   while (match = matcher.exec(pattern)) {
     if (match.index !== lastIndex) {
       tokens.push(pattern.slice(lastIndex, match.index));
-      escapedSource += escapeRegExp(pattern.slice(lastIndex, match.index));
+      escapedSource += escapeSource(pattern.slice(lastIndex, match.index));
     }
 
     if (match[1]) {
@@ -40,7 +44,7 @@ function _compilePattern(pattern) {
 
   if (lastIndex !== pattern.length) {
     tokens.push(pattern.slice(lastIndex, pattern.length));
-    escapedSource += escapeRegExp(pattern.slice(lastIndex, pattern.length));
+    escapedSource += escapeSource(pattern.slice(lastIndex, pattern.length));
   }
 
   return {
@@ -60,15 +64,28 @@ function compilePattern(pattern) {
   return _compiledPatterns[pattern];
 }
 
+function stripLeadingSlashes(path) {
+  return path ? path.replace(/^\/+/, '') : '';
+}
+
+function stripTrailingSlashes(path) {
+  return path.replace(/\/+$/, '');
+}
+
+function isAbsolutePath(path) {
+  return typeof path === 'string' && path.charAt(0) === '/';
+}
+
 var PathUtils = {
+
+  compilePattern,
+  stripLeadingSlashes,
+  stripTrailingSlashes,
+  isAbsolutePath,
 
   /**
    * Returns true if the given path is absolute.
    */
-  isAbsolute: function (path) {
-    return path.charAt(0) === '/';
-  },
-
   /**
    * Joins two URL paths together.
    */

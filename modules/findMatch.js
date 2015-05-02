@@ -1,4 +1,4 @@
-var { withoutQuery, extractQuery, extractParams, compilePattern } = require('./PathUtils');
+var { withoutQuery, extractQuery, extractParams, compilePattern, stripLeadingSlashes, stripTrailingSlashes } = require('./PathUtils');
 var { loopAsync } = require('./AsyncUtils');
 
 function getChildRoutes(route, callback) {
@@ -7,16 +7,8 @@ function getChildRoutes(route, callback) {
   } else if (route.getChildRoutes) {
     route.getChildRoutes(callback);
   } else {
-    callback(null, null);
+    callback();
   }
-}
-
-function stripLeadingSlashes(path) {
-  return path ? path.replace(/^\/+/, '') : '';
-}
-
-function stripTrailingSlashes(path) {
-  return path.replace(/\/+$/, '');
 }
 
 function assignParams(params, paramNames, paramValues) {
