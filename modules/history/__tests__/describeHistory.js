@@ -7,6 +7,14 @@ function describeHistory(history) {
     expect(history).toBeAn(AbstractHistory);
   });
 
+  var RequiredMethods = [ 'getPath', 'push', 'replace', 'go' ];
+
+  RequiredMethods.forEach(function (method) {
+    it('has a ' + method + ' method', function () {
+      expect(history[method]).toBeA('function');
+    });
+  });
+
   describe('adding/removing a listener', function () {
     var push, go, pushSpy, goSpy;
     beforeEach(function () {

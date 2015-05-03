@@ -11,7 +11,7 @@ var DOMHistory = require('./DOMHistory');
  */
 var RefreshHistory = assign(new DOMHistory(1), {
 
-  getCurrentPath: getWindowPath,
+  getPath: getWindowPath,
 
   push(path) {
     window.location = path;

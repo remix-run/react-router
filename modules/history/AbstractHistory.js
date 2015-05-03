@@ -1,5 +1,4 @@
 var invariant = require('react/lib/invariant');
-var NavigationTypes = require('../NavigationTypes');
 var Location = require('../Location');
 
 /**
@@ -7,6 +6,7 @@ var Location = require('../Location');
  * various environments and implementations. Requires concrete
  * subclasses to implement the following methods:
  *
+ * - getPath()
  * - push(path)
  * - replace(path)
  * - go(n)
@@ -57,10 +57,7 @@ class AbstractHistory {
   }
 
   getLocation() {
-    return new Location(
-      this.getPath(),
-      this.navigationType || NavigationTypes.POP
-    );
+    return new Location(this.getPath(), this.navigationType);
   }
 
   back() {
