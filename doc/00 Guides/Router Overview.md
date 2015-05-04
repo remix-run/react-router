@@ -37,7 +37,7 @@ var App = React.createClass({
         <h1>App</h1>
         <Child/>
       </div>
-    )
+    );
   }
 });
 
@@ -98,7 +98,7 @@ var App = React.createClass({
         <h1>App</h1>
         <RouteHandler/>
       </div>
-    )
+    );
   }
 });
 ```
