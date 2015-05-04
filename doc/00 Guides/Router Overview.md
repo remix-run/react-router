@@ -6,19 +6,19 @@ Without React Router
 
 ```js
 var About = React.createClass({
-  render: function () {
+  render () {
     return <h2>About</h2>;
   }
 });
 
 var Inbox = React.createClass({
-  render: function () {
+  render () {
     return <h2>Inbox</h2>;
   }
 });
 
 var Home = React.createClass({
-  render: function () {
+  render () {
     return <h2>Home</h2>;
   }
 });
