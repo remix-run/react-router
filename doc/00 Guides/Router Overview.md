@@ -126,6 +126,18 @@ First we'll make a new `Message` component and then we'll add the route
 under `inbox` so that the UI will nest.
 
 ```js
+var Inbox = React.createClass({
+  render () {
+    return (
+      <div>
+        <h2>Inbox</h2>
+        <RouteHandler/>
+      </div>
+    );
+
+  }
+});
+
 var Message = React.createClass({
   render () {
     return <h3>Message</h3>;
