@@ -69,7 +69,7 @@ With React Router
 Nested URLs and nested component hierarchy are at the heart of React
 Router. Lets make our routing for our little app declarative. We use JSX
 for route configuration because we want to define a view hierarchy with
-properties, so its a pefect fit.
+properties, so its a perfect fit.
 
 ```js
 var Router = require('react-router');
