@@ -51,7 +51,12 @@ function loopAsync(turns, work, callback) {
 
     if (currentTurn < turns) {
       currentTurn += 1;
-      work(currentTurn - 1, next, done);
+
+      try {
+        work(currentTurn - 1, next, done);
+      } catch (error) {
+        done.call(this, error);
+      }
     } else {
       done.apply(this, arguments);
     }

@@ -1,4 +1,4 @@
-var LocationActions = require('../actions/LocationActions');
+var NavigationTypes = require('../NavigationTypes');
 
 /**
  * A scroll behavior that attempts to imitate the default behavior
@@ -6,13 +6,13 @@ var LocationActions = require('../actions/LocationActions');
  */
 var ImitateBrowserBehavior = {
 
-  updateScrollPosition: function (position, actionType) {
-    switch (actionType) {
-      case LocationActions.PUSH:
-      case LocationActions.REPLACE:
+  updateScrollPosition(position, navigationType) {
+    switch (navigationType) {
+      case NavigationTypes.PUSH:
+      case NavigationTypes.REPLACE:
         window.scrollTo(0, 0);
         break;
-      case LocationActions.POP:
+      case NavigationTypes.POP:
         if (position) {
           window.scrollTo(position.x, position.y);
         } else {

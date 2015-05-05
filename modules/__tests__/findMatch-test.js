@@ -54,7 +54,7 @@ describe('Matching pathnames', function () {
       findMatch(RootRoute, '/not-found', function (error, match) {
         expect(error).toNotExist();
         expect(match).toBeAn('object');
-        expect(match.routes).toEqual([ RootRoute, CatchAllRoute ]);
+        expect(match.branch).toEqual([ RootRoute, CatchAllRoute ]);
         done();
       });
     });
@@ -65,7 +65,7 @@ describe('Matching pathnames', function () {
       findMatch(RootRoute, '/', function (error, match) {
         expect(error).toNotExist();
         expect(match).toBeAn('object');
-        expect(match.routes).toEqual([ RootRoute ]);
+        expect(match.branch).toEqual([ RootRoute ]);
         done();
       });
     });
@@ -76,7 +76,7 @@ describe('Matching pathnames', function () {
       findMatch(RootRoute, '/courses', function (error, match) {
         expect(error).toNotExist();
         expect(match).toBeAn('object');
-        expect(match.routes).toEqual([ RootRoute, CoursesRoute ]);
+        expect(match.branch).toEqual([ RootRoute, CoursesRoute ]);
         done();
       });
     });
@@ -96,7 +96,7 @@ describe('Matching pathnames', function () {
       findMatch(RootRoute, '/courses/', function (error, match) {
         expect(error).toNotExist();
         expect(match).toBeAn('object');
-        expect(match.routes).toEqual([ RootRoute, CoursesRoute ]);
+        expect(match.branch).toEqual([ RootRoute, CoursesRoute ]);
         done();
       });
     });
@@ -116,7 +116,7 @@ describe('Matching pathnames', function () {
       findMatch(RootRoute, '/courses/grades', function (error, match) {
         expect(error).toNotExist();
         expect(match).toBeAn('object');
-        expect(match.routes).toEqual([ RootRoute, CoursesRoute, GradesRoute ]);
+        expect(match.branch).toEqual([ RootRoute, CoursesRoute, GradesRoute ]);
         done();
       });
     });
@@ -136,7 +136,7 @@ describe('Matching pathnames', function () {
       findMatch(RootRoute, '/assignments/abc', function (error, match) {
         expect(error).toNotExist();
         expect(match).toBeAn('object');
-        expect(match.routes).toEqual([ RootRoute, CourseRoute, AssignmentRoute ]);
+        expect(match.branch).toEqual([ RootRoute, CourseRoute, AssignmentRoute ]);
         expect(match.params).toEqual({ assignmentID: 'abc' });
         done();
       });
@@ -154,7 +154,7 @@ describe('Matching pathnames', function () {
 
       expect(error).toNotExist();
       expect(match).toBeAn('object');
-      expect(match.routes).toEqual([ RootRoute, CoursesRoute, GradesRoute ]);
+      expect(match.branch).toEqual([ RootRoute, CoursesRoute, GradesRoute ]);
     });
   });
 
@@ -168,7 +168,7 @@ describe('Matching pathnames', function () {
 
         expect(error).toNotExist();
         expect(match).toBeAn('object');
-        expect(match.routes).toEqual([ RootRoute, CourseRoute, AssignmentsRoute ]);
+        expect(match.branch).toEqual([ RootRoute, CourseRoute, AssignmentsRoute ]);
         done();
       });
 

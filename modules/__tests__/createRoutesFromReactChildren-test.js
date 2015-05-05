@@ -2,44 +2,62 @@ var expect = require('expect');
 var React = require('react');
 var createRoutesFromReactChildren = require('../createRoutesFromReactChildren');
 var Route = require('../components/Route');
-var { Foo, Bar, Nested } = require('../TestUtils');
+var { Parent, Header, Sidebar } = require('../TestUtils');
 
 describe('createRoutesFromReactChildren', function () {
+  it('works with nested routes', function () {
+    expect(createRoutesFromReactChildren(
+      <Route component={Parent}>
+        <Route path="home" components={[ Header, Sidebar ]}/>
+      </Route>
+    )).toEqual([
+      {
+        component: Parent,
+        childRoutes: [
+          {
+            path: 'home',
+            components: [ Header, Sidebar ]
+          }
+        ]
+      }
+    ]);
+  });
+
   it('works with falsy children', function () {
     var routes = createRoutesFromReactChildren([
-      <Route path="/foo" component={Foo}/>,
+      <Route path="/foo" component={Parent}/>,
       null,
-      <Route path="/bar" component={Bar}/>,
+      <Route path="/bar" component={Parent}/>,
       undefined
     ]);
 
     expect(routes).toEqual([
       {
         path: '/foo',
-        component: Foo
+        component: Parent
       }, {
         path: '/bar',
-        component: Bar
+        component: Parent
       }
     ]);
   });
 
   it('works with comments', function () {
     var routes = createRoutesFromReactChildren(
-      <Route path="/foo" component={Nested}>
+      <Route path="/foo" component={Parent}>
         // This is a comment.
-        <Route path="/bar" component={Bar}/>
+        <Route path="/bar" component={Header}/>
       </Route>
     );
 
     expect(routes).toEqual([
       {
         path: '/foo',
-        component: Nested,
+        component: Parent,
         childRoutes: [
           {
             path: '/bar',
-            component: Bar
+            component: Header
           }
         ]
       }

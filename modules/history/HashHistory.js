@@ -2,16 +2,17 @@
 var assign = require('object-assign');
 var warning = require('react/lib/warning');
 var NavigationTypes = require('../NavigationTypes');
-var { getHashPath } = require('../DOMUtils');
+var { isAbsolutePath } = require('../PathUtils');
+var { getHashPath, setHashPath } = require('../DOMUtils');
 var DOMHistory = require('./DOMHistory');
 
 function ensureSlash() {
-  var path = HashHistory.getPath();
+  var path = getHashPath();
 
-  if (path.charAt(0) === '/')
+  if (isAbsolutePath(path))
     return true;
 
-  HashHistory.replace('/' + path);
+  setHashPath('/' + path);
 
   return false;
 }
@@ -38,9 +39,6 @@ var HashHistory = assign(new DOMHistory(1), {
   addChangeListener(listener) {
     DOMHistory.prototype.addChangeListener.call(this, listener);
 
-    // Do this BEFORE listening for hashchange.
-    ensureSlash();
-
     if (this.changeListeners.length === 1) {
       if (window.addEventListener) {
         window.addEventListener('hashchange', handleHashChange, false);
@@ -62,7 +60,10 @@ var HashHistory = assign(new DOMHistory(1), {
     }
   },
 
-  getPath: getHashPath,
+  getPath: function () {
+    ensureSlash();
+    return getHashPath();
+  },
 
   push(path) {
     this.current += 1;
@@ -73,10 +74,7 @@ var HashHistory = assign(new DOMHistory(1), {
 
   replace(path) {
     this.navigationType = NavigationTypes.REPLACE;
-
-    window.location.replace(
-      window.location.pathname + window.location.search + '#' + path
-    );
+    setHashPath(path);
   },
 
   canGo(n) {

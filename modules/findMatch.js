@@ -1,4 +1,4 @@
-var { withoutQuery, extractQuery, extractParams, compilePattern, stripLeadingSlashes, stripTrailingSlashes } = require('./PathUtils');
+var { getPathname, compilePattern, stripLeadingSlashes } = require('./PathUtils');
 var { loopAsync } = require('./AsyncUtils');
 
 function getChildRoutes(route, callback) {
@@ -68,7 +68,7 @@ function matchRouteDeep(route, pathname, callback) {
     // This route matched the whole path!
     callback(null, {
       params: createParams(paramNames, paramValues),
-      routes: [ route ]
+      branch: [ route ]
     });
   } else if (remainingPathname != null) {
     // This route matched at least some of the path.
@@ -83,7 +83,7 @@ function matchRouteDeep(route, pathname, callback) {
           } else if (match) {
             // A child route matched! Augment the match and pass it up the stack.
             assignParams(match.params, paramNames, paramValues);
-            match.routes.unshift(route);
+            match.branch.unshift(route);
             callback(null, match);
           } else {
             callback();
@@ -117,22 +117,16 @@ function matchRoutes(routes, pathname, callback) {
  *
  * routes   An array of route objects that matched, in nested order
  * params   An object of URL params (contained in the pathname)
- * query    An object of URL query parameters
  *
- * If no match can be made the argument is undefined.
+ * If no match can be made the callback argument is undefined.
  */
 function findMatch(routes, path, callback) {
   if (!Array.isArray(routes))
     routes = [ routes ]; // Allow a single route
 
-  var pathname = stripLeadingSlashes(withoutQuery(path));
+  var pathname = stripLeadingSlashes(getPathname(path));
 
-  matchRoutes(routes, pathname, function (error, match) {
-    if (match)
-      match.query = extractQuery(path);
-
-    callback(error, match);
-  });
+  matchRoutes(routes, pathname, callback);
 }
 
 module.exports = findMatch;

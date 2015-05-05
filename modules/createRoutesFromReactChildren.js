@@ -2,7 +2,6 @@ var React = require('react');
 var assign = require('object-assign');
 var warning = require('react/lib/warning');
 var invariant = require('react/lib/invariant');
-var validateRoute = require('./validateRoute');
 var DefaultRoute = require('./components/DefaultRoute');
 var CatchAllRoute = require('./components/CatchAllRoute');
 var Redirect = require('./components/Redirect');
@@ -20,57 +19,68 @@ function checkPropTypes(componentName, propTypes, props) {
   }
 }
 
+function getComponentName(component) {
+  return component.displayName || component.name;
+}
+
 function createRouteFromReactElement(element) {
   var type = element.type;
   var route = assign({}, type.defaultProps, element.props);
 
   if (type.propTypes)
-    checkPropTypes(type.displayName, type.propTypes, route);
+    checkPropTypes(getComponentName(type), type.propTypes, route);
+
+  if (route.handler) {
+    warning(
+      false,
+      '<%s handler> is deprecated, use <%s component> instead',
+      getComponentName(type), getComponentName(type)
+    );
+
+    route.component = route.handler;
+    delete route.handler;
+  }
 
   if (type === DefaultRoute) {
-    invariant(
-      route.children == null,
-      'A <DefaultRoute> may not have child routes'
-    );
-
-    warning(
-      route.path == null || route.path === '',
-      'A <DefaultRoute>\'s route.path is always ""; ignoring "%s"',
-      route.path
-    );
-
-    route.path = '';
+    if (route.path !== '') {
+      warning(
+        route.path == null,
+        'A <DefaultRoute>\'s path is always ""; ignoring "%s"',
+        route.path
+      );
+  
+      route.path = '';
+    }
   } else if (type === CatchAllRoute) {
-    invariant(
-      route.children == null,
-      'A <CatchAllRoute> may not have child routes'
-    );
-
-    warning(
-      route.path == null || route.path === '*',
-      'A <CatchAllRoute>\'s route.path is always "*"; ignoring "%s"',
-      route.path
-    );
-
-    route.path = '*';
+    if (route.path !== '*') {
+      warning(
+        route.path == null,
+        'A <CatchAllRoute>\'s path is always "*"; ignoring "%s"',
+        route.path
+      );
+  
+      route.path = '*';
+    }
   } else if (type === Redirect) {
-    invariant(
-      route.children == null,
-      'A <Redirect> may not have child routes'
-    );
+    if (route.path == null)
+      route.path = route.from || '*';
 
-    route.path = route.path || route.from || '*';
-    route.onEnter = function (transition, params, query) {
-      transition.redirect(route.to, route.params || params, route.query || query);
-    };
+    // TODO: Should we have a built-in way to do redirects?
+    invariant(
+      false,
+      '<Redirect> is not supported yet'
+    );
   } else {
+    // Unless otherwise specified, a route's
+    // path defaults to its name.
+    if (route.name && route.path == null)
+      route.path = route.name;
+
     if (route.children) {
       route.childRoutes = createRoutesFromReactChildren(route.children, route);
       delete route.children;
     }
   }
-
-  validateRoute(route);
 
   return route;
 }
@@ -116,14 +126,14 @@ function createRoutesFromReactChildren(children, _parentRoute) {
     if (element.type === DefaultRoute) {
       invariant(
         _parentRoute == null || defaultRoute == null,
-        'A route may not have more than one <DefaultRoute>'
+        'A <Route> may not have more than one <DefaultRoute>'
       );
 
       defaultRoute = route;
     } else if (element.type === CatchAllRoute) {
       invariant(
         _parentRoute == null || catchAllRoute == null,
-        'A route may not have more than one <CatchAllRoute>'
+        'A <Route> may not have more than one <CatchAllRoute>'
       );
 
       catchAllRoute = route;

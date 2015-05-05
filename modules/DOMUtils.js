@@ -1,16 +1,3 @@
-/**
- * Returns the current URL path.
- */
-function getWindowPath() {
-  return decodeURI(
-    window.location.pathname + window.location.search
-  );
-}
-
-/**
- * Returns the URL path contained in the hash portion of the URL,
- * which HashHistory uses to store the current path.
- */
 function getHashPath() {
   return decodeURI(
     // We can't use window.location.hash here because it's not
@@ -19,9 +6,18 @@ function getHashPath() {
   );
 }
 
-/**
- * Returns the current scroll position of the window as { x, y }.
- */
+function setHashPath(path) {
+  window.location.replace(
+    window.location.pathname + window.location.search + '#' + path
+  );
+}
+
+function getWindowPath() {
+  return decodeURI(
+    window.location.pathname + window.location.search
+  );
+}
+
 function getWindowScrollPosition() {
   return {
     x: window.pageXOffset || document.documentElement.scrollLeft,
@@ -44,8 +40,9 @@ function supportsHistory() {
 }
 
 module.exports = {
-  getWindowPath,
   getHashPath,
+  setHashPath,
+  getWindowPath,
   getWindowScrollPosition,
   supportsHistory
 };
