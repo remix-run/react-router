@@ -11,6 +11,7 @@ class TestLocation {
     this.history = history || [];
     this.listeners = [];
     this._updateHistoryLength();
+    this.needsDOM = false;
   }
 
   _updateHistoryLength() {
@@ -69,7 +70,5 @@ class TestLocation {
   }
 
 }
-
-TestLocation.needsDOM = false;
 
 module.exports = TestLocation;
