@@ -19,11 +19,11 @@ function handlePopState(event) {
   var state = event.state;
 
   if ('current' in state)
-    HTML5History.current = state.current;
+    BrowserHistory.current = state.current;
 
-  HTML5History.length = window.history.length;
-  HTML5History.navigationType = NavigationTypes.POP;
-  HTML5History._notifyChange();
+  BrowserHistory.length = window.history.length;
+  BrowserHistory.navigationType = NavigationTypes.POP;
+  BrowserHistory._notifyChange();
 }
 
 var state = window.history.state || {};
@@ -34,7 +34,7 @@ var state = window.history.state || {};
  * Provides the cleanest URLs and a reliable canGo(n) in browser
  * environments. Should always be used in browsers if possible.
  */
-var HTML5History = assign(new DOMHistory(window.history.length, state.current, state.navigationType), {
+var BrowserHistory = assign(new DOMHistory(window.history.length, state.current, state.navigationType), {
 
   // Fall back to full page refreshes in browsers
   // that do not support the HTML5 history API.
@@ -84,4 +84,4 @@ var HTML5History = assign(new DOMHistory(window.history.length, state.current, s
 
 });
 
-module.exports = HTML5History;
+module.exports = BrowserHistory;

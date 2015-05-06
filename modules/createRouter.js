@@ -61,8 +61,8 @@ function checkProps(props) {
  *   var { createRouter } = require('react-router');
  *   var Router = createRouter(routes);
  *
- *   var HTML5History = require('react-router/HTML5History');
- *   React.render(<Router history={HTML5History}/>, document.body);
+ *   var BrowserHistory = require('react-router/BrowserHistory');
+ *   React.render(<Router history={BrowserHistory}/>, document.body);
  *
  * In a server-side environment you should use the router component's
  * static `run` method to determine the props you need to pass to the router.
@@ -70,7 +70,7 @@ function checkProps(props) {
  *   app.get('*', function (req, res) {
  *     Router.run(req.url, function (error, props) {
  *       res.send(
- *         React.renderToString(<Router {...props}/>)
+ *         React.renderToString(React.createElement(Router, props))
  *       );
  *     });
  *   });

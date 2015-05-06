@@ -80,7 +80,7 @@ var HashHistory = assign(new DOMHistory(window.history.length), {
   canGo(n) {
     warning(
       false,
-      'HashHistory keeps session length in memory, so canGo(n) is not durable. Use HTML5History instead'
+      'HashHistory keeps session length in memory, so canGo(n) is not durable. Use BrowserHistory instead'
     );
 
     return DOMHistory.prototype.canGo.call(this, n);

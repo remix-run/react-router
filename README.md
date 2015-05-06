@@ -76,8 +76,8 @@ var Router = createRouter(
   </Route>
 );
 
-var HTML5History = require('react-router/HTML5History');
-React.render(<Router history={HTML5History}/>, document.body);
+var BrowserHistory = require('react-router/BrowserHistory');
+React.render(<Router history={BrowserHistory}/>, document.body);
 
 // Or, for browsers that don't support the HTML5 history API:
 
