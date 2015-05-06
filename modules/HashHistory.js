@@ -3,7 +3,7 @@ var assign = require('object-assign');
 var warning = require('react/lib/warning');
 var NavigationTypes = require('./NavigationTypes');
 var { isAbsolutePath } = require('./PathUtils');
-var { getHashPath, setHashPath } = require('./DOMUtils');
+var { getHashPath, replaceHashPath } = require('./DOMUtils');
 var DOMHistory = require('./DOMHistory');
 
 function ensureSlash() {
@@ -12,7 +12,7 @@ function ensureSlash() {
   if (isAbsolutePath(path))
     return true;
 
-  setHashPath('/' + path);
+  replaceHashPath('/' + path);
 
   return false;
 }
@@ -74,7 +74,7 @@ var HashHistory = assign(new DOMHistory(1), {
 
   replace(path) {
     this.navigationType = NavigationTypes.REPLACE;
-    setHashPath(path);
+    replaceHashPath(path);
   },
 
   canGo(n) {

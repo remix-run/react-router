@@ -6,7 +6,7 @@ function getHashPath() {
   );
 }
 
-function setHashPath(path) {
+function replaceHashPath(path) {
   window.location.replace(
     window.location.pathname + window.location.search + '#' + path
   );
@@ -41,7 +41,7 @@ function supportsHistory() {
 
 module.exports = {
   getHashPath,
-  setHashPath,
+  replaceHashPath,
   getWindowPath,
   getWindowScrollPosition,
   supportsHistory
