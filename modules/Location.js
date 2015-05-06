@@ -1,6 +1,12 @@
 var NavigationTypes = require('./NavigationTypes');
 var { getPathname, getQueryString, getQuery } = require('./PathUtils');
 
+/**
+ * A Location answers two important questions:
+ *
+ * 1. Where am I?
+ * 2. How did I get here?
+ */
 class Location {
 
   constructor(path, navigationType) {

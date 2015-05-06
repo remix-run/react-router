@@ -33,30 +33,36 @@ describe('createRouter', function () {
   }
 
   describe('when the location matches the root route', function () {
-    it('works', function () {
+    it('works', function (done) {
       var Router = createRouter(
         <Route component={Parent}>
           <Route path="home" components={[ Header, Sidebar ]}/>
         </Route>
       );
 
-      var markup = renderToStaticMarkup(<Router location="/"/>);
-      expect(markup).toMatch(/Parent/);
+      Router.run('/', function (error, props) {
+        var markup = renderToStaticMarkup(<Router {...props}/>);
+        expect(markup).toMatch(/Parent/);
+        done();
+      });
     });
   });
 
   describe('when the location matches a nested route', function () {
-    it('works', function () {
+    it('works', function (done) {
       var Router = createRouter(
         <Route component={Parent}>
           <Route path="home" components={[ Header, Sidebar ]}/>
         </Route>
       );
 
-      var markup = renderToStaticMarkup(<Router location="/home"/>);
-      expect(markup).toMatch(/Parent/);
-      expect(markup).toMatch(/Header/);
-      expect(markup).toMatch(/Sidebar/);
+      Router.run('/home', function (error, props) {
+        var markup = renderToStaticMarkup(<Router {...props}/>);
+        expect(markup).toMatch(/Parent/);
+        expect(markup).toMatch(/Header/);
+        expect(markup).toMatch(/Sidebar/);
+        done();
+      });
     });
   });
 

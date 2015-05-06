@@ -51,9 +51,11 @@ describe('A <Link>', function () {
         <Route name="link" component={LinkWrapper}/>
       ]);
 
-      render(<Router location="/link"/>, div, function () {
-        var a = div.querySelector('a');
-        expect(a.getAttribute('href')).toEqual('/hello/michael?the=query');
+      Router.run('/link', function (error, props) {
+        render(<Router {...props}/>, div, function () {
+          var a = div.querySelector('a');
+          expect(a.getAttribute('href')).toEqual('/hello/michael?the=query');
+        });
       });
     });
   });
@@ -78,17 +80,31 @@ describe('A <Link>', function () {
         </Route>
       );
 
-      render(<Router location="/hello"/>, div, function () {
-        var a = div.querySelector('a');
+      var steps = [], a;
+
+      steps.push(function () {
+        a = div.querySelector('a');
         expect(a.className).toEqual('dontKillMe highlight');
-        render(<Router location="/goodbye"/>, div, function () {
-          expect(a.className).toEqual('dontKillMe');
-          render(<Router location="/hello"/>, div, function () {
-            expect(a.className).toEqual('dontKillMe highlight');
-            done();
-          });
-        });
+        this.transitionTo('goodbye');
       });
+
+      steps.push(function () {
+        expect(a.className).toEqual('dontKillMe');
+        this.transitionTo('hello');
+      });
+
+      steps.push(function () {
+        expect(a.className).toEqual('dontKillMe highlight');
+        done();
+      });
+
+      function execNextStep() {
+        steps.shift().apply(this, arguments);
+      }
+
+      var history = new History('/hello');
+
+      render(<Router history={history} onUpdate={execNextStep}/>, div, execNextStep);
     });
 
     it('has its activeStyle', function (done) {
@@ -110,17 +126,31 @@ describe('A <Link>', function () {
         </Route>
       );
 
-      render(<Router location="/hello"/>, div, function () {
-        var a = div.querySelector('a');
+      var steps = [], a;
+
+      steps.push(function () {
+        a = div.querySelector('a');
         expect(a.style.color).toEqual('red');
-        render(<Router location="/goodbye"/>, div, function () {
-          expect(a.style.color).toEqual('white');
-          render(<Router location="/hello"/>, div, function () {
-            expect(a.style.color).toEqual('red');
-            done();
-          });
-        });
+        this.transitionTo('goodbye');
       });
+
+      steps.push(function () {
+        expect(a.style.color).toEqual('white');
+        this.transitionTo('hello');
+      });
+
+      steps.push(function () {
+        expect(a.style.color).toEqual('red');
+        done();
+      });
+
+      function execNextStep() {
+        steps.shift().apply(this, arguments);
+      }
+
+      var history = new History('/hello');
+
+      render(<Router history={history} onUpdate={execNextStep}/>, div, execNextStep);
     });
   });
 
@@ -142,7 +172,9 @@ describe('A <Link>', function () {
         <Route name="link" component={LinkWrapper}/>
       ]);
 
-      React.render(<Router location="/link"/>, div, function () {
+      var history = new History('/link');
+
+      React.render(<Router history={history}/>, div, function () {
         click(div.querySelector('a'));
       });
     });
@@ -168,21 +200,19 @@ describe('A <Link>', function () {
         done();
       });
 
+      function execNextStep() {
+        steps.shift().apply(this, arguments);
+      }
+
+      var Router = createRouter([
+        <Route name="hello" component={Hello}/>,
+        <Route name="link" component={LinkWrapper}/>
+      ]);
+
       var history = new History('/link');
-      var Router = createRouter({
-        history,
-        routes: [
-          <Route name="hello" component={Hello}/>,
-          <Route name="link" component={LinkWrapper}/>
-        ],
-        onUpdate() {
-          steps.shift()();
-        }
-      });
 
-      render(<Router/>, div);
+      render(<Router history={history} onUpdate={execNextStep}/>, div, execNextStep);
     });
-
   });
 
 });

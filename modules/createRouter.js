@@ -1,13 +1,12 @@
 var React = require('react');
 var assign = require('object-assign');
 var invariant = require('react/lib/invariant');
-var { object, string, oneOfType } = React.PropTypes;
-var { location } = require('./PropTypes');
+var { func, object, string, oneOfType, arrayOf } = React.PropTypes;
+var { components, history, location, route } = require('./PropTypes');
 var isReactChildren = require('./isReactChildren');
 var createRoutesFromReactChildren = require('./createRoutesFromReactChildren');
-var { isAbsolutePath, stripLeadingSlashes, stripTrailingSlashes, withQuery, injectParams } = require('./PathUtils');
-var AbstractHistory = require('./AbstractHistory');
 var { mapAsync } = require('./AsyncUtils');
+var NavigationMixin = require('./NavigationMixin');
 var StateMixin = require('./StateMixin');
 var findMatch = require('./findMatch');
 var Transition = require('./Transition');
@@ -33,84 +32,53 @@ function getComponentsForBranch(branch, callback) {
   }, callback);
 }
 
-function searchRoutesSync(routes, test) {
-  var route, branch;
-  for (var i = 0, len = routes.length; i < len; ++i) {
-    route = routes[i];
+function checkProps(props) {
+  var { history, location, branch, params, components } = props;
 
-    if (test(route))
-      return [ route ];
-
-    if (route.childRoutes && (branch = searchRoutesSync(route.childRoutes, test))) {
-      branch.unshift(route);
-      return branch;
-    }
+  if (history) {
+    invariant(
+      !(location || branch || params || components),
+      'A <Router> must not have location, branch, params, or components props when it has a history prop'
+    );
+  } else {
+    invariant(
+      location && branch && params && components,
+      'A <Router> must have location, branch, params, and components props when it does not have a history prop'
+    );
   }
-
-  return null;
-}
-
-function getBranchToRoute(routes, route) {
-  return searchRoutesSync(routes, function (r) {
-    return r === route;
-  });
-}
-
-function getBranchToRouteWithName(routes, name) {
-  return searchRoutesSync(routes, function (route) {
-    return route.name === name;
-  });
-}
-
-function makePatternFromBranch(branch) {
-  return branch.reduce(function (pattern, route) {
-    return stripTrailingSlashes(pattern) + '/' + stripLeadingSlashes(route.path);
-  }, '');
 }
 
 /**
- * Wraps the given component in a new Router component. The Router component
- * gets its state from one of two places:
+ * Creates and returns a new Router component that uses the given routes to
+ * determine what to render to the page.
  *
- * - A History object
- * - A single Location object
- *
- * A History object acts like a store for Location objects and emits new
+ * In a client-side environment you simply pass a History object to the Router
+ * as a prop. A History acts like a store for Location objects and emits new
  * ones as the location changes over time (i.e. a user navigates around your
  * site). History objects are included for all the most common scenarios in
  * which the router may be used.
  *
- *   var HTML5History = require('react-router/HTML5History');
- *   var { createRouter } = require('react-router');
- *   var Router = createRouter(routes, HTML5History);
- *   React.render(<Router/>, document.body);
- *
- * In a server-side routing scenario, you should use pass the URL of
- * the incoming request directly to the Router in the location prop.
- *
  *   var { createRouter } = require('react-router');
  *   var Router = createRouter(routes);
  *
+ *   var HTML5History = require('react-router/HTML5History');
+ *   React.render(<Router history={HTML5History}/>, document.body);
+ *
+ * In a server-side environment you should use the router component's
+ * static `run` method to determine the props you need to pass to the router.
+ *
  *   app.get('*', function (req, res) {
- *     res.send(
- *       React.renderToString(<Router location={req.url}/>)
- *     );
+ *     Router.run(req.url, function (error, props) {
+ *       res.send(
+ *         React.renderToString(<Router {...props}/>)
+ *       );
+ *     });
  *   });
  */
-function createRouter(options, history) {
-  options = options || {};
-
-  if (isReactChildren(options))
-    options = { routes: options };
-
-  if (history)
-    options.history = history;
-
-  var { routes, history, onError, onChange, onUpdate } = options;
-
+function createRouter(routes) {
   invariant(
     routes != null,
-    'A router needs at least one route'
+    'A router needs some routes'
   );
 
   if (isReactChildren(routes)) {
@@ -119,126 +87,6 @@ function createRouter(options, history) {
   } else if (!Array.isArray(routes)) {
     routes = [ routes ];
   }
-
-  if (history && history.fallback)
-    history = history.fallback;
-
-  var currentTransition;
-
-  var NavigationMixin = {
-    
-    /**
-     * Returns an absolute URL path created from the given route
-     * name, URL parameters, and query.
-     */
-    makePath(to, params, query) {
-      var pattern;
-      if (isAbsolutePath(to)) {
-        pattern = to;
-      } else {
-        var branch = typeof to === 'string' ? getBranchToRouteWithName(routes, to) : getBranchToRoute(routes, to);
-
-        invariant(
-          branch,
-          'Cannot find route "%s"',
-          to
-        );
-
-        pattern = makePatternFromBranch(branch);
-      }
-
-      return withQuery(injectParams(pattern, params), query);
-    },
-
-    /**
-     * Returns a string that may safely be used as the href of a link
-     * to the route with the given name, URL parameters, and query.
-     */
-    makeHref(to, params, query) {
-      var path = this.makePath(to, params, query);
-
-      if (history)
-        return history.makeHref(path);
-
-      return path;
-    },
-
-    /**
-     * Transitions to the URL specified in the arguments by pushing
-     * a new URL onto the history stack.
-     */
-    transitionTo(to, params, query) {
-      invariant(
-        history,
-        'transitionTo() needs history'
-      );
-
-      var path = this.makePath(to, params, query);
-
-      if (currentTransition) {
-        currentTransition.isCancelled = true;
-
-        // Replace so pending location does not stay in history.
-        history.replace(path);
-      } else {
-        history.push(path);
-      }
-    },
-
-    /**
-     * Transitions to the URL specified in the arguments by replacing
-     * the current URL in the history stack.
-     */
-    replaceWith(to, params, query) {
-      invariant(
-        history,
-        'replaceWith() needs history'
-      );
-
-      if (currentTransition)
-        currentTransition.isCancelled = true;
-
-      history.replace(this.makePath(to, params, query));
-    },
-
-    go(n) {
-      invariant(
-        history,
-        'go() needs history'
-      );
-
-      if (currentTransition)
-        currentTransition.isCancelled = true;
-
-      history.go(n);
-    },
-
-    goBack() {
-      this.go(-1);
-    },
-
-    goForward() {
-      this.go(1);
-    },
-
-    canGo(n) {
-      invariant(
-        history,
-        'canGo() needs history'
-      );
-
-      return history.canGo(n);
-    },
-
-    canGoBack() {
-      return this.canGo(-1);
-    },
-
-    canGoForward() {
-      return this.canGo(1);
-    }
-
-  };
 
   class Router extends React.Component {
 
@@ -285,36 +133,37 @@ function createRouter(options, history) {
     }
 
     static propTypes = {
-      location: oneOfType([ string, location ])
+      onError: func,
+      onUpdate: func,
+
+      // We either need a history...
+      history,
+
+      // OR ALL of these...
+      location: oneOfType([ string, location ]),
+      branch: arrayOf(route),
+      params: object,
+      components: arrayOf(components)
+    }
+
+    static childContextTypes = {
+      router: object.isRequired
     }
 
     constructor(props) {
       super(props);
-      this.handleLocationChange = this.handleLocationChange.bind(this);
+      this._updateLocation = this._updateLocation.bind(this);
+      this.nextLocation = null;
       this.state = {
-        location: null,
-        branch: null,
-        params: null,
-        components: null
+        location: props.location,
+        branch: props.branch,
+        params: props.params,
+        components: props.components
       };
     }
 
-    handleError(error) {
-      if (onError) {
-        onError.call(this, error);
-      } else {
-        // Throw errors so we don't silently swallow them.
-        throw error; // This error probably originated in getChildRoutes, getComponents, or routerWillUpdate.
-      }
-    }
-
-    handleLocationChange() {
-      this._updateLocation(history.getLocation());
-    }
-
     _updateLocation(location) {
-      var transition = new Transition(location);
-      currentTransition = transition;
+      this.nextLocation = location;
 
       Router.run(location, (error, state) => {
         if (error) {
@@ -322,58 +171,66 @@ function createRouter(options, history) {
           return;
         }
 
-        if (currentTransition !== transition)
-          return; // Another transition interrupted this one.
+        if (this.nextLocation !== location)
+          return; // Another location change interrupted this one.
 
-        if (state) {
-          try {
-            if (onChange)
-              onChange.call(this, this, this.state, state);
-  
-            if (!transition.isCancelled)
-              this.setState(state, onUpdate);
-          } catch (error) {
-            this.handleError(error);
-          }
-        }
+        this.nextLocation = null;
 
-        currentTransition = null;
+        if (state)
+          this.setState(state, this.props.onUpdate);
       });
     }
 
-    componentWillMount() {
-      invariant(
-        this.props.location || history,
-        'Router needs a location or history'
-      );
+    handleError(error) {
+      if (this.props.onError) {
+        this.props.onError.call(this, error);
+      } else {
+        // Throw errors so we don't silently swallow them.
+        throw error; // This error probably originated in getChildRoutes or getComponents.
+      }
+    }
 
-      this._updateLocation(
-        this.props.location || history.getLocation()
-      );
+    getHistory() {
+      var { history } = this.props;
+
+      if (history == null)
+        return null;
+
+      return history.fallback || history;
+    }
+
+    getRoutes() {
+      return routes;
+    }
+
+    componentWillMount() {
+      checkProps(this.props);
+
+      var history = this.getHistory();
+
+      if (history)
+        this._updateLocation(history.getLocation());
     }
 
     componentDidMount() {
-      if (history)
-        history.addChangeListener(this.handleLocationChange);
+      var history = this.getHistory();
 
-      // The setState callback is ignored when it is called from inside
-      // componentWillMount. So we need to trigger onUpdate manually here.
-      if (onUpdate)
-        onUpdate.call(this);
+      if (history)
+        history.addChangeListener(this._updateLocation);
     }
 
     componentWillReceiveProps(nextProps) {
-      if (this.props.location !== nextProps.location)
-        this._updateLocation(nextProps.location);
+      checkProps(nextProps);
+
+      if (!nextProps.history)
+        this.setState(nextProps);
     }
 
     componentWillUnmount() {
-      if (history)
-        history.removeChangeListener(this.handleLocationChange);
-    }
+      var history = this.getHistory();
 
-    static childContextTypes = {
-      router: object.isRequired
+      if (history)
+        history.removeChangeListener(this._updateLocation);
     }
 
     getChildContext() {

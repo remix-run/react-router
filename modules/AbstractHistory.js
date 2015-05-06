@@ -32,12 +32,33 @@ class AbstractHistory {
     this.navigationType = navigationType;
   }
 
+  /**
+   * This is the high-level sugar API for adding a listener and
+   * triggering it immediately in one shot, useful when you're
+   * doing data-fetching before you render.
+   *
+   *   History.listen(function (location) {
+   *     Router.run(location, function (error, props) {
+   *       fetchData(props.branch, function (data) {
+   *         wrapComponentsWithData(props.components, data);
+   *         React.render(<Router {...props}/>, document.body);
+   *       });
+   *     });
+   *   });
+   */
+  listen(listener) {
+    this.addChangeListener(listener);
+    listener.call(this, this.getLocation());
+  }
+
   _notifyChange() {
     if (!this.changeListeners)
       return;
 
+    var location = this.getLocation();
+
     for (var i = 0, len = this.changeListeners.length; i < len; ++i)
-      this.changeListeners[i].call(this);
+      this.changeListeners[i].call(this, location);
   }
 
   addChangeListener(listener) {

@@ -23,27 +23,33 @@ describe('A <Route>', function () {
     }
   }
 
-  it('renders nested children correctly', function () {
+  it('renders nested children correctly', function (done) {
     var Router = createRouter(
       <Route component={Parent}>
         <Route path="hello" component={Hello}/>
       </Route>
     );
 
-    var markup = renderToStaticMarkup(<Router location="/hello"/>);
-    expect(markup).toMatch(/Parent/);
-    expect(markup).toMatch(/Hello/);
+    Router.run('/hello', function (error, props) {
+      var markup = renderToStaticMarkup(<Router {...props}/>);
+      expect(markup).toMatch(/Parent/);
+      expect(markup).toMatch(/Hello/);
+      done();
+    });
   });
 
-  it('renders the child\'s component when it has no component', function () {
+  it('renders the child\'s component when it has no component', function (done) {
     var Router = createRouter(
       <Route>
         <Route path="hello" component={Hello}/>
       </Route>
     );
 
-    var markup = renderToStaticMarkup(<Router location="/hello"/>);
-    expect(markup).toMatch(/Hello/);
+    Router.run('/hello', function (error, props) {
+      var markup = renderToStaticMarkup(<Router {...props}/>);
+      expect(markup).toMatch(/Hello/);
+      done();
+    });
   });
 
 });
