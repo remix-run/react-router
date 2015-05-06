@@ -1,32 +1,13 @@
 var React = require('react');
-var Router = require('react-router');
-var { Route, RouteHandler, Link } = Router;
-
-var App = React.createClass({
-  render: function () {
-    return (
-      <div>
-        <ul>
-          <li><Link to="user" params={{userID: "123"}}>Bob</Link></li>
-          <li><Link to="user" params={{userID: "123"}} query={{showAge: true}}>Bob With Query Params</Link></li>
-          <li><Link to="user" params={{userID: "abc"}}>Sally</Link></li>
-        </ul>
-        <RouteHandler/>
-      </div>
-    );
-  }
-});
+var HashHistory = require('react-router/HashHistory');
+var { createRouter, State, Route, Link } = require('react-router');
 
 var User = React.createClass({
-
-  contextTypes: {
-    router: React.PropTypes.func
-  },
-
-  render: function () {
-    var { router } = this.context;
-    var age = router.getCurrentQuery().showAge ? '33' : '';
-    var userID = router.getCurrentParams().userID;
+  mixins: [ State ],
+  render() {
+    var query = this.getQuery();
+    var age = query && query.showAge ? '33' : '';
+    var { userID } = this.getParams();
     return (
       <div className="User">
         <h1>User id: {userID}</h1>
@@ -36,12 +17,26 @@ var User = React.createClass({
   }
 });
 
-var routes = (
-  <Route handler={App}>
-    <Route name="user" path="user/:userID" handler={User}/>
-  </Route>
+var App = React.createClass({
+  render() {
+    return (
+      <div>
+        <ul>
+          <li><Link to="user" params={{userID: "123"}}>Bob</Link></li>
+          <li><Link to="user" params={{userID: "123"}} query={{showAge: true}}>Bob With Query Params</Link></li>
+          <li><Link to="user" params={{userID: "abc"}}>Sally</Link></li>
+        </ul>
+        {this.props.children}
+      </div>
+    );
+  }
+});
+
+var Router = createRouter(
+  <Route component={App}>
+    <Route name="user" path="user/:userID" component={User}/>
+  </Route>,
+  HashHistory
 );
 
-Router.run(routes, function (Handler) {
-  React.render(<Handler/>, document.getElementById('example'));
-});
+React.render(<Router/>, document.getElementById('example'));
