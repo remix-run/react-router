@@ -1,5 +1,5 @@
 var invariant = require('react/lib/invariant');
-var Location = require('../Location');
+var Location = require('./Location');
 
 /**
  * A history interface that normalizes the differences across

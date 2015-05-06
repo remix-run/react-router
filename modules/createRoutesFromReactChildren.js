@@ -1,10 +1,11 @@
 var React = require('react');
-var assign = require('object-assign');
 var warning = require('react/lib/warning');
 var invariant = require('react/lib/invariant');
-var DefaultRoute = require('./components/DefaultRoute');
-var CatchAllRoute = require('./components/CatchAllRoute');
-var Redirect = require('./components/Redirect');
+var assign = require('object-assign');
+
+function getComponentName(component) {
+  return component.displayName || component.name;
+}
 
 function checkPropTypes(componentName, propTypes, props) {
   componentName = componentName || 'UnknownComponent';
@@ -17,10 +18,6 @@ function checkPropTypes(componentName, propTypes, props) {
         warning(false, error.message);
     }
   }
-}
-
-function getComponentName(component) {
-  return component.displayName || component.name;
 }
 
 function createRouteFromReactElement(element) {
@@ -41,45 +38,13 @@ function createRouteFromReactElement(element) {
     delete route.handler;
   }
 
-  if (type === DefaultRoute) {
-    if (route.path !== '') {
-      warning(
-        route.path == null,
-        'A <DefaultRoute>\'s path is always ""; ignoring "%s"',
-        route.path
-      );
-  
-      route.path = '';
-    }
-  } else if (type === CatchAllRoute) {
-    if (route.path !== '*') {
-      warning(
-        route.path == null,
-        'A <CatchAllRoute>\'s path is always "*"; ignoring "%s"',
-        route.path
-      );
-  
-      route.path = '*';
-    }
-  } else if (type === Redirect) {
-    if (route.path == null)
-      route.path = route.from || '*';
+  // Unless otherwise specified, a route's path defaults to its name.
+  if (route.name && route.path == null)
+    route.path = route.name;
 
-    // TODO: Should we have a built-in way to do redirects?
-    invariant(
-      false,
-      '<Redirect> is not supported yet'
-    );
-  } else {
-    // Unless otherwise specified, a route's
-    // path defaults to its name.
-    if (route.name && route.path == null)
-      route.path = route.name;
-
-    if (route.children) {
-      route.childRoutes = createRoutesFromReactChildren(route.children, route);
-      delete route.children;
-    }
+  if (route.children) {
+    route.childRoutes = createRoutesFromReactChildren(route.children);
+    delete route.children;
   }
 
   return route;
@@ -94,61 +59,31 @@ function createRouteFromReactElement(element) {
  *   
  *   var routes = createRoutesFromReactChildren(
  *     <Route handler={App}>
- *       <DefaultRoute handler={Dashboard}/>
- *       <Route path="news" handler={NewsFeed}/>
- *       <CatchAllRoute handler={NotFound}/>
+ *       <Route name="home" handler={Dashboard}/>
+ *       <Route name="news" handler={NewsFeed}/>
  *     </Route>
  *   );
  *
  * This method is automatically used when you provide a ReactChildren
- * object as your routes.
+ * object to createRouter.
  *
- *   var RootComponent = React.createClass({
- *     statics: {
- *       routes: (
- *         <Route .../>
- *       )
- *     }
- *   });
+ *   var Router = createRouter(
+ *     <Route .../>
+ *   );
  *
- *   var Router = createRouter(RootComponent);
+ *   React.render(<Router/>, ...);
  */
-function createRoutesFromReactChildren(children, _parentRoute) {
+function createRoutesFromReactChildren(children) {
   var routes = [];
-  var defaultRoute, catchAllRoute;
 
   React.Children.forEach(children, function (element) {
     if (!React.isValidElement(element))
       return;
 
-    var route = createRouteFromReactElement(element);
-
-    if (element.type === DefaultRoute) {
-      invariant(
-        _parentRoute == null || defaultRoute == null,
-        'A <Route> may not have more than one <DefaultRoute>'
-      );
-
-      defaultRoute = route;
-    } else if (element.type === CatchAllRoute) {
-      invariant(
-        _parentRoute == null || catchAllRoute == null,
-        'A <Route> may not have more than one <CatchAllRoute>'
-      );
-
-      catchAllRoute = route;
-    } else {
-      routes.push(route);
-    }
+    routes.push(
+      createRouteFromReactElement(element)
+    );
   });
-
-  // Order here is important. We want to try the default route
-  // before the catch-all but *after* all other routes.
-  if (defaultRoute)
-    routes.push(defaultRoute);
-
-  if (catchAllRoute)
-    routes.push(catchAllRoute);
 
   return routes;
 }

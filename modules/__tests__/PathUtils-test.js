@@ -99,31 +99,9 @@ describe('PathUtils.injectParams', function () {
   });
 });
 
-describe('PathUtils.extractQuery', function () {
-  describe('when the path contains a query string', function () {
-    it('returns the parsed query object', function () {
-      expect(PathUtils.extractQuery('/?id=def&show=true')).toEqual({ id: 'def', show: 'true' });
-    });
-
-    it('properly handles arrays', function () {
-      expect(PathUtils.extractQuery('/?id%5B%5D=a&id%5B%5D=b')).toEqual({ id: [ 'a', 'b' ] });
-    });
-
-    it('properly handles encoded ampersands', function () {
-      expect(PathUtils.extractQuery('/?id=a%26b')).toEqual({ id: 'a&b' });
-    });
-  });
-
-  describe('when the path does not contain a query string', function () {
-    it('returns null', function () {
-      expect(PathUtils.extractQuery('/a/b/c')).toBe(null);
-    });
-  });
-});
-
-describe('PathUtils.withoutQuery', function () {
-  it('removes the query string', function () {
-    expect(PathUtils.withoutQuery('/a/b/c?id=def')).toEqual('/a/b/c');
+describe('PathUtils.getPathname', function () {
+  it('returns the pathname portion of a path', function () {
+    expect(PathUtils.getPathname('/a/b/c?id=def')).toEqual('/a/b/c');
   });
 });
 
@@ -132,15 +110,7 @@ describe('PathUtils.withQuery', function () {
     expect(PathUtils.withQuery('/a/b/c', { id: 'def' })).toEqual('/a/b/c?id=def');
   });
 
-  it('merges two query strings', function () {
-    expect(PathUtils.withQuery('/path?a=b', { c: [ 'd', 'e' ] })).toEqual('/path?a=b&c%5B%5D=d&c%5B%5D=e');
-  });
-
-  it('removes query string', function () {
-    expect(PathUtils.withQuery('/a/b/c?a=b', { a: undefined })).toEqual('/a/b/c');
-  });
-
   it('handles special characters', function () {
-    expect(PathUtils.withQuery('/path?a=b', { c: [ 'd#e', 'f&a=i#j+k' ] })).toEqual('/path?a=b&c%5B%5D=d%23e&c%5B%5D=f%26a%3Di%23j%2Bk');
+    expect(PathUtils.withQuery('/path', { c: [ 'd#e', 'f&a=i#j+k' ] })).toEqual('/path?c%5B%5D=d%23e&c%5B%5D=f%26a%3Di%23j%2Bk');
   });
 });

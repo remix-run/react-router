@@ -1,9 +1,8 @@
 var expect = require('expect');
 var React = require('react');
 var { renderToStaticMarkup } = React;
-var History = require('../history/History');
-var { Route } = require('../TestUtils');
 var createRouter = require('../createRouter');
+var Route = require('../Route');
 
 describe('createRouter', function () {
 
@@ -33,30 +32,28 @@ describe('createRouter', function () {
     }
   }
 
-  class Root extends React.Component {
-    static routes = (
-      <Route component={Parent}>
-        <Route path="home" components={[ Header, Sidebar ]}/>
-      </Route>
-    )
-
-    render() {
-      return this.props.children;
-    }
-  }
-
   describe('when the location matches the root route', function () {
     it('works', function () {
-      var Router = createRouter(Root, new History('/'))
-      var markup = renderToStaticMarkup(<Router/>);
+      var Router = createRouter(
+        <Route component={Parent}>
+          <Route path="home" components={[ Header, Sidebar ]}/>
+        </Route>
+      );
+
+      var markup = renderToStaticMarkup(<Router location="/"/>);
       expect(markup).toMatch(/Parent/);
     });
   });
 
   describe('when the location matches a nested route', function () {
     it('works', function () {
-      var Router = createRouter(Root, new History('/home'));
-      var markup = renderToStaticMarkup(<Router/>);
+      var Router = createRouter(
+        <Route component={Parent}>
+          <Route path="home" components={[ Header, Sidebar ]}/>
+        </Route>
+      );
+
+      var markup = renderToStaticMarkup(<Router location="/home"/>);
       expect(markup).toMatch(/Parent/);
       expect(markup).toMatch(/Header/);
       expect(markup).toMatch(/Sidebar/);

@@ -44,6 +44,7 @@ class Link extends React.Component {
   }
   
   static defaultProps = {
+    className: '',
     activeClassName: 'active'
   }
 
@@ -87,10 +88,10 @@ class Link extends React.Component {
 
     if (this.isActive()) {
       if (props.activeClassName)
-        props.className = (props.className ? `${props.className} ${props.activeClassName}` : props.activeClassName);
+        props.className += ` ${props.activeClassName}`;
 
       if (props.activeStyle)
-        props.style = props.activeStyle;
+        assign(props.style, props.activeStyle);
     }
 
     return React.DOM.a(props, this.props.children);

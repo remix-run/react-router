@@ -1,9 +1,9 @@
 /* jshint -W058 */
 var assign = require('object-assign');
 var warning = require('react/lib/warning');
-var NavigationTypes = require('../NavigationTypes');
-var { isAbsolutePath } = require('../PathUtils');
-var { getHashPath, setHashPath } = require('../DOMUtils');
+var NavigationTypes = require('./NavigationTypes');
+var { isAbsolutePath } = require('./PathUtils');
+var { getHashPath, setHashPath } = require('./DOMUtils');
 var DOMHistory = require('./DOMHistory');
 
 function ensureSlash() {

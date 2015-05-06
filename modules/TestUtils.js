@@ -1,39 +1,11 @@
 var React = require('react');
-var Link = require('./components/Link');
-var CatchAllRoute = require('./components/CatchAllRoute');
-var DefaultRoute = require('./components/DefaultRoute');
-var Redirect = require('./components/Redirect');
-var Route = require('./components/Route');
-
-class Parent extends React.Component {
-  render() {
-    return (
-      <div>
-        <h1>Parent</h1>
-        {this.props.children}
-      </div>
-    );
-  }
-}
-
-class Header extends React.Component {
-  render() {
-    return <div>Header</div>;
-  }
-}
-
-class Sidebar extends React.Component {
-  render() {
-    return <div>Sidebar</div>;
-  }
-}
+var Link = require('./Link');
+var CatchAllRoute = require('./CatchAllRoute');
+var DefaultRoute = require('./DefaultRoute');
+var Redirect = require('./Redirect');
+var Route = require('./Route');
 
 module.exports = {
-  // fixtures
-  Parent,
-  Header,
-  Sidebar,
-
   // components
   Link,
 

@@ -1,12 +1,12 @@
 var React = require('react');
-var { object, string, oneOfType } = React.PropTypes;
-var { location } = require('./PropTypes');
 var assign = require('object-assign');
 var invariant = require('react/lib/invariant');
+var { object, string, oneOfType } = React.PropTypes;
+var { location } = require('./PropTypes');
 var isReactChildren = require('./isReactChildren');
 var createRoutesFromReactChildren = require('./createRoutesFromReactChildren');
 var { isAbsolutePath, stripLeadingSlashes, stripTrailingSlashes, withQuery, injectParams } = require('./PathUtils');
-var AbstractHistory = require('./history/AbstractHistory');
+var AbstractHistory = require('./AbstractHistory');
 var { mapAsync } = require('./AsyncUtils');
 var StateMixin = require('./StateMixin');
 var findMatch = require('./findMatch');
@@ -76,19 +76,20 @@ function makePatternFromBranch(branch) {
  * - A single Location object
  *
  * A History object acts like a store for Location objects and emits new
- * ones as the location changes over time. History objects are included for
- * all the most common scenarios in which the router may be used.
+ * ones as the location changes over time (i.e. a user navigates around your
+ * site). History objects are included for all the most common scenarios in
+ * which the router may be used.
  *
- *   var { createRouter } = require('react-router');
  *   var HTML5History = require('react-router/HTML5History');
- *   var Router = createRouter(RootComponent, HTML5History);
+ *   var { createRouter } = require('react-router');
+ *   var Router = createRouter(routes, HTML5History);
  *   React.render(<Router/>, document.body);
  *
  * In a server-side routing scenario, you should use pass the URL of
  * the incoming request directly to the Router in the location prop.
  *
  *   var { createRouter } = require('react-router');
- *   var Router = createRouter(RootComponent);
+ *   var Router = createRouter(routes);
  *
  *   app.get('*', function (req, res) {
  *     res.send(
@@ -96,23 +97,28 @@ function makePatternFromBranch(branch) {
  *     );
  *   });
  */
-function createRouter(component, history) {
-  invariant(
-    typeof component === 'function',
-    'createRouter needs a valid component class'
-  );
+function createRouter(options, history) {
+  options = options || {};
 
-  var routes = component.routes;
+  if (isReactChildren(options))
+    options = { routes: options };
+
+  if (history)
+    options.history = history;
+
+  var { routes, history, onError, onChange, onUpdate } = options;
 
   invariant(
     routes != null,
-    'The <%s> component does not have any routes. Use the static "routes" property',
-    component.displayName || component.name
+    'A router needs at least one route'
   );
 
-  // Allow users to specify routes as JSX at this level.
-  if (isReactChildren(routes))
+  if (isReactChildren(routes)) {
+    // Allow users to specify routes as JSX.
     routes = createRoutesFromReactChildren(routes);
+  } else if (!Array.isArray(routes)) {
+    routes = [ routes ];
+  }
 
   if (history && history.fallback)
     history = history.fallback;
@@ -285,7 +291,6 @@ function createRouter(component, history) {
     constructor(props) {
       super(props);
       this.handleLocationChange = this.handleLocationChange.bind(this);
-
       this.state = {
         location: null,
         branch: null,
@@ -295,8 +300,8 @@ function createRouter(component, history) {
     }
 
     handleError(error) {
-      if (component.handleRouterError) {
-        component.handleRouterError(error);
+      if (onError) {
+        onError.call(this, error);
       } else {
         // Throw errors so we don't silently swallow them.
         throw error; // This error probably originated in getChildRoutes, getComponents, or routerWillUpdate.
@@ -322,11 +327,11 @@ function createRouter(component, history) {
 
         if (state) {
           try {
-            if (component.routerWillUpdate)
-              component.routerWillUpdate(this, state, this.state);
+            if (onChange)
+              onChange.call(this, this, state, this.state);
   
             if (!transition.isCancelled)
-              this.setState(state);
+              this.setState(state, onUpdate);
           } catch (error) {
             this.handleError(error);
           }
@@ -350,6 +355,16 @@ function createRouter(component, history) {
     componentDidMount() {
       if (history)
         history.addChangeListener(this.handleLocationChange);
+
+      // The setState callback is ignored when it is called from inside
+      // componentWillMount. So we need to trigger onUpdate manually here.
+      if (onUpdate)
+        onUpdate.call(this);
+    }
+
+    componentWillReceiveProps(nextProps) {
+      if (this.props.location !== nextProps.location)
+        this._updateLocation(nextProps.location);
     }
 
     componentWillUnmount() {
@@ -368,13 +383,13 @@ function createRouter(component, history) {
     }
 
     render() {
+      var children = null;
       var { location, branch, params, components } = this.state;
 
-      var children;
       if (components) {
         children = components.reduceRight(function (children, components, index) {
           if (components == null)
-            return null;
+            return children; // Don't create new children; use the grandchildren.
 
           var route = branch[index];
           var props = { location, params, route, children };
@@ -383,8 +398,10 @@ function createRouter(component, history) {
             return components.map(function (component) {
               return createElement(component, assign({}, props));
             });
-          } else if (typeof components === 'object') {
-            // Use children like:
+          }
+          
+          if (typeof components === 'object') {
+            // In render, use children like:
             // var { header, sidebar } = this.props.children;
             var elements = {};
             
@@ -396,10 +413,10 @@ function createRouter(component, history) {
           }
 
           return createElement(components, props);
-        }, null);
+        }, children);
       }
 
-      return createElement(component, { location, params, children });
+      return children;
     }
 
   }

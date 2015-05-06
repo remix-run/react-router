@@ -1,7 +1,7 @@
 /* jshint -W058 */
 var assign = require('object-assign');
-var NavigationTypes = require('../NavigationTypes');
-var { getWindowPath, supportsHistory } = require('../DOMUtils');
+var NavigationTypes = require('./NavigationTypes');
+var { getWindowPath, supportsHistory } = require('./DOMUtils');
 var RefreshHistory = require('./RefreshHistory');
 var DOMHistory = require('./DOMHistory');
 

@@ -1,7 +1,7 @@
 var React = require('react');
-var { string, bool, func } = React.PropTypes;
-var { component, components } = require('../PropTypes');
 var invariant = require('react/lib/invariant');
+var { string, bool, func } = React.PropTypes;
+var { component, components } = require('./PropTypes');
 
 /**
  * A <Route> is used to declare which components are rendered to the page when
