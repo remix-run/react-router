@@ -1,13 +1,7 @@
 var React = require('react');
-var Router = require('react-router');
+var HashHistory = require('react-router/HashHistory');
+var { createRouter, State, Navigation, Route, Link } = require('react-router');
 var ContactStore = require('./ContactStore');
-var {
-  Route,
-  DefaultRoute,
-  NotFoundRoute,
-  RouteHandler,
-  Link
-} = Router;
 
 var App = React.createClass({
   getInitialState: function () {
@@ -43,6 +37,7 @@ var App = React.createClass({
     var contacts = this.state.contacts.map(function (contact) {
       return <li key={contact.id}><Link to="contact" params={contact}>{contact.first}</Link></li>;
     });
+
     return (
       <div className="App">
         <div className="ContactList">
@@ -53,7 +48,7 @@ var App = React.createClass({
           <Link to="/nothing-here">Invalid Link (not found)</Link>
         </div>
         <div className="Content">
-          <RouteHandler/>
+          {this.props.children || <Index/>}
         </div>
       </div>
     );
@@ -67,13 +62,11 @@ var Index = React.createClass({
 });
 
 var Contact = React.createClass({
-
-  contextTypes: {
-    router: React.PropTypes.func
-  },
+  mixins: [ State, Navigation ],
 
   getStateFromStore: function () {
-    var id = this.context.router.getCurrentParams().id;
+    var { id } = this.getParams();
+
     return {
       contact: ContactStore.getContact(id)
     };
@@ -103,10 +96,9 @@ var Contact = React.createClass({
   },
 
   destroy: function () {
-    var { router } = this.context;
-    var id = router.getCurrentParams().id;
+    var { id } = this.getParams();
     ContactStore.removeContact(id);
-    router.transitionTo('/');
+    this.transitionTo('/');
   },
 
   render: function () {
@@ -124,18 +116,16 @@ var Contact = React.createClass({
 });
 
 var NewContact = React.createClass({
-
-  contextTypes: {
-    router: React.PropTypes.func
-  },
+  mixins: [ Navigation ],
 
   createContact: function (event) {
     event.preventDefault();
+
     ContactStore.addContact({
       first: this.refs.first.getDOMNode().value,
       last: this.refs.last.getDOMNode().value
     }, function (contact) {
-      this.context.router.transitionTo('contact', { id: contact.id });
+      this.transitionTo('contact', { id: contact.id });
     }.bind(this));
   },
 
@@ -160,15 +150,13 @@ var NotFound = React.createClass({
   }
 });
 
-var routes = (
-  <Route handler={App}>
-    <DefaultRoute handler={Index}/>
-    <Route name="new" path="contact/new" handler={NewContact}/>
-    <Route name="contact" path="contact/:id" handler={Contact}/>
-    <NotFoundRoute handler={NotFound}/>
-  </Route>
+var Router = createRouter(
+  <Route component={App}>
+    <Route name="new" path="contact/new" component={NewContact}/>
+    <Route name="contact" path="contact/:id" component={Contact}/>
+    <Route path="*" component={NotFound}/>
+  </Route>,
+  HashHistory
 );
 
-Router.run(routes, function (Handler) {
-  React.render(<Handler/>, document.getElementById('example'));
-});
+React.render(<Router/>, document.getElementById('example'));
