@@ -328,7 +328,7 @@ function createRouter(options, history) {
         if (state) {
           try {
             if (onChange)
-              onChange.call(this, this, state, this.state);
+              onChange.call(this, this, this.state, state);
   
             if (!transition.isCancelled)
               this.setState(state, onUpdate);
