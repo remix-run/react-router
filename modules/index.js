@@ -16,8 +16,8 @@ exports.ImitateBrowserBehavior = require('./behaviors/ImitateBrowserBehavior');
 exports.ScrollToTopBehavior = require('./behaviors/ScrollToTopBehavior');
 
 exports.History = require('./History');
-exports.Navigation = require('./Navigation');
-exports.State = require('./State');
+exports.Navigation = exports.NavigationMixin = require('./Navigation');
+exports.State = exports.StateMixin = require('./State');
 
 exports.createRoute = require('./Route').createRoute;
 exports.createDefaultRoute = require('./Route').createDefaultRoute;
