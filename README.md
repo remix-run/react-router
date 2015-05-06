@@ -63,9 +63,8 @@ What's it look like?
 
 ```js
 var createRouter = require('react-router').createRouter;
-var HTML5History = require('react-router/HTML5History');
 
-var routes = (
+var Router = createRouter(
   <Route path="/" component={App}>
     <Route name="about" component={About}/>
     <Route name="users" component={Users}>
@@ -77,19 +76,23 @@ var routes = (
   </Route>
 );
 
-var Router = createRouter(routes, HTML5History);
-React.render(<Router/>, document.body);
+var HTML5History = require('react-router/HTML5History');
+React.render(<Router history={HTML5History}/>, document.body);
 
 // Or, for browsers that don't support the HTML5 history API:
 
 var HashHistory = require('react-router/HashHistory');
-var Router = createRouter(routes, HashHistory);
-React.render(<Router/>, document.body);
+React.render(<Router history={HashHistory}/>, document.body);
 
-// Or, if you want to render on the server:
+// Or, if you want to render on the server (using e.g. Express):
 
-var Router = createRouter(routes);
-var html = React.renderToString(<Router location="/hello?a=b"/>);
+app.get('*', function (req, res) {
+  Router.run(req.url, function (error, props) {
+    res.send(
+      React.renderToString(React.createElement(Router, props))
+    );
+  });
+});
 ```
 
 See more in the [overview guide](/docs/guides/overview.md).
