@@ -7,7 +7,6 @@ var DOMHistory = require('./DOMHistory');
 
 function getSerializableState(history) {
   return {
-    length: history.length,
     current: history.current,
     navigationType: history.navigationType
   };
@@ -19,12 +18,10 @@ function handlePopState(event) {
 
   var state = event.state;
 
-  if ('length' in state)
-    HTML5History.length = state.length
-
   if ('current' in state)
     HTML5History.current = state.current;
 
+  HTML5History.length = window.history.length;
   HTML5History.navigationType = NavigationTypes.POP;
   HTML5History._notifyChange();
 }
@@ -37,7 +34,7 @@ var state = window.history.state || {};
  * Provides the cleanest URLs and a reliable canGo(n) in browser
  * environments. Should always be used in browsers if possible.
  */
-var HTML5History = assign(new DOMHistory(state.length || 1, state.current, state.navigationType), {
+var HTML5History = assign(new DOMHistory(window.history.length, state.current, state.navigationType), {
 
   // Fall back to full page refreshes in browsers
   // that do not support the HTML5 history API.
@@ -73,8 +70,8 @@ var HTML5History = assign(new DOMHistory(state.length || 1, state.current, state
     // http://www.w3.org/TR/2011/WD-html5-20110113/history.html#dom-history-pushstate
     this.navigationType = NavigationTypes.PUSH;
     this.current += 1;
-    this.length = this.current + 1;
     window.history.pushState(getSerializableState(this), '', path);
+    this.length = window.history.length;
     this._notifyChange();
   },
 

@@ -19,6 +19,7 @@ function ensureSlash() {
 
 function handleHashChange() {
   if (ensureSlash()) {
+    HashHistory.length = window.history.length;
     HashHistory._notifyChange();
 
     // On the next hashchange we want this to be accurate.
@@ -34,7 +35,7 @@ function handleHashChange() {
  * without requiring server-side changes. However, the canGo* methods are not
  * reliable.
  */
-var HashHistory = assign(new DOMHistory(1), {
+var HashHistory = assign(new DOMHistory(window.history.length), {
 
   addChangeListener(listener) {
     DOMHistory.prototype.addChangeListener.call(this, listener);
@@ -67,7 +68,6 @@ var HashHistory = assign(new DOMHistory(1), {
 
   push(path) {
     this.current += 1;
-    this.length = Math.min(this.length, this.current + 1);
     this.navigationType = NavigationTypes.PUSH;
     window.location.hash = path;
   },
