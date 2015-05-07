@@ -38,9 +38,9 @@ always be in sync.
 - `npm run examples` fires up a webpack dev server that will watch
   for changes and build the examples
 
-### Build
+### Hacking
 
-Please do not include the output of `scripts/build` in your commits, we
-only do this when we release. (Also, you probably don't need to build
-anyway unless you are fixing something around our global build.)
-
+The best way to hack on the router is to symlink it into your project
+using [`npm link`](https://docs.npmjs.com/cli/link). Then, use `npm run watch`
+to automatically watch the `modules` directory and output a new `build`
+every time something changes.
