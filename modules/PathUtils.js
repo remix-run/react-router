@@ -3,7 +3,7 @@ var invariant = require('react/lib/invariant');
 var assign = require('object-assign');
 var qs = require('qs');
 
-var queryMatcher = /\?(.*)$/;
+var queryMatcher = /\?([\s\S]*)$/;
 
 function escapeRegExp(string) {
   return string.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
@@ -25,7 +25,7 @@ function _compilePattern(pattern) {
       escapedSource += '([^/?#]+)';
       paramNames.push(match[1]);
     } else if (match[0] === '*') {
-      escapedSource += '(.*?)';
+      escapedSource += '([\\s\\S]*?)';
       paramNames.push('splat');
     } else if (match[0] === '(') {
       escapedSource += '(?:';
