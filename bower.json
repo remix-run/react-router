@@ -2,7 +2,7 @@
   "name": "react-router",
   "version": "0.13.3",
   "description": "A complete routing library for React.js",
-  "main": "build/umd/ReactRouter.js",
+  "main": "lib/umd/ReactRouter.js",
   "homepage": "https://github.com/rackt/react-router",
   "authors": [
     "Ryan Florence",
