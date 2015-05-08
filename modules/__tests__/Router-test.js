@@ -22,6 +22,15 @@ var {
 } = require('../TestUtils');
 
 describe('Router', function () {
+
+  describe('when a router is created with no routes', function() {
+    var router = Router.create({})
+
+    it ('returns false when isActive is called', function() {
+      expect(router.isActive('/bad-match')).toBe(false)
+    });
+  });
+
   describe('transitions', function () {
 
     var routes = [
