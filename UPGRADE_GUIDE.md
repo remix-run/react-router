@@ -5,8 +5,28 @@ To see discussion around these API changes, please refer to the
 [changelog](/CHANGELOG.md) and visit the commits and issues they
 reference.
 
-0.12.x -> 0.13.x
+0.13.2 -> 0.13.3
 ----------------
+
+Like many others in the community, we misunderstood the "mixins are
+going away" sentiment. Mixins, along with `React.createClass` are not
+going away any time soon, and definitely not until ES6 classes have
+better answers to replace what mixins do (like decorators).
+
+So, don't access context, use the mixins, sorry for the churn, we know
+it can be frustrating.
+
+Upgrade path from `0.13.2` to `0.13.3` is to put your code back to how
+it was in `0.12.x`. The context stuff will still work, so you can do it
+incrementally.
+
+0.12.x -> 0.13.2 (PLEASE SKIP THIS)
+-----------------------------------
+
+**SKIP THIS UPGRADE AND GO STRAIGHT TO 0.13.3**
+
+`0.13.3` has the same API as `0.12.x`, so please upgrade to `0.13.3` and
+skip the `0.13.0-0.13.2` stuff and leave your code alone :)
 
 React introduced the ability to use ES6 classes for component
 definitions, which has the side-effect of mixins not being "the thing"
