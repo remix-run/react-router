@@ -449,7 +449,7 @@ API Documentation
 -----------------
 
 That's the gist of what this router is all about, but there's a lot more
-it has to offer. Check out the [API Docs](../api) to learn about
+it has to offer. Check out the [API Docs](http://rackt.github.io/react-router/) to learn about
 redirecting transitions, query parameters and more.
 
 CommonJS Guide
