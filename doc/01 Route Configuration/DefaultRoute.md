@@ -1,7 +1,7 @@
 A `DefaultRoute` will be the matched child route when the parent's path
 matches exactly.
 
-You'd want to use this to ensures a child `RouteHandler` is always
+You'd want to use this to ensure a child `RouteHandler` is always
 rendered when there is no child match. Think of it like `index.html` in
 a directory of a static html server.
 
