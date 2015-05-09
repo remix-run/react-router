@@ -3,7 +3,8 @@ var Router = require('react-router');
 var { Route, RouteHandler, Link } = Router;
 
 class App extends React.Component {
-  constructor () {
+  constructor (props) {
+    super(props);
     this.state = {
       loggedIn: auth.loggedIn()
     };
