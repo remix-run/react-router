@@ -69,7 +69,8 @@ var Dashboard = requireAuth(class extends React.Component {
 
 class Login extends React.Component {
 
-  constructor () {
+  constructor (props) {
+    super(props);
     this.handleSubmit = this.handleSubmit.bind(this);
     this.state = {
       error: false
