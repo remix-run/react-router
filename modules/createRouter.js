@@ -7,9 +7,9 @@ var isReactChildren = require('./isReactChildren');
 var createRoutesFromReactChildren = require('./createRoutesFromReactChildren');
 var { mapAsync } = require('./AsyncUtils');
 var NavigationMixin = require('./NavigationMixin');
+var TransitionMixin = require('./TransitionMixin');
 var StateMixin = require('./StateMixin');
 var findMatch = require('./findMatch');
-var Transition = require('./Transition');
 var Location = require('./Location');
 
 function createElement(component, props) {
@@ -172,12 +172,12 @@ function createRouter(routes) {
         }
 
         if (this.nextLocation !== location)
-          return; // Another location change interrupted this one.
+          return; // Another transition interrupted this one.
+
+        if (state && this._runTransitionHooks(state))
+          this.setState(state);
 
         this.nextLocation = null;
-
-        if (state)
-          this.setState(state, this.props.onUpdate);
       });
     }
 
@@ -208,15 +208,10 @@ function createRouter(routes) {
 
       var history = this.getHistory();
 
-      if (history)
-        this._updateLocation(history.getLocation());
-    }
-
-    componentDidMount() {
-      var history = this.getHistory();
-
-      if (history)
+      if (history) {
         history.addChangeListener(this._updateLocation);
+        this._updateLocation(history.getLocation());
+      }
     }
 
     componentWillReceiveProps(nextProps) {
@@ -224,6 +219,11 @@ function createRouter(routes) {
 
       if (!nextProps.history)
         this.setState(nextProps);
+    }
+
+    componentDidUpdate() {
+      if (this.props.onUpdate)
+        this.props.onUpdate.call(this);
     }
 
     componentWillUnmount() {
@@ -250,18 +250,18 @@ function createRouter(routes) {
 
           var route = branch[index];
           var props = { location, params, route, children };
-          
+ 
           if (Array.isArray(components)) {
             return components.map(function (component) {
               return createElement(component, assign({}, props));
             });
           }
-          
+
           if (typeof components === 'object') {
             // In render, use children like:
             // var { header, sidebar } = this.props.children;
             var elements = {};
-            
+
             for (var key in components)
               if (components.hasOwnProperty(key))
                 elements[key] = createElement(components[property], assign({}, props, { key }));
@@ -278,7 +278,7 @@ function createRouter(routes) {
 
   }
 
-  assign(Router.prototype, NavigationMixin, StateMixin);
+  assign(Router.prototype, NavigationMixin, StateMixin, TransitionMixin);
 
   return Router;
 }

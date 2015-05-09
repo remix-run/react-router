@@ -55,6 +55,7 @@ function _compilePattern(pattern) {
   };
 }
 
+// Cache patterns we've seen before.
 var _compiledPatterns = {};
 
 function compilePattern(pattern) {
@@ -97,6 +98,10 @@ function withQuery(path, query) {
     return getPathname(path) + '?' + query;
 
   return getPathname(path);
+}
+
+function getParamNames(path) {
+  return compilePattern(path).paramNames;
 }
 
 /**
@@ -158,5 +163,6 @@ module.exports = {
   getQueryString,
   getQuery,
   withQuery,
+  getParamNames,
   injectParams
 };
