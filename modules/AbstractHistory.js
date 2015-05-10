@@ -1,4 +1,5 @@
 var invariant = require('invariant');
+var Location = require('./Location');
 
 var _listenSingleton = null;
 
@@ -84,10 +85,7 @@ class AbstractHistory {
   }
 
   getLocation() {
-    return {
-      path: this.getPath(),
-      navigationType: this.navigationType
-    };
+    return new Location(this.getPath(), this.navigationType);
   }
 
   back() {

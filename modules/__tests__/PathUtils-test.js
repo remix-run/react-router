@@ -100,22 +100,8 @@ describe('PathUtils.injectParams', function () {
 });
 
 describe('PathUtils.getPathname', function () {
-  it('returns the path when there is no query', function () {
-    expect(PathUtils.getPathname('/a/b/c')).toEqual('/a/b/c');
-  });
-
   it('returns the pathname portion of a path', function () {
     expect(PathUtils.getPathname('/a/b/c?id=def')).toEqual('/a/b/c');
-  });
-});
-
-describe('PathUtils.getQueryString', function () {
-  it('returns an empty string when there is no query', function () {
-    expect(PathUtils.getQueryString('/a/b/c')).toEqual('');
-  });
-
-  it('returns the querystring portion of a path', function () {
-    expect(PathUtils.getQueryString('/a/b/c?id=def')).toEqual('id=def');
   });
 });
 

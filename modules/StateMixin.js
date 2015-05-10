@@ -1,4 +1,4 @@
-var PathUtils = require('./PathUtils');
+var { isAbsolutePath } = require('./PathUtils');
 
 function routeIsActive(activeRoutes, route) {
   if (typeof route === 'object')
@@ -39,15 +39,15 @@ var StateMixin = {
   },
 
   getPathname() {
-    return PathUtils.getPathname(this.getLocation());
+    return this.getLocation().getPathname();
   },
 
   getQueryString() {
-    return PathUtils.getQueryString(this.getLocation());
+    return this.getLocation().getQueryString();
   },
 
   getQuery() {
-    return PathUtils.getQuery(this.getLocation());
+    return this.getLocation().getQuery();
   },
 
   getBranch() {
@@ -66,7 +66,7 @@ var StateMixin = {
     if (!this.getLocation())
       return false;
 
-    if (PathUtils.isAbsolutePath(to))
+    if (isAbsolutePath(to))
       return to === this.getPath();
 
     return routeIsActive(this.getBranch(), to) &&

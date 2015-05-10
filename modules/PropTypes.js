@@ -1,5 +1,6 @@
-var { func, object, string, arrayOf, instanceOf, oneOfType, shape } = require('react').PropTypes;
+var { func, object, arrayOf, instanceOf, oneOfType } = require('react').PropTypes;
 var AbstractHistory = require('./AbstractHistory');
+var Location = require('./Location');
 
 function falsy(props, propName, componentName) {
   if (props[propName])
@@ -9,17 +10,14 @@ function falsy(props, propName, componentName) {
 var component = func;
 var components = oneOfType([ component, arrayOf(component) ]);
 var history = instanceOf(AbstractHistory);
+var location = instanceOf(Location);
 var route = object;
-var location = shape({
-  path: string.isRequired,
-  navigationType: string
-});
 
 module.exports = {
   falsy,
   component,
   components,
   history,
-  route,
-  location
+  location,
+  route
 };
