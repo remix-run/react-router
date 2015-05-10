@@ -86,7 +86,7 @@ describe('createRouter', function () {
       </Route>
     );
 
-    it.only('renders correctly', function (done) {
+    it('renders correctly', function (done) {
       var Router = createRouter(routes);
       Router.run('/foo', function (err, props) {
         var markup = React.renderToString(<Router {...props}/>)
