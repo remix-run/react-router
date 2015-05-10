@@ -1,20 +1,8 @@
 var expect = require('expect');
 var Location = require('../Location');
-var NavigationTypes = require('../NavigationTypes');
 
 describe('Location', function () {
   var location;
-
-  it('can be revived', function () {
-    location = new Location('/the/path', NavigationTypes.POP);
-
-    var serialized = JSON.stringify(location);
-    var revived = JSON.parse(serialized, Location.revive);
-
-    expect(revived instanceof Location).toEqual(true);
-    expect(revived.path).toEqual(location.path);
-    expect(revived.navigationType).toEqual(location.navigationType);
-  });
 
   describe('with a query string', function () {
     beforeEach(function () {

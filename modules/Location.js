@@ -9,22 +9,6 @@ var PathUtils = require('./PathUtils');
  */
 class Location {
 
-  /**
-   * Revives the location from its serialized form.
-   * Use `Location.revive` as a second argument to `JSON.parse`.
-   *
-   *   var serialized = JSON.stringify(location);
-   *   var deserialized = JSON.parse(serialized, Location.revive);
-   *
-   */
-  static revive(key, value) {
-    if (key === '') {
-      return new Location(value.path, value.navigationType);
-    } else {
-      return value;
-    }
-  }
-
   constructor(path, navigationType) {
     this.path = path;
     this.navigationType = navigationType || NavigationTypes.POP;
@@ -40,13 +24,6 @@ class Location {
 
   getQuery(options) {
     return PathUtils.getQuery(this.path, options);
-  }
-
-  toJSON() {
-    return {
-      path: this.path,
-      navigationType: this.navigationType
-    };
   }
 
 }
