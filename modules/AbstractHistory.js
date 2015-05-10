@@ -1,6 +1,8 @@
 var invariant = require('react/lib/invariant');
 var Location = require('./Location');
 
+var _listenSingleton = null;
+
 /**
  * A history interface that normalizes the differences across
  * various environments and implementations. Requires concrete
@@ -12,6 +14,10 @@ var Location = require('./Location');
  * - go(n)
  */
 class AbstractHistory {
+
+  static getSingleton() {
+    return _listenSingleton;
+  }
 
   constructor(length, current, navigationType) {
     invariant(
@@ -47,6 +53,7 @@ class AbstractHistory {
    *   });
    */
   listen(listener) {
+    _listenSingleton = this;
     this.addChangeListener(listener);
     listener.call(this, this.getLocation());
   }

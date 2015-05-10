@@ -11,6 +11,7 @@ var TransitionMixin = require('./TransitionMixin');
 var StateMixin = require('./StateMixin');
 var findMatch = require('./findMatch');
 var Location = require('./Location');
+var AbstractHistory = require('./AbstractHistory');
 
 function createElement(component, props) {
   return typeof component === 'function' ? React.createElement(component, props) : null;
@@ -191,6 +192,10 @@ function createRouter(routes) {
     }
 
     getHistory() {
+      return this.getHistoryProp() || AbstractHistory.getSingleton();
+    }
+
+    getHistoryProp() {
       var { history } = this.props;
 
       if (history == null)
@@ -206,7 +211,7 @@ function createRouter(routes) {
     componentWillMount() {
       checkProps(this.props);
 
-      var history = this.getHistory();
+      var history = this.getHistoryProp();
 
       if (history) {
         history.addChangeListener(this._updateLocation);
@@ -227,7 +232,7 @@ function createRouter(routes) {
     }
 
     componentWillUnmount() {
-      var history = this.getHistory();
+      var history = this.getHistoryProp();
 
       if (history)
         history.removeChangeListener(this._updateLocation);
