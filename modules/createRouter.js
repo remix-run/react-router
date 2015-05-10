@@ -10,7 +10,6 @@ var NavigationMixin = require('./NavigationMixin');
 var TransitionMixin = require('./TransitionMixin');
 var StateMixin = require('./StateMixin');
 var findMatch = require('./findMatch');
-var Location = require('./Location');
 var AbstractHistory = require('./AbstractHistory');
 
 function createElement(component, props) {
@@ -54,7 +53,7 @@ function checkProps(props) {
  * determine what to render to the page.
  *
  * In a client-side environment you simply pass a History object to the Router
- * as a prop. A History acts like a store for Location objects and emits new
+ * as a prop. A History acts like a store for location objects and emits new
  * ones as the location changes over time (i.e. a user navigates around your
  * site). History objects are included for all the most common scenarios in
  * which the router may be used.
@@ -98,10 +97,10 @@ function createRouter(routes) {
      */
     static run(location, callback) {
       if (typeof location === 'string')
-        location = new Location(location);
+        location = { path: location };
 
       invariant(
-        location instanceof Location,
+        typeof location.path === 'string',
         'Router.run needs a Location'
       );
 
