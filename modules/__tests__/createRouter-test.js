@@ -66,4 +66,35 @@ describe('createRouter', function () {
     });
   });
 
+  describe('multiple components on a route', function () {
+    class Parent extends React.Component {
+      render() {
+        var { header, sidebar } = this.props.children;
+        return (
+          <div>
+            <h1>Parent</h1>
+            {header}
+            {sidebar}
+          </div>
+        );
+      }
+    }
+
+    var routes = (
+      <Route component={Parent}>
+        <Route path="/foo" components={{ header: Header, sidebar: Sidebar }}/>
+      </Route>
+    );
+
+    it.only('renders correctly', function (done) {
+      var Router = createRouter(routes);
+      Router.run('/foo', function (err, props) {
+        var markup = React.renderToString(<Router {...props}/>)
+        expect(markup).toMatch(/Header/);
+        expect(markup).toMatch(/Sidebar/);
+        done();
+      });
+    });
+  });
+
 });

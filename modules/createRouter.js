@@ -269,7 +269,7 @@ function createRouter(routes) {
 
             for (var key in components)
               if (components.hasOwnProperty(key))
-                elements[key] = createElement(components[property], assign({}, props, { key }));
+                elements[key] = createElement(components[key], assign({}, props, { key }));
 
             return elements;
           }
