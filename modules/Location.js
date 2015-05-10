@@ -1,5 +1,5 @@
 var NavigationTypes = require('./NavigationTypes');
-var { getPathname, getQueryString, getQuery } = require('./PathUtils');
+var PathUtils = require('./PathUtils');
 
 /**
  * A Location answers two important questions:
@@ -15,15 +15,15 @@ class Location {
   }
 
   getPathname() {
-    return getPathname(this.path);
+    return PathUtils.getPathname(this.path);
   }
 
   getQueryString() {
-    return getQueryString(this.path);
+    return PathUtils.getQueryString(this.path);
   }
 
   getQuery(options) {
-    return getQuery(this.path, options);
+    return PathUtils.getQuery(this.path, options);
   }
 
 }
