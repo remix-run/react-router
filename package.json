@@ -50,8 +50,11 @@
     "react": "0.13.x"
   },
   "dependencies": {
+    "invariant": "^2.0.0",
+    "keymirror": "^0.1.1",
     "object-assign": "^2.0.0",
-    "qs": "2.4.1"
+    "qs": "2.4.1",
+    "warning": "^1.0.1"
   },
   "tags": [
     "react",

@@ -1,4 +1,4 @@
-var warning = require('react/lib/warning');
+var warning = require('warning');
 var AbstractHistory = require('./AbstractHistory');
 
 class DOMHistory extends AbstractHistory {

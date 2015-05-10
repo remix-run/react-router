@@ -1,6 +1,6 @@
 var React = require('react');
 var assign = require('object-assign');
-var invariant = require('react/lib/invariant');
+var invariant = require('invariant');
 var { func, object, string, oneOfType, arrayOf } = React.PropTypes;
 var { components, history, location, route } = require('./PropTypes');
 var isReactChildren = require('./isReactChildren');

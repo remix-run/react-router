@@ -1,6 +1,6 @@
 /* jshint -W058 */
 var assign = require('object-assign');
-var warning = require('react/lib/warning');
+var warning = require('warning');
 var { getWindowPath } = require('./DOMUtils');
 var DOMHistory = require('./DOMHistory');
 

@@ -1,4 +1,4 @@
-var invariant = require('react/lib/invariant');
+var invariant = require('invariant');
 var { AsyncStorage } = require('react-native');
 var History = require('./History');
 

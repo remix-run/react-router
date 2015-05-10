@@ -1,4 +1,4 @@
-var invariant = require('react/lib/invariant');
+var invariant = require('invariant');
 var { isAbsolutePath, withQuery, injectParams, stripLeadingSlashes, stripTrailingSlashes } = require('./PathUtils');
 
 function searchRoutesSync(routes, test) {

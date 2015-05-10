@@ -1,6 +1,10 @@
-var invariant = require('react/lib/invariant');
-var canUseDOM = require('react/lib/ExecutionEnvironment').canUseDOM;
+var invariant = require('invariant');
 var getWindowScrollPosition = require('./getWindowScrollPosition');
+
+var canUseDOM = !!(
+  (typeof window !== 'undefined' &&
+  window.document && window.document.createElement)
+);
 
 function shouldUpdateScroll(state, prevState) {
   if (!prevState)

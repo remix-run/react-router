@@ -1,5 +1,5 @@
 var React = require('react');
-var invariant = require('react/lib/invariant');
+var invariant = require('invariant');
 var { string, bool, func } = React.PropTypes;
 var { component, components } = require('./PropTypes');
 

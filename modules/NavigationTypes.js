@@ -1,4 +1,4 @@
-var keyMirror = require('react/lib/keyMirror');
+var keyMirror = require('keymirror');
 
 var NavigationTypes = keyMirror({
 

@@ -1,4 +1,4 @@
-var warning = require('react/lib/warning');
+var warning = require('warning');
 var { getParamNames } = require('./PathUtils');
 
 function forEachComponent(components, callback) {

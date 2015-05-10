@@ -1,6 +1,6 @@
 var React = require('react');
-var warning = require('react/lib/warning');
-var invariant = require('react/lib/invariant');
+var warning = require('warning');
+var invariant = require('invariant');
 var assign = require('object-assign');
 
 function getComponentName(component) {
