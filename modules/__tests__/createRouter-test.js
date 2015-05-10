@@ -3,6 +3,7 @@ var React = require('react');
 var { renderToStaticMarkup } = React;
 var createRouter = require('../createRouter');
 var Route = require('../Route');
+var Location = require('../Location');
 
 describe('createRouter', function () {
 
@@ -92,6 +93,49 @@ describe('createRouter', function () {
         var markup = React.renderToString(<Router {...props}/>)
         expect(markup).toMatch(/Header/);
         expect(markup).toMatch(/Sidebar/);
+        done();
+      });
+    });
+  });
+
+  describe('location argument', function () {
+    it('can be a Location instance', function (done) {
+      var Router = createRouter(
+        <Route component={Parent} />
+      );
+
+      var location = new Location('/');
+      Router.run(location, function (error, props) {
+        var markup = renderToStaticMarkup(<Router {...props}/>);
+        expect(markup).toMatch(/Parent/);
+        done();
+      });
+    });
+
+    it('can be a string', function (done) {
+      var Router = createRouter(
+        <Route component={Parent} />
+      );
+
+      var location = '/';
+      Router.run(location, function (error, props) {
+        var markup = renderToStaticMarkup(<Router {...props}/>);
+        expect(markup).toMatch(/Parent/);
+        done();
+      });
+    });
+
+    it('can be a plain object', function (done) {
+      var Router = createRouter(
+        <Route component={Parent} />
+      );
+
+      var location = new Location('/');
+      location = JSON.parse(JSON.stringify(location));
+
+      Router.run(location, function (error, props) {
+        var markup = renderToStaticMarkup(<Router {...props}/>);
+        expect(markup).toMatch(/Parent/);
         done();
       });
     });

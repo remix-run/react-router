@@ -100,6 +100,15 @@ function createRouter(routes) {
       if (typeof location === 'string')
         location = new Location(location);
 
+      if (!(location instanceof Location) &&
+          typeof location.path === 'string' &&
+          typeof location.navigationType === 'string') {
+        location = new Location(
+          location.path,
+          location.navigationType
+        );
+      }
+
       invariant(
         location instanceof Location,
         'Router.run needs a Location'
