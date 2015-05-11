@@ -20,7 +20,7 @@ module.exports = {
 
   module: {
     loaders: [
-      { test: /\.js$/, exclude: /node_modules/, loader: 'babel-loader?optional=es7.classProperties' }
+      { test: /\.js$/, exclude: /node_modules/, loader: 'babel?optional=es7.classProperties' }
     ]
   },
 
