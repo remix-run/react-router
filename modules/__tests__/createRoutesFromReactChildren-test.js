@@ -31,7 +31,7 @@ describe('createRoutesFromReactChildren', function () {
   it('works with nested routes', function () {
     expect(createRoutesFromReactChildren(
       <Route component={Parent}>
-        <Route path="home" components={[ Hello, Goodbye ]}/>
+        <Route path="home" components={{ hello: Hello, goodbye: Goodbye }}/>
       </Route>
     )).toEqual([
       {
@@ -39,7 +39,7 @@ describe('createRoutesFromReactChildren', function () {
         childRoutes: [
           {
             path: 'home',
-            components: [ Hello, Goodbye ]
+            components: { hello: Hello, goodbye: Goodbye }
           }
         ]
       }

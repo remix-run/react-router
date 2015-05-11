@@ -9,7 +9,7 @@ describe('createRouter', function () {
 
   class Parent extends React.Component {
     render() {
-      var [ header, sidebar ] = this.props.children || [];
+      var { header, sidebar } = this.props;
 
       return (
         <div>
@@ -37,7 +37,7 @@ describe('createRouter', function () {
     it('works', function (done) {
       var Router = createRouter(
         <Route component={Parent}>
-          <Route path="home" components={[ Header, Sidebar ]}/>
+          <Route path="home" components={{ header: Header, sidebar: Sidebar }}/>
         </Route>
       );
 
@@ -53,7 +53,7 @@ describe('createRouter', function () {
     it('works', function (done) {
       var Router = createRouter(
         <Route component={Parent}>
-          <Route path="home" components={[ Header, Sidebar ]}/>
+          <Route path="home" components={{ header: Header, sidebar: Sidebar }}/>
         </Route>
       );
 

@@ -29,7 +29,13 @@ function getComponents(route, callback) {
 
 function getComponentsForBranch(branch, callback) {
   mapAsync(branch, function (route, index, callback) {
-    getComponents(route, callback);
+    getComponents(route, function (error, components) {
+      if (error || !Array.isArray(components)) {
+        callback(error, components);
+      } else {
+        callback(new Error('Components must not be an array'));
+      }
+    });
   }, callback);
 }
 
@@ -263,22 +269,22 @@ function createRouter(routes) {
             return children; // Don't create new children; use the grandchildren.
 
           var route = branch[index];
-          var props = { location, params, route, children };
+          var props = { location, params, route };
  
-          if (Array.isArray(components)) {
-            return components.map(function (component) {
-              return createElement(component, assign({}, props));
-            });
+          if (React.isValidElement(children)) {
+            props.children = children;
+          } else if (children) {
+            // In render, use children like:
+            // var { header, sidebar } = this.props;
+            assign(props, children);
           }
 
           if (typeof components === 'object') {
-            // In render, use children like:
-            // var { header, sidebar } = this.props.children;
             var elements = {};
 
             for (var key in components)
               if (components.hasOwnProperty(key))
-                elements[key] = createElement(components[key], assign({}, props, { key }));
+                elements[key] = createElement(components[key], assign({}, props));
 
             return elements;
           }
@@ -286,6 +292,11 @@ function createRouter(routes) {
           return createElement(components, props);
         }, children);
       }
+
+      invariant(
+        React.isValidElement(children),
+        'Your top-most route must render a single component'
+      );
 
       return children;
     }
