@@ -101,4 +101,40 @@ describe('RouteHandler', function () {
     }
   });
 
+  it('passing props to children', function (done) {
+    var Root = React.createClass({
+      render: function () {
+        return (
+          <div>
+            <RouteHandler />
+          </div>
+        );
+      }
+    });
+
+    var Foo = React.createClass({
+      componentDidMount: function() {
+        expect(this.props.query).toNotBe(undefined);
+        expect(this.props.params).toNotBe(undefined);
+        expect(this.props.path).toNotBe(undefined);
+        done();
+      },
+      render: function () {
+        return <div>foo</div>;
+      }
+    });
+
+    var div = document.createElement('div');
+
+    var routes = (
+      <Route path='/' handler={Root}>
+        <Route path='foo' handler={Foo}/>
+      </Route>
+    );
+
+    Router.run(routes, '/foo', function (App) {
+      React.render(<App />, div);
+    });
+  });
+
 });
