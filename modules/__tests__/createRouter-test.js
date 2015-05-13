@@ -141,4 +141,18 @@ describe('createRouter', function () {
     });
   });
 
+  describe('when throwing an exception inside run callback', function () {
+    it('is not swallowed', function () {
+      var Router = createRouter(
+        <Route component={Parent} />
+      );
+
+      expect(function(){
+        Router.run('/', function(error, props){
+          throw new Error('boom!')
+        });
+      }).toThrow(/boom/);
+    });
+  });
+
 });
