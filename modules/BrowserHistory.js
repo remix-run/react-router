@@ -16,7 +16,7 @@ function handlePopState(event) {
   if (event.state === undefined)
     return; // Ignore extraneous popstate events in WebKit.
 
-  var state = event.state;
+  var state = event.state || {};
 
   if ('current' in state)
     BrowserHistory.current = state.current;
