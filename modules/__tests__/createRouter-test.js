@@ -70,7 +70,7 @@ describe('createRouter', function () {
   describe('multiple components on a route', function () {
     class Parent extends React.Component {
       render() {
-        var { header, sidebar } = this.props.children;
+        var { header, sidebar } = this.props;
         return (
           <div>
             <h1>Parent</h1>
