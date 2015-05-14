@@ -76,11 +76,11 @@ function checkProps(props) {
  *   var BrowserHistory = require('react-router/BrowserHistory');
  *   React.render(<Router history={BrowserHistory}/>, document.body);
  *
- * In a server-side environment you should use the router component's
- * static `run` method to determine the props you need to pass to the router.
+ * In a server-side environment you should use the router component's static
+ * `match` method to determine the props you need to pass to the router.
  *
  *   app.get('*', function (req, res) {
- *     Router.run(req.url, function (error, props) {
+ *     Router.match(req.url, function (error, props) {
  *       res.send(
  *         React.renderToString(React.createElement(Router, props))
  *       );
@@ -107,7 +107,7 @@ function createRouter(routes) {
      * components, and calls callback(error, state) when finished. This
      * is the main router interface.
      */
-    static run(location, callback) {
+    static match(location, callback) {
       if (typeof location === 'string')
         location = new Location(location);
 
@@ -122,10 +122,10 @@ function createRouter(routes) {
 
       invariant(
         location instanceof Location,
-        'Router.run needs a Location'
+        'Router.match needs a Location'
       );
 
-      Router.match(location.path, function (error, state) {
+      findMatch(routes, location.path, function (error, state) {
         if (error) {
           callback(error);
         } else if (state) {
@@ -143,14 +143,6 @@ function createRouter(routes) {
           callback();
         }
       });
-    }
-
-    /**
-     * Low-level utility method that attempts to find a match for the
-     * given path in this router's routes.
-     */
-    static match(path, callback) {
-      findMatch(routes, path, callback);
     }
 
     static propTypes = {
@@ -186,7 +178,7 @@ function createRouter(routes) {
     _updateLocation(location) {
       this.nextLocation = location;
 
-      Router.run(location, (error, state) => {
+      Router.match(location, (error, state) => {
         if (error) {
           this.handleError(error);
           return;

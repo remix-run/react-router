@@ -87,7 +87,7 @@ React.render(<Router history={HashHistory}/>, document.body);
 // Or, if you want to render on the server (using e.g. Express):
 
 app.get('*', function (req, res) {
-  Router.run(req.url, function (error, props) {
+  Router.match(req.url, function (error, props) {
     res.send(
       React.renderToString(React.createElement(Router, props))
     );

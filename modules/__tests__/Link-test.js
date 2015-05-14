@@ -51,7 +51,7 @@ describe('A <Link>', function () {
         <Route name="link" component={LinkWrapper}/>
       ]);
 
-      Router.run('/link', function (error, props) {
+      Router.match('/link', function (error, props) {
         render(<Router {...props}/>, div, function () {
           var a = div.querySelector('a');
           expect(a.getAttribute('href')).toEqual('/hello/michael?the=query');

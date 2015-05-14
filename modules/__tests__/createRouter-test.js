@@ -41,7 +41,7 @@ describe('createRouter', function () {
         </Route>
       );
 
-      Router.run('/', function (error, props) {
+      Router.match('/', function (error, props) {
         var markup = renderToStaticMarkup(<Router {...props}/>);
         expect(markup).toMatch(/Parent/);
         done();
@@ -57,7 +57,7 @@ describe('createRouter', function () {
         </Route>
       );
 
-      Router.run('/home', function (error, props) {
+      Router.match('/home', function (error, props) {
         var markup = renderToStaticMarkup(<Router {...props}/>);
         expect(markup).toMatch(/Parent/);
         expect(markup).toMatch(/Header/);
@@ -89,7 +89,7 @@ describe('createRouter', function () {
 
     it('renders correctly', function (done) {
       var Router = createRouter(routes);
-      Router.run('/foo', function (err, props) {
+      Router.match('/foo', function (err, props) {
         var markup = React.renderToString(<Router {...props}/>)
         expect(markup).toMatch(/Header/);
         expect(markup).toMatch(/Sidebar/);
@@ -105,7 +105,7 @@ describe('createRouter', function () {
       );
 
       var location = new Location('/');
-      Router.run(location, function (error, props) {
+      Router.match(location, function (error, props) {
         var markup = renderToStaticMarkup(<Router {...props}/>);
         expect(markup).toMatch(/Parent/);
         done();
@@ -118,7 +118,7 @@ describe('createRouter', function () {
       );
 
       var location = '/';
-      Router.run(location, function (error, props) {
+      Router.match(location, function (error, props) {
         var markup = renderToStaticMarkup(<Router {...props}/>);
         expect(markup).toMatch(/Parent/);
         done();
@@ -133,7 +133,7 @@ describe('createRouter', function () {
       var location = new Location('/');
       location = JSON.parse(JSON.stringify(location));
 
-      Router.run(location, function (error, props) {
+      Router.match(location, function (error, props) {
         var markup = renderToStaticMarkup(<Router {...props}/>);
         expect(markup).toMatch(/Parent/);
         done();
@@ -141,14 +141,14 @@ describe('createRouter', function () {
     });
   });
 
-  describe('when throwing an exception inside run callback', function () {
+  describe('when throwing an exception inside match callback', function () {
     it('is not swallowed', function () {
       var Router = createRouter(
         <Route component={Parent} />
       );
 
       expect(function(){
-        Router.run('/', function(error, props){
+        Router.match('/', function(error, props){
           throw new Error('boom!')
         });
       }).toThrow(/boom/);

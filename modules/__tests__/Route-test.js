@@ -30,7 +30,7 @@ describe('A <Route>', function () {
       </Route>
     );
 
-    Router.run('/hello', function (error, props) {
+    Router.match('/hello', function (error, props) {
       var markup = renderToStaticMarkup(<Router {...props}/>);
       expect(markup).toMatch(/Parent/);
       expect(markup).toMatch(/Hello/);
@@ -45,7 +45,7 @@ describe('A <Route>', function () {
       </Route>
     );
 
-    Router.run('/hello', function (error, props) {
+    Router.match('/hello', function (error, props) {
       var markup = renderToStaticMarkup(<Router {...props}/>);
       expect(markup).toMatch(/Hello/);
       done();

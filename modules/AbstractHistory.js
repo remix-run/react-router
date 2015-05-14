@@ -44,7 +44,7 @@ class AbstractHistory {
    * doing data-fetching before you render.
    *
    *   History.listen(function (location) {
-   *     Router.run(location, function (error, props) {
+   *     Router.match(location, function (error, props) {
    *       fetchData(props.branch, function (data) {
    *         wrapComponentsWithData(props.components, data);
    *         React.render(<Router {...props}/>, document.body);
