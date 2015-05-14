@@ -34,7 +34,7 @@ module.exports = {
 
   resolve: {
     alias: {
-      'react-router': '../../modules'
+      'react-router': process.cwd()+'/modules'
     }
   },
 
