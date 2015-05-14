@@ -108,16 +108,12 @@ function createRouter(routes) {
      * is the main router interface.
      */
     static match(location, callback) {
-      if (typeof location === 'string')
-        location = new Location(location);
-
-      if (!(location instanceof Location) &&
-          typeof location.path === 'string' &&
-          typeof location.navigationType === 'string') {
-        location = new Location(
-          location.path,
-          location.navigationType
-        );
+      if (!(location instanceof Location)) {
+        if (typeof location === 'string') {
+          location = new Location(location);
+        } else if (location && location.path) {
+          location = new Location(location.path, location.navigationType);
+        }
       }
 
       invariant(
