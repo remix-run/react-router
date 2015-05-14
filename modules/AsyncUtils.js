@@ -26,13 +26,9 @@ function mapAsync(array, work, callback) {
   }
 
   array.forEach(function (item, index) {
-    try {
-      work(item, index, function (error, value) {
-        done(index, error, value);
-      });
-    } catch (error) {
-      done(index, error);
-    }
+    work(item, index, function (error, value) {
+      done(index, error, value);
+    });
   });
 }
 
@@ -51,12 +47,7 @@ function loopAsync(turns, work, callback) {
 
     if (currentTurn < turns) {
       currentTurn += 1;
-
-      try {
-        work(currentTurn - 1, next, done);
-      } catch (error) {
-        done.call(this, error);
-      }
+      work(currentTurn - 1, next, done);
     } else {
       done.apply(this, arguments);
     }

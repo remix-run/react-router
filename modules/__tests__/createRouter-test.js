@@ -147,9 +147,9 @@ describe('createRouter', function () {
         <Route component={Parent} />
       );
 
-      expect(function(){
-        Router.match('/', function(error, props){
-          throw new Error('boom!')
+      expect(function () {
+        Router.match('/', function (error, props) {
+          throw new Error('boom!');
         });
       }).toThrow(/boom/);
     });

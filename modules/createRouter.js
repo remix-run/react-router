@@ -126,9 +126,9 @@ function createRouter(routes) {
       );
 
       findMatch(routes, location.path, function (error, state) {
-        if (error) {
-          callback(error);
-        } else if (state) {
+        if (error || state == null) {
+          callback(error, state);
+        } else {
           state.location = location;
 
           getComponentsForBranch(state.branch, function (error, components) {
@@ -139,8 +139,6 @@ function createRouter(routes) {
               callback(null, state);
             }
           });
-        } else {
-          callback();
         }
       });
     }
