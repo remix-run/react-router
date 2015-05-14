@@ -407,6 +407,9 @@ functionality like control/command clicking to open in a new tab. Also,
 when the route a link references is active, you get the `active` css
 class to easily style your UI.
 
+Pass params to `<Link/>` using `<Link params={route_params} />` when 
+navigating users through routes that include dynamic segments.
+
 ### `<NotFoundRoute/>`
 
 At any level of your UI nesting, you can render a handler if the url
