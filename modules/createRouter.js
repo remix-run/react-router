@@ -30,10 +30,15 @@ function getComponents(route, callback) {
 function getComponentsForBranch(branch, callback) {
   mapAsync(branch, function (route, index, callback) {
     getComponents(route, function (error, components) {
-      if (error || !Array.isArray(components)) {
-        callback(error, components);
+      if (error) {
+        callback(error);
       } else {
-        callback(new Error('Components must not be an array'));
+        invariant(
+          !Array.isArray(components),
+          'Components must not be an array'
+        );
+
+        callback(null, components);
       }
     });
   }, callback);

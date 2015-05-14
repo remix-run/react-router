@@ -2,9 +2,7 @@ var warning = require('warning');
 var { getParamNames } = require('./PathUtils');
 
 function forEachComponent(components, callback) {
-  if (Array.isArray(components)) {
-    components.forEach(callback);
-  } else if (typeof components === 'object') {
+  if (typeof components === 'object') {
     for (var key in components)
       if (components.hasOwnProperty(key))
         callback(components[key]);
@@ -28,7 +26,7 @@ function routeParamsChanged(route, prevState, nextState) {
   });
 }
 
-function getTransitionHooks(router, prevState, nextState) {
+function getRouteAndComponentTransitionHooks(router, prevState, nextState) {
   var fromRoutes = prevState.branch;
   var toRoutes = nextState.branch;
   var hooks = [];
@@ -110,9 +108,21 @@ var TransitionMixin = {
    * Returns true to allow the transition, false to prevent it.
    */
   _runTransitionHooks(nextState) {
-    var nextLocation = this.nextLocation;
-    var hooks = getTransitionHooks(this, this.state, nextState);
+    var hooks = [];
+
+    if (this._transitionHooks) {
+      this._transitionHooks.forEach(function (hook) {
+        hooks.push(hook.bind(this, this, nextState));
+      }, this);
+    }
+
+    hooks.push.apply(
+      hooks,
+      getRouteAndComponentTransitionHooks(this, this.state, nextState)
+    );
   
+    var nextLocation = this.nextLocation;
+
     try {
       for (var i = 0, len = hooks.length; i < len; ++i) {
         hooks[i]();
@@ -149,6 +159,22 @@ var TransitionMixin = {
       var location = this.cancelledLocation;
       this.cancelledLocation = null;
       this._updateLocation(location);
+    }
+  },
+
+  addTransitionHook(hook) {
+    if (!this._transitionHooks) {
+      this._transitionHooks = [ hook ];
+    } else {
+      this._transitionHooks.push(hook);
+    }
+  },
+
+  removeTransitionHook(hook) {
+    if (this._transitionHooks) {
+      this._transitionHooks = this._transitionHooks.filter(function (h) {
+        return h !== hook;
+      });
     }
   }
 

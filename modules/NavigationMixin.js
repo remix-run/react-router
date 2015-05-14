@@ -91,6 +91,8 @@ var NavigationMixin = {
     var path = this.makePath(to, params, query);
 
     if (this.nextLocation) {
+      this.cancelTransition();
+
       // Replace so pending location does not stay in history.
       history.replace(path);
     } else {
@@ -110,6 +112,9 @@ var NavigationMixin = {
       'replaceWith() needs history'
     );
 
+    if (this.nextLocation)
+      this.cancelTransition();
+
     history.replace(this.makePath(to, params, query));
   },
 
@@ -120,6 +125,9 @@ var NavigationMixin = {
       history,
       'go() needs history'
     );
+
+    if (this.nextLocation)
+      this.cancelTransition();
 
     history.go(n);
   },
