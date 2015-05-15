@@ -1,5 +1,5 @@
 var React = require('react/addons');
-var { cloneWithProps, CSSTransitionGroup } = React.addons;
+var { CSSTransitionGroup } = React.addons;
 var { createRouter, Route, Link } = require('react-router');
 var HashHistory = require('react-router/HashHistory');
 //var HashHistory = require('react-router/lib/HashHistory'); <-- what you use from npm
@@ -15,7 +15,7 @@ var App = React.createClass({
           <li><Link to="page2">Page 2</Link></li>
         </ul>
         <CSSTransitionGroup component="div" transitionName="example">
-          {cloneWithProps(this.props.children || <div/>, { key: key })}
+          {React.cloneElement(this.props.children || <div/>, { key: key })}
         </CSSTransitionGroup>
       </div>
     );
