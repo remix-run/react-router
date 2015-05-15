@@ -30,8 +30,8 @@
     "warning": "^1.0.1"
   },
   "devDependencies": {
-    "babel": "^5.0.12",
-    "babel-core": "^5.0.12",
+    "babel": "^5.4.1",
+    "babel-core": "^5.4.1",
     "babel-loader": "^5.0.0",
     "bundle-loader": "^0.5.2",
     "events": "1.0.2",
@@ -50,6 +50,7 @@
     "react": "0.13.x",
     "rf-changelog": "^0.4.0",
     "rx": "2.3.18",
+    "slash": "^1.0.0",
     "webpack": "^1.4.13",
     "webpack-dev-server": "^1.6.6"
   },

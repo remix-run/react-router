@@ -6,8 +6,7 @@ build_dir=lib
 
 rm -rf $build_dir
 
-$babel ./modules -d $build_dir --optional es7.classProperties
-find -X $build_dir -type d -name __tests__ | xargs rm -rf
+$babel ./modules -d $build_dir --optional es7.classProperties --ignore "__tests__"
 
 NODE_ENV=production $webpack modules/index.js $build_dir/umd/ReactRouter.js
 NODE_ENV=production $webpack -p modules/index.js $build_dir/umd/ReactRouter.min.js
