@@ -1,7 +1,8 @@
-var React = require('react');
-var Router = require('react-router');
+var React = require('react/addons');
+var { createRouter, Route, Link } = require('react-router');
+var HashHistory = require('react-router/HashHistory');
 var EventEmitter = require('events').EventEmitter;
-var { Route, DefaultRoute, RouteHandler, Link } = Router;
+var assign = require('object-assign');
 
 var API = 'http://addressbook-api.herokuapp.com';
 var loadingEvents = new EventEmitter();
@@ -33,8 +34,12 @@ getJSON._cache = {};
 var App = React.createClass({
 
   statics: {
-    fetchData (params) {
-      return getJSON(`${API}/contacts`).then((res) => res.contacts);
+    loadAsyncProps (params) {
+      return getJSON(`${API}/contacts`).then(function (res) {
+        return {
+          contacts: res.contacts
+        };
+      });
     }
   },
 
@@ -61,7 +66,7 @@ var App = React.createClass({
   },
 
   renderContacts () {
-    return this.props.data.contacts.map((contact, i) => {
+    return this.props.contacts.map((contact, i) => {
       return (
         <li key={i}>
           <Link to="contact" params={contact}>{contact.first} {contact.last}</Link>
@@ -76,7 +81,7 @@ var App = React.createClass({
         <ul>
           {this.renderContacts()}
         </ul>
-        <RouteHandler {...this.props}/>
+        {this.props.children || <Index/>}
       </div>
     );
   }
@@ -84,13 +89,15 @@ var App = React.createClass({
 
 var Contact = React.createClass({
   statics: {
-    fetchData (params) {
-      return getJSON(`${API}/contacts/${params.id}`).then((res) => res.contact);
+    loadAsyncProps (params) {
+      return getJSON(`${API}/contacts/${params.id}`).then(function (res) {
+        return { contact: res.contact };
+      });
     }
   },
 
   render () {
-    var { contact } = this.props.data;
+    var contact = this.props.contact;
     return (
       <div>
         <p><Link to="/">Back</Link></p>
@@ -111,28 +118,40 @@ var Index = React.createClass({
   }
 });
 
-var routes = (
-  <Route name="contacts" path="/" handler={App}>
-    <DefaultRoute name="index" handler={Index}/>
-    <Route name="contact" path="contact/:id" handler={Contact}/>
+var Router = createRouter((
+  <Route name="contacts" path="/" component={App}>
+    <Route name="contact" path="contact/:id" component={Contact}/>
   </Route>
-);
+));
 
-function fetchData(routes, params) {
-  var data = {};
-  return Promise.all(routes
-    .filter(route => route.handler.fetchData)
-    .map(route => {
-      return route.handler.fetchData(params).then(d => {data[route.name] = d;});
-    })
-  ).then(() => data);
+function loadAsyncProps(components, params) {
+  var promises = components.map(function (Component) {
+    if (Component.loadAsyncProps) {
+      return Component.loadAsyncProps(params).then(function (data) {
+        // create a Higher Order Component and pass the async props in
+        return React.createClass({
+          render () {
+            return <Component {...this.props} {...data}/>
+          }
+        });
+      });
+    } else {
+      return Component;
+    }
+  });
+  return Promise.all(promises);
 }
 
-Router.run(routes, function (Handler, state) {
-  loadingEvents.emit('loadStart');
+HashHistory.listen(function (location) {
+  Router.match(location, function (err, routerProps) {
+    loadingEvents.emit('loadStart');
 
-  fetchData(state.routes, state.params).then((data) => {
-    loadingEvents.emit('loadEnd');
-    React.render(<Handler data={data}/>, document.getElementById('example'));
+    loadAsyncProps(routerProps.components, routerProps.params).then((components) => {
+      loadingEvents.emit('loadEnd');
+
+      // put the higher order components into the props before rendering
+      var props = assign({}, routerProps, { components: components });
+      React.render(<Router {...props}/>, document.getElementById('example'));
+    });
   });
 });
