@@ -127,13 +127,17 @@ var Router = createRouter((
 function loadAsyncProps(components, params) {
   var promises = components.map(function (Component) {
     if (Component.loadAsyncProps) {
-      return Component.loadAsyncProps(params).then(function (data) {
+      return Component.loadAsyncProps(params).then(function (asyncProps) {
         // create a Higher Order Component and pass the async props in
-        return React.createClass({
+        Component.Wrapper = Component.Wrapper || React.createClass({
           render () {
-            return <Component {...this.props} {...data}/>
+            return <Component {...this.props} {...this.constructor._asyncProps}/>
           }
         });
+        // would probably make more sense to put this stuff in a store, not mutate
+        // the component classes.
+        Component.Wrapper._asyncProps = asyncProps;
+        return Component.Wrapper;
       });
     } else {
       return Component;
