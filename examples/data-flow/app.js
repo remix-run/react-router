@@ -1,12 +1,10 @@
 var React = require('react');
-var Router = require('react-router');
-var { Route, RouteHandler, Link } = Router;
+var { Route, createRouter, Link, Navigation } = require('react-router');
+var HashHistory = require('react-router/HashHistory');
 
 var App = React.createClass({
 
-  contextTypes: {
-    router: React.PropTypes.func
-  },
+  mixins: [ Navigation ],
 
   getInitialState: function () {
     return {
@@ -30,7 +28,7 @@ var App = React.createClass({
       return taco.name != removedTaco;
     });
     this.setState({tacos: tacos});
-    this.context.router.transitionTo('/');
+    this.transitionTo('/');
   },
 
   render: function () {
@@ -48,7 +46,9 @@ var App = React.createClass({
           {links}
         </ul>
         <div className="Detail">
-          <RouteHandler onRemoveTaco={this.handleRemoveTaco}/>
+          {this.props.children && React.cloneElement(this.props.children, {
+            onRemoveTaco: this.handleRemoveTaco
+          })}
         </div>
       </div>
     );
@@ -57,30 +57,24 @@ var App = React.createClass({
 
 var Taco = React.createClass({
 
-  contextTypes: {
-    router: React.PropTypes.func
-  },
-
   remove: function () {
-    this.props.onRemoveTaco(this.context.router.getCurrentParams().name);
+    this.props.onRemoveTaco(this.props.params.name);
   },
 
   render: function () {
     return (
       <div className="Taco">
-        <h1>{this.context.router.getCurrentParams().name}</h1>
+        <h1>{this.props.params.name}</h1>
         <button onClick={this.remove}>remove</button>
       </div>
     );
   }
 });
 
-var routes = (
-  <Route handler={App}>
-    <Route name="taco" path="taco/:name" handler={Taco}/>
+var Router = createRouter(
+  <Route component={App}>
+    <Route name="taco" path="taco/:name" component={Taco}/>
   </Route>
 );
 
-Router.run(routes, function (Handler) {
-  React.render(<Handler/>, document.getElementById('example'));
-});
+React.render(<Router history={HashHistory}/>, document.getElementById('example'));
