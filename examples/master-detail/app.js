@@ -159,4 +159,4 @@ var Router = createRouter(
   HashHistory
 );
 
-React.render(<Router/>, document.getElementById('example'));
+React.render(<Router history={HashHistory}/>, document.getElementById('example'));
