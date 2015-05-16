@@ -1,6 +1,6 @@
 var React = require('react');
-var Router = require('react-router');
-var { Route, Redirect, RouteHandler, Link } = Router;
+var { createRouter, Route, Redirect, Link } = require('react-router');
+var HashHistory = require('react-router/HashHistory');
 
 var App = React.createClass({
   render () {
@@ -10,7 +10,7 @@ var App = React.createClass({
           <li><Link to="user" params={{userId: "123"}}>Bob</Link></li>
           <li><Link to="user" params={{userId: "abc"}}>Sally</Link></li>
         </ul>
-        <RouteHandler/>
+        {this.props.children}
       </div>
     );
   }
@@ -18,12 +18,8 @@ var App = React.createClass({
 
 var User = React.createClass({
 
-  contextTypes: {
-    router: React.PropTypes.func
-  },
-
   render () {
-    var { userId } = this.context.router.getCurrentParams();
+    var { userId } = this.props.params;
     return (
       <div className="User">
         <h1>User id: {userId}</h1>
@@ -31,7 +27,7 @@ var User = React.createClass({
           <li><Link to="task" params={{userId: userId, taskId: "foo"}}>foo task</Link></li>
           <li><Link to="task" params={{userId: userId, taskId: "bar"}}>bar task</Link></li>
         </ul>
-        <RouteHandler/>
+        {this.props.children}
       </div>
     );
   }
@@ -39,13 +35,8 @@ var User = React.createClass({
 
 
 var Task = React.createClass({
-
-  contextTypes: {
-    router: React.PropTypes.func
-  },
-
   render () {
-    var { userId, taskId } = this.context.router.getCurrentParams();
+    var { userId, taskId } = this.props.params;
     return (
       <div className="Task">
         <h2>User id: {userId}</h2>
@@ -55,15 +46,14 @@ var Task = React.createClass({
   }
 });
 
-var routes = (
-  <Route path="/" handler={App}>
-    <Route name="user" path="/user/:userId" handler={User}>
-      <Route name="task" path="tasks/:taskId" handler={Task}/>
-      <Redirect from="todos/:taskId" to="task"/>
+var Router = createRouter(
+  <Route path="/" component={App}>
+    <Route name="user" path="/user/:userId" component={User}>
+      <Route name="task" path="tasks/:taskId" component={Task}/>
+      {/*<Redirect from="todos/:taskId" to="task"/>*/}
     </Route>
   </Route>
 );
 
-Router.run(routes, function (Handler) {
-  React.render(<Handler/>, document.getElementById('example'));
-});
+React.render(<Router history={HashHistory} />, document.getElementById('example'));
+
