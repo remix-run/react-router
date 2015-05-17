@@ -3,10 +3,6 @@ var warning = require('warning');
 var invariant = require('invariant');
 var assign = require('object-assign');
 
-function getComponentName(component) {
-  return component.displayName || component.name;
-}
-
 function checkPropTypes(componentName, propTypes, props) {
   componentName = componentName || 'UnknownComponent';
 
@@ -22,16 +18,17 @@ function checkPropTypes(componentName, propTypes, props) {
 
 function createRouteFromReactElement(element) {
   var type = element.type;
+  var componentName = type.displayName || type.name;
   var route = assign({}, type.defaultProps, element.props);
 
   if (type.propTypes)
-    checkPropTypes(getComponentName(type), type.propTypes, route);
+    checkPropTypes(componentName, type.propTypes, route);
 
   if (route.handler) {
     warning(
       false,
       '<%s handler> is deprecated, use <%s component> instead',
-      getComponentName(type), getComponentName(type)
+      componentName, componentName
     );
 
     route.component = route.handler;
