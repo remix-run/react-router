@@ -1206,3 +1206,24 @@ describe('Router.run', function () {
     });
   });
 });
+
+describe('Router.runSync', function () {
+
+  it('returns Handler and state synchronously', function () {
+    var routes = <Route path="/" handler={EchoFooProp} />;
+    var { Handler, state } = Router.runSync(routes, '/');
+    var html = React.renderToString(<Handler foo="bar"/>);
+    expect(html).toMatch(/bar/);
+    expect(state).toBeAn(Object);
+  });
+
+  describe('when there is an async transition hook', function () {
+    it('throws an error', function () {
+      var routes = <Route path="/" handler={Async} />;
+
+      expect(function () {
+        Router.runSync(routes, '/');
+      }).toThrow(/is async/);
+    });
+  });
+});
