@@ -55,12 +55,12 @@ function createRouteFromReactElement(element) {
  * provides a convenient way to visualize how routes in the hierarchy are
  * nested.
  *
- *   var { Route, DefaultRoute, CatchAllRoute } = require('react-router');
+ *   var { Route } = require('react-router');
  *   
  *   var routes = createRoutesFromReactChildren(
- *     <Route handler={App}>
- *       <Route name="home" handler={Dashboard}/>
- *       <Route name="news" handler={NewsFeed}/>
+ *     <Route component={App}>
+ *       <Route name="home" component={Dashboard}/>
+ *       <Route name="news" component={NewsFeed}/>
  *     </Route>
  *   );
  *
@@ -77,12 +77,8 @@ function createRoutesFromReactChildren(children) {
   var routes = [];
 
   React.Children.forEach(children, function (element) {
-    if (!React.isValidElement(element))
-      return;
-
-    routes.push(
-      createRouteFromReactElement(element)
-    );
+    if (React.isValidElement(element))
+      routes.push(createRouteFromReactElement(element));
   });
 
   return routes;

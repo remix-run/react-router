@@ -146,7 +146,7 @@ function createRouter(routes) {
       // We either need a history...
       history,
 
-      // OR ALL of these...
+      // or ALL of these...
       location: oneOfType([ string, location ]),
       branch: arrayOf(route),
       params: object,
@@ -286,7 +286,7 @@ function createRouter(routes) {
 
       invariant(
         React.isValidElement(children),
-        'Your top-most route must render a single component'
+        'The root route must render a single component'
       );
 
       return children;

@@ -1,3 +1,5 @@
+var isReactChildren = require('./isReactChildren');
+var createRoutesFromReactChildren = require('./createRoutesFromReactChildren');
 var { getPathname, compilePattern, stripLeadingSlashes } = require('./PathUtils');
 var { loopAsync } = require('./AsyncUtils');
 
@@ -76,6 +78,9 @@ function matchRouteDeep(route, pathname, callback) {
       if (error) {
         callback(error);
       } else if (childRoutes) {
+        if (isReactChildren(childRoutes))
+          childRoutes = createRoutesFromReactChildren(childRoutes);
+
         // Check the child routes to see if any of them match.
         matchRoutes(childRoutes, remainingPathname, function (error, match) {
           if (error) {
