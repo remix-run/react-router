@@ -5,6 +5,8 @@
 
 <img src="https://rackt.github.io/react-router/img/vertical.png" width="300"/>
 
+[![Join the chat at https://gitter.im/rackt/react-router](https://badges.gitter.im/Join%20Chat.svg)](https://gitter.im/rackt/react-router?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge)
+
 A complete routing library for React.
 
 [View the docs](https://rackt.github.io/react-router)
