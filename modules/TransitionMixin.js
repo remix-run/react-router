@@ -1,16 +1,6 @@
 var warning = require('warning');
 var { getParamNames } = require('./PathUtils');
 
-function forEachComponent(components, callback) {
-  if (typeof components === 'object') {
-    for (var key in components)
-      if (components.hasOwnProperty(key))
-        callback(components[key]);
-  } else if (components) {
-    callback(components);
-  }
-}
-
 /**
  * Returns true if the params a route cares about changed in
  * the transition from prevState to nextState, false otherwise.
@@ -26,7 +16,7 @@ function routeParamsChanged(route, prevState, nextState) {
   });
 }
 
-function getRouteAndComponentTransitionHooks(router, prevState, nextState) {
+function getTransitionHooks(router, prevState, nextState) {
   var fromRoutes = prevState.branch;
   var toRoutes = nextState.branch;
   var hooks = [];
@@ -42,11 +32,6 @@ function getRouteAndComponentTransitionHooks(router, prevState, nextState) {
       if (isLeavingRoute(route)) {
         leavingRoutes.push(route);
 
-        forEachComponent(prevState.components[index], function (component) {
-          if (component.routerWillLeave)
-            hooks.push(component.routerWillLeave.bind(component, router, nextState, route));
-        });
-
         if (route.onLeave)
           hooks.push(route.onLeave.bind(route, router, nextState));
       }
@@ -60,25 +45,13 @@ function getRouteAndComponentTransitionHooks(router, prevState, nextState) {
     }
 
     toRoutes.forEach(function (route, index) {
-      if (isEnteringRoute(route)) {
-        if (route.onEnter)
-          hooks.push(route.onEnter.bind(route, router, nextState));
-
-        forEachComponent(nextState.components[index], function (component) {
-          if (component.routerWillEnter)
-            hooks.push(component.routerWillEnter.bind(component, router, nextState, route));
-        });
-      }
+      if (isEnteringRoute(route) && route.onEnter)
+        hooks.push(route.onEnter.bind(route, router, nextState));
     });
   } else {
     toRoutes.forEach(function (route, index) {
       if (route.onEnter)
         hooks.push(route.onEnter.bind(route, router, nextState));
-
-      forEachComponent(nextState.components[index], function (component) {
-        if (component.routerWillEnter)
-          hooks.push(component.routerWillEnter.bind(component, router, nextState, route));
-      });
     });
   }
 
@@ -93,9 +66,7 @@ var TransitionMixin = {
    * hook signatures are:
    *
    *   - route.onLeave(router, nextState)
-   *   - component.routerWillLeave(router, nextState, route)
    *   - route.onEnter(router, nextState)
-   *   - component.routerWillEnter(router, nextState, route)
    *
    * Transition hooks run in order from the leaf route in the branch
    * we're leaving, up the tree to the common parent route, and back
@@ -118,7 +89,7 @@ var TransitionMixin = {
 
     hooks.push.apply(
       hooks,
-      getRouteAndComponentTransitionHooks(this, this.state, nextState)
+      getTransitionHooks(this, this.state, nextState)
     );
   
     var nextLocation = this.nextLocation;

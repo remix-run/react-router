@@ -12,18 +12,6 @@ describe('When a router enters a branch', function () {
     div = document.createElement('div');
 
     Dashboard = React.createClass({
-      statics: {
-        routerWillEnter(router, nextState, route) {
-          expect(router).toBeA(Router);
-          expect(nextState.components).toContain(Dashboard);
-          expect(route).toBe(DashboardRoute);
-        },
-        routerWillLeave(router, nextState, route) {
-          expect(router).toBeA(Router);
-          expect(router.state.components).toContain(Dashboard);
-          expect(route).toBe(DashboardRoute);
-        }
-      },
       render() {
         return (
           <div className="Dashboard">
@@ -35,36 +23,12 @@ describe('When a router enters a branch', function () {
     });
   
     NewsFeed = React.createClass({
-      statics: {
-        routerWillEnter(router, nextState, route) {
-          expect(router).toBeA(Router);
-          expect(nextState.components).toContain(NewsFeed);
-          expect(route).toBe(NewsFeedRoute);
-        },
-        routerWillLeave(router, nextState, route) {
-          expect(router).toBeA(Router);
-          expect(router.state.components).toContain(NewsFeed);
-          expect(route).toBe(NewsFeedRoute);
-        }
-      },
       render() {
         return <div>News</div>;
       }
     });
   
     Inbox = React.createClass({
-      statics: {
-        routerWillEnter(router, nextState, route) {
-          expect(router).toBeA(Router);
-          expect(nextState.components).toContain(Inbox);
-          expect(route).toBe(InboxRoute);
-        },
-        routerWillLeave(router, nextState, route) {
-          expect(router).toBeA(Router);
-          expect(router.state.components).toContain(Inbox);
-          expect(route).toBe(InboxRoute);
-        }
-      },
       render() {
         return <div>Inbox</div>;
       }
@@ -79,7 +43,7 @@ describe('When a router enters a branch', function () {
       },
       onLeave(router, nextState) {
         expect(router).toBeA(Router);
-        expect(router.state.branch).toContain(NewsFeedRoute);
+        expect(nextState.branch).toNotContain(NewsFeedRoute);
       }
     };
   
@@ -92,7 +56,7 @@ describe('When a router enters a branch', function () {
       },
       onLeave(router, nextState) {
         expect(router).toBeA(Router);
-        expect(router.state.branch).toContain(InboxRoute);
+        expect(nextState.branch).toNotContain(InboxRoute);
       }
     };
 
@@ -101,11 +65,12 @@ describe('When a router enters a branch', function () {
       onEnter(router, nextState) {
         expect(router).toBeA(Router);
         expect(nextState.branch).toContain(RedirectToInboxRoute);
+
         router.replaceWith('/inbox');
       },
       onLeave(router, nextState) {
         expect(router).toBeA(Router);
-        expect(router.state.branch).toContain(RedirectToInboxRoute);
+        expect(nextState.branch).toNotContain(RedirectToInboxRoute);
       }
     };
 
@@ -117,7 +82,8 @@ describe('When a router enters a branch', function () {
       },
       onLeave(router, nextState) {
         expect(router).toBeA(Router);
-        expect(router.state.branch).toContain(MessageRoute);
+        // We can't make this assertion when switching from /messages/123 => /messages/456
+        //expect(nextState.branch).toNotContain(MessageRoute);
       }
     };
   
@@ -129,7 +95,7 @@ describe('When a router enters a branch', function () {
       },
       onLeave(router, nextState) {
         expect(router).toBeA(Router);
-        expect(router.state.branch).toContain(DashboardRoute);
+        expect(nextState.branch).toNotContain(DashboardRoute);
       },
       childRoutes: [ NewsFeedRoute, InboxRoute, RedirectToInboxRoute, MessageRoute ]
     };
@@ -153,24 +119,6 @@ describe('When a router enters a branch', function () {
     });
   });
 
-  it('calls the routerWillEnter hooks of all components in that branch', function (done) {
-    var spies = [
-      spyOn(Dashboard, 'routerWillEnter').andCallThrough(),
-      spyOn(NewsFeed, 'routerWillEnter').andCallThrough()
-    ];
-
-    render(<Router history={new History('/news')}/>, div, function () {
-      spies.forEach(function (spy) {
-        expect(spy).toHaveBeenCalled();
-      });
-      done();
-    });
-
-    spies.forEach(function (spy) {
-      expect(spy).toHaveBeenCalled();
-    });
-  });
-
   describe('and one of the transition hooks navigates to another route', function () {
     it('immediately transitions to the new route', function (done) {
       var redirectRouteEnterSpy = spyOn(RedirectToInboxRoute, 'onEnter').andCallThrough();
@@ -190,20 +138,16 @@ describe('When a router enters a branch', function () {
   });
 
   describe('and then navigates to another branch', function () {
-    it('calls the onLeave/routerWillLeave hooks of all routes & components in the previous branch that are not in the next branch', function (done) {
+    it('calls the onLeave hooks of all routes in the previous branch that are not in the next branch', function (done) {
       var dashboardRouteLeaveSpy = spyOn(DashboardRoute, 'onLeave').andCallThrough();
       var inboxRouteEnterSpy = spyOn(InboxRoute, 'onEnter').andCallThrough();
       var inboxRouteLeaveSpy = spyOn(InboxRoute, 'onLeave').andCallThrough();
-      var dashboardComponentLeaveSpy = spyOn(Dashboard, 'routerWillLeave').andCallThrough();
-      var inboxComponentEnterSpy = spyOn(Inbox, 'routerWillEnter').andCallThrough();
-      var inboxComponentLeaveSpy = spyOn(Inbox, 'routerWillLeave').andCallThrough();
 
       var steps = [];
 
       steps.push(function () {
         try {
           expect(inboxRouteEnterSpy).toHaveBeenCalled('InboxRoute.onEnter was not called');
-          expect(inboxComponentEnterSpy).toHaveBeenCalled('Inbox.routerWillEnter was not called');
           this.transitionTo('/news');
         } catch (error) {
           done(error);
@@ -212,9 +156,7 @@ describe('When a router enters a branch', function () {
 
       steps.push(function () {
         try {
-          expect(inboxComponentLeaveSpy).toHaveBeenCalled('Inbox.routerWillLeave was not called');
           expect(inboxRouteLeaveSpy).toHaveBeenCalled('InboxRoute.onLeave was not called');
-          expect(dashboardComponentLeaveSpy.calls.length).toEqual(0, 'Dashboard.routerWillLeave was called');
           expect(dashboardRouteLeaveSpy.calls.length).toEqual(0, 'DashboardRoute.onLeave was called');
           done();
         } catch (error) {
