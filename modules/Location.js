@@ -9,9 +9,9 @@ var PathUtils = require('./PathUtils');
  */
 class Location {
 
-  constructor(path, navigationType = NavigationTypes.POP, scrollPosition = null) {
+  constructor(path, navigationType, scrollPosition) {
     this.path = path;
-    this.navigationType = navigationType;
+    this.navigationType = navigationType || NavigationTypes.POP;
     this.scrollPosition = scrollPosition;
   }
 

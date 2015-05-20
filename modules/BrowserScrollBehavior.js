@@ -1,7 +1,10 @@
 var createScrollBehavior = require('./createScrollBehavior');
+var NavigationTypes = require('./NavigationTypes');
 
-function restoreScrollPosition(scrollPosition) {
-  if (scrollPosition) {
+function restoreScrollPosition(location) {
+  var { scrollPosition, navigationType } = location;
+
+  if (navigationType === NavigationTypes.POP && scrollPosition != null) {
     window.scrollTo(scrollPosition.x, scrollPosition.y);
   } else {
     window.scrollTo(0, 0);

@@ -4,7 +4,7 @@ var PropTypes = require('./PropTypes');
 function createScrollBehavior(applyScrollPosition) {
   class ScrollBehavior extends React.Component {
     static propTypes = {
-      location: PropTypes.location,
+      location: PropTypes.location.isRequired,
       children: React.PropTypes.element.isRequired
     }
 
@@ -15,7 +15,7 @@ function createScrollBehavior(applyScrollPosition) {
       if (prevLocation.path === location.path)
         return;
 
-      applyScrollPosition(location.scrollPosition);
+      applyScrollPosition(location);
     }
 
     render() {
