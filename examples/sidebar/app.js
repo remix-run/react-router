@@ -1,110 +1,47 @@
 var React = require('react');
-var Router = require('react-router');
-var { Route, DefaultRoute, RouteHandler, Link } = Router;
+var { createRouter, Route, Link } = require('react-router');
+var HashHistory = require('react-router/HashHistory');
 var data = require('./data');
 
-var CategoryNav = React.createClass({
-  getInitialState: function () {
-    return { isOpen: this.props.defaultIsOpen};
-  },
-
-  getDefaultProps: function () {
-    return { isOpen: false };
-  },
-
-  componentWillReceiveProps: function (newProps) {
-    if (!this.state.isOpen)
-      this.setState({ isOpen: newProps.defaultIsOpen });
-  },
-
-  toggle: function () {
-    this.setState({ isOpen: !this.state.isOpen });
-  },
-
-  buildToggleClassName: function () {
-    var toggleClassName = 'CategoryNav__Toggle';
-    if (this.state.isOpen)
-      toggleClassName += ' CategoryNav__Toggle--is-open';
-    return toggleClassName;
-  },
-
-  renderItems: function () {
-    var category = this.props.category;
-    return this.state.isOpen ? category.items.map(function (item) {
-      var params = { name: item.name, category: category.name };
-      return (
-        <li key={item.name}>
-          <Link to="item" params={params}>{item.name}</Link>
-        </li>
-      );
-    }) : null;
-  },
-
-  render: function () {
-    var category = this.props.category;
-    return (
-      <div className="CategoryNav">
-        <h3
-          className={this.buildToggleClassName()}
-          onClick={this.toggle}
-        >{category.name}</h3>
-        <ul>{this.renderItems()}</ul>  
-      </div>
-    );
-  }
-});
-
-var Sidebar = React.createClass({
-  renderCategory: function (category) {
-    return <CategoryNav
-      key={category.name}
-      defaultIsOpen={category.name === this.props.activeCategory}
-      category={category}
-    />;
-  },
-
-  render: function () {
-    return (
-      <div className="Sidebar">
-        {this.props.categories.map(this.renderCategory)}
-      </div>
-    );
-  }
-});
-
-var App = React.createClass({
-
-  contextTypes: {
-    router: React.PropTypes.func.isRequired
-  },
-
-  render: function () {
-    var activeCategory = this.context.router.getCurrentParams().category;
+var Category = React.createClass({
+  render () {
+    var category = data.lookupCategory(this.props.params.category);
     return (
       <div>
-        <Sidebar activeCategory={activeCategory} categories={data.getAll()}/>
-        <div className="Content">
-          <RouteHandler/>
-        </div>
+        <h1>{category.name}</h1>
+        {this.props.children || (
+          <p>{category.description}</p>
+        )}
+      </div>
+    );
+  }
+});
+
+var CategorySidebar = React.createClass({
+  render () {
+    var category = data.lookupCategory(this.props.params.category);
+    return (
+      <div>
+        <Link to="/">◀︎ Back</Link>
+        <h2>{category.name} Items</h2>
+        <ul>
+          {category.items.map(item => (
+            <li><Link to={`/category/${category.name}/${item.name}`}>{item.name}</Link></li>
+          ))}
+        </ul>
       </div>
     );
   }
 });
 
 var Item = React.createClass({
-
-  contextTypes: {
-    router: React.PropTypes.func.isRequired
-  },
-
-  render: function () {
-    var params = this.context.router.getCurrentParams();
-    var category = data.lookupCategory(params.category);
-    var item = data.lookupItem(params.category, params.name);
+  render () {
+    var { category, item } = this.props.params;
+    var menuItem = data.lookupItem(category, item);
     return (
       <div>
-        <h2>{category.name} / {item.name}</h2>
-        <p>Price: ${item.price}</p>
+        <h1>{menuItem.name}</h1>
+        <p>${menuItem.price}</p>
       </div>
     );
   }
@@ -114,37 +51,56 @@ var Index = React.createClass({
   render: function () {
     return (
       <div>
-        <p>Sidebar features:</p>
-        <ul style={{maxWidth: '400px'}}>
-          <li>User can open/close categories</li>
-          <li>
-            Visiting an item on first page load will automatically open
-            the correct category. (Click an item, then reload the
-            browser.)
-          </li>
-          <li>
-            Navigating with forward/back buttons will open an active
-            category if it is not already open. (Navigate to several
-            items, close all the categories, then use back/forward
-            buttons.)
-          </li>
-          <li>
-            Only the user can close a category. (Navigating from an
-            active category will not close it.)
-          </li>
+        <h1>Sidebar</h1>
+        <p>
+          Routes can have multiple components, so that all portions of your UI
+          can participate in the routing.
+        </p>
+      </div>
+    );
+  }
+});
+
+
+var IndexSidebar = React.createClass({
+  render () {
+    return (
+      <div>
+        <h2>Categories</h2>
+        <ul>
+          {data.getAll().map(category => (
+            <li><Link to={`/category/${category.name}`}>{category.name}</Link></li>
+          ))}
         </ul>
       </div>
     );
   }
 });
 
+var App = React.createClass({
+  render () {
+    return (
+      <div>
+        <div className="Sidebar">
+          {this.props.sidebar || <IndexSidebar/>}
+        </div>
+        <div className="Content">
+          {this.props.content || <Index/>}
+        </div>
+      </div>
+    );
+  }
+});
+
 var routes = (
-  <Route handler={App}>
-    <DefaultRoute handler={Index}/>
-    <Route name="item" path=":category/:name" handler={Item} />
+  <Route path="/" component={App}>
+    <Route path="category/:category" components={{content: Category, sidebar: CategorySidebar}}>
+      <Route path=":item" component={Item}/>
+    </Route>
   </Route>
 );
 
-Router.run(routes, function (Handler) {
-  React.render(<Handler/>, document.getElementById('example'));
-});
+var Router = createRouter(routes);
+
+React.render(<Router history={HashHistory}/>, document.getElementById('example'));
+
