@@ -19,6 +19,9 @@ class DOMHistory extends AbstractHistory {
     window.history.go(n);
   }
 
+  push(path) {
+  }
+
 }
 
 module.exports = DOMHistory;
