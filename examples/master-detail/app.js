@@ -155,8 +155,7 @@ var Router = createRouter(
     <Route name="new" path="contact/new" component={NewContact}/>
     <Route name="contact" path="contact/:id" component={Contact}/>
     <Route path="*" component={NotFound}/>
-  </Route>,
-  HashHistory
+  </Route>
 );
 
 React.render(<Router history={HashHistory}/>, document.getElementById('example'));
