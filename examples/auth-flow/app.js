@@ -1,6 +1,6 @@
 var React = require('react');
-var Router = require('react-router');
-var { Route, RouteHandler, Link } = Router;
+var HashHistory = require('react-router/HashHistory');
+var { createRouter, Route, Link } = require('react-router');
 
 class App extends React.Component {
   constructor (props) {
@@ -35,26 +35,18 @@ class App extends React.Component {
           <li><Link to="about">About</Link></li>
           <li><Link to="dashboard">Dashboard</Link> (authenticated)</li>
         </ul>
-        <RouteHandler/>
+        {this.props.children}
       </div>
     );
   }
 }
 
-var requireAuth = (Component) => {
-  return class Authenticated extends React.Component {
-    static willTransitionTo(transition) {
-      if (!auth.loggedIn()) {
-        transition.redirect('/login', {}, {'nextPath' : transition.path});
-      }  
-    }
-    render () {
-      return <Component {...this.props}/>
-    }
-  }
-};
+function requireAuth (router, state) {
+  if (!auth.loggedIn())
+    router.replaceWith('/login', {}, {'nextPath' : state.location.path});
+}
 
-var Dashboard = requireAuth(class extends React.Component {
+class Dashboard extends React.Component {
   render () {
     var token = auth.getToken();
     return (
@@ -65,7 +57,7 @@ var Dashboard = requireAuth(class extends React.Component {
       </div>
     );
   }
-});
+}
 
 class Login extends React.Component {
 
@@ -182,14 +174,14 @@ function pretendRequest(email, pass, cb) {
 }
 
 var routes = (
-  <Route handler={App}>
-    <Route name="login" handler={Login}/>
-    <Route name="logout" handler={Logout}/>
-    <Route name="about" handler={About}/>
-    <Route name="dashboard" handler={Dashboard}/>
+  <Route component={App}>
+    <Route name="login" component={Login}/>
+    <Route name="logout" component={Logout}/>
+    <Route name="about" component={About}/>
+    <Route name="dashboard" component={Dashboard} onEnter={requireAuth}/>
   </Route>
 );
 
-Router.run(routes, function (Handler) {
-  React.render(<Handler/>, document.getElementById('example'));
-});
+var Router = createRouter(routes);
+
+React.render(<Router history={HashHistory}/>, document.getElementById('example'));
