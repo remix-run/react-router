@@ -67,7 +67,7 @@ var BrowserHistory = assign(new DOMHistory(window.history.length, state.current,
   getPath: getWindowPath,
 
   push(path) {
-    DOMHistory.prototype.push.call(this, path);
+    this.recordScrollPosition();
 
     // http://www.w3.org/TR/2011/WD-html5-20110113/history.html#dom-history-pushstate
     this.navigationType = NavigationTypes.PUSH;

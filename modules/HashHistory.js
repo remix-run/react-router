@@ -67,7 +67,7 @@ var HashHistory = assign(new DOMHistory(window.history.length), {
   },
 
   push(path) {
-    DOMHistory.prototype.push.call(this, path);
+    this.recordScrollPosition();
 
     this.current += 1;
     this.navigationType = NavigationTypes.PUSH;
