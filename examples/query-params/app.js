@@ -7,7 +7,7 @@ var User = React.createClass({
   render() {
     var query = this.getQuery();
     var age = query && query.showAge ? '33' : '';
-    var { userID } = this.getParams();
+    var { userID } = this.props.params;
     return (
       <div className="User">
         <h1>User id: {userID}</h1>
@@ -35,8 +35,7 @@ var App = React.createClass({
 var Router = createRouter(
   <Route component={App}>
     <Route name="user" path="user/:userID" component={User}/>
-  </Route>,
-  HashHistory
+  </Route>
 );
 
-React.render(<Router/>, document.getElementById('example'));
+React.render(<Router history={HashHistory}/>, document.getElementById('example'));
