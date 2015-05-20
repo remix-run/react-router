@@ -6,6 +6,8 @@ var assign = require('object-assign');
 
 var API = 'http://addressbook-api.herokuapp.com';
 var loadingEvents = new EventEmitter();
+localStorage.token = localStorage.token || (Date.now()*Math.random());
+
 
 function getJSON(url) {
   if (getJSON._cache[url])
@@ -26,6 +28,7 @@ function getJSON(url) {
       }
     };
     req.open('GET', url);
+    req.setRequestHeader('authorization', localStorage.token);
     req.send();
   });
 }
