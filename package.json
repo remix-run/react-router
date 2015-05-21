@@ -64,5 +64,8 @@
     "route",
     "routes",
     "router"
-  ]
+  ],
+  "system": { 
+    "main": "umd/ReactRouter" 
+  }
 }
