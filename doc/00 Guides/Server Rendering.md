@@ -163,8 +163,9 @@ serveNonStaticPaths((req, res) => {
       var html = React.renderToString(<App {...initialState} token={token} />);
 
       // Now we pass both the html and the data to `renderFullPage`
-      // You must "dehydrate" the data on `window.__ASYNC_PROPS__` for our
-      // client.js call to `AsyncProps.rehydrate` to work.
+      // You must "dehydrate" the data on `window.__ASYNC_PROPS__` for
+      // `AsyncProps` to know where to find the data on the client for
+      // the initial render.
       res.send(renderFullPage(html, data));
     });
   });
