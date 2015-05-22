@@ -123,8 +123,21 @@ on some sort of logic (first load, navigating from the dashboard, etc).
 
 Check out the [instagram][instragram-example] example.
 
+### `onEnter(history, nextState)`
+
+A hook called from `Transitions` middleware when a route is about to
+entered. It provides your [`history`][history] to cancel or redirect the
+transition, and the router's state.
+
+### `onLeave(history, nextState)`
+
+A hook called from `Transitions` middleware when a route is about to be
+left. It provides your [`history`][history] to cancel or redirect the
+transition, and the router's state.
+
   [overview]:#TODO
   [path-matching]:#TODO
   [ignoreScrollBehavior]:#TODO
   [instragram-example]:#TODO
+  [history]:#TODO
 

@@ -1,5 +1,5 @@
-A mixin for components that need to create URLs and/or initiate
-transitions to other routes.
+Mixes in the navigation methods of your router's `history` to the
+component for convenient navigation and path string creation.
 
 Instance Methods
 ----------------

@@ -22,6 +22,16 @@ Same as `childRoutes` but asynchronous:
 ```js
 var myRoute = {
   path: 'course/:courseId',
+  childRoutes: [
+    announcementsRoute,
+    gradesRoute,
+    assignmentsRoute
+  ]
+};
+
+// async child routes
+var myRoute = {
+  path: 'course/:courseId',
   getChildRoutes (cb) {
     // do asynchronous stuff to find the child routes
     cb(null, [announcementsRoute, gradesRoute, assignmentsRoute]);
