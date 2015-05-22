@@ -119,7 +119,7 @@ pre > code {
   margin: 0;
   list-style-type: none;
   padding: 0;
-  font-family: "Source Code Pro", mono-space;
+  font-family: "Source Code Pro", monospace;
 }
 
 .Version {
