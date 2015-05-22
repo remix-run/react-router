@@ -12,6 +12,7 @@ var StateMixin = require('./StateMixin');
 var findMatch = require('./findMatch');
 var Location = require('./Location');
 var AbstractHistory = require('./AbstractHistory');
+var BrowserScrollBehavior = require('./BrowserScrollBehavior');
 
 function createElement(component, props) {
   return typeof component === 'function' ? React.createElement(component, props) : null;
@@ -87,10 +88,15 @@ function checkProps(props) {
  *     });
  *   });
  */
-function createRouter(routes) {
+function createRouter(routes, Behavior = BrowserScrollBehavior) {
   invariant(
     routes != null,
     'A router needs some routes'
+  );
+
+  invariant(
+    typeof Behavior === 'function',
+    'Behavior, if specified, must be a valid React component class.'
   );
 
   if (isReactChildren(routes)) {
@@ -112,7 +118,11 @@ function createRouter(routes) {
         if (typeof location === 'string') {
           location = new Location(location);
         } else if (location && location.path) {
-          location = new Location(location.path, location.navigationType);
+          location = new Location(
+            location.path,
+            location.navigationType,
+            location.scrollPosition
+          );
         }
       }
 
@@ -289,7 +299,11 @@ function createRouter(routes) {
         'The root route must render a single component'
       );
 
-      return children;
+      return (
+        <Behavior {...this.state}>
+          {children}
+        </Behavior>
+      );
     }
 
   }
