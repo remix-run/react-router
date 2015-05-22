@@ -31,7 +31,7 @@ function getCategories () {
         const src = fs.readFileSync(path.join(DIR, dir, file)).toString();
         marked(src, (err, html) => {
           if (err) rejectDoc(err);
-          else resolveDoc({ name: stripExt(file), html });
+          else resolveDoc({ name: stripExt(stripDigits(file)), html });
         });
       });
     })).then((docs) => {
