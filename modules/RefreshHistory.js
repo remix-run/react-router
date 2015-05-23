@@ -1,35 +1,24 @@
-/* jshint -W058 */
-var assign = require('object-assign');
-var warning = require('warning');
-var { getWindowPath } = require('./DOMUtils');
-var DOMHistory = require('./DOMHistory');
+import DOMHistory from './DOMHistory';
 
 /**
- * A history implementation that can be used in DOM environments
- * that lack support for HTML5 history. Automatically used as the
- * fallback when HTML5 history is desired but not available.
+ * A history implementation that provides clean URLs in DOM
+ * environments that lack support for HTML5 history by simply
+ * sending a new request to the server on push/replace.
  */
-var RefreshHistory = assign(new DOMHistory(1), {
+class RefreshHistory extends DOMHistory {
 
-  getPath: getWindowPath,
+  static propTypes = Object.assign({}, DOMHistory.propTypes);
+  static defaultProps = Object.assign({}, DOMHistory.defaultProps);
+  static childContextTypes = Object.assign({}, DOMHistory.childContextTypes);
 
-  push(path) {
-    window.location = path;
-  },
-
-  replace(path) {
-    window.location.replace(path);
-  },
-
-  canGo(n) {
-    warning(
-      false,
-      'RefreshHistory.canGo(n) is not reliable'
-    );
-
-    return DOMHistory.prototype.canGo.call(this, n);
+  push(path, query) {
+    window.location = this.makePath(path, query);
   }
 
-});
+  replace(path, query) {
+    window.location.replace(this.makePath(path, query));
+  }
 
-module.exports = RefreshHistory;
+}
+
+export default RefreshHistory;

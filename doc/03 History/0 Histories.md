@@ -11,21 +11,21 @@ All histories share the same api.
 Props
 -----
 
-### `parseQuery(parser)`
+### `parseQueryString`
 
-Provides a way for you to specify a custom query string parser, defaults
-to the `qs` dependency.
+A function that is used to parse the URL query string. Defaults to using
+`qs.parse`.
 
-### `stringifyQuery(obj)`
+### `stringifyQuery`
 
-Provides a way for you to specify a custom query string stringifyer (I
-think I just coined this term), defaults to the `qs` dependency.
+A function that is used to create new query strings from a query object.
+Defaults to using `qs.stringify` with `{ arrayFormat: 'brackets' }`.
 
 ### Example
 
 ```js
 <BrowserHistory
-  parseQuery={(queryString) => customParser(queryString)}
+  parseQueryString={(queryString) => customParser(queryString)}
   stringifyQuery={(obj) => customStringify(obj)}
 />
 ```

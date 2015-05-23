@@ -1,10 +1,8 @@
-/* jshint -W058 */
-var assign = require('object-assign');
-var warning = require('warning');
-var NavigationTypes = require('./NavigationTypes');
-var { isAbsolutePath } = require('./PathUtils');
-var { getHashPath, replaceHashPath } = require('./DOMUtils');
-var DOMHistory = require('./DOMHistory');
+import DOMHistory from './DOMHistory';
+import NavigationTypes from './NavigationTypes';
+import { getHashPath, replaceHashPath } from './DOMUtils';
+import { isAbsolutePath } from './PathUtils';
+import Location from './Location';
 
 function ensureSlash() {
   var path = getHashPath();
@@ -17,79 +15,77 @@ function ensureSlash() {
   return false;
 }
 
-function handleHashChange() {
-  if (ensureSlash()) {
-    HashHistory.length = window.history.length;
-    HashHistory._notifyChange();
-
-    // On the next hashchange we want this to be accurate.
-    HashHistory.navigationType = null;
-  }
-}
-
 /**
  * A history implementation for DOM environments that uses window.location.hash
- * to store the current path. This is a hack for older browsers that do not
- * support the HTML5 history API (IE <= 9). It is currently used as the
- * default in DOM environments because it offers the widest range of support
- * without requiring server-side changes. However, the canGo* methods are not
- * reliable.
+ * to store the current path. This is essentially a hack for older browsers that
+ * do not support the HTML5 history API (IE <= 9).
  */
-var HashHistory = assign(new DOMHistory(window.history.length), {
+class HashHistory extends DOMHistory {
 
-  addChangeListener(listener) {
-    DOMHistory.prototype.addChangeListener.call(this, listener);
+  static propTypes = Object.assign({}, DOMHistory.propTypes);
+  static defaultProps = Object.assign({}, DOMHistory.defaultProps);
+  static childContextTypes = Object.assign({}, DOMHistory.childContextTypes);
 
-    if (this.changeListeners.length === 1) {
-      if (window.addEventListener) {
-        window.addEventListener('hashchange', handleHashChange, false);
-      } else {
-        window.attachEvent('onhashchange', handleHashChange);
-      }
-    }
-  },
-
-  removeChangeListener(listener) {
-    DOMHistory.prototype.removeChangeListener.call(this, listener);
-
-    if (this.changeListeners.length === 0) {
-      if (window.removeEventListener) {
-        window.removeEventListener('hashchange', handleHashChange, false);
-      } else {
-        window.removeEvent('onhashchange', handleHashChange);
-      }
-    }
-  },
-
-  getPath: function () {
-    ensureSlash();
-    return getHashPath();
-  },
-
-  push(path) {
-    this.current += 1;
-    this.navigationType = NavigationTypes.PUSH;
-    window.location.hash = path;
-  },
-
-  replace(path) {
-    this.navigationType = NavigationTypes.REPLACE;
-    replaceHashPath(path);
-  },
-
-  canGo(n) {
-    warning(
-      false,
-      'HashHistory keeps session length in memory, so canGo(n) is not durable. Use BrowserHistory instead'
-    );
-
-    return DOMHistory.prototype.canGo.call(this, n);
-  },
-
-  makeHref(path) {
-    return '#' + path;
+  constructor(props) {
+    super(props);
+    this.handleHashChange = this.handleHashChange.bind(this);
+    this.navigationType = null;
   }
 
-});
+  _updateLocation(navigationType) {
+    var [ path, queryString ] = getHashPath().split('?', 2);
 
-module.exports = HashHistory;
+    this.setState({
+      location: new Location(path, this.parseQueryString(queryString), navigationType)
+    });
+  }
+
+  handleHashChange() {
+    if (ensureSlash()) {
+      var navigationType = this.navigationType;
+
+      // On the next hashchange we want this to be accurate.
+      this.navigationType = null;
+
+      this._updateLocation(navigationType);
+    }
+  }
+
+  componentWillMount() {
+    super.componentWillMount();
+    this._updateLocation();
+  }
+
+  componentDidMount() {
+    if (window.addEventListener) {
+      window.addEventListener('hashchange', this.handleHashChange, false);
+    } else {
+      window.attachEvent('onhashchange', this.handleHashChange);
+    }
+  }
+
+  componentWillUnmount() {
+    if (window.removeEventListener) {
+      window.removeEventListener('hashchange', this.handleHashChange, false);
+    } else {
+      window.removeEvent('onhashchange', this.handleHashChange);
+    }
+  }
+
+  push(path, query) {
+    this.navigationType = NavigationTypes.PUSH;
+    window.location.hash = this.makePath(path, query);
+  }
+
+  replace(path, query) {
+    this.navigationType = NavigationTypes.REPLACE;
+    replaceHashPath(this.makePath(path, query));
+  }
+
+  makeHref(path, query) {
+    return '#' + super.makeHref(path, query);
+  }
+
+}
+
+export default HashHistory;

@@ -1,5 +1,4 @@
-var NavigationTypes = require('./NavigationTypes');
-var PathUtils = require('./PathUtils');
+import NavigationTypes from './NavigationTypes';
 
 /**
  * A Location answers two important questions:
@@ -9,21 +8,18 @@ var PathUtils = require('./PathUtils');
  */
 class Location {
 
-  constructor(path, navigationType) {
-    this.path = path;
+  constructor(path, query, navigationType) {
     this.navigationType = navigationType || NavigationTypes.POP;
+    this.query = query || null;
+    this.path = path;
   }
 
-  getPathname() {
-    return PathUtils.getPathname(this.path);
-  }
-
-  getQueryString() {
-    return PathUtils.getQueryString(this.path);
-  }
-
-  getQuery(options) {
-    return PathUtils.getQuery(this.path, options);
+  toJSON() {
+    return {
+      path: this.path,
+      query: this.query,
+      navigationType: this.navigationType
+    };
   }
 
 }

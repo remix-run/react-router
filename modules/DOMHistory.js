@@ -1,24 +1,21 @@
-var warning = require('warning');
-var AbstractHistory = require('./AbstractHistory');
+import History from './History';
 
-class DOMHistory extends AbstractHistory {
+/**
+ * A history interface that assumes a DOM environment.
+ */
+class DOMHistory extends History {
+
+  static propTypes = Object.assign({}, History.propTypes);
+  static defaultProps = Object.assign({}, History.defaultProps);
+  static childContextTypes = Object.assign({}, History.childContextTypes);
 
   go(n) {
     if (n === 0)
       return;
-
-    warning(
-      this.canGo(n),
-      'Cannot go(%s); there is not enough history',
-      n
-    );
-
-    this.navigationType = NavigationTypes.POP;
-    this.current += n;
 
     window.history.go(n);
   }
 
 }
 
-module.exports = DOMHistory;
+export default DOMHistory;

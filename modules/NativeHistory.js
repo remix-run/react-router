@@ -1,46 +1,69 @@
-var invariant = require('invariant');
-var { AsyncStorage } = require('react-native');
-var History = require('./History');
+import { AsyncStorage, PropTypes } from 'react-native';
+import MemoryHistory from './MemoryHistory';
+import Location from './Location';
 
-var AsyncStorageKey = '@ReactRouterNativeHistory';
+var { bool, string } = PropTypes;
+
+function encodeState(state) {
+  return JSON.stringify(state);
+}
+
+function decodeState(string) {
+  var state;
+  try {
+    state = JSON.parse(string);
+  } catch (error) {
+    // Invalid JSON in AsyncStorage for some reason. Ignore it.
+    state = {};
+  }
+
+  // Make sure we have a real Location.
+  if (state && state.location) {
+    var { location } = state;
+    state.location = new Location(location.path, location.query, location.navigationType);
+  }
+
+  return state;
+}
 
 /**
  * A history implementation for React Native environments that
  * supports persistence across the application lifecycle using
  * the AsyncStorage module.
  */
-class NativeHistory extends History {
+class NativeHistory extends MemoryHistory {
 
-  static createFromAsyncStorage(callback) {
-    invariant(
-      typeof callback === 'function',
-      'NativeHistory.createFromAsyncStorage needs a callback function'
-    );
+  static propTypes = Object.assign({}, MemoryHistory.propTypes, {
+    storageKey: string.isRequired,
+    autoSave: bool.isRequired
+  });
 
-    AsyncStorage.getItem(AsyncStorageKey, function (error, value) {
+  static defaultProps = Object.assign({}, MemoryHistory.defaultProps, {
+    storageKey: '@ReactRouterNativeHistory',
+    autoSave: true
+  });
+
+  static childContextTypes = Object.assign({}, MemoryHistory.childContextTypes);
+  
+  componentWillMount() {
+    AsyncStorage.getItem(this.props.storageKey, (error, value) => {
       if (error) {
-        callback(error);
+        throw error; // TODO: Keep this around in state?
       } else {
-        var state;
-        try {
-          state = JSON.parse(value);
-        } catch (e) {
-          // Invalid state in AsyncStorage?
-          state = {};
-        }
-
-        callback(
-          null,
-          new NativeHistory(state.entries, state.current, state.navigationType)
-        );
+        this.setState(decodeState(value));
       }
     });
   }
 
+  componentDidUpdate() {
+    if (this.props.autoSave)
+      this.saveToAsyncStorage();
+  }
+
   saveToAsyncStorage(callback) {
-    AsyncStorage.setItem(AsyncStorageKey, JSON.stringify(this), callback);
+    AsyncStorage.setItem(this.props.storageKey, encodeState(this.state), callback);
   }
 
 }
 
-module.exports = NativeHistory;
+export default NativeHistory;

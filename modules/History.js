@@ -1,73 +1,106 @@
-var invariant = require('invariant');
-var NavigationTypes = require('./NavigationTypes');
-var AbstractHistory = require('./AbstractHistory');
+import React from 'react';
+import invariant from 'invariant';
+import { parse: parseQueryString, stringify } from 'qs';
+import { history } from './PropTypes';
+
+var RequiredSubclassMethods = [ 'push', 'replace', 'go' ];
+
+function stringifyQuery(query) {
+  return stringify(query, { arrayFormat: 'brackets' });
+}
 
 /**
- * A concrete History class that doesn't require a DOM. Ideal
- * for testing because it allows you to specify route history
- * entries in the constructor.
+ * A history interface that normalizes the differences across
+ * various environments and implementations. Requires concrete
+ * subclasses to implement the following methods:
+ *
+ * - push(path)
+ * - replace(path)
+ * - go(n)
  */
-class History extends AbstractHistory {
-  
-  constructor(entries, current, navigationType) {
-    if (entries == null) {
-      entries = [ '/' ];
-    } else if (typeof entries === 'string') {
-      entries = [ entries ]; // Allow a single path argument.
+class History extends React.Component {
+
+  static propTypes = {
+    parseQueryString: func.isRequired,
+    stringifyQuery: func.isRequired
+  };
+
+  static defaultProps = {
+    parseQueryString,
+    stringifyQuery
+  };
+
+  static childContextTypes = {
+    history
+  };
+
+  constructor(props) {
+    super(props);
+    this.state = {
+      location: null
+    };
+  }
+
+  getChildContext() {
+    return {
+      history: this
+    };
+  }
+
+  componentWillMount() {
+    invariant(
+      this.constructor !== History,
+      'History is not usable directly; you must use one of its subclasses'
+    );
+
+    RequiredSubclassMethods.forEach(function (method) {
+      invariant(
+        typeof this[method] === 'function',
+        '%s needs a "%s" method',
+        this.constructor.name, method
+      );
+    }, this);
+  }
+
+  back() {
+    this.go(-1);
+  }
+
+  forward() {
+    this.go(1);
+  }
+
+  parseQueryString(queryString) {
+    return this.props.parseQueryString(queryString);
+  }
+
+  stringifyQuery(query) {
+    return this.props.stringifyQuery(query);
+  }
+
+  makePath(path, query) {
+    if (query) {
+      var queryString = this.stringifyQuery(query);
+
+      if (queryString !== '')
+        return path + '?' + queryString;
     }
 
-    invariant(
-      Array.isArray(entries) && entries.length > 0,
-      'History needs at least one entry'
-    );
-
-    super(entries.length, current, navigationType);
-    this.entries = entries;
+    return path;
   }
 
-  getPath() {
-    return this.entries[this.current];
+  makeHref(path, query) {
+    return this.makePath(path, query);
   }
 
-  push(path) {
-    // http://www.w3.org/TR/2011/WD-html5-20110113/history.html#dom-history-pushstate
-    this.navigationType = NavigationTypes.PUSH;
-    this.current += 1;
-    this.entries = this.entries.slice(0, this.current).concat([ path ]);
-    this.length = this.entries.length;
-    this._notifyChange();
-  }
+  render() {
+    var element = React.Children.only(this.props.children);
 
-  replace(path) {
-    // http://www.w3.org/TR/2011/WD-html5-20110113/history.html#dom-history-replacestate
-    this.navigationType = NavigationTypes.REPLACE;
-    this.entries[this.current] = path;
-    this._notifyChange();
-  }
-
-  go(n) {
-    if (n === 0)
-      return;
-
-    invariant(
-      this.canGo(n),
-      'Cannot go(%s); there is not enough history',
-      n
-    );
-
-    this.navigationType = NavigationTypes.POP;
-    this.current += n;
-    this._notifyChange();
-  }
-
-  toJSON() {
-    return {
-      entries: this.entries,
-      current: this.current,
-      navigationType: this.navigationType
-    };
+    return React.cloneElement(element, {
+      location: this.state.location
+    });
   }
 
 }
 
-module.exports = History;
+export default History;
