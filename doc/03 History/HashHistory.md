@@ -1,9 +1,8 @@
-API is described in [Histories][Histories].
+`HashHistory` is a [history][Histories] implementation for DOM environments that
+uses `window.location.hash` to store the current path. This is essentially a hack
+for older browsers (IE <= 9) that do not support the HTML5 history API.
 
-Uses the hash (`#`) portion of the URL.
-
-For example, your urls will look like this:
-`https://example.com/#/courses/123`.
+For example, your urls will look like this: `https://example.com/#/courses/123`.
 
 Query Params
 ------------
@@ -21,16 +20,16 @@ Example
 -------
 
 ```js
-import { HashHistory, Router } from 'react-router';
-import routes from './routes';
+import { Router } from 'react-router';
+import HashHistory from 'react-router/lib/HashHistory';
 
 React.render((
   <HashHistory>
-    <Router routes={routes}/>
+    <Router>
+      // ...
+    </Router>
   </HashHistory>
 ), document.body);
 ```
-
-
 
   [Histories]:#TODO

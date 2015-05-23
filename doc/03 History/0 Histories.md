@@ -1,12 +1,12 @@
 History components live at the top of the [middleware][Middleware] stack. Their
 role is to:
 
-- listen to changes in the url
+- listen to changes in the URL
 - pass the location down as a prop to a `Router`
-- parse/stringify the url queries
+- parse/stringify URL query strings
 - provide context for the [`Navigation`][Navigation] mixin to work
 
-All histories share the same api.
+All histories share the same API.
 
 Props
 -----
@@ -30,62 +30,89 @@ Defaults to using `qs.stringify` with `{ arrayFormat: 'brackets' }`.
 />
 ```
 
-Middleware Props Passed
------------------------
+Child Props
+-----------
 
 ### `location`
 
 And object with location information on it.
 
-#### properties
+#### path
 
-##### path
+The URL path, without the query string.
 
-The full url path.
+#### query
 
-##### action
+The parsed query object (see `<History parseQueryString>`).
 
-One of `POP`, `PUSH`, or `REPLACE`, depending on what the action was.
+#### navigationType
 
-Middleware Context Set
-----------------------
+One of `PUSH`, `REPLACE`, or `POP` depending on what type of navigation
+triggered the change in location.
+
+Context
+-------
 
 ### `history`
 
-An object with some methods useful for navigating around the app and
-creating hrefs.
+A `History` object puts itself in context for descendants that need to
+navigate around the app and create hrefs. The following methods are useful
+for these tasks:
 
-#### methods
-
-##### `transitionTo(path [, query])`
+#### `push(path [, query])`
 
 Programmatically transition to a new route.
 
 ```js
-this.transitionTo('about');
-this.transitionTo('/users/10', { showGrades: true });
+this.context.history.push('about');
+this.context.history.push('/users/10', { showGrades: true });
 ```
 
-##### `replaceWith(path [, query])`
+#### `replace(path [, query])`
 
 Programmatically replace current route with a new route. Does not add an
 entry into the browser history.
 
 ```js
-this.replaceWith('about');
-this.replaceWith('/users/10', { showGrades: true });
+this.context.history.replace('about');
+this.context.history.replace('/users/10', { showGrades: true });
 ```
-##### `goBack()`
 
-Programmatically go back to the last route and remove the most recent
-entry from the browser history.
+#### `go(n)`
 
-##### `makeHref()`
+Programmatically navigate back/forward `n` entries in the history. Analogous
+to web browsers' `window.history.go(n)`.
+
+```js
+this.context.history.go(-2);
+```
+
+#### `back()`
+
+Programmatically go back to the last route in the history. Shorthand for
+`go(-1)`.
+
+#### `forward()`
+
+Programmatically go forward to the next route in the history. Shorthand
+for `go(1)`.
+
+#### `makePath(path [, query])`
+
+Creates and returns a full URL path with the given `query`.
+
+```js
+this.context.history.makePath('/users/10', { showGrades: true });
+```
+
+Note: This method does not make any attempt to preserve any query string
+that may already exist in `path`. Instead, use the `query` argument.
+
+#### `makeHref(path [, query])`
 
 Creates an `href` to a route. Use this along with `State` when you
 need to build components similar to `Link`.
 
   [Middleware]:#TODO
   [Navigation]:#TODO
-
 

@@ -1,8 +1,7 @@
-API is described in [Histories][Histories].
-
-Uses the Browser history API to create real URLs. We recommend you use
-this history. It has better looking URLs and is required for picking up
-a server rendered app in the browser.
+`BrowserHistory` is a [history][Histories] implementation for DOM environments that
+support the HTML5 history API (pushState, replaceState, and the popstate event).
+It provides the cleanest URLs and should always be used in browser
+environments if possible.
 
 **You must configure your server when using `BrowserHistory`**
 
@@ -26,18 +25,16 @@ server and then React Router will take over from there.
 Fallback for browsers that don't support it
 -------------------------------------------
 
-`BrowserHistory` falls back to an internal history called
-`RefreshHistory` when the broweser history API isn't supported. When
-the history transitions, the user gets a full page reload, instead of
-client side routing.
+`BrowserHistory` falls back to using full page refreshes when the browser
+does not support the HTML5 history API.
 
-> Why don't you just fall back to `HashLocation`?
+> Why don't you just fall back to `HashHistory`?
 
-Because we'd end up with multiple urls for the same UI, and as users
-with different location support share urls they become non-deterministic
+Because we'd end up with multiple URLs for the same UI, and as users
+with different location support share URLs they become non-deterministic
 for the router to switch back and forth.
 
-Additionally, many `HistoryLocation` apps will want to take advantage of
+Additionally, many `BrowserHistory` apps will want to take advantage of
 what the hash is actually intended for: linking to specific elements in
 the page. We don't want to break this valuable feature of the web.
 
@@ -45,15 +42,16 @@ Example
 -------
 
 ```js
-import { BrowserHistory, Router } from 'react-router';
-import routes from './routes';
+import { Router } from 'react-router';
+import BrowserHistory from 'react-router/lib/BrowserHistory';
 
 React.render((
   <BrowserHistory>
-    <Router routes={routes}/>
+    <Router>
+      // ...
+    </Router>
   </BrowserHistory>
 ), document.body);
 ```
 
   [Histories]:#TODO
-
