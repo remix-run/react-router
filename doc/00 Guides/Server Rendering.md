@@ -12,7 +12,7 @@ We start with an `App` we can use on the client and the server.
 // App.js
 import {
   BrowserHistory,
-  Router,
+  RouteMatcher,
   Transitions,
   RestoreScroll,
 } from 'react-router';
@@ -23,11 +23,11 @@ var App = React.createClass({
   render () {
     return (
       <BrowserHistory>
-        <Router {...this.props} routes={routes}>
+        <RouteMatcher {...this.props} routes={routes}>
           <Transitions>
             <RestoreScroll/>
           </Transitions>
-        </Router>
+        </RouteMatcher>
       </BrowserHistory>
     );
   }
@@ -57,7 +57,7 @@ serveNonStaticPaths((req, res) => {
   // send the server side path and our routes to the `match` helper
   match(req.path, routes, (err, initialState) => {
     // pass the initial router state into app via props, which just
-    // passes it along to `Router`, so that router can render w/o
+    // passes it along to `RouteMatcher`, so that router can render w/o
     // doing any asynchronous work
     var html = React.renderToString(<App {...initialState} />);
     res.send(renderFullPage(html));
@@ -96,7 +96,7 @@ happen.
 // App.js
 import {
   BrowserHistory,
-  Router,
+  RouteMatcher,
   Transitions,
   RestoreScroll,
   // import AsyncProps
@@ -109,14 +109,14 @@ var App = React.createClass({
   render () {
     return (
       <BrowserHistory>
-        <Router {...this.props} routes={routes}>
+        <RouteMatcher {...this.props} routes={routes}>
           <Transitions>
             {/* add in AsyncProps middleware and give it a cache token */}
             <AsyncProps token={this.props.token}>
               <RestoreScroll/>
             </AsyncProps>
           </Transitions>
-        </Router>
+        </RouteMatcher>
       </BrowserHistory>
     );
   }
