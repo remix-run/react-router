@@ -1,4 +1,4 @@
-import RefreshHistory from './RefreshHistory';
+import DOMHistory from './DOMHistory';
 import { getWindowPath, supportsHistory } from './DOMUtils';
 import NavigationTypes from './NavigationTypes';
 import Location from './Location';
@@ -13,11 +13,11 @@ import Location from './Location';
  * refreshes if HTML5 history is not available, so URLs are always
  * the same across browsers.
  */
-class BrowserHistory extends RefreshHistory {
+class BrowserHistory extends DOMHistory {
 
-  static propTypes = Object.assign({}, RefreshHistory.propTypes);
-  static defaultProps = Object.assign({}, RefreshHistory.defaultProps);
-  static childContextTypes = Object.assign({}, RefreshHistory.childContextTypes);
+  static propTypes = Object.assign({}, DOMHistory.propTypes);
+  static defaultProps = Object.assign({}, DOMHistory.defaultProps);
+  static childContextTypes = Object.assign({}, DOMHistory.childContextTypes);
 
   constructor(props) {
     super(props);
@@ -62,9 +62,9 @@ class BrowserHistory extends RefreshHistory {
   }
 
   push(path, query) {
-    if (this.isSupported) {
-      var fullPath = this.makePath(path, query);
+    var fullPath = this.makePath(path, query);
 
+    if (this.isSupported) {
       // http://www.w3.org/TR/2011/WD-html5-20110113/history.html#dom-history-pushstate
       this.setState({
         location: new Location(path, query, NavigationTypes.PUSH)
@@ -72,14 +72,14 @@ class BrowserHistory extends RefreshHistory {
         window.history.pushState(null, '', fullPath);
       });
     } else {
-      super.push(path, query);
+      window.location = fullPath;
     }
   }
 
   replace(path, query) {
-    if (this.isSupported) {
-      var fullPath = this.makePath(path, query);
+    var fullPath = this.makePath(path, query);
 
+    if (this.isSupported) {
       // http://www.w3.org/TR/2011/WD-html5-20110113/history.html#dom-history-replacestate
       this.setState({
         location: new Location(path, query, NavigationTypes.REPLACE)
@@ -87,7 +87,7 @@ class BrowserHistory extends RefreshHistory {
         window.history.replaceState(null, '', fullPath);
       });
     } else {
-      super.replace(path, query);
+      window.location.replace(fullPath);
     }
   }
 
