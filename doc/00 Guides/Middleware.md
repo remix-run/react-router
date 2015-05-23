@@ -1,7 +1,7 @@
 React Router works by a stack of components that each have one
 child. The first in line is a [`History`][History] component responsible
 for listening to the URL and passing a [`location`][location] to its
-child, a [`Router`][Router]. The `Router` is responsible for matching
+child, a [`RouterMatcher`][RouteMatcher]. The `Router` is responsible for matching
 routes to the location, gathering up the route components, and then
 passing all of its state to the next middleware component in line.
 
@@ -9,7 +9,7 @@ Its common for middleware to read props from your [routes][Route]. For
 example, `RestoreScroll` reads `ignoreScroll` from your routes. When
 createing middleware, do not hesitate to add API to routes.
 
-Typically you just import [`Root`][Root] into your app and this is all
+Typically you just import [`Router`][Router] into your app and this is all
 hidden from you, but you can do it all yourself, and add your own
 middleware to the stack.
 
@@ -38,6 +38,6 @@ Creating Middleware
   [History]:#TODO
   [location]:#TODO
   [Router]:#TODO
-  [Root]:#TODO
   [Route]:#TODO
+  [RouteMatcher]:#TODO
 

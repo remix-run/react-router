@@ -69,7 +69,7 @@ Let's refactor our app to use React Router.
 
 ```js
 // first we import some components
-import { Root, Route } from 'react-router';
+import { Router, Route } from 'react-router';
 
 // ...
 
@@ -89,15 +89,15 @@ var App = React.createClass({
   }
 });
 
-// Finally we render a `Root` component with some `Route`s, it'll do all
+// Finally we render a `Router` component with some `Route`s, it'll do all
 // the fancy routing stuff for us.
 React.render((
-  <Root>
+  <Router>
     <Route path="/" component={App}>
       <Route path="about" component={About}/>
       <Route path="inbox" component={Inbox}/>
     </Route>
-  </Root>
+  </Router>
 ), document.body);
 ```
 
@@ -113,7 +113,7 @@ var routes = {
   ]
 };
 
-React.render(<Root children={routes}/>, document.body):
+React.render(<Router children={routes}/>, document.body):
 ```
 
 Adding more UI
@@ -143,7 +143,7 @@ var Inbox = React.createClass({
 
 
 React.render((
-  <Root>
+  <Router>
     <Route component={App}>
       <Route path="about" component={About}/>
       <Route path="inbox" component={Inbox}>
@@ -151,7 +151,7 @@ React.render((
         <Route path="messages/:id" component={Message}/>
       </Route>
     </Route>
-  </Root>
+  </Router>
 ), document.body);
 ```
 
