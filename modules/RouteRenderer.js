@@ -5,7 +5,7 @@ import invariant from 'invariant';
 import assign from 'object-assign';
 
 var { createElement } = React;
-var { element, object, any, instanceOf } = React.PropTypes;
+var { element, object, any, instanceOf, func } = React.PropTypes;
 
 export default class RouteRenderer extends React.Component {
 
@@ -13,13 +13,20 @@ export default class RouteRenderer extends React.Component {
     params: object.isRequired,
     query: any.isRequired,
     location: instanceOf(Location).isRequired,
+    renderComponent: func,
     children: element
+  };
+
+  static defaultProps = {
+    renderComponent (Component, props) {
+      return <Component {...props}/>
+    }
   };
 
   render () {
     var { location, params, query } = this.props;
 
-    var element = this.props.branch.reduceRight(function (element, route, index) {
+    var element = this.props.branch.reduceRight((element, route, index) => {
       var components = route.component || route.components;
 
       if (components == null)
@@ -39,11 +46,11 @@ export default class RouteRenderer extends React.Component {
         var elements = {};
         for (var key in components)
           if (components.hasOwnProperty(key))
-            elements[key] = createElement(components[key], assign({}, props));
+            elements[key] = this.props.renderComponent(components[key], assign({}, props));
         return elements;
       }
 
-      return createElement(components, props);
+      return this.props.renderComponent(components, props);
     }, element);
 
     invariant(
