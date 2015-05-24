@@ -20,6 +20,5 @@ React.render((
     <Route path="about" component={About}/>
     <Route path="dashboard" component={Dashboard}/>
   </Router>
-));
+), document.body);
 ```
-
