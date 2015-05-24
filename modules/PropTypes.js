@@ -1,6 +1,8 @@
-var { func, object, arrayOf, instanceOf, oneOfType } = require('react').PropTypes;
-var AbstractHistory = require('./AbstractHistory');
-var Location = require('./Location');
+import React from 'react';
+import Location from './Location';
+import History from './History';
+
+var { func, object, arrayOf, instanceOf, oneOfType } = React.PropTypes;
 
 function falsy(props, propName, componentName) {
   if (props[propName])
@@ -9,9 +11,10 @@ function falsy(props, propName, componentName) {
 
 var component = func;
 var components = oneOfType([ component, object ]);
-var history = instanceOf(AbstractHistory);
+var history = instanceOf(History);
 var location = instanceOf(Location);
 var route = object;
+var routes = arrayOf(route);
 
 module.exports = {
   falsy,
