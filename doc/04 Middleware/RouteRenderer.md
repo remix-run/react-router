@@ -25,6 +25,18 @@ Maybe you need to wrap your route components in a HoC.
 )}/>
 ```
 
+Or maybe you want to let a route define a render method:
+
+```js
+<Route path="/friends" component={Friends} render={(Component, props) => (
+  <SomeHoC {...props}><Component/></SomeHoC>
+)}/>
+
+<RouteRenderer renderComponent={(Component, props) => (
+  props.route.render && props.route.render(Component, props) || <Component {...props}/>
+)}/>
+```
+
 Middleware Props Passed
 -----------------------
 
