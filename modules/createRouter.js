@@ -13,8 +13,19 @@ var findMatch = require('./findMatch');
 var Location = require('./Location');
 var AbstractHistory = require('./AbstractHistory');
 
-function createElement(component, props) {
-  return typeof component === 'function' ? React.createElement(component, props) : null;
+function createElement(branch, index, component, props) {
+  if (typeof component !== 'function') {
+    return null;
+  }
+  var element, render;
+  while (index >= 0) {
+    render = branch[index--].render;
+    element = (typeof render === 'function') ? render(component, props) : null;
+    if (element) {
+      return element;
+    }
+  }
+  return React.createElement(component, props);
 }
 
 function getComponents(route, callback) {
@@ -261,7 +272,7 @@ function createRouter(routes) {
 
           var route = branch[index];
           var props = { location, params, route };
- 
+
           if (React.isValidElement(children)) {
             props.children = children;
           } else if (children) {
@@ -275,12 +286,17 @@ function createRouter(routes) {
 
             for (var key in components)
               if (components.hasOwnProperty(key))
-                elements[key] = createElement(components[key], assign({}, props));
+                elements[key] = createElement(
+                  branch,
+                  index,
+                  components[key],
+                  assign({}, props)
+                );
 
             return elements;
           }
 
-          return createElement(components, props);
+          return createElement(branch, index, components, props);
         }, children);
       }
 
