@@ -27,7 +27,7 @@ describe('RouteRenderer', function () {
     // to test than asserting against props
     var html = React.renderToString(
       <RouteRenderer {...props}
-        branch={[makeRoute(() => <div>one</div>)]}
+        branch={[makeRoute(function() { return <div>one</div>; })]}
       />
     );
     expect(html).toMatch(/one/);
@@ -37,8 +37,8 @@ describe('RouteRenderer', function () {
     var html = React.renderToString(
       <RouteRenderer {...props}
         branch={[
-          makeRoute(() => <div>one {this.props.children}</div>),
-          makeRoute(() => <div>two</div>),
+          makeRoute(function() { return <div>one {this.props.children}</div>; }),
+          makeRoute(function() { return <div>two</div>; }),
         ]}
       />
     );
@@ -48,14 +48,14 @@ describe('RouteRenderer', function () {
   it('passes the next route components as `props[name]`', function () {
     var childRoute = {
       components: {
-        sidebar: makeComponent(() => { <div>sidebar</div> }),
-        main: makeComponent(() => { <div>main</div> }),
+        sidebar: makeComponent(function() { return <div>sidebar</div>; }),
+        main: makeComponent(function() { return <div>main</div> }),
       }
     };
 
-    var parentRoute = makeRoute(() => (
+    var parentRoute = makeRoute(function() { return (
       <div>{this.props.sidebar} {this.props.main}</div>
-    ));
+    );});
 
     var html = React.renderToString(
       <RouteRenderer {...props}
@@ -84,21 +84,25 @@ describe('RouteRenderer', function () {
     renders it
     */
 
-    var parent = makeRoute(() => (
+    var parent = makeRoute(function() { return (
       <div>{this.props.sidebar} {this.props.main}</div>
-    ));
+    );});
 
     var child = {
       components: {
-        sidebar: makeComponent(() => { <div>first {this.props.children}</div> }),
-        main: makeComponent(() => { <div>second {this.props.children}</div> }),
+        sidebar: makeComponent(function() { return <div>{this.props.children}</div>; }),
+        main: makeComponent(function() { return <div>{this.props.children}</div>; }),
       }
     };
 
-    var counter = 0;
-    var grandChild = makeRoute(() => (
-      <div>{++counter}</div>
-    ));
+    var counter = -1;
+    var text = ['one', 'two'];
+    var grandChild = makeRoute(function() {
+      counter++;
+      return (
+        <div>{text[counter]}</div>
+      );
+    });
 
     var html = React.renderToString(
       <RouteRenderer {...props}
@@ -106,14 +110,14 @@ describe('RouteRenderer', function () {
       />
     );
 
-    expect(html).toMatch(/first 1/);
-    expect(html).toMatch(/second 2/);
+    expect(html).toMatch(/one/);
+    expect(html).toMatch(/two/);
   });
 
   it('passes params to elements', function () {
     var html = React.renderToString(
       <RouteRenderer {...props}
-        branch={[makeRoute(() => <div>{this.props.params.one}</div>)]}
+        branch={[makeRoute(function() { return <div>{this.props.params.one}</div>; })]}
       />
     );
     expect(html).toMatch(/1/);
@@ -122,7 +126,7 @@ describe('RouteRenderer', function () {
   it('passes query to elements', function () {
     var html = React.renderToString(
       <RouteRenderer {...props}
-        branch={[makeRoute(() => <div>{this.props.query.two}</div>)]}
+        branch={[makeRoute(function() { return <div>{this.props.query.two}</div>; })]}
       />
     );
     expect(html).toMatch(/2/);
@@ -130,11 +134,25 @@ describe('RouteRenderer', function () {
 
   it('passes location to elements', function () {
     var html = React.renderToString(
-      <RouteRenderer
-        branch={[makeRoute(() => <div>{this.props.location.path}</div>)]}
+      <RouteRenderer {...props}
+        branch={[makeRoute(function() { return <div>{this.props.location.path}</div>; })]}
       />
     );
     expect(html).toMatch(/\/test/);
   });
+
+  it('passes the route to elements', function () {
+    var route = {
+      name: 'test',
+      component: makeComponent(function() { return (
+        <div>{this.props.route.name}</div>
+      );})
+    };
+    var html = React.renderToString(
+      <RouteRenderer {...props} branch={[route]} />
+    );
+    expect(html).toMatch(/test/);
+  });
+
 });
 
