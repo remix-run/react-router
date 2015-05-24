@@ -33,7 +33,7 @@ Or maybe you want to let a route define a render method:
 )}/>
 
 <RouteRenderer renderComponent={(Component, props) => (
-  props.route.render && props.route.render(Component, props) || <Component {...props}/>
+  (props.route.render && props.route.render(Component, props)) || <Component {...props}/>
 )}/>
 ```
 
