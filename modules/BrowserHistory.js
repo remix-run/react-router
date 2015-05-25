@@ -4,6 +4,10 @@ import NavigationTypes from './NavigationTypes';
 import Location from './Location';
 import assign from 'object-assign';
 
+function generateRandomId() {
+  return Math.random().toString(36).substr(2, 9); // https://gist.github.com/gordonbrander/2230317
+}
+
 /**
  * A history implementation for DOM environments that support the
  * HTML5 history API (pushState, replaceState, and the popstate event).
@@ -28,9 +32,20 @@ class BrowserHistory extends DOMHistory {
 
   _updateLocation(navigationType) {
     var [ path, queryString ] = getWindowPath().split('?', 2);
+    var key = null;
+
+    if (this.isSupported) {
+      var state = window.history.state;
+      key = state && state.key;
+
+      if (!key) {
+        key = generateRandomId();
+        window.history.replaceState({key}, '');
+      }
+    }
 
     this.setState({
-      location: new Location(path, this.parseQueryString(queryString), navigationType)
+      location: new Location(path, this.parseQueryString(queryString), navigationType, key)
     });
   }
 
@@ -66,11 +81,13 @@ class BrowserHistory extends DOMHistory {
     var fullPath = this.makePath(path, query);
 
     if (this.isSupported) {
+      var key = generateRandomId();
+
       // http://www.w3.org/TR/2011/WD-html5-20110113/history.html#dom-history-pushstate
       this.setState({
-        location: new Location(path, query, NavigationTypes.PUSH)
+        location: new Location(path, query, NavigationTypes.PUSH, key)
       }, function () {
-        window.history.pushState(null, '', fullPath);
+        window.history.pushState({key}, '', fullPath);
       });
     } else {
       window.location = fullPath;
@@ -81,11 +98,13 @@ class BrowserHistory extends DOMHistory {
     var fullPath = this.makePath(path, query);
 
     if (this.isSupported) {
+      var key = generateRandomId();
+
       // http://www.w3.org/TR/2011/WD-html5-20110113/history.html#dom-history-replacestate
       this.setState({
-        location: new Location(path, query, NavigationTypes.REPLACE)
+        location: new Location(path, query, NavigationTypes.REPLACE, key)
       }, function () {
-        window.history.replaceState(null, '', fullPath);
+        window.history.replaceState({key}, '', fullPath);
       });
     } else {
       window.location.replace(fullPath);

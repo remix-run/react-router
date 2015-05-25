@@ -8,7 +8,8 @@ import NavigationTypes from './NavigationTypes';
  */
 class Location {
 
-  constructor(path, query, navigationType) {
+  constructor(path, query, navigationType, key) {
+    this.key = key;
     this.navigationType = navigationType || NavigationTypes.POP;
     this.query = query || null;
     this.path = path;
@@ -18,7 +19,8 @@ class Location {
     return {
       path: this.path,
       query: this.query,
-      navigationType: this.navigationType
+      navigationType: this.navigationType,
+      key: this.key
     };
   }
 

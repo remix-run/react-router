@@ -50,6 +50,15 @@ The parsed query object (see `<History parseQueryString>`).
 One of `PUSH`, `REPLACE`, or `POP` depending on what type of navigation
 triggered the change in location.
 
+### key
+
+A randomly generated string that can be used as an identifier for the current history entry. Only available when using 
+`BrowserHistory` without fallback.
+
+```js
+window.sessionStorage.setItem(location.key, data);
+```
+
 Context
 -------
 
