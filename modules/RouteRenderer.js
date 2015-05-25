@@ -17,6 +17,7 @@ export default class RouteRenderer extends React.Component {
     branchData: array,
     wrapComponent: func,
     historyContext: any,
+    routingContext: any,
     children: element
   };
 
@@ -32,12 +33,16 @@ export default class RouteRenderer extends React.Component {
   };
 
   static childContextTypes = {
-    history: React.PropTypes.any
+    router: React.PropTypes.any
   };
 
   getChildContext () {
     return {
-      history: this.props.historyContext
+      // only export one thing to context, keep our footprint small
+      router: {
+        history: this.props.historyContext,
+        routing: this.props.routingContext
+      }
     }
   }
 

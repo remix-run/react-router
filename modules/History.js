@@ -84,12 +84,6 @@ class History extends React.Component {
     return this.makePath(path, query);
   }
 
-  isActive(path, query) {
-    // TODO: this is incomplete, need to check query, also needs to move to AsyncRouting
-    // so a parent can be active when its children are
-    return this.state.location.path === path;
-  }
-
   render() {
     var element = React.Children.only(this.props.children);
 

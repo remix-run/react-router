@@ -197,9 +197,9 @@ describe('RouteRenderer', function () {
 
   it('renders route components with history context', function () {
     class Component extends React.Component {
-      static contextTypes = { history: React.PropTypes.any };
+      static contextTypes = { router: React.PropTypes.any };
       render () {
-        return <div>{this.context.history.location.path}</div>;
+        return <div>{this.context.router.history.location.path}</div>;
       }
     }
     var branch = [{ component: Component }];
