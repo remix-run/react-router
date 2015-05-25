@@ -85,7 +85,8 @@ class History extends React.Component {
   }
 
   isActive(path, query) {
-    // TODO: this is incomplete, need to check query also
+    // TODO: this is incomplete, need to check query, also needs to move to AsyncRouting
+    // so a parent can be active when its children are
     return this.state.location.path === path;
   }
 

@@ -266,7 +266,7 @@ class AsyncRouting extends React.Component {
 
   componentWillReceiveProps(nextProps) {
     if (this.props.routes !== nextProps.routes || this.props.location !== nextProps.location)
-      this._updateState(routes, location);
+      this._updateState(nextProps.routes, nextProps.location);
   }
 
   render() {

@@ -22,8 +22,8 @@ var User = React.createClass({
       <div className="User">
         <h1>User id: {userId}</h1>
         <ul>
-          <li><Link to={`/user/${userId}/task/foo`}>foo task</Link></li>
-          <li><Link to={`/user/${userId}/task/bar`}>bar task</Link></li>
+          <li><Link to={`/user/${userId}/tasks/foo`}>foo task</Link></li>
+          <li><Link to={`/user/${userId}/tasks/bar`}>bar task</Link></li>
         </ul>
         {this.props.children}
       </div>
@@ -47,7 +47,7 @@ var Task = React.createClass({
 React.render((
   <Router>
     <Route path="/" component={App}>
-      <Route path="/user/:userId" component={User}>
+      <Route path="user/:userId" component={User}>
         <Route path="tasks/:taskId" component={Task}/>
         {/*<Redirect from="todos/:taskId" to="task"/>*/}
       </Route>
