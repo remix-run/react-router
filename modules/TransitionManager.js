@@ -1,12 +1,13 @@
 import React from 'react';
 import { history, location } from './PropTypes';
+import passMiddlewareProps from './passMiddlewareProps';
 
 /**
  * A middleware that provides transition hooks for routes and/or
  * mounted components.
  */
 class TransitionManager extends React.Component {
-  
+
   static contextTypes = {
     history: history.isRequired
   };
@@ -15,8 +16,8 @@ class TransitionManager extends React.Component {
     location: location.isRequired
   };
 
-  constructor(props) {
-    super(props);
+  constructor(props, context) {
+    super(props, context);
     this.hooks = [];
   }
 
@@ -93,7 +94,7 @@ class TransitionManager extends React.Component {
   }
 
   /**
-   * Runs all transition hooks needed to get to the nextState. 
+   * Runs all transition hooks needed to get to the nextState.
    * Returns true to allow the transition, false to prevent it.
    */
   _runTransitionHooks(nextState) {
@@ -117,31 +118,17 @@ class TransitionManager extends React.Component {
   }
 
   componentWillMount() {
-    
+
   }
 
   componentWillReceiveProps(nextProps) {
-    
+
   }
 
   render() {
-    var element = React.Children.only(this.props.children);
-
-    return React.cloneElement(element, Object.assign(clonePropsWithoutChildren(this.props), {
-      // TODO
-    });
+    return passMiddlewareProps(this.props, {});
   }
 
-}
-
-function clonePropsWithoutChildren(props) {
-  var clone = {};
-
-  for (var property in props)
-    if (props.hasOwnProperty(property) && property !== 'children')
-      clone[property] = props[property];
-
-  return clone;
 }
 
 export default TransitionManager;
