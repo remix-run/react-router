@@ -3,175 +3,50 @@ browser. The primary difference is that while on the client we can do
 asynchronous work *after* rendering, on the server we have to do that
 work *before* rendering, like path matching and data fetching.
 
-Basics
-------
-
-We start with an `App` we can use on the client and the server.
-
-```js
-// App.js
-import {
-  BrowserHistory,
-  RouteMatcher,
-  Transitions,
-  RestoreScroll,
-} from 'react-router';
-
-import routes from './routes';
-
-var App = React.createClass({
-  render () {
-    return (
-      <BrowserHistory>
-        <RouteMatcher {...this.props} routes={routes}>
-          <Transitions>
-            <RestoreScroll/>
-          </Transitions>
-        </RouteMatcher>
-      </BrowserHistory>
-    );
-  }
-}
-```
-
-Then in the client we just render as usual:
+We'll start with the client since its pretty simple. The only
+interesting thing is that we are getting some initial data from the
+server render to ensure that the first client render markup matches the
+the markup from the server render. Without the initial data, the markup
+the client creates would differ from what the server sent, and React
+would replace the DOM.
 
 ```js
 // client.js
-import App from './App';
-React.render(<App/>, document.getElementById('app'));
+import { Router } from 'react-router';
+import './routes' from './routes';
+React.render((
+  <Router
+    routes={routes}
+    initialBranchData={window.__INITIAL_DATA_BRANCH__}
+/>), document.getElementById('app'));
 ```
 
-On the server, we need to match first, and then provide the initial
-state to the router so it can render synchronously.
+On the server, we need to asynchronously match the routes and fetch data
+first, and then provide the initial stat to the router so it render
+synchronously.
 
 ```js
 // server.js
-import { match } from 'react-router';
+import { AsyncRouting, AsyncProps, Router } from 'react-router';
 import routes from './routes';
-import App from './App';
 
 // you'll want to configure your server to serve up static assets, and
 // and then handle the rest with React Router
 serveNonStaticPaths((req, res) => {
-  // send the server side path and our routes to the `match` helper
-  match(req.path, routes, (err, initialState) => {
-    // pass the initial router state into app via props, which just
-    // passes it along to `RouteMatcher`, so that router can render w/o
-    // doing any asynchronous work
-    var html = React.renderToString(<App {...initialState} />);
-    res.send(renderFullPage(html));
-  });
-});
-
-function renderFullPage(html) {
-  // browsers don't really like it when react messes with stuff outside
-  // of <body>, here we're just using es6 string templates, you can do
-  // whatever you want.
-  return `
-<!doctype html>
-<html>
-  <meta charset="utf-8"/>
-  <head>
-    <title>Sorry, no answers for you here</title>
-  </head>
-  <body>
-    <div id="app">${html}</div>
-  </body>
-</html>
-`
-}
-```
-
-With `AsyncProps`
-----------------
-
-One major concern for server rendering is loading data before you
-render. While on the client we can fetch data in the render lifecycle,
-on the server we need to do that work first. `AsyncProps` does the dirty
-work, but you have to do a little bit more on the server to make it
-happen.
-
-```js
-// App.js
-import {
-  BrowserHistory,
-  RouteMatcher,
-  Transitions,
-  RestoreScroll,
-  // import AsyncProps
-  AsyncProps
-} from 'react-router';
-
-import routes from './routes';
-
-var App = React.createClass({
-  render () {
-    return (
-      <BrowserHistory>
-        <RouteMatcher {...this.props} routes={routes}>
-          <Transitions>
-            {/* add in AsyncProps middleware and give it a cache token */}
-            <AsyncProps token={this.props.token}>
-              <RestoreScroll/>
-            </AsyncProps>
-          </Transitions>
-        </RouteMatcher>
-      </BrowserHistory>
-    );
-  }
-}
-```
-
-The client doesn't change.
-
-```js
-// client.js
-import App from './App';
-React.render(<App />, document.getElementById('app'));
-```
-
-Now the server has the most changes, we need to:
-
-1. Generate a token for AsyncProps to keep track of this request's data
-   "hydration".
-2. Fetch the data before rendering, so that we can render with data
-   synchronously.
-3. "Dehydrate" the data to the client so it can "rehydrate" it when the
-   JavaScript app takes over.
-
-```js
-// server.js
-import { match, AsyncProps } from 'react-router';
-import routes from './routes';
-import App from './App';
-import generateToken from 'one-of-86-token-generators-on-npm';
-
-serveNonStaticPaths((req, res) => {
-  // first we match, `AsyncProps` uses the route components to know what
-  // data to fetch
-  match(req.path, routes, (err, initialState) => {
-
-    // generate a token to track the data for this request
-    var token = generateToken();
-
-    // fetch the data before rendering
-    AsyncProps.hydrate(token, initialState, (err, data) => {
-
-      // pass the token to our app so AsyncProps knows where to find the
-      // data synchronously
-      var html = React.renderToString(<App {...initialState} token={token} />);
-
-      // Now we pass both the html and the data to `renderFullPage`
-      // You must "dehydrate" the data on `window.__ASYNC_PROPS__` for
-      // `AsyncProps` to know where to find the data on the client for
-      // the initial render.
-      res.send(renderFullPage(html, data));
+  AsyncRouting.match(req.path, routes, (err, initialRoutingState) => {
+    AsyncProps.load(initialRoutingState, (err, initialBranchData) => {
+      var html = React.renderToString((
+        <Router
+          initialRoutingState={initialRoutingState}
+          initialBranchData={initialBranchData}
+        />
+      ));
+      res.send(renderFullPage(html));
     });
   });
 });
 
-function renderFullPage(html, data) {
+function renderFullPage(html, asyncProps) {
   return `
 <!doctype html>
 <html>
@@ -182,16 +57,14 @@ function renderFullPage(html, data) {
   <body>
     <div id="app">${html}</div>
     <script>
-      __ASYNC_PROPS__ = ${JSON.stringify(data, null, 2)};
+     ${/* put this here for the client to pick up */}
+      __ASYNC_PROPS__ = ${JSON.stringify(asyncProps)};
     </script>
   </body>
 </html>
 `
 }
 ```
-
-That's it! You can use your own data provider middleware instead of
-`AsyncProps` and choreograph your own dance, if you'd like.
 
 API Routes
 ----------
@@ -210,4 +83,27 @@ the methods on your route instead of rendering the components. I was
 about to tell you not to do this, but please do and let us know how it
 goes. Most of us should probably just use the server side router from
 our favorite libraries for now, though.
+
+Async Routes
+------------
+
+The previous example assumed a non-async route config. If you're using
+the async features (`getChildRoutes`, `getComponents`) you can read from
+`document.location` to asynchronously match before the initial render in
+the client, just like the server.
+
+```js
+// client.js
+import { Router, AsyncRouting } from 'react-router';
+import './routes' from './routes';
+var path = location.pathname+location.search;
+AsyncRouting.match(path, (err, initialRoutingState) => {
+  React.render((
+    <Router
+      routes={routes}
+      initialRoutingState={initialRoutingState}
+      initialBranchData={window.__INITIAL_DATA_BRANCH__}
+  />), document.getElementById('app'));
+});
+```
 

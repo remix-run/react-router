@@ -3,10 +3,6 @@ import Location from './Location';
 import passMiddlewareProps from './passMiddlewareProps'
 var { element, object, any, instanceOf, array } = React.PropTypes;
 
-function getPropsFromServerRender () {
-  return (typeof window !== 'undefined' && window.__ASYNC_PROPS__) || null;
-}
-
 function loadAsyncProps (env, cb) {
   var { branch, params } = env;
   var components = branch.map(route => route.component || route.components);
@@ -74,6 +70,7 @@ export default class AsyncProps extends React.Component {
     branch: array,
     params: object.isRequired,
     location: instanceOf(Location).isRequired,
+    initialBranchData: array,
     children: element
   };
 
@@ -83,13 +80,12 @@ export default class AsyncProps extends React.Component {
     this.state = {
       loading: false,
       propsBeforeLoad: null,
-      branchData: getPropsFromServerRender()
+      branchData: this.props.initialBranchData || []
     };
   }
 
   componentDidMount () {
-    var noServerCache = this.state.branchData === null;
-    if (noServerCache)
+    if (this.props.initialBranchData == null)
       this.load();
   }
 
