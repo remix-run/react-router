@@ -6,6 +6,7 @@ import { getPathname, compilePattern, stripLeadingSlashes } from './PathUtils';
 import { loopAsync, mapAsync } from './AsyncUtils';
 import { location, routes } from './PropTypes';
 import Location from './Location';
+import passMiddlewareProps from './passMiddlewareProps';
 var { func } = React.PropTypes;
 
 function getChildRoutes(route, callback) {
@@ -165,12 +166,12 @@ function throwError(error) {
  * component loading.
  */
 class AsyncRouting extends React.Component {
-  
+
   /**
    * Asynchronously matches the given location to a set of routes and calls
    * callback(error, match) when finished. The match object may have the
    * following properties:
-   * 
+   *
    * - branch       An array of routes that matched, in hierarchical order
    * - params       An object of URL parameters
    * - components   An array of components for each route in branch
@@ -183,7 +184,7 @@ class AsyncRouting extends React.Component {
       routes != null,
       'AsyncRouting.match needs some routes'
     );
-  
+
     if (isReactChildren(routes)) {
       // Allow routes to be specified as JSX.
       routes = createRoutesFromReactChildren(routes);
@@ -198,12 +199,12 @@ class AsyncRouting extends React.Component {
         location = new Location(location.path, location.query, location.navigationType);
       }
     }
-  
+
     invariant(
       location instanceof Location,
       'AsyncRouting.match needs a Location'
     );
- 
+
     findMatch(routes, location.path, function (error, match) {
       if (error || match == null) {
         callback(error, match);
@@ -275,10 +276,7 @@ class AsyncRouting extends React.Component {
     if (!(location && branch && params && components))
       return null; // Do not render anything until we resolve.
 
-    var element = React.Children.only(children);
-
-    return React.cloneElement(element, {
-      location,
+    return passMiddlewareProps(this.props, {
       branch,
       params,
       components
