@@ -14,10 +14,13 @@ function makeRoute (render) {
 
 describe('RouteRenderer', function () {
 
+  var location = new Location('/test');
+
   var props = {
     params: { one: '1' },
     query: { two: '2'},
-    location: new Location('/test'),
+    location,
+    historyContext: { location },
     children: <Renderer/>
   };
 
@@ -168,6 +171,7 @@ describe('RouteRenderer', function () {
 
   it('passes branchData to elements of multiple component routes', function () {
     var branch = [{
+
       component: makeComponent(function () { return (
         <div><div>{this.props.sidebar}</div><div>{this.props.main}</div></div>
       );})
@@ -189,6 +193,21 @@ describe('RouteRenderer', function () {
     );
     expect(html).toMatch(/sidebar test/);
     expect(html).toMatch(/main test/);
+  });
+
+  it('renders route components with history context', function () {
+    class Component extends React.Component {
+      static contextTypes = { history: React.PropTypes.any };
+      render () {
+        return <div>{this.context.history.location.path}</div>;
+      }
+    }
+    var branch = [{ component: Component }];
+
+    var html = React.renderToString(
+      <RouteRenderer {...props} branch={branch} />
+    );
+    expect(html).toMatch(/\/test/);
   });
 });
 

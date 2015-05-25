@@ -31,14 +31,13 @@ function isModifiedEvent(event) {
 class Link extends React.Component {
 
   static contextTypes = {
-    router: object.isRequired
+    history: object.isRequired
   }
   
   static propTypes = {
     activeStyle: object,
     activeClassName: string,
     to: oneOfType([ string, object ]).isRequired,
-    params: object,
     query: object,
     onClick: func
   }
@@ -69,15 +68,15 @@ class Link extends React.Component {
     event.preventDefault();
 
     if (allowTransition)
-      this.context.router.transitionTo(this.props.to, this.props.params, this.props.query);
+      this.context.history.transitionTo(this.props.to, this.props.query);
   }
 
   getHref() {
-    return this.context.router.makeHref(this.props.to, this.props.params, this.props.query);
+    return this.context.history.makeHref(this.props.to, this.props.query);
   }
 
   isActive() {
-    return this.context.router.isActive(this.props.to, this.props.params, this.props.query);
+    return this.context.history.isActive(this.props.to, this.props.query);
   }
 
   render() {
