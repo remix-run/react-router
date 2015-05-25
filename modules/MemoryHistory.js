@@ -2,6 +2,7 @@ import React from 'react';
 import invariant from 'invariant';
 import NavigationTypes from './NavigationTypes';
 import History from './History';
+import assign from 'object-assign';
 
 var { arrayOf, string, object, number, oneOfType } = React.PropTypes;
 
@@ -22,16 +23,16 @@ function parseEntry(entry) {
  */
 class MemoryHistory extends History {
 
-  static propTypes = Object.assign({}, History.propTypes, {
+  static propTypes = assign({}, History.propTypes, {
     entries: arrayOf(oneOfType(locationShape, string)).isRequired,
     current: number
   });
 
-  static defaultProps = Object.assign({}, History.defaultProps, {
+  static defaultProps = assign({}, History.defaultProps, {
     entries: [ '/' ]
   });
 
-  static childContextTypes = Object.assign({}, History.childContextTypes);
+  static childContextTypes = assign({}, History.childContextTypes);
   
   constructor(props) {
     super(props);
@@ -48,7 +49,7 @@ class MemoryHistory extends History {
       );
     }
 
-    Object.assign(this.state, {
+    assign(this.state, {
       entries,
       current
     });

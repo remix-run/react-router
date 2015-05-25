@@ -6,6 +6,7 @@ import { getPathname, compilePattern, stripLeadingSlashes } from './PathUtils';
 import { loopAsync, mapAsync } from './AsyncUtils';
 import { location, routes } from './PropTypes';
 import Location from './Location';
+var { func } = React.PropTypes;
 
 function getChildRoutes(route, callback) {
   if (route.childRoutes) {

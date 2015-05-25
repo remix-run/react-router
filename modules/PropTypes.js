@@ -2,7 +2,7 @@ import React from 'react';
 import Location from './Location';
 import History from './History';
 
-var { func, object, arrayOf, instanceOf, oneOfType } = React.PropTypes;
+var { any, func, object, arrayOf, instanceOf, oneOfType, oneOf, element } = React.PropTypes;
 
 function falsy(props, propName, componentName) {
   if (props[propName])
@@ -13,8 +13,8 @@ var component = func;
 var components = oneOfType([ component, object ]);
 var history = instanceOf(History);
 var location = instanceOf(Location);
-var route = object;
-var routes = arrayOf(route);
+var route = any; //oneOf([object, element]);
+var routes = any; //oneOf([route, arrayOf(route), object]);
 
 module.exports = {
   falsy,
@@ -22,5 +22,6 @@ module.exports = {
   components,
   history,
   location,
-  route
+  route,
+  routes
 };

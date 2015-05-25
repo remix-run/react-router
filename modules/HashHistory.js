@@ -3,6 +3,7 @@ import NavigationTypes from './NavigationTypes';
 import { getHashPath, replaceHashPath } from './DOMUtils';
 import { isAbsolutePath } from './PathUtils';
 import Location from './Location';
+import assign from 'object-assign';
 
 function ensureSlash() {
   var path = getHashPath();
@@ -22,9 +23,9 @@ function ensureSlash() {
  */
 class HashHistory extends DOMHistory {
 
-  static propTypes = Object.assign({}, DOMHistory.propTypes);
-  static defaultProps = Object.assign({}, DOMHistory.defaultProps);
-  static childContextTypes = Object.assign({}, DOMHistory.childContextTypes);
+  static propTypes = assign({}, DOMHistory.propTypes);
+  static defaultProps = assign({}, DOMHistory.defaultProps);
+  static childContextTypes = assign({}, DOMHistory.childContextTypes);
 
   constructor(props) {
     super(props);

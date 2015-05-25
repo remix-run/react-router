@@ -2,6 +2,7 @@ import DOMHistory from './DOMHistory';
 import { getWindowPath, supportsHistory } from './DOMUtils';
 import NavigationTypes from './NavigationTypes';
 import Location from './Location';
+import assign from 'object-assign';
 
 /**
  * A history implementation for DOM environments that support the
@@ -15,9 +16,9 @@ import Location from './Location';
  */
 class BrowserHistory extends DOMHistory {
 
-  static propTypes = Object.assign({}, DOMHistory.propTypes);
-  static defaultProps = Object.assign({}, DOMHistory.defaultProps);
-  static childContextTypes = Object.assign({}, DOMHistory.childContextTypes);
+  static propTypes = assign({}, DOMHistory.propTypes);
+  static defaultProps = assign({}, DOMHistory.defaultProps);
+  static childContextTypes = assign({}, DOMHistory.childContextTypes);
 
   constructor(props) {
     super(props);

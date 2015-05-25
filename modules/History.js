@@ -1,7 +1,8 @@
 import React from 'react';
 import invariant from 'invariant';
-import { parse: parseQueryString, stringify } from 'qs';
+import qs from 'qs';
 import { history } from './PropTypes';
+var { func } = React.PropTypes;
 
 var RequiredSubclassMethods = [ 'push', 'replace', 'go' ];
 
@@ -26,8 +27,8 @@ class History extends React.Component {
   };
 
   static defaultProps = {
-    parseQueryString,
-    stringifyQuery
+    parseQueryString: qs.parse,
+    stringifyQuery: qs.stringify
   };
 
   static childContextTypes = {

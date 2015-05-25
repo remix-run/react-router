@@ -1,13 +1,14 @@
 import History from './History';
+import assign from 'object-assign';
 
 /**
  * A history interface that assumes a DOM environment.
  */
 class DOMHistory extends History {
 
-  static propTypes = Object.assign({}, History.propTypes);
-  static defaultProps = Object.assign({}, History.defaultProps);
-  static childContextTypes = Object.assign({}, History.childContextTypes);
+  static propTypes = assign({}, History.propTypes);
+  static defaultProps = assign({}, History.defaultProps);
+  static childContextTypes = assign({}, History.childContextTypes);
 
   go(n) {
     if (n === 0)
