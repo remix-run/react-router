@@ -41,18 +41,7 @@ class Sidebar extends React.Component {
   }
 }
 
-var branch = [
-  { component: Parent },
-  { components: { main: Main, sidebar: Sidebar } },
-];
-
-function setServerCache (data) {
-  window.__ASYNC_PROPS__ = data || branchData;
-}
-
-function cleanupServerCache () {
-  delete window.__ASYNC_PROPS__;
-}
+var components = [Parent, { main: Main, sidebar: Sidebar }];
 
 describe('AsyncProps', function () {
 
@@ -60,7 +49,7 @@ describe('AsyncProps', function () {
 
     it('renders with initialBranchData', function (done) {
       var props = {
-        branch,
+        components,
         initialBranchData: branchData,
         params: {},
         location: new Location('/test'),
@@ -87,7 +76,7 @@ describe('AsyncProps', function () {
 
     it('renders with previous props when receiving new props', function (done) {
       var props = {
-        branch,
+        components,
         params: {},
         initialBranchData: branchData,
         location: new Location('/test'),
@@ -98,7 +87,7 @@ describe('AsyncProps', function () {
         render () {
           numberOfRenders++;
           if (numberOfRenders == 2) {
-            expect(this.props.branch).toEqual(props.branch);
+            expect(this.props.components).toEqual(props.components);
             expect(this.props.params).toEqual(props.params);
             expect(this.props.location).toEqual(props.location);
             done();
@@ -110,7 +99,7 @@ describe('AsyncProps', function () {
         <AsyncProps {...props}><Assertions/></AsyncProps>
       ), div, function () {
         var newProps = {
-          branch: [{ component: Parent }],
+          components: [Parent],
           params: { foo: 'bar' },
           location: new Location('/'),
         };
@@ -137,9 +126,9 @@ describe('AsyncProps', function () {
 
     it('loads data after render with an empty cache', function (done) {
       var props = {
-        branch: [
-          { component: Parent },
-          { components: { main: Main, sidebar: Sidebar } },
+        components: [
+          Parent,
+          { main: Main, sidebar: Sidebar }
         ],
         params: {},
         location: new Location('/test'),

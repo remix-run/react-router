@@ -4,8 +4,7 @@ import passMiddlewareProps from './passMiddlewareProps'
 var { element, object, any, instanceOf, array } = React.PropTypes;
 
 function loadAsyncProps (env, cb) {
-  var { branch, params } = env;
-  var components = branch.map(route => route.component || route.components);
+  var { params, components } = env;
   var asyncPropsArray = new Array(components.length);
   var count = 0;
 
@@ -67,7 +66,7 @@ export function hydrate (serverContext, env, callback) {
 export default class AsyncProps extends React.Component {
 
   static propTypes = {
-    branch: array,
+    components: array,
     params: object.isRequired,
     location: instanceOf(Location).isRequired,
     initialBranchData: array,
