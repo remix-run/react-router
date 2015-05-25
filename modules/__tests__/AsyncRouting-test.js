@@ -3,19 +3,7 @@ import React from 'react';
 import AsyncRouting from '../AsyncRouting';
 import Location from '../Location';
 import assign from 'object-assign';
-
-function createPropAssertions (assertionsFunc, onRenderCount) {
-  onRenderCount = onRenderCount || 1;
-  var renderCount = 0;
-  return class extends React.Component {
-    render () {
-      renderCount++;
-      if (renderCount === onRenderCount)
-        assertionsFunc(this.props);
-      return null;
-    }
-  }
-}
+import createPropAssertions from './createPropAssertions';
 
 describe('AsyncRouting', () => {
   var div = document.createElement('div');
