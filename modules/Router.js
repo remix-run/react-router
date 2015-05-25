@@ -1,58 +1,85 @@
 import React from 'react';
+import HashHistory from './HashHistory';
+import AsyncRouting from './AsyncRouting';
+import TransitionManager from './TransitionManager';
+import AsyncProps from './AsyncProps';
+import RouteRenderer from './RouteRenderer';
+import ScrollManager from './ScrollManager';
+import Renderer from './Renderer';
 import isReactChildren from './isReactChildren';
 import createRoutesFromReactChildren from './createRoutesFromReactChildren';
-import TransitionManager from './TransitionManager';
-import AsyncRouting from './AsyncRouting';
-import { location, routes } from './PropTypes';
+import { routes, component } from './PropTypes';
+var { array, func } = React.PropTypes;
 
-/**
- * The main interface of React Router.
- */
-class Router extends React.Component {
+export default class Router extends React.Component {
 
   static propTypes = {
-    location: location.isRequired,
-    routes: routes.isRequired,
-    children: routes
+    children: routes.isRequired,
+    initialRoutingState: array,
+    initialBranchData: array,
+    parseQueryString: func,
+    stringifyQueryString: func,
+    renderRouteComponent: func,
+
+    History: component,
+    Routing: component,
+    TransitionManager: component,
+    DataProvider: component,
+    RouteRenderer: component,
+    ScrollManager: component,
+    Renderer: component
   };
 
   static defaultProps = {
-    routes: []
+    History: HashHistory,
+    Routing: AsyncRouting,
+    TransitionManager,
+    DataProvider: AsyncProps,
+    RouteRenderer,
+    ScrollManager,
+    Renderer
   };
 
-  constructor(props) {
-    super(props);
-    this.state = {
-      routes: null
-    };
-  }
+  render () {
+    var routes = isReactChildren(this.props.children) ?
+      createRoutesFromReactChildren(routes) : this.props.children;
 
-  _updateRoutes(routes) {
-    if (isReactChildren(routes))
-      routes = createRoutesFromReactChildren(routes);
+    var {
+      History,
+      Routing,
+      TransitionManager,
+      DataProvider,
+      RouteRenderer,
+      ScrollManager,
+      Renderer,
+      initialRoutingState,
+      initialBranchData,
+      parseQueryString,
+      stringifyQueryString,
+      renderRouteComponent
+    } = this.props;
 
-    this.setState({ routes });
-  }
-
-  componentWillMount() {
-    this._updateRoutes(this.props.children || this.props.routes);
-  }
-
-  componentWillReceiveProps(nextProps) {
-    if (this.props.children !== nextProps.children || this.props.routes !== nextProps.routes)
-      this._updateRoutes(nextProps.children || nextProps.routes);
-  }
-
-  render() {
     return (
-      <AsyncRouting routes={this.state.routes} location={this.props.location}>
-        <TransitionManager>
-          
-        </TransitionManager>
-      </AsyncRouting>
+      <History
+        parseQueryString={parseQueryString}
+        stringifyQueryString={stringifyQueryString}
+      >
+        <Routing
+          routes={routes}
+          initialRoutingState={initialRoutingState}
+        >
+          <TransitionManager>
+            <DataProvider initialBranchData={initialBranchData}>
+              <RouteRenderer renderComponent={renderRouteComponent}>
+                <ScrollManager>
+                  <Renderer/>
+                </ScrollManager>
+              </RouteRenderer>
+            </DataProvider>
+          </TransitionManager>
+        </Routing>
+      </History>
     );
   }
-
 }
 
-export default Router;
