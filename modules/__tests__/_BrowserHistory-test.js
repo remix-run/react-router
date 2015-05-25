@@ -1,6 +1,6 @@
 var describeHistory = require('./describeHistory');
 var BrowserHistory = require('../BrowserHistory');
 
-describe('BrowserHistory', function () {
+describe.skip('BrowserHistory', function () {
   describeHistory(BrowserHistory);
 });

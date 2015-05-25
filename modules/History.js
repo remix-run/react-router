@@ -90,7 +90,6 @@ class History extends React.Component {
   }
 
   render() {
-    console.log('History');
     var element = React.Children.only(this.props.children);
 
     return React.cloneElement(element, {

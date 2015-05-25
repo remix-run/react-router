@@ -1,6 +1,6 @@
 var describeHistory = require('./describeHistory');
 var HashHistory = require('../HashHistory');
 
-describe('HashHistory', function () {
+describe.skip('HashHistory', function () {
   describeHistory(HashHistory);
 });

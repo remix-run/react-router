@@ -270,7 +270,6 @@ class AsyncRouting extends React.Component {
   }
 
   render() {
-    console.log('AsyncRouting');
     var { children, location } = this.props;
     var { branch, params, components } = this.state;
 

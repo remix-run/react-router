@@ -1,6 +1,6 @@
 var expect = require('expect');
 var { createSpy, spyOn } = expect;
-var AbstractHistory = require('../AbstractHistory');
+//var AbstractHistory = require('../AbstractHistory');
 
 function describeHistory(history) {
   it('is an instanceof History', function () {
