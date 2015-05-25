@@ -5,14 +5,16 @@ import invariant from 'invariant';
 import assign from 'object-assign';
 
 var { createElement } = React;
-var { element, object, any, instanceOf, func } = React.PropTypes;
+var { branch, element, object, any, array, instanceOf, func } = React.PropTypes;
 
 export default class RouteRenderer extends React.Component {
 
   static propTypes = {
+    branch: array.isRequired,
     params: object.isRequired,
     query: any.isRequired,
     location: instanceOf(Location).isRequired,
+    branchData: array,
     renderComponent: func,
     children: element
   };
@@ -20,11 +22,12 @@ export default class RouteRenderer extends React.Component {
   static defaultProps = {
     renderComponent (Component, props) {
       return <Component {...props}/>
-    }
+    },
+    branchData: []
   };
 
   render () {
-    var { location, params, query } = this.props;
+    var { location, params, query, branchData } = this.props;
 
     var element = this.props.branch.reduceRight((element, route, index) => {
       var components = route.component || route.components;
@@ -32,10 +35,10 @@ export default class RouteRenderer extends React.Component {
       if (components == null)
         return element; // Don't create new children; use the grandchildren.
 
-      var props = { location, params, query, route };
+      var props = assign({ location, params, query, route }, branchData[index]);
 
       if (React.isValidElement(element)) {
-        props.children = element;
+        assign(props, { children: element });
       } else if (element) {
         // In render, use children like:
         // var { header, sidebar } = this.props;
@@ -45,8 +48,12 @@ export default class RouteRenderer extends React.Component {
       if (typeof components === 'object') {
         var elements = {};
         for (var key in components)
-          if (components.hasOwnProperty(key))
-            elements[key] = this.props.renderComponent(components[key], assign({}, props));
+          if (components.hasOwnProperty(key)) {
+            let data = (branchData[index] && branchData[index][key]);
+            elements[key] = this.props.renderComponent(
+              components[key], assign({}, props, data)
+            );
+          }
         return elements;
       }
 

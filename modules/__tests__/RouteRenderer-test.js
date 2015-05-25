@@ -154,5 +154,41 @@ describe('RouteRenderer', function () {
     expect(html).toMatch(/test/);
   });
 
+  it('passes branchData to elements', function () {
+    var route = {
+      component: makeComponent(function() { return (
+        <div>{this.props.name}</div>
+      );})
+    };
+    var html = React.renderToString(
+      <RouteRenderer {...props} branch={[route]} branchData={[{name: 'test'}]} />
+    );
+    expect(html).toMatch(/test/);
+  });
+
+  it('passes branchData to elements of multiple component routes', function () {
+    var branch = [{
+      component: makeComponent(function () { return (
+        <div><div>{this.props.sidebar}</div><div>{this.props.main}</div></div>
+      );})
+    }, {
+      components: {
+        sidebar: makeComponent(function() { return (
+          <div>{this.props.name}</div>
+        );}),
+        main: makeComponent(function() { return (
+          <div>{this.props.name}</div>
+        );})
+      }
+    }];
+    var html = React.renderToString(
+      <RouteRenderer {...props} branch={branch} branchData={[
+        {},
+        {sidebar: {name: 'sidebar test'}, main: { name: 'main test' }}
+      ]}/>
+    );
+    expect(html).toMatch(/sidebar test/);
+    expect(html).toMatch(/main test/);
+  });
 });
 
