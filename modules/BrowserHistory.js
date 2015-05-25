@@ -20,8 +20,8 @@ class BrowserHistory extends DOMHistory {
   static defaultProps = assign({}, DOMHistory.defaultProps);
   static childContextTypes = assign({}, DOMHistory.childContextTypes);
 
-  constructor(props) {
-    super(props);
+  constructor(props, context) {
+    super(props, context);
     this.handlePopState = this.handlePopState.bind(this);
     this.isSupported = supportsHistory();
   }

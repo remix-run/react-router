@@ -31,20 +31,10 @@ class History extends React.Component {
     stringifyQuery: qs.stringify
   };
 
-  static childContextTypes = {
-    history
-  };
-
-  constructor(props) {
-    super(props);
+  constructor(props, context) {
+    super(props, context);
     this.state = {
       location: null
-    };
-  }
-
-  getChildContext() {
-    return {
-      history: this
     };
   }
 
@@ -94,11 +84,18 @@ class History extends React.Component {
     return this.makePath(path, query);
   }
 
+  isActive(path, query) {
+    // TODO: this is incomplete, need to check query also
+    return this.state.location.path === path;
+  }
+
   render() {
+    console.log('History');
     var element = React.Children.only(this.props.children);
 
     return React.cloneElement(element, {
-      location: this.state.location
+      location: this.state.location,
+      historyContext: this
     });
   }
 

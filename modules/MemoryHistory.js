@@ -34,8 +34,8 @@ class MemoryHistory extends History {
 
   static childContextTypes = assign({}, History.childContextTypes);
   
-  constructor(props) {
-    super(props);
+  constructor(props, context) {
+    super(props, context);
 
     var { current, entries } = props;
 

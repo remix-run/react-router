@@ -231,8 +231,8 @@ class AsyncRouting extends React.Component {
     onError: throwError
   };
 
-  constructor(props) {
-    super(props);
+  constructor(props, context) {
+    super(props, context);
     this.nextLocation = null;
     this.state = {
       branch: null,
@@ -270,6 +270,7 @@ class AsyncRouting extends React.Component {
   }
 
   render() {
+    console.log('AsyncRouting');
     var { children, location } = this.props;
     var { branch, params, components } = this.state;
 

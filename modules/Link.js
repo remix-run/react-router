@@ -48,8 +48,8 @@ class Link extends React.Component {
     activeClassName: 'active'
   }
 
-  constructor(props) {
-    super(props);
+  constructor(props, context) {
+    super(props, context);
     this.handleClick = this.handleClick.bind(this);
   }
 

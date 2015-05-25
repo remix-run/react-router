@@ -27,8 +27,8 @@ class HashHistory extends DOMHistory {
   static defaultProps = assign({}, DOMHistory.defaultProps);
   static childContextTypes = assign({}, DOMHistory.childContextTypes);
 
-  constructor(props) {
-    super(props);
+  constructor(props, context) {
+    super(props, context);
     this.handleHashChange = this.handleHashChange.bind(this);
     this.navigationType = null;
   }
