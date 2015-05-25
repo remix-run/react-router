@@ -1,8 +1,8 @@
 import expect from 'expect';
 import React from 'react';
-import ScrollRestorer from '../ScrollRestorer';
+import ScrollManager from '../ScrollManager';
 
-describe('ScrollRestorer', function () {
+describe('ScrollManager', function () {
   it('will do great things');
 });
 
