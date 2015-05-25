@@ -2,6 +2,7 @@ import expect from 'expect';
 import React from 'react';
 import AsyncRouting from '../AsyncRouting';
 import Location from '../Location';
+import assign from 'object-assign';
 
 function createPropAssertions (assertionsFunc, onRenderCount) {
   onRenderCount = onRenderCount || 1;
@@ -19,38 +20,57 @@ function createPropAssertions (assertionsFunc, onRenderCount) {
 describe('AsyncRouting', () => {
   var div = document.createElement('div');
 
-  class Component1 extends React.Component {
-    render () {}
-  }
-
-  class Component2 extends React.Component {
-    render () {}
-  }
-
-  class Component3 extends React.Component {
-    render () {}
-  }
+  class Component1 extends React.Component { render () {} }
+  class Component2 extends React.Component { render () {} }
+  class Component3 extends React.Component { render () {} }
+  class Component4 extends React.Component { render () {} }
 
   afterEach(() => {
     React.unmountComponentAtNode(div);
   });
 
   describe('with a synchronous route config', () => {
+    var childRoutes = [
+      { path: 'two/:name', component: Component2 },
+      { path: 'three',
+        components: {
+          main: Component3,
+          sidebar: Component4
+        }
+      }
+    ];
+
+    var parentRoute = {
+      path: '/',
+      component: Component1,
+      childRoutes: childRoutes,
+    };
+
     var props = {
       location: new Location('/two/sally'),
-      routes: {
-        path: '/',
-        component: Component1,
-        childRoutes: [
-          { path: 'two/:name', component: Component2 },
-          { path: 'three', component: Component3 },
-        ]
-      }
+      routes: parentRoute
     };
 
     it('passes components', () => {
       var Assertions = createPropAssertions((props) => {
-        expect(props.components).toEqual([Component1, Component2]);
+        expect(props.components).toEqual([
+          parentRoute.component,
+          childRoutes[0].component
+        ]);
+      });
+      React.render(<AsyncRouting {...props}><Assertions/></AsyncRouting>, div);
+    });
+
+    it('passes named components', () => {
+      var props = {
+        location: new Location('/three'),
+        routes: parentRoute
+      };
+      var Assertions = createPropAssertions((props) => {
+        expect(props.components).toEqual([
+          Component1,
+          { main: Component3, sidebar: Component4 }
+        ]);
       });
       React.render(<AsyncRouting {...props}><Assertions/></AsyncRouting>, div);
     });
@@ -83,7 +103,15 @@ describe('AsyncRouting', () => {
 
     var childRoutes = [
       { path: 'two/:name', getComponents (cb){ cb(null, Component2); } },
-      { path: 'three', getComponents (cb) { cb(null, Component3); } }
+      {
+        path: 'three',
+        getComponents (cb) {
+          cb(null, {
+            main: Component3,
+            sidebar: Component4
+          });
+        }
+      }
     ];
 
     var props = {
@@ -95,6 +123,20 @@ describe('AsyncRouting', () => {
       var Assertions = createPropAssertions((props) => {
         expect(props.components).toEqual([Component1, Component2]);
         done();
+      });
+      React.render(<AsyncRouting {...props}><Assertions/></AsyncRouting>, div);
+    });
+
+    it('passes named components', () => {
+      var props = {
+        location: new Location('/three'),
+        routes: parentRoute
+      };
+      var Assertions = createPropAssertions((props) => {
+        expect(props.components).toEqual([
+          Component1,
+          { main: Component3, sidebar: Component4 }
+        ]);
       });
       React.render(<AsyncRouting {...props}><Assertions/></AsyncRouting>, div);
     });
@@ -115,6 +157,5 @@ describe('AsyncRouting', () => {
       React.render(<AsyncRouting {...props}><Assertions/></AsyncRouting>, div);
     });
   });
-
 });
 
