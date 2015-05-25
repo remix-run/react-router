@@ -1,26 +1,26 @@
-export Router from './Router';
+exports.Router = require('./Router');
 
-export Route from './Route';
+exports.Route = require('./Route');
 
-export History from './History';
-export DOMHistory from './DOMHistory';
-export HashHistory from './HashHistory';
-export BrowserHistory from './BrowserHistory';
-export MemoryHistory from './HashHistory';
+exports.History = require('./History');
+exports.DOMHistory = require('./DOMHistory');
+exports.HashHistory = require('./HashHistory');
+exports.BrowserHistory = require('./BrowserHistory');
+exports.MemoryHistory = require('./HashHistory');
 
-export Link from './Link';
-export Navigation from './Navigation';
-export TransitionHook from './TransitionHook'
-export Env from './Env';
+exports.Link = require('./Link');
+exports.Navigation = require('./Navigation');
+exports.TransitionHook = require('./TransitionHook');
+exports.Env = require('./Env');
 
-export AsyncRouting from './AsyncRouting';
-export TransitionManager from './TransitionManager';
-export AsyncProps from './AsyncProps';
-export RouteRenderer from './RouteRenderer';
-export ScrollManager from './ScrollManager';
-export Renderer from './Renderer';
+exports.AsyncRouting = require('./AsyncRouting');
+exports.TransitionManager = require('./TransitionManager');
+exports.AsyncProps = require('./AsyncProps');
+exports.RouteRenderer = require('./RouteRenderer');
+exports.ScrollManager = require('./ScrollManager');
+exports.Renderer = require('./Renderer');
 
-export PropTypes from './PropTypes';
+exports.PropTypes = require('./PropTypes');
 
-export createRoutesFromReactChildren from './createRoutesFromReactChildren';
+exports.createRoutesFromReactChildren = require('./createRoutesFromReactChildren');
 
