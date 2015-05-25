@@ -3,7 +3,9 @@ import React from 'react';
 import Router from '../Router';
 import Route from '../Route';
 
-describe.skip('Router', function () {
+//console.warn = () => {};
+
+describe('Router', function () {
   var div = document.createElement('div');
 
   afterEach(function () {

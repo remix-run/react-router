@@ -42,7 +42,8 @@ export default class Router extends React.Component {
 
   render () {
     var routes = isReactChildren(this.props.children) ?
-      createRoutesFromReactChildren(routes) : this.props.children;
+      createRoutesFromReactChildren(this.props.children) :
+      this.props.children;
 
     var {
       History,
