@@ -10,10 +10,10 @@ var { branch, element, object, any, array, instanceOf, func } = React.PropTypes;
 export default class RouteRenderer extends React.Component {
 
   static propTypes = {
-    branch: array.isRequired,
-    params: object.isRequired,
-    query: any.isRequired,
-    location: instanceOf(Location).isRequired,
+    branch: array,
+    params: object,
+    query: any,
+    location: instanceOf(Location),
     branchData: array,
     wrapComponent: func,
     historyContext: any,

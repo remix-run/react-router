@@ -9,11 +9,11 @@ import passMiddlewareProps from './passMiddlewareProps';
 class TransitionManager extends React.Component {
 
   static contextTypes = {
-    history: history.isRequired
+    history: history
   };
 
   static propTypes = {
-    location: location.isRequired
+    location: location
   };
 
   constructor(props, context) {

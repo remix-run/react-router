@@ -222,9 +222,9 @@ class AsyncRouting extends React.Component {
   }
 
   static propTypes = {
-    location: location.isRequired,
-    routes: routes.isRequired,
-    onError: func.isRequired
+    location: location,
+    routes: routes,
+    onError: func
   };
 
   static defaultProps = {

@@ -9,25 +9,25 @@ import Renderer from './Renderer';
 import isReactChildren from './isReactChildren';
 import createRoutesFromReactChildren from './createRoutesFromReactChildren';
 import { routes, component } from './PropTypes';
-var { array, func } = React.PropTypes;
+var { array, func, any } = React.PropTypes;
 
 export default class Router extends React.Component {
 
   static propTypes = {
-    children: routes.isRequired,
+    children: routes,
     initialRoutingState: array,
     initialBranchData: array,
     parseQueryString: func,
     stringifyQueryString: func,
     renderRouteComponent: func,
 
-    History: component,
-    Routing: component,
-    TransitionManager: component,
-    DataProvider: component,
-    RouteRenderer: component,
-    ScrollManager: component,
-    Renderer: component
+    History: any,
+    Routing: any,
+    TransitionManager: any,
+    DataProvider: any,
+    RouteRenderer: any,
+    ScrollManager: any,
+    Renderer:any,
   };
 
   static defaultProps = {

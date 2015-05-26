@@ -67,8 +67,8 @@ export default class AsyncProps extends React.Component {
 
   static propTypes = {
     components: array,
-    params: object.isRequired,
-    location: instanceOf(Location).isRequired,
+    params: object,
+    location: instanceOf(Location),
     initialBranchData: array,
     children: element
   };
