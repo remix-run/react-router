@@ -15,19 +15,15 @@ export default class RouteRenderer extends React.Component {
     query: any,
     location: instanceOf(Location),
     branchData: array,
-    wrapComponent: func,
+    renderComponent: func,
     historyContext: any,
     routingContext: any,
     children: element
   };
 
   static defaultProps = {
-    wrapComponent (Component, props) {
-      return class extends React.Component {
-        render () {
-          return <Component {...props}/>
-        }
-      }
+    renderComponent (Component, props) {
+      return <Component {...props}/>
     },
     branchData: []
   };
@@ -70,14 +66,14 @@ export default class RouteRenderer extends React.Component {
         for (var key in components)
           if (components.hasOwnProperty(key)) {
             let data = (branchData[index] && branchData[index][key]);
-            elements[key] = React.createElement(this.props.wrapComponent(
+            elements[key] = this.props.renderComponent(
               components[key], assign({}, props, data)
-            ));
+            );
           }
         return elements;
       }
 
-      return React.createElement(this.props.wrapComponent(components, props));
+      return this.props.renderComponent(components, props);
     }, element);
 
     invariant(
