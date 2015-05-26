@@ -68,7 +68,7 @@ class Link extends React.Component {
     event.preventDefault();
 
     if (allowTransition)
-      this.context.router.history.transitionTo(this.props.to, this.props.query);
+      this.context.router.history.push(this.props.to, this.props.query);
   }
 
   getHref() {
