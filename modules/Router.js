@@ -56,7 +56,7 @@ class Router extends React.Component {
       initialRoutingState,
       initialBranchData,
       parseQueryString,
-      stringifyQueryString,
+      stringifyQuery,
       renderRouteComponent
     } = this.props;
 
