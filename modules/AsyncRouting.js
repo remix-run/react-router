@@ -196,7 +196,7 @@ class AsyncRouting extends React.Component {
       if (typeof location === 'string') {
         location = new Location(location);
       } else if (location && location.path) {
-        location = new Location(location.path, location.query, location.navigationType);
+        location = new Location(location.path, location.query, location.navigationType, location.key);
       }
     }
 

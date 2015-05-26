@@ -9,7 +9,7 @@ import NavigationTypes from './NavigationTypes';
 class Location {
 
   constructor(path, query, navigationType, key) {
-    this.key = key;
+    this.key = key || null;
     this.navigationType = navigationType || NavigationTypes.POP;
     this.query = query || null;
     this.path = path;

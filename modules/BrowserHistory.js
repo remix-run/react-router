@@ -4,8 +4,8 @@ import NavigationTypes from './NavigationTypes';
 import Location from './Location';
 import assign from 'object-assign';
 
-function generateRandomId() {
-  return Math.random().toString(36).substr(2, 9); // https://gist.github.com/gordonbrander/2230317
+function createRandomKey() {
+  return Math.random().toString(36).substr(2);
 }
 
 /**
@@ -39,8 +39,8 @@ class BrowserHistory extends DOMHistory {
       key = state && state.key;
 
       if (!key) {
-        key = generateRandomId();
-        window.history.replaceState({key}, '');
+        key = createRandomKey();
+        window.history.replaceState({ key }, '');
       }
     }
 
@@ -81,13 +81,13 @@ class BrowserHistory extends DOMHistory {
     var fullPath = this.makePath(path, query);
 
     if (this.isSupported) {
-      var key = generateRandomId();
+      var key = createRandomKey();
 
       // http://www.w3.org/TR/2011/WD-html5-20110113/history.html#dom-history-pushstate
       this.setState({
         location: new Location(path, query, NavigationTypes.PUSH, key)
       }, function () {
-        window.history.pushState({key}, '', fullPath);
+        window.history.pushState({ key }, '', fullPath);
       });
     } else {
       window.location = fullPath;
@@ -98,13 +98,13 @@ class BrowserHistory extends DOMHistory {
     var fullPath = this.makePath(path, query);
 
     if (this.isSupported) {
-      var key = generateRandomId();
+      var key = createRandomKey();
 
       // http://www.w3.org/TR/2011/WD-html5-20110113/history.html#dom-history-replacestate
       this.setState({
         location: new Location(path, query, NavigationTypes.REPLACE, key)
       }, function () {
-        window.history.replaceState({key}, '', fullPath);
+        window.history.replaceState({ key }, '', fullPath);
       });
     } else {
       window.location.replace(fullPath);
