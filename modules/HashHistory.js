@@ -78,17 +78,9 @@ class HashHistory extends DOMHistory {
     window.location.hash = this.makePath(path, query);
   }
 
-  transitionTo(path, query) {
-    this.push(path, query);
-  }
-
   replace(path, query) {
     this.navigationType = NavigationTypes.REPLACE;
     replaceHashPath(this.makePath(path, query));
-  }
-
-  replaceWith(path, query) {
-    this.replace(path, query);
   }
 
   makeHref(path, query) {
