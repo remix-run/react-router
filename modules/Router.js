@@ -11,14 +11,14 @@ import createRoutesFromReactChildren from './createRoutesFromReactChildren';
 import { routes, component } from './PropTypes';
 var { array, func, any } = React.PropTypes;
 
-export default class Router extends React.Component {
+class Router extends React.Component {
 
   static propTypes = {
     children: routes,
     initialRoutingState: array,
     initialBranchData: array,
     parseQueryString: func,
-    stringifyQueryString: func,
+    stringifyQuery: func,
     renderRouteComponent: func,
 
     History: any,
@@ -40,7 +40,7 @@ export default class Router extends React.Component {
     Renderer
   };
 
-  render () {
+  render() {
     var routes = isReactChildren(this.props.children) ?
       createRoutesFromReactChildren(this.props.children) :
       this.props.children;
@@ -63,7 +63,7 @@ export default class Router extends React.Component {
     return (
       <History
         parseQueryString={parseQueryString}
-        stringifyQueryString={stringifyQueryString}
+        stringifyQuery={stringifyQuery}
       >
         <Routing
           routes={routes}
@@ -82,5 +82,7 @@ export default class Router extends React.Component {
       </History>
     );
   }
+
 }
 
+export default Router;
