@@ -4,10 +4,11 @@ var History = require('../History');
 var _listeners = [];
 var _isListening = false;
 
-function notifyChange(type) {
+function notifyChange(type, data) {
   var change = {
     path: HistoryLocation.getCurrentPath(),
-    type: type
+    type: type,
+    data: data
   };
 
   _listeners.forEach(function (listener) {
@@ -57,15 +58,15 @@ var HistoryLocation = {
     }
   },
 
-  push(path) {
+  push(path, data) {
     window.history.pushState({ path: path }, '', path);
     History.length += 1;
-    notifyChange(LocationActions.PUSH);
+    notifyChange(LocationActions.PUSH, data);
   },
 
-  replace(path) {
+  replace(path, data) {
     window.history.replaceState({ path: path }, '', path);
-    notifyChange(LocationActions.REPLACE);
+    notifyChange(LocationActions.REPLACE, data);
   },
 
   pop: History.back,

@@ -35,7 +35,7 @@ exports.Async = React.createClass({
   statics: {
     delay: 10,
 
-    willTransitionTo: function (transition, params, query, callback) {
+    willTransitionTo: function (transition, params, query, callback, data) {
       setTimeout(callback, exports.Async.delay);
     }
   },
@@ -61,7 +61,7 @@ exports.RedirectToFooAsync = React.createClass({
   statics: {
     delay: 10,
 
-    willTransitionTo: function (transition, params, query, callback) {
+    willTransitionTo: function (transition, params, query, callback, data) {
       setTimeout(function () {
         transition.redirect('/foo');
         callback();
@@ -91,7 +91,7 @@ exports.AbortAsync = React.createClass({
   statics: {
     delay: 10,
 
-    willTransitionTo: function (transition, params, query, callback) {
+    willTransitionTo: function (transition, params, query, callback, data) {
       setTimeout(function () {
         transition.abort();
         callback();

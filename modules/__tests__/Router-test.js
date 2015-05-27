@@ -192,7 +192,7 @@ describe('Router', function () {
           statics: {
             delay: Async.delay * 2,
 
-            willTransitionTo: function (transition, params, query, callback) {
+            willTransitionTo: function (transition, params, query, callback, data) {
               setTimeout(callback, LongAsync.delay);
             }
           },
@@ -585,7 +585,7 @@ describe('Router', function () {
       it('ignores aborting asynchronously in willTransitionTo when aborted before router.transitionTo', function (done) {
         var AbortAsync2 = React.createClass({
           statics: {
-            willTransitionTo: function (transition, params, query, callback) {
+            willTransitionTo: function (transition, params, query, callback, data) {
               transition.abort();
               setTimeout(callback, Async.delay);
             }

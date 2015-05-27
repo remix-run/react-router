@@ -4,14 +4,16 @@ var History = require('../History');
 var _listeners = [];
 var _isListening = false;
 var _actionType;
+var _data = [];
 
-function notifyChange(type) {
+function notifyChange(type, data) {
   if (type === LocationActions.PUSH)
     History.length += 1;
 
   var change = {
     path: HashLocation.getCurrentPath(),
-    type: type
+    type: type,
+    data: data
   };
 
   _listeners.forEach(function (listener) {
@@ -38,7 +40,7 @@ function onHashChange() {
     // manipulation. So just guess 'pop'.
     var curActionType = _actionType;
     _actionType = null;
-    notifyChange(curActionType || LocationActions.POP);
+    notifyChange(curActionType || LocationActions.POP, _data.pop());
   }
 }
 
@@ -80,13 +82,15 @@ var HashLocation = {
     }
   },
 
-  push(path) {
+  push(path, data) {
     _actionType = LocationActions.PUSH;
+    _data.push(data);
     window.location.hash = path;
   },
 
-  replace(path) {
+  replace(path, data) {
     _actionType = LocationActions.REPLACE;
+    _data.push(data);
     window.location.replace(
       window.location.pathname + window.location.search + '#' + path
     );

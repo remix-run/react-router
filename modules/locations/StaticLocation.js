@@ -11,8 +11,9 @@ function throwCannotModify() {
  */
 class StaticLocation {
 
-  constructor(path) {
-    this.path = path;
+  constructor(path, data) {
+    this.path = path
+    this.data = data;
   }
 
   getCurrentPath() {
