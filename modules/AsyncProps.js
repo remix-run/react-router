@@ -60,7 +60,7 @@ function getAsyncPropsForComponentsObject (components, env, callback) {
 }
 
 export function hydrate (serverContext, env, callback) {
-  loadAsyncProps(assign({}, env, { serverContext }, callback));
+  loadAsyncProps(Object.assign({}, env, { serverContext }, callback));
 }
 
 export default class AsyncProps extends React.Component {
