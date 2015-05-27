@@ -27,8 +27,8 @@ be rendered by the parent route component with `this.props.children`.
 ```js
 const routes = (
   <Route component={App}>
-    <Route path="groups" components={Groups}}/>
-    <Route path="users" components={Users}}/>
+    <Route path="groups" components={Groups}/>
+    <Route path="users" components={Users}/>
   </Route>
 );
 
