@@ -6,19 +6,19 @@ Without React Router
 
 ```js
 var About = React.createClass({
-  render: function () {
+  render () {
     return <h2>About</h2>;
   }
 });
 
 var Inbox = React.createClass({
-  render: function () {
+  render () {
     return <h2>Inbox</h2>;
   }
 });
 
 var Home = React.createClass({
-  render: function () {
+  render () {
     return <h2>Home</h2>;
   }
 });
@@ -37,7 +37,7 @@ var App = React.createClass({
         <h1>App</h1>
         <Child/>
       </div>
-    )
+    );
   }
 });
 
@@ -69,7 +69,7 @@ With React Router
 Nested URLs and nested component hierarchy are at the heart of React
 Router. Lets make our routing for our little app declarative. We use JSX
 for route configuration because we want to define a view hierarchy with
-properties, so its a pefect fit.
+properties, so its a perfect fit.
 
 ```js
 var Router = require('react-router');
@@ -98,7 +98,7 @@ var App = React.createClass({
         <h1>App</h1>
         <RouteHandler/>
       </div>
-    )
+    );
   }
 });
 ```
@@ -126,6 +126,18 @@ First we'll make a new `Message` component and then we'll add the route
 under `inbox` so that the UI will nest.
 
 ```js
+var Inbox = React.createClass({
+  render () {
+    return (
+      <div>
+        <h2>Inbox</h2>
+        <RouteHandler/>
+      </div>
+    );
+
+  }
+});
+
 var Message = React.createClass({
   render () {
     return <h3>Message</h3>;
