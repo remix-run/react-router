@@ -1,5 +1,5 @@
-var React = require('react');
-var TransitionGroup = require('react/lib/ReactCSSTransitionGroup');
+var React = require('react/addons');
+var TransitionGroup = React.addons.CSSTransitionGroup;
 var Router = require('react-router');
 var { Route, RouteHandler, Link } = Router;
 
