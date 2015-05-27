@@ -17,7 +17,6 @@ export default class RouteRenderer extends React.Component {
     branchData: array,
     renderComponent: func,
     historyContext: any,
-    routingContext: any,
     children: element
   };
 
@@ -40,7 +39,6 @@ export default class RouteRenderer extends React.Component {
           return this.pathIsActive(path, query)
         },
         history: this.props.historyContext,
-        routing: this.props.routingContext
       }
     }
   }

@@ -286,7 +286,6 @@ class AsyncRouting extends React.Component {
       branch,
       params,
       components,
-      routingContext: this
     });
   }
 
