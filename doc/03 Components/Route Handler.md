@@ -92,4 +92,4 @@ var Settings = React.createClass({
 });
 ```
 
-[transition]:#TODO
+[transition]:#Transition
