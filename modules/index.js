@@ -1,26 +1,47 @@
-exports.Router = require('./Router');
+import Router from './Router';
 
-exports.Route = require('./Route');
+import Route from './Route';
 
-exports.History = require('./History');
-exports.DOMHistory = require('./DOMHistory');
-exports.HashHistory = require('./HashHistory');
-exports.BrowserHistory = require('./BrowserHistory');
-exports.MemoryHistory = require('./HashHistory');
+import History from './History';
+import DOMHistory from './DOMHistory';
+import HashHistory from './HashHistory';
+import BrowserHistory from './BrowserHistory';
+import MemoryHistory from './HashHistory';
 
-exports.Link = require('./Link');
-exports.Navigation = require('./Navigation');
-exports.TransitionHook = require('./TransitionHook');
-exports.Env = require('./Env');
+import Link from './Link';
+import Navigation from './Navigation';
+import TransitionHook from './TransitionHook';
+import Env from './Env';
 
-exports.AsyncRouting = require('./AsyncRouting');
-exports.TransitionManager = require('./TransitionManager');
-exports.AsyncProps = require('./AsyncProps');
-exports.RouteRenderer = require('./RouteRenderer');
-exports.ScrollManager = require('./ScrollManager');
-exports.Renderer = require('./Renderer');
+import AsyncRouting from './AsyncRouting';
+import TransitionManager from './TransitionManager';
+import AsyncProps from './AsyncProps';
+import RouteRenderer from './RouteRenderer';
+import ScrollManager from './ScrollManager';
+import Renderer from './Renderer';
 
-exports.PropTypes = require('./PropTypes');
+import PropTypes from './PropTypes';
 
-exports.createRoutesFromReactChildren = require('./createRoutesFromReactChildren');
+import createRoutesFromReactChildren from './createRoutesFromReactChildren';
 
+export default {
+  Router,
+  Route,
+  History,
+  DOMHistory,
+  HashHistory,
+  BrowserHistory,
+  MemoryHistory,
+  Link,
+  Navigation,
+  TransitionHook,
+  Env,
+  AsyncRouting,
+  TransitionManager,
+  AsyncProps,
+  RouteRenderer,
+  ScrollManager,
+  Renderer,
+  PropTypes,
+  createRoutesFromReactChildren
+};
