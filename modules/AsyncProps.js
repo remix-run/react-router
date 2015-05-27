@@ -1,14 +1,15 @@
 import React from 'react';
 import Location from './Location';
 import passMiddlewareProps from './passMiddlewareProps'
+
 var { element, object, any, instanceOf, array } = React.PropTypes;
 
-function loadAsyncProps (env, cb) {
+function loadAsyncProps(env, cb) {
   var { params, components } = env;
   var asyncPropsArray = new Array(components.length);
   var count = 0;
 
-  function finish () {
+  function finish() {
     count++;
     if (count === components.length)
       cb(null, asyncPropsArray);
@@ -20,15 +21,13 @@ function loadAsyncProps (env, cb) {
         asyncPropsArray[index] = props;
         finish();
       });
-    }
-    else {
+    } else {
       if (Component.loadAsyncProps) {
         Component.loadAsyncProps(env, (err, props) => {
           asyncPropsArray[index] = props;
           finish();
         });
-      }
-      else {
+      } else {
         asyncPropsArray[index] = {};
         finish();
       }
@@ -36,34 +35,36 @@ function loadAsyncProps (env, cb) {
   });
 }
 
-function getAsyncPropsForComponentsObject (components, env, callback) {
+function getAsyncPropsForComponentsObject(components, env, callback) {
   var total = Object.keys(components).length;
   var asyncProps = {};
   var count = 0;
 
-  function finish () {
+  function finish() {
     count++;
     if (count === total)
       callback(null, asyncProps);
   }
 
-  for (let key in components) {
-    let Component = components[key];
+  for (var key in components) {
+    var Component = components[key];
+
     if (Component.loadAsyncProps) {
       Component.loadAsyncProps(env, (err, props) => {
         asyncProps[key] = props;
         finish();
       });
     }
+
     finish();
   }
 }
 
-export function hydrate (serverContext, env, callback) {
-  loadAsyncProps(Object.assign({}, env, { serverContext }, callback));
+export function hydrate(serverContext, env, callback) {
+  loadAsyncProps(Object.assign({}, env, { serverContext }), callback);
 }
 
-export default class AsyncProps extends React.Component {
+class AsyncProps extends React.Component {
 
   static propTypes = {
     components: array,
@@ -73,7 +74,7 @@ export default class AsyncProps extends React.Component {
     children: element
   };
 
-  constructor (props, context) {
+  constructor(props, context) {
     super(props, context);
     this.ignorePendingLoad = false;
     this.state = {
@@ -83,12 +84,12 @@ export default class AsyncProps extends React.Component {
     };
   }
 
-  componentDidMount () {
+  componentDidMount() {
     if (this.props.initialBranchData == null)
       this.load();
   }
 
-  componentWillReceiveProps (nextProps) {
+  componentWillReceiveProps(nextProps) {
     if (!this.state.loading) {
       this.setState({
         propsBeforeLoad: this.props,
@@ -97,11 +98,11 @@ export default class AsyncProps extends React.Component {
     }
   }
 
-  componentWillUnmount () {
+  componentWillUnmount() {
     this.ignorePendingLoad = true;
   }
 
-  load () {
+  load() {
     loadAsyncProps(this.props, (err, branchData) => {
       // TODO handle error
       if (this.ignorePendingLoad)
@@ -114,7 +115,7 @@ export default class AsyncProps extends React.Component {
     });
   }
 
-  render () {
+  render() {
     if (this.state.branchData === null)
       return null;
 
@@ -128,3 +129,4 @@ export default class AsyncProps extends React.Component {
   }
 }
 
+export default AsyncProps;
