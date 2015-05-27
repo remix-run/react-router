@@ -20,6 +20,8 @@ class Router extends React.Component {
     parseQueryString: func,
     stringifyQuery: func,
     getScrollPosition: func,
+    updateScrollPosition: func,
+    shouldUpdateScrollPosition: func,
     renderRouteComponent: func,
 
     History: any,
@@ -59,6 +61,8 @@ class Router extends React.Component {
       parseQueryString,
       stringifyQuery,
       getScrollPosition,
+      updateScrollPosition,
+      shouldUpdateScrollPosition,
       renderRouteComponent
     } = this.props;
 
@@ -75,7 +79,8 @@ class Router extends React.Component {
           <TransitionManager>
             <DataProvider initialBranchData={initialBranchData}>
               <RouteRenderer renderComponent={renderRouteComponent}>
-                <ScrollManager>
+                <ScrollManager updateScrollPosition={updateScrollPosition}
+                               shouldUpdateScrollPosition={shouldUpdateScrollPosition}>
                   <Renderer/>
                 </ScrollManager>
               </RouteRenderer>
