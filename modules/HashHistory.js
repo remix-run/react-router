@@ -2,7 +2,6 @@ import DOMHistory from './DOMHistory';
 import NavigationTypes from './NavigationTypes';
 import { getHashPath, replaceHashPath } from './DOMUtils';
 import { isAbsolutePath } from './PathUtils';
-import Location from './Location';
 import assign from 'object-assign';
 
 function ensureSlash() {
@@ -37,7 +36,7 @@ class HashHistory extends DOMHistory {
     var [ path, queryString ] = getHashPath().split('?', 2);
 
     this.setState({
-      location: new Location(path, this.parseQueryString(queryString), navigationType)
+      location: this.createLocation(path, this.parseQueryString(queryString), navigationType)
     });
   }
 
@@ -74,6 +73,7 @@ class HashHistory extends DOMHistory {
   }
 
   push(path, query) {
+    this.recordScrollPosition();
     this.navigationType = NavigationTypes.PUSH;
     window.location.hash = this.makePath(path, query);
   }

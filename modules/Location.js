@@ -8,11 +8,12 @@ import NavigationTypes from './NavigationTypes';
  */
 class Location {
 
-  constructor(path, query, navigationType, key) {
-    this.key = key || null;
-    this.navigationType = navigationType || NavigationTypes.POP;
-    this.query = query || null;
+  constructor(path, query, navigationType, key, scrollPosition) {
     this.path = path;
+    this.query = query || null;
+    this.navigationType = navigationType || NavigationTypes.POP;
+    this.key = key || null;
+    this.scrollPosition = scrollPosition || null;
   }
 
   toJSON() {

@@ -1,7 +1,6 @@
 import DOMHistory from './DOMHistory';
 import { getWindowPath, supportsHistory } from './DOMUtils';
 import NavigationTypes from './NavigationTypes';
-import Location from './Location';
 import assign from 'object-assign';
 
 function createRandomKey() {
@@ -45,7 +44,7 @@ class BrowserHistory extends DOMHistory {
     }
 
     this.setState({
-      location: new Location(path, this.parseQueryString(queryString), navigationType, key)
+      location: this.createLocation(path, this.parseQueryString(queryString), navigationType, key)
     });
   }
 
@@ -81,11 +80,12 @@ class BrowserHistory extends DOMHistory {
     var fullPath = this.makePath(path, query);
 
     if (this.isSupported) {
+      this.recordScrollPosition();
       var key = createRandomKey();
 
       // http://www.w3.org/TR/2011/WD-html5-20110113/history.html#dom-history-pushstate
       this.setState({
-        location: new Location(path, query, NavigationTypes.PUSH, key)
+        location: this.createLocation(path, query, NavigationTypes.PUSH, key)
       }, function () {
         window.history.pushState({ key }, '', fullPath);
       });
@@ -102,7 +102,7 @@ class BrowserHistory extends DOMHistory {
 
       // http://www.w3.org/TR/2011/WD-html5-20110113/history.html#dom-history-replacestate
       this.setState({
-        location: new Location(path, query, NavigationTypes.REPLACE, key)
+        location: this.createLocation(path, query, NavigationTypes.REPLACE, key)
       }, function () {
         window.history.replaceState({ key }, '', fullPath);
       });

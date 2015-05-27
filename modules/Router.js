@@ -19,6 +19,7 @@ class Router extends React.Component {
     initialBranchData: array,
     parseQueryString: func,
     stringifyQuery: func,
+    getScrollPosition: func,
     renderRouteComponent: func,
 
     History: any,
@@ -57,6 +58,7 @@ class Router extends React.Component {
       initialBranchData,
       parseQueryString,
       stringifyQuery,
+      getScrollPosition,
       renderRouteComponent
     } = this.props;
 
@@ -64,6 +66,7 @@ class Router extends React.Component {
       <History
         parseQueryString={parseQueryString}
         stringifyQuery={stringifyQuery}
+        getScrollPosition={getScrollPosition}
       >
         <Routing
           routes={routes}
