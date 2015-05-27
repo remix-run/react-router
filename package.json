@@ -1,6 +1,6 @@
 {
   "name": "react-router",
-  "version": "0.13.3",
+  "version": "0.14.0-alpha2",
   "description": "A complete routing library for React.js",
   "main": "lib",
   "repository": {
@@ -40,14 +40,14 @@
     "marked": "0.3.3",
     "mocha": "^2.0.1",
     "pygmentize-bundled": "^2.3.0",
-    "react": "0.13.x",
+    "react": "0.14.0-alpha2",
     "rf-changelog": "^0.4.0",
     "rx": "2.3.18",
     "webpack": "^1.4.13",
     "webpack-dev-server": "^1.6.6"
   },
   "peerDependencies": {
-    "react": "0.13.x"
+    "react": "0.14.0-alpha2"
   },
   "dependencies": {
     "object-assign": "^2.0.0",
