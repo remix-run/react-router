@@ -1,7 +1,24 @@
 /* jshint -W084 */
 var PathUtils = require('./PathUtils');
 
-function deepSearch(route, pathname, query) {
+function extractParams(route, pathname, pluginDispatcher) {
+  var params = PathUtils.extractParams(route.path, pathname);
+
+  if (!params) {
+    // return if route did not match
+    return params;
+  }
+
+  // run plugins to validate params
+  if (!pluginDispatcher.validateParams(params, route, pathname)) {
+    // return if params are invalid
+    return null;
+  }
+
+  return params;
+}
+
+function deepSearch(route, pathname, query, pluginDispatcher) {
   // Check the subtree first to find the most deeply-nested match.
   var childRoutes = route.childRoutes;
   if (childRoutes) {
@@ -12,7 +29,7 @@ function deepSearch(route, pathname, query) {
       if (childRoute.isDefault || childRoute.isNotFound)
         continue; // Check these in order later.
 
-      if (match = deepSearch(childRoute, pathname, query)) {
+      if (match = deepSearch(childRoute, pathname, query, pluginDispatcher)) {
         // A route in the subtree matched! Add this route and we're done.
         match.routes.unshift(route);
         return match;
@@ -22,16 +39,16 @@ function deepSearch(route, pathname, query) {
 
   // No child routes matched; try the default route.
   var defaultRoute = route.defaultRoute;
-  if (defaultRoute && (params = PathUtils.extractParams(defaultRoute.path, pathname)))
+  if (defaultRoute && (params = extractParams(defaultRoute, pathname, pluginDispatcher)))
     return new Match(pathname, params, query, [ route, defaultRoute ]);
 
   // Does the "not found" route match?
   var notFoundRoute = route.notFoundRoute;
-  if (notFoundRoute && (params = PathUtils.extractParams(notFoundRoute.path, pathname)))
+  if (notFoundRoute && (params = extractParams(notFoundRoute, pathname, pluginDispatcher)))
     return new Match(pathname, params, query, [ route, notFoundRoute ]);
 
   // Last attempt: check this route.
-  var params = PathUtils.extractParams(route.path, pathname);
+  var params = extractParams(route, pathname, pluginDispatcher);
   if (params)
     return new Match(pathname, params, query, [ route ]);
 
@@ -45,13 +62,17 @@ class Match {
    * subtree against the given path and returns the match if it
    * succeeds, null if no match can be made.
    */
-  static findMatch(routes, path) {
+  static findMatch(routes, path, pluginDispatcher) {
     var pathname = PathUtils.withoutQuery(path);
     var query = PathUtils.extractQuery(path);
     var match = null;
 
     for (var i = 0, len = routes.length; match == null && i < len; ++i)
-      match = deepSearch(routes[i], pathname, query);
+      match = deepSearch(routes[i], pathname, query, pluginDispatcher);
+
+    if (match) {
+      match = pluginDispatcher.transformMatch(match);
+    }
 
     return match;
   }

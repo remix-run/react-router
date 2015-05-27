@@ -21,6 +21,7 @@ var Match = require('./Match');
 var Route = require('./Route');
 var supportsHistory = require('./supportsHistory');
 var PathUtils = require('./PathUtils');
+var PluginDispatcher = require('./PluginDispatcher');
 
 /**
  * The default location for new routers.
@@ -134,6 +135,7 @@ function createRouter(options) {
   var nextState = {};
   var pendingTransition = null;
   var dispatchHandler = null;
+  var pluginDispatcher = new PluginDispatcher;
 
   if (typeof location === 'string')
     location = new StaticLocation(location);
@@ -205,7 +207,7 @@ function createRouter(options) {
        * match can be made.
        */
       match: function (path) {
-        return Match.findMatch(Router.routes, path);
+        return Match.findMatch(Router.routes, path, pluginDispatcher);
       },
 
       /**
@@ -507,6 +509,13 @@ function createRouter(options) {
         return routeIsActive(state.routes, to) &&
           paramsAreActive(state.params, params) &&
           (query == null || queryIsActive(state.query, query));
+      },
+
+      /**
+       * Register plugin
+       */
+      plug: function (plugin) {
+        pluginDispatcher.register(plugin);
       }
 
     },
