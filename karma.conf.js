@@ -25,7 +25,7 @@ module.exports = function (config) {
       devtool: 'inline-source-map',
       module: {
         loaders: [
-          { test: /\.js$/, exclude: /node_modules/, loader: 'babel?optional=es7.classProperties&plugins=object-assign' }
+          { test: /\.js$/, exclude: /node_modules/, loader: 'babel' }
         ]
       },
       plugins: [

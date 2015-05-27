@@ -28,7 +28,7 @@ module.exports = {
 
   module: {
     loaders: [
-      { test: /\.js$/, exclude: /node_modules/, loader: 'babel?optional=es7.classProperties&plugins=object-assign' }
+      { test: /\.js$/, exclude: /node_modules/, loader: 'babel' }
     ]
   },
 

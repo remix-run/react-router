@@ -1,47 +1,25 @@
-import Router from './Router';
+export Router from './Router';
 
-import Route from './Route';
+export Route from './Route';
 
-import History from './History';
-import DOMHistory from './DOMHistory';
-import HashHistory from './HashHistory';
-import BrowserHistory from './BrowserHistory';
-import MemoryHistory from './HashHistory';
+export History from './History';
+export DOMHistory from './DOMHistory';
+export HashHistory from './HashHistory';
+export BrowserHistory from './BrowserHistory';
+export MemoryHistory from './HashHistory';
 
-import Link from './Link';
-import Navigation from './Navigation';
-import TransitionHook from './TransitionHook';
-import Env from './Env';
+export Link from './Link';
+export Navigation from './Navigation';
+export TransitionHook from './TransitionHook';
+export Env from './Env';
 
-import AsyncRouting from './AsyncRouting';
-import TransitionManager from './TransitionManager';
-import AsyncProps from './AsyncProps';
-import RouteRenderer from './RouteRenderer';
-import ScrollManager from './ScrollManager';
-import Renderer from './Renderer';
+export AsyncRouting from './AsyncRouting';
+export TransitionManager from './TransitionManager';
+export AsyncProps from './AsyncProps';
+export RouteRenderer from './RouteRenderer';
+export ScrollManager from './ScrollManager';
+export Renderer from './Renderer';
 
-import PropTypes from './PropTypes';
+export PropTypes from './PropTypes';
 
-import createRoutesFromReactChildren from './createRoutesFromReactChildren';
-
-export default {
-  Router,
-  Route,
-  History,
-  DOMHistory,
-  HashHistory,
-  BrowserHistory,
-  MemoryHistory,
-  Link,
-  Navigation,
-  TransitionHook,
-  Env,
-  AsyncRouting,
-  TransitionManager,
-  AsyncProps,
-  RouteRenderer,
-  ScrollManager,
-  Renderer,
-  PropTypes,
-  createRoutesFromReactChildren
-};
+export createRoutesFromReactChildren from './createRoutesFromReactChildren';
