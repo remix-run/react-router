@@ -247,12 +247,6 @@ class AsyncRouting extends React.Component {
     };
   }
 
-  isActive(path, query) {
-    // FIXME: this is incomplete, need to check query, and
-    // if a parent is active when its children are
-    return this.props.location.path === path;
-  }
-
   _updateState(routes, location) {
     this.nextLocation = location;
 

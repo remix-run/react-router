@@ -36,10 +36,19 @@ export default class RouteRenderer extends React.Component {
     return {
       // only export one thing to context, keep our footprint small
       router: {
+        pathIsActive: (path, query) => {
+          return this.pathIsActive(path, query)
+        },
         history: this.props.historyContext,
         routing: this.props.routingContext
       }
     }
+  }
+
+  pathIsActive(path, query) {
+    // FIXME: this is incomplete, need to check query, and
+    // if a parent is active when its children are
+    return this.props.location.path === path;
   }
 
   render () {

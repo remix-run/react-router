@@ -76,7 +76,7 @@ class Link extends React.Component {
   }
 
   isActive() {
-    return this.context.router.routing.isActive(this.props.to, this.props.query);
+    return this.context.router.pathIsActive(this.props.to, this.props.query);
   }
 
   render() {
