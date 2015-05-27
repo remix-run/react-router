@@ -2,7 +2,6 @@ import expect from 'expect';
 import React from 'react';
 import AsyncRouting from '../AsyncRouting';
 import Location from '../Location';
-import assign from 'object-assign';
 import createPropAssertions from './createPropAssertions';
 
 describe('AsyncRouting', () => {

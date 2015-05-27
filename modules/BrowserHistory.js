@@ -1,7 +1,6 @@
 import DOMHistory from './DOMHistory';
 import { getWindowPath, supportsHistory } from './DOMUtils';
 import NavigationTypes from './NavigationTypes';
-import assign from 'object-assign';
 
 function createRandomKey() {
   return Math.random().toString(36).substr(2);
@@ -19,9 +18,9 @@ function createRandomKey() {
  */
 class BrowserHistory extends DOMHistory {
 
-  static propTypes = assign({}, DOMHistory.propTypes);
-  static defaultProps = assign({}, DOMHistory.defaultProps);
-  static childContextTypes = assign({}, DOMHistory.childContextTypes);
+  static propTypes = Object.assign({}, DOMHistory.propTypes);
+  static defaultProps = Object.assign({}, DOMHistory.defaultProps);
+  static childContextTypes = Object.assign({}, DOMHistory.childContextTypes);
 
   constructor(props, context) {
     super(props, context);

@@ -1,5 +1,4 @@
 import React from 'react';
-import assign from 'object-assign';
 import History from './History';
 import Location from './Location';
 import { getWindowScrollPosition } from './DOMUtils';
@@ -9,15 +8,15 @@ import { getWindowScrollPosition } from './DOMUtils';
  */
 class DOMHistory extends History {
 
-  static propTypes = assign({
+  static propTypes = Object.assign({
     getScrollPosition: React.PropTypes.func.isRequired
   }, History.propTypes);
 
-  static defaultProps = assign({
+  static defaultProps = Object.assign({
     getScrollPosition: getWindowScrollPosition
   }, History.defaultProps);
 
-  static childContextTypes = assign({}, History.childContextTypes);
+  static childContextTypes = Object.assign({}, History.childContextTypes);
 
   constructor(props, context) {
     super(props, context);

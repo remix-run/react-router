@@ -2,7 +2,6 @@ import React from 'react';
 import passMiddlewareProps from './passMiddlewareProps';
 import Location from './Location';
 import invariant from 'invariant';
-import assign from 'object-assign';
 
 var { createElement } = React;
 var { branch, element, object, any, array, instanceOf, func } = React.PropTypes;
@@ -68,14 +67,14 @@ export default class RouteRenderer extends React.Component {
       if (components == null)
         return element; // Don't create new children; use the grandchildren.
 
-      var props = assign({ location, params, query, route }, branchData[index]);
+      var props = Object.assign({ location, params, query, route }, branchData[index]);
 
       if (React.isValidElement(element)) {
-        assign(props, { children: element });
+        Object.assign(props, { children: element });
       } else if (element) {
         // In render, use children like:
         // var { header, sidebar } = this.props;
-        assign(props, element);
+        Object.assign(props, element);
       }
 
       if (typeof components === 'object') {
@@ -84,7 +83,7 @@ export default class RouteRenderer extends React.Component {
           if (components.hasOwnProperty(key)) {
             let data = (branchData[index] && branchData[index][key]);
             elements[key] = this.props.renderComponent(
-              components[key], assign({}, props, data)
+              components[key], Object.assign({}, props, data)
             );
           }
         return elements;

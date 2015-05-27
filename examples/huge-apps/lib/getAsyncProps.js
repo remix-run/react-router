@@ -1,5 +1,4 @@
 import React from 'react';
-import assign from 'object-assign';
 
 export default function getAsyncProps (routerProps, cb) {
   var { components, params } = routerProps;
@@ -72,13 +71,13 @@ function injectAsyncProps (routerProps, asyncProps) {
       return wrapComponent(Component, asyncProps[index]);
     }
   });
-  return assign({}, routerProps, { components: newComponents });
+  return Object.assign({}, routerProps, { components: newComponents });
 }
 
 function wrapComponent (Component, asyncProps) {
   return asyncProps ? class AsyncPropsWrapper extends React.Component {
     render () {
-      return React.createElement(Component, assign({}, this.props, asyncProps));
+      return React.createElement(Component, Object.assign({}, this.props, asyncProps));
     }
   } : Component;
 }

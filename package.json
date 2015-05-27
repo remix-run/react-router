@@ -11,7 +11,7 @@
   "bugs": "https://github.com/rackt/react-router/issues",
   "scripts": {
     "build": "scripts/build.sh",
-    "watch": "babel ./modules --watch -d lib --optional es7.classProperties",
+    "watch": "babel ./modules --watch -d lib --optional es7.classProperties --plugins object-assign",
     "build-website": "babel-node website/scripts/build.js > website/index.html",
     "examples": "webpack-dev-server --config examples/webpack.config.js --content-base examples --inline",
     "prepublish": "npm run build",
@@ -25,14 +25,14 @@
   "dependencies": {
     "invariant": "^2.0.0",
     "keymirror": "^0.1.1",
-    "object-assign": "^2.0.0",
     "qs": "2.4.1",
     "warning": "^1.0.1"
   },
   "devDependencies": {
-    "babel": "^5.4.1",
-    "babel-core": "^5.4.1",
+    "babel": "^5.4.7",
+    "babel-core": "^5.4.7",
     "babel-loader": "^5.0.0",
+    "babel-plugin-object-assign": "^1.1.0",
     "bundle-loader": "^0.5.2",
     "events": "1.0.2",
     "expect": "^1.6.0",
