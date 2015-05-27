@@ -24,9 +24,13 @@ class DOMHistory extends History {
     this.scrollHistory = {};
   }
 
+  getScrollKey(path, query, key) {
+    return key || this.makePath(path, query);
+  }
+
   createLocation(path, query, navigationType, key) {
-    var fullPath = this.makePath(path, query);
-    var scrollPosition = this.scrollHistory[fullPath];
+    var scrollKey = this.getScrollKey(path, query, key);
+    var scrollPosition = this.scrollHistory[scrollKey];
 
     return new Location(path, query, navigationType, key, scrollPosition);
   }
@@ -39,10 +43,10 @@ class DOMHistory extends History {
   }
 
   recordScrollPosition() {
-    var renderedLocation = this.state.location;
-    var renderedFullPath = this.makePath(renderedLocation.path, renderedLocation.query);
+    var location = this.state.location;
+    var scrollKey = this.getScrollKey(location.path, location.query, location.key);
 
-    this.scrollHistory[renderedFullPath] = this.props.getScrollPosition();
+    this.scrollHistory[scrollKey] = this.props.getScrollPosition();
   }
 
 }
