@@ -172,6 +172,7 @@ class AsyncRouting extends React.Component {
    * callback(error, match) when finished. The match object may have the
    * following properties:
    *
+   * - location     The Location object
    * - branch       An array of routes that matched, in hierarchical order
    * - params       An object of URL parameters
    * - components   An array of components for each route in branch
@@ -219,6 +220,7 @@ class AsyncRouting extends React.Component {
           if (error) {
             callback(error);
           } else {
+            match.location = location;
             match.components = components;
             callback(null, match);
           }
@@ -241,6 +243,7 @@ class AsyncRouting extends React.Component {
     super(props, context);
     this.nextLocation = null;
     this.state = {
+      location: null,
       branch: null,
       params: null,
       components: null
@@ -276,13 +279,13 @@ class AsyncRouting extends React.Component {
   }
 
   render() {
-    var { children, location } = this.props;
-    var { branch, params, components } = this.state;
+    var { location, branch, params, components } = this.state;
 
     if (!(location && branch && params && components))
       return null; // Do not render anything until we resolve.
 
     return passMiddlewareProps(this.props, {
+      location,
       branch,
       params,
       components,
