@@ -1,4 +1,4 @@
 {
-  "optional": [ "es7.classProperties", "es7.exportExtensions" ],
+  "stage": 0,
   "plugins": [ "object-assign" ]
 }
