@@ -89,7 +89,7 @@ class History extends React.Component {
 
     return React.cloneElement(element, {
       location: this.state.location,
-      historyContext: this
+      history: this
     });
   }
 

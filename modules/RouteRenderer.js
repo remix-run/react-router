@@ -16,7 +16,7 @@ export default class RouteRenderer extends React.Component {
     location: instanceOf(Location),
     branchData: array,
     renderComponent: func,
-    historyContext: any,
+    history: any,
     children: element
   };
 
@@ -32,13 +32,23 @@ export default class RouteRenderer extends React.Component {
   };
 
   getChildContext () {
+    // Context "queries" must only ask about the props of `RouteRenderer`
+    // see a1f114
     return {
       // only export one thing to context, keep our footprint small
       router: {
         pathIsActive: (path, query) => {
           return this.pathIsActive(path, query)
         },
-        history: this.props.historyContext,
+        makeHref: (path, query) => {
+          return this.props.history.makeHref(path, query);
+        },
+        transitionTo: (path, query) => {
+          return this.props.history.push(path, query);
+        },
+        replaceWith: (path, query) => {
+          return this.props.history.replace(path, query);
+        }
       }
     }
   }

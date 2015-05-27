@@ -20,7 +20,7 @@ describe('RouteRenderer', function () {
     params: { one: '1' },
     query: { two: '2'},
     location,
-    historyContext: { location },
+    history: { location },
     children: <Renderer/>
   };
 
@@ -195,19 +195,19 @@ describe('RouteRenderer', function () {
     expect(html).toMatch(/main test/);
   });
 
-  it('renders route components with history context', function () {
+  it('renders route components with history context', function (done) {
     class Component extends React.Component {
       static contextTypes = { router: React.PropTypes.any };
       render () {
-        return <div>{this.context.router.history.location.path}</div>;
+        expect(this.context.router.pathIsActive('/test')).toBe(true);
+        done();
+        return null;
       }
     }
     var branch = [{ component: Component }];
-
     var html = React.renderToString(
       <RouteRenderer {...props} branch={branch} />
     );
-    expect(html).toMatch(/\/test/);
   });
 });
 
