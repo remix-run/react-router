@@ -93,7 +93,7 @@ class Link extends React.Component {
         assign(props.style, props.activeStyle);
     }
 
-    return React.DOM.a(props, this.props.children);
+    return React.createElement('a', props, this.props.children);
   }
 
 }

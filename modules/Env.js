@@ -15,7 +15,7 @@ var { object } = require('react').PropTypes;
  *       if (this.isActive('about'))
  *         className += ' is-active';
  *
- *       return React.DOM.a({ className: className }, this.props.children);
+ *       return React.createElement('a', { className: className }, this.props.children);
  *     }
  *   });
  */
