@@ -57,39 +57,39 @@ function _compilePattern(pattern) {
 // Cache patterns we've seen before.
 var _compiledPatterns = {};
 
-function compilePattern(pattern) {
+export function compilePattern(pattern) {
   if (!(pattern in _compiledPatterns))
     _compiledPatterns[pattern] = _compilePattern(pattern);
 
   return _compiledPatterns[pattern];
 }
 
-function stripLeadingSlashes(path) {
+export function stripLeadingSlashes(path) {
   return path ? path.replace(/^\/+/, '') : '';
 }
 
-function stripTrailingSlashes(path) {
+export function stripTrailingSlashes(path) {
   return path.replace(/\/+$/, '');
 }
 
-function isAbsolutePath(path) {
+export function isAbsolutePath(path) {
   return typeof path === 'string' && path.charAt(0) === '/';
 }
 
-function getPathname(path) {
+export function getPathname(path) {
   return path.replace(queryMatcher, '');
 }
 
-function getQueryString(path) {
+export function getQueryString(path) {
   var match = path.match(queryMatcher);
   return match ? match[1] : '';
 }
 
-function getQuery(path, options) {
+export function getQuery(path, options) {
   return qs.parse(getQueryString(path), options);
 }
 
-function withQuery(path, query) {
+export function withQuery(path, query) {
   if (typeof query !== 'string')
     query = qs.stringify(query, { arrayFormat: 'brackets' });
 
@@ -99,7 +99,7 @@ function withQuery(path, query) {
   return getPathname(path);
 }
 
-function getParamNames(path) {
+export function getParamNames(path) {
   return compilePattern(path).paramNames;
 }
 
@@ -108,7 +108,7 @@ function getParamNames(path) {
  * interpolated. Throws if there is a dynamic segment of
  * the route path for which there is no param.
  */
-function injectParams(pattern, params) {
+export function injectParams(pattern, params) {
   params = params || {};
 
   var { tokens } = compilePattern(pattern);
@@ -152,14 +152,3 @@ function injectParams(pattern, params) {
 
   return pathname.replace(/\/+/g, '/');
 }
-
-export compilePattern;
-export stripLeadingSlashes;
-export stripTrailingSlashes;
-export isAbsolutePath;
-export getPathname;
-export getQueryString;
-export getQuery;
-export withQuery;
-export getParamNames;
-export injectParams;
