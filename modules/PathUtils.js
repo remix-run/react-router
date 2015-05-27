@@ -1,7 +1,6 @@
 /* jshint -W084 */
-var invariant = require('invariant');
-var assign = require('object-assign');
-var qs = require('qs');
+import invariant from 'invariant';
+import qs from 'qs';
 
 var queryMatcher = /\?(.*)$/;
 
@@ -154,15 +153,13 @@ function injectParams(pattern, params) {
   return pathname.replace(/\/+/g, '/');
 }
 
-module.exports = {
-  compilePattern,
-  stripLeadingSlashes,
-  stripTrailingSlashes,
-  isAbsolutePath,
-  getPathname,
-  getQueryString,
-  getQuery,
-  withQuery,
-  getParamNames,
-  injectParams
-};
+export compilePattern;
+export stripLeadingSlashes;
+export stripTrailingSlashes;
+export isAbsolutePath;
+export getPathname;
+export getQueryString;
+export getQuery;
+export withQuery;
+export getParamNames;
+export injectParams;

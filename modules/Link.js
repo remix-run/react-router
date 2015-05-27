@@ -1,6 +1,6 @@
-var React = require('react');
+import React from 'react';
+
 var { object, string, func, oneOfType } = React.PropTypes;
-var assign = require('object-assign');
 
 function isLeftClickEvent(event) {
   return event.button === 0;
@@ -32,7 +32,7 @@ class Link extends React.Component {
 
   static contextTypes = {
     router: object
-  }
+  };
 
   static propTypes = {
     activeStyle: object,
@@ -40,12 +40,12 @@ class Link extends React.Component {
     to: oneOfType([ string, object ]).isRequired,
     query: object,
     onClick: func
-  }
+  };
 
   static defaultProps = {
     className: '',
     activeClassName: 'active'
-  }
+  };
 
   constructor(props, context) {
     super(props, context);
@@ -80,7 +80,7 @@ class Link extends React.Component {
   }
 
   render() {
-    var props = assign({}, this.props, {
+    var props = Object.assign({}, this.props, {
       href: this.getHref(),
       onClick: this.handleClick
     });
@@ -90,7 +90,7 @@ class Link extends React.Component {
         props.className += ` ${props.activeClassName}`;
 
       if (props.activeStyle)
-        assign(props.style, props.activeStyle);
+        Object.assign(props.style, props.activeStyle);
     }
 
     return React.createElement('a', props, this.props.children);
@@ -98,4 +98,4 @@ class Link extends React.Component {
 
 }
 
-module.exports = Link;
+export default Link;
