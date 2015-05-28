@@ -130,6 +130,7 @@ describe('PathUtils.extractParams', function () {
         expect(PathUtils.extractParams('/files/*', '/files/my/photo.jpg')).toEqual({ splat: 'my/photo.jpg' });
         expect(PathUtils.extractParams('/files/*', '/files/my/photo.jpg.zip')).toEqual({ splat: 'my/photo.jpg.zip' });
         expect(PathUtils.extractParams('/files/*.jpg', '/files/my/photo.jpg')).toEqual({ splat: 'my/photo' });
+        expect(PathUtils.extractParams('/files/*.jpg', '/files/my/new\nline.jpg')).toEqual({ splat: 'my/new\nline' });
       });
     });
 
@@ -286,6 +287,20 @@ describe('PathUtils.extractQuery', function () {
 
     it('properly handles encoded ampersands', function () {
       expect(PathUtils.extractQuery('/?id=a%26b')).toEqual({ id: 'a&b' });
+    });
+
+    it('properly handles raw newlines', function () {
+      expect(PathUtils.extractQuery('/?id=a\nb')).toEqual({ id: 'a\nb' });
+      expect(PathUtils.extractQuery('/?id=a\rb')).toEqual({ id: 'a\rb' });
+      expect(PathUtils.extractQuery('/?id=a\r\nb')).toEqual({ id: 'a\r\nb' });
+      expect(PathUtils.extractQuery('/?id=a\n\rb')).toEqual({ id: 'a\n\rb' });
+    });
+
+    it('properly handles encoded newlines', function () {
+      expect(PathUtils.extractQuery('/?id=a%0Ab')).toEqual({ id: 'a\nb' });
+      expect(PathUtils.extractQuery('/?id=a%0Db')).toEqual({ id: 'a\rb' });
+      expect(PathUtils.extractQuery('/?id=a%0D%0Ab')).toEqual({ id: 'a\r\nb' });
+      expect(PathUtils.extractQuery('/?id=a%0A%0Db')).toEqual({ id: 'a\n\rb' });
     });
   });
 
