@@ -2,6 +2,7 @@ var expect = require('expect');
 var React = require('react');
 var Router = require('../index');
 var Route = require('../components/Route');
+var RouteHandler = require('../components/RouteHandler');
 var { Foo, Bar, Nested } = require('../TestUtils');
 
 describe('creating routes from ReactChildren', function () {
@@ -33,5 +34,15 @@ describe('creating routes from ReactChildren', function () {
       expect(html).toMatch(/Bar/);
       done();
     });
+  });
+});
+
+describe('creating route with RouteHandler as handler but no children', function () {
+  it('should throw a descriptive error', function () {
+    var routes = [<Route handler={RouteHandler}/>];
+    var test = function () {
+      Router.run(routes,function () {});
+    }
+    expect(test).toThrow(/with no children/);
   });
 });

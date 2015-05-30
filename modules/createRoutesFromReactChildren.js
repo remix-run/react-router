@@ -2,7 +2,9 @@
 var React = require('react');
 var assign = require('react/lib/Object.assign');
 var warning = require('react/lib/warning');
+var invariant = require('react/lib/invariant');
 var DefaultRoute = require('./components/DefaultRoute');
+var RouteHandler = require('./components/RouteHandler');
 var NotFoundRoute = require('./components/NotFoundRoute');
 var Redirect = require('./components/Redirect');
 var Route = require('./Route');
@@ -54,6 +56,11 @@ function createRouteFromReactElement(element) {
   return Route.createRoute(createRouteOptions(props), function () {
     if (props.children)
       createRoutesFromReactChildren(props.children);
+    else
+      invariant(
+        props.handler !== RouteHandler,
+        "RouteHandler may not be used as the handler for a route with no children"
+      );
   });
 }
 
