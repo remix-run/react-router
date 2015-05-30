@@ -1,37 +1,16 @@
-import React from 'react';
 import History from './History';
-import Location from './Location';
 import { getWindowScrollPosition } from './DOMUtils';
+import Location from './Location';
 
 /**
  * A history interface that assumes a DOM environment.
  */
 class DOMHistory extends History {
 
-  static propTypes = Object.assign({
-    getScrollPosition: React.PropTypes.func.isRequired
-  }, History.propTypes);
-
-  static defaultProps = Object.assign({
-    getScrollPosition: getWindowScrollPosition
-  }, History.defaultProps);
-
-  static childContextTypes = Object.assign({}, History.childContextTypes);
-
-  constructor(props, context) {
-    super(props, context);
+  constructor(getScrollPosition=getWindowScrollPosition) {
+    super();
+    this.getScrollPosition = getScrollPosition;
     this.scrollHistory = {};
-  }
-
-  getScrollKey(path, query, key) {
-    return key || this.makePath(path, query);
-  }
-
-  createLocation(path, query, navigationType, key) {
-    var scrollKey = this.getScrollKey(path, query, key);
-    var scrollPosition = this.scrollHistory[scrollKey];
-
-    return new Location(path, query, navigationType, key, scrollPosition);
   }
 
   go(n) {
@@ -41,11 +20,18 @@ class DOMHistory extends History {
     window.history.go(n);
   }
 
-  recordScrollPosition() {
-    var location = this.state.location;
-    var scrollKey = this.getScrollKey(location.path, location.query, location.key);
+  _createLocation(path, key, navigationType) {
+    var scrollKey = key || path;
+    var scrollPosition = this.scrollHistory[scrollKey];
 
-    this.scrollHistory[scrollKey] = this.props.getScrollPosition();
+    return new Location(path, key, navigationType, scrollPosition);
+  }
+
+  _recordScrollPosition() {
+    var location = this.location;
+    var scrollKey = location.key || location.path;
+
+    this.scrollHistory[scrollKey] = this.getScrollPosition();
   }
 
 }

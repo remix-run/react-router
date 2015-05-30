@@ -1,19 +1,6 @@
-import React from 'react';
 import invariant from 'invariant';
 import NavigationTypes from './NavigationTypes';
 import History from './History';
-
-var { arrayOf, string, object, number, oneOfType } = React.PropTypes;
-
-var locationShape = shape({
-  path: string.isRequired,
-  query: object,
-  navigationType: string
-});
-
-function parseEntry(entry) {
-  return typeof entry === 'string' ? { path: entry } : path;
-}
 
 /**
  * A concrete History class that doesn't require a DOM. Ideal
@@ -22,21 +9,14 @@ function parseEntry(entry) {
  */
 class MemoryHistory extends History {
 
-  static propTypes = Object.assign({}, History.propTypes, {
-    entries: arrayOf(oneOfType(locationShape, string)).isRequired,
-    current: number
-  });
+  constructor(entries, current) {
+    super();
 
-  static defaultProps = Object.assign({}, History.defaultProps, {
-    entries: [ '/' ]
-  });
-
-  static childContextTypes = Object.assign({}, History.childContextTypes);
-  
-  constructor(props, context) {
-    super(props, context);
-
-    var { current, entries } = props;
+    if (entries == null) {
+      entries = [ '/' ];
+    } else if (typeof entries === 'string') {
+      entries = [ entries ];
+    }
 
     if (current == null) {
       current = entries.length - 1;
@@ -48,46 +28,24 @@ class MemoryHistory extends History {
       );
     }
 
-    Object.assign(this.state, {
-      entries,
-      current
-    });
+    this.entries = entries;
+    this.current = current;
+    this.location = new Location(entries[current]);
   }
 
-  componentWillMount() {
-    super.componentWillMount();
-
-    var { entries, current } = this.state;
-    var { path, query, navigationType } = parseEntry(entries[current]);
-
-    this.setState({
-      location: new Location(path, query, navigationType)
-    });
+  // http://www.w3.org/TR/2011/WD-html5-20110113/history.html#dom-history-pushstate
+  push(path) {
+    this.current += 1;
+    this.entries = this.entries.slice(0, this.current).concat([ path ]);
+    this.location = new Location(path, null, NavigationTypes.PUSH);
+    this._notifyChange();
   }
 
-  push(path, query) {
-    // http://www.w3.org/TR/2011/WD-html5-20110113/history.html#dom-history-pushstate
-    var { entries, current } = this.state;
-
-    current += 1;
-    entries = entries.slice(0, current).concat([{ path, query }]);
-
-    this.setState({
-      location: new Location(path, query, NavigationTypes.PUSH),
-      current,
-      entries
-    });
-  }
-
-  replace(path, query) {
-    // http://www.w3.org/TR/2011/WD-html5-20110113/history.html#dom-history-replacestate
-    var { entries, current } = this.state;
-    entries[current] = { path, query };
-
-    this.setState({
-      location: new Location(path, query, NavigationTypes.REPLACE),
-      entries
-    });
+  // http://www.w3.org/TR/2011/WD-html5-20110113/history.html#dom-history-replacestate
+  replace(path) {
+    this.entries[this.current] = path;
+    this.location = new Location(path, null, NavigationTypes.REPLACE);
+    this._notifyChange();
   }
 
   go(n) {
@@ -100,20 +58,14 @@ class MemoryHistory extends History {
       this.constructor.name, n
     );
 
-    var { entries, current } = this.state;
-    current += n;
-
-    var { path, query } = parseEntry(entries[current]);
-
-    this.setState({
-      location: new Location(path, query, NavigationTypes.POP),
-      current
-    });
+    this.current += n;
+    this.location = new Location(this.entries[this.current], null, NavigationTypes.POP);
+    this._notifyChange();
   }
 
   canGo(n) {
-    var index = this.state.current + n;
-    return index >= 0 && index < this.state.entries.length;
+    var index = this.current + n;
+    return index >= 0 && index < this.entries.length;
   }
 
   canGoBack() {

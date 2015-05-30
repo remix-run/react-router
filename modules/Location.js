@@ -8,21 +8,28 @@ import NavigationTypes from './NavigationTypes';
  */
 class Location {
 
-  constructor(path, query, navigationType, key, scrollPosition) {
-    this.path = path;
-    this.query = query || null;
-    this.navigationType = navigationType || NavigationTypes.POP;
-    this.key = key || null;
-    this.scrollPosition = scrollPosition || null;
+  static isLocation(object) {
+    return object instanceof Location;
   }
 
-  toJSON() {
-    return {
-      path: this.path,
-      query: this.query,
-      navigationType: this.navigationType,
-      key: this.key
-    };
+  static create(object) {
+    if (Location.isLocation(object))
+      return object;
+
+    if (typeof object === 'string')
+      return new Location(object);
+
+    if (object && object.path)
+      return new Location(object.path, object.key, object.navigationType, object.scrollPosition);
+
+    throw new Error('Unable to create a Location from ' + object);
+  }
+
+  constructor(path, key=null, navigationType=NavigationTypes.POP, scrollPosition=null) {
+    this.path = path;
+    this.key = key;
+    this.navigationType = navigationType;
+    this.scrollPosition = scrollPosition;
   }
 
 }

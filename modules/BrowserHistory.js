@@ -16,20 +16,15 @@ function createRandomKey() {
  * refreshes if HTML5 history is not available, so URLs are always
  * the same across browsers.
  */
-class BrowserHistory extends DOMHistory {
+export class BrowserHistory extends DOMHistory {
 
-  static propTypes = Object.assign({}, DOMHistory.propTypes);
-  static defaultProps = Object.assign({}, DOMHistory.defaultProps);
-  static childContextTypes = Object.assign({}, DOMHistory.childContextTypes);
-
-  constructor(props, context) {
-    super(props, context);
+  constructor(getScrollPosition) {
+    super(getScrollPosition);
     this.handlePopState = this.handlePopState.bind(this);
     this.isSupported = supportsHistory();
   }
 
   _updateLocation(navigationType) {
-    var [ path, queryString ] = getWindowPath().split('?', 2);
     var key = null;
 
     if (this.isSupported) {
@@ -42,9 +37,7 @@ class BrowserHistory extends DOMHistory {
       }
     }
 
-    this.setState({
-      location: this.createLocation(path, this.parseQueryString(queryString), navigationType, key)
-    });
+    this.location = this._createLocation(getWindowPath(), key, navigationType);
   }
 
   handlePopState(event) {
@@ -52,64 +45,64 @@ class BrowserHistory extends DOMHistory {
       return; // Ignore extraneous popstate events in WebKit.
 
     this._updateLocation(NavigationTypes.POP);
+    this._notifyChange();
   }
 
-  componentWillMount() {
-    super.componentWillMount();
-    this._updateLocation();
-  }
+  addChangeListener(listener) {
+    super.addChangeListener(listener);
 
-  componentDidMount() {
-    if (window.addEventListener) {
-      window.addEventListener('popstate', this.handlePopState, false);
-    } else {
-      window.attachEvent('onpopstate', this.handlePopState);
+    if (this.changeListeners.length === 1) {
+      if (window.addEventListener) {
+        window.addEventListener('popstate', this.handlePopState, false);
+      } else {
+        window.attachEvent('onpopstate', this.handlePopState);
+      }
     }
   }
 
-  componentWillUnmount() {
-    if (window.removeEventListener) {
-      window.removeEventListener('popstate', this.handlePopState, false);
-    } else {
-      window.removeEvent('onpopstate', this.handlePopState);
+  removeChangeListener(listener) {
+    super.removeChangeListener(listener);
+
+    if (this.changeListeners.length === 0) {
+      if (window.removeEventListener) {
+        window.removeEventListener('popstate', this.handlePopState, false);
+      } else {
+        window.removeEvent('onpopstate', this.handlePopState);
+      }
     }
   }
 
-  push(path, query) {
-    var fullPath = this.makePath(path, query);
+  setup() {
+    if (this.location == null)
+      this._updateLocation();
+  }
 
+  // http://www.w3.org/TR/2011/WD-html5-20110113/history.html#dom-history-pushstate
+  push(path) {
     if (this.isSupported) {
-      this.recordScrollPosition();
-      var key = createRandomKey();
+      this._recordScrollPosition();
 
-      // http://www.w3.org/TR/2011/WD-html5-20110113/history.html#dom-history-pushstate
-      this.setState({
-        location: this.createLocation(path, query, NavigationTypes.PUSH, key)
-      }, function () {
-        window.history.pushState({ key }, '', fullPath);
-      });
+      var key = createRandomKey();
+      window.history.pushState({ key }, '', path);
+      this.location = this._createLocation(path, key, NavigationTypes.PUSH);
+      this._notifyChange();
     } else {
-      window.location = fullPath;
+      window.location = path;
     }
   }
 
-  replace(path, query) {
-    var fullPath = this.makePath(path, query);
-
+  // http://www.w3.org/TR/2011/WD-html5-20110113/history.html#dom-history-replacestate
+  replace(path) {
     if (this.isSupported) {
       var key = createRandomKey();
-
-      // http://www.w3.org/TR/2011/WD-html5-20110113/history.html#dom-history-replacestate
-      this.setState({
-        location: this.createLocation(path, query, NavigationTypes.REPLACE, key)
-      }, function () {
-        window.history.replaceState({ key }, '', fullPath);
-      });
+      window.history.replaceState({ key }, '', path);
+      this.location = this._createLocation(path, key, NavigationTypes.REPLACE);
+      this._notifyChange();
     } else {
-      window.location.replace(fullPath);
+      window.location.replace(path);
     }
   }
 
 }
 
-export default BrowserHistory;
+export default new BrowserHistory;

@@ -1,14 +1,6 @@
-import React from 'react';
 import invariant from 'invariant';
-import qs from 'qs';
-import { history } from './PropTypes';
-var { func } = React.PropTypes;
 
 var RequiredSubclassMethods = [ 'push', 'replace', 'go' ];
-
-function stringifyQuery(query) {
-  return stringify(query, { arrayFormat: 'brackets' });
-}
 
 /**
  * A history interface that normalizes the differences across
@@ -19,31 +11,9 @@ function stringifyQuery(query) {
  * - replace(path)
  * - go(n)
  */
-class History extends React.Component {
+export class History {
 
-  static propTypes = {
-    parseQueryString: func.isRequired,
-    stringifyQuery: func.isRequired
-  };
-
-  static defaultProps = {
-    parseQueryString: qs.parse,
-    stringifyQuery: qs.stringify
-  };
-
-  constructor(props, context) {
-    super(props, context);
-    this.state = {
-      location: null
-    };
-  }
-
-  componentWillMount() {
-    invariant(
-      this.constructor !== History,
-      'History is not usable directly; you must use one of its subclasses'
-    );
-
+  constructor() {
     RequiredSubclassMethods.forEach(function (method) {
       invariant(
         typeof this[method] === 'function',
@@ -51,6 +21,24 @@ class History extends React.Component {
         this.constructor.name, method
       );
     }, this);
+
+    this.changeListeners = [];
+    this.location = null;
+  }
+
+  _notifyChange() {
+    for (var i = 0, len = this.changeListeners.length; i < len; ++i)
+      this.changeListeners[i].call(this);
+  }
+
+  addChangeListener(listener) {
+    this.changeListeners.push(listener);
+  }
+
+  removeChangeListener(listener) {
+    this.changeListeners = this.changeListeners.filter(function (li) {
+      return li !== listener;
+    });
   }
 
   back() {
@@ -61,38 +49,8 @@ class History extends React.Component {
     this.go(1);
   }
 
-  parseQueryString(queryString) {
-    return this.props.parseQueryString(queryString);
-  }
-
-  stringifyQuery(query) {
-    return this.props.stringifyQuery(query);
-  }
-
-  makePath(path, query) {
-    if (query) {
-      var queryString = this.stringifyQuery(query);
-
-      if (queryString !== '')
-        return path + '?' + queryString;
-    }
-
+  makeHref(path) {
     return path;
   }
 
-  makeHref(path, query) {
-    return this.makePath(path, query);
-  }
-
-  render() {
-    var element = React.Children.only(this.props.children);
-
-    return React.cloneElement(element, {
-      location: this.state.location,
-      history: this
-    });
-  }
-
 }
-
-export default History;
