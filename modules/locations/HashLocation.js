@@ -42,6 +42,11 @@ function onHashChange() {
   }
 }
 
+function refresh() {
+  _actionType = LocationActions.REFRESH;
+  onHashChange();
+}
+
 /**
  * A Location that uses `window.location.hash`.
  */
@@ -81,15 +86,25 @@ var HashLocation = {
   },
 
   push(path) {
-    _actionType = LocationActions.PUSH;
-    window.location.hash = path;
+    // ensure change event if path has not changed
+    if (path !== HashLocation.getCurrentPath()) {
+      _actionType = LocationActions.PUSH;
+      window.location.hash = path;
+    } else {
+      refresh();
+    }
   },
 
   replace(path) {
-    _actionType = LocationActions.REPLACE;
-    window.location.replace(
-      window.location.pathname + window.location.search + '#' + path
-    );
+    // ensure change event if path has not changed
+    if (path !== HashLocation.getCurrentPath()) {
+      _actionType = LocationActions.REPLACE;
+      window.location.replace(
+        window.location.pathname + window.location.search + '#' + path
+      );
+    } else {
+      refresh();
+    }
   },
 
   pop() {
