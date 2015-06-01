@@ -1,5 +1,6 @@
 import invariant from 'invariant';
 import NavigationTypes from './NavigationTypes';
+import Location from './Location';
 import History from './History';
 
 /**
