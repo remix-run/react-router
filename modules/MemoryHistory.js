@@ -8,7 +8,7 @@ import History from './History';
  * for testing because it allows you to specify route history
  * entries in the constructor.
  */
-class MemoryHistory extends History {
+export class MemoryHistory extends History {
 
   constructor(entries, current) {
     super();

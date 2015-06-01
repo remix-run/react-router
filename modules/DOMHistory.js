@@ -5,7 +5,7 @@ import Location from './Location';
 /**
  * A history interface that assumes a DOM environment.
  */
-class DOMHistory extends History {
+export class DOMHistory extends History {
 
   constructor(getScrollPosition=getWindowScrollPosition) {
     super();

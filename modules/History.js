@@ -54,3 +54,5 @@ export class History {
   }
 
 }
+
+export default History;
