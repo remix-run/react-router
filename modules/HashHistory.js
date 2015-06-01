@@ -62,8 +62,10 @@ export class HashHistory extends DOMHistory {
   }
 
   setup() {
-    if (this.location == null)
+    if (this.location == null) {
+      ensureSlash();
       this._updateLocation();
+    }
   }
 
   push(path) {
