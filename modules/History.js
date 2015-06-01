@@ -49,10 +49,6 @@ export class History {
     this.go(1);
   }
 
-  makeHref(path) {
-    return path;
-  }
-
 }
 
 export default History;
