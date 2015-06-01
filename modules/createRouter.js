@@ -81,7 +81,7 @@ function addRoutesToNamedRoutes(routes, namedRoutes) {
   }
 }
 
-function routeIsActive(activeRoutes, routeName) {
+function routeIsActive(activeRoutes=[], routeName) {
   return activeRoutes.some(function (route) {
     return route.name === routeName;
   });
