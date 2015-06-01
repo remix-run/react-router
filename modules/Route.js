@@ -1,7 +1,9 @@
-var React = require('react');
-var invariant = require('invariant');
+import React from 'react';
+import invariant from 'invariant';
+import { createRouteFromReactElement } from './RouteUtils';
+import { component, components } from './PropTypes';
+
 var { string, bool, func } = React.PropTypes;
-var { component, components } = require('./PropTypes');
 
 /**
  * A <Route> is used to declare which components are rendered to the page when
@@ -15,14 +17,26 @@ var { component, components } = require('./PropTypes');
  */
 class Route extends React.Component {
 
+  static createRouteFromReactElement(element) {
+    var route = createRouteFromReactElement(element);
+
+    if (route.handler) {
+      warning(false, '<Route handler> is deprecated, use <Route component> instead');
+      route.component = route.handler;
+      delete route.handler;
+    }
+
+    return route;
+  }
+
   static propTypes = {
-    name: string,
     path: string,
     ignoreScrollBehavior: bool,
+    handler: component,
     component,
     components,
     getComponents: func
-  }
+  };
 
   render() {
     invariant(
@@ -34,4 +48,4 @@ class Route extends React.Component {
 
 }
 
-module.exports = Route;
+export default Route;
