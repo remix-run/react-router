@@ -21,5 +21,5 @@ export default function StateDecorator(DecoratedComponent) {
 
       return <DecoratedComponent {...stateMixinApi} {...this.props} />;
     }
-  })
+  });
 }

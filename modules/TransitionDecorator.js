@@ -16,5 +16,5 @@ export default function TransitionDecorator(DecoratedComponent) {
 
       return <DecoratedComponent {...transitionMixinApi} {...this.props} />;
     }
-  })
+  });
 }

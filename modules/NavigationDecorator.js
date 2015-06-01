@@ -22,5 +22,5 @@ export default function NavigationDecorator(DecoratedComponent) {
 
       return <DecoratedComponent {...navigationMixinApi} {...this.props} />;
     }
-  })
+  });
 }
