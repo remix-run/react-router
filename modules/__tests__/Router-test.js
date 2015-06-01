@@ -6,6 +6,7 @@ var RouteHandler = require('../components/RouteHandler');
 var TestLocation = require('../locations/TestLocation');
 var ScrollToTopBehavior = require('../behaviors/ScrollToTopBehavior');
 var getWindowScrollPosition = require('../getWindowScrollPosition');
+var PropTypes = require('../PropTypes');
 
 var {
   Foo,
@@ -1202,6 +1203,76 @@ describe('Router.run', function () {
 
         location.replace('/search/whatever');
         expect(didUpdateScroll).toBe(false);
+      });
+    });
+  });
+});
+
+describe('Router Context', function () {
+  function createAssertionHandler(assertions) {
+    return React.createClass({
+      contextTypes: {
+        router: PropTypes.router.isRequired
+      },
+      render: function () {
+        assertions.call(this, this.props, this.context);
+        return null;
+      }
+    });
+  }
+
+  describe('getCurrentParams', function () {
+
+    it('always returns a new copy', function (done) {
+      var routes = <Route
+        path='/:bar'
+        handler={createAssertionHandler(function (props, context) {
+          var router = context.router;
+          expect(router.getCurrentParams()).toNotBe(router.getCurrentParams());
+        })}
+      />;
+      Router.run(routes, '/baz', function (Handler) {
+        React.render(<Handler/>, document.createElement('div'), function () {
+          done();
+        });
+      });
+    });
+  });
+
+  describe('getCurrentQuery', function () {
+
+    it('always returns a new copy', function (done) {
+      var routes = <Route
+        path='/'
+        handler={createAssertionHandler(function (props, context) {
+          var router = context.router;
+          expect(router.getCurrentQuery()).toNotBe(router.getCurrentQuery());
+        })}
+      />;
+      Router.run(routes, '/?bar=baz', function (Handler) {
+        React.render(<Handler/>, document.createElement('div'), function () {
+          done();
+        });
+      });
+    });
+  });
+
+  describe('getCurrentRoutes', function () {
+
+    it('always returns a new copy', function (done) {
+      var routes = <Route>
+        <Route
+          path='/'
+          handler={createAssertionHandler(function (props, context) {
+            var router = context.router;
+            expect(router.getCurrentRoutes()).toNotBe(router.getCurrentRoutes());
+          })}
+        />
+      </Route>;
+      Router.run(routes, '/?bar=baz', function (Handler) {
+        React.render(<Handler/>, document.createElement('div'), function () {
+          done();
+        });
       });
     });
   });
