@@ -53,6 +53,7 @@ export class Router extends React.Component {
     location: any,
     branch: routes,
     params: object,
+    query: object,
     components,
     componentsProps: array
   };
@@ -295,6 +296,9 @@ export class Router extends React.Component {
 
     if (this.props.children !== nextProps.children) {
       this.routes = createRoutes(nextProps.children);
+
+      // Call this now because _updateLocation uses
+      // this.routes to determine state.
       this._updateLocation(nextProps.location);
     } else if (this.props.location !== nextProps.location) {
       this._updateLocation(nextProps.location);
@@ -320,7 +324,7 @@ export class Router extends React.Component {
   }
 
   render() {
-    var { location, branch, params, components, componentsProps } = this.state;
+    var { location, branch, params, query, components, componentsProps } = this.state;
     var element = null;
 
     if (components) {
@@ -330,7 +334,7 @@ export class Router extends React.Component {
         if (components == null)
           return element; // Don't create new children; use the grandchildren.
 
-        var props = { location, params, route };
+        var props = { location, params, query, route };
 
         if (isValidElement(element)) {
           Object.assign(props, { children: element });
