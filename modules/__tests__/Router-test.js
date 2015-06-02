@@ -863,6 +863,19 @@ describe('Router.run', function () {
     });
   });
 
+  it('matches an array of routes including null', function (done) {
+    var routes = [
+      <Route handler={Foo} path="/foo"/>,
+      null,
+      <Route handler={Bar} path="/bar"/>
+    ];
+    Router.run(routes, '/bar', function (Handler, state) {
+      var html = React.renderToString(<Handler/>);
+      expect(html).toMatch(/Bar/);
+      done();
+    });
+  });
+
   it('matches nested routes', function (done) {
     var routes = (
       <Route handler={Nested} path='/'>
