@@ -66,6 +66,9 @@ function addRoutesToNamedRoutes(routes, namedRoutes) {
   for (var i = 0, len = routes.length; i < len; ++i) {
     route = routes[i];
 
+    if (!route)
+      continue;
+
     if (route.name) {
       invariant(
         namedRoutes[route.name] == null,
