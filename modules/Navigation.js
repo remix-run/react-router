@@ -1,11 +1,14 @@
-var { object } = require('react').PropTypes;
+import React from 'react';
+
+var { object } = React.PropTypes;
 
 /**
  * A mixin for components that modify the URL.
  *
  * Example:
  *
- *   var { Navigation } = require('react-router');
+ *   import { Navigation } from 'react-router';
+ *
  *   var MyLink = React.createClass({
  *     mixins: [ Navigation ],
  *     handleClick(event) {
@@ -34,10 +37,7 @@ var RouterNavigationMethods = [
   'replaceWith',
   'go',
   'goBack',
-  'goForward',
-  'canGo',
-  'canGoBack',
-  'canGoForward'
+  'goForward'
 ];
 
 RouterNavigationMethods.forEach(function (method) {
@@ -47,4 +47,4 @@ RouterNavigationMethods.forEach(function (method) {
   };
 });
 
-module.exports = Navigation;
+export default Navigation;

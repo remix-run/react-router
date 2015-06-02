@@ -1,17 +1,15 @@
-var expect = require('expect');
-var { spyOn } = expect;
-var React = require('react');
-var { render } = React;
-//var createRouter = require('../createRouter');
-var History = require('../History');
-var Route = require('../Route');
+import expect, { spyOn } from 'expect';
+import React, { render, createClass } from 'react';
+import MemoryHistory from '../MemoryHistory';
+import Router from '../Router';
+import Route from '../Route';
 
-describe.skip('When a router enters a branch', function () {
-  var Router, Dashboard, NewsFeed, Inbox, DashboardRoute, NewsFeedRoute, InboxRoute, RedirectToInboxRoute, MessageRoute, div;
+describe('When a router enters a branch', function () {
+  var div, Dashboard, NewsFeed, Inbox, DashboardRoute, NewsFeedRoute, InboxRoute, RedirectToInboxRoute, MessageRoute, routes;
   beforeEach(function () {
     div = document.createElement('div');
 
-    Dashboard = React.createClass({
+    Dashboard = createClass({
       render() {
         return (
           <div className="Dashboard">
@@ -22,13 +20,13 @@ describe.skip('When a router enters a branch', function () {
       }
     });
   
-    NewsFeed = React.createClass({
+    NewsFeed = createClass({
       render() {
         return <div>News</div>;
       }
     });
   
-    Inbox = React.createClass({
+    Inbox = createClass({
       render() {
         return <div>Inbox</div>;
       }
@@ -37,72 +35,72 @@ describe.skip('When a router enters a branch', function () {
     NewsFeedRoute = {
       path: 'news',
       component: NewsFeed,
-      onEnter(router, nextState) {
-        expect(router).toBeA(Router);
+      onEnter(nextState, router) {
         expect(nextState.branch).toContain(NewsFeedRoute);
-      },
-      onLeave(router, nextState) {
         expect(router).toBeA(Router);
+      },
+      onLeave(nextState, router) {
         expect(nextState.branch).toNotContain(NewsFeedRoute);
+        expect(router).toBeA(Router);
       }
     };
   
     InboxRoute = {
       path: 'inbox',
       component: Inbox,
-      onEnter(router, nextState) {
-        expect(router).toBeA(Router);
+      onEnter(nextState, router) {
         expect(nextState.branch).toContain(InboxRoute);
-      },
-      onLeave(router, nextState) {
         expect(router).toBeA(Router);
+      },
+      onLeave(nextState, router) {
         expect(nextState.branch).toNotContain(InboxRoute);
+        expect(router).toBeA(Router);
       }
     };
 
     RedirectToInboxRoute = {
       path: 'redirect-to-inbox',
-      onEnter(router, nextState) {
-        expect(router).toBeA(Router);
+      onEnter(nextState, router) {
         expect(nextState.branch).toContain(RedirectToInboxRoute);
+        expect(router).toBeA(Router);
 
         router.replaceWith('/inbox');
       },
-      onLeave(router, nextState) {
-        expect(router).toBeA(Router);
+      onLeave(nextState, router) {
         expect(nextState.branch).toNotContain(RedirectToInboxRoute);
+        expect(router).toBeA(Router);
       }
     };
 
     MessageRoute = {
       path: 'messages/:messageID',
-      onEnter(router, nextState) {
-        expect(router).toBeA(Router);
+      onEnter(nextState, router) {
         expect(nextState.branch).toContain(MessageRoute);
-      },
-      onLeave(router, nextState) {
         expect(router).toBeA(Router);
+      },
+      onLeave(nextState, router) {
         // We can't make this assertion when switching from /messages/123 => /messages/456
         //expect(nextState.branch).toNotContain(MessageRoute);
+        expect(router).toBeA(Router);
       }
     };
   
     DashboardRoute = {
       component: Dashboard,
-      onEnter(router, nextState) {
-        expect(router).toBeA(Router);
+      onEnter(nextState, router) {
         expect(nextState.branch).toContain(DashboardRoute);
-      },
-      onLeave(router, nextState) {
         expect(router).toBeA(Router);
+      },
+      onLeave(nextState, router) {
         expect(nextState.branch).toNotContain(DashboardRoute);
+        expect(router).toBeA(Router);
       },
       childRoutes: [ NewsFeedRoute, InboxRoute, RedirectToInboxRoute, MessageRoute ]
     };
-  
-    Router = createRouter(
+
+    routes = [
       DashboardRoute
-    );
+    ];
   });
  
   it('calls the onEnter hooks of all routes in that branch', function (done) {
@@ -111,7 +109,7 @@ describe.skip('When a router enters a branch', function () {
       spyOn(NewsFeedRoute, 'onEnter').andCallThrough()
     ];
 
-    render(<Router history={new History('/news')}/>, div, function () {
+    render(<Router location="/news" children={routes}/>, div, function () {
       spies.forEach(function (spy) {
         expect(spy).toHaveBeenCalled();
       });
@@ -125,10 +123,8 @@ describe.skip('When a router enters a branch', function () {
       var redirectRouteLeaveSpy = spyOn(RedirectToInboxRoute, 'onLeave').andCallThrough();
       var inboxEnterSpy = spyOn(InboxRoute, 'onEnter').andCallThrough();
 
-      var history = new History('/redirect-to-inbox');
-
-      render(<Router history={history}/>, div, function () {
-        expect(history.getPath()).toEqual('/inbox');
+      render(<Router location="/redirect-to-inbox" children={routes}/>, div, function () {
+        expect(this.state.location.path).toEqual('/inbox');
         expect(redirectRouteEnterSpy).toHaveBeenCalled();
         expect(redirectRouteLeaveSpy.calls.length).toEqual(0);
         expect(inboxEnterSpy).toHaveBeenCalled();
@@ -168,8 +164,8 @@ describe.skip('When a router enters a branch', function () {
         steps.shift().apply(this, arguments);
       }
 
-      var history = new History('/inbox');
-      render(<Router history={history} onUpdate={execNextStep}/>, div, execNextStep);
+      var history = new MemoryHistory('/inbox');
+      render(<Router history={history} children={routes} onUpdate={execNextStep}/>, div, execNextStep);
     });
   });
 
@@ -207,8 +203,8 @@ describe.skip('When a router enters a branch', function () {
         steps.shift().apply(this, arguments);
       }
 
-      var history = new History('/messages/123');
-      render(<Router history={history} onUpdate={execNextStep}/>, div, execNextStep);
+      var history = new MemoryHistory('/messages/123');
+      render(<Router history={history} children={routes} onUpdate={execNextStep}/>, div, execNextStep);
     });
   });
 });

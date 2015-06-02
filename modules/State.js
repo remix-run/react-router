@@ -1,4 +1,6 @@
-var { object } = require('react').PropTypes;
+import React from 'react';
+
+var { object } = React.PropTypes;
 
 /**
  * A mixin for components that need to know the path, routes, URL
@@ -6,7 +8,8 @@ var { object } = require('react').PropTypes;
  *
  * Example:
  *
- *   var { State } = require('react-router');
+ *   import { State } from 'react-router';
+ *
  *   var AboutLink = React.createClass({
  *     mixins: [ State ],
  *     render() {
@@ -28,13 +31,6 @@ var State = {
 };
 
 var RouterStateMethods = [
-  'getLocation',
-  'getPath',
-  'getPathname',
-  'getQuery',
-  'getParams',
-  'getRoutes',
-  'getComponents',
   'isActive'
 ];
 
@@ -45,4 +41,4 @@ RouterStateMethods.forEach(function (method) {
   };
 });
 
-module.exports = State;
+export default State;

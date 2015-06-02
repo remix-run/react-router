@@ -1,7 +1,7 @@
-var isReactChildren = require('./isReactChildren');
-var createRoutesFromReactChildren = require('./createRoutesFromReactChildren');
-var { getPathname, compilePattern, stripLeadingSlashes } = require('./PathUtils');
-var { loopAsync } = require('./AsyncUtils');
+import { loopAsync } from './AsyncUtils';
+import { createRoutes } from './RouteUtils';
+import { getPathname, getQueryString, matchPattern, stripLeadingSlashes } from './PathUtils';
+import Location from './Location';
 
 function getChildRoutes(route, callback) {
   if (route.childRoutes) {
@@ -33,36 +33,6 @@ function createParams(paramNames, paramValues) {
   return assignParams({}, paramNames, paramValues);
 }
 
-function matchPattern(pattern, pathname) {
-  var { escapedSource, paramNames, tokens } = compilePattern(stripLeadingSlashes(pattern));
-
-  escapedSource += '/*'; // Ignore trailing slashes
-
-  var captureRemaining = tokens[tokens.length - 1] !== '*';
-
-  if (captureRemaining)
-    escapedSource += '(.*?)';
-
-  var match = pathname.match(new RegExp('^' + escapedSource + '$', 'i'));
-
-  var remainingPathname, paramValues;
-  if (match != null) {
-    paramValues = Array.prototype.slice.call(match, 1);
-
-    if (captureRemaining) {
-      remainingPathname = paramValues.pop();
-    } else {
-      remainingPathname = pathname.replace(match[0], '');
-    }
-  }
-
-  return {
-    remainingPathname,
-    paramNames,
-    paramValues
-  };
-}
-
 function matchRouteDeep(route, pathname, callback) {
   var { remainingPathname, paramNames, paramValues } = matchPattern(route.path, pathname);
 
@@ -78,9 +48,6 @@ function matchRouteDeep(route, pathname, callback) {
       if (error) {
         callback(error);
       } else if (childRoutes) {
-        if (isReactChildren(childRoutes))
-          childRoutes = createRoutesFromReactChildren(childRoutes);
-
         // Check the child routes to see if any of them match.
         matchRoutes(childRoutes, remainingPathname, function (error, match) {
           if (error) {
@@ -104,6 +71,8 @@ function matchRouteDeep(route, pathname, callback) {
 }
 
 function matchRoutes(routes, pathname, callback) {
+  routes = createRoutes(routes);
+
   loopAsync(routes.length, function (index, next, done) {
     matchRouteDeep(routes[index], pathname, function (error, match) {
       if (error || match) {
@@ -116,22 +85,30 @@ function matchRoutes(routes, pathname, callback) {
 }
 
 /**
- * Searches the given tree of routes for a branch that matches
- * the given path and calls callback(error, match) with the
- * result. The match object has the following properties:
+ * Asynchronously matches the given location to a set of routes and calls
+ * callback(error, state) when finished. The state object may have the
+ * following properties:
  *
- * routes   An array of route objects that matched, in nested order
- * params   An object of URL params (contained in the pathname)
+ * - location     The Location object
+ * - branch       An array of routes that matched, in hierarchical order
+ * - params       An object of URL parameters
  *
- * If no match can be made the callback argument is undefined.
+ * Note: This operation may return synchronously if no routes have an
+ * asynchronous getChildRoutes method.
  */
-function findMatch(routes, path, callback) {
-  if (!Array.isArray(routes))
-    routes = [ routes ]; // Allow a single route
+export function getProps(routes, location, parseQueryString, callback) {
+  if (!Location.isLocation(location))
+    location = Location.create(location); // Allow location-like objects.
 
-  var pathname = stripLeadingSlashes(getPathname(path));
+  var pathname = stripLeadingSlashes(getPathname(location.path));
 
-  matchRoutes(routes, pathname, callback);
+  matchRoutes(routes, pathname, function (error, props) {
+    if (error || props == null) {
+      callback(error);
+    } else {
+      props.location = location;
+      props.query = parseQueryString(getQueryString(location.path));
+      callback(null, props);
+    }
+  });
 }
-
-module.exports = findMatch;

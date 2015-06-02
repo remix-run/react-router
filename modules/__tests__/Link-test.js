@@ -1,14 +1,14 @@
-var assert = require('assert');
-var expect = require('expect');
-var React = require('react/addons');
-var { render } = React;
-var { click } = React.addons.TestUtils.Simulate;
-//var createRouter = require('../createRouter');
-var History = require('../History');
-var Route = require('../Route');
-var Link = require('../Link');
+import assert from 'assert';
+import expect from 'expect';
+import React, { render } from 'react/addons';
+import Router from '../Router';
+import MemoryHistory from '../MemoryHistory';
+import Route from '../Route';
+import Link from '../Link';
 
-describe.skip('A <Link>', function () {
+var { click } = React.addons.TestUtils.Simulate;
+
+describe('A <Link>', function () {
 
   class Parent extends React.Component {
     render() {
@@ -41,21 +41,19 @@ describe.skip('A <Link>', function () {
   describe('with params and a query', function () {
     class LinkWrapper extends React.Component {
       render() {
-        return <Link to="hello" params={{name: 'michael'}} query={{the: 'query'}}>Link</Link>;
+        return <Link to="/hello/michael" query={{the: 'query'}}>Link</Link>;
       }
     }
 
     it('knows how to make its href', function () {
-      var Router = createRouter([
-        <Route name="hello" path="hello/:name" component={Hello}/>,
-        <Route name="link" component={LinkWrapper}/>
-      ]);
-
-      Router.match('/link', function (error, props) {
-        render(<Router {...props}/>, div, function () {
-          var a = div.querySelector('a');
-          expect(a.getAttribute('href')).toEqual('/hello/michael?the=query');
-        });
+      render((
+        <Router location="/link">
+          <Route path="hello/:name" component={Hello}/>
+          <Route path="link" component={LinkWrapper}/>
+        </Router>
+      ), div, () => {
+        var a = div.querySelector('a');
+        expect(a.getAttribute('href')).toEqual('/hello/michael?the=query');
       });
     });
   });
@@ -72,13 +70,6 @@ describe.skip('A <Link>', function () {
           );
         }
       }
-
-      var Router = createRouter(
-        <Route path="/" component={LinkWrapper}>
-          <Route name="hello" component={Hello}/>
-          <Route name="goodbye" component={Goodbye}/>
-        </Route>
-      );
 
       var steps = [], a;
 
@@ -102,9 +93,16 @@ describe.skip('A <Link>', function () {
         steps.shift().apply(this, arguments);
       }
 
-      var history = new History('/hello');
+      var history = new MemoryHistory('/hello');
 
-      render(<Router history={history} onUpdate={execNextStep}/>, div, execNextStep);
+      render((
+        <Router history={history} onUpdate={execNextStep}>
+          <Route path="/" component={LinkWrapper}>
+            <Route path="goodbye" component={Goodbye}/>
+            <Route path="hello" component={Hello}/>
+          </Route>
+        </Router>
+      ), div, execNextStep);
     });
 
     it('has its activeStyle', function (done) {
@@ -112,19 +110,12 @@ describe.skip('A <Link>', function () {
         render() {
           return (
             <div>
-              <Link to="hello" style={{color: 'white'}} activeStyle={{color: 'red'}}>Link</Link>
+              <Link to="/hello" style={{color: 'white'}} activeStyle={{color: 'red'}}>Link</Link>
               {this.props.children}
             </div>
           );
         }
       }
-
-      var Router = createRouter(
-        <Route path="/" component={LinkWrapper}>
-          <Route name="hello" component={Hello}/>
-          <Route name="goodbye" component={Goodbye}/>
-        </Route>
-      );
 
       var steps = [], a;
 
@@ -148,9 +139,14 @@ describe.skip('A <Link>', function () {
         steps.shift().apply(this, arguments);
       }
 
-      var history = new History('/hello');
-
-      render(<Router history={history} onUpdate={execNextStep}/>, div, execNextStep);
+      render((
+        <Router location="/hello" onUpdate={execNextStep}>
+          <Route path="/" component={LinkWrapper}>
+            <Route path="hello" component={Hello}/>
+            <Route path="goodbye" component={Goodbye}/>
+          </Route>
+        </Router>
+      ), div, execNextStep);
     });
   });
 
@@ -167,14 +163,12 @@ describe.skip('A <Link>', function () {
         }
       }
 
-      var Router = createRouter([
-        <Route name="hello" component={Hello}/>,
-        <Route name="link" component={LinkWrapper}/>
-      ]);
-
-      var history = new History('/link');
-
-      React.render(<Router history={history}/>, div, function () {
+      render((
+        <Router location="/link">
+          <Route path="hello" component={Hello}/>
+          <Route path="link" component={LinkWrapper}/>
+        </Router>
+      ), div, () => {
         click(div.querySelector('a'));
       });
     });
@@ -204,14 +198,12 @@ describe.skip('A <Link>', function () {
         steps.shift().apply(this, arguments);
       }
 
-      var Router = createRouter([
-        <Route name="hello" component={Hello}/>,
-        <Route name="link" component={LinkWrapper}/>
-      ]);
-
-      var history = new History('/link');
-
-      render(<Router history={history} onUpdate={execNextStep}/>, div, execNextStep);
+      render((
+        <Router location="/link" onUpdate={execNextStep}>
+          <Route path="hello" component={Hello}/>
+          <Route path="link" component={LinkWrapper}/>
+        </Router>
+      ), div, execNextStep);
     });
   });
 

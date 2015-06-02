@@ -1,4 +1,4 @@
-var keyMirror = require('keymirror');
+import keyMirror from 'keymirror';
 
 var NavigationTypes = keyMirror({
 
@@ -24,4 +24,4 @@ var NavigationTypes = keyMirror({
 
 });
 
-module.exports = NavigationTypes;
+export default NavigationTypes;

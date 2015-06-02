@@ -1,7 +1,7 @@
-var expect = require('expect');
-var React = require('react');
-var createRoutesFromReactChildren = require('../createRoutesFromReactChildren');
-var Route = require('../Route');
+import expect from 'expect';
+import React from 'react';
+import { createRoutesFromReactChildren } from '../RouteUtils';
+import Route from '../Route';
 
 describe('createRoutesFromReactChildren', function () {
 

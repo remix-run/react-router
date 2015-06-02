@@ -6,7 +6,7 @@ import NavigationTypes from './NavigationTypes';
  * 1. Where am I?
  * 2. How did I get here?
  */
-class Location {
+export class Location {
 
   static isLocation(object) {
     return object instanceof Location;
@@ -34,4 +34,4 @@ class Location {
 
 }
 
-module.exports = Location;
+export default Location;

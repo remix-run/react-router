@@ -1,9 +1,7 @@
 import expect from 'expect';
-import React from 'react';
+import React, { render } from 'react';
 import Router from '../Router';
 import Route from '../Route';
-
-//console.warn = () => {};
 
 describe('Router', function () {
   var div = document.createElement('div');
@@ -19,7 +17,7 @@ describe('Router', function () {
       }
     }
 
-    React.render((
+    render((
       <Router>
         <Route path="/" component={Component}/>
       </Router>

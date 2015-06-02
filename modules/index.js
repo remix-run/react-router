@@ -1,25 +1,23 @@
-export Router from './Router';
-
-export Route from './Route';
-
+/* histories */
 export History from './History';
 export DOMHistory from './DOMHistory';
 export HashHistory from './HashHistory';
 export BrowserHistory from './BrowserHistory';
 export MemoryHistory from './HashHistory';
 
+/* components */
+export Router from './Router';
 export Link from './Link';
+
+/* components (configuration) */
+export Redirect from './Redirect';
+export Route from './Route';
+
+/* mixins */
 export Navigation from './Navigation';
 export TransitionHook from './TransitionHook';
-export Env from './Env';
+export State from './State';
 
-export AsyncRouting from './AsyncRouting';
-export TransitionManager from './TransitionManager';
-export AsyncProps from './AsyncProps';
-export RouteRenderer from './RouteRenderer';
-export ScrollManager from './ScrollManager';
-export Renderer from './Renderer';
-
+/* utils */
+export { createRoutesFromReactChildren } from './RouteUtils';
 export PropTypes from './PropTypes';
-
-export createRoutesFromReactChildren from './createRoutesFromReactChildren';

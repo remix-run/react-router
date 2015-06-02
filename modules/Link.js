@@ -1,6 +1,6 @@
 import React from 'react';
 
-var { object, string, func, oneOfType } = React.PropTypes;
+var { object, string, func } = React.PropTypes;
 
 function isLeftClickEvent(event) {
   return event.button === 0;
@@ -28,23 +28,24 @@ function isModifiedEvent(event) {
  *
  *   <Link to="showPost" params={{ postID: "123" }} query={{ show:true }}/>
  */
-class Link extends React.Component {
+export class Link extends React.Component {
 
   static contextTypes = {
-    router: object
+    router: object.isRequired
   };
 
   static propTypes = {
     activeStyle: object,
     activeClassName: string,
-    to: oneOfType([ string, object ]).isRequired,
+    to: string.isRequired,
     query: object,
     onClick: func
   };
 
   static defaultProps = {
     className: '',
-    activeClassName: 'active'
+    activeClassName: 'active',
+    style: {}
   };
 
   constructor(props, context) {
@@ -71,21 +72,16 @@ class Link extends React.Component {
       this.context.router.transitionTo(this.props.to, this.props.query);
   }
 
-  getHref() {
-    return this.context.router.makeHref(this.props.to, this.props.query);
-  }
-
-  isActive() {
-    return this.context.router.pathIsActive(this.props.to, this.props.query);
-  }
-
   render() {
+    var { router } = this.context;
+    var { to, query } = this.props;
+
     var props = Object.assign({}, this.props, {
-      href: this.getHref(),
+      href: router.makeHref(to, query),
       onClick: this.handleClick
     });
 
-    if (this.isActive()) {
+    if (router.isActive(to, query)) {
       if (props.activeClassName)
         props.className += ` ${props.activeClassName}`;
 
@@ -93,7 +89,7 @@ class Link extends React.Component {
         Object.assign(props.style, props.activeStyle);
     }
 
-    return React.createElement('a', props, this.props.children);
+    return React.createElement('a', props);
   }
 
 }

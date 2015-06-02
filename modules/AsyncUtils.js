@@ -1,4 +1,28 @@
-function mapAsync(array, work, callback) {
+export function loopAsync(turns, work, callback) {
+  var currentTurn = 0;
+  var isDone = false;
+
+  function done() {
+    isDone = true;
+    callback.apply(this, arguments);
+  }
+
+  function next() {
+    if (isDone)
+      return;
+
+    if (currentTurn < turns) {
+      currentTurn += 1;
+      work(currentTurn - 1, next, done);
+    } else {
+      done.apply(this, arguments);
+    }
+  }
+
+  next();
+}
+
+export function mapAsync(array, work, callback) {
   var length = array.length;
   var values = [];
 
@@ -32,31 +56,21 @@ function mapAsync(array, work, callback) {
   });
 }
 
-function loopAsync(turns, work, callback) {
-  var currentTurn = 0;
-  var isDone = false;
+export function hashAsync(object, work, callback) {
+  var keys = Object.keys(object);
 
-  function done() {
-    isDone = true;
-    callback.apply(this, arguments);
-  }
-
-  function next() {
-    if (isDone)
-      return;
-
-    if (currentTurn < turns) {
-      currentTurn += 1;
-      work(currentTurn - 1, next, done);
+  mapAsync(keys, function (key, index, callback) {
+    work(object[key], callback);
+  }, function (error, valuesArray) {
+    if (error) {
+      callback(error);
     } else {
-      done.apply(this, arguments);
+      var values = valuesArray.reduce(function (memo, results, index) {
+        memo[keys[index]] = results;
+        return memo;
+      }, {});
+
+      callback(null, values);
     }
-  }
-
-  next();
+  });
 }
-
-module.exports = {
-  mapAsync,
-  loopAsync
-};

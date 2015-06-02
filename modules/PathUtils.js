@@ -1,75 +1,7 @@
-/* jshint -W084 */
-import invariant from 'invariant';
-import qs from 'qs';
-
 var queryMatcher = /\?(.*)$/;
-
-function escapeRegExp(string) {
-  return string.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
-}
-
-function escapeSource(string) {
-  return escapeRegExp(string).replace(/\/+/g, '/+');
-}
-
-function _compilePattern(pattern) {
-  var escapedSource = '';
-  var paramNames = [];
-  var tokens = [];
-
-  var match, lastIndex = 0, matcher = /:([a-zA-Z_$][a-zA-Z0-9_$]*)|\*|\(|\)/g;
-  while (match = matcher.exec(pattern)) {
-    if (match.index !== lastIndex) {
-      tokens.push(pattern.slice(lastIndex, match.index));
-      escapedSource += escapeSource(pattern.slice(lastIndex, match.index));
-    }
-
-    if (match[1]) {
-      escapedSource += '([^/?#]+)';
-      paramNames.push(match[1]);
-    } else if (match[0] === '*') {
-      escapedSource += '(.*?)';
-      paramNames.push('splat');
-    } else if (match[0] === '(') {
-      escapedSource += '(?:';
-    } else if (match[0] === ')') {
-      escapedSource += ')?';
-    }
-
-    tokens.push(match[0]);
-
-    lastIndex = matcher.lastIndex;
-  }
-
-  if (lastIndex !== pattern.length) {
-    tokens.push(pattern.slice(lastIndex, pattern.length));
-    escapedSource += escapeSource(pattern.slice(lastIndex, pattern.length));
-  }
-
-  return {
-    pattern,
-    escapedSource,
-    paramNames,
-    tokens
-  };
-}
-
-// Cache patterns we've seen before.
-var _compiledPatterns = {};
-
-export function compilePattern(pattern) {
-  if (!(pattern in _compiledPatterns))
-    _compiledPatterns[pattern] = _compilePattern(pattern);
-
-  return _compiledPatterns[pattern];
-}
 
 export function stripLeadingSlashes(path) {
   return path ? path.replace(/^\/+/, '') : '';
-}
-
-export function stripTrailingSlashes(path) {
-  return path.replace(/\/+$/, '');
 }
 
 export function isAbsolutePath(path) {
@@ -85,70 +17,127 @@ export function getQueryString(path) {
   return match ? match[1] : '';
 }
 
-export function getQuery(path, options) {
-  return qs.parse(getQueryString(path), options);
+function escapeRegExp(string) {
+  return string.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
 }
 
-export function withQuery(path, query) {
-  if (typeof query !== 'string')
-    query = qs.stringify(query, { arrayFormat: 'brackets' });
-
-  if (query)
-    return getPathname(path) + '?' + query;
-
-  return getPathname(path);
+function escapeSource(string) {
+  return escapeRegExp(string).replace(/\/+/g, '/+');
 }
 
-export function getParamNames(path) {
-  return compilePattern(path).paramNames;
+function _compilePattern(pattern) {
+  var regexpSource = '';
+  var paramNames = [];
+  var tokens = [];
+
+  var match, lastIndex = 0, matcher = /:([a-zA-Z_$][a-zA-Z0-9_$]*)|\*|\(|\)/g;
+  while (match = matcher.exec(pattern)) {
+    if (match.index !== lastIndex) {
+      tokens.push(pattern.slice(lastIndex, match.index));
+      regexpSource += escapeSource(pattern.slice(lastIndex, match.index));
+    }
+
+    if (match[1]) {
+      regexpSource += '([^/?#]+)';
+      paramNames.push(match[1]);
+    } else if (match[0] === '*') {
+      regexpSource += '(.*?)';
+      paramNames.push('splat');
+    } else if (match[0] === '(') {
+      regexpSource += '(?:';
+    } else if (match[0] === ')') {
+      regexpSource += ')?';
+    }
+
+    tokens.push(match[0]);
+
+    lastIndex = matcher.lastIndex;
+  }
+
+  if (lastIndex !== pattern.length) {
+    tokens.push(pattern.slice(lastIndex, pattern.length));
+    regexpSource += escapeSource(pattern.slice(lastIndex, pattern.length));
+  }
+
+  return {
+    pattern,
+    regexpSource,
+    paramNames,
+    tokens
+  };
+}
+
+var CompiledPatternsCache = {};
+
+export function compilePattern(pattern) {
+  if (!(pattern in CompiledPatternsCache))
+    CompiledPatternsCache[pattern] = _compilePattern(pattern);
+
+  return CompiledPatternsCache[pattern];
 }
 
 /**
- * Returns a version of the given route path with params
- * interpolated. Throws if there is a dynamic segment of
- * the route path for which there is no param.
+ * Attempts to match a pattern on the given pathname. Patterns may use
+ * the following special characters:
+ *
+ * - :paramName     Matches a URL segment up to the next /, ?, or #. The
+ *                  captured string is considered a "param"
+ * - ()             Wraps a segment of the URL that is optional
+ * - *              Consumes (non-greedy) all characters up to the next
+ *                  character in the pattern, or to the end of the URL if
+ *                  there is none
+ *
+ * The return value is an object with the following properties:
+ *
+ * - remainingPathname
+ * - paramNames
+ * - paramValues
  */
-export function injectParams(pattern, params) {
-  params = params || {};
+export function matchPattern(pattern, pathname) {
+  var { regexpSource, paramNames, tokens } = compilePattern(stripLeadingSlashes(pattern));
 
-  var { tokens } = compilePattern(pattern);
-  var parenCount = 0, pathname = '', splatIndex = 0;
+  regexpSource += '/*'; // Ignore trailing slashes
 
-  var token, paramName, paramValue;
-  for (var i = 0, len = tokens.length; i < len; ++i) {
-    token = tokens[i];
+  var captureRemaining = tokens[tokens.length - 1] !== '*';
 
-    if (token === '*') {
-      paramValue = Array.isArray(params.splat) ? params.splat[splatIndex++] : params.splat;
+  if (captureRemaining)
+    regexpSource += '(.*?)';
 
-      invariant(
-        paramValue != null || parenCount > 0,
-        'Missing splat #%s for path "%s"',
-        splatIndex, pattern
-      );
+  var match = pathname.match(new RegExp('^' + regexpSource + '$', 'i'));
 
-      if (paramValue != null)
-        pathname += paramValue;
-    } else if (token === '(') {
-      parenCount += 1;
-    } else if (token === ')') {
-      parenCount -= 1;
-    } else if (token.charAt(0) === ':') {
-      paramName = token.substring(1);
-      paramValue = params[paramName];
+  var remainingPathname, paramValues;
+  if (match != null) {
+    paramValues = Array.prototype.slice.call(match, 1);
 
-      invariant(
-        paramValue != null || parenCount > 0,
-        'Missing "%s" parameter for path "%s"',
-        paramName, pattern
-      );
-
-      if (paramValue != null)
-        pathname += paramValue;
+    if (captureRemaining) {
+      remainingPathname = paramValues.pop();
     } else {
-      pathname += token;
+      remainingPathname = pathname.replace(match[0], '');
     }
   }
 
-  return pathname.replace(/\/+/g, '/');
+  return {
+    remainingPathname,
+    paramNames,
+    paramValues
+  };
+}
+
+export function getParamNames(pattern) {
+  return compilePattern(pattern).paramNames;
+}
+
+/**
+ * Returns true if the given pathname matches against the routes
+ * in the given branch.
+ */
+export function branchMatches(branch, pathname) {
+  for (var i = 0, len = branch.length; i < len; ++i) {
+    pathname = matchPattern(branch[i].path, pathname).remainingPathname;
+
+    if (pathname === '')
+      return true;
+  }
+
+  return false;
 }
