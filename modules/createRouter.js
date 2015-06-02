@@ -32,11 +32,14 @@ var DEFAULT_LOCATION = canUseDOM ? HashLocation : '/';
  */
 var DEFAULT_SCROLL_BEHAVIOR = canUseDOM ? ImitateBrowserBehavior : null;
 
+var hasOwnProperty = ({}).hasOwnProperty;
 function hasProperties(object, properties) {
-  for (var propertyName in properties)
-    if (properties.hasOwnProperty(propertyName) && object[propertyName] !== properties[propertyName])
+  for (var propertyName in properties) {
+    if (hasOwnProperty.call(properties, propertyName) &&
+        object[propertyName] !== properties[propertyName]) {
       return false;
-
+    }
+  }
   return true;
 }
 

@@ -657,6 +657,40 @@ describe('Router', function () {
       });
     });
 
+    it('transitions to URL without query', function (done) {
+      var routes = [
+        <Route name="foo" handler={Foo}/>,
+        <Route name="bar" handler={Bar}/>
+      ];
+
+      var location = new TestLocation([ '/foo?q=search' ]);
+
+      var div = document.createElement('div');
+      var steps = [];
+      var router;
+
+      steps.push(function () {
+        expect(div.innerHTML).toMatch(/Foo/);
+        router.transitionTo('/bar');
+      });
+
+      steps.push(function () {
+        expect(div.innerHTML).toMatch(/Bar/);
+        done();
+      });
+
+      router = Router.create({
+        routes: routes,
+        location: location
+      });
+
+      router.run(function (Handler) {
+        React.render(<Handler/>, div, function () {
+          steps.shift()();
+        });
+      });
+    });
+
     it('executes transition hooks when only the query changes', function (done) {
       var fromKnifeCalled = false;
       var fromSpoonCalled = false;
