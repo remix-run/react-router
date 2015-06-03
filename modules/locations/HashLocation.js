@@ -25,7 +25,7 @@ function ensureSlash() {
   if (path.charAt(0) === '/')
     return true;
 
-  HashLocation.replace('/' + path);
+  HashLocation.replace('/' + encodeURI(path));
 
   return false;
 }
