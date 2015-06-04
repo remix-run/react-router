@@ -72,8 +72,8 @@ class Login extends React.Component {
     event.preventDefault();
     var { router } = this.context;
     var nextPath = router.state.query.nextPath;
-    var email = this.refs.email.getDOMNode().value;
-    var pass = this.refs.pass.getDOMNode().value;
+    var email = React.findDOMNode(this.refs.email).value;
+    var pass = React.findDOMNode(this.refs.pass).value;
     auth.login(email, pass, (loggedIn) => {
       if (!loggedIn)
         return this.setState({ error: true });
