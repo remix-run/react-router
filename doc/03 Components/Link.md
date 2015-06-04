@@ -15,11 +15,6 @@ The name of the route to link to, or a full URL.
 
 An object of the names/values that correspond with dynamic segments in your route path.
 
-### `query`
-
-An object of the names/values that will become the query parameters in
-the path.
-
 #### Example
 
 ```js
@@ -35,7 +30,8 @@ the path.
 
 ### `query`
 
-The query string parameters as a JavaScript object.
+An object of the names/values that will become the query parameters in
+the path.
 
 ### `activeClassName`
 
