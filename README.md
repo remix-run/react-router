@@ -1,7 +1,7 @@
 [![npm package](https://img.shields.io/npm/v/react-router.svg?style=flat-square)](https://www.npmjs.org/package/react-router)
 [![build status](https://img.shields.io/travis/rackt/react-router/master.svg?style=flat-square)](https://travis-ci.org/rackt/react-router)
 [![dependency status](https://img.shields.io/david/rackt/react-router.svg?style=flat-square)](https://david-dm.org/rackt/react-router)
-[![Gitter](https://badges.gitter.im/Join%20Chat.svg)](https://gitter.im/rackt/react-router?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge)
+[![Gitter](https://img.shields.io/badge/GITTER-join%20chat-1DCF73.svg?style=flat-square)](https://gitter.im/rackt/react-router?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge)
 
 <img src="https://rackt.github.io/react-router/img/vertical.png" width="300"/>
 
