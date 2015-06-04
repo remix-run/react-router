@@ -18,9 +18,7 @@ export function replaceHashPath(path) {
 }
 
 export function getWindowPath() {
-  return decodeURI(
-    window.location.pathname + window.location.search
-  );
+  return window.location.pathname + window.location.search;
 }
 
 export function getWindowScrollPosition() {
