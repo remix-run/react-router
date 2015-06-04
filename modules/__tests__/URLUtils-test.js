@@ -245,13 +245,13 @@ describe('formatPattern', function () {
 
     describe('and some params have special URL encoding', function () {
       it('returns the correct path', function () {
-        expect(formatPattern(pattern, { id: 'one, two' })).toEqual('comments/one, two/edit');
+        expect(formatPattern(pattern, { id: 'one, two' })).toEqual('comments/one%2C%20two/edit');
       });
     });
 
     describe('and a param has a forward slash', function () {
       it('preserves the forward slash', function () {
-        expect(formatPattern(pattern, { id: 'the/id' })).toEqual('comments/the/id/edit');
+        expect(formatPattern(pattern, { id: 'the/id' })).toEqual('comments/the%2Fid/edit');
       });
     });
 
