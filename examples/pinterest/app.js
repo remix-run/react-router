@@ -104,7 +104,7 @@ var RootRoute = {
 
   component: App,
 
-  defaultChildRoute: FeedRoute,
+  indexRoute: FeedRoute,
 
   getChildRoutes (transitionState, cb) {
     if (transitionState.fromFeed) {
@@ -120,7 +120,7 @@ React.render(<Router routes={RootRoute}/>, document.getElementById('example'));
 
 // Wait a sec ... what's happening?
 //
-//  1. When you visit "/" `RootRoute.defaultChildRoute` is matched,
+//  1. When you visit "/" `RootRoute.indexRoute` is matched,
 //     which is `FeedRoute`, and that renders `Feed`.
 //
 //  2. Then, when you click a link on the feed, it sets some `transitionState`,
