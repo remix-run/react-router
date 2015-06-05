@@ -11,11 +11,14 @@ class TestLocation {
     this.history = history || [];
     this.listeners = [];
     this._updateHistoryLength();
+    this.needsDOM = false;
   }
 
+  /*
   get needsDOM() {
     return false;
   }
+  */
 
   _updateHistoryLength() {
     History.length = this.history.length;
