@@ -2,6 +2,7 @@
 var React = require('react');
 var warning = require('react/lib/warning');
 var invariant = require('react/lib/invariant');
+var assign = require('react/lib/Object.assign');
 var canUseDOM = require('react/lib/ExecutionEnvironment').canUseDOM;
 var LocationActions = require('./actions/LocationActions');
 var ImitateBrowserBehavior = require('./behaviors/ImitateBrowserBehavior');
@@ -261,6 +262,34 @@ function createRouter(options) {
        */
       replaceWith: function (to, params, query) {
         location.replace(Router.makePath(to, params, query));
+      },
+
+      /**
+       * Transitions to the current URL with updated params and query by
+       * pushing a new URL onto the history stack.
+       */
+      transitionToMixin: function (to, params, query) {
+        var routes = this.getCurrentRoutes();
+
+        to = to || routes[routes.length - 1].path;
+        params = assign({}, this.getCurrentParams(), params);
+        query = assign({}, this.getCurrentQuery(), query);
+
+        this.transitionTo(to, params, query);
+      },
+
+      /**
+       * Tranition to the current URL with updated params and query by
+       * replacing the current URL in the history stack.
+       */
+      replaceWithMixin: function (to, params, query) {
+        var routes = this.getCurrentRoutes();
+
+        to = to || routes[routes.length - 1].path;
+        params = assign({}, this.getCurrentParams(), params);
+        query = assign({}, this.getCurrentQuery(), query);
+
+        this.replaceWith(to, params, query);
       },
 
       /**

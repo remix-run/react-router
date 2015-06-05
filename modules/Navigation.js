@@ -57,6 +57,22 @@ var Navigation = {
   },
 
   /**
+   * Transitions to the current URL with updated params and query by
+   * pushing a new URL onto the history stack.
+   */
+  transitionToMixin(to, params, query) {
+    this.context.router.transitionToMixin(to, params, query);
+  },
+
+  /**
+   * Tranition to the current URL with updated params and query by
+   * replacing the current URL in the history stack.
+   */
+  replaceWithMixin(to, params, query) {
+    this.context.router.replaceWithMixin(to, params, query);
+  },
+
+  /**
    * Transitions to the previous URL.
    */
   goBack() {

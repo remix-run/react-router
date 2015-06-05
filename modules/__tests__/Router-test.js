@@ -849,6 +849,224 @@ describe('Router.makePath', function () {
   });
 });
 
+describe('Router.transitionToMixin', function () {
+
+  var routes = (
+    <Route name="home" path="/" handler={Foo}>
+      <Route name="users" handler={Foo}>
+        <Route name="user" path=":userId" handler={Foo}>
+          <Route name="orders" handler={Foo}>
+            <Route name="order" path=":orderId" handler={Foo} />
+          </Route>
+        </Route>
+      </Route>
+    </Route>
+  );
+
+  describe('when updating only the to', function () {
+    it('transition to the correct path', function (done) {
+      var location = new TestLocation([ '/users/1/orders/100' ]);
+
+      var div = document.createElement('div');
+      var steps = [];
+      var router;
+
+      steps.push(function () {
+        router.transitionToMixin('user', null, null);
+      });
+
+      steps.push(function () {
+        expect(router.getCurrentPath()).toEqual('/users/1');
+        expect(location.history.length).toEqual(2);
+        done();
+      });
+
+      router = Router.create({
+        routes: routes,
+        location: location
+      });
+
+      router.run(function (Handler) {
+        React.render(<Handler/>, div, function () {
+          steps.shift()();
+        });
+      });
+    });
+  });
+
+  describe('when updating a single param', function () {
+    it('transition to the correct path', function (done) {
+      var location = new TestLocation([ '/users/1/orders/100' ]);
+
+      var div = document.createElement('div');
+      var steps = [];
+      var router;
+
+      steps.push(function () {
+        router.transitionToMixin(null, { orderId: 101 }, null);
+      });
+
+      steps.push(function () {
+        expect(router.getCurrentPath()).toEqual('/users/1/orders/101');
+        expect(location.history.length).toEqual(2);
+        done();
+      });
+
+      router = Router.create({
+        routes: routes,
+        location: location
+      });
+
+      router.run(function (Handler) {
+        React.render(<Handler/>, div, function () {
+          steps.shift()();
+        });
+      });
+    });
+  });
+
+  describe('when updating a query param', function () {
+    it('transition to the correct path', function (done) {
+      var location = new TestLocation([ '/users?sortBy=name&sortDir=desc' ]);
+
+      var div = document.createElement('div');
+      var steps = [];
+      var router;
+
+      steps.push(function () {
+        router.transitionToMixin(null, null, { sortDir: 'asc' });
+      });
+
+      steps.push(function () {
+        expect(router.getCurrentPath()).toEqual('/users?sortBy=name&sortDir=asc');
+        expect(location.history.length).toEqual(2);
+        done();
+      });
+
+      router = Router.create({
+        routes: routes,
+        location: location
+      });
+
+      router.run(function (Handler) {
+        React.render(<Handler/>, div, function () {
+          steps.shift()();
+        });
+      });
+    });
+  });
+
+});
+
+describe('Router.replaceWithMixin', function () {
+
+  var routes = (
+    <Route name="home" path="/" handler={Foo}>
+      <Route name="users" handler={Foo}>
+        <Route name="user" path=":userId" handler={Foo}>
+          <Route name="orders" handler={Foo}>
+            <Route name="order" path=":orderId" handler={Foo} />
+          </Route>
+        </Route>
+      </Route>
+    </Route>
+  );
+
+  describe('when updating only the to', function () {
+    it('transition to the correct path', function (done) {
+      var location = new TestLocation([ '/users/1/orders/100' ]);
+
+      var div = document.createElement('div');
+      var steps = [];
+      var router;
+
+      steps.push(function () {
+        router.replaceWithMixin('user', null, null);
+      });
+
+      steps.push(function () {
+        expect(router.getCurrentPath()).toEqual('/users/1');
+        expect(location.history.length).toEqual(1);
+        done();
+      });
+
+      router = Router.create({
+        routes: routes,
+        location: location
+      });
+
+      router.run(function (Handler) {
+        React.render(<Handler/>, div, function () {
+          steps.shift()();
+        });
+      });
+    });
+  });
+
+  describe('when updating a single param', function () {
+    it('transition to the correct path', function (done) {
+      var location = new TestLocation([ '/users/1/orders/100' ]);
+
+      var div = document.createElement('div');
+      var steps = [];
+      var router;
+
+      steps.push(function () {
+        router.replaceWithMixin(null, { orderId: 101 }, null);
+      });
+
+      steps.push(function () {
+        expect(router.getCurrentPath()).toEqual('/users/1/orders/101');
+        expect(location.history.length).toEqual(1);
+        done();
+      });
+
+      router = Router.create({
+        routes: routes,
+        location: location
+      });
+
+      router.run(function (Handler) {
+        React.render(<Handler/>, div, function () {
+          steps.shift()();
+        });
+      });
+    });
+  });
+
+  describe('when updating a query param', function () {
+    it('transition to the correct path', function (done) {
+      var location = new TestLocation([ '/users?sortBy=name&sortDir=desc' ]);
+
+      var div = document.createElement('div');
+      var steps = [];
+      var router;
+
+      steps.push(function () {
+        router.replaceWithMixin(null, null, { sortDir: 'asc' });
+      });
+
+      steps.push(function () {
+        expect(router.getCurrentPath()).toEqual('/users?sortBy=name&sortDir=asc');
+        expect(location.history.length).toEqual(1);
+        done();
+      });
+
+      router = Router.create({
+        routes: routes,
+        location: location
+      });
+
+      router.run(function (Handler) {
+        React.render(<Handler/>, div, function () {
+          steps.shift()();
+        });
+      });
+    });
+  });
+
+});
+
 describe('Router.run', function () {
 
   it('matches a root route', function (done) {
