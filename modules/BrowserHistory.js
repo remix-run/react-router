@@ -78,13 +78,15 @@ export class BrowserHistory extends DOMHistory {
   }
 
   // http://www.w3.org/TR/2011/WD-html5-20110113/history.html#dom-history-pushstate
-  push(path) {
+  push(path, transitionState) {
     if (this.isSupported) {
       this._recordScrollPosition();
 
       var key = createRandomKey();
       window.history.pushState({ key }, '', path);
-      this.location = this._createLocation(path, key, NavigationTypes.PUSH);
+      this.location = this._createLocation(
+        path, key, NavigationTypes.PUSH, transitionState
+      );
       this._notifyChange();
     } else {
       window.location = path;
@@ -92,11 +94,13 @@ export class BrowserHistory extends DOMHistory {
   }
 
   // http://www.w3.org/TR/2011/WD-html5-20110113/history.html#dom-history-replacestate
-  replace(path) {
+  replace(path, transitionState) {
     if (this.isSupported) {
       var key = createRandomKey();
       window.history.replaceState({ key }, '', path);
-      this.location = this._createLocation(path, key, NavigationTypes.REPLACE);
+      this.location = this._createLocation(
+        path, key, NavigationTypes.REPLACE, transitionState
+      );
       this._notifyChange();
     } else {
       window.location.replace(path);

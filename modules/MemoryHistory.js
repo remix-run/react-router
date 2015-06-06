@@ -35,17 +35,17 @@ export class MemoryHistory extends History {
   }
 
   // http://www.w3.org/TR/2011/WD-html5-20110113/history.html#dom-history-pushstate
-  push(path) {
+  push(path, transitionState) {
     this.current += 1;
     this.entries = this.entries.slice(0, this.current).concat([ path ]);
-    this.location = new Location(path, null, NavigationTypes.PUSH);
+    this.location = new Location(path, null, NavigationTypes.PUSH, null, transitionState);
     this._notifyChange();
   }
 
   // http://www.w3.org/TR/2011/WD-html5-20110113/history.html#dom-history-replacestate
-  replace(path) {
+  replace(path, transitionState) {
     this.entries[this.current] = path;
-    this.location = new Location(path, null, NavigationTypes.REPLACE);
+    this.location = new Location(path, null, NavigationTypes.REPLACE, null, transitionState);
     this._notifyChange();
   }
 

@@ -45,7 +45,7 @@ var Feed = React.createClass({
         <div>
           {pictures.map(picture => (
             <Link
-              href={`/pictures/${picture.id}`}
+              to={`/pictures/${picture.id}`}
               transitionState={{fromFeed: true}}
             >
               <img style={{margin: 10}} src={picture.src} height="100"/>
@@ -116,7 +116,7 @@ var RootRoute = {
   }
 };
 
-React.render(<Router routes={RootRoute}/>, document.getElementById('example'));
+React.render(<Router children={RootRoute}/>, document.getElementById('example'));
 
 // Wait a sec ... what's happening?
 //

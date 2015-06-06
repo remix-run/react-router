@@ -146,7 +146,7 @@ export class Router extends React.Component {
 
     try {
       for (var i = 0, len = hooks.length; i < len; ++i) {
-        hooks[i].call(this);
+        hooks[i].call(this, location.transitionState);
 
         if (this.nextLocation !== nextLocation)
           break; // No need to proceed further.
@@ -218,29 +218,29 @@ export class Router extends React.Component {
     return path;
   }
 
-  transitionTo(pathname, query) {
+  transitionTo(pathname, query, transitionState) {
     var path = this.makePath(pathname, query);
     var { history } = this.props;
 
     if (history) {
       if (this.nextLocation) {
-        history.replace(path);
+        history.replace(path, transitionState);
       } else {
-        history.push(path);
+        history.push(path, transitionState);
       }
     } else {
-      this._updateLocation(path);
+      this._updateLocation({ path, transitionState });
     }
   }
 
-  replaceWith(pathname, query) {
+  replaceWith(pathname, query, transitionState) {
     var path = this.makePath(pathname, query);
     var { history } = this.props;
 
     if (history) {
-      history.replace(path);
+      history.replace(path, transitionState);
     } else {
-      this._updateLocation(path);
+      this._updateLocation({path, transitionState});
     }
   }
 

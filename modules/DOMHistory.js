@@ -11,6 +11,7 @@ export class DOMHistory extends History {
     super();
     this.getScrollPosition = getScrollPosition;
     this.scrollHistory = {};
+    this.stateHistory = {};
   }
 
   go(n) {
@@ -20,11 +21,13 @@ export class DOMHistory extends History {
     window.history.go(n);
   }
 
-  _createLocation(path, key, navigationType) {
+  _createLocation(path, key, navigationType, transitionState) {
     var scrollKey = key || path;
     var scrollPosition = this.scrollHistory[scrollKey];
+    transitionState = transitionState || this.stateHistory[key];
+    this.stateHistory[key] = transitionState;
 
-    return new Location(path, key, navigationType, scrollPosition);
+    return new Location(path, key, navigationType, scrollPosition, transitionState);
   }
 
   _recordScrollPosition() {
