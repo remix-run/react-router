@@ -142,26 +142,22 @@ describe('When a router enters a branch', function () {
       var steps = [];
 
       steps.push(function () {
-        try {
-          expect(inboxRouteEnterSpy).toHaveBeenCalled('InboxRoute.onEnter was not called');
-          this.transitionTo('/news');
-        } catch (error) {
-          done(error);
-        }
+        expect(inboxRouteEnterSpy).toHaveBeenCalled('InboxRoute.onEnter was not called');
+        this.transitionTo('/news');
       });
 
       steps.push(function () {
-        try {
-          expect(inboxRouteLeaveSpy).toHaveBeenCalled('InboxRoute.onLeave was not called');
-          expect(dashboardRouteLeaveSpy.calls.length).toEqual(0, 'DashboardRoute.onLeave was called');
-          done();
-        } catch (error) {
-          done(error);
-        }
+        expect(inboxRouteLeaveSpy).toHaveBeenCalled('InboxRoute.onLeave was not called');
+        expect(dashboardRouteLeaveSpy.calls.length).toEqual(0, 'DashboardRoute.onLeave was called');
+        done();
       });
 
       function execNextStep() {
-        steps.shift().apply(this, arguments);
+        try {
+          steps.shift().apply(this, arguments);
+        } catch (error) {
+          done(error);
+        }
       }
 
       var history = new MemoryHistory('/inbox');
@@ -179,28 +175,24 @@ describe('When a router enters a branch', function () {
       var steps = [];
 
       steps.push(function () {
-        try {
-          expect(dashboardRouteEnterSpy).toHaveBeenCalled('DashboardRoute.onEnter was not called');
-          expect(messageRouteEnterSpy).toHaveBeenCalled('InboxRoute.onEnter was not called');
-          this.transitionTo('/messages/456');
-        } catch (error) {
-          done(error);
-        }
+        expect(dashboardRouteEnterSpy).toHaveBeenCalled('DashboardRoute.onEnter was not called');
+        expect(messageRouteEnterSpy).toHaveBeenCalled('InboxRoute.onEnter was not called');
+        this.transitionTo('/messages/456');
       });
 
       steps.push(function () {
-        try {
-          expect(messageRouteLeaveSpy).toHaveBeenCalled('MessageRoute.onLeave was not called');
-          expect(messageRouteEnterSpy).toHaveBeenCalled('MessageRoute.onEnter was not called');
-          expect(dashboardRouteLeaveSpy.calls.length).toEqual(0, 'DashboardRoute.onLeave was called');
-          done();
-        } catch (error) {
-          done(error);
-        }
+        expect(messageRouteLeaveSpy).toHaveBeenCalled('MessageRoute.onLeave was not called');
+        expect(messageRouteEnterSpy).toHaveBeenCalled('MessageRoute.onEnter was not called');
+        expect(dashboardRouteLeaveSpy.calls.length).toEqual(0, 'DashboardRoute.onLeave was called');
+        done();
       });
 
       function execNextStep() {
-        steps.shift().apply(this, arguments);
+        try {
+          steps.shift().apply(this, arguments);
+        } catch (error) {
+          done(error);
+        }
       }
 
       var history = new MemoryHistory('/messages/123');

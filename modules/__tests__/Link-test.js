@@ -10,7 +10,7 @@ var { click } = React.addons.TestUtils.Simulate;
 
 describe('A <Link>', function () {
 
-  class Parent extends React.Component {
+  var Parent = React.createClass({
     render() {
       return (
         <div>
@@ -19,19 +19,19 @@ describe('A <Link>', function () {
         </div>
       );
     }
-  }
+  });
 
-  class Hello extends React.Component {
+  var Hello = React.createClass({
     render() {
       return <div>Hello {this.props.params.name}!</div>;
     }
-  }
+  });
 
-  class Goodbye extends React.Component {
+  var Goodbye = React.createClass({
     render() {
       return <div>Goodbye</div>;
     }
-  }
+  });
 
   var div;
   beforeEach(function () {
@@ -51,7 +51,7 @@ describe('A <Link>', function () {
           <Route path="hello/:name" component={Hello}/>
           <Route path="link" component={LinkWrapper}/>
         </Router>
-      ), div, () => {
+      ), div, function () {
         var a = div.querySelector('a');
         expect(a.getAttribute('href')).toEqual('/hello/michael?the=query');
       });
@@ -60,7 +60,7 @@ describe('A <Link>', function () {
 
   describe('when its route is active', function () {
     it('has its activeClassName', function (done) {
-      class LinkWrapper extends React.Component {
+      var LinkWrapper = React.createClass({
         render() {
           return (
             <div>
@@ -69,17 +69,12 @@ describe('A <Link>', function () {
             </div>
           );
         }
-      }
+      });
 
       var steps = [], a;
 
       steps.push(function () {
         a = div.querySelector('a');
-        expect(a.className).toEqual('dontKillMe highlight');
-        this.transitionTo('goodbye');
-      });
-
-      steps.push(function () {
         expect(a.className).toEqual('dontKillMe');
         this.transitionTo('hello');
       });
@@ -90,10 +85,14 @@ describe('A <Link>', function () {
       });
 
       function execNextStep() {
-        steps.shift().apply(this, arguments);
+        try {
+          steps.shift().apply(this, arguments);
+        } catch (error) {
+          done(error);
+        }
       }
 
-      var history = new MemoryHistory('/hello');
+      var history = new MemoryHistory('/goodbye');
 
       render((
         <Router history={history} onUpdate={execNextStep}>
@@ -121,11 +120,6 @@ describe('A <Link>', function () {
 
       steps.push(function () {
         a = div.querySelector('a');
-        expect(a.style.color).toEqual('red');
-        this.transitionTo('goodbye');
-      });
-
-      steps.push(function () {
         expect(a.style.color).toEqual('white');
         this.transitionTo('hello');
       });
@@ -136,11 +130,15 @@ describe('A <Link>', function () {
       });
 
       function execNextStep() {
-        steps.shift().apply(this, arguments);
+        try {
+          steps.shift().apply(this, arguments);
+        } catch (error) {
+          done(error);
+        }
       }
 
       render((
-        <Router location="/hello" onUpdate={execNextStep}>
+        <Router location="/goodbye" onUpdate={execNextStep}>
           <Route path="/" component={LinkWrapper}>
             <Route path="hello" component={Hello}/>
             <Route path="goodbye" component={Goodbye}/>
@@ -152,16 +150,16 @@ describe('A <Link>', function () {
 
   describe('when clicked', function () {
     it('calls a user defined click handler', function (done) {
-      class LinkWrapper extends React.Component {
+      var LinkWrapper = React.createClass({
         handleClick(event) {
           event.preventDefault();
           assert.ok(true);
           done();
-        }
+        },
         render() {
           return <Link to="hello" onClick={this.handleClick}>Link</Link>;
         }
-      }
+      });
 
       render((
         <Router location="/link">
@@ -174,14 +172,14 @@ describe('A <Link>', function () {
     });
 
     it('transitions to the correct route', function (done) {
-      class LinkWrapper extends React.Component {
+      var LinkWrapper = React.createClass({
         handleClick() {
           // just here to make sure click handlers don't prevent it from happening
-        }
+        },
         render() {
           return <Link to="hello" onClick={this.handleClick}>Link</Link>;
         }
-      }
+      });
 
       var steps = [];
 

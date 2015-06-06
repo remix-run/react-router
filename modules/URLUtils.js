@@ -1,4 +1,10 @@
-var queryMatcher = /\?(.*)$/;
+import qs from 'qs';
+
+export var parseQueryString = qs.parse;
+
+export function stringifyQuery(query) {
+  return qs.stringify(query, { arrayFormat: 'brackets' });
+}
 
 export function stripLeadingSlashes(path) {
   return path ? path.replace(/^\/+/, '') : '';
@@ -7,6 +13,22 @@ export function stripLeadingSlashes(path) {
 export function isAbsolutePath(path) {
   return typeof path === 'string' && path.charAt(0) === '/';
 }
+
+export function queryContains(query, props) {
+  if (props == null)
+    return true;
+
+  if (query == null)
+    return false;
+
+  for (var p in props)
+    if (props.hasOwnProperty(p) && String(query[p]) !== String(props[p]))
+      return false;
+
+  return true;
+}
+
+var queryMatcher = /\?(.*)$/;
 
 export function getPathname(path) {
   return path.replace(queryMatcher, '');
@@ -125,19 +147,4 @@ export function matchPattern(pattern, pathname) {
 
 export function getParamNames(pattern) {
   return compilePattern(pattern).paramNames;
-}
-
-/**
- * Returns true if the given pathname matches against the routes
- * in the given branch.
- */
-export function branchMatches(branch, pathname) {
-  for (var i = 0, len = branch.length; i < len; ++i) {
-    pathname = matchPattern(branch[i].path, pathname).remainingPathname;
-
-    if (pathname === '')
-      return true;
-  }
-
-  return false;
 }

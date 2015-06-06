@@ -1,11 +1,11 @@
 import expect from 'expect';
 import React from 'react';
-import { createRoutesFromReactChildren } from '../RouteUtils';
 import Route from '../Route';
+import { createRoutesFromReactChildren } from '../RouteUtils';
 
 describe('createRoutesFromReactChildren', function () {
 
-  class Parent extends React.Component {
+  var Parent = React.createClass({
     render() {
       return (
         <div>
@@ -14,19 +14,19 @@ describe('createRoutesFromReactChildren', function () {
         </div>
       );
     }
-  }
+  });
 
-  class Hello extends React.Component {
+  var Hello = React.createClass({
     render() {
       return <div>Hello</div>;
     }
-  }
+  });
 
-  class Goodbye extends React.Component {
+  var Goodbye = React.createClass({
     render() {
       return <div>Goodbye</div>;
     }
-  }
+  });
  
   it('works with nested routes', function () {
     expect(createRoutesFromReactChildren(
@@ -86,4 +86,5 @@ describe('createRoutesFromReactChildren', function () {
       }
     ]);
   });
+
 });

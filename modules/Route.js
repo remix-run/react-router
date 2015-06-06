@@ -15,37 +15,40 @@ var { string, bool, func } = React.PropTypes;
  * "active" and their components are rendered into the DOM, nested in the same
  * order as they are in the tree.
  */
-class Route extends React.Component {
+export var Route = React.createClass({
 
-  static createRouteFromReactElement(element) {
-    var route = createRouteFromReactElement(element);
+  statics: {
 
-    if (route.handler) {
-      warning(false, '<Route handler> is deprecated, use <Route component> instead');
-      route.component = route.handler;
-      delete route.handler;
+    createRouteFromReactElement(element) {
+      var route = createRouteFromReactElement(element);
+
+      if (route.handler) {
+        warning(false, '<Route handler> is deprecated, use <Route component> instead');
+        route.component = route.handler;
+        delete route.handler;
+      }
+
+      return route;
     }
+  
+  },
 
-    return route;
-  }
-
-  static propTypes = {
+  propTypes: {
     path: string,
     ignoreScrollBehavior: bool,
     handler: component,
     component,
     components,
     getComponents: func
-  };
+  },
 
   render() {
     invariant(
       false,
-      '<%s> elements are for router configuration only and should not be rendered',
-      this.constructor.name
+      '<Route> elements are for router configuration only and should not be rendered'
     );
   }
 
-}
+});
 
 export default Route;

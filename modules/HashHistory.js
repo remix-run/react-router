@@ -1,7 +1,7 @@
 import DOMHistory from './DOMHistory';
 import NavigationTypes from './NavigationTypes';
 import { getHashPath, replaceHashPath } from './DOMUtils';
-import { isAbsolutePath } from './PathUtils';
+import { isAbsolutePath } from './URLUtils';
 
 function ensureSlash() {
   var path = getHashPath();

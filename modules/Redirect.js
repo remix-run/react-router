@@ -1,32 +1,43 @@
 import React from 'react';
-import Route from './Route';
+import invariant from 'invariant';
 import { createRouteFromReactElement } from './RouteUtils';
 import { falsy } from './PropTypes';
 
 var { string } = React.PropTypes;
 
-class Redirect extends Route {
+export var Redirect = React.createClass({
 
-  static createRouteFromReactElement(element) {
-    var route = createRouteFromReactElement(element);
+  statics: {
 
-    if (route.from)
-      route.path = route.from;
+    createRouteFromReactElement(element) {
+      var route = createRouteFromReactElement(element);
 
-    route.onEnter = function (nextState, router) {
-      router.replaceWith(route.to, nextState.query);
-    };
+      if (route.from)
+        route.path = route.from;
 
-    return route;
-  }
+      route.onEnter = function (nextState, router) {
+        router.replaceWith(route.to, nextState.query);
+      };
+
+      return route;
+    }
+
+  },
   
-  static propTypes = {
+  propTypes: {
     from: string,
     to: string.isRequired,
     onEnter: falsy,
     children: falsy
-  };
+  },
+
+  render() {
+    invariant(
+      false,
+      '<Redirect> elements are for router configuration only and should not be rendered'
+    );
+  }
   
-}
+});
 
 export default Redirect;

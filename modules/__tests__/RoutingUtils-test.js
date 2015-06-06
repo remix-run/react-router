@@ -1,10 +1,8 @@
 import expect, { spyOn } from 'expect';
-import { getProps } from '../getProps';
-import qs from 'qs';
+import { parseQueryString } from '../URLUtils';
+import { getProps } from '../RoutingUtils';
 
-var parseQueryString = qs.parse;
-
-describe('Matching pathnames', function () {
+describe('getProps', function () {
   var RootRoute, AboutRoute, CoursesRoute, GradesRoute, CourseRoute, CourseGradesRoute, AssignmentRoute, AssignmentsRoute, CatchAllRoute, AccountRoute, AccountIndexRoute, ProfileRoute, ProfileIndexRoute;
   beforeEach(function () {
     AboutRoute = {
