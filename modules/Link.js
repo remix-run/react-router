@@ -1,4 +1,5 @@
 import React from 'react';
+console.log('got the source');
 
 var { object, string, func } = React.PropTypes;
 
@@ -69,7 +70,9 @@ export class Link extends React.Component {
     event.preventDefault();
 
     if (allowTransition)
-      this.context.router.transitionTo(this.props.to, this.props.query);
+      this.context.router.transitionTo(
+        this.props.to, this.props.query, this.props.transitionState
+      );
   }
 
   render() {

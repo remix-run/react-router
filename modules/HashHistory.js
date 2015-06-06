@@ -68,23 +68,27 @@ export class HashHistory extends DOMHistory {
     }
   }
 
-  push(path) {
+  push(path, transitionState) {
     this._recordScrollPosition();
 
     this._ignoreHashChange = true;
     window.location.hash = path;
     this._ignoreHashChange = false;
 
-    this.location = this._createLocation(path, null, NavigationTypes.PUSH);
+    this.location = this._createLocation(
+      path, null, NavigationTypes.PUSH, transitionState
+    );
     this._notifyChange();
   }
 
-  replace(path) {
+  replace(path, transitionState) {
     this._ignoreHashChange = true;
     replaceHashPath(path);
     this._ignoreHashChange = false;
 
-    this.location = this._createLocation(path, null, NavigationTypes.REPLACE);
+    this.location = this._createLocation(
+      path, null, NavigationTypes.REPLACE, transitionState
+    );
     this._notifyChange();
   }
 

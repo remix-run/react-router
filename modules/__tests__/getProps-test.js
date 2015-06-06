@@ -1,4 +1,5 @@
 import expect, { spyOn } from 'expect';
+import Location from '../Location';
 import { getProps } from '../getProps';
 import qs from 'qs';
 
@@ -17,7 +18,7 @@ describe('Matching pathnames', function () {
 
     CoursesRoute = {
       path: 'courses',
-      getChildRoutes(callback) {
+      getChildRoutes(transitionState, callback) {
         callback(null, [ GradesRoute ]);
       }
     };
@@ -35,7 +36,7 @@ describe('Matching pathnames', function () {
     };
 
     CourseRoute = {
-      getChildRoutes(callback) {
+      getChildRoutes(transitionState, callback) {
         setTimeout(function () {
           callback(null, [ CourseGradesRoute, AssignmentRoute, AssignmentsRoute ]);
         }, 0);
@@ -53,7 +54,7 @@ describe('Matching pathnames', function () {
 
     ProfileRoute = {
       path: 'profile',
-      getIndexRoute (cb) {
+      getIndexRoute (transitionState, cb) {
         cb(null, ProfileIndexRoute);
       }
     };
@@ -210,6 +211,46 @@ describe('Matching pathnames', function () {
       expect(outerProps).toNotExist();
     });
   });
+
+});
+
+describe('transitionState', function () {
+  var RouteA = {path: 'test'};
+  var RouteB = {path: 'test'};
+  var RootRoute = {
+    path: '/',
+    getIndexRoute (transitionState, cb) {
+      if (transitionState.test)
+        cb(null, RouteA);
+      else
+        cb(null, RouteB);
+    },
+    getChildRoutes (transitionState, cb) {
+      if (transitionState.test)
+        cb(null, [RouteA]);
+      else
+        cb(null, [RouteB]);
+    }
+  };
+
+  it('is passed to getChildRoutes', function (done) {
+    var transitionState = { test: true };
+    var location = new Location('/test', null, null, null, transitionState);
+    getProps(RootRoute, location, parseQueryString, function (err, props) {
+      expect(props.branch).toEqual([RootRoute, RouteA]);
+      done();
+    });
+  });
+
+  it('is passed to getIndexRoute', function (done) {
+    var transitionState = { test: true };
+    var location = new Location('/', null, null, null, transitionState);
+    getProps(RootRoute, location, parseQueryString, function (err, props) {
+      expect(props.branch).toEqual([RootRoute, RouteA]);
+      done();
+    });
+  });
+
 });
 
 describe('Matching params', function () {
@@ -364,4 +405,5 @@ describe('Matching params', function () {
       });
     });
   });
+
 });
