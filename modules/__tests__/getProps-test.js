@@ -5,7 +5,7 @@ import qs from 'qs';
 var parseQueryString = qs.parse;
 
 describe('Matching pathnames', function () {
-  var RootRoute, AboutRoute, CoursesRoute, GradesRoute, CourseRoute, CourseGradesRoute, AssignmentRoute, AssignmentsRoute, CatchAllRoute;
+  var RootRoute, AboutRoute, CoursesRoute, GradesRoute, CourseRoute, CourseGradesRoute, AssignmentRoute, AssignmentsRoute, CatchAllRoute, AccountRoute, AccountIndexRoute, ProfileRoute, ProfileIndexRoute;
   beforeEach(function () {
     AboutRoute = {
       path: 'about'
@@ -42,12 +42,28 @@ describe('Matching pathnames', function () {
       }
     };
 
+    AccountIndexRoute = {};
+
+    AccountRoute = {
+      path: 'account',
+      indexRoute: AccountIndexRoute
+    };
+
+    ProfileIndexRoute = {};
+
+    ProfileRoute = {
+      path: 'profile',
+      getIndexRoute (cb) {
+        cb(null, ProfileIndexRoute);
+      }
+    };
+
     CatchAllRoute = {
       path: '*'
     };
 
     RootRoute = {
-      childRoutes: [ AboutRoute, CoursesRoute, CourseRoute, CatchAllRoute ]
+      childRoutes: [ AboutRoute, CoursesRoute, CourseRoute, AccountRoute, ProfileRoute, CatchAllRoute ]
     };
   });
 
@@ -89,6 +105,22 @@ describe('Matching pathnames', function () {
       getProps(RootRoute, '/courses', parseQueryString, function () {
         expect(spy.calls.length).toEqual(0);
         done();
+      });
+    });
+
+    describe('with an index route', function () {
+      it('matches synchronously', function (done) {
+        getProps(RootRoute, '/account', parseQueryString, function (error, props) {
+          expect(props.branch).toEqual([ RootRoute, AccountRoute, AccountIndexRoute]);
+          done();
+        });
+      });
+
+      it('matches asynchronously', function (done) {
+        getProps(RootRoute, '/profile', parseQueryString, function (error, props) {
+          expect(props.branch).toEqual([ RootRoute, ProfileRoute, ProfileIndexRoute]);
+          done();
+        });
       });
     });
   });

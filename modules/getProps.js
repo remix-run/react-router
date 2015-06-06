@@ -35,13 +35,27 @@ function createParams(paramNames, paramValues) {
 
 function matchRouteDeep(route, pathname, callback) {
   var { remainingPathname, paramNames, paramValues } = matchPattern(route.path, pathname);
+  var isExactMatch = remainingPathname === '';
 
-  if (remainingPathname === '') {
-    // This route matched the whole path!
-    callback(null, {
-      params: createParams(paramNames, paramValues),
-      branch: [ route ]
-    });
+  if (isExactMatch) {
+    var params = createParams(paramNames, paramValues);
+    var branch = [ route ];
+
+    if (route.indexRoute) {
+      branch.push(route.indexRoute);
+      callback(null, { params, branch });
+    } else if (route.getIndexRoute) {
+      route.getIndexRoute(function (error, indexRoute) {
+        if (error) {
+          callback(error);
+        } else {
+          branch.push(indexRoute);
+          callback(null, { params, branch });
+        }
+      });
+    } else {
+      callback(null, { params, branch });
+    }
   } else if (remainingPathname != null) {
     // This route matched at least some of the path.
     getChildRoutes(route, function (error, childRoutes) {
