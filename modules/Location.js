@@ -20,16 +20,17 @@ export class Location {
       return new Location(object);
 
     if (object && object.path)
-      return new Location(object.path, object.key, object.navigationType, object.scrollPosition);
+      return new Location(object.path, object.key, object.navigationType, object.scrollPosition, object.transitionState);
 
     throw new Error('Unable to create a Location from ' + object);
   }
 
-  constructor(path, key=null, navigationType=NavigationTypes.POP, scrollPosition=null) {
+  constructor(path, key=null, navigationType=NavigationTypes.POP, scrollPosition=null, transitionState=null) {
     this.path = path;
     this.key = key;
     this.navigationType = navigationType;
     this.scrollPosition = scrollPosition;
+    this.transitionState = transitionState;
   }
 
 }

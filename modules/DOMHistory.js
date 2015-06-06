@@ -20,11 +20,11 @@ export class DOMHistory extends History {
     window.history.go(n);
   }
 
-  _createLocation(path, key, navigationType) {
+  _createLocation(path, key, navigationType, transitionState) {
     var scrollKey = key || path;
     var scrollPosition = this.scrollHistory[scrollKey];
 
-    return new Location(path, key, navigationType, scrollPosition);
+    return new Location(path, key, navigationType, scrollPosition, transitionState);
   }
 
   _recordScrollPosition() {
