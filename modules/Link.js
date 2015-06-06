@@ -28,30 +28,25 @@ function isModifiedEvent(event) {
  *
  *   <Link to="showPost" params={{ postID: "123" }} query={{ show:true }}/>
  */
-export class Link extends React.Component {
+export var Link = React.createClass({
 
-  static contextTypes = {
+  contextTypes: {
     router: object.isRequired
-  };
+  },
 
-  static propTypes = {
+  propTypes: {
     activeStyle: object,
     activeClassName: string,
     to: string.isRequired,
     query: object,
     onClick: func
-  };
+  },
 
-  static defaultProps = {
+  getDefaultProps() {
     className: '',
     activeClassName: 'active',
     style: {}
-  };
-
-  constructor(props, context) {
-    super(props, context);
-    this.handleClick = this.handleClick.bind(this);
-  }
+  },
 
   handleClick(event) {
     var allowTransition = true;
@@ -70,7 +65,7 @@ export class Link extends React.Component {
 
     if (allowTransition)
       this.context.router.transitionTo(this.props.to, this.props.query);
-  }
+  },
 
   render() {
     var { router } = this.context;
@@ -92,6 +87,6 @@ export class Link extends React.Component {
     return React.createElement('a', props);
   }
 
-}
+});
 
 export default Link;

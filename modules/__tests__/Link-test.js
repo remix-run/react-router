@@ -39,11 +39,11 @@ describe('A <Link>', function () {
   });
 
   describe('with params and a query', function () {
-    class LinkWrapper extends React.Component {
+    var LinkWrapper = React.createClass({
       render() {
         return <Link to="/hello/michael" query={{the: 'query'}}>Link</Link>;
       }
-    }
+    });
 
     it('knows how to make its href', function () {
       render((
@@ -105,7 +105,7 @@ describe('A <Link>', function () {
     });
 
     it('has its activeStyle', function (done) {
-      class LinkWrapper extends React.Component {
+      var LinkWrapper = React.createClass({
         render() {
           return (
             <div>
@@ -114,7 +114,7 @@ describe('A <Link>', function () {
             </div>
           );
         }
-      }
+      });
 
       var steps = [], a;
 
