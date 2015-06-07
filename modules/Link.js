@@ -43,9 +43,11 @@ export var Link = React.createClass({
   },
 
   getDefaultProps() {
-    className: '',
-    activeClassName: 'active',
-    style: {}
+    return {
+      className: '',
+      activeClassName: 'active',
+      style: {}
+    };
   },
 
   handleClick(event) {
