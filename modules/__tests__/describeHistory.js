@@ -1,13 +1,12 @@
-var expect = require('expect');
-var { createSpy, spyOn } = expect;
-//var AbstractHistory = require('../AbstractHistory');
+import expect, { createSpy, spyOn } from 'expect';
+import History from '../History';
 
-function describeHistory(history) {
+export default function describeHistory(history) {
   it('is an instanceof History', function () {
-    expect(history).toBeAn(AbstractHistory);
+    expect(history).toBeA(History);
   });
 
-  var RequiredMethods = [ 'getPath', 'push', 'replace', 'go' ];
+  var RequiredMethods = [ 'push', 'replace', 'go' ];
 
   RequiredMethods.forEach(function (method) {
     it('has a ' + method + ' method', function () {
@@ -51,5 +50,3 @@ function describeHistory(history) {
     });
   });
 }
-
-module.exports = describeHistory;

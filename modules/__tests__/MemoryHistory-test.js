@@ -1,20 +1,16 @@
-var expect = require('expect');
-var describeHistory = require('./describeHistory');
-var History = require('../History');
+import expect from 'expect';
+import describeHistory from './describeHistory';
+import MemoryHistory from '../MemoryHistory';
 
-describe.skip('History', function () {
-  describeHistory(new History('/'));
+describe('MemoryHistory', function () {
+  describeHistory(new MemoryHistory('/'));
 
-  var history
+  var history;
   beforeEach(function () {
-    history = new History('/');
+    history = new MemoryHistory('/');
   });
 
   describe('when first created', function () {
-    it('has length 1', function () {
-      expect(history.length).toEqual(1);
-    });
-
     it('cannot go back', function () {
       expect(history.canGoBack()).toBe(false);
     });
@@ -29,16 +25,12 @@ describe.skip('History', function () {
       history.push('/push');
     });
 
-    it('increments length by one', function () {
-      expect(history.length).toEqual(2);
-    });
-
     it('increments current index by one', function () {
       expect(history.current).toEqual(1);
     });
 
     it('has the correct path', function () {
-      expect(history.getPath()).toEqual('/push');
+      expect(history.location.path).toEqual('/push');
     });
 
     it('can go back', function () {
@@ -54,16 +46,12 @@ describe.skip('History', function () {
         history.replace('/replace');
       });
 
-      it('maintains the length', function () {
-        expect(history.length).toEqual(2);
-      });
-  
       it('maintains the current index', function () {
         expect(history.current).toEqual(1);
       });
 
       it('returns the correct path', function () {
-        expect(history.getPath()).toEqual('/replace');
+        expect(history.location.path).toEqual('/replace');
       });
 
       it('can go back', function () {
@@ -80,16 +68,12 @@ describe.skip('History', function () {
         history.back();
       });
 
-      it('maintains the length', function () {
-        expect(history.length).toEqual(2);
-      });
-
       it('decrements current index by one', function () {
         expect(history.current).toEqual(0);
       });
 
       it('has the correct path', function () {
-        expect(history.getPath()).toEqual('/');
+        expect(history.location.path).toEqual('/');
       });
 
       it('cannot go back', function () {
