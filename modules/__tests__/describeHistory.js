@@ -6,7 +6,7 @@ export default function describeHistory(history) {
     expect(history).toBeA(History);
   });
 
-  var RequiredMethods = [ 'push', 'replace', 'go' ];
+  var RequiredMethods = [ 'pushState', 'replaceState', 'go' ];
 
   RequiredMethods.forEach(function (method) {
     it('has a ' + method + ' method', function () {
@@ -15,21 +15,21 @@ export default function describeHistory(history) {
   });
 
   describe('adding/removing a listener', function () {
-    var push, go, pushSpy, goSpy;
+    var pushState, go, pushStateSpy, goSpy;
     beforeEach(function () {
       // It's a bit tricky to test change listeners properly because
       // they are triggered when the URL changes. So we need to stub
       // out push/go to only notify listeners ... but we can't make
       // assertions on the location because it will be wrong.
-      push = history.push;
-      pushSpy = spyOn(history, 'push').andCall(history._notifyChange);
+      pushState = history.pushState;
+      pushStateSpy = spyOn(history, 'pushState').andCall(history._notifyChange);
 
       go = history.go;
       goSpy = spyOn(history, 'go').andCall(history._notifyChange);
     });
 
     afterEach(function () {
-      history.push = push;
+      history.push = pushState;
       history.go = go;
     });
 
@@ -37,8 +37,8 @@ export default function describeHistory(history) {
       var spy = expect.createSpy(function () {});
 
       history.addChangeListener(spy);
-      history.push('/home'); // call #1
-      expect(pushSpy).toHaveBeenCalled();
+      history.pushState(null, '/home'); // call #1
+      expect(pushStateSpy).toHaveBeenCalled();
 
       expect(spy.calls.length).toEqual(1);
 

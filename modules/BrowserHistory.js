@@ -1,10 +1,7 @@
 import DOMHistory from './DOMHistory';
-import { getWindowPath, supportsHistory } from './DOMUtils';
+import { getWindowPath, getWindowScrollPosition, supportsHistory } from './DOMUtils';
 import NavigationTypes from './NavigationTypes';
-
-function createRandomKey() {
-  return Math.random().toString(36).substr(2);
-}
+import Location from './Location';
 
 /**
  * A history implementation for DOM environments that support the
@@ -18,26 +15,31 @@ function createRandomKey() {
  */
 export class BrowserHistory extends DOMHistory {
 
-  constructor(getScrollPosition) {
-    super(getScrollPosition);
+  constructor(getScrollPosition=getWindowScrollPosition) {
+    super();
+    this.getScrollPosition = getScrollPosition;
     this.handlePopState = this.handlePopState.bind(this);
     this.isSupported = supportsHistory();
   }
 
   _updateLocation(navigationType) {
-    var key = null;
+    var state = null;
 
     if (this.isSupported) {
-      var state = window.history.state;
-      key = state && state.key;
+      state = window.history.state || {};
 
-      if (!key) {
-        key = createRandomKey();
-        window.history.replaceState({ key }, '');
+      if (!state.key) {
+        state.key = createRandomKey();
+        window.history.replaceState(state, '');
       }
     }
 
-    this.location = this._createLocation(getWindowPath(), key, navigationType);
+    this.location = new Location(state, getWindowPath(), navigationType);
+  }
+
+  setup() {
+    if (this.location == null)
+      this._updateLocation();
   }
 
   handlePopState(event) {
@@ -72,19 +74,20 @@ export class BrowserHistory extends DOMHistory {
     }
   }
 
-  setup() {
-    if (this.location == null)
-      this._updateLocation();
-  }
-
   // http://www.w3.org/TR/2011/WD-html5-20110113/history.html#dom-history-pushstate
-  push(path) {
+  pushState(state, path) {
     if (this.isSupported) {
-      this._recordScrollPosition();
+      var currentState = window.history.state;
 
-      var key = createRandomKey();
-      window.history.pushState({ key }, '', path);
-      this.location = this._createLocation(path, key, NavigationTypes.PUSH);
+      if (currentState) {
+        Object.assign(currentState, this.getScrollPosition());
+        window.history.replaceState(currentState, '');
+      }
+
+      state = this._createState(state);
+
+      window.history.pushState(state, '', path);
+      this.location = new Location(state, path, NavigationTypes.PUSH);
       this._notifyChange();
     } else {
       window.location = path;
@@ -92,11 +95,12 @@ export class BrowserHistory extends DOMHistory {
   }
 
   // http://www.w3.org/TR/2011/WD-html5-20110113/history.html#dom-history-replacestate
-  replace(path) {
+  replaceState(state, path) {
     if (this.isSupported) {
-      var key = createRandomKey();
-      window.history.replaceState({ key }, '', path);
-      this.location = this._createLocation(path, key, NavigationTypes.REPLACE);
+      state = this._createState(state);
+
+      window.history.replaceState(state, '', path);
+      this.location = new Location(state, path, NavigationTypes.REPLACE);
       this._notifyChange();
     } else {
       window.location.replace(path);

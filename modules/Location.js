@@ -6,7 +6,7 @@ import NavigationTypes from './NavigationTypes';
  * 1. Where am I?
  * 2. How did I get here?
  */
-export class Location {
+class Location {
 
   static isLocation(object) {
     return object instanceof Location;
@@ -17,19 +17,18 @@ export class Location {
       return object;
 
     if (typeof object === 'string')
-      return new Location(object);
+      return new Location(null, object);
 
     if (object && object.path)
-      return new Location(object.path, object.key, object.navigationType, object.scrollPosition);
+      return new Location(object.state, object.path, object.navigationType);
 
     throw new Error('Unable to create a Location from ' + object);
   }
 
-  constructor(path, key=null, navigationType=NavigationTypes.POP, scrollPosition=null) {
+  constructor(state, path, navigationType=NavigationTypes.POP) {
+    this.state = state;
     this.path = path;
-    this.key = key;
     this.navigationType = navigationType;
-    this.scrollPosition = scrollPosition;
   }
 
 }

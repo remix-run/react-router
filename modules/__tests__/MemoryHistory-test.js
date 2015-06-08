@@ -22,7 +22,7 @@ describe('MemoryHistory', function () {
 
   describe('when pushing a new path', function () {
     beforeEach(function () {
-      history.push('/push');
+      history.pushState(null, '/push');
     });
 
     it('increments current index by one', function () {
@@ -43,7 +43,7 @@ describe('MemoryHistory', function () {
  
     describe('and then replacing that path', function () {
       beforeEach(function () {
-        history.replace('/replace');
+        history.replaceState(null, '/replace');
       });
 
       it('maintains the current index', function () {

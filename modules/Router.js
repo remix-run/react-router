@@ -15,7 +15,7 @@ export var Router = React.createClass({
   statics: {
     
     match(routes, location, callback) {
-      // TODO: Mimic what we're doing in _updateLocation, but statically
+      // TODO: Mimic what we're doing in _updateState, but statically
       // so we can get the right props for doing server-side rendering.
     }
 
@@ -60,10 +60,7 @@ export var Router = React.createClass({
     };
   },
 
-  _updateLocation(location) {
-    if (!Location.isLocation(location))
-      location = Location.create(location);
-
+  _updateState(location) {
     this.setState({ isTransitioning: true });
     this.nextLocation = location;
 
@@ -172,29 +169,29 @@ export var Router = React.createClass({
     return makeHref(pathname, query, stringifyQuery, history);
   },
 
-  transitionTo(pathname, query) {
+  transitionTo(pathname, query, state=null) {
     var path = this.makePath(pathname, query);
     var { history } = this.props;
 
     if (history) {
       if (this.nextLocation) {
-        history.replace(path);
+        history.replaceState(state, path);
       } else {
-        history.push(path);
+        history.pushState(state, path);
       }
     } else {
-      this._updateLocation(path);
+      this._updateState(new Location(state, path));
     }
   },
 
-  replaceWith(pathname, query) {
+  replaceWith(pathname, query, state=null) {
     var path = this.makePath(pathname, query);
     var { history } = this.props;
 
     if (history) {
-      history.replace(path);
+      history.replaceState(state, path);
     } else {
-      this._updateLocation(path);
+      this._updateState(new Location(state, path));
     }
   },
 
@@ -223,14 +220,14 @@ export var Router = React.createClass({
       if (typeof history.setup === 'function')
         history.setup();
 
-      this._updateLocation(history.location);
+      this._updateState(history.location);
     } else {
-      this._updateLocation(location);
+      this._updateState(location);
     }
   },
 
   handleHistoryChange() {
-    this._updateLocation(this.props.history.location);
+    this._updateState(this.props.history.location);
   },
 
   componentDidMount() {
@@ -256,11 +253,11 @@ export var Router = React.createClass({
     if (this.props.children !== nextProps.children) {
       this.routes = createRoutes(nextProps.children);
 
-      // Call this now because _updateLocation uses
-      // this.routes to determine state.
-      this._updateLocation(nextProps.location);
+      // Call this here because _updateState
+      // uses this.routes to determine state.
+      this._updateState(nextProps.location);
     } else if (this.props.location !== nextProps.location) {
-      this._updateLocation(nextProps.location);
+      this._updateState(nextProps.location);
     }
   },
 

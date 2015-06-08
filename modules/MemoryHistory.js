@@ -3,6 +3,22 @@ import NavigationTypes from './NavigationTypes';
 import Location from './Location';
 import History from './History';
 
+function createEntry(object) {
+  if (typeof object === 'string')
+    return { path: object };
+
+  if (object && typeof object === 'object') {
+    invariant(
+      typeof object.path === 'string',
+      'A history entry must have a string path'
+    );
+
+    return object;
+  }
+
+  throw new Error('Unable to create history entry from ' + object);
+}
+
 /**
  * A concrete History class that doesn't require a DOM. Ideal
  * for testing because it allows you to specify route history
@@ -17,7 +33,11 @@ export class MemoryHistory extends History {
       entries = [ '/' ];
     } else if (typeof entries === 'string') {
       entries = [ entries ];
+    } else if (!Array.isArray(entries)) {
+      throw new Error('MemoryHistory needs an array of entries');
     }
+
+    entries = entries.map(createEntry);
 
     if (current == null) {
       current = entries.length - 1;
@@ -31,21 +51,33 @@ export class MemoryHistory extends History {
 
     this.entries = entries;
     this.current = current;
-    this.location = new Location(entries[current]);
+
+    var currentEntry = entries[current];
+
+    this.location = new Location(
+      currentEntry.state || null,
+      currentEntry.path
+    );
   }
 
   // http://www.w3.org/TR/2011/WD-html5-20110113/history.html#dom-history-pushstate
-  push(path) {
+  pushState(state, path) {
+    state = this._createState(state);
+
     this.current += 1;
-    this.entries = this.entries.slice(0, this.current).concat([ path ]);
-    this.location = new Location(path, null, NavigationTypes.PUSH);
+    this.entries = this.entries.slice(0, this.current).concat([{ state, path }]);
+    this.location = new Location(state, path, NavigationTypes.PUSH);
+
     this._notifyChange();
   }
 
   // http://www.w3.org/TR/2011/WD-html5-20110113/history.html#dom-history-replacestate
-  replace(path) {
-    this.entries[this.current] = path;
-    this.location = new Location(path, null, NavigationTypes.REPLACE);
+  replaceState(state, path) {
+    state = this._createState(state);
+
+    this.entries[this.current] = { state, path };
+    this.location = new Location(state, path, NavigationTypes.REPLACE);
+
     this._notifyChange();
   }
 
@@ -60,7 +92,14 @@ export class MemoryHistory extends History {
     );
 
     this.current += n;
-    this.location = new Location(this.entries[this.current], null, NavigationTypes.POP);
+    var currentEntry = this.entries[this.current];
+
+    this.location = new Location(
+      currentEntry.state || null,
+      currentEntry.path,
+      NavigationTypes.POP
+    );
+
     this._notifyChange();
   }
 
