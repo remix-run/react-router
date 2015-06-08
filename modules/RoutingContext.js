@@ -1,6 +1,8 @@
 import invariant from 'invariant';
 import { components, routes } from './PropTypes';
 import React, { isValidElement } from 'react';
+import { branchMatches, makePath, makeHref} from './RoutingUtils';
+import { queryContains } from './URLUtils';
 
 var { any, arrayOf, bool, object } = React.PropTypes;
 
@@ -28,6 +30,33 @@ export var RoutingContext = React.createClass({
       components: null,
       isTransitioning: false
     };
+  },
+
+  childContextTypes: {
+    router: object.isRequired
+  },
+
+  getChildContext() {
+    return {
+      router: Object.assign({}, this.props.routerContext, {
+        makeHref: this.makeHref,
+        makePath: this.makePath,
+        isActive: this.isActive,
+      })
+    };
+  },
+
+  isActive(pathname, query) {
+    return branchMatches(this.state.branch, pathname) && queryContains(this.state.query, query);
+  },
+
+  makePath(pathname, query) {
+    return makePath(pathname, query, this.props.stringifyQuery);
+  },
+
+  makeHref(pathname, query) {
+    var { stringifyQuery, history } = this.props;
+    return makeHref(pathname, query, stringifyQuery, history);
   },
 
   _updateState(props) {

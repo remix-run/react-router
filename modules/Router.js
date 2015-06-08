@@ -3,7 +3,7 @@ import warning from 'warning';
 import invariant from 'invariant';
 import { createRoutes } from './RouteUtils';
 import { getQueryString, parseQueryString, stringifyQuery, queryContains } from './URLUtils';
-import { branchMatches, getProps, getTransitionHooks, getAndAssignComponents } from './RoutingUtils';
+import { branchMatches, getProps, getTransitionHooks, getAndAssignComponents, makePath, makeHref } from './RoutingUtils';
 import { routes, component, components, history, location } from './PropTypes';
 import RoutingContext from './RoutingContext';
 import Location from './Location';
@@ -160,15 +160,7 @@ export var Router = React.createClass({
    * Returns a full URL path from the given pathname and query.
    */
   makePath(pathname, query) {
-    if (query) {
-      if (typeof query !== 'string')
-        query = this.props.stringifyQuery(query);
-
-      if (query !== '')
-        return pathname + '?' + query;
-    }
-
-    return pathname;
+    return makePath(pathname, query, this.props.stringifyQuery);
   },
 
   /**
@@ -176,13 +168,8 @@ export var Router = React.createClass({
    * pathname and query.
    */
   makeHref(pathname, query) {
-    var path = this.makePath(pathname, query);
-    var { history } = this.props;
-
-    if (history && history.makeHref)
-      return history.makeHref(path);
-
-    return path;
+    var { stringifyQuery, history } = this.props;
+    return makeHref(pathname, query, stringifyQuery, history);
   },
 
   transitionTo(pathname, query) {
@@ -223,10 +210,6 @@ export var Router = React.createClass({
 
   goForward() {
     this.go(1);
-  },
-
-  isActive(pathname, query) {
-    return branchMatches(this.state.branch, pathname) && queryContains(this.state.query, query);
   },
 
   componentWillMount() {
@@ -288,18 +271,22 @@ export var Router = React.createClass({
       history.removeChangeListener(this.handleHistoryChange);
   },
 
-  childContextTypes: {
-    router: object.isRequired
-  },
-
-  getChildContext() {
-    return {
-      router: this
-    };
-  },
-
   render() {
-    return <RoutingContext {...this.state}/>;
+    return <RoutingContext
+      {...this.state}
+      stringifyQuery={this.props.stringifyQuery}
+      history={this.props.history}
+      routerContext={{
+        transitionTo: this.transitionTo,
+        replaceWith: this.replaceWith,
+        go: this.go,
+        goBack: this.goBack,
+        goForward: this.goForward,
+        addTransitionHook: this.addTransitionHook,
+        removeTransitionHook: this.removeTransitionHook,
+        cancelTransition: this.cancelTransition,
+      }}
+    />;
   }
 
 });
