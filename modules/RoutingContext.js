@@ -4,7 +4,7 @@ import React, { isValidElement } from 'react';
 import { branchMatches, makePath, makeHref} from './RoutingUtils';
 import { queryContains } from './URLUtils';
 
-var { any, arrayOf, bool, object } = React.PropTypes;
+var { any, arrayOf, bool, object, func } = React.PropTypes;
 
 function createElement(component, props) {
   return (typeof component === 'function') ? React.createElement(component, props) : null;
@@ -13,6 +13,9 @@ function createElement(component, props) {
 export var RoutingContext = React.createClass({
 
   propTypes: {
+    stringifyQuery: func,
+    history: object,
+    routerContext: object,
     location: any,
     branch: routes,
     params: object,
