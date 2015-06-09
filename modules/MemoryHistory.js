@@ -55,8 +55,8 @@ export class MemoryHistory extends History {
     var currentEntry = entries[current];
 
     this.location = new Location(
-      currentEntry.state || null,
-      currentEntry.path
+      currentEntry.path,
+      currentEntry.state
     );
   }
 
@@ -66,7 +66,7 @@ export class MemoryHistory extends History {
 
     this.current += 1;
     this.entries = this.entries.slice(0, this.current).concat([{ state, path }]);
-    this.location = new Location(state, path, NavigationTypes.PUSH);
+    this.location = new Location(path, state, NavigationTypes.PUSH);
 
     this._notifyChange();
   }
@@ -76,7 +76,7 @@ export class MemoryHistory extends History {
     state = this._createState(state);
 
     this.entries[this.current] = { state, path };
-    this.location = new Location(state, path, NavigationTypes.REPLACE);
+    this.location = new Location(path, state, NavigationTypes.REPLACE);
 
     this._notifyChange();
   }
@@ -95,8 +95,8 @@ export class MemoryHistory extends History {
     var currentEntry = this.entries[this.current];
 
     this.location = new Location(
-      currentEntry.state || null,
       currentEntry.path,
+      currentEntry.state,
       NavigationTypes.POP
     );
 

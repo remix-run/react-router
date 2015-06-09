@@ -1,8 +1,8 @@
 /* histories */
 export History from './History';
 export DOMHistory from './DOMHistory';
-export HashHistory from './HashHistory';
 export BrowserHistory from './BrowserHistory';
+export HashHistory from './HashHistory';
 export MemoryHistory from './HashHistory';
 
 /* components */

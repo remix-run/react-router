@@ -17,17 +17,17 @@ class Location {
       return object;
 
     if (typeof object === 'string')
-      return new Location(null, object);
+      return new Location(object);
 
     if (object && object.path)
-      return new Location(object.state, object.path, object.navigationType);
+      return new Location(object.path, object.state, object.navigationType);
 
     throw new Error('Unable to create a Location from ' + object);
   }
 
-  constructor(state, path, navigationType=NavigationTypes.POP) {
-    this.state = state;
+  constructor(path, state, navigationType=NavigationTypes.POP) {
     this.path = path;
+    this.state = state || null;
     this.navigationType = navigationType;
   }
 

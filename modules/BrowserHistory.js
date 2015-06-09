@@ -3,6 +3,13 @@ import { getWindowPath, getWindowScrollPosition, supportsHistory } from './DOMUt
 import NavigationTypes from './NavigationTypes';
 import Location from './Location';
 
+function updateCurrentState(extraState) {
+  var state = window.history.state;
+
+  if (state)
+    window.history.replaceState(Object.assign(state, extraState), '');
+}
+
 /**
  * A history implementation for DOM environments that support the
  * HTML5 history API (pushState, replaceState, and the popstate event).
@@ -34,7 +41,7 @@ export class BrowserHistory extends DOMHistory {
       }
     }
 
-    this.location = new Location(state, getWindowPath(), navigationType);
+    this.location = new Location(getWindowPath(), state, navigationType);
   }
 
   setup() {
@@ -77,17 +84,12 @@ export class BrowserHistory extends DOMHistory {
   // http://www.w3.org/TR/2011/WD-html5-20110113/history.html#dom-history-pushstate
   pushState(state, path) {
     if (this.isSupported) {
-      var currentState = window.history.state;
-
-      if (currentState) {
-        Object.assign(currentState, this.getScrollPosition());
-        window.history.replaceState(currentState, '');
-      }
+      updateCurrentState(this.getScrollPosition());
 
       state = this._createState(state);
 
       window.history.pushState(state, '', path);
-      this.location = new Location(state, path, NavigationTypes.PUSH);
+      this.location = new Location(path, state, NavigationTypes.PUSH);
       this._notifyChange();
     } else {
       window.location = path;
@@ -100,7 +102,7 @@ export class BrowserHistory extends DOMHistory {
       state = this._createState(state);
 
       window.history.replaceState(state, '', path);
-      this.location = new Location(state, path, NavigationTypes.REPLACE);
+      this.location = new Location(path, state, NavigationTypes.REPLACE);
       this._notifyChange();
     } else {
       window.location.replace(path);

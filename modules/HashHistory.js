@@ -1,8 +1,11 @@
+import warning from 'warning';
 import DOMHistory from './DOMHistory';
 import NavigationTypes from './NavigationTypes';
 import { getHashPath, getWindowScrollPosition, replaceHashPath } from './DOMUtils';
 import { isAbsolutePath } from './URLUtils';
 import Location from './Location';
+
+var DefaultQueryKey = '_key';
 
 function ensureSlash() {
   var path = getHashPath();
@@ -15,29 +18,74 @@ function ensureSlash() {
   return false;
 }
 
+function addQueryStringValueToPath(path, key, value) {
+  return path + (path.indexOf('?') === -1 ? '?' : '&') + `${key}=${value}`;
+}
+
+function getQueryStringValueFromPath(path, key) {
+  var match = path.match(new RegExp(`\\?.*?\\b${key}=(.+?)\\b`));
+  return match && match[1];
+}
+
+function saveState(path, queryKey, state) {
+  window.sessionStorage.setItem(state.key, JSON.stringify(state));
+  return addQueryStringValueToPath(path, queryKey, state.key);
+}
+
+function readState(path, queryKey) {
+  var sessionKey = getQueryStringValueFromPath(path, queryKey);
+  var json = sessionKey && window.sessionStorage.getItem(sessionKey);
+  
+  if (json) {
+    try {
+      return JSON.parse(json);
+    } catch (error) {
+      // Ignore invalid JSON in session storage.
+    }
+  }
+
+  return null;
+}
+
+function updateCurrentState(queryKey, extraState) {
+  var path = getHashPath();
+  var state = readState(path, queryKey);
+
+  if (state)
+    saveState(path, queryKey, Object.assign(state, extraState));
+}
+
 /**
  * A history implementation for DOM environments that uses window.location.hash
  * to store the current path. This is essentially a hack for older browsers that
  * do not support the HTML5 history API (IE <= 9).
+ *
+ * Support for persistence of state across page refreshes is provided using a
+ * combination of a URL query string parameter and DOM storage. However, this
+ * support is not enabled by default. In order to use it, create your own
+ * HashHistory, like this:
+ *
+ *   import { HashHistory } from 'react-router/lib/HashHistory';
+ *   var StatefulHashHistory = new HashHistory(true);
+ *   React.render(<Router history={StatefulHashHistory} .../>, ...);
  */
 export class HashHistory extends DOMHistory {
 
-  constructor(getScrollPosition=getWindowScrollPosition) {
+  constructor(queryKey=null, getScrollPosition=getWindowScrollPosition) {
     super();
-    this.getScrollPosition = getScrollPosition;
     this.handleHashChange = this.handleHashChange.bind(this);
 
-    // We keep known states in memory so we don't have to keep a key
-    // in the URL. We could have persistence if we did, but we can always
-    // add that later if people need it. I suspect that at this point
-    // most users who need state are already using BrowserHistory.
-    this.states = {};
+    if (typeof queryKey !== 'string')
+      queryKey = queryKey ? DefaultQueryKey : null;
+
+    this.queryKey = queryKey;
+    this.getScrollPosition = getScrollPosition;
   }
 
   _updateLocation(navigationType) {
     var path = getHashPath();
-    var state = this.states[path] || null;
-    this.location = new Location(state, path, navigationType);
+    var state = this.queryKey ? readState(path, this.queryKey) : null;
+    this.location = new Location(path, state, navigationType);
   }
 
   setup() {
@@ -79,22 +127,24 @@ export class HashHistory extends DOMHistory {
   }
 
   pushState(state, path) {
-    var location = this.location;
-    var currentState = location && this.states[location.path];
+    warning(
+      this.queryKey || state == null,
+      'HashHistory needs a queryKey in order to persist state'
+    );
 
-    if (currentState) {
-      Object.assign(currentState, this.getScrollPosition());
-      this.states[location.path] = currentState;
-    }
+    if (this.queryKey)
+      updateCurrentState(this.queryKey, this.getScrollPosition());
 
     state = this._createState(state);
-    this.states[path] = state;
+
+    if (this.queryKey)
+      path = saveState(path, this.queryKey, state);
 
     this._ignoreHashChange = true;
     window.location.hash = path;
     this._ignoreHashChange = false;
 
-    this.location = new Location(state, path, NavigationTypes.PUSH);
+    this.location = new Location(path, state, NavigationTypes.PUSH);
 
     this._notifyChange();
   }
@@ -102,16 +152,14 @@ export class HashHistory extends DOMHistory {
   replaceState(state, path) {
     state = this._createState(state);
 
-    var location = this.location;
-
-    if (location && this.states[location.path])
-      this.states[location.path] = state;
+    if (this.queryKey)
+      path = saveState(path, this.queryKey, state);
 
     this._ignoreHashChange = true;
     replaceHashPath(path);
     this._ignoreHashChange = false;
 
-    this.location = new Location(state, path, NavigationTypes.REPLACE);
+    this.location = new Location(path, state, NavigationTypes.REPLACE);
 
     this._notifyChange();
   }
