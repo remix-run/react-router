@@ -75,6 +75,11 @@ export var RoutingContext = React.createClass({
     this._updateState(nextProps);
   },
 
+  componentDidUpdate() {
+    // TODO: Update scroll position
+    // TODO: Move onUpdate hook to here?
+  },
+
   render() {
     var { location, branch, params, query, components, isTransitioning } = this.state;
     var element = null;
