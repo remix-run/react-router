@@ -1,6 +1,5 @@
-var React = require('react');
-var HashHistory = require('react-router/HashHistory');
-var { createRouter, Route, Link } = require('react-router');
+import React from 'react';
+import { Router, Route, Link } from 'react-router';
 
 class App extends React.Component {
   constructor (props) {
@@ -41,9 +40,9 @@ class App extends React.Component {
   }
 }
 
-function requireAuth (router, state) {
+function requireAuth (nextState, router) {
   if (!auth.loggedIn())
-    router.replaceWith('/login', {}, {'nextPath' : state.location.path});
+    router.replaceWith('/login', {'nextPath' : nextState.location.path});
 }
 
 class Dashboard extends React.Component {
@@ -72,9 +71,9 @@ class Login extends React.Component {
   handleSubmit (event) {
     event.preventDefault();
     var { router } = this.context;
-    var nextPath = router.getCurrentQuery().nextPath;
-    var email = this.refs.email.getDOMNode().value;
-    var pass = this.refs.pass.getDOMNode().value;
+    var nextPath = router.state.query.nextPath;
+    var email = React.findDOMNode(this.refs.email).value;
+    var pass = React.findDOMNode(this.refs.pass).value;
     auth.login(email, pass, (loggedIn) => {
       if (!loggedIn)
         return this.setState({ error: true });
@@ -101,7 +100,7 @@ class Login extends React.Component {
 }
 
 Login.contextTypes = {
-  router: React.PropTypes.func
+  router: React.PropTypes.object
 };
 
 class About extends React.Component {
@@ -173,15 +172,13 @@ function pretendRequest(email, pass, cb) {
   }, 0);
 }
 
-var routes = (
-  <Route component={App}>
-    <Route name="login" component={Login}/>
-    <Route name="logout" component={Logout}/>
-    <Route name="about" component={About}/>
-    <Route name="dashboard" component={Dashboard} onEnter={requireAuth}/>
-  </Route>
-);
-
-var Router = createRouter(routes);
-
-React.render(<Router history={HashHistory}/>, document.getElementById('example'));
+React.render((
+  <Router>
+    <Route path="/" component={App}>
+      <Route name="login" path="login" component={Login}/>
+      <Route name="logout" path="logout" component={Logout}/>
+      <Route name="about" path="about" component={About}/>
+      <Route name="dashboard" path="dashboard" component={Dashboard} onEnter={requireAuth}/>
+    </Route>
+  </Router>
+), document.getElementById('example'));
