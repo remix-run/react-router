@@ -108,24 +108,20 @@ function matchRoutes(routes, pathname, callback) {
  * callback(error, state) when finished. The state object may have the
  * following properties:
  *
- * - location     The Location object
  * - branch       An array of routes that matched, in hierarchical order
  * - params       An object of URL parameters
+ * - query        An object of data contained in the URL query string
  *
  * Note: This operation may return synchronously if no routes have an
  * asynchronous getChildRoutes method.
  */
 export function getProps(routes, location, parseQueryString, callback) {
-  if (!Location.isLocation(location))
-    location = Location.create(location); // Allow location-like objects.
-
   var pathname = stripLeadingSlashes(getPathname(location.path));
 
   matchRoutes(routes, pathname, function (error, props) {
     if (error || props == null) {
       callback(error);
     } else {
-      props.location = location;
       props.query = parseQueryString(getQueryString(location.path));
       callback(null, props);
     }
@@ -176,10 +172,23 @@ export function computeDiff(prevState, nextState) {
   ];
 }
 
-function getHooks(routes, hookName, nextState, router) {
+export function createTransitionHook(fn, context) {
+  return function (nextState, router, callback) {
+    if (fn.length > 2) {
+      fn.call(context, nextState, router, callback);
+    } else {
+      // Assume fn executes synchronously and
+      // automatically call the callback for them.
+      fn.call(context, nextState, router);
+      callback();
+    }
+  };
+}
+
+function getTransitionHooksFromRoutes(routes, hookName) {
   return routes.reduce(function (hooks, route) {
     if (route[hookName])
-      hooks.push(route[hookName].bind(route, nextState, router));
+      hooks.push(createTransitionHook(route[hookName], route));
 
     return hooks;
   }, []);
@@ -190,20 +199,24 @@ function getHooks(routes, hookName, nextState, router) {
  * should be called before we transition to a new state. Transition
  * hook signatures are:
  *
- *   - route.onLeave(nextState, router)
- *   - route.onEnter(nextState, router)
+ *   - route.onLeave(nextState, router[, callback ])
+ *   - route.onEnter(nextState, router[, callback ])
  *
  * Transition hooks run in order from the leaf route in the branch
  * we're leaving, up the tree to the common parent route, and back
  * down the branch we're entering to the leaf route.
+ *
+ * If a transition hook needs to execute asynchronously it may have
+ * a 3rd argument that it should call when it is finished. Otherwise
+ * the transition executes synchronously.
  */
-export function getTransitionHooks(prevState, nextState, router) {
+export function getTransitionHooks(prevState, nextState) {
   var [ leavingRoutes, enteringRoutes ] = computeDiff(prevState, nextState);
-  var hooks = getHooks(leavingRoutes, 'onLeave', nextState, router);
+  var hooks = getTransitionHooksFromRoutes(leavingRoutes, 'onLeave');
 
   hooks.push.apply(
     hooks,
-    getHooks(enteringRoutes, 'onEnter', nextState, router)
+    getTransitionHooksFromRoutes(enteringRoutes, 'onEnter')
   );
 
   return hooks;

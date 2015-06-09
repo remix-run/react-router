@@ -1,16 +1,79 @@
 import React from 'react';
 import warning from 'warning';
 import invariant from 'invariant';
+import { loopAsync } from './AsyncUtils';
 import { createRoutes } from './RouteUtils';
 import { getQueryString, parseQueryString, stringifyQuery, queryContains } from './URLUtils';
-import { branchMatches, getProps, getTransitionHooks, getAndAssignComponents, makePath, makeHref } from './RoutingUtils';
+import { branchMatches, getProps, getTransitionHooks, createTransitionHook, getAndAssignComponents, makePath, makeHref } from './RoutingUtils';
 import { routes, component, components, history, location } from './PropTypes';
 import RoutingContext from './RoutingContext';
 import Location from './Location';
 
 var { any, array, func, object, instanceOf } = React.PropTypes;
 
+var NavigationMixin = {
+
+  /**
+   * Returns a full URL path from the given pathname and query.
+   */
+  makePath(pathname, query) {
+    return makePath(pathname, query, this.props.stringifyQuery);
+  },
+
+  /**
+   * Returns a string that may safely be used to link to the given
+   * pathname and query.
+   */
+  makeHref(pathname, query) {
+    var { stringifyQuery, history } = this.props;
+    return makeHref(pathname, query, stringifyQuery, history);
+  },
+
+  transitionTo(pathname, query, state=null) {
+    var path = this.makePath(pathname, query);
+    var { history } = this.props;
+
+    if (history) {
+      if (this.nextLocation) {
+        history.replaceState(state, path);
+      } else {
+        history.pushState(state, path);
+      }
+    } else {
+      this._updateState(new Location(path, state));
+    }
+  },
+
+  replaceWith(pathname, query, state=null) {
+    var path = this.makePath(pathname, query);
+    var { history } = this.props;
+
+    if (history) {
+      history.replaceState(state, path);
+    } else {
+      this._updateState(new Location(path, state));
+    }
+  },
+
+  go(n) {
+    var { history } = this.props;
+    invariant(history, 'Router#go needs a history');
+    history.go(n);
+  },
+
+  goBack() {
+    this.go(-1);
+  },
+
+  goForward() {
+    this.go(1);
+  }
+ 
+};
+
 export var Router = React.createClass({
+
+  mixins: [ NavigationMixin ],
 
   statics: {
     
@@ -61,64 +124,70 @@ export var Router = React.createClass({
   },
 
   _updateState(location) {
-    this.setState({ isTransitioning: true });
+    if (!Location.isLocation(location))
+      location = Location.create(location);
+
     this.nextLocation = location;
+    this.setState({ isTransitioning: true });
 
     getProps(this.routes, location, this.props.parseQueryString, (error, state) => {
-      if (error) {
-        this.handleError(error);
-        this.setState({ isTransitioning: false });
-        this.nextLocation = null;
-        return;
+      if (error || this.nextLocation !== location) {
+        this._finishTransition(error);
+      } else if (state == null) {
+        this._finishTransition();
+        warning(false, 'Location "%s" did not match any routes', location.path);
+      } else {
+        state.location = location;
+
+        this._runTransitionHooks(state, (error) => {
+          if (error || this.nextLocation !== location) {
+            this._finishTransition(error);
+          } else {
+            this._getAndAssignComponents(state, (error) => {
+              if (error || this.nextLocation !== location) {
+                this._finishTransition(error);
+              } else {
+                this._finishTransition();
+                this.setState(state, this.props.onUpdate);
+                this._alreadyUpdated = true;
+              }
+            });
+          }
+        });
       }
-
-      warning(state, 'Location "%s" did not match any routes', location.path);
-
-      if (state == null || !this._runTransitionHooks(state)) {
-        this.setState({ isTransitioning: false });
-        this.nextLocation = null;
-        return;
-      }
-
-      this._getAndAssignComponents(state, (error) => {
-        if (error) {
-          this.handleError(error);
-        } else if (this.nextLocation === location) {
-          state.isTransitioning = false;
-          this.setState(state, this.onUpdate);
-          this._alreadyUpdated = true;
-        }
-
-        this.nextLocation = null;
-      });
     });
   },
 
-  _runTransitionHooks(nextState) {
+  _finishTransition(error) {
+    this.setState({ isTransitioning: false });
+    this.nextLocation = null;
+
+    if (error)
+      this.handleError(error);
+  },
+
+  _runTransitionHooks(nextState, callback) {
     // Run component hooks before route hooks.
-    var hooks = this.transitionHooks.map(hook => hook.bind(this, nextState, this));
+    var hooks = this.transitionHooks.map(hook => createTransitionHook(hook, this));
 
     hooks.push.apply(
       hooks,
-      getTransitionHooks(this.state, nextState, this)
+      getTransitionHooks(this.state, nextState)
     );
 
     var nextLocation = this.nextLocation;
 
-    try {
-      for (var i = 0, len = hooks.length; i < len; ++i) {
-        hooks[i].call(this);
+    loopAsync(hooks.length, (index, next, done) => {
+      var hook = hooks[index];
 
-        if (this.nextLocation !== nextLocation)
-          break; // No need to proceed further.
-      }
-    } catch (error) {
-      this.handleError(error);
-      return false;
-    }
-
-    // Allow the transition if nextLocation hasn't changed.
-    return this.nextLocation === nextLocation;
+      hooks[index].call(this, nextState, this, (error) => {
+        if (error || this.nextLocation !== nextLocation) {
+          done.call(this, error); // No need to continue.
+        } else {
+          next.call(this);
+        }
+      });
+    }, callback);
   },
 
   _getAndAssignComponents(nextState, callback) {
@@ -151,62 +220,6 @@ export var Router = React.createClass({
    */
   removeTransitionHook(hook) {
     this.transitionHooks = this.transitionHooks.filter(h => h !== hook);
-  },
-
-  /**
-   * Returns a full URL path from the given pathname and query.
-   */
-  makePath(pathname, query) {
-    return makePath(pathname, query, this.props.stringifyQuery);
-  },
-
-  /**
-   * Returns a string that may safely be used to link to the given
-   * pathname and query.
-   */
-  makeHref(pathname, query) {
-    var { stringifyQuery, history } = this.props;
-    return makeHref(pathname, query, stringifyQuery, history);
-  },
-
-  transitionTo(pathname, query, state=null) {
-    var path = this.makePath(pathname, query);
-    var { history } = this.props;
-
-    if (history) {
-      if (this.nextLocation) {
-        history.replaceState(state, path);
-      } else {
-        history.pushState(state, path);
-      }
-    } else {
-      this._updateState(new Location(state, path));
-    }
-  },
-
-  replaceWith(pathname, query, state=null) {
-    var path = this.makePath(pathname, query);
-    var { history } = this.props;
-
-    if (history) {
-      history.replaceState(state, path);
-    } else {
-      this._updateState(new Location(state, path));
-    }
-  },
-
-  go(n) {
-    var { history } = this.props;
-    invariant(history, 'Router#go needs a history');
-    history.go(n);
-  },
-
-  goBack() {
-    this.go(-1);
-  },
-
-  goForward() {
-    this.go(1);
   },
 
   componentWillMount() {

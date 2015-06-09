@@ -1,6 +1,14 @@
 import expect, { spyOn } from 'expect';
 import { parseQueryString } from '../URLUtils';
-import { getProps } from '../RoutingUtils';
+import { getProps as _getProps } from '../RoutingUtils';
+import Location from '../Location';
+
+function getProps(routes, location, parseQueryString, callback) {
+  if (!Location.isLocation(location))
+    location = Location.create(location);
+
+  _getProps(routes, location, parseQueryString, callback);
+}
 
 describe('getProps', function () {
   var RootRoute, AboutRoute, CoursesRoute, GradesRoute, CourseRoute, CourseGradesRoute, AssignmentRoute, AssignmentsRoute, CatchAllRoute, AccountRoute, AccountIndexRoute, ProfileRoute, ProfileIndexRoute;

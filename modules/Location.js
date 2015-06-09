@@ -25,9 +25,9 @@ class Location {
     throw new Error('Unable to create a Location from ' + object);
   }
 
-  constructor(path, state, navigationType=NavigationTypes.POP) {
+  constructor(path, state=null, navigationType=NavigationTypes.POP) {
     this.path = path;
-    this.state = state || null;
+    this.state = state;
     this.navigationType = navigationType;
   }
 
