@@ -47,7 +47,7 @@ function matchRouteDeep(route, pathname, callback) {
   var { remainingPathname, paramNames, paramValues } = matchPattern(route.path, pathname);
   var isExactMatch = remainingPathname === '';
 
-  if (isExactMatch) {
+  if (isExactMatch && route.path) {
     var params = createParams(paramNames, paramValues);
     var branch = [ route ];
 

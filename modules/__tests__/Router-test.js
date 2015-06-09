@@ -27,6 +27,33 @@ describe('Router', function () {
       done();
     });
   });
+
+  it('renders child routes when the parent does not have a path', function (done) {
+    var Parent = React.createClass({
+      render() {
+        return <div>parent{this.props.children}</div>;
+      }
+    });
+
+    var Child = React.createClass({
+      render() {
+        return <div>child</div>;
+      }
+    });
+
+    render((
+      <Router>
+        <Route component={Parent}>
+          <Route component={Parent}>
+            <Route path="/" component={Child}/>
+          </Route>
+        </Route>
+      </Router>
+    ), div, function () {
+      expect(div.textContent.trim()).toEqual('parentparentchild');
+      done();
+    });
+  });
   
   var Component1 = React.createClass({ render() { return null; } });
   var Component2 = React.createClass({ render() { return null; } });

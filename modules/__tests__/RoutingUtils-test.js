@@ -69,6 +69,7 @@ describe('getProps', function () {
     };
 
     RootRoute = {
+      path: '/',
       childRoutes: [ AboutRoute, CoursesRoute, CourseRoute, AccountRoute, ProfileRoute, CatchAllRoute ]
     };
   });
