@@ -1,7 +1,7 @@
 import React from 'react';
 import PropTypes from './PropTypes';
 import NavigationTypes from './NavigationTypes';
-import passMiddlewareProps from './passMiddlewareProps';
+//import passMiddlewareProps from './passMiddlewareProps';
 
 var canUseDOM = !!(
   (typeof window !== 'undefined' &&

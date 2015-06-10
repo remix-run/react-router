@@ -5,10 +5,6 @@ import Location from '../Location';
 import Router from '../Router';
 import Route from '../Route';
 
-function createHistory(path) {
-  return new MemoryHistory(path);
-}
-
 describe('Router', function () {
   var div;
   beforeEach(function () {
@@ -19,38 +15,32 @@ describe('Router', function () {
     React.unmountComponentAtNode(div);
   });
 
-  it('renders routes', function (done) {
-    var Component = React.createClass({
-      render() {
-        return <div>hello world!</div>;
-      }
-    });
+  var Parent = React.createClass({
+    render() {
+      return <div>parent{this.props.children}</div>;
+    }
+  });
 
+  var Child = React.createClass({
+    render() {
+      return <div>child</div>;
+    }
+  });
+
+  it('renders routes', function (done) {
     render((
-      <Router history={createHistory()}>
-        <Route path="/" component={Component}/>
+      <Router history={new MemoryHistory('/')}>
+        <Route path="/" component={Parent}/>
       </Router>
     ), div, function () {
-      expect(div.textContent.trim()).toEqual('hello world!');
+      expect(div.textContent.trim()).toEqual('parent');
       done();
     });
   });
 
   it('renders child routes when the parent does not have a path', function (done) {
-    var Parent = React.createClass({
-      render() {
-        return <div>parent{this.props.children}</div>;
-      }
-    });
-
-    var Child = React.createClass({
-      render() {
-        return <div>child</div>;
-      }
-    });
-
     render((
-      <Router history={createHistory()}>
+      <Router history={new MemoryHistory('/')}>
         <Route component={Parent}>
           <Route component={Parent}>
             <Route path="/" component={Child}/>
@@ -59,6 +49,33 @@ describe('Router', function () {
       </Router>
     ), div, function () {
       expect(div.textContent.trim()).toEqual('parentparentchild');
+      done();
+    });
+  });
+
+  it('renders nested children correctly', function (done) {
+    render((
+      <Router history={new MemoryHistory('/hello')}>
+        <Route component={Parent}>
+          <Route path="hello" component={Child}/>
+        </Route>
+      </Router>
+    ), div, function () {
+      expect(div.textContent.trim()).toMatch(/parent/);
+      expect(div.textContent.trim()).toMatch(/child/);
+      done();
+    });
+  });
+
+  it('renders the child\'s component when it has no component', function (done) {
+    render((
+      <Router history={new MemoryHistory('/hello')}>
+        <Route>
+          <Route path="hello" component={Child}/>
+        </Route>
+      </Router>
+    ), div, function () {
+      expect(div.textContent.trim()).toMatch(/child/);
       done();
     });
   });
@@ -78,7 +95,7 @@ describe('Router', function () {
     });
 
     render((
-      <Router history={createHistory()} createElement={Component => <Wrapper Component={Component}/>}>
+      <Router history={new MemoryHistory('/')} createElement={Component => <Wrapper Component={Component}/>}>
         <Route path="/" component={Component}/>
       </Router>
     ), div, function () {
@@ -112,7 +129,7 @@ describe('Router', function () {
     var routes = [ parentRoute ];
 
     it('matches the correct components', function (done) {
-      render(<Router history={createHistory("/two/sally")} children={routes}/>, div, function () {
+      render(<Router history={new MemoryHistory("/two/sally")} children={routes}/>, div, function () {
         expect(this.state.components).toEqual([
           parentRoute.component,
           childRoutes[0].component
@@ -123,7 +140,7 @@ describe('Router', function () {
     });
 
     it('matches named components', function (done) {
-      render(<Router history={createHistory("/three")} children={routes}/>, div, function () {
+      render(<Router history={new MemoryHistory("/three")} children={routes}/>, div, function () {
         expect(this.state.components).toEqual([
           Component1,
           { main: Component3, sidebar: Component4 }
@@ -134,7 +151,7 @@ describe('Router', function () {
     });
 
     it('matches the correct route branch', function (done) {
-      render(<Router history={createHistory("/three")} children={routes}/>, div, function () {
+      render(<Router history={new MemoryHistory("/three")} children={routes}/>, div, function () {
         expect(this.state.branch).toEqual([
           parentRoute,
           childRoutes[1]
@@ -145,7 +162,7 @@ describe('Router', function () {
     });
 
     it('matches the correct params', function (done) {
-      render(<Router history={createHistory("/two/sally")} children={routes}/>, div, function () {
+      render(<Router history={new MemoryHistory("/two/sally")} children={routes}/>, div, function () {
         expect(this.state.params).toEqual({ name: 'sally' });
         done();
       });
@@ -184,14 +201,14 @@ describe('Router', function () {
     };
 
     it('matches the correct components', function (done) {
-      render(<Router history={createHistory("/two/sally")} children={routes}/>, div, function () {
+      render(<Router history={new MemoryHistory('/two/sally')} children={routes}/>, div, function () {
         expect(this.state.components).toEqual([ Component1, Component2 ]);
         done();
       });
     });
 
     it('matches named components', function (done) {
-      render(<Router history={createHistory("/three")} children={routes}/>, div, function () {
+      render(<Router history={new MemoryHistory('/three')} children={routes}/>, div, function () {
         expect(this.state.components).toEqual([
           Component1,
           { main: Component3, sidebar: Component4 }
@@ -201,7 +218,7 @@ describe('Router', function () {
     });
 
     it('matches the correct route branch', function (done) {
-      render(<Router history={createHistory("/three")} children={routes}/>, div, function () {
+      render(<Router history={new MemoryHistory('/three')} children={routes}/>, div, function () {
         expect(this.state.branch).toEqual([
           parentRoute,
           childRoutes[1]
@@ -212,7 +229,7 @@ describe('Router', function () {
     });
 
     it('matches the correct params', function (done) {
-      render(<Router history={createHistory("/two/sally")} children={routes}/>, div, function () {
+      render(<Router history={new MemoryHistory('/two/sally')} children={routes}/>, div, function () {
         expect(this.state.params).toEqual({ name: 'sally' });
         done();
       });
