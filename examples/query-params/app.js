@@ -1,11 +1,9 @@
 var React = require('react');
-var HashHistory = require('react-router/HashHistory');
-var { createRouter, State, Route, Link } = require('react-router');
+var { Router, HashHistory, Route, Link } = require('react-router');
 
 var User = React.createClass({
-  mixins: [ State ],
   render() {
-    var query = this.getQuery();
+    var { query } = this.props;
     var age = query && query.showAge ? '33' : '';
     var { userID } = this.props.params;
     return (
@@ -22,9 +20,9 @@ var App = React.createClass({
     return (
       <div>
         <ul>
-          <li><Link to="user" params={{userID: "123"}}>Bob</Link></li>
-          <li><Link to="user" params={{userID: "123"}} query={{showAge: true}}>Bob With Query Params</Link></li>
-          <li><Link to="user" params={{userID: "abc"}}>Sally</Link></li>
+          <li><Link to={`/user/bob`}>Bob</Link></li>
+          <li><Link to={`/user/bob`} query={{showAge: true}}>Bob With Query Params</Link></li>
+          <li><Link to={`/user/sally`}>Sally</Link></li>
         </ul>
         {this.props.children}
       </div>
@@ -32,10 +30,11 @@ var App = React.createClass({
   }
 });
 
-var Router = createRouter(
-  <Route component={App}>
-    <Route name="user" path="user/:userID" component={User}/>
-  </Route>
-);
+React.render((
+  <Router history={HashHistory}>
+    <Route path="/" component={App}>
+      <Route path="user/:userID" component={User}/>
+    </Route>
+  </Router>
+), document.getElementById('example'));
 
-React.render(<Router history={HashHistory}/>, document.getElementById('example'));
