@@ -59,14 +59,10 @@ var ContextMixin = {
     var path = this.makePath(pathname, query);
     var { history } = this.props;
 
-    if (history) {
-      if (this.nextLocation) {
-        history.replaceState(state, path);
-      } else {
-        history.pushState(state, path);
-      }
+    if (this.nextLocation) {
+      history.replaceState(state, path);
     } else {
-      this._updateState(new Location(path, state));
+      history.pushState(state, path);
     }
   },
 
@@ -74,17 +70,11 @@ var ContextMixin = {
     var path = this.makePath(pathname, query);
     var { history } = this.props;
 
-    if (history) {
-      history.replaceState(state, path);
-    } else {
-      this._updateState(new Location(path, state));
-    }
+    history.replaceState(state, path);
   },
 
   go(n) {
-    var { history } = this.props;
-    invariant(history, 'Router#go needs a history');
-    history.go(n);
+    this.props.history.go(n);
   },
 
   goBack() {
@@ -115,7 +105,7 @@ export var Router = React.createClass({
   },
 
   propTypes: {
-    history,
+    history: history.isRequired,
     children: routes.isRequired,
     createElement: func.isRequired,
     parseQueryString: func.isRequired,
@@ -123,7 +113,7 @@ export var Router = React.createClass({
     onError: func.isRequired,
     onUpdate: func,
 
-    // Primarily for server-side rendering.
+    // For server-side rendering...
     location: any,
     branch: routes,
     params: object,
@@ -133,7 +123,6 @@ export var Router = React.createClass({
 
   getDefaultProps() {
     return {
-      location: '/',
       createElement,
       parseQueryString,
       stringifyQuery,
@@ -262,20 +251,20 @@ export var Router = React.createClass({
   },
 
   componentWillMount() {
-    var { children, history, location } = this.props;
+    var { children, history } = this.props;
 
-    this.transitionHooks = [];
     this.routes = createRoutes(children);
+    this.transitionHooks = [];
     this.nextLocation = null;
 
-    if (history) {
-      if (typeof history.setup === 'function')
-        history.setup();
+    if (typeof history.setup === 'function')
+      history.setup();
 
-      this._updateState(history.location);
-    } else {
-      this._updateState(location);
-    }
+    // We need to listen first in case we redirect immediately.
+    if (history.addChangeListener)
+      history.addChangeListener(this.handleHistoryChange);
+
+    this._updateState(history.location);
   },
 
   handleHistoryChange() {
@@ -283,11 +272,6 @@ export var Router = React.createClass({
   },
 
   componentDidMount() {
-    var { history } = this.props;
-
-    if (history)
-      history.addChangeListener(this.handleHistoryChange);
-
     // React doesn't fire the setState callback when we call setState
     // synchronously within componentWillMount, so we need this. Note
     // that we still only get one call to onUpdate, even if setState
@@ -307,16 +291,15 @@ export var Router = React.createClass({
 
       // Call this here because _updateState
       // uses this.routes to determine state.
-      this._updateState(nextProps.location);
-    } else if (this.props.location !== nextProps.location) {
-      this._updateState(nextProps.location);
+      if (nextProps.history.location)
+        this._updateState(nextProps.history.location);
     }
   },
 
   componentWillUnmount() {
     var { history } = this.props;
 
-    if (history)
+    if (history.removeChangeListener)
       history.removeChangeListener(this.handleHistoryChange);
   },
 

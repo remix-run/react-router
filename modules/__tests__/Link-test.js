@@ -8,6 +8,10 @@ import Link from '../Link';
 
 var { click } = React.addons.TestUtils.Simulate;
 
+function createHistory(path) {
+  return new MemoryHistory(path);
+}
+
 describe('A <Link>', function () {
 
   var Parent = React.createClass({
@@ -89,7 +93,7 @@ describe('A <Link>', function () {
 
     it('knows how to make its href', function () {
       render((
-        <Router location="/link">
+        <Router history={createHistory("/link")}>
           <Route path="hello/:name" component={Hello}/>
           <Route path="link" component={LinkWrapper}/>
         </Router>
@@ -134,10 +138,8 @@ describe('A <Link>', function () {
         }
       }
 
-      var history = new MemoryHistory('/goodbye');
-
       render((
-        <Router history={history} onUpdate={execNextStep}>
+        <Router history={createHistory('/goodbye')} onUpdate={execNextStep}>
           <Route path="/" component={LinkWrapper}>
             <Route path="goodbye" component={Goodbye}/>
             <Route path="hello" component={Hello}/>
@@ -180,7 +182,7 @@ describe('A <Link>', function () {
       }
 
       render((
-        <Router location="/goodbye" onUpdate={execNextStep}>
+        <Router history={createHistory("/goodbye")} onUpdate={execNextStep}>
           <Route path="/" component={LinkWrapper}>
             <Route path="hello" component={Hello}/>
             <Route path="goodbye" component={Goodbye}/>
@@ -204,7 +206,7 @@ describe('A <Link>', function () {
       });
 
       render((
-        <Router location="/link">
+        <Router history={createHistory("/link")}>
           <Route path="hello" component={Hello}/>
           <Route path="link" component={LinkWrapper}/>
         </Router>
@@ -239,7 +241,7 @@ describe('A <Link>', function () {
       }
 
       render((
-        <Router location="/link" onUpdate={execNextStep}>
+        <Router history={createHistory("/link")} onUpdate={execNextStep}>
           <Route path="hello" component={Hello}/>
           <Route path="link" component={LinkWrapper}/>
         </Router>
