@@ -1,10 +1,10 @@
-import stubbedCourses from './stubs/courses';
 import React from 'react';
-import { createRouter, Route, Link } from 'react-router';
-import History from 'react-router/HashHistory';
+import HashHistory from 'react-router/lib/HashHistory';
+import { Router, Route, Link } from 'react-router';
 import getAsyncProps from './lib/getAsyncProps';
+import stubbedCourses from './stubs/courses';
 
-const rootRoute = {
+var rootRoute = {
   path: '/',
 
   childRoutes: [
@@ -18,16 +18,15 @@ const rootRoute = {
   component: require('./components/App'),
 };
 
-const Router = createRouter(rootRoute);
-
-History.listen((location) => {
-  Router.match(location, (err, props) => {
-    getAsyncProps(props, (err, newProps) => {
-      // swallowed errors?!
-      setTimeout(() => {
-        React.render(<Router {...newProps} />, document.getElementById('example'));
-      }, 0);
-    });
-  });
-});
-
+//var Router = createRouter(rootRoute);
+//
+//History.listen((location) => {
+//  Router.match(location, (err, props) => {
+//    getAsyncProps(props, (err, newProps) => {
+//      // swallowed errors?!
+//      setTimeout(() => {
+//        React.render(<Router {...newProps} />, document.getElementById('example'));
+//      }, 0);
+//    });
+//  });
+//});

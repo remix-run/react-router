@@ -1,8 +1,9 @@
-var React = require('react');
-var { Router, Route, Link, TransitionHook, HashHistory } = require('react-router');
+import React from 'react';
+import HashHistory from 'react-router/lib/HashHistory';
+import { Router, Route, Link, TransitionHook } from 'react-router';
 
 var App = React.createClass({
-  render: function () {
+  render() {
     return (
       <div>
         <ul>
@@ -16,22 +17,21 @@ var App = React.createClass({
 });
 
 var Home = React.createClass({
-  render: function () {
+  render() {
     return <h1>Home</h1>;
   }
 });
 
 var Dashboard = React.createClass({
-  render: function () {
+  render() {
     return <h1>Dashboard</h1>;
   }
 });
 
 var Form = React.createClass({
-
   mixins: [ TransitionHook ],
 
-  routerWillLeave: function (router) {
+  routerWillLeave(router) {
     if (this.refs.userInput.getDOMNode().value !== '') {
       if (!confirm('You have unsaved information, are you sure you want to leave this page?')) {
         router.cancelTransition();
@@ -39,13 +39,13 @@ var Form = React.createClass({
     }
   },
 
-  handleSubmit: function (event) {
+  handleSubmit(event) {
     event.preventDefault();
     this.refs.userInput.getDOMNode().value = '';
     this.context.router.transitionTo('/');
   },
 
-  render: function () {
+  render() {
     console.log('form render');
     return (
       <div>
@@ -67,4 +67,3 @@ React.render((
     </Route>
   </Router>
 ), document.getElementById('example'));
-

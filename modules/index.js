@@ -1,10 +1,3 @@
-/* histories */
-export History from './History';
-export DOMHistory from './DOMHistory';
-export BrowserHistory from './BrowserHistory';
-export HashHistory from './HashHistory';
-export MemoryHistory from './HashHistory';
-
 /* components */
 export Router from './Router';
 export Link from './Link';

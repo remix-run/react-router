@@ -1,8 +1,9 @@
 import React from 'react';
-import { Router, Route, Link, HashHistory } from 'react-router';
+import HashHistory from 'react-router/lib/HashHistory';
+import { Router, Route, Link, Redirect } from 'react-router';
 
 var App = React.createClass({
-  render () {
+  render() {
     return (
       <div>
         <ul>
@@ -16,14 +17,15 @@ var App = React.createClass({
 });
 
 var User = React.createClass({
-  render () {
-    var { userId } = this.props.params;
+  render() {
+    var { userID } = this.props.params;
+
     return (
       <div className="User">
-        <h1>User id: {userId}</h1>
+        <h1>User id: {userID}</h1>
         <ul>
-          <li><Link to={`/user/${userId}/tasks/foo`}>foo task</Link></li>
-          <li><Link to={`/user/${userId}/tasks/bar`}>bar task</Link></li>
+          <li><Link to={`/user/${userID}/tasks/foo`}>foo task</Link></li>
+          <li><Link to={`/user/${userID}/tasks/bar`}>bar task</Link></li>
         </ul>
         {this.props.children}
       </div>
@@ -31,14 +33,14 @@ var User = React.createClass({
   }
 });
 
-
 var Task = React.createClass({
-  render () {
-    var { userId, taskId } = this.props.params;
+  render() {
+    var { userID, taskID } = this.props.params;
+
     return (
       <div className="Task">
-        <h2>User id: {userId}</h2>
-        <h3>Task id: {taskId}</h3>
+        <h2>User ID: {userID}</h2>
+        <h3>Task ID: {taskID}</h3>
       </div>
     );
   }
@@ -47,11 +49,10 @@ var Task = React.createClass({
 React.render((
   <Router history={HashHistory}>
     <Route path="/" component={App}>
-      <Route path="user/:userId" component={User}>
-        <Route path="tasks/:taskId" component={Task}/>
-        {/*<Redirect from="todos/:taskId" to="task"/>*/}
+      <Route path="user/:userID" component={User}>
+        <Route path="tasks/:taskID" component={Task}/>
+        <Redirect from="todos/:taskID" to="task"/>
       </Route>
     </Route>
   </Router>
 ), document.getElementById('example'));
-

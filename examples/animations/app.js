@@ -1,10 +1,11 @@
-var React = require('react/addons');
+import React from 'react/addons';
+import HashHistory from 'react-router/lib/HashHistory';
+import { Router, Route, Link } from 'react-router';
+
 var { CSSTransitionGroup } = React.addons;
-var { Router, Route, Link, HashHistory } = require('react-router');
 
 var App = React.createClass({
-
-  render () {
+  render() {
     var key = this.props.location.path;
     return (
       <div>
@@ -21,7 +22,7 @@ var App = React.createClass({
 });
 
 var Page1 = React.createClass({
-  render () {
+  render() {
     return (
       <div className="Image">
         <h1>Page 1</h1>
@@ -32,7 +33,7 @@ var Page1 = React.createClass({
 });
 
 var Page2 = React.createClass({
-  render () {
+  render() {
     return (
       <div className="Image">
         <h1>Page 2</h1>
@@ -51,4 +52,3 @@ React.render((
     </Route>
   </Router>
 ), document.getElementById('example'));
-

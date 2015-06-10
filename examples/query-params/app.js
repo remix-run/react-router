@@ -1,5 +1,6 @@
-var React = require('react');
-var { Router, HashHistory, Route, Link } = require('react-router');
+import React from 'react';
+import HashHistory from 'react-router/lib/HashHistory';
+import { Router, Route, Link } from 'react-router';
 
 var User = React.createClass({
   render() {
@@ -37,4 +38,3 @@ React.render((
     </Route>
   </Router>
 ), document.getElementById('example'));
-

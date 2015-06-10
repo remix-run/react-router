@@ -1,8 +1,9 @@
-var React = require('react');
-var { Router, Route, RouteHandler, Link, HashHistory } = require('react-router');
+import React from 'react';
+import HashHistory from 'react-router/lib/HashHistory';
+import { Router, Route, Link } from 'react-router';
 
 var App = React.createClass({
-  render: function () {
+  render() {
     return (
       <div>
         <p>
@@ -23,7 +24,7 @@ var App = React.createClass({
 });
 
 var SignedIn = React.createClass({
-  render: function () {
+  render() {
     return (
       <div>
         <h2>Signed In</h2>
@@ -34,7 +35,7 @@ var SignedIn = React.createClass({
 });
 
 var Home = React.createClass({
-  render: function () {
+  render() {
     return (
       <h3>Welcome home!</h3>
     );
@@ -42,7 +43,7 @@ var Home = React.createClass({
 });
 
 var SignedOut = React.createClass({
-  render: function () {
+  render() {
     return (
       <div>
         <h2>Signed Out</h2>
@@ -53,7 +54,7 @@ var SignedOut = React.createClass({
 });
 
 var SignIn = React.createClass({
-  render: function () {
+  render() {
     return (
       <h3>Please sign in.</h3>
     );
@@ -61,7 +62,7 @@ var SignIn = React.createClass({
 });
 
 var ForgotPassword = React.createClass({
-  render: function () {
+  render() {
     return (
       <h3>Forgot your password?</h3>
     );
@@ -81,4 +82,3 @@ React.render((
     </Route>
   </Router>
 ), document.getElementById('example'));
-

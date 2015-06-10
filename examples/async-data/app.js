@@ -1,9 +1,9 @@
-var React = require('react');
-var { Router, Route, Link, HashHistory } = require('react-router');
-var { loadContacts, loadContact, createContact, shallowEqual } = require('./utils');
+import React from 'react';
+import HashHistory from 'react-router/lib/HashHistory';
+import { Router, Route, Link } from 'react-router';
+import { loadContacts, loadContact, createContact, shallowEqual } from './utils';
 
 var App = React.createClass({
-
   statics: {
     loadProps(params, cb) {
       console.log('loading App props');
@@ -17,18 +17,16 @@ var App = React.createClass({
     };
   },
 
-  componentWillReceiveProps(nextProps) {
-  },
-
   handleSubmit(event) {
-    var [first, last] = event.target.elements;
+    var [ first, last ] = event.target.elements;
+
     createContact({
       first: first.value,
       last: last.value
     }, this.props.onPropsDidChange);
   },
 
-  render () {
+  render() {
     return (
       <div className={this.props.propsAreLoading ? 'loading' : ''}>
         <form onSubmit={this.handleSubmit}>
@@ -56,8 +54,9 @@ var Contact = React.createClass({
     }
   },
 
-  render () {
+  render() {
     var { contact } = this.props;
+
     return (
       <div>
         <p><Link to="/">Back</Link></p>
@@ -69,7 +68,7 @@ var Contact = React.createClass({
 });
 
 var Index = React.createClass({
-  render () {
+  render() {
     return (
       <div>
         <h1>Welcome!</h1>
@@ -158,4 +157,3 @@ React.render((
     </Route>
   </Router>
 ), document.getElementById('example'));
-

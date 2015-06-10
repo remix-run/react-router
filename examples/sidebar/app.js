@@ -1,9 +1,10 @@
-var React = require('react');
-var { Router, Route, Link, HashHistory } = require('react-router');
-var data = require('./data');
+import React from 'react';
+import HashHistory from 'react-router/lib/HashHistory';
+import { Router, Route, Link } from 'react-router';
+import data from './data';
 
 var Category = React.createClass({
-  render () {
+  render() {
     var category = data.lookupCategory(this.props.params.category);
     return (
       <div>
@@ -17,7 +18,7 @@ var Category = React.createClass({
 });
 
 var CategorySidebar = React.createClass({
-  render () {
+  render() {
     var category = data.lookupCategory(this.props.params.category);
     return (
       <div>
@@ -34,7 +35,7 @@ var CategorySidebar = React.createClass({
 });
 
 var Item = React.createClass({
-  render () {
+  render() {
     var { category, item } = this.props.params;
     var menuItem = data.lookupItem(category, item);
     return (
@@ -47,7 +48,7 @@ var Item = React.createClass({
 });
 
 var Index = React.createClass({
-  render: function () {
+  render() {
     return (
       <div>
         <h1>Sidebar</h1>
@@ -62,7 +63,7 @@ var Index = React.createClass({
 
 
 var IndexSidebar = React.createClass({
-  render () {
+  render() {
     return (
       <div>
         <h2>Categories</h2>
@@ -77,7 +78,7 @@ var IndexSidebar = React.createClass({
 });
 
 var App = React.createClass({
-  render () {
+  render() {
     return (
       <div>
         <div className="Sidebar">
@@ -100,4 +101,3 @@ React.render((
     </Route>
   </Router>
 ), document.getElementById('example'));
-

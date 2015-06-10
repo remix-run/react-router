@@ -1,6 +1,7 @@
-var React = require('react');
-var { HashHistory, Router, Route, Link, Navigation } = require('react-router');
-var auth = require('./auth');
+import React from 'react';
+import HashHistory from 'react-router/lib/HashHistory';
+import { Router, Route, Link, Navigation } from 'react-router';
+import auth from './auth';
 
 var App = React.createClass({
   getInitialState() {
@@ -9,18 +10,18 @@ var App = React.createClass({
     };
   },
 
-  setStateOnAuth (loggedIn) {
+  setStateOnAuth(loggedIn) {
     this.setState({
       loggedIn: loggedIn
     });
   },
 
-  componentWillMount () {
+  componentWillMount() {
     auth.onChange = this.setStateOnAuth;
     auth.login();
   },
 
-  render () {
+  render() {
     return (
       <div>
         <ul>
@@ -41,7 +42,7 @@ var App = React.createClass({
 });
 
 var Dashboard = React.createClass({
-  render () {
+  render() {
     var token = auth.getToken();
     return (
       <div>
@@ -63,23 +64,26 @@ var Login = React.createClass({
     };
   },
 
-  handleSubmit (event) {
+  handleSubmit(event) {
     event.preventDefault();
-    var { nextPath } = this.props.query;
+
+    var { nextPathname } = this.props.query;
     var email = this.refs.email.getDOMNode().value;
     var pass = this.refs.pass.getDOMNode().value;
+
     auth.login(email, pass, (loggedIn) => {
       if (!loggedIn)
         return this.setState({ error: true });
-      if (nextPath) {
-        this.replaceWith(nextPath);
+
+      if (nextPathname) {
+        this.replaceWith(nextPathname);
       } else {
         this.replaceWith('/about');
       }
     });
   },
 
-  render () {
+  render() {
     return (
       <form onSubmit={this.handleSubmit}>
         <label><input ref="email" placeholder="email" defaultValue="joe@example.com"/></label>
@@ -94,24 +98,24 @@ var Login = React.createClass({
 });
 
 var About = React.createClass({
-  render () {
+  render() {
     return <h1>About</h1>;
   }
 });
 
 var Logout = React.createClass({
-  componentDidMount () {
+  componentDidMount() {
     auth.logout();
   },
 
-  render () {
+  render() {
     return <p>You are now logged out</p>;
   }
 });
 
-function requireAuth (state, router) {
+function requireAuth(nextState, router) {
   if (!auth.loggedIn())
-    router.replaceWith('/login', {nextPath: state.location.path});
+    router.replaceWith('/login', { nextPathname: nextState.location.pathname });
 }
 
 React.render((
