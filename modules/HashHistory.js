@@ -1,11 +1,10 @@
 import warning from 'warning';
 import DOMHistory from './DOMHistory';
 import NavigationTypes from './NavigationTypes';
-import { getHashPath, getWindowScrollPosition, replaceHashPath } from './DOMUtils';
+import { getHashPath, replaceHashPath } from './DOMUtils';
 import { isAbsolutePath } from './URLUtils';
-import Location from './Location';
 
-var DefaultQueryKey = '_key';
+var DefaultQueryKey = '_qk';
 
 function ensureSlash() {
   var path = getHashPath();
@@ -66,26 +65,24 @@ function updateCurrentState(queryKey, extraState) {
  * HashHistory, like this:
  *
  *   import { HashHistory } from 'react-router/lib/HashHistory';
- *   var StatefulHashHistory = new HashHistory(true);
+ *   var StatefulHashHistory = new HashHistory({ queryKey: '_key' });
  *   React.render(<Router history={StatefulHashHistory} .../>, ...);
  */
 export class HashHistory extends DOMHistory {
 
-  constructor(queryKey=null, getScrollPosition=getWindowScrollPosition) {
-    super();
+  constructor(options={}) {
+    super(options);
     this.handleHashChange = this.handleHashChange.bind(this);
+    this.queryKey = options.queryKey;
 
-    if (typeof queryKey !== 'string')
-      queryKey = queryKey ? DefaultQueryKey : null;
-
-    this.queryKey = queryKey;
-    this.getScrollPosition = getScrollPosition;
+    if (typeof this.queryKey !== 'string')
+      this.queryKey = this.queryKey ? DefaultQueryKey : null;
   }
 
   _updateLocation(navigationType) {
     var path = getHashPath();
     var state = this.queryKey ? readState(path, this.queryKey) : null;
-    this.location = new Location(path, state, navigationType);
+    this.location = this._createLocation(path, state, navigationType);
   }
 
   setup() {
@@ -146,7 +143,7 @@ export class HashHistory extends DOMHistory {
     this._ignoreHashChange = true;
     window.location.hash = path;
 
-    this.location = new Location(path, state, NavigationTypes.PUSH);
+    this.location = this._createLocation(path, state, NavigationTypes.PUSH);
 
     this._notifyChange();
   }
@@ -160,13 +157,13 @@ export class HashHistory extends DOMHistory {
     this._ignoreHashChange = true;
     replaceHashPath(path);
 
-    this.location = new Location(path, state, NavigationTypes.REPLACE);
+    this.location = this._createLocation(path, state, NavigationTypes.REPLACE);
 
     this._notifyChange();
   }
 
   makeHref(path) {
-    return '#' + path;
+    return '#' + super.makeHref(path);
   }
 
 }

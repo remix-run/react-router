@@ -3,7 +3,7 @@ import warning from 'warning';
 import invariant from 'invariant';
 import { loopAsync } from './AsyncUtils';
 import { createRoutes } from './RouteUtils';
-import { getQueryString, parseQueryString, stringifyQuery, queryContains } from './URLUtils';
+import { queryContains } from './URLUtils';
 import { branchMatches, getState, getTransitionHooks, createTransitionHook, getComponents } from './RoutingUtils';
 import { routes, component, components, history, location } from './PropTypes';
 import Location from './Location';
@@ -22,38 +22,17 @@ var ContextMixin = {
     };
   },
 
-  /**
-   * Returns a full URL path from the given pathname and query.
-   */
   makePath(pathname, query) {
-    if (query) {
-      if (typeof query !== 'string')
-        query = this.props.stringifyQuery(query);
-
-      if (query !== '')
-        return pathname + '?' + query;
-    }
-
-    return pathname;
+    return this.props.history.makePath(pathname, query);
   },
 
-  /**
-   * Returns a string that may safely be used to link to the given
-   * pathname and query.
-   */
   makeHref(pathname, query) {
-    var path = this.makePath(pathname, query);
-    var { history } = this.props;
-
-    if (history && history.makeHref)
-      return history.makeHref(path);
-
-    return path;
+    return this.props.history.makeHref(pathname, query);
   },
 
   transitionTo(pathname, query, state=null) {
-    var path = this.makePath(pathname, query);
     var { history } = this.props;
+    var path = this.makePath(pathname, query);
 
     if (this.nextLocation) {
       history.replaceState(state, path);
@@ -63,8 +42,8 @@ var ContextMixin = {
   },
 
   replaceWith(pathname, query, state=null) {
-    var path = this.makePath(pathname, query);
     var { history } = this.props;
+    var path = this.makePath(pathname, query);
 
     history.replaceState(state, path);
   },
@@ -82,7 +61,8 @@ var ContextMixin = {
   },
  
   isActive(pathname, query) {
-    return branchMatches(this.state.branch, pathname) && queryContains(this.state.query, query);
+    var { branch, location } = this.state;
+    return branch && location && branchMatches(branch, pathname) && queryContains(location.query, query);
   }
 
 };
@@ -104,8 +84,6 @@ export var Router = React.createClass({
     history: history.isRequired,
     children: routes.isRequired,
     createElement: func.isRequired,
-    parseQueryString: func.isRequired,
-    stringifyQuery: func.isRequired,
     onError: func.isRequired,
     onUpdate: func,
 
@@ -113,15 +91,12 @@ export var Router = React.createClass({
     location: any,
     branch: routes,
     params: object,
-    query: object,
     components
   },
 
   getDefaultProps() {
     return {
       createElement,
-      parseQueryString,
-      stringifyQuery,
       onError: function (error) {
         // Throw errors by default so we don't silently swallow them!
         throw error; // This error probably originated in getChildRoutes or getComponents.
@@ -134,15 +109,16 @@ export var Router = React.createClass({
       location: null,
       branch: null,
       params: null,
-      query: null,
       components: null,
       isTransitioning: false
     };
   },
 
   _updateState(location) {
-    if (!Location.isLocation(location))
-      location = Location.create(location);
+    invariant(
+      Location.isLocation(location),
+      'Router needs a valid Location'
+    );
 
     this.nextLocation = location;
     this.setState({ isTransitioning: true });
@@ -188,12 +164,12 @@ export var Router = React.createClass({
   },
 
   _getState(routes, location, callback) {
-    var { branch, params, query, parseQueryString } = this.props;
+    var { branch, params } = this.props;
 
     if (branch && params && query) {
-      callback(null, { branch, params, query });
+      callback(null, { branch, params });
     } else {
-      getState(routes, location, parseQueryString, callback);
+      getState(routes, location, callback);
     }
   },
 
@@ -310,7 +286,7 @@ export var Router = React.createClass({
   },
 
   render() {
-    var { location, branch, params, query, components, isTransitioning } = this.state;
+    var { location, branch, params, components, isTransitioning } = this.state;
     var element = null;
 
     if (components) {
@@ -319,7 +295,7 @@ export var Router = React.createClass({
           return element; // Don't create new children; use the grandchildren.
 
         var route = branch[index];
-        var props = { location, params, query, route, isTransitioning };
+        var props = { location, params, route, isTransitioning };
 
         if (isValidElement(element)) {
           props.children = element;

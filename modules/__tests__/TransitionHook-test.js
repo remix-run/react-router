@@ -28,13 +28,13 @@ describe('TransitionHook', function () {
 
     var steps = [
       function () {
-        expect(this.state.location.path).toEqual('/one');
+        expect(this.state.location.pathname).toEqual('/one');
         expect(div.textContent.trim()).toEqual('one');
         this.transitionTo('/two')
       },
       function () {
         expect(hookCalled).toBe(true);
-        expect(this.state.location.path).toEqual('/two');
+        expect(this.state.location.pathname).toEqual('/two');
         done();
       }
     ];

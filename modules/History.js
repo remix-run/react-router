@@ -1,5 +1,7 @@
 import invariant from 'invariant';
+import { getPathname, getQueryString, parseQueryString, stringifyQuery } from './URLUtils';
 import ChangeEmitter from './ChangeEmitter';
+import Location from './Location';
 
 var RequiredSubclassMethods = [ 'pushState', 'replaceState', 'go' ];
 
@@ -18,8 +20,12 @@ function createRandomKey() {
  */
 class History extends ChangeEmitter {
 
-  constructor() {
+  constructor(options={}) {
     super();
+
+    this.parseQueryString = options.parseQueryString || parseQueryString;
+    this.stringifyQuery = options.stringifyQuery || stringifyQuery;
+    this.location = null;
 
     RequiredSubclassMethods.forEach(function (method) {
       invariant(
@@ -28,8 +34,6 @@ class History extends ChangeEmitter {
         this.constructor.name, method
       );
     }, this);
-
-    this.location = null;
   }
 
   back() {
@@ -47,6 +51,35 @@ class History extends ChangeEmitter {
       state.key = createRandomKey();
 
     return state;
+  }
+
+  _createLocation(path, state, navigationType) {
+    var pathname = getPathname(path);
+    var query = this.parseQueryString(getQueryString(path));
+    return new Location(pathname, query, state, navigationType);
+  }
+
+  /**
+   * Returns a full URL path from the given pathname and query.
+   */
+  makePath(pathname, query) {
+    if (query) {
+      if (typeof query !== 'string')
+        query = this.stringifyQuery(query);
+
+      if (query !== '')
+        return pathname + '?' + query;
+    }
+
+    return pathname;
+  }
+
+  /**
+   * Returns a string that may safely be used to link to the given
+   * pathname and query.
+   */
+  makeHref(pathname, query) {
+    return this.makePath(pathname, query);
   }
 
 }

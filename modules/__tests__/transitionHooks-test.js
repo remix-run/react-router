@@ -128,7 +128,7 @@ describe('When a router enters a branch', function () {
       var inboxEnterSpy = spyOn(InboxRoute, 'onEnter').andCallThrough();
 
       render(<Router history={createHistory('/redirect-to-inbox')} children={routes}/>, div, function () {
-        expect(this.state.location.path).toEqual('/inbox');
+        expect(this.state.location.pathname).toEqual('/inbox');
         expect(redirectRouteEnterSpy).toHaveBeenCalled();
         expect(redirectRouteLeaveSpy.calls.length).toEqual(0);
         expect(inboxEnterSpy).toHaveBeenCalled();

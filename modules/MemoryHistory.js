@@ -1,6 +1,5 @@
 import invariant from 'invariant';
 import NavigationTypes from './NavigationTypes';
-import Location from './Location';
 import History from './History';
 
 function createEntry(object) {
@@ -54,7 +53,7 @@ export class MemoryHistory extends History {
 
     var currentEntry = entries[current];
 
-    this.location = new Location(
+    this.location = this._createLocation(
       currentEntry.path,
       currentEntry.state
     );
@@ -66,7 +65,7 @@ export class MemoryHistory extends History {
 
     this.current += 1;
     this.entries = this.entries.slice(0, this.current).concat([{ state, path }]);
-    this.location = new Location(path, state, NavigationTypes.PUSH);
+    this.location = this._createLocation(path, state, NavigationTypes.PUSH);
 
     this._notifyChange();
   }
@@ -76,7 +75,7 @@ export class MemoryHistory extends History {
     state = this._createState(state);
 
     this.entries[this.current] = { state, path };
-    this.location = new Location(path, state, NavigationTypes.REPLACE);
+    this.location = this._createLocation(path, state, NavigationTypes.REPLACE);
 
     this._notifyChange();
   }
@@ -94,7 +93,7 @@ export class MemoryHistory extends History {
     this.current += n;
     var currentEntry = this.entries[this.current];
 
-    this.location = new Location(
+    this.location = this._createLocation(
       currentEntry.path,
       currentEntry.state,
       NavigationTypes.POP

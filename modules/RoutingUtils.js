@@ -1,7 +1,6 @@
 import { createRoutes } from './RouteUtils';
-import { getParamNames, getPathname, getQueryString, matchPattern, stripLeadingSlashes } from './URLUtils';
+import { getParamNames, matchPattern, stripLeadingSlashes } from './URLUtils';
 import { loopAsync, mapAsync } from './AsyncUtils';
-import Location from './Location';
 
 function getChildRoutes(route, locationState, callback) {
   if (route.childRoutes) {
@@ -110,22 +109,12 @@ function matchRoutes(routes, pathname, locationState, callback) {
  *
  * - branch       An array of routes that matched, in hierarchical order
  * - params       An object of URL parameters
- * - query        An object of data contained in the URL query string
  *
  * Note: This operation may return synchronously if no routes have an
  * asynchronous getChildRoutes method.
  */
-export function getState(routes, location, parseQueryString, callback) {
-  var pathname = stripLeadingSlashes(getPathname(location.path));
-
-  matchRoutes(routes, pathname, location.state || {}, function (error, props) {
-    if (error || props == null) {
-      callback(error);
-    } else {
-      props.query = parseQueryString(getQueryString(location.path));
-      callback(null, props);
-    }
-  });
+export function getState(routes, location, callback) {
+  matchRoutes(routes, stripLeadingSlashes(location.pathname), location.state, callback);
 }
 
 function routeParamsChanged(route, prevState, nextState) {

@@ -12,21 +12,9 @@ class Location {
     return object instanceof Location;
   }
 
-  static create(object) {
-    if (Location.isLocation(object))
-      return object;
-
-    if (typeof object === 'string')
-      return new Location(object);
-
-    if (object && object.path)
-      return new Location(object.path, object.state, object.navigationType);
-
-    throw new Error('Unable to create a Location from ' + object);
-  }
-
-  constructor(path, state=null, navigationType=NavigationTypes.POP) {
-    this.path = path;
+  constructor(pathname='/', query={}, state=null, navigationType=NavigationTypes.POP) {
+    this.pathname = pathname;
+    this.query = query;
     this.state = state;
     this.navigationType = navigationType;
   }

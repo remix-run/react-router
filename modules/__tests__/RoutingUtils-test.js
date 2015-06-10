@@ -1,13 +1,9 @@
 import expect, { spyOn } from 'expect';
-import { parseQueryString } from '../URLUtils';
 import { getState as _getState } from '../RoutingUtils';
 import Location from '../Location';
 
-function getState(routes, location, parseQueryString, callback) {
-  if (!Location.isLocation(location))
-    location = Location.create(location);
-
-  _getState(routes, location, parseQueryString, callback);
+function getState(routes, pathname, callback) {
+  return _getState(routes, new Location(pathname), callback);
 }
 
 describe('getState', function () {
@@ -76,7 +72,7 @@ describe('getState', function () {
 
   describe('when the path does not match any route', function () {
     it('matches the "catch all" route', function (done) {
-      getState(RootRoute, '/not-found', parseQueryString, function (error, state) {
+      getState(RootRoute, '/not-found', function (error, state) {
         expect(error).toNotExist();
         expect(state).toBeAn('object');
         expect(state.branch).toEqual([ RootRoute, CatchAllRoute ]);
@@ -87,7 +83,7 @@ describe('getState', function () {
 
   describe('when the path matches a route exactly', function () {
     it('matches', function (done) {
-      getState(RootRoute, '/', parseQueryString, function (error, state) {
+      getState(RootRoute, '/', function (error, state) {
         expect(error).toNotExist();
         expect(state).toBeAn('object');
         expect(state.branch).toEqual([ RootRoute ]);
@@ -98,7 +94,7 @@ describe('getState', function () {
 
   describe('when the path matches a nested route exactly', function () {
     it('matches', function (done) {
-      getState(RootRoute, '/courses', parseQueryString, function (error, state) {
+      getState(RootRoute, '/courses', function (error, state) {
         expect(error).toNotExist();
         expect(state).toBeAn('object');
         expect(state.branch).toEqual([ RootRoute, CoursesRoute ]);
@@ -109,7 +105,7 @@ describe('getState', function () {
     it('does not attempt to fetch the nested route\'s child routes', function (done) {
       var spy = spyOn(CoursesRoute, 'getChildRoutes');
 
-      getState(RootRoute, '/courses', parseQueryString, function () {
+      getState(RootRoute, '/courses', function () {
         expect(spy.calls.length).toEqual(0);
         done();
       });
@@ -117,14 +113,14 @@ describe('getState', function () {
 
     describe('with an index route', function () {
       it('matches synchronously', function (done) {
-        getState(RootRoute, '/account', parseQueryString, function (error, state) {
+        getState(RootRoute, '/account', function (error, state) {
           expect(state.branch).toEqual([ RootRoute, AccountRoute, AccountIndexRoute]);
           done();
         });
       });
 
       it('matches asynchronously', function (done) {
-        getState(RootRoute, '/profile', parseQueryString, function (error, state) {
+        getState(RootRoute, '/profile', function (error, state) {
           expect(state.branch).toEqual([ RootRoute, ProfileRoute, ProfileIndexRoute]);
           done();
         });
@@ -134,7 +130,7 @@ describe('getState', function () {
 
   describe('when the path matches a nested route with a trailing slash', function () {
     it('matches', function (done) {
-      getState(RootRoute, '/courses/', parseQueryString, function (error, state) {
+      getState(RootRoute, '/courses/', function (error, state) {
         expect(error).toNotExist();
         expect(state).toBeAn('object');
         expect(state.branch).toEqual([ RootRoute, CoursesRoute ]);
@@ -145,7 +141,7 @@ describe('getState', function () {
     it('does not attempt to fetch the nested route\'s child routes', function (done) {
       var spy = spyOn(CoursesRoute, 'getChildRoutes');
 
-      getState(RootRoute, '/courses/', parseQueryString, function () {
+      getState(RootRoute, '/courses/', function () {
         expect(spy.calls.length).toEqual(0);
         done();
       });
@@ -154,7 +150,7 @@ describe('getState', function () {
 
   describe('when the path matches a deeply nested route', function () {
     it('matches', function (done) {
-      getState(RootRoute, '/courses/grades', parseQueryString, function (error, state) {
+      getState(RootRoute, '/courses/grades', function (error, state) {
         expect(error).toNotExist();
         expect(state).toBeAn('object');
         expect(state.branch).toEqual([ RootRoute, CoursesRoute, GradesRoute ]);
@@ -165,7 +161,7 @@ describe('getState', function () {
     it('fetches the nested route\'s child routes', function (done) {
       var spy = spyOn(CoursesRoute, 'getChildRoutes').andCallThrough();
 
-      getState(RootRoute, '/courses/grades', parseQueryString, function () {
+      getState(RootRoute, '/courses/grades', function () {
         expect(spy).toHaveBeenCalled();
         done();
       });
@@ -174,7 +170,7 @@ describe('getState', function () {
 
   describe('when the path matches a route with a dynamic segment', function () {
     it('stores the value of that segment in params', function (done) {
-      getState(RootRoute, '/assignments/abc', parseQueryString, function (error, state) {
+      getState(RootRoute, '/assignments/abc', function (error, state) {
         expect(error).toNotExist();
         expect(state).toBeAn('object');
         expect(state.branch).toEqual([ RootRoute, CourseRoute, AssignmentRoute ]);
@@ -188,7 +184,7 @@ describe('getState', function () {
     it('matches synchronously', function () {
       var error, state;
 
-      getState(RootRoute, '/courses/grades', parseQueryString, function (innerError, innerState) {
+      getState(RootRoute, '/courses/grades', function (innerError, innerState) {
         error = innerError;
         state = innerState;
       });
@@ -203,7 +199,7 @@ describe('getState', function () {
     it('matches asynchronously', function (done) {
       var outerError, outerState;
 
-      getState(RootRoute, '/assignments', parseQueryString, function (error, state) {
+      getState(RootRoute, '/assignments', function (error, state) {
         outerError = error;
         outerState = state;
 
@@ -224,7 +220,7 @@ describe('Matching params', function () {
     if (typeof routes === 'string')
       routes = [ { path: routes } ];
 
-    getState(routes, pathname, parseQueryString, function (error, state) {
+    getState(routes, pathname, function (error, state) {
       try {
         expect(error).toNotExist();
         expect(state).toBeAn('object');

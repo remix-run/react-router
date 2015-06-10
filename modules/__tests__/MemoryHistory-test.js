@@ -30,7 +30,7 @@ describe('MemoryHistory', function () {
     });
 
     it('has the correct path', function () {
-      expect(history.location.path).toEqual('/push');
+      expect(history.location.pathname).toEqual('/push');
     });
 
     it('can go back', function () {
@@ -51,7 +51,7 @@ describe('MemoryHistory', function () {
       });
 
       it('returns the correct path', function () {
-        expect(history.location.path).toEqual('/replace');
+        expect(history.location.pathname).toEqual('/replace');
       });
 
       it('can go back', function () {
@@ -73,7 +73,7 @@ describe('MemoryHistory', function () {
       });
 
       it('has the correct path', function () {
-        expect(history.location.path).toEqual('/');
+        expect(history.location.pathname).toEqual('/');
       });
 
       it('cannot go back', function () {

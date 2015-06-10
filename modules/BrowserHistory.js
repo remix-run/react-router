@@ -1,7 +1,6 @@
 import DOMHistory from './DOMHistory';
-import { getWindowPath, getWindowScrollPosition, supportsHistory } from './DOMUtils';
+import { getWindowPath, supportsHistory } from './DOMUtils';
 import NavigationTypes from './NavigationTypes';
-import Location from './Location';
 
 function updateCurrentState(extraState) {
   var state = window.history.state;
@@ -22,9 +21,8 @@ function updateCurrentState(extraState) {
  */
 export class BrowserHistory extends DOMHistory {
 
-  constructor(getScrollPosition=getWindowScrollPosition) {
-    super();
-    this.getScrollPosition = getScrollPosition;
+  constructor(options) {
+    super(options);
     this.handlePopState = this.handlePopState.bind(this);
     this.isSupported = supportsHistory();
   }
@@ -41,7 +39,7 @@ export class BrowserHistory extends DOMHistory {
       }
     }
 
-    this.location = new Location(getWindowPath(), state, navigationType);
+    this.location = this._createLocation(getWindowPath(), state, navigationType);
   }
 
   setup() {
@@ -89,7 +87,7 @@ export class BrowserHistory extends DOMHistory {
       state = this._createState(state);
 
       window.history.pushState(state, '', path);
-      this.location = new Location(path, state, NavigationTypes.PUSH);
+      this.location = this._createLocation(path, state, NavigationTypes.PUSH);
       this._notifyChange();
     } else {
       window.location = path;
@@ -102,7 +100,7 @@ export class BrowserHistory extends DOMHistory {
       state = this._createState(state);
 
       window.history.replaceState(state, '', path);
-      this.location = new Location(path, state, NavigationTypes.REPLACE);
+      this.location = this._createLocation(path, state, NavigationTypes.REPLACE);
       this._notifyChange();
     } else {
       window.location.replace(path);
