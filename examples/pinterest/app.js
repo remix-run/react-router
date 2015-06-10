@@ -31,13 +31,17 @@ var App = React.createClass({
 });
 
 var Feed = React.createClass({
+
   overlayStyles: {
     position: 'fixed',
     top: 30,
     right: 30,
     bottom: 30,
     left: 30,
-    boxShadow: "0px 0px 20px rgba(255, 255, 255, 0.75)"
+    padding: 20,
+    boxShadow: '0px 0px 50px 30px rgba(0, 0, 0, 0.5)',
+    overflow: 'auto',
+    background: '#fff'
   },
 
   render () {
@@ -68,7 +72,10 @@ var FeedPicture = React.createClass({
     return (
       <div>
         <h2>Inside the feed</h2>
-        <img src={pictures[this.props.params.id].src}/>
+        <Link to="/">back</Link>
+        <p>
+          <img src={pictures[this.props.params.id].src} height="400"/>
+        </p>
       </div>
     );
   }
@@ -79,7 +86,10 @@ var Picture = React.createClass({
     return (
       <div>
         <h2>Not Inside the feed</h2>
-        <img src={pictures[this.props.params.id].src}/>
+        <Link to="/">Feed</Link>
+        <p>
+          <img src={pictures[this.props.params.id].src}/>
+        </p>
       </div>
     );
   }
