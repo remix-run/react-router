@@ -1,6 +1,5 @@
 import React from 'react';
-import { Router, Link } from 'react-router';
-import { HashHistory } from 'react-router/HashHistory';
+import { Router, Link, HashHistory } from 'react-router';
 
 var pictures = [
   {id: 0, src: 'http://placekitten.com/601/601'},
@@ -119,7 +118,7 @@ var RootRoute = {
 };
 
 React.render(
-  <Router history={new HashHistory('k')} children={RootRoute}/>,
+  <Router history={HashHistory} children={RootRoute}/>,
   document.getElementById('example')
 );
 
