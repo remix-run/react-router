@@ -4,7 +4,7 @@ import invariant from 'invariant';
 import { loopAsync } from './AsyncUtils';
 import { createRoutes } from './RouteUtils';
 import { getQueryString, parseQueryString, stringifyQuery, queryContains } from './URLUtils';
-import { branchMatches, getProps, getTransitionHooks, createTransitionHook, getAndAssignComponents, makePath, makeHref } from './RoutingUtils';
+import { branchMatches, getProps, getTransitionHooks, createTransitionHook, getComponents, makePath, makeHref } from './RoutingUtils';
 import { routes, component, components, history, location } from './PropTypes';
 import RoutingContext from './RoutingContext';
 import Location from './Location';
@@ -195,7 +195,14 @@ export var Router = React.createClass({
       nextState.components = this.props.components;
       callback();
     } else {
-      getAndAssignComponents(nextState, callback);
+      getComponents(nextState, function (error, components) {
+        if (error) {
+          callback(error);
+        } else {
+          nextState.components = components;
+          callback();
+        }
+      });
     }
   },
 

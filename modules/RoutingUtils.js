@@ -245,20 +245,8 @@ function getComponentsForRoutes(routes, callback) {
  * Note: This operation may return synchronously if no routes have an
  * asynchronous getComponents method.
  */
-export function getComponents(props, callback) {
-  getComponentsForRoutes(props.branch, callback);
-}
-
-/**
- * Assigns the result of getComponents to props.components.
- */
-export function getAndAssignComponents(props, callback) {
-  getComponents(props, function (error, components) {
-    if (!error)
-      props.components = components;
-
-    callback(error);
-  });
+export function getComponents(state, callback) {
+  getComponentsForRoutes(state.branch, callback);
 }
 
 /**
