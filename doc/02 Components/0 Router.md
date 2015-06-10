@@ -48,9 +48,9 @@ function createElement(Component, props) {
 
 A custom prop to parse query strings differently than the default.
 
-### stringifyQuery
+### `stringifyQuery(obj)`
 
-A cstom prop to stringify query objects that come from [`Links`][Link]
+A custom prop to stringify query objects that come from [`Links`][Link]
 and [`router.transitionTo()`][transitionTo].
 
 ### `onError(error)`
@@ -200,8 +200,8 @@ React.render((
 ), document.body);
 ```
 
-  [Routes]:#TODO
-  [PlainRoutes]:#TODO
+  [Route]:#TODO
+  [PlainRoute]:#TODO
   [History]:#TODO
   [RouteComponent]:#TODO
   [Link]:#TODO
