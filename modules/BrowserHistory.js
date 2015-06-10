@@ -31,12 +31,11 @@ export class BrowserHistory extends DOMHistory {
     var state = null;
 
     if (this.isSupported) {
-      state = window.history.state || {};
+      var historyState = window.history.state;
+      state = this._createState(historyState);
 
-      if (!state.key) {
-        state.key = createRandomKey();
+      if (!historyState || !historyState.key)
         window.history.replaceState(state, '');
-      }
     }
 
     this.location = this._createLocation(getWindowPath(), state, navigationType);
