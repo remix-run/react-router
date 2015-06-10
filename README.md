@@ -7,128 +7,122 @@
 
 A complete routing library for React.
 
-[View the docs](https://rackt.github.io/react-router)
+React Router keeps the URL in sync with nested UI. It has a simple API
+with powerful features like lazy code loading, dynamic route matching,
+and location transition handling built right in. Make the URL your first
+thought, not an after-thought.
 
-Important Notes
----------------
+Docs
+----
 
-### SemVer
-
-Before our `1.0` release, breaking API changes will cause a bump to
-`0.x`. For example, `0.4.1` and `0.4.8` will have the same API, but
-`0.5.0` will have breaking changes.
-
-Please refer to the [upgrade guide](/UPGRADE_GUIDE.md) and
-[changelog](/CHANGELOG.md) when upgrading.
+- [Guides and API Docs](https://rackt.github.io/react-router)
+- [Upgrade Guide](/UPGRADE_GUIDE.md)
+- [Changelog](/CHANGELOG.md)
 
 Installation
 ------------
 
+### npm + webpack/browserify
+
 ```sh
 npm install react-router
-# or
+```
+
+Then with a module bundler or webpack, use as you would anything else:
+
+```js
+// using an ES6 transpiler
+import { Router, Route, Link } from 'react-router';
+
+// not using and ES6 transpiler
+var ReactRouter = require('react-router');
+var Router = ReactRouter.Router;
+var Route = ReactRouter.Route;
+```
+
+There's also a `dist/` folder containing a UMD version.
+
+### bower + who knows what
+
+```sh
 bower install react-router
 ```
 
-This library is written with CommonJS modules. If you are using
-browserify, webpack, or similar, you can consume it like anything else
-installed from npm.
+Find the UMD/global build in `dist/`, and the library on
+`window.ReactRouter`. Best of luck to you.
 
-There is also a global build available on bower. Find the library on
-`window.ReactRouter`.
+### CDN
 
-The library is also available on [cdnjs](https://cdnjs.com/libraries/react-router).
-
-Features
---------
-
-- Nested views mapped to nested routes
-- Modular construction of route hierarchy
-- Sync and async transition hooks
-- Transition abort / redirect / retry
-- Dynamic segments
-- Query parameters
-- Links with automatic `.active` class when their route is active
-- Multiple root routes
-- Hash or HTML5 history (with fallback) URLs
-- Declarative Redirect routes
-- Declarative NotFound routes
-- Browser scroll behavior with transitions
-
-Check out the `examples` directory to see how simple previously complex UI
-and workflows are to create.
+Available on cdnjs [here](https://cdnjs.com/libraries/react-router).
 
 What's it look like?
 --------------------
 
 ```js
-var createRouter = require('react-router').createRouter;
+import { Router, Route } from 'react-router';
+import BrowserHistory from 'react-router/lib/BrowserHistory';
 
-var Router = createRouter(
-  <Route path="/" component={App}>
-    <Route name="about" component={About}/>
-    <Route name="users" component={Users}>
-      <Route name="recent-users" path="recent" component={RecentUsers}/>
-      <Route name="user" path="/user/:userId" component={User}/>
-      <Route path="*" component={UserRouteNotFound}/>
-    </Route>
-    <Route path="*" component={NotFound}/>
-  </Route>
-);
+var App = React.createClass({/*...*/});
+var About = React.createClass({/*...*/});
+// etc.
 
-var BrowserHistory = require('react-router/BrowserHistory');
-React.render(<Router history={BrowserHistory}/>, document.body);
-
-// Or, for browsers that don't support the HTML5 history API:
-
-var HashHistory = require('react-router/HashHistory');
-React.render(<Router history={HashHistory}/>, document.body);
-
-// Or, if you want to render on the server (using e.g. Express):
-
-app.get('*', function (req, res) {
-  Router.match(req.url, function (error, props) {
-    res.send(
-      React.renderToString(React.createElement(Router, props))
+var Users = React.createClass({
+  render() {
+    return (
+      <div>
+        <h1>Users</h1>
+        <div className="master">
+          <ul>
+            {/* use Link to route around the app */}
+            {this.state.users.map(user => (
+              <li><Link to={`/users/${users.id}`}>{user.name}</Link></li>
+            ))}
+          </ul>
+        </div>
+        <div className="detail">
+          {this.props.children}
+        </div>
+      </div>
     );
-  });
+  }
 });
+
+var User = React.createClass({
+  componentDidMount() {
+    this.setState({
+      // route components are rendered with useful information, like URL params
+      user: findUserById(this.props.params.userId)
+    });
+  },
+
+  render() {
+    return (
+      <div>
+        <h2>{this.state.user.name}</h2>
+        {/* etc. */}
+      </div>
+    );
+  }
+});
+
+// Declarative route configuration (could also load this config lazily
+// instead, all you reall need is a single root route, you don't need to
+// colocate the entire config).
+React.render((
+  <Router history={BrowserHistory}>
+    <Route path="/" component={App}>
+      <Route path="about" component={About}/>
+      <Route path="users" component={Users} indexComponent={RecentUsers}>
+        <Route path="/user/:userId" component={User}/>
+      </Route>
+      <Route path="*" component={NoMatch}/>
+    </Route>
+  </Router>
+), document.body);
 ```
 
-See more in the [overview guide](/docs/guides/overview.md).
-
-Benefits of this Approach
--------------------------
-
-1. **Incredible screen-creation productivity** - There is only one
-   use-case when a user visits a route: render something. Every user
-   interface has layers (or nesting) whether it's a simple navbar or
-   multiple levels of master-detail. Coupling nested routes to these
-   nested views gets rid of a ton of work for the developer to wire all
-   of it together when the user switches routes. Adding new screens
-   could not get faster.
-
-2. **Immediate understanding of application structure** - When routes
-   are declared in one place, developers can easily construct a mental
-   image of the application. It's essentially a sitemap. There's not a
-   better way to get so much information about your app this quickly.
-
-3. **Code tractability** - When a developer gets a ticket to fix a bug
-   at as specific url they simply 1) look at the route config, then 2)
-   go find the handler for that route. Every entry point into your
-   application is represented by these routes.
-
-4. **URLs are your first thought, not an after-thought** - With React
-   Router, you don't get UI on the page without configuring a url first.
-   Fortunately, it's wildly productive this way, too.
-
-Related Modules
----------------
-
-- [rnr-constrained-route](https://github.com/bjyoungblood/rnr-constrained-route) - validate paths
-  and parameters on route handlers.
-- [react-router-bootstrap](https://github.com/mtscout6/react-router-bootstrap) - Integration with [react-bootstrap](https://github.com/react-bootstrap/react-bootstrap) components.
-- [react-router-proxy-loader](https://github.com/odysseyscience/react-router-proxy-loader) - A Webpack loader to dynamically load react-router components on-demand
+See more in the [overview guide](/docs/00 Guides/0 Overview.md) and [Advanced
+Usage](/doc/00 Guides/Advanced Usage.md)
 
 Contributing
 ------------
@@ -138,6 +132,6 @@ Please see [CONTRIBUTING](CONTRIBUTING.md)
 Thanks, Ember
 -------------
 
-This library is highly inspired by the Ember.js routing API. In general,
-it's a translation of the Ember router api to React. Huge thanks to the
-Ember team for solving the hardest part already.
+React Router was initially inspired by Ember's fantastic Router. Many
+thanks to the Ember team.
+
