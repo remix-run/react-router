@@ -1,6 +1,5 @@
 var React = require('react');
-var { Route, createRouter, Link, Navigation } = require('react-router');
-var HashHistory = require('react-router/HashHistory');
+var { Router, Route, Link, Navigation, HashHistory } = require('react-router');
 
 var App = React.createClass({
 
@@ -35,7 +34,7 @@ var App = React.createClass({
     var links = this.state.tacos.map(function (taco, i) {
       return (
         <li key={i}>
-          <Link to="taco" params={taco}>{taco.name}</Link>
+          <Link to={`/taco/${taco.name}`}>{taco.name}</Link>
         </li>
       );
     });
@@ -71,10 +70,10 @@ var Taco = React.createClass({
   }
 });
 
-var Router = createRouter(
-  <Route component={App}>
-    <Route name="taco" path="taco/:name" component={Taco}/>
-  </Route>
-);
-
-React.render(<Router history={HashHistory}/>, document.getElementById('example'));
+React.render((
+  <Router history={HashHistory}>
+    <Route path="/" component={App}>
+      <Route path="taco/:name" component={Taco}/>
+    </Route>
+  </Router>
+), document.getElementById('example'));
