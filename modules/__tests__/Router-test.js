@@ -168,7 +168,7 @@ describe('Router', function () {
 
     var parentRoute = {
       path: '/',
-      getChildRoutes (cb) {
+      getChildRoutes (state, cb) {
         cb(null, childRoutes);
       },
       getComponents (cb) {

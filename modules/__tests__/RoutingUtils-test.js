@@ -23,7 +23,7 @@ describe('getProps', function () {
 
     CoursesRoute = {
       path: 'courses',
-      getChildRoutes(callback) {
+      getChildRoutes(state, callback) {
         callback(null, [ GradesRoute ]);
       }
     };
@@ -41,7 +41,7 @@ describe('getProps', function () {
     };
 
     CourseRoute = {
-      getChildRoutes(callback) {
+      getChildRoutes(state, callback) {
         setTimeout(function () {
           callback(null, [ CourseGradesRoute, AssignmentRoute, AssignmentsRoute ]);
         }, 0);
