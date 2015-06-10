@@ -1,23 +1,44 @@
-import React from 'react';
+import React, { isValidElement } from 'react';
 import warning from 'warning';
 import invariant from 'invariant';
 import { loopAsync } from './AsyncUtils';
 import { createRoutes } from './RouteUtils';
 import { getQueryString, parseQueryString, stringifyQuery, queryContains } from './URLUtils';
-import { branchMatches, getProps, getTransitionHooks, createTransitionHook, getComponents, makePath, makeHref } from './RoutingUtils';
+import { branchMatches, getProps, getTransitionHooks, createTransitionHook, getComponents } from './RoutingUtils';
 import { routes, component, components, history, location } from './PropTypes';
-import RoutingContext from './RoutingContext';
 import Location from './Location';
 
 var { any, array, func, object, instanceOf } = React.PropTypes;
 
-var NavigationMixin = {
+function createElement(component, props) {
+  return (typeof component === 'function') ? React.createElement(component, props) : null;
+}
+
+var ContextMixin = {
+
+  childContextTypes: {
+    router: object.isRequired
+  },
+
+  getChildContext() {
+    return {
+      router: this
+    };
+  },
 
   /**
    * Returns a full URL path from the given pathname and query.
    */
   makePath(pathname, query) {
-    return makePath(pathname, query, this.props.stringifyQuery);
+    if (query) {
+      if (typeof query !== 'string')
+        query = this.props.stringifyQuery(query);
+
+      if (query !== '')
+        return pathname + '?' + query;
+    }
+
+    return pathname;
   },
 
   /**
@@ -25,8 +46,13 @@ var NavigationMixin = {
    * pathname and query.
    */
   makeHref(pathname, query) {
-    var { stringifyQuery, history } = this.props;
-    return makeHref(pathname, query, stringifyQuery, history);
+    var path = this.makePath(pathname, query);
+    var { history } = this.props;
+
+    if (history && history.makeHref)
+      return history.makeHref(path);
+
+    return path;
   },
 
   transitionTo(pathname, query, state=null) {
@@ -67,13 +93,17 @@ var NavigationMixin = {
 
   goForward() {
     this.go(1);
-  }
+  },
  
+  isActive(pathname, query) {
+    return branchMatches(this.state.branch, pathname) && queryContains(this.state.query, query);
+  }
+
 };
 
 export var Router = React.createClass({
 
-  mixins: [ NavigationMixin ],
+  mixins: [ ContextMixin ],
 
   statics: {
     
@@ -87,9 +117,9 @@ export var Router = React.createClass({
   propTypes: {
     history,
     children: routes.isRequired,
+    createElement: func.isRequired,
     parseQueryString: func.isRequired,
     stringifyQuery: func.isRequired,
-    createElement: func,
     onError: func.isRequired,
     onUpdate: func,
 
@@ -104,6 +134,7 @@ export var Router = React.createClass({
   getDefaultProps() {
     return {
       location: '/',
+      createElement,
       parseQueryString,
       stringifyQuery,
       onError: function (error) {
@@ -290,22 +321,44 @@ export var Router = React.createClass({
   },
 
   render() {
-    return <RoutingContext
-      {...this.state}
-      stringifyQuery={this.props.stringifyQuery}
-      createElement={this.props.createElement}
-      history={this.props.history}
-      routerContext={{
-        transitionTo: this.transitionTo,
-        replaceWith: this.replaceWith,
-        go: this.go,
-        goBack: this.goBack,
-        goForward: this.goForward,
-        addTransitionHook: this.addTransitionHook,
-        removeTransitionHook: this.removeTransitionHook,
-        cancelTransition: this.cancelTransition,
-      }}
-    />;
+    var { location, branch, params, query, components, isTransitioning } = this.state;
+    var element = null;
+
+    if (components) {
+      element = components.reduceRight((element, components, index) => {
+        if (components == null)
+          return element; // Don't create new children; use the grandchildren.
+
+        var route = branch[index];
+        var props = { location, params, query, route, isTransitioning };
+
+        if (isValidElement(element)) {
+          props.children = element;
+        } else if (element) {
+          // In render, do var { header, sidebar } = this.props;
+          Object.assign(props, element);
+        }
+
+        if (typeof components === 'object') {
+          var elements = {};
+
+          for (var key in components)
+            if (components.hasOwnProperty(key))
+              elements[key] = this.props.createElement(components[key], props);
+
+          return elements;
+        }
+
+        return this.props.createElement(components, props);
+      }, element);
+    }
+
+    invariant(
+      element === null || element === false || isValidElement(element),
+      'The root route must render a single element'
+    );
+
+    return element;
   }
 
 });

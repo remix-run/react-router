@@ -263,21 +263,3 @@ export function branchMatches(branch, pathname) {
 
   return false;
 }
-
-export function makePath(pathname, query, stringifyQuery) {
-  if (query) {
-    if (typeof query !== 'string')
-      query = stringifyQuery(query);
-    if (query !== '')
-      return pathname + '?' + query;
-  }
-  return pathname;
-}
-
-export function makeHref(pathname, query, stringifyQuery, history) {
-  var path = makePath(pathname, query, stringifyQuery);
-  if (history && history.makeHref)
-    return history.makeHref(path);
-  return path;
-}
-
