@@ -89,6 +89,7 @@ export var Router = React.createClass({
     children: routes.isRequired,
     parseQueryString: func.isRequired,
     stringifyQuery: func.isRequired,
+    createElement: func,
     onError: func.isRequired,
     onUpdate: func,
 
@@ -292,6 +293,7 @@ export var Router = React.createClass({
     return <RoutingContext
       {...this.state}
       stringifyQuery={this.props.stringifyQuery}
+      createElement={this.props.createElement}
       history={this.props.history}
       routerContext={{
         transitionTo: this.transitionTo,

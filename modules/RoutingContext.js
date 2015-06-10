@@ -13,6 +13,7 @@ function createElement(component, props) {
 export var RoutingContext = React.createClass({
 
   propTypes: {
+    createElement: func.isRequired,
     stringifyQuery: func,
     history: object,
     routerContext: object,
@@ -22,6 +23,10 @@ export var RoutingContext = React.createClass({
     query: object,
     components: arrayOf(components),
     isTransitioning: bool
+  },
+
+  getDefaultProps() {
+    return { createElement };
   },
 
   getInitialState() {
@@ -85,7 +90,7 @@ export var RoutingContext = React.createClass({
     var element = null;
 
     if (components) {
-      element = components.reduceRight(function (element, components, index) {
+      element = components.reduceRight((element, components, index) => {
         if (components == null)
           return element; // Don't create new children; use the grandchildren.
 
@@ -105,12 +110,12 @@ export var RoutingContext = React.createClass({
 
           for (var key in components)
             if (components.hasOwnProperty(key))
-              elements[key] = createElement(components[key], props);
+              elements[key] = this.props.createElement(components[key], props);
 
           return elements;
         }
 
-        return createElement(components, props);
+        return this.props.createElement(components, props);
       }, element);
     }
 

@@ -54,7 +54,31 @@ describe('Router', function () {
       done();
     });
   });
-  
+
+  it('renders with a custom `createElement` prop', function(done) {
+    var Wrapper = React.createClass({
+      render() {
+        var { Component } = this.props;
+        return <Component fromWrapper="wrapped"/>
+      }
+    });
+
+    var Component = React.createClass({
+      render() {
+        return <div>{this.props.fromWrapper}</div>;
+      }
+    });
+
+    render((
+      <Router createElement={Component => <Wrapper Component={Component}/>}>
+        <Route path="/" component={Component}/>
+      </Router>
+    ), div, function () {
+      expect(div.textContent.trim()).toEqual('wrapped');
+      done();
+    });
+  });
+
   var Component1 = React.createClass({ render() { return null; } });
   var Component2 = React.createClass({ render() { return null; } });
   var Component3 = React.createClass({ render() { return null; } });
