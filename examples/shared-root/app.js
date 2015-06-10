@@ -1,17 +1,22 @@
 var React = require('react');
-var Router = require('react-router');
-var { Route, RouteHandler, Link } = Router;
+var { Router, Route, RouteHandler, Link, HashHistory } = require('react-router');
 
 var App = React.createClass({
   render: function () {
     return (
       <div>
+        <p>
+          This illustrates how routes can share UI w/o sharing the url,
+          when routes have no path, they never match themselves but their
+          children can, allowing "/signin" and "/forgot-password" to both
+          be render in the <code>SignedOut</code> component.
+        </p>
         <ol>
-          <li><Link to="home">Home</Link></li>
-          <li><Link to="signin">Sign in</Link></li>
-          <li><Link to="forgot-password">Forgot Password</Link></li>
+          <li><Link to="/home">Home</Link></li>
+          <li><Link to="/signin">Sign in</Link></li>
+          <li><Link to="/forgot-password">Forgot Password</Link></li>
         </ol>
-        <RouteHandler/>
+        {this.props.children}
       </div>
     );
   }
@@ -22,7 +27,7 @@ var SignedIn = React.createClass({
     return (
       <div>
         <h2>Signed In</h2>
-        <RouteHandler/>
+        {this.props.children}
       </div>
     );
   }
@@ -41,7 +46,7 @@ var SignedOut = React.createClass({
     return (
       <div>
         <h2>Signed Out</h2>
-        <RouteHandler/>
+        {this.props.children}
       </div>
     );
   }
@@ -63,18 +68,17 @@ var ForgotPassword = React.createClass({
   }
 });
 
-var routes = (
-  <Route handler={App}>
-    <Route handler={SignedOut}>
-      <Route name="signin" handler={SignIn}/>
-      <Route name="forgot-password" handler={ForgotPassword}/>
+React.render((
+  <Router history={HashHistory}>
+    <Route path="/" component={App}>
+      <Route component={SignedOut}>
+        <Route path="signin" component={SignIn}/>
+        <Route path="forgot-password" component={ForgotPassword}/>
+      </Route>
+      <Route component={SignedIn}>
+        <Route path="home" component={Home}/>
+      </Route>
     </Route>
-    <Route handler={SignedIn}>
-      <Route name="home" handler={Home}/>
-    </Route>
-  </Route>
-);
+  </Router>
+), document.getElementById('example'));
 
-Router.run(routes, function (Handler) {
-  React.render(<Handler/>, document.getElementById('example'));
-});
