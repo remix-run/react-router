@@ -11,14 +11,16 @@ The matched child route elements to be rendered.
 #### Example
 
 ```js
-const routes = (
-  <Route component={App}>
-    <Route path="groups" components={Groups}}/>
-    <Route path="users" components={Users}}/>
-  </Route>
-);
+React.render((
+  <Router history={HashHistory}>
+    <Route path="/" component={App}>
+      <Route path="groups" components={Groups}}/>
+      <Route path="users" components={Users}}/>
+    </Route>
+  </Router>
+), element);
 
-const App = React.createClass({
+var App = React.createClass({
   render () {
     return (
       <div>
@@ -30,7 +32,7 @@ const App = React.createClass({
 });
 ```
 
-### Named Children
+### Named Components
 
 When a route has multiple components, the elements are available by name
 on props. All route components can participate in the nesting.
@@ -38,24 +40,28 @@ on props. All route components can participate in the nesting.
 #### Example
 
 ```js
-const routes = (
-  <Route component={App}>
-    <Route path="groups" components={{main: Groups, sidebar: GroupsSidebar}}/>
-    <Route path="users" components={{main: Users, sidebar: UsersSidebar}}>
-      <Route path="users/:userId" components={Profile}/>
+React.render((
+  <Router history={HashHistory}>
+    <Route path="/" component={App}>
+      <Route path="groups" components={{main: Groups, sidebar: GroupsSidebar}}/>
+      <Route path="users" components={{main: Users, sidebar: UsersSidebar}}>
+        <Route path="users/:userId" components={Profile}/>
+      </Route>
     </Route>
-  </Route>
-);
+  </Router>
+), element);
 
-const App = React.createClass({
+var App = React.createClass({
   render () {
     // the matched child route components become props in the parent
     return (
       <div>
         <div className="Main">
+          {/* this will either be <Groups> or <Users> */}
           {this.props.main}
         </div>
         <div className="Sidebar">
+          {/* this will either be <GroupsSidebar> or <UsersSidebar> */}
           {this.props.sidebar}
         </div>
       </div>
@@ -63,12 +69,13 @@ const App = React.createClass({
   }
 });
 
-const Users = React.createClass({
+var Users = React.createClass({
   render () {
     return (
       <div>
         {/* if at "/users/123" this will be <Profile> */}
-        {/* UsersSidebar will also get <Profile> as this.props.children */}
+        {/* UsersSidebar will also get <Profile> as this.props.children,
+            you pick where it renders */}
         {this.props.children}
       </div>
     );
@@ -79,6 +86,15 @@ const Users = React.createClass({
 ### `params`
 
 The dynamic segments of the url.
+
+### `routeParams`
+
+Subset of the dynamic segments of the url that relate to the route the
+component belongs to. For example, if the route path is `users/:userId`
+and the url is `/users/123/portfolios/345` then `props.routeParams` will be
+`{userId: '123'}`, and `route.params` will be `{userId: '123',
+portfolioId: 345}`.
+
 
 ### `query`
 
@@ -115,3 +131,4 @@ var Students = React.createClass({
   [transition]:#TODO
   [Route]:#TODO
   [location]:#TODO
+

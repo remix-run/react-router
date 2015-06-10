@@ -93,7 +93,7 @@ export var Router = React.createClass({
 
   statics: {
     
-    match(routes, location, callback) {
+    match(routes, history, callback) {
       // TODO: Mimic what we're doing in _updateState, but statically
       // so we can get the right props for doing server-side rendering.
     }

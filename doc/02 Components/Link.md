@@ -13,8 +13,7 @@ The path to link to, ie `/users/123`.
 
 ### `query`
 
-An object of key:value pairs to be stingified by your
-[`history`][History].
+An object of key:value pairs to be stingified.
 
 ### `activeClassName`
 
@@ -54,5 +53,3 @@ Given a route like `<Route path="/users/:userId"/>`:
 <Link to="/users" style={{color: 'white'}} activeStyle={{color: 'red'}}>Users</Link>
 ```
 
-
-  [History]:#TODO
