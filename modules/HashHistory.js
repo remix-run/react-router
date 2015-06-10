@@ -71,9 +71,13 @@ function updateCurrentState(queryKey, extraState) {
  */
 export class HashHistory extends DOMHistory {
 
-  constructor(queryKey=DefaultQueryKey, getScrollPosition=getWindowScrollPosition) {
+  constructor(queryKey=null, getScrollPosition=getWindowScrollPosition) {
     super();
     this.handleHashChange = this.handleHashChange.bind(this);
+
+    if (typeof queryKey !== 'string')
+      queryKey = queryKey ? DefaultQueryKey : null;
+
     this.queryKey = queryKey;
     this.getScrollPosition = getScrollPosition;
   }
