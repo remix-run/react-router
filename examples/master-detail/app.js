@@ -1,6 +1,5 @@
 var React = require('react');
-var HashHistory = require('react-router/HashHistory');
-var { createRouter, State, Navigation, Route, Link } = require('react-router');
+var { Router, HashHistory, Navigation, Route, Link } = require('react-router');
 var ContactStore = require('./ContactStore');
 
 var App = React.createClass({
@@ -35,20 +34,19 @@ var App = React.createClass({
 
   render: function () {
     var contacts = this.state.contacts.map(function (contact) {
-      return <li key={contact.id}><Link to="contact" params={contact}>{contact.first}</Link></li>;
+      return <li key={contact.id}><Link to={`/contact/${contact.id}`}>{contact.first}</Link></li>;
     });
 
     return (
       <div className="App">
         <div className="ContactList">
-          <Link to="new">New Contact</Link>
+          <Link to="/new">New Contact</Link>
           <ul>
             {contacts}
           </ul>
-          <Link to="/nothing-here">Invalid Link (not found)</Link>
         </div>
         <div className="Content">
-          {this.props.children || <Index/>}
+          {this.props.children}
         </div>
       </div>
     );
@@ -62,10 +60,10 @@ var Index = React.createClass({
 });
 
 var Contact = React.createClass({
-  mixins: [ State, Navigation ],
+  mixins: [ Navigation ],
 
   getStateFromStore: function () {
-    var { id } = this.getParams();
+    var { id } = this.props.params;
 
     return {
       contact: ContactStore.getContact(id)
@@ -124,9 +122,9 @@ var NewContact = React.createClass({
     ContactStore.addContact({
       first: this.refs.first.getDOMNode().value,
       last: this.refs.last.getDOMNode().value
-    }, function (contact) {
-      this.transitionTo('contact', { id: contact.id });
-    }.bind(this));
+    }, (contact) => {
+      this.transitionTo(`/contact/${contact.id}`);
+    });
   },
 
   render: function () {
@@ -150,12 +148,13 @@ var NotFound = React.createClass({
   }
 });
 
-var Router = createRouter(
-  <Route component={App}>
-    <Route name="new" path="contact/new" component={NewContact}/>
-    <Route name="contact" path="contact/:id" component={Contact}/>
-    <Route path="*" component={NotFound}/>
-  </Route>
-);
+React.render((
+  <Router history={HashHistory}>
+    <Route component={App} indexComponent={Index}>
+      <Route name="new" path="contact/new" component={NewContact}/>
+      <Route name="contact" path="contact/:id" component={Contact}/>
+      <Route path="*" component={NotFound}/>
+    </Route>
+  </Router>
+), document.getElementById('example'));
 
-React.render(<Router history={HashHistory}/>, document.getElementById('example'));
