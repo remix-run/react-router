@@ -1,4 +1,4 @@
-import React, { isValidElement } from 'react';
+import React, { createElement, isValidElement } from 'react';
 import warning from 'warning';
 import invariant from 'invariant';
 import { loopAsync } from './AsyncUtils';
@@ -9,10 +9,6 @@ import { routes, component, components, history, location } from './PropTypes';
 import Location from './Location';
 
 var { any, array, func, object, instanceOf } = React.PropTypes;
-
-function createElement(component, props) {
-  return (typeof component === 'function') ? React.createElement(component, props) : null;
-}
 
 var ContextMixin = {
 
@@ -227,6 +223,10 @@ export var Router = React.createClass({
     }
   },
 
+  _createElement(component, props) {
+    return typeof component === 'function' ? this.props.createElement(component, props) : null;
+  },
+
   /**
    * Cancels the current transition, preventing any subsequent
    * transition hooks from running.
@@ -327,12 +327,12 @@ export var Router = React.createClass({
 
           for (var key in components)
             if (components.hasOwnProperty(key))
-              elements[key] = this.props.createElement(components[key], props);
+              elements[key] = this._createElement(components[key], props);
 
           return elements;
         }
 
-        return this.props.createElement(components, props);
+        return this._createElement(components, props);
       }, element);
     }
 
