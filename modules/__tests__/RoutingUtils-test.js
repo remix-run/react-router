@@ -1,16 +1,16 @@
 import expect, { spyOn } from 'expect';
 import { parseQueryString } from '../URLUtils';
-import { getProps as _getProps } from '../RoutingUtils';
+import { getState as _getState } from '../RoutingUtils';
 import Location from '../Location';
 
-function getProps(routes, location, parseQueryString, callback) {
+function getState(routes, location, parseQueryString, callback) {
   if (!Location.isLocation(location))
     location = Location.create(location);
 
-  _getProps(routes, location, parseQueryString, callback);
+  _getState(routes, location, parseQueryString, callback);
 }
 
-describe('getProps', function () {
+describe('getState', function () {
   var RootRoute, AboutRoute, CoursesRoute, GradesRoute, CourseRoute, CourseGradesRoute, AssignmentRoute, AssignmentsRoute, CatchAllRoute, AccountRoute, AccountIndexRoute, ProfileRoute, ProfileIndexRoute;
   beforeEach(function () {
     AboutRoute = {
@@ -74,12 +74,12 @@ describe('getProps', function () {
     };
   });
 
-  describe('when the path does not props any route', function () {
+  describe('when the path does not match any route', function () {
     it('matches the "catch all" route', function (done) {
-      getProps(RootRoute, '/not-found', parseQueryString, function (error, props) {
+      getState(RootRoute, '/not-found', parseQueryString, function (error, state) {
         expect(error).toNotExist();
-        expect(props).toBeAn('object');
-        expect(props.branch).toEqual([ RootRoute, CatchAllRoute ]);
+        expect(state).toBeAn('object');
+        expect(state.branch).toEqual([ RootRoute, CatchAllRoute ]);
         done();
       });
     });
@@ -87,10 +87,10 @@ describe('getProps', function () {
 
   describe('when the path matches a route exactly', function () {
     it('matches', function (done) {
-      getProps(RootRoute, '/', parseQueryString, function (error, props) {
+      getState(RootRoute, '/', parseQueryString, function (error, state) {
         expect(error).toNotExist();
-        expect(props).toBeAn('object');
-        expect(props.branch).toEqual([ RootRoute ]);
+        expect(state).toBeAn('object');
+        expect(state.branch).toEqual([ RootRoute ]);
         done();
       });
     });
@@ -98,10 +98,10 @@ describe('getProps', function () {
 
   describe('when the path matches a nested route exactly', function () {
     it('matches', function (done) {
-      getProps(RootRoute, '/courses', parseQueryString, function (error, props) {
+      getState(RootRoute, '/courses', parseQueryString, function (error, state) {
         expect(error).toNotExist();
-        expect(props).toBeAn('object');
-        expect(props.branch).toEqual([ RootRoute, CoursesRoute ]);
+        expect(state).toBeAn('object');
+        expect(state.branch).toEqual([ RootRoute, CoursesRoute ]);
         done();
       });
     });
@@ -109,7 +109,7 @@ describe('getProps', function () {
     it('does not attempt to fetch the nested route\'s child routes', function (done) {
       var spy = spyOn(CoursesRoute, 'getChildRoutes');
 
-      getProps(RootRoute, '/courses', parseQueryString, function () {
+      getState(RootRoute, '/courses', parseQueryString, function () {
         expect(spy.calls.length).toEqual(0);
         done();
       });
@@ -117,15 +117,15 @@ describe('getProps', function () {
 
     describe('with an index route', function () {
       it('matches synchronously', function (done) {
-        getProps(RootRoute, '/account', parseQueryString, function (error, props) {
-          expect(props.branch).toEqual([ RootRoute, AccountRoute, AccountIndexRoute]);
+        getState(RootRoute, '/account', parseQueryString, function (error, state) {
+          expect(state.branch).toEqual([ RootRoute, AccountRoute, AccountIndexRoute]);
           done();
         });
       });
 
       it('matches asynchronously', function (done) {
-        getProps(RootRoute, '/profile', parseQueryString, function (error, props) {
-          expect(props.branch).toEqual([ RootRoute, ProfileRoute, ProfileIndexRoute]);
+        getState(RootRoute, '/profile', parseQueryString, function (error, state) {
+          expect(state.branch).toEqual([ RootRoute, ProfileRoute, ProfileIndexRoute]);
           done();
         });
       });
@@ -134,10 +134,10 @@ describe('getProps', function () {
 
   describe('when the path matches a nested route with a trailing slash', function () {
     it('matches', function (done) {
-      getProps(RootRoute, '/courses/', parseQueryString, function (error, props) {
+      getState(RootRoute, '/courses/', parseQueryString, function (error, state) {
         expect(error).toNotExist();
-        expect(props).toBeAn('object');
-        expect(props.branch).toEqual([ RootRoute, CoursesRoute ]);
+        expect(state).toBeAn('object');
+        expect(state.branch).toEqual([ RootRoute, CoursesRoute ]);
         done();
       });
     });
@@ -145,7 +145,7 @@ describe('getProps', function () {
     it('does not attempt to fetch the nested route\'s child routes', function (done) {
       var spy = spyOn(CoursesRoute, 'getChildRoutes');
 
-      getProps(RootRoute, '/courses/', parseQueryString, function () {
+      getState(RootRoute, '/courses/', parseQueryString, function () {
         expect(spy.calls.length).toEqual(0);
         done();
       });
@@ -154,10 +154,10 @@ describe('getProps', function () {
 
   describe('when the path matches a deeply nested route', function () {
     it('matches', function (done) {
-      getProps(RootRoute, '/courses/grades', parseQueryString, function (error, props) {
+      getState(RootRoute, '/courses/grades', parseQueryString, function (error, state) {
         expect(error).toNotExist();
-        expect(props).toBeAn('object');
-        expect(props.branch).toEqual([ RootRoute, CoursesRoute, GradesRoute ]);
+        expect(state).toBeAn('object');
+        expect(state.branch).toEqual([ RootRoute, CoursesRoute, GradesRoute ]);
         done();
       });
     });
@@ -165,7 +165,7 @@ describe('getProps', function () {
     it('fetches the nested route\'s child routes', function (done) {
       var spy = spyOn(CoursesRoute, 'getChildRoutes').andCallThrough();
 
-      getProps(RootRoute, '/courses/grades', parseQueryString, function () {
+      getState(RootRoute, '/courses/grades', parseQueryString, function () {
         expect(spy).toHaveBeenCalled();
         done();
       });
@@ -174,11 +174,11 @@ describe('getProps', function () {
 
   describe('when the path matches a route with a dynamic segment', function () {
     it('stores the value of that segment in params', function (done) {
-      getProps(RootRoute, '/assignments/abc', parseQueryString, function (error, props) {
+      getState(RootRoute, '/assignments/abc', parseQueryString, function (error, state) {
         expect(error).toNotExist();
-        expect(props).toBeAn('object');
-        expect(props.branch).toEqual([ RootRoute, CourseRoute, AssignmentRoute ]);
-        expect(props.params).toEqual({ assignmentID: 'abc' });
+        expect(state).toBeAn('object');
+        expect(state.branch).toEqual([ RootRoute, CourseRoute, AssignmentRoute ]);
+        expect(state.params).toEqual({ assignmentID: 'abc' });
         done();
       });
     });
@@ -186,35 +186,35 @@ describe('getProps', function () {
 
   describe('when nested routes are able to be fetched synchronously', function () {
     it('matches synchronously', function () {
-      var error, props;
+      var error, state;
 
-      getProps(RootRoute, '/courses/grades', parseQueryString, function (innerError, innerProps) {
+      getState(RootRoute, '/courses/grades', parseQueryString, function (innerError, innerState) {
         error = innerError;
-        props = innerProps;
+        state = innerState;
       });
 
       expect(error).toNotExist();
-      expect(props).toBeAn('object');
-      expect(props.branch).toEqual([ RootRoute, CoursesRoute, GradesRoute ]);
+      expect(state).toBeAn('object');
+      expect(state.branch).toEqual([ RootRoute, CoursesRoute, GradesRoute ]);
     });
   });
 
   describe('when nested routes must be fetched asynchronously', function () {
     it('matches asynchronously', function (done) {
-      var outerError, outerProps;
+      var outerError, outerState;
 
-      getProps(RootRoute, '/assignments', parseQueryString, function (error, props) {
+      getState(RootRoute, '/assignments', parseQueryString, function (error, state) {
         outerError = error;
-        outerProps = props;
+        outerState = state;
 
         expect(error).toNotExist();
-        expect(props).toBeAn('object');
-        expect(props.branch).toEqual([ RootRoute, CourseRoute, AssignmentsRoute ]);
+        expect(state).toBeAn('object');
+        expect(state.branch).toEqual([ RootRoute, CourseRoute, AssignmentsRoute ]);
         done();
       });
 
       expect(outerError).toNotExist();
-      expect(outerProps).toNotExist();
+      expect(outerState).toNotExist();
     });
   });
 });
@@ -224,11 +224,11 @@ describe('Matching params', function () {
     if (typeof routes === 'string')
       routes = [ { path: routes } ];
 
-    getProps(routes, pathname, parseQueryString, function (error, props) {
+    getState(routes, pathname, parseQueryString, function (error, state) {
       try {
         expect(error).toNotExist();
-        expect(props).toBeAn('object');
-        expect(props.params).toEqual(params);
+        expect(state).toBeAn('object');
+        expect(state.params).toEqual(params);
         callback();
       } catch (error) {
         callback(error);

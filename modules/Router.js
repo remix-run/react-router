@@ -4,7 +4,7 @@ import invariant from 'invariant';
 import { loopAsync } from './AsyncUtils';
 import { createRoutes } from './RouteUtils';
 import { getQueryString, parseQueryString, stringifyQuery, queryContains } from './URLUtils';
-import { branchMatches, getProps, getTransitionHooks, createTransitionHook, getComponents } from './RoutingUtils';
+import { branchMatches, getState, getTransitionHooks, createTransitionHook, getComponents } from './RoutingUtils';
 import { routes, component, components, history, location } from './PropTypes';
 import Location from './Location';
 
@@ -147,12 +147,12 @@ export var Router = React.createClass({
     this.nextLocation = location;
     this.setState({ isTransitioning: true });
 
-    getProps(this.routes, location, this.props.parseQueryString, (error, state) => {
+    this._getState(this.routes, location, (error, state) => {
       if (error || this.nextLocation !== location) {
         this._finishTransition(error);
       } else if (state == null) {
-        this._finishTransition();
         warning(false, 'Location "%s" did not match any routes', location.path);
+        this._finishTransition();
       } else {
         state.location = location;
 
@@ -184,6 +184,16 @@ export var Router = React.createClass({
     } else if (state) {
       this.setState(state, this.props.onUpdate);
       this._alreadyUpdated = true;
+    }
+  },
+
+  _getState(routes, location, callback) {
+    var { branch, params, query, parseQueryString } = this.props;
+
+    if (branch && params && query) {
+      callback(null, { branch, params, query });
+    } else {
+      getState(routes, location, parseQueryString, callback);
     }
   },
 

@@ -115,7 +115,7 @@ function matchRoutes(routes, pathname, locationState, callback) {
  * Note: This operation may return synchronously if no routes have an
  * asynchronous getChildRoutes method.
  */
-export function getProps(routes, location, parseQueryString, callback) {
+export function getState(routes, location, parseQueryString, callback) {
   var pathname = stripLeadingSlashes(getPathname(location.path));
 
   matchRoutes(routes, pathname, location.state || {}, function (error, props) {
