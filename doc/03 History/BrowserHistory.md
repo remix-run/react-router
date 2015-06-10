@@ -3,7 +3,7 @@ support the HTML5 history API (pushState, replaceState, and the popstate event).
 It provides the cleanest URLs and should always be used in browser
 environments if possible.
 
-**You must configure your server when using `BrowserHistory`**
+You must configure your server when using `BrowserHistory`.
 
 Configuring your server
 -----------------------
@@ -46,12 +46,11 @@ import { Router } from 'react-router';
 import BrowserHistory from 'react-router/lib/BrowserHistory';
 
 React.render((
-  <BrowserHistory>
-    <Router>
-      // ...
-    </Router>
-  </BrowserHistory>
+  <Router history={BrowserHistory}>
+    {/* ... */}
+  </Router>
 ), document.body);
 ```
 
   [Histories]:#TODO
+

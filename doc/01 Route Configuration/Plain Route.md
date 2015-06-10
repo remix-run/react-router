@@ -1,4 +1,4 @@
-A route configuration object. React Router turns JSX `<Route/>`s into
+A route configuration object. `Router` turns JSX `<Route/>`s into
 these objects, but you can use them direclty if you prefer. All of the
 props are the same as `<Route/>` props, except those listed here.
 

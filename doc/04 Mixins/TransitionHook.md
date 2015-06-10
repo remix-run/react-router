@@ -7,10 +7,15 @@ state.
 Lifecycle Methods
 -----------------
 
-### `routerWillLeave(cancelTransition, location)`
+### `routerWillLeave(nextState, router)`
 
 Called when the router is attempting to transition away from the route
 that rendered this component.
+
+### arguments
+
+- `nextState` - the next router state
+- `router` - the [`Router`][Router] instance
 
 Example
 -------
@@ -21,13 +26,15 @@ import { TransitionHook } from 'react-router';
 var SignupForm = React.createClass({
   mixins: [ TransitionHook ],
 
-  routerWillLeave (cancelTransition, location) {
+  routerWillLeave (nextState, router) {
     if (this.formIsHalfFilledOut())
       if (!prompt("You sure you want to leave?"))
-        cancelTransition();
+        router.cancelTransition();
   },
 
   // ...
 });
 ```
+
+  [Router]:#TODO
 

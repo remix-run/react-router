@@ -91,9 +91,10 @@ const Users = React.createClass({
 });
 ```
 
-### `getComponent(cb)`
+### `getComponents(state, cb)`
 
-Same as `component` but asynchronous, useful for code-splitting.
+Same as `components` but asynchronous, useful for code-splitting and
+returning different routes given some transition `state`.
 
 #### `callback` signature
 
@@ -103,37 +104,27 @@ Same as `component` but asynchronous, useful for code-splitting.
 
 ```js
 <Route path="coures/:courseId" getComponents={(cb) => {
-  // do asynchronous stuff to find the component
-  cb(null, Course);
+  // do asynchronous stuff to find the components
+  cb(null, [Course]);
 }}/>
 ```
 
 ### `children`
 
-Routes can be nested. Please refer to the [overview][overview] since this
-is a very critical part of the router's design.
+Routes can be nested, `this.props.children` will contain the element
+created from the child route component. Please refer to the
+[overview][overview] since this is a very critical part of the router's
+design.
 
-### `childWillMatch`
+### `onEnter(nextState, router)`
 
-A function to hint to the router to match the route even if the path
-doesn't match the url. This is primarily useful for child routes that do
-not want to concat their url with the parent or allowing two routes in
-different parts of the tree to have the same url, but are matched based
-on some sort of logic (first load, navigating from the dashboard, etc).
+Called when a route is about to be entered. It provides the next router
+state and the router instance for cancelling/redirecting the transition.
 
-Check out the [instagram][instragram-example] example.
+### `onLeave(nextState, router)`
 
-### `onEnter(history, nextState)`
-
-A hook called from `Transitions` middleware when a route is about to
-entered. It provides your [`history`][history] to cancel or redirect the
-transition, and the router's state.
-
-### `onLeave(history, nextState)`
-
-A hook called from `Transitions` middleware when a route is about to be
-left. It provides your [`history`][history] to cancel or redirect the
-transition, and the router's state.
+Called when a route is about to be exited. It provides the next router
+state and the router instance for cancelling/redirecting the transition.
 
   [overview]:#TODO
   [path-matching]:#TODO

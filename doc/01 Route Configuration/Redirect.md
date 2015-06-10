@@ -6,8 +6,7 @@ Props
 
 ### `from`
 
-The path you want to redirect from, including dynamic segments. Defaults
-to `*` so you can redirect anything not found to somewhere else.
+The path you want to redirect from, including dynamic segments.
 
 ### `to`
 
@@ -55,7 +54,7 @@ routes, the `from` path will match the same as a regular route `path`.
 ```js
 <Route path="course/:courseId">
   <Route path="dashboard"/>
-  <!-- /course/123/home -> /course/123/dashboard -->
+  {/* /course/123/home -> /course/123/dashboard */}
   <Redirect from="home" to="dashboard" />
 </Route>
 ```

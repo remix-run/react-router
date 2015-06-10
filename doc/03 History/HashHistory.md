@@ -24,12 +24,11 @@ import { Router } from 'react-router';
 import HashHistory from 'react-router/lib/HashHistory';
 
 React.render((
-  <HashHistory>
-    <Router>
-      // ...
-    </Router>
-  </HashHistory>
+  <Router history={HashHistory}>
+    {/* ... */}
+  </Router>
 ), document.body);
 ```
 
   [Histories]:#TODO
+
