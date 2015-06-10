@@ -1,5 +1,5 @@
 A `Route` is used to declaratively map routes to your application's
-screen hiearchy.
+screen hierarchy.
 
 Props
 -----
