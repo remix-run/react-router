@@ -31,7 +31,7 @@ function isModifiedEvent(event) {
 export var Link = React.createClass({
 
   contextTypes: {
-    router: object.isRequired
+    router: object
   },
 
   propTypes: {
@@ -79,7 +79,8 @@ export var Link = React.createClass({
       onClick: this.handleClick
     });
 
-    if (router.isActive(to, query)) {
+    // ignore if rendered outside of the context of a router, simplifies unit testing
+    if (router && router.isActive(to, query)) {
       if (props.activeClassName)
         props.className += ` ${props.activeClassName}`;
 
