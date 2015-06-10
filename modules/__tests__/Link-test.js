@@ -38,6 +38,48 @@ describe('A <Link>', function () {
     div = document.createElement('div');
   });
 
+  describe('with params', function () {
+    var App = React.createClass({
+      render() {
+        return (
+          <div>
+            <Link to="/hello/michael">Michael</Link>
+            <Link to="/hello/ryan">Ryan</Link>
+          </div>
+        );
+      }
+    });
+
+    it('is active when its params match', function (done) {
+      render((
+        <Router location="/hello/michael">
+          <Route path="/" component={App}>
+            <Route path="/hello/:name" component={Hello}/>
+          </Route>
+        </Router>
+      ), div, function () {
+        var a = div.querySelectorAll('a')[0];
+        expect(a.className.trim()).toEqual('active');
+        done();
+      });
+    });
+
+    it('is not active when its params do not match', function (done) {
+      render((
+        <Router location="/hello/michael">
+          <Route path="/" component={App}>
+            <Route path="/hello/:name" component={Hello}/>
+          </Route>
+        </Router>
+      ), div, function () {
+        var a = div.querySelectorAll('a')[1];
+        expect(a.className.trim()).toEqual('');
+        done();
+      });
+    });
+
+  });
+
   describe('with params and a query', function () {
     var LinkWrapper = React.createClass({
       render() {
