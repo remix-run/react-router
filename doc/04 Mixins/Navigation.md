@@ -1,5 +1,5 @@
 Mixes in the navigation methods of the router for convenient routing
-from withing components.
+from within components.
 
 Methods
 -------
