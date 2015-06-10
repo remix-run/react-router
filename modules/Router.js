@@ -160,13 +160,13 @@ export var Router = React.createClass({
           if (error || this.nextLocation !== location) {
             this._finishTransition(error);
           } else {
-            this._getAndAssignComponents(state, (error) => {
+            this._getComponents(state, (error, components) => {
               if (error || this.nextLocation !== location) {
                 this._finishTransition(error);
               } else {
-                this._finishTransition();
-                this.setState(state, this.props.onUpdate);
-                this._alreadyUpdated = true;
+                state.components = components;
+
+                this._finishTransition(null, state);
               }
             });
           }
@@ -175,12 +175,16 @@ export var Router = React.createClass({
     });
   },
 
-  _finishTransition(error) {
+  _finishTransition(error, state) {
     this.setState({ isTransitioning: false });
     this.nextLocation = null;
 
-    if (error)
+    if (error) {
       this.handleError(error);
+    } else if (state) {
+      this.setState(state, this.props.onUpdate);
+      this._alreadyUpdated = true;
+    }
   },
 
   _runTransitionHooks(nextState, callback) {
@@ -207,19 +211,11 @@ export var Router = React.createClass({
     }, callback);
   },
 
-  _getAndAssignComponents(nextState, callback) {
+  _getComponents(nextState, callback) {
     if (this.props.components) {
-      nextState.components = this.props.components;
-      callback();
+      callback(null, this.props.components);
     } else {
-      getComponents(nextState, function (error, components) {
-        if (error) {
-          callback(error);
-        } else {
-          nextState.components = components;
-          callback();
-        }
-      });
+      getComponents(nextState, callback);
     }
   },
 
