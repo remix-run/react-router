@@ -1,6 +1,5 @@
 var React = require('react');
-var { createRouter, Route, Link, TransitionHook } = require('react-router');
-var HashHistory = require('react-router/HashHistory');
+var { Router, Route, Link, TransitionHook, HashHistory } = require('react-router');
 
 var App = React.createClass({
   render: function () {
@@ -47,6 +46,7 @@ var Form = React.createClass({
   },
 
   render: function () {
+    console.log('form render');
     return (
       <div>
         <form onSubmit={this.handleSubmit}>
@@ -59,11 +59,12 @@ var Form = React.createClass({
   }
 });
 
-var Router = createRouter(
-  <Route path="/" component={App}>
-    <Route path="dashboard" component={Dashboard}/>
-    <Route path="form" component={Form}/>
-  </Route>
-);
+React.render((
+  <Router history={HashHistory}>
+    <Route path="/" component={App}>
+      <Route path="dashboard" component={Dashboard}/>
+      <Route path="form" component={Form}/>
+    </Route>
+  </Router>
+), document.getElementById('example'));
 
-React.render(<Router history={HashHistory}/>, document.getElementById('example'));
