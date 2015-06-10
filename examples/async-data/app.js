@@ -1,90 +1,48 @@
-var React = require('react/addons');
-var { createRouter, Route, Link } = require('react-router');
-var HashHistory = require('react-router/HashHistory');
-var EventEmitter = require('events').EventEmitter;
-var assign = require('object-assign');
-
-var API = 'http://addressbook-api.herokuapp.com';
-var loadingEvents = new EventEmitter();
-localStorage.token = localStorage.token || (Date.now()*Math.random());
-
-
-function getJSON(url) {
-  if (getJSON._cache[url])
-    return Promise.resolve(getJSON._cache[url]);
-
-  return new Promise((resolve, reject) => {
-    var req = new XMLHttpRequest();
-    req.onload = function () {
-      if (req.status === 404) {
-        reject(new Error('not found'));
-      } else {
-        // fake a slow response every now and then
-        setTimeout(function () {
-          var data = JSON.parse(req.response);
-          resolve(data);
-          getJSON._cache[url] = data;
-        }, Math.random() > 0.5 ? 0 : 1000);
-      }
-    };
-    req.open('GET', url);
-    req.setRequestHeader('authorization', localStorage.token);
-    req.send();
-  });
-}
-getJSON._cache = {};
+var React = require('react');
+var { Router, Route, Link, HashHistory } = require('react-router');
+var { loadContacts, loadContact, createContact, shallowEqual } = require('./utils');
 
 var App = React.createClass({
 
   statics: {
-    loadAsyncProps (params) {
-      return getJSON(`${API}/contacts`).then(function (res) {
-        return {
-          contacts: res.contacts
-        };
-      });
+    loadProps(params, cb) {
+      console.log('loading App props');
+      loadContacts(cb);
     }
   },
 
-  getInitialState () {
-    return { loading: false };
+  getInitialState() {
+    return {
+      longLoad: false
+    };
   },
 
-  componentDidMount () {
-    var timer;
-    loadingEvents.on('loadStart', () => {
-      clearTimeout(timer);
-      // for slow responses, indicate the app is thinking
-      // otherwise its fast enough to just wait for the
-      // data to load
-      timer = setTimeout(() => {
-        this.setState({ loading: true });
-      }, 300);
-    });
-
-    loadingEvents.on('loadEnd', () => {
-      clearTimeout(timer);
-      this.setState({ loading: false });
-    });
+  componentWillReceiveProps(nextProps) {
   },
 
-  renderContacts () {
-    return this.props.contacts.map((contact, i) => {
-      return (
-        <li key={i}>
-          <Link to="contact" params={contact}>{contact.first} {contact.last}</Link>
-        </li>
-      );
-    });
+  handleSubmit(event) {
+    var [first, last] = event.target.elements;
+    createContact({
+      first: first.value,
+      last: last.value
+    }, this.props.onPropsDidChange);
   },
 
   render () {
     return (
-      <div className={this.state.loading ? 'loading' : ''}>
+      <div className={this.props.propsAreLoading ? 'loading' : ''}>
+        <form onSubmit={this.handleSubmit}>
+          <input placeholder="First name"/> <input placeholder="Last name"/>{' '}
+          <button type="submit">submit</button>
+        </form>
         <ul>
-          {this.renderContacts()}
+          {this.props.contacts.map((contact, i) => (
+            <li key={contact.id}>
+              <Link to={`/contact/${contact.id}`}>{contact.first} {contact.last}</Link>
+            </li>
+          ))}
         </ul>
-        {this.props.children || <Index/>}
+        {this.props.children}
       </div>
     );
   }
@@ -92,15 +50,14 @@ var App = React.createClass({
 
 var Contact = React.createClass({
   statics: {
-    loadAsyncProps (params) {
-      return getJSON(`${API}/contacts/${params.id}`).then(function (res) {
-        return { contact: res.contact };
-      });
+    loadProps(params, cb) {
+      console.log('loading Contact props');
+      loadContact(params.id, cb);
     }
   },
 
   render () {
-    var contact = this.props.contact;
+    var { contact } = this.props;
     return (
       <div>
         <p><Link to="/">Back</Link></p>
@@ -121,44 +78,84 @@ var Index = React.createClass({
   }
 });
 
-var Router = createRouter((
-  <Route name="contacts" path="/" component={App}>
-    <Route name="contact" path="contact/:id" component={Contact}/>
-  </Route>
-));
+var Spinner = React.createClass({
+  render() {
+    return (
+      <div style={{textAlign: 'center', padding: 50}}>
+        <img src="spinner.gif" width="64" height="64"/>
+      </div>
+    );
+  }
+});
 
-function loadAsyncProps(components, params) {
-  var promises = components.map(function (Component) {
-    if (Component.loadAsyncProps) {
-      return Component.loadAsyncProps(params).then(function (asyncProps) {
-        // create a Higher Order Component and pass the async props in
-        Component.Wrapper = Component.Wrapper || React.createClass({
-          render () {
-            return <Component {...this.props} {...this.constructor._asyncProps}/>
-          }
+var AsyncProps = React.createClass({
+  getInitialState() {
+    return {
+      propsAreLoading: false,
+      asyncProps: null,
+      previousRoutingState: null
+    };
+  },
+
+  componentDidMount() {
+    this.load();
+  },
+
+  componentWillReceiveProps(nextProps) {
+    //var nextParams = nextProps.routingState.params;
+    //var currentParams = this.props.routingState.params;
+    //var needToLoad = !shallowEqual(nextParams, currentParams);
+    //// params are the only data loading depency, so we don't
+    //// re-load unless they change
+    //if (needToLoad) {
+      //this.setState({
+        //previousRoutingState: this.props.routingState
+      //});
+      //this.load();
+    //}
+  },
+
+  load() {
+    var { params } = this.props.routingState;
+    var { Component } = this.props;
+
+    this.setState({ propsAreLoading: true }, () => {
+      Component.loadProps(params, (err, asyncProps) => {
+        this.setState({
+          propsAreLoading: false,
+          asyncProps: asyncProps,
+          previousRoutingState: null
         });
-        // would probably make more sense to put this stuff in a store, not mutate
-        // the component classes.
-        Component.Wrapper._asyncProps = asyncProps;
-        return Component.Wrapper;
       });
-    } else {
-      return Component;
-    }
-  });
-  return Promise.all(promises);
+    });
+  },
+
+  render() {
+    if (this.state.asyncProps === null)
+      return <Spinner/>;
+
+    var { Component } = this.props;
+    var { asyncProps, propsAreLoading } = this.state;
+    var routingState = this.state.previousRoutingState || this.props.routingState;
+
+    return <Component
+      onPropsDidChange={this.load}
+      propsAreLoading={propsAreLoading}
+      {...routingState}
+      {...asyncProps}
+    />
+  }
+});
+
+function createAsyncPropsElement(Component, state) {
+  return <AsyncProps Component={Component} routingState={state}/>
 }
 
-HashHistory.listen(function (location) {
-  Router.match(location, function (err, routerProps) {
-    loadingEvents.emit('loadStart');
+React.render((
+  <Router history={HashHistory} createElement={createAsyncPropsElement}>
+    <Route path="/" component={App} indexComponent={Index}>
+      <Route path="contact/:id" component={Contact}/>
+    </Route>
+  </Router>
+), document.getElementById('example'));
 
-    loadAsyncProps(routerProps.components, routerProps.params).then((components) => {
-      loadingEvents.emit('loadEnd');
-
-      // put the higher order components into the props before rendering
-      var props = assign({}, routerProps, { components: components });
-      React.render(<Router {...props}/>, document.getElementById('example'));
-    });
-  });
-});
