@@ -6,14 +6,8 @@ function createEntry(object) {
   if (typeof object === 'string')
     return { path: object };
 
-  if (object && typeof object === 'object') {
-    invariant(
-      typeof object.path === 'string',
-      'A history entry must have a string path'
-    );
-
+  if (typeof object === 'object' && object)
     return object;
-  }
 
   throw new Error('Unable to create history entry from ' + object);
 }
