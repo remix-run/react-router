@@ -1,6 +1,5 @@
 var React = require('react');
-var { createRouter, Route, Link } = require('react-router');
-var HashHistory = require('react-router/HashHistory');
+var { Router, Route, Link, HashHistory } = require('react-router');
 var data = require('./data');
 
 var Category = React.createClass({
@@ -92,15 +91,13 @@ var App = React.createClass({
   }
 });
 
-var routes = (
-  <Route path="/" component={App}>
-    <Route path="category/:category" components={{content: Category, sidebar: CategorySidebar}}>
-      <Route path=":item" component={Item}/>
+React.render((
+  <Router history={HashHistory}>
+    <Route path="/" component={App}>
+      <Route path="category/:category" components={{content: Category, sidebar: CategorySidebar}}>
+        <Route path=":item" component={Item}/>
+      </Route>
     </Route>
-  </Route>
-);
-
-var Router = createRouter(routes);
-
-React.render(<Router history={HashHistory}/>, document.getElementById('example'));
+  </Router>
+), document.getElementById('example'));
 
