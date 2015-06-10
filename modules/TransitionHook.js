@@ -1,4 +1,7 @@
-var { object } = require('react').PropTypes;
+import React from 'react';
+import warning from 'warning';
+
+var { object } = React.PropTypes;
 
 var TransitionHook = {
 
@@ -6,17 +9,22 @@ var TransitionHook = {
     router: object.isRequired
   },
 
-  componentDidMount () {
-    var router = this.context.router;
-    router.addTransitionHook(this.routerWillLeave);
+  componentDidMount() {
+    warning(
+      typeof this.routerWillLeave === 'function',
+      'Components that mixin TransitionHook should have a routerWillLeave method, check %s',
+      this.constructor.displayName || this.constructor.name
+    );
+
+    if (this.routerWillLeave)
+      this.context.router.addTransitionHook(this.routerWillLeave);
   },
 
-  componentWillUnmount () {
-    var router = this.context.router;
-    router.removeTransitionHook(this.routerWillLeave);
+  componentWillUnmount() {
+    if (this.routerWillLeave)
+      this.context.router.removeTransitionHook(this.routerWillLeave);
   }
 
 };
 
-module.exports = TransitionHook;
-
+export default TransitionHook;
