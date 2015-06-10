@@ -38,11 +38,7 @@ module.exports = {
   path: 'course/:courseId',
 
   getChildRoutes (cb) {
-    require.ensure([
-      './routes/Announcements',
-      './routes/Assignments',
-      './routes/Grades',
-    ], (require) => {
+    require.ensure([], (require) => {
       cb(null, [
         require('./routes/Announcements'),
         require('./routes/Assignments'),
@@ -52,7 +48,7 @@ module.exports = {
   },
 
   getComponents (cb) {
-    require.ensure(['./components/Course'], (require) => {
+    require.ensure([], (require) => {
       cb(null, require('./components/Course'))
     })
   }
@@ -62,12 +58,9 @@ module.exports = {
 Now go look at what hacks you have in place to do this. Just kidding, I
 don't want to make you sad right now.
 
-It's also really easy to imagine some tooling that auto-generates a
-route like this from your file system.
-
-Check out the [huge apps][huge] example in the repository. Even better,
-open your web inspector and watch code get loaded in as you navigate
-around the demo.
+Check out the [huge apps][huge] example in the repository with your web
+inspector open and watch code get loaded in as you navigate around the
+demo.
 
   [shameless]:https://reactjs-training.com
   [fb]:http://facebook.com

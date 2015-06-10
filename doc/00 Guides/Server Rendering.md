@@ -13,52 +13,48 @@ would replace the DOM.
 ```js
 // client.js
 import { Router } from 'react-router';
+import BrowserHistory from 'react-router/lib/BrowserHistory';
 import './routes' from './routes';
-React.render((
-  <Router
-    routes={routes}
-    initialBranchData={window.__INITIAL_DATA_BRANCH__}
-/>), document.getElementById('app'));
+
+React.render(<Router children={routes}/>, document.getElementById('app'));
 ```
 
 On the server, we need to asynchronously match the routes and fetch data
-first, and then provide the initial stat to the router so it render
+first, and then provide the initial state to the router so it render
 synchronously.
 
 ```js
 // server.js
-import { AsyncRouting, AsyncProps, Router } from 'react-router';
+import { Router } from 'react-router';
+import ServerHistory from 'react-router/lib/ServerHistory';
 import routes from './routes';
 
 // you'll want to configure your server to serve up static assets, and
 // and then handle the rest with React Router
 serveNonStaticPaths((req, res) => {
-  AsyncRouting.match(req.path, routes, (err, initialRoutingState) => {
-    AsyncProps.load(initialRoutingState, (err, initialBranchData) => {
-      var html = React.renderToString((
-        <Router
-          initialRoutingState={initialRoutingState}
-          initialBranchData={initialBranchData}
-        />
-      ));
-      res.send(renderFullPage(html));
+  var history = new ServerHistory(req.path);
+  Router.match(routes, history, (err, initialState) => {
+    // do your own data fetching, perhaps using the branch of components
+    // in the initialState
+    fetchSomeData(initialState.components, (err, initialData) => {
+      var html = React.renderToString(
+        <Router history={history} {...initialState}/>
+      );
+      res.send(renderFullPage(html, initialData));
     });
   });
 });
 
-function renderFullPage(html, asyncProps) {
+function renderFullPage(html, initialData) {
   return `
 <!doctype html>
 <html>
-  <meta charset="utf-8"/>
-  <head>
-    <title>Sorry, no answers for you here</title>
-  </head>
   <body>
     <div id="app">${html}</div>
     <script>
-     ${/* put this here for the client to pick up */}
-      __ASYNC_PROPS__ = ${JSON.stringify(asyncProps)};
+     ${/* put this here for the client to pick up, you'll need your
+          components to pick up this stuff on the first render */}
+      __INITIAL_DATA__ = ${JSON.stringify(initialData)};
     </script>
   </body>
 </html>
@@ -88,22 +84,8 @@ Async Routes
 ------------
 
 The previous example assumed a non-async route config. If you're using
-the async features (`getChildRoutes`, `getComponents`) you can read from
-`document.location` to asynchronously match before the initial render in
-the client, just like the server.
-
-```js
-// client.js
-import { Router, AsyncRouting } from 'react-router';
-import './routes' from './routes';
-var path = location.pathname+location.search;
-AsyncRouting.match(path, (err, initialRoutingState) => {
-  React.render((
-    <Router
-      routes={routes}
-      initialRoutingState={initialRoutingState}
-      initialBranchData={window.__INITIAL_DATA_BRANCH__}
-  />), document.getElementById('app'));
-});
-```
+the async features (`getChildRoutes`, `getComponents`) we *thinkg* you
+can read from `document.location` to asynchronously match before the
+initial render in the client, just like the server. Haven't done this
+yet together. Will update the docs with example code once we have.
 
