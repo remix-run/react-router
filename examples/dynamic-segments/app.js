@@ -1,5 +1,5 @@
 import React from 'react';
-import { Router, Route, Link } from 'react-router';
+import { Router, Route, Link, HashHistory } from 'react-router';
 
 var App = React.createClass({
   render () {
@@ -45,7 +45,7 @@ var Task = React.createClass({
 });
 
 React.render((
-  <Router>
+  <Router history={HashHistory}>
     <Route path="/" component={App}>
       <Route path="user/:userId" component={User}>
         <Route path="tasks/:taskId" component={Task}/>

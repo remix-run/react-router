@@ -1,5 +1,6 @@
 import React from 'react';
 import { Router, Link } from 'react-router';
+import { HashHistory } from 'react-router/HashHistory';
 
 var pictures = [
   {id: 0, src: 'http://placekitten.com/601/601'},
@@ -19,8 +20,9 @@ var App = React.createClass({
         </p>
         <p>
           Click on an item in the feed, and see that it opens in an overlay.
-          Then refresh, and see that the image does not render inside the
-          overlay. One URL, two session dependent routes and UI :D
+          Then copy/paste it into a different browser window (Like Chrome -> Firefox),
+          and see that the image does not render inside the overlay. One URL, two
+          session dependent routes and UI :D
         </p>
 
         {this.props.children}
@@ -45,8 +47,8 @@ var Feed = React.createClass({
         <div>
           {pictures.map(picture => (
             <Link
-              href={`/pictures/${picture.id}`}
-              transitionState={{fromFeed: true}}
+              to={`/pictures/${picture.id}`}
+              state={{fromFeed: true}}
             >
               <img style={{margin: 10}} src={picture.src} height="100"/>
             </Link>
@@ -84,14 +86,14 @@ var Picture = React.createClass({
   }
 });
 
-var FeedRoute = {
-  component: Feed,
-  childRoutes: [ FeedPictureRoute ],
-};
-
 var FeedPictureRoute = {
   path: '/pictures/:id',
   component: FeedPicture
+};
+
+var FeedRoute = {
+  component: Feed,
+  childRoutes: [ FeedPictureRoute ],
 };
 
 var PictureRoute = {
@@ -106,8 +108,8 @@ var RootRoute = {
 
   indexRoute: FeedRoute,
 
-  getChildRoutes (transitionState, cb) {
-    if (transitionState.fromFeed) {
+  getChildRoutes (state, cb) {
+    if (state.fromFeed) {
       cb(null, [ FeedRoute ]);
     }
     else {
@@ -116,14 +118,17 @@ var RootRoute = {
   }
 };
 
-React.render(<Router routes={RootRoute}/>, document.getElementById('example'));
+React.render(
+  <Router history={new HashHistory('k')} children={RootRoute}/>,
+  document.getElementById('example')
+);
 
 // Wait a sec ... what's happening?
 //
 //  1. When you visit "/" `RootRoute.indexRoute` is matched,
 //     which is `FeedRoute`, and that renders `Feed`.
 //
-//  2. Then, when you click a link on the feed, it sets some `transitionState`,
+//  2. Then, when you click a link on the feed, it sets some location `state`,
 //     particularly, `fromFeed`.
 //
 //  3. The router calls `RootRoute.getChildRoutes` while matching, which

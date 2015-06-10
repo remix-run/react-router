@@ -3,21 +3,21 @@ import { getParamNames, getPathname, getQueryString, matchPattern, stripLeadingS
 import { loopAsync, mapAsync } from './AsyncUtils';
 import Location from './Location';
 
-function getChildRoutes(route, callback) {
+function getChildRoutes(route, locationState, callback) {
   if (route.childRoutes) {
     callback(null, route.childRoutes);
   } else if (route.getChildRoutes) {
-    route.getChildRoutes(callback);
+    route.getChildRoutes(locationState, callback);
   } else {
     callback();
   }
 }
 
-function getIndexRoute(route, callback) {
+function getIndexRoute(route, locationState, callback) {
   if (route.indexRoute) {
     callback(null, route.indexRoute);
   } else if (route.getIndexRoute) {
-    route.getIndexRoute(callback);
+    route.getIndexRoute(callback, locationState);
   } else {
     callback();
   }
@@ -43,7 +43,7 @@ function createParams(paramNames, paramValues) {
   return assignParams({}, paramNames, paramValues);
 }
 
-function matchRouteDeep(route, pathname, callback) {
+function matchRouteDeep(route, pathname, locationState, callback) {
   var { remainingPathname, paramNames, paramValues } = matchPattern(route.path, pathname);
   var isExactMatch = remainingPathname === '';
 
@@ -51,7 +51,7 @@ function matchRouteDeep(route, pathname, callback) {
     var params = createParams(paramNames, paramValues);
     var branch = [ route ];
 
-    getIndexRoute(route, function (error, indexRoute) {
+    getIndexRoute(route, locationState, function (error, indexRoute) {
       if (error) {
         callback(error);
       } else {
@@ -63,12 +63,12 @@ function matchRouteDeep(route, pathname, callback) {
     });
   } else if (remainingPathname != null) {
     // This route matched at least some of the path.
-    getChildRoutes(route, function (error, childRoutes) {
+    getChildRoutes(route, locationState, function (error, childRoutes) {
       if (error) {
         callback(error);
       } else if (childRoutes) {
         // Check the child routes to see if any of them match.
-        matchRoutes(childRoutes, remainingPathname, function (error, match) {
+        matchRoutes(childRoutes, remainingPathname, locationState, function (error, match) {
           if (error) {
             callback(error);
           } else if (match) {
@@ -89,11 +89,11 @@ function matchRouteDeep(route, pathname, callback) {
   }
 }
 
-function matchRoutes(routes, pathname, callback) {
+function matchRoutes(routes, pathname, locationState, callback) {
   routes = createRoutes(routes);
 
   loopAsync(routes.length, function (index, next, done) {
-    matchRouteDeep(routes[index], pathname, function (error, match) {
+    matchRouteDeep(routes[index], pathname, locationState, function (error, match) {
       if (error || match) {
         done(error, match);
       } else {
@@ -118,7 +118,7 @@ function matchRoutes(routes, pathname, callback) {
 export function getProps(routes, location, parseQueryString, callback) {
   var pathname = stripLeadingSlashes(getPathname(location.path));
 
-  matchRoutes(routes, pathname, function (error, props) {
+  matchRoutes(routes, pathname, location.state || {}, function (error, props) {
     if (error || props == null) {
       callback(error);
     } else {

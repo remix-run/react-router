@@ -39,6 +39,7 @@ export var Link = React.createClass({
     activeClassName: string,
     to: string.isRequired,
     query: object,
+    state: object,
     onClick: func
   },
 
@@ -66,7 +67,7 @@ export var Link = React.createClass({
     event.preventDefault();
 
     if (allowTransition)
-      this.context.router.transitionTo(this.props.to, this.props.query);
+      this.context.router.transitionTo(this.props.to, this.props.query, this.props.state);
   },
 
   render() {
