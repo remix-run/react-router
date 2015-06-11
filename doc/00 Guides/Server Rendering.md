@@ -80,12 +80,3 @@ about to tell you not to do this, but please do and let us know how it
 goes. Most of us should probably just use the server side router from
 our favorite libraries for now, though.
 
-Async Routes
-------------
-
-The previous example assumed a non-async route config. If you're using
-the async features (`getChildRoutes`, `getComponents`) we *thinkg* you
-can read from `document.location` to asynchronously match before the
-initial render in the client, just like the server. Haven't done this
-yet together. Will update the docs with example code once we have.
-
