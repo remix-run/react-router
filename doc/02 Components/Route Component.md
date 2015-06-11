@@ -95,11 +95,6 @@ and the url is `/users/123/portfolios/345` then `props.routeParams` will be
 `{userId: '123'}`, and `route.params` will be `{userId: '123',
 portfolioId: 345}`.
 
-
-### `query`
-
-The query parameters of the url.
-
 ### `location`
 
 The [location][location] matched.
@@ -121,8 +116,7 @@ Examples
 var Students = React.createClass({
   render () {
     this.props.params.courseId; // "123"
-    this.props.query.sort; // "name"
-    this.props.location; // { path: "/course/123/students?sort=name" }
+    this.props.location.query.sort; // "name"
     // ...
   }
 });
