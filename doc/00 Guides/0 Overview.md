@@ -48,22 +48,58 @@ As the hash portion of the URL changes, `App` will render a different
 `<Child/>` by branching on `this.state.route`. Pretty straightforward
 stuff. But it gets complicated fast.
 
-Imagine now that `Inbox` has some nested UI at a path like
-`inbox/messages/:id` and `inbox/unread`, etc. We'll need to make our url
-parsing much more intelligent to be able to pass the right information
-to `App`, and then to `Inbox` in order for it to know which URL-mapped
-child component it should render. We'd then have a branch of components
-that should be rendered at any given URL. Add a few more of these
-branches and we'll end up with a lot of code to keep the URL and our
-application's component hierarchy in sync.
+Imagine now that `Inbox` has some nested UI at different URLs, maybe
+something like this master detail view:
+
+```
+path: /inbox/messages/1234
+
++---------+------------+------------------------+
+| About   |    Inbox   |                        |
++---------+            +------------------------+
+| Compose    Reply    Reply All    Archive      |
++-----------------------------------------------+
+|Movie tomorrow|                                |
++--------------+   Subject: TPS Report          |
+|TPS Report        From:    boss@big.co         |
++--------------+                                |
+|New Pull Reque|   So ...                       |
++--------------+                                |
+|...           |                                |
++--------------+--------------------------------+
+```
+
+And maybe stats page when not viewing a message:
+
+```
+path: /inbox
+
++---------+------------+------------------------+
+| About   |    Inbox   |                        |
++---------+            +------------------------+
+| Compose    Reply    Reply All    Archive      |
++-----------------------------------------------+
+|Movie tomorrow|                                |
++--------------+   10 Unread Messages           |
+|TPS Report    |   22 drafts                    |
++--------------+                                |
+|New Pull Reque|                                |
++--------------+                                |
+|...           |                                |
++--------------+--------------------------------+
+```
+
+We'd have to make our url parsing a lot more intelligent, and end up
+with a lot of code to figure out which branch of nested components to be
+rendered at any given url: `App -> About`, `App -> Inbox -> Messages ->
+Message`, `App -> Inbox -> Messages -> Stats`, etc.
 
 With React Router
 -----------------
 
 Nested URLs and nested component hierarchy are at the heart of React
-Router. It brings a declarative API to your routes. Lots of people like
-to use JSX to define their routes, but you can use plain objects if you
-want.
+Router's declarative API. Lots of people like to use JSX to define their
+routes, but you can use plain objects if you want.
 
 Let's refactor our app to use React Router.
 
