@@ -93,13 +93,16 @@ export class HashHistory extends DOMHistory {
   }
 
   handleHashChange() {
-    if (!this._ignoreHashChange && ensureSlash()) {
-      this._updateLocation(NavigationTypes.POP);
-      this._notifyChange();
+    if (!ensureSlash())
+      return;
+
+    if (this._ignoreNextHashChange) {
+      this._ignoreNextHashChange = false;
+      return;
     }
-    if (this._ignoreHashChange) {
-      this._ignoreHashChange = false;
-    }
+
+    this._updateLocation(NavigationTypes.POP);
+    this._notifyChange();
   }
 
   addChangeListener(listener) {
@@ -140,7 +143,7 @@ export class HashHistory extends DOMHistory {
     if (this.queryKey)
       path = saveState(path, this.queryKey, state);
 
-    this._ignoreHashChange = true;
+    this._ignoreNextHashChange = true;
     window.location.hash = path;
 
     this.location = this._createLocation(path, state, NavigationTypes.PUSH);
@@ -154,7 +157,7 @@ export class HashHistory extends DOMHistory {
     if (this.queryKey)
       path = saveState(path, this.queryKey, state);
 
-    this._ignoreHashChange = true;
+    this._ignoreNextHashChange = true;
     replaceHashPath(path);
 
     this.location = this._createLocation(path, state, NavigationTypes.REPLACE);
