@@ -25,14 +25,14 @@ be rendered by the parent route component with `this.props.children`.
 #### Example
 
 ```js
-const routes = (
+var routes = (
   <Route component={App}>
     <Route path="groups" components={Groups}/>
     <Route path="users" components={Users}/>
   </Route>
 );
 
-const App = React.createClass({
+var App = React.createClass({
   render () {
     return (
       <div>
@@ -53,7 +53,7 @@ by the parent route component with `this.props[name]`.
 #### Example
 
 ```js
-const routes = (
+var routes = (
   <Route component={App}>
     <Route path="groups" components={{main: Groups, sidebar: GroupsSidebar}}/>
     <Route path="users" components={{main: Users, sidebar: UsersSidebar}}>
@@ -62,7 +62,7 @@ const routes = (
   </Route>
 );
 
-const App = React.createClass({
+var App = React.createClass({
   render () {
     // the matched child route components become props in the parent
     return (
@@ -78,7 +78,7 @@ const App = React.createClass({
   }
 });
 
-const Users = React.createClass({
+var Users = React.createClass({
   render () {
     return (
       <div>
