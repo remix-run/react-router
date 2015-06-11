@@ -252,6 +252,14 @@ export var Router = React.createClass({
     }
   },
 
+  handleHistoryChange() {
+    if (this._ignoreNextHistoryChange) {
+      this._ignoreNextHistoryChange = false;
+    } else {
+      this._updateState(this.props.history.location);
+    }
+  },
+
   componentWillMount() {
     var { children, history } = this.props;
 
@@ -267,14 +275,6 @@ export var Router = React.createClass({
       history.addChangeListener(this.handleHistoryChange);
 
     this._updateState(history.location);
-  },
-
-  handleHistoryChange() {
-    if (this._ignoreNextHistoryChange) {
-      this._ignoreNextHistoryChange = false;
-    } else {
-      this._updateState(this.props.history.location);
-    }
   },
 
   componentDidMount() {
