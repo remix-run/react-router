@@ -13,13 +13,13 @@ export function pathnameIsActive(pathname, activePathname) {
 
 export function queryIsActive(query, activeQuery) {
   if (activeQuery == null)
-    return true;
+    return query == null;
 
   if (query == null)
-    return false;
+    return true;
 
-  for (var p in activeQuery)
-    if (activeQuery.hasOwnProperty(p) && String(query[p]) !== String(activeQuery[p]))
+  for (var p in query)
+    if (query.hasOwnProperty(p) && String(query[p]) !== String(activeQuery[p]))
       return false;
 
   return true;
