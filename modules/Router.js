@@ -215,14 +215,6 @@ export var Router = React.createClass({
   },
 
   /**
-   * Cancels the current transition, preventing any subsequent
-   * transition hooks from running.
-   */
-  cancelTransition() {
-    this.nextLocation = null;
-  },
-
-  /**
    * Adds a transition hook that runs before all route hooks in a
    * transition. The signature is the same as route transition hooks.
    */
@@ -235,6 +227,29 @@ export var Router = React.createClass({
    */
   removeTransitionHook(hook) {
     this.transitionHooks = this.transitionHooks.filter(h => h !== hook);
+  },
+
+  /**
+   * Cancels the current transition, preventing any subsequent transition
+   * hooks from running and restoring the previous location.
+   */
+  cancelTransition() {
+    invariant(
+      this.state.location,
+      'Router#cancelTransition: You may not cancel the initial transition'
+    );
+
+    if (this.nextLocation) {
+      this.nextLocation = null;
+
+      // The best we can do here is goBack so the location state reverts
+      // to what it was. However, we also set a flag so that we know not
+      // to run through _updateState again.
+      this._ignoreNextHistoryChange = true;
+      this.goBack();
+    } else {
+      warning(false, 'Router#cancelTransition: Router is not transitioning');
+    }
   },
 
   componentWillMount() {
@@ -255,6 +270,11 @@ export var Router = React.createClass({
   },
 
   handleHistoryChange() {
+    if (this._ignoreNextHistoryChange) {
+      this._ignoreNextHistoryChange = false;
+      return;
+    }
+
     this._updateState(this.props.history.location);
   },
 

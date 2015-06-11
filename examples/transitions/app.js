@@ -1,6 +1,6 @@
-import React from 'react';
+import React, { findDOMNode } from 'react';
 import HashHistory from 'react-router/lib/HashHistory';
-import { Router, Route, Link, TransitionHook } from 'react-router';
+import { Router, Route, Link, Navigation, TransitionHook } from 'react-router';
 
 var App = React.createClass({
   render() {
@@ -29,20 +29,18 @@ var Dashboard = React.createClass({
 });
 
 var Form = React.createClass({
-  mixins: [ TransitionHook ],
+  mixins: [ Navigation, TransitionHook ],
 
   routerWillLeave(nextState, router) {
-    if (this.refs.userInput.getDOMNode().value !== '') {
-      if (!confirm('You have unsaved information, are you sure you want to leave this page?')) {
+    if (findDOMNode(this.refs.userInput).value !== '')
+      if (!confirm('You have unsaved information, are you sure you want to leave this page?'))
         router.cancelTransition();
-      }
-    }
   },
 
   handleSubmit(event) {
     event.preventDefault();
-    this.refs.userInput.getDOMNode().value = '';
-    this.context.router.transitionTo('/');
+    findDOMNode(this.refs.userInput).value = '';
+    this.transitionTo('/');
   },
 
   render() {
