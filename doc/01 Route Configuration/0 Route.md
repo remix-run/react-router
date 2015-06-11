@@ -9,8 +9,9 @@ Props
 The path used in the URL.
 
 It will concat with the parent route's path unless it starts with `/`.
-In which case you will need to use `childWillMatch` on the parent route
-so the router knows to keep going down the route tree.
+In which case you will need to use `absoluteChildPaths` on the parent
+route so the router knows to keep going down the route tree even though
+the parent path doesn't match the url.
 
 If left undefined, the router will try to match the child routes.
 
@@ -27,8 +28,8 @@ be rendered by the parent route component with `this.props.children`.
 ```js
 var routes = (
   <Route component={App}>
-    <Route path="groups" components={Groups}/>
-    <Route path="users" components={Users}/>
+    <Route path="groups" component={Groups}/>
+    <Route path="users" component={Users}/>
   </Route>
 );
 
@@ -47,12 +48,18 @@ var App = React.createClass({
 ### `components`
 
 Routes can define multiple components as an object of name:component
-pairs to be rendered when the path matches the url. They can be rendred
+pairs to be rendered when the path matches the url. They can be rendered
 by the parent route component with `this.props[name]`.
 
 #### Example
 
 ```js
+// think of it outside the context of the router, if you had pluggable
+// portions of your `render`, you might do it like this
+<App main={<Users/>} sidebar={<UsersSidebar/>}/>
+<App main={<Groups/>} sidebar={<GroupsSidebar/>}/>
+
+// So with the router its looks like this:
 var routes = (
   <Route component={App}>
     <Route path="groups" components={{main: Groups, sidebar: GroupsSidebar}}/>
@@ -89,6 +96,7 @@ var Users = React.createClass({
     );
   }
 });
+
 ```
 
 ### `getComponents(state, cb)`

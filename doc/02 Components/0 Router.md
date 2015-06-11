@@ -11,6 +11,10 @@ history changes, `Router` will match a branch of its [`Routes`][Route],
 and render their configured [components][RouteComponent], with child
 route components nested inside the parents.
 
+### `routes`
+
+Alias for `children`.
+
 ### `history` (required)
 
 The [`History`][History] the router should set up and listen for changes
@@ -43,15 +47,6 @@ function createElement(Component, props) {
   return <RelayContainer Component={Component} routerProps={props}/>;
 }
 ```
-
-### `parseQueryString(queryString)`
-
-A custom prop to parse query strings differently than the default.
-
-### `stringifyQuery(obj)`
-
-A custom prop to stringify query objects that come from [`Links`][Link]
-and [`router.transitionTo()`][transitionTo].
 
 ### `onError(error)`
 
