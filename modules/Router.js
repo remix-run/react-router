@@ -4,7 +4,7 @@ import invariant from 'invariant';
 import { loopAsync } from './AsyncUtils';
 import { createRoutes } from './RouteUtils';
 import { pathnameIsActive, queryIsActive } from './ActiveUtils';
-import { getState, getTransitionHooks, createTransitionHook, getComponents } from './RoutingUtils';
+import { getState, getTransitionHooks, createTransitionHook, getComponents, getRouteParams } from './RoutingUtils';
 import { routes, component, components, history, location } from './PropTypes';
 import Location from './Location';
 
@@ -300,7 +300,8 @@ export var Router = React.createClass({
           return element; // Don't create new children; use the grandchildren.
 
         var route = branch[index];
-        var props = { location, params, route, isTransitioning };
+        var routeParams = getRouteParams(route, params);
+        var props = { location, params, route, routeParams, isTransitioning };
 
         if (isValidElement(element)) {
           props.children = element;
