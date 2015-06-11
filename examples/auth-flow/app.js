@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { findDOMNode } from 'react';
 import HashHistory from 'react-router/lib/HashHistory';
 import { Router, Route, Link, Navigation } from 'react-router';
 import auth from './auth';
@@ -67,16 +67,17 @@ var Login = React.createClass({
   handleSubmit(event) {
     event.preventDefault();
 
-    var { nextPathname } = this.props.query;
-    var email = this.refs.email.getDOMNode().value;
-    var pass = this.refs.pass.getDOMNode().value;
+    var email = findDOMNode(this.refs.email).value;
+    var pass = findDOMNode(this.refs.pass).value;
 
     auth.login(email, pass, (loggedIn) => {
       if (!loggedIn)
         return this.setState({ error: true });
 
-      if (nextPathname) {
-        this.replaceWith(nextPathname);
+      var { location } = this.props;
+
+      if (location.query && location.query.nextPathname) {
+        this.replaceWith(location.query.nextPathname);
       } else {
         this.replaceWith('/about');
       }
