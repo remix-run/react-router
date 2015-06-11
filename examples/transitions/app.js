@@ -31,7 +31,7 @@ var Dashboard = React.createClass({
 var Form = React.createClass({
   mixins: [ TransitionHook ],
 
-  routerWillLeave(router) {
+  routerWillLeave(nextState, router) {
     if (this.refs.userInput.getDOMNode().value !== '') {
       if (!confirm('You have unsaved information, are you sure you want to leave this page?')) {
         router.cancelTransition();
