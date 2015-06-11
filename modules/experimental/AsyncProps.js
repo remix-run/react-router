@@ -38,30 +38,23 @@ var AsyncProps = React.createClass({
   },
 
   componentWillReceiveProps(nextProps) {
-    console.log(this.props.Component);
-
     var needToLoad = !shallowEqual(
       nextProps.routing.routeParams,
       this.props.routing.routeParams
     );
 
-    console.log('needToLoad', needToLoad);
-    if (!needToLoad)
-      return;
+    if (needToLoad) {
+      var routerTransitioned = nextProps.routing.location !== this.props.routing.location;
+      var keepPreviousRoutingState = this.state.propsAreLoadingLong && routerTransitioned;
 
-    var routerTransitioned = nextProps.routing.location !== this.props.routing.location;
-    var keepPreviousRoutingState = this.state.propsAreLoadingLong && routerTransitioned;
-
-    console.log('keepPreviousRoutingState', keepPreviousRoutingState);
-    if (keepPreviousRoutingState) {
-      this.load(nextProps);
-      return;
+      if (keepPreviousRoutingState) {
+        this.load(nextProps);
+      } else {
+        this.setState({
+          previousRoutingState: this.props.routing
+        }, () => this.load(nextProps));
+      }
     }
-
-    console.log('set previousRoutingState');
-    this.setState({
-      previousRoutingState: this.props.routing
-    }, () => this.load(nextProps));
   },
 
   /*
