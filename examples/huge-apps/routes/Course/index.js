@@ -1,12 +1,8 @@
 module.exports = {
   path: 'course/:courseId',
 
-  getChildRoutes (cb) {
-    require.ensure([
-      './routes/Announcements',
-      './routes/Assignments',
-      './routes/Grades',
-    ], (require) => {
+  getChildRoutes (state, cb) {
+    require.ensure([], (require) => {
       cb(null, [
         require('./routes/Announcements'),
         require('./routes/Assignments'),
@@ -16,7 +12,7 @@ module.exports = {
   },
 
   getComponents (cb) {
-    require.ensure(['./components/Course'], (require) => {
+    require.ensure([], (require) => {
       cb(null, require('./components/Course'))
     })
   }

@@ -1,7 +1,7 @@
 import React from 'react';
 import HashHistory from 'react-router/lib/HashHistory';
-import { Router, Route, Link } from 'react-router';
-import getAsyncProps from './lib/getAsyncProps';
+import { Router } from 'react-router';
+import AsyncProps from 'react-router/lib/experimental/AsyncProps';
 import stubbedCourses from './stubs/courses';
 
 var rootRoute = {
@@ -18,15 +18,11 @@ var rootRoute = {
   component: require('./components/App'),
 };
 
-//var Router = createRouter(rootRoute);
-//
-//History.listen((location) => {
-//  Router.match(location, (err, props) => {
-//    getAsyncProps(props, (err, newProps) => {
-//      // swallowed errors?!
-//      setTimeout(() => {
-//        React.render(<Router {...newProps} />, document.getElementById('example'));
-//      }, 0);
-//    });
-//  });
-//});
+React.render((
+  <Router
+    children={rootRoute}
+    history={HashHistory}
+    createElement={AsyncProps.createElement}
+  />
+), document.getElementById('example'));
+

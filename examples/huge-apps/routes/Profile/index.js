@@ -2,7 +2,7 @@ module.exports = {
   path: 'profile',
 
   getComponents (cb) {
-    require.ensure(['./components/Profile'], (require) => {
+    require.ensure([], (require) => {
       cb(null, require('./components/Profile'));
     });
   }

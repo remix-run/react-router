@@ -2,7 +2,7 @@ module.exports = {
   path: 'grades',
 
   getComponents (cb) {
-    require.ensure(['./components/Grades'], (require) => {
+    require.ensure([], (require) => {
       cb(null, require('./components/Grades'))
     })
   }

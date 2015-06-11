@@ -1,19 +1,22 @@
 import React from 'react';
 import { Link } from 'react-router';
 
-class Sidebar extends React.Component {
-  static getAsyncProps (params, cb) {
-    cb(null, {
-      announcements: COURSES[params.courseId].announcements
-    });
-  }
+export default class AnnouncementsSidebar extends React.Component {
+
+  //static loadProps (params, cb) {
+    //cb(null, {
+      //announcements: COURSES[params.courseId].announcements
+    //});
+  //}
 
   render () {
+    //var { announcements } = this.props;
+    var announcements = COURSES[this.props.params.courseId].announcements;
     return (
       <div>
         <h3>Sidebar Assignments</h3>
         <ul>
-          {this.props.announcements.map(announcement => (
+          {announcements.map(announcement => (
             <li key={announcement.id}>
               <Link to={`/course/${this.props.params.courseId}/announcements/${announcement.id}`}>
                 {announcement.title}
@@ -26,6 +29,4 @@ class Sidebar extends React.Component {
   }
 
 }
-
-export default Sidebar;
 

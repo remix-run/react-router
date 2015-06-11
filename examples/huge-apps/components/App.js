@@ -1,22 +1,22 @@
 import React from 'react';
 import Dashboard from './Dashboard';
-import { Link } from 'react-router';
 import GlobalNav from './GlobalNav';
-
-var styles = {};
 
 class App extends React.Component {
 
-  static getAsyncProps (params, cb) {
-    cb(null, { courses: COURSES });
-  }
+  //static loadProps (params, cb) {
+    //console.log('App');
+    //cb(null, { courses: COURSES });
+  //}
 
   render () {
+    //var { courses } = this.props;
+    var courses = COURSES;
     return (
       <div>
         <GlobalNav/>
         <div style={{padding: 20}}>
-          {this.props.children || <Dashboard courses={this.props.courses}/>}
+          {this.props.children || <Dashboard courses={courses}/>}
         </div>
       </div>
     );

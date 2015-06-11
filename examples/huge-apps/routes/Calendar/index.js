@@ -2,7 +2,7 @@ module.exports = {
   path: 'calendar',
 
   getComponents (cb) {
-    require.ensure(['./components/Calendar'], (require) => {
+    require.ensure([], (require) => {
       cb(null, require('./components/Calendar'))
     })
   }

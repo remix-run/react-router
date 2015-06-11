@@ -1,10 +1,8 @@
 module.exports = {
   path: 'assignments',
 
-  getChildRoutes (cb) {
-    require.ensure([
-      './routes/Assignment',
-    ], (require) => {
+  getChildRoutes (state, cb) {
+    require.ensure([], (require) => {
       cb(null, [
         require('./routes/Assignment')
       ])
@@ -12,10 +10,7 @@ module.exports = {
   },
 
   getComponents (cb) {
-    require.ensure([
-      './components/Assignments',
-      './components/Sidebar',
-    ], (require) => {
+    require.ensure([], (require) => {
       cb(null, {
         sidebar: require('./components/Sidebar'),
         main: require('./components/Assignments'),

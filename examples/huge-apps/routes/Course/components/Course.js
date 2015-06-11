@@ -14,12 +14,13 @@ styles.sidebar = {
 
 class Course extends React.Component {
 
-  static getAsyncProps (params, cb) {
-    cb(null, { course: COURSES[params.courseId] });
-  }
+  //static loadProps (params, cb) {
+    //cb(null, { course: COURSES[params.courseId] });
+  //}
 
   render () {
-    var { course } = this.props;
+    //var { course } = this.props;
+    var course = COURSES[this.props.params.courseId];
     return (
       <div>
         <h2>{course.name}</h2>

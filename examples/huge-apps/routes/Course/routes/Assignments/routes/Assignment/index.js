@@ -2,9 +2,7 @@ module.exports = {
   path: ':assignmentId',
 
   getComponents (cb) {
-    require.ensure([
-      './components/Assignment',
-    ], (require) => {
+    require.ensure([], (require) => {
       cb(null, require('./components/Assignment'));
     })
   }
