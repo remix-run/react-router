@@ -1,5 +1,6 @@
 var React = require('react');
-var { Router, Route, Link, Navigation, HashHistory } = require('react-router');
+import HashHistory from 'react-router/lib/HashHistory';
+var { Router, Route, Link, Navigation } = require('react-router');
 
 var App = React.createClass({
 
