@@ -27,13 +27,13 @@ var App = React.createClass({
         <ul>
           <li>
             {this.state.loggedIn ? (
-              <Link to="logout">Log out</Link>
+              <Link to="/logout">Log out</Link>
             ) : (
-              <Link to="login">Sign in</Link>
+              <Link to="/login">Sign in</Link>
             )}
           </li>
-          <li><Link to="about">About</Link></li>
-          <li><Link to="dashboard">Dashboard</Link> (authenticated)</li>
+          <li><Link to="/about">About</Link></li>
+          <li><Link to="/dashboard">Dashboard</Link> (authenticated)</li>
         </ul>
         {this.props.children}
       </div>
@@ -84,6 +84,7 @@ var Login = React.createClass({
   },
 
   render() {
+    console.log(this.props.query);
     return (
       <form onSubmit={this.handleSubmit}>
         <label><input ref="email" placeholder="email" defaultValue="joe@example.com"/></label>
