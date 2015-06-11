@@ -237,18 +237,3 @@ function getComponentsForRoutes(routes, callback) {
 export function getComponents(state, callback) {
   getComponentsForRoutes(state.branch, callback);
 }
-
-/**
- * Returns true if the given pathname matches against the routes
- * in the given branch.
- */
-export function branchMatches(branch, pathname) {
-  for (var i = 0, len = branch.length; i < len; ++i) {
-    pathname = matchPattern(branch[i].path, pathname).remainingPathname;
-
-    if (pathname === '')
-      return true;
-  }
-
-  return false;
-}

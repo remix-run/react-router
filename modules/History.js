@@ -55,7 +55,8 @@ class History extends ChangeEmitter {
 
   _createLocation(path, state, navigationType) {
     var pathname = getPathname(path);
-    var query = this.parseQueryString(getQueryString(path));
+    var queryString = getQueryString(path);
+    var query = queryString ? this.parseQueryString(queryString) : null;
     return new Location(pathname, query, state, navigationType);
   }
 

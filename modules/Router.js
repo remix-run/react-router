@@ -3,8 +3,8 @@ import warning from 'warning';
 import invariant from 'invariant';
 import { loopAsync } from './AsyncUtils';
 import { createRoutes } from './RouteUtils';
-import { queryContains } from './URLUtils';
-import { branchMatches, getState, getTransitionHooks, createTransitionHook, getComponents } from './RoutingUtils';
+import { pathnameIsActive, queryIsActive } from './ActiveUtils';
+import { getState, getTransitionHooks, createTransitionHook, getComponents } from './RoutingUtils';
 import { routes, component, components, history, location } from './PropTypes';
 import Location from './Location';
 
@@ -61,8 +61,13 @@ var ContextMixin = {
   },
  
   isActive(pathname, query) {
-    var { branch, location } = this.state;
-    return branch && location && branchMatches(branch, pathname) && queryContains(location.query, query);
+    var { location } = this.state;
+
+    if (location == null)
+      return false;
+
+    return pathnameIsActive(pathname, location.pathname) &&
+      queryIsActive(query, location.query);
   }
 
 };

@@ -14,20 +14,6 @@ export function isAbsolutePath(path) {
   return typeof path === 'string' && path.charAt(0) === '/';
 }
 
-export function queryContains(query, props) {
-  if (props == null)
-    return true;
-
-  if (query == null)
-    return false;
-
-  for (var p in props)
-    if (props.hasOwnProperty(p) && String(query[p]) !== String(props[p]))
-      return false;
-
-  return true;
-}
-
 var queryMatcher = /\?(.*)$/;
 
 export function getPathname(path) {
