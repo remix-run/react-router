@@ -9,9 +9,11 @@ Props
 
 An array of child routes, same as `children` in JSX route configs.
 
-### `getChildRoutes(callback)`
+### `getChildRoutes(state, callback)`
 
-Same as `childRoutes` but asynchronous:
+Same as `childRoutes` but asynchronous and receives the location state.
+Useful for code-splitting and dynamic route matching (given some state
+or session data, return a different set of child routes).
 
 #### `callback` signature
 
@@ -32,7 +34,7 @@ var myRoute = {
 // async child routes
 var myRoute = {
   path: 'course/:courseId',
-  getChildRoutes (cb) {
+  getChildRoutes (state, cb) {
     // do asynchronous stuff to find the child routes
     cb(null, [announcementsRoute, gradesRoute, assignmentsRoute]);
   }

@@ -37,7 +37,7 @@ route:
 module.exports = {
   path: 'course/:courseId',
 
-  getChildRoutes (cb) {
+  getChildRoutes (state, cb) {
     require.ensure([], (require) => {
       cb(null, [
         require('./routes/Announcements'),
