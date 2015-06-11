@@ -162,8 +162,8 @@ export class HashHistory extends DOMHistory {
     this._notifyChange();
   }
 
-  makeHref(path) {
-    return '#' + super.makeHref(path);
+  makeHref(pathname, query) {
+    return '#' + super.makeHref(pathname, query);
   }
 
 }
