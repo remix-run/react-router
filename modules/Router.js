@@ -93,7 +93,7 @@ export var Router = React.createClass({
     onError: func.isRequired,
     onUpdate: func,
 
-    // For server-side rendering...
+    // For server-side rendering
     location: any,
     branch: routes,
     params: object,
@@ -133,7 +133,7 @@ export var Router = React.createClass({
       if (error || this.nextLocation !== location) {
         this._finishTransition(error);
       } else if (state == null) {
-        warning(false, 'Location "%s" did not match any routes', location.path);
+        warning(false, 'Location "%s" did not match any routes', location.pathname);
         this._finishTransition();
       } else {
         state.location = location;
