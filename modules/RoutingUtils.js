@@ -244,6 +244,10 @@ export function getComponents(state, callback) {
  */
 export function getRouteParams(route, params) {
   var routeParams = {};
+
+  if (!route.path)
+    return routeParams;
+
   var paramNames = getParamNames(route.path);
 
   for (var p in params)
