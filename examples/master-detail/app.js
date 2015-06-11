@@ -41,7 +41,7 @@ var App = React.createClass({
     return (
       <div className="App">
         <div className="ContactList">
-          <Link to="/new">New Contact</Link>
+          <Link to="/contact/new">New Contact</Link>
           <ul>
             {contacts}
           </ul>
@@ -63,8 +63,8 @@ var Index = React.createClass({
 var Contact = React.createClass({
   mixins: [ Navigation ],
 
-  getStateFromStore() {
-    var { id } = this.props.params;
+  getStateFromStore(props) {
+    var { id } = props ? props.params : this.props.params;
 
     return {
       contact: ContactStore.getContact(id)
@@ -83,8 +83,8 @@ var Contact = React.createClass({
     ContactStore.removeChangeListener(this.updateContact);
   },
 
-  componentWillReceiveProps() {
-    this.setState(this.getStateFromStore());
+  componentWillReceiveProps(nextProps) {
+    this.setState(this.getStateFromStore(nextProps));
   },
 
   updateContact() {
@@ -95,7 +95,7 @@ var Contact = React.createClass({
   },
 
   destroy() {
-    var { id } = this.getParams();
+    var { id } = this.props.params;
     ContactStore.removeContact(id);
     this.transitionTo('/');
   },
@@ -151,9 +151,9 @@ var NotFound = React.createClass({
 
 React.render((
   <Router history={HashHistory}>
-    <Route component={App} indexComponent={Index}>
-      <Route name="new" path="contact/new" component={NewContact}/>
-      <Route name="contact" path="contact/:id" component={Contact}/>
+    <Route path="/" component={App} indexComponent={Index}>
+      <Route path="contact/new" component={NewContact}/>
+      <Route path="contact/:id" component={Contact}/>
       <Route path="*" component={NotFound}/>
     </Route>
   </Router>
