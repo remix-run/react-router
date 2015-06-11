@@ -117,7 +117,7 @@ var RootRoute = {
   indexRoute: FeedRoute,
 
   getChildRoutes (state, cb) {
-    if (state.fromFeed) {
+    if (state && state.fromFeed) {
       cb(null, [ FeedRoute ]);
     }
     else {
