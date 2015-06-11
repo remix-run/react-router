@@ -85,7 +85,6 @@ var Login = React.createClass({
   },
 
   render() {
-    console.log(this.props.query);
     return (
       <form onSubmit={this.handleSubmit}>
         <label><input ref="email" placeholder="email" defaultValue="joe@example.com"/></label>

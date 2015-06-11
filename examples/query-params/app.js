@@ -4,7 +4,7 @@ import { Router, Route, Link } from 'react-router';
 
 var User = React.createClass({
   render() {
-    var { query } = this.props;
+    var { query } = this.props.location;
     var age = query && query.showAge ? '33' : '';
     var { userID } = this.props.params;
     return (
@@ -21,9 +21,9 @@ var App = React.createClass({
     return (
       <div>
         <ul>
-          <li><Link to={`/user/bob`}>Bob</Link></li>
-          <li><Link to={`/user/bob`} query={{showAge: true}}>Bob With Query Params</Link></li>
-          <li><Link to={`/user/sally`}>Sally</Link></li>
+          <li><Link to="/user/bob">Bob</Link></li>
+          <li><Link to="/user/bob" query={{showAge: true}}>Bob With Query Params</Link></li>
+          <li><Link to="/user/sally">Sally</Link></li>
         </ul>
         {this.props.children}
       </div>

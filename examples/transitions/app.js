@@ -44,7 +44,6 @@ var Form = React.createClass({
   },
 
   render() {
-    console.log('form render');
     return (
       <div>
         <form onSubmit={this.handleSubmit}>
