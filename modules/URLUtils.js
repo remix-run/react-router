@@ -6,14 +6,6 @@ export function stringifyQuery(query) {
   return qs.stringify(query, { arrayFormat: 'brackets' });
 }
 
-export function stripLeadingSlashes(path) {
-  return path ? path.replace(/^\/+/, '') : '';
-}
-
-export function isAbsolutePath(path) {
-  return typeof path === 'string' && path.charAt(0) === '/';
-}
-
 var queryMatcher = /\?(.*)$/;
 
 export function getPathname(path) {
@@ -23,6 +15,14 @@ export function getPathname(path) {
 export function getQueryString(path) {
   var match = path.match(queryMatcher);
   return match ? match[1] : '';
+}
+
+export function stripLeadingSlashes(path) {
+  return path ? path.replace(/^\/+/, '') : '';
+}
+
+export function isAbsolutePath(path) {
+  return typeof path === 'string' && path.charAt(0) === '/';
 }
 
 function escapeRegExp(string) {

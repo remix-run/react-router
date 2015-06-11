@@ -4,10 +4,6 @@ import MemoryHistory from '../MemoryHistory';
 import Router from '../Router';
 import Route from '../Route';
 
-function createHistory(path) {
-  return new MemoryHistory(path);
-}
-
 describe('When a router enters a branch', function () {
   var div, Dashboard, NewsFeed, Inbox, DashboardRoute, NewsFeedRoute, InboxRoute, RedirectToInboxRoute, MessageRoute, routes;
   beforeEach(function () {
@@ -113,7 +109,7 @@ describe('When a router enters a branch', function () {
       spyOn(NewsFeedRoute, 'onEnter').andCallThrough()
     ];
 
-    render(<Router history={createHistory('/news')} children={routes}/>, div, function () {
+    render(<Router history={new MemoryHistory('/news')} children={routes}/>, div, function () {
       spies.forEach(function (spy) {
         expect(spy).toHaveBeenCalled();
       });
@@ -127,7 +123,7 @@ describe('When a router enters a branch', function () {
       var redirectRouteLeaveSpy = spyOn(RedirectToInboxRoute, 'onLeave').andCallThrough();
       var inboxEnterSpy = spyOn(InboxRoute, 'onEnter').andCallThrough();
 
-      render(<Router history={createHistory('/redirect-to-inbox')} children={routes}/>, div, function () {
+      render(<Router history={new MemoryHistory('/redirect-to-inbox')} children={routes}/>, div, function () {
         expect(this.state.location.pathname).toEqual('/inbox');
         expect(redirectRouteEnterSpy).toHaveBeenCalled();
         expect(redirectRouteLeaveSpy.calls.length).toEqual(0);
@@ -164,7 +160,7 @@ describe('When a router enters a branch', function () {
         }
       }
 
-      render(<Router history={createHistory('/inbox')} children={routes} onUpdate={execNextStep}/>, div, execNextStep);
+      render(<Router history={new MemoryHistory('/inbox')} children={routes} onUpdate={execNextStep}/>, div, execNextStep);
     });
   });
 

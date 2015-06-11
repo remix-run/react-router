@@ -8,10 +8,6 @@ import Link from '../Link';
 
 var { click } = React.addons.TestUtils.Simulate;
 
-function createHistory(path) {
-  return new MemoryHistory(path);
-}
-
 describe('A <Link>', function () {
 
   var Parent = React.createClass({
@@ -42,6 +38,23 @@ describe('A <Link>', function () {
     div = document.createElement('div');
   });
 
+  it('knows how to make its href', function () {
+    var LinkWrapper = React.createClass({
+      render() {
+        return <Link to="/hello/michael" query={{the: 'query'}}>Link</Link>;
+      }
+    });
+
+    render((
+      <Router history={new MemoryHistory('/link')}>
+        <Route path="link" component={LinkWrapper}/>
+      </Router>
+    ), div, function () {
+      var a = div.querySelector('a');
+      expect(a.getAttribute('href')).toEqual('/hello/michael?the=query');
+    });
+  });
+
   describe('with params', function () {
     var App = React.createClass({
       render() {
@@ -56,7 +69,7 @@ describe('A <Link>', function () {
 
     it('is active when its params match', function (done) {
       render((
-        <Router history={createHistory("/hello/michael")}>
+        <Router history={new MemoryHistory('/hello/michael')}>
           <Route path="/" component={App}>
             <Route path="/hello/:name" component={Hello}/>
           </Route>
@@ -68,9 +81,9 @@ describe('A <Link>', function () {
       });
     });
 
-    it.skip('is not active when its params do not match', function (done) {
+    it('is not active when its params do not match', function (done) {
       render((
-        <Router history={createHistory("/hello/michael")}>
+        <Router history={new MemoryHistory('/hello/michael')}>
           <Route path="/" component={App}>
             <Route path="/hello/:name" component={Hello}/>
           </Route>
@@ -79,27 +92,6 @@ describe('A <Link>', function () {
         var a = div.querySelectorAll('a')[1];
         expect(a.className.trim()).toEqual('');
         done();
-      });
-    });
-
-  });
-
-  describe('with params and a query', function () {
-    var LinkWrapper = React.createClass({
-      render() {
-        return <Link to="/hello/michael" query={{the: 'query'}}>Link</Link>;
-      }
-    });
-
-    it('knows how to make its href', function () {
-      render((
-        <Router history={createHistory("/link")}>
-          <Route path="hello/:name" component={Hello}/>
-          <Route path="link" component={LinkWrapper}/>
-        </Router>
-      ), div, function () {
-        var a = div.querySelector('a');
-        expect(a.getAttribute('href')).toEqual('/hello/michael?the=query');
       });
     });
   });
@@ -117,18 +109,17 @@ describe('A <Link>', function () {
         }
       });
 
-      var steps = [], a;
-
-      steps.push(function () {
-        a = div.querySelector('a');
-        expect(a.className).toEqual('dontKillMe');
-        this.transitionTo('hello');
-      });
-
-      steps.push(function () {
-        expect(a.className).toEqual('dontKillMe highlight');
-        done();
-      });
+      var a, steps = [
+        function () {
+          a = div.querySelector('a');
+          expect(a.className).toEqual('dontKillMe');
+          this.transitionTo('hello');
+        },
+        function () {
+          expect(a.className).toEqual('dontKillMe highlight');
+          done();
+        }
+      ];
 
       function execNextStep() {
         try {
@@ -139,7 +130,7 @@ describe('A <Link>', function () {
       }
 
       render((
-        <Router history={createHistory('/goodbye')} onUpdate={execNextStep}>
+        <Router history={new MemoryHistory('/goodbye')} onUpdate={execNextStep}>
           <Route path="/" component={LinkWrapper}>
             <Route path="goodbye" component={Goodbye}/>
             <Route path="hello" component={Hello}/>
@@ -160,18 +151,17 @@ describe('A <Link>', function () {
         }
       });
 
-      var steps = [], a;
-
-      steps.push(function () {
-        a = div.querySelector('a');
-        expect(a.style.color).toEqual('white');
-        this.transitionTo('hello');
-      });
-
-      steps.push(function () {
-        expect(a.style.color).toEqual('red');
-        done();
-      });
+      var a, steps = [
+        function () {
+          a = div.querySelector('a');
+          expect(a.style.color).toEqual('white');
+          this.transitionTo('hello');
+        },
+        function () {
+          expect(a.style.color).toEqual('red');
+          done();
+        }
+      ];
 
       function execNextStep() {
         try {
@@ -182,7 +172,7 @@ describe('A <Link>', function () {
       }
 
       render((
-        <Router history={createHistory("/goodbye")} onUpdate={execNextStep}>
+        <Router history={new MemoryHistory("/goodbye")} onUpdate={execNextStep}>
           <Route path="/" component={LinkWrapper}>
             <Route path="hello" component={Hello}/>
             <Route path="goodbye" component={Goodbye}/>
@@ -206,7 +196,7 @@ describe('A <Link>', function () {
       });
 
       render((
-        <Router history={createHistory("/link")}>
+        <Router history={new MemoryHistory("/link")}>
           <Route path="hello" component={Hello}/>
           <Route path="link" component={LinkWrapper}/>
         </Router>
@@ -225,23 +215,26 @@ describe('A <Link>', function () {
         }
       });
 
-      var steps = [];
-
-      steps.push(function () {
-        click(div.querySelector('a'), { button: 0 });
-      });
-
-      steps.push(function () {
-        expect(div.innerHTML).toMatch(/Hello/);
-        done();
-      });
+      var steps = [
+        function () {
+          click(div.querySelector('a'), { button: 0 });
+        },
+        function () {
+          expect(div.innerHTML).toMatch(/Hello/);
+          done();
+        }
+      ];
 
       function execNextStep() {
-        steps.shift().apply(this, arguments);
+        try {
+          steps.shift().apply(this, arguments);
+        } catch (error) {
+          done(error);
+        }
       }
 
       render((
-        <Router history={createHistory("/link")} onUpdate={execNextStep}>
+        <Router history={new MemoryHistory("/link")} onUpdate={execNextStep}>
           <Route path="hello" component={Hello}/>
           <Route path="link" component={LinkWrapper}/>
         </Router>
