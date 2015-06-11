@@ -15,8 +15,9 @@ marked.setOptions({
 });
 
 getCategories().then((categories) => {
+  var versions = process.argv[2].split('\n');
   var html = React.renderToStaticMarkup(
-    React.createElement(Page, { categories })
+    React.createElement(Page, { categories, versions })
   );
   console.log('<!doctype html>'+html);
 });
@@ -63,14 +64,14 @@ class Page extends React.Component {
         <head>
           <meta charSet="utf-8"/>
           <title>React Router Documentation</title>
-          <link rel="stylesheet" href="./styles.css"/>
-          <link rel="stylesheet" href="./syntax.css"/>
+          <link rel="stylesheet" href="/styles.css"/>
+          <link rel="stylesheet" href="/syntax.css"/>
         </head>
         <body>
           <main className="Main">
             <div className="Main__Content">
               <center>
-                <img src="./img/vertical.png" width="367" style={{marginBottom: 40}}/>
+                <img src="/img/vertical.png" width="367" style={{marginBottom: 40}}/>
               </center>
               <p>
                 React Router is a complete routing solution designed specifically
@@ -100,8 +101,14 @@ class Page extends React.Component {
             </div>
           </main>
           <nav className="Nav">
-            <img src="./img/horizontal.png" width="100%"/>
-            <br/>
+            <img src="/img/horizontal.png" width="100%"/>
+            <p>
+              version: <select id="version">
+                {this.props.versions.map((version) => (
+                  <option>{version}</option>
+                ))}
+              </select>
+            </p>
             {this.props.categories.map((category) => (
               <div className="Category">
                 <div className="Category__Name">{category.name}</div>
@@ -117,7 +124,7 @@ class Page extends React.Component {
               </div>
             ))}
           </nav>
-          <script src="app.js"></script>
+          <script src="/app.js"></script>
         </body>
       </html>
     );
