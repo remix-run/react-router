@@ -87,7 +87,8 @@ export var Router = React.createClass({
 
   propTypes: {
     history: history.isRequired,
-    children: routes.isRequired,
+    children: routes,
+    routes, // Alias for children
     createElement: func.isRequired,
     onError: func.isRequired,
     onUpdate: func,
@@ -122,7 +123,7 @@ export var Router = React.createClass({
   _updateState(location) {
     invariant(
       Location.isLocation(location),
-      'Router needs a valid Location'
+      'A <Router> needs a valid Location'
     );
 
     this.nextLocation = location;
@@ -261,9 +262,14 @@ export var Router = React.createClass({
   },
 
   componentWillMount() {
-    var { children, history } = this.props;
+    var { history, routes, children } = this.props;
 
-    this.routes = createRoutes(children);
+    invariant(
+      routes || children,
+      'A <Router> needs some routes'
+    );
+
+    this.routes = createRoutes(routes || children);
     this.transitionHooks = [];
     this.nextLocation = null;
 
@@ -292,8 +298,11 @@ export var Router = React.createClass({
       '<Router history> may not be changed'
     );
 
-    if (this.props.children !== nextProps.children) {
-      this.routes = createRoutes(nextProps.children);
+    var currentRoutes = this.props.routes || this.props.children;
+    var nextRoutes = nextProps.routes || nextProps.children;
+
+    if (currentRoutes !== nextRoutes) {
+      this.routes = createRoutes(nextRoutes);
 
       // Call this here because _updateState
       // uses this.routes to determine state.
