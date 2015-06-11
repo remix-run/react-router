@@ -27,14 +27,18 @@ var App = React.createClass({
   render () {
     var Child;
     switch (this.props.route) {
-      case 'about': Child = About; break;
-      case 'inbox': Child = Inbox; break;
+      case '/about': Child = About; break;
+      case '/inbox': Child = Inbox; break;
       default:      Child = Home;
     }
 
     return (
       <div>
         <h1>App</h1>
+        <ul>
+          <li><a href="#/about">About</a></li>
+          <li><a href="#/inbox">Inbox</a></li>
+        </ul>
         <Child/>
       </div>
     )
@@ -111,12 +115,19 @@ import HashHistory from 'react-router/lib/HashHistory';
 
 // ...
 
-// then we delete a bunch of code from `App`
+// then we delete a bunch of code from `App` and add some `Link`
+// components
 var App = React.createClass({
   render () {
     return (
       <div>
         <h1>App</h1>
+        {/* change the <a>s to <Links>s */}
+        <ul>
+          <li><Link to="/about">About</Link></li>
+          <li><Link to="/inbox">Inbox</Link></li>
+        </ul>
+
         {/*
           next we replace `<Child>` with `this.props.children`
           the router will figure out the children for us
