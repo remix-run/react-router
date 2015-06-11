@@ -272,10 +272,9 @@ export var Router = React.createClass({
   handleHistoryChange() {
     if (this._ignoreNextHistoryChange) {
       this._ignoreNextHistoryChange = false;
-      return;
+    } else {
+      this._updateState(this.props.history.location);
     }
-
-    this._updateState(this.props.history.location);
   },
 
   componentDidMount() {

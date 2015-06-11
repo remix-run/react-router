@@ -98,11 +98,10 @@ export class HashHistory extends DOMHistory {
 
     if (this._ignoreNextHashChange) {
       this._ignoreNextHashChange = false;
-      return;
+    } else {
+      this._updateLocation(NavigationTypes.POP);
+      this._notifyChange();
     }
-
-    this._updateLocation(NavigationTypes.POP);
-    this._notifyChange();
   }
 
   addChangeListener(listener) {
