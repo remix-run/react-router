@@ -121,7 +121,7 @@ React.render((
 ), document.body);
 ```
 
-See more in the [overview guide](/docs/00 Guides/0 Overview.md) and [Advanced
+See more in the [overview guide](/doc/00 Guides/0 Overview.md) and [Advanced
 Usage](/doc/00 Guides/Advanced Usage.md)
 
 Contributing
