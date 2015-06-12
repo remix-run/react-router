@@ -11,7 +11,7 @@ var version = document.getElementById('version');
 
 var segments = document.location.pathname.split('/');
 if (segments.indexOf('tags') !== -1)
-  version.value = segments[2].replace(/\.html$/, '');
+  version.value = segments[3].replace(/\.html$/, '');
 
 version.addEventListener('change', function() {
   document.location = '/react-router/tags/'+this.value+'.html';
