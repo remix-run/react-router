@@ -64,14 +64,14 @@ class Page extends React.Component {
         <head>
           <meta charSet="utf-8"/>
           <title>React Router Documentation</title>
-          <link rel="stylesheet" href="/styles.css"/>
-          <link rel="stylesheet" href="/syntax.css"/>
+          <link rel="stylesheet" href="/react-router/styles.css"/>
+          <link rel="stylesheet" href="/react-router/syntax.css"/>
         </head>
         <body>
           <main className="Main">
             <div className="Main__Content">
               <center>
-                <img src="/img/vertical.png" width="367" style={{marginBottom: 40}}/>
+                <img src="/react-router/img/vertical.png" width="367" style={{marginBottom: 40}}/>
               </center>
               <p>
                 React Router is a complete routing solution designed specifically
@@ -101,7 +101,7 @@ class Page extends React.Component {
             </div>
           </main>
           <nav className="Nav">
-            <img src="/img/horizontal.png" width="100%"/>
+            <img src="/react-router/img/horizontal.png" width="100%"/>
             <p>
               version: <select id="version">
                 {this.props.versions.map((version) => (
@@ -124,7 +124,7 @@ class Page extends React.Component {
               </div>
             ))}
           </nav>
-          <script src="/app.js"></script>
+          <script src="/react-router/app.js"></script>
         </body>
       </html>
     );
