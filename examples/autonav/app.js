@@ -1,17 +1,18 @@
-var React = require('react');
-var Router = require('react-router');
-var { Route, RouteHandler, Link, DefaultRoute } = Router;
+import React from 'react';
+import HashHistory from 'react-router/lib/HashHistory';
+import { Router, Route, Link } from 'react-router';
 
 class Nav extends React.Component {
   render() {
-    var routes = this.context.router.getCurrentRoutes()[0].childRoutes;
+    var routes = this.context.router.routes[0].childRoutes;
 
     return (
       <nav className="Nav" role="navigation">
         <header className="Nav-header">Navigation</header>
         <ul role="tablist" className="Nav-list">
-          {routes.map(i => (
-            <li className="Nav-item" key={i.path || i.defaultRoute.name}>
+          {routes.map((i, to) => (
+            (to = i.name || i.path || i.defaultRoute.name),
+            <li className="Nav-item" key={to}>
               <Link
                 className="Nav-link"
                 to={i.path || i.defaultRoute.name}
@@ -24,16 +25,14 @@ class Nav extends React.Component {
   }
 }
 
-Nav.contextTypes = {
-  router: React.PropTypes.func
-};
+Nav.contextTypes = {router: React.PropTypes.object.isRequired};
 
 class App extends React.Component {
   render () {
     return (
       <div>
         <Nav />
-        <RouteHandler/>
+        {this.props.children || <About />}
       </div>
     );
   }
@@ -71,14 +70,14 @@ class Inbox extends React.Component {
 // Fake authentication lib
 
 var routes = (
-  <Route handler={App}>
-    <DefaultRoute name="about" handler={About}/>
-    <Route name="dashboard" handler={Dashboard}/>
-    <Route name="inbox" handler={Inbox}/>
-  </Route>
+  <Router history={HashHistory}>
+    <Route name="Root" path="/" component={App}>
+      <Route path="dashboard" name="dashboard" component={Dashboard}/>
+      <Route path="inbox" name="inbox" component={Inbox}/>
+    </Route>
+  </Router>
 );
 
-Router.run(routes, function (Handler) {
-  React.render(<Handler/>, document.getElementById('example'));
-});
+React.render(routes, document.getElementById('example'));
+
 
