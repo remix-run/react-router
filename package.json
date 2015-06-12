@@ -7,7 +7,7 @@
     "type": "git",
     "url": "https://github.com/rackt/react-router.git"
   },
-  "homepage": "https://github.com/rackt/react-router/blob/latest/README.md",
+  "homepage": "https://rackt.github.io/react-router/",
   "bugs": "https://github.com/rackt/react-router/issues",
   "scripts": {
     "build": "scripts/build.sh",
