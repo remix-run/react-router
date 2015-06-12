@@ -2,7 +2,7 @@
   "name": "react-router",
   "version": "0.13.3",
   "description": "A complete routing library for React.js",
-  "main": "lib",
+  "main": "lib/index",
   "repository": {
     "type": "git",
     "url": "https://github.com/rackt/react-router.git"
@@ -12,8 +12,8 @@
   "scripts": {
     "build": "scripts/build.sh",
     "watch": "babel ./modules --watch -d lib",
-    "build-website": "babel-node website/scripts/build.js > website/index.html",
-    "examples": "webpack-dev-server --config examples/webpack.config.js --content-base examples",
+    "build-website": "scripts/build-website.sh",
+    "examples": "webpack-dev-server --config examples/webpack.config.js --content-base examples --inline",
     "prepublish": "npm run build",
     "test": "jsxhint modules && karma start"
   },
@@ -22,13 +22,20 @@
     "Michael Jackson"
   ],
   "license": "MIT",
+  "dependencies": {
+    "invariant": "^2.0.0",
+    "keymirror": "^0.1.1",
+    "qs": "2.4.1",
+    "warning": "^1.0.1"
+  },
   "devDependencies": {
-    "babel": "^5.0.12",
-    "babel-core": "^5.0.12",
+    "babel": "^5.4.7",
+    "babel-core": "^5.4.7",
     "babel-loader": "^5.0.0",
+    "babel-plugin-object-assign": "^1.1.0",
     "bundle-loader": "^0.5.2",
     "events": "1.0.2",
-    "expect": "^1.1.0",
+    "expect": "^1.6.0",
     "jsxhint": "^0.12.1",
     "karma": "^0.12.28",
     "karma-chrome-launcher": "^0.1.7",
@@ -43,15 +50,12 @@
     "react": "0.13.x",
     "rf-changelog": "^0.4.0",
     "rx": "2.3.18",
+    "slash": "^1.0.0",
     "webpack": "^1.4.13",
     "webpack-dev-server": "^1.6.6"
   },
   "peerDependencies": {
     "react": "0.13.x"
-  },
-  "dependencies": {
-    "object-assign": "^2.0.0",
-    "qs": "2.4.1"
   },
   "tags": [
     "react",

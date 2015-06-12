@@ -1,28 +1,27 @@
-var assign = require('react/lib/Object.assign');
-var ReactPropTypes = require('react').PropTypes;
-var Route = require('./Route');
+import React from 'react';
+import Location from './Location';
+import History from './History';
 
-var PropTypes = assign({}, ReactPropTypes, {
+var { any, func, object, arrayOf, instanceOf, oneOfType, oneOf, element } = React.PropTypes;
 
-  /**
-   * Indicates that a prop should be falsy.
-   */
-  falsy(props, propName, componentName) {
-    if (props[propName])
-      return new Error(`<${componentName}> should not have a "${propName}" prop`);
-  },
+function falsy(props, propName, componentName) {
+  if (props[propName])
+    return new Error(`<${componentName}> should not have a "${propName}" prop`);
+}
 
-  /**
-   * Indicates that a prop should be a Route object.
-   */
-  route: ReactPropTypes.instanceOf(Route),
+var component = func;
+var components = oneOfType([ component, object ]);
+var history = instanceOf(History);
+var location = instanceOf(Location);
+var route = any; //oneOf([object, element]);
+var routes = any; //oneOf([route, arrayOf(route), object]);
 
-  /**
-   * Indicates that a prop should be a Router object.
-   */
-  //router: ReactPropTypes.instanceOf(Router) // TODO
-  router: ReactPropTypes.func
-
-});
-
-module.exports = PropTypes;
+module.exports = {
+  falsy,
+  component,
+  components,
+  history,
+  location,
+  route,
+  routes
+};

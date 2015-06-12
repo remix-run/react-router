@@ -1,0 +1,4 @@
+{
+  "stage": 0,
+  "plugins": [ "object-assign" ]
+}

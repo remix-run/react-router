@@ -1,35 +1,29 @@
-var React = require('react');
-var Router = require('react-router');
-var ContactStore = require('./ContactStore');
-var {
-  Route,
-  DefaultRoute,
-  NotFoundRoute,
-  RouteHandler,
-  Link
-} = Router;
+import React from 'react';
+import HashHistory from 'react-router/lib/HashHistory';
+import { Router, Navigation, Route, Link } from 'react-router';
+import ContactStore from './ContactStore';
 
 var App = React.createClass({
-  getInitialState: function () {
+  getInitialState() {
     return {
       contacts: ContactStore.getContacts(),
       loading: true
     };
   },
 
-  componentWillMount: function () {
+  componentWillMount() {
     ContactStore.init();
   },
 
-  componentDidMount: function () {
+  componentDidMount() {
     ContactStore.addChangeListener(this.updateContacts);
   },
 
-  componentWillUnmount: function () {
+  componentWillUnmount() {
     ContactStore.removeChangeListener(this.updateContacts);
   },
 
-  updateContacts: function () {
+  updateContacts() {
     if (!this.isMounted())
       return;
 
@@ -39,21 +33,21 @@ var App = React.createClass({
     });
   },
 
-  render: function () {
+  render() {
     var contacts = this.state.contacts.map(function (contact) {
-      return <li key={contact.id}><Link to="contact" params={contact}>{contact.first}</Link></li>;
+      return <li key={contact.id}><Link to={`/contact/${contact.id}`}>{contact.first}</Link></li>;
     });
+
     return (
       <div className="App">
         <div className="ContactList">
-          <Link to="new">New Contact</Link>
+          <Link to="/contact/new">New Contact</Link>
           <ul>
             {contacts}
           </ul>
-          <Link to="/nothing-here">Invalid Link (not found)</Link>
         </div>
         <div className="Content">
-          <RouteHandler/>
+          {this.props.children}
         </div>
       </div>
     );
@@ -61,55 +55,52 @@ var App = React.createClass({
 });
 
 var Index = React.createClass({
-  render: function () {
+  render() {
     return <h1>Address Book</h1>;
   }
 });
 
 var Contact = React.createClass({
+  mixins: [ Navigation ],
 
-  contextTypes: {
-    router: React.PropTypes.func
-  },
+  getStateFromStore(props) {
+    var { id } = props ? props.params : this.props.params;
 
-  getStateFromStore: function () {
-    var id = this.context.router.getCurrentParams().id;
     return {
       contact: ContactStore.getContact(id)
     };
   },
 
-  getInitialState: function () {
+  getInitialState() {
     return this.getStateFromStore();
   },
 
-  componentDidMount: function () {
+  componentDidMount() {
     ContactStore.addChangeListener(this.updateContact);
   },
 
-  componentWillUnmount: function () {
+  componentWillUnmount() {
     ContactStore.removeChangeListener(this.updateContact);
   },
 
-  componentWillReceiveProps: function () {
-    this.setState(this.getStateFromStore());
+  componentWillReceiveProps(nextProps) {
+    this.setState(this.getStateFromStore(nextProps));
   },
 
-  updateContact: function () {
+  updateContact() {
     if (!this.isMounted())
       return;
 
     this.setState(this.getStateFromStore());
   },
 
-  destroy: function () {
-    var { router } = this.context;
-    var id = router.getCurrentParams().id;
+  destroy() {
+    var { id } = this.props.params;
     ContactStore.removeContact(id);
-    router.transitionTo('/');
+    this.transitionTo('/');
   },
 
-  render: function () {
+  render() {
     var contact = this.state.contact || {};
     var name = contact.first + ' ' + contact.last;
     var avatar = contact.avatar || 'http://placecage.com/50/50';
@@ -124,22 +115,20 @@ var Contact = React.createClass({
 });
 
 var NewContact = React.createClass({
+  mixins: [ Navigation ],
 
-  contextTypes: {
-    router: React.PropTypes.func
-  },
-
-  createContact: function (event) {
+  createContact(event) {
     event.preventDefault();
+
     ContactStore.addContact({
       first: this.refs.first.getDOMNode().value,
       last: this.refs.last.getDOMNode().value
-    }, function (contact) {
-      this.context.router.transitionTo('contact', { id: contact.id });
-    }.bind(this));
+    }, (contact) => {
+      this.transitionTo(`/contact/${contact.id}`);
+    });
   },
 
-  render: function () {
+  render() {
     return (
       <form onSubmit={this.createContact}>
         <p>
@@ -155,20 +144,17 @@ var NewContact = React.createClass({
 });
 
 var NotFound = React.createClass({
-  render: function () {
+  render() {
     return <h2>Not found</h2>;
   }
 });
 
-var routes = (
-  <Route handler={App}>
-    <DefaultRoute handler={Index}/>
-    <Route name="new" path="contact/new" handler={NewContact}/>
-    <Route name="contact" path="contact/:id" handler={Contact}/>
-    <NotFoundRoute handler={NotFound}/>
-  </Route>
-);
-
-Router.run(routes, function (Handler) {
-  React.render(<Handler/>, document.getElementById('example'));
-});
+React.render((
+  <Router history={HashHistory}>
+    <Route path="/" component={App} indexComponent={Index}>
+      <Route path="contact/new" component={NewContact}/>
+      <Route path="contact/:id" component={Contact}/>
+      <Route path="*" component={NotFound}/>
+    </Route>
+  </Router>
+), document.getElementById('example'));
