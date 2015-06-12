@@ -14,6 +14,6 @@ if (segments.indexOf('tags') !== -1)
   version.value = segments[2].replace(/\.html$/, '');
 
 version.addEventListener('change', function() {
-  document.location = '/tags/'+this.value+'.html';
+  document.location = '/react-router/tags/'+this.value+'.html';
 }, false);
 
