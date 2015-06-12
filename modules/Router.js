@@ -4,13 +4,19 @@ import invariant from 'invariant';
 import { loopAsync } from './AsyncUtils';
 import { createRoutes } from './RouteUtils';
 import { pathnameIsActive, queryIsActive } from './ActiveUtils';
-import { getState, getTransitionHooks, createTransitionHook, getComponents, getRouteParams } from './RoutingUtils';
+import { getState, getTransitionHooks, getComponents, createTransitionHook, getRouteParams, runTransition } from './RoutingUtils';
 import { routes, component, components, history, location } from './PropTypes';
 import Location from './Location';
 
-var { any, array, func, object, instanceOf } = React.PropTypes;
+var { arrayOf, func, object } = React.PropTypes;
 
-var ContextMixin = {
+var ServerTransitionDelegate = {
+  getState,
+  getTransitionHooks,
+  getComponents
+};
+
+var RoutingContextMixin = {
 
   childContextTypes: {
     router: object.isRequired
@@ -72,32 +78,89 @@ var ContextMixin = {
 
 };
 
+var TransitionDelegateMixin = {
+
+  /**
+   * Adds a transition hook that runs before all route hooks in a
+   * transition. The signature is the same as route transition hooks.
+   */
+  addTransitionHook(hook) {
+    if (!this.transitionHooks)
+      this.transitionHooks = [];
+
+    this.transitionHooks.push(hook);
+  },
+
+  /**
+   * Removes the given transition hook.
+   */
+  removeTransitionHook(hook) {
+    if (this.transitionHooks)
+      this.transitionHooks = this.transitionHooks.filter(h => h !== hook);
+  },
+
+  getState(routes, location, callback) {
+    var { branch, params } = this.props;
+  
+    if (branch && params) {
+      callback(null, { branch, params });
+    } else {
+      getState(routes, location, callback);
+    }
+  },
+  
+  getTransitionHooks(prevState, nextState) {
+    var hooks = [];
+
+    // Run component hooks before route hooks.
+    if (this.transitionHooks)
+      hooks.push.apply(hooks, this.transitionHooks.map(hook => createTransitionHook(hook, this)));
+  
+    hooks.push.apply(hooks, getTransitionHooks(prevState, nextState));
+
+    return hooks;
+  },
+  
+  getComponents(nextState, callback) {
+    var { components } = this.props;
+
+    if (components) {
+      callback(null, components);
+    } else {
+      getComponents(nextState, callback);
+    }
+  }
+  
+};
+
 export var Router = React.createClass({
 
-  mixins: [ ContextMixin ],
+  mixins: [ RoutingContextMixin, TransitionDelegateMixin ],
 
   statics: {
     
-    match(routes, history, callback) {
-      // TODO: Mimic what we're doing in _updateState, but statically
-      // so we can get the right props for doing server-side rendering.
+    match(routes, location, callback) {
+      runTransition(null, routes, location, ServerTransitionDelegate, callback);
     }
 
   },
 
   propTypes: {
-    history: history.isRequired,
-    children: routes,
-    routes, // Alias for children
     createElement: func.isRequired,
     onError: func.isRequired,
     onUpdate: func,
 
-    // For server-side rendering
-    location: any,
+    // Client-side
+    history,
+    routes,
+    // Routes may also be given as children (JSX)
+    children: routes,
+
+    // Server-side
+    location,
     branch: routes,
     params: object,
-    components
+    components: arrayOf(components)
   },
 
   getDefaultProps() {
@@ -126,131 +189,42 @@ export var Router = React.createClass({
       'A <Router> needs a valid Location'
     );
 
-    this.nextLocation = location;
     this.setState({ isTransitioning: true });
 
-    this._getState(this.routes, location, (error, state) => {
-      if (error || this.nextLocation !== location) {
-        this._finishTransition(error);
+    runTransition(this.state, this.routes, location, this, (error, transition, state) => {
+      this.setState({ isTransitioning: false });
+
+      if (error) {
+        this.handleError(error);
+      } else if (transition.isCancelled) {
+        if (transition.redirectInfo) {
+          var { pathname, query, state } = transition.redirectInfo;
+          this.replaceWith(pathname, query, state);
+        } else {
+          invariant(
+            this.state.location,
+            'You may not abort the initial transition'
+          );
+
+          // TODO: Do something with transition.abortReason ?
+
+          // The best we can do here is goBack so the location state reverts
+          // to what it was. However, we also set a flag so that we know not
+          // to run through _updateState again since state did not change.
+          this._ignoreNextHistoryChange = true;
+          this.goBack();
+        }
       } else if (state == null) {
         warning(false, 'Location "%s" did not match any routes', location.pathname);
-        this._finishTransition();
       } else {
-        state.location = location;
-
-        this._runTransitionHooks(state, (error) => {
-          if (error || this.nextLocation !== location) {
-            this._finishTransition(error);
-          } else {
-            this._getComponents(state, (error, components) => {
-              if (error || this.nextLocation !== location) {
-                this._finishTransition(error);
-              } else {
-                state.components = components;
-
-                this._finishTransition(null, state);
-              }
-            });
-          }
-        });
+        this.setState(state, this.props.onUpdate);
+        this._alreadyUpdated = true;
       }
     });
   },
 
-  _finishTransition(error, state) {
-    this.setState({ isTransitioning: false });
-    this.nextLocation = null;
-
-    if (error) {
-      this.handleError(error);
-    } else if (state) {
-      this.setState(state, this.props.onUpdate);
-      this._alreadyUpdated = true;
-    }
-  },
-
-  _getState(routes, location, callback) {
-    var { branch, params } = this.props;
-
-    if (branch && params && query) {
-      callback(null, { branch, params });
-    } else {
-      getState(routes, location, callback);
-    }
-  },
-
-  _runTransitionHooks(nextState, callback) {
-    // Run component hooks before route hooks.
-    var hooks = this.transitionHooks.map(hook => createTransitionHook(hook, this));
-
-    hooks.push.apply(
-      hooks,
-      getTransitionHooks(this.state, nextState)
-    );
-
-    var nextLocation = this.nextLocation;
-
-    loopAsync(hooks.length, (index, next, done) => {
-      var hook = hooks[index];
-
-      hooks[index].call(this, nextState, this, (error) => {
-        if (error || this.nextLocation !== nextLocation) {
-          done.call(this, error); // No need to continue.
-        } else {
-          next.call(this);
-        }
-      });
-    }, callback);
-  },
-
-  _getComponents(nextState, callback) {
-    if (this.props.components) {
-      callback(null, this.props.components);
-    } else {
-      getComponents(nextState, callback);
-    }
-  },
-
   _createElement(component, props) {
     return typeof component === 'function' ? this.props.createElement(component, props) : null;
-  },
-
-  /**
-   * Adds a transition hook that runs before all route hooks in a
-   * transition. The signature is the same as route transition hooks.
-   */
-  addTransitionHook(hook) {
-    this.transitionHooks.push(hook);
-  },
-
-  /**
-   * Removes the given transition hook.
-   */
-  removeTransitionHook(hook) {
-    this.transitionHooks = this.transitionHooks.filter(h => h !== hook);
-  },
-
-  /**
-   * Cancels the current transition, preventing any subsequent transition
-   * hooks from running and restoring the previous location.
-   */
-  cancelTransition() {
-    invariant(
-      this.state.location,
-      'Router#cancelTransition: You may not cancel the initial transition'
-    );
-
-    if (this.nextLocation) {
-      this.nextLocation = null;
-
-      // The best we can do here is goBack so the location state reverts
-      // to what it was. However, we also set a flag so that we know not
-      // to run through _updateState again.
-      this._ignoreNextHistoryChange = true;
-      this.goBack();
-    } else {
-      warning(false, 'Router#cancelTransition: Router is not transitioning');
-    }
   },
 
   handleHistoryChange() {
@@ -264,23 +238,34 @@ export var Router = React.createClass({
   componentWillMount() {
     var { history, routes, children } = this.props;
 
-    invariant(
-      routes || children,
-      'A <Router> needs some routes'
-    );
+    if (history) {
+      invariant(
+        routes || children,
+        'A client-side <Router> needs some routes. Try using <Router routes> or ' +
+        'passing your routes as nested <Route> children'
+      );
 
-    this.routes = createRoutes(routes || children);
-    this.transitionHooks = [];
-    this.nextLocation = null;
+      this.routes = createRoutes(routes || children);
 
-    if (typeof history.setup === 'function')
-      history.setup();
+      if (typeof history.setup === 'function')
+        history.setup();
 
-    // We need to listen first in case we redirect immediately.
-    if (history.addChangeListener)
-      history.addChangeListener(this.handleHistoryChange);
+      // We need to listen first in case we redirect immediately.
+      if (history.addChangeListener)
+        history.addChangeListener(this.handleHistoryChange);
 
-    this._updateState(history.location);
+      this._updateState(history.location);
+    } else {
+      var { location, branch, params, components } = this.props;
+
+      invariant(
+        location && branch && params && components,
+        'A server-side <Router> needs location, branch, params, and components ' +
+        'props. Try using Router.match to get all the props you need'
+      );
+
+      this.setState({ location, branch, params, components });
+    }
   },
 
   componentDidMount() {
@@ -298,23 +283,25 @@ export var Router = React.createClass({
       '<Router history> may not be changed'
     );
 
-    var currentRoutes = this.props.routes || this.props.children;
-    var nextRoutes = nextProps.routes || nextProps.children;
+    if (nextProps.history) {
+      var currentRoutes = this.props.routes || this.props.children;
+      var nextRoutes = nextProps.routes || nextProps.children;
 
-    if (currentRoutes !== nextRoutes) {
-      this.routes = createRoutes(nextRoutes);
+      if (currentRoutes !== nextRoutes) {
+        this.routes = createRoutes(nextRoutes);
 
-      // Call this here because _updateState
-      // uses this.routes to determine state.
-      if (nextProps.history.location)
-        this._updateState(nextProps.history.location);
+        // Call this here because _updateState
+        // uses this.routes to determine state.
+        if (nextProps.history.location)
+          this._updateState(nextProps.history.location);
+      }
     }
   },
 
   componentWillUnmount() {
     var { history } = this.props;
 
-    if (history.removeChangeListener)
+    if (history && history.removeChangeListener)
       history.removeChangeListener(this.handleHistoryChange);
   },
 

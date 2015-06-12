@@ -1,3 +1,4 @@
+import invariant from 'invariant';
 import { createRoutes } from './RouteUtils';
 import { getParamNames, matchPattern, stripLeadingSlashes } from './URLUtils';
 import { loopAsync, mapAsync } from './AsyncUtils';
@@ -134,7 +135,7 @@ function routeParamsChanged(route, prevState, nextState) {
  * route and 2) the routes that we are entering, ending with the leaf
  * route.
  */
-export function computeDiff(prevState, nextState) {
+function computeDiff(prevState, nextState) {
   var fromRoutes = prevState && prevState.branch;
   var toRoutes = nextState.branch;
 
@@ -162,13 +163,13 @@ export function computeDiff(prevState, nextState) {
 }
 
 export function createTransitionHook(fn, context) {
-  return function (nextState, router, callback) {
+  return function (nextState, transition, callback) {
     if (fn.length > 2) {
-      fn.call(context, nextState, router, callback);
+      fn.call(context, nextState, transition, callback);
     } else {
       // Assume fn executes synchronously and
       // automatically call the callback for them.
-      fn.call(context, nextState, router);
+      fn.call(context, nextState, transition);
       callback();
     }
   };
@@ -188,8 +189,8 @@ function getTransitionHooksFromRoutes(routes, hookName) {
  * should be called before we transition to a new state. Transition
  * hook signatures are:
  *
- *   - route.onLeave(nextState, router[, callback ])
- *   - route.onEnter(nextState, router[, callback ])
+ *   - route.onLeave(nextState, transition[, callback ])
+ *   - route.onEnter(nextState, transition[, callback ])
  *
  * Transition hooks run in order from the leaf route in the branch
  * we're leaving, up the tree to the common parent route, and back
@@ -255,4 +256,66 @@ export function getRouteParams(route, params) {
       routeParams[p] = params[p];
 
   return routeParams;
+}
+
+var RequiredTransitionDelegateMethods = [ 'getState', 'getTransitionHooks', 'getComponents' ];
+
+export function isValidTransitionDelegate(object) {
+  return RequiredTransitionDelegateMethods.every(function (method) {
+    return typeof object[method] === 'function';
+  });
+}
+
+export function runTransition(prevState, routes, location, delegate, callback) {
+  invariant(
+    isValidTransitionDelegate(delegate),
+    'runTransition needs a valid transition delegate'
+  );
+
+  var transition = {
+    isCancelled: false,
+    redirectInfo: null,
+    abortReason: null,
+    to(pathname, query, state) {
+      transition.redirectInfo = { pathname, query, state };
+      transition.isCancelled = true;
+    },
+    abort(reason) {
+      transition.abortReason = reason;
+      transition.isCancelled = true;
+    }
+  };
+
+  delegate.getState(routes, location, function (error, nextState) {
+    if (error || nextState == null || transition.isCancelled) {
+      callback(error, transition);
+    } else {
+      nextState.location = location;
+
+      var hooks = delegate.getTransitionHooks(prevState, nextState);
+
+      loopAsync(hooks.length, (index, next, done) => {
+        hooks[index](nextState, transition, (error) => {
+          if (error || transition.isCancelled) {
+            done(error); // No need to continue.
+          } else {
+            next();
+          }
+        });
+      }, function (error) {
+        if (error || transition.isCancelled) {
+          callback(error, transition);
+        } else {
+          delegate.getComponents(nextState, function (error, components) {
+            if (error || transition.isCancelled) {
+              callback(error, transition);
+            } else {
+              nextState.components = components;
+              callback(null, transition, nextState);
+            }
+          });
+        }
+      });
+    }
+  });
 }
