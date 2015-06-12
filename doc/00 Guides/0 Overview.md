@@ -156,7 +156,7 @@ If you're not digging the JSX route config you can use plain objects:
 var routes = {
   path: '/',
   component: App,
-  childRoute: [
+  childRoutes: [
     { path: 'about', component: About },
     { path: 'inbox', component: Inbox },
   ]
