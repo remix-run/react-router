@@ -77,7 +77,7 @@ pre > code {
   display: block;
   border-bottom: 1px solid #ccc;
   text-decoration: none;
-  font-family: "Source Code Pro";
+  font-family: "Source Code Pro", monospace;
   font-size: 150%;
 }
 
