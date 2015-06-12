@@ -34,7 +34,7 @@ Then with a module bundler or webpack, use as you would anything else:
 // using an ES6 transpiler
 import { Router, Route, Link } from 'react-router';
 
-// not using and ES6 transpiler
+// not using an ES6 transpiler
 var ReactRouter = require('react-router');
 var Router = ReactRouter.Router;
 var Route = ReactRouter.Route;
@@ -134,4 +134,3 @@ Thanks, Ember
 
 React Router was initially inspired by Ember's fantastic Router. Many
 thanks to the Ember team.
-
