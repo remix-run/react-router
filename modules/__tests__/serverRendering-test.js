@@ -2,9 +2,10 @@ import expect from 'expect';
 import React, { createClass, renderToString } from 'react';
 import Location from '../Location';
 import Router from '../Router';
+import Link from '../Link';
 
 describe('Server rendering', function () {
-  var Dashboard, NewsFeed, Inbox, DashboardRoute, NewsFeedRoute, InboxRoute, RedirectToInboxRoute, MessageRoute, routes;
+  var Dashboard, Inbox, DashboardRoute, InboxRoute, RedirectToInboxRoute, routes;
   beforeEach(function () {
     Dashboard = createClass({
       render() {
@@ -16,24 +17,22 @@ describe('Server rendering', function () {
         );
       }
     });
-  
-    NewsFeed = createClass({
-      render() {
-        return <div>News</div>;
-      }
-    });
-  
+ 
     Inbox = createClass({
       render() {
-        return <div>Inbox</div>;
+        return <div>Inbox <Link to="/">Go to the dashboard</Link></div>;
       }
     });
-  
-    NewsFeedRoute = {
-      path: 'news',
-      component: NewsFeed
+ 
+    DashboardRoute = {
+      component: Dashboard,
+      getChildRoutes(locationState, callback) {
+        setTimeout(function () {
+          callback(null, [ InboxRoute, RedirectToInboxRoute ]);
+        }, 0);
+      }
     };
-  
+
     InboxRoute = {
       path: 'inbox',
       component: Inbox
@@ -45,20 +44,7 @@ describe('Server rendering', function () {
         transition.to('/inbox');
       }
     };
-
-    MessageRoute = {
-      path: 'messages/:messageID'
-    };
-  
-    DashboardRoute = {
-      component: Dashboard,
-      getChildRoutes(locationState, callback) {
-        setTimeout(function () {
-          callback(null, [ NewsFeedRoute, InboxRoute, RedirectToInboxRoute, MessageRoute ]);
-        }, 0);
-      }
-    };
-
+ 
     routes = [
       DashboardRoute
     ];

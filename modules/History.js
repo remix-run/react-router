@@ -1,9 +1,8 @@
 import invariant from 'invariant';
-import { getPathname, getQueryString, parseQueryString, stringifyQuery } from './URLUtils';
-import ChangeEmitter from './ChangeEmitter';
+import { getPathname, getQueryString, parseQueryString } from './URLUtils';
 import Location from './Location';
 
-var RequiredSubclassMethods = [ 'pushState', 'replaceState', 'go' ];
+var RequiredHistorySubclassMethods = [ 'pushState', 'replaceState', 'go' ];
 
 function createRandomKey() {
   return Math.random().toString(36).substr(2);
@@ -18,22 +17,35 @@ function createRandomKey() {
  * - replaceState(state, path)
  * - go(n)
  */
-class History extends ChangeEmitter {
+class History {
 
   constructor(options={}) {
-    super();
-
-    this.parseQueryString = options.parseQueryString || parseQueryString;
-    this.stringifyQuery = options.stringifyQuery || stringifyQuery;
-    this.location = null;
-
-    RequiredSubclassMethods.forEach(function (method) {
+    RequiredHistorySubclassMethods.forEach(function (method) {
       invariant(
         typeof this[method] === 'function',
         '%s needs a "%s" method',
         this.constructor.name, method
       );
     }, this);
+
+    this.parseQueryString = options.parseQueryString || parseQueryString;
+    this.changeListeners = [];
+    this.location = null;
+  }
+
+  _notifyChange() {
+    for (var i = 0, len = this.changeListeners.length; i < len; ++i)
+      this.changeListeners[i].call(this);
+  }
+
+  addChangeListener(listener) {
+    this.changeListeners.push(listener);
+  }
+
+  removeChangeListener(listener) {
+    this.changeListeners = this.changeListeners.filter(function (li) {
+      return li !== listener;
+    });
   }
 
   back() {
@@ -53,34 +65,11 @@ class History extends ChangeEmitter {
     return state;
   }
 
-  _createLocation(path, state, navigationType) {
+  createLocation(path, state, navigationType) {
     var pathname = getPathname(path);
     var queryString = getQueryString(path);
     var query = queryString ? this.parseQueryString(queryString) : null;
     return new Location(pathname, query, state, navigationType);
-  }
-
-  /**
-   * Returns a full URL path from the given pathname and query.
-   */
-  makePath(pathname, query) {
-    if (query) {
-      if (typeof query !== 'string')
-        query = this.stringifyQuery(query);
-
-      if (query !== '')
-        return pathname + '?' + query;
-    }
-
-    return pathname;
-  }
-
-  /**
-   * Returns a string that may safely be used to link to the given
-   * pathname and query.
-   */
-  makeHref(pathname, query) {
-    return this.makePath(pathname, query);
   }
 
 }

@@ -17,7 +17,7 @@ function createEntry(object) {
  * for testing because it allows you to specify route history
  * entries in the constructor.
  */
-export class MemoryHistory extends History {
+class MemoryHistory extends History {
 
   constructor(entries, current) {
     super();
@@ -47,7 +47,7 @@ export class MemoryHistory extends History {
 
     var currentEntry = entries[current];
 
-    this.location = this._createLocation(
+    this.location = this.createLocation(
       currentEntry.path,
       currentEntry.state
     );
@@ -59,7 +59,7 @@ export class MemoryHistory extends History {
 
     this.current += 1;
     this.entries = this.entries.slice(0, this.current).concat([{ state, path }]);
-    this.location = this._createLocation(path, state, NavigationTypes.PUSH);
+    this.location = this.createLocation(path, state, NavigationTypes.PUSH);
 
     this._notifyChange();
   }
@@ -69,7 +69,7 @@ export class MemoryHistory extends History {
     state = this._createState(state);
 
     this.entries[this.current] = { state, path };
-    this.location = this._createLocation(path, state, NavigationTypes.REPLACE);
+    this.location = this.createLocation(path, state, NavigationTypes.REPLACE);
 
     this._notifyChange();
   }
@@ -87,7 +87,7 @@ export class MemoryHistory extends History {
     this.current += n;
     var currentEntry = this.entries[this.current];
 
-    this.location = this._createLocation(
+    this.location = this.createLocation(
       currentEntry.path,
       currentEntry.state,
       NavigationTypes.POP

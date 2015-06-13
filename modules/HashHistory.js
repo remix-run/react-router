@@ -82,7 +82,7 @@ export class HashHistory extends DOMHistory {
   _updateLocation(navigationType) {
     var path = getHashPath();
     var state = this.queryKey ? readState(path, this.queryKey) : null;
-    this.location = this._createLocation(path, state, navigationType);
+    this.location = this.createLocation(path, state, navigationType);
   }
 
   setup() {
@@ -145,7 +145,7 @@ export class HashHistory extends DOMHistory {
     this._ignoreNextHashChange = true;
     window.location.hash = path;
 
-    this.location = this._createLocation(path, state, NavigationTypes.PUSH);
+    this.location = this.createLocation(path, state, NavigationTypes.PUSH);
 
     this._notifyChange();
   }
@@ -159,7 +159,7 @@ export class HashHistory extends DOMHistory {
     this._ignoreNextHashChange = true;
     replaceHashPath(path);
 
-    this.location = this._createLocation(path, state, NavigationTypes.REPLACE);
+    this.location = this.createLocation(path, state, NavigationTypes.REPLACE);
 
     this._notifyChange();
   }

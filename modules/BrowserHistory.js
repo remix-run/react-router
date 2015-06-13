@@ -38,7 +38,7 @@ export class BrowserHistory extends DOMHistory {
         window.history.replaceState(state, '');
     }
 
-    this.location = this._createLocation(getWindowPath(), state, navigationType);
+    this.location = this.createLocation(getWindowPath(), state, navigationType);
   }
 
   setup() {
@@ -86,7 +86,7 @@ export class BrowserHistory extends DOMHistory {
       state = this._createState(state);
 
       window.history.pushState(state, '', path);
-      this.location = this._createLocation(path, state, NavigationTypes.PUSH);
+      this.location = this.createLocation(path, state, NavigationTypes.PUSH);
       this._notifyChange();
     } else {
       window.location = path;
@@ -99,7 +99,7 @@ export class BrowserHistory extends DOMHistory {
       state = this._createState(state);
 
       window.history.replaceState(state, '', path);
-      this.location = this._createLocation(path, state, NavigationTypes.REPLACE);
+      this.location = this.createLocation(path, state, NavigationTypes.REPLACE);
       this._notifyChange();
     } else {
       window.location.replace(path);

@@ -6,15 +6,10 @@ import { createRoutes } from './RouteUtils';
 import { pathnameIsActive, queryIsActive } from './ActiveUtils';
 import { getState, getTransitionHooks, getComponents, createTransitionHook, getRouteParams, runTransition } from './RoutingUtils';
 import { routes, component, components, history, location } from './PropTypes';
+import { stringifyQuery } from './URLUtils';
 import Location from './Location';
 
-var { arrayOf, func, object } = React.PropTypes;
-
-var ServerTransitionDelegate = {
-  getState,
-  getTransitionHooks,
-  getComponents
-};
+var { arrayOf, func, object, instanceOf } = React.PropTypes;
 
 var RoutingContextMixin = {
 
@@ -28,44 +23,91 @@ var RoutingContextMixin = {
     };
   },
 
+  /**
+   * Returns a full URL path from the given pathname and query.
+   */
   makePath(pathname, query) {
-    return this.props.history.makePath(pathname, query);
+    if (query) {
+      if (typeof query !== 'string')
+        query = this.props.stringifyQuery(query);
+
+      if (query !== '')
+        return pathname + '?' + query;
+    }
+
+    return pathname;
   },
 
+  /**
+   * Returns a string that may safely be used to link to the given
+   * pathname and query.
+   */
   makeHref(pathname, query) {
-    return this.props.history.makeHref(pathname, query);
+    return this.makePath(pathname, query);
   },
-
+ 
+  /**
+   * Pushes a new Location onto the history stack.
+   */
   transitionTo(pathname, query, state=null) {
     var { history } = this.props;
-    var path = this.makePath(pathname, query);
 
-    if (this.nextLocation) {
-      history.replaceState(state, path);
-    } else {
-      history.pushState(state, path);
-    }
+    invariant(
+      history,
+      'Router#transitionTo is client-side only (needs history)'
+    );
+
+    history.pushState(state, this.makePath(pathname, query));
   },
 
+  /**
+   * Replaces the current Location on the history stack.
+   */
   replaceWith(pathname, query, state=null) {
     var { history } = this.props;
-    var path = this.makePath(pathname, query);
 
-    history.replaceState(state, path);
+    invariant(
+      history,
+      'Router#replaceWith is client-side only (needs history)'
+    );
+
+    history.replaceState(state, this.makePath(pathname, query));
   },
 
+  /**
+   * Navigates forward/backward n entries in the history stack.
+   */
   go(n) {
-    this.props.history.go(n);
+    var { history } = this.props;
+
+    invariant(
+      history,
+      'Router#go is client-side only (needs history)'
+    );
+
+    history.go(n);
   },
 
+  /**
+   * Navigates back one entry in the history stack. This is identical to
+   * the user clicking the browser's back button.
+   */
   goBack() {
     this.go(-1);
   },
 
+  /**
+   * Navigates forward one entry in the history stack. This is identical to
+   * the user clicking the browser's forward button.
+   */
   goForward() {
     this.go(1);
   },
  
+  /**
+   * Returns true if a <Link> to the given pathname/query combination is
+   * currently active.
+   */
   isActive(pathname, query) {
     var { location } = this.state;
 
@@ -78,26 +120,16 @@ var RoutingContextMixin = {
 
 };
 
-var TransitionDelegateMixin = {
+// This needs to be defined BEFORE RouterTransitionDelegateMixin because
+// babel clobbers the definition of these methods otherwise :/
+// https://github.com/babel/babel/issues/1743
+var StaticTransitionDelegate = {
+  getState,
+  getTransitionHooks,
+  getComponents
+};
 
-  /**
-   * Adds a transition hook that runs before all route hooks in a
-   * transition. The signature is the same as route transition hooks.
-   */
-  addTransitionHook(hook) {
-    if (!this.transitionHooks)
-      this.transitionHooks = [];
-
-    this.transitionHooks.push(hook);
-  },
-
-  /**
-   * Removes the given transition hook.
-   */
-  removeTransitionHook(hook) {
-    if (this.transitionHooks)
-      this.transitionHooks = this.transitionHooks.filter(h => h !== hook);
-  },
+var RouterTransitionDelegateMixin = {
 
   getState(routes, location, callback) {
     var { branch, params } = this.props;
@@ -129,24 +161,44 @@ var TransitionDelegateMixin = {
     } else {
       getComponents(nextState, callback);
     }
+  },
+
+  /**
+   * Adds a transition hook that runs before all route hooks in a
+   * transition. The signature is the same as route transition hooks.
+   */
+  addTransitionHook(hook) {
+    if (!this.transitionHooks)
+      this.transitionHooks = [];
+
+    this.transitionHooks.push(hook);
+  },
+
+  /**
+   * Removes the given transition hook.
+   */
+  removeTransitionHook(hook) {
+    if (this.transitionHooks)
+      this.transitionHooks = this.transitionHooks.filter(h => h !== hook);
   }
   
 };
 
 export var Router = React.createClass({
 
-  mixins: [ RoutingContextMixin, TransitionDelegateMixin ],
+  mixins: [ RoutingContextMixin, RouterTransitionDelegateMixin ],
 
   statics: {
     
     match(routes, location, callback) {
-      runTransition(null, routes, location, ServerTransitionDelegate, callback);
+      runTransition(null, routes, location, StaticTransitionDelegate, callback);
     }
 
   },
 
   propTypes: {
     createElement: func.isRequired,
+    stringifyQuery: func.isRequired,
     onError: func.isRequired,
     onUpdate: func,
 
@@ -166,6 +218,7 @@ export var Router = React.createClass({
   getDefaultProps() {
     return {
       createElement,
+      stringifyQuery,
       onError: function (error) {
         // Throw errors by default so we don't silently swallow them!
         throw error; // This error probably originated in getChildRoutes or getComponents.
