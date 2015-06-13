@@ -10,14 +10,14 @@ Example
 import { Router } from 'react-router';
 import MemoryHistory from 'react-router/lib/MemoryHistory';
 
+var history = new MemoryHistory([ '/', '/a/path' ]);
+
 React.render((
-  <Router history={MemoryHistory}>
+  <Router history={history}>
     {/* ... */}
   </Router>
 ), document.body);
 ```
-
-
 
   [Histories]:#TODO
 

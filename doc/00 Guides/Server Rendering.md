@@ -25,17 +25,17 @@ synchronously.
 
 ```js
 // server.js
-import { Router } from 'react-router';
-import ServerHistory from 'react-router/lib/ServerHistory';
+import { Router, Location } from 'react-router';
 import routes from './routes';
 
 // you'll want to configure your server to serve up static assets, and
 // and then handle the rest with React Router
 serveNonStaticPaths((req, res) => {
-  var history = new ServerHistory(req.path);
-  Router.match(routes, history, (err, initialState) => {
-    // do your own data fetching, perhaps using the branch of components
-    // in the initialState
+  var location = new Location('/the/path', { the: 'query' });
+
+  Router.match(routes, location, (err, transition, initialState) => {
+    // do your own data fetching, perhaps using the
+    // branch of components in the initialState
     fetchSomeData(initialState.components, (err, initialData) => {
       var html = React.renderToString(
         <Router history={history} {...initialState}/>

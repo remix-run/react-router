@@ -15,7 +15,7 @@ route components nested inside the parents.
 
 Alias for `children`.
 
-### `history` (required)
+### `history`
 
 The [`History`][History] the router should set up and listen for changes
 on. When the history gets new entries, the router will update its state
@@ -28,6 +28,11 @@ use this function to create the elements. You may want to take control
 of creating the elements when you're using some sort of data
 abstraction, like setting up subscriptions to stores, or passing in some
 sort of application module to each component via props.
+
+### `stringifyQuery(query)`
+
+A function that should be used to convert an object to a URL query string.
+By default, this function uses `qs.stringify(query, { arrayFormat: 'brackets' })`.
 
 
 #### Examples

@@ -33,10 +33,10 @@ Normal usage
 
 ```js
 import { Router } from 'react-router';
-import HashHistory from 'react-router/lib/HashHistory';
+import History from 'react-router/lib/HashHistory';
 
 React.render((
-  <Router history={HashHistory}>
+  <Router history={History}>
     {/* ... */}
   </Router>
 ), document.body);
@@ -45,14 +45,13 @@ React.render((
 Opting in to the `state` features:
 
 ```js
-// note the `{ ... }` syntax on the import
 import { HashHistory } from 'react-router/lib/HashHistory';
 
 // use the default key which is `_key`
 var history = new HashHistory({ queryKey: true });
 
 // use your own
-var history = new HashHistory({queryKey: 'k'});
+var history = new HashHistory({ queryKey: 'k' });
 
 React.render((
   <Router history={history}>
