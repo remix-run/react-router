@@ -228,11 +228,11 @@ export var Router = React.createClass({
 
   getInitialState() {
     return {
+      isTransitioning: false,
       location: null,
       branch: null,
       params: null,
-      components: null,
-      isTransitioning: false
+      components: null
     };
   },
 
@@ -245,8 +245,6 @@ export var Router = React.createClass({
     this.setState({ isTransitioning: true });
 
     runTransition(this.state, this.routes, location, this, (error, transition, state) => {
-      this.setState({ isTransitioning: false });
-
       if (error) {
         this.handleError(error);
       } else if (transition.isCancelled) {
@@ -273,6 +271,8 @@ export var Router = React.createClass({
         this.setState(state, this.props.onUpdate);
         this._alreadyUpdated = true;
       }
+
+      this.setState({ isTransitioning: false });
     });
   },
 
@@ -294,7 +294,7 @@ export var Router = React.createClass({
     if (history) {
       invariant(
         routes || children,
-        'A client-side <Router> needs some routes. Try using <Router routes> or ' +
+        'Client-side <Router>s need routes. Try using <Router routes> or ' +
         'passing your routes as nested <Route> children'
       );
 
@@ -313,7 +313,7 @@ export var Router = React.createClass({
 
       invariant(
         location && branch && params && components,
-        'A server-side <Router> needs location, branch, params, and components ' +
+        'Server-side <Router>s need location, branch, params, and components ' +
         'props. Try using Router.match to get all the props you need'
       );
 
