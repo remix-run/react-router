@@ -13,6 +13,16 @@ var { arrayOf, func, object, instanceOf } = React.PropTypes;
 
 var RoutingContextMixin = {
 
+  propTypes: {
+    stringifyQuery: func.isRequired
+  },
+
+  getDefaultProps() {
+    return {
+      stringifyQuery
+    };
+  },
+
   childContextTypes: {
     router: object.isRequired
   },
@@ -198,7 +208,6 @@ export var Router = React.createClass({
 
   propTypes: {
     createElement: func.isRequired,
-    stringifyQuery: func.isRequired,
     onError: func.isRequired,
     onUpdate: func,
 
@@ -218,7 +227,6 @@ export var Router = React.createClass({
   getDefaultProps() {
     return {
       createElement,
-      stringifyQuery,
       onError: function (error) {
         // Throw errors by default so we don't silently swallow them!
         throw error; // This error probably originated in getChildRoutes or getComponents.
