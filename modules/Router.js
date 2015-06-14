@@ -8,23 +8,12 @@ import { routes, component, components, history, location } from './PropTypes';
 import RouterContextMixin from './RouterContextMixin';
 import ScrollManagementMixin from './ScrollManagementMixin';
 import { isLocation } from './Location';
+import Transition from './Transition';
 
 var { arrayOf, func, object } = React.PropTypes;
 
 function runTransition(prevState, routes, location, hooks, callback) {
-  var transition = {
-    isCancelled: false,
-    redirectInfo: null,
-    abortReason: null,
-    to(pathname, query, state) {
-      transition.redirectInfo = { pathname, query, state };
-      transition.isCancelled = true;
-    },
-    abort(reason) {
-      transition.abortReason = reason;
-      transition.isCancelled = true;
-    }
-  };
+  var transition = new Transition;
 
   getState(routes, location, function (error, nextState) {
     if (error || nextState == null || transition.isCancelled) {
