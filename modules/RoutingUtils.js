@@ -222,12 +222,6 @@ function getComponentsForRoute(route, callback) {
   }
 }
 
-function getComponentsForRoutes(routes, callback) {
-  mapAsync(routes, function (route, index, callback) {
-    getComponentsForRoute(route, callback);
-  }, callback);
-}
-
 /**
  * Asynchronously fetches all components needed for the given router
  * state and calls callback(error, components) when finished.
@@ -235,8 +229,10 @@ function getComponentsForRoutes(routes, callback) {
  * Note: This operation may return synchronously if no routes have an
  * asynchronous getComponents method.
  */
-export function getComponents(state, callback) {
-  getComponentsForRoutes(state.branch, callback);
+export function getComponents(routes, callback) {
+  mapAsync(routes, function (route, index, callback) {
+    getComponentsForRoute(route, callback);
+  }, callback);
 }
 
 /**

@@ -33,7 +33,6 @@ function runTransition(prevState, routes, location, transitionHooks, callback) {
       nextState.location = location;
 
       var hooks = getTransitionHooks(prevState, nextState);
-
       if (Array.isArray(transitionHooks))
         hooks.unshift.apply(hooks, transitionHooks);
 
@@ -49,7 +48,7 @@ function runTransition(prevState, routes, location, transitionHooks, callback) {
         if (error || transition.isCancelled) {
           callback(error, transition);
         } else {
-          getComponents(nextState, function (error, components) {
+          getComponents(nextState.branch, function (error, components) {
             if (error || transition.isCancelled) {
               callback(error, transition);
             } else {
@@ -165,7 +164,6 @@ var Router = React.createClass({
         warning(false, 'Location "%s" did not match any routes', location.pathname);
       } else {
         this.setState(state, this.props.onUpdate);
-        this._alreadyUpdated = true;
       }
 
       this.setState({ isTransitioning: false });
@@ -232,15 +230,6 @@ var Router = React.createClass({
 
       this.setState({ location, branch, params, components });
     }
-  },
-
-  componentDidMount() {
-    // React doesn't fire the setState callback when we call setState
-    // synchronously within componentWillMount, so we need this. Note
-    // that we still only get one call to onUpdate, even if setState
-    // was called multiple times in componentWillMount.
-    //if (this._alreadyUpdated && this.props.onUpdate)
-      //this.props.onUpdate.call(this);
   },
 
   componentWillReceiveProps(nextProps) {
