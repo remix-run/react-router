@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { findDOMNode } from 'react';
 import HashHistory from 'react-router/lib/HashHistory';
 import { Router, Navigation, Route, Link } from 'react-router';
 import ContactStore from './ContactStore';
@@ -121,8 +121,8 @@ var NewContact = React.createClass({
     event.preventDefault();
 
     ContactStore.addContact({
-      first: this.refs.first.getDOMNode().value,
-      last: this.refs.last.getDOMNode().value
+      first: findDOMNode(this.refs.first).value,
+      last: findDOMNode(this.refs.last).value
     }, (contact) => {
       this.transitionTo(`/contact/${contact.id}`);
     });
