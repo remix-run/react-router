@@ -33,10 +33,10 @@ import routes from './routes';
 serveNonStaticPaths((req, res) => {
   var location = new Location('/the/path', { the: 'query' });
 
-  Router.match(routes, location, (err, transition, initialState) => {
+  Router.match(routes, location, (error, initialState, transition) => {
     // do your own data fetching, perhaps using the
     // branch of components in the initialState
-    fetchSomeData(initialState.components, (err, initialData) => {
+    fetchSomeData(initialState.components, (error, initialData) => {
       var html = React.renderToString(
         <Router history={history} {...initialState}/>
       );
