@@ -233,7 +233,7 @@ var Router = React.createClass({
       invariant(
         location && branch && params && components,
         'Server-side <Router>s need location, branch, params, and components ' +
-        'props. Try using Router.match to get all the props you need'
+        'props. Try using Router.run to get all the props you need'
       );
 
       this.setState({ location, branch, params, components });
