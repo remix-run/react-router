@@ -30,6 +30,10 @@ export function getWindowScrollPosition() {
   };
 }
 
+export function setWindowScrollPosition(scrollX, scrollY) {
+  window.scrollTo(scrollX, scrollY);
+}
+
 /**
  * taken from modernizr
  * https://github.com/Modernizr/Modernizr/blob/master/LICENSE

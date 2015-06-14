@@ -53,7 +53,7 @@ describe('Server rendering', function () {
   it('works', function (done) {
     var location = new Location('/inbox');
 
-    Router.match(routes, location, function (error, transition, state) {
+    Router.run(routes, location, function (error, transition, state) {
       var string = renderToString(<Router {...state}/>);
       expect(string).toMatch(/Dashboard/);
       expect(string).toMatch(/Inbox/);
