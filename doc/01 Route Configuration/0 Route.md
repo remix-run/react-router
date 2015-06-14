@@ -124,19 +124,20 @@ created from the child route component. Please refer to the
 [overview][overview] since this is a very critical part of the router's
 design.
 
-### `onEnter(nextState, router)`
+### `onEnter(nextState, transition)`
 
 Called when a route is about to be entered. It provides the next router
-state and the router instance for cancelling/redirecting the transition.
+state and the [transition][Transition] instance for cancelling/redirecting.
 
-### `onLeave(nextState, router)`
+### `onLeave(nextState, transition)`
 
 Called when a route is about to be exited. It provides the next router
-state and the router instance for cancelling/redirecting the transition.
+state and the [transition][Transition] instance for cancelling/redirecting.
 
   [overview]:#TODO
   [path-matching]:#TODO
   [ignoreScrollBehavior]:#TODO
   [instragram-example]:#TODO
   [history]:#TODO
+  [Transition]:#TODO
 
