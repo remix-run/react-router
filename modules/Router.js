@@ -11,7 +11,7 @@ import { isLocation } from './Location';
 
 var { arrayOf, func, object } = React.PropTypes;
 
-function runTransition(prevState, routes, location, transitionHooks, callback) {
+function runTransition(prevState, routes, location, hooks, callback) {
   var transition = {
     isCancelled: false,
     redirectInfo: null,
@@ -28,16 +28,16 @@ function runTransition(prevState, routes, location, transitionHooks, callback) {
 
   getState(routes, location, function (error, nextState) {
     if (error || nextState == null || transition.isCancelled) {
-      callback(error, transition);
+      callback(error, null, transition);
     } else {
       nextState.location = location;
 
-      var hooks = getTransitionHooks(prevState, nextState);
-      if (Array.isArray(transitionHooks))
-        hooks.unshift.apply(hooks, transitionHooks);
+      var transitionHooks = getTransitionHooks(prevState, nextState);
+      if (Array.isArray(hooks))
+        transitionHooks.unshift.apply(transitionHooks, hooks);
 
-      loopAsync(hooks.length, (index, next, done) => {
-        hooks[index](nextState, transition, (error) => {
+      loopAsync(transitionHooks.length, (index, next, done) => {
+        transitionHooks[index](nextState, transition, (error) => {
           if (error || transition.isCancelled) {
             done(error); // No need to continue.
           } else {
@@ -46,14 +46,14 @@ function runTransition(prevState, routes, location, transitionHooks, callback) {
         });
       }, function (error) {
         if (error || transition.isCancelled) {
-          callback(error, transition);
+          callback(error, null, transition);
         } else {
           getComponents(nextState.branch, function (error, components) {
             if (error || transition.isCancelled) {
-              callback(error, transition);
+              callback(error, null, transition);
             } else {
               nextState.components = components;
-              callback(null, transition, nextState);
+              callback(null, nextState, transition);
             }
           });
         }
@@ -70,7 +70,7 @@ var Router = React.createClass({
 
     /**
      * Runs a transition to the given location using the given routes and
-     * transition hooks (optional) and calls callback(error, transition, state)
+     * transition hooks (optional) and calls callback(error, state, transition)
      * when finished. This is primarily useful for server-side rendering.
      */
     run(routes, location, transitionHooks, callback) {
@@ -91,7 +91,8 @@ var Router = React.createClass({
 
   propTypes: {
     createElement: func.isRequired,
-    onError: func.isRequired,
+    onAbort: func,
+    onError: func,
     onUpdate: func,
 
     // Client-side
@@ -109,11 +110,7 @@ var Router = React.createClass({
 
   getDefaultProps() {
     return {
-      createElement,
-      onError: function (error) {
-        // Throw errors by default so we don't silently swallow them!
-        throw error; // This error probably originated in getChildRoutes or getComponents.
-      }
+      createElement
     };
   },
 
@@ -139,7 +136,7 @@ var Router = React.createClass({
 
     this.setState({ isTransitioning: true });
 
-    runTransition(this.state, this.routes, location, hooks, (error, transition, state) => {
+    runTransition(this.state, this.routes, location, hooks, (error, state, transition) => {
       if (error) {
         this.handleError(error);
       } else if (transition.isCancelled) {
@@ -152,13 +149,7 @@ var Router = React.createClass({
             'You may not abort the initial transition'
           );
 
-          // TODO: Do something with transition.abortReason ?
-
-          // The best we can do here is goBack so the location state reverts
-          // to what it was. However, we also set a flag so that we know not
-          // to run through _updateState again since state did not change.
-          this._ignoreNextHistoryChange = true;
-          this.goBack();
+          this.handleAbort(reason);
         }
       } else if (state == null) {
         warning(false, 'Location "%s" did not match any routes', location.pathname);
@@ -189,8 +180,25 @@ var Router = React.createClass({
       this.transitionHooks = this.transitionHooks.filter(h => h !== hook);
   },
 
-  _createElement(component, props) {
-    return typeof component === 'function' ? this.props.createElement(component, props) : null;
+  handleAbort(reason) {
+    if (this.props.onAbort) {
+      this.props.onAbort.call(this, reason);
+    } else {
+      // The best we can do here is goBack so the location state reverts
+      // to what it was. However, we also set a flag so that we know not
+      // to run through _updateState again since state did not change.
+      this._ignoreNextHistoryChange = true;
+      this.goBack();
+    }
+  },
+
+  handleError(error) {
+    if (this.props.onError) {
+      this.props.onError.call(this, error);
+    } else {
+      // Throw errors by default so we don't silently swallow them!
+      throw error; // This error probably originated in getChildRoutes or getComponents.
+    }
   },
 
   handleHistoryChange() {
@@ -258,6 +266,10 @@ var Router = React.createClass({
 
     if (history && history.removeChangeListener)
       history.removeChangeListener(this.handleHistoryChange);
+  },
+
+  _createElement(component, props) {
+    return typeof component === 'function' ? this.props.createElement(component, props) : null;
   },
 
   render() {
