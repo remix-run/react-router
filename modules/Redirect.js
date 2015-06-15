@@ -1,9 +1,10 @@
 import React from 'react';
 import invariant from 'invariant';
 import { createRouteFromReactElement } from './RouteUtils';
+import { formatPattern } from './URLUtils';
 import { falsy } from './PropTypes';
 
-var { string } = React.PropTypes;
+var { string, object } = React.PropTypes;
 
 export var Redirect = React.createClass({
 
@@ -15,8 +16,15 @@ export var Redirect = React.createClass({
       if (route.from)
         route.path = route.from;
 
-      route.onEnter = function (nextState, router) {
-        router.replaceWith(route.to, nextState.query);
+      route.onEnter = function (nextState, transition) {
+        var { location, params } = nextState;
+        var pathname = route.to ? formatPattern(route.to, params) : location.pathname;
+
+        transition.to(
+          pathname,
+          route.query || location.query,
+          route.state || location.state
+        );
       };
 
       return route;
@@ -25,8 +33,11 @@ export var Redirect = React.createClass({
   },
   
   propTypes: {
-    from: string,
+    path: string,
+    from: string, // Alias for path
     to: string.isRequired,
+    query: object,
+    state: object,
     onEnter: falsy,
     children: falsy
   },
