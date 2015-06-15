@@ -1,4 +1,5 @@
 import qs from 'qs';
+import invariant from 'invariant';
 
 export var parseQueryString = qs.parse;
 
@@ -133,4 +134,53 @@ export function matchPattern(pattern, pathname) {
 
 export function getParamNames(pattern) {
   return compilePattern(pattern).paramNames;
+}
+
+/**
+ * Returns a version of the given pattern with params interpolated. Throws
+ * if there is a dynamic segment of the pattern for which there is no param.
+ */
+export function formatPattern(pattern, params) {
+  params = params || {};
+
+  var { tokens } = compilePattern(pattern);
+  var parenCount = 0, pathname = '', splatIndex = 0;
+
+  var token, paramName, paramValue;
+  for (var i = 0, len = tokens.length; i < len; ++i) {
+    token = tokens[i];
+
+    if (token === '*') {
+      paramValue = Array.isArray(params.splat) ? params.splat[splatIndex++] : params.splat;
+
+      invariant(
+        paramValue != null || parenCount > 0,
+        'Missing splat #%s for path "%s"',
+        splatIndex, pattern
+      );
+
+      if (paramValue != null)
+        pathname += paramValue;
+    } else if (token === '(') {
+      parenCount += 1;
+    } else if (token === ')') {
+      parenCount -= 1;
+    } else if (token.charAt(0) === ':') {
+      paramName = token.substring(1);
+      paramValue = params[paramName];
+
+      invariant(
+        paramValue != null || parenCount > 0,
+        'Missing "%s" parameter for path "%s"',
+        paramName, pattern
+      );
+
+      if (paramValue != null)
+        pathname += paramValue;
+    } else {
+      pathname += token;
+    }
+  }
+
+  return pathname.replace(/\/+/g, '/');
 }
