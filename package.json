@@ -1,6 +1,6 @@
 {
   "name": "react-router",
-  "version": "1.0.0-alpha2",
+  "version": "1.0.0-beta1",
   "description": "A complete routing library for React.js",
   "main": "lib/index",
   "repository": {
