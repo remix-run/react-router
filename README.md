@@ -5,7 +5,7 @@
 
 <img src="https://rackt.github.io/react-router/img/vertical.png" width="300"/>
 
-A complete routing library for React.
+A complete routing library for React. https://rackt.github.io/react-router
 
 React Router keeps the URL in sync with nested UI. It has a simple API
 with powerful features like lazy code loading, dynamic route matching,
