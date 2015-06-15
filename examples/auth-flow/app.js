@@ -76,7 +76,7 @@ var Login = React.createClass({
 
       var { location } = this.props;
 
-      if (location.query && location.state.nextPathname) {
+      if (location.state && location.state.nextPathname) {
         this.replaceWith(location.state.nextPathname);
       } else {
         this.replaceWith('/about');
