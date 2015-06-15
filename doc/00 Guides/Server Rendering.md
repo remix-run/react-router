@@ -31,9 +31,9 @@ import routes from './routes';
 // you'll want to configure your server to serve up static assets, and
 // and then handle the rest with React Router
 serveNonStaticPaths((req, res) => {
-  var location = new Location('/the/path', { the: 'query' });
+  var location = new Location(req.path, req.query);
 
-  Router.match(routes, location, (error, initialState, transition) => {
+  Router.run(routes, location, (error, initialState, transition) => {
     // do your own data fetching, perhaps using the
     // branch of components in the initialState
     fetchSomeData(initialState.components, (error, initialData) => {
