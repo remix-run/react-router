@@ -1,5 +1,5 @@
 import React, { findDOMNode } from 'react';
-import HashHistory from 'react-router/lib/HashHistory';
+import { HashHistory } from 'react-router/lib/HashHistory';
 import { Router, Route, Link, Navigation } from 'react-router';
 import auth from './auth';
 
@@ -76,8 +76,8 @@ var Login = React.createClass({
 
       var { location } = this.props;
 
-      if (location.query && location.query.nextPathname) {
-        this.replaceWith(location.query.nextPathname);
+      if (location.query && location.state.nextPathname) {
+        this.replaceWith(location.state.nextPathname);
       } else {
         this.replaceWith('/about');
       }
@@ -116,11 +116,11 @@ var Logout = React.createClass({
 
 function requireAuth(nextState, transition) {
   if (!auth.loggedIn())
-    transition.to('/login', { nextPathname: nextState.location.pathname });
+    transition.to('/login', null, { nextPathname: nextState.location.pathname });
 }
 
 React.render((
-  <Router history={HashHistory}>
+  <Router history={new HashHistory({ queryKey: true })}>
     <Route path="/" component={App}>
       <Route path="login" component={Login}/>
       <Route path="logout" component={Logout}/>
