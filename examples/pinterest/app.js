@@ -150,7 +150,7 @@ React.render(
 //
 //  6. Hit refresh in the browser.
 //
-//  7. The url is not `/` so `RootRoute.defaultRoute` does not get matched.
+//  7. The url is not `/` so `RootRoute.indexRoute` does not get matched.
 //
 //  8. Since there is no `transitionState`, `RootRoute.getChildRoutes` branches
 //     the other way, and callsback with `PictureRoute` as a child, which matches
