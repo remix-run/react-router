@@ -7,7 +7,7 @@ applies its `activeClassName` and/or `activeStyle` when it is.
 Props
 -----
 
-### `href`
+### `to`
 
 The path to link to, ie `/users/123`.
 
