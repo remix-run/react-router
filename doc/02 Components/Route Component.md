@@ -14,8 +14,8 @@ The matched child route elements to be rendered.
 React.render((
   <Router history={HashHistory}>
     <Route path="/" component={App}>
-      <Route path="groups" components={Groups}}/>
-      <Route path="users" components={Users}}/>
+      <Route path="groups" components={Groups}/>
+      <Route path="users" components={Users}/>
     </Route>
   </Router>
 ), element);
