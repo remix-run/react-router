@@ -1,6 +1,6 @@
 import React from 'react';
 import invariant from 'invariant';
-import { stripLeadingSlashes, stringifyQuery } from './URLUtils';
+import { stripLeadingSlashes, stringifyQuery, parseQueryString } from './URLUtils';
 
 var { func, object } = React.PropTypes;
 
@@ -21,6 +21,10 @@ function queryIsActive(query, activeQuery) {
 
   if (query == null)
     return true;
+
+  if (typeof query === 'string') {
+    query = parseQueryString(query);
+  }
 
   for (var p in query)
     if (query.hasOwnProperty(p) && String(query[p]) !== String(activeQuery[p]))
@@ -73,7 +77,7 @@ var RouterContextMixin = {
   makeHref(pathname, query) {
     return this.makePath(pathname, query);
   },
- 
+
   /**
    * Pushes a new Location onto the history stack.
    */
@@ -131,7 +135,7 @@ var RouterContextMixin = {
   goForward() {
     this.go(1);
   },
- 
+
   /**
    * Returns true if a <Link> to the given pathname/query combination is
    * currently active.
