@@ -1,6 +1,6 @@
 import expect from 'expect';
 import React, { render } from 'react';
-import { HashHistory } from '../HashHistory';
+import HashHistory from '../HashHistory';
 import { getWindowScrollPosition } from '../DOMUtils';
 import Router from '../Router';
 import Route from '../Route';
