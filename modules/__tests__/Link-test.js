@@ -114,6 +114,50 @@ describe('A <Link>', function () {
     });
   });
 
+  describe('when its route is active and className is empty', function () {
+    it('it shouldn\'t have an active class', function (done) {
+      var LinkWrapper = React.createClass({
+        render() {
+          return (
+            <div>
+              <Link to="hello" className="dontKillMe" activeClassName="">Link</Link>
+              {this.props.children}
+            </div>
+          );
+        }
+      });
+
+      var a, steps = [
+        function () {
+          a = div.querySelector('a');
+          expect(a.className).toEqual('dontKillMe');
+          this.transitionTo('hello');
+        },
+        function () {
+          expect(a.className).toEqual('dontKillMe');
+          done();
+        }
+      ];
+
+      function execNextStep() {
+        try {
+          steps.shift().apply(this, arguments);
+        } catch (error) {
+          done(error);
+        }
+      }
+
+      render((
+        <Router history={new MemoryHistory('/goodbye')} onUpdate={execNextStep}>
+          <Route path="/" component={LinkWrapper}>
+            <Route path="goodbye" component={Goodbye}/>
+            <Route path="hello" component={Hello}/>
+          </Route>
+        </Router>
+      ), div, execNextStep);
+    });
+  });
+
   describe('when its route is active', function () {
     it('has its activeClassName', function (done) {
       var LinkWrapper = React.createClass({
