@@ -74,13 +74,13 @@ export var Link = React.createClass({
     var { router } = this.context;
     var { to, query } = this.props;
 
-    var props = Object.assign({}, this.props, {
-      href: router.makeHref(to, query),
-      onClick: this.handleClick
-    });
-
     // ignore if rendered outside of the context of a router, simplifies unit testing
     if (router && router.isActive(to, query)) {
+      var props = Object.assign({}, this.props, {
+        href: router.makeHref(to, query),
+        onClick: this.handleClick
+      });
+
       if (props.activeClassName)
         props.className += ` ${props.activeClassName}`;
 
