@@ -19,6 +19,11 @@ Docs
 - [Upgrade Guide](/UPGRADE_GUIDE.md)
 - [Changelog](/CHANGELOG.md)
 
+Browser Support
+---------------
+
+We intend to support all the browers React supports.
+
 Installation
 ------------
 
