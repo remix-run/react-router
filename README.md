@@ -114,7 +114,7 @@ var User = React.createClass({
 // instead, all you really need is a single root route, you don't need to
 // colocate the entire config).
 React.render((
-  <Router history={BrowserHistory}>
+  <Router history={new BrowserHistory}>
     <Route path="/" component={App}>
       <Route path="about" component={About}/>
       <Route path="users" component={Users} indexComponent={RecentUsers}>
