@@ -43,10 +43,10 @@ Example
 
 ```js
 import { Router } from 'react-router';
-import History from 'react-router/lib/BrowserHistory';
+import BrowserHistory from 'react-router/lib/BrowserHistory';
 
 React.render((
-  <Router history={History}>
+  <Router history={new BrowserHistory}>
     {/* ... */}
   </Router>
 ), document.body);

@@ -62,13 +62,13 @@ function updateCurrentState(queryKey, extraState) {
  * Support for persistence of state across page refreshes is provided using a
  * combination of a URL query string parameter and DOM storage. However, this
  * support is not enabled by default. In order to use it, create your own
- * HashHistory, like this:
+ * HashHistory.
  *
- *   import { HashHistory } from 'react-router/lib/HashHistory';
+ *   import HashHistory from 'react-router/lib/HashHistory';
  *   var StatefulHashHistory = new HashHistory({ queryKey: '_key' });
  *   React.render(<Router history={StatefulHashHistory} .../>, ...);
  */
-export class HashHistory extends DOMHistory {
+class HashHistory extends DOMHistory {
 
   constructor(options={}) {
     super(options);
@@ -170,4 +170,4 @@ export class HashHistory extends DOMHistory {
 
 }
 
-export default new HashHistory;
+export default HashHistory;

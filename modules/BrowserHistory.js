@@ -19,7 +19,7 @@ function updateCurrentState(extraState) {
  * refreshes if HTML5 history is not available, so URLs are always
  * the same across browsers.
  */
-export class BrowserHistory extends DOMHistory {
+class BrowserHistory extends DOMHistory {
 
   constructor(options) {
     super(options);
@@ -108,4 +108,4 @@ export class BrowserHistory extends DOMHistory {
 
 }
 
-export default new BrowserHistory;
+export default BrowserHistory;
