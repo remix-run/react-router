@@ -64,8 +64,7 @@ What's it look like?
 --------------------
 
 ```js
-import { Router, Route } from 'react-router';
-import BrowserHistory from 'react-router/lib/BrowserHistory';
+import { Router, Route, HashHistory} from 'react-router';
 
 var App = React.createClass({/*...*/});
 var About = React.createClass({/*...*/});
@@ -114,7 +113,7 @@ var User = React.createClass({
 // instead, all you really need is a single root route, you don't need to
 // colocate the entire config).
 React.render((
-  <Router history={BrowserHistory}>
+  <Router history={new HashHistory}>
     <Route path="/" component={App}>
       <Route path="about" component={About}/>
       <Route path="users" component={Users} indexComponent={RecentUsers}>
