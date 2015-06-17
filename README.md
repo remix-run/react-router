@@ -1,7 +1,6 @@
 [![npm package](https://img.shields.io/npm/v/react-router.svg?style=flat-square)](https://www.npmjs.org/package/react-router)
 [![build status](https://img.shields.io/travis/rackt/react-router/master.svg?style=flat-square)](https://travis-ci.org/rackt/react-router)
 [![dependency status](https://img.shields.io/david/rackt/react-router.svg?style=flat-square)](https://david-dm.org/rackt/react-router)
-[![Gitter](https://img.shields.io/badge/GITTER-join%20chat-1DCF73.svg?style=flat-square)](https://gitter.im/rackt/react-router?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge)
 
 <img src="https://rackt.github.io/react-router/img/vertical.png" width="300"/>
 
@@ -12,12 +11,13 @@ with powerful features like lazy code loading, dynamic route matching,
 and location transition handling built right in. Make the URL your first
 thought, not an after-thought.
 
-Docs
-----
+Docs & Help
+-----------
 
 - [Guides and API Docs](https://rackt.github.io/react-router)
 - [Upgrade Guide](/UPGRADE_GUIDE.md)
 - [Changelog](/CHANGELOG.md)
+- [#react-router channel on reactiflux](http://www.reactiflux.com/)
 
 Browser Support
 ---------------
