@@ -1,6 +1,6 @@
 import React from 'react';
-import { HashHistory } from 'react-router/lib/HashHistory';
 import { Router, Link } from 'react-router';
+import HashHistory from 'react-router/lib/HashHistory';
 
 var pictures = [
   {id: 0, src: 'http://placekitten.com/601/601'},

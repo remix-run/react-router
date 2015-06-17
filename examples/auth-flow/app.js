@@ -1,6 +1,6 @@
 import React, { findDOMNode } from 'react';
-import { HashHistory } from 'react-router/lib/HashHistory';
 import { Router, Route, Link, Navigation } from 'react-router';
+import HashHistory from 'react-router/lib/HashHistory';
 import auth from './auth';
 
 var App = React.createClass({
