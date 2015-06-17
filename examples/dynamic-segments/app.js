@@ -47,7 +47,7 @@ var Task = React.createClass({
 });
 
 React.render((
-  <Router history={HashHistory}>
+  <Router history={new HashHistory}>
     <Route path="/" component={App}>
       <Route path="user/:userID" component={User}>
         <Route path="tasks/:taskID" component={Task}/>

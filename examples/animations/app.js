@@ -46,7 +46,7 @@ var Page2 = React.createClass({
 
 
 React.render((
-  <Router history={HashHistory}>
+  <Router history={new HashHistory}>
     <Route path="/" component={App}>
       <Route path="page1" component={Page1} />
       <Route path="page2" component={Page2} />

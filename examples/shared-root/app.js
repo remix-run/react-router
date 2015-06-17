@@ -70,7 +70,7 @@ var ForgotPassword = React.createClass({
 });
 
 React.render((
-  <Router history={HashHistory}>
+  <Router history={new HashHistory}>
     <Route path="/" component={App}>
       <Route component={SignedOut}>
         <Route path="signin" component={SignIn}/>

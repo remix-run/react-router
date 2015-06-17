@@ -93,7 +93,7 @@ var App = React.createClass({
 });
 
 React.render((
-  <Router history={HashHistory}>
+  <Router history={new HashHistory}>
     <Route path="/" component={App}>
       <Route path="category/:category" components={{content: Category, sidebar: CategorySidebar}}>
         <Route path=":item" component={Item}/>

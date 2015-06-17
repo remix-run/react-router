@@ -21,7 +21,7 @@ var rootRoute = {
 React.render((
   <Router
     children={rootRoute}
-    history={HashHistory}
+    history={new HashHistory}
     createElement={AsyncProps.createElement}
   />
 ), document.getElementById('example'));

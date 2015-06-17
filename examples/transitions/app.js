@@ -57,7 +57,7 @@ var Form = React.createClass({
 });
 
 React.render((
-  <Router history={HashHistory}>
+  <Router history={new HashHistory}>
     <Route path="/" component={App}>
       <Route path="dashboard" component={Dashboard}/>
       <Route path="form" component={Form}/>
