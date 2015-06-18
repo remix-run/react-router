@@ -109,7 +109,7 @@ Let's refactor our app to use React Router.
 
 ```js
 // first we import some components
-import { Router, Route } from 'react-router';
+import { Router, Route, Link } from 'react-router';
 // the histories are imported separately for smaller builds
 import HashHistory from 'react-router/lib/HashHistory';
 
