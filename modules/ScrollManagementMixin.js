@@ -12,6 +12,12 @@ function shouldUpdateScrollPosition(state, prevState) {
   var { location, branch } = state;
   var { location: prevLocation, branch: prevBranch } = prevState;
 
+  // On browser load, when having an onEnter event with a redirect
+  // on the transition prevLocation is null, so assume we don't
+  // want to update the scroll position
+  if (prevLocation === null)
+    return false;
+
   // Don't update scroll position if only the query has changed.
   if (location.pathname === prevLocation.pathname)
     return false;
