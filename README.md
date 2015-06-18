@@ -6,7 +6,7 @@
 
 A complete routing library for React. https://rackt.github.io/react-router
 
-React Router keeps the URL in sync with nested UI. It has a simple API
+React Router keeps your UI in sync with the URL. It has a simple API
 with powerful features like lazy code loading, dynamic route matching,
 and location transition handling built right in. Make the URL your first
 thought, not an after-thought.
@@ -22,7 +22,7 @@ Docs & Help
 Browser Support
 ---------------
 
-We intend to support all the browers React supports.
+We support all browsers and environments where React runs.
 
 Installation
 ------------
@@ -43,9 +43,10 @@ import { Router, Route, Link } from 'react-router';
 var ReactRouter = require('react-router');
 var Router = ReactRouter.Router;
 var Route = ReactRouter.Route;
+var Link = ReactRouter.Link;
 ```
 
-There's also a `dist/` folder containing a UMD version.
+There's also a `lib/umd` folder containing a UMD version.
 
 ### bower + who knows what
 
@@ -53,8 +54,8 @@ There's also a `dist/` folder containing a UMD version.
 bower install react-router
 ```
 
-Find the UMD/global build in `dist/`, and the library on
-`window.ReactRouter`. Best of luck to you.
+Find the UMD/global build in `lib/umd`, and the library on
+`window.ReactRouter`. Best of luck to you. :)
 
 ### CDN
 
