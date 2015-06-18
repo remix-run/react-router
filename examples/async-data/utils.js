@@ -1,4 +1,5 @@
-var API = 'http://addressbook-api.herokuapp.com';
+//var API = 'http://addressbook-api.herokuapp.com';
+var API = 'http://localhost:3000';
 
 localStorage.token = localStorage.token || (Date.now()*Math.random());
 
@@ -32,6 +33,7 @@ function getJSON(url, cb) {
       cb(new Error('not found'));
     } else {
 
+      var time = 0;
       // fake a spotty server
       var time = Math.random() * 1000;
       // for a really spotty server:

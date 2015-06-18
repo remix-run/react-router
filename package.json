@@ -54,9 +54,6 @@
     "webpack": "^1.4.13",
     "webpack-dev-server": "^1.6.6"
   },
-  "peerDependencies": {
-    "react": "0.13.x"
-  },
   "tags": [
     "react",
     "router"

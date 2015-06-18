@@ -4,16 +4,15 @@ import GlobalNav from './GlobalNav';
 
 class App extends React.Component {
 
-  //static loadProps (params, cb) {
-    //console.log('App');
-    //cb(null, { courses: COURSES });
-  //}
+  static loadProps (params, cb) {
+    console.log('App', 'loadProps');
+    cb(null, { courses: COURSES });
+  }
 
   render () {
-    //var { courses } = this.props;
-    var courses = COURSES;
+    var { courses, loading } = this.props;
     return (
-      <div>
+      <div style={{opacity: loading ? 0.66 : 1}}>
         <GlobalNav/>
         <div style={{padding: 20}}>
           {this.props.children || <Dashboard courses={courses}/>}

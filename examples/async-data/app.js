@@ -17,12 +17,14 @@ var Spinner = React.createClass({
 var App = React.createClass({
   mixins: [ Navigation ],
 
+  getDefaultProps() {
+    return { contacts: [] };
+  },
+
   statics: {
     loadProps(params, cb) {
       loadContacts(cb);
-    },
-
-    Loader: Spinner
+    }
   },
 
   handleSubmit(event) {
@@ -31,7 +33,7 @@ var App = React.createClass({
       first: event.target.elements[0].value,
       last: event.target.elements[1].value
     }, (err, data) => {
-      this.props.onPropsDidChange();
+      this.props.reloadAsyncProps();
       this.transitionTo(`/contact/${data.contact.id}`);
     });
     event.target.reset();
@@ -39,14 +41,20 @@ var App = React.createClass({
   },
 
   render() {
+    // super smooth user feedback
+    var appStyle = {
+      transition: this.props.loading ? 'opacity 500ms ease 250ms' : 'opacity 150ms',
+      opacity: this.props.loading ? 0.5 : 1
+    };
+
     return (
-      <div className="App">
+      <div className="App" style={appStyle}>
         <form onSubmit={this.handleSubmit}>
           <input placeholder="First name"/> <input placeholder="Last name"/>{' '}
           <button type="submit">submit</button>
         </form>
         <div style={{display: 'flex'}}>
-          <ul style={{opacity: this.props.propsAreLoadingLong ? 0.5 : 1, padding: 20}}>
+          <ul style={{opacity: this.props.loadingAsyncProps ? 0.5 : 1, padding: 20}}>
             {this.props.contacts.map((contact, i) => (
               <li key={contact.id}>
                 <Link to={`/contact/${contact.id}`}>{contact.first} {contact.last}</Link>
@@ -64,29 +72,24 @@ var App = React.createClass({
 
 var Contact = React.createClass({
 
-  statics: {
-    loadProps(params, cb) {
-      //console.log('Contact loadProps');
-      loadContact(params.id, cb);
-    },
-
-    Loader: Spinner
+  getDefaultProps() {
+    return { contact: {} };
   },
 
-  getInitialState() {
-    return {
-      longLoad: false
-    };
+  statics: {
+    loadProps(params, cb) {
+      loadContact(params.id, cb);
+    }
   },
 
   render() {
     var { contact } = this.props;
 
     return (
-      <div style={{opacity: this.props.propsAreLoadingLong ? 0.5 : 1}}>
+      <div style={{opacity: this.props.loadingAsyncProps ? 0.5 : 1}}>
         <p><Link to="/">Back</Link></p>
         <h1>{contact.first} {contact.last}</h1>
-        <img key={contact.avatar} src={contact.avatar} height="200"/>
+        <p><img key={contact.avatar} src={contact.avatar} height="200"/></p>
       </div>
     );
   }
@@ -103,10 +106,12 @@ var Index = React.createClass({
 });
 
 React.render((
-  <Router history={new HashHistory} createElement={AsyncProps.createElement}>
-    <Route component={App}>
-      <Route path="/" component={Index}/>
-      <Route path="contact/:id" component={Contact}/>
+  <Router history={new HashHistory()} createElement={AsyncProps.createElement}>
+    <Route component={AsyncProps} renderInitialLoad={() => <Spinner/> }>
+      <Route component={App}>
+        <Route path="/" component={Index}/>
+        <Route path="contact/:id" component={Contact}/>
+      </Route>
     </Route>
   </Router>
 ), document.getElementById('example'));

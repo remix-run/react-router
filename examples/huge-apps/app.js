@@ -5,23 +5,30 @@ import AsyncProps from 'react-router/lib/experimental/AsyncProps';
 import stubbedCourses from './stubs/COURSES';
 
 var rootRoute = {
-  path: '/',
+  component: AsyncProps,
 
-  childRoutes: [
-    require('./routes/Calendar'),
-    require('./routes/Course'),
-    require('./routes/Grades'),
-    require('./routes/Messages'),
-    require('./routes/Profile'),
-  ],
+  // iunno?
+  renderInitialLoad() {
+    return <div>loading...</div>
+  },
 
-  component: require('./components/App'),
+  childRoutes: [{
+    path: '/',
+    component: require('./components/App'),
+    childRoutes: [
+      require('./routes/Calendar'),
+      require('./routes/Course'),
+      require('./routes/Grades'),
+      require('./routes/Messages'),
+      require('./routes/Profile'),
+    ]}
+  ]
 };
 
 React.render((
   <Router
-    children={rootRoute}
-    history={new HashHistory}
+    routes={rootRoute}
+    history={new HashHistory()}
     createElement={AsyncProps.createElement}
   />
 ), document.getElementById('example'));
