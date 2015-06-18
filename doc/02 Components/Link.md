@@ -7,13 +7,13 @@ applies its `activeClassName` and/or `activeStyle` when it is.
 Props
 -----
 
-### `href`
+### `to`
 
-The path to link to, ie `/users/123`.
+The path to link to, e.g., `/users/123`.
 
 ### `query`
 
-An object of key:value pairs to be stingified.
+An object of key:value pairs to be stringified.
 
 ### `activeClassName`
 
