@@ -25,7 +25,8 @@ synchronously.
 
 ```js
 // server.js
-import { Router, Location } from 'react-router';
+import Router from 'react-router';
+import Location from 'react-router/lib/Location';
 import routes from './routes';
 
 // you'll want to configure your server to serve up static assets, and
@@ -38,7 +39,7 @@ serveNonStaticPaths((req, res) => {
     // branch of components in the initialState
     fetchSomeData(initialState.components, (error, initialData) => {
       var html = React.renderToString(
-        <Router history={history} {...initialState}/>
+        <Router {...initialState}/>
       );
       res.send(renderFullPage(html, initialData));
     });

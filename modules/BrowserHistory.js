@@ -73,7 +73,7 @@ class BrowserHistory extends DOMHistory {
       if (window.removeEventListener) {
         window.removeEventListener('popstate', this.handlePopState, false);
       } else {
-        window.removeEvent('onpopstate', this.handlePopState);
+        window.detachEvent('onpopstate', this.handlePopState);
       }
     }
   }

@@ -123,7 +123,7 @@ class HashHistory extends DOMHistory {
       if (window.removeEventListener) {
         window.removeEventListener('hashchange', this.handleHashChange, false);
       } else {
-        window.removeEvent('onhashchange', this.handleHashChange);
+        window.detachEvent('onhashchange', this.handleHashChange);
       }
     }
   }
