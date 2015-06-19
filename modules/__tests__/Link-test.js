@@ -64,12 +64,12 @@ describe('A <Link>', function () {
     });
 
     render((
-      <Router history={new HashHistory()}>
+      <Router history={new HashHistory}>
         <Route path="/" component={LinkWrapper}/>
       </Router>
     ), div, function () {
       var a = div.querySelector('a');
-      expect(a.getAttribute('href')).toEqual('/#/hello/michael?the=query');
+      expect(a.getAttribute('href')).toEqual('#/hello/michael?the=query');
     });
   });
 

@@ -71,7 +71,13 @@ var RouterContextMixin = {
    * pathname and query.
    */
   makeHref(pathname, query) {
-    return this.makePath(pathname, query);
+    var path = this.makePath(pathname, query);
+    var { history } = this.props;
+
+    if (history && history.makeHref)
+      return history.makeHref(path);
+
+    return path;
   },
  
   /**
