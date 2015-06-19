@@ -116,7 +116,9 @@ export function matchPattern(pattern, pathname) {
 
   var remainingPathname, paramValues;
   if (match != null) {
-    paramValues = Array.prototype.slice.call(match, 1);
+    paramValues = Array.prototype.slice.call(match, 1).map(
+      (v) => v != null ? decodeURIComponent(v) : v
+    );
 
     if (captureRemaining) {
       remainingPathname = paramValues.pop();
@@ -191,7 +193,7 @@ export function formatPattern(pattern, params) {
       );
 
       if (paramValue != null)
-        pathname += paramValue;
+        pathname += encodeURIComponent(paramValue);
     } else {
       pathname += token;
     }
