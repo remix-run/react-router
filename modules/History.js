@@ -1,12 +1,10 @@
 import invariant from 'invariant';
+import warning from 'warning';
+import NavigationTypes from './NavigationTypes';
 import { getPathname, getQueryString, parseQueryString } from './URLUtils';
 import Location from './Location';
 
-var RequiredHistorySubclassMethods = [ 'pushState', 'replaceState', 'go' ];
-
-function createRandomKey() {
-  return Math.random().toString(36).substr(2);
-}
+var RequiredHistorySubclassMethods = [ 'push', 'replace', 'go' ];
 
 /**
  * A history interface that normalizes the differences across
@@ -30,7 +28,6 @@ class History {
 
     this.parseQueryString = options.parseQueryString || parseQueryString;
     this.changeListeners = [];
-    this.location = null;
   }
 
   _notifyChange() {
@@ -48,6 +45,84 @@ class History {
     });
   }
 
+  setup(path, entry = {}) {
+    if (this.location)
+      return;
+
+    if (!entry.key)
+      entry = this.replace(path, this.createRandomKey());
+
+    var state = null;
+    if (typeof this.readState === 'function')
+      state = this.readState(entry.key);
+
+    this.location = this._createLocation(path, state, entry);
+  }
+
+  handlePop(path, entry = {}) {
+    var state = null;
+    if (entry.key && typeof this.readState === 'function')
+      state = this.readState(entry.key);
+
+    this.location = this._createLocation(path, state, entry, NavigationTypes.POP);
+    this._notifyChange();
+  }
+
+  createRandomKey() {
+    return Math.random().toString(36).substr(2);
+  }
+
+  _saveNewState(state) {
+    var key = this.createRandomKey();
+
+    if (state != null) {
+      invariant(
+        typeof this.saveState === 'function',
+        '%s needs a saveState method in order to store state',
+        this.constructor.name
+      );
+
+      this.saveState(key, state);
+    }
+
+    return key;
+  }
+
+  pushState(state, path) {
+    var key = this._saveNewState(state);
+
+    var entry = null;
+    if (this.location && this.location.path === path) {
+      entry = this.replace(path, key) || {};
+    } else {
+      entry = this.push(path, key) || {};
+    }
+
+    warning(
+      entry.key || state == null,
+      '%s does not support storing state',
+      this.constructor.name
+    );
+
+    this.location = this._createLocation(path, state, entry, NavigationTypes.PUSH);
+    this._notifyChange();
+  }
+
+  replaceState(state, path) {
+    var key = this._saveNewState(state);
+
+    var entry = this.replace(path, key) || {};
+
+    warning(
+      entry.key || state == null,
+      '%s does not support storing state',
+      this.constructor.name
+    );
+
+    this.location = this._createLocation(path, state, entry, NavigationTypes.REPLACE);
+    this._notifyChange();
+  }
+
   back() {
     this.go(-1);
   }
@@ -56,20 +131,11 @@ class History {
     this.go(1);
   }
 
-  _createState(state) {
-    state = state || {};
-
-    if (!state.key)
-      state.key = createRandomKey();
-
-    return state;
-  }
-
-  createLocation(path, state, navigationType) {
+  _createLocation(path, state, entry, navigationType) {
     var pathname = getPathname(path);
     var queryString = getQueryString(path);
     var query = queryString ? this.parseQueryString(queryString) : null;
-    return new Location(pathname, query, state, navigationType);
+    return new Location(path, pathname, query, {...state, ...entry}, navigationType);
   }
 
 }
