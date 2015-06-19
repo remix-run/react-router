@@ -3,6 +3,7 @@ import expect from 'expect';
 import React, { render } from 'react/addons';
 import Router from '../Router';
 import MemoryHistory from '../MemoryHistory';
+import HashHistory from '../HashHistory';
 import Route from '../Route';
 import Link from '../Link';
 
@@ -52,6 +53,23 @@ describe('A <Link>', function () {
     ), div, function () {
       var a = div.querySelector('a');
       expect(a.getAttribute('href')).toEqual('/hello/michael?the=query');
+    });
+  });
+
+  it('knows how to make its href with HashHistory', function () {
+    var LinkWrapper = React.createClass({
+      render() {
+        return <Link to="/hello/michael" query={{the: 'query'}}>Link</Link>;
+      }
+    });
+
+    render((
+      <Router history={new HashHistory()}>
+        <Route path="/" component={LinkWrapper}/>
+      </Router>
+    ), div, function () {
+      var a = div.querySelector('a');
+      expect(a.getAttribute('href')).toEqual('/#/hello/michael?the=query');
     });
   });
 
