@@ -177,7 +177,7 @@ export function formatPattern(pattern, params) {
       );
 
       if (paramValue != null)
-        pathname += encodeURIComponent(paramValue);
+        pathname += encodeURI(paramValue);
     } else if (token === '(') {
       parenCount += 1;
     } else if (token === ')') {

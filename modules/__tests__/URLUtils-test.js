@@ -264,7 +264,7 @@ describe('formatPattern', function () {
 
   describe('when a pattern has one splat', function () {
     it('returns the correct path', function () {
-      expect(formatPattern('/a/*/d', { splat: 'b/c' })).toEqual('/a/b%2Fc/d');
+      expect(formatPattern('/a/*/d', { splat: 'b/c' })).toEqual('/a/b/c/d');
     });
   });
 
