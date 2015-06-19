@@ -1,6 +1,5 @@
 import warning from 'warning';
 import DOMHistory from './DOMHistory';
-import NavigationTypes from './NavigationTypes';
 import { getHashPath, replaceHashPath } from './DOMUtils';
 import { isAbsolutePath } from './URLUtils';
 
@@ -24,34 +23,6 @@ function addQueryStringValueToPath(path, key, value) {
 function getQueryStringValueFromPath(path, key) {
   var match = path.match(new RegExp(`\\?.*?\\b${key}=(.+?)\\b`));
   return match && match[1];
-}
-
-function saveState(path, queryKey, state) {
-  window.sessionStorage.setItem(state.key, JSON.stringify(state));
-  return addQueryStringValueToPath(path, queryKey, state.key);
-}
-
-function readState(path, queryKey) {
-  var sessionKey = getQueryStringValueFromPath(path, queryKey);
-  var json = sessionKey && window.sessionStorage.getItem(sessionKey);
-
-  if (json) {
-    try {
-      return JSON.parse(json);
-    } catch (error) {
-      // Ignore invalid JSON in session storage.
-    }
-  }
-
-  return null;
-}
-
-function updateCurrentState(queryKey, extraState) {
-  var path = getHashPath();
-  var state = readState(path, queryKey);
-
-  if (state)
-    saveState(path, queryKey, Object.assign(state, extraState));
 }
 
 /**
@@ -79,17 +50,15 @@ class HashHistory extends DOMHistory {
       this.queryKey = this.queryKey ? DefaultQueryKey : null;
   }
 
-  _updateLocation(navigationType) {
-    var path = getHashPath();
-    var state = this.queryKey ? readState(path, this.queryKey) : null;
-    this.location = this.createLocation(path, state, navigationType);
-  }
-
   setup() {
-    if (this.location == null) {
-      ensureSlash();
-      this._updateLocation();
-    }
+    if (this.location != null)
+      return;
+
+    ensureSlash();
+
+    var path = getHashPath();
+    var key = getQueryStringValueFromPath(path, this.queryKey);
+    super.setup(path, { key });
   }
 
   handleHashChange() {
@@ -99,8 +68,9 @@ class HashHistory extends DOMHistory {
     if (this._ignoreNextHashChange) {
       this._ignoreNextHashChange = false;
     } else {
-      this._updateLocation(NavigationTypes.POP);
-      this._notifyChange();
+      var path = getHashPath();
+      var key = getQueryStringValueFromPath(path, this.queryKey);
+      this.handlePop(path, { key });
     }
   }
 
@@ -128,40 +98,38 @@ class HashHistory extends DOMHistory {
     }
   }
 
-  pushState(state, path) {
-    warning(
-      this.queryKey || state == null,
-      'HashHistory needs a queryKey in order to persist state'
-    );
-
+  push(path, key) {
+    var actualPath = path;
     if (this.queryKey)
-      updateCurrentState(this.queryKey, this.getScrollPosition());
+      actualPath = addQueryStringValueToPath(path, this.queryKey, key);
 
-    state = this._createState(state);
 
-    if (this.queryKey)
-      path = saveState(path, this.queryKey, state);
+    if (actualPath === getHashPath()) {
+      warning(
+        false,
+        'HashHistory can not push the current path'
+      );
+    } else {
+      this._ignoreNextHashChange = true;
+      window.location.hash = actualPath;
+    }
 
-    this._ignoreNextHashChange = true;
-    window.location.hash = path;
-
-    this.location = this.createLocation(path, state, NavigationTypes.PUSH);
-
-    this._notifyChange();
+    return { key: this.queryKey && key };
   }
 
-  replaceState(state, path) {
-    state = this._createState(state);
 
+  replace(path, key) {
+    var actualPath = path;
     if (this.queryKey)
-      path = saveState(path, this.queryKey, state);
+      actualPath = addQueryStringValueToPath(path, this.queryKey, key);
 
-    this._ignoreNextHashChange = true;
-    replaceHashPath(path);
 
-    this.location = this.createLocation(path, state, NavigationTypes.REPLACE);
+    if (actualPath !== getHashPath())
+      this._ignoreNextHashChange = true;
 
-    this._notifyChange();
+    replaceHashPath(actualPath);
+
+    return { key: this.queryKey && key };
   }
 
   makeHref(path) {
