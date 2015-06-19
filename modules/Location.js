@@ -12,8 +12,7 @@ class Location {
     return object instanceof Location;
   }
 
-  constructor(path='/', pathname=path, query=null, state=null, navigationType=NavigationTypes.POP) {
-    this.path = path;
+  constructor(pathname='/', query=null, state=null, navigationType=NavigationTypes.POP) {
     this.pathname = pathname;
     this.query = query;
     this.state = state;

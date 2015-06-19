@@ -56,7 +56,7 @@ class History {
     if (typeof this.readState === 'function')
       state = this.readState(entry.key);
 
-    this.location = this._createLocation(path, state, entry);
+    this._handleChange(path, state, entry, NavigationTypes.POP, false);
   }
 
   handlePop(path, entry = {}) {
@@ -64,8 +64,7 @@ class History {
     if (entry.key && typeof this.readState === 'function')
       state = this.readState(entry.key);
 
-    this.location = this._createLocation(path, state, entry, NavigationTypes.POP);
-    this._notifyChange();
+    this._handleChange(path, state, entry, NavigationTypes.POP);
   }
 
   createRandomKey() {
@@ -92,7 +91,7 @@ class History {
     var key = this._saveNewState(state);
 
     var entry = null;
-    if (this.location && this.location.path === path) {
+    if (this.path === path) {
       entry = this.replace(path, key) || {};
     } else {
       entry = this.push(path, key) || {};
@@ -104,8 +103,7 @@ class History {
       this.constructor.name
     );
 
-    this.location = this._createLocation(path, state, entry, NavigationTypes.PUSH);
-    this._notifyChange();
+    this._handleChange(path, state, entry, NavigationTypes.PUSH);
   }
 
   replaceState(state, path) {
@@ -119,8 +117,7 @@ class History {
       this.constructor.name
     );
 
-    this.location = this._createLocation(path, state, entry, NavigationTypes.REPLACE);
-    this._notifyChange();
+    this._handleChange(path, state, entry, NavigationTypes.REPLACE);
   }
 
   back() {
@@ -131,11 +128,19 @@ class History {
     this.go(1);
   }
 
+  _handleChange(path, state, entry, navigationType, notify=true) {
+    this.path = path;
+    this.location = this._createLocation(path, state, entry, navigationType);
+
+    if (notify)
+      this._notifyChange();
+  }
+
   _createLocation(path, state, entry, navigationType) {
     var pathname = getPathname(path);
     var queryString = getQueryString(path);
     var query = queryString ? this.parseQueryString(queryString) : null;
-    return new Location(path, pathname, query, {...state, ...entry}, navigationType);
+    return new Location(pathname, query, {...state, ...entry}, navigationType);
   }
 
 }
