@@ -603,13 +603,13 @@ called during route transitions.</p>
 abort or redirect the transition. You can pause the transition while you
 do some asynchonous work and call <code>callback(error)</code> when you&#39;re done, or
 omit the callback in your argument list and it will be called for you.</p>
-<p>See also: <a href="#TODO">Transition</a></p>
+<p>See also: <a href="#Transition">Transition</a></p>
 <h3 id="-willtransitionfrom-transition-component-callback-"><code>willTransitionFrom(transition, component, callback)</code></h3>
 <p>Called when an active route is being transitioned out giving you an
 opportunity to abort the transition. The <code>component</code> is the current
 component, you&#39;ll probably need it to check its state to decide if you
 want to allow the transition (like form fields).</p>
-<p>See also: <a href="#TODO">Transition</a></p>
+<p>See also: <a href="#Transition">Transition</a></p>
 <h3 id="note-about-callback-argument">Note about <code>callback</code> argument</h3>
 <p>If you add <code>callback</code> to your arguments list, you must call it
 eventually, even if you redirect the transition.</p>
@@ -899,7 +899,7 @@ tags for the Tabs:</p>
 </pre></div>
 
 </code></pre>
-</div></article></section><section><article class="Doc"><h1 class="Heading" id="Transition"><a class="HeadingLink" href="#Transition">Transition</a><span class="CategoryName">Misc</span></h1><div><p>A <code>Transition</code> object is sent to the <a href="#TODO">transition
+</div></article></section><section><article class="Doc"><h1 class="Heading" id="Transition"><a class="HeadingLink" href="#Transition">Transition</a><span class="CategoryName">Misc</span></h1><div><p>A <code>Transition</code> object is sent to the <a href="#Route Handler">transition
 hooks</a> of a <code>RouteHandler</code> as the first argument.</p>
 <h2 id="methods">Methods</h2>
 <h3 id="-abort-"><code>abort()</code></h3>
