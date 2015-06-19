@@ -81,8 +81,8 @@ export var Link = React.createClass({
 
     // ignore if rendered outside of the context of a router, simplifies unit testing
     if (router && router.isActive(to, query)) {
-      if (props.activeClassName)
-        props.className += ` ${props.activeClassName}`;
+      if (props.activeClassName) 
+        props.className += props.className !== '' ? ` ${props.activeClassName}` : props.activeClassName;
 
       if (props.activeStyle)
         Object.assign(props.style, props.activeStyle);
