@@ -260,6 +260,12 @@ describe('formatPattern', function () {
         expect(formatPattern(pattern, { id: 'alt.black.helicopter' })).toEqual('comments/alt.black.helicopter/edit');
       });
     });
+
+    describe('and some params contain special characters', function () {
+      it('returns the correct path', function () {
+        expect(formatPattern(pattern, { id: '?not=confused&with=query#string' })).toEqual('comments/%3Fnot%3Dconfused%26with%3Dquery%23string/edit');
+      });
+    });
   });
 
   describe('when a pattern has one splat', function () {
