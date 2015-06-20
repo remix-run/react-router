@@ -56,7 +56,7 @@ class History {
     if (typeof this.readState === 'function')
       state = this.readState(entry.key);
 
-    this._handleChange(path, state, entry, NavigationTypes.POP, false);
+    this._update(path, state, entry, NavigationTypes.POP, false);
   }
 
   handlePop(path, entry = {}) {
@@ -64,7 +64,7 @@ class History {
     if (entry.key && typeof this.readState === 'function')
       state = this.readState(entry.key);
 
-    this._handleChange(path, state, entry, NavigationTypes.POP);
+    this._update(path, state, entry, NavigationTypes.POP);
   }
 
   createRandomKey() {
@@ -103,7 +103,7 @@ class History {
       this.constructor.name
     );
 
-    this._handleChange(path, state, entry, NavigationTypes.PUSH);
+    this._update(path, state, entry, NavigationTypes.PUSH);
   }
 
   replaceState(state, path) {
@@ -117,7 +117,7 @@ class History {
       this.constructor.name
     );
 
-    this._handleChange(path, state, entry, NavigationTypes.REPLACE);
+    this._update(path, state, entry, NavigationTypes.REPLACE);
   }
 
   back() {
@@ -128,7 +128,7 @@ class History {
     this.go(1);
   }
 
-  _handleChange(path, state, entry, navigationType, notify=true) {
+  _update(path, state, entry, navigationType, notify=true) {
     this.path = path;
     this.location = this._createLocation(path, state, entry, navigationType);
 

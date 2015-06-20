@@ -43,7 +43,7 @@ class BrowserHistory extends DOMHistory {
     if (this.isSupported && window.history.state)
       key = window.history.state.key;
 
-    super.setup(path, {key});
+    super.setup(path, { key });
   }
 
   handlePopState(event) {
@@ -52,7 +52,7 @@ class BrowserHistory extends DOMHistory {
 
     var path = getWindowPath();
     var key = event.state && event.state.key;
-    this.handlePop(path, {key});
+    this.handlePop(path, { key });
   }
 
   addChangeListener(listener) {
