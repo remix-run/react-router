@@ -151,7 +151,8 @@ var NotFound = React.createClass({
 
 React.render((
   <Router history={new HashHistory}>
-    <Route path="/" component={App} indexComponent={Index}>
+    <Route component={App}>
+      <Route path="/" component={Index}/>
       <Route path="contact/new" component={NewContact}/>
       <Route path="contact/:id" component={Contact}/>
       <Route path="*" component={NotFound}/>
