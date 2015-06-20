@@ -50,7 +50,7 @@ class MemoryHistory extends History {
     var path = entry.path;
     var key = entry.key;
 
-    super.setup(path, {key, current: this.current});
+    super.setup(path, { key, current: this.current });
   }
 
   _createEntry(object) {
@@ -69,14 +69,14 @@ class MemoryHistory extends History {
     this.current += 1;
     this.entries = this.entries.slice(0, this.current).concat([{ key, path }]);
 
-    return {key, current: this.current};
+    return { key, current: this.current };
   }
 
   // http://www.w3.org/TR/2011/WD-html5-20110113/history.html#dom-history-replacestate
   replace(path, key) {
     this.entries[this.current] = { key, path };
 
-    return {key, current: this.current};
+    return { key, current: this.current };
   }
 
   readState(key) {
@@ -100,7 +100,7 @@ class MemoryHistory extends History {
     this.current += n;
     var currentEntry = this.entries[this.current];
 
-    this.handlePop(currentEntry.path, {key: currentEntry.key, current: this.current});
+    this.handlePop(currentEntry.path, { key: currentEntry.key, current: this.current });
   }
 
   canGo(n) {
