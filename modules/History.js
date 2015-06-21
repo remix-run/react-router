@@ -84,7 +84,9 @@ class History {
           this._pendingLocation = null;
           applyEntry && applyEntry();
           this._update(path, location);
+          return true;
         }
+        return false;
       });
     }
   }
