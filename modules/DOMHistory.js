@@ -11,6 +11,26 @@ class DOMHistory extends History {
     this.handleBeforeUnload = this.handleBeforeUnload.bind(this);
   }
 
+  setup(path, entry) {
+    super.setup(path, entry);
+
+    if (window.addEventListener) {
+      window.addEventListener('beforeunload', this.handleBeforeUnload);
+    } else {
+      window.attachEvent('onbeforeunload', this.handleBeforeUnload);
+    }
+  }
+
+  teardown() {
+    if (window.removeEventListener) {
+      window.removeEventListener('beforeunload', this.handleBeforeUnload);
+    } else {
+      window.detachEvent('onbeforeunload', this.handleBeforeUnload);
+    }
+
+    super.teardown();
+  }
+
   go(n) {
     if (n === 0)
       return;
@@ -34,24 +54,6 @@ class DOMHistory extends History {
     }
 
     return null;
-  }
-
-  onBeforeChange(listener) {
-    if (!this.beforeChangeListener && listener) {
-      if (window.addEventListener) {
-        window.addEventListener('beforeunload', this.handleBeforeUnload);
-      } else {
-        window.attachEvent('onbeforeunload', this.handleBeforeUnload);
-      }
-    } else if(this.beforeChangeListener && !listener) {
-      if (window.removeEventListener) {
-        window.removeEventListener('beforeunload', this.handleBeforeUnload);
-      } else {
-        window.detachEvent('onbeforeunload', this.handleBeforeUnload);
-      }
-    }
-
-    super.onBeforeChange(listener);
   }
 
   handleBeforeUnload(event) {

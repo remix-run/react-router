@@ -44,6 +44,22 @@ class BrowserHistory extends DOMHistory {
       key = window.history.state.key;
 
     super.setup(path, { key });
+
+    if (window.addEventListener) {
+      window.addEventListener('popstate', this.handlePopState, false);
+    } else {
+      window.attachEvent('onpopstate', this.handlePopState);
+    }
+  }
+
+  teardown() {
+    if (window.removeEventListener) {
+      window.removeEventListener('popstate', this.handlePopState, false);
+    } else {
+      window.detachEvent('onpopstate', this.handlePopState);
+    }
+
+    super.teardown();
   }
 
   handlePopState(event) {
@@ -53,30 +69,6 @@ class BrowserHistory extends DOMHistory {
     var path = getWindowPath();
     var key = event.state && event.state.key;
     this.handlePop(path, { key });
-  }
-
-  addChangeListener(listener) {
-    super.addChangeListener(listener);
-
-    if (this.changeListeners.length === 1) {
-      if (window.addEventListener) {
-        window.addEventListener('popstate', this.handlePopState, false);
-      } else {
-        window.attachEvent('onpopstate', this.handlePopState);
-      }
-    }
-  }
-
-  removeChangeListener(listener) {
-    super.removeChangeListener(listener);
-
-    if (this.changeListeners.length === 0) {
-      if (window.removeEventListener) {
-        window.removeEventListener('popstate', this.handlePopState, false);
-      } else {
-        window.detachEvent('onpopstate', this.handlePopState);
-      }
-    }
   }
 
   // http://www.w3.org/TR/2011/WD-html5-20110113/history.html#dom-history-pushstate

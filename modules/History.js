@@ -49,6 +49,11 @@ class History {
   }
 
   onBeforeChange(listener) {
+    warning(
+      this.beforeChangeListener != null,
+      'beforeChange listener of History should not be overwritten'
+    );
+
     this.beforeChangeListener = listener;
   }
 
@@ -65,6 +70,15 @@ class History {
 
     var location = this._createLocation(path, state, entry, NavigationTypes.POP);
     this._update(path, location, false);
+  }
+
+  teardown() {
+    this.changeListeners = [];
+    this.beforeChangeListener = null;
+
+    this.path = null;
+    this.location = null;
+    this._pendingLocation = null;
   }
 
   handlePop(path, entry={}, applyEntry=null) {

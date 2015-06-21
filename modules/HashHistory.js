@@ -59,6 +59,22 @@ class HashHistory extends DOMHistory {
     var path = getHashPath();
     var key = getQueryStringValueFromPath(path, this.queryKey);
     super.setup(path, { key });
+
+    if (window.addEventListener) {
+      window.addEventListener('hashchange', this.handleHashChange, false);
+    } else {
+      window.attachEvent('onhashchange', this.handleHashChange);
+    }
+  }
+
+  teardown() {
+    if (window.removeEventListener) {
+      window.removeEventListener('hashchange', this.handleHashChange, false);
+    } else {
+      window.detachEvent('onhashchange', this.handleHashChange);
+    }
+
+    super.teardown();
   }
 
   handleHashChange() {
@@ -71,30 +87,6 @@ class HashHistory extends DOMHistory {
       var path = getHashPath();
       var key = getQueryStringValueFromPath(path, this.queryKey);
       this.handlePop(path, { key });
-    }
-  }
-
-  addChangeListener(listener) {
-    super.addChangeListener(listener);
-
-    if (this.changeListeners.length === 1) {
-      if (window.addEventListener) {
-        window.addEventListener('hashchange', this.handleHashChange, false);
-      } else {
-        window.attachEvent('onhashchange', this.handleHashChange);
-      }
-    }
-  }
-
-  removeChangeListener(listener) {
-    super.removeChangeListener(listener);
-
-    if (this.changeListeners.length === 0) {
-      if (window.removeEventListener) {
-        window.removeEventListener('hashchange', this.handleHashChange, false);
-      } else {
-        window.detachEvent('onhashchange', this.handleHashChange);
-      }
     }
   }
 
