@@ -97,10 +97,12 @@ class MemoryHistory extends History {
       this.constructor.name, n
     );
 
-    this.current += n;
-    var currentEntry = this.entries[this.current];
+    var next = this.current + n;
+    var nextEntry = this.entries[next];
 
-    this.handlePop(currentEntry.path, { key: currentEntry.key, current: this.current });
+    this.handlePop(nextEntry.path, { key: nextEntry.key, current: this.current }, () => {
+      this.current = next;
+    });
   }
 
   canGo(n) {

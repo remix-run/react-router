@@ -28,6 +28,9 @@ class History {
 
     this.parseQueryString = options.parseQueryString || parseQueryString;
     this.changeListeners = [];
+
+    this.location = null;
+    this._pendingLocation = null;
   }
 
   _notifyChange() {
@@ -45,6 +48,10 @@ class History {
     });
   }
 
+  onBeforeChange(listener) {
+    this.beforeChangeListener = listener;
+  }
+
   setup(path, entry = {}) {
     if (this.location)
       return;
@@ -56,15 +63,30 @@ class History {
     if (typeof this.readState === 'function')
       state = this.readState(entry.key);
 
-    this._update(path, state, entry, NavigationTypes.POP, false);
+    var location = this._createLocation(path, state, entry, NavigationTypes.POP);
+    this._update(path, location, false);
   }
 
-  handlePop(path, entry = {}) {
+  handlePop(path, entry={}, applyEntry=null) {
     var state = null;
     if (entry.key && typeof this.readState === 'function')
       state = this.readState(entry.key);
 
-    this._update(path, state, entry, NavigationTypes.POP);
+    var location = this._createLocation(path, state, entry, NavigationTypes.POP);
+
+    if (!this.beforeChangeListener) {
+      applyEntry && applyEntry();
+      this._update(path, location);
+    } else {
+      this._pendingLocation = location;
+      this.beforeChangeListener.call(this, location, () => {
+        if (this._pendingLocation === location){
+          this._pendingLocation = null;
+          applyEntry && applyEntry();
+          this._update(path, location);
+        }
+      });
+    }
   }
 
   createRandomKey() {
@@ -88,9 +110,27 @@ class History {
   }
 
   pushState(state, path) {
-    var key = this._saveNewState(state);
+    if (!this.beforeChangeListener) {
+      this._doPushState(state, path);
+    } else {
+      var pendingLocation = this._createLocation(path, state, null, NavigationTypes.PUSH);
+      this._pendingLocation = pendingLocation;
 
+      this.beforeChangeListener.call(this, pendingLocation, () => {
+        if (this._pendingLocation === pendingLocation) {
+          this._pendingLocation = null;
+          this._doPushState(state, path);
+          return true;
+        }
+        return false;
+      });
+    }
+  }
+
+  _doPushState(state, path) {
+    var key = this._saveNewState(state);
     var entry = null;
+
     if (this.path === path) {
       entry = this.replace(path, key) || {};
     } else {
@@ -103,12 +143,30 @@ class History {
       this.constructor.name
     );
 
-    this._update(path, state, entry, NavigationTypes.PUSH);
+    var location = this._createLocation(path, state, entry, NavigationTypes.PUSH);
+    this._update(path, location);
   }
 
   replaceState(state, path) {
-    var key = this._saveNewState(state);
+    if (!this.beforeChangeListener) {
+      this._doReplaceState(state, path);
+    } else {
+      var pendingLocation = this._createLocation(path, state, null, NavigationTypes.REPLACE);
+      this._pendingLocation = pendingLocation;
 
+      this.beforeChangeListener.call(this, pendingLocation, () => {
+        if (this._pendingLocation === pendingLocation) {
+          this._pendingLocation = null;
+          this._doReplaceState(state, path);
+          return true;
+        }
+        return false;
+      });
+    }
+  }
+
+  _doReplaceState(state, path) {
+    var key = this._saveNewState(state);
     var entry = this.replace(path, key) || {};
 
     warning(
@@ -117,7 +175,8 @@ class History {
       this.constructor.name
     );
 
-    this._update(path, state, entry, NavigationTypes.REPLACE);
+    var location = this._createLocation(path, state, entry, NavigationTypes.REPLACE);
+    this._update(path, location);
   }
 
   back() {
@@ -128,9 +187,10 @@ class History {
     this.go(1);
   }
 
-  _update(path, state, entry, navigationType, notify=true) {
+  _update(path, location, notify=true) {
     this.path = path;
-    this.location = this._createLocation(path, state, entry, navigationType);
+    this.location = location;
+    this._pendingLocation = null;
 
     if (notify)
       this._notifyChange();
