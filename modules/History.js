@@ -135,6 +135,10 @@ class History {
     }
   }
 
+  isPending(location) {
+    return this._pendingLocation === location;
+  }
+
   pushState(state, path) {
     var pendingLocation = this._createLocation(path, state, null, NavigationTypes.PUSH);
     this._schedule(pendingLocation, () => {
