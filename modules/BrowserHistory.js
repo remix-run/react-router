@@ -1,6 +1,5 @@
 import DOMHistory from './DOMHistory';
 import { getWindowPath, supportsHistory } from './DOMUtils';
-import NavigationTypes from './NavigationTypes';
 
 /**
  * A history implementation for DOM environments that support the
@@ -18,20 +17,6 @@ class BrowserHistory extends DOMHistory {
     super(options);
     this.handlePopState = this.handlePopState.bind(this);
     this.isSupported = supportsHistory();
-  }
-
-  _updateLocation(navigationType) {
-    var state = null;
-
-    if (this.isSupported) {
-      var historyState = window.history.state;
-      state = this._createState(historyState);
-
-      if (!historyState || !historyState.key)
-        window.history.replaceState(state, '');
-    }
-
-    this.location = this.createLocation(getWindowPath(), state, navigationType);
   }
 
   setup() {

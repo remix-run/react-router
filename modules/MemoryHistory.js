@@ -1,5 +1,4 @@
 import invariant from 'invariant';
-import NavigationTypes from './NavigationTypes';
 import History from './History';
 
 /**

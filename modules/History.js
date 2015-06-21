@@ -27,8 +27,11 @@ class History {
     }, this);
 
     this.parseQueryString = options.parseQueryString || parseQueryString;
-    this.changeListeners = [];
 
+    this.changeListeners = [];
+    this.beforeChangeListener = null;
+
+    this.path = null;
     this.location = null;
     this._pendingLocation = null;
   }
@@ -86,23 +89,13 @@ class History {
     if (entry.key && typeof this.readState === 'function')
       state = this.readState(entry.key);
 
-    var location = this._createLocation(path, state, entry, NavigationTypes.POP);
+    var pendingLocation = this._createLocation(path, state, entry, NavigationTypes.POP);
 
-    if (!this.beforeChangeListener) {
+    this._schedule(pendingLocation, () => {
       applyEntry && applyEntry();
+      var location = this._createLocation(path, state, entry, NavigationTypes.POP);
       this._update(path, location);
-    } else {
-      this._pendingLocation = location;
-      this.beforeChangeListener.call(this, location, () => {
-        if (this._pendingLocation === location){
-          this._pendingLocation = null;
-          applyEntry && applyEntry();
-          this._update(path, location);
-          return true;
-        }
-        return false;
-      });
-    }
+    });
   }
 
   createRandomKey() {
@@ -125,22 +118,28 @@ class History {
     return key;
   }
 
-  pushState(state, path) {
+  _schedule(location, done) {
     if (!this.beforeChangeListener) {
-      this._doPushState(state, path);
+      done();
     } else {
-      var pendingLocation = this._createLocation(path, state, null, NavigationTypes.PUSH);
-      this._pendingLocation = pendingLocation;
+      this._pendingLocation = location;
 
-      this.beforeChangeListener.call(this, pendingLocation, () => {
-        if (this._pendingLocation === pendingLocation) {
+      this.beforeChangeListener.call(this, location, () => {
+        if (this._pendingLocation === location) {
           this._pendingLocation = null;
-          this._doPushState(state, path);
+          done();
           return true;
         }
         return false;
       });
     }
+  }
+
+  pushState(state, path) {
+    var pendingLocation = this._createLocation(path, state, null, NavigationTypes.PUSH);
+    this._schedule(pendingLocation, () => {
+      this._doPushState(state, path)
+    });
   }
 
   _doPushState(state, path) {
@@ -164,21 +163,10 @@ class History {
   }
 
   replaceState(state, path) {
-    if (!this.beforeChangeListener) {
+    var pendingLocation = this._createLocation(path, state, null, NavigationTypes.REPLACE);
+    this._schedule(pendingLocation, () => {
       this._doReplaceState(state, path);
-    } else {
-      var pendingLocation = this._createLocation(path, state, null, NavigationTypes.REPLACE);
-      this._pendingLocation = pendingLocation;
-
-      this.beforeChangeListener.call(this, pendingLocation, () => {
-        if (this._pendingLocation === pendingLocation) {
-          this._pendingLocation = null;
-          this._doReplaceState(state, path);
-          return true;
-        }
-        return false;
-      });
-    }
+    });
   }
 
   _doReplaceState(state, path) {
