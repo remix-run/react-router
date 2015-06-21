@@ -118,6 +118,26 @@ class History {
     return key;
   }
 
+  canUpdateState() {
+    return typeof this.readState === 'function'
+      && typeof this.saveState === 'function'
+      && this.location
+      && this.location.state
+      && this.location.state.key;
+  }
+
+  updateState(extraState) {
+    invariant(
+      this.canUpdateState(),
+      '%s is unable to update state right now',
+      this.constructor.name
+    );
+
+    var key = this.location.state.key;
+    var state = this.readState(key);
+    this.saveState(key, { ...state, ...extraState });
+  }
+
   _schedule(location, done) {
     if (!this.beforeChangeListener) {
       done();

@@ -67,12 +67,9 @@ class DOMHistory extends History {
   }
 
   pushState(state, path) {
-    var location = this.location;
-    if (location && location.state && location.state.key) {
-      var key = location.state.key;
-      var curState = this.readState(key);
-      var scroll = this.getScrollPosition();
-      this.saveState(key, {...curState, ...scroll});
+    if (this.canUpdateState()) {
+      var scrollPosition = this.getScrollPosition();
+      this.updateState(scrollPosition);
     }
 
     super.pushState(state, path);
