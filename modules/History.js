@@ -91,10 +91,9 @@ class History {
 
     var pendingLocation = this._createLocation(path, state, entry, NavigationTypes.POP);
 
-    this._schedule(pendingLocation, () => {
+    this.beforeChange(pendingLocation, () => {
       applyEntry && applyEntry();
-      var location = this._createLocation(path, state, entry, NavigationTypes.POP);
-      this._update(path, location);
+      this._update(path, pendingLocation);
     });
   }
 
@@ -138,7 +137,7 @@ class History {
     this.saveState(key, { ...state, ...extraState });
   }
 
-  _schedule(location, done) {
+  beforeChange(location, done) {
     if (!this.beforeChangeListener) {
       done();
     } else {
@@ -161,7 +160,7 @@ class History {
 
   pushState(state, path) {
     var pendingLocation = this._createLocation(path, state, null, NavigationTypes.PUSH);
-    this._schedule(pendingLocation, () => {
+    this.beforeChange(pendingLocation, () => {
       this._doPushState(state, path)
     });
   }
@@ -188,7 +187,7 @@ class History {
 
   replaceState(state, path) {
     var pendingLocation = this._createLocation(path, state, null, NavigationTypes.REPLACE);
-    this._schedule(pendingLocation, () => {
+    this.beforeChange(pendingLocation, () => {
       this._doReplaceState(state, path);
     });
   }

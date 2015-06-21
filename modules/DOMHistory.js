@@ -1,5 +1,6 @@
 import History from './History';
 import { getWindowScrollPosition } from './DOMUtils';
+import NavigationTypes from './NavigationTypes';
 
 /**
  * A history interface that assumes a DOM environment.
@@ -56,6 +57,16 @@ class DOMHistory extends History {
     return null;
   }
 
+  beforeChange(location, done) {
+    super.beforeChange(location, () => {
+      if (location.navigationType === NavigationTypes.PUSH && this.canUpdateState()) {
+        var scrollPosition = this.getScrollPosition();
+        this.updateState(scrollPosition);
+      }
+      done();
+    });
+  }
+
   handleBeforeUnload(event) {
     var message = this.beforeChangeListener.call(this);
 
@@ -64,15 +75,6 @@ class DOMHistory extends History {
       (event || window.event).returnValue = message;
       return message;
     }
-  }
-
-  pushState(state, path) {
-    if (this.canUpdateState()) {
-      var scrollPosition = this.getScrollPosition();
-      this.updateState(scrollPosition);
-    }
-
-    super.pushState(state, path);
   }
 
 }
