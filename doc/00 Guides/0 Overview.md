@@ -162,7 +162,7 @@ var routes = {
   ]
 };
 
-React.render(<Router history={new HashHistory()} children={routes}/>, document.body):
+React.render(<Router history={new HashHistory()} children={routes}/>, document.body);
 ```
 
 Adding more UI
