@@ -105,8 +105,8 @@ var Index = React.createClass({
 React.render((
   <Router history={new HashHistory} createElement={AsyncProps.createElement}>
     <Route component={App}>
-      <Route path="/" component={Index}>
-      <Route path="contact/:id" component={Contact}/>
+      <Route path="/" component={Index} />
+      <Route path="contact/:id" component={Contact} />
     </Route>
   </Router>
 ), document.getElementById('example'));
