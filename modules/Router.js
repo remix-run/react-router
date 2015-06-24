@@ -138,7 +138,7 @@ var Router = React.createClass({
             'You may not abort the initial transition'
           );
 
-          this.handleAbort(reason);
+          this.handleAbort(transition.abortReason);
         }
       } else if (state == null) {
         warning(false, 'Location "%s" did not match any routes', location.pathname);
