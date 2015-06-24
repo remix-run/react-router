@@ -1,6 +1,6 @@
 import React from 'react';
 import invariant from 'invariant';
-import { stripLeadingSlashes, stringifyQuery } from './URLUtils';
+import { stripLeadingSlashes, makePath } from './URLUtils';
 
 var { func, object } = React.PropTypes;
 
@@ -31,16 +31,6 @@ function queryIsActive(query, activeQuery) {
 
 var RouterContextMixin = {
 
-  propTypes: {
-    stringifyQuery: func.isRequired
-  },
-
-  getDefaultProps() {
-    return {
-      stringifyQuery
-    };
-  },
-
   childContextTypes: {
     router: object.isRequired
   },
@@ -55,15 +45,7 @@ var RouterContextMixin = {
    * Returns a full URL path from the given pathname and query.
    */
   makePath(pathname, query) {
-    if (query) {
-      if (typeof query !== 'string')
-        query = this.props.stringifyQuery(query);
-
-      if (query !== '')
-        return pathname + '?' + query;
-    }
-
-    return pathname;
+    return makePath(pathname, query);
   },
 
   /**
@@ -79,7 +61,7 @@ var RouterContextMixin = {
 
     return path;
   },
- 
+
   /**
    * Pushes a new Location onto the history stack.
    */
@@ -91,7 +73,7 @@ var RouterContextMixin = {
       'Router#transitionTo is client-side only (needs history)'
     );
 
-    history.pushState(state, this.makePath(pathname, query));
+    history.transitionTo(pathname, query, state);
   },
 
   /**
@@ -105,7 +87,7 @@ var RouterContextMixin = {
       'Router#replaceWith is client-side only (needs history)'
     );
 
-    history.replaceState(state, this.makePath(pathname, query));
+    history.replaceWith(pathname, query, state);
   },
 
   /**
@@ -137,7 +119,7 @@ var RouterContextMixin = {
   goForward() {
     this.go(1);
   },
- 
+
   /**
    * Returns true if a <Link> to the given pathname/query combination is
    * currently active.
