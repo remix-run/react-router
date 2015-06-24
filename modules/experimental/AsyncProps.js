@@ -6,8 +6,7 @@ var contextTypes = {
   asyncProps: shape({
     reloadComponent: func,
     propsArray: array,
-    componentsArray: array,
-    routerState: object
+    componentsArray: array
   })
 };
 
@@ -189,8 +188,7 @@ var AsyncProps = React.createClass({
     return {
       asyncProps: Object.assign({
         reloadComponent: this.reloadComponent,
-        loading: this.state.previousProps !== null,
-        routerState: this.state.previousProps || this.props
+        loading: this.state.previousProps !== null
       }, this.state.asyncProps),
     };
   },
