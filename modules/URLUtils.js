@@ -7,6 +7,18 @@ export function stringifyQuery(query) {
   return qs.stringify(query, { arrayFormat: 'brackets' });
 }
 
+export function makePath(pathname, query) {
+  if (query) {
+    if (typeof query !== 'string')
+      query = stringifyQuery(query);
+
+    if (query !== '')
+      return pathname + '?' + query;
+  }
+
+  return pathname;
+}
+
 var queryMatcher = /\?([\s\S]*)$/;
 
 export function getPathname(path) {

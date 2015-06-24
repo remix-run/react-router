@@ -1,5 +1,5 @@
 import invariant from 'invariant';
-import { getPathname, getQueryString, parseQueryString } from './URLUtils';
+import { getPathname, getQueryString, parseQueryString, stringifyQuery, makePath } from './URLUtils';
 import Location from './Location';
 
 var RequiredHistorySubclassMethods = [ 'pushState', 'replaceState', 'go' ];
@@ -29,6 +29,7 @@ class History {
     }, this);
 
     this.parseQueryString = options.parseQueryString || parseQueryString;
+    this.stringifyQuery = options.stringifyQuery || stringifyQuery;
     this.changeListeners = [];
     this.location = null;
   }
@@ -46,6 +47,27 @@ class History {
     this.changeListeners = this.changeListeners.filter(function (li) {
       return li !== listener;
     });
+  }
+
+  /**
+   * Returns a full URL path from the given pathname and query.
+   */
+  makePath(pathname, query) {
+    return makePath(pathname, query);
+  }
+
+  /**
+   * Pushes a new Location onto the history stack.
+   */
+  transitionTo(pathname, query, state=null) {
+    this.pushState(state, this.makePath(pathname, query));
+  }
+
+  /**
+   * Replaces the current Location on the history stack.
+   */
+  replaceWith(pathname, query, state=null) {
+    this.replaceState(state, this.makePath(pathname, query));
   }
 
   back() {
