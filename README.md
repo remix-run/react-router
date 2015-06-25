@@ -118,7 +118,7 @@ React.render((
   <Router history={new BrowserHistory}>
     <Route path="/" component={App}>
       <Route path="about" component={About}/>
-      <Route path="users" component={Users} indexComponent={RecentUsers}>
+      <Route path="users" component={Users}>
         <Route path="/user/:userId" component={User}/>
       </Route>
       <Route path="*" component={NoMatch}/>
