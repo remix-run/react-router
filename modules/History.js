@@ -84,7 +84,7 @@ class History {
     this._pendingLocation = null;
   }
 
-  handlePop(path, entry={}, applyEntry=null) {
+  handlePop(path, entry={}) {
     var state = null;
     if (entry.key && typeof this.readState === 'function')
       state = this.readState(entry.key);
@@ -92,7 +92,6 @@ class History {
     var pendingLocation = this._createLocation(path, state, entry, NavigationTypes.POP);
 
     this.beforeChange(pendingLocation, () => {
-      applyEntry && applyEntry();
       this._update(path, pendingLocation);
     });
   }
