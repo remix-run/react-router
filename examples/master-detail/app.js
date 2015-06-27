@@ -1,5 +1,5 @@
 import React, { findDOMNode } from 'react';
-import HashHistory from 'react-router/lib/HashHistory';
+import { history } from 'react-router/lib/HashHistory';
 import { Router, Navigation, Route, Link } from 'react-router';
 import ContactStore from './ContactStore';
 
@@ -150,7 +150,7 @@ var NotFound = React.createClass({
 });
 
 React.render((
-  <Router history={new HashHistory}>
+  <Router history={history}>
     <Route component={App}>
       <Route path="/" component={Index}/>
       <Route path="contact/new" component={NewContact}/>

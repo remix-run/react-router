@@ -1,6 +1,6 @@
 import React, { findDOMNode } from 'react';
 import { Router, Route, Link, Navigation, TransitionHook } from 'react-router';
-import HashHistory from 'react-router/lib/HashHistory';
+import { history } from 'react-router/lib/HashHistory';
 
 var App = React.createClass({
   render() {
@@ -57,7 +57,7 @@ var Form = React.createClass({
 });
 
 React.render((
-  <Router history={new HashHistory}>
+  <Router history={history}>
     <Route path="/" component={App}>
       <Route path="dashboard" component={Dashboard}/>
       <Route path="form" component={Form}/>

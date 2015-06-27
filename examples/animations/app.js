@@ -1,5 +1,5 @@
 import React, { cloneElement } from 'react/addons';
-import HashHistory from 'react-router/lib/HashHistory';
+import { history } from 'react-router/lib/HashHistory';
 import { Router, Route, Link } from 'react-router';
 
 var { CSSTransitionGroup } = React.addons;
@@ -46,7 +46,7 @@ var Page2 = React.createClass({
 
 
 React.render((
-  <Router history={new HashHistory}>
+  <Router history={history}>
     <Route path="/" component={App}>
       <Route path="page1" component={Page1} />
       <Route path="page2" component={Page2} />
