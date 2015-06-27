@@ -108,7 +108,7 @@ class BrowserHistory extends DOMHistory {
     }
   }
 
-  static history() {
+  static get history() {
     instance = instance || new BrowserHistory();
     return instance;
   }

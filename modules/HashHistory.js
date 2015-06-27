@@ -169,7 +169,7 @@ class HashHistory extends DOMHistory {
     return '#' + path;
   }
 
-  static history() {
+  static get history() {
     instance = instance || new HashHistory();
     return instance;
   }
