@@ -33,11 +33,10 @@ Normal usage
 
 ```js
 import { Router } from 'react-router';
-import HashHistory from 'react-router/lib/HashHistory';
-var history = new HashHistory();
+import { history } from 'react-router/lib/HashHistory';
 
 React.render((
-  <Router history={ history }>
+  <Router history={history()}>
     {/* ... */}
   </Router>
 ), document.body);
@@ -62,4 +61,3 @@ React.render((
 ```
 
   [Histories]:#TODO
-

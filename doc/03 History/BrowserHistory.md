@@ -43,15 +43,13 @@ Example
 
 ```js
 import { Router } from 'react-router';
-import BrowserHistory from 'react-router/lib/BrowserHistory';
-var history = new BrowserHistory();
+import { history } from 'react-router/lib/BrowserHistory';
 
 React.render((
-  <Router history={ history }>
+  <Router history={ history() }>
     {/* ... */}
   </Router>
 ), document.body);
 ```
 
   [Histories]:#TODO
-

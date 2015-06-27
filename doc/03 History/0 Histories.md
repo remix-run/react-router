@@ -3,8 +3,8 @@
 an instance of one with your own options for query parsing.
 
 ```js
-import History from 'react-router/lib/BrowserHistory';
-<Router history={History}/>
+import { history } from 'react-router/lib/BrowserHistory';
+<Router history={history()}/>
 ```
 
 If you need to do your own query parsing:
