@@ -32,7 +32,7 @@
     "babel": "^5.4.7",
     "babel-core": "^5.4.7",
     "babel-loader": "^5.0.0",
-    "babel-plugin-object-assign": "^1.1.0",
+    "babel-plugin-object-assign": "^1.2.0",
     "bundle-loader": "^0.5.2",
     "events": "1.0.2",
     "expect": "^1.6.0",
