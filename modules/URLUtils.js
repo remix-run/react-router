@@ -117,7 +117,7 @@ export function matchPattern(pattern, pathname) {
   var remainingPathname, paramValues;
   if (match != null) {
     paramValues = Array.prototype.slice.call(match, 1).map(function (v) {
-      return v != null ? decodeURIComponent(v) : v;
+      return v != null ? decodeURIComponent(v.replace(/\+/g, '%20')) : v;
     });
 
     if (captureRemaining) {
@@ -177,7 +177,7 @@ export function formatPattern(pattern, params) {
       );
 
       if (paramValue != null)
-        pathname += encodeURI(paramValue);
+        pathname += encodeURI(paramValue).replace(/%20/g, '+');
     } else if (token === '(') {
       parenCount += 1;
     } else if (token === ')') {
@@ -193,7 +193,7 @@ export function formatPattern(pattern, params) {
       );
 
       if (paramValue != null)
-        pathname += encodeURIComponent(paramValue);
+        pathname += encodeURIComponent(paramValue).replace(/%20/g, '+');
     } else {
       pathname += token;
     }

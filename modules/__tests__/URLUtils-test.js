@@ -245,7 +245,7 @@ describe('formatPattern', function () {
 
     describe('and some params have special URL encoding', function () {
       it('returns the correct path', function () {
-        expect(formatPattern(pattern, { id: 'one, two' })).toEqual('comments/one%2C%20two/edit');
+        expect(formatPattern(pattern, { id: 'one, two' })).toEqual('comments/one%2C+two/edit');
       });
     });
 
