@@ -4,6 +4,7 @@ import NavigationTypes from './NavigationTypes';
 import { getHashPath, replaceHashPath } from './DOMUtils';
 import { isAbsolutePath } from './URLUtils';
 
+var instance = null;
 var DefaultQueryKey = '_qk';
 
 function ensureSlash() {
@@ -34,7 +35,7 @@ function saveState(path, queryKey, state) {
 function readState(path, queryKey) {
   var sessionKey = getQueryStringValueFromPath(path, queryKey);
   var json = sessionKey && window.sessionStorage.getItem(sessionKey);
-  
+
   if (json) {
     try {
       return JSON.parse(json);
@@ -168,6 +169,10 @@ class HashHistory extends DOMHistory {
     return '#' + path;
   }
 
+  static history() {
+    instance = instance || new HashHistory();
+    return instance;
+  }
 }
 
 export default HashHistory;

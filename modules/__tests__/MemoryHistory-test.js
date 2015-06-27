@@ -40,7 +40,7 @@ describe('MemoryHistory', function () {
     it('cannot go forward', function () {
       expect(history.canGoForward()).toBe(false);
     });
- 
+
     describe('and then replacing that path', function () {
       beforeEach(function () {
         history.replaceState(null, '/replace');

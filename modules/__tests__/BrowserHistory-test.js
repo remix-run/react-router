@@ -1,6 +1,7 @@
 import describeHistory from './describeHistory';
-import BrowserHistory from '../BrowserHistory';
+import BrowserHistory, { history } from '../BrowserHistory';
 
 describe('BrowserHistory', function () {
   describeHistory(new BrowserHistory);
+  describeHistory(history());
 });
