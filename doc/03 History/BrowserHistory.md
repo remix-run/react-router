@@ -46,7 +46,7 @@ import { Router } from 'react-router';
 import { history } from 'react-router/lib/BrowserHistory';
 
 React.render((
-  <Router history={ history() }>
+  <Router history={ history }>
     {/* ... */}
   </Router>
 ), document.body);

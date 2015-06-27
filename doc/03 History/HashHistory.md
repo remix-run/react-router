@@ -36,7 +36,7 @@ import { Router } from 'react-router';
 import { history } from 'react-router/lib/HashHistory';
 
 React.render((
-  <Router history={history()}>
+  <Router history={history}>
     {/* ... */}
   </Router>
 ), document.body);

@@ -4,7 +4,7 @@ an instance of one with your own options for query parsing.
 
 ```js
 import { history } from 'react-router/lib/BrowserHistory';
-<Router history={history()}/>
+<Router history={history}/>
 ```
 
 If you need to do your own query parsing:
