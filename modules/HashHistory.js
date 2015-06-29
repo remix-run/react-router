@@ -4,7 +4,6 @@ import NavigationTypes from './NavigationTypes';
 import { getHashPath, replaceHashPath } from './DOMUtils';
 import { isAbsolutePath } from './URLUtils';
 
-var instance = null;
 var DefaultQueryKey = '_qk';
 
 function ensureSlash() {
@@ -168,11 +167,7 @@ class HashHistory extends DOMHistory {
   makeHref(path) {
     return '#' + path;
   }
-
-  static get history() {
-    instance = instance || new HashHistory();
-    return instance;
-  }
 }
 
+export var history = new HashHistory;
 export default HashHistory;
