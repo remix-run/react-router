@@ -1,5 +1,5 @@
 import History from './History';
-import { getWindowScrollPosition } from './DOMUtils';
+import { addEventListener, removeEventListener, getWindowScrollPosition } from './DOMUtils';
 import NavigationTypes from './NavigationTypes';
 
 /**
@@ -14,21 +14,11 @@ class DOMHistory extends History {
 
   setup(path, entry) {
     super.setup(path, entry);
-
-    if (window.addEventListener) {
-      window.addEventListener('beforeunload', this.handleBeforeUnload);
-    } else {
-      window.attachEvent('onbeforeunload', this.handleBeforeUnload);
-    }
+    addEventListener(window, 'beforeunload', this.handleBeforeUnload);
   }
 
   teardown() {
-    if (window.removeEventListener) {
-      window.removeEventListener('beforeunload', this.handleBeforeUnload);
-    } else {
-      window.detachEvent('onbeforeunload', this.handleBeforeUnload);
-    }
-
+    removeEventListener(window, 'beforeunload', this.handleBeforeUnload);
     super.teardown();
   }
 

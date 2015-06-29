@@ -1,6 +1,6 @@
 import warning from 'warning';
 import DOMHistory from './DOMHistory';
-import { getHashPath, replaceHashPath } from './DOMUtils';
+import { addEventListener, removeEventListener, getHashPath, replaceHashPath } from './DOMUtils';
 import { isAbsolutePath } from './URLUtils';
 
 var DefaultQueryKey = '_qk';
@@ -58,22 +58,14 @@ class HashHistory extends DOMHistory {
 
     var path = getHashPath();
     var key = getQueryStringValueFromPath(path, this.queryKey);
+
     super.setup(path, { key });
 
-    if (window.addEventListener) {
-      window.addEventListener('hashchange', this.handleHashChange, false);
-    } else {
-      window.attachEvent('onhashchange', this.handleHashChange);
-    }
+    addEventListener(window, 'hashchange', this.handleHashChange);
   }
 
   teardown() {
-    if (window.removeEventListener) {
-      window.removeEventListener('hashchange', this.handleHashChange, false);
-    } else {
-      window.detachEvent('onhashchange', this.handleHashChange);
-    }
-
+    removeEventListener(window, 'hashchange', this.handleHashChange);
     super.teardown();
   }
 

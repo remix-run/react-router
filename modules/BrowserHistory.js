@@ -1,5 +1,5 @@
 import DOMHistory from './DOMHistory';
-import { getWindowPath, supportsHistory } from './DOMUtils';
+import { addEventListener, removeEventListener, getWindowPath, supportsHistory } from './DOMUtils';
 
 /**
  * A history implementation for DOM environments that support the
@@ -30,20 +30,11 @@ class BrowserHistory extends DOMHistory {
 
     super.setup(path, { key });
 
-    if (window.addEventListener) {
-      window.addEventListener('popstate', this.handlePopState, false);
-    } else {
-      window.attachEvent('onpopstate', this.handlePopState);
-    }
+    addEventListener(window, 'popstate', this.handlePopState);
   }
 
   teardown() {
-    if (window.removeEventListener) {
-      window.removeEventListener('popstate', this.handlePopState, false);
-    } else {
-      window.detachEvent('onpopstate', this.handlePopState);
-    }
-
+    removeEventListener(window, 'popstate', this.handlePopState);
     super.teardown();
   }
 
