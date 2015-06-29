@@ -59,7 +59,7 @@ by the parent route component with `this.props[name]`.
 <App main={<Users/>} sidebar={<UsersSidebar/>}/>
 <App main={<Groups/>} sidebar={<GroupsSidebar/>}/>
 
-// So with the router its looks like this:
+// So with the router it looks like this:
 var routes = (
   <Route component={App}>
     <Route path="groups" components={{main: Groups, sidebar: GroupsSidebar}}/>
