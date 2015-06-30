@@ -24,7 +24,7 @@ describe('Scroll management', function () {
 
     Inbox = React.createClass({
       render() {
-        return <p>This is the inbox.</p>;
+        return <p style={{padding: '100px 3000px 3000px 100px'}}>This is the inbox.</p>;
       }
     });
 
