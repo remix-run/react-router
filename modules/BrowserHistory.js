@@ -105,7 +105,7 @@ class BrowserHistory extends DOMHistory {
       window.location.replace(path);
     }
   }
-
 }
 
+export var history = new BrowserHistory;
 export default BrowserHistory;

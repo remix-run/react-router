@@ -111,7 +111,7 @@ Let's refactor our app to use React Router.
 // first we import some components
 import { Router, Route, Link } from 'react-router';
 // the histories are imported separately for smaller builds
-import HashHistory from 'react-router/lib/HashHistory';
+import { history } from 'react-router/lib/HashHistory';
 
 // ...
 
@@ -141,7 +141,7 @@ var App = React.createClass({
 // Finally we render a `Router` component with some `Route`s, it'll do all
 // the fancy routing stuff for us.
 React.render((
-  <Router history={new HashHistory}>
+  <Router history={history}>
     <Route path="/" component={App}>
       <Route path="about" component={About}/>
       <Route path="inbox" component={Inbox}/>
@@ -162,7 +162,7 @@ var routes = {
   ]
 };
 
-React.render(<Router history={new HashHistory} children={routes}/>, document.body);
+React.render(<Router history={history} children={routes}/>, document.body);
 ```
 
 Adding more UI
@@ -191,7 +191,7 @@ var Inbox = React.createClass({
 });
 
 React.render((
-  <Router history={new HashHistory}>
+  <Router history={history}>
     <Route component={App}>
       <Route path="about" component={About}/>
       <Route path="inbox" component={Inbox}>
@@ -230,4 +230,3 @@ var Message = React.createClass({
 That's the gist of React Router. Application UIs are boxes inside of
 boxes inside of boxes; now you can keep those boxes in sync with the
 URL.
-

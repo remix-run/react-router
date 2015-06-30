@@ -1,5 +1,5 @@
 import React from 'react';
-import HashHistory from 'react-router/lib/HashHistory';
+import { history } from 'react-router/lib/HashHistory';
 import { Router, Route, Link, Redirect } from 'react-router';
 
 var App = React.createClass({
@@ -47,7 +47,7 @@ var Task = React.createClass({
 });
 
 React.render((
-  <Router history={new HashHistory}>
+  <Router history={history}>
     <Route path="/" component={App}>
       <Route path="user/:userID" component={User}>
         <Route path="tasks/:taskID" component={Task}/>

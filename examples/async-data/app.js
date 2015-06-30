@@ -1,5 +1,5 @@
 import React from 'react';
-import HashHistory from 'react-router/lib/HashHistory';
+import { history } from 'react-router/lib/HashHistory';
 import { Router, Route, Link, Navigation } from 'react-router';
 import { loadContacts, loadContact, createContact } from './utils';
 import AsyncProps from 'react-router/lib/experimental/AsyncProps';
@@ -106,7 +106,7 @@ var Index = React.createClass({
 });
 
 React.render((
-  <Router history={new HashHistory} createElement={AsyncProps.createElement}>
+  <Router history={history} createElement={AsyncProps.createElement}>
     <Route component={AsyncProps} renderInitialLoad={() => <Spinner/> }>
       <Route component={App}>
         <Route path="/" component={Index}/>
