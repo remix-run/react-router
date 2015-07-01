@@ -1,4 +1,4 @@
-Available configurations:
+Available path configurations:
 
 ```js
 <Router ...>
@@ -11,3 +11,36 @@ Available configurations:
   </Route>
 </Router>
 ```
+
+### Inside parent
+TODO
+
+### Direct to root path
+TODO
+
+### Parameters
+URL Parameters, in the form of `http://server/{PARAM_NAME}` are declared in the form of `:paramName`. a colon and then the parameter name.
+
+Example:
+
+```js
+class User extends React.Component {
+  render() {
+    return (
+      <div>
+        access the user id: { this.props.params.userId }
+      </div>
+    )
+  }
+}
+
+React.render(
+  <Router ...>
+    <Route path=':userId' component={ User } />
+  </Router>,
+  document.getElementById('app')
+)
+```
+
+### Optional parameters
+TODO
