@@ -1,0 +1,1055 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8"/><title>React Router Documentation</title><link rel="stylesheet" href="/react-router/styles.css"/><link rel="stylesheet" href="/react-router/syntax.css"/></head><body><main class="Main"><div class="Main__Content"><center><img src="/react-router/img/vertical.png" width="367" style="margin-bottom:40px;"/></center><p>React Router is a complete routing solution designed specifically for <a href="https://facebook.github.io/react">React.js</a>. It painlessly synchronizes the components of your application with the URL, with first-class support for nesting, transitions, and server side rendering.</p><p><a href="https://github.com/rackt/react-router">Contribute on Github.</a></p><section><article class="Doc"><h1 class="Heading" id="Overview"><a class="HeadingLink" href="#Overview">Overview</a><span class="CategoryName">Guides</span></h1><div><p>To illustrate the problems React Router is going to solve for you, let’s build a
+small application without it.</p>
+<h2 id="without-react-router">Without React Router</h2>
+<pre><code class="lang-js"><div class="highlight"><pre><span class="kd">var</span> <span class="nx">About</span> <span class="o">=</span> <span class="nx">React</span><span class="p">.</span><span class="nx">createClass</span><span class="p">({</span><span class="cm">/*...*/</span><span class="p">});</span>
+<span class="kd">var</span> <span class="nx">Inbox</span> <span class="o">=</span> <span class="nx">React</span><span class="p">.</span><span class="nx">createClass</span><span class="p">({</span><span class="cm">/*...*/</span><span class="p">});</span>
+<span class="kd">var</span> <span class="nx">Home</span> <span class="o">=</span> <span class="nx">React</span><span class="p">.</span><span class="nx">createClass</span><span class="p">({</span><span class="cm">/*...*/</span><span class="p">});</span>
+
+<span class="kd">var</span> <span class="nx">App</span> <span class="o">=</span> <span class="nx">React</span><span class="p">.</span><span class="nx">createClass</span><span class="p">({</span>
+  <span class="nx">getInitialState</span> <span class="p">()</span> <span class="p">{</span>
+    <span class="k">return</span> <span class="p">{</span>
+      <span class="nx">route</span><span class="o">:</span> <span class="nb">window</span><span class="p">.</span><span class="nx">location</span><span class="p">.</span><span class="nx">hash</span><span class="p">.</span><span class="nx">substr</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span>
+    <span class="p">};</span>
+  <span class="p">},</span>
+
+  <span class="nx">componentDidMount</span> <span class="p">()</span> <span class="p">{</span>
+    <span class="nb">window</span><span class="p">.</span><span class="nx">addEventListener</span><span class="p">(</span><span class="s1">&#39;hashchange&#39;</span><span class="p">,</span> <span class="p">()</span> <span class="o">=&gt;</span> <span class="p">{</span>
+      <span class="k">this</span><span class="p">.</span><span class="nx">setState</span><span class="p">({</span>
+        <span class="nx">route</span><span class="o">:</span> <span class="nb">window</span><span class="p">.</span><span class="nx">location</span><span class="p">.</span><span class="nx">hash</span><span class="p">.</span><span class="nx">substr</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span>
+      <span class="p">});</span>
+    <span class="p">});</span>
+  <span class="p">},</span>
+
+  <span class="nx">render</span> <span class="p">()</span> <span class="p">{</span>
+    <span class="kd">var</span> <span class="nx">Child</span><span class="p">;</span>
+    <span class="k">switch</span> <span class="p">(</span><span class="k">this</span><span class="p">.</span><span class="nx">state</span><span class="p">.</span><span class="nx">route</span><span class="p">)</span> <span class="p">{</span>
+      <span class="k">case</span> <span class="s1">&#39;/about&#39;</span><span class="o">:</span> <span class="nx">Child</span> <span class="o">=</span> <span class="nx">About</span><span class="p">;</span> <span class="k">break</span><span class="p">;</span>
+      <span class="k">case</span> <span class="s1">&#39;/inbox&#39;</span><span class="o">:</span> <span class="nx">Child</span> <span class="o">=</span> <span class="nx">Inbox</span><span class="p">;</span> <span class="k">break</span><span class="p">;</span>
+      <span class="k">default</span><span class="o">:</span>      <span class="nx">Child</span> <span class="o">=</span> <span class="nx">Home</span><span class="p">;</span>
+    <span class="p">}</span>
+
+    <span class="k">return</span> <span class="p">(</span>
+      <span class="o">&lt;</span><span class="nx">div</span><span class="o">&gt;</span>
+        <span class="o">&lt;</span><span class="nx">h1</span><span class="o">&gt;</span><span class="nx">App</span><span class="o">&lt;</span><span class="err">/h1&gt;</span>
+        <span class="o">&lt;</span><span class="nx">ul</span><span class="o">&gt;</span>
+          <span class="o">&lt;</span><span class="nx">li</span><span class="o">&gt;&lt;</span><span class="nx">a</span> <span class="nx">href</span><span class="o">=</span><span class="s2">&quot;#/about&quot;</span><span class="o">&gt;</span><span class="nx">About</span><span class="o">&lt;</span><span class="err">/a&gt;&lt;/li&gt;</span>
+          <span class="o">&lt;</span><span class="nx">li</span><span class="o">&gt;&lt;</span><span class="nx">a</span> <span class="nx">href</span><span class="o">=</span><span class="s2">&quot;#/inbox&quot;</span><span class="o">&gt;</span><span class="nx">Inbox</span><span class="o">&lt;</span><span class="err">/a&gt;&lt;/li&gt;</span>
+        <span class="o">&lt;</span><span class="err">/ul&gt;</span>
+        <span class="o">&lt;</span><span class="nx">Child</span><span class="o">/&gt;</span>
+      <span class="o">&lt;</span><span class="err">/div&gt;</span>
+    <span class="p">)</span>
+  <span class="p">}</span>
+<span class="p">});</span>
+
+<span class="nx">React</span><span class="p">.</span><span class="nx">render</span><span class="p">(</span><span class="o">&lt;</span><span class="nx">App</span> <span class="o">/&gt;</span><span class="p">,</span> <span class="nb">document</span><span class="p">.</span><span class="nx">body</span><span class="p">);</span>
+</pre></div>
+
+</code></pre>
+<p>As the hash portion of the URL changes, <code>App</code> will render a different
+<code>&lt;Child/&gt;</code> by branching on <code>this.state.route</code>. Pretty straightforward
+stuff. But it gets complicated fast.</p>
+<p>Imagine now that <code>Inbox</code> has some nested UI at different URLs, maybe
+something like this master detail view:</p>
+<pre><code><div class="highlight"><pre><span class="nx">path</span><span class="o">:</span> <span class="err">/inbox/messages/1234</span>
+
+<span class="o">+---------+------------+------------------------+</span>
+<span class="o">|</span> <span class="nx">About</span>   <span class="o">|</span>    <span class="nx">Inbox</span>   <span class="o">|</span>                        <span class="o">|</span>
+<span class="o">+---------+</span>            <span class="o">+------------------------+</span>
+<span class="o">|</span> <span class="nx">Compose</span>    <span class="nx">Reply</span>    <span class="nx">Reply</span> <span class="nx">All</span>    <span class="nx">Archive</span>      <span class="o">|</span>
+<span class="o">+-----------------------------------------------+</span>
+<span class="o">|</span><span class="nx">Movie</span> <span class="nx">tomorrow</span><span class="o">|</span>                                <span class="o">|</span>
+<span class="o">+--------------+</span>   <span class="nx">Subject</span><span class="o">:</span> <span class="nx">TPS</span> <span class="nx">Report</span>          <span class="o">|</span>
+<span class="o">|</span><span class="nx">TPS</span> <span class="nx">Report</span>        <span class="nx">From</span><span class="o">:</span>    <span class="nx">boss</span><span class="err">@</span><span class="nx">big</span><span class="p">.</span><span class="nx">co</span>         <span class="o">|</span>
+<span class="o">+--------------+</span>                                <span class="o">|</span>
+<span class="o">|</span><span class="nx">New</span> <span class="nx">Pull</span> <span class="nx">Reque</span><span class="o">|</span>   <span class="nx">So</span> <span class="p">...</span>                       <span class="o">|</span>
+<span class="o">+--------------+</span>                                <span class="o">|</span>
+<span class="o">|</span><span class="p">...</span>           <span class="o">|</span>                                <span class="o">|</span>
+<span class="o">+--------------+--------------------------------+</span>
+</pre></div>
+
+</code></pre><p>And maybe stats page when not viewing a message:</p>
+<pre><code><div class="highlight"><pre><span class="nx">path</span><span class="o">:</span> <span class="err">/inbox</span>
+
+<span class="o">+---------+------------+------------------------+</span>
+<span class="o">|</span> <span class="nx">About</span>   <span class="o">|</span>    <span class="nx">Inbox</span>   <span class="o">|</span>                        <span class="o">|</span>
+<span class="o">+---------+</span>            <span class="o">+------------------------+</span>
+<span class="o">|</span> <span class="nx">Compose</span>    <span class="nx">Reply</span>    <span class="nx">Reply</span> <span class="nx">All</span>    <span class="nx">Archive</span>      <span class="o">|</span>
+<span class="o">+-----------------------------------------------+</span>
+<span class="o">|</span><span class="nx">Movie</span> <span class="nx">tomorrow</span><span class="o">|</span>                                <span class="o">|</span>
+<span class="o">+--------------+</span>   <span class="mi">10</span> <span class="nx">Unread</span> <span class="nx">Messages</span>           <span class="o">|</span>
+<span class="o">|</span><span class="nx">TPS</span> <span class="nx">Report</span>    <span class="o">|</span>   <span class="mi">22</span> <span class="nx">drafts</span>                    <span class="o">|</span>
+<span class="o">+--------------+</span>                                <span class="o">|</span>
+<span class="o">|</span><span class="nx">New</span> <span class="nx">Pull</span> <span class="nx">Reque</span><span class="o">|</span>                                <span class="o">|</span>
+<span class="o">+--------------+</span>                                <span class="o">|</span>
+<span class="o">|</span><span class="p">...</span>           <span class="o">|</span>                                <span class="o">|</span>
+<span class="o">+--------------+--------------------------------+</span>
+</pre></div>
+
+</code></pre><p>We&#39;d have to make our url parsing a lot more intelligent, and end up
+with a lot of code to figure out which branch of nested components to be
+rendered at any given url: <code>App -&gt; About</code>, <code>App -&gt; Inbox -&gt; Messages -&gt;
+Message</code>, <code>App -&gt; Inbox -&gt; Messages -&gt; Stats</code>, etc.</p>
+<h2 id="with-react-router">With React Router</h2>
+<p>Nested URLs and nested component hierarchy are at the heart of React
+Router&#39;s declarative API. Lots of people like to use JSX to define their
+routes, but you can use plain objects if you want.</p>
+<p>Let&#39;s refactor our app to use React Router.</p>
+<pre><code class="lang-js"><div class="highlight"><pre><span class="c1">// first we import some components</span>
+<span class="kr">import</span> <span class="p">{</span> <span class="nx">Router</span><span class="p">,</span> <span class="nx">Route</span><span class="p">,</span> <span class="nx">Link</span> <span class="p">}</span> <span class="nx">from</span> <span class="s1">&#39;react-router&#39;</span><span class="p">;</span>
+<span class="c1">// the histories are imported separately for smaller builds</span>
+<span class="kr">import</span> <span class="p">{</span> <span class="nx">history</span> <span class="p">}</span> <span class="nx">from</span> <span class="s1">&#39;react-router/lib/HashHistory&#39;</span><span class="p">;</span>
+
+<span class="c1">// ...</span>
+
+<span class="c1">// then we delete a bunch of code from `App` and add some `Link`</span>
+<span class="c1">// components</span>
+<span class="kd">var</span> <span class="nx">App</span> <span class="o">=</span> <span class="nx">React</span><span class="p">.</span><span class="nx">createClass</span><span class="p">({</span>
+  <span class="nx">render</span> <span class="p">()</span> <span class="p">{</span>
+    <span class="k">return</span> <span class="p">(</span>
+      <span class="o">&lt;</span><span class="nx">div</span><span class="o">&gt;</span>
+        <span class="o">&lt;</span><span class="nx">h1</span><span class="o">&gt;</span><span class="nx">App</span><span class="o">&lt;</span><span class="err">/h1&gt;</span>
+        <span class="p">{</span><span class="cm">/* change the &lt;a&gt;s to &lt;Links&gt;s */</span><span class="p">}</span>
+        <span class="o">&lt;</span><span class="nx">ul</span><span class="o">&gt;</span>
+          <span class="o">&lt;</span><span class="nx">li</span><span class="o">&gt;&lt;</span><span class="nx">Link</span> <span class="nx">to</span><span class="o">=</span><span class="s2">&quot;/about&quot;</span><span class="o">&gt;</span><span class="nx">About</span><span class="o">&lt;</span><span class="err">/Link&gt;&lt;/li&gt;</span>
+          <span class="o">&lt;</span><span class="nx">li</span><span class="o">&gt;&lt;</span><span class="nx">Link</span> <span class="nx">to</span><span class="o">=</span><span class="s2">&quot;/inbox&quot;</span><span class="o">&gt;</span><span class="nx">Inbox</span><span class="o">&lt;</span><span class="err">/Link&gt;&lt;/li&gt;</span>
+        <span class="o">&lt;</span><span class="err">/ul&gt;</span>
+
+        <span class="p">{</span><span class="cm">/*</span>
+<span class="cm">          next we replace `&lt;Child&gt;` with `this.props.children`</span>
+<span class="cm">          the router will figure out the children for us</span>
+<span class="cm">        */</span><span class="p">}</span>
+        <span class="p">{</span><span class="k">this</span><span class="p">.</span><span class="nx">props</span><span class="p">.</span><span class="nx">children</span><span class="p">}</span>
+      <span class="o">&lt;</span><span class="err">/div&gt;</span>
+    <span class="p">)</span>
+  <span class="p">}</span>
+<span class="p">});</span>
+
+<span class="c1">// Finally we render a `Router` component with some `Route`s, it&#39;ll do all</span>
+<span class="c1">// the fancy routing stuff for us.</span>
+<span class="nx">React</span><span class="p">.</span><span class="nx">render</span><span class="p">((</span>
+  <span class="o">&lt;</span><span class="nx">Router</span> <span class="nx">history</span><span class="o">=</span><span class="p">{</span><span class="nx">history</span><span class="p">}</span><span class="o">&gt;</span>
+    <span class="o">&lt;</span><span class="nx">Route</span> <span class="nx">path</span><span class="o">=</span><span class="s2">&quot;/&quot;</span> <span class="nx">component</span><span class="o">=</span><span class="p">{</span><span class="nx">App</span><span class="p">}</span><span class="o">&gt;</span>
+      <span class="o">&lt;</span><span class="nx">Route</span> <span class="nx">path</span><span class="o">=</span><span class="s2">&quot;about&quot;</span> <span class="nx">component</span><span class="o">=</span><span class="p">{</span><span class="nx">About</span><span class="p">}</span><span class="o">/&gt;</span>
+      <span class="o">&lt;</span><span class="nx">Route</span> <span class="nx">path</span><span class="o">=</span><span class="s2">&quot;inbox&quot;</span> <span class="nx">component</span><span class="o">=</span><span class="p">{</span><span class="nx">Inbox</span><span class="p">}</span><span class="o">/&gt;</span>
+    <span class="o">&lt;</span><span class="err">/Route&gt;</span>
+  <span class="o">&lt;</span><span class="err">/Router&gt;</span>
+<span class="p">),</span> <span class="nb">document</span><span class="p">.</span><span class="nx">body</span><span class="p">);</span>
+</pre></div>
+
+</code></pre>
+<p>If you&#39;re not digging the JSX route config you can use plain objects:</p>
+<pre><code class="lang-js"><div class="highlight"><pre><span class="kd">var</span> <span class="nx">routes</span> <span class="o">=</span> <span class="p">{</span>
+  <span class="nx">path</span><span class="o">:</span> <span class="s1">&#39;/&#39;</span><span class="p">,</span>
+  <span class="nx">component</span><span class="o">:</span> <span class="nx">App</span><span class="p">,</span>
+  <span class="nx">childRoutes</span><span class="o">:</span> <span class="p">[</span>
+    <span class="p">{</span> <span class="nx">path</span><span class="o">:</span> <span class="s1">&#39;about&#39;</span><span class="p">,</span> <span class="nx">component</span><span class="o">:</span> <span class="nx">About</span> <span class="p">},</span>
+    <span class="p">{</span> <span class="nx">path</span><span class="o">:</span> <span class="s1">&#39;inbox&#39;</span><span class="p">,</span> <span class="nx">component</span><span class="o">:</span> <span class="nx">Inbox</span> <span class="p">},</span>
+  <span class="p">]</span>
+<span class="p">};</span>
+
+<span class="nx">React</span><span class="p">.</span><span class="nx">render</span><span class="p">(</span><span class="o">&lt;</span><span class="nx">Router</span> <span class="nx">history</span><span class="o">=</span><span class="p">{</span><span class="nx">history</span><span class="p">}</span> <span class="nx">children</span><span class="o">=</span><span class="p">{</span><span class="nx">routes</span><span class="p">}</span><span class="o">/&gt;</span><span class="p">,</span> <span class="nb">document</span><span class="p">.</span><span class="nx">body</span><span class="p">);</span>
+</pre></div>
+
+</code></pre>
+<h2 id="adding-more-ui">Adding more UI</h2>
+<p>Alright, now we&#39;re ready to nest the inbox messages inside the inbox UI.</p>
+<pre><code class="lang-js"><div class="highlight"><pre><span class="c1">// Make a new component to render inside of Inbox</span>
+<span class="kd">var</span> <span class="nx">Message</span> <span class="o">=</span> <span class="nx">React</span><span class="p">.</span><span class="nx">createClass</span><span class="p">({</span>
+  <span class="nx">render</span> <span class="p">()</span> <span class="p">{</span>
+    <span class="k">return</span> <span class="o">&lt;</span><span class="nx">h3</span><span class="o">&gt;</span><span class="nx">Message</span><span class="o">&lt;</span><span class="err">/h3&gt;;</span>
+  <span class="p">}</span>
+<span class="p">});</span>
+
+<span class="kd">var</span> <span class="nx">Inbox</span> <span class="o">=</span> <span class="nx">React</span><span class="p">.</span><span class="nx">createClass</span><span class="p">({</span>
+  <span class="nx">render</span> <span class="p">()</span> <span class="p">{</span>
+    <span class="k">return</span> <span class="p">(</span>
+      <span class="o">&lt;</span><span class="nx">div</span><span class="o">&gt;</span>
+        <span class="o">&lt;</span><span class="nx">h2</span><span class="o">&gt;</span><span class="nx">Inbox</span><span class="o">&lt;</span><span class="err">/h2&gt;</span>
+        <span class="p">{</span><span class="cm">/* Render the child route component */</span><span class="p">}</span>
+        <span class="p">{</span><span class="k">this</span><span class="p">.</span><span class="nx">props</span><span class="p">.</span><span class="nx">children</span> <span class="o">||</span> <span class="s2">&quot;Welcome to your Inbox&quot;</span><span class="p">}</span>
+      <span class="o">&lt;</span><span class="err">/div&gt;</span>
+    <span class="p">);</span>
+  <span class="p">}</span>
+<span class="p">});</span>
+
+<span class="nx">React</span><span class="p">.</span><span class="nx">render</span><span class="p">((</span>
+  <span class="o">&lt;</span><span class="nx">Router</span> <span class="nx">history</span><span class="o">=</span><span class="p">{</span><span class="nx">history</span><span class="p">}</span><span class="o">&gt;</span>
+    <span class="o">&lt;</span><span class="nx">Route</span> <span class="nx">component</span><span class="o">=</span><span class="p">{</span><span class="nx">App</span><span class="p">}</span><span class="o">&gt;</span>
+      <span class="o">&lt;</span><span class="nx">Route</span> <span class="nx">path</span><span class="o">=</span><span class="s2">&quot;about&quot;</span> <span class="nx">component</span><span class="o">=</span><span class="p">{</span><span class="nx">About</span><span class="p">}</span><span class="o">/&gt;</span>
+      <span class="o">&lt;</span><span class="nx">Route</span> <span class="nx">path</span><span class="o">=</span><span class="s2">&quot;inbox&quot;</span> <span class="nx">component</span><span class="o">=</span><span class="p">{</span><span class="nx">Inbox</span><span class="p">}</span><span class="o">&gt;</span>
+        <span class="p">{</span><span class="cm">/* Add the route, nested where we want the UI to nest */</span><span class="p">}</span>
+        <span class="o">&lt;</span><span class="nx">Route</span> <span class="nx">path</span><span class="o">=</span><span class="s2">&quot;messages/:id&quot;</span> <span class="nx">component</span><span class="o">=</span><span class="p">{</span><span class="nx">Message</span><span class="p">}</span><span class="o">/&gt;</span>
+      <span class="o">&lt;</span><span class="err">/Route&gt;</span>
+    <span class="o">&lt;</span><span class="err">/Route&gt;</span>
+  <span class="o">&lt;</span><span class="err">/Router&gt;</span>
+<span class="p">),</span> <span class="nb">document</span><span class="p">.</span><span class="nx">body</span><span class="p">);</span>
+</pre></div>
+
+</code></pre>
+<p>Now visits to urls like <code>inbox/messages/Jkei3c32</code> will match the new
+route and nest the UI branch of <code>App -&gt; Inbox -&gt; Message</code>.</p>
+<h2 id="getting-the-url-parameters">Getting the url parameters</h2>
+<p>We&#39;re going to need to know something about the message in order to
+fetch it from the server. Route components get some useful properties
+injected into them when you render, particularly the parameters from the
+dynamic segment of your path. In our case, <code>:id</code>.</p>
+<pre><code class="lang-js"><div class="highlight"><pre><span class="kd">var</span> <span class="nx">Message</span> <span class="o">=</span> <span class="nx">React</span><span class="p">.</span><span class="nx">createClass</span><span class="p">({</span>
+  <span class="nx">componentDidMount</span><span class="o">:</span> <span class="kd">function</span> <span class="p">()</span> <span class="p">{</span>
+    <span class="c1">// from the path `/inbox/messages/:id`</span>
+    <span class="kd">var</span> <span class="nx">id</span> <span class="o">=</span> <span class="k">this</span><span class="p">.</span><span class="nx">props</span><span class="p">.</span><span class="nx">params</span><span class="p">.</span><span class="nx">id</span><span class="p">;</span>
+    <span class="nx">fetchMessage</span><span class="p">(</span><span class="nx">id</span><span class="p">,</span> <span class="kd">function</span> <span class="p">(</span><span class="nx">err</span><span class="p">,</span> <span class="nx">message</span><span class="p">)</span> <span class="p">{</span>
+      <span class="k">this</span><span class="p">.</span><span class="nx">setState</span><span class="p">({</span> <span class="nx">message</span><span class="o">:</span> <span class="nx">message</span> <span class="p">});</span>
+    <span class="p">})</span>
+  <span class="p">},</span>
+  <span class="c1">// ...</span>
+<span class="p">});</span>
+</pre></div>
+
+</code></pre>
+<p>That&#39;s the gist of React Router. Application UIs are boxes inside of
+boxes inside of boxes; now you can keep those boxes in sync with the
+URL.</p>
+</div></article><article class="Doc"><h1 class="Heading" id="Advanced Usage"><a class="HeadingLink" href="#Advanced Usage">Advanced Usage</a><span class="CategoryName">Guides</span></h1><div><p>React Router is great for small sites like <a href="https://reactjs-training.com">React.js
+Training</a> (&quot;React Router brought to you by ...&quot;) but its
+built with websites like <a href="http://facebook.com">facebook</a> and <a href="http://twitter.com">twitter</a> in mind, too.</p>
+<p>The biggest concern for large apps is the amount of JavaScript required
+to boot the app. Large apps should download only the JavaScript required
+to render the current view. Some people call this &quot;code splitting&quot;, you
+split your code up into multiple bundles that are loaded on-demand as
+the visitor navigates around.</p>
+<p>Its important that changes deep down in the application don&#39;t require
+changes all the way up top. Adding a route to the photo viewer should
+not affect the size of the initial JavaScript bundle the user downloads.
+Neither should it cause merge conflicts as multiple teams have their
+fingers in the same, big route configuration file.</p>
+<p>Your router is the perfect place to handle code splitting: its
+responsible for setting up your views.</p>
+<p>React Router does all of its path matching and component resolving
+asynchronously, which allows you to not only load up the components
+lazily, <em>but also lazily load the route configuration</em>. You really only
+need one route definition in your initial bundle, the router will
+resolve the rest on demand.</p>
+<p>Routes can define <code>getChildRoutes</code> and <code>getComponents</code> methods. These
+are asynchronous and only called when needed. We call it &quot;gradual
+matching&quot;. React Router will gradually match the url and fetch only the
+amount of route configuration and components it needs to match the path
+and render.</p>
+<p>Coupled with webpack&#39;s built-in code splitting, a once tireless
+architecture is now simple and declarative, look at this
+route:</p>
+<pre><code class="lang-js"><div class="highlight"><pre><span class="nx">module</span><span class="p">.</span><span class="nx">exports</span> <span class="o">=</span> <span class="p">{</span>
+  <span class="nx">path</span><span class="o">:</span> <span class="s1">&#39;course/:courseId&#39;</span><span class="p">,</span>
+
+  <span class="nx">getChildRoutes</span> <span class="p">(</span><span class="nx">state</span><span class="p">,</span> <span class="nx">cb</span><span class="p">)</span> <span class="p">{</span>
+    <span class="nx">require</span><span class="p">.</span><span class="nx">ensure</span><span class="p">([],</span> <span class="p">(</span><span class="nx">require</span><span class="p">)</span> <span class="o">=&gt;</span> <span class="p">{</span>
+      <span class="nx">cb</span><span class="p">(</span><span class="kc">null</span><span class="p">,</span> <span class="p">[</span>
+        <span class="nx">require</span><span class="p">(</span><span class="s1">&#39;./routes/Announcements&#39;</span><span class="p">),</span>
+        <span class="nx">require</span><span class="p">(</span><span class="s1">&#39;./routes/Assignments&#39;</span><span class="p">),</span>
+        <span class="nx">require</span><span class="p">(</span><span class="s1">&#39;./routes/Grades&#39;</span><span class="p">),</span>
+      <span class="p">])</span>
+    <span class="p">})</span>
+  <span class="p">},</span>
+
+  <span class="nx">getComponents</span> <span class="p">(</span><span class="nx">cb</span><span class="p">)</span> <span class="p">{</span>
+    <span class="nx">require</span><span class="p">.</span><span class="nx">ensure</span><span class="p">([],</span> <span class="p">(</span><span class="nx">require</span><span class="p">)</span> <span class="o">=&gt;</span> <span class="p">{</span>
+      <span class="nx">cb</span><span class="p">(</span><span class="kc">null</span><span class="p">,</span> <span class="nx">require</span><span class="p">(</span><span class="s1">&#39;./components/Course&#39;</span><span class="p">))</span>
+    <span class="p">})</span>
+  <span class="p">}</span>
+<span class="p">};</span>
+</pre></div>
+
+</code></pre>
+<p>Now go look at what hacks you have in place to do this. Just kidding, I
+don&#39;t want to make you sad right now.</p>
+<p>Check out the <a href="/examples/huge-apps">huge apps</a> example in the repository with your web
+inspector open and watch code get loaded in as you navigate around the
+demo.</p>
+</div></article><article class="Doc"><h1 class="Heading" id="Flux"><a class="HeadingLink" href="#Flux">Flux</a><span class="CategoryName">Guides</span></h1><div><h1 id="todo">TODO</h1>
+</div></article><article class="Doc"><h1 class="Heading" id="Path Matching"><a class="HeadingLink" href="#Path Matching">Path Matching</a><span class="CategoryName">Guides</span></h1><div><h1 id="todo">TODO</h1>
+</div></article><article class="Doc"><h1 class="Heading" id="Server Rendering"><a class="HeadingLink" href="#Server Rendering">Server Rendering</a><span class="CategoryName">Guides</span></h1><div><p>Rendering on the server is not much different than rendering in the
+browser. The primary difference is that while on the client we can do
+asynchronous work <em>after</em> rendering, on the server we have to do that
+work <em>before</em> rendering, like path matching and data fetching.</p>
+<p>We&#39;ll start with the client since its pretty simple. The only
+interesting thing is that we are getting some initial data from the
+server render to ensure that the first client render markup matches the
+the markup from the server render. Without the initial data, the markup
+the client creates would differ from what the server sent, and React
+would replace the DOM.</p>
+<pre><code class="lang-js"><div class="highlight"><pre><span class="c1">// client.js</span>
+<span class="kr">import</span> <span class="p">{</span> <span class="nx">Router</span> <span class="p">}</span> <span class="nx">from</span> <span class="s1">&#39;react-router&#39;</span><span class="p">;</span>
+<span class="kr">import</span> <span class="nx">BrowserHistory</span> <span class="nx">from</span> <span class="s1">&#39;react-router/lib/BrowserHistory&#39;</span><span class="p">;</span>
+<span class="kr">import</span> <span class="s1">&#39;./routes&#39;</span> <span class="nx">from</span> <span class="s1">&#39;./routes&#39;</span><span class="p">;</span>
+
+<span class="nx">React</span><span class="p">.</span><span class="nx">render</span><span class="p">(</span><span class="o">&lt;</span><span class="nx">Router</span> <span class="nx">children</span><span class="o">=</span><span class="p">{</span><span class="nx">routes</span><span class="p">}</span><span class="o">/&gt;</span><span class="p">,</span> <span class="nb">document</span><span class="p">.</span><span class="nx">getElementById</span><span class="p">(</span><span class="s1">&#39;app&#39;</span><span class="p">));</span>
+</pre></div>
+
+</code></pre>
+<p>On the server, we need to asynchronously match the routes and fetch data
+first, and then provide the initial state to the router so it render
+synchronously.</p>
+<pre><code class="lang-js"><div class="highlight"><pre><span class="c1">// server.js</span>
+<span class="kr">import</span> <span class="nx">Router</span> <span class="nx">from</span> <span class="s1">&#39;react-router&#39;</span><span class="p">;</span>
+<span class="kr">import</span> <span class="nx">Location</span> <span class="nx">from</span> <span class="s1">&#39;react-router/lib/Location&#39;</span><span class="p">;</span>
+<span class="kr">import</span> <span class="nx">routes</span> <span class="nx">from</span> <span class="s1">&#39;./routes&#39;</span><span class="p">;</span>
+
+<span class="c1">// you&#39;ll want to configure your server to serve up static assets, and</span>
+<span class="c1">// and then handle the rest with React Router</span>
+<span class="nx">serveNonStaticPaths</span><span class="p">((</span><span class="nx">req</span><span class="p">,</span> <span class="nx">res</span><span class="p">)</span> <span class="o">=&gt;</span> <span class="p">{</span>
+  <span class="kd">var</span> <span class="nx">location</span> <span class="o">=</span> <span class="k">new</span> <span class="nx">Location</span><span class="p">(</span><span class="nx">req</span><span class="p">.</span><span class="nx">path</span><span class="p">,</span> <span class="nx">req</span><span class="p">.</span><span class="nx">query</span><span class="p">);</span>
+
+  <span class="nx">Router</span><span class="p">.</span><span class="nx">run</span><span class="p">(</span><span class="nx">routes</span><span class="p">,</span> <span class="nx">location</span><span class="p">,</span> <span class="p">(</span><span class="nx">error</span><span class="p">,</span> <span class="nx">initialState</span><span class="p">,</span> <span class="nx">transition</span><span class="p">)</span> <span class="o">=&gt;</span> <span class="p">{</span>
+    <span class="c1">// do your own data fetching, perhaps using the</span>
+    <span class="c1">// branch of components in the initialState</span>
+    <span class="nx">fetchSomeData</span><span class="p">(</span><span class="nx">initialState</span><span class="p">.</span><span class="nx">components</span><span class="p">,</span> <span class="p">(</span><span class="nx">error</span><span class="p">,</span> <span class="nx">initialData</span><span class="p">)</span> <span class="o">=&gt;</span> <span class="p">{</span>
+      <span class="kd">var</span> <span class="nx">html</span> <span class="o">=</span> <span class="nx">React</span><span class="p">.</span><span class="nx">renderToString</span><span class="p">(</span>
+        <span class="o">&lt;</span><span class="nx">Router</span> <span class="p">{...</span><span class="nx">initialState</span><span class="p">}</span><span class="o">/&gt;</span>
+      <span class="p">);</span>
+      <span class="nx">res</span><span class="p">.</span><span class="nx">send</span><span class="p">(</span><span class="nx">renderFullPage</span><span class="p">(</span><span class="nx">html</span><span class="p">,</span> <span class="nx">initialData</span><span class="p">));</span>
+    <span class="p">});</span>
+  <span class="p">});</span>
+<span class="p">});</span>
+
+<span class="kd">function</span> <span class="nx">renderFullPage</span><span class="p">(</span><span class="nx">html</span><span class="p">,</span> <span class="nx">initialData</span><span class="p">)</span> <span class="p">{</span>
+  <span class="k">return</span> <span class="err">`</span>
+<span class="o">&lt;!</span><span class="nx">doctype</span> <span class="nx">html</span><span class="o">&gt;</span>
+<span class="o">&lt;</span><span class="nx">html</span><span class="o">&gt;</span>
+  <span class="o">&lt;</span><span class="nx">body</span><span class="o">&gt;</span>
+    <span class="o">&lt;</span><span class="nx">div</span> <span class="nx">id</span><span class="o">=</span><span class="s2">&quot;app&quot;</span><span class="o">&gt;</span><span class="nx">$</span><span class="p">{</span><span class="nx">html</span><span class="p">}</span><span class="o">&lt;</span><span class="err">/div&gt;</span>
+    <span class="o">&lt;</span><span class="nx">script</span><span class="o">&gt;</span>
+     <span class="nx">$</span><span class="p">{</span><span class="cm">/* put this here for the client to pick up, you&#39;ll need your</span>
+<span class="cm">          components to pick up this stuff on the first render */</span><span class="p">}</span>
+      <span class="nx">__INITIAL_DATA__</span> <span class="o">=</span> <span class="nx">$</span><span class="p">{</span><span class="nx">JSON</span><span class="p">.</span><span class="nx">stringify</span><span class="p">(</span><span class="nx">initialData</span><span class="p">)};</span>
+    <span class="o">&lt;</span><span class="err">/script&gt;</span>
+  <span class="o">&lt;</span><span class="err">/body&gt;</span>
+<span class="o">&lt;</span><span class="err">/html&gt;</span>
+<span class="err">`</span>
+<span class="p">}</span>
+</pre></div>
+
+</code></pre>
+<h2 id="api-routes">API Routes</h2>
+<p>Sometimes servers function as both the UI server and the api server. Do
+your best to think of them separately.</p>
+<p>While historically we&#39;ve allowed one URL to function as both an API and
+a UI server that branches behavior on the &quot;accepts&quot; header, you&#39;re
+better off just having separate routes.  Might I suggest you namespace
+your api routes with <code>/api/...</code>?</p>
+<p>You could certainly add methods to your React Router routes to handle
+API requests, match the routes, inspect the accepts header, then call
+the methods on your route instead of rendering the components. I was
+about to tell you not to do this, but please do and let us know how it
+goes. Most of us should probably just use the server side router from
+our favorite libraries for now, though.</p>
+</div></article></section><section><article class="Doc"><h1 class="Heading" id="Route"><a class="HeadingLink" href="#Route">Route</a><span class="CategoryName">Route Configuration</span></h1><div><p>A <code>Route</code> is used to declaratively map routes to your application&#39;s
+component hierarchy.</p>
+<h2 id="props">Props</h2>
+<h3 id="-path-"><code>path</code></h3>
+<p>The path used in the URL.</p>
+<p>It will concat with the parent route&#39;s path unless it starts with <code>/</code>.
+In which case you will need to use <code>absoluteChildPaths</code> on the parent
+route so the router knows to keep going down the route tree even though
+the parent path doesn&#39;t match the url.</p>
+<p>If left undefined, the router will try to match the child routes.</p>
+<p>Please refer to the <a href="#TODO">Path Matching Guide</a> to learn more
+about supported path matching syntax.</p>
+<h3 id="-component-"><code>component</code></h3>
+<p>A single component to be rendered when the route matches the url. It can
+be rendered by the parent route component with <code>this.props.children</code>.</p>
+<h4 id="example">Example</h4>
+<pre><code class="lang-js"><div class="highlight"><pre><span class="kd">var</span> <span class="nx">routes</span> <span class="o">=</span> <span class="p">(</span>
+  <span class="o">&lt;</span><span class="nx">Route</span> <span class="nx">component</span><span class="o">=</span><span class="p">{</span><span class="nx">App</span><span class="p">}</span><span class="o">&gt;</span>
+    <span class="o">&lt;</span><span class="nx">Route</span> <span class="nx">path</span><span class="o">=</span><span class="s2">&quot;groups&quot;</span> <span class="nx">component</span><span class="o">=</span><span class="p">{</span><span class="nx">Groups</span><span class="p">}</span><span class="o">/&gt;</span>
+    <span class="o">&lt;</span><span class="nx">Route</span> <span class="nx">path</span><span class="o">=</span><span class="s2">&quot;users&quot;</span> <span class="nx">component</span><span class="o">=</span><span class="p">{</span><span class="nx">Users</span><span class="p">}</span><span class="o">/&gt;</span>
+  <span class="o">&lt;</span><span class="err">/Route&gt;</span>
+<span class="p">);</span>
+
+<span class="kd">var</span> <span class="nx">App</span> <span class="o">=</span> <span class="nx">React</span><span class="p">.</span><span class="nx">createClass</span><span class="p">({</span>
+  <span class="nx">render</span> <span class="p">()</span> <span class="p">{</span>
+    <span class="k">return</span> <span class="p">(</span>
+      <span class="o">&lt;</span><span class="nx">div</span><span class="o">&gt;</span>
+        <span class="p">{</span><span class="cm">/* this will be either &lt;Users&gt; or &lt;Groups&gt; */</span><span class="p">}</span>
+        <span class="p">{</span><span class="k">this</span><span class="p">.</span><span class="nx">props</span><span class="p">.</span><span class="nx">children</span><span class="p">}</span>
+      <span class="o">&lt;</span><span class="err">/div&gt;</span>
+    <span class="p">);</span>
+  <span class="p">}</span>
+<span class="p">});</span>
+</pre></div>
+
+</code></pre>
+<h3 id="-components-"><code>components</code></h3>
+<p>Routes can define multiple components as an object of name:component
+pairs to be rendered when the path matches the url. They can be rendered
+by the parent route component with <code>this.props[name]</code>.</p>
+<h4 id="example">Example</h4>
+<pre><code class="lang-js"><div class="highlight"><pre><span class="c1">// think of it outside the context of the router, if you had pluggable</span>
+<span class="c1">// portions of your `render`, you might do it like this</span>
+<span class="o">&lt;</span><span class="nx">App</span> <span class="nx">main</span><span class="o">=</span><span class="p">{</span><span class="o">&lt;</span><span class="nx">Users</span><span class="o">/&gt;</span><span class="p">}</span> <span class="nx">sidebar</span><span class="o">=</span><span class="p">{</span><span class="o">&lt;</span><span class="nx">UsersSidebar</span><span class="o">/&gt;</span><span class="p">}</span><span class="o">/&gt;</span>
+<span class="o">&lt;</span><span class="nx">App</span> <span class="nx">main</span><span class="o">=</span><span class="p">{</span><span class="o">&lt;</span><span class="nx">Groups</span><span class="o">/&gt;</span><span class="p">}</span> <span class="nx">sidebar</span><span class="o">=</span><span class="p">{</span><span class="o">&lt;</span><span class="nx">GroupsSidebar</span><span class="o">/&gt;</span><span class="p">}</span><span class="o">/&gt;</span>
+
+<span class="c1">// So with the router it looks like this:</span>
+<span class="kd">var</span> <span class="nx">routes</span> <span class="o">=</span> <span class="p">(</span>
+  <span class="o">&lt;</span><span class="nx">Route</span> <span class="nx">component</span><span class="o">=</span><span class="p">{</span><span class="nx">App</span><span class="p">}</span><span class="o">&gt;</span>
+    <span class="o">&lt;</span><span class="nx">Route</span> <span class="nx">path</span><span class="o">=</span><span class="s2">&quot;groups&quot;</span> <span class="nx">components</span><span class="o">=</span><span class="p">{{</span><span class="nx">main</span><span class="o">:</span> <span class="nx">Groups</span><span class="p">,</span> <span class="nx">sidebar</span><span class="o">:</span> <span class="nx">GroupsSidebar</span><span class="p">}}</span><span class="o">/&gt;</span>
+    <span class="o">&lt;</span><span class="nx">Route</span> <span class="nx">path</span><span class="o">=</span><span class="s2">&quot;users&quot;</span> <span class="nx">components</span><span class="o">=</span><span class="p">{{</span><span class="nx">main</span><span class="o">:</span> <span class="nx">Users</span><span class="p">,</span> <span class="nx">sidebar</span><span class="o">:</span> <span class="nx">UsersSidebar</span><span class="p">}}</span><span class="o">&gt;</span>
+      <span class="o">&lt;</span><span class="nx">Route</span> <span class="nx">path</span><span class="o">=</span><span class="s2">&quot;users/:userId&quot;</span> <span class="nx">components</span><span class="o">=</span><span class="p">{</span><span class="nx">Profile</span><span class="p">}</span><span class="o">/&gt;</span>
+    <span class="o">&lt;</span><span class="err">/Route&gt;</span>
+  <span class="o">&lt;</span><span class="err">/Route&gt;</span>
+<span class="p">);</span>
+
+<span class="kd">var</span> <span class="nx">App</span> <span class="o">=</span> <span class="nx">React</span><span class="p">.</span><span class="nx">createClass</span><span class="p">({</span>
+  <span class="nx">render</span> <span class="p">()</span> <span class="p">{</span>
+    <span class="c1">// the matched child route components become props in the parent</span>
+    <span class="k">return</span> <span class="p">(</span>
+      <span class="o">&lt;</span><span class="nx">div</span><span class="o">&gt;</span>
+        <span class="o">&lt;</span><span class="nx">div</span> <span class="nx">className</span><span class="o">=</span><span class="s2">&quot;Main&quot;</span><span class="o">&gt;</span>
+          <span class="p">{</span><span class="k">this</span><span class="p">.</span><span class="nx">props</span><span class="p">.</span><span class="nx">main</span><span class="p">}</span>
+        <span class="o">&lt;</span><span class="err">/div&gt;</span>
+        <span class="o">&lt;</span><span class="nx">div</span> <span class="nx">className</span><span class="o">=</span><span class="s2">&quot;Sidebar&quot;</span><span class="o">&gt;</span>
+          <span class="p">{</span><span class="k">this</span><span class="p">.</span><span class="nx">props</span><span class="p">.</span><span class="nx">sidebar</span><span class="p">}</span>
+        <span class="o">&lt;</span><span class="err">/div&gt;</span>
+      <span class="o">&lt;</span><span class="err">/div&gt;</span>
+    <span class="p">);</span>
+  <span class="p">}</span>
+<span class="p">});</span>
+
+<span class="kd">var</span> <span class="nx">Users</span> <span class="o">=</span> <span class="nx">React</span><span class="p">.</span><span class="nx">createClass</span><span class="p">({</span>
+  <span class="nx">render</span> <span class="p">()</span> <span class="p">{</span>
+    <span class="k">return</span> <span class="p">(</span>
+      <span class="o">&lt;</span><span class="nx">div</span><span class="o">&gt;</span>
+        <span class="p">{</span><span class="cm">/* if at &quot;/users/123&quot; this will be &lt;Profile&gt; */</span><span class="p">}</span>
+        <span class="p">{</span><span class="cm">/* UsersSidebar will also get &lt;Profile&gt; as this.props.children */</span><span class="p">}</span>
+        <span class="p">{</span><span class="k">this</span><span class="p">.</span><span class="nx">props</span><span class="p">.</span><span class="nx">children</span><span class="p">}</span>
+      <span class="o">&lt;</span><span class="err">/div&gt;</span>
+    <span class="p">);</span>
+  <span class="p">}</span>
+<span class="p">});</span>
+</pre></div>
+
+</code></pre>
+<h3 id="-getcomponents-state-cb-"><code>getComponents(state, cb)</code></h3>
+<p>Same as <code>components</code> but asynchronous, useful for code-splitting and
+returning different routes given some transition <code>state</code>.</p>
+<h4 id="-callback-signature"><code>callback</code> signature</h4>
+<p><code>cb(err, component)</code></p>
+<h4 id="example">Example</h4>
+<pre><code class="lang-js"><div class="highlight"><pre><span class="o">&lt;</span><span class="nx">Route</span> <span class="nx">path</span><span class="o">=</span><span class="s2">&quot;coures/:courseId&quot;</span> <span class="nx">getComponents</span><span class="o">=</span><span class="p">{(</span><span class="nx">cb</span><span class="p">)</span> <span class="o">=&gt;</span> <span class="p">{</span>
+  <span class="c1">// do asynchronous stuff to find the components</span>
+  <span class="nx">cb</span><span class="p">(</span><span class="kc">null</span><span class="p">,</span> <span class="p">[</span><span class="nx">Course</span><span class="p">]);</span>
+<span class="p">}}</span><span class="o">/&gt;</span>
+</pre></div>
+
+</code></pre>
+<h3 id="-children-"><code>children</code></h3>
+<p>Routes can be nested, <code>this.props.children</code> will contain the element
+created from the child route component. Please refer to the
+<a href="#TODO">overview</a> since this is a very critical part of the router&#39;s
+design.</p>
+<h3 id="-onenter-nextstate-transition-"><code>onEnter(nextState, transition)</code></h3>
+<p>Called when a route is about to be entered. It provides the next router
+state and the <a href="#TODO">transition</a> instance for cancelling/redirecting.</p>
+<h3 id="-onleave-nextstate-transition-"><code>onLeave(nextState, transition)</code></h3>
+<p>Called when a route is about to be exited. It provides the next router
+state and the <a href="#TODO">transition</a> instance for cancelling/redirecting.</p>
+</div></article><article class="Doc"><h1 class="Heading" id="Plain Route"><a class="HeadingLink" href="#Plain Route">Plain Route</a><span class="CategoryName">Route Configuration</span></h1><div><p>A route configuration object. <code>Router</code> turns JSX <code>&lt;Route/&gt;</code>s into
+these objects, but you can use them directly if you prefer. All of the
+props are the same as <code>&lt;Route/&gt;</code> props, except those listed here.</p>
+<h2 id="props">Props</h2>
+<h3 id="-childroutes-"><code>childRoutes</code></h3>
+<p>An array of child routes, same as <code>children</code> in JSX route configs.</p>
+<h3 id="-getchildroutes-state-callback-"><code>getChildRoutes(state, callback)</code></h3>
+<p>Same as <code>childRoutes</code> but asynchronous and receives the location state.
+Useful for code-splitting and dynamic route matching (given some state
+or session data to return a different set of child routes).</p>
+<h4 id="-callback-signature"><code>callback</code> signature</h4>
+<p><code>cb(err, routesArray)</code></p>
+<h4 id="example">Example</h4>
+<pre><code class="lang-js"><div class="highlight"><pre><span class="kd">var</span> <span class="nx">myRoute</span> <span class="o">=</span> <span class="p">{</span>
+  <span class="nx">path</span><span class="o">:</span> <span class="s1">&#39;course/:courseId&#39;</span><span class="p">,</span>
+  <span class="nx">childRoutes</span><span class="o">:</span> <span class="p">[</span>
+    <span class="nx">announcementsRoute</span><span class="p">,</span>
+    <span class="nx">gradesRoute</span><span class="p">,</span>
+    <span class="nx">assignmentsRoute</span>
+  <span class="p">]</span>
+<span class="p">};</span>
+
+<span class="c1">// async child routes</span>
+<span class="kd">var</span> <span class="nx">myRoute</span> <span class="o">=</span> <span class="p">{</span>
+  <span class="nx">path</span><span class="o">:</span> <span class="s1">&#39;course/:courseId&#39;</span><span class="p">,</span>
+  <span class="nx">getChildRoutes</span> <span class="p">(</span><span class="nx">state</span><span class="p">,</span> <span class="nx">cb</span><span class="p">)</span> <span class="p">{</span>
+    <span class="c1">// do asynchronous stuff to find the child routes</span>
+    <span class="nx">cb</span><span class="p">(</span><span class="kc">null</span><span class="p">,</span> <span class="p">[</span><span class="nx">announcementsRoute</span><span class="p">,</span> <span class="nx">gradesRoute</span><span class="p">,</span> <span class="nx">assignmentsRoute</span><span class="p">]);</span>
+  <span class="p">}</span>
+<span class="p">};</span>
+
+<span class="c1">// navigation dependent child routes</span>
+<span class="c1">// can link with some state</span>
+<span class="o">&lt;</span><span class="nx">Link</span> <span class="nx">to</span><span class="o">=</span><span class="s2">&quot;/picture/123&quot;</span> <span class="nx">state</span><span class="o">=</span><span class="p">{{</span><span class="nx">fromDashboard</span><span class="o">:</span> <span class="kc">true</span><span class="p">}}</span><span class="o">/&gt;</span>
+
+<span class="kd">var</span> <span class="nx">myRoute</span> <span class="o">=</span> <span class="p">{</span>
+  <span class="nx">path</span><span class="o">:</span> <span class="s1">&#39;picture/:id&#39;</span><span class="p">,</span>
+  <span class="nx">getChildRoutes</span> <span class="p">(</span><span class="nx">state</span><span class="p">,</span> <span class="nx">cb</span><span class="p">)</span> <span class="p">{</span>
+    <span class="c1">// state gets passed to `getChildRoutes`</span>
+    <span class="k">if</span> <span class="p">(</span><span class="nx">state</span> <span class="o">&amp;&amp;</span> <span class="nx">state</span><span class="p">.</span><span class="nx">fromDashboard</span><span class="p">)</span>
+      <span class="nx">cb</span><span class="p">(</span><span class="kc">null</span><span class="p">,</span> <span class="p">[</span><span class="nx">dashboardPictureRoute</span><span class="p">])</span>
+    <span class="k">else</span>
+      <span class="nx">cb</span><span class="p">(</span><span class="kc">null</span><span class="p">,</span> <span class="p">[</span><span class="nx">pictureRoute</span><span class="p">])</span>
+  <span class="p">}</span>
+<span class="p">};</span>
+</pre></div>
+
+</code></pre>
+</div></article><article class="Doc"><h1 class="Heading" id="Redirect"><a class="HeadingLink" href="#Redirect">Redirect</a><span class="CategoryName">Route Configuration</span></h1><div><p>A <code>Redirect</code> sets up a redirect to another route in your application to
+maintain old URLs.</p>
+<h2 id="props">Props</h2>
+<h3 id="-from-"><code>from</code></h3>
+<p>The path you want to redirect from, including dynamic segments.</p>
+<h3 id="-to-"><code>to</code></h3>
+<p>The route path you want to redirect to.</p>
+<h3 id="-params-"><code>params</code></h3>
+<p>By default, the parameters will just pass through to the new route, but
+you can specify them if you need to (usually you shouldn&#39;t).</p>
+<h3 id="-query-"><code>query</code></h3>
+<p>By default, the query parameters will just pass through to the new
+route, but you can specify them if you need to (usually you shouldn&#39;t).</p>
+<h2 id="example">Example</h2>
+<pre><code class="lang-js"><div class="highlight"><pre><span class="c1">// lets say we want to change from `/profile/123` to `/about/123`</span>
+<span class="c1">// and redirect `/get-in-touch` to `/contact`</span>
+<span class="o">&lt;</span><span class="nx">Route</span> <span class="nx">component</span><span class="o">=</span><span class="p">{</span><span class="nx">App</span><span class="p">}</span><span class="o">&gt;</span>
+  <span class="o">&lt;</span><span class="nx">Route</span> <span class="nx">path</span><span class="o">=</span><span class="s2">&quot;contact&quot;</span> <span class="nx">component</span><span class="o">=</span><span class="p">{</span><span class="nx">Contact</span><span class="p">}</span><span class="o">/&gt;</span>
+  <span class="o">&lt;</span><span class="nx">Route</span> <span class="nx">path</span><span class="o">=</span><span class="s2">&quot;about/:userId&quot;</span> <span class="nx">component</span><span class="o">=</span><span class="p">{</span><span class="nx">UserProfile</span><span class="p">}</span><span class="o">/&gt;</span>
+  <span class="o">&lt;</span><span class="nx">Route</span> <span class="nx">path</span><span class="o">=</span><span class="s2">&quot;course/:courseId&quot;</span><span class="o">&gt;</span>
+    <span class="o">&lt;</span><span class="nx">Route</span> <span class="nx">path</span><span class="o">=</span><span class="s2">&quot;dashboard&quot;</span> <span class="nx">component</span><span class="o">=</span><span class="p">{</span><span class="nx">Dashboard</span><span class="p">}</span><span class="o">/&gt;</span>
+    <span class="o">&lt;</span><span class="nx">Route</span> <span class="nx">path</span><span class="o">=</span><span class="s2">&quot;assignments&quot;</span> <span class="nx">component</span><span class="o">=</span><span class="p">{</span><span class="nx">Assignments</span><span class="p">}</span><span class="o">/&gt;</span>
+  <span class="o">&lt;</span><span class="err">/Route&gt;</span>
+
+  <span class="p">{</span><span class="cm">/* `/get-in-touch` -&gt; `/contact` */</span><span class="p">}</span>
+  <span class="o">&lt;</span><span class="nx">Redirect</span> <span class="nx">from</span><span class="o">=</span><span class="s2">&quot;/get-in-touch&quot;</span> <span class="nx">to</span><span class="o">=</span><span class="s2">&quot;/contact&quot;</span> <span class="o">/&gt;</span>
+
+  <span class="p">{</span><span class="cm">/* `/profile/123` -&gt; `/about/123` */</span><span class="p">}</span>
+  <span class="o">&lt;</span><span class="nx">Redirect</span> <span class="nx">from</span><span class="o">=</span><span class="s2">&quot;/profile/:userId&quot;</span> <span class="nx">to</span><span class="o">=</span><span class="s2">&quot;/about/:userId&quot;</span> <span class="o">/&gt;</span>
+
+  <span class="p">{</span><span class="cm">/* `/profile/me` -&gt; `/about/123` */</span><span class="p">}</span>
+  <span class="o">&lt;</span><span class="nx">Redirect</span> <span class="nx">from</span><span class="o">=</span><span class="s2">&quot;/profile/me&quot;</span> <span class="nx">to</span><span class="o">=</span><span class="s2">&quot;/about/:userId&quot;</span> <span class="nx">params</span><span class="o">=</span><span class="p">{{</span><span class="nx">userId</span><span class="o">:</span> <span class="nx">SESSION</span><span class="p">.</span><span class="nx">USER_ID</span><span class="p">}}</span><span class="o">/&gt;</span>
+<span class="o">&lt;</span><span class="err">/Route&gt;</span>
+</pre></div>
+
+</code></pre>
+<p>Note that the <code>&lt;Redirect/&gt;</code> can be placed anywhere in the route
+hierarchy, if you&#39;d prefer the redirects to be next to their respective
+routes, the <code>from</code> path will match the same as a regular route <code>path</code>.</p>
+<pre><code class="lang-js"><div class="highlight"><pre><span class="o">&lt;</span><span class="nx">Route</span> <span class="nx">path</span><span class="o">=</span><span class="s2">&quot;course/:courseId&quot;</span><span class="o">&gt;</span>
+  <span class="o">&lt;</span><span class="nx">Route</span> <span class="nx">path</span><span class="o">=</span><span class="s2">&quot;dashboard&quot;</span><span class="o">/&gt;</span>
+  <span class="p">{</span><span class="cm">/* /course/123/home -&gt; /course/123/dashboard */</span><span class="p">}</span>
+  <span class="o">&lt;</span><span class="nx">Redirect</span> <span class="nx">from</span><span class="o">=</span><span class="s2">&quot;home&quot;</span> <span class="nx">to</span><span class="o">=</span><span class="s2">&quot;dashboard&quot;</span> <span class="o">/&gt;</span>
+<span class="o">&lt;</span><span class="err">/Route&gt;</span>
+</pre></div>
+
+</code></pre>
+</div></article></section><section><article class="Doc"><h1 class="Heading" id="Router"><a class="HeadingLink" href="#Router">Router</a><span class="CategoryName">Components</span></h1><div><p>Primary component of React Router. It keeps your UI and the URL in sync.</p>
+<h2 id="props">Props</h2>
+<h3 id="-children-required-"><code>children</code> (required)</h3>
+<p>One or many <a href="#TODO"><code>Routes</code></a> or <a href="#TODO">Plain Routes</a>. When the
+history changes, <code>Router</code> will match a branch of its <a href="#TODO"><code>Routes</code></a>,
+and render their configured <a href="#TODO">components</a>, with child
+route components nested inside the parents.</p>
+<h3 id="-routes-"><code>routes</code></h3>
+<p>Alias for <code>children</code>.</p>
+<h3 id="-history-"><code>history</code></h3>
+<p>The <a href="#TODO"><code>History</code></a> the router should set up and listen for changes
+on. When the history gets new entries, the router will update its state
+and render.</p>
+<h3 id="-createelement-component-props-"><code>createElement(Component, props)</code></h3>
+<p>When the router is ready to render a branch of route components, it will
+use this function to create the elements. You may want to take control
+of creating the elements when you&#39;re using some sort of data
+abstraction, like setting up subscriptions to stores, or passing in some
+sort of application module to each component via props.</p>
+<h3 id="-stringifyquery-query-"><code>stringifyQuery(query)</code></h3>
+<p>A function that should be used to convert an object to a URL query string.
+By default, this function uses <code>qs.stringify(query, { arrayFormat: &#39;brackets&#39; })</code>.</p>
+<h4 id="examples">Examples</h4>
+<pre><code class="lang-js"><div class="highlight"><pre><span class="o">&lt;</span><span class="nx">Router</span> <span class="nx">createElement</span><span class="o">=</span><span class="p">{</span><span class="nx">createElement</span><span class="p">}</span><span class="o">/&gt;</span>
+
+<span class="c1">// default behavior</span>
+<span class="kd">function</span> <span class="nx">createElement</span><span class="p">(</span><span class="nx">Component</span><span class="p">,</span> <span class="nx">props</span><span class="p">)</span> <span class="p">{</span>
+  <span class="c1">// make sure you pass all the props in!</span>
+  <span class="k">return</span> <span class="o">&lt;</span><span class="nx">Component</span> <span class="p">{...</span><span class="nx">props</span><span class="p">}</span><span class="o">/&gt;</span>
+<span class="p">}</span>
+
+<span class="c1">// maybe you&#39;re using something like Relay</span>
+<span class="kd">function</span> <span class="nx">createElement</span><span class="p">(</span><span class="nx">Component</span><span class="p">,</span> <span class="nx">props</span><span class="p">)</span> <span class="p">{</span>
+  <span class="c1">// make sure you pass all the props in!</span>
+  <span class="k">return</span> <span class="o">&lt;</span><span class="nx">RelayContainer</span> <span class="nx">Component</span><span class="o">=</span><span class="p">{</span><span class="nx">Component</span><span class="p">}</span> <span class="nx">routerProps</span><span class="o">=</span><span class="p">{</span><span class="nx">props</span><span class="p">}</span><span class="o">/&gt;</span><span class="p">;</span>
+<span class="p">}</span>
+</pre></div>
+
+</code></pre>
+<h3 id="-onerror-error-"><code>onError(error)</code></h3>
+<p>While the router is matching, errors may bubble up, here
+is your opportunity to catch and deal with them. Typically these will
+come from async features like <code>route.getComponents</code> and
+<code>route.getChildRoutes</code>.</p>
+<h3 id="-onupdate-"><code>onUpdate()</code></h3>
+<p>Called whenever the router updates its state in response to URL changes.</p>
+<h2 id="methods">Methods</h2>
+<h3 id="-transitionto-pathname-query-state-"><code>transitionTo(pathname, query, state)</code></h3>
+<p>Transitions to a new URL.</p>
+<p>Usually called from the <a href="#TODO"><code>Navigation</code></a> mixin or transition hooks.</p>
+<h4 id="arguments">arguments</h4>
+<ul>
+<li><code>pathname</code> - the full url with or without the query</li>
+<li><code>query</code> - an object that will be <a href="#TODO">stringified</a> by the router.</li>
+<li><code>state</code> - the <a href="#TODO">location state</a>.</li>
+</ul>
+<h4 id="examples">Examples</h4>
+<pre><code class="lang-js"><div class="highlight"><pre><span class="nx">router</span><span class="p">.</span><span class="nx">transitionTo</span><span class="p">(</span><span class="s1">&#39;/users/123&#39;</span><span class="p">);</span>
+<span class="nx">router</span><span class="p">.</span><span class="nx">transitionTo</span><span class="p">(</span><span class="s1">&#39;/users/123&#39;</span><span class="p">,</span> <span class="p">{</span><span class="nx">showGrades</span><span class="o">:</span> <span class="kc">true</span><span class="p">});</span> <span class="c1">// -&gt; /users/123?showGrades=true</span>
+<span class="nx">router</span><span class="p">.</span><span class="nx">transitionTo</span><span class="p">(</span><span class="s1">&#39;/pictures/123&#39;</span><span class="p">,</span> <span class="kc">null</span><span class="p">,</span> <span class="p">{</span> <span class="nx">fromDashboard</span><span class="o">:</span> <span class="kc">true</span> <span class="p">});</span>
+</pre></div>
+
+</code></pre>
+<h3 id="-replacewith-pathname-query-state-"><code>replaceWith(pathname, query, state)</code></h3>
+<p>Replaces the current URL with a new one, without affecting the length of
+the history (like a redirect).</p>
+<p>Usually called from the <a href="#TODO"><code>Navigation</code></a> mixin or transition hooks.</p>
+<h4 id="arguments">arguments</h4>
+<ul>
+<li><code>pathname</code> - the full url with or without the query</li>
+<li><code>query</code> - an object that will be <a href="#TODO">stringified</a> by the router.</li>
+<li><code>state</code> - the <a href="#TODO">location state</a>.</li>
+</ul>
+<h4 id="examples">Examples</h4>
+<pre><code class="lang-js"><div class="highlight"><pre><span class="nx">router</span><span class="p">.</span><span class="nx">replaceWith</span><span class="p">(</span><span class="s1">&#39;/users/123&#39;</span><span class="p">);</span>
+<span class="nx">router</span><span class="p">.</span><span class="nx">replaceWith</span><span class="p">(</span><span class="s1">&#39;/users/123&#39;</span><span class="p">,</span> <span class="p">{</span><span class="nx">showGrades</span><span class="o">:</span> <span class="kc">true</span><span class="p">});</span> <span class="c1">// -&gt; /users/123?showGrades=true</span>
+<span class="nx">router</span><span class="p">.</span><span class="nx">replaceWith</span><span class="p">(</span><span class="s1">&#39;/pictures/123&#39;</span><span class="p">,</span> <span class="kc">null</span><span class="p">,</span> <span class="p">{</span> <span class="nx">fromDashboard</span><span class="o">:</span> <span class="kc">true</span> <span class="p">});</span>
+</pre></div>
+
+</code></pre>
+<h3 id="-go-n-"><code>go(n)</code></h3>
+<p>Go forward or backward in the history by <code>n</code> or <code>-n</code>.</p>
+<h3 id="-goback-"><code>goBack()</code></h3>
+<p>Go back one entry in the history.</p>
+<h3 id="-goforward-"><code>goForward()</code></h3>
+<p>Go forward one entry in the history.</p>
+<h3 id="-addtransitionhook-fn-"><code>addTransitionHook(fn)</code></h3>
+<p>Add a function to be called when the router attempts to transition away
+from the current location.</p>
+<p>You may find the <a href="#TODO"><code>TransitionHook</code></a> mixin more
+convienient.</p>
+<h4 id="arguments">arguments</h4>
+<ul>
+<li><code>fn(nextState, router, cb)</code><ul>
+<li><code>nextState</code> - the next rendering state of the router.</li>
+<li><code>router</code> - the <code>Router</code> instance</li>
+<li><code>cb(err)</code> - call this when you are finished doing transition work</li>
+</ul>
+</li>
+</ul>
+<h3 id="-removetransitionhook-fn-"><code>removeTransitionHook(fn)</code></h3>
+<p>Removes a function <code>fn</code> previously added as a transition hook.</p>
+<p>You may find the <a href="#TODO"><code>TransitionHook</code></a> mixin more
+convienient.</p>
+<h3 id="-canceltransition-"><code>cancelTransition()</code></h3>
+<p>Cancels an active transition.</p>
+<h3 id="-isactive-pathname-query-"><code>isActive(pathname, query)</code></h3>
+<p>Returns <code>true</code> or <code>false</code> depending on if the current path is active.
+Will be true for every route in the route branch matched by the
+<code>pathname</code> (child route is active, therefore parent is too).</p>
+<h3 id="-makepath-pathname-query-"><code>makePath(pathname, query)</code></h3>
+<p>Stringifies the query into the pathname, using the router&#39;s config.</p>
+<h3 id="-makehref-pathname-query-"><code>makeHref(pathname, query)</code></h3>
+<p>Makes a URL, using the router&#39;s config. For example, it will add <code>#/</code> in
+front of the <code>pathname</code> for <code>HashHistory</code>.</p>
+<h2 id="static-methods">Static Methods</h2>
+<h3 id="-match-routes-history-cb-"><code>match(routes, history, cb)</code></h3>
+<p>The router works by listening to a history for changes, matches the url
+to routes, and then sets state for rendering. On the server you will
+need to calculate that state before rendering with <code>Router.match</code>. It
+will call back with a bag of initial state that you pass to the router.</p>
+<h4 id="example">Example</h4>
+<pre><code class="lang-js"><div class="highlight"><pre><span class="kd">var</span> <span class="nx">history</span> <span class="o">=</span> <span class="k">new</span> <span class="nx">ServerHistory</span><span class="p">(</span><span class="nx">req</span><span class="p">.</span><span class="nx">path</span><span class="p">);</span>
+<span class="nx">Router</span><span class="p">.</span><span class="nx">match</span><span class="p">(</span><span class="nx">routes</span><span class="p">,</span> <span class="nx">history</span><span class="p">,</span> <span class="p">(</span><span class="nx">err</span><span class="p">,</span> <span class="nx">initialState</span><span class="p">)</span> <span class="o">=&gt;</span> <span class="p">{</span>
+  <span class="nx">React</span><span class="p">.</span><span class="nx">renderToString</span><span class="p">(</span><span class="o">&lt;</span><span class="nx">Router</span> <span class="nx">children</span><span class="o">=</span><span class="p">{</span><span class="nx">routes</span><span class="p">}</span> <span class="nx">history</span><span class="o">=</span><span class="p">{</span><span class="nx">history</span><span class="p">}</span> <span class="p">{...</span><span class="nx">initialState</span><span class="p">}</span><span class="o">/&gt;</span><span class="p">);</span>
+<span class="p">});</span>
+</pre></div>
+
+</code></pre>
+<h2 id="examples">Examples</h2>
+<p>Please see the <code>examples/</code> directory of the repository for extensive
+exampls of using <code>Router</code>.</p>
+<pre><code class="lang-js"><div class="highlight"><pre><span class="kr">import</span> <span class="p">{</span> <span class="nx">Router</span><span class="p">,</span> <span class="nx">Route</span> <span class="p">}</span> <span class="nx">from</span> <span class="s1">&#39;react-router&#39;</span><span class="p">;</span>
+<span class="kr">import</span> <span class="nx">BrowserHistory</span> <span class="nx">from</span> <span class="s1">&#39;react-router/lib/BrowserHistory&#39;</span><span class="p">;</span>
+
+<span class="nx">React</span><span class="p">.</span><span class="nx">render</span><span class="p">((</span>
+  <span class="o">&lt;</span><span class="nx">Router</span> <span class="nx">history</span><span class="o">=</span><span class="p">{</span><span class="nx">BrowserHistory</span><span class="p">}</span><span class="o">&gt;</span>
+    <span class="o">&lt;</span><span class="nx">Route</span> <span class="nx">path</span><span class="o">=</span><span class="s2">&quot;about&quot;</span> <span class="nx">component</span><span class="o">=</span><span class="p">{</span><span class="nx">About</span><span class="p">}</span><span class="o">/&gt;</span>
+    <span class="o">&lt;</span><span class="nx">Route</span> <span class="nx">path</span><span class="o">=</span><span class="s2">&quot;dashboard&quot;</span> <span class="nx">component</span><span class="o">=</span><span class="p">{</span><span class="nx">Dashboard</span><span class="p">}</span><span class="o">/&gt;</span>
+  <span class="o">&lt;</span><span class="err">/Router&gt;</span>
+<span class="p">),</span> <span class="nb">document</span><span class="p">.</span><span class="nx">body</span><span class="p">);</span>
+</pre></div>
+
+</code></pre>
+</div></article><article class="Doc"><h1 class="Heading" id="Link"><a class="HeadingLink" href="#Link">Link</a><span class="CategoryName">Components</span></h1><div><p>The primary way to allow users to navigate around your application.
+<code>Link</code> will render a fully accesible anchor tag with the proper href.</p>
+<p>A <code>Link</code> also knows when the route it links to is active and automatically
+applies its <code>activeClassName</code> and/or <code>activeStyle</code> when it is.</p>
+<h2 id="props">Props</h2>
+<h3 id="-to-"><code>to</code></h3>
+<p>The path to link to, e.g., <code>/users/123</code>.</p>
+<h3 id="-query-"><code>query</code></h3>
+<p>An object of key:value pairs to be stringified.</p>
+<h3 id="-activeclassname-"><code>activeClassName</code></h3>
+<p>The className a <code>Link</code> receives when its route is active. Defaults to <code>active</code>.</p>
+<h3 id="-activestyle-"><code>activeStyle</code></h3>
+<p>The styles to apply to the link element when its route is active.</p>
+<h3 id="-onclick-"><code>onClick</code></h3>
+<p>A custom handler for the click event. Works just like a handler on an <code>&lt;a&gt;</code>
+tag - calling <code>e.preventDefault()</code> or returning <code>false</code> will prevent the
+transition from firing, while <code>e.stopPropagation()</code> will prevent the event
+from bubbling.</p>
+<h3 id="-others-"><em>others</em></h3>
+<p>You can also pass props you&#39;d like to be on the <code>&lt;a&gt;</code> such as a title, id, className, etc.</p>
+<h2 id="example">Example</h2>
+<p>Given a route like <code>&lt;Route path=&quot;/users/:userId&quot;/&gt;</code>:</p>
+<pre><code class="lang-js"><div class="highlight"><pre><span class="o">&lt;</span><span class="nx">Link</span> <span class="nx">to</span><span class="o">=</span><span class="p">{</span><span class="err">`</span><span class="o">/</span><span class="nx">users</span><span class="o">/</span><span class="nx">$</span><span class="p">{</span><span class="nx">user</span><span class="p">.</span><span class="nx">id</span><span class="p">}</span><span class="err">`</span><span class="p">}</span><span class="o">&gt;</span><span class="p">{</span><span class="nx">user</span><span class="p">.</span><span class="nx">name</span><span class="p">}</span><span class="o">&lt;</span><span class="err">/Link&gt;</span>
+<span class="c1">// becomes one of these depending on your History and if the route is</span>
+<span class="c1">// active</span>
+<span class="o">&lt;</span><span class="nx">a</span> <span class="nx">href</span><span class="o">=</span><span class="s2">&quot;/users/123&quot;</span> <span class="kr">class</span><span class="o">=</span><span class="s2">&quot;active&quot;</span><span class="o">&gt;</span><span class="nx">Michael</span><span class="o">&lt;</span><span class="err">/a&gt;</span>
+<span class="o">&lt;</span><span class="nx">a</span> <span class="nx">href</span><span class="o">=</span><span class="s2">&quot;#/users/123&quot;</span><span class="o">&gt;</span><span class="nx">Michael</span><span class="o">&lt;</span><span class="err">/a&gt;</span>
+
+<span class="c1">// change the activeClassName</span>
+<span class="o">&lt;</span><span class="nx">Link</span> <span class="nx">to</span><span class="o">=</span><span class="p">{</span><span class="err">`</span><span class="o">/</span><span class="nx">users</span><span class="o">/</span><span class="nx">$</span><span class="p">{</span><span class="nx">user</span><span class="p">.</span><span class="nx">id</span><span class="p">}</span><span class="err">`</span><span class="p">}</span> <span class="nx">activeClassName</span><span class="o">=</span><span class="s2">&quot;current&quot;</span><span class="o">&gt;</span><span class="p">{</span><span class="nx">user</span><span class="p">.</span><span class="nx">name</span><span class="p">}</span><span class="o">&lt;</span><span class="err">/Link&gt;</span>
+
+<span class="c1">// change style when link is active</span>
+<span class="o">&lt;</span><span class="nx">Link</span> <span class="nx">to</span><span class="o">=</span><span class="s2">&quot;/users&quot;</span> <span class="nx">style</span><span class="o">=</span><span class="p">{{</span><span class="nx">color</span><span class="o">:</span> <span class="s1">&#39;white&#39;</span><span class="p">}}</span> <span class="nx">activeStyle</span><span class="o">=</span><span class="p">{{</span><span class="nx">color</span><span class="o">:</span> <span class="s1">&#39;red&#39;</span><span class="p">}}</span><span class="o">&gt;</span><span class="nx">Users</span><span class="o">&lt;</span><span class="err">/Link&gt;</span>
+</pre></div>
+
+</code></pre>
+</div></article><article class="Doc"><h1 class="Heading" id="Route Component"><a class="HeadingLink" href="#Route Component">Route Component</a><span class="CategoryName">Components</span></h1><div><p>A user-defined component given to a <code>Route</code> as the <code>component</code> prop. The
+router will inject properties into your component when its rendered.</p>
+<h2 id="injected-props">Injected Props</h2>
+<h3 id="-children-"><code>children</code></h3>
+<p>The matched child route elements to be rendered.</p>
+<h4 id="example">Example</h4>
+<pre><code class="lang-js"><div class="highlight"><pre><span class="nx">React</span><span class="p">.</span><span class="nx">render</span><span class="p">((</span>
+  <span class="o">&lt;</span><span class="nx">Router</span> <span class="nx">history</span><span class="o">=</span><span class="p">{</span><span class="nx">HashHistory</span><span class="p">}</span><span class="o">&gt;</span>
+    <span class="o">&lt;</span><span class="nx">Route</span> <span class="nx">path</span><span class="o">=</span><span class="s2">&quot;/&quot;</span> <span class="nx">component</span><span class="o">=</span><span class="p">{</span><span class="nx">App</span><span class="p">}</span><span class="o">&gt;</span>
+      <span class="o">&lt;</span><span class="nx">Route</span> <span class="nx">path</span><span class="o">=</span><span class="s2">&quot;groups&quot;</span> <span class="nx">components</span><span class="o">=</span><span class="p">{</span><span class="nx">Groups</span><span class="p">}</span><span class="o">/&gt;</span>
+      <span class="o">&lt;</span><span class="nx">Route</span> <span class="nx">path</span><span class="o">=</span><span class="s2">&quot;users&quot;</span> <span class="nx">components</span><span class="o">=</span><span class="p">{</span><span class="nx">Users</span><span class="p">}</span><span class="o">/&gt;</span>
+    <span class="o">&lt;</span><span class="err">/Route&gt;</span>
+  <span class="o">&lt;</span><span class="err">/Router&gt;</span>
+<span class="p">),</span> <span class="nx">element</span><span class="p">);</span>
+
+<span class="kd">var</span> <span class="nx">App</span> <span class="o">=</span> <span class="nx">React</span><span class="p">.</span><span class="nx">createClass</span><span class="p">({</span>
+  <span class="nx">render</span> <span class="p">()</span> <span class="p">{</span>
+    <span class="k">return</span> <span class="p">(</span>
+      <span class="o">&lt;</span><span class="nx">div</span><span class="o">&gt;</span>
+        <span class="p">{</span><span class="cm">/* this will be either &lt;Users&gt; or &lt;Groups&gt; */</span><span class="p">}</span>
+        <span class="p">{</span><span class="k">this</span><span class="p">.</span><span class="nx">props</span><span class="p">.</span><span class="nx">children</span><span class="p">}</span>
+      <span class="o">&lt;</span><span class="err">/div&gt;</span>
+    <span class="p">);</span>
+  <span class="p">}</span>
+<span class="p">});</span>
+</pre></div>
+
+</code></pre>
+<h3 id="named-components">Named Components</h3>
+<p>When a route has multiple components, the elements are available by name
+on props. All route components can participate in the nesting.</p>
+<h4 id="example">Example</h4>
+<pre><code class="lang-js"><div class="highlight"><pre><span class="nx">React</span><span class="p">.</span><span class="nx">render</span><span class="p">((</span>
+  <span class="o">&lt;</span><span class="nx">Router</span> <span class="nx">history</span><span class="o">=</span><span class="p">{</span><span class="nx">HashHistory</span><span class="p">}</span><span class="o">&gt;</span>
+    <span class="o">&lt;</span><span class="nx">Route</span> <span class="nx">path</span><span class="o">=</span><span class="s2">&quot;/&quot;</span> <span class="nx">component</span><span class="o">=</span><span class="p">{</span><span class="nx">App</span><span class="p">}</span><span class="o">&gt;</span>
+      <span class="o">&lt;</span><span class="nx">Route</span> <span class="nx">path</span><span class="o">=</span><span class="s2">&quot;groups&quot;</span> <span class="nx">components</span><span class="o">=</span><span class="p">{{</span><span class="nx">main</span><span class="o">:</span> <span class="nx">Groups</span><span class="p">,</span> <span class="nx">sidebar</span><span class="o">:</span> <span class="nx">GroupsSidebar</span><span class="p">}}</span><span class="o">/&gt;</span>
+      <span class="o">&lt;</span><span class="nx">Route</span> <span class="nx">path</span><span class="o">=</span><span class="s2">&quot;users&quot;</span> <span class="nx">components</span><span class="o">=</span><span class="p">{{</span><span class="nx">main</span><span class="o">:</span> <span class="nx">Users</span><span class="p">,</span> <span class="nx">sidebar</span><span class="o">:</span> <span class="nx">UsersSidebar</span><span class="p">}}</span><span class="o">&gt;</span>
+        <span class="o">&lt;</span><span class="nx">Route</span> <span class="nx">path</span><span class="o">=</span><span class="s2">&quot;users/:userId&quot;</span> <span class="nx">components</span><span class="o">=</span><span class="p">{</span><span class="nx">Profile</span><span class="p">}</span><span class="o">/&gt;</span>
+      <span class="o">&lt;</span><span class="err">/Route&gt;</span>
+    <span class="o">&lt;</span><span class="err">/Route&gt;</span>
+  <span class="o">&lt;</span><span class="err">/Router&gt;</span>
+<span class="p">),</span> <span class="nx">element</span><span class="p">);</span>
+
+<span class="kd">var</span> <span class="nx">App</span> <span class="o">=</span> <span class="nx">React</span><span class="p">.</span><span class="nx">createClass</span><span class="p">({</span>
+  <span class="nx">render</span> <span class="p">()</span> <span class="p">{</span>
+    <span class="c1">// the matched child route components become props in the parent</span>
+    <span class="k">return</span> <span class="p">(</span>
+      <span class="o">&lt;</span><span class="nx">div</span><span class="o">&gt;</span>
+        <span class="o">&lt;</span><span class="nx">div</span> <span class="nx">className</span><span class="o">=</span><span class="s2">&quot;Main&quot;</span><span class="o">&gt;</span>
+          <span class="p">{</span><span class="cm">/* this will either be &lt;Groups&gt; or &lt;Users&gt; */</span><span class="p">}</span>
+          <span class="p">{</span><span class="k">this</span><span class="p">.</span><span class="nx">props</span><span class="p">.</span><span class="nx">main</span><span class="p">}</span>
+        <span class="o">&lt;</span><span class="err">/div&gt;</span>
+        <span class="o">&lt;</span><span class="nx">div</span> <span class="nx">className</span><span class="o">=</span><span class="s2">&quot;Sidebar&quot;</span><span class="o">&gt;</span>
+          <span class="p">{</span><span class="cm">/* this will either be &lt;GroupsSidebar&gt; or &lt;UsersSidebar&gt; */</span><span class="p">}</span>
+          <span class="p">{</span><span class="k">this</span><span class="p">.</span><span class="nx">props</span><span class="p">.</span><span class="nx">sidebar</span><span class="p">}</span>
+        <span class="o">&lt;</span><span class="err">/div&gt;</span>
+      <span class="o">&lt;</span><span class="err">/div&gt;</span>
+    <span class="p">);</span>
+  <span class="p">}</span>
+<span class="p">});</span>
+
+<span class="kd">var</span> <span class="nx">Users</span> <span class="o">=</span> <span class="nx">React</span><span class="p">.</span><span class="nx">createClass</span><span class="p">({</span>
+  <span class="nx">render</span> <span class="p">()</span> <span class="p">{</span>
+    <span class="k">return</span> <span class="p">(</span>
+      <span class="o">&lt;</span><span class="nx">div</span><span class="o">&gt;</span>
+        <span class="p">{</span><span class="cm">/* if at &quot;/users/123&quot; this will be &lt;Profile&gt; */</span><span class="p">}</span>
+        <span class="p">{</span><span class="cm">/* UsersSidebar will also get &lt;Profile&gt; as this.props.children,</span>
+<span class="cm">            you pick where it renders */</span><span class="p">}</span>
+        <span class="p">{</span><span class="k">this</span><span class="p">.</span><span class="nx">props</span><span class="p">.</span><span class="nx">children</span><span class="p">}</span>
+      <span class="o">&lt;</span><span class="err">/div&gt;</span>
+    <span class="p">);</span>
+  <span class="p">}</span>
+<span class="p">});</span>
+</pre></div>
+
+</code></pre>
+<h3 id="-params-"><code>params</code></h3>
+<p>The dynamic segments of the url.</p>
+<h3 id="-routeparams-"><code>routeParams</code></h3>
+<p>Subset of the dynamic segments of the url that relate to the route the
+component belongs to. For example, if the route path is <code>users/:userId</code>
+and the url is <code>/users/123/portfolios/345</code> then <code>props.routeParams</code> will be
+<code>{userId: &#39;123&#39;}</code>, and <code>route.params</code> will be <code>{userId: &#39;123&#39;,
+portfolioId: 345}</code>.</p>
+<h3 id="-location-"><code>location</code></h3>
+<p>The <a href="#TODO">location</a> matched.</p>
+<h3 id="-route-"><code>route</code></h3>
+<p>The matched <a href="#TODO">Route</a> the component belongs to.</p>
+<h2 id="examples">Examples</h2>
+<pre><code class="lang-js"><div class="highlight"><pre><span class="c1">// given a route like this:</span>
+<span class="o">&lt;</span><span class="nx">Route</span> <span class="nx">path</span><span class="o">=</span><span class="s2">&quot;/course/:courseId/students&quot;</span> <span class="nx">component</span><span class="o">=</span><span class="p">{</span><span class="nx">Students</span><span class="p">}</span><span class="o">/&gt;</span>
+
+<span class="c1">// and a url like this:</span>
+<span class="s2">&quot;/course/123/students?sort=name&quot;</span>
+
+<span class="kd">var</span> <span class="nx">Students</span> <span class="o">=</span> <span class="nx">React</span><span class="p">.</span><span class="nx">createClass</span><span class="p">({</span>
+  <span class="nx">render</span> <span class="p">()</span> <span class="p">{</span>
+    <span class="k">this</span><span class="p">.</span><span class="nx">props</span><span class="p">.</span><span class="nx">params</span><span class="p">.</span><span class="nx">courseId</span><span class="p">;</span> <span class="c1">// &quot;123&quot;</span>
+    <span class="k">this</span><span class="p">.</span><span class="nx">props</span><span class="p">.</span><span class="nx">location</span><span class="p">.</span><span class="nx">query</span><span class="p">.</span><span class="nx">sort</span><span class="p">;</span> <span class="c1">// &quot;name&quot;</span>
+    <span class="c1">// ...</span>
+  <span class="p">}</span>
+<span class="p">});</span>
+</pre></div>
+
+</code></pre>
+</div></article></section><section><article class="Doc"><h1 class="Heading" id="Histories"><a class="HeadingLink" href="#Histories">Histories</a><span class="CategoryName">History</span></h1><div><p><code>Router</code> sets up a <code>History</code> and updates <code>Router</code> state when the
+<code>History</code> emits changes.  You can implement your own history, or create
+an instance of one with your own options for query parsing.</p>
+<pre><code class="lang-js"><div class="highlight"><pre><span class="kr">import</span> <span class="p">{</span> <span class="nx">history</span> <span class="p">}</span> <span class="nx">from</span> <span class="s1">&#39;react-router/lib/BrowserHistory&#39;</span><span class="p">;</span>
+<span class="o">&lt;</span><span class="nx">Router</span> <span class="nx">history</span><span class="o">=</span><span class="p">{</span><span class="nx">history</span><span class="p">}</span><span class="o">/&gt;</span>
+</pre></div>
+
+</code></pre>
+<p>If you need to do your own query parsing:</p>
+<pre><code class="lang-js"><div class="highlight"><pre><span class="kr">import</span> <span class="p">{</span> <span class="nx">BrowserHistory</span> <span class="p">}</span> <span class="nx">from</span> <span class="s1">&#39;react-router/lib/BrowserHistory&#39;</span><span class="p">;</span>
+
+<span class="kd">var</span> <span class="nx">history</span> <span class="o">=</span> <span class="k">new</span> <span class="nx">BrowserHistory</span><span class="p">({</span>
+  <span class="nx">parseQueryString</span><span class="p">(</span><span class="nx">string</span><span class="p">)</span> <span class="p">{</span>
+    <span class="k">return</span> <span class="nx">customParse</span><span class="p">(</span><span class="nx">string</span><span class="p">);</span>
+  <span class="p">}</span>
+<span class="p">});</span>
+
+<span class="kd">var</span> <span class="nx">router</span> <span class="o">=</span> <span class="o">&lt;</span><span class="nx">Router</span> <span class="nx">history</span><span class="o">=</span><span class="p">{</span><span class="nx">history</span><span class="p">}</span><span class="o">/&gt;</span><span class="p">;</span>
+</pre></div>
+
+</code></pre>
+</div></article><article class="Doc"><h1 class="Heading" id="BrowserHistory"><a class="HeadingLink" href="#BrowserHistory">BrowserHistory</a><span class="CategoryName">History</span></h1><div><p><code>BrowserHistory</code> is a <a href="#TODO">history</a> implementation for DOM environments that
+support the HTML5 history API (pushState, replaceState, and the popstate event).
+It provides the cleanest URLs and should always be used in browser
+environments if possible.</p>
+<p>You must configure your server when using <code>BrowserHistory</code>.</p>
+<h2 id="configuring-your-server">Configuring your server</h2>
+<p>When a visitor sends the url <code>/assignments/123</code> or <code>/settings</code> to your
+app, they both must send your client application to the visitor.</p>
+<p>Here&#39;s an example using express:</p>
+<pre><code class="lang-js"><div class="highlight"><pre><span class="nx">app</span><span class="p">.</span><span class="nx">get</span><span class="p">(</span><span class="s1">&#39;*&#39;</span><span class="p">,</span> <span class="kd">function</span> <span class="p">(</span><span class="nx">req</span><span class="p">,</span> <span class="nx">res</span><span class="p">)</span> <span class="p">{</span>
+  <span class="nx">res</span><span class="p">.</span><span class="nx">render</span><span class="p">(</span><span class="s1">&#39;index&#39;</span><span class="p">);</span>
+<span class="p">});</span>
+</pre></div>
+
+</code></pre>
+<p>This will route all requests to the <code>index</code> template rendered by your
+server and then React Router will take over from there.</p>
+<h2 id="fallback-for-browsers-that-don-t-support-it">Fallback for browsers that don&#39;t support it</h2>
+<p><code>BrowserHistory</code> falls back to using full page refreshes when the browser
+does not support the HTML5 history API.</p>
+<blockquote>
+<p>Why don&#39;t you just fall back to <code>HashHistory</code>?</p>
+</blockquote>
+<p>Because we&#39;d end up with multiple URLs for the same UI, and as users
+with different location support share URLs they become non-deterministic
+for the router to switch back and forth.</p>
+<p>Additionally, many <code>BrowserHistory</code> apps will want to take advantage of
+what the hash is actually intended for: linking to specific elements in
+the page. We don&#39;t want to break this valuable feature of the web.</p>
+<h2 id="example">Example</h2>
+<pre><code class="lang-js"><div class="highlight"><pre><span class="kr">import</span> <span class="p">{</span> <span class="nx">Router</span> <span class="p">}</span> <span class="nx">from</span> <span class="s1">&#39;react-router&#39;</span><span class="p">;</span>
+<span class="kr">import</span> <span class="p">{</span> <span class="nx">history</span> <span class="p">}</span> <span class="nx">from</span> <span class="s1">&#39;react-router/lib/BrowserHistory&#39;</span><span class="p">;</span>
+
+<span class="nx">React</span><span class="p">.</span><span class="nx">render</span><span class="p">((</span>
+  <span class="o">&lt;</span><span class="nx">Router</span> <span class="nx">history</span><span class="o">=</span><span class="p">{</span> <span class="nx">history</span> <span class="p">}</span><span class="o">&gt;</span>
+    <span class="p">{</span><span class="cm">/* ... */</span><span class="p">}</span>
+  <span class="o">&lt;</span><span class="err">/Router&gt;</span>
+<span class="p">),</span> <span class="nb">document</span><span class="p">.</span><span class="nx">body</span><span class="p">);</span>
+</pre></div>
+
+</code></pre>
+</div></article><article class="Doc"><h1 class="Heading" id="HashHistory"><a class="HeadingLink" href="#HashHistory">HashHistory</a><span class="CategoryName">History</span></h1><div><p><code>HashHistory</code> is a <a href="#TODO">history</a> implementation for DOM environments that
+uses <code>window.location.hash</code> to store the current path. This is essentially a hack
+for older browsers (IE &lt;= 9) that do not support the HTML5 history API.</p>
+<p>For example, your urls will look like this: <code>https://example.com/#/courses/123</code>.</p>
+<h2 id="query-params">Query Params</h2>
+<p>Query params in the portion of the URL before the <code>#</code> are completely
+ignored with <code>HashHistory</code> because they are not part of the URL that
+<code>HashHistory</code> manages. Query parameters after the <code>#</code> will work as
+expected.</p>
+<p>For example: <code>http://example.com/?lang=es#/messages?sort=date</code>,
+<code>lang=es</code> is invisible to a <code>HashHistory</code> router, but <code>sort=date</code> is
+recognized, and will be used as the query parameters.</p>
+<h2 id="using-location-state">Using location state</h2>
+<p><code>HashHistory</code> shims the <code>state</code> features of <code>window.history.pushState</code>,
+but you have to opt-in because it puts a key in the URL and we didn&#39;t
+want a bunch of issues opened about it :P</p>
+<p>If you want to use the <code>location.state</code> features, opt-in. See the
+examples.</p>
+<h2 id="example">Example</h2>
+<p>Normal usage</p>
+<pre><code class="lang-js"><div class="highlight"><pre><span class="kr">import</span> <span class="p">{</span> <span class="nx">Router</span> <span class="p">}</span> <span class="nx">from</span> <span class="s1">&#39;react-router&#39;</span><span class="p">;</span>
+<span class="kr">import</span> <span class="p">{</span> <span class="nx">history</span> <span class="p">}</span> <span class="nx">from</span> <span class="s1">&#39;react-router/lib/HashHistory&#39;</span><span class="p">;</span>
+
+<span class="nx">React</span><span class="p">.</span><span class="nx">render</span><span class="p">((</span>
+  <span class="o">&lt;</span><span class="nx">Router</span> <span class="nx">history</span><span class="o">=</span><span class="p">{</span><span class="nx">history</span><span class="p">}</span><span class="o">&gt;</span>
+    <span class="p">{</span><span class="cm">/* ... */</span><span class="p">}</span>
+  <span class="o">&lt;</span><span class="err">/Router&gt;</span>
+<span class="p">),</span> <span class="nb">document</span><span class="p">.</span><span class="nx">body</span><span class="p">);</span>
+</pre></div>
+
+</code></pre>
+<p>Opting in to the <code>state</code> features:</p>
+<pre><code class="lang-js"><div class="highlight"><pre><span class="kr">import</span> <span class="nx">HashHistory</span> <span class="nx">from</span> <span class="s1">&#39;react-router/lib/HashHistory&#39;</span><span class="p">;</span>
+
+<span class="c1">// use the default key which is `_key`</span>
+<span class="kd">var</span> <span class="nx">history</span> <span class="o">=</span> <span class="k">new</span> <span class="nx">HashHistory</span><span class="p">({</span> <span class="nx">queryKey</span><span class="o">:</span> <span class="kc">true</span> <span class="p">});</span>
+
+<span class="c1">// use your own</span>
+<span class="kd">var</span> <span class="nx">history</span> <span class="o">=</span> <span class="k">new</span> <span class="nx">HashHistory</span><span class="p">({</span> <span class="nx">queryKey</span><span class="o">:</span> <span class="s1">&#39;k&#39;</span> <span class="p">});</span>
+
+<span class="nx">React</span><span class="p">.</span><span class="nx">render</span><span class="p">((</span>
+  <span class="o">&lt;</span><span class="nx">Router</span> <span class="nx">history</span><span class="o">=</span><span class="p">{</span><span class="nx">history</span><span class="p">}</span><span class="o">&gt;</span>
+    <span class="p">{</span><span class="cm">/* ... */</span><span class="p">}</span>
+  <span class="o">&lt;</span><span class="err">/Router&gt;</span>
+<span class="p">),</span> <span class="nb">document</span><span class="p">.</span><span class="nx">body</span><span class="p">);</span>
+</pre></div>
+
+</code></pre>
+</div></article><article class="Doc"><h1 class="Heading" id="MemoryHistory"><a class="HeadingLink" href="#MemoryHistory">MemoryHistory</a><span class="CategoryName">History</span></h1><div><p><code>MemoryHistory</code> is a <a href="#TODO">history</a> implementation that does not
+read and write state to the address bar of the browser. Its useful for
+testing and running React Router in persistent environments that don&#39;t
+have URLs.</p>
+<h2 id="example">Example</h2>
+<pre><code class="lang-js"><div class="highlight"><pre><span class="kr">import</span> <span class="p">{</span> <span class="nx">Router</span> <span class="p">}</span> <span class="nx">from</span> <span class="s1">&#39;react-router&#39;</span><span class="p">;</span>
+<span class="kr">import</span> <span class="nx">MemoryHistory</span> <span class="nx">from</span> <span class="s1">&#39;react-router/lib/MemoryHistory&#39;</span><span class="p">;</span>
+
+<span class="kd">var</span> <span class="nx">history</span> <span class="o">=</span> <span class="k">new</span> <span class="nx">MemoryHistory</span><span class="p">([</span> <span class="s1">&#39;/&#39;</span><span class="p">,</span> <span class="s1">&#39;/a/path&#39;</span> <span class="p">]);</span>
+
+<span class="nx">React</span><span class="p">.</span><span class="nx">render</span><span class="p">((</span>
+  <span class="o">&lt;</span><span class="nx">Router</span> <span class="nx">history</span><span class="o">=</span><span class="p">{</span><span class="nx">history</span><span class="p">}</span><span class="o">&gt;</span>
+    <span class="p">{</span><span class="cm">/* ... */</span><span class="p">}</span>
+  <span class="o">&lt;</span><span class="err">/Router&gt;</span>
+<span class="p">),</span> <span class="nb">document</span><span class="p">.</span><span class="nx">body</span><span class="p">);</span>
+</pre></div>
+
+</code></pre>
+</div></article></section><section><article class="Doc"><h1 class="Heading" id="Navigation"><a class="HeadingLink" href="#Navigation">Navigation</a><span class="CategoryName">Mixins</span></h1><div><p>Mixes in the navigation methods of the router for convenient routing
+from within components.</p>
+<h2 id="methods">Methods</h2>
+<h3 id="makepath">makePath</h3>
+<p>See <a href="#TODO">router.makePath</a></p>
+<h3 id="makehref">makeHref</h3>
+<p>See <a href="#TODO">router.makeHref</a></p>
+<h3 id="transitionto">transitionTo</h3>
+<p>See <a href="#TODO">router.transitionTo</a></p>
+<h3 id="replacewith">replaceWith</h3>
+<p>See <a href="#TODO">router.replaceWith</a></p>
+<h3 id="go">go</h3>
+<p>See <a href="#TODO">router.go</a></p>
+<h3 id="goback">goBack</h3>
+<p>See <a href="#TODO">router.goBack</a></p>
+<h3 id="goforward">goForward</h3>
+<p>See <a href="#TODO">router.goForward</a></p>
+<h2 id="example">Example</h2>
+<pre><code class="lang-js"><div class="highlight"><pre><span class="kr">import</span> <span class="p">{</span> <span class="nx">Navigation</span> <span class="p">}</span> <span class="nx">from</span> <span class="s1">&#39;react-router&#39;</span><span class="p">;</span>
+
+<span class="nx">React</span><span class="p">.</span><span class="nx">createClass</span><span class="p">({</span>
+
+ <span class="nx">mixins</span><span class="o">:</span> <span class="p">[</span> <span class="nx">Navigation</span> <span class="p">],</span>
+
+ <span class="nx">render</span><span class="p">()</span> <span class="p">{</span>
+   <span class="k">return</span> <span class="p">(</span>
+     <span class="o">&lt;</span><span class="nx">div</span> <span class="nx">onClick</span><span class="o">=</span><span class="p">{()</span> <span class="o">=&gt;</span> <span class="k">this</span><span class="p">.</span><span class="nx">transitionTo</span><span class="p">(</span><span class="s1">&#39;foo&#39;</span><span class="p">)}</span><span class="o">&gt;</span><span class="nx">Go</span> <span class="nx">to</span> <span class="nx">foo</span><span class="o">&lt;</span><span class="err">/div&gt;</span>
+     <span class="o">&lt;</span><span class="nx">div</span> <span class="nx">onClick</span><span class="o">=</span><span class="p">{()</span> <span class="o">=&gt;</span> <span class="k">this</span><span class="p">.</span><span class="nx">replaceWith</span><span class="p">(</span><span class="s1">&#39;bar&#39;</span><span class="p">)}</span><span class="o">&gt;</span><span class="nx">Go</span> <span class="nx">to</span> <span class="nx">bar</span> <span class="nx">without</span> <span class="nx">creating</span> <span class="nx">a</span> <span class="k">new</span> <span class="nx">history</span> <span class="nx">entry</span><span class="o">&lt;</span><span class="err">/div&gt;</span>
+     <span class="o">&lt;</span><span class="nx">div</span> <span class="nx">onClick</span><span class="o">=</span><span class="p">{()</span> <span class="o">=&gt;</span> <span class="k">this</span><span class="p">.</span><span class="nx">goBack</span><span class="p">()}</span><span class="o">&gt;</span><span class="nx">Go</span> <span class="nx">back</span><span class="o">&lt;</span><span class="err">/div&gt;</span>
+   <span class="p">);</span>
+ <span class="p">}</span>
+<span class="p">});</span>
+</pre></div>
+
+</code></pre>
+</div></article><article class="Doc"><h1 class="Heading" id="State"><a class="HeadingLink" href="#State">State</a><span class="CategoryName">Mixins</span></h1><div><p>Mixes in the <code>isActive</code> method of <code>Router</code>.</p>
+<h2 id="methods">Methods</h2>
+<h3 id="isactive">isActive</h3>
+<p>See <a href="#TODO">router.isActive</a></p>
+<h2 id="example">Example</h2>
+<p>Let&#39;s say you are using bootstrap and want to get <code>active</code> on those <code>li</code>
+tags for the Tabs:</p>
+<pre><code class="lang-js"><div class="highlight"><pre><span class="kr">import</span> <span class="p">{</span> <span class="nx">Link</span><span class="p">,</span> <span class="nx">State</span> <span class="p">}</span> <span class="nx">from</span> <span class="s1">&#39;react-router&#39;</span><span class="p">;</span>
+
+<span class="kd">var</span> <span class="nx">Tab</span> <span class="o">=</span> <span class="nx">React</span><span class="p">.</span><span class="nx">createClass</span><span class="p">({</span>
+
+  <span class="nx">mixins</span><span class="o">:</span> <span class="p">[</span> <span class="nx">State</span> <span class="p">],</span>
+
+  <span class="nx">render</span><span class="p">()</span> <span class="p">{</span>
+    <span class="kd">var</span> <span class="nx">isActive</span> <span class="o">=</span> <span class="k">this</span><span class="p">.</span><span class="nx">isActive</span><span class="p">(</span><span class="k">this</span><span class="p">.</span><span class="nx">props</span><span class="p">.</span><span class="nx">href</span><span class="p">,</span> <span class="k">this</span><span class="p">.</span><span class="nx">props</span><span class="p">.</span><span class="nx">query</span><span class="p">);</span>
+    <span class="kd">var</span> <span class="nx">className</span> <span class="o">=</span> <span class="nx">isActive</span> <span class="o">?</span> <span class="s1">&#39;active&#39;</span> <span class="o">:</span> <span class="s1">&#39;&#39;</span><span class="p">;</span>
+    <span class="k">return</span> <span class="o">&lt;</span><span class="nx">li</span> <span class="nx">className</span><span class="o">=</span><span class="p">{</span><span class="nx">className</span><span class="p">}</span><span class="o">&gt;&lt;</span><span class="nx">Link</span> <span class="p">{...</span><span class="k">this</span><span class="p">.</span><span class="nx">props</span><span class="p">}</span><span class="o">/&gt;&lt;</span><span class="err">/li&gt;;</span>
+  <span class="p">}</span>
+
+<span class="p">});</span>
+
+<span class="c1">// use it just like &lt;Link/&gt;, and you&#39;ll get an anchor wrapped in an `li`</span>
+<span class="c1">// with an automatic `active` class on both.</span>
+<span class="o">&lt;</span><span class="nx">Tab</span> <span class="nx">href</span><span class="o">=</span><span class="s2">&quot;foo&quot;</span><span class="o">&gt;</span><span class="nx">Foo</span><span class="o">&lt;</span><span class="err">/Tab&gt;</span>
+</pre></div>
+
+</code></pre>
+</div></article><article class="Doc"><h1 class="Heading" id="TransitionHook"><a class="HeadingLink" href="#TransitionHook">TransitionHook</a><span class="CategoryName">Mixins</span></h1><div><p>Adds a hook to your component instance that is called when the router is
+about to navigate away from the route the component is rendered in, with
+the opportunity to cancel the transition. Mosty useful for forms that
+are partially filled out, or kicking off an action somewhere to persist
+state.</p>
+<h2 id="lifecycle-methods">Lifecycle Methods</h2>
+<h3 id="-routerwillleave-nextstate-router-"><code>routerWillLeave(nextState, router)</code></h3>
+<p>Called when the router is attempting to transition away from the route
+that rendered this component.</p>
+<h3 id="arguments">arguments</h3>
+<ul>
+<li><code>nextState</code> - the next router state</li>
+<li><code>router</code> - the <a href="#TODO"><code>Router</code></a> instance</li>
+</ul>
+<h2 id="example">Example</h2>
+<pre><code class="lang-js"><div class="highlight"><pre><span class="kr">import</span> <span class="p">{</span> <span class="nx">TransitionHook</span> <span class="p">}</span> <span class="nx">from</span> <span class="s1">&#39;react-router&#39;</span><span class="p">;</span>
+
+<span class="kd">var</span> <span class="nx">SignupForm</span> <span class="o">=</span> <span class="nx">React</span><span class="p">.</span><span class="nx">createClass</span><span class="p">({</span>
+  <span class="nx">mixins</span><span class="o">:</span> <span class="p">[</span> <span class="nx">TransitionHook</span> <span class="p">],</span>
+
+  <span class="nx">routerWillLeave</span> <span class="p">(</span><span class="nx">nextState</span><span class="p">,</span> <span class="nx">router</span><span class="p">)</span> <span class="p">{</span>
+    <span class="k">if</span> <span class="p">(</span><span class="k">this</span><span class="p">.</span><span class="nx">formIsHalfFilledOut</span><span class="p">())</span>
+      <span class="k">if</span> <span class="p">(</span><span class="o">!</span><span class="nx">prompt</span><span class="p">(</span><span class="s2">&quot;You sure you want to leave?&quot;</span><span class="p">))</span>
+        <span class="nx">router</span><span class="p">.</span><span class="nx">cancelTransition</span><span class="p">();</span>
+  <span class="p">},</span>
+
+  <span class="c1">// ...</span>
+<span class="p">});</span>
+</pre></div>
+
+</code></pre>
+</div></article></section></div></main><nav class="Nav"><img src="/react-router/img/horizontal.png" width="100%"/><p>version: <select id="version"><option>v0.13.3</option><option>v1.0.0-beta3</option><option>v1.0.0-beta2</option><option>v1.0.0-beta1</option><option>v1.0.0-alpha2</option></select></p><div class="Category"><div class="Category__Name">Guides</div><ul class="Category__List"><li class="Category__ListItem"><a class="Category__Link" href="#Overview">Overview</a></li><li class="Category__ListItem"><a class="Category__Link" href="#Advanced Usage">Advanced Usage</a></li><li class="Category__ListItem"><a class="Category__Link" href="#Flux">Flux</a></li><li class="Category__ListItem"><a class="Category__Link" href="#Path Matching">Path Matching</a></li><li class="Category__ListItem"><a class="Category__Link" href="#Server Rendering">Server Rendering</a></li></ul></div><div class="Category"><div class="Category__Name">Route Configuration</div><ul class="Category__List"><li class="Category__ListItem"><a class="Category__Link" href="#Route">Route</a></li><li class="Category__ListItem"><a class="Category__Link" href="#Plain Route">Plain Route</a></li><li class="Category__ListItem"><a class="Category__Link" href="#Redirect">Redirect</a></li></ul></div><div class="Category"><div class="Category__Name">Components</div><ul class="Category__List"><li class="Category__ListItem"><a class="Category__Link" href="#Router">Router</a></li><li class="Category__ListItem"><a class="Category__Link" href="#Link">Link</a></li><li class="Category__ListItem"><a class="Category__Link" href="#Route Component">Route Component</a></li></ul></div><div class="Category"><div class="Category__Name">History</div><ul class="Category__List"><li class="Category__ListItem"><a class="Category__Link" href="#Histories">Histories</a></li><li class="Category__ListItem"><a class="Category__Link" href="#BrowserHistory">BrowserHistory</a></li><li class="Category__ListItem"><a class="Category__Link" href="#HashHistory">HashHistory</a></li><li class="Category__ListItem"><a class="Category__Link" href="#MemoryHistory">MemoryHistory</a></li></ul></div><div class="Category"><div class="Category__Name">Mixins</div><ul class="Category__List"><li class="Category__ListItem"><a class="Category__Link" href="#Navigation">Navigation</a></li><li class="Category__ListItem"><a class="Category__Link" href="#State">State</a></li><li class="Category__ListItem"><a class="Category__Link" href="#TransitionHook">TransitionHook</a></li></ul></div></nav><script src="/react-router/app.js"></script></body></html>
