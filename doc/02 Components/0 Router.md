@@ -43,7 +43,7 @@ By default, this function uses `qs.stringify(query, { arrayFormat: 'brackets' })
 // default behavior
 function createElement(Component, props) {
   // make sure you pass all the props in!
-  return <Component {...props}/>
+  return <Component {...props}/>;
 }
 
 // maybe you're using something like Relay

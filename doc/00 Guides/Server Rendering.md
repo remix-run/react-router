@@ -59,7 +59,7 @@ function renderFullPage(html, initialData) {
     </script>
   </body>
 </html>
-`
+`;
 }
 ```
 

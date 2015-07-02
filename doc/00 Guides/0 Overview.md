@@ -41,7 +41,7 @@ var App = React.createClass({
         </ul>
         <Child/>
       </div>
-    )
+    );
   }
 });
 
@@ -134,7 +134,7 @@ var App = React.createClass({
         */}
         {this.props.children}
       </div>
-    )
+    );
   }
 });
 
@@ -221,7 +221,7 @@ var Message = React.createClass({
     var id = this.props.params.id;
     fetchMessage(id, function (err, message) {
       this.setState({ message: message });
-    })
+    });
   },
   // ...
 });
