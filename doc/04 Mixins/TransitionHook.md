@@ -27,9 +27,11 @@ var SignupForm = React.createClass({
   mixins: [ TransitionHook ],
 
   routerWillLeave (nextState, router) {
-    if (this.formIsHalfFilledOut())
-      if (!prompt("You sure you want to leave?"))
+    if (this.formIsHalfFilledOut()) {
+      if (!prompt("You sure you want to leave?")) {
         router.cancelTransition();
+      }
+    }
   },
 
   // ...
