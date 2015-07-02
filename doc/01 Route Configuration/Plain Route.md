@@ -48,10 +48,12 @@ var myRoute = {
   path: 'picture/:id',
   getChildRoutes (state, cb) {
     // state gets passed to `getChildRoutes`
-    if (state && state.fromDashboard)
+    if (state && state.fromDashboard) {
       cb(null, [dashboardPictureRoute])
-    else
+    }
+    else {
       cb(null, [pictureRoute])
+    }
   }
 };
 ```
