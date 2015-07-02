@@ -67,6 +67,6 @@
     "router"
   ],
   "system": { 
-    "main": "umd/ReactRouter" 
+    "main": "lib/umd/ReactRouter.min" 
   }
 }
