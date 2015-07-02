@@ -1,5 +1,5 @@
 A user-defined component given to a `Route` as the `component` prop. The
-router will inject properties into your component when its rendered.
+router will inject properties into your component when it's rendered.
 
 Injected Props
 --------------
