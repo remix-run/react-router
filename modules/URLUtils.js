@@ -26,6 +26,30 @@ export function isAbsolutePath(path) {
   return typeof path === 'string' && path.charAt(0) === '/';
 }
 
+/**
+ * Determines whether or not a path 'matches' part of another path.
+ * e.g., if /users matches /users/5/profile
+ */
+export function doesPathMatch(path, compare) {
+  var strippedPath = stripLeadingSlashes(path);
+  var strippedPathCompare = stripLeadingSlashes(compare);
+
+  if (strippedPath === "")
+    return true;
+
+  var splitMatcher = /([/?#]+)/;
+  var splitPath = strippedPath.split(splitMatcher);
+  var splitPathCompare = strippedPathCompare.split(splitMatcher);
+
+  for (var i = 0; i < splitPath.length; i++) {
+    if (splitPath[i].length && splitPath[i] !== splitPathCompare[i]) {
+      return false;
+    }
+  }
+
+  return true;
+}
+
 function escapeRegExp(string) {
   return string.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
 }
