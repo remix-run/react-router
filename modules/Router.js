@@ -185,8 +185,8 @@ var Router = React.createClass({
     if (this.props.onError) {
       this.props.onError.call(this, error);
     } else {
-      // Throw errors by default so we don't silently swallow them!
-      throw error; // This error probably originated in getChildRoutes or getComponents.
+      var msg = error.stack ? error.stack : 'An error ocurred (probably originated in a transition hook)';
+      throw new Error(msg); // This error probably originated in a transition hook.
     }
   },
 
