@@ -20,7 +20,7 @@ React.render(<Router children={routes}/>, document.getElementById('app'));
 ```
 
 On the server, we need to asynchronously match the routes and fetch data
-first, and then provide the initial state to the router so it render
+first, and then provide the initial state to the router so it renders
 synchronously.
 
 ```js
