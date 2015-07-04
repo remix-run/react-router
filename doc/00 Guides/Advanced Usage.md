@@ -1,5 +1,5 @@
 React Router is great for small sites like [React.js
-Training][shameless] ("React Router brought to you by ...") but its
+Training][shameless] ("React Router brought to you by ...") but it's
 built with websites like [facebook][fb] and [twitter][t] in mind, too.
 
 The biggest concern for large apps is the amount of JavaScript required
@@ -8,13 +8,13 @@ to render the current view. Some people call this "code splitting", you
 split your code up into multiple bundles that are loaded on-demand as
 the visitor navigates around.
 
-Its important that changes deep down in the application don't require
+It's important that changes deep down in the application don't require
 changes all the way up top. Adding a route to the photo viewer should
 not affect the size of the initial JavaScript bundle the user downloads.
 Neither should it cause merge conflicts as multiple teams have their
 fingers in the same, big route configuration file.
 
-Your router is the perfect place to handle code splitting: its
+Your router is the perfect place to handle code splitting: it's
 responsible for setting up your views.
 
 React Router does all of its path matching and component resolving
