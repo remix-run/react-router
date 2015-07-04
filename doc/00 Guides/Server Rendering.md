@@ -3,7 +3,7 @@ browser. The primary difference is that while on the client we can do
 asynchronous work *after* rendering, on the server we have to do that
 work *before* rendering, like path matching and data fetching.
 
-We'll start with the client since its pretty simple. The only
+We'll start with the client since it's pretty simple. The only
 interesting thing is that we are getting some initial data from the
 server render to ensure that the first client render markup matches the
 the markup from the server render. Without the initial data, the markup
