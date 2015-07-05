@@ -68,7 +68,17 @@ What's it look like?
 import { Router, Route } from 'react-router';
 import { history } from 'react-router/lib/BrowserHistory';
 
-var App = React.createClass({/*...*/});
+var App = React.createClass({
+  render() {
+    return (
+      <div>
+        <h1>Site Title</h1>
+        {this.props.children}
+      </div>
+    );
+  }
+});
+
 var About = React.createClass({/*...*/});
 // etc.
 
