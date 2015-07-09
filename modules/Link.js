@@ -40,11 +40,13 @@ export var Link = React.createClass({
     to: string.isRequired,
     query: object,
     state: object,
+    tag: string,
     onClick: func
   },
 
   getDefaultProps() {
     return {
+      tag: 'a',
       className: '',
       activeClassName: 'active',
       style: {}
@@ -88,7 +90,7 @@ export var Link = React.createClass({
         props.style = Object.assign({}, props.style, props.activeStyle);
     }
 
-    return React.createElement('a', props);
+    return React.createElement(props.tag, props);
   }
 
 });
