@@ -466,7 +466,7 @@ function fn() {
 
 ### `.` in params support
 
-`.` used to be a delimiter like `/`, but now its a valid character in
+`.` used to be a delimiter like `/`, but now it's a valid character in
 your params.
 
 ### `transition.retry()`

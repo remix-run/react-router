@@ -1,7 +1,7 @@
 `MemoryHistory` is a [history][Histories] implementation that does not
-read and write state to the address bar of the browser. Its useful for
-testing and running React Router in persistent environments that don't
-have URLs.
+read and write state to the address bar of the browser. It's useful
+for testing and running React Router in persistent environments that
+don't have URLs.
 
 Example
 -------
