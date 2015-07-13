@@ -3,7 +3,7 @@ import React from 'react';
 var { object, string, func } = React.PropTypes;
 
 function isLeftClickEvent(event) {
-  return event.button === 0;
+  return event.button === undefined || event.button === 0;
 }
 
 function isModifiedEvent(event) {

@@ -279,7 +279,7 @@ describe('A <Link>', function () {
 
       var steps = [
         function () {
-          click(div.querySelector('a'), { button: 0 });
+          click(div.querySelector('a'));
         },
         function () {
           expect(div.innerHTML).toMatch(/Hello/);
