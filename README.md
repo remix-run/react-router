@@ -19,6 +19,9 @@ Docs & Help
 - [Changelog](/CHANGELOG.md)
 - [#react-router channel on reactiflux](http://www.reactiflux.com/)
 
+**Note: the docs and the examples in master refer to the 1.0 Beta and may be incomplete.**  
+**Browse [the website](http://rackt.github.io/react-router/) and [the 0.13.3 tag](https://github.com/rackt/react-router/tree/v0.13.3) for the information about the latest stable version.**
+
 Browser Support
 ---------------
 
