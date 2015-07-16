@@ -14,7 +14,7 @@ would replace the DOM.
 // client.js
 import { Router } from 'react-router';
 import BrowserHistory from 'react-router/lib/BrowserHistory';
-import './routes' from './routes';
+import routes from './routes';
 
 React.render(<Router children={routes}/>, document.getElementById('app'));
 ```
