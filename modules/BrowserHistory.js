@@ -1,13 +1,5 @@
 import DOMHistory from './DOMHistory';
-import { getWindowPath, supportsHistory } from './DOMUtils';
-import NavigationTypes from './NavigationTypes';
-
-function updateCurrentState(extraState) {
-  var state = window.history.state;
-
-  if (state)
-    window.history.replaceState(Object.assign(state, extraState), '');
-}
+import { addEventListener, removeEventListener, getWindowPath, supportsHistory } from './DOMUtils';
 
 /**
  * A history implementation for DOM environments that support the
@@ -27,83 +19,53 @@ class BrowserHistory extends DOMHistory {
     this.isSupported = supportsHistory();
   }
 
-  _updateLocation(navigationType) {
-    var state = null;
+  setup() {
+    if (this.location != null)
+      return;
 
-    if (this.isSupported) {
-      var historyState = window.history.state;
-      state = this._createState(historyState);
+    var path = getWindowPath();
+    var key = null;
+    if (this.isSupported && window.history.state)
+      key = window.history.state.key;
 
-      if (!historyState || !historyState.key)
-        window.history.replaceState(state, '');
-    }
+    super.setup(path, { key });
 
-    this.location = this.createLocation(getWindowPath(), state, navigationType);
+    addEventListener(window, 'popstate', this.handlePopState);
   }
 
-  setup() {
-    if (this.location == null)
-      this._updateLocation();
+  teardown() {
+    removeEventListener(window, 'popstate', this.handlePopState);
+    super.teardown();
   }
 
   handlePopState(event) {
     if (event.state === undefined)
       return; // Ignore extraneous popstate events in WebKit.
 
-    this._updateLocation(NavigationTypes.POP);
-    this._notifyChange();
-  }
-
-  addChangeListener(listener) {
-    super.addChangeListener(listener);
-
-    if (this.changeListeners.length === 1) {
-      if (window.addEventListener) {
-        window.addEventListener('popstate', this.handlePopState, false);
-      } else {
-        window.attachEvent('onpopstate', this.handlePopState);
-      }
-    }
-  }
-
-  removeChangeListener(listener) {
-    super.removeChangeListener(listener);
-
-    if (this.changeListeners.length === 0) {
-      if (window.removeEventListener) {
-        window.removeEventListener('popstate', this.handlePopState, false);
-      } else {
-        window.detachEvent('onpopstate', this.handlePopState);
-      }
-    }
+    var path = getWindowPath();
+    var key = event.state && event.state.key;
+    this.handlePop(path, { key });
   }
 
   // http://www.w3.org/TR/2011/WD-html5-20110113/history.html#dom-history-pushstate
-  pushState(state, path) {
+  push(path, key) {
     if (this.isSupported) {
-      updateCurrentState(this.getScrollPosition());
-
-      state = this._createState(state);
-
+      var state = { key };
       window.history.pushState(state, '', path);
-      this.location = this.createLocation(path, state, NavigationTypes.PUSH);
-      this._notifyChange();
-    } else {
-      window.location = path;
+      return state;
     }
+
+    window.location = path;
   }
 
   // http://www.w3.org/TR/2011/WD-html5-20110113/history.html#dom-history-replacestate
-  replaceState(state, path) {
+  replace(path, key) {
     if (this.isSupported) {
-      state = this._createState(state);
-
+      var state = { key };
       window.history.replaceState(state, '', path);
-      this.location = this.createLocation(path, state, NavigationTypes.REPLACE);
-      this._notifyChange();
-    } else {
-      window.location.replace(path);
+      return state;
     }
+    window.location.replace(path);
   }
 }
 

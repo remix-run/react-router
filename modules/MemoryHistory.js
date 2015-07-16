@@ -1,16 +1,5 @@
 import invariant from 'invariant';
-import NavigationTypes from './NavigationTypes';
 import History from './History';
-
-function createEntry(object) {
-  if (typeof object === 'string')
-    return { path: object };
-
-  if (typeof object === 'object' && object)
-    return object;
-
-  throw new Error('Unable to create history entry from ' + object);
-}
 
 /**
  * A concrete History class that doesn't require a DOM. Ideal
@@ -30,7 +19,7 @@ class MemoryHistory extends History {
       throw new Error('MemoryHistory needs an array of entries');
     }
 
-    entries = entries.map(createEntry);
+    entries = entries.map(this._createEntry.bind(this));
 
     if (current == null) {
       current = entries.length - 1;
@@ -42,36 +31,59 @@ class MemoryHistory extends History {
       );
     }
 
-    this.entries = entries;
     this.current = current;
+    this.entries = entries;
+    this.storage = entries
+      .filter(entry => entry.state)
+      .reduce((all, entry) => {
+        all[entry.key] = entry.state;
+        return all;
+      }, {});
+  }
 
-    var currentEntry = entries[current];
+  setup() {
+    if (this.location)
+      return;
 
-    this.location = this.createLocation(
-      currentEntry.path,
-      currentEntry.state
-    );
+    var entry = this.entries[this.current];
+    var path = entry.path;
+    var key = entry.key;
+
+    super.setup(path, { key, current: this.current });
+  }
+
+  _createEntry(object) {
+    var key = this.createRandomKey();
+    if (typeof object === 'string')
+      return { path: object, key };
+
+    if (typeof object === 'object' && object)
+      return {...object, key};
+
+    throw new Error('Unable to create history entry from ' + object);
   }
 
   // http://www.w3.org/TR/2011/WD-html5-20110113/history.html#dom-history-pushstate
-  pushState(state, path) {
-    state = this._createState(state);
-
+  push(path, key) {
     this.current += 1;
-    this.entries = this.entries.slice(0, this.current).concat([{ state, path }]);
-    this.location = this.createLocation(path, state, NavigationTypes.PUSH);
+    this.entries = this.entries.slice(0, this.current).concat([{ key, path }]);
 
-    this._notifyChange();
+    return { key, current: this.current };
   }
 
   // http://www.w3.org/TR/2011/WD-html5-20110113/history.html#dom-history-replacestate
-  replaceState(state, path) {
-    state = this._createState(state);
+  replace(path, key) {
+    this.entries[this.current] = { key, path };
 
-    this.entries[this.current] = { state, path };
-    this.location = this.createLocation(path, state, NavigationTypes.REPLACE);
+    return { key, current: this.current };
+  }
 
-    this._notifyChange();
+  readState(key) {
+    return this.storage[key];
+  }
+
+  saveState(key, state){
+    this.storage[key] = state;
   }
 
   go(n) {
@@ -85,15 +97,9 @@ class MemoryHistory extends History {
     );
 
     this.current += n;
-    var currentEntry = this.entries[this.current];
+    var entry = this.entries[this.current];
 
-    this.location = this.createLocation(
-      currentEntry.path,
-      currentEntry.state,
-      NavigationTypes.POP
-    );
-
-    this._notifyChange();
+    this.handlePop(entry.path, { key: entry.key, current: this.current });
   }
 
   canGo(n) {
