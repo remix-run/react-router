@@ -64,6 +64,11 @@ export var Link = React.createClass({
     if (clickResult === false || event.defaultPrevented === true)
       allowTransition = false;
 
+    if (this.context.router.state.location.pathname === this.props.to
+        &&
+        this.context.router.state.location.query == this.props.query) // == b/c query may be null / undefined
+      allowTransition = false;
+
     event.preventDefault();
 
     if (allowTransition)
