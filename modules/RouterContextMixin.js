@@ -1,18 +1,11 @@
 import React from 'react';
 import invariant from 'invariant';
-import { stripLeadingSlashes, stringifyQuery } from './URLUtils';
+import { stripLeadingSlashes, stringifyQuery, doesPathMatch } from './URLUtils';
 
 var { func, object } = React.PropTypes;
 
 function pathnameIsActive(pathname, activePathname) {
-  if (stripLeadingSlashes(activePathname).indexOf(stripLeadingSlashes(pathname)) === 0)
-    return true; // This quick comparison satisfies most use cases.
-
-  // TODO: Implement a more stringent comparison that checks
-  // to see if the pathname matches any routes (and params)
-  // in the currently active branch.
-
-  return false;
+  return doesPathMatch(pathname, activePathname);
 }
 
 function queryIsActive(query, activeQuery) {

@@ -1,5 +1,5 @@
 import expect from 'expect';
-import { getPathname, getQueryString, getParamNames, getParams, formatPattern } from '../URLUtils';
+import { getPathname, getQueryString, getParamNames, getParams, formatPattern, doesPathMatch } from '../URLUtils';
 
 describe('getPathname', function () {
   it('returns the pathname portion of a path', function () {
@@ -29,6 +29,52 @@ describe('getParamNames', function () {
   describe('when a pattern has a *', function () {
     it('uses the name "splat"', function () {
       expect(getParamNames('/files/*.jpg')).toEqual([ 'splat' ]);
+    });
+  });
+});
+
+describe('doesPathMatch', function () {
+  describe('when a path is the root', function () {
+    it('matches everything', function () {
+      expect(doesPathMatch('/', '/')).toEqual(true);
+      expect(doesPathMatch('/', '/users')).toEqual(true);
+      expect(doesPathMatch('/', '/users/5')).toEqual(true);
+      expect(doesPathMatch('/', '/users/5/profile')).toEqual(true);
+    });
+  });
+  describe('when a path has varying levels', function () {
+    it('returns true for exact matches', function () {
+      expect(doesPathMatch('/users', '/users')).toEqual(true);
+      expect(doesPathMatch('/users/', '/users/5')).toEqual(true);
+      expect(doesPathMatch('/users/5', '/users/5')).toEqual(true);
+      expect(doesPathMatch('/users/5/profile', '/users/5/profile')).toEqual(true);
+    });
+    it('returns false for non-matches', function () {
+      expect(doesPathMatch('/users', '/')).toEqual(false);
+      expect(doesPathMatch('/users/5', '/users/55')).toEqual(false);
+      expect(doesPathMatch('/users/', '/users')).toEqual(false);
+      expect(doesPathMatch('/users/john', '/users/john smith')).toEqual(false);
+      expect(doesPathMatch('/projects', '/users')).toEqual(false);
+      expect(doesPathMatch('/projects/5', '/users/5')).toEqual(false);
+      expect(doesPathMatch('/projects/5/info', '/users/5/info')).toEqual(false);
+    });
+  });
+  describe('when a path has query/hash params', function () {
+    it('returns true for exact matches', function () {
+      expect(doesPathMatch('/users?id=5', '/users?id=5')).toEqual(true);
+      expect(doesPathMatch('/users?id=5#heading', '/users?id=5#heading')).toEqual(true);
+      expect(doesPathMatch('/users/profile?id=5', '/users/profile?id=5')).toEqual(true);
+    });
+    it('returns true for partial matches', function () {
+      expect(doesPathMatch('/users', '/users?id=5')).toEqual(true);
+      expect(doesPathMatch('/users', '/users/profile?id=5')).toEqual(true);
+      expect(doesPathMatch('/users?id=5', '/users?id=5#heading')).toEqual(true);
+    });
+    it('returns false for non-matches', function () {
+      expect(doesPathMatch('/users?id=5', '/users?id=55')).toEqual(false);
+      expect(doesPathMatch('/users?id=5', '/users')).toEqual(false);
+      expect(doesPathMatch('/users?id=5', '/')).toEqual(false);
+      expect(doesPathMatch('/users?id', '/users/id')).toEqual(false);
     });
   });
 });

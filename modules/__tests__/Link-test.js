@@ -80,12 +80,14 @@ describe('A <Link>', function () {
           <div>
             <Link to="/hello/michael">Michael</Link>
             <Link to="/hello/ryan">Ryan</Link>
+            <Link to="/hello/ryan%20florence">Ryan Florence</Link>
+            <Link to="/hello">Hello</Link>
           </div>
         );
       }
     });
 
-    it('is active when its params match', function (done) {
+    it('is active when its params match all path segments', function (done) {
       render((
         <Router history={new MemoryHistory('/hello/michael')}>
           <Route path="/" component={App}>
@@ -99,9 +101,37 @@ describe('A <Link>', function () {
       });
     });
 
+    it('is active when its params match parent path segments', function (done) {
+      render((
+        <Router history={new MemoryHistory('/hello/michael')}>
+          <Route path="/" component={App}>
+            <Route path="/hello/:name" component={Hello}/>
+          </Route>
+        </Router>
+      ), div, function () {
+        var a = div.querySelectorAll('a')[3];
+        expect(a.className.trim()).toEqual('active');
+        done();
+      });
+    });
+
     it('is not active when its params do not match', function (done) {
       render((
         <Router history={new MemoryHistory('/hello/michael')}>
+          <Route path="/" component={App}>
+            <Route path="/hello/:name" component={Hello}/>
+          </Route>
+        </Router>
+      ), div, function () {
+        var a = div.querySelectorAll('a')[1];
+        expect(a.className.trim()).toEqual('');
+        done();
+      });
+    });
+
+    it('is not active when its params match only an initial part of a segment', function (done) {
+      render((
+        <Router history={new MemoryHistory('/hello/ryan%20florence')}>
           <Route path="/" component={App}>
             <Route path="/hello/:name" component={Hello}/>
           </Route>
