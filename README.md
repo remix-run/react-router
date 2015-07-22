@@ -68,66 +68,62 @@ What's it look like?
 --------------------
 
 ```js
-import { Router, Route } from 'react-router';
-import { history } from 'react-router/lib/BrowserHistory';
+var Router = require('react-router');
+var Route = Router.Route;
+var Link = Router.Link;
 
-var App = React.createClass({/*...*/});
-var About = React.createClass({/*...*/});
-// etc.
-
-var Users = React.createClass({
-  render() {
-    return (
-      <div>
-        <h1>Users</h1>
-        <div className="master">
-          <ul>
-            {/* use Link to route around the app */}
-            {this.state.users.map(user => (
-              <li><Link to={`/users/${users.id}`}>{user.name}</Link></li>
-            ))}
-          </ul>
-        </div>
-        <div className="detail">
-          {this.props.children}
-        </div>
-      </div>
-    );
+// components to route between
+var About = React.createClass({
+  render: function () {
+    return <h2>About</h2>;
   }
 });
 
-var User = React.createClass({
-  componentDidMount() {
-    this.setState({
-      // route components are rendered with useful information, like URL params
-      user: findUserById(this.props.params.userId)
-    });
-  },
-
-  render() {
-    return (
-      <div>
-        <h2>{this.state.user.name}</h2>
-        {/* etc. */}
-      </div>
-    );
+var Inbox = React.createClass({
+  render: function () {
+    return <h2>Inbox</h2>;
   }
 });
 
-// Declarative route configuration (could also load this config lazily
-// instead, all you really need is a single root route, you don't need to
-// colocate the entire config).
-React.render((
-  <Router history={history}>
-    <Route path="/" component={App}>
-      <Route path="about" component={About}/>
-      <Route path="users" component={Users}>
-        <Route path="/user/:userId" component={User}/>
-      </Route>
-      <Route path="*" component={NoMatch}/>
-    </Route>
-  </Router>
-), document.body);
+// declare our routes and their hierarchy
+var routes = (
+  <Route handler={App}>
+    <Route name="about" handler={About}/>
+    <Route name="inbox" handler={Inbox}/>
+  </Route>
+);
+
+var Navbar = React.createClass({
+  render: function(){
+    return (
+      <div>
+        // use Link to route around App
+        <Link to="about">About</Link>
+        <Link to="inbox">Inbox</Link>
+      </div>
+    )
+  }
+});
+
+var RouteHandler = Router.RouteHandler;
+
+var App = React.createClass({
+  render () {
+    return (
+      <div>
+        <Navbar/>
+        <h1>App</h1>
+        <RouteHandler/>
+      </div>
+    )
+  }
+});
+
+// listens to URL and renders components to RouteHandler
+Router.run(routes, Router.HashLocation, (Root) => {
+  React.render(<Root/>, document.body);
+});
+
 ```
 
 See more in the [overview guide](/doc/00 Guides/0 Overview.md) and [Advanced
