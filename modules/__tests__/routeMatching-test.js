@@ -20,13 +20,31 @@ describe('A Router', function () {
   var Component4 = React.createClass({ render() { return null; } });
 
   describe('with a synchronous route config', function () {
+    
     var childRoutes = [
-      { path: 'two/:name', component: Component2 },
-      { path: 'three',
+      {
+        path: 'two/:name',
+        component: Component2
+      },
+      {
+        path: 'three',
         components: {
           main: Component3,
           sidebar: Component4
         }
+      },
+      {
+        path: 'foos',
+        childRoutes: [
+          {
+            path: '/',
+            component: Component3
+          },
+          {
+            path: 'bars',
+            component: Component4
+          }
+        ]
       }
     ];
 
@@ -77,11 +95,40 @@ describe('A Router', function () {
         done();
       });
     });
+
+    it('matches nested route where parent has no component', function (done) {
+      render(<Router history={new MemoryHistory("/foos/bars")} children={routes} />, div, function () {
+        expect(this.state.branch).toEqual([
+          parentRoute,
+          childRoutes[2],
+          childRoutes[2].childRoutes[1]
+        ]);
+        done();
+      });
+    });
+
+    it('matches nested default route where parent has no component', function (done) {
+      render(<Router history={new MemoryHistory("/foos")} children={routes} />, div, function () {
+        expect(this.state.branch).toEqual([
+          parentRoute,
+          childRoutes[2],
+          childRoutes[2].childRoutes[0]
+        ]);
+        done();
+      });
+    });
+
   });
 
   describe('with an asynchronous route config', function () {
+
     var childRoutes = [
-      { path: 'two/:name', getComponents (cb){ cb(null, Component2); } },
+      {
+        path: 'two/:name',
+        getComponents (cb) {
+          cb(null, Component2);
+        }
+      },
       {
         path: 'three',
         getComponents (cb) {
@@ -89,6 +136,25 @@ describe('A Router', function () {
             main: Component3,
             sidebar: Component4
           });
+        }
+      },
+      {
+        path: 'foos',
+        getChildRoutes (state, cb) {
+          cb(null, [
+            {
+              path: '/',
+              getComponents (cb) {
+                cb(null, Component3);
+              }
+            },
+            {
+              path: 'bars',
+              getComponents (cb) {
+                cb(null, Component4);
+              }
+            }
+          ]);
         }
       }
     ];
@@ -139,6 +205,33 @@ describe('A Router', function () {
         done();
       });
     });
+
+    it('matches nested route where parent has no component', function (done) {
+      render(<Router history={new MemoryHistory("/foos/bars")} children={routes} />, div, function () {
+        childRoutes[2].getChildRoutes(null, function (state, barsChildRoutes) {
+          expect(this.state.branch).toEqual([
+            parentRoute,
+            childRoutes[2],
+            barsChildRoutes[1]
+          ]);
+          done();
+        }.bind(this));
+      });
+    });
+
+    it('matches nested default route where parent has no component', function (done) {
+      render(<Router history={new MemoryHistory("/foos")} children={routes} />, div, function () {
+        childRoutes[2].getChildRoutes(null, function (state, barsChildRoutes) {
+          expect(this.state.branch).toEqual([
+            parentRoute,
+            childRoutes[2],
+            barsChildRoutes[0]
+          ]);
+          done();
+        }.bind(this));
+      });
+    });
+
   });
 
 });
