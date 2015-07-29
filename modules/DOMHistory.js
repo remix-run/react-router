@@ -58,12 +58,14 @@ class DOMHistory extends History {
   }
 
   handleBeforeUnload(event) {
-    var message = this.beforeChangeListener.call(this);
+    if(this.beforeChangeListener) {
+      var message = this.beforeChangeListener.call(this);
 
-    if (message != null) {
-      // cross browser, see https://developer.mozilla.org/en-US/docs/Web/Events/beforeunload
-      (event || window.event).returnValue = message;
-      return message;
+      if (message != null) {
+        // cross browser, see https://developer.mozilla.org/en-US/docs/Web/Events/beforeunload
+        (event || window.event).returnValue = message;
+        return message;
+      }
     }
   }
 
