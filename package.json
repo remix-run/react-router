@@ -10,9 +10,9 @@
   "homepage": "https://rackt.github.io/react-router/",
   "bugs": "https://github.com/rackt/react-router/issues",
   "scripts": {
-    "build": "scripts/build.sh",
+    "build": "sh ./scripts/build.sh",
     "watch": "babel ./modules --watch -d lib",
-    "build-website": "scripts/build-website.sh",
+    "build-website": "sh ./scripts/build-website.sh",
     "examples": "webpack-dev-server --config examples/webpack.config.js --content-base examples --inline",
     "prepublish": "npm run build",
     "test": "eslint modules && karma start"
