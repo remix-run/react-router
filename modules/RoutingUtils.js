@@ -212,11 +212,11 @@ export function getTransitionHooks(prevState, nextState) {
   return hooks;
 }
 
-function getComponentsForRoute(route, callback) {
+function getComponentsForRoute(route, state, callback) {
   if (route.component || route.components) {
     callback(null, route.component || route.components);
   } else if (route.getComponents) {
-    route.getComponents(callback);
+    route.getComponents(callback, state);
   } else {
     callback();
   }
@@ -229,9 +229,10 @@ function getComponentsForRoute(route, callback) {
  * Note: This operation may return synchronously if no routes have an
  * asynchronous getComponents method.
  */
-export function getComponents(routes, callback) {
+export function getComponents(state, callback) {
+  var routes = state.branch;
   mapAsync(routes, function (route, index, callback) {
-    getComponentsForRoute(route, callback);
+    getComponentsForRoute(route, state, callback);
   }, callback);
 }
 

@@ -99,7 +99,7 @@ var Users = React.createClass({
 
 ```
 
-### `getComponents(state, cb)`
+### `getComponents(callback, state)`
 
 Same as `components` but asynchronous, useful for code-splitting and
 returning different routes given some transition `state`.
@@ -140,4 +140,3 @@ state and the [transition][Transition] instance for cancelling/redirecting.
   [instragram-example]:#TODO
   [history]:#TODO
   [Transition]:#TODO
-
