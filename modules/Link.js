@@ -75,7 +75,7 @@ export var Link = React.createClass({
     var { to, query } = this.props;
 
     var props = Object.assign({}, this.props, {
-      href: router.makeHref(to, query),
+      href: router && router.makeHref(to, query),
       onClick: this.handleClick
     });
 
