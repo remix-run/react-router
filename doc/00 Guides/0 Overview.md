@@ -93,7 +93,7 @@ path: /inbox
 +--------------+--------------------------------+
 ```
 
-We'd have to make our url parsing a lot more intelligent, and end up
+We'd have to make our url parsing a lot more intelligently, and end up
 with a lot of code to figure out which branch of nested components to be
 rendered at any given url: `App -> About`, `App -> Inbox -> Messages ->
 Message`, `App -> Inbox -> Messages -> Stats`, etc.
