@@ -13,6 +13,20 @@ import Transition from './Transition';
 var { arrayOf, func, object } = React.PropTypes;
 
 function runTransition(prevState, routes, location, hooks, callback) {
+  let history = null;
+
+  // ducktype history object
+  if (
+    location.pushState &&
+    location.replaceState &&
+    location.go
+  ) {
+    history = location;
+    if (history.setup) {
+      history.setup();
+    }
+    location = history.location;
+  }
   var transition = new Transition;
 
   getState(routes, location, function (error, nextState) {
@@ -41,6 +55,8 @@ function runTransition(prevState, routes, location, hooks, callback) {
             if (error || transition.isCancelled) {
               callback(error, null, transition);
             } else {
+              nextState.routes = routes;
+              nextState.history = history;
               nextState.components = components;
               callback(null, nextState, transition);
             }
@@ -217,6 +233,11 @@ var Router = React.createClass({
       if (history.addChangeListener)
         history.addChangeListener(this.handleHistoryChange);
 
+      // client side Router run
+      if (location && components && params)
+        return this.setState({ components, branch, location, params });
+
+      // client side Router component
       this._updateState(history.location);
     } else {
       invariant(
