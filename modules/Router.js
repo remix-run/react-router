@@ -37,7 +37,7 @@ function runTransition(prevState, routes, location, hooks, callback) {
         if (error || transition.isCancelled) {
           callback(error, null, transition);
         } else {
-          getComponents(nextState.branch, function (error, components) {
+          getComponents(nextState, function (error, components) {
             if (error || transition.isCancelled) {
               callback(error, null, transition);
             } else {
