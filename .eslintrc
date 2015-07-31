@@ -1,4 +1,5 @@
 {
+  "extends": "eslint:recommended",
   "ecmaFeatures": {
     "modules": true
   },
