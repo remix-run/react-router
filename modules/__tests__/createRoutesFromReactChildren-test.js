@@ -29,11 +29,13 @@ describe('createRoutesFromReactChildren', function () {
   });
  
   it('works with nested routes', function () {
-    expect(createRoutesFromReactChildren(
+    var routes = createRoutesFromReactChildren(
       <Route component={Parent}>
         <Route path="home" components={{ hello: Hello, goodbye: Goodbye }}/>
       </Route>
-    )).toEqual([
+    );
+
+    expect(routes).toEqual([
       {
         component: Parent,
         childRoutes: [
