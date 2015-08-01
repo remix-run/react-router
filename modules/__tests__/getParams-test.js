@@ -1,9 +1,9 @@
 import expect from 'expect';
-import { getParams } from '../URLUtils';
+import { getParams } from '../PatternUtils';
 
 describe('getParams', function () {
   describe('when a pattern does not have dynamic segments', function () {
-    var pattern = 'a/b/c';
+    var pattern = '/a/b/c';
 
     describe('and the path matches', function () {
       it('returns an empty object', function () {
@@ -13,77 +13,77 @@ describe('getParams', function () {
 
     describe('and the path does not match', function () {
       it('returns null', function () {
-        expect(getParams(pattern, 'd/e/f')).toBe(null);
+        expect(getParams(pattern, '/d/e/f')).toBe(null);
       });
     });
   });
 
   describe('when a pattern has dynamic segments', function () {
-    var pattern = 'comments/:id.:ext/edit';
+    var pattern = '/comments/:id.:ext/edit';
 
     describe('and the path matches', function () {
       it('returns an object with the params', function () {
-        expect(getParams(pattern, 'comments/abc.js/edit')).toEqual({ id: 'abc', ext: 'js' });
+        expect(getParams(pattern, '/comments/abc.js/edit')).toEqual({ id: 'abc', ext: 'js' });
       });
     });
 
     describe('and the pattern is optional', function () {
-      var pattern = 'comments/(:id)/edit';
+      var pattern = '/comments/(:id)/edit';
 
       describe('and the path matches with supplied param', function () {
         it('returns an object with the params', function () {
-          expect(getParams(pattern, 'comments/123/edit')).toEqual({ id: '123' });
+          expect(getParams(pattern, '/comments/123/edit')).toEqual({ id: '123' });
         });
       });
 
       describe('and the path matches without supplied param', function () {
         it('returns an object with an undefined param', function () {
-          expect(getParams(pattern, 'comments//edit')).toEqual({ id: undefined });
+          expect(getParams(pattern, '/comments//edit')).toEqual({ id: undefined });
         });
       });
     });
 
     describe('and the pattern and forward slash are optional', function () {
-      var pattern = 'comments(/:id)/edit';
+      var pattern = '/comments(/:id)/edit';
 
       describe('and the path matches with supplied param', function () {
         it('returns an object with the params', function () {
-          expect(getParams(pattern, 'comments/123/edit')).toEqual({ id: '123' });
+          expect(getParams(pattern, '/comments/123/edit')).toEqual({ id: '123' });
         });
       });
 
       describe('and the path matches without supplied param', function () {
         it('returns an object with an undefined param', function () {
-          expect(getParams(pattern, 'comments/edit')).toEqual({ id: undefined });
+          expect(getParams(pattern, '/comments/edit')).toEqual({ id: undefined });
         });
       });
     });
 
     describe('and the path does not match', function () {
       it('returns null', function () {
-        expect(getParams(pattern, 'users/123')).toBe(null);
+        expect(getParams(pattern, '/users/123')).toBe(null);
       });
     });
 
     describe('and the path matches with a segment containing a .', function () {
       it('returns an object with the params', function () {
-        expect(getParams(pattern, 'comments/foo.bar/edit')).toEqual({ id: 'foo', ext: 'bar' });
+        expect(getParams(pattern, '/comments/foo.bar/edit')).toEqual({ id: 'foo', ext: 'bar' });
       });
     });
   });
 
   describe('when a pattern has characters that have special URL encoding', function () {
-    var pattern = 'one, two';
+    var pattern = '/one, two';
 
     describe('and the path matches', function () {
       it('returns an empty object', function () {
-        expect(getParams(pattern, 'one, two')).toEqual({});
+        expect(getParams(pattern, '/one, two')).toEqual({});
       });
     });
 
     describe('and the path does not match', function () {
       it('returns null', function () {
-        expect(getParams(pattern, 'one two')).toBe(null);
+        expect(getParams(pattern, '/one two')).toBe(null);
       });
     });
   });
