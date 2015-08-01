@@ -4,6 +4,7 @@ var { Route, RouteHandler, Link } = Router;
 
 class App extends React.Component {
   constructor () {
+    super(props);
     this.state = {
       loggedIn: auth.loggedIn()
     };
@@ -45,7 +46,7 @@ var requireAuth = (Component) => {
     static willTransitionTo(transition) {
       if (!auth.loggedIn()) {
         transition.redirect('/login', {}, {'nextPath' : transition.path});
-      }  
+      }
     }
     render () {
       return <Component {...this.props}/>
@@ -69,6 +70,7 @@ var Dashboard = requireAuth(class extends React.Component {
 class Login extends React.Component {
 
   constructor () {
+    super(props);
     this.handleSubmit = this.handleSubmit.bind(this);
     this.state = {
       error: false
