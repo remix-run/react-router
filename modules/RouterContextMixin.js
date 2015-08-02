@@ -5,14 +5,25 @@ import { stripLeadingSlashes, stringifyQuery } from './URLUtils';
 var { func, object } = React.PropTypes;
 
 function pathnameIsActive(pathname, activePathname) {
-  if (stripLeadingSlashes(activePathname).indexOf(stripLeadingSlashes(pathname)) === 0)
-    return true; // This quick comparison satisfies most use cases.
+  pathname = stripLeadingSlashes(pathname);
+  activePathname = stripLeadingSlashes(activePathname);
 
-  // TODO: Implement a more stringent comparison that checks
-  // to see if the pathname matches any routes (and params)
-  // in the currently active branch.
+  // perfect match
+  if (pathname === activePathname) {
+    return true;
+  }
 
-  return false;
+  // starts with your path?
+  if (activePathname.indexOf(pathname) !== 0) {
+    return false;
+  }
+
+  // eliminate false-positive when the path section was not finished
+  if (activePathname.charAt(pathname.length) !== '/') {
+    return false;
+  }
+
+  return true;
 }
 
 function queryIsActive(query, activeQuery) {
@@ -79,7 +90,7 @@ var RouterContextMixin = {
 
     return path;
   },
- 
+
   /**
    * Pushes a new Location onto the history stack.
    */
@@ -137,7 +148,7 @@ var RouterContextMixin = {
   goForward() {
     this.go(1);
   },
- 
+
   /**
    * Returns true if a <Link> to the given pathname/query combination is
    * currently active.
