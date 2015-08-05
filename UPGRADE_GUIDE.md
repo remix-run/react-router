@@ -8,7 +8,7 @@ reference.
 0.13.x -> 1.0.0
 ----------------
 
-- React `0.14.x` is now required
+- React `0.14.x` is now required (if you want to use the new AsyncProps feature of React Router)
 - `Router.run` has been removed. Simply call `React.render()` directly on the `<Router/>` component
 - `<RouteHandler/>` has been replaced with `this.props.children`
 
@@ -104,6 +104,42 @@ var SomeComponent = React.createClass({
     )
   }
 });
+```
+
+- The `willTransitionTo` lifecycle method has been replaced with the `routerWillLeave` method from the `Navigation` mixin, or the `onEnter` prop on the `<Route/>` component
+
+```js
+// 0.13.x
+var SomeComponent = React.createClass({
+  statics: {
+    willTransitionTo: (transition, params, query) {
+	  if (shouldAbort) {
+	    transition.abort();
+	  } else {
+	    transition.redirect('another-route');
+	  }
+	}
+  }
+});
+
+// 1.0.0
+// Using component method
+var SomeComponent = React.createClass({
+  mixins: [Navigation],
+
+  routerWillLeave: (nextState, transition) {
+    transition.abort();
+  }
+});
+
+// 1.0.0
+// Using Route definition
+var onEnter = function (nextState, transition) {
+  transition.to('another-route');
+};
+
+<Route component={Page} onEnter={onEnter} path="page" />
+
 ```
 
 0.13.2 -> 0.13.3
