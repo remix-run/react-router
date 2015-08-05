@@ -225,7 +225,7 @@ class History {
   _createLocation(path, state, entry, navigationType) {
     var pathname = getPathname(path);
     var queryString = getQueryString(path);
-    var query = queryString ? this.parseQueryString(queryString) : null;
+    var query = this.parseQueryString(queryString);
     return new Location(pathname, query, {...state, ...entry}, navigationType);
   }
 
