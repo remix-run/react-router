@@ -7,8 +7,9 @@ import { getState, getTransitionHooks, getComponents, getRouteParams, createTran
 import { routes, component, components, history, location } from './PropTypes';
 import RouterContextMixin from './RouterContextMixin';
 import ScrollManagementMixin from './ScrollManagementMixin';
-import { isLocation } from './Location';
+import Location from './Location';
 import Transition from './Transition';
+var isLocation = Location.isLocation;
 
 var { arrayOf, func, object } = React.PropTypes;
 
