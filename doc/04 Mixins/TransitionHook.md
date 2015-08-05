@@ -15,7 +15,7 @@ that rendered this component.
 ### arguments
 
 - `nextState` - the next router state
-- `router` - the [`Router`][Router] instance
+- `transition` - the [`Transition`][Transition] instance
 
 Example
 -------
@@ -26,10 +26,10 @@ import { TransitionHook } from 'react-router';
 var SignupForm = React.createClass({
   mixins: [ TransitionHook ],
 
-  routerWillLeave (nextState, router) {
+  routerWillLeave (nextState, transition) {
     if (this.formIsHalfFilledOut())
       if (!prompt("You sure you want to leave?"))
-        router.cancelTransition();
+        transition.abort();
   },
 
   // ...
