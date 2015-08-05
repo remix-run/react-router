@@ -125,7 +125,7 @@ var SomeComponent = React.createClass({
 // 1.0.0
 // Using component method
 var SomeComponent = React.createClass({
-  mixins: [Navigation],
+  mixins: [TransitionHook],
 
   routerWillLeave: (nextState, transition) {
     transition.abort();
