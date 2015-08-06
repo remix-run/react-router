@@ -1,6 +1,6 @@
-import React from 'react';
+import { createClass, createElement, PropTypes } from 'react';
 
-var { object, string, func } = React.PropTypes;
+var { object, string, func } = PropTypes;
 
 function isLeftClickEvent(event) {
   return event.button === 0;
@@ -26,9 +26,9 @@ function isModifiedEvent(event) {
  * Links may pass along query string parameters
  * using the `query` prop.
  *
- *   <Link to="/posts/123" query={{ show:true }}/>
+ *   <Link to="/posts/123" query={{ show: true }}/>
  */
-export var Link = React.createClass({
+var Link = createClass({
 
   contextTypes: {
     router: object
@@ -72,23 +72,28 @@ export var Link = React.createClass({
 
   render() {
     var { router } = this.context;
-    var { to, query } = this.props;
 
     var props = Object.assign({}, this.props, {
-      href: router.makeHref(to, query),
       onClick: this.handleClick
     });
 
-    // ignore if rendered outside of the context of a router, simplifies unit testing
-    if (router && router.isActive(to, query)) {
-      if (props.activeClassName)
-        props.className += props.className !== '' ? ` ${props.activeClassName}` : props.activeClassName;
+    // Ignore if rendered outside of the context of a
+    // router, simplifies unit testing.
+    if (router) {
+      var { to, query } = this.props;
 
-      if (props.activeStyle)
-        props.style = Object.assign({}, props.style, props.activeStyle);
+      props.href = router.createHref(to, query);
+
+      if (router.isActive(to, query)) {
+        if (props.activeClassName)
+          props.className += props.className !== '' ? ` ${props.activeClassName}` : props.activeClassName;
+
+        if (props.activeStyle)
+          props.style = Object.assign({}, props.style, props.activeStyle);
+      }
     }
 
-    return React.createElement('a', props);
+    return createElement('a', props);
   }
 
 });

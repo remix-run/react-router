@@ -1,8 +1,9 @@
 import React, { findDOMNode } from 'react';
+import createHistory from 'history/lib/createHashHistory';
 import { Router, Route, Link, Navigation } from 'react-router';
-import HashHistory from 'react-router/lib/HashHistory';
 import auth from './auth';
-var history = new HashHistory({ queryKey: true });
+
+var history = createHistory();
 
 var App = React.createClass({
   getInitialState() {
@@ -11,14 +12,14 @@ var App = React.createClass({
     };
   },
 
-  setStateOnAuth(loggedIn) {
+  updateAuth(loggedIn) {
     this.setState({
-      loggedIn: loggedIn
+      loggedIn: !!loggedIn
     });
   },
 
   componentWillMount() {
-    auth.onChange = this.setStateOnAuth;
+    auth.onChange = this.updateAuth;
     auth.login();
   },
 
@@ -45,6 +46,7 @@ var App = React.createClass({
 var Dashboard = React.createClass({
   render() {
     var token = auth.getToken();
+
     return (
       <div>
         <h1>Dashboard</h1>
@@ -56,7 +58,6 @@ var Dashboard = React.createClass({
 });
 
 var Login = React.createClass({
-
   mixins: [ Navigation ],
 
   getInitialState() {
@@ -115,9 +116,9 @@ var Logout = React.createClass({
   }
 });
 
-function requireAuth(nextState, transition) {
+function requireAuth(nextState, redirectTo) {
   if (!auth.loggedIn())
-    transition.to('/login', null, { nextPathname: nextState.location.pathname });
+    redirectTo('/login', null, { nextPathname: nextState.location.pathname });
 }
 
 React.render((

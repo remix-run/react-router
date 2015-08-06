@@ -36,8 +36,8 @@ export function getWindowPath() {
 
 export function getWindowScrollPosition() {
   return {
-    scrollX: window.pageXOffset || document.documentElement.scrollLeft,
-    scrollY: window.pageYOffset || document.documentElement.scrollTop
+    x: window.pageXOffset || document.documentElement.scrollLeft,
+    y: window.pageYOffset || document.documentElement.scrollTop
   };
 }
 

@@ -1,7 +1,7 @@
 import expect from 'expect';
 import React from 'react';
-import Route from '../Route';
 import { createRoutesFromReactChildren } from '../RouteUtils';
+import Route from '../Route';
 
 describe('createRoutesFromReactChildren', function () {
 

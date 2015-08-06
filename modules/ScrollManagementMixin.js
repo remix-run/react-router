@@ -1,16 +1,16 @@
 import React from 'react';
+import { Actions } from 'history';
 import { canUseDOM, setWindowScrollPosition } from './DOMUtils';
-import NavigationTypes from './NavigationTypes';
 
 var { func } = React.PropTypes;
 
-function getCommonAncestors(branch, otherBranch) {
-  return branch.filter(route => otherBranch.indexOf(route) !== -1);
+function getCommonAncestors(routes, otherRoutes) {
+  return routes.filter(route => otherRoutes.indexOf(route) !== -1);
 }
 
 function shouldUpdateScrollPosition(state, prevState) {
-  var { location, branch } = state;
-  var { location: prevLocation, branch: prevBranch } = prevState;
+  var { location, routes } = state;
+  var { location: prevLocation, routes: prevRoutes } = prevState;
 
   // When an onEnter hook uses transition.to to redirect
   // on the initial load prevLocation is null, so assume
@@ -24,16 +24,16 @@ function shouldUpdateScrollPosition(state, prevState) {
 
   // Don't update scroll position if any of the ancestors
   // has `ignoreScrollPosition` set to `true` on the route.
-  var sharedAncestors = getCommonAncestors(branch, prevBranch);
+  var sharedAncestors = getCommonAncestors(routes, prevRoutes);
   if (sharedAncestors.some(route => route.ignoreScrollBehavior))
     return false;
 
   return true;
 }
 
-function updateWindowScrollPosition(navigationType, scrollX, scrollY) {
+function updateWindowScrollPosition(action, scrollX, scrollY) {
   if (canUseDOM) {
-    if (navigationType === NavigationTypes.POP) {
+    if (action === Actions.POP) {
       setWindowScrollPosition(scrollX, scrollY);
     } else {
       setWindowScrollPosition(0, 0);
@@ -57,11 +57,10 @@ var ScrollManagementMixin = {
 
   componentDidUpdate(prevProps, prevState) {
     var { location } = this.state;
-    var locationState = location && location.state;
 
-    if (locationState && this.props.shouldUpdateScrollPosition(this.state, prevState)) {
-      var { scrollX, scrollY } = locationState;
-      this.props.updateScrollPosition(location.navigationType, scrollX || 0, scrollY || 0);
+    if (location && this.props.shouldUpdateScrollPosition(this.state, prevState)) {
+      var { action, scrollX, scrollY } = location;
+      this.props.updateScrollPosition(action, scrollX || 0, scrollY || 0);
     }
   }
 

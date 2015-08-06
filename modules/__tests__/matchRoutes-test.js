@@ -3,8 +3,8 @@ import expect from 'expect';
 import { createLocation } from 'history';
 import matchRoutes from '../matchRoutes';
 
-describe.skip('matchRoutes', function () {
-  var routes, RootRoute, UsersRoute, UsersIndexRoute, UserRoute, AboutRoute, TeamRoute, ProfileRoute;
+describe('matchRoutes', function () {
+  var routes, RootRoute, UsersRoute, UsersIndexRoute, UserRoute, PostRoute, FilesRoute, AboutRoute, TeamRoute, ProfileRoute, CatchAllRoute;
   beforeEach(function () {
     /*
     <Route>
@@ -17,6 +17,7 @@ describe.skip('matchRoutes', function () {
       </Route>
     </Route>
     <Route path="/about" />
+    <Route path="*" />
     */
     routes = [
       RootRoute = {
@@ -30,6 +31,9 @@ describe.skip('matchRoutes', function () {
                 childRoutes: [
                   ProfileRoute = {
                     path: '/profile'
+                  },
+                  PostRoute = {
+                    path: ':postID'
                   }
                 ]
               },
@@ -40,8 +44,14 @@ describe.skip('matchRoutes', function () {
           }
         ]
       },
+      FilesRoute = {
+        path: '/files/*/*.jpg'
+      },
       AboutRoute = {
         path: '/about'
+      },
+      CatchAllRoute = {
+        path: '*'
       }
     ];
   });
@@ -68,11 +78,43 @@ describe.skip('matchRoutes', function () {
       });
     });
 
+    describe('when the location matches a deeply nested route with params', function () {
+      it('matches the correct routes and params', function (done) {
+        matchRoutes(routes, createLocation('/users/5/abc'), function (error, match) {
+          assert(match);
+          expect(match.routes).toEqual([ RootRoute, UsersRoute, UserRoute, PostRoute ]);
+          expect(match.params).toEqual({ userID: '5', postID: 'abc' });
+          done();
+        });
+      });
+    });
+
+    describe('when the location matches a nested route with multiple splat params', function () {
+      it('matches the correct routes and params', function (done) {
+        matchRoutes(routes, createLocation('/files/a/b/c.jpg'), function (error, match) {
+          assert(match);
+          expect(match.routes).toEqual([ FilesRoute ]);
+          expect(match.params).toEqual({ splat: [ 'a', 'b/c' ] });
+          done();
+        });
+      });
+    });
+
     describe('when the location matches an absolute route', function () {
       it('matches the correct routes', function (done) {
         matchRoutes(routes, createLocation('/about'), function (error, match) {
           assert(match);
           expect(match.routes).toEqual([ AboutRoute ]);
+          done();
+        });
+      });
+    });
+
+    describe('when the location does not match any routes', function () {
+      it('matches the "catch-all" route', function (done) {
+        matchRoutes(routes, createLocation('/not-found'), function (error, match) {
+          assert(match);
+          expect(match.routes).toEqual([ CatchAllRoute ]);
           done();
         });
       });
@@ -97,7 +139,7 @@ describe.skip('matchRoutes', function () {
         matchRoutes(routes, createLocation('/profile'), function (error, match) {
           assert(match);
           expect(match.routes).toEqual([ RootRoute, UsersRoute, UserRoute, ProfileRoute ]);
-          expect(match.params).toEqual({ userID: null });
+          expect(match.params).toEqual({}); // no userID param
           done();
         });
       });

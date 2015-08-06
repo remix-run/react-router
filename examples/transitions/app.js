@@ -1,6 +1,8 @@
-import React, { findDOMNode } from 'react';
-import { Router, Route, Link, Navigation, TransitionHook } from 'react-router';
-import { history } from 'react-router/lib/HashHistory';
+import React from 'react';
+import createHistory from 'history/lib/createHashHistory';
+import { Router, Route, Link, Navigation } from 'react-router';
+
+var history = createHistory();
 
 var App = React.createClass({
   render() {
@@ -29,18 +31,43 @@ var Dashboard = React.createClass({
 });
 
 var Form = React.createClass({
-  mixins: [ Navigation, TransitionHook ],
+  mixins: [ Navigation ],
 
-  routerWillLeave(nextState, transition) {
-    if (findDOMNode(this.refs.userInput).value !== '')
-      if (!confirm('You have unsaved information, are you sure you want to leave this page?'))
-        transition.abort();
+  getInitialState() {
+    return {
+      textValue: 'ohai'
+    };
+  },
+
+  transitionHook() {
+    if (this.state.textValue)
+      return 'You have unsaved information, are you sure you want to leave this page?';
+  },
+
+  componentDidMount() {
+    history.registerTransitionHook(this.transitionHook);
+  },
+
+  componentWillUnmount() {
+    history.unregisterTransitionHook(this.transitionHook);
+  },
+
+  handleChange(event) {
+    var { value } = event.target;
+
+    this.setState({
+      textValue: value
+    });
   },
 
   handleSubmit(event) {
     event.preventDefault();
-    findDOMNode(this.refs.userInput).value = '';
-    this.transitionTo('/');
+
+    this.setState({
+      textValue: ''
+    }, () => {
+      this.transitionTo('/');
+    });
   },
 
   render() {
@@ -48,7 +75,7 @@ var Form = React.createClass({
       <div>
         <form onSubmit={this.handleSubmit}>
           <p>Click the dashboard link with text in the input.</p>
-          <input type="text" ref="userInput" defaultValue="ohai" />
+          <input type="text" ref="userInput" value={this.state.textValue} onChange={this.handleChange} />
           <button type="submit">Go</button>
         </form>
       </div>

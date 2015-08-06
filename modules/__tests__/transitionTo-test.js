@@ -1,10 +1,14 @@
 import expect from 'expect';
-import React, { render } from 'react';
-import MemoryHistory from '../MemoryHistory';
+import React from 'react';
+import createHistory from 'history/lib/createHashHistory';
+import resetHash from './resetHash';
+import execSteps from './execSteps';
 import Router from '../Router';
 import Route from '../Route';
 
 describe('transitionTo', function () {
+  beforeEach(resetHash);
+
   var node;
   beforeEach(function () {
     node = document.createElement('div');
@@ -35,20 +39,14 @@ describe('transitionTo', function () {
         },
         function () {
           expect(this.state.location.pathname).toEqual('/home/hi:there');
-          done();
         }
       ];
 
-      function execNextStep() {
-        try {
-          steps.shift().apply(this, arguments);
-        } catch (error) {
-          done(error);
-        }
-      }
+      var execNextStep = execSteps(steps, done);
+      var history = createHistory();
 
-      render((
-        <Router history={new MemoryHistory('/')} onUpdate={execNextStep}>
+      React.render((
+        <Router history={history} onUpdate={execNextStep}>
           <Route path="/" component={Index}/>
           <Route path="/home/hi:there" component={Home}/>
         </Router>

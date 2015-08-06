@@ -1,27 +1,28 @@
-import React from 'react';
-import Location from './Location';
-import History from './History';
+import { PropTypes } from 'react';
 
-var { func, object, arrayOf, instanceOf, oneOfType, element } = React.PropTypes;
+var { func, object, arrayOf, oneOfType, element, shape, string } = PropTypes;
 
-function falsy(props, propName, componentName) {
+export function falsy(props, propName, componentName) {
   if (props[propName])
     return new Error(`<${componentName}> should not have a "${propName}" prop`);
 }
 
-var component = func;
-var components = oneOfType([ component, object ]);
-var history = instanceOf(History);
-var location = instanceOf(Location);
-var route = oneOfType([ object, element ]);
-var routes = oneOfType([ route, arrayOf(route) ]);
+export var history = shape({
+  listen: func.isRequired,
+  pushState: func.isRequired,
+  replaceState: func.isRequired,
+  go: func.isRequired
+});
 
-module.exports = {
-  falsy,
-  component,
-  components,
-  history,
-  location,
-  route,
-  routes
-};
+export var location = shape({
+  pathname: string.isRequired,
+  search: string.isRequired,
+  state: object,
+  action: string.isRequired,
+  key: string
+});
+
+export var component = func;
+export var components = oneOfType([ component, object ]);
+export var route = oneOfType([ object, element ]);
+export var routes = oneOfType([ route, arrayOf(route) ]);

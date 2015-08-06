@@ -51,17 +51,19 @@ function matchRouteDeep(basename, route, location, callback) {
   var isExactMatch = remainingPathname === '';
 
   if (isExactMatch && route.path) {
-    var routes = [ route ];
-    var params = createParams(paramNames, paramValues);
+    var match = {
+      routes: [ route ],
+      params: createParams(paramNames, paramValues)
+    };
 
     getIndexRoute(route, location, function (error, indexRoute) {
       if (error) {
         callback(error);
       } else {
         if (indexRoute)
-          routes.push(indexRoute);
+          match.routes.push(indexRoute);
 
-        callback(null, { routes, params });
+        callback(null, match);
       }
     });
   } else if (remainingPathname != null || route.childRoutes) {
@@ -79,8 +81,6 @@ function matchRouteDeep(basename, route, location, callback) {
           } else if (match) {
             // A child route matched! Augment the match and pass it up the stack.
             match.routes.unshift(route);
-            assignParams(match.params, paramNames, paramValues);
-
             callback(null, match);
           } else {
             callback();
@@ -97,13 +97,13 @@ function matchRouteDeep(basename, route, location, callback) {
 
 /**
  * Asynchronously matches the given location to a set of routes and calls
- * callback(error, state) when finished. The state object may have the
+ * callback(error, state) when finished. The state object will have the
  * following properties:
  *
  * - routes       An array of routes that matched, in hierarchical order
  * - params       An object of URL parameters
  *
- * Note: This operation may return synchronously if no routes have an
+ * Note: This operation may finish synchronously if no routes have an
  * asynchronous getChildRoutes method.
  */
 function matchRoutes(routes, location, callback, basename='') {

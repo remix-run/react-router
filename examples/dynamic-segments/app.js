@@ -1,6 +1,8 @@
 import React from 'react';
-import { history } from 'react-router/lib/HashHistory';
+import createHistory from 'history/lib/createHashHistory';
 import { Router, Route, Link, Redirect } from 'react-router';
+
+var history = createHistory();
 
 var App = React.createClass({
   render() {
@@ -50,8 +52,8 @@ React.render((
   <Router history={history}>
     <Route path="/" component={App}>
       <Route path="user/:userID" component={User}>
-        <Route path="tasks/:taskID" component={Task}/>
-        <Redirect from="todos/:taskID" to="task"/>
+        <Route path="tasks/:taskID" component={Task} />
+        <Redirect from="todos/:taskID" to="/user/:userID/tasks/:taskID" />
       </Route>
     </Route>
   </Router>
