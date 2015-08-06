@@ -1,8 +1,10 @@
 import React from 'react';
-import { history } from 'react-router/lib/HashHistory';
+import createHistory from 'history/lib/createHashHistory';
 import { Router, Route, Link, Navigation } from 'react-router';
 import { loadContacts, loadContact, createContact } from './utils';
 import AsyncProps from 'react-router/lib/experimental/AsyncProps';
+
+var history = createHistory();
 
 var Spinner = React.createClass({
   render() {

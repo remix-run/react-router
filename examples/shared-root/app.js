@@ -1,14 +1,16 @@
 import React from 'react';
-import { history } from 'react-router/lib/HashHistory';
+import createHistory from 'history/lib/createHashHistory';
 import { Router, Route, Link } from 'react-router';
+
+var history = createHistory();
 
 var App = React.createClass({
   render() {
     return (
       <div>
         <p>
-          This illustrates how routes can share UI w/o sharing the url,
-          when routes have no path, they never match themselves but their
+          This illustrates how routes can share UI w/o sharing the URL.
+          When routes have no path, they never match themselves but their
           children can, allowing "/signin" and "/forgot-password" to both
           be render in the <code>SignedOut</code> component.
         </p>

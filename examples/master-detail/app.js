@@ -1,7 +1,9 @@
 import React, { findDOMNode } from 'react';
-import { history } from 'react-router/lib/HashHistory';
+import createHistory from 'history/lib/createHashHistory';
 import { Router, Navigation, Route, Link } from 'react-router';
 import ContactStore from './ContactStore';
+
+var history = createHistory();
 
 var App = React.createClass({
   getInitialState() {

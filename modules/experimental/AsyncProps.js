@@ -1,5 +1,6 @@
 import React from 'react';
 import invariant from 'invariant';
+
 var { func, array, shape, object } = React.PropTypes;
 
 var contextTypes = {

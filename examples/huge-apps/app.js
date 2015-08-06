@@ -1,8 +1,10 @@
 import React from 'react';
-import { history } from 'react-router/lib/HashHistory';
+import createHistory from 'history/lib/createHashHistory';
 import { Router } from 'react-router';
 import AsyncProps from 'react-router/lib/experimental/AsyncProps';
 import stubbedCourses from './stubs/COURSES';
+
+var history = createHistory();
 
 var rootRoute = {
   component: AsyncProps,
@@ -27,8 +29,8 @@ var rootRoute = {
 
 React.render((
   <Router
-    routes={rootRoute}
     history={history}
+    routes={rootRoute}
     createElement={AsyncProps.createElement}
   />
 ), document.getElementById('example'));

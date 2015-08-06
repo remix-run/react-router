@@ -1,6 +1,8 @@
 import React from 'react';
-import { history } from 'react-router/lib/HashHistory';
+import createHistory from 'history/lib/createHashHistory';
 import { Router, Route, Link } from 'react-router';
+
+var history = createHistory();
 
 var User = React.createClass({
   render() {

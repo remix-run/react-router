@@ -1,7 +1,9 @@
 import React from 'react';
-import { history } from 'react-router/lib/HashHistory';
+import createHistory from 'history/lib/createHashHistory';
 import { Router, Route, Link } from 'react-router';
 import data from './data';
+
+var history = createHistory();
 
 var Category = React.createClass({
   render() {
@@ -25,8 +27,10 @@ var CategorySidebar = React.createClass({
         <Link to="/">◀︎ Back</Link>
         <h2>{category.name} Items</h2>
         <ul>
-          {category.items.map(item => (
-            <li><Link to={`/category/${category.name}/${item.name}`}>{item.name}</Link></li>
+          {category.items.map((item, index) => (
+            <li key={index}>
+              <Link to={`/category/${category.name}/${item.name}`}>{item.name}</Link>
+            </li>
           ))}
         </ul>
       </div>
@@ -61,15 +65,16 @@ var Index = React.createClass({
   }
 });
 
-
 var IndexSidebar = React.createClass({
   render() {
     return (
       <div>
         <h2>Categories</h2>
         <ul>
-          {data.getAll().map(category => (
-            <li><Link to={`/category/${category.name}`}>{category.name}</Link></li>
+          {data.getAll().map((category, index) => (
+            <li key={index}>
+              <Link to={`/category/${category.name}`}>{category.name}</Link>
+            </li>
           ))}
         </ul>
       </div>

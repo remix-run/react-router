@@ -13,7 +13,7 @@ module.exports = {
   entry: fs.readdirSync(__dirname).reduce(function (entries, dir) {
     var isDraft = dir.charAt(0) === '_';
 
-    if (!isDraft && isDirectory(path.join(__dirname, dir)))
+    if (!isDraft && isDirectory(path.join(__dirname, dir)) && dir === 'transitions')
       entries[dir] = path.join(__dirname, dir, 'app.js');
 
     return entries;
