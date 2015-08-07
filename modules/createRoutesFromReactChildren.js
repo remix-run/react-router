@@ -24,10 +24,11 @@ function createRouteOptions(props) {
   var options = assign({}, props);
   var handler = options.handler;
 
-  if (handler) {
+  if (handler.willTransitionTo)
     options.onEnter = handler.willTransitionTo;
+
+  if (handler.willTransitionFrom)
     options.onLeave = handler.willTransitionFrom;
-  }
 
   return options;
 }
