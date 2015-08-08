@@ -3,8 +3,6 @@ import createHistory from 'history/lib/createHashHistory';
 import { Router, Navigation, Route, Link } from 'react-router';
 import ContactStore from './ContactStore';
 
-var history = createHistory();
-
 var App = React.createClass({
   getInitialState() {
     return {
@@ -150,6 +148,8 @@ var NotFound = React.createClass({
     return <h2>Not found</h2>;
   }
 });
+
+var history = createHistory();
 
 React.render((
   <Router history={history}>

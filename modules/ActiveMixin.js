@@ -8,7 +8,8 @@ function pathnameIsActive(pathname, activePathname, activeRoutes, activeParams) 
   if (pathname === activePathname || activePathname.indexOf(pathname + '/') === 0)
     return true;
 
-  var route, pattern, basename;
+  var route, pattern;
+  var basename = '';
   for (var i = 0, len = activeRoutes.length; i < len; ++i) {
     route = activeRoutes[i];
     pattern = route.path || '';
