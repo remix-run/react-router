@@ -4,8 +4,6 @@ import { Router, Route, Link } from 'react-router';
 
 var { CSSTransitionGroup } = React.addons;
 
-var history = createHistory();
-
 var App = React.createClass({
   render() {
     var key = this.props.location.pathname;
@@ -17,7 +15,7 @@ var App = React.createClass({
           <li><Link to="/page2">Page 2</Link></li>
         </ul>
         <CSSTransitionGroup component="div" transitionName="example">
-          {React.cloneElement(this.props.children || <div/>, { key: key })}
+          {React.cloneElement(this.props.children || <div />, { key: key })}
         </CSSTransitionGroup>
       </div>
     );
@@ -45,6 +43,8 @@ var Page2 = React.createClass({
     );
   }
 });
+
+var history = createHistory();
 
 React.render((
   <Router history={history}>

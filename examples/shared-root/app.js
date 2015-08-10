@@ -2,8 +2,6 @@ import React from 'react';
 import createHistory from 'history/lib/createHashHistory';
 import { Router, Route, Link } from 'react-router';
 
-var history = createHistory();
-
 var App = React.createClass({
   render() {
     return (
@@ -71,15 +69,17 @@ var ForgotPassword = React.createClass({
   }
 });
 
+var history = createHistory();
+
 React.render((
   <Router history={history}>
     <Route path="/" component={App}>
       <Route component={SignedOut}>
-        <Route path="signin" component={SignIn}/>
-        <Route path="forgot-password" component={ForgotPassword}/>
+        <Route path="signin" component={SignIn} />
+        <Route path="forgot-password" component={ForgotPassword} />
       </Route>
       <Route component={SignedIn}>
-        <Route path="home" component={Home}/>
+        <Route path="home" component={Home} />
       </Route>
     </Route>
   </Router>

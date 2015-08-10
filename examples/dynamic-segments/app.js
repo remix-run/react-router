@@ -2,8 +2,6 @@ import React from 'react';
 import createHistory from 'history/lib/createHashHistory';
 import { Router, Route, Link, Redirect } from 'react-router';
 
-var history = createHistory();
-
 var App = React.createClass({
   render() {
     return (
@@ -47,6 +45,8 @@ var Task = React.createClass({
     );
   }
 });
+
+var history = createHistory();
 
 React.render((
   <Router history={history}>

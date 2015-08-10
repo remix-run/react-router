@@ -3,8 +3,6 @@ import createHistory from 'history/lib/createHashHistory';
 import { Router, Route, Link } from 'react-router';
 import data from './data';
 
-var history = createHistory();
-
 var Category = React.createClass({
   render() {
     var category = data.lookupCategory(this.props.params.category);
@@ -87,21 +85,23 @@ var App = React.createClass({
     return (
       <div>
         <div className="Sidebar">
-          {this.props.sidebar || <IndexSidebar/>}
+          {this.props.sidebar || <IndexSidebar />}
         </div>
         <div className="Content">
-          {this.props.content || <Index/>}
+          {this.props.content || <Index />}
         </div>
       </div>
     );
   }
 });
 
+var history = createHistory();
+
 React.render((
   <Router history={history}>
     <Route path="/" component={App}>
       <Route path="category/:category" components={{content: Category, sidebar: CategorySidebar}}>
-        <Route path=":item" component={Item}/>
+        <Route path=":item" component={Item} />
       </Route>
     </Route>
   </Router>

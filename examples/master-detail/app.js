@@ -106,7 +106,7 @@ var Contact = React.createClass({
     var avatar = contact.avatar || 'http://placecage.com/50/50';
     return (
       <div className="Contact">
-        <img height="50" src={avatar} key={avatar}/>
+        <img height="50" src={avatar} key={avatar} />
         <h3>{name}</h3>
         <button onClick={this.destroy}>Delete</button>
       </div>
@@ -132,8 +132,8 @@ var NewContact = React.createClass({
     return (
       <form onSubmit={this.createContact}>
         <p>
-          <input type="text" ref="first" placeholder="First name"/>
-          <input type="text" ref="last" placeholder="Last name"/>
+          <input type="text" ref="first" placeholder="First name" />
+          <input type="text" ref="last" placeholder="Last name" />
         </p>
         <p>
           <button type="submit">Save</button> <Link to="/">Cancel</Link>
@@ -154,10 +154,10 @@ var history = createHistory();
 React.render((
   <Router history={history}>
     <Route component={App}>
-      <Route path="/" component={Index}/>
-      <Route path="contact/new" component={NewContact}/>
-      <Route path="contact/:id" component={Contact}/>
-      <Route path="*" component={NotFound}/>
+      <Route path="/" component={Index} />
+      <Route path="contact/new" component={NewContact} />
+      <Route path="contact/:id" component={Contact} />
+      <Route path="*" component={NotFound} />
     </Route>
   </Router>
 ), document.getElementById('example'));

@@ -4,8 +4,6 @@ import { Router } from 'react-router';
 import AsyncProps from 'react-router/lib/experimental/AsyncProps';
 import stubbedCourses from './stubs/COURSES';
 
-var history = createHistory();
-
 var rootRoute = {
   component: AsyncProps,
 
@@ -26,6 +24,8 @@ var rootRoute = {
     ]}
   ]
 };
+
+var history = createHistory();
 
 React.render((
   <Router

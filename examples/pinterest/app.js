@@ -2,8 +2,6 @@ import React from 'react';
 import createHistory from 'history/lib/createHashHistory';
 import { Router, Link } from 'react-router';
 
-var history = createHistory();
-
 var pictures = [
   { id: 0, src: 'http://placekitten.com/601/601' },
   { id: 1, src: 'http://placekitten.com/610/610' },
@@ -73,7 +71,7 @@ var FeedPicture = React.createClass({
         <h2>Inside the feed</h2>
         <Link to="/">back</Link>
         <p>
-          <img src={pictures[this.props.params.id].src} height="400"/>
+          <img src={pictures[this.props.params.id].src} height="400" />
         </p>
       </div>
     );
@@ -87,7 +85,7 @@ var Picture = React.createClass({
         <h2>Not Inside the feed</h2>
         <Link to="/">Feed</Link>
         <p>
-          <img src={pictures[this.props.params.id].src}/>
+          <img src={pictures[this.props.params.id].src} />
         </p>
       </div>
     );
@@ -125,6 +123,8 @@ var RootRoute = {
   }
 };
 
+var history = createHistory();
+
 React.render(
   <Router history={history} children={RootRoute} />,
   document.getElementById('example')
@@ -158,4 +158,3 @@ React.render(
 //  9. `App -> PictureRoute` renders
 //
 // 10. I am very glad there aren't ten steps to explain this ...
-//

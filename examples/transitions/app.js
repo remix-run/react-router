@@ -2,8 +2,6 @@ import React from 'react';
 import createHistory from 'history/lib/createHashHistory';
 import { Router, Route, Link, Navigation } from 'react-router';
 
-var history = createHistory();
-
 var App = React.createClass({
   render() {
     return (
@@ -83,11 +81,13 @@ var Form = React.createClass({
   }
 });
 
+var history = createHistory();
+
 React.render((
   <Router history={history}>
     <Route path="/" component={App}>
-      <Route path="dashboard" component={Dashboard}/>
-      <Route path="form" component={Form}/>
+      <Route path="dashboard" component={Dashboard} />
+      <Route path="form" component={Form} />
     </Route>
   </Router>
 ), document.getElementById('example'));

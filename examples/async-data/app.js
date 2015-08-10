@@ -4,13 +4,11 @@ import { Router, Route, Link, Navigation } from 'react-router';
 import { loadContacts, loadContact, createContact } from './utils';
 import AsyncProps from 'react-router/lib/experimental/AsyncProps';
 
-var history = createHistory();
-
 var Spinner = React.createClass({
   render() {
     return (
       <div style={{textAlign: 'center', padding: 50}}>
-        <img src="spinner.gif" width="64" height="64"/>
+        <img src="spinner.gif" width="64" height="64" />
       </div>
     );
   }
@@ -52,7 +50,7 @@ var App = React.createClass({
     return (
       <div className="App" style={appStyle}>
         <form onSubmit={this.handleSubmit}>
-          <input placeholder="First name"/> <input placeholder="Last name"/>{' '}
+          <input placeholder="First name" /> <input placeholder="Last name" />{' '}
           <button type="submit">submit</button>
         </form>
         <div style={{display: 'flex'}}>
@@ -91,7 +89,7 @@ var Contact = React.createClass({
       <div style={{opacity: this.props.loadingAsyncProps ? 0.5 : 1}}>
         <p><Link to="/">Back</Link></p>
         <h1>{contact.first} {contact.last}</h1>
-        <p><img key={contact.avatar} src={contact.avatar} height="200"/></p>
+        <p><img key={contact.avatar} src={contact.avatar} height="200" /></p>
       </div>
     );
   }
@@ -107,12 +105,14 @@ var Index = React.createClass({
   }
 });
 
+var history = createHistory();
+
 React.render((
   <Router history={history} createElement={AsyncProps.createElement}>
-    <Route component={AsyncProps} renderInitialLoad={() => <Spinner/> }>
+    <Route component={AsyncProps} renderInitialLoad={() => <Spinner /> }>
       <Route component={App}>
-        <Route path="/" component={Index}/>
-        <Route path="contact/:id" component={Contact}/>
+        <Route path="/" component={Index} />
+        <Route path="contact/:id" component={Contact} />
       </Route>
     </Route>
   </Router>

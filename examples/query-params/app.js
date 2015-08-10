@@ -2,8 +2,6 @@ import React from 'react';
 import createHistory from 'history/lib/createHashHistory';
 import { Router, Route, Link } from 'react-router';
 
-var history = createHistory();
-
 var User = React.createClass({
   render() {
     var { query } = this.props.location;
@@ -33,10 +31,12 @@ var App = React.createClass({
   }
 });
 
+var history = createHistory();
+
 React.render((
   <Router history={history}>
     <Route path="/" component={App}>
-      <Route path="user/:userID" component={User}/>
+      <Route path="user/:userID" component={User} />
     </Route>
   </Router>
 ), document.getElementById('example'));
