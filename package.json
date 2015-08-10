@@ -39,6 +39,7 @@
     "events": "1.0.2",
     "expect": "^1.6.0",
     "karma": "^0.13.8",
+    "karma-browserstack-launcher": "^0.1.4",
     "karma-chrome-launcher": "^0.2.0",
     "karma-firefox-launcher": "^0.1.6",
     "karma-mocha": "^0.2.0",
