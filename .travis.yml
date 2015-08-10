@@ -1,7 +1,15 @@
 language: node_js
 node_js:
-  - "0.10"
-before_script:
-  - export DISPLAY=:99.0
-  - sh -e /etc/init.d/xvfb start
+- '0.10'
+env:
+  global:
+  - secure: VxRtkMGGvUa4J3dWK7gl1t3t8WRmCSfmUuE6chvtk4pbf32eWnMBu7bKLWOFAhFCqI7+3PGQxGScOF5wJtJhOnmc/PLnBXIKge651ioTNbnP4ghKvYc03ZDWjM77+XvNSSeL3bIewvKrFksDov15PfxXP3tF+WG52WaacVDeaJmEiFCA8E52t5hfF3wkFKCQ2ebTWmt7SFRqHM5P0y2ul/OqNOAHO6f8hBrGAvsw+U711dY2HI2wRt3TLG0dFAG7dzjnU0vDyAZHs34LCF/vYn84NnTXPqZYwiQW+ZtrMJLsT8dBLUanHqBLb+x0MSvOGZ3mnV+MQi3jSyAinYjYRGMfkjQuDNrRLy6FfTXe6dHQhisRWWdEi57YgJeS+APJUBwAXuD/1cU4jLKjEmv17lPq+XeKjxabjs6nHbguvNG55x4DWEdZd26ALURCJyoIiCIcGW+JBXCVgZqiKDaV4JyAjEjFbcJqIAq75iXcq5Cqv4EVajGhwN6DqDlOhQa+dd+bQNTPrf93a1Vg9Nlu3Ep0ZoSE98pVYRufeGttUHXokn6ul9oJUX+ftMbgr9MnJXf3urs4w4ihzsxVAC/MycjP6V+x56fQq2Db8nQW5FJIRY7CEhRn4b3JEWc1YbVe9KRnooxy3avGB19oVNmQ8gmQxGWdHqW4ox61/oogcyg=
+  - secure: YNqWs5oA4S6VzWzo1nZVFJPuohW+JAzjvzoOPKo0hynsWYDrt9Ezj9YWum5+IeBTyVxAcRraX0gBZwEjlKAhvi3PgGe1qxzO6Drw1kKOnzRRGjjMvbz20V6GE5OK05bXYP5Z36eYaM02+NDE2a+3Tfj0miyNRPCLRXbX6AGVpVkQs4Lhs7fSv3XeKCT6J1uoDkp4FvHOEQEztJpIlRVmi+jngpC95imiJGX5XP85FMe4jEPBlLz9kmGBhP6F283HWb5el9/5kG3FWp9pJm7DTE0MJQ5ykwMgfp41l4e4H8Rzn1ZKkRtgaM+Mw3xkzXQSf3HtM9/NqkufMceKK/n7Ua9Zy3QWNiHnqD8NPXhfikcjCDKa9ex8b8JifnuTmPxsAbsAwyrLOuaj6IfV1ggPi96fo4mCYW/GYQUaVYU6CCnHT66GvaXXjfq5wGEBJQb49Ja6HP/OZ1GdHBWNNlnwCps4bkcaNhJz+5iaWJmKzwYufWm22wWPxCXLdxOF+Xdpy10aaNRAlv1YWKEZvgd745Mjt4JWE9VhX6TWpC6R43RPbzBLaIGT4GS1/ILj2A8Ji7+kCcXUDH88QtB6PNAZAywENRKOZHRh5eB+9g2Z5oztyr0f77LORR/nGGUp5C4TnD1u0YFWI87qCw3UDEBX4DzRPKR7DhnmrQC6bIPfESY=
+  matrix:
+  - USE_CLOUD=1
 sudo: false
+before_script:
+- wget http://www.browserstack.com/browserstack-local/BrowserStackLocal-linux-x64.zip
+- unzip BrowserStackLocal-linux-x64.zip
+- ./BrowserStackLocal $BROWSER_STACK_ACCESS_KEY localhost,8001,0 > /dev/null &
+- sleep 10
