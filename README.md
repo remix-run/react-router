@@ -54,7 +54,7 @@ Find the UMD/global build in `lib/umd`, and the library on `window.ReactRouter`.
 
 #### CDN
 
-If you just want to drop a \<script> tag in your page and be done with it, you can use the UMD/global build [hosted on cdnjs](https://cdnjs.com/libraries/react-router).
+If you just want to drop a `<script>` tag in your page and be done with it, you can use the UMD/global build [hosted on cdnjs](https://cdnjs.com/libraries/react-router).
 
 ### What's it look like?
 
