@@ -2,18 +2,10 @@ import React from 'react';
 
 class Calendar extends React.Component {
 
-  static loadProps(params, cb) {
-    setTimeout(() => {
-      cb(null, {
-        events: [{
-          id: 0, title: 'essay due'
-        }]
-      })
-    }, 1000);
-  }
-
   render () {
-    var { events } = this.props;
+    var events = [{
+      id: 0, title: 'essay due'
+    }];
     return (
       <div>
         <h2>Calendar</h2>

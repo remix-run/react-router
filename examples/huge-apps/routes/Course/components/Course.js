@@ -14,13 +14,8 @@ styles.sidebar = {
 
 class Course extends React.Component {
 
-  static loadProps (params, cb) {
-    console.log('Course', 'loadProps');
-    setTimeout(() => cb(null, { course: COURSES[params.courseId] }), 1000);
-  }
-
   render () {
-    var { course } = this.props;
+    var course = COURSES[this.props.params.courseId];
     return (
       <div>
         <h2>{course.name}</h2>

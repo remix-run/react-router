@@ -2,14 +2,7 @@ import React from 'react';
 
 class Assignment extends React.Component {
 
-  //static loadProps (params, cb) {
-    //cb(null, {
-      //assignment: COURSES[params.courseId].assignments[params.assignmentId]
-    //});
-  //}
-
   render () {
-    //var { title, body } = this.props.assignment;
     var { courseId, assignmentId } = this.props.params;
     var { title, body } = COURSES[courseId].assignments[assignmentId]
     return (
