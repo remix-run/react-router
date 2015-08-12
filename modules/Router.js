@@ -188,7 +188,7 @@ var Router = createClass({
   },
 
   createElement(component, props) {
-    return typeof component === 'function' ? this.props.createElement(component, props) : null;
+    return component ? this.props.createElement(component, props) : null;
   },
 
   render() {
