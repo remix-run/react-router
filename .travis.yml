@@ -13,3 +13,7 @@ before_script:
 - unzip BrowserStackLocal-linux-x64.zip
 - ./BrowserStackLocal $BROWSER_STACK_ACCESS_KEY localhost,8001,0 > /dev/null &
 - sleep 10
+branches:
+  except:
+    - latest
+    - /^v\d/
