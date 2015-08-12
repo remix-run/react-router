@@ -113,7 +113,7 @@ code-splitting.
 }}/>
 ```
 
-### `getComponents(callback)`
+### `getComponents(state, callback)`
 
 Same as `components` but asynchronous, useful for
 code-splitting.
@@ -125,7 +125,7 @@ code-splitting.
 #### Example
 
 ```js
-<Route path="courses/:courseId" getComponent={(cb) => {
+<Route path="courses/:courseId" getComponent={(state, cb) => {
   // do asynchronous stuff to find the components
   cb(null, {sidebar: CourseSidebar, content: Course});
 }}/>
@@ -142,4 +142,3 @@ Called when a route is about to be entered. It provides the next router state an
 ### `onLeave()`
 
 Called when a route is about to be exited.
-

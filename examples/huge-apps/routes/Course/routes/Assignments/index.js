@@ -9,7 +9,7 @@ module.exports = {
     })
   },
 
-  getComponents (cb) {
+  getComponents (state, cb) {
     require.ensure([], (require) => {
       cb(null, {
         sidebar: require('./components/Sidebar'),
