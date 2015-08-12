@@ -22,7 +22,7 @@
   ],
   "license": "MIT",
   "dependencies": {
-    "history": "^1.1.0",
+    "history": "^1.2.1",
     "invariant": "^2.0.0",
     "keymirror": "^0.1.1",
     "qs": "2.4.1",
