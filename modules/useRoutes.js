@@ -77,7 +77,7 @@ function useRoutes(createHistory) {
           callback(null, createLocationFromRedirectInfo(redirectInfo), null);
         } else {
           // TODO: Fetch components after state is updated.
-          getComponents(nextState.routes, function (error, components) {
+          getComponents(nextState, function (error, components) {
             if (error) {
               callback(error);
             } else {
