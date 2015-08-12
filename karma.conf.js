@@ -5,15 +5,15 @@ module.exports = function (config) {
   var customLaunchers = {
     BS_Chrome: {
       base: 'BrowserStack',
-      os: 'OS X',
-      os_version: 'Yosemite',
+      os: 'Windows',
+      os_version: '8.1',
       browser: 'chrome',
       browser_version: '39.0',
     },
     BS_Firefox: {
       base: 'BrowserStack',
-      os: 'OS X',
-      os_version: 'Yosemite',
+      os: 'Windows',
+      os_version: '8.1',
       browser: 'firefox',
       browser_version: '32.0',
     },
