@@ -24,6 +24,13 @@ module.exports = function (config) {
       browser: 'safari',
       browser_version: '8.0',
     },
+    BS_MobileSafari: {
+      base: 'BrowserStack',
+      os: 'ios',
+      os_version: '7.0',
+      browser: 'iphone',
+      real_mobile: false,
+    },
 //    BS_InternetExplorer9: {
 //      base: 'BrowserStack',
 //      os: 'Windows',
@@ -44,12 +51,6 @@ module.exports = function (config) {
       os_version: '8.1',
       browser: 'ie',
       browser_version: '11.0',
-    },
-    BS_MobileSafari: {
-      base: 'BrowserStack',
-      os: 'ios',
-      os_version: '7.0',
-      browser: 'iphone'
     },
   };
 
