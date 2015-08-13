@@ -2,6 +2,7 @@ import warning from 'warning';
 import invariant from 'invariant';
 import { createClass, createElement, isValidElement, PropTypes } from 'react';
 import { component, components, history, location, routes } from './PropTypes';
+import { parseQueryString } from './QueryUtils';
 import { createRoutes } from './RouteUtils';
 import matchRoutes from './matchRoutes';
 import runTransitionHooks from './runTransitionHooks';
@@ -13,16 +14,6 @@ import ScrollManagementMixin from './ScrollManagementMixin';
 import ActiveMixin from './ActiveMixin';
 
 var { arrayOf, func, object } = PropTypes;
-
-import qs from 'qs';
-
-function stringifyQuery(query) {
-  return qs.stringify(query, { arrayFormat: 'brackets' });
-}
-
-function parseQueryString(queryString) {
-  return qs.parse(queryString);
-}
 
 var Router = createClass({
 
@@ -69,7 +60,6 @@ var Router = createClass({
   propTypes: {
     createElement: func,
     parseQueryString: func,
-    stringifyQuery: func,
     onError: func,
     onUpdate: func,
     routes,
@@ -86,8 +76,7 @@ var Router = createClass({
   getDefaultProps() {
     return {
       createElement,
-      parseQueryString,
-      stringifyQuery
+      parseQueryString
     };
   },
 
@@ -175,16 +164,6 @@ var Router = createClass({
   componentWillUnmount() {
     if (this._unlisten)
       this._unlisten();
-  },
-
-  createPath(pathname, query) {
-    var { stringifyQuery } = this.props;
-
-    var queryString;
-    if (query == null || (queryString = stringifyQuery(query)) === '')
-      return pathname;
-
-    return pathname + (pathname.indexOf('?') === -1 ? '?' : '&') + queryString;
   },
 
   createElement(component, props) {

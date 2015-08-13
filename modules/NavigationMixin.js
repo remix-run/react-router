@@ -1,6 +1,30 @@
 import invariant from 'invariant';
+import React from 'react';
+import { stringifyQuery } from './QueryUtils';
+
+var { func } = React.PropTypes;
 
 var NavigationMixin = {
+
+  propTypes: {
+    stringifyQuery: func
+  },
+
+  getDefaultProps() {
+    return {
+      stringifyQuery
+    };
+  },
+
+  createPath(pathname, query) {
+    var { stringifyQuery } = this.props;
+
+    var queryString;
+    if (query == null || (queryString = stringifyQuery(query)) === '')
+      return pathname;
+
+    return pathname + (pathname.indexOf('?') === -1 ? '?' : '&') + queryString;
+  },
 
   /**
    * Returns a string that may safely be used to link to the given
