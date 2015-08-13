@@ -14,7 +14,7 @@
     "build-umd": "NODE_ENV=production webpack modules/index.js lib/umd/History.js",
     "build-min": "NODE_ENV=production webpack -p modules/index.js lib/umd/History.min.js",
     "build-website": "scripts/build-website.sh",
-    "examples": "webpack-dev-server --config examples/webpack.config.js --content-base examples --inline",
+    "start": "webpack-dev-server --config examples/webpack.config.js --content-base examples --inline",
     "test": "eslint modules && karma start",
     "prepublish": "npm run build"
   },
