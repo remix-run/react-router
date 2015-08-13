@@ -133,7 +133,7 @@ Server Rendering
 something.serve(function (req, res) {
   Router.run(routes, req.path, function (Root, state) {
     // could fetch data like in the previous example
-    fetchData(state.matches).then(function (data) {
+    fetchData(state.routes).then(function (data) {
       var html = React.renderToString(<Root data={data} />);
       res.send(html);
     });
