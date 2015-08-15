@@ -16,7 +16,7 @@ import { Router } from 'react-router';
 import BrowserHistory from 'react-router/lib/BrowserHistory';
 import routes from './routes';
 
-React.render(<Router children={routes}/>, document.getElementById('app'));
+React.render(<Router history={new BrowserHistory} children={routes}/>, document.getElementById('app'));
 ```
 
 On the server, we need to asynchronously match the routes and fetch data
