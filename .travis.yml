@@ -1,12 +1,6 @@
 language: node_js
 node_js:
 - '0.10'
-env:
-  matrix:
-  - USE_CLOUD=1
-  global:
-  - secure: qdlJz51Hmrg8NIvPmkFI1EwX2qPUKC4Qpw9CupsDUmZLoAxMyMbhtkqXREU94KE8lvqAaQaCajaOmKiA8CKOOy3jX7jc+JOnuYdFpRYEwQs5uuMhFM1dAUbqVlUhpNV/Q6Vizcbr2GequBFssJSfwMGt66cWA/pgcnj9AfPNLXU=
-  - secure: gf/gbbVhJKfD3wSsK2PYEcHz0CfLtIYcVXUT/WJVMf7utBtlDv02OtTYawrONIs5CmDdQngHWq//36J9MsP53+e6jcC3PtVyt7XeRe+xtMO/tvwWV3q/VfKh3U1ZycKdl8cuG96oy6cLrazV2BvCQUH0HRkRIMVFgupA23ovLWQ=
 sudo: false
 before_script:
 - wget http://www.browserstack.com/browserstack-local/BrowserStackLocal-linux-x64.zip
