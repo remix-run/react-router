@@ -60,17 +60,8 @@ function renderFullPage(html, initialData) {
 
 ### API Routes
 
-Sometimes servers function as both the UI server and the api server. Do
-your best to think of them separately.
+Sometimes servers function as both the UI server and the API server. Do your best to think of them separately.
 
-While historically we've allowed one URL to function as both an API and
-a UI server that branches behavior on the "accepts" header, you're
-better off just having separate routes.  Might I suggest you namespace
-your api routes with `/api/...`?
+While historically we've allowed one URL to function as both an API and a UI server that branches behavior on the "accepts" header, you're better off just having separate routes.  Might I suggest you namespace your API routes with `/api/...`?
 
-You could certainly add methods to your React Router routes to handle
-API requests, match the routes, inspect the accepts header, then call
-the methods on your route instead of rendering the components. I was
-about to tell you not to do this, but please do and let us know how it
-goes. Most of us should probably just use the server side router from
-our favorite libraries for now, though.
+You could certainly add methods to your React Router routes to handle API requests, match the routes, inspect the accepts header, then call the methods on your route instead of rendering the components. I was about to tell you not to do this, but please do and let us know how it goes. Most of us should probably just use the server side router from our favorite libraries for now, though.
