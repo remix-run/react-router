@@ -30,8 +30,8 @@ describe('server rendering', function () {
   it('works', function (done) {
     var location = createLocation('/');
 
-    Router.run(routes, location, function (error, state, transition) {
-      var string = React.renderToString(<Router {...state} />);
+    Router.run(routes, location, function (error, state) {
+      var string = React.renderToString(<Router initialState={state} />);
       expect(string).toMatch(/The Dashboard/);
       done();
     });

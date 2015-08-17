@@ -66,11 +66,14 @@ var Router = createClass({
     // Routes may also be given as children (JSX)
     children: routes,
 
-    // Client-side
+    // Client
     history,
 
-    // Server-side
-    location
+    // Unit testing, simple server
+    location,
+
+    // Flux, data fetching
+    initialState: object
   },
 
   getDefaultProps() {
@@ -86,7 +89,8 @@ var Router = createClass({
       location: null,
       routes: null,
       params: null,
-      components: null
+      components: null,
+      ...this.props.initialState
     };
   },
 
@@ -142,13 +146,11 @@ var Router = createClass({
   componentWillMount() {
     var { routes, children, history, location } = this.props;
 
-    invariant(
-      routes || children,
-      '<Router>s need routes. Try using <Router routes> or ' +
-      'passing your routes as nested <Route> children'
-    );
-
-    this.routes = createRoutes(routes || children);
+    if (routes || children) {
+      this.routes = createRoutes(routes || children);
+    } else {
+      this.routes = [];
+    }
 
     if (history) {
       this.updateHistory(history);
