@@ -1,11 +1,9 @@
 import warning from 'warning';
 import invariant from 'invariant';
 import { createClass, createElement, isValidElement, PropTypes } from 'react';
-import { component, components, history, location, routes } from './PropTypes';
-import { parseQueryString } from './QueryUtils';
+import { component, components, history, location, routes, router } from './PropTypes';
 import { createRoutes } from './RouteUtils';
-import matchRoutes from './matchRoutes';
-import runTransitionHooks from './runTransitionHooks';
+import createRouter, { run } from './createRouter';
 import getComponents from './getComponents';
 import getRouteParams from './getRouteParams';
 
@@ -13,38 +11,14 @@ import NavigationMixin from './NavigationMixin';
 import ScrollManagementMixin from './ScrollManagementMixin';
 import ActiveMixin from './ActiveMixin';
 
-var { arrayOf, func, object } = PropTypes;
+const { arrayOf, func, object } = PropTypes;
 
-var Router = createClass({
+const RouterComponent = createClass({
 
   mixins: [ NavigationMixin, ScrollManagementMixin, ActiveMixin ],
 
   statics: {
-
-    run(routes, location, callback, prevState=null) {
-      matchRoutes(routes, location, function (error, nextState) {
-        if (error || nextState == null) {
-          callback(error, null);
-        } else {
-          nextState.location = location;
-          runTransitionHooks(prevState, nextState, function (error, redirectInfo) {
-            if (error || redirectInfo) {
-              callback(error, null, redirectInfo);
-            } else {
-              getComponents(nextState, function (error, components) {
-                if (error) {
-                  callback(error);
-                } else {
-                  nextState.components = components;
-                  callback(null, nextState);
-                }
-              });
-            }
-          });
-        }
-      });
-    }
-
+    run
   },
 
   childContextTypes: {
@@ -53,13 +27,14 @@ var Router = createClass({
 
   getChildContext() {
     return {
-      router: this
+      router: this.router
     };
   },
 
   propTypes: {
     createElement: func,
     parseQueryString: func,
+    stringifyQuery: func,
     onError: func,
     onUpdate: func,
     routes,
@@ -70,64 +45,44 @@ var Router = createClass({
     history,
 
     // Server-side
-    location
+    location,
+
+    // Or create router outside of router component
+    router: object
   },
 
   getDefaultProps() {
     return {
-      createElement,
-      parseQueryString
+      createElement
     };
   },
 
   getInitialState() {
-    return {
-      isTransitioning: false,
-      location: null,
-      routes: null,
-      params: null,
-      components: null
-    };
-  },
+    const { routes, children } = this.props;
+    let { router } = this.props;
 
-  updateLocation(location) {
-    if (!location.query)
-      location.query = this.props.parseQueryString(location.search.substring(1));
+    if (!router) {
+      invariant(
+        routes || children,
+        '<Router>s need routes. Try using <Router routes> or ' +
+        'passing your routes as nested <Route> children'
+      );
 
-    this.setState({
-      isTransitioning: true
-    });
+      const routerProps = {
+        ...this.props,
+        routes: createRoutes(routes || children),
+        onError: this.handleError
+      };
 
-    Router.run(this.routes, location, (error, state, redirectInfo) => {
-      if (error) {
-        this.handleError(error);
-      } else if (redirectInfo) {
-        var { pathname, query, state } = redirectInfo;
-        this.replaceWith(pathname, query, state);
-      } else if (state == null) {
-        warning(
-          false,
-          'Location "%s" did not match any routes',
-          location.pathname + location.search
-        );
-      } else {
-        this.setState(state, this.props.onUpdate);
-      }
-
-      this.setState({
-        isTransitioning: false
-      });
-    }, this.state);
-  },
-
-  updateHistory(history) {
-    if (this._unlisten) {
-      this._unlisten();
-      this._unlisten = null;
+      router = createRouter(routerProps);
     }
 
-    if (history)
-      this._unlisten = history.listen(this.updateLocation);
+    this.router = router;
+
+    return {
+      ...this.router.getState(),
+      components: null
+    };
   },
 
   handleError(error) {
@@ -140,21 +95,8 @@ var Router = createClass({
   },
 
   componentWillMount() {
-    var { routes, children, history, location } = this.props;
-
-    invariant(
-      routes || children,
-      '<Router>s need routes. Try using <Router routes> or ' +
-      'passing your routes as nested <Route> children'
-    );
-
-    this.routes = createRoutes(routes || children);
-
-    if (history) {
-      this.updateHistory(history);
-    } else if (location) {
-      this.updateLocation(location);
-    }
+    this._unlisten = this.router.listen(this.handleRouterUpdate);
+    this.handleRouterUpdate();
   },
 
   componentWillReceiveProps(nextProps) {
@@ -166,22 +108,39 @@ var Router = createClass({
       this._unlisten();
   },
 
+  handleRouterUpdate() {
+    const routerState = this.router.getState();
+
+    getComponents(routerState, (error, components) => {
+      if (error) {
+        callback(error);
+      } else {
+        const nextState = {
+          ...routerState,
+          components
+        };
+
+        this.setState(nextState, this.props.onUpdate);
+      }
+    });
+  },
+
   createElement(component, props) {
     return component ? this.props.createElement(component, props) : null;
   },
 
   render() {
-    var { routes, params, components } = this.state;
-    var element = null;
+    const { routes, params, components } = this.state;
+    let element = null;
 
     if (components) {
       element = components.reduceRight((element, components, index) => {
         if (components == null)
           return element; // Don't create new children; use the grandchildren.
 
-        var route = routes[index];
-        var routeParams = getRouteParams(route, params);
-        var props = Object.assign({}, this.state, { route, routeParams });
+        const route = routes[index];
+        const routeParams = getRouteParams(route, params);
+        const props = { ...this.state, route, routeParams };
 
         if (isValidElement(element)) {
           props.children = element;
@@ -191,9 +150,9 @@ var Router = createClass({
         }
 
         if (typeof components === 'object') {
-          var elements = {};
+          let elements = {};
 
-          for (var key in components)
+          for (let key in components)
             if (components.hasOwnProperty(key))
               elements[key] = this.createElement(components[key], props);
 
@@ -211,7 +170,6 @@ var Router = createClass({
 
     return element;
   }
-
 });
 
-export default Router;
+export default RouterComponent;
