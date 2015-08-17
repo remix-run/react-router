@@ -28,6 +28,7 @@
     "invariant": "^2.0.0",
     "keymirror": "^0.1.1",
     "qs": "2.4.1",
+    "react": "0.13.x",
     "warning": "^2.0.0"
   },
   "devDependencies": {
@@ -51,7 +52,6 @@
     "marked": "0.3.3",
     "mocha": "^2.0.1",
     "pygmentize-bundled": "^2.3.0",
-    "react": "0.13.x",
     "rf-changelog": "^0.4.0",
     "rx": "2.3.18",
     "slash": "^1.0.0",
