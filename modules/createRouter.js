@@ -73,6 +73,10 @@ class Router {
     let didSyncUpdate = false;
 
     run(this.props.routes, location, (error, state, redirectInfo) => {
+      const nextState = {
+        isTransitioning: false
+      };
+
       if (error) {
         this.props.onError(error)
       } else if (redirectInfo) {
@@ -85,16 +89,11 @@ class Router {
           location.pathname + location.search
         );
       } else {
-        this.setState(state);
+        Object.assign(nextState, state);
       }
 
       didSyncUpdate = true;
-
-      if (this.state.isTransitioning) {
-        this.setState({
-          isTransitioning: false
-        });
-      }
+      this.setState(nextState);
     }, this.state);
 
     if (!didSyncUpdate) {
