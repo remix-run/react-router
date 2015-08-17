@@ -10,9 +10,11 @@ A route path is a string pattern that is used to match a URL (or a portion of on
 - `()` - specifies a portion of the URL that is optional
 - `*` - matches all characters up to the next character in the pattern, or the end of the URL
 
-    <Route path="/hello/:name">         // matches /hello/michael and /hello/ryan
-    <Route path="/hello(/:name)">       // matches /hello, /hello/michael, and /hello/ryan
-    <Route path="/files/*.*">           // matches /files/hello.jpg and /files/path/to/hello.jpg
+```
+<Route path="/hello/:name">         // matches /hello/michael and /hello/ryan
+<Route path="/hello(/:name)">       // matches /hello, /hello/michael, and /hello/ryan
+<Route path="/files/*.*">           // matches /files/hello.jpg and /files/path/to/hello.jpg
+```
 
 ### Nesting
 
@@ -22,9 +24,11 @@ If a route uses a relative `path`, its `path` actually builds upon the accumulat
 
 React Router traverses routes from the top of the hierarchy depth-first to find the deepest route in the hierarchy that matches the entire URL, stopping as soon as it finds one.
 
-    <Route path="/users">               // matches /users
-      <Route path=":id" />              // matches /users/5
-      <Route path="/about" />           // matches /about
-    </Route>
+```
+<Route path="/users">               // matches /users
+  <Route path=":id" />              // matches /users/5
+  <Route path="/about" />           // matches /about
+</Route>
+```
 
   [advanced]: AdvancedUsage.md
