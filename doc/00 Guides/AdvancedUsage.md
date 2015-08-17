@@ -18,7 +18,7 @@ Coupled with a smart code splitting tool like [webpack](http://webpack.github.io
 var CourseRoute = {
   path: 'course/:courseId',
 
-  getChildRoutes(state, callback) {
+  getChildRoutes(location, callback) {
     require.ensure([], function (require) {
       callback(null, [
         require('./routes/Announcements'),
