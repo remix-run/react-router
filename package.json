@@ -37,7 +37,7 @@
     "babel-loader": "^5.0.0",
     "babel-plugin-object-assign": "^1.2.0",
     "bundle-loader": "^0.5.2",
-    "eslint": "^1.0.0-rc-1",
+    "eslint": "^1.0.0",
     "events": "1.0.2",
     "expect": "^1.6.0",
     "karma": "^0.13.8",
