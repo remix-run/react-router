@@ -3,6 +3,7 @@ import React from 'react';
 import { createLocation } from 'history';
 import Router from '../Router';
 import Route from '../Route';
+import createRouter from '../createRouter';
 
 describe('Router', function () {
 
@@ -103,5 +104,31 @@ describe('Router', function () {
       done();
     });
   });
+
+  it('renders with a custom `router` prop', function (done) {
+    const router = createRouter({
+      location: createLocation('/hello'),
+      routes: [
+        {
+          childRoutes: [
+            {
+              path: 'hello',
+              component: Child
+            }
+          ],
+          component: Parent
+        }
+      ]
+    });
+
+    React.render((
+      <Router router={router} />
+    ), node, function () {
+      expect(node.textContent.trim()).toMatch(/parent/);
+      expect(node.textContent.trim()).toMatch(/child/);
+      done();
+    });
+  });
+
 
 });
