@@ -11,12 +11,12 @@ import runTransitionHooks from './runTransitionHooks';
  * @returns {CreateRouter}
  */
 export default function useTransitionHooks(createRouter) {
-  return (...args) => {
-    const router = createRouter(...args);
+  return initialState => {
+    const router = createRouter(initialState);
 
-    function match(location, callback) {
+    function match(routes, location, callback) {
       const prevState = router.getState();
-      router.match(location, (error, nextState, existingRedirectInfo) => {
+      router.match(routes, location, (error, nextState, existingRedirectInfo) => {
         if (error || existingRedirectInfo) {
           callback(error, null, existingRedirectInfo);
           return;

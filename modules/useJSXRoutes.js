@@ -6,5 +6,11 @@ import { createRoutes } from './RouteUtils';
  * @returns {CreateRouter}
  */
 export default function useJSXRoutes(createRouter) {
-  return (routes, initialState) => createRouter(createRoutes(routes), initialState);
+  return initialState => {
+    const router = createRouter(initialState);
+    return {
+      ...router,
+      match: (routes, ...rest) => router.match(createRoutes(routes), ...rest)
+    };
+  }
 }

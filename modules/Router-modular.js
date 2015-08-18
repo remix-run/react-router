@@ -40,7 +40,7 @@ export default class Router extends Component {
       location
     };
 
-    this.router = createReactRouter(routes || children, this.props.initialState);
+    this.router = createReactRouter(this.props.initialState);
 
     if (history) {
       this.unlisten = history.listen(this.handleLocationChange);
@@ -68,13 +68,13 @@ export default class Router extends Component {
   }
 
   handleLocationChange = location => {
-    const { history, onError, onUpdate } = this.props;
+    const { routes, children, history, onError, onUpdate } = this.props;
 
     this.setState({
       isTransitioning: true
     });
 
-    this.router.match(location, (error, state, redirectInfo) => {
+    this.router.match(routes || children, location, (error, state, redirectInfo) => {
       if (error) {
         onError(error);
         return;

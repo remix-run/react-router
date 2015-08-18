@@ -8,12 +8,12 @@ import getComponents from './getComponents';
  * @returns {CreateRouter}
  */
 export default function useComponents(createRouter) {
-  return (...args) => {
-    const router = createRouter(...args);
+  return (initialState) => {
+    const router = createRouter(initialState);
     let components;
 
-    function match(location, callback) {
-      router.match(location, (error, nextState, redirectInfo) => {
+    function match(routes, location, callback) {
+      router.match(routes, location, (error, nextState, redirectInfo) => {
         if (error || redirectInfo) {
           callback(error, null, redirectInfo);
           return;

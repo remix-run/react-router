@@ -10,15 +10,16 @@ import matchRoutes from './matchRoutes';
  *    params: Object
  *  }
  */
-export default function createRouter(routes, initialState) {
+export default function createRouter(initialState) {
   let state = initialState;
 
   /**
    * Update router state in response to new location
+   * @param {Array<Route>} routes - Route configuration
    * @param {Location} location - location returned from history
    * @param {Function} callback - Called with (error, nextState)
    */
-  function match(location, callback) {
+  function match(routes, location, callback) {
     matchRoutes(routes, location, (error, nextState) => {
       if (error) {
         callback(error);
