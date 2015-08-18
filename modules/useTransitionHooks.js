@@ -23,7 +23,8 @@ export default function useTransitionHooks(next) {
         }
         runTransitionHooks(prevState, nextState, (transitionError, redirectInfo) => {
           if (error || redirectInfo) {
-            callback(error, null, redirectInfo);
+            callback(transitionError, null, redirectInfo);
+            return;
           }
           callback(null, nextState);
         });
