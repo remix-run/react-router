@@ -7,6 +7,7 @@ import { createRoutes } from './RouteUtils';
 import matchRoutes from './matchRoutes';
 import runTransitionHooks from './runTransitionHooks';
 import getComponents from './getComponents';
+import renderComponents from './renderComponents';
 import getRouteParams from './getRouteParams';
 
 import NavigationMixin from './NavigationMixin';
@@ -173,38 +174,11 @@ var Router = createClass({
   },
 
   render() {
-    var { routes, params, components } = this.state;
-    var element = null;
-
-    if (components) {
-      element = components.reduceRight((element, components, index) => {
-        if (components == null)
-          return element; // Don't create new children; use the grandchildren.
-
-        var route = routes[index];
-        var routeParams = getRouteParams(route, params);
-        var props = Object.assign({}, this.state, { route, routeParams });
-
-        if (isValidElement(element)) {
-          props.children = element;
-        } else if (element) {
-          // In render, do var { header, sidebar } = this.props;
-          Object.assign(props, element);
-        }
-
-        if (typeof components === 'object') {
-          var elements = {};
-
-          for (var key in components)
-            if (components.hasOwnProperty(key))
-              elements[key] = this.createElement(components[key], props);
-
-          return elements;
-        }
-
-        return this.createElement(components, props);
-      }, element);
-    }
+    var element = renderComponents(
+      this.state,
+      this.state, // Not a typo :) This is what gets passed to router components
+      this.createElement
+    );
 
     invariant(
       element === null || element === false || isValidElement(element),
