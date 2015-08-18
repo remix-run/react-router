@@ -7,12 +7,12 @@ import runTransitionHooks from './runTransitionHooks';
  * -- including this one, to account for the possibility that another enhancer
  * has produced a redirect (unlikely, but should be technically possible).
  *
- * @param {CreateRouter} next - Router-creating function
+ * @param {CreateRouter} createRouter - Router-creating function
  * @returns {CreateRouter}
  */
-export default function useTransitionHooks(next) {
+export default function useTransitionHooks(createRouter) {
   return (...args) => {
-    const router = next(...args);
+    const router = createRouter(...args);
 
     function match(location, callback) {
       const prevState = router.getState();

@@ -4,12 +4,12 @@ import getComponents from './getComponents';
  * Router enhancer that gets (possibly asynchronously) the components needed
  * to render the active routes and adds it to the router state.
  *
- * @param {CreateRouter} next - Router-creating function
+ * @param {CreateRouter} createRouter - Router-creating function
  * @returns {CreateRouter}
  */
-export default function useComponents(next) {
+export default function useComponents(createRouter) {
   return (...args) => {
-    const router = next(...args);
+    const router = createRouter(...args);
     let components;
 
     function match(location, callback) {
