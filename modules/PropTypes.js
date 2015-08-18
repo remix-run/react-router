@@ -22,6 +22,11 @@ export var location = shape({
   key: string
 });
 
+export var router = shape({
+  getState: func.isRequired,
+  match: func.isRequired
+});
+
 export var component = func;
 export var components = oneOfType([ component, object ]);
 export var route = oneOfType([ object, element ]);
