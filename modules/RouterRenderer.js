@@ -13,13 +13,15 @@ const dontPass = [
   'createElement'
 ];
 
-export default class RouterComponent extends Component {
+export default class RouterRenderer extends Component {
   static propTypes = {
+    // Router state
     routes: RouterPropTypes.routes.isRequired,
     params: PropTypes.object.isRequired,
     location: RouterPropTypes.location.isRequired,
     components: PropTypes.array.isRequired,
 
+    // Extra
     createElement: PropTypes.func
   }
 

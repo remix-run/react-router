@@ -1,3 +1,4 @@
+import warning from 'warning';
 import matchRoutes from './matchRoutes';
 
 /**
@@ -21,6 +22,15 @@ export default function createRouter(routes, initialState) {
     matchRoutes(routes, location, (error, nextState) => {
       if (error) {
         callback(error);
+        return;
+      }
+      if (nextState == null) {
+        warning(
+          false,
+          'Location "%s" did not match any routes',
+          location.pathname + location.search
+        );
+        callback(error, nextState);
         return;
       }
       state = { ...nextState, location };
