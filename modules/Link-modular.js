@@ -1,4 +1,4 @@
-import React, { Component, PropTypes, createElement } from 'react';
+import React, { Component, PropTypes } from 'react';
 import * as RouterPropTypes from './PropTypes';
 import { stringifyQuery } from './QueryUtils';
 
@@ -91,57 +91,33 @@ export default class Link extends Component {
   }
 
   render() {
-    var { router } = this.context;
-
-    var props = Object.assign({}, this.props, {
+    const { router } = this.context;
+    const props = {
+      ...this.props,
       onClick: this.handleClick
-    });
+    };
 
-    // Ignore if rendered outside of the context of a
-    // router, simplifies unit testing.
+    // Ignore if rendered outside of the context of a router, simplifies
+    // unit testing.
     if (router) {
-      var { to, query } = this.props;
+      const { to, query } = this.props;
 
       props.href = this.createHref(to, query);
 
       if (router.isActive(to, query)) {
-        if (props.activeClassName)
+        if (props.activeClassName) {
           props.className += props.className !== '' ? ` ${props.activeClassName}` : props.activeClassName;
+        }
 
-        if (props.activeStyle)
-          props.style = Object.assign({}, props.style, props.activeStyle);
+        if (props.activeStyle) {
+          props.style = {
+            ...props.style,
+            ...props.activeStyle
+          };
+        }
       }
     }
 
-    return createElement('a', props);
-
-    // const { router } = this.context;
-    // const props = {
-    //   ...this.props,
-    //   onClick: this.handleClick
-    // };
-    //
-    // // Ignore if rendered outside of the context of a router, simplifies
-    // // unit testing.
-    // if (router) {
-    //   const { to, query } = this.props;
-    //
-    //   props.href = this.createHref(to, query);
-    //
-    //   if (router.isActive(to, query)) {
-    //     if (props.activeClassName) {
-    //       props.className += props.className !== '' ? ` ${props.activeClassName}` : props.activeClassName;
-    //     }
-    //
-    //     if (props.activeStyle) {
-    //       props.style = {
-    //         ...props.style,
-    //         ...props.activeStyle
-    //       };
-    //     }
-    //   }
-    // }
-    //
-    // return <a {...props} />;
+    return <a {...props} />;
   }
 }
