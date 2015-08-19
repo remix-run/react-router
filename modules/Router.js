@@ -173,7 +173,7 @@ var Router = createClass({
   },
 
   render() {
-    var { routes, params, components } = this.state;
+    var { isTransitioning, location, routes, params, components } = this.state;
     var element = null;
 
     if (components) {
@@ -183,7 +183,13 @@ var Router = createClass({
 
         var route = routes[index];
         var routeParams = getRouteParams(route, params);
-        var props = Object.assign({}, this.state, { route, routeParams });
+        var props = {
+          isTransitioning,
+          location,
+          params,
+          route,
+          routeParams
+        };
 
         if (isValidElement(element)) {
           props.children = element;
