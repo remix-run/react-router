@@ -211,7 +211,7 @@ var Router = createClass({
       'The root route must render a single element'
     );
 
-    return element;
+    return React.cloneElement(element, { ref: 'innerComponent' });
   }
 
 });
