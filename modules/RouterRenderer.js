@@ -18,7 +18,7 @@ export default class RouterRenderer extends Component {
     // Router state
     routes: RouterPropTypes.routes.isRequired,
     params: PropTypes.object.isRequired,
-    location: RouterPropTypes.location.isRequired,
+    location: RouterPropTypes.location,
     components: PropTypes.array.isRequired,
 
     // Extra

@@ -1,8 +1,10 @@
+import invariant from 'invariant';
 import React, { Component, PropTypes } from 'react';
 import * as RouterPropTypes from './PropTypes';
 import BaseRouterRenderer from './RouterRenderer';
 import createReactRouter from './createReactRouter';
 import routerContext from './routerContext';
+import addNavigation from './addNavigation';
 
 function noop() {}
 
@@ -33,7 +35,8 @@ export default class Router extends Component {
 
   constructor(props, context) {
     super(props, context);
-    const { routes, children, history, location } = props;
+    const { routes, children, location } = props;
+    let { history } = props;
 
     this.state = {
       isTransitioning: false,
@@ -43,7 +46,19 @@ export default class Router extends Component {
     this.router = createReactRouter(this.props.initialState);
 
     if (history) {
-      this.unlisten = history.listen(this.handleLocationChange);
+      // Check if navigation methods exist on history; add them if they don't.
+      // This is a temporary solution — they should really be added using the
+      // `addNavigation()` history enhancer. However, to maintain compatibility
+      // with the 1.0 API, we can't require users to use that extension. We'll
+      // need to either introduce a breaking change or update the history module
+      // to include those methods by default.
+      // TODO: get rid of this
+      if (!history.transitionTo || !history.replaceWith) {
+        // Pass history-creating function to "trick" enhancer
+        this.history = addNavigation(() => history)();
+      }
+
+      this.unlisten = this.history.listen(this.handleLocationChange);
     } else if (location) {
       this.handleLocationChange(location);
     }
@@ -81,7 +96,7 @@ export default class Router extends Component {
       }
       if (redirectInfo) {
         const { pathname, query, state } = redirectInfo;
-        history.replaceWith(pathname, query, state);
+        history.replaceState(state, history.createHref(pathname, query));
         return;
       }
       if (state == null) {
@@ -95,9 +110,68 @@ export default class Router extends Component {
     });
   }
 
+
+  // Below are deprecated methods that are added here for 1.0
+  // compatibility. Future versions should access these on either the router
+  // or history object, as appropriate. Outside modules (like <Link>) should not
+  // use these methods — they should use the correct methods, and rely on their
+  // own fallbacks for compatibility.
+
+  transitionTo(...args) {
+    const { history } = this;
+
+    invariant(
+      history,
+      'Router#transitionTo needs history'
+    );
+
+    history.transitionTo(...args);
+  }
+
+
+  replaceWith(...args) {
+    const { history } = this;
+
+    invariant(
+      history,
+      'Router#replaceWith needs history'
+    );
+
+    history.replaceWith(...args);
+  }
+
+  go(n) {
+    const { history } = this;
+
+    invariant(
+      history,
+      'Router#go needs history'
+    );
+
+    history.go(n);
+  }
+
+  goBack() {
+    this.go(-1);
+  }
+
+  goForward() {
+    this.go(1);
+  }
+
+  isActive(...args) {
+    this.router.isActive(...args);
+  }
+
+  createHref(...args) {
+    this.history.createHref(...args);
+  }
+
   render() {
-    const { history, createElement } = this.props;
-    const RouterRenderer = routerContext(this.router, history)(BaseRouterRenderer);
+    const { router, history } = this;
+    const { createElement } = this.props;
+    const RouterRenderer = routerContext(router, history)(BaseRouterRenderer);
+
     return (
       <RouterRenderer
         createElement={createElement}
