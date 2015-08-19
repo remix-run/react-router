@@ -1,4 +1,5 @@
 import React, { isValidElement } from 'react';
+import { formatPattern } from './URLUtils';
 import warning from 'warning';
 
 function isValidChild(object) {
@@ -22,6 +23,33 @@ function checkPropTypes(componentName, propTypes, props) {
   }
 }
 
+function parseRoute(route) {
+  if (route.from) {
+    route = createRedirectRoute(route);
+  }
+
+  return route;
+}
+
+function createRedirectRoute(route) {
+  var redirect = Object.assign({}, route);
+  if (redirect.from)
+    redirect.path = redirect.from;
+
+  redirect.onEnter = function (nextState, transition) {
+    var { location, params } = nextState;
+    var pathname = redirect.to ? formatPattern(redirect.to, params) : location.pathname;
+
+    transition.to(
+      pathname,
+      redirect.query || location.query,
+      redirect.state || location.state
+    );
+  };
+
+  return redirect;
+}
+
 export function createRouteFromReactElement(element) {
   var type = element.type;
   var route = Object.assign({}, type.defaultProps, element.props);
@@ -43,7 +71,7 @@ export function createRouteFromReactElement(element) {
  * nested.
  *
  *   import { Route, createRoutesFromReactChildren } from 'react-router';
- *   
+ *
  *   var routes = createRoutesFromReactChildren(
  *     <Route component={App}>
  *       <Route path="home" component={Dashboard}/>
@@ -77,10 +105,12 @@ export function createRoutesFromReactChildren(children) {
  */
 export function createRoutes(routes) {
   if (isReactChildren(routes)) {
-    routes = createRoutesFromReactChildren(routes);
-  } else if (!Array.isArray(routes)) {
+    return createRoutesFromReactChildren(routes);
+  }
+
+  if (!Array.isArray(routes)) {
     routes = [ routes ];
   }
 
-  return routes;
+  return routes.map(function(route) { return parseRoute(route) });
 }
