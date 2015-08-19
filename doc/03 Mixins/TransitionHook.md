@@ -1,6 +1,6 @@
 Adds a hook to your component instance that is called when the router is
 about to navigate away from the route the component is rendered in, with
-the opportunity to cancel the transition. Mosty useful for forms that
+the opportunity to cancel the transition. Mostly useful for forms that
 are partially filled out, or kicking off an action somewhere to persist
 state.
 

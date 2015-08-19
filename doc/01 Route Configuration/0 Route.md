@@ -111,7 +111,7 @@ returning different routes given some transition `state`.
 #### Example
 
 ```js
-<Route path="coures/:courseId" getComponents={(cb) => {
+<Route path="courses/:courseId" getComponents={(cb) => {
   // do asynchronous stuff to find the components
   cb(null, [Course]);
 }}/>
