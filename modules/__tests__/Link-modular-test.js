@@ -174,7 +174,6 @@ describe('A <Link-modular>', function () {
           this.transitionTo('/hello');
         },
         function () {
-          a = node.querySelector('a'); // TODO: Why is this necessary?
           expect(a.className).toEqual('dontKillMe highlight');
         }
       ];
@@ -210,7 +209,6 @@ describe('A <Link-modular>', function () {
           this.transitionTo('/hello');
         },
         function () {
-          a = node.querySelector('a'); // TODO: Why is this necessary?
           expect(a.style.color).toEqual('red');
         }
       ];

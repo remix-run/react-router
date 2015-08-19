@@ -62,6 +62,8 @@ export default class Router extends Component {
     } else if (location) {
       this.handleLocationChange(location);
     }
+
+    this.RouterRenderer = routerContext(this.router, this.history)(BaseRouterRenderer);
   }
 
   setState(state, onUpdate) {
@@ -168,9 +170,8 @@ export default class Router extends Component {
   }
 
   render() {
-    const { router, history } = this;
+    const { router, history, RouterRenderer } = this;
     const { createElement } = this.props;
-    const RouterRenderer = routerContext(router, history)(BaseRouterRenderer);
 
     return (
       <RouterRenderer
