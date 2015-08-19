@@ -127,7 +127,7 @@ Add a function to be called when the router attempts to transition away
 from the current location.
 
 You may find the [`TransitionHook`][TransitionHook] mixin more
-convienient.
+convenient.
 
 #### arguments
 
@@ -141,7 +141,7 @@ convienient.
 Removes a function `fn` previously added as a transition hook.
 
 You may find the [`TransitionHook`][TransitionHook] mixin more
-convienient.
+convenient.
 
 ### `cancelTransition()`
 
@@ -186,7 +186,7 @@ Examples
 --------
 
 Please see the `examples/` directory of the repository for extensive
-exampls of using `Router`.
+examples of using `Router`.
 
 ```js
 import { Router, Route } from 'react-router';
