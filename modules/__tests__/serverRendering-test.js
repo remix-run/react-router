@@ -26,7 +26,7 @@ describe('server rendering', function () {
       DashboardRoute
     ];
   });
- 
+
   it('works', function (done) {
     var location = createLocation('/');
 

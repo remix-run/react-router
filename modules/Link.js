@@ -1,6 +1,6 @@
-import { createClass, createElement, PropTypes } from 'react';
-
-var { object, string, func } = PropTypes;
+import React, { Component, PropTypes } from 'react';
+import * as RouterPropTypes from './PropTypes';
+import { stringifyQuery } from './QueryUtils';
 
 function isLeftClickEvent(event) {
   return event.button === 0;
@@ -28,74 +28,96 @@ function isModifiedEvent(event) {
  *
  *   <Link to="/posts/123" query={{ show: true }}/>
  */
-var Link = createClass({
+export default class Link extends Component {
+  static contextTypes = {
+    router: RouterPropTypes.router,
+    history: RouterPropTypes.history
+  }
 
-  contextTypes: {
-    router: object
-  },
+  static propTypes = {
+    activeStyle: PropTypes.object,
+    activeClassName: PropTypes.string,
+    to: PropTypes.string.isRequired,
+    query: PropTypes.object,
+    state: PropTypes.object,
+    onClick: PropTypes.func
+  }
 
-  propTypes: {
-    activeStyle: object,
-    activeClassName: string,
-    to: string.isRequired,
-    query: object,
-    state: object,
-    onClick: func
-  },
+  static defaultProps = {
+    className: '',
+    activeClassName: 'active',
+    style: {}
+  }
 
-  getDefaultProps() {
-    return {
-      className: '',
-      activeClassName: 'active',
-      style: {}
-    };
-  },
+  handleClick = event => {
+    const { onClick, to, query, state } = this.props;
+    const { history, router } = this.context;
+    let allowTransition = true;
+    let clickResult;
 
-  handleClick(event) {
-    var allowTransition = true;
-    var clickResult;
-
-    if (this.props.onClick)
-      clickResult = this.props.onClick(event);
-
-    if (isModifiedEvent(event) || !isLeftClickEvent(event))
+    if (this.props.onClick) {
+      clickResult = onClick(event);
+    }
+    if (isModifiedEvent(event) || !isLeftClickEvent(event)) {
       return;
-
-    if (clickResult === false || event.defaultPrevented === true)
+    }
+    if (clickResult === false || event.defaultPrevented === true) {
       allowTransition = false;
+    }
 
     event.preventDefault();
 
-    if (allowTransition)
-      this.context.router.transitionTo(this.props.to, this.props.query, this.props.state);
-  },
+    if (allowTransition) {
+      history.transitionTo(to, query, state);
+    }
+  }
+
+  createHref(pathname, query) {
+    const { history } = this.context;
+
+    // In the absence of a history, <Link>s need a way to create hrefs — e.g. for
+    // server-side rendering. For now we'll just inline a fallback. This is a
+    // temporary solution until we figure out a better one.
+    // TODO: get rid of this
+    if (!history) {
+      let queryString;
+      if (query == null || (queryString = stringifyQuery(query)) === '') {
+        return pathname;
+      }
+      return pathname + (pathname.indexOf('?') === -1 ? '?' : '&') + queryString;
+    }
+
+    return history.createHref(pathname, query);
+  }
 
   render() {
-    var { router } = this.context;
-
-    var props = Object.assign({}, this.props, {
+    const { router } = this.context;
+    const props = {
+      ...this.props,
       onClick: this.handleClick
-    });
+    };
 
-    // Ignore if rendered outside of the context of a
-    // router, simplifies unit testing.
+    // Ignore if rendered outside of the context of a router, simplifies
+    // unit testing.
     if (router) {
-      var { to, query } = this.props;
+      const { to, query } = this.props;
 
-      props.href = router.createHref(to, query);
+      props.href = this.createHref(to, query);
 
       if (router.isActive(to, query)) {
-        if (props.activeClassName)
+        if (props.activeClassName) {
           props.className += props.className !== '' ? ` ${props.activeClassName}` : props.activeClassName;
+        }
 
-        if (props.activeStyle)
-          props.style = Object.assign({}, props.style, props.activeStyle);
+        if (props.activeStyle) {
+          props.style = {
+            ...props.style,
+            ...props.activeStyle
+          };
+        }
       }
     }
 
-    return createElement('a', props);
+    return <a {...props} />;
   }
-
-});
-
-export default Link;
+}

@@ -1,193 +1,216 @@
-import warning from 'warning';
 import invariant from 'invariant';
-import { createClass, createElement, isValidElement, PropTypes } from 'react';
-import { component, components, history, location, routes } from './PropTypes';
+import React, { Component, PropTypes } from 'react';
+import * as RouterPropTypes from './PropTypes';
+import BaseRouterRenderer from './RouterRenderer';
+import createReactRouter from './createReactRouter';
+import routerContext from './routerContext';
+import addNavigation from './addNavigation';
+import compose from './compose';
 import { parseQueryString } from './QueryUtils';
-import { createRoutes } from './RouteUtils';
-import matchRoutes from './matchRoutes';
-import runTransitionHooks from './runTransitionHooks';
-import getComponents from './getComponents';
-import renderComponents from './renderComponents';
-import getRouteParams from './getRouteParams';
+import useParseQueryStringFallback from './useParseQueryStringFallback';
 
-import NavigationMixin from './NavigationMixin';
-import ScrollManagementMixin from './ScrollManagementMixin';
-import ActiveMixin from './ActiveMixin';
+function noop() {}
 
-var { arrayOf, func, object } = PropTypes;
+/**
+ * Create React router with 1.0 API compatibility added
+ * @param  {Function} parseQueryString
+ * @return {CreateRouter}
+ */
+function createReactRouterCompat(parseQueryString) {
+  return compose(
+    useParseQueryStringFallback(parseQueryString),
+    createReactRouter
+  );
+}
 
-var Router = createClass({
-
-  mixins: [ NavigationMixin, ScrollManagementMixin, ActiveMixin ],
-
-  statics: {
-
-    run(routes, location, callback, prevState=null) {
-      matchRoutes(routes, location, function (error, nextState) {
-        if (error || nextState == null) {
-          callback(error, null);
-        } else {
-          nextState.location = location;
-          runTransitionHooks(prevState, nextState, function (error, redirectInfo) {
-            if (error || redirectInfo) {
-              callback(error, null, redirectInfo);
-            } else {
-              getComponents(nextState, function (error, components) {
-                if (error) {
-                  callback(error);
-                } else {
-                  nextState.components = components;
-                  callback(null, nextState);
-                }
-              });
-            }
-          });
-        }
-      });
-    }
-
-  },
-
-  childContextTypes: {
-    router: object
-  },
-
-  getChildContext() {
-    return {
-      router: this
-    };
-  },
-
-  propTypes: {
-    createElement: func,
-    parseQueryString: func,
-    onError: func,
-    onUpdate: func,
-    routes,
+export default class Router extends Component {
+  static propTypes = {
+    createElement: PropTypes.func,
+    parseQueryString: PropTypes.func,
+    onError: PropTypes.func,
+    onUpdate: PropTypes.func,
+    routes: RouterPropTypes.routes,
     // Routes may also be given as children (JSX)
-    children: routes,
+    children: RouterPropTypes.routes,
 
     // Client
-    history,
+    history: RouterPropTypes.history,
 
     // Unit testing, simple server
-    location,
+    location: RouterPropTypes.location,
 
     // Flux, data fetching
-    initialState: object
-  },
+    // @deprecated, use <RouterRenderer {...initialState} /> instead
+    initialState: PropTypes.object
+  }
 
-  getDefaultProps() {
-    return {
-      createElement,
-      parseQueryString
-    };
-  },
+  static defaultProps = {
+    parseQueryString,
+    onError: error => { throw error; },
+    onUpdate: noop
+  }
 
-  getInitialState() {
-    return {
+  /**
+   * Server-side shortcut for `router.match()`. Use `router.match()`
+   * directly instead.
+   * @deprecated
+   * @param {Array<Route>} routes
+   * @param {Location} location
+   * @param {Function} callback
+   * @param {Object} [initialState]
+   */
+  static run(routes, location, callback, initialState) {
+    const router = createReactRouterCompat(parseQueryString)(initialState);
+    router.match(routes, location, callback);
+  }
+
+  constructor(props, context) {
+    super(props, context);
+    const { routes, children, location, parseQueryString } = props;
+    let { history } = props;
+
+    this.state = {
       isTransitioning: false,
-      location: null,
-      routes: null,
-      params: null,
-      components: null,
-      ...this.props.initialState
+      location
     };
-  },
 
-  updateLocation(location) {
-    if (!location.query)
-      location.query = this.props.parseQueryString(location.search.substring(1));
+    this.router = createReactRouterCompat(parseQueryString)(props.initialState);
+
+    if (history) {
+      // Check if navigation methods exist on history; add them if they don't.
+      // This is a temporary solution — they should really be added using the
+      // `addNavigation()` history enhancer. However, to maintain compatibility
+      // with the 1.0 API, we can't require users to use that extension. We'll
+      // need to either introduce a breaking change or update the history module
+      // to include those methods by default.
+      // TODO: get rid of this
+      if (!history.transitionTo || !history.replaceWith) {
+        // Pass history-creating function to "trick" enhancer
+        this.history = addNavigation(() => history)();
+      }
+
+      this.unlisten = this.history.listen(this.handleLocationChange);
+    } else if (location) {
+      this.handleLocationChange(location);
+    }
+
+    this.RouterRenderer = routerContext(this.router, this.history)(BaseRouterRenderer);
+  }
+
+  setState(state, onUpdate) {
+    if (!this.componentHasMounted) {
+      this.state = { ...this.state, ...state };
+      return;
+    }
+    super.setState(state, onUpdate);
+  }
+
+  componentDidMount() {
+    this.componentHasMounted = true;
+  }
+
+  componentWillUnmount() {
+    if (this.unlisten) {
+      this.unlisten();
+    }
+  }
+
+  handleLocationChange = location => {
+    const { routes, children, history, onError, onUpdate, parseQueryString } = this.props;
 
     this.setState({
       isTransitioning: true
     });
 
-    Router.run(this.routes, location, (error, state, redirectInfo) => {
+    this.router.match(routes || children, location, (error, state, redirectInfo) => {
       if (error) {
-        this.handleError(error);
-      } else if (redirectInfo) {
-        var { pathname, query, state } = redirectInfo;
-        this.replaceWith(pathname, query, state);
-      } else if (state == null) {
-        warning(
-          false,
-          'Location "%s" did not match any routes',
-          location.pathname + location.search
-        );
-      } else {
-        this.setState(state, this.props.onUpdate);
+        onError(error);
+        return;
       }
+      if (redirectInfo) {
+        const { pathname, query, state } = redirectInfo;
+        history.replaceState(state, history.createHref(pathname, query));
+        return;
+      }
+      if (state == null) {
+        return;
+      }
+      this.setState(state, onUpdate);
+    });
 
-      this.setState({
-        isTransitioning: false
-      });
-    }, this.state);
-  },
-
-  updateHistory(history) {
-    if (this._unlisten) {
-      this._unlisten();
-      this._unlisten = null;
-    }
-
-    if (history)
-      this._unlisten = history.listen(this.updateLocation);
-  },
-
-  handleError(error) {
-    if (this.props.onError) {
-      this.props.onError.call(this, error);
-    } else {
-      // Throw errors by default so we don't silently swallow them!
-      throw error; // This error probably originated in getChildRoutes or getComponents.
-    }
-  },
-
-  componentWillMount() {
-    var { routes, children, history, location } = this.props;
-
-    if (routes || children) {
-      this.routes = createRoutes(routes || children);
-    } else {
-      this.routes = [];
-    }
-
-    if (history) {
-      this.updateHistory(history);
-    } else if (location) {
-      this.updateLocation(location);
-    }
-  },
-
-  componentWillReceiveProps(nextProps) {
-    // TODO
-  },
-
-  componentWillUnmount() {
-    if (this._unlisten)
-      this._unlisten();
-  },
-
-  createElement(component, props) {
-    return component ? this.props.createElement(component, props) : null;
-  },
-
-  render() {
-    var element = renderComponents(
-      this.state,
-      this.state, // Not a typo :) This is what gets passed to router components
-      this.createElement
-    );
-
-    invariant(
-      element === null || element === false || isValidElement(element),
-      'The root route must render a single element'
-    );
-
-    return element;
+    this.setState({
+      isTransitioning: false
+    });
   }
 
-});
 
-export default Router;
+  // Below are deprecated methods that are added here for 1.0
+  // compatibility. Future versions should access these on either the router
+  // or history object, as appropriate. Outside modules (like <Link>) should not
+  // use these methods — they should use the correct methods, and rely on their
+  // own fallbacks for compatibility.
+
+  transitionTo(...args) {
+    const { history } = this;
+
+    invariant(
+      history,
+      'Router#transitionTo needs history'
+    );
+
+    return history.transitionTo(...args);
+  }
+
+
+  replaceWith(...args) {
+    const { history } = this;
+
+    invariant(
+      history,
+      'Router#replaceWith needs history'
+    );
+
+    return history.replaceWith(...args);
+  }
+
+  go(n) {
+    const { history } = this;
+
+    invariant(
+      history,
+      'Router#go needs history'
+    );
+
+    return history.go(n);
+  }
+
+  goBack() {
+    return this.go(-1);
+  }
+
+  goForward() {
+    return this.go(1);
+  }
+
+  isActive(...args) {
+    return this.router.isActive(...args);
+  }
+
+  createHref(...args) {
+    return this.history.createHref(...args);
+  }
+
+  render() {
+    const { router, history, RouterRenderer } = this;
+    const { createElement, initialState } = this.props;
+
+    const state = initialState || this.state;
+
+    return (
+      <RouterRenderer
+        createElement={createElement}
+        {...state}
+      />
+    );
+  }
+}

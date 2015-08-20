@@ -20,19 +20,19 @@ describe('When a router enters a branch', function () {
         );
       }
     });
-  
+
     NewsFeed = React.createClass({
       render() {
         return <div>News</div>;
       }
     });
-  
+
     Inbox = React.createClass({
       render() {
         return <div>Inbox</div>;
       }
     });
-  
+
     NewsFeedRoute = {
       path: 'news',
       component: NewsFeed,
@@ -45,7 +45,7 @@ describe('When a router enters a branch', function () {
         expect(redirectTo).toBeA('function');
       }
     };
-  
+
     InboxRoute = {
       path: 'inbox',
       component: Inbox,
@@ -85,7 +85,7 @@ describe('When a router enters a branch', function () {
         expect(redirectTo).toBeA('function');
       }
     };
-  
+
     DashboardRoute = {
       component: Dashboard,
       onEnter(nextState, redirectTo) {
@@ -107,7 +107,7 @@ describe('When a router enters a branch', function () {
   afterEach(function () {
     React.unmountComponentAtNode(node);
   });
- 
+
   it('calls the onEnter hooks of all routes in that branch', function (done) {
     var dashboardRouteEnterSpy = spyOn(DashboardRoute, 'onEnter').andCallThrough();
     var newsFeedRouteEnterSpy = spyOn(NewsFeedRoute, 'onEnter').andCallThrough();

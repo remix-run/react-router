@@ -39,7 +39,7 @@ var NavigationMixin = {
 
     return path;
   },
- 
+
   /**
    * Pushes a new Location onto the history stack.
    */
@@ -97,7 +97,7 @@ var NavigationMixin = {
   goForward() {
     this.go(1);
   }
- 
+
 };
 
 export default NavigationMixin;

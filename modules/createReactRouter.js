@@ -11,8 +11,8 @@ import addIsActive from './addIsActive';
  */
 const createReactRouter = compose(
   addIsActive,
-  useComponents,
   useTransitionHooks,
+  useComponents,
   useJSXRoutes,
   createRouter
 );

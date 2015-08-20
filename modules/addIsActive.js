@@ -6,7 +6,7 @@ import { pathnameIsActive, queryIsActive } from './ActiveMixin';
  * @returns {CreateRouter}
  */
 export default function addIsActive(createRouter) {
-  return (initialState) => {
+  return initialState => {
     const router = createRouter(initialState);
 
     function isActive(pathname, query) {

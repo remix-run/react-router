@@ -25,7 +25,7 @@ export default function createRouter(initialState) {
         callback(error);
         return;
       }
-      if (nextState == null) {
+      if (!nextState) {
         warning(
           false,
           'Location "%s" did not match any routes',
