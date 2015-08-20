@@ -2,6 +2,7 @@ import assert from 'assert';
 import expect from 'expect';
 import React from 'react/addons';
 import createHistory from 'history/lib/createMemoryHistory';
+import enableQueries from 'history/lib/enableQueries';
 import execSteps from './execSteps';
 import Router from '../Router';
 import Route from '../Route';
@@ -47,7 +48,7 @@ describe('A <Link>', function () {
     });
 
     React.render((
-      <Router history={createHistory('/')}>
+      <Router history={enableQueries(createHistory)('/')}>
         <Route path="/" component={LinkWrapper}/>
       </Router>
     ), node, function () {

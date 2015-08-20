@@ -4,7 +4,7 @@ import { matchPattern } from './PatternUtils';
  * Returns true if a route and params that match the given
  * pathname are currently active.
  */
-function pathnameIsActive(pathname, activePathname, activeRoutes, activeParams) {
+export function pathnameIsActive(pathname, activePathname, activeRoutes, activeParams) {
   if (pathname === activePathname || activePathname.indexOf(pathname + '/') === 0)
     return true;
 
@@ -35,7 +35,7 @@ function pathnameIsActive(pathname, activePathname, activeRoutes, activeParams) 
  * Returns true if all key/value pairs in the given query are
  * currently active.
  */
-function queryIsActive(query, activeQuery) {
+export function queryIsActive(query = null, activeQuery = null) {
   if (activeQuery == null)
     return query == null;
 
