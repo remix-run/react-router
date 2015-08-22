@@ -5,8 +5,8 @@
  * @returns {CreateHistory}
  */
 export default function addNavigation(createHistory) {
-  return (...args) => {
-    const history = createHistory(...args);
+  return options => {
+    const history = createHistory(options);
 
     /**
      * Pushes a new Location onto the history stack.

@@ -1,7 +1,7 @@
 import expect from 'expect';
 import React from 'react';
 import { createLocation } from 'history';
-import Router from '../Router';
+import Router from '../take-2/Router';
 import Route from '../Route';
 
 describe('Router', function () {
