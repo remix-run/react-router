@@ -1,39 +1,21 @@
 import runTransitionHooks from './runTransitionHooks';
 
-/**
- * Router enhancer that runs transition hooks when matching. The callback passed
- * to `router.match()` is called with a third parameter, `redirectInfo`. For
- * safety, all store enhancers must check for the existence of `redirectInfo`
- * -- including this one, to account for the possibility that another enhancer
- * has produced a redirect (unlikely, but should be technically possible).
- *
- * @param {CreateRouter} createRouter - Router-creating function
- * @returns {CreateRouter}
- */
-export default function useTransitionHooks(createRouter) {
-  return initialState => {
-    const router = createRouter(initialState);
-
-    function match(routes, location, callback) {
-      const prevState = router.getState();
-      router.match(routes, location, (error, nextState, existingRedirectInfo) => {
-        if (error || existingRedirectInfo) {
-          callback(error, null, existingRedirectInfo);
+export default function useTransitionHooks(routes) {
+  return match => (prevState, location, callback) => {
+    // Call downstream middleware first to get next state
+    match(prevState, location, (error1, nextState, redirectInfo1) => {
+      if (error1 || redirectInfo1) {
+        callback(transitionError, null, redirectInfo1);
+        return;
+      }
+      // Run transition hooks using next and previous state
+      runTransitionHooks(prevState, nextState, (error2, redirectInfo2) => {
+        if (error2 || redirectInfo2) {
+          callback(error2, null, redirectInfo2);
           return;
         }
-        runTransitionHooks(prevState, nextState, (transitionError, redirectInfo) => {
-          if (error || redirectInfo) {
-            callback(transitionError, null, redirectInfo);
-            return;
-          }
-          callback(null, nextState);
-        });
+        callback(null, nextState);
       });
-    }
-
-    return {
-      ...router,
-      match
-    };
+    });
   };
 }

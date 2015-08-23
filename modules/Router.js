@@ -4,24 +4,20 @@ import * as RouterPropTypes from './PropTypes';
 import BaseRouterRenderer from './RouterRenderer';
 import createReactRouter from './createReactRouter';
 import routerContext from './routerContext';
-import addNavigation from './addNavigation';
 import compose from './compose';
 import { parseQueryString } from './QueryUtils';
-import useParseQueryStringFallback from './useParseQueryStringFallback';
+import createMemoryHistory from 'history/lib/createMemoryHistory';
+import useQueries from 'history/lib/useQueries';
+import matchUntilResolved from './matchUntilResolved';
+import { pick, inArray } from './CollectionUtils';
 
 function noop() {}
 
-/**
- * Create React router with 1.0 API compatibility added
- * @param  {Function} parseQueryString
- * @return {CreateRouter}
- */
-function createReactRouterCompat(parseQueryString) {
-  return compose(
-    useParseQueryStringFallback(parseQueryString),
-    createReactRouter
-  );
-}
+const createFallbackHistory = createMemoryHistory
+
+const componentSpecificOptions = [
+  'createElement'
+];
 
 export default class Router extends Component {
   static propTypes = {
@@ -32,9 +28,6 @@ export default class Router extends Component {
     routes: RouterPropTypes.routes,
     // Routes may also be given as children (JSX)
     children: RouterPropTypes.routes,
-
-    // Client
-    history: RouterPropTypes.history,
 
     // Unit testing, simple server
     location: RouterPropTypes.location,
@@ -60,41 +53,38 @@ export default class Router extends Component {
    * @param {Object} [initialState]
    */
   static run(routes, location, callback, initialState) {
-    const router = createReactRouterCompat(parseQueryString)(initialState);
-    router.match(routes, location, callback);
+    const router = createReactRouter(createFallbackHistory)({
+      routes,
+      initialState
+    });
+    router.match(initialState, location, callback);
   }
 
   constructor(props, context) {
     super(props, context);
-    const { routes, children, location, parseQueryString } = props;
-    let { history } = props;
+    const {
+      history,
+      routes,
+      children
+    } = props;
 
     this.state = {
       isTransitioning: false,
-      location
     };
 
-    this.router = createReactRouterCompat(parseQueryString)(props.initialState);
+    const routerProps = pick(props, k => !inArray(componentSpecificOptions, k));
 
-    if (history) {
-      // Check if navigation methods exist on history; add them if they don't.
-      // This is a temporary solution — they should really be added using the
-      // `addNavigation()` history enhancer. However, to maintain compatibility
-      // with the 1.0 API, we can't require users to use that extension. We'll
-      // need to either introduce a breaking change or update the history module
-      // to include those methods by default.
-      // TODO: get rid of this
-      if (!history.transitionTo || !history.replaceWith) {
-        // Pass history-creating function to "trick" enhancer
-        this.history = addNavigation(() => history)();
-      }
+    const createHistory = history
+      ? () => history
+      : createFallbackHistory
 
-      this.unlisten = this.history.listen(this.handleLocationChange);
-    } else if (location) {
-      this.handleLocationChange(location);
-    }
+    this.router = createReactRouter(createHistory)({
+      ...routerProps,
+      routes: routes || children
+    });
 
-    this.RouterRenderer = routerContext(this.router, this.history)(BaseRouterRenderer);
+    this.unlisten = this.router.listen(this.handleRouterChange);
+    this.RouterRenderer = routerContext(this.router)(BaseRouterRenderer);
   }
 
   setState(state, onUpdate) {
@@ -115,73 +105,52 @@ export default class Router extends Component {
     }
   }
 
-  handleLocationChange = location => {
-    const { routes, children, history, onError, onUpdate, parseQueryString } = this.props;
-
+  handleRouterChange = state => {
     this.setState({
-      isTransitioning: true
-    });
-
-    this.router.match(routes || children, location, (error, state, redirectInfo) => {
-      if (error) {
-        onError(error);
-        return;
-      }
-      if (redirectInfo) {
-        const { pathname, query, state } = redirectInfo;
-        history.replaceState(state, history.createHref(pathname, query));
-        return;
-      }
-      if (state == null) {
-        return;
-      }
-      this.setState(state, onUpdate);
-    });
-
-    this.setState({
-      isTransitioning: false
-    });
+      isTransitioning: state.pendingLocation ? true : false,
+      ...state
+    }, this.props.onUpdate);
   }
 
 
   // Below are deprecated methods that are added here for 1.0
   // compatibility. Future versions should access these on either the router
-  // or history object, as appropriate. Outside modules (like <Link>) should not
-  // use these methods — they should use the correct methods, and rely on their
-  // own fallbacks for compatibility.
+  // directly. Outside modules (like <Link>) should not use these methods — they
+  // should use the correct methods, and rely on their own fallbacks
+  // for compatibility.
 
   transitionTo(...args) {
-    const { history } = this;
+    const { router } = this;
 
     invariant(
       history,
       'Router#transitionTo needs history'
     );
 
-    return history.transitionTo(...args);
+    return router.transitionTo(...args);
   }
 
 
   replaceWith(...args) {
-    const { history } = this;
+    const { router } = this;
 
     invariant(
       history,
       'Router#replaceWith needs history'
     );
 
-    return history.replaceWith(...args);
+    return router.replaceWith(...args);
   }
 
   go(n) {
-    const { history } = this;
+    const { router } = this;
 
     invariant(
-      history,
+      router,
       'Router#go needs history'
     );
 
-    return history.go(n);
+    return router.go(n);
   }
 
   goBack() {
@@ -197,7 +166,7 @@ export default class Router extends Component {
   }
 
   createHref(...args) {
-    return this.history.createHref(...args);
+    return this.router.createHref(...args);
   }
 
   render() {

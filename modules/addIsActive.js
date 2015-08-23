@@ -1,16 +1,16 @@
 import { pathnameIsActive, queryIsActive } from './ActiveMixin';
 
 /**
- * Router enhancer that adds an `isActive()` method
- * @param {CreateRouter} createRouter - Router-creating function
- * @returns {CreateRouter}
+ * History enhancer that adds an `isActive()` method. Specific to React Router.
+ * @param {CreateHistory} createHistory - History-creating function
+ * @returns {CreateHistory}
  */
-export default function addIsActive(createRouter) {
-  return initialState => {
-    const router = createRouter(initialState);
+export default function addIsActive(createHistory) {
+  return options => {
+    const router = createHistory(options);
 
     function isActive(pathname, query) {
-      const { location, routes, params } = router.getState();
+      const { location, routes, params } = router.getState() || {};
 
       if (location == null) {
         return false;
@@ -27,6 +27,6 @@ export default function addIsActive(createRouter) {
     return {
       ...router,
       isActive
-    }
+    };
   }
 }

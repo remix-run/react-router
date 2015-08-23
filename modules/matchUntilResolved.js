@@ -1,11 +1,9 @@
 /**
- * Returns a new match function that is called recursively until there are
- * no more redirects.
- * @param {Match} match
- * @return {Match} New match
+ * Middleware that matches recursively until there are no more redirects. This
+ * should be the first middleware in the chain
  */
-export default function matchUntilResolved(match) {
-  return (prevState, location, callback) => {
+export default function matchUntilResolved() {
+  return match => (prevState, location, callback) => {
     function matchAgain(state) {
       match(state, location, (error, newState, redirectInfo) => {
         if (error) {

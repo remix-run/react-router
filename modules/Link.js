@@ -30,8 +30,7 @@ function isModifiedEvent(event) {
  */
 export default class Link extends Component {
   static contextTypes = {
-    router: RouterPropTypes.router,
-    history: RouterPropTypes.history
+    router: RouterPropTypes.router
   }
 
   static propTypes = {
@@ -51,7 +50,7 @@ export default class Link extends Component {
 
   handleClick = event => {
     const { onClick, to, query, state } = this.props;
-    const { history, router } = this.context;
+    const { router } = this.context;
     let allowTransition = true;
     let clickResult;
 
@@ -68,26 +67,13 @@ export default class Link extends Component {
     event.preventDefault();
 
     if (allowTransition) {
-      history.transitionTo(to, query, state);
+      router.transitionTo(to, query, state);
     }
   }
 
   createHref(pathname, query) {
-    const { history } = this.context;
-
-    // In the absence of a history, <Link>s need a way to create hrefs — e.g. for
-    // server-side rendering. For now we'll just inline a fallback. This is a
-    // temporary solution until we figure out a better one.
-    // TODO: get rid of this
-    if (!history) {
-      let queryString;
-      if (query == null || (queryString = stringifyQuery(query)) === '') {
-        return pathname;
-      }
-      return pathname + (pathname.indexOf('?') === -1 ? '?' : '&') + queryString;
-    }
-
-    return history.createHref(pathname, query);
+    const { router } = this.context;
+    return router.createHref(pathname, query);
   }
 
   render() {
