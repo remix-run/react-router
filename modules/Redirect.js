@@ -1,10 +1,10 @@
+import React from 'react';
 import invariant from 'invariant';
-import { createClass, PropTypes } from 'react';
 import { createRouteFromReactElement } from './RouteUtils';
 import { formatPattern } from './PatternUtils';
 import { falsy } from './PropTypes';
 
-var { string, object } = PropTypes;
+var { string, object } = React.PropTypes;
 
 /**
  * A <Redirect> is used to declare another URL path a client should be sent
@@ -13,7 +13,7 @@ var { string, object } = PropTypes;
  * Redirects are placed alongside routes in the route configuration and are
  * traversed in the same manner.
  */
-var Redirect = createClass({
+var Redirect = React.createClass({
 
   statics: {
 
