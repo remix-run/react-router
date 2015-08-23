@@ -1,6 +1,5 @@
 import React from 'react';
-import createHistory from 'history/lib/createHashHistory';
-import { Router, Route, Link, Navigation } from 'react-router';
+import { Router, Route, Link, Navigation, Lifecycle } from 'react-router';
 
 var App = React.createClass({
   render() {
@@ -29,7 +28,7 @@ var Dashboard = React.createClass({
 });
 
 var Form = React.createClass({
-  mixins: [ Navigation ],
+  mixins: [ Lifecycle, Navigation ],
 
   getInitialState() {
     return {
@@ -37,24 +36,14 @@ var Form = React.createClass({
     };
   },
 
-  transitionHook() {
+  routerWillLeave(nextLocation) {
     if (this.state.textValue)
       return 'You have unsaved information, are you sure you want to leave this page?';
   },
 
-  componentDidMount() {
-    history.registerTransitionHook(this.transitionHook);
-  },
-
-  componentWillUnmount() {
-    history.unregisterTransitionHook(this.transitionHook);
-  },
-
   handleChange(event) {
-    var { value } = event.target;
-
     this.setState({
-      textValue: value
+      textValue: event.target.value
     });
   },
 
@@ -81,10 +70,8 @@ var Form = React.createClass({
   }
 });
 
-var history = createHistory();
-
 React.render((
-  <Router history={history}>
+  <Router>
     <Route path="/" component={App}>
       <Route path="dashboard" component={Dashboard} />
       <Route path="form" component={Form} />

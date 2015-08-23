@@ -1,5 +1,4 @@
 import React from 'react';
-import createHistory from 'history/lib/createHashHistory';
 import { Router } from 'react-router';
 import stubbedCourses from './stubs/COURSES';
 
@@ -18,8 +17,6 @@ var rootRoute = {
   ]
 };
 
-var history = createHistory();
-
 React.render((
-  <Router history={history} routes={rootRoute} />
+  <Router routes={rootRoute} />
 ), document.getElementById('example'));
