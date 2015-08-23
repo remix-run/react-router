@@ -17,8 +17,8 @@ function getComponentsForRoute(route, callback) {
  * Note: This operation may finish synchronously if no routes have an
  * asynchronous getComponents method.
  */
-function getComponents(nextState, callback) {
-  mapAsync(nextState.routes, function (route, index, callback) {
+function getComponents(routes, callback) {
+  mapAsync(routes, function (route, index, callback) {
     getComponentsForRoute(route, callback);
   }, callback);
 }

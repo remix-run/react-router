@@ -3,7 +3,8 @@ import React from 'react';
 var { object } = React.PropTypes;
 
 /**
- * A mixin for components that modify the URL.
+ * The Navigation mixin provides methods for components
+ * that need to modify the URL.
  *
  * Example:
  *
@@ -26,6 +27,14 @@ var Navigation = {
 
   contextTypes: {
     router: object.isRequired
+  },
+
+  transitionTo(pathname, query, state) {
+    return this.context.router.pushState(state, pathname, query);
+  },
+
+  replaceWith(pathname, query, state) {
+    return this.context.router.replaceState(state, pathname, query);
   }
 
 };
@@ -33,8 +42,6 @@ var Navigation = {
 var RouterNavigationMethods = [
   'createPath',
   'createHref',
-  'transitionTo',
-  'replaceWith',
   'go',
   'goBack',
   'goForward'
