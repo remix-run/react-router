@@ -1,5 +1,4 @@
 import React, { findDOMNode } from 'react';
-import createHistory from 'history/lib/createHashHistory';
 import { Router, Route, Link, Navigation } from 'react-router';
 import auth from './auth';
 
@@ -119,10 +118,8 @@ function requireAuth(nextState, redirectTo) {
     redirectTo('/login', null, { nextPathname: nextState.location.pathname });
 }
 
-var history = createHistory();
-
 React.render((
-  <Router history={history}>
+  <Router>
     <Route path="/" component={App}>
       <Route path="login" component={Login} />
       <Route path="logout" component={Logout} />
