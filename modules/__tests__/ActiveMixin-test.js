@@ -5,7 +5,7 @@ import createHistory from 'history/lib/createMemoryHistory';
 import Router from '../Router';
 import Route from '../Route';
 
-describe('ActiveMixin', function () {
+describe.skip('ActiveMixin', function () {
 
   var node;
   beforeEach(function () {

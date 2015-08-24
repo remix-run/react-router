@@ -18,7 +18,7 @@ describe('transitionTo', function () {
     React.unmountComponentAtNode(node);
   });
 
-  describe('when the target path contains a colon', function () {
+  describe.skip('when the target path contains a colon', function () {
     it('works', function (done) {
       var Index = React.createClass({
         render() {

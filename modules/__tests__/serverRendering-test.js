@@ -4,7 +4,7 @@ import { createLocation } from 'history';
 import Router from '../Router';
 import Link from '../Link';
 
-describe('server rendering', function () {
+describe.skip('server rendering', function () {
   var Dashboard, DashboardRoute, routes;
   beforeEach(function () {
     Dashboard = React.createClass({
