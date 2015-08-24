@@ -5,7 +5,7 @@ import Redirect from '../Redirect';
 import Router from '../Router';
 import Route from '../Route';
 
-describe('A <Redirect>', function () {
+describe.skip('A <Redirect>', function () {
   var node;
   beforeEach(function () {
     node = document.createElement('div');

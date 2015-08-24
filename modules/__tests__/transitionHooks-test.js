@@ -5,7 +5,7 @@ import execSteps from './execSteps';
 import Router from '../Router';
 import Route from '../Route';
 
-describe('When a router enters a branch', function () {
+describe.skip('When a router enters a branch', function () {
   var node, Dashboard, NewsFeed, Inbox, DashboardRoute, NewsFeedRoute, InboxRoute, RedirectToInboxRoute, MessageRoute, routes;
   beforeEach(function () {
     node = document.createElement('div');

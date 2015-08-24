@@ -9,7 +9,7 @@ import Link from '../Link';
 
 var { click } = React.addons.TestUtils.Simulate;
 
-describe('A <Link>', function () {
+describe.skip('A <Link>', function () {
 
   var Parent = React.createClass({
     render() {
