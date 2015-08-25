@@ -26,15 +26,15 @@ var { object } = React.PropTypes;
 var Navigation = {
 
   contextTypes: {
-    router: object.isRequired
+    history: object.isRequired
   },
 
   transitionTo(pathname, query, state) {
-    return this.context.router.pushState(state, pathname, query);
+    return this.context.history.pushState(state, pathname, query);
   },
 
   replaceWith(pathname, query, state) {
-    return this.context.router.replaceState(state, pathname, query);
+    return this.context.history.replaceState(state, pathname, query);
   }
 
 };
@@ -49,8 +49,8 @@ var RouterNavigationMethods = [
 
 RouterNavigationMethods.forEach(function (method) {
   Navigation[method] = function () {
-    var router = this.context.router;
-    return router[method].apply(router, arguments);
+    var { history } = this.context;
+    return history[method].apply(history, arguments);
   };
 });
 

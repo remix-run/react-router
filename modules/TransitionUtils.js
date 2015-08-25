@@ -61,5 +61,5 @@ export function runEnterHooks(routes, nextState, callback) {
 export function runLeaveHooks(routes) {
   for (var i = 0, len = routes.length; i < len; ++i)
     if (routes[i].onLeave)
-      routes[i].onLeave.call(route);
+      routes[i].onLeave.call(routes[i]);
 }
