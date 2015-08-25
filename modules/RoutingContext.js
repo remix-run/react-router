@@ -11,7 +11,7 @@ var { array, func, object } = React.PropTypes;
 var RoutingContext = React.createClass({
 
   propTypes: {
-    router: object.isRequired,
+    history: object.isRequired,
     createElement: func.isRequired,
     location: object.isRequired,
     routes: array.isRequired,
@@ -26,13 +26,13 @@ var RoutingContext = React.createClass({
   },
 
   childContextTypes: {
-    router: object.isRequired,
+    history: object.isRequired,
     location: object.isRequired
   },
 
   getChildContext() {
     return {
-      router: this.props.router,
+      history: this.props.history,
       location: this.props.location
     };
   },
@@ -42,7 +42,7 @@ var RoutingContext = React.createClass({
   },
 
   render() {
-    var { router, location, routes, params, components } = this.props;
+    var { history, location, routes, params, components } = this.props;
     var element = null;
 
     if (components) {
@@ -53,7 +53,7 @@ var RoutingContext = React.createClass({
         var route = routes[index];
         var routeParams = getRouteParams(route, params);
         var props = {
-          router,
+          history,
           location,
           params,
           route,

@@ -25,11 +25,11 @@ var { object } = React.PropTypes;
 var State = {
 
   contextTypes: {
-    router: object.isRequired
+    history: object.isRequired
   },
 
   isActive(pathname, query) {
-    return this.context.router.isActive(pathname, query);
+    return this.context.history.isActive(pathname, query);
   }
 
 };

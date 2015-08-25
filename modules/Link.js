@@ -32,7 +32,7 @@ function isModifiedEvent(event) {
 var Link = React.createClass({
 
   contextTypes: {
-    router: object
+    history: object
   },
 
   propTypes: {
@@ -68,13 +68,13 @@ var Link = React.createClass({
     event.preventDefault();
 
     if (allowTransition)
-      this.context.router.pushState(this.props.state, this.props.to, this.props.query);
+      this.context.history.pushState(this.props.state, this.props.to, this.props.query);
   },
 
   componentWillMount() {
     warning(
-      this.context.router,
-      'A <Link> should not be rendered outside the context of a router; ' +
+      this.context.history,
+      'A <Link> should not be rendered outside the context of history; ' +
       'some features including real hrefs, active styling, and navigation ' +
       'will not function correctly'
     );
@@ -88,14 +88,14 @@ var Link = React.createClass({
       onClick: this.handleClick
     };
 
-    var { router } = this.context;
+    var { history } = this.context;
 
     // Ignore if rendered outside the context
-    // of a router, simplifies unit testing.
-    if (router) {
-      props.href = router.createHref(to, query);
+    // of history, simplifies unit testing.
+    if (history) {
+      props.href = history.createHref(to, query);
 
-      if (router.isActive(to, query)) {
+      if (history.isActive(to, query)) {
         if (props.activeClassName)
           props.className += props.className !== '' ? ` ${props.activeClassName}` : props.activeClassName;
 

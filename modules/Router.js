@@ -5,7 +5,7 @@ import RoutingContext from './RoutingContext';
 import useRoutes from './useRoutes';
 import { routes } from './PropTypes';
 
-var { func } = React.PropTypes;
+var { func, object } = React.PropTypes;
 
 /**
  * A <Router> is a high-level API for automatically setting up
@@ -15,20 +15,14 @@ var { func } = React.PropTypes;
 var Router = React.createClass({
   
   propTypes: {
+    history: object,
     children: routes,
     routes, // alias for children
-    createHistory: func.isRequired,
     createElement: func,
     onError: func,
     onUpdate: func,
     parseQueryString: func,
     stringifyQuery: func
-  },
-
-  getDefaultProps() {
-    return {
-      createHistory: createHashHistory
-    };
   },
 
   getInitialState() {
@@ -50,15 +44,16 @@ var Router = React.createClass({
   },
 
   componentWillMount() {
-    var { children, routes, parseQueryString, stringifyQuery } = this.props;
+    var { history, children, routes, parseQueryString, stringifyQuery } = this.props;
+    var createHistory = history ? () => history : createHashHistory;
 
-    this.router = useRoutes(this.props.createHistory)({
+    this.history = useRoutes(createHistory)({
       routes: createRoutes(routes || children),
       parseQueryString,
       stringifyQuery
     });
 
-    this._unlisten = this.router.listen((error, state) => {
+    this._unlisten = this.history.listen((error, state) => {
       if (error) {
         this.handleError(error);
       } else {
@@ -75,7 +70,7 @@ var Router = React.createClass({
   render() {
     return React.createElement(RoutingContext, {
       ...this.state,
-      router: this.router,
+      history: this.history,
       createElement: this.props.createElement
     });
   }

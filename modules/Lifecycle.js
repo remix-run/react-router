@@ -26,7 +26,7 @@ var Lifecycle = {
   },
 
   contextTypes: {
-    router: object.isRequired,
+    history: object.isRequired,
     // Nested children receive the route as context, either
     // set by the route component using the RouteContext mixin
     // or by some other ancestor.
@@ -51,14 +51,14 @@ var Lifecycle = {
       'The Lifecycle mixin requires you to define a routerWillLeave method'
     );
 
-    this.context.router.registerRouteHook(
+    this.context.history.registerRouteHook(
       this._getRoute(),
       this.routerWillLeave
     );
   },
 
   componentWillUnmount() {
-    this.context.router.unregisterRouteHook(
+    this.context.history.unregisterRouteHook(
       this._getRoute(),
       this.routerWillLeave
     );

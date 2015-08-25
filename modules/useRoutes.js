@@ -16,8 +16,9 @@ import matchRoutes from './matchRoutes';
  */
 function useRoutes(createHistory) {
   return function (options={}) {
-    var history = useQueries(createHistory)(options);
-    var { routes, initialState: state } = options;
+    var { routes, ...historyOptions } = options;
+    var history = useQueries(createHistory)(historyOptions);
+    var state;
 
     function isActive(pathname, query) {
       return _isActive(pathname, query, state.location, state.routes, state.params);
