@@ -9,7 +9,7 @@ import Link from '../Link';
 
 var { click } = React.addons.TestUtils.Simulate;
 
-describe.skip('A <Link>', function () {
+describe('A <Link>', function () {
 
   var Parent = React.createClass({
     render() {
@@ -133,7 +133,7 @@ describe.skip('A <Link>', function () {
         function () {
           a = node.querySelector('a');
           expect(a.className).toEqual('dontKillMe');
-          this.transitionTo('/hello');
+          this.history.pushState(null, '/hello');
         },
         function () {
           expect(a.className).toEqual('dontKillMe');
@@ -170,7 +170,7 @@ describe.skip('A <Link>', function () {
         function () {
           a = node.querySelector('a');
           expect(a.className).toEqual('dontKillMe');
-          this.transitionTo('/hello');
+          this.history.pushState(null, '/hello');
         },
         function () {
           expect(a.className).toEqual('dontKillMe highlight');
@@ -205,7 +205,7 @@ describe.skip('A <Link>', function () {
         function () {
           a = node.querySelector('a');
           expect(a.style.color).toEqual('white');
-          this.transitionTo('/hello');
+          this.history.pushState(null, '/hello');
         },
         function () {
           expect(a.style.color).toEqual('red');
