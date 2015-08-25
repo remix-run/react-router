@@ -5,7 +5,7 @@ import execSteps from './execSteps';
 import Router from '../Router';
 import Route from '../Route';
 
-describe.skip('When a router enters a branch', function () {
+describe('When a router enters a branch', function () {
   var node, Dashboard, NewsFeed, Inbox, DashboardRoute, NewsFeedRoute, InboxRoute, RedirectToInboxRoute, MessageRoute, routes;
   beforeEach(function () {
     node = document.createElement('div');
@@ -37,12 +37,12 @@ describe.skip('When a router enters a branch', function () {
       path: 'news',
       component: NewsFeed,
       onEnter(nextState, redirectTo) {
+        expect(this).toBe(NewsFeedRoute);
         expect(nextState.routes).toContain(NewsFeedRoute);
         expect(redirectTo).toBeA('function');
       },
-      onLeave(nextState, redirectTo) {
-        expect(nextState.routes).toNotContain(NewsFeedRoute);
-        expect(redirectTo).toBeA('function');
+      onLeave() {
+        expect(this).toBe(NewsFeedRoute);
       }
     };
   
@@ -50,51 +50,50 @@ describe.skip('When a router enters a branch', function () {
       path: 'inbox',
       component: Inbox,
       onEnter(nextState, redirectTo) {
+        expect(this).toBe(InboxRoute);
         expect(nextState.routes).toContain(InboxRoute);
         expect(redirectTo).toBeA('function');
       },
-      onLeave(nextState, redirectTo) {
-        expect(nextState.routes).toNotContain(InboxRoute);
-        expect(redirectTo).toBeA('function');
+      onLeave() {
+        expect(this).toBe(InboxRoute);
       }
     };
 
     RedirectToInboxRoute = {
       path: 'redirect-to-inbox',
       onEnter(nextState, redirectTo) {
+        expect(this).toBe(RedirectToInboxRoute);
         expect(nextState.routes).toContain(RedirectToInboxRoute);
         expect(redirectTo).toBeA('function');
 
         redirectTo('/inbox');
       },
-      onLeave(nextState, redirectTo) {
-        expect(nextState.routes).toNotContain(RedirectToInboxRoute);
-        expect(redirectTo).toBeA('function');
+      onLeave() {
+        expect(this).toBe(RedirectToInboxRoute);
       }
     };
 
     MessageRoute = {
       path: 'messages/:messageID',
       onEnter(nextState, redirectTo) {
+        expect(this).toBe(MessageRoute);
         expect(nextState.routes).toContain(MessageRoute);
         expect(redirectTo).toBeA('function');
       },
-      onLeave(nextState, redirectTo) {
-        // We can't make this assertion when switching from /messages/123 => /messages/456
-        //expect(nextState.routes).toNotContain(MessageRoute);
-        expect(redirectTo).toBeA('function');
+      onLeave() {
+        expect(this).toBe(MessageRoute);
       }
     };
   
     DashboardRoute = {
       component: Dashboard,
       onEnter(nextState, redirectTo) {
+        expect(this).toBe(DashboardRoute);
         expect(nextState.routes).toContain(DashboardRoute);
         expect(redirectTo).toBeA('function');
       },
-      onLeave(nextState, redirectTo) {
-        expect(nextState.routes).toNotContain(DashboardRoute);
-        expect(redirectTo).toBeA('function');
+      onLeave() {
+        expect(this).toBe(DashboardRoute);
       },
       childRoutes: [ NewsFeedRoute, InboxRoute, RedirectToInboxRoute, MessageRoute ]
     };
@@ -144,7 +143,7 @@ describe.skip('When a router enters a branch', function () {
       var steps = [
         function () {
           expect(inboxRouteEnterSpy).toHaveBeenCalled('InboxRoute.onEnter was not called');
-          this.transitionTo('/news');
+          this.history.pushState(null, '/news');
         },
         function () {
           expect(inboxRouteLeaveSpy).toHaveBeenCalled('InboxRoute.onLeave was not called');
@@ -173,7 +172,7 @@ describe.skip('When a router enters a branch', function () {
         function () {
           expect(dashboardRouteEnterSpy).toHaveBeenCalled('DashboardRoute.onEnter was not called');
           expect(messageRouteEnterSpy).toHaveBeenCalled('InboxRoute.onEnter was not called');
-          this.transitionTo('/messages/456');
+          this.history.pushState(null, '/messages/456');
         },
         function () {
           expect(messageRouteLeaveSpy).toHaveBeenCalled('MessageRoute.onLeave was not called');

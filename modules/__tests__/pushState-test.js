@@ -6,7 +6,7 @@ import execSteps from './execSteps';
 import Router from '../Router';
 import Route from '../Route';
 
-describe('transitionTo', function () {
+describe('pushState', function () {
   beforeEach(resetHash);
 
   var node;
@@ -18,7 +18,7 @@ describe('transitionTo', function () {
     React.unmountComponentAtNode(node);
   });
 
-  describe.skip('when the target path contains a colon', function () {
+  describe('when the target path contains a colon', function () {
     it('works', function (done) {
       var Index = React.createClass({
         render() {
@@ -35,7 +35,7 @@ describe('transitionTo', function () {
       var steps = [
         function () {
           expect(this.state.location.pathname).toEqual('/');
-          this.transitionTo('/home/hi:there');
+          this.history.pushState(null, '/home/hi:there');
         },
         function () {
           expect(this.state.location.pathname).toEqual('/home/hi:there');
