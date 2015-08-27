@@ -15,10 +15,10 @@ var { object } = React.PropTypes;
  *     render() {
  *       var className = this.props.className;
  *
- *       if (this.isActive('about'))
+ *       if (this.isActive('/about'))
  *         className += ' is-active';
  *
- *       return React.createElement('a', { className: className }, this.props.children);
+ *       return React.createElement('a', { className }, this.props.children);
  *     }
  *   });
  */

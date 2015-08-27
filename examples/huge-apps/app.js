@@ -1,17 +1,10 @@
 import React from 'react';
-import { history } from 'react-router/lib/HashHistory';
+import createHistory from 'history/lib/createHashHistory';
 import { Router } from 'react-router';
-import AsyncProps from 'react-router/lib/experimental/AsyncProps';
 import stubbedCourses from './stubs/COURSES';
 
 var rootRoute = {
-  component: AsyncProps,
-
-  // iunno?
-  renderInitialLoad() {
-    return <div>loading...</div>
-  },
-
+  component: 'div',
   childRoutes: [{
     path: '/',
     component: require('./components/App'),
@@ -25,10 +18,8 @@ var rootRoute = {
   ]
 };
 
+var history = createHistory();
+
 React.render((
-  <Router
-    routes={rootRoute}
-    history={history}
-    createElement={AsyncProps.createElement}
-  />
+  <Router history={history} routes={rootRoute} />
 ), document.getElementById('example'));

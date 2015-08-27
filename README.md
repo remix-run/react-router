@@ -1,6 +1,6 @@
-[![npm package](https://img.shields.io/npm/v/react-router.svg?style=flat-square)](https://www.npmjs.org/package/react-router)
 [![build status](https://img.shields.io/travis/rackt/react-router/master.svg?style=flat-square)](https://travis-ci.org/rackt/react-router)
-[![dependency status](https://img.shields.io/david/rackt/react-router.svg?style=flat-square)](https://david-dm.org/rackt/react-router)
+[![npm package](https://img.shields.io/npm/v/react-router.svg?style=flat-square)](https://www.npmjs.org/package/react-router)
+[![react-router channel on slack](https://img.shields.io/badge/slack-react--router@reactiflux-61DAFB.svg?style=flat-square)](http://www.reactiflux.com)
 
 <img src="https://rackt.github.io/react-router/img/vertical.png" width="300"/>
 
@@ -11,27 +11,25 @@ with powerful features like lazy code loading, dynamic route matching,
 and location transition handling built right in. Make the URL your first
 thought, not an after-thought.
 
-Docs & Help
------------
+### Docs & Help
 
 - [Guides and API Docs](https://rackt.github.io/react-router)
 - [Upgrade Guide](/UPGRADE_GUIDE.md)
 - [Changelog](/CHANGELOG.md)
 - [#react-router channel on reactiflux](http://www.reactiflux.com/)
 
-Browser Support
----------------
+**Note: the docs and the examples in master refer to the 1.0 Beta and may be incomplete.**  
+**Browse [the website](http://rackt.github.io/react-router/) and [the 0.13.3 tag](https://github.com/rackt/react-router/tree/v0.13.3) for the information about the latest stable version.**
+
+### Browser Support
 
 We support all browsers and environments where React runs.
 
-Installation
-------------
+### Installation
 
-### npm + webpack/browserify
+#### npm + webpack/browserify
 
-```sh
-npm install react-router
-```
+    $ npm install react-router
 
 Then with a module bundler or webpack, use as you would anything else:
 
@@ -48,21 +46,17 @@ var Link = ReactRouter.Link;
 
 There's also a `lib/umd` folder containing a UMD version.
 
-### bower + who knows what
+#### bower + who knows what
 
-```sh
-bower install react-router
-```
+    $ bower install react-router
 
-Find the UMD/global build in `lib/umd`, and the library on
-`window.ReactRouter`. Best of luck to you. :)
+Find the UMD/global build in `lib/umd`, and the library on `window.ReactRouter`. Best of luck to you. :)
 
-### CDN
+#### CDN
 
-Available on cdnjs [here](https://cdnjs.com/libraries/react-router).
+If you just want to drop a `<script>` tag in your page and be done with it, you can use the UMD/global build [hosted on cdnjs](https://cdnjs.com/libraries/react-router).
 
-What's it look like?
---------------------
+### What's it look like?
 
 ```js
 import { Router, Route } from 'react-router';
@@ -81,7 +75,7 @@ var Users = React.createClass({
           <ul>
             {/* use Link to route around the app */}
             {this.state.users.map(user => (
-              <li><Link to={`/users/${users.id}`}>{user.name}</Link></li>
+              <li key={user.id}><Link to={`/user/${user.id}`}>{user.name}</Link></li>
             ))}
           </ul>
         </div>
@@ -130,13 +124,9 @@ React.render((
 See more in the [overview guide](/doc/00 Guides/0 Overview.md) and [Advanced
 Usage](/doc/00 Guides/Advanced Usage.md)
 
-Contributing
-------------
+### Thanks
 
-Please see [CONTRIBUTING](CONTRIBUTING.md)
-
-Thanks, Ember
--------------
-
-React Router was initially inspired by Ember's fantastic Router. Many
+React Router was initially inspired by Ember's fantastic router. Many
 thanks to the Ember team.
+
+Also, thanks to [BrowserStack](https://www.browserstack.com/) for providing the infrastructure that allows us to run our build in real browsers.

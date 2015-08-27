@@ -13,7 +13,7 @@ var { object } = React.PropTypes;
  *     mixins: [ Navigation ],
  *     handleClick(event) {
  *       event.preventDefault();
- *       this.transitionTo('aRoute', { the: 'params' }, { the: 'query' });
+ *       this.transitionTo('/the/path', { the: 'query' });
  *     },
  *     render() {
  *       return (
@@ -31,8 +31,8 @@ var Navigation = {
 };
 
 var RouterNavigationMethods = [
-  'makePath',
-  'makeHref',
+  'createPath',
+  'createHref',
   'transitionTo',
   'replaceWith',
   'go',

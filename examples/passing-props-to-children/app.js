@@ -1,9 +1,8 @@
-var React = require('react');
-import { history } from 'react-router/lib/HashHistory';
-var { Router, Route, Link, Navigation } = require('react-router');
+import React from 'react';
+import createHistory from 'history/lib/createHashHistory';
+import { Router, Route, Link, Navigation } from 'react-router';
 
 var App = React.createClass({
-
   mixins: [ Navigation ],
 
   getInitialState: function () {
@@ -56,7 +55,6 @@ var App = React.createClass({
 });
 
 var Taco = React.createClass({
-
   remove: function () {
     this.props.onRemoveTaco(this.props.params.name);
   },
@@ -71,10 +69,12 @@ var Taco = React.createClass({
   }
 });
 
+var history = createHistory();
+
 React.render((
   <Router history={history}>
     <Route path="/" component={App}>
-      <Route path="taco/:name" component={Taco}/>
+      <Route path="taco/:name" component={Taco} />
     </Route>
   </Router>
 ), document.getElementById('example'));

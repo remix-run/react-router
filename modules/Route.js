@@ -1,10 +1,10 @@
-import React from 'react';
+import warning from 'warning';
 import invariant from 'invariant';
+import { createClass, PropTypes } from 'react';
 import { createRouteFromReactElement } from './RouteUtils';
 import { component, components } from './PropTypes';
-import warning from 'warning';
 
-var { string, bool, func } = React.PropTypes;
+var { string, bool, func } = PropTypes;
 
 /**
  * A <Route> is used to declare which components are rendered to the page when
@@ -16,7 +16,7 @@ var { string, bool, func } = React.PropTypes;
  * "active" and their components are rendered into the DOM, nested in the same
  * order as they are in the tree.
  */
-export var Route = React.createClass({
+var Route = createClass({
 
   statics: {
 

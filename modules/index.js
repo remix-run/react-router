@@ -8,7 +8,6 @@ export Route from './Route';
 
 /* mixins */
 export Navigation from './Navigation';
-export TransitionHook from './TransitionHook';
 export State from './State';
 
 /* utils */

@@ -1,5 +1,5 @@
 import React from 'react';
-import { history } from 'react-router/lib/HashHistory';
+import createHistory from 'history/lib/createHashHistory';
 import { Router, Route, Link } from 'react-router';
 
 var User = React.createClass({
@@ -31,10 +31,12 @@ var App = React.createClass({
   }
 });
 
+var history = createHistory();
+
 React.render((
   <Router history={history}>
     <Route path="/" component={App}>
-      <Route path="user/:userID" component={User}/>
+      <Route path="user/:userID" component={User} />
     </Route>
   </Router>
 ), document.getElementById('example'));

@@ -55,22 +55,3 @@ export function mapAsync(array, work, callback) {
     });
   });
 }
-
-export function hashAsync(object, work, callback) {
-  var keys = Object.keys(object);
-
-  mapAsync(keys, function (key, index, callback) {
-    work(object[key], callback);
-  }, function (error, valuesArray) {
-    if (error) {
-      callback(error);
-    } else {
-      var values = valuesArray.reduce(function (memo, results, index) {
-        memo[keys[index]] = results;
-        return memo;
-      }, {});
-
-      callback(null, values);
-    }
-  });
-}

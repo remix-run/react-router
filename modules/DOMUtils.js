@@ -2,6 +2,22 @@ export var canUseDOM = !!(
   typeof window !== 'undefined' && window.document && window.document.createElement
 );
 
+export function addEventListener(node, type, listener) {
+  if (node.addEventListener) {
+    node.addEventListener(type, listener, false);
+  } else {
+    node.attachEvent('on' + type, listener);
+  }
+}
+
+export function removeEventListener(node, type, listener) {
+  if (node.removeEventListener) {
+    node.removeEventListener(type, listener, false);
+  } else {
+    node.detachEvent('on' + type, listener);
+  }
+}
+
 export function getHashPath() {
   // We can't use window.location.hash here because it's not
   // consistent across browsers - Firefox will pre-decode it!
@@ -20,8 +36,8 @@ export function getWindowPath() {
 
 export function getWindowScrollPosition() {
   return {
-    scrollX: window.pageXOffset || document.documentElement.scrollLeft,
-    scrollY: window.pageYOffset || document.documentElement.scrollTop
+    x: window.pageXOffset || document.documentElement.scrollLeft,
+    y: window.pageYOffset || document.documentElement.scrollTop
   };
 }
 

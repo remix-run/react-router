@@ -1,8 +1,7 @@
 import React, { findDOMNode } from 'react';
+import createHistory from 'history/lib/createHashHistory';
 import { Router, Route, Link, Navigation } from 'react-router';
-import HashHistory from 'react-router/lib/HashHistory';
 import auth from './auth';
-var history = new HashHistory({ queryKey: true });
 
 var App = React.createClass({
   getInitialState() {
@@ -11,14 +10,14 @@ var App = React.createClass({
     };
   },
 
-  setStateOnAuth(loggedIn) {
+  updateAuth(loggedIn) {
     this.setState({
-      loggedIn: loggedIn
+      loggedIn: !!loggedIn
     });
   },
 
   componentWillMount() {
-    auth.onChange = this.setStateOnAuth;
+    auth.onChange = this.updateAuth;
     auth.login();
   },
 
@@ -45,6 +44,7 @@ var App = React.createClass({
 var Dashboard = React.createClass({
   render() {
     var token = auth.getToken();
+
     return (
       <div>
         <h1>Dashboard</h1>
@@ -56,7 +56,6 @@ var Dashboard = React.createClass({
 });
 
 var Login = React.createClass({
-
   mixins: [ Navigation ],
 
   getInitialState() {
@@ -88,8 +87,8 @@ var Login = React.createClass({
   render() {
     return (
       <form onSubmit={this.handleSubmit}>
-        <label><input ref="email" placeholder="email" defaultValue="joe@example.com"/></label>
-        <label><input ref="pass" placeholder="password"/></label> (hint: password1)<br/>
+        <label><input ref="email" placeholder="email" defaultValue="joe@example.com" /></label>
+        <label><input ref="pass" placeholder="password" /></label> (hint: password1)<br />
         <button type="submit">login</button>
         {this.state.error && (
           <p>Bad login information</p>
@@ -115,18 +114,20 @@ var Logout = React.createClass({
   }
 });
 
-function requireAuth(nextState, transition) {
+function requireAuth(nextState, redirectTo) {
   if (!auth.loggedIn())
-    transition.to('/login', null, { nextPathname: nextState.location.pathname });
+    redirectTo('/login', null, { nextPathname: nextState.location.pathname });
 }
+
+var history = createHistory();
 
 React.render((
   <Router history={history}>
     <Route path="/" component={App}>
-      <Route path="login" component={Login}/>
-      <Route path="logout" component={Logout}/>
-      <Route path="about" component={About}/>
-      <Route path="dashboard" component={Dashboard} onEnter={requireAuth}/>
+      <Route path="login" component={Login} />
+      <Route path="logout" component={Logout} />
+      <Route path="about" component={About} />
+      <Route path="dashboard" component={Dashboard} onEnter={requireAuth} />
     </Route>
   </Router>
 ), document.getElementById('example'));

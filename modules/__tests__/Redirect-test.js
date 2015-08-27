@@ -1,9 +1,9 @@
 import expect from 'expect';
-import React, { render } from 'react';
-import MemoryHistory from '../MemoryHistory';
+import React from 'react';
+import createHistory from 'history/lib/createMemoryHistory';
+import Redirect from '../Redirect';
 import Router from '../Router';
 import Route from '../Route';
-import Redirect from '../Redirect';
 
 describe('A <Redirect>', function () {
   var node;
@@ -16,10 +16,10 @@ describe('A <Redirect>', function () {
   });
 
   it('works', function (done) {
-    render((
-      <Router history={new MemoryHistory('/notes/5')}>
-        <Route path="messages/:id"/>
-        <Redirect from="notes/:id" to="/messages/:id"/>
+    React.render((
+      <Router history={createHistory('/notes/5')}>
+        <Route path="/messages/:id" />
+        <Redirect from="/notes/:id" to="/messages/:id" />
       </Router>
     ), node, function () {
       expect(this.state.location.pathname).toEqual('/messages/5');
