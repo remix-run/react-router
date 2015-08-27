@@ -1,6 +1,7 @@
 import expect from 'expect';
 import React from 'react';
 import { createRoutesFromReactChildren } from '../RouteUtils';
+import IndexRoute from '../IndexRoute';
 import Route from '../Route';
 
 describe('createRoutesFromReactChildren', function () {
@@ -28,10 +29,28 @@ describe('createRoutesFromReactChildren', function () {
     }
   });
  
+  it('works with index routes', function () {
+    var routes = createRoutesFromReactChildren(
+      <Route path="/" component={Parent}>
+        <IndexRoute component={Hello} />
+      </Route>
+    );
+
+    expect(routes).toEqual([
+      {
+        path: '/',
+        component: Parent,
+        indexRoute: {
+          component: Hello
+        }
+      }
+    ]);
+  });
+
   it('works with nested routes', function () {
     var routes = createRoutesFromReactChildren(
       <Route component={Parent}>
-        <Route path="home" components={{ hello: Hello, goodbye: Goodbye }}/>
+        <Route path="home" components={{ hello: Hello, goodbye: Goodbye }} />
       </Route>
     );
 
@@ -50,9 +69,9 @@ describe('createRoutesFromReactChildren', function () {
 
   it('works with falsy children', function () {
     var routes = createRoutesFromReactChildren([
-      <Route path="/one" component={Parent}/>,
+      <Route path="/one" component={Parent} />,
       null,
-      <Route path="/two" component={Parent}/>,
+      <Route path="/two" component={Parent} />,
       undefined
     ]);
 
@@ -71,7 +90,7 @@ describe('createRoutesFromReactChildren', function () {
     var routes = createRoutesFromReactChildren(
       <Route path="/one" component={Parent}>
         // This is a comment.
-        <Route path="/two" component={Hello}/>
+        <Route path="/two" component={Hello} />
       </Route>
     );
 

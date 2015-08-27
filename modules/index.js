@@ -3,6 +3,7 @@ export Router from './Router';
 export Link from './Link';
 
 /* components (configuration) */
+export IndexRoute from './IndexRoute';
 export Redirect from './Redirect';
 export Route from './Route';
 
