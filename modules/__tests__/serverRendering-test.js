@@ -1,10 +1,11 @@
 import expect from 'expect';
 import React from 'react';
-import { createLocation } from 'history';
-import Router from '../Router';
-import Link from '../Link';
+import createHistory from 'history/lib/createMemoryHistory';
+import createLocation from 'history/lib/createLocation';
+import RoutingContext from '../RoutingContext';
+import useRoutes from '../useRoutes';
 
-describe.skip('server rendering', function () {
+describe('server rendering', function () {
   var Dashboard, DashboardRoute, routes;
   beforeEach(function () {
     Dashboard = React.createClass({
@@ -28,11 +29,16 @@ describe.skip('server rendering', function () {
   });
  
   it('works', function (done) {
+    var history = useRoutes(createHistory)({ routes });
     var location = createLocation('/');
 
-    Router.run(routes, location, function (error, state) {
-      var string = React.renderToString(<Router initialState={state} />);
+    history.match(location, function (error, state) {
+      var string = React.renderToString(
+        <RoutingContext history={history} {...state} />
+      );
+
       expect(string).toMatch(/The Dashboard/);
+
       done();
     });
   });
