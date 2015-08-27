@@ -23,10 +23,14 @@ var Redirect = React.createClass({
       if (route.from)
         route.path = route.from;
 
+      // TODO: Handle relative pathnames, see #1658
+      invariant(
+        route.to.charAt(0) === '/',
+        '<Redirect to> must be an absolute path. This should be fixed in the future'
+      );
+
       route.onEnter = function (nextState, redirectTo) {
         var { location, params } = nextState;
-
-        // TODO: Handle relative pathnames.
         var pathname = route.to ? formatPattern(route.to, params) : location.pathname;
 
         redirectTo(
