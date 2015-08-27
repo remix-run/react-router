@@ -50,12 +50,12 @@ Example
 Note that the `<Redirect/>` can be placed anywhere in the route
 hierarchy, if you'd prefer the redirects to be next to their respective
 routes, the `from` path will match the same as a regular route `path`.
+Currently, the `to` property of `<Redirect/>` cannot be relative.
 
 ```js
 <Route path="course/:courseId">
   <Route path="dashboard"/>
   {/* /course/123/home -> /course/123/dashboard */}
-  <Redirect from="home" to="dashboard" />
+  <Redirect from="home" to="/course/:courseId/dashboard" />
 </Route>
 ```
-
