@@ -1,8 +1,8 @@
-import React, { isValidElement } from 'react';
+import React from 'react';
 import warning from 'warning';
 
 function isValidChild(object) {
-  return object == null || isValidElement(object);
+  return object == null || React.isValidElement(object);
 }
 
 export function isReactChildren(object) {
@@ -58,7 +58,7 @@ export function createRoutesFromReactChildren(children) {
   var routes = [];
 
   React.Children.forEach(children, function (element) {
-    if (isValidElement(element)) {
+    if (React.isValidElement(element)) {
       // Component classes may have a static create* method.
       if (element.type.createRouteFromReactElement) {
         routes.push(element.type.createRouteFromReactElement(element));
