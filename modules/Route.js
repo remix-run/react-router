@@ -41,7 +41,7 @@ var Route = React.createClass({
   propTypes: {
     path: string,
     ignoreScrollBehavior: bool,
-    handler: component,
+    handler: component, // deprecated
     component,
     components,
     getComponents: func
