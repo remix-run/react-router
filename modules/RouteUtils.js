@@ -22,15 +22,23 @@ function checkPropTypes(componentName, propTypes, props) {
   }
 }
 
+function createRoute(defaultProps, props) {
+  return { ...defaultProps, ...props };
+}
+
 export function createRouteFromReactElement(element) {
   var type = element.type;
-  var route = Object.assign({}, type.defaultProps, element.props);
+  var route = createRoute(type.defaultProps, element.props);
 
   if (type.propTypes)
     checkPropTypes(type.displayName || type.name, type.propTypes, route);
 
   if (route.children) {
-    route.childRoutes = createRoutesFromReactChildren(route.children);
+    var childRoutes = createRoutesFromReactChildren(route.children, route);
+
+    if (childRoutes.length)
+      route.childRoutes = childRoutes;
+
     delete route.children;
   }
 
@@ -54,14 +62,17 @@ export function createRouteFromReactElement(element) {
  * Note: This method is automatically used when you provide <Route> children
  * to a <Router> component.
  */
-export function createRoutesFromReactChildren(children) {
+export function createRoutesFromReactChildren(children, parentRoute) {
   var routes = [];
 
   React.Children.forEach(children, function (element) {
     if (React.isValidElement(element)) {
       // Component classes may have a static create* method.
       if (element.type.createRouteFromReactElement) {
-        routes.push(element.type.createRouteFromReactElement(element));
+        var route = element.type.createRouteFromReactElement(element, parentRoute);
+
+        if (route)
+          routes.push(route);
       } else {
         routes.push(createRouteFromReactElement(element));
       }
