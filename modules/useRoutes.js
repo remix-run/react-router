@@ -19,10 +19,10 @@ function useRoutes(createHistory) {
   return function (options={}) {
     var { routes, ...historyOptions } = options;
     var history = useQueries(createHistory)(historyOptions);
-    var state;
+    var state = {};
 
-    function isActive(pathname, query) {
-      return _isActive(pathname, query, state.location, state.routes, state.params);
+    function isActive(pathname, query, indexOnly=false) {
+      return _isActive(pathname, query, indexOnly, state.location, state.routes, state.params);
     }
 
     function matchRoutesWithWarning(routes, location, callback) {

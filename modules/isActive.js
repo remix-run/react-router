@@ -53,8 +53,11 @@ function queryIsActive(query, activeQuery) {
  * Returns true if a <Link> to the given pathname/query combination is
  * currently active.
  */
-function isActive(pathname, query, location, routes, params) {
+function isActive(pathname, query, indexOnly, location, routes, params) {
   if (location == null)
+    return false;
+
+  if (indexOnly && (routes.length < 2 || routes[routes.length - 2].indexRoute !== routes[routes.length - 1]))
     return false;
 
   return pathnameIsActive(pathname, location.pathname, routes, params) &&
