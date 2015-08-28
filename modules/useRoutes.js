@@ -77,8 +77,7 @@ function useRoutes(createHistory) {
             if (error) {
               callback(error);
             } else {
-              state = { ...nextState, components };
-              callback(null, state);
+              callback(null, { ...nextState, components });
             }
           });
         }
@@ -113,8 +112,6 @@ function useRoutes(createHistory) {
             result = hooks[i](location);
           }
 
-          // Callback with the result from the first route
-          // hook that has a non-null return value.
           callback(result);
         }
       });
@@ -133,8 +130,6 @@ function useRoutes(createHistory) {
           message = hooks[i]();
         }
 
-        // Return the result from the first route hook
-        // that returns a prompt message.
         return message;
       }
     }
