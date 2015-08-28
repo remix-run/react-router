@@ -1,3 +1,4 @@
+import warning from 'warning';
 import useQueries from 'history/lib/useQueries';
 import computeChangedRoutes from './computeChangedRoutes';
 import { runEnterHooks, runLeaveHooks } from './TransitionUtils';
@@ -24,6 +25,20 @@ function useRoutes(createHistory) {
       return _isActive(pathname, query, state.location, state.routes, state.params);
     }
 
+    function matchRoutesWithWarning(routes, location, callback) {
+      matchRoutes(routes, location, function (error, nextState) {
+        if (error || nextState) {
+          callback(error, nextState);
+        } else {
+          warning(
+            false,
+            'Location "%s" did not match any routes',
+            location.pathname + location.search
+          );
+        }
+      });
+    }
+
     // TODO: If we had a way to uniquely identify a route,
     // we could use a plain object here instead...
     var routeHooks = new Map();
@@ -34,7 +49,7 @@ function useRoutes(createHistory) {
         // Continue from where we left off.
         finishMatch(partialNextState, callback);
       } else {
-        matchRoutes(routes, location, function (error, nextState) {
+        matchRoutesWithWarning(routes, location, function (error, nextState) {
           if (error) {
             callback(error);
           } else {
@@ -78,7 +93,7 @@ function useRoutes(createHistory) {
     }
 
     function transitionHook(location, callback) {
-      matchRoutes(routes, location, function (error, nextState) {
+      matchRoutesWithWarning(routes, location, function (error, nextState) {
         if (error) {
           // TODO: Handle the error.
           callback(false); // Cancel the transition.
