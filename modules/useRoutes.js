@@ -25,7 +25,7 @@ function useRoutes(createHistory) {
       return _isActive(pathname, query, indexOnly, state.location, state.routes, state.params);
     }
 
-    function matchRoutesWithWarning(routes, location, callback) {
+    function matchRoutesWithGuaranteedState(routes, location, callback) {
       matchRoutes(routes, location, function (error, nextState) {
         if (error || nextState) {
           callback(error, nextState);
@@ -49,7 +49,7 @@ function useRoutes(createHistory) {
         // Continue from where we left off.
         finishMatch(partialNextState, callback);
       } else {
-        matchRoutesWithWarning(routes, location, function (error, nextState) {
+        matchRoutesWithGuaranteedState(routes, location, function (error, nextState) {
           if (error) {
             callback(error);
           } else {
@@ -92,7 +92,7 @@ function useRoutes(createHistory) {
     }
 
     function transitionHook(location, callback) {
-      matchRoutesWithWarning(routes, location, function (error, nextState) {
+      matchRoutesWithGuaranteedState(routes, location, function (error, nextState) {
         if (error) {
           // TODO: Handle the error.
           callback(false); // Cancel the transition.
