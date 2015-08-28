@@ -1,6 +1,7 @@
 import expect from 'expect';
 import React from 'react';
 import createHistory from 'history/lib/createMemoryHistory';
+import IndexRoute from '../IndexRoute';
 import Router from '../Router';
 import Route from '../Route';
 
@@ -67,6 +68,7 @@ describe('isActive', function () {
           </Router>
         ), node, function () {
           expect(this.history.isActive('/home')).toBe(true);
+          expect(this.history.isActive('/home', null, true)).toBe(false);
           done();
         });
       });
@@ -82,6 +84,7 @@ describe('isActive', function () {
           </Router>
         ), node, function () {
           expect(this.history.isActive('/home', { the: 'query' })).toBe(true);
+          expect(this.history.isActive('/home', { the: 'query' }, true)).toBe(false);
           done();
         });
       });
@@ -97,6 +100,57 @@ describe('isActive', function () {
           </Router>
         ), node, function () {
           expect(this.history.isActive('/home', { something: 'else' })).toBe(false);
+          expect(this.history.isActive('/home', { something: 'else' }, true)).toBe(false);
+          done();
+        });
+      });
+    });
+  });
+
+  describe('a pathname that matches an index URL', function () {
+    describe('with no query', function () {
+      it('is active', function (done) {
+        React.render((
+          <Router history={createHistory('/home')}>
+            <Route path="/home">
+              <IndexRoute />
+            </Route>
+          </Router>
+        ), node, function () {
+          expect(this.history.isActive('/home', null)).toBe(true);
+          expect(this.history.isActive('/home', null, true)).toBe(true);
+          done();
+        });
+      });
+    });
+
+    describe('with a query that also matches', function () {
+      it('is active', function (done) {
+        React.render((
+          <Router history={createHistory('/home?the=query')}>
+            <Route path="/home">
+              <IndexRoute />
+            </Route>
+          </Router>
+        ), node, function () {
+          expect(this.history.isActive('/home', { the: 'query' })).toBe(true);
+          expect(this.history.isActive('/home', { the: 'query' }, true)).toBe(true);
+          done();
+        });
+      });
+    });
+
+    describe('with a query that does not match', function () {
+      it('is not active', function (done) {
+        React.render((
+          <Router history={createHistory('/home?the=query')}>
+            <Route path="/home">
+              <IndexRoute />
+            </Route>
+          </Router>
+        ), node, function () {
+          expect(this.history.isActive('/home', { something: 'else' })).toBe(false);
+          expect(this.history.isActive('/home', { something: 'else' }, true)).toBe(false);
           done();
         });
       });

@@ -1,7 +1,7 @@
 import React from 'react';
 import warning from 'warning';
 
-var { object, string, func } = React.PropTypes;
+var { bool, object, string, func } = React.PropTypes;
 
 function isLeftClickEvent(event) {
   return event.button === 0;
@@ -38,6 +38,7 @@ var Link = React.createClass({
   propTypes: {
     activeStyle: object,
     activeClassName: string,
+    onlyActiveOnIndex: bool.isRequired,
     to: string.isRequired,
     query: object,
     state: object,
@@ -48,6 +49,7 @@ var Link = React.createClass({
     return {
       className: '',
       activeClassName: 'active',
+      onlyActiveOnIndex: false,
       style: {}
     };
   },
@@ -81,7 +83,7 @@ var Link = React.createClass({
   },
 
   render() {
-    var { to, query } = this.props;
+    var { to, query, onlyActiveOnIndex } = this.props;
 
     var props = {
       ...this.props,
@@ -95,7 +97,7 @@ var Link = React.createClass({
     if (history) {
       props.href = history.createHref(to, query);
 
-      if (history.isActive(to, query)) {
+      if (history.isActive(to, query, onlyActiveOnIndex)) {
         if (props.activeClassName)
           props.className += props.className !== '' ? ` ${props.activeClassName}` : props.activeClassName;
 

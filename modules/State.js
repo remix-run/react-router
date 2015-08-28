@@ -28,8 +28,8 @@ var State = {
     history: object.isRequired
   },
 
-  isActive(pathname, query) {
-    return this.context.history.isActive(pathname, query);
+  isActive(pathname, query, indexOnly) {
+    return this.context.history.isActive(pathname, query, indexOnly);
   }
 
 };
