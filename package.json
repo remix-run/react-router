@@ -24,10 +24,8 @@
   ],
   "license": "MIT",
   "dependencies": {
-    "history": "^1.3.3",
+    "history": "^1.8.0",
     "invariant": "^2.0.0",
-    "keymirror": "^0.1.1",
-    "qs": "2.4.1",
     "warning": "^2.0.0"
   },
   "devDependencies": {
