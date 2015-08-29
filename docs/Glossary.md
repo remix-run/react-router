@@ -20,15 +20,13 @@ A *component* is a React component class or a string (e.g. "div"). Basically, it
 
 ### EnterHook
 
-    type EnterHook = (nextState: RoutingState, redirectTo: RedirectFunction, callback?: Function) => any;
+    type EnterHook = (nextState: RouterState, redirectTo: RedirectFunction, callback?: Function) => any;
 
-An *enter hook* is a user-defined function that is called when a route is about to be rendered. It receives the next [routing state](#routingstate) as its first argument. The [`redirectTo` function](#redirectfunction) may be used to trigger a transition to a different URL.
+An *enter hook* is a user-defined function that is called when a route is about to be rendered. It receives the next [router state](#routerstate) as its first argument. The [`redirectTo` function](#redirectfunction) may be used to trigger a transition to a different URL.
 
 If an enter hook needs to execute asynchronously, it may list a 3rd `callback` argument that it must call in order to cause the transition to proceed.
 
 **Caution:** Using the `callback` in an enter hook causes the transition to wait until it is called. **This can lead to a non-responsive UI if you don't call it very quickly**.
-
-### History
 
 ### LeaveHook
 
@@ -44,7 +42,7 @@ A *leave hook* is a user-defined function that is called when a route is about t
       query: Query;
       state: LocationState;
       action: Action;
-      key: string;
+      key: LocationKey;
     };
 
 A *location* answers two important (philosophical) questions:
@@ -54,9 +52,15 @@ A *location* answers two important (philosophical) questions:
 
 New locations are typically created each time the URL changes. You can read more about locations in [the `history` docs](https://github.com/rackt/history/blob/master/docs/Location.md).
 
+### LocationKey
+
+    type LocationKey = string;
+
+A *location key* is a string that is unique to a particular [`location`](#location). It is the one piece of data that most accurately answers the question "Where am I?".
+
 ### LocationState
 
-    type LocationState = any;
+    type LocationState = ?Object;
 
 A *location state* is an arbitrary object of data associated with a particular [`location`](#location). This is basically a way to tie extra state to a location that is not contained in the URL.
 
@@ -64,6 +68,12 @@ This type gets its name from the first argument to HTML5's [`pushState`][pushSta
 
 [pushState]: https://developer.mozilla.org/en-US/docs/Web/API/History_API#The_pushState()_method
 [replaceState]: https://developer.mozilla.org/en-US/docs/Web/API/History_API#The_replaceState()_method
+
+### Path
+
+    type Path = Pathname + QueryString;
+
+A *path* represents a URL path.
 
 ### Pathname
 
@@ -91,9 +101,28 @@ The word *params* refers to an object of key/value pairs that were parsed out of
 
 ### RedirectFunction
 
-    type RedirectFunction = (pathname: Pathname, query: ?Query, state: ?LocationState) => void;
+    type RedirectFunction = (pathname: Pathname | Path, query: ?Query, state: ?LocationState) => void;
 
 A *redirect function* is used in [`onEnter` hooks](#enterhook) to trigger a transition to a new URL.
+
+### Route
+
+    type Route = {
+      component: Component;
+      path: ?RoutePattern;
+      onEnter: ?EnterHook;
+      onLeave: ?LeaveHook;
+    };
+
+A *route* specifies a [component](#component) that is part of the user interface (UI). Routes should be nested in a tree-like structure that follows the hierarchy of your components.
+
+It may help to think of a route as an "entry point" into your UI. You don't need a route for every component in your component hierarchy, only for those places where your UI differs based on the URL.
+
+### RouteConfig
+
+    type RouteConfig = Array<Route>;
+
+A *route config* is an array of [route](#route)s that specifies the order in which routes should be tried when the router attempts to match a URL.
 
 ### RoutePattern
 
@@ -107,25 +136,40 @@ A *route pattern* (or "path") is a string that describes a portion of a URL. Pat
 
 Route patterns are relative to the pattern of the parent route unless they begin with a `/`, in which case they begin matching at the beginning of the URL.
 
-### Route
+### Router
 
-    type Route = {
-      path: RoutePattern;
-      component: Component;
-      onEnter: EnterHook;
-      onLeave: LeaveHook;
+    type Router = {
+      transitionTo: (location: Location) => void;
+      pushState: (state: ?LocationState, pathname: Pathname | Path, query?: Query) => void;
+      replaceState: (state: ?LocationState, pathname: Pathname | Path, query?: Query) => void;
+      go(n: Number) => void;
+      listen(listener: RouterListener) => Function;
+      match(location: Location, callback: RouterListener) => void;
     };
 
-### RoutingState
+A *router* is a [`history`](http://rackt.github.io/history) object (akin to `window.history` in web browsers) that is used to modify and listen for changes to the URL.
 
-    type RoutingState = {
+There are two primary interfaces for computing a router's next [state](#routerstate):
+
+- `history.listen` is to be used in stateful environments (such as web browsers) that need to update the UI over a period of time. This method immediately invokes its `listener` argument once and returns a function that must be called to stop listening for changes
+- `history.match` is a pure function that does not update the history's internal state. This makes it ideal for server-side environments where many requests must be handled concurrently
+
+### RouterListener
+
+    type RouterListener = (error: ?Error, nextState: RouterState) => void;
+
+A *router listener* is a function that is used to listen for changes to a [router](#router)'s [state](#routerstate).
+
+### RouterState
+
+    type RouterState = {
       location: Location;
       routes: Array<Route>;
       params: Params;
       components: Array<Component>;
     };
 
-A *routing state* represents the current state of a router. It contains:
+A *router state* represents the current state of a router. It contains:
 
   - the current [`location`](#location),
   - an array of [`routes`](#route) that match that location,
