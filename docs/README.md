@@ -1,7 +1,7 @@
 ## Table of Contents
 
 - [Introduction](Introduction.md)
-- [Getting Started](GettingStarted.md)
+- [Route Configuration](RouteConfiguration.md)
 - [Dynamic Routing](DynamicRouting.md)
 - [Advanced Usage](AdvancedUsage.md)
 - [Server Rendering](ServerRendering.md)

@@ -97,11 +97,11 @@ We'd have to make our URL parsing a lot smarter, and we would end up with a lot 
 Let's refactor our app to use React Router.
 
 ```js
-// first we import some components
+// First we import some components...
 import { Router, Route, Link } from 'react-router';
 
-// then we delete a bunch of code from `App` and add some `Link`
-// components
+// Then we delete a bunch of code from App and
+// add some <Link> elements...
 var App = React.createClass({
   render() {
     return (
@@ -123,7 +123,7 @@ var App = React.createClass({
   }
 });
 
-// Finally we render a Router component with some Routes.
+// Finally, we render a <Router> with some <Route>s.
 // It does all the fancy routing stuff for us.
 React.render((
   <Router>
@@ -135,7 +135,7 @@ React.render((
 ), document.body);
 ```
 
-React Router knows how to build nested UI for us, so we don't have to manually figure out which `<Child>` component to render. If you're not digging the JSX route config you can use plain objects instead:
+React Router knows how to build nested UI for us, so we don't have to manually figure out which `<Child>` component to render. Internally, the router converts your `<Route>` element hierarchy to a [route config](Glossary.md#routeconfig). But if you're not digging the JSX you can use plain objects instead:
 
 ```js
 var routes = {
@@ -150,7 +150,7 @@ var routes = {
 React.render(<Router routes={routes} />, document.body);
 ```
 
-### Adding more UI
+### Adding More UI
 
 Alright, now we're ready to nest the inbox messages inside the inbox UI.
 
@@ -177,10 +177,10 @@ var Inbox = React.createClass({
 React.render((
   <Router>
     <Route path="/" component={App}>
-      <Route path="about" component={About}/>
+      <Route path="about" component={About} />
       <Route path="inbox" component={Inbox}>
         {/* Add the route, nested where we want the UI to nest */}
-        <Route path="messages/:id" component={Message}/>
+        <Route path="messages/:id" component={Message} />
       </Route>
     </Route>
   </Router>
@@ -189,7 +189,7 @@ React.render((
 
 Now visits to URLs like `inbox/messages/Jkei3c32` will match the new route and nest the UI branch of `App -> Inbox -> Message`.
 
-### Getting URL parameters
+### Getting URL Parameters
 
 We're going to need to know something about the message in order to fetch it from the server. Route components get some useful properties injected into them when you render, particularly the parameters from the dynamic segment of your path. In our case, `:id`.
 
@@ -211,3 +211,5 @@ var Message = React.createClass({
 ```
 
 That's the gist of React Router. Application UIs are boxes inside of boxes inside of boxes; now you can keep those boxes in sync with the URL and link to them easily.
+
+The docs about [route configuration](RouteConfiguration.md) describe more of the router's features in depth.
