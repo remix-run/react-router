@@ -60,7 +60,10 @@ New locations are typically created each time the URL changes. You can read more
 
 A *location state* is an arbitrary object of data associated with a particular [`location`](#location). This is basically a way to tie extra state to a location that is not contained in the URL.
 
-This type gets its name from the first argument to HTML5's [`pushState`](https://developer.mozilla.org/en-US/docs/Web/API/History_API#The_pushState(\)_method) and [`replaceState`](https://developer.mozilla.org/en-US/docs/Web/API/History_API#The_replaceState(\)_method) methods.
+This type gets its name from the first argument to HTML5's [`pushState`][pushState] and [`replaceState`][replaceState] methods.
+
+[pushState]: https://developer.mozilla.org/en-US/docs/Web/API/History_API#The_pushState()_method
+[replaceState]: https://developer.mozilla.org/en-US/docs/Web/API/History_API#The_replaceState()_method
 
 ### Pathname
 
