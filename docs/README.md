@@ -6,3 +6,4 @@
 - [Advanced Usage](AdvancedUsage.md)
 - [Server Rendering](ServerRendering.md)
 - [Transitions](Transitions.md)
+- [Glossary](Glossary.md)

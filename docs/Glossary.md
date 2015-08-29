@@ -42,7 +42,7 @@ A *leave hook* is a user-defined function that is called when a route is about t
       pathname: Pathname;
       search: QueryString;
       query: Query;
-      state: any;
+      state: LocationState;
       action: Action;
       key: string;
     };
@@ -54,6 +54,14 @@ A *location* answers two important (philosophical) questions:
 
 New locations are typically created each time the URL changes. You can read more about locations in [the `history` docs](https://github.com/rackt/history/blob/master/docs/Location.md).
 
+### LocationState
+
+    type LocationState = any;
+
+A *location state* is an arbitrary object of data associated with a particular [`location`](#location). This is basically a way to tie extra state to a location that is not contained in the URL.
+
+This type gets its name from the first argument to HTML5's [`pushState`](https://developer.mozilla.org/en-US/docs/Web/API/History_API#The_pushState(\)_method) and [`replaceState`](https://developer.mozilla.org/en-US/docs/Web/API/History_API#The_replaceState(\)_method) methods.
+
 ### Pathname
 
     type Pathname = string;
@@ -64,7 +72,7 @@ A *pathname* is the portion of a URL that describes a hierarchical path, includi
 
     type QueryString = string;
 
-A *query string* is the portion of the URL that trails the [pathname](#pathname), including the preceeding `?`. For example, in `http://example.com/the/path?the=query`, `?the=query` is the query string. It is synonymous with `window.location.search` in web browsers.
+A *query string* is the portion of the URL that follows the [pathname](#pathname), including any preceeding `?`. For example, in `http://example.com/the/path?the=query`, `?the=query` is the query string. It is synonymous with `window.location.search` in web browsers.
 
 ### Query
 
@@ -80,7 +88,7 @@ The word *params* refers to an object of key/value pairs that were parsed out of
 
 ### RedirectFunction
 
-    type RedirectFunction = (pathname: Pathname, query: Query | any, state: any) => void;
+    type RedirectFunction = (pathname: Pathname, query: ?Query, state: ?LocationState) => void;
 
 A *redirect function* is used in [`onEnter` hooks](#enterhook) to trigger a transition to a new URL.
 
