@@ -133,7 +133,7 @@ URL                     | Components
 `/inbox`                | `App -> Inbox`
 `/messages/:id`         | `App -> Inbox -> Message`
 
-**Note**: Absolute paths may not be used in route config that is [dynamically loaded](DynamicLoading.md).
+**Note**: Absolute paths may not be used in route config that is [dynamically loaded](DynamicRouting.md).
 
 ### Preserving URLs
 

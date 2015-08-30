@@ -3,8 +3,8 @@
 - [Introduction](Introduction.md)
 - [Route Configuration](RouteConfiguration.md)
 - [Route Matching](RouteMatching.md)
+- [Dynamic Routing](DynamicRouting.md)
 - [Confirming Navigation](ConfirmingNavigation.md)
 - [Glossary](Glossary.md)
 
-- [Dynamic Routing](DynamicRouting.md)
 - [Server Rendering](ServerRendering.md)
