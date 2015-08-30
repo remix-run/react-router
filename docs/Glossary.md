@@ -136,6 +136,12 @@ The term *route component* refers to a [component](#component) that is directly 
 
 A *route config* is an array of [route](#route)s that specifies the order in which routes should be tried when the router attempts to match a URL.
 
+### RouteHook
+
+    type RouteHook = (nextLocation?: Location) => any;
+
+A *route hook* is a function that is used to prevent the user from leaving a route. On normal transitions, it receives the next [location](#location) as an argument and must either `return false` to cancel the transition or `return` a prompt message to show the user. When invoked during the `beforeunload` event in web browsers, it does not receive any arguments and must `return` a prompt message to cancel the transition.
+
 ### RoutePattern
 
     type RoutePattern = string;
