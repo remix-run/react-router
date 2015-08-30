@@ -1,6 +1,6 @@
 ## Route Configuration
 
-A [route configuration](Glossary.md#routeconfig) is basically a set of instructions that tell a router how to try and [match the URL](RouteMatching.md) and what code to run when it does. To illustrate some of the features available in your route config, let's expand on the simple app from [the introduction](Introduction.md).
+A [route configuration](Glossary.md#routeconfig) is basically a set of instructions that tell a router how to try to [match the URL](RouteMatching.md) and what code to run when it does. To illustrate some of the features available in your route config, let's expand on the simple app from [the introduction](Introduction.md).
 
 ```js
 import React from 'react';
