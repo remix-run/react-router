@@ -108,7 +108,7 @@ A *redirect function* is used in [`onEnter` hooks](#enterhook) to trigger a tran
 ### Route
 
     type Route = {
-      component: Component;
+      component: RouteComponent;
       path: ?RoutePattern;
       onEnter: ?EnterHook;
       onLeave: ?LeaveHook;
@@ -117,6 +117,18 @@ A *redirect function* is used in [`onEnter` hooks](#enterhook) to trigger a tran
 A *route* specifies a [component](#component) that is part of the user interface (UI). Routes should be nested in a tree-like structure that follows the hierarchy of your components.
 
 It may help to think of a route as an "entry point" into your UI. You don't need a route for every component in your component hierarchy, only for those places where your UI differs based on the URL.
+
+### RouteComponent
+
+    type RouteComponent = Component;
+
+The term *route component* refers to a [component](#component) that is directly rendered by a [route](#route) (i.e. the `<Route component>`). The router creates elements from route components and provides them as `this.props.children` to route components further up the hierarchy. In addition to `children`, route components receive the following props:
+
+  - `router` – The [router](#router) instance
+  - `location` – The current [location](#location)
+  - `params` – The current [params](#params)
+  - `route` – The [route](#route) that declared this component
+  - `routeParams` – A subset of the [params](#params) that were specified in the route's [`path`](#routepattern)
 
 ### RouteConfig
 
@@ -152,7 +164,7 @@ A *router* is a [`history`](http://rackt.github.io/history) object (akin to `win
 There are two primary interfaces for computing a router's next [state](#routerstate):
 
 - `history.listen` is to be used in stateful environments (such as web browsers) that need to update the UI over a period of time. This method immediately invokes its `listener` argument once and returns a function that must be called to stop listening for changes
-- `history.match` is a pure function that does not update the history's internal state. This makes it ideal for server-side environments where many requests must be handled concurrently
+- `history.match` is a pure asynchronous function that does not update the history's internal state. This makes it ideal for server-side environments where many requests must be handled concurrently
 
 ### RouterListener
 
