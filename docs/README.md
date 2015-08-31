@@ -6,5 +6,6 @@
 - [Dynamic Routing](DynamicRouting.md)
 - [Confirming Navigation](ConfirmingNavigation.md)
 - [Glossary](Glossary.md)
+- [Route](Route.md)
 
 - [Server Rendering](ServerRendering.md)
