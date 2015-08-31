@@ -81,13 +81,14 @@ var IndexSidebar = React.createClass({
 
 var App = React.createClass({
   render() {
+    var { children } = this.props;
     return (
       <div>
         <div className="Sidebar">
-          {this.props.sidebar || <IndexSidebar />}
+          {children ? children.sidebar : <IndexSidebar />}
         </div>
         <div className="Content">
-          {this.props.content || <Index />}
+          {children ? children.content : <Index />}
         </div>
       </div>
     );
