@@ -3,6 +3,8 @@ import { mapAsync } from './AsyncUtils';
 function getComponentsForRoute(route, callback) {
   if (route.component || route.components) {
     callback(null, route.component || route.components);
+  } else if (route.getComponent) {
+    route.getComponent(callback);
   } else if (route.getComponents) {
     route.getComponents(callback);
   } else {
