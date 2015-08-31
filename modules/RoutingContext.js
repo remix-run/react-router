@@ -60,12 +60,8 @@ var RoutingContext = React.createClass({
           routeParams
         };
 
-        if (React.isValidElement(element)) {
+        if (element)
           props.children = element;
-        } else if (element) {
-          // In render, do var { header, sidebar } = this.props;
-          Object.assign(props, element);
-        }
 
         if (typeof components === 'object') {
           var elements = {};
