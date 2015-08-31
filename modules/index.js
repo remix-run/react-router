@@ -15,7 +15,7 @@ export State from './State';
 
 /* utils */
 export useRoutes from './useRoutes';
-export { createRoutesFromReactChildren } from './RouteUtils';
+export { createRoutes } from './RouteUtils';
 export PropTypes from './PropTypes';
 
 export default from './Router';
