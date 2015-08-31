@@ -104,4 +104,41 @@ describe('Router', function () {
     });
   });
 
+  describe('with named components', function() {
+    it('renders the named components', function(done) {
+      var Parent = React.createClass({
+        render() {
+          return (
+            <div>
+              {this.props.children.sidebar}-{this.props.children.content}
+            </div>
+          );
+        }
+      });
+
+      var Sidebar = React.createClass({
+        render() {
+          return <div>sidebar</div>;
+        }
+      });
+
+      var Content = React.createClass({
+        render() {
+          return <div>content</div>;
+        }
+      });
+
+      React.render((
+        <Router history={createHistory('/')}>
+          <Route component={Parent}>
+            <Route path="/" components={{sidebar: Sidebar, content: Content}} />
+          </Route>
+        </Router>
+      ), node, function () {
+        expect(node.textContent.trim()).toEqual('sidebar-content');
+        done();
+      });
+    });
+  });
+
 });
