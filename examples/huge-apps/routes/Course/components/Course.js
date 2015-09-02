@@ -13,30 +13,29 @@ styles.sidebar = {
 };
 
 class Course extends React.Component {
-
   render () {
-    var course = COURSES[this.props.params.courseId];
+    let { children, params } = this.props;
+    let course = COURSES[params.courseId];
+
     return (
       <div>
         <h2>{course.name}</h2>
-        <Nav course={course}/>
-        {this.props.sidebar && this.props.main ? (
+        <Nav course={course} />
+        {children && children.sidebar && children.main ? (
           <div>
             <div className="Sidebar" style={styles.sidebar}>
-              {this.props.sidebar}
+              {children.sidebar}
             </div>
             <div className="Main" style={{padding: 20}}>
-              {this.props.main}
+              {children.main}
             </div>
           </div>
         ) : (
-          <Dashboard/>
+          <Dashboard />
         )}
       </div>
     );
   }
-
 }
 
 export default Course;
-
