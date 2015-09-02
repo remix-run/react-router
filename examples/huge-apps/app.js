@@ -13,10 +13,11 @@ var rootRoute = {
       require('./routes/Grades'),
       require('./routes/Messages'),
       require('./routes/Profile'),
-    ]}
-  ]
+    ]
+  }]
 };
 
-React.render((
-  <Router routes={rootRoute} />
-), document.getElementById('example'));
+React.render(
+  <Router routes={rootRoute} />,
+  document.getElementById('example')
+);
