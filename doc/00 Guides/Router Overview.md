@@ -167,8 +167,8 @@ var Message = React.createClass({
 });
 ```
 
-Nested UI and Nested URLs need not be coupled
----------------------------------------------
+Nested UI and Nested URLs don't need to be coupled
+--------------------------------------------------
 
 With React Router, you don't need to nest your UI in order to get a
 nested URL. Inversely, to get nested UI, you don't need to have nested
