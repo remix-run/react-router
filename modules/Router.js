@@ -5,14 +5,14 @@ import RoutingContext from './RoutingContext';
 import useRoutes from './useRoutes';
 import { routes } from './PropTypes';
 
-var { func, object } = React.PropTypes;
+const { func, object } = React.PropTypes;
 
 /**
  * A <Router> is a high-level API for automatically setting up
  * a router that renders a <RoutingContext> with all the props
  * it needs each time the URL changes.
  */
-var Router = React.createClass({
+const Router = React.createClass({
   
   propTypes: {
     history: object,
@@ -44,8 +44,8 @@ var Router = React.createClass({
   },
 
   componentWillMount() {
-    var { history, children, routes, parseQueryString, stringifyQuery } = this.props;
-    var createHistory = history ? () => history : createHashHistory;
+    let { history, children, routes, parseQueryString, stringifyQuery } = this.props;
+    let createHistory = history ? () => history : createHashHistory;
 
     this.history = useRoutes(createHistory)({
       routes: createRoutes(routes || children),
@@ -68,10 +68,19 @@ var Router = React.createClass({
   },
 
   render() {
+    let { location, routes, params, components } = this.state;
+    let { createElement } = this.props;
+
+    if (location == null)
+      return null; // Async match
+
     return React.createElement(RoutingContext, {
-      ...this.state,
       history: this.history,
-      createElement: this.props.createElement
+      createElement,
+      location,
+      routes,
+      params,
+      components
     });
   }
 

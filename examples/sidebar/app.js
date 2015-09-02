@@ -82,6 +82,7 @@ var IndexSidebar = React.createClass({
 var App = React.createClass({
   render() {
     var { children } = this.props;
+
     return (
       <div>
         <div className="Sidebar">
