@@ -10,6 +10,7 @@ export Route from './Route';
 /* mixins */
 export Lifecycle from './Lifecycle';
 export Navigation from './Navigation';
+export { NavigationDecorator } from './Navigation';
 export RouteContext from './RouteContext';
 export IsActive from './IsActiveMixin';
 
