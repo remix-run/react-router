@@ -4,7 +4,7 @@ import invariant from 'invariant';
 import { createRouteFromReactElement } from './RouteUtils';
 import { component, components } from './PropTypes';
 
-var { string, bool, func } = React.PropTypes;
+var { string, bool, func, object } = React.PropTypes;
 
 /**
  * A <Route> is used to declare which components are rendered to the page when
@@ -33,6 +33,27 @@ var Route = React.createClass({
         delete route.handler;
       }
 
+      if(route.plainRoute){
+        if(route.childRoutes){
+          if(route.plainRoute.childRoutes){
+            warning(
+              false,
+              'plainRoute.childRoutes will override route.children'
+            );
+          }
+
+          if(route.plainRoute.getChildRoutes){
+            warning(
+              false,
+              'route.children exist, plainRoute.getChildRoutes will be ignored'
+            );
+          }
+        }
+
+        route = {...route,...route.plainRoute};
+        delete route.plainRoute;
+      }
+
       return route;
     }
   
@@ -44,7 +65,8 @@ var Route = React.createClass({
     handler: component, // deprecated
     component,
     components,
-    getComponents: func
+    getComponents: func,
+    plainRoute: object
   },
 
   render() {
