@@ -225,6 +225,43 @@ describe('A <Link>', function () {
     });
   });
 
+  describe('when route changes', function() {
+    it('changes active state', function(done) {
+      var LinkWrapper = React.createClass({
+        render() {
+          return (
+            <div>
+              <Link to="/hello">Link</Link>
+              {this.props.children}
+            </div>
+          );
+        }
+      });
+
+      var a, steps = [
+        function () {
+          a = node.querySelector('a');
+          expect(a.className).toEqual('');
+          this.history.pushState(null, '/hello');
+        },
+        function () {
+          expect(a.className).toEqual('active');
+        }
+      ];
+
+      var execNextStep = execSteps(steps, done);
+
+      React.render((
+        <Router history={createHistory('/goodbye')} onUpdate={execNextStep}>
+          <Route path="/" component={LinkWrapper}>
+            <Route path="goodbye" component={Goodbye} />
+            <Route path="hello" component={Hello} />
+          </Route>
+        </Router>
+      ), node, execNextStep);
+    });
+  });
+
   describe('when clicked', function () {
     it('calls a user defined click handler', function (done) {
       var LinkWrapper = React.createClass({

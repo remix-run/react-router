@@ -54,6 +54,46 @@ var Link = React.createClass({
     };
   },
 
+  getInitialState() {
+    var active = this.getActiveState();
+    return { active };
+  },
+
+  trySubscribe() {
+    var { history } = this.context;
+    if (!history) return;
+    this._unlisten = history.listen(this.handleHistoryChange);
+  },
+
+  tryUnsubscribe() {
+    if (!this._unlisten) return;
+    this._unlisten();
+    this._unlisten = undefined;
+  },
+
+  handleHistoryChange() {
+    var { active } = this.state;
+    var nextActive = this.getActiveState();
+    if (active !== nextActive) {
+        this.setState({ active: nextActive });
+    }
+  },
+
+  getActiveState() {
+    var { history } = this.context;
+    var { to, query, onlyActiveOnIndex } = this.props;
+    if (!history) return false;
+    return history.isActive(to, query, onlyActiveOnIndex);
+  },
+
+  componentDidMount() {
+    this.trySubscribe();
+  },
+
+  componentWillUnmount() {
+    this.tryUnsubscribe();
+  },
+
   handleClick(event) {
     var allowTransition = true;
     var clickResult;
@@ -91,13 +131,14 @@ var Link = React.createClass({
     };
 
     var { history } = this.context;
+    var { active } = this.state;
 
     // Ignore if rendered outside the context
     // of history, simplifies unit testing.
     if (history) {
       props.href = history.createHref(to, query);
 
-      if (history.isActive(to, query, onlyActiveOnIndex)) {
+      if (active) {
         if (props.activeClassName)
           props.className += props.className !== '' ? ` ${props.activeClassName}` : props.activeClassName;
 
