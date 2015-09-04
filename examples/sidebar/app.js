@@ -1,5 +1,4 @@
 import React from 'react';
-import { history } from 'react-router/lib/HashHistory';
 import { Router, Route, Link } from 'react-router';
 import data from './data';
 
@@ -25,8 +24,10 @@ var CategorySidebar = React.createClass({
         <Link to="/">◀︎ Back</Link>
         <h2>{category.name} Items</h2>
         <ul>
-          {category.items.map(item => (
-            <li><Link to={`/category/${category.name}/${item.name}`}>{item.name}</Link></li>
+          {category.items.map((item, index) => (
+            <li key={index}>
+              <Link to={`/category/${category.name}/${item.name}`}>{item.name}</Link>
+            </li>
           ))}
         </ul>
       </div>
@@ -61,15 +62,16 @@ var Index = React.createClass({
   }
 });
 
-
 var IndexSidebar = React.createClass({
   render() {
     return (
       <div>
         <h2>Categories</h2>
         <ul>
-          {data.getAll().map(category => (
-            <li><Link to={`/category/${category.name}`}>{category.name}</Link></li>
+          {data.getAll().map((category, index) => (
+            <li key={index}>
+              <Link to={`/category/${category.name}`}>{category.name}</Link>
+            </li>
           ))}
         </ul>
       </div>
@@ -79,13 +81,15 @@ var IndexSidebar = React.createClass({
 
 var App = React.createClass({
   render() {
+    var { children } = this.props;
+
     return (
       <div>
         <div className="Sidebar">
-          {this.props.sidebar || <IndexSidebar/>}
+          {children ? children.sidebar : <IndexSidebar />}
         </div>
         <div className="Content">
-          {this.props.content || <Index/>}
+          {children ? children.content : <Index />}
         </div>
       </div>
     );
@@ -93,10 +97,10 @@ var App = React.createClass({
 });
 
 React.render((
-  <Router history={history}>
+  <Router>
     <Route path="/" component={App}>
       <Route path="category/:category" components={{content: Category, sidebar: CategorySidebar}}>
-        <Route path=":item" component={Item}/>
+        <Route path=":item" component={Item} />
       </Route>
     </Route>
   </Router>

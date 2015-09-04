@@ -1,5 +1,4 @@
-import React, { cloneElement } from 'react/addons';
-import { history } from 'react-router/lib/HashHistory';
+import React from 'react/addons';
 import { Router, Route, Link } from 'react-router';
 
 var { CSSTransitionGroup } = React.addons;
@@ -15,7 +14,7 @@ var App = React.createClass({
           <li><Link to="/page2">Page 2</Link></li>
         </ul>
         <CSSTransitionGroup component="div" transitionName="example">
-          {cloneElement(this.props.children || <div/>, { key: key })}
+          {React.cloneElement(this.props.children || <div />, { key: key })}
         </CSSTransitionGroup>
       </div>
     );
@@ -44,9 +43,8 @@ var Page2 = React.createClass({
   }
 });
 
-
 React.render((
-  <Router history={history}>
+  <Router>
     <Route path="/" component={App}>
       <Route path="page1" component={Page1} />
       <Route path="page2" component={Page2} />

@@ -1,16 +1,14 @@
 import React from 'react';
 import { Router, Link } from 'react-router';
-import HashHistory from 'react-router/lib/HashHistory';
-var history = new HashHistory({ queryKey: 'k' });
 
 var pictures = [
-  {id: 0, src: 'http://placekitten.com/601/601'},
-  {id: 1, src: 'http://placekitten.com/610/610'},
-  {id: 2, src: 'http://placekitten.com/620/620'},
+  { id: 0, src: 'http://placekitten.com/601/601' },
+  { id: 1, src: 'http://placekitten.com/610/610' },
+  { id: 2, src: 'http://placekitten.com/620/620' }
 ];
 
 var App = React.createClass({
-  render () {
+  render() {
     return (
       <div>
         <h1>Pinterest Style Routes</h1>
@@ -33,7 +31,6 @@ var App = React.createClass({
 });
 
 var Feed = React.createClass({
-
   overlayStyles: {
     position: 'fixed',
     top: 30,
@@ -46,16 +43,13 @@ var Feed = React.createClass({
     background: '#fff'
   },
 
-  render () {
+  render() {
     return (
       <div>
         <div>
           {pictures.map(picture => (
-            <Link
-              to={`/pictures/${picture.id}`}
-              state={{fromFeed: true}}
-            >
-              <img style={{margin: 10}} src={picture.src} height="100"/>
+            <Link key={picture.id} to={`/pictures/${picture.id}`} state={{ fromFeed: true }}>
+              <img style={{ margin: 10 }} src={picture.src} height="100" />
             </Link>
           ))}
         </div>
@@ -70,13 +64,13 @@ var Feed = React.createClass({
 });
 
 var FeedPicture = React.createClass({
-  render () {
+  render() {
     return (
       <div>
         <h2>Inside the feed</h2>
         <Link to="/">back</Link>
         <p>
-          <img src={pictures[this.props.params.id].src} height="400"/>
+          <img src={pictures[this.props.params.id].src} height="400" />
         </p>
       </div>
     );
@@ -84,13 +78,13 @@ var FeedPicture = React.createClass({
 });
 
 var Picture = React.createClass({
-  render () {
+  render() {
     return (
       <div>
         <h2>Not Inside the feed</h2>
         <Link to="/">Feed</Link>
         <p>
-          <img src={pictures[this.props.params.id].src}/>
+          <img src={pictures[this.props.params.id].src} />
         </p>
       </div>
     );
@@ -104,7 +98,7 @@ var FeedPictureRoute = {
 
 var FeedRoute = {
   component: Feed,
-  childRoutes: [ FeedPictureRoute ],
+  childRoutes: [ FeedPictureRoute ]
 };
 
 var PictureRoute = {
@@ -117,18 +111,19 @@ var RootRoute = {
   component: App,
   indexRoute: FeedRoute,
 
-  getChildRoutes (state, cb) {
+  getChildRoutes (location, callback) {
+    var { state } = location;
+
     if (state && state.fromFeed) {
-      cb(null, [ FeedRoute ]);
-    }
-    else {
-      cb(null, [ PictureRoute ]);
+      callback(null, [ FeedRoute ]);
+    } else {
+      callback(null, [ PictureRoute ]);
     }
   }
 };
 
 React.render(
-  <Router history={history} children={RootRoute}/>,
+  <Router children={RootRoute} />,
   document.getElementById('example')
 );
 
@@ -160,4 +155,3 @@ React.render(
 //  9. `App -> PictureRoute` renders
 //
 // 10. I am very glad there aren't ten steps to explain this ...
-//

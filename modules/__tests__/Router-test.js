@@ -1,17 +1,18 @@
 import expect from 'expect';
-import React, { render } from 'react';
-import MemoryHistory from '../MemoryHistory';
+import React from 'react';
+import createHistory from 'history/lib/createMemoryHistory';
 import Router from '../Router';
 import Route from '../Route';
 
 describe('Router', function () {
-  var div;
+
+  var node;
   beforeEach(function () {
-    div = document.createElement('div');
+    node = document.createElement('div');
   });
 
   afterEach(function () {
-    React.unmountComponentAtNode(div);
+    React.unmountComponentAtNode(node);
   });
 
   var Parent = React.createClass({
@@ -27,54 +28,54 @@ describe('Router', function () {
   });
 
   it('renders routes', function (done) {
-    render((
-      <Router history={new MemoryHistory('/')}>
-        <Route path="/" component={Parent}/>
+    React.render((
+      <Router history={createHistory('/')}>
+        <Route path="/" component={Parent} />
       </Router>
-    ), div, function () {
-      expect(div.textContent.trim()).toEqual('parent');
+    ), node, function () {
+      expect(node.textContent.trim()).toEqual('parent');
       done();
     });
   });
 
   it('renders child routes when the parent does not have a path', function (done) {
-    render((
-      <Router history={new MemoryHistory('/')}>
+    React.render((
+      <Router history={createHistory('/')}>
         <Route component={Parent}>
           <Route component={Parent}>
-            <Route path="/" component={Child}/>
+            <Route path="/" component={Child} />
           </Route>
         </Route>
       </Router>
-    ), div, function () {
-      expect(div.textContent.trim()).toEqual('parentparentchild');
+    ), node, function () {
+      expect(node.textContent.trim()).toEqual('parentparentchild');
       done();
     });
   });
 
   it('renders nested children correctly', function (done) {
-    render((
-      <Router history={new MemoryHistory('/hello')}>
+    React.render((
+      <Router history={createHistory('/hello')}>
         <Route component={Parent}>
-          <Route path="hello" component={Child}/>
+          <Route path="hello" component={Child} />
         </Route>
       </Router>
-    ), div, function () {
-      expect(div.textContent.trim()).toMatch(/parent/);
-      expect(div.textContent.trim()).toMatch(/child/);
+    ), node, function () {
+      expect(node.textContent.trim()).toMatch(/parent/);
+      expect(node.textContent.trim()).toMatch(/child/);
       done();
     });
   });
 
   it('renders the child\'s component when it has no component', function (done) {
-    render((
-      <Router history={new MemoryHistory('/hello')}>
+    React.render((
+      <Router history={createHistory('/hello')}>
         <Route>
-          <Route path="hello" component={Child}/>
+          <Route path="hello" component={Child} />
         </Route>
       </Router>
-    ), div, function () {
-      expect(div.textContent.trim()).toMatch(/child/);
+    ), node, function () {
+      expect(node.textContent.trim()).toMatch(/child/);
       done();
     });
   });
@@ -83,7 +84,7 @@ describe('Router', function () {
     var Wrapper = React.createClass({
       render() {
         var { Component } = this.props;
-        return <Component fromWrapper="wrapped"/>
+        return <Component fromWrapper="wrapped" />
       }
     });
 
@@ -93,13 +94,50 @@ describe('Router', function () {
       }
     });
 
-    render((
-      <Router history={new MemoryHistory('/')} createElement={Component => <Wrapper Component={Component}/>}>
+    React.render((
+      <Router history={createHistory('/')} createElement={Component => <Wrapper Component={Component} />}>
         <Route path="/" component={Component}/>
       </Router>
-    ), div, function () {
-      expect(div.textContent.trim()).toEqual('wrapped');
+    ), node, function () {
+      expect(node.textContent.trim()).toEqual('wrapped');
       done();
+    });
+  });
+
+  describe('with named components', function() {
+    it('renders the named components', function(done) {
+      var Parent = React.createClass({
+        render() {
+          return (
+            <div>
+              {this.props.children.sidebar}-{this.props.children.content}
+            </div>
+          );
+        }
+      });
+
+      var Sidebar = React.createClass({
+        render() {
+          return <div>sidebar</div>;
+        }
+      });
+
+      var Content = React.createClass({
+        render() {
+          return <div>content</div>;
+        }
+      });
+
+      React.render((
+        <Router history={createHistory('/')}>
+          <Route component={Parent}>
+            <Route path="/" components={{sidebar: Sidebar, content: Content}} />
+          </Route>
+        </Router>
+      ), node, function () {
+        expect(node.textContent.trim()).toEqual('sidebar-content');
+        done();
+      });
     });
   });
 

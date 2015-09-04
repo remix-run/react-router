@@ -1,5 +1,4 @@
 import React from 'react';
-import { history } from 'react-router/lib/HashHistory';
 import { Router, Route, Link, Redirect } from 'react-router';
 
 var App = React.createClass({
@@ -47,11 +46,11 @@ var Task = React.createClass({
 });
 
 React.render((
-  <Router history={history}>
+  <Router>
     <Route path="/" component={App}>
       <Route path="user/:userID" component={User}>
-        <Route path="tasks/:taskID" component={Task}/>
-        <Redirect from="todos/:taskID" to="task"/>
+        <Route path="tasks/:taskID" component={Task} />
+        <Redirect from="todos/:taskID" to="/user/:userID/tasks/:taskID" />
       </Route>
     </Route>
   </Router>

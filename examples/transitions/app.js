@@ -1,6 +1,5 @@
-import React, { findDOMNode } from 'react';
-import { Router, Route, Link, Navigation, TransitionHook } from 'react-router';
-import { history } from 'react-router/lib/HashHistory';
+import React from 'react';
+import { Router, Route, Link, Navigation, Lifecycle } from 'react-router';
 
 var App = React.createClass({
   render() {
@@ -29,18 +28,33 @@ var Dashboard = React.createClass({
 });
 
 var Form = React.createClass({
-  mixins: [ Navigation, TransitionHook ],
+  mixins: [ Lifecycle, Navigation ],
 
-  routerWillLeave(nextState, transition) {
-    if (findDOMNode(this.refs.userInput).value !== '')
-      if (!confirm('You have unsaved information, are you sure you want to leave this page?'))
-        transition.abort();
+  getInitialState() {
+    return {
+      textValue: 'ohai'
+    };
+  },
+
+  routerWillLeave(nextLocation) {
+    if (this.state.textValue)
+      return 'You have unsaved information, are you sure you want to leave this page?';
+  },
+
+  handleChange(event) {
+    this.setState({
+      textValue: event.target.value
+    });
   },
 
   handleSubmit(event) {
     event.preventDefault();
-    findDOMNode(this.refs.userInput).value = '';
-    this.transitionTo('/');
+
+    this.setState({
+      textValue: ''
+    }, () => {
+      this.transitionTo('/');
+    });
   },
 
   render() {
@@ -48,7 +62,7 @@ var Form = React.createClass({
       <div>
         <form onSubmit={this.handleSubmit}>
           <p>Click the dashboard link with text in the input.</p>
-          <input type="text" ref="userInput" defaultValue="ohai" />
+          <input type="text" ref="userInput" value={this.state.textValue} onChange={this.handleChange} />
           <button type="submit">Go</button>
         </form>
       </div>
@@ -57,10 +71,10 @@ var Form = React.createClass({
 });
 
 React.render((
-  <Router history={history}>
+  <Router>
     <Route path="/" component={App}>
-      <Route path="dashboard" component={Dashboard}/>
-      <Route path="form" component={Form}/>
+      <Route path="dashboard" component={Dashboard} />
+      <Route path="form" component={Form} />
     </Route>
   </Router>
 ), document.getElementById('example'));

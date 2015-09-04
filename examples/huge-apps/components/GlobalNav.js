@@ -60,7 +60,4 @@ styles.activeLink = Object.assign({}, styles.link, {
   color: dark
 });
 
-console.log(styles.link);
-
 export default GlobalNav;
-
