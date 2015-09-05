@@ -6,7 +6,7 @@ var { array, func, object } = React.PropTypes;
 
 /**
  * A <RoutingContext> renders the component tree for a given router state
- * and sets the router object and the current location in context.
+ * and sets the history object and the current location in context.
  */
 var RoutingContext = React.createClass({
 
