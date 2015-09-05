@@ -75,7 +75,7 @@ var Link = React.createClass({
     var { active } = this.state;
     var nextActive = this.getActiveState();
     if (active !== nextActive) {
-        this.setState({ active: nextActive });
+      this.setState({ active: nextActive });
     }
   },
 
