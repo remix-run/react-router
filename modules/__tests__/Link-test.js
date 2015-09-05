@@ -228,6 +228,9 @@ describe('A <Link>', function () {
   describe('when route changes', function() {
     it('changes active state', function(done) {
       var LinkWrapper = React.createClass({
+        shouldComponentUpdate() {
+          return false;
+        },
         render() {
           return (
             <div>
