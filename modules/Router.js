@@ -13,7 +13,7 @@ const { func, object } = React.PropTypes;
  * it needs each time the URL changes.
  */
 const Router = React.createClass({
-  
+
   propTypes: {
     history: object,
     children: routes,
