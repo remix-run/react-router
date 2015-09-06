@@ -7,7 +7,7 @@ var { object } = React.PropTypes;
  * The Lifecycle mixin adds the routerWillLeave lifecycle method
  * to a component that may be used to cancel a transition or prompt
  * the user for confirmation.
- * 
+ *
  * On standard transitions, routerWillLeave receives a single argument: the
  * location we're transitioning to. To cancel the transition, return false.
  * To prompt the user for confirmation, return a prompt message (string).
@@ -44,7 +44,7 @@ var Lifecycle = {
 
     return route;
   },
-  
+
   componentWillMount() {
     invariant(
       this.routerWillLeave,
