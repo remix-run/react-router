@@ -14,5 +14,7 @@
   - [Plain Route](Plain Route.md)
   - [Redirect](Redirect.md)
   - [Link](Link.md)
+  - [Navigation](Navigation.md)
+  - [IsActive](IsActive.md)
 
 - [Server Rendering](ServerRendering.md)

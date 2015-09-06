@@ -3,15 +3,15 @@ import React from 'react';
 var { object } = React.PropTypes;
 
 /**
- * The State mixin provides components with an isActive(pathname, query)
+ * The IsActive mixin provides components with an isActive(pathname, query)
  * method they can use to check if a given pathname/query are active.
  *
  * Example:
  *
- *   import { State } from 'react-router';
+ *   import { IsActive } from 'react-router';
  *
  *   var AboutLink = React.createClass({
- *     mixins: [ State ],
+ *     mixins: [ IsActive ],
  *     render() {
  *       var className = this.props.className;
  *
@@ -22,7 +22,7 @@ var { object } = React.PropTypes;
  *     }
  *   });
  */
-var State = {
+var IsActive = {
 
   contextTypes: {
     history: object.isRequired
@@ -34,4 +34,4 @@ var State = {
 
 };
 
-export default State;
+export default IsActive;
