@@ -7,5 +7,7 @@
 - [Confirming Navigation](ConfirmingNavigation.md)
 - [Glossary](Glossary.md)
 - [Route](Route.md)
+- [Plain Route](Plain Route.md)
+- [Redirect](Redirect.md)
 
 - [Server Rendering](ServerRendering.md)
