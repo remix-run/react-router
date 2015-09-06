@@ -1,28 +1,30 @@
-A route configuration object. `Router` turns JSX `<Route/>`s into
-these objects, but you can use them directly if you prefer. All of the
-props are the same as `<Route/>` props, except those listed here.
+## Plain Route
 
-Props
------
+A plain JavaScript object route definition. `Router` turns JSX
+`<Route/>`s into these objects, but you can use them directly if you
+prefer. All of the props are the same as `<Route/>` props, except
+those listed here.
 
-### `childRoutes`
+### Props
+
+#### `childRoutes`
 
 An array of child routes, same as `children` in JSX route configs.
 
-### `getChildRoutes(state, callback)`
+#### `getChildRoutes(location, callback)`
 
-Same as `childRoutes` but asynchronous and receives the location state.
+Same as `childRoutes` but asynchronous and receives the `location`.
 Useful for code-splitting and dynamic route matching (given some state
 or session data to return a different set of child routes).
 
-#### `callback` signature
+##### `callback` signature
 
 `cb(err, routesArray)`
 
-#### Example
+### Examples
 
 ```js
-var myRoute = {
+let myRoute = {
   path: 'course/:courseId',
   childRoutes: [
     announcementsRoute,
@@ -32,9 +34,9 @@ var myRoute = {
 };
 
 // async child routes
-var myRoute = {
+let myRoute = {
   path: 'course/:courseId',
-  getChildRoutes (state, cb) {
+  getChildRoutes (location, cb) {
     // do asynchronous stuff to find the child routes
     cb(null, [announcementsRoute, gradesRoute, assignmentsRoute]);
   }
@@ -44,10 +46,10 @@ var myRoute = {
 // can link with some state
 <Link to="/picture/123" state={{fromDashboard: true}}/>
 
-var myRoute = {
+let myRoute = {
   path: 'picture/:id',
-  getChildRoutes (state, cb) {
-    // state gets passed to `getChildRoutes`
+  getChildRoutes (location, cb) {
+    let { state } = location
     if (state && state.fromDashboard)
       cb(null, [dashboardPictureRoute])
     else
