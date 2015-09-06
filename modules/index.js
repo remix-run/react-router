@@ -12,7 +12,7 @@ export Lifecycle from './Lifecycle';
 export Navigation from './Navigation';
 export { NavigationDecorator } from './Navigation';
 export RouteContext from './RouteContext';
-export State from './State';
+export IsActive from './IsActiveMixin';
 
 /* utils */
 export useRoutes from './useRoutes';
