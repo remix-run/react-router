@@ -44,7 +44,7 @@ var Redirect = React.createClass({
     }
 
   },
-  
+
   propTypes: {
     path: string,
     from: string, // Alias for path
@@ -61,7 +61,7 @@ var Redirect = React.createClass({
       '<Redirect> elements are for router configuration only and should not be rendered'
     );
   }
-  
+
 });
 
 export default Redirect;
