@@ -1,36 +1,41 @@
+## Link
+
 The primary way to allow users to navigate around your application.
 `Link` will render a fully accesible anchor tag with the proper href.
 
 A `Link` also knows when the route it links to is active and automatically
 applies its `activeClassName` and/or `activeStyle` when it is.
 
-Props
------
+### Props
 
 ### `to`
 
 The path to link to, e.g., `/users/123`.
 
-### `query`
+#### `query`
 
 An object of key:value pairs to be stringified.
 
-### `activeClassName`
+#### `state`
+
+State to persist to the `location`.
+
+#### `activeClassName`
 
 The className a `Link` receives when its route is active. Defaults to `active`.
 
-### `activeStyle`
+#### `activeStyle`
 
 The styles to apply to the link element when its route is active.
 
-### `onClick`
+#### `onClick`
 
 A custom handler for the click event. Works just like a handler on an `<a>`
 tag - calling `e.preventDefault()` or returning `false` will prevent the
 transition from firing, while `e.stopPropagation()` will prevent the event
 from bubbling.
 
-### *others*
+#### *others*
 
 You can also pass props you'd like to be on the `<a>` such as a title, id, className, etc.
 

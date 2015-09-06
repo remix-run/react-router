@@ -13,5 +13,6 @@
   - [Route](Route.md)
   - [Plain Route](Plain Route.md)
   - [Redirect](Redirect.md)
+  - [Link](Link.md)
 
 - [Server Rendering](ServerRendering.md)
