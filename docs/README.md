@@ -16,5 +16,6 @@
   - [Link](Link.md)
   - [Navigation](Navigation.md)
   - [IsActive](IsActive.md)
+  - [Lifecycle](Lifecycle.md)
 
 - [Server Rendering](ServerRendering.md)
