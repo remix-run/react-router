@@ -1,4 +1,4 @@
-## Route Configuration
+# Route Configuration
 
 A [route configuration](Glossary.md#routeconfig) is basically a set of instructions that tell a router how to try to [match the URL](RouteMatching.md) and what code to run when it does. To illustrate some of the features available in your route config, let's expand on the simple app from [the introduction](Introduction.md).
 
@@ -65,7 +65,7 @@ URL                     | Components
 `/inbox`                | `App -> Inbox`
 `/inbox/messages/:id`   | `App -> Inbox -> Message`
 
-### Adding an Index
+## Adding an Index
 
 Imagine we'd like to render another component inside of `App` when the URL is `/`. Currently, `this.props.children` inside of `App`'s `render` method is `undefined` in this case. We can use an `<IndexRoute>` to specify a "default" page.
 
@@ -103,7 +103,7 @@ URL                     | Components
 `/inbox`                | `App -> Inbox`
 `/inbox/messages/:id`   | `App -> Inbox -> Message`
 
-### Decoupling the UI from the URL
+## Decoupling the UI from the URL
 
 It would be nice if we could remove the `/inbox` segment from the `/inbox/messages/:id` URL pattern, but still render `Message` nested inside the `App -> Inbox` UI. Absolute `path`s let us do exactly that.
 
@@ -135,7 +135,7 @@ URL                     | Components
 
 **Note**: Absolute paths may not be used in route config that is [dynamically loaded](DynamicRouting.md).
 
-### Preserving URLs
+## Preserving URLs
 
 Wait a minute ... we just changed a URL! [That's not cool](http://www.w3.org/Provider/Style/URI.html). Now everyone who had a link to `/inbox/messages/5` has a **broken link**. :(
 
@@ -162,7 +162,7 @@ React.render((
 
 Now when someone clicks on that link to `/inbox/messages/5` they'll automatically be redirected to `/messages/5`. :highfive:
 
-### Enter and Leave Hooks
+## Enter and Leave Hooks
 
 [Route](Glossary.md#route)s may also define [`onEnter`](Glossary.md#enterhook) and [`onLeave`](Glossary.md#leavehook) hooks that are invoked once a transition has been [confirmed](ConfirmingNavigation.md). These hooks are useful for various things like [requiring auth](https://github.com/rackt/react-router/tree/master/examples/auth-flow) when a route is entered and saving stuff to persistent storage before a route unmounts.
 
@@ -174,7 +174,7 @@ Continuing with our example above, if a user clicked on a link to `/about` from 
   - `onLeave` on the `/inbox` route
   - `onEnter` on the `/about` route
 
-### Alternate Configuration
+## Alternate Configuration
 
 Since [route](Glossary.md#route)s are usually nested, it's useful to use a concise nested syntax like [JSX](https://facebook.github.io/jsx/) to describe their relationship to one another. However, you may also use an array of plain [route](Glossary.md#route) objects if you prefer to avoid using JSX.
 

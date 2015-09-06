@@ -1,4 +1,4 @@
-## Server Rendering
+# Server Rendering
 
 Server rendering is a bit different than in a client because you'll want
 to:

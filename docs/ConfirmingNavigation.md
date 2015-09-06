@@ -1,4 +1,4 @@
-## Confirming Navigation
+# Confirming Navigation
 
 React Router provides a [`routerWillLeave` lifecycle hook](Glossary.md#routehook) that React [component](Glossary.md#component)s may use to prevent a transition from happening or to prompt the user before leaving a [route](Glossary.md#route). `routerWillLeave` may either 1) `return false` to cancel the transition or 2) `return` a prompt message that will prompt the user for confirmation before leaving the route.
 
@@ -12,7 +12,7 @@ var Home = React.createClass({
   // Assuming Home is a route component, it may use the
   // Lifecycle mixin to get a routerWillLeave method.
   mixins: [ Lifecycle ],
-  
+
   routerWillLeave(nextLocation) {
     if (!this.state.isSaved)
       return 'Your work is not saved! Are you sure you want to leave?';

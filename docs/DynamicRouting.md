@@ -1,4 +1,4 @@
-## Dynamic Routing
+# Dynamic Routing
 
 React Router is great for small sites like [React.js Training](https://reactjs-training.com) ("React Router brought to you by ...") but it's built with websites like [Facebook](https://www.facebook.com/) and [Twitter](https://twitter.com/) in mind, too.
 

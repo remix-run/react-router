@@ -1,8 +1,8 @@
-## Introduction
+# Introduction
 
 To illustrate the problems React Router is going to solve for you, let's build a small application without it.
 
-### Without React Router
+## Without React Router
 
 ```js
 var About = React.createClass({/*...*/});
@@ -92,7 +92,7 @@ path: /inbox
 
 We'd have to make our URL parsing a lot smarter, and we would end up with a lot of code to figure out which branch of nested components to be rendered at any given URL: `App -> About`, `App -> Inbox -> Messages -> Message`, `App -> Inbox -> Messages -> Stats`, etc.
 
-### With React Router
+## With React Router
 
 Let's refactor our app to use React Router.
 
@@ -150,7 +150,7 @@ var routes = {
 React.render(<Router routes={routes} />, document.body);
 ```
 
-### Adding More UI
+## Adding More UI
 
 Alright, now we're ready to nest the inbox messages inside the inbox UI.
 
@@ -189,7 +189,7 @@ React.render((
 
 Now visits to URLs like `inbox/messages/Jkei3c32` will match the new route and nest the UI branch of `App -> Inbox -> Message`.
 
-### Getting URL Parameters
+## Getting URL Parameters
 
 We're going to need to know something about the message in order to fetch it from the server. Route components get some useful properties injected into them when you render, particularly the parameters from the dynamic segment of your path. In our case, `:id`.
 

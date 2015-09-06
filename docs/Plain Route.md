@@ -1,27 +1,27 @@
-## Plain Route
+# Plain Route
 
 A plain JavaScript object route definition. `Router` turns JSX
 `<Route/>`s into these objects, but you can use them directly if you
 prefer. All of the props are the same as `<Route/>` props, except
 those listed here.
 
-### Props
+## Props
 
-#### `childRoutes`
+### `childRoutes`
 
 An array of child routes, same as `children` in JSX route configs.
 
-#### `getChildRoutes(location, callback)`
+### `getChildRoutes(location, callback)`
 
 Same as `childRoutes` but asynchronous and receives the `location`.
 Useful for code-splitting and dynamic route matching (given some state
 or session data to return a different set of child routes).
 
-##### `callback` signature
+#### `callback` signature
 
 `cb(err, routesArray)`
 
-### Examples
+## Examples
 
 ```js
 let myRoute = {
