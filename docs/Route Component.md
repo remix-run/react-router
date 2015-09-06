@@ -1,4 +1,4 @@
-## Route Components
+## Route Component
 
 A route's component is rendered when that route matches the URL. The router will inject the following properties into your component when it's rendered:
 
@@ -38,7 +38,7 @@ React.render((
   </Router>
 ), node);
 
-var App = React.createClass({
+let App = React.createClass({
   render() {
     return (
       <div>
@@ -50,15 +50,15 @@ var App = React.createClass({
 });
 ```
 
-### Named Child Components
+### Named Components
 
-When a route has multiple components, the child elements are available by name on `this.props`. All route components can participate in the nesting.
+When a route has multiple components, the child elements are available by name on `this.props.children`. All route components can participate in the nesting.
 
 #### Example
 
 ```js
 React.render((
-  <Router history={HashHistory}>
+  <Router>
     <Route path="/" component={App}>
       <Route path="groups" components={{main: Groups, sidebar: GroupsSidebar}} />
       <Route path="users" components={{main: Users, sidebar: UsersSidebar}}>
@@ -75,11 +75,11 @@ var App = React.createClass({
       <div>
         <div className="Main">
           {/* this will either be <Groups> or <Users> */}
-          {this.props.main}
+          {this.props.children.main}
         </div>
         <div className="Sidebar">
           {/* this will either be <GroupsSidebar> or <UsersSidebar> */}
-          {this.props.sidebar}
+          {this.props.children.sidebar}
         </div>
       </div>
     );
