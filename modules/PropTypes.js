@@ -34,5 +34,4 @@ export default {
   component,
   components,
   route,
-  router
 };
