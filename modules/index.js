@@ -11,7 +11,7 @@ export Route from './Route';
 export Lifecycle from './Lifecycle';
 export Navigation from './Navigation';
 export RouteContext from './RouteContext';
-export State from './State';
+export IsActive from './IsActiveMixin';
 
 /* utils */
 export useRoutes from './useRoutes';
