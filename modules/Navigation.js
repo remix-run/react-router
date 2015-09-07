@@ -56,6 +56,6 @@ RouterNavigationMethods.forEach(function (method) {
 });
 
 
-export const NavigationDecorator = createDecorator(Navigation); 
+export const NavigationDecorator = createDecorator(Navigation);
 
 export default Navigation;
