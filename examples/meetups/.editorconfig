@@ -1,0 +1,13 @@
+# EditorConfig is awesome: http://EditorConfig.org
+
+root = true
+
+# Unix-style newlines with a newline ending every file
+[*]
+end_of_line = lf
+insert_final_newline = true
+
+# 2 space indentation
+[**.*]
+indent_style = space
+indent_size = 2
