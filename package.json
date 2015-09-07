@@ -50,7 +50,6 @@
     "mocha": "^2.0.1",
     "pygmentize-bundled": "^2.3.0",
     "react": "0.13.x",
-    "react-modal": "0.3.0",
     "rf-changelog": "^0.4.0",
     "rx": "2.3.18",
     "slash": "^1.0.0",

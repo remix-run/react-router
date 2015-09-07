@@ -1,15 +1,33 @@
 import React from 'react';
 import { Router, Route, IndexRoute, Link } from 'react-router';
-import Modal from 'react-modal'
-
-Modal.setAppElement(document.getElementById('example'))
-Modal.injectCSS()
 
 var PICTURES = [
   { id: 0, src: 'http://placekitten.com/601/601' },
   { id: 1, src: 'http://placekitten.com/610/610' },
   { id: 2, src: 'http://placekitten.com/620/620' }
 ];
+
+var Modal = React.createClass({
+  styles: {
+    position: 'fixed',
+    top: 30,
+    right: 30,
+    bottom: 30,
+    left: 30,
+    padding: 20,
+    boxShadow: '0px 0px 50px 30px rgba(0, 0, 0, 0.5)',
+    overflow: 'auto',
+    background: '#fff'
+  },
+
+  render () {
+    return (
+      <div style={this.styles}>
+        {this.props.children}
+      </div>
+    )
+  }
+})
 
 var App = React.createClass({
 
