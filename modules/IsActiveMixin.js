@@ -34,4 +34,6 @@ var IsActive = {
 
 };
 
+export const IsActiveDecorator = createDecorator(IsActive);
+
 export default IsActive;
