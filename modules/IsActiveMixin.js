@@ -1,4 +1,5 @@
 import React from 'react';
+import createDecorator from './DecoratorUtils';
 
 var { object } = React.PropTypes;
 
