@@ -10,12 +10,12 @@ var PICTURES = [
 var Modal = React.createClass({
   styles: {
     position: 'fixed',
-    top: 30,
-    right: 30,
-    bottom: 30,
-    left: 30,
+    top: '20%',
+    right: '20%',
+    bottom: '20%',
+    left: '20%',
     padding: 20,
-    boxShadow: '0px 0px 50px 30px rgba(0, 0, 0, 0.5)',
+    boxShadow: '0px 0px 150px 130px rgba(0, 0, 0, 0.5)',
     overflow: 'auto',
     background: '#fff'
   },
@@ -23,6 +23,7 @@ var Modal = React.createClass({
   render () {
     return (
       <div style={this.styles}>
+        <p><Link to={this.props.returnTo}>Back</Link></p>
         {this.props.children}
       </div>
     )
@@ -63,7 +64,7 @@ var App = React.createClass({
           }
 
           {isModal && (
-            <Modal isOpen={true}>
+            <Modal isOpen={true} returnTo={location.state.returnTo}>
               {this.props.children}
             </Modal>
           )}
@@ -91,7 +92,7 @@ var Index = React.createClass({
 
         <div>
           {PICTURES.map(picture => (
-            <Link key={picture.id} to={`/pictures/${picture.id}`} state={{ modal: true }}>
+            <Link key={picture.id} to={`/pictures/${picture.id}`} state={{ modal: true, returnTo: this.props.location.pathname }}>
               <img style={{ margin: 10 }} src={picture.src} height="100" />
             </Link>
           ))}
@@ -111,7 +112,7 @@ var Deep = React.createClass({
         <p>You can link from anywhere really deep too</p>
         <p>Params stick around: {this.props.params.one} {this.props.params.two}</p>
         <p>
-          <Link to={`/pictures/0`} state={{ modal: true }}>
+          <Link to={`/pictures/0`} state={{ modal: true, returnTo: this.props.location.pathname}}>
             Link to picture with Modal
           </Link><br/>
           <Link to={`/pictures/0`}>
@@ -127,10 +128,7 @@ var Picture = React.createClass({
   render() {
     return (
       <div>
-        <Link to="/">Home</Link>
-        <p>
-          <img src={PICTURES[this.props.params.id].src} />
-        </p>
+        <img src={PICTURES[this.props.params.id].src} style={{ height: '80%' }} />
       </div>
     );
   }
