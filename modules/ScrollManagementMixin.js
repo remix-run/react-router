@@ -66,4 +66,6 @@ var ScrollManagementMixin = {
 
 };
 
+export const ScrollManagementDecorator = createDecorator(ScrollManagementMixin);
+
 export default ScrollManagementMixin;
