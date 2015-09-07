@@ -66,4 +66,6 @@ var Lifecycle = {
 
 };
 
+export const LifecycleDecorator = createDecorator(Lifecycle);
+
 export default Lifecycle;
