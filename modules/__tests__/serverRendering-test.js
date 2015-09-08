@@ -19,7 +19,7 @@ describe('server rendering', function () {
     });
 
     DashboardRoute = {
-      path: '/',
+      path: '/dashboard',
       component: Dashboard
     };
 
@@ -27,10 +27,10 @@ describe('server rendering', function () {
       DashboardRoute
     ];
   });
- 
+
   it('works', function (done) {
     var history = useRoutes(createHistory)({ routes });
-    var location = createLocation('/');
+    var location = createLocation('/dashboard');
 
     history.match(location, function (error, state) {
       var string = React.renderToString(
@@ -38,6 +38,7 @@ describe('server rendering', function () {
       );
 
       expect(string).toMatch(/The Dashboard/);
+      expect(history.isActive('/dashboard')).toBe(true);
 
       done();
     });
