@@ -70,5 +70,5 @@ Examples
 --------
 
 Please see the `examples/` directory of the repository for extensive
-exampls of using `Router`.
+examples of using `Router`.
 
