@@ -45,6 +45,22 @@ describe('formatPattern', function () {
       });
     });
 
+    describe('and a param group is optional', function () {
+      var pattern = '/comments(/edit/:id)(/mode/:modeType)';
+
+      it('returns the correct path when all params are supplied', function () {
+        expect(formatPattern(pattern, {id:'123', modeType: 'foo' })).toEqual('/comments/edit/123/mode/foo');
+      });
+
+      it('returns the correct path when param is not supplied', function () {
+        expect(formatPattern(pattern, {})).toEqual('/comments');
+      });
+
+      it('returns the correct path when one param is not supplied', function () {
+        expect(formatPattern(pattern, { modeType: 'foo' })).toEqual('/comments/mode/foo');
+      });
+    });
+
     describe('and all params are present', function () {
       it('returns the correct path', function () {
         expect(formatPattern(pattern, { id: 'abc' })).toEqual('/comments/abc/edit');
