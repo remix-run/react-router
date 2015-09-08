@@ -1,7 +1,7 @@
 # Link
 
 The primary way to allow users to navigate around your application.
-`Link` will render a fully accesible anchor tag with the proper href.
+`Link` will render a fully accessible anchor tag with the proper href.
 
 A `Link` also knows when the route it links to is active and automatically
 applies its `activeClassName` and/or `activeStyle` when it is.
