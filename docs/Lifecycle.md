@@ -2,7 +2,7 @@
 
 Adds a hook to your component instance that is called when the router is
 about to navigate away from the route the component is configured on,
-with the opportunity to cancel the transition. Mosty useful for forms
+with the opportunity to cancel the transition. Mostly useful for forms
 that are partially filled out.
 
 Lifecycle Methods

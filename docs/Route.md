@@ -105,7 +105,7 @@ code-splitting.
 #### Example
 
 ```js
-<Route path="coures/:courseId" getComponent={(cb) => {
+<Route path="courses/:courseId" getComponent={(cb) => {
   // do asynchronous stuff to find the components
   cb(null, Course);
 }}/>
@@ -123,7 +123,7 @@ code-splitting.
 #### Example
 
 ```js
-<Route path="coures/:courseId" getComponent={(cb) => {
+<Route path="courses/:courseId" getComponent={(cb) => {
   // do asynchronous stuff to find the components
   cb(null, {sidebar: CourseSidebar, content: Course});
 }}/>
