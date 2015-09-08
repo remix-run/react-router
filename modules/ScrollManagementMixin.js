@@ -1,6 +1,7 @@
 import React from 'react';
 import { Actions } from 'history';
 import { canUseDOM, setWindowScrollPosition } from './DOMUtils';
+import createDecorator from './DecoratorUtils';
 
 var { func } = React.PropTypes;
 
@@ -65,5 +66,7 @@ var ScrollManagementMixin = {
   }
 
 };
+
+export const ScrollManagementDecorator = createDecorator(ScrollManagementMixin);
 
 export default ScrollManagementMixin;
