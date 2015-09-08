@@ -1,160 +1,146 @@
 import React from 'react';
-import createHistory from 'history/lib/createHashHistory';
-import { Router, Link } from 'react-router';
+import { Router, Route, IndexRoute, Link } from 'react-router';
 
-var pictures = [
+var PICTURES = [
   { id: 0, src: 'http://placekitten.com/601/601' },
   { id: 1, src: 'http://placekitten.com/610/610' },
   { id: 2, src: 'http://placekitten.com/620/620' }
 ];
 
-var App = React.createClass({
-  render() {
-    return (
-      <div>
-        <h1>Pinterest Style Routes</h1>
-        <p>
-          The url `/pictures/:id` can potentially match two routes,
-          it all depends on if the url was navigated to from the feed or
-          not.
-        </p>
-        <p>
-          Click on an item in the feed, and see that it opens in an overlay.
-          Then copy/paste it into a different browser window (Like Chrome -> Firefox),
-          and see that the image does not render inside the overlay. One URL, two
-          session dependent routes and UI :D
-        </p>
-
-        {this.props.children}
-      </div>
-    );
-  }
-});
-
-var Feed = React.createClass({
-  overlayStyles: {
+var Modal = React.createClass({
+  styles: {
     position: 'fixed',
-    top: 30,
-    right: 30,
-    bottom: 30,
-    left: 30,
+    top: '20%',
+    right: '20%',
+    bottom: '20%',
+    left: '20%',
     padding: 20,
-    boxShadow: '0px 0px 50px 30px rgba(0, 0, 0, 0.5)',
+    boxShadow: '0px 0px 150px 130px rgba(0, 0, 0, 0.5)',
     overflow: 'auto',
     background: '#fff'
   },
 
+  render () {
+    return (
+      <div style={this.styles}>
+        <p><Link to={this.props.returnTo}>Back</Link></p>
+        {this.props.children}
+      </div>
+    )
+  }
+})
+
+var App = React.createClass({
+
+  componentWillReceiveProps (nextProps) {
+    // if we changed routes...
+    if ((
+      nextProps.location.key !== this.props.location.key &&
+      nextProps.location.state &&
+      nextProps.location.state.modal
+    )) {
+      // save the old children (just like animation)
+      this.previousChildren = this.props.children
+    }
+  },
+
   render() {
+    var { location } = this.props
+
+    var isModal = (
+      location.state &&
+      location.state.modal &&
+      this.previousChildren
+    )
+
     return (
       <div>
+        <h1>Pinterest Style Routes</h1>
+
         <div>
-          {pictures.map(picture => (
-            <Link key={picture.id} to={`/pictures/${picture.id}`} state={{ fromFeed: true }}>
-              <img style={{ margin: 10 }} src={picture.src} height="100" />
-            </Link>
-          ))}
+          {isModal ?
+            this.previousChildren :
+            this.props.children
+          }
+
+          {isModal && (
+            <Modal isOpen={true} returnTo={location.state.returnTo}>
+              {this.props.children}
+            </Modal>
+          )}
         </div>
-        {this.props.children && (
-          <div style={this.overlayStyles}>
-            {this.props.children}
-          </div>
-        )}
       </div>
     );
   }
 });
 
-var FeedPicture = React.createClass({
-  render() {
+var Index = React.createClass({
+  render () {
     return (
       <div>
-        <h2>Inside the feed</h2>
-        <Link to="/">back</Link>
         <p>
-          <img src={pictures[this.props.params.id].src} height="400" />
+          The url `/pictures/:id` can be rendered anywhere in the app as a modal.
+          Simply put `modal: true` in the `state` prop of links.
+        </p>
+
+        <p>
+          Click on an item and see its rendered as a modal, then copy/paste the
+          url into a different browser window (with a different session, like
+          Chrome -> Firefox), and see that the image does not render inside the
+          overlay. One URL, two session dependent screens :D
+        </p>
+
+        <div>
+          {PICTURES.map(picture => (
+            <Link key={picture.id} to={`/pictures/${picture.id}`} state={{ modal: true, returnTo: this.props.location.pathname }}>
+              <img style={{ margin: 10 }} src={picture.src} height="100" />
+            </Link>
+          ))}
+        </div>
+
+        <p><Link to="/some/123/deep/456/route">Go to some deep route</Link></p>
+
+      </div>
+    )
+  }
+})
+
+var Deep = React.createClass({
+  render () {
+    return (
+      <div>
+        <p>You can link from anywhere really deep too</p>
+        <p>Params stick around: {this.props.params.one} {this.props.params.two}</p>
+        <p>
+          <Link to={`/pictures/0`} state={{ modal: true, returnTo: this.props.location.pathname}}>
+            Link to picture with Modal
+          </Link><br/>
+          <Link to={`/pictures/0`}>
+            Without modal
+          </Link>
         </p>
       </div>
-    );
+    )
   }
-});
+})
 
 var Picture = React.createClass({
   render() {
     return (
       <div>
-        <h2>Not Inside the feed</h2>
-        <Link to="/">Feed</Link>
-        <p>
-          <img src={pictures[this.props.params.id].src} />
-        </p>
+        <img src={PICTURES[this.props.params.id].src} style={{ height: '80%' }} />
       </div>
     );
   }
 });
 
-var FeedPictureRoute = {
-  path: '/pictures/:id',
-  component: FeedPicture
-};
+React.render((
+  <Router>
+    <Route path="/" component={App}>
+      <IndexRoute component={Index}/>
+      <Route path="/pictures/:id" component={Picture}/>
+      <Route path="/some/:one/deep/:two/route" component={Deep}/>
+    </Route>
+  </Router>
+), document.getElementById('example'))
 
-var FeedRoute = {
-  component: Feed,
-  childRoutes: [ FeedPictureRoute ]
-};
-
-var PictureRoute = {
-  path: '/pictures/:id',
-  component: Picture
-};
-
-var RootRoute = {
-  path: '/',
-  component: App,
-  indexRoute: FeedRoute,
-
-  getChildRoutes (location, cb) {
-    var { state } = location;
-
-    if (state && state.fromFeed) {
-      cb(null, [ FeedRoute ]);
-    } else {
-      cb(null, [ PictureRoute ]);
-    }
-  }
-};
-
-var history = createHistory();
-
-React.render(
-  <Router history={history} children={RootRoute} />,
-  document.getElementById('example')
-);
-
-// Wait a sec ... what's happening?
-//
-//  1. When you visit "/" `RootRoute.indexRoute` is matched,
-//     which is `FeedRoute`, and that renders `Feed`.
-//
-//  2. Then, when you click a link on the feed, it sets some location `state`,
-//     particularly, `fromFeed`.
-//
-//  3. The router calls `RootRoute.getChildRoutes` while matching, which
-//     branches on `transitionState.fromFeed` and calls back with only
-//     `FeedRoute` as a child, so `PictureRoute` has no chance of ever matching.
-//
-//  4. `FeedRoute` has no path, so the router will dig down into its children
-//     to try to find a match, and finds `FeedPictureRoute` as a match.
-//
-//  5. The components `App -> Feed -> FeedPicture` all render.
-//
-//  6. Hit refresh in the browser.
-//
-//  7. The url is not `/` so `RootRoute.indexRoute` does not get matched.
-//
-//  8. Since there is no `transitionState`, `RootRoute.getChildRoutes` branches
-//     the other way, and callsback with `PictureRoute` as a child, which matches
-//     the url.
-//
-//  9. `App -> PictureRoute` renders
-//
-// 10. I am very glad there aren't ten steps to explain this ...

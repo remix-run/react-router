@@ -3,15 +3,19 @@ export Router from './Router';
 export Link from './Link';
 
 /* components (configuration) */
+export IndexRoute from './IndexRoute';
 export Redirect from './Redirect';
 export Route from './Route';
 
 /* mixins */
+export Lifecycle from './Lifecycle';
 export Navigation from './Navigation';
-export State from './State';
+export RouteContext from './RouteContext';
+export IsActive from './IsActiveMixin';
 
 /* utils */
-export { createRoutesFromReactChildren } from './RouteUtils';
+export useRoutes from './useRoutes';
+export { createRoutes } from './RouteUtils';
 export PropTypes from './PropTypes';
 
 export default from './Router';

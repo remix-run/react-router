@@ -49,22 +49,19 @@ function queryIsActive(query, activeQuery) {
   return true;
 }
 
-var ActiveMixin = {
+/**
+ * Returns true if a <Link> to the given pathname/query combination is
+ * currently active.
+ */
+function isActive(pathname, query, indexOnly, location, routes, params) {
+  if (location == null)
+    return false;
 
-  /**
-   * Returns true if a <Link> to the given pathname/query combination is
-   * currently active.
-   */
-  isActive(pathname, query) {
-    var { location, routes, params } = this.state;
+  if (indexOnly && (routes.length < 2 || routes[routes.length - 2].indexRoute !== routes[routes.length - 1]))
+    return false;
 
-    if (location == null)
-      return false;
+  return pathnameIsActive(pathname, location.pathname, routes, params) &&
+    queryIsActive(query, location.query);
+}
 
-    return pathnameIsActive(pathname, location.pathname, routes, params) &&
-      queryIsActive(query, location.query);
-  }
-
-};
-
-export default ActiveMixin;
+export default isActive;

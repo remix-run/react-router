@@ -1,5 +1,4 @@
 import React from 'react';
-import createHistory from 'history/lib/createHashHistory';
 import { Router } from 'react-router';
 import stubbedCourses from './stubs/COURSES';
 
@@ -14,12 +13,11 @@ var rootRoute = {
       require('./routes/Grades'),
       require('./routes/Messages'),
       require('./routes/Profile'),
-    ]}
-  ]
+    ]
+  }]
 };
 
-var history = createHistory();
-
-React.render((
-  <Router history={history} routes={rootRoute} />
-), document.getElementById('example'));
+React.render(
+  <Router routes={rootRoute} />,
+  document.getElementById('example')
+);

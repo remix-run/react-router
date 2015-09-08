@@ -1,12 +1,11 @@
 import expect from 'expect';
 import React from 'react';
-import createHistory from 'history/lib/createHashHistory';
 import resetHash from './resetHash';
 import execSteps from './execSteps';
 import Router from '../Router';
 import Route from '../Route';
 
-describe('transitionTo', function () {
+describe('pushState', function () {
   beforeEach(resetHash);
 
   var node;
@@ -35,7 +34,7 @@ describe('transitionTo', function () {
       var steps = [
         function () {
           expect(this.state.location.pathname).toEqual('/');
-          this.transitionTo('/home/hi:there');
+          this.history.pushState(null, '/home/hi:there');
         },
         function () {
           expect(this.state.location.pathname).toEqual('/home/hi:there');
@@ -43,10 +42,9 @@ describe('transitionTo', function () {
       ];
 
       var execNextStep = execSteps(steps, done);
-      var history = createHistory();
 
       React.render((
-        <Router history={history} onUpdate={execNextStep}>
+        <Router onUpdate={execNextStep}>
           <Route path="/" component={Index}/>
           <Route path="/home/hi:there" component={Home}/>
         </Router>

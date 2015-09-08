@@ -3,7 +3,8 @@ import { Link } from 'react-router';
 
 class Dashboard extends React.Component {
   render () {
-    var { courses } = this.props;
+    let { courses } = this.props;
+
     return (
       <div>
         <h2>Super Scalable Apps</h2>
@@ -16,7 +17,8 @@ class Dashboard extends React.Component {
           initial bundle of your application.
         </p>
 
-        <h2>Courses</h2> <ul>
+        <h2>Courses</h2>{' '}
+        <ul>
           {courses.map(course => (
             <li key={course.id}>
               <Link to={`/course/${course.id}`}>{course.name}</Link>
@@ -29,4 +31,3 @@ class Dashboard extends React.Component {
 }
 
 export default Dashboard;
-

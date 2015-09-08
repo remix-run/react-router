@@ -12,8 +12,7 @@ export function loopAsync(turns, work, callback) {
       return;
 
     if (currentTurn < turns) {
-      currentTurn += 1;
-      work.call(this, currentTurn - 1, next, done);
+      work.call(this, currentTurn++, next, done);
     } else {
       done.apply(this, arguments);
     }
@@ -53,24 +52,5 @@ export function mapAsync(array, work, callback) {
     work(item, index, function (error, value) {
       done(index, error, value);
     });
-  });
-}
-
-export function hashAsync(object, work, callback) {
-  var keys = Object.keys(object);
-
-  mapAsync(keys, function (key, index, callback) {
-    work(object[key], callback);
-  }, function (error, valuesArray) {
-    if (error) {
-      callback(error);
-    } else {
-      var values = valuesArray.reduce(function (memo, results, index) {
-        memo[keys[index]] = results;
-        return memo;
-      }, {});
-
-      callback(null, values);
-    }
   });
 }

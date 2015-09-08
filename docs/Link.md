@@ -1,11 +1,12 @@
+# Link
+
 The primary way to allow users to navigate around your application.
 `Link` will render a fully accessible anchor tag with the proper href.
 
 A `Link` also knows when the route it links to is active and automatically
 applies its `activeClassName` and/or `activeStyle` when it is.
 
-Props
------
+## Props
 
 ### `to`
 
@@ -14,6 +15,10 @@ The path to link to, e.g., `/users/123`.
 ### `query`
 
 An object of key:value pairs to be stringified.
+
+### `state`
+
+State to persist to the `location`.
 
 ### `activeClassName`
 

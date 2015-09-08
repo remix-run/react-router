@@ -1,5 +1,4 @@
 import React from 'react';
-import createHistory from 'history/lib/createHashHistory';
 import { Router, Route, Link } from 'react-router';
 import data from './data';
 
@@ -82,23 +81,23 @@ var IndexSidebar = React.createClass({
 
 var App = React.createClass({
   render() {
+    var { children } = this.props;
+
     return (
       <div>
         <div className="Sidebar">
-          {this.props.sidebar || <IndexSidebar />}
+          {children ? children.sidebar : <IndexSidebar />}
         </div>
         <div className="Content">
-          {this.props.content || <Index />}
+          {children ? children.content : <Index />}
         </div>
       </div>
     );
   }
 });
 
-var history = createHistory();
-
 React.render((
-  <Router history={history}>
+  <Router>
     <Route path="/" component={App}>
       <Route path="category/:category" components={{content: Category, sidebar: CategorySidebar}}>
         <Route path=":item" component={Item} />

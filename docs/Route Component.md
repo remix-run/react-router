@@ -1,32 +1,32 @@
-## Route Components
+# Route Component
 
 A route's component is rendered when that route matches the URL. The router will inject the following properties into your component when it's rendered:
 
-#### `isTransitioning`
+### `isTransitioning`
 
 A boolean value that is `true` when the router is transitioning, `false` otherwise.
 
-#### `location`
+### `location`
 
 The current [location](http://rackt.github.io/history/docs/Location.html).
 
-#### `params`
+### `params`
 
 The dynamic segments of the URL.
 
-#### `route`
+### `route`
 
 The route that rendered this component.
 
-#### `routeParams`
+### `routeParams`
 
 A subset of `this.props.params` that were directly specified in this component's route. For example, if the route's path is `users/:userId` and the URL is `/users/123/portfolios/345` then `this.props.routeParams` will be `{userId: '123'}`, and `this.props.params` will be `{userId: '123', portfolioId: 345}`.
 
-#### `children`
+### `children`
 
 The matched child route elements to be rendered.
 
-#### Example
+### Example
 
 ```js
 React.render((
@@ -38,7 +38,7 @@ React.render((
   </Router>
 ), node);
 
-var App = React.createClass({
+let App = React.createClass({
   render() {
     return (
       <div>
@@ -50,15 +50,15 @@ var App = React.createClass({
 });
 ```
 
-### Named Child Components
+## Named Components
 
-When a route has multiple components, the child elements are available by name on `this.props`. All route components can participate in the nesting.
+When a route has multiple components, the child elements are available by name on `this.props.children`. All route components can participate in the nesting.
 
-#### Example
+### Example
 
 ```js
 React.render((
-  <Router history={HashHistory}>
+  <Router>
     <Route path="/" component={App}>
       <Route path="groups" components={{main: Groups, sidebar: GroupsSidebar}} />
       <Route path="users" components={{main: Users, sidebar: UsersSidebar}}>
@@ -75,11 +75,11 @@ var App = React.createClass({
       <div>
         <div className="Main">
           {/* this will either be <Groups> or <Users> */}
-          {this.props.main}
+          {this.props.children.main}
         </div>
         <div className="Sidebar">
           {/* this will either be <GroupsSidebar> or <UsersSidebar> */}
-          {this.props.sidebar}
+          {this.props.children.sidebar}
         </div>
       </div>
     );

@@ -1,10 +1,10 @@
+import React from 'react';
 import invariant from 'invariant';
-import { createClass, PropTypes } from 'react';
 import { createRouteFromReactElement } from './RouteUtils';
 import { formatPattern } from './PatternUtils';
 import { falsy } from './PropTypes';
 
-var { string, object } = PropTypes;
+var { string, object } = React.PropTypes;
 
 /**
  * A <Redirect> is used to declare another URL path a client should be sent
@@ -13,7 +13,7 @@ var { string, object } = PropTypes;
  * Redirects are placed alongside routes in the route configuration and are
  * traversed in the same manner.
  */
-var Redirect = createClass({
+var Redirect = React.createClass({
 
   statics: {
 
@@ -23,10 +23,14 @@ var Redirect = createClass({
       if (route.from)
         route.path = route.from;
 
+      // TODO: Handle relative pathnames, see #1658
+      invariant(
+        route.to.charAt(0) === '/',
+        '<Redirect to> must be an absolute path. This should be fixed in the future'
+      );
+
       route.onEnter = function (nextState, redirectTo) {
         var { location, params } = nextState;
-
-        // TODO: Handle relative pathnames.
         var pathname = route.to ? formatPattern(route.to, params) : location.pathname;
 
         redirectTo(
@@ -40,7 +44,7 @@ var Redirect = createClass({
     }
 
   },
-  
+
   propTypes: {
     path: string,
     from: string, // Alias for path
@@ -57,7 +61,7 @@ var Redirect = createClass({
       '<Redirect> elements are for router configuration only and should not be rendered'
     );
   }
-  
+
 });
 
 export default Redirect;

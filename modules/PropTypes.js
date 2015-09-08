@@ -22,7 +22,16 @@ export var location = shape({
   key: string
 });
 
-export var component = func;
+export var component = oneOfType([ func, string ]);
 export var components = oneOfType([ component, object ]);
 export var route = oneOfType([ object, element ]);
 export var routes = oneOfType([ route, arrayOf(route) ]);
+
+export default {
+  falsy,
+  history,
+  location,
+  component,
+  components,
+  route,
+};

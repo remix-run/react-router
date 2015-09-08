@@ -1,29 +1,25 @@
+# Route
+
 A `Route` is used to declaratively map routes to your application's
 component hierarchy.
 
-Props
------
+## Props
 
 ### `path`
 
 The path used in the URL.
 
-It will concat with the parent route's path unless it starts with `/`.
-In which case you will need to use `absoluteChildPaths` on the parent
-route so the router knows to keep going down the route tree even though
-the parent path doesn't match the url.
+It will concat with the parent route's path unless it starts with `/`,
+making it an absolute path.
+
+**Note**: Absolute paths may not be used in route config that is [dynamically loaded](DynamicRouting.md).
 
 If left undefined, the router will try to match the child routes.
-
-Please refer to the [Path Matching Guide][path-matching] to learn more
-about supported path matching syntax.
 
 ### `component`
 
 A single component to be rendered when the route matches the url. It can
 be rendered by the parent route component with `this.props.children`.
-
-#### Example
 
 ```js
 var routes = (
@@ -47,17 +43,16 @@ var App = React.createClass({
 
 ### `components`
 
-Routes can define multiple components as an object of name:component
+Routes can define multiple components as an object of `name:component`
 pairs to be rendered when the path matches the url. They can be rendered
-by the parent route component with `this.props[name]`.
+by the parent route component with `this.props.children[name]`.
 
 #### Example
 
 ```js
 // think of it outside the context of the router, if you had pluggable
 // portions of your `render`, you might do it like this
-<App main={<Users/>} sidebar={<UsersSidebar/>}/>
-<App main={<Groups/>} sidebar={<GroupsSidebar/>}/>
+<App children={{main: <Users/>, sidebar: <UsersSidebar/>}}/>
 
 // So with the router it looks like this:
 var routes = (
@@ -71,14 +66,14 @@ var routes = (
 
 var App = React.createClass({
   render () {
-    // the matched child route components become props in the parent
+    var { main, sidebar } = this.props.children;
     return (
       <div>
         <div className="Main">
-          {this.props.main}
+          {main}
         </div>
         <div className="Sidebar">
-          {this.props.sidebar}
+          {sidebar}
         </div>
       </div>
     );
@@ -96,13 +91,12 @@ var Users = React.createClass({
     );
   }
 });
-
 ```
 
-### `getComponents(state, cb)`
+### `getComponent(callback)`
 
-Same as `components` but asynchronous, useful for code-splitting and
-returning different routes given some transition `state`.
+Same as `component` but asynchronous, useful for
+code-splitting.
 
 #### `callback` signature
 
@@ -111,33 +105,39 @@ returning different routes given some transition `state`.
 #### Example
 
 ```js
-<Route path="courses/:courseId" getComponents={(cb) => {
+<Route path="courses/:courseId" getComponent={(cb) => {
   // do asynchronous stuff to find the components
-  cb(null, [Course]);
+  cb(null, Course);
+}}/>
+```
+
+### `getComponents(callback)`
+
+Same as `components` but asynchronous, useful for
+code-splitting.
+
+#### `callback` signature
+
+`cb(err, components)`
+
+#### Example
+
+```js
+<Route path="coures/:courseId" getComponent={(cb) => {
+  // do asynchronous stuff to find the components
+  cb(null, {sidebar: CourseSidebar, content: Course});
 }}/>
 ```
 
 ### `children`
 
-Routes can be nested, `this.props.children` will contain the element
-created from the child route component. Please refer to the
-[overview][overview] since this is a very critical part of the router's
-design.
+Routes can be nested, `this.props.children` will contain the element created from the child route component. Please refer to the [Route Configuration][RouteConfiguration.md] since this is a very critical part of the router's design.
 
-### `onEnter(nextState, transition)`
+### `onEnter(nextState, redirectTo)`
 
-Called when a route is about to be entered. It provides the next router
-state and the [transition][Transition] instance for cancelling/redirecting.
+Called when a route is about to be entered. It provides the next router state and a function to redirect to another path.
 
-### `onLeave(nextState, transition)`
+### `onLeave()`
 
-Called when a route is about to be exited. It provides the next router
-state and the [transition][Transition] instance for cancelling/redirecting.
-
-  [overview]:#TODO
-  [path-matching]:#TODO
-  [ignoreScrollBehavior]:#TODO
-  [instragram-example]:#TODO
-  [history]:#TODO
-  [Transition]:#TODO
+Called when a route is about to be exited.
 

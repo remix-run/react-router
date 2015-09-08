@@ -102,6 +102,16 @@ describe('getParams', function () {
         expect(getParams(pattern, '/users/123')).toBe(null);
       });
     });
+
+    describe('and the path contains multiple special URL encoded characters', function () {
+        var pattern = '/foo/:component';
+
+        describe('and the path matches', function () {
+            it('returns the correctly decoded characters', function () {
+                expect(getParams(pattern, '/foo/%7Bfoo%24bar')).toEqual({ component: '{foo$bar' });
+            });
+        });
+    });
   });
 
   describe('when a pattern has a *', function () {
