@@ -61,7 +61,17 @@ If you just want to drop a `<script>` tag in your page and be done with it, you 
 ```js
 import { Router, Route } from 'react-router';
 
-var App = React.createClass({/*...*/});
+var App = React.createClass({
+  render() {
+    return (
+      <div>
+        <h1>Site Title</h1>
+        {this.props.children}
+      </div>
+    );
+  }
+});
+
 var About = React.createClass({/*...*/});
 // etc.
 
