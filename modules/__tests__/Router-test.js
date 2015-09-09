@@ -141,4 +141,21 @@ describe('Router', function () {
     });
   });
 
+  describe('at a route with special characters', function () {
+    it.only('does not double escape', function(done) {
+      let MyComponent = React.createClass({
+        render () { return <div>{this.props.params.some_token}</div> }
+      })
+
+      React.render((
+        <Router history={createHistory('/point/aaa%2Bbbb')}>
+          <Route path="point/:some_token" component={MyComponent} />
+        </Router>
+      ), node, function () {
+        expect(node.textContent.trim()).toEqual('aaa+bbb');
+        done();
+      });
+    });
+  });
+
 });
