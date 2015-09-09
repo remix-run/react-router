@@ -1,4 +1,4 @@
-[![build status](https://img.shields.io/travis/rackt/react-router/master.svg?style=flat-square)](https://travis-ci.org/rackt/react-router)
+[![build status](https://img.shields.io/travis/rackt/react-router/0.13.x.svg?style=flat-square)](https://travis-ci.org/rackt/react-router)
 [![npm package](https://img.shields.io/npm/v/react-router.svg?style=flat-square)](https://www.npmjs.org/package/react-router)
 [![react-router channel on slack](https://img.shields.io/badge/slack-react--router@reactiflux-61DAFB.svg?style=flat-square)](http://www.reactiflux.com)
 
