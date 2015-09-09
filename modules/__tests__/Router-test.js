@@ -142,7 +142,8 @@ describe('Router', function () {
   });
 
   describe('at a route with special characters', function () {
-    it.only('does not double escape', function(done) {
+    it('does not double escape', function(done) {
+      // https://github.com/rackt/react-router/issues/1574
       let MyComponent = React.createClass({
         render () { return <div>{this.props.params.some_token}</div> }
       })
