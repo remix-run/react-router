@@ -22,49 +22,49 @@ Consider this route config:
 
 1. Lets say the user enters the app at `/`.
 
-| Component | Lifecycle Hooks called |
-|-----------|------------------------|
-| App | componentDidMount |
-| Home | componentDidMount |
-| Invoice | N/A |
-| Account | N/A |
+    | Component | Lifecycle Hooks called |
+    |-----------|------------------------|
+    | App | componentDidMount |
+    | Home | componentDidMount |
+    | Invoice | N/A |
+    | Account | N/A |
 
 2. Now they navigate from `/` to `/invoice/123`
 
-| Component | Lifecycle Hooks called |
-|-----------|------------------------|
-| App | componentWillReceiveProps, componentDidUpdate |
-| Home | componentWillUnmount |
-| Invoice | componentDidMount |
-| Account | N/A |
+    | Component | Lifecycle Hooks called |
+    |-----------|------------------------|
+    | App | componentWillReceiveProps, componentDidUpdate |
+    | Home | componentWillUnmount |
+    | Invoice | componentDidMount |
+    | Account | N/A |
 
-- `App` gets `componentWillReceiveProps` and `componentDidUpdate` because it
-stayed rendered but just received new props from the router (like
-`children`, `params`, `location`, etc.)
-- `Home` is no longer rendered, so it gets unmounted.
-- `Invoice` is mounted for the first time.
+    - `App` gets `componentWillReceiveProps` and `componentDidUpdate` because it
+    stayed rendered but just received new props from the router (like
+    `children`, `params`, `location`, etc.)
+    - `Home` is no longer rendered, so it gets unmounted.
+    - `Invoice` is mounted for the first time.
 
 
 3. Now they navigate from `/invoice/123` to `/invoice/789`
 
-| Component | Lifecycle Hooks called |
-|-----------|------------------------|
-| App | componentWillReceiveProps, componentDidUpdate |
-| Home | N/A |
-| Invoice | componentWillReceiveProps, componentDidUpdate |
-| Account | N/A |
+    | Component | Lifecycle Hooks called |
+    |-----------|------------------------|
+    | App | componentWillReceiveProps, componentDidUpdate |
+    | Home | N/A |
+    | Invoice | componentWillReceiveProps, componentDidUpdate |
+    | Account | N/A |
 
-All the components that were mounted before, are still mounted, they
-just receive new props from the router.
+    All the components that were mounted before, are still mounted, they
+    just receive new props from the router.
 
 4. Now they navigate from `/invoice/789` to `/accounts/123`
 
-| Component | Lifecycle Hooks called |
-|-----------|------------------------|
-| App | componentWillReceiveProps, componentDidUpdate |
-| Home | N/A |
-| Invoice | componentWillUnmount |
-| Account | componentDidMount |
+    | Component | Lifecycle Hooks called |
+    |-----------|------------------------|
+    | App | componentWillReceiveProps, componentDidUpdate |
+    | Home | N/A |
+    | Invoice | componentWillUnmount |
+    | Account | componentDidMount |
 
 ## Fetching Data
 
