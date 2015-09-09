@@ -16,6 +16,7 @@ export IsActive from './IsActiveMixin';
 /* utils */
 export useRoutes from './useRoutes';
 export { createRoutes } from './RouteUtils';
+export RoutingContext from './RoutingContext';
 export PropTypes from './PropTypes';
 
 export default from './Router';
