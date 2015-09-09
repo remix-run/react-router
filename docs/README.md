@@ -1,6 +1,7 @@
 # Table of Contents
 
 - [Glossary](Glossary.md)
+
 - Guides
   - [Introduction](Introduction.md)
   - [Route Configuration](RouteConfiguration.md)
@@ -8,6 +9,8 @@
   - [Dynamic Routing](DynamicRouting.md)
   - [Confirming Navigation](ConfirmingNavigation.md)
   - [Server Rendering](Server Rendering.md)
+  - [Component Lifecycle When Routing](ComponentLifecycleWhenRouting.md)
+
 - API
   - [Router](Route.md)
   - [Route](Route.md)
