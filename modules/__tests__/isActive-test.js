@@ -170,4 +170,33 @@ describe('isActive', function () {
     });
   });
 
+  describe('a pathname that matches the root URL only if it is a parent route', function () {
+    it('is active', function (done) {
+      React.render((
+        <Router history={createHistory('/home')}>
+          <Route path="/">
+            <Route path="/home" />
+          </Route>
+        </Router>
+      ), node, function () {
+        expect(this.history.isActive('/')).toBe(true);
+        done();
+      });
+    });
+  });
+
+  describe('a pathname that does not match the root URL if it is not a parent route', function () {
+    it('is not active', function (done) {
+      React.render((
+        <Router history={createHistory('/home')}>
+          <Route path="/" />
+          <Route path="/home" />
+        </Router>
+      ), node, function () {
+        expect(this.history.isActive('/')).toBe(false);
+        done();
+      });
+    });
+  });
+
 });

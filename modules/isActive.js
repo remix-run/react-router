@@ -12,6 +12,7 @@ function pathnameIsActive(pathname, activePathname, activeRoutes, activeParams) 
   var basename = '';
   for (var i = 0, len = activeRoutes.length; i < len; ++i) {
     route = activeRoutes[i];
+    if (!route.path) return false;
     pattern = route.path || '';
 
     if (pattern.indexOf('/') !== 0)
