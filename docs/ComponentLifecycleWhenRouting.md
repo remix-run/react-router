@@ -23,7 +23,7 @@ Consider this route config:
 1. Lets say the user enters the app at `/`.
 
 | Component | Lifecycle Hooks called |
---------------------------------------
+|-----------|------------------------|
 | App | componentDidMount |
 | Home | componentDidMount |
 | Invoice | N/A |
@@ -32,7 +32,7 @@ Consider this route config:
 2. Now they navigate from `/` to `/invoice/123`
 
 | Component | Lifecycle Hooks called |
---------------------------------------
+|-----------|------------------------|
 | App | componentWillReceiveProps, componentDidUpdate |
 | Home | componentWillUnmount |
 | Invoice | componentDidMount |
@@ -48,7 +48,7 @@ stayed rendered but just received new props from the router (like
 3. Now they navigate from `/invoice/123` to `/invoice/789`
 
 | Component | Lifecycle Hooks called |
---------------------------------------
+|-----------|------------------------|
 | App | componentWillReceiveProps, componentDidUpdate |
 | Home | N/A |
 | Invoice | componentWillReceiveProps, componentDidUpdate |
@@ -60,7 +60,7 @@ just receive new props from the router.
 4. Now they navigate from `/invoice/789` to `/accounts/123`
 
 | Component | Lifecycle Hooks called |
---------------------------------------
+|-----------|------------------------|
 | App | componentWillReceiveProps, componentDidUpdate |
 | Home | N/A |
 | Invoice | componentWillUnmount |
