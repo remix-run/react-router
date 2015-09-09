@@ -5,6 +5,7 @@ import { runEnterHooks, runLeaveHooks } from './TransitionUtils';
 import { default as _isActive } from './isActive';
 import getComponents from './getComponents';
 import matchRoutes from './matchRoutes';
+import 'babel-core/polyfill';
 
 /**
  * Enhances a history object with the following methods:
