@@ -15,7 +15,7 @@ describe('a Route Component', function () {
     React.unmountComponentAtNode(node);
   });
 
-  it.only('injects the right props', function (done) {
+  it('injects the right props', function (done) {
     var Parent = React.createClass({
       componentDidMount() {
         assertProps(this.props)
