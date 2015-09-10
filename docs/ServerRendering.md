@@ -24,13 +24,16 @@ import { renderToString } from 'react-dom/server'
 
 serve((req, res) => {
   let location = createLocation(req.url)
-  match(routes, location, (err, props, redirectInfo) => {
-    if (redirectInfo)
-      res.redirect(redirectInfo.path)
-    else if (err)
-      res.error(err.message)
+
+  match({ routes, location }, (error, redirectLocation, renderProps) => {
+    if (redirectLocation)
+      res.redirect(301, redirectLocation.pathname + redirectLocation.search)
+    else if (error)
+      res.send(500, error.message)
+    else if (renderProps == null)
+      res.send(404, 'Not found')
     else
-      res.send(renderToString(<RoutingContext {...props}/>))
+      res.send(renderToString(<RoutingContext {...renderProps}/>))
   })
 })
 ```

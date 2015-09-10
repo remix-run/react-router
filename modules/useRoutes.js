@@ -8,6 +8,15 @@ import { default as _isActive } from './isActive';
 import getComponents from './getComponents';
 import matchRoutes from './matchRoutes';
 
+class NoMatchError extends Error {
+  constructor (location) {
+    super()
+    this.name = this.constructor.name;
+    this.message = `Location ${location.pathname}${location.search} did not match any routes.`;
+    this.stack = (new Error()).stack;
+  }
+}
+
 function hasAnyProperties(object) {
   for (var p in object)
     if (object.hasOwnProperty(p))
@@ -44,10 +53,16 @@ function useRoutes(createHistory) {
         finishMatch(partialNextState, callback);
       } else {
         matchRoutes(routes, location, function (error, nextState) {
-          if (error || nextState == null) {
-            callback(error, nextState);
+          if (error) {
+            callback(error, null, null);
+          } else if (nextState) {
+            finishMatch({ ...nextState, location }, function (err, nextLocation, nextState) {
+              if (nextState)
+                state = nextState;
+              callback(err, nextLocation, nextState);
+            });
           } else {
-            finishMatch({ ...nextState, location }, callback);
+            callback(null, null, null);
           }
         });
       }
@@ -68,14 +83,14 @@ function useRoutes(createHistory) {
         if (error) {
           callback(error);
         } else if (redirectInfo) {
-          callback(null, null, createLocationFromRedirectInfo(redirectInfo));
+          callback(null, createLocationFromRedirectInfo(redirectInfo), null);
         } else {
           // TODO: Fetch components after state is updated.
           getComponents(nextState.routes, function (error, components) {
             if (error) {
               callback(error);
             } else {
-              callback(null, { ...nextState, components });
+              callback(null, null, { ...nextState, components });
             }
           });
         }
@@ -127,7 +142,7 @@ function useRoutes(createHistory) {
     }
 
     function beforeUnloadHook() {
-      // Synchronously check to see if any route hooks want to 
+      // Synchronously check to see if any route hooks want to
       // prevent the current window/tab from closing.
       if (state.routes) {
         let hooks = getRouteHooksForRoutes(state.routes);
@@ -169,7 +184,7 @@ function useRoutes(createHistory) {
     function unregisterRouteHook(route, hook) {
       let routeID = getRouteID(route);
       let hooks = RouteHooks[routeID];
-      
+
       if (hooks != null) {
         let newHooks = hooks.filter(item => item !== hook);
 
@@ -201,19 +216,17 @@ function useRoutes(createHistory) {
         if (state.location === location) {
           listener(null, state);
         } else {
-          match(location, function (error, nextState, nextLocation) {
+          match(location, function (error, nextLocation, nextState) {
             if (error) {
-              listener(error);
+              if (error.name === 'NoMatchError') {
+                warning(false, error.message);
+              } else {
+                listener(error);
+              }
             } else if (nextState) {
-              listener(null, (state = nextState));
+              listener(null, state); // match mutates state to nextState
             } else if (nextLocation) {
               history.transitionTo(nextLocation);
-            } else {
-              warning(
-                false,
-                'Location "%s" did not match any routes',
-                location.pathname + location.search
-              );
             }
           });
         }
