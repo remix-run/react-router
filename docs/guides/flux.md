@@ -145,5 +145,7 @@ exports.changeRoute = (payload) => {
 };
 ```
 
-This is not how we use the router with flux, but to each their own.
+Some folks have found this to be helpful too:
+
+http://blog.benstokoe.co.uk/react-router-store-in-flux/
 
