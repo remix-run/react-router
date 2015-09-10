@@ -7,7 +7,14 @@ import { runEnterHooks, runLeaveHooks } from './TransitionUtils';
 import { default as _isActive } from './isActive';
 import getComponents from './getComponents';
 import matchRoutes from './matchRoutes';
-import 'babel-core/polyfill';
+
+function hasAnyProperties(object) {
+  for (var p in object)
+    if (object.hasOwnProperty(p))
+      return true;
+
+  return false;
+}
 
 /**
  * Returns a new createHistory function that may be used to create
@@ -29,9 +36,6 @@ function useRoutes(createHistory) {
       return _isActive(pathname, query, indexOnly, state.location, state.routes, state.params);
     }
 
-    // TODO: If we had a way to uniquely identify a route,
-    // we could use a plain object here instead...
-    let routeHooks = new Map();
     let partialNextState;
 
     function match(location, callback) {
@@ -78,9 +82,17 @@ function useRoutes(createHistory) {
       });
     }
 
+    const RouteHooks = {};
+
+    let RouteGuid = 1;
+
+    function getRouteID(route) {
+      return route.__id__ || (route.__id__ = RouteGuid++);
+    }
+
     function getRouteHooksForRoutes(routes) {
       return routes.reduce(function (hooks, route) {
-        hooks.push.apply(hooks, routeHooks.get(route));
+        hooks.push.apply(hooks, RouteHooks[getRouteID(route)]);
         return hooks;
       }, []);
     }
@@ -135,14 +147,17 @@ function useRoutes(createHistory) {
       // TODO: Warn if they register for a route that isn't currently
       // active. They're probably doing something wrong, like re-creating
       // route objects on every location change.
-      let hooks = routeHooks.get(route);
+      let routeID = getRouteID(route);
+      let hooks = RouteHooks[routeID];
 
       if (hooks == null) {
-        routeHooks.set(route, (hooks = [ hook ]));
+        let thereWereNoRouteHooks = !hasAnyProperties(RouteHooks);
 
-        if (routeHooks.size === 1) {
+        hooks = RouteHooks[routeID] = [ hook ];
+
+        if (thereWereNoRouteHooks) {
           history.registerTransitionHook(transitionHook);
-          
+
           if (history.registerBeforeUnloadHook)
             history.registerBeforeUnloadHook(beforeUnloadHook);
         }
@@ -152,22 +167,23 @@ function useRoutes(createHistory) {
     }
 
     function unregisterRouteHook(route, hook) {
-      let hooks = routeHooks.get(route);
+      let routeID = getRouteID(route);
+      let hooks = RouteHooks[routeID];
       
       if (hooks != null) {
         let newHooks = hooks.filter(item => item !== hook);
 
         if (newHooks.length === 0) {
-          routeHooks.delete(route);
+          delete RouteHooks[routeID];
 
-          if (routeHooks.size === 0) {
+          if (!hasAnyProperties(RouteHooks)) {
             history.unregisterTransitionHook(transitionHook);
 
             if (history.unregisterBeforeUnloadHook)
               history.unregisterBeforeUnloadHook(beforeUnloadHook);
           }
         } else {
-          routeHooks.set(route, newHooks);
+          RouteHooks[routeID] = newHooks;
         }
       }
     }
