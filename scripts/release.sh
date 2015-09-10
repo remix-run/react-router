@@ -34,9 +34,6 @@ update_version 'package.json' $next_version
 
 $changelog -t $next_ref
 
-./scripts/build.sh
-
-git add -A build
 git commit -am "Version $next_version"
 
 git tag $next_ref
@@ -45,6 +42,8 @@ git tag latest -f
 git push origin master
 git push origin $next_ref
 git push origin latest -f
+
+./scripts/build.sh
 
 npm publish
 
