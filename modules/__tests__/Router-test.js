@@ -158,6 +158,27 @@ describe('Router', function () {
       });
     });
 
+    it('does not double escape when nested', function(done) {
+      // https://github.com/rackt/react-router/issues/1574
+      let MyWrapperComponent = React.createClass({
+        render () { return this.props.children; }
+      });
+      let MyComponent = React.createClass({
+        render () { return <div>{this.props.params.some_token}</div> }
+      });
+
+      React.render((
+        <Router history={createHistory('/point/aaa%2Bbbb')}>
+          <Route component={MyWrapperComponent}>
+            <Route path="point/:some_token" component={MyComponent} />
+          </Route>
+        </Router>
+      ), node, function () {
+        expect(node.textContent.trim()).toEqual('aaa+bbb');
+        done();
+      });
+    });
+
     it('is happy to have colons in parameter values', function(done) {
       // https://github.com/rackt/react-router/issues/1759
       let MyComponent = React.createClass({
