@@ -8,15 +8,6 @@ import { default as _isActive } from './isActive';
 import getComponents from './getComponents';
 import matchRoutes from './matchRoutes';
 
-class NoMatchError extends Error {
-  constructor (location) {
-    super()
-    this.name = this.constructor.name;
-    this.message = `Location ${location.pathname}${location.search} did not match any routes.`;
-    this.stack = (new Error()).stack;
-  }
-}
-
 function hasAnyProperties(object) {
   for (var p in object)
     if (object.hasOwnProperty(p))
@@ -218,15 +209,17 @@ function useRoutes(createHistory) {
         } else {
           match(location, function (error, nextLocation, nextState) {
             if (error) {
-              if (error.name === 'NoMatchError') {
-                warning(false, error.message);
-              } else {
-                listener(error);
-              }
+              listener(error);
             } else if (nextState) {
               listener(null, state); // match mutates state to nextState
             } else if (nextLocation) {
               history.transitionTo(nextLocation);
+            } else {
+              warning(
+                false,
+                'Location "%s" did not match any routes',
+                location.pathname + location.search
+              );
             }
           });
         }
