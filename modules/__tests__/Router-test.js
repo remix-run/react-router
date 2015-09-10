@@ -190,6 +190,33 @@ describe('Router', function () {
       });
     });
 
+    it('handles forward slashes', function(done) {
+      // https://github.com/rackt/react-router/issues/1865
+      class Parent extends React.Component {
+        render() {
+          return <div>{this.props.children} </div>
+        }
+      }
+
+      class Child extends React.Component {
+        render() {
+          const {params} = this.props
+          return <h1>{params.name}</h1>
+        }
+      }
+
+      React.render((
+        <Router history={createHistory('/apple%2Fbanana')}>
+          <Route component={Parent}>
+            <Route path='/:name' component={Child} />
+          </Route>
+        </Router>
+      ), node, function () {
+        expect(node.textContent.trim()).toEqual('apple/banana');
+        done();
+      });
+    });
+
   });
 
 });
