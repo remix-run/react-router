@@ -173,6 +173,23 @@ describe('Router', function () {
         done();
       });
     });
+
+    it('handles % in parameters', function(done) {
+      // https://github.com/rackt/react-router/issues/1766
+      let MyComponent = React.createClass({
+        render () { return <div>{this.props.params.name}</div> }
+      })
+
+      React.render((
+        <Router history={createHistory('/company/CADENCE%20DESIGN%20SYSTEM%20INC%20NOTE%202.625%25%2060')}>
+          <Route path="/company/:name" component={MyComponent} />
+        </Router>
+      ), node, function () {
+        expect(node.textContent.trim()).toEqual('CADENCE DESIGN SYSTEM INC NOTE 2.625% 60');
+        done();
+      });
+    });
+
   });
 
 });
