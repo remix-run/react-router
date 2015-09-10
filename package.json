@@ -11,8 +11,8 @@
   "bugs": "https://github.com/rackt/react-router/issues",
   "scripts": {
     "build": "babel ./modules -d lib --ignore '__tests__'",
-    "build-umd": "NODE_ENV=production webpack modules/index.js lib/umd/History.js",
-    "build-min": "NODE_ENV=production webpack -p modules/index.js lib/umd/History.min.js",
+    "build-umd": "NODE_ENV=production webpack modules/index.js lib/umd/ReactRouter.js",
+    "build-min": "NODE_ENV=production webpack -p modules/index.js lib/umd/ReactRouter.min.js",
     "build-website": "scripts/build-website.sh",
     "start": "webpack-dev-server --config examples/webpack.config.js --content-base examples --inline",
     "test": "eslint modules && karma start",
