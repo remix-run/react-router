@@ -22,14 +22,15 @@
 
 #### Utilities
 
+* [AsyncUtils](AsyncUtils.md)
+* [computeChangedRoute](computeChangedRoute.md)
+* [DOMUtils](DOMUtils.md)
 * [getComponents](getComponents.md)
 * [getRouteParams](getRouteParams.md)
 * [matchRoutes](matchRoutes.md)
-* [useRoutes](useRoutes.md)
-* [RoutingContext](RoutingContext.md)
-* [AsyncUtils](AsyncUtils.md)
-* [DOMUtils](DOMUtils.md)
-* [PatternUtils](PatternUtils.md)
-* [RouteUtils](RouteUtils.md)
-* [TransitionUtils](TransitionUtils.md)
+* [PaternUtils](PaternUtils.md)
+* [PlainRoute](PlainRoute.md)
 * [QueryUtils](QueryUtils.md)
+* [RouteUtils](RouteUtils.md)
+* [RoutingContext](RoutingContext.md)
+* [TransitionUtils](TransitionUtils.md)
