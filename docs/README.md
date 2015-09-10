@@ -12,7 +12,7 @@
   - [Component Lifecycle When Routing](ComponentLifecycleWhenRouting.md)
 
 - API
-  - [Router](Route.md)
+  - [Router](Router.md)
   - [Route](Route.md)
   - [Plain Route](Plain Route.md)
   - [Redirect](Redirect.md)
