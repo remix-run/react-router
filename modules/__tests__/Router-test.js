@@ -157,6 +157,22 @@ describe('Router', function () {
         done();
       });
     });
+
+    it('is happy to have colons in parameter values', function(done) {
+      // https://github.com/rackt/react-router/issues/1759
+      let MyComponent = React.createClass({
+        render () { return <div>{this.props.params.foo}</div> }
+      })
+
+      React.render((
+        <Router history={createHistory('/ns/aaa:bbb/bar')}>
+          <Route path="ns/:foo/bar" component={MyComponent} />
+        </Router>
+      ), node, function () {
+        expect(node.textContent.trim()).toEqual('aaa:bbb');
+        done();
+      });
+    });
   });
 
 });
