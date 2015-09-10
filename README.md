@@ -34,7 +34,7 @@ We support all browsers and environments where React runs.
 Then with a module bundler or webpack, use as you would anything else:
 
 ```js
-// using an ES6 transpiler
+// using an ES6 transpiler, like babel
 import { Router, Route, Link } from 'react-router';
 
 // not using an ES6 transpiler
@@ -44,13 +44,19 @@ var Route = ReactRouter.Route;
 var Link = ReactRouter.Link;
 ```
 
-There's also a `lib/umd` folder containing a UMD version.
+You can require only the pieces you need straight from the `lib` directory:
 
-#### bower + who knows what
+```js
+import { Router } from 'react-router/lib/Router';
+```
 
-    $ bower install react-router
+There's also a UMD build in the `umd` directory:
 
-Find the UMD/global build in `lib/umd`, and the library on `window.ReactRouter`. Best of luck to you. :)
+```js
+import ReactRouter from 'react-router/umd/ReactRouter';
+```
+
+If you're using globals, you can find the library on `window.ReactRouter`.
 
 #### CDN
 
