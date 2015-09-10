@@ -1,4 +1,5 @@
 import React from 'react';
+import createDecorator from './DecoratorUtils';
 
 var { object } = React.PropTypes;
 
@@ -33,5 +34,7 @@ var IsActive = {
   }
 
 };
+
+export const IsActiveDecorator = createDecorator(IsActive);
 
 export default IsActive;

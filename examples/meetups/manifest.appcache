@@ -1,0 +1,16 @@
+CACHE MANIFEST
+
+#version 1.02 8-30-2015
+
+CACHE:
+index.html
+
+http://code.ionicframework.com/ionicons/2.0.1/css/ionicons.min.css
+http://code.ionicframework.com/ionicons/2.0.1/fonts/ionicons.eot?v=2.0.1
+http://code.ionicframework.com/ionicons/2.0.1/fonts/ionicons.ttf?v=2.0.1
+http://code.ionicframework.com/ionicons/2.0.1/fonts/ionicons.woff?v=2.0.1
+http://code.ionicframework.com/ionicons/2.0.1/fonts/ionicons.svg?v=2.0.1
+https://fonts.gstatic.com/s/opensans/v13/cJZKeOuBrn4kERxqtaUH3ZBw1xU1rKptJj_0jans920.woff2
+
+NETWORK:
+*

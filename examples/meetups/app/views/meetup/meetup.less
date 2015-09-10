@@ -1,0 +1,30 @@
+.meetup-description-short {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  width: 100%;
+  margin-bottom: 1em;
+}
+
+.meetup {
+  display: flex;
+  flex-direction: row;
+  flex-wrap: nowrap;
+  align-items: stretch;
+  aside {
+    text-align: center;
+    width: 180px;
+    margin-top: 8px;
+  }
+
+  .meetup-description {
+    overflow-y: auto;
+    flex: 1;
+  }
+
+  .meetup-name {
+    positon: relative;
+    font-size: 20px;
+    font-weight: bold;
+  }
+}

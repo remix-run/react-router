@@ -1,0 +1,28 @@
+extends: 
+  eslint-config-airbnb
+
+parser: 
+  babel-eslint
+
+settings:
+  ecmascript: 6
+
+ecmaFeatures: 
+  jsx: true
+  modules: true
+  destructuring: true
+  classes: true
+  forOf: true
+  blockBindings: true
+  arrowFunctions: true 
+
+env:
+  browser: true
+
+rules:
+  indent: 2
+  func-style: 0
+  func-names: 0
+  comma-dangle: 0
+  no-console: 0
+  no-param-reassign: 0
