@@ -57,7 +57,8 @@ var RoutingContext = React.createClass({
           location,
           params,
           route,
-          routeParams
+          routeParams,
+          routes
         };
 
         if (element)
