@@ -84,8 +84,10 @@ var Users = React.createClass({
   render () {
     return (
       <div>
-        {/* if at "/users/123" this will be <Profile> */}
-        {/* UsersSidebar will also get <Profile> as this.props.children */}
+        {/* if at "/users/123" `children` will be <Profile> */}
+        {/* UsersSidebar will also get <Profile> as this.props.children,
+            so its a little weird, but you can decide which one wants
+            to continue with the nesting */}
         {this.props.children}
       </div>
     );
