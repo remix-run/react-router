@@ -1,5 +1,7 @@
 import warning from 'warning';
+import { REPLACE } from 'history/lib/Actions';
 import useQueries from 'history/lib/useQueries';
+import createLocation from 'history/lib/createLocation';
 import computeChangedRoutes from './computeChangedRoutes';
 import { runEnterHooks, runLeaveHooks } from './TransitionUtils';
 import { default as _isActive } from './isActive';
@@ -8,12 +10,13 @@ import matchRoutes from './matchRoutes';
 import 'babel-core/polyfill';
 
 /**
- * Enhances a history object with the following methods:
+ * Returns a new createHistory function that may be used to create
+ * history objects that know about routing.
  *
  * - isActive(pathname, query)
  * - registerRouteHook(route, (location) => {})
  * - unregisterRouteHook(route, (location) => {})
- * - match(location, (error, nextState, redirectInfo) => {})
+ * - match(location, (error, nextState, nextLocation) => {})
  * - listen((error, nextState) => {})
  */
 function useRoutes(createHistory) {
@@ -46,6 +49,12 @@ function useRoutes(createHistory) {
       }
     }
 
+    function createLocationFromRedirectInfo({ pathname, query, state }) {
+      return createLocation(
+        history.createPath(pathname, query), state, REPLACE, history.createKey()
+      );
+    }
+
     function finishMatch(nextState, callback) {
       let { leaveRoutes, enterRoutes } = computeChangedRoutes(state, nextState);
 
@@ -55,7 +64,7 @@ function useRoutes(createHistory) {
         if (error) {
           callback(error);
         } else if (redirectInfo) {
-          callback(null, null, redirectInfo);
+          callback(null, null, createLocationFromRedirectInfo(redirectInfo));
         } else {
           // TODO: Fetch components after state is updated.
           getComponents(nextState.routes, function (error, components) {
@@ -176,14 +185,13 @@ function useRoutes(createHistory) {
         if (state.location === location) {
           listener(null, state);
         } else {
-          match(location, function (error, nextState, redirectInfo) {
+          match(location, function (error, nextState, nextLocation) {
             if (error) {
               listener(error);
             } else if (nextState) {
               listener(null, (state = nextState));
-            } else if (redirectInfo) {
-              let { pathname, query, state } = redirectInfo;
-              history.replaceState(state, pathname, query);
+            } else if (nextLocation) {
+              history.transitionTo(nextLocation);
             } else {
               warning(
                 false,
