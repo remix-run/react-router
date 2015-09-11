@@ -12,7 +12,8 @@
   "parser": "babel-eslint",
   "rules": {
     "strict": 0,
-    "react/prop-types": 2
+    "react/prop-types": 2,
+    "react/jsx-uses-react": 1
   },
   "plugins": [
     "react"

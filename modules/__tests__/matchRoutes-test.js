@@ -8,8 +8,6 @@ import { createLocation } from 'history';
 import { createRoutes } from '../RouteUtils';
 import matchRoutes from '../matchRoutes';
 
-React.shutupESLint;
-
 describe('matchRoutes', function () {
   var routes, RootRoute, UsersRoute, UsersIndexRoute, UserRoute, PostRoute, FilesRoute, AboutRoute, TeamRoute, ProfileRoute, CatchAllRoute;
   beforeEach(function () {
