@@ -101,6 +101,27 @@ describe('matchRoutes', function () {
       });
     });
 
+    describe('when the location matches a route with hash', function () {
+      it('matches the correct routes', function (done) {
+        matchRoutes(routes, createLocation('/users#about'), function (error, match) {
+          assert(match);
+          expect(match.routes).toEqual([ RootRoute, UsersRoute, UsersIndexRoute ]);
+          done();
+        });
+      });
+    });
+
+    describe('when the location matches a deeply nested route with params and hash', function () {
+      it('matches the correct routes and params', function (done) {
+        matchRoutes(routes, createLocation('/users/5/abc#about'), function (error, match) {
+          assert(match);
+          expect(match.routes).toEqual([ RootRoute, UsersRoute, UserRoute, PostRoute ]);
+          expect(match.params).toEqual({ userID: '5', postID: 'abc' });
+          done();
+        });
+      });
+    });
+
     describe('when the location matches an absolute route', function () {
       it('matches the correct routes', function (done) {
         matchRoutes(routes, createLocation('/about'), function (error, match) {
