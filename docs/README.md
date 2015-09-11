@@ -10,6 +10,7 @@
   - [Confirming Navigation](ConfirmingNavigation.md)
   - [Server Rendering](Server Rendering.md)
   - [Component Lifecycle When Routing](ComponentLifecycleWhenRouting.md)
+  - [Histories](Histories.md)
 
 - API
   - [Router](Router.md)
