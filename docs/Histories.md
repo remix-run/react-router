@@ -23,9 +23,8 @@ all (i.e. `<Router>{/* your routes */}</Router>`). It uses the hash
 ### Should I use `createHashHistory`?
 
 Hash history is the default because it works without any setup on your
-server, and works in all evergreen browsers and IE8+.
-
-We don't recomment using it in production, every web app should aspire
+server, and works in all evergreen browsers and IE8+. But, we don't
+recommend using it in production, every web app should aspire
 to use `createBrowserHistory`.
 
 ### What is that `?_k=ckuvup` junk in the URL?
