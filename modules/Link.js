@@ -83,7 +83,7 @@ var Link = React.createClass({
   },
 
   render() {
-    var { to, query } = this.props;
+    var { to, query, onlyActiveOnIndex } = this.props;
 
     var props = {
       ...this.props,
