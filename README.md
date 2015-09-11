@@ -4,7 +4,7 @@
 
 <img src="https://rackt.github.io/react-router/img/vertical.png" width="300"/>
 
-A complete routing library for React. https://rackt.github.io/react-router
+A complete routing library for React
 
 React Router keeps your UI in sync with the URL. It has a simple API
 with powerful features like lazy code loading, dynamic route matching,
@@ -13,13 +13,10 @@ thought, not an after-thought.
 
 ### Docs & Help
 
-- [Guides and API Docs](https://rackt.github.io/react-router)
+- [Guides and API Docs](/docs)
 - [Upgrade Guide](/UPGRADE_GUIDE.md)
 - [Changelog](/CHANGELOG.md)
 - [#react-router channel on reactiflux](http://www.reactiflux.com/)
-
-**Note: the docs and the examples in master refer to the 1.0 Beta and may be incomplete.**  
-**Browse [the website](http://rackt.github.io/react-router/) and [the 0.13.3 tag](https://github.com/rackt/react-router/tree/v0.13.3) for the information about the latest stable version.**
 
 ### Browser Support
 
@@ -126,12 +123,11 @@ React.render((
 ), document.body);
 ```
 
-See more in the [overview guide](/doc/00 Guides/0 Overview.md) and [Advanced
-Usage](/doc/00 Guides/Advanced Usage.md)
+See more in the [Introduction](/docs/introduction/README.md) and [Advanced
+Usage](/docs/advanced/README.md).
 
 ### Thanks
 
-React Router was initially inspired by Ember's fantastic router. Many
-thanks to the Ember team.
+React Router was initially inspired by Ember's fantastic router. Many thanks to the Ember team.
 
 Also, thanks to [BrowserStack](https://www.browserstack.com/) for providing the infrastructure that allows us to run our build in real browsers.

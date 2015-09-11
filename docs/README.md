@@ -17,7 +17,7 @@
   * [Component Lifecycle](/docs/advanced/ComponentLifecycle.md)
   * [Examples](/docs/advanced/Examples.md)
 * [Recipes](/docs/recipes/README.md)
-* [Migration Guide](/docs/MigrationGuide.md)
+* [Upgrade Guide](/UPGRADE_GUIDE.md)
 * [Troubleshooting](/docs/Troubleshooting.md)
 * [Glossary](/docs/Glossary.md)
 * [API Reference](/docs/api/README.md)
