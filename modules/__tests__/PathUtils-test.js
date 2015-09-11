@@ -187,6 +187,14 @@ describe('PathUtils.injectParams', function () {
     });
   });
 
+  describe('when a path has query params', function() {
+    var pattern = '/a/:b/?c/?d=e';
+
+    it('should not change the query params', function() {
+        expect(PathUtils.injectParams(pattern, {b: '123'})).toEqual('/a/123/c/?d=e');
+    });
+  });
+
   describe('when a pattern has dynamic segments', function () {
     var pattern = 'comments/:id/edit';
 
