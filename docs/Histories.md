@@ -84,7 +84,7 @@ api, if not, any call to transition around the app will result in _a
 full page reload_, which allows you to build your app and have a better
 experience for newer browsers, but still support old ones.
 
-You might wonder why don't fall back to hash history, the problem is
+You might wonder why we don't fall back to hash history; the problem is
 that urls become non-deterministic. If a visitor on hash history shares
 a url with a visitor on browser history, and then they share that back,
 we end up with a terrible cartesian product of infinite potential
