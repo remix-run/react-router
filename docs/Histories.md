@@ -13,6 +13,15 @@ consumption with React Router.
 - [`createBrowserHistory`](#createBrowserHistory)
 - [`createMemoryHistory`](#createMemoryHistory)
 
+Get them from the history package:
+
+```js
+// JavaScript module import
+import createBrowserHistory from 'history/lib/createBrowserHistory'
+// or commonjs
+var createBrowserHistory = require('history/lib/createBrowserHistory')
+```
+
 ## `createHashHistory`
 
 This is the default history you'll get if you don't specify a history at
