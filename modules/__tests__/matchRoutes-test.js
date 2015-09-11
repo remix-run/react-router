@@ -1,6 +1,10 @@
+import React from 'react';
+import Route from '../Route';
+
 import assert from 'assert';
 import expect from 'expect';
 import { createLocation } from 'history';
+import { createRoutes } from '../RouteUtils';
 import matchRoutes from '../matchRoutes';
 
 describe('matchRoutes', function () {
@@ -180,5 +184,45 @@ describe('matchRoutes', function () {
     });
 
     describeRoutes();
+  });
+
+  describe('an asynchronous JSX route config', function () {
+    var jsxRoutes;
+
+    beforeEach(function () {
+      var getChildRoutes = function (location, callback) {
+          setTimeout(function () {
+            callback(null, <Route path=":userID" />);
+          });
+      };
+      var getIndexRoute = function (location, callback) {
+        setTimeout(function () {
+          callback(null, <Route name='jsx' />);
+        });
+      };
+      jsxRoutes = createRoutes([
+        <Route name="users"
+               path="users"
+               getChildRoutes={getChildRoutes}
+               getIndexRoute={getIndexRoute} />
+      ]);
+    });
+
+    it('when getChildRoutes callback returns reactElements', function(done) {
+      matchRoutes(jsxRoutes, createLocation('/users/5'), function (error, match) {
+         assert(match);
+         expect(match.routes.map(r => r.path)).toEqual([ 'users', ':userID' ]);
+         expect(match.params).toEqual({ userID: '5' });
+         done();
+      });
+    });
+
+    it('when getIndexRoute callback returns reactElements', function(done) {
+      matchRoutes(jsxRoutes, createLocation('/users'), function (error, match) {
+         assert(match);
+         expect(match.routes.map(r => r.name)).toEqual([ 'users', 'jsx' ]);
+         done();
+      });
+    });
   });
 });

@@ -1,11 +1,14 @@
 import { loopAsync } from './AsyncUtils';
 import { matchPattern } from './PatternUtils';
+import { createRoutes } from './RouteUtils';
 
 function getChildRoutes(route, location, callback) {
   if (route.childRoutes) {
     callback(null, route.childRoutes);
   } else if (route.getChildRoutes) {
-    route.getChildRoutes(location, callback);
+    route.getChildRoutes(location, function(error, childRoutes) {
+        callback(error, !error && createRoutes(childRoutes));
+    });
   } else {
     callback();
   }
@@ -15,7 +18,9 @@ function getIndexRoute(route, location, callback) {
   if (route.indexRoute) {
     callback(null, route.indexRoute);
   } else if (route.getIndexRoute) {
-    route.getIndexRoute(location, callback);
+    route.getIndexRoute(location, function(error, indexRoute) {
+        callback(error, !error && createRoutes(indexRoute)[0]);
+    });
   } else {
     callback();
   }
