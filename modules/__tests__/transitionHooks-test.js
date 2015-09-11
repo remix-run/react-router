@@ -1,9 +1,10 @@
+/*eslint-env mocha */
+/*eslint react/prop-types: 0*/
 import expect, { spyOn } from 'expect';
 import React from 'react';
 import createHistory from 'history/lib/createMemoryHistory';
 import execSteps from './execSteps';
 import Router from '../Router';
-import Route from '../Route';
 
 describe('When a router enters a branch', function () {
   var node, Dashboard, NewsFeed, Inbox, DashboardRoute, NewsFeedRoute, InboxRoute, RedirectToInboxRoute, MessageRoute, routes;
@@ -20,19 +21,19 @@ describe('When a router enters a branch', function () {
         );
       }
     });
-  
+
     NewsFeed = React.createClass({
       render() {
         return <div>News</div>;
       }
     });
-  
+
     Inbox = React.createClass({
       render() {
         return <div>Inbox</div>;
       }
     });
-  
+
     NewsFeedRoute = {
       path: 'news',
       component: NewsFeed,
@@ -45,7 +46,7 @@ describe('When a router enters a branch', function () {
         expect(this).toBe(NewsFeedRoute);
       }
     };
-  
+
     InboxRoute = {
       path: 'inbox',
       component: Inbox,
@@ -84,7 +85,7 @@ describe('When a router enters a branch', function () {
         expect(this).toBe(MessageRoute);
       }
     };
-  
+
     DashboardRoute = {
       component: Dashboard,
       onEnter(nextState, replaceState) {
@@ -106,7 +107,7 @@ describe('When a router enters a branch', function () {
   afterEach(function () {
     React.unmountComponentAtNode(node);
   });
- 
+
   it('calls the onEnter hooks of all routes in that branch', function (done) {
     var dashboardRouteEnterSpy = spyOn(DashboardRoute, 'onEnter').andCallThrough();
     var newsFeedRouteEnterSpy = spyOn(NewsFeedRoute, 'onEnter').andCallThrough();

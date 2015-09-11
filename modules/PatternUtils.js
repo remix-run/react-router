@@ -14,7 +14,7 @@ function _compilePattern(pattern) {
   var tokens = [];
 
   var match, lastIndex = 0, matcher = /:([a-zA-Z_$][a-zA-Z0-9_$]*)|\*|\(|\)/g;
-  while (match = matcher.exec(pattern)) {
+  while ((match = matcher.exec(pattern))) {
     if (match.index !== lastIndex) {
       tokens.push(pattern.slice(lastIndex, match.index));
       regexpSource += escapeSource(pattern.slice(lastIndex, match.index));

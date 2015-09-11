@@ -1,3 +1,5 @@
+/*eslint-env mocha */
+/*eslint react/prop-types: 0*/
 import assert from 'assert';
 import expect from 'expect';
 import React from 'react/addons';
@@ -10,17 +12,6 @@ import Link from '../Link';
 var { click } = React.addons.TestUtils.Simulate;
 
 describe('A <Link>', function () {
-
-  var Parent = React.createClass({
-    render() {
-      return (
-        <div>
-          <h1>Parent</h1>
-          {this.props.children}
-        </div>
-      );
-    }
-  });
 
   var Hello = React.createClass({
     render() {

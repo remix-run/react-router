@@ -1,4 +1,5 @@
 import React from 'react';
+import warning from 'warning';
 import createHashHistory from 'history/lib/createHashHistory';
 import { createRoutes } from './RouteUtils';
 import RoutingContext from './RoutingContext';

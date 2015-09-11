@@ -1,3 +1,5 @@
+/*eslint-env mocha */
+/*eslint react/prop-types: 0*/
 import expect from 'expect';
 import React from 'react';
 import createHistory from 'history/lib/createMemoryHistory';

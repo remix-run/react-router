@@ -1,3 +1,5 @@
+/*eslint-env mocha */
+/*eslint react/prop-types: 0*/
 import expect from 'expect';
 import React from 'react';
 import createLocation from 'history/lib/createLocation';
@@ -6,7 +8,7 @@ import match from '../match';
 import Link from '../Link';
 
 describe('server rendering', function () {
-  var App, Dashboard, About, AppRoute, RedirectRoute, AboutRoute, DashboardRoute, routes;
+  var App, Dashboard, About, RedirectRoute, AboutRoute, DashboardRoute, routes;
 
   beforeEach(function () {
     App = React.createClass({
@@ -61,7 +63,7 @@ describe('server rendering', function () {
       }
     };
 
-    AppRoute = routes = {
+    routes = {
       path: '/',
       component: App,
       childRoutes: [ DashboardRoute, AboutRoute, RedirectRoute ]

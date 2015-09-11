@@ -1,3 +1,4 @@
+/*eslint-env mocha */
 import expect from 'expect';
 import { getParams } from '../PatternUtils';
 

@@ -33,5 +33,5 @@ export default {
   location,
   component,
   components,
-  route,
+  route
 };

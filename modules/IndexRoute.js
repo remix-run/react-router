@@ -1,5 +1,6 @@
 import React from 'react';
 import invariant from 'invariant';
+import warning from 'warning';
 import { createRouteFromReactElement } from './RouteUtils';
 import { component, components, falsy } from './PropTypes';
 

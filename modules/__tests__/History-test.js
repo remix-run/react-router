@@ -1,3 +1,4 @@
+/*eslint-env mocha */
 import expect from 'expect';
 import React from 'react';
 import History from '../History';
@@ -19,7 +20,7 @@ describe('History Mixin', function () {
     let history = createHistory('/');
 
     function assertHistory() {
-      this.history === history;
+      expect(this.history).toExist();
     }
 
     let Component = React.createClass({

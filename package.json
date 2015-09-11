@@ -16,6 +16,7 @@
     "build-website": "scripts/build-website.sh",
     "start": "webpack-dev-server --config examples/webpack.config.js --content-base examples --inline",
     "test": "eslint modules && karma start",
+    "lint": "eslint modules",
     "prepublish": "npm run build"
   },
   "authors": [
@@ -35,7 +36,8 @@
     "babel-loader": "^5.0.0",
     "babel-plugin-object-assign": "^1.2.0",
     "bundle-loader": "^0.5.2",
-    "eslint": "^1.0.0",
+    "eslint": "1.4.0",
+    "eslint-plugin-react": "3.3.2",
     "events": "1.0.2",
     "expect": "^1.6.0",
     "karma": "^0.13.8",

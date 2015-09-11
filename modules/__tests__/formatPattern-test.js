@@ -1,3 +1,4 @@
+/*eslint-env mocha */
 import expect from 'expect';
 import { formatPattern } from '../PatternUtils';
 

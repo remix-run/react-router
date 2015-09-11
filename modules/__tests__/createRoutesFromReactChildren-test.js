@@ -1,3 +1,5 @@
+/*eslint-env mocha */
+/*eslint react/prop-types: 0*/
 import expect from 'expect';
 import React from 'react';
 import { createRoutesFromReactChildren } from '../RouteUtils';
@@ -28,7 +30,7 @@ describe('createRoutesFromReactChildren', function () {
       return <div>Goodbye</div>;
     }
   });
- 
+
   it('works with index routes', function () {
     var routes = createRoutesFromReactChildren(
       <Route path="/" component={Parent}>
