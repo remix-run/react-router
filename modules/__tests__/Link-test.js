@@ -145,7 +145,7 @@ describe('A <Link>', function () {
   });
 
   describe('when its route is active', function () {
-    it('has its activeClassName', function (done) {
+    it.skip('has its activeClassName', function (done) {
       var LinkWrapper = React.createClass({
         render() {
           return (
@@ -180,7 +180,7 @@ describe('A <Link>', function () {
       ), node, execNextStep);
     });
 
-    it('has its activeStyle', function (done) {
+    it.skip('has its activeStyle', function (done) {
       var LinkWrapper = React.createClass({
         render() {
           return (
@@ -217,7 +217,7 @@ describe('A <Link>', function () {
   });
 
   describe('when route changes', function() {
-    it('changes active state', function(done) {
+    it.skip('changes active state', function(done) {
       var LinkWrapper = React.createClass({
         shouldComponentUpdate() {
           return false;
