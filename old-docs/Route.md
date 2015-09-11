@@ -95,7 +95,7 @@ var Users = React.createClass({
 });
 ```
 
-### `getComponent(callback)`
+### `getComponent(location, callback)`
 
 Same as `component` but asynchronous, useful for
 code-splitting.
@@ -107,13 +107,13 @@ code-splitting.
 #### Example
 
 ```js
-<Route path="courses/:courseId" getComponent={(cb) => {
+<Route path="courses/:courseId" getComponent={(location, cb) => {
   // do asynchronous stuff to find the components
   cb(null, Course);
 }}/>
 ```
 
-### `getComponents(callback)`
+### `getComponents(location, callback)`
 
 Same as `components` but asynchronous, useful for
 code-splitting.
@@ -125,7 +125,7 @@ code-splitting.
 #### Example
 
 ```js
-<Route path="courses/:courseId" getComponent={(cb) => {
+<Route path="courses/:courseId" getComponent={(state, cb) => {
   // do asynchronous stuff to find the components
   cb(null, {sidebar: CourseSidebar, content: Course});
 }}/>
@@ -135,11 +135,10 @@ code-splitting.
 
 Routes can be nested, `this.props.children` will contain the element created from the child route component. Please refer to the [Route Configuration][RouteConfiguration.md] since this is a very critical part of the router's design.
 
-### `onEnter(nextState, replaceState)`
+### `onEnter(location, replaceState)`
 
-Called when a route is about to be entered. It provides the next router state and a function to redirect to another path.
+Called when a route is about to be entered. It provides the next location and a function to redirect to another path.
 
 ### `onLeave()`
 
 Called when a route is about to be exited.
-
