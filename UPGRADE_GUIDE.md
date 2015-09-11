@@ -8,7 +8,13 @@ reference.
 0.13.3 -> 1.0.0
 ---------------
 
-Thanks for your patience :) Big changes.
+Thanks for your patience :) Big changes. While on the surface a lot of
+this just looks like shuffling around API, the entire codebase has been
+rewritten to handle some really great use cases, like loading routes and
+components on demand, session-based route matching, server rendering,
+integration with libs like redux and relay, and lots more.
+
+But for now, here's how to translate the old API to the new one.
 
 ### Rendering
 
