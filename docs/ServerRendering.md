@@ -38,7 +38,7 @@ serve((req, res) => {
 })
 ```
 
-For data loading, you can use the `props` argument to build whatever
+For data loading, you can use the `renderProps` argument to build whatever
 convention you want--like adding static `load` methods to your route
 components, or putting data loading functions on the routes, its up to
 you.
