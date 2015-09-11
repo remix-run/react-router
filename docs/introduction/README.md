@@ -4,7 +4,6 @@ React Router is a powerful routing library built on top of [React](http://facebo
 
 * [Motivation](Motivation.md)
 * [Principles](Principles.md)
-* [Examples](Examples.md)
 
 ===
 

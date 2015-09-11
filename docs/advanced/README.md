@@ -4,4 +4,3 @@
 * [Confirming Navigation](ConfirmingNavigation.md)
 * [Server Rendering](ServerRendering.md)
 * [Component Lifecycle](ComponentLifecycle.md)
-* [Examples](Examples.md)
