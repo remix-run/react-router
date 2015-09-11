@@ -45,7 +45,7 @@ parents just like before but prop names have changed.
 <Route path="about" component={About}/>
 ```
 
-Named routes are gone, see discussion [here](https://github.com/rackt/react-router/issues/1840)
+Named routes are gone (for now, [see discussion](https://github.com/rackt/react-router/issues/1840))
 
 ### NotFound route
 
@@ -108,7 +108,7 @@ the link will not check if its active.
 <Link to="/about" activeClassName="active">About</Link>
 ```
 
-#### Linking to Defult/Index routes
+#### Linking to Default/Index routes
 
 Because named routes are gone, a link to `/` with an index route at `/`
 will always be active. So we've introduced `IndexLink` that is only
