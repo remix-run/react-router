@@ -46,6 +46,3 @@ git push origin latest -f
 ./scripts/build.sh
 
 npm publish
-
-echo "# Publishing docs website"
-./publish-docs.sh
