@@ -22,6 +22,7 @@
     * [Router](/docs/api/Router.md)
     * [Link](/docs/api/Link.md)
     * [IndexLink](/docs/api/IndexLink.md)
+    * [RoutingContext](/docs/api/RoutingContext.md)
   * [Configuration components](/docs/api/README.md#configuration-components)
     * [Route](/docs/api/Route.md)
     * [Redirect](/docs/api/Redirect.md)
@@ -35,5 +36,4 @@
   * [Utilities](/docs/api/README.md#utilities)
     * [useRoutes](/docs/api/useRoutes.md)
     * [createRoutes](/docs/api/createRoutes.md)
-    * [RoutingContext](/docs/api/RoutingContext.md)
     * [PropTypes](/docs/api/PropTypes.md)

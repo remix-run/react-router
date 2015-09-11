@@ -5,6 +5,7 @@
 * [Router](Router.md)
 * [Link](Link.md)
 * [IndexLink](IndexLink.md)
+* [RoutingContext](RoutingContext.md)
 
 #### Configuration components
 
@@ -24,5 +25,4 @@
 
 * [useRoutes](useRoutes.md)
 * [createRoutes](createRoutes.md)
-* [RoutingContext](RoutingContext.md)
 * [PropTypes](PropTypes.md)
