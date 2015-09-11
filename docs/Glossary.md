@@ -20,9 +20,9 @@ A *component* is a React component class or a string (e.g. "div"). Basically, it
 
 ## EnterHook
 
-    type EnterHook = (nextState: RouterState, redirectTo: RedirectFunction, callback?: Function) => any;
+    type EnterHook = (nextState: RouterState, replaceState: RedirectFunction, callback?: Function) => any;
 
-An *enter hook* is a user-defined function that is called when a route is about to be rendered. It receives the next [router state](#routerstate) as its first argument. The [`redirectTo` function](#redirectfunction) may be used to trigger a transition to a different URL.
+An *enter hook* is a user-defined function that is called when a route is about to be rendered. It receives the next [router state](#routerstate) as its first argument. The [`replaceState` function](#redirectfunction) may be used to trigger a transition to a different URL.
 
 If an enter hook needs to execute asynchronously, it may list a 3rd `callback` argument that it must call in order to cause the transition to proceed.
 

@@ -1,5 +1,5 @@
 import React from 'react';
-import { Router, Route, Link, Navigation, Lifecycle } from 'react-router';
+import { Router, Route, Link, History, Lifecycle } from 'react-router';
 
 var App = React.createClass({
   render() {
@@ -28,7 +28,7 @@ var Dashboard = React.createClass({
 });
 
 var Form = React.createClass({
-  mixins: [ Lifecycle, Navigation ],
+  mixins: [ Lifecycle, History ],
 
   getInitialState() {
     return {
@@ -53,7 +53,7 @@ var Form = React.createClass({
     this.setState({
       textValue: ''
     }, () => {
-      this.transitionTo('/');
+      this.history.pushState(null, '/');
     });
   },
 

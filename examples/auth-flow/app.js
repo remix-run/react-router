@@ -1,5 +1,5 @@
 import React, { findDOMNode } from 'react';
-import { Router, Route, Link, Navigation } from 'react-router';
+import { Router, Route, Link, History } from 'react-router';
 import auth from './auth';
 
 var App = React.createClass({
@@ -55,7 +55,7 @@ var Dashboard = React.createClass({
 });
 
 var Login = React.createClass({
-  mixins: [ Navigation ],
+  mixins: [ History ],
 
   getInitialState() {
     return {
@@ -76,9 +76,9 @@ var Login = React.createClass({
       var { location } = this.props;
 
       if (location.state && location.state.nextPathname) {
-        this.replaceWith(location.state.nextPathname);
+        this.history.replaceState(null, location.state.nextPathname);
       } else {
-        this.replaceWith('/about');
+        this.history.replaceState(null, '/about');
       }
     });
   },

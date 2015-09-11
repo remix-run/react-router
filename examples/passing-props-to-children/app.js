@@ -1,8 +1,8 @@
 import React from 'react';
-import { Router, Route, Link, Navigation } from 'react-router';
+import { Router, Route, Link, History } from 'react-router';
 
 var App = React.createClass({
-  mixins: [ Navigation ],
+  mixins: [ History ],
 
   getInitialState() {
     return {
@@ -27,7 +27,7 @@ var App = React.createClass({
       return taco.name != removedTaco;
     });
     this.setState({tacos: tacos});
-    this.transitionTo('/');
+    this.history.pushState(null, '/');
   },
 
   render() {

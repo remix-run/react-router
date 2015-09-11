@@ -1,5 +1,5 @@
 import React, { findDOMNode } from 'react';
-import { Router, Navigation, Route, Link } from 'react-router';
+import { Router, History, Route, IndexRoute, Link } from 'react-router';
 import ContactStore from './ContactStore';
 
 var App = React.createClass({
@@ -60,7 +60,7 @@ var Index = React.createClass({
 });
 
 var Contact = React.createClass({
-  mixins: [ Navigation ],
+  mixins: [ History ],
 
   getStateFromStore(props) {
     var { id } = props ? props.params : this.props.params;
@@ -96,7 +96,7 @@ var Contact = React.createClass({
   destroy() {
     var { id } = this.props.params;
     ContactStore.removeContact(id);
-    this.transitionTo('/');
+    this.history.pushState(null, '/');
   },
 
   render() {
@@ -114,7 +114,7 @@ var Contact = React.createClass({
 });
 
 var NewContact = React.createClass({
-  mixins: [ Navigation ],
+  mixins: [ History ],
 
   createContact(event) {
     event.preventDefault();
@@ -123,7 +123,7 @@ var NewContact = React.createClass({
       first: findDOMNode(this.refs.first).value,
       last: findDOMNode(this.refs.last).value
     }, (contact) => {
-      this.transitionTo(`/contact/${contact.id}`);
+      this.history.pushState(null, `/contact/${contact.id}`);
     });
   },
 
@@ -150,8 +150,8 @@ var NotFound = React.createClass({
 
 React.render((
   <Router>
-    <Route component={App}>
-      <Route path="/" component={Index} />
+    <Route path="/" component={App}>
+      <IndexRoute component={Index} />
       <Route path="contact/new" component={NewContact} />
       <Route path="contact/:id" component={Contact} />
       <Route path="*" component={NotFound} />
