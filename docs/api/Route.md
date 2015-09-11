@@ -95,7 +95,7 @@ var Users = React.createClass({
 });
 ```
 
-#### `getComponent(callback)`
+#### `getComponent(location, callback)`
 
 Same as `component` but asynchronous, useful for
 code-splitting.
@@ -107,13 +107,13 @@ code-splitting.
 ##### Example
 
 ```js
-<Route path="courses/:courseId" getComponent={(cb) => {
+<Route path="courses/:courseId" getComponent={(location, cb) => {
   // do asynchronous stuff to find the components
   cb(null, Course);
 }}/>
 ```
 
-#### `getComponents(callback)`
+#### `getComponents(location, callback)`
 
 Same as `components` but asynchronous, useful for
 code-splitting.
@@ -125,7 +125,7 @@ code-splitting.
 ##### Example
 
 ```js
-<Route path="courses/:courseId" getComponent={(cb) => {
+<Route path="courses/:courseId" getComponent={(location, cb) => {
   // do asynchronous stuff to find the components
   cb(null, {sidebar: CourseSidebar, content: Course});
 }}/>
