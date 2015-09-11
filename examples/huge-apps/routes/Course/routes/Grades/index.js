@@ -1,7 +1,7 @@
 module.exports = {
   path: 'grades',
 
-  getComponents (cb) {
+  getComponents (state, cb) {
     require.ensure([], (require) => {
       cb(null, require('./components/Grades'));
     })
