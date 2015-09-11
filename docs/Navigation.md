@@ -3,6 +3,25 @@
 Mixes in the navigation methods of the router for convenient routing
 from within components.
 
+## Usage
+
+```js
+var ReactRouter = require('react-router')
+
+var myComponent = React.createComponent({
+	mixins : [ReactRouter.Navigation],
+	goToStore : function() {
+		// store is the route name, and storeId is hamilton
+		// will change to /store/hamilton
+		var city = 'hamilton';
+		this.transitionTo('/store/' + city);
+	},
+	render : function() {
+		return (<button onClick={this.goToStore}>Change Pages</button>)
+	}
+});
+```
+
 ## Methods
 
 ### `transitionTo(pathname, query, state)`

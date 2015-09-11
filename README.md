@@ -113,7 +113,7 @@ var User = React.createClass({
 // Declarative route configuration (could also load this config lazily
 // instead, all you really need is a single root route, you don't need to
 // colocate the entire config).
-React.render((
+ReactDOM.render((
   <Router>
     <Route path="/" component={App}>
       <Route path="about" component={About}/>

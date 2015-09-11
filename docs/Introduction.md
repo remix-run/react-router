@@ -45,7 +45,7 @@ var App = React.createClass({
   }
 });
 
-React.render(<App />, document.body);
+ReactDOM.render(<App />, document.body);
 ```
 
 As the hash portion of the URL changes, `<App>` will render a different `<Child>` by branching on `this.state.route`. Pretty straightforward stuff. But it gets complicated fast.
@@ -125,7 +125,7 @@ var App = React.createClass({
 
 // Finally, we render a <Router> with some <Route>s.
 // It does all the fancy routing stuff for us.
-React.render((
+ReactDOM.render((
   <Router>
     <Route path="/" component={App}>
       <Route path="about" component={About} />
@@ -147,7 +147,7 @@ var routes = {
   ]
 };
 
-React.render(<Router routes={routes} />, document.body);
+ReactDOM.render(<Router routes={routes} />, document.body);
 ```
 
 ## Adding More UI
@@ -174,7 +174,7 @@ var Inbox = React.createClass({
   }
 });
 
-React.render((
+ReactDOM.render((
   <Router>
     <Route path="/" component={App}>
       <Route path="about" component={About} />

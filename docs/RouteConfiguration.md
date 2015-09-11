@@ -44,7 +44,7 @@ var Message = React.createClass({
   }
 });
 
-React.render((
+ReactDOM.render((
   <Router>
     <Route path="/" component={App}>
       <Route path="about" component={About} />
@@ -78,7 +78,7 @@ var Dashboard = React.createClass({
   }
 });
 
-React.render((
+ReactDOM.render((
   <Router>
     <Route path="/" component={App}>
       {/* Show the dashboard at / */}
@@ -108,7 +108,7 @@ URL                     | Components
 It would be nice if we could remove the `/inbox` segment from the `/inbox/messages/:id` URL pattern, but still render `Message` nested inside the `App -> Inbox` UI. Absolute `path`s let us do exactly that.
 
 ```js
-React.render((
+ReactDOM.render((
   <Router>
     <Route path="/" component={App}>
       <IndexRoute component={Dashboard} />
@@ -144,7 +144,7 @@ Not to worry. We can use a `<Redirect>` to make sure that URL still works!
 ```js
 import { Redirect } from 'react-router';
 
-React.render((
+ReactDOM.render((
   <Router>
     <Route path="/" component={App}>
       <IndexRoute component={Dashboard} />
@@ -202,5 +202,5 @@ var routeConfig = [
   }
 ];
 
-React.render(<Router routes={routeConfig} />, document.body);
+ReactDOM.render(<Router routes={routeConfig} />, document.body);
 ```
