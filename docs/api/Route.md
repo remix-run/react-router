@@ -3,20 +3,20 @@
 A `Route` is used to declaratively map routes to your application's
 component hierarchy.
 
-## Props
+### Props
 
-### `path`
+#### `path`
 
 The path used in the URL.
 
 It will concat with the parent route's path unless it starts with `/`,
 making it an absolute path.
 
-**Note**: Absolute paths may not be used in route config that is [dynamically loaded](DynamicRouting.md).
+**Note**: Absolute paths may not be used in route config that is [dynamically loaded](/docs/advanced/DynamicRouting.md).
 
 If left undefined, the router will try to match the child routes.
 
-### `component`
+#### `component`
 
 A single component to be rendered when the route matches the url. It can
 be rendered by the parent route component with `this.props.children`.
@@ -41,13 +41,13 @@ var App = React.createClass({
 });
 ```
 
-### `components`
+#### `components`
 
 Routes can define multiple components as an object of `name:component`
 pairs to be rendered when the path matches the url. They can be rendered
 by the parent route component with `this.props.children[name]`.
 
-#### Example
+##### Example
 
 ```js
 // think of it outside the context of the router, if you had pluggable
@@ -95,16 +95,16 @@ var Users = React.createClass({
 });
 ```
 
-### `getComponent(callback)`
+#### `getComponent(callback)`
 
 Same as `component` but asynchronous, useful for
 code-splitting.
 
-#### `callback` signature
+##### `callback` signature
 
 `cb(err, component)`
 
-#### Example
+##### Example
 
 ```js
 <Route path="courses/:courseId" getComponent={(cb) => {
@@ -113,16 +113,16 @@ code-splitting.
 }}/>
 ```
 
-### `getComponents(callback)`
+#### `getComponents(callback)`
 
 Same as `components` but asynchronous, useful for
 code-splitting.
 
-#### `callback` signature
+##### `callback` signature
 
 `cb(err, components)`
 
-#### Example
+##### Example
 
 ```js
 <Route path="courses/:courseId" getComponent={(cb) => {
@@ -131,15 +131,14 @@ code-splitting.
 }}/>
 ```
 
-### `children`
+#### `children`
 
-Routes can be nested, `this.props.children` will contain the element created from the child route component. Please refer to the [Route Configuration][RouteConfiguration.md] since this is a very critical part of the router's design.
+Routes can be nested, `this.props.children` will contain the element created from the child route component. Please refer to the [Route Configuration](/docs/basics/RouteConfiguration.md) since this is a very critical part of the router's design.
 
-### `onEnter(nextState, replaceState)`
+#### `onEnter(nextState, replaceState)`
 
 Called when a route is about to be entered. It provides the next router state and a function to redirect to another path.
 
-### `onLeave()`
+#### `onLeave()`
 
 Called when a route is about to be exited.
-

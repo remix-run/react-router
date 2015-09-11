@@ -7,8 +7,8 @@ to:
 - Send `30x` responses for redirects
 - Fetch data before rendering (and use the router to help you do it)
 
-To facilitate these needs, you drop one level lower than the `<Router/>`
-API with
+To facilitate these needs, you drop one level lower than the [`<Router/>`](/docs/api/Router.md)
+API with:  
 
 - `createLocation` from the history package
 - `match` to match the routes to a location without rendering
@@ -40,6 +40,5 @@ serve((req, res) => {
 
 For data loading, you can use the `renderProps` argument to build whatever
 convention you want--like adding static `load` methods to your route
-components, or putting data loading functions on the routes, its up to
+components, or putting data loading functions on the routes, it's up to
 you.
-

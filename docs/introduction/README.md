@@ -1,8 +1,16 @@
 # Introduction
 
+React Router is a powerful routing library built on top of [React](http://facebook.github.io/react/) that helps you add new screens and flows to your application incredibly quickly, all while keeping the URL in sync with what's being displayed on the page. The project benefits from several years of combined experience working with the legendary Ember.js router.
+
+* [Motivation](Motivation.md)
+* [Principles](Principles.md)
+* [Examples](Examples.md)
+
+===
+
 To illustrate the problems React Router is going to solve for you, let's build a small application without it.
 
-## Without React Router
+### Without React Router
 
 ```js
 var About = React.createClass({/*...*/});
@@ -92,7 +100,7 @@ path: /inbox
 
 We'd have to make our URL parsing a lot smarter, and we would end up with a lot of code to figure out which branch of nested components to be rendered at any given URL: `App -> About`, `App -> Inbox -> Messages -> Message`, `App -> Inbox -> Messages -> Stats`, etc.
 
-## With React Router
+### With React Router
 
 Let's refactor our app to use React Router.
 
@@ -135,7 +143,7 @@ React.render((
 ), document.body);
 ```
 
-React Router knows how to build nested UI for us, so we don't have to manually figure out which `<Child>` component to render. Internally, the router converts your `<Route>` element hierarchy to a [route config](Glossary.md#routeconfig). But if you're not digging the JSX you can use plain objects instead:
+React Router knows how to build nested UI for us, so we don't have to manually figure out which `<Child>` component to render. Internally, the router converts your `<Route>` element hierarchy to a [route config](/docs/Glossary.md#routeconfig). But if you're not digging the JSX you can use plain objects instead:
 
 ```js
 var routes = {
@@ -189,7 +197,7 @@ React.render((
 
 Now visits to URLs like `inbox/messages/Jkei3c32` will match the new route and nest the UI branch of `App -> Inbox -> Message`.
 
-## Getting URL Parameters
+### Getting URL Parameters
 
 We're going to need to know something about the message in order to fetch it from the server. Route components get some useful properties injected into them when you render, particularly the parameters from the dynamic segment of your path. In our case, `:id`.
 
@@ -212,4 +220,4 @@ var Message = React.createClass({
 
 That's the gist of React Router. Application UIs are boxes inside of boxes inside of boxes; now you can keep those boxes in sync with the URL and link to them easily.
 
-The docs about [route configuration](RouteConfiguration.md) describe more of the router's features in depth.
+The docs about [route configuration](/docs/basics/RouteConfiguration.md) describe more of the router's features in depth.

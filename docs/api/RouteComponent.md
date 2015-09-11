@@ -8,7 +8,7 @@ A boolean value that is `true` when the router is transitioning, `false` otherwi
 
 ### `location`
 
-The current [location](http://rackt.github.io/history/docs/Location.html).
+The current [location](https://github.com/rackt/history/blob/master/docs/Location.md).
 
 ### `params`
 
@@ -26,7 +26,7 @@ A subset of `this.props.params` that were directly specified in this component's
 
 The matched child route elements to be rendered.
 
-### Example
+#### Example
 
 ```js
 React.render((

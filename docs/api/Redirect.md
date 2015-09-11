@@ -3,22 +3,22 @@
 A `Redirect` sets up a redirect to another route in your application to
 maintain old URLs.
 
-## Props
+### Props
 
-### `from`
+#### `from`
 
 The path you want to redirect from, including dynamic segments.
 
-### `to`
+#### `to`
 
 The path you want to redirect to.
 
-### `query`
+#### `query`
 
 By default, the query parameters will just pass through but you can
 specify them if you need to.
 
-## Example
+### Example
 
 ```js
 // lets say we want to change from `/profile/123` to `/about/123`
@@ -44,4 +44,3 @@ path. Pull requests welcome to make them handle relative paths too!
   <Redirect from="home" to="/course/:courseId/dashboard" />
 </Route>
 ```
-

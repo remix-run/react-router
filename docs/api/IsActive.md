@@ -2,15 +2,15 @@
 
 Provides `isActive` to a component.
 
-## Methods
+### Methods
 
-### `isActive(pathname, query)`
+#### `isActive(pathname, query)`
 
 Returns `true` or `false` depending on if the current path is active.
 Will be true for every route in the route branch matched by the
 `pathname` (child route is active, therefore parent is too).
 
-## Example
+### Example
 
 Let's say you are using bootstrap and want to get `active` on those `li`
 tags for the Tabs:
@@ -34,4 +34,3 @@ let Tab = React.createClass({
 // with an automatic `active` class on both.
 <Tab href="foo">Foo</Tab>
 ```
-

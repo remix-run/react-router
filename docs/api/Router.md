@@ -2,24 +2,24 @@
 
 Primary component of React Router. It keeps your UI and the URL in sync.
 
-## Props
+### Props
 
-### `children` (required)
+#### `children` (required)
 
-One or many [`Routes`][Route] or [Plain Routes][PlainRoute]. When the
-history changes, `Router` will match a branch of its [`Routes`][Route],
-and render their configured [components][RouteComponent], with child
+One or many [`Routes`](Route.md) or [Plain Routes](PlainRoute.md). When the
+history changes, `Router` will match a branch of its [`Routes`](Route.md),
+and render their configured [components](RouteComponent.md), with child
 route components nested inside the parents.
 
-### `routes`
+#### `routes`
 
 Alias for `children`.
 
-### `history`
+#### `history`
 
 The history the router should listen to from the `history` package.
 
-### `createElement(Component, props)`
+#### `createElement(Component, props)`
 
 When the router is ready to render a branch of route components, it will
 use this function to create the elements. You may want to take control
@@ -27,7 +27,7 @@ of creating the elements when you're using some sort of data
 abstraction, like setting up subscriptions to stores, or passing in some
 sort of application module to each component via props.
 
-#### Examples
+##### Examples
 
 ```js
 <Router createElement={createElement}/>
@@ -45,30 +45,28 @@ function createElement(Component, props) {
 }
 ```
 
-### `stringifyQuery(queryObject)`
+#### `stringifyQuery(queryObject)`
 
-A function used to convert an object from `Link`s or calls to
-`transitionTo` to a URL query string.
+A function used to convert an object from [`Link`](Link.md)s or calls to
+[`transitionTo`](Navigation.md#transitiontopathname-query-state) to a URL query string.
 
-### `parseQueryString(queryString)`
+#### `parseQueryString(queryString)`
 
 A function used to convert a query string into an object that gets
 passed to route component props.
 
-### `onError(error)`
+#### `onError(error)`
 
 While the router is matching, errors may bubble up, here
 is your opportunity to catch and deal with them. Typically these will
-come from async features like `route.getComponents` and
-`route.getChildRoutes`.
+come from async features like [`route.getComponents`](Route.md#getcomponentscallback) and
+[`route.getChildRoutes`](PlainRoute.md#getchildrouteslocation-callback).
 
-### `onUpdate()`
+#### `onUpdate()`
 
 Called whenever the router updates its state in response to URL changes.
 
-Examples
---------
+### Examples
 
-Please see the `examples/` directory of the repository for extensive
+Please see the [`examples/`](/examples) directory of the repository for extensive
 examples of using `Router`.
-

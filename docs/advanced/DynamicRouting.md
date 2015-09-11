@@ -8,9 +8,9 @@ It's important that changes deep down in the application don't require changes a
 
 A router is the perfect place to handle code splitting: it's responsible for setting up your views.
 
-React Router does all of its [path matching](RouteMatching.md) and component fetching asynchronously, which allows you to not only load up the components lazily, *but also lazily load the route configuration*. You really only need one route definition in your initial bundle, the router can resolve the rest on demand.
+React Router does all of its [path matching](/docs/basics/RouteMatching.md) and component fetching asynchronously, which allows you to not only load up the components lazily, *but also lazily load the route configuration*. You really only need one route definition in your initial bundle, the router can resolve the rest on demand.
 
-Routes may define `getChildRoutes` and `getComponents` methods. These are asynchronous and only called when needed. We call it "gradual matching". React Router will gradually match the URL and fetch only the amount of route configuration and components it needs to match the URL and render.
+Routes may define [`getChildRoutes`](/docs/api/PlainRoute.md#getchildrouteslocation-callback) and [`getComponents`](/docs/api/Route.md#getcomponentscallback) methods. These are asynchronous and only called when needed. We call it "gradual matching". React Router will gradually match the URL and fetch only the amount of route configuration and components it needs to match the URL and render.
 
 Coupled with a smart code splitting tool like [webpack](http://webpack.github.io/), a once tireless architecture is now simple and declarative.
 
