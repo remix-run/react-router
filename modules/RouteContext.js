@@ -1,4 +1,5 @@
 import React from 'react';
+import createDecorator from './DecoratorUtils';
 
 var { object } = React.PropTypes;
 
@@ -25,5 +26,7 @@ var RouteContext = {
   }
 
 };
+
+export const RouteContextDecorator = createDecorator(RouteContext);
 
 export default RouteContext;

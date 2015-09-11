@@ -1,4 +1,5 @@
 import React from 'react';
+import createDecorator from './DecoratorUtils';
 
 var { object } = React.PropTypes;
 
@@ -53,5 +54,8 @@ RouterNavigationMethods.forEach(function (method) {
     return history[method].apply(history, arguments);
   };
 });
+
+
+export const NavigationDecorator = createDecorator(Navigation);
 
 export default Navigation;

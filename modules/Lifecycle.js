@@ -1,5 +1,6 @@
 import React from 'react';
 import invariant from 'invariant';
+import createDecorator from './DecoratorUtils';
 
 var { object } = React.PropTypes;
 
@@ -65,5 +66,7 @@ var Lifecycle = {
   }
 
 };
+
+export const LifecycleDecorator = createDecorator(Lifecycle);
 
 export default Lifecycle;

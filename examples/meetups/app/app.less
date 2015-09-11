@@ -1,0 +1,86 @@
+@font-face {
+  font-family: 'Open Sans';
+  font-style: normal;
+  font-weight: 400;
+  src: local('Open Sans'), local('OpenSans'), url(https://fonts.gstatic.com/s/opensans/v13/cJZKeOuBrn4kERxqtaUH3ZBw1xU1rKptJj_0jans920.woff2) format('woff2');
+  unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02C6, U+02DA, U+02DC, U+2000-206F, U+2074, U+20AC, U+2212, U+2215, U+E0FF, U+EFFD, U+F000;
+}
+
+@keyframes rotation {
+  0% {
+    transform: rotate(0);
+  }
+  100% {
+    transform: rotate(360deg);
+  }
+}
+
+@-webkit-keyframes rotation {
+  0% {
+    -webkit-transform: rotate(0);
+  }
+  100% {
+    -webkit-transform: rotate(360deg);
+  }
+}
+
+@-moz-keyframes rotation {
+  0% {
+    -moz-transform: rotate(0);
+  }
+  100% {
+    -moz-transform: rotate(360deg);
+  }
+}
+
+.rotation() {
+  animation: rotation 1s infinite linear;
+  -webkit-animation: rotation 1s infinite linear;
+  -moz-animation: rotation 1s infinite linear;
+}
+
+body {
+  font-family: 'Open Sans', sans-serif;
+  margin: 0;
+}
+
+a {
+  text-decoration: none;
+  color: #0383FF;
+}
+
+.main-content {
+  margin: 10px;
+}
+
+.loading {
+  text-align: center;
+  font-size: 2em;
+  margin-top: 1.5em;
+  i {
+    .rotation();
+  }
+}
+
+.title {
+  padding: 0;
+  margin: 0;
+  margin-left: 10px;
+}
+
+.subtitle {
+  .title();
+  color: #B90202;
+  margin-bottom: 8px;
+}
+
+.error {
+  color: #B90202;
+  text-align: center;
+  margin-top: 2em;
+
+  .ionicons {
+    font-size: 2em;
+    font-weight: 800;
+  }
+}
