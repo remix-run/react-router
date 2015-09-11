@@ -9,9 +9,9 @@ There are three types of histories you'll come across most often, but
 note that anyone can build a custom history implementation for
 consumption with React Router.
 
-- [`createHashHistory`](#createHashHistory)
-- [`createBrowserHistory`](#createBrowserHistory)
-- [`createMemoryHistory`](#createMemoryHistory)
+- [`createHashHistory`](#createhashhistory)
+- [`createBrowserHistory`](#createbrowserhistory)
+- [`createMemoryHistory`](#creatememoryhistory)
 
 Get them from the history package:
 
@@ -43,7 +43,7 @@ When a history transitions around your app with `pushState` or
 doesn't show up in the URL, think of it a little bit like post data in
 an HTML form.
 
-The DOM api that hash history uses to transition around is simply
+The DOM API that hash history uses to transition around is simply
 `window.location.hash = newHash`, with no place to store location state.
 But, we want all histories to be able to use location state, so we shim
 it by creating a unique key for each location and then store that state
@@ -89,7 +89,7 @@ console.log("server started on port " + port)
 #### IE8, IE9 Support
 
 We feature detect to see if we can use the browser's native `History`
-api, if not, any call to transition around the app will result in _a
+API, if not, any call to transition around the app will result in _a
 full page reload_, which allows you to build your app and have a better
 experience for newer browsers, but still support old ones.
 

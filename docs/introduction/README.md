@@ -143,7 +143,7 @@ React.render((
 ), document.body);
 ```
 
-React Router knows how to build nested UI for us, so we don't have to manually figure out which `<Child>` component to render. Internally, the router converts your `<Route>` element hierarchy to a [route config](Glossary.md#routeconfig). But if you're not digging the JSX you can use plain objects instead:
+React Router knows how to build nested UI for us, so we don't have to manually figure out which `<Child>` component to render. Internally, the router converts your `<Route>` element hierarchy to a [route config](/docs/Glossary.md#routeconfig). But if you're not digging the JSX you can use plain objects instead:
 
 ```js
 var routes = {
@@ -220,4 +220,4 @@ var Message = React.createClass({
 
 That's the gist of React Router. Application UIs are boxes inside of boxes inside of boxes; now you can keep those boxes in sync with the URL and link to them easily.
 
-The docs about [route configuration](RouteConfiguration.md) describe more of the router's features in depth.
+The docs about [route configuration](/docs/basics/RouteConfiguration.md) describe more of the router's features in depth.

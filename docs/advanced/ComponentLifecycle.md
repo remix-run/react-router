@@ -24,8 +24,8 @@ Consider this route config:
 
     | Component | Lifecycle Hooks called |
     |-----------|------------------------|
-    | App | componentDidMount |
-    | Home | componentDidMount |
+    | App | `componentDidMount` |
+    | Home | `componentDidMount` |
     | Invoice | N/A |
     | Account | N/A |
 
@@ -33,13 +33,13 @@ Consider this route config:
 
     | Component | Lifecycle Hooks called |
     |-----------|------------------------|
-    | App | componentWillReceiveProps, componentDidUpdate |
-    | Home | componentWillUnmount |
-    | Invoice | componentDidMount |
+    | App | `componentWillReceiveProps`, `componentDidUpdate` |
+    | Home | `componentWillUnmount` |
+    | Invoice | `componentDidMount` |
     | Account | N/A |
 
     - `App` gets `componentWillReceiveProps` and `componentDidUpdate` because it
-    stayed rendered but just received new props from the router (like
+    stayed rendered but just received new props from the router (like:
     `children`, `params`, `location`, etc.)
     - `Home` is no longer rendered, so it gets unmounted.
     - `Invoice` is mounted for the first time.

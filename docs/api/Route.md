@@ -12,7 +12,7 @@ The path used in the URL.
 It will concat with the parent route's path unless it starts with `/`,
 making it an absolute path.
 
-**Note**: Absolute paths may not be used in route config that is [dynamically loaded](DynamicRouting.md).
+**Note**: Absolute paths may not be used in route config that is [dynamically loaded](/docs/advanced/DynamicRouting.md).
 
 If left undefined, the router will try to match the child routes.
 
@@ -133,7 +133,7 @@ code-splitting.
 
 #### `children`
 
-Routes can be nested, `this.props.children` will contain the element created from the child route component. Please refer to the [Route Configuration][RouteConfiguration.md] since this is a very critical part of the router's design.
+Routes can be nested, `this.props.children` will contain the element created from the child route component. Please refer to the [Route Configuration](/docs/basics/RouteConfiguration.md) since this is a very critical part of the router's design.
 
 #### `onEnter(nextState, replaceState)`
 

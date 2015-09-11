@@ -1,18 +1,18 @@
 # Route Matching
 
-A [route](Glossary.md#route) has two attributes that determine whether or not it "matches" the URL: 1) [nesting](#nesting) and 2) its [`path`](#path-syntax).
+A [route](/docs/Glossary.md#route) has two attributes that determine whether or not it "matches" the URL: 1) [nesting](#nesting) and 2) its [`path`](#path-syntax).
 
 ### Nesting
 
-React Router uses the concept of nested routes to let you declare nested sets of views that should be rendered when a given URL is invoked. Nested routes are arranged in a tree-like structure. To find a match, React Router traverses the [route config](Glossary.md#routeconfig) depth-first searching for a route that matches the URL.
+React Router uses the concept of nested routes to let you declare nested sets of views that should be rendered when a given URL is invoked. Nested routes are arranged in a tree-like structure. To find a match, React Router traverses the [route config](/docs/Glossary.md#routeconfig) depth-first searching for a route that matches the URL.
 
 ### Path Syntax
 
-A route path is [a string pattern](Glossary.md#routepattern) that is used to match a URL (or a portion of one). Route paths are interpreted literally, except for the following special symbols:
+A route path is [a string pattern](/docs/Glossary.md#routepattern) that is used to match a URL (or a portion of one). Route paths are interpreted literally, except for the following special symbols:
 
-  - `:paramName` – matches a URL segment up to the next `/`, `?`, or `#`. The matched string is called a [param](Glossary.md#params)
+  - `:paramName` – matches a URL segment up to the next `/`, `?`, or `#`. The matched string is called a [param](/docs/Glossary.md#params)
   - `()` – Wraps a portion of the URL that is optional
-  - `*` – Matches all characters (non-greedy) up to the next character in the pattern, or to the end of the URL if there is none, and creates a `splat` [param](Glossary.md#params)
+  - `*` – Matches all characters (non-greedy) up to the next character in the pattern, or to the end of the URL if there is none, and creates a `splat` [param](/docs/Glossary.md#params)
 
 ```
 <Route path="/hello/:name">         // matches /hello/michael and /hello/ryan
