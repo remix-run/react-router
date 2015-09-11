@@ -8,7 +8,7 @@ A boolean value that is `true` when the router is transitioning, `false` otherwi
 
 ### `location`
 
-The current [location](http://rackt.github.io/history/docs/Location.html).
+The current [location](https://github.com/rackt/history/blob/master/docs/Location.md).
 
 ### `params`
 
