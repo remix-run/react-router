@@ -11,7 +11,9 @@ Lifecycle Methods
 ### `routerWillLeave(nextLocation)`
 
 Called when the router is attempting to transition away from the route
-that rendered this component.
+that rendered this component. If you return a string, the user will be
+asked to confirm the transition with the string returned (just like
+onBeforeUnload).
 
 ### arguments
 
