@@ -60,7 +60,7 @@ does not match:
   /file/
   /file
 
-path: /file(/:name)
+path: /file?/:name?
 matches:
   /file/foo.js
     this.props.params: {name: 'foo.js'}
@@ -79,7 +79,7 @@ matches:
   /file/quux/baz.js
     this.props.params: {splat: 'quux/baz.js'}
 
-path: /foo/*/:bar(/*)
+path: /foo/*/:bar?/*?
 matches:
   /foo/a.b.c/taco/def
     this.props.params: {bar: 'taco', splat: ['a.b.c', 'def']}
