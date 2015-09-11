@@ -49,7 +49,7 @@ Named routes are gone, see discussion [here](https://github.com/rackt/react-rout
 
 ### NotFound route
 
-Not found really confused people mistaking it for not finding resources
+Not found really confused people, mistaking not finding resources
 from your API for not matching a route. We've removed it completely
 since its simple with a `*` path.
 
@@ -58,7 +58,7 @@ since its simple with a `*` path.
 <NotFoundRoute handler={NoMatch}/>
 
 // v1.0
-<Route path="*"/>
+<Route path="*" component={NoMatch}/>
 ```
 
 ### Redirect route
@@ -226,7 +226,7 @@ and where you get it now if you're a route component (`this.props`)
 ### We'll keep updating this
 
 There's a lot of the old API we've missed, please give the [new
-docs][/docs] a read and help us fill this guide in. Thansk!
+docs](/docs) a read and help us fill this guide in. Thansk!
 
 
 0.13.2 -> 0.13.3
