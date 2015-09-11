@@ -5,6 +5,143 @@ To see discussion around these API changes, please refer to the
 [changelog](/CHANGELOG.md) and visit the commits and issues they
 reference.
 
+0.13.x -> 1.0.0
+----------------
+
+- React `0.14.x` is now required (if you want to use the new AsyncProps feature of React Router)
+- `Router.run` has been removed. Simply call `React.render()` directly on the `<Router/>` component
+- `<RouteHandler/>` has been replaced with `this.props.children`
+
+```js
+// 0.13.x
+var SomeComponent = React.createClass({
+  render() {
+    return (
+      <div>
+        <RouteHandler customProp={true} />
+      </div>
+    )
+  }
+});
+
+// 1.0.0
+var SomeComponent = React.createClass({
+  render() {
+    return (
+      <div>
+        {this.props.children && React.cloneElement(this.props.children, {
+          customProp: true
+        })}
+      </div>
+    )
+  }
+});
+```
+
+- `this.context.router` has been replaced with a combination of `this.props.*`
+values and `this.*` methods
+
+```js
+// 0.13.x
+var SomeComponent = React.createClass({
+  contextTypes = {
+    router: React.PropTypes.func.isRequired
+  },
+
+  render() {
+    return (
+      <div>
+        Current route is: {this.context.router.getCurrentPath()}.
+        <button onClick={this._handleClick}>Click to Navigate Away</button>
+      </div>
+    )
+  },
+
+  _handleClick () {
+      this.context.router.transitionTo('login');
+  }
+});
+
+// 1.0.0
+var SomeComponent = React.createClass({
+  render() {
+    return (
+      <div>
+        Current route is: {this.props.location.pathname}
+        <button onClick={this._handleClick}>Click to Navigate Away</button>
+      </div>
+    )
+  },
+
+  _handleClick () {
+      this.transitionTo('login');
+  }
+});
+```
+
+- The `name` prop on the `<Route />` component has been removed. All paths
+must be absolute now.
+
+```js
+// 0.13.x
+Router.run(<Route name="user" path="/user/:id" />);
+
+var SomeComponent = React.createClass({
+  render() {
+    return (
+      <Link to="user" params={{userId: "123"}} />
+    )
+  }
+});
+
+// 1.0.0
+React.render(<Router><Route path="/user/:id" /></Router>);
+
+var SomeComponent = React.createClass({
+  render() {
+    return (
+      <Link to="/user/123" />
+    )
+  }
+});
+```
+
+- The `willTransitionTo` lifecycle method has been replaced with the `routerWillLeave` method from the `Navigation` mixin, or the `onEnter` prop on the `<Route/>` component
+
+```js
+// 0.13.x
+var SomeComponent = React.createClass({
+  statics: {
+    willTransitionTo: (transition, params, query) {
+	  if (shouldAbort) {
+	    transition.abort();
+	  } else {
+	    transition.redirect('another-route');
+	  }
+	}
+  }
+});
+
+// 1.0.0
+// Using component method
+var SomeComponent = React.createClass({
+  mixins: [TransitionHook],
+
+  routerWillLeave: (nextState, transition) {
+    transition.abort();
+  }
+});
+
+// 1.0.0
+// Using Route definition
+var onEnter = function (nextState, transition) {
+  transition.to('another-route');
+};
+
+<Route component={Page} onEnter={onEnter} path="page" />
+
+```
+
 0.13.2 -> 0.13.3
 ----------------
 
