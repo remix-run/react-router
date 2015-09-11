@@ -135,7 +135,7 @@ code-splitting.
 
 Routes can be nested, `this.props.children` will contain the element created from the child route component. Please refer to the [Route Configuration][RouteConfiguration.md] since this is a very critical part of the router's design.
 
-### `onEnter(nextState, redirectTo)`
+### `onEnter(nextState, replaceState)`
 
 Called when a route is about to be entered. It provides the next router state and a function to redirect to another path.
 

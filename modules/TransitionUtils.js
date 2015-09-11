@@ -23,9 +23,9 @@ function getEnterHooks(routes) {
 
 /**
  * Runs all onEnter hooks in the given array of routes in order
- * with onEnter(nextState, redirectTo, callback) and calls
+ * with onEnter(nextState, replaceState, callback) and calls
  * callback(error, redirectInfo) when finished. The first hook
- * to use redirectTo short-circuits the loop.
+ * to use replaceState short-circuits the loop.
  *
  * If a hook needs to run asynchronously, it may use the callback
  * function. However, doing so will cause the transition to pause,
@@ -40,12 +40,12 @@ export function runEnterHooks(routes, nextState, callback) {
   }
 
   var redirectInfo;
-  function redirectTo(pathname, query, state) {
+  function replaceState(state, pathname, query) {
     redirectInfo = { pathname, query, state };
   }
 
   loopAsync(hooks.length, function (index, next, done) {
-    hooks[index](nextState, redirectTo, function (error) {
+    hooks[index](nextState, replaceState, function (error) {
       if (error || redirectInfo) {
         done(error, redirectInfo); // No need to continue.
       } else {

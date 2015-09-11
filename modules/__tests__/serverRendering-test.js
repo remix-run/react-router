@@ -56,8 +56,8 @@ describe('server rendering', function () {
 
     RedirectRoute = {
       path: '/company',
-      onEnter (nextState, redirectTo) {
-        redirectTo('/about')
+      onEnter (nextState, replaceState) {
+        replaceState(null, '/about')
       }
     };
 

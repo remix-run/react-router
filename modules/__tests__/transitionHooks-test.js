@@ -36,10 +36,10 @@ describe('When a router enters a branch', function () {
     NewsFeedRoute = {
       path: 'news',
       component: NewsFeed,
-      onEnter(nextState, redirectTo) {
+      onEnter(nextState, replaceState) {
         expect(this).toBe(NewsFeedRoute);
         expect(nextState.routes).toContain(NewsFeedRoute);
-        expect(redirectTo).toBeA('function');
+        expect(replaceState).toBeA('function');
       },
       onLeave() {
         expect(this).toBe(NewsFeedRoute);
@@ -49,10 +49,10 @@ describe('When a router enters a branch', function () {
     InboxRoute = {
       path: 'inbox',
       component: Inbox,
-      onEnter(nextState, redirectTo) {
+      onEnter(nextState, replaceState) {
         expect(this).toBe(InboxRoute);
         expect(nextState.routes).toContain(InboxRoute);
-        expect(redirectTo).toBeA('function');
+        expect(replaceState).toBeA('function');
       },
       onLeave() {
         expect(this).toBe(InboxRoute);
@@ -61,12 +61,12 @@ describe('When a router enters a branch', function () {
 
     RedirectToInboxRoute = {
       path: 'redirect-to-inbox',
-      onEnter(nextState, redirectTo) {
+      onEnter(nextState, replaceState) {
         expect(this).toBe(RedirectToInboxRoute);
         expect(nextState.routes).toContain(RedirectToInboxRoute);
-        expect(redirectTo).toBeA('function');
+        expect(replaceState).toBeA('function');
 
-        redirectTo('/inbox');
+        replaceState(null, '/inbox');
       },
       onLeave() {
         expect(this).toBe(RedirectToInboxRoute);
@@ -75,10 +75,10 @@ describe('When a router enters a branch', function () {
 
     MessageRoute = {
       path: 'messages/:messageID',
-      onEnter(nextState, redirectTo) {
+      onEnter(nextState, replaceState) {
         expect(this).toBe(MessageRoute);
         expect(nextState.routes).toContain(MessageRoute);
-        expect(redirectTo).toBeA('function');
+        expect(replaceState).toBeA('function');
       },
       onLeave() {
         expect(this).toBe(MessageRoute);
@@ -87,10 +87,10 @@ describe('When a router enters a branch', function () {
   
     DashboardRoute = {
       component: Dashboard,
-      onEnter(nextState, redirectTo) {
+      onEnter(nextState, replaceState) {
         expect(this).toBe(DashboardRoute);
         expect(nextState.routes).toContain(DashboardRoute);
-        expect(redirectTo).toBeA('function');
+        expect(replaceState).toBeA('function');
       },
       onLeave() {
         expect(this).toBe(DashboardRoute);
