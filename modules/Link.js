@@ -11,6 +11,14 @@ function isModifiedEvent(event) {
   return !!(event.metaKey || event.altKey || event.ctrlKey || event.shiftKey);
 }
 
+function isEmptyObject(object) {
+  for (var p in object)
+    if (object.hasOwnProperty(p))
+      return false;
+
+  return true;
+}
+
 /**
  * A <Link> is used to create an <a> element that links to a route.
  * When that route is active, the link gets an "active" class name
@@ -47,9 +55,8 @@ var Link = React.createClass({
 
   getDefaultProps() {
     return {
-      className: '',
-      activeClassName: 'active',
       onlyActiveOnIndex: false,
+      className: '',
       style: {}
     };
   },
@@ -83,26 +90,24 @@ var Link = React.createClass({
   },
 
   render() {
-    var { to, query, onlyActiveOnIndex } = this.props;
-
-    var props = {
-      ...this.props,
-      onClick: this.handleClick
-    };
-
     var { history } = this.context;
+    var { activeClassName, activeStyle, onlyActiveOnIndex, to, query, state, onClick, ...props } = this.props;
+
+    props.onClick = this.handleClick;
 
     // Ignore if rendered outside the context
     // of history, simplifies unit testing.
     if (history) {
       props.href = history.createHref(to, query);
 
-      if (history.isActive(to, query, onlyActiveOnIndex)) {
-        if (props.activeClassName)
-          props.className += props.className !== '' ? ` ${props.activeClassName}` : props.activeClassName;
+      if (activeClassName || (activeStyle != null && !isEmptyObject(activeStyle))) {
+        if (history.isActive(to, query, onlyActiveOnIndex)) {
+          if (activeClassName)
+            props.className += props.className === '' ? activeClassName : ` ${activeClassName}`;
 
-        if (props.activeStyle)
-          props.style = { ...props.style, ...props.activeStyle };
+          if (activeStyle)
+            props.style = { ...props.style, ...activeStyle };
+        }
       }
     }
 

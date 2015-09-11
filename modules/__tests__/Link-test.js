@@ -71,8 +71,8 @@ describe('A <Link>', function () {
       render() {
         return (
           <div>
-            <Link to="/hello/michael">Michael</Link>
-            <Link to="/hello/ryan">Ryan</Link>
+            <Link to="/hello/michael" activeClassName="active">Michael</Link>
+            <Link to="/hello/ryan" activeClassName="active">Ryan</Link>
           </div>
         );
       }
