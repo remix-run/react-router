@@ -29,7 +29,7 @@ The matched child route elements to be rendered.
 ### Example
 
 ```js
-React.render((
+ReactDOM.render((
   <Router history={history}>
     <Route path="/" component={App}>
       <Route path="groups" components={Groups} />
@@ -57,7 +57,7 @@ When a route has multiple components, the child elements are available by name o
 ### Example
 
 ```js
-React.render((
+ReactDOM.render((
   <Router>
     <Route path="/" component={App}>
       <Route path="groups" components={{main: Groups, sidebar: GroupsSidebar}} />

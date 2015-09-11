@@ -57,6 +57,14 @@ React Router. It uses the [History](https://developer.mozilla.org/en-US/docs/Web
 API built into the browser to manipulate the url, creating real urls that
 look like `example.com/some/path`.
 
+To use, set the `history` prop on your `Router`:
+
+```js
+<Router history={createBrowserHistory()}>
+  ... 
+</Router>
+```
+
 ### Configuring Your Server
 
 Your server must be ready to handle real urls. When the app first loads
