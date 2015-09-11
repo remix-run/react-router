@@ -32,25 +32,25 @@ Then with a module bundler or webpack, use as you would anything else:
 
 ```js
 // using an ES6 transpiler, like babel
-import { Router, Route, Link } from 'react-router'
+import { Router, Route, Link } from 'react-router';
 
 // not using an ES6 transpiler
-var ReactRouter = require('react-router')
-var Router = ReactRouter.Router
-var Route = ReactRouter.Route
-var Link = ReactRouter.Link
+var ReactRouter = require('react-router');
+var Router = ReactRouter.Router;
+var Route = ReactRouter.Route;
+var Link = ReactRouter.Link;
 ```
 
 You can require only the pieces you need straight from the `lib` directory:
 
 ```js
-import { Router } from 'react-router/lib/Router'
+import { Router } from 'react-router/lib/Router';
 ```
 
 There's also a UMD build in the `umd` directory:
 
 ```js
-import ReactRouter from 'react-router/umd/ReactRouter'
+import ReactRouter from 'react-router/umd/ReactRouter';
 ```
 
 If you're using globals, you can find the library on `window.ReactRouter`.
@@ -62,10 +62,11 @@ If you just want to drop a `<script>` tag in your page and be done with it, you 
 ### What's it look like?
 
 ```js
-import { Router, Route } from 'react-router'
+import React from 'react';
+import { Router, Route } from 'react-router';
 
-var App = React.createClass({/*...*/})
-var About = React.createClass({/*...*/})
+var App = React.createClass({/*...*/});
+var About = React.createClass({/*...*/});
 // etc.
 
 var Users = React.createClass({
@@ -85,16 +86,16 @@ var Users = React.createClass({
           {this.props.children}
         </div>
       </div>
-    )
+    );
   }
-})
+});
 
 var User = React.createClass({
   componentDidMount() {
     this.setState({
       // route components are rendered with useful information, like URL params
       user: findUserById(this.props.params.userId)
-    })
+    });
   },
 
   render() {
@@ -103,9 +104,9 @@ var User = React.createClass({
         <h2>{this.state.user.name}</h2>
         {/* etc. */}
       </div>
-    )
+    );
   }
-})
+});
 
 // Declarative route configuration (could also load this config lazily
 // instead, all you really need is a single root route, you don't need to
@@ -120,7 +121,7 @@ React.render((
       <Route path="*" component={NoMatch}/>
     </Route>
   </Router>
-), document.body)
+), document.body);
 ```
 
 See more in the [Introduction](/docs/introduction/README.md) and [Advanced
