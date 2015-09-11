@@ -45,7 +45,7 @@ have a mechanism to restore the location state.
 
 Browser history is the recommended history for browser application with
 React Router. It uses the [History](https://developer.mozilla.org/en-US/docs/Web/API/History)
-API built into the browser to manipulate the url creating real urls that
+API built into the browser to manipulate the url, creating real urls that
 look like `example.com/some/path`.
 
 ### Configuring Your Server
