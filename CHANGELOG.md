@@ -1,3 +1,26 @@
+v1.0.0-rc1 - Fri, 11 Sep 2015 21:35:18 GMT
+------------------------------------------
+
+- [5fbe933](../../commit/5fbe933) [changed] Do not add "active" class by default
+- [85c699c](../../commit/85c699c) [changed] State -> IsActive
+- [94509e7](../../commit/94509e7) [added] IndexLink
+- [adc0a2f](../../commit/adc0a2f) [added] IndexRoute
+- [b86509a](../../commit/b86509a) [added] useRoutes history enhancer [added] RoutingContext component [added] RouteContext mixin [added] Lifecycle mixin
+- [e72812d](../../commit/e72812d) [added] <Router initialState>
+- [4c6dc1b](../../commit/4c6dc1b) [fixed] Installing on Windows
+- [042cffc](../../commit/042cffc) [changed] Removed histories/added history dep
+- [af7eb55](../../commit/af7eb55) [added] History.onBeforeChange
+- [f4ed900](../../commit/f4ed900) [fixed] correctly updates the window scroll position
+- [587e54f](../../commit/587e54f) [added] static `history` singleton getter for `HashHistory` and `BrowserHistory`
+- [5bd62b5](../../commit/5bd62b5) [fixed] errors in examples
+- [4e2ca3c](../../commit/4e2ca3c) [fixed] URI escape path components with special chars
+- [0630488](../../commit/0630488) [fixed] Link module adds extra space
+- [26400c1](../../commit/26400c1) [fixed] Use encodeURI for splat params
+- [178efc3](../../commit/178efc3) [fixed] <Link href> when using HashHistory
+- [41bd525](../../commit/41bd525) [fixed] Properly escape splats
+- [4759961](../../commit/4759961) [fixed] URLUtils recognize values containing \n
+
+
 v1.0.0-beta4 - Mon, 31 Aug 2015 06:19:34 GMT
 --------------------------------------------
 
