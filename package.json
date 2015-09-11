@@ -13,7 +13,6 @@
     "build": "babel ./modules -d lib --ignore '__tests__'",
     "build-umd": "NODE_ENV=production webpack modules/index.js umd/ReactRouter.js",
     "build-min": "NODE_ENV=production webpack -p modules/index.js umd/ReactRouter.min.js",
-    "build-website": "scripts/build-website.sh",
     "start": "webpack-dev-server --config examples/webpack.config.js --content-base examples --inline",
     "test": "eslint modules && karma start",
     "lint": "eslint modules",
