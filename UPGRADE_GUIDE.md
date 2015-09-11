@@ -5,9 +5,228 @@ To see discussion around these API changes, please refer to the
 [changelog](/CHANGELOG.md) and visit the commits and issues they
 reference.
 
-0.13.3 -> 1.0.0-rc1
--------------------
-Todo
+0.13.3 -> 1.0.0
+---------------
+
+Thanks for your patience :) Big changes.
+
+### Rendering
+
+```js
+// v0.13.x
+Router.run(routes, (Handler) => {
+  React.render(<Handler/>, el);
+})
+
+// v1.0
+React.render(<Router>{routes}</Router>, el)
+
+// looks more like this:
+React.render((
+  <Router>
+    <Route path="/" component={App}/>
+  </Router>
+), el);
+
+// or if you'd rather
+React.render(<Router routes={routes}/>, el)
+```
+
+### Route Config
+
+You can still nest your routes as before, paths are inherited from
+parents just like before but prop names have changed.
+
+```js
+// v0.13.x
+<Route name="about" handler={About}/>
+
+// v1.0
+<Route path="about" component={About}/>
+```
+
+Named routes are gone, see discussion [here](https://github.com/rackt/react-router/issues/1840)
+
+### NotFound route
+
+Not found really confused people mistaking it for not finding resources
+from your API for not matching a route. We've removed it completely
+since its simple with a `*` path.
+
+```js
+// v0.13.x
+<NotFoundRoute handler={NoMatch}/>
+
+// v1.0
+<Route path="*"/>
+```
+
+### Redirect route
+
+- no more params
+- must have absolute "from" (for now)
+
+```js
+// v0.13.x
+<Redirect from="some/where/:id" to="somewhere/else/:id" params={{id: 2}}/>
+
+// v1.0
+// Works the same as before, except no params, just put them in the path
+<Redirect from="/some/where/:id" to="/somewhere/else/2"/>
+```
+
+### Links
+
+#### path / params
+
+```js
+// v0.13.x
+<Link to="user" params={{userId: user.id}}>Mateusz</Link>
+
+// v1.0
+// because named routes are gone, link to full paths, you no longer need
+// to know the names of the parameters, and string templates are quite
+// nice. Note that `query` has not changed.
+<Link to={`/users/${user.id}`}>Mateusz</Link>
+```
+
+#### "active" class
+
+In 0.13.x links added the "active" class by default which you could
+override with `activeClassName`, or provide `activeStyles`. Most links
+don't need this and the check is (currently) expensive.
+
+Links no longer add the "active" class by default, you opt-in by
+providing one; if no `activeClassName` or `activeStyles` are provided,
+the link will not check if its active.
+
+```js
+// v0.13.x
+<Link to="about">About</Link>
+
+// v1.0
+<Link to="/about" activeClassName="active">About</Link>
+```
+
+#### Linking to Defult/Index routes
+
+Because named routes are gone, a link to `/` with an index route at `/`
+will always be active. So we've introduced `IndexLink` that is only
+active when the index route is active.
+
+```js
+// v0.13.x
+// with this route config
+<Route path="/" handler={App}>
+  <DefaultRoute name="home" handler={Home}/>
+  <Route name="about" handler={About}/>
+</Route>
+
+// will be active only when home is active, not when about is active
+<Link to="home">Home</Link>
+
+// v1.0
+<Route path="/" component={App}>
+  <IndexRoute handler={Home}/>
+  <Route path="about" handler={About}/>
+</Route>
+
+// will be active only when home is active, not when about is active
+<IndexLink to="/">Home</Link>
+```
+
+### Navigation Mixin
+
+If you were using the navigation, instead use the `History` mixin.
+
+```js
+// v0.13.x
+var Assignment = React.createClass({
+  mixins: [ Navigation ],
+  navigateAfterSomethingHappened () {
+    this.transitionTo('/users', { userId: user.id }, query);
+    // this.replaceWith('/users', { userId: user.id }, query);
+  }
+})
+
+// v1.0
+var Assignment = React.createClass({
+  mixins: [ History ],
+  navigateAfterSomethingHappened () {
+    // the router is not built on rackt/history, and it is a first class
+    // API in the router for navigating
+    this.history.pushState(null, `/users/${user.id}`, query);
+    // this.history.replaceState(null, `/users/${user.id}`, query);
+  }
+})
+```
+
+The following `Navigation` methods are now also found on the history
+object, main difference again is there are no params or route names,
+just pathnames.
+
+| v0.13                                | v1.0                          |
+|--------------------------------------|-------------------------------|
+| `go(n)`                              | `go(n)`                       |
+| `goBack()`                           | `goBack()`                    |
+| `goForward()`                        | `goForward()`                 |
+| `makeHref(routeName, params, query)` | `createHref(pathname, query)` |
+| `makePath(routeName, params, query)` | `createPath(pathname, query)` |
+
+### State mixin
+
+```js
+// v0.13.x
+var Assignment = React.createClass({
+  mixins: [ State ],
+  foo () {
+    this.getPath()
+    this.getParams()
+    // etc...
+  }
+})
+
+// v1.0
+// if you are a route component...
+<Route component={Assignment/>
+
+var Assignment = React.createClass({
+  foo () {
+    this.props.location // contains path information
+    this.props.params // contains params
+    this.props.history.isActive
+  }
+})
+
+// if you're not a route component, you need to pass location down the
+// tree or get the location from context, we will probably provide a
+// higher order component that will do this for you but haven't yet
+var Assignment = React.createClass({
+  contextTypes: {
+    location: React.PropTypes.object
+  },
+  foo () {
+    this.context.location
+  }
+})
+```
+
+Here's a table of where you used to get stuff with the `State` mixin,
+and where you get it now if you're a route component (`this.props`)
+
+
+| v0.13 (this)    | v1.0 (this.props)                  |
+|-----------------|------------------------------------|
+| `getPath()`     | `location.pathname+location.query` |
+| `getPathname()` | `location.pathname`                |
+| `getParams()`   | `params`                           |
+| `getQuery()`    | `query`                            |
+| `getRoutes()`   | `routes`                           |
+
+### We'll keep updating this
+
+There's a lot of the old API we've missed, please give the [new
+docs][/docs] a read and help us fill this guide in. Thansk!
 
 
 0.13.2 -> 0.13.3
