@@ -1,6 +1,9 @@
 # Route Matching
 
-A [route](/docs/Glossary.md#route) has two attributes that determine whether or not it "matches" the URL: 1) [nesting](#nesting) and 2) its [`path`](#path-syntax).
+A [route](/docs/Glossary.md#route) has two attributes that determine whether or not it "matches" the URL:  
+
+1. [nesting](#nesting) and 
+2. its [`path`](#path-syntax)
 
 ### Nesting
 

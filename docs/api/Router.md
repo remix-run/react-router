@@ -59,7 +59,7 @@ passed to route component props.
 
 While the router is matching, errors may bubble up, here
 is your opportunity to catch and deal with them. Typically these will
-come from async features like [`route.getComponents`](Route.md#getcomponentcallback) and
+come from async features like [`route.getComponents`](Route.md#getcomponentscallback) and
 [`route.getChildRoutes`](PlainRoute.md#getchildrouteslocation-callback).
 
 #### `onUpdate()`
