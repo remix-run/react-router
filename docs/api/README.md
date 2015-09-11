@@ -19,7 +19,6 @@
 * [Navigation](Navigation.md)
 * [RouteContext](RouteContext.md)
 * [IsActive](IsActive.md)
-* [ScrollManagmentMixin](ScrollManagmentMixin.md)
 
 #### Utilities
 
