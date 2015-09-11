@@ -42,11 +42,13 @@ var Link = React.createClass({
     to: string.isRequired,
     query: object,
     state: object,
+    tag: string,
     onClick: func
   },
 
   getDefaultProps() {
     return {
+      tag: 'a',
       className: '',
       activeClassName: 'active',
       onlyActiveOnIndex: false,
@@ -147,7 +149,7 @@ var Link = React.createClass({
       }
     }
 
-    return React.createElement('a', props);
+    return React.createElement(props.tag, props);
   }
 
 });
