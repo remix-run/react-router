@@ -143,7 +143,7 @@ active when the index route is active.
 
 ### Navigation Mixin
 
-If you were using the navigation, instead use the `History` mixin.
+If you were using the `Navigation` mixin, use the `History` mixin instead.
 
 ```js
 // v0.13.x
