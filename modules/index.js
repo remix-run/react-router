@@ -1,6 +1,7 @@
 /* components */
 export Router from './Router'
 export Link from './Link'
+export IndexLink from './IndexLink'
 
 /* components (configuration) */
 export IndexRoute from './IndexRoute'
