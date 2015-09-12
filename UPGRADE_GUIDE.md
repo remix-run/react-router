@@ -104,7 +104,7 @@ don't need this and the check is (currently) expensive.
 
 Links no longer add the "active" class by default, you opt-in by
 providing one; if no `activeClassName` or `activeStyles` are provided,
-the link will not check if its active.
+the link will not check if it's active.
 
 ```js
 // v0.13.x
@@ -205,8 +205,8 @@ var Assignment = React.createClass({
 })
 
 // if you're not a route component, you need to pass location down the
-// tree or get the location from context, we will probably provide a
-// higher order component that will do this for you but haven't yet
+// tree or get the location from context. We will probably provide a
+// higher order component that will do this for you but haven't yet.
 var Assignment = React.createClass({
   contextTypes: {
     location: React.PropTypes.object
@@ -232,7 +232,7 @@ and where you get it now if you're a route component (`this.props`)
 ### We'll keep updating this
 
 There's a lot of the old API we've missed, please give the [new
-docs](/docs) a read and help us fill this guide in. Thansk!
+docs](/docs) a read and help us fill this guide in. Thanks!
 
 
 0.13.2 -> 0.13.3
@@ -827,7 +827,7 @@ handlers) so we've removed it.
 Please don't upgrade to `0.8.0`, just skip to `0.9.x`.
 
 `0.8.0` had some transient mixins we didn't intend to document, but had
-some miscommunication :( If you were one of three people who used some
+some miscommunication :(. If you were one of three people who used some
 of these mixins and need help upgrading from `0.8.0 -> 0.9.x` find us on
 freenode in `#rackt` or open a ticket. Thanks!
 
@@ -869,7 +869,7 @@ Simply add `/` in front of all your paths to keep things working.
 </Route>
 ```
 
-Though, you may want to embrace this new feature:
+Though you may want to embrace this new feature:
 
 ```xml
 <!-- 0.5.x -->
