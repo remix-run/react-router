@@ -33,7 +33,6 @@
     * [Navigation](/docs/api/Navigation.md)
     * [RouteContext](/docs/api/RouteContext.md)
     * [IsActive](/docs/api/IsActive.md)
-    * [ScrollManagmentMixin](/docs/api/ScrollManagmentMixin.md)
   * [Utilities](/docs/api/README.md#utilities)
     * [useRoutes](/docs/api/useRoutes.md)
     * [createRoutes](/docs/api/createRoutes.md)

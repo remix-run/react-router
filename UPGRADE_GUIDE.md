@@ -229,6 +229,13 @@ and where you get it now if you're a route component (`this.props`)
 | `getQuery()`    | `query`                            |
 | `getRoutes()`   | `routes`                           |
 
+### Scrolling
+
+In 0.13.x we had a couple of implementations to restore scroll position,
+we've realized that we can build a better implementation on top of the
+router and will be doing that very soon, before the 1.0 final release,
+but it doesn't need to be baked into routing like it was before.
+
 ### We'll keep updating this
 
 There's a lot of the old API we've missed, please give the [new
