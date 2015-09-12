@@ -4,4 +4,4 @@ The RouteContext mixin provides a convenient way for route components to set the
 
 ### RouteContext methods
 
-#### `getChildContect()`
+#### `getChildContext()`
