@@ -28,7 +28,7 @@ var CourseRoute = {
     })
   },
 
-  getComponents(callback) {
+  getComponents(location, callback) {
     require.ensure([], function (require) {
       callback(null, require('./components/Course'))
     })
