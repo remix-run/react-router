@@ -138,12 +138,12 @@ active when the index route is active.
 </Route>
 
 // will be active only when home is active, not when about is active
-<IndexLink to="/">Home</Link>
+<IndexLink to="/">Home</IndexLink>
 ```
 
 ### Navigation Mixin
 
-If you were using the `Navigation` mixin, use the `History` mixin instead.
+If you were using the navigation, instead use the `History` mixin.
 
 ```js
 // v0.13.x
@@ -194,7 +194,7 @@ var Assignment = React.createClass({
 
 // v1.0
 // if you are a route component...
-<Route component={Assignment/>
+<Route component={Assignment} />
 
 var Assignment = React.createClass({
   foo () {
