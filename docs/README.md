@@ -30,7 +30,7 @@
     * [IndexRoute](/docs/api/IndexRoute.md)
   * [Mixins](/docs/api/README.md#mixins)
     * [Lifecycle](/docs/api/Lifecycle.md)
-    * [Navigation](/docs/api/Navigation.md)
+    * [History](/docs/api/History.md)
     * [RouteContext](/docs/api/RouteContext.md)
     * [IsActive](/docs/api/IsActive.md)
   * [Utilities](/docs/api/README.md#utilities)

@@ -16,7 +16,7 @@
 #### Mixins
 
 * [Lifecycle](Lifecycle.md)
-* [Navigation](Navigation.md)
+* [History](History.md)
 * [RouteContext](RouteContext.md)
 * [IsActive](IsActive.md)
 
