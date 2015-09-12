@@ -1,10 +1,10 @@
 # Navigating Outside of Components
 
-While route components get `this.props.history` and the `History` mixins
+While route components get `this.props.history` and the `History` mixin
 provides `this.history`, many apps want to be able to navigate outside
 of their components.
 
-Its pretty simple, just hang onto your history object:
+Its pretty simple, just hang on to your history object:
 
 You can have a module in your app somewhere that exports your history
 object.
