@@ -22,7 +22,7 @@
 }
 
 .swap-leave.swap-leave-active {
-  opacity: 0.01;
+  opacity: 0;
   transform: translateX(-5em);
 }
 
@@ -41,5 +41,5 @@
 }
 
 .example-leave.example-leave-active {
-  opacity: 0.01;
+  opacity: 0;
 }
