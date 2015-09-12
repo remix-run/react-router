@@ -133,8 +133,8 @@ active when the index route is active.
 
 // v1.0
 <Route path="/" component={App}>
-  <IndexRoute handler={Home}/>
-  <Route path="about" handler={About}/>
+  <IndexRoute component={Home}/>
+  <Route path="about" component={About}/>
 </Route>
 
 // will be active only when home is active, not when about is active
