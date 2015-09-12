@@ -38,6 +38,23 @@ React.render((
 React.render(<Router routes={routes}/>, el)
 ```
 
+### Locations
+
+Locations are now called histories (that emit locations). You import
+them from the `history` package, not react router.
+
+```js
+// v0.13.x
+Router.run(routes, Router.BrowserHistory, (Handler) => {
+  React.render(<Handler/>, el);
+})
+
+// v1.0
+import createBrowserHistory from 'history/lib/createBrowserHistory'
+let history = createBrowserHistory()
+React.render(<Router history={history}>{routes}</Router>, el)
+```
+
 ### Route Config
 
 You can still nest your routes as before, paths are inherited from
