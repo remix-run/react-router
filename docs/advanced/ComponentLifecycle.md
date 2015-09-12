@@ -4,7 +4,7 @@ It's important to understand which lifecycle hooks are going to be called
 on your route components to implement lots of different functionality in
 your app. The most common thing is fetching data.
 
-There is no difference in the lifecycle of a componet in the router as
+There is no difference in the lifecycle of a component in the router as
 just React itself. Let's peel away the idea of routes, and just think
 about the components being rendered at different urls.
 
