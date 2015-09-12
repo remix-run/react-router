@@ -104,3 +104,26 @@ urls.
 Memory history doesn't manipulate or read from the address bar. This is
 how we implement server rendering, its also useful for testing and other
 rendering environments (like React Native).
+
+## Example implementation
+
+```js
+import React from 'react';
+import createBrowserHistory from 'history/lib/createBrowserHistory';
+import {Router, Route, IndexRoute} from 'react-router';
+import App from '../components/App';
+import Home from '../components/Home';
+import About from '../components/About';
+import Features from '../components/Features';
+
+React.render(
+  <Router history={createBrowserHistory()}>
+    <Route path='/' component={App}>
+      <IndexRoute component={Home} />
+      <Route path='about' component={About} />
+      <Route path='features' component={Features} />
+    </Route>
+  </Router>,
+  document.getElementById('app')
+);
+```
