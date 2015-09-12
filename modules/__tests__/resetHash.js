@@ -1,10 +1,10 @@
 function resetHash(done) {
   if (window.location.hash !== '') {
-    window.location.hash = '';
-    setTimeout(done, 10);
+    window.location.hash = ''
+    setTimeout(done, 10)
   } else {
-    done();
+    done()
   }
 }
 
-export default resetHash;
+export default resetHash

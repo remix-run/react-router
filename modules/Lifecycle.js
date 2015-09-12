@@ -1,7 +1,7 @@
-import React from 'react';
-import invariant from 'invariant';
+import React from 'react'
+import invariant from 'invariant'
 
-var { object } = React.PropTypes;
+var { object } = React.PropTypes
 
 /**
  * The Lifecycle mixin adds the routerWillLeave lifecycle method
@@ -34,36 +34,36 @@ var Lifecycle = {
   },
 
   _getRoute() {
-    var route = this.props.route || this.context.route;
+    var route = this.props.route || this.context.route
 
     invariant(
       route,
       'The Lifecycle mixin needs to be used either on 1) a <Route component> or ' +
       '2) a descendant of a <Route component> that uses the RouteContext mixin'
-    );
+    )
 
-    return route;
+    return route
   },
 
   componentWillMount() {
     invariant(
       this.routerWillLeave,
       'The Lifecycle mixin requires you to define a routerWillLeave method'
-    );
+    )
 
     this.context.history.registerRouteHook(
       this._getRoute(),
       this.routerWillLeave
-    );
+    )
   },
 
   componentWillUnmount() {
     this.context.history.unregisterRouteHook(
       this._getRoute(),
       this.routerWillLeave
-    );
+    )
   }
 
-};
+}
 
-export default Lifecycle;
+export default Lifecycle

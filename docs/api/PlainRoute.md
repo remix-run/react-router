@@ -31,16 +31,16 @@ let myRoute = {
     gradesRoute,
     assignmentsRoute
   ]
-};
+}
 
 // async child routes
 let myRoute = {
   path: 'course/:courseId',
   getChildRoutes (location, cb) {
     // do asynchronous stuff to find the child routes
-    cb(null, [announcementsRoute, gradesRoute, assignmentsRoute]);
+    cb(null, [announcementsRoute, gradesRoute, assignmentsRoute])
   }
-};
+}
 
 // navigation dependent child routes
 // can link with some state
@@ -55,5 +55,5 @@ let myRoute = {
     else
       cb(null, [pictureRoute])
   }
-};
+}
 ```

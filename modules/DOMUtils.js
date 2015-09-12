@@ -1,48 +1,48 @@
 export var canUseDOM = !!(
   typeof window !== 'undefined' && window.document && window.document.createElement
-);
+)
 
 export function addEventListener(node, type, listener) {
   if (node.addEventListener) {
-    node.addEventListener(type, listener, false);
+    node.addEventListener(type, listener, false)
   } else {
-    node.attachEvent('on' + type, listener);
+    node.attachEvent('on' + type, listener)
   }
 }
 
 export function removeEventListener(node, type, listener) {
   if (node.removeEventListener) {
-    node.removeEventListener(type, listener, false);
+    node.removeEventListener(type, listener, false)
   } else {
-    node.detachEvent('on' + type, listener);
+    node.detachEvent('on' + type, listener)
   }
 }
 
 export function getHashPath() {
   // We can't use window.location.hash here because it's not
   // consistent across browsers - Firefox will pre-decode it!
-  return window.location.href.split('#')[1] || '';
+  return window.location.href.split('#')[1] || ''
 }
 
 export function replaceHashPath(path) {
   window.location.replace(
     window.location.pathname + window.location.search + '#' + path
-  );
+  )
 }
 
 export function getWindowPath() {
-  return window.location.pathname + window.location.search;
+  return window.location.pathname + window.location.search
 }
 
 export function getWindowScrollPosition() {
   return {
     x: window.pageXOffset || document.documentElement.scrollLeft,
     y: window.pageYOffset || document.documentElement.scrollTop
-  };
+  }
 }
 
 export function setWindowScrollPosition(scrollX, scrollY) {
-  window.scrollTo(scrollX, scrollY);
+  window.scrollTo(scrollX, scrollY)
 }
 
 /**
@@ -52,9 +52,9 @@ export function setWindowScrollPosition(scrollX, scrollY) {
  * changed to avoid false negatives for Windows Phones: https://github.com/rackt/react-router/issues/586
  */
 export function supportsHistory() {
-  var ua = navigator.userAgent;
+  var ua = navigator.userAgent
   if ((ua.indexOf('Android 2.') !== -1 || ua.indexOf('Android 4.0') !== -1) && ua.indexOf('Mobile Safari') !== -1 && ua.indexOf('Chrome') === -1 && ua.indexOf('Windows Phone') === -1) {
-    return false;
+    return false
   }
-  return window.history && 'pushState' in window.history;
+  return window.history && 'pushState' in window.history
 }

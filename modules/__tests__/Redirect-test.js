@@ -1,20 +1,20 @@
 /*eslint-env mocha */
-import expect from 'expect';
-import React from 'react';
-import createHistory from 'history/lib/createMemoryHistory';
-import Redirect from '../Redirect';
-import Router from '../Router';
-import Route from '../Route';
+import expect from 'expect'
+import React from 'react'
+import createHistory from 'history/lib/createMemoryHistory'
+import Redirect from '../Redirect'
+import Router from '../Router'
+import Route from '../Route'
 
 describe('A <Redirect>', function () {
-  var node;
+  var node
   beforeEach(function () {
-    node = document.createElement('div');
-  });
+    node = document.createElement('div')
+  })
 
   afterEach(function () {
-    React.unmountComponentAtNode(node);
-  });
+    React.unmountComponentAtNode(node)
+  })
 
   it('works', function (done) {
     React.render((
@@ -23,8 +23,8 @@ describe('A <Redirect>', function () {
         <Redirect from="/notes/:id" to="/messages/:id" />
       </Router>
     ), node, function () {
-      expect(this.state.location.pathname).toEqual('/messages/5');
-      done();
-    });
-  });
-});
+      expect(this.state.location.pathname).toEqual('/messages/5')
+      done()
+    })
+  })
+})

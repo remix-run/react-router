@@ -1,22 +1,22 @@
-import React from 'react';
-import warning from 'warning';
+import React from 'react'
+import warning from 'warning'
 
-var { bool, object, string, func } = React.PropTypes;
+var { bool, object, string, func } = React.PropTypes
 
 function isLeftClickEvent(event) {
-  return event.button === 0;
+  return event.button === 0
 }
 
 function isModifiedEvent(event) {
-  return !!(event.metaKey || event.altKey || event.ctrlKey || event.shiftKey);
+  return !!(event.metaKey || event.altKey || event.ctrlKey || event.shiftKey)
 }
 
 function isEmptyObject(object) {
   for (var p in object)
     if (object.hasOwnProperty(p))
-      return false;
+      return false
 
-  return true;
+  return true
 }
 
 /**
@@ -58,62 +58,62 @@ var Link = React.createClass({
       onlyActiveOnIndex: false,
       className: '',
       style: {}
-    };
+    }
   },
 
   handleClick(event) {
-    var allowTransition = true;
-    var clickResult;
+    var allowTransition = true
+    var clickResult
 
     if (this.props.onClick)
-      clickResult = this.props.onClick(event);
+      clickResult = this.props.onClick(event)
 
     if (isModifiedEvent(event) || !isLeftClickEvent(event))
-      return;
+      return
 
     if (clickResult === false || event.defaultPrevented === true)
-      allowTransition = false;
+      allowTransition = false
 
-    event.preventDefault();
+    event.preventDefault()
 
     if (allowTransition)
-      this.context.history.pushState(this.props.state, this.props.to, this.props.query);
+      this.context.history.pushState(this.props.state, this.props.to, this.props.query)
   },
 
   componentWillMount() {
     warning(
       this.context.history,
-      'A <Link> should not be rendered outside the context of history; ' +
+      'A <Link> should not be rendered outside the context of history ' +
       'some features including real hrefs, active styling, and navigation ' +
       'will not function correctly'
-    );
+    )
   },
 
   render() {
-    var { history } = this.context;
-    var { activeClassName, activeStyle, onlyActiveOnIndex, to, query, state, onClick, ...props } = this.props;
+    var { history } = this.context
+    var { activeClassName, activeStyle, onlyActiveOnIndex, to, query, state, onClick, ...props } = this.props
 
-    props.onClick = this.handleClick;
+    props.onClick = this.handleClick
 
     // Ignore if rendered outside the context
     // of history, simplifies unit testing.
     if (history) {
-      props.href = history.createHref(to, query);
+      props.href = history.createHref(to, query)
 
       if (activeClassName || (activeStyle != null && !isEmptyObject(activeStyle))) {
         if (history.isActive(to, query, onlyActiveOnIndex)) {
           if (activeClassName)
-            props.className += props.className === '' ? activeClassName : ` ${activeClassName}`;
+            props.className += props.className === '' ? activeClassName : ` ${activeClassName}`
 
           if (activeStyle)
-            props.style = { ...props.style, ...activeStyle };
+            props.style = { ...props.style, ...activeStyle }
         }
       }
     }
 
-    return React.createElement('a', props);
+    return React.createElement('a', props)
   }
 
-});
+})
 
-export default Link;
+export default Link

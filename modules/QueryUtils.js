@@ -1,9 +1,9 @@
-import qs from 'qs';
+import qs from 'qs'
 
 export function stringifyQuery(query) {
-  return qs.stringify(query, { arrayFormat: 'brackets' });
+  return qs.stringify(query, { arrayFormat: 'brackets' })
 }
 
 export function parseQueryString(queryString) {
-  return qs.parse(queryString);
+  return qs.parse(queryString)
 }

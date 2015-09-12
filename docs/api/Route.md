@@ -27,7 +27,7 @@ var routes = (
     <Route path="groups" component={Groups}/>
     <Route path="users" component={Users}/>
   </Route>
-);
+)
 
 var App = React.createClass({
   render () {
@@ -36,9 +36,9 @@ var App = React.createClass({
         {/* this will be either <Users> or <Groups> */}
         {this.props.children}
       </div>
-    );
+    )
   }
-});
+})
 ```
 
 #### `components`
@@ -62,11 +62,11 @@ var routes = (
       <Route path="users/:userId" components={Profile}/>
     </Route>
   </Route>
-);
+)
 
 var App = React.createClass({
   render () {
-    var { main, sidebar } = this.props.children;
+    var { main, sidebar } = this.props.children
     return (
       <div>
         <div className="Main">
@@ -76,9 +76,9 @@ var App = React.createClass({
           {sidebar}
         </div>
       </div>
-    );
+    )
   }
-});
+})
 
 var Users = React.createClass({
   render () {
@@ -90,9 +90,9 @@ var Users = React.createClass({
             to continue with the nesting */}
         {this.props.children}
       </div>
-    );
+    )
   }
-});
+})
 ```
 
 #### `getComponent(location, callback)`
@@ -109,7 +109,7 @@ code-splitting.
 ```js
 <Route path="courses/:courseId" getComponent={(location, cb) => {
   // do asynchronous stuff to find the components
-  cb(null, Course);
+  cb(null, Course)
 }}/>
 ```
 
@@ -127,7 +127,7 @@ code-splitting.
 ```js
 <Route path="courses/:courseId" getComponent={(location, cb) => {
   // do asynchronous stuff to find the components
-  cb(null, {sidebar: CourseSidebar, content: Course});
+  cb(null, {sidebar: CourseSidebar, content: Course})
 }}/>
 ```
 

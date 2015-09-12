@@ -1,4 +1,4 @@
-import { matchPattern } from './PatternUtils';
+import { matchPattern } from './PatternUtils'
 
 /**
  * Returns true if a route and params that match the given
@@ -6,30 +6,30 @@ import { matchPattern } from './PatternUtils';
  */
 function pathnameIsActive(pathname, activePathname, activeRoutes, activeParams) {
   if (pathname === activePathname || activePathname.indexOf(pathname + '/') === 0)
-    return true;
+    return true
 
-  var route, pattern;
-  var basename = '';
+  var route, pattern
+  var basename = ''
   for (var i = 0, len = activeRoutes.length; i < len; ++i) {
-    route = activeRoutes[i];
-    if (!route.path) return false;
-    pattern = route.path || '';
+    route = activeRoutes[i]
+    if (!route.path) return false
+    pattern = route.path || ''
 
     if (pattern.indexOf('/') !== 0)
-      pattern = basename.replace(/\/*$/, '/') + pattern; // Relative paths build on the parent's path.
+      pattern = basename.replace(/\/*$/, '/') + pattern // Relative paths build on the parent's path.
 
-    var { remainingPathname, paramNames, paramValues } = matchPattern(pattern, pathname);
+    var { remainingPathname, paramNames, paramValues } = matchPattern(pattern, pathname)
 
     if (remainingPathname === '') {
       return paramNames.every(function (paramName, index) {
-        return String(paramValues[index]) === String(activeParams[paramName]);
-      });
+        return String(paramValues[index]) === String(activeParams[paramName])
+      })
     }
 
-    basename = pattern;
+    basename = pattern
   }
 
-  return false;
+  return false
 }
 
 /**
@@ -38,16 +38,16 @@ function pathnameIsActive(pathname, activePathname, activeRoutes, activeParams) 
  */
 function queryIsActive(query, activeQuery) {
   if (activeQuery == null)
-    return query == null;
+    return query == null
 
   if (query == null)
-    return true;
+    return true
 
   for (var p in query)
     if (query.hasOwnProperty(p) && String(query[p]) !== String(activeQuery[p]))
-      return false;
+      return false
 
-  return true;
+  return true
 }
 
 /**
@@ -56,13 +56,13 @@ function queryIsActive(query, activeQuery) {
  */
 function isActive(pathname, query, indexOnly, location, routes, params) {
   if (location == null)
-    return false;
+    return false
 
   if (indexOnly && (routes.length < 2 || routes[routes.length - 2].indexRoute !== routes[routes.length - 1]))
-    return false;
+    return false
 
   return pathnameIsActive(pathname, location.pathname, routes, params) &&
-    queryIsActive(query, location.query);
+    queryIsActive(query, location.query)
 }
 
-export default isActive;
+export default isActive

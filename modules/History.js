@@ -1,13 +1,13 @@
-import { history } from './PropTypes';
+import { history } from './PropTypes'
 
 var History = {
 
   contextTypes: { history },
 
   componentWillMount () {
-    this.history = this.context.history;
+    this.history = this.context.history
   }
 
-};
+}
 
-export default History;
+export default History

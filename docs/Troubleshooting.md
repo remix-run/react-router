@@ -4,7 +4,7 @@
 
 ```js
 <Route component={App}>
-  {/* ... other routes */
+  {/* ... other routes */}
 </Route>
 
 var App = React.createClass({
@@ -13,8 +13,8 @@ var App = React.createClass({
   },
 
   componentWillReceiveProps(nextProps) {
-    var routeChanged = nextProps.location !== this.props.location;
-    this.setState({ showBackButton: routeChanged });
+    var routeChanged = nextProps.location !== this.props.location
+    this.setState({ showBackButton: routeChanged })
   }
-});
+})
 ```

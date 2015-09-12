@@ -1,8 +1,8 @@
-import React from 'react';
-import invariant from 'invariant';
-import getRouteParams from './getRouteParams';
+import React from 'react'
+import invariant from 'invariant'
+import getRouteParams from './getRouteParams'
 
-var { array, func, object } = React.PropTypes;
+var { array, func, object } = React.PropTypes
 
 /**
  * A <RoutingContext> renders the component tree for a given router state
@@ -22,7 +22,7 @@ var RoutingContext = React.createClass({
   getDefaultProps() {
     return {
       createElement: React.createElement
-    };
+    }
   },
 
   childContextTypes: {
@@ -34,24 +34,24 @@ var RoutingContext = React.createClass({
     return {
       history: this.props.history,
       location: this.props.location
-    };
+    }
   },
 
   createElement(component, props) {
-    return component == null ? null : this.props.createElement(component, props);
+    return component == null ? null : this.props.createElement(component, props)
   },
 
   render() {
-    var { history, location, routes, params, components } = this.props;
-    var element = null;
+    var { history, location, routes, params, components } = this.props
+    var element = null
 
     if (components) {
       element = components.reduceRight((element, components, index) => {
         if (components == null)
-          return element; // Don't create new children; use the grandchildren.
+          return element // Don't create new children use the grandchildren.
 
-        var route = routes[index];
-        var routeParams = getRouteParams(route, params);
+        var route = routes[index]
+        var routeParams = getRouteParams(route, params)
         var props = {
           history,
           location,
@@ -59,33 +59,33 @@ var RoutingContext = React.createClass({
           route,
           routeParams,
           routes
-        };
+        }
 
         if (element)
-          props.children = element;
+          props.children = element
 
         if (typeof components === 'object') {
-          var elements = {};
+          var elements = {}
 
           for (var key in components)
             if (components.hasOwnProperty(key))
-              elements[key] = this.createElement(components[key], props);
+              elements[key] = this.createElement(components[key], props)
 
-          return elements;
+          return elements
         }
 
-        return this.createElement(components, props);
-      }, element);
+        return this.createElement(components, props)
+      }, element)
     }
 
     invariant(
       element === null || element === false || React.isValidElement(element),
       'The root route must render a single element'
-    );
+    )
 
-    return element;
+    return element
   }
 
-});
+})
 
-export default RoutingContext;
+export default RoutingContext

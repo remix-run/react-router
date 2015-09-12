@@ -1,14 +1,14 @@
-import { mapAsync } from './AsyncUtils';
+import { mapAsync } from './AsyncUtils'
 
 function getComponentsForRoute(location, route, callback) {
   if (route.component || route.components) {
-    callback(null, route.component || route.components);
+    callback(null, route.component || route.components)
   } else if (route.getComponent) {
-    route.getComponent(location, callback);
+    route.getComponent(location, callback)
   } else if (route.getComponents) {
-    route.getComponents(location, callback);
+    route.getComponents(location, callback)
   } else {
-    callback();
+    callback()
   }
 }
 
@@ -21,8 +21,8 @@ function getComponentsForRoute(location, route, callback) {
  */
 function getComponents(nextState, callback) {
   mapAsync(nextState.routes, function (route, index, callback) {
-    getComponentsForRoute(nextState.location, route, callback);
-  }, callback);
+    getComponentsForRoute(nextState.location, route, callback)
+  }, callback)
 }
 
-export default getComponents;
+export default getComponents

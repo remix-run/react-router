@@ -1,14 +1,14 @@
-import { getParamNames } from './PatternUtils';
+import { getParamNames } from './PatternUtils'
 
 function routeParamsChanged(route, prevState, nextState) {
   if (!route.path)
-    return false;
+    return false
 
-  var paramNames = getParamNames(route.path);
+  var paramNames = getParamNames(route.path)
 
   return paramNames.some(function (paramName) {
-    return prevState.params[paramName] !== nextState.params[paramName];
-  });
+    return prevState.params[paramName] !== nextState.params[paramName]
+  })
 }
 
 /**
@@ -22,30 +22,30 @@ function routeParamsChanged(route, prevState, nextState) {
  * from the top of the tree we're entering down to the leaf route.
  */
 function computeChangedRoutes(prevState, nextState) {
-  var prevRoutes = prevState && prevState.routes;
-  var nextRoutes = nextState.routes;
+  var prevRoutes = prevState && prevState.routes
+  var nextRoutes = nextState.routes
 
-  var leaveRoutes, enterRoutes;
+  var leaveRoutes, enterRoutes
   if (prevRoutes) {
     leaveRoutes = prevRoutes.filter(function (route) {
-      return nextRoutes.indexOf(route) === -1 || routeParamsChanged(route, prevState, nextState);
-    });
+      return nextRoutes.indexOf(route) === -1 || routeParamsChanged(route, prevState, nextState)
+    })
 
     // onLeave hooks start at the leaf route.
-    leaveRoutes.reverse();
+    leaveRoutes.reverse()
 
     enterRoutes = nextRoutes.filter(function (route) {
-      return prevRoutes.indexOf(route) === -1 || leaveRoutes.indexOf(route) !== -1;
-    });
+      return prevRoutes.indexOf(route) === -1 || leaveRoutes.indexOf(route) !== -1
+    })
   } else {
-    leaveRoutes = [];
-    enterRoutes = nextRoutes;
+    leaveRoutes = []
+    enterRoutes = nextRoutes
   }
 
   return {
     leaveRoutes,
     enterRoutes
-  };
+  }
 }
 
-export default computeChangedRoutes;
+export default computeChangedRoutes

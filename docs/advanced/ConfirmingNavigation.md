@@ -8,7 +8,7 @@ React Router provides a [`routerWillLeave` lifecycle hook](/docs/Glossary.md#rou
 To install this hook, use the `Lifecycle` mixin in one of your [route component](/docs/Glossary.md#routecomponent)s.
 
 ```js
-import { Lifecycle } from 'react-router';
+import { Lifecycle } from 'react-router'
 
 var Home = React.createClass({
 
@@ -18,18 +18,18 @@ var Home = React.createClass({
 
   routerWillLeave(nextLocation) {
     if (!this.state.isSaved)
-      return 'Your work is not saved! Are you sure you want to leave?';
+      return 'Your work is not saved! Are you sure you want to leave?'
   },
 
   // ...
 
-});
+})
 ```
 
 If you need a [`routerWillLeave`](/docs/api/Lifecycle.md#routerwillleavenextlocation) hook in a deeply nested component, simply use the [`RouteContext`](/docs/api/RouteContext.md) mixin in your [route component](/docs/Glossary.md#routecomponent) to put the `route` in context.
 
 ```js
-import { Lifecycle, RouteContext } from 'react-router';
+import { Lifecycle, RouteContext } from 'react-router'
 
 var Home = React.createClass({
 
@@ -38,10 +38,10 @@ var Home = React.createClass({
   mixins: [ RouteContext ],
 
   render() {
-    return <NestedForm />;
+    return <NestedForm />
   }
 
-});
+})
 
 var NestedForm = React.createClass({
 
@@ -51,10 +51,10 @@ var NestedForm = React.createClass({
 
   routerWillLeave(nextLocation) {
     if (!this.state.isSaved)
-      return 'Your work is not saved! Are you sure you want to leave?';
+      return 'Your work is not saved! Are you sure you want to leave?'
   },
 
   // ...
 
-});
+})
 ```

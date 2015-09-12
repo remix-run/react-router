@@ -36,7 +36,7 @@ React.render((
       <Route path="users" components={Users} />
     </Route>
   </Router>
-), node);
+), node)
 
 let App = React.createClass({
   render() {
@@ -45,9 +45,9 @@ let App = React.createClass({
         {/* this will be either <Users> or <Groups> */}
         {this.props.children}
       </div>
-    );
+    )
   }
-});
+})
 ```
 
 ## Named Components
@@ -66,7 +66,7 @@ React.render((
       </Route>
     </Route>
   </Router>
-), node);
+), node)
 
 var App = React.createClass({
   render() {
@@ -82,9 +82,9 @@ var App = React.createClass({
           {this.props.children.sidebar}
         </div>
       </div>
-    );
+    )
   }
-});
+})
 
 var Users = React.createClass({
   render() {
@@ -95,7 +95,7 @@ var Users = React.createClass({
             you pick where it renders */}
         {this.props.children}
       </div>
-    );
+    )
   }
-});
+})
 ```

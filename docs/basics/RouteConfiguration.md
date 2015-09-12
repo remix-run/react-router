@@ -3,8 +3,8 @@
 A [route configuration](/docs/Glossary.md#routeconfig) is basically a set of instructions that tell a router how to try to [match the URL](RouteMatching.md) and what code to run when it does. To illustrate some of the features available in your route config, let's expand on the simple app from [the introduction](/docs/introduction/README.md#adding-more-ui).
 
 ```js
-import React from 'react';
-import { Router, Route } from 'react-router';
+import React from 'react'
+import { Router, Route } from 'react-router'
 
 var App = React.createClass({
   render() {
@@ -19,13 +19,13 @@ var App = React.createClass({
       </div>
     )
   }
-});
+})
 
 var About = React.createClass({
   render() {
-    return <h3>About</h3>;
+    return <h3>About</h3>
   }
-});
+})
 
 var Inbox = React.createClass({
   render() {
@@ -34,15 +34,15 @@ var Inbox = React.createClass({
         <h2>Inbox</h2>
         {this.props.children || "Welcome to your Inbox"}
       </div>
-    );
+    )
   }
-});
+})
 
 var Message = React.createClass({
   render() {
-    return <h3>Message {this.props.params.id}</h3>;
+    return <h3>Message {this.props.params.id}</h3>
   }
-});
+})
 
 React.render((
   <Router>
@@ -53,7 +53,7 @@ React.render((
       </Route>
     </Route>
   </Router>
-), document.body);
+), document.body)
 ```
 
 As configured, this app knows how to render the following 4 URLs:
@@ -70,13 +70,13 @@ URL                     | Components
 Imagine we'd like to render another component inside of `App` when the URL is `/`. Currently, `this.props.children` inside of `App`'s `render` method is `undefined` in this case. We can use an [`<IndexRoute>`](/docs/api/IndexRoute.md) to specify a "default" page.
 
 ```js
-import { IndexRoute } from 'react-router';
+import { IndexRoute } from 'react-router'
 
 var Dashboard = React.createClass({
   render() {
-    return <div>Welcome to the app!</div>;
+    return <div>Welcome to the app!</div>
   }
-});
+})
 
 React.render((
   <Router>
@@ -89,7 +89,7 @@ React.render((
       </Route>
     </Route>
   </Router>
-), document.body);
+), document.body)
 ```
 
 Now, inside `App`'s `render` method `this.props.children` will be a `<Dashboard>` element! This functionality is similar to Apache's [`DirectoryIndex`](http://httpd.apache.org/docs/2.4/mod/mod_dir.html#directoryindex) or nginx's [`index`](http://nginx.org/en/docs/http/ngx_http_index_module.html#index) directive, both of which allow you to specify a file such as `index.html` when the request URL matches a directory path.
@@ -119,7 +119,7 @@ React.render((
       </Route>
     </Route>
   </Router>
-), document.body);
+), document.body)
 ```
 
 The ability to use absolute paths in deeply nested routes gives us complete control over what the URL looks like! We don't have to add more segments to the URL just to get nested UI.
@@ -142,7 +142,7 @@ Wait a minute ... we just changed a URL! [That's not cool](http://www.w3.org/Pro
 Not to worry. We can use a [`<Redirect>`](/docs/api/Redirect.md) to make sure that URL still works!
 
 ```js
-import { Redirect } from 'react-router';
+import { Redirect } from 'react-router'
 
 React.render((
   <Router>
@@ -157,7 +157,7 @@ React.render((
       </Route>
     </Route>
   </Router>
-), document.body);
+), document.body)
 ```
 
 Now when someone clicks on that link to `/inbox/messages/5` they'll automatically be redirected to `/messages/5`. :raised_hands:
@@ -193,14 +193,14 @@ var routeConfig = [
           { path: '/messages/:id', component: Message },
           { path: 'messages/:id',
             onEnter: function (nextState, replaceState) {
-              replaceState(null, '/messages/' + nextState.params.id);
+              replaceState(null, '/messages/' + nextState.params.id)
             }
           }
         ]
       }
     ]
   }
-];
+]
 
-React.render(<Router routes={routeConfig} />, document.body);
+React.render(<Router routes={routeConfig} />, document.body)
 ```

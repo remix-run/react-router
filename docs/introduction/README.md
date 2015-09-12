@@ -12,27 +12,27 @@ To illustrate the problems React Router is going to solve for you, let's build a
 ### Without React Router
 
 ```js
-var About = React.createClass({/*...*/});
-var Inbox = React.createClass({/*...*/});
-var Home = React.createClass({/*...*/});
+var About = React.createClass({/*...*/})
+var Inbox = React.createClass({/*...*/})
+var Home = React.createClass({/*...*/})
 
 var App = React.createClass({
   getInitialState() {
     return {
       route: window.location.hash.substr(1)
-    };
+    }
   },
 
   componentDidMount() {
     window.addEventListener('hashchange', () => {
       this.setState({
         route: window.location.hash.substr(1)
-      });
-    });
+      })
+    })
   },
 
   render() {
-    var Child;
+    var Child
     switch (this.state.route) {
       case '/about': Child = About; break;
       case '/inbox': Child = Inbox; break;
@@ -50,9 +50,9 @@ var App = React.createClass({
       </div>
     )
   }
-});
+})
 
-React.render(<App />, document.body);
+React.render(<App />, document.body)
 ```
 
 As the hash portion of the URL changes, `<App>` will render a different `<Child>` by branching on `this.state.route`. Pretty straightforward stuff. But it gets complicated fast.
@@ -105,7 +105,7 @@ Let's refactor our app to use React Router.
 
 ```js
 // First we import some components...
-import { Router, Route, Link } from 'react-router';
+import { Router, Route, Link } from 'react-router'
 
 // Then we delete a bunch of code from App and
 // add some <Link> elements...
@@ -128,7 +128,7 @@ var App = React.createClass({
       </div>
     )
   }
-});
+})
 
 // Finally, we render a <Router> with some <Route>s.
 // It does all the fancy routing stuff for us.
@@ -139,7 +139,7 @@ React.render((
       <Route path="inbox" component={Inbox} />
     </Route>
   </Router>
-), document.body);
+), document.body)
 ```
 
 React Router knows how to build nested UI for us, so we don't have to manually figure out which `<Child>` component to render. Internally, the router converts your `<Route>` element hierarchy to a [route config](/docs/Glossary.md#routeconfig). But if you're not digging the JSX you can use plain objects instead:
@@ -152,9 +152,9 @@ var routes = {
     { path: 'about', component: About },
     { path: 'inbox', component: Inbox },
   ]
-};
+}
 
-React.render(<Router routes={routes} />, document.body);
+React.render(<Router routes={routes} />, document.body)
 ```
 
 ## Adding More UI
@@ -165,9 +165,9 @@ Alright, now we're ready to nest the inbox messages inside the inbox UI.
 // Make a new component to render inside of Inbox
 var Message = React.createClass({
   render() {
-    return <h3>Message</h3>;
+    return <h3>Message</h3>
   }
-});
+})
 
 var Inbox = React.createClass({
   render() {
@@ -177,9 +177,9 @@ var Inbox = React.createClass({
         {/* Render the child route component */}
         {this.props.children || "Welcome to your Inbox"}
       </div>
-    );
+    )
   }
-});
+})
 
 React.render((
   <Router>
@@ -191,7 +191,7 @@ React.render((
       </Route>
     </Route>
   </Router>
-), document.body);
+), document.body)
 ```
 
 Now visits to URLs like `inbox/messages/Jkei3c32` will match the new route and nest the UI branch of `App -> Inbox -> Message`.
@@ -205,16 +205,16 @@ var Message = React.createClass({
 
   componentDidMount() {
     // from the path `/inbox/messages/:id`
-    var id = this.props.params.id;
+    var id = this.props.params.id
 
     fetchMessage(id, function (err, message) {
-      this.setState({ message: message });
-    });
+      this.setState({ message: message })
+    })
   },
 
   // ...
 
-});
+})
 ```
 
 That's the gist of React Router. Application UIs are boxes inside of boxes inside of boxes; now you can keep those boxes in sync with the URL and link to them easily.

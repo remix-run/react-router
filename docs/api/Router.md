@@ -41,7 +41,7 @@ function createElement(Component, props) {
 // maybe you're using something like Relay
 function createElement(Component, props) {
   // make sure you pass all the props in!
-  return <RelayContainer Component={Component} routerProps={props}/>;
+  return <RelayContainer Component={Component} routerProps={props}/>
 }
 ```
 

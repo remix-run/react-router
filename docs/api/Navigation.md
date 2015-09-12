@@ -18,9 +18,9 @@ Transitions to a new URL.
 ##### Examples
 
 ```js
-router.transitionTo('/users/123');
-router.transitionTo('/users/123', {showGrades: true}); // -> /users/123?showGrades=true
-router.transitionTo('/pictures/123', null, { fromDashboard: true });
+router.transitionTo('/users/123')
+router.transitionTo('/users/123', {showGrades: true}) // -> /users/123?showGrades=true
+router.transitionTo('/pictures/123', null, { fromDashboard: true })
 ```
 
 #### `replaceWith(pathname, query, state)`
@@ -37,9 +37,9 @@ the history (like a redirect).
 ##### Examples
 
 ```js
-router.replaceWith('/users/123');
-router.replaceWith('/users/123', {showGrades: true}); // -> /users/123?showGrades=true
-router.replaceWith('/pictures/123', null, { fromDashboard: true });
+router.replaceWith('/users/123')
+router.replaceWith('/users/123', {showGrades: true}) // -> /users/123?showGrades=true
+router.replaceWith('/pictures/123', null, { fromDashboard: true })
 ```
 
 #### `go(n)`
@@ -66,7 +66,7 @@ front of the `pathname` for `HashHistory`.
 ### Example
 
 ```js
-import { Navigation } from 'react-router';
+import { Navigation } from 'react-router'
 
 React.createClass({
 

@@ -1,6 +1,6 @@
-import createMemoryHistory from 'history/lib/createMemoryHistory';
-import useRoutes from './useRoutes';
-import { createRoutes } from './RouteUtils';
+import createMemoryHistory from 'history/lib/createMemoryHistory'
+import useRoutes from './useRoutes'
+import { createRoutes } from './RouteUtils'
 
 export default function match({
   routes,
@@ -9,17 +9,17 @@ export default function match({
   parseQueryString,
   stringifyQuery
 }, cb) {
-  let createHistory = history ? () => history : createMemoryHistory;
+  let createHistory = history ? () => history : createMemoryHistory
 
   let staticHistory = useRoutes(createHistory)({
     routes: createRoutes(routes),
     parseQueryString,
     stringifyQuery
-  });
+  })
 
   staticHistory.match(location, function (error, nextLocation, nextState) {
-    let renderProps = nextState ? {...nextState, history: staticHistory} : null;
-    cb(error, nextLocation, renderProps);
-  });
+    let renderProps = nextState ? {...nextState, history: staticHistory} : null
+    cb(error, nextLocation, renderProps)
+  })
 }
 

@@ -1,21 +1,21 @@
 /*eslint-env mocha */
-import expect from 'expect';
-import React from 'react';
-import createHistory from 'history/lib/createMemoryHistory';
-import IndexRoute from '../IndexRoute';
-import Router from '../Router';
-import Route from '../Route';
+import expect from 'expect'
+import React from 'react'
+import createHistory from 'history/lib/createMemoryHistory'
+import IndexRoute from '../IndexRoute'
+import Router from '../Router'
+import Route from '../Route'
 
 describe('isActive', function () {
 
-  var node;
+  var node
   beforeEach(function () {
-    node = document.createElement('div');
-  });
+    node = document.createElement('div')
+  })
 
   afterEach(function () {
-    React.unmountComponentAtNode(node);
-  });
+    React.unmountComponentAtNode(node)
+  })
 
   describe('a pathname that matches the URL', function () {
     describe('with no query', function () {
@@ -25,11 +25,11 @@ describe('isActive', function () {
             <Route path="/home" />
           </Router>
         ), node, function () {
-          expect(this.history.isActive('/home')).toBe(true);
-          done();
-        });
-      });
-    });
+          expect(this.history.isActive('/home')).toBe(true)
+          done()
+        })
+      })
+    })
 
     describe('with a query that also matches', function () {
       it('is active', function (done) {
@@ -38,11 +38,11 @@ describe('isActive', function () {
             <Route path="/home" />
           </Router>
         ), node, function () {
-          expect(this.history.isActive('/home', { the: 'query' })).toBe(true);
-          done();
-        });
-      });
-    });
+          expect(this.history.isActive('/home', { the: 'query' })).toBe(true)
+          done()
+        })
+      })
+    })
 
     describe('with a query that does not match', function () {
       it('is not active', function (done) {
@@ -51,12 +51,12 @@ describe('isActive', function () {
             <Route path="/home" />
           </Router>
         ), node, function () {
-          expect(this.history.isActive('/home', { something: 'else' })).toBe(false);
-          done();
-        });
-      });
-    });
-  });
+          expect(this.history.isActive('/home', { something: 'else' })).toBe(false)
+          done()
+        })
+      })
+    })
+  })
 
   describe('a pathname that matches a parent route, but not the URL directly', function () {
     describe('with no query', function () {
@@ -68,12 +68,12 @@ describe('isActive', function () {
             </Route>
           </Router>
         ), node, function () {
-          expect(this.history.isActive('/home')).toBe(true);
-          expect(this.history.isActive('/home', null, true)).toBe(false);
-          done();
-        });
-      });
-    });
+          expect(this.history.isActive('/home')).toBe(true)
+          expect(this.history.isActive('/home', null, true)).toBe(false)
+          done()
+        })
+      })
+    })
 
     describe('with a query that also matches', function () {
       it('is active', function (done) {
@@ -84,12 +84,12 @@ describe('isActive', function () {
             </Route>
           </Router>
         ), node, function () {
-          expect(this.history.isActive('/home', { the: 'query' })).toBe(true);
-          expect(this.history.isActive('/home', { the: 'query' }, true)).toBe(false);
-          done();
-        });
-      });
-    });
+          expect(this.history.isActive('/home', { the: 'query' })).toBe(true)
+          expect(this.history.isActive('/home', { the: 'query' }, true)).toBe(false)
+          done()
+        })
+      })
+    })
 
     describe('with a query that does not match', function () {
       it('is active', function (done) {
@@ -100,13 +100,13 @@ describe('isActive', function () {
             </Route>
           </Router>
         ), node, function () {
-          expect(this.history.isActive('/home', { something: 'else' })).toBe(false);
-          expect(this.history.isActive('/home', { something: 'else' }, true)).toBe(false);
-          done();
-        });
-      });
-    });
-  });
+          expect(this.history.isActive('/home', { something: 'else' })).toBe(false)
+          expect(this.history.isActive('/home', { something: 'else' }, true)).toBe(false)
+          done()
+        })
+      })
+    })
+  })
 
   describe('a pathname that matches an index URL', function () {
     describe('with no query', function () {
@@ -118,12 +118,12 @@ describe('isActive', function () {
             </Route>
           </Router>
         ), node, function () {
-          expect(this.history.isActive('/home', null)).toBe(true);
-          expect(this.history.isActive('/home', null, true)).toBe(true);
-          done();
-        });
-      });
-    });
+          expect(this.history.isActive('/home', null)).toBe(true)
+          expect(this.history.isActive('/home', null, true)).toBe(true)
+          done()
+        })
+      })
+    })
 
     describe('with a query that also matches', function () {
       it('is active', function (done) {
@@ -134,12 +134,12 @@ describe('isActive', function () {
             </Route>
           </Router>
         ), node, function () {
-          expect(this.history.isActive('/home', { the: 'query' })).toBe(true);
-          expect(this.history.isActive('/home', { the: 'query' }, true)).toBe(true);
-          done();
-        });
-      });
-    });
+          expect(this.history.isActive('/home', { the: 'query' })).toBe(true)
+          expect(this.history.isActive('/home', { the: 'query' }, true)).toBe(true)
+          done()
+        })
+      })
+    })
 
     describe('with a query that does not match', function () {
       it('is not active', function (done) {
@@ -150,13 +150,13 @@ describe('isActive', function () {
             </Route>
           </Router>
         ), node, function () {
-          expect(this.history.isActive('/home', { something: 'else' })).toBe(false);
-          expect(this.history.isActive('/home', { something: 'else' }, true)).toBe(false);
-          done();
-        });
-      });
-    });
-  });
+          expect(this.history.isActive('/home', { something: 'else' })).toBe(false)
+          expect(this.history.isActive('/home', { something: 'else' }, true)).toBe(false)
+          done()
+        })
+      })
+    })
+  })
 
   describe('a pathname that matches only the beginning of the URL', function () {
     it('is not active', function (done) {
@@ -165,11 +165,11 @@ describe('isActive', function () {
           <Route path="/home" />
         </Router>
       ), node, function () {
-        expect(this.history.isActive('/h')).toBe(false);
-        done();
-      });
-    });
-  });
+        expect(this.history.isActive('/h')).toBe(false)
+        done()
+      })
+    })
+  })
 
   describe('a pathname that matches the root URL only if it is a parent route', function () {
     it('is active', function (done) {
@@ -180,11 +180,11 @@ describe('isActive', function () {
           </Route>
         </Router>
       ), node, function () {
-        expect(this.history.isActive('/')).toBe(true);
-        done();
-      });
-    });
-  });
+        expect(this.history.isActive('/')).toBe(true)
+        done()
+      })
+    })
+  })
 
   describe('a pathname that does not match the root URL if it is not a parent route', function () {
     it('is not active', function (done) {
@@ -194,10 +194,10 @@ describe('isActive', function () {
           <Route path="/home" />
         </Router>
       ), node, function () {
-        expect(this.history.isActive('/')).toBe(false);
-        done();
-      });
-    });
-  });
+        expect(this.history.isActive('/')).toBe(false)
+        done()
+      })
+    })
+  })
 
-});
+})

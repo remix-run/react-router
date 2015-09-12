@@ -1,6 +1,6 @@
-import React from 'react';
+import React from 'react'
 
-var { object } = React.PropTypes;
+var { object } = React.PropTypes
 
 /**
  * The RouteContext mixin provides a convenient way for route
@@ -21,9 +21,9 @@ var RouteContext = {
   getChildContext() {
     return {
       route: this.props.route
-    };
+    }
   }
 
-};
+}
 
-export default RouteContext;
+export default RouteContext

@@ -1,10 +1,10 @@
-import React from 'react';
-import invariant from 'invariant';
-import warning from 'warning';
-import { createRouteFromReactElement } from './RouteUtils';
-import { component, components, falsy } from './PropTypes';
+import React from 'react'
+import invariant from 'invariant'
+import warning from 'warning'
+import { createRouteFromReactElement } from './RouteUtils'
+import { component, components, falsy } from './PropTypes'
 
-var { bool, func } = React.PropTypes;
+var { bool, func } = React.PropTypes
 
 /**
  * An <IndexRoute> is used to specify its parent's <Route indexRoute> in
@@ -16,12 +16,12 @@ var IndexRoute = React.createClass({
 
     createRouteFromReactElement(element, parentRoute) {
       if (parentRoute) {
-        parentRoute.indexRoute = createRouteFromReactElement(element);
+        parentRoute.indexRoute = createRouteFromReactElement(element)
       } else {
         warning(
           false,
           'An <IndexRoute> does not make sense at the root of your route config'
-        );
+        )
       }
     }
 
@@ -39,9 +39,9 @@ var IndexRoute = React.createClass({
     invariant(
       false,
       '<IndexRoute> elements are for router configuration only and should not be rendered'
-    );
+    )
   }
 
-});
+})
 
-export default IndexRoute;
+export default IndexRoute

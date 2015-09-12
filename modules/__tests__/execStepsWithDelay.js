@@ -1,15 +1,15 @@
-import execSteps from './execSteps';
+import execSteps from './execSteps'
 
 function execStepsWithDelay(steps, delay, done) {
-  var execNextStep = execSteps(steps, done);
+  var execNextStep = execSteps(steps, done)
 
   return function () {
-    var context = this, args = Array.prototype.slice.call(arguments, 0);
+    var context = this, args = Array.prototype.slice.call(arguments, 0)
 
     return setTimeout(function () {
-      execNextStep.apply(context, args);
-    }, delay);
-  };
+      execNextStep.apply(context, args)
+    }, delay)
+  }
 }
 
-export default execStepsWithDelay;
+export default execStepsWithDelay

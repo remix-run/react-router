@@ -1,12 +1,12 @@
-import React from 'react';
-import warning from 'warning';
-import createHashHistory from 'history/lib/createHashHistory';
-import { createRoutes } from './RouteUtils';
-import RoutingContext from './RoutingContext';
-import useRoutes from './useRoutes';
-import { routes } from './PropTypes';
+import React from 'react'
+import warning from 'warning'
+import createHashHistory from 'history/lib/createHashHistory'
+import { createRoutes } from './RouteUtils'
+import RoutingContext from './RoutingContext'
+import useRoutes from './useRoutes'
+import { routes } from './PropTypes'
 
-const { func, object } = React.PropTypes;
+const { func, object } = React.PropTypes
 
 /**
  * A <Router> is a high-level API for automatically setting up
@@ -32,55 +32,55 @@ const Router = React.createClass({
       routes: null,
       params: null,
       components: null
-    };
+    }
   },
 
   handleError(error) {
     if (this.props.onError) {
-      this.props.onError.call(this, error);
+      this.props.onError.call(this, error)
     } else {
       // Throw errors by default so we don't silently swallow them!
-      throw error; // This error probably occurred in getChildRoutes or getComponents.
+      throw error // This error probably occurred in getChildRoutes or getComponents.
     }
   },
 
   componentWillMount() {
-    let { history, children, routes, parseQueryString, stringifyQuery } = this.props;
-    let createHistory = history ? () => history : createHashHistory;
+    let { history, children, routes, parseQueryString, stringifyQuery } = this.props
+    let createHistory = history ? () => history : createHashHistory
 
     this.history = useRoutes(createHistory)({
       routes: createRoutes(routes || children),
       parseQueryString,
       stringifyQuery
-    });
+    })
 
     this._unlisten = this.history.listen((error, state) => {
       if (error) {
-        this.handleError(error);
+        this.handleError(error)
       } else {
-        this.setState(state, this.props.onUpdate);
+        this.setState(state, this.props.onUpdate)
       }
-    });
+    })
   },
 
   componentWillReceiveProps(nextProps) {
     warning(
       nextProps.history === this.props.history,
       "The `history` provided to <Router/> has changed, it will be ignored."
-    );
+    )
   },
 
   componentWillUnmount() {
     if (this._unlisten)
-      this._unlisten();
+      this._unlisten()
   },
 
   render() {
-    let { location, routes, params, components } = this.state;
-    let { createElement } = this.props;
+    let { location, routes, params, components } = this.state
+    let { createElement } = this.props
 
     if (location == null)
-      return null; // Async match
+      return null // Async match
 
     return React.createElement(RoutingContext, {
       history: this.history,
@@ -89,9 +89,9 @@ const Router = React.createClass({
       routes,
       params,
       components
-    });
+    })
   }
 
-});
+})
 
-export default Router;
+export default Router

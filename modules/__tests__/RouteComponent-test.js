@@ -1,19 +1,19 @@
 /*eslint-env mocha */
-import expect from 'expect';
-import React from 'react';
-import createHistory from 'history/lib/createMemoryHistory';
-import Router from '../Router';
+import expect from 'expect'
+import React from 'react'
+import createHistory from 'history/lib/createMemoryHistory'
+import Router from '../Router'
 
 describe('a Route Component', function () {
 
-  var node;
+  var node
   beforeEach(function () {
-    node = document.createElement('div');
-  });
+    node = document.createElement('div')
+  })
 
   afterEach(function () {
-    React.unmountComponentAtNode(node);
-  });
+    React.unmountComponentAtNode(node)
+  })
 
   it('injects the right props', function (done) {
     var Parent = React.createClass({
@@ -21,11 +21,11 @@ describe('a Route Component', function () {
         assertProps(this.props)
       },
       render() { return null }
-    });
+    })
 
     var Child = React.createClass({
       render() { return null }
-    });
+    })
 
     var child = { path: 'child', component: Child }
     var parent = { path: '/', component: Parent, childRoutes: [ child ] }
@@ -38,6 +38,6 @@ describe('a Route Component', function () {
     React.render((
       <Router history={createHistory('/child')} routes={parent}/>
     ), node, done)
-  });
+  })
 
-});
+})

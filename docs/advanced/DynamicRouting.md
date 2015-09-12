@@ -33,7 +33,7 @@ var CourseRoute = {
       callback(null, require('./components/Course'))
     })
   }
-};
+}
 ```
 
 Now go look at what hacks you have in place to do this. Just kidding, I don't want to make you sad right now.
