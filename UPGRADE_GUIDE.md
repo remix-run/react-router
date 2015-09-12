@@ -98,15 +98,17 @@ since its simple with a `*` path.
 
 ### RouteHandler
 
-`RouteHandler` has been deprecated. `Router` now automatically populates
+`RouteHandler` is gone. `Router` now automatically populates
 `this.props.children` of your components based on the active route.
 
-```
+```js
 // v0.13.x
-<RouteHandler {...this.props} />
+<RouteHandler/>
+<RouteHandler someExtraProp={something}/>
 
 // v1.0
 {this.props.children}
+{React.cloneElement(this.props.children, {someExtraProp: something })}
 ```
 
 #### "active" class
