@@ -260,6 +260,7 @@ and where you get it now if you're a route component (`this.props`)
 | `getParams()`   | `params`                           |
 | `getQuery()`    | `query`                            |
 | `getRoutes()`   | `routes`                           |
+| `isActive(to, params, query)` | `history.isActive(pathname, query, onlyActiveOnIndex)` |
 
 ### Scrolling
 
