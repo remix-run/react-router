@@ -1,7 +1,7 @@
 import React from 'react'
 import invariant from 'invariant'
 
-var { object } = React.PropTypes
+const { object } = React.PropTypes
 
 /**
  * The Lifecycle mixin adds the routerWillLeave lifecycle method
@@ -18,7 +18,7 @@ var { object } = React.PropTypes
  * we're transitioning to so routerWillLeave must return a prompt message to
  * prevent the user from closing the tab.
  */
-var Lifecycle = {
+const Lifecycle = {
 
   propTypes: {
     // Route components receive the route object as a prop.
@@ -34,7 +34,7 @@ var Lifecycle = {
   },
 
   _getRoute() {
-    var route = this.props.route || this.context.route
+    const route = this.props.route || this.context.route
 
     invariant(
       route,

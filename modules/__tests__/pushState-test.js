@@ -9,7 +9,7 @@ import Route from '../Route'
 describe('pushState', function () {
   beforeEach(resetHash)
 
-  var node
+  let node
   beforeEach(function () {
     node = document.createElement('div')
   })
@@ -20,19 +20,19 @@ describe('pushState', function () {
 
   describe('when the target path contains a colon', function () {
     it('works', function (done) {
-      var Index = React.createClass({
+      const Index = React.createClass({
         render() {
           return <h1>Index</h1>
         }
       })
 
-      var Home = React.createClass({
+      const Home = React.createClass({
         render() {
           return <h1>Home</h1>
         }
       })
 
-      var steps = [
+      const steps = [
         function () {
           expect(this.state.location.pathname).toEqual('/')
           this.history.pushState(null, '/home/hi:there')
@@ -42,7 +42,7 @@ describe('pushState', function () {
         }
       ]
 
-      var execNextStep = execSteps(steps, done)
+      const execNextStep = execSteps(steps, done)
 
       React.render((
         <Router onUpdate={execNextStep}>
@@ -52,4 +52,5 @@ describe('pushState', function () {
       ), node, execNextStep)
     })
   })
+
 })

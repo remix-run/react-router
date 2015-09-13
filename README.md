@@ -35,10 +35,10 @@ Then with a module bundler or webpack, use as you would anything else:
 import { Router, Route, Link } from 'react-router'
 
 // not using an ES6 transpiler
-var ReactRouter = require('react-router')
-var Router = ReactRouter.Router
-var Route = ReactRouter.Route
-var Link = ReactRouter.Link
+const ReactRouter = require('react-router')
+const Router = ReactRouter.Router
+const Route = ReactRouter.Route
+const Link = ReactRouter.Link
 ```
 
 You can require only the pieces you need straight from the `lib` directory:
@@ -65,11 +65,11 @@ If you just want to drop a `<script>` tag in your page and be done with it, you 
 import React from 'react'
 import { Router, Route } from 'react-router'
 
-var App = React.createClass({/*...*/})
-var About = React.createClass({/*...*/})
+const App = React.createClass({/*...*/})
+const About = React.createClass({/*...*/})
 // etc.
 
-var Users = React.createClass({
+const Users = React.createClass({
   render() {
     return (
       <div>
@@ -90,7 +90,7 @@ var Users = React.createClass({
   }
 })
 
-var User = React.createClass({
+const User = React.createClass({
   componentDidMount() {
     this.setState({
       // route components are rendered with useful information, like URL params

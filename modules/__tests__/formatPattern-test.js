@@ -4,7 +4,7 @@ import { formatPattern } from '../PatternUtils'
 
 describe('formatPattern', function () {
   describe('when a pattern does not have dynamic segments', function () {
-    var pattern = '/a/b/c'
+    const pattern = '/a/b/c'
 
     it('returns the pattern', function () {
       expect(formatPattern(pattern, {})).toEqual(pattern)
@@ -12,7 +12,7 @@ describe('formatPattern', function () {
   })
 
   describe('when a pattern has dynamic segments', function () {
-    var pattern = '/comments/:id/edit'
+    const pattern = '/comments/:id/edit'
 
     describe('and a param is missing', function () {
       it('throws an Error', function () {
@@ -23,7 +23,7 @@ describe('formatPattern', function () {
     })
 
     describe('and a param is optional', function () {
-      var pattern = '/comments/(:id)/edit'
+      const pattern = '/comments/(:id)/edit'
 
       it('returns the correct path when param is supplied', function () {
         expect(formatPattern(pattern, { id:'123' })).toEqual('/comments/123/edit')
@@ -35,7 +35,7 @@ describe('formatPattern', function () {
     })
 
     describe('and a param and forward slash are optional', function () {
-      var pattern = '/comments(/:id)/edit'
+      const pattern = '/comments(/:id)/edit'
 
       it('returns the correct path when param is supplied', function () {
         expect(formatPattern(pattern, { id:'123' })).toEqual('/comments/123/edit')

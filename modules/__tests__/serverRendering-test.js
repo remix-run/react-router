@@ -8,8 +8,8 @@ import match from '../match'
 import Link from '../Link'
 
 describe('server rendering', function () {
-  var App, Dashboard, About, RedirectRoute, AboutRoute, DashboardRoute, routes
 
+  let App, Dashboard, About, RedirectRoute, AboutRoute, DashboardRoute, routes
   beforeEach(function () {
     App = React.createClass({
       render() {
@@ -71,9 +71,9 @@ describe('server rendering', function () {
   })
 
   it('works', function (done) {
-    var location = createLocation('/dashboard')
+    const location = createLocation('/dashboard')
     match({ routes, location }, function (error, redirectLocation, renderProps) {
-      var string = React.renderToString(
+      const string = React.renderToString(
         <RoutingContext {...renderProps} />
       )
       expect(string).toMatch(/The Dashboard/)
@@ -82,9 +82,9 @@ describe('server rendering', function () {
   })
 
   it('renders active Links as active', function (done) {
-    var location = createLocation('/about')
+    const location = createLocation('/about')
     match({ routes, location }, function (error, redirectLocation, renderProps) {
-      var string = React.renderToString(
+      const string = React.renderToString(
         <RoutingContext {...renderProps} />
       )
       expect(string).toMatch(/about-is-active/)
@@ -94,7 +94,7 @@ describe('server rendering', function () {
   })
 
   it('sends the redirect location', function (done) {
-    var location = createLocation('/company')
+    const location = createLocation('/company')
     match({ routes, location }, function (error, redirectLocation) {
       expect(redirectLocation).toExist()
       expect(redirectLocation.pathname).toEqual('/about')
@@ -106,7 +106,7 @@ describe('server rendering', function () {
   })
 
   it('sends null values when no routes match', function (done) {
-    var location = createLocation('/no-match')
+    const location = createLocation('/no-match')
     match({ routes, location }, function (error, redirectLocation, state) {
       expect(error).toBe(null)
       expect(redirectLocation).toBe(null)

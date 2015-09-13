@@ -8,7 +8,7 @@ import Route from '../Route'
 
 describe('isActive', function () {
 
-  var node
+  let node
   beforeEach(function () {
     node = document.createElement('div')
   })

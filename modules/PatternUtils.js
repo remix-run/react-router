@@ -9,11 +9,11 @@ function escapeSource(string) {
 }
 
 function _compilePattern(pattern) {
-  var regexpSource = ''
-  var paramNames = []
-  var tokens = []
+  let regexpSource = ''
+  const paramNames = []
+  const tokens = []
 
-  var match, lastIndex = 0, matcher = /:([a-zA-Z_$][a-zA-Z0-9_$]*)|\*|\(|\)/g
+  let match, lastIndex = 0, matcher = /:([a-zA-Z_$][a-zA-Z0-9_$]*)|\*|\(|\)/g
   while ((match = matcher.exec(pattern))) {
     if (match.index !== lastIndex) {
       tokens.push(pattern.slice(lastIndex, match.index))
@@ -50,7 +50,7 @@ function _compilePattern(pattern) {
   }
 }
 
-var CompiledPatternsCache = {}
+const CompiledPatternsCache = {}
 
 export function compilePattern(pattern) {
   if (!(pattern in CompiledPatternsCache))
@@ -77,18 +77,18 @@ export function compilePattern(pattern) {
  * - paramValues
  */
 export function matchPattern(pattern, pathname) {
-  var { regexpSource, paramNames, tokens } = compilePattern(pattern)
+  let { regexpSource, paramNames, tokens } = compilePattern(pattern)
 
   regexpSource += '/*' // Ignore trailing slashes
 
-  var captureRemaining = tokens[tokens.length - 1] !== '*'
+  const captureRemaining = tokens[tokens.length - 1] !== '*'
 
   if (captureRemaining)
     regexpSource += '([\\s\\S]*?)'
 
-  var match = pathname.match(new RegExp('^' + regexpSource + '$', 'i'))
+  const match = pathname.match(new RegExp('^' + regexpSource + '$', 'i'))
 
-  var remainingPathname, paramValues
+  let remainingPathname, paramValues
   if (match != null) {
     paramValues = Array.prototype.slice.call(match, 1).map(function (v) {
       return v != null ? decodeURIComponent(v.replace(/\+/g, '%20')) : v
@@ -115,7 +115,7 @@ export function getParamNames(pattern) {
 }
 
 export function getParams(pattern, pathname) {
-  var { paramNames, paramValues } = matchPattern(pattern, pathname)
+  const { paramNames, paramValues } = matchPattern(pattern, pathname)
 
   if (paramValues != null) {
     return paramNames.reduce(function (memo, paramName, index) {
@@ -134,11 +134,11 @@ export function getParams(pattern, pathname) {
 export function formatPattern(pattern, params) {
   params = params || {}
 
-  var { tokens } = compilePattern(pattern)
-  var parenCount = 0, pathname = '', splatIndex = 0
+  const { tokens } = compilePattern(pattern)
+  let parenCount = 0, pathname = '', splatIndex = 0
 
-  var token, paramName, paramValue
-  for (var i = 0, len = tokens.length; i < len; ++i) {
+  let token, paramName, paramValue
+  for (let i = 0, len = tokens.length; i < len; ++i) {
     token = tokens[i]
 
     if (token === '*') {

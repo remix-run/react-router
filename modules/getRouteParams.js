@@ -5,14 +5,14 @@ import { getParamNames } from './PatternUtils'
  * the given params object.
  */
 function getRouteParams(route, params) {
-  var routeParams = {}
+  const routeParams = {}
 
   if (!route.path)
     return routeParams
 
-  var paramNames = getParamNames(route.path)
+  const paramNames = getParamNames(route.path)
 
-  for (var p in params)
+  for (const p in params)
     if (params.hasOwnProperty(p) && paramNames.indexOf(p) !== -1)
       routeParams[p] = params[p]
 

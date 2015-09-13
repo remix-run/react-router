@@ -28,7 +28,7 @@ function getIndexRoute(route, location, callback) {
 
 function assignParams(params, paramNames, paramValues) {
   return paramNames.reduceRight(function (params, paramName, index) {
-    var paramValue = paramValues && paramValues[index]
+    const paramValue = paramValues && paramValues[index]
 
     if (Array.isArray(params[paramName])) {
       params[paramName].unshift(paramValue)
@@ -47,16 +47,16 @@ function createParams(paramNames, paramValues) {
 }
 
 function matchRouteDeep(basename, route, location, callback) {
-  var pattern = route.path || ''
+  let pattern = route.path || ''
 
   if (pattern.indexOf('/') !== 0)
     pattern = basename.replace(/\/*$/, '/') + pattern // Relative paths build on the parent's path.
 
-  var { remainingPathname, paramNames, paramValues } = matchPattern(pattern, location.pathname)
-  var isExactMatch = remainingPathname === ''
+  const { remainingPathname, paramNames, paramValues } = matchPattern(pattern, location.pathname)
+  const isExactMatch = remainingPathname === ''
 
   if (isExactMatch && route.path) {
-    var match = {
+    const match = {
       routes: [ route ],
       params: createParams(paramNames, paramValues)
     }

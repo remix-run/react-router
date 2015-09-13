@@ -10,7 +10,7 @@ To install this hook, use the `Lifecycle` mixin in one of your [route component]
 ```js
 import { Lifecycle } from 'react-router'
 
-var Home = React.createClass({
+const Home = React.createClass({
 
   // Assuming Home is a route component, it may use the
   // Lifecycle mixin to get a routerWillLeave method.
@@ -31,7 +31,7 @@ If you need a [`routerWillLeave`](/docs/api/Lifecycle.md#routerwillleavenextloca
 ```js
 import { Lifecycle, RouteContext } from 'react-router'
 
-var Home = React.createClass({
+const Home = React.createClass({
 
   // Home should provide its route in context
   // for descendants further down the hierarchy.
@@ -43,7 +43,7 @@ var Home = React.createClass({
 
 })
 
-var NestedForm = React.createClass({
+const NestedForm = React.createClass({
 
   // Descendants use the Lifecycle mixin to get
   // a routerWillLeave method.

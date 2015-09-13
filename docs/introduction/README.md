@@ -14,11 +14,11 @@ To illustrate the problems React Router is going to solve for you, let's build a
 ```js
 import React from 'react'
 
-var About = React.createClass({/*...*/})
-var Inbox = React.createClass({/*...*/})
-var Home = React.createClass({/*...*/})
+const About = React.createClass({/*...*/})
+const Inbox = React.createClass({/*...*/})
+const Home = React.createClass({/*...*/})
 
-var App = React.createClass({
+const App = React.createClass({
   getInitialState() {
     return {
       route: window.location.hash.substr(1)
@@ -34,7 +34,7 @@ var App = React.createClass({
   },
 
   render() {
-    var Child
+    const Child
     switch (this.state.route) {
       case '/about': Child = About; break;
       case '/inbox': Child = Inbox; break;
@@ -113,7 +113,7 @@ import { Router, Route, Link } from 'react-router'
 
 // Then we delete a bunch of code from App and
 // add some <Link> elements...
-var App = React.createClass({
+const App = React.createClass({
   render() {
     return (
       <div>
@@ -149,7 +149,7 @@ React.render((
 React Router knows how to build nested UI for us, so we don't have to manually figure out which `<Child>` component to render. Internally, the router converts your `<Route>` element hierarchy to a [route config](/docs/Glossary.md#routeconfig). But if you're not digging the JSX you can use plain objects instead:
 
 ```js
-var routes = {
+const routes = {
   path: '/',
   component: App,
   childRoutes: [
@@ -167,13 +167,13 @@ Alright, now we're ready to nest the inbox messages inside the inbox UI.
 
 ```js
 // Make a new component to render inside of Inbox
-var Message = React.createClass({
+const Message = React.createClass({
   render() {
     return <h3>Message</h3>
   }
 })
 
-var Inbox = React.createClass({
+const Inbox = React.createClass({
   render() {
     return (
       <div>
@@ -205,11 +205,11 @@ Now visits to URLs like `inbox/messages/Jkei3c32` will match the new route and n
 We're going to need to know something about the message in order to fetch it from the server. Route components get some useful properties injected into them when you render, particularly the parameters from the dynamic segment of your path. In our case, `:id`.
 
 ```js
-var Message = React.createClass({
+const Message = React.createClass({
 
   componentDidMount() {
     // from the path `/inbox/messages/:id`
-    var id = this.props.params.id
+    const id = this.props.params.id
 
     fetchMessage(id, function (err, message) {
       this.setState({ message: message })

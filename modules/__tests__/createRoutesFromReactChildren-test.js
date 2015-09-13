@@ -8,7 +8,7 @@ import Route from '../Route'
 
 describe('createRoutesFromReactChildren', function () {
 
-  var Parent = React.createClass({
+  const Parent = React.createClass({
     render() {
       return (
         <div>
@@ -19,20 +19,20 @@ describe('createRoutesFromReactChildren', function () {
     }
   })
 
-  var Hello = React.createClass({
+  const Hello = React.createClass({
     render() {
       return <div>Hello</div>
     }
   })
 
-  var Goodbye = React.createClass({
+  const Goodbye = React.createClass({
     render() {
       return <div>Goodbye</div>
     }
   })
 
   it('works with index routes', function () {
-    var routes = createRoutesFromReactChildren(
+    const routes = createRoutesFromReactChildren(
       <Route path="/" component={Parent}>
         <IndexRoute component={Hello} />
       </Route>
@@ -50,7 +50,7 @@ describe('createRoutesFromReactChildren', function () {
   })
 
   it('works with nested routes', function () {
-    var routes = createRoutesFromReactChildren(
+    const routes = createRoutesFromReactChildren(
       <Route component={Parent}>
         <Route path="home" components={{ hello: Hello, goodbye: Goodbye }} />
       </Route>
@@ -70,7 +70,7 @@ describe('createRoutesFromReactChildren', function () {
   })
 
   it('works with falsy children', function () {
-    var routes = createRoutesFromReactChildren([
+    const routes = createRoutesFromReactChildren([
       <Route path="/one" component={Parent} />,
       null,
       <Route path="/two" component={Parent} />,
@@ -89,7 +89,7 @@ describe('createRoutesFromReactChildren', function () {
   })
 
   it('works with comments', function () {
-    var routes = createRoutesFromReactChildren(
+    const routes = createRoutesFromReactChildren(
       <Route path="/one" component={Parent}>
         // This is a comment.
         <Route path="/two" component={Hello} />

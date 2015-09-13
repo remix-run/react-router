@@ -4,7 +4,7 @@ function routeParamsChanged(route, prevState, nextState) {
   if (!route.path)
     return false
 
-  var paramNames = getParamNames(route.path)
+  const paramNames = getParamNames(route.path)
 
   return paramNames.some(function (paramName) {
     return prevState.params[paramName] !== nextState.params[paramName]
@@ -22,10 +22,10 @@ function routeParamsChanged(route, prevState, nextState) {
  * from the top of the tree we're entering down to the leaf route.
  */
 function computeChangedRoutes(prevState, nextState) {
-  var prevRoutes = prevState && prevState.routes
-  var nextRoutes = nextState.routes
+  const prevRoutes = prevState && prevState.routes
+  const nextRoutes = nextState.routes
 
-  var leaveRoutes, enterRoutes
+  let leaveRoutes, enterRoutes
   if (prevRoutes) {
     leaveRoutes = prevRoutes.filter(function (route) {
       return nextRoutes.indexOf(route) === -1 || routeParamsChanged(route, prevState, nextState)

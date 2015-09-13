@@ -1,6 +1,5 @@
 export function loopAsync(turns, work, callback) {
-  var currentTurn = 0
-  var isDone = false
+  let currentTurn = 0, isDone = false
 
   function done() {
     isDone = true
@@ -22,14 +21,13 @@ export function loopAsync(turns, work, callback) {
 }
 
 export function mapAsync(array, work, callback) {
-  var length = array.length
-  var values = []
+  const length = array.length
+  const values = []
 
   if (length === 0)
     return callback(null, values)
 
-  var isDone = false
-  var doneCount = 0
+  let isDone = false, doneCount = 0
 
   function done(index, error, value) {
     if (isDone)

@@ -7,7 +7,8 @@ import Router from '../Router'
 import Route from '../Route'
 
 describe('A <Redirect>', function () {
-  var node
+
+  let node
   beforeEach(function () {
     node = document.createElement('div')
   })
@@ -27,4 +28,5 @@ describe('A <Redirect>', function () {
       done()
     })
   })
+
 })

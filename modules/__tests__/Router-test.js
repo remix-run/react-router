@@ -8,7 +8,7 @@ import Route from '../Route'
 
 describe('Router', function () {
 
-  var node
+  let node
   beforeEach(function () {
     node = document.createElement('div')
   })
@@ -17,13 +17,13 @@ describe('Router', function () {
     React.unmountComponentAtNode(node)
   })
 
-  var Parent = React.createClass({
+  const Parent = React.createClass({
     render() {
       return <div>parent{this.props.children}</div>
     }
   })
 
-  var Child = React.createClass({
+  const Child = React.createClass({
     render() {
       return <div>child</div>
     }
@@ -83,14 +83,14 @@ describe('Router', function () {
   })
 
   it('renders with a custom `createElement` prop', function(done) {
-    var Wrapper = React.createClass({
+    const Wrapper = React.createClass({
       render() {
-        var { Component } = this.props
+        const { Component } = this.props
         return <Component fromWrapper="wrapped" />
       }
     })
 
-    var Component = React.createClass({
+    const Component = React.createClass({
       render() {
         return <div>{this.props.fromWrapper}</div>
       }
@@ -108,7 +108,7 @@ describe('Router', function () {
 
   describe('with named components', function() {
     it('renders the named components', function(done) {
-      var Parent = React.createClass({
+      const Parent = React.createClass({
         render() {
           return (
             <div>
@@ -118,13 +118,13 @@ describe('Router', function () {
         }
       })
 
-      var Sidebar = React.createClass({
+      const Sidebar = React.createClass({
         render() {
           return <div>sidebar</div>
         }
       })
 
-      var Content = React.createClass({
+      const Content = React.createClass({
         render() {
           return <div>content</div>
         }

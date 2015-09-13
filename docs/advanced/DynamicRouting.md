@@ -15,7 +15,7 @@ Routes may define [`getChildRoutes`](/docs/api/PlainRoute.md#getchildrouteslocat
 Coupled with a smart code splitting tool like [webpack](http://webpack.github.io/), a once tireless architecture is now simple and declarative.
 
 ```js
-var CourseRoute = {
+const CourseRoute = {
   path: 'course/:courseId',
 
   getChildRoutes(location, callback) {

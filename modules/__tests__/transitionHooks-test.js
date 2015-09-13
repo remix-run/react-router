@@ -7,7 +7,8 @@ import execSteps from './execSteps'
 import Router from '../Router'
 
 describe('When a router enters a branch', function () {
-  var node, Dashboard, NewsFeed, Inbox, DashboardRoute, NewsFeedRoute, InboxRoute, RedirectToInboxRoute, MessageRoute, routes
+
+  let node, Dashboard, NewsFeed, Inbox, DashboardRoute, NewsFeedRoute, InboxRoute, RedirectToInboxRoute, MessageRoute, routes
   beforeEach(function () {
     node = document.createElement('div')
 
@@ -109,8 +110,8 @@ describe('When a router enters a branch', function () {
   })
 
   it('calls the onEnter hooks of all routes in that branch', function (done) {
-    var dashboardRouteEnterSpy = spyOn(DashboardRoute, 'onEnter').andCallThrough()
-    var newsFeedRouteEnterSpy = spyOn(NewsFeedRoute, 'onEnter').andCallThrough()
+    const dashboardRouteEnterSpy = spyOn(DashboardRoute, 'onEnter').andCallThrough()
+    const newsFeedRouteEnterSpy = spyOn(NewsFeedRoute, 'onEnter').andCallThrough()
 
     React.render(<Router history={createHistory('/news')} routes={routes}/>, node, function () {
       expect(dashboardRouteEnterSpy).toHaveBeenCalled()
@@ -121,9 +122,9 @@ describe('When a router enters a branch', function () {
 
   describe('and one of the transition hooks navigates to another route', function () {
     it('immediately transitions to the new route', function (done) {
-      var redirectRouteEnterSpy = spyOn(RedirectToInboxRoute, 'onEnter').andCallThrough()
-      var redirectRouteLeaveSpy = spyOn(RedirectToInboxRoute, 'onLeave').andCallThrough()
-      var inboxEnterSpy = spyOn(InboxRoute, 'onEnter').andCallThrough()
+      const redirectRouteEnterSpy = spyOn(RedirectToInboxRoute, 'onEnter').andCallThrough()
+      const redirectRouteLeaveSpy = spyOn(RedirectToInboxRoute, 'onLeave').andCallThrough()
+      const inboxEnterSpy = spyOn(InboxRoute, 'onEnter').andCallThrough()
 
       React.render(<Router history={createHistory('/redirect-to-inbox')} routes={routes}/>, node, function () {
         expect(this.state.location.pathname).toEqual('/inbox')
@@ -137,11 +138,11 @@ describe('When a router enters a branch', function () {
 
   describe('and then navigates to another branch', function () {
     it('calls the onLeave hooks of all routes in the previous branch that are not in the next branch', function (done) {
-      var dashboardRouteLeaveSpy = spyOn(DashboardRoute, 'onLeave').andCallThrough()
-      var inboxRouteEnterSpy = spyOn(InboxRoute, 'onEnter').andCallThrough()
-      var inboxRouteLeaveSpy = spyOn(InboxRoute, 'onLeave').andCallThrough()
+      const dashboardRouteLeaveSpy = spyOn(DashboardRoute, 'onLeave').andCallThrough()
+      const inboxRouteEnterSpy = spyOn(InboxRoute, 'onEnter').andCallThrough()
+      const inboxRouteLeaveSpy = spyOn(InboxRoute, 'onLeave').andCallThrough()
 
-      var steps = [
+      const steps = [
         function () {
           expect(inboxRouteEnterSpy).toHaveBeenCalled('InboxRoute.onEnter was not called')
           this.history.pushState(null, '/news')
@@ -152,7 +153,7 @@ describe('When a router enters a branch', function () {
         }
       ]
 
-      var execNextStep = execSteps(steps, done)
+      const execNextStep = execSteps(steps, done)
 
       React.render(
         <Router history={createHistory('/inbox')}
@@ -164,12 +165,12 @@ describe('When a router enters a branch', function () {
 
   describe('and then navigates to the same branch, but with different params', function () {
     it('calls the onLeave and onEnter hooks of all routes whose params have changed', function (done) {
-      var dashboardRouteLeaveSpy = spyOn(DashboardRoute, 'onLeave').andCallThrough()
-      var dashboardRouteEnterSpy = spyOn(DashboardRoute, 'onEnter').andCallThrough()
-      var messageRouteLeaveSpy = spyOn(MessageRoute, 'onLeave').andCallThrough()
-      var messageRouteEnterSpy = spyOn(MessageRoute, 'onEnter').andCallThrough()
+      const dashboardRouteLeaveSpy = spyOn(DashboardRoute, 'onLeave').andCallThrough()
+      const dashboardRouteEnterSpy = spyOn(DashboardRoute, 'onEnter').andCallThrough()
+      const messageRouteLeaveSpy = spyOn(MessageRoute, 'onLeave').andCallThrough()
+      const messageRouteEnterSpy = spyOn(MessageRoute, 'onEnter').andCallThrough()
 
-      var steps = [
+      const steps = [
         function () {
           expect(dashboardRouteEnterSpy).toHaveBeenCalled('DashboardRoute.onEnter was not called')
           expect(messageRouteEnterSpy).toHaveBeenCalled('InboxRoute.onEnter was not called')
@@ -182,7 +183,7 @@ describe('When a router enters a branch', function () {
         }
       ]
 
-      var execNextStep = execSteps(steps, done)
+      const execNextStep = execSteps(steps, done)
 
       React.render(
         <Router history={createHistory('/messages/123')}
@@ -191,4 +192,5 @@ describe('When a router enters a branch', function () {
         />, node, execNextStep)
     })
   })
+
 })

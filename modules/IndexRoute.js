@@ -4,13 +4,13 @@ import warning from 'warning'
 import { createRouteFromReactElement } from './RouteUtils'
 import { component, components, falsy } from './PropTypes'
 
-var { bool, func } = React.PropTypes
+const { bool, func } = React.PropTypes
 
 /**
  * An <IndexRoute> is used to specify its parent's <Route indexRoute> in
  * a JSX route config.
  */
-var IndexRoute = React.createClass({
+const IndexRoute = React.createClass({
 
   statics: {
 

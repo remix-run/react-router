@@ -9,7 +9,8 @@ import { createRoutes } from '../RouteUtils'
 import matchRoutes from '../matchRoutes'
 
 describe('matchRoutes', function () {
-  var routes, RootRoute, UsersRoute, UsersIndexRoute, UserRoute, PostRoute, FilesRoute, AboutRoute, TeamRoute, ProfileRoute, CatchAllRoute
+
+  let routes, RootRoute, UsersRoute, UsersIndexRoute, UserRoute, PostRoute, FilesRoute, AboutRoute, TeamRoute, ProfileRoute, CatchAllRoute
   beforeEach(function () {
     /*
     <Route>
@@ -175,7 +176,7 @@ describe('matchRoutes', function () {
   describe('an asynchronous route config', function () {
     function makeAsyncRouteConfig(routes) {
       routes.forEach(function (route) {
-        var { childRoutes, indexRoute } = route
+        const { childRoutes, indexRoute } = route
 
         if (childRoutes) {
           delete route.childRoutes
@@ -209,19 +210,21 @@ describe('matchRoutes', function () {
   })
 
   describe('an asynchronous JSX route config', function () {
-    var jsxRoutes
+    let getChildRoutes, getIndexRoute, jsxRoutes
 
     beforeEach(function () {
-      var getChildRoutes = function (location, callback) {
+      getChildRoutes = function (location, callback) {
           setTimeout(function () {
             callback(null, <Route path=":userID" />)
           })
       }
-      var getIndexRoute = function (location, callback) {
+
+      getIndexRoute = function (location, callback) {
         setTimeout(function () {
           callback(null, <Route name='jsx' />)
         })
       }
+
       jsxRoutes = createRoutes([
         <Route name="users"
                path="users"
@@ -247,4 +250,5 @@ describe('matchRoutes', function () {
       })
     })
   })
+
 })

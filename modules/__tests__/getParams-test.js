@@ -4,7 +4,7 @@ import { getParams } from '../PatternUtils'
 
 describe('getParams', function () {
   describe('when a pattern does not have dynamic segments', function () {
-    var pattern = '/a/b/c'
+    const pattern = '/a/b/c'
 
     describe('and the path matches', function () {
       it('returns an empty object', function () {
@@ -20,7 +20,7 @@ describe('getParams', function () {
   })
 
   describe('when a pattern has dynamic segments', function () {
-    var pattern = '/comments/:id.:ext/edit'
+    const pattern = '/comments/:id.:ext/edit'
 
     describe('and the path matches', function () {
       it('returns an object with the params', function () {
@@ -29,7 +29,7 @@ describe('getParams', function () {
     })
 
     describe('and the pattern is optional', function () {
-      var pattern = '/comments/(:id)/edit'
+      const pattern = '/comments/(:id)/edit'
 
       describe('and the path matches with supplied param', function () {
         it('returns an object with the params', function () {
@@ -45,7 +45,7 @@ describe('getParams', function () {
     })
 
     describe('and the pattern and forward slash are optional', function () {
-      var pattern = '/comments(/:id)/edit'
+      const pattern = '/comments(/:id)/edit'
 
       describe('and the path matches with supplied param', function () {
         it('returns an object with the params', function () {
@@ -74,7 +74,7 @@ describe('getParams', function () {
   })
 
   describe('when a pattern has characters that have special URL encoding', function () {
-    var pattern = '/one, two'
+    const pattern = '/one, two'
 
     describe('and the path matches', function () {
       it('returns an empty object', function () {
@@ -90,7 +90,7 @@ describe('getParams', function () {
   })
 
   describe('when a pattern has dynamic segments and characters that have special URL encoding', function () {
-    var pattern = '/comments/:id/edit now'
+    const pattern = '/comments/:id/edit now'
 
     describe('and the path matches', function () {
       it('returns an object with the params', function () {
@@ -105,7 +105,7 @@ describe('getParams', function () {
     })
 
     describe('and the path contains multiple special URL encoded characters', function () {
-        var pattern = '/foo/:component'
+        const pattern = '/foo/:component'
 
         describe('and the path matches', function () {
             it('returns the correctly decoded characters', function () {
@@ -133,7 +133,7 @@ describe('getParams', function () {
   })
 
   describe('when a pattern has an optional group', function () {
-    var pattern = '/archive(/:name)'
+    const pattern = '/archive(/:name)'
 
     describe('and the path matches', function () {
       it('returns an object with the params', function () {
@@ -150,7 +150,7 @@ describe('getParams', function () {
   })
 
   describe('when a param has dots', function () {
-    var pattern = '/:query/with/:domain'
+    const pattern = '/:query/with/:domain'
 
     describe('and the path matches', function () {
       it('returns an object with the params', function () {

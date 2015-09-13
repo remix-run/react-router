@@ -4,7 +4,7 @@ import { createRouteFromReactElement } from './RouteUtils'
 import { formatPattern } from './PatternUtils'
 import { falsy } from './PropTypes'
 
-var { string, object } = React.PropTypes
+const { string, object } = React.PropTypes
 
 /**
  * A <Redirect> is used to declare another URL path a client should be sent
@@ -13,12 +13,12 @@ var { string, object } = React.PropTypes
  * Redirects are placed alongside routes in the route configuration and are
  * traversed in the same manner.
  */
-var Redirect = React.createClass({
+const Redirect = React.createClass({
 
   statics: {
 
     createRouteFromReactElement(element) {
-      var route = createRouteFromReactElement(element)
+      const route = createRouteFromReactElement(element)
 
       if (route.from)
         route.path = route.from
@@ -30,8 +30,8 @@ var Redirect = React.createClass({
       )
 
       route.onEnter = function (nextState, replaceState) {
-        var { location, params } = nextState
-        var pathname = route.to ? formatPattern(route.to, params) : location.pathname
+        const { location, params } = nextState
+        const pathname = route.to ? formatPattern(route.to, params) : location.pathname
 
         replaceState(
           route.state || location.state,

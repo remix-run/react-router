@@ -1,7 +1,7 @@
 import React from 'react'
 import warning from 'warning'
 
-var { bool, object, string, func } = React.PropTypes
+const { bool, object, string, func } = React.PropTypes
 
 function isLeftClickEvent(event) {
   return event.button === 0
@@ -12,7 +12,7 @@ function isModifiedEvent(event) {
 }
 
 function isEmptyObject(object) {
-  for (var p in object)
+  for (const p in object)
     if (object.hasOwnProperty(p))
       return false
 
@@ -37,7 +37,7 @@ function isEmptyObject(object) {
  *
  *   <Link ... query={{ show: true }} state={{ the: 'state' }} />
  */
-var Link = React.createClass({
+const Link = React.createClass({
 
   contextTypes: {
     history: object
@@ -62,8 +62,7 @@ var Link = React.createClass({
   },
 
   handleClick(event) {
-    var allowTransition = true
-    var clickResult
+    let allowTransition = true, clickResult
 
     if (this.props.onClick)
       clickResult = this.props.onClick(event)
@@ -90,8 +89,8 @@ var Link = React.createClass({
   },
 
   render() {
-    var { history } = this.context
-    var { activeClassName, activeStyle, onlyActiveOnIndex, to, query, state, onClick, ...props } = this.props
+    const { history } = this.context
+    const { activeClassName, activeStyle, onlyActiveOnIndex, to, query, state, onClick, ...props } = this.props
 
     props.onClick = this.handleClick
 

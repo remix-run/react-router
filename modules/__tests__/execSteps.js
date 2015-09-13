@@ -1,5 +1,5 @@
 function execSteps(steps, done) {
-  var index = 0
+  let index = 0
 
   return function () {
     if (steps.length === 0) {

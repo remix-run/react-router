@@ -7,7 +7,8 @@ import Route from '../Route'
 import createHistory from 'history/lib/createMemoryHistory'
 
 describe('History Mixin', function () {
-  var node
+
+  let node
   beforeEach(function () {
     node = document.createElement('div')
   })
@@ -35,4 +36,5 @@ describe('History Mixin', function () {
       </Router>
     ), node, done)
   })
+
 })

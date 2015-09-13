@@ -2,13 +2,13 @@ import React from 'react'
 import invariant from 'invariant'
 import getRouteParams from './getRouteParams'
 
-var { array, func, object } = React.PropTypes
+const { array, func, object } = React.PropTypes
 
 /**
  * A <RoutingContext> renders the component tree for a given router state
  * and sets the history object and the current location in context.
  */
-var RoutingContext = React.createClass({
+const RoutingContext = React.createClass({
 
   propTypes: {
     history: object.isRequired,
@@ -42,17 +42,17 @@ var RoutingContext = React.createClass({
   },
 
   render() {
-    var { history, location, routes, params, components } = this.props
-    var element = null
+    const { history, location, routes, params, components } = this.props
+    let element = null
 
     if (components) {
       element = components.reduceRight((element, components, index) => {
         if (components == null)
           return element // Don't create new children use the grandchildren.
 
-        var route = routes[index]
-        var routeParams = getRouteParams(route, params)
-        var props = {
+        const route = routes[index]
+        const routeParams = getRouteParams(route, params)
+        const props = {
           history,
           location,
           params,
@@ -65,9 +65,9 @@ var RoutingContext = React.createClass({
           props.children = element
 
         if (typeof components === 'object') {
-          var elements = {}
+          const elements = {}
 
-          for (var key in components)
+          for (const key in components)
             if (components.hasOwnProperty(key))
               elements[key] = this.createElement(components[key], props)
 

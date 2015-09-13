@@ -6,7 +6,7 @@ A [route configuration](/docs/Glossary.md#routeconfig) is basically a set of ins
 import React from 'react'
 import { Router, Route, Link } from 'react-router'
 
-var App = React.createClass({
+const App = React.createClass({
   render() {
     return (
       <div>
@@ -21,13 +21,13 @@ var App = React.createClass({
   }
 })
 
-var About = React.createClass({
+const About = React.createClass({
   render() {
     return <h3>About</h3>
   }
 })
 
-var Inbox = React.createClass({
+const Inbox = React.createClass({
   render() {
     return (
       <div>
@@ -38,7 +38,7 @@ var Inbox = React.createClass({
   }
 })
 
-var Message = React.createClass({
+const Message = React.createClass({
   render() {
     return <h3>Message {this.props.params.id}</h3>
   }
@@ -72,7 +72,7 @@ Imagine we'd like to render another component inside of `App` when the URL is `/
 ```js
 import { IndexRoute } from 'react-router'
 
-var Dashboard = React.createClass({
+const Dashboard = React.createClass({
   render() {
     return <div>Welcome to the app!</div>
   }
@@ -181,7 +181,7 @@ Since [route](/docs/Glossary.md#route)s are usually nested, it's useful to use a
 The route config we've discussed up to this point could also be specified like this:
 
 ```js
-var routeConfig = [
+const routeConfig = [
   { path: '/',
     component: App,
     indexRoute: { component: Dashboard },

@@ -19,7 +19,7 @@ Get them from the history package:
 // JavaScript module import
 import createBrowserHistory from 'history/lib/createBrowserHistory'
 // or commonjs
-var createBrowserHistory = require('history/lib/createBrowserHistory')
+const createBrowserHistory = require('history/lib/createBrowserHistory')
 ```
 
 ### `createHashHistory`
@@ -68,10 +68,10 @@ JavaScript application in the response.
 A quick example with express:
 
 ```js
-var express = require('express')
-var path = require('path')
-var port = process.env.PORT || 8080
-var app = express()
+const express = require('express')
+const path = require('path')
+const port = process.env.PORT || 8080
+const app = express()
 
 // serve static assets normally
 app.use(express.static(__dirname + '/public'))

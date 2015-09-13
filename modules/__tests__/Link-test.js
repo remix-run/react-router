@@ -9,29 +9,29 @@ import Router from '../Router'
 import Route from '../Route'
 import Link from '../Link'
 
-var { click } = React.addons.TestUtils.Simulate
+const { click } = React.addons.TestUtils.Simulate
 
 describe('A <Link>', function () {
 
-  var Hello = React.createClass({
+  let node
+  beforeEach(function () {
+    node = document.createElement('div')
+  })
+
+  const Hello = React.createClass({
     render() {
       return <div>Hello {this.props.params.name}!</div>
     }
   })
 
-  var Goodbye = React.createClass({
+  const Goodbye = React.createClass({
     render() {
       return <div>Goodbye</div>
     }
   })
 
-  var node
-  beforeEach(function () {
-    node = document.createElement('div')
-  })
-
   it('knows how to make its href', function () {
-    var LinkWrapper = React.createClass({
+    const LinkWrapper = React.createClass({
       render() {
         return <Link to="/hello/michael" query={{the: 'query'}}>Link</Link>
       }
@@ -42,7 +42,7 @@ describe('A <Link>', function () {
         <Route path="/" component={LinkWrapper} />
       </Router>
     ), node, function () {
-      var a = node.querySelector('a')
+      const a = node.querySelector('a')
       expect(a.getAttribute('href')).toEqual('/hello/michael?the=query')
     })
   })
@@ -50,7 +50,7 @@ describe('A <Link>', function () {
   // This test needs to be in its own file with beforeEach(resetHash).
   //
   //it('knows how to make its href with HashHistory', function () {
-  //  var LinkWrapper = React.createClass({
+  //  const LinkWrapper = React.createClass({
   //    render() {
   //      return <Link to="/hello/michael" query={{the: 'query'}}>Link</Link>
   //    }
@@ -61,13 +61,13 @@ describe('A <Link>', function () {
   //      <Route path="/" component={LinkWrapper} />
   //    </Router>
   //  ), node, function () {
-  //    var a = node.querySelector('a')
+  //    const a = node.querySelector('a')
   //    expect(a.getAttribute('href')).toEqual('#/hello/michael?the=query')
   //  })
   //})
 
   describe('with params', function () {
-    var App = React.createClass({
+    const App = React.createClass({
       render() {
         return (
           <div>
@@ -86,7 +86,7 @@ describe('A <Link>', function () {
           </Route>
         </Router>
       ), node, function () {
-        var a = node.querySelectorAll('a')[0]
+        const a = node.querySelectorAll('a')[0]
         expect(a.className.trim()).toEqual('active')
         done()
       })
@@ -100,7 +100,7 @@ describe('A <Link>', function () {
           </Route>
         </Router>
       ), node, function () {
-        var a = node.querySelectorAll('a')[1]
+        const a = node.querySelectorAll('a')[1]
         expect(a.className.trim()).toEqual('')
         done()
       })
@@ -109,7 +109,7 @@ describe('A <Link>', function () {
 
   describe('when its route is active and className is empty', function () {
     it('it shouldn\'t have an active class', function (done) {
-      var LinkWrapper = React.createClass({
+      const LinkWrapper = React.createClass({
         render() {
           return (
             <div>
@@ -120,7 +120,8 @@ describe('A <Link>', function () {
         }
       })
 
-      var a, steps = [
+      let a
+      const steps = [
         function () {
           a = node.querySelector('a')
           expect(a.className).toEqual('dontKillMe')
@@ -131,7 +132,7 @@ describe('A <Link>', function () {
         }
       ]
 
-      var execNextStep = execSteps(steps, done)
+      const execNextStep = execSteps(steps, done)
 
       React.render((
         <Router history={createHistory('/goodbye')} onUpdate={execNextStep}>
@@ -146,7 +147,7 @@ describe('A <Link>', function () {
 
   describe('when its route is active', function () {
     it.skip('has its activeClassName', function (done) {
-      var LinkWrapper = React.createClass({
+      const LinkWrapper = React.createClass({
         render() {
           return (
             <div>
@@ -157,7 +158,8 @@ describe('A <Link>', function () {
         }
       })
 
-      var a, steps = [
+      let a
+      const steps = [
         function () {
           a = node.querySelector('a')
           expect(a.className).toEqual('dontKillMe')
@@ -168,7 +170,7 @@ describe('A <Link>', function () {
         }
       ]
 
-      var execNextStep = execSteps(steps, done)
+      const execNextStep = execSteps(steps, done)
 
       React.render((
         <Router history={createHistory('/goodbye')} onUpdate={execNextStep}>
@@ -181,7 +183,7 @@ describe('A <Link>', function () {
     })
 
     it.skip('has its activeStyle', function (done) {
-      var LinkWrapper = React.createClass({
+      const LinkWrapper = React.createClass({
         render() {
           return (
             <div>
@@ -192,7 +194,8 @@ describe('A <Link>', function () {
         }
       })
 
-      var a, steps = [
+      let a
+      const steps = [
         function () {
           a = node.querySelector('a')
           expect(a.style.color).toEqual('white')
@@ -203,7 +206,7 @@ describe('A <Link>', function () {
         }
       ]
 
-      var execNextStep = execSteps(steps, done)
+      const execNextStep = execSteps(steps, done)
 
       React.render((
         <Router history={createHistory("/goodbye")} onUpdate={execNextStep}>
@@ -218,7 +221,7 @@ describe('A <Link>', function () {
 
   describe('when route changes', function() {
     it.skip('changes active state', function(done) {
-      var LinkWrapper = React.createClass({
+      const LinkWrapper = React.createClass({
         shouldComponentUpdate() {
           return false
         },
@@ -232,7 +235,8 @@ describe('A <Link>', function () {
         }
       })
 
-      var a, steps = [
+      let a
+      const steps = [
         function () {
           a = node.querySelector('a')
           expect(a.className).toEqual('')
@@ -243,7 +247,7 @@ describe('A <Link>', function () {
         }
       ]
 
-      var execNextStep = execSteps(steps, done)
+      const execNextStep = execSteps(steps, done)
 
       React.render((
         <Router history={createHistory('/goodbye')} onUpdate={execNextStep}>
@@ -258,7 +262,7 @@ describe('A <Link>', function () {
 
   describe('when clicked', function () {
     it('calls a user defined click handler', function (done) {
-      var LinkWrapper = React.createClass({
+      const LinkWrapper = React.createClass({
         handleClick(event) {
           event.preventDefault()
           assert.ok(true)
@@ -280,7 +284,7 @@ describe('A <Link>', function () {
     })
 
     it('transitions to the correct route', function (done) {
-      var LinkWrapper = React.createClass({
+      const LinkWrapper = React.createClass({
         handleClick() {
           // just here to make sure click handlers don't prevent it from happening
         },
@@ -289,7 +293,7 @@ describe('A <Link>', function () {
         }
       })
 
-      var steps = [
+      const steps = [
         function () {
           click(node.querySelector('a'), { button: 0 })
         },
@@ -298,7 +302,7 @@ describe('A <Link>', function () {
         }
       ]
 
-      var execNextStep = execSteps(steps, done)
+      const execNextStep = execSteps(steps, done)
 
       React.render((
         <Router history={createHistory('/')} onUpdate={execNextStep}>

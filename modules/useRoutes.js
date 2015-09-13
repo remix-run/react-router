@@ -9,7 +9,7 @@ import getComponents from './getComponents'
 import matchRoutes from './matchRoutes'
 
 function hasAnyProperties(object) {
-  for (var p in object)
+  for (const p in object)
     if (object.hasOwnProperty(p))
       return true
 

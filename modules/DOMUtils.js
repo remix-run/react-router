@@ -1,4 +1,4 @@
-export var canUseDOM = !!(
+export const canUseDOM = !!(
   typeof window !== 'undefined' && window.document && window.document.createElement
 )
 
@@ -52,7 +52,7 @@ export function setWindowScrollPosition(scrollX, scrollY) {
  * changed to avoid false negatives for Windows Phones: https://github.com/rackt/react-router/issues/586
  */
 export function supportsHistory() {
-  var ua = navigator.userAgent
+  const ua = navigator.userAgent
   if ((ua.indexOf('Android 2.') !== -1 || ua.indexOf('Android 4.0') !== -1) && ua.indexOf('Mobile Safari') !== -1 && ua.indexOf('Chrome') === -1 && ua.indexOf('Windows Phone') === -1) {
     return false
   }

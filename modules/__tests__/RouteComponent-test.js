@@ -6,7 +6,7 @@ import Router from '../Router'
 
 describe('a Route Component', function () {
 
-  var node
+  let node
   beforeEach(function () {
     node = document.createElement('div')
   })
@@ -16,19 +16,19 @@ describe('a Route Component', function () {
   })
 
   it('injects the right props', function (done) {
-    var Parent = React.createClass({
+    const Parent = React.createClass({
       componentDidMount() {
         assertProps(this.props)
       },
       render() { return null }
     })
 
-    var Child = React.createClass({
+    const Child = React.createClass({
       render() { return null }
     })
 
-    var child = { path: 'child', component: Child }
-    var parent = { path: '/', component: Parent, childRoutes: [ child ] }
+    const child = { path: 'child', component: Child }
+    const parent = { path: '/', component: Parent, childRoutes: [ child ] }
 
     function assertProps(props) {
       expect(props.route).toEqual(parent)

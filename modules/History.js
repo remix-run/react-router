@@ -1,6 +1,6 @@
 import { history } from './PropTypes'
 
-var History = {
+const History = {
 
   contextTypes: { history },
 

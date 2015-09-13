@@ -22,14 +22,14 @@ A single component to be rendered when the route matches the url. It can
 be rendered by the parent route component with `this.props.children`.
 
 ```js
-var routes = (
+const routes = (
   <Route component={App}>
     <Route path="groups" component={Groups}/>
     <Route path="users" component={Users}/>
   </Route>
 )
 
-var App = React.createClass({
+const App = React.createClass({
   render () {
     return (
       <div>
@@ -55,7 +55,7 @@ by the parent route component with `this.props.children[name]`.
 <App children={{main: <Users/>, sidebar: <UsersSidebar/>}}/>
 
 // So with the router it looks like this:
-var routes = (
+const routes = (
   <Route component={App}>
     <Route path="groups" components={{main: Groups, sidebar: GroupsSidebar}}/>
     <Route path="users" components={{main: Users, sidebar: UsersSidebar}}>
@@ -64,9 +64,9 @@ var routes = (
   </Route>
 )
 
-var App = React.createClass({
+const App = React.createClass({
   render () {
-    var { main, sidebar } = this.props.children
+    const { main, sidebar } = this.props.children
     return (
       <div>
         <div className="Main">
@@ -80,7 +80,7 @@ var App = React.createClass({
   }
 })
 
-var Users = React.createClass({
+const Users = React.createClass({
   render () {
     return (
       <div>

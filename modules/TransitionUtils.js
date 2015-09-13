@@ -32,14 +32,14 @@ function getEnterHooks(routes) {
  * which could lead to a non-responsive UI if the hook is slow.
  */
 export function runEnterHooks(routes, nextState, callback) {
-  var hooks = getEnterHooks(routes)
+  const hooks = getEnterHooks(routes)
 
   if (!hooks.length) {
     callback()
     return
   }
 
-  var redirectInfo
+  let redirectInfo
   function replaceState(state, pathname, query) {
     redirectInfo = { pathname, query, state }
   }
@@ -59,7 +59,7 @@ export function runEnterHooks(routes, nextState, callback) {
  * Runs all onLeave hooks in the given array of routes in order.
  */
 export function runLeaveHooks(routes) {
-  for (var i = 0, len = routes.length; i < len; ++i)
+  for (let i = 0, len = routes.length; i < len; ++i)
     if (routes[i].onLeave)
       routes[i].onLeave.call(routes[i])
 }

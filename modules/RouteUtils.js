@@ -12,9 +12,9 @@ export function isReactChildren(object) {
 function checkPropTypes(componentName, propTypes, props) {
   componentName = componentName || 'UnknownComponent'
 
-  for (var propName in propTypes) {
+  for (const propName in propTypes) {
     if (propTypes.hasOwnProperty(propName)) {
-      var error = propTypes[propName](props, propName, componentName)
+      const error = propTypes[propName](props, propName, componentName)
 
       if (error instanceof Error)
         warning(false, error.message)
@@ -27,14 +27,14 @@ function createRoute(defaultProps, props) {
 }
 
 export function createRouteFromReactElement(element) {
-  var type = element.type
-  var route = createRoute(type.defaultProps, element.props)
+  const type = element.type
+  const route = createRoute(type.defaultProps, element.props)
 
   if (type.propTypes)
     checkPropTypes(type.displayName || type.name, type.propTypes, route)
 
   if (route.children) {
-    var childRoutes = createRoutesFromReactChildren(route.children, route)
+    const childRoutes = createRoutesFromReactChildren(route.children, route)
 
     if (childRoutes.length)
       route.childRoutes = childRoutes
@@ -52,7 +52,7 @@ export function createRouteFromReactElement(element) {
  *
  *   import { Route, createRoutesFromReactChildren } from 'react-router'
  *   
- *   var routes = createRoutesFromReactChildren(
+ *   const routes = createRoutesFromReactChildren(
  *     <Route component={App}>
  *       <Route path="home" component={Dashboard}/>
  *       <Route path="news" component={NewsFeed}/>
@@ -63,13 +63,13 @@ export function createRouteFromReactElement(element) {
  * to a <Router> component.
  */
 export function createRoutesFromReactChildren(children, parentRoute) {
-  var routes = []
+  const routes = []
 
   React.Children.forEach(children, function (element) {
     if (React.isValidElement(element)) {
       // Component classes may have a static create* method.
       if (element.type.createRouteFromReactElement) {
-        var route = element.type.createRouteFromReactElement(element, parentRoute)
+        const route = element.type.createRouteFromReactElement(element, parentRoute)
 
         if (route)
           routes.push(route)

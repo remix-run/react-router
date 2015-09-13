@@ -68,7 +68,7 @@ React.render((
   </Router>
 ), node)
 
-var App = React.createClass({
+const App = React.createClass({
   render() {
     // the matched child route components become props in the parent
     return (
@@ -86,7 +86,7 @@ var App = React.createClass({
   }
 })
 
-var Users = React.createClass({
+const Users = React.createClass({
   render() {
     return (
       <div>
