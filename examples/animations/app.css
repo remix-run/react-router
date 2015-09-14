@@ -21,3 +21,8 @@
 .example-leave.example-leave-active {
   opacity: 0;
 }
+
+.link-active {
+  color: #bbbbbb;
+  text-decoration: none;
+}
