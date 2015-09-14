@@ -85,15 +85,15 @@ your app for the sake of the `History` mixin, have a couple of options:
 
 - Use context
 
-    ```js
-    import PropTypes from 'react-router'
-    class MyComponent extends React.Component {
-      doStuff () {
-        this.context.history.pushState(null, '/some/path')
-      }
-    }
-    MyComponent.contextTypes = { history: PropTypes.history }
-    ```
+```js
+import PropTypes from 'react-router'
+class MyComponent extends React.Component {
+  doStuff () {
+    this.context.history.pushState(null, '/some/path')
+  }
+}
+MyComponent.contextTypes = { history: PropTypes.history }
+```
 
 - [Make your history a module](/docs/advanced/NavigatingOutsideOfComponents.md)
 
@@ -101,25 +101,24 @@ your app for the sake of the `History` mixin, have a couple of options:
   and deprecating history, just haven't had the time to think it through
   all the way.
 
-    ```js
-    function connectHistory (Component) {
-      return React.createClass({
-        mixins: [ History ],
-        render () {
-          return <Component {...this.props} history={this.history}/>
-        }
-      })
+```js
+function connectHistory (Component) {
+  return React.createClass({
+    mixins: [ History ],
+    render () {
+      return <Component {...this.props} history={this.history} />
     }
+  })
+}
 
-    // other file
-    import connectHistory from './connectHistory'
+// other file
+import connectHistory from './connectHistory'
 
-    class MyComponent extends React.Component {
-      doStuff () {
-        this.props.history.pushState(null, '/some/where')
-      }
-    }
+class MyComponent extends React.Component {
+  doStuff () {
+    this.props.history.pushState(null, '/some/where')
+  }
+}
 
-    export default connectHistory(MyComponent)
-    ```
-
+export default connectHistory(MyComponent)
+```
