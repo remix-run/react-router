@@ -113,21 +113,6 @@ since its simple with a `*` path.
 <Link to={`/users/${user.id}`}>Mateusz</Link>
 ```
 
-### RouteHandler
-
-`RouteHandler` is gone. `Router` now automatically populates
-`this.props.children` of your components based on the active route.
-
-```js
-// v0.13.x
-<RouteHandler/>
-<RouteHandler someExtraProp={something}/>
-
-// v1.0
-{this.props.children}
-{React.cloneElement(this.props.children, {someExtraProp: something })}
-```
-
 #### "active" class
 
 In 0.13.x links added the "active" class by default which you could
@@ -171,6 +156,21 @@ active when the index route is active.
 
 // will be active only when home is active, not when about is active
 <IndexLink to="/">Home</IndexLink>
+```
+
+### RouteHandler
+
+`RouteHandler` is gone. `Router` now automatically populates
+`this.props.children` of your components based on the active route.
+
+```js
+// v0.13.x
+<RouteHandler/>
+<RouteHandler someExtraProp={something}/>
+
+// v1.0
+{this.props.children}
+{React.cloneElement(this.props.children, {someExtraProp: something })}
 ```
 
 ### Navigation Mixin
@@ -268,6 +268,32 @@ In 0.13.x we had a couple of implementations to restore scroll position,
 we've realized that we can build a better implementation on top of the
 router and will be doing that very soon, before the 1.0 final release,
 but it doesn't need to be baked into routing like it was before.
+
+### `willTransitionTo` and `willTransitionFrom`
+
+Routes now define this behavior:
+
+```js
+// v0.13.x
+var Home = React.createClass({
+  statics: {
+    willTransitionTo (transition, params, query, callback) {
+    }
+    willTransitionFrom (component, transition, params, query, callback) {
+    }
+  }
+})
+
+// v1.0
+<Route
+  component={Home}
+  onEnter={(location, replaceWith) => {}}
+  onLeave={() => {}}
+/>
+```
+
+To cancel a "transition from", please refer to the
+[Confirming Navigation](docs/advanced/ConfirmingNavigation.md) guide.
 
 ### We'll keep updating this
 
