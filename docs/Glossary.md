@@ -126,7 +126,7 @@ The word *params* refers to an object of key/value pairs that were parsed out of
 ## RedirectFunction
 
 ```js
-type RedirectFunction = (pathname: Pathname | Path, query: ?Query, state: ?LocationState) => void;
+type RedirectFunction = (state: ?LocationState, pathname: Pathname | Path, query: ?Query) => void;
 ```
 
 A *redirect function* is used in [`onEnter` hooks](#enterhook) to trigger a transition to a new URL.
