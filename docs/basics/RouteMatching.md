@@ -1,9 +1,10 @@
 # Route Matching
 
-A [route](/docs/Glossary.md#route) has two attributes that determine whether or not it "matches" the URL:  
+A [route](/docs/Glossary.md#route) has three attributes that determine whether or not it "matches" the URL:  
 
 1. [nesting](#nesting) and 
 2. its [`path`](#path-syntax)
+3. its [precedence](#precedence)
 
 ### Nesting
 
@@ -17,10 +18,19 @@ A route path is [a string pattern](/docs/Glossary.md#routepattern) that is used 
   - `()` – Wraps a portion of the URL that is optional
   - `*` – Matches all characters (non-greedy) up to the next character in the pattern, or to the end of the URL if there is none, and creates a `splat` [param](/docs/Glossary.md#params)
 
-```
+```js
 <Route path="/hello/:name">         // matches /hello/michael and /hello/ryan
 <Route path="/hello(/:name)">       // matches /hello, /hello/michael, and /hello/ryan
 <Route path="/files/*.*">           // matches /files/hello.jpg and /files/path/to/hello.jpg
 ```
 
 If a route uses a relative `path`, it builds upon the accumulated `path` of its ancestors. Nested routes may opt-out of this behavior by [using an absolute `path`](RouteConfiguration.md#decoupling-the-ui-from-the-url).
+
+### Precedence
+
+Finally, the routing algorithm attempts to match routes in the order they are defined, top to bottom. So, when you have two sibling routes you should be sure the first doesn't match all possible `path`s that can be matched by the later sibling. For example, **don't** do this:
+
+```js
+<Route path="/comments" ... />
+<Redirect from="/comments" ... />
+```
