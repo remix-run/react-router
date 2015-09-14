@@ -35,10 +35,10 @@ Then with a module bundler or webpack, use as you would anything else:
 import { Router, Route, Link } from 'react-router'
 
 // not using an ES6 transpiler
-const ReactRouter = require('react-router')
-const Router = ReactRouter.Router
-const Route = ReactRouter.Route
-const Link = ReactRouter.Link
+var ReactRouter = require('react-router')
+var Router = ReactRouter.Router
+var Route = ReactRouter.Route
+var Link = ReactRouter.Link
 ```
 
 You can require only the pieces you need straight from the `lib` directory:
