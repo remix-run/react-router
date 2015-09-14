@@ -258,7 +258,7 @@ and where you get it now if you're a route component (`this.props`)
 | `getPath()`     | `location.pathname+location.query` |
 | `getPathname()` | `location.pathname`                |
 | `getParams()`   | `params`                           |
-| `getQuery()`    | `query`                            |
+| `getQuery()`    | `location.query`                            |
 | `getRoutes()`   | `routes`                           |
 | `isActive(to, params, query)` | `history.isActive(pathname, query, onlyActiveOnIndex)` |
 
