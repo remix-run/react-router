@@ -7,7 +7,8 @@ React Router
 
 A complete routing library for React.
 
-[Docs](/doc)
+* [Guides](/doc/guides)
+* [Docs](/doc)
 
 Important Notes
 ---------------
