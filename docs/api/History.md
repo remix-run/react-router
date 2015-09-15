@@ -3,7 +3,7 @@
 Adds the router's `history` object to your component instance.
 
 **Note**: You do not need this mixin for route components, its already
-avaible as `this.props.history`. This is for components deeper in the
+available as `this.props.history`. This is for components deeper in the
 render tree that need access to the router's history object.
 
 ### Methods
@@ -50,7 +50,18 @@ Stringifies the query into the pathname, using the router's config.
 Creates a URL, using the router's config. For example, it will add `#/` in
 front of the `pathname` for hash history.
 
-### Example
+#### `isActive(pathname, query)`
+
+Returns `true` or `false` depending on if the current path is active.
+Will be true for every route in the route branch matched by the
+`pathname` (child route is active, therefore parent is too).
+
+##### arguments
+
+- `pathname` - the full url with or without the query.
+- `query` - an object that will be stringified by the router.
+
+### Examples
 
 ```js
 import { History } from 'react-router'
@@ -69,6 +80,29 @@ React.createClass({
    )
  }
 })
+```
+
+Let's say you are using bootstrap and want to get `active` on those `li`
+tags for the Tabs:
+
+```js
+import { Link, History } from 'react-router'
+
+let Tab = React.createClass({
+
+  mixins: [ History ],
+
+  render() {
+    let isActive = this.history.isActive(this.props.to, this.props.query)
+    let className = isActive ? 'active' : ''
+    return <li className={className}><Link {...this.props}/></li>
+  }
+
+})
+
+// use it just like <Link/>, and you'll get an anchor wrapped in an `li`
+// with an automatic `active` class on both.
+<Tab href="foo">Foo</Tab>
 ```
 
 ### But I’m using Classes
