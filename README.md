@@ -7,9 +7,7 @@ React Router
 
 A complete routing library for React.
 
-**Note: We are currently working hard on some major API changes for version 1.0. You can [follow our progress, here](https://github.com/rackt/react-router/tree/master)!**
-
-[Docs](https://rackt.github.io/react-router/)
+[Docs](/doc)
 
 Important Notes
 ---------------
