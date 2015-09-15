@@ -30,4 +30,3 @@
 * Mixins
   * [Navigation](/doc/06 Mixins/Navigation.md)
   * [State](/doc/06 Mixins/State.md)
-* [Upgrade Guide](https://github.com/rackt/react-router/blob/master/UPGRADE_GUIDE.md)
