@@ -86,7 +86,7 @@ describe('server rendering', function () {
     })
   })
 
-  it.only('works with query params', function (done) {
+  it('works with query params', function (done) {
     const location = createLocation('/dashboard?message=Hello')
     match({ routes, location }, function (error, redirectLocation, renderProps) {
       const string = React.renderToString(
