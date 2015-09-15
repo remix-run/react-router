@@ -32,7 +32,6 @@
     * [Lifecycle](/docs/api/Lifecycle.md)
     * [History](/docs/api/History.md)
     * [RouteContext](/docs/api/RouteContext.md)
-    * [IsActive](/docs/api/IsActive.md)
   * [Utilities](/docs/api/README.md#utilities)
     * [useRoutes](/docs/api/useRoutes.md)
     * [createRoutes](/docs/api/createRoutes.md)
