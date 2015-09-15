@@ -18,7 +18,6 @@
 * [Lifecycle](Lifecycle.md)
 * [History](History.md)
 * [RouteContext](RouteContext.md)
-* [IsActive](IsActive.md)
 
 #### Utilities
 
