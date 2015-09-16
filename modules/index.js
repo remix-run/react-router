@@ -4,6 +4,7 @@ export Link from './Link'
 export IndexLink from './IndexLink'
 
 /* components (configuration) */
+export IndexRedirect from './IndexRedirect'
 export IndexRoute from './IndexRoute'
 export Redirect from './Redirect'
 export Route from './Route'
