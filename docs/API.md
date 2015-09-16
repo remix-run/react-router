@@ -10,7 +10,8 @@
   - [Route](#route)
   - [PlainRoute](#plainroute)
   - [Redirect](#redirect)
-  - [IndexRoute](#indexroute)  
+  - [IndexRoute](#indexroute)
+  - [IndexRedirect](#indexredirect)
 
 * [Handler Components](#handler-components)
 
@@ -344,15 +345,29 @@ Note that the `<Redirect>` can be placed anywhere in the route hierarchy, though
 </Route>
 ```
 
+
+
 ## IndexRoute
 Index Routes allow you to provide a default "child" to a parent
 route when visitor is at the url of the parent, they provide convention
 for `<IndexLink>` to work.
 
-Please see the [Index Routes guide](/docs/guides/basics/IndexRoutes.md)
+Please see the [Index Routes guide](/docs/guides/basics/IndexRoutes.md).
 
 #### Props
 All the same props as [Route](#route) except for `path`.
+
+
+
+## IndexRedirect
+Index Redirects allow you to redirect from the URL of a parent route to another
+route. They can be used to allow a child route to serve as the default route
+for its parent, while still keeping a distinct URL.
+
+Please see the [Index Routes guide](/docs/guides/basics/IndexRoutes.md).
+
+#### Props
+All the same props as [Redirect](./Redirect.md) except for `from`.
 
 
 
