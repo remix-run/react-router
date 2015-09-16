@@ -47,11 +47,7 @@ function useRoutes(createHistory) {
           if (error) {
             callback(error, null, null)
           } else if (nextState) {
-            finishMatch({ ...nextState, location }, function (err, nextLocation, nextState) {
-              if (nextState)
-                state = nextState
-              callback(err, nextLocation, nextState)
-            })
+            finishMatch({ ...nextState, location }, callback)
           } else {
             callback(null, null, null)
           }
@@ -81,7 +77,9 @@ function useRoutes(createHistory) {
             if (error) {
               callback(error)
             } else {
-              callback(null, null, { ...nextState, components })
+              nextState = { ...nextState, components };
+              state = nextState;
+              callback(null, null, nextState);
             }
           })
         }
