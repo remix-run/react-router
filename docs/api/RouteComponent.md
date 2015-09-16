@@ -38,7 +38,7 @@ React.render((
   </Router>
 ), node)
 
-let App = React.createClass({
+const App = React.createClass({
   render() {
     return (
       <div>
