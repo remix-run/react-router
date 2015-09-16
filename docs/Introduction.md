@@ -1,11 +1,6 @@
 # Introduction
 
-React Router is a powerful routing library built on top of [React](http://facebook.github.io/react/) that helps you add new screens and flows to your application incredibly quickly, all while keeping the URL in sync with what's being displayed on the page. The project benefits from several years of combined experience working with the legendary Ember.js router.
-
-* [Motivation](Motivation.md)
-* [Principles](Principles.md)
-
-===
+React Router is a powerful routing library built on top of [React](http://facebook.github.io/react/) that helps you add new screens and flows to your application incredibly quickly, all while keeping the URL in sync with what's being displayed on the page.
 
 To illustrate the problems React Router is going to solve for you, let's build a small application without it.
 
