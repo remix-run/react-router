@@ -1,9 +1,7 @@
 ## Table of Contents
 
 * [Read Me](/README.md)
-* [Introduction](/docs/introduction/README.md)
-  * [Motivation](/docs/introduction/Motivation.md)
-  * [Principles](/docs/introduction/Principles.md)
+* [Introduction](/docs/Introduction.md)
 * [Basics](/docs/basics/README.md)
   * [Route Configuration](/docs/basics/RouteConfiguration.md)
   * [Route Matching](/docs/basics/RouteMatching.md)
