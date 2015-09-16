@@ -191,7 +191,7 @@ var Assignment = React.createClass({
 var Assignment = React.createClass({
   mixins: [ History ],
   navigateAfterSomethingHappened () {
-    // the router is not built on rackt/history, and it is a first class
+    // the router is now built on rackt/history, and it is a first class
     // API in the router for navigating
     this.history.pushState(null, `/users/${user.id}`, query);
     // this.history.replaceState(null, `/users/${user.id}`, query);
