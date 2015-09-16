@@ -22,7 +22,7 @@ State to persist to the `location`.
 
 #### `activeClassName`
 
-The className a `Link` receives when its route is active. Defaults to `active`.
+The className a `Link` receives when its route is active. No active class by default.
 
 #### `activeStyle`
 
