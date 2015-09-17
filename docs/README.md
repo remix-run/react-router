@@ -12,7 +12,6 @@
   * [Server Rendering](/docs/advanced/ServerRendering.md)
   * [Component Lifecycle](/docs/advanced/ComponentLifecycle.md)
   * [Navigating Outside of Components](/docs/advanced/NavigatingOutsideOfComponents.md)
-* [Recipes](/docs/recipes/README.md)
 * [Upgrade Guide](/UPGRADE_GUIDE.md)
 * [Troubleshooting](/docs/Troubleshooting.md)
 * [Glossary](/docs/Glossary.md)
