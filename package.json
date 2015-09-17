@@ -27,7 +27,6 @@
   "dependencies": {
     "history": "^1.9.0",
     "invariant": "^2.0.0",
-    "qs": "^5.1.0",
     "warning": "^2.0.0"
   },
   "devDependencies": {
