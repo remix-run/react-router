@@ -2,7 +2,9 @@
 import expect from 'expect'
 import React from 'react'
 import createHistory from 'history/lib/createMemoryHistory'
-import Router from '../Router'
+import createRouter from '../Router'
+
+const Router = createRouter(React)
 
 describe('a Route Component', function () {
 

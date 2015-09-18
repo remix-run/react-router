@@ -3,9 +3,13 @@
 import expect from 'expect'
 import React from 'react'
 import createLocation from 'history/lib/createLocation'
-import RoutingContext from '../RoutingContext'
-import match from '../match'
-import Link from '../Link'
+import createRoutingContext from '../RoutingContext'
+import createMatch from '../match'
+import createLink from '../Link'
+
+const RoutingContext = createRoutingContext(React)
+const match = createMatch(React)
+const Link = createLink(React)
 
 describe('server rendering', function () {
 

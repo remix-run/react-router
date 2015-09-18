@@ -1,59 +1,66 @@
-import React from 'react'
 import warning from 'warning'
 import invariant from 'invariant'
-import { createRouteFromReactElement } from './RouteUtils'
-import { component, components } from './PropTypes'
 
-const { string, bool, func } = React.PropTypes
+import createRouteUtils from './RouteUtils'
+import createPropTypes from './PropTypes'
 
-/**
- * A <Route> is used to declare which components are rendered to the page when
- * the URL matches a given pattern.
- *
- * Routes are arranged in a nested tree structure. When a new URL is requested,
- * the tree is searched depth-first to find a route whose path matches the URL.
- * When one is found, all routes in the tree that lead to it are considered
- * "active" and their components are rendered into the DOM, nested in the same
- * order as they are in the tree.
- */
-const Route = React.createClass({
+export default function createRoute(React) {
 
-  statics: {
+  const { createRouteFromReactElement } = createRouteUtils(React)
+  const { component, components } = createPropTypes(React)
 
-    createRouteFromReactElement(element) {
-      const route = createRouteFromReactElement(element)
+  const { string, bool, func } = React.PropTypes
 
-      if (route.handler) {
-        warning(
-          false,
-          '<Route handler> is deprecated, use <Route component> instead'
-        )
+  /**
+   * A <Route> is used to declare which components are rendered to the page when
+   * the URL matches a given pattern.
+   *
+   * Routes are arranged in a nested tree structure. When a new URL is requested,
+   * the tree is searched depth-first to find a route whose path matches the URL.
+   * When one is found, all routes in the tree that lead to it are considered
+   * "active" and their components are rendered into the DOM, nested in the same
+   * order as they are in the tree.
+   */
+  const Route = React.createClass({
 
-        route.component = route.handler
-        delete route.handler
+    statics: {
+
+      createRouteFromReactElement(element) {
+        const route = createRouteFromReactElement(element)
+
+        if (route.handler) {
+          warning(
+            false,
+            '<Route handler> is deprecated, use <Route component> instead'
+          )
+
+          route.component = route.handler
+          delete route.handler
+        }
+
+        return route
       }
 
-      return route
+    },
+
+    propTypes: {
+      path: string,
+      ignoreScrollBehavior: bool,
+      handler: component, // deprecated
+      component,
+      components,
+      getComponents: func
+    },
+
+    render() {
+      invariant(
+        false,
+        '<Route> elements are for router configuration only and should not be rendered'
+      )
     }
-  
-  },
 
-  propTypes: {
-    path: string,
-    ignoreScrollBehavior: bool,
-    handler: component, // deprecated
-    component,
-    components,
-    getComponents: func
-  },
+  })
 
-  render() {
-    invariant(
-      false,
-      '<Route> elements are for router configuration only and should not be rendered'
-    )
-  }
+  return Route
 
-})
-
-export default Route
+}

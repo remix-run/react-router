@@ -1,10 +1,15 @@
 /*eslint-env mocha */
 import expect from 'expect'
 import React from 'react'
-import History from '../History'
-import Router from '../Router'
-import Route from '../Route'
-import createHistory from 'history/lib/createMemoryHistory'
+import createHistory from '../History'
+import createRouter from '../Router'
+import createRoute from '../Route'
+import createMemoryHistory from 'history/lib/createMemoryHistory'
+
+const History = createHistory(React)
+const Router = createRouter(React)
+const Route = createRoute(React)
+
 
 describe('History Mixin', function () {
 
@@ -18,7 +23,7 @@ describe('History Mixin', function () {
   })
 
   it('assigns the history to the component instance', function (done) {
-    let history = createHistory('/')
+    let history = createMemoryHistory('/')
 
     function assertHistory() {
       expect(this.history).toExist()

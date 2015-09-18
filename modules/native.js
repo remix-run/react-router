@@ -1,4 +1,4 @@
-import React from 'react'
+import React from 'react-native'
 import createAll from './createAll'
 
 const all = createAll(React)

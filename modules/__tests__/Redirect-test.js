@@ -2,9 +2,13 @@
 import expect from 'expect'
 import React from 'react'
 import createHistory from 'history/lib/createMemoryHistory'
-import Redirect from '../Redirect'
-import Router from '../Router'
-import Route from '../Route'
+import createRedirect from '../Redirect'
+import createRouter from '../Router'
+import createRoute from '../Route'
+
+const Redirect = createRedirect(React)
+const Router = createRouter(React)
+const Route = createRoute(React)
 
 describe('A <Redirect>', function () {
 

@@ -4,7 +4,9 @@ import expect, { spyOn } from 'expect'
 import React from 'react'
 import createHistory from 'history/lib/createMemoryHistory'
 import execSteps from './execSteps'
-import Router from '../Router'
+import createRouter from '../Router'
+
+const Router = createRouter(React)
 
 describe('When a router enters a branch', function () {
 
