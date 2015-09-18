@@ -29,7 +29,7 @@ const App = React.createClass({
   },
 
   render() {
-    const Child
+    let Child
     switch (this.state.route) {
       case '/about': Child = About; break;
       case '/inbox': Child = Inbox; break;
