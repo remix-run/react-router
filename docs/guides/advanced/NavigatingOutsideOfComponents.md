@@ -31,4 +31,3 @@ flux actions file
 import history from './history'
 history.replaceState(null, '/some/path')
 ```
-

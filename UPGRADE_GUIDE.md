@@ -293,7 +293,7 @@ var Home = React.createClass({
 ```
 
 To cancel a "transition from", please refer to the
-[Confirming Navigation](docs/advanced/ConfirmingNavigation.md) guide.
+[Confirming Navigation](docs/guides/advanced/ConfirmingNavigation.md) guide.
 
 ### We'll keep updating this
 
@@ -1104,4 +1104,3 @@ router.renderComponent(element);
 // 0.2.x
 React.renderComponent(routes, element);
 ```
-
