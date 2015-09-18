@@ -11,7 +11,7 @@ var App = React.createClass({
 
   updateAuth(loggedIn) {
     this.setState({
-      loggedIn: !!loggedIn
+      loggedIn: loggedIn
     });
   },
 
