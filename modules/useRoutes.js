@@ -77,9 +77,9 @@ function useRoutes(createHistory) {
             if (error) {
               callback(error)
             } else {
-              nextState = { ...nextState, components };
-              state = nextState;
-              callback(null, null, nextState);
+              nextState = { ...nextState, components }
+              state = nextState
+              callback(null, null, nextState)
             }
           })
         }
