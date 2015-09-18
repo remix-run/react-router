@@ -124,8 +124,7 @@ React.render((
 ), document.body)
 ```
 
-See more in the [Introduction](/docs/Introduction.md) and [Advanced
-Usage](/docs/advanced/README.md).
+See more in the [Introduction](/docs/Introduction.md) and [Advanced Usage](/docs/guides/advanced/README.md).
 
 ### Thanks
 

@@ -7,7 +7,7 @@ to:
 - Send `30x` responses for redirects
 - Fetch data before rendering (and use the router to help you do it)
 
-To facilitate these needs, you drop one level lower than the [`<Router/>`](/docs/api/Router.md)
+To facilitate these needs, you drop one level lower than the [`<Router/>`](/docs/API.md#Router)
 API with:  
 
 - `createLocation` from the history package

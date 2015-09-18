@@ -1,6 +1,6 @@
 # Route Configuration
 
-A [route configuration](/docs/Glossary.md#routeconfig) is basically a set of instructions that tell a router how to try to [match the URL](RouteMatching.md) and what code to run when it does. To illustrate some of the features available in your route config, let's expand on the simple app from [the introduction](/docs/introduction/README.md#adding-more-ui).
+A [route configuration](/docs/Glossary.md#routeconfig) is basically a set of instructions that tell a router how to try to [match the URL](RouteMatching.md) and what code to run when it does. To illustrate some of the features available in your route config, let's expand on the simple app from [the introduction](/docs/Introduction.md#adding-more-ui).
 
 ```js
 import React from 'react'
@@ -67,7 +67,7 @@ URL                     | Components
 
 ### Adding an Index
 
-Imagine we'd like to render another component inside of `App` when the URL is `/`. Currently, `this.props.children` inside of `App`'s `render` method is `undefined` in this case. We can use an [`<IndexRoute>`](/docs/api/IndexRoute.md) to specify a "default" page.
+Imagine we'd like to render another component inside of `App` when the URL is `/`. Currently, `this.props.children` inside of `App`'s `render` method is `undefined` in this case. We can use an [`<IndexRoute>`](/docs/API.md#indexroute) to specify a "default" page.
 
 ```js
 import { IndexRoute } from 'react-router'
@@ -133,13 +133,13 @@ URL                     | Components
 `/inbox`                | `App -> Inbox`
 `/messages/:id`         | `App -> Inbox -> Message`
 
-**Note**: Absolute paths may not be used in route config that is [dynamically loaded](/docs/advanced/DynamicRouting.md).
+**Note**: Absolute paths may not be used in route config that is [dynamically loaded](/docs/guides/advanced/DynamicRouting.md).
 
 ### Preserving URLs
 
 Wait a minute ... we just changed a URL! [That's not cool](http://www.w3.org/Provider/Style/URI.html). Now everyone who had a link to `/inbox/messages/5` has a **broken link**. :(
 
-Not to worry. We can use a [`<Redirect>`](/docs/api/Redirect.md) to make sure that URL still works!
+Not to worry. We can use a [`<Redirect>`](/docs/API.md#redirect) to make sure that URL still works!
 
 ```js
 import { Redirect } from 'react-router'
@@ -164,7 +164,7 @@ Now when someone clicks on that link to `/inbox/messages/5` they'll automaticall
 
 ### Enter and Leave Hooks
 
-[Route](/docs/Glossary.md#route)s may also define [`onEnter`](/docs/Glossary.md#enterhook) and [`onLeave`](/docs/Glossary.md#leavehook) hooks that are invoked once a transition has been [confirmed](/docs/advanced/ConfirmingNavigation.md). These hooks are useful for various things like [requiring auth](https://github.com/rackt/react-router/tree/master/examples/auth-flow) when a route is entered and saving stuff to persistent storage before a route unmounts.
+[Route](/docs/Glossary.md#route)s may also define [`onEnter`](/docs/Glossary.md#enterhook) and [`onLeave`](/docs/Glossary.md#leavehook) hooks that are invoked once a transition has been [confirmed](/docs/guides/advanced/ConfirmingNavigation.md). These hooks are useful for various things like [requiring auth](https://github.com/rackt/react-router/tree/master/examples/auth-flow) when a route is entered and saving stuff to persistent storage before a route unmounts.
 
 During a transition, [`onLeave` hooks](/docs/Glossary.md#leavehook) run first on all routes we are leaving, starting with the leaf route on up to the first common ancestor route. Next, [`onEnter` hooks](/docs/Glossary.md#enterhook) run starting with the first parent route we're entering down to the leaf route.
 

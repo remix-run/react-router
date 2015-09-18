@@ -2,6 +2,28 @@
 
 This is a glossary of common terms used in the React Router codebase and documentation listed in alphabetical order, along with their [type signatures](http://flowtype.org/docs/quick-reference.html).
 
+* [Action](#action)
+* [Component](#component)
+* [EnterHook](#enterhook)
+* [LeaveHook](#leavehook)
+* [Location](#location)
+* [LocationKey](#locationkey)
+* [LocationState](#locationstate)
+* [Path](#path)
+* [Pathname](#pathname)
+* [Params](#params)
+* [Query](#query)
+* [QueryString](#querystring)
+* [RedirectFunction](#redirectfunction)
+* [Route](#route)
+* [RouteComponent](#routecomponent)
+* [RouteConfig](#routeconfig)
+* [RouteHook](#routehook)
+* [RoutePattern](#routepattern)
+* [Router](#router)
+* [RouterListener](#routerlistener)
+* [RouterState](#routerstate)
+
 ## Action
 
 ```js

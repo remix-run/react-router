@@ -1,4 +1,4 @@
-# Advanced
+# Advanced Usage
 
 * [Dynamic Routing](DynamicRouting.md)
 * [Confirming Navigation](ConfirmingNavigation.md)
