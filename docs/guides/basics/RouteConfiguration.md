@@ -176,7 +176,7 @@ Continuing with our example above, if a user clicked on a link to `/about` from 
 
 ### Alternate Configuration
 
-Since [route](/docs/Glossary.md#route)s are usually nested, it's useful to use a concise nested syntax like [JSX](https://facebook.github.io/jsx/) to describe their relationship to one another. However, you may also use an array of plain [route](/docs/Glossary.md#route) objects if you prefer to avoid using JSX.
+Since [routes](/docs/Glossary.md#route) are usually nested, it's useful to use a concise nested syntax like [JSX](https://facebook.github.io/jsx/) to describe their relationship to one another. However, you may also use an array of plain [route](/docs/Glossary.md#route) objects if you prefer to avoid using JSX.
 
 The route config we've discussed up to this point could also be specified like this:
 
