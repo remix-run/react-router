@@ -195,7 +195,7 @@ const routes = (
   <Route component={App}>
     <Route path="groups" components={{main: Groups, sidebar: GroupsSidebar}}/>
     <Route path="users" components={{main: Users, sidebar: UsersSidebar}}>
-      <Route path="users/:userId" components={Profile}/>
+      <Route path="users/:userId" component={Profile}/>
     </Route>
   </Route>
 )
@@ -399,8 +399,8 @@ The matched child route elements to be rendered.
 React.render((
   <Router history={history}>
     <Route path="/" component={App}>
-      <Route path="groups" components={Groups} />
-      <Route path="users" components={Users} />
+      <Route path="groups" component={Groups} />
+      <Route path="users" component={Users} />
     </Route>
   </Router>
 ), node)
@@ -427,7 +427,7 @@ React.render((
     <Route path="/" component={App}>
       <Route path="groups" components={{main: Groups, sidebar: GroupsSidebar}} />
       <Route path="users" components={{main: Users, sidebar: UsersSidebar}}>
-        <Route path="users/:userId" components={Profile} />
+        <Route path="users/:userId" component={Profile} />
       </Route>
     </Route>
   </Router>
