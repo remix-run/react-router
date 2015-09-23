@@ -118,7 +118,7 @@ You can also pass props you'd like to be on the `<a>` such as a title, id, class
 Given a route like `<Route path="/users/:userId"/>`:
 
 ```js
-<Link to={`/users/${user.id}`}>{user.name}</Link>
+<Link to={`/users/${user.id}`} activeClassName="active">{user.name}</Link>
 // becomes one of these depending on your History and if the route is
 // active
 <a href="/users/123" class="active">Michael</a>
