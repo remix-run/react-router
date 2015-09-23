@@ -2,9 +2,13 @@
 import expect from 'expect'
 import React from 'react'
 import createHistory from 'history/lib/createMemoryHistory'
-import IndexRoute from '../IndexRoute'
-import Router from '../Router'
-import Route from '../Route'
+import createIndexRoute from '../IndexRoute'
+import createRouter from '../Router'
+import createRoute from '../Route'
+
+const IndexRoute = createIndexRoute(React)
+const Router = createRouter(React)
+const Route = createRoute(React)
 
 describe('isActive', function () {
 

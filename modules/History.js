@@ -1,13 +1,18 @@
-import { history } from './PropTypes'
+import createPropTypes from './PropTypes'
 
-const History = {
+export default function createHistory(React) {
+  const { history } = createPropTypes(React)
 
-  contextTypes: { history },
+  const History = {
 
-  componentWillMount () {
-    this.history = this.context.history
+    contextTypes: { history },
+
+    componentWillMount () {
+      this.history = this.context.history
+    }
+
   }
 
-}
+  return History
 
-export default History
+}

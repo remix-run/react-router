@@ -3,8 +3,11 @@ import expect from 'expect'
 import React from 'react'
 import resetHash from './resetHash'
 import execSteps from './execSteps'
-import Router from '../Router'
-import Route from '../Route'
+import createRouter from '../Router'
+import createRoute from '../Route'
+
+const Router = createRouter(React)
+const Route = createRoute(React)
 
 describe('pushState', function () {
   beforeEach(resetHash)

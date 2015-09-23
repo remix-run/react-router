@@ -1,37 +1,40 @@
-import { PropTypes } from 'react'
+export default function createPropTypes(React) {
 
-const { func, object, arrayOf, oneOfType, element, shape, string } = PropTypes
+  const { func, object, arrayOf, oneOfType, element, shape, string } = React.PropTypes
 
-export function falsy(props, propName, componentName) {
-  if (props[propName])
-    return new Error(`<${componentName}> should not have a "${propName}" prop`)
-}
+  function falsy(props, propName, componentName) {
+    if (props[propName])
+      return new Error(`<${componentName}> should not have a "${propName}" prop`)
+  }
 
-export const history = shape({
-  listen: func.isRequired,
-  pushState: func.isRequired,
-  replaceState: func.isRequired,
-  go: func.isRequired
-})
+  const history = shape({
+    listen: func.isRequired,
+    pushState: func.isRequired,
+    replaceState: func.isRequired,
+    go: func.isRequired
+  })
 
-export const location = shape({
-  pathname: string.isRequired,
-  search: string.isRequired,
-  state: object,
-  action: string.isRequired,
-  key: string
-})
+  const location = shape({
+    pathname: string.isRequired,
+    search: string.isRequired,
+    state: object,
+    action: string.isRequired,
+    key: string
+  })
 
-export const component = oneOfType([ func, string ])
-export const components = oneOfType([ component, object ])
-export const route = oneOfType([ object, element ])
-export const routes = oneOfType([ route, arrayOf(route) ])
+  const component = oneOfType([ func, string ])
+  const components = oneOfType([ component, object ])
+  const route = oneOfType([ object, element ])
+  const routes = oneOfType([ route, arrayOf(route) ])
 
-export default {
-  falsy,
-  history,
-  location,
-  component,
-  components,
-  route
+  return {
+    falsy,
+    history,
+    location,
+    component,
+    components,
+    route,
+    routes
+  }
+
 }

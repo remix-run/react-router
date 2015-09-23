@@ -5,9 +5,13 @@ import expect from 'expect'
 import React from 'react/addons'
 import createHistory from 'history/lib/createMemoryHistory'
 import execSteps from './execSteps'
-import Router from '../Router'
-import Route from '../Route'
-import Link from '../Link'
+import createRouter from '../Router'
+import createRoute from '../Route'
+import createLink from '../Link'
+
+const Router = createRouter(React)
+const Route = createRoute(React)
+const Link = createLink(React)
 
 const { click } = React.addons.TestUtils.Simulate
 

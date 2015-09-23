@@ -2,9 +2,13 @@
 /*eslint react/prop-types: 0*/
 import expect from 'expect'
 import React from 'react'
-import { createRoutesFromReactChildren } from '../RouteUtils'
-import IndexRoute from '../IndexRoute'
-import Route from '../Route'
+import createRouteUtils from '../RouteUtils'
+import createIndexRoute from '../IndexRoute'
+import createRoute from '../Route'
+
+const Route = createRoute(React)
+const IndexRoute = createIndexRoute(React)
+const { createRoutesFromReactChildren } = createRouteUtils(React)
 
 describe('createRoutesFromReactChildren', function () {
 

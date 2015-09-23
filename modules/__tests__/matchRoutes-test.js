@@ -1,12 +1,16 @@
 /*eslint-env mocha */
 import React from 'react'
-import Route from '../Route'
+import createRoute from '../Route'
 
 import assert from 'assert'
 import expect from 'expect'
 import { createLocation } from 'history'
-import { createRoutes } from '../RouteUtils'
-import matchRoutes from '../matchRoutes'
+import createRouteUtils from '../RouteUtils'
+import createMatchRoutes from '../matchRoutes'
+
+const Route = createRoute(React)
+const { createRoutes } = createRouteUtils(React)
+const matchRoutes = createMatchRoutes(React)
 
 describe('matchRoutes', function () {
 
