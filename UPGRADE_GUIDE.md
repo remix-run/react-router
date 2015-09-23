@@ -41,7 +41,7 @@ React.render(<Router routes={routes}/>, el)
 ### Locations
 
 Locations are now called histories (that emit locations). You import
-them from the `history` package, not react router.
+them from the [`history` package](https://github.com/rackt/history), not react router.
 
 ```js
 // v0.13.x
@@ -74,7 +74,7 @@ Named routes are gone (for now, [see discussion](https://github.com/rackt/react-
 
 Not found really confused people, mistaking not finding resources
 from your API for not matching a route. We've removed it completely
-since its simple with a `*` path.
+since it's simple with a `*` path.
 
 ```js
 // v0.13.x
@@ -87,7 +87,7 @@ since its simple with a `*` path.
 ### Redirect route
 
 - no more params
-- must have absolute "from" (for now)
+- must have absolute `from` (for now)
 
 ```js
 // v0.13.x
@@ -131,11 +131,13 @@ the link will not check if it's active.
 <Link to="/about" activeClassName="active">About</Link>
 ```
 
-#### Linking to Default/Index routes
+#### Linking to Index routes
 
 Because named routes are gone, a link to `/` with an index route at `/`
 will always be active. So we've introduced `IndexLink` that is only
 active when the index route is active.
+
+**Note:** `DefaultRoute` is gone.
 
 ```js
 // v0.13.x
