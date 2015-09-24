@@ -44,15 +44,11 @@ function useRoutes(createHistory) {
       } else {
         matchRoutes(routes, location, function (error, nextState) {
           if (error) {
-            callback(error, null, null)
+            callback(error)
           } else if (nextState) {
-            finishMatch({ ...nextState, location }, function (err, nextLocation, nextState) {
-              if (nextState)
-                state = nextState
-              callback(err, nextLocation, nextState)
-            })
+            finishMatch({ ...nextState, location }, callback)
           } else {
-            callback(null, null, null)
+            callback()
           }
         })
       }
@@ -73,7 +69,7 @@ function useRoutes(createHistory) {
         if (error) {
           callback(error)
         } else if (redirectInfo) {
-          callback(null, createLocationFromRedirectInfo(redirectInfo), null)
+          callback(null, createLocationFromRedirectInfo(redirectInfo))
         } else {
           // TODO: Fetch components after state is updated.
           getComponents(nextState, function (error, components) {
@@ -215,12 +211,9 @@ function useRoutes(createHistory) {
     }
 
     /**
-     * This is the API for stateful environments. As the location changes,
-     * we update state and call the listener. Benefits of this API are:
-     *
-     * - We automatically manage state on the client
-     * - We automatically handle redirects on the client
-     * - We warn when the location doesn't match any routes
+     * This is the API for stateful environments. As the location
+     * changes, we update state and call the listener. We can also
+     * gracefully handle errors and redirects.
      */
     function listen(listener) {
       return history.listen(function (location) {
@@ -230,10 +223,10 @@ function useRoutes(createHistory) {
           match(location, function (error, nextLocation, nextState) {
             if (error) {
               listener(error)
-            } else if (nextState) {
-              listener(null, state) // match mutates state to nextState
             } else if (nextLocation) {
               history.transitionTo(nextLocation)
+            } else if (nextState) {
+              listener(null, (state = nextState))
             } else {
               warning(
                 false,
