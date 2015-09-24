@@ -3,6 +3,18 @@ import invariant from 'invariant'
 
 const { object } = React.PropTypes
 
+function getRoute(element) {
+  const route = element.props.route || element.context.route
+
+  invariant(
+    route,
+    'The Lifecycle mixin needs to be used either on 1) a <Route component> or ' +
+    '2) a descendant of a <Route component> that uses the RouteContext mixin'
+  )
+
+  return route
+}
+
 /**
  * The Lifecycle mixin adds the routerWillLeave lifecycle method
  * to a component that may be used to cancel a transition or prompt
@@ -33,35 +45,21 @@ const Lifecycle = {
     route: object
   },
 
-  _getRoute() {
-    const route = this.props.route || this.context.route
-
-    invariant(
-      route,
-      'The Lifecycle mixin needs to be used either on 1) a <Route component> or ' +
-      '2) a descendant of a <Route component> that uses the RouteContext mixin'
-    )
-
-    return route
-  },
-
   componentWillMount() {
     invariant(
       this.routerWillLeave,
       'The Lifecycle mixin requires you to define a routerWillLeave method'
     )
 
-    this.context.history.registerRouteHook(
-      this._getRoute(),
+    this._unlistenBeforeLeavingRoute = this.context.history.listenBeforeLeavingRoute(
+      getRoute(this),
       this.routerWillLeave
     )
   },
 
   componentWillUnmount() {
-    this.context.history.unregisterRouteHook(
-      this._getRoute(),
-      this.routerWillLeave
-    )
+    if (this._unlistenBeforeLeavingRoute)
+      this._unlistenBeforeLeavingRoute()
   }
 
 }

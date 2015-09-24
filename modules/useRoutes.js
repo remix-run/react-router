@@ -21,9 +21,8 @@ function hasAnyProperties(object) {
  * history objects that know about routing.
  *
  * - isActive(pathname, query)
- * - registerRouteHook(route, (location) => {})
- * - unregisterRouteHook(route, (location) => {})
  * - match(location, (error, nextState, nextLocation) => {})
+ * - listenBeforeLeavingRoute(route, (?nextLocation) => {})
  * - listen((error, nextState) => {})
  */
 function useRoutes(createHistory) {
@@ -88,13 +87,13 @@ function useRoutes(createHistory) {
       })
     }
 
-    const RouteHooks = {}
-
     let RouteGuid = 1
 
     function getRouteID(route) {
       return route.__id__ || (route.__id__ = RouteGuid++)
     }
+
+    const RouteHooks = {}
 
     function getRouteHooksForRoutes(routes) {
       return routes.reduce(function (hooks, route) {
@@ -133,8 +132,8 @@ function useRoutes(createHistory) {
     }
 
     function beforeUnloadHook() {
-      // Synchronously check to see if any route hooks want to
-      // prevent the current window/tab from closing.
+      // Synchronously check to see if any route hooks want
+      // to prevent the current window/tab from closing.
       if (state.routes) {
         let hooks = getRouteHooksForRoutes(state.routes)
 
@@ -149,7 +148,22 @@ function useRoutes(createHistory) {
       }
     }
 
-    function registerRouteHook(route, hook) {
+    let unlistenBefore, unlistenBeforeUnload
+
+    /**
+     * Registers the given hook function to run before leaving the given route.
+     *
+     * During a normal transition, the hook function receives the next location
+     * as its only argument and must return either a) a prompt message to show
+     * the user, to make sure they want to leave the page or b) false, to prevent
+     * the transition.
+     *
+     * During the beforeunload event (in browsers) the hook receives no arguments.
+     * In this case it must return a prompt message to prevent the transition.
+     *
+     * Returns a function that may be used to unbind the listener.
+     */
+    function listenBeforeLeavingRoute(route, hook) {
       // TODO: Warn if they register for a route that isn't currently
       // active. They're probably doing something wrong, like re-creating
       // route objects on every location change.
@@ -162,34 +176,40 @@ function useRoutes(createHistory) {
         hooks = RouteHooks[routeID] = [ hook ]
 
         if (thereWereNoRouteHooks) {
-          history.registerTransitionHook(transitionHook)
+          // setup transition & beforeunload hooks
+          unlistenBefore = history.listenBefore(transitionHook)
 
-          if (history.registerBeforeUnloadHook)
-            history.registerBeforeUnloadHook(beforeUnloadHook)
+          if (history.listenBeforeUnload)
+            unlistenBeforeUnload = history.listenBeforeUnload(beforeUnloadHook)
         }
       } else if (hooks.indexOf(hook) === -1) {
         hooks.push(hook)
       }
-    }
+      
+      return function () {
+        let hooks = RouteHooks[routeID]
 
-    function unregisterRouteHook(route, hook) {
-      let routeID = getRouteID(route)
-      let hooks = RouteHooks[routeID]
+        if (hooks != null) {
+          let newHooks = hooks.filter(item => item !== hook)
 
-      if (hooks != null) {
-        let newHooks = hooks.filter(item => item !== hook)
+          if (newHooks.length === 0) {
+            delete RouteHooks[routeID]
 
-        if (newHooks.length === 0) {
-          delete RouteHooks[routeID]
+            if (!hasAnyProperties(RouteHooks)) {
+              // teardown transition & beforeunload hooks
+              if (unlistenBefore) {
+                unlistenBefore()
+                unlistenBefore = null
+              }
 
-          if (!hasAnyProperties(RouteHooks)) {
-            history.unregisterTransitionHook(transitionHook)
-
-            if (history.unregisterBeforeUnloadHook)
-              history.unregisterBeforeUnloadHook(beforeUnloadHook)
+              if (unlistenBeforeUnload) {
+                unlistenBeforeUnload()
+                unlistenBeforeUnload = null
+              }
+            }
+          } else {
+            RouteHooks[routeID] = newHooks
           }
-        } else {
-          RouteHooks[routeID] = newHooks
         }
       }
     }
@@ -229,10 +249,9 @@ function useRoutes(createHistory) {
     return {
       ...history,
       isActive,
-      registerRouteHook,
-      unregisterRouteHook,
-      listen,
-      match
+      match,
+      listenBeforeLeavingRoute,
+      listen
     }
   }
 }
