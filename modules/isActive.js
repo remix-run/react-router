@@ -4,7 +4,7 @@ import { matchPattern } from './PatternUtils'
  * Returns true if a route and params that match the given
  * pathname are currently active.
  */
-function pathnameIsActive(pathname, activePathname, activeRoutes, activeParams) {
+function pathnameIsActive(pathname, activePathname, activeRoutes, activeParams, indexOnly) {
   if (pathname === activePathname || activePathname.indexOf(pathname + '/') === 0)
     return true
 
@@ -23,6 +23,7 @@ function pathnameIsActive(pathname, activePathname, activeRoutes, activeParams) 
     let { remainingPathname, paramNames, paramValues } = matchPattern(pattern, pathname)
 
     if (remainingPathname === '') {
+      if (indexOnly === true) return false;
       return paramNames.every(function (paramName, index) {
         return String(paramValues[index]) === String(activeParams[paramName])
       })
@@ -63,7 +64,7 @@ function isActive(pathname, query, indexOnly, location, routes, params) {
   if (indexOnly && (routes.length < 2 || routes[routes.length - 2].indexRoute !== routes[routes.length - 1]))
     return false
 
-  return pathnameIsActive(pathname, location.pathname, routes, params) &&
+  return pathnameIsActive(pathname, location.pathname, routes, params, indexOnly) &&
     queryIsActive(query, location.query)
 }
 
