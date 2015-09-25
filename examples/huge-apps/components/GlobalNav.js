@@ -46,13 +46,13 @@ class GlobalNav extends React.Component {
     var { user } = this.props
     return (
       <div style={styles.wrapper}>
-        <div style={{float: 'left'}}>
+        <div style={{ float: 'left' }}>
           <Link to="/" style={styles.link}>Home</Link>{' '}
           <Link to="/calendar" style={styles.link} activeStyle={styles.activeLink}>Calendar</Link>{' '}
           <Link to="/grades" style={styles.link} activeStyle={styles.activeLink}>Grades</Link>{' '}
           <Link to="/messages" style={styles.link} activeStyle={styles.activeLink}>Messages</Link>{' '}
         </div>
-        <div style={{float: 'right'}}>
+        <div style={{ float: 'right' }}>
           <Link style={styles.link} to="/profile">{user.name}</Link> <button onClick={this.logOut}>log out</button>
         </div>
       </div>

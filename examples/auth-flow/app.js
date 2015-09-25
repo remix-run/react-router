@@ -1,7 +1,7 @@
-import React, { findDOMNode } from 'react';
-import { Router, Route, Link, History } from 'react-router';
+import React, { findDOMNode } from 'react'
+import { Router, Route, Link, History } from 'react-router'
 import { createHistory, useBasename } from 'history'
-import auth from './auth';
+import auth from './auth'
 
 const history = useBasename(createHistory)({
   basename: '/auth-flow'
@@ -11,18 +11,18 @@ var App = React.createClass({
   getInitialState() {
     return {
       loggedIn: auth.loggedIn()
-    };
+    }
   },
 
   updateAuth(loggedIn) {
     this.setState({
       loggedIn: loggedIn
-    });
+    })
   },
 
   componentWillMount() {
-    auth.onChange = this.updateAuth;
-    auth.login();
+    auth.onChange = this.updateAuth
+    auth.login()
   },
 
   render() {
@@ -41,13 +41,13 @@ var App = React.createClass({
         </ul>
         {this.props.children}
       </div>
-    );
+    )
   }
-});
+})
 
 var Dashboard = React.createClass({
   render() {
-    var token = auth.getToken();
+    var token = auth.getToken()
 
     return (
       <div>
@@ -55,9 +55,9 @@ var Dashboard = React.createClass({
         <p>You made it!</p>
         <p>{token}</p>
       </div>
-    );
+    )
   }
-});
+})
 
 var Login = React.createClass({
   mixins: [ History ],
@@ -65,27 +65,27 @@ var Login = React.createClass({
   getInitialState() {
     return {
       error: false
-    };
+    }
   },
 
   handleSubmit(event) {
-    event.preventDefault();
+    event.preventDefault()
 
-    var email = findDOMNode(this.refs.email).value;
-    var pass = findDOMNode(this.refs.pass).value;
+    var email = findDOMNode(this.refs.email).value
+    var pass = findDOMNode(this.refs.pass).value
 
     auth.login(email, pass, (loggedIn) => {
       if (!loggedIn)
-        return this.setState({ error: true });
+        return this.setState({ error: true })
 
-      var { location } = this.props;
+      var { location } = this.props
 
       if (location.state && location.state.nextPathname) {
-        this.history.replaceState(null, location.state.nextPathname);
+        this.history.replaceState(null, location.state.nextPathname)
       } else {
-        this.history.replaceState(null, '/about');
+        this.history.replaceState(null, '/about')
       }
-    });
+    })
   },
 
   render() {
@@ -98,29 +98,29 @@ var Login = React.createClass({
           <p>Bad login information</p>
         )}
       </form>
-    );
+    )
   }
-});
+})
 
 var About = React.createClass({
   render() {
-    return <h1>About</h1>;
+    return <h1>About</h1>
   }
-});
+})
 
 var Logout = React.createClass({
   componentDidMount() {
-    auth.logout();
+    auth.logout()
   },
 
   render() {
-    return <p>You are now logged out</p>;
+    return <p>You are now logged out</p>
   }
-});
+})
 
 function requireAuth(nextState, replaceState) {
   if (!auth.loggedIn())
-    replaceState({ nextPathname: nextState.location.pathname }, '/login');
+    replaceState({ nextPathname: nextState.location.pathname }, '/login')
 }
 
 React.render((
@@ -132,4 +132,4 @@ React.render((
       <Route path="dashboard" component={Dashboard} onEnter={requireAuth} />
     </Route>
   </Router>
-), document.getElementById('example'));
+), document.getElementById('example'))

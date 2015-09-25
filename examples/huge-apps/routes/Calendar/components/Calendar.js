@@ -1,11 +1,11 @@
-import React from 'react';
+import React from 'react'
 
 class Calendar extends React.Component {
+  render() {
+    const events = [
+      { id: 0, title: 'essay due' }
+    ]
 
-  render () {
-    var events = [{
-      id: 0, title: 'essay due'
-    }];
     return (
       <div>
         <h2>Calendar</h2>
@@ -15,10 +15,8 @@ class Calendar extends React.Component {
           ))}
         </ul>
       </div>
-    );
+    )
   }
-
 }
 
-export default Calendar;
-
+export default Calendar

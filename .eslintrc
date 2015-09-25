@@ -13,6 +13,8 @@
   "rules": {
     "array-bracket-spacing": [2, "always"],
     "comma-dangle": [2, "never"],
+    "eol-last": 2,
+    "no-multiple-empty-lines": 2,
     "object-curly-spacing": [2, "always"],
     "quotes": [2, "single", "avoid-escape"],
     "semi": [2, "never"],

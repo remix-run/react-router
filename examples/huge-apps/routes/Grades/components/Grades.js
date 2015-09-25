@@ -1,16 +1,15 @@
-import React from 'react';
+import React from 'react'
 
 class Grades extends React.Component {
 
-  render () {
+  render() {
     return (
       <div>
         <h2>Grades</h2>
       </div>
-    );
+    )
   }
 
 }
 
-export default Grades;
-
+export default Grades

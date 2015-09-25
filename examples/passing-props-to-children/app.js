@@ -8,7 +8,7 @@ const history = useBasename(createHistory)({
   basename: '/passing-props-to-children'
 })
 
-var App = React.createClass({
+const App = React.createClass({
   mixins: [ History ],
 
   getInitialState() {
@@ -22,23 +22,25 @@ var App = React.createClass({
   },
 
   addTaco() {
-    var name = prompt('taco name?')
+    let name = prompt('taco name?')
 
     this.setState({
-      tacos: this.state.tacos.concat({name: name})
+      tacos: this.state.tacos.concat({ name })
     })
   },
 
   handleRemoveTaco(removedTaco) {
-    var tacos = this.state.tacos.filter(function (taco) {
-      return taco.name != removedTaco
+    this.setState({
+      tacos: this.state.tacos.filter(function (taco) {
+        return taco.name != removedTaco
+      })
     })
-    this.setState({tacos: tacos})
+
     this.history.pushState(null, '/')
   },
 
   render() {
-    var links = this.state.tacos.map(function (taco, i) {
+    let links = this.state.tacos.map(function (taco, i) {
       return (
         <li key={i}>
           <Link to={`/taco/${taco.name}`}>{taco.name}</Link>
@@ -61,7 +63,7 @@ var App = React.createClass({
   }
 })
 
-var Taco = React.createClass({
+const Taco = React.createClass({
   remove() {
     this.props.onRemoveTaco(this.props.params.name)
   },

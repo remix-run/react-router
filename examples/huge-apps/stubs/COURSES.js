@@ -47,5 +47,4 @@ global.COURSES = [
       }
     ]
   }
-];
-
+]

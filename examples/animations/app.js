@@ -14,8 +14,6 @@ class App extends React.Component {
   render() {
     const { pathname } = this.props.location
 
-    console.log(pathname)
-
     return (
       <div>
         <ul>

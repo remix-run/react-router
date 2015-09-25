@@ -20,12 +20,6 @@ const App = React.createClass({
   }
 })
 
-const Home = React.createClass({
-  render() {
-    return <h1>Home</h1>
-  }
-})
-
 const Dashboard = React.createClass({
   render() {
     return <h1>Dashboard</h1>
@@ -41,7 +35,7 @@ const Form = React.createClass({
     }
   },
 
-  routerWillLeave(nextLocation) {
+  routerWillLeave() {
     if (this.state.textValue)
       return 'You have unsaved information, are you sure you want to leave this page?'
   },

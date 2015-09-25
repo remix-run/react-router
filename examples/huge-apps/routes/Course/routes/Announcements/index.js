@@ -1,7 +1,7 @@
 module.exports = {
   path: 'announcements',
 
-  getChildRoutes (location, cb) {
+  getChildRoutes(location, cb) {
     require.ensure([], (require) => {
       cb(null, [
         require('./routes/Announcement')
@@ -9,13 +9,12 @@ module.exports = {
     })
   },
 
-  getComponents (location, cb) {
+  getComponents(location, cb) {
     require.ensure([], (require) => {
       cb(null, {
         sidebar: require('./components/Sidebar'),
         main: require('./components/Announcements')
-      });
+      })
     })
   }
-};
-
+}

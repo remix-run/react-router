@@ -12,7 +12,7 @@ const PICTURES = [
   { id: 2, src: 'http://placekitten.com/620/620' }
 ]
 
-var Modal = React.createClass({
+const Modal = React.createClass({
   styles: {
     position: 'fixed',
     top: '20%',
@@ -25,7 +25,7 @@ var Modal = React.createClass({
     background: '#fff'
   },
 
-  render () {
+  render() {
     return (
       <div style={this.styles}>
         <p><Link to={this.props.returnTo}>Back</Link></p>
@@ -35,9 +35,9 @@ var Modal = React.createClass({
   }
 })
 
-var App = React.createClass({
+const App = React.createClass({
 
-  componentWillReceiveProps (nextProps) {
+  componentWillReceiveProps(nextProps) {
     // if we changed routes...
     if ((
       nextProps.location.key !== this.props.location.key &&
@@ -50,9 +50,9 @@ var App = React.createClass({
   },
 
   render() {
-    var { location } = this.props
+    let { location } = this.props
 
-    var isModal = (
+    let isModal = (
       location.state &&
       location.state.modal &&
       this.previousChildren
@@ -79,8 +79,8 @@ var App = React.createClass({
   }
 })
 
-var Index = React.createClass({
-  render () {
+const Index = React.createClass({
+  render() {
     return (
       <div>
         <p>
@@ -110,14 +110,14 @@ var Index = React.createClass({
   }
 })
 
-var Deep = React.createClass({
-  render () {
+const Deep = React.createClass({
+  render() {
     return (
       <div>
         <p>You can link from anywhere really deep too</p>
         <p>Params stick around: {this.props.params.one} {this.props.params.two}</p>
         <p>
-          <Link to={`/pictures/0`} state={{ modal: true, returnTo: this.props.location.pathname}}>
+          <Link to={`/pictures/0`} state={{ modal: true, returnTo: this.props.location.pathname }}>
             Link to picture with Modal
           </Link><br/>
           <Link to={`/pictures/0`}>
@@ -129,7 +129,7 @@ var Deep = React.createClass({
   }
 })
 
-var Picture = React.createClass({
+const Picture = React.createClass({
   render() {
     return (
       <div>

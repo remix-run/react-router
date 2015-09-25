@@ -1,16 +1,15 @@
-import React from 'react';
+import React from 'react'
 
 class Messages extends React.Component {
 
-  render () {
+  render() {
     return (
       <div>
         <h2>Messages</h2>
       </div>
-    );
+    )
   }
 
 }
 
-export default Messages;
-
+export default Messages

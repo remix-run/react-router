@@ -1,10 +1,11 @@
-import React from 'react';
-import { Link } from 'react-router';
+/*globals COURSES:true */
+import React from 'react'
+import { Link } from 'react-router'
 
-export default class AnnouncementsSidebar extends React.Component {
+class AnnouncementsSidebar extends React.Component {
+  render() {
+    let { announcements } = COURSES[this.props.params.courseId]
 
-  render () {
-    var announcements = COURSES[this.props.params.courseId].announcements;
     return (
       <div>
         <h3>Sidebar Assignments</h3>
@@ -18,8 +19,8 @@ export default class AnnouncementsSidebar extends React.Component {
           ))}
         </ul>
       </div>
-    );
+    )
   }
-
 }
 
+export default AnnouncementsSidebar

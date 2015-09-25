@@ -1,8 +1,5 @@
 import React from 'react'
 import { Link } from 'react-router'
-import AnnouncementsRoute from '../routes/Announcements'
-import AssignmentsRoute from '../routes/Assignments'
-import GradesRoute from '../routes/Grades'
 
 const styles = {}
 
@@ -18,17 +15,16 @@ styles.link = {
 
 styles.activeLink = {
   ...styles.link,
-  //color: 'red'
+  color: 'red'
 }
 
 class Nav extends React.Component {
-
-  render () {
+  render() {
     const { course } = this.props
     const pages = [
-      ['announcements', 'Announcements'],
-      ['assignments', 'Assignments'],
-      ['grades', 'Grades'],
+      [ 'announcements', 'Announcements' ],
+      [ 'assignments', 'Assignments' ],
+      [ 'grades', 'Grades' ]
     ]
 
     return (
@@ -44,7 +40,6 @@ class Nav extends React.Component {
       </nav>
     )
   }
-
 }
 
 export default Nav

@@ -1,10 +1,10 @@
-import React from 'react';
-import { Link } from 'react-router';
+/*globals COURSES:true */
+import React from 'react'
+import { Link } from 'react-router'
 
 class Sidebar extends React.Component {
-
-  render () {
-    var assignments = COURSES[this.props.params.courseId].assignments
+  render() {
+    let { assignments } = COURSES[this.props.params.courseId]
 
     return (
       <div>
@@ -19,10 +19,8 @@ class Sidebar extends React.Component {
           ))}
         </ul>
       </div>
-    );
+    )
   }
-
 }
 
-export default Sidebar;
-
+export default Sidebar

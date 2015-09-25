@@ -1,3 +1,4 @@
+/*eslint-disable no-unused-vars */
 import React from 'react'
 import { createHistory, useBasename } from 'history'
 import { Router } from 'react-router'
@@ -9,7 +10,7 @@ const history = useBasename(createHistory)({
 
 const rootRoute = {
   component: 'div',
-  childRoutes: [{
+  childRoutes: [ {
     path: '/',
     component: require('./components/App'),
     childRoutes: [
@@ -17,9 +18,9 @@ const rootRoute = {
       require('./routes/Course'),
       require('./routes/Grades'),
       require('./routes/Messages'),
-      require('./routes/Profile'),
+      require('./routes/Profile')
     ]
-  }]
+  } ]
 }
 
 React.render(
