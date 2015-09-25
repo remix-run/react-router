@@ -4,9 +4,10 @@ import expect from 'expect'
 import React from 'react'
 import createHistory from 'history/lib/createMemoryHistory'
 import IndexRoute from '../IndexRoute'
+import IndexLink from '../IndexLink'
 import Router from '../Router'
 import Route from '../Route'
-import IndexLink from '../IndexLink'
+import Link from '../Link'
 
 describe('An <IndexLink>', function () {
 
@@ -15,8 +16,10 @@ describe('An <IndexLink>', function () {
       return (
         <div>
           <ul>
-            <li><IndexLink id="appLink" to="/" activeClassName="active">app</IndexLink></li>
-            <li><IndexLink id="deepLink" to="/deep" activeClassName="active">deep</IndexLink></li>
+            <li><IndexLink id="overviewLink" to="/website" activeClassName="active">overview</IndexLink></li>
+            <li><Link id="contactLink" to="/website/contact" activeClassName="active">contact</Link></li>
+            <li><IndexLink id="productsLink" to="/website/products" activeClassName="active">products</IndexLink></li>
+            <li><Link id="specificProductLink" to="/website/products/15" activeClassName="active">specific product</Link></li>
           </ul>
           {this.props.children}
         </div>
@@ -24,25 +27,53 @@ describe('An <IndexLink>', function () {
     }
   }
 
-  class Parent extends React.Component {
+  class Website extends React.Component {
     render() {
-      return <div>parent {this.props.children}</div>
+      return <div>website wrapper {this.props.children}</div>
     }
   }
 
-  class Child extends React.Component {
+  class WebsiteOverview extends React.Component {
     render() {
-      return <div>child </div>
+      return <div>website overview</div>
+    }
+  }
+
+  class WebsiteContact extends React.Component {
+    render() {
+      return <div>contact page</div>
+    }
+  }
+
+  class WebsiteProducts extends React.Component {
+    render() {
+      return <div>website products {this.props.children}</div>
+    }
+  }
+
+  class WebsiteProductsProduct extends React.Component {
+    render() {
+      return <div>specific product {this.props.params.productId}</div>
+    }
+  }
+
+  class WebsiteProductsIndex extends React.Component {
+    render() {
+      return <div>list of products</div>
     }
   }
 
   const routes = (
-    <Route path="/" component={App}>
-      <IndexRoute component={Child} />
-      <Route path="/deep" component={Parent}>
-        <IndexRoute component={Child} />
+    <Route component={App}>
+      <Route path="/website" component={Website}>
+        <Route path="products" component={WebsiteProducts}>
+          <Route path=":productId" component={WebsiteProductsProduct} />
+          <IndexRoute component={WebsiteProductsIndex} />
+        </Route>
+        <Route path="contact" component={WebsiteContact} />
+        <IndexRoute component={WebsiteOverview} />
       </Route>
-    </Route>
+    </Route>    
   )
 
   let node
@@ -54,25 +85,57 @@ describe('An <IndexLink>', function () {
     React.unmountComponentAtNode(node)
   })
 
-  describe('when linking to the root', function () {
-    it("is active when the parent's route is active", function (done) {
+  describe('when linking to the overview', function () {
+    it('is active and other routes are not', function (done) {
       React.render((
-        <Router history={createHistory('/')} routes={routes} />
+        <Router history={createHistory('/website')} routes={routes} />
       ), node, function () {
-        expect(node.querySelector('#appLink').className).toEqual('active')
-        expect(node.querySelector('#deepLink').className).toEqual('')
+        expect(node.querySelector('#overviewLink').className).toEqual('active')
+        expect(node.querySelector('#contactLink').className).toEqual('')
+        expect(node.querySelector('#productsLink').className).toEqual('')
+        expect(node.querySelector('#specificProductLink').className).toEqual('')
         done()
       })
     })
   })
 
-  describe('when linking deep into the route hierarchy', function () {
-    it("is active when the parent's route is active", function (done) {
+  describe('when linking to the contact', function () {
+    it('is active and other routes are not', function (done) {
       React.render((
-        <Router history={createHistory('/deep')} routes={routes} />
+        <Router history={createHistory('/website/contact')} routes={routes} />
       ), node, function () {
-        expect(node.querySelector('#appLink').className).toEqual('')
-        expect(node.querySelector('#deepLink').className).toEqual('active')
+        expect(node.querySelector('#overviewLink').className).toEqual('')
+        expect(node.querySelector('#contactLink').className).toEqual('active')
+        expect(node.querySelector('#productsLink').className).toEqual('')
+        expect(node.querySelector('#specificProductLink').className).toEqual('')
+        done()
+      })
+    })
+  })
+
+  describe('when linking to the products', function () {
+    it('is active and other routes are not', function (done) {
+      React.render((
+        <Router history={createHistory('/website/products')} routes={routes} />
+      ), node, function () {
+        expect(node.querySelector('#overviewLink').className).toEqual('')
+        expect(node.querySelector('#contactLink').className).toEqual('')
+        expect(node.querySelector('#productsLink').className).toEqual('active')
+        expect(node.querySelector('#specificProductLink').className).toEqual('')
+        done()
+      })
+    })
+  })
+
+  describe('when linking to a specific product', function () {
+    it("is active and it's parent is also active", function (done) {
+      React.render((
+        <Router history={createHistory('/website/products/15')} routes={routes} />
+      ), node, function () {
+        expect(node.querySelector('#overviewLink').className).toEqual('')
+        expect(node.querySelector('#contactLink').className).toEqual('')
+        expect(node.querySelector('#productsLink').className).toEqual('active')
+        expect(node.querySelector('#specificProductLink').className).toEqual('active')
         done()
       })
     })
