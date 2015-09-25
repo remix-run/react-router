@@ -1,19 +1,25 @@
 import { matchPattern } from './PatternUtils'
 
 /**
- * Returns true if a route and params that match the given
- * pathname are currently active.
+ * Returns true if the given pathname matches the active pathname.
  */
-function pathnameIsActive(pathname, activePathname, activeRoutes, activeParams) {
-  if (pathname === activePathname || activePathname.indexOf(pathname + '/') === 0)
-    return true
+function pathnameIsActive(pathname, activePathname) {
+  return pathname === activePathname || activePathname.indexOf(pathname + '/') === 0
+}
 
+function paramsAreActive(paramNames, paramValues, activeParams) {
+  return paramNames.every(function (paramName, index) {
+    return String(paramValues[index]) === String(activeParams[paramName])
+  })
+}
+
+function getMatchingRoute(pathname, activeRoutes, activeParams) {
   let route, pattern, basename = ''
   for (let i = 0, len = activeRoutes.length; i < len; ++i) {
     route = activeRoutes[i]
 
-    if (!route.path)
-      return false
+    //if (!route.path)
+    //  return false
 
     pattern = route.path || ''
 
@@ -22,16 +28,29 @@ function pathnameIsActive(pathname, activePathname, activeRoutes, activeParams) 
 
     let { remainingPathname, paramNames, paramValues } = matchPattern(pattern, pathname)
 
-    if (remainingPathname === '') {
-      return paramNames.every(function (paramName, index) {
-        return String(paramValues[index]) === String(activeParams[paramName])
-      })
-    }
+    if (remainingPathname === '' && paramsAreActive(paramNames, paramValues, activeParams))
+      return route
 
     basename = pattern
   }
 
-  return false
+  return null
+}
+
+/**
+ * Returns true if the given pathname matches the active routes
+ * and params.
+ */
+function routeIsActive(pathname, activeRoutes, activeParams, indexOnly) {
+  let route = getMatchingRoute(pathname, activeRoutes, activeParams)
+
+  if (route == null)
+    return false
+
+  if (indexOnly)
+    return activeRoutes.length > 1 && activeRoutes[activeRoutes.length - 2].indexRoute === route
+
+  return true
 }
 
 /**
@@ -60,11 +79,10 @@ function isActive(pathname, query, indexOnly, location, routes, params) {
   if (location == null)
     return false
 
-  if (indexOnly && (routes.length < 2 || routes[routes.length - 2].indexRoute !== routes[routes.length - 1]))
+  if (!pathnameIsActive(pathname, location.pathname) && !routeIsActive(pathname, routes, params, indexOnly))
     return false
 
-  return pathnameIsActive(pathname, location.pathname, routes, params) &&
-    queryIsActive(query, location.query)
+  return queryIsActive(query, location.query)
 }
 
 export default isActive
