@@ -1,26 +1,20 @@
-var fs = require('fs');
-var path = require('path');
-var webpack = require('webpack');
-
-function isDirectory(dir) {
-  return fs.lstatSync(dir).isDirectory();
-}
+var fs = require('fs')
+var path = require('path')
+var webpack = require('webpack')
 
 module.exports = {
 
   devtool: 'inline-source-map',
 
   entry: fs.readdirSync(__dirname).reduce(function (entries, dir) {
-    var isDraft = dir.charAt(0) === '_';
+    if (fs.statSync(path.join(__dirname, dir)).isDirectory())
+      entries[dir] = path.join(__dirname, dir, 'app.js')
 
-    if (!isDraft && isDirectory(path.join(__dirname, dir)))
-      entries[dir] = path.join(__dirname, dir, 'app.js');
-
-    return entries;
+    return entries
   }, {}),
 
   output: {
-    path: 'examples/__build__',
+    path: __dirname + '/__build__',
     filename: '[name].js',
     chunkFilename: '[id].chunk.js',
     publicPath: '/__build__/'
@@ -28,14 +22,14 @@ module.exports = {
 
   module: {
     loaders: [
-      { test: /\.js$/, exclude: /node_modules/, loader: 'babel' }
+      { test: /\.js$/, exclude: /node_modules/, loader: 'babel' },
+      { test: /\.css$/, loader: 'style!css' }
     ]
   },
 
   resolve: {
     alias: {
-      'react-router$': process.cwd() + '/modules',
-      'react-router/lib': process.cwd() + '/modules'
+      'react-router': path.join(__dirname, '..', 'modules'),
     }
   },
 
@@ -46,4 +40,4 @@ module.exports = {
     })
   ]
 
-};
+}

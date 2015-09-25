@@ -1,41 +1,48 @@
-import React, { findDOMNode } from 'react';
-import { Router, History, Route, IndexRoute, Link } from 'react-router';
-import ContactStore from './ContactStore';
+import React, { findDOMNode } from 'react'
+import { createHistory, useBasename } from 'history'
+import { Router, History, Route, IndexRoute, Link } from 'react-router'
+import ContactStore from './ContactStore'
+
+require('./app.css')
+
+const history = useBasename(createHistory)({
+  basename: '/master-detail'
+})
 
 var App = React.createClass({
   getInitialState() {
     return {
       contacts: ContactStore.getContacts(),
       loading: true
-    };
+    }
   },
 
   componentWillMount() {
-    ContactStore.init();
+    ContactStore.init()
   },
 
   componentDidMount() {
-    ContactStore.addChangeListener(this.updateContacts);
+    ContactStore.addChangeListener(this.updateContacts)
   },
 
   componentWillUnmount() {
-    ContactStore.removeChangeListener(this.updateContacts);
+    ContactStore.removeChangeListener(this.updateContacts)
   },
 
   updateContacts() {
     if (!this.isMounted())
-      return;
+      return
 
     this.setState({
       contacts: ContactStore.getContacts(),
       loading: false
-    });
+    })
   },
 
   render() {
     var contacts = this.state.contacts.map(function (contact) {
-      return <li key={contact.id}><Link to={`/contact/${contact.id}`}>{contact.first}</Link></li>;
-    });
+      return <li key={contact.id}><Link to={`/contact/${contact.id}`}>{contact.first}</Link></li>
+    })
 
     return (
       <div className="App">
@@ -49,82 +56,82 @@ var App = React.createClass({
           {this.props.children}
         </div>
       </div>
-    );
+    )
   }
-});
+})
 
 var Index = React.createClass({
   render() {
-    return <h1>Address Book</h1>;
+    return <h1>Address Book</h1>
   }
-});
+})
 
 var Contact = React.createClass({
   mixins: [ History ],
 
   getStateFromStore(props) {
-    var { id } = props ? props.params : this.props.params;
+    var { id } = props ? props.params : this.props.params
 
     return {
       contact: ContactStore.getContact(id)
-    };
+    }
   },
 
   getInitialState() {
-    return this.getStateFromStore();
+    return this.getStateFromStore()
   },
 
   componentDidMount() {
-    ContactStore.addChangeListener(this.updateContact);
+    ContactStore.addChangeListener(this.updateContact)
   },
 
   componentWillUnmount() {
-    ContactStore.removeChangeListener(this.updateContact);
+    ContactStore.removeChangeListener(this.updateContact)
   },
 
   componentWillReceiveProps(nextProps) {
-    this.setState(this.getStateFromStore(nextProps));
+    this.setState(this.getStateFromStore(nextProps))
   },
 
   updateContact() {
     if (!this.isMounted())
-      return;
+      return
 
-    this.setState(this.getStateFromStore());
+    this.setState(this.getStateFromStore())
   },
 
   destroy() {
-    var { id } = this.props.params;
-    ContactStore.removeContact(id);
-    this.history.pushState(null, '/');
+    var { id } = this.props.params
+    ContactStore.removeContact(id)
+    this.history.pushState(null, '/')
   },
 
   render() {
-    var contact = this.state.contact || {};
-    var name = contact.first + ' ' + contact.last;
-    var avatar = contact.avatar || 'http://placecage.com/50/50';
+    var contact = this.state.contact || {}
+    var name = contact.first + ' ' + contact.last
+    var avatar = contact.avatar || 'http://placecage.com/50/50'
     return (
       <div className="Contact">
         <img height="50" src={avatar} key={avatar} />
         <h3>{name}</h3>
         <button onClick={this.destroy}>Delete</button>
       </div>
-    );
+    )
   }
-});
+})
 
 var NewContact = React.createClass({
   mixins: [ History ],
 
   createContact(event) {
-    event.preventDefault();
+    event.preventDefault()
 
     ContactStore.addContact({
       first: findDOMNode(this.refs.first).value,
       last: findDOMNode(this.refs.last).value
     }, (contact) => {
-      this.history.pushState(null, `/contact/${contact.id}`);
-    });
+      this.history.pushState(null, `/contact/${contact.id}`)
+    })
   },
 
   render() {
@@ -138,18 +145,18 @@ var NewContact = React.createClass({
           <button type="submit">Save</button> <Link to="/">Cancel</Link>
         </p>
       </form>
-    );
+    )
   }
-});
+})
 
 var NotFound = React.createClass({
   render() {
-    return <h2>Not found</h2>;
+    return <h2>Not found</h2>
   }
-});
+})
 
 React.render((
-  <Router>
+  <Router history={history}>
     <Route path="/" component={App}>
       <IndexRoute component={Index} />
       <Route path="contact/new" component={NewContact} />
@@ -157,4 +164,4 @@ React.render((
       <Route path="*" component={NotFound} />
     </Route>
   </Router>
-), document.getElementById('example'));
+), document.getElementById('example'))

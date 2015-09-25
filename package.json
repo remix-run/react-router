@@ -13,7 +13,7 @@
     "build": "babel ./modules -d lib --ignore '__tests__'",
     "build-umd": "NODE_ENV=production webpack modules/index.js umd/ReactRouter.js",
     "build-min": "NODE_ENV=production webpack -p modules/index.js umd/ReactRouter.min.js",
-    "start": "webpack-dev-server --config examples/webpack.config.js --content-base examples --inline",
+    "start": "node examples/server.js",
     "test": "npm run lint && karma start",
     "lint": "eslint modules",
     "postinstall": "node -e \"require('fs').stat('lib', function (e, s) { process.exit(e || !s.isDirectory() ? 1 : 0) })\" || npm run build",
@@ -25,7 +25,7 @@
   ],
   "license": "MIT",
   "dependencies": {
-    "history": "^1.9.0",
+    "history": "^1.11.0",
     "invariant": "^2.0.0",
     "warning": "^2.0.0"
   },
@@ -37,10 +37,13 @@
     "babel-loader": "^5.0.0",
     "babel-plugin-object-assign": "^1.2.0",
     "bundle-loader": "^0.5.2",
+    "css-loader": "^0.19.0",
     "eslint": "1.4.0",
     "eslint-plugin-react": "3.3.2",
     "events": "1.0.2",
     "expect": "1.10.0",
+    "express": "^4.13.3",
+    "express-urlrewrite": "^1.2.0",
     "karma": "^0.13.8",
     "karma-browserstack-launcher": "^0.1.4",
     "karma-chrome-launcher": "^0.2.0",
@@ -56,8 +59,9 @@
     "rf-changelog": "^0.4.0",
     "rx": "2.3.18",
     "slash": "^1.0.0",
+    "style-loader": "^0.12.4",
     "webpack": "^1.4.13",
-    "webpack-dev-server": "^1.10.1"
+    "webpack-dev-middleware": "^1.2.0"
   },
   "tags": [
     "react",

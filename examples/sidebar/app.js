@@ -1,10 +1,18 @@
-import React from 'react';
-import { Router, Route, Link } from 'react-router';
-import data from './data';
+import React from 'react'
+import { createHistory, useBasename } from 'history'
+import { Router, Route, Link } from 'react-router'
+import data from './data'
 
-var Category = React.createClass({
+require('./app.css')
+
+const history = useBasename(createHistory)({
+  basename: '/sidebar'
+})
+
+class Category extends React.Component {
   render() {
-    var category = data.lookupCategory(this.props.params.category);
+    const category = data.lookupCategory(this.props.params.category)
+
     return (
       <div>
         <h1>{category.name}</h1>
@@ -12,13 +20,14 @@ var Category = React.createClass({
           <p>{category.description}</p>
         )}
       </div>
-    );
+    )
   }
-});
+}
 
-var CategorySidebar = React.createClass({
+class CategorySidebar extends React.Component {
   render() {
-    var category = data.lookupCategory(this.props.params.category);
+    const category = data.lookupCategory(this.props.params.category)
+
     return (
       <div>
         <Link to="/">◀︎ Back</Link>
@@ -31,24 +40,25 @@ var CategorySidebar = React.createClass({
           ))}
         </ul>
       </div>
-    );
+    )
   }
-});
+}
 
-var Item = React.createClass({
+class Item extends React.Component {
   render() {
-    var { category, item } = this.props.params;
-    var menuItem = data.lookupItem(category, item);
+    const { category, item } = this.props.params
+    const menuItem = data.lookupItem(category, item)
+
     return (
       <div>
         <h1>{menuItem.name}</h1>
         <p>${menuItem.price}</p>
       </div>
-    );
+    )
   }
-});
+}
 
-var Index = React.createClass({
+class Index extends React.Component {
   render() {
     return (
       <div>
@@ -58,11 +68,11 @@ var Index = React.createClass({
           can participate in the routing.
         </p>
       </div>
-    );
+    )
   }
-});
+}
 
-var IndexSidebar = React.createClass({
+class IndexSidebar extends React.Component {
   render() {
     return (
       <div>
@@ -75,13 +85,13 @@ var IndexSidebar = React.createClass({
           ))}
         </ul>
       </div>
-    );
+    )
   }
-});
+}
 
-var App = React.createClass({
+class App extends React.Component {
   render() {
-    var { children } = this.props;
+    const { children } = this.props
 
     return (
       <div>
@@ -92,16 +102,16 @@ var App = React.createClass({
           {children ? children.content : <Index />}
         </div>
       </div>
-    );
+    )
   }
-});
+}
 
 React.render((
-  <Router>
+  <Router history={history}>
     <Route path="/" component={App}>
-      <Route path="category/:category" components={{content: Category, sidebar: CategorySidebar}}>
+      <Route path="category/:category" components={{ content: Category, sidebar: CategorySidebar }}>
         <Route path=":item" component={Item} />
       </Route>
     </Route>
   </Router>
-), document.getElementById('example'));
+), document.getElementById('example'))

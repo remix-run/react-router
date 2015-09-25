@@ -1,19 +1,23 @@
-import React from 'react';
-import { Router, Route, IndexRoute, Link } from 'react-router';
+import React from 'react'
+import { createHistory, useBasename } from 'history'
+import { Router, Route, IndexRoute, Link } from 'react-router'
 
+const history = useBasename(createHistory)({
+  basename: '/redirect-using-index'
+})
 
-var App = React.createClass({
+class App extends React.Component {
   render() {
     return (
       <div>
         {this.props.children}
       </div>
-    );
+    )
   }
-});
+}
 
-var Index = React.createClass({
-  render () {
+class Index extends React.Component {
+  render() {
     return (
       <div>
         <h1>You should not see this.</h1>
@@ -21,10 +25,10 @@ var Index = React.createClass({
       </div>
     )
   }
-});
+}
 
-var Child = React.createClass({
-  render () {
+class Child extends React.Component {
+  render() {
     return (
       <div>
         <h2>Redirected to "/child"</h2>
@@ -32,18 +36,17 @@ var Child = React.createClass({
       </div>
     )
   }
-});
+}
 
-function redirectToChild(location, replaceWith) {
-  replaceWith(null, '/child');
+function redirectToChild(location, replaceState) {
+  replaceState(null, '/child')
 }
 
 React.render((
-  <Router>
+  <Router history={history}>
     <Route path="/" component={App}>
-      <IndexRoute component={Index} onEnter={redirectToChild}/>
-      <Route path="/child" component={Child}/>
+      <IndexRoute component={Index} onEnter={redirectToChild} />
+      <Route path="/child" component={Child} />
     </Route>
   </Router>
-), document.getElementById('example'));
-
+), document.getElementById('example'))

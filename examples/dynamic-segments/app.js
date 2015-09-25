@@ -1,52 +1,57 @@
-import React from 'react';
-import { Router, Route, Link, Redirect } from 'react-router';
+import React from 'react'
+import { Router, Route, Link, Redirect } from 'react-router'
+import { createHistory, useBasename } from 'history'
 
-var App = React.createClass({
+const history = useBasename(createHistory)({
+  basename: '/dynamic-segments'
+})
+
+class App extends React.Component {
   render() {
     return (
       <div>
         <ul>
-          <li><Link to="/user/123">Bob</Link></li>
-          <li><Link to="/user/abc">Sally</Link></li>
+          <li><Link to="/user/123" activeClassName="active">Bob</Link></li>
+          <li><Link to="/user/abc" activeClassName="active">Sally</Link></li>
         </ul>
         {this.props.children}
       </div>
-    );
+    )
   }
-});
+}
 
-var User = React.createClass({
+class User extends React.Component {
   render() {
-    var { userID } = this.props.params;
+    const { userID } = this.props.params
 
     return (
       <div className="User">
         <h1>User id: {userID}</h1>
         <ul>
-          <li><Link to={`/user/${userID}/tasks/foo`}>foo task</Link></li>
-          <li><Link to={`/user/${userID}/tasks/bar`}>bar task</Link></li>
+          <li><Link to={`/user/${userID}/tasks/foo`} activeClassName="active">foo task</Link></li>
+          <li><Link to={`/user/${userID}/tasks/bar`} activeClassName="active">bar task</Link></li>
         </ul>
         {this.props.children}
       </div>
-    );
+    )
   }
-});
+}
 
-var Task = React.createClass({
+class Task extends React.Component {
   render() {
-    var { userID, taskID } = this.props.params;
+    const { userID, taskID } = this.props.params
 
     return (
       <div className="Task">
         <h2>User ID: {userID}</h2>
         <h3>Task ID: {taskID}</h3>
       </div>
-    );
+    )
   }
-});
+}
 
 React.render((
-  <Router>
+  <Router history={history}>
     <Route path="/" component={App}>
       <Route path="user/:userID" component={User}>
         <Route path="tasks/:taskID" component={Task} />
@@ -54,4 +59,4 @@ React.render((
       </Route>
     </Route>
   </Router>
-), document.getElementById('example'));
+), document.getElementById('example'))

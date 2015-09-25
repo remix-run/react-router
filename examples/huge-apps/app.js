@@ -1,8 +1,13 @@
-import React from 'react';
-import { Router } from 'react-router';
-import stubbedCourses from './stubs/COURSES';
+import React from 'react'
+import { createHistory, useBasename } from 'history'
+import { Router } from 'react-router'
+import stubbedCourses from './stubs/COURSES'
 
-var rootRoute = {
+const history = useBasename(createHistory)({
+  basename: '/huge-apps'
+})
+
+const rootRoute = {
   component: 'div',
   childRoutes: [{
     path: '/',
@@ -15,30 +20,30 @@ var rootRoute = {
       require('./routes/Profile'),
     ]
   }]
-};
+}
 
 React.render(
-  <Router routes={rootRoute} />,
+  <Router history={history} routes={rootRoute} />,
   document.getElementById('example')
-);
+)
 
 // I've unrolled the recursive directory loop that is happening above to get a
 // better idea of just what this huge-apps Router looks like
 //
 // import { Route } from 'react-router'
 
-// import App from './components/App';
-// import Course from './routes/Course/components/Course';
-// import AnnouncementsSidebar from './routes/Course/routes/Announcements/components/Sidebar';
-// import Announcements from './routes/Course/routes/Announcements/components/Announcements';
-// import Announcement from './routes/Course/routes/Announcements/routes/Announcement/components/Announcement';
-// import AssignmentsSidebar from './routes/Course/routes/Assignments/components/Sidebar';
-// import Assignments from './routes/Course/routes/Assignments/components/Assignments';
-// import Assignment from './routes/Course/routes/Assignments/routes/Assignment/components/Assignment';
-// import CourseGrades from './routes/Course/routes/Grades/components/Grades';
-// import Calendar from './routes/Calendar/components/Calendar';
-// import Grades from './routes/Grades/components/Grades';
-// import Messages from './routes/Messages/components/Messages';
+// import App from './components/App'
+// import Course from './routes/Course/components/Course'
+// import AnnouncementsSidebar from './routes/Course/routes/Announcements/components/Sidebar'
+// import Announcements from './routes/Course/routes/Announcements/components/Announcements'
+// import Announcement from './routes/Course/routes/Announcements/routes/Announcement/components/Announcement'
+// import AssignmentsSidebar from './routes/Course/routes/Assignments/components/Sidebar'
+// import Assignments from './routes/Course/routes/Assignments/components/Assignments'
+// import Assignment from './routes/Course/routes/Assignments/routes/Assignment/components/Assignment'
+// import CourseGrades from './routes/Course/routes/Grades/components/Grades'
+// import Calendar from './routes/Calendar/components/Calendar'
+// import Grades from './routes/Grades/components/Grades'
+// import Messages from './routes/Messages/components/Messages'
 
 // React.render(
 //   <Router>
@@ -65,4 +70,4 @@ React.render(
 //     </Route>
 //   </Router>,
 //   document.getElementById('example')
-// );
+// )

@@ -1,11 +1,16 @@
-import React from 'react';
-import { Router, Route, IndexRoute, Link } from 'react-router';
+import React from 'react'
+import { createHistory, useBasename } from 'history'
+import { Router, Route, IndexRoute, Link } from 'react-router'
 
-var PICTURES = [
+const history = useBasename(createHistory)({
+  basename: '/pinterest'
+})
+
+const PICTURES = [
   { id: 0, src: 'http://placekitten.com/601/601' },
   { id: 1, src: 'http://placekitten.com/610/610' },
   { id: 2, src: 'http://placekitten.com/620/620' }
-];
+]
 
 var Modal = React.createClass({
   styles: {
@@ -70,9 +75,9 @@ var App = React.createClass({
           )}
         </div>
       </div>
-    );
+    )
   }
-});
+})
 
 var Index = React.createClass({
   render () {
@@ -130,12 +135,12 @@ var Picture = React.createClass({
       <div>
         <img src={PICTURES[this.props.params.id].src} style={{ height: '80%' }} />
       </div>
-    );
+    )
   }
-});
+})
 
 React.render((
-  <Router>
+  <Router history={history}>
     <Route path="/" component={App}>
       <IndexRoute component={Index}/>
       <Route path="/pictures/:id" component={Picture}/>
@@ -143,4 +148,3 @@ React.render((
     </Route>
   </Router>
 ), document.getElementById('example'))
-

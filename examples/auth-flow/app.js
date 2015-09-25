@@ -1,6 +1,11 @@
 import React, { findDOMNode } from 'react';
 import { Router, Route, Link, History } from 'react-router';
+import { createHistory, useBasename } from 'history'
 import auth from './auth';
+
+const history = useBasename(createHistory)({
+  basename: '/auth-flow'
+})
 
 var App = React.createClass({
   getInitialState() {
@@ -114,13 +119,12 @@ var Logout = React.createClass({
 });
 
 function requireAuth(nextState, replaceState) {
-  if (!auth.loggedIn()) {
+  if (!auth.loggedIn())
     replaceState({ nextPathname: nextState.location.pathname }, '/login');
-  }
 }
 
 React.render((
-  <Router>
+  <Router history={history}>
     <Route path="/" component={App}>
       <Route path="login" component={Login} />
       <Route path="logout" component={Logout} />
