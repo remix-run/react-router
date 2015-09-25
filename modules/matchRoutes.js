@@ -49,7 +49,7 @@ function createParams(paramNames, paramValues) {
 function matchRouteDeep(basename, route, location, callback) {
   let pattern = route.path || ''
 
-  if (pattern.indexOf('/') !== 0)
+  if (pattern.charAt(0) !== '/')
     pattern = basename.replace(/\/*$/, '/') + pattern // Relative paths build on the parent's path.
 
   const { remainingPathname, paramNames, paramValues } = matchPattern(pattern, location.pathname)
