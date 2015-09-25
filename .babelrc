@@ -1,5 +1,4 @@
 {
   "stage": 0,
-  "loose": "all",
-  "plugins": [ "object-assign" ]
+  "loose": "all"
 }
