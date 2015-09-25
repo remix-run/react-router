@@ -32,7 +32,7 @@ describe('a Route Component', function () {
 
     function assertProps(props) {
       expect(props.route).toEqual(parent)
-      expect(props.routes).toEqual([parent, child])
+      expect(props.routes).toEqual([ parent, child ])
     }
 
     React.render((

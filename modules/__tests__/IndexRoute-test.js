@@ -9,25 +9,25 @@ import Route from '../Route'
 
 describe('an <IndexRoute/>', function () {
 
-  var node
+  const Parent = React.createClass({
+    render() {
+      return <div>parent {this.props.children}</div>
+    }
+  })
+
+  const Child = React.createClass({
+    render() {
+      return <div>child </div>
+    }
+  })
+
+  let node
   beforeEach(function () {
     node = document.createElement('div')
   })
 
   afterEach(function () {
     React.unmountComponentAtNode(node)
-  })
-
-  var Parent = React.createClass({
-    render () {
-      return <div>parent {this.props.children}</div>
-    }
-  })
-
-  var Child = React.createClass({
-    render () {
-      return <div>child </div>
-    }
   })
 
   it('renders when its parent’s url matches exactly', function (done) {
@@ -60,4 +60,5 @@ describe('an <IndexRoute/>', function () {
       })
     })
   })
+
 })

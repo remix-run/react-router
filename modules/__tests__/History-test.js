@@ -27,7 +27,7 @@ describe('History Mixin', function () {
     let Component = React.createClass({
       mixins: [ History ],
       componentWillMount: assertHistory,
-      render () { return null }
+      render() { return null }
     })
 
     React.render((

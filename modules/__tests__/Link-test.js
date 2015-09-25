@@ -13,11 +13,6 @@ const { click } = React.addons.TestUtils.Simulate
 
 describe('A <Link>', function () {
 
-  let node
-  beforeEach(function () {
-    node = document.createElement('div')
-  })
-
   const Hello = React.createClass({
     render() {
       return <div>Hello {this.props.params.name}!</div>
@@ -30,10 +25,15 @@ describe('A <Link>', function () {
     }
   })
 
+  let node
+  beforeEach(function () {
+    node = document.createElement('div')
+  })
+
   it('knows how to make its href', function () {
     const LinkWrapper = React.createClass({
       render() {
-        return <Link to="/hello/michael" query={{the: 'query'}}>Link</Link>
+        return <Link to="/hello/michael" query={{ the: 'query' }}>Link</Link>
       }
     })
 
@@ -209,7 +209,7 @@ describe('A <Link>', function () {
       const execNextStep = execSteps(steps, done)
 
       React.render((
-        <Router history={createHistory("/goodbye")} onUpdate={execNextStep}>
+        <Router history={createHistory('/goodbye')} onUpdate={execNextStep}>
           <Route path="/" component={LinkWrapper}>
             <Route path="hello" component={Hello} />
             <Route path="goodbye" component={Goodbye} />
@@ -219,8 +219,8 @@ describe('A <Link>', function () {
     })
   })
 
-  describe('when route changes', function() {
-    it.skip('changes active state', function(done) {
+  describe('when route changes', function () {
+    it.skip('changes active state', function (done) {
       const LinkWrapper = React.createClass({
         shouldComponentUpdate() {
           return false

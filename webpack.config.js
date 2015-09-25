@@ -1,4 +1,4 @@
-var webpack = require('webpack');
+var webpack = require('webpack')
 
 module.exports = {
 
@@ -9,11 +9,11 @@ module.exports = {
 
   externals: [
     {
-      "react": {
-        root: "React",
-        commonjs2: "react",
-        commonjs: "react",
-        amd: "react"
+      react: {
+        root: 'React',
+        commonjs2: 'react',
+        commonjs: 'react',
+        amd: 'react'
       }
     }
   ],
@@ -35,4 +35,4 @@ module.exports = {
     })
   ]
 
-};
+}

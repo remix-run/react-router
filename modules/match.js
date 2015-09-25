@@ -2,7 +2,7 @@ import createMemoryHistory from 'history/lib/createMemoryHistory'
 import useRoutes from './useRoutes'
 import { createRoutes } from './RouteUtils'
 
-export default function match({
+function match({
   routes,
   history,
   location,
@@ -18,8 +18,9 @@ export default function match({
   })
 
   staticHistory.match(location, function (error, nextLocation, nextState) {
-    let renderProps = nextState ? {...nextState, history: staticHistory} : null
+    let renderProps = nextState ? { ...nextState, history: staticHistory } : null
     cb(error, nextLocation, renderProps)
   })
 }
 
+export default match

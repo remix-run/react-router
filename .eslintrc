@@ -11,9 +11,18 @@
   },
   "parser": "babel-eslint",
   "rules": {
+    "array-bracket-spacing": [2, "always"],
+    "comma-dangle": [2, "never"],
+    "object-curly-spacing": [2, "always"],
+    "quotes": [2, "single", "avoid-escape"],
+    "semi": [2, "never"],
     "strict": 0,
-    "react/prop-types": 2,
-    "react/jsx-uses-react": 1
+    "space-before-blocks": [2, "always"],
+    "space-before-function-paren": [2, {"anonymous":"always","named":"never"}],
+    "react/jsx-uses-react": 1,
+    "react/jsx-quotes": 2,
+    "react/jsx-no-undef": 2,
+    "react/wrap-multilines": 2
   },
   "plugins": [
     "react"

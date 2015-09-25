@@ -1,7 +1,7 @@
 import invariant from 'invariant'
 
 function escapeRegExp(string) {
-  return string.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")
+  return string.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
 }
 
 function escapeSource(string) {

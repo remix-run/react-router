@@ -66,7 +66,7 @@ const Router = React.createClass({
   componentWillReceiveProps(nextProps) {
     warning(
       nextProps.history === this.props.history,
-      "The `history` provided to <Router/> has changed, it will be ignored."
+      'You cannot change <Router history>; it will be ignored'
     )
   },
 

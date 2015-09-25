@@ -233,7 +233,7 @@ describe('matchRoutes', function () {
       ])
     })
 
-    it('when getChildRoutes callback returns reactElements', function(done) {
+    it('when getChildRoutes callback returns reactElements', function (done) {
       matchRoutes(jsxRoutes, createLocation('/users/5'), function (error, match) {
          assert(match)
          expect(match.routes.map(r => r.path)).toEqual([ 'users', ':userID' ])
@@ -242,7 +242,7 @@ describe('matchRoutes', function () {
       })
     })
 
-    it('when getIndexRoute callback returns reactElements', function(done) {
+    it('when getIndexRoute callback returns reactElements', function (done) {
       matchRoutes(jsxRoutes, createLocation('/users'), function (error, match) {
          assert(match)
          expect(match.routes.map(r => r.name)).toEqual([ 'users', 'jsx' ])

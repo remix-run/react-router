@@ -4,7 +4,7 @@ const History = {
 
   contextTypes: { history },
 
-  componentWillMount () {
+  componentWillMount() {
     this.history = this.context.history
   }
 
