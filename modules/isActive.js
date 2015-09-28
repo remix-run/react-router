@@ -1,11 +1,5 @@
 import { matchPattern } from './PatternUtils'
 import deepEqual from 'deep-equal'
-/**
- * Returns true if the given pathname matches the active pathname.
- */
-function pathnameIsActive(pathname, activePathname) {
-  return pathname === activePathname || activePathname.indexOf(pathname + '/') === 0
-}
 
 function paramsAreActive(paramNames, paramValues, activeParams) {
   return paramNames.every(function (paramName, index) {
@@ -48,7 +42,7 @@ function routeIsActive(pathname, activeRoutes, activeParams, indexOnly) {
     return false
 
   if (indexOnly)
-    return activeRoutes.length > 1 && activeRoutes[activeRoutes.length - 2].indexRoute === route
+    return activeRoutes.length > 1 && activeRoutes[activeRoutes.length - 1] === route.indexRoute
 
   return true
 }
@@ -75,7 +69,7 @@ function isActive(pathname, query, indexOnly, location, routes, params) {
   if (location == null)
     return false
 
-  if (!pathnameIsActive(pathname, location.pathname) && !routeIsActive(pathname, routes, params, indexOnly))
+  if (!routeIsActive(pathname, routes, params, indexOnly))
     return false
 
   return queryIsActive(query, location.query)

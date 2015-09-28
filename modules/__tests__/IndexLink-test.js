@@ -18,7 +18,7 @@ describe('An <IndexLink>', function () {
           <ul>
             <li><IndexLink id="overviewLink" to="/website" activeClassName="active">overview</IndexLink></li>
             <li><Link id="contactLink" to="/website/contact" activeClassName="active">contact</Link></li>
-            <li><IndexLink id="productsLink" to="/website/products" activeClassName="active">products</IndexLink></li>
+            <li><Link id="productsLink" to="/website/products" activeClassName="active">products</Link></li>
             <li><Link id="specificProductLink" to="/website/products/15" activeClassName="active">specific product</Link></li>
           </ul>
           {this.props.children}
