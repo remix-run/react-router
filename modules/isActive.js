@@ -48,7 +48,7 @@ function routeIsActive(pathname, activeRoutes, activeParams, indexOnly) {
     return false
 
   if (indexOnly)
-    return activeRoutes.length > 1 && activeRoutes[activeRoutes.length - 2].indexRoute === route
+    return activeRoutes.length > 1 && activeRoutes[activeRoutes.length - 1] === route.indexRoute
 
   return true
 }
@@ -79,7 +79,7 @@ function isActive(pathname, query, indexOnly, location, routes, params) {
   if (location == null)
     return false
 
-  if (!pathnameIsActive(pathname, location.pathname) && !routeIsActive(pathname, routes, params, indexOnly))
+  if (/*!pathnameIsActive(pathname, location.pathname) || */!routeIsActive(pathname, routes, params, indexOnly))
     return false
 
   return queryIsActive(query, location.query)
