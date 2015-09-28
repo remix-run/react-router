@@ -245,6 +245,8 @@ var Assignment = React.createClass({
 // if you're not a route component, you need to pass location down the
 // tree or get the location from context. We will probably provide a
 // higher order component that will do this for you but haven't yet.
+// see further down for more information on what can be passed down
+// via context
 var Assignment = React.createClass({
   contextTypes: {
     location: React.PropTypes.object
@@ -261,12 +263,25 @@ and where you get it now if you're a route component (`this.props`)
 
 | v0.13 (this)    | v1.0 (this.props)                  |
 |-----------------|------------------------------------|
-| `getPath()`     | `location.pathname+location.query` |
+| `getPath()`     | `location.pathname+location.search` |
 | `getPathname()` | `location.pathname`                |
 | `getParams()`   | `params`                           |
-| `getQuery()`    | `location.query`                            |
+| `getQuery()`    | `location.search`                  |
 | `getRoutes()`   | `routes`                           |
 | `isActive(to, params, query)` | `history.isActive(pathname, query, onlyActiveOnIndex)` |
+
+Here is another table of properties you used to get via the `State` and 
+where you can get it now if you are **not** a route component (`this.context`).
+
+| v0.13 (this)    | v1.0 (this.context)                |
+|-----------------|------------------------------------|
+| `getPath()`     | `location.pathname+location.search`|
+| `getPathname()` | `location.pathname`                |
+| `getQuery()`    | `location.search`                  |
+| `isActive(to, params, query)` | `history.isActive(pathname, query, onlyActiveOnIndex)` |
+
+Note not all `State` functionality can be accessed via context in v1.0. 
+For example, `params` is not available via context.
 
 ### Scrolling
 
