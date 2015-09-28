@@ -75,7 +75,7 @@ function isActive(pathname, query, indexOnly, location, routes, params) {
   if (location == null)
     return false
 
-  if (/*!pathnameIsActive(pathname, location.pathname) || */!routeIsActive(pathname, routes, params, indexOnly))
+  if (!routeIsActive(pathname, routes, params, indexOnly))
     return false
 
   return queryIsActive(query, location.query)
