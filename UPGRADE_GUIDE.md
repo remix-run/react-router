@@ -55,6 +55,10 @@ let history = createBrowserHistory()
 React.render(<Router history={history}>{routes}</Router>, el)
 ```
 
+After updating to 1.0.0 you will notice that a magic querystring entry starts appearing in your URLs called "_k". An example of how it looks is this: `?_k=umhx1s`.  
+
+This is not a bug - this is intended. You can read more about the feature [here](https://github.com/rackt/react-router/blob/master/docs/guides/basics/Histories.md#what-is-that-_kckuvup-junk-in-the-url) and how to opt out [here](https://rackt.github.io/history/stable/HashHistoryCaveats.html).
+
 ### Route Config
 
 You can still nest your routes as before, paths are inherited from
