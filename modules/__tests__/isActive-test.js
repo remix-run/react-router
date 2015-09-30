@@ -5,6 +5,7 @@ import createHistory from 'history/lib/createMemoryHistory'
 import IndexRoute from '../IndexRoute'
 import Router from '../Router'
 import Route from '../Route'
+import qs from 'qs'
 
 describe('isActive', function () {
 
@@ -102,6 +103,27 @@ describe('isActive', function () {
         ), node, function () {
           expect(this.history.isActive('/home', { something: 'else' })).toBe(false)
           expect(this.history.isActive('/home', { something: 'else' }, true)).toBe(false)
+          done()
+        })
+      })
+    })
+
+    describe('with a custom parse function and a query that does not match', function () {
+      it('is not active', function (done) {
+        function stringifyQuery(params) {
+            return qs.stringify(params, { arrayFormat: 'indices' })
+        }
+        function parseQueryString(query) {
+            return qs.parse(query, { arrayLimit: 0 })
+        }
+
+        React.render((
+          <Router history={createHistory('/home?foo[4]=bar')} stringifyQuery={stringifyQuery} parseQueryString={parseQueryString}>
+            <Route path="/" />
+            <Route path="/home" />
+          </Router>
+        ), node, function () {
+          expect(this.history.isActive('/home', { foo: { 1: 'bar' } })).toBe(false)
           done()
         })
       })
