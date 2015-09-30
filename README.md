@@ -18,6 +18,8 @@ thought, not an after-thought.
 - [Changelog](/CHANGELOG.md)
 - [#react-router channel on reactiflux](http://www.reactiflux.com/)
 
+**Note:** *If you are still using React Router 0.13.x [the docs](https://github.com/rackt/react-router/tree/0.13.x/docs/guides) can be found on [the 0.13.x branch](https://github.com/rackt/react-router/tree/0.13.x).*
+
 ### Browser Support
 
 We support all browsers and environments where React runs.
