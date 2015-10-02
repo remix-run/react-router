@@ -81,6 +81,17 @@ app.listen(port)
 console.log("server started on port " + port)
 ```
 
+A quick example with nginx:
+
+```
+server {
+  ...
+  location / {
+    try_files $uri /index.html
+  }
+}
+```
+
 #### IE8, IE9 Support
 We feature detect to see if we can use the browser's native `History`
 API, if not, any call to transition around the app will result in _a
