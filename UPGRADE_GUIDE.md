@@ -120,11 +120,11 @@ since it's simple with a `*` path.
 #### "active" class
 
 In 0.13.x links added the "active" class by default which you could
-override with `activeClassName`, or provide `activeStyles`. Most links
+override with `activeClassName`, or provide `activeStyle`s. Most links
 don't need this and the check is (currently) expensive.
 
 Links no longer add the "active" class by default, you opt-in by
-providing one; if no `activeClassName` or `activeStyles` are provided,
+providing one; if no `activeClassName` or `activeStyle`s are provided,
 the link will not check if it's active.
 
 ```js
