@@ -10,22 +10,23 @@ to:
 To facilitate these needs, you drop one level lower than the [`<Router/>`](/docs/API.md#Router)
 API with:  
 
-- `createLocation` from the history package
+- `createMemoryHistory` from the history package
 - `match` to match the routes to a location without rendering
 - `RoutingContext` for synchronous rendering of route components
 
 It looks something like this with an imaginary JavaScript server:
 
 ```js
-import createLocation from 'history/lib/createLocation'
+import createMemoryHistory from 'history/lib/createMemoryHistory'
 import { RoutingContext, match } from 'react-router'
 import routes from './routes'
 import { renderToString } from 'react-dom/server'
 
 serve((req, res) => {
-  let location = createLocation(req.url)
+  const history = createMemoryHistory();
+  const location = history.createLocation(req.url)
 
-  match({ routes, location }, (error, redirectLocation, renderProps) => {
+  match({ routes, history, location }, (error, redirectLocation, renderProps) => {
     if (redirectLocation)
       res.redirect(301, redirectLocation.pathname + redirectLocation.search)
     else if (error)
