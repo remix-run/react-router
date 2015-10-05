@@ -1,7 +1,6 @@
 import warning from 'warning'
 import { REPLACE } from 'history/lib/Actions'
 import useQueries from 'history/lib/useQueries'
-import createLocation from 'history/lib/createLocation'
 import computeChangedRoutes from './computeChangedRoutes'
 import { runEnterHooks, runLeaveHooks } from './TransitionUtils'
 import { default as _isActive } from './isActive'
@@ -55,7 +54,7 @@ function useRoutes(createHistory) {
     }
 
     function createLocationFromRedirectInfo({ pathname, query, state }) {
-      return createLocation(
+      return history.createLocation(
         history.createPath(pathname, query), state, REPLACE, history.createKey()
       )
     }
@@ -181,7 +180,7 @@ function useRoutes(createHistory) {
       } else if (hooks.indexOf(hook) === -1) {
         hooks.push(hook)
       }
-      
+
       return function () {
         let hooks = RouteHooks[routeID]
 
