@@ -23,7 +23,7 @@ import routes from './routes'
 import { renderToString } from 'react-dom/server'
 
 serve((req, res) => {
-  const history = createMemoryHistory();
+  const history = createMemoryHistory()
   const location = history.createLocation(req.url)
 
   match({ routes, history, location }, (error, redirectLocation, renderProps) => {
