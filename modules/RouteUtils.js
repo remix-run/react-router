@@ -87,7 +87,9 @@ export function createRoutesFromReactChildren(children, parentRoute) {
  * may be a JSX route, a plain object route, or an array of either.
  */
 export function createRoutes(routes) {
-  if (isReactChildren(routes)) {
+  if(routes && routes.props && routes.props.routes){
+	  routes = routes.props.routes;
+  } else if (isReactChildren(routes)) {
     routes = createRoutesFromReactChildren(routes)
   } else if (routes && !Array.isArray(routes)) {
     routes = [ routes ]
