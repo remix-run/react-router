@@ -1122,13 +1122,18 @@ describe('Router.run', function () {
         }
       };
 
+      var isDone = false;
+
       Router.create({
         routes: routes,
         location: location,
         scrollBehavior: MockScrollBehavior
       }).run(function (Handler) {
         React.render(<Handler/>, div, function () {
-          done();
+          if (!isDone) {
+            isDone = true;
+            done();
+          }
         });
       });
     });
