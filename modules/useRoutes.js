@@ -49,10 +49,6 @@ function useRoutes(createHistory) {
         // Continue from where we left off.
         finishMatch(partialNextState, callback)
       } else {
-        // Allow match(path)
-        if (typeof location === 'string')
-          location = history.createLocation(location)
-
         matchRoutes(routes, location, function (error, nextState) {
           if (error) {
             callback(error)
