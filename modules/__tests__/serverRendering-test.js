@@ -1,4 +1,4 @@
-/*eslint-env mocha */
+``/*eslint-env mocha */
 /*eslint react/prop-types: 0*/
 import expect from 'expect'
 import React from 'react'
@@ -12,12 +12,17 @@ describe('server rendering', function () {
   beforeEach(function () {
     App = React.createClass({
       render() {
+        let message = this.props.location.query && this.props.location.query.message
+          ? <p>{this.props.query.location.query.message}</p>
+          : null;
+
         return (
           <div className="App">
             <h1>App</h1>
             <Link to="/about" activeClassName="about-is-active">About</Link>{' '}
             <Link to="/dashboard" activeClassName="dashboard-is-active">Dashboard</Link>
             <div>
+              {message}
               {this.props.children}
             </div>
           </div>
@@ -78,6 +83,17 @@ describe('server rendering', function () {
       done()
     })
   })
+
+  it('works with query params', function (done) {
+    const location = createLocation('/dashboard?message=Hello')
+    match({ routes, location }, function (error, redirectLocation, renderProps) {
+      const string = React.renderToString(
+        <RoutingContext {...renderProps} />
+      )
+      expect(string).toMatch(/Hello/)
+      done()
+    })
+  });
 
   it('renders active Links as active', function (done) {
     match({ routes, location: '/about' }, function (error, redirectLocation, renderProps) {
