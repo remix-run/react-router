@@ -10,11 +10,8 @@ class TestLocation {
   constructor(history) {
     this.history = history || [];
     this.listeners = [];
+    this.needsDOM = false;
     this._updateHistoryLength();
-  }
-
-  get needsDOM() {
-    return false;
   }
 
   _updateHistoryLength() {
