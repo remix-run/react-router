@@ -39,7 +39,7 @@ Browser history is the recommended history for browser application with React Ro
 #### Configuring Your Server
 Your server must be ready to handle real URLs. When the app first loads at `/` it will probably work, but as the user navigates around and then hits refresh at `/accounts/23` your web server will get a request to `/accounts/23`. You will need it to handle that URL and include your JavaScript application in the response.
 
-A quick example with express:
+An express app might look like this:
 
 ```js
 const express = require('express')
@@ -52,7 +52,7 @@ app.use(express.static(__dirname + '/public'))
 
 // handle every other route with index.html, which will contain
 // a script tag to your application's JavaScript file(s).
-app.get('*', function(request, response){
+app.get('*', function (request, response){
   response.sendFile(path.resolve(__dirname, 'public', 'index.html'))
 })
 
@@ -60,7 +60,7 @@ app.listen(port)
 console.log("server started on port " + port)
 ```
 
-A quick example with nginx:
+If you're using nginx, use the [`try_files` directive](http://nginx.org/en/docs/http/ngx_http_core_module.html#try_files):
 
 ```
 server {
@@ -70,6 +70,8 @@ server {
   }
 }
 ```
+
+This lets nginx serve static asset files and serves your `index.html` file when another file isn't found on the server.
 
 #### IE8, IE9 Support
 We feature detect to see if we can use the browser's native `window.history` API. If not, any call to transition around the app will result in _a full page reload_, which allows you to build your app and have a better experience for newer browsers, but still support old ones.
