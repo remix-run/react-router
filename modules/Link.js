@@ -77,15 +77,6 @@ class Link extends React.Component {
       this.context.history.pushState(this.props.state, this.props.to, this.props.query)
   }
 
-  componentWillMount() {
-    warning(
-      this.context.history,
-      'A <Link> should not be rendered outside the context of history ' +
-      'some features including real hrefs, active styling, and navigation ' +
-      'will not function correctly'
-    )
-  }
-
   render() {
     const { history } = this.context
     const { activeClassName, activeStyle, onlyActiveOnIndex, to, query, state, onClick, ...props } = this.props
