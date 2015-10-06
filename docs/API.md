@@ -350,7 +350,7 @@ specify them if you need to.
 </Route>
 ```
 
-Note that the `<Redirect/>` can be placed anywhere in the route hierarchy, though [normal precedence](/docs/guides/basics/RouteMatching.md#precedence) rules apply. If you'd prefer the redirects to be next to their respective routes, the `from` path will match the same as a regular route `path`.  Currently, the `to` property of `<Redirect/>` needs to be an absolute path. Pull requests welcome to make them handle relative paths too!
+Note that the `<Redirect>` can be placed anywhere in the route hierarchy, though [normal precedence](/docs/guides/basics/RouteMatching.md#precedence) rules apply. If you'd prefer the redirects to be next to their respective routes, the `from` path will match the same as a regular route `path`.
 
 ```js
 <Route path="course/:courseId">
