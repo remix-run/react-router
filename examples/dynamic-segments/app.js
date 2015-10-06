@@ -55,7 +55,7 @@ React.render((
     <Route path="/" component={App}>
       <Route path="user/:userID" component={User}>
         <Route path="tasks/:taskID" component={Task} />
-        <Redirect from="todos/:taskID" to="/user/:userID/tasks/:taskID" />
+        <Redirect from="todos/:taskID" to="tasks/:taskID" />
       </Route>
     </Route>
   </Router>
