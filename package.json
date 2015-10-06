@@ -25,6 +25,7 @@
   ],
   "license": "MIT",
   "dependencies": {
+    "deep-equal": "^1.0.0",
     "history": "1.12.1",
     "invariant": "^2.0.0",
     "warning": "^2.0.0"
@@ -51,6 +52,7 @@
     "karma-sourcemap-loader": "^0.3.5",
     "karma-webpack": "^1.7.0",
     "mocha": "^2.0.1",
+    "qs": "^4.0.0",
     "react": "0.13.x",
     "rf-changelog": "^0.4.0",
     "style-loader": "^0.12.4",

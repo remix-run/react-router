@@ -5,6 +5,7 @@ import createHistory from 'history/lib/createMemoryHistory'
 import IndexRoute from '../IndexRoute'
 import Router from '../Router'
 import Route from '../Route'
+import qs from 'qs'
 
 describe('isActive', function () {
 
@@ -200,4 +201,61 @@ describe('isActive', function () {
     })
   })
 
+  describe('a pathname that matches URL', function () {
+    describe('with query that does match', function () {
+      it('is active', function (done) {
+        React.render((
+          <Router history={createHistory('/home?foo[]=bar&foo[]=bar1&foo[]=bar2')}>
+            <Route path="/" />
+            <Route path="/home" />
+          </Router>
+        ), node, function () {
+          expect(this.history.isActive('/home', { foo: [ 'bar', 'bar1', 'bar2' ] })).toBe(true)
+          done()
+        })
+      })
+    })
+
+    describe('with a custom parse function and a query that does not match', function () {
+      it('is not active', function (done) {
+        function stringifyQuery(params) {
+            return qs.stringify(params, { arrayFormat: 'indices' })
+        }
+        function parseQueryString(query) {
+            return qs.parse(query, { parseArrays: false })
+        }
+
+        React.render((
+          <Router history={createHistory('/home?foo[1]=bar')} stringifyQuery={stringifyQuery} parseQueryString={parseQueryString}>
+            <Route path="/" />
+            <Route path="/home" />
+          </Router>
+        ), node, function () {
+          expect(this.history.isActive('/home', { foo: { 4: 'bar' } })).toBe(false)
+          done()
+        })
+      })
+    })
+
+    describe('with a custom parse function and a query that match', function () {
+      it('is active', function (done) {
+        function stringifyQuery(params) {
+            return qs.stringify(params, { arrayFormat: 'indices' })
+        }
+        function parseQueryString(query) {
+            return qs.parse(query, { parseArrays: false })
+        }
+
+        React.render((
+          <Router history={createHistory('/home?foo[4]=bar&foo[1]=bar2')} stringifyQuery={stringifyQuery} parseQueryString={parseQueryString}>
+            <Route path="/" />
+            <Route path="/home" />
+          </Router>
+        ), node, function () {
+          expect(this.history.isActive('/home', { foo: { 1: 'bar2', 4: 'bar' } })).toBe(true)
+          done()
+        })
+      })
+    })
+  })
 })

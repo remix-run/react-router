@@ -1,5 +1,5 @@
 import { matchPattern } from './PatternUtils'
-
+import deepEqual from 'deep-equal'
 /**
  * Returns true if the given pathname matches the active pathname.
  */
@@ -64,11 +64,7 @@ function queryIsActive(query, activeQuery) {
   if (query == null)
     return true
 
-  for (const p in query)
-    if (query.hasOwnProperty(p) && String(query[p]) !== String(activeQuery[p]))
-      return false
-
-  return true
+  return deepEqual(query, activeQuery)
 }
 
 /**
