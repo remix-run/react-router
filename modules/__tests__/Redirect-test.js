@@ -29,4 +29,32 @@ describe('A <Redirect>', function () {
     })
   })
 
+  it('works with relative paths', function (done) {
+    React.render((
+      <Router history={createHistory('/nested/route1')}>
+        <Route path="nested">
+          <Route path="route2" />
+          <Redirect from="route1" to="route2" />
+        </Route>
+      </Router>
+    ), node, function () {
+      expect(this.state.location.pathname).toEqual('/nested/route2')
+      done()
+    })
+  })
+
+  it('works with relative paths with param', function (done) {
+    React.render((
+      <Router history={createHistory('/nested/1/route1')}>
+        <Route path="nested/:id">
+          <Route path="route2" />
+          <Redirect from="route1" to="route2" />
+        </Route>
+      </Router>
+    ), node, function () {
+      expect(this.state.location.pathname).toEqual('/nested/1/route2')
+      done()
+    })
+  })
+
 })

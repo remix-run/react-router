@@ -23,15 +23,22 @@ const Redirect = React.createClass({
       if (route.from)
         route.path = route.from
 
-      // TODO: Handle relative pathnames, see #1658
-      invariant(
-        route.to.charAt(0) === '/',
-        '<Redirect to> must be an absolute path. This should be fixed in the future'
-      )
-
       route.onEnter = function (nextState, replaceState) {
         const { location, params } = nextState
-        const pathname = route.to ? formatPattern(route.to, params) : location.pathname
+
+        let pathname
+        if (route.to.charAt(0) === '/') {
+          pathname = formatPattern(route.to, params)
+        }
+        else if (!route.to) {
+          pathname = location.pathname
+        }
+        else {
+          let routeIndex = nextState.routes.indexOf(route)
+          let parentPattern = Redirect.getRoutePattern(nextState.routes, routeIndex - 1)
+          let pattern = parentPattern.replace(/\/*$/, '/') + route.to
+          pathname = formatPattern(pattern, params)
+        }
 
         replaceState(
           route.state || location.state,
@@ -41,6 +48,22 @@ const Redirect = React.createClass({
       }
 
       return route
+    },
+
+    getRoutePattern(routes, routeIndex) {
+      let parentPattern = ''
+
+      for (let i = routeIndex; i >= 0; i--) {
+        let route = routes[i]
+        let pattern = route.path || ''
+        parentPattern = pattern.replace(/\/*$/, '/') + parentPattern
+
+        if (pattern.indexOf('/') === 0) {
+          break
+        }
+      }
+
+      return '/' + parentPattern
     }
 
   },
