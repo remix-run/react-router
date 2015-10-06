@@ -1,18 +1,14 @@
+[![build status](https://img.shields.io/travis/rackt/react-router/0.13.x.svg?style=flat-square)](https://travis-ci.org/rackt/react-router)
 [![npm package](https://img.shields.io/npm/v/react-router.svg?style=flat-square)](https://www.npmjs.org/package/react-router)
-[![build status](https://img.shields.io/travis/rackt/react-router/master.svg?style=flat-square)](https://travis-ci.org/rackt/react-router)
-[![dependency status](https://img.shields.io/david/rackt/react-router.svg?style=flat-square)](https://david-dm.org/rackt/react-router)
-[![Gitter](https://badges.gitter.im/Join%20Chat.svg)](https://gitter.im/rackt/react-router?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge)
+[![react-router channel on slack](https://img.shields.io/badge/slack-react--router@reactiflux-61DAFB.svg?style=flat-square)](http://www.reactiflux.com)
 
 React Router
 ============
 
 A complete routing library for React.
 
-Docs
-----
-
-- [Guide: Overview](/docs/guides/overview.md)
-- [API](/docs/api/)
+* [Guides](/docs/guides)
+* [Docs](/doc)
 
 Important Notes
 ---------------
@@ -124,7 +120,7 @@ Related Modules
 
 - [rnr-constrained-route](https://github.com/bjyoungblood/rnr-constrained-route) - validate paths
   and parameters on route handlers.
-- [react-router-bootstrap](https://github.com/mtscout6/react-router-bootstrap) - Integration with [react-bootstrap](https://github.com/react-bootstrap/react-bootstrap) components.
+- [react-router-bootstrap](https://github.com/react-bootstrap/react-router-bootstrap) - Integration with [react-bootstrap](https://github.com/react-bootstrap/react-bootstrap) components.
 - [react-router-proxy-loader](https://github.com/odysseyscience/react-router-proxy-loader) - A Webpack loader to dynamically load react-router components on-demand
 
 Contributing

@@ -1,3 +1,10 @@
+v0.13.4 - Tue, 06 Oct 2015 13:13:20 GMT
+---------------------------------------
+
+- [b237238](../../commit/b237238) [fixed] Removed getter for IE8 compat
+- [53ce7f1](../../commit/53ce7f1) [fixed] #1148 regex for detecting trailing slashes
+
+
 v0.13.3 - Wed, 29 Apr 2015 01:47:08 GMT
 ---------------------------------------
 
