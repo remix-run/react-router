@@ -21,15 +21,15 @@ import routes from './routes'
 serve((req, res) => {
   // Note that req.url here should be the full URL path from
   // the original request, including the query string.
-  match(req.url, (error, redirectLocation, renderProps) => {
-    if (redirectLocation) {
-      res.redirect(302, redirectLocation.pathname + redirectLocation.search)
-    } else if (error) {
+  match({ routes, location: req.url }, (error, redirectLocation, renderProps) => {
+    if (error) {
       res.send(500, error.message)
-    } else if (renderProps == null) {
-      res.send(404, 'Not found')
-    } else {
+    } else if (redirectLocation) {
+      res.redirect(302, redirectLocation.pathname + redirectLocation.search)
+    } else if (renderProps) {
       res.send(200, renderToString(<RoutingContext {...renderProps} />))
+    } else {
+      res.send(404, 'Not found')
     }
   })
 })
