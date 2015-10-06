@@ -29,11 +29,9 @@ const Redirect = React.createClass({
         let pathname
         if (route.to.charAt(0) === '/') {
           pathname = formatPattern(route.to, params)
-        }
-        else if (!route.to) {
+        } else if (!route.to) {
           pathname = location.pathname
-        }
-        else {
+        } else {
           let routeIndex = nextState.routes.indexOf(route)
           let parentPattern = Redirect.getRoutePattern(nextState.routes, routeIndex - 1)
           let pattern = parentPattern.replace(/\/*$/, '/') + route.to
@@ -58,9 +56,8 @@ const Redirect = React.createClass({
         let pattern = route.path || ''
         parentPattern = pattern.replace(/\/*$/, '/') + parentPattern
 
-        if (pattern.indexOf('/') === 0) {
+        if (pattern.indexOf('/') === 0)
           break
-        }
       }
 
       return '/' + parentPattern
