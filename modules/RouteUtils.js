@@ -89,7 +89,7 @@ export function createRoutesFromReactChildren(children, parentRoute) {
 export function createRoutes(routes) {
   if (isReactChildren(routes)) {
     routes = createRoutesFromReactChildren(routes)
-  } else if (!Array.isArray(routes)) {
+  } else if (routes && !Array.isArray(routes)) {
     routes = [ routes ]
   }
 
