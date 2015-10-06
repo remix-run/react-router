@@ -113,7 +113,7 @@ const App = React.createClass({
     return (
       <div>
         <h1>App</h1>
-        {/* change the <a>s to <Links>s */}
+        {/* change the <a>s to <Link>s */}
         <ul>
           <li><Link to="/about">About</Link></li>
           <li><Link to="/inbox">Inbox</Link></li>

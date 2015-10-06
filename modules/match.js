@@ -1,25 +1,21 @@
-import createMemoryHistory from 'history/lib/createMemoryHistory'
-import useRoutes from './useRoutes'
+import createHistory from 'history/lib/createMemoryHistory'
 import { createRoutes } from './RouteUtils'
+import useRoutes from './useRoutes'
 
 function match({
   routes,
-  history,
   location,
   parseQueryString,
   stringifyQuery
-}, cb) {
-  let createHistory = history ? () => history : createMemoryHistory
-
-  let staticHistory = useRoutes(createHistory)({
+}, callback) {
+  let history = useRoutes(createHistory)({
     routes: createRoutes(routes),
     parseQueryString,
     stringifyQuery
   })
 
-  staticHistory.match(location, function (error, nextLocation, nextState) {
-    let renderProps = nextState ? { ...nextState, history: staticHistory } : null
-    cb(error, nextLocation, renderProps)
+  history.match(location, function (error, redirectLocation, nextState) {
+    callback(error, redirectLocation, nextState && { ...nextState, history })
   })
 }
 
