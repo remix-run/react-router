@@ -7,6 +7,19 @@ import Router from '../Router'
 import Route from '../Route'
 
 describe('pushState', function () {
+
+  class Index extends React.Component {
+    render() {
+      return <h1>Index</h1>
+    }
+  }
+
+  class Home extends React.Component {
+    render() {
+      return <h1>Home</h1>
+    }
+  }
+
   beforeEach(resetHash)
 
   let node
@@ -20,18 +33,6 @@ describe('pushState', function () {
 
   describe('when the target path contains a colon', function () {
     it('works', function (done) {
-      const Index = React.createClass({
-        render() {
-          return <h1>Index</h1>
-        }
-      })
-
-      const Home = React.createClass({
-        render() {
-          return <h1>Home</h1>
-        }
-      })
-
       const steps = [
         function () {
           expect(this.state.location.pathname).toEqual('/')

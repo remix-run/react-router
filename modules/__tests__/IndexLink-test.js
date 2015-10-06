@@ -10,7 +10,7 @@ import IndexLink from '../IndexLink'
 
 describe('An <IndexLink>', function () {
 
-  const App = React.createClass({
+  class App extends React.Component {
     render() {
       return (
         <div>
@@ -22,19 +22,19 @@ describe('An <IndexLink>', function () {
         </div>
       )
     }
-  })
+  }
 
-  const Parent = React.createClass({
+  class Parent extends React.Component {
     render() {
       return <div>parent {this.props.children}</div>
     }
-  })
+  }
 
-  const Child = React.createClass({
+  class Child extends React.Component {
     render() {
       return <div>child </div>
     }
-  })
+  }
 
   const routes = (
     <Route path="/" component={App}>

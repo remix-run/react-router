@@ -8,38 +8,36 @@ const { array, func, object } = React.PropTypes
  * A <RoutingContext> renders the component tree for a given router state
  * and sets the history object and the current location in context.
  */
-const RoutingContext = React.createClass({
+class RoutingContext extends React.Component {
 
-  propTypes: {
+  static propTypes = {
     history: object.isRequired,
     createElement: func.isRequired,
     location: object.isRequired,
     routes: array.isRequired,
     params: object.isRequired,
     components: array.isRequired
-  },
+  }
 
-  getDefaultProps() {
-    return {
-      createElement: React.createElement
-    }
-  },
+  static defaultProps = {
+    createElement: React.createElement
+  }
 
-  childContextTypes: {
+  static childContextTypes = {
     history: object.isRequired,
     location: object.isRequired
-  },
+  }
 
   getChildContext() {
     return {
       history: this.props.history,
       location: this.props.location
     }
-  },
+  }
 
   createElement(component, props) {
     return component == null ? null : this.props.createElement(component, props)
-  },
+  }
 
   render() {
     const { history, location, routes, params, components } = this.props
@@ -86,6 +84,6 @@ const RoutingContext = React.createClass({
     return element
   }
 
-})
+}
 
 export default RoutingContext

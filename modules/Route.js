@@ -7,45 +7,41 @@ import { component, components } from './PropTypes'
 const { string, bool, func } = React.PropTypes
 
 /**
- * A <Route> is used to declare which components are rendered to the page when
- * the URL matches a given pattern.
+ * A <Route> is used to declare which components are rendered to the
+ * page when the URL matches a given pattern.
  *
- * Routes are arranged in a nested tree structure. When a new URL is requested,
- * the tree is searched depth-first to find a route whose path matches the URL.
- * When one is found, all routes in the tree that lead to it are considered
- * "active" and their components are rendered into the DOM, nested in the same
- * order as they are in the tree.
+ * Routes are arranged in a nested tree structure. When a new URL is
+ * requested, the tree is searched depth-first to find a route whose
+ * path matches the URL.  When one is found, all routes in the tree
+ * that lead to it are considered "active" and their components are
+ * rendered into the DOM, nested in the same order as in the tree.
  */
-const Route = React.createClass({
+class Route extends React.Component {
 
-  statics: {
+  static createRouteFromReactElement(element) {
+    const route = createRouteFromReactElement(element)
 
-    createRouteFromReactElement(element) {
-      const route = createRouteFromReactElement(element)
+    if (route.handler) {
+      warning(
+        false,
+        '<Route handler> is deprecated, use <Route component> instead'
+      )
 
-      if (route.handler) {
-        warning(
-          false,
-          '<Route handler> is deprecated, use <Route component> instead'
-        )
-
-        route.component = route.handler
-        delete route.handler
-      }
-
-      return route
+      route.component = route.handler
+      delete route.handler
     }
-  
-  },
 
-  propTypes: {
+    return route
+  }
+
+  static propTypes = {
     path: string,
     ignoreScrollBehavior: bool,
     handler: component, // deprecated
     component,
     components,
     getComponents: func
-  },
+  }
 
   render() {
     invariant(
@@ -54,6 +50,6 @@ const Route = React.createClass({
     )
   }
 
-})
+}
 
 export default Route

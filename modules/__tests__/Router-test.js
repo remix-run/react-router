@@ -8,6 +8,18 @@ import Route from '../Route'
 
 describe('Router', function () {
 
+  class Parent extends React.Component {
+    render() {
+      return <div>parent{this.props.children}</div>
+    }
+  }
+
+  class Child extends React.Component {
+    render() {
+      return <div>child</div>
+    }
+  }
+
   let node
   beforeEach(function () {
     node = document.createElement('div')
@@ -15,18 +27,6 @@ describe('Router', function () {
 
   afterEach(function () {
     React.unmountComponentAtNode(node)
-  })
-
-  const Parent = React.createClass({
-    render() {
-      return <div>parent{this.props.children}</div>
-    }
-  })
-
-  const Child = React.createClass({
-    render() {
-      return <div>child</div>
-    }
   })
 
   it('renders routes', function (done) {
@@ -69,7 +69,7 @@ describe('Router', function () {
     })
   })
 
-  it('renders the child\'s component when it has no component', function (done) {
+  it("renders the child's component when it has no component", function (done) {
     React.render((
       <Router history={createHistory('/hello')}>
         <Route>
@@ -82,19 +82,19 @@ describe('Router', function () {
     })
   })
 
-  it('renders with a custom `createElement` prop', function (done) {
-    const Wrapper = React.createClass({
+  it('renders with a custom "createElement" prop', function (done) {
+    class Wrapper extends React.Component {
       render() {
         const { Component } = this.props
         return <Component fromWrapper="wrapped" />
       }
-    })
+    }
 
-    const Component = React.createClass({
+    class Component extends React.Component {
       render() {
         return <div>{this.props.fromWrapper}</div>
       }
-    })
+    }
 
     React.render((
       <Router history={createHistory('/')} createElement={Component => <Wrapper Component={Component} />}>
@@ -108,7 +108,7 @@ describe('Router', function () {
 
   describe('with named components', function () {
     it('renders the named components', function (done) {
-      const Parent = React.createClass({
+      class Parent extends React.Component {
         render() {
           return (
             <div>
@@ -116,19 +116,19 @@ describe('Router', function () {
             </div>
           )
         }
-      })
+      }
 
-      const Sidebar = React.createClass({
+      class Sidebar extends React.Component {
         render() {
           return <div>sidebar</div>
         }
-      })
+      }
 
-      const Content = React.createClass({
+      class Content extends React.Component {
         render() {
           return <div>content</div>
         }
-      })
+      }
 
       React.render((
         <Router history={createHistory('/')}>
@@ -146,13 +146,15 @@ describe('Router', function () {
   describe('at a route with special characters', function () {
     it('does not double escape', function (done) {
       // https://github.com/rackt/react-router/issues/1574
-      let MyComponent = React.createClass({
-        render() { return <div>{this.props.params.some_token}</div> }
-      })
+      class MyComponent extends React.Component {
+        render() {
+          return <div>{this.props.params.someToken}</div>
+        }
+      }
 
       React.render((
         <Router history={createHistory('/point/aaa%2Bbbb')}>
-          <Route path="point/:some_token" component={MyComponent} />
+          <Route path="point/:someToken" component={MyComponent} />
         </Router>
       ), node, function () {
         expect(node.textContent.trim()).toEqual('aaa+bbb')
@@ -162,17 +164,22 @@ describe('Router', function () {
 
     it('does not double escape when nested', function (done) {
       // https://github.com/rackt/react-router/issues/1574
-      let MyWrapperComponent = React.createClass({
-        render() { return this.props.children }
-      })
-      let MyComponent = React.createClass({
-        render() { return <div>{this.props.params.some_token}</div> }
-      })
+      class MyWrapperComponent extends React.Component {
+        render() {
+          return this.props.children
+        }
+      }
+
+      class MyComponent extends React.Component {
+        render() {
+          return <div>{this.props.params.someToken}</div>
+        }
+      }
 
       React.render((
         <Router history={createHistory('/point/aaa%2Bbbb')}>
           <Route component={MyWrapperComponent}>
-            <Route path="point/:some_token" component={MyComponent} />
+            <Route path="point/:someToken" component={MyComponent} />
           </Route>
         </Router>
       ), node, function () {
@@ -183,9 +190,11 @@ describe('Router', function () {
 
     it('is happy to have colons in parameter values', function (done) {
       // https://github.com/rackt/react-router/issues/1759
-      let MyComponent = React.createClass({
-        render() { return <div>{this.props.params.foo}</div> }
-      })
+      class MyComponent extends React.Component {
+        render() {
+          return <div>{this.props.params.foo}</div>
+        }
+      }
 
       React.render((
         <Router history={createHistory('/ns/aaa:bbb/bar')}>
@@ -199,9 +208,11 @@ describe('Router', function () {
 
     it('handles % in parameters', function (done) {
       // https://github.com/rackt/react-router/issues/1766
-      let MyComponent = React.createClass({
-        render() { return <div>{this.props.params.name}</div> }
-      })
+      class MyComponent extends React.Component {
+        render() {
+          return <div>{this.props.params.name}</div>
+        }
+      }
 
       React.render((
         <Router history={createHistory('/company/CADENCE%20DESIGN%20SYSTEM%20INC%20NOTE%202.625%25%2060')}>
@@ -223,8 +234,7 @@ describe('Router', function () {
 
       class Child extends React.Component {
         render() {
-          const { params } = this.props
-          return <h1>{params.name}</h1>
+          return <h1>{this.props.params.name}</h1>
         }
       }
 

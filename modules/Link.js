@@ -37,13 +37,13 @@ function isEmptyObject(object) {
  *
  *   <Link ... query={{ show: true }} state={{ the: 'state' }} />
  */
-const Link = React.createClass({
+class Link extends React.Component {
 
-  contextTypes: {
+  static contextTypes = {
     history: object
-  },
+  }
 
-  propTypes: {
+  static propTypes = {
     activeStyle: object,
     activeClassName: string,
     onlyActiveOnIndex: bool.isRequired,
@@ -51,15 +51,13 @@ const Link = React.createClass({
     query: object,
     state: object,
     onClick: func
-  },
+  }
 
-  getDefaultProps() {
-    return {
-      onlyActiveOnIndex: false,
-      className: '',
-      style: {}
-    }
-  },
+  static defaultProps = {
+    onlyActiveOnIndex: false,
+    className: '',
+    style: {}
+  }
 
   handleClick(event) {
     let allowTransition = true, clickResult
@@ -77,7 +75,7 @@ const Link = React.createClass({
 
     if (allowTransition)
       this.context.history.pushState(this.props.state, this.props.to, this.props.query)
-  },
+  }
 
   componentWillMount() {
     warning(
@@ -86,13 +84,13 @@ const Link = React.createClass({
       'some features including real hrefs, active styling, and navigation ' +
       'will not function correctly'
     )
-  },
+  }
 
   render() {
     const { history } = this.context
     const { activeClassName, activeStyle, onlyActiveOnIndex, to, query, state, onClick, ...props } = this.props
 
-    props.onClick = this.handleClick
+    props.onClick = (e) => this.handleClick(e)
 
     // Ignore if rendered outside the context
     // of history, simplifies unit testing.
@@ -110,9 +108,9 @@ const Link = React.createClass({
       }
     }
 
-    return React.createElement('a', props)
+    return <a {...props} />
   }
 
-})
+}
 
 export default Link

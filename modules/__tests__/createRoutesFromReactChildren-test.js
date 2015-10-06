@@ -8,7 +8,7 @@ import Route from '../Route'
 
 describe('createRoutesFromReactChildren', function () {
 
-  const Parent = React.createClass({
+  class Parent extends React.Component {
     render() {
       return (
         <div>
@@ -17,19 +17,19 @@ describe('createRoutesFromReactChildren', function () {
         </div>
       )
     }
-  })
+  }
 
-  const Hello = React.createClass({
+  class Hello extends React.Component {
     render() {
       return <div>Hello</div>
     }
-  })
+  }
 
-  const Goodbye = React.createClass({
+  class Goodbye extends React.Component {
     render() {
       return <div>Goodbye</div>
     }
-  })
+  }
 
   it('works with index routes', function () {
     const routes = createRoutesFromReactChildren(

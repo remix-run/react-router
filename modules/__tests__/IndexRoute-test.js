@@ -7,19 +7,19 @@ import IndexRoute from '../IndexRoute'
 import Router from '../Router'
 import Route from '../Route'
 
-describe('an <IndexRoute/>', function () {
+describe('An <IndexRoute>', function () {
 
-  const Parent = React.createClass({
+  class Parent extends React.Component {
     render() {
       return <div>parent {this.props.children}</div>
     }
-  })
+  }
 
-  const Child = React.createClass({
+  class Child extends React.Component {
     render() {
       return <div>child </div>
     }
-  })
+  }
 
   let node
   beforeEach(function () {

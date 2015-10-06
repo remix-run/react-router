@@ -13,9 +13,9 @@ const { func, object } = React.PropTypes
  * a router that renders a <RoutingContext> with all the props
  * it needs each time the URL changes.
  */
-const Router = React.createClass({
+class Router extends React.Component {
 
-  propTypes: {
+  static propTypes = {
     history: object,
     children: routes,
     routes, // alias for children
@@ -24,16 +24,18 @@ const Router = React.createClass({
     onUpdate: func,
     parseQueryString: func,
     stringifyQuery: func
-  },
+  }
 
-  getInitialState() {
-    return {
+  constructor(props, context) {
+    super(props, context)
+
+    this.state = {
       location: null,
       routes: null,
       params: null,
       components: null
     }
-  },
+  }
 
   handleError(error) {
     if (this.props.onError) {
@@ -42,7 +44,7 @@ const Router = React.createClass({
       // Throw errors by default so we don't silently swallow them!
       throw error // This error probably occurred in getChildRoutes or getComponents.
     }
-  },
+  }
 
   componentWillMount() {
     let { history, children, routes, parseQueryString, stringifyQuery } = this.props
@@ -61,19 +63,19 @@ const Router = React.createClass({
         this.setState(state, this.props.onUpdate)
       }
     })
-  },
+  }
 
   componentWillReceiveProps(nextProps) {
     warning(
       nextProps.history === this.props.history,
       'You cannot change <Router history>; it will be ignored'
     )
-  },
+  }
 
   componentWillUnmount() {
     if (this._unlisten)
       this._unlisten()
-  },
+  }
 
   render() {
     let { location, routes, params, components } = this.state
@@ -92,6 +94,6 @@ const Router = React.createClass({
     })
   }
 
-})
+}
 
 export default Router

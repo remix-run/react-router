@@ -9,32 +9,32 @@ import Router from '../Router'
 
 describe('When a router enters a branch', function () {
 
-  let node, Dashboard, NewsFeed, Inbox, DashboardRoute, NewsFeedRoute, InboxRoute, RedirectToInboxRoute, MessageRoute, routes
+  class Dashboard extends React.Component {
+    render() {
+      return (
+        <div className="Dashboard">
+          <h1>The Dashboard</h1>
+          {this.props.children}
+        </div>
+      )
+    }
+  }
+
+  class NewsFeed extends React.Component {
+    render() {
+      return <div>News</div>
+    }
+  }
+
+  class Inbox extends React.Component {
+    render() {
+      return <div>Inbox</div>
+    }
+  }
+
+  let node, DashboardRoute, NewsFeedRoute, InboxRoute, RedirectToInboxRoute, MessageRoute, routes
   beforeEach(function () {
     node = document.createElement('div')
-
-    Dashboard = React.createClass({
-      render() {
-        return (
-          <div className="Dashboard">
-            <h1>The Dashboard</h1>
-            {this.props.children}
-          </div>
-        )
-      }
-    })
-
-    NewsFeed = React.createClass({
-      render() {
-        return <div>News</div>
-      }
-    })
-
-    Inbox = React.createClass({
-      render() {
-        return <div>Inbox</div>
-      }
-    })
 
     NewsFeedRoute = {
       path: 'news',

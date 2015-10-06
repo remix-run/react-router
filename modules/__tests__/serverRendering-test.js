@@ -8,66 +8,63 @@ import Link from '../Link'
 
 describe('server rendering', function () {
 
-  let App, Dashboard, About, RedirectRoute, AboutRoute, DashboardRoute, routes
-  beforeEach(function () {
-    App = React.createClass({
-      render() {
-        return (
-          <div className="App">
-            <h1>App</h1>
-            <Link to="/about" activeClassName="about-is-active">About</Link>{' '}
-            <Link to="/dashboard" activeClassName="dashboard-is-active">Dashboard</Link>
-            <div>
-              {this.props.children}
-            </div>
+  class App extends React.Component {
+    render() {
+      return (
+        <div className="App">
+          <h1>App</h1>
+          <Link to="/about" activeClassName="about-is-active">About</Link>{' '}
+          <Link to="/dashboard" activeClassName="dashboard-is-active">Dashboard</Link>
+          <div>
+            {this.props.children}
           </div>
-        )
-      }
-    })
-
-    Dashboard = React.createClass({
-      render() {
-        return (
-          <div className="Dashboard">
-            <h1>The Dashboard</h1>
-          </div>
-        )
-      }
-    })
-
-    About = React.createClass({
-      render() {
-        return (
-          <div className="About">
-            <h1>About</h1>
-          </div>
-        )
-      }
-    })
-
-    DashboardRoute = {
-      path: '/dashboard',
-      component: Dashboard
+        </div>
+      )
     }
+  }
 
-    AboutRoute = {
-      path: '/about',
-      component: About
+  class Dashboard extends React.Component {
+    render() {
+      return (
+        <div className="Dashboard">
+          <h1>The Dashboard</h1>
+        </div>
+      )
     }
+  }
 
-    RedirectRoute = {
-      path: '/company',
-      onEnter(nextState, replaceState) {
-        replaceState(null, '/about')
-      }
+  class About extends React.Component {
+    render() {
+      return (
+        <div className="About">
+          <h1>About</h1>
+        </div>
+      )
     }
+  }
 
-    routes = {
-      path: '/',
-      component: App,
-      childRoutes: [ DashboardRoute, AboutRoute, RedirectRoute ]
+  const DashboardRoute = {
+    path: '/dashboard',
+    component: Dashboard
+  }
+
+  const AboutRoute = {
+    path: '/about',
+    component: About
+  }
+
+  const RedirectRoute = {
+    path: '/company',
+    onEnter(nextState, replaceState) {
+      replaceState(null, '/about')
     }
-  })
+  }
+
+  const routes = {
+    path: '/',
+    component: App,
+    childRoutes: [ DashboardRoute, AboutRoute, RedirectRoute ]
+  }
 
   it('works', function (done) {
     match({ routes, location: '/dashboard' }, function (error, redirectLocation, renderProps) {
@@ -85,7 +82,7 @@ describe('server rendering', function () {
         <RoutingContext {...renderProps} />
       )
       expect(string).toMatch(/about-is-active/)
-      //expect(string).toNotMatch(/dashboard-is-active/) TODO add toNotMatch to expect
+      expect(string).toNotMatch(/dashboard-is-active/)
       done()
     })
   })

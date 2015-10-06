@@ -16,16 +16,20 @@ describe('a Route Component', function () {
   })
 
   it('injects the right props', function (done) {
-    const Parent = React.createClass({
+    class Parent extends React.Component {
       componentDidMount() {
         assertProps(this.props)
-      },
-      render() { return null }
-    })
+      }
+      render() {
+        return null
+      }
+    }
 
-    const Child = React.createClass({
-      render() { return null }
-    })
+    class Child extends React.Component {
+      render() {
+        return null
+      }
+    }
 
     const child = { path: 'child', component: Child }
     const parent = { path: '/', component: Parent, childRoutes: [ child ] }

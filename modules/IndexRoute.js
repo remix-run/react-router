@@ -10,30 +10,26 @@ const { bool, func } = React.PropTypes
  * An <IndexRoute> is used to specify its parent's <Route indexRoute> in
  * a JSX route config.
  */
-const IndexRoute = React.createClass({
+class IndexRoute extends React.Component {
 
-  statics: {
-
-    createRouteFromReactElement(element, parentRoute) {
-      if (parentRoute) {
-        parentRoute.indexRoute = createRouteFromReactElement(element)
-      } else {
-        warning(
-          false,
-          'An <IndexRoute> does not make sense at the root of your route config'
-        )
-      }
+  static createRouteFromReactElement(element, parentRoute) {
+    if (parentRoute) {
+      parentRoute.indexRoute = createRouteFromReactElement(element)
+    } else {
+      warning(
+        false,
+        'An <IndexRoute> does not make sense at the root of your route config'
+      )
     }
+  }
 
-  },
-
-  propTypes: {
+  static propTypes = {
     path: falsy,
     ignoreScrollBehavior: bool,
     component,
     components,
     getComponents: func
-  },
+  }
 
   render() {
     invariant(
@@ -42,6 +38,6 @@ const IndexRoute = React.createClass({
     )
   }
 
-})
+}
 
 export default IndexRoute

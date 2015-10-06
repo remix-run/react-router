@@ -13,17 +13,17 @@ const { click } = React.addons.TestUtils.Simulate
 
 describe('A <Link>', function () {
 
-  const Hello = React.createClass({
+  class Hello extends React.Component {
     render() {
       return <div>Hello {this.props.params.name}!</div>
     }
-  })
+  }
 
-  const Goodbye = React.createClass({
+  class Goodbye extends React.Component {
     render() {
       return <div>Goodbye</div>
     }
-  })
+  }
 
   let node
   beforeEach(function () {
@@ -31,11 +31,11 @@ describe('A <Link>', function () {
   })
 
   it('knows how to make its href', function () {
-    const LinkWrapper = React.createClass({
+    class LinkWrapper extends React.Component {
       render() {
         return <Link to="/hello/michael" query={{ the: 'query' }}>Link</Link>
       }
-    })
+    }
 
     React.render((
       <Router history={createHistory('/')}>
@@ -50,11 +50,11 @@ describe('A <Link>', function () {
   // This test needs to be in its own file with beforeEach(resetHash).
   //
   //it('knows how to make its href with HashHistory', function () {
-  //  const LinkWrapper = React.createClass({
+  //  class LinkWrapper extends React.Component {
   //    render() {
   //      return <Link to="/hello/michael" query={{the: 'query'}}>Link</Link>
   //    }
-  //  })
+  //  }
 
   //  render((
   //    <Router history={new HashHistory}>
@@ -67,7 +67,7 @@ describe('A <Link>', function () {
   //})
 
   describe('with params', function () {
-    const App = React.createClass({
+    class App extends React.Component {
       render() {
         return (
           <div>
@@ -76,7 +76,7 @@ describe('A <Link>', function () {
           </div>
         )
       }
-    })
+    }
 
     it('is active when its params match', function (done) {
       React.render((
@@ -108,8 +108,8 @@ describe('A <Link>', function () {
   })
 
   describe('when its route is active and className is empty', function () {
-    it('it shouldn\'t have an active class', function (done) {
-      const LinkWrapper = React.createClass({
+    it("it shouldn't have an active class", function (done) {
+      class LinkWrapper extends React.Component {
         render() {
           return (
             <div>
@@ -118,7 +118,7 @@ describe('A <Link>', function () {
             </div>
           )
         }
-      })
+      }
 
       let a
       const steps = [
@@ -147,7 +147,7 @@ describe('A <Link>', function () {
 
   describe('when its route is active', function () {
     it.skip('has its activeClassName', function (done) {
-      const LinkWrapper = React.createClass({
+      class LinkWrapper extends React.Component {
         render() {
           return (
             <div>
@@ -156,7 +156,7 @@ describe('A <Link>', function () {
             </div>
           )
         }
-      })
+      }
 
       let a
       const steps = [
@@ -183,7 +183,7 @@ describe('A <Link>', function () {
     })
 
     it.skip('has its activeStyle', function (done) {
-      const LinkWrapper = React.createClass({
+      class LinkWrapper extends React.Component {
         render() {
           return (
             <div>
@@ -192,7 +192,7 @@ describe('A <Link>', function () {
             </div>
           )
         }
-      })
+      }
 
       let a
       const steps = [
@@ -221,10 +221,10 @@ describe('A <Link>', function () {
 
   describe('when route changes', function () {
     it.skip('changes active state', function (done) {
-      const LinkWrapper = React.createClass({
+      class LinkWrapper extends React.Component {
         shouldComponentUpdate() {
           return false
-        },
+        }
         render() {
           return (
             <div>
@@ -233,7 +233,7 @@ describe('A <Link>', function () {
             </div>
           )
         }
-      })
+      }
 
       let a
       const steps = [
@@ -262,16 +262,16 @@ describe('A <Link>', function () {
 
   describe('when clicked', function () {
     it('calls a user defined click handler', function (done) {
-      const LinkWrapper = React.createClass({
+      class LinkWrapper extends React.Component {
         handleClick(event) {
           event.preventDefault()
           assert.ok(true)
           done()
-        },
-        render() {
-          return <Link to="/hello" onClick={this.handleClick}>Link</Link>
         }
-      })
+        render() {
+          return <Link to="/hello" onClick={(e) => this.handleClick(e)}>Link</Link>
+        }
+      }
 
       React.render((
         <Router history={createHistory('/')}>
@@ -284,14 +284,14 @@ describe('A <Link>', function () {
     })
 
     it('transitions to the correct route', function (done) {
-      const LinkWrapper = React.createClass({
+      class LinkWrapper extends React.Component {
         handleClick() {
           // just here to make sure click handlers don't prevent it from happening
-        },
-        render() {
-          return <Link to="/hello" onClick={this.handleClick}>Link</Link>
         }
-      })
+        render() {
+          return <Link to="/hello" onClick={(e) => this.handleClick(e)}>Link</Link>
+        }
+      }
 
       const steps = [
         function () {

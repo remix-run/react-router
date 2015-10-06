@@ -18,13 +18,13 @@ describe('History Mixin', function () {
   })
 
   it('assigns the history to the component instance', function (done) {
-    let history = createHistory('/')
+    const history = createHistory('/')
 
     function assertHistory() {
       expect(this.history).toExist()
     }
 
-    let Component = React.createClass({
+    const Component = React.createClass({
       mixins: [ History ],
       componentWillMount: assertHistory,
       render() { return null }
