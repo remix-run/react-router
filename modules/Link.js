@@ -12,7 +12,7 @@ function isModifiedEvent(event) {
 }
 
 function isEmptyObject(object) {
-  for (const p in object)
+  for (let p in object)
     if (object.hasOwnProperty(p))
       return false
 
