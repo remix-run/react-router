@@ -2,9 +2,8 @@
 /*eslint react/prop-types: 0*/
 import expect from 'expect'
 import React from 'react'
-import createMemoryHistory from 'history/lib/createMemoryHistory'
-import RoutingContext from '../RoutingContext'
 import match from '../match'
+import RoutingContext from '../RoutingContext'
 import Link from '../Link'
 
 describe('server rendering', function () {
@@ -71,9 +70,7 @@ describe('server rendering', function () {
   })
 
   it('works', function (done) {
-    const history = createMemoryHistory()
-    const location = history.createLocation('/dashboard')
-    match({ routes, history, location }, function (error, redirectLocation, renderProps) {
+    match({ routes, location: '/dashboard' }, function (error, redirectLocation, renderProps) {
       const string = React.renderToString(
         <RoutingContext {...renderProps} />
       )
@@ -83,9 +80,7 @@ describe('server rendering', function () {
   })
 
   it('renders active Links as active', function (done) {
-    const history = createMemoryHistory()
-    const location = history.createLocation('/about')
-    match({ routes, history, location }, function (error, redirectLocation, renderProps) {
+    match({ routes, location: '/about' }, function (error, redirectLocation, renderProps) {
       const string = React.renderToString(
         <RoutingContext {...renderProps} />
       )
@@ -96,9 +91,7 @@ describe('server rendering', function () {
   })
 
   it('sends the redirect location', function (done) {
-    const history = createMemoryHistory()
-    const location = history.createLocation('/company')
-    match({ routes, history, location }, function (error, redirectLocation) {
+    match({ routes, location: '/company' }, function (error, redirectLocation) {
       expect(redirectLocation).toExist()
       expect(redirectLocation.pathname).toEqual('/about')
       expect(redirectLocation.search).toEqual('')
@@ -109,9 +102,7 @@ describe('server rendering', function () {
   })
 
   it('sends null values when no routes match', function (done) {
-    const history = createMemoryHistory()
-    const location = history.createLocation('/no-match')
-    match({ routes, history, location }, function (error, redirectLocation, state) {
+    match({ routes, location: '/no-match' }, function (error, redirectLocation, state) {
       expect(error).toNotExist()
       expect(redirectLocation).toNotExist()
       expect(state).toNotExist()
