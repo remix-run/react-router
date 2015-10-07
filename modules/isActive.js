@@ -1,11 +1,5 @@
 import { matchPattern } from './PatternUtils'
 import deepEqual from 'deep-equal'
-/**
- * Returns true if the given pathname matches the active pathname.
- */
-function pathnameIsActive(pathname, activePathname) { // eslint-disable-line no-unused-vars
-  return pathname === activePathname || activePathname.indexOf(pathname + '/') === 0
-}
 
 function paramsAreActive(paramNames, paramValues, activeParams) {
   return paramNames.every(function (paramName, index) {
