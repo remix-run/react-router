@@ -1,4 +1,5 @@
-import React, { findDOMNode } from 'react'
+import React from 'react'
+import ReactDOM, { findDOMNode } from 'react-dom'
 import { createHistory, useBasename } from 'history'
 import { Router, History, Route, IndexRoute, Link } from 'react-router'
 import ContactStore from './ContactStore'
@@ -155,7 +156,7 @@ var NotFound = React.createClass({
   }
 })
 
-React.render((
+ReactDOM.render((
   <Router history={history}>
     <Route path="/" component={App}>
       <IndexRoute component={Index} />

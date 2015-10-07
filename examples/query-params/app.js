@@ -1,4 +1,5 @@
 import React from 'react'
+import ReactDOM from 'react-dom'
 import { createHistory, useBasename } from 'history'
 import { Router, Route, Link } from 'react-router'
 
@@ -36,7 +37,7 @@ class App extends React.Component {
   }
 }
 
-React.render((
+ReactDOM.render((
   <Router history={history}>
     <Route path="/" component={App}>
       <Route path="user/:userID" component={User} />

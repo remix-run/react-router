@@ -1,4 +1,6 @@
-import React from 'react/addons'
+import React from 'react'
+import ReactDOM from 'react-dom'
+import ReactCSSTransitionGroup from 'react-addons-transition-group'
 import { createHistory, useBasename } from 'history'
 import { Router, Route, Link } from 'react-router'
 
@@ -7,8 +9,6 @@ require('./app.css')
 const history = useBasename(createHistory)({
   basename: '/animations'
 })
-
-const { CSSTransitionGroup } = React.addons
 
 class App extends React.Component {
   render() {
@@ -20,9 +20,9 @@ class App extends React.Component {
           <li><Link to="/page1">Page 1</Link></li>
           <li><Link to="/page2">Page 2</Link></li>
         </ul>
-        <CSSTransitionGroup component="div" transitionName="example">
+        <ReactCSSTransitionGroup component="div" transitionName="example">
           {React.cloneElement(this.props.children || <div />, { key: pathname })}
-        </CSSTransitionGroup>
+        </ReactCSSTransitionGroup>
       </div>
     )
   }
@@ -50,7 +50,7 @@ class Page2 extends React.Component {
   }
 }
 
-React.render((
+ReactDOM.render((
   <Router history={history}>
     <Route path="/" component={App}>
       <Route path="page1" component={Page1} />

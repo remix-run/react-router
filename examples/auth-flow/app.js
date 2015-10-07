@@ -1,4 +1,5 @@
-import React, { findDOMNode } from 'react'
+import React from 'react'
+import ReactDOM, { findDOMNode } from 'react-dom'
 import { Router, Route, Link, History } from 'react-router'
 import { createHistory, useBasename } from 'history'
 import auth from './auth'
@@ -123,7 +124,7 @@ function requireAuth(nextState, replaceState) {
     replaceState({ nextPathname: nextState.location.pathname }, '/login')
 }
 
-React.render((
+ReactDOM.render((
   <Router history={history}>
     <Route path="/" component={App}>
       <Route path="login" component={Login} />
