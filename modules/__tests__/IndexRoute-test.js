@@ -2,6 +2,7 @@
 /*eslint react/prop-types: 0*/
 import expect from 'expect'
 import React from 'react'
+import ReactDOM from 'react-dom'
 import createHistory from 'history/lib/createMemoryHistory'
 import IndexRoute from '../IndexRoute'
 import Router from '../Router'
@@ -27,11 +28,11 @@ describe('An <IndexRoute>', function () {
   })
 
   afterEach(function () {
-    React.unmountComponentAtNode(node)
+    ReactDOM.unmountComponentAtNode(node)
   })
 
   it('renders when its parent’s url matches exactly', function (done) {
-    React.render((
+    ReactDOM.render((
       <Router history={createHistory('/')}>
         <Route path="/" component={Parent}>
           <IndexRoute component={Child}/>
@@ -45,7 +46,7 @@ describe('An <IndexRoute>', function () {
 
   describe('nested deeply in the route hierarchy', function () {
     it('renders when its parent’s url matches exactly', function (done) {
-      React.render((
+      ReactDOM.render((
         <Router history={createHistory('/test')}>
           <Route path="/" component={Parent}>
             <IndexRoute component={Child}/>

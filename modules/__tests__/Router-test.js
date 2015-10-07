@@ -2,6 +2,7 @@
 /*eslint react/prop-types: 0*/
 import expect from 'expect'
 import React from 'react'
+import ReactDOM from 'react-dom'
 import createHistory from 'history/lib/createMemoryHistory'
 import Router from '../Router'
 import Route from '../Route'
@@ -26,11 +27,11 @@ describe('Router', function () {
   })
 
   afterEach(function () {
-    React.unmountComponentAtNode(node)
+    ReactDOM.unmountComponentAtNode(node)
   })
 
   it('renders routes', function (done) {
-    React.render((
+    ReactDOM.render((
       <Router history={createHistory('/')}>
         <Route path="/" component={Parent} />
       </Router>
@@ -41,7 +42,7 @@ describe('Router', function () {
   })
 
   it('renders child routes when the parent does not have a path', function (done) {
-    React.render((
+    ReactDOM.render((
       <Router history={createHistory('/')}>
         <Route component={Parent}>
           <Route component={Parent}>
@@ -56,7 +57,7 @@ describe('Router', function () {
   })
 
   it('renders nested children correctly', function (done) {
-    React.render((
+    ReactDOM.render((
       <Router history={createHistory('/hello')}>
         <Route component={Parent}>
           <Route path="hello" component={Child} />
@@ -70,7 +71,7 @@ describe('Router', function () {
   })
 
   it("renders the child's component when it has no component", function (done) {
-    React.render((
+    ReactDOM.render((
       <Router history={createHistory('/hello')}>
         <Route>
           <Route path="hello" component={Child} />
@@ -96,7 +97,7 @@ describe('Router', function () {
       }
     }
 
-    React.render((
+    ReactDOM.render((
       <Router history={createHistory('/')} createElement={Component => <Wrapper Component={Component} />}>
         <Route path="/" component={Component}/>
       </Router>
@@ -130,7 +131,7 @@ describe('Router', function () {
         }
       }
 
-      React.render((
+      ReactDOM.render((
         <Router history={createHistory('/')}>
           <Route component={Parent}>
             <Route path="/" components={{ sidebar: Sidebar, content: Content }} />
@@ -152,7 +153,7 @@ describe('Router', function () {
         }
       }
 
-      React.render((
+      ReactDOM.render((
         <Router history={createHistory('/point/aaa%2Bbbb')}>
           <Route path="point/:someToken" component={MyComponent} />
         </Router>
@@ -176,7 +177,7 @@ describe('Router', function () {
         }
       }
 
-      React.render((
+      ReactDOM.render((
         <Router history={createHistory('/point/aaa%2Bbbb')}>
           <Route component={MyWrapperComponent}>
             <Route path="point/:someToken" component={MyComponent} />
@@ -196,7 +197,7 @@ describe('Router', function () {
         }
       }
 
-      React.render((
+      ReactDOM.render((
         <Router history={createHistory('/ns/aaa:bbb/bar')}>
           <Route path="ns/:foo/bar" component={MyComponent} />
         </Router>
@@ -214,7 +215,7 @@ describe('Router', function () {
         }
       }
 
-      React.render((
+      ReactDOM.render((
         <Router history={createHistory('/company/CADENCE%20DESIGN%20SYSTEM%20INC%20NOTE%202.625%25%2060')}>
           <Route path="/company/:name" component={MyComponent} />
         </Router>
@@ -238,7 +239,7 @@ describe('Router', function () {
         }
       }
 
-      React.render((
+      ReactDOM.render((
         <Router history={createHistory('/apple%2Fbanana')}>
           <Route component={Parent}>
             <Route path='/:name' component={Child} />
