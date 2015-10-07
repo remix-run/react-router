@@ -1,6 +1,7 @@
 /*eslint-env mocha */
 import expect from 'expect'
 import React from 'react'
+import ReactDOM from 'react-dom'
 import createHistory from 'history/lib/createMemoryHistory'
 import Redirect from '../Redirect'
 import Router from '../Router'
@@ -14,11 +15,11 @@ describe('A <Redirect>', function () {
   })
 
   afterEach(function () {
-    React.unmountComponentAtNode(node)
+    ReactDOM.unmountComponentAtNode(node)
   })
 
   it('works', function (done) {
-    React.render((
+    ReactDOM.render((
       <Router history={createHistory('/notes/5')}>
         <Route path="/messages/:id" />
         <Redirect from="/notes/:id" to="/messages/:id" />
@@ -30,7 +31,7 @@ describe('A <Redirect>', function () {
   })
 
   it('works with relative paths', function (done) {
-    React.render((
+    ReactDOM.render((
       <Router history={createHistory('/nested/route1')}>
         <Route path="nested">
           <Route path="route2" />
@@ -44,7 +45,7 @@ describe('A <Redirect>', function () {
   })
 
   it('works with relative paths with param', function (done) {
-    React.render((
+    ReactDOM.render((
       <Router history={createHistory('/nested/1/route1')}>
         <Route path="nested/:id">
           <Route path="route2" />

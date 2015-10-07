@@ -1,6 +1,7 @@
 /*eslint-env mocha */
 import expect from 'expect'
 import React from 'react'
+import ReactDOM from 'react-dom'
 import resetHash from './resetHash'
 import execSteps from './execSteps'
 import Router from '../Router'
@@ -28,7 +29,7 @@ describe('pushState', function () {
   })
 
   afterEach(function () {
-    React.unmountComponentAtNode(node)
+    ReactDOM.unmountComponentAtNode(node)
   })
 
   describe('when the target path contains a colon', function () {
@@ -45,7 +46,7 @@ describe('pushState', function () {
 
       const execNextStep = execSteps(steps, done)
 
-      React.render((
+      ReactDOM.render((
         <Router onUpdate={execNextStep}>
           <Route path="/" component={Index}/>
           <Route path="/home/hi:there" component={Home}/>
