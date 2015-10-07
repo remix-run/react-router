@@ -148,7 +148,7 @@ making it an absolute path.
 If left undefined, the router will try to match the child routes.
 
 ##### `component`
-A single component to be rendered when the route matches the url. It can
+A single component to be rendered when the route matches the URL. It can
 be rendered by the parent route component with `this.props.children`.
 
 ```js
@@ -173,7 +173,7 @@ class App extends React.Component {
 
 ##### `components`
 Routes can define multiple components as an object of `name:component`
-pairs to be rendered when the path matches the url. They can be rendered
+pairs to be rendered when the path matches the URL. They can be rendered
 by the parent route component with `this.props.children[name]`.
 
 ```js
@@ -349,7 +349,7 @@ Note that the `<Redirect>` can be placed anywhere in the route hierarchy, though
 
 ## IndexRoute
 Index Routes allow you to provide a default "child" to a parent
-route when visitor is at the url of the parent, they provide convention
+route when visitor is at the URL of the parent, they provide convention
 for `<IndexLink>` to work.
 
 Please see the [Index Routes guide](/docs/guides/basics/IndexRoutes.md).
@@ -494,7 +494,7 @@ Transitions to a new URL.
 
 ###### arguments
 - `state` - the location state.
-- `pathname` - the full url with or without the query.
+- `pathname` - the full URL with or without the query.
 - `query` - an object that will be stringified by the router.
 
 ##### `replaceState(state, pathname, query)`
@@ -502,7 +502,7 @@ Replaces the current URL with a new one, without affecting the length of the his
 
 ###### arguments
 - `state` - the location state.
-- `pathname` - the full url with or without the query.
+- `pathname` - the full URL with or without the query.
 - `query` - an object that will be stringified by the router.
 
 ##### `go(n)`
@@ -524,7 +524,7 @@ Creates a URL, using the router's config. For example, it will add `#/` in front
 Returns `true` or `false` depending on if the current path is active. Will be true for every route in the route branch matched by the `pathname` (child route is active, therefore parent is too).
 
 ###### arguments
-- `pathname` - the full url with or without the query.
+- `pathname` - the full URL with or without the query.
 - `query` - an object that will be stringified by the router.
 
 #### Examples

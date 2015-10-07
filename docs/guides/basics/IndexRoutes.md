@@ -40,7 +40,7 @@ route for `Home` that can participate in routing.
 ## Index Links
 
 If you were to `<Link to="/">Home</Link>` in this app, it would always
-be active since every url starts with `/`. This is a problem because
+be active since every URL starts with `/`. This is a problem because
 we'd like to link to `Home` but only be active if `Home` is rendered.
 
 To have a link to `/` that is only active when the `Home` route is
