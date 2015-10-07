@@ -20,8 +20,8 @@ function isEmptyObject(object) {
 
 /**
  * A <Link> is used to create an <a> element that links to a route.
- * When that route is active, the link gets an "active" class name
- * (or the value of its `activeClassName` prop).
+ * When that route is active, the link gets the value of its
+ * `activeClassName` prop
  *
  * For example, assuming you have the following route:
  *
