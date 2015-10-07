@@ -4,7 +4,7 @@ import assert from 'assert'
 import expect from 'expect'
 import React from 'react'
 import ReactTestUtils from 'react-addons-test-utils'
-import ReactDOM from 'react-dom'
+import { render } from 'react-dom'
 import createHistory from 'history/lib/createMemoryHistory'
 import execSteps from './execSteps'
 import Router from '../Router'
@@ -39,7 +39,7 @@ describe('A <Link>', function () {
       }
     }
 
-    ReactDOM.render((
+    render((
       <Router history={createHistory('/')}>
         <Route path="/" component={LinkWrapper} />
       </Router>
@@ -81,7 +81,7 @@ describe('A <Link>', function () {
     }
 
     it('is active when its params match', function (done) {
-      ReactDOM.render((
+      render((
         <Router history={createHistory('/hello/michael')}>
           <Route path="/" component={App}>
             <Route path="hello/:name" component={Hello} />
@@ -95,7 +95,7 @@ describe('A <Link>', function () {
     })
 
     it('is not active when its params do not match', function (done) {
-      ReactDOM.render((
+      render((
         <Router history={createHistory('/hello/michael')}>
           <Route path="/" component={App}>
             <Route path="hello/:name" component={Hello} />
@@ -136,7 +136,7 @@ describe('A <Link>', function () {
 
       const execNextStep = execSteps(steps, done)
 
-      ReactDOM.render((
+      render((
         <Router history={createHistory('/goodbye')} onUpdate={execNextStep}>
           <Route path="/" component={LinkWrapper}>
             <Route path="goodbye" component={Goodbye} />
@@ -174,7 +174,7 @@ describe('A <Link>', function () {
 
       const execNextStep = execSteps(steps, done)
 
-      ReactDOM.render((
+      render((
         <Router history={createHistory('/goodbye')} onUpdate={execNextStep}>
           <Route path="/" component={LinkWrapper}>
             <Route path="goodbye" component={Goodbye} />
@@ -210,7 +210,7 @@ describe('A <Link>', function () {
 
       const execNextStep = execSteps(steps, done)
 
-      ReactDOM.render((
+      render((
         <Router history={createHistory('/goodbye')} onUpdate={execNextStep}>
           <Route path="/" component={LinkWrapper}>
             <Route path="hello" component={Hello} />
@@ -251,7 +251,7 @@ describe('A <Link>', function () {
 
       const execNextStep = execSteps(steps, done)
 
-      ReactDOM.render((
+      render((
         <Router history={createHistory('/goodbye')} onUpdate={execNextStep}>
           <Route path="/" component={LinkWrapper}>
             <Route path="goodbye" component={Goodbye} />
@@ -275,7 +275,7 @@ describe('A <Link>', function () {
         }
       }
 
-      ReactDOM.render((
+      render((
         <Router history={createHistory('/')}>
           <Route path="/" component={LinkWrapper} />
           <Route path="/hello" component={Hello} />
@@ -306,7 +306,7 @@ describe('A <Link>', function () {
 
       const execNextStep = execSteps(steps, done)
 
-      ReactDOM.render((
+      render((
         <Router history={createHistory('/')} onUpdate={execNextStep}>
           <Route path="/" component={LinkWrapper} />
           <Route path="/hello" component={Hello} />

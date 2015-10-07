@@ -2,7 +2,7 @@
 /*eslint react/prop-types: 0*/
 import expect, { spyOn } from 'expect'
 import React from 'react'
-import ReactDOM from 'react-dom'
+import { render, unmountComponentAtNode } from 'react-dom'
 import createHistory from 'history/lib/createMemoryHistory'
 import useQueries from 'history/lib/useQueries'
 import execSteps from './execSteps'
@@ -108,14 +108,14 @@ describe('When a router enters a branch', function () {
   })
 
   afterEach(function () {
-    ReactDOM.unmountComponentAtNode(node)
+    unmountComponentAtNode(node)
   })
 
   it('calls the onEnter hooks of all routes in that branch', function (done) {
     const dashboardRouteEnterSpy = spyOn(DashboardRoute, 'onEnter').andCallThrough()
     const newsFeedRouteEnterSpy = spyOn(NewsFeedRoute, 'onEnter').andCallThrough()
 
-    ReactDOM.render(<Router history={createHistory('/news')} routes={routes}/>, node, function () {
+    render(<Router history={createHistory('/news')} routes={routes}/>, node, function () {
       expect(dashboardRouteEnterSpy).toHaveBeenCalled()
       expect(newsFeedRouteEnterSpy).toHaveBeenCalled()
       done()
@@ -128,7 +128,7 @@ describe('When a router enters a branch', function () {
       const redirectRouteLeaveSpy = spyOn(RedirectToInboxRoute, 'onLeave').andCallThrough()
       const inboxEnterSpy = spyOn(InboxRoute, 'onEnter').andCallThrough()
 
-      ReactDOM.render(<Router history={createHistory('/redirect-to-inbox')} routes={routes}/>, node, function () {
+      render(<Router history={createHistory('/redirect-to-inbox')} routes={routes}/>, node, function () {
         expect(this.state.location.pathname).toEqual('/inbox')
         expect(redirectRouteEnterSpy).toHaveBeenCalled()
         expect(redirectRouteLeaveSpy.calls.length).toEqual(0)
@@ -157,7 +157,7 @@ describe('When a router enters a branch', function () {
 
       const execNextStep = execSteps(steps, done)
 
-      ReactDOM.render(
+      render(
         <Router history={createHistory('/inbox')}
                 routes={routes}
                 onUpdate={execNextStep}
@@ -187,7 +187,7 @@ describe('When a router enters a branch', function () {
 
       const execNextStep = execSteps(steps, done)
 
-      ReactDOM.render(
+      render(
         <Router history={createHistory('/messages/123')}
                 routes={routes}
                 onUpdate={execNextStep}
@@ -200,7 +200,7 @@ describe('When a router enters a branch', function () {
       const newsFeedRouteEnterSpy = spyOn(NewsFeedRoute, 'onEnter').andCallThrough()
       const history = useQueries(createHistory)('/inbox')
 
-      ReactDOM.render(<Router history={history} routes={routes}/>, node, function () {
+      render(<Router history={history} routes={routes}/>, node, function () {
         history.pushState(null, '/news', { q: 1 })
         expect(newsFeedRouteEnterSpy.calls.length).toEqual(1)
         history.pushState(null, '/news', { q: 2 })
