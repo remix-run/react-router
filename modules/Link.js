@@ -1,5 +1,4 @@
 import React from 'react'
-import warning from 'warning'
 
 const { bool, object, string, func } = React.PropTypes
 
