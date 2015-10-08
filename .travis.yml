@@ -9,5 +9,5 @@ before_script:
 - sleep 10
 branches:
   except:
-    - latest
-    - "/^v\d/"
+  - latest
+  - "/^v\\d/"
