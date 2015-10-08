@@ -43,12 +43,13 @@ class Link extends React.Component {
   }
 
   static propTypes = {
+    to: string.isRequired,
+    query: object,
+    hash: string,
+    state: object,
     activeStyle: object,
     activeClassName: string,
     onlyActiveOnIndex: bool.isRequired,
-    to: string.isRequired,
-    query: object,
-    state: object,
     onClick: func
   }
 
@@ -77,15 +78,18 @@ class Link extends React.Component {
   }
 
   render() {
-    const { history } = this.context
-    const { activeClassName, activeStyle, onlyActiveOnIndex, to, query, state, onClick, ...props } = this.props
+    const { to, query, hash, state, activeClassName, activeStyle, onlyActiveOnIndex, ...props } = this.props
 
+    // Manually override onClick.
     props.onClick = (e) => this.handleClick(e)
 
-    // Ignore if rendered outside the context
-    // of history, simplifies unit testing.
+    // Ignore if rendered outside the context of history, simplifies unit testing.
+    const { history } = this.context
     if (history) {
       props.href = history.createHref(to, query)
+
+      if (hash)
+        props.href += hash
 
       if (activeClassName || (activeStyle != null && !isEmptyObject(activeStyle))) {
         if (history.isActive(to, query, onlyActiveOnIndex)) {
