@@ -16,14 +16,12 @@ It looks something like this with an imaginary JavaScript server:
 ```js
 import { renderToString } from 'react-dom/server'
 import { match, RoutingContext } from 'react-router'
-import createLocation from 'history/lib/createLocation'
 import routes from './routes'
 
 serve((req, res) => {
   // Note that req.url here should be the full URL path from
   // the original request, including the query string.
-  const location = createLocation(req.url);
-  match({ routes, location }, (error, redirectLocation, renderProps) => {
+  match({ routes, location: req.url }, (error, redirectLocation, renderProps) => {
     if (error) {
       res.send(500, error.message)
     } else if (redirectLocation) {
