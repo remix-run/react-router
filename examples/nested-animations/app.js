@@ -1,4 +1,6 @@
-import React from 'react/addons'
+import React from 'react'
+import { render } from 'react-dom'
+import ReactCSSTransitionGroup from 'react-addons-transition-group'
 import { createHistory, useBasename } from 'history'
 import { Router, Route, Link } from 'react-router'
 
@@ -7,8 +9,6 @@ require('./app.css')
 const history = useBasename(createHistory)({
   basename: '/nested-animations'
 })
-
-const { CSSTransitionGroup } = React.addons
 
 class App extends React.Component {
   render() {
@@ -23,9 +23,9 @@ class App extends React.Component {
           <li><Link to="/page1">Page 1</Link></li>
           <li><Link to="/page2">Page 2</Link></li>
         </ul>
-        <CSSTransitionGroup component="div" transitionName="swap">
+        <ReactCSSTransitionGroup component="div" transitionName="swap">
           {React.cloneElement(this.props.children || <div />, { key: key })}
-        </CSSTransitionGroup>
+        </ReactCSSTransitionGroup>
       </div>
     )
   }
@@ -42,9 +42,9 @@ class Page1 extends React.Component {
           <li><Link to="/page1/tab1">Tab 1</Link></li>
           <li><Link to="/page1/tab2">Tab 2</Link></li>
         </ul>
-        <CSSTransitionGroup component="div" transitionName="example">
+        <ReactCSSTransitionGroup component="div" transitionName="example">
           {React.cloneElement(this.props.children || <div/>, { key: pathname })}
-        </CSSTransitionGroup>
+        </ReactCSSTransitionGroup>
       </div>
     )
   }
@@ -61,9 +61,9 @@ class Page2 extends React.Component {
           <li><Link to="/page2/tab1">Tab 1</Link></li>
           <li><Link to="/page2/tab2">Tab 2</Link></li>
         </ul>
-        <CSSTransitionGroup component="div" transitionName="example">
+        <ReactCSSTransitionGroup component="div" transitionName="example">
           {React.cloneElement(this.props.children || <div/>, { key: pathname })}
-        </CSSTransitionGroup>
+        </ReactCSSTransitionGroup>
       </div>
     )
   }
@@ -91,7 +91,7 @@ class Tab2 extends React.Component {
   }
 }
 
-React.render((
+render((
   <Router history={history}>
     <Route path="/" component={App}>
       <Route path="page1" component={Page1}>

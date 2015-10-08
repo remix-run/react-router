@@ -1,5 +1,6 @@
 /*eslint-disable no-unused-vars */
 import React from 'react'
+import { render } from 'react-dom'
 import { createHistory, useBasename } from 'history'
 import { Router } from 'react-router'
 import stubbedCourses from './stubs/COURSES'
@@ -23,7 +24,7 @@ const rootRoute = {
   } ]
 }
 
-React.render(
+render(
   <Router history={history} routes={rootRoute} />,
   document.getElementById('example')
 )

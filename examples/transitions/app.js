@@ -1,4 +1,5 @@
 import React from 'react'
+import { render } from 'react-dom'
 import { createHistory, useBasename } from 'history'
 import { Router, Route, Link, History, Lifecycle } from 'react-router'
 
@@ -69,7 +70,7 @@ const Form = React.createClass({
   }
 })
 
-React.render((
+render((
   <Router history={history}>
     <Route path="/" component={App}>
       <Route path="dashboard" component={Dashboard} />
