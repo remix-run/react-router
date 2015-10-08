@@ -1,5 +1,28 @@
 import { matchPattern } from './PatternUtils'
-import deepEqual from 'deep-equal'
+
+function deepEqual(a, b) {
+  if (a == b)
+    return true
+
+  if (a == null || b == null)
+    return false
+
+  if (Array.isArray(a)) {
+    return Array.isArray(b) && a.length === b.length && a.every(function (item, index) {
+      return deepEqual(item, b[index])
+    })
+  }
+
+  if (typeof a === 'object') {
+    for (let p in a)
+      if (a.hasOwnProperty(p) && (!b.hasOwnProperty(p) || !deepEqual(a[p], b[p])))
+        return false
+
+    return true
+  }
+
+  return String(a) === String(b)
+}
 
 function paramsAreActive(paramNames, paramValues, activeParams) {
   return paramNames.every(function (paramName, index) {
@@ -11,10 +34,6 @@ function getMatchingRoute(pathname, activeRoutes, activeParams) {
   let route, pattern, basename = ''
   for (let i = 0, len = activeRoutes.length; i < len; ++i) {
     route = activeRoutes[i]
-
-    //if (!route.path)
-    //  return false
-
     pattern = route.path || ''
 
     if (pattern.charAt(0) !== '/')
