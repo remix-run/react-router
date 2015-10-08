@@ -22,7 +22,7 @@ describe('isActive', function () {
     describe('with no query', function () {
       it('is active', function (done) {
         React.render((
-          <Router history={createHistory('/home')}>
+          <Router history={createHistory('/home?the=query')}>
             <Route path="/home" />
           </Router>
         ), node, function () {
@@ -40,6 +40,19 @@ describe('isActive', function () {
           </Router>
         ), node, function () {
           expect(this.history.isActive('/home', { the: 'query' })).toBe(true)
+          done()
+        })
+      })
+    })
+
+    describe('with a query that also matches by value, but not by type', function () {
+      it('is active', function (done) {
+        React.render((
+          <Router history={createHistory('/home?the=query&n=2&show=false')}>
+            <Route path="/home" />
+          </Router>
+        ), node, function () {
+          expect(this.history.isActive('/home', { the: 'query', n: 2, show: false })).toBe(true)
           done()
         })
       })

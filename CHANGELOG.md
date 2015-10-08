@@ -1,3 +1,38 @@
+v1.0.0-rc2 - Thu, 08 Oct 2015 05:06:02 GMT
+------------------------------------------
+
+- [bdab3d8](../../commit/bdab3d8) [fixed] Compare query by string value
+- [c43fb61](../../commit/c43fb61) [added] <Link hash> prop
+- [24e7b4f](../../commit/24e7b4f) [fixed] isActive on nested IndexLink
+- [160c5ba](../../commit/160c5ba) [fixed] Removed <Link> warning about no history in context
+- [ca9e3b7](../../commit/ca9e3b7) [added] IndexRedirect
+- [428da54](../../commit/428da54) [added] Support <Redirect to="relative/path">
+- [ebb8d20](../../commit/ebb8d20) [fixed] Remove direct calls to createLocation.
+- [fc8a7a4](../../commit/fc8a7a4) [changed] Run examples using HTML5 history
+- [37d9bac](../../commit/37d9bac) [fixed] isActive on <Link onlyActiveOnIndex>
+- [be37196](../../commit/be37196) [fixed] Actually update state when there are transition hooks
+- [b8f1abe](../../commit/b8f1abe) [changed] Removed (un)registerRouteHook
+- [69a9240](../../commit/69a9240) [fixed] Added missing IndexLink to exports
+- [5fbe933](../../commit/5fbe933) [changed] Do not add "active" class by default
+- [85c699c](../../commit/85c699c) [changed] State -> IsActive
+- [94509e7](../../commit/94509e7) [added] IndexLink
+- [adc0a2f](../../commit/adc0a2f) [added] IndexRoute
+- [b86509a](../../commit/b86509a) [added] useRoutes history enhancer [added] RoutingContext component [added] RouteContext mixin [added] Lifecycle mixin
+- [e72812d](../../commit/e72812d) [added] <Router initialState>
+- [4c6dc1b](../../commit/4c6dc1b) [fixed] Installing on Windows
+- [042cffc](../../commit/042cffc) [changed] Removed histories/added history dep
+- [af7eb55](../../commit/af7eb55) [added] History.onBeforeChange
+- [f4ed900](../../commit/f4ed900) [fixed] correctly updates the window scroll position
+- [587e54f](../../commit/587e54f) [added] static `history` singleton getter for `HashHistory` and `BrowserHistory`
+- [5bd62b5](../../commit/5bd62b5) [fixed] errors in examples
+- [4e2ca3c](../../commit/4e2ca3c) [fixed] URI escape path components with special chars
+- [0630488](../../commit/0630488) [fixed] Link module adds extra space
+- [26400c1](../../commit/26400c1) [fixed] Use encodeURI for splat params
+- [178efc3](../../commit/178efc3) [fixed] <Link href> when using HashHistory
+- [41bd525](../../commit/41bd525) [fixed] Properly escape splats
+- [4759961](../../commit/4759961) [fixed] URLUtils recognize values containing \n
+
+
 v0.13.4 - Tue, 06 Oct 2015 13:13:28 GMT
 ---------------------------------------
 
