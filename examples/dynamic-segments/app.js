@@ -1,5 +1,5 @@
 import React from 'react'
-import ReactDOM from 'react-dom'
+import { render } from 'react-dom'
 import { Router, Route, Link, Redirect } from 'react-router'
 import { createHistory, useBasename } from 'history'
 
@@ -51,7 +51,7 @@ class Task extends React.Component {
   }
 }
 
-ReactDOM.render((
+render((
   <Router history={history}>
     <Route path="/" component={App}>
       <Route path="user/:userID" component={User}>

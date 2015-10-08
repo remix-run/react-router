@@ -1,5 +1,5 @@
 import React from 'react'
-import ReactDOM from 'react-dom'
+import { render } from 'react-dom'
 import { createHistory, useBasename } from 'history'
 import { Router, Route, IndexRoute, Link } from 'react-router'
 
@@ -140,7 +140,7 @@ const Picture = React.createClass({
   }
 })
 
-ReactDOM.render((
+render((
   <Router history={history}>
     <Route path="/" component={App}>
       <IndexRoute component={Index}/>

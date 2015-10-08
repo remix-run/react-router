@@ -1,5 +1,5 @@
 import React from 'react'
-import ReactDOM from 'react-dom'
+import { render } from 'react-dom'
 import { createHistory, useBasename } from 'history'
 import { Router, Route, Link, History } from 'react-router'
 
@@ -79,7 +79,7 @@ const Taco = React.createClass({
   }
 })
 
-ReactDOM.render((
+render((
   <Router history={history}>
     <Route path="/" component={App}>
       <Route path="taco/:name" component={Taco} />

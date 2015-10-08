@@ -1,5 +1,5 @@
 import React from 'react'
-import ReactDOM from 'react-dom'
+import { render } from 'react-dom'
 import ReactCSSTransitionGroup from 'react-addons-transition-group'
 import { createHistory, useBasename } from 'history'
 import { Router, Route, Link } from 'react-router'
@@ -91,7 +91,7 @@ class Tab2 extends React.Component {
   }
 }
 
-ReactDOM.render((
+render((
   <Router history={history}>
     <Route path="/" component={App}>
       <Route path="page1" component={Page1}>
