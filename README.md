@@ -28,7 +28,7 @@ We support all browsers and environments where React runs.
 
 #### npm + webpack/browserify
 
-    $ npm install react-router@1.0.0-rc2
+    $ npm install react-router@1.0.0-rc3
 
 Then with a module bundler or webpack, use as you would anything else:
 
