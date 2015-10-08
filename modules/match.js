@@ -18,6 +18,7 @@ const createHistory = useRoutes(useBasename(createMemoryHistory))
 function match({
   routes,
   location,
+  state,
   parseQueryString,
   stringifyQuery,
   basename
@@ -36,7 +37,7 @@ function match({
 
   // Allow match({ location: '/the/path', ... })
   if (typeof location === 'string')
-    location = history.createLocation(location)
+    location = history.createLocation(location, state)
 
   history.match(location, function (error, redirectLocation, nextState) {
     callback(error, redirectLocation, nextState && { ...nextState, history })
