@@ -1,6 +1,6 @@
 {
   "name": "react-router",
-  "version": "1.0.0-rc1",
+  "version": "1.0.0-rc2",
   "description": "A complete routing library for React.js",
   "main": "lib/index",
   "repository": {
@@ -25,7 +25,6 @@
   ],
   "license": "MIT",
   "dependencies": {
-    "deep-equal": "^1.0.0",
     "history": "1.12.1",
     "invariant": "^2.0.0",
     "warning": "^2.0.0"
@@ -54,7 +53,7 @@
     "mocha": "^2.0.1",
     "qs": "^4.0.0",
     "react": "0.14.0",
-    "react-addons-test-utils": "^0.14.0",
+    "react-addons-test-utils": "0.14.0",
     "react-dom": "0.14.0",
     "rf-changelog": "^0.4.0",
     "style-loader": "^0.12.4",

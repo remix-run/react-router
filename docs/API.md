@@ -85,10 +85,13 @@ A `<Link>` also knows when the route it links to is active and automatically app
 
 #### Props
 ##### `to`
-The path to link to, e.g., `/users/123`.
+The path to link to, e.g. `/users/123`.
 
 ##### `query`
 An object of key:value pairs to be stringified.
+
+##### `hash`
+A hash to put in the URL, e.g. `#a-hash`.
 
 ##### `state`
 State to persist to the `location`.

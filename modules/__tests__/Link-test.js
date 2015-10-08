@@ -35,7 +35,7 @@ describe('A <Link>', function () {
   it('knows how to make its href', function () {
     class LinkWrapper extends React.Component {
       render() {
-        return <Link to="/hello/michael" query={{ the: 'query' }}>Link</Link>
+        return <Link to="/hello/michael" query={{ the: 'query' }} hash="#the-hash">Link</Link>
       }
     }
 
@@ -45,7 +45,7 @@ describe('A <Link>', function () {
       </Router>
     ), node, function () {
       const a = node.querySelector('a')
-      expect(a.getAttribute('href')).toEqual('/hello/michael?the=query')
+      expect(a.getAttribute('href')).toEqual('/hello/michael?the=query#the-hash')
     })
   })
 
