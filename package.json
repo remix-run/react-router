@@ -13,11 +13,10 @@
     "build": "babel ./modules -d lib --ignore '__tests__'",
     "build-umd": "NODE_ENV=production webpack modules/index.js umd/ReactRouter.js",
     "build-min": "NODE_ENV=production webpack -p modules/index.js umd/ReactRouter.min.js",
+    "lint": "eslint modules examples",
     "start": "node examples/server.js",
     "test": "npm run lint && karma start",
-    "lint": "eslint modules examples",
-    "postinstall": "node -e \"require('fs').stat('lib', function (e, s) { process.exit(e || !s.isDirectory() ? 1 : 0) })\" || npm run build",
-    "prepublish": "npm run build"
+    "postinstall": "node -e \"require('fs').stat('lib', function (e, s) { process.exit(e || !s.isDirectory() ? 1 : 0) })\" || npm run build"
   },
   "authors": [
     "Ryan Florence",
