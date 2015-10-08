@@ -16,9 +16,10 @@ It looks something like this with an imaginary JavaScript server:
 ```js
 import { renderToString } from 'react-dom/server'
 import { match, RoutingContext } from 'react-router'
-import createLocation from 'history/lib/createLocation'
+import { createMemoryHistory } from 'history';
 import routes from './routes'
 
+const createLocation = createMemoryHistory().createLocation;
 serve((req, res) => {
   // Note that req.url here should be the full URL path from
   // the original request, including the query string.
