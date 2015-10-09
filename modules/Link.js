@@ -88,6 +88,12 @@ class Link extends Component {
         to += hash
 
       this.context.history.pushState(state, to, query)
+
+      if (hash) {
+        let hashElement = document.getElementByID(hash.slice(1))
+        if (hashElement)
+          hashElement.scrollIntoView()
+      }
     }
   }
 
