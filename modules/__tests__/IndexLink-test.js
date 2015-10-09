@@ -20,6 +20,7 @@ describe('An <IndexLink>', function () {
             <li><IndexLink id="overviewLink" to="/website" activeClassName="active">overview</IndexLink></li>
             <li><Link id="contactLink" to="/website/contact" activeClassName="active">contact</Link></li>
             <li><Link id="productsLink" to="/website/products" activeClassName="active">products</Link></li>
+            <li><IndexLink id="productsIndexLink" to="/website/products" activeClassName="active">products index</IndexLink></li>
             <li><Link id="specificProductLink" to="/website/products/15" activeClassName="active">specific product</Link></li>
           </ul>
           {this.props.children}
@@ -94,6 +95,7 @@ describe('An <IndexLink>', function () {
         expect(node.querySelector('#overviewLink').className).toEqual('active')
         expect(node.querySelector('#contactLink').className).toEqual('')
         expect(node.querySelector('#productsLink').className).toEqual('')
+        expect(node.querySelector('#productsIndexLink').className).toEqual('')
         expect(node.querySelector('#specificProductLink').className).toEqual('')
         done()
       })
@@ -108,6 +110,7 @@ describe('An <IndexLink>', function () {
         expect(node.querySelector('#overviewLink').className).toEqual('')
         expect(node.querySelector('#contactLink').className).toEqual('active')
         expect(node.querySelector('#productsLink').className).toEqual('')
+        expect(node.querySelector('#productsIndexLink').className).toEqual('')
         expect(node.querySelector('#specificProductLink').className).toEqual('')
         done()
       })
@@ -122,6 +125,7 @@ describe('An <IndexLink>', function () {
         expect(node.querySelector('#overviewLink').className).toEqual('')
         expect(node.querySelector('#contactLink').className).toEqual('')
         expect(node.querySelector('#productsLink').className).toEqual('active')
+        expect(node.querySelector('#productsIndexLink').className).toEqual('active')
         expect(node.querySelector('#specificProductLink').className).toEqual('')
         done()
       })
@@ -136,6 +140,7 @@ describe('An <IndexLink>', function () {
         expect(node.querySelector('#overviewLink').className).toEqual('')
         expect(node.querySelector('#contactLink').className).toEqual('')
         expect(node.querySelector('#productsLink').className).toEqual('active')
+        expect(node.querySelector('#productsIndexLink').className).toEqual('')
         expect(node.querySelector('#specificProductLink').className).toEqual('active')
         done()
       })
