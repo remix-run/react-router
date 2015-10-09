@@ -81,8 +81,14 @@ class Link extends Component {
 
     event.preventDefault()
 
-    if (allowTransition)
-      this.context.history.pushState(this.props.state, this.props.to, this.props.query)
+    if (allowTransition) {
+      let { state, to, query, hash } = this.props
+
+      if (hash)
+        to += hash
+
+      this.context.history.pushState(state, to, query)
+    }
   }
 
   render() {
