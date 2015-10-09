@@ -20,6 +20,7 @@ A route path is [a string pattern](/docs/Glossary.md#routepattern) that is used 
 <Route path="/hello/:name">         // matches /hello/michael and /hello/ryan
 <Route path="/hello(/:name)">       // matches /hello, /hello/michael, and /hello/ryan
 <Route path="/files/*.*">           // matches /files/hello.jpg and /files/path/to/hello.jpg
+<Route path="/:slug?/home">           // matches /[anything]/home like /github/home
 ```
 
 If a route uses a relative `path`, it builds upon the accumulated `path` of its ancestors. Nested routes may opt-out of this behavior by [using an absolute `path`](RouteConfiguration.md#decoupling-the-ui-from-the-url).
