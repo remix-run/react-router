@@ -16,7 +16,7 @@
     "lint": "eslint modules examples",
     "start": "node examples/server.js",
     "test": "npm run lint && karma start",
-    "postinstall": "node scripts/postinstall.js"
+    "postinstall": "node npm-scripts/postinstall.js"
   },
   "authors": [
     "Ryan Florence",

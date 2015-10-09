@@ -1,4 +1,5 @@
 examples
+scripts
 __tests__
 karma.conf.js
 tests.webpack.js
