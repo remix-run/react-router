@@ -1,6 +1,6 @@
-import React from 'react'
-import invariant from 'invariant'
 import warning from 'warning'
+import invariant from 'invariant'
+import React, { Component } from 'react'
 import Redirect from './Redirect'
 import { falsy } from './PropTypes'
 
@@ -9,7 +9,7 @@ const { string, object } = React.PropTypes
 /**
  * An <IndexRedirect> is used to redirect from an indexRoute.
  */
-class IndexRedirect extends React.Component {
+class IndexRedirect extends Component {
 
   static createRouteFromReactElement(element, parentRoute) {
     if (parentRoute) {

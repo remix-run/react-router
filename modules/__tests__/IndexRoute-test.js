@@ -1,7 +1,7 @@
 /*eslint-env mocha */
 /*eslint react/prop-types: 0*/
 import expect from 'expect'
-import React from 'react'
+import React, { Component } from 'react'
 import { render, unmountComponentAtNode } from 'react-dom'
 import createHistory from 'history/lib/createMemoryHistory'
 import IndexRoute from '../IndexRoute'
@@ -10,15 +10,15 @@ import Route from '../Route'
 
 describe('An <IndexRoute>', function () {
 
-  class Parent extends React.Component {
+  class Parent extends Component {
     render() {
       return <div>parent {this.props.children}</div>
     }
   }
 
-  class Child extends React.Component {
+  class Child extends Component {
     render() {
-      return <div>child </div>
+      return <div>child</div>
     }
   }
 
@@ -31,7 +31,7 @@ describe('An <IndexRoute>', function () {
     unmountComponentAtNode(node)
   })
 
-  it('renders when its parent’s url matches exactly', function (done) {
+  it("renders when its parent's URL matches exactly", function (done) {
     render((
       <Router history={createHistory('/')}>
         <Route path="/" component={Parent}>
@@ -39,13 +39,13 @@ describe('An <IndexRoute>', function () {
         </Route>
       </Router>
     ), node, function () {
-      expect(node.textContent.trim()).toEqual('parent child')
+      expect(node.textContent).toEqual('parent child')
       done()
     })
   })
 
   describe('nested deeply in the route hierarchy', function () {
-    it('renders when its parent’s url matches exactly', function (done) {
+    it("renders when its parent's URL matches exactly", function (done) {
       render((
         <Router history={createHistory('/test')}>
           <Route path="/" component={Parent}>
@@ -56,7 +56,7 @@ describe('An <IndexRoute>', function () {
           </Route>
         </Router>
       ), node, function () {
-        expect(node.textContent.trim()).toEqual('parent parent child')
+        expect(node.textContent).toEqual('parent parent child')
         done()
       })
     })

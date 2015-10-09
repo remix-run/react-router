@@ -1,5 +1,5 @@
-import React from 'react'
 import invariant from 'invariant'
+import React, { Component } from 'react'
 import getRouteParams from './getRouteParams'
 
 const { array, func, object } = React.PropTypes
@@ -8,7 +8,7 @@ const { array, func, object } = React.PropTypes
  * A <RoutingContext> renders the component tree for a given router state
  * and sets the history object and the current location in context.
  */
-class RoutingContext extends React.Component {
+class RoutingContext extends Component {
 
   static propTypes = {
     history: object.isRequired,

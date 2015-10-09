@@ -1,7 +1,7 @@
 /*eslint-env mocha */
 /*eslint react/prop-types: 0*/
 import expect from 'expect'
-import React from 'react'
+import React, { Component } from 'react'
 import ReactTestUtils from 'react-addons-test-utils'
 import { render } from 'react-dom'
 import createHistory from 'history/lib/createMemoryHistory'
@@ -14,13 +14,13 @@ const { click } = ReactTestUtils.Simulate
 
 describe('A <Link>', function () {
 
-  class Hello extends React.Component {
+  class Hello extends Component {
     render() {
       return <div>Hello {this.props.params.name}!</div>
     }
   }
 
-  class Goodbye extends React.Component {
+  class Goodbye extends Component {
     render() {
       return <div>Goodbye</div>
     }
@@ -32,7 +32,7 @@ describe('A <Link>', function () {
   })
 
   it('knows how to make its href', function () {
-    class LinkWrapper extends React.Component {
+    class LinkWrapper extends Component {
       render() {
         return <Link to="/hello/michael" query={{ the: 'query' }} hash="#the-hash">Link</Link>
       }
@@ -51,7 +51,7 @@ describe('A <Link>', function () {
   // This test needs to be in its own file with beforeEach(resetHash).
   //
   //it('knows how to make its href with HashHistory', function () {
-  //  class LinkWrapper extends React.Component {
+  //  class LinkWrapper extends Component {
   //    render() {
   //      return <Link to="/hello/michael" query={{the: 'query'}}>Link</Link>
   //    }
@@ -68,7 +68,7 @@ describe('A <Link>', function () {
   //})
 
   describe('with params', function () {
-    class App extends React.Component {
+    class App extends Component {
       render() {
         return (
           <div>
@@ -110,7 +110,7 @@ describe('A <Link>', function () {
 
   describe('when its route is active and className is empty', function () {
     it("it shouldn't have an active class", function (done) {
-      class LinkWrapper extends React.Component {
+      class LinkWrapper extends Component {
         render() {
           return (
             <div>
@@ -148,7 +148,7 @@ describe('A <Link>', function () {
 
   describe('when its route is active', function () {
     it.skip('has its activeClassName', function (done) {
-      class LinkWrapper extends React.Component {
+      class LinkWrapper extends Component {
         render() {
           return (
             <div>
@@ -184,7 +184,7 @@ describe('A <Link>', function () {
     })
 
     it.skip('has its activeStyle', function (done) {
-      class LinkWrapper extends React.Component {
+      class LinkWrapper extends Component {
         render() {
           return (
             <div>
@@ -222,7 +222,7 @@ describe('A <Link>', function () {
 
   describe('when route changes', function () {
     it.skip('changes active state', function (done) {
-      class LinkWrapper extends React.Component {
+      class LinkWrapper extends Component {
         shouldComponentUpdate() {
           return false
         }
@@ -263,7 +263,7 @@ describe('A <Link>', function () {
 
   describe('when clicked', function () {
     it('calls a user defined click handler', function (done) {
-      class LinkWrapper extends React.Component {
+      class LinkWrapper extends Component {
         handleClick(event) {
           event.preventDefault()
           done()
@@ -284,7 +284,7 @@ describe('A <Link>', function () {
     })
 
     it('transitions to the correct route', function (done) {
-      class LinkWrapper extends React.Component {
+      class LinkWrapper extends Component {
         handleClick() {
           // just here to make sure click handlers don't prevent it from happening
         }

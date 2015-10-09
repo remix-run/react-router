@@ -1,4 +1,4 @@
-import React from 'react'
+import React, { Component } from 'react'
 
 const { bool, object, string, func } = React.PropTypes
 
@@ -36,7 +36,7 @@ function isEmptyObject(object) {
  *
  *   <Link ... query={{ show: true }} state={{ the: 'state' }} />
  */
-class Link extends React.Component {
+class Link extends Component {
 
   static contextTypes = {
     history: object

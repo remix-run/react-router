@@ -1,6 +1,6 @@
 /*eslint-env mocha */
 import expect from 'expect'
-import React from 'react'
+import React, { Component } from 'react'
 import { render, unmountComponentAtNode } from 'react-dom'
 import resetHash from './resetHash'
 import execSteps from './execSteps'
@@ -9,13 +9,13 @@ import Route from '../Route'
 
 describe('pushState', function () {
 
-  class Index extends React.Component {
+  class Index extends Component {
     render() {
       return <h1>Index</h1>
     }
   }
 
-  class Home extends React.Component {
+  class Home extends Component {
     render() {
       return <h1>Home</h1>
     }

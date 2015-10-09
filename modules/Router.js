@@ -1,5 +1,5 @@
-import React from 'react'
 import warning from 'warning'
+import React, { Component } from 'react'
 import createHashHistory from 'history/lib/createHashHistory'
 import { createRoutes } from './RouteUtils'
 import RoutingContext from './RoutingContext'
@@ -13,7 +13,7 @@ const { func, object } = React.PropTypes
  * a router that renders a <RoutingContext> with all the props
  * it needs each time the URL changes.
  */
-class Router extends React.Component {
+class Router extends Component {
 
   static propTypes = {
     history: object,

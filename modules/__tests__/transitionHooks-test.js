@@ -1,7 +1,7 @@
 /*eslint-env mocha */
 /*eslint react/prop-types: 0*/
 import expect, { spyOn } from 'expect'
-import React from 'react'
+import React, { Component } from 'react'
 import { render, unmountComponentAtNode } from 'react-dom'
 import createHistory from 'history/lib/createMemoryHistory'
 import useQueries from 'history/lib/useQueries'
@@ -10,7 +10,7 @@ import Router from '../Router'
 
 describe('When a router enters a branch', function () {
 
-  class Dashboard extends React.Component {
+  class Dashboard extends Component {
     render() {
       return (
         <div className="Dashboard">
@@ -21,13 +21,13 @@ describe('When a router enters a branch', function () {
     }
   }
 
-  class NewsFeed extends React.Component {
+  class NewsFeed extends Component {
     render() {
       return <div>News</div>
     }
   }
 
-  class Inbox extends React.Component {
+  class Inbox extends Component {
     render() {
       return <div>Inbox</div>
     }

@@ -1,7 +1,7 @@
 /*eslint-env mocha */
 /*eslint react/prop-types: 0*/
 import expect from 'expect'
-import React from 'react'
+import React, { Component } from 'react'
 import { renderToString } from 'react-dom/server'
 import match from '../match'
 import RoutingContext from '../RoutingContext'
@@ -9,7 +9,7 @@ import Link from '../Link'
 
 describe('server rendering', function () {
 
-  class App extends React.Component {
+  class App extends Component {
     render() {
       return (
         <div className="App">
@@ -24,7 +24,7 @@ describe('server rendering', function () {
     }
   }
 
-  class Dashboard extends React.Component {
+  class Dashboard extends Component {
     render() {
       return (
         <div className="Dashboard">
@@ -34,7 +34,7 @@ describe('server rendering', function () {
     }
   }
 
-  class About extends React.Component {
+  class About extends Component {
     render() {
       return (
         <div className="About">

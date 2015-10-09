@@ -1,14 +1,14 @@
 /*eslint-env mocha */
 /*eslint react/prop-types: 0*/
 import expect from 'expect'
-import React from 'react'
+import React, { Component } from 'react'
 import { createRoutesFromReactChildren } from '../RouteUtils'
 import IndexRoute from '../IndexRoute'
 import Route from '../Route'
 
 describe('createRoutesFromReactChildren', function () {
 
-  class Parent extends React.Component {
+  class Parent extends Component {
     render() {
       return (
         <div>
@@ -19,13 +19,13 @@ describe('createRoutesFromReactChildren', function () {
     }
   }
 
-  class Hello extends React.Component {
+  class Hello extends Component {
     render() {
       return <div>Hello</div>
     }
   }
 
-  class Goodbye extends React.Component {
+  class Goodbye extends Component {
     render() {
       return <div>Goodbye</div>
     }

@@ -1,6 +1,6 @@
 /*eslint-env mocha */
 import expect from 'expect'
-import React from 'react'
+import React, { Component } from 'react'
 import { render, unmountComponentAtNode } from 'react-dom'
 import createHistory from 'history/lib/createMemoryHistory'
 import Router from '../Router'
@@ -17,7 +17,7 @@ describe('a Route Component', function () {
   })
 
   it('injects the right props', function (done) {
-    class Parent extends React.Component {
+    class Parent extends Component {
       componentDidMount() {
         expect(this.props.route).toEqual(parent)
         expect(this.props.routes).toEqual([ parent, child ])
@@ -27,7 +27,7 @@ describe('a Route Component', function () {
       }
     }
 
-    class Child extends React.Component {
+    class Child extends Component {
       render() {
         return null
       }

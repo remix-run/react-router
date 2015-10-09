@@ -1,7 +1,7 @@
 /*eslint-env mocha */
 /*eslint react/prop-types: 0*/
 import expect from 'expect'
-import React from 'react'
+import React, { Component } from 'react'
 import { render, unmountComponentAtNode } from 'react-dom'
 import createHistory from 'history/lib/createMemoryHistory'
 import IndexRoute from '../IndexRoute'
@@ -12,7 +12,7 @@ import Link from '../Link'
 
 describe('An <IndexLink>', function () {
 
-  class App extends React.Component {
+  class App extends Component {
     render() {
       return (
         <div>
@@ -28,37 +28,37 @@ describe('An <IndexLink>', function () {
     }
   }
 
-  class Website extends React.Component {
+  class Wrapper extends Component {
     render() {
       return <div>website wrapper {this.props.children}</div>
     }
   }
 
-  class WebsiteOverview extends React.Component {
+  class IndexPage extends Component {
     render() {
       return <div>website overview</div>
     }
   }
 
-  class WebsiteContact extends React.Component {
+  class ContactPage extends Component {
     render() {
       return <div>contact page</div>
     }
   }
 
-  class WebsiteProducts extends React.Component {
+  class ProductsPage extends Component {
     render() {
       return <div>website products {this.props.children}</div>
     }
   }
 
-  class WebsiteProductsProduct extends React.Component {
+  class ProductPage extends Component {
     render() {
       return <div>specific product {this.props.params.productId}</div>
     }
   }
 
-  class WebsiteProductsIndex extends React.Component {
+  class ProductsIndexPage extends Component {
     render() {
       return <div>list of products</div>
     }
@@ -66,13 +66,13 @@ describe('An <IndexLink>', function () {
 
   const routes = (
     <Route component={App}>
-      <Route path="/website" component={Website}>
-        <Route path="products" component={WebsiteProducts}>
-          <Route path=":productId" component={WebsiteProductsProduct} />
-          <IndexRoute component={WebsiteProductsIndex} />
+      <Route path="/website" component={Wrapper}>
+        <Route path="products" component={ProductsPage}>
+          <Route path=":productId" component={ProductPage} />
+          <IndexRoute component={ProductsIndexPage} />
         </Route>
-        <Route path="contact" component={WebsiteContact} />
-        <IndexRoute component={WebsiteOverview} />
+        <Route path="contact" component={ContactPage} />
+        <IndexRoute component={IndexPage} />
       </Route>
     </Route>
   )
