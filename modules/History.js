@@ -1,8 +1,13 @@
 import { history } from './PropTypes'
 
+/**
+ * A mixin that adds the "history" instance variable to components.
+ */
 const History = {
 
-  contextTypes: { history },
+  contextTypes: {
+    history
+  },
 
   componentWillMount() {
     this.history = this.context.history
