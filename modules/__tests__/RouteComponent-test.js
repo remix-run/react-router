@@ -19,7 +19,8 @@ describe('a Route Component', function () {
   it('injects the right props', function (done) {
     class Parent extends React.Component {
       componentDidMount() {
-        assertProps(this.props)
+        expect(this.props.route).toEqual(parent)
+        expect(this.props.routes).toEqual([ parent, child ])
       }
       render() {
         return null
@@ -34,11 +35,6 @@ describe('a Route Component', function () {
 
     const child = { path: 'child', component: Child }
     const parent = { path: '/', component: Parent, childRoutes: [ child ] }
-
-    function assertProps(props) {
-      expect(props.route).toEqual(parent)
-      expect(props.routes).toEqual([ parent, child ])
-    }
 
     render((
       <Router history={createHistory('/child')} routes={parent}/>

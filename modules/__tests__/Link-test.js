@@ -1,6 +1,5 @@
 /*eslint-env mocha */
 /*eslint react/prop-types: 0*/
-import assert from 'assert'
 import expect from 'expect'
 import React from 'react'
 import ReactTestUtils from 'react-addons-test-utils'
@@ -267,11 +266,10 @@ describe('A <Link>', function () {
       class LinkWrapper extends React.Component {
         handleClick(event) {
           event.preventDefault()
-          assert.ok(true)
           done()
         }
         render() {
-          return <Link to="/hello" onClick={(e) => this.handleClick(e)}>Link</Link>
+          return <Link to="/hello" onClick={e => this.handleClick(e)}>Link</Link>
         }
       }
 
