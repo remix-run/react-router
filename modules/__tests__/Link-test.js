@@ -1,8 +1,8 @@
 /*eslint-env mocha */
 /*eslint react/prop-types: 0*/
-import expect from 'expect'
+import expect, { spyOn } from 'expect'
 import React, { Component } from 'react'
-import ReactTestUtils from 'react-addons-test-utils'
+import { Simulate } from 'react-addons-test-utils'
 import { render } from 'react-dom'
 import createHistory from 'history/lib/createMemoryHistory'
 import execSteps from './execSteps'
@@ -10,7 +10,7 @@ import Router from '../Router'
 import Route from '../Route'
 import Link from '../Link'
 
-const { click } = ReactTestUtils.Simulate
+const { click } = Simulate
 
 describe('A <Link>', function () {
 
@@ -289,9 +289,12 @@ describe('A <Link>', function () {
           // just here to make sure click handlers don't prevent it from happening
         }
         render() {
-          return <Link to="/hello" onClick={(e) => this.handleClick(e)}>Link</Link>
+          return <Link to="/hello" hash="#world" onClick={(e) => this.handleClick(e)}>Link</Link>
         }
       }
+
+      const history = createHistory('/')
+      const spy = spyOn(history, 'pushState').andCallThrough()
 
       const steps = [
         function () {
@@ -299,13 +302,14 @@ describe('A <Link>', function () {
         },
         function () {
           expect(node.innerHTML).toMatch(/Hello/)
+          expect(spy).toHaveBeenCalledWith(undefined, '/hello#world')
         }
       ]
 
       const execNextStep = execSteps(steps, done)
 
       render((
-        <Router history={createHistory('/')} onUpdate={execNextStep}>
+        <Router history={history} onUpdate={execNextStep}>
           <Route path="/" component={LinkWrapper} />
           <Route path="/hello" component={Hello} />
         </Router>
