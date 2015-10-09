@@ -97,7 +97,7 @@ describe('Router', function () {
     }
 
     render((
-      <Router history={createHistory('/')} createElement={Component => <Wrapper component={Child} />}>
+      <Router history={createHistory('/')} createElement={x => <Wrapper component={x} />}>
         <Route path="/" component={Child}/>
       </Router>
     ), node, function () {
