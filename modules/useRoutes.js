@@ -116,7 +116,7 @@ function useRoutes(createHistory) {
         partialNextState = { ...nextState, location }
 
         let hooks = getRouteHooksForRoutes(
-          computeChangedRoutes(state, nextState).leaveRoutes
+          computeChangedRoutes(state, partialNextState).leaveRoutes
         )
 
         let result
