@@ -2,7 +2,7 @@
 
 changelog=node_modules/.bin/changelog
 
-if ! [ -e scripts/build.sh ]; then
+if ! [ -e scripts/build.js ]; then
   echo >&2 "Please run scripts/release.sh from the repo root"
   exit 1
 fi
@@ -43,7 +43,7 @@ git push origin master
 git push origin $next_ref
 git push origin latest -f
 
-./scripts/build.sh
+node scripts/build.js
 
 # This is a workaround for a nasty npm bug. :'(
 # First, we need to uninstall the history package so
