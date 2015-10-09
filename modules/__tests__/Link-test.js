@@ -289,7 +289,7 @@ describe('A <Link>', function () {
           // just here to make sure click handlers don't prevent it from happening
         }
         render() {
-          return <Link to="/hello" hash="#world" onClick={(e) => this.handleClick(e)}>Link</Link>
+          return <Link to="/hello" hash="#world" query={{ how: 'are' }} state={{ you: 'doing?' }} onClick={(e) => this.handleClick(e)}>Link</Link>
         }
       }
 
@@ -302,7 +302,7 @@ describe('A <Link>', function () {
         },
         function () {
           expect(node.innerHTML).toMatch(/Hello/)
-          expect(spy).toHaveBeenCalledWith(undefined, '/hello#world')
+          expect(spy).toHaveBeenCalledWith({ you: 'doing?' }, '/hello#world?how=are')
         }
       ]
 
