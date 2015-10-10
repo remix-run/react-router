@@ -24,6 +24,30 @@ describe('Dynamic Routes', function () {
     }
   }
 
+  class Website extends Component {
+    render() {
+      return <div>website wrapper {this.props.children}</div>
+    }
+  }
+
+  class CheckoutPage extends Component {
+    render() {
+      return <div>checkout page</div>
+    }
+  }
+
+  class ContactPage extends Component {
+    render() {
+      return <div>contact page</div>
+    }
+  }
+
+  class IndexPage extends Component {
+    render() {
+      return <div>index page</div>
+    }
+  }
+
   const routes = {
     childRoutes: [ {
       path: '/',
@@ -31,24 +55,14 @@ describe('Dynamic Routes', function () {
       childRoutes: [
         {
           path: 'website',
-          getComponents(location, callback) {
-            require.ensure([], (require) => {
-              callback(null, require('./dynamicRoutes/Website'))
-            })
-          },
+          component: Website,
+          childRoutes: [
+            { path: 'checkout', component: CheckoutPage },
+            { path: 'contact', component: ContactPage }
+          ],
           getIndexRoute(location, callback) {
-            require.ensure([], (require) => {
-              callback(null, [
-                { component: require('./dynamicRoutes/IndexPage') }
-              ])
-            })
-          },
-          getChildRoutes(location, callback) {
-            require.ensure([], (require) => {
-              callback(null, [
-                { path: 'checkout', component: require('./dynamicRoutes/CheckoutPage') },
-                { path: 'contact', component: require('./dynamicRoutes/ContactPage') }
-              ])
+            setTimeout(function () {
+              callback(null, { component: IndexPage } )
             })
           }
         }
@@ -68,7 +82,7 @@ describe('Dynamic Routes', function () {
   describe('when linking to an index link', function () {
     it('is active and non-index routes are not', function (done) {
       render((
-        <Router history={createHistory('/website')} routes={routes}></Router>
+        <Router history={createHistory('/website')} routes={routes} />
       ), node, function () {
         expect(node.querySelector('#overviewLink').className).toEqual('active')
         expect(node.querySelector('#checkoutLink').className).toEqual('')
