@@ -4,6 +4,7 @@ import React, { Component } from 'react'
 import { render, unmountComponentAtNode } from 'react-dom'
 import createHistory from 'history/lib/createMemoryHistory'
 import IndexLink from '../IndexLink'
+import execSteps from './execSteps'
 import Router from '../Router'
 import Link from '../Link'
 
@@ -15,7 +16,6 @@ describe('Dynamic Routes', function () {
         <div>
           <ul>
             <li><IndexLink id="overviewLink" to="/website" activeClassName="active">overview</IndexLink></li>
-            <li><Link id="checkoutLink" to="/website/checkout" activeClassName="active">checkout</Link></li>
             <li><Link id="contactLink" to="/website/contact" activeClassName="active">contact</Link></li>
           </ul>
           {this.props.children}
@@ -27,12 +27,6 @@ describe('Dynamic Routes', function () {
   class Website extends Component {
     render() {
       return <div>website wrapper {this.props.children}</div>
-    }
-  }
-
-  class CheckoutPage extends Component {
-    render() {
-      return <div>checkout page</div>
     }
   }
 
@@ -57,7 +51,6 @@ describe('Dynamic Routes', function () {
           path: 'website',
           component: Website,
           childRoutes: [
-            { path: 'checkout', component: CheckoutPage },
             { path: 'contact', component: ContactPage }
           ],
           getIndexRoute(location, callback) {
@@ -81,14 +74,26 @@ describe('Dynamic Routes', function () {
 
   describe('when linking to an index link', function () {
     it('is active and non-index routes are not', function (done) {
+      let overviewLink, contactLink
+      const steps = [
+        function () {
+          overviewLink = node.querySelector('#overviewLink')
+          contactLink = node.querySelector('#contactLink')
+          expect(overviewLink.className).toEqual('')
+          expect(contactLink.className).toEqual('active')
+          this.history.pushState(null, '/website')
+        },
+        function () {
+          expect(overviewLink.className).toEqual('active')
+          expect(contactLink.className).toEqual('')
+        }
+      ]
+
+      const execNextStep = execSteps(steps, done)
+
       render((
-        <Router history={createHistory('/website')} routes={routes} />
-      ), node, function () {
-        expect(node.querySelector('#overviewLink').className).toEqual('active')
-        expect(node.querySelector('#checkoutLink').className).toEqual('')
-        expect(node.querySelector('#contactLink').className).toEqual('')
-        done()
-      })
+        <Router onUpdate={execNextStep} history={createHistory('/website/contact')} routes={routes} />
+      ), node, execNextStep)
     })
   })
 
