@@ -523,12 +523,13 @@ Stringifies the query into the pathname, using the router's config.
 ##### `createHref(pathname, query)`
 Creates a URL, using the router's config. For example, it will add `#/` in front of the `pathname` for hash history.
 
-##### `isActive(pathname, query)`
+##### `isActive(pathname, query, indexOnly)`
 Returns `true` or `false` depending on if the current path is active. Will be true for every route in the route branch matched by the `pathname` (child route is active, therefore parent is too).
 
 ###### arguments
 - `pathname` - the full URL with or without the query.
 - `query` - an object that will be stringified by the router.
+- `indexOnly` - a boolean (default: `false`).
 
 #### Examples
 ```js
