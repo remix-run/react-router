@@ -41,7 +41,7 @@ function getMatchingRoute(pathname, activeRoutes, activeParams) {
 
     let { remainingPathname, paramNames, paramValues } = matchPattern(pattern, pathname)
 
-    if (remainingPathname === '' && paramsAreActive(paramNames, paramValues, activeParams))
+    if (remainingPathname === '' && route.path && paramsAreActive(paramNames, paramValues, activeParams))
       return route
 
     basename = pattern
