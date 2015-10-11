@@ -43,6 +43,7 @@ class Link extends Component {
   }
 
   static propTypes = {
+    tagName: string,
     to: string.isRequired,
     query: object,
     hash: string,
@@ -54,6 +55,7 @@ class Link extends Component {
   }
 
   static defaultProps = {
+    tagName: 'a',
     onlyActiveOnIndex: false,
     className: '',
     style: {}
@@ -92,7 +94,7 @@ class Link extends Component {
   }
 
   render() {
-    const { to, query, hash, state, activeClassName, activeStyle, onlyActiveOnIndex, ...props } = this.props
+    const { tagName, to, query, hash, state, activeClassName, activeStyle, onlyActiveOnIndex, ...props } = this.props
 
     // Manually override onClick.
     props.onClick = (e) => this.handleClick(e)
@@ -116,7 +118,7 @@ class Link extends Component {
       }
     }
 
-    return <a {...props} />
+    return React.createElement(tagName, props)
   }
 
 }

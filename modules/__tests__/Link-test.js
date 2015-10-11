@@ -48,6 +48,24 @@ describe('A <Link>', function () {
     })
   })
 
+  it('can be a button', function () {
+    class LinkWrapper extends Component {
+      render() {
+        return <Link tagName="button" type="button" className="link-button" to="/hello/michael">Link</Link>
+      }
+    }
+
+    render((
+      <Router history={createHistory('/')}>
+        <Route path="/" component={LinkWrapper} />
+      </Router>
+    ), node, function () {
+      const button = node.querySelector('.link-button')
+      expect(button.tagName).toEqual('BUTTON')
+      expect(button.type).toEqual('button')
+    })
+  })
+
   // This test needs to be in its own file with beforeEach(resetHash).
   //
   //it('knows how to make its href with HashHistory', function () {
