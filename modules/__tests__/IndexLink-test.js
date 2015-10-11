@@ -17,6 +17,7 @@ describe('An <IndexLink>', function () {
       return (
         <div>
           <ul>
+            <li><IndexLink id="rootLink" to="/" activeClassName="active">root</IndexLink></li>
             <li><IndexLink id="overviewLink" to="/website" activeClassName="active">overview</IndexLink></li>
             <li><Link id="contactLink" to="/website/contact" activeClassName="active">contact</Link></li>
             <li><Link id="productsLink" to="/website/products" activeClassName="active">products</Link></li>
@@ -26,6 +27,18 @@ describe('An <IndexLink>', function () {
           {this.props.children}
         </div>
       )
+    }
+  }
+
+  class RootWrapper extends Component {
+    render() {
+      return <div>root wrapper {this.props.children}</div>
+    }
+  }
+
+  class RootPage extends Component {
+    render() {
+      return <div>website root</div>
     }
   }
 
@@ -67,13 +80,16 @@ describe('An <IndexLink>', function () {
 
   const routes = (
     <Route component={App}>
-      <Route path="/website" component={Wrapper}>
-        <Route path="products" component={ProductsPage}>
-          <Route path=":productId" component={ProductPage} />
-          <IndexRoute component={ProductsIndexPage} />
+      <Route path="/" component={RootWrapper}>
+        <IndexRoute component={RootPage} />
+        <Route path="website" component={Wrapper}>
+          <Route path="products" component={ProductsPage}>
+            <Route path=":productId" component={ProductPage} />
+            <IndexRoute component={ProductsIndexPage} />
+          </Route>
+          <Route path="contact" component={ContactPage} />
+          <IndexRoute component={IndexPage} />
         </Route>
-        <Route path="contact" component={ContactPage} />
-        <IndexRoute component={IndexPage} />
       </Route>
     </Route>
   )
@@ -87,11 +103,28 @@ describe('An <IndexLink>', function () {
     unmountComponentAtNode(node)
   })
 
+  describe('when linking to the root', function () {
+    it('is active and other routes are not', function (done) {
+      render((
+        <Router history={createHistory('/')} routes={routes} />
+      ), node, function () {
+        expect(node.querySelector('#rootLink').className).toEqual('active')
+        expect(node.querySelector('#overviewLink').className).toEqual('')
+        expect(node.querySelector('#contactLink').className).toEqual('')
+        expect(node.querySelector('#productsLink').className).toEqual('')
+        expect(node.querySelector('#productsIndexLink').className).toEqual('')
+        expect(node.querySelector('#specificProductLink').className).toEqual('')
+        done()
+      })
+    })
+  })
+
   describe('when linking to the overview', function () {
     it('is active and other routes are not', function (done) {
       render((
         <Router history={createHistory('/website')} routes={routes} />
       ), node, function () {
+        expect(node.querySelector('#rootLink').className).toEqual('')
         expect(node.querySelector('#overviewLink').className).toEqual('active')
         expect(node.querySelector('#contactLink').className).toEqual('')
         expect(node.querySelector('#productsLink').className).toEqual('')
@@ -107,6 +140,7 @@ describe('An <IndexLink>', function () {
       render((
         <Router history={createHistory('/website/contact')} routes={routes} />
       ), node, function () {
+        expect(node.querySelector('#rootLink').className).toEqual('')
         expect(node.querySelector('#overviewLink').className).toEqual('')
         expect(node.querySelector('#contactLink').className).toEqual('active')
         expect(node.querySelector('#productsLink').className).toEqual('')
@@ -122,6 +156,7 @@ describe('An <IndexLink>', function () {
       render((
         <Router history={createHistory('/website/products')} routes={routes} />
       ), node, function () {
+        expect(node.querySelector('#rootLink').className).toEqual('')
         expect(node.querySelector('#overviewLink').className).toEqual('')
         expect(node.querySelector('#contactLink').className).toEqual('')
         expect(node.querySelector('#productsLink').className).toEqual('active')
@@ -137,6 +172,7 @@ describe('An <IndexLink>', function () {
       render((
         <Router history={createHistory('/website/products/15')} routes={routes} />
       ), node, function () {
+        expect(node.querySelector('#rootLink').className).toEqual('')
         expect(node.querySelector('#overviewLink').className).toEqual('')
         expect(node.querySelector('#contactLink').className).toEqual('')
         expect(node.querySelector('#productsLink').className).toEqual('active')
