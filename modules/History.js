@@ -1,4 +1,4 @@
-var invariant = require('react/lib/invariant');
+var invariant = require('invariant');
 var canUseDOM = require('react/lib/ExecutionEnvironment').canUseDOM;
 
 var History = {
