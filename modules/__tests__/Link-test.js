@@ -302,7 +302,7 @@ describe('A <Link>', function () {
         },
         function () {
           expect(node.innerHTML).toMatch(/Hello/)
-          expect(spy).toHaveBeenCalledWith({ you: 'doing?' }, '/hello#world?how=are')
+          expect(spy).toHaveBeenCalledWith({ you: 'doing?' }, { pathname: '/hello', search: '?how=are', hash: '#world' })
         }
       ]
 
