@@ -28,7 +28,11 @@ We support all browsers and environments where React runs.
 
 #### npm + webpack/browserify
 
-    $ npm install react-router@1.0.0-rc3
+Install using [npm](https://www.npmjs.com/):
+
+    $ npm install history react-router@latest
+
+Note that you need to also install the [history](https://www.npmjs.com/package/history) package since it is a peer dependency of React Router and won't automatically be installed for you in npm 3+.
 
 Then with a module bundler or webpack, use as you would anything else:
 
