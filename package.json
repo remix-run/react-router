@@ -48,6 +48,7 @@
     "react": "0.13.x||0.14.x"
   },
   "dependencies": {
+    "can-use-dom": "0.1.0",
     "invariant": "^2.0.0",
     "object-assign": "^2.0.0",
     "qs": "2.4.1"

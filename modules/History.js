@@ -1,5 +1,5 @@
 var invariant = require('invariant');
-var canUseDOM = require('react/lib/ExecutionEnvironment').canUseDOM;
+var canUseDOM = require('can-use-dom');
 
 var History = {
 
