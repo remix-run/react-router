@@ -1,6 +1,6 @@
 /* jshint -W058 */
 var React = require('react');
-var warning = require('react/lib/warning');
+var warning = require('./warning');
 var invariant = require('invariant');
 var canUseDOM = require('can-use-dom');
 var LocationActions = require('./actions/LocationActions');
