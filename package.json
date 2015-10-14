@@ -28,7 +28,7 @@
     "warning": "^2.0.0"
   },
   "peerDependencies": {
-    "history": "~1"
+    "history": "^1.12.0"
   },
   "devDependencies": {
     "babel": "^5.4.7",
