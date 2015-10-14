@@ -57,7 +57,6 @@
     "qs": "^4.0.0",
     "react": "0.14.0",
     "react-addons-test-utils": "0.14.0",
-    "react-addons-transition-group": "0.14.0",
     "react-addons-css-transition-group": "^0.14.0",
     "react-dom": "0.14.0",
     "rf-changelog": "^0.4.0",
