@@ -1,6 +1,6 @@
 import React from 'react'
 import { render } from 'react-dom'
-import ReactCSSTransitionGroup from 'react-addons-transition-group'
+import ReactCSSTransitionGroup from 'react-addons-css-transition-group'
 import { createHistory, useBasename } from 'history'
 import { Router, Route, Link } from 'react-router'
 
