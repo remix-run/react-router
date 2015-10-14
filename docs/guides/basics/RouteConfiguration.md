@@ -67,7 +67,7 @@ URL                     | Components
 
 ### Adding an Index
 
-Imagine we'd like to render another component inside of `App` when the URL is `/`. Currently, `this.props.children` inside of `App`'s `render` method is `undefined` in this case. We can use an [`<IndexRoute>`](../../API.md#indexroute) to specify a "default" page.
+Imagine we'd like to render another component inside of `App` when the URL is `/`. Currently, `this.props.children` inside of `App`'s `render` method is `undefined` in this case. We can use an [`<IndexRoute>`](../../api/ConfigurationComponents.md#IndexRoute) to specify a "default" page.
 
 ```js
 import { IndexRoute } from 'react-router'
@@ -139,7 +139,7 @@ URL                     | Components
 
 Wait a minute ... we just changed a URL! [That's not cool](http://www.w3.org/Provider/Style/URI.html). Now everyone who had a link to `/inbox/messages/5` has a **broken link**. :(
 
-Not to worry. We can use a [`<Redirect>`](../../API.md#redirect) to make sure that URL still works!
+Not to worry. We can use a [`<Redirect>`](../../api/ConfigurationComponents.md#Redirect) to make sure that URL still works!
 
 ```js
 import { Redirect } from 'react-router'
