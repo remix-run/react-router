@@ -25,6 +25,8 @@
   "license": "MIT",
   "dependencies": {
     "invariant": "^2.0.0",
+    "react": "^0.14.0",
+    "react-addons-css-transition-group": "^0.14.0",
     "warning": "^2.0.0"
   },
   "peerDependencies": {
