@@ -37,7 +37,7 @@ var TestUtils = React.addons.TestUtils;
 with this:
 
 ```js
-var TestUtils  = require('react-addons-test-utils');
+var TestUtils = require('react-addons-test-utils');
 var ReactDOM = require('react-dom');
 var React = require('react');
 ```
