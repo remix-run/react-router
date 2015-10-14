@@ -1,4 +1,4 @@
-var invariant = require('react/lib/invariant');
+var invariant = require('invariant');
 var LocationActions = require('../actions/LocationActions');
 var History = require('../History');
 

@@ -1,4 +1,4 @@
-var invariant = require('react/lib/invariant');
+var invariant = require('invariant');
 
 function throwCannotModify() {
   invariant(false, 'You cannot modify a static location');

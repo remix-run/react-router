@@ -1,6 +1,6 @@
 var assign = require('react/lib/Object.assign');
-var invariant = require('react/lib/invariant');
-var warning = require('react/lib/warning');
+var invariant = require('invariant');
+var warning = require('./warning');
 var PathUtils = require('./PathUtils');
 
 var _currentRoute;
