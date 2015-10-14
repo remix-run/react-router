@@ -146,7 +146,7 @@ The path used in the URL.
 It will concat with the parent route's path unless it starts with `/`,
 making it an absolute path.
 
-**Note**: Absolute paths may not be used in route config that is [dynamically loaded](/docs/guides/advanced/DynamicRouting.md).
+**Note**: Absolute paths may not be used in route config that is [dynamically loaded](guides/advanced/DynamicRouting.md).
 
 If left undefined, the router will try to match the child routes.
 
@@ -253,7 +253,7 @@ code-splitting.
 ```
 
 ##### `children`
-Routes can be nested, `this.props.children` will contain the element created from the child route component. Please refer to the [Route Configuration](/docs/guides/basics/RouteConfiguration.md) since this is a very critical part of the router's design.
+Routes can be nested, `this.props.children` will contain the element created from the child route component. Please refer to the [Route Configuration](guides/basics/RouteConfiguration.md) since this is a very critical part of the router's design.
 
 ##### `onEnter(nextState, replaceState)`
 Called when a route is about to be entered. It provides the next router state and a function to redirect to another path.
@@ -338,7 +338,7 @@ By default, the query parameters will just pass through but you can specify them
 </Route>
 ```
 
-Note that the `<Redirect>` can be placed anywhere in the route hierarchy, though [normal precedence](/docs/guides/basics/RouteMatching.md#precedence) rules apply. If you'd prefer the redirects to be next to their respective routes, the `from` path will match the same as a regular route `path`.
+Note that the `<Redirect>` can be placed anywhere in the route hierarchy, though [normal precedence](guides/basics/RouteMatching.md#precedence) rules apply. If you'd prefer the redirects to be next to their respective routes, the `from` path will match the same as a regular route `path`.
 
 ```js
 <Route path="course/:courseId">
@@ -355,7 +355,7 @@ Index Routes allow you to provide a default "child" to a parent
 route when visitor is at the URL of the parent, they provide convention
 for `<IndexLink>` to work.
 
-Please see the [Index Routes guide](/docs/guides/basics/IndexRoutes.md).
+Please see the [Index Routes guide](guides/basics/IndexRoutes.md).
 
 #### Props
 All the same props as [Route](#route) except for `path`.
@@ -367,10 +367,10 @@ Index Redirects allow you to redirect from the URL of a parent route to another
 route. They can be used to allow a child route to serve as the default route
 for its parent, while still keeping a distinct URL.
 
-Please see the [Index Routes guide](/docs/guides/basics/IndexRoutes.md).
+Please see the [Index Routes guide](guides/basics/IndexRoutes.md).
 
 #### Props
-All the same props as [Redirect](./Redirect.md) except for `from`.
+All the same props as [Redirect](#redirect.md) except for `from`.
 
 
 
@@ -590,7 +590,7 @@ class MyComponent extends React.Component {
 MyComponent.contextTypes = { history: PropTypes.history }
 ```
 
-- [Make your history a module](/docs/guides/advanced/NavigatingOutsideOfComponents.md)
+- [Make your history a module](guides/advanced/NavigatingOutsideOfComponents.md)
 - Create a higher order component, we might end up shipping with this and deprecating history, just haven't had the time to think it through all the way.
 
 ```js

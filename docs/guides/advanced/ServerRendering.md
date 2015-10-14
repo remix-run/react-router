@@ -6,7 +6,7 @@ Server rendering is a bit different than in a client because you'll want to:
 - Send `30x` responses for redirects
 - Fetch data before rendering (and use the router to help you do it)
 
-To facilitate these needs, you drop one level lower than the [`<Router>`](/docs/API.md#Router) API with:  
+To facilitate these needs, you drop one level lower than the [`<Router>`](../../API.md#Router) API with:  
 
 - `match` to match the routes to a location without rendering
 - `RoutingContext` for synchronous rendering of route components
