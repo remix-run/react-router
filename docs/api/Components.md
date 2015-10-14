@@ -1,16 +1,16 @@
 # Components
 
-- [`Router`](#Router)
-- [`Link`](#Link)
-- [`IndexLink`](#IndexLink)
-- [`RoutingContext`](#RoutingContext)
+- [`<Router>`](#Router)
+- [`<Link>`](#Link)
+- [`<IndexLink>`](#IndexLink)
+- [`<RoutingContext>`](#RoutingContext)
 
-## <a id='Router'></a>[`Router`](#Router)
+## <a id='Router'></a>[`<Router>`](#Router)
 Primary component of React Router. It keeps your UI and the URL in sync.
 
 #### Props
 ##### `children` (required)
-One or many [`Routes`](ConfigurationComponents.md#Route) or [`PlainRoutes`](ConfigurationComponents.md#PlainRoute). When the history changes, `<Router>` will match a branch of its [`Routes`](ConfigurationComponents.md#Route), and render their configured [components](ConfigurationComponents.md), with child route components nested inside the parents.
+One or many [`<Route>s`](ConfigurationComponents.md#Route) or [`<PlainRoute>s`](ConfigurationComponents.md#PlainRoute). When the history changes, `<Router>` will match a branch of its [`<Route>s`](ConfigurationComponents.md#Route), and render their configured [components](ConfigurationComponents.md), with child route components nested inside the parents.
 
 ##### `routes`
 Alias for `children`.
@@ -38,7 +38,7 @@ function createElement(Component, props) {
 ```
 
 ##### `stringifyQuery(queryObject)`
-A function used to convert an object from [`Link`](#Link)s or calls to `pushState` to a URL query string.
+A function used to convert an object from [`<Link>`](#Link)s or calls to `pushState` to a URL query string.
 
 ##### `parseQueryString(queryString)`
 A function used to convert a query string into an object that gets passed to route component props.
@@ -54,7 +54,7 @@ Please see the [`examples/`](/examples) directory of the repository for extensiv
 
 
 
-## <a id='Link'></a>[`Link`](#Link)
+## <a id='Link'></a>[`<Link>`](#Link)
 The primary way to allow users to navigate around your application. `<Link>` will render a fully accessible anchor tag with the proper href.
 
 A `<Link>` also knows when the route it links to is active and automatically applies its `activeClassName` and/or `activeStyle` when it is.
@@ -101,8 +101,8 @@ Given a route like `<Route path="/users/:userId" />`:
 <Link to="/users" style={{color: 'white'}} activeStyle={{color: 'red'}}>Users</Link>
 ```
 
-## <a id='IndexLink'></a>[`IndexLink`](#IndexLink)
+## <a id='IndexLink'></a>[`<IndexLink>`](#IndexLink)
 Docs coming so soon!
 
-## <a id='RoutingContext'></a>[`RoutingContext`](#RoutingContext)
+## <a id='RoutingContext'></a>[`<RoutingContext>`](#RoutingContext)
 A `<RoutingContext>` renders the component tree for a given router state and sets the history object and the current location in context.

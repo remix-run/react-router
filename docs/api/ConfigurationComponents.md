@@ -1,12 +1,12 @@
 # Configuration Components
 
-- [`Route`](#Route)
-- [`PlainRoute`](#PlainRoute)
-- [`Redirect`](#Redirect)
-- [`IndexRoute`](#IndexRoute)
-- [`IndexRedirect`](#IndexRedirect)
+- [`<Route>`](#Route)
+- [`<PlainRoute>`](#PlainRoute)
+- [`<Redirect>`](#Redirect)
+- [`<IndexRoute>`](#IndexRoute)
+- [`<IndexRedirect>`](#IndexRedirect)
 
-## <a id='Route'></a>[`Route`](#Route)
+## <a id='Route'></a>[`<Route>`](#Route)
 A `Route` is used to declaratively map routes to your application's
 component hierarchy.
 
@@ -134,7 +134,7 @@ Called when a route is about to be exited.
 
 
 
-## <a id='PlainRoute'></a>[`PlainRoute`](#PlainRoute)
+## <a id='PlainRoute'></a>[`<PlainRoute>`](#PlainRoute)
 A plain JavaScript object route definition. `Router` turns JSX `<Route>`s into these objects, but you can use them directly if you prefer. All of the props are the same as `<Route>` props, except those listed here.
 
 #### Props
@@ -186,7 +186,7 @@ let myRoute = {
 
 
 
-## <a id='Redirect'></a>[`Redirect`](#Redirect)
+## <a id='Redirect'></a>[`<Redirect>`](#Redirect)
 A `<Redirect>` sets up a redirect to another route in your application to maintain old URLs.
 
 #### Props
@@ -221,7 +221,7 @@ Note that the `<Redirect>` can be placed anywhere in the route hierarchy, though
 
 
 
-## <a id='IndexRoute'></a>[`IndexRoute`](#IndexRoute)
+## <a id='IndexRoute'></a>[`<IndexRoute>`](#IndexRoute)
 Index Routes allow you to provide a default "child" to a parent
 route when visitor is at the URL of the parent, they provide convention
 for `<IndexLink>` to work.
@@ -233,7 +233,7 @@ All the same props as [Route](#Route) except for `path`.
 
 
 
-## <a id='IndexRedirect'></a>[`IndexRedirect`](#IndexRedirect)
+## <a id='IndexRedirect'></a>[`<IndexRedirect>`](#IndexRedirect)
 Index Redirects allow you to redirect from the URL of a parent route to another
 route. They can be used to allow a child route to serve as the default route
 for its parent, while still keeping a distinct URL.
