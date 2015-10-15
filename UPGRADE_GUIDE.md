@@ -270,7 +270,7 @@ and where you get it now if you're a route component (`this.props`)
 | `getRoutes()`   | `routes`                           |
 | `isActive(to, params, query)` | `history.isActive(pathname, query, onlyActiveOnIndex)` |
 
-Here is another table of properties you used to get via the `State` and 
+Here is another table of properties you used to get via the `State` and
 where you can get it now if you are **not** a route component (`this.context`).
 
 | v0.13 (this)    | v1.0 (this.context)                |
@@ -280,7 +280,7 @@ where you can get it now if you are **not** a route component (`this.context`).
 | `getQuery()`    | `location.search`                  |
 | `isActive(to, params, query)` | `history.isActive(pathname, query, onlyActiveOnIndex)` |
 
-Note not all `State` functionality can be accessed via context in v1.0. 
+Note not all `State` functionality can be accessed via context in v1.0.
 For example, `params` is not available via context.
 
 ### Scrolling

@@ -1,5 +1,6 @@
 ## Table of Contents
 
+* [Read Me](/README.md)
 * [Introduction](/docs/Introduction.md)
 * [Basics](/docs/guides/basics/README.md)
  * [Route Configuration](/docs/guides/basics/RouteConfiguration.md)
@@ -14,5 +15,10 @@
  * [Navigating Outside of Components](/docs/guides/advanced/NavigatingOutsideOfComponents.md)
 * [Upgrade Guide](/UPGRADE_GUIDE.md)
 * [Troubleshooting](/docs/Troubleshooting.md)
-* [API](/docs/API.md)
+* [API](/docs/api/README.md)
+ * [Components](/docs/api/Components.md)
+ * [Configuration Components](/docs/api/ConfigurationComponents.md)
+ * [Handler Components](/docs/api/HandlerComponents.md)
+ * [Mixins](/docs/api/Mixins.md)
+ * [Utilities](/docs/api/Utilities.md)
 * [Glossary](/docs/Glossary.md)
