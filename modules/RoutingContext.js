@@ -1,5 +1,6 @@
 import invariant from 'invariant'
 import React, { Component } from 'react'
+import { isReactChildren } from './RouteUtils'
 import getRouteParams from './getRouteParams'
 
 const { array, func, object } = React.PropTypes
@@ -46,7 +47,7 @@ class RoutingContext extends Component {
     if (components) {
       element = components.reduceRight((element, components, index) => {
         if (components == null)
-          return element // Don't create new children use the grandchildren.
+          return element // Don't create new children; use the grandchildren.
 
         const route = routes[index]
         const routeParams = getRouteParams(route, params)
@@ -59,13 +60,18 @@ class RoutingContext extends Component {
           routes
         }
 
-        if (element)
+        if (isReactChildren(element)) {
           props.children = element
+        } else if (element) {
+          for (let prop in element)
+            if (element.hasOwnProperty(prop))
+              props[prop] = element[prop]
+        }
 
         if (typeof components === 'object') {
           const elements = {}
 
-          for (const key in components)
+          for (let key in components)
             if (components.hasOwnProperty(key))
               elements[key] = this.createElement(components[key], props)
 

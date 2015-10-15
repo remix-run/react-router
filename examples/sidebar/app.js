@@ -92,15 +92,15 @@ class IndexSidebar extends React.Component {
 
 class App extends React.Component {
   render() {
-    const { children } = this.props
+    const { content, sidebar } = this.props
 
     return (
       <div>
         <div className="Sidebar">
-          {children ? children.sidebar : <IndexSidebar />}
+          {sidebar || <IndexSidebar />}
         </div>
         <div className="Content">
-          {children ? children.content : <Index />}
+          {content || <Index />}
         </div>
       </div>
     )
