@@ -1,4 +1,5 @@
 import React, { Component } from 'react'
+import { scrollToElement } from './DOMUtils'
 
 const { bool, object, string, func } = React.PropTypes
 
@@ -88,6 +89,10 @@ class Link extends Component {
         to += hash
 
       this.context.history.pushState(state, to, query)
+
+      if (hash) {
+        scrollToElement(hash.slice(1))
+      }
     }
   }
 

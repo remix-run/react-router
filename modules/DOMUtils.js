@@ -45,6 +45,12 @@ export function setWindowScrollPosition(scrollX, scrollY) {
   window.scrollTo(scrollX, scrollY)
 }
 
+export function scrollToElement(elementID) {
+  let element = document.getElementById(elementID)
+  if (element)
+    element.scrollIntoView()
+}
+
 /**
  * taken from modernizr
  * https://github.com/Modernizr/Modernizr/blob/master/LICENSE
