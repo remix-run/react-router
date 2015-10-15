@@ -68,7 +68,7 @@ A function used to convert an object from [`Link`](#link)s or calls to
 A function used to convert a query string into an object that gets passed to route component props.
 
 ##### `onError(error)`
-While the router is matching, errors may bubble up, here is your opportunity to catch and deal with them. Typically these will come from async features like [`route.getComponents`](#getcomponentscallback) and [`route.getChildRoutes`](#getchildrouteslocation-callback).
+While the router is matching, errors may bubble up, here is your opportunity to catch and deal with them. Typically these will come from async features like [`route.getComponents`](#getcomponentscallback), [`route.getIndexRoute`](#getindexroutecallback), and [`route.getChildRoutes`](#getchildrouteslocation-callback).
 
 ##### `onUpdate()`
 Called whenever the router updates its state in response to URL changes.
@@ -360,6 +360,19 @@ Please see the [Index Routes guide](/docs/guides/basics/IndexRoutes.md).
 #### Props
 All the same props as [Route](#route) except for `path`.
 
+##### `getIndexRoute(location, callback)`
+Same as `IndexRoute` but asynchronous, useful for
+code-splitting.
+
+###### `callback` signature
+`cb(err, component)`
+
+```js
+<Route path="courses/:courseId" getIndexRoute={(location, cb) => {
+  // do asynchronous stuff to find the index route
+  cb(null, Index)
+}}/>
+```
 
 
 ## IndexRedirect
