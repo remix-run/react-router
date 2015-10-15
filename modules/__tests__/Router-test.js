@@ -107,11 +107,11 @@ describe('Router', function () {
   })
 
   describe('with named components', function () {
-    it('renders the named components', function (done) {
+    it('receives those components as props', function (done) {
       class Parent extends Component {
         render() {
           return (
-            <div>{this.props.children.sidebar}-{this.props.children.content}</div>
+            <div>{this.props.sidebar}-{this.props.content}</div>
           )
         }
       }
