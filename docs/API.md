@@ -648,6 +648,13 @@ Returns a new `createHistory` function that may be used to create history object
 - isActive(pathname, query, indexOnly=false)
 
 
+## `match(location, cb)`
+
+This function is to be used for server-side rendering. It matches a set of routes to a location, without rendering, and calls a `callback(error, redirectLocation, renderProps)` when it's done.
+
+*Note: You probably don't want to use this in a browser. Use the [`history.listen`](https://github.com/rackt/history/blob/master/docs/GettingStarted.md#getting-started) API instead.*
+
+
 
 ## `createRoutes(routes)`
 
