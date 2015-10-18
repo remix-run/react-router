@@ -60,15 +60,15 @@ class Link extends Component {
   }
 
   handleClick(event) {
-    let allowTransition = true, clickResult
+    let allowTransition = true
 
     if (this.props.onClick)
-      clickResult = this.props.onClick(event)
+      this.props.onClick(event)
 
     if (isModifiedEvent(event) || !isLeftClickEvent(event))
       return
 
-    if (clickResult === false || event.defaultPrevented === true)
+    if (event.defaultPrevented === true)
       allowTransition = false
 
     // If target prop is set (e.g. to "_blank") let browser handle link.
