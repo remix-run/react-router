@@ -315,6 +315,36 @@ describe('A <Link>', function () {
         </Router>
       ), node, execNextStep)
     })
+
+    it('does not transition when onClick prevents default', function (done) {
+      class LinkWrapper extends Component {
+        render() {
+          return <Link to="/hello" onClick={(e) => e.preventDefault()}>Link</Link>
+        }
+      }
+
+      const history = createHistory('/')
+      const spy = spyOn(history, 'pushState').andCallThrough()
+
+      const steps = [
+        function () {
+          click(node.querySelector('a'), { button: 0 })
+        },
+        function () {
+          expect(node.innerHTML).toMatch(/Link/)
+          expect(spy).toNotHaveBeenCalled()
+        }
+      ]
+
+      const execNextStep = execSteps(steps, done)
+
+      render((
+        <Router history={history} onUpdate={execNextStep}>
+          <Route path="/" component={LinkWrapper} />
+          <Route path="/hello" component={Hello} />
+        </Router>
+      ), node, execNextStep)
+    })
   })
 
 })

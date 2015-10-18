@@ -139,9 +139,7 @@ the link will not check if it's active.
 
 Because named routes are gone, a link to `/` with an index route at `/`
 will always be active. So we've introduced `IndexLink` that is only
-active when the index route is active.
-
-**Note:** `DefaultRoute` is gone.
+active when on exactly that path.
 
 ```js
 // v0.13.x
@@ -163,6 +161,12 @@ active when the index route is active.
 // will be active only when home is active, not when about is active
 <IndexLink to="/">Home</IndexLink>
 ```
+
+#### onClick handler
+
+For consistency with React v0.14, returning `false` from a `Link`'s `onClick`
+handler no longer prevents the transition. To prevent the transition, call
+`e.preventDefault()` instead.
 
 ### RouteHandler
 
