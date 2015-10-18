@@ -30,16 +30,16 @@ In prior setups, react-tools was needed. This is not longer the case. You will n
 Lastly, anywhere you have the following, needs to be replaced with this:
 
 ```js
-var React = require('react/addons');
-var TestUtils = React.addons.TestUtils;
+var React = require('react/addons')
+var TestUtils = React.addons.TestUtils
 ```
 
 with this:
 
 ```js
-var TestUtils = require('react-addons-test-utils');
-var ReactDOM = require('react-dom');
-var React = require('react');
+import React from 'react'
+import ReactDOM from 'react-dom'
+import TestUtils from 'react-addons-test-utils'
 ```
 
 Make sure you do an npm clean, install, etc. and make sure you add react-addons-test-utils and react-dom to your unmocked paths.
@@ -66,50 +66,43 @@ Lastly ensure you are using babel-jest for the script preproccessor:
 
 Example:
 ----------------------------------------------
+
 A component:
+
 ```js
 //../components/BasicPage.js
 
-let React = require('react');
+import React, { Component, PropTypes } from 'react'
+import { Button } from 'react-bootstrap'
+import { Link } from 'react-router'
 
-import { Button } from 'react-bootstrap';
-import { Link } from 'react-router';
 
-let BasicPage =
-  React.createClass({
-    propTypes: {
-      authenticated: React.PropTypes.bool,
-    },
-    render:function(){
-      let mainContent;
-      let authenticated = this.props.authenticated;
+export default class BasicPage extends Component {
+  static propTypes = {
+    authenticated: PropTypes.bool
+  }
 
-      if(authenticated) {
-        mainContent = (
-          <div>
-            <Link to="/admin"><Button bsStyle="primary">Login</Button></Link>
-          </div>
-        );
-      } else {
-        mainContent = (
-          <div>
-            <Link to="/admin"><Button bsStyle="primary">Login</Button></Link>
-          </div>
-        );
-
-      }
-
-      return (
-        <div>
-          {mainContent}
-        </div>
-      );
-    },
-  });
-module.exports = BasicPage;
+  render() {
+    return (
+      <div>
+        { this.props.authenticated ? (
+            <div>
+              <Link to="/admin"><Button bsStyle="primary">Login</Button></Link>
+            </div>
+          ) : (
+            <div>
+              <Link to="/admin"><Button bsStyle="primary">Login</Button></Link>
+            </div>
+          )
+        }
+      </div>
+    )
+  }
+}
 ```
 
 The test for that component:
+
 ```js
 //../components/__tests__/BasicPage-test.js
 
@@ -117,24 +110,24 @@ The test for that component:
 // jest.dontMock & jest.autoMockOff()
 // do not understand ES6 modules yet
 
-jest.dontMock('../BasicPage');
+jest.dontMock('../BasicPage')
 
 describe('BasicPage', function() {
-  let BasicPage = require('../BasicPage');
-  let TestUtils = require('react-addons-test-utils');
-  let ReactDOM = require('react-dom');
-  let React = require('react');
+  let BasicPage = require('../BasicPage')
+  let TestUtils = require('react-addons-test-utils')
+  let ReactDOM = require('react-dom')
+  let React = require('react')
 
   it('renders the Login button if not logged in', function() {
-    let page = TestUtils.renderIntoDocument(<BasicPage />);
-    let button = TestUtils.findRenderedDOMComponentWithTag(page, 'button');
-    expect(ReactDOM.findDOMNode(button).textContent).toBe('Login');
-  });
+    let page = TestUtils.renderIntoDocument(<BasicPage />)
+    let button = TestUtils.findRenderedDOMComponentWithTag(page, 'button')
+    expect(ReactDOM.findDOMNode(button).textContent).toBe('Login')
+  })
 
   it('renders the Account button if logged in', function() {
-    let page = TestUtils.renderIntoDocument(<BasicPage authenticated={true} />);
-    let button = TestUtils.findRenderedDOMComponentWithTag(page, 'button');
-    expect(ReactDOM.findDOMNode(button).textContent).toBe('Your Account');
-  });
-});
+    let page = TestUtils.renderIntoDocument(<BasicPage authenticated={true} />)
+    let button = TestUtils.findRenderedDOMComponentWithTag(page, 'button')
+    expect(ReactDOM.findDOMNode(button).textContent).toBe('Your Account')
+  })
+})
 ```
