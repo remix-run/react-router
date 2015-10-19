@@ -383,7 +383,7 @@ for its parent, while still keeping a distinct URL.
 Please see the [Index Routes guide](/docs/guides/basics/IndexRoutes.md).
 
 #### Props
-All the same props as [Redirect](./Redirect.md) except for `from`.
+All the same props as [Redirect](#redirect) except for `from`.
 
 
 
