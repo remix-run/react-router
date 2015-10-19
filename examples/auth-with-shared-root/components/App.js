@@ -1,23 +1,23 @@
-import React from "react";
-import { Link } from "react-router";
-import auth from "../utils/auth";
+import React from 'react'
+import { Link } from 'react-router'
+import auth from '../utils/auth'
 
 var App = React.createClass({
   getInitialState() {
     return {
       loggedIn: auth.loggedIn()
-    };
+    }
   },
 
   updateAuth(loggedIn) {
     this.setState({
       loggedIn: !!loggedIn
-    });
+    })
   },
 
   componentWillMount() {
-    auth.onChange = this.updateAuth;
-    auth.login();
+    auth.onChange = this.updateAuth
+    auth.login()
   },
 
   render() {
@@ -38,8 +38,8 @@ var App = React.createClass({
         </ul>
         {this.props.children}
       </div>
-    );
+    )
   }
-});
+})
 
-export default App;
+export default App

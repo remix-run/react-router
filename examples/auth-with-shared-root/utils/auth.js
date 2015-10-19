@@ -1,39 +1,39 @@
 module.exports = {
-  login (email, pass, cb) {
-    cb = arguments[arguments.length - 1];
+  login(email, pass, cb) {
+    cb = arguments[arguments.length - 1]
     if (localStorage.token) {
-      if (cb) cb(true);
-      this.onChange(true);
-      return;
+      if (cb) cb(true)
+      this.onChange(true)
+      return
     }
     pretendRequest(email, pass, (res) => {
       if (res.authenticated) {
-        localStorage.token = res.token;
-        if (cb) cb(true);
-        this.onChange(true);
+        localStorage.token = res.token
+        if (cb) cb(true)
+        this.onChange(true)
       } else {
-        if (cb) cb(false);
-        this.onChange(false);
+        if (cb) cb(false)
+        this.onChange(false)
       }
-    });
+    })
   },
 
   getToken: function () {
-    return localStorage.token;
+    return localStorage.token
   },
 
   logout: function (cb) {
-    delete localStorage.token;
-    if (cb) cb();
-    this.onChange(false);
+    delete localStorage.token
+    if (cb) cb()
+    this.onChange(false)
   },
 
   loggedIn: function () {
-    return !!localStorage.token;
+    return !!localStorage.token
   },
 
   onChange: function () {}
-};
+}
 
 function pretendRequest(email, pass, cb) {
   setTimeout(() => {
@@ -41,11 +41,11 @@ function pretendRequest(email, pass, cb) {
       cb({
         authenticated: true,
         token: Math.random().toString(36).substring(7)
-      });
+      })
     } else {
-      cb({authenticated: false});
+      cb({ authenticated: false })
     }
-  }, 0);
+  }, 0)
 }
 
 
