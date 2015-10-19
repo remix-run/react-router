@@ -41,30 +41,29 @@ Then with a module bundler or webpack, use as you would anything else:
 import { Router, Route, Link } from 'react-router'
 
 // not using an ES6 transpiler
-var ReactRouter = require('react-router')
-var Router = ReactRouter.Router
-var Route = ReactRouter.Route
-var Link = ReactRouter.Link
+var Router = require('react-router').Router
+var Route = require('react-router').Route
+var Link = require('react-router').Link
 ```
 
 You can require only the pieces you need straight from the `lib` directory:
 
 ```js
-import { Router } from 'react-router/lib/Router'
+import Router from 'react-router/lib/Router'
 ```
+
+### UMD
 
 There's also a UMD build in the `umd` directory:
 
 ```js
-import ReactRouter from 'react-router/umd/ReactRouter'
-```
+// using an es6 transpiler, like babel
+import { Router, Route, Link } from 'react-router/umd/ReactRouter'
 
-If you're using globals, you can find the library on `window.ReactRouter`:
-```js
-var ReactRouter = window.ReactRouter;
-var Router = ReactRouter.Router;
-var Link = ReactRouter.Link;
-var Route = ReactRouter.Route;
+// using globals
+var Router = window.ReactRouter.Router;
+var Link = window.ReactRouter.Link;
+var Route = window.ReactRouter.Route;
 ```
 
 #### CDN
