@@ -59,7 +59,13 @@ There's also a UMD build in the `umd` directory:
 import ReactRouter from 'react-router/umd/ReactRouter'
 ```
 
-If you're using globals, you can find the library on `window.ReactRouter`.
+If you're using globals, you can find the library on `window.ReactRouter`:
+```js
+var ReactRouter = window.ReactRouter;
+var Router = ReactRouter.Router;
+var Link = ReactRouter.Link;
+var Route = ReactRouter.Route;
+```
 
 #### CDN
 
