@@ -8,6 +8,7 @@ To illustrate the problems React Router is going to solve for you, let's build a
 
 ```js
 import React from 'react'
+import { render } from 'react-dom'
 
 const About = React.createClass({/*...*/})
 const Inbox = React.createClass({/*...*/})
@@ -49,7 +50,7 @@ const App = React.createClass({
   }
 })
 
-React.render(<App />, document.body)
+render(<App />, document.body)
 ```
 
 As the hash portion of the URL changes, `<App>` will render a different `<Child>` by branching on `this.state.route`. Pretty straightforward stuff. But it gets complicated fast.
@@ -102,6 +103,7 @@ Let's refactor our app to use React Router.
 
 ```js
 import React from 'react'
+import { render } from 'react-dom'
 
 // First we import some components...
 import { Router, Route, Link } from 'react-router'
@@ -131,7 +133,7 @@ const App = React.createClass({
 
 // Finally, we render a <Router> with some <Route>s.
 // It does all the fancy routing stuff for us.
-React.render((
+render((
   <Router>
     <Route path="/" component={App}>
       <Route path="about" component={About} />
@@ -153,7 +155,7 @@ const routes = {
   ]
 }
 
-React.render(<Router routes={routes} />, document.body)
+render(<Router routes={routes} />, document.body)
 ```
 
 ## Adding More UI
@@ -180,7 +182,7 @@ const Inbox = React.createClass({
   }
 })
 
-React.render((
+render((
   <Router>
     <Route path="/" component={App}>
       <Route path="about" component={About} />
