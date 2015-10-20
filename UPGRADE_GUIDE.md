@@ -265,23 +265,25 @@ Here's a table of where you used to get stuff with the `State` mixin,
 and where you get it now if you're a route component (`this.props`)
 
 
-| v0.13 (this)    | v1.0 (this.props)                  |
-|-----------------|------------------------------------|
-| `getPath()`     | `location.pathname+location.search` |
-| `getPathname()` | `location.pathname`                |
-| `getParams()`   | `params`                           |
-| `getQuery()`    | `location.search`                  |
-| `getRoutes()`   | `routes`                           |
+| v0.13 (this)      | v1.0 (this.props)                  |
+|-------------------|------------------------------------|
+| `getPath()`       | `location.pathname+location.search`|
+| `getPathname()`   | `location.pathname`                |
+| `getParams()`     | `params`                           |
+| `getQuery()`      | `location.search`                  |
+| `getQueryParams()`| `location.query`                   |
+| `getRoutes()`     | `routes`                           |
 | `isActive(to, params, query)` | `history.isActive(pathname, query, onlyActiveOnIndex)` |
 
 Here is another table of properties you used to get via the `State` and 
 where you can get it now if you are **not** a route component (`this.context`).
 
-| v0.13 (this)    | v1.0 (this.context)                |
-|-----------------|------------------------------------|
-| `getPath()`     | `location.pathname+location.search`|
-| `getPathname()` | `location.pathname`                |
-| `getQuery()`    | `location.search`                  |
+| v0.13 (this)      | v1.0 (this.context)                |
+|-------------------|------------------------------------|
+| `getPath()`       | `location.pathname+location.search`|
+| `getPathname()`   | `location.pathname`                |
+| `getQuery()`      | `location.search`                  |
+| `getQueryParams()`| `location.query`                   |
 | `isActive(to, params, query)` | `history.isActive(pathname, query, onlyActiveOnIndex)` |
 
 Note not all `State` functionality can be accessed via context in v1.0. 
