@@ -26,14 +26,13 @@ class RoutingContext extends Component {
 
   static childContextTypes = {
     history: object.isRequired,
-    location: object.isRequired
+    location: object.isRequired,
+    params: object.isRequired
   }
 
   getChildContext() {
-    return {
-      history: this.props.history,
-      location: this.props.location
-    }
+    const { history, location, params } = this.props
+    return { history, location, params }
   }
 
   createElement(component, props) {
