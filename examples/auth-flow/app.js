@@ -1,5 +1,5 @@
 import React from 'react'
-import { render, findDOMNode } from 'react-dom'
+import { render } from 'react-dom'
 import { Router, Route, Link, History } from 'react-router'
 import { createHistory, useBasename } from 'history'
 import auth from './auth'
@@ -72,8 +72,8 @@ var Login = React.createClass({
   handleSubmit(event) {
     event.preventDefault()
 
-    var email = findDOMNode(this.refs.email).value
-    var pass = findDOMNode(this.refs.pass).value
+    var email = this.refs.email.value
+    var pass = this.refs.pass.value
 
     auth.login(email, pass, (loggedIn) => {
       if (!loggedIn)
