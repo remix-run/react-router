@@ -21,6 +21,23 @@ function getIndexRoute(route, location, callback) {
     route.getIndexRoute(location, function (error, indexRoute) {
       callback(error, !error && createRoutes(indexRoute)[0])
     })
+  } else if (route.childRoutes) {
+    const pathless = route.childRoutes.filter(function (obj) {
+      return !obj.hasOwnProperty('path')
+    })
+
+    loopAsync(pathless.length, function (index, next, done) {
+      getIndexRoute(pathless[index], location, function (error, indexRoute) {
+        if (error || indexRoute) {
+          const routes = [ pathless[index] ].concat( Array.isArray(indexRoute) ? indexRoute : [ indexRoute ] )
+          done(error, routes)
+        } else {
+          next()
+        }
+      })
+    }, function (err, routes) {
+      callback(null, routes)
+    })
   } else {
     callback()
   }
@@ -65,7 +82,9 @@ function matchRouteDeep(basename, route, location, callback) {
       if (error) {
         callback(error)
       } else {
-        if (indexRoute)
+        if (Array.isArray(indexRoute))
+          match.routes.push(...indexRoute)
+        else if (indexRoute)
           match.routes.push(indexRoute)
 
         callback(null, match)

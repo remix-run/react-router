@@ -60,6 +60,41 @@ describe('An <IndexRoute>', function () {
         done()
       })
     })
-  })
 
+    it('renders when its parents combined pathes match', function (done) {
+      render((
+        <Router history={createHistory('/path/test')}>
+          <Route path="/path" component={Parent}>
+            <IndexRoute component={Child}/>
+            <Route path="test" component={Parent}>
+              <IndexRoute component={Child}/>
+            </Route>
+          </Route>
+        </Router>
+      ), node, function () {
+        expect(node.textContent).toEqual('parent parent child')
+        done()
+      })
+    })
+
+    it('renders when its parents combined pathes match, and its direct parent is path less', function (done) {
+      render((
+        <Router history={createHistory('/')}>
+          <Route path="/" component={Parent}>
+            <Route component={Parent}>
+              <Route component={Parent}>
+                <Route component={Parent}>
+                  <Route path="deep" component={Parent}/>
+                  <IndexRoute component={Child}/>
+                </Route>
+              </Route>
+            </Route>
+          </Route>
+        </Router>
+      ), node, function () {
+        expect(node.textContent).toEqual('parent parent parent parent child')
+        done()
+      })
+    })
+  })
 })
