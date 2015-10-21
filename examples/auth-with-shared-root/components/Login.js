@@ -1,4 +1,4 @@
-import React, { findDOMNode } from 'react'
+import React from 'react'
 import { History } from 'react-router'
 import auth from '../utils/auth.js'
 
@@ -14,9 +14,8 @@ var Login = React.createClass({
 
   handleSubmit(event) {
     event.preventDefault()
-
-    var email = findDOMNode(this.refs.email).value
-    var pass = findDOMNode(this.refs.pass).value
+    var email = this.refs.email.value
+    var pass = this.refs.pass.value
 
     auth.login(email, pass, (loggedIn) => {
       if (!loggedIn)
