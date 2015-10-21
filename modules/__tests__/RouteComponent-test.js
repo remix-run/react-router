@@ -5,6 +5,8 @@ import { render, unmountComponentAtNode } from 'react-dom'
 import createHistory from 'history/lib/createMemoryHistory'
 import Router from '../Router'
 
+const { object } = React.PropTypes
+
 describe('a Route Component', function () {
 
   let node
@@ -38,6 +40,30 @@ describe('a Route Component', function () {
 
     render((
       <Router history={createHistory('/child')} routes={parent}/>
+    ), node, done)
+  })
+
+  it('receives the right context', function (done) {
+    class RouteComponent extends Component {
+      static contextTypes = {
+        history: object.isRequired,
+        location: object.isRequired,
+        params: object.isRequired
+      }
+      componentDidMount() {
+        expect(this.context.history).toEqual(this.props.history)
+        expect(this.context.location).toEqual(this.props.location)
+        expect(this.context.params).toEqual(this.props.params)
+      }
+      render() {
+        return null
+      }
+    }
+
+    const route = { path: '/', component: RouteComponent }
+
+    render((
+      <Router history={createHistory('/')} routes={route}/>
     ), node, done)
   })
 
