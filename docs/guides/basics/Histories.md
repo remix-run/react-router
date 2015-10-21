@@ -33,7 +33,13 @@ When a history transitions around your app with `pushState` or `replaceState`, i
 
 The DOM API that hash history uses to transition around is simply `window.location.hash = newHash`, with no place to store location state.  But, we want all histories to be able to use location state, so we shim it by creating a unique key for each location and then store that state in session storage. When the visitor clicks "back" and "forward" we now have a mechanism to restore the location state.
 
-You can disable that feature by following the instructions [here](http://rackt.org/history/stable/HashHistoryCaveats.html).
+You can disable that feature (more [here](http://rackt.org/history/stable/HashHistoryCaveats.html)):
+```js
+// Opt-out of persistent state, not recommended.
+let history = createHistory({
+  queryKey: false
+});
+```
 
 ### `createBrowserHistory`
 Browser history is the recommended history for browser application with React Router. It uses the [History](https://developer.mozilla.org/en-US/docs/Web/API/History) API built into the browser to manipulate the URL, creating real URLs that look like `example.com/some/path`.
