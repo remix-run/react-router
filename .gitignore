@@ -5,3 +5,4 @@ node_modules
 npm-debug.log
 website/index.html
 website/tags/*
+coverage
