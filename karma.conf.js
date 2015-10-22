@@ -99,7 +99,7 @@ module.exports = function (config) {
 
   if (process.env.USE_CLOUD) {
     config.browsers = Object.keys(customLaunchers)
-    config.reporters = [ 'dots' ]
+    config.reporters = [ 'dots', 'coverage' ]
     config.browserDisconnectTimeout = 10000
     config.browserDisconnectTolerance = 3
     config.browserNoActivityTimeout = 30000
