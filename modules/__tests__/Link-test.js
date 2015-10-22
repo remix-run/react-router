@@ -1,5 +1,6 @@
 /*eslint-env mocha */
 /*eslint react/prop-types: 0*/
+/* eslint-disable */
 import expect, { spyOn } from 'expect'
 import React, { Component } from 'react'
 import { Simulate } from 'react-addons-test-utils'
@@ -147,7 +148,7 @@ describe('A <Link>', function () {
   })
 
   describe('when its route is active', function () {
-    it.skip('has its activeClassName', function (done) {
+    it('has its activeClassName', function (done) {
       class LinkWrapper extends Component {
         render() {
           return (
@@ -183,7 +184,7 @@ describe('A <Link>', function () {
       ), node, execNextStep)
     })
 
-    it.skip('has its activeStyle', function (done) {
+    it('has its activeStyle', function (done) {
       class LinkWrapper extends Component {
         render() {
           return (
@@ -221,15 +222,12 @@ describe('A <Link>', function () {
   })
 
   describe('when route changes', function () {
-    it.skip('changes active state', function (done) {
+    it('changes active state', function (done) {
       class LinkWrapper extends Component {
-        shouldComponentUpdate() {
-          return false
-        }
         render() {
           return (
             <div>
-              <Link to="/hello">Link</Link>
+              <Link to="/hello" activeClassName="active">Link</Link>
               {this.props.children}
             </div>
           )
