@@ -21,21 +21,21 @@ But for now, here's how to translate the old API to the new one.
 ```js
 // v0.13.x
 Router.run(routes, (Handler) => {
-  React.render(<Handler/>, el);
+  render(<Handler/>, el);
 })
 
 // v1.0
-React.render(<Router>{routes}</Router>, el)
+render(<Router>{routes}</Router>, el)
 
 // looks more like this:
-React.render((
+render((
   <Router>
     <Route path="/" component={App}/>
   </Router>
 ), el);
 
 // or if you'd rather
-React.render(<Router routes={routes}/>, el)
+render(<Router routes={routes}/>, el)
 ```
 
 ### Locations
@@ -46,13 +46,13 @@ them from the [`history` package](https://github.com/rackt/history), not react r
 ```js
 // v0.13.x
 Router.run(routes, Router.BrowserHistory, (Handler) => {
-  React.render(<Handler/>, el);
+  render(<Handler/>, el);
 })
 
 // v1.0
 import createBrowserHistory from 'history/lib/createBrowserHistory'
 let history = createBrowserHistory()
-React.render(<Router history={history}>{routes}</Router>, el)
+render(<Router history={history}>{routes}</Router>, el)
 ```
 
 If you do not specify a history type (as in the example above) then you will notice some unusual behaviour after updating to 1.0.0. With the default hash based routing a querystring entry not defined by yourself will start appearing in your URLs called "_k". An example of how it looks is this: `?_k=umhx1s`.  
