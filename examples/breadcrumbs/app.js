@@ -1,4 +1,5 @@
-import React from 'react/addons'
+import React from 'react'
+import { render } from 'react-dom'
 import { createHistory, useBasename } from 'history'
 import { Router, Route, Link } from 'react-router'
 
@@ -9,8 +10,8 @@ const history = useBasename(createHistory)({
 })
 
 class App extends React.Component {
-  static title = 'Home';
-  static path = '/';
+  static title = 'Home'
+  static path = '/'
 
   render() {
     const depth = this.props.routes.length
@@ -24,12 +25,12 @@ class App extends React.Component {
           </ul>
         </aside>
         <main>
-          <ul className="breadcrumbs-list">
+          <ul className='breadcrumbs-list'>
             {this.props.routes.map((item, index) =>
               <li key={index}>
                 <Link
                   onlyActiveOnIndex={true}
-                  activeClassName="breadcrumb-active"
+                  activeClassName='breadcrumb-active'
                   to={item.path || ''}>
                   {item.component.title}
                 </Link>
@@ -45,12 +46,12 @@ class App extends React.Component {
 }
 
 class Products extends React.Component {
-  static title = 'Products';
-  static path = '/products';
+  static title = 'Products'
+  static path = '/products'
 
   render() {
     return (
-      <div className="Page">
+      <div className='Page'>
         <h1>Products</h1>
       </div>
     )
@@ -58,19 +59,19 @@ class Products extends React.Component {
 }
 
 class Orders extends React.Component {
-  static title = 'Orders';
-  static path = '/orders';
+  static title = 'Orders'
+  static path = '/orders'
 
   render() {
     return (
-      <div className="Page">
+      <div className='Page'>
         <h1>Orders</h1>
       </div>
     )
   }
 }
 
-React.render((
+render((
   <Router history={history}>
     <Route path={App.path} component={App}>
       <Route path={Products.path} component={Products} />
