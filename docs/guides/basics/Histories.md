@@ -74,7 +74,7 @@ If you're using nginx, use the [`try_files` directive](http://nginx.org/en/docs/
 server {
   ...
   location / {
-    try_files $uri /index.html
+    try_files $uri /index.html;
   }
 }
 ```
