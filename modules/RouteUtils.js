@@ -95,3 +95,23 @@ export function createRoutes(routes) {
 
   return routes
 }
+
+function checkForDuplicatePaths(routes) {
+  let foundPaths = new Set()
+  routes.forEach((route) => {
+    warning(
+      foundPaths.has(route.path) === false,
+      `There are duplicate child routes with the path '${route.path}'`)
+    foundPaths.add(route.path)
+  })
+}
+
+export function checkRoutes(routes) {
+  routes.forEach((route) => {
+    const { childRoutes } = route
+    if (childRoutes) {
+      checkForDuplicatePaths(childRoutes)
+      checkRoutes(childRoutes)
+    }
+  })
+}
