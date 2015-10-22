@@ -143,7 +143,9 @@ render((
 ), document.body)
 ```
 
-React Router knows how to build nested UI for us, so we don't have to manually figure out which `<Child>` component to render. Internally, the router converts your `<Route>` element hierarchy to a [route config](/docs/Glossary.md#routeconfig). But if you're not digging the JSX you can use plain objects instead:
+React Router knows how to build nested UI for us, so we don't have to manually figure out which `<Child>` component to render. For example, for a full path `/about` it would build `<App><About /></App>`.
+
+Internally, the router converts your `<Route>` element hierarchy to a [route config](/docs/Glossary.md#routeconfig). But if you're not digging the JSX you can use plain objects instead:
 
 ```js
 const routes = {
@@ -195,7 +197,15 @@ render((
 ), document.body)
 ```
 
-Now visits to URLs like `inbox/messages/Jkei3c32` will match the new route and nest the UI branch of `App -> Inbox -> Message`.
+Now visits to URLs like `inbox/messages/Jkei3c32` will match the new route and build this:
+
+```
+<App>
+  <Inbox>
+    <Message params={ {id: 'Jkei3c32'} } />
+  </Inbox>
+</App>
+```
 
 ### Getting URL Parameters
 

@@ -30,7 +30,9 @@ const CourseRoute = {
 
   getIndexRoute(location, callback) {
     require.ensure([], function (require) {
-      callback(null, require('./components/Index'))
+      callback(null, {
+        component: require('./components/Index'),
+      })
     })
   },
 
