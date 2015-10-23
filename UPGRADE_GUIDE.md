@@ -180,7 +180,7 @@ handler no longer prevents the transition. To prevent the transition, call
 
 // v1.0
 {this.props.children}
-{React.cloneElement(this.props.children, {someExtraProp: something })}
+{React.cloneElement(this.props.children, {someExtraProp: something})}
 ```
 
 **Note:** React does not validate `propTypes` that are specified via `cloneElement` (see: [facebook/react#4494](https://github.com/facebook/react/issues/4494#issuecomment-125068868)). It is recommended to make such `propTypes` optional.
