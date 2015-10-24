@@ -248,63 +248,78 @@ describe('Router', function () {
 
   })
 
-  it('applies middlewares', function (done) {
-    const Parent = ({ children }) => <span>parent {children}</span>
-    const Child = () => <span>child</span>
+  describe('middlewares', function () {
+    it('applies middlewares', function (done) {
+      const Parent = ({ children }) => <span>parent:{children}</span>
+      const Child = () => <span>child</span>
 
-    class Middleware1 extends Component {
-      createElement = (component, props) => {
-        return (
-          <span>m1-inner {this.props.createElement(component, props)}</span>
-        )
+      class Middleware extends Component {
+        createElement = (component, props) => {
+          return (
+            <span>
+              {this.props.label}-inner:
+              {this.props.createElement(component, props)}
+            </span>
+          )
+        }
+
+        render() {
+          return (
+            <span>
+              {this.props.label}-outer:
+              {React.cloneElement(this.props.children, {
+                createElement: this.createElement
+              })}
+            </span>
+          )
+        }
       }
 
-      render() {
-        return (
-          <span>
-            m1-outer {React.cloneElement(this.props.children, {
-              createElement: this.createElement
-            })}
-          </span>
-        )
-      }
-    }
-
-    class Middleware2 extends Component {
-      createElement = (component, props) => {
-        return (
-          <span>m2-inner {this.props.createElement(component, props)}</span>
-        )
+      function createMiddleware(label) {
+        return <Middleware label={label} />
       }
 
-      render() {
-        return (
-          <span>
-            m2-outer {React.cloneElement(this.props.children, {
-              createElement: this.createElement
-            })}
-          </span>
+      render((
+        <Router
+          history={createHistory('/child')}
+          middlewares={[ createMiddleware('m1'), createMiddleware('m2') ]}
+          >
+          <Route path="/" component={Parent}>
+            <Route path="child" component={Child} />
+          </Route>
+        </Router>
+      ), node, function () {
+        // Note that the nesting order is inverted for `createElement`, because
+        // the order of function application is outermost-first.
+        expect(node.textContent).toBe(
+          'm1-outer:m2-outer:m2-inner:m1-inner:parent:m2-inner:m1-inner:child'
         )
-      }
-    }
-
-    render((
-      <Router
-        history={createHistory('/child')}
-        middlewares={[ <Middleware1 />, <Middleware2 /> ]}
-      >
-        <Route path="/" component={Parent}>
-          <Route path="child" component={Child} />
-        </Route>
-      </Router>
-    ), node, function () {
-      // Note that the nesting order is inverted for `createElement`, because
-      // the order of function application is outermost-first.
-      expect(node.textContent).toEqual(
-        'm1-outer m2-outer m2-inner m1-inner parent m2-inner m1-inner child'
-      )
-      done()
+        done()
+      })
     })
+
+    it('passes router props to middlewares', function (done) {
+      const MyComponent = () => <div />
+      const route = { path: '/', component: MyComponent }
+
+      const Middleware = ({ routes, components, children }) => {
+        expect(routes).toEqual([ route ])
+        expect(components).toEqual([ MyComponent ])
+        done()
+
+        return children
+      }
+      const middleware = <Middleware />
+
+      render((
+        <Router
+          history={createHistory('/')}
+          middlewares={[ middleware ]}
+          routes={route}
+        />
+      ), node)
+    })
+
   })
 
 })
