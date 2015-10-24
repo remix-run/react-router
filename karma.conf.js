@@ -1,4 +1,5 @@
 var webpack = require('webpack')
+var path = require('path')
 
 module.exports = function (config) {
   // Browsers to run on BrowserStack
@@ -59,7 +60,7 @@ module.exports = function (config) {
 
     browsers: [ 'Chrome' ],
     frameworks: [ 'mocha' ],
-    reporters: [ 'mocha' ],
+    reporters: [ 'mocha', 'coverage' ],
 
     files: [
       'tests.webpack.js'
@@ -73,7 +74,8 @@ module.exports = function (config) {
       devtool: 'inline-source-map',
       module: {
         loaders: [
-          { test: /\.js$/, exclude: /node_modules/, loader: 'babel' }
+          { test: /\.js$/, exclude: /node_modules/, loader: 'babel' },
+          { test: /\.js$/, exclude: /__tests__/, include: path.resolve('modules/'), loader: 'isparta' }
         ]
       },
       plugins: [
@@ -85,12 +87,19 @@ module.exports = function (config) {
 
     webpackServer: {
       noInfo: true
+    },
+
+    coverageReporter: {
+      reporters: [
+        { type: 'html', subdir: 'html' },
+        { type: 'lcovonly', subdir: '.' }
+      ]
     }
   })
 
   if (process.env.USE_CLOUD) {
     config.browsers = Object.keys(customLaunchers)
-    config.reporters = [ 'dots' ]
+    config.reporters = [ 'dots', 'coverage' ]
     config.browserDisconnectTimeout = 10000
     config.browserDisconnectTolerance = 3
     config.browserNoActivityTimeout = 30000

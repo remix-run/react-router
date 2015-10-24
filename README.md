@@ -1,8 +1,9 @@
-[![build status](https://img.shields.io/travis/rackt/react-router/master.svg?style=flat-square)](https://travis-ci.org/rackt/react-router)
-[![npm package](https://img.shields.io/npm/v/react-router.svg?style=flat-square)](https://www.npmjs.org/package/react-router)
-[![#rackt on freenode](https://img.shields.io/badge/irc-rackt_on_freenode-61DAFB.svg?style=flat-square)](https://webchat.freenode.net/)
+<img src="https://rackt.github.io/react-router/img/vertical.png" width="300">
 
-<img src="https://rackt.github.io/react-router/img/vertical.png" width="300"/>
+[![npm package](https://img.shields.io/npm/v/react-router.svg?style=flat-square)](https://www.npmjs.org/package/react-router)
+[![build status](https://img.shields.io/travis/rackt/react-router/master.svg?style=flat-square)](https://travis-ci.org/rackt/react-router)
+[![Coverage Status](https://img.shields.io/coveralls/rackt/react-router.svg?style=flat-square)](https://coveralls.io/github/rackt/react-router)
+[![#rackt on freenode](https://img.shields.io/badge/irc-rackt_on_freenode-61DAFB.svg?style=flat-square)](https://webchat.freenode.net/)
 
 A complete routing library for React
 
