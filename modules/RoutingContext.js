@@ -1,23 +1,19 @@
-import invariant from 'invariant'
 import React, { Component } from 'react'
-import { isReactChildren } from './RouteUtils'
-import getRouteParams from './getRouteParams'
+import RoutingRenderer from './RoutingRenderer'
 
 const { array, func, object } = React.PropTypes
 
 /**
- * A <RoutingContext> renders the component tree for a given router state
- * and sets the history object and the current location in context.
+ * A <RoutingContext> applies middlewares for rendering the router state and
+ * the history object and the current location in context.
  */
 class RoutingContext extends Component {
 
   static propTypes = {
     history: object.isRequired,
     createElement: func.isRequired,
-    location: object.isRequired,
-    routes: array.isRequired,
-    params: object.isRequired,
-    components: array.isRequired
+    middlewares: array,
+    location: object.isRequired
   }
 
   static defaultProps = {
@@ -34,56 +30,15 @@ class RoutingContext extends Component {
     return { history, location }
   }
 
-  createElement(component, props) {
-    return component == null ? null : this.props.createElement(component, props)
-  }
-
   render() {
-    const { history, location, routes, params, components } = this.props
-    let element = null
+    const { middlewares, ...props } = this.props
 
-    if (components) {
-      element = components.reduceRight((element, components, index) => {
-        if (components == null)
-          return element // Don't create new children; use the grandchildren.
-
-        const route = routes[index]
-        const routeParams = getRouteParams(route, params)
-        const props = {
-          history,
-          location,
-          params,
-          route,
-          routeParams,
-          routes
-        }
-
-        if (isReactChildren(element)) {
-          props.children = element
-        } else if (element) {
-          for (let prop in element)
-            if (element.hasOwnProperty(prop))
-              props[prop] = element[prop]
-        }
-
-        if (typeof components === 'object') {
-          const elements = {}
-
-          for (let key in components)
-            if (components.hasOwnProperty(key))
-              elements[key] = this.createElement(components[key], props)
-
-          return elements
-        }
-
-        return this.createElement(components, props)
-      }, element)
+    let element = React.createElement(RoutingRenderer, props)
+    if (middlewares) {
+      element = middlewares.reduceRight((children, middleware) => (
+        React.cloneElement(middleware, { ...props, children })
+      ), element)
     }
-
-    invariant(
-      element === null || element === false || React.isValidElement(element),
-      'The root route must render a single element'
-    )
 
     return element
   }
