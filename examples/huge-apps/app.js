@@ -47,7 +47,7 @@ render(
 // import Grades from './routes/Grades/components/Grades'
 // import Messages from './routes/Messages/components/Messages'
 
-// React.render(
+// render(
 //   <Router>
 //     <Route path="/" component={App}>
 //       <Route path="calendar" component={Calendar} />

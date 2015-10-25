@@ -4,7 +4,7 @@
   - [Router](#router)
   - [Link](#link)
   - [IndexLink](#indexlink)
-  - [RoutingContext](#routingcontext)  
+  - [RoutingContext](#routingcontext)
 
 * [Configuration Components](#configuration-components)
   - [Route](#route)
@@ -18,7 +18,7 @@
 * [Mixins](#mixins)
   - [Lifecycle](#lifecycle-mixin)
   - [History](#history-mixin)
-  - [RouteContext](#routecontext-mixin)  
+  - [RouteContext](#routecontext-mixin)
 
 * [Utilities](#utilities)
   * [useRoutes](#useroutescreatehistory)
@@ -42,7 +42,7 @@ Alias for `children`.
 The history the router should listen to from the `history` package.
 
 ##### `createElement(Component, props)`
-When the router is ready to render a branch of route components, it will use this function to create the elements. You may want to take control of creating the elements when you're using some sort of data abstraction, like setting up subscriptions to stores, or passing in some sort of application module to each component via props.  
+When the router is ready to render a branch of route components, it will use this function to create the elements. You may want to take control of creating the elements when you're using some sort of data abstraction, like setting up subscriptions to stores, or passing in some sort of application module to each component via props.
 
 ```js
 <Router createElement={createElement} />
@@ -410,7 +410,7 @@ The matched child route elements to be rendered.
 
 ##### Example
 ```js
-React.render((
+render((
   <Router history={history}>
     <Route path="/" component={App}>
       <Route path="groups" component={Groups} />
@@ -436,7 +436,7 @@ When a route has multiple components, the child elements are available by name o
 
 #### Example
 ```js
-React.render((
+render((
   <Router>
     <Route path="/" component={App}>
       <Route path="groups" components={{main: Groups, sidebar: GroupsSidebar}} />

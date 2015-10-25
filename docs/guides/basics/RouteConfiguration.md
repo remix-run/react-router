@@ -4,6 +4,7 @@ A [route configuration](/docs/Glossary.md#routeconfig) is basically a set of ins
 
 ```js
 import React from 'react'
+import { render } from 'react-dom'
 import { Router, Route, Link } from 'react-router'
 
 const App = React.createClass({
@@ -44,7 +45,7 @@ const Message = React.createClass({
   }
 })
 
-React.render((
+render((
   <Router>
     <Route path="/" component={App}>
       <Route path="about" component={About} />
@@ -78,7 +79,7 @@ const Dashboard = React.createClass({
   }
 })
 
-React.render((
+render((
   <Router>
     <Route path="/" component={App}>
       {/* Show the dashboard at / */}
@@ -108,7 +109,7 @@ URL                     | Components
 It would be nice if we could remove the `/inbox` segment from the `/inbox/messages/:id` URL pattern, but still render `Message` nested inside the `App -> Inbox` UI. Absolute `path`s let us do exactly that.
 
 ```js
-React.render((
+render((
   <Router>
     <Route path="/" component={App}>
       <IndexRoute component={Dashboard} />
@@ -144,7 +145,7 @@ Not to worry. We can use a [`<Redirect>`](/docs/API.md#redirect) to make sure th
 ```js
 import { Redirect } from 'react-router'
 
-React.render((
+render((
   <Router>
     <Route path="/" component={App}>
       <IndexRoute component={Dashboard} />
@@ -202,5 +203,5 @@ const routeConfig = [
   }
 ]
 
-React.render(<Router routes={routeConfig} />, document.body)
+render(<Router routes={routeConfig} />, document.body)
 ```
