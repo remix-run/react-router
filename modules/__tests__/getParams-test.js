@@ -104,13 +104,13 @@ describe('getParams', function () {
     })
 
     describe('and the path contains multiple special URL encoded characters', function () {
-        const pattern = '/foo/:component'
+      const pattern = '/foo/:component'
 
-        describe('and the path matches', function () {
-            it('returns the correctly decoded characters', function () {
-                expect(getParams(pattern, '/foo/%7Bfoo%24bar')).toEqual({ component: '{foo$bar' })
-            })
+      describe('and the path matches', function () {
+        it('returns the correctly decoded characters', function () {
+          expect(getParams(pattern, '/foo/%7Bfoo%24bar')).toEqual({ component: '{foo$bar' })
         })
+      })
     })
   })
 

@@ -237,7 +237,7 @@ describe('Router', function () {
       render((
         <Router history={createHistory('/apple%2Fbanana')}>
           <Route component={Parent}>
-            <Route path='/:name' component={Child} />
+            <Route path="/:name" component={Child} />
           </Route>
         </Router>
       ), node, function () {

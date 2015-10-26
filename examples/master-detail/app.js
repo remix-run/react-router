@@ -10,7 +10,7 @@ const history = useBasename(createHistory)({
   basename: '/master-detail'
 })
 
-var App = React.createClass({
+const App = React.createClass({
   getInitialState() {
     return {
       contacts: ContactStore.getContacts(),
@@ -41,7 +41,7 @@ var App = React.createClass({
   },
 
   render() {
-    var contacts = this.state.contacts.map(function (contact) {
+    const contacts = this.state.contacts.map(function (contact) {
       return <li key={contact.id}><Link to={`/contact/${contact.id}`}>{contact.first}</Link></li>
     })
 
@@ -61,17 +61,17 @@ var App = React.createClass({
   }
 })
 
-var Index = React.createClass({
+const Index = React.createClass({
   render() {
     return <h1>Address Book</h1>
   }
 })
 
-var Contact = React.createClass({
+const Contact = React.createClass({
   mixins: [ History ],
 
   getStateFromStore(props) {
-    var { id } = props ? props.params : this.props.params
+    const { id } = props ? props.params : this.props.params
 
     return {
       contact: ContactStore.getContact(id)
@@ -102,15 +102,16 @@ var Contact = React.createClass({
   },
 
   destroy() {
-    var { id } = this.props.params
+    const { id } = this.props.params
     ContactStore.removeContact(id)
     this.history.pushState(null, '/')
   },
 
   render() {
-    var contact = this.state.contact || {}
-    var name = contact.first + ' ' + contact.last
-    var avatar = contact.avatar || 'http://placecage.com/50/50'
+    const contact = this.state.contact || {}
+    const name = contact.first + ' ' + contact.last
+    const avatar = contact.avatar || 'http://placecage.com/50/50'
+
     return (
       <div className="Contact">
         <img height="50" src={avatar} key={avatar} />
@@ -121,7 +122,7 @@ var Contact = React.createClass({
   }
 })
 
-var NewContact = React.createClass({
+const NewContact = React.createClass({
   mixins: [ History ],
 
   createContact(event) {
@@ -150,7 +151,7 @@ var NewContact = React.createClass({
   }
 })
 
-var NotFound = React.createClass({
+const NotFound = React.createClass({
   render() {
     return <h2>Not found</h2>
   }

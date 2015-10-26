@@ -1,6 +1,7 @@
 import React from 'react'
 
-var Landing = React.createClass({
+const Landing = React.createClass({
+
   render() {
     return (
       <div>
@@ -10,6 +11,7 @@ var Landing = React.createClass({
       </div>
     )
   }
+
 })
 
 export default Landing

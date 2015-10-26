@@ -8,7 +8,7 @@ const history = useBasename(createHistory)({
   basename: '/auth-flow'
 })
 
-var App = React.createClass({
+const App = React.createClass({
   getInitialState() {
     return {
       loggedIn: auth.loggedIn()
@@ -46,9 +46,9 @@ var App = React.createClass({
   }
 })
 
-var Dashboard = React.createClass({
+const Dashboard = React.createClass({
   render() {
-    var token = auth.getToken()
+    const token = auth.getToken()
 
     return (
       <div>
@@ -60,7 +60,7 @@ var Dashboard = React.createClass({
   }
 })
 
-var Login = React.createClass({
+const Login = React.createClass({
   mixins: [ History ],
 
   getInitialState() {
@@ -72,14 +72,14 @@ var Login = React.createClass({
   handleSubmit(event) {
     event.preventDefault()
 
-    var email = this.refs.email.value
-    var pass = this.refs.pass.value
+    const email = this.refs.email.value
+    const pass = this.refs.pass.value
 
     auth.login(email, pass, (loggedIn) => {
       if (!loggedIn)
         return this.setState({ error: true })
 
-      var { location } = this.props
+      const { location } = this.props
 
       if (location.state && location.state.nextPathname) {
         this.history.replaceState(null, location.state.nextPathname)
@@ -103,13 +103,13 @@ var Login = React.createClass({
   }
 })
 
-var About = React.createClass({
+const About = React.createClass({
   render() {
     return <h1>About</h1>
   }
 })
 
-var Logout = React.createClass({
+const Logout = React.createClass({
   componentDidMount() {
     auth.logout()
   },

@@ -2,8 +2,8 @@ import React from 'react'
 import { History } from 'react-router'
 import auth from '../utils/auth.js'
 
+const Login = React.createClass({
 
-var Login = React.createClass({
   mixins: [ History ],
 
   getInitialState() {
@@ -14,14 +14,15 @@ var Login = React.createClass({
 
   handleSubmit(event) {
     event.preventDefault()
-    var email = this.refs.email.value
-    var pass = this.refs.pass.value
+
+    const email = this.refs.email.value
+    const pass = this.refs.pass.value
 
     auth.login(email, pass, (loggedIn) => {
       if (!loggedIn)
         return this.setState({ error: true })
 
-      var { location } = this.props
+      const { location } = this.props
 
       if (location.state && location.state.nextPathname) {
         this.history.replaceState(null, location.state.nextPathname)
@@ -43,6 +44,7 @@ var Login = React.createClass({
       </form>
     )
   }
+
 })
 
 export default Login

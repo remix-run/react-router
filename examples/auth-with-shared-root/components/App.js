@@ -2,7 +2,8 @@ import React from 'react'
 import { Link } from 'react-router'
 import auth from '../utils/auth'
 
-var App = React.createClass({
+const App = React.createClass({
+
   getInitialState() {
     return {
       loggedIn: auth.loggedIn()
@@ -40,6 +41,7 @@ var App = React.createClass({
       </div>
     )
   }
+
 })
 
 export default App

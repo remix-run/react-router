@@ -212,14 +212,14 @@ describe('matchRoutes', function () {
 
     beforeEach(function () {
       getChildRoutes = function (location, callback) {
-          setTimeout(function () {
-            callback(null, <Route path=":userID" />)
-          })
+        setTimeout(function () {
+          callback(null, <Route path=":userID" />)
+        })
       }
 
       getIndexRoute = function (location, callback) {
         setTimeout(function () {
-          callback(null, <Route name='jsx' />)
+          callback(null, <Route name="jsx" />)
         })
       }
 
@@ -233,18 +233,18 @@ describe('matchRoutes', function () {
 
     it('when getChildRoutes callback returns reactElements', function (done) {
       matchRoutes(jsxRoutes, createLocation('/users/5'), function (error, match) {
-         expect(match).toExist()
-         expect(match.routes.map(r => r.path)).toEqual([ 'users', ':userID' ])
-         expect(match.params).toEqual({ userID: '5' })
-         done()
+        expect(match).toExist()
+        expect(match.routes.map(r => r.path)).toEqual([ 'users', ':userID' ])
+        expect(match.params).toEqual({ userID: '5' })
+        done()
       })
     })
 
     it('when getIndexRoute callback returns reactElements', function (done) {
       matchRoutes(jsxRoutes, createLocation('/users'), function (error, match) {
-         expect(match).toExist()
-         expect(match.routes.map(r => r.name)).toEqual([ 'users', 'jsx' ])
-         done()
+        expect(match).toExist()
+        expect(match.routes.map(r => r.name)).toEqual([ 'users', 'jsx' ])
+        done()
       })
     })
   })

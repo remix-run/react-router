@@ -232,10 +232,10 @@ describe('isActive', function () {
     describe('with a custom parse function and a query that does not match', function () {
       it('is not active', function (done) {
         function stringifyQuery(params) {
-            return qs.stringify(params, { arrayFormat: 'indices' })
+          return qs.stringify(params, { arrayFormat: 'indices' })
         }
         function parseQueryString(query) {
-            return qs.parse(query, { parseArrays: false })
+          return qs.parse(query, { parseArrays: false })
         }
 
         render((
@@ -253,10 +253,10 @@ describe('isActive', function () {
     describe('with a custom parse function and a query that match', function () {
       it('is active', function (done) {
         function stringifyQuery(params) {
-            return qs.stringify(params, { arrayFormat: 'indices' })
+          return qs.stringify(params, { arrayFormat: 'indices' })
         }
         function parseQueryString(query) {
-            return qs.parse(query, { parseArrays: false })
+          return qs.parse(query, { parseArrays: false })
         }
 
         render((

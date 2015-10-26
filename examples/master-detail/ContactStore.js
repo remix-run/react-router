@@ -1,9 +1,9 @@
-var API = 'http://addressbook-api.herokuapp.com/contacts'
-var _contacts = {}
-var _changeListeners = []
-var _initCalled = false
+const API = 'http://addressbook-api.herokuapp.com/contacts'
+const _contacts = {}
+const _changeListeners = []
+const _initCalled = false
 
-var ContactStore = module.exports = {
+const ContactStore = {
 
   init: function () {
     if (_initCalled)
@@ -35,9 +35,9 @@ var ContactStore = module.exports = {
   },
 
   getContacts: function () {
-    var array = []
+    const array = []
 
-    for (var id in _contacts)
+    for (const id in _contacts)
       array.push(_contacts[id])
 
     return array
@@ -68,7 +68,7 @@ var ContactStore = module.exports = {
 localStorage.token = localStorage.token || (Date.now()*Math.random())
 
 function getJSON(url, cb) {
-  var req = new XMLHttpRequest()
+  const req = new XMLHttpRequest()
   req.onload = function () {
     if (req.status === 404) {
       cb(new Error('not found'))
@@ -82,7 +82,7 @@ function getJSON(url, cb) {
 }
 
 function postJSON(url, obj, cb) {
-  var req = new XMLHttpRequest()
+  const req = new XMLHttpRequest()
   req.onload = function () {
     cb(JSON.parse(req.response))
   }
@@ -93,9 +93,11 @@ function postJSON(url, obj, cb) {
 }
 
 function deleteJSON(url, cb) {
-  var req = new XMLHttpRequest()
+  const req = new XMLHttpRequest()
   req.onload = cb
   req.open('DELETE', url)
   req.setRequestHeader('authorization', localStorage.token)
   req.send()
 }
+
+export default ContactStore

@@ -25,12 +25,12 @@ class App extends React.Component {
           </ul>
         </aside>
         <main>
-          <ul className='breadcrumbs-list'>
+          <ul className="breadcrumbs-list">
             {this.props.routes.map((item, index) =>
               <li key={index}>
                 <Link
                   onlyActiveOnIndex={true}
-                  activeClassName='breadcrumb-active'
+                  activeClassName="breadcrumb-active"
                   to={item.path || ''}>
                   {item.component.title}
                 </Link>
@@ -51,7 +51,7 @@ class Products extends React.Component {
 
   render() {
     return (
-      <div className='Page'>
+      <div className="Page">
         <h1>Products</h1>
       </div>
     )
@@ -64,7 +64,7 @@ class Orders extends React.Component {
 
   render() {
     return (
-      <div className='Page'>
+      <div className="Page">
         <h1>Orders</h1>
       </div>
     )

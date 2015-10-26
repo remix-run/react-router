@@ -1,4 +1,4 @@
-/*eslint-disable no-console */
+/*eslint-disable no-console, no-var */
 var express = require('express')
 var rewrite = require('express-urlrewrite')
 var webpack = require('webpack')

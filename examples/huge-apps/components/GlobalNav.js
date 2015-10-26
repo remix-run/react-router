@@ -43,7 +43,8 @@ class GlobalNav extends React.Component {
   }
 
   render() {
-    var { user } = this.props
+    const { user } = this.props
+
     return (
       <div style={styles.wrapper}>
         <div style={{ float: 'left' }}>
