@@ -21,6 +21,7 @@ class Route extends Component {
   static createRouteFromReactElement(element) {
     const route = createRouteFromReactElement(element)
 
+    /* istanbul ignore if: deprecation */
     if (route.handler) {
       warning(
         false,
@@ -43,6 +44,7 @@ class Route extends Component {
     getComponents: func
   }
 
+  /* istanbul ignore next: sanity check */
   render() {
     invariant(
       false,

@@ -12,6 +12,7 @@ const { string, object } = React.PropTypes
 class IndexRedirect extends Component {
 
   static createRouteFromReactElement(element, parentRoute) {
+    /* istanbul ignore else: sanity check */
     if (parentRoute) {
       parentRoute.indexRoute = Redirect.createRouteFromReactElement(element)
     } else {
@@ -30,6 +31,7 @@ class IndexRedirect extends Component {
     children: falsy
   }
 
+  /* istanbul ignore next: sanity check */
   render() {
     invariant(
       false,

@@ -13,6 +13,7 @@ const { bool, func } = React.PropTypes
 class IndexRoute extends Component {
 
   static createRouteFromReactElement(element, parentRoute) {
+    /* istanbul ignore else: sanity check */
     if (parentRoute) {
       parentRoute.indexRoute = createRouteFromReactElement(element)
     } else {
@@ -31,6 +32,7 @@ class IndexRoute extends Component {
     getComponents: func
   }
 
+  /* istanbul ignore next: sanity check */
   render() {
     invariant(
       false,

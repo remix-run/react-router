@@ -65,6 +65,7 @@ class Router extends Component {
     })
   }
 
+  /* istanbul ignore next: sanity check */
   componentWillReceiveProps(nextProps) {
     warning(
       nextProps.history === this.props.history,
