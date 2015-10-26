@@ -1,0 +1,78 @@
+import invariant from 'invariant'
+import React, { Component } from 'react'
+import { isReactChildren } from './RouteUtils'
+import getRouteParams from './getRouteParams'
+
+const { array, func, object } = React.PropTypes
+
+/**
+ * A <RoutingRenderer> renders the component tree for a given router state.
+ */
+class RoutingRenderer extends Component {
+
+  static propTypes = {
+    history: object.isRequired,
+    createElement: func.isRequired,
+    location: object.isRequired,
+    routes: array.isRequired,
+    params: object.isRequired,
+    components: array.isRequired
+  }
+
+  createElement(component, props) {
+    return component == null ? null : this.props.createElement(component, props)
+  }
+
+  render() {
+    const { history, location, routes, params, components } = this.props
+    let element = null
+
+    if (components) {
+      element = components.reduceRight((element, components, index) => {
+        if (components == null)
+          return element // Don't create new children; use the grandchildren.
+
+        const route = routes[index]
+        const routeParams = getRouteParams(route, params)
+        const props = {
+          history,
+          location,
+          params,
+          route,
+          routeParams,
+          routes  // TODO: Remove this?
+        }
+
+        if (isReactChildren(element)) {
+          props.children = element
+        } else if (element) {
+          for (let prop in element)
+            if (element.hasOwnProperty(prop))
+              props[prop] = element[prop]
+        }
+
+        if (typeof components === 'object') {
+          const elements = {}
+
+          for (let key in components)
+            if (components.hasOwnProperty(key))
+              elements[key] = this.createElement(components[key], props)
+
+          return elements
+        }
+
+        return this.createElement(components, props)
+      }, element)
+    }
+
+    invariant(
+      element === null || element === false || React.isValidElement(element),
+      'The root route must render a single element'
+    )
+
+    return element
+  }
+
+}
+
+export default RoutingRenderer

@@ -6,7 +6,7 @@ import RoutingContext from './RoutingContext'
 import useRoutes from './useRoutes'
 import { routes } from './PropTypes'
 
-const { func, object } = React.PropTypes
+const { array, func, object } = React.PropTypes
 
 /**
  * A <Router> is a high-level API for automatically setting up
@@ -20,6 +20,7 @@ class Router extends Component {
     children: routes,
     routes, // alias for children
     createElement: func,
+    middlewares: array,
     onError: func,
     onUpdate: func,
     parseQueryString: func,
@@ -79,7 +80,7 @@ class Router extends Component {
 
   render() {
     let { location, routes, params, components } = this.state
-    let { createElement } = this.props
+    let { createElement, middlewares } = this.props
 
     if (location == null)
       return null // Async match
@@ -87,6 +88,7 @@ class Router extends Component {
     return React.createElement(RoutingContext, {
       history: this.history,
       createElement,
+      middlewares,
       location,
       routes,
       params,
