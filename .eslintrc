@@ -1,11 +1,7 @@
 {
   "extends": "rackt",
-  "ecmaFeatures": {
-    "jsx": true
-  },
   "rules": {
     "react/jsx-uses-react": 1,
-    "react/jsx-quotes": 2,
     "react/jsx-no-undef": 2,
     "react/wrap-multilines": 2
   },

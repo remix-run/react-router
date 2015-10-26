@@ -47,5 +47,3 @@ function pretendRequest(email, pass, cb) {
     }
   }, 0)
 }
-
-
