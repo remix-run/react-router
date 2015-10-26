@@ -19,11 +19,16 @@ class Router extends Component {
     history: object,
     children: routes,
     routes, // alias for children
+    RoutingContext: func.isRequired,
     createElement: func,
     onError: func,
     onUpdate: func,
     parseQueryString: func,
     stringifyQuery: func
+  }
+
+  static defaultProps = {
+    RoutingContext
   }
 
   constructor(props, context) {
@@ -80,12 +85,17 @@ class Router extends Component {
 
   render() {
     let { location, routes, params, components } = this.state
-    let { createElement } = this.props
+    let { RoutingContext, createElement, ...props } = this.props
 
     if (location == null)
       return null // Async match
 
+    // Only forward non-Router-specific props to routing context, as those are
+    // the only ones that might be custom routing context props.
+    Object.keys(Router.propTypes).forEach(propType => delete props[propType])
+
     return React.createElement(RoutingContext, {
+      ...props,
       history: this.history,
       createElement,
       location,
