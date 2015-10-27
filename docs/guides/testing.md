@@ -38,7 +38,7 @@ with this:
 
 ```js
 import React from 'react'
-import ReactDOM from 'react-dom'
+import { render } from 'react-dom'
 import TestUtils from 'react-addons-test-utils'
 ```
 
