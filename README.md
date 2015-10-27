@@ -17,9 +17,12 @@ thought, not an after-thought.
 - [Guides and API Docs](/docs)
 - [Upgrade Guide](/UPGRADE_GUIDE.md)
 - [Changelog](/CHANGELOG.md)
-- [#react-router channel on reactiflux](http://www.reactiflux.com/)
+- [#react-router @ Reactiflux](https://discord.gg/0ZcbPKXt5bYaNQ46)
+- [Stack Overflow](http://stackoverflow.com/questions/tagged/react-router)
 
 **Note:** *If you are still using React Router 0.13.x [the docs](https://github.com/rackt/react-router/tree/0.13.x/docs/guides) can be found on [the 0.13.x branch](https://github.com/rackt/react-router/tree/0.13.x).*
+
+For questions and support, please visit [our channel on Reactiflux](https://discord.gg/0ZcbPKXt5bYaNQ46) or [Stack Overflow](http://stackoverflow.com/questions/tagged/react-router). The issue tracker is *exclusively* for bug reports and feature requests.
 
 ### Browser Support
 
