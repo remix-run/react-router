@@ -7,7 +7,7 @@ import Route from '../Route'
 
 describe('matchRoutes', function () {
 
-  let routes, RootRoute, UsersRoute, UsersIndexRoute, UserRoute, PostRoute, FilesRoute, AboutRoute, TeamRoute, ProfileRoute, CatchAllRoute
+  let routes, RootRoute, UsersRoute, UsersIndexRoute, UserRoute, PostRoute, FilesRoute, AboutRoute, TeamRoute, ProfileRoute, GreedyRoute, CatchAllRoute
   let createLocation = createMemoryHistory().createLocation
   beforeEach(function () {
     /*
@@ -54,6 +54,9 @@ describe('matchRoutes', function () {
       AboutRoute = {
         path: '/about'
       },
+      GreedyRoute = {
+        path: '/**/f'
+      },
       CatchAllRoute = {
         path: '*'
       }
@@ -99,6 +102,17 @@ describe('matchRoutes', function () {
           expect(match).toExist()
           expect(match.routes).toEqual([ FilesRoute ])
           expect(match.params).toEqual({ splat: [ 'a', 'b/c' ] })
+          done()
+        })
+      })
+    })
+
+    describe('when the location matches a nested route with a greedy splat param', function () {
+      it('matches the correct routes and params', function (done) {
+        matchRoutes(routes, createLocation('/foo/bar/f'), function (error, match) {
+          expect(match).toExist()
+          expect(match.routes).toEqual([ GreedyRoute ])
+          expect(match.params).toEqual({ splat: 'foo/bar' })
           done()
         })
       })

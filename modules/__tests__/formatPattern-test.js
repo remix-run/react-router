@@ -98,6 +98,19 @@ describe('formatPattern', function () {
     })
   })
 
+  describe('when a pattern has a greedy splat', function () {
+    it('returns the correct path', function () {
+      expect(formatPattern('/a/**/d', { splat: 'b/c/d' })).toEqual('/a/b/c/d/d')
+      expect(formatPattern('/a/**/d/**', { splat: [ 'b/c/d', 'e' ] })).toEqual('/a/b/c/d/d/e')
+    })
+
+    it('complains if not given enough splat values', function () {
+      expect(function () {
+        formatPattern('/a/**/d/**', { splat: [ 'b/c/d' ] })
+      }).toThrow(Error)
+    })
+  })
+
   describe('when a pattern has dots', function () {
     it('returns the correct path', function () {
       expect(formatPattern('/foo.bar.baz')).toEqual('/foo.bar.baz')
