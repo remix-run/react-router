@@ -270,5 +270,31 @@ describe('isActive', function () {
         })
       })
     })
+
+    describe('with a query with explicit undefined values', function () {
+      it('matches missing query keys', function (done) {
+        render((
+          <Router history={createHistory('/home?foo=1')}>
+            <Route path="/" />
+            <Route path="/home" />
+          </Router>
+        ), node, function () {
+          expect(this.history.isActive('/home', { foo: 1, bar: undefined })).toBe(true)
+          done()
+        })
+      })
+
+      it('does not match a present query key', function (done) {
+        render((
+          <Router history={createHistory('/home?foo=1&bar=')}>
+            <Route path="/" />
+            <Route path="/home" />
+          </Router>
+        ), node, function () {
+          expect(this.history.isActive('/home', { foo: 1, bar: undefined })).toBe(false)
+          done()
+        })
+      })
+    })
   })
 })
