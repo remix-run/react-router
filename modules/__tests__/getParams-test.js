@@ -131,6 +131,20 @@ describe('getParams', function () {
     })
   })
 
+  describe('when a pattern has a **', function () {
+    describe('and the path matches', function () {
+      it('return an object with the params', function () {
+        expect(getParams('/**/f', '/foo/bar/f')).toEqual({ splat: 'foo/bar' })
+      })
+    })
+
+    describe('and the path does not match', function () {
+      it('returns null', function () {
+        expect(getParams('/**/f', '/foo/bar/')).toBe(null)
+      })
+    })
+  })
+
   describe('when a pattern has an optional group', function () {
     const pattern = '/archive(/:name)'
 
