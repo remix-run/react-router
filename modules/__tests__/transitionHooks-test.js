@@ -202,7 +202,7 @@ describe('When a router enters a branch', function () {
         history.pushState(null, '/news', { q: 1 })
         expect(newsFeedRouteEnterSpy.calls.length).toEqual(1)
         history.pushState(null, '/news', { q: 2 })
-        expect(newsFeedRouteEnterSpy.calls.length).toEqual(2)
+        expect(newsFeedRouteEnterSpy.calls.length).toEqual(1)
         done()
       })
     })
