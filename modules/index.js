@@ -20,5 +20,6 @@ export { createRoutes } from './RouteUtils'
 export RoutingContext from './RoutingContext'
 export PropTypes from './PropTypes'
 export match from './match'
+export { matchRule, RuleBase } from './matchRules'
 
 export default from './Router'

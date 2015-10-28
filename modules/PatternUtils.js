@@ -1,4 +1,5 @@
 import invariant from 'invariant'
+import { getRule } from './matchRules'
 
 function escapeRegExp(string) {
   return string.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
@@ -11,21 +12,34 @@ function escapeSource(string) {
 function _compilePattern(pattern) {
   let regexpSource = ''
   const paramNames = []
+  const rules = []
   const tokens = []
 
-  let match, lastIndex = 0, matcher = /:([a-zA-Z_$][a-zA-Z0-9_$]*)|\*|\(|\)/g
+  let match, lastIndex = 0
+  let matcher = /:([a-zA-Z_$][a-zA-Z0-9_$]*)|<([a-zA-Z_$][a-zA-Z0-9_$]*):([a-zA-Z_$][a-zA-Z0-9_$]*)>|\*|\(|\)/g
   while ((match = matcher.exec(pattern))) {
     if (match.index !== lastIndex) {
       tokens.push(pattern.slice(lastIndex, match.index))
       regexpSource += escapeSource(pattern.slice(lastIndex, match.index))
     }
 
-    if (match[1]) {
-      regexpSource += '([^/?#]+)'
-      paramNames.push(match[1])
+    if(match[1] || match[2]) { // there is a parameter
+      let ruleName, paramName
+      if(match[3]) { // a rule is specified
+        ruleName = match[2]
+        paramName = match[3]
+      } else { // no rule is specified
+        ruleName = 'default'
+        paramName = match[1] || match[2]
+      }
+      const rule = getRule(ruleName)
+      regexpSource += rule.regex
+      rules.push(rule)
+      paramNames.push(paramName)
     } else if (match[0] === '*') {
       regexpSource += '([\\s\\S]*?)'
       paramNames.push('splat')
+      rules.push(getRule('path'))
     } else if (match[0] === '(') {
       regexpSource += '(?:'
     } else if (match[0] === ')') {
@@ -46,7 +60,8 @@ function _compilePattern(pattern) {
     pattern,
     regexpSource,
     paramNames,
-    tokens
+    tokens,
+    rules
   }
 }
 
@@ -57,6 +72,11 @@ export function compilePattern(pattern) {
     CompiledPatternsCache[pattern] = _compilePattern(pattern)
 
   return CompiledPatternsCache[pattern]
+}
+
+function checkValidation(paramMatches, rules) {
+  return paramMatches && paramMatches
+    .every((v, i) => !rules[i] || rules[i].validate(v))
 }
 
 /**
@@ -77,7 +97,7 @@ export function compilePattern(pattern) {
  * - paramValues
  */
 export function matchPattern(pattern, pathname) {
-  let { regexpSource, paramNames, tokens } = compilePattern(pattern)
+  let { regexpSource, paramNames, tokens, rules } = compilePattern(pattern)
 
   regexpSource += '/*' // Ignore trailing slashes
 
@@ -87,20 +107,19 @@ export function matchPattern(pattern, pathname) {
     regexpSource += '([\\s\\S]*?)'
 
   const match = pathname.match(new RegExp('^' + regexpSource + '$', 'i'))
+  const paramMatches = Array.prototype.slice.call(match || [], 1)
+  const validationPasses = checkValidation(paramMatches, rules)
 
-  let remainingPathname, paramValues
-  if (match != null) {
-    paramValues = Array.prototype.slice.call(match, 1).map(function (v) {
-      return v != null ? decodeURIComponent(v.replace(/\+/g, '%20')) : v
-    })
-
+  let remainingPathname = null, paramValues = null
+  if (match != null && validationPasses) {
+    paramValues = paramMatches
+      .map((v) => v != null ? decodeURIComponent(v.replace(/\+/g, '%20')) : v)
+      .map((v, i) => rules[i] ? rules[i].convert(v) : v)
     if (captureRemaining) {
       remainingPathname = paramValues.pop()
     } else {
       remainingPathname = pathname.replace(match[0], '')
     }
-  } else {
-    remainingPathname = paramValues = null
   }
 
   return {

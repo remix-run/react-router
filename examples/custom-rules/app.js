@@ -1,7 +1,7 @@
 import React from 'react'
 import { render } from 'react-dom'
 import { createHistory, useBasename } from 'history'
-import { Router, Route, Link } from 'react-router'
+import { Router, Route, Link, matchRule, RuleBase } from 'react-router'
 
 const history = useBasename(createHistory)({
   basename: '/custom-rules'
@@ -35,11 +35,6 @@ class Image extends React.Component {
 
 class App extends React.Component {
 
-  // very basic custom rule
-  imageRule(param) {
-    return param.indexOf('.') !== -1
-  }
-
   render() {
     return (
       <div>
@@ -55,11 +50,19 @@ class App extends React.Component {
   }
 }
 
+// very basic custom rule
+class ImageRule extends RuleBase {
+  validate(val) {
+    return val.indexOf('.') !== -1
+  }
+}
+matchRule('image', new ImageRule())
+
 render((
   <Router history={history}>
     <Route path="/" component={App}>
-      <Route path="user/<string:userID>" component={User} />
-      <Route path="user/:userID/image/<imageRule:imageName>" component={Image} />
+      <Route path="user/<int:userID>" component={User} />
+      <Route path="user/<int:userID>/image/<image:imageName>" component={Image} />
     </Route>
   </Router>
 ), document.getElementById('example'))
