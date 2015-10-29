@@ -16,7 +16,7 @@ function _compilePattern(pattern) {
   const tokens = []
 
   let match, lastIndex = 0
-  let matcher = /:([a-zA-Z_$][a-zA-Z0-9_$]*)|<([a-zA-Z_$][a-zA-Z0-9_$]*):([a-zA-Z_$][a-zA-Z0-9_$]*)>|\*|\(|\)/g
+  let matcher = /:([a-zA-Z_$][a-zA-Z0-9_$]*)|<([a-zA-Z_$][a-zA-Z0-9_$]*):([a-zA-Z_$][a-zA-Z0-9_$]*)>|\*\*|\*|\(|\)/g
   while ((match = matcher.exec(pattern))) {
     if (match.index !== lastIndex) {
       tokens.push(pattern.slice(lastIndex, match.index))
@@ -36,6 +36,9 @@ function _compilePattern(pattern) {
       regexpSource += rule.regex
       rules.push(rule)
       paramNames.push(paramName)
+    } else if (match[0] === '**') {
+      regexpSource += '([\\s\\S]*)'
+      paramNames.push('splat')
     } else if (match[0] === '*') {
       regexpSource += '([\\s\\S]*?)'
       paramNames.push('splat')
@@ -160,7 +163,7 @@ export function formatPattern(pattern, params) {
   for (let i = 0, len = tokens.length; i < len; ++i) {
     token = tokens[i]
 
-    if (token === '*') {
+    if (token === '*' || token === '**') {
       paramValue = Array.isArray(params.splat) ? params.splat[splatIndex++] : params.splat
 
       invariant(

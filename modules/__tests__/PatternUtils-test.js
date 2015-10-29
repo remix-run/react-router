@@ -10,7 +10,7 @@ describe('matchPattern', function () {
       paramValues
     })
   }
-  
+
   it('works without params', function () {
     assertMatch('/', '/path', 'path', [], [])
   })
@@ -26,6 +26,14 @@ describe('matchPattern', function () {
 
   it('ignores trailing slashes', function () {
     assertMatch('/:id', '/path/', '', [ 'id' ], [ 'path' ])
+  })
+
+  it('works with greedy splat (**)', function () {
+    assertMatch('/**/g', '/greedy/is/good/g', '', [ 'splat' ], [ 'greedy/is/good' ])
+  })
+
+  it('works with greedy and non-greedy splat', function () {
+    assertMatch('/**/*.jpg', '/files/path/to/file.jpg', '', [ 'splat', 'splat' ], [ 'files/path/to', 'file' ])
   })
 
 })
