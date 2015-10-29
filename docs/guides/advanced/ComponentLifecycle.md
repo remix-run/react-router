@@ -49,9 +49,9 @@ Consider this route config:
 
     | Component | Lifecycle Hooks called |
     |-----------|------------------------|
-    | App | componentWillReceiveProps, componentDidUpdate |
+    | App | `componentWillReceiveProps`, `componentDidUpdate` |
     | Home | N/A |
-    | Invoice | componentWillReceiveProps, componentDidUpdate |
+    | Invoice | `componentWillReceiveProps`, `componentDidUpdate` |
     | Account | N/A |
 
     All the components that were mounted before, are still mounted, they
@@ -61,10 +61,10 @@ Consider this route config:
 
     | Component | Lifecycle Hooks called |
     |-----------|------------------------|
-    | App | componentWillReceiveProps, componentDidUpdate |
+    | App | `componentWillReceiveProps`, `componentDidUpdate` |
     | Home | N/A |
-    | Invoice | componentWillUnmount |
-    | Account | componentDidMount |
+    | Invoice | `componentWillUnmount` |
+    | Account | `componentDidMount` |
 
 ### Fetching Data
 
