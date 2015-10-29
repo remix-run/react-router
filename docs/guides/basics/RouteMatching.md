@@ -20,7 +20,7 @@ A route path is [a string pattern](/docs/Glossary.md#routepattern) that is used 
 ```js
 <Route path="/hello/:name">         // matches /hello/michael and /hello/ryan
 <Route path="/hello(/:name)">       // matches /hello, /hello/michael, and /hello/ryan
-<Route path="/files/*.*">           // matches /files/hello.jpg and /files/path/to/hello.jpg
+<Route path="/files/*.*">           // matches /files/hello.jpg and /files/hello.html
 <Route path="/**/*.jpg">            // matches /files/hello.jpg and /files/path/to/file.jpg
 ```
 
