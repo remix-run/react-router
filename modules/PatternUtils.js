@@ -9,48 +9,79 @@ function escapeSource(string) {
   return escapeRegExp(string).replace(/\/+/g, '/+')
 }
 
+/**
+ * match a rule enclosed by '<...>'
+ */
+function _compileRule(pattern) {
+  let ruleMatcher =
+    /^(?:([a-zA-Z_$][a-zA-Z0-9_$]*)(?:\(([^)]*)\))?:)?([a-zA-Z_$][a-zA-Z0-9_$]*)$/g
+
+  let [ , ruleName, ruleArgs, paramName ] = ruleMatcher.exec(pattern) || []
+
+  try {
+    if(ruleArgs) ruleArgs = eval(`(${ruleArgs})`)
+  }
+  catch(e) {
+    invariant(false, '%s is not a valid argument for rule %s',
+      ruleArgs, ruleName)
+  }
+  const rule = getRule(ruleName)
+
+  invariant(paramName,
+    'invalid rule "%s". The rule must have a parameter name', pattern)
+
+  return {
+    rule,
+    ruleArgs,
+    paramName
+  }
+}
+
 function _compilePattern(pattern) {
   let regexpSource = ''
-  const paramNames = []
-  const rules = []
   const tokens = []
+  const params = []
 
   let match, lastIndex = 0
-  let matcher = /:([a-zA-Z_$][a-zA-Z0-9_$]*)|<([a-zA-Z_$][a-zA-Z0-9_$]*):([a-zA-Z_$][a-zA-Z0-9_$]*)>|\*\*|\*|\(|\)/g
+  let matcher = /:([a-zA-Z_$][a-zA-Z0-9_$]*)|<([^>]+)>|\*\*|\*|\(|\)/g
   while ((match = matcher.exec(pattern))) {
     if (match.index !== lastIndex) {
       tokens.push(pattern.slice(lastIndex, match.index))
       regexpSource += escapeSource(pattern.slice(lastIndex, match.index))
     }
 
-    if(match[1] || match[2]) { // there is a parameter
-      let ruleName, paramName
-      if(match[3]) { // a rule is specified
-        ruleName = match[2]
-        paramName = match[3]
-      } else { // no rule is specified
-        ruleName = 'default'
-        paramName = match[1] || match[2]
+    let param
+    const [ token, simpleArg, ruleArg ] = match
+
+    if(simpleArg) {
+      param = {
+        paramName: simpleArg,
+        rule: getRule('default')
       }
-      const rule = getRule(ruleName)
-      regexpSource += rule.regex
-      rules.push(rule)
-      paramNames.push(paramName)
-    } else if (match[0] === '**') {
-      regexpSource += '([\\s\\S]*)'
-      paramNames.push('splat')
-    } else if (match[0] === '*') {
-      regexpSource += '([\\s\\S]*?)'
-      paramNames.push('splat')
-      rules.push(getRule('path'))
-    } else if (match[0] === '(') {
+    } else if(ruleArg) {
+      param = _compileRule(ruleArg)
+    } else if (token === '**') {
+      param = {
+        rule: getRule('greedySplat'),
+        paramName: 'splat'
+      }
+    } else if (token === '*') {
+      param = {
+        rule: getRule('splat'),
+        paramName: 'splat'
+      }
+    } else if (token === '(') {
       regexpSource += '(?:'
-    } else if (match[0] === ')') {
+    } else if (token === ')') {
       regexpSource += ')?'
     }
 
-    tokens.push(match[0])
+    if(param) {
+      params.push(param)
+      regexpSource += param.rule.regex
+    }
 
+    tokens.push(token)
     lastIndex = matcher.lastIndex
   }
 
@@ -62,9 +93,8 @@ function _compilePattern(pattern) {
   return {
     pattern,
     regexpSource,
-    paramNames,
     tokens,
-    rules
+    params
   }
 }
 
@@ -77,9 +107,11 @@ export function compilePattern(pattern) {
   return CompiledPatternsCache[pattern]
 }
 
-function checkValidation(paramMatches, rules) {
-  return paramMatches && paramMatches
-    .every((v, i) => !rules[i] || rules[i].validate(v))
+function checkValidation(paramMatches, params) {
+  return paramMatches.every((v, i) => {
+    let { rule, ruleArgs } = params[i] || {}
+    return !rule || rule.validate(v, ruleArgs)
+  })
 }
 
 /**
@@ -100,7 +132,8 @@ function checkValidation(paramMatches, rules) {
  * - paramValues
  */
 export function matchPattern(pattern, pathname) {
-  let { regexpSource, paramNames, tokens, rules } = compilePattern(pattern)
+
+  let { regexpSource, tokens, params } = compilePattern(pattern)
 
   regexpSource += '/*' // Ignore trailing slashes
 
@@ -111,13 +144,16 @@ export function matchPattern(pattern, pathname) {
 
   const match = pathname.match(new RegExp('^' + regexpSource + '$', 'i'))
   const paramMatches = Array.prototype.slice.call(match || [], 1)
-  const validationPasses = checkValidation(paramMatches, rules)
+  const validationPasses = checkValidation(paramMatches, params)
 
   let remainingPathname = null, paramValues = null
   if (match != null && validationPasses) {
     paramValues = paramMatches
       .map((v) => v != null ? decodeURIComponent(v.replace(/\+/g, '%20')) : v)
-      .map((v, i) => rules[i] ? rules[i].convert(v) : v)
+      .map((v, i) => {
+        let { rule, ruleArgs } = params[i] || {}
+        return rule ? rule.convert(v, ruleArgs) : v
+      })
     if (captureRemaining) {
       remainingPathname = paramValues.pop()
     } else {
@@ -127,13 +163,14 @@ export function matchPattern(pattern, pathname) {
 
   return {
     remainingPathname,
-    paramNames,
+    paramNames: params.map(p => p.paramName),
     paramValues
   }
 }
 
 export function getParamNames(pattern) {
-  return compilePattern(pattern).paramNames
+  return compilePattern(pattern).params
+    .map(p => p.paramName)
 }
 
 export function getParams(pattern, pathname) {

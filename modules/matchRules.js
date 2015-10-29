@@ -42,6 +42,20 @@ class PathRule extends RuleBase {
 }
 
 /**
+ * rule for the greedy spat matcher
+ */
+class GreedySplatRule extends RuleBase {
+  regex = '([\\s\\S]*)'
+}
+
+/**
+ * rule for the spat matcher
+ */
+class SplatRule extends RuleBase {
+  regex = '([\\s\\S]*?)'
+}
+
+/**
  * This rule matches non negative integers.
  * The following parameters can be specified:
  *
@@ -56,10 +70,10 @@ class IntRule extends RuleBase {
 
   validate(val, { max, min, fixedLength } = {}) {
     const num = Number(val)
-    if(fixedLength && fixedLength !== val.length) throw new Error('validation')
-    if(max && val > max) throw new Error('validation')
-    if(min && val < min) throw new Error('validation')
-    return num
+    if(fixedLength && fixedLength !== val.length) return false
+    if(max && num > max) return false
+    if(min && num < min) return false
+    return true
   }
 
   convert(val) {
@@ -73,8 +87,8 @@ class IntRule extends RuleBase {
  * 'pizza/<any(small,medium,big):size>' will match 'pizza/small'
  */
 class AnyRule extends RuleBase {
-  validate(val, ...values) {
-    if(!values || values.indexOf(val) === -1) throw new Error('validation')
+  validate(val, values) {
+    return (!values || values.indexOf(val) !== -1)
   }
 }
 
@@ -94,7 +108,9 @@ const matchRules = {
   path: new PathRule(),
   any: new AnyRule(),
   uuid: new UuidRule(),
-  default: new StringRule()
+  default: new StringRule(),
+  greedySplat: new GreedySplatRule(),
+  splat: new SplatRule()
 }
 
 /**

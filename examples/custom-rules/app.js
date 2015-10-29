@@ -9,11 +9,11 @@ const history = useBasename(createHistory)({
 
 class User extends React.Component {
   render() {
-    let { userID } = this.props.params
+    let { userId } = this.props.params
 
     return (
-      <div className="User">
-        <h1>User id: {userID}</h1>
+      <div>
+        <h1>User id: {userId}</h1>
         This is my profile page
       </div>
     )
@@ -22,12 +22,40 @@ class User extends React.Component {
 
 class Image extends React.Component {
   render() {
-    let { userID, imageName } = this.props.params
+    let { userId, imageName } = this.props.params
 
     return (
-      <div className="Image">
-        <h1>User id: {userID} Images</h1>
+      <div>
+        <h1>User id: {userId} Images</h1>
         Showing picture {imageName}
+      </div>
+    )
+  }
+}
+
+class Pizza extends React.Component {
+  render() {
+    const { size } = this.props.params
+    const cost = size === 'small' ? 5
+      : size === 'small' ? 8
+      : 11
+
+    return (
+      <div>
+        A {size} pizza ($ {cost})
+      </div>
+    )
+  }
+}
+
+class Message extends React.Component {
+  render() {
+    const { messageId } = this.props.params
+
+    return (
+      <div>
+        <h1>Message { messageId }</h1>
+        Contents of message { messageId }
       </div>
     )
   }
@@ -43,6 +71,10 @@ class App extends React.Component {
           <li><Link to="/user/bob" activeClassName="active">invalid route user/bob</Link></li>
           <li><Link to="/user/123/image/thumb.jpg" activeClassName="active">invalid route user/123/image/thumb.jpg</Link></li>
           <li><Link to="/user/123/image/thumb" activeClassName="active">invalid route user/123/image/thumb</Link></li>
+          <li><Link to="/pizza/big" activeClassName="active">valid route /pizza/big</Link></li>
+          <li><Link to="/pizza/red" activeClassName="active">invalid route /pizza/red</Link></li>
+          <li><Link to="/message/XXXXX" activeClassName="active">invalid route /message/XXXXX</Link></li>
+          <li><Link to="/message/XXXX" activeClassName="active">invalid route /message/XXXX</Link></li>
         </ul>
         {this.props.children}
       </div>
@@ -61,8 +93,10 @@ matchRule('image', new ImageRule())
 render((
   <Router history={history}>
     <Route path="/" component={App}>
-      <Route path="user/<int:userID>" component={User} />
-      <Route path="user/<int:userID>/image/<image:imageName>" component={Image} />
+      <Route path="pizza/<any(['small', 'medium', 'big']):size>" component={Pizza} />
+      <Route path="message/<string({length: 5}):messageId>" component={Message} />
+      <Route path="user/<int:userId>" component={User} />
+      <Route path="user/<int:userId>/image/<image:imageName>" component={Image} />
     </Route>
   </Router>
 ), document.getElementById('example'))
