@@ -44,13 +44,13 @@ function getIndexRoute(route, location, callback) {
 }
 
 function assignParams(params, paramNames, paramValues) {
-  return paramNames.reduceRight(function (params, paramName, index) {
+  return paramNames.reduce(function (params, paramName, index) {
     const paramValue = paramValues && paramValues[index]
 
     if (Array.isArray(params[paramName])) {
-      params[paramName].unshift(paramValue)
+      params[paramName].push(paramValue)
     } else if (paramName in params) {
-      params[paramName] = [ paramValue, params[paramName] ]
+      params[paramName] = [ params[paramName], paramValue ]
     } else {
       params[paramName] = paramValue
     }
@@ -63,34 +63,46 @@ function createParams(paramNames, paramValues) {
   return assignParams({}, paramNames, paramValues)
 }
 
-function matchRouteDeep(basename, route, location, callback) {
+function matchRouteDeep(
+  route, location, remainingPathname, paramNames, paramValues, callback
+) {
   let pattern = route.path || ''
 
-  if (pattern.charAt(0) !== '/')
-    pattern = basename.replace(/\/*$/, '/') + pattern // Relative paths build on the parent's path.
+  if (pattern.charAt(0) === '/') {
+    remainingPathname = location.pathname
+    paramNames = []
+    paramValues = []
+  }
 
-  const { remainingPathname, paramNames, paramValues } = matchPattern(pattern, location.pathname)
-  const isExactMatch = remainingPathname === ''
+  if (remainingPathname !== null) {
+    const matched = matchPattern(pattern, remainingPathname)
+    remainingPathname = matched.remainingPathname
+    paramNames = [ ...paramNames, ...matched.paramNames ]
+    paramValues = [ ...paramValues, ...matched.paramValues ]
 
-  if (isExactMatch && route.path) {
-    const match = {
-      routes: [ route ],
-      params: createParams(paramNames, paramValues)
-    }
-
-    getIndexRoute(route, location, function (error, indexRoute) {
-      if (error) {
-        callback(error)
-      } else {
-        if (Array.isArray(indexRoute))
-          match.routes.push(...indexRoute)
-        else if (indexRoute)
-          match.routes.push(indexRoute)
-
-        callback(null, match)
+    if (remainingPathname === '' && route.path) {
+      const match = {
+        routes: [ route ],
+        params: createParams(paramNames, paramValues)
       }
-    })
-  } else if (remainingPathname != null || route.childRoutes) {
+
+      getIndexRoute(route, location, function (error, indexRoute) {
+        if (error) {
+          callback(error)
+        } else {
+          if (Array.isArray(indexRoute))
+            match.routes.push(...indexRoute)
+          else if (indexRoute)
+            match.routes.push(indexRoute)
+
+          callback(null, match)
+        }
+      })
+      return
+    }
+  }
+
+  if (remainingPathname != null || route.childRoutes) {
     // Either a) this route matched at least some of the path or b)
     // we don't have to load this route's children asynchronously. In
     // either case continue checking for matches in the subtree.
@@ -109,7 +121,7 @@ function matchRouteDeep(basename, route, location, callback) {
           } else {
             callback()
           }
-        }, pattern)
+        }, remainingPathname, paramNames, paramValues)
       } else {
         callback()
       }
@@ -130,15 +142,21 @@ function matchRouteDeep(basename, route, location, callback) {
  * Note: This operation may finish synchronously if no routes have an
  * asynchronous getChildRoutes method.
  */
-function matchRoutes(routes, location, callback, basename='') {
+function matchRoutes(
+  routes, location, callback,
+  remainingPathname=location.pathname, paramNames=[], paramValues=[]
+) {
   loopAsync(routes.length, function (index, next, done) {
-    matchRouteDeep(basename, routes[index], location, function (error, match) {
-      if (error || match) {
-        done(error, match)
-      } else {
-        next()
+    matchRouteDeep(
+      routes[index], location, remainingPathname, paramNames, paramValues,
+      function (error, match) {
+        if (error || match) {
+          done(error, match)
+        } else {
+          next()
+        }
       }
-    })
+    )
   }, callback)
 }
 

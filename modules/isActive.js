@@ -37,26 +37,39 @@ function deepEqual(a, b) {
 }
 
 function paramsAreActive(paramNames, paramValues, activeParams) {
+  // FIXME: This doesn't work on repeated params in activeParams.
   return paramNames.every(function (paramName, index) {
     return String(paramValues[index]) === String(activeParams[paramName])
   })
 }
 
 function getMatchingRoute(pathname, activeRoutes, activeParams) {
-  let route, pattern, basename = ''
+  let route, pattern
+  let remainingPathname = pathname, paramNames = [], paramValues = []
+
   for (let i = 0, len = activeRoutes.length; i < len; ++i) {
     route = activeRoutes[i]
     pattern = route.path || ''
 
-    if (pattern.charAt(0) !== '/')
-      pattern = basename.replace(/\/*$/, '/') + pattern // Relative paths build on the parent's path.
+    if (pattern.charAt(0) === '/') {
+      remainingPathname = pathname
+      paramNames = []
+      paramValues = []
+    }
 
-    let { remainingPathname, paramNames, paramValues } = matchPattern(pattern, pathname)
+    if (remainingPathname !== null) {
+      const matched = matchPattern(pattern, remainingPathname)
+      remainingPathname = matched.remainingPathname
+      paramNames = [ ...paramNames, ...matched.paramNames ]
+      paramValues = [ ...paramValues, ...matched.paramValues ]
+    }
 
-    if (remainingPathname === '' && route.path && paramsAreActive(paramNames, paramValues, activeParams))
+    if (
+      remainingPathname === '' &&
+      route.path &&
+      paramsAreActive(paramNames, paramValues, activeParams)
+    )
       return route
-
-    basename = pattern
   }
 
   return null
