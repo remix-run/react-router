@@ -82,28 +82,57 @@ export function compilePattern(pattern) {
  * - paramValues
  */
 export function matchPattern(pattern, pathname) {
+  // Make leading slashes consistent between pattern and pathname.
+  if (pattern.charAt(0) !== '/') {
+    pattern = `/${pattern}`
+  }
+  if (pathname.charAt(0) !== '/') {
+    pathname = `/${pathname}`
+  }
+
   let { regexpSource, paramNames, tokens } = compilePattern(pattern)
 
   regexpSource += '/*' // Ignore trailing slashes
 
+  // Special-case patterns like '*' for catch-all routes.
   const captureRemaining = tokens[tokens.length - 1] !== '*'
 
-  if (captureRemaining)
+  if (captureRemaining) {
+    // This will match newlines in the remaining path.
     regexpSource += '([\\s\\S]*?)'
+  }
 
   const match = pathname.match(new RegExp('^' + regexpSource + '$', 'i'))
 
   let remainingPathname, paramValues
   if (match != null) {
-    paramValues = Array.prototype.slice.call(match, 1).map(function (v) {
-      return v != null ? decodeURIComponent(v) : v
-    })
-
+    let matchedPath
     if (captureRemaining) {
-      remainingPathname = paramValues.pop()
+      remainingPathname = match.pop()
+      matchedPath =
+        match[0].substr(0, match[0].length - remainingPathname.length)
     } else {
-      remainingPathname = pathname.replace(match[0], '')
+      // If this matched at all, then the match was the entire pathname.
+      matchedPath = match[0]
+      remainingPathname = ''
     }
+
+    // Ensure we actually match at a path boundary.
+    if (remainingPathname && remainingPathname.charAt(0) !== '/') {
+      // This depends on the leading slash getting added to pathname above to
+      // work in all cases.
+      if (!matchedPath || matchedPath.charAt(matchedPath.length - 1) !== '/') {
+        return {
+          remainingPathname: null,
+          paramNames,
+          paramValues: null
+        }
+      }
+    }
+
+    paramValues = match.slice(1).map(
+      v => v != null ? decodeURIComponent(v) : v
+    )
   } else {
     remainingPathname = paramValues = null
   }
