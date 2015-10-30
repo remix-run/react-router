@@ -66,33 +66,12 @@ function getMatchingRoute(pathname, activeRoutes, activeParams) {
  * Returns true if the given pathname matches the active routes
  * and params.
  */
-function routeIsActive(pathname, activeRoutes, activeParams, indexOnly) {
-  let route = getMatchingRoute(pathname, activeRoutes, activeParams)
-
-  if (route == null) {
-    return false
-  }
-
+function routeIsActive(pathname, location, routes, params, indexOnly) {
   if (indexOnly) {
-    if (activeRoutes.length < 2) {
-      return false
-    }
-
-    const lastRoute = activeRoutes[activeRoutes.length - 1]
-    if (route.indexRoute) {
-      return lastRoute === route.indexRoute
-    }
-
-    // TODO: Should we also return true if lastRoute is route?
-
-    // In case the index route was configured via getIndexRoute.
-    return (
-      activeRoutes[activeRoutes.length - 2] === route &&
-      !lastRoute.path // Pathless route must have been the index route.
-    )
+    return location.pathname.replace(/\/*$/) === pathname.replace(/\/*$/)
   }
 
-  return true
+  return getMatchingRoute(pathname, routes, params) != null
 }
 
 /**
@@ -117,7 +96,7 @@ function isActive(pathname, query, indexOnly, location, routes, params) {
   if (location == null)
     return false
 
-  if (!routeIsActive(pathname, routes, params, indexOnly))
+  if (!routeIsActive(pathname, location, routes, params, indexOnly))
     return false
 
   return queryIsActive(query, location.query)
