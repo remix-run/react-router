@@ -1,7 +1,8 @@
 const API = 'http://addressbook-api.herokuapp.com/contacts'
-const _contacts = {}
-const _changeListeners = []
-const _initCalled = false
+
+let _contacts = {}
+let _initCalled = false
+let _changeListeners = []
 
 const ContactStore = {
 
