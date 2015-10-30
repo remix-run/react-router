@@ -20,6 +20,11 @@ describe('matchPattern', function () {
     assertMatch('/:id.:ext', '/path.jpg', '', [ 'id', 'ext' ], [ 'path', 'jpg' ])
   })
 
+  it('works with named params that contain spaces', function () {
+    assertMatch('/:id', '/path+more', '', [ 'id' ], [ 'path+more' ])
+    assertMatch('/:id', '/path%20more', '', [ 'id' ], [ 'path more' ])
+  })
+
   it('works with splat params', function () {
     assertMatch('/files/*.*', '/files/path.jpg', '', [ 'splat', 'splat' ], [ 'path', 'jpg' ])
   })

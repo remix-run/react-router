@@ -72,6 +72,8 @@ export function compilePattern(pattern) {
  * - *              Consumes (non-greedy) all characters up to the next
  *                  character in the pattern, or to the end of the URL if
  *                  there is none
+ * - **             Consumes (greedy) all characters up to the next character
+ *                  in the pattern, or to the end of the URL if there is none
  *
  * The return value is an object with the following properties:
  *
@@ -94,7 +96,7 @@ export function matchPattern(pattern, pathname) {
   let remainingPathname, paramValues
   if (match != null) {
     paramValues = Array.prototype.slice.call(match, 1).map(function (v) {
-      return v != null ? decodeURIComponent(v.replace(/\+/g, '%20')) : v
+      return v != null ? decodeURIComponent(v) : v
     })
 
     if (captureRemaining) {
@@ -154,7 +156,7 @@ export function formatPattern(pattern, params) {
       )
 
       if (paramValue != null)
-        pathname += encodeURI(paramValue).replace(/%20/g, '+')
+        pathname += encodeURI(paramValue)
     } else if (token === '(') {
       parenCount += 1
     } else if (token === ')') {
@@ -170,7 +172,7 @@ export function formatPattern(pattern, params) {
       )
 
       if (paramValue != null)
-        pathname += encodeURIComponent(paramValue).replace(/%20/g, '+')
+        pathname += encodeURIComponent(paramValue)
     } else {
       pathname += token
     }
