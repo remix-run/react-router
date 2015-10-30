@@ -1,7 +1,7 @@
 React Router Examples
 =====================
 
-To run and development examples:
+To run the examples in your development environment:
 
 1. Clone this repo
 2. Run `npm install`
