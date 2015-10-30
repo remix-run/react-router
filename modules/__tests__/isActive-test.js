@@ -297,4 +297,45 @@ describe('isActive', function () {
       })
     })
   })
+
+  describe('dynamic routes', function () {
+    const routes = {
+      path: '/',
+      childRoutes: [
+        { path: 'foo' }
+      ],
+      getIndexRoute(location, callback) {
+        setTimeout(() => callback(null, {}))
+      }
+    }
+
+    describe('when not on index route', function () {
+      it('does not show index as active', function (done) {
+        render((
+          <Router history={createHistory('/foo')} routes={routes} />
+        ), node, function () {
+          expect(this.history.isActive('/')).toBe(true)
+          expect(this.history.isActive('/', null, true)).toBe(false)
+          expect(this.history.isActive('/foo')).toBe(true)
+          done()
+        })
+      })
+    })
+
+    describe('when on index route', function () {
+      it('shows index as active', function (done) {
+        render((
+          <Router history={createHistory('/')} routes={routes} />
+        ), node, function () {
+          // Need to wait for async match to complete.
+          setTimeout(() => {
+            expect(this.history.isActive('/')).toBe(true)
+            expect(this.history.isActive('/', null, true)).toBe(true)
+            expect(this.history.isActive('/foo')).toBe(false)
+            done()
+          })
+        })
+      })
+    })
+  })
 })
