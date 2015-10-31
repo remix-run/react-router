@@ -16,6 +16,24 @@ integration with libs like redux and relay, and lots more.
 
 But for now, here's how to translate the old API to the new one.
 
+### Importing
+
+The new `Router` component is a property of the top-level module.
+
+```js
+// v0.13.x
+var Router = require('react-router');
+var Route = Router.Route;
+
+// v1.0
+var ReactRouter = require('react-router');
+var Router = ReactRouter.Router;
+var Route = ReactRouter.Route;
+
+// or using object destructuring
+var { Router, Route } = require('react-router');
+```
+
 ### Rendering
 
 ```js
