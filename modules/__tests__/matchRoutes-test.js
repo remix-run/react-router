@@ -7,13 +7,18 @@ import Route from '../Route'
 
 describe('matchRoutes', function () {
 
-  let routes, RootRoute, UsersRoute, UsersIndexRoute, UserRoute, PostRoute, FilesRoute, AboutRoute, TeamRoute, ProfileRoute, GreedyRoute, CatchAllRoute
+  let routes
+  let
+    RootRoute, UsersRoute, UsersIndexRoute, UserRoute, PostRoute, FilesRoute,
+    AboutRoute, TeamRoute, ProfileRoute, GreedyRoute, OptionalRoute,
+    OptionalRouteChild, CatchAllRoute
   let createLocation = createMemoryHistory().createLocation
+
   beforeEach(function () {
     /*
     <Route>
       <Route path="users">
-        <Index />
+        <IndexRoute />
         <Route path=":userID">
           <Route path="/profile" />
         </Route>
@@ -21,6 +26,9 @@ describe('matchRoutes', function () {
       </Route>
     </Route>
     <Route path="/about" />
+    <Route path="/(optional)">
+      <Route path="child" />
+    </Route>
     <Route path="*" />
     */
     routes = [
@@ -56,6 +64,14 @@ describe('matchRoutes', function () {
       },
       GreedyRoute = {
         path: '/**/f'
+      },
+      OptionalRoute = {
+        path: '/(optional)',
+        childRoutes: [
+          OptionalRouteChild = {
+            path: 'child'
+          }
+        ]
       },
       CatchAllRoute = {
         path: '*'
@@ -149,9 +165,61 @@ describe('matchRoutes', function () {
       })
     })
 
+    describe('when the location matches an optional route', function () {
+      it('matches when the optional pattern is missing', function (done) {
+        matchRoutes(routes, createLocation('/'), function (error, match) {
+          expect(match).toExist()
+          expect(match.routes).toEqual([ OptionalRoute ])
+          done()
+        })
+      })
+
+      it('matches when the optional pattern is present', function (done) {
+        matchRoutes(routes, createLocation('/optional'), function (error, match) {
+          expect(match).toExist()
+          expect(match.routes).toEqual([ OptionalRoute ])
+          done()
+        })
+      })
+    })
+
+    describe('when the location matches the child of an optional route', function () {
+      it('matches when the optional pattern is missing', function (done) {
+        matchRoutes(routes, createLocation('/child'), function (error, match) {
+          expect(match).toExist()
+          expect(match.routes).toEqual([ OptionalRoute, OptionalRouteChild ])
+          done()
+        })
+      })
+
+      it('matches when the optional pattern is present', function (done) {
+        matchRoutes(routes, createLocation('/optional/child'), function (error, match) {
+          expect(match).toExist()
+          expect(match.routes).toEqual([ OptionalRoute, OptionalRouteChild ])
+          done()
+        })
+      })
+    })
+
     describe('when the location does not match any routes', function () {
       it('matches the "catch-all" route', function (done) {
         matchRoutes(routes, createLocation('/not-found'), function (error, match) {
+          expect(match).toExist()
+          expect(match.routes).toEqual([ CatchAllRoute ])
+          done()
+        })
+      })
+
+      it('matches the "catch-all" route on a deep miss', function (done) {
+        matchRoutes(routes, createLocation('/not-found/foo'), function (error, match) {
+          expect(match).toExist()
+          expect(match.routes).toEqual([ CatchAllRoute ])
+          done()
+        })
+      })
+
+      it('matches the "catch-all" route on missing path separators', function (done) {
+        matchRoutes(routes, createLocation('/optionalchild'), function (error, match) {
           expect(match).toExist()
           expect(match.routes).toEqual([ CatchAllRoute ])
           done()
