@@ -71,6 +71,7 @@ class Redirect extends Component {
     children: falsy
   }
 
+  /* istanbul ignore next: sanity check */
   render() {
     invariant(
       false,

@@ -16,6 +16,7 @@ function checkPropTypes(componentName, propTypes, props) {
     if (propTypes.hasOwnProperty(propName)) {
       const error = propTypes[propName](props, propName, componentName)
 
+      /* istanbul ignore if: error logging */
       if (error instanceof Error)
         warning(false, error.message)
     }
