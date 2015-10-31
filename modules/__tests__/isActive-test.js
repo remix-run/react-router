@@ -122,6 +122,24 @@ describe('isActive', function () {
     })
   })
 
+  describe('a pathname that matches a nested absolute path', function () {
+    describe('with no query', function () {
+      it('is active', function (done) {
+        render((
+          <Router history={createHistory('/absolute')}>
+            <Route path="/home">
+              <Route path="/absolute" />
+            </Route>
+          </Router>
+        ), node, function () {
+          expect(this.history.isActive('/absolute')).toBe(true)
+          expect(this.history.isActive('/absolute', null, true)).toBe(true)
+          done()
+        })
+      })
+    })
+  })
+
   describe('a pathname that matches an index URL', function () {
     describe('with no query', function () {
       it('is active', function (done) {
