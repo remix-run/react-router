@@ -1,3 +1,4 @@
+import warning from 'warning'
 import { loopAsync } from './AsyncUtils'
 import { matchPattern } from './PatternUtils'
 import { createRoutes } from './RouteUtils'
@@ -90,10 +91,19 @@ function matchRouteDeep(
         if (error) {
           callback(error)
         } else {
-          if (Array.isArray(indexRoute))
+          if (Array.isArray(indexRoute)) {
+            warning(
+              indexRoute.every(route => !route.path),
+              'Index routes should not have paths'
+            )
             match.routes.push(...indexRoute)
-          else if (indexRoute)
+          } else if (indexRoute) {
+            warning(
+              !indexRoute.path,
+              'Index routes should not have paths'
+            )
             match.routes.push(indexRoute)
+          }
 
           callback(null, match)
         }

@@ -4,9 +4,9 @@ import { createMemoryHistory } from 'history'
 import { createRoutes } from '../RouteUtils'
 import matchRoutes from '../matchRoutes'
 import Route from '../Route'
+import IndexRoute from '../IndexRoute'
 
 describe('matchRoutes', function () {
-
   let routes
   let
     RootRoute, UsersRoute, UsersIndexRoute, UserRoute, PostRoute, FilesRoute,
@@ -331,4 +331,33 @@ describe('matchRoutes', function () {
     })
   })
 
+  describe('invalid route configs', function () {
+    let invalidRoutes, errorSpy
+
+    beforeEach(function () {
+      errorSpy = expect.spyOn(console, 'error')
+    })
+
+    afterEach(function () {
+      errorSpy.restore()
+    })
+
+    describe('index route with path', function () {
+      beforeEach(function () {
+        invalidRoutes = createRoutes(
+          <Route path="/">
+            <IndexRoute path="foo" />
+          </Route>
+        )
+      })
+
+      it('complains when matching', function (done) {
+        matchRoutes(invalidRoutes, createLocation('/'), function (error, match) {
+          expect(match).toExist()
+          expect(errorSpy).toHaveBeenCalledWith('Warning: Index routes should not have paths')
+          done()
+        })
+      })
+    })
+  })
 })
