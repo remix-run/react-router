@@ -3,7 +3,6 @@ import { PropTypes } from 'react'
 const { func, object, arrayOf, oneOfType, element, shape, string } = PropTypes
 
 export function falsy(props, propName, componentName) {
-  /* istanbul ignore if: sanity check */
   if (props[propName])
     return new Error(`<${componentName}> should not have a "${propName}" prop`)
 }
