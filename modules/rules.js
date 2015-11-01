@@ -18,7 +18,7 @@ export function string({ maxLength, minLength, length } = {}) {
 }
 
 /**
- * rule for the greedy spat matcher
+ * rule for the greedy splat matcher
  */
 export function greedySplat() {
   return createRule({
@@ -27,7 +27,7 @@ export function greedySplat() {
 }
 
 /**
- * rule for the spat matcher
+ * rule for the splat matcher
  */
 export function splat() {
   return createRule({
