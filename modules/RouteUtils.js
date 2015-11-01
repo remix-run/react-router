@@ -5,6 +5,18 @@ function isValidChild(object) {
   return object == null || React.isValidElement(object)
 }
 
+// utility function to create an object which is the merge of b on a
+function mergeObjects(a, b) {
+  const result = {}
+  for (let i in a) {
+    result[i] = a[i]
+  }
+  for (let i in b) {
+    result[i] = b[i]
+  }
+  return result
+}
+
 export function isReactChildren(object) {
   return isValidChild(object) || (Array.isArray(object) && object.every(isValidChild))
 }
@@ -27,9 +39,13 @@ function createRoute(defaultProps, props) {
   return { ...defaultProps, ...props }
 }
 
-export function createRouteFromReactElement(element) {
+export function createRouteFromReactElement(element, parentRoute) {
   const type = element.type
   const route = createRoute(type.defaultProps, element.props)
+
+  if(parentRoute && parentRoute.params && route.params) {
+    route.params = mergeObjects(parentRoute.params, route.params)
+  }
 
   if (type.propTypes)
     checkPropTypes(type.displayName || type.name, type.propTypes, route)
@@ -75,7 +91,7 @@ export function createRoutesFromReactChildren(children, parentRoute) {
         if (route)
           routes.push(route)
       } else {
-        routes.push(createRouteFromReactElement(element))
+        routes.push(createRouteFromReactElement(element, parentRoute))
       }
     }
   })
