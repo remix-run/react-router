@@ -4,7 +4,7 @@ function routeParamsChanged(route, prevState, nextState) {
   if (!route.path)
     return false
 
-  const paramNames = getParamNames(route.path)
+  const paramNames = getParamNames(route.path, route.params)
 
   return paramNames.some(function (paramName) {
     return prevState.params[paramName] !== nextState.params[paramName]
