@@ -32,8 +32,8 @@ describe('custom Rules', function () {
 
     it('should convert the parameter to integer', function () {
       assertMatch(pathDef, '/friends/1234', '', [ 'userId' ], [ 1234 ])
-      expect(Number.isInteger(matchPattern(pathDef.pattern, '/friends/1234')
-        .paramValues[0])).toBeTrue
+      expect(matchPattern(pathDef.pattern, '/friends/1234').paramValues[0])
+        .toBe(1234)
     })
 
     describe('when the `max` argument is set', function () {
