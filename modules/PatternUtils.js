@@ -76,8 +76,9 @@ export function compilePattern(pattern, paramRules) {
  * Attempts to match a pattern on the given pathname. Patterns may use
  * the following special characters:
  *
- * - :paramName     Matches a URL segment up to the next /, ?, or #. The
- *                  captured string is considered a "param"
+ * - :paramName     Matches a URL segment and captures a param. The matched
+ *                  segment depends on the parameter rule. If no rule is
+ *                  provided, it defaults to the string matcher ([^/?#]+)
  * - ()             Wraps a segment of the URL that is optional
  * - *              Consumes (non-greedy) all characters up to the next
  *                  character in the pattern, or to the end of the URL if

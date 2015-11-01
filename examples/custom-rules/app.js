@@ -62,6 +62,20 @@ class Message extends React.Component {
   }
 }
 
+class Images extends React.Component {
+    render() {
+      const { tags } = this.props.params
+      return (
+        <div>
+          <h1>Viewing images with the following tags:</h1>
+          <ul>
+            {tags.map(tag => <li>{tag}</li>)}
+          </ul>
+        </div>
+      )
+    }
+}
+
 class App extends React.Component {
 
   render() {
@@ -87,6 +101,17 @@ const image = rules.createRule({
   validate: (val => val.indexOf('.') !== -1)
 })
 
+const array = rules.createRule({
+  regex: '(\\[(?:\\w+,)*\\w*\\])',
+  convert: (v) => {
+    let result = []
+    let matcher = /(\w+)/g
+    let match
+    while((match = matcher.exec(v))) result.push(match[1])
+    return result
+  }
+})
+
 render((
   <Router history={history}>
     <Route path="/" component={App} >
@@ -102,6 +127,9 @@ render((
       <Route path="user/:userId/image/:imageName"
         component={Image}
         params={{ userId: rules.int(), imageName: image }} />
+      <Route path="images/:tags"
+        params={{ tags: array }}
+        component={Images} />
     </Route>
   </Router>
 ), document.getElementById('example'))
