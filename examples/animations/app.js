@@ -1,6 +1,7 @@
 import React from 'react'
 import { render } from 'react-dom'
 import ReactCSSTransitionGroup from 'react-addons-css-transition-group'
+import StaticContainer from 'react-static-container'
 import { createHistory, useBasename } from 'history'
 import { Router, Route, Link } from 'react-router'
 
@@ -10,23 +11,62 @@ const history = useBasename(createHistory)({
   basename: '/animations'
 })
 
+class RouteCSSTransitionGroup extends React.Component {
+  static contextTypes = {
+    location: React.PropTypes.object
+  }
+
+  constructor(props, context) {
+    super(props, context)
+
+    this.state = {
+      previousPathname: null
+    }
+  }
+
+  componentWillReceiveProps(nextProps, nextContext) {
+    if (nextContext.location.pathname !== this.context.location.pathname) {
+      this.setState({ previousPathname: this.context.location.pathname })
+    }
+  }
+
+  render() {
+    const { children, ...props } = this.props
+    const { previousPathname } = this.state
+
+    return (
+      <ReactCSSTransitionGroup {...props}>
+        <StaticContainer
+          key={previousPathname || this.context.location.pathname}
+          shouldUpdate={!previousPathname}
+        >
+          {children}
+        </StaticContainer>
+      </ReactCSSTransitionGroup>
+    )
+  }
+
+  componentDidUpdate() {
+    if (this.state.previousPathname) {
+      this.setState({ previousPathname: null })
+    }
+  }
+}
+
 class App extends React.Component {
   render() {
-    const { pathname } = this.props.location
-
     return (
       <div>
         <ul>
           <li><Link to="/page1">Page 1</Link></li>
           <li><Link to="/page2">Page 2</Link></li>
         </ul>
-        <ReactCSSTransitionGroup component="div"
-                                 transitionName="example"
-                                 transitionEnterTimeout={500}
-                                 transitionLeaveTimeout={500}
+        <RouteCSSTransitionGroup
+          component="div" transitionName="example"
+          transitionEnterTimeout={500} transitionLeaveTimeout={500}
         >
-          {React.cloneElement(this.props.children || <div />, { key: pathname })}
-        </ReactCSSTransitionGroup>
+          {this.props.children}
+        </RouteCSSTransitionGroup>
       </div>
     )
   }
