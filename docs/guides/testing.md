@@ -87,7 +87,7 @@ export default class BasicPage extends Component {
       <div>
         { this.props.authenticated ? (
             <div>
-              <Link to="/admin"><Button bsStyle="primary">Login</Button></Link>
+              <Link to="/admin"><Button bsStyle="primary">Your account</Button></Link>
             </div>
           ) : (
             <div>
