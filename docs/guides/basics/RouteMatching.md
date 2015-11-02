@@ -28,7 +28,7 @@ If a route uses a relative `path`, it builds upon the accumulated `path` of its 
 
 ### Parameter Rules
 
-If a parameter is defined in the form of `:parameterName` in the path, you might want to specify specific parsing rules for it. The [`params`](/docs/Glossary.md#Route-params) prop defined on the Route allows you to do so. if for example you want to match only integers for a specific parameter, you can decalare your route like this:
+If a parameter is defined in the form of `:parameterName` in the path, you might want to specify specific parsing rules for it. The [`params`](/docs/API.md#route-params) prop defined on the Route allows you to do so. if for example you want to match only integers for a specific parameter, you can decalare your route like this:
 
 ````js
 import { int } from 'react-router/rules'

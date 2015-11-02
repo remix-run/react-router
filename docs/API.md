@@ -181,7 +181,7 @@ This props describes how parameters should be parsed, validated and converted. T
 - `validate`: a function taking the matched value as input and returning a boolean that tells if the input value is a valid input. If the input value is not valid, the route will not be matched
 - `convert`: a function taking the matched and validated value and converting to the desired output before passing it to the `props.params` of the component
 
-See the [Parameter Rules](/docs/RouteMatchine.md#Parameter-Rules) section of the guide for more information about the existing rules.
+See the [Parameter Rules](/docs/guides/basics/RouteMatching.md#parameter-rules) section of the guide for more information about the existing rules.
 
 ##### `components`
 Routes can define multiple components as an object of `name:component`
