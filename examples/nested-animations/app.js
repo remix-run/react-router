@@ -23,7 +23,10 @@ class App extends React.Component {
           <li><Link to="/page1">Page 1</Link></li>
           <li><Link to="/page2">Page 2</Link></li>
         </ul>
-        <ReactCSSTransitionGroup component="div" transitionName="swap">
+        <ReactCSSTransitionGroup
+          component="div" transitionName="swap"
+          transitionEnterTimeout={500} transitionLeaveTimeout={500}
+        >
           {React.cloneElement(this.props.children || <div />, { key: key })}
         </ReactCSSTransitionGroup>
       </div>
@@ -42,7 +45,10 @@ class Page1 extends React.Component {
           <li><Link to="/page1/tab1">Tab 1</Link></li>
           <li><Link to="/page1/tab2">Tab 2</Link></li>
         </ul>
-        <ReactCSSTransitionGroup component="div" transitionName="example">
+        <ReactCSSTransitionGroup
+          component="div" transitionName="example"
+          transitionEnterTimeout={500} transitionLeaveTimeout={500}
+        >
           {React.cloneElement(this.props.children || <div/>, { key: pathname })}
         </ReactCSSTransitionGroup>
       </div>
@@ -61,7 +67,10 @@ class Page2 extends React.Component {
           <li><Link to="/page2/tab1">Tab 1</Link></li>
           <li><Link to="/page2/tab2">Tab 2</Link></li>
         </ul>
-        <ReactCSSTransitionGroup component="div" transitionName="example">
+        <ReactCSSTransitionGroup
+          component="div" transitionName="example"
+          transitionEnterTimeout={500} transitionLeaveTimeout={500}
+        >
           {React.cloneElement(this.props.children || <div/>, { key: pathname })}
         </ReactCSSTransitionGroup>
       </div>
