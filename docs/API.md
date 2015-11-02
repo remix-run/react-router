@@ -174,7 +174,7 @@ class App extends React.Component {
 }
 ```
 
-#### Route `params`
+##### Route `params`
 This props describes how parameters should be parsed, validated and converted. The params object contains key/value pairs where the key is the name of the param that refers to, and the value is a **rule** object containing the following three properties:
 
 - `regex`: a string representing the regular expression that matches the segment of the url corresponding to the parameter
