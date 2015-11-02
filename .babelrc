@@ -1,4 +1,7 @@
 {
   "stage": 0,
-  "loose": "all"
+  "loose": "all",
+  "plugins": [
+    "dev-expression"
+  ]
 }
