@@ -15,20 +15,20 @@ styles.sidebar = {
 
 class Course extends React.Component {
   render() {
-    let { children, params } = this.props
+    let { sidebar, main, params } = this.props
     let course = COURSES[params.courseId]
 
     return (
       <div>
         <h2>{course.name}</h2>
         <Nav course={course} />
-        {children && children.sidebar && children.main ? (
+        {sidebar && main ? (
           <div>
             <div className="Sidebar" style={styles.sidebar}>
-              {children.sidebar}
+              {sidebar}
             </div>
             <div className="Main" style={{ padding: 20 }}>
-              {children.main}
+              {main}
             </div>
           </div>
         ) : (
