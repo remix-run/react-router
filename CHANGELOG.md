@@ -1,3 +1,43 @@
+v1.0.0-rc4 - Tue, 03 Nov 2015 06:34:46 GMT
+------------------------------------------
+
+- [ec3f3eb](../../commit/ec3f3eb) [wip][added] Support custom RoutingContext on Router
+- [4b8e994](../../commit/4b8e994) [fixed] Index routes with extraneous slashes
+- [c68f9f1](../../commit/c68f9f1) [removed] Remove deprecated handler prop on Route
+- [9e449f5](../../commit/9e449f5) [fixed] Match routes piece-by-piece
+- [fbc109c](../../commit/fbc109c) [fixed] Use %20 instead of + in URL pathnames
+- [8dd8ceb](../../commit/8dd8ceb) [fixed] Mark dynamic index routes as active
+- [fae04bc](../../commit/fae04bc) [added] Greedy splat (**)
+- [24ad58c](../../commit/24ad58c) [changed] Query changes aren't route changes
+- [19c7086](../../commit/19c7086) [added] Handle undefined query values in isActive
+- [3545ab2](../../commit/3545ab2) [removed] params from RoutingContext child context
+- [9d346fc](../../commit/9d346fc) [added] params on RoutingContext child context
+- [52cca98](../../commit/52cca98) [changed] Preventing transition from onClick
+- [4e48b6b](../../commit/4e48b6b) [changed] Pass named children as props
+- [3cc7d6d](../../commit/3cc7d6d) [added] Peer dependency on history package
+- [751ca25](../../commit/751ca25) [fixed] Don't match empty routes for isActive
+- [8459755](../../commit/8459755) [fixed] Include the hash prop on Links
+- [ac7dd4a](../../commit/ac7dd4a) [fixed] Postinstall script on Windows
+- [d905382](../../commit/d905382) [added] Test for IndexLink to deeply nested IndexRoute
+- [6f8ceac](../../commit/6f8ceac) [fixed] Transitions example
+- [e42a4ad](../../commit/e42a4ad) [changed] Stop using npm prepublish script
+- [3be6a2d](../../commit/3be6a2d) [fixed] Workaround for nasty npm bug
+- [bdab3d8](../../commit/bdab3d8) [fixed] Compare query by string value
+- [c43fb61](../../commit/c43fb61) [added] <Link hash> prop
+- [24e7b4f](../../commit/24e7b4f) [fixed] isActive on nested IndexLink
+- [160c5ba](../../commit/160c5ba) [fixed] Removed <Link> warning about no history in context
+- [ca9e3b7](../../commit/ca9e3b7) [added] IndexRedirect
+- [428da54](../../commit/428da54) [added] Support <Redirect to="relative/path">
+- [ebb8d20](../../commit/ebb8d20) [fixed] Remove direct calls to createLocation.
+- [fc8a7a4](../../commit/fc8a7a4) [changed] Run examples using HTML5 history
+- [37d9bac](../../commit/37d9bac) [fixed] isActive on <Link onlyActiveOnIndex>
+- [be37196](../../commit/be37196) [fixed] Actually update state when there are transition hooks
+- [b8f1abe](../../commit/b8f1abe) [changed] Removed (un)registerRouteHook
+- [69a9240](../../commit/69a9240) [fixed] Added missing IndexLink to exports
+- [5fbe933](../../commit/5fbe933) [changed] Do not add "active" class by default
+- [85c699c](../../commit/85c699c) [changed] State -> IsActive
+
+
 v1.0.0-rc3 - Thu, 08 Oct 2015 18:06:49 GMT
 ------------------------------------------
 
