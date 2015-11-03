@@ -178,7 +178,7 @@ const Inbox = React.createClass({
       <div>
         <h2>Inbox</h2>
         {/* Render the child route component */}
-        {this.props.children || "Welcome to your Inbox"}
+        {this.props.children}
       </div>
     )
   }
