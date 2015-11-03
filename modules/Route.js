@@ -3,7 +3,7 @@ import React, { Component } from 'react'
 import { createRouteFromReactElement } from './RouteUtils'
 import { component, components } from './PropTypes'
 
-const { string, bool, func } = React.PropTypes
+const { string, bool, func, object } = React.PropTypes
 
 /**
  * A <Route> is used to declare which components are rendered to the
@@ -21,6 +21,7 @@ class Route extends Component {
 
   static propTypes = {
     path: string,
+    params: object,
     ignoreScrollBehavior: bool,
     component,
     components,

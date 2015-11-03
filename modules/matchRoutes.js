@@ -75,7 +75,7 @@ function matchRouteDeep(
   }
 
   if (remainingPathname !== null) {
-    const matched = matchPattern(pattern, remainingPathname)
+    const matched = matchPattern(pattern, remainingPathname, route.params)
     remainingPathname = matched.remainingPathname
     paramNames = [ ...paramNames, ...matched.paramNames ]
     paramValues = [ ...paramValues, ...matched.paramValues ]

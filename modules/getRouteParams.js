@@ -10,7 +10,7 @@ function getRouteParams(route, params) {
   if (!route.path)
     return routeParams
 
-  const paramNames = getParamNames(route.path)
+  const paramNames = getParamNames(route.path, route.params)
 
   for (const p in params)
     if (params.hasOwnProperty(p) && paramNames.indexOf(p) !== -1)

@@ -174,6 +174,15 @@ class App extends React.Component {
 }
 ```
 
+##### Route `params`
+This props describes how parameters should be parsed, validated and converted. The params object contains key/value pairs where the key is the name of the param that refers to, and the value is a **rule** object containing the following three properties:
+
+- `regex`: a string representing the regular expression that matches the segment of the url corresponding to the parameter
+- `validate`: a function taking the matched value as input and returning a boolean that tells if the input value is a valid input. If the input value is not valid, the route will not be matched
+- `convert`: a function taking the matched and validated value and converting to the desired output before passing it to the `props.params` of the component
+
+See the [Parameter Rules](/docs/guides/basics/RouteMatching.md#parameter-rules) section of the guide for more information about the existing rules.
+
 ##### `components`
 Routes can define multiple components as an object of `name:component`
 pairs to be rendered when the path matches the URL. They can be rendered
