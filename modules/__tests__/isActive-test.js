@@ -72,6 +72,70 @@ describe('isActive', function () {
     })
   })
 
+  describe('nested routes', function () {
+    describe('on the child', function () {
+      it('is active for the child and the parent', function (done) {
+        render((
+          <Router history={createHistory('/parent/child')}>
+            <Route path="/parent">
+              <Route path="child" />
+            </Route>
+          </Router>
+        ), node, function () {
+          expect(this.history.isActive('/parent/child')).toBe(true)
+          expect(this.history.isActive('/parent/child', null, true)).toBe(true)
+          expect(this.history.isActive('/parent')).toBe(true)
+          expect(this.history.isActive('/parent', null, true)).toBe(false)
+          done()
+        })
+      })
+
+      it('is active with extraneous slashes', function (done) {
+        render((
+          <Router history={createHistory('/parent/child')}>
+            <Route path="/parent">
+              <Route path="child" />
+            </Route>
+          </Router>
+        ), node, function () {
+          expect(this.history.isActive('/parent////child////')).toBe(true)
+          done()
+        })
+      })
+
+      it('is not active with missing slashes', function (done) {
+        render((
+          <Router history={createHistory('/parent/child')}>
+            <Route path="/parent">
+              <Route path="child" />
+            </Route>
+          </Router>
+        ), node, function () {
+          expect(this.history.isActive('/parentchild')).toBe(false)
+          done()
+        })
+      })
+    })
+
+    describe('on the parent', function () {
+      it('is active for the parent', function (done) {
+        render((
+          <Router history={createHistory('/parent')}>
+            <Route path="/parent">
+              <Route path="child" />
+            </Route>
+          </Router>
+        ), node, function () {
+          expect(this.history.isActive('/parent/child')).toBe(false)
+          expect(this.history.isActive('/parent/child', null, true)).toBe(false)
+          expect(this.history.isActive('/parent')).toBe(true)
+          expect(this.history.isActive('/parent', null, true)).toBe(true)
+          done()
+        })
+      })
+    })
+  })
+
   describe('a pathname that matches a parent route, but not the URL directly', function () {
     describe('with no query', function () {
       it('is active', function (done) {
@@ -184,6 +248,96 @@ describe('isActive', function () {
         ), node, function () {
           expect(this.history.isActive('/home', { something: 'else' })).toBe(false)
           expect(this.history.isActive('/home', { something: 'else' }, true)).toBe(false)
+          done()
+        })
+      })
+    })
+
+    describe('with the index route nested under a pathless route', function () {
+      it('is active', function (done) {
+        render((
+          <Router history={createHistory('/home')}>
+            <Route path="/home">
+              <Route>
+                <IndexRoute />
+              </Route>
+            </Route>
+          </Router>
+        ), node, function () {
+          expect(this.history.isActive('/home', null)).toBe(true)
+          expect(this.history.isActive('/home', null, true)).toBe(true)
+          done()
+        })
+      })
+    })
+
+    describe('with a nested index route', function () {
+      it('is active', function (done) {
+        render((
+          <Router history={createHistory('/parent/child')}>
+            <Route path="/parent">
+              <Route path="child">
+                <IndexRoute />
+              </Route>
+            </Route>
+          </Router>
+        ), node, function () {
+          expect(this.history.isActive('/parent/child', null)).toBe(true)
+          expect(this.history.isActive('/parent/child', null, true)).toBe(true)
+          done()
+        })
+      })
+
+      it('is active with extraneous slashes', function (done) {
+        render((
+          <Router history={createHistory('/parent/child')}>
+            <Route path="/parent">
+              <Route path="child">
+                <IndexRoute />
+              </Route>
+            </Route>
+          </Router>
+        ), node, function () {
+          expect(this.history.isActive('/parent///child///', null)).toBe(true)
+          expect(this.history.isActive('/parent///child///', null, true)).toBe(true)
+          done()
+        })
+      })
+    })
+
+    describe('with a nested index route under a pathless route', function () {
+      it('is active', function (done) {
+        render((
+          <Router history={createHistory('/parent/child')}>
+            <Route path="/parent">
+              <Route path="child">
+                <Route>
+                  <IndexRoute />
+                </Route>
+              </Route>
+            </Route>
+          </Router>
+        ), node, function () {
+          expect(this.history.isActive('/parent/child', null)).toBe(true)
+          expect(this.history.isActive('/parent/child', null, true)).toBe(true)
+          done()
+        })
+      })
+
+      it('is active with extraneous slashes', function (done) {
+        render((
+          <Router history={createHistory('/parent/child')}>
+            <Route path="/parent">
+              <Route path="child">
+                <Route>
+                  <IndexRoute />
+                </Route>
+              </Route>
+            </Route>
+          </Router>
+        ), node, function () {
+          expect(this.history.isActive('/parent///child///', null)).toBe(true)
+          expect(this.history.isActive('/parent///child///', null, true)).toBe(true)
           done()
         })
       })

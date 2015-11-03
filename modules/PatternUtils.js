@@ -92,7 +92,7 @@ export function matchPattern(pattern, pathname) {
 
   let { regexpSource, paramNames, tokens } = compilePattern(pattern)
 
-  regexpSource += '/*' // Ignore trailing slashes
+  regexpSource += '/*' // Capture path separators
 
   // Special-case patterns like '*' for catch-all routes.
   const captureRemaining = tokens[tokens.length - 1] !== '*'
@@ -106,28 +106,27 @@ export function matchPattern(pattern, pathname) {
 
   let remainingPathname, paramValues
   if (match != null) {
-    let matchedPath
     if (captureRemaining) {
       remainingPathname = match.pop()
-      matchedPath =
+      const matchedPath =
         match[0].substr(0, match[0].length - remainingPathname.length)
-    } else {
-      // If this matched at all, then the match was the entire pathname.
-      matchedPath = match[0]
-      remainingPathname = ''
-    }
 
-    // Ensure we actually match at a path boundary.
-    if (remainingPathname && remainingPathname.charAt(0) !== '/') {
-      // This depends on the leading slash getting added to pathname above to
-      // work in all cases.
-      if (!matchedPath || matchedPath.charAt(matchedPath.length - 1) !== '/') {
+      // If we didn't match the entire pathname, then make sure that the match
+      // we did get ends at a path separator (potentially the one we added
+      // above at the beginning of the path, if the actual match was empty).
+      if (
+        remainingPathname &&
+        matchedPath.charAt(matchedPath.length - 1) !== '/'
+      ) {
         return {
           remainingPathname: null,
           paramNames,
           paramValues: null
         }
       }
+    } else {
+      // If this matched at all, then the match was the entire pathname.
+      remainingPathname = ''
     }
 
     paramValues = match.slice(1).map(
