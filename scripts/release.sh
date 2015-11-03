@@ -36,10 +36,12 @@ $changelog -t $next_ref
 
 git commit -am "Version $next_version"
 
+# push first to make sure we're up-to-date
+git push origin master
+
 git tag $next_ref
 git tag latest -f
 
-git push origin master
 git push origin $next_ref
 git push origin latest -f
 
