@@ -84,7 +84,7 @@ const Login = React.createClass({
       if (location.state && location.state.nextPathname) {
         this.history.replaceState(null, location.state.nextPathname)
       } else {
-        this.history.replaceState(null, '/about')
+        this.history.replaceState(null, '/')
       }
     })
   },
