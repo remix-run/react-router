@@ -189,7 +189,10 @@ render((
     <Route path="/" component={App}>
       <Route path="about" component={About} />
       <Route path="inbox" component={Inbox}>
-        {/* Add the route, nested where we want the UI to nest */}
+        {/* add some nested routes where we want the UI to nest */}
+        {/* render the stats page when at `/inbox` */}
+        <IndexRoute component={InboxStats}/>
+        {/* render the message component at /inbox/messages/123 */}
         <Route path="messages/:id" component={Message} />
       </Route>
     </Route>
@@ -197,7 +200,7 @@ render((
 ), document.body)
 ```
 
-Now visits to URLs like `inbox/messages/Jkei3c32` will match the new route and build this:
+Now visits to URLs like `inbox/messages/Jkei3c32` will match the new route and build this for you:
 
 ```
 <App>
@@ -206,6 +209,17 @@ Now visits to URLs like `inbox/messages/Jkei3c32` will match the new route and b
   </Inbox>
 </App>
 ```
+
+And visits to `/inbox` will build this:
+
+```
+<App>
+  <Inbox>
+    <InboxStats />
+  </Inbox>
+</App>
+```
+
 
 ### Getting URL Parameters
 
