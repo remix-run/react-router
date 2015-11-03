@@ -3,7 +3,7 @@
 
 var React = require('react');
 var assign = require('react/lib/Object.assign');
-var warning = require('react/lib/warning');
+var warning = require('./warning');
 var DefaultRoute = require('./components/DefaultRoute');
 var NotFoundRoute = require('./components/NotFoundRoute');
 var Redirect = require('./components/Redirect');
