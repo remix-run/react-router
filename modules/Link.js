@@ -72,6 +72,7 @@ class Link extends Component {
       allowTransition = false
 
     // If target prop is set (e.g. to "_blank") let browser handle link.
+    /* istanbul ignore if: untestable with Karma */
     if (this.props.target) {
       if (!allowTransition)
         event.preventDefault()
