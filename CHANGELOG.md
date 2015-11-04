@@ -1,8 +1,7 @@
 v0.13.5 - Tue, 03 Nov 2015 06:15:38 GMT
 ---------------------------------------
 
-- [b237238](../../commit/b237238) [fixed] Removed getter for IE8 compat
-- [53ce7f1](../../commit/53ce7f1) [fixed] #1148 regex for detecting trailing slashes
+- [#2262](../../pull/2262) [added] Support for React v0.14
 
 
 v0.13.4 - Tue, 06 Oct 2015 13:13:20 GMT
