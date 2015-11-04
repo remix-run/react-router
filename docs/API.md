@@ -175,16 +175,11 @@ class App extends React.Component {
 ```
 
 ##### `components`
-Routes can define multiple components as an object of `name:component`
+Routes can define one or more named components as an object of `name:component`
 pairs to be rendered when the path matches the URL. They can be rendered
-by the parent route component with `this.props.children[name]`.
+by the parent route component with `this.props[name]`.
 
 ```js
-// think of it outside the context of the router, if you had pluggable
-// portions of your `render`, you might do it like this
-<App children={{main: <Users/>, sidebar: <UsersSidebar/>}}/>
-
-// So with the router it looks like this:
 const routes = (
   <Route component={App}>
     <Route path="groups" components={{main: Groups, sidebar: GroupsSidebar}}/>
@@ -196,7 +191,7 @@ const routes = (
 
 class App extends React.Component {
   render () {
-    const { main, sidebar } = this.props.children
+    const { main, sidebar } = this.props
     return (
       <div>
         <div className="Main">
@@ -432,55 +427,6 @@ class App extends React.Component {
   }
 }
 ```
-
-### Named Components
-When a route has multiple components, the child elements are available by name on `this.props`. All route components can participate in the nesting.
-
-#### Example
-```js
-render((
-  <Router>
-    <Route path="/" component={App}>
-      <Route path="groups" components={{main: Groups, sidebar: GroupsSidebar}} />
-      <Route path="users" components={{main: Users, sidebar: UsersSidebar}}>
-        <Route path="users/:userId" component={Profile} />
-      </Route>
-    </Route>
-  </Router>
-), node)
-
-class App extends React.Component {
-  render() {
-    // the matched child route components become props in the parent
-    return (
-      <div>
-        <div className="Main">
-          {/* this will either be <Groups> or <Users> */}
-          {this.props.main}
-        </div>
-        <div className="Sidebar">
-          {/* this will either be <GroupsSidebar> or <UsersSidebar> */}
-          {this.props.sidebar}
-        </div>
-      </div>
-    )
-  }
-}
-
-class Users extends React.Component {
-  render() {
-    return (
-      <div>
-        {/* if at "/users/123" this will be <Profile> */}
-        {/* UsersSidebar will also get <Profile> as this.props.children,
-            you pick where it renders */}
-        {this.props.children}
-      </div>
-    )
-  }
-}
-```
-
 
 
 ## Mixins
