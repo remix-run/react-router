@@ -434,7 +434,7 @@ class App extends React.Component {
 ```
 
 ### Named Components
-When a route has multiple components, the child elements are available by name on `this.props.children`. All route components can participate in the nesting.
+When a route has multiple components, the child elements are available by name on `this.props`. All route components can participate in the nesting.
 
 #### Example
 ```js
@@ -456,11 +456,11 @@ class App extends React.Component {
       <div>
         <div className="Main">
           {/* this will either be <Groups> or <Users> */}
-          {this.props.children.main}
+          {this.props.main}
         </div>
         <div className="Sidebar">
           {/* this will either be <GroupsSidebar> or <UsersSidebar> */}
-          {this.props.children.sidebar}
+          {this.props.sidebar}
         </div>
       </div>
     )
