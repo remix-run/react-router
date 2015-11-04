@@ -4,7 +4,7 @@ import React, { Component } from 'react'
 import { createRouteFromReactElement } from './RouteUtils'
 import { component, components, falsy } from './PropTypes'
 
-const { bool, func } = React.PropTypes
+const { func } = React.PropTypes
 
 /**
  * An <IndexRoute> is used to specify its parent's <Route indexRoute> in
@@ -26,9 +26,9 @@ class IndexRoute extends Component {
 
   static propTypes = {
     path: falsy,
-    ignoreScrollBehavior: bool,
     component,
     components,
+    getComponent: func,
     getComponents: func
   }
 
