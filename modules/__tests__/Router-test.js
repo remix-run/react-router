@@ -393,4 +393,36 @@ describe('Router', function () {
       })
     })
   })
+
+  describe('error handling', function () {
+    let error, getComponent
+
+    beforeEach(function () {
+      error = new Error('error fixture')
+      getComponent = (_, callback) => callback(error)
+    })
+
+    it('should work with onError', function (done) {
+      const errorSpy = expect.createSpy()
+
+      render((
+        <Router history={createHistory('/')} onError={errorSpy}>
+          <Route path="/" getComponent={getComponent} />
+        </Router>
+      ), node, function () {
+        expect(errorSpy).toHaveBeenCalledWith(error)
+        done()
+      })
+    })
+
+    it('should throw without onError', function () {
+      expect(function () {
+        render((
+          <Router history={createHistory('/')}>
+            <Route path="/" getComponent={getComponent} />
+          </Router>
+        ), node)
+      }).toThrow('error fixture')
+    })
+  })
 })
