@@ -343,4 +343,86 @@ describe('Router', function () {
 
   })
 
+  describe('async components', function () {
+    let componentSpy, RoutingSpy
+
+    beforeEach(function () {
+      componentSpy = expect.createSpy()
+
+      RoutingSpy = ({ components }) => {
+        componentSpy(components)
+        return <div />
+      }
+    })
+
+    it('should support getComponent', function (done) {
+      const Component = () => <div />
+      const getComponent = (_, callback) => {
+        setTimeout(() => callback(null, Component))
+      }
+
+      render((
+        <Router history={createHistory('/')} RoutingContext={RoutingSpy}>
+          <Route path="/" getComponent={getComponent} />
+        </Router>
+      ), node, function () {
+        setTimeout(function () {
+          expect(componentSpy).toHaveBeenCalledWith([ Component ])
+          done()
+        })
+      })
+    })
+
+    it('should support getComponents', function (done) {
+      const foo = () => <div />
+      const bar = () => <div />
+
+      const getComponents = (_, callback) => {
+        setTimeout(() => callback(null, { foo, bar }))
+      }
+
+      render((
+        <Router history={createHistory('/')} RoutingContext={RoutingSpy}>
+          <Route path="/" getComponents={getComponents} />
+        </Router>
+      ), node, function () {
+        setTimeout(function () {
+          expect(componentSpy).toHaveBeenCalledWith([ { foo, bar } ])
+          done()
+        })
+      })
+    })
+  })
+
+  describe('error handling', function () {
+    let error, getComponent
+
+    beforeEach(function () {
+      error = new Error('error fixture')
+      getComponent = (_, callback) => callback(error)
+    })
+
+    it('should work with onError', function (done) {
+      const errorSpy = expect.createSpy()
+
+      render((
+        <Router history={createHistory('/')} onError={errorSpy}>
+          <Route path="/" getComponent={getComponent} />
+        </Router>
+      ), node, function () {
+        expect(errorSpy).toHaveBeenCalledWith(error)
+        done()
+      })
+    })
+
+    it('should throw without onError', function () {
+      expect(function () {
+        render((
+          <Router history={createHistory('/')}>
+            <Route path="/" getComponent={getComponent} />
+          </Router>
+        ), node)
+      }).toThrow('error fixture')
+    })
+  })
 })
