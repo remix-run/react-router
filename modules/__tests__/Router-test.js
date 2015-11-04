@@ -343,4 +343,54 @@ describe('Router', function () {
 
   })
 
+  describe('async components', function () {
+    let componentSpy, RoutingSpy
+
+    beforeEach(function () {
+      componentSpy = expect.createSpy()
+
+      RoutingSpy = ({ components }) => {
+        componentSpy(components)
+        return <div />
+      }
+    })
+
+    it('should support getComponent', function (done) {
+      const Component = () => <div />
+      const getComponent = (_, callback) => {
+        setTimeout(() => callback(null, Component))
+      }
+
+      render((
+        <Router history={createHistory('/')} RoutingContext={RoutingSpy}>
+          <Route path="/" getComponent={getComponent} />
+        </Router>
+      ), node, function () {
+        setTimeout(function () {
+          expect(componentSpy).toHaveBeenCalledWith([ Component ])
+          done()
+        })
+      })
+    })
+
+    it('should support getComponents', function (done) {
+      const foo = () => <div />
+      const bar = () => <div />
+
+      const getComponents = (_, callback) => {
+        setTimeout(() => callback(null, { foo, bar }))
+      }
+
+      render((
+        <Router history={createHistory('/')} RoutingContext={RoutingSpy}>
+          <Route path="/" getComponents={getComponents} />
+        </Router>
+      ), node, function () {
+        setTimeout(function () {
+          expect(componentSpy).toHaveBeenCalledWith([ { foo, bar } ])
+          done()
+        })
+      })
+    })
+  })
 })
