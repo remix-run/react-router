@@ -14,6 +14,7 @@
   - [IndexRedirect](#indexredirect)
 
 * [Handler Components](#handler-components)
+  - [Named Components](#named-components)
 
 * [Mixins](#mixins)
   - [Lifecycle](#lifecycle-mixin)
@@ -175,16 +176,15 @@ class App extends React.Component {
 ```
 
 ##### `components`
-Routes can define multiple components as an object of `name:component`
+Routes can define one or more named components as an object of `name:component`
 pairs to be rendered when the path matches the URL. They can be rendered
-by the parent route component with `this.props.children[name]`.
+by the parent route component with `this.props[name]`.
 
 ```js
-// think of it outside the context of the router, if you had pluggable
-// portions of your `render`, you might do it like this
-<App children={{main: <Users/>, sidebar: <UsersSidebar/>}}/>
+// Think of it outside the context of the router - if you had pluggable
+// portions of your `render`, you might do it like this:
+// <App main={<Users />} sidebar={<UsersSidebar />} />
 
-// So with the router it looks like this:
 const routes = (
   <Route component={App}>
     <Route path="groups" components={{main: Groups, sidebar: GroupsSidebar}}/>
@@ -196,7 +196,7 @@ const routes = (
 
 class App extends React.Component {
   render () {
-    const { main, sidebar } = this.props.children
+    const { main, sidebar } = this.props
     return (
       <div>
         <div className="Main">
@@ -408,7 +408,7 @@ The route that rendered this component.
 A subset of `this.props.params` that were directly specified in this component's route. For example, if the route's path is `users/:userId` and the URL is `/users/123/portfolios/345` then `this.props.routeParams` will be `{userId: '123'}`, and `this.props.params` will be `{userId: '123', portfolioId: 345}`.
 
 #### `children`
-The matched child route elements to be rendered.
+The matched child route element to be rendered. If the route has [named components](https://github.com/rackt/react-router/blob/master/docs/API.md#named-components) then this will be undefined, and the components will instead be available as direct properties on `this.props`.
 
 ##### Example
 ```js
@@ -434,7 +434,7 @@ class App extends React.Component {
 ```
 
 ### Named Components
-When a route has multiple components, the child elements are available by name on `this.props.children`. All route components can participate in the nesting.
+When a route has one or more named components, the child elements are available by name on `this.props`. In this case `this.props.children` will be undefined. All route components can participate in the nesting.
 
 #### Example
 ```js
@@ -456,11 +456,11 @@ class App extends React.Component {
       <div>
         <div className="Main">
           {/* this will either be <Groups> or <Users> */}
-          {this.props.children.main}
+          {this.props.main}
         </div>
         <div className="Sidebar">
           {/* this will either be <GroupsSidebar> or <UsersSidebar> */}
-          {this.props.children.sidebar}
+          {this.props.sidebar}
         </div>
       </div>
     )
@@ -472,15 +472,14 @@ class Users extends React.Component {
     return (
       <div>
         {/* if at "/users/123" this will be <Profile> */}
-        {/* UsersSidebar will also get <Profile> as this.props.children,
-            you pick where it renders */}
+        {/* UsersSidebar will also get <Profile> as this.props.children.
+            You can pick where it renders */}
         {this.props.children}
       </div>
     )
   }
 }
 ```
-
 
 
 ## Mixins
