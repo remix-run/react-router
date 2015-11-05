@@ -14,8 +14,7 @@
   - [IndexRedirect](#indexredirect)
 
 * [Handler Components](#handler-components)
-
-* [Named Components](#named-components)
+  - [Named Components](#named-components)
 
 * [Mixins](#mixins)
   - [Lifecycle](#lifecycle-mixin)
@@ -182,6 +181,10 @@ pairs to be rendered when the path matches the URL. They can be rendered
 by the parent route component with `this.props[name]`.
 
 ```js
+// Think of it outside the context of the router - if you had pluggable
+// portions of your `render`, you might do it like this:
+// <App main={<Users />} sidebar={<UsersSidebar />} />
+
 const routes = (
   <Route component={App}>
     <Route path="groups" components={{main: Groups, sidebar: GroupsSidebar}}/>
@@ -469,8 +472,8 @@ class Users extends React.Component {
     return (
       <div>
         {/* if at "/users/123" this will be <Profile> */}
-        {/* UsersSidebar will also get <Profile> as this.props.children
-            you pick where it renders */}
+        {/* UsersSidebar will also get <Profile> as this.props.children.
+            You can pick where it renders */}
         {this.props.children}
       </div>
     )
