@@ -26,7 +26,7 @@ const Home = React.createClass({
 })
 ```
 
-If you are using ES6 classes for your components, you can use [react-mixin](https://github.com/brigand/react-mixin) to add the `Lifecycle` mixin to your component, but we recommend using `React.createClass` for components that to set up router lifecycle hooks.
+If you are using ES6 classes for your components, you can use [react-mixin](https://github.com/brigand/react-mixin) to add the `Lifecycle` mixin to your component, but we recommend using `React.createClass` for components that set up router lifecycle hooks.
 
 If you need a [`routerWillLeave`](/docs/API.md#routerwillleavenextlocation) hook in a deeply nested component, simply use the [`RouteContext`](/docs/API.md#routecontext-mixin) mixin in your [route component](/docs/Glossary.md#routecomponent) to put the `route` in context.
 
