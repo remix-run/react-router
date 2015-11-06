@@ -1,7 +1,7 @@
 import warning from 'warning'
 import React, { Component } from 'react'
 import createHashHistory from 'history/lib/createHashHistory'
-import { createRoutes } from './RouteUtils'
+import { createRoutes, checkRoutes } from './RouteUtils'
 import RoutingContext from './RoutingContext'
 import useRoutes from './useRoutes'
 import { routes } from './PropTypes'
@@ -55,8 +55,11 @@ class Router extends Component {
     let { history, children, routes, parseQueryString, stringifyQuery } = this.props
     let createHistory = history ? () => history : createHashHistory
 
+    const routesObject = createRoutes(routes || children)
+    checkRoutes(routesObject)
+
     this.history = useRoutes(createHistory)({
-      routes: createRoutes(routes || children),
+      routes: routesObject,
       parseQueryString,
       stringifyQuery
     })
