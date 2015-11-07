@@ -304,17 +304,24 @@ where you can get it now if you are **not** a route component (`this.context`).
 | `getPathname()`   | `location.pathname`                |
 | `getQuery()`      | `location.search`                  |
 | `getQueryParams()`| `location.query`                   |
-| `isActive(to, params, query)` | `history.isActive(pathname, query, onlyActiveOnIndex)` |
+| `isActive(to, params, query)` | `history.isActive(pathname, query, indexOnly)` |
 
 Note not all `State` functionality can be accessed via context in v1.0. 
 For example, `params` is not available via context.
 
 ### Scrolling
 
-In 0.13.x we had a couple of implementations to restore scroll position,
-we've realized that we can build a better implementation on top of the
-router and will be doing that very soon, before the 1.0 final release,
-but it doesn't need to be baked into routing like it was before.
+We're developing scroll behaviors separately in the
+[`scroll-behavior`](https://github.com/rackt/scroll-behavior)
+library until we have a stable, robust implementation that we're happy with.
+Currently, scroll behaviors are exposed there as history enhancers: 
+
+```js
+import createHistory from 'history/lib/createBrowserHistory'
+import useScroll from 'scroll-behavior/lib/useStandardScroll'
+
+const history = useScroll(createHistory)()
+```
 
 ### `willTransitionTo` and `willTransitionFrom`
 
