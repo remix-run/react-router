@@ -1,9 +1,9 @@
 <img src="https://rackt.github.io/react-router/img/vertical.png" width="300">
 
-[![npm package](https://img.shields.io/npm/v/react-router.svg?style=flat-square)](https://www.npmjs.org/package/react-router)
-[![build status](https://img.shields.io/travis/rackt/react-router/master.svg?style=flat-square)](https://travis-ci.org/rackt/react-router)
-[![Coverage Status](https://img.shields.io/coveralls/rackt/react-router.svg?style=flat-square)](https://coveralls.io/github/rackt/react-router)
-[![#rackt on freenode](https://img.shields.io/badge/irc-rackt_on_freenode-61DAFB.svg?style=flat-square)](https://webchat.freenode.net/)
+[![Travis][build-badge]][build]
+[![npm package][npm-badge]][npm]
+[![Coveralls][coveralls-badge]][coveralls]
+[![Discord][discord-badge]][discord]
 
 A complete routing library for React
 
@@ -17,7 +17,6 @@ thought, not an after-thought.
 - [Guides and API Docs](/docs)
 - [Upgrade Guide](/UPGRADE_GUIDE.md)
 - [Changelog](/CHANGELOG.md)
-- [#react-router @ Reactiflux](https://discord.gg/0ZcbPKXt5bYaNQ46)
 - [Stack Overflow](http://stackoverflow.com/questions/tagged/react-router)
 
 **Note:** *If you are still using React Router 0.13.x [the docs](https://github.com/rackt/react-router/tree/0.13.x/docs/guides) can be found on [the 0.13.x branch](https://github.com/rackt/react-router/tree/0.13.x).*
@@ -147,3 +146,15 @@ See more in the [Introduction](/docs/Introduction.md), [Advanced Usage](/docs/gu
 React Router was initially inspired by Ember's fantastic router. Many thanks to the Ember team.
 
 Also, thanks to [BrowserStack](https://www.browserstack.com/) for providing the infrastructure that allows us to run our build in real browsers.
+
+[build-badge]: https://img.shields.io/travis/rackt/react-router/master.svg?style=flat-square
+[build]: https://travis-ci.org/rackt/react-router
+
+[npm-badge]: https://img.shields.io/npm/v/react-router.svg?style=flat-square
+[npm]: https://www.npmjs.org/package/react-router
+
+[coveralls-badge]: https://img.shields.io/coveralls/rackt/react-router/master.svg?style=flat-square
+[coveralls]: https://coveralls.io/github/rackt/react-router
+
+[discord-badge]: https://img.shields.io/badge/Discord-join%20chat%20%E2%86%92-738bd7.svg?style=flat-square
+[discord]: https://discord.gg/0ZcbPKXt5bYaNQ46
