@@ -1,7 +1,7 @@
 import path from 'path'
 import webpack from 'webpack'
 
-// Browsers to run on BrowserStack
+// Browsers to run on BrowserStack.
 const CUSTOM_LAUNCHERS = {
   BS_Chrome: {
     base: 'BrowserStack',
