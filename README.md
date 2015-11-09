@@ -16,7 +16,7 @@ thought, not an after-thought.
 
 - [Guides and API Docs](/docs)
 - [Upgrade Guide](/UPGRADE_GUIDE.md)
-- [Changelog](/CHANGELOG.md)
+- [Change Log](/CHANGES.md)
 - [Stack Overflow](http://stackoverflow.com/questions/tagged/react-router)
 
 **Note:** *If you are still using React Router 0.13.x [the docs](https://github.com/rackt/react-router/tree/0.13.x/docs/guides) can be found on [the 0.13.x branch](https://github.com/rackt/react-router/tree/0.13.x).*
