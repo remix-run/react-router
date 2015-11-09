@@ -1,7 +1,5 @@
 #!/bin/bash -e
 
-changelog=node_modules/.bin/changelog
-
 if ! [ -e scripts/release.sh ]; then
   echo >&2 "Please run scripts/release.sh from the repo root"
   exit 1
@@ -31,8 +29,6 @@ next_ref="v$next_version"
 npm test -- --single-run
 
 update_version 'package.json' $next_version
-
-$changelog -t $next_ref
 
 git commit -am "Version $next_version"
 
