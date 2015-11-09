@@ -18,8 +18,8 @@ that also:
 
 Introduce new API in minor versions, remove old APIs in major versions.
 
-For example, if the current version is 2.3 and we change `<Router/>`
-`<Rooter/>` the next release will be 2.4 that contains both APIs but
+For example, if the current version is 2.3 and we change `<Router/>` to
+`<Rooter/>`, the next release will be 2.4 that contains both APIs but using
 `<Router/>` would log a warning to the console.  When 3.0 is released,
 `<Router/>` would be completely removed.
 
