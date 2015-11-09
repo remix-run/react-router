@@ -12,7 +12,7 @@
  * [Server Rendering](/docs/guides/advanced/ServerRendering.md)
  * [Component Lifecycle](/docs/guides/advanced/ComponentLifecycle.md)
  * [Navigating Outside of Components](/docs/guides/advanced/NavigatingOutsideOfComponents.md)
-* [Upgrade Guide](/UPGRADE_GUIDE.md)
+* [Change Log](/CHANGES.md)
 * [Troubleshooting](/docs/Troubleshooting.md)
 * [API](/docs/API.md)
 * [Glossary](/docs/Glossary.md)
