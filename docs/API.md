@@ -256,7 +256,7 @@ code-splitting.
 Routes can be nested, `this.props.children` will contain the element created from the child route component. Please refer to the [Route Configuration](/docs/guides/basics/RouteConfiguration.md) since this is a very critical part of the router's design.
 
 ##### `onEnter(nextState, replaceState, callback?)`
-Called when a route is about to be entered. It provides the next router state and a function to redirect to another path.
+Called when a route is about to be entered. It provides the next router state and a function to redirect to another path. `this` will be the route instance that triggered the hook.
 
 If `callback` is listed as a 3rd argument, this hook will run asynchronously, and the transition will block until `callback` is called.
 
