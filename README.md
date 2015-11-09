@@ -141,7 +141,12 @@ render((
 
 See more in the [Introduction](/docs/Introduction.md), [Advanced Usage](/docs/guides/advanced/README.md), and [Examples](/examples).
 
+
+
 ### Thanks
+
+Thanks to [our sponsors](/SPONSORS.md) for supporting the development of
+React Router.
 
 React Router was initially inspired by Ember's fantastic router. Many thanks to the Ember team.
 
