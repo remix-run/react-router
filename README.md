@@ -28,9 +28,7 @@ We support all browsers and environments where React runs.
 
 ### Installation
 
-#### npm + webpack/browserify
-
-Install using [npm](https://www.npmjs.com/):
+Using [npm](https://www.npmjs.com/):
 
     $ npm install history react-router@latest
 
@@ -48,29 +46,13 @@ var Route = require('react-router').Route
 var Link = require('react-router').Link
 ```
 
-You can require only the pieces you need straight from the `lib` directory:
+The UMD build is also available on [npmcdn](https://npmcdn.com):
 
-```js
-import Router from 'react-router/lib/Router'
+```html
+<script src="https://npmcdn.com/react-router/umd/ReactRouter.min.js"></script>
 ```
 
-### UMD
-
-There's also a UMD build in the `umd` directory:
-
-```js
-// using an es6 transpiler, like babel
-import { Router, Route, Link } from 'react-router/umd/ReactRouter'
-
-// using globals
-var Router = window.ReactRouter.Router;
-var Link = window.ReactRouter.Link;
-var Route = window.ReactRouter.Route;
-```
-
-#### CDN
-
-If you just want to drop a `<script>` tag in your page and be done with it, you can use the UMD/global build [hosted on cdnjs](https://cdnjs.com/libraries/react-router).
+You can find the library on `window.ReactRouter`.
 
 ### What's it look like?
 
