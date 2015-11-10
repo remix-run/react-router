@@ -52,7 +52,7 @@ class Router extends Component {
   }
 
   componentWillMount() {
-    let { history, children, routes, parseQueryString, stringifyQuery } = this.props
+    let { history, children, routes, onUpdate, parseQueryString, stringifyQuery } = this.props
     let createHistory = history ? () => history : createHashHistory
 
     this.history = useRoutes(createHistory)({
@@ -65,7 +65,7 @@ class Router extends Component {
       if (error) {
         this.handleError(error)
       } else {
-        this.setState(state, this.props.onUpdate)
+        this.setState(state, () => onUpdate && onUpdate.call(this, state))
       }
     })
   }
