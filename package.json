@@ -20,7 +20,7 @@
     "build": "babel ./modules -d lib --ignore '__tests__'",
     "build-umd": "NODE_ENV=production webpack modules/index.js umd/ReactRouter.js",
     "build-min": "NODE_ENV=production webpack -p modules/index.js umd/ReactRouter.min.js",
-    "lint": "eslint modules examples *.js",
+    "lint": "eslint modules examples",
     "start": "node examples/server.js",
     "test": "npm run lint && karma start",
     "postinstall": "node ./npm-scripts/postinstall.js"
@@ -60,6 +60,7 @@
     "karma-browserstack-launcher": "^0.1.4",
     "karma-chrome-launcher": "^0.2.0",
     "karma-coverage": "^0.5.3",
+    "karma-firefox-launcher": "^0.1.6",
     "karma-mocha": "^0.2.0",
     "karma-mocha-reporter": "^1.1.1",
     "karma-sourcemap-loader": "^0.3.5",
