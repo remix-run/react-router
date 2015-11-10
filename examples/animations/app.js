@@ -11,6 +11,14 @@ const history = useBasename(createHistory)({
   basename: '/animations'
 })
 
+/**
+ * <RouteCSSTransitionGroup> renders twice on a route change. On the first
+ * render, it "freezes" the transitioning-out component by setting
+ * `shouldUpdate` on the <StaticContainer> to `false`. This prevents any
+ * <Link>s nested under the old component from updating their active state to
+ * reflect the new location, to allow for a smooth transition out. It then
+ * renders the new, transitioning-in component immediately afterward.
+ */
 class RouteCSSTransitionGroup extends React.Component {
   static contextTypes = {
     location: React.PropTypes.object
