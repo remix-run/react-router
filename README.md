@@ -17,6 +17,8 @@ thought, not an after-thought.
 - [Guides and API Docs](/docs)
 - [Change Log](/CHANGES.md)
 - [Stack Overflow](http://stackoverflow.com/questions/tagged/react-router)
+- [Codepen Boilerplate](http://codepen.io/anon/pen/xwQZdy?editors=001)
+  Please use for bug reports
 
 **Note:** *If you are still using React Router 0.13.x [the docs](https://github.com/rackt/react-router/tree/0.13.x/docs/guides) can be found on [the 0.13.x branch](https://github.com/rackt/react-router/tree/0.13.x). Upgrade information is available on the [change log](/CHANGES.md).*
 
