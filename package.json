@@ -60,7 +60,6 @@
     "karma-browserstack-launcher": "^0.1.4",
     "karma-chrome-launcher": "^0.2.0",
     "karma-coverage": "^0.5.3",
-    "karma-firefox-launcher": "^0.1.6",
     "karma-mocha": "^0.2.0",
     "karma-mocha-reporter": "^1.1.1",
     "karma-sourcemap-loader": "^0.3.5",
