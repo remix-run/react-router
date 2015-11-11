@@ -71,8 +71,8 @@ A function used to convert a query string into an object that gets passed to rou
 ##### `onError(error)`
 While the router is matching, errors may bubble up, here is your opportunity to catch and deal with them. Typically these will come from async features like [`route.getComponents`](#getcomponentscallback), [`route.getIndexRoute`](#getindexroutecallback), and [`route.getChildRoutes`](#getchildrouteslocation-callback).
 
-##### `onUpdate()`
-Called whenever the router updates its state in response to URL changes.
+##### `onUpdate(routerState)`
+Called whenever the router updates its state in response to URL changes. This new state is passed as the first argument.
 
 #### Examples
 Please see the [`examples/`](/examples) directory of the repository for extensive examples of using `Router`.
