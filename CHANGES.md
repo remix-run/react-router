@@ -213,7 +213,12 @@ handler no longer prevents the transition. To prevent the transition, call
 {React.cloneElement(this.props.children, {someExtraProp: something})}
 ```
 
-**Note:** React does not validate `propTypes` that are specified via `cloneElement` (see: [facebook/react#4494](https://github.com/facebook/react/issues/4494#issuecomment-125068868)). It is recommended to make such `propTypes` optional.
+There's a small semantic change with this approach. React validates `propTypes`
+on elements when those elements are created, rather than when they're about to
+render. This means that any props with `isRequired` will fail validation when
+those props are supplied via this approach. In these cases, you should not
+specify `isRequired` for those props. For more details, see
+[facebook/react#4494](https://github.com/facebook/react/issues/4494#issuecomment-125068868).
 
 ### Navigation Mixin
 
