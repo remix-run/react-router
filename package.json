@@ -6,10 +6,12 @@
     "*.md",
     "docs",
     "lib",
+    "modules",
     "npm-scripts",
     "umd"
   ],
   "main": "lib/index",
+  "jsnext:main": "modules/index",
   "repository": {
     "type": "git",
     "url": "https://github.com/rackt/react-router.git"

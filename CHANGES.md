@@ -1,5 +1,9 @@
 ## [HEAD]
 
+### Distribute ES6/ES2015 modules for Rollup optimization
+
+See the [Rollup repo](https://github.com/rollup/rollup#a-next-generation-es6-module-bundler) for more details
+
 ## [v1.1.0]
 
 ### Router `onUpdate` prop

@@ -36,7 +36,7 @@ Using [npm](https://www.npmjs.com/):
 
 Note that you need to also install the [history](https://www.npmjs.com/package/history) package since it is a peer dependency of React Router and won't automatically be installed for you in npm 3+.
 
-Then with a module bundler like [webpack](https://webpack.github.io/), use as you would anything else:
+Then with a module bundler like [webpack](https://webpack.github.io/) or [rollup](https://github.com/rollup/rollup), use as you would anything else:
 
 ```js
 // using an ES6 transpiler, like babel
