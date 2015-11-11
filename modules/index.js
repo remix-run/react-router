@@ -14,6 +14,9 @@ export History from './History'
 export Lifecycle from './Lifecycle'
 export RouteContext from './RouteContext'
 
+/* higher-order components */
+export connectHistory from './connectHistory'
+
 /* utils */
 export useRoutes from './useRoutes'
 export { createRoutes } from './RouteUtils'
