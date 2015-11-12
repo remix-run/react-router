@@ -58,6 +58,22 @@ describe('getParams', function () {
         })
       })
     })
+    
+    describe('and the pattern is parentheses escaped', function () {
+      const pattern = '/comments\\(:id\\)'
+      
+      describe('and the path matches with supplied param', function () {
+        it('returns an object with the params', function () {
+          expect(getParams(pattern, '/comments(123)')).toEqual({ id: '123' })
+        })
+      })
+
+      describe('and the path does not match without parentheses', function () {
+        it('returns an object with an undefined param', function () {
+          expect(getParams(pattern, '/commentsedit')).toBe(null)
+        })
+      })
+    })
 
     describe('and the path does not match', function () {
       it('returns null', function () {
