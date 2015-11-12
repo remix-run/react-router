@@ -3,5 +3,8 @@
   "loose": "all",
   "plugins": [
     "dev-expression"
+  ],
+  "blacklist": [
+    "es7.classProperties"
   ]
 }

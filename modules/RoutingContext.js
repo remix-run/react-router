@@ -11,24 +11,6 @@ const { array, func, object } = React.PropTypes
  */
 class RoutingContext extends Component {
 
-  static propTypes = {
-    history: object.isRequired,
-    createElement: func.isRequired,
-    location: object.isRequired,
-    routes: array.isRequired,
-    params: object.isRequired,
-    components: array.isRequired
-  }
-
-  static defaultProps = {
-    createElement: React.createElement
-  }
-
-  static childContextTypes = {
-    history: object.isRequired,
-    location: object.isRequired
-  }
-
   getChildContext() {
     const { history, location } = this.props
     return { history, location }
@@ -88,6 +70,24 @@ class RoutingContext extends Component {
     return element
   }
 
+}
+
+RoutingContext.propTypes = {
+  history: object.isRequired,
+  createElement: func.isRequired,
+  location: object.isRequired,
+  routes: array.isRequired,
+  params: object.isRequired,
+  components: array.isRequired
+}
+
+RoutingContext.defaultProps = {
+  createElement: React.createElement
+}
+
+RoutingContext.childContextTypes = {
+  history: object.isRequired,
+  location: object.isRequired
 }
 
 export default RoutingContext
