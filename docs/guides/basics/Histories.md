@@ -93,7 +93,7 @@ Memory history doesn't manipulate or read from the address bar. This is how we i
 ```js
 import React from 'react'
 import { render } from 'react-dom'
-import createBrowserHistory from 'history/lib/createBrowserHistory'
+import createMemoryHistory from 'history/lib/createMemoryHistory'
 import { Router, Route, IndexRoute } from 'react-router'
 import App from '../components/App'
 import Home from '../components/Home'
@@ -101,7 +101,7 @@ import About from '../components/About'
 import Features from '../components/Features'
 
 render(
-  <Router history={createBrowserHistory()}>
+  <Router history={createMemoryHistory()}>
     <Route path='/' component={App}>
       <IndexRoute component={Home} />
       <Route path='about' component={About} />
