@@ -395,6 +395,8 @@ A route's component is rendered when that route matches the URL. The router will
 #### `history`
 The Router's history [history](https://github.com/rackt/history/blob/master/docs).
 
+Useful mostly for transitioning around with `this.props.history.pushState(state, path, query)`
+
 #### `location`
 The current [location](https://github.com/rackt/history/blob/master/docs/Location.md).
 
