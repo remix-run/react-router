@@ -21,7 +21,7 @@ To render some default UI you could easily do `{this.props.children ||
 
 But now `Home` can't participate in routing, like the `onEnter` hooks,
 etc. You render in the same position as `Accounts` and `Statements`, so
-the router allows you have `Home` be a first class route component with
+the router allows you to have `Home` be a first class route component with
 `IndexRoute`.
 
 ```js
