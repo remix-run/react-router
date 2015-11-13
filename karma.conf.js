@@ -55,12 +55,29 @@ module.exports = function (config) {
     }
   }
 
+  var isCi = process.env.CONTINUOUS_INTEGRATION === 'true'
+  var runCoverage = process.env.COVERAGE === 'true' || isCi
+
+  var coverageLoaders = []
+  var coverageReporters = []
+
+  if (runCoverage) {
+    coverageLoaders.push({
+      test: /\.js$/,
+      include: path.resolve('modules/'),
+      exclude: /__tests__/,
+      loader: 'isparta'
+    })
+
+    coverageReporters.push('coverage')
+  }
+
   config.set({
     customLaunchers: customLaunchers,
 
     browsers: [ 'Chrome' ],
     frameworks: [ 'mocha' ],
-    reporters: [ 'mocha', 'coverage' ],
+    reporters: [ 'mocha' ].concat(coverageReporters),
 
     files: [
       'tests.webpack.js'
@@ -74,9 +91,8 @@ module.exports = function (config) {
       devtool: 'inline-source-map',
       module: {
         loaders: [
-          { test: /\.js$/, exclude: /node_modules/, loader: 'babel' },
-          { test: /\.js$/, exclude: /__tests__/, include: path.resolve('modules/'), loader: 'isparta' }
-        ]
+          { test: /\.js$/, exclude: /node_modules/, loader: 'babel' }
+        ].concat(coverageLoaders)
       },
       plugins: [
         new webpack.DefinePlugin({
@@ -99,7 +115,7 @@ module.exports = function (config) {
 
   if (process.env.USE_CLOUD) {
     config.browsers = Object.keys(customLaunchers)
-    config.reporters = [ 'dots', 'coverage' ]
+    config.reporters[0] = 'dots'
     config.browserDisconnectTimeout = 10000
     config.browserDisconnectTolerance = 3
     config.browserNoActivityTimeout = 30000
