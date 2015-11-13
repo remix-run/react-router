@@ -1,15 +1,10 @@
+sudo: false
 language: node_js
 node_js:
 - stable
-sudo: false
 cache:
   directories:
   - node_modules
-before_script:
-- wget http://www.browserstack.com/browserstack-local/BrowserStackLocal-linux-x64.zip
-- unzip BrowserStackLocal-linux-x64.zip
-- "./BrowserStackLocal $BROWSER_STACK_ACCESS_KEY localhost,8001,0 > /dev/null &"
-- sleep 10
 after_success:
 - cat ./coverage/lcov.info | ./node_modules/codecov.io/bin/codecov.io.js
 - cat ./coverage/lcov.info | ./node_modules/coveralls/bin/coveralls.js

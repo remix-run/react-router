@@ -112,7 +112,7 @@ module.exports = function (config) {
         username: process.env.BROWSER_STACK_USERNAME,
         accessKey: process.env.BROWSER_STACK_ACCESS_KEY,
         pollingTimeout: 10000,
-        startTunnel: false,
+        startTunnel: true,
         project: 'react-router',
         build: buildLabel,
         name: process.env.TRAVIS_JOB_NUMBER
