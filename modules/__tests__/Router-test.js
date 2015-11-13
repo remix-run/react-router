@@ -425,21 +425,4 @@ describe('Router', function () {
       }).toThrow('error fixture')
     })
   })
-
-  describe('onUpdate', function () {
-    it('should pass the router state as the first argument', function (done) {
-
-      function onUpdate(state) {
-        expect(state).toEqual(this.state)
-        done()
-      }
-
-      render((
-        <Router history={createHistory('/')} onUpdate={onUpdate}>
-          <Route path="/" component={Child} />
-        </Router>
-      ), node)
-    })
-
-  })
 })
