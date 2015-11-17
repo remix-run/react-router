@@ -20,7 +20,7 @@ const history = useBasename(createHistory)({
  * renders the new, transitioning-in component immediately afterward.
  */
 class RouteCSSTransitionGroup extends React.Component {
-  static contextTypes = {
+  static contextTypes: {
     location: React.PropTypes.object
   }
 

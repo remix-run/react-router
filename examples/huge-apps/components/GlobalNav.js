@@ -26,7 +26,7 @@ styles.activeLink = {
 
 class GlobalNav extends React.Component {
 
-  static defaultProps = {
+  static defaultProps: {
     user: {
       id: 1,
       name: 'Ryan Florence'
