@@ -11,26 +11,6 @@ const { string, object } = React.PropTypes
  */
 class IndexRedirect extends Component {
 
-  static createRouteFromReactElement(element, parentRoute) {
-    /* istanbul ignore else: sanity check */
-    if (parentRoute) {
-      parentRoute.indexRoute = Redirect.createRouteFromReactElement(element)
-    } else {
-      warning(
-        false,
-        'An <IndexRedirect> does not make sense at the root of your route config'
-      )
-    }
-  }
-
-  static propTypes = {
-    to: string.isRequired,
-    query: object,
-    state: object,
-    onEnter: falsy,
-    children: falsy
-  }
-
   /* istanbul ignore next: sanity check */
   render() {
     invariant(
@@ -39,6 +19,26 @@ class IndexRedirect extends Component {
     )
   }
 
+}
+
+IndexRedirect.propTypes = {
+  to: string.isRequired,
+  query: object,
+  state: object,
+  onEnter: falsy,
+  children: falsy
+}
+
+IndexRedirect.createRouteFromReactElement = function (element, parentRoute) {
+  /* istanbul ignore else: sanity check */
+  if (parentRoute) {
+    parentRoute.indexRoute = Redirect.createRouteFromReactElement(element)
+  } else {
+    warning(
+      false,
+      'An <IndexRedirect> does not make sense at the root of your route config'
+    )
+  }
 }
 
 export default IndexRedirect

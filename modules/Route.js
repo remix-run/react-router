@@ -17,16 +17,6 @@ const { string, func } = React.PropTypes
  */
 class Route extends Component {
 
-  static createRouteFromReactElement = createRouteFromReactElement
-
-  static propTypes = {
-    path: string,
-    component,
-    components,
-    getComponent: func,
-    getComponents: func
-  }
-
   /* istanbul ignore next: sanity check */
   render() {
     invariant(
@@ -35,6 +25,16 @@ class Route extends Component {
     )
   }
 
+}
+
+Route.createRouteFromReactElement = createRouteFromReactElement
+
+Route.propTypes = {
+  path: string,
+  component,
+  components,
+  getComponent: func,
+  getComponents: func
 }
 
 export default Route

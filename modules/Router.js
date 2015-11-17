@@ -15,22 +15,6 @@ const { func, object } = React.PropTypes
  */
 class Router extends Component {
 
-  static propTypes = {
-    history: object,
-    children: routes,
-    routes, // alias for children
-    RoutingContext: func.isRequired,
-    createElement: func,
-    onError: func,
-    onUpdate: func,
-    parseQueryString: func,
-    stringifyQuery: func
-  }
-
-  static defaultProps = {
-    RoutingContext
-  }
-
   constructor(props, context) {
     super(props, context)
 
@@ -105,6 +89,22 @@ class Router extends Component {
     })
   }
 
+}
+
+Router.propTypes = {
+  history: object,
+  children: routes,
+  routes, // alias for children
+  RoutingContext: func.isRequired,
+  createElement: func,
+  onError: func,
+  onUpdate: func,
+  parseQueryString: func,
+  stringifyQuery: func
+}
+
+Router.defaultProps = {
+  RoutingContext
 }
 
 export default Router

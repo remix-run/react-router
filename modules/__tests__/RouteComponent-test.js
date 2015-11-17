@@ -44,10 +44,7 @@ describe('a Route Component', function () {
 
   it('receives the right context', function (done) {
     class RouteComponent extends Component {
-      static contextTypes = {
-        history: object.isRequired,
-        location: object.isRequired
-      }
+      
       componentDidMount() {
         expect(this.context.history).toEqual(this.props.history)
         expect(this.context.location).toEqual(this.props.location)
@@ -55,6 +52,11 @@ describe('a Route Component', function () {
       render() {
         return null
       }
+    }
+    
+    RouteComponent.contextTypes = {
+      history: object.isRequired,
+      location: object.isRequired
     }
 
     const route = { path: '/', component: RouteComponent }

@@ -255,11 +255,11 @@ describe('Router', function () {
       const Child = () => <span>child</span>
 
       class LabelWrapper extends Component {
-        static defaultProps = {
-          createElement: React.createElement
+        constructor() {
+          this.createElement = this.createElement.bind(this)
         }
 
-        createElement = (component, props) => {
+        createElement(component, props) {
           const { label, createElement } = this.props
 
           return (
@@ -281,6 +281,10 @@ describe('Router', function () {
             </span>
           )
         }
+      }
+
+      LabelWrapper.defaultProps = {
+        createElement: React.createElement
       }
 
       const CustomRoutingContext = props => (

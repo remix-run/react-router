@@ -38,26 +38,6 @@ function isEmptyObject(object) {
  */
 class Link extends Component {
 
-  static contextTypes = {
-    history: object
-  }
-
-  static propTypes = {
-    to: string.isRequired,
-    query: object,
-    hash: string,
-    state: object,
-    activeStyle: object,
-    activeClassName: string,
-    onlyActiveOnIndex: bool.isRequired,
-    onClick: func
-  }
-
-  static defaultProps = {
-    onlyActiveOnIndex: false,
-    className: '',
-    style: {}
-  }
 
   handleClick(event) {
     let allowTransition = true
@@ -120,6 +100,27 @@ class Link extends Component {
     return <a {...props} />
   }
 
+}
+
+Link.contextTypes = {
+  history: object
+}
+
+Link.propTypes = {
+  to: string.isRequired,
+  query: object,
+  hash: string,
+  state: object,
+  activeStyle: object,
+  activeClassName: string,
+  onlyActiveOnIndex: bool.isRequired,
+  onClick: func
+}
+
+Link.defaultProps = {
+  onlyActiveOnIndex: false,
+  className: '',
+  style: {}
 }
 
 export default Link
