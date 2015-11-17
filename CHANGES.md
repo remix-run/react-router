@@ -265,7 +265,7 @@ var Assignment = React.createClass({
   foo () {
     this.props.location // contains path information
     this.props.params // contains params
-    this.props.history.isActive
+    this.props.history.isActive('/pathToAssignment')
   }
 })
 
