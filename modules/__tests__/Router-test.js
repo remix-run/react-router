@@ -255,7 +255,8 @@ describe('Router', function () {
       const Child = () => <span>child</span>
 
       class LabelWrapper extends Component {
-        constructor() {
+        constructor(props, context) {
+          super(props, context)
           this.createElement = this.createElement.bind(this)
         }
 
