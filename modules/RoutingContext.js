@@ -51,9 +51,16 @@ class RoutingContext extends Component {
         if (typeof components === 'object') {
           const elements = {}
 
-          for (let key in components)
-            if (components.hasOwnProperty(key))
-              elements[key] = this.createElement(components[key], props)
+          for (const key in components) {
+            if (components.hasOwnProperty(key)) {
+              // Pass through the key as a prop to createElement to allow
+              // custom createElement functions to know which named component
+              // they're rendering, for e.g. matching up to fetched data.
+              elements[key] = this.createElement(components[key], {
+                key, ...props
+              })
+            }
+          }
 
           return elements
         }

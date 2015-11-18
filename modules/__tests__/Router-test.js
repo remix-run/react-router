@@ -106,35 +106,63 @@ describe('Router', function () {
   })
 
   describe('with named components', function () {
+    class Parent extends Component {
+      render() {
+        return (
+          <div>{this.props.sidebar}-{this.props.content}</div>
+        )
+      }
+    }
+
+    class Sidebar extends Component {
+      render() {
+        return <div>sidebar</div>
+      }
+    }
+
+    class Content extends Component {
+      render() {
+        return <div>content</div>
+      }
+    }
+
+    let routes
+
+    beforeEach(function () {
+      routes = (
+        <Route component={Parent}>
+          <Route path="/" components={{ sidebar: Sidebar, content: Content }} />
+        </Route>
+      )
+    })
+
     it('receives those components as props', function (done) {
-      class Parent extends Component {
-        render() {
-          return (
-            <div>{this.props.sidebar}-{this.props.content}</div>
-          )
-        }
-      }
+      render((
+        <Router history={createHistory('/')} routes={routes} />
+      ), node, function () {
+        expect(node.textContent).toEqual('sidebar-content')
+        done()
+      })
+    })
 
-      class Sidebar extends Component {
-        render() {
-          return <div>sidebar</div>
+    it('sets the key on those components', function (done) {
+      const components = {}
+      function createElementSpy(Component, props) {
+        if (props.key) {
+          components[props.key] = Component
         }
-      }
 
-      class Content extends Component {
-        render() {
-          return <div>content</div>
-        }
+        return null
       }
 
       render((
-        <Router history={createHistory('/')}>
-          <Route component={Parent}>
-            <Route path="/" components={{ sidebar: Sidebar, content: Content }} />
-          </Route>
-        </Router>
+        <Router
+          history={createHistory('/')} routes={routes}
+          createElement={createElementSpy}
+        />
       ), node, function () {
-        expect(node.textContent).toEqual('sidebar-content')
+        expect(components.sidebar).toBe(Sidebar)
+        expect(components.content).toBe(Content)
         done()
       })
     })
