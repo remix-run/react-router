@@ -72,8 +72,12 @@ export function createRoutesFromReactChildren(children, parentRoute) {
       if (element.type.createRouteFromReactElement) {
         const route = element.type.createRouteFromReactElement(element, parentRoute)
 
-        if (route)
-          routes.push(route)
+        if (route) {
+          if (Array.isArray(route))
+            routes.push(...route)
+          else
+            routes.push(route)
+        }
       } else {
         routes.push(createRouteFromReactElement(element))
       }
