@@ -10,9 +10,6 @@ const history = useBasename(createHistory)({
 })
 
 class App extends React.Component {
-  static title = 'Home'
-  static path = '/'
-
   render() {
     const depth = this.props.routes.length
 
@@ -45,10 +42,11 @@ class App extends React.Component {
   }
 }
 
-class Products extends React.Component {
-  static title = 'Products'
-  static path = '/products'
+App.title = 'Home'
+App.path = '/'
 
+
+class Products extends React.Component {
   render() {
     return (
       <div className="Page">
@@ -58,10 +56,10 @@ class Products extends React.Component {
   }
 }
 
-class Orders extends React.Component {
-  static title = 'Orders'
-  static path = '/orders'
+Products.title = 'Products'
+Products.path = '/products'
 
+class Orders extends React.Component {
   render() {
     return (
       <div className="Page">
@@ -70,6 +68,9 @@ class Orders extends React.Component {
     )
   }
 }
+
+Orders.title = 'Orders'
+Orders.path = '/orders'
 
 render((
   <Router history={history}>

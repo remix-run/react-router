@@ -26,13 +26,6 @@ styles.activeLink = {
 
 class GlobalNav extends React.Component {
 
-  static defaultProps = {
-    user: {
-      id: 1,
-      name: 'Ryan Florence'
-    }
-  }
-
   constructor(props, context) {
     super(props, context)
     this.logOut = this.logOut.bind(this)
@@ -58,6 +51,13 @@ class GlobalNav extends React.Component {
         </div>
       </div>
     )
+  }
+}
+
+GlobalNav.defaultProps = {
+  user: {
+    id: 1,
+    name: 'Ryan Florence'
   }
 }
 
