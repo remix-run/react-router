@@ -372,7 +372,7 @@ code-splitting.
 ```js
 <Route path="courses/:courseId" getIndexRoute={(location, cb) => {
   // do asynchronous stuff to find the index route
-  cb(null, Index)
+  cb(null, myIndexRoute)
 }}/>
 ```
 
