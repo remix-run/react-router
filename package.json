@@ -22,7 +22,9 @@
     "build-min": "NODE_ENV=production webpack -p modules/index.js umd/ReactRouter.min.js",
     "lint": "eslint modules examples",
     "start": "node examples/server.js",
-    "test": "npm run lint && karma start",
+    "test": "npm run lint && npm run test-node && npm run test-browser",
+    "test-browser": "karma start",
+    "test-node": "mocha --compilers js:babel-core/register tests.node.js",
     "postinstall": "node ./npm-scripts/postinstall.js"
   },
   "authors": [
