@@ -1,11 +1,14 @@
 ## [HEAD]
 
+- Expose `listenRoutes` on `useRoutes`-enhanced histories for listening to
+  routing state ([#2580])
 - Support IE8 ([#2540])
 - Add ES2015 module build ([#2530])
 
 [HEAD]: https://github.com/rackt/react-router/compare/latest...HEAD
 [#2530]: https://github.com/rackt/react-router/pull/2530
 [#2540]: https://github.com/rackt/react-router/pull/2540
+[#2580]: https://github.com/rackt/react-router/pull/2580
 
 ## [v1.0.0]
 > Nov 9, 2015
