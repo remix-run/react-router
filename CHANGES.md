@@ -1,6 +1,8 @@
 ## [HEAD]
 
+- Add ES2015 module build ([#2530])
 
+[#2530]: https://github.com/rackt/react-router/pull/2530
 
 ## [v1.0.0]
 
@@ -355,5 +357,3 @@ To cancel a "transition from", please refer to the
 
 There's a lot of the old API we've missed, please give the [new
 docs](/docs) a read and help us fill this guide in. Thanks!
-
-
