@@ -1,10 +1,14 @@
 ## [HEAD]
 
+- Support IE8 ([#2540])
 - Add ES2015 module build ([#2530])
 
+[HEAD]: https://github.com/rackt/react-router/compare/latest...HEAD
 [#2530]: https://github.com/rackt/react-router/pull/2530
+[#2540]: https://github.com/rackt/react-router/pull/2540
 
 ## [v1.0.0]
+> Nov 9, 2015
 
 Thanks for your patience :) Big changes from v0.13.x to 1.0. While on
 the surface a lot of this just looks like shuffling around API, the
@@ -357,3 +361,5 @@ To cancel a "transition from", please refer to the
 
 There's a lot of the old API we've missed, please give the [new
 docs](/docs) a read and help us fill this guide in. Thanks!
+
+[v1.0.0]: https://github.com/rackt/react-router/compare/v0.13.5...v1.0.0
