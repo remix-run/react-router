@@ -60,6 +60,12 @@ class Router extends Component {
       nextProps.history === this.props.history,
       'You cannot change <Router history>; it will be ignored'
     )
+
+    warning(
+      (nextProps.routes || nextProps.children) ===
+        (this.props.routes || this.props.children),
+      'You cannot change <Router routes>; it will be ignored'
+    )
   }
 
   componentWillUnmount() {
