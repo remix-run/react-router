@@ -49,7 +49,7 @@ class Router extends Component {
       if (error) {
         this.handleError(error)
       } else {
-        this.setState(state, this.props.onUpdate)
+        this.setState(state, this.props.onUpdate && this.props.onUpdate.bind(this, state) )
       }
     })
   }
