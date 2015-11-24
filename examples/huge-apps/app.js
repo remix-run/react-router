@@ -24,8 +24,12 @@ const rootRoute = {
   } ]
 }
 
+function analyticsLog(state) {
+  console.log('log to analytics: ' + state.location.pathname);
+}
+
 render(
-  <Router history={history} routes={rootRoute} />,
+  <Router history={history} routes={rootRoute} onUpdate={analyticsLog} />,
   document.getElementById('example')
 )
 

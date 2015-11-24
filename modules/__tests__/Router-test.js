@@ -5,6 +5,7 @@ import createHistory from 'history/lib/createMemoryHistory'
 import Route from '../Route'
 import Router from '../Router'
 import RoutingContext from '../RoutingContext'
+import execSteps from './execSteps'
 
 describe('Router', function () {
 
@@ -456,6 +457,28 @@ describe('Router', function () {
           </Router>
         ), node)
       }).toThrow('error fixture')
+    })
+  })
+
+  describe('update callback', function () {
+    it('should call onUpdate with its state', function (done) {
+      const steps = [
+        function () {
+          this.history.pushState(null, '/hello')
+        },
+        function (routerState) {
+          expect(routerState.location.pathname).toEqual('/hello')
+        }
+      ]
+
+      const execNextStep = execSteps(steps, done)
+
+      render((
+        <Router history={createHistory('/')} onUpdate={execNextStep}>
+          <Route path="/" component={Parent} />
+          <Route path="hello" component={Child} />
+        </Router>
+      ), node, execNextStep)
     })
   })
 })
