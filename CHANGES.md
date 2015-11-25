@@ -202,7 +202,10 @@ handler no longer prevents the transition. To prevent the transition, call
 
 // v1.0
 {this.props.children}
-{React.cloneElement(this.props.children, {someExtraProp: something})}
+{React.Children.map(this.props.children, function (child) {
+    return React.cloneElement(this.props.children, {someExtraProp: something});
+  })
+}
 ```
 
 There's a small semantic change with this approach. React validates `propTypes`
