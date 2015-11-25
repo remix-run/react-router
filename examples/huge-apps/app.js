@@ -4,6 +4,7 @@ import { render } from 'react-dom'
 import { createHistory, useBasename } from 'history'
 import { Router } from 'react-router'
 import stubbedCourses from './stubs/COURSES'
+import App from './components/App'
 
 const history = useBasename(createHistory)({
   basename: '/huge-apps'
@@ -13,7 +14,7 @@ const rootRoute = {
   component: 'div',
   childRoutes: [ {
     path: '/',
-    component: require('./components/App'),
+    component: App,
     childRoutes: [
       require('./routes/Calendar'),
       require('./routes/Course'),
