@@ -39,4 +39,4 @@ class Course extends React.Component {
   }
 }
 
-export default Course
+module.exports = Course

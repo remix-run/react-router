@@ -10,4 +10,4 @@ class Profile extends React.Component {
   }
 }
 
-export default Profile
+module.exports = Profile

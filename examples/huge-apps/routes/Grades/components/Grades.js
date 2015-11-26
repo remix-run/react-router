@@ -12,4 +12,4 @@ class Grades extends React.Component {
 
 }
 
-export default Grades
+module.exports = Grades

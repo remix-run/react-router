@@ -15,4 +15,4 @@ class Announcement extends React.Component {
   }
 }
 
-export default Announcement
+module.exports = Announcement

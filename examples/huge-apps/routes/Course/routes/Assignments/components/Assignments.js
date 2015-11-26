@@ -11,4 +11,4 @@ class Assignments extends React.Component {
   }
 }
 
-export default Assignments
+module.exports = Assignments

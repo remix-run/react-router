@@ -11,4 +11,4 @@ class Announcements extends React.Component {
   }
 }
 
-export default Announcements
+module.exports = Announcements

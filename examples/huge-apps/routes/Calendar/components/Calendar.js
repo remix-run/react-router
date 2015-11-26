@@ -19,4 +19,4 @@ class Calendar extends React.Component {
   }
 }
 
-export default Calendar
+module.exports = Calendar
