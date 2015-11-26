@@ -15,4 +15,4 @@ class Assignment extends React.Component {
   }
 }
 
-export default Assignment
+module.exports = Assignment

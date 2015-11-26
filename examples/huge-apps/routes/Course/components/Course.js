@@ -15,28 +15,35 @@ styles.sidebar = {
 
 class Course extends React.Component {
   render() {
-    let { sidebar, main, params } = this.props
+    let { sidebar, main, children, params } = this.props
     let course = COURSES[params.courseId]
+
+    let content
+    if (sidebar && main) {
+      content = (
+        <div>
+          <div className="Sidebar" style={styles.sidebar}>
+            {sidebar}
+          </div>
+          <div className="Main" style={{ padding: 20 }}>
+            {main}
+          </div>
+        </div>
+      )
+    } else if (children) {
+      content = children
+    } else {
+      content = <Dashboard />
+    }
 
     return (
       <div>
         <h2>{course.name}</h2>
         <Nav course={course} />
-        {sidebar && main ? (
-          <div>
-            <div className="Sidebar" style={styles.sidebar}>
-              {sidebar}
-            </div>
-            <div className="Main" style={{ padding: 20 }}>
-              {main}
-            </div>
-          </div>
-        ) : (
-          <Dashboard />
-        )}
+        {content}
       </div>
     )
   }
 }
 
-export default Course
+module.exports = Course

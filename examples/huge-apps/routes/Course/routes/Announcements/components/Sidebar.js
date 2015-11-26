@@ -23,4 +23,4 @@ class AnnouncementsSidebar extends React.Component {
   }
 }
 
-export default AnnouncementsSidebar
+module.exports = AnnouncementsSidebar
