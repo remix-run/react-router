@@ -94,6 +94,8 @@ An object of key:value pairs to be stringified.
 ##### `hash`
 A hash to put in the URL, e.g. `#a-hash`.
 
+_Note: React Router currently does not manage scroll position, and will not scroll to the element corresponding to the hash. Scroll position management utilities are available in the [scroll-behavior](https://github.com/rackt/scroll-behavior) library._
+
 ##### `state`
 State to persist to the `location`.
 
