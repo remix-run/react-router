@@ -1,7 +1,7 @@
 import expect from 'expect'
 import React, { Component } from 'react'
 import { render, unmountComponentAtNode } from 'react-dom'
-import createHistory from 'history/lib/createMemoryHistory'
+import { createMemoryHistory as createHistory } from 'history'
 import Router from '../Router'
 
 const { object } = React.PropTypes

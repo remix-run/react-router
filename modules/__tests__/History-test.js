@@ -4,7 +4,7 @@ import { render, unmountComponentAtNode } from 'react-dom'
 import History from '../History'
 import Router from '../Router'
 import Route from '../Route'
-import createHistory from 'history/lib/createMemoryHistory'
+import { createMemoryHistory as createHistory } from 'history'
 
 describe('History Mixin', function () {
 
