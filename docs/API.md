@@ -103,6 +103,9 @@ The className a `<Link>` receives when its route is active. No active class by d
 ##### `activeStyle`
 The styles to apply to the link element when its route is active.
 
+##### `onlyActiveOnIndex`
+A bool, default false. If true, the `activeStyle/ClassName` will *not* be applied for child routes. For example, if `to="/people"` and the current location is `/people/23` and `onlyActiveOnIndex=true`, then the active style & className will *not* be applied.
+
 ##### `onClick(e)`
 A custom handler for the click event. Works just like a handler on an `<a>` tag - calling `e.preventDefault()` will prevent the transition from firing, while `e.stopPropagation()` will prevent the event from bubbling.
 
