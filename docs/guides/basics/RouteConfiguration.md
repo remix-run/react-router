@@ -184,14 +184,14 @@ The route config we've discussed up to this point could also be specified like t
 ```js
 const routeConfig = [
   { path: '/',
-    component: App,
-    indexRoute: { component: Dashboard },
+    getComponent: App,
+    indexRoute: { getComponent: Dashboard },
     childRoutes: [
-      { path: 'about', component: About },
+      { path: 'about', getComponent: About },
       { path: 'inbox',
-        component: Inbox,
+        getComponent: Inbox,
         childRoutes: [
-          { path: '/messages/:id', component: Message },
+          { path: '/messages/:id', getComponent: Message },
           { path: 'messages/:id',
             onEnter: function (nextState, replaceState) {
               replaceState(null, '/messages/' + nextState.params.id)
