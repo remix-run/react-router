@@ -1,7 +1,7 @@
 import expect, { spyOn } from 'expect'
 import React, { Component } from 'react'
 import { render, unmountComponentAtNode } from 'react-dom'
-import createHistory from 'history/lib/createMemoryHistory'
+import { createMemoryHistory as createHistory } from 'history'
 import useQueries from 'history/lib/useQueries'
 import execSteps from './execSteps'
 import Router from '../Router'
