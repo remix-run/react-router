@@ -367,6 +367,8 @@ All the same props as [Route](#route) except for `path`.
 ##### `getIndexRoute(location, callback)`
 Same as `IndexRoute` but asynchronous, useful for
 code-splitting.
+Note: `callback` expects a route object, with the `component` property set to
+your indexRoute Component class.
 
 ###### `callback` signature
 `cb(err, component)`
@@ -374,6 +376,10 @@ code-splitting.
 ```js
 <Route path="courses/:courseId" getIndexRoute={(location, cb) => {
   // do asynchronous stuff to find the index route
+  const IndexRoute = require('./MyIndexRoute')
+  const myIndexRoute = {
+    component: IndexRoute
+  }
   cb(null, myIndexRoute)
 }}/>
 ```
