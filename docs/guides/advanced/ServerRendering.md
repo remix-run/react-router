@@ -35,4 +35,11 @@ serve((req, res) => {
 })
 ```
 
+The three arguments to the callback function you pass to `match` are:
+* `error`: A Javascript `Error` object if an error occurred, `undefined` otherwise.
+* `redirectLocation`: A [Location](https://github.com/rackt/react-router/blob/master/docs/Glossary.md#location) object if the route is a redirect, `undefined` otherwise.
+* `renderProps`: The props you should pass to the routing context if the route matched, `undefined` otherwise.
+
+If all three parameters are `undefined`, this means that there was no route found matching the given location.
+
 For data loading, you can use the `renderProps` argument to build whatever convention you want--like adding static `load` methods to your route components, or putting data loading functions on the routes--it's up to you.
