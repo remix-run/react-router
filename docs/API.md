@@ -23,6 +23,7 @@
 
 * [Utilities](#utilities)
   * [useRoutes](#useroutescreatehistory)
+  * [match](#matchlocation-cb)
   * [createRoutes](#createroutesroutes)
   * [PropTypes](#proptypes)
 
@@ -664,7 +665,7 @@ The three arguments to the callback function you pass to `match` are:
 
 If all three parameters are `undefined`, this means that there was no route found matching the given location.
 
-*Note: You probably don't want to use this in a browser. Use the [`history.listen`](https://github.com/rackt/history/blob/master/docs/GettingStarted.md#getting-started) API instead.*
+*Note: You probably don't want to use this in a browser unless you're doing server-side rendering of async routes.*
 
 
 ## `createRoutes(routes)`
