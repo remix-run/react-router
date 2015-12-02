@@ -218,7 +218,7 @@ function useRoutes(createHistory) {
      * changes, we update state and call the listener. We can also
      * gracefully handle errors and redirects.
      */
-    function listen(listener) {
+    function listenRoutes(listener) {
       // TODO: Only use a single history listener. Otherwise we'll
       // end up with multiple concurrent calls to match.
       return history.listen(function (location) {
@@ -244,11 +244,22 @@ function useRoutes(createHistory) {
       })
     }
 
+    function listen(listener) {
+      warning(
+        '[React Router] The behavior of `listen` will change to match ' +
+        'standard histories. Use `listenRoutes` to listen to routing state.'
+      )
+      return listenRoutes(listener)
+    }
+
     return {
       ...history,
       isActive,
       match,
       listenBeforeLeavingRoute,
+      listenRoutes,
+
+      // Deprecated:
       listen
     }
   }
