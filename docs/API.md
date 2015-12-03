@@ -249,7 +249,7 @@ code-splitting.
 `cb(err, components)`
 
 ```js
-<Route path="courses/:courseId" getComponent={(location, cb) => {
+<Route path="courses/:courseId" getComponents={(location, cb) => {
   // do asynchronous stuff to find the components
   cb(null, {sidebar: CourseSidebar, content: Course})
 }}/>
