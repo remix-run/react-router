@@ -12,6 +12,6 @@ stat('lib', function (error, stat) {
 		console.log('where i will run this from: ' + newDir);
 		console.log("executing ls");
 		exec('ls ./');
-		exec('npm run build', {cwd: newDir})
+
 	}
 })
