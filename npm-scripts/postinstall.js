@@ -6,7 +6,10 @@ function exec(command) {
 }
 
 stat('lib', function (error, stat) {
-  if (error || !stat.isDirectory())
-  	console.log('directory name: ' + __dirname);
-    exec('npm run build', {cwd: __dirname.replace('npm-scripts', '')})
+  if (error || !stat.isDirectory()) {
+		console.log('directory name: ' + __dirname);
+		var newDir = __dirname.replace('npm-scripts', '');
+		console.log('where i will run this from: ' + newDir);
+		exec('npm run build', {cwd: newDir})
+	}
 })
