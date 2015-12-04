@@ -35,10 +35,29 @@ The DOM API that hash history uses to transition around is simply `window.locati
 
 You can disable that feature (more [here](http://rackt.org/history/stable/HashHistoryCaveats.html)):
 ```js
+// JavaScript module import
+import createHistory from 'history/lib/createHistory'
+// or commonjs
+const createHistory = require('history/lib/createHistory')
+
+// ...
+
 // Opt-out of persistent state, not recommended.
 let history = createHistory({
   queryKey: false
 });
+
+// ...
+
+render(
+  <Router history={ history }>
+    <Route path='/' component={App}>
+      // ... 
+    </Route>
+  </Router>,
+  document.getElementById('app')
+)
+
 ```
 
 ### `createBrowserHistory`
