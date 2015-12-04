@@ -2,15 +2,6 @@
   "name": "react-router",
   "version": "1.0.0",
   "description": "A complete routing library for React.js",
-  "files": [
-    "*.md",
-    "docs",
-    "es6",
-    "lib",
-    "modules",
-    "npm-scripts",
-    "umd"
-  ],
   "main": "lib/index",
   "jsnext:main": "es6/index",
   "repository": {
