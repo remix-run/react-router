@@ -1,12 +1,37 @@
-import deprecateObjectProperties from './deprecateObjectProperties'
+import React from 'react'
 import invariant from 'invariant'
-import React, { Component } from 'react'
+import deprecateObjectProperties from './deprecateObjectProperties'
 import { isReactChildren } from './RouteUtils'
 import getRouteParams from './getRouteParams'
 
 const { array, func, object } = React.PropTypes
 
-class RoutingContext extends Component {
+/**
+ * A <RoutingContext> renders the component tree for a given router state
+ * and sets the history object and the current location in context.
+ */
+const RoutingContext = React.createClass({
+
+  propTypes: {
+    history: object.isRequired,
+    createElement: func.isRequired,
+    location: object.isRequired,
+    routes: array.isRequired,
+    params: object.isRequired,
+    components: array.isRequired
+  },
+
+  getDefaultProps() {
+    return {
+      createElement: React.createElement
+    }
+  },
+
+  childContextTypes: {
+    history: object.isRequired,
+    location: object.isRequired,
+    router: object.isRequired
+  },
 
   getChildContext() {
     const { history, location } = this.props
@@ -32,11 +57,11 @@ class RoutingContext extends Component {
       })
     else
       return contextExport
-  }
+  },
 
   createElement(component, props) {
     return component == null ? null : this.props.createElement(component, props)
-  }
+  },
 
   render() {
     const { history, location, routes, params, components } = this.props
@@ -95,25 +120,6 @@ class RoutingContext extends Component {
     return element
   }
 
-}
-
-RoutingContext.propTypes = {
-  history: object.isRequired,
-  createElement: func.isRequired,
-  location: object.isRequired,
-  routes: array.isRequired,
-  params: object.isRequired,
-  components: array.isRequired
-}
-
-RoutingContext.defaultProps = {
-  createElement: React.createElement
-}
-
-RoutingContext.childContextTypes = {
-  history: object.isRequired,
-  location: object.isRequired,
-  router: object.isRequired
-}
+})
 
 export default RoutingContext

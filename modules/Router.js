@@ -1,5 +1,5 @@
+import React from 'react'
 import warning from 'warning'
-import React, { Component } from 'react'
 import createHashHistory from 'history/lib/createHashHistory'
 import { createRoutes } from './RouteUtils'
 import RoutingContext from './RoutingContext'
@@ -13,18 +13,34 @@ const { func, object } = React.PropTypes
  * a router that renders a <RoutingContext> with all the props
  * it needs each time the URL changes.
  */
-class Router extends Component {
+const Router = React.createClass({
 
-  constructor(props, context) {
-    super(props, context)
+  propTypes: {
+    history: object,
+    children: routes,
+    routes, // alias for children
+    RoutingContext: func.isRequired,
+    createElement: func,
+    onError: func,
+    onUpdate: func,
+    parseQueryString: func,
+    stringifyQuery: func
+  },
 
-    this.state = {
+  getDefaultProps() {
+    return {
+      RoutingContext
+    }
+  },
+
+  getInitialState() {
+    return {
       location: null,
       routes: null,
       params: null,
       components: null
     }
-  }
+  },
 
   handleError(error) {
     if (this.props.onError) {
@@ -33,7 +49,7 @@ class Router extends Component {
       // Throw errors by default so we don't silently swallow them!
       throw error // This error probably occurred in getChildRoutes or getComponents.
     }
-  }
+  },
 
   componentWillMount() {
     let { history, children, routes, parseQueryString, stringifyQuery } = this.props
@@ -52,7 +68,7 @@ class Router extends Component {
         this.setState(state, this.props.onUpdate)
       }
     })
-  }
+  },
 
   /* istanbul ignore next: sanity check */
   componentWillReceiveProps(nextProps) {
@@ -66,12 +82,12 @@ class Router extends Component {
         (this.props.routes || this.props.children),
       'You cannot change <Router routes>; it will be ignored'
     )
-  }
+  },
 
   componentWillUnmount() {
     if (this._unlisten)
       this._unlisten()
-  }
+  },
 
   render() {
     let { location, routes, params, components } = this.state
@@ -95,22 +111,6 @@ class Router extends Component {
     })
   }
 
-}
-
-Router.propTypes = {
-  history: object,
-  children: routes,
-  routes, // alias for children
-  RoutingContext: func.isRequired,
-  createElement: func,
-  onError: func,
-  onUpdate: func,
-  parseQueryString: func,
-  stringifyQuery: func
-}
-
-Router.defaultProps = {
-  RoutingContext
-}
+})
 
 export default Router

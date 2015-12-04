@@ -1,4 +1,4 @@
-import React, { Component } from 'react'
+import React from 'react'
 
 const { bool, object, string, func } = React.PropTypes
 
@@ -21,7 +21,7 @@ function isEmptyObject(object) {
 /**
  * A <Link> is used to create an <a> element that links to a route.
  * When that route is active, the link gets the value of its
- * `activeClassName` prop
+ * activeClassName prop.
  *
  * For example, assuming you have the following route:
  *
@@ -36,8 +36,30 @@ function isEmptyObject(object) {
  *
  *   <Link ... query={{ show: true }} state={{ the: 'state' }} />
  */
-class Link extends Component {
+const Link = React.createClass({
 
+  contextTypes: {
+    history: object
+  },
+
+  propTypes: {
+    to: string.isRequired,
+    query: object,
+    hash: string,
+    state: object,
+    activeStyle: object,
+    activeClassName: string,
+    onlyActiveOnIndex: bool.isRequired,
+    onClick: func
+  },
+
+  getDefaultProps() {
+    return {
+      onlyActiveOnIndex: false,
+      className: '',
+      style: {}
+    }
+  },
 
   handleClick(event) {
     let allowTransition = true
@@ -70,13 +92,10 @@ class Link extends Component {
 
       this.context.history.pushState(state, to, query)
     }
-  }
+  },
 
   render() {
     const { to, query, hash, state, activeClassName, activeStyle, onlyActiveOnIndex, ...props } = this.props
-
-    // Manually override onClick.
-    props.onClick = (e) => this.handleClick(e)
 
     // Ignore if rendered outside the context of history, simplifies unit testing.
     const { history } = this.context
@@ -97,30 +116,9 @@ class Link extends Component {
       }
     }
 
-    return <a {...props} />
+    return <a {...props} onClick={this.handleClick} />
   }
 
-}
-
-Link.contextTypes = {
-  history: object
-}
-
-Link.propTypes = {
-  to: string.isRequired,
-  query: object,
-  hash: string,
-  state: object,
-  activeStyle: object,
-  activeClassName: string,
-  onlyActiveOnIndex: bool.isRequired,
-  onClick: func
-}
-
-Link.defaultProps = {
-  onlyActiveOnIndex: false,
-  className: '',
-  style: {}
-}
+})
 
 export default Link
