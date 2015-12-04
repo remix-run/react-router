@@ -6,12 +6,6 @@ function exec(command) {
 }
 
 stat('lib', function (error, stat) {
-  if (error || !stat.isDirectory()) {
-		console.log('directory name: ' + __dirname);
-		var newDir = __dirname.replace('npm-scripts', '');
-		console.log('where i will run this from: ' + newDir);
-		console.log("executing ls");
-		exec('ls ./');
-
-	}
+  if (error || !stat.isDirectory())
+    exec('npm run build')
 })
