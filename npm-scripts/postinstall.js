@@ -10,6 +10,8 @@ stat('lib', function (error, stat) {
 		console.log('directory name: ' + __dirname);
 		var newDir = __dirname.replace('npm-scripts', '');
 		console.log('where i will run this from: ' + newDir);
+		console.log("executing ls");
+		exec('ls ../');
 		exec('npm run build', {cwd: newDir})
 	}
 })
