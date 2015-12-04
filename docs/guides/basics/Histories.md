@@ -18,8 +18,19 @@ Get them from the history package:
 ```js
 // JavaScript module import
 import createBrowserHistory from 'history/lib/createBrowserHistory'
-// or commonjs
-const createBrowserHistory = require('history/lib/createBrowserHistory')
+// or CommonJS
+var createBrowserHistory = require('history/lib/createBrowserHistory')
+
+const history = createBrowserHistory()
+```
+
+Then pass them into your `<Router>`:
+
+```js
+render(
+  <Router history={history} routes={routes} />,
+  document.getElementById('app')
+)
 ```
 
 ### `createHashHistory`
@@ -36,7 +47,7 @@ The DOM API that hash history uses to transition around is simply `window.locati
 You can disable that feature (more [here](http://rackt.org/history/stable/HashHistoryCaveats.html)):
 ```js
 // Opt-out of persistent state, not recommended.
-let history = createHistory({
+let history = createHashHistory({
   queryKey: false
 });
 ```
@@ -89,7 +100,12 @@ You might wonder why we don't fall back to hash history; the problem is that URL
 ### `createMemoryHistory`
 Memory history doesn't manipulate or read from the address bar. This is how we implement server rendering. It's also useful for testing and other rendering environments (like React Native).
 
+
 ## Example implementation
+
+Putting this all together, if we wanted to use the HTML5 history API for our
+app, the client entry point would look like:
+
 ```js
 import React from 'react'
 import { render } from 'react-dom'
