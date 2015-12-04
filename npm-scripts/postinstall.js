@@ -8,5 +8,5 @@ function exec(command) {
 stat('lib', function (error, stat) {
   if (error || !stat.isDirectory())
   	console.log('directory name: ' + __dirname);
-    exec('npm run build')
+    exec('npm run build', {cwd: '../'})
 })
