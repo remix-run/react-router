@@ -14,11 +14,11 @@ const RoutingContext = React.createClass({
 
   propTypes: {
     history: object.isRequired,
-    createElement: func.isRequired,
     location: object.isRequired,
     routes: array.isRequired,
     params: object.isRequired,
-    components: array.isRequired
+    components: array.isRequired,
+    createElement: func.isRequired
   },
 
   getDefaultProps() {
