@@ -24,10 +24,14 @@ class RoutingContext extends Component {
         return history.isActive(...args)
       }
     }
-    return deprecateObjectProperties({ history, location, router }, {
-      history: '`context.history` is deprecated, please use context.router',
-      location: '`context.location` is deprecated, please use a route component\'s `props.location` instead. If this is a deeply nested component, please refer to the strategies described in https://github.com/rackt/react-router/blob/v1.1.0/CHANGES.md#v110'
-    })
+    const contextExport = { history, location, router }
+    if (__DEV__)
+      return deprecateObjectProperties(contextExport, {
+        history: '`context.history` is deprecated, please use context.router',
+        location: '`context.location` is deprecated, please use a route component\'s `props.location` instead. If this is a deeply nested component, please refer to the strategies described in https://github.com/rackt/react-router/blob/v1.1.0/CHANGES.md#v110'
+      })
+    else
+      return contextExport
   }
 
   createElement(component, props) {
