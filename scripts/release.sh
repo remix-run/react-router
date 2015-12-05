@@ -1,4 +1,5 @@
 #!/bin/bash -e
+export RELEASE=1
 
 if ! [ -e scripts/release.sh ]; then
   echo >&2 "Please run scripts/release.sh from the repo root"
@@ -26,7 +27,7 @@ validate_semver $next_version
 
 next_ref="v$next_version"
 
-npm test -- --single-run
+npm test
 
 update_version 'package.json' $next_version
 

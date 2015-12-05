@@ -2,6 +2,9 @@ var webpack = require('webpack')
 var path = require('path')
 
 module.exports = function (config) {
+  if (process.env.RELEASE)
+    config.singleRun = true
+
   // Browsers to run on BrowserStack
   var customLaunchers = {
     BS_Chrome: {
