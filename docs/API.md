@@ -17,9 +17,9 @@
   - [Named Components](#named-components)
 
 * [Mixins](#mixins)
-  - [Lifecycle](#lifecycle-mixin)
-  - [History](#history-mixin)
-  - [RouteContext](#routecontext-mixin)
+  - [Lifecycle](#lifecycle-mixin) (Deprecated)
+  - [History](#history-mixin) (Deprecated)
+  - [RouteContext](#routecontext-mixin) (Deprecated)
 
 * [Utilities](#utilities)
   * [useRoutes](#useroutescreatehistory)

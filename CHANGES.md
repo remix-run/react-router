@@ -1,8 +1,10 @@
 ## [HEAD]
 
-### Changed context exports
+### Changes to context exports and Mixins
 
 Only an object named `router` is added to context. Accessing `context.history`, `context.location`, and `context.route` are all deprecated.
+
+Additionally, since `context` is now documented, all mixins are deprecated.
 
 #### Accessing location
 
