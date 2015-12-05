@@ -1,5 +1,8 @@
 {
   "extends": "rackt",
+  "globals": {
+    "__DEV__": true
+  },
   "rules": {
     "react/jsx-uses-react": 1,
     "react/jsx-no-undef": 2,
