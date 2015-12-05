@@ -5,15 +5,25 @@ import getRouteParams from './getRouteParams'
 
 const { array, func, object } = React.PropTypes
 
-/**
- * A <RoutingContext> renders the component tree for a given router state
- * and sets the history object and the current location in context.
- */
 class RoutingContext extends Component {
 
   getChildContext() {
     const { history, location } = this.props
-    return { history, location }
+    const router = {
+      push(...args) {
+        history.push(...args)
+      },
+      replace(...args) {
+        history.replace(...args)
+      },
+      addRouteLeaveHook(...args) {
+        return history.listenBeforeLeavingRoute(...args)
+      },
+      isActive(...args) {
+        return history.isActive(...args)
+      }
+    }
+    return { history, location, router }
   }
 
   createElement(component, props) {
@@ -94,7 +104,8 @@ RoutingContext.defaultProps = {
 
 RoutingContext.childContextTypes = {
   history: object.isRequired,
-  location: object.isRequired
+  location: object.isRequired,
+  router: object.isRequired
 }
 
 export default RoutingContext
