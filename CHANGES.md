@@ -1,5 +1,8 @@
 ## [HEAD]
 
+## [v1.0.1]
+> Dec 5, 2015
+
 - Support IE8 ([#2540])
 - Add ES2015 module build ([#2530])
 
