@@ -1,3 +1,4 @@
+import deprecateObjectProperties from './deprecateObjectProperties'
 import invariant from 'invariant'
 import React, { Component } from 'react'
 import { isReactChildren } from './RouteUtils'
@@ -5,15 +6,32 @@ import getRouteParams from './getRouteParams'
 
 const { array, func, object } = React.PropTypes
 
-/**
- * A <RoutingContext> renders the component tree for a given router state
- * and sets the history object and the current location in context.
- */
 class RoutingContext extends Component {
 
   getChildContext() {
     const { history, location } = this.props
-    return { history, location }
+    const router = {
+      push(...args) {
+        history.push(...args)
+      },
+      replace(...args) {
+        history.replace(...args)
+      },
+      addRouteLeaveHook(...args) {
+        return history.listenBeforeLeavingRoute(...args)
+      },
+      isActive(...args) {
+        return history.isActive(...args)
+      }
+    }
+    const contextExport = { history, location, router }
+    if (__DEV__)
+      return deprecateObjectProperties(contextExport, {
+        history: '`context.history` is deprecated, please use context.router',
+        location: '`context.location` is deprecated, please use a route component\'s `props.location` instead. If this is a deeply nested component, please refer to the strategies described in https://github.com/rackt/react-router/blob/v1.1.0/CHANGES.md#v110'
+      })
+    else
+      return contextExport
   }
 
   createElement(component, props) {
@@ -94,7 +112,8 @@ RoutingContext.defaultProps = {
 
 RoutingContext.childContextTypes = {
   history: object.isRequired,
-  location: object.isRequired
+  location: object.isRequired,
+  router: object.isRequired
 }
 
 export default RoutingContext

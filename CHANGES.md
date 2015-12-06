@@ -1,5 +1,199 @@
 ## [HEAD]
 
+### Changes to context exports and Mixins
+
+Only an object named `router` is added to context. Accessing `context.history`, `context.location`, and `context.route` are all deprecated.
+
+Additionally, since `context` is now documented, all mixins are deprecated.
+
+#### Accessing location
+
+Access `location` from `this.props.location` of your route component. If
+you'd like to get it deeper in the tree, you can use whatever
+conventions your app has for getting props from high down low. One
+option is to put it context yourself:
+
+```js
+// v1.0.x
+const RouteComponent = React.createClass({
+  childContextTypes: {
+    location: React.PropTypes.object
+  },
+
+  getChildContext() {
+    return { location: this.props.location }
+  }
+})
+```
+
+Though you may want to hide that in a mixin or higher order component,
+it's up to you.
+
+#### Navigating
+
+In all cases where you once had a `history` for navigation, you now have a `router` to navigate instead.
+
+```js
+// v1.0.0
+history.pushState(state, path, query)
+history.replaceState(state, path, query)
+
+// v1.1.0
+router.push(path)
+router.push({ path, query, state }) // new "location descriptor"
+
+router.replace(path)
+router.replace({ path, query, state }) // new "location descriptor"
+```
+
+#### Navigating in route components
+
+```js
+// v1.0.0
+class RouteComponent extends React.Component {
+  someHandler() {
+    this.props.history.pushState(...)
+  }
+}
+
+// v1.1.0
+class RouteComponent extends React.Component {
+  someHandler() {
+    this.props.router.push(...)
+  }
+}
+```
+
+#### Navigating inside deeply nested components
+
+```js
+// v1.0.0
+const DeepComponent = React.createClass({
+  mixins: [ History ],
+
+  someHandler() {
+    this.history.pushState(...)
+  }
+}
+
+// v1.1.0
+// You have a couple options:
+// Use context directly (recommended)
+const DeepComponent = React.createClass({
+  contextTypes: {
+    router: object.isRequired
+  },
+
+  someHandler() {
+    this.context.router.push(...)
+  }
+}
+
+// create your own mixin:
+const RouterMixin = {
+  contextTypes: {
+    router: object.isRequired
+  },
+  componentWillMount() {
+    this.router = this.context.router
+  }
+}
+
+const DeepComponent = React.createClass({
+  mixins: [ RouterMixin ],
+  someHandler() {
+    this.history.pushState(...)
+  }
+}
+
+// use the singleton history you are using when the router was rendered,
+import { browserHistory } from 'react-router'
+
+const DeepComponent = React.createClass({
+  someHandler() {
+    browserHistory.push(...)
+  }
+}
+```
+
+#### Lifecycle Mixin with route components
+
+```js
+// v1.0.0
+const RouteComponent = React.createClass({
+  mixins: [ Lifecycle ],
+  routerWillLeave() {
+    // ...
+  }
+})
+
+// v1.1.0
+const RouteComponent = React.createClass({
+  componentDidMount() {
+    const { router, route } = this.props
+    router.addRouteLeaveHook(route, this.routerWillLeave)
+  }
+})
+
+// or make your own mixin, check it out in the next section
+```
+
+#### Lifecycle Mixin with deep, non-route components
+
+```js
+// v1.0.0
+const DeepComponent = React.createClass({
+  mixins: [ Lifecycle ],
+  routerWillLeave() {
+    // do stuff
+  }
+})
+
+// v1.1.0
+// you have a couple of options
+// first you can put the route on context in the route component
+const RouteComponent = React.createClass({
+  childContextTypes: {
+    route: object
+  },
+
+  getChildContext() {
+    return { route: this.props.route }
+  }
+})
+
+// and then access it on your deep component
+const DeepComponent = React.createClass({
+  contextTypes: {
+    route: object.isRequired,
+    router: objec.isRequired
+  },
+
+  componentDidMount() {
+    const { router, route } = this.context
+    router.addRouteLeaveHook(route, this.routerWillLeave)
+  }
+})
+
+// or make your own mixin that will work for both route components and
+// deep components alike (as long as your route component puts `route`
+// on context
+const Lifecycle = {
+  contextTypes: {
+    route: object.isRequired,
+    router: objec.isRequired
+  },
+
+  componentDidMount() {
+    const router = this.context.router
+    const route = this.props.route || this.context.route
+    router.addRouteLeaveHook(route, this.routerWillLeave)
+  }
+}
+```
+
+
+
 ## [v1.0.1]
 > Dec 5, 2015
 
