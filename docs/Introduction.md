@@ -165,6 +165,9 @@ render(<Router routes={routes} />, document.body)
 Alright, now we're ready to nest the inbox messages inside the inbox UI.
 
 ```js
+// Note we are now importing the `IndexRoute` component...
+import { IndexRoute, Router, Route, Link } from 'react-router'
+
 // Make a new component to render inside of Inbox
 const Message = React.createClass({
   render() {
