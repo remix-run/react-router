@@ -1,6 +1,7 @@
 import React from 'react'
+import warning from 'warning'
 
-const { bool, object, string, func } = React.PropTypes
+const { bool, object, string, func, oneOfType } = React.PropTypes
 
 function isLeftClickEvent(event) {
   return event.button === 0
@@ -16,6 +17,14 @@ function isEmptyObject(object) {
       return false
 
   return true
+}
+
+function createLocation({ to, query, hash, state }) {
+  if (typeof to !== 'object') {
+    return { pathname: to, query, hash, state }
+  } else {
+    return{ query, hash, state, ...to }
+  }
 }
 
 /**
@@ -43,7 +52,7 @@ const Link = React.createClass({
   },
 
   propTypes: {
-    to: string.isRequired,
+    to: oneOfType([ string, object ]).isRequired,
     query: object,
     hash: string,
     state: object,
@@ -87,23 +96,26 @@ const Link = React.createClass({
     if (allowTransition) {
       let { state, to, query, hash } = this.props
 
-      if (hash)
-        to += hash
+      const location = createLocation({ to, query, hash, state })
 
-      this.context.history.pushState(state, to, query)
+      this.context.history.push(location)
     }
   },
 
   render() {
     const { to, query, hash, state, activeClassName, activeStyle, onlyActiveOnIndex, ...props } = this.props
+    warning(
+      query || hash || state,
+      'the `query`, `hash`, and `state` props on `<Link>` are deprecated; use a location descriptor instead'
+    )
 
     // Ignore if rendered outside the context of history, simplifies unit testing.
     const { history } = this.context
-    if (history) {
-      props.href = history.createHref(to, query)
 
-      if (hash)
-        props.href += hash
+    if (history) {
+      const location = createLocation({ to, query, hash, state })
+
+      props.href = history.createHref(location, location.query)
 
       if (activeClassName || (activeStyle != null && !isEmptyObject(activeStyle))) {
         if (history.isActive(to, query, onlyActiveOnIndex)) {
