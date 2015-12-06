@@ -192,6 +192,9 @@ const Lifecycle = {
 }
 ```
 
+### Router render prop
+
+Just a stub so we don't forget to talk about it.
 
 
 ## [v1.0.1]

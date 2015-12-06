@@ -19,7 +19,7 @@ const Router = React.createClass({
     history: object,
     children: routes,
     routes, // alias for children
-    RoutingContext: func.isRequired,
+    render: func,
     createElement: func,
     onError: func,
     onUpdate: func,
@@ -29,7 +29,9 @@ const Router = React.createClass({
 
   getDefaultProps() {
     return {
-      RoutingContext
+      render(props) {
+        return <RoutingContext {...props} />
+      }
     }
   },
 
@@ -90,8 +92,8 @@ const Router = React.createClass({
   },
 
   render() {
-    let { location, routes, params, components } = this.state
-    let { RoutingContext, createElement, ...props } = this.props
+    const { location, routes, params, components } = this.state
+    const { createElement, render, ...props } = this.props
 
     if (location == null)
       return null // Async match
@@ -100,14 +102,14 @@ const Router = React.createClass({
     // the only ones that might be custom routing context props.
     Object.keys(Router.propTypes).forEach(propType => delete props[propType])
 
-    return React.createElement(RoutingContext, {
+    return render({
       ...props,
       history: this.history,
-      createElement,
       location,
       routes,
       params,
-      components
+      components,
+      createElement
     })
   }
 
