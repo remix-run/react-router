@@ -75,6 +75,10 @@ While the router is matching, errors may bubble up, here is your opportunity to 
 ##### `onUpdate()`
 Called whenever the router updates its state in response to URL changes.
 
+##### `render(props)`
+This is primarily for integrating with other libraries that need to participate in rendering before the route components are rendered. It defaults to `render={(props) => <RoutingContext {...props}/>}`.
+
+
 #### Examples
 Please see the [`examples/`](/examples) directory of the repository for extensive examples of using `Router`.
 
