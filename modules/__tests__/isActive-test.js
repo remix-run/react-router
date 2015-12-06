@@ -390,7 +390,7 @@ describe('isActive', function () {
     describe('with query that does match', function () {
       it('is active', function (done) {
         render((
-          <Router history={createHistory('/home?foo[]=bar&foo[]=bar1&foo[]=bar2')}>
+          <Router history={createHistory('/home?foo=bar&foo=bar1&foo=bar2')}>
             <Route path="/" />
             <Route path="/home" />
           </Router>
