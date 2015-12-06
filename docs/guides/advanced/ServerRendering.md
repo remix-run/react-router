@@ -9,13 +9,13 @@ Server rendering is a bit different than in a client because you'll want to:
 To facilitate these needs, you drop one level lower than the [`<Router>`](/docs/API.md#Router) API with:  
 
 - [`match`](https://github.com/rackt/react-router/blob/master/docs/API.md#matchlocation-cb) to match the routes to a location without rendering
-- `RoutingContext` for synchronous rendering of route components
+- `RouterContext` for synchronous rendering of route components
 
 It looks something like this with an imaginary JavaScript server:
 
 ```js
 import { renderToString } from 'react-dom/server'
-import { match, RoutingContext } from 'react-router'
+import { match, RouterContext } from 'react-router'
 import routes from './routes'
 
 serve((req, res) => {
@@ -27,7 +27,7 @@ serve((req, res) => {
     } else if (redirectLocation) {
       res.redirect(302, redirectLocation.pathname + redirectLocation.search)
     } else if (renderProps) {
-      res.status(200).send(renderToString(<RoutingContext {...renderProps} />))
+      res.status(200).send(renderToString(<RouterContext {...renderProps} />))
     } else {
       res.status(404).send('Not found')
     }

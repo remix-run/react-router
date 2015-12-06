@@ -17,7 +17,7 @@ export RouteContext from './RouteContext'
 /* utils */
 export useRoutes from './useRoutes'
 export { createRoutes } from './RouteUtils'
-export RoutingContext from './RoutingContext'
+export RouterContext from './RouterContext'
 export PropTypes from './PropTypes'
 export match from './match'
 
