@@ -4,7 +4,7 @@ import { render, unmountComponentAtNode } from 'react-dom'
 import RoutingContext from '../RoutingContext'
 import match from '../match'
 
-describe('For Real RoutingContext', () => {
+describe('RoutingContext', () => {
   let node, routes, context, history
 
   beforeEach(() => {
