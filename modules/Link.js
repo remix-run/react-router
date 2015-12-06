@@ -1,4 +1,5 @@
 import React from 'react'
+import warning from 'warning'
 
 const { bool, object, string, func } = React.PropTypes
 
@@ -87,23 +88,36 @@ const Link = React.createClass({
     if (allowTransition) {
       let { state, to, query, hash } = this.props
 
-      if (hash)
-        to += hash
+      let location
+      if (query || hash || state) {
+        location = { pathname: to, query, hash, state }
+      } else {
+        location = to
+      }
 
-      this.context.history.pushState(state, to, query)
+      this.context.history.push(location)
     }
   },
 
   render() {
     const { to, query, hash, state, activeClassName, activeStyle, onlyActiveOnIndex, ...props } = this.props
+    warning(
+      query || hash || state,
+      'the `query`, `hash`, and `state` props on `<Link>` are deprecated; use a location descriptor instead'
+    )
 
     // Ignore if rendered outside the context of history, simplifies unit testing.
     const { history } = this.context
-    if (history) {
-      props.href = history.createHref(to, query)
 
-      if (hash)
-        props.href += hash
+    if (history) {
+      let location
+      if (query || hash || state) {
+        location = { pathname: to, query, hash, state }
+      } else {
+        location = to
+      }
+
+      props.href = history.createHref(location)
 
       if (activeClassName || (activeStyle != null && !isEmptyObject(activeStyle))) {
         if (history.isActive(to, query, onlyActiveOnIndex)) {
