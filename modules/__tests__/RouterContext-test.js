@@ -96,6 +96,62 @@ describe('RouterContext', () => {
         done()
       })
     })
+
+    it('proxies calls to `createHref` to `props.history`', (done) => {
+      const args = [ 1, 2, 3 ]
+      const retVal = function () {}
+      history.createHref = (...params) => {
+        expect(params).toEqual(args)
+        return retVal
+      }
+      renderTest(() => {
+        const createHref = context.router.createHref(...args)
+        expect(createHref).toBe(retVal)
+        done()
+      })
+    })
+
+    it('proxies calls to `go` to `props.history`', (done) => {
+      const args = [ 1, 2, 3 ]
+      const retVal = function () {}
+      history.go = (...params) => {
+        expect(params).toEqual(args)
+        return retVal
+      }
+      renderTest(() => {
+        const go = context.router.go(...args)
+        expect(go).toBe(retVal)
+        done()
+      })
+    })
+
+    it('proxies calls to `goBack` to `props.history`', (done) => {
+      const args = [ 1, 2, 3 ]
+      const retVal = function () {}
+      history.goBack = (...params) => {
+        expect(params).toEqual(args)
+        return retVal
+      }
+      renderTest(() => {
+        const goBack = context.router.goBack(...args)
+        expect(goBack).toBe(retVal)
+        done()
+      })
+    })
+
+    it('proxies calls to `goForward` to `props.history`', (done) => {
+      const args = [ 1, 2, 3 ]
+      const retVal = function () {}
+      history.goForward = (...params) => {
+        expect(params).toEqual(args)
+        return retVal
+      }
+      renderTest(() => {
+        const goForward = context.router.goForward(...args)
+        expect(goForward).toBe(retVal)
+        done()
+      })
+    })
   })
 
 })
