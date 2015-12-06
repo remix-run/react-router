@@ -200,7 +200,7 @@ render((
 ), document.body)
 ```
 
-Now visits to URLs like `inbox/messages/Jkei3c32` will match the new route and build this for you:
+Now visits to URLs like `inbox/messages/Jkei3c32` will match the new route. If you view the elements with the [React Dev Tools](https://chrome.google.com/webstore/detail/react-developer-tools/fmkadmapgofadopljbjfkapdkoienihi) you will see the route has built something like this for you:
 
 ```
 <App>
