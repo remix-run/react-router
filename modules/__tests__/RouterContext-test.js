@@ -1,10 +1,10 @@
 import expect from 'expect'
 import React from 'react'
 import { render, unmountComponentAtNode } from 'react-dom'
-import RoutingContext from '../RoutingContext'
+import RouterContext from '../RouterContext'
 import match from '../match'
 
-describe('RoutingContext', () => {
+describe('RouterContext', () => {
   let node, routes, context, history
 
   beforeEach(() => {
@@ -30,7 +30,7 @@ describe('RoutingContext', () => {
 
   function renderTest(done) {
     match({ location: '/', routes }, (err, redirect, renderProps) => {
-      render(<RoutingContext {...renderProps} history={history} />, node)
+      render(<RouterContext {...renderProps} history={history} />, node)
       done()
     })
   }

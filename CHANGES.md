@@ -196,6 +196,14 @@ const Lifecycle = {
 
 Just a stub so we don't forget to talk about it.
 
+### `RoutingContext` renamed to `RouterContext`
+
+```js
+// v1.0.x
+import { RoutingContext } from 'react-router'
+// v1.1.0
+import { RouterContext } from 'react-router'
+```
 
 ## [v1.0.1]
 > Dec 5, 2015

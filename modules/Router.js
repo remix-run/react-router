@@ -2,7 +2,7 @@ import React from 'react'
 import warning from 'warning'
 import createHashHistory from 'history/lib/createHashHistory'
 import { createRoutes } from './RouteUtils'
-import RoutingContext from './RoutingContext'
+import RouterContext from './RouterContext'
 import useRoutes from './useRoutes'
 import { routes } from './PropTypes'
 
@@ -10,7 +10,7 @@ const { func, object } = React.PropTypes
 
 /**
  * A <Router> is a high-level API for automatically setting up
- * a router that renders a <RoutingContext> with all the props
+ * a router that renders a <RouterContext> with all the props
  * it needs each time the URL changes.
  */
 const Router = React.createClass({
@@ -30,7 +30,7 @@ const Router = React.createClass({
   getDefaultProps() {
     return {
       render(props) {
-        return <RoutingContext {...props} />
+        return <RouterContext {...props} />
       }
     }
   },

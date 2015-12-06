@@ -4,7 +4,8 @@
   - [Router](#router)
   - [Link](#link)
   - [IndexLink](#indexlink)
-  - [RoutingContext](#routingcontext)
+  - [RouterContext](#routercontext)
+  - RoutingContext (Deprecated, use `RouterContext`)
 
 * [Configuration Components](#configuration-components)
   - [Route](#route)
@@ -76,7 +77,7 @@ While the router is matching, errors may bubble up, here is your opportunity to 
 Called whenever the router updates its state in response to URL changes.
 
 ##### `render(props)`
-This is primarily for integrating with other libraries that need to participate in rendering before the route components are rendered. It defaults to `render={(props) => <RoutingContext {...props}/>}`.
+This is primarily for integrating with other libraries that need to participate in rendering before the route components are rendered. It defaults to `render={(props) => <RouterContext {...props}/>}`.
 
 
 #### Examples
@@ -136,8 +137,8 @@ Given a route like `<Route path="/users/:userId" />`:
 ### IndexLink
 Docs coming so soon!
 
-### RoutingContext
-A `<RoutingContext>` renders the component tree for a given router state and sets the history object and the current location in context.
+### RouterContext
+A `<RouterContext>` renders the component tree for a given router state and sets the history object and the current location in context.
 
 
 
