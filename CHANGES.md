@@ -205,13 +205,15 @@ import { RoutingContext } from 'react-router'
 import { RouterContext } from 'react-router'
 ```
 
+[HEAD]: https://github.com/rackt/react-router/compare/latest...HEAD
+
 ## [v1.0.1]
 > Dec 5, 2015
 
 - Support IE8 ([#2540])
 - Add ES2015 module build ([#2530])
 
-[HEAD]: https://github.com/rackt/react-router/compare/latest...HEAD
+[v1.0.1]: https://github.com/rackt/react-router/compare/v1.0.0...v1.0.1
 [#2530]: https://github.com/rackt/react-router/pull/2530
 [#2540]: https://github.com/rackt/react-router/pull/2540
 
