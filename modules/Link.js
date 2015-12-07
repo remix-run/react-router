@@ -19,7 +19,7 @@ function isEmptyObject(object) {
   return true
 }
 
-function createLocation({ to, query, hash, state }) {
+function createLocationDescriptor({ to, query, hash, state }) {
   if (typeof to !== 'object') {
     return { pathname: to, query, hash, state }
   } else {
@@ -96,7 +96,7 @@ const Link = React.createClass({
     if (allowTransition) {
       let { state, to, query, hash } = this.props
 
-      const location = createLocation({ to, query, hash, state })
+      const location = createLocationDescriptor({ to, query, hash, state })
 
       this.context.history.push(location)
     }
@@ -113,9 +113,9 @@ const Link = React.createClass({
     const { history } = this.context
 
     if (history) {
-      const location = createLocation({ to, query, hash, state })
+      const location = createLocationDescriptor({ to, query, hash, state })
 
-      props.href = history.createHref(location, location.query)
+      props.href = history.createHref(location)
 
       if (activeClassName || (activeStyle != null && !isEmptyObject(activeStyle))) {
         if (history.isActive(to, query, onlyActiveOnIndex)) {
