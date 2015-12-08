@@ -230,7 +230,7 @@ A *router* is a [`history`](http://rackt.github.io/history) object (akin to `win
 There are two primary interfaces for computing a router's next [state](#routerstate):
 
 - `history.listen` is to be used in stateful environments (such as web browsers) that need to update the UI over a period of time. This method immediately invokes its `listener` argument once and returns a function that must be called to stop listening for changes
-- `history.match` is a pure asynchronous function that does not update the history's internal state. This makes it ideal for server-side environments where many requests must be handled concurrently
+- `history.match` is a function that does not update the history's internal state. This makes it ideal for server-side environments where many requests must be handled concurrently
 
 ## RouterListener
 
