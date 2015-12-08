@@ -2,7 +2,7 @@ import React from 'react'
 import warning from 'warning'
 import createHashHistory from 'history/lib/createHashHistory'
 import { createRoutes } from './RouteUtils'
-import RouterContext from './RouterContext'
+import RoutingContext from './RoutingContext'
 import useRoutes from './useRoutes'
 import { routes } from './PropTypes'
 
@@ -10,7 +10,7 @@ const { func, object } = React.PropTypes
 
 /**
  * A <Router> is a high-level API for automatically setting up
- * a router that renders a <RouterContext> with all the props
+ * a router that renders a <RoutingContext> with all the props
  * it needs each time the URL changes.
  */
 const Router = React.createClass({
@@ -19,7 +19,7 @@ const Router = React.createClass({
     history: object,
     children: routes,
     routes, // alias for children
-    render: func,
+    RoutingContext: func.isRequired,
     createElement: func,
     onError: func,
     onUpdate: func,
@@ -29,9 +29,7 @@ const Router = React.createClass({
 
   getDefaultProps() {
     return {
-      render(props) {
-        return <RouterContext {...props} />
-      }
+      RoutingContext
     }
   },
 
@@ -92,8 +90,8 @@ const Router = React.createClass({
   },
 
   render() {
-    const { location, routes, params, components } = this.state
-    const { createElement, render, ...props } = this.props
+    let { location, routes, params, components } = this.state
+    let { RoutingContext, createElement, ...props } = this.props
 
     if (location == null)
       return null // Async match
@@ -102,14 +100,14 @@ const Router = React.createClass({
     // the only ones that might be custom routing context props.
     Object.keys(Router.propTypes).forEach(propType => delete props[propType])
 
-    return render({
+    return React.createElement(RoutingContext, {
       ...props,
       history: this.history,
+      createElement,
       location,
       routes,
       params,
-      components,
-      createElement
+      components
     })
   }
 

@@ -1,4 +1,3 @@
-import warning from 'warning'
 import React from 'react'
 import invariant from 'invariant'
 
@@ -35,7 +34,6 @@ const Lifecycle = {
   },
 
   componentDidMount() {
-    warning(false, 'the `Lifcycle` mixin is deprecated, please use `this.props.router.addRouteLeaveHook(this.props.route, hook)` from a route component, see https://github.com/rackt/react-router/blob/v1.1.0/CHANGES.md#v110 for more details.')
     invariant(
       this.routerWillLeave,
       'The Lifecycle mixin requires you to define a routerWillLeave method'
