@@ -66,7 +66,7 @@ describe('server rendering', function () {
   }
 
   it('works', function (done) {
-    match({ routes, location: '/dashboard' }, function (error, redirectLocation, renderProps) {
+    match({ routes, path: '/dashboard' }, function (error, redirectLocation, renderProps) {
       const string = renderToString(
         <RouterContext {...renderProps} />
       )
@@ -76,7 +76,7 @@ describe('server rendering', function () {
   })
 
   it('renders active Links as active', function (done) {
-    match({ routes, location: '/about' }, function (error, redirectLocation, renderProps) {
+    match({ routes, path: '/about' }, function (error, redirectLocation, renderProps) {
       const string = renderToString(
         <RouterContext {...renderProps} />
       )
@@ -87,7 +87,7 @@ describe('server rendering', function () {
   })
 
   it('sends the redirect location', function (done) {
-    match({ routes, location: '/company' }, function (error, redirectLocation) {
+    match({ routes, path: '/company' }, function (error, redirectLocation) {
       expect(redirectLocation).toExist()
       expect(redirectLocation.pathname).toEqual('/about')
       expect(redirectLocation.search).toEqual('')
@@ -98,10 +98,33 @@ describe('server rendering', function () {
   })
 
   it('sends null values when no routes match', function (done) {
-    match({ routes, location: '/no-match' }, function (error, redirectLocation, state) {
+    match({ routes, path: '/no-match' }, function (error, redirectLocation, state) {
       expect(error).toNotExist()
       expect(redirectLocation).toNotExist()
       expect(state).toNotExist()
+      done()
+    })
+  })
+
+  it('works with deprecated location string', function (done) {
+    match({ routes, location: '/dashboard' }, function (error, redirectLocation, renderProps) {
+      const string = renderToString(
+        <RouterContext {...renderProps} />
+      )
+      expect(string).toMatch(/The Dashboard/)
+      done()
+    })
+  })
+
+  it('works with deprecated location object', function (done) {
+    // Poor man's history.createLocation.
+    const location = { pathname: '/dashboard' }
+
+    match({ routes, location }, function (error, redirectLocation, renderProps) {
+      const string = renderToString(
+        <RouterContext {...renderProps} />
+      )
+      expect(string).toMatch(/The Dashboard/)
       done()
     })
   })
