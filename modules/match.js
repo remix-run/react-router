@@ -1,4 +1,5 @@
 import invariant from 'invariant'
+import warning from 'warning'
 import createMemoryHistory from 'history/lib/createMemoryHistory'
 import useBasename from 'history/lib/useBasename'
 import { createRoutes } from './RouteUtils'
@@ -17,26 +18,30 @@ const createHistory = useRoutes(useBasename(createMemoryHistory))
  */
 function match({
   routes,
+  path,
   location,
-  parseQueryString,
-  stringifyQuery,
-  basename
+  ...options
 }, callback) {
   invariant(
-    location,
-    'match needs a location'
+    path || location,
+    'match needs a path or location'
   )
 
   const history = createHistory({
     routes: createRoutes(routes),
-    parseQueryString,
-    stringifyQuery,
-    basename
+    ...options
   })
 
-  // Allow match({ location: '/the/path', ... })
-  if (typeof location === 'string')
+  warning(
+    location == null,
+    '`match({ location, ...options })` is deprecated; use `match({ path, ...options })` instead'
+  )
+
+  if (path) {
+    location = history.createLocation(path)
+  } else if (typeof location === 'string') {
     location = history.createLocation(location)
+  }
 
   history.match(location, function (error, redirectLocation, nextState) {
     callback(error, redirectLocation, nextState && { ...nextState, history })

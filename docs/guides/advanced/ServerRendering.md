@@ -8,7 +8,7 @@ Server rendering is a bit different than in a client because you'll want to:
 
 To facilitate these needs, you drop one level lower than the [`<Router>`](/docs/API.md#Router) API with:  
 
-- [`match`](https://github.com/rackt/react-router/blob/master/docs/API.md#matchlocation-cb) to match the routes to a location without rendering
+- [`match`](/docs/API.md#match-routes-path-options--cb) to match the routes to a location without rendering
 - `RouterContext` for synchronous rendering of route components
 
 It looks something like this with an imaginary JavaScript server:
@@ -21,7 +21,7 @@ import routes from './routes'
 serve((req, res) => {
   // Note that req.url here should be the full URL path from
   // the original request, including the query string.
-  match({ routes, location: req.url }, (error, redirectLocation, renderProps) => {
+  match({ routes, path: req.url }, (error, redirectLocation, renderProps) => {
     if (error) {
       res.status(500).send(error.message)
     } else if (redirectLocation) {
