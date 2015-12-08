@@ -1,5 +1,10 @@
 ## [HEAD]
 
+## [v1.0.2]
+> Dec 8, 2015
+
+- Pinned peer dependency on History to `1.13.x` to avoid console warnings.
+
 ## [v1.0.1]
 > Dec 5, 2015
 
