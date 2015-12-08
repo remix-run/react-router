@@ -14,7 +14,7 @@ thought, not an after-thought.
 
 ### Docs & Help
 
-- [Guides and API Docs](/docs)
+- [Guides and API Docs](/tree/latest/docs)
 - [Change Log](/CHANGES.md)
 - [Stack Overflow](http://stackoverflow.com/questions/tagged/react-router)
 - [Codepen Boilerplate](http://codepen.io/anon/pen/xwQZdy?editors=001)
