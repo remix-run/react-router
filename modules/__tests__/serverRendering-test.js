@@ -106,4 +106,32 @@ describe('server rendering', function () {
     })
   })
 
+  it('works with location descriptor object', function (done) {
+    const location = { pathname: '/dashboard', query: { the: 'query' } }
+
+    match({ routes, location }, function (error, redirectLocation, renderProps) {
+      const string = renderToString(
+        <RouterContext {...renderProps} />
+      )
+
+      expect(string).toMatch(/The Dashboard/)
+      expect(renderProps.location.search).toEqual('?the=query')
+
+      done()
+    })
+  })
+
+  it('only fires the callback once', function () {
+    const callback = expect.createSpy().andCall(
+      function (error, redirectLocation, renderProps) {
+        if (renderProps.location.pathname === '/dashboard') {
+          renderProps.history.push('/about')
+        }
+      }
+    )
+
+    match({ routes, location: '/dashboard' }, callback)
+    expect(callback.calls.length).toEqual(1)
+  })
+
 })

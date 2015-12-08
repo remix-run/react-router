@@ -6,13 +6,21 @@ import matchRoutes from '../matchRoutes'
 import Route from '../Route'
 import IndexRoute from '../IndexRoute'
 
+function createLocation(path) {
+  const history = createMemoryHistory(path)
+  let result
+  history.listen(location => {
+    result = location
+  })
+  return result
+}
+
 describe('matchRoutes', function () {
   let routes
   let
     RootRoute, UsersRoute, UsersIndexRoute, UserRoute, PostRoute, FilesRoute,
     AboutRoute, TeamRoute, ProfileRoute, GreedyRoute, OptionalRoute,
     OptionalRouteChild, CatchAllRoute
-  let createLocation = createMemoryHistory().createLocation
 
   beforeEach(function () {
     /*
