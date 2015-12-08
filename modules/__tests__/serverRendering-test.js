@@ -107,13 +107,16 @@ describe('server rendering', function () {
   })
 
   it('works with location descriptor object', function (done) {
-    const location = { pathname: '/dashboard' }
+    const location = { pathname: '/dashboard', query: { the: 'query' } }
 
     match({ routes, location }, function (error, redirectLocation, renderProps) {
       const string = renderToString(
         <RouterContext {...renderProps} />
       )
+
       expect(string).toMatch(/The Dashboard/)
+      expect(renderProps.location.search).toEqual('?the=query')
+
       done()
     })
   })

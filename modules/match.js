@@ -27,10 +27,10 @@ function match({
   )
 
   const history = createHistory({
-    entries: [ location ],
     routes: createRoutes(routes),
     ...options
   })
+  history.push(location)
 
   let fired = false
 
