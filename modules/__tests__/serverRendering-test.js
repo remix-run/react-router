@@ -118,4 +118,17 @@ describe('server rendering', function () {
     })
   })
 
+  it('only fires the callback once', function () {
+    const callback = expect.createSpy().andCall(
+      function (error, redirectLocation, renderProps) {
+        if (renderProps.location.pathname === '/dashboard') {
+          renderProps.history.push('/about')
+        }
+      }
+    )
+
+    match({ routes, location: '/dashboard' }, callback)
+    expect(callback.calls.length).toEqual(1)
+  })
+
 })

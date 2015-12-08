@@ -32,9 +32,18 @@ function match({
     ...options
   })
 
+  let fired = false
+
   // We don't have to clean up listeners here, because this is just a memory
   // history.
   history.listen((error, state) => {
+    // This isn't fully stateless - if the user redirects as a consequence of
+    // rendering, this ensures that we won't fire the callback twice.
+    if (fired) {
+      return
+    }
+    fired = true
+
     if (error) {
       callback(error)
       return
