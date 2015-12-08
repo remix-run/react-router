@@ -1,4 +1,5 @@
 import invariant from 'invariant'
+import { REPLACE } from 'history/lib/Actions'
 import createMemoryHistory from 'history/lib/createMemoryHistory'
 import useBasename from 'history/lib/useBasename'
 import { createRoutes } from './RouteUtils'
@@ -26,16 +27,32 @@ function match({
   )
 
   const history = createHistory({
+    entries: [ location ],
     routes: createRoutes(routes),
     ...options
   })
 
-  // Allow match({ location: '/the/path', ... })
-  if (typeof location === 'string')
-    location = history.createLocation(location)
+  // We don't have to clean up listeners here, because this is just a memory
+  // history.
+  history.listen((error, state) => {
+    if (error) {
+      callback(error)
+      return
+    }
 
-  history.match(location, function (error, redirectLocation, nextState) {
-    callback(error, redirectLocation, nextState && { ...nextState, history })
+    if (!state) {
+      // No match.
+      callback()
+      return
+    }
+
+    if (state.location.action === REPLACE) {
+      // This was a redirect.
+      callback(null, state.location)
+      return
+    }
+
+    callback(null, null, { ...state, history })
   })
 }
 

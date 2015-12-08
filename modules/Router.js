@@ -66,9 +66,15 @@ const Router = React.createClass({
     this._unlisten = this.history.listen((error, state) => {
       if (error) {
         this.handleError(error)
-      } else {
-        this.setState(state, this.props.onUpdate)
+        return
       }
+
+      if (!state) {
+        // No match.
+        return
+      }
+
+      this.setState(state, this.props.onUpdate)
     })
   },
 

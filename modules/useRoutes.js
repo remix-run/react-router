@@ -1,5 +1,4 @@
 import warning from 'warning'
-import { REPLACE } from 'history/lib/Actions'
 import useQueries from 'history/lib/useQueries'
 import computeChangedRoutes from './computeChangedRoutes'
 import { runEnterHooks, runLeaveHooks } from './TransitionUtils'
@@ -36,12 +35,6 @@ function useRoutes(createHistory) {
       return _isActive(pathname, query, indexOnly, state.location, state.routes, state.params)
     }
 
-    function createLocationFromRedirectInfo({ pathname, query, state }) {
-      return history.createLocation(
-        history.createPath(pathname, query), state, REPLACE
-      )
-    }
-
     let partialNextState
 
     function match(location, callback) {
@@ -70,7 +63,7 @@ function useRoutes(createHistory) {
         if (error) {
           callback(error)
         } else if (redirectInfo) {
-          callback(null, createLocationFromRedirectInfo(redirectInfo))
+          callback(null, redirectInfo)
         } else {
           // TODO: Fetch components after state is updated.
           getComponents(nextState, function (error, components) {
@@ -229,7 +222,7 @@ function useRoutes(createHistory) {
             if (error) {
               listener(error)
             } else if (redirectLocation) {
-              history.transitionTo(redirectLocation)
+              history.replace(redirectLocation)
             } else if (nextState) {
               listener(null, nextState)
             } else {
@@ -238,6 +231,8 @@ function useRoutes(createHistory) {
                 'Location "%s" did not match any routes',
                 location.pathname + location.search + location.hash
               )
+
+              listener()
             }
           })
         }
