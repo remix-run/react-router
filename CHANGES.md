@@ -102,7 +102,7 @@ const RouterMixin = {
 const DeepComponent = React.createClass({
   mixins: [ RouterMixin ],
   someHandler() {
-    this.history.pushState(...)
+    this.router.push(...)
   }
 }
 
