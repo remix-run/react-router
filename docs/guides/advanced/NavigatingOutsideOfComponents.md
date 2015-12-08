@@ -20,7 +20,7 @@ And then import it to render a `<Router>`:
 ```js
 // index.js
 import history from './history'
-render(<Router history={history}/>, el)
+render(<Router history={history} routes={routes}/>, el)
 ```
 
 And now you can use that history object anywhere in your app, maybe in a
