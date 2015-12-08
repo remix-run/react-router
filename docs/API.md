@@ -4,8 +4,7 @@
   - [Router](#router)
   - [Link](#link)
   - [IndexLink](#indexlink)
-  - [RouterContext](#routercontext)
-  - RoutingContext (Deprecated, use `RouterContext`)
+  - [RoutingContext](#routingcontext)
 
 * [Configuration Components](#configuration-components)
   - [Route](#route)
@@ -18,9 +17,9 @@
   - [Named Components](#named-components)
 
 * [Mixins](#mixins)
-  - [Lifecycle](#lifecycle-mixin) (Deprecated)
-  - [History](#history-mixin) (Deprecated)
-  - [RouteContext](#routecontext-mixin) (Deprecated)
+  - [Lifecycle](#lifecycle-mixin)
+  - [History](#history-mixin)
+  - [RouteContext](#routecontext-mixin)
 
 * [Utilities](#utilities)
   * [useRoutes](#useroutescreatehistory)
@@ -75,10 +74,6 @@ While the router is matching, errors may bubble up, here is your opportunity to 
 
 ##### `onUpdate()`
 Called whenever the router updates its state in response to URL changes.
-
-##### `render(props)`
-This is primarily for integrating with other libraries that need to participate in rendering before the route components are rendered. It defaults to `render={(props) => <RouterContext {...props}/>}`.
-
 
 #### Examples
 Please see the [`examples/`](/examples) directory of the repository for extensive examples of using `Router`.
@@ -137,8 +132,8 @@ Given a route like `<Route path="/users/:userId" />`:
 ### IndexLink
 Docs coming so soon!
 
-### RouterContext
-A `<RouterContext>` renders the component tree for a given router state and sets the history object and the current location in context.
+### RoutingContext
+A `<RoutingContext>` renders the component tree for a given router state and sets the history object and the current location in context.
 
 
 

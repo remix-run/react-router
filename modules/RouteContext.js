@@ -1,4 +1,3 @@
-import warning from 'warning'
 import React from 'react'
 
 const { object } = React.PropTypes
@@ -23,10 +22,6 @@ const RouteContext = {
     return {
       route: this.props.route
     }
-  },
-
-  componentWillMount() {
-    warning(false, 'the `RouteContext` mixin is deprecated, please export `this.props.route` from a route component yourself. See https://github.com/rackt/react-router/blob/v1.1.0/CHANGES.md#v110 for more details.')
   }
 
 }
