@@ -212,6 +212,8 @@ import { RouterContext } from 'react-router'
 
 - Pinned peer dependency on History to `1.13.x` to avoid console warnings.
 
+[v1.0.2]: https://github.com/rackt/react-router/compare/v1.0.1...v1.0.2
+
 ## [v1.0.1]
 > Dec 5, 2015
 
