@@ -594,19 +594,22 @@ React.createClass({
 Let's say you are using bootstrap and want to get `active` on those `li` tags for the Tabs:
 
 ```js
-import { Link, History } from 'react-router'
+import { Link, IndexLink, History } from 'react-router'
 
 const Tab = React.createClass({
   mixins: [ History ],
   render() {
-    let isActive = this.history.isActive(this.props.to, this.props.query)
-    let className = isActive ? 'active' : ''
-    return <li className={className}><Link {...this.props}/></li>
+    const isActive = this.history.isActive(this.props.to, this.props.query, this.props.indexLink)
+    const className = isActive ? 'active' : ''
+    const LinkElement = this.props.indexLink ? IndexLink : Link;
+    return <li className={className}><LinkElement {...this.props}/></li>
   }
 })
 
-// use it just like <Link/>, and you'll get an anchor wrapped in an `li`
+// use it just like <Link/> or <IndexLink/>, and you'll get an anchor wrapped in an `li`
 // with an automatic `active` class on both.
+<Tab to="/" indexLink>Home</Tab>
+<Tab to="about">About</Tab>
 <Tab href="foo">Foo</Tab>
 ```
 
