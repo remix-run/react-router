@@ -11,3 +11,4 @@ after_success:
 branches:
   only:
   - master
+  - 1.0.x
