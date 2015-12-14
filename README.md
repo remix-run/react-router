@@ -122,7 +122,7 @@ render((
 ), document.body)
 ```
 
-See more in the [Introduction](/docs/Introduction.md), [Advanced Usage](/docs/guides/advanced/README.md), and [Examples](/examples).
+See more in the [Introduction](https://github.com/rackt/react-router/tree/latest/docs/Introduction.md), [Advanced Usage](https://github.com/rackt/react-router/tree/latest/docs/guides/advanced/README.md), and [Examples](https://github.com/rackt/react-router/tree/latest/examples).
 
 
 
