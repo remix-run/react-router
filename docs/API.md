@@ -702,7 +702,7 @@ Creates and returns an array of routes from the given object which may be a JSX 
 
 #### params
 ##### `routes`
-One or many [`Routes`](#route) or [`PlainRoutes`](#plainRoute).
+One or many [`Routes`](#route) or [`PlainRoutes`](#plainroute).
 
 
 ## PropTypes
