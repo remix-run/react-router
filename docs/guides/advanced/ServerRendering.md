@@ -15,7 +15,7 @@ It looks something like this with an imaginary JavaScript server:
 
 ```js
 import { renderToString } from 'react-dom/server'
-import { match, RouterContext } from 'react-router'
+import { match, RoutingContext } from 'react-router'
 import routes from './routes'
 
 serve((req, res) => {
@@ -27,7 +27,7 @@ serve((req, res) => {
     } else if (redirectLocation) {
       res.redirect(302, redirectLocation.pathname + redirectLocation.search)
     } else if (renderProps) {
-      res.status(200).send(renderToString(<RouterContext {...renderProps} />))
+      res.status(200).send(renderToString(<RoutingContext {...renderProps} />))
     } else {
       res.status(404).send('Not found')
     }
