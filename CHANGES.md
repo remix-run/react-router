@@ -429,12 +429,18 @@ those props are supplied via this approach. In these cases, you should not
 specify `isRequired` for those props. For more details, see
 [facebook/react#4494](https://github.com/facebook/react/issues/4494#issuecomment-125068868).
 
-Caveat: you can no longer do the following as it will overwrite `this.props.children`
-of the child component breaking the chain and causing recurrsion.
+Note spreading `this.props` will overwrite `this.props.children` of the child 
+component breaking the chain and causing recurrsion.
 
 ```js
 // v0.13.x
 <RouteHandler {...this.props}/>
+
+// v1.0
+// you must specify all the props your child needs or remove this.props.children before the spread
+const props = {...this.props}
+delete props.children;
+{React.cloneElement(this.props.children, {...props})}
 ```
 ### Navigation Mixin
 
