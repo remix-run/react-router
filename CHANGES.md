@@ -415,18 +415,36 @@ handler no longer prevents the transition. To prevent the transition, call
 ```js
 // v0.13.x
 <RouteHandler/>
-<RouteHandler someExtraProp={something}/>
 
 // v1.0
 {this.props.children}
-{React.cloneElement(this.props.children, {someExtraProp: something})}
 ```
 
-There's a small semantic change with this approach. React validates `propTypes`
-on elements when those elements are created, rather than when they're about to
-render. This means that any props with `isRequired` will fail validation when
-those props are supplied via this approach. In these cases, you should not
-specify `isRequired` for those props. For more details, see
+As with all other React components that receive `children` from their parent,
+you can use the standard `React.cloneElement` pattern to inject additional
+props into your supplied child.
+
+You should generally avoid over-using this pattern, as this tightly couples
+your route components via the render tree rather than the routing tree, which
+can make refactoring more difficult.
+
+```js
+// v0.13.x
+<RouteHandler someExtraProp={something}/>
+
+// v1.0
+{React.cloneElement(this.props.children, { someExtraProp: something })}
+```
+
+A couple of things to note:
+- Don't pass in `props.children` to the child (e.g. via spreading in
+`this.props`), as that will override the previous value of `props.children`,
+and can potentially cause infinite recursion of the same nested element.
+- React validates `propTypes` on elements when those elements are created,
+rather than when they're about to render. This means that any prop types with
+`isRequired` will fail validation when those props are supplied via this
+approach. In these cases, you should not specify `isRequired` for those props.
+For more details, see
 [facebook/react#4494](https://github.com/facebook/react/issues/4494#issuecomment-125068868).
 
 ### Navigation Mixin
