@@ -430,7 +430,7 @@ specify `isRequired` for those props. For more details, see
 [facebook/react#4494](https://github.com/facebook/react/issues/4494#issuecomment-125068868).
 
 Note spreading `this.props` will overwrite `this.props.children` of the child 
-component breaking the chain and causing recurrsion.
+component breaking the chain and causing recurrsion. For more details, see [rackt/react-router#2554](https://github.com/rackt/react-router/issues/2554)
 
 ```js
 // v0.13.x
