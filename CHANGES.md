@@ -429,6 +429,13 @@ those props are supplied via this approach. In these cases, you should not
 specify `isRequired` for those props. For more details, see
 [facebook/react#4494](https://github.com/facebook/react/issues/4494#issuecomment-125068868).
 
+Caveat: you can no longer do the following as it will overwrite `this.props.children`
+of the child component breaking the chain and causing recurrsion.
+
+```js
+// v0.13.x
+<RouteHandler {...this.props}/>
+```
 ### Navigation Mixin
 
 If you were using the `Navigation` mixin, use the `History` mixin instead.
