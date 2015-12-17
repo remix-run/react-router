@@ -289,7 +289,7 @@ describe('A <Link>', function () {
       }
 
       const history = createHistory('/')
-      const spy = spyOn(history, 'pushState').andCallThrough()
+      const spy = spyOn(history, 'push').andCallThrough()
 
       const steps = [
         function () {
@@ -297,7 +297,13 @@ describe('A <Link>', function () {
         },
         function () {
           expect(node.innerHTML).toMatch(/Hello/)
-          expect(spy).toHaveBeenCalledWith({ you: 'doing?' }, { pathname: '/hello', search: '?how=are', hash: '#world' })
+          expect(spy).toHaveBeenCalled()
+
+          const { location } = this.state
+          expect(location.pathname).toEqual('/hello')
+          expect(location.search).toEqual('?how=are')
+          expect(location.hash).toEqual('#world')
+          expect(location.state).toEqual({ you: 'doing?' })
         }
       ]
 
