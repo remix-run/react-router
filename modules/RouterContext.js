@@ -34,12 +34,12 @@ const RouterContext = React.createClass({
   },
 
   getChildContext() {
-    const { history, location } = this.props
+    const { transitionManager, history, location } = this.props
     const router = {
       push: history.push,
       replace: history.replace,
-      addRouteLeaveHook: history.listenBeforeLeavingRoute,
-      isActive: history.isActive,
+      addRouteLeaveHook: transitionManager.listenBeforeLeavingRoute,
+      isActive: transitionManager.isActive,
       createHref: history.createHref,
       go: history.go,
       goBack: history.goBack,

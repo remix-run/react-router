@@ -5,6 +5,11 @@ import { createRoutes } from './RouteUtils'
 import RouterContext from './RouterContext'
 import useRoutes from './useRoutes'
 import { routes } from './PropTypes'
+import createTransitionManager from './createTransitionManager'
+
+function isDeprecatedHistory(history) {
+  return !history || !history.__v2_compatible__
+}
 
 const { func, object } = React.PropTypes
 
@@ -54,6 +59,27 @@ const Router = React.createClass({
   },
 
   componentWillMount() {
+    const { history } = this.props
+    if (isDeprecatedHistory(history)) {
+      this.setupDeprecatedHistory()
+    } else {
+      this.setupTransitionManager()
+    }
+  },
+
+  setupTransitionManager() {
+    const { history, routes, children } = this.props
+    this.transitionManager = createTransitionManager(history, createRoutes(routes || children))
+    this.transitionManager.listen((error, state) => {
+      if (error) {
+        this.handleError(error)
+      } else {
+        this.setState(state, this.props.onUpdate)
+      }
+    })
+  },
+
+  setupDeprecatedHistory() {
     let { history, children, routes, parseQueryString, stringifyQuery } = this.props
     let createHistory = history ? () => history : createHashHistory
 
@@ -62,6 +88,12 @@ const Router = React.createClass({
       parseQueryString,
       stringifyQuery
     })
+
+    // polyfill transitionManager so API changes don't leak down to RouterContext
+    this.transitionManager = {
+      listenBeforeLeavingRoute: history.listenBeforeLeavingRoute,
+      isActive: history.isActive
+    }
 
     this._unlisten = this.history.listen((error, state) => {
       if (error) {
@@ -94,6 +126,8 @@ const Router = React.createClass({
   render() {
     const { location, routes, params, components } = this.state
     const { createElement, render, ...props } = this.props
+    const history = isDeprecatedHistory(this.props.history) ?
+      this.history : this.props.history
 
     if (location == null)
       return null // Async match
@@ -104,7 +138,8 @@ const Router = React.createClass({
 
     return render({
       ...props,
-      history: this.history,
+      history: history,
+      transitionManager: this.transitionManager,
       location,
       routes,
       params,

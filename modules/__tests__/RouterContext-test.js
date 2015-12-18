@@ -5,11 +5,12 @@ import RouterContext from '../RouterContext'
 import match from '../match'
 
 describe('RouterContext', () => {
-  let node, routes, context, history
+  let node, routes, context, history, transitionManager
 
   beforeEach(() => {
     node = document.createElement('div')
     history = { push() {}, replace() {} }
+    transitionManager = { listenBeforeLeavingRoute() {}, isActive() {} }
 
     class Component extends React.Component {
       constructor(props, ctx) {
@@ -30,7 +31,7 @@ describe('RouterContext', () => {
 
   function renderTest(done) {
     match({ location: '/', routes }, (err, redirect, renderProps) => {
-      render(<RouterContext {...renderProps} history={history} />, node)
+      render(<RouterContext {...renderProps} history={history} transitionManager={transitionManager} />, node)
       done()
     })
   }
@@ -46,7 +47,7 @@ describe('RouterContext', () => {
     })
   })
 
-  describe('interaction with history', () => {
+  describe('some weird tests that test implementation and should probably go away', () => {
     it('proxies calls to `push` to `props.history`', (done) => {
       const args = [ 1, 2, 3 ]
       history.push = (...params) => {
@@ -69,10 +70,10 @@ describe('RouterContext', () => {
       })
     })
 
-    it('proxies calls to `addRouteLeaveHook` to `props.history`', (done) => {
+    it('proxies calls to `addRouteLeaveHook` to `props.transitionManager`', (done) => {
       const args = [ 1, 2, 3 ]
       const retVal = function () {}
-      history.listenBeforeLeavingRoute = (...params) => {
+      transitionManager.listenBeforeLeavingRoute = (...params) => {
         expect(params).toEqual(args)
         return retVal
       }
@@ -83,10 +84,10 @@ describe('RouterContext', () => {
       })
     })
 
-    it('proxies calls to `isActive` to `props.history`', (done) => {
+    it('proxies calls to `isActive` to `props.transitionManager`', (done) => {
       const args = [ 1, 2, 3 ]
       const retVal = function () {}
-      history.isActive = (...params) => {
+      transitionManager.isActive = (...params) => {
         expect(params).toEqual(args)
         return retVal
       }

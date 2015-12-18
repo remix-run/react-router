@@ -1,6 +1,7 @@
 import expect from 'expect'
 import React, { Component } from 'react'
 import { render, unmountComponentAtNode } from 'react-dom'
+import createHistory from 'history/lib/createMemoryHistory'
 import resetHash from './resetHash'
 import execSteps from './execSteps'
 import Router from '../Router'
@@ -46,7 +47,7 @@ describe('pushState', function () {
       const execNextStep = execSteps(steps, done)
 
       render((
-        <Router onUpdate={execNextStep}>
+        <Router history={createHistory('/')} onUpdate={execNextStep}>
           <Route path="/" component={Index}/>
           <Route path="/home/hi:there" component={Home}/>
         </Router>
