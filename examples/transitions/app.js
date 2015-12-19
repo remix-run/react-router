@@ -53,7 +53,7 @@ const Form = React.createClass({
     this.setState({
       textValue: ''
     }, () => {
-      this.history.pushState(null, '/')
+      this.history.push('/')
     })
   },
 

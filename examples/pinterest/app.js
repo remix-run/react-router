@@ -98,7 +98,13 @@ const Index = React.createClass({
 
         <div>
           {PICTURES.map(picture => (
-            <Link key={picture.id} to={`/pictures/${picture.id}`} state={{ modal: true, returnTo: this.props.location.pathname }}>
+            <Link
+              key={picture.id}
+              to={{
+                pathname: `/pictures/${picture.id}`,
+                state: { modal: true, returnTo: this.props.location.pathname }
+              }}
+            >
               <img style={{ margin: 10 }} src={picture.src} height="100" />
             </Link>
           ))}
@@ -118,7 +124,10 @@ const Deep = React.createClass({
         <p>You can link from anywhere really deep too</p>
         <p>Params stick around: {this.props.params.one} {this.props.params.two}</p>
         <p>
-          <Link to={`/pictures/0`} state={{ modal: true, returnTo: this.props.location.pathname }}>
+          <Link to={{
+            pathname: `/pictures/0`,
+            state: { modal: true, returnTo: this.props.location.pathname }
+          }}>
             Link to picture with Modal
           </Link><br/>
           <Link to={`/pictures/0`}>

@@ -37,7 +37,7 @@ const App = React.createClass({
       })
     })
 
-    this.history.pushState(null, '/')
+    this.history.push('/')
   },
 
   render() {

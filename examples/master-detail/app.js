@@ -104,7 +104,7 @@ const Contact = React.createClass({
   destroy() {
     const { id } = this.props.params
     ContactStore.removeContact(id)
-    this.history.pushState(null, '/')
+    this.history.push('/')
   },
 
   render() {
@@ -132,7 +132,7 @@ const NewContact = React.createClass({
       first: findDOMNode(this.refs.first).value,
       last: findDOMNode(this.refs.last).value
     }, (contact) => {
-      this.history.pushState(null, `/contact/${contact.id}`)
+      this.history.push(`/contact/${contact.id}`)
     })
   },
 
