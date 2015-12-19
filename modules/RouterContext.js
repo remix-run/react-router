@@ -15,7 +15,7 @@ const { array, func, object } = React.PropTypes
 const RouterContext = React.createClass({
 
   propTypes: {
-    history: object.isRequired,
+    history: object,
     router: object.isRequired,
     location: object.isRequired,
     routes: array.isRequired,
@@ -31,7 +31,7 @@ const RouterContext = React.createClass({
   },
 
   childContextTypes: {
-    history: object.isRequired,
+    history: object,
     location: object.isRequired,
     router: object.isRequired
   },
@@ -74,7 +74,7 @@ const RouterContext = React.createClass({
         const route = routes[index]
         const routeParams = getRouteParams(route, params)
         const props = {
-          history: deprecateObjectProperties(history, 'Accessing `props.history` is deprecated, please use a singleton `history` or `context.router`.'),
+          history: history && deprecateObjectProperties(history, 'Accessing `props.history` is deprecated, please use a singleton `history` or `context.router`.'),
           location,
           params,
           route,
