@@ -1,13 +1,7 @@
 import React from 'react'
 import { render } from 'react-dom'
-import { createHistory, useBasename } from 'history'
-import { Router, Route, Link } from 'react-router'
-
-require('./app.css')
-
-const history = useBasename(createHistory)({
-  basename: '/breadcrumbs'
-})
+import { browserHistory, Router, Route, Link } from 'react-router'
+import './app.css'
 
 class App extends React.Component {
   render() {
@@ -73,7 +67,7 @@ Orders.title = 'Orders'
 Orders.path = '/orders'
 
 render((
-  <Router history={history}>
+  <Router history={browserHistory}>
     <Route path={App.path} component={App}>
       <Route path={Products.path} component={Products} />
       <Route path={Orders.path} component={Orders} />

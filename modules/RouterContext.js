@@ -71,7 +71,7 @@ const RouterContext = React.createClass({
         const route = routes[index]
         const routeParams = getRouteParams(route, params)
         const props = {
-          history,
+          history: deprecateObjectProperties(history, 'Accessing `props.history` is deprecated, please use a singleton `history` or `context.router`.'),
           location,
           params,
           route,

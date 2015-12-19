@@ -77,7 +77,6 @@
     "react-addons-css-transition-group": "^0.14.0",
     "react-addons-test-utils": "0.14.0",
     "react-dom": "^0.14.0",
-    "react-static-container": "^1.0.0",
     "rimraf": "^2.4.3",
     "style-loader": "^0.12.4",
     "webpack": "^1.4.13",
