@@ -1,7 +1,7 @@
 import expect from 'expect'
 import React from 'react'
 import { render, unmountComponentAtNode } from 'react-dom'
-import createHistory from 'history/lib/createMemoryHistory'
+import createHistory from '../createMemoryHistory'
 import IndexRoute from '../IndexRoute'
 import Router from '../Router'
 import Route from '../Route'
@@ -21,12 +21,13 @@ describe('isActive', function () {
   describe('a pathname that matches the URL', function () {
     describe('with no query', function () {
       it('is active', function (done) {
+        const history = createHistory('/home')
         render((
-          <Router history={createHistory('/home?the=query')}>
+          <Router history={history}>
             <Route path="/home" />
           </Router>
         ), node, function () {
-          expect(this.history.isActive('/home')).toBe(true)
+          expect(this.transitionManager.isActive('/home')).toBe(true)
           done()
         })
       })
@@ -417,27 +418,6 @@ describe('isActive', function () {
           </Router>
         ), node, function () {
           expect(this.history.isActive('/home', { foo: { 4: 'bar' } })).toBe(false)
-          done()
-        })
-      })
-    })
-
-    describe('with a custom parse function and a query that match', function () {
-      it('is active', function (done) {
-        function stringifyQuery(params) {
-          return qs.stringify(params, { arrayFormat: 'indices' })
-        }
-        function parseQueryString(query) {
-          return qs.parse(query, { parseArrays: false })
-        }
-
-        render((
-          <Router history={createHistory('/home?foo[4]=bar&foo[1]=bar2')} stringifyQuery={stringifyQuery} parseQueryString={parseQueryString}>
-            <Route path="/" />
-            <Route path="/home" />
-          </Router>
-        ), node, function () {
-          expect(this.history.isActive('/home', { foo: { 1: 'bar2', 4: 'bar' } })).toBe(true)
           done()
         })
       })
