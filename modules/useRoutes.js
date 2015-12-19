@@ -1,4 +1,4 @@
-import warning from 'warning'
+import warning from './warning'
 import { REPLACE } from 'history/lib/Actions'
 import useQueries from 'history/lib/useQueries'
 import computeChangedRoutes from './computeChangedRoutes'

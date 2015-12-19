@@ -1,5 +1,5 @@
 import React from 'react'
-import warning from 'warning'
+import warning from './warning'
 
 function isValidChild(object) {
   return object == null || React.isValidElement(object)

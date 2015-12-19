@@ -354,7 +354,7 @@ describe('matchRoutes', function () {
       it('complains when matching', function (done) {
         matchRoutes(invalidRoutes, createLocation('/'), function (error, match) {
           expect(match).toExist()
-          expect(errorSpy).toHaveBeenCalledWith('Warning: Index routes should not have paths')
+          expect(errorSpy).toHaveBeenCalledWith('Warning: [react-router] Index routes should not have paths')
           done()
         })
       })

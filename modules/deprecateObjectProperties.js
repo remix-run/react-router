@@ -1,5 +1,5 @@
 /*eslint no-empty: 0*/
-import warning from 'warning'
+import warning from './warning'
 
 let useMembrane = false
 

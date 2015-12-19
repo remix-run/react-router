@@ -1,6 +1,6 @@
 import React from 'react'
 import RouterContext from './RouterContext'
-import warning from 'warning'
+import warning from './warning'
 
 const RoutingContext = React.createClass({
   componentWillMount() {
