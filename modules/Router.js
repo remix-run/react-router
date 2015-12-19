@@ -27,9 +27,7 @@ const Router = React.createClass({
     render: func,
     createElement: func,
     onError: func,
-    onUpdate: func,
-    parseQueryString: func,
-    stringifyQuery: func
+    onUpdate: func
   },
 
   getDefaultProps() {
@@ -59,7 +57,8 @@ const Router = React.createClass({
   },
 
   componentWillMount() {
-    const { history } = this.props
+    const { history, parseQueryString, stringifyQuery } = this.props
+    warning(!(parseQueryString || stringifyQuery), '`parseQueryString` and `stringifyQuery` are deprecated, please create a custom `history` as described in https://github.com/rackt/react-router/blob/v1.1.0/CHANGES.md#v110')
     if (isDeprecatedHistory(history)) {
       this.setupDeprecatedHistory()
     } else {
