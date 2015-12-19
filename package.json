@@ -46,7 +46,7 @@
   "devDependencies": {
     "babel": "^5.4.7",
     "babel-core": "^5.4.7",
-    "babel-eslint": "^3.1.23",
+    "babel-eslint": "^4.1.6",
     "babel-loader": "^5.0.0",
     "babel-plugin-dev-expression": "^0.1.0",
     "bundle-loader": "^0.5.2",
@@ -60,7 +60,7 @@
     "express": "^4.13.3",
     "express-urlrewrite": "^1.2.0",
     "gzip-size": "^3.0.0",
-    "history": "^1.12.5",
+    "history": "^1.17.0",
     "isparta-loader": "^1.0.0",
     "karma": "^0.13.13",
     "karma-browserstack-launcher": "^0.1.4",
