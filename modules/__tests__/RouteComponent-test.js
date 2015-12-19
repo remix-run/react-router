@@ -4,8 +4,6 @@ import { render, unmountComponentAtNode } from 'react-dom'
 import createHistory from 'history/lib/createMemoryHistory'
 import Router from '../Router'
 
-const { object } = React.PropTypes
-
 describe('a Route Component', function () {
 
   let node
