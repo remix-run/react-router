@@ -202,9 +202,9 @@ describe('When a router enters a branch', function () {
       const history = useQueries(createHistory)('/inbox')
 
       render(<Router history={history} routes={routes}/>, node, function () {
-        history.push('/news', { q: 1 })
+        history.push({ pathname: '/news', query: { q: 1 } })
         expect(newsFeedRouteEnterSpy.calls.length).toEqual(1)
-        history.push('/news', { q: 2 })
+        history.push({ pathname: '/news', query: { q: 2 } })
         expect(newsFeedRouteEnterSpy.calls.length).toEqual(1)
         done()
       })
