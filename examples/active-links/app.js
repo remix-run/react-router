@@ -1,7 +1,6 @@
 import React from 'react'
 import { render } from 'react-dom'
-import { Router, Route, IndexRoute, Link, IndexLink } from 'react-router'
-import { createHistory, useBasename } from 'history'
+import { Router, Route, IndexRoute, Link, IndexLink, browserHistory } from 'react-router'
 
 const ACTIVE = { color: 'red' }
 
@@ -80,12 +79,8 @@ class About extends React.Component {
   }
 }
 
-const history = useBasename(createHistory)({
-  basename: '/active-links'
-})
-
 render((
-  <Router history={history}>
+  <Router history={browserHistory}>
     <Route path="/" component={App}>
       <IndexRoute component={Index}/>
       <Route path="/about" component={About}/>
