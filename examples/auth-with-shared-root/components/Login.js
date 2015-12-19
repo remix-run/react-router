@@ -1,5 +1,4 @@
 import React from 'react'
-import { History } from 'react-router'
 import auth from '../utils/auth.js'
 
 const Login = React.createClass({

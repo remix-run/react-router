@@ -1,16 +1,36 @@
 import expect from 'expect'
 import React from 'react'
 import { render, unmountComponentAtNode } from 'react-dom'
-import RouterContext from '../RouterContext'
+
 import match from '../match'
+import RouterContext from '../RouterContext'
+import { createRouterObject } from '../RouterUtils'
 
 describe('RouterContext', () => {
-  let node, routes, context, history, transitionManager
+  let node, routes, context, history, transitionManager, router
+  let listenBeforeLeavingRouteSentinel, isActiveSentinel, createHrefSentinel
 
   beforeEach(() => {
+    listenBeforeLeavingRouteSentinel = {}
+    isActiveSentinel = {}
+    createHrefSentinel = {}
+
     node = document.createElement('div')
-    history = { push() {}, replace() {} }
-    transitionManager = { listenBeforeLeavingRoute() {}, isActive() {} }
+
+    history = {
+      push: expect.createSpy(),
+      replace: expect.createSpy(),
+      createHref: expect.createSpy().andReturn(createHrefSentinel),
+      go: expect.createSpy(),
+      goBack: expect.createSpy(),
+      goForward: expect.createSpy()
+    }
+    transitionManager = {
+      listenBeforeLeavingRoute: expect.createSpy().andReturn(listenBeforeLeavingRouteSentinel),
+      isActive: expect.createSpy().andReturn(isActiveSentinel)
+    }
+
+    router = createRouterObject(history, transitionManager)
 
     class Component extends React.Component {
       constructor(props, ctx) {
@@ -31,7 +51,7 @@ describe('RouterContext', () => {
 
   function renderTest(done) {
     match({ location: '/', routes }, (err, redirect, renderProps) => {
-      render(<RouterContext {...renderProps} history={history} transitionManager={transitionManager} />, node)
+      render(<RouterContext {...renderProps} history={history} router={router} />, node)
       done()
     })
   }
@@ -50,106 +70,75 @@ describe('RouterContext', () => {
   describe('some weird tests that test implementation and should probably go away', () => {
     it('proxies calls to `push` to `props.history`', (done) => {
       const args = [ 1, 2, 3 ]
-      history.push = (...params) => {
-        expect(params).toEqual(args)
-        done()
-      }
       renderTest(() => {
         context.router.push(...args)
+        expect(history.push).toHaveBeenCalledWith(...args)
+        done()
       })
     })
 
     it('proxies calls to `replace` to `props.history`', (done) => {
       const args = [ 1, 2, 3 ]
-      history.replace = (...params) => {
-        expect(params).toEqual(args)
-        done()
-      }
       renderTest(() => {
         context.router.replace(...args)
+        expect(history.replace).toHaveBeenCalledWith(...args)
+        done()
       })
     })
 
     it('proxies calls to `addRouteLeaveHook` to `props.transitionManager`', (done) => {
       const args = [ 1, 2, 3 ]
-      const retVal = function () {}
-      transitionManager.listenBeforeLeavingRoute = (...params) => {
-        expect(params).toEqual(args)
-        return retVal
-      }
       renderTest(() => {
         const remove = context.router.addRouteLeaveHook(...args)
-        expect(remove).toBe(retVal)
+        expect(transitionManager.listenBeforeLeavingRoute).toHaveBeenCalledWith(...args)
+        expect(remove).toBe(listenBeforeLeavingRouteSentinel)
         done()
       })
     })
 
     it('proxies calls to `isActive` to `props.transitionManager`', (done) => {
       const args = [ 1, 2, 3 ]
-      const retVal = function () {}
-      transitionManager.isActive = (...params) => {
-        expect(params).toEqual(args)
-        return retVal
-      }
       renderTest(() => {
         const isActive = context.router.isActive(...args)
-        expect(isActive).toBe(retVal)
+        expect(transitionManager.isActive).toHaveBeenCalledWith(...args)
+        expect(isActive).toBe(isActiveSentinel)
         done()
       })
     })
 
     it('proxies calls to `createHref` to `props.history`', (done) => {
       const args = [ 1, 2, 3 ]
-      const retVal = function () {}
-      history.createHref = (...params) => {
-        expect(params).toEqual(args)
-        return retVal
-      }
       renderTest(() => {
-        const createHref = context.router.createHref(...args)
-        expect(createHref).toBe(retVal)
+        const href = context.router.createHref(...args)
+        expect(history.createHref).toHaveBeenCalledWith(...args)
+        expect(href).toBe(createHrefSentinel)
         done()
       })
     })
 
     it('proxies calls to `go` to `props.history`', (done) => {
       const args = [ 1, 2, 3 ]
-      const retVal = function () {}
-      history.go = (...params) => {
-        expect(params).toEqual(args)
-        return retVal
-      }
       renderTest(() => {
-        const go = context.router.go(...args)
-        expect(go).toBe(retVal)
+        context.router.go(...args)
+        expect(history.go).toHaveBeenCalledWith(...args)
         done()
       })
     })
 
     it('proxies calls to `goBack` to `props.history`', (done) => {
       const args = [ 1, 2, 3 ]
-      const retVal = function () {}
-      history.goBack = (...params) => {
-        expect(params).toEqual(args)
-        return retVal
-      }
       renderTest(() => {
-        const goBack = context.router.goBack(...args)
-        expect(goBack).toBe(retVal)
+        context.router.goBack(...args)
+        expect(history.goBack).toHaveBeenCalledWith(...args)
         done()
       })
     })
 
     it('proxies calls to `goForward` to `props.history`', (done) => {
       const args = [ 1, 2, 3 ]
-      const retVal = function () {}
-      history.goForward = (...params) => {
-        expect(params).toEqual(args)
-        return retVal
-      }
       renderTest(() => {
-        const goForward = context.router.goForward(...args)
-        expect(goForward).toBe(retVal)
+        context.router.goForward(...args)
+        expect(history.goForward).toHaveBeenCalledWith(...args)
         done()
       })
     })

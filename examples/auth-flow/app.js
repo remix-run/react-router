@@ -1,6 +1,6 @@
 import React from 'react'
 import { render } from 'react-dom'
-import { browserHistory, Router, Route, Link, History } from 'react-router'
+import { browserHistory, Router, Route, Link } from 'react-router'
 import auth from './auth'
 
 const App = React.createClass({

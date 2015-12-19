@@ -1,7 +1,9 @@
 import invariant from 'invariant'
+
 import createMemoryHistory from './createMemoryHistory'
 import createTransitionManager from './createTransitionManager'
 import { createRoutes } from './RouteUtils'
+import { createRouterObject, createRoutingHistory } from './RouterUtils'
 
 /**
  * A high-level API to be used for server-side rendering.
@@ -18,7 +20,7 @@ function match({ routes, location, ...options }, callback) {
     'match needs a location'
   )
 
-  const history = createMemoryHistory(options)
+  let history = createMemoryHistory(options)
   const transitionManager = createTransitionManager(
     history,
     createRoutes(routes)
@@ -28,11 +30,14 @@ function match({ routes, location, ...options }, callback) {
   if (typeof location === 'string')
     location = history.createLocation(location)
 
+  const router = createRouterObject(history, transitionManager)
+  history = createRoutingHistory(history, transitionManager)
+
   transitionManager.match(location, function (error, redirectLocation, nextState) {
     callback(
       error,
       redirectLocation,
-      nextState && { ...nextState, history, transitionManager }
+      nextState && { ...nextState, history, router }
     )
   })
 }

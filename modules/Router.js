@@ -1,11 +1,13 @@
-import React from 'react'
-import warning from './warning'
 import createHashHistory from 'history/lib/createHashHistory'
-import { createRoutes } from './RouteUtils'
-import RouterContext from './RouterContext'
-import useRoutes from './useRoutes'
-import { routes } from './PropTypes'
+import useQueries from 'history/lib/useQueries'
+import React from 'react'
+
 import createTransitionManager from './createTransitionManager'
+import { routes } from './PropTypes'
+import RouterContext from './RouterContext'
+import { createRoutes } from './RouteUtils'
+import { createRouterObject, createRoutingHistory } from './RouterUtils'
+import warning from './warning'
 
 function isDeprecatedHistory(history) {
   return !history || !history.__v2_compatible__
@@ -57,52 +59,52 @@ const Router = React.createClass({
   },
 
   componentWillMount() {
-    const { history, parseQueryString, stringifyQuery } = this.props
-    warning(!(parseQueryString || stringifyQuery), '`parseQueryString` and `stringifyQuery` are deprecated, please create a custom `history` as described in https://github.com/rackt/react-router/blob/v1.1.0/CHANGES.md#v110')
+    let { history, routes, children } = this.props
+
+    const { parseQueryString, stringifyQuery } = this.props
+    warning(
+      !(parseQueryString || stringifyQuery),
+      '`parseQueryString` and `stringifyQuery` are deprecated, please create a custom `history` as described in https://github.com/rackt/react-router/blob/v1.1.0/CHANGES.md#v110'
+    )
+
     if (isDeprecatedHistory(history)) {
-      this.setupDeprecatedHistory()
+      history = this.wrapDeprecatedHistory(history)
+    }
+
+    const transitionManager = createTransitionManager(
+      history, createRoutes(routes || children)
+    )
+    this._unlisten = transitionManager.listen((error, state) => {
+      if (error) {
+        this.handleError(error)
+      } else {
+        this.setState(state, this.props.onUpdate)
+      }
+    })
+
+    this.router = createRouterObject(history, transitionManager)
+    this.history = createRoutingHistory(history, transitionManager)
+  },
+
+  wrapDeprecatedHistory(history) {
+    const { parseQueryString, stringifyQuery } = this.props
+
+    let createHistory
+    if (history) {
+      warning(
+        false,
+        'automatically wrapping histories in useQueries is deprecated; if this is a wrapped custom history, set `__v2_compatible__`'
+      )
+      createHistory = () => history
     } else {
-      this.setupTransitionManager()
+      warning(
+        false,
+        'the default hash history is deprecated; use the `hashHistory` singleton instead'
+      )
+      createHistory = createHashHistory
     }
-  },
 
-  setupTransitionManager() {
-    const { history, routes, children } = this.props
-    this.transitionManager = createTransitionManager(history, createRoutes(routes || children))
-    this.transitionManager.listen((error, state) => {
-      if (error) {
-        this.handleError(error)
-      } else {
-        this.setState(state, this.props.onUpdate)
-      }
-    })
-
-    this.history = {
-      ...this.transitionManager,
-      ...this.props.history
-    }
-  },
-
-  setupDeprecatedHistory() {
-    let { history, children, routes, parseQueryString, stringifyQuery } = this.props
-    let createHistory = history ? () => history : createHashHistory
-
-    this.history = useRoutes(createHistory)({
-      routes: createRoutes(routes || children),
-      parseQueryString,
-      stringifyQuery
-    })
-
-    // polyfill transitionManager so API changes don't leak down to RouterContext
-    this.transitionManager = this.history
-
-    this._unlisten = this.history.listen((error, state) => {
-      if (error) {
-        this.handleError(error)
-      } else {
-        this.setState(state, this.props.onUpdate)
-      }
-    })
+    return useQueries(createHistory)({ parseQueryString, stringifyQuery })
   },
 
   /* istanbul ignore next: sanity check */
@@ -138,7 +140,7 @@ const Router = React.createClass({
     return render({
       ...props,
       history: this.history,
-      transitionManager: this.transitionManager,
+      router: this.router,
       location,
       routes,
       params,

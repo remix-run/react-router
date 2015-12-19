@@ -1,8 +1,10 @@
-import React from 'react'
 import invariant from 'invariant'
+import React from 'react'
+
 import deprecateObjectProperties from './deprecateObjectProperties'
-import { isReactChildren } from './RouteUtils'
 import getRouteParams from './getRouteParams'
+import { isReactChildren } from './RouteUtils'
+import warning from './warning'
 
 const { array, func, object } = React.PropTypes
 
@@ -14,7 +16,7 @@ const RouterContext = React.createClass({
 
   propTypes: {
     history: object.isRequired,
-    transitionManager: object.isRequired,
+    router: object.isRequired,
     location: object.isRequired,
     routes: array.isRequired,
     params: object.isRequired,
@@ -35,20 +37,21 @@ const RouterContext = React.createClass({
   },
 
   getChildContext() {
-    const { transitionManager } = this.props
-    let { history, location } = this.props
+    let { router, history, location } = this.props
+    if (!router) {
+      warning(
+        false,
+        '`<RouterContext>` expects a `router` rather than a `history`'
+      )
 
-
-    const router = {
-      // must copy these properties before adding deprecations so that
-      // correct usage of `router` doesn't trigger warnings
-      ...history,
-      addRouteLeaveHook: transitionManager.listenBeforeLeavingRoute,
-      isActive: transitionManager.isActive
+      router = {
+        ...history,
+        addRouteLeaveHook: history.listenBeforeLeavingRoute
+      }
+      delete router.listenBeforeLeavingRoute
     }
 
     if (__DEV__) {
-      history = deprecateObjectProperties(history, '`context.history` is deprecated, please use context.router')
       location = deprecateObjectProperties(location, '`context.location` is deprecated, please use a route component\'s `props.location` instead. If this is a deeply nested component, please refer to the strategies described in https://github.com/rackt/react-router/blob/v1.1.0/CHANGES.md#v110')
     }
 

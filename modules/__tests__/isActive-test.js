@@ -27,7 +27,7 @@ describe('isActive', function () {
             <Route path="/home" />
           </Router>
         ), node, function () {
-          expect(this.transitionManager.isActive('/home')).toBe(true)
+          expect(this.router.isActive('/home')).toBe(true)
           done()
         })
       })
