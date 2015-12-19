@@ -21,4 +21,8 @@ export RouterContext from './RouterContext'
 export PropTypes from './PropTypes'
 export match from './match'
 
+/* histories */
+export browserHistory from './browserHistory'
+export hashHistory from './hashHistory'
+
 export default from './Router'

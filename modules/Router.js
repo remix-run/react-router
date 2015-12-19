@@ -77,6 +77,11 @@ const Router = React.createClass({
         this.setState(state, this.props.onUpdate)
       }
     })
+
+    this.history = {
+      ...this.transitionManager,
+      ...this.props.history
+    }
   },
 
   setupDeprecatedHistory() {
@@ -90,10 +95,7 @@ const Router = React.createClass({
     })
 
     // polyfill transitionManager so API changes don't leak down to RouterContext
-    this.transitionManager = {
-      listenBeforeLeavingRoute: history.listenBeforeLeavingRoute,
-      isActive: history.isActive
-    }
+    this.transitionManager = this.history
 
     this._unlisten = this.history.listen((error, state) => {
       if (error) {
@@ -126,8 +128,6 @@ const Router = React.createClass({
   render() {
     const { location, routes, params, components } = this.state
     const { createElement, render, ...props } = this.props
-    const history = isDeprecatedHistory(this.props.history) ?
-      this.history : this.props.history
 
     if (location == null)
       return null // Async match
@@ -138,7 +138,7 @@ const Router = React.createClass({
 
     return render({
       ...props,
-      history: history,
+      history: this.history,
       transitionManager: this.transitionManager,
       location,
       routes,
