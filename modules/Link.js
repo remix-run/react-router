@@ -48,7 +48,7 @@ function createLocationDescriptor({ to, query, hash, state }) {
 const Link = React.createClass({
 
   contextTypes: {
-    history: object
+    router: object
   },
 
   propTypes: {
@@ -98,27 +98,27 @@ const Link = React.createClass({
 
       const location = createLocationDescriptor({ to, query, hash, state })
 
-      this.context.history.push(location)
+      this.context.router.push(location)
     }
   },
 
   render() {
     const { to, query, hash, state, activeClassName, activeStyle, onlyActiveOnIndex, ...props } = this.props
     warning(
-      query || hash || state,
+      !(query || hash || state),
       'the `query`, `hash`, and `state` props on `<Link>` are deprecated; use a location descriptor instead'
     )
 
-    // Ignore if rendered outside the context of history, simplifies unit testing.
-    const { history } = this.context
+    // Ignore if rendered outside the context of router, simplifies unit testing.
+    const { router } = this.context
 
-    if (history) {
-      const location = createLocationDescriptor({ to, query, hash, state })
+    if (router) {
+      const loc = createLocationDescriptor({ to, query, hash, state })
 
-      props.href = history.createHref(location)
+      props.href = router.createHref(loc)
 
       if (activeClassName || (activeStyle != null && !isEmptyObject(activeStyle))) {
-        if (history.isActive(to, query, onlyActiveOnIndex)) {
+        if (router.isActive(to, query, onlyActiveOnIndex)) {
           if (activeClassName)
             props.className += props.className === '' ? activeClassName : ` ${activeClassName}`
 

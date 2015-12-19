@@ -42,28 +42,4 @@ describe('a Route Component', function () {
     ), node, done)
   })
 
-  it('receives the right context', function (done) {
-    class RouteComponent extends Component {
-      
-      componentDidMount() {
-        expect(this.context.history).toEqual(this.props.history)
-        expect(this.context.location).toEqual(this.props.location)
-      }
-      render() {
-        return null
-      }
-    }
-    
-    RouteComponent.contextTypes = {
-      history: object.isRequired,
-      location: object.isRequired
-    }
-
-    const route = { path: '/', component: RouteComponent }
-
-    render((
-      <Router history={createHistory('/')} routes={route}/>
-    ), node, done)
-  })
-
 })

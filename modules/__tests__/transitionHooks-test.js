@@ -88,6 +88,7 @@ describe('When a router enters a branch', function () {
     }
 
     DashboardRoute = {
+      path: '/',
       component: Dashboard,
       onEnter(nextState, replaceState) {
         expect(this).toBe(DashboardRoute)
@@ -146,7 +147,7 @@ describe('When a router enters a branch', function () {
       const steps = [
         function () {
           expect(inboxRouteEnterSpy).toHaveBeenCalled('InboxRoute.onEnter was not called')
-          history.pushState(null, '/news')
+          history.push('/news')
         },
         function () {
           expect(inboxRouteLeaveSpy).toHaveBeenCalled('InboxRoute.onLeave was not called')
@@ -176,7 +177,7 @@ describe('When a router enters a branch', function () {
         function () {
           expect(dashboardRouteEnterSpy).toHaveBeenCalled('DashboardRoute.onEnter was not called')
           expect(messageRouteEnterSpy).toHaveBeenCalled('InboxRoute.onEnter was not called')
-          history.pushState(null, '/messages/456')
+          history.push('/messages/456')
         },
         function () {
           expect(messageRouteLeaveSpy).toHaveBeenCalled('MessageRoute.onLeave was not called')
@@ -201,9 +202,9 @@ describe('When a router enters a branch', function () {
       const history = useQueries(createHistory)('/inbox')
 
       render(<Router history={history} routes={routes}/>, node, function () {
-        history.pushState(null, '/news', { q: 1 })
+        history.push('/news', { q: 1 })
         expect(newsFeedRouteEnterSpy.calls.length).toEqual(1)
-        history.pushState(null, '/news', { q: 2 })
+        history.push('/news', { q: 2 })
         expect(newsFeedRouteEnterSpy.calls.length).toEqual(1)
         done()
       })

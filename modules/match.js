@@ -24,9 +24,6 @@ function match({ routes, location, ...options }, callback) {
     createRoutes(routes)
   )
 
-  // polyfill deprecated history API
-  history.isActive = transitionManager.isActive
-
   // Allow match({ location: '/the/path', ... })
   if (typeof location === 'string')
     location = history.createLocation(location)

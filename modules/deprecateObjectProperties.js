@@ -11,22 +11,28 @@ if (__DEV__) {
 }
 
 // wraps an object in a membrane to warn about deprecated property access
-export default function deprecateObjectProperties(object, deprecatedKeys) {
+export default function deprecateObjectProperties(object, message) {
   if (!useMembrane)
     return object
 
   const membrane = {}
 
   for (let prop in object) {
-    Object.defineProperty(membrane, prop, {
-      configurable: false,
-      enumerable: true,
-      get() {
-        if (deprecatedKeys[prop])
-          warning(!deprecatedKeys[prop], deprecatedKeys[prop])
-        return object[prop]
+    if (typeof object[prop] === 'function') {
+      membrane[prop] = function () {
+        warning(false, message)
+        return object[prop].apply(object, arguments)
       }
-    })
+    } else {
+      Object.defineProperty(membrane, prop, {
+        configurable: false,
+        enumerable: true,
+        get() {
+          warning(false, message)
+          return object[prop]
+        }
+      })
+    }
   }
 
   return membrane

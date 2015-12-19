@@ -14,6 +14,7 @@ const RouterContext = React.createClass({
 
   propTypes: {
     history: object.isRequired,
+    transitionManager: object.isRequired,
     location: object.isRequired,
     routes: array.isRequired,
     params: object.isRequired,
@@ -34,25 +35,24 @@ const RouterContext = React.createClass({
   },
 
   getChildContext() {
-    const { transitionManager, history, location } = this.props
+    const { transitionManager } = this.props
+    let { history, location } = this.props
+
+
     const router = {
-      push: history.push,
-      replace: history.replace,
+      // must copy these properties before adding deprecations so that
+      // correct usage of `router` doesn't trigger warnings
+      ...history,
       addRouteLeaveHook: transitionManager.listenBeforeLeavingRoute,
-      isActive: transitionManager.isActive,
-      createHref: history.createHref,
-      go: history.go,
-      goBack: history.goBack,
-      goForward: history.goForward
+      isActive: transitionManager.isActive
     }
-    const contextExport = { history, location, router }
-    if (__DEV__)
-      return deprecateObjectProperties(contextExport, {
-        history: '`context.history` is deprecated, please use context.router',
-        location: '`context.location` is deprecated, please use a route component\'s `props.location` instead. If this is a deeply nested component, please refer to the strategies described in https://github.com/rackt/react-router/blob/v1.1.0/CHANGES.md#v110'
-      })
-    else
-      return contextExport
+
+    if (__DEV__) {
+      history = deprecateObjectProperties(history, '`context.history` is deprecated, please use context.router')
+      location = deprecateObjectProperties(location, '`context.location` is deprecated, please use a route component\'s `props.location` instead. If this is a deeply nested component, please refer to the strategies described in https://github.com/rackt/react-router/blob/v1.1.0/CHANGES.md#v110')
+    }
+
+    return { history, location, router }
   },
 
   createElement(component, props) {
