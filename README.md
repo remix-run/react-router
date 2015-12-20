@@ -12,6 +12,8 @@ with powerful features like lazy code loading, dynamic route matching,
 and location transition handling built right in. Make the URL your first
 thought, not an after-thought.
 
+**Important:** *This is the `master` branch of React Router and may contain changes that are not yet released. To see the code for the most recently published release, browse [the `latest` tag](https://github.com/rackt/react-router/tree/latest).*
+
 ### Docs & Help
 
 - [Guides and API Docs](https://github.com/rackt/react-router/tree/latest/docs) (latest release)
