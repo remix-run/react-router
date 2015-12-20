@@ -1,7 +1,7 @@
 import React from 'react'
 import { render } from 'react-dom'
 import ReactCSSTransitionGroup from 'react-addons-css-transition-group'
-import { browserHistory, Router, Route, Link } from 'react-router'
+import { browserHistory, Router, Route, IndexRoute, Link } from 'react-router'
 import './app.css'
 
 class App extends React.Component {
@@ -24,6 +24,18 @@ class App extends React.Component {
           })}
         </ReactCSSTransitionGroup>
 
+      </div>
+    )
+  }
+}
+
+
+class Index extends React.Component {
+  render() {
+    return (
+      <div className="Image">
+        <h1>Index</h1>
+        <p>Animations with React Router are not different than any other animation.</p>
       </div>
     )
   }
@@ -54,6 +66,7 @@ class Page2 extends React.Component {
 render((
   <Router history={browserHistory}>
     <Route path="/" component={App}>
+      <IndexRoute component={Index}/>
       <Route path="page1" component={Page1} />
       <Route path="page2" component={Page2} />
     </Route>
