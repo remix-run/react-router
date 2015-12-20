@@ -35,7 +35,7 @@ const App = React.createClass({
           <li><Link to="/about">About</Link></li>
           <li><Link to="/dashboard">Dashboard</Link> (authenticated)</li>
         </ul>
-        {this.props.children || <p>You are {!this.state.loggedIn && "not"} logged in.</p>}
+        {this.props.children || <p>You are {!this.state.loggedIn && 'not'} logged in.</p>}
       </div>
     )
   }
