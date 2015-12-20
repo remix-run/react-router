@@ -1,16 +1,9 @@
 import React from 'react'
 import { render } from 'react-dom'
-import { createHistory, useBasename } from 'history'
-import { Router, Route, Link, History } from 'react-router'
-
-require('./app.css')
-
-const history = useBasename(createHistory)({
-  basename: '/passing-props-to-children'
-})
+import { browserHistory, Router, Route, Link } from 'react-router'
+import './app.css'
 
 const App = React.createClass({
-  mixins: [ History ],
 
   getInitialState() {
     return {
@@ -37,7 +30,7 @@ const App = React.createClass({
       })
     })
 
-    this.history.push('/')
+    this.props.router.push('/')
   },
 
   render() {
@@ -80,7 +73,7 @@ const Taco = React.createClass({
 })
 
 render((
-  <Router history={history}>
+  <Router history={browserHistory}>
     <Route path="/" component={App}>
       <Route path="taco/:name" component={Taco} />
     </Route>

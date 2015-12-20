@@ -1,14 +1,8 @@
 import React from 'react'
 import { render } from 'react-dom'
 import ReactCSSTransitionGroup from 'react-addons-css-transition-group'
-import { createHistory, useBasename } from 'history'
-import { Router, Route, Link } from 'react-router'
-
-require('./app.css')
-
-const history = useBasename(createHistory)({
-  basename: '/nested-animations'
-})
+import { browserHistory, Router, Route, Link } from 'react-router'
+import './app.css'
 
 class App extends React.Component {
   render() {
@@ -101,7 +95,7 @@ class Tab2 extends React.Component {
 }
 
 render((
-  <Router history={history}>
+  <Router history={browserHistory}>
     <Route path="/" component={App}>
       <Route path="page1" component={Page1}>
         <Route path="tab1" component={Tab1} />

@@ -1,11 +1,6 @@
 import React from 'react'
 import { render } from 'react-dom'
-import { createHistory, useBasename } from 'history'
-import { Router, Route, IndexRoute, Link } from 'react-router'
-
-const history = useBasename(createHistory)({
-  basename: '/pinterest'
-})
+import { browserHistory, Router, Route, IndexRoute, Link } from 'react-router'
 
 const PICTURES = [
   { id: 0, src: 'http://placekitten.com/601/601' },
@@ -150,7 +145,7 @@ const Picture = React.createClass({
 })
 
 render((
-  <Router history={history}>
+  <Router history={browserHistory}>
     <Route path="/" component={App}>
       <IndexRoute component={Index}/>
       <Route path="/pictures/:id" component={Picture}/>

@@ -1,11 +1,6 @@
 import React from 'react'
 import { render } from 'react-dom'
-import { createHistory, useBasename } from 'history'
-import { Router, Route, Link } from 'react-router'
-
-const history = useBasename(createHistory)({
-  basename: '/query-params'
-})
+import { browserHistory, Router, Route, Link } from 'react-router'
 
 class User extends React.Component {
   render() {
@@ -38,7 +33,7 @@ class App extends React.Component {
 }
 
 render((
-  <Router history={history}>
+  <Router history={browserHistory}>
     <Route path="/" component={App}>
       <Route path="user/:userID" component={User} />
     </Route>

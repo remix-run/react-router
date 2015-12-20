@@ -1,11 +1,6 @@
 import React from 'react'
 import { render } from 'react-dom'
-import { createHistory, useBasename } from 'history'
-import { Router, Route, Link, History, Lifecycle } from 'react-router'
-
-const history = useBasename(createHistory)({
-  basename: '/transitions'
-})
+import { browserHistory, Router, Route, Link } from 'react-router'
 
 const App = React.createClass({
   render() {
@@ -28,7 +23,13 @@ const Dashboard = React.createClass({
 })
 
 const Form = React.createClass({
-  mixins: [ Lifecycle, History ],
+
+  componentWillMount() {
+    this.props.router.addRouteLeaveHook(
+      this.props.route,
+      this.routerWillLeave
+    )
+  },
 
   getInitialState() {
     return {
@@ -53,7 +54,7 @@ const Form = React.createClass({
     this.setState({
       textValue: ''
     }, () => {
-      this.history.push('/')
+      this.props.router.push('/')
     })
   },
 
@@ -71,7 +72,7 @@ const Form = React.createClass({
 })
 
 render((
-  <Router history={history}>
+  <Router history={browserHistory}>
     <Route path="/" component={App}>
       <Route path="dashboard" component={Dashboard} />
       <Route path="form" component={Form} />
