@@ -38,10 +38,8 @@
   "license": "MIT",
   "dependencies": {
     "invariant": "^2.0.0",
-    "warning": "^2.0.0"
-  },
-  "peerDependencies": {
-    "history": "1.15.x"
+    "warning": "^2.0.0",
+    "history": "^1.17.0"
   },
   "devDependencies": {
     "babel": "^5.4.7",
@@ -60,7 +58,6 @@
     "express": "^4.13.3",
     "express-urlrewrite": "^1.2.0",
     "gzip-size": "^3.0.0",
-    "history": "^1.15.0",
     "isparta-loader": "^1.0.0",
     "karma": "^0.13.13",
     "karma-browserstack-launcher": "^0.1.4",
@@ -77,7 +74,6 @@
     "react-addons-css-transition-group": "^0.14.0",
     "react-addons-test-utils": "0.14.0",
     "react-dom": "^0.14.0",
-    "react-static-container": "^1.0.0",
     "rimraf": "^2.4.3",
     "style-loader": "^0.12.4",
     "webpack": "^1.4.13",

@@ -1,11 +1,6 @@
 import React from 'react'
 import { render } from 'react-dom'
-import { Router, Route, Link, Redirect } from 'react-router'
-import { createHistory, useBasename } from 'history'
-
-const history = useBasename(createHistory)({
-  basename: '/dynamic-segments'
-})
+import { browserHistory, Router, Route, Link, Redirect } from 'react-router'
 
 class App extends React.Component {
   render() {
@@ -52,7 +47,7 @@ class Task extends React.Component {
 }
 
 render((
-  <Router history={history}>
+  <Router history={browserHistory}>
     <Route path="/" component={App}>
       <Route path="user/:userID" component={User}>
         <Route path="tasks/:taskID" component={Task} />

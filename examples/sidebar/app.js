@@ -1,14 +1,8 @@
 import React from 'react'
 import { render } from 'react-dom'
-import { createHistory, useBasename } from 'history'
-import { Router, Route, Link } from 'react-router'
+import { browserHistory, Router, Route, Link } from 'react-router'
 import data from './data'
-
-require('./app.css')
-
-const history = useBasename(createHistory)({
-  basename: '/sidebar'
-})
+import './app.css'
 
 class Category extends React.Component {
   render() {
@@ -108,7 +102,7 @@ class App extends React.Component {
 }
 
 render((
-  <Router history={history}>
+  <Router history={browserHistory}>
     <Route path="/" component={App}>
       <Route path="category/:category" components={{ content: Category, sidebar: CategorySidebar }}>
         <Route path=":item" component={Item} />

@@ -1,14 +1,8 @@
 import React from 'react'
 import { render, findDOMNode } from 'react-dom'
-import { createHistory, useBasename } from 'history'
-import { Router, History, Route, IndexRoute, Link } from 'react-router'
+import { browserHistory, Router, Route, IndexRoute, Link } from 'react-router'
 import ContactStore from './ContactStore'
-
-require('./app.css')
-
-const history = useBasename(createHistory)({
-  basename: '/master-detail'
-})
+import './app.css'
 
 const App = React.createClass({
   getInitialState() {
@@ -68,7 +62,6 @@ const Index = React.createClass({
 })
 
 const Contact = React.createClass({
-  mixins: [ History ],
 
   getStateFromStore(props) {
     const { id } = props ? props.params : this.props.params
@@ -104,7 +97,7 @@ const Contact = React.createClass({
   destroy() {
     const { id } = this.props.params
     ContactStore.removeContact(id)
-    this.history.pushState(null, '/')
+    this.props.router.push('/')
   },
 
   render() {
@@ -123,7 +116,6 @@ const Contact = React.createClass({
 })
 
 const NewContact = React.createClass({
-  mixins: [ History ],
 
   createContact(event) {
     event.preventDefault()
@@ -132,7 +124,7 @@ const NewContact = React.createClass({
       first: findDOMNode(this.refs.first).value,
       last: findDOMNode(this.refs.last).value
     }, (contact) => {
-      this.history.pushState(null, `/contact/${contact.id}`)
+      this.props.router.push(`/contact/${contact.id}`)
     })
   },
 
@@ -158,7 +150,7 @@ const NotFound = React.createClass({
 })
 
 render((
-  <Router history={history}>
+  <Router history={browserHistory}>
     <Route path="/" component={App}>
       <IndexRoute component={Index} />
       <Route path="contact/new" component={NewContact} />

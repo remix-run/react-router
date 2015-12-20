@@ -1,11 +1,6 @@
 import React from 'react'
 import { render } from 'react-dom'
-import { createHistory, useBasename } from 'history'
-import { Router, Route, Link } from 'react-router'
-
-const history = useBasename(createHistory)({
-  basename: '/query-params'
-})
+import { browserHistory, Router, Route, Link } from 'react-router'
 
 class User extends React.Component {
   render() {
@@ -28,7 +23,7 @@ class App extends React.Component {
       <div>
         <ul>
           <li><Link to="/user/bob" activeClassName="active">Bob</Link></li>
-          <li><Link to="/user/bob" query={{ showAge: true }} activeClassName="active">Bob With Query Params</Link></li>
+          <li><Link to={{ pathname: '/user/bob', query: { showAge: true } }} activeClassName="active">Bob With Query Params</Link></li>
           <li><Link to="/user/sally" activeClassName="active">Sally</Link></li>
         </ul>
         {this.props.children}
@@ -38,7 +33,7 @@ class App extends React.Component {
 }
 
 render((
-  <Router history={history}>
+  <Router history={browserHistory}>
     <Route path="/" component={App}>
       <Route path="user/:userID" component={User} />
     </Route>

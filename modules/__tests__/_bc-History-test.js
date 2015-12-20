@@ -6,7 +6,9 @@ import Router from '../Router'
 import Route from '../Route'
 import createHistory from 'history/lib/createMemoryHistory'
 
-describe('History Mixin', function () {
+// skipping to remove warnings, and we don't intent to update this mixin
+// keeping tests here just in-case
+describe('v1 History Mixin', function () {
 
   let node
   beforeEach(function () {

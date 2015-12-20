@@ -1,10 +1,9 @@
 import invariant from 'invariant'
-import createMemoryHistory from 'history/lib/createMemoryHistory'
-import useBasename from 'history/lib/useBasename'
-import { createRoutes } from './RouteUtils'
-import useRoutes from './useRoutes'
 
-const createHistory = useRoutes(useBasename(createMemoryHistory))
+import createMemoryHistory from './createMemoryHistory'
+import createTransitionManager from './createTransitionManager'
+import { createRoutes } from './RouteUtils'
+import { createRouterObject, createRoutingHistory } from './RouterUtils'
 
 /**
  * A high-level API to be used for server-side rendering.
@@ -15,27 +14,31 @@ const createHistory = useRoutes(useBasename(createMemoryHistory))
  * Note: You probably don't want to use this in a browser. Use
  * the history.listen API instead.
  */
-function match({
-  routes,
-  location,
-  ...options
-}, callback) {
+function match({ routes, location, ...options }, callback) {
   invariant(
     location,
     'match needs a location'
   )
 
-  const history = createHistory({
-    routes: createRoutes(routes),
-    ...options
-  })
+  let history = createMemoryHistory(options)
+  const transitionManager = createTransitionManager(
+    history,
+    createRoutes(routes)
+  )
 
   // Allow match({ location: '/the/path', ... })
   if (typeof location === 'string')
     location = history.createLocation(location)
 
-  history.match(location, function (error, redirectLocation, nextState) {
-    callback(error, redirectLocation, nextState && { ...nextState, history })
+  const router = createRouterObject(history, transitionManager)
+  history = createRoutingHistory(history, transitionManager)
+
+  transitionManager.match(location, function (error, redirectLocation, nextState) {
+    callback(
+      error,
+      redirectLocation,
+      nextState && { ...nextState, history, router }
+    )
   })
 }
 

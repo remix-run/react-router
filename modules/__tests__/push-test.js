@@ -1,6 +1,7 @@
 import expect from 'expect'
 import React, { Component } from 'react'
 import { render, unmountComponentAtNode } from 'react-dom'
+import createHistory from '../createMemoryHistory'
 import resetHash from './resetHash'
 import execSteps from './execSteps'
 import Router from '../Router'
@@ -33,10 +34,11 @@ describe('pushState', function () {
 
   describe('when the target path contains a colon', function () {
     it('works', function (done) {
+      const history = createHistory('/')
       const steps = [
         function () {
           expect(this.state.location.pathname).toEqual('/')
-          this.history.pushState(null, '/home/hi:there')
+          history.push('/home/hi:there')
         },
         function () {
           expect(this.state.location.pathname).toEqual('/home/hi:there')
@@ -46,7 +48,7 @@ describe('pushState', function () {
       const execNextStep = execSteps(steps, done)
 
       render((
-        <Router onUpdate={execNextStep}>
+        <Router history={history} onUpdate={execNextStep}>
           <Route path="/" component={Index}/>
           <Route path="/home/hi:there" component={Home}/>
         </Router>

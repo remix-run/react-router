@@ -1,12 +1,7 @@
 import React from 'react'
 import { render } from 'react-dom'
-import { Router, Route, Link, History } from 'react-router'
-import { createHistory, useBasename } from 'history'
+import { browserHistory, Router, Route, Link } from 'react-router'
 import auth from './auth'
-
-const history = useBasename(createHistory)({
-  basename: '/auth-flow'
-})
 
 const App = React.createClass({
   getInitialState() {
@@ -40,7 +35,7 @@ const App = React.createClass({
           <li><Link to="/about">About</Link></li>
           <li><Link to="/dashboard">Dashboard</Link> (authenticated)</li>
         </ul>
-        {this.props.children}
+        {this.props.children || <p>You are {!this.state.loggedIn && "not"} logged in.</p>}
       </div>
     )
   }
@@ -61,7 +56,10 @@ const Dashboard = React.createClass({
 })
 
 const Login = React.createClass({
-  mixins: [ History ],
+
+  contextTypes: {
+    router: React.PropTypes.object.isRequired
+  },
 
   getInitialState() {
     return {
@@ -82,9 +80,9 @@ const Login = React.createClass({
       const { location } = this.props
 
       if (location.state && location.state.nextPathname) {
-        this.history.replaceState(null, location.state.nextPathname)
+        this.context.router.replace(location.state.nextPathname)
       } else {
-        this.history.replaceState(null, '/')
+        this.context.router.replace('/')
       }
     })
   },
@@ -125,7 +123,7 @@ function requireAuth(nextState, replaceState) {
 }
 
 render((
-  <Router history={history}>
+  <Router history={browserHistory}>
     <Route path="/" component={App}>
       <Route path="login" component={Login} />
       <Route path="logout" component={Logout} />

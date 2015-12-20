@@ -1,12 +1,12 @@
 import expect, { spyOn } from 'expect'
 import React, { Component } from 'react'
 import { render, unmountComponentAtNode } from 'react-dom'
-import createHistory from '../createMemoryHistory'
+import createHistory from 'history/lib/createMemoryHistory'
 import useQueries from 'history/lib/useQueries'
 import execSteps from './execSteps'
 import Router from '../Router'
 
-describe('When a router enters a branch', function () {
+describe('v1 When a router enters a branch', function () {
 
   class Dashboard extends Component {
     render() {
@@ -88,7 +88,6 @@ describe('When a router enters a branch', function () {
     }
 
     DashboardRoute = {
-      path: '/',
       component: Dashboard,
       onEnter(nextState, replaceState) {
         expect(this).toBe(DashboardRoute)
@@ -142,12 +141,11 @@ describe('When a router enters a branch', function () {
       const dashboardRouteLeaveSpy = spyOn(DashboardRoute, 'onLeave').andCallThrough()
       const inboxRouteEnterSpy = spyOn(InboxRoute, 'onEnter').andCallThrough()
       const inboxRouteLeaveSpy = spyOn(InboxRoute, 'onLeave').andCallThrough()
-      const history = createHistory('/inbox')
 
       const steps = [
         function () {
           expect(inboxRouteEnterSpy).toHaveBeenCalled('InboxRoute.onEnter was not called')
-          history.push('/news')
+          this.history.pushState(null, '/news')
         },
         function () {
           expect(inboxRouteLeaveSpy).toHaveBeenCalled('InboxRoute.onLeave was not called')
@@ -158,7 +156,7 @@ describe('When a router enters a branch', function () {
       const execNextStep = execSteps(steps, done)
 
       render(
-        <Router history={history}
+        <Router history={createHistory('/inbox')}
                 routes={routes}
                 onUpdate={execNextStep}
         />, node, execNextStep)
@@ -171,13 +169,12 @@ describe('When a router enters a branch', function () {
       const dashboardRouteEnterSpy = spyOn(DashboardRoute, 'onEnter').andCallThrough()
       const messageRouteLeaveSpy = spyOn(MessageRoute, 'onLeave').andCallThrough()
       const messageRouteEnterSpy = spyOn(MessageRoute, 'onEnter').andCallThrough()
-      const history = createHistory('/messages/123')
 
       const steps = [
         function () {
           expect(dashboardRouteEnterSpy).toHaveBeenCalled('DashboardRoute.onEnter was not called')
           expect(messageRouteEnterSpy).toHaveBeenCalled('InboxRoute.onEnter was not called')
-          history.push('/messages/456')
+          this.history.pushState(null, '/messages/456')
         },
         function () {
           expect(messageRouteLeaveSpy).toHaveBeenCalled('MessageRoute.onLeave was not called')
@@ -189,7 +186,7 @@ describe('When a router enters a branch', function () {
       const execNextStep = execSteps(steps, done)
 
       render(
-        <Router history={history}
+        <Router history={createHistory('/messages/123')}
                 routes={routes}
                 onUpdate={execNextStep}
         />, node, execNextStep)
@@ -202,9 +199,9 @@ describe('When a router enters a branch', function () {
       const history = useQueries(createHistory)('/inbox')
 
       render(<Router history={history} routes={routes}/>, node, function () {
-        history.push({ pathname: '/news', query: { q: 1 } })
+        history.pushState(null, '/news', { q: 1 })
         expect(newsFeedRouteEnterSpy.calls.length).toEqual(1)
-        history.push({ pathname: '/news', query: { q: 2 } })
+        history.pushState(null, '/news', { q: 2 })
         expect(newsFeedRouteEnterSpy.calls.length).toEqual(1)
         done()
       })

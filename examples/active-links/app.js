@@ -1,7 +1,6 @@
 import React from 'react'
 import { render } from 'react-dom'
-import { Router, Route, IndexRoute, Link, IndexLink } from 'react-router'
-import { createHistory, useBasename } from 'history'
+import { Router, Route, IndexRoute, Link, IndexLink, browserHistory } from 'react-router'
 
 const ACTIVE = { color: 'red' }
 
@@ -18,7 +17,8 @@ class App extends React.Component {
           <li><IndexLink to="/users"      activeStyle={ACTIVE}>/users IndexLink</IndexLink></li>
 
           <li><Link      to="/users/ryan" activeStyle={ACTIVE}>/users/ryan</Link></li>
-          <li><Link      to="/users/ryan" query={{ foo: 'bar' }} activeStyle={ACTIVE}>/users/ryan?foo=bar</Link></li>
+          <li><Link      to={{ pathname: '/users/ryan', query: { foo: 'bar' } }}
+                                          activeStyle={ACTIVE}>/users/ryan?foo=bar</Link></li>
 
           <li><Link      to="/about"      activeStyle={ACTIVE}>/about</Link></li>
         </ul>
@@ -80,12 +80,8 @@ class About extends React.Component {
   }
 }
 
-const history = useBasename(createHistory)({
-  basename: '/active-links'
-})
-
 render((
-  <Router history={history}>
+  <Router history={browserHistory}>
     <Route path="/" component={App}>
       <IndexRoute component={Index}/>
       <Route path="/about" component={About}/>

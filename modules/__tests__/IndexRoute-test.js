@@ -1,7 +1,7 @@
 import expect from 'expect'
 import React, { Component } from 'react'
 import { render, unmountComponentAtNode } from 'react-dom'
-import createHistory from 'history/lib/createMemoryHistory'
+import createHistory from '../createMemoryHistory'
 import IndexRoute from '../IndexRoute'
 import Router from '../Router'
 import Route from '../Route'

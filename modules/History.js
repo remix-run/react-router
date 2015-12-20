@@ -1,4 +1,4 @@
-import warning from 'warning'
+import warning from './warning'
 import { history } from './PropTypes'
 
 /**

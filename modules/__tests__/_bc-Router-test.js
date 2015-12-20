@@ -1,11 +1,11 @@
 import expect from 'expect'
 import React, { Component } from 'react'
 import { render, unmountComponentAtNode } from 'react-dom'
-import createHistory from '../createMemoryHistory'
+import createHistory from 'history/lib/createMemoryHistory'
 import Route from '../Route'
 import Router from '../Router'
 
-describe('Router', function () {
+describe('v1 Router', function () {
 
   class Parent extends Component {
     render() {

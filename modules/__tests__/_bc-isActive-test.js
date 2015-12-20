@@ -1,13 +1,13 @@
 import expect from 'expect'
 import React from 'react'
 import { render, unmountComponentAtNode } from 'react-dom'
-import createHistory from '../createMemoryHistory'
+import createHistory from 'history/lib/createMemoryHistory'
 import IndexRoute from '../IndexRoute'
 import Router from '../Router'
 import Route from '../Route'
 import qs from 'qs'
 
-describe('isActive', function () {
+describe('v1 isActive', function () {
 
   let node
   beforeEach(function () {
@@ -21,13 +21,12 @@ describe('isActive', function () {
   describe('a pathname that matches the URL', function () {
     describe('with no query', function () {
       it('is active', function (done) {
-        const history = createHistory('/home')
         render((
-          <Router history={history}>
+          <Router history={createHistory('/home?the=query')}>
             <Route path="/home" />
           </Router>
         ), node, function () {
-          expect(this.router.isActive('/home')).toBe(true)
+          expect(this.history.isActive('/home')).toBe(true)
           done()
         })
       })
@@ -40,10 +39,7 @@ describe('isActive', function () {
             <Route path="/home" />
           </Router>
         ), node, function () {
-          expect(this.router.isActive({
-            pathname: '/home',
-            query: { the: 'query' }
-          })).toBe(true)
+          expect(this.history.isActive('/home', { the: 'query' })).toBe(true)
           done()
         })
       })
@@ -56,10 +52,7 @@ describe('isActive', function () {
             <Route path="/home" />
           </Router>
         ), node, function () {
-          expect(this.router.isActive({
-            pathname: '/home',
-            query: { the: 'query', n: 2, show: false }
-          })).toBe(true)
+          expect(this.history.isActive('/home', { the: 'query', n: 2, show: false })).toBe(true)
           done()
         })
       })
@@ -72,10 +65,7 @@ describe('isActive', function () {
             <Route path="/home" />
           </Router>
         ), node, function () {
-          expect(this.router.isActive({
-            pathname: '/home',
-            query: { something: 'else' }
-          })).toBe(false)
+          expect(this.history.isActive('/home', { something: 'else' })).toBe(false)
           done()
         })
       })
@@ -92,10 +82,10 @@ describe('isActive', function () {
             </Route>
           </Router>
         ), node, function () {
-          expect(this.router.isActive('/parent/child')).toBe(true)
-          expect(this.router.isActive('/parent/child', true)).toBe(true)
-          expect(this.router.isActive('/parent')).toBe(true)
-          expect(this.router.isActive('/parent', true)).toBe(false)
+          expect(this.history.isActive('/parent/child')).toBe(true)
+          expect(this.history.isActive('/parent/child', null, true)).toBe(true)
+          expect(this.history.isActive('/parent')).toBe(true)
+          expect(this.history.isActive('/parent', null, true)).toBe(false)
           done()
         })
       })
@@ -108,7 +98,7 @@ describe('isActive', function () {
             </Route>
           </Router>
         ), node, function () {
-          expect(this.router.isActive('/parent////child////')).toBe(true)
+          expect(this.history.isActive('/parent////child////')).toBe(true)
           done()
         })
       })
@@ -121,7 +111,7 @@ describe('isActive', function () {
             </Route>
           </Router>
         ), node, function () {
-          expect(this.router.isActive('/parentchild')).toBe(false)
+          expect(this.history.isActive('/parentchild')).toBe(false)
           done()
         })
       })
@@ -136,10 +126,10 @@ describe('isActive', function () {
             </Route>
           </Router>
         ), node, function () {
-          expect(this.router.isActive('/parent/child')).toBe(false)
-          expect(this.router.isActive('/parent/child', true)).toBe(false)
-          expect(this.router.isActive('/parent')).toBe(true)
-          expect(this.router.isActive('/parent', true)).toBe(true)
+          expect(this.history.isActive('/parent/child')).toBe(false)
+          expect(this.history.isActive('/parent/child', null, true)).toBe(false)
+          expect(this.history.isActive('/parent')).toBe(true)
+          expect(this.history.isActive('/parent', null, true)).toBe(true)
           done()
         })
       })
@@ -156,8 +146,8 @@ describe('isActive', function () {
             </Route>
           </Router>
         ), node, function () {
-          expect(this.router.isActive('/home')).toBe(true)
-          expect(this.router.isActive('/home', true)).toBe(false)
+          expect(this.history.isActive('/home')).toBe(true)
+          expect(this.history.isActive('/home', null, true)).toBe(false)
           done()
         })
       })
@@ -172,14 +162,8 @@ describe('isActive', function () {
             </Route>
           </Router>
         ), node, function () {
-          expect(this.router.isActive({
-            pathname: '/home',
-            query: { the: 'query' }
-          })).toBe(true)
-          expect(this.router.isActive({
-            pathname: '/home',
-            query: { the: 'query' }
-          }, true)).toBe(false)
+          expect(this.history.isActive('/home', { the: 'query' })).toBe(true)
+          expect(this.history.isActive('/home', { the: 'query' }, true)).toBe(false)
           done()
         })
       })
@@ -194,14 +178,8 @@ describe('isActive', function () {
             </Route>
           </Router>
         ), node, function () {
-          expect(this.router.isActive({
-            pathname: '/home',
-            query: { something: 'else' }
-          })).toBe(false)
-          expect(this.router.isActive({
-            pathname: '/home',
-            query: { something: 'else' }
-          }, true)).toBe(false)
+          expect(this.history.isActive('/home', { something: 'else' })).toBe(false)
+          expect(this.history.isActive('/home', { something: 'else' }, true)).toBe(false)
           done()
         })
       })
@@ -218,8 +196,8 @@ describe('isActive', function () {
             </Route>
           </Router>
         ), node, function () {
-          expect(this.router.isActive('/absolute')).toBe(true)
-          expect(this.router.isActive('/absolute', true)).toBe(true)
+          expect(this.history.isActive('/absolute')).toBe(true)
+          expect(this.history.isActive('/absolute', null, true)).toBe(true)
           done()
         })
       })
@@ -236,8 +214,8 @@ describe('isActive', function () {
             </Route>
           </Router>
         ), node, function () {
-          expect(this.router.isActive('/home')).toBe(true)
-          expect(this.router.isActive('/home', true)).toBe(true)
+          expect(this.history.isActive('/home', null)).toBe(true)
+          expect(this.history.isActive('/home', null, true)).toBe(true)
           done()
         })
       })
@@ -252,14 +230,8 @@ describe('isActive', function () {
             </Route>
           </Router>
         ), node, function () {
-          expect(this.router.isActive({
-            pathname: '/home',
-            query: { the: 'query' }
-          })).toBe(true)
-          expect(this.router.isActive({
-            pathname: '/home',
-            query: { the: 'query' }
-          }, true)).toBe(true)
+          expect(this.history.isActive('/home', { the: 'query' })).toBe(true)
+          expect(this.history.isActive('/home', { the: 'query' }, true)).toBe(true)
           done()
         })
       })
@@ -274,14 +246,8 @@ describe('isActive', function () {
             </Route>
           </Router>
         ), node, function () {
-          expect(this.router.isActive({
-            pathname: '/home',
-            query: { something: 'else' }
-          })).toBe(false)
-          expect(this.router.isActive({
-            pathname: '/home',
-            query: { something: 'else' }
-          }, true)).toBe(false)
+          expect(this.history.isActive('/home', { something: 'else' })).toBe(false)
+          expect(this.history.isActive('/home', { something: 'else' }, true)).toBe(false)
           done()
         })
       })
@@ -298,8 +264,8 @@ describe('isActive', function () {
             </Route>
           </Router>
         ), node, function () {
-          expect(this.router.isActive('/home')).toBe(true)
-          expect(this.router.isActive('/home', true)).toBe(true)
+          expect(this.history.isActive('/home', null)).toBe(true)
+          expect(this.history.isActive('/home', null, true)).toBe(true)
           done()
         })
       })
@@ -316,8 +282,8 @@ describe('isActive', function () {
             </Route>
           </Router>
         ), node, function () {
-          expect(this.router.isActive('/parent/child')).toBe(true)
-          expect(this.router.isActive('/parent/child', true)).toBe(true)
+          expect(this.history.isActive('/parent/child', null)).toBe(true)
+          expect(this.history.isActive('/parent/child', null, true)).toBe(true)
           done()
         })
       })
@@ -332,8 +298,8 @@ describe('isActive', function () {
             </Route>
           </Router>
         ), node, function () {
-          expect(this.router.isActive('/parent///child///')).toBe(true)
-          expect(this.router.isActive('/parent///child///', true)).toBe(true)
+          expect(this.history.isActive('/parent///child///', null)).toBe(true)
+          expect(this.history.isActive('/parent///child///', null, true)).toBe(true)
           done()
         })
       })
@@ -352,8 +318,8 @@ describe('isActive', function () {
             </Route>
           </Router>
         ), node, function () {
-          expect(this.router.isActive('/parent/child')).toBe(true)
-          expect(this.router.isActive('/parent/child', true)).toBe(true)
+          expect(this.history.isActive('/parent/child', null)).toBe(true)
+          expect(this.history.isActive('/parent/child', null, true)).toBe(true)
           done()
         })
       })
@@ -370,8 +336,8 @@ describe('isActive', function () {
             </Route>
           </Router>
         ), node, function () {
-          expect(this.router.isActive('/parent///child///')).toBe(true)
-          expect(this.router.isActive('/parent///child///', true)).toBe(true)
+          expect(this.history.isActive('/parent///child///', null)).toBe(true)
+          expect(this.history.isActive('/parent///child///', null, true)).toBe(true)
           done()
         })
       })
@@ -385,7 +351,7 @@ describe('isActive', function () {
           <Route path="/home" />
         </Router>
       ), node, function () {
-        expect(this.router.isActive('/h')).toBe(false)
+        expect(this.history.isActive('/h')).toBe(false)
         done()
       })
     })
@@ -400,7 +366,7 @@ describe('isActive', function () {
           </Route>
         </Router>
       ), node, function () {
-        expect(this.router.isActive('/')).toBe(true)
+        expect(this.history.isActive('/')).toBe(true)
         done()
       })
     })
@@ -414,7 +380,7 @@ describe('isActive', function () {
           <Route path="/home" />
         </Router>
       ), node, function () {
-        expect(this.router.isActive('/')).toBe(false)
+        expect(this.history.isActive('/')).toBe(false)
         done()
       })
     })
@@ -429,10 +395,7 @@ describe('isActive', function () {
             <Route path="/home" />
           </Router>
         ), node, function () {
-          expect(this.router.isActive({
-            pathname: '/home',
-            query: { foo: [ 'bar', 'bar1', 'bar2' ] }
-          })).toBe(true)
+          expect(this.history.isActive('/home', { foo: [ 'bar', 'bar1', 'bar2' ] })).toBe(true)
           done()
         })
       })
@@ -440,26 +403,41 @@ describe('isActive', function () {
 
     describe('with a custom parse function and a query that does not match', function () {
       it('is not active', function (done) {
-        const history = createHistory({
-          entries: [ '/home?foo[1]=bar' ],
-          stringifyQuery(params) {
-            return qs.stringify(params, { arrayFormat: 'indices' })
-          },
-          parseQueryString(query) {
-            return qs.parse(query, { parseArrays: false })
-          }
-        })
+        function stringifyQuery(params) {
+          return qs.stringify(params, { arrayFormat: 'indices' })
+        }
+        function parseQueryString(query) {
+          return qs.parse(query, { parseArrays: false })
+        }
 
         render((
-          <Router history={history}>
+          <Router history={createHistory('/home?foo[1]=bar')} stringifyQuery={stringifyQuery} parseQueryString={parseQueryString}>
             <Route path="/" />
             <Route path="/home" />
           </Router>
         ), node, function () {
-          expect(this.router.isActive({
-            pathname: '/home',
-            query: { foo: { 4: 'bar' } }
-          })).toBe(false)
+          expect(this.history.isActive('/home', { foo: { 4: 'bar' } })).toBe(false)
+          done()
+        })
+      })
+    })
+
+    describe('with a custom parse function and a query that match', function () {
+      it('is active', function (done) {
+        function stringifyQuery(params) {
+          return qs.stringify(params, { arrayFormat: 'indices' })
+        }
+        function parseQueryString(query) {
+          return qs.parse(query, { parseArrays: false })
+        }
+
+        render((
+          <Router history={createHistory('/home?foo[4]=bar&foo[1]=bar2')} stringifyQuery={stringifyQuery} parseQueryString={parseQueryString}>
+            <Route path="/" />
+            <Route path="/home" />
+          </Router>
+        ), node, function () {
+          expect(this.history.isActive('/home', { foo: { 1: 'bar2', 4: 'bar' } })).toBe(true)
           done()
         })
       })
@@ -473,10 +451,7 @@ describe('isActive', function () {
             <Route path="/home" />
           </Router>
         ), node, function () {
-          expect(this.router.isActive({
-            pathname: '/home',
-            query: { foo: 1, bar: undefined }
-          })).toBe(true)
+          expect(this.history.isActive('/home', { foo: 1, bar: undefined })).toBe(true)
           done()
         })
       })
@@ -488,10 +463,7 @@ describe('isActive', function () {
             <Route path="/home" />
           </Router>
         ), node, function () {
-          expect(this.router.isActive({
-            pathname: '/home',
-            query: { foo: 1, bar: undefined }
-          })).toBe(false)
+          expect(this.history.isActive('/home', { foo: 1, bar: undefined })).toBe(false)
           done()
         })
       })
@@ -514,9 +486,9 @@ describe('isActive', function () {
         render((
           <Router history={createHistory('/foo')} routes={routes} />
         ), node, function () {
-          expect(this.router.isActive('/')).toBe(true)
-          expect(this.router.isActive('/', true)).toBe(false)
-          expect(this.router.isActive('/foo')).toBe(true)
+          expect(this.history.isActive('/')).toBe(true)
+          expect(this.history.isActive('/', null, true)).toBe(false)
+          expect(this.history.isActive('/foo')).toBe(true)
           done()
         })
       })
@@ -529,9 +501,9 @@ describe('isActive', function () {
         ), node, function () {
           // Need to wait for async match to complete.
           setTimeout(() => {
-            expect(this.router.isActive('/')).toBe(true)
-            expect(this.router.isActive('/', true)).toBe(true)
-            expect(this.router.isActive('/foo')).toBe(false)
+            expect(this.history.isActive('/')).toBe(true)
+            expect(this.history.isActive('/', null, true)).toBe(true)
+            expect(this.history.isActive('/foo')).toBe(false)
             done()
           })
         })

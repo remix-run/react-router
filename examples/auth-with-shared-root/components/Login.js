@@ -1,10 +1,11 @@
 import React from 'react'
-import { History } from 'react-router'
 import auth from '../utils/auth.js'
 
 const Login = React.createClass({
 
-  mixins: [ History ],
+  contextTypes: {
+    router: React.PropTypes.object
+  },
 
   getInitialState() {
     return {
@@ -25,9 +26,9 @@ const Login = React.createClass({
       const { location } = this.props
 
       if (location.state && location.state.nextPathname) {
-        this.history.replaceState(null, location.state.nextPathname)
+        this.context.router.replace(location.state.nextPathname)
       } else {
-        this.history.replaceState(null, '/')
+        this.context.router.replace('/')
       }
     })
   },

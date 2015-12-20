@@ -1,8 +1,10 @@
-import React from 'react'
 import invariant from 'invariant'
+import React from 'react'
+
 import deprecateObjectProperties from './deprecateObjectProperties'
-import { isReactChildren } from './RouteUtils'
 import getRouteParams from './getRouteParams'
+import { isReactChildren } from './RouteUtils'
+import warning from './warning'
 
 const { array, func, object } = React.PropTypes
 
@@ -13,7 +15,8 @@ const { array, func, object } = React.PropTypes
 const RouterContext = React.createClass({
 
   propTypes: {
-    history: object.isRequired,
+    history: object,
+    router: object.isRequired,
     location: object.isRequired,
     routes: array.isRequired,
     params: object.isRequired,
@@ -28,31 +31,28 @@ const RouterContext = React.createClass({
   },
 
   childContextTypes: {
-    history: object.isRequired,
+    history: object,
     location: object.isRequired,
     router: object.isRequired
   },
 
   getChildContext() {
-    const { history, location } = this.props
-    const router = {
-      push: history.push,
-      replace: history.replace,
-      addRouteLeaveHook: history.listenBeforeLeavingRoute,
-      isActive: history.isActive,
-      createHref: history.createHref,
-      go: history.go,
-      goBack: history.goBack,
-      goForward: history.goForward
+    let { router, history, location } = this.props
+    if (!router) {
+      warning(false, '`<RouterContext>` expects a `router` rather than a `history`')
+
+      router = {
+        ...history,
+        addRouteLeaveHook: history.listenBeforeLeavingRoute
+      }
+      delete router.listenBeforeLeavingRoute
     }
-    const contextExport = { history, location, router }
-    if (__DEV__)
-      return deprecateObjectProperties(contextExport, {
-        history: '`context.history` is deprecated, please use context.router',
-        location: '`context.location` is deprecated, please use a route component\'s `props.location` instead. If this is a deeply nested component, please refer to the strategies described in https://github.com/rackt/react-router/blob/v1.1.0/CHANGES.md#v110'
-      })
-    else
-      return contextExport
+
+    if (__DEV__) {
+      location = deprecateObjectProperties(location, '`context.location` is deprecated, please use a route component\'s `props.location` instead. If this is a deeply nested component, please refer to the strategies described in https://github.com/rackt/react-router/blob/v1.1.0/CHANGES.md#v110')
+    }
+
+    return { history, location, router }
   },
 
   createElement(component, props) {
@@ -60,7 +60,7 @@ const RouterContext = React.createClass({
   },
 
   render() {
-    const { history, location, routes, params, components } = this.props
+    const { router, history, location, routes, params, components } = this.props
     let element = null
 
     if (components) {
@@ -71,6 +71,7 @@ const RouterContext = React.createClass({
         const route = routes[index]
         const routeParams = getRouteParams(route, params)
         const props = {
+          router,
           history,
           location,
           params,
