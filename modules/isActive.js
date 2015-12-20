@@ -112,14 +112,14 @@ function queryIsActive(query, activeQuery) {
  * Returns true if a <Link> to the given pathname/query combination is
  * currently active.
  */
-function isActive(pathname, query, indexOnly, location, routes, params) {
-  if (location == null)
+export default function isActive(
+  { pathname, query }, indexOnly, currentLocation, routes, params
+) {
+  if (currentLocation == null)
     return false
 
   if (!routeIsActive(pathname, routes, params, indexOnly))
     return false
 
-  return queryIsActive(query, location.query)
+  return queryIsActive(query, currentLocation.query)
 }
-
-export default isActive

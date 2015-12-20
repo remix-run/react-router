@@ -17,8 +17,32 @@ function hasAnyProperties(object) {
 export default function createTransitionManager(history, routes) {
   let state = {}
 
-  function isActive(pathname, query, indexOnly=false) {
-    return _isActive(pathname, query, indexOnly, state.location, state.routes, state.params)
+  // Signature should be (location, indexOnly), but needs to support (path,
+  // query, indexOnly)
+  function isActive(
+    location, indexOnlyOrDeprecatedQuery=false, deprecatedIndexOnly=null
+  ) {
+    let indexOnly
+    if (
+      (indexOnlyOrDeprecatedQuery && indexOnlyOrDeprecatedQuery !== true) ||
+      deprecatedIndexOnly !== null
+    ) {
+      warning(
+        false,
+        '`isActive(pathname, query, indexOnly) is deprecated; use `isActive(location, indexOnly)` with a location descriptor instead'
+      )
+      location = { pathname: location, query: indexOnlyOrDeprecatedQuery }
+      indexOnly = deprecatedIndexOnly || false
+    } else {
+      if (typeof location === 'string') {
+        location = { pathname: location }
+      }
+      indexOnly = indexOnlyOrDeprecatedQuery
+    }
+
+    return _isActive(
+      location, indexOnly, state.location, state.routes, state.params
+    )
   }
 
   function createLocationFromRedirectInfo({ pathname, query, state }) {

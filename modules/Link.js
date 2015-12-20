@@ -118,7 +118,7 @@ const Link = React.createClass({
       props.href = router.createHref(loc)
 
       if (activeClassName || (activeStyle != null && !isEmptyObject(activeStyle))) {
-        if (router.isActive(to, query, onlyActiveOnIndex)) {
+        if (router.isActive(loc, onlyActiveOnIndex)) {
           if (activeClassName)
             props.className += props.className === '' ? activeClassName : ` ${activeClassName}`
 

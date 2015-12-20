@@ -78,8 +78,18 @@ describe('A <Link>', function () {
       render() {
         return (
           <div>
-            <Link to="/hello/michael" activeClassName="active">Michael</Link>
-            <Link to="/hello/ryan" activeClassName="active">Ryan</Link>
+            <Link
+              to="/hello/michael"
+              activeClassName="active"
+            >
+              Michael
+            </Link>
+            <Link
+              to={{ pathname: '/hello/ryan', query: { the: 'query' } }}
+              activeClassName="active"
+            >
+              Ryan
+            </Link>
           </div>
         )
       }
@@ -102,6 +112,34 @@ describe('A <Link>', function () {
     it('is not active when its params do not match', function (done) {
       render((
         <Router history={createHistory('/hello/michael')}>
+          <Route path="/" component={App}>
+            <Route path="hello/:name" component={Hello} />
+          </Route>
+        </Router>
+      ), node, function () {
+        const a = node.querySelectorAll('a')[1]
+        expect(a.className.trim()).toEqual('')
+        done()
+      })
+    })
+
+    it('is active when its params and query match', function (done) {
+      render((
+        <Router history={createHistory('/hello/ryan?the=query')}>
+          <Route path="/" component={App}>
+            <Route path="hello/:name" component={Hello} />
+          </Route>
+        </Router>
+      ), node, function () {
+        const a = node.querySelectorAll('a')[1]
+        expect(a.className.trim()).toEqual('active')
+        done()
+      })
+    })
+
+    it('is not active when its query does not match', function (done) {
+      render((
+        <Router history={createHistory('/hello/ryan?the=other+query')}>
           <Route path="/" component={App}>
             <Route path="hello/:name" component={Hello} />
           </Route>

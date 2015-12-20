@@ -40,7 +40,10 @@ describe('isActive', function () {
             <Route path="/home" />
           </Router>
         ), node, function () {
-          expect(this.router.isActive('/home', { the: 'query' })).toBe(true)
+          expect(this.router.isActive({
+            pathname: '/home',
+            query: { the: 'query' }
+          })).toBe(true)
           done()
         })
       })
@@ -53,7 +56,10 @@ describe('isActive', function () {
             <Route path="/home" />
           </Router>
         ), node, function () {
-          expect(this.router.isActive('/home', { the: 'query', n: 2, show: false })).toBe(true)
+          expect(this.router.isActive({
+            pathname: '/home',
+            query: { the: 'query', n: 2, show: false }
+          })).toBe(true)
           done()
         })
       })
@@ -66,7 +72,10 @@ describe('isActive', function () {
             <Route path="/home" />
           </Router>
         ), node, function () {
-          expect(this.router.isActive('/home', { something: 'else' })).toBe(false)
+          expect(this.router.isActive({
+            pathname: '/home',
+            query: { something: 'else' }
+          })).toBe(false)
           done()
         })
       })
@@ -84,9 +93,9 @@ describe('isActive', function () {
           </Router>
         ), node, function () {
           expect(this.router.isActive('/parent/child')).toBe(true)
-          expect(this.router.isActive('/parent/child', null, true)).toBe(true)
+          expect(this.router.isActive('/parent/child', true)).toBe(true)
           expect(this.router.isActive('/parent')).toBe(true)
-          expect(this.router.isActive('/parent', null, true)).toBe(false)
+          expect(this.router.isActive('/parent', true)).toBe(false)
           done()
         })
       })
@@ -128,9 +137,9 @@ describe('isActive', function () {
           </Router>
         ), node, function () {
           expect(this.router.isActive('/parent/child')).toBe(false)
-          expect(this.router.isActive('/parent/child', null, true)).toBe(false)
+          expect(this.router.isActive('/parent/child', true)).toBe(false)
           expect(this.router.isActive('/parent')).toBe(true)
-          expect(this.router.isActive('/parent', null, true)).toBe(true)
+          expect(this.router.isActive('/parent', true)).toBe(true)
           done()
         })
       })
@@ -148,7 +157,7 @@ describe('isActive', function () {
           </Router>
         ), node, function () {
           expect(this.router.isActive('/home')).toBe(true)
-          expect(this.router.isActive('/home', null, true)).toBe(false)
+          expect(this.router.isActive('/home', true)).toBe(false)
           done()
         })
       })
@@ -163,8 +172,14 @@ describe('isActive', function () {
             </Route>
           </Router>
         ), node, function () {
-          expect(this.router.isActive('/home', { the: 'query' })).toBe(true)
-          expect(this.router.isActive('/home', { the: 'query' }, true)).toBe(false)
+          expect(this.router.isActive({
+            pathname: '/home',
+            query: { the: 'query' }
+          })).toBe(true)
+          expect(this.router.isActive({
+            pathname: '/home',
+            query: { the: 'query' }
+          }, true)).toBe(false)
           done()
         })
       })
@@ -179,8 +194,14 @@ describe('isActive', function () {
             </Route>
           </Router>
         ), node, function () {
-          expect(this.router.isActive('/home', { something: 'else' })).toBe(false)
-          expect(this.router.isActive('/home', { something: 'else' }, true)).toBe(false)
+          expect(this.router.isActive({
+            pathname: '/home',
+            query: { something: 'else' }
+          })).toBe(false)
+          expect(this.router.isActive({
+            pathname: '/home',
+            query: { something: 'else' }
+          }, true)).toBe(false)
           done()
         })
       })
@@ -198,7 +219,7 @@ describe('isActive', function () {
           </Router>
         ), node, function () {
           expect(this.router.isActive('/absolute')).toBe(true)
-          expect(this.router.isActive('/absolute', null, true)).toBe(true)
+          expect(this.router.isActive('/absolute', true)).toBe(true)
           done()
         })
       })
@@ -215,8 +236,8 @@ describe('isActive', function () {
             </Route>
           </Router>
         ), node, function () {
-          expect(this.router.isActive('/home', null)).toBe(true)
-          expect(this.router.isActive('/home', null, true)).toBe(true)
+          expect(this.router.isActive('/home')).toBe(true)
+          expect(this.router.isActive('/home', true)).toBe(true)
           done()
         })
       })
@@ -231,8 +252,14 @@ describe('isActive', function () {
             </Route>
           </Router>
         ), node, function () {
-          expect(this.router.isActive('/home', { the: 'query' })).toBe(true)
-          expect(this.router.isActive('/home', { the: 'query' }, true)).toBe(true)
+          expect(this.router.isActive({
+            pathname: '/home',
+            query: { the: 'query' }
+          })).toBe(true)
+          expect(this.router.isActive({
+            pathname: '/home',
+            query: { the: 'query' }
+          }, true)).toBe(true)
           done()
         })
       })
@@ -247,8 +274,14 @@ describe('isActive', function () {
             </Route>
           </Router>
         ), node, function () {
-          expect(this.router.isActive('/home', { something: 'else' })).toBe(false)
-          expect(this.router.isActive('/home', { something: 'else' }, true)).toBe(false)
+          expect(this.router.isActive({
+            pathname: '/home',
+            query: { something: 'else' }
+          })).toBe(false)
+          expect(this.router.isActive({
+            pathname: '/home',
+            query: { something: 'else' }
+          }, true)).toBe(false)
           done()
         })
       })
@@ -265,8 +298,8 @@ describe('isActive', function () {
             </Route>
           </Router>
         ), node, function () {
-          expect(this.router.isActive('/home', null)).toBe(true)
-          expect(this.router.isActive('/home', null, true)).toBe(true)
+          expect(this.router.isActive('/home')).toBe(true)
+          expect(this.router.isActive('/home', true)).toBe(true)
           done()
         })
       })
@@ -283,8 +316,8 @@ describe('isActive', function () {
             </Route>
           </Router>
         ), node, function () {
-          expect(this.router.isActive('/parent/child', null)).toBe(true)
-          expect(this.router.isActive('/parent/child', null, true)).toBe(true)
+          expect(this.router.isActive('/parent/child')).toBe(true)
+          expect(this.router.isActive('/parent/child', true)).toBe(true)
           done()
         })
       })
@@ -299,8 +332,8 @@ describe('isActive', function () {
             </Route>
           </Router>
         ), node, function () {
-          expect(this.router.isActive('/parent///child///', null)).toBe(true)
-          expect(this.router.isActive('/parent///child///', null, true)).toBe(true)
+          expect(this.router.isActive('/parent///child///')).toBe(true)
+          expect(this.router.isActive('/parent///child///', true)).toBe(true)
           done()
         })
       })
@@ -319,8 +352,8 @@ describe('isActive', function () {
             </Route>
           </Router>
         ), node, function () {
-          expect(this.router.isActive('/parent/child', null)).toBe(true)
-          expect(this.router.isActive('/parent/child', null, true)).toBe(true)
+          expect(this.router.isActive('/parent/child')).toBe(true)
+          expect(this.router.isActive('/parent/child', true)).toBe(true)
           done()
         })
       })
@@ -337,8 +370,8 @@ describe('isActive', function () {
             </Route>
           </Router>
         ), node, function () {
-          expect(this.router.isActive('/parent///child///', null)).toBe(true)
-          expect(this.router.isActive('/parent///child///', null, true)).toBe(true)
+          expect(this.router.isActive('/parent///child///')).toBe(true)
+          expect(this.router.isActive('/parent///child///', true)).toBe(true)
           done()
         })
       })
@@ -396,7 +429,10 @@ describe('isActive', function () {
             <Route path="/home" />
           </Router>
         ), node, function () {
-          expect(this.router.isActive('/home', { foo: [ 'bar', 'bar1', 'bar2' ] })).toBe(true)
+          expect(this.router.isActive({
+            pathname: '/home',
+            query: { foo: [ 'bar', 'bar1', 'bar2' ] }
+          })).toBe(true)
           done()
         })
       })
@@ -420,7 +456,10 @@ describe('isActive', function () {
             <Route path="/home" />
           </Router>
         ), node, function () {
-          expect(this.router.isActive('/home', { foo: { 4: 'bar' } })).toBe(false)
+          expect(this.router.isActive({
+            pathname: '/home',
+            query: { foo: { 4: 'bar' } }
+          })).toBe(false)
           done()
         })
       })
@@ -434,7 +473,10 @@ describe('isActive', function () {
             <Route path="/home" />
           </Router>
         ), node, function () {
-          expect(this.router.isActive('/home', { foo: 1, bar: undefined })).toBe(true)
+          expect(this.router.isActive({
+            pathname: '/home',
+            query: { foo: 1, bar: undefined }
+          })).toBe(true)
           done()
         })
       })
@@ -446,7 +488,10 @@ describe('isActive', function () {
             <Route path="/home" />
           </Router>
         ), node, function () {
-          expect(this.router.isActive('/home', { foo: 1, bar: undefined })).toBe(false)
+          expect(this.router.isActive({
+            pathname: '/home',
+            query: { foo: 1, bar: undefined }
+          })).toBe(false)
           done()
         })
       })
@@ -470,7 +515,7 @@ describe('isActive', function () {
           <Router history={createHistory('/foo')} routes={routes} />
         ), node, function () {
           expect(this.router.isActive('/')).toBe(true)
-          expect(this.router.isActive('/', null, true)).toBe(false)
+          expect(this.router.isActive('/', true)).toBe(false)
           expect(this.router.isActive('/foo')).toBe(true)
           done()
         })
@@ -485,7 +530,7 @@ describe('isActive', function () {
           // Need to wait for async match to complete.
           setTimeout(() => {
             expect(this.router.isActive('/')).toBe(true)
-            expect(this.router.isActive('/', null, true)).toBe(true)
+            expect(this.router.isActive('/', true)).toBe(true)
             expect(this.router.isActive('/foo')).toBe(false)
             done()
           })
