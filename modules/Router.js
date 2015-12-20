@@ -59,7 +59,8 @@ const Router = React.createClass({
   },
 
   componentWillMount() {
-    let { history, routes, children } = this.props
+    let { history } = this.props
+    const { routes, children } = this.props
 
     const { parseQueryString, stringifyQuery } = this.props
     warning(
