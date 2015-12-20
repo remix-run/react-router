@@ -39,10 +39,7 @@ const RouterContext = React.createClass({
   getChildContext() {
     let { router, history, location } = this.props
     if (!router) {
-      warning(
-        false,
-        '`<RouterContext>` expects a `router` rather than a `history`'
-      )
+      warning(false, '`<RouterContext>` expects a `router` rather than a `history`')
 
       router = {
         ...history,
@@ -63,7 +60,7 @@ const RouterContext = React.createClass({
   },
 
   render() {
-    const { history, location, routes, params, components } = this.props
+    const { router, history, location, routes, params, components } = this.props
     let element = null
 
     if (components) {
@@ -74,6 +71,7 @@ const RouterContext = React.createClass({
         const route = routes[index]
         const routeParams = getRouteParams(route, params)
         const props = {
+          router,
           history,
           location,
           params,

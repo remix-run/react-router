@@ -18,7 +18,7 @@ export function createRoutingHistory(history, transitionManager) {
   if (__DEV__) {
     history = deprecateObjectProperties(
       history,
-      'routing history is deprecated; use the `router` object instead'
+      '`props.history` and `context.history` are deprecated; use `props.router` on route components and `context.router` on deeper components.'
     )
   }
 
