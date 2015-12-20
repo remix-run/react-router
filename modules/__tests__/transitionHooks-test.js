@@ -7,33 +7,48 @@ import execSteps from './execSteps'
 import Router from '../Router'
 
 describe('When a router enters a branch', function () {
+  let
+    node, leaveHookSpy, removeLeaveHook,
+    DashboardRoute, NewsFeedRoute, InboxRoute, RedirectToInboxRoute, MessageRoute,
+    routes
 
-  class Dashboard extends Component {
-    render() {
-      return (
-        <div className="Dashboard">
-          <h1>The Dashboard</h1>
-          {this.props.children}
-        </div>
-      )
-    }
-  }
-
-  class NewsFeed extends Component {
-    render() {
-      return <div>News</div>
-    }
-  }
-
-  class Inbox extends Component {
-    render() {
-      return <div>Inbox</div>
-    }
-  }
-
-  let node, DashboardRoute, NewsFeedRoute, InboxRoute, RedirectToInboxRoute, MessageRoute, routes
   beforeEach(function () {
     node = document.createElement('div')
+    leaveHookSpy = expect.createSpy()
+
+    class Dashboard extends Component {
+      render() {
+        return (
+          <div className="Dashboard">
+            <h1>The Dashboard</h1>
+            {this.props.children}
+          </div>
+        )
+      }
+    }
+
+    class NewsFeed extends Component {
+      componentWillMount() {
+        removeLeaveHook = this.context.router.addRouteLeaveHook(
+          this.props.route,
+          () => leaveHookSpy() // Break reference equality.
+        )
+      }
+
+      render() {
+        return <div>News</div>
+      }
+    }
+
+    NewsFeed.contextTypes = {
+      router: React.PropTypes.object.isRequired
+    }
+
+    class Inbox extends Component {
+      render() {
+        return <div>Inbox</div>
+      }
+    }
 
     NewsFeedRoute = {
       path: 'news',
@@ -117,6 +132,35 @@ describe('When a router enters a branch', function () {
     render(<Router history={createHistory('/news')} routes={routes}/>, node, function () {
       expect(dashboardRouteEnterSpy).toHaveBeenCalled()
       expect(newsFeedRouteEnterSpy).toHaveBeenCalled()
+      done()
+    })
+  })
+
+  it('calls the route leave hooks when leaving the route', function (done) {
+    const history = createHistory('/news')
+
+    // Stub this function to exercise the code path.
+    history.listenBeforeUnload = () => (() => {})
+
+    render(<Router history={history} routes={routes}/>, node, function () {
+      expect(leaveHookSpy.calls.length).toEqual(0)
+      history.push('/inbox')
+      expect(leaveHookSpy.calls.length).toEqual(1)
+      history.push('/news')
+      expect(leaveHookSpy.calls.length).toEqual(1)
+      history.push('/inbox')
+      expect(leaveHookSpy.calls.length).toEqual(2)
+      done()
+    })
+  })
+
+  it('does not call removed route leave hooks', function (done) {
+    const history = createHistory('/news')
+
+    render(<Router history={history} routes={routes}/>, node, function () {
+      removeLeaveHook()
+      history.push('/inbox')
+      expect(leaveHookSpy).toNotHaveBeenCalled()
       done()
     })
   })
