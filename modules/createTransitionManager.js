@@ -218,8 +218,15 @@ export default function createTransitionManager(history, routes) {
         if (history.listenBeforeUnload)
           unlistenBeforeUnload = history.listenBeforeUnload(beforeUnloadHook)
       }
-    } else if (hooks.indexOf(hook) === -1) {
-      hooks.push(hook)
+    } else {
+      warning(
+        false,
+        'adding multiple leave hooks for the same route is deprecated; manage multiple confirmations in your own code instead'
+      )
+
+      if (hooks.indexOf(hook) === -1) {
+        hooks.push(hook)
+      }
     }
 
     return function () {

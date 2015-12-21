@@ -43,7 +43,7 @@ const RouterContext = React.createClass({
 
       router = {
         ...history,
-        addRouteLeaveHook: history.listenBeforeLeavingRoute
+        setRouteLeaveHook: history.listenBeforeLeavingRoute
       }
       delete router.listenBeforeLeavingRoute
     }

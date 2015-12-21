@@ -131,7 +131,7 @@ const RouteComponent = React.createClass({
 const RouteComponent = React.createClass({
   componentDidMount() {
     const { router, route } = this.props
-    router.addRouteLeaveHook(route, this.routerWillLeave)
+    router.setRouteLeaveHook(route, this.routerWillLeave)
   }
 })
 
@@ -171,7 +171,7 @@ const DeepComponent = React.createClass({
 
   componentDidMount() {
     const { router, route } = this.context
-    router.addRouteLeaveHook(route, this.routerWillLeave)
+    router.setRouteLeaveHook(route, this.routerWillLeave)
   }
 })
 
@@ -187,7 +187,7 @@ const Lifecycle = {
   componentDidMount() {
     const router = this.context.router
     const route = this.props.route || this.context.route
-    router.addRouteLeaveHook(route, this.routerWillLeave)
+    router.setRouteLeaveHook(route, this.routerWillLeave)
   }
 }
 ```

@@ -3,7 +3,7 @@ import deprecateObjectProperties from './deprecateObjectProperties'
 export function createRouterObject(history, transitionManager) {
   return {
     ...history,
-    addRouteLeaveHook: transitionManager.listenBeforeLeavingRoute,
+    setRouteLeaveHook: transitionManager.listenBeforeLeavingRoute,
     isActive: transitionManager.isActive
   }
 }

@@ -86,10 +86,10 @@ describe('RouterContext', () => {
       })
     })
 
-    it('proxies calls to `addRouteLeaveHook` to `props.transitionManager`', (done) => {
+    it('proxies calls to `setRouteLeaveHook` to `props.transitionManager`', (done) => {
       const args = [ 1, 2, 3 ]
       renderTest(() => {
-        const remove = context.router.addRouteLeaveHook(...args)
+        const remove = context.router.setRouteLeaveHook(...args)
         expect(transitionManager.listenBeforeLeavingRoute).toHaveBeenCalledWith(...args)
         expect(remove).toBe(listenBeforeLeavingRouteSentinel)
         done()
