@@ -23,7 +23,7 @@ class App extends React.Component {
                   onlyActiveOnIndex={true}
                   activeClassName="breadcrumb-active"
                   to={item.path || ''}>
-                  {item.component.title}
+                  {item.component.name}
                 </Link>
                 {(index + 1) < depth && '\u2192'}
               </li>
