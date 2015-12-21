@@ -13,7 +13,7 @@ Consider this route config:
 ```js
 <Route path="/" component={App}>
   <IndexRoute component={Home}/>
-  <Route path="invoices/:invoiceId" component={Invoice}/>
+  <Route path="invoice/:invoiceId" component={Invoice}/>
   <Route path="accounts/:accountId" component={Account}/>
 </Route>
 ```
