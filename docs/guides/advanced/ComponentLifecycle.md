@@ -13,7 +13,7 @@ Consider this route config:
 ```js
 <Route path="/" component={App}>
   <IndexRoute component={Home}/>
-  <Route path="invoice/:invoiceId" component={Invoice}/>
+  <Route path="invoices/:invoiceId" component={Invoice}/>
   <Route path="accounts/:accountId" component={Account}/>
 </Route>
 ```
@@ -29,7 +29,7 @@ Consider this route config:
     | Invoice | N/A |
     | Account | N/A |
 
-2. Now they navigate from `/` to `/invoice/123`
+2. Now they navigate from `/` to `/invoices/123`
 
     | Component | Lifecycle Hooks called |
     |-----------|------------------------|
@@ -45,7 +45,7 @@ Consider this route config:
     - `Invoice` is mounted for the first time.
 
 
-3. Now they navigate from `/invoice/123` to `/invoice/789`
+3. Now they navigate from `/invoices/123` to `/invoices/789`
 
     | Component | Lifecycle Hooks called |
     |-----------|------------------------|
@@ -57,7 +57,7 @@ Consider this route config:
     All the components that were mounted before, are still mounted, they
     just receive new props from the router.
 
-4. Now they navigate from `/invoice/789` to `/accounts/123`
+4. Now they navigate from `/invoices/789` to `/accounts/123`
 
     | Component | Lifecycle Hooks called |
     |-----------|------------------------|
