@@ -2,7 +2,8 @@
 
 ### Changes to context exports and Mixins
 
-Only an object named `router` is added to context. Accessing `context.history`, `context.location`, and `context.route` are all deprecated.
+Only an object named `router` is added to context. Accessing `context.history`,
+`context.location`, and `context.route` are all deprecated.
 
 Additionally, since `context` is now documented, all mixins are deprecated.
 
@@ -31,32 +32,55 @@ it's up to you.
 
 #### Navigating
 
-In all cases where you once had a `history` for navigation, you now have a `router` to navigate instead.
+In all cases where you once had a `history` for navigation, you now have a
+`router` to navigate instead.
 
 ```js
-// v1.0.0
+// v1.0.x
 history.pushState(state, path, query)
 history.replaceState(state, path, query)
 
-// v1.1.0
+// v2.0.0
 router.push(path)
-router.push({ path, query, state }) // new "location descriptor"
+router.push({ pathname, query, state }) // new "location descriptor"
 
 router.replace(path)
-router.replace({ path, query, state }) // new "location descriptor"
+router.replace({ pathname, query, state }) // new "location descriptor"
+```
+
+#### Links
+
+`<Link to>`s now takes a location descriptor. The other props are deprecated.
+
+```js
+// v1.0.x
+<Link to="/foo" query={{ the: 'query' }}>
+
+// v2.0.0
+<Link to={{ pathname: '/foo', query: { the: 'query' } }}>
+```
+
+For custom link-like components, the same applies for `router.isActive`.
+
+```js
+// v1.0.x
+router.isActive(pathname, query, indexOnly)
+
+// v2.0.0
+router.isActive({ pathname, query }, indexOnly)
 ```
 
 #### Navigating in route components
 
 ```js
-// v1.0.0
+// v1.0.x
 class RouteComponent extends React.Component {
   someHandler() {
     this.props.history.pushState(...)
   }
 }
 
-// v1.1.0
+// v2.0.0
 class RouteComponent extends React.Component {
   someHandler() {
     this.props.router.push(...)
@@ -67,7 +91,7 @@ class RouteComponent extends React.Component {
 #### Navigating inside deeply nested components
 
 ```js
-// v1.0.0
+// v1.0.x
 const DeepComponent = React.createClass({
   mixins: [ History ],
 
@@ -76,7 +100,7 @@ const DeepComponent = React.createClass({
   }
 }
 
-// v1.1.0
+// v2.0.0
 // You have a couple options:
 // Use context directly (recommended)
 const DeepComponent = React.createClass({
@@ -119,7 +143,7 @@ const DeepComponent = React.createClass({
 #### Lifecycle Mixin with route components
 
 ```js
-// v1.0.0
+// v1.0.x
 const RouteComponent = React.createClass({
   mixins: [ Lifecycle ],
   routerWillLeave() {
@@ -127,7 +151,7 @@ const RouteComponent = React.createClass({
   }
 })
 
-// v1.1.0
+// v2.0.0
 const RouteComponent = React.createClass({
   componentDidMount() {
     const { router, route } = this.props
@@ -138,10 +162,14 @@ const RouteComponent = React.createClass({
 // or make your own mixin, check it out in the next section
 ```
 
+You don't need to manually tear down the route leave hook in most cases any
+more. We automatically remove all attached route leave hooks after leaving the
+associated route.
+
 #### Lifecycle Mixin with deep, non-route components
 
 ```js
-// v1.0.0
+// v1.0.x
 const DeepComponent = React.createClass({
   mixins: [ Lifecycle ],
   routerWillLeave() {
@@ -149,7 +177,7 @@ const DeepComponent = React.createClass({
   }
 })
 
-// v1.1.0
+// v2.0.0
 // you have a couple of options
 // first you can put the route on context in the route component
 const RouteComponent = React.createClass({
@@ -201,7 +229,7 @@ Just a stub so we don't forget to talk about it.
 ```js
 // v1.0.x
 import { RoutingContext } from 'react-router'
-// v1.1.0
+// v2.0.0
 import { RouterContext } from 'react-router'
 ```
 
