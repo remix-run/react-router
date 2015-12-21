@@ -29,7 +29,7 @@ describe('When a router enters a branch', function () {
 
     class NewsFeed extends Component {
       componentWillMount() {
-        removeLeaveHook = this.context.router.addRouteLeaveHook(
+        removeLeaveHook = this.context.router.setRouteLeaveHook(
           this.props.route,
           () => leaveHookSpy() // Break reference equality.
         )
