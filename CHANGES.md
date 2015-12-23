@@ -235,6 +235,13 @@ import { RouterContext } from 'react-router'
 
 [HEAD]: https://github.com/rackt/react-router/compare/latest...HEAD
 
+## [v1.0.3]
+> Dec 23, 2015
+
+- Switched back to a caret range for history, now that the warnings have been removed
+
+[v1.0.3]: https://github.com/rackt/react-router/compare/v1.0.2...v1.0.3
+
 ## [v1.0.2]
 > Dec 8, 2015
 
