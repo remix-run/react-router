@@ -34,7 +34,7 @@ We support all browsers and environments where React runs.
 
 Using [npm](https://www.npmjs.com/):
 
-    $ npm install history@1.13.1 react-router@latest
+    $ npm install history@1.17.0 react-router@latest
 
 Note that you need to also install the [history](https://www.npmjs.com/package/history) package since it is a peer dependency of React Router and won't automatically be installed for you in npm 3+.
 
