@@ -63,7 +63,7 @@ You can find the library on `window.ReactRouter`.
 ```js
 import React from 'react'
 import { render } from 'react-dom'
-import { Router, Route, Link } from 'react-router'
+import { Router, Route, Link, browserHistory } from 'react-router'
 
 const App = React.createClass({/*...*/})
 const About = React.createClass({/*...*/})
@@ -112,7 +112,7 @@ const User = React.createClass({
 // instead, all you really need is a single root route, you don't need to
 // colocate the entire config).
 render((
-  <Router>
+  <Router history={browserHistory}>
     <Route path="/" component={App}>
       <Route path="about" component={About}/>
       <Route path="users" component={Users}>

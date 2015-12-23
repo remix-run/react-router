@@ -1,33 +1,16 @@
 # Navigating Outside of Components
 
-While route components get `this.props.history` and the `History` mixin
-provides `this.history`, many apps want to be able to navigate outside
-of their components.
-
-Its pretty simple, just hang on to your history object:
-
-You can have a module in your app somewhere that exports your history
-object.
+While route components get `this.props.router`, and `Router` puts on context `this.context.router` to navigate around, many apps want to be able to navigate outside of their components. They can do that with the history the app gives to `Router`.
 
 ```js
-// history.js
-import createBrowserHistory from 'history/lib/createBrowserHistory'
-export default createBrowserHistory()
+// your main file that renders a Router
+import { Router, browserHistory } from 'react-router'
+import routes from './app/routes'
+render(<Router history={browserHistory} routes={routes}/>, el)
 ```
 
-And then import it to render a `<Router>`:
-
 ```js
-// index.js
-import history from './history'
-render(<Router history={history} routes={routes}/>, el)
-```
-
-And now you can use that history object anywhere in your app, maybe in a
-flux actions file
-
-```js
-// actions.js
-import history from './history'
-history.replaceState(null, '/some/path')
+// somewhere like a redux/flux action file:
+import { browserHistory } from './react-router'
+browserHistory.push('/some/path')
 ```

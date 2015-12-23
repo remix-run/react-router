@@ -23,7 +23,7 @@
   - [RouteContext](#routecontext-mixin) (Deprecated)
 
 * [Utilities](#utilities)
-  * [useRoutes](#useroutescreatehistory)
+  * [useRoutes](#useroutescreatehistory) (Deprecated)
   * [match](#match-routes-location-options--cb)
   * [createRoutes](#createroutesroutes)
   * [PropTypes](#proptypes)

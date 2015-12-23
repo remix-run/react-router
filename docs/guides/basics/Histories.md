@@ -1,6 +1,6 @@
 # Histories
 
-React Router is built on [history](https://github.com/rackt/history).
+React Router is built with [history](https://github.com/rackt/history).
 In a nutshell, a history knows how to listen to the browser's address
 bar for changes and parses the URL into a `location` object that the
 router can use to match routes and render the correct set of components.
@@ -9,50 +9,38 @@ There are three types of histories you'll come across most often, but
 note that anyone can build a custom history implementation for
 consumption with React Router.
 
-- [`createHashHistory`](#createhashhistory)
-- [`createBrowserHistory`](#createbrowserhistory)
+- [`hashHistory`](#hashhistory)
+- [`browserHistory`](#browserhistory)
 - [`createMemoryHistory`](#creatememoryhistory)
 
-Get them from the history package:
+You import them from the React Router package:
 
 ```js
 // JavaScript module import
-import createBrowserHistory from 'history/lib/createBrowserHistory'
-// or CommonJS
-var createBrowserHistory = require('history/lib/createBrowserHistory')
-
-const history = createBrowserHistory()
+import { browserHistory } from 'react-router'
 ```
 
 Then pass them into your `<Router>`:
 
 ```js
 render(
-  <Router history={history} routes={routes} />,
+  <Router history={browserHistory} routes={routes} />,
   document.getElementById('app')
 )
 ```
 
-### `createHashHistory`
-This is the default history you'll get if you don't specify a history at all (i.e. `<Router>{/* your routes */}</Router>`). It uses the hash (`#`) portion of the URL creating routes that look like `example.com/#/some/path`.
+### `hashHistory`
+Hash history uses the hash (`#`) portion of the URL, creating routes that look like `example.com/#/some/path`.
 
-#### Should I use `createHashHistory`?
-Hash history is the default because it works without any setup on your server, and works in all evergreen browsers and IE8+. But, we don't recommend using it in production, every web app should aspire to use `createBrowserHistory`.
+#### Should I use `hashHistory`?
+Hash history works without configuring your server, so if you're just getting started, go ahead and use it. But, we don't recommend using it in production, every web app should aspire to use `browserHistory`.
 
 #### What is that `?_k=ckuvup` junk in the URL?
-When a history transitions around your app with `pushState` or `replaceState`, it can store "location state" on the new location that doesn't show up in the URL, think of it a little bit like post data in an HTML form.
+When a history transitions around your app with `push` or `replace`, it can store "location state" that doesn't show up in the URL on the new location, think of it a little bit like post data in an HTML form.
 
 The DOM API that hash history uses to transition around is simply `window.location.hash = newHash`, with no place to store location state.  But, we want all histories to be able to use location state, so we shim it by creating a unique key for each location and then store that state in session storage. When the visitor clicks "back" and "forward" we now have a mechanism to restore the location state.
 
-You can disable that feature (more [here](http://rackt.org/history/stable/HashHistoryCaveats.html)):
-```js
-// Opt-out of persistent state, not recommended.
-let history = createHashHistory({
-  queryKey: false
-});
-```
-
-### `createBrowserHistory`
+### `browserHistory`
 Browser history is the recommended history for browser application with React Router. It uses the [History](https://developer.mozilla.org/en-US/docs/Web/API/History) API built into the browser to manipulate the URL, creating real URLs that look like `example.com/some/path`.
 
 #### Configuring Your Server
@@ -100,6 +88,12 @@ You might wonder why we don't fall back to hash history; the problem is that URL
 ### `createMemoryHistory`
 Memory history doesn't manipulate or read from the address bar. This is how we implement server rendering. It's also useful for testing and other rendering environments (like React Native).
 
+Its a bit different than the other two histories because you have to
+create one, it is this way to facilitate testing:
+
+```js
+const history = createMemoryHistory(location)
+```
 
 ## Example implementation
 
@@ -109,15 +103,15 @@ app, the client entry point would look like:
 ```js
 import React from 'react'
 import { render } from 'react-dom'
-import createBrowserHistory from 'history/lib/createBrowserHistory'
-import { Router, Route, IndexRoute } from 'react-router'
+import { browserHistory, Router, Route, IndexRoute } from 'react-router'
+
 import App from '../components/App'
 import Home from '../components/Home'
 import About from '../components/About'
 import Features from '../components/Features'
 
 render(
-  <Router history={createBrowserHistory()}>
+  <Router history={browserHistory}>
     <Route path='/' component={App}>
       <IndexRoute component={Home} />
       <Route path='about' component={About} />
