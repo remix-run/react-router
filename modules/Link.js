@@ -103,7 +103,7 @@ const Link = React.createClass({
   },
 
   render() {
-    const { to, query, hash, state, activeClassName, activeStyle, onlyActiveOnIndex, ...props } = this.props
+    const { to, query, hash, state, activeClassName, activeStyle, activeTitle, onlyActiveOnIndex, ...props } = this.props
     warning(
       !(query || hash || state),
       'the `query`, `hash`, and `state` props on `<Link>` are deprecated; use a location descriptor instead'
@@ -125,6 +125,11 @@ const Link = React.createClass({
           if (activeStyle)
             props.style = { ...props.style, ...activeStyle }
         }
+      }
+
+      if (activeTitle) {
+        if (router.isActive(loc, onlyActiveOnIndex))
+          props.title = activeTitle
       }
     }
 

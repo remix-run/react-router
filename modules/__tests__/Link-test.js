@@ -266,6 +266,43 @@ describe('A <Link>', function () {
         </Router>
       ), node, execNextStep)
     })
+
+    it('has its activeTitle', function (done) {
+      class LinkWrapper extends Component {
+        render() {
+          return (
+            <div>
+              <Link to="/hello" title="Hello" activeTitle="Hello - current page">Link</Link>
+              {this.props.children}
+            </div>
+          )
+        }
+      }
+
+      let a
+      const history = createHistory('/goodbye')
+      const steps = [
+        function () {
+          a = node.querySelector('a')
+          expect(a.title).toEqual('Hello')
+          history.push('/hello')
+        },
+        function () {
+          expect(a.title).toEqual('Hello - current page')
+        }
+      ]
+
+      const execNextStep = execSteps(steps, done)
+
+      render((
+        <Router history={history} onUpdate={execNextStep}>
+          <Route path="/" component={LinkWrapper}>
+            <Route path="goodbye" component={Goodbye} />
+            <Route path="hello" component={Hello} />
+          </Route>
+        </Router>
+      ), node, execNextStep)
+    })
   })
 
   describe('when route changes', function () {
