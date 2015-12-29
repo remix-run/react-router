@@ -1,11 +1,39 @@
-## [HEAD]
+## [HEAD]: https://github.com/rackt/react-router/compare/latest...HEAD
 
-### Changes to context exports and Mixins
+### Notes
 
-Only an object named `router` is added to context. Accessing `context.history`,
-`context.location`, and `context.route` are all deprecated.
+#### Goals of this release
 
-Additionally, since `context` is now documented, all mixins are deprecated.
+1. Clear up the coupling between History and Router with sipler APIs.
+
+2. Provide cleaner integrations with other libraries like Redux, Relay, Async Props etc.
+
+3. Stop providing API that conceals usage of `context`. It is now a documented feature of React so developers using Router can implement their own opinions on how best to use context: Mixins, higher-order components, decorators, etc. React Router no longer has an opinion, but instead uses the lowest level feature of React.  This project wants to be an incredibly useful routing library and doesn't want to get hung up on best-practice patterns for getting stuff from up top to down low.
+
+#### Backwards Compatibility and Deprecation Warnings
+
+This has been a community project from the start, we need your help making the upgrade as smooth as possible for everybody!
+
+We have done our best to provide backwards compatibility with deprecated APIs. If you drop in v2.x into a v1.x application and it doesn't run, then there is a bug. Please open an issue when you discover what the problem is so we can get a fix out.
+
+The deprecation warnings should also lead you to the relevant part of this document. If one doesn't, please open a pull request with a fix. Also, if any part of this document could be improved, please let us know how. Confound it, our bias is often inescapable!
+
+### New Router render prop (`RoutingContext` prop replacement)
+
+You can now pass a `render` prop to `Router` for it to use for rendering. This allows you to create "middleware components" that participate in routing. Its critical for integrations with libraries like Relay, Redux, Resolver, Transmit, Async Props, etc.
+
+```js
+// the default is basically this:
+<Router render={props => <RouterContext {...props}/>}/>
+```
+
+`RoutingContext` was undocumented and therefore has no backwards compatibility.
+
+### Changes to provided context and Mixins
+
+Only an object named `router` is added to context. Accessing `context.history`, `context.location`, and `context.route` are all deprecated.
+
+Additionally, since `context` is now documented, all mixins are deprecated as they simply served to conceal usage of context.
 
 #### Accessing location
 
@@ -27,13 +55,18 @@ const RouteComponent = React.createClass({
 })
 ```
 
-Though you may want to hide that in a mixin or higher order component,
-it's up to you.
+### History Mixin
+(see below)
 
-#### Navigating
+### Route component `history` prop
+(see below)
 
-In all cases where you once had a `history` for navigation, you now have a
-`router` to navigate instead.
+### `context.history`
+(see below)
+
+### Programatic Navigation
+
+There were several ways to get a hold of the history object to navigate around (see above :P) 1.0. In 2.0, where you once had a `history`, you now have a `router` to navigate instead (only from context) with a better signature.
 
 ```js
 // v1.0.x
@@ -48,29 +81,7 @@ router.replace(path)
 router.replace({ pathname, query, state }) // new "location descriptor"
 ```
 
-#### Links
-
-`<Link to>`s now takes a location descriptor. The other props are deprecated.
-
-```js
-// v1.0.x
-<Link to="/foo" query={{ the: 'query' }}>
-
-// v2.0.0
-<Link to={{ pathname: '/foo', query: { the: 'query' } }}>
-```
-
-For custom link-like components, the same applies for `router.isActive`.
-
-```js
-// v1.0.x
-router.isActive(pathname, query, indexOnly)
-
-// v2.0.0
-router.isActive({ pathname, query }, indexOnly)
-```
-
-#### Navigating in route components
+#### Navigating in Route Components
 
 ```js
 // v1.0.x
@@ -82,13 +93,17 @@ class RouteComponent extends React.Component {
 
 // v2.0.0
 class RouteComponent extends React.Component {
+  contextTypes: {
+    router: object.isRequired
+  },
+
   someHandler() {
-    this.props.router.push(...)
+    this.context.router.push(...)
   }
 }
 ```
 
-#### Navigating inside deeply nested components
+### Navigating inside deeply nested components
 
 ```js
 // v1.0.x
@@ -102,37 +117,18 @@ const DeepComponent = React.createClass({
 
 // v2.0.0
 // You have a couple options:
-// Use context directly (recommended)
+// 1) Use context.router
 const DeepComponent = React.createClass({
   contextTypes: {
     router: object.isRequired
   },
-
   someHandler() {
     this.context.router.push(...)
   }
 }
 
-// create your own mixin:
-const RouterMixin = {
-  contextTypes: {
-    router: object.isRequired
-  },
-  componentWillMount() {
-    this.router = this.context.router
-  }
-}
-
-const DeepComponent = React.createClass({
-  mixins: [ RouterMixin ],
-  someHandler() {
-    this.router.push(...)
-  }
-}
-
-// use the singleton history you are using when the router was rendered,
+// 2) Use the singleton history you are using when the router was rendered,
 import { browserHistory } from 'react-router'
-
 const DeepComponent = React.createClass({
   someHandler() {
     browserHistory.push(...)
@@ -140,7 +136,7 @@ const DeepComponent = React.createClass({
 }
 ```
 
-#### Lifecycle Mixin with route components
+### Lifecycle Mixin
 
 ```js
 // v1.0.x
@@ -153,76 +149,43 @@ const RouteComponent = React.createClass({
 
 // v2.0.0
 const RouteComponent = React.createClass({
+  contextTypes: {
+    router: object.isRequired
+  },
   componentDidMount() {
-    const { router, route } = this.props
+    const { route } = this.props
+    const { router } = this.context
     router.setRouteLeaveHook(route, this.routerWillLeave)
   }
 })
-
-// or make your own mixin, check it out in the next section
 ```
 
-You don't need to manually tear down the route leave hook in most cases any
-more. We automatically remove all attached route leave hooks after leaving the
-associated route.
+You don't need to manually tear down the route leave hook in most cases. We automatically remove all attached route leave hooks after leaving the associated route.
 
-#### Lifecycle Mixin with deep, non-route components
+### Links `to` Type
+
+`<Link to>` can now take a location descriptor in addition to strings. The `query` and `state` props are deprecated.
 
 ```js
 // v1.0.x
-const DeepComponent = React.createClass({
-  mixins: [ Lifecycle ],
-  routerWillLeave() {
-    // do stuff
-  }
-})
+<Link to="/foo" query={{ the: 'query' }}/>
 
 // v2.0.0
-// you have a couple of options
-// first you can put the route on context in the route component
-const RouteComponent = React.createClass({
-  childContextTypes: {
-    route: object
-  },
+<Link to={{ pathname: '/foo', query: { the: 'query' } }}/>
 
-  getChildContext() {
-    return { route: this.props.route }
-  }
-})
-
-// and then access it on your deep component
-const DeepComponent = React.createClass({
-  contextTypes: {
-    route: object.isRequired,
-    router: objec.isRequired
-  },
-
-  componentDidMount() {
-    const { router, route } = this.context
-    router.setRouteLeaveHook(route, this.routerWillLeave)
-  }
-})
-
-// or make your own mixin that will work for both route components and
-// deep components alike (as long as your route component puts `route`
-// on context
-const Lifecycle = {
-  contextTypes: {
-    route: object.isRequired,
-    router: objec.isRequired
-  },
-
-  componentDidMount() {
-    const router = this.context.router
-    const route = this.props.route || this.context.route
-    router.setRouteLeaveHook(route, this.routerWillLeave)
-  }
-}
+// Still valid in 2.x
+<Link to="/foo"/>
 ```
 
-### Router render prop
+For custom link-like components, the same applies for `router.isActive`, previously `history.isActive`.
 
-Just a stub so we don't forget to talk about it.
+```js
+// v1.0.x
+router.isActive(pathname, query, indexOnly)
+
+// v2.0.0
+router.isActive({ pathname, query }, indexOnly)
+```
 
 ### `RoutingContext` renamed to `RouterContext`
 
@@ -233,7 +196,6 @@ import { RoutingContext } from 'react-router'
 import { RouterContext } from 'react-router'
 ```
 
-[HEAD]: https://github.com/rackt/react-router/compare/latest...HEAD
 
 ## [v1.0.3]
 > Dec 23, 2015
@@ -593,7 +555,7 @@ For example, `params` is not available via context.
 We're developing scroll behaviors separately in the
 [`scroll-behavior`](https://github.com/rackt/scroll-behavior)
 library until we have a stable, robust implementation that we're happy with.
-Currently, scroll behaviors are exposed there as history enhancers: 
+Currently, scroll behaviors are exposed there as history enhancers:
 
 ```js
 import createHistory from 'history/lib/createBrowserHistory'

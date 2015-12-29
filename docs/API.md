@@ -85,6 +85,8 @@ Called whenever the router updates its state in response to URL changes.
 ##### `render(props)`
 This is primarily for integrating with other libraries that need to participate in rendering before the route components are rendered. It defaults to `render={(props) => <RouterContext {...props}/>}`.
 
+Ensure that you render a `RouterContext` at the end of the line, passing all the props passed to `render`.
+
 
 #### Examples
 Please see the [`examples/`](/examples) directory of the repository for extensive examples of using `Router`.
