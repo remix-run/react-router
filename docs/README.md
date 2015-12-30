@@ -13,6 +13,8 @@
  * [Component Lifecycle](/docs/guides/advanced/ComponentLifecycle.md)
  * [Navigating Outside of Components](/docs/guides/advanced/NavigatingOutsideOfComponents.md)
 * [Change Log](/CHANGES.md)
+ * [Upgrading to v1.0.0](../upgrade-guides/v1.0.0.md)
+ * [Upgrading to v2.0.0](../upgrade-guides/v2.0.0.md)
 * [Troubleshooting](/docs/Troubleshooting.md)
 * [API](/docs/API.md)
 * [Glossary](/docs/Glossary.md)
