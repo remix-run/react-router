@@ -17,7 +17,7 @@ import warning from './warning'
 function useRoutes(createHistory) {
   warning(
     false,
-    '`useRoutes` is deprecated; use `createTransitionManager` instead'
+    '`useRoutes` is deprecated. Please use `createTransitionManager` instead.'
   )
 
   return function ({ routes, ...options } = {}) {
