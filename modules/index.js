@@ -20,6 +20,7 @@ export { createRoutes } from './RouteUtils'
 export RouterContext from './RouterContext'
 export PropTypes from './PropTypes'
 export match from './match'
+export useRouterHistory from './useRouterHistory'
 
 /* histories */
 export browserHistory from './browserHistory'
