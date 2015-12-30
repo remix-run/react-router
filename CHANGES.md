@@ -1,4 +1,4 @@
-## [HEAD]: https://github.com/rackt/react-router/compare/latest...HEAD
+## [HEAD]
 
 - Added `render` prop to `Router`
 - Added singleton `browserHistory` and `hashHistory`
@@ -7,6 +7,8 @@
 - Replaced `context.history` with `context.router`
 - Deprecated Route Component `props.history`
 - Deprecated `context.location`
+
+[HEAD]: https://github.com/rackt/react-router/compare/latest...HEAD
 
 ## [v1.0.3]
 > Dec 23, 2015
