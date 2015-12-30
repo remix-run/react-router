@@ -34,9 +34,7 @@ We support all browsers and environments where React runs.
 
 Using [npm](https://www.npmjs.com/):
 
-    $ npm install history@1.17.0 react-router@latest
-
-Note that you need to also install the [history](https://www.npmjs.com/package/history) package since it is a peer dependency of React Router and won't automatically be installed for you in npm 3+.
+    $ npm install react-router
 
 Then with a module bundler like [webpack](https://webpack.github.io/) that supports either CommonJS or ES2015 modules, use as you would anything else:
 
