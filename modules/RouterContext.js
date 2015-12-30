@@ -60,7 +60,7 @@ const RouterContext = React.createClass({
   },
 
   render() {
-    const { router, history, location, routes, params, components } = this.props
+    const { history, location, routes, params, components } = this.props
     let element = null
 
     if (components) {
@@ -71,7 +71,6 @@ const RouterContext = React.createClass({
         const route = routes[index]
         const routeParams = getRouteParams(route, params)
         const props = {
-          router,
           history,
           location,
           params,

@@ -26,7 +26,7 @@ const RouteContext = {
   },
 
   componentWillMount() {
-    warning(false, 'the `RouteContext` mixin is deprecated, please export `this.props.route` from a route component yourself. See https://github.com/rackt/react-router/blob/v1.1.0/CHANGES.md#v110 for more details.')
+    warning(false, 'The `RouteContext` mixin is deprecated. You can provide `this.props.route` on context with your own `contextTypes`. See http://bit.ly/1MHiOst')
   }
 
 }
