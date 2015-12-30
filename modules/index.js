@@ -25,5 +25,6 @@ export useRouterHistory from './useRouterHistory'
 /* histories */
 export browserHistory from './browserHistory'
 export hashHistory from './hashHistory'
+export memoryHistory from './memoryHistory'
 
 export default from './Router'
