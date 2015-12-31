@@ -81,7 +81,7 @@ const Index = React.createClass({
       <div>
         <p>
           The url `/pictures/:id` can be rendered anywhere in the app as a modal.
-          Simply put `modal: true` in the `state` prop of links.
+          Simply put `modal: true` in the location descriptor of the `to` prop.
         </p>
 
         <p>
