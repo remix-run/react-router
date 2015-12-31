@@ -1,6 +1,3 @@
-/*eslint no-console: 0*/
-console.log('[react-router]', 'Thanks for trying the 2.0 beta! Please disable the React Devtools browser extension. It accesses deprecated properties and will cause deprecation warnings to be logged even when you have properly updated your code. If any part of your upgrade isn\'t smooth, please open an issue or pull request to help us make it better for the next person. :thumbsup:')
-
 /* components */
 export Router from './Router'
 export Link from './Link'
