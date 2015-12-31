@@ -106,7 +106,7 @@ import React from 'react'
 import { render } from 'react-dom'
 
 // First we import some modules...
-import { Router, Route, Link, browserHistory } from 'react-router'
+import { Router, Route, IndexRoute, Link, browserHistory } from 'react-router'
 
 // Then we delete a bunch of code from App and
 // add some <Link> elements...
