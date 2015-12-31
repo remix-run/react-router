@@ -49,7 +49,7 @@ const RouterContext = React.createClass({
     }
 
     if (__DEV__) {
-      location = deprecateObjectProperties(location, '`context.location` is deprecated, please use a route component\'s `props.location` instead. http://bit.ly/1mq2pTU')
+      location = deprecateObjectProperties(location, '`context.location` is deprecated, please use a route component\'s `props.location` instead. http://tiny.cc/router-accessinglocation')
     }
 
     return { history, location, router }
