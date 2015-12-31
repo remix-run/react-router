@@ -29,7 +29,7 @@ export default function createTransitionManager(history, routes) {
     ) {
       warning(
         false,
-        '`isActive(pathname, query, indexOnly) is deprecated; use `isActive(location, indexOnly)` with a location descriptor instead: http://bit.ly/1VpTo9H'
+        '`isActive(pathname, query, indexOnly) is deprecated; use `isActive(location, indexOnly)` with a location descriptor instead. http://tiny.cc/router-isActivedeprecated'
       )
       location = { pathname: location, query: indexOnlyOrDeprecatedQuery }
       indexOnly = deprecatedIndexOnly || false

@@ -18,7 +18,7 @@ export function createRoutingHistory(history, transitionManager) {
   if (__DEV__) {
     history = deprecateObjectProperties(
       history,
-      '`props.history` and `context.history` are deprecated. Please use `context.router`. http://bit.ly/1mj4IZr'
+      '`props.history` and `context.history` are deprecated. Please use `context.router`. http://tiny.cc/router-contextchanges'
     )
   }
 

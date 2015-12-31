@@ -35,7 +35,7 @@ const Lifecycle = {
   },
 
   componentDidMount() {
-    warning(false, 'the `Lifecycle` mixin is deprecated, please use `context.router.setRouteLeaveHook(route, hook)`, see http://bit.ly/1PxKMv7 for more details.')
+    warning(false, 'the `Lifecycle` mixin is deprecated, please use `context.router.setRouteLeaveHook(route, hook)`. http://tiny.cc/router-lifecyclemixin')
     invariant(
       this.routerWillLeave,
       'The Lifecycle mixin requires you to define a routerWillLeave method'

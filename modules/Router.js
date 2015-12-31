@@ -65,7 +65,7 @@ const Router = React.createClass({
     const { parseQueryString, stringifyQuery } = this.props
     warning(
       !(parseQueryString || stringifyQuery),
-      '`parseQueryString` and `stringifyQuery` are deprecated. Please create a custom history. See http://bit.ly/1NRMoPX for details.'
+      '`parseQueryString` and `stringifyQuery` are deprecated. Please create a custom history. http://tiny.cc/router-customquerystring'
     )
 
     if (isDeprecatedHistory(history)) {
@@ -92,10 +92,12 @@ const Router = React.createClass({
 
     let createHistory
     if (history) {
-      warning(false, 'It appears you have provided a deprecated history object to `<Router/>`, please use a history provided by React Router with `import { browserHistory } from \'react-router\'` or `import { hashHistory } from \'react-router\'`. If you are using a custom, valid history please set `history.__v2_compatible__ = true`. See http://bit.ly/1Pxrl7E')
+      warning(false, 'It appears you have provided a deprecated history object to `<Router/>`, please use a history provided by ' +
+                     'React Router with `import { browserHistory } from \'react-router\'` or `import { hashHistory } from \'react-router\'`. ' +
+                     'If you are using a valid custom history please set `history.__v2_compatible__ = true`. http://tiny.cc/router-usinghistory')
       createHistory = () => history
     } else {
-      warning(false, '`Router` no longer defaults the history prop to hash history. Please use the `hashHistory` singleton instead. http://bit.ly/1ktRibg')
+      warning(false, '`Router` no longer defaults the history prop to hash history. Please use the `hashHistory` singleton instead. http://tiny.cc/router-defaulthistory')
       createHistory = createHashHistory
     }
 
