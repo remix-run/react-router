@@ -5,8 +5,9 @@ let useMembrane = false
 
 if (__DEV__) {
   try {
-    Object.defineProperty({}, 'x', { get() { return true } }).x
-    useMembrane = true
+    if (Object.defineProperty({}, 'x', { get() { return true } }).x) {
+      useMembrane = true
+    }
   } catch(e) { }
 }
 
@@ -26,7 +27,7 @@ export default function deprecateObjectProperties(object, message) {
     } else {
       Object.defineProperty(membrane, prop, {
         configurable: false,
-        enumerable: true,
+        enumerable: false,
         get() {
           warning(false, message)
           return object[prop]
