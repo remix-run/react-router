@@ -1,7 +1,8 @@
-import expect from 'expect'
+import expect, { spyOn } from 'expect'
 import React, { Component } from 'react'
 import { renderToString } from 'react-dom/server'
 import match from '../match'
+import createMemoryHistory from '../createMemoryHistory'
 import RouterContext from '../RouterContext'
 import Link from '../Link'
 
@@ -74,6 +75,21 @@ describe('server rendering', function () {
       done()
     })
   })
+
+  it('accepts a custom history', function (done) {
+    const history = createMemoryHistory()
+    const spy = spyOn(history, 'createLocation').andCallThrough()
+
+    match({ history, routes, location: '/dashboard' }, function (error, redirectLocation, renderProps) {
+      const string = renderToString(
+        <RouterContext {...renderProps} />
+      )
+      expect(string).toMatch(/The Dashboard/)
+      expect(spy).toHaveBeenCalled()
+      done()
+    })
+  })
+
 
   it('renders active Links as active', function (done) {
     match({ routes, location: '/about' }, function (error, redirectLocation, renderProps) {

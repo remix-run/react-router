@@ -14,13 +14,13 @@ import { createRouterObject, createRoutingHistory } from './RouterUtils'
  * Note: You probably don't want to use this in a browser. Use
  * the history.listen API instead.
  */
-function match({ routes, location, ...options }, callback) {
+function match({ history, routes, location, ...options }, callback) {
   invariant(
     location,
     'match needs a location'
   )
 
-  let history = createMemoryHistory(options)
+  history = history ? history : createMemoryHistory(options)
   const transitionManager = createTransitionManager(
     history,
     createRoutes(routes)
