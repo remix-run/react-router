@@ -12,20 +12,20 @@
   - [Route](#route)
   - [PlainRoute](#plainroute)
   - [Redirect](#redirect)
-  - [IndexRoute](#indexroute)
+  - [IndexRoute](#indexroute-1)
   - [IndexRedirect](#indexredirect)
 
 * [Route Components](#route-components)
   - [Named Components](#named-components)
 
 * [Mixins](#mixins)
-  - [Lifecycle](#lifecycle-mixin) (deprecated)
-  - [History](#history-mixin) (deprecated)
-  - [RouteContext](#routecontext-mixin) (deprecated)
+  - [Lifecycle](#lifecycle-mixin-deprecated) (deprecated)
+  - [History](#history-mixin-deprecated) (deprecated)
+  - [RouteContext](#routecontext-mixin-deprecated) (deprecated)
 
 * [Utilities](#utilities)
-  * [useRoutes](#useroutescreatehistory) (deprecated)
-  * [match](#match-routes-location-options--cb)
+  * [useRoutes](#useroutescreatehistory-deprecated) (deprecated)
+  * [match](#match-routes-location-history-options--cb)
   * [createRoutes](#createroutesroutes)
   * [PropTypes](#proptypes)
 
