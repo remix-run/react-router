@@ -5,7 +5,7 @@
   - [Link](#link)
   - [IndexLink](#indexlink)
   - [RouterContext](#routercontext)
-    - [context.router](#context-router)
+    - [context.router](#contextrouter)
   - RoutingContext (deprecated, use `RouterContext`)
 
 * [Configuration Components](#configuration-components)
