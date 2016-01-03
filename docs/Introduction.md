@@ -106,7 +106,7 @@ import React from 'react'
 import { render } from 'react-dom'
 
 // First we import some modules...
-import { Router, Route, IndexRoute, Link, browserHistory } from 'react-router'
+import { Router, Route, IndexRoute, Link, hashHistory } from 'react-router'
 
 // Then we delete a bunch of code from App and
 // add some <Link> elements...
@@ -134,7 +134,7 @@ const App = React.createClass({
 // Finally, we render a <Router> with some <Route>s.
 // It does all the fancy routing stuff for us.
 render((
-  <Router history={browserHistory}>
+  <Router history={hashHistory}>
     <Route path="/" component={App}>
       <IndexRoute component={Home} />
       <Route path="about" component={About} />
