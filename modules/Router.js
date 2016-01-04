@@ -94,7 +94,7 @@ const Router = React.createClass({
     if (history) {
       warning(false, 'It appears you have provided a deprecated history object to `<Router/>`, please use a history provided by ' +
                      'React Router with `import { browserHistory } from \'react-router\'` or `import { hashHistory } from \'react-router\'`. ' +
-                     'If you are using a valid custom history please set `history.__v2_compatible__ = true`. http://tiny.cc/router-usinghistory')
+                     'If you are using a custom history please create it with `useRouterHistory`, see http://tiny.cc/router-usinghistory for details.')
       createHistory = () => history
     } else {
       warning(false, '`Router` no longer defaults the history prop to hash history. Please use the `hashHistory` singleton instead. http://tiny.cc/router-defaulthistory')
