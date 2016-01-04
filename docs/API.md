@@ -157,6 +157,10 @@ Contains data and methods relevant to routing. Most useful for imperatively tran
 ##### `push(pathnameOrLoc)`
 Transitions to a new URL, adding a new entry in the browser history.
 
+The path here is absolute, not relative.  
+Eg - if you are at route 'A' and want to go to route 'B', call
+`router.push('/A/B')`
+
 ```js
 router.push('/users/12')
 // or with location descriptor
