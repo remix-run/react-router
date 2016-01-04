@@ -15,7 +15,7 @@ It looks something like this with an imaginary JavaScript server:
 
 ```js
 import { renderToString } from 'react-dom/server'
-import { match, RouterContext } from 'react-router'
+import { match, RoutingContext } from 'react-router'
 import routes from './routes'
 
 serve((req, res) => {
@@ -30,7 +30,7 @@ serve((req, res) => {
       // You can also check renderProps.components or renderProps.routes for
       // your "not found" component or route respectively, and send a 404 as
       // below, if you're using a catch-all route.
-      res.status(200).send(renderToString(<RouterContext {...renderProps} />))
+      res.status(200).send(renderToString(<RoutingContext {...renderProps} />))
     } else {
       res.status(404).send('Not found')
     }
