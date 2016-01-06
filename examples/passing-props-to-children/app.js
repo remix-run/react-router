@@ -4,6 +4,9 @@ import { browserHistory, Router, Route, Link } from 'react-router'
 import './app.css'
 
 const App = React.createClass({
+  contextTypes: {
+    router: React.PropTypes.object.isRequired
+  },
 
   getInitialState() {
     return {
@@ -30,7 +33,7 @@ const App = React.createClass({
       })
     })
 
-    this.props.router.push('/')
+    this.context.router.push('/')
   },
 
   render() {

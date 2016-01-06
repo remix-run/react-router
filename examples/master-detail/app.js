@@ -62,6 +62,9 @@ const Index = React.createClass({
 })
 
 const Contact = React.createClass({
+  contextTypes: {
+    router: React.PropTypes.object.isRequired
+  },
 
   getStateFromStore(props) {
     const { id } = props ? props.params : this.props.params
@@ -97,7 +100,7 @@ const Contact = React.createClass({
   destroy() {
     const { id } = this.props.params
     ContactStore.removeContact(id)
-    this.props.router.push('/')
+    this.context.router.push('/')
   },
 
   render() {
@@ -116,6 +119,9 @@ const Contact = React.createClass({
 })
 
 const NewContact = React.createClass({
+  contextTypes: {
+    router: React.PropTypes.object.isRequired
+  },
 
   createContact(event) {
     event.preventDefault()
@@ -124,7 +130,7 @@ const NewContact = React.createClass({
       first: findDOMNode(this.refs.first).value,
       last: findDOMNode(this.refs.last).value
     }, (contact) => {
-      this.props.router.push(`/contact/${contact.id}`)
+      this.context.router.push(`/contact/${contact.id}`)
     })
   },
 
