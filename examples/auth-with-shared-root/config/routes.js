@@ -1,16 +1,17 @@
 import auth from '../utils/auth.js'
 
-function redirectToLogin(nextState, replaceState) {
+function redirectToLogin(nextState, replace) {
   if (!auth.loggedIn()) {
-    replaceState({
-      nextPathname: nextState.location.pathname
-    }, '/login')
+    replace({
+      pathname: '/login',
+      state: { nextPathname: nextState.location.pathname }
+    })
   }
 }
 
-function redirectToDashboard(nextState, replaceState) {
+function redirectToDashboard(nextState, replace) {
   if (auth.loggedIn()) {
-    replaceState(null, '/')
+    replace('/')
   }
 }
 
