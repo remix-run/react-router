@@ -5,8 +5,10 @@ This is a glossary of common terms used in the React Router codebase and documen
 * [Action](#action)
 * [Component](#component)
 * [EnterHook](#enterhook)
+* [Hash](#hash)
 * [LeaveHook](#leavehook)
 * [Location](#location)
+* [LocationDescriptor](#locationdescriptor)
 * [LocationKey](#locationkey)
 * [LocationState](#locationstate)
 * [Path](#path)
@@ -21,7 +23,6 @@ This is a glossary of common terms used in the React Router codebase and documen
 * [RouteHook](#routehook)
 * [RoutePattern](#routepattern)
 * [Router](#router)
-* [RouterListener](#routerlistener)
 * [RouterState](#routerstate)
 
 ## Action
@@ -47,14 +48,20 @@ A *component* is a React component class or a string (e.g. "div"). Basically, it
 ## EnterHook
 
 ```js
-type EnterHook = (nextState: RouterState, replaceState: RedirectFunction, callback?: Function) => any;
+type EnterHook = (nextState: RouterState, replace: RedirectFunction, callback?: Function) => any;
 ```
 
-An *enter hook* is a user-defined function that is called when a route is about to be rendered. It receives the next [router state](#routerstate) as its first argument. The [`replaceState` function](#redirectfunction) may be used to trigger a transition to a different URL.
+An *enter hook* is a user-defined function that is called when a route is about to be rendered. It receives the next [router state](#routerstate) as its first argument. The [`replace` function](#redirectfunction) may be used to trigger a transition to a different URL.
 
 If an enter hook needs to execute asynchronously, it may list a 3rd `callback` argument that it must call in order to cause the transition to proceed.
 
 **Caution:** Using the `callback` in an enter hook causes the transition to wait until it is called. **This can lead to a non-responsive UI if you don't call it very quickly**.
+
+### Hash
+
+    type Hash = string;
+
+A *hash* is a string that represents the hash portion of the URL. It is synonymous with `window.location.hash` in web browsers.
 
 ## LeaveHook
 
@@ -84,6 +91,21 @@ A *location* answers two important (philosophical) questions:
 
 New locations are typically created each time the URL changes. You can read more about locations in [the `history` docs](https://github.com/rackt/history/blob/master/docs/Location.md).
 
+### LocationDescriptor
+
+    type LocationDescriptorObject = {
+      pathname: Pathname;
+      search: Search;
+      query: Query;
+      state: LocationState;
+    };
+
+    type LocationDescriptor = LocationDescriptorObject | Path;
+
+A *location descriptor* is the pushable analogue of a location. Locations tell you where you are; you create location descriptors to say where to go.
+
+You can read more about location descriptors in [the `history` docs](https://github.com/rackt/history/blob/master/docs/Location.md).
+
 ## LocationKey
 
 ```js
@@ -108,7 +130,7 @@ This type gets its name from the first argument to HTML5's [`pushState`][pushSta
 ## Path
 
 ```js
-type Path = Pathname + QueryString;
+type Path = Pathname + QueryString + Hash;
 ```
 
 A *path* represents a URL path.
@@ -119,7 +141,7 @@ A *path* represents a URL path.
 type Pathname = string;
 ```
 
-A *pathname* is the portion of a URL that describes a hierarchical path, including the preceeding `/`. For example, in `http://example.com/the/path?the=query`, `/the/path` is the pathname. It is synonymous with `window.location.pathname` in web browsers.
+A *pathname* is the portion of a URL that describes a hierarchical path, including the preceding `/`. For example, in `http://example.com/the/path?the=query`, `/the/path` is the pathname. It is synonymous with `window.location.pathname` in web browsers.
 
 ## QueryString
 
@@ -127,7 +149,7 @@ A *pathname* is the portion of a URL that describes a hierarchical path, includi
 type QueryString = string;
 ```
 
-A *query string* is the portion of the URL that follows the [pathname](#pathname), including any preceeding `?`. For example, in `http://example.com/the/path?the=query`, `?the=query` is the query string. It is synonymous with `window.location.search` in web browsers.
+A *query string* is the portion of the URL that follows the [pathname](#pathname), including any preceding `?`. For example, in `http://example.com/the/path?the=query`, `?the=query` is the query string. It is synonymous with `window.location.search` in web browsers.
 
 ## Query
 
@@ -216,29 +238,17 @@ Route patterns are relative to the pattern of the parent route unless they begin
 
 ```js
 type Router = {
-  transitionTo: (location: Location) => void;
-  pushState: (state: ?LocationState, pathname: Pathname | Path, query?: Query) => void;
-  replaceState: (state: ?LocationState, pathname: Pathname | Path, query?: Query) => void;
-  go(n: Number) => void;
-  listen(listener: RouterListener) => Function;
-  match(location: Location, callback: RouterListener) => void;
+  push(location: LocationDescriptor) => void;
+  replace(location: LocationDescriptor) => void;
+  go(n: number) => void;
+  goBack() => void;
+  goForward() => void;
+  setRouteLeaveHook(hook: RouteHook) => Function;
+  isActive(location: LocationDescriptor, indexOnly: boolean) => void;
 };
 ```
 
-A *router* is a [`history`](http://rackt.github.io/history) object (akin to `window.history` in web browsers) that is used to modify and listen for changes to the URL.
-
-There are two primary interfaces for computing a router's next [state](#routerstate):
-
-- `history.listen` is to be used in stateful environments (such as web browsers) that need to update the UI over a period of time. This method immediately invokes its `listener` argument once and returns a function that must be called to stop listening for changes
-- `history.match` is a function that does not update the history's internal state. This makes it ideal for server-side environments where many requests must be handled concurrently
-
-## RouterListener
-
-```js
-type RouterListener = (error: ?Error, nextState: RouterState) => void;
-```
-
-A *router listener* is a function that is used to listen for changes to a [router](#router)'s [state](#routerstate).
+A *router* object allows for procedural manipulation of the routing state.
 
 ## RouterState
 

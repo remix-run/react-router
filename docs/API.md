@@ -185,7 +185,7 @@ Stringifies the query into the pathname, using the router's config.
 ##### `createHref(pathname, query)`
 Creates a URL, using the router's config. For example, it will add `#/` in front of the `pathname` for hash history.
 
-##### `isActive(pathnameOrLoc, onlyActiveOnIndex)`
+##### `isActive(pathnameOrLoc, indexOnly)`
 Returns `true` or `false` depending on if the `pathnameOrLoc` is active. Will be true for every route in the route branch matched (child route is active, therefore parent is too), unless `onlyActiveOnIndex` is specified, in which case it will only match the exact path.
 
 
@@ -310,7 +310,7 @@ code-splitting.
 ##### `children`
 Routes can be nested, `this.props.children` will contain the element created from the child route component. Please refer to the [Route Configuration](/docs/guides/basics/RouteConfiguration.md) since this is a very critical part of the router's design.
 
-##### `onEnter(nextState, replaceState, callback?)`
+##### `onEnter(nextState, replace, callback?)`
 Called when a route is about to be entered. It provides the next router state and a function to redirect to another path. `this` will be the route instance that triggered the hook.
 
 If `callback` is listed as a 3rd argument, this hook will run asynchronously, and the transition will block until `callback` is called.
