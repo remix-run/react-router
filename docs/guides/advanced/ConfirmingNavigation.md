@@ -10,7 +10,7 @@ const Home = React.createClass({
   },
 
   componentDidMount() {
-    this.context.router.setLeaveHook(this.props.route, this.routerWillLeave)
+    this.context.router.setRouteLeaveHook(this.props.route, this.routerWillLeave)
   },
 
   routerWillLeave(nextLocation) {
