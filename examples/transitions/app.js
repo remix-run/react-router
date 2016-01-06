@@ -57,7 +57,7 @@ const Form = React.createClass({
     this.setState({
       textValue: ''
     }, () => {
-      this.props.router.push('/')
+      this.context.router.push('/')
     })
   },
 
