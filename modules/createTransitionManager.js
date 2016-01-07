@@ -45,10 +45,8 @@ export default function createTransitionManager(history, routes) {
     )
   }
 
-  function createLocationFromRedirectInfo({ pathname, query, state }) {
-    return history.createLocation(
-      history.createPath(pathname, query), state, REPLACE
-    )
+  function createLocationFromRedirectInfo(location) {
+    return history.createLocation(location, REPLACE)
   }
 
   let partialNextState

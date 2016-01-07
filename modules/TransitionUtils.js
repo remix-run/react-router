@@ -1,4 +1,5 @@
 import { loopAsync } from './AsyncUtils'
+import warning from './warning'
 
 function createEnterHook(hook, route) {
   return function (a, b, callback) {
@@ -23,9 +24,9 @@ function getEnterHooks(routes) {
 
 /**
  * Runs all onEnter hooks in the given array of routes in order
- * with onEnter(nextState, replaceState, callback) and calls
+ * with onEnter(nextState, replace, callback) and calls
  * callback(error, redirectInfo) when finished. The first hook
- * to use replaceState short-circuits the loop.
+ * to use replace short-circuits the loop.
  *
  * If a hook needs to run asynchronously, it may use the callback
  * function. However, doing so will cause the transition to pause,
@@ -40,12 +41,26 @@ export function runEnterHooks(routes, nextState, callback) {
   }
 
   let redirectInfo
-  function replaceState(state, pathname, query) {
-    redirectInfo = { pathname, query, state }
+  function replace(location, deprecatedPathname, deprecatedQuery) {
+    if (deprecatedPathname) {
+      warning(
+        false,
+        '`replaceState(state, pathname, query) is deprecated; use `replace(location)` with a location descriptor instead. http://tiny.cc/router-isActivedeprecated'
+      )
+      redirectInfo = {
+        pathname: deprecatedPathname,
+        query: deprecatedQuery,
+        state: location
+      }
+
+      return
+    }
+
+    redirectInfo = location
   }
 
   loopAsync(hooks.length, function (index, next, done) {
-    hooks[index](nextState, replaceState, function (error) {
+    hooks[index](nextState, replace, function (error) {
       if (error || redirectInfo) {
         done(error, redirectInfo) // No need to continue.
       } else {

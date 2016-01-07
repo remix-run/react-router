@@ -55,8 +55,8 @@ describe('server rendering', function () {
 
   const RedirectRoute = {
     path: '/company',
-    onEnter(nextState, replaceState) {
-      replaceState(null, '/about')
+    onEnter(nextState, replace) {
+      replace('/about')
     }
   }
 

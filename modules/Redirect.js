@@ -23,7 +23,7 @@ const Redirect = React.createClass({
       if (route.from)
         route.path = route.from
 
-      route.onEnter = function (nextState, replaceState) {
+      route.onEnter = function (nextState, replace) {
         const { location, params } = nextState
 
         let pathname
@@ -38,11 +38,11 @@ const Redirect = React.createClass({
           pathname = formatPattern(pattern, params)
         }
 
-        replaceState(
-          route.state || location.state,
+        replace({
           pathname,
-          route.query || location.query
-        )
+          query: route.query || location.query,
+          state: route.state || location.state
+        })
       }
 
       return route

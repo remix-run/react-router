@@ -117,9 +117,13 @@ const Logout = React.createClass({
   }
 })
 
-function requireAuth(nextState, replaceState) {
-  if (!auth.loggedIn())
-    replaceState({ nextPathname: nextState.location.pathname }, '/login')
+function requireAuth(nextState, replace) {
+  if (!auth.loggedIn()) {
+    replace({
+      pathname: '/login',
+      state: { nextPathname: nextState.location.pathname }
+    })
+  }
 }
 
 render((
