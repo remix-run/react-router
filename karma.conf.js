@@ -56,6 +56,10 @@ module.exports = function (config) {
       os_version: '10',
       browser: 'ie',
       browser_version: '11.0'
+    },
+    ChromeCi: {
+      base: 'Chrome',
+      flags: [ '--no-sandbox' ]
     }
   }
 
@@ -129,6 +133,8 @@ module.exports = function (config) {
 
     if (process.env.TRAVIS) {
       var buildLabel = 'TRAVIS #' + process.env.TRAVIS_BUILD_NUMBER + ' (' + process.env.TRAVIS_BUILD_ID + ')'
+
+      config.browsers.unshift('ChromeCi')
 
       config.browserStack = {
         username: process.env.BROWSER_STACK_USERNAME,
