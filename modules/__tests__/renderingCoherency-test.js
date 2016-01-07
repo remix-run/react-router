@@ -8,6 +8,8 @@ import Router from '../Router'
 import RouterContext from '../RouterContext'
 import createHistory from '../createMemoryHistory'
 
+const containerId = 'container'
+
 function stripReactAttributes(node) {
   node.removeAttribute('data-reactid')
   node.removeAttribute('data-react-checksum')
@@ -19,24 +21,27 @@ function stripReactAttributes(node) {
 
 function toDOMNode(htmlString) {
   const parser = new DOMParser()
-  return parser.parseFromString(htmlString, 'text/html').documentElement
+  return parser.parseFromString(htmlString, 'text/html')
 }
 
 function normalizeReactHTMLString(htmlString) {
-  const node = toDOMNode(htmlString)
+  const domTree = toDOMNode(htmlString)
+  const node = domTree.getElementById(containerId)
   return normalizeReactHTMLNode(node)
 }
 
 function normalizeReactHTMLNode(htmlNode) {
   const normalizedNode = stripReactAttributes(htmlNode)
-  return normalizedNode.outerHTML
+  return normalizedNode
 }
 
 describe('server rendering', function () {
   class MainComponent extends Component {
     render() {
       return (
-        <div>Foo</div>
+        <div id={containerId}>
+          <strong>Foo</strong>
+        </div>
       )
     }
   }
@@ -67,18 +72,13 @@ describe('server rendering', function () {
     </Router>
   )
 
-  let html
-  let body
+  let node
   beforeEach(function () {
-    body = document.createElement('body')
-    const head = document.createElement('head')
-    html = document.createElement('html')
-    html.appendChild(head)
-    html.appendChild(body)
+    node = document.createElement('div')
   })
 
   afterEach(function () {
-    unmountComponentAtNode(body)
+    unmountComponentAtNode(node)
   })
 
   function executeRenderingComparisonTest(routes, callback) {
@@ -87,9 +87,9 @@ describe('server rendering', function () {
         <RouterContext {...renderProps} />
       )
 
-      render(routes, body, function () {
+      render(routes, node, function () {
         const serverHTML = normalizeReactHTMLString(serverRendered)
-        const clientHTML = normalizeReactHTMLNode(html)
+        const clientHTML = normalizeReactHTMLNode(node.children[0])
         expect(serverHTML).toEqual(clientHTML)
         callback()
       })
