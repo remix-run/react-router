@@ -48,29 +48,21 @@ describe('server rendering', function () {
 
   const targetLocation = '/'
 
-  const routes = (
-    <Router history={createHistory(targetLocation)}>
-      <Route component={MainComponent} path={targetLocation} />
-    </Router>
+  const routes = (    
+    <Route component={MainComponent} path={targetLocation} />
   )
 
   function synchronousOnEnter() {}
 
-  const routesWithSynchronousOnEnter = (
-    <Router history={createHistory(targetLocation)}>
-      <Route component={MainComponent} path={targetLocation} onEnter={synchronousOnEnter} />
-    </Router>
-  )
+  const routesWithSynchronousOnEnter =
+    <Route component={MainComponent} path={targetLocation} onEnter={synchronousOnEnter} />
 
   function asynchronousOnEnter(nextState, replaceState, callback) {
     setTimeout(callback, 1000)
   }
 
-  const routesWithAsynchronousOnEnter = (
-    <Router history={createHistory(targetLocation)}>
-      <Route component={MainComponent} path={targetLocation} onEnter={asynchronousOnEnter} />
-    </Router>
-  )
+  const routesWithAsynchronousOnEnter = 
+    <Route component={MainComponent} path={targetLocation} onEnter={asynchronousOnEnter} />
 
   let node
   beforeEach(function () {
@@ -87,7 +79,12 @@ describe('server rendering', function () {
         <RouterContext {...renderProps} />
       )
 
-      render(routes, node, function () {
+      const router = (
+        <Router history={createHistory(targetLocation)}>
+          {routes}
+        </Router>
+      )
+      render(router, node, function () {
         const serverHTML = normalizeReactHTMLString(serverRendered)
         const clientHTML = normalizeReactHTMLNode(node.children[0])
         expect(serverHTML).toEqual(clientHTML)
