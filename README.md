@@ -58,7 +58,7 @@ You can find the library on `window.ReactRouter`.
 
 ### Versioning and Stability
 
-React Router follows semver to the best of our interpretation of it. We want React Router to be a stable dependency that’s easy to keep current. Here is our upgrading stategy for your apps.
+React Router follows semver to the best of our interpretation of it. We want React Router to be a stable dependency that’s easy to keep current. Here is our upgrading strategy for your apps.
 
 Assuming we are currently on version 1.0:
 
