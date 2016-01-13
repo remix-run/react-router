@@ -1,10 +1,12 @@
 import expect, { spyOn } from 'expect'
 import React, { Component } from 'react'
-import { renderToString } from 'react-dom/server'
-import match from '../match'
+import { renderToStaticMarkup, renderToString } from 'react-dom/server'
+
 import createMemoryHistory from '../createMemoryHistory'
-import RouterContext from '../RouterContext'
 import Link from '../Link'
+import match from '../match'
+import Router from '../Router'
+import RouterContext from '../RouterContext'
 
 describe('server rendering', function () {
 
@@ -43,6 +45,16 @@ describe('server rendering', function () {
     }
   }
 
+  class Async extends Component {
+    render() {
+      return (
+        <div className="Async">
+          <h1>Async</h1>
+        </div>
+      )
+    }
+  }
+
   const DashboardRoute = {
     path: '/dashboard',
     component: Dashboard
@@ -60,18 +72,35 @@ describe('server rendering', function () {
     }
   }
 
+  const AsyncRoute = {
+    path: '/async',
+    getComponent(location, cb) {
+      setTimeout(cb(null, Async))
+    }
+  }
+
   const routes = {
     path: '/',
     component: App,
-    childRoutes: [ DashboardRoute, AboutRoute, RedirectRoute ]
+    childRoutes: [ DashboardRoute, AboutRoute, RedirectRoute, AsyncRoute ]
   }
 
-  it('works', function (done) {
+  it('works for synchronous route', function (done) {
     match({ routes, location: '/dashboard' }, function (error, redirectLocation, renderProps) {
       const string = renderToString(
         <RouterContext {...renderProps} />
       )
       expect(string).toMatch(/The Dashboard/)
+      done()
+    })
+  })
+
+  it('works for asynchronous route', function (done) {
+    match({ routes, location: '/async' }, function (error, redirectLocation, renderProps) {
+      const string = renderToString(
+        <RouterContext {...renderProps} />
+      )
+      expect(string).toMatch(/Async/)
       done()
     })
   })
@@ -122,4 +151,35 @@ describe('server rendering', function () {
     })
   })
 
+  describe('server/client consistency', function () {
+    // Just render to static markup here to avoid having to normalize markup.
+
+    it('should match for synchronous route', function (done) {
+      match({ routes, location: '/dashboard' }, function (error, redirectLocation, renderProps) {
+        const serverString = renderToStaticMarkup(
+          <RouterContext {...renderProps} />
+        )
+        const browserString = renderToStaticMarkup(
+          <Router {...renderProps} history={createMemoryHistory('/dashboard')} />
+        )
+
+        expect(browserString).toEqual(serverString)
+        done()
+      })
+    })
+
+    it('should match for asynchronous route', function (done) {
+      match({ routes, location: '/async' }, function (error, redirectLocation, renderProps) {
+        const serverString = renderToStaticMarkup(
+          <RouterContext {...renderProps} />
+        )
+        const browserString = renderToStaticMarkup(
+          <Router {...renderProps} history={createMemoryHistory('/async')} />
+        )
+
+        expect(browserString).toEqual(serverString)
+        done()
+      })
+    })
+  })
 })
