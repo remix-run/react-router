@@ -27,14 +27,14 @@ In prior setups, react-tools was needed. This is not longer the case. You will n
 "react-tools": "~0.13.3",
 ```
 
-Lastly, anywhere you have the following, needs to be replaced with this:
+Lastly, anywhere you have the following:
 
 ```js
 var React = require('react/addons')
 var TestUtils = React.addons.TestUtils
 ```
 
-with this:
+needs to be replaced with this:
 
 ```js
 import React from 'react'
