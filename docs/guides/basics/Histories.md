@@ -80,6 +80,16 @@ server {
 
 This lets nginx serve static asset files and serves your `index.html` file when another file isn't found on the server.
 
+There is also a similar approach for Apache servers. Create an `.htaccess` file in your folder's root:
+
+```
+RewriteBase /
+RewriteRule ^index\.html$ - [L]
+RewriteCond %{REQUEST_FILENAME} !-f
+RewriteCond %{REQUEST_FILENAME} !-d
+RewriteRule . /index.html [L]
+```
+
 #### IE8, IE9 Support
 We feature detect to see if we can use the browser's native `window.history` API. If not, any call to transition around the app will result in _a full page reload_, which allows you to build your app and have a better experience for newer browsers, but still support old ones.
 
