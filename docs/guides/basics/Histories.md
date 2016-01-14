@@ -13,11 +13,11 @@ consumption with React Router.
 - [`browserHistory`](#browserhistory)
 - [`createMemoryHistory`](#creatememoryhistory)
 
-You import them from the React Router package:
+You import them from `react-router/lib` under the React Router package:
 
 ```js
 // JavaScript module import
-import { browserHistory } from 'react-router'
+import browserHistory from 'react-router/lib/browserHistory'
 ```
 
 Then pass them into your `<Router>`:
@@ -103,7 +103,8 @@ app, the client entry point would look like:
 ```js
 import React from 'react'
 import { render } from 'react-dom'
-import { browserHistory, Router, Route, IndexRoute } from 'react-router'
+import { Router, Route, IndexRoute } from 'react-router'
+import browserHistory from 'react-router/lib/browserHistory'
 
 import App from '../components/App'
 import Home from '../components/Home'

@@ -4,13 +4,14 @@ While you can use `this.context.router` to navigate around, many apps want to be
 
 ```js
 // your main file that renders a Router
-import { Router, browserHistory } from 'react-router'
+import { Router } from 'react-router'
+import browserHistory from 'react-router/lib/browserHistory'
 import routes from './app/routes'
 render(<Router history={browserHistory} routes={routes}/>, el)
 ```
 
 ```js
 // somewhere like a redux/flux action file:
-import { browserHistory } from './react-router'
+import browserHistory from 'react-router/lib/browserHistory'
 browserHistory.push('/some/path')
 ```

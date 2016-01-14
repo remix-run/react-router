@@ -46,7 +46,7 @@ Alias for `children`.
 The history the router should listen to. Typically `browserHistory` or `hashHistory`.
 
 ```js
-import { browserHistory } from 'react-router'
+import browserHistory from 'react-router/lib/browserHistory'
 ReactDOM.render(<Router history={browserHistory}/>, el)
 ```
 
