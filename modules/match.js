@@ -30,8 +30,7 @@ function match({ history, routes, location, ...options }, callback) {
 
   if (location) {
     // Allow match({ location: '/the/path', ... })
-    if (typeof location === 'string')
-      location = history.createLocation(location)
+    location = history.createLocation(location)
   } else {
     // Pick up the location from the history via synchronous history.listen
     // call if needed.
