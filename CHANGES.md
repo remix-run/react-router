@@ -1,14 +1,35 @@
 ## [HEAD]
+> Unreleased
 
-- Added `render` prop to `Router`
-- Added singleton `browserHistory` and `hashHistory`
-- Added `createMemoryHistory`
-- Deprecated all mixins
-- Replaced `context.history` with `context.router`
-- Deprecated Route Component `props.history`
-- Deprecated `context.location`
+- **Breaking:** Removed default top-level `<Router>` export ([#2906])
 
-[HEAD]: https://github.com/rackt/react-router/compare/latest...HEAD
+[HEAD]: https://github.com/rackt/react-router/compare/v2.0.0-rc5...HEAD
+[#2906]: https://github.com/rackt/react-router/pull/2906
+
+## [v2.0.0-rc5]
+> Jan 14, 2016
+
+- **Feature:** Support custom `history` for `match` ([#2813])
+- **Feature:** Support location descriptor in `replace` callback in `onEnter` ([#2855])
+- **Feature:** Improve support for server rendering async routes ([#2883])
+
+[v2.0.0-rc5]: https://github.com/rackt/react-router/compare/v2.0.0-rc4...v2.0.0-rc5
+[#2813]: https://github.com/rackt/react-router/pull/2813
+[#2855]: https://github.com/rackt/react-router/pull/2855
+[#2883]: https://github.com/rackt/react-router/pull/2883
+
+## [v2.0.0-rc4]
+> Dec 30, 2015
+
+- **Feature:** Added `render` prop to `Router`
+- **Feature:** Added singleton `browserHistory` and `hashHistory`
+- **Feature:** Added `createMemoryHistory`
+- **Deprecation:** Deprecated all mixins
+- **Deprecation:** Replaced `context.history` with `context.router`
+- **Deprecation:** Deprecated Route Component `props.history`
+- **Deprecation:** Deprecated `context.location`
+
+[v2.0.0-rc4]: https://github.com/rackt/react-router/compare/v1.0.3...v2.0.0-rc4
 
 ## [v1.0.3]
 > Dec 23, 2015
