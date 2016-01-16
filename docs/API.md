@@ -122,7 +122,7 @@ The styles to apply to the link element when its route is active.
 ##### `onClick(e)`
 A custom handler for the click event. Works just like a handler on an `<a>` tag - calling `e.preventDefault()` will prevent the transition from firing, while `e.stopPropagation()` will prevent the event from bubbling.
 
-#### `useReplace`
+##### `useReplace`
 If true the Link will call `router.replace` instead of `router.push`.
 
 ##### *others*
