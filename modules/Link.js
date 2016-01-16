@@ -59,6 +59,7 @@ const Link = React.createClass({
     activeStyle: object,
     activeClassName: string,
     onlyActiveOnIndex: bool.isRequired,
+    useReplace: bool.isRequired,
     onClick: func
   },
 
@@ -66,7 +67,8 @@ const Link = React.createClass({
     return {
       onlyActiveOnIndex: false,
       className: '',
-      style: {}
+      style: {},
+      useReplace: false
     }
   },
 
@@ -94,11 +96,15 @@ const Link = React.createClass({
     event.preventDefault()
 
     if (allowTransition) {
-      let { state, to, query, hash } = this.props
+      let { state, to, query, hash, useReplace } = this.props
 
       const location = createLocationDescriptor({ to, query, hash, state })
 
-      this.context.router.push(location)
+      if (useReplace) {
+        this.context.router.replace(location)
+      } else {
+        this.context.router.push(location)
+      }
     }
   },
 

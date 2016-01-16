@@ -409,6 +409,41 @@ describe('A <Link>', function () {
         </Router>
       ), node, execNextStep)
     })
+
+    it('uses router.replace if useReplace is on', function (done) {
+      class LinkWrapper extends Component {
+        render() {
+          return <Link to="/hello" useReplace>Link</Link>
+        }
+      }
+
+      const history = createHistory('/')
+      const pushSpy = spyOn(history, 'push').andCallThrough()
+      const replaceSpy = spyOn(history, 'replace').andCallThrough()
+
+      const steps = [
+        function () {
+          click(node.querySelector('a'), { button: 0 })
+        },
+        function () {
+          expect(node.innerHTML).toMatch(/Hello/)
+          expect(replaceSpy).toHaveBeenCalled()
+          expect(pushSpy).toNotHaveBeenCalled()
+
+          const { location } = this.state
+          expect(location.pathname).toEqual('/hello')
+        }
+      ]
+
+      const execNextStep = execSteps(steps, done)
+
+      render((
+        <Router history={history} onUpdate={execNextStep}>
+          <Route path="/" component={LinkWrapper} />
+          <Route path="/hello" component={Hello} />
+        </Router>
+      ), node, execNextStep)
+    })
   })
 
 })
