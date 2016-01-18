@@ -1,43 +1,44 @@
 # API Reference
 
-* [Components](#components)
-  - [Router](#router)
-  - [Link](#link)
-  - [IndexLink](#indexlink)
-  - [RouterContext](#routercontext)
-    - [context.router](#contextrouter)
-  - RoutingContext (deprecated, use `RouterContext`)
+- [Components](#components)
+  - [`<Router>`](#router)
+  - [`<Link>`](#link)
+  - [`<IndexLink>`](#indexlink)
+  - [`<RouterContext>`](#routercontext)
+    - [`context.router`](#contextrouter)
+  - `<RoutingContext>` (deprecated, use `<RouterContext>`)
 
-* [Configuration Components](#configuration-components)
-  - [Route](#route)
-  - [PlainRoute](#plainroute)
-  - [Redirect](#redirect)
-  - [IndexRoute](#indexroute-1)
-  - [IndexRedirect](#indexredirect)
+- [Configuration Components](#configuration-components)
+  - [`<Route>`](#route)
+  - [`PlainRoute`](#plainroute)
+  - [`<Redirect>`](#redirect)
+  - [`<IndexRoute>`](#indexroute-1)
+  - [`<IndexRedirect>`](#indexredirect)
 
-* [Route Components](#route-components)
+- [Route Components](#route-components)
+  - [Injected Props](#injected-props)
   - [Named Components](#named-components)
 
-* [Mixins](#mixins)
-  - [Lifecycle](#lifecycle-mixin-deprecated) (deprecated)
-  - [History](#history-mixin-deprecated) (deprecated)
-  - [RouteContext](#routecontext-mixin-deprecated) (deprecated)
+- [Utilities](#utilities)
+  - [`match()`](#match-routes-location-history-options--cb)
+  - [`createRoutes()`](#createroutesroutes)
+  - [`PropTypes`](#proptypes)
+  - [`useRoutes()`](#useroutescreatehistory-deprecated) (deprecated)
 
-* [Utilities](#utilities)
-  * [useRoutes](#useroutescreatehistory-deprecated) (deprecated)
-  * [match](#match-routes-location-history-options--cb)
-  * [createRoutes](#createroutesroutes)
-  * [PropTypes](#proptypes)
+- [Mixins](#mixins-deprecated) (deprecated)
+  - `Lifecycle` (deprecated)
+  - `History` (deprecated)
+  - `RouteContext` (deprecated)
 
 
 ## Components
 
-### Router
+### `<Router>`
 Primary component of React Router. It keeps your UI and the URL in sync.
 
 #### Props
 ##### `children` (required)
-One or many [`Routes`](#route) or [`PlainRoutes`](#plainroute). When the history changes, `<Router>` will match a branch of its [`Routes`](#route), and render their configured [components](#routecomponent), with child route components nested inside the parents.
+One or many [`<Route>`](#route)s or [`PlainRoute`](#plainroute)s. When the history changes, `<Router>` will match a branch of its routes, and render their configured [components](#routecomponent), with child route components nested inside the parents.
 
 ##### `routes`
 Alias for `children`.
@@ -47,7 +48,7 @@ The history the router should listen to. Typically `browserHistory` or `hashHist
 
 ```js
 import { browserHistory } from 'react-router'
-ReactDOM.render(<Router history={browserHistory}/>, el)
+ReactDOM.render(<Router history={browserHistory} />, el)
 ```
 
 ##### `createElement(Component, props)`
@@ -59,18 +60,18 @@ When the router is ready to render a branch of route components, it will use thi
 // default behavior
 function createElement(Component, props) {
   // make sure you pass all the props in!
-  return <Component {...props}/>
+  return <Component {...props} />
 }
 
 // maybe you're using something like Relay
 function createElement(Component, props) {
   // make sure you pass all the props in!
-  return <RelayContainer Component={Component} routerProps={props}/>
+  return <RelayContainer Component={Component} routerProps={props} />
 }
 ```
 
 ##### `stringifyQuery(queryObject)`
-A function used to convert an object from [`Link`](#link)s or calls to
+A function used to convert an object from [`<Link>`](#link)s or calls to
 [`transitionTo`](#transitiontopathname-query-state) to a URL query string.
 
 ##### `parseQueryString(queryString)`
@@ -83,20 +84,20 @@ While the router is matching, errors may bubble up, here is your opportunity to 
 Called whenever the router updates its state in response to URL changes.
 
 ##### `render(props)`
-This is primarily for integrating with other libraries that need to participate in rendering before the route components are rendered. It defaults to `render={(props) => <RouterContext {...props}/>}`.
+This is primarily for integrating with other libraries that need to participate in rendering before the route components are rendered. It defaults to `render={(props) => <RouterContext {...props} />}`.
 
-Ensure that you render a `RouterContext` at the end of the line, passing all the props passed to `render`.
+Ensure that you render a `<RouterContext>` at the end of the line, passing all the props passed to `render`.
 
 
 #### Examples
-Please see the [`examples/`](/examples) directory of the repository for extensive examples of using `Router`.
+Please see the [`examples/`](/examples) directory of the repository for extensive examples of using `<Router>`.
 
 
 
-### Link
+### `<Link>`
 The primary way to allow users to navigate around your application. `<Link>` will render a fully accessible anchor tag with the proper href.
 
-A `<Link>` can know when the route it links to is active and automatically apply an `activeClassName` and/or `activeStyle` when given either prop.
+A `<Link>` can know when the route it links to is active and automatically apply an `activeClassName` and/or `activeStyle` when given either prop. The `<Link>` will be active if the current route is either the linked route or any descendant of the linked route. To have the link be active only on the exact linked route, use [`<IndexLink>`](#indexlink) instead.
 
 #### Props
 ##### `to`
@@ -142,11 +143,11 @@ Given a route like `<Route path="/users/:userId" />`:
 <Link to="/users" style={{color: 'white'}} activeStyle={{color: 'red'}}>Users</Link>
 ```
 
-### IndexLink
-Docs coming so soon! Please see the `active-links` example.
+### `<IndexLink>`
+An `<IndexLink>` is like a [`<Link>`](#link), except it is only active when the current route is exactly the linked route.
 
-### RouterContext
-A `<RouterContext>` renders the component tree for a given router state. Its used by `Router` but also useful for server rendering and integrating in brownfield development.
+### `<RouterContext>`
+A `<RouterContext>` renders the component tree for a given router state. Its used by `<Router>` but also useful for server rendering and integrating in brownfield development.
 
 It also provides a `router` object on `context`.
 
@@ -154,12 +155,13 @@ It also provides a `router` object on `context`.
 
 Contains data and methods relevant to routing. Most useful for imperatively transitioning around the application.
 
-##### `push(pathnameOrLoc)`
+##### `push(pathOrLoc)`
 Transitions to a new URL, adding a new entry in the browser history.
 
 ```js
 router.push('/users/12')
-// or with location descriptor
+
+// or with a location descriptor object
 router.push({
   pathname: '/users/12',
   query: { modal: true },
@@ -167,7 +169,7 @@ router.push({
 })
 ```
 
-##### `replace(pathnameOrLoc)`
+##### `replace(pathOrLoc)`
 Identical to `push` except replaces the current history entry with a new one.
 
 ##### `go(n)`
@@ -179,20 +181,20 @@ Go back one entry in the history.
 ##### `goForward()`
 Go forward one entry in the history.
 
-##### `createPath(pathname, query)`
+##### `createPath(pathOrLoc, query)`
 Stringifies the query into the pathname, using the router's config.
 
-##### `createHref(pathname, query)`
+##### `createHref(pathOrLoc, query)`
 Creates a URL, using the router's config. For example, it will add `#/` in front of the `pathname` for hash history.
 
-##### `isActive(pathnameOrLoc, indexOnly)`
-Returns `true` or `false` depending on if the `pathnameOrLoc` is active. Will be true for every route in the route branch matched (child route is active, therefore parent is too), unless `onlyActiveOnIndex` is specified, in which case it will only match the exact path.
+##### `isActive(pathOrLoc, indexOnly)`
+Returns `true` or `false` depending on if the `pathOrLoc` is active. Will be true for every route in the route branch matched (child route is active, therefore parent is too), unless `indexOnly` is specified, in which case it will only match the exact path.
 
 
 ## Configuration Components
 
-## Route
-A `Route` is used to declaratively map routes to your application's
+### `<Route>`
+A `<Route>` is used to declaratively map routes to your application's
 component hierarchy.
 
 #### Props
@@ -213,8 +215,8 @@ be rendered by the parent route component with `this.props.children`.
 ```js
 const routes = (
   <Route component={App}>
-    <Route path="groups" component={Groups}/>
-    <Route path="users" component={Users}/>
+    <Route path="groups" component={Groups} />
+    <Route path="users" component={Users} />
   </Route>
 )
 
@@ -231,9 +233,7 @@ class App extends React.Component {
 ```
 
 ##### `components`
-Routes can define one or more named components as an object of `name:component`
-pairs to be rendered when the path matches the URL. They can be rendered
-by the parent route component with `this.props[name]`.
+Routes can define one or more named components as an object of `[name]: component` pairs to be rendered when the path matches the URL. They can be rendered by the parent route component with `this.props[name]`.
 
 ```js
 // Think of it outside the context of the router - if you had pluggable
@@ -242,9 +242,9 @@ by the parent route component with `this.props[name]`.
 
 const routes = (
   <Route component={App}>
-    <Route path="groups" components={{main: Groups, sidebar: GroupsSidebar}}/>
+    <Route path="groups" components={{main: Groups, sidebar: GroupsSidebar}} />
     <Route path="users" components={{main: Users, sidebar: UsersSidebar}}>
-      <Route path="users/:userId" component={Profile}/>
+      <Route path="users/:userId" component={Profile} />
     </Route>
   </Route>
 )
@@ -279,6 +279,7 @@ class Users extends React.Component {
   }
 }
 ```
+
 ##### `getComponent(location, callback)`
 Same as `component` but asynchronous, useful for
 code-splitting.
@@ -290,7 +291,7 @@ code-splitting.
 <Route path="courses/:courseId" getComponent={(location, cb) => {
   // do asynchronous stuff to find the components
   cb(null, Course)
-}}/>
+}} />
 ```
 
 ##### `getComponents(location, callback)`
@@ -304,7 +305,7 @@ code-splitting.
 <Route path="courses/:courseId" getComponents={(location, cb) => {
   // do asynchronous stuff to find the components
   cb(null, {sidebar: CourseSidebar, content: Course})
-}}/>
+}} />
 ```
 
 ##### `children`
@@ -319,9 +320,8 @@ If `callback` is listed as a 3rd argument, this hook will run asynchronously, an
 Called when a route is about to be exited.
 
 
-
-## PlainRoute
-A plain JavaScript object route definition. `Router` turns JSX `<Route>`s into these objects, but you can use them directly if you prefer. All of the props are the same as `<Route>` props, except those listed here.
+### `PlainRoute`
+A plain JavaScript object route definition. `<Router>` turns JSX `<Route>`s into these objects, but you can use them directly if you prefer. All of the props are the same as `<Route>` props, except those listed here.
 
 #### Props
 ##### `childRoutes`
@@ -354,7 +354,7 @@ let myRoute = {
 
 // navigation dependent child routes
 // can link with some state
-<Link to="/picture/123" state={{ fromDashboard: true }}/>
+<Link to="/picture/123" state={{ fromDashboard: true }} />
 
 let myRoute = {
   path: 'picture/:id',
@@ -403,7 +403,7 @@ let myRoute = {
 
 
 
-## Redirect
+### `<Redirect>`
 A `<Redirect>` sets up a redirect to another route in your application to maintain old URLs.
 
 #### Props
@@ -420,7 +420,7 @@ By default, the query parameters will just pass through but you can specify them
 // Say we want to change from `/profile/123` to `/about/123`
 // and redirect `/get-in-touch` to `/contact`
 <Route component={App}>
-  <Route path="about/:userId" component={UserProfile}/>
+  <Route path="about/:userId" component={UserProfile} />
   {/* /profile/123 -> /about/123 */}
   <Redirect from="profile/:userId" to="about/:userId" />
 </Route>
@@ -438,10 +438,8 @@ Note that the `<Redirect>` can be placed anywhere in the route hierarchy, though
 
 
 
-## IndexRoute
-Index Routes allow you to provide a default "child" to a parent
-route when visitor is at the URL of the parent, they provide convention
-for `<IndexLink>` to work.
+### `<IndexRoute>`
+An `<IndexRoute>` allows you to provide a default "child" to a parent route when visitor is at the URL of the parent.
 
 Please see the [Index Routes guide](/docs/guides/basics/IndexRoutes.md).
 
@@ -450,10 +448,8 @@ All the same props as [Route](#route) except for `path`.
 
 
 
-## IndexRedirect
-Index Redirects allow you to redirect from the URL of a parent route to another
-route. They can be used to allow a child route to serve as the default route
-for its parent, while still keeping a distinct URL.
+### `<IndexRedirect>`
+An `<IndexRedirect>` allows you to redirect from the URL of a parent route to another route. They can be used to allow a child route to serve as the default route for its parent, while still keeping a distinct URL.
 
 Please see the [Index Routes guide](/docs/guides/basics/IndexRoutes.md).
 
@@ -466,8 +462,6 @@ All the same props as [Redirect](#redirect) except for `from`.
 A route's component is rendered when that route matches the URL. The router will inject the following properties into your component when it's rendered:
 
 ### Injected Props
-
-#### `history` (deprecated)
 
 #### `location`
 The current [location](https://github.com/rackt/history/blob/master/docs/Location.md).
@@ -506,6 +500,8 @@ class App extends React.Component {
   }
 }
 ```
+
+#### `history` (deprecated)
 
 ### Named Components
 When a route has one or more named components, the child elements are available by name on `this.props`. In this case `this.props.children` will be undefined. All route components can participate in the nesting.
@@ -556,23 +552,9 @@ class Users extends React.Component {
 ```
 
 
-## Mixins
-
-## Lifecycle Mixin [deprecated]
-Deprecated, please see the `CHANGES.md`.
-
-## History Mixin [deprecated]
-Deprecated, please see the `CHANGES.md`.
-
-## RouteContext Mixin [deprecated]
-Deprecated, please see the `CHANGES.md`.
-
-
 ## Utilities
 
-## `useRoutes(createHistory)` [deprecated]
-
-## `match({ routes, location, [history], ...options }, cb)`
+### `match({ routes, location, [history], ...options }, cb)`
 
 This function is to be used for server-side rendering. It matches a set of routes to a location, without rendering, and calls a `callback(error, redirectLocation, renderProps)` when it's done.
 
@@ -588,14 +570,22 @@ If all three parameters are `undefined`, this means that there was no route foun
 *Note: You probably don't want to use this in a browser unless you're doing server-side rendering of async routes.*
 
 
-## `createRoutes(routes)`
+### `createRoutes(routes)`
 
 Creates and returns an array of routes from the given object which may be a JSX route, a plain object route, or an array of either.
 
 #### params
 ##### `routes`
-One or many [`Routes`](#route) or [`PlainRoutes`](#plainroute).
+One or many [`<Route>`](#route)s or [`PlainRoute`](#plainroute)s.
 
 
-## PropTypes
+### `PropTypes`
 TODO (Pull Requests Welcome)
+
+
+### `useRoutes(createHistory)` (deprecated)
+
+
+## Mixins (deprecated)
+
+Deprecated, please see the [upgrade guide](/upgrade-guides/v2.0.0.md#mixins-are-deprecated).
