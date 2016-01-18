@@ -5,14 +5,26 @@ import { createRoutes } from './RouteUtils'
 
 function getChildRoutes(route, location, callback) {
   if (route.childRoutes) {
-    callback(null, route.childRoutes)
-  } else if (route.getChildRoutes) {
-    route.getChildRoutes(location, function (error, childRoutes) {
-      callback(error, !error && createRoutes(childRoutes))
-    })
-  } else {
-    callback()
+    return [ null, route.childRoutes ]
   }
+  if (!route.getChildRoutes) {
+    return []
+  }
+
+  let sync = true, result
+
+  route.getChildRoutes(location, function (error, childRoutes) {
+    childRoutes = !error && createRoutes(childRoutes)
+    if (sync) {
+      result = [ error, childRoutes ]
+      return
+    }
+
+    callback(error, childRoutes)
+  })
+
+  sync = false
+  return result  // Might be undefined.
 }
 
 function getIndexRoute(route, location, callback) {
@@ -116,7 +128,7 @@ function matchRouteDeep(
     // Either a) this route matched at least some of the path or b)
     // we don't have to load this route's children asynchronously. In
     // either case continue checking for matches in the subtree.
-    getChildRoutes(route, location, function (error, childRoutes) {
+    const onChildRoutes = (error, childRoutes) => {
       if (error) {
         callback(error)
       } else if (childRoutes) {
@@ -135,7 +147,12 @@ function matchRouteDeep(
       } else {
         callback()
       }
-    })
+    }
+
+    const result = getChildRoutes(route, location, onChildRoutes)
+    if (result) {
+      onChildRoutes(...result)
+    }
   } else {
     callback()
   }
