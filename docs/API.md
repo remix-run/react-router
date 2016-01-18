@@ -19,6 +19,12 @@
   - [Injected Props](#injected-props)
   - [Named Components](#named-components)
 
+- [Histories](#histories)
+  - [`browserHistory`](#browserhistory)
+  - [`hashHistory`](#hashhistory)
+  - [`createMemoryHistory()`](#creatememoryhistoryoptions)
+  - [`useRouterHistory()`](#userouterhistorycreatehistory)
+
 - [Utilities](#utilities)
   - [`match()`](#match-routes-location-history-options--cb)
   - [`createRoutes()`](#createroutesroutes)
@@ -550,6 +556,33 @@ class Users extends React.Component {
   }
 }
 ```
+
+
+
+## Histories
+
+For more details, please see the [histories guide](/docs/guides/basics/Histories.md).
+
+### `browserHistory`
+`browserHistory` uses the HTML5 History API when available, and falls back to full refreshes otherwise. `browserHistory` requires additional configuration on the server side to serve up URLs, but is the generally preferred solution for modern web pages.
+
+
+### `hashHistory`
+`hashHistory` uses URL hashes, along with a query key to keep track of state. `hashHistory` requires no additional server configuration, but is generally less preferred than `browserHistory`.
+
+
+### `createMemoryHistory(options)`
+`createMemoryHistory` creates an in-memory `history` object that does not interact with the browser URL. This is useful when you need to customize the `history` used for server-side rendering, as well as for automated testing.
+
+
+### `useRouterHistory(createHistory)`
+`useRouterHistory` is a `history` enhancer that configures a given `createHistory` factory to work with React Router. This allows using custom histories in addition to the bundled singleton histories.
+
+#### Example
+```js
+const history = useRouterHistory(createHashHistory)({ queryKey: false })
+```
+
 
 
 ## Utilities
