@@ -159,7 +159,7 @@ const routes = {
   ]
 }
 
-render(<Router routes={routes} />, document.body)
+render(<Router history={history} routes={routes} />, document.body)
 ```
 
 ## Adding More UI
@@ -187,7 +187,7 @@ const Inbox = React.createClass({
 })
 
 render((
-  <Router>
+  <Router history={history}>
     <Route path="/" component={App}>
       <IndexRoute component={Home} />
       <Route path="about" component={About} />

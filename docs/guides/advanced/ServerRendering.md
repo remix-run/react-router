@@ -39,3 +39,21 @@ serve((req, res) => {
 ```
 
 For data loading, you can use the `renderProps` argument to build whatever convention you want--like adding static `load` methods to your route components, or putting data loading functions on the routes--it's up to you.
+
+## Async Routes
+
+Server rendering works identically when using async routes. However, the client-side rendering needs to be a little different to make sure all of the async behavior has been resolved before the initial render, to avoid a mismatch between the server rendered and client rendered markup.
+
+Instead of rendering
+
+```js
+render(<Router history={history} routes={routes} />, mountNode)
+```
+
+You need to do
+
+```js
+match({ routes, location }, (error, redirectLocation, renderProps) => {
+  render(<Router {...renderProps} history={history} />, mountNode)
+})
+```

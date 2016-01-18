@@ -11,4 +11,3 @@ export default function createMemoryHistory(options) {
   history.__v2_compatible__ = true
   return history
 }
-
