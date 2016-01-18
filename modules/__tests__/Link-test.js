@@ -329,11 +329,47 @@ describe('A <Link>', function () {
       })
     })
 
-    it('transitions to the correct route', function (done) {
+    it('transitions to the correct route for string', function (done) {
       class LinkWrapper extends Component {
-        handleClick() {
-          // just here to make sure click handlers don't prevent it from happening
+        render() {
+          return (
+            <Link to="/hello?the=query#hash">
+              Link
+            </Link>
+          )
         }
+      }
+
+      const history = createHistory('/')
+      const spy = spyOn(history, 'push').andCallThrough()
+
+      const steps = [
+        function () {
+          click(node.querySelector('a'), { button: 0 })
+        },
+        function () {
+          expect(node.innerHTML).toMatch(/Hello/)
+          expect(spy).toHaveBeenCalled()
+
+          const { location } = this.state
+          expect(location.pathname).toEqual('/hello')
+          expect(location.search).toEqual('?the=query')
+          expect(location.hash).toEqual('#hash')
+        }
+      ]
+
+      const execNextStep = execSteps(steps, done)
+
+      render((
+        <Router history={history} onUpdate={execNextStep}>
+          <Route path="/" component={LinkWrapper} />
+          <Route path="/hello" component={Hello} />
+        </Router>
+      ), node, execNextStep)
+    })
+
+    it('transitions to the correct route for object', function (done) {
+      class LinkWrapper extends Component {
         render() {
           return (
             <Link
@@ -343,7 +379,6 @@ describe('A <Link>', function () {
                 hash: '#world',
                 state: { you: 'doing?' }
               }}
-              onClick={(e) => this.handleClick(e)}
             >
               Link
             </Link>
