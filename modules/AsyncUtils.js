@@ -1,5 +1,6 @@
 export function loopAsync(turns, work, callback) {
   let currentTurn = 0, isDone = false
+  let sync = false, hasNext = false
 
   function done() {
     isDone = true
@@ -7,13 +8,27 @@ export function loopAsync(turns, work, callback) {
   }
 
   function next() {
-    if (isDone)
-      return
+    hasNext = true
 
-    if (currentTurn < turns) {
+    if (sync) {
+      // Iterate instead of recursing if possible.
+      return
+    }
+
+    sync = true
+
+    while (!isDone && currentTurn < turns && hasNext) {
+      hasNext = false
       work.call(this, currentTurn++, next, done)
-    } else {
-      done.apply(this, arguments)
+    }
+
+    sync = false
+
+    if (isDone) {
+      return
+    }
+    if (currentTurn >= turns && hasNext) {
+      done()
     }
   }
 
