@@ -55,7 +55,7 @@ describe('useRouterHistory', function () {
       ), node, function () {
         expect(pathnames).toEqual([ '/notes/5', '/messages/5' ])
         expect(basenames).toEqual([ '/foo', '/foo' ])
-        expect(this.state.location.pathname).toEqual('/inbox')
+        expect(this.state.location.pathname).toEqual('/messages/5')
         expect(this.state.location.basename).toEqual('/foo')
         done()
       })
