@@ -18,3 +18,21 @@ const App = React.createClass({
   }
 })
 ```
+
+### Component won't render
+Route matching happens in the order they are defined (think `if/elseif` statement). In this case, `/about/me` will show the `UserPage` component because `/about/me` matches the first route. You need to reorder your routes if this happens.  
+`About` will never be reachable:  
+```js
+<Router>
+  <Route path="/:userName/:id" component={UserPage}/>
+  <Route path="/about/me" component={About}/>
+</Router>
+```
+
+`About` is now be reachable:
+```js
+<Router>
+  <Route path="/about/me" component={About}/>
+  <Route path="/:userName/:id" component={UserPage}/>
+</Router>
+```
