@@ -1,6 +1,6 @@
 # Troubleshooting
 
-### this.context.router is undefined
+### `this.context.router` is `undefined`
 You will need to add the router context type to your component so the router will be available to you.
 ```js
 contextTypes: {
