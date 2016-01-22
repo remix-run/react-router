@@ -6,8 +6,8 @@ module.exports = function (config) {
   if (process.env.RELEASE)
     config.singleRun = true
 
-  // Browsers to run on BrowserStack
   var customLaunchers = {
+    // Browsers to run on BrowserStack.
     BS_Chrome: {
       base: 'BrowserStack',
       os: 'Windows',
@@ -57,6 +57,8 @@ module.exports = function (config) {
       browser: 'ie',
       browser_version: '11.0'
     },
+
+    // The ancient Travis Chrome that most projects use in CI.
     ChromeCi: {
       base: 'Chrome',
       flags: [ '--no-sandbox' ]
@@ -133,8 +135,6 @@ module.exports = function (config) {
 
     if (process.env.TRAVIS) {
       var buildLabel = 'TRAVIS #' + process.env.TRAVIS_BUILD_NUMBER + ' (' + process.env.TRAVIS_BUILD_ID + ')'
-
-      config.browsers.unshift('ChromeCi')
 
       config.browserStack = {
         username: process.env.BROWSER_STACK_USERNAME,
