@@ -11,13 +11,13 @@ import { createRouterObject, createRoutingHistory } from './RouterUtils'
  * This function matches a location to a set of routes and calls
  * callback(error, redirectLocation, renderProps) when finished.
  *
- * Note: You probably don't want to use this in a browser. Use
- * the history.listen API instead.
+ * Note: You probably don't want to use this in a browser unless you're using
+ * server-side rendering with async routes.
  */
 function match({ history, routes, location, ...options }, callback) {
   invariant(
-    location,
-    'match needs a location'
+    history || location,
+    'match needs a history or a location'
   )
 
   history = history ? history : createMemoryHistory(options)
@@ -26,9 +26,19 @@ function match({ history, routes, location, ...options }, callback) {
     createRoutes(routes)
   )
 
-  // Allow match({ location: '/the/path', ... })
-  if (typeof location === 'string')
-    location = history.createLocation(location)
+  let unlisten
+
+  if (location) {
+    // Allow match({ location: '/the/path', ... })
+    if (typeof location === 'string')
+      location = history.createLocation(location)
+  } else {
+    // Pick up the location from the history via synchronous history.listen
+    // call if needed.
+    unlisten = history.listen(historyLocation => {
+      location = historyLocation
+    })
+  }
 
   const router = createRouterObject(history, transitionManager)
   history = createRoutingHistory(history, transitionManager)
@@ -37,8 +47,15 @@ function match({ history, routes, location, ...options }, callback) {
     callback(
       error,
       redirectLocation,
-      nextState && { ...nextState, history, router }
+      nextState && { ...nextState, history, router, transitionManager }
     )
+
+    // Defer removing the listener to here to prevent DOM histories from having
+    // to unwind DOM event listeners unnecessarily, in case callback renders a
+    // <Router> and attaches another history listener.
+    if (unlisten) {
+      unlisten()
+    }
   })
 }
 

@@ -1,6 +1,7 @@
 import createHashHistory from 'history/lib/createHashHistory'
 import useQueries from 'history/lib/useQueries'
 import React from 'react'
+import invariant from 'invariant'
 
 import createTransitionManager from './createTransitionManager'
 import { routes } from './PropTypes'
@@ -29,7 +30,11 @@ const Router = React.createClass({
     render: func,
     createElement: func,
     onError: func,
-    onUpdate: func
+    onUpdate: func,
+
+    // For client-side rehydration of server match.
+    router: object,
+    transitionManager: object
   },
 
   getDefaultProps() {
@@ -41,10 +46,12 @@ const Router = React.createClass({
   },
 
   getInitialState() {
-    // Use initial state from renderProps when available, to allow using match
-    // on client side when doing server-side rendering.
-    const { location, routes, params, components } = this.props
-    return { location, routes, params, components }
+    return {
+      location: null,
+      routes: null,
+      params: null,
+      components: null
+    }
   },
 
   handleError(error) {
@@ -57,8 +64,7 @@ const Router = React.createClass({
   },
 
   componentWillMount() {
-    let { history } = this.props
-    const { routes, children } = this.props
+    let { router, history, transitionManager } = this.props
 
     const { parseQueryString, stringifyQuery } = this.props
     warning(
@@ -66,13 +72,25 @@ const Router = React.createClass({
       '`parseQueryString` and `stringifyQuery` are deprecated. Please create a custom history. http://tiny.cc/router-customquerystring'
     )
 
-    if (isDeprecatedHistory(history)) {
-      history = this.wrapDeprecatedHistory(history)
+    if (router) {
+      invariant(
+        transitionManager && history,
+        'When providing a `router` prop to Router, you must also provide a `transitionManager` and `history` prop.'
+      )
+    } else {
+      if (isDeprecatedHistory(history)) {
+        history = this.wrapDeprecatedHistory(history)
+      }
+
+      const { routes, children } = this.props
+      transitionManager = createTransitionManager(
+        history, createRoutes(routes || children)
+      )
+
+      router = createRouterObject(history, transitionManager)
+      history = createRoutingHistory(history, transitionManager)
     }
 
-    const transitionManager = createTransitionManager(
-      history, createRoutes(routes || children)
-    )
     this._unlisten = transitionManager.listen((error, state) => {
       if (error) {
         this.handleError(error)
@@ -81,8 +99,8 @@ const Router = React.createClass({
       }
     })
 
-    this.router = createRouterObject(history, transitionManager)
-    this.history = createRoutingHistory(history, transitionManager)
+    this.router = router
+    this.history = history
   },
 
   wrapDeprecatedHistory(history) {
