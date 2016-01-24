@@ -63,36 +63,32 @@ const Router = React.createClass({
   },
 
   componentWillMount() {
-    const { router } = this.props
-    let transitionManager
+    let { router, history, transitionManager } = this.props
 
-    if (router) {
-      // This is coming from match(), and is already wrapped.
-      transitionManager = this.props.transitionManager
+    const { parseQueryString, stringifyQuery } = this.props
+    warning(
+      !(parseQueryString || stringifyQuery),
+      '`parseQueryString` and `stringifyQuery` are deprecated. Please create a custom history. http://tiny.cc/router-customquerystring'
+    )
 
-      this.router = router
-      this.history = this.props.history
-    } else {
-      let { history } = this.props
+    if (isDeprecatedHistory(history)) {
+      history = this.wrapDeprecatedHistory(history)
+    }
+
+    if (!transitionManager) {
       const { routes, children } = this.props
-
-      const { parseQueryString, stringifyQuery } = this.props
-      warning(
-        !(parseQueryString || stringifyQuery),
-        '`parseQueryString` and `stringifyQuery` are deprecated. Please create a custom history. http://tiny.cc/router-customquerystring'
-      )
-
-      if (isDeprecatedHistory(history)) {
-        history = this.wrapDeprecatedHistory(history)
-      }
-
       transitionManager = createTransitionManager(
         history, createRoutes(routes || children)
       )
-
-      this.router = createRouterObject(history, transitionManager)
-      this.history = createRoutingHistory(history, transitionManager)
     }
+
+    if (!router) {
+      router = createRouterObject(history, transitionManager)
+      history = createRoutingHistory(history, transitionManager)
+    }
+
+    this.router = router
+    this.history = history
 
     this._unlisten = transitionManager.listen((error, state) => {
       if (error) {
