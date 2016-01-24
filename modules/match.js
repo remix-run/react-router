@@ -47,7 +47,12 @@ function match({ history, routes, location, ...options }, callback) {
     callback(
       error,
       redirectLocation,
-      nextState && { ...nextState, history, router, transitionManager }
+      nextState && {
+        ...nextState,
+        history,
+        router,
+        matchContext: { history, transitionManager, router }
+      }
     )
 
     // Defer removing the listener to here to prevent DOM histories from having
