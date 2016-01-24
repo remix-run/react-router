@@ -1,6 +1,7 @@
 import createHashHistory from 'history/lib/createHashHistory'
 import useQueries from 'history/lib/useQueries'
 import React from 'react'
+import invariant from 'invariant'
 
 import createTransitionManager from './createTransitionManager'
 import { routes } from './PropTypes'
@@ -71,24 +72,24 @@ const Router = React.createClass({
       '`parseQueryString` and `stringifyQuery` are deprecated. Please create a custom history. http://tiny.cc/router-customquerystring'
     )
 
-    if (isDeprecatedHistory(history)) {
-      history = this.wrapDeprecatedHistory(history)
-    }
+    if (router) {
+      invariant(
+        transitionManager && history,
+        'When providing a `router` prop to Router, you must also provide a `transitionManager` and `history` prop.'
+      )
+    } else {
+      if (isDeprecatedHistory(history)) {
+        history = this.wrapDeprecatedHistory(history)
+      }
 
-    if (!transitionManager) {
       const { routes, children } = this.props
       transitionManager = createTransitionManager(
         history, createRoutes(routes || children)
       )
-    }
 
-    if (!router) {
       router = createRouterObject(history, transitionManager)
       history = createRoutingHistory(history, transitionManager)
     }
-
-    this.router = router
-    this.history = history
 
     this._unlisten = transitionManager.listen((error, state) => {
       if (error) {
@@ -97,6 +98,9 @@ const Router = React.createClass({
         this.setState(state, this.props.onUpdate)
       }
     })
+
+    this.router = router
+    this.history = history
   },
 
   wrapDeprecatedHistory(history) {
