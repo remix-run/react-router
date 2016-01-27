@@ -50,6 +50,7 @@ describe('server rendering', function () {
       return (
         <div className="Async">
           <h1>Async</h1>
+          <Link to="/async" activeClassName="async-is-active">Link</Link>
         </div>
       )
     }
@@ -75,7 +76,7 @@ describe('server rendering', function () {
   const AsyncRoute = {
     path: '/async',
     getComponent(location, cb) {
-      setTimeout(cb(null, Async))
+      setTimeout(() => cb(null, Async))
     }
   }
 
@@ -154,18 +155,20 @@ describe('server rendering', function () {
   describe('server/client consistency', function () {
     // Just render to static markup here to avoid having to normalize markup.
 
-    it('should match for synchronous route', function (done) {
+    it('should match for synchronous route', function () {
+      let serverString
+
       match({ routes, location: '/dashboard' }, function (error, redirectLocation, renderProps) {
-        const serverString = renderToStaticMarkup(
+        serverString = renderToStaticMarkup(
           <RouterContext {...renderProps} />
         )
-        const browserString = renderToStaticMarkup(
-          <Router {...renderProps} history={createMemoryHistory('/dashboard')} />
-        )
-
-        expect(browserString).toEqual(serverString)
-        done()
       })
+
+      const browserString = renderToStaticMarkup(
+        <Router history={createMemoryHistory('/dashboard')} routes={routes} />
+      )
+
+      expect(browserString).toEqual(serverString)
     })
 
     it('should match for asynchronous route', function (done) {
@@ -173,12 +176,17 @@ describe('server rendering', function () {
         const serverString = renderToStaticMarkup(
           <RouterContext {...renderProps} />
         )
-        const browserString = renderToStaticMarkup(
-          <Router {...renderProps} history={createMemoryHistory('/async')} />
-        )
 
-        expect(browserString).toEqual(serverString)
-        done()
+        match({ history: createMemoryHistory('/async'), routes }, function (error, redirectLocation, renderProps) {
+          const browserString = renderToStaticMarkup(
+            <Router {...renderProps} />
+          )
+
+          expect(browserString).toEqual(serverString)
+          expect(browserString).toMatch(/async-is-active/)
+
+          done()
+        })
       })
     })
   })
