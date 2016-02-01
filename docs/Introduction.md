@@ -245,7 +245,7 @@ const Message = React.createClass({
 })
 ```
 
-You can also access parameters from the query string. If you for instance visit `/foo?bar=baz`, you can access `this.props.location.query.bar` to get the value `"baz"` from your Route component.
+You can also access parameters from the query string. For instance, visiting `/foo?bar=baz` allows you to access `this.props.location.query.bar` to get the value `"baz"` from your Route component.
 
 That's the gist of React Router. Application UIs are boxes inside of boxes inside of boxes; now you can keep those boxes in sync with the URL and link to them easily.
 
