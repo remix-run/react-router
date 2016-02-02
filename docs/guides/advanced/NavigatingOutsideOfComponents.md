@@ -11,6 +11,6 @@ render(<Router history={browserHistory} routes={routes}/>, el)
 
 ```js
 // somewhere like a redux/flux action file:
-import { browserHistory } from './react-router'
+import { browserHistory } from 'react-router'
 browserHistory.push('/some/path')
 ```
