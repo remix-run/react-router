@@ -6,6 +6,7 @@ import createTransitionManager from './createTransitionManager'
 import { routes } from './PropTypes'
 import RouterContext from './RouterContext'
 import { createRoutes } from './RouteUtils'
+import { checkForUnreachableRoutes } from './findUnreachableRoutes'
 import { createRouterObject, createRoutingHistory } from './RouterUtils'
 import warning from './warning'
 
@@ -68,7 +69,7 @@ const Router = React.createClass({
       '`parseQueryString` and `stringifyQuery` are deprecated. Please create a custom history. http://tiny.cc/router-customquerystring'
     )
 
-    const { history, transitionManager, router } = this.createRouterObjects()
+    const { history, transitionManager, router, sharedRoutesObj } = this.createRouterObjects()
 
     this._unlisten = transitionManager.listen((error, state) => {
       if (error) {
@@ -80,6 +81,10 @@ const Router = React.createClass({
 
     this.history = history
     this.router = router
+
+    if (__DEV__) {
+      checkForUnreachableRoutes(transitionManager, sharedRoutesObj)
+    }
   },
 
   createRouterObjects() {
@@ -91,17 +96,19 @@ const Router = React.createClass({
     let { history } = this.props
     const { routes, children } = this.props
 
+    const sharedRoutesObj = createRoutes(routes || children)
+
     if (isDeprecatedHistory(history)) {
       history = this.wrapDeprecatedHistory(history)
     }
 
     const transitionManager = createTransitionManager(
-      history, createRoutes(routes || children)
+      history, sharedRoutesObj
     )
     const router = createRouterObject(history, transitionManager)
     const routingHistory = createRoutingHistory(history, transitionManager)
 
-    return { history: routingHistory, transitionManager, router }
+    return { history: routingHistory, transitionManager, router, sharedRoutesObj }
   },
 
   wrapDeprecatedHistory(history) {
