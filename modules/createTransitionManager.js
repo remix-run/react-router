@@ -34,9 +34,7 @@ export default function createTransitionManager(history, routes) {
       location = { pathname: location, query: indexOnlyOrDeprecatedQuery }
       indexOnly = deprecatedIndexOnly || false
     } else {
-      if (typeof location === 'string') {
-        location = { pathname: location }
-      }
+      location = history.createLocation(location)
       indexOnly = indexOnlyOrDeprecatedQuery
     }
 
