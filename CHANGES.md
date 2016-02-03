@@ -2,9 +2,15 @@
 > Unreleased
 
 - **Breaking:** Removed default top-level `<Router>` export ([#2906])
+- Use history.createLocation where possible ([#2910])
+- Fix initial routing state after `match` ([#2965])
+- Reduce stack size from matching routes ([#2923])
 
 [HEAD]: https://github.com/rackt/react-router/compare/v2.0.0-rc5...HEAD
 [#2906]: https://github.com/rackt/react-router/pull/2906
+[#2910]: https://github.com/rackt/react-router/pull/2910
+[#2965]: https://github.com/rackt/react-router/pull/2965
+[#2923]: https://github.com/rackt/react-router/pull/2923
 
 ## [v2.0.0-rc5]
 > Jan 14, 2016
