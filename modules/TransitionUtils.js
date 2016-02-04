@@ -1,5 +1,5 @@
 import { loopAsync } from './AsyncUtils'
-import warning from './warning'
+import warning from './routerWarning'
 
 function createEnterHook(hook, route) {
   return function (a, b, callback) {

@@ -7,7 +7,7 @@ import { routes } from './PropTypes'
 import RouterContext from './RouterContext'
 import { createRoutes } from './RouteUtils'
 import { createRouterObject, createRoutingHistory } from './RouterUtils'
-import warning from './warning'
+import warning from './routerWarning'
 
 function isDeprecatedHistory(history) {
   return !history || !history.__v2_compatible__

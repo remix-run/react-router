@@ -1,7 +1,7 @@
 import useQueries from 'history/lib/useQueries'
 
 import createTransitionManager from './createTransitionManager'
-import warning from './warning'
+import warning from './routerWarning'
 
 /**
  * Returns a new createHistory function that may be used to create

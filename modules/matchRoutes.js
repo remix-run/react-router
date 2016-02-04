@@ -1,4 +1,4 @@
-import warning from './warning'
+import warning from './routerWarning'
 import { loopAsync } from './AsyncUtils'
 import { matchPattern } from './PatternUtils'
 import { createRoutes } from './RouteUtils'

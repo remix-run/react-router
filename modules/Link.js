@@ -1,5 +1,5 @@
 import React from 'react'
-import warning from './warning'
+import warning from './routerWarning'
 
 const { bool, object, string, func, oneOfType } = React.PropTypes
 
