@@ -1,5 +1,5 @@
 /*eslint no-empty: 0*/
-import warning from './warning'
+import warning from './routerWarning'
 
 let useMembrane = false
 

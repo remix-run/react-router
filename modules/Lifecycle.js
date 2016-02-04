@@ -1,4 +1,4 @@
-import warning from './warning'
+import warning from './routerWarning'
 import React from 'react'
 import invariant from 'invariant'
 

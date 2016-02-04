@@ -4,7 +4,7 @@ import React from 'react'
 import deprecateObjectProperties from './deprecateObjectProperties'
 import getRouteParams from './getRouteParams'
 import { isReactChildren } from './RouteUtils'
-import warning from './warning'
+import warning from './routerWarning'
 
 const { array, func, object } = React.PropTypes
 
