@@ -57,3 +57,11 @@ match({ history, routes }, (error, redirectLocation, renderProps) => {
   render(<Router {...renderProps} />, mountNode)
 })
 ```
+
+## History singletons
+
+Because the server has no DOM available, the history singletons (`browserHistory` and `hashHistory`) do not function on the server. Instead, they will simply return `undefined`.
+
+You should be sure to only use the history singletons in client code. For React Components, this means using them only in lifecycle functions like `componentDidMount`, but not in `componentWillMount`. Most events, such as clicks, can only happen in the client, as the server has no DOM available to trigger them. So, using the history singletons is a valid option in that case. Knowing what code should run on the server and on the client is important to using React in a universal app, so make sure you're familiar with these concepts even if you aren't using React Router.
+
+And don't feel discouraged! History singletons are a great convenience method to navigate without setting up `this.context` or when you're not inside of a React component. Simply take care to only use them in places the server will not try to touch.
