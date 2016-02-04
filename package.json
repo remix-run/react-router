@@ -38,7 +38,7 @@
   ],
   "license": "MIT",
   "dependencies": {
-    "history": "^2.0.0-rc3",
+    "history": "^2.0.0",
     "invariant": "^2.0.0",
     "warning": "^2.0.0"
   },
