@@ -1,12 +1,19 @@
 ## [HEAD]
 > Unreleased
 
+- Nothing yet!
+
+[HEAD]: https://github.com/rackt/react-router/compare/v2.0.0-rc6...HEAD
+
+## [v2.0.0-rc6]
+> Feb 5, 2016
+
 - **Breaking:** Removed default top-level `<Router>` export ([#2906])
 - Use history.createLocation where possible ([#2910])
 - Fix initial routing state after `match` ([#2965])
 - Reduce stack size from matching routes ([#2923])
 
-[HEAD]: https://github.com/rackt/react-router/compare/v2.0.0-rc5...HEAD
+[v2.0.0-rc6]: https://github.com/rackt/react-router/compare/v2.0.0-rc5...v2.0.0-rc6
 [#2906]: https://github.com/rackt/react-router/pull/2906
 [#2910]: https://github.com/rackt/react-router/pull/2910
 [#2965]: https://github.com/rackt/react-router/pull/2965
