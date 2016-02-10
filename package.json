@@ -1,6 +1,6 @@
 {
   "name": "react-router",
-  "version": "2.0.0-rc6",
+  "version": "2.0.0",
   "description": "A complete routing library for React.js",
   "files": [
     "*.md",
