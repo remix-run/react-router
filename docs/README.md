@@ -2,12 +2,12 @@
 
 * [Tutorial](https://github.com/rackt/react-router-tutorial)
 * [Introduction](Introduction.md)
-* [Basics]
+* Basics
  * [Route Configuration](guides/RouteConfiguration.md)
  * [Route Matching](guides/RouteMatching.md)
  * [Histories](guides/Histories.md)
  * [Index Routes and Links](guides/IndexRoutes.md)
-* [Advanced Usage]
+* Advanced Usage
  * [Dynamic Routing](guides/DynamicRouting.md)
  * [Confirming Navigation](guides/ConfirmingNavigation.md)
  * [Server Rendering](guides/ServerRendering.md)
