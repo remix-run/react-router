@@ -16,6 +16,7 @@ thought, not an after-thought.
 
 ### Docs & Help
 
+- [Tutorial - Do This First!](https://github.com/rackt/react-router-tutorial)
 - [Guides and API Docs](https://github.com/rackt/react-router/tree/latest/docs) (latest release)
 - [Change Log](/CHANGES.md)
 - [Stack Overflow](http://stackoverflow.com/questions/tagged/react-router)
