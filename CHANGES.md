@@ -3,7 +3,15 @@
 
 - Nothing yet!
 
-[HEAD]: https://github.com/rackt/react-router/compare/v2.0.0-rc6...HEAD
+[HEAD]: https://github.com/rackt/react-router/compare/v2.0.0...HEAD
+
+## [v2.0.0]
+> Feb 10, 2016
+
+- Add back basename support in `match` ([#3054])
+
+[v2.0.0-rc6]: https://github.com/rackt/react-router/compare/v2.0.0-rc6...v2.0.0
+[#3054]: https://github.com/rackt/react-router/pull/3054
 
 ## [v2.0.0-rc6]
 > Feb 5, 2016
