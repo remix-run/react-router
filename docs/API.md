@@ -315,7 +315,7 @@ code-splitting.
 ```
 
 ##### `children`
-Routes can be nested, `this.props.children` will contain the element created from the child route component. Please refer to the [Route Configuration](/docs/guides/basics/RouteConfiguration.md) since this is a very critical part of the router's design.
+Routes can be nested, `this.props.children` will contain the element created from the child route component. Please refer to the [Route Configuration](/docs/guides/RouteConfiguration.md) since this is a very critical part of the router's design.
 
 ##### `onEnter(nextState, replace, callback?)`
 Called when a route is about to be entered. It provides the next router state and a function to redirect to another path. `this` will be the route instance that triggered the hook.
@@ -377,7 +377,7 @@ let myRoute = {
 ```
 
 ##### `indexRoute`
-The [index route](/docs/guides/basics/IndexRoutes.md). This is the same as specifying an `<IndexRoute>` child when using JSX route configs.
+The [index route](/docs/guides/IndexRoutes.md). This is the same as specifying an `<IndexRoute>` child when using JSX route configs.
 
 ##### `getIndexRoute(location, callback)`
 
@@ -432,7 +432,7 @@ By default, the query parameters will just pass through but you can specify them
 </Route>
 ```
 
-Note that the `<Redirect>` can be placed anywhere in the route hierarchy, though [normal precedence](/docs/guides/basics/RouteMatching.md#precedence) rules apply. If you'd prefer the redirects to be next to their respective routes, the `from` path will match the same as a regular route `path`.
+Note that the `<Redirect>` can be placed anywhere in the route hierarchy, though [normal precedence](/docs/guides/RouteMatching.md#precedence) rules apply. If you'd prefer the redirects to be next to their respective routes, the `from` path will match the same as a regular route `path`.
 
 ```js
 <Route path="course/:courseId">
@@ -561,7 +561,7 @@ class Users extends React.Component {
 
 ## Histories
 
-For more details, please see the [histories guide](/docs/guides/basics/Histories.md).
+For more details, please see the [histories guide](/docs/guides/Histories.md).
 
 ### `browserHistory`
 `browserHistory` uses the HTML5 History API when available, and falls back to full refreshes otherwise. `browserHistory` requires additional configuration on the server side to serve up URLs, but is the generally preferred solution for modern web pages.
