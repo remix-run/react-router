@@ -249,4 +249,4 @@ You can also access parameters from the query string. For instance, if you're on
 
 That's the gist of React Router. Application UIs are boxes inside of boxes inside of boxes; now you can keep those boxes in sync with the URL and link to them easily.
 
-The docs about [route configuration](/docs/guides/basics/RouteConfiguration.md) describe more of the router's features in depth.
+The docs about [route configuration](/docs/guides/RouteConfiguration.md) describe more of the router's features in depth.
