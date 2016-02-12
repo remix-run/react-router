@@ -7,12 +7,12 @@ React Router keeps your UI in sync with the URL. It has a simple API with powerf
 [![Coveralls][coveralls-badge]][coveralls]
 [![Discord][discord-badge]][discord]
 
-> **Important:** *This is the `master` branch of React Router and may contain changes that are not yet released. To see the code for the most recently published release, browse [the `latest` tag](https://github.com/rackt/react-router/tree/latest).*
+> **Important:** *This is the `master` branch of React Router and may contain changes that are not yet released. To see the code for the most recently published release, browse [the `latest` tag](https://github.com/reactjs/react-router/tree/latest).*
 
 ### Docs & Help
 
-- [Tutorial - Do This First!](https://github.com/rackt/react-router-tutorial)
-- [Guides and API Docs](https://github.com/rackt/react-router/tree/latest/docs) (latest release)
+- [Tutorial - Do This First!](https://github.com/reactjs/react-router-tutorial)
+- [Guides and API Docs](https://github.com/reactjs/react-router/tree/latest/docs) (latest release)
 - [Change Log](/CHANGES.md)
 - [Stack Overflow](http://stackoverflow.com/questions/tagged/react-router)
 - [Codepen Boilerplate](http://codepen.io/anon/pen/xwQZdy?editors=001)
@@ -20,8 +20,8 @@ React Router keeps your UI in sync with the URL. It has a simple API with powerf
 
 **Older Versions:**
 
-- 0.13.x - [docs](https://github.com/rackt/react-router/tree/0.13.x/docs/guides) / [code](https://github.com/rackt/react-router/tree/0.13.x) / [upgrade guide](https://github.com/rackt/react-router/blob/master/upgrade-guides/v1.0.0.md)
-- 1.0.x - [docs](https://github.com/rackt/react-router/tree/1.0.x/docs) / [code](https://github.com/rackt/react-router/tree/1.0.x) / [upgrade guide](https://github.com/rackt/react-router/blob/master/upgrade-guides/v2.0.0.md)
+- 0.13.x - [docs](https://github.com/reactjs/react-router/tree/0.13.x/docs/guides) / [code](https://github.com/reactjs/react-router/tree/0.13.x) / [upgrade guide](https://github.com/reactjs/react-router/blob/master/upgrade-guides/v1.0.0.md)
+- 1.0.x - [docs](https://github.com/reactjs/react-router/tree/1.0.x/docs) / [code](https://github.com/reactjs/react-router/tree/1.0.x) / [upgrade guide](https://github.com/reactjs/react-router/blob/master/upgrade-guides/v2.0.0.md)
 
 For questions and support, please visit [our channel on Reactiflux](https://discord.gg/0ZcbPKXt5bYaNQ46) or [Stack Overflow](http://stackoverflow.com/questions/tagged/react-router). The issue tracker is *exclusively* for bug reports and feature requests.
 
@@ -121,7 +121,7 @@ render((
 ), document.body)
 ```
 
-See more in the [Introduction](https://github.com/rackt/react-router/tree/latest/docs/Introduction.md), [Advanced Usage](https://github.com/rackt/react-router/tree/latest/docs/guides/README.md), and [Examples](https://github.com/rackt/react-router/tree/latest/examples).
+See more in the [Introduction](https://github.com/reactjs/react-router/tree/latest/docs/Introduction.md), [Advanced Usage](https://github.com/reactjs/react-router/tree/latest/docs/guides/README.md), and [Examples](https://github.com/reactjs/react-router/tree/latest/examples).
 
 ### Versioning and Stability
 
@@ -133,7 +133,7 @@ Assuming you are currently on version 1.0:
 2. All deprecated 1.0 API usage warns to the console and links to an upgrade guide.
 3. 3.0 will remove 1.0 deprecations completely.
 4. 3.0 will be released no sooner than three months after 2.0. This gives an API, in the worst case scenario, six months of life if you’re staying perfectly up-to-date.
-5. Some codemods that will automatically update your code will be available at rackt/rackt-codemod
+5. Some codemods that will automatically update your code will be available at reactjs/rackt-codemod
 
 > If it’s fully backwards compatible, why isn’t that a minor release?
 
@@ -155,14 +155,14 @@ React Router was initially inspired by Ember's fantastic router. Many thanks to 
 
 Also, thanks to [BrowserStack](https://www.browserstack.com/) for providing the infrastructure that allows us to run our build in real browsers.
 
-[build-badge]: https://img.shields.io/travis/rackt/react-router/master.svg?style=flat-square
-[build]: https://travis-ci.org/rackt/react-router
+[build-badge]: https://img.shields.io/travis/reactjs/react-router/master.svg?style=flat-square
+[build]: https://travis-ci.org/reactjs/react-router
 
 [npm-badge]: https://img.shields.io/npm/v/react-router.svg?style=flat-square
 [npm]: https://www.npmjs.org/package/react-router
 
-[coveralls-badge]: https://img.shields.io/coveralls/rackt/react-router/master.svg?style=flat-square
-[coveralls]: https://coveralls.io/github/rackt/react-router
+[coveralls-badge]: https://img.shields.io/coveralls/reactjs/react-router/master.svg?style=flat-square
+[coveralls]: https://coveralls.io/github/reactjs/react-router
 
 [discord-badge]: https://img.shields.io/badge/Discord-join%20chat%20%E2%86%92-738bd7.svg?style=flat-square
 [discord]: https://discord.gg/0ZcbPKXt5bYaNQ46
