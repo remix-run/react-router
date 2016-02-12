@@ -210,7 +210,7 @@ The path used in the URL.
 It will concat with the parent route's path unless it starts with `/`,
 making it an absolute path.
 
-**Note**: Absolute paths may not be used in route config that is [dynamically loaded](/docs/guides/advanced/DynamicRouting.md).
+**Note**: Absolute paths may not be used in route config that is [dynamically loaded](/docs/guides/DynamicRouting.md).
 
 If left undefined, the router will try to match the child routes.
 

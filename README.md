@@ -121,7 +121,7 @@ render((
 ), document.body)
 ```
 
-See more in the [Introduction](https://github.com/reactjs/react-router/tree/latest/docs/Introduction.md), [Advanced Usage](https://github.com/reactjs/react-router/tree/latest/docs/guides/README.md), and [Examples](https://github.com/reactjs/react-router/tree/latest/examples).
+See more in the [Introduction](https://github.com/reactjs/react-router/tree/latest/docs/Introduction.md), [Guides](https://github.com/reactjs/react-router/tree/latest/docs/guides/README.md), and [Examples](https://github.com/reactjs/react-router/tree/latest/examples).
 
 ### Versioning and Stability
 
