@@ -2,7 +2,7 @@ Thanks for contributing, you rock!
 
 If you use our code, it is now *our* code.
 
-Please read https://rackt.org/ and the Code of Conduct before opening an
+Please read https://reactjs.org/ and the Code of Conduct before opening an
 issue.
 
 - [Think You Found a Bug?](#bug)

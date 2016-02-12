@@ -1,6 +1,6 @@
 ## Table of Contents
 
-* [Tutorial](https://github.com/rackt/react-router-tutorial)
+* [Tutorial](https://github.com/reactjs/react-router-tutorial)
 * [Introduction](Introduction.md)
 * Basics
  * [Route Configuration](guides/RouteConfiguration.md)

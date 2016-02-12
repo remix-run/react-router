@@ -1,6 +1,6 @@
 # Histories
 
-React Router is built with [history](https://github.com/rackt/history).
+React Router is built with [history](https://github.com/reactjs/history).
 In a nutshell, a history knows how to listen to the browser's address
 bar for changes and parses the URL into a `location` object that the
 router can use to match routes and render the correct set of components.

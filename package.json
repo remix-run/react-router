@@ -13,12 +13,9 @@
   ],
   "main": "lib/index",
   "jsnext:main": "es6/index",
-  "repository": {
-    "type": "git",
-    "url": "https://github.com/rackt/react-router.git"
-  },
-  "homepage": "https://rackt.github.io/react-router/",
-  "bugs": "https://github.com/rackt/react-router/issues",
+  "repository": "reactjs/react-router",
+  "homepage": "https://reactjs.org/react-router/",
+  "bugs": "https://github.com/reactjs/react-router/issues",
   "scripts": {
     "build": "npm run build-cjs && npm run build-es6",
     "build-cjs": "rimraf lib && babel ./modules -d lib --ignore '__tests__'",

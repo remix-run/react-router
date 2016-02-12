@@ -1,6 +1,6 @@
 React Router Testing With Jest
 ====================
-Testing has become much easier since React Router version 1.x. For Testing prior React Router versions, see   [Old testing docs](https://github.com/rackt/react-router/blob/57543eb41ce45b994a29792d77c86cc10b51eac9/docs/guides/testing.md).
+Testing has become much easier since React Router version 1.x. For Testing prior React Router versions, see   [Old testing docs](https://github.com/reactjs/react-router/blob/57543eb41ce45b994a29792d77c86cc10b51eac9/docs/guides/testing.md).
 
 It is recommended that you read the following two tutorials prior:
 - [Jest Getting Started docs](https://facebook.github.io/jest/docs/getting-started.html)

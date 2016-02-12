@@ -115,7 +115,7 @@ An object of key:value pairs to be stringified.
 ##### `hash`
 A hash to put in the URL, e.g. `#a-hash`.
 
-_Note: React Router currently does not manage scroll position, and will not scroll to the element corresponding to the hash. Scroll position management utilities are available in the [scroll-behavior](https://github.com/rackt/scroll-behavior) library._
+_Note: React Router currently does not manage scroll position, and will not scroll to the element corresponding to the hash. Scroll position management utilities are available in the [scroll-behavior](https://github.com/taion/scroll-behavior) library._
 
 ##### `state`
 State to persist to the `location`.
@@ -470,7 +470,7 @@ A route's component is rendered when that route matches the URL. The router will
 ### Injected Props
 
 #### `location`
-The current [location](https://github.com/rackt/history/blob/master/docs/Location.md).
+The current [location](https://github.com/reactjs/history/blob/master/docs/Location.md).
 
 #### `params`
 The dynamic segments of the URL.
@@ -482,7 +482,7 @@ The route that rendered this component.
 A subset of `this.props.params` that were directly specified in this component's route. For example, if the route's path is `users/:userId` and the URL is `/users/123/portfolios/345` then `this.props.routeParams` will be `{userId: '123'}`, and `this.props.params` will be `{userId: '123', portfolioId: 345}`.
 
 #### `children`
-The matched child route element to be rendered. If the route has [named components](https://github.com/rackt/react-router/blob/master/docs/API.md#named-components) then this will be undefined, and the components will instead be available as direct properties on `this.props`.
+The matched child route element to be rendered. If the route has [named components](/docs/API.md#named-components) then this will be undefined, and the components will instead be available as direct properties on `this.props`.
 
 ##### Example
 ```js
