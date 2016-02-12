@@ -1,16 +1,11 @@
-<img src="https://rackt.github.io/react-router/img/vertical.png" width="300">
+# react-router [![Travis][build-badge]][build] [![npm package][npm-badge]][npm]
 
-[![Travis][build-badge]][build]
-[![npm package][npm-badge]][npm]
+[`react-router`](https://www.npmjs.com/package/react-router) is a complete routing library for [React](https://facebook.github.io/react).
+
+React Router keeps your UI in sync with the URL. It has a simple API with powerful features like lazy code loading, dynamic route matching, and location transition handling built right in. Make the URL your first thought, not an after-thought.
+
 [![Coveralls][coveralls-badge]][coveralls]
 [![Discord][discord-badge]][discord]
-
-A complete routing library for React
-
-React Router keeps your UI in sync with the URL. It has a simple API
-with powerful features like lazy code loading, dynamic route matching,
-and location transition handling built right in. Make the URL your first
-thought, not an after-thought.
 
 > **Important:** *This is the `master` branch of React Router and may contain changes that are not yet released. To see the code for the most recently published release, browse [the `latest` tag](https://github.com/rackt/react-router/tree/latest).*
 
