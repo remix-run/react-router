@@ -47,7 +47,7 @@ node scripts/build.js
 # This is a workaround for a nasty npm bug. :'(
 # First, we need to uninstall the history package so
 # it's not included in the react-router npm package.
-# https://github.com/rackt/react-router/issues/2195
+# https://github.com/reactjs/react-router/issues/2195
 # https://github.com/npm/npm/issues/9894
 rm -rf node_modules/history
 
