@@ -34,6 +34,10 @@ Also, Please include code samples of the feature's usage.
 
 
 <!-- BUG TEMPLATE -->
+## Version
+
+2.0.0
+
 ## Test Case
 
 http://jsbin.com/sacerobuxi/edit?html,js,output
