@@ -107,7 +107,7 @@ describe('server rendering', function () {
   })
 
   it('accepts a custom history', function (done) {
-    const history = createMemoryHistory()
+    const history = createMemoryHistory('/dashboard')
     const spy = spyOn(history, 'createLocation').andCallThrough()
 
     match({ history, routes, location: '/dashboard' }, function (error, redirectLocation, renderProps) {
@@ -161,7 +161,7 @@ describe('server rendering', function () {
       done()
     })
   })
-  
+
   it('produces a consistent history', function () {
     match({ routes, location: '/dashboard' }, function (error, redirectLocation, renderProps) {
       renderProps.router.listen(function (location) {
