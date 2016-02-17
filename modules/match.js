@@ -20,24 +20,26 @@ function match({ history, routes, location, ...options }, callback) {
     'match needs a history or a location'
   )
 
-  history = history ? history : createMemoryHistory(options)
+  // Make our own history
+  if (!history) {
+    // Ensure our history is created with an initial location
+    options = {
+      entries: [ location ],
+      ...options
+    }
+
+    history = createMemoryHistory(options)
+  }
+
   const transitionManager = createTransitionManager(
     history,
     createRoutes(routes)
   )
 
-  let unlisten
-
-  if (location) {
-    // Allow match({ location: '/the/path', ... })
-    location = history.createLocation(location)
-  } else {
-    // Pick up the location from the history via synchronous history.listen
-    // call if needed.
-    unlisten = history.listen(historyLocation => {
-      location = historyLocation
-    })
-  }
+  // Pick up the location from the history via synchronous history.listen call.
+  const unlisten = history.listen(historyLocation => {
+    location = historyLocation
+  })
 
   const router = createRouterObject(history, transitionManager)
   history = createRoutingHistory(history, transitionManager)
@@ -57,9 +59,7 @@ function match({ history, routes, location, ...options }, callback) {
     // Defer removing the listener to here to prevent DOM histories from having
     // to unwind DOM event listeners unnecessarily, in case callback renders a
     // <Router> and attaches another history listener.
-    if (unlisten) {
-      unlisten()
-    }
+    unlisten()
   })
 }
 
