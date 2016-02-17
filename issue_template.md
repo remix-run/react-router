@@ -4,12 +4,13 @@ Thank you for contributing!
 
 Have a usage question?
 ======================
-Please ask it on stackoverflow.com. Questions will be closed without
-comment. Please cosult the tutorial, documentation, and examples:
+Questions will be closed without comment. Here are some resources to get help:
 
-- https://github.com/reactjs/react-router-tutorial
-- https://github.com/reactjs/react-router/tree/latest/docs
-- https://github.com/reactjs/react-router/tree/latest/examples
+- Do the tutorial: https://github.com/reactjs/react-router-tutorial
+- Read the docs: https://github.com/reactjs/react-router/tree/latest/docs
+- Explore examples: https://github.com/reactjs/react-router/tree/latest/examples
+- Look for/ask questions on stack overflow: https://stackoverflow.com/questions/ask?tags=react-router
+- Ask in chat: https://discord.gg/0ZcbPKXt5bYaNQ46
 
 
 Think you found a bug?
