@@ -20,7 +20,7 @@ The best thing to do is make a failing test in the repo and send it as a pull re
 
 Have a feature request?
 =======================
-Remove the tempalte from below and provide thoughtful commentary on what this feature means for your product. What will it allow you to do that you can't do today? How will it make current work-arounds straightforward? What potential bugs and edge cases does it help to avoid? etc. Please keep it product-centric.
+Remove the template from below and provide thoughtful commentary on what this feature means for your product. What will it allow you to do that you can't do today? How will it make current work-arounds straightforward? What potential bugs and edge cases does it help to avoid? etc. Please keep it product-centric.
 
 Also, Please include code samples of the feature's usage.
 
