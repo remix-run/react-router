@@ -161,6 +161,15 @@ describe('server rendering', function () {
       done()
     })
   })
+  
+  it('produces a consistent history', function () {
+    match({ routes, location: '/dashboard' }, function (error, redirectLocation, renderProps) {
+      renderProps.router.listen(function (location) {
+        expect(location).toExist()
+        expect(location.pathname).toEqual('/dashboard')
+      })
+    })
+  })
 
   describe('server/client consistency', function () {
     // Just render to static markup here to avoid having to normalize markup.

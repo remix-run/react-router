@@ -20,7 +20,17 @@ function match({ history, routes, location, ...options }, callback) {
     'match needs a history or a location'
   )
 
-  history = history ? history : createMemoryHistory(options)
+  // Make our own history
+  if (!history) {
+    // Ensure our history is created with a consistent initial location
+    options = {
+      entries: [ location ],
+      ...options
+    }
+
+    history = createMemoryHistory(options)
+  }
+
   const transitionManager = createTransitionManager(
     history,
     createRoutes(routes)
