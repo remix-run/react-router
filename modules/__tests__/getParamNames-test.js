@@ -15,8 +15,8 @@ describe('getParamNames', function () {
   })
 
   describe('when a pattern has a *', function () {
-    it('uses the name "splat"', function () {
-      expect(getParamNames('/files/*.jpg')).toEqual([ 'splat' ])
+    it('uses an anonymous name', function () {
+      expect(getParamNames('/files/*.jpg')).toEqual([ 0 ])
     })
   })
 })

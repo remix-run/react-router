@@ -26,7 +26,7 @@ describe('matchRoutes', function () {
       </Route>
     </Route>
     <Route path="/about" />
-    <Route path="/(optional)">
+    <Route path="/(optional)?">
       <Route path="child" />
     </Route>
     <Route path="*" />
@@ -63,10 +63,10 @@ describe('matchRoutes', function () {
         path: '/about'
       },
       GreedyRoute = {
-        path: '/**/f'
+        path: '/*/f'
       },
       OptionalRoute = {
-        path: '/(optional)',
+        path: '/(optional)?',
         childRoutes: [
           OptionalRouteChild = {
             path: 'child'
@@ -117,7 +117,7 @@ describe('matchRoutes', function () {
         matchRoutes(routes, createLocation('/files/a/b/c.jpg'), function (error, match) {
           expect(match).toExist()
           expect(match.routes).toEqual([ FilesRoute ])
-          expect(match.params).toEqual({ splat: [ 'a', 'b/c' ] })
+          expect(match.params).toEqual({ 0: 'a/b', 1: 'c' })
           done()
         })
       })
@@ -128,7 +128,7 @@ describe('matchRoutes', function () {
         matchRoutes(routes, createLocation('/foo/bar/f'), function (error, match) {
           expect(match).toExist()
           expect(match.routes).toEqual([ GreedyRoute ])
-          expect(match.params).toEqual({ splat: 'foo/bar' })
+          expect(match.params).toEqual({ 0: 'foo/bar' })
           done()
         })
       })

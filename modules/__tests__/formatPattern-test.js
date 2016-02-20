@@ -22,19 +22,7 @@ describe('formatPattern', function () {
     })
 
     describe('and a param is optional', function () {
-      const pattern = '/comments/(:id)/edit'
-
-      it('returns the correct path when param is supplied', function () {
-        expect(formatPattern(pattern, { id:'123' })).toEqual('/comments/123/edit')
-      })
-
-      it('returns the correct path when param is not supplied', function () {
-        expect(formatPattern(pattern, {})).toEqual('/comments/edit')
-      })
-    })
-
-    describe('and a param and forward slash are optional', function () {
-      const pattern = '/comments(/:id)/edit'
+      const pattern = '/comments/:id?/edit'
 
       it('returns the correct path when param is supplied', function () {
         expect(formatPattern(pattern, { id:'123' })).toEqual('/comments/123/edit')
@@ -82,31 +70,23 @@ describe('formatPattern', function () {
 
   describe('when a pattern has one splat', function () {
     it('returns the correct path', function () {
-      expect(formatPattern('/a/*/d', { splat: 'b/c' })).toEqual('/a/b/c/d')
+      expect(formatPattern('/a/*/d', { 0: 'b/c' })).toEqual('/a/b%2Fc/d')
     })
   })
 
   describe('when a pattern has multiple splats', function () {
     it('returns the correct path', function () {
-      expect(formatPattern('/a/*/c/*', { splat: [ 'b', 'd' ] })).toEqual('/a/b/c/d')
+      expect(formatPattern('/a/*/c/*', { 0: 'b', 1: 'd' })).toEqual('/a/b/c/d')
+      expect(formatPattern('/a/*/d', { 0: 'b/c/d' })).toEqual('/a/b%2Fc%2Fd/d')
+      expect(formatPattern('/a/*/d/*', { 0: 'b/c/d', 1: 'e' })).toEqual('/a/b%2Fc%2Fd/d/e')
     })
 
     it('complains if not given enough splat values', function () {
       expect(function () {
-        formatPattern('/a/*/c/*', { splat: [ 'b' ] })
+        formatPattern('/a/*/c/*', { 0: 'b' })
       }).toThrow(Error)
-    })
-  })
-
-  describe('when a pattern has a greedy splat', function () {
-    it('returns the correct path', function () {
-      expect(formatPattern('/a/**/d', { splat: 'b/c/d' })).toEqual('/a/b/c/d/d')
-      expect(formatPattern('/a/**/d/**', { splat: [ 'b/c/d', 'e' ] })).toEqual('/a/b/c/d/d/e')
-    })
-
-    it('complains if not given enough splat values', function () {
       expect(function () {
-        formatPattern('/a/**/d/**', { splat: [ 'b/c/d' ] })
+        formatPattern('/a/*/d/*', { 0: 'b/c/d' })
       }).toThrow(Error)
     })
   })

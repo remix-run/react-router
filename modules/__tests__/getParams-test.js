@@ -28,23 +28,7 @@ describe('getParams', function () {
     })
 
     describe('and the pattern is optional', function () {
-      const pattern = '/comments/(:id)/edit'
-
-      describe('and the path matches with supplied param', function () {
-        it('returns an object with the params', function () {
-          expect(getParams(pattern, '/comments/123/edit')).toEqual({ id: '123' })
-        })
-      })
-
-      describe('and the path matches without supplied param', function () {
-        it('returns an object with an undefined param', function () {
-          expect(getParams(pattern, '/comments//edit')).toEqual({ id: undefined })
-        })
-      })
-    })
-
-    describe('and the pattern and forward slash are optional', function () {
-      const pattern = '/comments(/:id)/edit'
+      const pattern = '/comments/:id?/edit'
 
       describe('and the path matches with supplied param', function () {
         it('returns an object with the params', function () {
@@ -117,36 +101,25 @@ describe('getParams', function () {
   describe('when a pattern has a *', function () {
     describe('and the path matches', function () {
       it('returns an object with the params', function () {
-        expect(getParams('/files/*', '/files/my/photo.jpg')).toEqual({ splat: 'my/photo.jpg' })
-        expect(getParams('/files/*', '/files/my/photo.jpg.zip')).toEqual({ splat: 'my/photo.jpg.zip' })
-        expect(getParams('/files/*.jpg', '/files/my/photo.jpg')).toEqual({ splat: 'my/photo' })
-        expect(getParams('/files/*.jpg', '/files/my/new\nline.jpg')).toEqual({ splat: 'my/new\nline' })
+        expect(getParams('/files/*', '/files/my/photo.jpg')).toEqual({ 0: 'my/photo.jpg' })
+        expect(getParams('/files/*', '/files/my/photo.jpg.zip')).toEqual({ 0: 'my/photo.jpg.zip' })
+        expect(getParams('/files/*.jpg', '/files/my/photo.jpg')).toEqual({ 0: 'my/photo' })
+
+        expect(getParams('/*/f', '/foo/bar/f')).toEqual({ 0: 'foo/bar' })
       })
     })
 
     describe('and the path does not match', function () {
       it('returns null', function () {
         expect(getParams('/files/*.jpg', '/files/my/photo.png')).toBe(null)
-      })
-    })
-  })
 
-  describe('when a pattern has a **', function () {
-    describe('and the path matches', function () {
-      it('return an object with the params', function () {
-        expect(getParams('/**/f', '/foo/bar/f')).toEqual({ splat: 'foo/bar' })
-      })
-    })
-
-    describe('and the path does not match', function () {
-      it('returns null', function () {
-        expect(getParams('/**/f', '/foo/bar/')).toBe(null)
+        expect(getParams('/*/f', '/foo/bar/')).toBe(null)
       })
     })
   })
 
   describe('when a pattern has an optional group', function () {
-    const pattern = '/archive(/:name)'
+    const pattern = '/archive/:name?'
 
     describe('and the path matches', function () {
       it('returns an object with the params', function () {

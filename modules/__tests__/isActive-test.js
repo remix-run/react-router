@@ -100,7 +100,7 @@ describe('isActive', function () {
         })
       })
 
-      it('is active with extraneous slashes', function (done) {
+      it('is not active with extraneous slashes', function (done) {
         render((
           <Router history={createHistory('/parent/child')}>
             <Route path="/parent">
@@ -108,7 +108,7 @@ describe('isActive', function () {
             </Route>
           </Router>
         ), node, function () {
-          expect(this.router.isActive('/parent////child////')).toBe(true)
+          expect(this.router.isActive('/parent////child////')).toBe(false)
           done()
         })
       })
@@ -322,7 +322,7 @@ describe('isActive', function () {
         })
       })
 
-      it('is active with extraneous slashes', function (done) {
+      it('is not active with extraneous slashes', function (done) {
         render((
           <Router history={createHistory('/parent/child')}>
             <Route path="/parent">
@@ -332,8 +332,8 @@ describe('isActive', function () {
             </Route>
           </Router>
         ), node, function () {
-          expect(this.router.isActive('/parent///child///')).toBe(true)
-          expect(this.router.isActive('/parent///child///', true)).toBe(true)
+          expect(this.router.isActive('/parent///child///')).toBe(false)
+          expect(this.router.isActive('/parent///child///', true)).toBe(false)
           done()
         })
       })
@@ -358,7 +358,7 @@ describe('isActive', function () {
         })
       })
 
-      it('is active with extraneous slashes', function (done) {
+      it('is not active with extraneous slashes', function (done) {
         render((
           <Router history={createHistory('/parent/child')}>
             <Route path="/parent">
@@ -370,8 +370,8 @@ describe('isActive', function () {
             </Route>
           </Router>
         ), node, function () {
-          expect(this.router.isActive('/parent///child///')).toBe(true)
-          expect(this.router.isActive('/parent///child///', true)).toBe(true)
+          expect(this.router.isActive('/parent///child///')).toBe(false)
+          expect(this.router.isActive('/parent///child///', true)).toBe(false)
           done()
         })
       })
