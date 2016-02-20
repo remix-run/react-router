@@ -125,26 +125,7 @@ See more in the [Introduction](https://github.com/reactjs/react-router/tree/late
 
 ### Versioning and Stability
 
-React Router follows semver to the best of our interpretation of it. We want React Router to be a stable dependency that’s easy to keep current. Here is our upgrading strategy for your apps.
-
-Assuming you are currently on version 1.0:
-
-1. 2.0 is fully backward compatible with 1.0 so you can upgrade, and then update your code incrementally.
-2. All deprecated 1.0 API usage warns to the console and links to an upgrade guide.
-3. 3.0 will remove 1.0 deprecations completely.
-4. 3.0 will be released no sooner than three months after 2.0. This gives an API, in the worst case scenario, six months of life if you’re staying perfectly up-to-date.
-5. Some codemods that will automatically update your code will be available at reactjs/rackt-codemod
-
-> If it’s fully backwards compatible, why isn’t that a minor release?
-
-If we didn’t provide the backwards compatibility then you wouldn’t be asking this question — but then upgrading would break your app. We don’t want to break your app, we want smooth, incremental upgrades.
-
-In practice, this means you can:
-
-1. Upgrade from 1.0 to 2.0 and your app will still run.
-2. Update your code incrementally to the new API, and you have three months before the next release to do it.
-3. Run the codemods to make some of (2) automatic.
-4. If your code runs without warnings, you can repeat this list with version 3.0
+We want React Router to be a stable dependency that’s easy to keep current. We follow the same versioning as React.js itself: [React Versioning Scheme](https://facebook.github.io/react/blog/2016/02/19/new-versioning-scheme.html).
 
 ### Thanks
 
