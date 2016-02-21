@@ -58,6 +58,13 @@ describe('When a router enters a branch', function () {
         expect(nextState.routes).toContain(NewsFeedRoute)
         expect(replace).toBeA('function')
       },
+      onChange(prevState, nextState, replace) {
+        expect(this).toBe(NewsFeedRoute)
+        expect(prevState).toNotEqual(nextState)
+        expect(prevState.routes).toContain(NewsFeedRoute)
+        expect(nextState.routes).toContain(NewsFeedRoute)
+        expect(replace).toBeA('function')
+      },
       onLeave() {
         expect(this).toBe(NewsFeedRoute)
       }
@@ -97,6 +104,12 @@ describe('When a router enters a branch', function () {
         expect(nextState.routes).toContain(MessageRoute)
         expect(replace).toBeA('function')
       },
+      onChange(prevState, nextState, replace) {
+        expect(this).toBe(MessageRoute)
+        expect(prevState.routes).toContain(MessageRoute)
+        expect(nextState.routes).toContain(MessageRoute)
+        expect(replace).toBeA('function')
+      },
       onLeave() {
         expect(this).toBe(MessageRoute)
       }
@@ -107,6 +120,13 @@ describe('When a router enters a branch', function () {
       component: Dashboard,
       onEnter(nextState, replace) {
         expect(this).toBe(DashboardRoute)
+        expect(nextState.routes).toContain(DashboardRoute)
+        expect(replace).toBeA('function')
+      },
+      onChange(prevState, nextState, replace) {
+        expect(this).toBe(DashboardRoute)
+        expect(prevState).toNotEqual(nextState)
+        expect(prevState.routes).toContain(DashboardRoute)
         expect(nextState.routes).toContain(DashboardRoute)
         expect(replace).toBeA('function')
       },
@@ -212,8 +232,11 @@ describe('When a router enters a branch', function () {
   describe('and then navigates to the same branch, but with different params', function () {
     it('calls the onLeave and onEnter hooks of all routes whose params have changed', function (done) {
       const dashboardRouteLeaveSpy = spyOn(DashboardRoute, 'onLeave').andCallThrough()
+      const dashboardRouteChangeSpy = spyOn(DashboardRoute, 'onChange').andCallThrough()
       const dashboardRouteEnterSpy = spyOn(DashboardRoute, 'onEnter').andCallThrough()
+
       const messageRouteLeaveSpy = spyOn(MessageRoute, 'onLeave').andCallThrough()
+      const messageRouteChangeSpy = spyOn(MessageRoute, 'onChange').andCallThrough()
       const messageRouteEnterSpy = spyOn(MessageRoute, 'onEnter').andCallThrough()
       const history = createHistory('/messages/123')
 
@@ -226,6 +249,9 @@ describe('When a router enters a branch', function () {
         function () {
           expect(messageRouteLeaveSpy).toHaveBeenCalled('MessageRoute.onLeave was not called')
           expect(messageRouteEnterSpy).toHaveBeenCalled('MessageRoute.onEnter was not called')
+          expect(messageRouteChangeSpy.calls.length).toEqual(0, 'DashboardRoute.onChange was called')
+
+          expect(dashboardRouteChangeSpy).toHaveBeenCalled('DashboardRoute.onChange was not called')
           expect(dashboardRouteLeaveSpy.calls.length).toEqual(0, 'DashboardRoute.onLeave was called')
         }
       ]
@@ -243,12 +269,16 @@ describe('When a router enters a branch', function () {
   describe('and then the query changes', function () {
     it('calls the onEnter hooks of all routes in that branch', function (done) {
       const newsFeedRouteEnterSpy = spyOn(NewsFeedRoute, 'onEnter').andCallThrough()
+      const newsFeedRouteChangeSpy = spyOn(NewsFeedRoute, 'onChange').andCallThrough()
       const history = useQueries(createHistory)('/inbox')
 
       render(<Router history={history} routes={routes}/>, node, function () {
         history.push({ pathname: '/news', query: { q: 1 } })
+        expect(newsFeedRouteChangeSpy.calls.length).toEqual(0, 'NewsFeedRoute.onChange was called')
         expect(newsFeedRouteEnterSpy.calls.length).toEqual(1)
+
         history.push({ pathname: '/news', query: { q: 2 } })
+        expect(newsFeedRouteChangeSpy).toHaveBeenCalled('NewsFeedRoute.onChange was not called')
         expect(newsFeedRouteEnterSpy.calls.length).toEqual(1)
         done()
       })

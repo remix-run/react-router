@@ -1,7 +1,7 @@
 import warning from './routerWarning'
 import { REPLACE } from 'history/lib/Actions'
 import computeChangedRoutes from './computeChangedRoutes'
-import { runEnterHooks, runLeaveHooks } from './TransitionUtils'
+import { runEnterHooks, runChangeHooks, runLeaveHooks } from './TransitionUtils'
 import { default as _isActive } from './isActive'
 import getComponents from './getComponents'
 import matchRoutes from './matchRoutes'
@@ -67,33 +67,43 @@ export default function createTransitionManager(history, routes) {
   }
 
   function finishMatch(nextState, callback) {
-    const { leaveRoutes, enterRoutes } = computeChangedRoutes(state, nextState)
+    const { leaveRoutes, changeRoutes, enterRoutes } = computeChangedRoutes(state, nextState)
 
     runLeaveHooks(leaveRoutes)
 
     // Tear down confirmation hooks for left routes
     leaveRoutes.forEach(removeListenBeforeHooksForRoute)
 
-    runEnterHooks(enterRoutes, nextState, function (error, redirectInfo) {
-      if (error) {
-        callback(error)
-      } else if (redirectInfo) {
-        callback(null, createLocationFromRedirectInfo(redirectInfo))
-      } else {
-        // TODO: Fetch components after state is updated.
-        getComponents(nextState, function (error, components) {
-          if (error) {
-            callback(error)
-          } else {
-            // TODO: Make match a pure function and have some other API
-            // for "match and update state".
-            callback(null, null, (
-              state = { ...nextState, components })
-            )
-          }
-        })
-      }
+    // change and enter hooks are run in series
+    runChangeHooks(changeRoutes, state, nextState, (error, redirectInfo) => {
+      if (error || redirectInfo)
+        return handleErrorOrRedirect(error, redirectInfo)
+
+      runEnterHooks(enterRoutes, nextState, finishEnterHooks)
     })
+
+    function finishEnterHooks(error, redirectInfo) {
+      if (error || redirectInfo)
+        return handleErrorOrRedirect(error, redirectInfo)
+
+      // TODO: Fetch components after state is updated.
+      getComponents(nextState, function (error, components) {
+        if (error) {
+          callback(error)
+        } else {
+          // TODO: Make match a pure function and have some other API
+          // for "match and update state".
+          callback(null, null, (
+            state = { ...nextState, components })
+          )
+        }
+      })
+    }
+
+    function handleErrorOrRedirect(error, redirectInfo) {
+      if (error) callback(error)
+      else callback(null, createLocationFromRedirectInfo(redirectInfo))
+    }
   }
 
   let RouteGuid = 1
