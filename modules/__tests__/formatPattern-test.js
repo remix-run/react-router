@@ -15,9 +15,7 @@ describe('formatPattern', function () {
 
     describe('and a param is missing', function () {
       it('throws an Error', function () {
-        expect(function () {
-          formatPattern(pattern, {})
-        }).toThrow(Error)
+        expect(() => formatPattern(pattern, {})).toThrow(Error)
       })
     })
 
@@ -82,18 +80,24 @@ describe('formatPattern', function () {
     })
 
     it('complains if not given enough splat values', function () {
-      expect(function () {
-        formatPattern('/a/*/c/*', { 0: 'b' })
-      }).toThrow(Error)
-      expect(function () {
-        formatPattern('/a/*/d/*', { 0: 'b/c/d' })
-      }).toThrow(Error)
+      expect(() => formatPattern('/a/*/c/*', { 0: 'b' })).toThrow(Error)
+      expect(() => formatPattern('/a/*/d/*', { 0: 'b/c/d' })).toThrow(Error)
     })
   })
 
   describe('when a pattern has dots', function () {
     it('returns the correct path', function () {
       expect(formatPattern('/foo.bar.baz')).toEqual('/foo.bar.baz')
+    })
+  })
+
+  describe('when a pattern has regexes for params', function () {
+    it('returns the correct path', function () {
+      expect(formatPattern('/:int(\\d+)', { int: '42' })).toEqual('/42')
+    })
+
+    it('complains if param does not match regex', function () {
+      expect(() => formatPattern('/:int(\\d+)', { int: 'foo' })).toThrow(Error)
     })
   })
 })

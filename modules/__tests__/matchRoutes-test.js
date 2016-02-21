@@ -11,7 +11,8 @@ describe('matchRoutes', function () {
   let
     RootRoute, UsersRoute, UsersIndexRoute, UserRoute, PostRoute, FilesRoute,
     AboutRoute, TeamRoute, ProfileRoute, GreedyRoute, OptionalRoute,
-    OptionalRouteChild, CatchAllRoute
+    OptionalRouteChild, RegexRoute, UnnamedParamsRoute,
+    UnnamedParamsRouteChild, CatchAllRoute
   let createLocation = createMemoryHistory().createLocation
 
   beforeEach(function () {
@@ -70,6 +71,17 @@ describe('matchRoutes', function () {
         childRoutes: [
           OptionalRouteChild = {
             path: 'child'
+          }
+        ]
+      },
+      RegexRoute = {
+        path: '/int/:int(\\d+)'
+      },
+      UnnamedParamsRoute = {
+        path: '/unnamed-params/(foo)',
+        childRoutes: [
+          UnnamedParamsRouteChild = {
+            path: '(bar)'
           }
         ]
       },
@@ -201,6 +213,28 @@ describe('matchRoutes', function () {
       })
     })
 
+    describe('when the location matches a route with param regex', function () {
+      it('matches the correct routes and param', function (done) {
+        matchRoutes(routes, createLocation('/int/42'), function (error, match) {
+          expect(match).toExist()
+          expect(match.routes).toEqual([ RegexRoute ])
+          expect(match.params).toEqual({ int: '42' })
+          done()
+        })
+      })
+    })
+
+    describe('when the location matches nested route with unnamed params', function () {
+      it('matches the correct routes and params', function (done) {
+        matchRoutes(routes, createLocation('/unnamed-params/foo/bar'), function (error, match) {
+          expect(match).toExist()
+          expect(match.routes).toEqual([ UnnamedParamsRoute, UnnamedParamsRouteChild ])
+          expect(match.params).toEqual({ 0: 'foo', 1: 'bar' })
+          done()
+        })
+      })
+    })
+
     describe('when the location does not match any routes', function () {
       it('matches the "catch-all" route', function (done) {
         matchRoutes(routes, createLocation('/not-found'), function (error, match) {
@@ -220,6 +254,14 @@ describe('matchRoutes', function () {
 
       it('matches the "catch-all" route on missing path separators', function (done) {
         matchRoutes(routes, createLocation('/optionalchild'), function (error, match) {
+          expect(match).toExist()
+          expect(match.routes).toEqual([ CatchAllRoute ])
+          done()
+        })
+      })
+
+      it('matches the "catch-all" route on a regex miss', function (done) {
+        matchRoutes(routes, createLocation('/int/foo'), function (error, match) {
           expect(match).toExist()
           expect(match.routes).toEqual([ CatchAllRoute ])
           done()

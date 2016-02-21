@@ -11,6 +11,14 @@ describe('matchPattern', function () {
     })
   }
 
+  function assertNoMatch(pattern, pathname) {
+    expect(matchPattern(pattern, pathname)).toEqual({
+      remainingPathname: null,
+      paramNames: [],
+      paramValues: []
+    })
+  }
+
   it('works without params', function () {
     assertMatch('/', '/path', '/path', [], [])
   })
@@ -41,4 +49,16 @@ describe('matchPattern', function () {
     assertMatch('/*/*.jpg', '/files/path/to/file.jpg', '', [ 0, 1 ], [ 'files/path/to', 'file' ])
   })
 
+  it('works with regexes for params', function () {
+    assertMatch('/:int(\\d+)', '/42', '', [ 'int' ], [ '42' ])
+    assertNoMatch('/:int(\\d+)', '/foo')
+    assertMatch('/:id(foo|bar)', '/foo', '', [ 'id' ], [ 'foo' ])
+    assertMatch('/:id(foo|bar)', '/bar', '', [ 'id' ], [ 'bar' ])
+    assertNoMatch('/:id(foo|bar)', '/42')
+  })
+
+  it('works with anonymous params', function () {
+    assertMatch('/(foo|bar)', '/foo', '', [ 0 ], [ 'foo' ])
+    assertMatch('/(foo|bar)', '/bar', '', [ 0 ], [ 'bar' ])
+  })
 })
