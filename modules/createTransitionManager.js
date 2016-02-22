@@ -72,7 +72,9 @@ export default function createTransitionManager(history, routes) {
     runLeaveHooks(leaveRoutes)
 
     // Tear down confirmation hooks for left routes
-    leaveRoutes.forEach(removeListenBeforeHooksForRoute)
+    leaveRoutes
+      .filter(route => enterRoutes.indexOf(route) === -1)
+      .forEach(removeListenBeforeHooksForRoute)
 
     runEnterHooks(enterRoutes, nextState, function (error, redirectInfo) {
       if (error) {
