@@ -10,7 +10,7 @@ React Router keeps your UI in sync with the URL. It has a simple API with powerf
 ### Docs & Help
 
 - [Tutorial - Do This First!](https://github.com/reactjs/react-router-tutorial)
-- [Guides and API Docs](https://github.com/reactjs/react-router/tree/latest/docs) (latest release)
+- [Guides and API Docs](https://github.com/reactjs/react-router/tree/master/docs)
 - [Change Log](/CHANGES.md)
 - [Stack Overflow](http://stackoverflow.com/questions/tagged/react-router)
 - [Codepen Boilerplate](http://codepen.io/anon/pen/xwQZdy?editors=001)
@@ -119,7 +119,7 @@ render((
 ), document.body)
 ```
 
-See more in the [Introduction](https://github.com/reactjs/react-router/tree/latest/docs/Introduction.md), [Guides](https://github.com/reactjs/react-router/tree/latest/docs/guides/README.md), and [Examples](https://github.com/reactjs/react-router/tree/latest/examples).
+See more in the [Introduction](https://github.com/reactjs/react-router/tree/master/docs/Introduction.md), [Guides](https://github.com/reactjs/react-router/tree/master/docs/guides/README.md), and [Examples](https://github.com/reactjs/react-router/tree/master/examples).
 
 ### Versioning and Stability
 
