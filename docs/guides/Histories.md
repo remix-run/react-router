@@ -9,8 +9,8 @@ There are three types of histories you'll come across most often, but
 note that anyone can build a custom history implementation for
 consumption with React Router.
 
-- [`hashHistory`](#hashhistory)
 - [`browserHistory`](#browserhistory)
+- [`hashHistory`](#hashhistory)
 - [`createMemoryHistory`](#creatememoryhistory)
 
 You import them from the React Router package:
@@ -29,22 +29,12 @@ render(
 )
 ```
 
-### `hashHistory`
-Hash history uses the hash (`#`) portion of the URL, creating routes that look like `example.com/#/some/path`.
-
-#### Should I use `hashHistory`?
-Hash history works without configuring your server, so if you're just getting started, go ahead and use it. But, we don't recommend using it in production, every web app should aspire to use `browserHistory`.
-
-#### What is that `?_k=ckuvup` junk in the URL?
-When a history transitions around your app with `push` or `replace`, it can store "location state" that doesn't show up in the URL on the new location, think of it a little bit like post data in an HTML form.
-
-The DOM API that hash history uses to transition around is simply `window.location.hash = newHash`, with no place to store location state.  But, we want all histories to be able to use location state, so we shim it by creating a unique key for each location and then store that state in session storage. When the visitor clicks "back" and "forward" we now have a mechanism to restore the location state.
-
 ### `browserHistory`
 Browser history is the recommended history for browser application with React Router. It uses the [History](https://developer.mozilla.org/en-US/docs/Web/API/History) API built into the browser to manipulate the URL, creating real URLs that look like `example.com/some/path`.
 
 #### Configuring Your Server
-Your server must be ready to handle real URLs. When the app first loads at `/` it will probably work, but as the user navigates around and then hits refresh at `/accounts/23` your web server will get a request to `/accounts/23`. You will need it to handle that URL and include your JavaScript application in the response.
+
+In order to allow the user to reload or bookmark any page on your app, your server will need to respond to any url that the react code generates and serve the single page app. For example, if the user bookmarks `/accounts/23` and then clicks on that bookmark, the web server will get a request for `/accounts/23` and will need to handle it by serving the single page app. React-route will render the right component for that route, as long as the javascript code gets to the browser.
 
 An express app might look like this:
 
@@ -94,6 +84,17 @@ RewriteRule . /index.html [L]
 We feature detect to see if we can use the browser's native `window.history` API. If not, any call to transition around the app will result in _a full page reload_, which allows you to build your app and have a better experience for newer browsers, but still support old ones.
 
 You might wonder why we don't fall back to hash history; the problem is that URLs become non-deterministic. If a visitor on hash history shares a URL with a visitor on browser history, and then they share that back, we end up with a terrible cartesian product of infinite potential URLs.
+
+### `hashHistory`
+Hash history uses the hash (`#`) portion of the URL, creating routes that look like `example.com/#/some/path`.
+
+#### Should I use `hashHistory`?
+Hash history works without configuring your server, so if you're just getting started, go ahead and use it. But, we don't recommend using it in production, every web app should aspire to use `browserHistory`.
+
+#### What is that `?_k=ckuvup` junk in the URL?
+When a history transitions around your app with `push` or `replace`, it can store "location state" that doesn't show up in the URL on the new location, think of it a little bit like post data in an HTML form.
+
+The DOM API that hash history uses to transition around is simply `window.location.hash = newHash`, with no place to store location state.  But, we want all histories to be able to use location state, so we shim it by creating a unique key for each location and then store that state in session storage. When the visitor clicks "back" and "forward" we now have a mechanism to restore the location state.
 
 ### `createMemoryHistory`
 Memory history doesn't manipulate or read from the address bar. This is how we implement server rendering. It's also useful for testing and other rendering environments (like React Native).
