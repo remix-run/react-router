@@ -34,7 +34,7 @@ Browser history is the recommended history for browser application with React Ro
 
 #### Configuring Your Server
 
-In order to allow the user to reload or bookmark any page on your app, your server will need to respond to any url that the react code generates and serve the single page app. For example, if the user bookmarks `/accounts/23` and then clicks on that bookmark, the web server will get a request for `/accounts/23` and will need to handle it by serving the single page app. React-route will render the right component for that route, as long as the javascript code gets to the browser.
+Your server must be ready to handle real URLs. When the app first loads at `/` it will probably work, but as the user navigates around and then hits refresh at `/accounts/23` your web server will get a request to `/accounts/23`. You will need it to handle that URL and include your JavaScript application in the response.
 
 An express app might look like this:
 
