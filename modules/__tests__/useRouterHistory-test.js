@@ -14,6 +14,11 @@ describe('useRouterHistory', function () {
     expect(history.__v2_compatible__).toBe(true)
   })
 
+  it('adds beforeunload listeners', function () {
+    const history = useRouterHistory(createHistory)()
+    expect(typeof history.listenBeforeUnload).toBe('function')
+  })
+
   it('passes along options, especially query parsing', function (done) {
     const history = useRouterHistory(createHistory)({
       stringifyQuery() {
