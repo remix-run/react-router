@@ -103,7 +103,7 @@ Please see the [`examples/`](/examples) directory of the repository for extensiv
 ### `<Link>`
 The primary way to allow users to navigate around your application. `<Link>` will render a fully accessible anchor tag with the proper href.
 
-A `<Link>` can know when the route it links to is active and automatically apply an `activeClassName` and/or `activeStyle` when given either prop. The `<Link>` will be active if the current route is either the linked route or any descendant of the linked route. To have the link be active only on the exact linked route, use [`<IndexLink>`](#indexlink) instead.
+A `<Link>` can know when the route it links to is active and automatically apply an `activeClassName` and/or `activeStyle` when given either prop. The `<Link>` will be active if the current route is either the linked route or any descendant of the linked route. To have the link be active only on the exact linked route, use [`<IndexLink>`](#indexlink) instead or set the `onlyActiveOnIndex` prop.
 
 #### Props
 ##### `to`
@@ -129,6 +129,9 @@ The styles to apply to the link element when its route is active.
 ##### `onClick(e)`
 A custom handler for the click event. Works just like a handler on an `<a>` tag - calling `e.preventDefault()` will prevent the transition from firing, while `e.stopPropagation()` will prevent the event from bubbling.
 
+##### `onlyActiveOnIndex`
+If `true`, the `<Link>` will only be active when the current route exactly matches the linked route.
+
 ##### *others*
 You can also pass props you'd like to be on the `<a>` such as a `title`, `id`, `className`, etc.
 
@@ -150,7 +153,7 @@ Given a route like `<Route path="/users/:userId" />`:
 ```
 
 ### `<IndexLink>`
-An `<IndexLink>` is like a [`<Link>`](#link), except it is only active when the current route is exactly the linked route.
+An `<IndexLink>` is like a [`<Link>`](#link), except it is only active when the current route is exactly the linked route. It is equivalent to `<Link>` with the `onlyActiveOnIndex` prop set.
 
 ### `<RouterContext>`
 A `<RouterContext>` renders the component tree for a given router state. Its used by `<Router>` but also useful for server rendering and integrating in brownfield development.
