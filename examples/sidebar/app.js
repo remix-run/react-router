@@ -5,6 +5,17 @@ import data from './data'
 import './app.css'
 
 class Category extends React.Component {
+  handleBack() {
+    const { category, item } = this.props.params
+
+    if (item) {
+      this.context.router.push(`/category/${category}`)
+    } else {
+      this.context.router.push('/')
+    }
+
+  }
+
   render() {
     const category = data.lookupCategory(this.props.params.category)
 
@@ -25,7 +36,7 @@ class CategorySidebar extends React.Component {
 
     return (
       <div>
-        <Link to="/">◀︎ Back</Link>
+        <a onClick={this.handleBack.bind(this)}>◀︎ Back</a>
         <h2>{category.name} Items</h2>
         <ul>
           {category.items.map((item, index) => (
@@ -37,6 +48,10 @@ class CategorySidebar extends React.Component {
       </div>
     )
   }
+}
+
+CategorySidebar.contextTypes = {
+  router: React.PropTypes.object.isRequired
 }
 
 class Item extends React.Component {
