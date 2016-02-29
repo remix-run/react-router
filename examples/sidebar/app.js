@@ -52,7 +52,7 @@ class CategorySidebar extends React.Component {
 
 CategorySidebar.contextTypes = {
   router: React.PropTypes.object.isRequired
-};
+}
 
 class Item extends React.Component {
   render() {
