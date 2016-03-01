@@ -80,6 +80,19 @@ describe('isActive', function () {
         })
       })
     })
+
+    describe('with matching route params', function () {
+      it('is active', function (done) {
+        render((
+          <Router history={createHistory('/items/1')}>
+            <Route path="/items/:itemId" />
+          </Router>
+        ), node, function () {
+          expect(this.router.isActive('/items/1')).toBe(true)
+          done()
+        })
+      })
+    })
   })
 
   describe('nested routes', function () {

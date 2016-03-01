@@ -38,8 +38,8 @@ function deepEqual(a, b) {
 
 function paramsAreActive(paramNames, paramValues, activeParams) {
   // FIXME: This doesn't work on repeated params in activeParams.
-  return paramNames.every(function (paramName, index) {
-    return String(paramValues[index]) === String(activeParams[paramName])
+  return paramNames.every(function (paramName) {
+    return typeof activeParams[paramName] !== 'undefined'
   })
 }
 
