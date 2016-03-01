@@ -460,7 +460,18 @@ All the same props as [Route](#route) except for `path`.
 ### `<IndexRedirect>`
 An `<IndexRedirect>` allows you to redirect from the URL of a parent route to another route. They can be used to allow a child route to serve as the default route for its parent, while still keeping a distinct URL.
 
-Please see the [Index Routes guide](/docs/guides/IndexRoutes.md).
+#### Example
+```js
+<Router>
+  <Route path="/" component={App}>
+    <IndexRedirect to="groups" />
+    {/* If no child route is matched, will redirect to 'groups' */}
+
+    <Route path="groups" component={Groups} />
+    <Route path="users" component={Users} />
+  </Route>
+</Router>
+```
 
 #### Props
 All the same props as [Redirect](#redirect) except for `from`.
