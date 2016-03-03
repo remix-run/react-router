@@ -1,5 +1,7 @@
 # Confirming Navigation
 
+If you are using ES6 classes, then you can't use mixins and so you need to make use of `history`. You can find an example of "Confirming Navigation" in the [rackt/history repo](https://github.com/rackt/history/blob/master/docs/ConfirmingNavigation.md).
+
 You can prevent a transition from happening or prompt the user before leaving a [route](/docs/Glossary.md#route) with a leave hook.
 
 ```js
