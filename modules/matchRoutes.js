@@ -49,18 +49,19 @@ function getIndexRoute(route, location, callback) {
   }
 }
 
-function checkCondition(condition, params, callback) {
+function checkCondition(condition, paramNames, paramValues, callback) {
   if (!condition) {
     callback(null, true)
   } else {
-    condition(params, callback)
+    const params = createParams(paramNames, paramValues)
+    condition(params, function (error, isMatch) {
+      callback(error, isMatch, params)
+    })
   }
 }
 
 function finalize(route, location, paramNames, paramValues, callback) {
-  const params = createParams(paramNames, paramValues)
-
-  checkCondition(route.condition, params, function (error, isMatch) {
+  checkCondition(route.condition, paramNames, paramValues, function (error, isMatch, params) {
     if (error) {
       callback(error)
     } else if (!isMatch) {
@@ -72,7 +73,7 @@ function finalize(route, location, paramNames, paramValues, callback) {
         } else {
           const match = {
             routes: [ route ],
-            params: params
+            params: params || createParams(paramNames, paramValues)
           }
 
           if (Array.isArray(indexRoute)) {
@@ -97,7 +98,7 @@ function finalize(route, location, paramNames, paramValues, callback) {
 }
 
 function matchChildren(route, location, remainingPathname, paramNames, paramValues, callback) {
-  checkCondition(route.condition, createParams(paramNames, paramValues), function (error, isMatch) {
+  checkCondition(route.condition, paramNames, paramValues, function (error, isMatch) {
     if (error) {
       callback(error)
     } else if (!isMatch) {
