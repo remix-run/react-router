@@ -5,26 +5,19 @@ import { createRoutes } from './RouteUtils'
 
 function getChildRoutes(route, location, callback) {
   if (route.childRoutes) {
-    return [ null, route.childRoutes ]
+    return callback(null, route.childRoutes)
   }
   if (!route.getChildRoutes) {
-    return []
+    return callback(null, [])
   }
 
-  let sync = true, result
-
   route.getChildRoutes(location, function (error, childRoutes) {
-    childRoutes = !error && createRoutes(childRoutes)
-    if (sync) {
-      result = [ error, childRoutes ]
-      return
+    if (error) {
+      callback(error)
+    } else {
+      callback(null, createRoutes(childRoutes))
     }
-
-    callback(error, childRoutes)
   })
-
-  sync = false
-  return result  // Might be undefined.
 }
 
 function getIndexRoute(route, location, callback) {
@@ -54,6 +47,88 @@ function getIndexRoute(route, location, callback) {
   } else {
     callback()
   }
+}
+
+function checkCondition(condition, params, callback) {
+  if (!condition) {
+    callback(null, true)
+  } else {
+    condition(params, callback)
+  }
+}
+
+function finalize(route, location, paramNames, paramValues, callback) {
+  const params = createParams(paramNames, paramValues)
+
+  checkCondition(route.condition, params, function (error, isMatch) {
+    if (error) {
+      callback(error)
+    } else if (!isMatch) {
+      callback()
+    } else {
+      getIndexRoute(route, location, function (error, indexRoute) {
+        if (error) {
+          callback(error)
+        } else {
+          const match = {
+            routes: [ route ],
+            params: params
+          }
+
+          if (Array.isArray(indexRoute)) {
+            warning(
+              indexRoute.every(route => !route.path),
+              'Index routes should not have paths'
+            )
+            match.routes.push(...indexRoute)
+          } else if (indexRoute) {
+            warning(
+              !indexRoute.path,
+              'Index routes should not have paths'
+            )
+            match.routes.push(indexRoute)
+          }
+
+          callback(null, match)
+        }
+      })
+    }
+  })
+}
+
+function matchChildren(route, location, remainingPathname, paramNames, paramValues, callback) {
+  checkCondition(route.condition, createParams(paramNames, paramValues), function (error, isMatch) {
+    if (error) {
+      callback(error)
+    } else if (!isMatch) {
+      callback()
+    } else {
+      // Either a) this route matched at least some of the path or b)
+      // we don't have to load this route's children asynchronously. In
+      // either case continue checking for matches in the subtree.
+      const onChildRoutes = (error, childRoutes) => {
+        if (error) {
+          callback(error)
+        } else if (childRoutes) {
+          // Check the child routes to see if any of them match.
+          matchRoutes(childRoutes, location, function (error, match) {
+            if (error) {
+              callback(error)
+            } else if (match) {
+              match.routes.unshift(route)
+              callback(null, match)
+            } else {
+              callback()
+            }
+          }, remainingPathname, paramNames, paramValues)
+        } else {
+          callback()
+        }
+      }
+
+      getChildRoutes(route, location, onChildRoutes)
+    }
+  })
 }
 
 function assignParams(params, paramNames, paramValues) {
@@ -94,68 +169,15 @@ function matchRouteDeep(
     paramValues = [ ...paramValues, ...matched.paramValues ]
 
     if (remainingPathname === '' && route.path) {
-      const match = {
-        routes: [ route ],
-        params: createParams(paramNames, paramValues)
-      }
-
-      getIndexRoute(route, location, function (error, indexRoute) {
-        if (error) {
-          callback(error)
-        } else {
-          if (Array.isArray(indexRoute)) {
-            warning(
-              indexRoute.every(route => !route.path),
-              'Index routes should not have paths'
-            )
-            match.routes.push(...indexRoute)
-          } else if (indexRoute) {
-            warning(
-              !indexRoute.path,
-              'Index routes should not have paths'
-            )
-            match.routes.push(indexRoute)
-          }
-
-          callback(null, match)
-        }
-      })
-      return
+      return finalize(route, location, paramNames, paramValues, callback)
     }
   }
 
-  if (remainingPathname != null || route.childRoutes) {
-    // Either a) this route matched at least some of the path or b)
-    // we don't have to load this route's children asynchronously. In
-    // either case continue checking for matches in the subtree.
-    const onChildRoutes = (error, childRoutes) => {
-      if (error) {
-        callback(error)
-      } else if (childRoutes) {
-        // Check the child routes to see if any of them match.
-        matchRoutes(childRoutes, location, function (error, match) {
-          if (error) {
-            callback(error)
-          } else if (match) {
-            // A child route matched! Augment the match and pass it up the stack.
-            match.routes.unshift(route)
-            callback(null, match)
-          } else {
-            callback()
-          }
-        }, remainingPathname, paramNames, paramValues)
-      } else {
-        callback()
-      }
-    }
-
-    const result = getChildRoutes(route, location, onChildRoutes)
-    if (result) {
-      onChildRoutes(...result)
-    }
-  } else {
-    callback()
+  if (remainingPathname !== null || route.childRoutes) {
+    return matchChildren(route, location, remainingPathname, paramNames, paramValues, callback)
   }
+
+  callback()
 }
 
 /**

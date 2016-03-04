@@ -56,6 +56,28 @@ describe('server rendering', function () {
     }
   }
 
+  class Category extends Component {
+    render() {
+      return (
+        <div className="Category">
+          <h1>Category</h1>
+          <div>{this.props.params.category}</div>
+        </div>
+      )
+    }
+  }
+
+  class Post extends Component {
+    render() {
+      return (
+        <div className="Post">
+          <h1>Post</h1>
+          <div>{this.props.params.slug}</div>
+        </div>
+      )
+    }
+  }
+
   const DashboardRoute = {
     path: '/dashboard',
     component: Dashboard
@@ -80,10 +102,23 @@ describe('server rendering', function () {
     }
   }
 
+  const CategoryRoute = {
+    path: '/food/:category',
+    condition(params, callback) {
+      callback(null, [ 'baking', 'bbq' ].indexOf(params.category) > -1)
+    },
+    component: Category
+  }
+
+  const PostRoute = {
+    path: '/food/:slug',
+    component: Post
+  }
+
   const routes = {
     path: '/',
     component: App,
-    childRoutes: [ DashboardRoute, AboutRoute, RedirectRoute, AsyncRoute ]
+    childRoutes: [ DashboardRoute, AboutRoute, RedirectRoute, AsyncRoute, CategoryRoute, PostRoute ]
   }
 
   it('works for synchronous route', function (done) {
@@ -198,6 +233,28 @@ describe('server rendering', function () {
           done()
         })
       })
+    })
+  })
+
+  it('condition matches category route', function (done) {
+    match({ routes, location: '/food/bbq' }, function (error, redirectLocation, renderProps) {
+      const string = renderToString(
+        <RouterContext {...renderProps} />
+      )
+      expect(string).toMatch(/Category/)
+      expect(string).toMatch(/bbq/)
+      done()
+    })
+  })
+
+  it('condition does not match and moves to next mached route', function (done) {
+    match({ routes, location: '/food/pizza-hut' }, function (error, redirectLocation, renderProps) {
+      const string = renderToString(
+        <RouterContext {...renderProps} />
+      )
+      expect(string).toMatch(/Post/)
+      expect(string).toMatch(/pizza-hut/)
+      done()
     })
   })
 })
