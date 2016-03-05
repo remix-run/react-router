@@ -205,3 +205,16 @@ const routeConfig = [
 
 render(<Router routes={routeConfig} />, document.body)
 ```
+
+### Redirect using plain routes configuration
+
+```js
+const routes = [{
+  path: '/',
+  component: Home,
+  onEnter: (nextState, replace) => replace('/about')
+}, {
+  path: '/about',
+  component: About
+}]
+```
