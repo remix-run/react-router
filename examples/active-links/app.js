@@ -17,6 +17,7 @@ class App extends React.Component {
           <li><IndexLink to="/users"      activeStyle={ACTIVE}>/users IndexLink</IndexLink></li>
 
           <li><Link      to="/users/ryan" activeStyle={ACTIVE}>/users/ryan</Link></li>
+          <li><IndexLink      to={{ pathname: '/users/ryan', query: { foo: undefined } }} activeStyle={ACTIVE}>/users/ryan IndexLink</IndexLink></li>
           <li><Link      to={{ pathname: '/users/ryan', query: { foo: 'bar' } }}
                                           activeStyle={ACTIVE}>/users/ryan?foo=bar</Link></li>
 
