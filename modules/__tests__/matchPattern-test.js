@@ -12,7 +12,7 @@ describe('matchPattern', function () {
   }
 
   it('works without params', function () {
-    assertMatch('/', '/path', 'path', [], [])
+    assertMatch('/', '/path', '/path', [], [])
   })
 
   it('works with named params', function () {
