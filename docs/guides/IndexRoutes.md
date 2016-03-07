@@ -37,6 +37,43 @@ the router allows you to have `Home` be a first class route component with
 Now `App` can render `{this.props.children}` and we have a first-class
 route for `Home` that can participate in routing.
 
+## Index Redirects
+
+Suppose your basic route configuration looks like:
+
+```js
+<Route path="/" component={App}>
+  <Route path="welcome" component={Welcome} />
+  <Route path="about" component={About} />
+</Route>
+```
+
+Suppose you want to redirect `/` to `/welcome`. To do this, you need to set up
+an index route that does the redirect. To do this, use the `<IndexRedirect>`
+component:
+
+```js
+<Route path="/" component={App}>
+  <IndexRedirect to="/welcome" />
+  <Route path="welcome" component={Welcome} />
+  <Route path="about" component={About} />
+</Route>
+```
+
+This is equivalent to setting up an index route with just an `onEnter` hook
+that redirects the user. You would set this up with plain routes as:
+
+```js
+const routes = [{
+  path: '/', component: App,
+  indexRoute: { onEnter: (nextState, replace) => replace('/welcome') },
+  childRoutes: [
+    { path: 'welcome', component: Welcome },
+    { path: 'about', component: About }
+  ]
+}]
+```
+
 ## Index Links
 
 If you were to `<Link to="/">Home</Link>` in this app, it would always

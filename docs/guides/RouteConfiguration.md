@@ -175,14 +175,16 @@ Continuing with our example above, if a user clicked on a link to `/about` from 
   - `onLeave` on the `/inbox` route
   - `onEnter` on the `/about` route
 
-### Alternate Configuration
+### Configuration with Plain Routes
 
 Since [routes](/docs/Glossary.md#route) are usually nested, it's useful to use a concise nested syntax like [JSX](https://facebook.github.io/jsx/) to describe their relationship to one another. However, you may also use an array of plain [route](/docs/Glossary.md#route) objects if you prefer to avoid using JSX.
+
+The `<Redirect>` configuration helper is not available when using plain routes, so you have to set up the redirect using the `onEnter` hook. 
 
 The route config we've discussed up to this point could also be specified like this:
 
 ```js
-const routeConfig = [
+const routes = [
   { path: '/',
     component: App,
     indexRoute: { component: Dashboard },
@@ -203,18 +205,5 @@ const routeConfig = [
   }
 ]
 
-render(<Router routes={routeConfig} />, document.body)
-```
-
-### Redirect using plain routes configuration
-
-```js
-const routes = [{
-  path: '/',
-  component: Home,
-  onEnter: (nextState, replace) => replace('/about')
-}, {
-  path: '/about',
-  component: About
-}]
+render(<Router routes={routes} />, document.body)
 ```
