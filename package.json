@@ -8,7 +8,6 @@
     "es6",
     "lib",
     "modules/*.js",
-    "npm-scripts",
     "umd"
   ],
   "main": "lib/index",
@@ -26,8 +25,7 @@
     "start": "node examples/server.js",
     "test": "npm run lint && npm run test-node && npm run test-browser",
     "test-browser": "karma start",
-    "test-node": "mocha --compilers js:babel-core/register tests.node.js",
-    "postinstall": "node ./npm-scripts/postinstall.js"
+    "test-node": "mocha --compilers js:babel-core/register tests.node.js"
   },
   "authors": [
     "Ryan Florence",
