@@ -10,7 +10,7 @@ describe('When a router enters a branch', function () {
   let
     node,
     newsLeaveHookSpy, removeNewsLeaveHook, userLeaveHookSpy,
-    DashboardRoute, NewsFeedRoute, InboxRoute, RedirectToInboxRoute, MessageRoute, UserRoute,
+    DashboardRoute, NewsFeedRoute, InboxRoute, RedirectToInboxRoute, MessageRoute, UserRoute, AssignmentRoute,
     routes
 
   beforeEach(function () {
@@ -52,6 +52,12 @@ describe('When a router enters a branch', function () {
       }
     }
 
+    class UserAssignment extends Component {
+      render() {
+        return <div>assignment {this.props.params.assignmentId}</div>
+      }
+    }
+
     class User extends Component {
       componentWillMount() {
         this.context.router.setRouteLeaveHook(
@@ -61,7 +67,7 @@ describe('When a router enters a branch', function () {
       }
 
       render() {
-        return <div>User</div>
+        return <div>User {this.props.params.userId} {this.props.children}</div>
       }
     }
 
@@ -121,9 +127,19 @@ describe('When a router enters a branch', function () {
       }
     }
 
+    AssignmentRoute = {
+      path: 'assignments/:assignmentId',
+      component: UserAssignment,
+      onEnter() { expect(this).toBe(AssignmentRoute) },
+      onLeave() { expect(this).toBe(AssignmentRoute) }
+    }
+
     UserRoute = {
       path: 'users/:userId',
-      component: User
+      component: User,
+      childRoutes: [ AssignmentRoute ],
+      onEnter() { expect(this).toBe(UserRoute) },
+      onLeave() { expect(this).toBe(UserRoute) }
     }
 
     DashboardRoute = {
@@ -264,6 +280,38 @@ describe('When a router enters a branch', function () {
           expect(messageRouteLeaveSpy).toHaveBeenCalled('MessageRoute.onLeave was not called')
           expect(messageRouteEnterSpy).toHaveBeenCalled('MessageRoute.onEnter was not called')
           expect(dashboardRouteLeaveSpy.calls.length).toEqual(0, 'DashboardRoute.onLeave was called')
+        }
+      ]
+
+      const execNextStep = execSteps(steps, done)
+
+      render(
+        <Router history={history}
+                routes={routes}
+                onUpdate={execNextStep}
+        />, node, execNextStep)
+    })
+  })
+
+  describe('and then navigates to the same branch, but with different parent params', function () {
+    it('calls the onLeave and onEnter hooks of the parent and children', function (done) {
+      const parentLeaveSpy = spyOn(UserRoute, 'onLeave').andCallThrough()
+      const parentEnterSpy = spyOn(UserRoute, 'onEnter').andCallThrough()
+      const childLeaveSpy = spyOn(AssignmentRoute, 'onLeave').andCallThrough()
+      const childEnterSpy = spyOn(AssignmentRoute, 'onEnter').andCallThrough()
+      const history = createHistory('/users/123/assignments/456')
+
+      const steps = [
+        function () {
+          expect(parentEnterSpy).toHaveBeenCalled()
+          expect(childEnterSpy).toHaveBeenCalled()
+          history.push('/users/789/assignments/456')
+        },
+        function () {
+          expect(parentLeaveSpy).toHaveBeenCalled()
+          expect(childLeaveSpy).toHaveBeenCalled()
+          expect(parentEnterSpy).toHaveBeenCalled()
+          expect(childEnterSpy).toHaveBeenCalled()
         }
       ]
 
