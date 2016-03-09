@@ -1,7 +1,10 @@
 ## [HEAD]
 > Unreleased
 
-- Nothing yet!
+- Fixed bug where transition hooks were not called on child routes of
+  parent's whose params changed but the child's did not. ([#3166])
+
+[#3166][https://github.com/reactjs/react-router/pull/3166]
 
 [HEAD]: https://github.com/reactjs/react-router/compare/v2.0.0...HEAD
 

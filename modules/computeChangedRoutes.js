@@ -27,8 +27,16 @@ function computeChangedRoutes(prevState, nextState) {
 
   let leaveRoutes, enterRoutes
   if (prevRoutes) {
+    let parentIsLeaving = false
     leaveRoutes = prevRoutes.filter(function (route) {
-      return nextRoutes.indexOf(route) === -1 || routeParamsChanged(route, prevState, nextState)
+      if (parentIsLeaving) {
+        return true
+      } else {
+        const isLeaving = nextRoutes.indexOf(route) === -1 || routeParamsChanged(route, prevState, nextState)
+        if (isLeaving)
+          parentIsLeaving = true
+        return isLeaving
+      }
     })
 
     // onLeave hooks start at the leaf route.
