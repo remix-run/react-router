@@ -1,7 +1,7 @@
 ## [HEAD]
 > Unreleased
 
-## [v2.0.0-rc6]
+## [v2.0.1]
 > March 9, 2016
 
 - Fixed bug where transition hooks were not called on child routes of
