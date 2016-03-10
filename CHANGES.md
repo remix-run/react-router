@@ -1,6 +1,9 @@
 ## [HEAD]
 > Unreleased
 
+## [v2.0.0-rc6]
+> March 9, 2016
+
 - Fixed bug where transition hooks were not called on child routes of
   parent's whose params changed but the child's did not. ([#3166])
 
