@@ -1,0 +1,842 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <meta charset="utf-8">
+        <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+        <meta name="viewport" content="width=device-width">
+
+        <title>React Router : API Reference</title>
+        <meta name="description" content="A complete routing library for React.">
+
+        <link href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.5/css/bootstrap.min.css" rel="stylesheet">
+        <link rel="stylesheet" href="/css/syntax.css">
+        <link rel="stylesheet" href="/css/main.css">
+    </head>
+    <body>
+
+        <div class="container">
+            <div class="row">
+                <div id="header" class="col-sm-12">
+                    <h4><a class="brand" href="/">React Router</a>
+    <small>A complete routing library for React.</small>
+</h4>
+
+                </div>
+            </div>
+
+            <div class="row">
+                
+                
+                    <div id="navigation" class="col-sm-2">
+                        <ul class="nav nav-list">
+    <li><a href="/">Home</a></li>
+    
+        
+        
+
+        
+            
+                <li class="nav-header">Documentation</li>
+            
+            <li data-order="13"><a href="/doc/v2.0.0.html">v2.0.0 Upgrade Guide</a></li>
+        
+            
+            <li data-order="12"><a href="/doc/v1.0.0.html">v1.0.0 Upgrade Guide</a></li>
+        
+            
+            <li data-order="14"><a href="/doc/Troubleshooting.html">Troubleshooting</a></li>
+        
+            
+            <li data-order="7"><a href="/doc/ServerRendering.html">Server Rendering</a></li>
+        
+            
+            <li data-order="9"><a href="/doc/NavigationOutsideOfComponents.html">Navigating Outside of Components</a></li>
+        
+            
+            <li data-order="10"><a href="/doc/MinimizingBundleSize.html">Minimizing Bundle Size</a></li>
+        
+            
+            <li data-order="4"><a href="/doc/IndexRoutes.html">Index Routes and Links</a></li>
+        
+            
+            <li data-order="3"><a href="/doc/Histories.html">Histories</a></li>
+        
+            
+            <li data-order="16"><a href="/doc/Glossary.html">Glossary</a></li>
+        
+            
+            <li data-order="5"><a href="/doc/DynamicRouting.html">Dynamic Routing</a></li>
+        
+            
+            <li data-order="6"><a href="/doc/ConfirmingNavigation.html">Confirming Navigation</a></li>
+        
+            
+            <li data-order="8"><a href="/doc/ComponentLifecycle.html">Component Lifecycle</a></li>
+        
+            
+            <li data-order="11"><a href="/doc/CHANGES.html">Change Log</a></li>
+        
+            
+            <li data-order="15"><a href="/doc/API.html">API Reference</a></li>
+        
+            
+            <li data-order="2"><a href="/doc/RouteMatching.html">Route Matching</a></li>
+        
+            
+            <li data-order="1"><a href="/doc/RouteConfiguration.html">Route Configuration</a></li>
+        
+    
+        
+        
+
+        
+    
+        
+        
+
+        
+    
+        
+        
+
+        
+    
+        
+        
+
+        
+    
+<!-- List additional links. It is recommended to add a divider
+    e.g. <li class="divider"></li> first to break up the content. -->
+</ul>
+
+                    </div>
+
+                    <div id="content" class="col-sm-10">
+                        <div class="page-header">
+    <h2>API Reference
+        
+    </h2>
+</div>
+
+<ul>
+<li><p><a href="#components">Components</a></p>
+
+<ul>
+<li><a href="#router"><code>&lt;Router&gt;</code></a></li>
+<li><a href="#link"><code>&lt;Link&gt;</code></a></li>
+<li><a href="#indexlink"><code>&lt;IndexLink&gt;</code></a></li>
+<li><a href="#routercontext"><code>&lt;RouterContext&gt;</code></a></li>
+<li><a href="#contextrouter"><code>context.router</code></a></li>
+<li><code>&lt;RoutingContext&gt;</code> (deprecated, use <code>&lt;RouterContext&gt;</code>)</li>
+</ul></li>
+<li><p><a href="#configuration-components">Configuration Components</a></p>
+
+<ul>
+<li><a href="#route"><code>&lt;Route&gt;</code></a></li>
+<li><a href="#plainroute"><code>PlainRoute</code></a></li>
+<li><a href="#redirect"><code>&lt;Redirect&gt;</code></a></li>
+<li><a href="#indexroute-1"><code>&lt;IndexRoute&gt;</code></a></li>
+<li><a href="#indexredirect"><code>&lt;IndexRedirect&gt;</code></a></li>
+</ul></li>
+<li><p><a href="#route-components">Route Components</a></p>
+
+<ul>
+<li><a href="#injected-props">Injected Props</a></li>
+<li><a href="#named-components">Named Components</a></li>
+</ul></li>
+<li><p><a href="#histories">Histories</a></p>
+
+<ul>
+<li><a href="#browserhistory"><code>browserHistory</code></a></li>
+<li><a href="#hashhistory"><code>hashHistory</code></a></li>
+<li><a href="#creatememoryhistoryoptions"><code>createMemoryHistory()</code></a></li>
+<li><a href="#userouterhistorycreatehistory"><code>useRouterHistory()</code></a></li>
+</ul></li>
+<li><p><a href="#utilities">Utilities</a></p>
+
+<ul>
+<li><a href="#match-routes-location-history-options--cb"><code>match()</code></a></li>
+<li><a href="#createroutesroutes"><code>createRoutes()</code></a></li>
+<li><a href="#proptypes"><code>PropTypes</code></a></li>
+<li><a href="#useroutescreatehistory-deprecated"><code>useRoutes()</code></a> (deprecated)</li>
+</ul></li>
+<li><p><a href="#mixins-deprecated">Mixins</a> (deprecated)</p>
+
+<ul>
+<li><code>Lifecycle</code> (deprecated)</li>
+<li><code>History</code> (deprecated)</li>
+<li><code>RouteContext</code> (deprecated)</li>
+</ul></li>
+</ul>
+
+<h2 id="components">Components</h2>
+
+<h3 id="code-code"><code>&lt;Router&gt;</code></h3>
+
+<p>Primary component of React Router. It keeps your UI and the URL in sync.</p>
+
+<h4 id="props">Props</h4>
+
+<h5 id="code-code"><code>children</code> (required)</h5>
+
+<p>One or many <a href="#route"><code>&lt;Route&gt;</code></a>s or <a href="#plainroute"><code>PlainRoute</code></a>s. When the history changes, <code>&lt;Router&gt;</code> will match a branch of its routes, and render their configured <a href="#routecomponent">components</a>, with child route components nested inside the parents.</p>
+
+<h5 id="code-code"><code>routes</code></h5>
+
+<p>Alias for <code>children</code>.</p>
+
+<h5 id="code-code"><code>history</code></h5>
+
+<p>The history the router should listen to. Typically <code>browserHistory</code> or <code>hashHistory</code>.</p>
+<div class="highlight"><pre><code class="language-js" data-lang="js"><span class="kr">import</span> <span class="p">{</span> <span class="nx">browserHistory</span> <span class="p">}</span> <span class="nx">from</span> <span class="s1">&#39;react-router&#39;</span>
+<span class="nx">ReactDOM</span><span class="p">.</span><span class="nx">render</span><span class="p">(</span><span class="o">&lt;</span><span class="nx">Router</span> <span class="nx">history</span><span class="o">=</span><span class="p">{</span><span class="nx">browserHistory</span><span class="p">}</span> <span class="o">/&gt;</span><span class="p">,</span> <span class="nx">el</span><span class="p">)</span>
+</code></pre></div>
+<h5 id="code-code"><code>createElement(Component, props)</code></h5>
+
+<p>When the router is ready to render a branch of route components, it will use this function to create the elements. You may want to take control of creating the elements when you&#39;re using some sort of data abstraction, like setting up subscriptions to stores, or passing in some sort of application module to each component via props.</p>
+<div class="highlight"><pre><code class="language-js" data-lang="js"><span class="o">&lt;</span><span class="nx">Router</span> <span class="nx">createElement</span><span class="o">=</span><span class="p">{</span><span class="nx">createElement</span><span class="p">}</span> <span class="o">/&gt;</span>
+
+<span class="c1">// default behavior</span>
+<span class="kd">function</span> <span class="nx">createElement</span><span class="p">(</span><span class="nx">Component</span><span class="p">,</span> <span class="nx">props</span><span class="p">)</span> <span class="p">{</span>
+  <span class="c1">// make sure you pass all the props in!</span>
+  <span class="k">return</span> <span class="o">&lt;</span><span class="nx">Component</span> <span class="p">{...</span><span class="nx">props</span><span class="p">}</span> <span class="o">/&gt;</span>
+<span class="p">}</span>
+
+<span class="c1">// maybe you&#39;re using something like Relay</span>
+<span class="kd">function</span> <span class="nx">createElement</span><span class="p">(</span><span class="nx">Component</span><span class="p">,</span> <span class="nx">props</span><span class="p">)</span> <span class="p">{</span>
+  <span class="c1">// make sure you pass all the props in!</span>
+  <span class="k">return</span> <span class="o">&lt;</span><span class="nx">RelayContainer</span> <span class="nx">Component</span><span class="o">=</span><span class="p">{</span><span class="nx">Component</span><span class="p">}</span> <span class="nx">routerProps</span><span class="o">=</span><span class="p">{</span><span class="nx">props</span><span class="p">}</span> <span class="o">/&gt;</span>
+<span class="p">}</span>
+</code></pre></div>
+<h5 id="code-code"><code>stringifyQuery(queryObject)</code></h5>
+
+<p>A function used to convert an object from <a href="#link"><code>&lt;Link&gt;</code></a>s or calls to
+<a href="#transitiontopathname-query-state"><code>transitionTo</code></a> to a URL query string.</p>
+
+<h5 id="code-code"><code>parseQueryString(queryString)</code></h5>
+
+<p>A function used to convert a query string into an object that gets passed to route component props.</p>
+
+<h5 id="code-code"><code>onError(error)</code></h5>
+
+<p>While the router is matching, errors may bubble up, here is your opportunity to catch and deal with them. Typically these will come from async features like <a href="#getcomponentslocation-callback"><code>route.getComponents</code></a>, <a href="#getindexroutelocation-callback"><code>route.getIndexRoute</code></a>, and <a href="#getchildrouteslocation-callback"><code>route.getChildRoutes</code></a>.</p>
+
+<h5 id="code-code"><code>onUpdate()</code></h5>
+
+<p>Called whenever the router updates its state in response to URL changes.</p>
+
+<h5 id="code-code"><code>render(props)</code></h5>
+
+<p>This is primarily for integrating with other libraries that need to participate in rendering before the route components are rendered. It defaults to <code>render={(props) =&gt; &lt;RouterContext {...props} /&gt;}</code>.</p>
+
+<p>Ensure that you render a <code>&lt;RouterContext&gt;</code> at the end of the line, passing all the props passed to <code>render</code>.</p>
+
+<h4 id="examples">Examples</h4>
+
+<p>Please see the <a href="/examples"><code>examples/</code></a> directory of the repository for extensive examples of using <code>&lt;Router&gt;</code>.</p>
+
+<h3 id="code-code"><code>&lt;Link&gt;</code></h3>
+
+<p>The primary way to allow users to navigate around your application. <code>&lt;Link&gt;</code> will render a fully accessible anchor tag with the proper href.</p>
+
+<p>A <code>&lt;Link&gt;</code> can know when the route it links to is active and automatically apply an <code>activeClassName</code> and/or <code>activeStyle</code> when given either prop. The <code>&lt;Link&gt;</code> will be active if the current route is either the linked route or any descendant of the linked route. To have the link be active only on the exact linked route, use <a href="#indexlink"><code>&lt;IndexLink&gt;</code></a> instead or set the <code>onlyActiveOnIndex</code> prop.</p>
+
+<h4 id="props">Props</h4>
+
+<h5 id="code-code"><code>to</code></h5>
+
+<p>The path to link to, e.g. <code>/users/123</code>.</p>
+
+<h5 id="code-code"><code>query</code></h5>
+
+<p>An object of key:value pairs to be stringified.</p>
+
+<h5 id="code-code"><code>hash</code></h5>
+
+<p>A hash to put in the URL, e.g. <code>#a-hash</code>.</p>
+
+<p><em>Note: React Router currently does not manage scroll position, and will not scroll to the element corresponding to the hash. Scroll position management utilities are available in the <a href="https://github.com/taion/scroll-behavior">scroll-behavior</a> library.</em></p>
+
+<h5 id="code-code"><code>state</code></h5>
+
+<p>State to persist to the <code>location</code>.</p>
+
+<h5 id="code-code"><code>activeClassName</code></h5>
+
+<p>The className a <code>&lt;Link&gt;</code> receives when its route is active. No active class by default.</p>
+
+<h5 id="code-code"><code>activeStyle</code></h5>
+
+<p>The styles to apply to the link element when its route is active.</p>
+
+<h5 id="code-code"><code>onClick(e)</code></h5>
+
+<p>A custom handler for the click event. Works just like a handler on an <code>&lt;a&gt;</code> tag - calling <code>e.preventDefault()</code> will prevent the transition from firing, while <code>e.stopPropagation()</code> will prevent the event from bubbling.</p>
+
+<h5 id="code-code"><code>onlyActiveOnIndex</code></h5>
+
+<p>If <code>true</code>, the <code>&lt;Link&gt;</code> will only be active when the current route exactly matches the linked route.</p>
+
+<h5 id="em-em"><em>others</em></h5>
+
+<p>You can also pass props you&#39;d like to be on the <code>&lt;a&gt;</code> such as a <code>title</code>, <code>id</code>, <code>className</code>, etc.</p>
+
+<h4 id="example">Example</h4>
+
+<p>Given a route like <code>&lt;Route path=&quot;/users/:userId&quot; /&gt;</code>:</p>
+<div class="highlight"><pre><code class="language-js" data-lang="js"><span class="o">&lt;</span><span class="nx">Link</span> <span class="nx">to</span><span class="o">=</span><span class="p">{</span><span class="err">`</span><span class="o">/</span><span class="nx">users</span><span class="o">/</span><span class="nx">$</span><span class="p">{</span><span class="nx">user</span><span class="p">.</span><span class="nx">id</span><span class="p">}</span><span class="err">`</span><span class="p">}</span> <span class="nx">activeClassName</span><span class="o">=</span><span class="s2">&quot;active&quot;</span><span class="o">&gt;</span><span class="p">{</span><span class="nx">user</span><span class="p">.</span><span class="nx">name</span><span class="p">}</span><span class="o">&lt;</span><span class="err">/Link&gt;</span>
+<span class="c1">// becomes one of these depending on your History and if the route is</span>
+<span class="c1">// active</span>
+<span class="o">&lt;</span><span class="nx">a</span> <span class="nx">href</span><span class="o">=</span><span class="s2">&quot;/users/123&quot;</span> <span class="kr">class</span><span class="o">=</span><span class="s2">&quot;active&quot;</span><span class="o">&gt;</span><span class="nx">Michael</span><span class="o">&lt;</span><span class="err">/a&gt;</span>
+<span class="o">&lt;</span><span class="nx">a</span> <span class="nx">href</span><span class="o">=</span><span class="s2">&quot;#/users/123&quot;</span><span class="o">&gt;</span><span class="nx">Michael</span><span class="o">&lt;</span><span class="err">/a&gt;</span>
+
+<span class="c1">// change the activeClassName</span>
+<span class="o">&lt;</span><span class="nx">Link</span> <span class="nx">to</span><span class="o">=</span><span class="p">{</span><span class="err">`</span><span class="o">/</span><span class="nx">users</span><span class="o">/</span><span class="nx">$</span><span class="p">{</span><span class="nx">user</span><span class="p">.</span><span class="nx">id</span><span class="p">}</span><span class="err">`</span><span class="p">}</span> <span class="nx">activeClassName</span><span class="o">=</span><span class="s2">&quot;current&quot;</span><span class="o">&gt;</span><span class="p">{</span><span class="nx">user</span><span class="p">.</span><span class="nx">name</span><span class="p">}</span><span class="o">&lt;</span><span class="err">/Link&gt;</span>
+
+<span class="c1">// change style when link is active</span>
+<span class="o">&lt;</span><span class="nx">Link</span> <span class="nx">to</span><span class="o">=</span><span class="s2">&quot;/users&quot;</span> <span class="nx">style</span><span class="o">=</span> <span class="nx">activeStyle</span><span class="o">=&gt;</span><span class="nx">Users</span><span class="o">&lt;</span><span class="err">/Link&gt;</span>
+</code></pre></div>
+<h3 id="code-code"><code>&lt;IndexLink&gt;</code></h3>
+
+<p>An <code>&lt;IndexLink&gt;</code> is like a <a href="#link"><code>&lt;Link&gt;</code></a>, except it is only active when the current route is exactly the linked route. It is equivalent to <code>&lt;Link&gt;</code> with the <code>onlyActiveOnIndex</code> prop set.</p>
+
+<h3 id="code-code"><code>&lt;RouterContext&gt;</code></h3>
+
+<p>A <code>&lt;RouterContext&gt;</code> renders the component tree for a given router state. Its used by <code>&lt;Router&gt;</code> but also useful for server rendering and integrating in brownfield development.</p>
+
+<p>It also provides a <code>router</code> object on <code>context</code>.</p>
+
+<h4 id="code-code"><code>context.router</code></h4>
+
+<p>Contains data and methods relevant to routing. Most useful for imperatively transitioning around the application.</p>
+
+<h5 id="code-code"><code>push(pathOrLoc)</code></h5>
+
+<p>Transitions to a new URL, adding a new entry in the browser history.</p>
+<div class="highlight"><pre><code class="language-js" data-lang="js"><span class="nx">router</span><span class="p">.</span><span class="nx">push</span><span class="p">(</span><span class="s1">&#39;/users/12&#39;</span><span class="p">)</span>
+
+<span class="c1">// or with a location descriptor object</span>
+<span class="nx">router</span><span class="p">.</span><span class="nx">push</span><span class="p">({</span>
+  <span class="nx">pathname</span><span class="o">:</span> <span class="s1">&#39;/users/12&#39;</span><span class="p">,</span>
+  <span class="nx">query</span><span class="o">:</span> <span class="p">{</span> <span class="nx">modal</span><span class="o">:</span> <span class="kc">true</span> <span class="p">},</span>
+  <span class="nx">state</span><span class="o">:</span> <span class="p">{</span> <span class="nx">fromDashboard</span><span class="o">:</span> <span class="kc">true</span> <span class="p">}</span>
+<span class="p">})</span>
+</code></pre></div>
+<h5 id="code-code"><code>replace(pathOrLoc)</code></h5>
+
+<p>Identical to <code>push</code> except replaces the current history entry with a new one.</p>
+
+<h5 id="code-code"><code>go(n)</code></h5>
+
+<p>Go forward or backward in the history by <code>n</code> or <code>-n</code>.</p>
+
+<h5 id="code-code"><code>goBack()</code></h5>
+
+<p>Go back one entry in the history.</p>
+
+<h5 id="code-code"><code>goForward()</code></h5>
+
+<p>Go forward one entry in the history.</p>
+
+<h5 id="code-code"><code>createPath(pathOrLoc, query)</code></h5>
+
+<p>Stringifies the query into the pathname, using the router&#39;s config.</p>
+
+<h5 id="code-code"><code>createHref(pathOrLoc, query)</code></h5>
+
+<p>Creates a URL, using the router&#39;s config. For example, it will add <code>#/</code> in front of the <code>pathname</code> for hash history.</p>
+
+<h5 id="code-code"><code>isActive(pathOrLoc, indexOnly)</code></h5>
+
+<p>Returns <code>true</code> or <code>false</code> depending on if the <code>pathOrLoc</code> is active. Will be true for every route in the route branch matched (child route is active, therefore parent is too), unless <code>indexOnly</code> is specified, in which case it will only match the exact path.</p>
+
+<p>A route is only considered active if all the URL parameters match, including optional parameters and their presence or absence.</p>
+
+<p>However, only explicitly specified query parameters will be checked. That means that <code>isActive({ pathname: &#39;/foo&#39;, query: { a: &#39;b&#39; } })</code> will return <code>true</code> when the location is <code>/foo?a=b&amp;c=d</code>. To require that a query parameter be absent, specify its value as an explicit <code>undefined</code>, e.g. <code>isActive({ pathname: &#39;/foo&#39;, query: { a: &#39;b&#39;, c: undefined } })</code>, which would be <code>false</code> in this example.</p>
+
+<h2 id="configuration-components">Configuration Components</h2>
+
+<h3 id="code-code"><code>&lt;Route&gt;</code></h3>
+
+<p>A <code>&lt;Route&gt;</code> is used to declaratively map routes to your application&#39;s
+component hierarchy.</p>
+
+<h4 id="props">Props</h4>
+
+<h5 id="code-code"><code>path</code></h5>
+
+<p>The path used in the URL.</p>
+
+<p>It will concat with the parent route&#39;s path unless it starts with <code>/</code>,
+making it an absolute path.</p>
+
+<p><strong>Note</strong>: Absolute paths may not be used in route config that is <a href="/docs/guides/DynamicRouting.md">dynamically loaded</a>.</p>
+
+<p>If left undefined, the router will try to match the child routes.</p>
+
+<h5 id="code-code"><code>component</code></h5>
+
+<p>A single component to be rendered when the route matches the URL. It can
+be rendered by the parent route component with <code>this.props.children</code>.</p>
+<div class="highlight"><pre><code class="language-js" data-lang="js"><span class="kr">const</span> <span class="nx">routes</span> <span class="o">=</span> <span class="p">(</span>
+  <span class="o">&lt;</span><span class="nx">Route</span> <span class="nx">component</span><span class="o">=</span><span class="p">{</span><span class="nx">App</span><span class="p">}</span><span class="o">&gt;</span>
+    <span class="o">&lt;</span><span class="nx">Route</span> <span class="nx">path</span><span class="o">=</span><span class="s2">&quot;groups&quot;</span> <span class="nx">component</span><span class="o">=</span><span class="p">{</span><span class="nx">Groups</span><span class="p">}</span> <span class="o">/&gt;</span>
+    <span class="o">&lt;</span><span class="nx">Route</span> <span class="nx">path</span><span class="o">=</span><span class="s2">&quot;users&quot;</span> <span class="nx">component</span><span class="o">=</span><span class="p">{</span><span class="nx">Users</span><span class="p">}</span> <span class="o">/&gt;</span>
+  <span class="o">&lt;</span><span class="err">/Route&gt;</span>
+<span class="p">)</span>
+
+<span class="kr">class</span> <span class="nx">App</span> <span class="kr">extends</span> <span class="nx">React</span><span class="p">.</span><span class="nx">Component</span> <span class="p">{</span>
+  <span class="nx">render</span> <span class="p">()</span> <span class="p">{</span>
+    <span class="k">return</span> <span class="p">(</span>
+      <span class="o">&lt;</span><span class="nx">div</span><span class="o">&gt;</span>
+        <span class="p">{</span><span class="cm">/* this will be either &lt;Users&gt; or &lt;Groups&gt; */</span><span class="p">}</span>
+        <span class="p">{</span><span class="k">this</span><span class="p">.</span><span class="nx">props</span><span class="p">.</span><span class="nx">children</span><span class="p">}</span>
+      <span class="o">&lt;</span><span class="err">/div&gt;</span>
+    <span class="p">)</span>
+  <span class="p">}</span>
+<span class="p">}</span>
+</code></pre></div>
+<h5 id="code-code"><code>components</code></h5>
+
+<p>Routes can define one or more named components as an object of <code>[name]: component</code> pairs to be rendered when the path matches the URL. They can be rendered by the parent route component with <code>this.props[name]</code>.</p>
+<div class="highlight"><pre><code class="language-js" data-lang="js"><span class="c1">// Think of it outside the context of the router - if you had pluggable</span>
+<span class="c1">// portions of your `render`, you might do it like this:</span>
+<span class="c1">// &lt;App main={&lt;Users /&gt;} sidebar={&lt;UsersSidebar /&gt;} /&gt;</span>
+
+<span class="kr">const</span> <span class="nx">routes</span> <span class="o">=</span> <span class="p">(</span>
+  <span class="o">&lt;</span><span class="nx">Route</span> <span class="nx">component</span><span class="o">=</span><span class="p">{</span><span class="nx">App</span><span class="p">}</span><span class="o">&gt;</span>
+    <span class="o">&lt;</span><span class="nx">Route</span> <span class="nx">path</span><span class="o">=</span><span class="s2">&quot;groups&quot;</span> <span class="nx">components</span><span class="o">=</span> <span class="err">/&gt;</span>
+    <span class="o">&lt;</span><span class="nx">Route</span> <span class="nx">path</span><span class="o">=</span><span class="s2">&quot;users&quot;</span> <span class="nx">components</span><span class="o">=&gt;</span>
+      <span class="o">&lt;</span><span class="nx">Route</span> <span class="nx">path</span><span class="o">=</span><span class="s2">&quot;users/:userId&quot;</span> <span class="nx">component</span><span class="o">=</span><span class="p">{</span><span class="nx">Profile</span><span class="p">}</span> <span class="o">/&gt;</span>
+    <span class="o">&lt;</span><span class="err">/Route&gt;</span>
+  <span class="o">&lt;</span><span class="err">/Route&gt;</span>
+<span class="p">)</span>
+
+<span class="kr">class</span> <span class="nx">App</span> <span class="kr">extends</span> <span class="nx">React</span><span class="p">.</span><span class="nx">Component</span> <span class="p">{</span>
+  <span class="nx">render</span> <span class="p">()</span> <span class="p">{</span>
+    <span class="kr">const</span> <span class="p">{</span> <span class="nx">main</span><span class="p">,</span> <span class="nx">sidebar</span> <span class="p">}</span> <span class="o">=</span> <span class="k">this</span><span class="p">.</span><span class="nx">props</span>
+    <span class="k">return</span> <span class="p">(</span>
+      <span class="o">&lt;</span><span class="nx">div</span><span class="o">&gt;</span>
+        <span class="o">&lt;</span><span class="nx">div</span> <span class="nx">className</span><span class="o">=</span><span class="s2">&quot;Main&quot;</span><span class="o">&gt;</span>
+          <span class="p">{</span><span class="nx">main</span><span class="p">}</span>
+        <span class="o">&lt;</span><span class="err">/div&gt;</span>
+        <span class="o">&lt;</span><span class="nx">div</span> <span class="nx">className</span><span class="o">=</span><span class="s2">&quot;Sidebar&quot;</span><span class="o">&gt;</span>
+          <span class="p">{</span><span class="nx">sidebar</span><span class="p">}</span>
+        <span class="o">&lt;</span><span class="err">/div&gt;</span>
+      <span class="o">&lt;</span><span class="err">/div&gt;</span>
+    <span class="p">)</span>
+  <span class="p">}</span>
+<span class="p">}</span>
+
+<span class="kr">class</span> <span class="nx">Users</span> <span class="kr">extends</span> <span class="nx">React</span><span class="p">.</span><span class="nx">Component</span> <span class="p">{</span>
+  <span class="nx">render</span> <span class="p">()</span> <span class="p">{</span>
+    <span class="k">return</span> <span class="p">(</span>
+      <span class="o">&lt;</span><span class="nx">div</span><span class="o">&gt;</span>
+        <span class="p">{</span><span class="cm">/* if at &quot;/users/123&quot; `children` will be &lt;Profile&gt; */</span><span class="p">}</span>
+        <span class="p">{</span><span class="cm">/* UsersSidebar will also get &lt;Profile&gt; as this.props.children,</span>
+<span class="cm">            so its a little weird, but you can decide which one wants</span>
+<span class="cm">            to continue with the nesting */</span><span class="p">}</span>
+        <span class="p">{</span><span class="k">this</span><span class="p">.</span><span class="nx">props</span><span class="p">.</span><span class="nx">children</span><span class="p">}</span>
+      <span class="o">&lt;</span><span class="err">/div&gt;</span>
+    <span class="p">)</span>
+  <span class="p">}</span>
+<span class="p">}</span>
+</code></pre></div>
+<h5 id="code-code"><code>getComponent(location, callback)</code></h5>
+
+<p>Same as <code>component</code> but asynchronous, useful for
+code-splitting.</p>
+
+<h6 id="code-code"><code>callback</code> signature</h6>
+
+<p><code>cb(err, component)</code></p>
+<div class="highlight"><pre><code class="language-js" data-lang="js"><span class="o">&lt;</span><span class="nx">Route</span> <span class="nx">path</span><span class="o">=</span><span class="s2">&quot;courses/:courseId&quot;</span> <span class="nx">getComponent</span><span class="o">=</span><span class="p">{(</span><span class="nx">location</span><span class="p">,</span> <span class="nx">cb</span><span class="p">)</span> <span class="o">=&gt;</span> <span class="p">{</span>
+  <span class="c1">// do asynchronous stuff to find the components</span>
+  <span class="nx">cb</span><span class="p">(</span><span class="kc">null</span><span class="p">,</span> <span class="nx">Course</span><span class="p">)</span>
+<span class="p">}}</span> <span class="o">/&gt;</span>
+</code></pre></div>
+<h5 id="code-code"><code>getComponents(location, callback)</code></h5>
+
+<p>Same as <code>components</code> but asynchronous, useful for
+code-splitting.</p>
+
+<h6 id="code-code"><code>callback</code> signature</h6>
+
+<p><code>cb(err, components)</code></p>
+<div class="highlight"><pre><code class="language-js" data-lang="js"><span class="o">&lt;</span><span class="nx">Route</span> <span class="nx">path</span><span class="o">=</span><span class="s2">&quot;courses/:courseId&quot;</span> <span class="nx">getComponents</span><span class="o">=</span><span class="p">{(</span><span class="nx">location</span><span class="p">,</span> <span class="nx">cb</span><span class="p">)</span> <span class="o">=&gt;</span> <span class="p">{</span>
+  <span class="c1">// do asynchronous stuff to find the components</span>
+  <span class="nx">cb</span><span class="p">(</span><span class="kc">null</span><span class="p">,</span> <span class="p">{</span><span class="nx">sidebar</span><span class="o">:</span> <span class="nx">CourseSidebar</span><span class="p">,</span> <span class="nx">content</span><span class="o">:</span> <span class="nx">Course</span><span class="p">})</span>
+<span class="p">}}</span> <span class="o">/&gt;</span>
+</code></pre></div>
+<h5 id="code-code"><code>children</code></h5>
+
+<p>Routes can be nested, <code>this.props.children</code> will contain the element created from the child route component. Please refer to the <a href="/docs/guides/RouteConfiguration.md">Route Configuration</a> since this is a very critical part of the router&#39;s design.</p>
+
+<h5 id="code-code"><code>onEnter(nextState, replace, callback?)</code></h5>
+
+<p>Called when a route is about to be entered. It provides the next router state and a function to redirect to another path. <code>this</code> will be the route instance that triggered the hook.</p>
+
+<p>If <code>callback</code> is listed as a 3rd argument, this hook will run asynchronously, and the transition will block until <code>callback</code> is called.</p>
+
+<h5 id="code-code"><code>onLeave()</code></h5>
+
+<p>Called when a route is about to be exited.</p>
+
+<h3 id="code-code"><code>PlainRoute</code></h3>
+
+<p>A plain JavaScript object route definition. <code>&lt;Router&gt;</code> turns JSX <code>&lt;Route&gt;</code>s into these objects, but you can use them directly if you prefer. All of the props are the same as <code>&lt;Route&gt;</code> props, except those listed here.</p>
+
+<h4 id="props">Props</h4>
+
+<h5 id="code-code"><code>childRoutes</code></h5>
+
+<p>An array of child routes, same as <code>children</code> in JSX route configs.</p>
+
+<h5 id="code-code"><code>getChildRoutes(location, callback)</code></h5>
+
+<p>Same as <code>childRoutes</code> but asynchronous and receives the <code>location</code>. Useful for code-splitting and dynamic route matching (given some state or session data to return a different set of child routes).</p>
+
+<h6 id="code-code"><code>callback</code> signature</h6>
+
+<p><code>cb(err, routesArray)</code></p>
+<div class="highlight"><pre><code class="language-js" data-lang="js"><span class="kd">let</span> <span class="nx">myRoute</span> <span class="o">=</span> <span class="p">{</span>
+  <span class="nx">path</span><span class="o">:</span> <span class="s1">&#39;course/:courseId&#39;</span><span class="p">,</span>
+  <span class="nx">childRoutes</span><span class="o">:</span> <span class="p">[</span>
+    <span class="nx">announcementsRoute</span><span class="p">,</span>
+    <span class="nx">gradesRoute</span><span class="p">,</span>
+    <span class="nx">assignmentsRoute</span>
+  <span class="p">]</span>
+<span class="p">}</span>
+
+<span class="c1">// async child routes</span>
+<span class="kd">let</span> <span class="nx">myRoute</span> <span class="o">=</span> <span class="p">{</span>
+  <span class="nx">path</span><span class="o">:</span> <span class="s1">&#39;course/:courseId&#39;</span><span class="p">,</span>
+  <span class="nx">getChildRoutes</span><span class="p">(</span><span class="nx">location</span><span class="p">,</span> <span class="nx">cb</span><span class="p">)</span> <span class="p">{</span>
+    <span class="c1">// do asynchronous stuff to find the child routes</span>
+    <span class="nx">cb</span><span class="p">(</span><span class="kc">null</span><span class="p">,</span> <span class="p">[</span> <span class="nx">announcementsRoute</span><span class="p">,</span> <span class="nx">gradesRoute</span><span class="p">,</span> <span class="nx">assignmentsRoute</span> <span class="p">])</span>
+  <span class="p">}</span>
+<span class="p">}</span>
+
+<span class="c1">// navigation dependent child routes</span>
+<span class="c1">// can link with some state</span>
+<span class="o">&lt;</span><span class="nx">Link</span> <span class="nx">to</span><span class="o">=</span><span class="s2">&quot;/picture/123&quot;</span> <span class="nx">state</span><span class="o">=</span> <span class="err">/&gt;</span>
+
+<span class="kd">let</span> <span class="nx">myRoute</span> <span class="o">=</span> <span class="p">{</span>
+  <span class="nx">path</span><span class="o">:</span> <span class="s1">&#39;picture/:id&#39;</span><span class="p">,</span>
+  <span class="nx">getChildRoutes</span><span class="p">(</span><span class="nx">location</span><span class="p">,</span> <span class="nx">cb</span><span class="p">)</span> <span class="p">{</span>
+    <span class="kd">let</span> <span class="p">{</span> <span class="nx">state</span> <span class="p">}</span> <span class="o">=</span> <span class="nx">location</span>
+
+    <span class="k">if</span> <span class="p">(</span><span class="nx">state</span> <span class="o">&amp;&amp;</span> <span class="nx">state</span><span class="p">.</span><span class="nx">fromDashboard</span><span class="p">)</span> <span class="p">{</span>
+      <span class="nx">cb</span><span class="p">(</span><span class="kc">null</span><span class="p">,</span> <span class="p">[</span><span class="nx">dashboardPictureRoute</span><span class="p">])</span>
+    <span class="p">}</span> <span class="k">else</span> <span class="p">{</span>
+      <span class="nx">cb</span><span class="p">(</span><span class="kc">null</span><span class="p">,</span> <span class="p">[</span><span class="nx">pictureRoute</span><span class="p">])</span>
+    <span class="p">}</span>
+  <span class="p">}</span>
+<span class="p">}</span>
+</code></pre></div>
+<h5 id="code-code"><code>indexRoute</code></h5>
+
+<p>The <a href="/docs/guides/IndexRoutes.md">index route</a>. This is the same as specifying an <code>&lt;IndexRoute&gt;</code> child when using JSX route configs.</p>
+
+<h5 id="code-code"><code>getIndexRoute(location, callback)</code></h5>
+
+<p>Same as <code>indexRoute</code>, but asynchronous and receives the <code>location</code>. As with <code>getChildRoutes</code>, this can be useful for code-splitting and dynamic route matching.</p>
+
+<h6 id="code-code"><code>callback</code> signature</h6>
+
+<p><code>cb(err, route)</code></p>
+<div class="highlight"><pre><code class="language-js" data-lang="js"><span class="c1">// For example:</span>
+<span class="kd">let</span> <span class="nx">myIndexRoute</span> <span class="o">=</span> <span class="p">{</span>
+  <span class="nx">component</span><span class="o">:</span> <span class="nx">MyIndex</span>
+<span class="p">}</span>
+
+<span class="kd">let</span> <span class="nx">myRoute</span> <span class="o">=</span> <span class="p">{</span>
+  <span class="nx">path</span><span class="o">:</span> <span class="s1">&#39;courses&#39;</span><span class="p">,</span>
+  <span class="nx">indexRoute</span><span class="o">:</span> <span class="nx">myIndexRoute</span>
+<span class="p">}</span>
+
+<span class="c1">// async index route</span>
+<span class="kd">let</span> <span class="nx">myRoute</span> <span class="o">=</span> <span class="p">{</span>
+  <span class="nx">path</span><span class="o">:</span> <span class="s1">&#39;courses&#39;</span><span class="p">,</span>
+  <span class="nx">getIndexRoute</span><span class="p">(</span><span class="nx">location</span><span class="p">,</span> <span class="nx">cb</span><span class="p">)</span> <span class="p">{</span>
+    <span class="c1">// do something async here</span>
+    <span class="nx">cb</span><span class="p">(</span><span class="kc">null</span><span class="p">,</span> <span class="nx">myIndexRoute</span><span class="p">)</span>
+  <span class="p">}</span>
+<span class="p">}</span>
+</code></pre></div>
+<h3 id="code-code"><code>&lt;Redirect&gt;</code></h3>
+
+<p>A <code>&lt;Redirect&gt;</code> sets up a redirect to another route in your application to maintain old URLs.</p>
+
+<h4 id="props">Props</h4>
+
+<h5 id="code-code"><code>from</code></h5>
+
+<p>The path you want to redirect from, including dynamic segments.</p>
+
+<h5 id="code-code"><code>to</code></h5>
+
+<p>The path you want to redirect to.</p>
+
+<h5 id="code-code"><code>query</code></h5>
+
+<p>By default, the query parameters will just pass through but you can specify them if you need to.</p>
+<div class="highlight"><pre><code class="language-js" data-lang="js"><span class="c1">// Say we want to change from `/profile/123` to `/about/123`</span>
+<span class="c1">// and redirect `/get-in-touch` to `/contact`</span>
+<span class="o">&lt;</span><span class="nx">Route</span> <span class="nx">component</span><span class="o">=</span><span class="p">{</span><span class="nx">App</span><span class="p">}</span><span class="o">&gt;</span>
+  <span class="o">&lt;</span><span class="nx">Route</span> <span class="nx">path</span><span class="o">=</span><span class="s2">&quot;about/:userId&quot;</span> <span class="nx">component</span><span class="o">=</span><span class="p">{</span><span class="nx">UserProfile</span><span class="p">}</span> <span class="o">/&gt;</span>
+  <span class="p">{</span><span class="cm">/* /profile/123 -&gt; /about/123 */</span><span class="p">}</span>
+  <span class="o">&lt;</span><span class="nx">Redirect</span> <span class="nx">from</span><span class="o">=</span><span class="s2">&quot;profile/:userId&quot;</span> <span class="nx">to</span><span class="o">=</span><span class="s2">&quot;about/:userId&quot;</span> <span class="o">/&gt;</span>
+<span class="o">&lt;</span><span class="err">/Route&gt;</span>
+</code></pre></div>
+<p>Note that the <code>&lt;Redirect&gt;</code> can be placed anywhere in the route hierarchy, though <a href="/docs/guides/RouteMatching.md#precedence">normal precedence</a> rules apply. If you&#39;d prefer the redirects to be next to their respective routes, the <code>from</code> path will match the same as a regular route <code>path</code>.</p>
+<div class="highlight"><pre><code class="language-js" data-lang="js"><span class="o">&lt;</span><span class="nx">Route</span> <span class="nx">path</span><span class="o">=</span><span class="s2">&quot;course/:courseId&quot;</span><span class="o">&gt;</span>
+  <span class="o">&lt;</span><span class="nx">Route</span> <span class="nx">path</span><span class="o">=</span><span class="s2">&quot;dashboard&quot;</span> <span class="o">/&gt;</span>
+  <span class="p">{</span><span class="cm">/* /course/123/home -&gt; /course/123/dashboard */</span><span class="p">}</span>
+  <span class="o">&lt;</span><span class="nx">Redirect</span> <span class="nx">from</span><span class="o">=</span><span class="s2">&quot;home&quot;</span> <span class="nx">to</span><span class="o">=</span><span class="s2">&quot;dashboard&quot;</span> <span class="o">/&gt;</span>
+<span class="o">&lt;</span><span class="err">/Route&gt;</span>
+</code></pre></div>
+<h3 id="code-code"><code>&lt;IndexRoute&gt;</code></h3>
+
+<p>An <code>&lt;IndexRoute&gt;</code> allows you to provide a default &quot;child&quot; to a parent route when visitor is at the URL of the parent.</p>
+
+<p>Please see the <a href="/docs/guides/IndexRoutes.md">Index Routes guide</a>.</p>
+
+<h4 id="props">Props</h4>
+
+<p>All the same props as <a href="#route">Route</a> except for <code>path</code>.</p>
+
+<h3 id="code-code"><code>&lt;IndexRedirect&gt;</code></h3>
+
+<p>An <code>&lt;IndexRedirect&gt;</code> allows you to redirect from the URL of a parent route to another route. They can be used to allow a child route to serve as the default route for its parent, while still keeping a distinct URL.</p>
+
+<p>Please see the <a href="/docs/guides/IndexRoutes.md">Index Routes guide</a>.</p>
+
+<h4 id="props">Props</h4>
+
+<p>All the same props as <a href="#redirect">Redirect</a> except for <code>from</code>.</p>
+
+<h2 id="route-components">Route Components</h2>
+
+<p>A route&#39;s component is rendered when that route matches the URL. The router will inject the following properties into your component when it&#39;s rendered:</p>
+
+<h3 id="injected-props">Injected Props</h3>
+
+<h4 id="code-code"><code>location</code></h4>
+
+<p>The current <a href="https://github.com/reactjs/history/blob/master/docs/Location.md">location</a>.</p>
+
+<h4 id="code-code"><code>params</code></h4>
+
+<p>The dynamic segments of the URL.</p>
+
+<h4 id="code-code"><code>route</code></h4>
+
+<p>The route that rendered this component.</p>
+
+<h4 id="code-code"><code>routeParams</code></h4>
+
+<p>A subset of <code>this.props.params</code> that were directly specified in this component&#39;s route. For example, if the route&#39;s path is <code>users/:userId</code> and the URL is <code>/users/123/portfolios/345</code> then <code>this.props.routeParams</code> will be <code>{userId: &#39;123&#39;}</code>, and <code>this.props.params</code> will be <code>{userId: &#39;123&#39;, portfolioId: 345}</code>.</p>
+
+<h4 id="code-code"><code>children</code></h4>
+
+<p>The matched child route element to be rendered. If the route has <a href="/docs/API.md#named-components">named components</a> then this will be undefined, and the components will instead be available as direct properties on <code>this.props</code>.</p>
+
+<h5 id="example">Example</h5>
+<div class="highlight"><pre><code class="language-js" data-lang="js"><span class="nx">render</span><span class="p">((</span>
+  <span class="o">&lt;</span><span class="nx">Router</span><span class="o">&gt;</span>
+    <span class="o">&lt;</span><span class="nx">Route</span> <span class="nx">path</span><span class="o">=</span><span class="s2">&quot;/&quot;</span> <span class="nx">component</span><span class="o">=</span><span class="p">{</span><span class="nx">App</span><span class="p">}</span><span class="o">&gt;</span>
+      <span class="o">&lt;</span><span class="nx">Route</span> <span class="nx">path</span><span class="o">=</span><span class="s2">&quot;groups&quot;</span> <span class="nx">component</span><span class="o">=</span><span class="p">{</span><span class="nx">Groups</span><span class="p">}</span> <span class="o">/&gt;</span>
+      <span class="o">&lt;</span><span class="nx">Route</span> <span class="nx">path</span><span class="o">=</span><span class="s2">&quot;users&quot;</span> <span class="nx">component</span><span class="o">=</span><span class="p">{</span><span class="nx">Users</span><span class="p">}</span> <span class="o">/&gt;</span>
+    <span class="o">&lt;</span><span class="err">/Route&gt;</span>
+  <span class="o">&lt;</span><span class="err">/Router&gt;</span>
+<span class="p">),</span> <span class="nx">node</span><span class="p">)</span>
+
+<span class="kr">class</span> <span class="nx">App</span> <span class="kr">extends</span> <span class="nx">React</span><span class="p">.</span><span class="nx">Component</span> <span class="p">{</span>
+  <span class="nx">render</span><span class="p">()</span> <span class="p">{</span>
+    <span class="k">return</span> <span class="p">(</span>
+      <span class="o">&lt;</span><span class="nx">div</span><span class="o">&gt;</span>
+        <span class="p">{</span><span class="cm">/* this will be either &lt;Users&gt; or &lt;Groups&gt; */</span><span class="p">}</span>
+        <span class="p">{</span><span class="k">this</span><span class="p">.</span><span class="nx">props</span><span class="p">.</span><span class="nx">children</span><span class="p">}</span>
+      <span class="o">&lt;</span><span class="err">/div&gt;</span>
+    <span class="p">)</span>
+  <span class="p">}</span>
+<span class="p">}</span>
+</code></pre></div>
+<h4 id="code-code"><code>history</code> (deprecated)</h4>
+
+<h3 id="named-components">Named Components</h3>
+
+<p>When a route has one or more named components, the child elements are available by name on <code>this.props</code>. In this case <code>this.props.children</code> will be undefined. All route components can participate in the nesting.</p>
+
+<h4 id="example">Example</h4>
+<div class="highlight"><pre><code class="language-js" data-lang="js"><span class="nx">render</span><span class="p">((</span>
+  <span class="o">&lt;</span><span class="nx">Router</span><span class="o">&gt;</span>
+    <span class="o">&lt;</span><span class="nx">Route</span> <span class="nx">path</span><span class="o">=</span><span class="s2">&quot;/&quot;</span> <span class="nx">component</span><span class="o">=</span><span class="p">{</span><span class="nx">App</span><span class="p">}</span><span class="o">&gt;</span>
+      <span class="o">&lt;</span><span class="nx">Route</span> <span class="nx">path</span><span class="o">=</span><span class="s2">&quot;groups&quot;</span> <span class="nx">components</span><span class="o">=</span> <span class="err">/&gt;</span>
+      <span class="o">&lt;</span><span class="nx">Route</span> <span class="nx">path</span><span class="o">=</span><span class="s2">&quot;users&quot;</span> <span class="nx">components</span><span class="o">=&gt;</span>
+        <span class="o">&lt;</span><span class="nx">Route</span> <span class="nx">path</span><span class="o">=</span><span class="s2">&quot;users/:userId&quot;</span> <span class="nx">component</span><span class="o">=</span><span class="p">{</span><span class="nx">Profile</span><span class="p">}</span> <span class="o">/&gt;</span>
+      <span class="o">&lt;</span><span class="err">/Route&gt;</span>
+    <span class="o">&lt;</span><span class="err">/Route&gt;</span>
+  <span class="o">&lt;</span><span class="err">/Router&gt;</span>
+<span class="p">),</span> <span class="nx">node</span><span class="p">)</span>
+
+<span class="kr">class</span> <span class="nx">App</span> <span class="kr">extends</span> <span class="nx">React</span><span class="p">.</span><span class="nx">Component</span> <span class="p">{</span>
+  <span class="nx">render</span><span class="p">()</span> <span class="p">{</span>
+    <span class="c1">// the matched child route components become props in the parent</span>
+    <span class="k">return</span> <span class="p">(</span>
+      <span class="o">&lt;</span><span class="nx">div</span><span class="o">&gt;</span>
+        <span class="o">&lt;</span><span class="nx">div</span> <span class="nx">className</span><span class="o">=</span><span class="s2">&quot;Main&quot;</span><span class="o">&gt;</span>
+          <span class="p">{</span><span class="cm">/* this will either be &lt;Groups&gt; or &lt;Users&gt; */</span><span class="p">}</span>
+          <span class="p">{</span><span class="k">this</span><span class="p">.</span><span class="nx">props</span><span class="p">.</span><span class="nx">main</span><span class="p">}</span>
+        <span class="o">&lt;</span><span class="err">/div&gt;</span>
+        <span class="o">&lt;</span><span class="nx">div</span> <span class="nx">className</span><span class="o">=</span><span class="s2">&quot;Sidebar&quot;</span><span class="o">&gt;</span>
+          <span class="p">{</span><span class="cm">/* this will either be &lt;GroupsSidebar&gt; or &lt;UsersSidebar&gt; */</span><span class="p">}</span>
+          <span class="p">{</span><span class="k">this</span><span class="p">.</span><span class="nx">props</span><span class="p">.</span><span class="nx">sidebar</span><span class="p">}</span>
+        <span class="o">&lt;</span><span class="err">/div&gt;</span>
+      <span class="o">&lt;</span><span class="err">/div&gt;</span>
+    <span class="p">)</span>
+  <span class="p">}</span>
+<span class="p">}</span>
+
+<span class="kr">class</span> <span class="nx">Users</span> <span class="kr">extends</span> <span class="nx">React</span><span class="p">.</span><span class="nx">Component</span> <span class="p">{</span>
+  <span class="nx">render</span><span class="p">()</span> <span class="p">{</span>
+    <span class="k">return</span> <span class="p">(</span>
+      <span class="o">&lt;</span><span class="nx">div</span><span class="o">&gt;</span>
+        <span class="p">{</span><span class="cm">/* if at &quot;/users/123&quot; this will be &lt;Profile&gt; */</span><span class="p">}</span>
+        <span class="p">{</span><span class="cm">/* UsersSidebar will also get &lt;Profile&gt; as this.props.children.</span>
+<span class="cm">            You can pick where it renders */</span><span class="p">}</span>
+        <span class="p">{</span><span class="k">this</span><span class="p">.</span><span class="nx">props</span><span class="p">.</span><span class="nx">children</span><span class="p">}</span>
+      <span class="o">&lt;</span><span class="err">/div&gt;</span>
+    <span class="p">)</span>
+  <span class="p">}</span>
+<span class="p">}</span>
+</code></pre></div>
+<h2 id="histories">Histories</h2>
+
+<p>For more details, please see the <a href="/docs/guides/Histories.md">histories guide</a>.</p>
+
+<h3 id="code-code"><code>browserHistory</code></h3>
+
+<p><code>browserHistory</code> uses the HTML5 History API when available, and falls back to full refreshes otherwise. <code>browserHistory</code> requires additional configuration on the server side to serve up URLs, but is the generally preferred solution for modern web pages.</p>
+
+<h3 id="code-code"><code>hashHistory</code></h3>
+
+<p><code>hashHistory</code> uses URL hashes, along with a query key to keep track of state. <code>hashHistory</code> requires no additional server configuration, but is generally less preferred than <code>browserHistory</code>.</p>
+
+<h3 id="code-code"><code>createMemoryHistory(options)</code></h3>
+
+<p><code>createMemoryHistory</code> creates an in-memory <code>history</code> object that does not interact with the browser URL. This is useful when you need to customize the <code>history</code> used for server-side rendering, as well as for automated testing.</p>
+
+<h3 id="code-code"><code>useRouterHistory(createHistory)</code></h3>
+
+<p><code>useRouterHistory</code> is a <code>history</code> enhancer that configures a given <code>createHistory</code> factory to work with React Router. This allows using custom histories in addition to the bundled singleton histories.</p>
+
+<h4 id="example">Example</h4>
+<div class="highlight"><pre><code class="language-js" data-lang="js"><span class="kr">const</span> <span class="nx">history</span> <span class="o">=</span> <span class="nx">useRouterHistory</span><span class="p">(</span><span class="nx">createHashHistory</span><span class="p">)({</span> <span class="nx">queryKey</span><span class="o">:</span> <span class="kc">false</span> <span class="p">})</span>
+</code></pre></div>
+<h2 id="utilities">Utilities</h2>
+
+<h3 id="code-code"><code>match({ routes, location, [history], ...options }, cb)</code></h3>
+
+<p>This function is to be used for server-side rendering. It matches a set of routes to a location, without rendering, and calls a <code>callback(error, redirectLocation, renderProps)</code> when it&#39;s done.</p>
+
+<p>The function will create a <code>history</code> for you, passing the additional <code>options</code> along to create it. These options can include <code>basename</code> to control the base name for URLs, as well as the pair of <code>parseQueryString</code> and <code>stringifyQuery</code> to control query string parsing and serializing. You can also pass in an already instantiated <code>history</code> object, which can be constructed however you like.</p>
+
+<p>The three arguments to the callback function you pass to <code>match</code> are:
+- <code>error</code>: A Javascript <code>Error</code> object if an error occurred, <code>undefined</code> otherwise.
+- <code>redirectLocation</code>: A <a href="/docs/Glossary.md#location">Location</a> object if the route is a redirect, <code>undefined</code> otherwise.
+- <code>renderProps</code>: The props you should pass to the routing context if the route matched, <code>undefined</code> otherwise.</p>
+
+<p>If all three parameters are <code>undefined</code>, this means that there was no route found matching the given location.</p>
+
+<p><em>Note: You probably don&#39;t want to use this in a browser unless you&#39;re doing server-side rendering of async routes.</em></p>
+
+<h3 id="code-code"><code>createRoutes(routes)</code></h3>
+
+<p>Creates and returns an array of routes from the given object which may be a JSX route, a plain object route, or an array of either.</p>
+
+<h4 id="params">params</h4>
+
+<h5 id="code-code"><code>routes</code></h5>
+
+<p>One or many <a href="#route"><code>&lt;Route&gt;</code></a>s or <a href="#plainroute"><code>PlainRoute</code></a>s.</p>
+
+<h3 id="code-code"><code>PropTypes</code></h3>
+
+<p>TODO (Pull Requests Welcome)</p>
+
+<h3 id="code-code"><code>useRoutes(createHistory)</code> (deprecated)</h3>
+
+<h2 id="mixins-deprecated">Mixins (deprecated)</h2>
+
+<p>Deprecated, please see the <a href="/upgrade-guides/v2.0.0.md#mixins-are-deprecated">upgrade guide</a>.</p>
+
+
+                    </div>
+                
+            </div>
+
+            
+
+            <div class="row">
+                <div id="footer" class="col-sm-12">
+                    Documentation for <a href="https://github.com/reactjs/react-router">React Router</a>
+
+                </div>
+            </div>
+        </div>
+
+        <script>
+            function orderNav() {
+                var list,
+                    section,
+                    header,
+                    sections = [],
+                    lists = {},
+                    headers = {};
+
+                var navUl = document.querySelectorAll('#navigation ul')[0],
+                    navLis = document.querySelectorAll('#navigation ul li');
+
+                if (!navUl) return;
+
+                for (var i = 0; i < navLis.length; i++) {
+                    var order, li = navLis[i];
+
+                    if (li.classList.contains('nav-header')) {
+                        section = li.textContent || li.innerText;
+                        sections.push(section);
+                        headers[section] = li;
+                        continue;
+                    }
+
+                    if (!lists[section]) {
+                        lists[section] = [];
+                    }
+
+                    order = parseFloat(li.getAttribute('data-order'))
+                    lists[section].push([order, li]);
+                }
+
+                for (var i = 0; i < sections.length; i++) {
+                    section = sections[i];
+                    list = lists[section].sort(function(a, b) {
+                        return a[0] - b[0];
+                    });
+
+                    if (header = headers[section]) {
+                        navUl.appendChild(header);
+                    }
+                    for (var j = 0; j < list.length; j++) {
+                        navUl.appendChild(list[j][1]);
+                    }
+                }
+            }
+
+            if (document.querySelectorAll) orderNav();
+        </script>
+        
+    </body>
+</html>

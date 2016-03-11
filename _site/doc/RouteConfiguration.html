@@ -1,0 +1,432 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <meta charset="utf-8">
+        <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+        <meta name="viewport" content="width=device-width">
+
+        <title>React Router : Route Configuration</title>
+        <meta name="description" content="A complete routing library for React.">
+
+        <link href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.5/css/bootstrap.min.css" rel="stylesheet">
+        <link rel="stylesheet" href="/css/syntax.css">
+        <link rel="stylesheet" href="/css/main.css">
+    </head>
+    <body>
+
+        <div class="container">
+            <div class="row">
+                <div id="header" class="col-sm-12">
+                    <h4><a class="brand" href="/">React Router</a>
+    <small>A complete routing library for React.</small>
+</h4>
+
+                </div>
+            </div>
+
+            <div class="row">
+                
+                
+                    <div id="navigation" class="col-sm-2">
+                        <ul class="nav nav-list">
+    <li><a href="/">Home</a></li>
+    
+        
+        
+
+        
+            
+                <li class="nav-header">Documentation</li>
+            
+            <li data-order="13"><a href="/doc/v2.0.0.html">v2.0.0 Upgrade Guide</a></li>
+        
+            
+            <li data-order="12"><a href="/doc/v1.0.0.html">v1.0.0 Upgrade Guide</a></li>
+        
+            
+            <li data-order="14"><a href="/doc/Troubleshooting.html">Troubleshooting</a></li>
+        
+            
+            <li data-order="7"><a href="/doc/ServerRendering.html">Server Rendering</a></li>
+        
+            
+            <li data-order="9"><a href="/doc/NavigationOutsideOfComponents.html">Navigating Outside of Components</a></li>
+        
+            
+            <li data-order="10"><a href="/doc/MinimizingBundleSize.html">Minimizing Bundle Size</a></li>
+        
+            
+            <li data-order="4"><a href="/doc/IndexRoutes.html">Index Routes and Links</a></li>
+        
+            
+            <li data-order="3"><a href="/doc/Histories.html">Histories</a></li>
+        
+            
+            <li data-order="16"><a href="/doc/Glossary.html">Glossary</a></li>
+        
+            
+            <li data-order="5"><a href="/doc/DynamicRouting.html">Dynamic Routing</a></li>
+        
+            
+            <li data-order="6"><a href="/doc/ConfirmingNavigation.html">Confirming Navigation</a></li>
+        
+            
+            <li data-order="8"><a href="/doc/ComponentLifecycle.html">Component Lifecycle</a></li>
+        
+            
+            <li data-order="11"><a href="/doc/CHANGES.html">Change Log</a></li>
+        
+            
+            <li data-order="15"><a href="/doc/API.html">API Reference</a></li>
+        
+            
+            <li data-order="2"><a href="/doc/RouteMatching.html">Route Matching</a></li>
+        
+            
+            <li data-order="1"><a href="/doc/RouteConfiguration.html">Route Configuration</a></li>
+        
+    
+        
+        
+
+        
+    
+        
+        
+
+        
+    
+        
+        
+
+        
+    
+        
+        
+
+        
+    
+<!-- List additional links. It is recommended to add a divider
+    e.g. <li class="divider"></li> first to break up the content. -->
+</ul>
+
+                    </div>
+
+                    <div id="content" class="col-sm-10">
+                        <div class="page-header">
+    <h2>Route Configuration
+        
+    </h2>
+</div>
+
+<p>A <a href="/docs/Glossary.md#routeconfig">route configuration</a> is basically a set of instructions that tell a router how to try to <a href="RouteMatching.md">match the URL</a> and what code to run when it does. To illustrate some of the features available in your route config, let&#39;s expand on the simple app from <a href="/docs/Introduction.md#adding-more-ui">the introduction</a>.</p>
+<div class="highlight"><pre><code class="language-js" data-lang="js"><span class="kr">import</span> <span class="nx">React</span> <span class="nx">from</span> <span class="s1">&#39;react&#39;</span>
+<span class="kr">import</span> <span class="p">{</span> <span class="nx">render</span> <span class="p">}</span> <span class="nx">from</span> <span class="s1">&#39;react-dom&#39;</span>
+<span class="kr">import</span> <span class="p">{</span> <span class="nx">Router</span><span class="p">,</span> <span class="nx">Route</span><span class="p">,</span> <span class="nx">Link</span> <span class="p">}</span> <span class="nx">from</span> <span class="s1">&#39;react-router&#39;</span>
+
+<span class="kr">const</span> <span class="nx">App</span> <span class="o">=</span> <span class="nx">React</span><span class="p">.</span><span class="nx">createClass</span><span class="p">({</span>
+  <span class="nx">render</span><span class="p">()</span> <span class="p">{</span>
+    <span class="k">return</span> <span class="p">(</span>
+      <span class="o">&lt;</span><span class="nx">div</span><span class="o">&gt;</span>
+        <span class="o">&lt;</span><span class="nx">h1</span><span class="o">&gt;</span><span class="nx">App</span><span class="o">&lt;</span><span class="err">/h1&gt;</span>
+        <span class="o">&lt;</span><span class="nx">ul</span><span class="o">&gt;</span>
+          <span class="o">&lt;</span><span class="nx">li</span><span class="o">&gt;&lt;</span><span class="nx">Link</span> <span class="nx">to</span><span class="o">=</span><span class="s2">&quot;/about&quot;</span><span class="o">&gt;</span><span class="nx">About</span><span class="o">&lt;</span><span class="err">/Link&gt;&lt;/li&gt;</span>
+          <span class="o">&lt;</span><span class="nx">li</span><span class="o">&gt;&lt;</span><span class="nx">Link</span> <span class="nx">to</span><span class="o">=</span><span class="s2">&quot;/inbox&quot;</span><span class="o">&gt;</span><span class="nx">Inbox</span><span class="o">&lt;</span><span class="err">/Link&gt;&lt;/li&gt;</span>
+        <span class="o">&lt;</span><span class="err">/ul&gt;</span>
+        <span class="p">{</span><span class="k">this</span><span class="p">.</span><span class="nx">props</span><span class="p">.</span><span class="nx">children</span><span class="p">}</span>
+      <span class="o">&lt;</span><span class="err">/div&gt;</span>
+    <span class="p">)</span>
+  <span class="p">}</span>
+<span class="p">})</span>
+
+<span class="kr">const</span> <span class="nx">About</span> <span class="o">=</span> <span class="nx">React</span><span class="p">.</span><span class="nx">createClass</span><span class="p">({</span>
+  <span class="nx">render</span><span class="p">()</span> <span class="p">{</span>
+    <span class="k">return</span> <span class="o">&lt;</span><span class="nx">h3</span><span class="o">&gt;</span><span class="nx">About</span><span class="o">&lt;</span><span class="err">/h3&gt;</span>
+  <span class="p">}</span>
+<span class="p">})</span>
+
+<span class="kr">const</span> <span class="nx">Inbox</span> <span class="o">=</span> <span class="nx">React</span><span class="p">.</span><span class="nx">createClass</span><span class="p">({</span>
+  <span class="nx">render</span><span class="p">()</span> <span class="p">{</span>
+    <span class="k">return</span> <span class="p">(</span>
+      <span class="o">&lt;</span><span class="nx">div</span><span class="o">&gt;</span>
+        <span class="o">&lt;</span><span class="nx">h2</span><span class="o">&gt;</span><span class="nx">Inbox</span><span class="o">&lt;</span><span class="err">/h2&gt;</span>
+        <span class="p">{</span><span class="k">this</span><span class="p">.</span><span class="nx">props</span><span class="p">.</span><span class="nx">children</span> <span class="o">||</span> <span class="s2">&quot;Welcome to your Inbox&quot;</span><span class="p">}</span>
+      <span class="o">&lt;</span><span class="err">/div&gt;</span>
+    <span class="p">)</span>
+  <span class="p">}</span>
+<span class="p">})</span>
+
+<span class="kr">const</span> <span class="nx">Message</span> <span class="o">=</span> <span class="nx">React</span><span class="p">.</span><span class="nx">createClass</span><span class="p">({</span>
+  <span class="nx">render</span><span class="p">()</span> <span class="p">{</span>
+    <span class="k">return</span> <span class="o">&lt;</span><span class="nx">h3</span><span class="o">&gt;</span><span class="nx">Message</span> <span class="p">{</span><span class="k">this</span><span class="p">.</span><span class="nx">props</span><span class="p">.</span><span class="nx">params</span><span class="p">.</span><span class="nx">id</span><span class="p">}</span><span class="o">&lt;</span><span class="err">/h3&gt;</span>
+  <span class="p">}</span>
+<span class="p">})</span>
+
+<span class="nx">render</span><span class="p">((</span>
+  <span class="o">&lt;</span><span class="nx">Router</span><span class="o">&gt;</span>
+    <span class="o">&lt;</span><span class="nx">Route</span> <span class="nx">path</span><span class="o">=</span><span class="s2">&quot;/&quot;</span> <span class="nx">component</span><span class="o">=</span><span class="p">{</span><span class="nx">App</span><span class="p">}</span><span class="o">&gt;</span>
+      <span class="o">&lt;</span><span class="nx">Route</span> <span class="nx">path</span><span class="o">=</span><span class="s2">&quot;about&quot;</span> <span class="nx">component</span><span class="o">=</span><span class="p">{</span><span class="nx">About</span><span class="p">}</span> <span class="o">/&gt;</span>
+      <span class="o">&lt;</span><span class="nx">Route</span> <span class="nx">path</span><span class="o">=</span><span class="s2">&quot;inbox&quot;</span> <span class="nx">component</span><span class="o">=</span><span class="p">{</span><span class="nx">Inbox</span><span class="p">}</span><span class="o">&gt;</span>
+        <span class="o">&lt;</span><span class="nx">Route</span> <span class="nx">path</span><span class="o">=</span><span class="s2">&quot;messages/:id&quot;</span> <span class="nx">component</span><span class="o">=</span><span class="p">{</span><span class="nx">Message</span><span class="p">}</span> <span class="o">/&gt;</span>
+      <span class="o">&lt;</span><span class="err">/Route&gt;</span>
+    <span class="o">&lt;</span><span class="err">/Route&gt;</span>
+  <span class="o">&lt;</span><span class="err">/Router&gt;</span>
+<span class="p">),</span> <span class="nb">document</span><span class="p">.</span><span class="nx">body</span><span class="p">)</span>
+</code></pre></div>
+<p>As configured, this app knows how to render the following 4 URLs:</p>
+
+<table><thead>
+<tr>
+<th>URL</th>
+<th>Components</th>
+</tr>
+</thead><tbody>
+<tr>
+<td><code>/</code></td>
+<td><code>App</code></td>
+</tr>
+<tr>
+<td><code>/about</code></td>
+<td><code>App -&gt; About</code></td>
+</tr>
+<tr>
+<td><code>/inbox</code></td>
+<td><code>App -&gt; Inbox</code></td>
+</tr>
+<tr>
+<td><code>/inbox/messages/:id</code></td>
+<td><code>App -&gt; Inbox -&gt; Message</code></td>
+</tr>
+</tbody></table>
+
+<h3 id="adding-an-index">Adding an Index</h3>
+
+<p>Imagine we&#39;d like to render another component inside of <code>App</code> when the URL is <code>/</code>. Currently, <code>this.props.children</code> inside of <code>App</code>&#39;s <code>render</code> method is <code>undefined</code> in this case. We can use an <a href="/docs/API.md#indexroute"><code>&lt;IndexRoute&gt;</code></a> to specify a &quot;default&quot; page.</p>
+<div class="highlight"><pre><code class="language-js" data-lang="js"><span class="kr">import</span> <span class="p">{</span> <span class="nx">IndexRoute</span> <span class="p">}</span> <span class="nx">from</span> <span class="s1">&#39;react-router&#39;</span>
+
+<span class="kr">const</span> <span class="nx">Dashboard</span> <span class="o">=</span> <span class="nx">React</span><span class="p">.</span><span class="nx">createClass</span><span class="p">({</span>
+  <span class="nx">render</span><span class="p">()</span> <span class="p">{</span>
+    <span class="k">return</span> <span class="o">&lt;</span><span class="nx">div</span><span class="o">&gt;</span><span class="nx">Welcome</span> <span class="nx">to</span> <span class="nx">the</span> <span class="nx">app</span><span class="o">!&lt;</span><span class="err">/div&gt;</span>
+  <span class="p">}</span>
+<span class="p">})</span>
+
+<span class="nx">render</span><span class="p">((</span>
+  <span class="o">&lt;</span><span class="nx">Router</span><span class="o">&gt;</span>
+    <span class="o">&lt;</span><span class="nx">Route</span> <span class="nx">path</span><span class="o">=</span><span class="s2">&quot;/&quot;</span> <span class="nx">component</span><span class="o">=</span><span class="p">{</span><span class="nx">App</span><span class="p">}</span><span class="o">&gt;</span>
+      <span class="p">{</span><span class="cm">/* Show the dashboard at / */</span><span class="p">}</span>
+      <span class="o">&lt;</span><span class="nx">IndexRoute</span> <span class="nx">component</span><span class="o">=</span><span class="p">{</span><span class="nx">Dashboard</span><span class="p">}</span> <span class="o">/&gt;</span>
+      <span class="o">&lt;</span><span class="nx">Route</span> <span class="nx">path</span><span class="o">=</span><span class="s2">&quot;about&quot;</span> <span class="nx">component</span><span class="o">=</span><span class="p">{</span><span class="nx">About</span><span class="p">}</span> <span class="o">/&gt;</span>
+      <span class="o">&lt;</span><span class="nx">Route</span> <span class="nx">path</span><span class="o">=</span><span class="s2">&quot;inbox&quot;</span> <span class="nx">component</span><span class="o">=</span><span class="p">{</span><span class="nx">Inbox</span><span class="p">}</span><span class="o">&gt;</span>
+        <span class="o">&lt;</span><span class="nx">Route</span> <span class="nx">path</span><span class="o">=</span><span class="s2">&quot;messages/:id&quot;</span> <span class="nx">component</span><span class="o">=</span><span class="p">{</span><span class="nx">Message</span><span class="p">}</span> <span class="o">/&gt;</span>
+      <span class="o">&lt;</span><span class="err">/Route&gt;</span>
+    <span class="o">&lt;</span><span class="err">/Route&gt;</span>
+  <span class="o">&lt;</span><span class="err">/Router&gt;</span>
+<span class="p">),</span> <span class="nb">document</span><span class="p">.</span><span class="nx">body</span><span class="p">)</span>
+</code></pre></div>
+<p>Now, inside <code>App</code>&#39;s <code>render</code> method <code>this.props.children</code> will be a <code>&lt;Dashboard&gt;</code> element! This functionality is similar to Apache&#39;s <a href="http://httpd.apache.org/docs/2.4/mod/mod_dir.html#directoryindex"><code>DirectoryIndex</code></a> or nginx&#39;s <a href="http://nginx.org/en/docs/http/ngx_http_index_module.html#index"><code>index</code></a> directive, both of which allow you to specify a file such as <code>index.html</code> when the request URL matches a directory path.</p>
+
+<p>Our sitemap now looks like this:</p>
+
+<table><thead>
+<tr>
+<th>URL</th>
+<th>Components</th>
+</tr>
+</thead><tbody>
+<tr>
+<td><code>/</code></td>
+<td><code>App -&gt; Dashboard</code></td>
+</tr>
+<tr>
+<td><code>/about</code></td>
+<td><code>App -&gt; About</code></td>
+</tr>
+<tr>
+<td><code>/inbox</code></td>
+<td><code>App -&gt; Inbox</code></td>
+</tr>
+<tr>
+<td><code>/inbox/messages/:id</code></td>
+<td><code>App -&gt; Inbox -&gt; Message</code></td>
+</tr>
+</tbody></table>
+
+<h3 id="decoupling-the-ui-from-the-url">Decoupling the UI from the URL</h3>
+
+<p>It would be nice if we could remove the <code>/inbox</code> segment from the <code>/inbox/messages/:id</code> URL pattern, but still render <code>Message</code> nested inside the <code>App -&gt; Inbox</code> UI. Absolute <code>path</code>s let us do exactly that.</p>
+<div class="highlight"><pre><code class="language-js" data-lang="js"><span class="nx">render</span><span class="p">((</span>
+  <span class="o">&lt;</span><span class="nx">Router</span><span class="o">&gt;</span>
+    <span class="o">&lt;</span><span class="nx">Route</span> <span class="nx">path</span><span class="o">=</span><span class="s2">&quot;/&quot;</span> <span class="nx">component</span><span class="o">=</span><span class="p">{</span><span class="nx">App</span><span class="p">}</span><span class="o">&gt;</span>
+      <span class="o">&lt;</span><span class="nx">IndexRoute</span> <span class="nx">component</span><span class="o">=</span><span class="p">{</span><span class="nx">Dashboard</span><span class="p">}</span> <span class="o">/&gt;</span>
+      <span class="o">&lt;</span><span class="nx">Route</span> <span class="nx">path</span><span class="o">=</span><span class="s2">&quot;about&quot;</span> <span class="nx">component</span><span class="o">=</span><span class="p">{</span><span class="nx">About</span><span class="p">}</span> <span class="o">/&gt;</span>
+      <span class="o">&lt;</span><span class="nx">Route</span> <span class="nx">path</span><span class="o">=</span><span class="s2">&quot;inbox&quot;</span> <span class="nx">component</span><span class="o">=</span><span class="p">{</span><span class="nx">Inbox</span><span class="p">}</span><span class="o">&gt;</span>
+        <span class="p">{</span><span class="cm">/* Use /messages/:id instead of messages/:id */</span><span class="p">}</span>
+        <span class="o">&lt;</span><span class="nx">Route</span> <span class="nx">path</span><span class="o">=</span><span class="s2">&quot;/messages/:id&quot;</span> <span class="nx">component</span><span class="o">=</span><span class="p">{</span><span class="nx">Message</span><span class="p">}</span> <span class="o">/&gt;</span>
+      <span class="o">&lt;</span><span class="err">/Route&gt;</span>
+    <span class="o">&lt;</span><span class="err">/Route&gt;</span>
+  <span class="o">&lt;</span><span class="err">/Router&gt;</span>
+<span class="p">),</span> <span class="nb">document</span><span class="p">.</span><span class="nx">body</span><span class="p">)</span>
+</code></pre></div>
+<p>The ability to use absolute paths in deeply nested routes gives us complete control over what the URL looks like! We don&#39;t have to add more segments to the URL just to get nested UI.</p>
+
+<p>We can now render the following URLs:</p>
+
+<table><thead>
+<tr>
+<th>URL</th>
+<th>Components</th>
+</tr>
+</thead><tbody>
+<tr>
+<td><code>/</code></td>
+<td><code>App -&gt; Dashboard</code></td>
+</tr>
+<tr>
+<td><code>/about</code></td>
+<td><code>App -&gt; About</code></td>
+</tr>
+<tr>
+<td><code>/inbox</code></td>
+<td><code>App -&gt; Inbox</code></td>
+</tr>
+<tr>
+<td><code>/messages/:id</code></td>
+<td><code>App -&gt; Inbox -&gt; Message</code></td>
+</tr>
+</tbody></table>
+
+<p><strong>Note</strong>: Absolute paths may not be used in route config that is <a href="/docs/guides/DynamicRouting.md">dynamically loaded</a>.</p>
+
+<h3 id="preserving-urls">Preserving URLs</h3>
+
+<p>Wait a minute ... we just changed a URL! <a href="http://www.w3.org/Provider/Style/URI.html">That&#39;s not cool</a>. Now everyone who had a link to <code>/inbox/messages/5</code> has a <strong>broken link</strong>. :(</p>
+
+<p>Not to worry. We can use a <a href="/docs/API.md#redirect"><code>&lt;Redirect&gt;</code></a> to make sure that URL still works!</p>
+<div class="highlight"><pre><code class="language-js" data-lang="js"><span class="kr">import</span> <span class="p">{</span> <span class="nx">Redirect</span> <span class="p">}</span> <span class="nx">from</span> <span class="s1">&#39;react-router&#39;</span>
+
+<span class="nx">render</span><span class="p">((</span>
+  <span class="o">&lt;</span><span class="nx">Router</span><span class="o">&gt;</span>
+    <span class="o">&lt;</span><span class="nx">Route</span> <span class="nx">path</span><span class="o">=</span><span class="s2">&quot;/&quot;</span> <span class="nx">component</span><span class="o">=</span><span class="p">{</span><span class="nx">App</span><span class="p">}</span><span class="o">&gt;</span>
+      <span class="o">&lt;</span><span class="nx">IndexRoute</span> <span class="nx">component</span><span class="o">=</span><span class="p">{</span><span class="nx">Dashboard</span><span class="p">}</span> <span class="o">/&gt;</span>
+      <span class="o">&lt;</span><span class="nx">Route</span> <span class="nx">path</span><span class="o">=</span><span class="s2">&quot;about&quot;</span> <span class="nx">component</span><span class="o">=</span><span class="p">{</span><span class="nx">About</span><span class="p">}</span> <span class="o">/&gt;</span>
+      <span class="o">&lt;</span><span class="nx">Route</span> <span class="nx">path</span><span class="o">=</span><span class="s2">&quot;inbox&quot;</span> <span class="nx">component</span><span class="o">=</span><span class="p">{</span><span class="nx">Inbox</span><span class="p">}</span><span class="o">&gt;</span>
+        <span class="o">&lt;</span><span class="nx">Route</span> <span class="nx">path</span><span class="o">=</span><span class="s2">&quot;/messages/:id&quot;</span> <span class="nx">component</span><span class="o">=</span><span class="p">{</span><span class="nx">Message</span><span class="p">}</span> <span class="o">/&gt;</span>
+
+        <span class="p">{</span><span class="cm">/* Redirect /inbox/messages/:id to /messages/:id */</span><span class="p">}</span>
+        <span class="o">&lt;</span><span class="nx">Redirect</span> <span class="nx">from</span><span class="o">=</span><span class="s2">&quot;messages/:id&quot;</span> <span class="nx">to</span><span class="o">=</span><span class="s2">&quot;/messages/:id&quot;</span> <span class="o">/&gt;</span>
+      <span class="o">&lt;</span><span class="err">/Route&gt;</span>
+    <span class="o">&lt;</span><span class="err">/Route&gt;</span>
+  <span class="o">&lt;</span><span class="err">/Router&gt;</span>
+<span class="p">),</span> <span class="nb">document</span><span class="p">.</span><span class="nx">body</span><span class="p">)</span>
+</code></pre></div>
+<p>Now when someone clicks on that link to <code>/inbox/messages/5</code> they&#39;ll automatically be redirected to <code>/messages/5</code>. :raised_hands:</p>
+
+<h3 id="enter-and-leave-hooks">Enter and Leave Hooks</h3>
+
+<p><a href="/docs/Glossary.md#route">Route</a>s may also define <a href="/docs/Glossary.md#enterhook"><code>onEnter</code></a> and <a href="/docs/Glossary.md#leavehook"><code>onLeave</code></a> hooks that are invoked once a transition has been <a href="/docs/guides/ConfirmingNavigation.md">confirmed</a>. These hooks are useful for various things like <a href="https://github.com/reactjs/react-router/tree/master/examples/auth-flow">requiring auth</a> when a route is entered and saving stuff to persistent storage before a route unmounts.</p>
+
+<p>During a transition, <a href="/docs/Glossary.md#leavehook"><code>onLeave</code> hooks</a> run first on all routes we are leaving, starting with the leaf route on up to the first common ancestor route. Next, <a href="/docs/Glossary.md#enterhook"><code>onEnter</code> hooks</a> run starting with the first parent route we&#39;re entering down to the leaf route.</p>
+
+<p>Continuing with our example above, if a user clicked on a link to <code>/about</code> from <code>/messages/5</code>, the following hooks would run in this order:</p>
+
+<ul>
+<li><code>onLeave</code> on the <code>/messages/:id</code> route</li>
+<li><code>onLeave</code> on the <code>/inbox</code> route</li>
+<li><code>onEnter</code> on the <code>/about</code> route</li>
+</ul>
+
+<h3 id="alternate-configuration">Alternate Configuration</h3>
+
+<p>Since <a href="/docs/Glossary.md#route">routes</a> are usually nested, it&#39;s useful to use a concise nested syntax like <a href="https://facebook.github.io/jsx/">JSX</a> to describe their relationship to one another. However, you may also use an array of plain <a href="/docs/Glossary.md#route">route</a> objects if you prefer to avoid using JSX.</p>
+
+<p>The route config we&#39;ve discussed up to this point could also be specified like this:</p>
+<div class="highlight"><pre><code class="language-js" data-lang="js"><span class="kr">const</span> <span class="nx">routeConfig</span> <span class="o">=</span> <span class="p">[</span>
+  <span class="p">{</span> <span class="nx">path</span><span class="o">:</span> <span class="s1">&#39;/&#39;</span><span class="p">,</span>
+    <span class="nx">component</span><span class="o">:</span> <span class="nx">App</span><span class="p">,</span>
+    <span class="nx">indexRoute</span><span class="o">:</span> <span class="p">{</span> <span class="nx">component</span><span class="o">:</span> <span class="nx">Dashboard</span> <span class="p">},</span>
+    <span class="nx">childRoutes</span><span class="o">:</span> <span class="p">[</span>
+      <span class="p">{</span> <span class="nx">path</span><span class="o">:</span> <span class="s1">&#39;about&#39;</span><span class="p">,</span> <span class="nx">component</span><span class="o">:</span> <span class="nx">About</span> <span class="p">},</span>
+      <span class="p">{</span> <span class="nx">path</span><span class="o">:</span> <span class="s1">&#39;inbox&#39;</span><span class="p">,</span>
+        <span class="nx">component</span><span class="o">:</span> <span class="nx">Inbox</span><span class="p">,</span>
+        <span class="nx">childRoutes</span><span class="o">:</span> <span class="p">[</span>
+          <span class="p">{</span> <span class="nx">path</span><span class="o">:</span> <span class="s1">&#39;/messages/:id&#39;</span><span class="p">,</span> <span class="nx">component</span><span class="o">:</span> <span class="nx">Message</span> <span class="p">},</span>
+          <span class="p">{</span> <span class="nx">path</span><span class="o">:</span> <span class="s1">&#39;messages/:id&#39;</span><span class="p">,</span>
+            <span class="nx">onEnter</span><span class="o">:</span> <span class="kd">function</span> <span class="p">(</span><span class="nx">nextState</span><span class="p">,</span> <span class="nx">replace</span><span class="p">)</span> <span class="p">{</span>
+              <span class="nx">replace</span><span class="p">(</span><span class="s1">&#39;/messages/&#39;</span> <span class="o">+</span> <span class="nx">nextState</span><span class="p">.</span><span class="nx">params</span><span class="p">.</span><span class="nx">id</span><span class="p">)</span>
+            <span class="p">}</span>
+          <span class="p">}</span>
+        <span class="p">]</span>
+      <span class="p">}</span>
+    <span class="p">]</span>
+  <span class="p">}</span>
+<span class="p">]</span>
+
+<span class="nx">render</span><span class="p">(</span><span class="o">&lt;</span><span class="nx">Router</span> <span class="nx">routes</span><span class="o">=</span><span class="p">{</span><span class="nx">routeConfig</span><span class="p">}</span> <span class="o">/&gt;</span><span class="p">,</span> <span class="nb">document</span><span class="p">.</span><span class="nx">body</span><span class="p">)</span>
+</code></pre></div>
+
+                    </div>
+                
+            </div>
+
+            
+
+            <div class="row">
+                <div id="footer" class="col-sm-12">
+                    Documentation for <a href="https://github.com/reactjs/react-router">React Router</a>
+
+                </div>
+            </div>
+        </div>
+
+        <script>
+            function orderNav() {
+                var list,
+                    section,
+                    header,
+                    sections = [],
+                    lists = {},
+                    headers = {};
+
+                var navUl = document.querySelectorAll('#navigation ul')[0],
+                    navLis = document.querySelectorAll('#navigation ul li');
+
+                if (!navUl) return;
+
+                for (var i = 0; i < navLis.length; i++) {
+                    var order, li = navLis[i];
+
+                    if (li.classList.contains('nav-header')) {
+                        section = li.textContent || li.innerText;
+                        sections.push(section);
+                        headers[section] = li;
+                        continue;
+                    }
+
+                    if (!lists[section]) {
+                        lists[section] = [];
+                    }
+
+                    order = parseFloat(li.getAttribute('data-order'))
+                    lists[section].push([order, li]);
+                }
+
+                for (var i = 0; i < sections.length; i++) {
+                    section = sections[i];
+                    list = lists[section].sort(function(a, b) {
+                        return a[0] - b[0];
+                    });
+
+                    if (header = headers[section]) {
+                        navUl.appendChild(header);
+                    }
+                    for (var j = 0; j < list.length; j++) {
+                        navUl.appendChild(list[j][1]);
+                    }
+                }
+            }
+
+            if (document.querySelectorAll) orderNav();
+        </script>
+        
+    </body>
+</html>

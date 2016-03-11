@@ -1,0 +1,249 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <meta charset="utf-8">
+        <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+        <meta name="viewport" content="width=device-width">
+
+        <title>React Router : Server Rendering</title>
+        <meta name="description" content="A complete routing library for React.">
+
+        <link href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.5/css/bootstrap.min.css" rel="stylesheet">
+        <link rel="stylesheet" href="/css/syntax.css">
+        <link rel="stylesheet" href="/css/main.css">
+    </head>
+    <body>
+
+        <div class="container">
+            <div class="row">
+                <div id="header" class="col-sm-12">
+                    <h4><a class="brand" href="/">React Router</a>
+    <small>A complete routing library for React.</small>
+</h4>
+
+                </div>
+            </div>
+
+            <div class="row">
+                
+                
+                    <div id="navigation" class="col-sm-2">
+                        <ul class="nav nav-list">
+    <li><a href="/">Home</a></li>
+    
+        
+        
+
+        
+            
+                <li class="nav-header">Documentation</li>
+            
+            <li data-order="13"><a href="/doc/v2.0.0.html">v2.0.0 Upgrade Guide</a></li>
+        
+            
+            <li data-order="12"><a href="/doc/v1.0.0.html">v1.0.0 Upgrade Guide</a></li>
+        
+            
+            <li data-order="14"><a href="/doc/Troubleshooting.html">Troubleshooting</a></li>
+        
+            
+            <li data-order="7"><a href="/doc/ServerRendering.html">Server Rendering</a></li>
+        
+            
+            <li data-order="9"><a href="/doc/NavigationOutsideOfComponents.html">Navigating Outside of Components</a></li>
+        
+            
+            <li data-order="10"><a href="/doc/MinimizingBundleSize.html">Minimizing Bundle Size</a></li>
+        
+            
+            <li data-order="4"><a href="/doc/IndexRoutes.html">Index Routes and Links</a></li>
+        
+            
+            <li data-order="3"><a href="/doc/Histories.html">Histories</a></li>
+        
+            
+            <li data-order="16"><a href="/doc/Glossary.html">Glossary</a></li>
+        
+            
+            <li data-order="5"><a href="/doc/DynamicRouting.html">Dynamic Routing</a></li>
+        
+            
+            <li data-order="6"><a href="/doc/ConfirmingNavigation.html">Confirming Navigation</a></li>
+        
+            
+            <li data-order="8"><a href="/doc/ComponentLifecycle.html">Component Lifecycle</a></li>
+        
+            
+            <li data-order="11"><a href="/doc/CHANGES.html">Change Log</a></li>
+        
+            
+            <li data-order="15"><a href="/doc/API.html">API Reference</a></li>
+        
+            
+            <li data-order="2"><a href="/doc/RouteMatching.html">Route Matching</a></li>
+        
+            
+            <li data-order="1"><a href="/doc/RouteConfiguration.html">Route Configuration</a></li>
+        
+    
+        
+        
+
+        
+    
+        
+        
+
+        
+    
+        
+        
+
+        
+    
+        
+        
+
+        
+    
+<!-- List additional links. It is recommended to add a divider
+    e.g. <li class="divider"></li> first to break up the content. -->
+</ul>
+
+                    </div>
+
+                    <div id="content" class="col-sm-10">
+                        <div class="page-header">
+    <h2>Server Rendering
+        
+    </h2>
+</div>
+
+<p>Server rendering is a bit different than in a client because you&#39;ll want to:</p>
+
+<ul>
+<li>Send <code>500</code> responses for errors</li>
+<li>Send <code>30x</code> responses for redirects</li>
+<li>Fetch data before rendering (and use the router to help you do it)</li>
+</ul>
+
+<p>To facilitate these needs, you drop one level lower than the <a href="/docs/API.md#Router"><code>&lt;Router&gt;</code></a> API with:  </p>
+
+<ul>
+<li><a href="/docs/API.md#match-routes-location-history-options--cb"><code>match</code></a> to match the routes to a location without rendering</li>
+<li><code>RouterContext</code> for synchronous rendering of route components</li>
+</ul>
+
+<p>It looks something like this with an imaginary JavaScript server:</p>
+<div class="highlight"><pre><code class="language-js" data-lang="js"><span class="kr">import</span> <span class="p">{</span> <span class="nx">renderToString</span> <span class="p">}</span> <span class="nx">from</span> <span class="s1">&#39;react-dom/server&#39;</span>
+<span class="kr">import</span> <span class="p">{</span> <span class="nx">match</span><span class="p">,</span> <span class="nx">RouterContext</span> <span class="p">}</span> <span class="nx">from</span> <span class="s1">&#39;react-router&#39;</span>
+<span class="kr">import</span> <span class="nx">routes</span> <span class="nx">from</span> <span class="s1">&#39;./routes&#39;</span>
+
+<span class="nx">serve</span><span class="p">((</span><span class="nx">req</span><span class="p">,</span> <span class="nx">res</span><span class="p">)</span> <span class="o">=&gt;</span> <span class="p">{</span>
+  <span class="c1">// Note that req.url here should be the full URL path from</span>
+  <span class="c1">// the original request, including the query string.</span>
+  <span class="nx">match</span><span class="p">({</span> <span class="nx">routes</span><span class="p">,</span> <span class="nx">location</span><span class="o">:</span> <span class="nx">req</span><span class="p">.</span><span class="nx">url</span> <span class="p">},</span> <span class="p">(</span><span class="nx">error</span><span class="p">,</span> <span class="nx">redirectLocation</span><span class="p">,</span> <span class="nx">renderProps</span><span class="p">)</span> <span class="o">=&gt;</span> <span class="p">{</span>
+    <span class="k">if</span> <span class="p">(</span><span class="nx">error</span><span class="p">)</span> <span class="p">{</span>
+      <span class="nx">res</span><span class="p">.</span><span class="nx">status</span><span class="p">(</span><span class="mi">500</span><span class="p">).</span><span class="nx">send</span><span class="p">(</span><span class="nx">error</span><span class="p">.</span><span class="nx">message</span><span class="p">)</span>
+    <span class="p">}</span> <span class="k">else</span> <span class="k">if</span> <span class="p">(</span><span class="nx">redirectLocation</span><span class="p">)</span> <span class="p">{</span>
+      <span class="nx">res</span><span class="p">.</span><span class="nx">redirect</span><span class="p">(</span><span class="mi">302</span><span class="p">,</span> <span class="nx">redirectLocation</span><span class="p">.</span><span class="nx">pathname</span> <span class="o">+</span> <span class="nx">redirectLocation</span><span class="p">.</span><span class="nx">search</span><span class="p">)</span>
+    <span class="p">}</span> <span class="k">else</span> <span class="k">if</span> <span class="p">(</span><span class="nx">renderProps</span><span class="p">)</span> <span class="p">{</span>
+      <span class="c1">// You can also check renderProps.components or renderProps.routes for</span>
+      <span class="c1">// your &quot;not found&quot; component or route respectively, and send a 404 as</span>
+      <span class="c1">// below, if you&#39;re using a catch-all route.</span>
+      <span class="nx">res</span><span class="p">.</span><span class="nx">status</span><span class="p">(</span><span class="mi">200</span><span class="p">).</span><span class="nx">send</span><span class="p">(</span><span class="nx">renderToString</span><span class="p">(</span><span class="o">&lt;</span><span class="nx">RouterContext</span> <span class="p">{...</span><span class="nx">renderProps</span><span class="p">}</span> <span class="o">/&gt;</span><span class="p">))</span>
+    <span class="p">}</span> <span class="k">else</span> <span class="p">{</span>
+      <span class="nx">res</span><span class="p">.</span><span class="nx">status</span><span class="p">(</span><span class="mi">404</span><span class="p">).</span><span class="nx">send</span><span class="p">(</span><span class="s1">&#39;Not found&#39;</span><span class="p">)</span>
+    <span class="p">}</span>
+  <span class="p">})</span>
+<span class="p">})</span>
+</code></pre></div>
+<p>For data loading, you can use the <code>renderProps</code> argument to build whatever convention you want--like adding static <code>load</code> methods to your route components, or putting data loading functions on the routes--it&#39;s up to you.</p>
+
+<h2 id="async-routes">Async Routes</h2>
+
+<p>Server rendering works identically when using async routes. However, the client-side rendering needs to be a little different to make sure all of the async behavior has been resolved before the initial render, to avoid a mismatch between the server rendered and client rendered markup.</p>
+
+<p>On the client, instead of rendering</p>
+<div class="highlight"><pre><code class="language-js" data-lang="js"><span class="nx">render</span><span class="p">(</span><span class="o">&lt;</span><span class="nx">Router</span> <span class="nx">history</span><span class="o">=</span><span class="p">{</span><span class="nx">history</span><span class="p">}</span> <span class="nx">routes</span><span class="o">=</span><span class="p">{</span><span class="nx">routes</span><span class="p">}</span> <span class="o">/&gt;</span><span class="p">,</span> <span class="nx">mountNode</span><span class="p">)</span>
+</code></pre></div>
+<p>You need to do</p>
+<div class="highlight"><pre><code class="language-js" data-lang="js"><span class="nx">match</span><span class="p">({</span> <span class="nx">history</span><span class="p">,</span> <span class="nx">routes</span> <span class="p">},</span> <span class="p">(</span><span class="nx">error</span><span class="p">,</span> <span class="nx">redirectLocation</span><span class="p">,</span> <span class="nx">renderProps</span><span class="p">)</span> <span class="o">=&gt;</span> <span class="p">{</span>
+  <span class="nx">render</span><span class="p">(</span><span class="o">&lt;</span><span class="nx">Router</span> <span class="p">{...</span><span class="nx">renderProps</span><span class="p">}</span> <span class="o">/&gt;</span><span class="p">,</span> <span class="nx">mountNode</span><span class="p">)</span>
+<span class="p">})</span>
+</code></pre></div>
+<h2 id="history-singletons">History singletons</h2>
+
+<p>Because the server has no DOM available, the history singletons (<code>browserHistory</code> and <code>hashHistory</code>) do not function on the server. Instead, they will simply return <code>undefined</code>.</p>
+
+<p>You should be sure to only use the history singletons in client code. For React Components, this means using them only in lifecycle functions like <code>componentDidMount</code>, but not in <code>componentWillMount</code>. Most events, such as clicks, can only happen in the client, as the server has no DOM available to trigger them. So, using the history singletons is a valid option in that case. Knowing what code should run on the server and on the client is important to using React in a universal app, so make sure you&#39;re familiar with these concepts even if you aren&#39;t using React Router.</p>
+
+<p>And don&#39;t feel discouraged! History singletons are a great convenience method to navigate without setting up <code>this.context</code> or when you&#39;re not inside of a React component. Simply take care to only use them in places the server will not try to touch.</p>
+
+
+                    </div>
+                
+            </div>
+
+            
+
+            <div class="row">
+                <div id="footer" class="col-sm-12">
+                    Documentation for <a href="https://github.com/reactjs/react-router">React Router</a>
+
+                </div>
+            </div>
+        </div>
+
+        <script>
+            function orderNav() {
+                var list,
+                    section,
+                    header,
+                    sections = [],
+                    lists = {},
+                    headers = {};
+
+                var navUl = document.querySelectorAll('#navigation ul')[0],
+                    navLis = document.querySelectorAll('#navigation ul li');
+
+                if (!navUl) return;
+
+                for (var i = 0; i < navLis.length; i++) {
+                    var order, li = navLis[i];
+
+                    if (li.classList.contains('nav-header')) {
+                        section = li.textContent || li.innerText;
+                        sections.push(section);
+                        headers[section] = li;
+                        continue;
+                    }
+
+                    if (!lists[section]) {
+                        lists[section] = [];
+                    }
+
+                    order = parseFloat(li.getAttribute('data-order'))
+                    lists[section].push([order, li]);
+                }
+
+                for (var i = 0; i < sections.length; i++) {
+                    section = sections[i];
+                    list = lists[section].sort(function(a, b) {
+                        return a[0] - b[0];
+                    });
+
+                    if (header = headers[section]) {
+                        navUl.appendChild(header);
+                    }
+                    for (var j = 0; j < list.length; j++) {
+                        navUl.appendChild(list[j][1]);
+                    }
+                }
+            }
+
+            if (document.querySelectorAll) orderNav();
+        </script>
+        
+    </body>
+</html>

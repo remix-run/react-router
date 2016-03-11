@@ -1,0 +1,576 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <meta charset="utf-8">
+        <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+        <meta name="viewport" content="width=device-width">
+
+        <title>React Router : v1.0.0 Upgrade Guide</title>
+        <meta name="description" content="A complete routing library for React.">
+
+        <link href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.5/css/bootstrap.min.css" rel="stylesheet">
+        <link rel="stylesheet" href="/css/syntax.css">
+        <link rel="stylesheet" href="/css/main.css">
+    </head>
+    <body>
+
+        <div class="container">
+            <div class="row">
+                <div id="header" class="col-sm-12">
+                    <h4><a class="brand" href="/">React Router</a>
+    <small>A complete routing library for React.</small>
+</h4>
+
+                </div>
+            </div>
+
+            <div class="row">
+                
+                
+                    <div id="navigation" class="col-sm-2">
+                        <ul class="nav nav-list">
+    <li><a href="/">Home</a></li>
+    
+        
+        
+
+        
+            
+                <li class="nav-header">Documentation</li>
+            
+            <li data-order="13"><a href="/doc/v2.0.0.html">v2.0.0 Upgrade Guide</a></li>
+        
+            
+            <li data-order="12"><a href="/doc/v1.0.0.html">v1.0.0 Upgrade Guide</a></li>
+        
+            
+            <li data-order="14"><a href="/doc/Troubleshooting.html">Troubleshooting</a></li>
+        
+            
+            <li data-order="7"><a href="/doc/ServerRendering.html">Server Rendering</a></li>
+        
+            
+            <li data-order="9"><a href="/doc/NavigationOutsideOfComponents.html">Navigating Outside of Components</a></li>
+        
+            
+            <li data-order="10"><a href="/doc/MinimizingBundleSize.html">Minimizing Bundle Size</a></li>
+        
+            
+            <li data-order="4"><a href="/doc/IndexRoutes.html">Index Routes and Links</a></li>
+        
+            
+            <li data-order="3"><a href="/doc/Histories.html">Histories</a></li>
+        
+            
+            <li data-order="16"><a href="/doc/Glossary.html">Glossary</a></li>
+        
+            
+            <li data-order="5"><a href="/doc/DynamicRouting.html">Dynamic Routing</a></li>
+        
+            
+            <li data-order="6"><a href="/doc/ConfirmingNavigation.html">Confirming Navigation</a></li>
+        
+            
+            <li data-order="8"><a href="/doc/ComponentLifecycle.html">Component Lifecycle</a></li>
+        
+            
+            <li data-order="11"><a href="/doc/CHANGES.html">Change Log</a></li>
+        
+            
+            <li data-order="15"><a href="/doc/API.html">API Reference</a></li>
+        
+            
+            <li data-order="2"><a href="/doc/RouteMatching.html">Route Matching</a></li>
+        
+            
+            <li data-order="1"><a href="/doc/RouteConfiguration.html">Route Configuration</a></li>
+        
+    
+        
+        
+
+        
+    
+        
+        
+
+        
+    
+        
+        
+
+        
+    
+        
+        
+
+        
+    
+<!-- List additional links. It is recommended to add a divider
+    e.g. <li class="divider"></li> first to break up the content. -->
+</ul>
+
+                    </div>
+
+                    <div id="content" class="col-sm-10">
+                        <div class="page-header">
+    <h2>v1.0.0 Upgrade Guide
+        
+    </h2>
+</div>
+
+<p>Thanks for your patience :) Big changes from v0.13.x to 1.0. While on
+the surface a lot of this just looks like shuffling around API, the
+entire codebase has been rewritten to handle some really great use
+cases, like loading routes and components on demand, session-based route
+matching, server rendering, integration with libs like redux and relay,
+and lots more.</p>
+
+<p>But for now, here&#39;s how to translate the old API to the new one.</p>
+
+<h3 id="importing">Importing</h3>
+
+<p>The new <code>Router</code> component is a property of the top-level module.</p>
+<div class="highlight"><pre><code class="language-js" data-lang="js"><span class="c1">// v0.13.x</span>
+<span class="kd">var</span> <span class="nx">Router</span> <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s1">&#39;react-router&#39;</span><span class="p">);</span>
+<span class="kd">var</span> <span class="nx">Route</span> <span class="o">=</span> <span class="nx">Router</span><span class="p">.</span><span class="nx">Route</span><span class="p">;</span>
+
+<span class="c1">// v1.0</span>
+<span class="kd">var</span> <span class="nx">ReactRouter</span> <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s1">&#39;react-router&#39;</span><span class="p">);</span>
+<span class="kd">var</span> <span class="nx">Router</span> <span class="o">=</span> <span class="nx">ReactRouter</span><span class="p">.</span><span class="nx">Router</span><span class="p">;</span>
+<span class="kd">var</span> <span class="nx">Route</span> <span class="o">=</span> <span class="nx">ReactRouter</span><span class="p">.</span><span class="nx">Route</span><span class="p">;</span>
+
+<span class="c1">// or using ES Modules</span>
+<span class="kr">import</span> <span class="p">{</span> <span class="nx">Router</span><span class="p">,</span> <span class="nx">Route</span> <span class="p">}</span> <span class="nx">from</span> <span class="s1">&#39;react-router&#39;</span><span class="p">;</span>
+</code></pre></div>
+<h3 id="rendering">Rendering</h3>
+<div class="highlight"><pre><code class="language-js" data-lang="js"><span class="c1">// v0.13.x</span>
+<span class="nx">Router</span><span class="p">.</span><span class="nx">run</span><span class="p">(</span><span class="nx">routes</span><span class="p">,</span> <span class="p">(</span><span class="nx">Handler</span><span class="p">)</span> <span class="o">=&gt;</span> <span class="p">{</span>
+  <span class="nx">render</span><span class="p">(</span><span class="o">&lt;</span><span class="nx">Handler</span><span class="o">/&gt;</span><span class="p">,</span> <span class="nx">el</span><span class="p">);</span>
+<span class="p">})</span>
+
+<span class="c1">// v1.0</span>
+<span class="nx">render</span><span class="p">(</span><span class="o">&lt;</span><span class="nx">Router</span><span class="o">&gt;</span><span class="p">{</span><span class="nx">routes</span><span class="p">}</span><span class="o">&lt;</span><span class="err">/Router&gt;, el)</span>
+
+<span class="c1">// looks more like this:</span>
+<span class="nx">render</span><span class="p">((</span>
+  <span class="o">&lt;</span><span class="nx">Router</span><span class="o">&gt;</span>
+    <span class="o">&lt;</span><span class="nx">Route</span> <span class="nx">path</span><span class="o">=</span><span class="s2">&quot;/&quot;</span> <span class="nx">component</span><span class="o">=</span><span class="p">{</span><span class="nx">App</span><span class="p">}</span><span class="o">/&gt;</span>
+  <span class="o">&lt;</span><span class="err">/Router&gt;</span>
+<span class="p">),</span> <span class="nx">el</span><span class="p">);</span>
+
+<span class="c1">// or if you&#39;d rather</span>
+<span class="nx">render</span><span class="p">(</span><span class="o">&lt;</span><span class="nx">Router</span> <span class="nx">routes</span><span class="o">=</span><span class="p">{</span><span class="nx">routes</span><span class="p">}</span><span class="o">/&gt;</span><span class="p">,</span> <span class="nx">el</span><span class="p">)</span>
+</code></pre></div>
+<h3 id="locations">Locations</h3>
+
+<p>Locations are now called histories (that emit locations). You import
+them from the <a href="https://github.com/reactjs/history"><code>history</code> package</a>, not react router.</p>
+<div class="highlight"><pre><code class="language-js" data-lang="js"><span class="c1">// v0.13.x</span>
+<span class="nx">Router</span><span class="p">.</span><span class="nx">run</span><span class="p">(</span><span class="nx">routes</span><span class="p">,</span> <span class="nx">Router</span><span class="p">.</span><span class="nx">BrowserHistory</span><span class="p">,</span> <span class="p">(</span><span class="nx">Handler</span><span class="p">)</span> <span class="o">=&gt;</span> <span class="p">{</span>
+  <span class="nx">render</span><span class="p">(</span><span class="o">&lt;</span><span class="nx">Handler</span><span class="o">/&gt;</span><span class="p">,</span> <span class="nx">el</span><span class="p">);</span>
+<span class="p">})</span>
+
+<span class="c1">// v1.0</span>
+<span class="kr">import</span> <span class="nx">createBrowserHistory</span> <span class="nx">from</span> <span class="s1">&#39;history/lib/createBrowserHistory&#39;</span>
+<span class="kd">let</span> <span class="nx">history</span> <span class="o">=</span> <span class="nx">createBrowserHistory</span><span class="p">()</span>
+<span class="nx">render</span><span class="p">(</span><span class="o">&lt;</span><span class="nx">Router</span> <span class="nx">history</span><span class="o">=</span><span class="p">{</span><span class="nx">history</span><span class="p">}</span><span class="o">&gt;</span><span class="p">{</span><span class="nx">routes</span><span class="p">}</span><span class="o">&lt;</span><span class="err">/Router&gt;, el)</span>
+</code></pre></div>
+<p>If you do not specify a history type (as in the example above) then you will notice some unusual behaviour after updating to 1.0.0. With the default hash based routing a querystring entry not defined by yourself will start appearing in your URLs called <code>_k</code>. An example of how it looks is this: <code>?_k=umhx1s</code></p>
+
+<p>This is intended and part of <a href="/docs/guides/Histories.md#createhashhistory">createHashHistory</a> (which is the default history approach used if one is not specified). You can read more about the feature <a href="/docs/guides/Histories.md#what-is-that-_kckuvup-junk-in-the-url">here</a> and how to opt out <a href="https://reactjs.org/history/stable/HashHistoryCaveats.html">here</a>.</p>
+
+<h3 id="route-config">Route Config</h3>
+
+<p>You can still nest your routes as before, paths are inherited from
+parents just like before but prop names have changed.</p>
+<div class="highlight"><pre><code class="language-js" data-lang="js"><span class="c1">// v0.13.x</span>
+<span class="o">&lt;</span><span class="nx">Route</span> <span class="nx">name</span><span class="o">=</span><span class="s2">&quot;about&quot;</span> <span class="nx">handler</span><span class="o">=</span><span class="p">{</span><span class="nx">About</span><span class="p">}</span><span class="o">/&gt;</span>
+
+<span class="c1">// v1.0</span>
+<span class="o">&lt;</span><span class="nx">Route</span> <span class="nx">path</span><span class="o">=</span><span class="s2">&quot;about&quot;</span> <span class="nx">component</span><span class="o">=</span><span class="p">{</span><span class="nx">About</span><span class="p">}</span><span class="o">/&gt;</span>
+</code></pre></div>
+<p>Named routes are gone (for now, <a href="https://github.com/reactjs/react-router/issues/1840">see discussion</a>)</p>
+
+<h3 id="notfound-route">NotFound route</h3>
+
+<p>&quot;Not found&quot; really confused people, mistaking not finding resources
+from your API for not matching a route. We&#39;ve removed it completely
+since it&#39;s simple with a <code>*</code> path.</p>
+<div class="highlight"><pre><code class="language-js" data-lang="js"><span class="c1">// v0.13.x</span>
+<span class="o">&lt;</span><span class="nx">NotFoundRoute</span> <span class="nx">handler</span><span class="o">=</span><span class="p">{</span><span class="nx">NoMatch</span><span class="p">}</span><span class="o">/&gt;</span>
+
+<span class="c1">// v1.0</span>
+<span class="o">&lt;</span><span class="nx">Route</span> <span class="nx">path</span><span class="o">=</span><span class="s2">&quot;*&quot;</span> <span class="nx">component</span><span class="o">=</span><span class="p">{</span><span class="nx">NoMatch</span><span class="p">}</span><span class="o">/&gt;</span>
+</code></pre></div>
+<p>As this catch-all route will match everything, it must be the last route specified in the child route array.</p>
+
+<h3 id="redirect-route">Redirect route</h3>
+<div class="highlight"><pre><code class="language-js" data-lang="js"><span class="c1">// v0.13.x</span>
+<span class="o">&lt;</span><span class="nx">Redirect</span> <span class="nx">from</span><span class="o">=</span><span class="s2">&quot;some/where/:id&quot;</span> <span class="nx">to</span><span class="o">=</span><span class="s2">&quot;somewhere/else/:id&quot;</span> <span class="nx">params</span><span class="o">=</span><span class="err">/&gt;</span>
+
+<span class="c1">// v1.0</span>
+<span class="c1">// Works the same as before, except no params, just put them in the path</span>
+<span class="o">&lt;</span><span class="nx">Redirect</span> <span class="nx">from</span><span class="o">=</span><span class="s2">&quot;/some/where/:id&quot;</span> <span class="nx">to</span><span class="o">=</span><span class="s2">&quot;/somewhere/else/2&quot;</span><span class="o">/&gt;</span>
+</code></pre></div>
+<h3 id="links">Links</h3>
+
+<h4 id="path-params">path / params</h4>
+<div class="highlight"><pre><code class="language-js" data-lang="js"><span class="c1">// v0.13.x</span>
+<span class="o">&lt;</span><span class="nx">Link</span> <span class="nx">to</span><span class="o">=</span><span class="s2">&quot;user&quot;</span> <span class="nx">params</span><span class="o">=&gt;</span><span class="nx">Mateusz</span><span class="o">&lt;</span><span class="err">/Link&gt;</span>
+
+<span class="c1">// v1.0</span>
+<span class="c1">// because named routes are gone, link to full paths, you no longer need</span>
+<span class="c1">// to know the names of the parameters, and string templates are quite</span>
+<span class="c1">// nice. Note that `query` has not changed.</span>
+<span class="o">&lt;</span><span class="nx">Link</span> <span class="nx">to</span><span class="o">=</span><span class="p">{</span><span class="err">`</span><span class="o">/</span><span class="nx">users</span><span class="o">/</span><span class="nx">$</span><span class="p">{</span><span class="nx">user</span><span class="p">.</span><span class="nx">id</span><span class="p">}</span><span class="err">`</span><span class="p">}</span><span class="o">&gt;</span><span class="nx">Mateusz</span><span class="o">&lt;</span><span class="err">/Link&gt;</span>
+</code></pre></div>
+<h4 id="quot-active-quot-class">&quot;active&quot; class</h4>
+
+<p>In 0.13.x links added the &quot;active&quot; class by default which you could
+override with <code>activeClassName</code>, or provide <code>activeStyle</code>s. It&#39;s usually
+just a handful of navigation links that need this behavior.</p>
+
+<p>Links no longer add the &quot;active&quot; class by default (its expensive and
+usually not necessary), you opt-in by providing one; if no
+<code>activeClassName</code> or <code>activeStyle</code>s are provided, the link will not
+check if it&#39;s active.</p>
+<div class="highlight"><pre><code class="language-js" data-lang="js"><span class="c1">// v0.13.x</span>
+<span class="o">&lt;</span><span class="nx">Link</span> <span class="nx">to</span><span class="o">=</span><span class="s2">&quot;about&quot;</span><span class="o">&gt;</span><span class="nx">About</span><span class="o">&lt;</span><span class="err">/Link&gt;</span>
+
+<span class="c1">// v1.0</span>
+<span class="o">&lt;</span><span class="nx">Link</span> <span class="nx">to</span><span class="o">=</span><span class="s2">&quot;/about&quot;</span> <span class="nx">activeClassName</span><span class="o">=</span><span class="s2">&quot;active&quot;</span><span class="o">&gt;</span><span class="nx">About</span><span class="o">&lt;</span><span class="err">/Link&gt;</span>
+</code></pre></div>
+<h4 id="linking-to-index-routes">Linking to Index routes</h4>
+
+<p>Because named routes are gone, a link to <code>/</code> with an index route at <code>/</code>
+will always be active. So we&#39;ve introduced <code>IndexLink</code> that is only
+active when on exactly that path.</p>
+<div class="highlight"><pre><code class="language-js" data-lang="js"><span class="c1">// v0.13.x</span>
+<span class="c1">// with this route config</span>
+<span class="o">&lt;</span><span class="nx">Route</span> <span class="nx">path</span><span class="o">=</span><span class="s2">&quot;/&quot;</span> <span class="nx">handler</span><span class="o">=</span><span class="p">{</span><span class="nx">App</span><span class="p">}</span><span class="o">&gt;</span>
+  <span class="o">&lt;</span><span class="nx">DefaultRoute</span> <span class="nx">name</span><span class="o">=</span><span class="s2">&quot;home&quot;</span> <span class="nx">handler</span><span class="o">=</span><span class="p">{</span><span class="nx">Home</span><span class="p">}</span><span class="o">/&gt;</span>
+  <span class="o">&lt;</span><span class="nx">Route</span> <span class="nx">name</span><span class="o">=</span><span class="s2">&quot;about&quot;</span> <span class="nx">handler</span><span class="o">=</span><span class="p">{</span><span class="nx">About</span><span class="p">}</span><span class="o">/&gt;</span>
+<span class="o">&lt;</span><span class="err">/Route&gt;</span>
+
+<span class="c1">// will be active only when home is active, not when about is active</span>
+<span class="o">&lt;</span><span class="nx">Link</span> <span class="nx">to</span><span class="o">=</span><span class="s2">&quot;home&quot;</span><span class="o">&gt;</span><span class="nx">Home</span><span class="o">&lt;</span><span class="err">/Link&gt;</span>
+
+<span class="c1">// v1.0</span>
+<span class="o">&lt;</span><span class="nx">Route</span> <span class="nx">path</span><span class="o">=</span><span class="s2">&quot;/&quot;</span> <span class="nx">component</span><span class="o">=</span><span class="p">{</span><span class="nx">App</span><span class="p">}</span><span class="o">&gt;</span>
+  <span class="o">&lt;</span><span class="nx">IndexRoute</span> <span class="nx">component</span><span class="o">=</span><span class="p">{</span><span class="nx">Home</span><span class="p">}</span><span class="o">/&gt;</span>
+  <span class="o">&lt;</span><span class="nx">Route</span> <span class="nx">path</span><span class="o">=</span><span class="s2">&quot;about&quot;</span> <span class="nx">component</span><span class="o">=</span><span class="p">{</span><span class="nx">About</span><span class="p">}</span><span class="o">/&gt;</span>
+<span class="o">&lt;</span><span class="err">/Route&gt;</span>
+
+<span class="c1">// will be active only when home is active, not when about is active</span>
+<span class="o">&lt;</span><span class="nx">IndexLink</span> <span class="nx">to</span><span class="o">=</span><span class="s2">&quot;/&quot;</span><span class="o">&gt;</span><span class="nx">Home</span><span class="o">&lt;</span><span class="err">/IndexLink&gt;</span>
+</code></pre></div>
+<p>This gives you more granular control of what causes a link to be active
+or not when there is an index route involved.</p>
+
+<h4 id="onclick-handler">onClick handler</h4>
+
+<p>For consistency with React v0.14, returning <code>false</code> from a <code>Link</code>&#39;s <code>onClick</code>
+handler no longer prevents the transition. To prevent the transition, call
+<code>e.preventDefault()</code> instead.</p>
+
+<h3 id="routehandler">RouteHandler</h3>
+
+<p><code>RouteHandler</code> is gone. <code>Router</code> now automatically populates
+<code>this.props.children</code> of your components based on the active route.</p>
+<div class="highlight"><pre><code class="language-js" data-lang="js"><span class="c1">// v0.13.x</span>
+<span class="o">&lt;</span><span class="nx">RouteHandler</span><span class="o">/&gt;</span>
+
+<span class="c1">// v1.0</span>
+<span class="p">{</span><span class="k">this</span><span class="p">.</span><span class="nx">props</span><span class="p">.</span><span class="nx">children</span><span class="p">}</span>
+</code></pre></div>
+<p>As with all other React components that receive <code>children</code> from their parent,
+you can use the standard <code>React.cloneElement</code> pattern to inject additional
+props into your supplied child.</p>
+
+<p>You should generally avoid over-using this pattern, as this tightly couples
+your route components via the render tree rather than the routing tree, which
+can make refactoring more difficult.</p>
+<div class="highlight"><pre><code class="language-js" data-lang="js"><span class="c1">// v0.13.x</span>
+<span class="o">&lt;</span><span class="nx">RouteHandler</span> <span class="nx">someExtraProp</span><span class="o">=</span><span class="p">{</span><span class="nx">something</span><span class="p">}</span><span class="o">/&gt;</span>
+
+<span class="c1">// v1.0</span>
+<span class="p">{</span><span class="nx">React</span><span class="p">.</span><span class="nx">cloneElement</span><span class="p">(</span><span class="k">this</span><span class="p">.</span><span class="nx">props</span><span class="p">.</span><span class="nx">children</span><span class="p">,</span> <span class="p">{</span> <span class="nx">someExtraProp</span><span class="o">:</span> <span class="nx">something</span> <span class="p">})}</span>
+</code></pre></div>
+<p>A couple of things to note:
+- Don&#39;t pass in <code>props.children</code> to the child (e.g. via spreading in
+<code>this.props</code>), as that will override the previous value of <code>props.children</code>,
+and can potentially cause infinite recursion of the same nested element.
+- React validates <code>propTypes</code> on elements when those elements are created,
+rather than when they&#39;re about to render. This means that any prop types with
+<code>isRequired</code> will fail validation when those props are supplied via this
+approach. In these cases, you should not specify <code>isRequired</code> for those props.
+For more details, see
+<a href="https://github.com/facebook/react/issues/4494#issuecomment-125068868">facebook/react#4494</a>.</p>
+
+<h3 id="navigation-mixin">Navigation Mixin</h3>
+
+<p>If you were using the <code>Navigation</code> mixin, use the <code>History</code> mixin instead.</p>
+<div class="highlight"><pre><code class="language-js" data-lang="js"><span class="c1">// v0.13.x</span>
+<span class="kd">var</span> <span class="nx">Assignment</span> <span class="o">=</span> <span class="nx">React</span><span class="p">.</span><span class="nx">createClass</span><span class="p">({</span>
+  <span class="nx">mixins</span><span class="o">:</span> <span class="p">[</span> <span class="nx">Navigation</span> <span class="p">],</span>
+  <span class="nx">navigateAfterSomethingHappened</span> <span class="p">()</span> <span class="p">{</span>
+    <span class="k">this</span><span class="p">.</span><span class="nx">transitionTo</span><span class="p">(</span><span class="s1">&#39;/users&#39;</span><span class="p">,</span> <span class="p">{</span> <span class="nx">userId</span><span class="o">:</span> <span class="nx">user</span><span class="p">.</span><span class="nx">id</span> <span class="p">},</span> <span class="nx">query</span><span class="p">);</span>
+    <span class="c1">// this.replaceWith(&#39;/users&#39;, { userId: user.id }, query);</span>
+  <span class="p">}</span>
+<span class="p">})</span>
+
+<span class="c1">// v1.0</span>
+<span class="kd">var</span> <span class="nx">Assignment</span> <span class="o">=</span> <span class="nx">React</span><span class="p">.</span><span class="nx">createClass</span><span class="p">({</span>
+  <span class="nx">mixins</span><span class="o">:</span> <span class="p">[</span> <span class="nx">History</span> <span class="p">],</span>
+  <span class="nx">navigateAfterSomethingHappened</span> <span class="p">()</span> <span class="p">{</span>
+    <span class="c1">// the router is now built on reactjs/history, and it is a first class</span>
+    <span class="c1">// API in the router for navigating</span>
+    <span class="k">this</span><span class="p">.</span><span class="nx">history</span><span class="p">.</span><span class="nx">pushState</span><span class="p">(</span><span class="kc">null</span><span class="p">,</span> <span class="err">`</span><span class="o">/</span><span class="nx">users</span><span class="o">/</span><span class="nx">$</span><span class="p">{</span><span class="nx">user</span><span class="p">.</span><span class="nx">id</span><span class="p">}</span><span class="err">`</span><span class="p">,</span> <span class="nx">query</span><span class="p">);</span>
+    <span class="c1">// this.history.replaceState(null, `/users/${user.id}`, query);</span>
+  <span class="p">}</span>
+<span class="p">})</span>
+</code></pre></div>
+<p>The following <code>Navigation</code> methods are now also found on the history
+object, main difference again is there are no params or route names,
+just pathnames.</p>
+
+<table><thead>
+<tr>
+<th>v0.13</th>
+<th>v1.0</th>
+</tr>
+</thead><tbody>
+<tr>
+<td><code>go(n)</code></td>
+<td><code>go(n)</code></td>
+</tr>
+<tr>
+<td><code>goBack()</code></td>
+<td><code>goBack()</code></td>
+</tr>
+<tr>
+<td><code>goForward()</code></td>
+<td><code>goForward()</code></td>
+</tr>
+<tr>
+<td><code>makeHref(routeName, params, query)</code></td>
+<td><code>createHref(pathname, query)</code></td>
+</tr>
+<tr>
+<td><code>makePath(routeName, params, query)</code></td>
+<td><code>createPath(pathname, query)</code></td>
+</tr>
+</tbody></table>
+
+<h3 id="state-mixin">State mixin</h3>
+<div class="highlight"><pre><code class="language-js" data-lang="js"><span class="c1">// v0.13.x</span>
+<span class="kd">var</span> <span class="nx">Assignment</span> <span class="o">=</span> <span class="nx">React</span><span class="p">.</span><span class="nx">createClass</span><span class="p">({</span>
+  <span class="nx">mixins</span><span class="o">:</span> <span class="p">[</span> <span class="nx">State</span> <span class="p">],</span>
+  <span class="nx">foo</span> <span class="p">()</span> <span class="p">{</span>
+    <span class="k">this</span><span class="p">.</span><span class="nx">getPath</span><span class="p">()</span>
+    <span class="k">this</span><span class="p">.</span><span class="nx">getParams</span><span class="p">()</span>
+    <span class="c1">// etc...</span>
+  <span class="p">}</span>
+<span class="p">})</span>
+
+<span class="c1">// v1.0</span>
+<span class="c1">// if you are a route component...</span>
+<span class="o">&lt;</span><span class="nx">Route</span> <span class="nx">component</span><span class="o">=</span><span class="p">{</span><span class="nx">Assignment</span><span class="p">}</span> <span class="o">/&gt;</span>
+
+<span class="kd">var</span> <span class="nx">Assignment</span> <span class="o">=</span> <span class="nx">React</span><span class="p">.</span><span class="nx">createClass</span><span class="p">({</span>
+  <span class="nx">foo</span> <span class="p">()</span> <span class="p">{</span>
+    <span class="k">this</span><span class="p">.</span><span class="nx">props</span><span class="p">.</span><span class="nx">location</span> <span class="c1">// contains path information</span>
+    <span class="k">this</span><span class="p">.</span><span class="nx">props</span><span class="p">.</span><span class="nx">params</span> <span class="c1">// contains params</span>
+    <span class="k">this</span><span class="p">.</span><span class="nx">props</span><span class="p">.</span><span class="nx">history</span><span class="p">.</span><span class="nx">isActive</span><span class="p">(</span><span class="s1">&#39;/pathToAssignment&#39;</span><span class="p">)</span>
+  <span class="p">}</span>
+<span class="p">})</span>
+
+<span class="c1">// if you&#39;re not a route component, you need to pass location down the</span>
+<span class="c1">// tree or get the location from context. We will probably provide a</span>
+<span class="c1">// higher order component that will do this for you but haven&#39;t yet.</span>
+<span class="c1">// see further down for more information on what can be passed down</span>
+<span class="c1">// via context</span>
+<span class="kd">var</span> <span class="nx">Assignment</span> <span class="o">=</span> <span class="nx">React</span><span class="p">.</span><span class="nx">createClass</span><span class="p">({</span>
+  <span class="nx">contextTypes</span><span class="o">:</span> <span class="p">{</span>
+    <span class="nx">location</span><span class="o">:</span> <span class="nx">React</span><span class="p">.</span><span class="nx">PropTypes</span><span class="p">.</span><span class="nx">object</span>
+  <span class="p">},</span>
+  <span class="nx">foo</span> <span class="p">()</span> <span class="p">{</span>
+    <span class="k">this</span><span class="p">.</span><span class="nx">context</span><span class="p">.</span><span class="nx">location</span>
+  <span class="p">}</span>
+<span class="p">})</span>
+</code></pre></div>
+<p>Here&#39;s a table of where you used to get stuff with the <code>State</code> mixin,
+and where you get it now if you&#39;re a route component (<code>this.props</code>)</p>
+
+<table><thead>
+<tr>
+<th>v0.13 (this)</th>
+<th>v1.0 (this.props)</th>
+</tr>
+</thead><tbody>
+<tr>
+<td><code>getPath()</code></td>
+<td><code>location.pathname+location.search</code></td>
+</tr>
+<tr>
+<td><code>getPathname()</code></td>
+<td><code>location.pathname</code></td>
+</tr>
+<tr>
+<td><code>getParams()</code></td>
+<td><code>params</code></td>
+</tr>
+<tr>
+<td><code>getQuery()</code></td>
+<td><code>location.search</code></td>
+</tr>
+<tr>
+<td><code>getQueryParams()</code></td>
+<td><code>location.query</code></td>
+</tr>
+<tr>
+<td><code>getRoutes()</code></td>
+<td><code>routes</code></td>
+</tr>
+<tr>
+<td><code>isActive(to, params, query)</code></td>
+<td><code>history.isActive(pathname, query, onlyActiveOnIndex)</code></td>
+</tr>
+</tbody></table>
+
+<p>Here is another table of properties you used to get via the <code>State</code> and
+where you can get it now if you are <strong>not</strong> a route component
+(<code>this.context</code>).</p>
+
+<table><thead>
+<tr>
+<th>v0.13 (this)</th>
+<th>v1.0 (this.context)</th>
+</tr>
+</thead><tbody>
+<tr>
+<td><code>getPath()</code></td>
+<td><code>location.pathname+location.search</code></td>
+</tr>
+<tr>
+<td><code>getPathname()</code></td>
+<td><code>location.pathname</code></td>
+</tr>
+<tr>
+<td><code>getQuery()</code></td>
+<td><code>location.query</code></td>
+</tr>
+<tr>
+<td><code>isActive(to, params, query)</code></td>
+<td><code>history.isActive(pathname, query, indexOnly)</code></td>
+</tr>
+</tbody></table>
+
+<p>Note not all <code>State</code> functionality can be accessed via context in v1.0.
+For example, <code>params</code> is not available via context.</p>
+
+<h3 id="scrolling">Scrolling</h3>
+
+<p>We&#39;re developing scroll behaviors separately in the
+<a href="https://github.com/taion/scroll-behavior"><code>scroll-behavior</code></a>
+library until we have a stable, robust implementation that we&#39;re happy with.
+Currently, scroll behaviors are exposed there as history enhancers:</p>
+<div class="highlight"><pre><code class="language-js" data-lang="js"><span class="kr">import</span> <span class="nx">createHistory</span> <span class="nx">from</span> <span class="s1">&#39;history/lib/createBrowserHistory&#39;</span>
+<span class="kr">import</span> <span class="nx">useScroll</span> <span class="nx">from</span> <span class="s1">&#39;scroll-behavior/lib/useStandardScroll&#39;</span>
+
+<span class="kr">const</span> <span class="nx">history</span> <span class="o">=</span> <span class="nx">useScroll</span><span class="p">(</span><span class="nx">createHistory</span><span class="p">)()</span>
+</code></pre></div>
+<h3 id="code-codecode-code"><code>willTransitionTo</code> and <code>willTransitionFrom</code></h3>
+
+<p>Routes now define this behavior:</p>
+<div class="highlight"><pre><code class="language-js" data-lang="js"><span class="c1">// v0.13.x</span>
+<span class="kd">var</span> <span class="nx">Home</span> <span class="o">=</span> <span class="nx">React</span><span class="p">.</span><span class="nx">createClass</span><span class="p">({</span>
+  <span class="nx">statics</span><span class="o">:</span> <span class="p">{</span>
+    <span class="nx">willTransitionTo</span> <span class="p">(</span><span class="nx">transition</span><span class="p">,</span> <span class="nx">params</span><span class="p">,</span> <span class="nx">query</span><span class="p">,</span> <span class="nx">callback</span><span class="p">)</span> <span class="p">{</span> <span class="p">}</span>
+    <span class="nx">willTransitionFrom</span> <span class="p">(</span><span class="nx">component</span><span class="p">,</span> <span class="nx">transition</span><span class="p">,</span> <span class="nx">params</span><span class="p">,</span> <span class="nx">query</span><span class="p">,</span> <span class="nx">callback</span><span class="p">)</span> <span class="p">{</span> <span class="p">}</span>
+  <span class="p">}</span>
+<span class="p">})</span>
+
+<span class="c1">// v1.0</span>
+<span class="o">&lt;</span><span class="nx">Route</span>
+  <span class="nx">component</span><span class="o">=</span><span class="p">{</span><span class="nx">Home</span><span class="p">}</span>
+  <span class="nx">onEnter</span><span class="o">=</span><span class="p">{(</span><span class="nx">location</span><span class="p">,</span> <span class="nx">replaceWith</span><span class="p">)</span> <span class="o">=&gt;</span> <span class="p">{}}</span>
+  <span class="nx">onLeave</span><span class="o">=</span><span class="p">{()</span> <span class="o">=&gt;</span> <span class="p">{}}</span>
+<span class="o">/&gt;</span>
+</code></pre></div>
+<p>To cancel a &quot;transition from&quot;, please refer to the
+<a href="/docs/guides/ConfirmingNavigation.md">Confirming Navigation</a> guide.</p>
+
+<h3 id="we-39-ll-keep-updating-this">We&#39;ll keep updating this</h3>
+
+<p>There&#39;s a lot of the old API we&#39;ve missed, please give the <a href="/docs">new
+docs</a> a read and help us fill this guide in. Thanks!</p>
+
+
+                    </div>
+                
+            </div>
+
+            
+
+            <div class="row">
+                <div id="footer" class="col-sm-12">
+                    Documentation for <a href="https://github.com/reactjs/react-router">React Router</a>
+
+                </div>
+            </div>
+        </div>
+
+        <script>
+            function orderNav() {
+                var list,
+                    section,
+                    header,
+                    sections = [],
+                    lists = {},
+                    headers = {};
+
+                var navUl = document.querySelectorAll('#navigation ul')[0],
+                    navLis = document.querySelectorAll('#navigation ul li');
+
+                if (!navUl) return;
+
+                for (var i = 0; i < navLis.length; i++) {
+                    var order, li = navLis[i];
+
+                    if (li.classList.contains('nav-header')) {
+                        section = li.textContent || li.innerText;
+                        sections.push(section);
+                        headers[section] = li;
+                        continue;
+                    }
+
+                    if (!lists[section]) {
+                        lists[section] = [];
+                    }
+
+                    order = parseFloat(li.getAttribute('data-order'))
+                    lists[section].push([order, li]);
+                }
+
+                for (var i = 0; i < sections.length; i++) {
+                    section = sections[i];
+                    list = lists[section].sort(function(a, b) {
+                        return a[0] - b[0];
+                    });
+
+                    if (header = headers[section]) {
+                        navUl.appendChild(header);
+                    }
+                    for (var j = 0; j < list.length; j++) {
+                        navUl.appendChild(list[j][1]);
+                    }
+                }
+            }
+
+            if (document.querySelectorAll) orderNav();
+        </script>
+        
+    </body>
+</html>

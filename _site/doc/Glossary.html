@@ -1,0 +1,405 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <meta charset="utf-8">
+        <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+        <meta name="viewport" content="width=device-width">
+
+        <title>React Router : Glossary</title>
+        <meta name="description" content="A complete routing library for React.">
+
+        <link href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.5/css/bootstrap.min.css" rel="stylesheet">
+        <link rel="stylesheet" href="/css/syntax.css">
+        <link rel="stylesheet" href="/css/main.css">
+    </head>
+    <body>
+
+        <div class="container">
+            <div class="row">
+                <div id="header" class="col-sm-12">
+                    <h4><a class="brand" href="/">React Router</a>
+    <small>A complete routing library for React.</small>
+</h4>
+
+                </div>
+            </div>
+
+            <div class="row">
+                
+                
+                    <div id="navigation" class="col-sm-2">
+                        <ul class="nav nav-list">
+    <li><a href="/">Home</a></li>
+    
+        
+        
+
+        
+            
+                <li class="nav-header">Documentation</li>
+            
+            <li data-order="13"><a href="/doc/v2.0.0.html">v2.0.0 Upgrade Guide</a></li>
+        
+            
+            <li data-order="12"><a href="/doc/v1.0.0.html">v1.0.0 Upgrade Guide</a></li>
+        
+            
+            <li data-order="14"><a href="/doc/Troubleshooting.html">Troubleshooting</a></li>
+        
+            
+            <li data-order="7"><a href="/doc/ServerRendering.html">Server Rendering</a></li>
+        
+            
+            <li data-order="9"><a href="/doc/NavigationOutsideOfComponents.html">Navigating Outside of Components</a></li>
+        
+            
+            <li data-order="10"><a href="/doc/MinimizingBundleSize.html">Minimizing Bundle Size</a></li>
+        
+            
+            <li data-order="4"><a href="/doc/IndexRoutes.html">Index Routes and Links</a></li>
+        
+            
+            <li data-order="3"><a href="/doc/Histories.html">Histories</a></li>
+        
+            
+            <li data-order="16"><a href="/doc/Glossary.html">Glossary</a></li>
+        
+            
+            <li data-order="5"><a href="/doc/DynamicRouting.html">Dynamic Routing</a></li>
+        
+            
+            <li data-order="6"><a href="/doc/ConfirmingNavigation.html">Confirming Navigation</a></li>
+        
+            
+            <li data-order="8"><a href="/doc/ComponentLifecycle.html">Component Lifecycle</a></li>
+        
+            
+            <li data-order="11"><a href="/doc/CHANGES.html">Change Log</a></li>
+        
+            
+            <li data-order="15"><a href="/doc/API.html">API Reference</a></li>
+        
+            
+            <li data-order="2"><a href="/doc/RouteMatching.html">Route Matching</a></li>
+        
+            
+            <li data-order="1"><a href="/doc/RouteConfiguration.html">Route Configuration</a></li>
+        
+    
+        
+        
+
+        
+    
+        
+        
+
+        
+    
+        
+        
+
+        
+    
+        
+        
+
+        
+    
+<!-- List additional links. It is recommended to add a divider
+    e.g. <li class="divider"></li> first to break up the content. -->
+</ul>
+
+                    </div>
+
+                    <div id="content" class="col-sm-10">
+                        <div class="page-header">
+    <h2>Glossary
+        
+    </h2>
+</div>
+
+<h1 id="glossary">Glossary</h1>
+
+<p>This is a glossary of common terms used in the React Router codebase and documentation listed in alphabetical order, along with their <a href="http://flowtype.org/docs/quick-reference.html">type signatures</a>.</p>
+
+<ul>
+<li><a href="#action">Action</a></li>
+<li><a href="#component">Component</a></li>
+<li><a href="#enterhook">EnterHook</a></li>
+<li><a href="#hash">Hash</a></li>
+<li><a href="#leavehook">LeaveHook</a></li>
+<li><a href="#location">Location</a></li>
+<li><a href="#locationdescriptor">LocationDescriptor</a></li>
+<li><a href="#locationkey">LocationKey</a></li>
+<li><a href="#locationstate">LocationState</a></li>
+<li><a href="#path">Path</a></li>
+<li><a href="#pathname">Pathname</a></li>
+<li><a href="#params">Params</a></li>
+<li><a href="#query">Query</a></li>
+<li><a href="#querystring">QueryString</a></li>
+<li><a href="#redirectfunction">RedirectFunction</a></li>
+<li><a href="#route">Route</a></li>
+<li><a href="#routecomponent">RouteComponent</a></li>
+<li><a href="#routeconfig">RouteConfig</a></li>
+<li><a href="#routehook">RouteHook</a></li>
+<li><a href="#routepattern">RoutePattern</a></li>
+<li><a href="#router">Router</a></li>
+<li><a href="#routerstate">RouterState</a></li>
+</ul>
+
+<h2 id="action">Action</h2>
+<div class="highlight"><pre><code class="language-js" data-lang="js"><span class="nx">type</span> <span class="nx">Action</span> <span class="o">=</span> <span class="s1">&#39;PUSH&#39;</span> <span class="o">|</span> <span class="s1">&#39;REPLACE&#39;</span> <span class="o">|</span> <span class="s1">&#39;POP&#39;</span><span class="p">;</span>
+</code></pre></div>
+<p>An <em>action</em> describes the type of change to a URL. Possible values are:</p>
+
+<ul>
+<li><code>PUSH</code> – indicates a new item was added to the history</li>
+<li><code>REPLACE</code> – indicates the current item in history was altered</li>
+<li><code>POP</code> – indicates there is a new current item, i.e. the &quot;current pointer&quot; changed</li>
+</ul>
+
+<h2 id="component">Component</h2>
+<div class="highlight"><pre><code class="language-js" data-lang="js"><span class="nx">type</span> <span class="nx">Component</span> <span class="o">=</span> <span class="nx">ReactClass</span> <span class="o">|</span> <span class="nx">string</span><span class="p">;</span>
+</code></pre></div>
+<p>A <em>component</em> is a React component class or a string (e.g. &quot;div&quot;). Basically, it&#39;s anything that can be used as the first argument to <a href="https://facebook.github.io/react/docs/top-level-api.html#react.createelement"><code>React.createElement</code></a>.</p>
+
+<h2 id="enterhook">EnterHook</h2>
+<div class="highlight"><pre><code class="language-js" data-lang="js"><span class="nx">type</span> <span class="nx">EnterHook</span> <span class="o">=</span> <span class="p">(</span><span class="nx">nextState</span><span class="o">:</span> <span class="nx">RouterState</span><span class="p">,</span> <span class="nx">replace</span><span class="o">:</span> <span class="nx">RedirectFunction</span><span class="p">,</span> <span class="nx">callback</span><span class="o">?:</span> <span class="nb">Function</span><span class="p">)</span> <span class="o">=&gt;</span> <span class="nx">any</span><span class="p">;</span>
+</code></pre></div>
+<p>An <em>enter hook</em> is a user-defined function that is called when a route is about to be rendered. It receives the next <a href="#routerstate">router state</a> as its first argument. The <a href="#redirectfunction"><code>replace</code> function</a> may be used to trigger a transition to a different URL.</p>
+
+<p>If an enter hook needs to execute asynchronously, it may list a 3rd <code>callback</code> argument that it must call in order to cause the transition to proceed.</p>
+
+<p><strong>Caution:</strong> Using the <code>callback</code> in an enter hook causes the transition to wait until it is called. <strong>This can lead to a non-responsive UI if you don&#39;t call it very quickly</strong>.</p>
+
+<h3 id="hash">Hash</h3>
+<div class="highlight"><pre><code class="language-text" data-lang="text">type Hash = string;
+</code></pre></div>
+<p>A <em>hash</em> is a string that represents the hash portion of the URL. It is synonymous with <code>window.location.hash</code> in web browsers.</p>
+
+<h2 id="leavehook">LeaveHook</h2>
+<div class="highlight"><pre><code class="language-js" data-lang="js"><span class="nx">type</span> <span class="nx">LeaveHook</span> <span class="o">=</span> <span class="p">()</span> <span class="o">=&gt;</span> <span class="nx">any</span><span class="p">;</span>
+</code></pre></div>
+<p>A <em>leave hook</em> is a user-defined function that is called when a route is about to be unmounted.</p>
+
+<h2 id="location">Location</h2>
+<div class="highlight"><pre><code class="language-js" data-lang="js"><span class="nx">type</span> <span class="nx">Location</span> <span class="o">=</span> <span class="p">{</span>
+  <span class="nx">pathname</span><span class="o">:</span> <span class="nx">Pathname</span><span class="p">;</span>
+  <span class="nx">search</span><span class="o">:</span> <span class="nx">QueryString</span><span class="p">;</span>
+  <span class="nx">query</span><span class="o">:</span> <span class="nx">Query</span><span class="p">;</span>
+  <span class="nx">state</span><span class="o">:</span> <span class="nx">LocationState</span><span class="p">;</span>
+  <span class="nx">action</span><span class="o">:</span> <span class="nx">Action</span><span class="p">;</span>
+  <span class="nx">key</span><span class="o">:</span> <span class="nx">LocationKey</span><span class="p">;</span>
+<span class="p">};</span>
+</code></pre></div>
+<p>A <em>location</em> answers two important (philosophical) questions:</p>
+
+<ul>
+<li>Where am I?</li>
+<li>How did I get here?</li>
+</ul>
+
+<p>New locations are typically created each time the URL changes. You can read more about locations in <a href="https://github.com/reactjs/history/blob/master/docs/Location.md">the <code>history</code> docs</a>.</p>
+
+<h3 id="locationdescriptor">LocationDescriptor</h3>
+<div class="highlight"><pre><code class="language-text" data-lang="text">type LocationDescriptorObject = {
+  pathname: Pathname;
+  search: Search;
+  query: Query;
+  state: LocationState;
+};
+
+type LocationDescriptor = LocationDescriptorObject | Path;
+</code></pre></div>
+<p>A <em>location descriptor</em> is the pushable analogue of a location. Locations tell you where you are; you create location descriptors to say where to go.</p>
+
+<p>You can read more about location descriptors in <a href="https://github.com/reactjs/history/blob/master/docs/Location.md">the <code>history</code> docs</a>.</p>
+
+<h2 id="locationkey">LocationKey</h2>
+<div class="highlight"><pre><code class="language-js" data-lang="js"><span class="nx">type</span> <span class="nx">LocationKey</span> <span class="o">=</span> <span class="nx">string</span><span class="p">;</span>
+</code></pre></div>
+<p>A <em>location key</em> is a string that is unique to a particular <a href="#location"><code>location</code></a>. It is the one piece of data that most accurately answers the question &quot;Where am I?&quot;.</p>
+
+<h2 id="locationstate">LocationState</h2>
+<div class="highlight"><pre><code class="language-js" data-lang="js"><span class="nx">type</span> <span class="nx">LocationState</span> <span class="o">=</span> <span class="o">?</span><span class="nb">Object</span><span class="p">;</span>
+</code></pre></div>
+<p>A <em>location state</em> is an arbitrary object of data associated with a particular <a href="#location"><code>location</code></a>. This is basically a way to tie extra state to a location that is not contained in the URL.</p>
+
+<p>This type gets its name from the first argument to HTML5&#39;s <a href="https://developer.mozilla.org/en-US/docs/Web/API/History_API#The_pushState()_method"><code>pushState</code></a> and <a href="https://developer.mozilla.org/en-US/docs/Web/API/History_API#The_replaceState()_method"><code>replaceState</code></a> methods.</p>
+
+<h2 id="path">Path</h2>
+<div class="highlight"><pre><code class="language-js" data-lang="js"><span class="nx">type</span> <span class="nx">Path</span> <span class="o">=</span> <span class="nx">Pathname</span> <span class="o">+</span> <span class="nx">QueryString</span> <span class="o">+</span> <span class="nx">Hash</span><span class="p">;</span>
+</code></pre></div>
+<p>A <em>path</em> represents a URL path.</p>
+
+<h2 id="pathname">Pathname</h2>
+<div class="highlight"><pre><code class="language-js" data-lang="js"><span class="nx">type</span> <span class="nx">Pathname</span> <span class="o">=</span> <span class="nx">string</span><span class="p">;</span>
+</code></pre></div>
+<p>A <em>pathname</em> is the portion of a URL that describes a hierarchical path, including the preceding <code>/</code>. For example, in <code>http://example.com/the/path?the=query</code>, <code>/the/path</code> is the pathname. It is synonymous with <code>window.location.pathname</code> in web browsers.</p>
+
+<h2 id="querystring">QueryString</h2>
+<div class="highlight"><pre><code class="language-js" data-lang="js"><span class="nx">type</span> <span class="nx">QueryString</span> <span class="o">=</span> <span class="nx">string</span><span class="p">;</span>
+</code></pre></div>
+<p>A <em>query string</em> is the portion of the URL that follows the <a href="#pathname">pathname</a>, including any preceding <code>?</code>. For example, in <code>http://example.com/the/path?the=query</code>, <code>?the=query</code> is the query string. It is synonymous with <code>window.location.search</code> in web browsers.</p>
+
+<h2 id="query">Query</h2>
+<div class="highlight"><pre><code class="language-js" data-lang="js"><span class="nx">type</span> <span class="nx">Query</span> <span class="o">=</span> <span class="nb">Object</span><span class="p">;</span>
+</code></pre></div>
+<p>A <em>query</em> is the parsed version of a <a href="#querystring">query string</a>.</p>
+
+<h2 id="params">Params</h2>
+<div class="highlight"><pre><code class="language-js" data-lang="js"><span class="nx">type</span> <span class="nx">Params</span> <span class="o">=</span> <span class="nb">Object</span><span class="p">;</span>
+</code></pre></div>
+<p>The word <em>params</em> refers to an object of key/value pairs that were parsed out of the original URL&#39;s <a href="#pathname">pathname</a>. The values of this object are typically strings, unless there is more than one param with the same name in which case the value is an array.</p>
+
+<h2 id="redirectfunction">RedirectFunction</h2>
+<div class="highlight"><pre><code class="language-js" data-lang="js"><span class="nx">type</span> <span class="nx">RedirectFunction</span> <span class="o">=</span> <span class="p">(</span><span class="nx">state</span><span class="o">:</span> <span class="o">?</span><span class="nx">LocationState</span><span class="p">,</span> <span class="nx">pathname</span><span class="o">:</span> <span class="nx">Pathname</span> <span class="o">|</span> <span class="nx">Path</span><span class="p">,</span> <span class="nx">query</span><span class="o">:</span> <span class="o">?</span><span class="nx">Query</span><span class="p">)</span> <span class="o">=&gt;</span> <span class="k">void</span><span class="p">;</span>
+</code></pre></div>
+<p>A <em>redirect function</em> is used in <a href="#enterhook"><code>onEnter</code> hooks</a> to trigger a transition to a new URL.</p>
+
+<h2 id="route">Route</h2>
+<div class="highlight"><pre><code class="language-js" data-lang="js"><span class="nx">type</span> <span class="nx">Route</span> <span class="o">=</span> <span class="p">{</span>
+  <span class="nx">component</span><span class="o">:</span> <span class="nx">RouteComponent</span><span class="p">;</span>
+  <span class="nx">path</span><span class="o">:</span> <span class="o">?</span><span class="nx">RoutePattern</span><span class="p">;</span>
+  <span class="nx">onEnter</span><span class="o">:</span> <span class="o">?</span><span class="nx">EnterHook</span><span class="p">;</span>
+  <span class="nx">onLeave</span><span class="o">:</span> <span class="o">?</span><span class="nx">LeaveHook</span><span class="p">;</span>
+<span class="p">};</span>
+</code></pre></div>
+<p>A <em>route</em> specifies a <a href="#component">component</a> that is part of the user interface (UI). Routes should be nested in a tree-like structure that follows the hierarchy of your components.</p>
+
+<p>It may help to think of a route as an &quot;entry point&quot; into your UI. You don&#39;t need a route for every component in your component hierarchy, only for those places where your UI differs based on the URL.</p>
+
+<h2 id="routecomponent">RouteComponent</h2>
+<div class="highlight"><pre><code class="language-js" data-lang="js"><span class="nx">type</span> <span class="nx">RouteComponent</span> <span class="o">=</span> <span class="nx">Component</span><span class="p">;</span>
+</code></pre></div>
+<p>The term <em>route component</em> refers to a <a href="#component">component</a> that is directly rendered by a <a href="#route">route</a> (i.e. the <code>&lt;Route component&gt;</code>). The router creates elements from route components and provides them as <code>this.props.children</code> to route components further up the hierarchy. In addition to <code>children</code>, route components receive the following props:</p>
+
+<ul>
+<li><code>router</code> – The <a href="#router">router</a> instance</li>
+<li><code>location</code> – The current <a href="#location">location</a></li>
+<li><code>params</code> – The current <a href="#params">params</a></li>
+<li><code>route</code> – The <a href="#route">route</a> that declared this component</li>
+<li><code>routeParams</code> – A subset of the <a href="#params">params</a> that were specified in the route&#39;s <a href="#routepattern"><code>path</code></a></li>
+</ul>
+
+<h2 id="routeconfig">RouteConfig</h2>
+<div class="highlight"><pre><code class="language-js" data-lang="js"><span class="nx">type</span> <span class="nx">RouteConfig</span> <span class="o">=</span> <span class="nb">Array</span><span class="o">&lt;</span><span class="nx">Route</span><span class="o">&gt;</span><span class="p">;</span>
+</code></pre></div>
+<p>A <em>route config</em> is an array of <a href="#route">route</a>s that specifies the order in which routes should be tried when the router attempts to match a URL.</p>
+
+<h2 id="routehook">RouteHook</h2>
+<div class="highlight"><pre><code class="language-js" data-lang="js"><span class="nx">type</span> <span class="nx">RouteHook</span> <span class="o">=</span> <span class="p">(</span><span class="nx">nextLocation</span><span class="o">?:</span> <span class="nx">Location</span><span class="p">)</span> <span class="o">=&gt;</span> <span class="nx">any</span><span class="p">;</span>
+</code></pre></div>
+<p>A <em>route hook</em> is a function that is used to prevent the user from leaving a route. On normal transitions, it receives the next <a href="#location">location</a> as an argument and must either <code>return false</code> to cancel the transition or <code>return</code> a prompt message to show the user. When invoked during the <code>beforeunload</code> event in web browsers, it does not receive any arguments and must <code>return</code> a prompt message to cancel the transition.</p>
+
+<h2 id="routepattern">RoutePattern</h2>
+<div class="highlight"><pre><code class="language-js" data-lang="js"><span class="nx">type</span> <span class="nx">RoutePattern</span> <span class="o">=</span> <span class="nx">string</span><span class="p">;</span>
+</code></pre></div>
+<p>A <em>route pattern</em> (or &quot;path&quot;) is a string that describes a portion of a URL. Patterns are compiled into functions that are used to try and match a URL. Patterns may use the following special characters:</p>
+
+<ul>
+<li><code>:paramName</code> – matches a URL segment up to the next <code>/</code>, <code>?</code>, or <code>#</code>. The matched string is called a <a href="#params">param</a></li>
+<li><code>()</code> – Wraps a portion of the URL that is optional</li>
+<li><code>*</code> – Matches all characters (non-greedy) up to the next character in the pattern, or to the end of the URL if there is none, and creates a <code>splat</code> <a href="#params">param</a></li>
+</ul>
+
+<p>Route patterns are relative to the pattern of the parent route unless they begin with a <code>/</code>, in which case they begin matching at the beginning of the URL.</p>
+
+<h2 id="router">Router</h2>
+<div class="highlight"><pre><code class="language-js" data-lang="js"><span class="nx">type</span> <span class="nx">Router</span> <span class="o">=</span> <span class="p">{</span>
+  <span class="nx">push</span><span class="p">(</span><span class="nx">location</span><span class="o">:</span> <span class="nx">LocationDescriptor</span><span class="p">)</span> <span class="o">=&gt;</span> <span class="k">void</span><span class="p">;</span>
+  <span class="nx">replace</span><span class="p">(</span><span class="nx">location</span><span class="o">:</span> <span class="nx">LocationDescriptor</span><span class="p">)</span> <span class="o">=&gt;</span> <span class="k">void</span><span class="p">;</span>
+  <span class="nx">go</span><span class="p">(</span><span class="nx">n</span><span class="o">:</span> <span class="nx">number</span><span class="p">)</span> <span class="o">=&gt;</span> <span class="k">void</span><span class="p">;</span>
+  <span class="nx">goBack</span><span class="p">()</span> <span class="o">=&gt;</span> <span class="k">void</span><span class="p">;</span>
+  <span class="nx">goForward</span><span class="p">()</span> <span class="o">=&gt;</span> <span class="k">void</span><span class="p">;</span>
+  <span class="nx">setRouteLeaveHook</span><span class="p">(</span><span class="nx">hook</span><span class="o">:</span> <span class="nx">RouteHook</span><span class="p">)</span> <span class="o">=&gt;</span> <span class="nb">Function</span><span class="p">;</span>
+  <span class="nx">isActive</span><span class="p">(</span><span class="nx">location</span><span class="o">:</span> <span class="nx">LocationDescriptor</span><span class="p">,</span> <span class="nx">indexOnly</span><span class="o">:</span> <span class="kr">boolean</span><span class="p">)</span> <span class="o">=&gt;</span> <span class="k">void</span><span class="p">;</span>
+<span class="p">};</span>
+</code></pre></div>
+<p>A <em>router</em> object allows for procedural manipulation of the routing state.</p>
+
+<h2 id="routerstate">RouterState</h2>
+<div class="highlight"><pre><code class="language-js" data-lang="js"><span class="nx">type</span> <span class="nx">RouterState</span> <span class="o">=</span> <span class="p">{</span>
+  <span class="nx">location</span><span class="o">:</span> <span class="nx">Location</span><span class="p">;</span>
+  <span class="nx">routes</span><span class="o">:</span> <span class="nb">Array</span><span class="o">&lt;</span><span class="nx">Route</span><span class="o">&gt;</span><span class="p">;</span>
+  <span class="nx">params</span><span class="o">:</span> <span class="nx">Params</span><span class="p">;</span>
+  <span class="nx">components</span><span class="o">:</span> <span class="nb">Array</span><span class="o">&lt;</span><span class="nx">Component</span><span class="o">&gt;</span><span class="p">;</span>
+<span class="p">};</span>
+</code></pre></div>
+<p>A <em>router state</em> represents the current state of a router. It contains:</p>
+
+<ul>
+<li>the current <a href="#location"><code>location</code></a>,</li>
+<li>an array of <a href="#route"><code>routes</code></a> that match that location,</li>
+<li>an object of <a href="#params"><code>params</code></a> that were parsed out of the URL, and</li>
+<li>an array of <a href="#component"><code>components</code></a> that will be rendered to the page in hierarchical order.</li>
+</ul>
+
+
+                    </div>
+                
+            </div>
+
+            
+
+            <div class="row">
+                <div id="footer" class="col-sm-12">
+                    Documentation for <a href="https://github.com/reactjs/react-router">React Router</a>
+
+                </div>
+            </div>
+        </div>
+
+        <script>
+            function orderNav() {
+                var list,
+                    section,
+                    header,
+                    sections = [],
+                    lists = {},
+                    headers = {};
+
+                var navUl = document.querySelectorAll('#navigation ul')[0],
+                    navLis = document.querySelectorAll('#navigation ul li');
+
+                if (!navUl) return;
+
+                for (var i = 0; i < navLis.length; i++) {
+                    var order, li = navLis[i];
+
+                    if (li.classList.contains('nav-header')) {
+                        section = li.textContent || li.innerText;
+                        sections.push(section);
+                        headers[section] = li;
+                        continue;
+                    }
+
+                    if (!lists[section]) {
+                        lists[section] = [];
+                    }
+
+                    order = parseFloat(li.getAttribute('data-order'))
+                    lists[section].push([order, li]);
+                }
+
+                for (var i = 0; i < sections.length; i++) {
+                    section = sections[i];
+                    list = lists[section].sort(function(a, b) {
+                        return a[0] - b[0];
+                    });
+
+                    if (header = headers[section]) {
+                        navUl.appendChild(header);
+                    }
+                    for (var j = 0; j < list.length; j++) {
+                        navUl.appendChild(list[j][1]);
+                    }
+                }
+            }
+
+            if (document.querySelectorAll) orderNav();
+        </script>
+        
+    </body>
+</html>

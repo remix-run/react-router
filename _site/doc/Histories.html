@@ -1,0 +1,308 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <meta charset="utf-8">
+        <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+        <meta name="viewport" content="width=device-width">
+
+        <title>React Router : Histories</title>
+        <meta name="description" content="A complete routing library for React.">
+
+        <link href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.5/css/bootstrap.min.css" rel="stylesheet">
+        <link rel="stylesheet" href="/css/syntax.css">
+        <link rel="stylesheet" href="/css/main.css">
+    </head>
+    <body>
+
+        <div class="container">
+            <div class="row">
+                <div id="header" class="col-sm-12">
+                    <h4><a class="brand" href="/">React Router</a>
+    <small>A complete routing library for React.</small>
+</h4>
+
+                </div>
+            </div>
+
+            <div class="row">
+                
+                
+                    <div id="navigation" class="col-sm-2">
+                        <ul class="nav nav-list">
+    <li><a href="/">Home</a></li>
+    
+        
+        
+
+        
+            
+                <li class="nav-header">Documentation</li>
+            
+            <li data-order="13"><a href="/doc/v2.0.0.html">v2.0.0 Upgrade Guide</a></li>
+        
+            
+            <li data-order="12"><a href="/doc/v1.0.0.html">v1.0.0 Upgrade Guide</a></li>
+        
+            
+            <li data-order="14"><a href="/doc/Troubleshooting.html">Troubleshooting</a></li>
+        
+            
+            <li data-order="7"><a href="/doc/ServerRendering.html">Server Rendering</a></li>
+        
+            
+            <li data-order="9"><a href="/doc/NavigationOutsideOfComponents.html">Navigating Outside of Components</a></li>
+        
+            
+            <li data-order="10"><a href="/doc/MinimizingBundleSize.html">Minimizing Bundle Size</a></li>
+        
+            
+            <li data-order="4"><a href="/doc/IndexRoutes.html">Index Routes and Links</a></li>
+        
+            
+            <li data-order="3"><a href="/doc/Histories.html">Histories</a></li>
+        
+            
+            <li data-order="16"><a href="/doc/Glossary.html">Glossary</a></li>
+        
+            
+            <li data-order="5"><a href="/doc/DynamicRouting.html">Dynamic Routing</a></li>
+        
+            
+            <li data-order="6"><a href="/doc/ConfirmingNavigation.html">Confirming Navigation</a></li>
+        
+            
+            <li data-order="8"><a href="/doc/ComponentLifecycle.html">Component Lifecycle</a></li>
+        
+            
+            <li data-order="11"><a href="/doc/CHANGES.html">Change Log</a></li>
+        
+            
+            <li data-order="15"><a href="/doc/API.html">API Reference</a></li>
+        
+            
+            <li data-order="2"><a href="/doc/RouteMatching.html">Route Matching</a></li>
+        
+            
+            <li data-order="1"><a href="/doc/RouteConfiguration.html">Route Configuration</a></li>
+        
+    
+        
+        
+
+        
+    
+        
+        
+
+        
+    
+        
+        
+
+        
+    
+        
+        
+
+        
+    
+<!-- List additional links. It is recommended to add a divider
+    e.g. <li class="divider"></li> first to break up the content. -->
+</ul>
+
+                    </div>
+
+                    <div id="content" class="col-sm-10">
+                        <div class="page-header">
+    <h2>Histories
+        
+    </h2>
+</div>
+
+<p>React Router is built with <a href="https://github.com/reactjs/history">history</a>.
+In a nutshell, a history knows how to listen to the browser&#39;s address
+bar for changes and parses the URL into a <code>location</code> object that the
+router can use to match routes and render the correct set of components.</p>
+
+<p>There are three types of histories you&#39;ll come across most often, but
+note that anyone can build a custom history implementation for
+consumption with React Router.</p>
+
+<ul>
+<li><a href="#hashhistory"><code>hashHistory</code></a></li>
+<li><a href="#browserhistory"><code>browserHistory</code></a></li>
+<li><a href="#creatememoryhistory"><code>createMemoryHistory</code></a></li>
+</ul>
+
+<p>You import them from the React Router package:</p>
+<div class="highlight"><pre><code class="language-js" data-lang="js"><span class="c1">// JavaScript module import</span>
+<span class="kr">import</span> <span class="p">{</span> <span class="nx">browserHistory</span> <span class="p">}</span> <span class="nx">from</span> <span class="s1">&#39;react-router&#39;</span>
+</code></pre></div>
+<p>Then pass them into your <code>&lt;Router&gt;</code>:</p>
+<div class="highlight"><pre><code class="language-js" data-lang="js"><span class="nx">render</span><span class="p">(</span>
+  <span class="o">&lt;</span><span class="nx">Router</span> <span class="nx">history</span><span class="o">=</span><span class="p">{</span><span class="nx">browserHistory</span><span class="p">}</span> <span class="nx">routes</span><span class="o">=</span><span class="p">{</span><span class="nx">routes</span><span class="p">}</span> <span class="o">/&gt;</span><span class="p">,</span>
+  <span class="nb">document</span><span class="p">.</span><span class="nx">getElementById</span><span class="p">(</span><span class="s1">&#39;app&#39;</span><span class="p">)</span>
+<span class="p">)</span>
+</code></pre></div>
+<h3 id="code-code"><code>hashHistory</code></h3>
+
+<p>Hash history uses the hash (<code>#</code>) portion of the URL, creating routes that look like <code>example.com/#/some/path</code>.</p>
+
+<h4 id="should-i-use-hashhistory">Should I use <code>hashHistory</code>?</h4>
+
+<p>Hash history works without configuring your server, so if you&#39;re just getting started, go ahead and use it. But, we don&#39;t recommend using it in production, every web app should aspire to use <code>browserHistory</code>.</p>
+
+<h4 id="what-is-that-_k-ckuvup-junk-in-the-url">What is that <code>?_k=ckuvup</code> junk in the URL?</h4>
+
+<p>When a history transitions around your app with <code>push</code> or <code>replace</code>, it can store &quot;location state&quot; that doesn&#39;t show up in the URL on the new location, think of it a little bit like post data in an HTML form.</p>
+
+<p>The DOM API that hash history uses to transition around is simply <code>window.location.hash = newHash</code>, with no place to store location state.  But, we want all histories to be able to use location state, so we shim it by creating a unique key for each location and then store that state in session storage. When the visitor clicks &quot;back&quot; and &quot;forward&quot; we now have a mechanism to restore the location state.</p>
+
+<h3 id="code-code"><code>browserHistory</code></h3>
+
+<p>Browser history is the recommended history for browser application with React Router. It uses the <a href="https://developer.mozilla.org/en-US/docs/Web/API/History">History</a> API built into the browser to manipulate the URL, creating real URLs that look like <code>example.com/some/path</code>.</p>
+
+<h4 id="configuring-your-server">Configuring Your Server</h4>
+
+<p>Your server must be ready to handle real URLs. When the app first loads at <code>/</code> it will probably work, but as the user navigates around and then hits refresh at <code>/accounts/23</code> your web server will get a request to <code>/accounts/23</code>. You will need it to handle that URL and include your JavaScript application in the response.</p>
+
+<p>An express app might look like this:</p>
+<div class="highlight"><pre><code class="language-js" data-lang="js"><span class="kr">const</span> <span class="nx">express</span> <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s1">&#39;express&#39;</span><span class="p">)</span>
+<span class="kr">const</span> <span class="nx">path</span> <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s1">&#39;path&#39;</span><span class="p">)</span>
+<span class="kr">const</span> <span class="nx">port</span> <span class="o">=</span> <span class="nx">process</span><span class="p">.</span><span class="nx">env</span><span class="p">.</span><span class="nx">PORT</span> <span class="o">||</span> <span class="mi">8080</span>
+<span class="kr">const</span> <span class="nx">app</span> <span class="o">=</span> <span class="nx">express</span><span class="p">()</span>
+
+<span class="c1">// serve static assets normally</span>
+<span class="nx">app</span><span class="p">.</span><span class="nx">use</span><span class="p">(</span><span class="nx">express</span><span class="p">.</span><span class="kr">static</span><span class="p">(</span><span class="nx">__dirname</span> <span class="o">+</span> <span class="s1">&#39;/public&#39;</span><span class="p">))</span>
+
+<span class="c1">// handle every other route with index.html, which will contain</span>
+<span class="c1">// a script tag to your application&#39;s JavaScript file(s).</span>
+<span class="nx">app</span><span class="p">.</span><span class="nx">get</span><span class="p">(</span><span class="s1">&#39;*&#39;</span><span class="p">,</span> <span class="kd">function</span> <span class="p">(</span><span class="nx">request</span><span class="p">,</span> <span class="nx">response</span><span class="p">){</span>
+  <span class="nx">response</span><span class="p">.</span><span class="nx">sendFile</span><span class="p">(</span><span class="nx">path</span><span class="p">.</span><span class="nx">resolve</span><span class="p">(</span><span class="nx">__dirname</span><span class="p">,</span> <span class="s1">&#39;public&#39;</span><span class="p">,</span> <span class="s1">&#39;index.html&#39;</span><span class="p">))</span>
+<span class="p">})</span>
+
+<span class="nx">app</span><span class="p">.</span><span class="nx">listen</span><span class="p">(</span><span class="nx">port</span><span class="p">)</span>
+<span class="nx">console</span><span class="p">.</span><span class="nx">log</span><span class="p">(</span><span class="s2">&quot;server started on port &quot;</span> <span class="o">+</span> <span class="nx">port</span><span class="p">)</span>
+</code></pre></div>
+<p>If you&#39;re using nginx, use the <a href="http://nginx.org/en/docs/http/ngx_http_core_module.html#try_files"><code>try_files</code> directive</a>:</p>
+<div class="highlight"><pre><code class="language-text" data-lang="text">server {
+  ...
+  location / {
+    try_files $uri /index.html;
+  }
+}
+</code></pre></div>
+<p>This lets nginx serve static asset files and serves your <code>index.html</code> file when another file isn&#39;t found on the server.</p>
+
+<p>There is also a similar approach for Apache servers. Create an <code>.htaccess</code> file in your folder&#39;s root:</p>
+<div class="highlight"><pre><code class="language-text" data-lang="text">RewriteBase /
+RewriteRule ^index\.html$ - [L]
+RewriteCond %{REQUEST_FILENAME} !-f
+RewriteCond %{REQUEST_FILENAME} !-d
+RewriteRule . /index.html [L]
+</code></pre></div>
+<h4 id="ie8-ie9-support">IE8, IE9 Support</h4>
+
+<p>We feature detect to see if we can use the browser&#39;s native <code>window.history</code> API. If not, any call to transition around the app will result in <em>a full page reload</em>, which allows you to build your app and have a better experience for newer browsers, but still support old ones.</p>
+
+<p>You might wonder why we don&#39;t fall back to hash history; the problem is that URLs become non-deterministic. If a visitor on hash history shares a URL with a visitor on browser history, and then they share that back, we end up with a terrible cartesian product of infinite potential URLs.</p>
+
+<h3 id="code-code"><code>createMemoryHistory</code></h3>
+
+<p>Memory history doesn&#39;t manipulate or read from the address bar. This is how we implement server rendering. It&#39;s also useful for testing and other rendering environments (like React Native).</p>
+
+<p>Its a bit different than the other two histories because you have to
+create one, it is this way to facilitate testing:</p>
+<div class="highlight"><pre><code class="language-js" data-lang="js"><span class="kr">const</span> <span class="nx">history</span> <span class="o">=</span> <span class="nx">createMemoryHistory</span><span class="p">(</span><span class="nx">location</span><span class="p">)</span>
+</code></pre></div>
+<h2 id="example-implementation">Example implementation</h2>
+
+<p>Putting this all together, if we wanted to use the HTML5 history API for our
+app, the client entry point would look like:</p>
+<div class="highlight"><pre><code class="language-js" data-lang="js"><span class="kr">import</span> <span class="nx">React</span> <span class="nx">from</span> <span class="s1">&#39;react&#39;</span>
+<span class="kr">import</span> <span class="p">{</span> <span class="nx">render</span> <span class="p">}</span> <span class="nx">from</span> <span class="s1">&#39;react-dom&#39;</span>
+<span class="kr">import</span> <span class="p">{</span> <span class="nx">browserHistory</span><span class="p">,</span> <span class="nx">Router</span><span class="p">,</span> <span class="nx">Route</span><span class="p">,</span> <span class="nx">IndexRoute</span> <span class="p">}</span> <span class="nx">from</span> <span class="s1">&#39;react-router&#39;</span>
+
+<span class="kr">import</span> <span class="nx">App</span> <span class="nx">from</span> <span class="s1">&#39;../components/App&#39;</span>
+<span class="kr">import</span> <span class="nx">Home</span> <span class="nx">from</span> <span class="s1">&#39;../components/Home&#39;</span>
+<span class="kr">import</span> <span class="nx">About</span> <span class="nx">from</span> <span class="s1">&#39;../components/About&#39;</span>
+<span class="kr">import</span> <span class="nx">Features</span> <span class="nx">from</span> <span class="s1">&#39;../components/Features&#39;</span>
+
+<span class="nx">render</span><span class="p">(</span>
+  <span class="o">&lt;</span><span class="nx">Router</span> <span class="nx">history</span><span class="o">=</span><span class="p">{</span><span class="nx">browserHistory</span><span class="p">}</span><span class="o">&gt;</span>
+    <span class="o">&lt;</span><span class="nx">Route</span> <span class="nx">path</span><span class="o">=</span><span class="s1">&#39;/&#39;</span> <span class="nx">component</span><span class="o">=</span><span class="p">{</span><span class="nx">App</span><span class="p">}</span><span class="o">&gt;</span>
+      <span class="o">&lt;</span><span class="nx">IndexRoute</span> <span class="nx">component</span><span class="o">=</span><span class="p">{</span><span class="nx">Home</span><span class="p">}</span> <span class="o">/&gt;</span>
+      <span class="o">&lt;</span><span class="nx">Route</span> <span class="nx">path</span><span class="o">=</span><span class="s1">&#39;about&#39;</span> <span class="nx">component</span><span class="o">=</span><span class="p">{</span><span class="nx">About</span><span class="p">}</span> <span class="o">/&gt;</span>
+      <span class="o">&lt;</span><span class="nx">Route</span> <span class="nx">path</span><span class="o">=</span><span class="s1">&#39;features&#39;</span> <span class="nx">component</span><span class="o">=</span><span class="p">{</span><span class="nx">Features</span><span class="p">}</span> <span class="o">/&gt;</span>
+    <span class="o">&lt;</span><span class="err">/Route&gt;</span>
+  <span class="o">&lt;</span><span class="err">/Router&gt;,</span>
+  <span class="nb">document</span><span class="p">.</span><span class="nx">getElementById</span><span class="p">(</span><span class="s1">&#39;app&#39;</span><span class="p">)</span>
+<span class="p">)</span>
+</code></pre></div>
+
+                    </div>
+                
+            </div>
+
+            
+
+            <div class="row">
+                <div id="footer" class="col-sm-12">
+                    Documentation for <a href="https://github.com/reactjs/react-router">React Router</a>
+
+                </div>
+            </div>
+        </div>
+
+        <script>
+            function orderNav() {
+                var list,
+                    section,
+                    header,
+                    sections = [],
+                    lists = {},
+                    headers = {};
+
+                var navUl = document.querySelectorAll('#navigation ul')[0],
+                    navLis = document.querySelectorAll('#navigation ul li');
+
+                if (!navUl) return;
+
+                for (var i = 0; i < navLis.length; i++) {
+                    var order, li = navLis[i];
+
+                    if (li.classList.contains('nav-header')) {
+                        section = li.textContent || li.innerText;
+                        sections.push(section);
+                        headers[section] = li;
+                        continue;
+                    }
+
+                    if (!lists[section]) {
+                        lists[section] = [];
+                    }
+
+                    order = parseFloat(li.getAttribute('data-order'))
+                    lists[section].push([order, li]);
+                }
+
+                for (var i = 0; i < sections.length; i++) {
+                    section = sections[i];
+                    list = lists[section].sort(function(a, b) {
+                        return a[0] - b[0];
+                    });
+
+                    if (header = headers[section]) {
+                        navUl.appendChild(header);
+                    }
+                    for (var j = 0; j < list.length; j++) {
+                        navUl.appendChild(list[j][1]);
+                    }
+                }
+            }
+
+            if (document.querySelectorAll) orderNav();
+        </script>
+        
+    </body>
+</html>
