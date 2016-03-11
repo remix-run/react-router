@@ -1,0 +1,116 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <meta charset="utf-8">
+        <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+        <meta name="viewport" content="width=device-width">
+
+        <title>{{ site.title }}{% if page.title %} : {{ page.title }}{% endif %}</title>
+        <meta name="description" content="{{ site.subtitle }}">
+
+        <link href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.5/css/bootstrap.min.css" rel="stylesheet">
+        <link rel="stylesheet" href="{{ site.baseurl }}/css/syntax.css">
+        <link rel="stylesheet" href="{{ site.baseurl }}/css/main.css">
+    </head>
+    <body>
+
+        <div class="container">
+            <div class="row">
+                <div id="header" class="col-sm-12">
+                    {% include header.html %}
+                </div>
+            </div>
+
+            <div class="row">
+                {% assign post_count = site.posts|size %}
+                {% if site.navigation != 0 and site.navigation == 1 or post_count > 0 %}
+                    <div id="navigation" class="col-sm-2">
+                        {% include navigation.html %}
+                    </div>
+
+                    <div id="content" class="col-sm-10">
+                        {{ content }}
+                    </div>
+                {% else %}
+                    <div id="content" class="col-sm-12">
+                        {{ content }}
+                    </div>
+                {% endif %}
+            </div>
+
+            {% if page.disqus == 1 %}
+            <div class="row">
+              {% if site.navigation == 1 or post_count > 0 %}
+                <div id="navigation" class="col-sm-2"></div>
+                <div id="disqus" class="col-sm-10">
+                    {% include disqus.html %}
+                </div>
+              {% else %}
+                <div id="disqus" class="col-sm-12">
+                    {% include disqus.html %}
+                </div>
+              {% endif %}
+            </div>
+            {% endif %}
+
+            <div class="row">
+                <div id="footer" class="col-sm-12">
+                    {% include footer.html %}
+                </div>
+            </div>
+        </div>
+
+        <script>
+            function orderNav() {
+                var list,
+                    section,
+                    header,
+                    sections = [],
+                    lists = {},
+                    headers = {};
+
+                var navUl = document.querySelectorAll('#navigation ul')[0],
+                    navLis = document.querySelectorAll('#navigation ul li');
+
+                if (!navUl) return;
+
+                for (var i = 0; i < navLis.length; i++) {
+                    var order, li = navLis[i];
+
+                    if (li.classList.contains('nav-header')) {
+                        section = li.textContent || li.innerText;
+                        sections.push(section);
+                        headers[section] = li;
+                        continue;
+                    }
+
+                    if (!lists[section]) {
+                        lists[section] = [];
+                    }
+
+                    order = parseFloat(li.getAttribute('data-order'))
+                    lists[section].push([order, li]);
+                }
+
+                for (var i = 0; i < sections.length; i++) {
+                    section = sections[i];
+                    list = lists[section].sort(function(a, b) {
+                        return a[0] - b[0];
+                    });
+
+                    if (header = headers[section]) {
+                        navUl.appendChild(header);
+                    }
+                    for (var j = 0; j < list.length; j++) {
+                        navUl.appendChild(list[j][1]);
+                    }
+                }
+            }
+
+            if (document.querySelectorAll) orderNav();
+        </script>
+        {% if site.google_analytics_id != "" %}
+        {% include google_analytics.html %}
+        {% endif %}
+    </body>
+</html>

@@ -1,0 +1,297 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <meta charset="utf-8">
+        <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+        <meta name="viewport" content="width=device-width">
+
+        <title>React Router : Change Log</title>
+        <meta name="description" content="A complete routing library for React.">
+
+        <link href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.5/css/bootstrap.min.css" rel="stylesheet">
+        <link rel="stylesheet" href="/css/syntax.css">
+        <link rel="stylesheet" href="/css/main.css">
+    </head>
+    <body>
+
+        <div class="container">
+            <div class="row">
+                <div id="header" class="col-sm-12">
+                    <h4><a class="brand" href="/">React Router</a>
+    <small>A complete routing library for React.</small>
+</h4>
+
+                </div>
+            </div>
+
+            <div class="row">
+                
+                
+                    <div id="navigation" class="col-sm-2">
+                        <ul class="nav nav-list">
+    <li><a href="/">Home</a></li>
+    
+        
+        
+
+        
+            
+                <li class="nav-header">Documentation</li>
+            
+            <li data-order="13"><a href="/doc/v2.0.0.html">v2.0.0 Upgrade Guide</a></li>
+        
+            
+            <li data-order="12"><a href="/doc/v1.0.0.html">v1.0.0 Upgrade Guide</a></li>
+        
+            
+            <li data-order="14"><a href="/doc/Troubleshooting.html">Troubleshooting</a></li>
+        
+            
+            <li data-order="7"><a href="/doc/ServerRendering.html">Server Rendering</a></li>
+        
+            
+            <li data-order="9"><a href="/doc/NavigationOutsideOfComponents.html">Navigating Outside of Components</a></li>
+        
+            
+            <li data-order="10"><a href="/doc/MinimizingBundleSize.html">Minimizing Bundle Size</a></li>
+        
+            
+            <li data-order="4"><a href="/doc/IndexRoutes.html">Index Routes and Links</a></li>
+        
+            
+            <li data-order="3"><a href="/doc/Histories.html">Histories</a></li>
+        
+            
+            <li data-order="16"><a href="/doc/Glossary.html">Glossary</a></li>
+        
+            
+            <li data-order="5"><a href="/doc/DynamicRouting.html">Dynamic Routing</a></li>
+        
+            
+            <li data-order="6"><a href="/doc/ConfirmingNavigation.html">Confirming Navigation</a></li>
+        
+            
+            <li data-order="8"><a href="/doc/ComponentLifecycle.html">Component Lifecycle</a></li>
+        
+            
+            <li data-order="11"><a href="/doc/CHANGES.html">Change Log</a></li>
+        
+            
+            <li data-order="15"><a href="/doc/API.html">API Reference</a></li>
+        
+            
+            <li data-order="2"><a href="/doc/RouteMatching.html">Route Matching</a></li>
+        
+            
+            <li data-order="1"><a href="/doc/RouteConfiguration.html">Route Configuration</a></li>
+        
+    
+        
+        
+
+        
+    
+        
+        
+
+        
+    
+        
+        
+
+        
+    
+        
+        
+
+        
+    
+<!-- List additional links. It is recommended to add a divider
+    e.g. <li class="divider"></li> first to break up the content. -->
+</ul>
+
+                    </div>
+
+                    <div id="content" class="col-sm-10">
+                        <div class="page-header">
+    <h2>Change Log
+        
+    </h2>
+</div>
+
+<h2 id="a-href-https-github-com-reactjs-react-router-compare-v2-0-0-head-a"><a href="https://github.com/reactjs/react-router/compare/v2.0.0...HEAD">HEAD</a></h2>
+
+<blockquote>
+<p>Unreleased</p>
+</blockquote>
+
+<h2 id="v2-0-1">[v2.0.1]</h2>
+
+<blockquote>
+<p>March 9, 2016</p>
+</blockquote>
+
+<ul>
+<li>Fixed bug where transition hooks were not called on child routes of
+parent&#39;s whose params changed but the child&#39;s did not. ([#3166])</li>
+</ul>
+
+<p>[#3166][<a href="https://github.com/reactjs/react-router/pull/3166">https://github.com/reactjs/react-router/pull/3166</a>]</p>
+
+<h2 id="a-href-https-github-com-reactjs-react-router-compare-v2-0-0-rc6-v2-0-0-a"><a href="https://github.com/reactjs/react-router/compare/v2.0.0-rc6...v2.0.0">v2.0.0</a></h2>
+
+<blockquote>
+<p>Feb 10, 2016</p>
+</blockquote>
+
+<ul>
+<li>Add back basename support in <code>match</code> (<a href="https://github.com/reactjs/react-router/pull/3054">#3054</a>)</li>
+</ul>
+
+<h2 id="a-href-https-github-com-reactjs-react-router-compare-v2-0-0-rc5-v2-0-0-rc6-a"><a href="https://github.com/reactjs/react-router/compare/v2.0.0-rc5...v2.0.0-rc6">v2.0.0-rc6</a></h2>
+
+<blockquote>
+<p>Feb 5, 2016</p>
+</blockquote>
+
+<ul>
+<li><strong>Breaking:</strong> Removed default top-level <code>&lt;Router&gt;</code> export (<a href="https://github.com/reactjs/react-router/pull/2906">#2906</a>)</li>
+<li>Use history.createLocation where possible (<a href="https://github.com/reactjs/react-router/pull/2910">#2910</a>)</li>
+<li>Fix initial routing state after <code>match</code> (<a href="https://github.com/reactjs/react-router/pull/2965">#2965</a>)</li>
+<li>Reduce stack size from matching routes (<a href="https://github.com/reactjs/react-router/pull/2923">#2923</a>)</li>
+</ul>
+
+<h2 id="a-href-https-github-com-reactjs-react-router-compare-v2-0-0-rc4-v2-0-0-rc5-a"><a href="https://github.com/reactjs/react-router/compare/v2.0.0-rc4...v2.0.0-rc5">v2.0.0-rc5</a></h2>
+
+<blockquote>
+<p>Jan 14, 2016</p>
+</blockquote>
+
+<ul>
+<li><strong>Feature:</strong> Support custom <code>history</code> for <code>match</code> (<a href="https://github.com/reactjs/react-router/pull/2813">#2813</a>)</li>
+<li><strong>Feature:</strong> Support location descriptor in <code>replace</code> callback in <code>onEnter</code> (<a href="https://github.com/reactjs/react-router/pull/2855">#2855</a>)</li>
+<li><strong>Feature:</strong> Improve support for server rendering async routes (<a href="https://github.com/reactjs/react-router/pull/2883">#2883</a>)</li>
+</ul>
+
+<h2 id="a-href-https-github-com-reactjs-react-router-compare-v1-0-3-v2-0-0-rc4-a"><a href="https://github.com/reactjs/react-router/compare/v1.0.3...v2.0.0-rc4">v2.0.0-rc4</a></h2>
+
+<blockquote>
+<p>Dec 30, 2015</p>
+</blockquote>
+
+<ul>
+<li><strong>Feature:</strong> Added <code>render</code> prop to <code>Router</code></li>
+<li><strong>Feature:</strong> Added singleton <code>browserHistory</code> and <code>hashHistory</code></li>
+<li><strong>Feature:</strong> Added <code>createMemoryHistory</code></li>
+<li><strong>Deprecation:</strong> Deprecated all mixins</li>
+<li><strong>Deprecation:</strong> Replaced <code>context.history</code> with <code>context.router</code></li>
+<li><strong>Deprecation:</strong> Deprecated Route Component <code>props.history</code></li>
+<li><strong>Deprecation:</strong> Deprecated <code>context.location</code></li>
+</ul>
+
+<h2 id="a-href-https-github-com-reactjs-react-router-compare-v1-0-2-v1-0-3-a"><a href="https://github.com/reactjs/react-router/compare/v1.0.2...v1.0.3">v1.0.3</a></h2>
+
+<blockquote>
+<p>Dec 23, 2015</p>
+</blockquote>
+
+<ul>
+<li>Switched back to a caret range for history, now that the warnings have been removed</li>
+</ul>
+
+<h2 id="a-href-https-github-com-reactjs-react-router-compare-v1-0-1-v1-0-2-a"><a href="https://github.com/reactjs/react-router/compare/v1.0.1...v1.0.2">v1.0.2</a></h2>
+
+<blockquote>
+<p>Dec 8, 2015</p>
+</blockquote>
+
+<ul>
+<li>Pinned peer dependency on History to <code>1.13.x</code> to avoid console warnings.</li>
+</ul>
+
+<h2 id="a-href-https-github-com-reactjs-react-router-compare-v1-0-0-v1-0-1-a"><a href="https://github.com/reactjs/react-router/compare/v1.0.0...v1.0.1">v1.0.1</a></h2>
+
+<blockquote>
+<p>Dec 5, 2015</p>
+</blockquote>
+
+<ul>
+<li>Support IE8 (<a href="https://github.com/reactjs/react-router/pull/2540">#2540</a>)</li>
+<li>Add ES2015 module build (<a href="https://github.com/reactjs/react-router/pull/2530">#2530</a>)</li>
+</ul>
+
+<h2 id="a-href-https-github-com-reactjs-react-router-compare-v0-13-5-v1-0-0-a"><a href="https://github.com/reactjs/react-router/compare/v0.13.5...v1.0.0">v1.0.0</a></h2>
+
+<blockquote>
+<p>Nov 9, 2015</p>
+</blockquote>
+
+<p>Please see <code>/upgrade-guides/v1.0.0.md</code></p>
+
+
+                    </div>
+                
+            </div>
+
+            
+
+            <div class="row">
+                <div id="footer" class="col-sm-12">
+                    Documentation for <a href="https://github.com/reactjs/react-router">React Router</a>
+
+                </div>
+            </div>
+        </div>
+
+        <script>
+            function orderNav() {
+                var list,
+                    section,
+                    header,
+                    sections = [],
+                    lists = {},
+                    headers = {};
+
+                var navUl = document.querySelectorAll('#navigation ul')[0],
+                    navLis = document.querySelectorAll('#navigation ul li');
+
+                if (!navUl) return;
+
+                for (var i = 0; i < navLis.length; i++) {
+                    var order, li = navLis[i];
+
+                    if (li.classList.contains('nav-header')) {
+                        section = li.textContent || li.innerText;
+                        sections.push(section);
+                        headers[section] = li;
+                        continue;
+                    }
+
+                    if (!lists[section]) {
+                        lists[section] = [];
+                    }
+
+                    order = parseFloat(li.getAttribute('data-order'))
+                    lists[section].push([order, li]);
+                }
+
+                for (var i = 0; i < sections.length; i++) {
+                    section = sections[i];
+                    list = lists[section].sort(function(a, b) {
+                        return a[0] - b[0];
+                    });
+
+                    if (header = headers[section]) {
+                        navUl.appendChild(header);
+                    }
+                    for (var j = 0; j < list.length; j++) {
+                        navUl.appendChild(list[j][1]);
+                    }
+                }
+            }
+
+            if (document.querySelectorAll) orderNav();
+        </script>
+        
+    </body>
+</html>

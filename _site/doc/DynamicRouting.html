@@ -1,0 +1,233 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <meta charset="utf-8">
+        <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+        <meta name="viewport" content="width=device-width">
+
+        <title>React Router : Dynamic Routing</title>
+        <meta name="description" content="A complete routing library for React.">
+
+        <link href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.5/css/bootstrap.min.css" rel="stylesheet">
+        <link rel="stylesheet" href="/css/syntax.css">
+        <link rel="stylesheet" href="/css/main.css">
+    </head>
+    <body>
+
+        <div class="container">
+            <div class="row">
+                <div id="header" class="col-sm-12">
+                    <h4><a class="brand" href="/">React Router</a>
+    <small>A complete routing library for React.</small>
+</h4>
+
+                </div>
+            </div>
+
+            <div class="row">
+                
+                
+                    <div id="navigation" class="col-sm-2">
+                        <ul class="nav nav-list">
+    <li><a href="/">Home</a></li>
+    
+        
+        
+
+        
+            
+                <li class="nav-header">Documentation</li>
+            
+            <li data-order="13"><a href="/doc/v2.0.0.html">v2.0.0 Upgrade Guide</a></li>
+        
+            
+            <li data-order="12"><a href="/doc/v1.0.0.html">v1.0.0 Upgrade Guide</a></li>
+        
+            
+            <li data-order="14"><a href="/doc/Troubleshooting.html">Troubleshooting</a></li>
+        
+            
+            <li data-order="7"><a href="/doc/ServerRendering.html">Server Rendering</a></li>
+        
+            
+            <li data-order="9"><a href="/doc/NavigationOutsideOfComponents.html">Navigating Outside of Components</a></li>
+        
+            
+            <li data-order="10"><a href="/doc/MinimizingBundleSize.html">Minimizing Bundle Size</a></li>
+        
+            
+            <li data-order="4"><a href="/doc/IndexRoutes.html">Index Routes and Links</a></li>
+        
+            
+            <li data-order="3"><a href="/doc/Histories.html">Histories</a></li>
+        
+            
+            <li data-order="16"><a href="/doc/Glossary.html">Glossary</a></li>
+        
+            
+            <li data-order="5"><a href="/doc/DynamicRouting.html">Dynamic Routing</a></li>
+        
+            
+            <li data-order="6"><a href="/doc/ConfirmingNavigation.html">Confirming Navigation</a></li>
+        
+            
+            <li data-order="8"><a href="/doc/ComponentLifecycle.html">Component Lifecycle</a></li>
+        
+            
+            <li data-order="11"><a href="/doc/CHANGES.html">Change Log</a></li>
+        
+            
+            <li data-order="15"><a href="/doc/API.html">API Reference</a></li>
+        
+            
+            <li data-order="2"><a href="/doc/RouteMatching.html">Route Matching</a></li>
+        
+            
+            <li data-order="1"><a href="/doc/RouteConfiguration.html">Route Configuration</a></li>
+        
+    
+        
+        
+
+        
+    
+        
+        
+
+        
+    
+        
+        
+
+        
+    
+        
+        
+
+        
+    
+<!-- List additional links. It is recommended to add a divider
+    e.g. <li class="divider"></li> first to break up the content. -->
+</ul>
+
+                    </div>
+
+                    <div id="content" class="col-sm-10">
+                        <div class="page-header">
+    <h2>Dynamic Routing
+        
+    </h2>
+</div>
+
+<p>React Router is great for small sites like <a href="https://reactjs-training.com">React.js Training</a> (&quot;React Router brought to you by ...&quot;) but it&#39;s built with websites like <a href="https://www.facebook.com/">Facebook</a> and <a href="https://twitter.com/">Twitter</a> in mind, too.</p>
+
+<p>The primary concern for large apps is the amount of JavaScript required to boot the app. Large apps should download only the JavaScript required to render the current view. Some people call this &quot;code splitting&quot;–you split your code up into multiple bundles that are loaded on-demand as the user navigates around.</p>
+
+<p>It&#39;s important that changes deep down in the application don&#39;t require changes all the way up top as well. For example, adding a route to the photo viewer should not affect the size of the initial JavaScript bundle the user downloads. Neither should it cause merge conflicts as multiple teams have their fingers in the same, big route configuration file.</p>
+
+<p>A router is the perfect place to handle code splitting: it&#39;s responsible for setting up your views.</p>
+
+<p>React Router does all of its <a href="/docs/guides/RouteMatching.md">path matching</a> and component fetching asynchronously, which allows you to not only load up the components lazily, <em>but also lazily load the route configuration</em>. You really only need one route definition in your initial bundle, the router can resolve the rest on demand.</p>
+
+<p>Routes may define <a href="/docs/API.md#getchildrouteslocation-callback"><code>getChildRoutes</code></a>, <a href="/docs/API.md#getindexroutelocation-callback"><code>getIndexRoute</code></a>, and <a href="/docs/API.md#getcomponentslocation-callback"><code>getComponents</code></a> methods. These are asynchronous and only called when needed. We call it &quot;gradual matching&quot;. React Router will gradually match the URL and fetch only the amount of route configuration and components it needs to match the URL and render.</p>
+
+<p>Coupled with a smart code splitting tool like <a href="http://webpack.github.io/">webpack</a>, a once tireless architecture is now simple and declarative.</p>
+<div class="highlight"><pre><code class="language-js" data-lang="js"><span class="kr">const</span> <span class="nx">CourseRoute</span> <span class="o">=</span> <span class="p">{</span>
+  <span class="nx">path</span><span class="o">:</span> <span class="s1">&#39;course/:courseId&#39;</span><span class="p">,</span>
+
+  <span class="nx">getChildRoutes</span><span class="p">(</span><span class="nx">location</span><span class="p">,</span> <span class="nx">callback</span><span class="p">)</span> <span class="p">{</span>
+    <span class="nx">require</span><span class="p">.</span><span class="nx">ensure</span><span class="p">([],</span> <span class="kd">function</span> <span class="p">(</span><span class="nx">require</span><span class="p">)</span> <span class="p">{</span>
+      <span class="nx">callback</span><span class="p">(</span><span class="kc">null</span><span class="p">,</span> <span class="p">[</span>
+        <span class="nx">require</span><span class="p">(</span><span class="s1">&#39;./routes/Announcements&#39;</span><span class="p">),</span>
+        <span class="nx">require</span><span class="p">(</span><span class="s1">&#39;./routes/Assignments&#39;</span><span class="p">),</span>
+        <span class="nx">require</span><span class="p">(</span><span class="s1">&#39;./routes/Grades&#39;</span><span class="p">),</span>
+      <span class="p">])</span>
+    <span class="p">})</span>
+  <span class="p">},</span>
+
+  <span class="nx">getIndexRoute</span><span class="p">(</span><span class="nx">location</span><span class="p">,</span> <span class="nx">callback</span><span class="p">)</span> <span class="p">{</span>
+    <span class="nx">require</span><span class="p">.</span><span class="nx">ensure</span><span class="p">([],</span> <span class="kd">function</span> <span class="p">(</span><span class="nx">require</span><span class="p">)</span> <span class="p">{</span>
+      <span class="nx">callback</span><span class="p">(</span><span class="kc">null</span><span class="p">,</span> <span class="p">{</span>
+        <span class="nx">component</span><span class="o">:</span> <span class="nx">require</span><span class="p">(</span><span class="s1">&#39;./components/Index&#39;</span><span class="p">),</span>
+      <span class="p">})</span>
+    <span class="p">})</span>
+  <span class="p">},</span>
+
+  <span class="nx">getComponents</span><span class="p">(</span><span class="nx">location</span><span class="p">,</span> <span class="nx">callback</span><span class="p">)</span> <span class="p">{</span>
+    <span class="nx">require</span><span class="p">.</span><span class="nx">ensure</span><span class="p">([],</span> <span class="kd">function</span> <span class="p">(</span><span class="nx">require</span><span class="p">)</span> <span class="p">{</span>
+      <span class="nx">callback</span><span class="p">(</span><span class="kc">null</span><span class="p">,</span> <span class="nx">require</span><span class="p">(</span><span class="s1">&#39;./components/Course&#39;</span><span class="p">))</span>
+    <span class="p">})</span>
+  <span class="p">}</span>
+<span class="p">}</span>
+</code></pre></div>
+<p>Now go look at what hacks you have in place to do this. Just kidding, I don&#39;t want to make you sad right now.</p>
+
+<p>Run the <a href="https://github.com/reactjs/react-router/tree/master/examples/huge-apps">huge apps</a> example with your web inspector open and watch code get loaded in as you navigate around the demo.</p>
+
+
+                    </div>
+                
+            </div>
+
+            
+
+            <div class="row">
+                <div id="footer" class="col-sm-12">
+                    Documentation for <a href="https://github.com/reactjs/react-router">React Router</a>
+
+                </div>
+            </div>
+        </div>
+
+        <script>
+            function orderNav() {
+                var list,
+                    section,
+                    header,
+                    sections = [],
+                    lists = {},
+                    headers = {};
+
+                var navUl = document.querySelectorAll('#navigation ul')[0],
+                    navLis = document.querySelectorAll('#navigation ul li');
+
+                if (!navUl) return;
+
+                for (var i = 0; i < navLis.length; i++) {
+                    var order, li = navLis[i];
+
+                    if (li.classList.contains('nav-header')) {
+                        section = li.textContent || li.innerText;
+                        sections.push(section);
+                        headers[section] = li;
+                        continue;
+                    }
+
+                    if (!lists[section]) {
+                        lists[section] = [];
+                    }
+
+                    order = parseFloat(li.getAttribute('data-order'))
+                    lists[section].push([order, li]);
+                }
+
+                for (var i = 0; i < sections.length; i++) {
+                    section = sections[i];
+                    list = lists[section].sort(function(a, b) {
+                        return a[0] - b[0];
+                    });
+
+                    if (header = headers[section]) {
+                        navUl.appendChild(header);
+                    }
+                    for (var j = 0; j < list.length; j++) {
+                        navUl.appendChild(list[j][1]);
+                    }
+                }
+            }
+
+            if (document.querySelectorAll) orderNav();
+        </script>
+        
+    </body>
+</html>
