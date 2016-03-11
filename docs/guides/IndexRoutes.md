@@ -65,7 +65,8 @@ that redirects the user. You would set this up with plain routes as:
 
 ```js
 const routes = [{
-  path: '/', component: App,
+  path: '/',
+  component: App,
   indexRoute: { onEnter: (nextState, replace) => replace('/welcome') },
   childRoutes: [
     { path: 'welcome', component: Welcome },
