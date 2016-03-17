@@ -12,7 +12,7 @@ React Router does all of its [path matching](/docs/guides/RouteMatching.md) and 
 
 Routes may define [`getChildRoutes`](/docs/API.md#getchildrouteslocation-callback), [`getIndexRoute`](/docs/API.md#getindexroutelocation-callback), and [`getComponents`](/docs/API.md#getcomponentslocation-callback) methods. These are asynchronous and only called when needed. We call it "gradual matching". React Router will gradually match the URL and fetch only the amount of route configuration and components it needs to match the URL and render.
 
-Coupled with a smart code splitting tool like [webpack](http://webpack.github.io/), a once tireless architecture is now simple and declarative.
+Coupled with a smart code splitting tool like [webpack](http://webpack.github.io/), a once tiresome architecture is now simple and declarative.
 
 ```js
 const CourseRoute = {
