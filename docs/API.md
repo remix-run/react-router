@@ -107,7 +107,8 @@ A `<Link>` can know when the route it links to is active and automatically apply
 
 #### Props
 ##### `to`
-Can be either a string or an object.
+A [location descriptor](https://github.com/mjackson/history/blob/master/docs/Glossary.md#locationdescriptor). Usually this is a string or an object, with the following semantics:
+
 * If it's a string it represents the path to link to, e.g. `/users/123`.
 * If it's an object it can have four keys:
   * `pathname`: A string representing the path to link to.
