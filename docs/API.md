@@ -627,7 +627,14 @@ One or many [`<Route>`](#route)s or [`PlainRoute`](#plainroute)s.
 
 
 ### `PropTypes`
-TODO (Pull Requests Welcome)
+The following objects are exposed as properties of the exported PropTypes object:
+- `falsy`: Checks that a component does not have a prop
+- `history`
+- `location`
+- `component`
+- `components`
+- `route`
+- `routes`
 
 
 ### `useRoutes(createHistory)` (deprecated)
