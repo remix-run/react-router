@@ -15,7 +15,7 @@ function deepEqual(a, b) {
 
   if (typeof a === 'object') {
     for (let p in a) {
-      if (!a.hasOwnProperty(p)) {
+      if (!Object.prototype.hasOwnProperty.call(a, p)) {
         continue
       }
 
@@ -23,7 +23,7 @@ function deepEqual(a, b) {
         if (b[p] !== undefined) {
           return false
         }
-      } else if (!b.hasOwnProperty(p)) {
+      } else if (!Object.prototype.hasOwnProperty.call(b, p)) {
         return false
       } else if (!deepEqual(a[p], b[p])) {
         return false
