@@ -42,8 +42,13 @@ function computeChangedRoutes(prevState, nextState) {
     // onLeave hooks start at the leaf route.
     leaveRoutes.reverse()
 
+    const lastRoute = (routes) => (
+      routes[routes.length - 1]
+    )
+
     enterRoutes = nextRoutes.filter(function (route) {
-      return prevRoutes.indexOf(route) === -1 || leaveRoutes.indexOf(route) !== -1
+      const isParentRoute = (nextRoutes.indexOf(route) === (nextRoutes.length - 1)) && (lastRoute(prevRoutes) !== lastRoute(nextRoutes))
+      return prevRoutes.indexOf(route) === -1 || leaveRoutes.indexOf(route) !== -1 || isParentRoute
     })
   } else {
     leaveRoutes = []

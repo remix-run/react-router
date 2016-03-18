@@ -340,4 +340,33 @@ describe('When a router enters a branch', function () {
     })
   })
 
+  describe('and then enters a parent route', function () {
+    it('calls the onEnter hooks of the parent', function (done) {
+      const parentEnterSpy = spyOn(UserRoute, 'onEnter').andCallThrough()
+      const childEnterSpy = spyOn(AssignmentRoute, 'onEnter').andCallThrough()
+      const childLeaveSpy = spyOn(AssignmentRoute, 'onLeave').andCallThrough()
+      const history = createHistory('/users/123/assignments/456')
+
+      const steps = [
+        function () {
+          expect(parentEnterSpy).toHaveBeenCalled()
+          expect(childEnterSpy).toHaveBeenCalled()
+          history.push('/users/123')
+        },
+        function () {
+          expect(childLeaveSpy).toHaveBeenCalled()
+          expect(parentEnterSpy.calls.length).toEqual(2)
+        }
+      ]
+
+      const execNextStep = execSteps(steps, done)
+
+      render(
+        <Router history={history}
+                routes={routes}
+                onUpdate={execNextStep}
+        />, node, execNextStep)
+
+    })
+  })
 })
