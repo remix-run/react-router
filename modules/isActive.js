@@ -8,14 +8,16 @@ function deepEqual(a, b) {
     return false
 
   if (Array.isArray(a)) {
-    return Array.isArray(b) && a.length === b.length && a.every(function (item, index) {
-      return deepEqual(item, b[index])
-    })
+    return (
+      Array.isArray(b) &&
+      a.length === b.length &&
+      a.every((item, index) => deepEqual(item, b[index]))
+    )
   }
 
   if (typeof a === 'object') {
     for (let p in a) {
-      if (!a.hasOwnProperty(p)) {
+      if (!Object.prototype.hasOwnProperty.call(a, p)) {
         continue
       }
 
@@ -23,7 +25,7 @@ function deepEqual(a, b) {
         if (b[p] !== undefined) {
           return false
         }
-      } else if (!b.hasOwnProperty(p)) {
+      } else if (!Object.prototype.hasOwnProperty.call(b, p)) {
         return false
       } else if (!deepEqual(a[p], b[p])) {
         return false
