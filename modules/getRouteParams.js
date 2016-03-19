@@ -12,9 +12,14 @@ function getRouteParams(route, params) {
 
   const paramNames = getParamNames(route.path)
 
-  for (const p in params)
-    if (params.hasOwnProperty(p) && paramNames.indexOf(p) !== -1)
+  for (const p in params) {
+    if (
+      Object.prototype.hasOwnProperty.call(params, p) &&
+      paramNames.indexOf(p) !== -1
+    ) {
       routeParams[p] = params[p]
+    }
+  }
 
   return routeParams
 }

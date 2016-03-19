@@ -13,7 +13,7 @@ function checkPropTypes(componentName, propTypes, props) {
   componentName = componentName || 'UnknownComponent'
 
   for (const propName in propTypes) {
-    if (propTypes.hasOwnProperty(propName)) {
+    if (Object.prototype.hasOwnProperty.call(propTypes, propName)) {
       const error = propTypes[propName](props, propName, componentName)
 
       /* istanbul ignore if: error logging */

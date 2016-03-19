@@ -8,7 +8,7 @@ import matchRoutes from './matchRoutes'
 
 function hasAnyProperties(object) {
   for (const p in object)
-    if (object.hasOwnProperty(p))
+    if (Object.prototype.hasOwnProperty.call(object, p))
       return true
 
   return false
@@ -104,7 +104,7 @@ export default function createTransitionManager(history, routes) {
     return route.__id__ || create && (route.__id__ = RouteGuid++)
   }
 
-  const RouteHooks = {}
+  const RouteHooks = Object.create(null)
 
   function getRouteHooksForRoutes(routes) {
     return routes.reduce(function (hooks, route) {
