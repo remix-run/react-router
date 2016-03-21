@@ -2,9 +2,11 @@
 > Unreleased
 
 - **Feature:** Add support for `onChange` hook on routes ([#3108])
+- **Minor:** Include full warning messages in non-minified UMD build ([#3213])
 
 [HEAD]: https://github.com/reactjs/react-router/compare/latest...HEAD
 [#3108]: https://github.com/reactjs/react-router/pull/3108
+[#3213]: https://github.com/reactjs/react-router/pull/3213
 
 ## [v2.0.1]
 > March 9, 2016
