@@ -1,7 +1,10 @@
-## [HEAD]
+## [HEAD] \(v2.1.0\)
 > Unreleased
 
+- **Feature:** Add support for `onChange` hook on routes ([#3108])
+
 [HEAD]: https://github.com/reactjs/react-router/compare/latest...HEAD
+[#3108]: https://github.com/reactjs/react-router/pull/3108
 
 ## [v2.0.1]
 > March 9, 2016
