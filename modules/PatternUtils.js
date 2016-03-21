@@ -24,10 +24,10 @@ function _compilePattern(pattern) {
       regexpSource += '([^/?#]+)'
       paramNames.push(match[1])
     } else if (match[0] === '**') {
-      regexpSource += '([\\s\\S]*)'
+      regexpSource += '(.*)'
       paramNames.push('splat')
     } else if (match[0] === '*') {
-      regexpSource += '([\\s\\S]*?)'
+      regexpSource += '(.*?)'
       paramNames.push('splat')
     } else if (match[0] === '(') {
       regexpSource += '(?:'
@@ -98,8 +98,7 @@ export function matchPattern(pattern, pathname) {
   const captureRemaining = tokens[tokens.length - 1] !== '*'
 
   if (captureRemaining) {
-    // This will match newlines in the remaining path.
-    regexpSource += '([\\s\\S]*?)'
+    regexpSource += '(.*?)'
   }
 
   const match = pathname.match(new RegExp('^' + regexpSource + '$', 'i'))
