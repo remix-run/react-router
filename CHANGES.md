@@ -3,10 +3,12 @@
 
 - **Feature:** Add support for `onChange` hook on routes ([#3108])
 - **Minor:** Include full warning messages in non-minified UMD build ([#3213])
+- **Minor:** Speed up path matching ([#3217])
 
 [HEAD]: https://github.com/reactjs/react-router/compare/latest...HEAD
 [#3108]: https://github.com/reactjs/react-router/pull/3108
 [#3213]: https://github.com/reactjs/react-router/pull/3213
+[#3217]: https://github.com/reactjs/react-router/pull/3217
 
 ## [v2.0.1]
 > March 9, 2016
