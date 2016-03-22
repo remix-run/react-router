@@ -120,7 +120,7 @@ describe('getParams', function () {
         expect(getParams('/files/*', '/files/my/photo.jpg')).toEqual({ splat: 'my/photo.jpg' })
         expect(getParams('/files/*', '/files/my/photo.jpg.zip')).toEqual({ splat: 'my/photo.jpg.zip' })
         expect(getParams('/files/*.jpg', '/files/my/photo.jpg')).toEqual({ splat: 'my/photo' })
-        expect(getParams('/files/*.jpg', '/files/my/new\nline.jpg')).toEqual({ splat: 'my/new\nline' })
+        expect(getParams('/files/*.jpg', '/files/my/new%0Aline.jpg')).toEqual({ splat: 'my/new\nline' })
       })
     })
 

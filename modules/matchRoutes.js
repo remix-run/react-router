@@ -35,9 +35,7 @@ function getIndexRoute(route, location, callback) {
       callback(error, !error && createRoutes(indexRoute)[0])
     })
   } else if (route.childRoutes) {
-    const pathless = route.childRoutes.filter(function (obj) {
-      return !obj.hasOwnProperty('path')
-    })
+    const pathless = route.childRoutes.filter(childRoute => !childRoute.path)
 
     loopAsync(pathless.length, function (index, next, done) {
       getIndexRoute(pathless[index], location, function (error, indexRoute) {

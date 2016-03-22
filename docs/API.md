@@ -107,17 +107,24 @@ A `<Link>` can know when the route it links to is active and automatically apply
 
 #### Props
 ##### `to`
-The path to link to, e.g. `/users/123`.
+A [location descriptor](https://github.com/mjackson/history/blob/master/docs/Glossary.md#locationdescriptor). Usually this is a string or an object, with the following semantics:
 
-##### `query`
+* If it's a string it represents the path to link to, e.g. `/users/123`.
+* If it's an object it can have four keys:
+  * `pathname`: A string representing the path to link to.
+  * `query`: An object of key:value pairs to be stringified.
+  * `hash`: A hash to put in the URL, e.g. `#a-hash`.
+  * `state`: State to persist to the `location`.
+
+##### `query` **([Deprecated](https://github.com/reactjs/react-router/blob/master/upgrade-guides/v2.0.0.md#link-to-onenter-and-isactive-use-location-descriptors) see `to`)**
 An object of key:value pairs to be stringified.
 
-##### `hash`
+##### `hash` **([Deprecated](https://github.com/reactjs/react-router/blob/master/upgrade-guides/v2.0.0.md#link-to-onenter-and-isactive-use-location-descriptors) see `to`)**
 A hash to put in the URL, e.g. `#a-hash`.
 
 _Note: React Router currently does not manage scroll position, and will not scroll to the element corresponding to the hash. Scroll position management utilities are available in the [scroll-behavior](https://github.com/taion/scroll-behavior) library._
 
-##### `state`
+##### `state` **([Deprecated](https://github.com/reactjs/react-router/blob/master/upgrade-guides/v2.0.0.md#link-to-onenter-and-isactive-use-location-descriptors) see `to`)**
 State to persist to the `location`.
 
 ##### `activeClassName`
@@ -328,6 +335,11 @@ Routes can be nested, `this.props.children` will contain the element created fro
 Called when a route is about to be entered. It provides the next router state and a function to redirect to another path. `this` will be the route instance that triggered the hook.
 
 If `callback` is listed as a 3rd argument, this hook will run asynchronously, and the transition will block until `callback` is called.
+
+##### `onChange(prevState, nextState, replace, callback?)`
+Called on routes when the location changes, but the route itself neither enters or leaves. For example, this will be called when a route's children change, or when the location query changes. It provides the previous router state, the next router state, and a function to redirect to another path. `this` will be the route instance that triggered the hook.
+
+If `callback` is listed as a 4th argument, this hook will run asynchronously, and the transition will block until `callback` is called.
 
 ##### `onLeave()`
 Called when a route is about to be exited.
@@ -620,7 +632,14 @@ One or many [`<Route>`](#route)s or [`PlainRoute`](#plainroute)s.
 
 
 ### `PropTypes`
-TODO (Pull Requests Welcome)
+The following objects are exposed as properties of the exported PropTypes object:
+- `falsy`: Checks that a component does not have a prop
+- `history`
+- `location`
+- `component`
+- `components`
+- `route`
+- `routes`
 
 
 ### `useRoutes(createHistory)` (deprecated)

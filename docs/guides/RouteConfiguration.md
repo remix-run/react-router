@@ -114,9 +114,11 @@ render((
     <Route path="/" component={App}>
       <IndexRoute component={Dashboard} />
       <Route path="about" component={About} />
-      <Route path="inbox" component={Inbox}>
-        {/* Use /messages/:id instead of messages/:id */}
-        <Route path="/messages/:id" component={Message} />
+      <Route path="inbox" component={Inbox} />
+
+      {/* Use /messages/:id instead of /inbox/messages/:id */}
+      <Route component={Inbox}>
+        <Route path="messages/:id" component={Message} />
       </Route>
     </Route>
   </Router>
@@ -150,11 +152,14 @@ render((
     <Route path="/" component={App}>
       <IndexRoute component={Dashboard} />
       <Route path="about" component={About} />
-      <Route path="inbox" component={Inbox}>
-        <Route path="/messages/:id" component={Message} />
 
+      <Route path="inbox" component={Inbox}>
         {/* Redirect /inbox/messages/:id to /messages/:id */}
         <Redirect from="messages/:id" to="/messages/:id" />
+      </Route>
+
+      <Route component={Inbox}>
+        <Route path="messages/:id" component={Message} />
       </Route>
     </Route>
   </Router>
@@ -184,26 +189,28 @@ The `<Redirect>` configuration helper is not available when using plain routes, 
 The route config we've discussed up to this point could also be specified like this:
 
 ```js
-const routes = [
-  { path: '/',
-    component: App,
-    indexRoute: { component: Dashboard },
-    childRoutes: [
-      { path: 'about', component: About },
-      { path: 'inbox',
-        component: Inbox,
-        childRoutes: [
-          { path: '/messages/:id', component: Message },
-          { path: 'messages/:id',
-            onEnter: function (nextState, replace) {
-              replace('/messages/' + nextState.params.id)
-            }
-          }
-        ]
-      }
-    ]
-  }
-]
+const routes = {
+  path: '/',
+  component: App,
+  indexRoute: { component: Dashboard },
+  childRoutes: [
+    { path: 'about', component: About },
+    {
+      path: 'inbox',
+      component: Inbox,
+      childRoutes: [{
+        path: 'messages/:id',
+        onEnter: ({ params }, replace) => replace(`/messages/${params.id}`)
+      }]
+    },
+    {
+      component: Inbox,
+      childRoutes: [{
+        path: 'messages/:id', component: Message
+      }]
+    }
+  ]
+}
 
 render(<Router routes={routes} />, document.body)
 ```
