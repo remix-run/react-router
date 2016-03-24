@@ -132,3 +132,42 @@ render(
   document.getElementById('app')
 )
 ```
+
+## Customize your history further
+
+If you'd like to further customize the history options or use other
+enhancers from
+[history](https://github.com/mjackson/history/) you can use
+`useRouterHistory`.
+
+Be aware that `useRouterHistory` already pre-enhances your history
+factory with the [useQueries](https://github.com/mjackson/history/blob/master/docs/QuerySupport.md) and [useBasename](https://github.com/mjackson/history/blob/master/docs/BasenameSupport.md) enhancers from `history`.
+
+### Examples:
+
+Defining a basename:
+
+```js
+import { useRouterHistory } from 'react-router'
+import { createHistory } from 'history'
+
+const history = useRouterHistory(createHistory)({
+  basename: 'base-path'
+})
+```
+
+Using the
+[useBeforeUnload](https://github.com/mjackson/history/blob/master/docs/ConfirmingNavigation.md)
+enhancer:
+
+```js
+import { useRouterHistory } from 'react-router'
+import { createHistory, useBeforeUnload } from 'history'
+
+const history = useRouterHistory(useBeforeUnload(createHistory))()
+
+history.listenBeforeUnload(function () {
+  return 'Are you sure you want to leave this page?'
+})
+```
+
