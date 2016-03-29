@@ -7,7 +7,6 @@
     "docs",
     "es6",
     "lib",
-    "modules/*.js",
     "umd"
   ],
   "main": "lib/index",
