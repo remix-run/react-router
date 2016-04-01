@@ -58,7 +58,7 @@ match({ history, routes }, (error, redirectLocation, renderProps) => {
 })
 ```
 
-## History singletons
+## History Singletons
 
 Because the server has no DOM available, the history singletons (`browserHistory` and `hashHistory`) do not function on the server. Instead, they will simply return `undefined`.
 

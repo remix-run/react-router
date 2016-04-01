@@ -9,11 +9,12 @@ React Router keeps your UI in sync with the URL. It has a simple API with powerf
 
 ### Docs & Help
 
-- [Tutorial - Do This First!](https://github.com/reactjs/react-router-tutorial)
-- [Guides and API Docs](https://github.com/reactjs/react-router/tree/master/docs)
-- [Change Log](/CHANGES.md)
+- [Tutorial – do this first!](https://github.com/reactjs/react-router-tutorial)
+- [Guides and API docs](https://github.com/reactjs/react-router/tree/master/docs)
+- [Troubleshooting guide](https://github.com/reactjs/react-router/blob/master/docs/Troubleshooting.md)
+- [Changelog](/CHANGES.md)
 - [Stack Overflow](http://stackoverflow.com/questions/tagged/react-router)
-- [Codepen Boilerplate](http://codepen.io/anon/pen/xwQZdy?editors=001)
+- [CodePen boilerplate](http://codepen.io/anon/pen/xwQZdy?editors=001)
   Please use for bug reports
 
 **Older Versions:**
