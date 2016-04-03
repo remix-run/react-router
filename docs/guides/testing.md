@@ -16,8 +16,9 @@ Firstly, ensure you are using at least the following versions of each package.
 - `"react-dom": "^0.14.0"`
 - `"react-router": "^1.0.0"`
 - `"react-addons-test-utils": "^0.14.0"`
-- `"jest-cli": "^0.5.10"`
-- `"babel-jest": "^5.3.0"`
+- `"jest": "^0.1.40"`
+- `"jest-cli": "^0.10.0"`
+- `"babel-jest": "^10.0.1"`
 
 Also, make sure you are using node 4.x
 
@@ -106,17 +107,14 @@ The test for that component:
 ```js
 //../components/__tests__/BasicPage-test.js
 
-// NOTE: cannot use es6 modules syntax because
-// jest.dontMock & jest.autoMockOff()
-// do not understand ES6 modules yet
+jest.unmock('../BasicPage')
 
-jest.dontMock('../BasicPage')
+import TestUtils from 'react-addons-test-utils'
+import ReactDOM from 'react-dom'
+import React from 'react'
+import BasicPage from '../BasicPage'
 
 describe('BasicPage', function() {
-  let BasicPage = require('../BasicPage')
-  let TestUtils = require('react-addons-test-utils')
-  let ReactDOM = require('react-dom')
-  let React = require('react')
 
   it('renders the Login button if not logged in', function() {
     let page = TestUtils.renderIntoDocument(<BasicPage />)
