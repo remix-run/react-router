@@ -89,7 +89,9 @@ You might wonder why we don't fall back to hash history; the problem is that URL
 Hash history uses the hash (`#`) portion of the URL, creating routes that look like `example.com/#/some/path`.
 
 #### Should I use `hashHistory`?
-Hash history works without configuring your server, so if you're just getting started, go ahead and use it. But, we don't recommend using it in production, every web app should aspire to use `browserHistory`.
+Hash history works without configuring your server, so if you're just getting started, go ahead and use it. In general, though, production web applications should use `browserHistory` for the cleaner URLs, and for support for server-side rendering, which is impossible with `hashHistory`.
+
+Additionally, as mentioned above, some older browsers do not support the HTML5 History API. If it's important to you to not use full page reloads for navigation on those older browsers, then you will also need to use `hashHistory`.
 
 #### What is that `?_k=ckuvup` junk in the URL?
 When a history transitions around your app with `push` or `replace`, it can store "location state" that doesn't show up in the URL on the new location, think of it a little bit like post data in an HTML form.
