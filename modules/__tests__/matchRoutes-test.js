@@ -331,6 +331,107 @@ describe('matchRoutes', function () {
     })
   })
 
+  describe('routes with conditions', function () {
+    it('matches single route', function (done) {
+      let Condition, conditionCalled = 0
+
+      const routes = [
+        Condition = {
+          path: '/',
+          condition: (match, callback) => {
+            conditionCalled++
+            callback(null, true)
+          }
+        }
+      ]
+
+      matchRoutes(routes, createLocation('/'), function (error, match) {
+        expect(match).toExist()
+        expect(match.routes).toEqual([ Condition ])
+        expect(conditionCalled).toEqual(1)
+        done()
+      })
+    })
+
+    it('does not match single route', function (done) {
+      let conditionCalled = 0
+
+      const routes = [ {
+        path: '/',
+        condition: (match, callback) => {
+          conditionCalled++
+          callback(null, false)
+        }
+      } ]
+
+      matchRoutes(routes, createLocation('/'), function (error, match) {
+        expect(match).toNotExist()
+        expect(conditionCalled).toEqual(1)
+        done()
+      })
+    })
+
+    it('matches nested routes', function (done) {
+      let Parent, Child, parentConditionCalled = 0, childConditionCalled = 0
+
+      const routes = [
+        Parent = {
+          condition: (match, callback) => {
+            parentConditionCalled++
+            callback(null, true)
+          },
+          childRoutes: [
+            Child = {
+              path: '/',
+              condition: (match, callback) => {
+                childConditionCalled++
+                callback(null, true)
+              }
+            }
+          ]
+        }
+      ]
+
+      matchRoutes(routes, createLocation('/'), function (error, match) {
+        expect(match).toExist()
+        expect(match.routes).toEqual([ Parent, Child ])
+        expect(parentConditionCalled).toEqual(1)
+        expect(childConditionCalled).toEqual(1)
+        done()
+      })
+    })
+
+    it('does not match nested routes on parent condition failure', function (done) {
+      let parentConditionCalled = 0, childConditionCalled = 0
+
+      const routes = [
+        {
+          path: '/:food/',
+          condition: (match, callback) => {
+            parentConditionCalled++
+            callback(null, false)
+          },
+          childRoutes: [
+            {
+              path: ':color',
+              condition: (match, callback) => {
+                childConditionCalled++
+                callback(null, true)
+              }
+            }
+          ]
+        }
+      ]
+
+      matchRoutes(routes, createLocation('/apple/orange'), function (error, match) {
+        expect(match).toNotExist()
+        expect(parentConditionCalled).toEqual(1)
+        expect(childConditionCalled).toEqual(0)
+        done()
+      })
+    })
+  })
+
   describe('invalid route configs', function () {
     let invalidRoutes, errorSpy
 

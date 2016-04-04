@@ -276,6 +276,76 @@ describe('Router', function () {
 
   })
 
+
+  describe('conditions', function () {
+    it('matches route with condition match', function (done) {
+      class MyComponent extends Component {
+        render() {
+          return <div>{this.props.params.fruit}</div>
+        }
+      }
+
+
+      let conditionCalled = false
+      function condition(match, callback) {
+        conditionCalled = true
+        callback(null, true)
+      }
+
+      render((
+        <Router history={createHistory('/apple')}>
+          <Route path=":fruit" component={MyComponent} condition={condition} />
+        </Router>
+      ), node, function () {
+        expect(node.textContent).toEqual('apple')
+        expect(conditionCalled).toEqual(true)
+        done()
+      })
+    })
+
+
+    it('calls condition on both parent and child routes', function (done) {
+      class Parent extends Component {
+        render() {
+          return <div>{this.props.children}</div>
+        }
+      }
+
+      class Child extends Component {
+        render() {
+          return <h1>{this.props.params.name}</h1>
+        }
+      }
+
+
+      let conditionParentCalled = false
+      function conditionParent(match, callback) {
+        conditionParentCalled = true
+        callback(null, true)
+      }
+
+      let conditionChildCalled = false
+      function conditionChild(match, callback) {
+        conditionChildCalled = true
+        callback(null, true)
+      }
+
+      render((
+        <Router history={createHistory('/apple')}>
+          <Route component={Parent} condition={conditionParent}>
+            <Route path="/:name" component={Child} condition={conditionChild} />
+          </Route>
+        </Router>
+      ), node, function () {
+        expect(node.textContent).toEqual('apple')
+        expect(conditionParentCalled).toEqual(true)
+        expect(conditionChildCalled).toEqual(true)
+        done()
+      })
+    })
+
+  })
+
   describe('render prop', function () {
     it('renders with the render prop', function (done) {
       render((
