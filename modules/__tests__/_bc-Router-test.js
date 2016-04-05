@@ -4,9 +4,9 @@ import { render, unmountComponentAtNode } from 'react-dom'
 import createHistory from 'history/lib/createMemoryHistory'
 import Route from '../Route'
 import Router from '../Router'
+import shouldWarn from './shouldWarn'
 
 describe('v1 Router', function () {
-
   class Parent extends Component {
     render() {
       return <div>parent {this.props.children}</div>
@@ -26,6 +26,10 @@ describe('v1 Router', function () {
 
   afterEach(function () {
     unmountComponentAtNode(node)
+  })
+
+  beforeEach(function () {
+    shouldWarn('deprecated')
   })
 
   it('renders routes', function (done) {

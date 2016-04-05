@@ -5,6 +5,7 @@ import { createRoutes } from '../RouteUtils'
 import matchRoutes from '../matchRoutes'
 import Route from '../Route'
 import IndexRoute from '../IndexRoute'
+import shouldWarn from './shouldWarn'
 
 describe('matchRoutes', function () {
   let routes
@@ -331,33 +332,18 @@ describe('matchRoutes', function () {
     })
   })
 
-  describe('invalid route configs', function () {
-    let invalidRoutes, errorSpy
+  it('complains about invalid index route with path', function (done) {
+    shouldWarn('path')
 
-    beforeEach(function () {
-      errorSpy = expect.spyOn(console, 'error')
-    })
+    const invalidRoutes = createRoutes(
+      <Route path="/">
+        <IndexRoute path="foo" />
+      </Route>
+    )
 
-    afterEach(function () {
-      errorSpy.restore()
-    })
-
-    describe('index route with path', function () {
-      beforeEach(function () {
-        invalidRoutes = createRoutes(
-          <Route path="/">
-            <IndexRoute path="foo" />
-          </Route>
-        )
-      })
-
-      it('complains when matching', function (done) {
-        matchRoutes(invalidRoutes, createLocation('/'), function (error, match) {
-          expect(match).toExist()
-          expect(errorSpy).toHaveBeenCalledWith('Warning: [react-router] Index routes should not have paths')
-          done()
-        })
-      })
+    matchRoutes(invalidRoutes, createLocation('/'), function (error, match) {
+      expect(match).toExist()
+      done()
     })
   })
 })

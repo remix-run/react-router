@@ -7,6 +7,7 @@ import createHistory from 'history/lib/createMemoryHistory'
 import Router from '../Router'
 import Route from '../Route'
 import Link from '../Link'
+import shouldWarn from './shouldWarn'
 
 const { click } = Simulate
 
@@ -21,6 +22,10 @@ describe('v1 Link', function () {
   let node
   beforeEach(function () {
     node = document.createElement('div')
+  })
+
+  beforeEach(function () {
+    shouldWarn('deprecated')
   })
 
   it('knows how to make its href', function () {

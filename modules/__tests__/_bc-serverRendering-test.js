@@ -5,6 +5,7 @@ import { renderToString } from 'react-dom/server'
 import Link from '../Link'
 import match from '../match'
 import RoutingContext from '../RoutingContext'
+import shouldWarn from './shouldWarn'
 
 describe('v1 server rendering', function () {
 
@@ -67,6 +68,8 @@ describe('v1 server rendering', function () {
   }
 
   it('works', function (done) {
+    shouldWarn('has been renamed')
+
     match({ routes, location: '/dashboard' }, function (error, redirectLocation, renderProps) {
       const string = renderToString(
         <RoutingContext {...renderProps} />
@@ -77,6 +80,8 @@ describe('v1 server rendering', function () {
   })
 
   it('renders active Links as active', function (done) {
+    shouldWarn('has been renamed')
+
     match({ routes, location: '/about' }, function (error, redirectLocation, renderProps) {
       const string = renderToString(
         <RoutingContext {...renderProps} />
@@ -88,6 +93,8 @@ describe('v1 server rendering', function () {
   })
 
   it('sends the redirect location', function (done) {
+    shouldWarn('deprecated')
+
     match({ routes, location: '/company' }, function (error, redirectLocation) {
       expect(redirectLocation).toExist()
       expect(redirectLocation.pathname).toEqual('/about')

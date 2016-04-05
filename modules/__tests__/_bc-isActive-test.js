@@ -6,6 +6,7 @@ import IndexRoute from '../IndexRoute'
 import Router from '../Router'
 import Route from '../Route'
 import qs from 'qs'
+import shouldWarn from './shouldWarn'
 
 describe('v1 isActive', function () {
 
@@ -16,6 +17,10 @@ describe('v1 isActive', function () {
 
   afterEach(function () {
     unmountComponentAtNode(node)
+  })
+
+  beforeEach(function () {
+    shouldWarn('deprecated')
   })
 
   describe('a pathname that matches the URL', function () {
