@@ -3,6 +3,8 @@
 
 import expect from 'expect'
 
+import { _resetWarned } from './modules/routerWarning'
+
 beforeEach(() => {
   expect.spyOn(console, 'error').andCall(msg => {
     for (const about of console.error.expected) {
@@ -27,6 +29,7 @@ afterEach(() => {
   })
 
   console.error.restore()
+  _resetWarned()
 })
 
 const context = require.context('./modules', true, /-test\.js$/)
