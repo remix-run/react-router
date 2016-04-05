@@ -80,6 +80,13 @@ function matchRouteDeep(
   let pattern = route.path || ''
 
   if (pattern.charAt(0) === '/') {
+    if (remainingPathname !== location.pathname) {
+      warning(
+        false,
+        'Nested routes with absolute paths are deprecated. Nest those routes under pathless routes instead. http://tiny.cc/router-decouple-ui'
+      )
+    }
+
     remainingPathname = location.pathname
     paramNames = []
     paramValues = []
@@ -91,34 +98,40 @@ function matchRouteDeep(
     paramNames = [ ...paramNames, ...matched.paramNames ]
     paramValues = [ ...paramValues, ...matched.paramValues ]
 
-    if (remainingPathname === '' && route.path) {
-      const match = {
-        routes: [ route ],
-        params: createParams(paramNames, paramValues)
+    if (remainingPathname === '') {
+      if (route.path) {
+        const match = {
+          routes: [ route ],
+          params: createParams(paramNames, paramValues)
+        }
+
+        getIndexRoute(route, location, function (error, indexRoute) {
+          if (error) {
+            callback(error)
+          } else {
+            if (Array.isArray(indexRoute)) {
+              warning(
+                indexRoute.every(route => !route.path),
+                'Index routes should not have paths'
+              )
+              match.routes.push(...indexRoute)
+            } else if (indexRoute) {
+              warning(
+                !indexRoute.path,
+                'Index routes should not have paths'
+              )
+              match.routes.push(indexRoute)
+            }
+
+            callback(null, match)
+          }
+        })
+
+        return
       }
 
-      getIndexRoute(route, location, function (error, indexRoute) {
-        if (error) {
-          callback(error)
-        } else {
-          if (Array.isArray(indexRoute)) {
-            warning(
-              indexRoute.every(route => !route.path),
-              'Index routes should not have paths'
-            )
-            match.routes.push(...indexRoute)
-          } else if (indexRoute) {
-            warning(
-              !indexRoute.path,
-              'Index routes should not have paths'
-            )
-            match.routes.push(indexRoute)
-          }
-
-          callback(null, match)
-        }
-      })
-      return
+      // Re-normalize remaining path for continued match.
+      remainingPathname = '/'
     }
   }
 
