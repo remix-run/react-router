@@ -3,7 +3,7 @@ Thank you for contributing!
 
 Have a usage question?
 ======================
-Questions will be closed without comment. Here are some resources to get help:
+Questions *might* be closed without comment, sometimes we just don't have time for them. Before you ask one, here are some resources to get help first:
 
 - Do the tutorial: https://github.com/reactjs/react-router-tutorial
 - Read the docs: https://github.com/reactjs/react-router/tree/latest/docs
