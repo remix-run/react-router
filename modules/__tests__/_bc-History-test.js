@@ -5,9 +5,8 @@ import History from '../History'
 import Router from '../Router'
 import Route from '../Route'
 import createHistory from 'history/lib/createMemoryHistory'
+import shouldWarn from './shouldWarn'
 
-// skipping to remove warnings, and we don't intent to update this mixin
-// keeping tests here just in-case
 describe('v1 History Mixin', function () {
 
   let node
@@ -19,7 +18,12 @@ describe('v1 History Mixin', function () {
     unmountComponentAtNode(node)
   })
 
+  beforeEach(function () {
+    shouldWarn('deprecated')
+  })
+
   it('assigns the history to the component instance', function (done) {
+
     const history = createHistory('/')
 
     const Component = React.createClass({

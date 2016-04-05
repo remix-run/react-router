@@ -2,7 +2,6 @@ import expect, { spyOn } from 'expect'
 import React, { Component } from 'react'
 import { render, unmountComponentAtNode } from 'react-dom'
 import createHistory from '../createMemoryHistory'
-import useQueries from 'history/lib/useQueries'
 import execSteps from './execSteps'
 import Router from '../Router'
 
@@ -355,7 +354,7 @@ describe('When a router enters a branch', function () {
     it('calls the onEnter hooks of all routes in that branch', function (done) {
       const newsFeedRouteEnterSpy = spyOn(NewsFeedRoute, 'onEnter').andCallThrough()
       const newsFeedRouteChangeSpy = spyOn(NewsFeedRoute, 'onChange').andCallThrough()
-      const history = useQueries(createHistory)('/inbox')
+      const history = createHistory('/inbox')
 
       render(<Router history={history} routes={routes}/>, node, function () {
         history.push({ pathname: '/news', query: { q: 1 } })

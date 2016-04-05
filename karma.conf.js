@@ -106,9 +106,7 @@ module.exports = function (config) {
       },
       plugins: [
         new webpack.DefinePlugin({
-          'process.env.NODE_ENV': JSON.stringify('test'),
-          'process.env.SKIP_BC': JSON.stringify(process.env.SKIP_BC || false),
-          'process.env.FAIL_ON_WARNINGS': JSON.stringify(process.env.FAIL_ON_WARNINGS || false)
+          'process.env.NODE_ENV': JSON.stringify('test')
         })
       ]
     },
@@ -157,19 +155,3 @@ module.exports = function (config) {
     }
   }
 }
-
-console.log()
-console.log('===')
-if (process.env.SKIP_BC) {
-  console.warn('`SKIP_BC=1` detected: skipping backwards compatibility tests')
-} else {
-  console.log('`SKIP_BC=1 npm run *` to skip backwards compatibility tests.')
-}
-
-if (process.env.FAIL_ON_WARNINGS) {
-  console.warn('`FAIL_ON_WARNINGS=1` detected: console.error will now fail tests.')
-} else {
-  console.log('`FAIL_ON_WARNINGS=1 npm run *` to cause console warnings to throw errors.')
-}
-console.log('===')
-console.log()

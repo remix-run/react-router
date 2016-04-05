@@ -1,23 +1,33 @@
-/*eslint no-console: 0*/
+/* eslint-disable no-console */
+/* eslint-env mocha */
 
-if (process.env.FAIL_ON_WARNINGS) {
-  console.error = function (msg) {
-    // grant me the serenity to accept the things I cannot change,
-    if (msg.match(/Warning: the query argument to createHref is deprecated; use a location descriptor instead/))
-      return
-    else
-      throw new Error(msg)
-  }
-}
+import expect from 'expect'
+
+beforeEach(() => {
+  expect.spyOn(console, 'error').andCall(msg => {
+    for (const about of console.error.expected) {
+      if (msg.indexOf(about) !== -1) {
+        console.error.warned[about] = true
+        return
+      }
+    }
+
+    throw new Error(msg)
+  })
+
+  console.error.expected = []
+  console.error.warned = Object.create(null)
+})
+
+afterEach(() => {
+  console.error.expected.forEach(about => {
+    expect(console.error.warned[about]).toExist(
+      `Missing expected warning: ${about}`
+    )
+  })
+
+  console.error.restore()
+})
 
 const context = require.context('./modules', true, /-test\.js$/)
-
-context.keys().forEach(key => {
-  if (process.env.SKIP_BC) {
-    if (!key.match(/_bc/)) {
-      context(key)
-    }
-  } else {
-    context(key)
-  }
-})
+context.keys().forEach(context)

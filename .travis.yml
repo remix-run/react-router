@@ -2,9 +2,6 @@ sudo: false
 language: node_js
 node_js:
 - stable
-env:
--
-- SKIP_BC=1 FAIL_ON_WARNINGS=1
 cache:
   directories:
   - node_modules

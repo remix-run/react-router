@@ -2,9 +2,9 @@ import expect, { spyOn } from 'expect'
 import React, { Component } from 'react'
 import { render, unmountComponentAtNode } from 'react-dom'
 import createHistory from 'history/lib/createMemoryHistory'
-import useQueries from 'history/lib/useQueries'
 import execSteps from './execSteps'
 import Router from '../Router'
+import shouldWarn from './shouldWarn'
 
 describe('v1 When a router enters a branch', function () {
 
@@ -109,6 +109,10 @@ describe('v1 When a router enters a branch', function () {
     unmountComponentAtNode(node)
   })
 
+  beforeEach(function () {
+    shouldWarn('deprecated')
+  })
+
   it('calls the onEnter hooks of all routes in that branch', function (done) {
     const dashboardRouteEnterSpy = spyOn(DashboardRoute, 'onEnter').andCallThrough()
     const newsFeedRouteEnterSpy = spyOn(NewsFeedRoute, 'onEnter').andCallThrough()
@@ -196,7 +200,7 @@ describe('v1 When a router enters a branch', function () {
   describe('and then the query changes', function () {
     it('calls the onEnter hooks of all routes in that branch', function (done) {
       const newsFeedRouteEnterSpy = spyOn(NewsFeedRoute, 'onEnter').andCallThrough()
-      const history = useQueries(createHistory)('/inbox')
+      const history = createHistory('/inbox')
 
       render(<Router history={history} routes={routes}/>, node, function () {
         history.pushState(null, '/news', { q: 1 })
