@@ -1,9 +1,9 @@
-import React from 'react'
+import React, { Component } from 'react'
 import { render } from 'react-dom'
 import { browserHistory, Router, Route, Link } from 'react-router'
 import './app.css'
 
-class App extends React.Component {
+class App extends Component {
   render() {
     const depth = this.props.routes.length
 

@@ -1,10 +1,10 @@
-import React from 'react'
+import React, { Component } from 'react'
 import { render } from 'react-dom'
 import ReactCSSTransitionGroup from 'react-addons-css-transition-group'
 import { browserHistory, Router, Route, IndexRoute, Link } from 'react-router'
 import './app.css'
 
-class App extends React.Component {
+class App extends Component {
   render() {
     return (
       <div>
@@ -30,7 +30,7 @@ class App extends React.Component {
 }
 
 
-class Index extends React.Component {
+class Index extends Component {
   render() {
     return (
       <div className="Image">
@@ -41,7 +41,7 @@ class Index extends React.Component {
   }
 }
 
-class Page1 extends React.Component {
+class Page1 extends Component {
   render() {
     return (
       <div className="Image">
@@ -52,7 +52,7 @@ class Page1 extends React.Component {
   }
 }
 
-class Page2 extends React.Component {
+class Page2 extends Component {
   render() {
     return (
       <div className="Image">

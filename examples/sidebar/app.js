@@ -1,10 +1,10 @@
-import React from 'react'
+import React, { Component } from 'react'
 import { render } from 'react-dom'
 import { browserHistory, Router, Route, Link } from 'react-router'
 import data from './data'
 import './app.css'
 
-class Category extends React.Component {
+class Category extends Component {
   render() {
     const category = data.lookupCategory(this.props.params.category)
 
@@ -19,7 +19,7 @@ class Category extends React.Component {
   }
 }
 
-class CategorySidebar extends React.Component {
+class CategorySidebar extends Component {
   render() {
     const category = data.lookupCategory(this.props.params.category)
 
@@ -39,7 +39,7 @@ class CategorySidebar extends React.Component {
   }
 }
 
-class Item extends React.Component {
+class Item extends Component {
   render() {
     const { category, item } = this.props.params
     const menuItem = data.lookupItem(category, item)
@@ -53,7 +53,7 @@ class Item extends React.Component {
   }
 }
 
-class Index extends React.Component {
+class Index extends Component {
   render() {
     return (
       <div>
@@ -67,7 +67,7 @@ class Index extends React.Component {
   }
 }
 
-class IndexSidebar extends React.Component {
+class IndexSidebar extends Component {
   render() {
     return (
       <div>
@@ -84,7 +84,7 @@ class IndexSidebar extends React.Component {
   }
 }
 
-class App extends React.Component {
+class App extends Component {
   render() {
     const { content, sidebar } = this.props
 

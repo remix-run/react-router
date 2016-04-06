@@ -1,8 +1,8 @@
-import React from 'react'
+import React, { Component } from 'react'
 import { render } from 'react-dom'
 import { browserHistory, Router, Route, Link } from 'react-router'
 
-class User extends React.Component {
+class User extends Component {
   render() {
     let { userID } = this.props.params
     let { query } = this.props.location
@@ -17,7 +17,7 @@ class User extends React.Component {
   }
 }
 
-class App extends React.Component {
+class App extends Component {
   render() {
     return (
       <div>

@@ -1,8 +1,8 @@
-import React from 'react'
+import React, { Component } from 'react'
 import { render } from 'react-dom'
 import { browserHistory, Router, Route, Link, Redirect } from 'react-router'
 
-class App extends React.Component {
+class App extends Component {
   render() {
     return (
       <div>
@@ -16,7 +16,7 @@ class App extends React.Component {
   }
 }
 
-class User extends React.Component {
+class User extends Component {
   render() {
     const { userID } = this.props.params
 
@@ -33,7 +33,7 @@ class User extends React.Component {
   }
 }
 
-class Task extends React.Component {
+class Task extends Component {
   render() {
     const { userID, taskID } = this.props.params
 

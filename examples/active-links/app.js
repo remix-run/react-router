@@ -1,10 +1,10 @@
-import React from 'react'
+import React, { Component } from 'react'
 import { render } from 'react-dom'
 import { Router, Route, IndexRoute, Link, IndexLink, browserHistory } from 'react-router'
 
 const ACTIVE = { color: 'red' }
 
-class App extends React.Component {
+class App extends Component {
   render() {
     return (
       <div>
@@ -92,4 +92,3 @@ render((
     </Route>
   </Router>
 ), document.getElementById('example'))
-
