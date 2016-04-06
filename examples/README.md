@@ -14,6 +14,6 @@ In most of the examples, we will use ES6 syntax. Now, we have one minor plot twi
 
     import React, { Component } from 'react'
     
-    class Calendar extends Component {
+    class MyComponent extends Component {
     // Our code
      }
