@@ -1,7 +1,7 @@
 /*globals COURSES:true */
-import React from 'react'
+import React, { Component } from 'react'
 
-class Assignment extends React.Component {
+class Assignment extends Component {
   render() {
     let { courseId, assignmentId } = this.props.params
     let { title, body } = COURSES[courseId].assignments[assignmentId]

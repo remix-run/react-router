@@ -1,6 +1,6 @@
-import React from 'react'
+import React, { Component } from 'react'
 
-class Calendar extends React.Component {
+class Calendar extends Component {
   render() {
     const events = [
       { id: 0, title: 'essay due' }

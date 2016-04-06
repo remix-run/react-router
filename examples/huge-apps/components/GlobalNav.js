@@ -1,4 +1,4 @@
-import React from 'react'
+import React, { Component } from 'react'
 import { Link } from 'react-router'
 
 const dark = 'hsl(200, 20%, 20%)'
@@ -24,7 +24,7 @@ styles.activeLink = {
   color: dark
 }
 
-class GlobalNav extends React.Component {
+class GlobalNav extends Component {
 
   constructor(props, context) {
     super(props, context)

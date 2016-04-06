@@ -1,8 +1,8 @@
 /*globals COURSES:true */
-import React from 'react'
+import React, { Component } from 'react'
 import { Link } from 'react-router'
 
-class Sidebar extends React.Component {
+class Sidebar extends Component {
   render() {
     let { assignments } = COURSES[this.props.params.courseId]
 
