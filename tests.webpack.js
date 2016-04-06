@@ -14,19 +14,23 @@ beforeEach(() => {
       }
     }
 
+    console.error.threw = true
     throw new Error(msg)
   })
 
   console.error.expected = []
   console.error.warned = Object.create(null)
+  console.error.threw = false
 })
 
 afterEach(() => {
-  console.error.expected.forEach(about => {
-    expect(console.error.warned[about]).toExist(
-      `Missing expected warning: ${about}`
-    )
-  })
+  if (!console.error.threw) {
+    console.error.expected.forEach(about => {
+      expect(console.error.warned[about]).toExist(
+        `Missing expected warning: ${about}`
+      )
+    })
+  }
 
   console.error.restore()
   _resetWarned()
