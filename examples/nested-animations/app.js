@@ -1,10 +1,10 @@
-import React from 'react'
+import React, { Component } from 'react'
 import { render } from 'react-dom'
 import ReactCSSTransitionGroup from 'react-addons-css-transition-group'
 import { browserHistory, Router, Route, Link } from 'react-router'
 import './app.css'
 
-class App extends React.Component {
+class App extends Component {
   render() {
     const { pathname } = this.props.location
 
@@ -28,7 +28,7 @@ class App extends React.Component {
   }
 }
 
-class Page1 extends React.Component {
+class Page1 extends Component {
   render() {
     const { pathname } = this.props.location
 
@@ -50,7 +50,7 @@ class Page1 extends React.Component {
   }
 }
 
-class Page2 extends React.Component {
+class Page2 extends Component {
   render() {
     const { pathname } = this.props.location
 
@@ -72,7 +72,7 @@ class Page2 extends React.Component {
   }
 }
 
-class Tab1 extends React.Component {
+class Tab1 extends Component {
   render() {
     return (
       <div className="Image">
@@ -83,7 +83,7 @@ class Tab1 extends React.Component {
   }
 }
 
-class Tab2 extends React.Component {
+class Tab2 extends Component {
   render() {
     return (
       <div className="Image">
