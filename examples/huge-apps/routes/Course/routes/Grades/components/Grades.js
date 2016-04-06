@@ -1,7 +1,7 @@
 /*globals COURSES:true */
-import React from 'react'
+import React, { Component } from 'react'
 
-class Grades extends React.Component {
+class Grades extends Component {
   render() {
     let { assignments } = COURSES[this.props.params.courseId]
 

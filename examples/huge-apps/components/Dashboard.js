@@ -1,7 +1,7 @@
-import React from 'react'
+import React, { Component } from 'react'
 import { Link } from 'react-router'
 
-class Dashboard extends React.Component {
+class Dashboard extends Component {
   render() {
     const { courses } = this.props
 

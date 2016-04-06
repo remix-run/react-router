@@ -1,5 +1,5 @@
 /*globals COURSES:true */
-import React from 'react'
+import React, { Component } from 'react'
 import Dashboard from './Dashboard'
 import Nav from './Nav'
 
@@ -13,7 +13,7 @@ styles.sidebar = {
   marginRight: 20
 }
 
-class Course extends React.Component {
+class Course extends Component {
   render() {
     let { sidebar, main, children, params } = this.props
     let course = COURSES[params.courseId]

@@ -1,9 +1,9 @@
 /*globals COURSES:true */
-import React from 'react'
+import React, { Component } from 'react'
 import Dashboard from './Dashboard'
 import GlobalNav from './GlobalNav'
 
-class App extends React.Component {
+class App extends Component {
   render() {
     return (
       <div>

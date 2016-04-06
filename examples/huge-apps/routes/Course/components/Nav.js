@@ -1,4 +1,4 @@
-import React from 'react'
+import React, { Component } from 'react'
 import { Link } from 'react-router'
 
 const styles = {}
@@ -18,7 +18,7 @@ styles.activeLink = {
   color: 'red'
 }
 
-class Nav extends React.Component {
+class Nav extends Component {
   render() {
     const { course } = this.props
     const pages = [

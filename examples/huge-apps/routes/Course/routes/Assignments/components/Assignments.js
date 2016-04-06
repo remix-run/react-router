@@ -1,6 +1,6 @@
-import React from 'react'
+import React, { Component } from 'react'
 
-class Assignments extends React.Component {
+class Assignments extends Component {
   render() {
     return (
       <div>

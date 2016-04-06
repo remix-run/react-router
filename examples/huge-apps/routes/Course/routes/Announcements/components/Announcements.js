@@ -1,6 +1,6 @@
-import React from 'react'
+import React, { Component } from 'react'
 
-class Announcements extends React.Component {
+class Announcements extends Component {
   render() {
     return (
       <div>
