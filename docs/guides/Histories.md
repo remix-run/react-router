@@ -101,7 +101,7 @@ The DOM API that hash history uses to transition around is simply `window.locati
 ### `createMemoryHistory`
 Memory history doesn't manipulate or read from the address bar. This is how we implement server rendering. It's also useful for testing and other rendering environments (like React Native).
 
-Its a bit different than the other two histories because you have to
+It's a bit different than the other two histories because you have to
 create one, it is this way to facilitate testing:
 
 ```js
