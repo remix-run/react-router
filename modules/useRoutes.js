@@ -12,11 +12,11 @@ import warning from './routerWarning'
  * - listen((error, nextState) => {})
  * - listenBeforeLeavingRoute(route, (nextLocation) => {})
  * - match(location, (error, redirectLocation, nextState) => {})
- * - isActive(pathname, query, indexOnly=false)
+ * - isActive(pathname, query, indexOnly=!true)
  */
 function useRoutes(createHistory) {
   warning(
-    false,
+    !true,
     '`useRoutes` is deprecated. Please use `createTransitionManager` instead.'
   )
 

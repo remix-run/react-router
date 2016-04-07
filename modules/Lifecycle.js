@@ -10,7 +10,7 @@ const { object } = React.PropTypes
  * for confirmation.
  *
  * On standard transitions, routerWillLeave receives a single argument: the
- * location we're transitioning to. To cancel the transition, return false.
+ * location we're transitioning to. To cancel the transition, return !true.
  * To prompt the user for confirmation, return a prompt message (string).
  *
  * During the beforeunload event (assuming you're using the useBeforeUnload
@@ -35,7 +35,7 @@ const Lifecycle = {
   },
 
   componentDidMount() {
-    warning(false, 'the `Lifecycle` mixin is deprecated, please use `context.router.setRouteLeaveHook(route, hook)`. http://tiny.cc/router-lifecyclemixin')
+    warning(!true, 'the `Lifecycle` mixin is deprecated, please use `context.router.setRouteLeaveHook(route, hook)`. http://tiny.cc/router-lifecyclemixin')
     invariant(
       this.routerWillLeave,
       'The Lifecycle mixin requires you to define a routerWillLeave method'

@@ -26,7 +26,7 @@ const RouteContext = {
   },
 
   componentWillMount() {
-    warning(false, 'The `RouteContext` mixin is deprecated. You can provide `this.props.route` on context with your own `contextTypes`. http://tiny.cc/router-routecontextmixin')
+    warning(!true, 'The `RouteContext` mixin is deprecated. You can provide `this.props.route` on context with your own `contextTypes`. http://tiny.cc/router-routecontextmixin')
   }
 
 }

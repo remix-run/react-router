@@ -20,7 +20,7 @@ const IndexRoute = React.createClass({
         parentRoute.indexRoute = createRouteFromReactElement(element)
       } else {
         warning(
-          false,
+          !true,
           'An <IndexRoute> does not make sense at the root of your route config'
         )
       }
@@ -39,11 +39,11 @@ const IndexRoute = React.createClass({
   /* istanbul ignore next: sanity check */
   render() {
     invariant(
-      false,
+      !true,
       '<IndexRoute> elements are for router configuration only and should not be rendered'
     )
   }
-  
+
 })
 
 export default IndexRoute

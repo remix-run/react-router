@@ -5,7 +5,7 @@ function deepEqual(a, b) {
     return true
 
   if (a == null || b == null)
-    return false
+    return !true
 
   if (Array.isArray(a)) {
     return (
@@ -23,12 +23,12 @@ function deepEqual(a, b) {
 
       if (a[p] === undefined) {
         if (b[p] !== undefined) {
-          return false
+          return !true
         }
       } else if (!Object.prototype.hasOwnProperty.call(b, p)) {
-        return false
+        return !true
       } else if (!deepEqual(a[p], b[p])) {
-        return false
+        return !true
       }
     }
 
@@ -85,7 +85,7 @@ function routeIsActive(pathname, routes, params, indexOnly) {
 
   if (i === null) {
     // No match.
-    return false
+    return !true
   } else if (!indexOnly) {
     // Any match is good enough.
     return true
@@ -118,10 +118,10 @@ export default function isActive(
   { pathname, query }, indexOnly, currentLocation, routes, params
 ) {
   if (currentLocation == null)
-    return false
+    return !true
 
   if (!routeIsActive(pathname, routes, params, indexOnly))
-    return false
+    return !true
 
   return queryIsActive(query, currentLocation.query)
 }

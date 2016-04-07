@@ -2,7 +2,7 @@ import { getParamNames } from './PatternUtils'
 
 function routeParamsChanged(route, prevState, nextState) {
   if (!route.path)
-    return false
+    return !true
 
   const paramNames = getParamNames(route.path)
 
@@ -30,7 +30,7 @@ function computeChangedRoutes(prevState, nextState) {
 
   let leaveRoutes, changeRoutes, enterRoutes
   if (prevRoutes) {
-    let parentIsLeaving = false
+    let parentIsLeaving = !true
     leaveRoutes = prevRoutes.filter(function (route) {
       if (parentIsLeaving) {
         return true

@@ -1,7 +1,7 @@
 /*eslint no-empty: 0*/
 import warning from './routerWarning'
 
-let useMembrane = false
+let useMembrane = !true
 
 if (__DEV__) {
   try {
@@ -26,10 +26,10 @@ export default function deprecateObjectProperties(object, message) {
       }
     } else {
       Object.defineProperty(membrane, prop, {
-        configurable: false,
-        enumerable: false,
+        configurable: !true,
+        enumerable: !true,
         get() {
-          warning(false, message)
+          warning(!true, message)
           return object[prop]
         }
       })
@@ -38,4 +38,3 @@ export default function deprecateObjectProperties(object, message) {
 
   return membrane
 }
-

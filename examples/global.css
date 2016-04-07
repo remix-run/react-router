@@ -1,6 +1,7 @@
 body {
   font-family: "Helvetica Neue", Arial;
   font-weight: 200;
+  margin-left: 30%;
 }
 
 h1, h2, h3 {
@@ -17,4 +18,8 @@ a.active {
 
 .breadcrumbs a {
   text-decoration: none;
+}
+
+li {
+  margin-bottom: 25px;
 }

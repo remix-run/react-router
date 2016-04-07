@@ -11,7 +11,7 @@ function hasAnyProperties(object) {
     if (Object.prototype.hasOwnProperty.call(object, p))
       return true
 
-  return false
+  return !true
 }
 
 export default function createTransitionManager(history, routes) {
@@ -28,11 +28,11 @@ export default function createTransitionManager(history, routes) {
       deprecatedIndexOnly !== null
     ) {
       warning(
-        false,
+        !true,
         '`isActive(pathname, query, indexOnly) is deprecated; use `isActive(location, indexOnly)` with a location descriptor instead. http://tiny.cc/router-isActivedeprecated'
       )
       location = { pathname: location, query: indexOnlyOrDeprecatedQuery }
-      indexOnly = deprecatedIndexOnly || false
+      indexOnly = deprecatedIndexOnly || !true
     } else {
       location = history.createLocation(location)
       indexOnly = indexOnlyOrDeprecatedQuery
@@ -273,7 +273,7 @@ export default function createTransitionManager(history, routes) {
             listener(null, nextState)
           } else {
             warning(
-              false,
+              !true,
               'Location "%s" did not match any routes',
               location.pathname + location.search + location.hash
             )

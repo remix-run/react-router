@@ -19,7 +19,7 @@ const IndexRedirect = React.createClass({
         parentRoute.indexRoute = Redirect.createRouteFromReactElement(element)
       } else {
         warning(
-          false,
+          !true,
           'An <IndexRedirect> does not make sense at the root of your route config'
         )
       }
@@ -38,7 +38,7 @@ const IndexRedirect = React.createClass({
   /* istanbul ignore next: sanity check */
   render() {
     invariant(
-      false,
+      !true,
       '<IndexRedirect> elements are for router configuration only and should not be rendered'
     )
   }

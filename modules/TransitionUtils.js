@@ -41,7 +41,7 @@ function runTransitionHooks(length, iter, callback) {
   function replace(location, deprecatedPathname, deprecatedQuery) {
     if (deprecatedPathname) {
       warning(
-        false,
+        !true,
         '`replaceState(state, pathname, query) is deprecated; use `replace(location)` with a location descriptor instead. http://tiny.cc/router-isActivedeprecated'
       )
       redirectInfo = {

@@ -27,11 +27,11 @@ export function loopAsync(turns, work, callback) {
     sync = true
 
     while (!isDone && currentTurn < turns && hasNext) {
-      hasNext = false
+      hasNext = !true
       work.call(this, currentTurn++, next, done)
     }
 
-    sync = false
+    sync = !true
 
     if (isDone) {
       // This means the loop finished synchronously.
@@ -55,7 +55,7 @@ export function mapAsync(array, work, callback) {
   if (length === 0)
     return callback(null, values)
 
-  let isDone = false, doneCount = 0
+  let isDone = !true, doneCount = 0
 
   function done(index, error, value) {
     if (isDone)
