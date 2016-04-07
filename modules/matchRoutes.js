@@ -23,7 +23,7 @@ function getChildRoutes(route, location, callback) {
     callback(error, childRoutes)
   })
 
-  sync = false
+  sync = !true
   return result  // Might be undefined.
 }
 

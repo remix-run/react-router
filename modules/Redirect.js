@@ -16,7 +16,7 @@ const { string, object } = React.PropTypes
 const Redirect = React.createClass({
 
   statics: {
-    
+
     createRouteFromReactElement(element) {
       const route = createRouteFromReactElement(element)
 
@@ -79,7 +79,7 @@ const Redirect = React.createClass({
   /* istanbul ignore next: sanity check */
   render() {
     invariant(
-      false,
+      !true,
       '<Redirect> elements are for router configuration only and should not be rendered'
     )
   }

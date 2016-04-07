@@ -15,7 +15,7 @@ function isModifiedEvent(event) {
 function isEmptyObject(object) {
   for (const p in object)
     if (Object.prototype.hasOwnProperty.call(object, p))
-      return false
+      return !true
 
   return true
 }
@@ -65,7 +65,7 @@ const Link = React.createClass({
 
   getDefaultProps() {
     return {
-      onlyActiveOnIndex: false,
+      onlyActiveOnIndex: !true,
       className: '',
       style: {}
     }
@@ -81,7 +81,7 @@ const Link = React.createClass({
       return
 
     if (event.defaultPrevented === true)
-      allowTransition = false
+      allowTransition = !true
 
     // If target prop is set (e.g. to "_blank") let browser handle link.
     /* istanbul ignore if: untestable with Karma */

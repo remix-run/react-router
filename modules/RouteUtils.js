@@ -18,7 +18,7 @@ function checkPropTypes(componentName, propTypes, props) {
 
       /* istanbul ignore if: error logging */
       if (error instanceof Error)
-        warning(false, error.message)
+        warning(!true, error.message)
     }
   }
 }
@@ -52,7 +52,7 @@ export function createRouteFromReactElement(element) {
  * nested.
  *
  *   import { Route, createRoutesFromReactChildren } from 'react-router'
- *   
+ *
  *   const routes = createRoutesFromReactChildren(
  *     <Route component={App}>
  *       <Route path="home" component={Dashboard}/>

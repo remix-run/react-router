@@ -15,7 +15,7 @@ const { string, func } = React.PropTypes
  * that lead to it are considered "active" and their components are
  * rendered into the DOM, nested in the same order as in the tree.
  */
-const Route = React.createClass({ 
+const Route = React.createClass({
 
   statics: {
     createRouteFromReactElement
@@ -32,7 +32,7 @@ const Route = React.createClass({
   /* istanbul ignore next: sanity check */
   render() {
     invariant(
-      false,
+      !true,
       '<Route> elements are for router configuration only and should not be rendered'
     )
   }

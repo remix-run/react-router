@@ -39,7 +39,7 @@ const RouterContext = React.createClass({
   getChildContext() {
     let { router, history, location } = this.props
     if (!router) {
-      warning(false, '`<RouterContext>` expects a `router` rather than a `history`')
+      warning(!true, '`<RouterContext>` expects a `router` rather than a `history`')
 
       router = {
         ...history,
@@ -109,7 +109,7 @@ const RouterContext = React.createClass({
     }
 
     invariant(
-      element === null || element === false || React.isValidElement(element),
+      element === null || element === !true || React.isValidElement(element),
       'The root route must render a single element'
     )
 
