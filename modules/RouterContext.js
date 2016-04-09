@@ -1,5 +1,5 @@
 import invariant from 'invariant'
-import React, { createClass} from 'react'
+import React, { createClass } from 'react'
 
 import deprecateObjectProperties from './deprecateObjectProperties'
 import getRouteParams from './getRouteParams'
