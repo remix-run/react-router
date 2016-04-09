@@ -1,5 +1,5 @@
 import invariant from 'invariant'
-import React from 'react'
+import React, { createClass } from 'react'
 
 import deprecateObjectProperties from './deprecateObjectProperties'
 import getRouteParams from './getRouteParams'
@@ -12,7 +12,7 @@ const { array, func, object } = React.PropTypes
  * A <RouterContext> renders the component tree for a given router state
  * and sets the history object and the current location in context.
  */
-const RouterContext = React.createClass({
+const RouterContext = createClass({
 
   propTypes: {
     history: object,

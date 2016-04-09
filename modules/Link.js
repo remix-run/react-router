@@ -1,4 +1,4 @@
-import React from 'react'
+import React, { createClass } from 'react'
 import warning from './routerWarning'
 
 const { bool, object, string, func, oneOfType } = React.PropTypes
@@ -46,7 +46,7 @@ function createLocationDescriptor(to, { query, hash, state }) {
  *
  *   <Link ... query={{ show: true }} state={{ the: 'state' }} />
  */
-const Link = React.createClass({
+const Link = createClass({
 
   contextTypes: {
     router: object

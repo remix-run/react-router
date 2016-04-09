@@ -1,8 +1,8 @@
-import React from 'react'
+import React, { createClass } from 'react'
 import RouterContext from './RouterContext'
 import warning from './routerWarning'
 
-const RoutingContext = React.createClass({
+const RoutingContext = createClass({
   componentWillMount() {
     warning(false, '`RoutingContext` has been renamed to `RouterContext`. Please use `import { RouterContext } from \'react-router\'`. http://tiny.cc/router-routercontext')
   },
