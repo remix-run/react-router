@@ -1,7 +1,8 @@
 import React from 'react'
 import warning from './routerWarning'
+import { to } from './PropTypes'
 
-const { bool, object, string, func, oneOfType } = React.PropTypes
+const { bool, object, string, func } = React.PropTypes
 
 function isLeftClickEvent(event) {
   return event.button === 0
@@ -53,7 +54,7 @@ const Link = React.createClass({
   },
 
   propTypes: {
-    to: oneOfType([ string, object ]).isRequired,
+    to: to.isRequired,
     query: object,
     hash: string,
     state: object,

@@ -26,6 +26,7 @@ export const component = oneOfType([ func, string ])
 export const components = oneOfType([ component, object ])
 export const route = oneOfType([ object, element ])
 export const routes = oneOfType([ route, arrayOf(route) ])
+export const to = oneOfType([ string, object ])
 
 export default {
   falsy,
@@ -33,5 +34,6 @@ export default {
   location,
   component,
   components,
-  route
+  route,
+  to
 }
