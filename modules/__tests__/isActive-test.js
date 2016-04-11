@@ -114,7 +114,7 @@ describe('isActive', function () {
         })
       })
 
-      it('is active with trailing slash on pattern', function (done) {
+      it('is active with extraneous slashes', function (done) {
         render((
           <Router history={createHistory('/parent/child')}>
             <Route path="/parent">
@@ -122,35 +122,7 @@ describe('isActive', function () {
             </Route>
           </Router>
         ), node, function () {
-          expect(this.router.isActive('/parent/child/')).toBe(true)
-          done()
-        })
-      })
-
-      it('is active with trailing slash on location', function (done) {
-        render((
-          <Router history={createHistory('/parent/child/')}>
-            <Route path="/parent">
-              <Route path="child" />
-            </Route>
-          </Router>
-        ), node, function () {
-          expect(this.router.isActive('/parent/child')).toBe(true)
-          expect(this.router.isActive('/parent/child/')).toBe(true)
-          done()
-        })
-      })
-
-      it('is not active with extraneous slashes', function (done) {
-        render((
-          <Router history={createHistory('/parent/child')}>
-            <Route path="/parent">
-              <Route path="child" />
-            </Route>
-          </Router>
-        ), node, function () {
-          expect(this.router.isActive('/parent//child')).toBe(false)
-          expect(this.router.isActive('/parent/child//')).toBe(false)
+          expect(this.router.isActive('/parent////child////')).toBe(true)
           done()
         })
       })
@@ -364,7 +336,7 @@ describe('isActive', function () {
         })
       })
 
-      it('is active with trailing slash on pattern', function (done) {
+      it('is active with extraneous slashes', function (done) {
         render((
           <Router history={createHistory('/parent/child')}>
             <Route path="/parent">
@@ -374,44 +346,8 @@ describe('isActive', function () {
             </Route>
           </Router>
         ), node, function () {
-          expect(this.router.isActive('/parent/child/')).toBe(true)
-          expect(this.router.isActive('/parent/child/', true)).toBe(true)
-          done()
-        })
-      })
-
-      it('is active with trailing slash on location', function (done) {
-        render((
-          <Router history={createHistory('/parent/child/')}>
-            <Route path="/parent">
-              <Route path="child">
-                <IndexRoute />
-              </Route>
-            </Route>
-          </Router>
-        ), node, function () {
-          expect(this.router.isActive('/parent/child')).toBe(true)
-          expect(this.router.isActive('/parent/child', true)).toBe(true)
-          expect(this.router.isActive('/parent/child/')).toBe(true)
-          expect(this.router.isActive('/parent/child/', true)).toBe(true)
-          done()
-        })
-      })
-
-      it('is not active with extraneous slashes', function (done) {
-        render((
-          <Router history={createHistory('/parent/child')}>
-            <Route path="/parent">
-              <Route path="child">
-                <IndexRoute />
-              </Route>
-            </Route>
-          </Router>
-        ), node, function () {
-          expect(this.router.isActive('/parent//child')).toBe(false)
-          expect(this.router.isActive('/parent/child//')).toBe(false)
-          expect(this.router.isActive('/parent//child', true)).toBe(false)
-          expect(this.router.isActive('/parent/child//', true)).toBe(false)
+          expect(this.router.isActive('/parent///child///')).toBe(true)
+          expect(this.router.isActive('/parent///child///', true)).toBe(true)
           done()
         })
       })
@@ -436,7 +372,7 @@ describe('isActive', function () {
         })
       })
 
-      it('is active with trailing slash on pattern', function (done) {
+      it('is active with extraneous slashes', function (done) {
         render((
           <Router history={createHistory('/parent/child')}>
             <Route path="/parent">
@@ -448,48 +384,8 @@ describe('isActive', function () {
             </Route>
           </Router>
         ), node, function () {
-          expect(this.router.isActive('/parent/child/')).toBe(true)
-          expect(this.router.isActive('/parent/child/', true)).toBe(true)
-          done()
-        })
-      })
-
-      it('is active with trailing slash on location', function (done) {
-        render((
-          <Router history={createHistory('/parent/child/')}>
-            <Route path="/parent">
-              <Route path="child">
-                <Route>
-                  <IndexRoute />
-                </Route>
-              </Route>
-            </Route>
-          </Router>
-        ), node, function () {
-          expect(this.router.isActive('/parent/child')).toBe(true)
-          expect(this.router.isActive('/parent/child', true)).toBe(true)
-          expect(this.router.isActive('/parent/child/')).toBe(true)
-          expect(this.router.isActive('/parent/child/', true)).toBe(true)
-          done()
-        })
-      })
-
-      it('is not active with extraneous slashes', function (done) {
-        render((
-          <Router history={createHistory('/parent/child')}>
-            <Route path="/parent">
-              <Route path="child">
-                <Route>
-                  <IndexRoute />
-                </Route>
-              </Route>
-            </Route>
-          </Router>
-        ), node, function () {
-          expect(this.router.isActive('/parent//child')).toBe(false)
-          expect(this.router.isActive('/parent/child//')).toBe(false)
-          expect(this.router.isActive('/parent//child', true)).toBe(false)
-          expect(this.router.isActive('/parent/child//', true)).toBe(false)
+          expect(this.router.isActive('/parent///child///')).toBe(true)
+          expect(this.router.isActive('/parent///child///', true)).toBe(true)
           done()
         })
       })
