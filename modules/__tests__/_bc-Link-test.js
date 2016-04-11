@@ -57,7 +57,7 @@ describe('v1 Link', function () {
               Michael
             </Link>
             <Link
-              to="/hello/ryan" query={{ the: 'query' }}
+              to="hello/ryan" query={{ the: 'query' }}
               activeClassName="active"
             >
               Ryan
