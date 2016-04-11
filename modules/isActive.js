@@ -81,6 +81,13 @@ function getMatchingRouteIndex(pathname, activeRoutes, activeParams) {
  * and params.
  */
 function routeIsActive(pathname, routes, params, indexOnly) {
+  // TODO: This is a bit ugly. It keeps around support for treating pathnames
+  // without preceding slashes as absolute paths, but possibly also works
+  // around the same quirks with basenames as in matchRoutes.
+  if (pathname.charAt(0) !== '/') {
+    pathname = `/${pathname}`
+  }
+
   const i = getMatchingRouteIndex(pathname, routes, params)
 
   if (i === null) {

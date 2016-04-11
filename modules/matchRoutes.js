@@ -167,10 +167,23 @@ function matchRouteDeep(
  * Note: This operation may finish synchronously if no routes have an
  * asynchronous getChildRoutes method.
  */
-function matchRoutes(
+export default function matchRoutes(
   routes, location, callback,
-  remainingPathname=location.pathname, paramNames=[], paramValues=[]
+  remainingPathname, paramNames=[], paramValues=[]
 ) {
+  if (remainingPathname === undefined) {
+    // TODO: This is a little bit ugly, but it works around a quirk in history
+    // that strips the leading slash from pathnames when using basenames with
+    // trailing slashes.
+    if (location.pathname.charAt(0) !== '/') {
+      location = {
+        ...location,
+        pathname: `/${location.pathname}`
+      }
+    }
+    remainingPathname = location.pathname
+  }
+
   loopAsync(routes.length, function (index, next, done) {
     matchRouteDeep(
       routes[index], location, remainingPathname, paramNames, paramValues,
@@ -184,5 +197,3 @@ function matchRoutes(
     )
   }, callback)
 }
-
-export default matchRoutes
