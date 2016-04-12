@@ -49,11 +49,11 @@ const Form = createClass({
 })
 
 function Page() {
-  return <h1>Hey I see you are authenticated.</h1>
+  return <h1>Hey, I see you are authenticated. Welcome!</h1>
 }
 
 function ErrorPage() {
-  return <h1>Oh no! your auth failed!</h1>
+  return <h1>Oh no! Your auth failed!</h1>
 }
 
 function requireCredentials(nextState, replace, next) {
