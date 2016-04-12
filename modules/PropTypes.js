@@ -9,9 +9,11 @@ export function falsy(props, propName, componentName) {
 
 export const history = shape({
   listen: func.isRequired,
-  pushState: func.isRequired,
-  replaceState: func.isRequired,
-  go: func.isRequired
+  push: func.isRequired,
+  replace: func.isRequired,
+  go: func.isRequired,
+  goBack: func.isRequired,
+  goForward: func.isRequired
 })
 
 export const location = shape({
@@ -27,11 +29,18 @@ export const components = oneOfType([ component, object ])
 export const route = oneOfType([ object, element ])
 export const routes = oneOfType([ route, arrayOf(route) ])
 
+export const router = shape({
+  push: func.isRequired,
+  replace: func.isRequired,
+  go: func.isRequired,
+  goBack: func.isRequired,
+  goForward: func.isRequired,
+  setRouteLeaveHook: func.isRequired,
+  isActive: func.isRequired
+})
+
 export default {
-  falsy,
   history,
   location,
-  component,
-  components,
-  route
+  router
 }
