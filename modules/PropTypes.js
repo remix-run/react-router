@@ -40,10 +40,7 @@ export const router = shape({
 })
 
 export default {
-  falsy,
   history,
   location,
-  component,
-  components,
-  route
+  router
 }
