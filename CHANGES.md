@@ -1,6 +1,11 @@
 ## [HEAD]
 > Unreleased
 
+- **Minor:** Support trailing slashes, not extraneous ones ([#3285])
+- **Minor:** Updated PropTypes ([#3218])
+
+[#3285]: https://github.com/reactjs/react-router/pull/3285
+[#3218]: https://github.com/reactjs/react-router/pull/3218
 [HEAD]: https://github.com/reactjs/react-router/compare/latest...HEAD
 
 ## [v2.1.0]
