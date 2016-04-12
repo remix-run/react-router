@@ -162,6 +162,16 @@ describe('server rendering', function () {
     })
   })
 
+  it('supports basenames with trailing slash', function (done) {
+    match({ routes, location: '/dashboard', basename: '/nasebame/' }, function (error, redirectLocation, renderProps) {
+      const string = renderToString(
+        <RouterContext {...renderProps} />
+      )
+      expect(string).toMatch(/\/nasebame/)
+      done()
+    })
+  })
+
   describe('server/client consistency', function () {
     // Just render to static markup here to avoid having to normalize markup.
 
