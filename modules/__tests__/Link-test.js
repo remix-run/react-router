@@ -29,6 +29,15 @@ describe('A <Link>', function () {
     node = document.createElement('div')
   })
 
+  it('should not render unnecessary class=""', function () {
+    render((
+      <Link to="/something" />
+    ), node, function () {
+      const a = node.querySelector('a')
+      expect(a.hasAttribute('class')).toBe(false)
+    })
+  })
+
   it('knows how to make its href', function () {
     class LinkWrapper extends Component {
       render() {
