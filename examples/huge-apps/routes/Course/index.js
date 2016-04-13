@@ -11,7 +11,7 @@ module.exports = {
     })
   },
 
-  getComponent(location, cb) {
+  getComponent(nextState, cb) {
     require.ensure([], (require) => {
       cb(null, require('./components/Course'))
     })

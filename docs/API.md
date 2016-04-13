@@ -84,7 +84,7 @@ A function used to convert an object from [`<Link>`](#link)s or calls to
 A function used to convert a query string into an object that gets passed to route component props.
 
 ##### `onError(error)`
-While the router is matching, errors may bubble up, here is your opportunity to catch and deal with them. Typically these will come from async features like [`route.getComponents`](#getcomponentslocation-callback), [`route.getIndexRoute`](#getindexroutelocation-callback), and [`route.getChildRoutes`](#getchildrouteslocation-callback).
+While the router is matching, errors may bubble up, here is your opportunity to catch and deal with them. Typically these will come from async features like [`route.getComponents`](#getcomponentsnextstate-callback), [`route.getIndexRoute`](#getindexroutelocation-callback), and [`route.getChildRoutes`](#getchildrouteslocation-callback).
 
 ##### `onUpdate()`
 Called whenever the router updates its state in response to URL changes.
@@ -300,7 +300,7 @@ class Users extends React.Component {
 }
 ```
 
-##### `getComponent(location, callback)`
+##### `getComponent(nextState, callback)`
 Same as `component` but asynchronous, useful for
 code-splitting.
 
@@ -308,13 +308,13 @@ code-splitting.
 `cb(err, component)`
 
 ```js
-<Route path="courses/:courseId" getComponent={(location, cb) => {
+<Route path="courses/:courseId" getComponent={(nextState, cb) => {
   // do asynchronous stuff to find the components
   cb(null, Course)
 }} />
 ```
 
-##### `getComponents(location, callback)`
+##### `getComponents(nextState, callback)`
 Same as `components` but asynchronous, useful for
 code-splitting.
 
@@ -322,7 +322,7 @@ code-splitting.
 `cb(err, components)`
 
 ```js
-<Route path="courses/:courseId" getComponents={(location, cb) => {
+<Route path="courses/:courseId" getComponents={(nextState, cb) => {
   // do asynchronous stuff to find the components
   cb(null, {sidebar: CourseSidebar, content: Course})
 }} />
