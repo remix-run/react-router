@@ -1,12 +1,30 @@
-## [HEAD]
-> Unreleased
+## [v2.2.0]
+> April 13, 2016
 
-- **Minor:** Support trailing slashes, not extraneous ones ([#3285])
-- **Minor:** Updated PropTypes ([#3218])
+- **Feature/Deprecation:** Call `getComponent` and `getComponents` with `nextState`; deprecate accessing `location` directly in favor of `nextState.location` there ([#3298], [Upgrade Guide](/upgrade-guides/v2.2.0.md#getcomponent-getcomponents-signature))
+- **Bugfix:** Do not ignore extraneous slashes in matching ([#3285])
+- **Bugfix:** Do not unnecessarily set empty `className` on `<Link>` ([#3288])
+- **Minor:** Update PropTypes ([#3218])
+- **Minor:** Move ES module build from `es6/` to `es/` ([#3295])
+- **Minor:** Do not include unused deprecation logic in production builds ([#3296])
 
-[#3285]: https://github.com/reactjs/react-router/pull/3285
+[v2.2.0]: https://github.com/reactjs/react-router/compare/v2.1.1...v2.2.0
 [#3218]: https://github.com/reactjs/react-router/pull/3218
-[HEAD]: https://github.com/reactjs/react-router/compare/latest...HEAD
+[#3285]: https://github.com/reactjs/react-router/pull/3285
+[#3288]: https://github.com/reactjs/react-router/pull/3288
+[#3295]: https://github.com/reactjs/react-router/pull/3295
+[#3296]: https://github.com/reactjs/react-router/pull/3296
+[#3298]: https://github.com/reactjs/react-router/pull/3298
+
+
+## [v2.1.1]
+> April 11, 2016
+
+- **Bugfix:** Remove unintentionally released code change ([#3280])
+
+[v2.1.1]: https://github.com/reactjs/react-router/compare/v2.1.0...v2.1.1
+[#3280]: https://github.com/reactjs/react-router/pull/3280
+
 
 ## [v2.1.0]
 > April 11, 2016
@@ -15,10 +33,10 @@
 - **Minor:** Include full warning messages in non-minified UMD build ([#3213])
 - **Minor:** Speed up path matching ([#3217])
 
+[v2.1.0]: https://github.com/reactjs/react-router/compare/v2.0.1...v2.1.0
 [#3108]: https://github.com/reactjs/react-router/pull/3108
 [#3213]: https://github.com/reactjs/react-router/pull/3213
 [#3217]: https://github.com/reactjs/react-router/pull/3217
-[v2.1.0]: https://github.com/reactjs/react-router/compare/v2.0.1...v2.1.0
 
 ## [v2.0.1]
 > March 9, 2016
