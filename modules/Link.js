@@ -117,8 +117,13 @@ const Link = React.createClass({
 
       if (activeClassName || (activeStyle != null && !isEmptyObject(activeStyle))) {
         if (router.isActive(location, onlyActiveOnIndex)) {
-          if (activeClassName)
-            props.className = `${props.className || ''} ${activeClassName}`.trim()
+          if (activeClassName) {
+            if (props.className) {
+              props.className += ` ${activeClassName}`
+            } else {
+              props.className = activeClassName
+            }
+          }
 
           if (activeStyle)
             props.style = { ...props.style, ...activeStyle }
