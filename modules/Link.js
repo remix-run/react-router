@@ -66,7 +66,6 @@ const Link = React.createClass({
   getDefaultProps() {
     return {
       onlyActiveOnIndex: false,
-      className: '',
       style: {}
     }
   },
@@ -119,7 +118,7 @@ const Link = React.createClass({
       if (activeClassName || (activeStyle != null && !isEmptyObject(activeStyle))) {
         if (router.isActive(location, onlyActiveOnIndex)) {
           if (activeClassName)
-            props.className += props.className === '' ? activeClassName : ` ${activeClassName}`
+            props.className = `${props.className || ''} ${activeClassName}`.trim()
 
           if (activeStyle)
             props.style = { ...props.style, ...activeStyle }
