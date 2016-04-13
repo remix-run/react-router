@@ -1,20 +1,20 @@
 import warning from './routerWarning'
 
+export let canUseMembrane = false
+
 // No-op by default.
 let deprecateObjectProperties = object => object
 
 if (__DEV__) {
-  let useMembrane = false
-
   try {
     if (Object.defineProperty({}, 'x', { get() { return true } }).x) {
-      useMembrane = true
+      canUseMembrane = true
     }
   /* eslint-disable no-empty */
   } catch(e) {}
   /* eslint-enable no-empty */
 
-  if (useMembrane) {
+  if (canUseMembrane) {
     deprecateObjectProperties = (object, message) => {
       // Wrap the deprecated object in a membrane to warn on property access.
       const membrane = {}
@@ -39,8 +39,6 @@ if (__DEV__) {
         // ownKeys trap on proxies is not universal, even among browsers that
         // otherwise support proxies.
         Object.defineProperty(membrane, prop, {
-          configurable: false,
-          enumerable: false,
           get() {
             warning(false, message)
             return object[prop]
