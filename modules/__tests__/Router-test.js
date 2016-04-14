@@ -331,8 +331,11 @@ describe('Router', function () {
 
     it('should support getComponent', function (done) {
       const Component = () => <div />
-      const getComponent = (nextState, callback) => {
+
+      function getComponent(nextState, callback) {
+        expect(this.getComponent).toBe(getComponent)
         expect(nextState.location.pathname).toBe('/')
+
         setTimeout(() => callback(null, Component))
       }
 
@@ -352,8 +355,10 @@ describe('Router', function () {
       const foo = () => <div />
       const bar = () => <div />
 
-      const getComponents = (nextState, callback) => {
+      function getComponents(nextState, callback) {
+        expect(this.getComponents).toBe(getComponents)
         expect(nextState.location.pathname).toBe('/')
+
         setTimeout(() => callback(null, { foo, bar }))
       }
 
