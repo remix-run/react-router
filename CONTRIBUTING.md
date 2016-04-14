@@ -31,6 +31,8 @@ If you need a bug fixed and nobody is fixing it, it is your responsibility to fi
 <a name="pr"/>
 ## Making a Pull Request?
 
+Pull requests need only the :+1: of two or more collaborators to be merged; when the PR author is a collaborator, that counts as one.
+
 ### Tests
 
 All commits that fix bugs or add features need a test.
