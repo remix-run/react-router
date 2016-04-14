@@ -1,3 +1,12 @@
+## [v2.2.2]
+> April 14, 2016
+
+- **Bugfix:** Fix edge cases with continuing matches after pathless routes ([#3308])
+
+[v2.2.2]: https://github.com/reactjs/react-router/compare/v2.2.1...v2.2.2
+[#3308]: https://github.com/reactjs/react-router/pull/3308
+
+
 ## [v2.2.1]
 > April 14, 2016
 
