@@ -75,6 +75,8 @@ function routeIsActive(pathname, routes, params) {
     const pattern = route.path || ''
 
     if (pattern.charAt(0) === '/') {
+      // This code path is deprecated, but we the deprecation warning will
+      // actually be hit from matchRoutes, not from here.
       remainingPathname = pathname
       paramNames = []
       paramValues = []

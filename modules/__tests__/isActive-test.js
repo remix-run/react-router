@@ -6,6 +6,7 @@ import IndexRoute from '../IndexRoute'
 import Router from '../Router'
 import Route from '../Route'
 import qs from 'qs'
+import shouldWarn from './shouldWarn'
 
 describe('isActive', function () {
 
@@ -195,6 +196,10 @@ describe('isActive', function () {
   })
 
   describe('a pathname that matches a parent route, but not the URL directly', function () {
+    beforeEach(() => {
+      shouldWarn('deprecated')
+    })
+
     describe('with no query', function () {
       it('is active', function (done) {
         render((
@@ -257,6 +262,10 @@ describe('isActive', function () {
   })
 
   describe('a pathname that matches a nested absolute path', function () {
+    beforeEach(() => {
+      shouldWarn('deprecated')
+    })
+
     describe('with no query', function () {
       it('is active', function (done) {
         render((

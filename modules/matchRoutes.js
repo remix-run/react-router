@@ -80,6 +80,13 @@ function matchRouteDeep(
   let pattern = route.path || ''
 
   if (pattern.charAt(0) === '/') {
+    if (remainingPathname !== location.pathname) {
+      warning(
+        false,
+        'Nested routes with absolute paths are deprecated. Nest those routes under pathless routes instead. http://tiny.cc/router-decouple-ui'
+      )
+    }
+
     remainingPathname = location.pathname
     paramNames = []
     paramValues = []
