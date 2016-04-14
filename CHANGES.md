@@ -1,3 +1,12 @@
+## [HEAD]
+> Unreleased
+
+- **Minor:** Speed up checking index path active status ([#3313])
+
+[HEAD]: https://github.com/reactjs/react-router/compare/latest...master
+[#3313]: https://github.com/reactjs/react-router/pull/3313
+
+
 ## [v2.2.2]
 > April 14, 2016
 
