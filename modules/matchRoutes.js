@@ -85,13 +85,17 @@ function matchRouteDeep(
     paramValues = []
   }
 
-  if (remainingPathname !== null) {
+  // Only try to match the path if the route actually has a pattern, and if
+  // we're not just searching for potential nested absolute paths.
+  if (remainingPathname !== null && pattern) {
     const matched = matchPattern(pattern, remainingPathname)
     remainingPathname = matched.remainingPathname
     paramNames = [ ...paramNames, ...matched.paramNames ]
     paramValues = [ ...paramValues, ...matched.paramValues ]
 
-    if (remainingPathname === '' && route.path) {
+    // By assumption, pattern is non-empty here, which is the prerequisite for
+    // actually terminating a match.
+    if (remainingPathname === '') {
       const match = {
         routes: [ route ],
         params: createParams(paramNames, paramValues)
@@ -118,6 +122,7 @@ function matchRouteDeep(
           callback(null, match)
         }
       })
+
       return
     }
   }
