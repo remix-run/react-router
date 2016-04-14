@@ -33,7 +33,7 @@ function getComponentsForRoute(nextState, route, callback) {
       Object.assign(nextStateWithLocation, location)
     }
 
-    getComponent(nextStateWithLocation, callback)
+    getComponent.call(route, nextStateWithLocation, callback)
     return
   }
 
