@@ -114,6 +114,12 @@ describe('isActive', function () {
         })
       })
 
+      // This test case is a bit odd. A route with path /parent/child/ won't
+      // match /parent/child because of the trailing slash mismatch. However,
+      // this doesn't matter in practice, since it only comes up if your
+      // isActive pattern has a trailing slash but your route pattern doesn't,
+      // which would be an utterly bizarre thing to do.
+
       it('is active with trailing slash on pattern', function (done) {
         render((
           <Router history={createHistory('/parent/child')}>
