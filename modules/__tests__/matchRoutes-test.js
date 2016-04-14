@@ -346,4 +346,17 @@ describe('matchRoutes', function () {
       done()
     })
   })
+
+  it('supports splat under pathless route at root', function (done) {
+    const routes = createRoutes(
+      <Route>
+        <Route path="*" />
+      </Route>
+    )
+
+    matchRoutes(routes, createLocation('/'), function (error, match) {
+      expect(match).toExist()
+      done()
+    })
+  })
 })
