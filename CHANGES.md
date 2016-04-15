@@ -1,3 +1,11 @@
+## [v2.2.4]
+> April 15, 2016
+
+- **Noop:** Publish again to npm to work around missing tarball problem
+
+[v2.2.4]: https://github.com/reactjs/react-router/compare/v2.2.3...v2.2.4
+
+
 ## [v2.2.3]
 > April 15, 2016
 
