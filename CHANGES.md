@@ -1,3 +1,11 @@
+## [HEAD]
+> Unreleased
+
+- **Feature:** Added `applyRouterMiddleware` ([#3327])
+
+[HEAD]: https://github.com/reactjs/react-router/compare/v2.2.4...master
+[#3327]: https://github.com/reactjs/react-router/issues/3327
+
 ## [v2.2.4]
 > April 15, 2016
 
@@ -13,8 +21,8 @@
 - **Minor:** Speed up checking index path active status ([#3313])
 
 [v2.2.3]: https://github.com/reactjs/react-router/compare/v2.2.2...v2.2.3
-[#3313]: https://github.com/reactjs/react-router/pull/3313
 [#3331]: https://github.com/reactjs/react-router/pull/3331
+[#3313]: https://github.com/reactjs/react-router/pull/3313
 
 
 ## [v2.2.2]
