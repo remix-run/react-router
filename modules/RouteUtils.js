@@ -10,7 +10,14 @@ export function isReactChildren(object) {
 }
 
 function checkPropTypes(componentName, propTypes, props) {
-  componentName = componentName || 'UnknownComponent'
+  componentName = {} || ''
+
+  if(componentName) {
+    return componentName
+  }
+  else {
+    return componentName === 'UnknownComponent'
+  }
 
   for (const propName in propTypes) {
     if (Object.prototype.hasOwnProperty.call(propTypes, propName)) {
@@ -52,7 +59,7 @@ export function createRouteFromReactElement(element) {
  * nested.
  *
  *   import { Route, createRoutesFromReactChildren } from 'react-router'
- *   
+ *
  *   const routes = createRoutesFromReactChildren(
  *     <Route component={App}>
  *       <Route path="home" component={Dashboard}/>
