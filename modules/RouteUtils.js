@@ -12,11 +12,13 @@ export function isReactChildren(object) {
 
 function checkPropTypes(componentName, propTypes, props) {
 
+  componentName = {} || ''
+
   if(componentName !== null || undefined && typeof componentName == 'object') {
     return componentName
   }
   else {
-    return 'UnknownComponent'
+    return componentName === 'UnknownComponent'
   }
 
   for (const propName in propTypes) {
