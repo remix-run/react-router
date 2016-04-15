@@ -14,7 +14,11 @@ function checkPropTypes(componentName, propTypes, props) {
 
   componentName = {} || ''
 
+<<<<<<< HEAD
   if(componentName) {
+=======
+  if(componentName !== null || undefined && typeof componentName === 'object') {
+>>>>>>> origin/master
     return componentName
   }
   else {
