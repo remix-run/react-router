@@ -1,5 +1,6 @@
 var expect = require('expect');
 var React = require('react');
+var ReactDOMServer = require('react-dom/server');
 var Router = require('../../index');
 var NotFoundRoute = require('../NotFoundRoute');
 var Route = require('../Route');
@@ -11,7 +12,7 @@ describe('NotFoundRoute', function () {
     it('renders when no other routes match', function () {
       var routes = <NotFoundRoute handler={Bar}/>;
       Router.run(routes, '/ryans-patience', function (Handler) {
-        var html = React.renderToString(<Handler />);
+        var html = ReactDOMServer.renderToString(<Handler />);
         expect(html).toMatch(/Bar/);
       });
     });
@@ -27,7 +28,7 @@ describe('NotFoundRoute', function () {
       );
 
       Router.run(routes, '/ryans-mind', function (Handler) {
-        var html = React.renderToString(<Handler/>);
+        var html = ReactDOMServer.renderToString(<Handler/>);
         expect(html).toMatch(/Bar/);
       });
     });
@@ -46,7 +47,7 @@ describe('NotFoundRoute', function () {
 
     it('renders the matching parents and itself', function () {
       Router.run(routes, '/ryans/compassion', function (Handler) {
-        var html = React.renderToString(<Handler />);
+        var html = ReactDOMServer.renderToString(<Handler />);
         expect(html).toMatch(/Nested/);
         expect(html).toMatch(/Bar/);
       });
@@ -54,7 +55,7 @@ describe('NotFoundRoute', function () {
 
     it('does not match if a sibling matches', function () {
       Router.run(routes, '/ryans/happiness', function (Handler) {
-        var html = React.renderToString(<Handler />);
+        var html = ReactDOMServer.renderToString(<Handler />);
         expect(html).toMatch(/Nested/);
         expect(html).toMatch(/Foo/);
       });
@@ -71,7 +72,7 @@ describe('NotFoundRoute', function () {
       );
 
       Router.run(routes, '/ryans-mind', function (Handler) {
-        var html = React.renderToString(<Handler/>);
+        var html = ReactDOMServer.renderToString(<Handler/>);
         expect(html).toMatch(/Bar/);
       });
     });

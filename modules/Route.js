@@ -1,4 +1,4 @@
-var assign = require('react/lib/Object.assign');
+var assign = require('object-assign');
 var invariant = require('invariant');
 var warning = require('./warning');
 var PathUtils = require('./PathUtils');

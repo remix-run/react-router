@@ -1,13 +1,15 @@
 var assert = require('assert');
 var expect = require('expect');
-var React = require('react/addons');
+var React = require('react');
+var ReactTestUtils = require('react-addons-test-utils')
+var ReactDOM = require('react-dom');
 var Router = require('../../index');
 var Route = require('../Route');
 var Link = require('../Link');
 var RouteHandler = require('../RouteHandler');
 var TestLocation = require('../../locations/TestLocation');
 var { Foo, Bar } = require('../../TestUtils');
-var { click } = React.addons.TestUtils.Simulate;
+var { click } = ReactTestUtils.Simulate;
 
 describe('A Link', function () {
   describe('with params and a query', function () {
@@ -27,7 +29,7 @@ describe('A Link', function () {
       var location = new TestLocation([ '/link' ]);
 
       Router.run(routes, location, function (Handler) {
-        React.render(<Handler/>, div, function () {
+        ReactDOM.render(<Handler/>, div, function () {
           var a = div.querySelector('a');
           expect(a.getAttribute('href')).toEqual('/foo/baz?qux=quux');
         });
@@ -89,7 +91,7 @@ describe('A Link', function () {
       });
 
       Router.run(routes, location, function (Handler) {
-        React.render(<Handler/>, div, function () {
+        ReactDOM.render(<Handler/>, div, function () {
           steps.shift()();
         });
       });
@@ -148,7 +150,7 @@ describe('A Link', function () {
       });
 
       Router.run(routes, location, function (Handler) {
-        React.render(<Handler/>, div, function () {
+        ReactDOM.render(<Handler/>, div, function () {
           steps.shift()();
         });
       });
@@ -176,7 +178,7 @@ describe('A Link', function () {
       var location = new TestLocation([ '/link' ]);
 
       Router.run(routes, location, function (Handler) {
-        React.render(<Handler/>, div, function () {
+        ReactDOM.render(<Handler/>, div, function () {
           click(div.querySelector('a'));
         });
       });
@@ -213,7 +215,7 @@ describe('A Link', function () {
       });
 
       Router.run(routes, location, function (Handler) {
-        React.render(<Handler/>, div, function () {
+        ReactDOM.render(<Handler/>, div, function () {
           steps.shift()();
         });
       });

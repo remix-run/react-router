@@ -1,6 +1,6 @@
 /* jshint -W084 */
 var React = require('react');
-var assign = require('react/lib/Object.assign');
+var assign = require('object-assign');
 var warning = require('./warning');
 var DefaultRoute = require('./components/DefaultRoute');
 var NotFoundRoute = require('./components/NotFoundRoute');
