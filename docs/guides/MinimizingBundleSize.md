@@ -28,4 +28,12 @@ The public API available in this manner is defined as the set of imports availab
 
 ## Use a Bundler with ES2015 Module Support
 
-React Router offers a ES2015 module build under `es6/` and defines a `jsnext:main` entry point. If you are using a bundler that supports ES2015 modules and tree-shaking such as webpack 2 or Rollup, you can directly import from `react-router`, as long as you are correctly resolving to the ES2015 module build.
+React Router offers a ES2015 module build and defines a `jsnext:main` entry point. Only if you are using a bundler that supports ES2015 modules and tree-shaking such as webpack 2 or Rollup, you can directly import from `react-router`, as long as you are correctly resolving to the ES2015 module build. Specifically, in those cases, you can write
+
+```js
+import { Link, Route, Router } from 'react-router'
+```
+
+Tree-shaking will ensure that only the relevant modules will be included in your bundle.
+
+**Note:** Please do not import from the subdirectory with the ES module build directly. If you are using webpack 2, please add `jsnext:main` to `resolve.mainFields` (or `resolve.packageMains` for older versions of webpack 2).
