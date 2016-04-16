@@ -14,9 +14,7 @@ Please read https://reactjs.org/ and the Code of Conduct before opening an issue
 <a name="bug"/>
 ## Think You Found a Bug?
 
-Please provide a test case of some sort. Best is a pull request with a failing test. Next is a link to codepen/jsbin or repository that illustrates the bug. Finally, some copy/pastable code is acceptable.
-
-If you don't provide a test case, the issue will be closed.
+Please provide a test case of some sort. Best is a pull request with a failing test. Next is a link to CodePen/JS Bin or repository that illustrates the bug. Finally, some copy/pastable code is acceptable.
 
 <a name="api"/>
 ## Proposing New or Changed API?
