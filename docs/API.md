@@ -171,44 +171,58 @@ It also provides a `router` object on [context](https://facebook.github.io/react
 
 Contains data and methods relevant to routing. Most useful for imperatively transitioning around the application.
 
-To use it, you must signal to React that you need it by declaring your use of it in your component:
+To use it, you must signal to React that you need it by declaring your use of it in your component via `contextTypes`:
 
 ```js
 var MyComponent = React.createClass({
   contextTypes: {
-    router: Router.PropTypes.router
+    router: routerShape.isRequired
   },
-  render: function() {
-    // here, you can use `this.context.router`
-  }
-});
 
+  render: function() {
+    // Here, you can use this.context.router.
+  }
+})
 ```
 
-Using `context.router` in combination with ES6 classes requires a different pattern (note the use of the `static` keyword):
+To use `context.router` on a component declared as an ES2015 class, define `contextTypes` as a static property of the class:
+
+```js
+class MyComponent extends React.Component {
+  render() {
+    // Here, you can use this.context.router.
+  }
+}
+
+MyComponent.contextTypes = {
+  router: routerShape.isRequired
+}
+```
+
+If you are using the class properties proposal, you can instead write:
 
 ```js
 class MyComponent extends React.Component {
   static contextTypes = {
-    router: Router.PropTypes.router
+    router: routerShape.isRequired
   }
 
-  render: function() {
-    // here, you can use `this.context.router`
+  render() {
+    // Here, you can use this.context.router.
   }
-});
-
+}
 ```
 
-Finally, you can use `context.router` with
-[stateless function components](https://facebook.github.io/react/docs/reusable-components.html#stateless-functions):
+To use `context.router` with
+[stateless function components](https://facebook.github.io/react/docs/reusable-components.html#stateless-functions), declare `contextTypes` as a static property of the component function:
 
 ```js
 function MyComponent(props, context) {
-  // here, you can use `context.router`
+  // Here, you can use context.router.
 }
+
 MyComponent.contextTypes = {
-  router: Router.PropTypes.router
+  router: routerShape.isRequired
 }
 ```
 
