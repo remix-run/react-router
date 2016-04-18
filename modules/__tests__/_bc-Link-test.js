@@ -4,11 +4,13 @@ import { Simulate } from 'react-addons-test-utils'
 import { render } from 'react-dom'
 import execSteps from './execSteps'
 import createHistory from 'history/lib/createMemoryHistory'
+import useRouterHistory from '../useRouterHistory'
 import Router from '../Router'
 import Route from '../Route'
 import Link from '../Link'
 import shouldWarn from './shouldWarn'
 
+const createRouterHistory = useRouterHistory(createHistory)
 const { click } = Simulate
 
 describe('v1 Link', function () {
@@ -36,91 +38,12 @@ describe('v1 Link', function () {
     }
 
     render((
-      <Router history={createHistory('/')}>
+      <Router history={createRouterHistory('/')}>
         <Route path="/" component={LinkWrapper} />
       </Router>
     ), node, function () {
       const a = node.querySelector('a')
       expect(a.getAttribute('href')).toEqual('/hello/michael?the=query#the-hash')
-    })
-  })
-
-  describe('with params', function () {
-    class App extends Component {
-      render() {
-        return (
-          <div>
-            <Link
-              to="/hello/michael"
-              activeClassName="active"
-            >
-              Michael
-            </Link>
-            <Link
-              to="hello/ryan" query={{ the: 'query' }}
-              activeClassName="active"
-            >
-              Ryan
-            </Link>
-          </div>
-        )
-      }
-    }
-
-    it('is active when its params match', function (done) {
-      render((
-        <Router history={createHistory('/hello/michael')}>
-          <Route path="/" component={App}>
-            <Route path="hello/:name" component={Hello} />
-          </Route>
-        </Router>
-      ), node, function () {
-        const a = node.querySelectorAll('a')[0]
-        expect(a.className.trim()).toEqual('active')
-        done()
-      })
-    })
-
-    it('is not active when its params do not match', function (done) {
-      render((
-        <Router history={createHistory('/hello/michael')}>
-          <Route path="/" component={App}>
-            <Route path="hello/:name" component={Hello} />
-          </Route>
-        </Router>
-      ), node, function () {
-        const a = node.querySelectorAll('a')[1]
-        expect(a.className.trim()).toEqual('')
-        done()
-      })
-    })
-
-    it('is active when its params and query match', function (done) {
-      render((
-        <Router history={createHistory('/hello/ryan?the=query')}>
-          <Route path="/" component={App}>
-            <Route path="hello/:name" component={Hello} />
-          </Route>
-        </Router>
-      ), node, function () {
-        const a = node.querySelectorAll('a')[1]
-        expect(a.className.trim()).toEqual('active')
-        done()
-      })
-    })
-
-    it('is not active when its query does not match', function (done) {
-      render((
-        <Router history={createHistory('/hello/ryan?the=other+query')}>
-          <Route path="/" component={App}>
-            <Route path="hello/:name" component={Hello} />
-          </Route>
-        </Router>
-      ), node, function () {
-        const a = node.querySelectorAll('a')[1]
-        expect(a.className.trim()).toEqual('')
-        done()
-      })
     })
   })
 
@@ -134,7 +57,7 @@ describe('v1 Link', function () {
       }
     }
 
-    const history = createHistory('/')
+    const history = createRouterHistory('/')
     const spy = spyOn(history, 'push').andCallThrough()
 
     const steps = [

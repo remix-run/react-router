@@ -3,7 +3,7 @@ import invariant from 'invariant'
 import createMemoryHistory from './createMemoryHistory'
 import createTransitionManager from './createTransitionManager'
 import { createRoutes } from './RouteUtils'
-import { createRouterObject, createRoutingHistory } from './RouterUtils'
+import { createRouterObject } from './RouterUtils'
 
 /**
  * A high-level API to be used for server-side rendering.
@@ -40,7 +40,7 @@ function match({ history, routes, location, ...options }, callback) {
   }
 
   const router = createRouterObject(history, transitionManager)
-  history = createRoutingHistory(history, transitionManager)
+  history = { ...history, ...transitionManager }
 
   transitionManager.match(location, function (error, redirectLocation, nextState) {
     callback(

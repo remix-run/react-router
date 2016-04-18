@@ -2,11 +2,13 @@ import expect from 'expect'
 import React from 'react'
 import { render, unmountComponentAtNode } from 'react-dom'
 import createHistory from 'history/lib/createMemoryHistory'
+import useRouterHistory from '../useRouterHistory'
 import IndexRoute from '../IndexRoute'
 import Router from '../Router'
 import Route from '../Route'
-import qs from 'qs'
 import shouldWarn from './shouldWarn'
+
+const createRouterHistory = useRouterHistory(createHistory)
 
 describe('v1 isActive', function () {
 
@@ -24,23 +26,10 @@ describe('v1 isActive', function () {
   })
 
   describe('a pathname that matches the URL', function () {
-    describe('with no query', function () {
-      it('is active', function (done) {
-        render((
-          <Router history={createHistory('/home?the=query')}>
-            <Route path="/home" />
-          </Router>
-        ), node, function () {
-          expect(this.history.isActive('/home')).toBe(true)
-          done()
-        })
-      })
-    })
-
     describe('with a query that also matches', function () {
       it('is active', function (done) {
         render((
-          <Router history={createHistory('/home?the=query')}>
+          <Router history={createRouterHistory('/home?the=query')}>
             <Route path="/home" />
           </Router>
         ), node, function () {
@@ -53,7 +42,7 @@ describe('v1 isActive', function () {
     describe('with a query that also matches by value, but not by type', function () {
       it('is active', function (done) {
         render((
-          <Router history={createHistory('/home?the=query&n=2&show=false')}>
+          <Router history={createRouterHistory('/home?the=query&n=2&show=false')}>
             <Route path="/home" />
           </Router>
         ), node, function () {
@@ -66,7 +55,7 @@ describe('v1 isActive', function () {
     describe('with a query that does not match', function () {
       it('is not active', function (done) {
         render((
-          <Router history={createHistory('/home?the=query')}>
+          <Router history={createRouterHistory('/home?the=query')}>
             <Route path="/home" />
           </Router>
         ), node, function () {
@@ -81,7 +70,7 @@ describe('v1 isActive', function () {
     describe('on the child', function () {
       it('is active for the child and the parent', function (done) {
         render((
-          <Router history={createHistory('/parent/child')}>
+          <Router history={createRouterHistory('/parent/child')}>
             <Route path="/parent">
               <Route path="child" />
             </Route>
@@ -94,38 +83,12 @@ describe('v1 isActive', function () {
           done()
         })
       })
-
-      it('is not active with extraneous slashes', function (done) {
-        render((
-          <Router history={createHistory('/parent/child')}>
-            <Route path="/parent">
-              <Route path="child" />
-            </Route>
-          </Router>
-        ), node, function () {
-          expect(this.history.isActive('/parent////child////')).toBe(false)
-          done()
-        })
-      })
-
-      it('is not active with missing slashes', function (done) {
-        render((
-          <Router history={createHistory('/parent/child')}>
-            <Route path="/parent">
-              <Route path="child" />
-            </Route>
-          </Router>
-        ), node, function () {
-          expect(this.history.isActive('/parentchild')).toBe(false)
-          done()
-        })
-      })
     })
 
     describe('on the parent', function () {
       it('is active for the parent', function (done) {
         render((
-          <Router history={createHistory('/parent')}>
+          <Router history={createRouterHistory('/parent')}>
             <Route path="/parent">
               <Route path="child" />
             </Route>
@@ -145,7 +108,7 @@ describe('v1 isActive', function () {
     describe('with no query', function () {
       it('is active', function (done) {
         render((
-          <Router history={createHistory('/absolute')}>
+          <Router history={createRouterHistory('/absolute')}>
             <Route path="/home">
               <Route path="/absolute" />
             </Route>
@@ -161,7 +124,7 @@ describe('v1 isActive', function () {
     describe('with a query that also matches', function () {
       it('is active', function (done) {
         render((
-          <Router history={createHistory('/absolute?the=query')}>
+          <Router history={createRouterHistory('/absolute?the=query')}>
             <Route path="/home">
               <Route path="/absolute" />
             </Route>
@@ -177,7 +140,7 @@ describe('v1 isActive', function () {
     describe('with a query that does not match', function () {
       it('is active', function (done) {
         render((
-          <Router history={createHistory('/absolute?the=query')}>
+          <Router history={createRouterHistory('/absolute?the=query')}>
             <Route path="/home">
               <Route path="/absolute" />
             </Route>
@@ -195,7 +158,7 @@ describe('v1 isActive', function () {
     describe('with no query', function () {
       it('is active', function (done) {
         render((
-          <Router history={createHistory('/absolute')}>
+          <Router history={createRouterHistory('/absolute')}>
             <Route path="/home">
               <Route path="/absolute" />
             </Route>
@@ -213,7 +176,7 @@ describe('v1 isActive', function () {
     describe('with no query', function () {
       it('is active', function (done) {
         render((
-          <Router history={createHistory('/home')}>
+          <Router history={createRouterHistory('/home')}>
             <Route path="/home">
               <IndexRoute />
             </Route>
@@ -229,7 +192,7 @@ describe('v1 isActive', function () {
     describe('with a query that also matches', function () {
       it('is active', function (done) {
         render((
-          <Router history={createHistory('/home?the=query')}>
+          <Router history={createRouterHistory('/home?the=query')}>
             <Route path="/home">
               <IndexRoute />
             </Route>
@@ -245,7 +208,7 @@ describe('v1 isActive', function () {
     describe('with a query that does not match', function () {
       it('is not active', function (done) {
         render((
-          <Router history={createHistory('/home?the=query')}>
+          <Router history={createRouterHistory('/home?the=query')}>
             <Route path="/home">
               <IndexRoute />
             </Route>
@@ -261,7 +224,7 @@ describe('v1 isActive', function () {
     describe('with the index route nested under a pathless route', function () {
       it('is active', function (done) {
         render((
-          <Router history={createHistory('/home')}>
+          <Router history={createRouterHistory('/home')}>
             <Route path="/home">
               <Route>
                 <IndexRoute />
@@ -279,7 +242,7 @@ describe('v1 isActive', function () {
     describe('with a nested index route', function () {
       it('is active', function (done) {
         render((
-          <Router history={createHistory('/parent/child')}>
+          <Router history={createRouterHistory('/parent/child')}>
             <Route path="/parent">
               <Route path="child">
                 <IndexRoute />
@@ -295,7 +258,7 @@ describe('v1 isActive', function () {
 
       it('is not active with extraneous slashes', function (done) {
         render((
-          <Router history={createHistory('/parent/child')}>
+          <Router history={createRouterHistory('/parent/child')}>
             <Route path="/parent">
               <Route path="child">
                 <IndexRoute />
@@ -313,7 +276,7 @@ describe('v1 isActive', function () {
     describe('with a nested index route under a pathless route', function () {
       it('is active', function (done) {
         render((
-          <Router history={createHistory('/parent/child')}>
+          <Router history={createRouterHistory('/parent/child')}>
             <Route path="/parent">
               <Route path="child">
                 <Route>
@@ -331,7 +294,7 @@ describe('v1 isActive', function () {
 
       it('is not active with extraneous slashes', function (done) {
         render((
-          <Router history={createHistory('/parent/child')}>
+          <Router history={createRouterHistory('/parent/child')}>
             <Route path="/parent">
               <Route path="child">
                 <Route>
@@ -349,53 +312,11 @@ describe('v1 isActive', function () {
     })
   })
 
-  describe('a pathname that matches only the beginning of the URL', function () {
-    it('is not active', function (done) {
-      render((
-        <Router history={createHistory('/home')}>
-          <Route path="/home" />
-        </Router>
-      ), node, function () {
-        expect(this.history.isActive('/h')).toBe(false)
-        done()
-      })
-    })
-  })
-
-  describe('a pathname that matches the root URL only if it is a parent route', function () {
-    it('is active', function (done) {
-      render((
-        <Router history={createHistory('/home')}>
-          <Route path="/">
-            <Route path="/home" />
-          </Route>
-        </Router>
-      ), node, function () {
-        expect(this.history.isActive('/')).toBe(true)
-        done()
-      })
-    })
-  })
-
-  describe('a pathname that does not match the root URL if it is not a parent route', function () {
-    it('is not active', function (done) {
-      render((
-        <Router history={createHistory('/home')}>
-          <Route path="/" />
-          <Route path="/home" />
-        </Router>
-      ), node, function () {
-        expect(this.history.isActive('/')).toBe(false)
-        done()
-      })
-    })
-  })
-
   describe('a pathname that matches URL', function () {
     describe('with query that does match', function () {
       it('is active', function (done) {
         render((
-          <Router history={createHistory('/home?foo=bar&foo=bar1&foo=bar2')}>
+          <Router history={createRouterHistory('/home?foo=bar&foo=bar1&foo=bar2')}>
             <Route path="/" />
             <Route path="/home" />
           </Router>
@@ -406,52 +327,10 @@ describe('v1 isActive', function () {
       })
     })
 
-    describe('with a custom parse function and a query that does not match', function () {
-      it('is not active', function (done) {
-        function stringifyQuery(params) {
-          return qs.stringify(params, { arrayFormat: 'indices' })
-        }
-        function parseQueryString(query) {
-          return qs.parse(query, { parseArrays: false })
-        }
-
-        render((
-          <Router history={createHistory('/home?foo[1]=bar')} stringifyQuery={stringifyQuery} parseQueryString={parseQueryString}>
-            <Route path="/" />
-            <Route path="/home" />
-          </Router>
-        ), node, function () {
-          expect(this.history.isActive('/home', { foo: { 4: 'bar' } })).toBe(false)
-          done()
-        })
-      })
-    })
-
-    describe('with a custom parse function and a query that match', function () {
-      it('is active', function (done) {
-        function stringifyQuery(params) {
-          return qs.stringify(params, { arrayFormat: 'indices' })
-        }
-        function parseQueryString(query) {
-          return qs.parse(query, { parseArrays: false })
-        }
-
-        render((
-          <Router history={createHistory('/home?foo[4]=bar&foo[1]=bar2')} stringifyQuery={stringifyQuery} parseQueryString={parseQueryString}>
-            <Route path="/" />
-            <Route path="/home" />
-          </Router>
-        ), node, function () {
-          expect(this.history.isActive('/home', { foo: { 1: 'bar2', 4: 'bar' } })).toBe(true)
-          done()
-        })
-      })
-    })
-
     describe('with a query with explicit undefined values', function () {
       it('matches missing query keys', function (done) {
         render((
-          <Router history={createHistory('/home?foo=1')}>
+          <Router history={createRouterHistory('/home?foo=1')}>
             <Route path="/" />
             <Route path="/home" />
           </Router>
@@ -463,7 +342,7 @@ describe('v1 isActive', function () {
 
       it('does not match a present query key', function (done) {
         render((
-          <Router history={createHistory('/home?foo=1&bar=')}>
+          <Router history={createRouterHistory('/home?foo=1&bar=')}>
             <Route path="/" />
             <Route path="/home" />
           </Router>
@@ -489,7 +368,7 @@ describe('v1 isActive', function () {
     describe('when not on index route', function () {
       it('does not show index as active', function (done) {
         render((
-          <Router history={createHistory('/foo')} routes={routes} />
+          <Router history={createRouterHistory('/foo')} routes={routes} />
         ), node, function () {
           expect(this.history.isActive('/')).toBe(true)
           expect(this.history.isActive('/', null, true)).toBe(false)
@@ -502,7 +381,7 @@ describe('v1 isActive', function () {
     describe('when on index route', function () {
       it('shows index as active', function (done) {
         render((
-          <Router history={createHistory('/')} routes={routes} />
+          <Router history={createRouterHistory('/')} routes={routes} />
         ), node, function () {
           // Need to wait for async match to complete.
           setTimeout(() => {

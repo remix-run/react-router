@@ -9,6 +9,5 @@ export default function createMemoryHistory(options) {
   const memoryHistory = baseCreateMemoryHistory(options)
   const createHistory = () => memoryHistory
   const history = useQueries(useBasename(createHistory))(options)
-  history.__v2_compatible__ = true
   return history
 }

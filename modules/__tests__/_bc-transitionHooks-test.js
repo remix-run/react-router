@@ -113,17 +113,6 @@ describe('v1 When a router enters a branch', function () {
     shouldWarn('deprecated')
   })
 
-  it('calls the onEnter hooks of all routes in that branch', function (done) {
-    const dashboardRouteEnterSpy = spyOn(DashboardRoute, 'onEnter').andCallThrough()
-    const newsFeedRouteEnterSpy = spyOn(NewsFeedRoute, 'onEnter').andCallThrough()
-
-    render(<Router history={createHistory('/news')} routes={routes}/>, node, function () {
-      expect(dashboardRouteEnterSpy).toHaveBeenCalled()
-      expect(newsFeedRouteEnterSpy).toHaveBeenCalled()
-      done()
-    })
-  })
-
   describe('and one of the transition hooks navigates to another route', function () {
     it('immediately transitions to the new route', function (done) {
       const redirectRouteEnterSpy = spyOn(RedirectToInboxRoute, 'onEnter').andCallThrough()
