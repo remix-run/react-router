@@ -15,3 +15,4 @@ after_success:
 branches:
   only:
   - master
+  - next
