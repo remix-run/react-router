@@ -113,22 +113,6 @@ describe('v1 When a router enters a branch', function () {
     shouldWarn('deprecated')
   })
 
-  describe('and one of the transition hooks navigates to another route', function () {
-    it('immediately transitions to the new route', function (done) {
-      const redirectRouteEnterSpy = spyOn(RedirectToInboxRoute, 'onEnter').andCallThrough()
-      const redirectRouteLeaveSpy = spyOn(RedirectToInboxRoute, 'onLeave').andCallThrough()
-      const inboxEnterSpy = spyOn(InboxRoute, 'onEnter').andCallThrough()
-
-      render(<Router history={createHistory('/redirect-to-inbox')} routes={routes}/>, node, function () {
-        expect(this.state.location.pathname).toEqual('/inbox')
-        expect(redirectRouteEnterSpy).toHaveBeenCalled()
-        expect(redirectRouteLeaveSpy.calls.length).toEqual(0)
-        expect(inboxEnterSpy).toHaveBeenCalled()
-        done()
-      })
-    })
-  })
-
   describe('and then navigates to another branch', function () {
     it('calls the onLeave hooks of all routes in the previous branch that are not in the next branch', function (done) {
       const history = createHistory('/inbox')

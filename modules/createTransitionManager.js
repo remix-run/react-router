@@ -19,24 +19,8 @@ export default function createTransitionManager(history, routes) {
 
   // Signature should be (location, indexOnly), but needs to support (path,
   // query, indexOnly)
-  function isActive(
-    location, indexOnlyOrDeprecatedQuery=false, deprecatedIndexOnly=null
-  ) {
-    let indexOnly
-    if (
-      (indexOnlyOrDeprecatedQuery && indexOnlyOrDeprecatedQuery !== true) ||
-      deprecatedIndexOnly !== null
-    ) {
-      warning(
-        false,
-        '`isActive(pathname, query, indexOnly) is deprecated; use `isActive(location, indexOnly)` with a location descriptor instead. http://tiny.cc/router-isActivedeprecated'
-      )
-      location = { pathname: location, query: indexOnlyOrDeprecatedQuery }
-      indexOnly = deprecatedIndexOnly || false
-    } else {
-      location = history.createLocation(location)
-      indexOnly = indexOnlyOrDeprecatedQuery
-    }
+  function isActive(location, indexOnly) {
+    location = history.createLocation(location)
 
     return _isActive(
       location, indexOnly, state.location, state.routes, state.params
