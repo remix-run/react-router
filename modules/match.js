@@ -40,7 +40,6 @@ function match({ history, routes, location, ...options }, callback) {
   }
 
   const router = createRouterObject(history, transitionManager)
-  history = { ...history, ...transitionManager }
 
   transitionManager.match(location, function (error, redirectLocation, nextState) {
     callback(
@@ -48,9 +47,8 @@ function match({ history, routes, location, ...options }, callback) {
       redirectLocation,
       nextState && {
         ...nextState,
-        history,
         router,
-        matchContext: { history, transitionManager, router }
+        matchContext: { transitionManager, router }
       }
     )
 

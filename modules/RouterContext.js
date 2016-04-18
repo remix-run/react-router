@@ -3,7 +3,6 @@ import React from 'react'
 
 import getRouteParams from './getRouteParams'
 import { isReactChildren } from './RouteUtils'
-import warning from './routerWarning'
 
 const { array, func, object } = React.PropTypes
 
@@ -32,19 +31,9 @@ const RouterContext = React.createClass({
   },
 
   getChildContext() {
-    let { router, history } = this.props
-
-    if (!router) {
-      warning(false, '`<RouterContext>` expects a `router` rather than a `history`')
-
-      router = {
-        ...history,
-        setRouteLeaveHook: history.listenBeforeLeavingRoute
-      }
-      delete router.listenBeforeLeavingRoute
+    return {
+      router: this.props.router
     }
-
-    return { router }
   },
 
   createElement(component, props) {
@@ -52,7 +41,7 @@ const RouterContext = React.createClass({
   },
 
   render() {
-    const { history, location, routes, params, components } = this.props
+    const { location, routes, params, components } = this.props
     let element = null
 
     if (components) {
@@ -63,7 +52,6 @@ const RouterContext = React.createClass({
         const route = routes[index]
         const routeParams = getRouteParams(route, params)
         const props = {
-          history,
           location,
           params,
           route,

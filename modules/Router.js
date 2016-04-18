@@ -56,7 +56,7 @@ const Router = React.createClass({
   },
 
   componentWillMount() {
-    const { history, transitionManager, router } = this.createRouterObjects()
+    const { transitionManager, router } = this.createRouterObjects()
 
     this._unlisten = transitionManager.listen((error, state) => {
       if (error) {
@@ -66,7 +66,6 @@ const Router = React.createClass({
       }
     })
 
-    this.history = history
     this.router = router
   },
 
@@ -84,9 +83,8 @@ const Router = React.createClass({
       createRoutes(routes || children)
     )
     const router = createRouterObject(history, transitionManager)
-    history = { ...history, ...transitionManager }
 
-    return { history, transitionManager, router }
+    return { transitionManager, router }
   },
 
   /* istanbul ignore next: sanity check */
@@ -121,7 +119,6 @@ const Router = React.createClass({
 
     return render({
       ...props,
-      history: this.history,
       router: this.router,
       location,
       routes,
