@@ -7,10 +7,10 @@ function getComponentsForRoute(nextState, route, callback) {
   }
 
   const getComponent = route.getComponent || route.getComponents
-  if (!getComponent) {
-    callback()
-  } else {
+  if (getComponent) {
     getComponent.call(route, nextState, callback)
+  } else {
+    callback()
   }
 }
 
