@@ -165,11 +165,52 @@ An `<IndexLink>` is like a [`<Link>`](#link), except it is only active when the 
 ### `<RouterContext>`
 A `<RouterContext>` renders the component tree for a given router state. Its used by `<Router>` but also useful for server rendering and integrating in brownfield development.
 
-It also provides a `router` object on `context`.
+It also provides a `router` object on [context](https://facebook.github.io/react/docs/context.html).
 
 #### `context.router`
 
 Contains data and methods relevant to routing. Most useful for imperatively transitioning around the application.
+
+To use it, you must signal to React that you need it by declaring your use of it in your component:
+
+```js
+var MyComponent = React.createClass({
+  contextTypes: {
+    router: Router.PropTypes.router
+  },
+  render: function() {
+    // here, you can use `this.context.router`
+  }
+});
+
+```
+
+Using `context.router` in combination with ES6 classes requires a different pattern (note the use of the `static` keyword):
+
+```js
+class MyComponent extends React.Component {
+  static contextTypes = {
+    router: Router.PropTypes.router
+  }
+
+  render: function() {
+    // here, you can use `this.context.router`
+  }
+});
+
+```
+
+Finally, you can use `context.router` with
+[stateless function components](https://facebook.github.io/react/docs/reusable-components.html#stateless-functions):
+
+```js
+function MyComponent(props, context) {
+  // here, you can use `context.router`
+}
+MyComponent.contextTypes = {
+  router: Router.PropTypes.router
+}
+```
 
 ##### `push(pathOrLoc)`
 Transitions to a new URL, adding a new entry in the browser history.
