@@ -1,6 +1,6 @@
 import React from 'react'
 import { render } from 'react-dom'
-import { browserHistory, Router, Route, Link } from 'react-router'
+import { browserHistory, Router, Route, Link, routerShape } from 'react-router'
 
 const App = React.createClass({
   render() {
@@ -24,7 +24,7 @@ const Dashboard = React.createClass({
 
 const Form = React.createClass({
   contextTypes: {
-    router: React.PropTypes.object.isRequired
+    router: routerShape.isRequired
   },
 
   componentWillMount() {

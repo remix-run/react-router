@@ -1,5 +1,6 @@
 import React from 'react'
 import warning from './routerWarning'
+import { routerShape } from './PropTypes'
 
 const { bool, object, string, func, oneOfType } = React.PropTypes
 
@@ -49,7 +50,7 @@ function createLocationDescriptor(to, { query, hash, state }) {
 const Link = React.createClass({
 
   contextTypes: {
-    router: object
+    router: routerShape
   },
 
   propTypes: {

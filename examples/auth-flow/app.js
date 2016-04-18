@@ -1,6 +1,6 @@
 import React from 'react'
 import { render } from 'react-dom'
-import { browserHistory, Router, Route, Link } from 'react-router'
+import { browserHistory, Router, Route, Link, routerShape } from 'react-router'
 import auth from './auth'
 
 const App = React.createClass({
@@ -58,7 +58,7 @@ const Dashboard = React.createClass({
 const Login = React.createClass({
 
   contextTypes: {
-    router: React.PropTypes.object.isRequired
+    router: routerShape.isRequired
   },
 
   getInitialState() {
