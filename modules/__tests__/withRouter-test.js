@@ -4,18 +4,19 @@ import { render, unmountComponentAtNode } from 'react-dom'
 import createHistory from '../createMemoryHistory'
 import Route from '../Route'
 import Router from '../Router'
+import routerShape from '../PropTypes'
 import withRouter from '../withRouter'
-import resetHash from './resetHash'
 
 describe('withRouter', function () {
   class App extends Component {
+    propTypes: {
+      router: routerShape.isRequired
+    }
     render() {
-      expect(this.context.router).toExist()
+      expect(this.props.router).toExist()
       return <h1>App</h1>
     }
   }
-
-  beforeEach(resetHash)
 
   let node
   beforeEach(function () {
