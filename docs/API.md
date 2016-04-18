@@ -176,7 +176,7 @@ To use it, you must signal to React that you need it by declaring your use of it
 ```js
 var MyComponent = React.createClass({
   contextTypes: {
-    router: React.PropTypes.object.isRequired
+    router: Router.PropTypes.router
   },
   render: function() {
     // here, you can use `this.context.router`
@@ -185,12 +185,12 @@ var MyComponent = React.createClass({
 
 ```
 
-Using `context.router` i.c.w ES6 classes requires a different pattern (note the use of the `static` keyword):
+Using `context.router` in combination with ES6 classes requires a different pattern (note the use of the `static` keyword):
 
 ```js
 class MyComponent extends React.Component {
   static contextTypes = {
-    router: React.PropTypes.object.isRequired
+    router: Router.PropTypes.router
   }
 
   render: function() {
@@ -208,7 +208,7 @@ function MyComponent(props, context) {
   // here, you can use `context.router`
 }
 MyComponent.contextTypes = {
-  router: React.PropTypes.object.isRequired
+  router: Router.PropTypes.router
 }
 ```
 
