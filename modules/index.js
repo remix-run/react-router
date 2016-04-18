@@ -10,7 +10,6 @@ export Redirect from './Redirect'
 export Route from './Route'
 
 /* utils */
-export useRoutes from './useRoutes'
 export { createRoutes } from './RouteUtils'
 export RouterContext from './RouterContext'
 export RoutingContext from './RoutingContext'
