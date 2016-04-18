@@ -680,14 +680,11 @@ One or many [`<Route>`](#route)s or [`PlainRoute`](#plainroute)s.
 
 
 ### `PropTypes`
-The following objects are exposed as properties of the exported PropTypes object:
-- `falsy`: Checks that a component does not have a prop
-- `history`
-- `location`
-- `component`
-- `components`
-- `route`
-- `routes`
+The following prop types are exported at top level and from `react-router/lib/PropTypes`:
+- `routerShape`: Shape for the `router` object on context
+- `locationShape`: Shape for the `location` object on route component props
+
+Previously, a number of prop types intended for internal use were also exported under `PropTypes`. These are deprecated and should not be used.
 
 
 ### `useRoutes(createHistory)` (deprecated)

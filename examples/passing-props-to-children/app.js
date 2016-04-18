@@ -1,11 +1,11 @@
 import React from 'react'
 import { render } from 'react-dom'
-import { browserHistory, Router, Route, Link } from 'react-router'
+import { browserHistory, Router, Route, Link, routerShape } from 'react-router'
 import './app.css'
 
 const App = React.createClass({
   contextTypes: {
-    router: React.PropTypes.object.isRequired
+    router: routerShape.isRequired
   },
 
   getInitialState() {

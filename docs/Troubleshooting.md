@@ -6,7 +6,7 @@ You need to add `router` to your component's `contextTypes` to make the router o
 
 ```js
 contextTypes: {
-  router: Router.PropTypes.router
+  router: routerShape.isRequired
 }
 ```
 

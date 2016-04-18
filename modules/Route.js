@@ -1,7 +1,7 @@
 import React from 'react'
 import invariant from 'invariant'
 import { createRouteFromReactElement } from './RouteUtils'
-import { component, components } from './PropTypes'
+import { component, components } from './InternalPropTypes'
 
 const { string, func } = React.PropTypes
 

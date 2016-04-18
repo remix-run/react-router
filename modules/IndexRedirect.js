@@ -2,7 +2,7 @@ import React from 'react'
 import warning from './routerWarning'
 import invariant from 'invariant'
 import Redirect from './Redirect'
-import { falsy } from './PropTypes'
+import { falsy } from './InternalPropTypes'
 
 const { string, object } = React.PropTypes
 
