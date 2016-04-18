@@ -1,7 +1,6 @@
 import invariant from 'invariant'
 import React from 'react'
 
-import deprecateObjectProperties from './deprecateObjectProperties'
 import getRouteParams from './getRouteParams'
 import { isReactChildren } from './RouteUtils'
 import warning from './routerWarning'
@@ -15,9 +14,7 @@ const { array, func, object } = React.PropTypes
 const RouterContext = React.createClass({
 
   propTypes: {
-    history: object,
     router: object.isRequired,
-    location: object.isRequired,
     routes: array.isRequired,
     params: object.isRequired,
     components: array.isRequired,
@@ -31,13 +28,12 @@ const RouterContext = React.createClass({
   },
 
   childContextTypes: {
-    history: object,
-    location: object.isRequired,
     router: object.isRequired
   },
 
   getChildContext() {
-    let { router, history, location } = this.props
+    let { router, history } = this.props
+
     if (!router) {
       warning(false, '`<RouterContext>` expects a `router` rather than a `history`')
 
@@ -48,11 +44,7 @@ const RouterContext = React.createClass({
       delete router.listenBeforeLeavingRoute
     }
 
-    if (__DEV__) {
-      location = deprecateObjectProperties(location, '`context.location` is deprecated, please use a route component\'s `props.location` instead. http://tiny.cc/router-accessinglocation')
-    }
-
-    return { history, location, router }
+    return { router }
   },
 
   createElement(component, props) {

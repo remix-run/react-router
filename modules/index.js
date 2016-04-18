@@ -10,7 +10,6 @@ export Redirect from './Redirect'
 export Route from './Route'
 
 /* mixins */
-export History from './History'
 export Lifecycle from './Lifecycle'
 export RouteContext from './RouteContext'
 
