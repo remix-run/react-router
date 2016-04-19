@@ -63,6 +63,27 @@ describe('A <Link>', function () {
     })
   })
 
+  it('constructs fallback href _without_ router context', function () {
+    class LinkWrapper extends Component {
+      render() {
+        return (
+          <Link to={{
+            pathname: '/hello/michael',
+            query: { the: 'query' },
+            hash: '#the-hash'
+          }}>
+            Link
+          </Link>
+        )
+      }
+    }
+
+    render(<LinkWrapper />, node, function () {
+      const a = node.querySelector('a')
+      expect(a.getAttribute('href')).toEqual('/hello/michael?the=query#the-hash')
+    })
+  })
+
   // This test needs to be in its own file with beforeEach(resetHash).
   //
   //it('knows how to make its href with HashHistory', function () {
