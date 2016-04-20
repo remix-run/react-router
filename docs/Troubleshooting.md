@@ -1,6 +1,6 @@
 # Troubleshooting
 
-### `this.props.router` is `undefined`
+### How do I add `this.props.router` to my component?
 
 You need to wrap your component using `withRouter` to make the router object available to you.
 
@@ -11,7 +11,6 @@ const Component = withRouter(
   })
 )
 ```
-
 
 ### Getting the previous location
 

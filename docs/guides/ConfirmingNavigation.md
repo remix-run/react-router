@@ -6,10 +6,6 @@ You can prevent a transition from happening or prompt the user before leaving a 
 const Home = withRouter(
   React.createClass({
 
-    contextTypes: {
-      router: routerShape.isRequired
-    },
-
     componentDidMount() {
       this.props.router.setRouteLeaveHook(this.props.route, this.routerWillLeave)
     },
