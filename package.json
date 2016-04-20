@@ -36,6 +36,9 @@
     "invariant": "^2.2.1",
     "warning": "^2.1.0"
   },
+  "peerDependencies": {
+    "react": "^0.14.0 || ^15.0.0"
+  },
   "devDependencies": {
     "babel": "^5.8.38",
     "babel-core": "^5.8.38",
