@@ -101,10 +101,9 @@ export default function createTransitionManager(history, routes) {
   const RouteHooks = Object.create(null)
 
   function getRouteHooksForRoutes(routes) {
-    return routes.reduce(function (hooks, route) {
-      hooks.push.apply(hooks, RouteHooks[getRouteID(route)])
-      return hooks
-    }, [])
+    return routes
+      .map(route => RouteHooks[getRouteID(route)])
+      .filter(hook => hook)
   }
 
   function transitionHook(location, callback) {
@@ -192,38 +191,21 @@ export default function createTransitionManager(history, routes) {
    * Returns a function that may be used to unbind the listener.
    */
   function listenBeforeLeavingRoute(route, hook) {
-    // TODO: Warn if they register for a route that isn't currently
-    // active. They're probably doing something wrong, like re-creating
-    // route objects on every location change.
+    const thereWereNoRouteHooks = !hasAnyProperties(RouteHooks)
     const routeID = getRouteID(route)
-    let hooks = RouteHooks[routeID]
 
-    if (!hooks) {
-      let thereWereNoRouteHooks = !hasAnyProperties(RouteHooks)
+    RouteHooks[routeID] = hook
 
-      RouteHooks[routeID] = [ hook ]
+    if (thereWereNoRouteHooks) {
+      // setup transition & beforeunload hooks
+      unlistenBefore = history.listenBefore(transitionHook)
 
-      if (thereWereNoRouteHooks) {
-        // setup transition & beforeunload hooks
-        unlistenBefore = history.listenBefore(transitionHook)
-
-        if (history.listenBeforeUnload)
-          unlistenBeforeUnload = history.listenBeforeUnload(beforeUnloadHook)
-      }
+      if (history.listenBeforeUnload)
+        unlistenBeforeUnload = history.listenBeforeUnload(beforeUnloadHook)
     }
 
     return function () {
-      const hooks = RouteHooks[routeID]
-
-      if (hooks) {
-        const newHooks = hooks.filter(item => item !== hook)
-
-        if (newHooks.length === 0) {
-          removeListenBeforeHooksForRoute(route)
-        } else {
-          RouteHooks[routeID] = newHooks
-        }
-      }
+      removeListenBeforeHooksForRoute(route)
     }
   }
 
