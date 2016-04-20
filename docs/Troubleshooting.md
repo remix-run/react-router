@@ -1,13 +1,15 @@
 # Troubleshooting
 
-### `this.context.router` is `undefined`
+### `this.props.router` is `undefined`
 
-You need to add `router` to your component's `contextTypes` to make the router object available to you.
+You need to wrap your component using `withRouter` to make the router object available to you.
 
 ```js
-contextTypes: {
-  router: routerShape.isRequired
-}
+const Component = withRouter(
+  React.createClass({
+    //...
+  })
+)
 ```
 
 

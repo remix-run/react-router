@@ -1,11 +1,9 @@
 import React from 'react'
+import { withRouter } from 'react-router'
 import auth from '../utils/auth.js'
 
 const Login = React.createClass({
-
-  contextTypes: {
-    router: React.PropTypes.object
-  },
+  displayName: 'Login',
 
   getInitialState() {
     return {
@@ -26,9 +24,9 @@ const Login = React.createClass({
       const { location } = this.props
 
       if (location.state && location.state.nextPathname) {
-        this.context.router.replace(location.state.nextPathname)
+        this.props.router.replace(location.state.nextPathname)
       } else {
-        this.context.router.replace('/')
+        this.props.router.replace('/')
       }
     })
   },
@@ -48,4 +46,4 @@ const Login = React.createClass({
 
 })
 
-export default Login
+export default withRouter(Login)
