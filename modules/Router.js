@@ -3,7 +3,7 @@ import useQueries from 'history/lib/useQueries'
 import React from 'react'
 
 import createTransitionManager from './createTransitionManager'
-import { routes } from './PropTypes'
+import { routes } from './InternalPropTypes'
 import RouterContext from './RouterContext'
 import { createRoutes } from './RouteUtils'
 import { createRouterObject, createRoutingHistory } from './RouterUtils'

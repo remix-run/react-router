@@ -3,7 +3,7 @@ import React from 'react'
 import { render, unmountComponentAtNode } from 'react-dom'
 
 import match from '../match'
-import { router as routerPropType } from '../PropTypes'
+import { routerShape } from '../PropTypes'
 import RouterContext from '../RouterContext'
 import { createRouterObject } from '../RouterUtils'
 
@@ -42,7 +42,7 @@ describe('RouterContext', () => {
     }
 
     Component.contextTypes = {
-      router: routerPropType.isRequired
+      router: routerShape.isRequired
     }
 
     routes = { path: '/', component: Component }

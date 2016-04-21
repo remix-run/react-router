@@ -165,11 +165,66 @@ An `<IndexLink>` is like a [`<Link>`](#link), except it is only active when the 
 ### `<RouterContext>`
 A `<RouterContext>` renders the component tree for a given router state. Its used by `<Router>` but also useful for server rendering and integrating in brownfield development.
 
-It also provides a `router` object on `context`.
+It also provides a `router` object on [context](https://facebook.github.io/react/docs/context.html).
 
 #### `context.router`
 
 Contains data and methods relevant to routing. Most useful for imperatively transitioning around the application.
+
+To use it, you must signal to React that you need it by declaring your use of it in your component via `contextTypes`:
+
+```js
+var MyComponent = React.createClass({
+  contextTypes: {
+    router: routerShape.isRequired
+  },
+
+  render: function() {
+    // Here, you can use this.context.router.
+  }
+})
+```
+
+To use `context.router` on a component declared as an ES2015 class, define `contextTypes` as a static property of the class:
+
+```js
+class MyComponent extends React.Component {
+  render() {
+    // Here, you can use this.context.router.
+  }
+}
+
+MyComponent.contextTypes = {
+  router: routerShape.isRequired
+}
+```
+
+If you are using the class properties proposal, you can instead write:
+
+```js
+class MyComponent extends React.Component {
+  static contextTypes = {
+    router: routerShape.isRequired
+  }
+
+  render() {
+    // Here, you can use this.context.router.
+  }
+}
+```
+
+To use `context.router` with
+[stateless function components](https://facebook.github.io/react/docs/reusable-components.html#stateless-functions), declare `contextTypes` as a static property of the component function:
+
+```js
+function MyComponent(props, context) {
+  // Here, you can use context.router.
+}
+
+MyComponent.contextTypes = {
+  router: routerShape.isRequired
+}
+```
 
 ##### `push(pathOrLoc)`
 Transitions to a new URL, adding a new entry in the browser history.
@@ -639,14 +694,11 @@ One or many [`<Route>`](#route)s or [`PlainRoute`](#plainroute)s.
 
 
 ### `PropTypes`
-The following objects are exposed as properties of the exported PropTypes object:
-- `falsy`: Checks that a component does not have a prop
-- `history`
-- `location`
-- `component`
-- `components`
-- `route`
-- `routes`
+The following prop types are exported at top level and from `react-router/lib/PropTypes`:
+- `routerShape`: Shape for the `router` object on context
+- `locationShape`: Shape for the `location` object on route component props
+
+Previously, a number of prop types intended for internal use were also exported under `PropTypes`. These are deprecated and should not be used.
 
 
 ### `useRoutes(createHistory)` (deprecated)

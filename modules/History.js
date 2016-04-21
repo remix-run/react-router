@@ -1,5 +1,5 @@
 import warning from './routerWarning'
-import { history } from './PropTypes'
+import { history } from './InternalPropTypes'
 
 /**
  * A mixin that adds the "history" instance variable to components.

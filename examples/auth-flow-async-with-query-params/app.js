@@ -1,6 +1,8 @@
-import React, { createClass, PropTypes } from 'react'
+import React, { createClass } from 'react'
 import { render } from 'react-dom'
-import { Router, Route, IndexRoute, browserHistory, Link } from 'react-router'
+import {
+  Router, Route, IndexRoute, browserHistory, Link, routerShape
+} from 'react-router'
 
 function App(props) {
   return (
@@ -12,7 +14,7 @@ function App(props) {
 
 const Form = createClass({
   contextTypes: {
-    router: PropTypes.object.isRequired
+    router: routerShape.isRequired
   },
 
   getInitialState() {

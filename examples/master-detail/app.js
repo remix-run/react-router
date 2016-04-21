@@ -1,6 +1,8 @@
 import React from 'react'
 import { render, findDOMNode } from 'react-dom'
-import { browserHistory, Router, Route, IndexRoute, Link } from 'react-router'
+import {
+  browserHistory, Router, Route, IndexRoute, Link, routerShape
+} from 'react-router'
 import ContactStore from './ContactStore'
 import './app.css'
 
@@ -63,7 +65,7 @@ const Index = React.createClass({
 
 const Contact = React.createClass({
   contextTypes: {
-    router: React.PropTypes.object.isRequired
+    router: routerShape.isRequired
   },
 
   getStateFromStore(props) {
@@ -120,7 +122,7 @@ const Contact = React.createClass({
 
 const NewContact = React.createClass({
   contextTypes: {
-    router: React.PropTypes.object.isRequired
+    router: routerShape.isRequired
   },
 
   createContact(event) {

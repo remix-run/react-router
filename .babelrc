@@ -1,7 +1,14 @@
 {
-  "stage": 0,
-  "loose": "all",
-  "plugins": [
-    "dev-expression"
-  ]
+  "presets": ["stage-0", "react"],
+  "plugins": ["dev-expression"],
+
+  "env": {
+    "cjs": {
+      "presets": ["es2015-loose"],
+      "plugins": ["add-module-exports"]
+    },
+    "es": {
+      "presets": ["es2015-loose-native-modules"]
+    }
+  }
 }

@@ -2,7 +2,7 @@ import React from 'react'
 import warning from './routerWarning'
 import invariant from 'invariant'
 import { createRouteFromReactElement } from './RouteUtils'
-import { component, components, falsy } from './PropTypes'
+import { component, components, falsy } from './InternalPropTypes'
 
 const { func } = React.PropTypes
 
