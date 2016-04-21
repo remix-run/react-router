@@ -1,6 +1,6 @@
 import React from 'react'
 import { render } from 'react-dom'
-import { browserHistory, Router, Route, Link, routerShape } from 'react-router'
+import { browserHistory, Router, Route, Link, withRouter } from 'react-router'
 
 const App = React.createClass({
   render() {
@@ -22,57 +22,56 @@ const Dashboard = React.createClass({
   }
 })
 
-const Form = React.createClass({
-  contextTypes: {
-    router: routerShape.isRequired
-  },
+const Form = withRouter(
+  React.createClass({
 
-  componentWillMount() {
-    this.context.router.setRouteLeaveHook(
-      this.props.route,
-      this.routerWillLeave
-    )
-  },
+    componentWillMount() {
+      this.props.router.setRouteLeaveHook(
+        this.props.route,
+        this.routerWillLeave
+      )
+    },
 
-  getInitialState() {
-    return {
-      textValue: 'ohai'
+    getInitialState() {
+      return {
+        textValue: 'ohai'
+      }
+    },
+
+    routerWillLeave() {
+      if (this.state.textValue)
+        return 'You have unsaved information, are you sure you want to leave this page?'
+    },
+
+    handleChange(event) {
+      this.setState({
+        textValue: event.target.value
+      })
+    },
+
+    handleSubmit(event) {
+      event.preventDefault()
+
+      this.setState({
+        textValue: ''
+      }, () => {
+        this.props.router.push('/')
+      })
+    },
+
+    render() {
+      return (
+        <div>
+          <form onSubmit={this.handleSubmit}>
+            <p>Click the dashboard link with text in the input.</p>
+            <input type="text" ref="userInput" value={this.state.textValue} onChange={this.handleChange} />
+            <button type="submit">Go</button>
+          </form>
+        </div>
+      )
     }
-  },
-
-  routerWillLeave() {
-    if (this.state.textValue)
-      return 'You have unsaved information, are you sure you want to leave this page?'
-  },
-
-  handleChange(event) {
-    this.setState({
-      textValue: event.target.value
-    })
-  },
-
-  handleSubmit(event) {
-    event.preventDefault()
-
-    this.setState({
-      textValue: ''
-    }, () => {
-      this.context.router.push('/')
-    })
-  },
-
-  render() {
-    return (
-      <div>
-        <form onSubmit={this.handleSubmit}>
-          <p>Click the dashboard link with text in the input.</p>
-          <input type="text" ref="userInput" value={this.state.textValue} onChange={this.handleChange} />
-          <button type="submit">Go</button>
-        </form>
-      </div>
-    )
-  }
-})
+  })
+)
 
 render((
   <Router history={browserHistory}>
