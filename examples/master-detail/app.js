@@ -1,7 +1,7 @@
 import React from 'react'
 import { render, findDOMNode } from 'react-dom'
 import {
-  browserHistory, Router, Route, IndexRoute, Link, routerShape
+  browserHistory, Router, Route, IndexRoute, Link, withRouter
 } from 'react-router'
 import ContactStore from './ContactStore'
 import './app.css'
@@ -63,93 +63,91 @@ const Index = React.createClass({
   }
 })
 
-const Contact = React.createClass({
-  contextTypes: {
-    router: routerShape.isRequired
-  },
+const Contact = withRouter(
+  React.createClass({
 
-  getStateFromStore(props) {
-    const { id } = props ? props.params : this.props.params
+    getStateFromStore(props) {
+      const { id } = props ? props.params : this.props.params
 
-    return {
-      contact: ContactStore.getContact(id)
+      return {
+        contact: ContactStore.getContact(id)
+      }
+    },
+
+    getInitialState() {
+      return this.getStateFromStore()
+    },
+
+    componentDidMount() {
+      ContactStore.addChangeListener(this.updateContact)
+    },
+
+    componentWillUnmount() {
+      ContactStore.removeChangeListener(this.updateContact)
+    },
+
+    componentWillReceiveProps(nextProps) {
+      this.setState(this.getStateFromStore(nextProps))
+    },
+
+    updateContact() {
+      if (!this.isMounted())
+        return
+
+      this.setState(this.getStateFromStore())
+    },
+
+    destroy() {
+      const { id } = this.props.params
+      ContactStore.removeContact(id)
+      this.props.router.push('/')
+    },
+
+    render() {
+      const contact = this.state.contact || {}
+      const name = contact.first + ' ' + contact.last
+      const avatar = contact.avatar || 'http://placecage.com/50/50'
+
+      return (
+        <div className="Contact">
+          <img height="50" src={avatar} key={avatar} />
+          <h3>{name}</h3>
+          <button onClick={this.destroy}>Delete</button>
+        </div>
+      )
     }
-  },
+  })
+)
 
-  getInitialState() {
-    return this.getStateFromStore()
-  },
+const NewContact = withRouter(
+  React.createClass({
 
-  componentDidMount() {
-    ContactStore.addChangeListener(this.updateContact)
-  },
+    createContact(event) {
+      event.preventDefault()
 
-  componentWillUnmount() {
-    ContactStore.removeChangeListener(this.updateContact)
-  },
+      ContactStore.addContact({
+        first: findDOMNode(this.refs.first).value,
+        last: findDOMNode(this.refs.last).value
+      }, (contact) => {
+        this.props.router.push(`/contact/${contact.id}`)
+      })
+    },
 
-  componentWillReceiveProps(nextProps) {
-    this.setState(this.getStateFromStore(nextProps))
-  },
-
-  updateContact() {
-    if (!this.isMounted())
-      return
-
-    this.setState(this.getStateFromStore())
-  },
-
-  destroy() {
-    const { id } = this.props.params
-    ContactStore.removeContact(id)
-    this.context.router.push('/')
-  },
-
-  render() {
-    const contact = this.state.contact || {}
-    const name = contact.first + ' ' + contact.last
-    const avatar = contact.avatar || 'http://placecage.com/50/50'
-
-    return (
-      <div className="Contact">
-        <img height="50" src={avatar} key={avatar} />
-        <h3>{name}</h3>
-        <button onClick={this.destroy}>Delete</button>
-      </div>
-    )
-  }
-})
-
-const NewContact = React.createClass({
-  contextTypes: {
-    router: routerShape.isRequired
-  },
-
-  createContact(event) {
-    event.preventDefault()
-
-    ContactStore.addContact({
-      first: findDOMNode(this.refs.first).value,
-      last: findDOMNode(this.refs.last).value
-    }, (contact) => {
-      this.context.router.push(`/contact/${contact.id}`)
-    })
-  },
-
-  render() {
-    return (
-      <form onSubmit={this.createContact}>
-        <p>
-          <input type="text" ref="first" placeholder="First name" />
-          <input type="text" ref="last" placeholder="Last name" />
-        </p>
-        <p>
-          <button type="submit">Save</button> <Link to="/">Cancel</Link>
-        </p>
-      </form>
-    )
-  }
-})
+    render() {
+      return (
+        <form onSubmit={this.createContact}>
+          <p>
+            <input type="text" ref="first" placeholder="First name" />
+            <input type="text" ref="last" placeholder="Last name" />
+          </p>
+          <p>
+            <button type="submit">Save</button> <Link to="/">Cancel</Link>
+          </p>
+        </form>
+      )
+    }
+  })
+)
 
 const NotFound = React.createClass({
   render() {

@@ -1,6 +1,6 @@
 # Navigating Outside of Components
 
-While you can use `this.context.router` to navigate around, many apps want to be able to navigate outside of their components. They can do that with the history the app gives to `Router`.
+While you can use `this.props.router` from `withRouter` to navigate around, many apps want to be able to navigate outside of their components. They can do that with the history the app gives to `Router`.
 
 ```js
 // your main file that renders a Router
