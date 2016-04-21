@@ -58,8 +58,6 @@ const Dashboard = React.createClass({
 const Login = withRouter(
   React.createClass({
 
-    displayName: 'Login',
-
     getInitialState() {
       return {
         error: false

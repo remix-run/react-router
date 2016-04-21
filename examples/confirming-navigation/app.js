@@ -25,8 +25,6 @@ const Dashboard = React.createClass({
 const Form = withRouter(
   React.createClass({
 
-    displayName: 'Form',
-
     componentWillMount() {
       this.props.router.setRouteLeaveHook(
         this.props.route,

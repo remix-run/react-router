@@ -3,8 +3,6 @@ import { withRouter } from 'react-router'
 import auth from '../utils/auth.js'
 
 const Login = React.createClass({
-  displayName: 'Login',
-
   getInitialState() {
     return {
       error: false

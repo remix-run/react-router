@@ -66,8 +66,6 @@ const Index = React.createClass({
 const Contact = withRouter(
   React.createClass({
 
-    displayName: 'Contact',
-
     getStateFromStore(props) {
       const { id } = props ? props.params : this.props.params
 
@@ -123,8 +121,6 @@ const Contact = withRouter(
 
 const NewContact = withRouter(
   React.createClass({
-
-    displayName: 'NewContact',
 
     createContact(event) {
       event.preventDefault()

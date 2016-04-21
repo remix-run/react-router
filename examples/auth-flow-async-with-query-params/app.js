@@ -15,8 +15,6 @@ function App(props) {
 const Form = withRouter(
   createClass({
 
-    displayName: 'Form',
-
     getInitialState() {
       return {
         value: ''

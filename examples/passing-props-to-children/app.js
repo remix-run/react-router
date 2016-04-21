@@ -6,8 +6,6 @@ import './app.css'
 const App = withRouter(
   React.createClass({
 
-    displayName: 'App',
-
     getInitialState() {
       return {
         tacos: [
