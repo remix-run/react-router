@@ -94,7 +94,7 @@ export default function createTransitionManager(history, routes) {
 
   let RouteGuid = 1
 
-  function getRouteID(route, create = true) {
+  function getRouteID(route, create = false) {
     return route.__id__ || create && (route.__id__ = RouteGuid++)
   }
 
@@ -156,7 +156,7 @@ export default function createTransitionManager(history, routes) {
   let unlistenBefore, unlistenBeforeUnload
 
   function removeListenBeforeHooksForRoute(route) {
-    const routeID = getRouteID(route, false)
+    const routeID = getRouteID(route)
     if (!routeID) {
       return
     }
@@ -192,7 +192,7 @@ export default function createTransitionManager(history, routes) {
    */
   function listenBeforeLeavingRoute(route, hook) {
     const thereWereNoRouteHooks = !hasAnyProperties(RouteHooks)
-    const routeID = getRouteID(route)
+    const routeID = getRouteID(route, true)
 
     RouteHooks[routeID] = hook
 
