@@ -181,6 +181,7 @@ Transitions to a new URL, adding a new entry in the browser history.
 ```js
 router.push('/users/12')
 
+
 // or with a location descriptor object
 router.push({
   pathname: '/users/12',
@@ -268,7 +269,7 @@ const routes = (
   <Route component={App}>
     <Route path="groups" components={{main: Groups, sidebar: GroupsSidebar}} />
     <Route path="users" components={{main: Users, sidebar: UsersSidebar}}>
-      <Route path="users/:userId" component={Profile} />
+      <Route path=":userId" component={Profile} />
     </Route>
   </Route>
 )
