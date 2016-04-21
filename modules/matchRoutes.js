@@ -89,9 +89,13 @@ function matchRouteDeep(
   // we're not just searching for potential nested absolute paths.
   if (remainingPathname !== null && pattern) {
     const matched = matchPattern(pattern, remainingPathname)
-    remainingPathname = matched.remainingPathname
-    paramNames = [ ...paramNames, ...matched.paramNames ]
-    paramValues = [ ...paramValues, ...matched.paramValues ]
+    if (matched) {
+      remainingPathname = matched.remainingPathname
+      paramNames = [ ...paramNames, ...matched.paramNames ]
+      paramValues = [ ...paramValues, ...matched.paramValues ]
+    } else {
+      remainingPathname = null
+    }
 
     // By assumption, pattern is non-empty here, which is the prerequisite for
     // actually terminating a match.

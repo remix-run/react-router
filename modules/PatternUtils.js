@@ -94,37 +94,29 @@ export function matchPattern(pattern, pathname) {
   }
 
   const match = pathname.match(new RegExp(`^${regexpSource}`, 'i'))
+  if (match == null) {
+    return null
+  }
 
-  let remainingPathname, paramValues
-  if (match != null) {
-    const matchedPath = match[0]
-    remainingPathname = pathname.substr(matchedPath.length)
+  const matchedPath = match[0]
+  let remainingPathname = pathname.substr(matchedPath.length)
 
-    if (remainingPathname) {
-      // Require that the match ends at a path separator, if we didn't match
-      // the full path, so any remaining pathname is a new path segment.
-      if (matchedPath.charAt(matchedPath.length - 1) !== '/') {
-        return {
-          remainingPathname: null,
-          paramNames,
-          paramValues: null
-        }
-      }
-
-      // If there is a remaining pathname, treat the path separator as part of
-      // the remaining pathname for properly continuing the match.
-      remainingPathname = `/${remainingPathname}`
+  if (remainingPathname) {
+    // Require that the match ends at a path separator, if we didn't match
+    // the full path, so any remaining pathname is a new path segment.
+    if (matchedPath.charAt(matchedPath.length - 1) !== '/') {
+      return null
     }
 
-    paramValues = match.slice(1).map(v => v && decodeURIComponent(v))
-  } else {
-    remainingPathname = paramValues = null
+    // If there is a remaining pathname, treat the path separator as part of
+    // the remaining pathname for properly continuing the match.
+    remainingPathname = `/${remainingPathname}`
   }
 
   return {
     remainingPathname,
     paramNames,
-    paramValues
+    paramValues: match.slice(1).map(v => v && decodeURIComponent(v))
   }
 }
 
@@ -133,16 +125,19 @@ export function getParamNames(pattern) {
 }
 
 export function getParams(pattern, pathname) {
-  const { paramNames, paramValues } = matchPattern(pattern, pathname)
-
-  if (paramValues != null) {
-    return paramNames.reduce(function (memo, paramName, index) {
-      memo[paramName] = paramValues[index]
-      return memo
-    }, {})
+  const match = matchPattern(pattern, pathname)
+  if (!match) {
+    return null
   }
 
-  return null
+  const { paramNames, paramValues } = match
+  const params = {}
+
+  paramNames.forEach((paramName, index) => {
+    params[paramName] = paramValues[index]
+  })
+
+  return params
 }
 
 /**

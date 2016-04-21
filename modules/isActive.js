@@ -82,9 +82,13 @@ function routeIsActive(pathname, routes, params) {
 
     if (remainingPathname !== null && pattern) {
       const matched = matchPattern(pattern, remainingPathname)
-      remainingPathname = matched.remainingPathname
-      paramNames = [ ...paramNames, ...matched.paramNames ]
-      paramValues = [ ...paramValues, ...matched.paramValues ]
+      if (matched) {
+        remainingPathname = matched.remainingPathname
+        paramNames = [ ...paramNames, ...matched.paramNames ]
+        paramValues = [ ...paramValues, ...matched.paramValues ]
+      } else {
+        remainingPathname = null
+      }
 
       if (remainingPathname === '') {
         // We have an exact match on the route. Just check that all the params
