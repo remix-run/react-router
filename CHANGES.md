@@ -1,3 +1,16 @@
+## [HEAD] \(v2.4.0\)
+> Unreleased
+
+- **Feature:** Add `withRouter` higher-order component for injecting `props.router` ([#3352])
+- **Minor:** Add React as a peer dependency ([#3361])
+- **Minor:** Upgrade to Babel 6 ([#3362])
+
+[HEAD]: https://github.com/reactjs/react-router/compare/latest...HEAD
+[#3352]: https://github.com/reactjs/react-router/issues/3352
+[#3361]: https://github.com/reactjs/react-router/issues/3361
+[#3362]: https://github.com/reactjs/react-router/issues/3362
+
+
 ## [v2.3.0]
 > April 18, 2016
 
