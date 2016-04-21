@@ -92,19 +92,6 @@ describe('v1 server rendering', function () {
     })
   })
 
-  it('sends the redirect location', function (done) {
-    shouldWarn('deprecated')
-
-    match({ routes, location: '/company' }, function (error, redirectLocation) {
-      expect(redirectLocation).toExist()
-      expect(redirectLocation.pathname).toEqual('/about')
-      expect(redirectLocation.search).toEqual('')
-      expect(redirectLocation.state).toEqual(null)
-      expect(redirectLocation.action).toEqual('REPLACE')
-      done()
-    })
-  })
-
   it('sends null values when no routes match', function (done) {
     match({ routes, location: '/no-match' }, function (error, redirectLocation, state) {
       expect(error).toNotExist()

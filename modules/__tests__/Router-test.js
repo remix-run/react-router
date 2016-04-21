@@ -2,10 +2,8 @@ import expect from 'expect'
 import React, { Component } from 'react'
 import { render, unmountComponentAtNode } from 'react-dom'
 import createHistory from '../createMemoryHistory'
-import { canUseMembrane } from '../deprecateObjectProperties'
 import Route from '../Route'
 import Router from '../Router'
-import shouldWarn from './shouldWarn'
 
 describe('Router', function () {
 
@@ -369,29 +367,6 @@ describe('Router', function () {
       ), node, function () {
         setTimeout(function () {
           expect(componentSpy).toHaveBeenCalledWith([ { foo, bar } ])
-          done()
-        })
-      })
-    })
-
-    it('should supply location properties to getComponent', function (done) {
-      if (canUseMembrane) {
-        shouldWarn('deprecated')
-      }
-
-      const Component = () => <div />
-      const getComponent = (location, callback) => {
-        expect(location.pathname).toBe('/')
-        setTimeout(() => callback(null, Component))
-      }
-
-      render((
-        <Router history={createHistory('/')} render={renderSpy}>
-          <Route path="/" getComponent={getComponent} />
-        </Router>
-      ), node, function () {
-        setTimeout(function () {
-          expect(componentSpy).toHaveBeenCalledWith([ Component ])
           done()
         })
       })

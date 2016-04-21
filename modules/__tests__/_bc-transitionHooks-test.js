@@ -113,35 +113,9 @@ describe('v1 When a router enters a branch', function () {
     shouldWarn('deprecated')
   })
 
-  it('calls the onEnter hooks of all routes in that branch', function (done) {
-    const dashboardRouteEnterSpy = spyOn(DashboardRoute, 'onEnter').andCallThrough()
-    const newsFeedRouteEnterSpy = spyOn(NewsFeedRoute, 'onEnter').andCallThrough()
-
-    render(<Router history={createHistory('/news')} routes={routes}/>, node, function () {
-      expect(dashboardRouteEnterSpy).toHaveBeenCalled()
-      expect(newsFeedRouteEnterSpy).toHaveBeenCalled()
-      done()
-    })
-  })
-
-  describe('and one of the transition hooks navigates to another route', function () {
-    it('immediately transitions to the new route', function (done) {
-      const redirectRouteEnterSpy = spyOn(RedirectToInboxRoute, 'onEnter').andCallThrough()
-      const redirectRouteLeaveSpy = spyOn(RedirectToInboxRoute, 'onLeave').andCallThrough()
-      const inboxEnterSpy = spyOn(InboxRoute, 'onEnter').andCallThrough()
-
-      render(<Router history={createHistory('/redirect-to-inbox')} routes={routes}/>, node, function () {
-        expect(this.state.location.pathname).toEqual('/inbox')
-        expect(redirectRouteEnterSpy).toHaveBeenCalled()
-        expect(redirectRouteLeaveSpy.calls.length).toEqual(0)
-        expect(inboxEnterSpy).toHaveBeenCalled()
-        done()
-      })
-    })
-  })
-
   describe('and then navigates to another branch', function () {
     it('calls the onLeave hooks of all routes in the previous branch that are not in the next branch', function (done) {
+      const history = createHistory('/inbox')
       const dashboardRouteLeaveSpy = spyOn(DashboardRoute, 'onLeave').andCallThrough()
       const inboxRouteEnterSpy = spyOn(InboxRoute, 'onEnter').andCallThrough()
       const inboxRouteLeaveSpy = spyOn(InboxRoute, 'onLeave').andCallThrough()
@@ -149,7 +123,7 @@ describe('v1 When a router enters a branch', function () {
       const steps = [
         function () {
           expect(inboxRouteEnterSpy).toHaveBeenCalled('InboxRoute.onEnter was not called')
-          this.history.pushState(null, '/news')
+          history.pushState(null, '/news')
         },
         function () {
           expect(inboxRouteLeaveSpy).toHaveBeenCalled('InboxRoute.onLeave was not called')
@@ -160,7 +134,7 @@ describe('v1 When a router enters a branch', function () {
       const execNextStep = execSteps(steps, done)
 
       render(
-        <Router history={createHistory('/inbox')}
+        <Router history={history}
                 routes={routes}
                 onUpdate={execNextStep}
         />, node, execNextStep)
@@ -169,6 +143,7 @@ describe('v1 When a router enters a branch', function () {
 
   describe('and then navigates to the same branch, but with different params', function () {
     it('calls the onLeave and onEnter hooks of all routes whose params have changed', function (done) {
+      const history = createHistory('/messages/123')
       const dashboardRouteLeaveSpy = spyOn(DashboardRoute, 'onLeave').andCallThrough()
       const dashboardRouteEnterSpy = spyOn(DashboardRoute, 'onEnter').andCallThrough()
       const messageRouteLeaveSpy = spyOn(MessageRoute, 'onLeave').andCallThrough()
@@ -178,7 +153,7 @@ describe('v1 When a router enters a branch', function () {
         function () {
           expect(dashboardRouteEnterSpy).toHaveBeenCalled('DashboardRoute.onEnter was not called')
           expect(messageRouteEnterSpy).toHaveBeenCalled('InboxRoute.onEnter was not called')
-          this.history.pushState(null, '/messages/456')
+          history.pushState(null, '/messages/456')
         },
         function () {
           expect(messageRouteLeaveSpy).toHaveBeenCalled('MessageRoute.onLeave was not called')
@@ -190,7 +165,7 @@ describe('v1 When a router enters a branch', function () {
       const execNextStep = execSteps(steps, done)
 
       render(
-        <Router history={createHistory('/messages/123')}
+        <Router history={history}
                 routes={routes}
                 onUpdate={execNextStep}
         />, node, execNextStep)

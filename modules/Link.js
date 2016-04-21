@@ -1,5 +1,4 @@
 import React from 'react'
-import warning from './routerWarning'
 import { routerShape } from './PropTypes'
 
 const { bool, object, string, func, oneOfType } = React.PropTypes
@@ -19,14 +18,6 @@ function isEmptyObject(object) {
       return false
 
   return true
-}
-
-function createLocationDescriptor(to, { query, hash, state }) {
-  if (query || hash || state) {
-    return { pathname: to, query, hash, state }
-  }
-
-  return to
 }
 
 /**
@@ -95,29 +86,22 @@ const Link = React.createClass({
     event.preventDefault()
 
     if (allowTransition) {
-      const { to, query, hash, state } = this.props
-      const location = createLocationDescriptor(to, { query, hash, state })
+      const { to } = this.props
 
-      this.context.router.push(location)
+      this.context.router.push(to)
     }
   },
 
   render() {
-    const { to, query, hash, state, activeClassName, activeStyle, onlyActiveOnIndex, ...props } = this.props
-    warning(
-      !(query || hash || state),
-      'the `query`, `hash`, and `state` props on `<Link>` are deprecated, use `<Link to={{ pathname, query, hash, state }}/>. http://tiny.cc/router-isActivedeprecated'
-    )
-
+    const { to, activeClassName, activeStyle, onlyActiveOnIndex, ...props } = this.props
     // Ignore if rendered outside the context of router, simplifies unit testing.
     const { router } = this.context
 
     if (router) {
-      const location = createLocationDescriptor(to, { query, hash, state })
-      props.href = router.createHref(location)
+      props.href = router.createHref(to)
 
       if (activeClassName || (activeStyle != null && !isEmptyObject(activeStyle))) {
-        if (router.isActive(location, onlyActiveOnIndex)) {
+        if (router.isActive(to, onlyActiveOnIndex)) {
           if (activeClassName) {
             if (props.className) {
               props.className += ` ${activeClassName}`
