@@ -231,6 +231,7 @@ A *route pattern* (or "path") is a string that describes a portion of a URL. Pat
   - `:paramName` – matches a URL segment up to the next `/`, `?`, or `#`. The matched string is called a [param](#params)
   - `()` – Wraps a portion of the URL that is optional
   - `*` – Matches all characters (non-greedy) up to the next character in the pattern, or to the end of the URL if there is none, and creates a `splat` [param](#params)
+  - `**` - Matches all characters (greedy) until the next `/`, `?`, or `#` and creates a `splat` [param](#params)
 
 Route patterns are relative to the pattern of the parent route unless they begin with a `/`, in which case they begin matching at the beginning of the URL.
 
