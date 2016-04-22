@@ -81,7 +81,7 @@ import { Link } from 'react-router'
 export default class BasicPage extends Component {
   static propTypes = {
     authenticated: PropTypes.bool
-  }
+  };
 
   render() {
     return (
