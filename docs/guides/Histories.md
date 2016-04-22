@@ -147,6 +147,8 @@ factory with the [useQueries](https://github.com/mjackson/history/blob/master/do
 
 ### Examples:
 
+**Note**: You'll need to install `history` module with `npm install --save history`.
+
 Defining a basename:
 
 ```js
