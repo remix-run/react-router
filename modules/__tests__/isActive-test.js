@@ -544,9 +544,9 @@ describe('isActive', function () {
     })
   })
 
-  describe('a pathname that matches URL', function () {
-    describe('with query that does match', function () {
-      it('is active', function (done) {
+  describe('a pathname that matches the URL', function () {
+    describe('with a query containing a repeating parameter', function () {
+      it('is active if the values are specified in the same order', function (done) {
         render((
           <Router history={createHistory('/home?foo=bar&foo=bar1&foo=bar2')}>
             <Route path="/" />
@@ -557,6 +557,48 @@ describe('isActive', function () {
             pathname: '/home',
             query: { foo: [ 'bar', 'bar1', 'bar2' ] }
           })).toBe(true)
+          done()
+        })
+      }),
+      it('is active if the values are specified in a different order', function (done) {
+        render((
+          <Router history={createHistory('/home?foo=bar&foo=bar1&foo=bar2')}>
+            <Route path="/" />
+            <Route path="/home" />
+          </Router>
+        ), node, function () {
+          expect(this.router.isActive({
+            pathname: '/home',
+            query: { foo: [ 'bar1', 'bar', 'bar2' ] }
+          })).toBe(true)
+          done()
+        })
+      })
+      it('is active if an expected param is an empty array that is missing from the URL', function (done) {
+        render((
+          <Router history={createHistory('/home?foo=bar&foo=bar1&foo=bar2')}>
+            <Route path="/" />
+            <Route path="/home" />
+          </Router>
+        ), node, function () {
+          expect(this.router.isActive({
+            pathname: '/home',
+            query: { foo: [ 'bar', 'bar1', 'bar2' ], baz: [ ] }
+          })).toBe(true)
+          done()
+        })
+      })
+      it('is inactive if the expected path contains extra values', function (done) {
+        render((
+          <Router history={createHistory('/home?foo=bar&foo=bar1&foo=bar2')}>
+            <Route path="/" />
+            <Route path="/home" />
+          </Router>
+        ), node, function () {
+          expect(this.router.isActive({
+            pathname: '/home',
+            query: { foo: [ 'bar', 'bar1', 'bar2', 'bar3' ] }
+          })).toBe(false)
           done()
         })
       })
@@ -621,6 +663,7 @@ describe('isActive', function () {
       })
     })
   })
+
 
   describe('dynamic routes', function () {
     const routes = {
