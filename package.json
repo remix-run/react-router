@@ -28,7 +28,8 @@
   },
   "authors": [
     "Ryan Florence",
-    "Michael Jackson"
+    "Michael Jackson",
+    "Tim Dorr"
   ],
   "license": "MIT",
   "dependencies": {
