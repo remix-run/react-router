@@ -12,6 +12,7 @@ const Component = withRouter(
 )
 ```
 
+
 ### Getting the previous location
 
 ```js
@@ -31,9 +32,10 @@ const App = React.createClass({
 })
 ```
 
+
 ### Component won't render
 
-Route matching happens in the order they are defined (think `if/elseif` statement). In this case, `/about/me` will show the `<UserPage>` component because `/about/me` matches the first route. You need to reorder your routes if this happens. `<About>` will never be reachable:
+Route matching happens in the order they are defined (think `if/else if` statement). In this case, `/about/me` will show the `<UserPage>` component because `/about/me` matches the first route. You need to reorder your routes if this happens. `<About>` will never be reachable:
 
 ```js
 <Router>
@@ -52,16 +54,36 @@ Route matching happens in the order they are defined (think `if/elseif` statemen
 ```
 
 
+### Parent path does not show as active
+
+If your routes look like:
+
+```js
+<Route path="/">
+  <Route path="widgets" component={WidgetList} />
+  <Route path="widgets/:widgetId" component={Widget} />
+</Route>
+```
+
+Then the path `/widgets` will not be considered active when the current path is something like `/widgets/3`. This is because React Router looks at parent _routes_ rather than parent _paths_ to determine active state. To make the path `/widgets` active when the current path is `/widgets/3`, you need to declare your routes as:
+
+```js
+<Route path="/">
+  <Route path="widgets">
+    <IndexRoute component={WidgetList} />
+    <Route path=":widgetId" component={Widget} />
+  </Route>
+</Route>
+```
+
+As an additional benefit, this also removes the duplication in declaring route paths.
+
+
 ### "Required prop was not specified" on route components
 
 You might see this if you are using `React.cloneElement` to inject props into route components from their parents. If you see this, remove `isRequired` from `propTypes` for those props. This happens because React validates `propTypes` when the element is created rather than when it is mounted. For more details, see [facebook/react#4494](https://github.com/facebook/react/issues/4494#issuecomment-125068868).
 
 You should generally attempt to use this pattern as sparingly as possible. In general, it's best practice to minimize data dependencies between route components.
-
-
-### `<noscript>` with server-side rendering and async routes
-
-Use `match({ history, routes })` on the client side. See [the server rendering guide](guides/ServerRendering.md#async-routes).
 
 
 ### Passing additional values into route components
@@ -71,3 +93,8 @@ There are multiple ways to do this depending on what you want to do. You can:
 - Define additional values on `<Route>` or the plain route. This will make those values available on `this.props.route` on route components.
 - Pass in a `createElement` handler to `<Router>` or `<RouterContext>`. This will allow you to inject additional props into route elements at creation time.
 - Define a top-level component above `<Router>` or `<RouterContext>` that exports additional values via `getChildContext`, then access them via context from rendered components.
+
+
+### `<noscript>` with server-side rendering and async routes
+
+Use `match({ history, routes })` on the client side. See [the server rendering guide](guides/ServerRendering.md#async-routes).
