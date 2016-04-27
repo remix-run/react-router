@@ -1,6 +1,6 @@
 # React Router [![Travis][build-badge]][build] [![npm package][npm-badge]][npm]
 
-![logo](/logo/vertical@2x.png)
+<img src="/logo/vertical@2x.png" height="150"/>
 
 React Router is a complete routing library for [React](https://facebook.github.io/react).
 
