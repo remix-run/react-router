@@ -88,17 +88,47 @@ You should generally attempt to use this pattern as sparingly as possible. In ge
 
 ### Passing additional values into route components
 
-There are multiple ways to do this depending on what you want to do. You can:
+There are multiple ways to do this depending on what you want specifically.
 
-- Define additional values on `<Route>` or the plain route. This will make those values available on `this.props.route` on route components.
-- Pass in a `createElement` handler to `<Router>` or `<RouterContext>`. This will allow you to inject additional props into route elements at creation time.
-- Pass in a `render` handler to `<Router>` with the result of `applyRouterMiddleware`, using a middleware such as:
-```javascript
-extraProps => ({
-  renderRouteComponent: (child) => React.cloneElement(child, extraProps)
-})
+#### Declare properties on the route
+
+You can define additional props on `<Route>` or on the plain route:
+
+```js
+<Route foo="bar" />
 ```
-- Define a top-level component above `<Router>` or `<RouterContext>` that exports additional values via `getChildContext`, then access them via context from rendered components.
+
+These properties will then be available on `this.props.route` on the route component, such as with `this.props.route.foo` above.
+
+#### Inject props to all routes via middleware
+
+You can define a middleware that injects additional props into each route component:
+
+```js
+const useExtraProps = {
+  renderRouteComponent: child => React.cloneElement(child, extraProps)
+}
+```
+
+You can then use this middleware with:
+
+```js
+<Router
+  history={history}
+  routes={routes}
+  render={applyRouterMiddleware(useExtraProps)}
+/>
+```
+
+#### Use a top-level context provider
+
+You can export React context on a top-level provider component, then access this data throughout the tree on rendered components.
+
+```js
+<ExtraDataProvider>
+  <Router history={history} routes={routes} />
+</ExtraDataProvider>
+```
 
 
 ### `<noscript>` with server-side rendering and async routes
