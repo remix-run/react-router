@@ -18,7 +18,7 @@
 
 - **Feature:** Add `applyRouterMiddleware` for extending router rendering ([#3327])
 - **Feature/Deprecation:** Add `routerShape` and `locationShape` as top-level exported prop types, and deprecate all the old prop types, including the ones that were previously incorrectly removed ([#3349])
-- **Minor:** Move ES module build back to `es6/` to avoid breaking people who were incorrectly importing from `react-router/es6` ([#3334])
+- **Minor:** Move ES module build back to `es6/` to avoid breaking people who were importing from `react-router/es6` ([#3334])
 
 [v2.3.0]: https://github.com/reactjs/react-router/compare/v2.2.4...v2.3.0
 [#3327]: https://github.com/reactjs/react-router/pull/3327
