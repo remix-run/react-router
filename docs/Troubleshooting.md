@@ -92,6 +92,12 @@ There are multiple ways to do this depending on what you want to do. You can:
 
 - Define additional values on `<Route>` or the plain route. This will make those values available on `this.props.route` on route components.
 - Pass in a `createElement` handler to `<Router>` or `<RouterContext>`. This will allow you to inject additional props into route elements at creation time.
+- Pass in a `render` handler to `<Router>` with the result of `applyRouterMiddleware`, using a middleware such as:
+```javascript
+extraProps => ({
+  renderRouteComponent: (child) => React.cloneElement(child, extraProps)
+})
+```
 - Define a top-level component above `<Router>` or `<RouterContext>` that exports additional values via `getChildContext`, then access them via context from rendered components.
 
 
