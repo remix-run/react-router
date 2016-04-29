@@ -4,7 +4,7 @@
   - [`<Router>`](#router)
   - [`<Link>`](#link)
   - [`<IndexLink>`](#indexlink)
-  - [`withRouter`](#withRouter-component)
+  - [`withRouter`](#withroutercomponent)
   - [`<RouterContext>`](#routercontext)
     - [`context.router`](#contextrouter)
   - `<RoutingContext>` (deprecated, use `<RouterContext>`)
