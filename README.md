@@ -60,7 +60,7 @@ You can find the library on `window.ReactRouter`.
 ```js
 import React from 'react'
 import { render } from 'react-dom'
-import { Router, Route, Link, browserHistory } from 'react-router'
+import { Router, Route, Link, browserHistory, NoMatch } from 'react-router'
 
 const App = React.createClass({/*...*/})
 const About = React.createClass({/*...*/})
