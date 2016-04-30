@@ -64,7 +64,7 @@ import { Router, Route, Link, browserHistory } from 'react-router'
 
 const App = React.createClass({/*...*/})
 const About = React.createClass({/*...*/})
-// etc.
+const NoMatch = React.createClass({/*...*/})
 
 const Users = React.createClass({
   render() {
