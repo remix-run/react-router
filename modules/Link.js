@@ -20,6 +20,21 @@ function isEmptyObject(object) {
   return true
 }
 
+function isLinkActive(router, props) {
+  // Ignore if rendered outside the context of router, simplifies unit testing.
+  if (!router) {
+    return false
+  }
+
+  // Ignore if the render output is unaffected by the active state.
+  const { to, activeClassName, activeStyle, onlyActiveOnIndex } = props
+  if (!activeClassName && (activeStyle == null || isEmptyObject(activeStyle))) {
+    return false
+  }
+
+  return router.isActive(to, onlyActiveOnIndex)
+}
+
 /**
  * A <Link> is used to create an <a> element that links to a route.
  * When that route is active, the link gets the value of its
@@ -62,6 +77,60 @@ const Link = React.createClass({
     }
   },
 
+  getInitialState() {
+    return {
+      isActive: isLinkActive(this.context.router, this.props)
+    }
+  },
+
+  componentWillMount() {
+    this._isActive = this.state.isActive
+  },
+
+  componentDidMount() {
+    const { router } = this.context
+    if (router) {
+      this._unlisten = router.listen(() => {
+        if (this._unlisten) {
+          this.updateIsActive()
+        }
+      })
+    }
+  },
+
+  componentWillReceiveProps(nextProps) {
+    const { router } = this.context
+    if (router) {
+      if (
+        nextProps.to !== this.props.to ||
+        nextProps.onlyActiveOnIndex !== this.props.onlyActiveOnIndex ||
+        nextProps.activeClassName !== this.props.activeClassName ||
+        nextProps.activeStyle !== this.props.activeStyle
+      ) {
+        this.updateIsActive(nextProps)
+      }
+    }
+  },
+
+  componentWillUnmount() {
+    if (this._unlisten) {
+      this._unlisten()
+      this._unlisten = null
+    }
+  },
+
+  updateIsActive(props = this.props) {
+    const { router } = this.context
+    const isActive = isLinkActive(router, props)
+
+    // The code is written this way to avoid wasted
+    // setState() calls that get expensive in large trees.
+    if (isActive !== this._isActive) {
+      this._isActive = isActive
+      this.setState({ isActive: this._isActive })
+    }
+  },
+
   handleClick(event) {
     let allowTransition = true
 
@@ -93,26 +162,25 @@ const Link = React.createClass({
   },
 
   render() {
-    const { to, activeClassName, activeStyle, onlyActiveOnIndex, ...props } = this.props
-    // Ignore if rendered outside the context of router, simplifies unit testing.
+    const { to, activeClassName, activeStyle, ...props } = this.props
     const { router } = this.context
+    const { isActive } = this.state
 
+    // Ignore if rendered outside the context of router, simplifies unit testing.
     if (router) {
       props.href = router.createHref(to)
 
-      if (activeClassName || (activeStyle != null && !isEmptyObject(activeStyle))) {
-        if (router.isActive(to, onlyActiveOnIndex)) {
-          if (activeClassName) {
-            if (props.className) {
-              props.className += ` ${activeClassName}`
-            } else {
-              props.className = activeClassName
-            }
+      if (isActive) {
+        if (activeClassName) {
+          if (props.className) {
+            props.className += ` ${activeClassName}`
+          } else {
+            props.className = activeClassName
           }
-
-          if (activeStyle)
-            props.style = { ...props.style, ...activeStyle }
         }
+
+        if (activeStyle)
+          props.style = { ...props.style, ...activeStyle }
       }
     }
 
