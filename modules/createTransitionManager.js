@@ -209,35 +209,73 @@ export default function createTransitionManager(history, routes) {
     }
   }
 
+  let ownListeners = []
+  let unlistenHistory
+  let lastHistoryLocation
+
+  function handleHistoryLocationChange(location, callback) {
+    if (state.location === location) {
+      callback(null, state)
+    } else {
+      match(location, function (error, redirectLocation, nextState) {
+        if (error) {
+          callback(error)
+        } else if (redirectLocation) {
+          history.transitionTo(redirectLocation)
+        } else if (nextState) {
+          callback(null, nextState)
+        } else {
+          warning(
+            false,
+            'Location "%s" did not match any routes',
+            location.pathname + location.search + location.hash
+          )
+        }
+      })
+    }
+  }
+
+  function notifyOwnListeners(error, nextState) {
+    ownListeners.forEach(listener => listener(error, nextState))
+  }
+
   /**
    * This is the API for stateful environments. As the location
    * changes, we update state and call the listener. We can also
    * gracefully handle errors and redirects.
    */
   function listen(listener) {
-    // TODO: Only use a single history listener. Otherwise we'll
-    // end up with multiple concurrent calls to match.
-    return history.listen(function (location) {
-      if (state.location === location) {
-        listener(null, state)
-      } else {
-        match(location, function (error, redirectLocation, nextState) {
-          if (error) {
-            listener(error)
-          } else if (redirectLocation) {
-            history.transitionTo(redirectLocation)
-          } else if (nextState) {
-            listener(null, nextState)
-          } else {
-            warning(
-              false,
-              'Location "%s" did not match any routes',
-              location.pathname + location.search + location.hash
-            )
-          }
-        })
+    if (!unlistenHistory) {
+      // Set up a shared subscription to history
+      // when the first own listener subscribes.
+      unlistenHistory = history.listen(location => {
+        lastHistoryLocation = location
+        handleHistoryLocationChange(location, notifyOwnListeners)
+      })
+    }
+
+    ownListeners.push(listener)
+
+    // Since history.listen() only happens once,
+    // we manually call the new listener synchronously.
+    handleHistoryLocationChange(lastHistoryLocation, listener)
+
+    return () => {
+      const index = ownListeners.indexOf(listener)
+      if (index === -1) {
+        // This listener has been unsubscribed before
+        return
       }
-    })
+
+      ownListeners.splice(index, 1)
+
+      // Tear down the shared subscription to history
+      // when the last own listener unsubscribes.
+      if (!ownListeners.length) {
+        unlistenHistory()
+        unlistenHistory = null
+      }
+    }
   }
 
   return {
