@@ -3,6 +3,7 @@ export Router from './Router'
 export Link from './Link'
 export IndexLink from './IndexLink'
 export withRouter from './withRouter'
+export routerLink from './routerLink'
 
 /* components (configuration) */
 export IndexRedirect from './IndexRedirect'

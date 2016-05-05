@@ -1,16 +1,8 @@
 import React from 'react'
-import warning from './routerWarning'
-import { routerShape } from './PropTypes'
+
+import routerLink from './routerLink'
 
 const { bool, object, string, func, oneOfType } = React.PropTypes
-
-function isLeftClickEvent(event) {
-  return event.button === 0
-}
-
-function isModifiedEvent(event) {
-  return !!(event.metaKey || event.altKey || event.ctrlKey || event.shiftKey)
-}
 
 // TODO: De-duplicate against hasAnyProperties in createTransitionManager.
 function isEmptyObject(object) {
@@ -19,14 +11,6 @@ function isEmptyObject(object) {
       return false
 
   return true
-}
-
-function createLocationDescriptor(to, { query, hash, state }) {
-  if (query || hash || state) {
-    return { pathname: to, query, hash, state }
-  }
-
-  return to
 }
 
 /**
@@ -49,20 +33,14 @@ function createLocationDescriptor(to, { query, hash, state }) {
  */
 const Link = React.createClass({
 
-  contextTypes: {
-    router: routerShape
-  },
-
   propTypes: {
-    to: oneOfType([ string, object ]).isRequired,
-    query: object,
-    hash: string,
-    state: object,
+    location: oneOfType([ string, object ]).isRequired,
+    linkHref: string,
+    linkActive: bool,
     activeStyle: object,
     activeClassName: string,
     onlyActiveOnIndex: bool.isRequired,
-    onClick: func,
-    target: string
+    handleClick: func.isRequired
   },
 
   getDefaultProps() {
@@ -72,70 +50,29 @@ const Link = React.createClass({
     }
   },
 
-  handleClick(event) {
-    let allowTransition = true
-
-    if (this.props.onClick)
-      this.props.onClick(event)
-
-    if (isModifiedEvent(event) || !isLeftClickEvent(event))
-      return
-
-    if (event.defaultPrevented === true)
-      allowTransition = false
-
-    // If target prop is set (e.g. to "_blank") let browser handle link.
-    /* istanbul ignore if: untestable with Karma */
-    if (this.props.target) {
-      if (!allowTransition)
-        event.preventDefault()
-
-      return
-    }
-
-    event.preventDefault()
-
-    if (allowTransition) {
-      const { to, query, hash, state } = this.props
-      const location = createLocationDescriptor(to, { query, hash, state })
-
-      this.context.router.push(location)
-    }
-  },
-
   render() {
-    const { to, query, hash, state, activeClassName, activeStyle, onlyActiveOnIndex, ...props } = this.props
-    warning(
-      !(query || hash || state),
-      'the `query`, `hash`, and `state` props on `<Link>` are deprecated, use `<Link to={{ pathname, query, hash, state }}/>. http://tiny.cc/router-isActivedeprecated'
-    )
-
-    // Ignore if rendered outside the context of router, simplifies unit testing.
-    const { router } = this.context
-
-    if (router) {
-      const location = createLocationDescriptor(to, { query, hash, state })
-      props.href = router.createHref(location)
-
+    const {
+      linkActive, linkHref,  // from the HoC routerLink
+      activeClassName, activeStyle, onlyActiveOnIndex,
+      ...props } = this.props
+    if (linkActive) {
       if (activeClassName || (activeStyle != null && !isEmptyObject(activeStyle))) {
-        if (router.isActive(location, onlyActiveOnIndex)) {
-          if (activeClassName) {
-            if (props.className) {
-              props.className += ` ${activeClassName}`
-            } else {
-              props.className = activeClassName
-            }
+        if (activeClassName) {
+          if (props.className) {
+            props.className += ` ${activeClassName}`
+          } else {
+            props.className = activeClassName
           }
-
-          if (activeStyle)
-            props.style = { ...props.style, ...activeStyle }
         }
+
+        if (activeStyle)
+          props.style = { ...props.style, ...activeStyle }
       }
     }
 
-    return <a {...props} onClick={this.handleClick} />
+    return <a {...props} href={linkHref} onClick={this.props.handleClick} />
   }
 
 })
 
-export default Link
+export default routerLink(Link)
