@@ -2,9 +2,11 @@ import invariant from 'invariant'
 import React from 'react'
 
 import getRouteParams from './getRouteParams'
+import { createContextProvider } from './ContextUtils'
 import { isReactChildren } from './RouteUtils'
 
 const { array, func, object } = React.PropTypes
+const RouterContextProvider = createContextProvider('router', object.isRequired)
 
 /**
  * A <RouterContext> renders the component tree for a given router state
@@ -88,12 +90,21 @@ const RouterContext = React.createClass({
       }, element)
     }
 
+    const isEmpty = element === null || element === false
     invariant(
-      element === null || element === false || React.isValidElement(element),
+      isEmpty || React.isValidElement(element),
       'The root route must render a single element'
     )
 
-    return element
+    if (isEmpty) {
+      return element
+    }
+
+    return (
+      <RouterContextProvider>
+        {element}
+      </RouterContextProvider>
+    )
   }
 
 })
