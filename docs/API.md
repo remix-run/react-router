@@ -4,6 +4,7 @@
   - [`<Router>`](#router)
   - [`<Link>`](#link)
   - [`<IndexLink>`](#indexlink)
+  - [`routerLink`](#routerlinklinkcomponent)
   - [`withRouter`](#withroutercomponent)
   - [`<RouterContext>`](#routercontext)
     - [`context.router`](#contextrouter)
@@ -162,6 +163,16 @@ Given a route like `<Route path="/users/:userId" />`:
 
 ### `<IndexLink>`
 An `<IndexLink>` is like a [`<Link>`](#link), except it is only active when the current route is exactly the linked route. It is equivalent to `<Link>` with the `onlyActiveOnIndex` prop set.
+
+### `routerLink(linkComponent)`
+A HoC (higher-order component) that wraps another component representing a "link".
+It passes the following additional properties to the wrapped component `linkComponent`:
+
+* `linkActive`: a boolean that is `true` if the provided link matches the active route
+* `linkHref`: a string representing the "formatted" link
+* `handleClick`: a function managing the transition
+
+The properties used by the HoC are `to`, `onClick(e)`, `onlyActiveOnIndex`, `target`, `query` (deprecated), `hash` (deprecated), `state` (deprecated) with the same semantic of [`<Link>`](#link).
 
 ### `withRouter(component)`
 A HoC (higher-order component) that wraps another component to provide `this.props.router`. Pass in your component and it will return the wrapped component.
