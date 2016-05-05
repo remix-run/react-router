@@ -314,6 +314,47 @@ describe('A <Link>', function () {
         </Router>
       ), node, execNextStep)
     })
+
+    it('changes active state inside static containers', function (done) {
+      class LinkWrapper extends Component {
+        shouldComponentUpdate() {
+          return false
+        }
+
+        render() {
+          return (
+            <div>
+              <Link to="/hello" activeClassName="active">Link</Link>
+              {this.props.children}
+            </div>
+          )
+        }
+      }
+
+      let a
+      const history = createHistory('/goodbye')
+      const steps = [
+        function () {
+          a = node.querySelector('a')
+          expect(a.className).toEqual('')
+          history.push('/hello')
+        },
+        function () {
+          expect(a.className).toEqual('active')
+        }
+      ]
+
+      const execNextStep = execSteps(steps, done)
+
+      render((
+        <Router history={history} onUpdate={execNextStep}>
+          <Route path="/" component={LinkWrapper}>
+            <Route path="goodbye" component={Goodbye} />
+            <Route path="hello" component={Hello} />
+          </Route>
+        </Router>
+      ), node, execNextStep)
+    })
   })
 
   describe('when clicked', function () {
