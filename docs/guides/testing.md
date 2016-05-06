@@ -129,3 +129,4 @@ describe('BasicPage', function() {
   })
 })
 ```
+[Next Section - Dynamic Routing](https://github.com/reactjs/react-router/blob/master/docs/guides/DynamicRouting.md)

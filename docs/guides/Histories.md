@@ -173,3 +173,4 @@ history.listenBeforeUnload(function () {
 })
 ```
 
+[Next Section - Index Routes](https://github.com/reactjs/react-router/blob/master/docs/guides/IndexRoutes.md)

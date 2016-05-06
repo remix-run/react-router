@@ -14,3 +14,4 @@ render(<Router history={browserHistory} routes={routes}/>, el)
 import { browserHistory } from 'react-router'
 browserHistory.push('/some/path')
 ```
+[Minimizing Bundle Size](https://github.com/reactjs/react-router/blob/master/docs/guides/MinimizingBundleSize.md)
