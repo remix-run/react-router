@@ -6,7 +6,6 @@
   - [`<IndexLink>`](#indexlink)
   - [`<RouterContext>`](#routercontext)
     - [`context.router`](#contextrouter)
-  - `<RoutingContext>` (deprecated, use `<RouterContext>`)
 
 - [Configuration Components](#configuration-components)
   - [`<Route>`](#route)
@@ -29,12 +28,6 @@
   - [`match()`](#match-routes-location-history-options--cb)
   - [`createRoutes()`](#createroutesroutes)
   - [`PropTypes`](#proptypes)
-  - [`useRoutes()`](#useroutescreatehistory-deprecated) (deprecated)
-
-- [Mixins](#mixins-deprecated) (deprecated)
-  - `Lifecycle` (deprecated)
-  - `History` (deprecated)
-  - `RouteContext` (deprecated)
 
 
 ## Components
@@ -116,16 +109,7 @@ A [location descriptor](https://github.com/mjackson/history/blob/master/docs/Glo
   * `hash`: A hash to put in the URL, e.g. `#a-hash`.
   * `state`: State to persist to the `location`.
 
-##### `query` **([Deprecated](https://github.com/reactjs/react-router/blob/master/upgrade-guides/v2.0.0.md#link-to-onenter-and-isactive-use-location-descriptors) see `to`)**
-An object of key:value pairs to be stringified.
-
-##### `hash` **([Deprecated](https://github.com/reactjs/react-router/blob/master/upgrade-guides/v2.0.0.md#link-to-onenter-and-isactive-use-location-descriptors) see `to`)**
-A hash to put in the URL, e.g. `#a-hash`.
-
-_Note: React Router currently does not manage scroll position, and will not scroll to the element corresponding to the hash. Scroll position management utilities are available in the [scroll-behavior](https://github.com/taion/scroll-behavior) library._
-
-##### `state` **([Deprecated](https://github.com/reactjs/react-router/blob/master/upgrade-guides/v2.0.0.md#link-to-onenter-and-isactive-use-location-descriptors) see `to`)**
-State to persist to the `location`.
+_Note: React Router currently does not manage scroll position, and will not scroll to the element corresponding to the hash.
 
 ##### `activeClassName`
 The className a `<Link>` receives when its route is active. No active class by default.
@@ -581,8 +565,6 @@ class App extends React.Component {
 }
 ```
 
-#### `history` (deprecated)
-
 ### Named Components
 When a route has one or more named components, the child elements are available by name on `this.props`. In this case `this.props.children` will be undefined. All route components can participate in the nesting.
 
@@ -697,13 +679,3 @@ One or many [`<Route>`](#route)s or [`PlainRoute`](#plainroute)s.
 The following prop types are exported at top level and from `react-router/lib/PropTypes`:
 - `routerShape`: Shape for the `router` object on context
 - `locationShape`: Shape for the `location` object on route component props
-
-Previously, a number of prop types intended for internal use were also exported under `PropTypes`. These are deprecated and should not be used.
-
-
-### `useRoutes(createHistory)` (deprecated)
-
-
-## Mixins (deprecated)
-
-Deprecated, please see the [upgrade guide](/upgrade-guides/v2.0.0.md#mixins-are-deprecated).
