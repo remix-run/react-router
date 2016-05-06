@@ -19,3 +19,8 @@ import Router from 'react-router/lib/Router'
 ```
 
 The public API available in this manner is defined as the set of imports available from the top-level `react-router` module. Anything not available through the top-level `react-router` module is a private API, and is subject to change without notice.
+
+[Change Log](https://github.com/ev1stensberg/react-router/blob/master/CHANGES.md)
+[TroubleShooting](https://github.com/ev1stensberg/react-router/blob/master/docs/Troubleshooting.md)
+[API](https://github.com/ev1stensberg/react-router/blob/master/docs/API.md)
+[Glossary](https://github.com/ev1stensberg/react-router/blob/master/docs/Glossary.md)

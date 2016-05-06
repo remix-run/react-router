@@ -115,3 +115,4 @@ let Invoice = React.createClass({
 
 })
 ```
+[Next Section - Navigation Outside of Components]((https://github.com/reactjs/react-router/blob/master/docs/guides/NavigatingOutsideOfComponents.md)

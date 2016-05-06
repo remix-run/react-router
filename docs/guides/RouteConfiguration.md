@@ -184,7 +184,7 @@ Continuing with our example above, if a user clicked on a link to `/about` from 
 
 Since [routes](/docs/Glossary.md#route) are usually nested, it's useful to use a concise nested syntax like [JSX](https://facebook.github.io/jsx/) to describe their relationship to one another. However, you may also use an array of plain [route](/docs/Glossary.md#route) objects if you prefer to avoid using JSX.
 
-The `<Redirect>` configuration helper is not available when using plain routes, so you have to set up the redirect using the `onEnter` hook. 
+The `<Redirect>` configuration helper is not available when using plain routes, so you have to set up the redirect using the `onEnter` hook.
 
 The route config we've discussed up to this point could also be specified like this:
 
@@ -214,3 +214,4 @@ const routes = {
 
 render(<Router routes={routes} />, document.body)
 ```
+[Next Section - Route Matching](https://github.com/reactjs/react-router/blob/master/docs/guides/RouteMatching.md)

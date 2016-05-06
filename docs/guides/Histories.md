@@ -172,4 +172,4 @@ history.listenBeforeUnload(function () {
   return 'Are you sure you want to leave this page?'
 })
 ```
-
+[Next Section - Index Routes](https://github.com/reactjs/react-router/blob/master/docs/guides/IndexRoutes.md)

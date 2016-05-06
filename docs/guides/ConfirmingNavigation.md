@@ -22,3 +22,4 @@ const Home = withRouter(
   })
 )
 ```
+[Next Section - Server Rendering](https://github.com/reactjs/react-router/blob/master/docs/guides/ServerRendering.md)

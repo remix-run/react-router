@@ -47,3 +47,5 @@ const CourseRoute = {
 Now go look at what hacks you have in place to do this. Just kidding, I don't want to make you sad right now.
 
 Run the [huge apps](https://github.com/reactjs/react-router/tree/master/examples/huge-apps) example with your web inspector open and watch code get loaded in as you navigate around the demo.
+
+[Next Section - Confirming Navigation](https://github.com/ev1stensberg/react-router/blob/master/docs/guides/ConfirmingNavigation.md)

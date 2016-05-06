@@ -83,3 +83,5 @@ we'd like to link to `Home` but only be active if `Home` is rendered.
 
 To have a link to `/` that is only active when the `Home` route is
 rendered, use `<IndexLink to="/">Home</IndexLink>`.
+
+[Next Section - Testing](https://github.com/reactjs/react-router/blob/master/docs/guides/testing.md)
