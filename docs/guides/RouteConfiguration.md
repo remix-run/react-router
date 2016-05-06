@@ -214,4 +214,5 @@ const routes = {
 
 render(<Router routes={routes} />, document.body)
 ```
+
 [Next Section - Route Matching](https://github.com/reactjs/react-router/blob/master/docs/guides/RouteMatching.md)
