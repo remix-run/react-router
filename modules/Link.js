@@ -1,5 +1,6 @@
 import React from 'react'
 import { routerShape } from './PropTypes'
+import { connectToContext } from './ContextUtils'
 
 const { bool, object, string, func, oneOfType } = React.PropTypes
 
@@ -121,4 +122,4 @@ const Link = React.createClass({
 
 })
 
-export default Link
+export default connectToContext(Link, 'router', object)
