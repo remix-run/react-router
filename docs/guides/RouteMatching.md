@@ -33,4 +33,4 @@ Finally, the routing algorithm attempts to match routes in the order they are de
 <Route path="/comments" ... />
 <Redirect from="/comments" ... />
 ```
-[Next Section - Histories](https://github.com/reactjs/react-router/blob/master/docs/guides/RouteMatching.md)
+[Next Section - Histories](https://github.com/reactjs/react-router/blob/master/docs/guides/Histories.md)

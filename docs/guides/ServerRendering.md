@@ -66,4 +66,4 @@ You should be sure to only use the history singletons in client code. For React 
 
 And don't feel discouraged! History singletons are a great convenience method to navigate without setting up `this.context` or when you're not inside of a React component. Simply take care to only use them in places the server will not try to touch.
 
-[Next Section - Component Lifecycle](https://github.com/reactjs/react-router/blob/master/docs/guides/ComponentLifecycle.md
+[Next Section - Component Lifecycle](https://github.com/reactjs/react-router/blob/master/docs/guides/ComponentLifecycle.md)
