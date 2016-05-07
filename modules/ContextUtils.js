@@ -4,24 +4,30 @@ import React, { PropTypes } from 'react'
 // https://github.com/facebook/react/issues/2517
 // https://github.com/reactjs/react-router/issues/470
 
-export function createContextProvider(name, contextType = PropTypes.any) {
+const contextProviderShape = PropTypes.shape({
+  subscribe: PropTypes.func.isRequired,
+  eventIndex: PropTypes.number.isRequired
+})
+
+function makeContextName(name) {
+  return `@@contextSubscriber/${name}`
+}
+
+export function createContextProvider(name) {
+  const contextName = makeContextName(name)
+
   const ContextProvider = React.createClass({
     propTypes: {
       children: PropTypes.node.isRequired
     },
 
-    contextTypes: {
-      [name]: contextType
-    },
-
     childContextTypes: {
-      [name]: contextType
+      [contextName]: contextProviderShape.isRequired
     },
 
     getChildContext() {
       return {
-        [name]: {
-          ...this.context[name],
+        [contextName]: {
           subscribe: this.subscribe,
           eventIndex: this.eventIndex
         }
@@ -58,41 +64,41 @@ export function createContextProvider(name, contextType = PropTypes.any) {
   return ContextProvider
 }
 
-export function connectToContext(WrappedComponent, name, contextType = PropTypes.any) {
+export function connectToContext(WrappedComponent, name) {
+  const contextName = makeContextName(name)
+
   const ContextSubscriber = React.createClass({
     contextTypes: {
-      [name]: contextType
+      [contextName]: contextProviderShape
     },
 
     getInitialState() {
-      if (!this.context[name]) {
+      if (!this.context[contextName]) {
         return {}
       }
 
       return {
-        lastRenderedEventIndex: this.context[name].eventIndex
+        lastRenderedEventIndex: this.context[contextName].eventIndex
       }
     },
 
     componentDidMount() {
-      if (!this.context[name]) {
+      if (!this.context[contextName]) {
         return
       }
 
-      this.unsubscribe = this.context[name].listen(eventIndex => {
-        if (eventIndex !== this.state.lastRenderedEventIndex) {
-          this.setState({ lastRenderedEventIndex: eventIndex })
-        }
-      })
+      this.unsubscribe = this.context[contextName].subscribe(
+        this.handleContextUpdate
+      )
     },
 
     componentWillReceiveProps() {
-      if (!this.context[name]) {
+      if (!this.context[contextName]) {
         return
       }
 
       this.setState({
-        lastRenderedEventIndex: this.context[name].eventIndex
+        lastRenderedEventIndex: this.context[contextName].eventIndex
       })
     },
 
@@ -103,6 +109,12 @@ export function connectToContext(WrappedComponent, name, contextType = PropTypes
 
       this.unsubscribe()
       this.unsubscribe = null
+    },
+
+    handleContextUpdate(eventIndex) {
+      if (eventIndex !== this.state.lastRenderedEventIndex) {
+        this.setState({ lastRenderedEventIndex: eventIndex })
+      }
     },
 
     render() {
