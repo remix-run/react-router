@@ -1,5 +1,6 @@
-import warning from './routerWarning'
 import { REPLACE } from 'history/lib/Actions'
+
+import warning from './routerWarning'
 import computeChangedRoutes from './computeChangedRoutes'
 import { runEnterHooks, runChangeHooks, runLeaveHooks } from './TransitionUtils'
 import { default as _isActive } from './isActive'
@@ -247,5 +248,3 @@ export default function createTransitionManager(history, routes) {
     listen
   }
 }
-
-//export default useRoutes
