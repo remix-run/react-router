@@ -35,7 +35,6 @@
     "history": "^2.0.1",
     "hoist-non-react-statics": "^1.0.5",
     "invariant": "^2.2.1",
-    "object-assign": "^4.1.0",
     "warning": "^2.1.0"
   },
   "peerDependencies": {

@@ -1,9 +1,17 @@
 export function createRouterObject(history, transitionManager, state) {
-  return {
+  const router = {
     ...history,
     setRouteLeaveHook: transitionManager.listenBeforeLeavingRoute,
-    isActive: transitionManager.isActive,
-    location: state.location,
-    params: state.params
+    isActive: transitionManager.isActive
   }
+
+  return assignRouterState(router, state)
+}
+
+export function assignRouterState(router, { location, params, routes }) {
+  router.location = location
+  router.params = params
+  router.routes = routes
+
+  return router
 }
