@@ -11,7 +11,7 @@ describe('withRouter', function () {
   class App extends Component {
     render() {
       expect(this.props.router).toExist()
-      return <h1>App</h1>
+      return <h1>{this.props.router.location.pathname}</h1>
     }
   }
 
@@ -36,6 +36,36 @@ describe('withRouter', function () {
         <Route path="/" component={WrappedApp} />
       </Router>
     ), node, function () {
+      done()
+    })
+  })
+
+  it('updates the context inside static containers', function (done) {
+    const WrappedApp = withRouter(App)
+
+    class StaticContainer extends Component {
+      shouldComponentUpdate() {
+        return false
+      }
+
+      render() {
+        return this.props.children
+      }
+    }
+
+    const history = createHistory('/')
+
+    render((
+      <Router history={history}>
+        <Route component={StaticContainer}>
+          <Route path="/" component={WrappedApp} />
+          <Route path="/hello" component={WrappedApp} />
+        </Route>
+      </Router>
+    ), node, function () {
+      expect(node.firstChild.textContent).toEqual('/')
+      history.push('/hello')
+      expect(node.firstChild.textContent).toEqual('/hello')
       done()
     })
   })

@@ -1,6 +1,7 @@
 import { PropTypes } from 'react'
 
 // Works around issues with context updates failing to propagate.
+// Caveat: the context value is expected to never change its identity.
 // https://github.com/facebook/react/issues/2517
 // https://github.com/reactjs/react-router/issues/470
 
