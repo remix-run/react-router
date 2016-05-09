@@ -43,8 +43,9 @@ export function ContextProvider(name) {
     },
 
     componentDidUpdate() {
+      const nextValue = this.getChildContext()[name]
       this[listenersKey].forEach(listener =>
-        listener(this[eventIndexKey])
+        listener(this[eventIndexKey], nextValue)
       )
     },
 
@@ -111,8 +112,12 @@ export function ContextSubscriber(name) {
       this[unsubscribeKey] = null
     },
 
-    [handleContextUpdateKey](eventIndex) {
+    [handleContextUpdateKey](eventIndex, nextValue) {
       if (eventIndex !== this.state[lastRenderedEventIndexKey]) {
+        if (this.context[name] !== nextValue) {
+          // React uses a stale value so we update it manually.
+          this.context[name] = nextValue
+        }
         this.setState({ [lastRenderedEventIndexKey]: eventIndex })
       }
     }
