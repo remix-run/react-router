@@ -11,6 +11,10 @@ describe('withRouter', function () {
   class App extends Component {
     render() {
       expect(this.props.router).toExist()
+      expect(this.props.params).toExist()
+      expect(this.props.params).toBe(this.props.router.params)
+      expect(this.props.location).toExist()
+      expect(this.props.location).toBe(this.props.router.location)
       return <h1>{this.props.router.location.pathname}</h1>
     }
   }
@@ -28,7 +32,7 @@ describe('withRouter', function () {
     unmountComponentAtNode(node)
   })
 
-  it('puts router on context', function (done) {
+  it('puts router, props and location on context', function (done) {
     const WrappedApp = withRouter(App)
 
     render((

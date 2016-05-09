@@ -148,7 +148,7 @@ Given a route like `<Route path="/users/:userId" />`:
 An `<IndexLink>` is like a [`<Link>`](#link), except it is only active when the current route is exactly the linked route. It is equivalent to `<Link>` with the `onlyActiveOnIndex` prop set.
 
 ### `withRouter(component)`
-A HoC (higher-order component) that wraps another component to provide `this.props.router`. Pass in your component and it will return the wrapped component.
+A HoC (higher-order component) that wraps another component to provide `this.props.router`, `this.props.params`, and `this.props.location`. Pass in your component and it will return the wrapped component.
 
 ### `<RouterContext>`
 A `<RouterContext>` renders the component tree for a given router state. Its used by `<Router>` but also useful for server rendering and integrating in brownfield development.
