@@ -10,9 +10,20 @@ function getDisplayName(WrappedComponent) {
 export default function withRouter(WrappedComponent) {
   const WithRouter = React.createClass({
     mixins: [ ContextSubscriber('router') ],
+
     contextTypes: { router: routerShape },
+
     render() {
-      return <WrappedComponent {...this.props} router={this.context.router} />
+      const { router } = this.context
+      const { params, location } = router
+      return (
+        <WrappedComponent
+          {...this.props}
+          router={router}
+          params={params}
+          location={location}
+        />
+      )
     }
   })
 
