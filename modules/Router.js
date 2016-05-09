@@ -6,6 +6,7 @@ import RouterContext from './RouterContext'
 import { createRoutes } from './RouteUtils'
 import { createRouterObject } from './RouterUtils'
 import warning from './routerWarning'
+import assign from 'object-assign'
 
 const { func, object } = React.PropTypes
 
@@ -88,7 +89,9 @@ const Router = React.createClass({
       if (error) {
         this.handleError(error)
       } else {
-        this.router = this.createRouterObject(state)
+        // Keep the identity of this.router because of a caveat in ContextUtils:
+        // they only work if the object identity is preserved.
+        assign(this.router, this.createRouterObject(state))
         this.setState(state, this.props.onUpdate)
       }
     })

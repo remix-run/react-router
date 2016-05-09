@@ -1,6 +1,7 @@
 import { PropTypes } from 'react'
 
 // Works around issues with context updates failing to propagate.
+// Caveat: the context value is expected to never change its identity.
 // https://github.com/facebook/react/issues/2517
 // https://github.com/reactjs/react-router/issues/470
 
@@ -43,9 +44,8 @@ export function ContextProvider(name) {
     },
 
     componentDidUpdate() {
-      const nextValue = this.getChildContext()[name]
       this[listenersKey].forEach(listener =>
-        listener(this[eventIndexKey], nextValue)
+        listener(this[eventIndexKey])
       )
     },
 
@@ -112,12 +112,8 @@ export function ContextSubscriber(name) {
       this[unsubscribeKey] = null
     },
 
-    [handleContextUpdateKey](eventIndex, nextValue) {
+    [handleContextUpdateKey](eventIndex) {
       if (eventIndex !== this.state[lastRenderedEventIndexKey]) {
-        if (this.context[name] !== nextValue) {
-          // React uses a stale value so we update it manually.
-          this.context[name] = nextValue
-        }
         this.setState({ [lastRenderedEventIndexKey]: eventIndex })
       }
     }
