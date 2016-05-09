@@ -31,7 +31,7 @@ describe('RouterContext', () => {
       isActive: expect.createSpy().andReturn(isActiveSentinel)
     }
 
-    router = createRouterObject(history, transitionManager)
+    router = createRouterObject(history, transitionManager, {})
 
     class Component extends React.Component {
       constructor(props, ctx) {

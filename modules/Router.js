@@ -62,13 +62,7 @@ const Router = React.createClass({
     }
 
     const { history } = this.props
-    const router = createRouterObject(history, this.transitionManager)
-
-    return {
-      ...router,
-      location: state.location,
-      params: state.params
-    }
+    return createRouterObject(history, this.transitionManager, state)
   },
 
   createTransitionManager() {

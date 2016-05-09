@@ -43,12 +43,7 @@ function match({ history, routes, location, ...options }, callback) {
     let renderProps
 
     if (nextState) {
-      const router = {
-        ...createRouterObject(history, transitionManager),
-        location: nextState.location,
-        params: nextState.params
-      }
-
+      const router = createRouterObject(history, transitionManager, nextState)
       renderProps = {
         ...nextState,
         router,
