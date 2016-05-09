@@ -15,13 +15,14 @@ export default function withRouter(WrappedComponent) {
 
     render() {
       const { router } = this.context
-      const { params, location } = router
+      const { params, location, routes } = router
       return (
         <WrappedComponent
           {...this.props}
           router={router}
           params={params}
           location={location}
+          routes={routes}
         />
       )
     }

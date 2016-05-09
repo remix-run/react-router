@@ -8,9 +8,10 @@ export function createRouterObject(history, transitionManager, state) {
   return assignRouterState(router, state)
 }
 
-export function assignRouterState(router, { location, params }) {
+export function assignRouterState(router, { location, params, routes }) {
   router.location = location
   router.params = params
-  
+  router.routes = routes
+
   return router
 }

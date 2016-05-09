@@ -15,6 +15,8 @@ describe('withRouter', function () {
       expect(this.props.params).toBe(this.props.router.params)
       expect(this.props.location).toExist()
       expect(this.props.location).toBe(this.props.router.location)
+      expect(this.props.routes).toExist()
+      expect(this.props.routes).toBe(this.props.router.routes)
       return <h1>{this.props.router.location.pathname}</h1>
     }
   }
