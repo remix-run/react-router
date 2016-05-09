@@ -55,41 +55,49 @@ const Router = React.createClass({
     }
   },
 
-  componentWillMount() {
-    const { transitionManager, router } = this.createRouterObjects()
-
-    this._unlisten = transitionManager.listen((error, state) => {
-      if (error) {
-        this.handleError(error)
-      } else {
-        router.location = state.location
-        router.params = state.params
-        this.setState(state, this.props.onUpdate)
-      }
-    })
-
-    this.router = router
-  },
-
-  createRouterObjects() {
+  createRouterObject(state) {
     const { matchContext } = this.props
     if (matchContext) {
-      return matchContext
+      return matchContext.router
     }
 
-    let { history } = this.props
+    const { history } = this.props
+    const router = createRouterObject(history, this.transitionManager)
+
+    return {
+      ...router,
+      location: state.location,
+      params: state.params
+    }
+  },
+
+  createTransitionManager() {
+    const { matchContext } = this.props
+    if (matchContext) {
+      return matchContext.transitionManager
+    }
+
+    const { history } = this.props
     const { routes, children } = this.props
 
-    const transitionManager = createTransitionManager(
+    return createTransitionManager(
       history,
       createRoutes(routes || children)
     )
+  },
 
-    const router = createRouterObject(history, transitionManager)
-    router.location = null
-    router.params = null
+  componentWillMount() {
+    this.transitionManager = this.createTransitionManager()
+    this.router = this.createRouterObject(this.state)
 
-    return { transitionManager, router }
+    this._unlisten = this.transitionManager.listen((error, state) => {
+      if (error) {
+        this.handleError(error)
+      } else {
+        this.router = this.createRouterObject(state)
+        this.setState(state, this.props.onUpdate)
+      }
+    })
   },
 
   /* istanbul ignore next: sanity check */
