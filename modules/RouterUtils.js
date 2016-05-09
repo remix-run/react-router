@@ -7,3 +7,8 @@ export function createRouterObject(history, transitionManager, state) {
     params: state.params
   }
 }
+
+export function updateRouterObjectState(router, { location, params }) {
+  router.location = location
+  router.params = params
+}
