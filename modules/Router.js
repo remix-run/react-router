@@ -62,6 +62,8 @@ const Router = React.createClass({
       if (error) {
         this.handleError(error)
       } else {
+        router.location = state.location
+        router.params = state.params
         this.setState(state, this.props.onUpdate)
       }
     })
@@ -82,7 +84,10 @@ const Router = React.createClass({
       history,
       createRoutes(routes || children)
     )
+
     const router = createRouterObject(history, transitionManager)
+    router.location = null
+    router.params = null
 
     return { transitionManager, router }
   },
