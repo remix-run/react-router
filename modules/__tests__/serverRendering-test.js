@@ -152,6 +152,17 @@ describe('server rendering', function () {
     })
   })
 
+  it('includes params and location in the props', function (done) {
+    match({ routes, location: '/dashboard' }, function (error, redirectLocation, renderProps) {
+      expect(renderProps.params).toEqual({})
+      expect(renderProps.router.params).toEqual({})
+
+      expect(renderProps.location.pathname).toEqual('/dashboard')
+      expect(renderProps.router.location.pathname).toEqual('/dashboard')
+      done()
+    })
+  })
+
   it('accepts a basename option', function (done) {
     match({ routes, location: '/dashboard', basename: '/nasebame' }, function (error, redirectLocation, renderProps) {
       const string = renderToString(

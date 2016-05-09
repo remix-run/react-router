@@ -297,6 +297,12 @@ describe('Router', function () {
       const assertProps = (props) => {
         expect(props.routes).toEqual([ route ])
         expect(props.components).toEqual([ MyComponent ])
+
+        expect(props.params).toEqual({})
+        expect(props.location.pathname).toEqual('/')
+        expect(props.router.params).toEqual({})
+        expect(props.router.location.pathname).toEqual('/')
+
         expect(props.foo).toBe('bar')
         expect(props.render).toNotExist()
         done()

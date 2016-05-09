@@ -39,18 +39,19 @@ function match({ history, routes, location, ...options }, callback) {
     })
   }
 
-  const router = createRouterObject(history, transitionManager)
-
   transitionManager.match(location, function (error, redirectLocation, nextState) {
-    callback(
-      error,
-      redirectLocation,
-      nextState && {
+    let renderProps
+
+    if (nextState) {
+      const router = createRouterObject(history, transitionManager, nextState)
+      renderProps = {
         ...nextState,
         router,
         matchContext: { transitionManager, router }
       }
-    )
+    }
+
+    callback(error, redirectLocation, renderProps)
 
     // Defer removing the listener to here to prevent DOM histories from having
     // to unwind DOM event listeners unnecessarily, in case callback renders a
