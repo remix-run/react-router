@@ -4,7 +4,7 @@ import createTransitionManager from './createTransitionManager'
 import { routes } from './InternalPropTypes'
 import RouterContext from './RouterContext'
 import { createRoutes } from './RouteUtils'
-import { createRouterObject, updateRouterObjectState } from './RouterUtils'
+import { createRouterObject, assignRouterState } from './RouterUtils'
 import warning from './routerWarning'
 
 const { func, object } = React.PropTypes
@@ -90,7 +90,7 @@ const Router = React.createClass({
       } else {
         // Keep the identity of this.router because of a caveat in ContextUtils:
         // they only work if the object identity is preserved.
-        updateRouterObjectState(this.router, state)
+        assignRouterState(this.router, state)
         this.setState(state, this.props.onUpdate)
       }
     })
