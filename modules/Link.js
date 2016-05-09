@@ -1,6 +1,6 @@
 import React from 'react'
 import { routerShape } from './PropTypes'
-import { connectToContext } from './ContextUtils'
+import { ContextSubscriber } from './ContextUtils'
 
 const { bool, object, string, func, oneOfType } = React.PropTypes
 
@@ -40,6 +40,8 @@ function isEmptyObject(object) {
  *   <Link ... query={{ show: true }} state={{ the: 'state' }} />
  */
 const Link = React.createClass({
+
+  mixins: [ ContextSubscriber('router') ],
 
   contextTypes: {
     router: routerShape
@@ -122,4 +124,4 @@ const Link = React.createClass({
 
 })
 
-export default connectToContext(Link, 'router', object)
+export default Link
