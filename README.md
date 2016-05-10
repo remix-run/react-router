@@ -20,7 +20,7 @@ React Router keeps your UI in sync with the URL. It has a simple API with powerf
 
 **Older Versions:**
 
-- 0.13.x - [docs](https://github.com/reactjs/react-router/tree/0.13.x/docs/guides) / [code](https://github.com/reactjs/react-router/tree/0.13.x) / [upgrade guide](https://github.com/reactjs/react-router/blob/master/upgrade-guides/v1.0.0.md)
+- 0.13.x - [docs](https://github.com/reactjs/react-router/tree/0.13.x/doc) / [code](https://github.com/reactjs/react-router/tree/0.13.x) / [upgrade guide](https://github.com/reactjs/react-router/blob/master/upgrade-guides/v1.0.0.md)
 - 1.0.x - [docs](https://github.com/reactjs/react-router/tree/1.0.x/docs) / [code](https://github.com/reactjs/react-router/tree/1.0.x) / [upgrade guide](https://github.com/reactjs/react-router/blob/master/upgrade-guides/v2.0.0.md)
 
 For questions and support, please visit [our channel on Reactiflux](https://discord.gg/0ZcbPKXt5bYaNQ46) or [Stack Overflow](http://stackoverflow.com/questions/tagged/react-router).
