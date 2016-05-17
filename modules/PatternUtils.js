@@ -4,15 +4,6 @@ function escapeRegExp(string) {
   return string.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
 }
 
-function _tryDecodeURIComponent(value) {
-  try {
-    return decodeURIComponent(value)
-  } catch(e) {
-    // Ignore 'URI malformed' error.
-    return null
-  }
-}
-
 function _compilePattern(pattern) {
   let regexpSource = ''
   const paramNames = []
@@ -80,6 +71,7 @@ export function compilePattern(pattern) {
  * - **             Consumes (greedy) all characters up to the next character
  *                  in the pattern, or to the end of the URL if there is none
  *
+ *  The function calls callback(error, matched) when finished.
  * The return value is an object with the following properties:
  *
  * - remainingPathname
@@ -125,7 +117,7 @@ export function matchPattern(pattern, pathname) {
   return {
     remainingPathname,
     paramNames,
-    paramValues: match.slice(1).map(v => v && _tryDecodeURIComponent(v))
+    paramValues: match.slice(1).map(v => v && decodeURIComponent(v))
   }
 }
 

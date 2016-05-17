@@ -114,14 +114,6 @@ describe('getParams', function () {
     })
   })
 
-  describe('when the path contains invalid URI character', function () {
-    const pattern = '/foo/:invalid'
-
-    it('should ignore error that are not valid URI character', function () {
-      expect(getParams(pattern, '/foo/%')).toEqual({ invalid: null })
-    })
-  })
-
   describe('when a pattern has a *', function () {
     describe('and the path matches', function () {
       it('returns an object with the params', function () {

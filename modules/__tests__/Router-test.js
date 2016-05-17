@@ -276,6 +276,26 @@ describe('Router', function () {
       })
     })
 
+    it('handles error that are not valid URI character', function (done) {
+      let uriMalformedError
+      const errorSpy = expect.createSpy()
+
+      try {
+        decodeURIComponent('%') // throw URIError
+      } catch (error) {
+        uriMalformedError = error
+      }
+
+      render((
+        <Router history={createHistory('/%')} onError={errorSpy}>
+          <Route path="*" />
+        </Router>
+      ), node, function () {
+        expect(errorSpy).toHaveBeenCalledWith(uriMalformedError)
+        done()
+      })
+    })
+
   })
 
   describe('render prop', function () {
