@@ -40,5 +40,10 @@ describe('matchPattern', function () {
   it('works with greedy and non-greedy splat', function () {
     assertMatch('/**/*.jpg', '/files/path/to/file.jpg', '', [ 'splat', 'splat' ], [ 'files/path/to', 'file' ])
   })
+  
+  it('works with pipes', function () {
+    assertMatch('/one|two', '/one', '', [], [])
+    assertMatch('/one|two', '/two', '', [], [])
+  })
 
 })

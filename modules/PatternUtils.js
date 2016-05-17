@@ -78,6 +78,13 @@ export function compilePattern(pattern) {
  * - paramValues
  */
 export function matchPattern(pattern, pathname) {
+  // Check if pattern has pipes separating the paths
+  if (/\|/.test(pattern)) {
+    let match = pathname.match(new RegExp(`^/?(${pattern})$`), 'i')
+    if (match != null)
+      pattern = match[0]
+  }
+  
   // Ensure pattern starts with leading slash for consistency with pathname.
   if (pattern.charAt(0) !== '/') {
     pattern = `/${pattern}`
