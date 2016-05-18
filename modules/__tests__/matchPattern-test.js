@@ -44,6 +44,12 @@ describe('matchPattern', function () {
   it('works with pipes', function () {
     assertMatch('/one|two', '/one', '', [], [])
     assertMatch('/one|two', '/two', '', [], [])
+    assertMatch('/one|two/:id', '/one/path/', '', [ 'id' ], [ 'path' ])
+    assertMatch('/one|two/:id', '/two/path/', '', [ 'id' ], [ 'path' ])
+    assertMatch('/one|two/*.*', '/one/path.jpg', '', [ 'splat', 'splat' ], [ 'path', 'jpg' ])
+    assertMatch('/one|two/*.*', '/two/path.jpg', '', [ 'splat', 'splat' ], [ 'path', 'jpg' ])
+    assertMatch('/one|two/**/*.jpg', '/one/files/path/to/file.jpg', '', [ 'splat', 'splat' ], [ 'files/path/to', 'file' ])
+    assertMatch('/one|two/**/*.jpg', '/two/files/path/to/file.jpg', '', [ 'splat', 'splat' ], [ 'files/path/to', 'file' ])
   })
 
 })
