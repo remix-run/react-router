@@ -53,7 +53,7 @@ const BarContainer = React.createClass({
   render() {
     const { children, ...props } = this.props
     const barFromContext = this.context.bar
-    return cloneElement(children, { props, barFromContext })
+    return cloneElement(children, { ...props, barFromContext })
   }
 })
 
