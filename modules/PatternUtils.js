@@ -81,7 +81,7 @@ export function matchPattern(pattern, pathname) {
   // Check if pattern has pipes separating the paths
   if (/\|/.test(pattern)) {
     let pipedPath = pattern.match(/[a-zA-Z0-9_-]+\|[a-zA-Z0-9_-]+((\|[a-zA-Z0-9_-]*)*)?/)
-    if (pipedPath != null){
+    if (pipedPath != null) {
       pipedPath = pipedPath[0]
     }
 
@@ -97,7 +97,6 @@ export function matchPattern(pattern, pathname) {
   }
 
   let { regexpSource, paramNames, tokens } = compilePattern(pattern)
-
   if (pattern.charAt(pattern.length - 1) !== '/') {
     regexpSource += '/?' // Allow optional path separator at end.
   }
