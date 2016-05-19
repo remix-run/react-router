@@ -1,3 +1,12 @@
+## [v2.4.1]
+> May 19, 2016
+
+- **Bugfix:** Don't crash on invalid URI components in params ([#3453])
+
+[v2.4.1]: https://github.com/reactjs/react-router/compare/v2.4.0...v2.4.1
+[#3453]: https://github.com/reactjs/react-router/pull/3453
+
+
 ## [v2.4.0]
 > April 28, 2016
 
