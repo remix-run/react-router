@@ -1,14 +1,29 @@
+## [v2.4.0]
+> April 28, 2016
+
+- **Feature:** Add `withRouter` higher-order component for injecting `props.router` ([#3352])
+- **Minor:** Add React as a peer dependency ([#3361])
+- **Minor:** Upgrade to Babel 6 ([#3362])
+- **Minor:** Add `target` to `propTypes` for `<Link>` ([#3397])
+
+[v2.4.0]: https://github.com/reactjs/react-router/compare/v2.3.0...v2.4.0
+[#3352]: https://github.com/reactjs/react-router/pull/3352
+[#3361]: https://github.com/reactjs/react-router/pull/3361
+[#3362]: https://github.com/reactjs/react-router/pull/3362
+[#3397]: https://github.com/reactjs/react-router/pull/3397
+
+
 ## [v2.3.0]
 > April 18, 2016
 
 - **Feature:** Add `applyRouterMiddleware` for extending router rendering ([#3327])
 - **Feature/Deprecation:** Add `routerShape` and `locationShape` as top-level exported prop types, and deprecate all the old prop types, including the ones that were previously incorrectly removed ([#3349])
-- **Minor:** Move ES module build back to `es6/` to avoid breaking people who were incorrectly importing from `react-router/es6` ([#3334])
+- **Minor:** Move ES module build back to `es6/` to avoid breaking people who were importing from `react-router/es6` ([#3334])
 
 [v2.3.0]: https://github.com/reactjs/react-router/compare/v2.2.4...v2.3.0
-[#3327]: https://github.com/reactjs/react-router/issues/3327
-[#3334]: https://github.com/reactjs/react-router/issues/3334
-[#3349]: https://github.com/reactjs/react-router/issues/3349
+[#3327]: https://github.com/reactjs/react-router/pull/3327
+[#3334]: https://github.com/reactjs/react-router/pull/3334
+[#3349]: https://github.com/reactjs/react-router/pull/3349
 
 
 ## [v2.2.4]

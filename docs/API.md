@@ -4,7 +4,7 @@
   - [`<Router>`](#router)
   - [`<Link>`](#link)
   - [`<IndexLink>`](#indexlink)
-  - [`withRouter`](#withRouter-component)
+  - [`withRouter`](#withroutercomponent)
   - [`<RouterContext>`](#routercontext)
     - [`context.router`](#contextrouter)
 
@@ -252,7 +252,7 @@ const routes = (
   <Route component={App}>
     <Route path="groups" components={{main: Groups, sidebar: GroupsSidebar}} />
     <Route path="users" components={{main: Users, sidebar: UsersSidebar}}>
-      <Route path="users/:userId" component={Profile} />
+      <Route path=":userId" component={Profile} />
     </Route>
   </Route>
 )

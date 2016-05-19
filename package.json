@@ -1,6 +1,6 @@
 {
   "name": "react-router",
-  "version": "2.3.0",
+  "version": "2.4.0",
   "description": "A complete routing library for React",
   "files": [
     "*.md",
@@ -16,15 +16,15 @@
   "bugs": "https://github.com/reactjs/react-router/issues",
   "scripts": {
     "build": "npm run build-cjs && npm run build-es",
-    "build-cjs": "rimraf lib && BABEL_ENV=cjs babel ./modules -d lib --ignore '__tests__'",
-    "build-es": "rimraf es6 && BABEL_ENV=es babel ./modules -d es6 --ignore '__tests__'",
-    "build-umd": "BABEL_ENV=cjs NODE_ENV=development webpack modules/index.js umd/ReactRouter.js",
-    "build-min": "BABEL_ENV=cjs NODE_ENV=production webpack -p modules/index.js umd/ReactRouter.min.js",
+    "build-cjs": "rimraf lib && cross-env BABEL_ENV=cjs babel ./modules -d lib --ignore '__tests__'",
+    "build-es": "rimraf es6 && cross-env BABEL_ENV=es babel ./modules -d es6 --ignore '__tests__'",
+    "build-umd": "cross-env BABEL_ENV=cjs NODE_ENV=development webpack modules/index.js umd/ReactRouter.js",
+    "build-min": "cross-env BABEL_ENV=cjs NODE_ENV=production webpack -p modules/index.js umd/ReactRouter.min.js",
     "lint": "eslint modules examples",
-    "start": "BABEL_ENV=cjs node examples/server.js",
+    "start": "cross-env BABEL_ENV=cjs node examples/server.js",
     "test": "npm run lint && npm run test-node && npm run test-browser",
-    "test-browser": "BABEL_ENV=cjs karma start",
-    "test-node": "BABEL_ENV=cjs mocha --compilers js:babel-register tests.node.js"
+    "test-browser": "cross-env BABEL_ENV=cjs karma start",
+    "test-node": "cross-env BABEL_ENV=cjs mocha --compilers js:babel-register tests.node.js"
   },
   "authors": [
     "Ryan Florence",
@@ -51,11 +51,12 @@
     "babel-preset-es2015-loose": "^7.0.0",
     "babel-preset-es2015-loose-native-modules": "^1.0.0",
     "babel-preset-react": "^6.5.0",
-    "babel-preset-stage-0": "^6.5.0",
+    "babel-preset-stage-1": "^6.5.0",
     "babel-register": "^6.7.2",
     "bundle-loader": "^0.5.4",
     "codecov.io": "^0.1.6",
     "coveralls": "^2.11.9",
+    "cross-env": "^1.0.7",
     "css-loader": "^0.23.1",
     "eslint": "^1.10.3",
     "eslint-config-rackt": "^1.1.1",

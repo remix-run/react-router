@@ -274,6 +274,19 @@ describe('Router', function () {
       })
     })
 
+    it('handles error that are not valid URI character', function (done) {
+      const errorSpy = expect.createSpy()
+
+      render((
+        <Router history={createHistory('/%')} onError={errorSpy}>
+          <Route path="*" />
+        </Router>
+      ), node, function () {
+        expect(errorSpy).toHaveBeenCalled()
+        done()
+      })
+    })
+
   })
 
   describe('render prop', function () {

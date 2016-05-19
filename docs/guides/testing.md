@@ -22,7 +22,7 @@ Firstly, ensure you are using at least the following versions of each package.
 
 Also, make sure you are using node 4.x
 
-In prior setups, react-tools was needed. This is not longer the case. You will need to remove it from your package.json and environment.
+In prior setups, react-tools was needed. This is no longer the case. You will need to remove it from your package.json and environment.
 
 ```json
 "react-tools": "~0.13.3",
