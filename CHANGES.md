@@ -1,3 +1,19 @@
+## [v3.0.0-alpha.1]
+> May 19, 2016
+
+- **Breaking:** Remove all deprecated functionality as of v2.3.0 ([#3340], [#3435])
+- **Breaking/Feature:** Make `<Link>` and `withRouter` update inside static containers ([#3430], [#3443])
+- **Feature:** Add `params`, `location`, and `routes` to props injected by `withRouter` and to properties on `context.router` ([#3444], [#3446])
+
+[v3.0.0-alpha.1]: https://github.com/reactjs/react-router/compare/v2.4.1...v3.0.0-alpha.1
+[#3340]: https://github.com/reactjs/react-router/pull/3340
+[#3430]: https://github.com/reactjs/react-router/pull/3430
+[#3435]: https://github.com/reactjs/react-router/pull/3435
+[#3443]: https://github.com/reactjs/react-router/pull/3443
+[#3444]: https://github.com/reactjs/react-router/pull/3444
+[#3446]: https://github.com/reactjs/react-router/pull/3446
+
+
 ## [v2.4.1]
 > May 19, 2016
 
