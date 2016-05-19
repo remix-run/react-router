@@ -2,9 +2,9 @@ import invariant from 'invariant'
 import React from 'react'
 
 import deprecateObjectProperties from './deprecateObjectProperties'
-import getRouteParams from './getRouteParams'
 import { isReactChildren } from './RouteUtils'
 import warning from './routerWarning'
+import { getParamNames } from './PatternUtils';
 
 const { array, func, object } = React.PropTypes
 
@@ -59,6 +59,37 @@ const RouterContext = React.createClass({
     return component == null ? null : this.props.createElement(component, props)
   },
 
+  getRouteParams(route, params) {
+    const currentRouteParams = this.currentRouteParams
+    const routeParams = {}
+
+    if (!route.path)
+      return routeParams
+
+    const paramNames = getParamNames(route.path)
+
+    let updated = false
+    for (const p in params) {
+      if (
+        Object.prototype.hasOwnProperty.call(params, p) &&
+        paramNames.indexOf(p) !== -1
+      ) {
+        if (!currentRouteParams || currentRouteParams[p] !== params[p]) {
+          console.log('updating', p, currentRouteParams && currentRouteParams[p], params[p]) //eslint-disable-line no-console
+          updated = true
+        }
+        routeParams[p] = params[p]
+      }
+    }
+
+    if (updated) {
+      this.currentRouteParams = routeParams
+      return routeParams
+    }
+
+    return currentRouteParams
+  },
+
   render() {
     const { history, location, routes, params, components } = this.props
     let element = null
@@ -69,7 +100,7 @@ const RouterContext = React.createClass({
           return element // Don't create new children; use the grandchildren.
 
         const route = routes[index]
-        const routeParams = getRouteParams(route, params)
+        const routeParams = this.getRouteParams(route, params)
         const props = {
           history,
           location,

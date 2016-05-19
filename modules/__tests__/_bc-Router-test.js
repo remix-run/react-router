@@ -171,6 +171,42 @@ describe('v1 Router', function () {
     })
   })
 
+  describe.only('passed params', function () {
+    it('should be immutable', function (done) {
+      const history = createHistory('/point/a')
+      let lastParams
+      let currentParams
+      class MyComponent extends Component {
+        render() {
+          lastParams = currentParams
+          currentParams = this.props.params
+          return <div>{this.props.params.someToken}</div>
+        }
+      }
+
+      render((
+        <Router history={history}>
+          <Route path="point/:someToken" component={MyComponent} />
+        </Router>
+      ), node, function () {
+        expect(node.textContent).toBe('a')
+        expect(lastParams).toBe(undefined)
+        expect(lastParams).toNotBe(currentParams)
+
+        history.pushState(null, '/point/a')
+        expect(lastParams).toBe(currentParams)
+
+        history.pushState(null, '/point/b')
+        expect(lastParams).toNotBe(currentParams)
+
+        history.pushState(null, '/point/b')
+        expect(lastParams).toBe(currentParams)
+
+        done()
+      })
+    })
+  })
+
   describe('at a route with special characters', function () {
     it('does not double escape', function (done) {
       // https://github.com/reactjs/react-router/issues/1574
