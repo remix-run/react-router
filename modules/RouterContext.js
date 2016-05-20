@@ -44,7 +44,7 @@ const RouterContext = React.createClass({
   },
 
   render() {
-    const { location, routes, params, components } = this.props
+    const { location, routes, params, components, router } = this.props
     let element = null
 
     if (components) {
@@ -58,6 +58,7 @@ const RouterContext = React.createClass({
           location,
           params,
           route,
+          router,
           routeParams,
           routes
         }
