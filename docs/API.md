@@ -201,6 +201,18 @@ Go back one entry in the history.
 ##### `goForward()`
 Go forward one entry in the history.
 
+##### `setRouteLeaveHook(route, hook)`
+Registers the given hook function to run before leaving the given route.
+
+During a normal transition, the hook function receives the next location as its only argument and can return either a prompt message (string) to show the user, to make sure they want to leave the page; or `false`, to prevent the transition. Any other return value will have no effect.
+
+During the beforeunload event (in browsers) the hook receives no arguments.
+In this case it must return a prompt message to prevent the transition.
+
+Returns a function that may be used to unbind the listener.
+
+You don't need to manually tear down the route leave hook in most cases. We automatically remove all attached route leave hooks after leaving the associated route.
+
 ##### `createPath(pathOrLoc, query)`
 Stringifies the query into the pathname, using the router's config.
 
