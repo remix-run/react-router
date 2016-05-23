@@ -2,7 +2,7 @@ import warning from './routerWarning'
 import { REPLACE } from 'history/lib/Actions'
 import computeChangedRoutes from './computeChangedRoutes'
 import { runEnterHooks, runChangeHooks, runLeaveHooks } from './TransitionUtils'
-import { default as _isActive } from './isActive'
+import _isActive from './isActive'
 import getComponents from './getComponents'
 import matchRoutes from './matchRoutes'
 
