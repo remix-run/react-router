@@ -1,5 +1,7 @@
 import warning from './routerWarning'
 import { REPLACE } from 'history/lib/Actions'
+import { loopAsync } from 'history/lib/AsyncUtils'
+import runTransitionHook from 'history/lib/runTransitionHook'
 import computeChangedRoutes from './computeChangedRoutes'
 import { runEnterHooks, runChangeHooks, runLeaveHooks } from './TransitionUtils'
 import _isActive from './isActive'
@@ -141,14 +143,17 @@ export default function createTransitionManager(history, routes) {
         computeChangedRoutes(state, partialNextState).leaveRoutes
       )
 
-      let result
-      for (let i = 0, len = hooks.length; result == null && i < len; ++i) {
-        // Passing the location arg here indicates to
-        // the user that this is a transition hook.
-        result = hooks[i](location)
-      }
-
-      callback(result)
+      // Call the hook, passing in a callback so that it can be used for
+      // asynchronous transition confirmation if desired.
+      loopAsync(
+        hooks.length,
+        (index, next, done) => {
+          runTransitionHook(hooks[index], location, (result) => {
+            result != null ? done(result) : next()
+          })
+        },
+        callback
+      )
     })
   }
 
