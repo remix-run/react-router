@@ -79,6 +79,15 @@ class Account extends React.Component {
 }
 
 
+class ChildLink extends React.Component {
+  static contextTypes = { location: object }
+  render = () => {
+    const { location, to, ...rest } = this.props
+    const loc = location || this.context.location
+    return <Link {...rest} to={`${loc.pathname}/${to}`}/>
+  }
+}
+
 class Accounts extends React.Component {
   render() {
     const { pattern, location, isTerminal } = this.props
@@ -89,8 +98,8 @@ class Accounts extends React.Component {
         {isTerminal && (
           <ul>
             <li><Link to={`${location.pathname}/123`}>Netflix</Link></li>
-            <li><Link to={`${location.pathname}/435`}>Zillow Group</Link></li>
-            <li><Link to={`${location.pathname}/435`}>Yahoo</Link></li>
+            <li><ChildLink to="435">Zillow Group</ChildLink></li>
+            <li><ChildLink to="837">Yahoo</ChildLink></li>
           </ul>
         )}
 
@@ -115,9 +124,9 @@ class App extends React.Component {
             <h1>History!</h1>
 
             <ul>
-              <li><Link to="/foo">foo</Link></li>
-              <li><Link to="/bar">bar</Link></li>
-              <li><Link to="/accounts">accounts</Link></li>
+              <li><Link activeStyle={{ color: 'red' }} to="/foo" location={location}>foo</Link></li>
+              <li><Link activeStyle={{ color: 'red' }} to="/bar">bar</Link></li>
+              <li><Link activeStyle={{ color: 'red' }} to="/accounts">accounts</Link></li>
             </ul>
 
             <MatchLocation pattern="/foo" location={location} children={Foo}/>

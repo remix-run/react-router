@@ -4,21 +4,26 @@ import pathToRegexp from 'path-to-regexp'
 
 const { object } = React.PropTypes
 
+const makeProvider = (name, type) => (
+  class ContextProvider extends React.Component {
+
+    static childContextTypes = {
+      [name]: type
+    }
+
+    getChildContext() {
+      return { [name]: this.props[name] }
+    }
+
+    render() {
+      return React.Children.only(this.props.children)
+    }
+  }
+)
+
 ////////////////////////////////////////////////////////////////////////////////
-class HistoryContext extends React.Component {
-
-  static childContextTypes = {
-    history: object
-  }
-
-  getChildContext() {
-    return { history: this.props.history }
-  }
-
-  render() {
-    return React.Children.only(this.props.children)
-  }
-}
+const HistoryProvider = makeProvider('history', object)
+const LocationProvider = makeProvider('location', object)
 
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -52,9 +57,11 @@ class History extends React.Component {
     const { children:Child, history } = this.props
     const { location } = this.state
     return (
-      <HistoryContext history={history}>
-        <Child location={location}/>
-      </HistoryContext>
+      <HistoryProvider history={history}>
+        <LocationProvider location={location}>
+          <Child location={location}/>
+        </LocationProvider>
+      </HistoryProvider>
     )
   }
 }
@@ -72,6 +79,24 @@ const truncatePathname = (pathname, pattern) => (
   pathname.split('/').slice(0, pattern.split('/').length).join('/')
 )
 
+const matchPattern = (pattern, location) => {
+  const keys = []
+  const pathname = truncatePathname(location.pathname, pattern)
+  const regex = pathToRegexp(pattern, keys)
+  const match = regex.exec(pathname)
+  if (match) {
+    const params = parseParams(pattern, match, keys)
+    const locationLength = location.pathname.split('/').length
+    const patternLength = pattern.split('/').length
+    const isTerminal = locationLength === patternLength
+    return { match, params, isTerminal }
+  } else {
+    return null
+  }
+}
+
+
+////////////////////////////////////////////////////////////////////////////////
 class MatchLocation extends React.Component {
   state = {
     regex: null,
@@ -80,22 +105,14 @@ class MatchLocation extends React.Component {
 
   render() {
     const { children:Child, pattern, location } = this.props
-    const keys = []
-    // cache these next values in state to speed up
-    const pathname = truncatePathname(location.pathname, pattern)
-    const regex = pathToRegexp(pattern, keys)
-    const match = regex.exec(pathname)
-    //
+    const match = matchPattern(pattern, location)
     if (match) {
-      const params = parseParams(pattern, match, keys)
-      const locationLength = location.pathname.split('/').length
-      const patternLength = pattern.split('/').length
       return (
         <Child
-          isTerminal={locationLength === patternLength}
-          pattern={pattern}
           location={location}
-          params={params}
+          pattern={pattern}
+          params={match.params}
+          isTerminal={match.isTerminal}
         />
       )
     } else {
@@ -109,7 +126,13 @@ class MatchLocation extends React.Component {
 class Link extends React.Component {
 
   static contextTypes = {
-    history: object.isRequired
+    history: object,
+    location: object
+  }
+
+  static defaultProps = {
+    style: {},
+    activeStyle: {}
   }
 
   handleClick(event) {
@@ -120,11 +143,14 @@ class Link extends React.Component {
   }
 
   render() {
-    const { href, ...props } = this.props
+    const { to, style, activeStyle, location, ...props } = this.props
+    const locationToMatch = location || this.context.location
+    const isActive = locationToMatch ? !!matchPattern(to, locationToMatch) : false
     return (
       <a
         {...props}
-        href={this.props.to}
+        style={isActive ? { ...style, ...activeStyle } : style}
+        href={to}
         onClick={(event) => this.handleClick(event)}
       />
     )
