@@ -1,7 +1,7 @@
 /*eslint no-console: 0*/
 import React from 'react'
 import { render } from 'react-dom'
-import { History, Link, MatchLocation } from 'react-router'
+import { History, Link, MatchLocation } from 'react-history'
 
 const { object } = React.PropTypes
 
@@ -62,7 +62,7 @@ class Account extends React.Component {
   render() {
     return (
       <div>
-        <h3>Account</h3>
+        <h3>Account {this.props.params.id}</h3>
         <form
           onChange={this.blockHistory}
           onSubmit={this.handleSubmit}
@@ -79,6 +79,7 @@ class Account extends React.Component {
 }
 
 
+// compose this crap :D
 class ChildLink extends React.Component {
   static contextTypes = { location: object }
   render = () => {
@@ -94,6 +95,7 @@ class Accounts extends React.Component {
     return (
       <div>
         <h2>Accounts</h2>
+
         {/* don't need index routes, just tell me if I'm terminal! */}
         {isTerminal && (
           <ul>
@@ -104,37 +106,106 @@ class Accounts extends React.Component {
         )}
 
         {/* define your "child routes" right here instead of magical
-            `this.props.children` that got rendered for you */}
-        <MatchLocation
-          pattern={`${pattern}/:id`}
-          location={location}
-          children={Account}
-        />
+            `this.props.children` that got rendered for you, and
+             send whatever extra props you want, you own rendering */}
+        <MatchLocation pattern={`${pattern}/:id`} children={(props) => (
+          <Account {...props} more="stuff"/>
+        )} />
       </div>
     )
   }
 }
 
+
+const fakeAuth = {
+  isAuthenticated: false,
+  authenticate(cb) {
+    setTimeout(() => {
+      this.isAuthenticated = true
+      cb()
+    }, 100)
+  },
+  signout(cb) {
+    setTimeout(() => {
+      this.isAuthenticated = false
+      cb()
+    }, 100)
+  }
+}
+
+const ProtectedPaths = ({ children }) => (
+  <div>
+    {fakeAuth.isAuthenticated && children}
+  </div>
+)
+
+class Auth extends React.Component {
+
+  static contextTypes = { history: object }
+
+  login = () => {
+    fakeAuth.authenticate(() => this.forceUpdate())
+  }
+
+  signout = () => {
+    fakeAuth.signout(() => {
+      this.context.history.push('/auth')
+    })
+  }
+
+  render = () => (
+    <div>
+      <h2>Auth</h2>
+      {fakeAuth.isAuthenticated ? (
+        <div>
+          <p>You are logged in!</p>
+          <button onClick={this.signout}>Sign out</button>
+        </div>
+      ) : (
+        <button onClick={this.login}>Log in</button>
+      )}
+
+      <ProtectedPaths>
+        <MatchLocation pattern="/auth/nested" children={() => (
+          <p>Nested under auth</p>
+        )}/>
+      </ProtectedPaths>
+    </div>
+  )
+}
+
+const NavLink = (props) => (
+  <Link {...props} activeStyle={{ color: 'green' }}/>
+)
+
 class App extends React.Component {
   render() {
     return (
       <History>
-        {({ location }) => (
-          <div>
-            <h1>History!</h1>
+        <h1>History!</h1>
 
-            <ul>
-              <li><Link activeStyle={{ color: 'red' }} to="/foo" location={location}>foo</Link></li>
-              <li><Link activeStyle={{ color: 'red' }} to="/bar">bar</Link></li>
-              <li><Link activeStyle={{ color: 'red' }} to="/accounts">accounts</Link></li>
-            </ul>
+        <ul>
+          <li><NavLink to="/" activeOnlyWhenExact>Home</NavLink></li>
+          <li><NavLink to="/auth/nested">Auth Example</NavLink></li>
+          <li><NavLink to="/accounts">Blocking Transitions</NavLink></li>
+          <li><NavLink to="/foo" activeOnlyWhenExact>foo</NavLink></li>
+          <li><NavLink to="/foo/bar">foo/bar</NavLink></li>
+          <li><NavLink to="/bar">bar</NavLink></li>
+        </ul>
 
-            <MatchLocation pattern="/foo" location={location} children={Foo}/>
-            <MatchLocation pattern="/bar" location={location} children={Bar}/>
-            <MatchLocation pattern="/accounts" location={location} children={Accounts}/>
+        <MatchLocation pattern="/" children={() => (
+          <h1>Welcome to the future of routing with React!</h1>
+        )}/>
 
-          </div>
-        )}
+        <MatchLocation pattern="/foo" activeOnlyWhenExact children={Foo}/>
+        <MatchLocation pattern="/foo/bar" children={() => <div>foo bar</div>}/>
+        <MatchLocation pattern="/bar" children={Bar}/>
+        <MatchLocation pattern="/accounts" children={(props) => (
+          <Accounts {...props} somethingFromHere="cool"/>
+        )}/>
+
+        <MatchLocation pattern="/auth" children={Auth}/>
+
       </History>
     )
   }

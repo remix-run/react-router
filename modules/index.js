@@ -4,24 +4,15 @@ import pathToRegexp from 'path-to-regexp'
 
 const { object } = React.PropTypes
 
+////////////////////////////////////////////////////////////////////////////////
 const makeProvider = (name, type) => (
   class ContextProvider extends React.Component {
-
-    static childContextTypes = {
-      [name]: type
-    }
-
-    getChildContext() {
-      return { [name]: this.props[name] }
-    }
-
-    render() {
-      return React.Children.only(this.props.children)
-    }
+    static childContextTypes = { [name]: type }
+    getChildContext = () => ({ [name]: this.props[name] })
+    render = () => React.Children.only(this.props.children)
   }
 )
 
-////////////////////////////////////////////////////////////////////////////////
 const HistoryProvider = makeProvider('history', object)
 const LocationProvider = makeProvider('location', object)
 
@@ -45,21 +36,31 @@ class History extends React.Component {
   }
 
   state = {
-    location: window.location
+    location: null
   }
 
-  componentDidMount = () => {
+  componentWillMount = () => {
     const { history } = this.props
     history.listen(location => this.setState({ location }))
   }
 
   render = () => {
-    const { children:Child, history } = this.props
+    const { children, history } = this.props
     const { location } = this.state
+    let Child
+    // accept a component Class, function, or normal child nodes
+    // if people want to pass everything as props, they can
+    // use render props, otherwise they rely on context
+    if (typeof children === 'function')
+      Child = children
     return (
       <HistoryProvider history={history}>
         <LocationProvider location={location}>
-          <Child location={location}/>
+          {Child ? (
+            <Child location={location}/>
+          ) : (
+            <div>{this.props.children}</div>
+          )}
         </LocationProvider>
       </HistoryProvider>
     )
@@ -75,17 +76,30 @@ const parseParams = (pattern, match, keys) => (
   }, {})
 )
 
-const truncatePathname = (pathname, pattern) => (
+const truncatePathnameToPattern = (pathname, pattern) => (
+  // need to special case pattern === '/' here
   pathname.split('/').slice(0, pattern.split('/').length).join('/')
 )
 
-const matchPattern = (pattern, location) => {
-  const keys = []
-  const pathname = truncatePathname(location.pathname, pattern)
-  const regex = pathToRegexp(pattern, keys)
-  const match = regex.exec(pathname)
+const matcherCache = {}
+
+const getMatcher = (pattern) => {
+  let matcher = matcherCache[pattern]
+  if (!matcher) {
+    const keys = []
+    const regex = pathToRegexp(pattern, keys)
+    matcher = matcherCache[pattern] = { keys, regex }
+  }
+  return matcher
+}
+
+const matchPattern = (pattern, location, activeOnlyWhenExact) => {
+  const matcher = getMatcher(pattern)
+  const pathname = activeOnlyWhenExact ?
+    location.pathname : truncatePathnameToPattern(location.pathname, pattern)
+  const match = matcher.regex.exec(pathname)
   if (match) {
-    const params = parseParams(pattern, match, keys)
+    const params = parseParams(pattern, match, matcher.keys)
     const locationLength = location.pathname.split('/').length
     const patternLength = pattern.split('/').length
     const isTerminal = locationLength === patternLength
@@ -97,19 +111,26 @@ const matchPattern = (pattern, location) => {
 
 
 ////////////////////////////////////////////////////////////////////////////////
+// could optimize this by caching the `match` instead of calculating each render
+// can't use sCU because of render prop
 class MatchLocation extends React.Component {
-  state = {
-    regex: null,
-    keys: null
+
+  static defaultProps = {
+    activeOnlyWhenExact: false
   }
 
-  render() {
-    const { children:Child, pattern, location } = this.props
-    const match = matchPattern(pattern, location)
+  static contextTypes = {
+    location: object
+  }
+
+  render = () => {
+    const { children:Child, pattern, location, activeOnlyWhenExact } = this.props
+    const locationToUse = location || this.context.location
+    const match = matchPattern(pattern, locationToUse, activeOnlyWhenExact)
     if (match) {
       return (
         <Child
-          location={location}
+          location={locationToUse}
           pattern={pattern}
           params={match.params}
           isTerminal={match.isTerminal}
@@ -119,10 +140,12 @@ class MatchLocation extends React.Component {
       return null
     }
   }
+
 }
 
 
 ////////////////////////////////////////////////////////////////////////////////
+// obviously needs accessibility stuff from React Router Link
 class Link extends React.Component {
 
   static contextTypes = {
@@ -131,27 +154,36 @@ class Link extends React.Component {
   }
 
   static defaultProps = {
+    activeOnlyWhenExact: false,
     style: {},
     activeStyle: {}
   }
 
-  handleClick(event) {
+  handleClick = (event) => {
     event.preventDefault()
     const { history } = this.context
     const { to } = this.props
     history.push(to)
   }
 
-  render() {
-    const { to, style, activeStyle, location, ...props } = this.props
-    const locationToMatch = location || this.context.location
-    const isActive = locationToMatch ? !!matchPattern(to, locationToMatch) : false
+  render = () => {
+    const {
+      to,
+      style,
+      activeStyle,
+      location,
+      activeOnlyWhenExact,
+      ...rest
+    } = this.props
+    const { pathname } = location || this.context.location
+    const isActive = activeOnlyWhenExact ?
+      pathname === to : pathname.startsWith(to)
     return (
       <a
-        {...props}
-        style={isActive ? { ...style, ...activeStyle } : style}
+        {...rest}
         href={to}
-        onClick={(event) => this.handleClick(event)}
+        style={isActive ? { ...style, ...activeStyle } : style}
+        onClick={this.handleClick}
       />
     )
   }

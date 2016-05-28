@@ -1,11 +1,12 @@
 {
-  "name": "react-router-experiment",
+  "name": "react-history",
   "version": "0.0.0",
-  "description": "Name says it all",
+  "description": "",
   "scripts": {
     "start": "webpack-dev-server --config example/webpack.config.js --inline --content-base example"
   },
   "authors": [
+    "Michael Jackson",
     "Ryan Florence"
   ],
   "license": "MIT",
@@ -17,11 +18,15 @@
   "tags": [
     "react",
     "react router",
+    "routing",
+    "history",
     "links"
   ],
   "keywords": [
     "react",
     "react router",
-    "relative links"
+    "routing",
+    "history",
+    "links"
   ]
 }
