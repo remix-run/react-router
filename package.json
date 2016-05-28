@@ -1,0 +1,27 @@
+{
+  "name": "react-router-experiment",
+  "version": "0.0.0",
+  "description": "Name says it all",
+  "scripts": {
+    "start": "webpack-dev-server --config example/webpack.config.js --inline --content-base example"
+  },
+  "authors": [
+    "Ryan Florence"
+  ],
+  "license": "MIT",
+  "dependencies": {
+    "pushstate-server": "^1.8.1",
+    "resolve-pathname": "^2.0.0",
+    "webpack-dev-server": "^1.14.1"
+  },
+  "tags": [
+    "react",
+    "react router",
+    "links"
+  ],
+  "keywords": [
+    "react",
+    "react router",
+    "relative links"
+  ]
+}
