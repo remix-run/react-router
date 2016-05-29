@@ -58,6 +58,8 @@ export default function createTransitionManager(history, routes) {
         if (error) {
           callback(error)
         } else if (nextState) {
+          location.routes = nextState.routes
+          location.params = nextState.params
           finishMatch({ ...nextState, location }, callback)
         } else {
           callback()
