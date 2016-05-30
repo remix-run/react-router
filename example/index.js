@@ -1,7 +1,7 @@
 /*eslint no-console: 0*/
 import React from 'react'
 import { render } from 'react-dom'
-import { History, Link, MatchLocation, NoMatches } from 'react-history'
+import { Router, Link, MatchLocation, NoMatches } from 'react-history'
 
 import Auth from './components/Auth'
 import Params from './components/Params'
@@ -20,8 +20,8 @@ const NavLink = (props) => (
 class App extends React.Component {
   render() {
     return (
-      <History>
-        <h1>History!</h1>
+      <Router>
+        <h1>Declarative, Composable, React Router!</h1>
         <nav>
           <NavLink to="/" activeOnlyWhenExact>Home</NavLink> | {' '}
           <NavLink to="/auth">Auth Example</NavLink> | {' '}
@@ -47,11 +47,37 @@ class App extends React.Component {
           </div>
         )}/>
 
-      </History>
+      </Router>
     )
   }
 }
 
+class Controlled extends React.Component {
+  state = {
+    location: window.location
+  }
+
+  handleHistoryChange = (location) => {
+    this.setState({ location })
+  }
+
+  render() {
+    return (
+      <Router
+        location={this.state.location}
+        onChange={this.handleHistoryChange}
+      >
+        <div>
+          <h1>Controlled Router</h1>
+          <p>
+            <Link to="/foo">Foo</Link> | <Link to="/bar">Bar</Link>
+          </p>
+          <pre>{JSON.stringify(this.state, null, 2)}</pre>
+        </div>
+      </Router>
+    )
+  }
+}
 
 render(<App/>, document.getElementById('app'))
 
