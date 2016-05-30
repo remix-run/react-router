@@ -265,7 +265,7 @@ class MatchLocation extends React.Component {
 class NoMatches extends React.Component {
 
   static propTypes = {
-    children: funcOrNode,
+    children: funcOrNode
   }
 
   static contextTypes = {
@@ -286,6 +286,14 @@ class NoMatches extends React.Component {
 // obviously needs accessibility stuff from React Router Link
 class Link extends React.Component {
 
+  static propTypes = {
+    to: string,
+    style: object,
+    activeStyle: object,
+    location: object,
+    activeOnlyWhenExact: bool
+  }
+
   static contextTypes = {
     history: object,
     location: object
@@ -304,7 +312,7 @@ class Link extends React.Component {
     history.push(to)
   }
 
-  render = () => {
+  render() {
     const {
       to,
       style,
@@ -330,5 +338,60 @@ class Link extends React.Component {
 
 
 ////////////////////////////////////////////////////////////////////////////////
-export { History, MatchLocation, NoMatches, Link }
+class BlockHistory extends React.Component {
+
+  static propTypes = {
+    when: bool,
+    prompt: func
+  }
+
+  static contextTypes = {
+    history: object
+  }
+
+  unlistenBefore = null
+
+  componentDidMount() {
+    this.maybeBlock()
+  }
+
+  componentDidUpdate() {
+    this.maybeBlock()
+  }
+
+  componentWillUnmount() {
+    this.unblock()
+  }
+
+  maybeBlock() {
+    const { when } = this.props
+    if (when) {
+      this.block()
+    } else {
+      this.unblock()
+    }
+  }
+
+  block() {
+    const { history } = this.context
+    const { prompt } = this.props
+    if (!this.unlistenBefore) {
+      this.unlistenBefore = history.listenBefore(prompt)
+    }
+  }
+
+  unblock() {
+    if (this.unlistenBefore) {
+      this.unlistenBefore()
+      this.unlistenBefore = null
+    }
+  }
+
+  render() {
+    return null
+  }
+}
+
+////////////////////////////////////////////////////////////////////////////////
+export { History, MatchLocation, NoMatches, Link, BlockHistory }
 
