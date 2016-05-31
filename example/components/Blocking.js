@@ -1,5 +1,5 @@
 import React from 'react'
-import { BlockHistory } from 'react-history'
+import { BlockHistory } from 'react-router'
 
 class Blocking extends React.Component {
 

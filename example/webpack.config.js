@@ -10,7 +10,7 @@ module.exports = {
   },
   resolve: {
     alias: {
-      'react-history': path.join(__dirname, '..', 'modules')
+      'react-router': path.join(__dirname, '..', 'modules')
     }
   },
   module: {

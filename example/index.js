@@ -1,7 +1,7 @@
 /*eslint no-console: 0*/
 import React from 'react'
 import { render } from 'react-dom'
-import { Router, Link, MatchLocation, NoMatches } from 'react-history'
+import { Router, Link, MatchLocation, NoMatches } from 'react-router'
 
 import Auth from './components/Auth'
 import Params from './components/Params'

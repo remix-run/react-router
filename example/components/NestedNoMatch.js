@@ -1,5 +1,5 @@
 import React from 'react'
-import { NoMatches, MatchLocation, Link } from 'react-history'
+import { NoMatches, MatchLocation, Link } from 'react-router'
 
 const NestedNoMatch = () => (
   <div>

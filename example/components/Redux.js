@@ -1,6 +1,6 @@
 /*eslint no-console: 0*/
 import React from 'react'
-import { Router, MatchLocation, Link } from 'react-history'
+import { Router, MatchLocation, Link } from 'react-router'
 import { createStore, combineReducers, applyMiddleware } from 'redux'
 import { Provider, connect } from 'react-redux'
 

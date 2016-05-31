@@ -1,5 +1,5 @@
 import React from 'react'
-import { MatchLocation, Link } from 'react-history'
+import { MatchLocation, Link } from 'react-router'
 
 const genKey = () => Math.random().toString(36).substr(2, 5)
 
