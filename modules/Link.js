@@ -70,7 +70,11 @@ const Link = React.createClass({
     let allowTransition = true
 
     if (this.props.onClick)
-      this.props.onClick(event)
+      this.props.onClick(Object.assign({},
+        event,
+        {linkProps: this.props},
+        this.context
+      ))
 
     if (isModifiedEvent(event) || !isLeftClickEvent(event))
       return
@@ -92,7 +96,7 @@ const Link = React.createClass({
     if (allowTransition) {
       const { to } = this.props
 
-      this.context.router.push(to)
+      this.context.router.push(event.linkProps.redirectTo || to)
     }
   },
 
