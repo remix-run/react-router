@@ -485,6 +485,9 @@ The dynamic segments of the URL.
 #### `route`
 The route that rendered this component.
 
+#### `router`
+Contains methods relevant to routing. Most useful for imperatively transitioning around the application.
+
 #### `routeParams`
 A subset of `this.props.params` that were directly specified in this component's route. For example, if the route's path is `users/:userId` and the URL is `/users/123/portfolios/345` then `this.props.routeParams` will be `{userId: '123'}`, and `this.props.params` will be `{userId: '123', portfolioId: 345}`.
 

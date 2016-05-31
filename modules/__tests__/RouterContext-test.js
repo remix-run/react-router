@@ -67,6 +67,19 @@ describe('RouterContext', () => {
       done()
     })
   })
+  
+  it('injects a `router` object into props of route components', (done) => {
+    class RoutedComponent extends React.Component {
+      render() {
+        expect(this.props.router).toBeA(Object)
+        return null
+      }
+    }
+
+    match({ location: '/', routes: { path: '/', component: RoutedComponent } }, (err, redirect, renderProps) => {
+      render(<RouterContext {...renderProps} history={history} router={router}  />, node, done)
+    })
+  })
 
   describe('some weird tests that test implementation and should probably go away', () => {
     it('proxies calls to `push` to `props.history`', (done) => {
