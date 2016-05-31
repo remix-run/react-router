@@ -17,6 +17,14 @@ const NavLink = (props) => (
   <Link {...props} activeStyle={{ color: 'hsl(10, 50%, 50%)' }}/>
 )
 
+const NoMatch = ({ location }) => (
+  <div>
+    <h2>No Match Handling</h2>
+    <p>Nothing matched <code>{location.pathname}</code>.</p>
+    <p><Link to={`/${Math.random()}`}>Try something random</Link>?</p>
+  </div>
+)
+
 class App extends React.Component {
   render() {
     return (
@@ -38,46 +46,15 @@ class App extends React.Component {
         <MatchLocation pattern="/recursive" children={Recursive}/>
         <MatchLocation pattern="/blocking" children={Blocking}/>
         <MatchLocation pattern="/nested-no-match" children={NestedNoMatch}/>
+        <NoMatches children={NoMatch}/>
 
-        <NoMatches children={({ location }) => (
-          <div>
-            <h2>No Match Handling</h2>
-            <p>Nothing matched <code>{location.pathname}</code>.</p>
-            <p><Link to={`/${Math.random()}`}>Try something random</Link>?</p>
-          </div>
-        )}/>
-
-      </Router>
-    )
-  }
-}
-
-class Controlled extends React.Component {
-  state = {
-    location: window.location
-  }
-
-  handleHistoryChange = (location) => {
-    this.setState({ location })
-  }
-
-  render() {
-    return (
-      <Router
-        location={this.state.location}
-        onChange={this.handleHistoryChange}
-      >
-        <div>
-          <h1>Controlled Router</h1>
-          <p>
-            <Link to="/foo">Foo</Link> | <Link to="/bar">Bar</Link>
-          </p>
-          <pre>{JSON.stringify(this.state, null, 2)}</pre>
-        </div>
       </Router>
     )
   }
 }
 
 render(<App/>, document.getElementById('app'))
+
+//import Redux from './components/Redux'
+//render(<Redux/>, document.getElementById('app'))
 

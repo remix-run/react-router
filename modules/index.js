@@ -37,7 +37,7 @@ class Router extends React.Component {
 class MatchLocation extends React.Component {
 
   static propTypes = {
-    children: funcOrNode,
+    children: func,
     pattern: string,
     location: object,
     exactly: bool
@@ -248,6 +248,17 @@ class History extends React.Component {
     } else if (!nextProps.location && this.props.location) {
       this.switchToUncontrolled()
     }
+
+    if (nextProps.location !== this.props.location) {
+      this.transitioning = true
+      const { location } = nextProps
+      const { history } = this.props
+      if (location.action === 'PUSH') {
+        history.push(location)
+      } else {
+        history.replace(location)
+      }
+    }
   }
 
   isControlled() {
@@ -267,8 +278,13 @@ class History extends React.Component {
                   not provide an \`onChange\`. You must provide \`onChange\` to control
                   this component, otherwise it won’t be able to change the url.`)
     this.unlistenBefore = history.listenBefore((location) => {
-      onChange(location)
-      return false
+      if (!this.transitioning) {
+        onChange(location)
+        return false
+      } else {
+        this.transitioning = false
+        return true
+      }
     })
   }
 
@@ -311,15 +327,15 @@ const makeProvider = (contextName, type, displayName) => (
 
     static displayName = displayName
 
-    getChildContext = () => (
-      {
+    getChildContext() {
+      return {
         [contextName]: this.props[contextName]
       }
-    )
+    }
 
-    render = () => (
-      React.Children.only(this.props.children)
-    )
+    render() {
+      return React.Children.only(this.props.children)
+    }
   }
 )
 
@@ -344,9 +360,13 @@ class FuncOrNode extends React.Component {
     let Child
     if (typeof children === 'function')
       Child = children
-    return Child ?
-      <Child {...props}/> :
+    return Child ? (
+      <Child {...props}/>
+    ) : React.Children.count(children) === 1 ? (
+      children
+    ) : (
       <div>{children}</div>
+    )
   }
 }
 
@@ -367,17 +387,17 @@ class MatchCountProvider extends React.Component {
 
   state = { count: 0 }
 
-  unregisterMatch = () => {
+  registerMatch = () => {
     // have to manage manually since calling setState on same tick of event loop
     // would result in only `1` even though many may have registered
-    this.count--
+    this.count++
     this.setState({
       count: this.count
     })
   }
 
-  registerMatch = () => {
-    this.count++
+  unregisterMatch = () => {
+    this.count--
     this.setState({
       count: this.count
     })
@@ -456,8 +476,8 @@ const getMatcher = (pattern) => {
 
 
 ////////////////////////////////////////////////////////////////////////////////
-const matchPattern = (pattern, location, exactly) => {
-  const specialCase = !exactly && pattern === '/'
+const matchPattern = (pattern, location, matchExactly) => {
+  const specialCase = !matchExactly && pattern === '/'
   if (specialCase) {
     return {
       params: null,
@@ -466,7 +486,7 @@ const matchPattern = (pattern, location, exactly) => {
     }
   } else {
     const matcher = getMatcher(pattern)
-    const pathname = exactly ?
+    const pathname = matchExactly ?
       location.pathname : truncatePathnameToPattern(location.pathname, pattern)
     const match = matcher.regex.exec(pathname)
     if (match) {

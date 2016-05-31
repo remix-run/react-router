@@ -1,6 +1,6 @@
 {
-  "name": "react-history",
-  "version": "0.0.0",
+  "name": "react-router",
+  "version": "4.0.0-pre",
   "description": "",
   "scripts": {
     "start": "webpack-dev-server --config example/webpack.config.js --inline --content-base example"
@@ -10,10 +10,12 @@
     "Ryan Florence"
   ],
   "license": "MIT",
+  "peerDependencies": {
+    "react": "^15.1.0"
+  },
   "dependencies": {
-    "pushstate-server": "^1.8.1",
-    "resolve-pathname": "^2.0.0",
-    "webpack-dev-server": "^1.14.1"
+    "history": "2.1.2",
+    "path-to-regexp": "^1.5.0"
   },
   "tags": [
     "react",
@@ -30,6 +32,10 @@
     "links"
   ],
   "devDependencies": {
-    "eslint-plugin-react": "5.1.1"
+    "eslint-plugin-react": "5.1.1",
+    "react": "^15.1.0",
+    "react-redux": "^4.4.5",
+    "redux": "^3.5.2",
+    "webpack-dev-server": "^1.14.1"
   }
 }
