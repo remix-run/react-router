@@ -35,7 +35,8 @@
     "history": "^2.0.1",
     "hoist-non-react-statics": "^1.0.5",
     "invariant": "^2.2.1",
-    "warning": "^2.1.0"
+    "warning": "^2.1.0",
+    "loose-envify": "^1.2.0"
   },
   "peerDependencies": {
     "react": "^0.14.0 || ^15.0.0"
@@ -85,6 +86,11 @@
     "style-loader": "^0.13.1",
     "webpack": "^1.12.14",
     "webpack-dev-middleware": "^1.6.1"
+  },
+  "browserify": {
+    "transform": [
+      "loose-envify"
+    ]
   },
   "tags": [
     "react",
