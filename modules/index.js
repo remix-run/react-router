@@ -268,7 +268,12 @@ class History extends React.Component {
 
   listen() {
     const { history } = this.props
-    this.unlisten = history.listen((location) => {
+
+    this.setState({
+      location: history.getCurrentLocation()
+    })
+
+    this.unlisten = history.listen(location => {
       this.setState({ location })
     })
   }
