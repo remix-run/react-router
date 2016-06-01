@@ -1,0 +1,17 @@
+.button:focus {
+  outline: none;
+  color: hsl(200, 100%, 41%);
+}
+
+.button:hover {
+  color: hsl(5, 100%, 41%);
+}
+
+.button:active {
+  color: hsl(5, 100%, 30%);
+}
+
+.button:disabled {
+  color: hsl(5, 0%, 50%);
+}
+

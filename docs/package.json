@@ -1,0 +1,31 @@
+{
+  "name": "docs",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "start": "webpack-dev-server --config webpack.config.js --inline --content-base .",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "css-loader": "0.23.1",
+    "history": "2.1.2",
+    "jsxstyle": "0.0.18",
+    "postcss-loader": "0.9.1",
+    "react": "0.14.8",
+    "react-dom": "0.14.8",
+    "react-icons": "2.1.0",
+    "style-loader": "0.13.1"
+  },
+  "devDependencies": {
+    "babel-eslint": "6.0.4",
+    "bundle-loader": "0.5.4",
+    "eslint": "2.11.1",
+    "eslint-config-rackt": "1.1.1",
+    "eslint-plugin-react": "5.1.1",
+    "webpack": "1.13.1",
+    "webpack-dev-server": "1.14.1"
+  }
+}

@@ -1,10 +1,11 @@
 {
-  "extends": "rackt",
+  "extends": "eslint:recommended",
   "rules": {
+    "no-undef": 2,
+    "no-unused-vars": 2,
     "react/jsx-uses-react": 1,
     "react/jsx-uses-vars": 1,
     "react/jsx-no-undef": 2,
-    "react/wrap-multilines": 2,
     "react/prop-types": 2
   },
   "plugins": [

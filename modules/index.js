@@ -38,6 +38,7 @@ class MatchLocation extends React.Component {
 
   static propTypes = {
     children: func,
+    // TODO: has to start w/ slash, create custom validator
     pattern: string,
     location: object,
     exactly: bool
