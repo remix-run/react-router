@@ -4,6 +4,7 @@ import { Router, Link, MatchLocation } from 'react-router'
 import { H, V, B, GRAY, RED, PAD } from './components/layout'
 import LoadingDots from './components/LoadingDots'
 import FakeBrowser from './components/FakeBrowser'
+import SourceViewer from './components/SourceViewer'
 
 const { string } = React.PropTypes
 
@@ -21,6 +22,7 @@ const Main = (props) => (
     flex="1"
     padding={`${PAD}px ${PAD*5}px`}
     height="100%"
+    overflow="auto"
   />
 )
 
@@ -72,13 +74,30 @@ class LoadBundle extends React.Component {
 
 }
 
+const Header = (props) => (
+  <B {...props}
+    fontSize="300%"
+    fontWeight="100"
+    fontFamily="Helvetica Neue, sans-serif"
+    textAlign="center"
+  />
+)
+
 const PAGES = [
   { name: 'Philosophy', path: '/philosophy' },
   { name: 'Quick Start', path: '/quick-start' }
 ]
 
 const EXAMPLES = [
-  { name: 'URL Parameters', path: '/url-parameters', load: require('bundle?lazy!./examples/Params') },
+  {
+    name: 'URL Parameters',
+    path: '/url-parameters',
+    load: require('bundle?lazy!./examples/Params'),
+    loadSource: (cb) => {
+      const stuff = require('raw!./.examples/Params.js')
+      cb(stuff)
+    }
+  },
   { name: 'Redirects (Auth Workflow)', path: '/auth-workflow' },
   { name: 'Blocking Transitions', path: '/blocking-transitions' },
   { name: 'No Match Handling', path: '/no-match-handling' },
@@ -131,11 +150,17 @@ class App extends React.Component {
           <Main>
             {EXAMPLES.map((page, index) => (
               <MatchLocation key={index} pattern={page.path} children={() => (
-                <LoadBundle load={page.load} children={({ mod }) => (
-                  <FakeBrowser page={page} children={({ history }) => (
-                    <mod.default history={history} />
+                <B>
+                  <Header>{page.name}</Header>
+                  <LoadBundle load={page.load} children={({ mod }) => (
+                    <FakeBrowser page={page} children={({ history }) => (
+                      <mod.default history={history} />
+                    )}/>
                   )}/>
-                )}/>
+                  <LoadBundle load={page.loadSource} children={({ mod }) => (
+                    <SourceViewer code={mod}/>
+                  )}/>
+                </B>
               )}/>
             ))}
           </Main>

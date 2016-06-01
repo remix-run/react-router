@@ -4,16 +4,20 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "start": "webpack-dev-server --config webpack.config.js --inline --content-base .",
+    "start": "rm -rf .examples && cp -R examples .examples && webpack-dev-server --config webpack.config.js --inline --content-base .",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "author": "",
   "license": "ISC",
   "dependencies": {
     "css-loader": "0.23.1",
+    "highlight-loader": "0.7.2",
+    "highlight.js": "9.4.0",
     "history": "2.1.2",
+    "html-loader": "0.4.3",
     "jsxstyle": "0.0.18",
     "postcss-loader": "0.9.1",
+    "raw-loader": "0.5.1",
     "react": "0.14.8",
     "react-dom": "0.14.8",
     "react-icons": "2.1.0",

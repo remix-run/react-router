@@ -1,18 +1,9 @@
 import React from 'react'
-import { B, V, H, PAD, LIGHT_GRAY } from '../layout'
+import { B, V, H, I, PAD, LIGHT_GRAY } from '../layout'
 import createMemoryHistory from 'history/lib/createMemoryHistory'
 import LeftArrow from 'react-icons/lib/ti/arrow-left'
 import RightArrow from 'react-icons/lib/ti/arrow-right'
 import { button } from './style.css'
-
-const Header = (props) => (
-  <B {...props}
-    fontSize="300%"
-    fontWeight="100"
-    fontFamily="Helvetica Neue, sans-serif"
-    textAlign="center"
-  />
-)
 
 const useCanGo = (history) => {
   let length = 0
@@ -64,66 +55,71 @@ class FakeBrowser extends React.Component {
   }
 
   render() {
-    const { children:Child, page } = this.props
+    const { children:Child } = this.props
     const { address } = this.state
     const { history } = this
     return (
-      <V height="100%">
-        <Header>{page.name}</Header>
-        <V height="100%" flex="1" border="1px solid #ccc">
+      <V
+        background="white"
+        boxShadow="0px 4px 10px hsla(0, 0%, 0%, 0.25)"
+        height="80vh"
+        border="1px solid #ccc"
+      >
+        <H
+          background={LIGHT_GRAY}
+          border="none"
+          borderBottom="solid 1px #ccc"
+          alignItems="center"
+          padding={`0 ${PAD/2}px`}
+        >
+          <B
+            component="button"
+            className={button}
+            fontSize="200%"
+            props={{
+              onClick: history.goBack,
+              disabled: !history.canGoBack(),
+              ariaLabel: 'Go back in fake browser'
+            }}
+          ><LeftArrow/></B>
+          <B
+            component="button"
+            className={button}
+            fontSize="200%"
+            props={{
+              onClick: history.goForward,
+              disabled: !history.canGoForward(),
+              ariaLabel: 'Go forward in fake browser'
+            }}
+          ><RightArrow/></B>
           <H
-            background={LIGHT_GRAY}
-            border="none"
-            borderBottom="solid 1px #ccc"
+            flex="1"
             alignItems="center"
+            padding={`${PAD/3}px`}
           >
             <B
-              component="button"
-              className={button}
-              fontSize="200%"
+              component="input"
+              font="inherit"
+              width="100%"
               props={{
-                onClick: history.goBack,
-                disabled: !history.canGoBack(),
-                ariaLabel: 'Go back in fake browser'
+                type: 'text',
+                value: address,
+                onChange: (e) => {
+                  this.setState({
+                    address: e.target.value
+                  })
+                },
+                onKeyDown: (e) => {
+                  if (e.key === 'Enter')
+                    this.history.push(e.target.value)
+                }
               }}
-            ><LeftArrow/></B>
-            <B
-              component="button"
-              className={button}
-              fontSize="200%"
-              props={{
-                onClick: history.goForward,
-                disabled: !history.canGoForward(),
-                ariaLabel: 'Go forward in fake browser'
-              }}
-            ><RightArrow/></B>
-            <H
-              flex="1"
-              alignItems="center"
-              padding={`${PAD/3}px`}
-            >
-              <B
-                component="input"
-                font="inherit"
-                width="100%"
-                props={{
-                  type: 'text',
-                  value: address,
-                  onChange: (e) => {
-                    this.setState({ address: e.target.value })
-                  },
-                  onKeyDown: (e) => {
-                    if (e.key === 'Enter')
-                      this.history.push(e.target.value)
-                  }
-                }}
-              />
-            </H>
+            />
           </H>
-          <B flex="1" padding={`${PAD}px`}>
-            <Child history={history}/>
-          </B>
-        </V>
+        </H>
+        <B flex="1" padding={`${PAD}px`}>
+          <Child history={history}/>
+        </B>
       </V>
     )
   }
