@@ -7,44 +7,18 @@ import { button } from './style.css'
 import FileCode from 'react-icons/lib/go/file-code'
 
 const createFakeBrowserHistory = (createHistory) => {
-  let length = 0
-  let cursor = 0
-
   const getUserConfirmation = (message, callback) => {
     callback(window.confirm(message))
   }
 
   const history = createHistory({ getUserConfirmation })
 
-  const goForward = () => {
-    cursor++
-    history.goForward()
+  if (!history.canGo) {
+    console.error('need to make a PR to createMemoryHistory to expose `canGo`, but you can monkey patch node_modules for now') // eslint-disable-line
+    history.canGo = () => true
   }
 
-  const goBack = () => {
-    cursor--
-    history.goBack()
-  }
-
-  const push = (...args) => {
-    if (cursor === length) {
-      length++
-      cursor++
-    } else {
-      length = cursor
-    }
-    history.push(...args)
-  }
-
-  return {
-    ...history,
-    getUserConfirmation,
-    push,
-    goForward,
-    goBack,
-    canGoBack: () => cursor > 0,
-    canGoForward: () => length > cursor
-  }
+  return history
 }
 
 const Button = ({ children, ...props }) => (
@@ -69,6 +43,7 @@ class FakeBrowser extends React.Component {
 
   componentWillMount() {
     const history = this.history = createFakeBrowserHistory(createMemoryHistory)
+    this.setState({ address: history.getCurrentLocation().pathname })
     this.unlisten = history.listen((location) => {
       this.setState({ address: location.pathname })
     })
@@ -98,12 +73,12 @@ class FakeBrowser extends React.Component {
         >
           <Button
             onClick={history.goBack}
-            disabled={!history.canGoBack()}
+            disabled={!history.canGo(-1)}
             ariaLabel="Go back in fake browser"
           ><LeftArrow/></Button>
           <Button
             onClick={history.goForward}
-            disabled={!history.canGoForward()}
+            disabled={!history.canGo(1)}
             ariaLabel="Go forward in fake browser"
           ><RightArrow/></Button>
           <B

@@ -65,11 +65,6 @@ const App = connect(mapStateToAppProps)((props) => (
     <MatchLocation pattern="/" exactly children={() => (
       <div>
         <p>Open the console to see the logger middleware.</p>
-        <p>
-          Note: there is a bug somewhere with the fake browser
-          back/forward buttons that doesn't show up when using
-          the normal history.
-        </p>
       </div>
     )}/>
     <MatchLocation pattern="/one" children={() => <h3>One</h3>}/>
