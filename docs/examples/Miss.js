@@ -22,8 +22,6 @@ const MissExample = ({ history }) => (
     <Miss children={({ location }) => (
       <div>
         <h3>No match for <code>{location.pathname}</code></h3>
-        <p>But please note that the <code>MatchLocation</code> above this component
-           still matched and rendered :D</p>
       </div>
     )}/>
   </Router>

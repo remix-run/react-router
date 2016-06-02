@@ -1,6 +1,6 @@
 import React from 'react'
 import { PAGES, COMPONENTS, EXAMPLES } from '../Data'
-import { Router, Link, MatchLocation, NoMatches } from 'react-router'
+import { Router, Link, MatchLocation, Miss } from 'react-router'
 import { H, V, B, GRAY, RED, PAD } from './layout'
 import LoadBundle from './LoadBundle'
 import FakeBrowser from './FakeBrowser'
@@ -138,7 +138,7 @@ class App extends React.Component {
               )}/>
             ))}
 
-            <NoMatches children={() => (
+            <Miss children={() => (
               <h2>Oops, nothing matched. Maybe Try the first examples</h2>
             )}/>
           </Main>

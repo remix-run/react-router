@@ -1,5 +1,5 @@
 import React from 'react'
-import { Router, MatchLocation, Link, BlockHistory } from 'react-router'
+import { Router, Match, Link, BlockHistory } from 'react-router'
 
 const BlockingExample = ({ history }) => (
   <Router history={history}>
@@ -9,9 +9,9 @@ const BlockingExample = ({ history }) => (
       <li><Link to="/two">Two</Link></li>
     </ul>
 
-    <MatchLocation pattern="/" exactly children={Form}/>
-    <MatchLocation pattern="/one" children={() => <h3>One</h3>}/>
-    <MatchLocation pattern="/two" children={() => <h3>Two</h3>}/>
+    <Match pattern="/" exactly children={Form}/>
+    <Match pattern="/one" children={() => <h3>One</h3>}/>
+    <Match pattern="/two" children={() => <h3>Two</h3>}/>
 
   </Router>
 )

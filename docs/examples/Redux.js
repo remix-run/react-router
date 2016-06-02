@@ -1,6 +1,6 @@
 /*eslint no-console: 0*/
 import React from 'react'
-import { Router, MatchLocation, Link } from 'react-router'
+import { Router, Match, Link } from 'react-router'
 import { createStore, combineReducers, applyMiddleware } from 'redux'
 import { Provider, connect } from 'react-redux'
 
@@ -62,13 +62,13 @@ const App = connect(mapStateToAppProps)((props) => (
       <li><Link to="/two">Two</Link></li>
     </ul>
 
-    <MatchLocation pattern="/" exactly children={() => (
+    <Match pattern="/" exactly children={() => (
       <div>
         <p>Open the console to see the logger middleware.</p>
       </div>
     )}/>
-    <MatchLocation pattern="/one" children={() => <h3>One</h3>}/>
-    <MatchLocation pattern="/two" children={() => <h3>Two</h3>}/>
+    <Match pattern="/one" children={() => <h3>One</h3>}/>
+    <Match pattern="/two" children={() => <h3>Two</h3>}/>
   </Router>
 ))
 

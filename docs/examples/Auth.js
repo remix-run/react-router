@@ -1,5 +1,5 @@
 import React from 'react'
-import { Router, MatchLocation, Link, Redirect } from 'react-router'
+import { Router, Match, Link, Redirect } from 'react-router'
 
 const { object } = React.PropTypes
 
@@ -60,7 +60,7 @@ class Login extends React.Component {
 ////////////////////////////////////////////////////////////
 const MatchWhenAuthorized = (
   ({ children:Child, ...rest }) => (
-    <MatchLocation {...rest} children={(props) => (
+    <Match {...rest} children={(props) => (
       fakeAuth.isAuthenticated ? (
         <Child/>
       ) : (
@@ -110,8 +110,8 @@ class AuthExample extends React.Component {
         <li><Link to="/protected">Protected Page</Link></li>
       </ul>
 
-      <MatchLocation pattern="/public" children={Public}/>
-      <MatchLocation pattern="/login" children={Login}/>
+      <Match pattern="/public" children={Public}/>
+      <Match pattern="/login" children={Login}/>
       <MatchWhenAuthorized
         pattern="/protected"
         children={Protected}

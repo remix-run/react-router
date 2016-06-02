@@ -1,5 +1,5 @@
 import React from 'react'
-import { Router, MatchLocation, Link } from 'react-router'
+import { Router, Match, Link } from 'react-router'
 
 const Child = ({ params }) => {
   return (
@@ -20,7 +20,7 @@ const ParamsExample = ({ history }) => {
         <li><Link to="/modus-create">Modus Create</Link></li>
       </ul>
 
-      <MatchLocation pattern="/:id" children={Child} />
+      <Match pattern="/:id" children={Child} />
     </Router>
   )
 }
