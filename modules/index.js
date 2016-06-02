@@ -232,10 +232,29 @@ class Redirect extends React.Component {
 ////////////////////////////////////////////////////////////////////////////////
 ////////////////////////// Implementation details //////////////////////////////
 ////////////////////////////////////////////////////////////////////////////////
+const isBrowserEnvironment = typeof window === 'object'
+
+const locationType = (props, propName, componentName) => {
+  const error = object(props, propName, componentName)
+
+  if (error)
+    return error
+
+  if (props[propName] && typeof props.onChange !== 'function' && isBrowserEnvironment) {
+    // TODO: Add link to history docs for onChange usage.
+    return new Error(
+      'You provided a `location` prop to a <History> component without an `onChange` handler. ' +
+      'This will make the back/forward buttons and the address bar unusable. If you intend to let the ' +
+      'user navigate using the browser\'s built-in controls, use `defaultLocation` with a `history` prop. ' +
+      'Otherwise, set `onChange`.'
+    )
+  }
+}
+
 class History extends React.Component {
 
   static propTypes = {
-    location: object,
+    location: locationType,
     onChange: func,
     history: object,
     children: funcOrNode
@@ -305,12 +324,12 @@ class History extends React.Component {
 
   listenBefore() {
     const { history, onChange } = this.props
-    warning(onChange, `You provided a \`location\` prop to \`History\` or \`Router\` but did
-                  not provide an \`onChange\`. You must provide \`onChange\` to control
-                  this component, otherwise it won’t be able to change the url.`)
+
     this.unlistenBefore = history.listenBefore((location) => {
       if (!this.transitioning) {
-        onChange(location)
+        if (onChange)
+          onChange(location)
+
         return false
       } else {
         this.transitioning = false
