@@ -1,0 +1,11 @@
+.show {
+  opacity: 1;
+}
+
+.hide {
+  opacity: 0;
+}
+
+.transition {
+  transition: opacity 250ms ease;
+}

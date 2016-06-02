@@ -1,17 +1,21 @@
 import React from 'react'
-import hljs from 'highlight.js'
+import 'prismjs/themes/prism.css'
+import { B, PAD } from './layout'
 
 class SourceViewer extends React.Component {
-  state = { html: null }
-
-  componentWillMount() {
-    const { value } = hljs.highlightAuto(this.props.code)
-    this.setState({ html: value })
-  }
 
   render() {
-    return <pre><code dangerouslySetInnerHTML={{ __html: this.state.html }}/></pre>
+    return (
+      <B component="pre" flex="1" overflow="auto" paddingRight={`${PAD}px`}>
+        <code
+          dangerouslySetInnerHTML={{
+            __html: this.props.code
+          }}
+        />
+      </B>
+    )
   }
+
 }
 
 export default SourceViewer

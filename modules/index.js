@@ -205,6 +205,30 @@ class BlockHistory extends React.Component {
   }
 }
 
+
+////////////////////////////////////////////////////////////////////////////////
+class Redirect extends React.Component {
+
+  static contextTypes = {
+    history: object
+  }
+
+  componentDidMount() {
+    const { to, from, history } = this.props
+    const providedHistory = history || this.context.history
+    providedHistory.replace({
+      pathname: to,
+      state: { from }
+    })
+  }
+
+  render() {
+    return null
+  }
+
+}
+
+
 ////////////////////////////////////////////////////////////////////////////////
 ////////////////////////// Implementation details //////////////////////////////
 ////////////////////////////////////////////////////////////////////////////////
@@ -254,6 +278,7 @@ class History extends React.Component {
       this.transitioning = true
       const { location } = nextProps
       const { history } = this.props
+      // FIXME: I don't think this is right
       if (location.action === 'PUSH') {
         history.push(location)
       } else {
@@ -507,7 +532,20 @@ const matchPattern = (pattern, location, matchExactly) => {
   }
 }
 
+const Match = MatchLocation
+const Miss = NoMatches
+
 
 ////////////////////////////////////////////////////////////////////////////////
-export { Router, History, MatchLocation, NoMatches, Link, BlockHistory }
+export {
+  Router,
+  MatchLocation,
+  Match,
+  NoMatches,
+  Miss,
+  Link,
+  BlockHistory,
+  Redirect,
+  History
+}
 
