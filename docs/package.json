@@ -10,26 +10,22 @@
   "author": "",
   "license": "ISC",
   "dependencies": {
-    "css-loader": "0.23.1",
-    "highlight-loader": "0.7.2",
-    "highlight.js": "9.4.0",
     "history": "^3.0.0",
-    "html-loader": "0.4.3",
     "jsxstyle": "0.0.18",
-    "postcss-loader": "0.9.1",
-    "prismjs-loader": "0.0.3",
-    "raw-loader": "0.5.1",
     "react": "0.14.8",
     "react-dom": "0.14.8",
-    "react-icons": "2.1.0",
-    "style-loader": "0.13.1"
+    "react-icons": "2.1.0"
   },
   "devDependencies": {
     "babel-eslint": "6.0.4",
     "bundle-loader": "0.5.4",
+    "css-loader": "0.23.1",
     "eslint": "2.11.1",
     "eslint-config-rackt": "1.1.1",
     "eslint-plugin-react": "5.1.1",
+    "postcss-loader": "0.9.1",
+    "prismjs-loader": "0.0.3",
+    "style-loader": "0.13.1",
     "webpack": "1.13.1",
     "webpack-dev-server": "1.14.1"
   }
