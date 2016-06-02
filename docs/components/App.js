@@ -1,5 +1,5 @@
 import React from 'react'
-import { PAGES, COMPONENTS, EXAMPLES } from '../Data'
+import { PAGES, COMPONENTS, EXAMPLES } from '../routes'
 import { Router, Link, MatchLocation, Miss } from 'react-router'
 import { H, V, B, GRAY, RED, PAD } from './layout'
 import LoadBundle from './LoadBundle'
@@ -139,7 +139,10 @@ class App extends React.Component {
             ))}
 
             <Miss children={() => (
-              <h2>Oops, nothing matched. Maybe Try the first examples</h2>
+              <B>
+                <Header>Whoops</Header>
+                <B textAlign="center">Nothing matched. Maybe try some of the examples?</B>
+              </B>
             )}/>
           </Main>
         </H>

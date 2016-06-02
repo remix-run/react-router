@@ -14,7 +14,7 @@ const MissExample = ({ history }) => (
       <div>
         <p>
           When no sibling <code>Match</code> matches,
-          a <code>Miss</code> component will render its children.
+          a <code>Miss</code> component will render.
         </p>
       </div>
     )}/>
