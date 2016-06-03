@@ -1,5 +1,5 @@
 import React from 'react'
-import { MatchLocation, Link } from 'react-router'
+import { Match, Link } from 'react-router'
 
 const Params = ({ pattern }) => (
   <div>
@@ -11,7 +11,7 @@ const Params = ({ pattern }) => (
     </ul>
 
     {/* can read in the pattern that rendered this to create dynamic sub-routes */}
-    <MatchLocation pattern={`${pattern}/:id`} children={Child}/>
+    <Match pattern={`${pattern}/:id`} children={Child}/>
   </div>
 )
 

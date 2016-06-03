@@ -1,6 +1,6 @@
 /*eslint no-console: 0*/
 import React from 'react'
-import { Router, MatchLocation, Link } from 'react-router'
+import { Router, Match, Link } from 'react-router'
 import { createStore, combineReducers, applyMiddleware } from 'redux'
 import { Provider, connect } from 'react-redux'
 
@@ -56,8 +56,8 @@ const App = connect(mapStateToAppProps)((props) => (
       <li><Link to="/redux/two">Two</Link></li>
     </ul>
 
-    <MatchLocation pattern="/redux/one" children={One}/>
-    <MatchLocation pattern="/redux/two" children={Two}/>
+    <Match pattern="/redux/one" children={One}/>
+    <Match pattern="/redux/two" children={Two}/>
   </Router>
 ))
 

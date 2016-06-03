@@ -23,7 +23,7 @@ class Router extends React.Component {
     return (
       <History {...rest}>
         <MatchCountProvider isTerminal={true}>
-          <MatchLocation pattern="/" children={(props) => (
+          <Match pattern="/" children={(props) => (
             <FuncOrNode children={children} props={props}/>
           )}/>
         </MatchCountProvider>
@@ -34,7 +34,7 @@ class Router extends React.Component {
 
 
 ////////////////////////////////////////////////////////////////////////////////
-class MatchLocation extends React.Component {
+class Match extends React.Component {
 
   static propTypes = {
     children: func,
@@ -75,7 +75,7 @@ class MatchLocation extends React.Component {
 
 
 ////////////////////////////////////////////////////////////////////////////////
-class NoMatches extends React.Component {
+class Miss extends React.Component {
 
   static propTypes = {
     children: funcOrNode
@@ -551,20 +551,13 @@ const matchPattern = (pattern, location, matchExactly) => {
   }
 }
 
-const Match = MatchLocation
-const Miss = NoMatches
-
-
 ////////////////////////////////////////////////////////////////////////////////
 export {
   Router,
-  MatchLocation,
   Match,
-  NoMatches,
   Miss,
   Link,
   BlockHistory,
   Redirect,
   History
 }
-

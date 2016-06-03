@@ -1,5 +1,5 @@
 import React from 'react'
-import { MatchLocation, Link } from 'react-router'
+import { Match, Link } from 'react-router'
 
 const { object } = React.PropTypes
 
@@ -79,7 +79,7 @@ class Redirect extends React.Component {
 
 ////////////////////////////////////////////////////////////////////////////////
 const MatchWhenAuthorized = ({ children:Child, ...rest }) => (
-  <MatchLocation {...rest} children={(props) => (
+  <Match {...rest} children={(props) => (
     fakeAuth.isAuthenticated ? (
       <Child {...props}/>
     ) : (
@@ -123,8 +123,8 @@ class Auth extends React.Component {
       </ul>
 
       <MatchWhenAuthorized pattern="/auth/protected" children={Protected}/>
-      <MatchLocation pattern="/auth/public" children={Public}/>
-      <MatchLocation pattern="/auth/login" children={Login}/>
+      <Match pattern="/auth/public" children={Public}/>
+      <Match pattern="/auth/login" children={Login}/>
 
     </div>
   )

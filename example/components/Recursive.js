@@ -1,5 +1,5 @@
 import React from 'react'
-import { MatchLocation, Link } from 'react-router'
+import { Match, Link } from 'react-router'
 
 const genKey = () => Math.random().toString(36).substr(2, 5)
 
@@ -25,7 +25,7 @@ class RecursiveChild extends React.Component {
         <li>
           {params.id || 'root'}{' '}
           <Link to={`${pathname}/${childId}`}>we must go deeper</Link>
-          <MatchLocation pattern={`${pathname}/:id`} children={RecursiveChild}/>
+          <Match pattern={`${pathname}/:id`} children={RecursiveChild}/>
         </li>
       </ul>
     )

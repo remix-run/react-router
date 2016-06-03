@@ -1,12 +1,12 @@
 /*eslint no-console: 0*/
 import React from 'react'
 import { render } from 'react-dom'
-import { Router, Link, MatchLocation, NoMatches } from 'react-router'
+import { Router, Link, Match, Miss } from 'react-router'
 
 import Auth from './components/Auth'
 import Params from './components/Params'
 import Recursive from './components/Recursive'
-import NestedNoMatch from './components/NestedNoMatch'
+import NestedMiss from './components/NestedMiss'
 import Blocking from './components/Blocking'
 
 const Index = () => (
@@ -40,14 +40,13 @@ class App extends React.Component {
           <NavLink to="/nested-no-match">Nested No Match Handling</NavLink>
         </nav>
 
-        <MatchLocation exactly pattern="/" children={Index}/>
-        <MatchLocation pattern="/auth" children={Auth}/>
-        <MatchLocation pattern="/params" children={Params}/>
-        <MatchLocation pattern="/recursive" children={Recursive}/>
-        <MatchLocation pattern="/blocking" children={Blocking}/>
-        <MatchLocation pattern="/nested-no-match" children={NestedNoMatch}/>
-        <NoMatches children={NoMatch}/>
-
+        <Match exactly pattern="/" children={Index}/>
+        <Match pattern="/auth" children={Auth}/>
+        <Match pattern="/params" children={Params}/>
+        <Match pattern="/recursive" children={Recursive}/>
+        <Match pattern="/blocking" children={Blocking}/>
+        <Match pattern="/nested-miss" children={NestedMiss}/>
+        <Miss children={NoMatch}/>
       </Router>
     )
   }
