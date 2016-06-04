@@ -4,21 +4,21 @@ import { browserHistory, Router, Route, Link } from 'react-router'
 import data from './data'
 import './app.css'
 
-const Category = (props) => {
-  const category = data.lookupCategory(props.params.category)
+const Category = ({ children, params }) => {
+  const category = data.lookupCategory(params.category)
 
   return (
     <div>
       <h1>{category.name}</h1>
-      {props.children || (
+      {children || (
         <p>{category.description}</p>
       )}
     </div>
   )
 }
 
-const CategorySidebar = (props) => {
-  const category = data.lookupCategory(props.params.category)
+const CategorySidebar = ({ params }) => {
+  const category = data.lookupCategory(params.category)
 
   return (
     <div>
@@ -35,8 +35,7 @@ const CategorySidebar = (props) => {
   )
 }
 
-const Item = (props) => {
-  const { category, item } = props.params
+const Item = ({ params: { category, item } }) => {
   const menuItem = data.lookupItem(category, item)
 
   return (

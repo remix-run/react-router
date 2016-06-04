@@ -3,8 +3,8 @@ import { render } from 'react-dom'
 import { browserHistory, Router, Route, Link } from 'react-router'
 import './app.css'
 
-const App = (props) => {
-  const depth = props.routes.length
+const App = ({ children, routes }) => {
+  const depth = routes.length
 
   return (
     <div>
@@ -16,7 +16,7 @@ const App = (props) => {
       </aside>
       <main>
         <ul className="breadcrumbs-list">
-          {props.routes.map((item, index) =>
+          {routes.map((item, index) =>
             <li key={index}>
               <Link
                 onlyActiveOnIndex={true}
@@ -28,7 +28,7 @@ const App = (props) => {
             </li>
           )}
         </ul>
-        {props.children}
+        {children}
       </main>
     </div>
   )

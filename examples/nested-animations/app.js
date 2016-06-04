@@ -4,9 +4,7 @@ import ReactCSSTransitionGroup from 'react-addons-css-transition-group'
 import { browserHistory, Router, Route, Link } from 'react-router'
 import './app.css'
 
-const App = (props) => {
-  const { pathname } = props.location
-
+const App = ({ children, location: { pathname } }) => {
   // Only take the first-level part of the path as key, instead of the whole path.
   const key = pathname.split('/')[1] || 'root'
 
@@ -20,51 +18,43 @@ const App = (props) => {
         component="div" transitionName="swap"
         transitionEnterTimeout={500} transitionLeaveTimeout={500}
       >
-        {React.cloneElement(props.children || <div />, { key: key })}
+        {React.cloneElement(children || <div />, { key: key })}
       </ReactCSSTransitionGroup>
     </div>
   )
 }
 
-const Page1 = (props) => {
-  const { pathname } = props.location
+const Page1 = ({ children, location: { pathname } }) => (
+  <div className="Image">
+    <h1>Page 1</h1>
+    <ul>
+      <li><Link to="/page1/tab1">Tab 1</Link></li>
+      <li><Link to="/page1/tab2">Tab 2</Link></li>
+    </ul>
+    <ReactCSSTransitionGroup
+      component="div" transitionName="example"
+      transitionEnterTimeout={500} transitionLeaveTimeout={500}
+    >
+      {React.cloneElement(children || <div/>, { key: pathname })}
+    </ReactCSSTransitionGroup>
+  </div>
+)
 
-  return (
-    <div className="Image">
-      <h1>Page 1</h1>
-      <ul>
-        <li><Link to="/page1/tab1">Tab 1</Link></li>
-        <li><Link to="/page1/tab2">Tab 2</Link></li>
-      </ul>
-      <ReactCSSTransitionGroup
-        component="div" transitionName="example"
-        transitionEnterTimeout={500} transitionLeaveTimeout={500}
-      >
-        {React.cloneElement(props.children || <div/>, { key: pathname })}
-      </ReactCSSTransitionGroup>
-    </div>
-  )
-}
-
-const Page2 = (props) => {
-  const { pathname } = props.location
-
-  return (
-    <div className="Image">
-      <h1>Page 2</h1>
-      <ul>
-        <li><Link to="/page2/tab1">Tab 1</Link></li>
-        <li><Link to="/page2/tab2">Tab 2</Link></li>
-      </ul>
-      <ReactCSSTransitionGroup
-        component="div" transitionName="example"
-        transitionEnterTimeout={500} transitionLeaveTimeout={500}
-      >
-        {React.cloneElement(props.children || <div/>, { key: pathname })}
-      </ReactCSSTransitionGroup>
-    </div>
-  )
-}
+const Page2 = ({ children, location: { pathname } }) => (
+  <div className="Image">
+    <h1>Page 2</h1>
+    <ul>
+      <li><Link to="/page2/tab1">Tab 1</Link></li>
+      <li><Link to="/page2/tab2">Tab 2</Link></li>
+    </ul>
+    <ReactCSSTransitionGroup
+      component="div" transitionName="example"
+      transitionEnterTimeout={500} transitionLeaveTimeout={500}
+    >
+      {React.cloneElement(children || <div/>, { key: pathname })}
+    </ReactCSSTransitionGroup>
+  </div>
+)
 
 const Tab1 = () => (
   <div className="Image">

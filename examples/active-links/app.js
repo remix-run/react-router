@@ -4,7 +4,7 @@ import { Router, Route, IndexRoute, Link, IndexLink, browserHistory } from 'reac
 
 const ACTIVE = { color: 'red' }
 
-const App = (props) => (
+const App = ({ children }) => (
   <div>
     <h1>APP!</h1>
     <ul>
@@ -21,7 +21,7 @@ const App = (props) => (
       <li><Link      to="/about"      activeStyle={ACTIVE}>/about</Link></li>
     </ul>
 
-    {props.children}
+    {children}
   </div>
 )
 
@@ -31,10 +31,10 @@ const Index = () => (
   </div>
 )
 
-const Users = (props) => (
+const Users = ({ children }) => (
   <div>
     <h2>Users</h2>
-    {props.children}
+    {children}
   </div>
 )
 
@@ -44,9 +44,9 @@ const UsersIndex = () => (
   </div>
 )
 
-const User = (props) => (
+const User = ({ params: { id } }) => (
   <div>
-    <h3>User {props.params.id}</h3>
+    <h3>User {id}</h3>
   </div>
 )
 

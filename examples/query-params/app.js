@@ -2,9 +2,7 @@ import React from 'react'
 import { render } from 'react-dom'
 import { browserHistory, Router, Route, Link } from 'react-router'
 
-const User = (props) => {
-  let { userID } = props.params
-  let { query } = props.location
+const User = ({ params: { userID }, location: { query } }) => {
   let age = query && query.showAge ? '33' : ''
 
   return (
@@ -15,14 +13,14 @@ const User = (props) => {
   )
 }
 
-const App = (props) => (
+const App = ({ children }) => (
   <div>
     <ul>
       <li><Link to="/user/bob" activeClassName="active">Bob</Link></li>
       <li><Link to={{ pathname: '/user/bob', query: { showAge: true } }} activeClassName="active">Bob With Query Params</Link></li>
       <li><Link to="/user/sally" activeClassName="active">Sally</Link></li>
     </ul>
-    {props.children}
+    {children}
   </div>
 )
 
