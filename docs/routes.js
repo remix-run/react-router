@@ -34,9 +34,13 @@ export const EXAMPLES = [
     load: require('bundle?lazy!./examples/Recursive'),
     loadSource: require('bundle?lazy!!prismjs?lang=jsx!./.examples/Recursive.js')
   },
+  { name: 'Mobile-Style "Nav Stacks"',
+    path: '/mobile-style-nav-stacks',
+    load: require('bundle?lazy!./examples/NavStacks'),
+    loadSource: require('bundle?lazy!!prismjs?lang=jsx!./.examples/NavStacks.js')
+  },
   { name: 'Relative Links', path: '/relative-links' },
   { name: 'Pinterest-Style UI', path: '/pinterest-style-ui' },
-  { name: 'Mobile-Style "Nav Stacks"', path: '/mobile-style-nav-stacks' },
   { name: 'Animated Transitions', path: '/animated-transitions' },
   { name: 'Custom Histories', path: '/custom-histories' },
   { name: 'Server Rendering', path: '/server-rendering' }

@@ -118,7 +118,7 @@ class FakeBrowser extends React.Component {
             />
           </H>
         </H>
-        <B flex="1" padding={`${PAD}px`} overflow="auto">
+        <B flex="1" padding={`${PAD}px`} overflow="auto" position="relative">
           <Child history={history}/>
         </B>
       </V>

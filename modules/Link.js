@@ -1,4 +1,5 @@
 import React, { PropTypes } from 'react'
+import pathIsActive from './pathIsActive'
 
 // needs accessibility stuff from React Router Link
 class Link extends React.Component {
@@ -40,9 +41,8 @@ class Link extends React.Component {
       ...rest
     } = this.props
 
-    const { pathname } = location || this.context.location
-    const isActive = activeOnlyWhenExact ?
-      pathname === to : pathname.startsWith(to)
+    const loc = location || this.context.location
+    const isActive = pathIsActive(to, loc, activeOnlyWhenExact)
 
     return (
       <a
