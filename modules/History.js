@@ -1,7 +1,6 @@
 import React, { PropTypes } from 'react'
 import createBrowserHistory from 'history/lib/createBrowserHistory'
-import FuncOrNode from './FuncOrNode'
-import funcOrNode from './PropTypes'
+import MultiRender from './MultiRender'
 
 const warning = () => {}
 
@@ -34,7 +33,7 @@ const LocationProvider = makeProvider('location', PropTypes.object, 'LocationPro
 const isBrowserEnvironment = typeof window === 'object'
 
 const locationType = (props, propName, componentName) => {
-  const error = object(props, propName, componentName)
+  const error = PropTypes.object(props, propName, componentName)
 
   if (error)
     return error
@@ -55,7 +54,9 @@ class History extends React.Component {
     location: locationType,
     onChange: PropTypes.func,
     history: PropTypes.object,
-    children: funcOrNode
+    children: PropTypes.node,
+    render: PropTypes.func,
+    component: PropTypes.func
   }
 
   static defaultProps = {
@@ -149,12 +150,17 @@ class History extends React.Component {
   }
 
   render() {
-    const { children, history } = this.props
+    const { children, render, component, history } = this.props
     const { location } = this.isControlled() ? this.props : this.state
     return (
       <HistoryProvider history={history}>
         <LocationProvider location={location}>
-          <FuncOrNode props={{ location }} children={children}/>
+          <MultiRender
+            props={{ location }}
+            children={children}
+            render={render}
+            component={component}
+          />
         </LocationProvider>
       </HistoryProvider>
     )

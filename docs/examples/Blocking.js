@@ -9,9 +9,9 @@ const BlockingExample = ({ history }) => (
       <li><Link to="/two">Two</Link></li>
     </ul>
 
-    <Match pattern="/" exactly children={Form}/>
-    <Match pattern="/one" children={() => <h3>One</h3>}/>
-    <Match pattern="/two" children={() => <h3>Two</h3>}/>
+    <Match pattern="/" exactly component={Form}/>
+    <Match pattern="/one" render={() => <h3>One</h3>}/>
+    <Match pattern="/two" render={() => <h3>Two</h3>}/>
 
   </Router>
 )

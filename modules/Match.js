@@ -1,6 +1,7 @@
 import React, { PropTypes } from 'react'
 import pathToRegexp from 'path-to-regexp'
 import MatchCountProvider from './MatchCountProvider'
+import MultiRender from './MultiRender'
 
 const matcherCache = {}
 
@@ -76,7 +77,9 @@ class RegisterMatch extends React.Component {
 
 class Match extends React.Component {
   static propTypes = {
-    children: PropTypes.func,
+    children: PropTypes.node,
+    render: PropTypes.func,
+    component: PropTypes.func,
     // TODO: has to start w/ slash, create custom validator
     pattern: PropTypes.string,
     location: PropTypes.object,
@@ -92,7 +95,7 @@ class Match extends React.Component {
   }
 
   render() {
-    const { children:Child, pattern, location, exactly } = this.props
+    const { children, render, component, pattern, location, exactly } = this.props
     const loc = location || this.context.location
     const match = matchPattern(pattern, loc, exactly)
 
@@ -102,12 +105,17 @@ class Match extends React.Component {
     return (
       <RegisterMatch>
         <MatchCountProvider isTerminal={match.isTerminal}>
-          <Child
-            location={loc}
-            pattern={pattern}
-            pathname={match.pathname}
-            params={match.params}
-            isTerminal={match.isTerminal}
+          <MultiRender
+            props={{
+              location: loc,
+              pattern,
+              pathname: match.pathname,
+              params: match.params,
+              isTerminal: match.isTerminal
+            }}
+            children={children}
+            component={component}
+            render={render}
           />
         </MatchCountProvider>
       </RegisterMatch>

@@ -62,13 +62,13 @@ const App = connect(mapStateToAppProps)((props) => (
       <li><Link to="/two">Two</Link></li>
     </ul>
 
-    <Match pattern="/" exactly children={() => (
+    <Match pattern="/" exactly render={() => (
       <div>
         <p>Open the console to see the logger middleware.</p>
       </div>
     )}/>
-    <Match pattern="/one" children={() => <h3>One</h3>}/>
-    <Match pattern="/two" children={() => <h3>Two</h3>}/>
+    <Match pattern="/one" render={() => <h3>One</h3>}/>
+    <Match pattern="/two" render={() => <h3>Two</h3>}/>
   </Router>
 ))
 

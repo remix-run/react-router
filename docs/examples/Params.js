@@ -20,7 +20,7 @@ const ParamsExample = ({ history }) => {
         <li><Link to="/modus-create">Modus Create</Link></li>
       </ul>
 
-      <Match pattern="/:id" children={Child} />
+      <Match pattern="/:id" component={Child} />
     </Router>
   )
 }

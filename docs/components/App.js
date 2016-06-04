@@ -115,7 +115,7 @@ class App extends React.Component {
 
           <Main>
             {EXAMPLES.map((page, index) => (
-              <Match key={index} pattern={page.path} children={() => (
+              <Match key={index} pattern={page.path} render={() => (
                 <FadeIn>
                   <V height="100%">
                     <Header className="reset">{page.name}</Header>
@@ -138,7 +138,7 @@ class App extends React.Component {
               )}/>
             ))}
 
-            <Miss children={() => (
+            <Miss render={() => (
               <B>
                 <Header>Whoops</Header>
                 <B textAlign="center">Nothing matched. Maybe try some of the examples?</B>

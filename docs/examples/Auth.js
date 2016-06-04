@@ -59,10 +59,10 @@ class Login extends React.Component {
 
 ////////////////////////////////////////////////////////////
 const MatchWhenAuthorized = (
-  ({ children:Child, ...rest }) => (
-    <Match {...rest} children={(props) => (
+  ({ component:Component, ...rest }) => (
+    <Match {...rest} render={(props) => (
       fakeAuth.isAuthenticated ? (
-        <Child/>
+        <Component {...props}/>
       ) : (
         <Redirect to="/login" from={props.location.pathname}/>
       )
@@ -110,12 +110,9 @@ class AuthExample extends React.Component {
         <li><Link to="/protected">Protected Page</Link></li>
       </ul>
 
-      <Match pattern="/public" children={Public}/>
-      <Match pattern="/login" children={Login}/>
-      <MatchWhenAuthorized
-        pattern="/protected"
-        children={Protected}
-      />
+      <Match pattern="/public" component={Public}/>
+      <Match pattern="/login" component={Login}/>
+      <MatchWhenAuthorized pattern="/protected" component={Protected} />
     </Router>
   )
 }

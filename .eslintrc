@@ -1,5 +1,5 @@
 {
-  "extends": "eslint:recommended",
+  "extends": "rackt",
   "rules": {
     "no-undef": 2,
     "no-unused-vars": 2,

@@ -1,9 +1,11 @@
 import React, { PropTypes } from 'react'
-import { funcOrNode } from './PropTypes'
+import MultiRender from './MultiRender'
 
 class Miss extends React.Component {
   static propTypes = {
-    children: funcOrNode
+    children: PropTypes.node,
+    render: PropTypes.func,
+    component: PropTypes.func
   }
 
   static contextTypes = {
@@ -12,9 +14,16 @@ class Miss extends React.Component {
   }
 
   render() {
-    const { children:Child } = this.props
+    const { children, render, component } = this.props
     const { location, matchCounter } = this.context
-    return matchCounter.matchFound ? null : <Child location={location}/>
+    return matchCounter.matchFound ? null : (
+      <MultiRender
+        props={{ location }}
+        children={children}
+        component={component}
+        render={render}
+      />
+    )
   }
 }
 

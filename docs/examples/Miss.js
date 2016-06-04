@@ -10,7 +10,7 @@ const MissExample = ({ history }) => (
       <li><Link to="/also/will/not/match">Also Will Not Match</Link></li>
     </ul>
 
-    <Match pattern="/" exactly children={() => (
+    <Match pattern="/" exactly render={() => (
       <div>
         <p>
           When no sibling <code>Match</code> matches,
@@ -18,8 +18,8 @@ const MissExample = ({ history }) => (
         </p>
       </div>
     )}/>
-    <Match pattern="/will-match" children={() => <h3>Matched!</h3>}/>
-    <Miss children={({ location }) => (
+    <Match pattern="/will-match" render={() => <h3>Matched!</h3>}/>
+    <Miss render={({ location }) => (
       <div>
         <h3>No match for <code>{location.pathname}</code></h3>
       </div>

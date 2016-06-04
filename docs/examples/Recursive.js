@@ -25,7 +25,7 @@ class RecursiveChild extends React.Component {
         <li>
           {(params && params.id) || 'root'}{' '}
           <Link to={`${pathname || ''}/${childId}`}>we must go deeper</Link>
-          <Match pattern={`${pathname || ''}/:id`} children={RecursiveChild}/>
+          <Match pattern={`${pathname || ''}/:id`} component={RecursiveChild}/>
         </li>
       </ul>
     )
