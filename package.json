@@ -3,7 +3,7 @@
   "version": "4.0.0-pre",
   "description": "",
   "scripts": {
-    "start": "webpack-dev-server --config example/webpack.config.js --inline --content-base example"
+    "start": "cd docs && npm start"
   },
   "authors": [
     "Michael Jackson",
