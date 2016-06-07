@@ -4,7 +4,7 @@ import pathIsActive from './pathIsActive'
 // needs accessibility stuff from React Router Link
 class Link extends React.Component {
   static propTypes = {
-    to: PropTypes.string,
+    to: PropTypes.oneOfType([ PropTypes.string, PropTypes.object ]),
     style: PropTypes.object,
     activeStyle: PropTypes.object,
     location: PropTypes.object,
@@ -43,11 +43,10 @@ class Link extends React.Component {
 
     const loc = location || this.context.location
     const isActive = pathIsActive(to, loc, activeOnlyWhenExact)
-
     return (
       <a
         {...rest}
-        href={to}
+        href={typeof to === 'object' ? to.pathname : to}
         style={isActive ? { ...style, ...activeStyle } : style}
         onClick={this.handleClick}
       />
