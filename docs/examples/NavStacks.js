@@ -2,14 +2,32 @@ import React from 'react'
 import { Router, Match, Link, matchPattern } from 'react-router'
 
 ////////////////////////////////////////////////////////////
+// 1. Click "Tab One", then "Sub", to build up a stack on
+//    the first tab
+// 2. Now click "Tab Two"
+// 3. Now click "Tab One" again
+//    - Note the url is not "/one" but is "/one/sub" even
+//      though the href of the link is "/one", the last
+//      location in the stack is preserved
+//    - Click the "Back" link, note the navigation stack is
+//      also preserved.
+
+////////////////////////////////////////////////////////////
 const NavStacksExample = ({ history }) => {
   return (
     <Router history={history} render={({ location }) => (
       <div style={wrapper}>
         <div style={main}>
-          <Notes/>
-          <MatchWithStack pattern="/one" component={TabContent} location={location}/>
-          <MatchWithStack pattern="/two" component={TabContent} location={location}/>
+          <MatchWithStack
+            pattern="/one"
+            component={TabContent}
+            location={location}
+          />
+          <MatchWithStack
+            pattern="/two"
+            component={TabContent}
+            location={location}
+          />
         </div>
         <div style={tabs}>
           <Link to="/one" style={tab}>Tab One</Link>
@@ -62,13 +80,16 @@ class Stack extends React.Component {
       }
 
       else if (alreadyHere) {
+        const clickedTab = willBeActive.isTerminal
         const goingBack = nextProps.location.state &&
           nextProps.location.state.goingBack
         if (goingBack) {
+          // animate right
           this.setState({
             stack: stack.slice(0, stack.length - 1)
           })
         } else {
+          // animate left
           this.setState({
             stack: stack.concat([ nextProps.location ])
           })
@@ -114,7 +135,9 @@ const TabContent = ({ pattern, stack }) => {
       <h2>{pattern}</h2>
       <ul>
         <li>
-          <p><Link to={`${pattern}/sub`}>Sub</Link></p>
+          <p>
+            <Link to={`${pattern}/sub`}>Sub</Link>
+          </p>
           <Match pattern={`${pattern}/sub`} render={() => (
             <div>
               <h3>Sub for {pattern}</h3>
@@ -126,26 +149,6 @@ const TabContent = ({ pattern, stack }) => {
   )
 }
 
-
-////////////////////////////////////////////////////////////
-const Notes = () => (
-  <ol style={notes}>
-    <li>Click "Tab One", then "Sub", then "Tab Two"</li>
-    <li>
-      Now click on the "One" tab.
-      <ul>
-        <li>
-          Note the url is not "/one" but is "/one/sub",
-          the last location in the stack is preserved
-        </li>
-        <li>
-          Click the "Back" link, note the navigation stack
-          is also preserved.
-        </li>
-      </ul>
-    </li>
-  </ol>
-)
 
 ////////////////////////////////////////////////////////////
 const wrapper = {
