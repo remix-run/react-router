@@ -4,8 +4,7 @@
 
   "env": {
     "cjs": {
-      "presets": ["es2015-loose", "stage-1"],
-      "plugins": ["add-module-exports"]
+      "presets": ["es2015-loose", "stage-1"]
     },
     "es": {
       "presets": ["es2015-loose-native-modules", "stage-1"]
