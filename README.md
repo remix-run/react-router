@@ -118,7 +118,7 @@ render((
       <Route path="*" component={NoMatch}/>
     </Route>
   </Router>
-), document.getElementById('target'))
+), document.getElementById('root'))
 ```
 
 See more in the [Introduction](/docs/Introduction.md), [Guides](/docs/guides/README.md), and [Examples](/examples).
