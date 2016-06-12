@@ -1,7 +1,8 @@
 {
   "name": "react-router",
   "version": "4.0.0-pre",
-  "description": "",
+  "description": "A router for React.js",
+  "repository": "ReactJSTraining/react-router",
   "scripts": {
     "start": "cd docs && npm start",
     "lint": "eslint modules"
