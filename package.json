@@ -3,7 +3,8 @@
   "version": "4.0.0-pre",
   "description": "",
   "scripts": {
-    "start": "cd docs && npm start"
+    "start": "cd docs && npm start",
+    "lint": "eslint modules"
   },
   "authors": [
     "Michael Jackson",
@@ -18,12 +19,14 @@
     "path-to-regexp": "^1.5.0"
   },
   "devDependencies": {
-    "babel-core": "6.9.1",
-    "babel-loader": "6.2.4",
-    "babel-preset-es2015": "6.9.0",
-    "babel-preset-react": "6.5.0",
-    "babel-preset-stage-1": "6.5.0",
-    "eslint-plugin-react": "5.1.1",
+    "babel-core": "^6.9.1",
+    "babel-eslint": "^6.0.4",
+    "babel-preset-es2015": "^6.9.0",
+    "babel-preset-react": "^6.5.0",
+    "babel-preset-stage-1": "^6.5.0",
+    "eslint": "^2.12.0",
+    "eslint-plugin-import": "^1.8.1",
+    "eslint-plugin-react": "^5.1.1",
     "react": "^15.1.0",
     "react-dom": "15.1.0",
     "react-redux": "^4.4.5",

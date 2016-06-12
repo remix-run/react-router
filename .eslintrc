@@ -1,15 +1,20 @@
 {
-  "extends": "rackt",
-  "rules": {
-    "no-undef": 2,
-    "no-unused-vars": 2,
-    "react/jsx-uses-react": 1,
-    "react/jsx-uses-vars": 1,
-    "react/jsx-no-undef": 2,
-    "react/prop-types": 2
+  "parser": "babel-eslint",
+  "env": {
+    "browser": true,
+    "node": true
   },
   "plugins": [
+    "import",
     "react"
-  ]
+  ],
+  "extends": [
+    "eslint:recommended",
+    "plugin:import/errors",
+    "plugin:react/recommended"
+  ],
+  "rules": {
+    "prefer-arrow-callback": 2,
+    "semi": [ 2, "never" ]
+  }
 }
-
