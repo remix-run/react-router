@@ -75,8 +75,10 @@ const Link = React.createClass({
   handleClick(event) {
     let allowTransition = true
 
-    if (this.props.onClick)
+    if (this.props.onClick) {
       this.props.onClick(event)
+      return
+    }
 
     if (isModifiedEvent(event) || !isLeftClickEvent(event))
       return
