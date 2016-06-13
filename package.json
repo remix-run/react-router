@@ -8,6 +8,11 @@
     "Michael Jackson",
     "Ryan Florence"
   ],
+  "main": "lib",
+  "files": [
+    "lib",
+    "umd"
+  ],
   "scripts": {
     "start": "cd docs && npm start",
     "build-lib": "rimraf lib && babel ./modules -d lib --ignore '__tests__'",
