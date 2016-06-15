@@ -4,12 +4,17 @@ export const PAGES = [
 ]
 
 export const EXAMPLES = [
+  { name: 'Basic',
+    path: '/basic',
+    load: require('bundle?lazy!./examples/Basic'),
+    loadSource: require('bundle?lazy!!prismjs?lang=jsx!./.examples/Basic.js')
+  },
   { name: 'URL Parameters',
     path: '/url-parameters',
     load: require('bundle?lazy!./examples/Params'),
     loadSource: require('bundle?lazy!!prismjs?lang=jsx!./.examples/Params.js')
   },
-  { name: 'Redirects (Auth Workflow)',
+  { name: 'Redirects (Auth)',
     path: '/auth-workflow',
     load: require('bundle?lazy!./examples/Auth'),
     loadSource: require('bundle?lazy!!prismjs?lang=jsx!./.examples/Auth.js')

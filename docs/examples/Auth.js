@@ -9,11 +9,11 @@ const fakeAuth = {
   isAuthenticated: false,
   authenticate(cb) {
     this.isAuthenticated = true
-    cb()
+    setTimeout(cb, 100) // fake async
   },
   signout(cb) {
     this.isAuthenticated = false
-    cb()
+    setTimeout(cb, 100) // fake async
   }
 }
 

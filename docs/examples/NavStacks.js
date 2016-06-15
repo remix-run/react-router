@@ -11,7 +11,11 @@ import { Router, Match, Link, matchPattern } from 'react-router'
 //      location in the stack is preserved
 //    - Click the "Back" link, note the navigation stack is
 //      also preserved.
-
+//
+// Please note this is a rough proof-of-concept and
+// probably has bugs. Hopefully it illustrates the necessary
+// interactions with React Router to implement a more robust
+// implementation.
 ////////////////////////////////////////////////////////////
 const NavStacksExample = ({ history }) => {
   return (
@@ -80,7 +84,6 @@ class Stack extends React.Component {
       }
 
       else if (alreadyHere) {
-        const clickedTab = willBeActive.isTerminal
         const goingBack = nextProps.location.state &&
           nextProps.location.state.goingBack
         if (goingBack) {
@@ -89,10 +92,13 @@ class Stack extends React.Component {
             stack: stack.slice(0, stack.length - 1)
           })
         } else {
-          // animate left
-          this.setState({
-            stack: stack.concat([ nextProps.location ])
-          })
+          const clickedTab = willBeActive.isTerminal
+          if (!clickedTab) {
+            // animate left
+            this.setState({
+              stack: stack.concat([ nextProps.location ])
+            })
+          }
         }
       }
 
