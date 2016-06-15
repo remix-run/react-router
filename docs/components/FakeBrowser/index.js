@@ -1,11 +1,12 @@
 import React from 'react'
-import { B, V, H, PAD, LIGHT_GRAY, GRAY } from '../layout'
 import createMemoryHistory from 'history/lib/createMemoryHistory'
-import LeftArrow from 'react-icons/lib/ti/arrow-left'
-import RightArrow from 'react-icons/lib/ti/arrow-right'
+import LeftArrowIcon from 'react-icons/lib/ti/arrow-left'
+import RightArrowIcon from 'react-icons/lib/ti/arrow-right'
+import FileCodeIcon from 'react-icons/lib/go/file-code'
+import { B, V, H, PAD, LIGHT_GRAY, GRAY } from '../layout'
 import { button } from './style.css'
-import FileCode from 'react-icons/lib/go/file-code'
 
+////////////////////////////////////////////////////////////////////////////////
 const createFakeBrowserHistory = (createHistory) => {
   const getUserConfirmation = (message, callback) => {
     callback(window.confirm(message))
@@ -21,6 +22,8 @@ const createFakeBrowserHistory = (createHistory) => {
   return history
 }
 
+
+////////////////////////////////////////////////////////////////////////////////
 const Button = ({ children, ...props }) => (
   <B
     component="button"
@@ -37,9 +40,13 @@ const Button = ({ children, ...props }) => (
   />
 )
 
+
+////////////////////////////////////////////////////////////////////////////////
 class FakeBrowser extends React.Component {
 
-  state = { address: null }
+  state = {
+    address: null
+  }
 
   componentWillMount() {
     const history = this.history = createFakeBrowserHistory(createMemoryHistory)
@@ -75,12 +82,12 @@ class FakeBrowser extends React.Component {
             onClick={history.goBack}
             disabled={!history.canGo(-1)}
             ariaLabel="Go back in fake browser"
-          ><LeftArrow/></Button>
+          ><LeftArrowIcon/></Button>
           <Button
             onClick={history.goForward}
             disabled={!history.canGo(1)}
             ariaLabel="Go forward in fake browser"
-          ><RightArrow/></Button>
+          ><RightArrowIcon/></Button>
           <B
             position="relative"
             zIndex="1"
@@ -88,7 +95,7 @@ class FakeBrowser extends React.Component {
             top="-2px"
             color={GRAY}
           >
-            <FileCode/>
+            <FileCodeIcon/>
           </B>
           <H
             flex="1"
@@ -112,7 +119,7 @@ class FakeBrowser extends React.Component {
                 },
                 onKeyDown: (e) => {
                   if (e.key === 'Enter')
-                    this.history.push(e.target.value)
+                    history.push(e.target.value)
                 }
               }}
             />
@@ -126,4 +133,6 @@ class FakeBrowser extends React.Component {
   }
 }
 
+
+////////////////////////////////////////////////////////////////////////////////
 export default FakeBrowser

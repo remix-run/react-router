@@ -96,7 +96,6 @@ class History extends React.Component {
       this.transitioning = true
       const { location } = nextProps
       const { history } = this.props
-      // FIXME: I don't think this is right
       if (location.action === 'PUSH') {
         history.push(location)
       } else {
