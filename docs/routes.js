@@ -39,6 +39,11 @@ export const EXAMPLES = [
     load: require('bundle?lazy!./examples/NavStacks'),
     loadSource: require('bundle?lazy!!prismjs?lang=jsx!./.examples/NavStacks.js')
   },
+  { name: 'Sidebar',
+    path: '/sidebar',
+    load: require('bundle?lazy!./examples/Sidebar'),
+    loadSource: require('bundle?lazy!!prismjs?lang=jsx!./.examples/Sidebar.js')
+  },
   { name: 'Relative Links', path: '/relative-links' },
   { name: 'Pinterest-Style UI', path: '/pinterest-style-ui' },
   { name: 'Animated Transitions', path: '/animated-transitions' },

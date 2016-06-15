@@ -1,39 +1,42 @@
 import React from 'react'
 import { Router, Match, Link } from 'react-router'
 
-const genKey = () => Math.random().toString(36).substr(2, 5)
+const PEEPS = [
+  { id: 0, name: 'Michelle', friends: [ 1, 2, 3 ] },
+  { id: 1, name: 'Sean', friends: [ 0, 3 ] },
+  { id: 2, name: 'Kim', friends: [ 0, 1, 3 ], },
+  { id: 3, name: 'David', friends: [ 1, 2 ] }
+]
 
-const RecursiveExample = ({ history }) => (
-  <Router history={history}>
-    <RecursiveChild />
-  </Router>
-)
+const find = (id) => PEEPS.find(p => p.id == id)
 
-class RecursiveChild extends React.Component {
-
-  state = { childId: null }
-
-  componentWillMount() {
-    this.setState({ childId: genKey() })
-  }
-
-  render = () => {
-    const { pathname, params } = this.props
-    const { childId } = this.state
-    const id = (params && params.id) || 'root'
-    const childPath = `${pathname || ''}/${childId}`
-    return (
+const Person = ({ pathname, params }) => {
+  const person = find(params.id)
+  return (
+    <div>
+      <h3>{person.name}’s Friends</h3>
       <ul>
-        <li>
-          {id}{' '}
-          <Link to={childPath}>we must go deeper</Link>
-          <Match pattern={childPath} component={RecursiveChild}/>
-        </li>
+        {person.friends.map((id) => (
+          <li key={id}>
+            <Link to={`${pathname}/${id}`}>
+              {find(id).name}
+            </Link>
+          </li>
+        ))}
       </ul>
-    )
-  }
+      <Match pattern={`${pathname}/:id`} component={Person}/>
+    </div>
+  )
+}
 
+const RecursiveExample = ({ history }) => {
+  return (
+    <Router history={history}>
+      <Person params={{ id: 0 }} pathname=""/>
+    </Router>
+  )
 }
 
 export default RecursiveExample
+
 
