@@ -14,7 +14,8 @@
     "jsxstyle": "0.0.18",
     "react": "0.14.8",
     "react-dom": "0.14.8",
-    "react-icons": "2.1.0"
+    "react-icons": "2.1.0",
+    "react-motion": "^0.4.4"
   },
   "devDependencies": {
     "babel-eslint": "6.0.4",

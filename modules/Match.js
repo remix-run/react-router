@@ -29,6 +29,7 @@ class Match extends React.Component {
   static propTypes = {
     children: PropTypes.node,
     render: PropTypes.func,
+    renderAlways: PropTypes.func,
     component: PropTypes.func,
     // TODO: has to start w/ slash, create custom validator
     pattern: PropTypes.string,
@@ -45,31 +46,48 @@ class Match extends React.Component {
   }
 
   render() {
-    const { children, render, component, pattern, location, exactly } = this.props
+    const {
+      children,
+      render,
+      // this thing is just crap to get TransitionMotion to
+      // work, need to bikeshed it into `children` or `render`
+      // or something...
+      renderAlways,
+      component,
+      pattern,
+      location,
+      exactly
+    } = this.props
     const loc = location || this.context.location
     const match = matchPattern(pattern, loc, exactly)
+    const props = match ? {
+      location: loc,
+      pattern,
+      pathname: match.pathname,
+      params: match.params,
+      isTerminal: match.isTerminal
+    } : { location: loc }
 
-    if (!match)
-      return null
-
-    return (
-      <RegisterMatch>
-        <MatchCountProvider isTerminal={match.isTerminal}>
-          <MultiRender
-            props={{
-              location: loc,
-              pattern,
-              pathname: match.pathname,
-              params: match.params,
-              isTerminal: match.isTerminal
-            }}
-            children={children}
-            component={component}
-            render={render}
-          />
-        </MatchCountProvider>
-      </RegisterMatch>
-    )
+    if (renderAlways) {
+      return renderAlways(!!match, props)
+    } else {
+      if (!match) {
+        return null
+      } else {
+        return (
+          <RegisterMatch>
+            <MatchCountProvider isTerminal={match.isTerminal}>
+              <MultiRender
+                props={props}
+                children={children}
+                component={component}
+                render={render}
+              />
+            </MatchCountProvider>
+          </RegisterMatch>
+        )
+      }
+    }
   }
 }
 

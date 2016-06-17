@@ -49,9 +49,12 @@ export const EXAMPLES = [
     load: require('bundle?lazy!./examples/Sidebar'),
     loadSource: require('bundle?lazy!!prismjs?lang=jsx!./.examples/Sidebar.js')
   },
-  { name: 'Relative Links', path: '/relative-links' },
+  { name: 'Animated Transitions',
+    path: '/animated-transitions',
+    load: require('bundle?lazy!./examples/Animation'),
+    loadSource: require('bundle?lazy!!prismjs?lang=jsx!./.examples/Animation.js')
+  },
   { name: 'Pinterest-Style UI', path: '/pinterest-style-ui' },
-  { name: 'Animated Transitions', path: '/animated-transitions' },
   { name: 'Custom Histories', path: '/custom-histories' },
   { name: 'Server Rendering', path: '/server-rendering' }
 ]

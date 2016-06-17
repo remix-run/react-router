@@ -1,6 +1,9 @@
 import React from 'react'
 import { Router, Match, Link } from 'react-router'
 
+// Each "route" has two components, one for the sidebar
+// and one for the main area, we'll render them
+// simultaneously when the pattern matches
 const routes = [
   { pattern: '/',
     exactly: true,
