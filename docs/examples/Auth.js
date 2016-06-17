@@ -77,6 +77,8 @@ class AuthExample extends React.Component {
   signout = () => {
     fakeAuth.signout(() => {
       this.props.history.push('/')
+      // FIXME: why do we stay at /protected? when 
+      // there's a setTimeout?
     })
   }
 

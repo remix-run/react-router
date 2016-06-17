@@ -1,11 +1,11 @@
 import React, { PropTypes } from 'react'
 import MatchCountProvider from './MatchCountProvider'
-import MultiRender from './MultiRender'
 import matchPattern from './matchPattern'
 
 class RegisterMatch extends React.Component {
   static propTypes = {
-    children: PropTypes.node.isRequired
+    children: PropTypes.node.isRequired,
+    match: PropTypes.any
   }
 
   static contextTypes = {
@@ -13,11 +13,21 @@ class RegisterMatch extends React.Component {
   }
 
   componentWillMount() {
-    this.context.matchCounter.registerMatch()
+    if (this.props.match)
+      this.context.matchCounter.registerMatch()
+  }
+
+  componentWillReceiveProps(nextProps) {
+    if (nextProps.match && !this.props.match) {
+      this.context.matchCounter.registerMatch()
+    } else if (!nextProps.match && this.props.match) {
+      this.context.matchCounter.unregisterMatch()
+    }
   }
 
   componentWillUnmount() {
-    this.context.matchCounter.unregisterMatch()
+    if (this.props.match)
+      this.context.matchCounter.unregisterMatch()
   }
 
   render() {
@@ -29,8 +39,8 @@ class Match extends React.Component {
   static propTypes = {
     children: PropTypes.node,
     render: PropTypes.func,
-    renderAlways: PropTypes.func,
     component: PropTypes.func,
+
     // TODO: has to start w/ slash, create custom validator
     pattern: PropTypes.string,
     location: PropTypes.object,
@@ -46,48 +56,27 @@ class Match extends React.Component {
   }
 
   render() {
-    const {
-      children,
-      render,
-      // this thing is just crap to get TransitionMotion to
-      // work, need to bikeshed it into `children` or `render`
-      // or something...
-      renderAlways,
-      component,
-      pattern,
-      location,
-      exactly
-    } = this.props
+    const { children, render, component:Component,
+      pattern, location, exactly } = this.props
     const loc = location || this.context.location
     const match = matchPattern(pattern, loc, exactly)
-    const props = match ? {
-      location: loc,
-      pattern,
-      pathname: match.pathname,
-      params: match.params,
-      isTerminal: match.isTerminal
-    } : { location: loc }
+    const props = { ...match, location: loc, pattern }
 
-    if (renderAlways) {
-      return renderAlways(!!match, props)
-    } else {
-      if (!match) {
-        return null
-      } else {
-        return (
-          <RegisterMatch>
-            <MatchCountProvider isTerminal={match.isTerminal}>
-              <MultiRender
-                props={props}
-                children={children}
-                component={component}
-                render={render}
-              />
-            </MatchCountProvider>
-          </RegisterMatch>
-        )
-      }
-    }
+    return (
+      <RegisterMatch match={match}>
+        <MatchCountProvider match={match}>
+          {children ? (
+            children({ match, ...props })
+          ) : match ? (
+            render ? (
+              render(props)
+            ) : (
+              <Component {...props}/>
+            )
+          ) : null}
+        </MatchCountProvider>
+      </RegisterMatch>
+    )
   }
 }
 

@@ -28,10 +28,10 @@ const AnimationExample = ({ history }) => (
 const MatchWithFade = ({ component:Component, ...rest }) => {
   const willLeave = () => ({ zIndex: 1, opacity: spring(0) })
   return (
-    <Match {...rest} renderAlways={(isMatch, props) => (
+    <Match {...rest} children={({ match, ...props}) => (
       <TransitionMotion
         willLeave={willLeave}
-        styles={isMatch ? [{
+        styles={match ? [{
           key: props.location.key || 'initial',
           style: { opacity: 1 },
           data: props

@@ -2,7 +2,7 @@ import React, { PropTypes } from 'react'
 
 class MatchCountProvider extends React.Component {
   static propTypes = {
-    isTerminal: PropTypes.bool,
+    match: PropTypes.any,
     children: PropTypes.node
   }
 
@@ -30,9 +30,10 @@ class MatchCountProvider extends React.Component {
   }
 
   getChildContext() {
+    const { match } = this.props
     return {
       matchCounter: {
-        matchFound: this.props.isTerminal || this.state.count > 0,
+        matchFound: (match && match.isTerminal) || this.state.count > 0,
         registerMatch: this.registerMatch,
         unregisterMatch: this.unregisterMatch
       }
@@ -40,7 +41,7 @@ class MatchCountProvider extends React.Component {
   }
 
   render() {
-    return React.Children.only(this.props.children)
+    return this.props.children
   }
 }
 

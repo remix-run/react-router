@@ -1,6 +1,9 @@
 import React from 'react'
 import { Router, Match, Link, matchPattern } from 'react-router'
 
+// Buggy if you click tab 2, then tab 1, then sub. Stack
+// back button doesn't show up :\
+
 ////////////////////////////////////////////////////////////
 // 1. Click "Tab One", then "Sub", to build up a stack on
 //    the first tab
