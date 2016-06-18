@@ -13,15 +13,20 @@ class RegisterMatch extends React.Component {
   }
 
   componentWillMount() {
-    if (this.props.match)
-      this.context.matchCounter.registerMatch()
+    const { matchCounter } = this.context
+    const { match } = this.props
+    if (match && matchCounter)
+      matchCounter.registerMatch()
   }
 
   componentWillReceiveProps(nextProps) {
-    if (nextProps.match && !this.props.match) {
-      this.context.matchCounter.registerMatch()
-    } else if (!nextProps.match && this.props.match) {
-      this.context.matchCounter.unregisterMatch()
+    const { matchCounter } = this.context
+    if (matchCounter) {
+      if (nextProps.match && !this.props.match) {
+        matchCounter.registerMatch()
+      } else if (!nextProps.match && this.props.match) {
+        matchCounter.unregisterMatch()
+      }
     }
   }
 
@@ -66,7 +71,7 @@ class Match extends React.Component {
       <RegisterMatch match={match}>
         <MatchCountProvider match={match}>
           {children ? (
-            children({ match, ...props })
+            children({ matched: !!match, ...props })
           ) : match ? (
             render ? (
               render(props)
