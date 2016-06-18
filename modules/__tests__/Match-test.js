@@ -236,6 +236,22 @@ describe('Match', () => {
       )
       expect(html).toContain('got it')
     })
+
+    describe('when giving a location prop', () => {
+      it('matches the location from props', () => {
+        const contextLoc = { pathname: '/', state: { test: 'context' } }
+        const propsLoc = { pathname: '/', state: { test: 'prop' } }
+        const html = renderToString(
+          <LocationProvider location={contextLoc}>
+            <Match location={propsLoc} pattern="/" render={({ location }) => (
+              <div>{location.state.test}</div>
+            )}/>
+          </LocationProvider>
+        )
+        expect(html).toNotContain('context')
+        expect(html).toContain('prop')
+      })
+    })
   })
 
 })
