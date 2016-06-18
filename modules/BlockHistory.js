@@ -10,6 +10,10 @@ class BlockHistory extends React.Component {
     history: PropTypes.object
   }
 
+  static defaultProps = {
+    when: true
+  }
+
   unlistenBefore = null
 
   componentDidMount() {
