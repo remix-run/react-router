@@ -2,7 +2,6 @@ import React, { PropTypes } from 'react'
 import History from './History'
 import MatchCountProvider from './MatchCountProvider'
 import Match from './Match'
-import MultiRender from './MultiRender'
 
 class Router extends React.Component {
   static propTypes = {
@@ -13,18 +12,19 @@ class Router extends React.Component {
   }
 
   render() {
-    const { children, component, render, ...rest } = this.props
+    const { children, ...rest } = this.props
 
     return (
       <History {...rest}>
-        <MatchCountProvider isTerminal={true}>
+        <MatchCountProvider match={{ isTerminal: true }}>
           <Match pattern="/" render={(props) => (
-            <MultiRender
-              props={props}
-              children={children}
-              render={render}
-              component={component}
-            />
+            typeof children === 'function' ? (
+              children(props)
+            ) : React.Children.count(children) === 1 ? (
+              children
+            ) : (
+              <div>{children}</div>
+            )
           )}/>
         </MatchCountProvider>
       </History>
