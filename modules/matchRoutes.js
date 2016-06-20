@@ -5,7 +5,7 @@ import { createRoutes } from './RouteUtils'
 import { canUseMembrane } from './deprecateObjectProperties'
 import deprecateLocationProperties from './deprecateLocationProperties' 
 
-function getChildRoutes(route, location, paramNames, paramValues, remainingPathname, callback) {
+function getChildRoutes(route, location, paramNames, paramValues, callback) {
   if (route.childRoutes) {
     return [ null, route.childRoutes ]
   }
@@ -15,8 +15,7 @@ function getChildRoutes(route, location, paramNames, paramValues, remainingPathn
 
   let sync = true, result, partialNextStateWithLocation
   const partialNextState = { 
-    params: createParams(paramNames, paramValues),
-    remainingPathname 
+    params: createParams(paramNames, paramValues)
   }
   
   if (__DEV__ && canUseMembrane) {
@@ -172,7 +171,7 @@ function matchRouteDeep(
       }
     }
 
-    const result = getChildRoutes(route, location, paramNames, paramValues, remainingPathname, onChildRoutes)
+    const result = getChildRoutes(route, location, paramNames, paramValues, onChildRoutes)
     if (result) {
       onChildRoutes(...result)
     }
