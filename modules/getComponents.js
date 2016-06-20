@@ -1,6 +1,6 @@
 import { mapAsync } from './AsyncUtils'
 import { canUseMembrane } from './deprecateObjectProperties'
-import warning from './routerWarning'
+import deprecateLocationProperties from './deprecateLocationProperties' 
 
 function getComponentsForRoute(nextState, route, callback) {
   if (route.component || route.components) {
@@ -18,23 +18,7 @@ function getComponentsForRoute(nextState, route, callback) {
   let nextStateWithLocation
 
   if (__DEV__ && canUseMembrane) {
-    nextStateWithLocation = { ...nextState }
-
-    // I don't use deprecateObjectProperties here because I want to keep the
-    // same code path between development and production, in that we just
-    // assign extra properties to the copy of the state object in both cases.
-    for (const prop in location) {
-      if (!Object.prototype.hasOwnProperty.call(location, prop)) {
-        continue
-      }
-
-      Object.defineProperty(nextStateWithLocation, prop, {
-        get() {
-          warning(false, 'Accessing location properties from the first argument to `getComponent` and `getComponents` is deprecated. That argument is now the router state (`nextState`) rather than the location. To access the location, use `nextState.location`.')
-          return location[prop]
-        }
-      })
-    }
+    nextStateWithLocation = deprecateLocationProperties(nextState, location)
   } else {
     nextStateWithLocation = { ...nextState, ...location }
   }

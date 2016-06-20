@@ -2,8 +2,10 @@ import warning from './routerWarning'
 import { loopAsync } from './AsyncUtils'
 import { matchPattern } from './PatternUtils'
 import { createRoutes } from './RouteUtils'
+import { canUseMembrane } from './deprecateObjectProperties'
+import deprecateLocationProperties from './deprecateLocationProperties' 
 
-function getChildRoutes(route, location, callback) {
+function getChildRoutes(route, progressState, callback) {
   if (route.childRoutes) {
     return [ null, route.childRoutes ]
   }
@@ -13,7 +15,7 @@ function getChildRoutes(route, location, callback) {
 
   let sync = true, result
 
-  route.getChildRoutes(location, function (error, childRoutes) {
+  route.getChildRoutes(progressState, function (error, childRoutes) {
     childRoutes = !error && createRoutes(childRoutes)
     if (sync) {
       result = [ error, childRoutes ]
@@ -160,7 +162,19 @@ function matchRouteDeep(
       }
     }
 
-    const result = getChildRoutes(route, location, onChildRoutes)
+    const progressState = { 
+      params: createParams(paramNames, paramValues),
+      remainingPathname 
+    }
+    let progressStateWithLocation
+
+    if (__DEV__ && canUseMembrane) {
+      progressStateWithLocation = deprecateLocationProperties(progressState, location)
+    } else {
+      progressStateWithLocation = { ...progressState, ...location }
+    }
+
+    const result = getChildRoutes(route, progressStateWithLocation, onChildRoutes)
     if (result) {
       onChildRoutes(...result)
     }
