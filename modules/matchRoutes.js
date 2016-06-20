@@ -13,19 +13,19 @@ function getChildRoutes(route, location, paramNames, paramValues, remainingPathn
     return []
   }
 
-  let sync = true, result, progressStateWithLocation
-  const progressState = { 
+  let sync = true, result, partialNextStateWithLocation
+  const partialNextState = { 
     params: createParams(paramNames, paramValues),
     remainingPathname 
   }
   
   if (__DEV__ && canUseMembrane) {
-    progressStateWithLocation = deprecateLocationProperties(progressState, location)
+    partialNextStateWithLocation = deprecateLocationProperties(partialNextState, location)
   } else {
-    progressStateWithLocation = { ...progressState, ...location }
+    partialNextStateWithLocation = { ...partialNextState, ...location }
   }
 
-  route.getChildRoutes(progressStateWithLocation, function (error, childRoutes) {
+  route.getChildRoutes(partialNextStateWithLocation, function (error, childRoutes) {
     childRoutes = !error && createRoutes(childRoutes)
     if (sync) {
       result = [ error, childRoutes ]
