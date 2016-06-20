@@ -42,7 +42,7 @@ class RegisterMatch extends React.Component {
 
 class Match extends React.Component {
   static propTypes = {
-    children: PropTypes.node,
+    children: PropTypes.func,
     render: PropTypes.func,
     component: PropTypes.func,
 

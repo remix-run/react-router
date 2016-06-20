@@ -30,10 +30,9 @@ class MatchCountProvider extends React.Component {
   }
 
   getChildContext() {
-    const { match } = this.props
     return {
       matchCounter: {
-        matchFound: (match && match.isTerminal) || this.state.count > 0,
+        matchFound: this.state.count > 0,
         registerMatch: this.registerMatch,
         unregisterMatch: this.unregisterMatch
       }

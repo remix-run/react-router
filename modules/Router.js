@@ -6,7 +6,7 @@ import Match from './Match'
 class Router extends React.Component {
   static propTypes = {
     history: PropTypes.object,
-    children: PropTypes.node,
+    children: PropTypes.oneOfType([ PropTypes.node, PropTypes.func ]),
     render: PropTypes.func,
     component: PropTypes.func
   }

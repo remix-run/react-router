@@ -3,9 +3,15 @@ import React from 'react'
 import Router from '../Router'
 import Match from '../Match'
 import Miss from '../Miss'
-import matchPattern from '../matchPattern'
 import { renderToString } from 'react-dom/server'
+import { render } from 'react-dom'
 import createMemoryHistory from 'history/lib/createMemoryHistory'
+
+const renderToStringWithDOM = (el) => {
+  const div = document.createElement('div')
+  render(el, div)
+  return div.innerHTML
+}
 
 // definitely want this behavior
 describe('multiple matched Match', () => {
@@ -29,7 +35,7 @@ describe('multiple matched Match', () => {
 // not sure what to do here...
 describe('Ambiguous matches?', () => {
 
-  it('should render both?', () => {
+  it('should render both the dynamic and static patterns', () => {
     const html = renderToString(
       <Router history={createMemoryHistory([ '/foo' ])}>
         <Match pattern="/foo" render={() => <div>static</div>}/>
@@ -40,43 +46,37 @@ describe('Ambiguous matches?', () => {
     expect(html).toContain('param')
   })
 
-  it('lets the user decide what to do?', () => {
-    const staticMatch = renderToString(
-      <Router history={createMemoryHistory([ '/foo' ])}>
-        <Match pattern="/:name" render={() => (
-          <div>
-            <Match pattern="/foo" render={() => <div>static</div>}/>
-            <Miss render={({ params }) => <div>{params.name}</div>}/>
-          </div>
-        )}/>
-      </Router>
-    )
-    expect(staticMatch).toContain('static')
-    expect(staticMatch).toNotContain('foo')
+  describe('with nested Match/Miss', () => {
+    it('allows users to match the dynamic pattern only', () => {
+      const pathname = '/non-static-param'
+      const html = renderToStringWithDOM(
+        <Router history={createMemoryHistory([ pathname ])}>
+          <Match pattern="/:name" render={({ params }) => (
+            <div>
+              <Match pattern="/foo" render={() => <div>foo</div>}/>
+              <Miss render={() => <div>{params.name}</div>}/>
+            </div>
+          )}/>
+        </Router>
+      )
+      expect(html).toNotContain('foo')
+      expect(html).toContain('non-static-param')
+    })
 
-    const paramMatch = renderToString(
-      <Router history={createMemoryHistory([ '/bar' ])}>
-        <Match pattern="/:name" render={({ pattern, params }) => (
-          <div>
-            <Match pattern="/foo" render={() => <div>static</div>}/>
-            <Match pattern="/bar" render={() => <div>bar</div>}/>
-
-            {/* I would expect this to work... */}
-            <Miss render={() => <div>{params.name}</div>}/>
-
-            {/* but this does */}
-            {!matchPattern(pattern, location) && (
-              <div>{params.name}</div>
-            )}
-          </div>
-        )}/>
-      </Router>
-    )
-
-    expect(paramMatch).toNotContain('static')
-    expect(paramMatch).toContain('bar')
+    it('allows users to match the static pattern only', () => {
+      const pathname = '/foo'
+      // this fails with `renderToString`, I think the
+      // reconciler has a bug w/ context causing setState
+      // calls on the same tick, haven't looked too deep
+      const html = renderToStringWithDOM((
+        <Router history={createMemoryHistory([ pathname ])}>
+          <Match pattern="/foo" render={() => <div>match</div>}/>
+          <Miss render={() => <div>miss</div>}/>
+        </Router>
+      ))
+      expect(html).toContain('match')
+      expect(html).toNotContain('miss')
+    })
   })
-
-
 })
 
