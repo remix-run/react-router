@@ -262,7 +262,7 @@ describe('matchRoutes', function () {
         if (childRoutes) {
           delete route.childRoutes
 
-          route.getChildRoutes = function (location, callback) {
+          route.getChildRoutes = function (progressState, callback) {
             setTimeout(function () {
               callback(null, childRoutes)
             })
@@ -294,7 +294,7 @@ describe('matchRoutes', function () {
     let getChildRoutes, getIndexRoute, jsxRoutes
 
     beforeEach(function () {
-      getChildRoutes = function (location, callback) {
+      getChildRoutes = function (progressState, callback) {
         setTimeout(function () {
           callback(null, <Route path=":userID" />)
         })
