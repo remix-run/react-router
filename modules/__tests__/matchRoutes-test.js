@@ -332,6 +332,35 @@ describe('matchRoutes', function () {
     })
   })
 
+  describe('a nested route with a getChildRoutes callback', function () {
+    let getChildRoutes, jsxRoutes
+
+    beforeEach(function () {
+      getChildRoutes = function (partialNextState, callback) {
+        setTimeout(function () {
+          callback(null, partialNextState)
+        })
+      }
+
+      jsxRoutes = createRoutes([
+        <Route name="users"
+               path="users/:id">
+          <Route name="topic"
+                path=":topic"
+                getChildRoutes={getChildRoutes} />
+        </Route>
+      ])
+    })
+
+    it('when getChildRoutes callback returns partialNextState', function (done) {
+      matchRoutes(jsxRoutes, createLocation('/users/5/details'), function (error, partialNextState) {
+        expect(partialNextState).toExist()
+        expect(partialNextState.params).toEqual({ id: '5', topic: 'details' })
+        done()
+      })
+    })
+  })
+
   it('complains about invalid index route with path', function (done) {
     shouldWarn('path')
 
