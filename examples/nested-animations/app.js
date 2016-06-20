@@ -18,7 +18,7 @@ const App = ({ children, location: { pathname } }) => {
         component="div" transitionName="swap"
         transitionEnterTimeout={500} transitionLeaveTimeout={500}
       >
-        {React.cloneElement(children || <div />, { key: key })}
+        {React.cloneElement(children || <div />, { key })}
       </ReactCSSTransitionGroup>
     </div>
   )
