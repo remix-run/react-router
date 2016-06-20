@@ -85,7 +85,7 @@ A function used to convert an object from [`<Link>`](#link)s or calls to
 A function used to convert a query string into an object that gets passed to route component props.
 
 ##### `onError(error)`
-While the router is matching, errors may bubble up, here is your opportunity to catch and deal with them. Typically these will come from async features like [`route.getComponents`](#getcomponentsnextstate-callback), [`route.getIndexRoute`](#getindexroutelocation-callback), and [`route.getChildRoutes`](#getchildrouteslocation-callback).
+While the router is matching, errors may bubble up, here is your opportunity to catch and deal with them. Typically these will come from async features like [`route.getComponents`](#getcomponentsnextstate-callback), [`route.getIndexRoute`](#getindexroutelocation-callback), and [`route.getChildRoutes`](#getchildroutesprogressstate-callback).
 
 ##### `onUpdate()`
 Called whenever the router updates its state in response to URL changes.
@@ -368,8 +368,8 @@ A plain JavaScript object route definition. `<Router>` turns JSX `<Route>`s into
 ##### `childRoutes`
 An array of child routes, same as `children` in JSX route configs.
 
-##### `getChildRoutes(location, callback)`
-Same as `childRoutes` but asynchronous and receives the `location`. Useful for code-splitting and dynamic route matching (given some state or session data to return a different set of child routes).
+##### `getChildRoutes(progressState, callback)`
+Same as `childRoutes` but asynchronous and receives the `progressState`. Useful for code-splitting and dynamic route matching (given some state or session data to return a different set of child routes).
 
 ###### `callback` signature
 `cb(err, routesArray)`
@@ -399,8 +399,8 @@ let myRoute = {
 
 let myRoute = {
   path: 'picture/:id',
-  getChildRoutes(location, cb) {
-    let { state } = location
+  getChildRoutes(progressState, cb) {
+    let { state } = progressState
 
     if (state && state.fromDashboard) {
       cb(null, [dashboardPictureRoute])
