@@ -5,7 +5,7 @@ import { createRoutes } from './RouteUtils'
 import { canUseMembrane } from './deprecateObjectProperties'
 import deprecateLocationProperties from './deprecateLocationProperties' 
 
-function getChildRoutes(route, progressState, callback) {
+function getChildRoutes(route, location, paramNames, paramValues, remainingPathname, callback) {
   if (route.childRoutes) {
     return [ null, route.childRoutes ]
   }
@@ -13,9 +13,19 @@ function getChildRoutes(route, progressState, callback) {
     return []
   }
 
-  let sync = true, result
+  let sync = true, result, progressStateWithLocation
+  const progressState = { 
+    params: createParams(paramNames, paramValues),
+    remainingPathname 
+  }
+  
+  if (__DEV__ && canUseMembrane) {
+    progressStateWithLocation = deprecateLocationProperties(progressState, location)
+  } else {
+    progressStateWithLocation = { ...progressState, ...location }
+  }
 
-  route.getChildRoutes(progressState, function (error, childRoutes) {
+  route.getChildRoutes(progressStateWithLocation, function (error, childRoutes) {
     childRoutes = !error && createRoutes(childRoutes)
     if (sync) {
       result = [ error, childRoutes ]
@@ -162,19 +172,7 @@ function matchRouteDeep(
       }
     }
 
-    const progressState = { 
-      params: createParams(paramNames, paramValues),
-      remainingPathname 
-    }
-    let progressStateWithLocation
-
-    if (__DEV__ && canUseMembrane) {
-      progressStateWithLocation = deprecateLocationProperties(progressState, location)
-    } else {
-      progressStateWithLocation = { ...progressState, ...location }
-    }
-
-    const result = getChildRoutes(route, progressStateWithLocation, onChildRoutes)
+    const result = getChildRoutes(route, location, paramNames, paramValues, remainingPathname, onChildRoutes)
     if (result) {
       onChildRoutes(...result)
     }
