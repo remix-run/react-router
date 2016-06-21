@@ -262,7 +262,7 @@ describe('matchRoutes', function () {
         if (childRoutes) {
           delete route.childRoutes
 
-          route.getChildRoutes = function (location, callback) {
+          route.getChildRoutes = function (partialNextState, callback) {
             setTimeout(function () {
               callback(null, childRoutes)
             })
@@ -291,10 +291,10 @@ describe('matchRoutes', function () {
   })
 
   describe('an asynchronous JSX route config', function () {
-    let getChildRoutes, getIndexRoute, jsxRoutes
+    let getChildRoutes, getIndexRoute, jsxRoutes, makeJsxNestedRoutes
 
     beforeEach(function () {
-      getChildRoutes = function (location, callback) {
+      getChildRoutes = function (partialNextState, callback) {
         setTimeout(function () {
           callback(null, <Route path=":userID" />)
         })
@@ -312,6 +312,19 @@ describe('matchRoutes', function () {
                getChildRoutes={getChildRoutes}
                getIndexRoute={getIndexRoute} />
       ])
+
+      makeJsxNestedRoutes = () => {
+        const spy = expect.spyOn({ getChildRoutes }, 'getChildRoutes').andCallThrough()
+        const routes = createRoutes([
+          <Route name="users"
+                path="users/:id">
+            <Route name="topic"
+                  path=":topic"
+                  getChildRoutes={spy} />
+          </Route>
+        ])
+        return { spy, routes }
+      }
     })
 
     it('when getChildRoutes callback returns reactElements', function (done) {
@@ -327,6 +340,16 @@ describe('matchRoutes', function () {
       matchRoutes(jsxRoutes, createLocation('/users'), function (error, match) {
         expect(match).toExist()
         expect(match.routes.map(r => r.name)).toEqual([ 'users', 'jsx' ])
+        done()
+      })
+    })
+    
+    it('when getChildRoutes callback returns partialNextState', function (done) {
+      const jsxNestedRoutes = makeJsxNestedRoutes()
+      matchRoutes(jsxNestedRoutes.routes, createLocation('/users/5/details/others'), function () {
+        const state = jsxNestedRoutes.spy.calls[0].arguments[0]
+        expect(state).toExist()
+        expect(state.params).toEqual({ id: '5', topic: 'details' })
         done()
       })
     })

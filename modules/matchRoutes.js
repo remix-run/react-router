@@ -2,8 +2,10 @@ import warning from './routerWarning'
 import { loopAsync } from './AsyncUtils'
 import { matchPattern } from './PatternUtils'
 import { createRoutes } from './RouteUtils'
+import { canUseMembrane } from './deprecateObjectProperties'
+import deprecateLocationProperties from './deprecateLocationProperties'
 
-function getChildRoutes(route, location, callback) {
+function getChildRoutes(route, location, paramNames, paramValues, callback) {
   if (route.childRoutes) {
     return [ null, route.childRoutes ]
   }
@@ -11,9 +13,18 @@ function getChildRoutes(route, location, callback) {
     return []
   }
 
-  let sync = true, result
+  let sync = true, result, partialNextStateWithLocation
+  const partialNextState = { 
+    params: createParams(paramNames, paramValues)
+  }
+  
+  if (__DEV__ && canUseMembrane) {
+    partialNextStateWithLocation = deprecateLocationProperties(partialNextState, location)
+  } else {
+    partialNextStateWithLocation = { ...partialNextState, ...location }
+  }
 
-  route.getChildRoutes(location, function (error, childRoutes) {
+  route.getChildRoutes(partialNextStateWithLocation, function (error, childRoutes) {
     childRoutes = !error && createRoutes(childRoutes)
     if (sync) {
       result = [ error, childRoutes ]
@@ -160,7 +171,7 @@ function matchRouteDeep(
       }
     }
 
-    const result = getChildRoutes(route, location, onChildRoutes)
+    const result = getChildRoutes(route, location, paramNames, paramValues, onChildRoutes)
     if (result) {
       onChildRoutes(...result)
     }

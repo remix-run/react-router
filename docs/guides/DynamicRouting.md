@@ -10,7 +10,7 @@ A router is the perfect place to handle code splitting: it's responsible for set
 
 React Router does all of its [path matching](/docs/guides/RouteMatching.md) and component fetching asynchronously, which allows you to not only load up the components lazily, *but also lazily load the route configuration*. You really only need one route definition in your initial bundle, the router can resolve the rest on demand.
 
-Routes may define [`getChildRoutes`](/docs/API.md#getchildrouteslocation-callback), [`getIndexRoute`](/docs/API.md#getindexroutelocation-callback), and [`getComponents`](/docs/API.md#getcomponentsnextstate-callback) methods. These are asynchronous and only called when needed. We call it "gradual matching". React Router will gradually match the URL and fetch only the amount of route configuration and components it needs to match the URL and render.
+Routes may define [`getChildRoutes`](/docs/API.md#getchildroutespartialnextstate-callback), [`getIndexRoute`](/docs/API.md#getindexroutelocation-callback), and [`getComponents`](/docs/API.md#getcomponentsnextstate-callback) methods. These are asynchronous and only called when needed. We call it "gradual matching". React Router will gradually match the URL and fetch only the amount of route configuration and components it needs to match the URL and render.
 
 Coupled with a smart code splitting tool like [webpack](http://webpack.github.io/), a once tiresome architecture is now simple and declarative.
 
@@ -18,7 +18,7 @@ Coupled with a smart code splitting tool like [webpack](http://webpack.github.io
 const CourseRoute = {
   path: 'course/:courseId',
 
-  getChildRoutes(location, callback) {
+  getChildRoutes(partialNextState, callback) {
     require.ensure([], function (require) {
       callback(null, [
         require('./routes/Announcements'),

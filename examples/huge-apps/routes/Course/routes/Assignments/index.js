@@ -1,7 +1,7 @@
 module.exports = {
   path: 'assignments',
 
-  getChildRoutes(location, cb) {
+  getChildRoutes(partialNextState, cb) {
     require.ensure([], (require) => {
       cb(null, [
         require('./routes/Assignment')
