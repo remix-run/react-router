@@ -24,7 +24,6 @@ describe('Router', () => {
         </Router>
       )
       expect(actualProps).toEqual({
-        isTerminal: false,
         location: {
           action: 'POP',
           hash: '',
@@ -32,10 +31,7 @@ describe('Router', () => {
           pathname: '/lol',
           search: '',
           state: undefined
-        },
-        params: null,
-        pathname: '/',
-        pattern: '/'
+        }
       })
     })
   })

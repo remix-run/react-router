@@ -1,6 +1,5 @@
 import React, { PropTypes } from 'react'
 import createBrowserHistory from 'history/lib/createBrowserHistory'
-import MultiRender from './MultiRender'
 
 const warning = () => {}
 
@@ -149,17 +148,16 @@ class History extends React.Component {
   }
 
   render() {
-    const { children, render, component, history } = this.props
+    const { children, history } = this.props
     const { location } = this.isControlled() ? this.props : this.state
     return (
       <HistoryProvider history={history}>
         <LocationProvider location={location}>
-          <MultiRender
-            props={{ location }}
-            children={children}
-            render={render}
-            component={component}
-          />
+          {typeof children === 'function' ? (
+            children({ location })
+          ) : (
+            children
+          )}
         </LocationProvider>
       </HistoryProvider>
     )

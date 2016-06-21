@@ -1,5 +1,4 @@
 import React, { PropTypes } from 'react'
-import MultiRender from './MultiRender'
 
 class Miss extends React.Component {
   static propTypes = {
@@ -14,15 +13,14 @@ class Miss extends React.Component {
   }
 
   render() {
-    const { children, render, component } = this.props
+    const { render, component:Component } = this.props
     const { location, matchCounter } = this.context
     return matchCounter.matchFound ? null : (
-      <MultiRender
-        props={{ location }}
-        children={children}
-        component={component}
-        render={render}
-      />
+      render ? (
+        render({ location })
+      ) : (
+        <Component location={location}/>
+      )
     )
   }
 }

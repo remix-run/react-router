@@ -1,7 +1,6 @@
 import React, { PropTypes } from 'react'
 import History from './History'
 import MatchCountProvider from './MatchCountProvider'
-import Match from './Match'
 
 class Router extends React.Component {
   static propTypes = {
@@ -16,17 +15,17 @@ class Router extends React.Component {
 
     return (
       <History {...rest}>
-        <MatchCountProvider match={{ isTerminal: true }}>
-          <Match pattern="/" render={(props) => (
-            typeof children === 'function' ? (
-              children(props)
+        {({ location }) => (
+          <MatchCountProvider>
+            {typeof children === 'function' ? (
+              children({ location })
             ) : React.Children.count(children) === 1 ? (
               children
             ) : (
               <div>{children}</div>
-            )
-          )}/>
-        </MatchCountProvider>
+            )}
+          </MatchCountProvider>
+        )}
       </History>
     )
   }

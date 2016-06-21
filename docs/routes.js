@@ -63,9 +63,7 @@ export const EXAMPLES = [
     path: '/route-config',
     load: require('bundle?lazy!./examples/RouteConfig'),
     loadSource: require('bundle?lazy!!prismjs?lang=jsx!./.examples/RouteConfig.js')
-  },
-  { name: 'Pinterest-Style UI', path: '/pinterest-style-ui' },
-  { name: 'Custom Histories', path: '/custom-histories' }
+  }
 ]
 
 export const COMPONENTS = [
