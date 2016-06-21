@@ -291,15 +291,16 @@ describe('matchRoutes', function () {
   })
 
   describe('an asynchronous JSX route config', function () {
-    let getChildRoutes, getIndexRoute, jsxRoutes
+    let getChildRoutes, getIndexRoute, jsxRoutes, jsxNestedRoutes, state
 
     beforeEach(function () {
       getChildRoutes = function (partialNextState, callback) {
+        state = partialNextState
         setTimeout(function () {
           callback(null, <Route path=":userID" />)
         })
       }
-
+      
       getIndexRoute = function (location, callback) {
         setTimeout(function () {
           callback(null, <Route name="jsx" />)
@@ -310,9 +311,18 @@ describe('matchRoutes', function () {
         <Route name="users"
                path="users"
                getChildRoutes={getChildRoutes}
-               getIndexRoute={getIndexRoute} />
+               getIndexRoute={getIndexRoute} /> 
       ])
-    })
+    
+      jsxNestedRoutes = createRoutes([
+        <Route name="users"
+              path="users/:id">
+          <Route name="topic"
+                path=":topic"
+                getChildRoutes={getChildRoutes} />
+        </Route>
+      ]) 
+    }) 
 
     it('when getChildRoutes callback returns reactElements', function (done) {
       matchRoutes(jsxRoutes, createLocation('/users/5'), function (error, match) {
@@ -330,32 +340,11 @@ describe('matchRoutes', function () {
         done()
       })
     })
-  })
-
-  describe('a nested route with a getChildRoutes callback', function () {
-    let getChildRoutes, jsxRoutes
-
-    beforeEach(function () {
-      getChildRoutes = function (partialNextState, callback) {
-        setTimeout(function () {
-          callback(null, partialNextState)
-        })
-      }
-
-      jsxRoutes = createRoutes([
-        <Route name="users"
-               path="users/:id">
-          <Route name="topic"
-                path=":topic"
-                getChildRoutes={getChildRoutes} />
-        </Route>
-      ])
-    })
-
+    
     it('when getChildRoutes callback returns partialNextState', function (done) {
-      matchRoutes(jsxRoutes, createLocation('/users/5/details'), function (error, partialNextState) {
-        expect(partialNextState).toExist()
-        expect(partialNextState.params).toEqual({ id: '5', topic: 'details' })
+      matchRoutes(jsxNestedRoutes, createLocation('/users/5/details/others'), function () {
+        expect(state).toExist()
+        expect(state.params).toEqual({ id: '5', topic: 'details' })
         done()
       })
     })
