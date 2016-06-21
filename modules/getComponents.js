@@ -1,6 +1,5 @@
 import { mapAsync } from './AsyncUtils'
-import { canUseMembrane } from './deprecateObjectProperties'
-import deprecateLocationProperties from './deprecateLocationProperties'
+import makeStateWithLocation from './makeStateWithLocation'
 
 function getComponentsForRoute(nextState, route, callback) {
   if (route.component || route.components) {
@@ -15,13 +14,7 @@ function getComponentsForRoute(nextState, route, callback) {
   }
 
   const { location } = nextState
-  let nextStateWithLocation
-
-  if (__DEV__ && canUseMembrane) {
-    nextStateWithLocation = deprecateLocationProperties(nextState, location)
-  } else {
-    nextStateWithLocation = { ...nextState, ...location }
-  }
+  const nextStateWithLocation = makeStateWithLocation(nextState, location)
 
   getComponent.call(route, nextStateWithLocation, callback)
 }

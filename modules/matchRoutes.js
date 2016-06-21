@@ -1,9 +1,8 @@
-import warning from './routerWarning'
 import { loopAsync } from './AsyncUtils'
+import makeStateWithLocation from './makeStateWithLocation'
 import { matchPattern } from './PatternUtils'
+import warning from './routerWarning'
 import { createRoutes } from './RouteUtils'
-import { canUseMembrane } from './deprecateObjectProperties'
-import deprecateLocationProperties from './deprecateLocationProperties'
 
 function getChildRoutes(route, location, paramNames, paramValues, callback) {
   if (route.childRoutes) {
@@ -13,50 +12,62 @@ function getChildRoutes(route, location, paramNames, paramValues, callback) {
     return []
   }
 
-  let sync = true, result, partialNextStateWithLocation
-  const partialNextState = { 
-    params: createParams(paramNames, paramValues)
-  }
-  
-  if (__DEV__ && canUseMembrane) {
-    partialNextStateWithLocation = deprecateLocationProperties(partialNextState, location)
-  } else {
-    partialNextStateWithLocation = { ...partialNextState, ...location }
-  }
+  let sync = true, result
 
-  route.getChildRoutes(partialNextStateWithLocation, function (error, childRoutes) {
-    childRoutes = !error && createRoutes(childRoutes)
-    if (sync) {
-      result = [ error, childRoutes ]
-      return
+  const partialNextState = { params: createParams(paramNames, paramValues) }
+  const partialNextStateWithLocation = makeStateWithLocation(
+    partialNextState, location
+  )
+
+  route.getChildRoutes(
+    partialNextStateWithLocation,
+    function (error, childRoutes) {
+      childRoutes = !error && createRoutes(childRoutes)
+      if (sync) {
+        result = [ error, childRoutes ]
+        return
+      }
+
+      callback(error, childRoutes)
     }
-
-    callback(error, childRoutes)
-  })
+  )
 
   sync = false
   return result  // Might be undefined.
 }
 
-function getIndexRoute(route, location, callback) {
+function getIndexRoute(route, location, paramNames, paramValues, callback) {
   if (route.indexRoute) {
     callback(null, route.indexRoute)
   } else if (route.getIndexRoute) {
-    route.getIndexRoute(location, function (error, indexRoute) {
-      callback(error, !error && createRoutes(indexRoute)[0])
-    })
+    const partialNextState = { params: createParams(paramNames, paramValues) }
+    const partialNextStateWithLocation = makeStateWithLocation(
+      partialNextState, location
+    )
+
+    route.getIndexRoute(
+      partialNextStateWithLocation,
+      function (error, indexRoute) {
+        callback(error, !error && createRoutes(indexRoute)[0])
+      }
+    )
   } else if (route.childRoutes) {
     const pathless = route.childRoutes.filter(childRoute => !childRoute.path)
 
     loopAsync(pathless.length, function (index, next, done) {
-      getIndexRoute(pathless[index], location, function (error, indexRoute) {
-        if (error || indexRoute) {
-          const routes = [ pathless[index] ].concat( Array.isArray(indexRoute) ? indexRoute : [ indexRoute ] )
-          done(error, routes)
-        } else {
-          next()
+      getIndexRoute(
+        pathless[index], location, paramNames, paramValues,
+        function (error, indexRoute) {
+          if (error || indexRoute) {
+            const routes = [ pathless[index] ].concat(
+              Array.isArray(indexRoute) ? indexRoute : [ indexRoute ]
+            )
+            done(error, routes)
+          } else {
+            next()
+          }
         }
-      })
+      )
     }, function (err, routes) {
       callback(null, routes)
     })
@@ -120,27 +131,30 @@ function matchRouteDeep(
         params: createParams(paramNames, paramValues)
       }
 
-      getIndexRoute(route, location, function (error, indexRoute) {
-        if (error) {
-          callback(error)
-        } else {
-          if (Array.isArray(indexRoute)) {
-            warning(
-              indexRoute.every(route => !route.path),
-              'Index routes should not have paths'
-            )
-            match.routes.push(...indexRoute)
-          } else if (indexRoute) {
-            warning(
-              !indexRoute.path,
-              'Index routes should not have paths'
-            )
-            match.routes.push(indexRoute)
-          }
+      getIndexRoute(
+        route, location, paramNames, paramValues,
+        function (error, indexRoute) {
+          if (error) {
+            callback(error)
+          } else {
+            if (Array.isArray(indexRoute)) {
+              warning(
+                indexRoute.every(route => !route.path),
+                'Index routes should not have paths'
+              )
+              match.routes.push(...indexRoute)
+            } else if (indexRoute) {
+              warning(
+                !indexRoute.path,
+                'Index routes should not have paths'
+              )
+              match.routes.push(indexRoute)
+            }
 
-          callback(null, match)
+            callback(null, match)
+          }
         }
-      })
+      )
 
       return
     }
@@ -171,7 +185,9 @@ function matchRouteDeep(
       }
     }
 
-    const result = getChildRoutes(route, location, paramNames, paramValues, onChildRoutes)
+    const result = getChildRoutes(
+      route, location, paramNames, paramValues, onChildRoutes
+    )
     if (result) {
       onChildRoutes(...result)
     }

@@ -291,67 +291,70 @@ describe('matchRoutes', function () {
   })
 
   describe('an asynchronous JSX route config', function () {
-    let getChildRoutes, getIndexRoute, jsxRoutes, makeJsxNestedRoutes
+    let getChildRoutes, getIndexRoute, jsxRoutes
 
     beforeEach(function () {
-      getChildRoutes = function (partialNextState, callback) {
-        setTimeout(function () {
-          callback(null, <Route path=":userID" />)
-        })
-      }
+      getChildRoutes = expect.createSpy().andCall(
+        function (partialNextState, callback) {
+          setTimeout(function () {
+            callback(null, <Route path=":userId" />)
+          })
+        }
+      )
 
-      getIndexRoute = function (location, callback) {
-        setTimeout(function () {
-          callback(null, <Route name="jsx" />)
-        })
-      }
+      getIndexRoute = expect.createSpy().andCall(
+        function (location, callback) {
+          setTimeout(function () {
+            callback(null, <Route name="jsx" />)
+          })
+        }
+      )
 
       jsxRoutes = createRoutes([
-        <Route name="users"
-               path="users"
-               getChildRoutes={getChildRoutes}
-               getIndexRoute={getIndexRoute} />
+        <Route
+          name="users"
+          path=":groupId/users"
+          getChildRoutes={getChildRoutes}
+          getIndexRoute={getIndexRoute}
+        />
       ])
-
-      makeJsxNestedRoutes = () => {
-        const spy = expect.spyOn({ getChildRoutes }, 'getChildRoutes').andCallThrough()
-        const routes = createRoutes([
-          <Route name="users"
-                path="users/:id">
-            <Route name="topic"
-                  path=":topic"
-                  getChildRoutes={spy} />
-          </Route>
-        ])
-        return { spy, routes }
-      }
     })
 
     it('when getChildRoutes callback returns reactElements', function (done) {
-      matchRoutes(jsxRoutes, createLocation('/users/5'), function (error, match) {
-        expect(match).toExist()
-        expect(match.routes.map(r => r.path)).toEqual([ 'users', ':userID' ])
-        expect(match.params).toEqual({ userID: '5' })
-        done()
-      })
+      matchRoutes(
+        jsxRoutes, createLocation('/foo/users/5'),
+        function (error, match) {
+          expect(match).toExist()
+          expect(match.routes.map(r => r.path)).toEqual([
+            ':groupId/users', ':userId'
+          ])
+          expect(match.params).toEqual({ groupId: 'foo', userId: '5' })
+
+          expect(getChildRoutes.calls[0].arguments[0].params).toEqual({
+            groupId: 'foo'
+          })
+          expect(getIndexRoute).toNotHaveBeenCalled()
+
+          done()
+        }
+      )
     })
 
     it('when getIndexRoute callback returns reactElements', function (done) {
-      matchRoutes(jsxRoutes, createLocation('/users'), function (error, match) {
-        expect(match).toExist()
-        expect(match.routes.map(r => r.name)).toEqual([ 'users', 'jsx' ])
-        done()
-      })
-    })
-    
-    it('when getChildRoutes callback returns partialNextState', function (done) {
-      const jsxNestedRoutes = makeJsxNestedRoutes()
-      matchRoutes(jsxNestedRoutes.routes, createLocation('/users/5/details/others'), function () {
-        const state = jsxNestedRoutes.spy.calls[0].arguments[0]
-        expect(state).toExist()
-        expect(state.params).toEqual({ id: '5', topic: 'details' })
-        done()
-      })
+      matchRoutes(
+        jsxRoutes, createLocation('/bar/users'),
+        function (error, match) {
+          expect(match).toExist()
+          expect(match.routes.map(r => r.name)).toEqual([ 'users', 'jsx' ])
+
+          expect(getIndexRoute.calls[0].arguments[0].params).toEqual({
+            groupId: 'bar'
+          })
+          expect(getChildRoutes).toNotHaveBeenCalled()
+
+          done()
+        }
+      )
     })
   })
 
