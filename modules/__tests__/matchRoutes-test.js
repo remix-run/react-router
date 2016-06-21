@@ -325,7 +325,7 @@ describe('matchRoutes', function () {
         ])
         return { spy, routes }
       }
-    }) 
+    })
 
     it('when getChildRoutes callback returns reactElements', function (done) {
       matchRoutes(jsxRoutes, createLocation('/users/5'), function (error, match) {
