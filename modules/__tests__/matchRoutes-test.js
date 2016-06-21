@@ -310,7 +310,7 @@ describe('matchRoutes', function () {
         <Route name="users"
                path="users"
                getChildRoutes={getChildRoutes}
-               getIndexRoute={getIndexRoute} /> 
+               getIndexRoute={getIndexRoute} />
       ])
 
       makeJsxNestedRoutes = () => {
