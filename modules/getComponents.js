@@ -1,6 +1,6 @@
 import { mapAsync } from './AsyncUtils'
 import { canUseMembrane } from './deprecateObjectProperties'
-import deprecateLocationProperties from './deprecateLocationProperties' 
+import deprecateLocationProperties from './deprecateLocationProperties'
 
 function getComponentsForRoute(nextState, route, callback) {
   if (route.component || route.components) {

@@ -3,7 +3,7 @@ import { loopAsync } from './AsyncUtils'
 import { matchPattern } from './PatternUtils'
 import { createRoutes } from './RouteUtils'
 import { canUseMembrane } from './deprecateObjectProperties'
-import deprecateLocationProperties from './deprecateLocationProperties' 
+import deprecateLocationProperties from './deprecateLocationProperties'
 
 function getChildRoutes(route, location, paramNames, paramValues, callback) {
   if (route.childRoutes) {
