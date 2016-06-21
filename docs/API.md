@@ -85,7 +85,7 @@ A function used to convert an object from [`<Link>`](#link)s or calls to
 A function used to convert a query string into an object that gets passed to route component props.
 
 ##### `onError(error)`
-While the router is matching, errors may bubble up, here is your opportunity to catch and deal with them. Typically these will come from async features like [`route.getComponents`](#getcomponentsnextstate-callback), [`route.getIndexRoute`](#getindexroutelocation-callback), and [`route.getChildRoutes`](#getchildroutespartialnextstate-callback).
+While the router is matching, errors may bubble up, here is your opportunity to catch and deal with them. Typically these will come from async features like [`route.getComponents`](#getcomponentsnextstate-callback), [`route.getIndexRoute`](#getindexroutepartialnextstate-callback), and [`route.getChildRoutes`](#getchildroutespartialnextstate-callback).
 
 ##### `onUpdate()`
 Called whenever the router updates its state in response to URL changes.
@@ -317,8 +317,7 @@ class Users extends React.Component {
 ```
 
 ##### `getComponent(nextState, callback)`
-Same as `component` but asynchronous, useful for
-code-splitting.
+Same as `component` but asynchronous, useful for code-splitting.
 
 ###### `callback` signature
 `cb(err, component)`
@@ -369,7 +368,7 @@ A plain JavaScript object route definition. `<Router>` turns JSX `<Route>`s into
 An array of child routes, same as `children` in JSX route configs.
 
 ##### `getChildRoutes(partialNextState, callback)`
-Same as `childRoutes` but asynchronous and receives the `partialNextState`. Useful for code-splitting and dynamic route matching (given some state or session data to return a different set of child routes).
+Same as `childRoutes` but asynchronous and receives `partialNextState`. Useful for code-splitting and dynamic route matching (given some state or session data to return a different set of child routes).
 
 ###### `callback` signature
 `cb(err, routesArray)`
@@ -414,9 +413,9 @@ let myRoute = {
 ##### `indexRoute`
 The [index route](/docs/guides/IndexRoutes.md). This is the same as specifying an `<IndexRoute>` child when using JSX route configs.
 
-##### `getIndexRoute(location, callback)`
+##### `getIndexRoute(partialNextState, callback)`
 
-Same as `indexRoute`, but asynchronous and receives the `location`. As with `getChildRoutes`, this can be useful for code-splitting and dynamic route matching.
+Same as `indexRoute`, but asynchronous and receives `partialNextState`. As with `getChildRoutes`, this can be useful for code-splitting and dynamic route matching.
 
 ###### `callback` signature
 `cb(err, route)`
@@ -435,7 +434,7 @@ let myRoute = {
 // async index route
 let myRoute = {
   path: 'courses',
-  getIndexRoute(location, cb) {
+  getIndexRoute(partialNextState, cb) {
     // do something async here
     cb(null, myIndexRoute)
   }
