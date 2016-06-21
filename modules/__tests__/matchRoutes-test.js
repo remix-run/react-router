@@ -300,7 +300,7 @@ describe('matchRoutes', function () {
           callback(null, <Route path=":userID" />)
         })
       }
-      
+
       getIndexRoute = function (location, callback) {
         setTimeout(function () {
           callback(null, <Route name="jsx" />)
