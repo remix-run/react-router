@@ -24,7 +24,7 @@ export const EXAMPLES = [
     load: require('bundle?lazy!./examples/Blocking'),
     loadSource: require('bundle?lazy!!prismjs?lang=jsx!./.examples/Blocking.js')
   },
-  { name: 'No Match Handling with Miss',
+  { name: 'Miss (No Match Handling)',
     path: '/no-match-handling',
     load: require('bundle?lazy!./examples/Miss'),
     loadSource: require('bundle?lazy!!prismjs?lang=jsx!./.examples/Miss.js')
@@ -53,6 +53,11 @@ export const EXAMPLES = [
     path: '/animated-transitions',
     load: require('bundle?lazy!./examples/Animation'),
     loadSource: require('bundle?lazy!!prismjs?lang=jsx!./.examples/Animation.js')
+  },
+  { name: 'Ambiguous Matches',
+    path: '/ambiguous-matches',
+    load: require('bundle?lazy!./examples/Ambiguous'),
+    loadSource: require('bundle?lazy!!prismjs?lang=jsx!./.examples/Ambiguous.js')
   },
   { name: 'Pinterest-Style UI', path: '/pinterest-style-ui' },
   { name: 'Custom Histories', path: '/custom-histories' },
