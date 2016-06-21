@@ -12,7 +12,7 @@ const App = React.createClass({
 
   updateAuth(loggedIn) {
     this.setState({
-      loggedIn: loggedIn
+      loggedIn
     })
   },
 
