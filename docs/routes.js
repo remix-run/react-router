@@ -59,9 +59,13 @@ export const EXAMPLES = [
     load: require('bundle?lazy!./examples/Ambiguous'),
     loadSource: require('bundle?lazy!!prismjs?lang=jsx!./.examples/Ambiguous.js')
   },
+  { name: 'Route Config',
+    path: '/route-config',
+    load: require('bundle?lazy!./examples/RouteConfig'),
+    loadSource: require('bundle?lazy!!prismjs?lang=jsx!./.examples/RouteConfig.js')
+  },
   { name: 'Pinterest-Style UI', path: '/pinterest-style-ui' },
-  { name: 'Custom Histories', path: '/custom-histories' },
-  { name: 'Server Rendering', path: '/server-rendering' }
+  { name: 'Custom Histories', path: '/custom-histories' }
 ]
 
 export const COMPONENTS = [
