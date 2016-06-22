@@ -1,3 +1,16 @@
+## [v2.5.0]
+> Jun 22, 2016
+
+- **Feature/Deprecation:** Call `getChildRoutes` and `getIndexRoute` with `partialNextState`; deprecate accessing `location` directly in favor of `partialNextState.location` there ([#3556], [#3561], [#3569], [Upgrade Guide](/upgrade-guides/v2.5.0.md#getchildroutes-getindexroute-signature))
+- **Refactor:** Refactor creating `routeParams` objects ([#3544])
+
+[v2.5.0]: https://github.com/reactjs/react-router/compare/v2.4.1...v2.5.0
+[#3544]: https://github.com/reactjs/react-router/pull/3544
+[#3556]: https://github.com/reactjs/react-router/pull/3556
+[#3561]: https://github.com/reactjs/react-router/pull/3561
+[#3569]: https://github.com/reactjs/react-router/pull/3569
+
+
 ## [v2.4.1]
 > May 19, 2016
 
