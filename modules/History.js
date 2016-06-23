@@ -53,7 +53,7 @@ class History extends React.Component {
     location: locationType,
     onChange: PropTypes.func,
     history: PropTypes.object,
-    children: PropTypes.node,
+    children: PropTypes.oneOfType([ PropTypes.node, PropTypes.func ]),
     render: PropTypes.func,
     component: PropTypes.func
   }
