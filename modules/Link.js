@@ -104,7 +104,7 @@ const Link = React.createClass({
     if (allowTransition) {
       const { to, query, hash, state } = this.props
       const location = createLocationDescriptor(to, { query, hash, state })
-      
+
       this.context.router.push(location)
     }
   },
