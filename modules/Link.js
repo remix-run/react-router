@@ -99,7 +99,7 @@ const Link = React.createClass({
       const { to, query, hash, state } = this.props
       const location = createLocationDescriptor(to, { query, hash, state })
       
-      warning(this.context.router != undefined, "No router context, are you sure your link is inside a valid Router component?");
+      warning(this.context.router != undefined, 'No router context, are you sure your link is inside a valid Router component?')
       
       this.context.router.push(location)
     }
