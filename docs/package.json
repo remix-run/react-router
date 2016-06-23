@@ -24,6 +24,8 @@
     "eslint": "2.11.1",
     "eslint-config-rackt": "1.1.1",
     "eslint-plugin-react": "5.1.1",
+    "html-loader": "^0.4.3",
+    "markdown-loader": "^0.1.7",
     "postcss-loader": "0.9.1",
     "prismjs-loader": "0.0.3",
     "style-loader": "0.13.1",

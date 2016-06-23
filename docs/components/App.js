@@ -1,10 +1,11 @@
 import React from 'react'
-import { PAGES, COMPONENTS, EXAMPLES } from '../routes'
+import { PAGES, API, EXAMPLES } from '../routes'
 import { Router, Link, Match, Miss } from 'react-router'
 import { H, V, B, GRAY, RED, PAD } from './layout'
 import LoadBundle from './LoadBundle'
 import FakeBrowser from './FakeBrowser'
 import SourceViewer from './SourceViewer'
+import MarkdownViewer from './MarkdownViewer'
 import FadeIn from './FadeIn'
 
 const { string } = React.PropTypes
@@ -101,9 +102,9 @@ class App extends React.Component {
             </NavList>
             <Break/>
 
-            <NavHeader>Components</NavHeader>
+            <NavHeader>API</NavHeader>
             <NavList>
-              {COMPONENTS.map(NavItem)}
+              {API.map(NavItem)}
             </NavList>
             <Break/>
 
@@ -133,6 +134,18 @@ class App extends React.Component {
                         )}/>
                       </V>
                     </H>
+                  </V>
+                </FadeIn>
+              )}/>
+            ))}
+
+            {PAGES.map((page, index) => (
+              <Match key={index} pattern={page.path} render={() => (
+                <FadeIn>
+                  <V height="100%" maxWidth="700px">
+                    <LoadBundle load={page.load} children={({ mod }) => (
+                      <MarkdownViewer html={mod}/>
+                    )}/>
                   </V>
                 </FadeIn>
               )}/>

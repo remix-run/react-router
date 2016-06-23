@@ -1,6 +1,12 @@
 export const PAGES = [
-  { name: 'Philosophy', path: '/philosophy' },
-  { name: 'Quick Start', path: '/quick-start' }
+  { name: 'Philosophy',
+    path: '/philosophy',
+    load: require('bundle?lazy!./pages/philosophy.md')
+  },
+  { name: 'Quick Start',
+    path: '/quick-start',
+    load: require('bundle?lazy!./pages/quick-start.md')
+  }
 ]
 
 export const EXAMPLES = [
@@ -66,7 +72,7 @@ export const EXAMPLES = [
   }
 ]
 
-export const COMPONENTS = [
+export const API = [
   { name: 'Router', path: '/Router' },
   { name: 'Match', path: '/Match' },
   { name: 'Miss', path: '/Miss' },

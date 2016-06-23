@@ -27,6 +27,10 @@ module.exports = {
       { test: /\.css$/,
         include: /prismjs/,
         loader: 'style-loader!css-loader'
+      },
+      {
+        test: /\.md$/,
+        loader: './webpack/markdown-loader'
       }
     ]
   },
