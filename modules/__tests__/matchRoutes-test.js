@@ -1,10 +1,11 @@
 import expect from 'expect'
-import React from 'react'
 import { createMemoryHistory } from 'history'
-import { createRoutes } from '../RouteUtils'
+import React from 'react'
+import { canUseMembrane } from '../deprecateObjectProperties'
+import IndexRoute from '../IndexRoute'
 import matchRoutes from '../matchRoutes'
 import Route from '../Route'
-import IndexRoute from '../IndexRoute'
+import { createRoutes } from '../RouteUtils'
 import shouldWarn from './shouldWarn'
 
 describe('matchRoutes', function () {
@@ -330,10 +331,16 @@ describe('matchRoutes', function () {
           ])
           expect(match.params).toEqual({ groupId: 'foo', userId: '5' })
 
-          expect(getChildRoutes.calls[0].arguments[0].params).toEqual({
-            groupId: 'foo'
-          })
-          expect(getIndexRoute).toNotHaveBeenCalled()
+          const partialNextState = getChildRoutes.calls[0].arguments[0]
+          expect(partialNextState.params).toEqual({ groupId: 'foo' })
+          expect(partialNextState.location.pathname).toEqual('/foo/users/5')
+
+          // Only the calls below this point should emit deprecation warnings.
+          if (canUseMembrane) {
+            shouldWarn('deprecated')
+          }
+
+          expect(partialNextState.pathname).toEqual('/foo/users/5')
 
           done()
         }
@@ -347,10 +354,16 @@ describe('matchRoutes', function () {
           expect(match).toExist()
           expect(match.routes.map(r => r.name)).toEqual([ 'users', 'jsx' ])
 
-          expect(getIndexRoute.calls[0].arguments[0].params).toEqual({
-            groupId: 'bar'
-          })
-          expect(getChildRoutes).toNotHaveBeenCalled()
+          const partialNextState = getIndexRoute.calls[0].arguments[0]
+          expect(partialNextState.params).toEqual({ groupId: 'bar' })
+          expect(partialNextState.location.pathname).toEqual('/bar/users')
+
+          // Only the calls below this point should emit deprecation warnings.
+          if (canUseMembrane) {
+            shouldWarn('deprecated')
+          }
+
+          expect(partialNextState.pathname).toEqual('/bar/users')
 
           done()
         }

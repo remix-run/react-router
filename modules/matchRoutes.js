@@ -14,7 +14,11 @@ function getChildRoutes(route, location, paramNames, paramValues, callback) {
 
   let sync = true, result
 
-  const partialNextState = { params: createParams(paramNames, paramValues) }
+  const partialNextState = {
+    location,
+    params: createParams(paramNames, paramValues)
+  }
+
   const partialNextStateWithLocation = makeStateWithLocation(
     partialNextState, location
   )
@@ -40,7 +44,11 @@ function getIndexRoute(route, location, paramNames, paramValues, callback) {
   if (route.indexRoute) {
     callback(null, route.indexRoute)
   } else if (route.getIndexRoute) {
-    const partialNextState = { params: createParams(paramNames, paramValues) }
+    const partialNextState = {
+      location,
+      params: createParams(paramNames, paramValues)
+    }
+
     const partialNextStateWithLocation = makeStateWithLocation(
       partialNextState, location
     )
