@@ -100,7 +100,7 @@ const Router = React.createClass({
 
     invariant(
       !isUnsupportedHistory(history),
-      'You have provided a history object from created with history v3.x. ' +
+      'You have provided a history object created with history v3.x. ' +
       'This version of React Router is not compatible with v3 history ' +
       'objects. Please use history v2.x instead.'
     )
