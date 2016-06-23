@@ -1,5 +1,6 @@
 import createHashHistory from 'history/lib/createHashHistory'
 import useQueries from 'history/lib/useQueries'
+import invariant from 'invariant'
 import React from 'react'
 
 import createTransitionManager from './createTransitionManager'
@@ -11,6 +12,12 @@ import warning from './routerWarning'
 
 function isDeprecatedHistory(history) {
   return !history || !history.__v2_compatible__
+}
+
+/* istanbul ignore next: sanity check */
+function isUnsupportedHistory(history) {
+  // v3 histories expose getCurrentLocation, but aren't currently supported.
+  return history && history.getCurrentLocation
 }
 
 const { func, object } = React.PropTypes
@@ -90,6 +97,13 @@ const Router = React.createClass({
 
     let { history } = this.props
     const { routes, children } = this.props
+
+    invariant(
+      !isUnsupportedHistory(history),
+      'You have provided a history object from created with history v3.x. ' +
+      'This version of React Router is not compatible with v3 history ' +
+      'objects. Please use history v2.x instead.'
+    )
 
     if (isDeprecatedHistory(history)) {
       history = this.wrapDeprecatedHistory(history)
