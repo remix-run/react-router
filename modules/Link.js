@@ -1,23 +1,34 @@
 import React, { PropTypes } from 'react'
 
-const pathIsActive = (to, location, activeOnlyWhenExact) => {
-  const { pathname } = location
-  return activeOnlyWhenExact ?
-    pathname === to : pathname.startsWith(to)
-}
+const { oneOfType, string, object, bool, func } = PropTypes
 
-// needs accessibility stuff from React Router Link
+const pathIsActive = (to, pathname, activeOnlyWhenExact) =>
+  activeOnlyWhenExact ? pathname === to : pathname.startsWith(to)
+
+const isLeftClickEvent = (event) =>
+  event.button === 0
+
+const isModifiedEvent = (event) =>
+  !!(event.metaKey || event.altKey || event.ctrlKey || event.shiftKey)
+
 class Link extends React.Component {
+
   static propTypes = {
-    to: PropTypes.oneOfType([ PropTypes.string, PropTypes.object ]),
-    style: PropTypes.object,
-    activeStyle: PropTypes.object,
-    location: PropTypes.object,
-    activeOnlyWhenExact: PropTypes.bool
+    to: oneOfType([ string, object ]).isRequired,
+    style: object,
+    activeStyle: object,
+    className: string,
+    activeClassName: string,
+    location: object,
+    activeOnlyWhenExact: bool,
+    target: string,
+    onClick: func
   }
 
   static defaultProps = {
     activeOnlyWhenExact: false,
+    className: '',
+    activeClassName: '',
     style: {},
     activeStyle: {}
   }
@@ -28,12 +39,21 @@ class Link extends React.Component {
   }
 
   handleClick = (event) => {
-    event.preventDefault()
-
     const { history } = this.context
-    const { to } = this.props
+    const { to, onClick, target } = this.props
 
-    history.push(to)
+    if (onClick)
+      onClick(event)
+
+    if (
+      !event.defaultPrevented && // onClick prevented default
+      !target && // let browser handle "target=_blank" etc.
+      !isModifiedEvent(event) &&
+      isLeftClickEvent(event)
+    ) {
+      event.preventDefault()
+      history.push(to)
+    }
   }
 
   render() {
@@ -41,19 +61,25 @@ class Link extends React.Component {
       to,
       style,
       activeStyle,
+      className,
+      activeClassName,
       location,
       activeOnlyWhenExact,
       ...rest
     } = this.props
 
     const loc = location || this.context.location
-    const isActive = pathIsActive(to, loc, activeOnlyWhenExact)
+    const isActive = pathIsActive(to, loc.pathname, activeOnlyWhenExact)
+
     return (
       <a
         {...rest}
         href={typeof to === 'object' ? to.pathname : to}
-        style={isActive ? { ...style, ...activeStyle } : style}
         onClick={this.handleClick}
+        style={isActive ? { ...style, ...activeStyle } : style }
+        className={isActive ?
+          [ activeClassName, className ].join(' ').trim() : className
+        }
       />
     )
   }
