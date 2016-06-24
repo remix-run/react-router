@@ -1,3 +1,14 @@
+## [v2.5.1]
+> Jun 23, 2016
+
+- **Bugfix:** Throw error instead of silently failing with history v3 ([#3571])
+- **Bugfix:** Explicitly throw error in `onClick` handler of `<Link>` rendered outside of router context ([#3572])
+
+[v2.5.1]: https://github.com/reactjs/react-router/compare/v2.5.0...v2.5.1
+[#3571]: https://github.com/reactjs/react-router/pull/3571
+[#3572]: https://github.com/reactjs/react-router/pull/3572
+
+
 ## [v2.5.0]
 > Jun 22, 2016
 
