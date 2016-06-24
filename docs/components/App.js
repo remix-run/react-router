@@ -20,7 +20,7 @@ const Nav = (props) => (
   />
 )
 
-const Main = (props) => (
+const Example = (props) => (
   <V {...props}
     flex="1"
     padding={`${PAD}px ${PAD*2}px`}
@@ -114,9 +114,9 @@ class App extends React.Component {
             </NavList>
           </Nav>
 
-          <Main>
-            {EXAMPLES.map((page, index) => (
-              <Match key={index} pattern={page.path} render={() => (
+          {EXAMPLES.map((page, index) => (
+            <Match key={index} pattern={page.path} render={() => (
+              <Example>
                 <FadeIn>
                   <V height="100%">
                     <Header className="reset">{page.name}</Header>
@@ -136,28 +136,30 @@ class App extends React.Component {
                     </H>
                   </V>
                 </FadeIn>
-              )}/>
-            ))}
+              </Example>
+            )}/>
+          ))}
 
-            {PAGES.map((page, index) => (
-              <Match key={index} pattern={page.path} render={() => (
+          {PAGES.map((page, index) => (
+            <Match key={index} pattern={page.path} render={() => (
+              <B overflow="auto" flex="1" padding={`${PAD*2}px ${PAD*4}px`}>
                 <FadeIn>
-                  <V height="100%" maxWidth="700px">
+                  <V height="100%" maxWidth="800px">
                     <LoadBundle load={page.load} children={({ mod }) => (
                       <MarkdownViewer html={mod}/>
                     )}/>
                   </V>
                 </FadeIn>
-              )}/>
-            ))}
-
-            <Miss render={() => (
-              <B>
-                <Header>Whoops</Header>
-                <B textAlign="center">Nothing matched. Maybe try some of the examples?</B>
               </B>
             )}/>
-          </Main>
+          ))}
+
+          <Miss render={() => (
+            <B>
+              <Header>Whoops</Header>
+              <B textAlign="center">Nothing matched. Maybe try some of the examples?</B>
+            </B>
+          )}/>
         </H>
       </Router>
     )

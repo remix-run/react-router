@@ -3,13 +3,11 @@ import 'prismjs/themes/prism.css'
 import { B, PAD } from './layout'
 
 const MarkdownViewer = ({ html }) => (
-  <B overflow="auto">
-    <div
-      dangerouslySetInnerHTML={{
-        __html: html
-      }}
-    />
-  </B>
+  <markdown
+    dangerouslySetInnerHTML={{
+      __html: html
+    }}
+  />
 )
 
 export default MarkdownViewer
