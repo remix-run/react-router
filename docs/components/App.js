@@ -82,6 +82,17 @@ const Header = (props) => (
   />
 )
 
+const Page = ({ page }) => (
+  <B overflow="auto" flex="1" padding={`${PAD*2}px ${PAD*4}px`}>
+    <FadeIn>
+      <V height="100%" maxWidth="800px">
+        <LoadBundle load={page.load} children={({ mod }) => (
+          <MarkdownViewer html={mod}/>
+        )}/>
+      </V>
+    </FadeIn>
+  </B>
+)
 
 class App extends React.Component {
   render() {
@@ -141,17 +152,19 @@ class App extends React.Component {
           ))}
 
           {PAGES.map((page, index) => (
-            <Match key={index} pattern={page.path} render={() => (
-              <B overflow="auto" flex="1" padding={`${PAD*2}px ${PAD*4}px`}>
-                <FadeIn>
-                  <V height="100%" maxWidth="800px">
-                    <LoadBundle load={page.load} children={({ mod }) => (
-                      <MarkdownViewer html={mod}/>
-                    )}/>
-                  </V>
-                </FadeIn>
-              </B>
-            )}/>
+            <Match
+              key={index}
+              pattern={page.path}
+              render={() => <Page page={page}/>}
+            />
+          ))}
+
+          {API.map((page, index) => (
+            <Match
+              key={index}
+              pattern={page.path}
+              render={() => <Page page={page}/>}
+            />
           ))}
 
           <Miss render={() => (

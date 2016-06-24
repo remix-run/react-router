@@ -1,5 +1,5 @@
 markdown { display: block; }
 markdown pre code { font-size: 13px; }
 markdown code { font-size: 16px; }
-markdown h1 { text-align: center; font-size: 300%; font-family: "Helvetica Neue" sans-serif; font-weight: 100; }
+markdown h1 { text-align: center; font-size: 300%; font-family: "Helvetica Neue", sans-serif; font-weight: 100; }
 

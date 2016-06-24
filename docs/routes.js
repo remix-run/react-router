@@ -73,11 +73,28 @@ export const EXAMPLES = [
 ]
 
 export const API = [
-  { name: 'Router', path: '/Router' },
-  { name: 'Match', path: '/Match' },
-  { name: 'Miss', path: '/Miss' },
-  { name: 'Link', path: '/Link' },
-  { name: 'BlockHistory', path: '/BlockHistory' },
-  { name: 'Redirect', path: '/Redirect' },
-  { name: 'History', path: '/History' }
+  { name: 'Router',
+    path: '/Router',
+    load: require('bundle?lazy!./api/Router.md')
+  },
+  { name: 'Match',
+    path: '/Match',
+    load: require('bundle?lazy!./api/Match.md')
+  },
+  { name: 'Miss',
+    path: '/Miss',
+    load: require('bundle?lazy!./api/Miss.md')
+  },
+  { name: 'Link',
+    path: '/Link',
+    load: require('bundle?lazy!./api/Link.md')
+  },
+  { name: 'BlockHistory',
+    path: '/BlockHistory',
+    load: require('bundle?lazy!./api/BlockHistory.md')
+  },
+  { name: 'Redirect',
+    path: '/Redirect',
+    load: require('bundle?lazy!./api/Redirect.md')
+  }
 ]
