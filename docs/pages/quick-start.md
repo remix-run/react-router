@@ -1,5 +1,13 @@
 # Quick Start
 
+First, install it:
+
+```
+npm install react-router history
+```
+
+Now do some stuff
+
 ```js
 // import a couple components
 import { Router, Match } from 'react-router'
@@ -16,5 +24,13 @@ const App = () => (
     <Match pattern="/users/:name" component={User}/>
   </Router>
 )
+```
+
+```markup
+<lol>
+  <this>
+   is cool
+  </this>
+</lol>
 ```
 

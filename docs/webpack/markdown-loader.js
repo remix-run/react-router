@@ -1,13 +1,23 @@
 const markdownIt = require('markdown-it')
 const frontMatter = require('front-matter')
 const Prism = require('prismjs')
-require(`prismjs/components/prism-jsx.js`)
+
+const aliases = {
+  'js': 'jsx',
+  'html': 'markup'
+}
 
 const highlight = (str, lang) => {
-  if (lang === 'js') {
-    return Prism.highlight(str, Prism.languages.jsx)
-  } else {
+  if (!lang) {
     return str
+  } else {
+    lang = aliases[lang] || lang
+    require(`prismjs/components/prism-${lang}.js`)
+    if (Prism.languages[lang]) {
+      return Prism.highlight(str, Prism.languages[lang])
+    } else {
+      return str
+    }
   }
 }
 
