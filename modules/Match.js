@@ -42,14 +42,14 @@ class RegisterMatch extends React.Component {
 
 class Match extends React.Component {
   static propTypes = {
-    children: PropTypes.func,
-    render: PropTypes.func,
-    component: PropTypes.func,
-
     // TODO: has to start w/ slash, create custom validator
     pattern: PropTypes.string,
+    exactly: PropTypes.bool,
     location: PropTypes.object,
-    exactly: PropTypes.bool
+
+    children: PropTypes.func,
+    render: PropTypes.func,
+    component: PropTypes.func
   }
 
   static defaultProps = {

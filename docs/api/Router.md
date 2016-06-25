@@ -1,24 +1,19 @@
-# Router
+# `<Router>`
 
 Rendering a router makes all of the other components in this library
 work.
 
-## props
-
-### `history`
+## `history`
 
 This history to listen to for location changes.
 
 ```js
 import createBrowserHistory from 'history/lib/createBrowserHistory'
 <Router history={createBrowserHistory()}/>
-
-import createMemoryHistory from 'history/lib/createBrowserHistory'
-<Router history={createMemoryHistory()}/>
 ```
 
 
-### `children: node`
+## `children: node`
 
 Normal react children
 
@@ -29,7 +24,7 @@ Normal react children
 </Router>
 ```
 
-### `children: func`
+## `children: func`
 
 If you don't want to rely on `context` you can provide a function for
 the children and get the location from there to pass around your app.
@@ -42,3 +37,4 @@ the children and get the location from there to pass around your app.
 </Router>
 ```
 
+# `</Router>`

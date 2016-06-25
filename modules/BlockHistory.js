@@ -3,7 +3,7 @@ import React, { PropTypes } from 'react'
 class BlockHistory extends React.Component {
   static propTypes = {
     when: PropTypes.bool,
-    prompt: PropTypes.func
+    prompt: PropTypes.oneOfType([ PropTypes.string, PropTypes.func ])
   }
 
   static contextTypes = {
@@ -41,9 +41,10 @@ class BlockHistory extends React.Component {
   block() {
     const { history } = this.context
     const { prompt } = this.props
+    const listener = typeof prompt === 'string' ?  () => prompt : prompt
 
     if (!this.unlistenBefore)
-      this.unlistenBefore = history.listenBefore(prompt)
+      this.unlistenBefore = history.listenBefore(listener)
   }
 
   unblock() {

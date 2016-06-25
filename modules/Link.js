@@ -15,12 +15,15 @@ class Link extends React.Component {
 
   static propTypes = {
     to: oneOfType([ string, object ]).isRequired,
-    style: object,
     activeStyle: object,
-    className: string,
     activeClassName: string,
     location: object,
     activeOnlyWhenExact: bool,
+
+    // props we have to deal with but aren't necessarily
+    // part of the Link API
+    style: object,
+    className: string,
     target: string,
     onClick: func
   }
@@ -69,6 +72,8 @@ class Link extends React.Component {
     } = this.props
 
     const loc = location || this.context.location
+    // TODO: add query checking or punt and add function support for
+    //       activeClassName and activeStyle?
     const isActive = pathIsActive(to, loc.pathname, activeOnlyWhenExact)
 
     return (

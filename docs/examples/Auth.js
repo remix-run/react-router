@@ -13,7 +13,8 @@ const fakeAuth = {
   },
   signout(cb) {
     this.isAuthenticated = false
-    setTimeout(cb, 100) // fake async
+    cb()
+    //setTimeout(cb, 100) // weird bug if async?
   }
 }
 
@@ -40,13 +41,13 @@ class Login extends React.Component {
   }
 
   render() {
-    const { from } = this.context.location.state
+    const { from } = this.props.location.state
     return (
       <div>
         {from && (
           <p>
             You must log in to view the page at
-            <code>{from}</code>
+            <code>{from.pathname}</code>
           </p>
         )}
         <button onClick={this.login}>Log in</button>
@@ -64,7 +65,10 @@ const MatchWhenAuthorized = (
       fakeAuth.isAuthenticated ? (
         <Component {...props}/>
       ) : (
-        <Redirect to="/login" from={props.location.pathname}/>
+        <Redirect to={{
+          pathname: "/login",
+          state: { from: props.location }
+        }}/>
       )
     )}/>
   )
