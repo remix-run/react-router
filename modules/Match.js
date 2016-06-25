@@ -2,6 +2,14 @@ import React, { PropTypes } from 'react'
 import MatchCountProvider from './MatchCountProvider'
 import matchPattern from './matchPattern'
 
+const patternType = (props, propName, ...rest) => {
+  if (props[propName].charAt(0) !== '/') {
+    return new Error('The `pattern` prop must start with "/"')
+  } else {
+    return PropTypes.string(props, propName, ...rest)
+  }
+}
+
 class RegisterMatch extends React.Component {
   static propTypes = {
     children: PropTypes.node.isRequired,
@@ -42,8 +50,7 @@ class RegisterMatch extends React.Component {
 
 class Match extends React.Component {
   static propTypes = {
-    // TODO: has to start w/ slash, create custom validator
-    pattern: PropTypes.string,
+    pattern: patternType,
     exactly: PropTypes.bool,
     location: PropTypes.object,
 
