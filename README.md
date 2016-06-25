@@ -1,11 +1,8 @@
-run old examples outside of the fake browser
+React Router
+============
 
-`npm start`
+Declarative routing for [React.js][react].
 
-run the docs page w/ inline examples
+https://ReactJSTraining.github.io/react-router/
 
-```
-cd docs
-npm start
-```
-
+  [react]:https://facebook.github.io/react/

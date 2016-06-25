@@ -37,4 +37,9 @@ the children and get the location from there to pass around your app.
 </Router>
 ```
 
+## context values
+
+`Router` provides both the `history` and the current `location` on
+context.
+
 # `</Router>`

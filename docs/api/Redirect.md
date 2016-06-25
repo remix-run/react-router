@@ -21,4 +21,8 @@ The location to redirect to, can be a string or a location descriptor.
 
 If you'd rather not use the history from context, you can pass it in.
 
+```js
+<Redirect to="/some/where" history={someHistory}/>
+```
+
 # `</Redirect>`
