@@ -77,11 +77,11 @@ function createElement(Component, props) {
 }
 ```
 
-##### `stringifyQuery(queryObject)`
+##### `stringifyQuery(queryObject)` (deprecated)
 A function used to convert an object from [`<Link>`](#link)s or calls to
 [`transitionTo`](#transitiontopathname-query-state) to a URL query string.
 
-##### `parseQueryString(queryString)`
+##### `parseQueryString(queryString)` (deprecated)
 A function used to convert a query string into an object that gets passed to route component props.
 
 ##### `onError(error)`
@@ -117,15 +117,15 @@ A [location descriptor](https://github.com/mjackson/history/blob/master/docs/Glo
   * `hash`: A hash to put in the URL, e.g. `#a-hash`.
   * `state`: State to persist to the `location`.
 
-##### `query` **([Deprecated](/upgrade-guides/v2.0.0.md#link-to-onenter-and-isactive-use-location-descriptors) see `to`)**
+##### `query` **([deprecated](/upgrade-guides/v2.0.0.md#link-to-onenter-and-isactive-use-location-descriptors) see `to`)**
 An object of key:value pairs to be stringified.
 
-##### `hash` **([Deprecated](/upgrade-guides/v2.0.0.md#link-to-onenter-and-isactive-use-location-descriptors) see `to`)**
+##### `hash` **([deprecated](/upgrade-guides/v2.0.0.md#link-to-onenter-and-isactive-use-location-descriptors) see `to`)**
 A hash to put in the URL, e.g. `#a-hash`.
 
 _Note: React Router currently does not manage scroll position, and will not scroll to the element corresponding to the hash._
 
-##### `state` **([Deprecated](/upgrade-guides/v2.0.0.md#link-to-onenter-and-isactive-use-location-descriptors) see `to`)**
+##### `state` **([deprecated](/upgrade-guides/v2.0.0.md#link-to-onenter-and-isactive-use-location-descriptors) see `to`)**
 State to persist to the `location`.
 
 ##### `activeClassName`
