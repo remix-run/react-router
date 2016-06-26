@@ -1,7 +1,7 @@
 import React from 'react'
 import { Router, Match, Link, NavigationPrompt } from 'react-router'
 
-const BlockingExample = ({ history }) => (
+const PreventingTransitionsExample = ({ history }) => (
   <Router history={history}>
     <ul>
       <li><Link to="/">Home</Link></li>
@@ -67,5 +67,5 @@ class Form extends React.Component {
   }
 }
 
-export default BlockingExample
+export default PreventingTransitionsExample
 

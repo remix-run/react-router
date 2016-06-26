@@ -26,10 +26,10 @@ export const EXAMPLES = [
     load: require('bundle?lazy!./examples/Auth'),
     loadSource: require('bundle?lazy!!prismjs?lang=jsx!./.examples/Auth.js')
   },
-  { name: 'Blocking Transitions',
-    path: '/blocking-transitions',
-    load: require('bundle?lazy!./examples/Blocking'),
-    loadSource: require('bundle?lazy!!prismjs?lang=jsx!./.examples/Blocking.js')
+  { name: 'Preventing Transitions',
+    path: '/preventing-transitions',
+    load: require('bundle?lazy!./examples/PreventingTransitions'),
+    loadSource: require('bundle?lazy!!prismjs?lang=jsx!./.examples/PreventingTransitions.js')
   },
   { name: 'Miss (No Match Handling)',
     path: '/no-match-handling',
