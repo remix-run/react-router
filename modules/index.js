@@ -1,4 +1,4 @@
-export BlockHistory from './BlockHistory'
+export NavigationPrompt from './NavigationPrompt'
 export History from './History'
 export Link from './Link'
 export Match from './Match'

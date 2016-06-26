@@ -1,6 +1,6 @@
 import React, { PropTypes } from 'react'
 
-class BlockHistory extends React.Component {
+class NavigationPrompt extends React.Component {
   static propTypes = {
     when: PropTypes.bool,
     prompt: PropTypes.oneOfType([ PropTypes.string, PropTypes.func ])
@@ -59,4 +59,4 @@ class BlockHistory extends React.Component {
   }
 }
 
-export default BlockHistory
+export default NavigationPrompt

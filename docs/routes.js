@@ -95,9 +95,9 @@ export const API = [
     path: '/Link',
     load: require('bundle?lazy!./api/Link.md')
   },
-  { name: 'BlockHistory',
-    path: '/BlockHistory',
-    load: require('bundle?lazy!./api/BlockHistory.md')
+  { name: 'NavigationPrompt',
+    path: '/NavigationPrompt',
+    load: require('bundle?lazy!./api/NavigationPrompt.md')
   },
   { name: 'Redirect',
     path: '/Redirect',

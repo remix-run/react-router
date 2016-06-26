@@ -1,5 +1,5 @@
 import React from 'react'
-import { Router, Match, Link, BlockHistory } from 'react-router'
+import { Router, Match, Link, NavigationPrompt } from 'react-router'
 
 const BlockingExample = ({ history }) => (
   <Router history={history}>
@@ -34,7 +34,7 @@ class Form extends React.Component {
           })
         }}
       >
-        <BlockHistory
+        <NavigationPrompt
           when={blockTransitions}
           prompt={(location) => (
             `Are you sure you want to go to ${location.pathname}?`

@@ -1,12 +1,12 @@
-# `<BlockHistory>`
+# `<NavigationPrompt>`
 
 When your application enters a state that should prevent the user from
 navigating away (like a form is half-filled out), render a
-`BlockHistory`.
+`NavigationPrompt`.
 
 ```js
 {formIsHalfFilledOut && (
-  <BlockHistory prompt="Are you sure you want to leave?"/>
+  <NavigationPrompt prompt="Are you sure you want to leave?"/>
 )}
 ```
 
@@ -16,7 +16,7 @@ The string to prompt the user with when they try to navigate away.
 
 
 ```js
-<BlockHistory prompt="Are you sure you want to leave?"/>
+<NavigationPrompt prompt="Are you sure you want to leave?"/>
 ```
 
 
@@ -27,19 +27,19 @@ navigate to. Return a string to prompt the user with, `true` to allow
 the transition.
 
 ```js
-<BlockHistory prompt={(location) => (
+<NavigationPrompt prompt={(location) => (
   `Are you sure you want to go to ${location.pathname}?`
 )}/>
 ```
 
 ## `when: bool`
 
-Instead of guarding a `BlockHistory` behind a flag, you can always
+Instead of guarding a `NavigationPrompt` behind a flag, you can always
 render it but pass true or false to `when`. If `true`, navigation will
 be blocked, if `false`, navigation will be allowed.
 
 ```js
-<BlockHistory when={formIsHalfFilledOut} prompt="Are you sure?"/>
+<NavigationPrompt when={formIsHalfFilledOut} prompt="Are you sure?"/>
 ```
 
-# `</BlockHistory>`
+# `</NavigationPrompt>`
