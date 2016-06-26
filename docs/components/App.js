@@ -20,13 +20,33 @@ const Nav = (props) => (
   />
 )
 
-const Example = (props) => (
-  <V {...props}
+const Example = ({ page }) => (
+  <V
     flex="1"
     padding={`${PAD}px ${PAD*2}px`}
     height="100%"
     overflow="hidden"
-  />
+  >
+    <FadeIn>
+      <V height="100%">
+        <Header className="reset">{page.name}</Header>
+        <H flex="1">
+          <V width="50%" paddingBottom={`${PAD}px`}>
+            <LoadBundle load={page.load} children={({ mod }) => (
+              <FakeBrowser page={page} children={({ history }) => (
+                <mod.default history={history} />
+              )}/>
+            )}/>
+          </V>
+          <V width="50%" marginLeft={`${PAD*2}px`}>
+            <LoadBundle load={page.loadSource} children={({ mod }) => (
+              <SourceViewer code={mod}/>
+            )}/>
+          </V>
+        </H>
+      </V>
+    </FadeIn>
+  </V>
 )
 
 const NavList = (props) => (
@@ -38,13 +58,14 @@ const NavList = (props) => (
   />
 )
 
-const NavItem = ({ name, path }, index) => (
+const NavItem = ({ name, path, exactly }, index) => (
   <B key={index} component="li">
     <B
       component={Link}
       textDecoration="none"
       color="inherit"
       props={{
+        activeOnlyWhenExact: exactly,
         to: path,
         activeStyle: {
           color: RED
@@ -94,6 +115,13 @@ const Page = ({ page }) => (
   </B>
 )
 
+const Home = () => (
+  <B>
+    <Header>React Router</Header>
+    <B component="p">I don’t know what to say here</B>
+  </B>
+)
+
 class App extends React.Component {
   render() {
     return (
@@ -125,37 +153,20 @@ class App extends React.Component {
             </NavList>
           </Nav>
 
-          {EXAMPLES.map((page, index) => (
-            <Match key={index} pattern={page.path} render={() => (
-              <Example>
-                <FadeIn>
-                  <V height="100%">
-                    <Header className="reset">{page.name}</Header>
-                    <H flex="1">
-                      <V width="50%" paddingBottom={`${PAD}px`}>
-                        <LoadBundle load={page.load} children={({ mod }) => (
-                          <FakeBrowser page={page} children={({ history }) => (
-                            <mod.default history={history} />
-                          )}/>
-                        )}/>
-                      </V>
-                      <V width="50%" marginLeft={`${PAD*2}px`}>
-                        <LoadBundle load={page.loadSource} children={({ mod }) => (
-                          <SourceViewer code={mod}/>
-                        )}/>
-                      </V>
-                    </H>
-                  </V>
-                </FadeIn>
-              </Example>
-            )}/>
-          ))}
-
           {PAGES.map((page, index) => (
             <Match
               key={index}
               pattern={page.path}
+              exactly={page.exactly}
               render={() => <Page page={page}/>}
+            />
+          ))}
+
+          {EXAMPLES.map((page, index) => (
+            <Match
+              key={index}
+              pattern={page.path}
+              render={() => <Example page={page}/>}
             />
           ))}
 

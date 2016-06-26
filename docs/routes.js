@@ -1,7 +1,8 @@
 export const PAGES = [
-  { name: 'Philosophy',
-    path: '/philosophy',
-    load: require('bundle?lazy!./pages/philosophy.md')
+  { name: 'Home',
+    path: '/',
+    exactly: true,
+    load: require('bundle?lazy!./pages/home.md')
   },
   { name: 'Quick Start',
     path: '/quick-start',
