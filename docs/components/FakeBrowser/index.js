@@ -1,5 +1,6 @@
 import React from 'react'
 import createMemoryHistory from 'history/lib/createMemoryHistory'
+import useQueries from 'history/lib/useQueries'
 import LeftArrowIcon from 'react-icons/lib/ti/arrow-left'
 import RightArrowIcon from 'react-icons/lib/ti/arrow-right'
 import FileCodeIcon from 'react-icons/lib/go/file-code'
@@ -45,14 +46,14 @@ const Button = ({ children, ...props }) => (
 class FakeBrowser extends React.Component {
 
   state = {
-    address: null
+    location: null
   }
 
   componentWillMount() {
-    const history = this.history = createFakeBrowserHistory(createMemoryHistory)
-    this.setState({ address: history.getCurrentLocation().pathname })
+    const history = this.history = createFakeBrowserHistory(useQueries(createMemoryHistory))
+    this.setState({ location: history.getCurrentLocation() })
     this.unlisten = history.listen((location) => {
-      this.setState({ address: location.pathname })
+      this.setState({ location })
     })
   }
 
@@ -62,7 +63,7 @@ class FakeBrowser extends React.Component {
 
   render() {
     const { children:Child } = this.props
-    const { address } = this.state
+    const { location } = this.state
     const { history } = this
     return (
       <V
@@ -111,7 +112,7 @@ class FakeBrowser extends React.Component {
               color={GRAY}
               props={{
                 type: 'text',
-                value: address,
+                value: history.createHref(location),
                 onChange: (e) => {
                   this.setState({
                     address: e.target.value

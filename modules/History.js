@@ -1,5 +1,6 @@
 import React, { PropTypes } from 'react'
 import createBrowserHistory from 'history/lib/createBrowserHistory'
+import useQueries from 'history/lib/useQueries'
 
 const warning = () => {}
 
@@ -59,7 +60,7 @@ class History extends React.Component {
   }
 
   static defaultProps = {
-    history: createBrowserHistory()
+    history: useQueries(createBrowserHistory)()
   }
 
   state = {

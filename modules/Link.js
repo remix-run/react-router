@@ -2,15 +2,6 @@ import React, { PropTypes } from 'react'
 
 const { oneOfType, string, object, bool, func } = PropTypes
 
-const pathIsActive = (to, pathname, activeOnlyWhenExact) =>
-  activeOnlyWhenExact ? pathname === to : pathname.startsWith(to)
-
-const isLeftClickEvent = (event) =>
-  event.button === 0
-
-const isModifiedEvent = (event) =>
-  !!(event.metaKey || event.altKey || event.ctrlKey || event.shiftKey)
-
 class Link extends React.Component {
 
   static propTypes = {
@@ -19,6 +10,7 @@ class Link extends React.Component {
     activeClassName: string,
     location: object,
     activeOnlyWhenExact: bool,
+    isActive: func,
 
     // props we have to deal with but aren't necessarily
     // part of the Link API
@@ -33,7 +25,17 @@ class Link extends React.Component {
     className: '',
     activeClassName: '',
     style: {},
-    activeStyle: {}
+    activeStyle: {},
+    isActive: (to, location, props) => (
+      pathIsActive(
+        to.pathname,
+        location.pathname,
+        props.activeOnlyWhenExact
+      ) && queryIsActive(
+        to.query,
+        location.query
+      )
+    )
   }
 
   static contextTypes = {
@@ -67,19 +69,20 @@ class Link extends React.Component {
       className,
       activeClassName,
       location,
-      activeOnlyWhenExact,
+      isActive: getIsActive,
+      activeOnlyWhenExact, // eslint-disable-line
       ...rest
     } = this.props
+    const { history } = this.context
 
-    const loc = location || this.context.location
-    // TODO: add query checking or punt and add function support for
-    //       activeClassName and activeStyle?
-    const isActive = pathIsActive(to, loc.pathname, activeOnlyWhenExact)
+    const currentLocation = location || this.context.location
+    const linkedLocation = createLocationDescriptor(to)
+    const isActive = getIsActive(linkedLocation, currentLocation, this.props)
 
     return (
       <a
         {...rest}
-        href={typeof to === 'object' ? to.pathname : to}
+        href={history ? history.createHref(linkedLocation) : to}
         onClick={this.handleClick}
         style={isActive ? { ...style, ...activeStyle } : style }
         className={isActive ?
@@ -88,6 +91,66 @@ class Link extends React.Component {
       />
     )
   }
+}
+
+const createLocationDescriptor = (to) =>
+  typeof to === 'object' ? to : { pathname: to }
+
+const pathIsActive = (to, pathname, activeOnlyWhenExact) =>
+  activeOnlyWhenExact ? pathname === to : pathname.startsWith(to)
+
+const queryIsActive = (query, activeQuery) => {
+  if (activeQuery == null)
+    return query == null
+
+  if (query == null)
+    return true
+
+  return deepEqual(query, activeQuery)
+}
+
+const isLeftClickEvent = (event) =>
+  event.button === 0
+
+const isModifiedEvent = (event) =>
+  !!(event.metaKey || event.altKey || event.ctrlKey || event.shiftKey)
+
+const deepEqual = (a, b) => {
+  if (a == b)
+    return true
+
+  if (a == null || b == null)
+    return false
+
+  if (Array.isArray(a)) {
+    return (
+      Array.isArray(b) &&
+      a.length === b.length &&
+      a.every((item, index) => deepEqual(item, b[index]))
+    )
+  }
+
+  if (typeof a === 'object') {
+    for (let p in a) {
+      if (!Object.prototype.hasOwnProperty.call(a, p)) {
+        continue
+      }
+
+      if (a[p] === undefined) {
+        if (b[p] !== undefined) {
+          return false
+        }
+      } else if (!Object.prototype.hasOwnProperty.call(b, p)) {
+        return false
+      } else if (!deepEqual(a[p], b[p])) {
+        return false
+      }
+    }
+
+    return true
+  }
+
+  return String(a) === String(b)
 }
 
 export default Link
