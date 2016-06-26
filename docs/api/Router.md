@@ -3,9 +3,18 @@
 Rendering a router makes all of the other components in this library
 work.
 
+```js
+<Router>
+  <Link to="/">Home</Link>
+  <Link to="/movies">Movies</Link>
+  <Match pattern="/" exactly component={Index}/>
+  <Match pattern="/movies" component={MovieGrid}/>
+</Router>
+```
+
 ## `history`
 
-This history to listen to for location changes.
+The history to listen to for location changes.
 
 ```js
 import createBrowserHistory from 'history/lib/createBrowserHistory'
