@@ -13,7 +13,7 @@ const QueryParamsExample = ({ history }) => {
           <Link
             to="/"
             activeStyle={{ color: 'red' }}
-            isActive={(to, location) => (
+            isActive={(location) => (
               !Object.keys(location.query).length
             )}
           >No query</Link>

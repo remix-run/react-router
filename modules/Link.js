@@ -26,8 +26,9 @@ class Link extends React.Component {
     activeClassName: '',
     style: {},
     activeStyle: {},
-    isActive: (to, location, props) => (
-      pathIsActive(
+    isActive: (location, props) => {
+      const to = createLocationDescriptor(props.to)
+      return pathIsActive(
         to.pathname,
         location.pathname,
         props.activeOnlyWhenExact
@@ -35,7 +36,7 @@ class Link extends React.Component {
         to.query,
         location.query
       )
-    )
+    }
   }
 
   static contextTypes = {
@@ -76,13 +77,12 @@ class Link extends React.Component {
     const { history } = this.context
 
     const currentLocation = location || this.context.location
-    const linkedLocation = createLocationDescriptor(to)
-    const isActive = getIsActive(linkedLocation, currentLocation, this.props)
+    const isActive = getIsActive(currentLocation, this.props)
 
     return (
       <a
         {...rest}
-        href={history ? history.createHref(linkedLocation) : to}
+        href={history ? history.createHref(to) : to}
         onClick={this.handleClick}
         style={isActive ? { ...style, ...activeStyle } : style }
         className={isActive ?

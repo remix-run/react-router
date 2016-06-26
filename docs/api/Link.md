@@ -62,6 +62,33 @@ if the link's `to` matches the `location` exactly.
 // at /courses/123 it will not be active
 ```
 
+## `isActive: func`
+
+Allows for customized handling of whether or not the link is active.
+Return `true` for active, `false` for inactive.
+
+```js
+<Link
+  to="/"
+  activeStyle={{ color: 'red' }}
+  isActive={(location) => (
+    // only be active if there is no query
+    !Object.keys(location.query).length
+  )}
+/>
+
+<Link
+  to="/courses"
+  activeStyle={{ color: 'red' }}
+  isActive={(location, props) => (
+    // make it active for "/courses" and "/course/123"
+    // Even though it's not technically active, it is
+    // theoretically for the sake of a navigation menu
+    location.pathname.match(/course(s)?/)
+  )}
+/>
+```
+
 ## `location`
 
 If you don't want to use the location from context, you can pass the
