@@ -6,28 +6,28 @@ navigating away (like a form is half-filled out), render a
 
 ```js
 {formIsHalfFilledOut && (
-  <NavigationPrompt prompt="Are you sure you want to leave?"/>
+  <NavigationPrompt message="Are you sure you want to leave?"/>
 )}
 ```
 
-## `prompt: string`
+## `message: string`
 
-The string to prompt the user with when they try to navigate away.
+The message to prompt the user with when they try to navigate away.
 
 
 ```js
-<NavigationPrompt prompt="Are you sure you want to leave?"/>
+<NavigationPrompt message="Are you sure you want to leave?"/>
 ```
 
 
-## `prompt: func`
+## `message: func`
 
 Will be called with the `nextLocation` the user is attempting to
-navigate to. Return a string to prompt the user with, `true` to allow
+navigate to. Return a string to prompt the user with or `true` to allow
 the transition.
 
 ```js
-<NavigationPrompt prompt={(location) => (
+<NavigationPrompt message={(location) => (
   `Are you sure you want to go to ${location.pathname}?`
 )}/>
 ```
@@ -39,7 +39,7 @@ render it but pass true or false to `when`. If `true`, navigation will
 be blocked, if `false`, navigation will be allowed.
 
 ```js
-<NavigationPrompt when={formIsHalfFilledOut} prompt="Are you sure?"/>
+<NavigationPrompt when={formIsHalfFilledOut} message="Are you sure?"/>
 ```
 
 # `</NavigationPrompt>`

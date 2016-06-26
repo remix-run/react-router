@@ -1,9 +1,10 @@
 import React, { PropTypes } from 'react'
 
 class NavigationPrompt extends React.Component {
+
   static propTypes = {
     when: PropTypes.bool,
-    prompt: PropTypes.oneOfType([ PropTypes.string, PropTypes.func ])
+    message: PropTypes.oneOfType([ PropTypes.string, PropTypes.func ])
   }
 
   static contextTypes = {
@@ -40,8 +41,8 @@ class NavigationPrompt extends React.Component {
 
   block() {
     const { history } = this.context
-    const { prompt } = this.props
-    const listener = typeof prompt === 'string' ?  () => prompt : prompt
+    const { message } = this.props
+    const listener = typeof message === 'string' ?  () => message : message
 
     if (!this.unlistenBefore)
       this.unlistenBefore = history.listenBefore(listener)
@@ -57,6 +58,7 @@ class NavigationPrompt extends React.Component {
   render() {
     return null
   }
+
 }
 
 export default NavigationPrompt

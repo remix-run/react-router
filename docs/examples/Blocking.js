@@ -36,7 +36,7 @@ class Form extends React.Component {
       >
         <NavigationPrompt
           when={blockTransitions}
-          prompt={(location) => (
+          message={(location) => (
             `Are you sure you want to go to ${location.pathname}?`
           )}
         />
