@@ -49,7 +49,7 @@ Suppose your basic route configuration looks like:
 ```
 
 Suppose you want to redirect `/` to `/welcome`. To do this, you need to set up
-an index route that does the redirect. To do this, use the `<IndexRedirect>`
+an index redirect that does the redirect. To do this, use the `<IndexRedirect>`
 component:
 
 ```js
