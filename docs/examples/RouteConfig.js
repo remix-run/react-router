@@ -1,9 +1,9 @@
 import React from 'react'
 import { Router, Match, Link, matchPattern } from 'react-router'
 
-// Some folks find value in a centralized route config. A route
-// config is just data and React is great at mapping over data
-// to render components, and `Match` is a component.
+// Some folks find value in a centralized route config.
+// A route config is just data, React is great at mapping data
+// into components, and `Match` is a component.
 
 ////////////////////////////////////////////////////////////
 // first our route components

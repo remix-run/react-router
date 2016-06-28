@@ -3,7 +3,7 @@ markdown { display: block; }
 markdown pre code { font-size: 13px; }
 markdown code { font-size: 16px; }
 markdown h1 { font-size: 300%; font-family: "Helvetica Neue", sans-serif; font-weight: 100; }
-markdown h1 code { color: #000; font-size: 100%; font-family: monospace; font-weight: 100; }
+markdown h1 code { margin-left: -20px; color: #000; font-size: 100%; font-family: monospace; font-weight: 100; }
 markdown h2 { margin-top: 60px; }
 markdown h2 code { color: #d0021b; font-size: 100%; font-family: monospace; font-weight: 100;
   /*border-left: solid 4px #d0021b; padding-left: 10px;*/

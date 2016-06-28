@@ -7,6 +7,7 @@ import FakeBrowser from './FakeBrowser'
 import SourceViewer from './SourceViewer'
 import MarkdownViewer from './MarkdownViewer'
 import FadeIn from './FadeIn'
+import { navItem } from './styles.css'
 
 const { string } = React.PropTypes
 
@@ -60,18 +61,12 @@ const NavList = (props) => (
 
 const NavItem = ({ name, path, exactly }, index) => (
   <B key={index} component="li">
-    <B
-      component={Link}
-      textDecoration="none"
-      color="inherit"
-      props={{
-        activeOnlyWhenExact: exactly,
-        to: path,
-        activeStyle: {
-          color: RED
-        }
-      }}
-    >{name}</B>
+    <Link
+      to={path}
+      activeOnlyWhenExact={exactly}
+      className={navItem}
+      activeStyle={{ color: RED }}
+    >{name}</Link>
   </B>
 )
 
