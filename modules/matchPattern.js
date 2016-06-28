@@ -23,24 +23,24 @@ const parseParams = (pattern, match, keys) =>
     return params
   }, {})
 
-const matchPattern = (pattern, locPathname, matchExactly) => {
+const matchPattern = (pattern, location, matchExactly) => {
   const specialCase = !matchExactly && pattern === '/'
 
   if (specialCase) {
     return {
       params: null,
-      isTerminal: locPathname === '/',
+      isTerminal: location.pathname === '/',
       pathname: '/'
     }
   } else {
     const matcher = getMatcher(pattern)
     const pathname = matchExactly ?
-      locPathname : truncatePathnameToPattern(locPathname, pattern)
+      location.pathname : truncatePathnameToPattern(location.pathname, pattern)
     const match = matcher.regex.exec(pathname)
 
     if (match) {
       const params = parseParams(pattern, match, matcher.keys)
-      const locationLength = locPathname.split('/').length
+      const locationLength = location.pathname.split('/').length
       const patternLength = pattern.split('/').length
       const isTerminal = locationLength === patternLength
       return { params, isTerminal, pathname }

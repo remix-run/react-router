@@ -1,5 +1,7 @@
 import React from 'react'
 import { PAGES, API, EXAMPLES } from '../routes'
+import createBrowserHistory from 'history/lib/createBrowserHistory'
+import useBaseName from 'history/lib/useBaseName'
 import { Router, Link, Match, Miss } from 'react-router'
 import { H, V, B, GRAY, RED, PAD } from './layout'
 import LoadBundle from './LoadBundle'
@@ -10,6 +12,20 @@ import FadeIn from './FadeIn'
 import { navItem } from './styles.css'
 
 const { string } = React.PropTypes
+
+const stripTrailingSlash = (str) =>
+  str.replace(/\/$/, '')
+
+const stripLeadingSlash = (str) =>
+  str.replace(/^\//, '')
+
+const basename = (() => {
+  const a = document.createElement('a')
+  a.href = document.baseURI
+  return stripTrailingSlash(a.pathname)
+})()
+
+const history = useBaseName(createBrowserHistory)({ basename })
 
 const Nav = (props) => (
   <B {...props}
@@ -120,7 +136,7 @@ const Home = () => (
 class App extends React.Component {
   render() {
     return (
-      <Router>
+      <Router history={history}>
         <H
           lineHeight="1.5"
           fontFamily="sans-serif"
@@ -148,30 +164,32 @@ class App extends React.Component {
             </NavList>
           </Nav>
 
-          {PAGES.map((page, index) => (
-            <Match
-              key={index}
-              pattern={page.path}
-              exactly={page.exactly}
-              render={() => <Page page={page}/>}
-            />
-          ))}
+          <B>
+            {PAGES.map((page, index) => (
+              <Match
+                key={index}
+                pattern={page.path}
+                exactly={page.exactly}
+                render={() => <Page page={page}/>}
+              />
+            ))}
 
-          {EXAMPLES.map((page, index) => (
-            <Match
-              key={index}
-              pattern={page.path}
-              render={() => <Example page={page}/>}
-            />
-          ))}
+            {EXAMPLES.map((page, index) => (
+              <Match
+                key={index}
+                pattern={page.path}
+                render={() => <Example page={page}/>}
+              />
+            ))}
 
-          {API.map((page, index) => (
-            <Match
-              key={index}
-              pattern={page.path}
-              render={() => <Page page={page}/>}
-            />
-          ))}
+            {API.map((page, index) => (
+              <Match
+                key={index}
+                pattern={page.path}
+                render={() => <Page page={page}/>}
+              />
+            ))}
+          </B>
 
           <Miss render={() => (
             <B>

@@ -4,10 +4,10 @@ module.exports = {
   devtool: 'source-map',
   entry: path.join(__dirname, 'index.js'),
   output: {
-    path: __dirname,
+    path: path.join(__dirname, 'build'),
     filename: 'bundle.js',
     chunkFileName: '[name].js',
-    publicPath: '/'
+    publicPath: 'build/'
   },
   resolve: {
     alias: {

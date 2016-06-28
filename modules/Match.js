@@ -71,7 +71,7 @@ class Match extends React.Component {
     const { children, render, component:Component,
       pattern, location, exactly } = this.props
     const loc = location || this.context.location
-    const match = matchPattern(pattern, loc.pathname, exactly)
+    const match = matchPattern(pattern, loc, exactly)
     const props = { ...match, location: loc, pattern }
 
     return (
