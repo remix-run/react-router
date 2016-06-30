@@ -80,6 +80,15 @@ RewriteCond %{REQUEST_FILENAME} !-d
 RewriteRule . /index.html [L]
 ```
 
+Similarly with java servlet, you can redirect 404 errors to your index.html:
+
+```
+<error-page>
+	    <error-code>404</error-code>
+	    <location>/index.html</location>
+</error-page>
+```
+
 #### IE8, IE9 Support
 We feature detect to see if we can use the browser's native `window.history` API. If not, any call to transition around the app will result in _a full page reload_, which allows you to build your app and have a better experience for newer browsers, but still support old ones.
 
