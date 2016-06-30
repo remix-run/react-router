@@ -1,3 +1,12 @@
+## [v2.5.2]
+> Jul 1, 2016
+
+- **Bugfix:** Remove extraneous `propTypes` check when creating a route object from a React element ([#3591])
+
+[v2.5.2]: https://github.com/reactjs/react-router/compare/v2.5.1...v2.5.2
+[#3591]: https://github.com/reactjs/react-router/pull/3591
+
+
 ## [v2.5.1]
 > Jun 23, 2016
 
