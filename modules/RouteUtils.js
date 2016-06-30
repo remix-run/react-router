@@ -1,5 +1,4 @@
 import React from 'react'
-import warning from './routerWarning'
 
 function isValidChild(object) {
   return object == null || React.isValidElement(object)
@@ -9,20 +8,6 @@ export function isReactChildren(object) {
   return isValidChild(object) || (Array.isArray(object) && object.every(isValidChild))
 }
 
-function checkPropTypes(componentName, propTypes, props) {
-  componentName = componentName || 'UnknownComponent'
-
-  for (const propName in propTypes) {
-    if (Object.prototype.hasOwnProperty.call(propTypes, propName)) {
-      const error = propTypes[propName](props, propName, componentName)
-
-      /* istanbul ignore if: error logging */
-      if (error instanceof Error)
-        warning(false, error.message)
-    }
-  }
-}
-
 function createRoute(defaultProps, props) {
   return { ...defaultProps, ...props }
 }
@@ -30,9 +15,6 @@ function createRoute(defaultProps, props) {
 export function createRouteFromReactElement(element) {
   const type = element.type
   const route = createRoute(type.defaultProps, element.props)
-
-  if (type.propTypes)
-    checkPropTypes(type.displayName || type.name, type.propTypes, route)
 
   if (route.children) {
     const childRoutes = createRoutesFromReactChildren(route.children, route)
@@ -52,7 +34,7 @@ export function createRouteFromReactElement(element) {
  * nested.
  *
  *   import { Route, createRoutesFromReactChildren } from 'react-router'
- *   
+ *
  *   const routes = createRoutesFromReactChildren(
  *     <Route component={App}>
  *       <Route path="home" component={Dashboard}/>
