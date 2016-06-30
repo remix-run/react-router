@@ -77,13 +77,6 @@ function createElement(Component, props) {
 }
 ```
 
-##### `stringifyQuery(queryObject)` (deprecated)
-A function used to convert an object from [`<Link>`](#link)s or calls to
-[`transitionTo`](#transitiontopathname-query-state) to a URL query string.
-
-##### `parseQueryString(queryString)` (deprecated)
-A function used to convert a query string into an object that gets passed to route component props.
-
 ##### `onError(error)`
 While the router is matching, errors may bubble up, here is your opportunity to catch and deal with them. Typically these will come from async features like [`route.getComponents`](#getcomponentsnextstate-callback), [`route.getIndexRoute`](#getindexroutepartialnextstate-callback), and [`route.getChildRoutes`](#getchildroutespartialnextstate-callback).
 
@@ -94,6 +87,10 @@ Called whenever the router updates its state in response to URL changes.
 This is primarily for integrating with other libraries that need to participate in rendering before the route components are rendered. It defaults to `render={(props) => <RouterContext {...props} />}`.
 
 Ensure that you render a `<RouterContext>` at the end of the line, passing all the props passed to `render`.
+
+##### `stringifyQuery(queryObject)` (deprecated)
+
+##### `parseQueryString(queryString)` (deprecated)
 
 
 #### Examples
@@ -108,7 +105,7 @@ A `<Link>` can know when the route it links to is active and automatically apply
 
 #### Props
 ##### `to`
-A [location descriptor](https://github.com/mjackson/history/blob/master/docs/Glossary.md#locationdescriptor). Usually this is a string or an object, with the following semantics:
+A [location descriptor](https://github.com/ReactJSTraining/history/blob/master/docs/Glossary.md#locationdescriptor). Usually this is a string or an object, with the following semantics:
 
 * If it's a string it represents the absolute path to link to, e.g. `/users/123` (relative paths are not supported).
 * If it's an object it can have four keys:
@@ -117,16 +114,7 @@ A [location descriptor](https://github.com/mjackson/history/blob/master/docs/Glo
   * `hash`: A hash to put in the URL, e.g. `#a-hash`.
   * `state`: State to persist to the `location`.
 
-##### `query` **([deprecated](/upgrade-guides/v2.0.0.md#link-to-onenter-and-isactive-use-location-descriptors) see `to`)**
-An object of key:value pairs to be stringified.
-
-##### `hash` **([deprecated](/upgrade-guides/v2.0.0.md#link-to-onenter-and-isactive-use-location-descriptors) see `to`)**
-A hash to put in the URL, e.g. `#a-hash`.
-
-_Note: React Router currently does not manage scroll position, and will not scroll to the element corresponding to the hash._
-
-##### `state` **([deprecated](/upgrade-guides/v2.0.0.md#link-to-onenter-and-isactive-use-location-descriptors) see `to`)**
-State to persist to the `location`.
+_Note: React Router currently does not manage scroll position, and will not scroll to the element corresponding to `hash`._
 
 ##### `activeClassName`
 The className a `<Link>` receives when its route is active. No active class by default.
@@ -142,6 +130,12 @@ If `true`, the `<Link>` will only be active when the current route exactly match
 
 ##### *others*
 You can also pass props you'd like to be on the `<a>` such as a `title`, `id`, `className`, etc.
+
+##### `query` **([deprecated](/upgrade-guides/v2.0.0.md#link-to-onenter-and-isactive-use-location-descriptors) see `to`)**
+
+##### `hash` **([deprecated](/upgrade-guides/v2.0.0.md#link-to-onenter-and-isactive-use-location-descriptors) see `to`)**
+
+##### `state` **([deprecated](/upgrade-guides/v2.0.0.md#link-to-onenter-and-isactive-use-location-descriptors) see `to`)**
 
 #### Example
 Given a route like `<Route path="/users/:userId" />`:
@@ -613,9 +607,9 @@ For more details, please see the [histories guide](/docs/guides/Histories.md).
 `useRouterHistory` is a `history` enhancer that configures a given `createHistory` factory to work with React Router. This allows using custom histories in addition to the bundled singleton histories.
 
 It also pre-enhances the history with the
-[useQueries](https://github.com/mjackson/history/blob/master/docs/QuerySupport.md)
+[useQueries](https://github.com/ReactJSTraining/history/blob/master/docs/QuerySupport.md)
 and
-[useBasename](https://github.com/mjackson/history/blob/master/docs/BasenameSupport.md)
+[useBasename](https://github.com/ReactJSTraining/history/blob/master/docs/BasenameSupport.md)
 enhancers from `history`
 
 #### Example
