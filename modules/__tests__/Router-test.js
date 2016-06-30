@@ -83,6 +83,44 @@ describe('Router', function () {
     })
   })
 
+  it('passes params to route components', function (done) {
+    function MyComponent({ params }) {
+      return <div>{params.name}</div>
+    }
+
+    render((
+      <Router history={createHistory('/foo')}>
+        <Route>
+          <Route path=":name" component={MyComponent} />
+        </Route>
+      </Router>
+    ), node, function () {
+      expect(node.textContent).toMatch(/foo/)
+      done()
+    })
+  })
+
+  it('passes routeParams to route components', function (done) {
+    if (canUseMembrane) {
+      shouldWarn('deprecated')
+    }
+
+    function MyComponent({ routeParams }) {
+      return <div>{routeParams.name}</div>
+    }
+
+    render((
+      <Router history={createHistory('/bar')}>
+        <Route>
+          <Route path=":name" component={MyComponent} />
+        </Route>
+      </Router>
+    ), node, function () {
+      expect(node.textContent).toMatch(/bar/)
+      done()
+    })
+  })
+
   it('renders with a custom "createElement" prop', function (done) {
     class Wrapper extends Component {
       render() {

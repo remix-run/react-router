@@ -512,9 +512,6 @@ The dynamic segments of the URL.
 #### `route`
 The route that rendered this component.
 
-#### `routeParams`
-A subset of `this.props.params` that were directly specified in this component's route. For example, if the route's path is `users/:userId` and the URL is `/users/123/portfolios/345` then `this.props.routeParams` will be `{userId: '123'}`, and `this.props.params` will be `{userId: '123', portfolioId: 345}`.
-
 #### `children`
 The matched child route element to be rendered. If the route has [named components](/docs/API.md#named-components) then this will be undefined, and the components will instead be available as direct properties on `this.props`.
 
@@ -542,6 +539,8 @@ class App extends React.Component {
 ```
 
 #### `history` (deprecated)
+
+#### `routeParams` (deprecated)
 
 ### Named Components
 When a route has one or more named components, the child elements are available by name on `this.props`. In this case `this.props.children` will be undefined. All route components can participate in the nesting.
