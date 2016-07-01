@@ -11,7 +11,7 @@ export default function withRouter(WrappedComponent) {
     contextTypes: { router: routerShape },
     getWrappedInstance(){
       return this.refs.wrappedInstance;
-    }
+    },
     render() {
       return <WrappedComponent {...this.props} router={this.context.router} ref="wrappedInstance"/>
     }
