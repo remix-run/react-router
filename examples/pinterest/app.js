@@ -120,12 +120,12 @@ const Deep = React.createClass({
         <p>Params stick around: {this.props.params.one} {this.props.params.two}</p>
         <p>
           <Link to={{
-            pathname: `/pictures/0`,
+            pathname: '/pictures/0',
             state: { modal: true, returnTo: this.props.location.pathname }
           }}>
             Link to picture with Modal
           </Link><br/>
-          <Link to={`/pictures/0`}>
+          <Link to="/pictures/0">
             Without modal
           </Link>
         </p>

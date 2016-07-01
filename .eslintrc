@@ -1,11 +1,10 @@
 {
-  "extends": "rackt",
+  "extends": ["rackt", "plugin:react/recommended"],
   "globals": {
     "__DEV__": true
   },
   "rules": {
-    "react/jsx-uses-react": 1,
-    "react/jsx-no-undef": 2,
+    "react/display-name": 0,
     "react/wrap-multilines": 2
   },
   "plugins": [
