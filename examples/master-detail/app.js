@@ -27,9 +27,6 @@ const App = React.createClass({
   },
 
   updateContacts() {
-    if (!this.isMounted())
-      return
-
     this.setState({
       contacts: ContactStore.getContacts(),
       loading: false
@@ -91,9 +88,6 @@ const Contact = withRouter(
     },
 
     updateContact() {
-      if (!this.isMounted())
-        return
-
       this.setState(this.getStateFromStore())
     },
 
