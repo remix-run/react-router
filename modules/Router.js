@@ -1,3 +1,4 @@
+import invariant from 'invariant'
 import React from 'react'
 
 import createTransitionManager from './createTransitionManager'
@@ -6,6 +7,12 @@ import RouterContext from './RouterContext'
 import { createRoutes } from './RouteUtils'
 import { createRouterObject, assignRouterState } from './RouterUtils'
 import warning from './routerWarning'
+
+/* istanbul ignore next: sanity check */
+function isUnsupportedHistory(history) {
+  // v3 histories expose getCurrentLocation, but aren't currently supported.
+  return history && history.getCurrentLocation
+}
 
 const { func, object } = React.PropTypes
 
@@ -24,6 +31,10 @@ const Router = React.createClass({
     createElement: func,
     onError: func,
     onUpdate: func,
+
+    // Deprecated:
+    parseQueryString: func,
+    stringifyQuery: func,
 
     // PRIVATE: For client-side rehydration of server match.
     matchContext: object
@@ -73,6 +84,13 @@ const Router = React.createClass({
 
     const { history } = this.props
     const { routes, children } = this.props
+
+    invariant(
+      !isUnsupportedHistory(history),
+      'You have provided a history object created with history v3.x. ' +
+      'This version of React Router is not compatible with v3 history ' +
+      'objects. Please use history v2.x instead.'
+    )
 
     return createTransitionManager(
       history,

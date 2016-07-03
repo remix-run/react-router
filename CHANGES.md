@@ -14,6 +14,39 @@
 [#3446]: https://github.com/reactjs/react-router/pull/3446
 
 
+## [v2.5.2]
+> Jul 1, 2016
+
+- **Bugfix:** Remove extraneous `propTypes` check when creating a route object from a React element ([#3591])
+
+[v2.5.2]: https://github.com/reactjs/react-router/compare/v2.5.1...v2.5.2
+[#3591]: https://github.com/reactjs/react-router/pull/3591
+
+
+## [v2.5.1]
+> Jun 23, 2016
+
+- **Bugfix:** Throw error instead of silently failing with history v3 ([#3571])
+- **Bugfix:** Explicitly throw error in `onClick` handler of `<Link>` rendered outside of router context ([#3572])
+
+[v2.5.1]: https://github.com/reactjs/react-router/compare/v2.5.0...v2.5.1
+[#3571]: https://github.com/reactjs/react-router/pull/3571
+[#3572]: https://github.com/reactjs/react-router/pull/3572
+
+
+## [v2.5.0]
+> Jun 22, 2016
+
+- **Feature/Deprecation:** Call `getChildRoutes` and `getIndexRoute` with `partialNextState`; deprecate accessing `location` directly in favor of `partialNextState.location` there ([#3556], [#3561], [#3569], [Upgrade Guide](/upgrade-guides/v2.5.0.md#getchildroutes-getindexroute-signature))
+- **Refactor:** Refactor creating `routeParams` objects ([#3544])
+
+[v2.5.0]: https://github.com/reactjs/react-router/compare/v2.4.1...v2.5.0
+[#3544]: https://github.com/reactjs/react-router/pull/3544
+[#3556]: https://github.com/reactjs/react-router/pull/3556
+[#3561]: https://github.com/reactjs/react-router/pull/3561
+[#3569]: https://github.com/reactjs/react-router/pull/3569
+
+
 ## [v2.4.1]
 > May 19, 2016
 

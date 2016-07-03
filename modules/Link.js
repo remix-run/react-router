@@ -1,4 +1,5 @@
 import React from 'react'
+import invariant from 'invariant'
 import { routerShape } from './PropTypes'
 import { ContextSubscriber } from './ContextUtils'
 
@@ -67,6 +68,11 @@ const Link = React.createClass({
   },
 
   handleClick(event) {
+    invariant(
+      this.context.router,
+      '<Link>s rendered outside of a router context cannot handle clicks.'
+    )
+
     let allowTransition = true
 
     if (this.props.onClick)

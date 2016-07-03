@@ -3,7 +3,7 @@ import { REPLACE } from 'history/lib/Actions'
 import warning from './routerWarning'
 import computeChangedRoutes from './computeChangedRoutes'
 import { runEnterHooks, runChangeHooks, runLeaveHooks } from './TransitionUtils'
-import { default as _isActive } from './isActive'
+import _isActive from './isActive'
 import getComponents from './getComponents'
 import matchRoutes from './matchRoutes'
 
@@ -182,9 +182,9 @@ export default function createTransitionManager(history, routes) {
    * Registers the given hook function to run before leaving the given route.
    *
    * During a normal transition, the hook function receives the next location
-   * as its only argument and must return either a) a prompt message to show
-   * the user, to make sure they want to leave the page or b) false, to prevent
-   * the transition.
+   * as its only argument and can return either a prompt message (string) to show the user,
+   * to make sure they want to leave the page; or `false`, to prevent the transition.
+   * Any other return value will have no effect.
    *
    * During the beforeunload event (in browsers) the hook receives no arguments.
    * In this case it must return a prompt message to prevent the transition.

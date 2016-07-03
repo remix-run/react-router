@@ -17,6 +17,7 @@ const RouterContext = React.createClass({
 
   propTypes: {
     router: object.isRequired,
+    location: object.isRequired,
     routes: array.isRequired,
     params: object.isRequired,
     components: array.isRequired,
