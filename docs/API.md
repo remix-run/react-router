@@ -81,10 +81,6 @@ This is primarily for integrating with other libraries that need to participate 
 
 Ensure that you render a `<RouterContext>` at the end of the line, passing all the props passed to `render`.
 
-##### `stringifyQuery(queryObject)` (deprecated)
-
-##### `parseQueryString(queryString)` (deprecated)
-
 
 #### Examples
 Please see the [`examples/`](/examples) directory of the repository for extensive examples of using `<Router>`.
@@ -123,12 +119,6 @@ If `true`, the `<Link>` will only be active when the current route exactly match
 
 ##### *others*
 You can also pass props you'd like to be on the `<a>` such as a `title`, `id`, `className`, etc.
-
-##### `query` **([deprecated](/upgrade-guides/v2.0.0.md#link-to-onenter-and-isactive-use-location-descriptors) see `to`)**
-
-##### `hash` **([deprecated](/upgrade-guides/v2.0.0.md#link-to-onenter-and-isactive-use-location-descriptors) see `to`)**
-
-##### `state` **([deprecated](/upgrade-guides/v2.0.0.md#link-to-onenter-and-isactive-use-location-descriptors) see `to`)**
 
 #### Example
 Given a route like `<Route path="/users/:userId" />`:

@@ -1,7 +1,6 @@
 import expect from 'expect'
 import { createMemoryHistory } from 'history'
 import React from 'react'
-import { canUseMembrane } from '../deprecateObjectProperties'
 import IndexRoute from '../IndexRoute'
 import matchRoutes from '../matchRoutes'
 import Route from '../Route'
@@ -335,13 +334,6 @@ describe('matchRoutes', function () {
           expect(partialNextState.params).toEqual({ groupId: 'foo' })
           expect(partialNextState.location.pathname).toEqual('/foo/users/5')
 
-          // Only the calls below this point should emit deprecation warnings.
-          if (canUseMembrane) {
-            shouldWarn('deprecated')
-          }
-
-          expect(partialNextState.pathname).toEqual('/foo/users/5')
-
           done()
         }
       )
@@ -357,13 +349,6 @@ describe('matchRoutes', function () {
           const partialNextState = getIndexRoute.calls[0].arguments[0]
           expect(partialNextState.params).toEqual({ groupId: 'bar' })
           expect(partialNextState.location.pathname).toEqual('/bar/users')
-
-          // Only the calls below this point should emit deprecation warnings.
-          if (canUseMembrane) {
-            shouldWarn('deprecated')
-          }
-
-          expect(partialNextState.pathname).toEqual('/bar/users')
 
           done()
         }
