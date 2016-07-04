@@ -16,8 +16,11 @@ function createTransitionHook(hook, route, asyncArity) {
 
 function getEnterHooks(routes) {
   return routes.reduce(function (hooks, route) {
-    if (route.onEnter)
+    if (route.onEnter) {
       hooks.push(createTransitionHook(route.onEnter, route, 3))
+    } else {
+      hooks.push(null) // placeholder to figure out index
+    }
 
     return hooks
   }, [])
@@ -56,15 +59,20 @@ function runTransitionHooks(length, iter, callback) {
     redirectInfo = location
   }
 
+  const hookPassingProps = {}
   loopAsync(length, function (index, next, done) {
-    iter(index, replace, function (error) {
+    iter(index, replace, function (error, newRedirectInfo, injectsProps) {
       if (error || redirectInfo) {
-        done(error, redirectInfo) // No need to continue.
-      } else {
-        next()
+        return done(error, redirectInfo) // No need to continue.
       }
+      if (injectsProps) {
+        hookPassingProps[index] = injectsProps
+      }
+      next()
     })
-  }, callback)
+  }, function (error, redirectInfo) {
+    callback(error, redirectInfo, hookPassingProps)
+  })
 }
 
 /**
@@ -80,8 +88,21 @@ function runTransitionHooks(length, iter, callback) {
 export function runEnterHooks(routes, nextState, callback) {
   const hooks = getEnterHooks(routes)
   return runTransitionHooks(hooks.length, (index, replace, next) => {
-    hooks[index](nextState, replace, next)
-  }, callback)
+    if (hooks[index]) {
+      hooks[index](nextState, replace, next)
+    } else {
+      next()
+    }
+  }, function (error, redirectInfo, hookProps) {
+    const enterProps = {}
+    for (const index in hookProps) {
+      const idx = nextState.routes.indexOf(routes[index])
+      if (idx !== -1) {
+        enterProps[idx] = hookProps[index]
+      }
+    }
+    callback(error, redirectInfo, enterProps)
+  })
 }
 
 /**

@@ -85,7 +85,23 @@ const Router = React.createClass({
       if (error) {
         this.handleError(error)
       } else {
-        this.setState(state, this.props.onUpdate)
+        let enterProps
+        if (this.state.routes) {
+          enterProps = {}
+          for (let i=0; i < state.routes.length; ++i) {
+            if (state.routes[i] === this.state.routes[i]) {
+              enterProps[i] = this.state.enterProps[i]
+            } else {
+              enterProps[i] = state.enterProps[i]
+            }
+          }
+        } else {
+          enterProps = state.enterProps
+        }
+        this.setState({
+          ...state,
+          enterProps
+        }, this.props.onUpdate)
       }
     })
 
@@ -171,6 +187,7 @@ const Router = React.createClass({
 
     return render({
       ...props,
+      enterProps: this.state.enterProps,
       history: this.history,
       router: this.router,
       location,

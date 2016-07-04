@@ -84,7 +84,7 @@ export default function createTransitionManager(history, routes) {
       runEnterHooks(enterRoutes, nextState, finishEnterHooks)
     })
 
-    function finishEnterHooks(error, redirectInfo) {
+    function finishEnterHooks(error, redirectInfo, enterProps) {
       if (error || redirectInfo)
         return handleErrorOrRedirect(error, redirectInfo)
 
@@ -96,7 +96,7 @@ export default function createTransitionManager(history, routes) {
           // TODO: Make match a pure function and have some other API
           // for "match and update state".
           callback(null, null, (
-            state = { ...nextState, components })
+            state = { ...nextState, enterProps, components }),
           )
         }
       })

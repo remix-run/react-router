@@ -16,6 +16,7 @@ const RouterContext = React.createClass({
 
   propTypes: {
     history: object,
+    enterProps: object,
     router: object.isRequired,
     location: object.isRequired,
     routes: array.isRequired,
@@ -70,13 +71,15 @@ const RouterContext = React.createClass({
 
         const route = routes[index]
         const routeParams = getRouteParams(route, params)
+        const enterProp = this.props.enterProps ? this.props.enterProps[index] : null
         const props = {
           history,
           location,
           params,
           route,
           routeParams,
-          routes
+          routes,
+          ...enterProp
         }
 
         if (isReactChildren(element)) {
