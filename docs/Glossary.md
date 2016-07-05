@@ -204,6 +204,8 @@ The term *route component* refers to a [component](#component) that is directly 
   - `route` – The [route](#route) that declared this component
   - `routeParams` – A subset of the [params](#params) that were specified in the route's [`path`](#routepattern)
 
+Route components should generally be component classes rather than strings. This will avoid potential issues with passing the injected props above to DOM components.
+
 ## RouteConfig
 
 ```js
