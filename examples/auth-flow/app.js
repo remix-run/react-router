@@ -1,6 +1,8 @@
 import React from 'react'
 import { render } from 'react-dom'
 import { browserHistory, Router, Route, Link, withRouter } from 'react-router'
+
+import withBasename from '../withBasename'
 import auth from './auth'
 
 const App = React.createClass({
@@ -125,7 +127,7 @@ function requireAuth(nextState, replace) {
 }
 
 render((
-  <Router history={browserHistory}>
+  <Router history={withBasename(browserHistory, __dirname)}>
     <Route path="/" component={App}>
       <Route path="login" component={Login} />
       <Route path="logout" component={Logout} />

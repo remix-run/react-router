@@ -2,6 +2,8 @@ import React from 'react'
 import { render } from 'react-dom'
 import { browserHistory, Router, Route, Link } from 'react-router'
 
+import withBasename from '../withBasename'
+
 const User = ({ params: { userID }, location: { query } }) => {
   let age = query && query.showAge ? '33' : ''
 
@@ -25,7 +27,7 @@ const App = ({ children }) => (
 )
 
 render((
-  <Router history={browserHistory}>
+  <Router history={withBasename(browserHistory, __dirname)}>
     <Route path="/" component={App}>
       <Route path="user/:userID" component={User} />
     </Route>

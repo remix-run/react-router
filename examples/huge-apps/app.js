@@ -2,9 +2,10 @@ import React from 'react'
 import { render } from 'react-dom'
 import { Router, browserHistory } from 'react-router'
 
+import withBasename from '../withBasename'
 import './stubs/COURSES'
 
-const rootRoute = {
+const route = {
   childRoutes: [ {
     path: '/',
     component: require('./components/App'),
@@ -18,10 +19,9 @@ const rootRoute = {
   } ]
 }
 
-render(
-  <Router history={browserHistory} routes={rootRoute} />,
-  document.getElementById('example')
-)
+render((
+  <Router history={withBasename(browserHistory, __dirname)} routes={route} />
+), document.getElementById('example'))
 
 // I've unrolled the recursive directory loop that is happening above to get a
 // better idea of just what this huge-apps Router looks like, or just look at the

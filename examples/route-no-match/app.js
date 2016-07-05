@@ -2,6 +2,8 @@ import React from 'react'
 import { render } from 'react-dom'
 import { browserHistory, Router, Route, Link } from 'react-router'
 
+import withBasename from '../withBasename'
+
 class User extends React.Component {
   render() {
     let { userID } = this.props.params
@@ -44,7 +46,7 @@ class PageNotFound extends React.Component {
 }
 
 render((
-  <Router history={browserHistory}>
+  <Router history={withBasename(browserHistory, __dirname)}>
     <Route path="/" component={App}>
       <Route path="user/:userID" component={User} />
     </Route>

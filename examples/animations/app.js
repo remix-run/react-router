@@ -1,7 +1,10 @@
 import React from 'react'
-import { render } from 'react-dom'
 import ReactCSSTransitionGroup from 'react-addons-css-transition-group'
+import { render } from 'react-dom'
 import { browserHistory, Router, Route, IndexRoute, Link } from 'react-router'
+
+import withBasename from '../withBasename'
+
 import './app.css'
 
 const App = ({ children, location }) => (
@@ -46,7 +49,7 @@ const Page2 = () => (
 )
 
 render((
-  <Router history={browserHistory}>
+  <Router history={withBasename(browserHistory, __dirname)}>
     <Route path="/" component={App}>
       <IndexRoute component={Index}/>
       <Route path="page1" component={Page1} />
