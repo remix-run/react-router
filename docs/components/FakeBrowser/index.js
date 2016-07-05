@@ -115,7 +115,7 @@ class FakeBrowser extends React.Component {
                 value: history.createHref(location),
                 onChange: (e) => {
                   this.setState({
-                    address: e.target.value
+                    location: e.target.value
                   })
                 },
                 onKeyDown: (e) => {
