@@ -11,9 +11,9 @@ This is a glossary of common terms used in the React Router codebase and documen
 * [LocationDescriptor](#locationdescriptor)
 * [LocationKey](#locationkey)
 * [LocationState](#locationstate)
+* [Params](#params)
 * [Path](#path)
 * [Pathname](#pathname)
-* [Params](#params)
 * [Query](#query)
 * [QueryString](#querystring)
 * [RedirectFunction](#redirectfunction)
@@ -127,6 +127,14 @@ This type gets its name from the first argument to HTML5's [`pushState`][pushSta
 [pushState]: https://developer.mozilla.org/en-US/docs/Web/API/History_API#The_pushState()_method
 [replaceState]: https://developer.mozilla.org/en-US/docs/Web/API/History_API#The_replaceState()_method
 
+## Params
+
+```js
+type Params = Object;
+```
+
+The word *params* refers to an object of key/value pairs that were parsed out of the original URL's [pathname](#pathname). The values of this object are typically strings, unless there is more than one param with the same name in which case the value is an array.
+
 ## Path
 
 ```js
@@ -143,14 +151,6 @@ type Pathname = string;
 
 A *pathname* is the portion of a URL that describes a hierarchical path, including the preceding `/`. For example, in `http://example.com/the/path?the=query`, `/the/path` is the pathname. It is synonymous with `window.location.pathname` in web browsers.
 
-## QueryString
-
-```js
-type QueryString = string;
-```
-
-A *query string* is the portion of the URL that follows the [pathname](#pathname), including any preceding `?`. For example, in `http://example.com/the/path?the=query`, `?the=query` is the query string. It is synonymous with `window.location.search` in web browsers.
-
 ## Query
 
 ```js
@@ -159,13 +159,13 @@ type Query = Object;
 
 A *query* is the parsed version of a [query string](#querystring).
 
-## Params
+## QueryString
 
 ```js
-type Params = Object;
+type QueryString = string;
 ```
 
-The word *params* refers to an object of key/value pairs that were parsed out of the original URL's [pathname](#pathname). The values of this object are typically strings, unless there is more than one param with the same name in which case the value is an array.
+A *query string* is the portion of the URL that follows the [pathname](#pathname), including any preceding `?`. For example, in `http://example.com/the/path?the=query`, `?the=query` is the query string. It is synonymous with `window.location.search` in web browsers.
 
 ## RedirectFunction
 
@@ -203,6 +203,8 @@ The term *route component* refers to a [component](#component) that is directly 
   - `params` – The current [params](#params)
   - `route` – The [route](#route) that declared this component
   - `routeParams` – A subset of the [params](#params) that were specified in the route's [`path`](#routepattern)
+
+Route components should generally be component classes rather than strings. This will avoid potential issues with passing the injected props above to DOM components.
 
 ## RouteConfig
 
