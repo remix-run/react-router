@@ -2,7 +2,7 @@ import React from 'react'
 import { render, findDOMNode } from 'react-dom'
 import { browserHistory, Router, Route, IndexRoute, Link, withRouter } from 'react-router'
 
-import withBasename from '../withBasename'
+import withExampleBasename from '../withExampleBasename'
 import ContactStore from './ContactStore'
 
 import './app.css'
@@ -151,7 +151,7 @@ const NotFound = React.createClass({
 })
 
 render((
-  <Router history={withBasename(browserHistory, __dirname)}>
+  <Router history={withExampleBasename(browserHistory, __dirname)}>
     <Route path="/" component={App}>
       <IndexRoute component={Index} />
       <Route path="contact/new" component={NewContact} />

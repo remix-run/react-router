@@ -2,7 +2,7 @@ import React from 'react'
 import { render } from 'react-dom'
 import { browserHistory, Router, Route, IndexRoute, Link } from 'react-router'
 
-import withBasename from '../withBasename'
+import withExampleBasename from '../withExampleBasename'
 
 const PICTURES = [
   { id: 0, src: 'http://placekitten.com/601/601' },
@@ -147,7 +147,7 @@ const Picture = React.createClass({
 })
 
 render((
-  <Router history={withBasename(browserHistory, __dirname)}>
+  <Router history={withExampleBasename(browserHistory, __dirname)}>
     <Route path="/" component={App}>
       <IndexRoute component={Index}/>
       <Route path="/pictures/:id" component={Picture}/>
