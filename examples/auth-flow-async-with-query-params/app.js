@@ -1,8 +1,8 @@
 import React, { createClass } from 'react'
 import { render } from 'react-dom'
-import {
-  Router, Route, IndexRoute, browserHistory, Link, withRouter
-} from 'react-router'
+import { Router, Route, IndexRoute, browserHistory, Link, withRouter } from 'react-router'
+
+import withBasename from '../withBasename'
 
 function App(props) {
   return (
@@ -88,7 +88,7 @@ function serverAuth(authToken) {
 }
 
 render((
-  <Router history={browserHistory}>
+  <Router history={withBasename(browserHistory, __dirname)}>
     <Route path="/" component={App}>
       <IndexRoute component={Form} />
       <Route path="page" component={Page} onEnter={requireCredentials}/>

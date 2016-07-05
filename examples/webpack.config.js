@@ -1,4 +1,5 @@
 /*eslint-disable no-var */
+
 var fs = require('fs')
 var path = require('path')
 var webpack = require('webpack')
@@ -32,6 +33,12 @@ module.exports = {
     alias: {
       'react-router': path.join(__dirname, '..', 'modules')
     }
+  },
+
+  // Expose __dirname to allow automatically setting basename.
+  context: __dirname,
+  node: {
+    __dirname: true
   },
 
   plugins: [

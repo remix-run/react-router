@@ -2,6 +2,8 @@ import React from 'react'
 import { render } from 'react-dom'
 import { browserHistory, Router, Route, Link, withRouter } from 'react-router'
 
+import withBasename from '../withBasename'
+
 const App = React.createClass({
   render() {
     return (
@@ -74,7 +76,7 @@ const Form = withRouter(
 )
 
 render((
-  <Router history={browserHistory}>
+  <Router history={withBasename(browserHistory, __dirname)}>
     <Route path="/" component={App}>
       <Route path="dashboard" component={Dashboard} />
       <Route path="form" component={Form} />
