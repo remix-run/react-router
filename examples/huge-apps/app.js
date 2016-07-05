@@ -2,10 +2,10 @@ import React from 'react'
 import { render } from 'react-dom'
 import { Router, browserHistory } from 'react-router'
 
-import withBasename from '../withBasename'
+import withExampleBasename from '../withExampleBasename'
 import './stubs/COURSES'
 
-const route = {
+const rootRoute = {
   childRoutes: [ {
     path: '/',
     component: require('./components/App'),
@@ -20,7 +20,10 @@ const route = {
 }
 
 render((
-  <Router history={withBasename(browserHistory, __dirname)} routes={route} />
+  <Router
+    history={withExampleBasename(browserHistory, __dirname)}
+    routes={rootRoute}
+  />
 ), document.getElementById('example'))
 
 // I've unrolled the recursive directory loop that is happening above to get a

@@ -2,7 +2,7 @@ import React from 'react'
 import { render } from 'react-dom'
 import { browserHistory, Router, Route, Link } from 'react-router'
 
-import withBasename from '../withBasename'
+import withExampleBasename from '../withExampleBasename'
 import data from './data'
 
 import './app.css'
@@ -84,7 +84,7 @@ const App = ({ content, sidebar }) => (
 )
 
 render((
-  <Router history={withBasename(browserHistory, __dirname)}>
+  <Router history={withExampleBasename(browserHistory, __dirname)}>
     <Route path="/" component={App}>
       <Route path="category/:category" components={{ content: Category, sidebar: CategorySidebar }}>
         <Route path=":item" component={Item} />

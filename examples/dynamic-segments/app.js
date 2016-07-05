@@ -2,7 +2,7 @@ import React from 'react'
 import { render } from 'react-dom'
 import { browserHistory, Router, Route, Link, Redirect } from 'react-router'
 
-import withBasename from '../withBasename'
+import withExampleBasename from '../withExampleBasename'
 
 const App = ({ children }) => (
   <div>
@@ -33,7 +33,7 @@ const Task = ({ params: { userID, taskID } }) => (
 )
 
 render((
-  <Router history={withBasename(browserHistory, __dirname)}>
+  <Router history={withExampleBasename(browserHistory, __dirname)}>
     <Route path="/" component={App}>
       <Route path="user/:userID" component={User}>
         <Route path="tasks/:taskID" component={Task} />
