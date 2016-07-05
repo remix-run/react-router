@@ -12,7 +12,27 @@ of a component and understand what it’s doing.  If you need to redirect,
 block transitions, or match a location, you should be able to do so
 declaratively.
 
-- [Quick Start](quick-start)
-- [Github](https://github.com/reactjstraining/react-router)
+## Just Getting Started?
+
+1. First read the [Quick Start](quick-start)
+2. Browse the examples on this site
+3. Read the API docs on this site
+
+## Contributing
+
+We'd love your help, the code is [hosted on GitHub](https://github.com/reactjstraining/react-router).
+
+## Thanks
+
+Development has been sponsored by:
+
+- [React Training][react-training]
+- [Instructure][instructure]
+- [Modus Create][modus-create]
+- [100s of Contributors][contributors]
 
 
+  [react-training]:https://reactjs-training.com
+  [instructure]:https://instructure.com
+  [modus-create]:https://modus-create.com
+  [contributors]:https://github.com/reactjs/react-router/graphs/contributors
