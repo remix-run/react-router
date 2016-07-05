@@ -11,7 +11,7 @@ class Redirect extends React.Component {
     location: PropTypes.object
   }
 
-  componentDidMount() {
+  componentWillMount() {
     const { to, history } = this.props
     const providedHistory = history || this.context.history
     providedHistory.replace(to)

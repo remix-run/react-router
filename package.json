@@ -1,7 +1,7 @@
 {
   "name": "react-router",
   "version": "4.0.0-pre",
-  "description": "A router for React.js",
+  "description": "Declarative Routing for React.js",
   "repository": "ReactJSTraining/react-router",
   "license": "MIT",
   "authors": [
@@ -11,7 +11,8 @@
   "main": "lib",
   "files": [
     "lib",
-    "umd"
+    "umd",
+    "server"
   ],
   "scripts": {
     "start": "cd docs && npm start",
@@ -43,7 +44,6 @@
     "eslint-plugin-import": "^1.8.1",
     "eslint-plugin-react": "^5.1.1",
     "expect": "^1.20.1",
-    "front-matter": "^2.1.0",
     "gzip-size": "^3.0.0",
     "history": "^3.0.0",
     "in-publish": "^2.0.0",
@@ -61,7 +61,6 @@
     "react-dom": "^15.1.0",
     "react-redux": "^4.4.5",
     "readline-sync": "^1.4.4",
-    "redux": "^3.5.2",
     "rimraf": "^2.5.2",
     "webpack": "^1.13.1",
     "webpack-dev-server": "^1.14.1"

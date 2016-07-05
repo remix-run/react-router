@@ -102,5 +102,9 @@ export const API = [
   { name: 'Redirect',
     path: '/Redirect',
     load: require('bundle?lazy!./api/Redirect.md')
+  },
+  { name: 'ServerRouter',
+    path: '/ServerRouter',
+    load: require('bundle?lazy!./api/ServerRouter.md')
   }
 ]
