@@ -1,6 +1,4 @@
-# React Router
-
-**Declarative Routing for React**
+# Declarative Routing for React
 
 React components are the heart of React's powerful programming model.
 Their declarative nature makes them incredibly composable. React Router
@@ -12,7 +10,7 @@ React Router desires to have no public interface outside of components
 and props. If you need to redirect, or block transitions, or match a
 location you should be able to do so declaratively.
 
-[Quick Start](/quick-start)
-[Github](https://github.com/reactjstraining/react-router)
+- [Quick Start](quick-start)
+- [Github](https://github.com/reactjstraining/react-router)
 
 

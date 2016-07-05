@@ -32,7 +32,9 @@ import { render } from 'react-dom'
 import { Router, Match, Miss, Link } from 'react-router'
 
 const App = () => (
-  // 2. render a `Router`
+  // 2. render a `Router`, it will listen to the url changes
+  //    and make the location available to other components
+  //    automatically
   <Router>
     <ul>
       {/* 3. Link to some paths with `Link` */}
@@ -43,14 +45,15 @@ const App = () => (
 
     <hr/>
 
-    {/* 4. Render a `Match`. When the current location matches
-           the `pattern` then the `component` will render.
+    {/* 4. Render some `<Match/>` components.
+           When the current location matches the `pattern`
+           then the `component` will render.
     */}
     <Match exactly pattern="/" component={Home} />
     <Match pattern="/about" component={About} />
     <Match pattern="/topics" component={Topics} />
 
-    {/* `Miss` will render when none of it's siblings match */}
+    {/* If none of those match, then a sibling `Miss` will render. */}
     <Miss component={NoMatch}/>
   </Router>
 )

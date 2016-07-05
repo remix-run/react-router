@@ -10,14 +10,11 @@ import SourceViewer from './SourceViewer'
 import MarkdownViewer from './MarkdownViewer'
 import FadeIn from './FadeIn'
 import { navItem } from './styles.css'
+import logo from '../../logo/Horizontal@2x.png'
 
 const { string } = React.PropTypes
 
-const stripTrailingSlash = (str) =>
-  str.replace(/\/$/, '')
-
-const stripLeadingSlash = (str) =>
-  str.replace(/^\//, '')
+const stripTrailingSlash = str => str.replace(/\/$/, '')
 
 const basename = (() => {
   const a = document.createElement('a')
@@ -115,7 +112,7 @@ const Header = (props) => (
 )
 
 const Page = ({ page }) => (
-  <B overflow="auto" flex="1" padding={`${PAD*2}px ${PAD*4}px`}>
+  <B overflow="auto" flex="1" padding={`${PAD}px ${PAD*4}px`}>
     <FadeIn>
       <V height="100%" maxWidth="800px">
         <LoadBundle load={page.load} children={({ mod }) => (
@@ -126,82 +123,80 @@ const Page = ({ page }) => (
   </B>
 )
 
-const Home = () => (
-  <B>
-    <Header>React Router</Header>
-    <B component="p">I don’t know what to say here</B>
-  </B>
+const App = () => (
+  <Router history={history}>
+    <H
+      lineHeight="1.5"
+      fontFamily="sans-serif"
+      fontWeight="200"
+      width="100%"
+      height="100%"
+      overflow="hidden"
+    >
+      <Nav className="reset">
+        <B component="h1">
+          <B
+            component="img"
+            props={{
+              src: logo,
+              alt: 'React Router'
+            }}
+            width="150px"
+            margin={`${PAD}px 0`}
+          />
+        </B>
+        <NavHeader>Pages</NavHeader>
+        <NavList>
+          {PAGES.map(NavItem)}
+        </NavList>
+        <Break/>
+
+        <NavHeader>API</NavHeader>
+        <NavList>
+          {API.map(NavItem)}
+        </NavList>
+        <Break/>
+
+        <NavHeader>Examples</NavHeader>
+        <NavList component="ul">
+          {EXAMPLES.map(NavItem)}
+        </NavList>
+      </Nav>
+
+      {PAGES.map((page, index) => (
+        <Match
+          key={index}
+          pattern={page.path}
+          exactly={page.exactly}
+          render={() => <Page page={page}/>}
+        />
+      ))}
+
+      {EXAMPLES.map((page, index) => (
+        <Match
+          key={index}
+          pattern={page.path}
+          render={() => <Example page={page}/>}
+        />
+      ))}
+
+      {API.map((page, index) => (
+        <Match
+          key={index}
+          pattern={page.path}
+          render={() => <Page page={page}/>}
+        />
+      ))}
+
+      <Miss render={() => (
+        <B>
+          <Header>Whoops</Header>
+          <B textAlign="center">Nothing matched. Maybe try some of the examples?</B>
+        </B>
+      )}/>
+    </H>
+  </Router>
 )
-
-class App extends React.Component {
-  render() {
-    return (
-      <Router history={history}>
-        <H
-          lineHeight="1.5"
-          fontFamily="sans-serif"
-          fontWeight="200"
-          width="100%"
-          height="100%"
-          overflow="hidden"
-        >
-          <Nav className="reset">
-            <NavHeader>Pages</NavHeader>
-            <NavList>
-              {PAGES.map(NavItem)}
-            </NavList>
-            <Break/>
-
-            <NavHeader>API</NavHeader>
-            <NavList>
-              {API.map(NavItem)}
-            </NavList>
-            <Break/>
-
-            <NavHeader>Examples</NavHeader>
-            <NavList component="ul">
-              {EXAMPLES.map(NavItem)}
-            </NavList>
-          </Nav>
-
-          <B>
-            {PAGES.map((page, index) => (
-              <Match
-                key={index}
-                pattern={page.path}
-                exactly={page.exactly}
-                render={() => <Page page={page}/>}
-              />
-            ))}
-
-            {EXAMPLES.map((page, index) => (
-              <Match
-                key={index}
-                pattern={page.path}
-                render={() => <Example page={page}/>}
-              />
-            ))}
-
-            {API.map((page, index) => (
-              <Match
-                key={index}
-                pattern={page.path}
-                render={() => <Page page={page}/>}
-              />
-            ))}
-          </B>
-
-          <Miss render={() => (
-            <B>
-              <Header>Whoops</Header>
-              <B textAlign="center">Nothing matched. Maybe try some of the examples?</B>
-            </B>
-          )}/>
-        </H>
-      </Router>
-    )
-  }
-}
 
 export default App
 

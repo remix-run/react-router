@@ -10,12 +10,14 @@
   "author": "",
   "license": "ISC",
   "dependencies": {
+    "file-loader": "^0.9.0",
     "history": "^3.0.0",
     "jsxstyle": "0.0.18",
     "react": "0.14.8",
     "react-dom": "0.14.8",
     "react-icons": "2.1.0",
-    "react-motion": "^0.4.4"
+    "react-motion": "^0.4.4",
+    "url-loader": "^0.5.7"
   },
   "devDependencies": {
     "babel-eslint": "6.0.4",
