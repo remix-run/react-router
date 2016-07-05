@@ -14,11 +14,13 @@ work.
 
 ## `history`
 
-The history to listen to for location changes.
+Optional. The history to listen to for location changes.
 
 ```js
+// default behavior
 import createBrowserHistory from 'history/lib/createBrowserHistory'
-<Router history={createBrowserHistory()}/>
+import useQueries from 'history/lib/useQueries'
+<Router history={useQueries(createBrowserHistory)()}/>
 ```
 
 
