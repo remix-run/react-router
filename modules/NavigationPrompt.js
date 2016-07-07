@@ -1,14 +1,16 @@
 import React, { PropTypes } from 'react'
+import {
+  history as historyType
+} from './PropTypes'
 
 class NavigationPrompt extends React.Component {
-
-  static propTypes = {
-    when: PropTypes.bool,
-    message: PropTypes.oneOfType([ PropTypes.string, PropTypes.func ])
+  static contextTypes = {
+    history: historyType.isRequired
   }
 
-  static contextTypes = {
-    history: PropTypes.object
+  static propTypes = {
+    message: PropTypes.oneOfType([ PropTypes.string, PropTypes.func ]),
+    when: PropTypes.bool
   }
 
   static defaultProps = {
@@ -40,12 +42,13 @@ class NavigationPrompt extends React.Component {
   }
 
   block() {
-    const { history } = this.context
+    if (this.unlistenBefore)
+      return
+
     const { message } = this.props
     const listener = typeof message === 'string' ?  () => message : message
 
-    if (!this.unlistenBefore)
-      this.unlistenBefore = history.listenBefore(listener)
+    this.unlistenBefore = this.context.history.listenBefore(listener)
   }
 
   unblock() {
@@ -58,7 +61,6 @@ class NavigationPrompt extends React.Component {
   render() {
     return null
   }
-
 }
 
 export default NavigationPrompt
