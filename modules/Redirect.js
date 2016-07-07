@@ -7,8 +7,7 @@ class Redirect extends React.Component {
   }
 
   static contextTypes = {
-    history: PropTypes.object,
-    location: PropTypes.object
+    history: PropTypes.object
   }
 
   componentWillMount() {
