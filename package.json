@@ -15,7 +15,7 @@
     "server"
   ],
   "scripts": {
-    "start": "cd docs && npm start",
+    "start": "cd docs && npm install && npm start",
     "build-lib": "rimraf lib && babel ./modules -d lib --ignore '__tests__'",
     "build-umd": "webpack modules/index.js umd/react-router.js",
     "build-min": "webpack -p modules/index.js umd/react-router.min.js",

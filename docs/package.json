@@ -17,6 +17,7 @@
     "react-dom": "0.14.8",
     "react-icons": "2.1.0",
     "react-motion": "^0.4.4",
+    "redux": "^3.5.2",
     "url-loader": "^0.5.7"
   },
   "devDependencies": {
@@ -26,6 +27,7 @@
     "eslint": "2.11.1",
     "eslint-config-rackt": "1.1.1",
     "eslint-plugin-react": "5.1.1",
+    "front-matter": "^2.1.0",
     "html-loader": "^0.4.3",
     "markdown-loader": "^0.1.7",
     "postcss-loader": "0.9.1",
