@@ -69,7 +69,7 @@ export default function createTransitionManager(history, routes) {
   function finishMatch(nextState, callback) {
     const { leaveRoutes, changeRoutes, enterRoutes } = computeChangedRoutes(state, nextState)
 
-    runLeaveHooks(leaveRoutes)
+    runLeaveHooks(leaveRoutes, state)
 
     // Tear down confirmation hooks for left routes
     leaveRoutes

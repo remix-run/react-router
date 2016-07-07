@@ -90,8 +90,9 @@ describe('When a router enters a branch', function () {
         expect(nextState.routes).toContain(NewsFeedRoute)
         expect(replace).toBeA('function')
       },
-      onLeave() {
+      onLeave(prevState) {
         expect(this).toBe(NewsFeedRoute)
+        expect(prevState.routes).toContain(NewsFeedRoute)
       }
     }
 
@@ -117,8 +118,9 @@ describe('When a router enters a branch', function () {
 
         replace('/inbox')
       },
-      onLeave() {
+      onLeave(prevState) {
         expect(this).toBe(RedirectToInboxRoute)
+        expect(prevState.routes).toContain(RedirectToInboxRoute)
       }
     }
 
@@ -135,8 +137,9 @@ describe('When a router enters a branch', function () {
         expect(nextState.routes).toContain(MessageRoute)
         expect(replace).toBeA('function')
       },
-      onLeave() {
+      onLeave(prevState) {
         expect(this).toBe(MessageRoute)
+        expect(prevState.routes).toContain(MessageRoute)
       }
     }
 

@@ -104,8 +104,8 @@ export function runChangeHooks(routes, state, nextState, callback) {
 /**
  * Runs all onLeave hooks in the given array of routes in order.
  */
-export function runLeaveHooks(routes) {
+export function runLeaveHooks(routes, prevState) {
   for (let i = 0, len = routes.length; i < len; ++i)
     if (routes[i].onLeave)
-      routes[i].onLeave.call(routes[i])
+      routes[i].onLeave.call(routes[i], prevState)
 }
