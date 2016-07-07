@@ -3,11 +3,10 @@ import MatchCountProvider from './MatchCountProvider'
 import matchPattern from './matchPattern'
 
 const patternType = (props, propName, ...rest) => {
-  if (props[propName].charAt(0) !== '/') {
+  if (props[propName].charAt(0) !== '/')
     return new Error('The `pattern` prop must start with "/"')
-  } else {
-    return PropTypes.string(props, propName, ...rest)
-  }
+
+  return PropTypes.string(props, propName, ...rest)
 }
 
 class RegisterMatch extends React.Component {
@@ -23,24 +22,26 @@ class RegisterMatch extends React.Component {
   componentWillMount() {
     const { matchCounter } = this.context
     const { match } = this.props
+
     if (match && matchCounter)
-      matchCounter.registerMatch()
+      matchCounter.increment()
   }
 
   componentWillReceiveProps(nextProps) {
     const { matchCounter } = this.context
+
     if (matchCounter) {
       if (nextProps.match && !this.props.match) {
-        matchCounter.registerMatch()
+        matchCounter.increment()
       } else if (!nextProps.match && this.props.match) {
-        matchCounter.unregisterMatch()
+        matchCounter.decrement()
       }
     }
   }
 
   componentWillUnmount() {
     if (this.props.match)
-      this.context.matchCounter.unregisterMatch()
+      this.context.matchCounter.decrement()
   }
 
   render() {

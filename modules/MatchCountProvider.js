@@ -1,4 +1,7 @@
 import React, { PropTypes } from 'react'
+import {
+  counter as counterType
+} from './PropTypes'
 
 class MatchCountProvider extends React.Component {
   static propTypes = {
@@ -7,20 +10,20 @@ class MatchCountProvider extends React.Component {
   }
 
   static childContextTypes = {
-    matchCounter: PropTypes.object
+    matchCounter: counterType.isRequired
   }
 
   state = { count: 0 }
   count = 0
 
-  registerMatch = () => {
+  increment = () => {
     // have to manage manually since calling setState on same tick of event loop
     // would result in only `1` even though many may have registered
     this.count += 1
     this.forceUpdate()
   }
 
-  unregisterMatch = () => {
+  decrement = () => {
     this.count -= 1
     this.forceUpdate()
   }
@@ -28,9 +31,11 @@ class MatchCountProvider extends React.Component {
   getChildContext() {
     return {
       matchCounter: {
-        matchFound: this.count > 0,
-        registerMatch: this.registerMatch,
-        unregisterMatch: this.unregisterMatch
+        increment: this.increment,
+        decrement: this.decrement,
+
+        // This is a weird one...
+        matchFound: this.count > 0
       }
     }
   }

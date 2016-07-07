@@ -1,5 +1,10 @@
 import { PropTypes } from 'react'
 
+export const counter = PropTypes.shape({
+  increment: PropTypes.func.isRequired,
+  decrement: PropTypes.func.isRequired
+})
+
 export const location = PropTypes.shape({
   pathname: PropTypes.string.isRequired,
   search: PropTypes.string.isRequired,
