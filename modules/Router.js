@@ -1,14 +1,45 @@
+import warning from 'warning'
 import React, { PropTypes } from 'react'
 import History from './History'
 import MatchCountProvider from './MatchCountProvider'
 import {
+  history as historyType,
   router as routerType
 } from './PropTypes'
 
 class Router extends React.Component {
   static propTypes = {
-    history: PropTypes.object,
-    children: PropTypes.oneOfType([ PropTypes.node, PropTypes.func ])
+    history: historyType,
+    children: PropTypes.oneOfType([ PropTypes.node, PropTypes.func ]),
+    createHref: PropTypes.func,
+    onPush: PropTypes.func,
+    onReplace: PropTypes.func
+  }
+
+  static defaultProps = {
+    createHref(to) {
+      return this.props.history.createHref(to)
+    },
+    onPush(location) {
+      if (this.props.history) {
+        this.props.history.push(location)
+      } else {
+        warning(
+          false,
+          'Missing <Router history> prop; <Link>s won\'t work'
+        )
+      }
+    },
+    onReplace(location) {
+      if (this.props.history) {
+        this.props.history.replace(location)
+      } else {
+        warning(
+          false,
+          'Missing <Router history> prop; <Redirect>s won\'t work'
+        )
+      }
+    }
   }
 
   static childContextTypes = {
@@ -20,26 +51,21 @@ class Router extends React.Component {
       router: {
         createHref: this.createHref,
         transitionTo: this.transitionTo,
-        replaceWith: this.replaceWith,
-        go: this.go
+        replaceWith: this.replaceWith
       }
     }
   }
 
   createHref = (to) => {
-    return this.props.history.createHref(to)
+    return this.props.createHref.call(this, to)
   }
 
   transitionTo = (location) => {
-    this.props.history.push(location)
+    this.props.onPush.call(this, location)
   }
 
   replaceWith = (location) => {
-    this.props.history.replace(location)
-  }
-
-  go = (n) => {
-    this.props.history.go(n)
+    this.props.onReplace.call(this, location)
   }
 
   render() {

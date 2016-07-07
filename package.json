@@ -26,7 +26,8 @@
     "lint": "eslint modules"
   },
   "dependencies": {
-    "path-to-regexp": "^1.5.0"
+    "path-to-regexp": "^1.5.0",
+    "warning": "^3.0.0"
   },
   "peerDependencies": {
     "history": "^3.0.0",

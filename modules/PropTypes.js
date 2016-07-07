@@ -5,6 +5,14 @@ export const counter = PropTypes.shape({
   decrement: PropTypes.func.isRequired
 })
 
+export const history = PropTypes.shape({
+  listen: PropTypes.func.isRequired,
+  listenBefore: PropTypes.func.isRequired,
+  push: PropTypes.func.isRequired,
+  replace: PropTypes.func.isRequired,
+  go: PropTypes.func.isRequired
+})
+
 export const location = PropTypes.shape({
   pathname: PropTypes.string.isRequired,
   search: PropTypes.string.isRequired,
@@ -15,6 +23,5 @@ export const location = PropTypes.shape({
 export const router = PropTypes.shape({
   createHref: PropTypes.func.isRequired,
   transitionTo: PropTypes.func.isRequired,
-  replaceWith: PropTypes.func.isRequired,
-  go: PropTypes.func.isRequired
+  replaceWith: PropTypes.func.isRequired
 })
