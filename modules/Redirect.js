@@ -1,19 +1,19 @@
 import React, { PropTypes } from 'react'
+import {
+  router as routerType
+} from './PropTypes'
 
 class Redirect extends React.Component {
   static propTypes = {
-    to: PropTypes.string.isRequired,
-    history: PropTypes.object
+    to: PropTypes.string.isRequired
   }
 
   static contextTypes = {
-    history: PropTypes.object
+    router: routerType.isRequired
   }
 
   componentWillMount() {
-    const { to, history } = this.props
-    const providedHistory = history || this.context.history
-    providedHistory.replace(to)
+    this.context.router.replaceWith(this.props.to)
   }
 
   render() {

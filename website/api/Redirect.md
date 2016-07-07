@@ -34,12 +34,4 @@ A location descriptor to redirect to.
 }}/>
 ```
 
-## `history`
-
-If you'd rather not use the history from context, you can pass it in.
-
-```js
-<Redirect to="/some/where" history={someHistory}/>
-```
-
 # `</Redirect>`

@@ -1,9 +1,12 @@
 import React, { PropTypes } from 'react'
+import {
+  location as locationType,
+  router as routerType
+} from './PropTypes'
 
 const { oneOfType, string, object, bool, func } = PropTypes
 
 class Link extends React.Component {
-
   static propTypes = {
     to: oneOfType([ string, object ]).isRequired,
     activeStyle: object,
@@ -40,29 +43,27 @@ class Link extends React.Component {
   }
 
   static contextTypes = {
-    history: PropTypes.object,
-    location: PropTypes.object
+    router: routerType, // TODO: This should be required, lazy testers be damned
+    location: locationType // TODO: This should also be required
   }
 
   handleClick = (event) => {
-    const { history } = this.context
-    const { to, onClick, target } = this.props
-
-    if (onClick)
-      onClick(event)
+    if (this.props.onClick)
+      this.props.onClick(event)
 
     if (
       !event.defaultPrevented && // onClick prevented default
-      !target && // let browser handle "target=_blank" etc.
+      !this.props.target && // let browser handle "target=_blank" etc.
       !isModifiedEvent(event) &&
       isLeftClickEvent(event)
     ) {
       event.preventDefault()
-      history.push(to)
+      this.context.router.transitionTo(this.props.to)
     }
   }
 
   render() {
+    const { router } = this.context
     const {
       to,
       style,
@@ -74,7 +75,6 @@ class Link extends React.Component {
       activeOnlyWhenExact, // eslint-disable-line
       ...rest
     } = this.props
-    const { history } = this.context
 
     const currentLocation = location || this.context.location
     const isActive = getIsActive(currentLocation, this.props)
@@ -82,7 +82,7 @@ class Link extends React.Component {
     return (
       <a
         {...rest}
-        href={history ? history.createHref(to) : to}
+        href={router ? router.createHref(to) : to}
         onClick={this.handleClick}
         style={isActive ? { ...style, ...activeStyle } : style }
         className={isActive ?
