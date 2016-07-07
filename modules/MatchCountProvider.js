@@ -17,22 +17,18 @@ class MatchCountProvider extends React.Component {
     // have to manage manually since calling setState on same tick of event loop
     // would result in only `1` even though many may have registered
     this.count += 1
-    this.setState({
-      count: this.count
-    })
+    this.forceUpdate()
   }
 
   unregisterMatch = () => {
     this.count -= 1
-    this.setState({
-      count: this.count
-    })
+    this.forceUpdate()
   }
 
   getChildContext() {
     return {
       matchCounter: {
-        matchFound: this.state.count > 0,
+        matchFound: this.count > 0,
         registerMatch: this.registerMatch,
         unregisterMatch: this.unregisterMatch
       }
