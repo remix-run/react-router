@@ -66,10 +66,10 @@ A *hash* is a string that represents the hash portion of the URL. It is synonymo
 ## LeaveHook
 
 ```js
-type LeaveHook = () => any;
+type LeaveHook = (prevState: RouterState) => any;
 ```
 
-A *leave hook* is a user-defined function that is called when a route is about to be unmounted.
+A *leave hook* is a user-defined function that is called when a route is about to be unmounted. It receives the previous [router state](#routerstate) as its first argument. 
 
 ## Location
 
