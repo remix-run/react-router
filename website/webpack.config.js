@@ -17,7 +17,8 @@ module.exports = {
   output: {
     path: path.join(__dirname, 'build'),
     filename: `bundle-${HASH}.js`,
-    chunkFileName: `[name]-${HASH}.js`
+    chunkFileName: `[name]-${HASH}.js`,
+    pubicPath: PROD ? 'build/' : ''
   },
 
   plugins: [

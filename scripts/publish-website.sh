@@ -1,13 +1,13 @@
 #!/bin/sh -e
 export NODE_ENV=production
 
-echo "[publish-docs] starting"
-cd docs
+echo "[publish-website] starting"
+cd website
 
-echo "[publish-docs] webpacking"
+echo "[publish-website] webpacking"
 webpack
 
-echo "[publish-docs] pushing to gh-pages"
+echo "[publish-website] pushing to gh-pages"
 cd build
 cp index.html 404.html
 git init .
@@ -18,7 +18,7 @@ git commit -m 'publish'
 git push origin gh-pages --force
 cd ..
 
-echo "[publish-docs] cleaning up"
+echo "[publish-website] cleaning up"
 rm -rf build
 
-echo "[publish-docs] done"
+echo "[publish-website] done"
