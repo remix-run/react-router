@@ -51,11 +51,6 @@ export const EXAMPLES = [
     load: require('bundle?lazy!./examples/Recursive'),
     loadSource: require('bundle?lazy!!prismjs?lang=jsx!./.examples/Recursive.js')
   },
-  { name: 'Mobile-Style "Nav Stacks"',
-    path: '/mobile-style-nav-stacks',
-    load: require('bundle?lazy!./examples/NavStacks'),
-    loadSource: require('bundle?lazy!!prismjs?lang=jsx!./.examples/NavStacks.js')
-  },
   { name: 'Sidebar',
     path: '/sidebar',
     load: require('bundle?lazy!./examples/Sidebar'),

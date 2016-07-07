@@ -4,7 +4,7 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "start": "rm -rf .examples && cp -R examples .examples && webpack-dev-server --config webpack.config.js --inline --content-base .",
+    "start": "rm -rf .examples && cp -R examples .examples && webpack-dev-server --config webpack.config.js --inline --content-base build",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "author": "",
@@ -12,6 +12,7 @@
   "dependencies": {
     "file-loader": "^0.9.0",
     "history": "^3.0.0",
+    "html-webpack-plugin": "^2.22.0",
     "jsxstyle": "0.0.18",
     "react": "0.14.8",
     "react-dom": "0.14.8",

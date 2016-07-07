@@ -19,7 +19,7 @@ The first principles of React Router are components, `location`, and `Match`.
 
 - Everything is a component; so, if you know React, you know React Router.
 - A `location` is data that represents where a visitor is--or wants to
-  go--in your app.
+  go--in your app. It looks just like `window.location`.
 - `<Match/>` turns a `location` into UI.
 
 ## Copy Paste

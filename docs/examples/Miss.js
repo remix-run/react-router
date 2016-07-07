@@ -10,21 +10,25 @@ const MissExample = ({ history }) => (
       <li><Link to="/also/will/not/match">Also Will Not Match</Link></li>
     </ul>
 
-    <Match pattern="/" exactly render={() => (
-      <div>
-        <p>
-          When no sibling <code>Match</code> matches,
-          a <code>Miss</code> component will render.
-        </p>
-      </div>
-    )}/>
-    <Match pattern="/will-match" render={() => <h3>Matched!</h3>}/>
-    <Miss render={({ location }) => (
-      <div>
-        <h3>No match for <code>{location.pathname}</code></h3>
-      </div>
-    )}/>
+    <Match pattern="/" exactly component={Home}/>
+    <Match pattern="/will-match" component={WillMatch}/>
+    <Miss component={NoMatch} />
   </Router>
+)
+
+const Home = () => (
+  <p>
+    When no sibling <code>Match</code> matches,
+    a <code>Miss</code> component will render.
+  </p>
+)
+
+const WillMatch = () => <h3>Matched!</h3>
+
+const NoMatch = () => ({ location }) => (
+  <div>
+    <h3>No match for <code>{location.pathname}</code></h3>
+  </div>
 )
 
 export default MissExample

@@ -1,19 +1,43 @@
+const webpack = require('webpack')
+const HtmlWebpackPlugin = require('html-webpack-plugin')
 const path = require('path')
 
+const HASH = '[chunkHash]'
+const PROD = process.env.NODE_ENV === 'production'
+
 module.exports = {
+
   devtool: 'source-map',
-  entry: path.join(__dirname, 'index.js'),
+
+  entry: {
+    app: path.join(__dirname, 'index.js'),
+    vendor: [ 'react', 'react-dom', 'react-router' ]
+  },
+
   output: {
     path: path.join(__dirname, 'build'),
-    filename: 'bundle.js',
-    chunkFileName: '[name].js',
-    publicPath: 'build/'
+    filename: `bundle-${HASH}.js`,
+    chunkFileName: `[name]-${HASH}.js`
   },
+
+  plugins: [
+    new webpack.optimize.CommonsChunkPlugin('vendor', `vendor-${HASH}.js`),
+    new HtmlWebpackPlugin({
+      baseHref: PROD ? '//reactjstraining.github.io/react-router/' : '/',
+      template: 'index.html.ejs'
+    })
+  ].concat(PROD ? [
+    new webpack.optimize.DedupePlugin(),
+    new webpack.optimize.OccurrenceOrderPlugin(),
+    new webpack.optimize.UglifyJsPlugin()
+  ] : []),
+
   resolve: {
     alias: {
       'react-router': path.join(__dirname, '..', 'modules')
     }
   },
+
   module: {
     loaders: [
       { test: /\.js$/,
@@ -36,6 +60,7 @@ module.exports = {
       }
     ]
   },
+
   devServer: {
     historyApiFallback: true,
     quiet: false,
