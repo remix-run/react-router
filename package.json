@@ -15,11 +15,12 @@
     "server"
   ],
   "scripts": {
-    "start": "cd docs && npm install && npm start",
+    "start": "echo 'Make sure to `cd website && npm install`' && cd website && npm start",
     "build-lib": "rimraf lib && babel ./modules -d lib --ignore '__tests__'",
     "build-umd": "webpack modules/index.js umd/react-router.js",
     "build-min": "webpack -p modules/index.js umd/react-router.min.js",
     "build": "node ./scripts/build.js",
+    "publish-website": "./scripts/publish-website.sh",
     "prepublish": "node ./scripts/build.js",
     "test": "npm run lint && karma start",
     "lint": "eslint modules"
