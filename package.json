@@ -59,7 +59,6 @@
     "pretty-bytes": "^3.0.1",
     "react": "^15.1.0",
     "react-dom": "^15.1.0",
-    "react-redux": "^4.4.5",
     "readline-sync": "^1.4.4",
     "rimraf": "^2.5.2",
     "webpack": "^1.13.1",

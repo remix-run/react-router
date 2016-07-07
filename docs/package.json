@@ -17,6 +17,7 @@
     "react-dom": "0.14.8",
     "react-icons": "2.1.0",
     "react-motion": "^0.4.4",
+    "react-redux": "^4.4.5",
     "redux": "^3.5.2",
     "url-loader": "^0.5.7"
   },
