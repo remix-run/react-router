@@ -4,23 +4,21 @@ import {
   router as routerType
 } from './PropTypes'
 
-const { oneOfType, string, object, bool, func } = PropTypes
-
 class Link extends React.Component {
   static propTypes = {
-    to: oneOfType([ string, object ]).isRequired,
-    activeStyle: object,
-    activeClassName: string,
-    location: object,
-    activeOnlyWhenExact: bool,
-    isActive: func,
+    to: PropTypes.oneOfType([ PropTypes.string, PropTypes.object ]).isRequired,
+    activeStyle: PropTypes.object,
+    activeClassName: PropTypes.string,
+    location: PropTypes.object,
+    activeOnlyWhenExact: PropTypes.bool,
+    isActive: PropTypes.func,
 
     // props we have to deal with but aren't necessarily
     // part of the Link API
-    style: object,
-    className: string,
-    target: string,
-    onClick: func
+    style: PropTypes.object,
+    className: PropTypes.string,
+    target: PropTypes.string,
+    onClick: PropTypes.func
   }
 
   static defaultProps = {

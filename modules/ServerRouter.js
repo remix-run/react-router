@@ -3,15 +3,12 @@ import Router from './Router'
 import createMemoryHistory from 'history/lib/createMemoryHistory'
 import useQueries from 'history/lib/useQueries'
 
-const { object, string, func, node, oneOfType } = PropTypes
-
 class ServerRouter extends React.Component {
-
   static propTypes = {
-    history: object,
-    location: oneOfType([ object, string ]),
-    onRedirect: func.isRequired,
-    children: oneOfType([ node, func ])
+    history: PropTypes.object,
+    location: PropTypes.oneOfType([ PropTypes.object, PropTypes.string ]),
+    onRedirect: PropTypes.func.isRequired,
+    children: PropTypes.oneOfType([ PropTypes.node, PropTypes.func ])
   }
 
   componentWillMount() {
@@ -28,7 +25,6 @@ class ServerRouter extends React.Component {
     const { location, history, ...rest } = this.props // eslint-disable-line
     return <Router {...rest} history={this.history} />
   }
-
 }
 
 export default ServerRouter
