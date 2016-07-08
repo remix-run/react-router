@@ -32,7 +32,6 @@ const makeProvider = (contextName, type, displayName) => (
   }
 )
 
-const HistoryProvider = makeProvider('history', PropTypes.object, 'HistoryProvider')
 const LocationProvider = makeProvider('location', PropTypes.object, 'LocationProvider')
 
 const isBrowserEnvironment = typeof window === 'object'
@@ -155,18 +154,17 @@ class History extends React.Component {
   }
 
   render() {
-    const { children, history } = this.props
+    const { children } = this.props
     const { location } = this.isControlled() ? this.props : this.state
+
     return (
-      <HistoryProvider history={history}>
-        <LocationProvider location={location}>
-          {typeof children === 'function' ? (
-            children({ location })
-          ) : (
-            children
-          )}
-        </LocationProvider>
-      </HistoryProvider>
+      <LocationProvider location={location}>
+        {typeof children === 'function' ? (
+          children({ location })
+        ) : (
+          children
+        )}
+      </LocationProvider>
     )
   }
 }
