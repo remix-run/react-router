@@ -25,16 +25,15 @@ const Public = () => <h3>Public</h3>
 ////////////////////////////////////////////////////////////
 class Login extends React.Component {
   static contextTypes = {
-    history: object,
-    location: object
+    location: PropTypes.object,
+    router: PropTypes.object
   }
 
   login = () => {
-    const { history } = this.context
     const { location } = this.props
 
     fakeAuth.authenticate(() => {
-      history.replace(location.state.from)
+      this.context.router.replaceWith(location.state.from)
     })
   }
 
