@@ -1,5 +1,4 @@
 const markdownIt = require('markdown-it')
-const frontMatter = require('front-matter')
 const Prism = require('prismjs')
 
 const aliases = {
