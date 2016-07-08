@@ -59,21 +59,17 @@ class Router extends React.Component {
     }
   }
 
-  createHref = (to) => {
-    return this.props.createHref.call(this, to)
-  }
+  createHref = (to) =>
+    this.props.createHref.call(this, to)
 
-  transitionTo = (location) => {
+  transitionTo = (location) =>
     this.props.onPush.call(this, location)
-  }
 
-  replaceWith = (location) => {
+  replaceWith = (location) =>
     this.props.onReplace.call(this, location)
-  }
 
-  blockTransitions = (getPromptMessage) => {
-    return this.props.history.listenBefore(getPromptMessage)
-  }
+  blockTransitions = (getPromptMessage) =>
+    this.props.history.listenBefore(getPromptMessage)
 
   render() {
     const { children, history, location } = this.props
