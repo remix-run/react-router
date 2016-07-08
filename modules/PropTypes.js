@@ -23,5 +23,6 @@ export const location = PropTypes.shape({
 export const router = PropTypes.shape({
   createHref: PropTypes.func.isRequired,
   transitionTo: PropTypes.func.isRequired,
-  replaceWith: PropTypes.func.isRequired
+  replaceWith: PropTypes.func.isRequired,
+  blockTransitions: PropTypes.func.isRequired
 })

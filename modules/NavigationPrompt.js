@@ -1,11 +1,11 @@
 import React, { PropTypes } from 'react'
 import {
-  history as historyType
+  router as routerType
 } from './PropTypes'
 
 class NavigationPrompt extends React.Component {
   static contextTypes = {
-    history: historyType.isRequired
+    router: routerType.isRequired
   }
 
   static propTypes = {
@@ -17,7 +17,7 @@ class NavigationPrompt extends React.Component {
     when: true
   }
 
-  unlistenBefore = null
+  unblockTransitions = null
 
   componentDidMount() {
     this.maybeBlock()
@@ -41,20 +41,20 @@ class NavigationPrompt extends React.Component {
     }
   }
 
-  block() {
-    if (this.unlistenBefore)
-      return
-
+  getPromptMessage() {
     const { message } = this.props
-    const listener = typeof message === 'string' ?  () => message : message
+    return typeof message === 'function' ? message() : message
+  }
 
-    this.unlistenBefore = this.context.history.listenBefore(listener)
+  block() {
+    if (!this.unblockTransitions)
+      this.unblockTransitions = this.context.router.blockTransitions(this.getPromptMessage)
   }
 
   unblock() {
-    if (this.unlistenBefore) {
-      this.unlistenBefore()
-      this.unlistenBefore = null
+    if (this.unblockTransitions) {
+      this.unblockTransitions()
+      this.unblockTransitions = null
     }
   }
 

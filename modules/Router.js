@@ -53,7 +53,8 @@ class Router extends React.Component {
       router: {
         createHref: this.createHref,
         transitionTo: this.transitionTo,
-        replaceWith: this.replaceWith
+        replaceWith: this.replaceWith,
+        blockTransitions: this.blockTransitions
       }
     }
   }
@@ -68,6 +69,10 @@ class Router extends React.Component {
 
   replaceWith = (location) => {
     this.props.onReplace.call(this, location)
+  }
+
+  blockTransitions = (getPromptMessage) => {
+    return this.props.history.listenBefore(getPromptMessage)
   }
 
   render() {
