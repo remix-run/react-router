@@ -8,32 +8,6 @@ import {
 
 const warning = () => {}
 
-const makeProvider = (contextName, type, displayName) => (
-  class ContextProvider extends React.Component {
-    static displayName = displayName
-
-    static propTypes = {
-      children: PropTypes.node
-    }
-
-    static childContextTypes = {
-      [contextName]: type
-    }
-
-    getChildContext() {
-      return {
-        [contextName]: this.props[contextName]
-      }
-    }
-
-    render() {
-      return React.Children.only(this.props.children)
-    }
-  }
-)
-
-const LocationProvider = makeProvider('location', PropTypes.object, 'LocationProvider')
-
 const isBrowserEnvironment = typeof window === 'object'
 
 const controlledLocationType = (props, propName, componentName) => {
@@ -68,6 +42,18 @@ class History extends React.Component {
     history: useQueries(createBrowserHistory)()
   }
 
+  static childContextTypes = {
+    location: locationType
+  }
+
+  getChildContext() {
+    const { location } = this.isControlled() ? this.props : this.state
+
+    return {
+      location
+    }
+  }
+
   state = {
     location: null
   }
@@ -99,8 +85,10 @@ class History extends React.Component {
 
     if (nextProps.location !== this.props.location) {
       this.transitioning = true
+
       const { location } = nextProps
       const { history } = this.props
+
       if (location.action === 'PUSH') {
         history.push(location)
       } else {
@@ -158,13 +146,7 @@ class History extends React.Component {
     const { location } = this.isControlled() ? this.props : this.state
 
     return (
-      <LocationProvider location={location}>
-        {typeof children === 'function' ? (
-          children({ location })
-        ) : (
-          children
-        )}
-      </LocationProvider>
+      typeof children === 'function' ? children({ location }) : children
     )
   }
 }
