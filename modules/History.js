@@ -1,6 +1,10 @@
 import React, { PropTypes } from 'react'
 import createBrowserHistory from 'history/lib/createBrowserHistory'
 import useQueries from 'history/lib/useQueries'
+import {
+  history as historyType,
+  location as locationType
+} from './PropTypes'
 
 const warning = () => {}
 
@@ -30,30 +34,32 @@ const makeProvider = (contextName, type, displayName) => (
 
 const HistoryProvider = makeProvider('history', PropTypes.object, 'HistoryProvider')
 const LocationProvider = makeProvider('location', PropTypes.object, 'LocationProvider')
+
 const isBrowserEnvironment = typeof window === 'object'
 
-const locationType = (props, propName, componentName) => {
-  const error = PropTypes.object(props, propName, componentName)
+const controlledLocationType = (props, propName, componentName) => {
+  if (props[propName]) {
+    const error = locationType(props, propName, componentName)
 
-  if (error)
-    return error
+    if (error)
+      return error
 
-  if (props[propName] && typeof props.onChange !== 'function' && isBrowserEnvironment) {
-    // TODO: Add link to history docs for onChange usage.
-    return new Error(
-      'You provided a `location` prop to a <History> component without an `onChange` handler. ' +
-      'This will make the back/forward buttons and the address bar unusable. If you intend to let the ' +
-      'user navigate using the browser\'s built-in controls, use `defaultLocation` with a `history` prop. ' +
-      'Otherwise, set `onChange`.'
-    )
+    if (typeof props.onChange !== 'function' && isBrowserEnvironment) {
+      return new Error(
+        'You provided a `location` prop to a <History> component without an `onChange` handler. ' +
+        'This will make the back/forward buttons and the address bar unusable. If you intend to ' +
+        'let the user navigate using the browser\'s built-in controls, use `defaultLocation` with ' +
+        'a `history` prop. Otherwise, set `onChange`.'
+      )
+    }
   }
 }
 
 class History extends React.Component {
   static propTypes = {
-    location: locationType,
+    history: historyType,
+    location: controlledLocationType,
     onChange: PropTypes.func,
-    history: PropTypes.object,
     children: PropTypes.oneOfType([ PropTypes.node, PropTypes.func ]),
     render: PropTypes.func,
     component: PropTypes.func
