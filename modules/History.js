@@ -1,3 +1,4 @@
+import warning from 'warning'
 import React, { PropTypes } from 'react'
 import createBrowserHistory from 'history/lib/createBrowserHistory'
 import useQueries from 'history/lib/useQueries'
@@ -5,8 +6,6 @@ import {
   history as historyType,
   location as locationType
 } from './PropTypes'
-
-const warning = () => {}
 
 const isBrowserEnvironment = typeof window === 'object'
 
