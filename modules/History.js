@@ -58,8 +58,8 @@ class History extends React.Component {
   }
 
   unlisten = null
-
   unlistenBefore = null
+  isTransitioning = false
 
   // need to teardown and setup in cWRP too
   componentWillMount() {
@@ -83,7 +83,7 @@ class History extends React.Component {
     }
 
     if (nextProps.location !== this.props.location) {
-      this.transitioning = true
+      this.isTransitioning = true
 
       const { location } = nextProps
       const { history } = this.props
@@ -116,13 +116,13 @@ class History extends React.Component {
     const { history, onChange } = this.props
 
     this.unlistenBefore = history.listenBefore((location) => {
-      if (!this.transitioning) {
+      if (!this.isTransitioning) {
         if (onChange)
           onChange(location)
 
         return false
       } else {
-        this.transitioning = false
+        this.isTransitioning = false
         return true
       }
     })
