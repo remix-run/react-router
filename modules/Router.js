@@ -71,10 +71,10 @@ class Router extends React.Component {
   }
 
   render() {
-    const { children, ...rest } = this.props
+    const { children, history, location } = this.props
 
     return (
-      <History {...rest}>
+      <History history={history} location={location}>
         {({ location }) => (
           <MatchCountProvider>
             {typeof children === 'function' ? (
