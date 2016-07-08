@@ -84,10 +84,10 @@ class Router extends React.Component {
           <MatchCountProvider>
             {typeof children === 'function' ? (
               children({ location })
-            ) : React.Children.count(children) === 1 ? (
-              children
-            ) : (
+            ) : React.Children.count(children) > 1 ? (
               <div>{children}</div>
+            ) : (
+              children
             )}
           </MatchCountProvider>
         )}
