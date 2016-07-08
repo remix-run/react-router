@@ -1,7 +1,5 @@
-import React from 'react'
+import React, { PropTypes } from 'react'
 import { Router, Match, Link, Redirect } from 'react-router'
-
-const { object } = React.PropTypes
 
 
 ////////////////////////////////////////////////////////////
@@ -26,7 +24,6 @@ const Public = () => <h3>Public</h3>
 
 ////////////////////////////////////////////////////////////
 class Login extends React.Component {
-
   static contextTypes = {
     history: object,
     location: object
@@ -35,6 +32,7 @@ class Login extends React.Component {
   login = () => {
     const { history } = this.context
     const { location } = this.props
+
     fakeAuth.authenticate(() => {
       history.replace(location.state.from)
     })
@@ -42,6 +40,7 @@ class Login extends React.Component {
 
   render() {
     const { from } = this.props.location.state
+
     return (
       <div>
         {from && (
@@ -54,30 +53,26 @@ class Login extends React.Component {
       </div>
     )
   }
-
 }
 
 
 ////////////////////////////////////////////////////////////
-const MatchWhenAuthorized = (
-  ({ component:Component, ...rest }) => (
-    <Match {...rest} render={(props) => (
+const MatchWhenAuthorized = ({ component: Component, ...rest }) => (
+    <Match {...rest} render={props => (
       fakeAuth.isAuthenticated ? (
         <Component {...props}/>
       ) : (
         <Redirect to={{
-          pathname: "/login",
+          pathname: '/login',
           state: { from: props.location }
         }}/>
       )
     )}/>
   )
-)
 
 
 ////////////////////////////////////////////////////////////
 class AuthExample extends React.Component {
-
   signout = () => {
     fakeAuth.signout(() => {
       this.props.history.push('/')
@@ -86,42 +81,43 @@ class AuthExample extends React.Component {
     })
   }
 
-  render = () => (
-    <Router history={this.props.history}>
-      <ol style={{
-        padding: '10px 30px',
-        background: 'hsl(53, 81%, 75%)'
-      }}>
-        <li>Click the public page</li>
-        <li>Click the protected page</li>
-        <li>Log in</li>
-        <li>
-          Click the back button, note the url each time
-        </li>
-      </ol>
+  render() {
+    return (
+      <Router history={this.props.history}>
+        <ol style={{
+          padding: '10px 30px',
+          background: 'hsl(53, 81%, 75%)'
+        }}>
+          <li>Click the public page</li>
+          <li>Click the protected page</li>
+          <li>Log in</li>
+          <li>
+            Click the back button, note the url each time
+          </li>
+        </ol>
 
-      <div>
-        {fakeAuth.isAuthenticated ? (
-          <p>
-            Welcome! {' '}
-            <button onClick={this.signout}>Sign out</button>
-          </p>
-        ) : (
-          <p>You are not logged in.</p>
-        )}
-      </div>
+        <div>
+          {fakeAuth.isAuthenticated ? (
+            <p>
+              Welcome! {' '}
+              <button onClick={this.signout}>Sign out</button>
+            </p>
+          ) : (
+            <p>You are not logged in.</p>
+          )}
+        </div>
 
-      <ul>
-        <li><Link to="/public">Public Page</Link></li>
-        <li><Link to="/protected">Protected Page</Link></li>
-      </ul>
+        <ul>
+          <li><Link to="/public">Public Page</Link></li>
+          <li><Link to="/protected">Protected Page</Link></li>
+        </ul>
 
-      <Match pattern="/public" component={Public}/>
-      <Match pattern="/login" component={Login}/>
-      <MatchWhenAuthorized pattern="/protected" component={Protected} />
-    </Router>
-  )
+        <Match pattern="/public" component={Public}/>
+        <Match pattern="/login" component={Login}/>
+        <MatchWhenAuthorized pattern="/protected" component={Protected}/>
+      </Router>
+    )
+  }
 }
 
 export default AuthExample
-
