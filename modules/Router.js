@@ -4,12 +4,14 @@ import History from './History'
 import MatchCountProvider from './MatchCountProvider'
 import {
   history as historyType,
+  location as locationType,
   router as routerType
 } from './PropTypes'
 
 class Router extends React.Component {
   static propTypes = {
     history: historyType,
+    location: locationType,
     children: PropTypes.oneOfType([ PropTypes.node, PropTypes.func ]),
     createHref: PropTypes.func,
     onPush: PropTypes.func,
