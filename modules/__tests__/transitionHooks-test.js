@@ -90,8 +90,9 @@ describe('When a router enters a branch', function () {
         expect(nextState.routes).toContain(NewsFeedRoute)
         expect(replace).toBeA('function')
       },
-      onLeave() {
+      onLeave(prevState) {
         expect(this).toBe(NewsFeedRoute)
+        expect(prevState.routes).toContain(NewsFeedRoute)
       }
     }
 
@@ -103,8 +104,9 @@ describe('When a router enters a branch', function () {
         expect(nextState.routes).toContain(InboxRoute)
         expect(replace).toBeA('function')
       },
-      onLeave() {
+      onLeave(prevState) {
         expect(this).toBe(InboxRoute)
+        expect(prevState.routes).toContain(InboxRoute)
       }
     }
 
@@ -117,8 +119,9 @@ describe('When a router enters a branch', function () {
 
         replace('/inbox')
       },
-      onLeave() {
+      onLeave(prevState) {
         expect(this).toBe(RedirectToInboxRoute)
+        expect(prevState.routes).toContain(RedirectToInboxRoute)
       }
     }
 
@@ -135,8 +138,9 @@ describe('When a router enters a branch', function () {
         expect(nextState.routes).toContain(MessageRoute)
         expect(replace).toBeA('function')
       },
-      onLeave() {
+      onLeave(prevState) {
         expect(this).toBe(MessageRoute)
+        expect(prevState.routes).toContain(MessageRoute)
       }
     }
 
@@ -170,8 +174,9 @@ describe('When a router enters a branch', function () {
         expect(nextState.routes).toContain(DashboardRoute)
         expect(replace).toBeA('function')
       },
-      onLeave() {
+      onLeave(prevState) {
         expect(this).toBe(DashboardRoute)
+        expect(prevState.routes).toContain(DashboardRoute)
       },
       childRoutes: [ NewsFeedRoute, InboxRoute, RedirectToInboxRoute, MessageRoute, UserRoute ]
     }

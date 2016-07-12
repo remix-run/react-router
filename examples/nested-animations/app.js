@@ -1,7 +1,10 @@
 import React from 'react'
-import { render } from 'react-dom'
 import ReactCSSTransitionGroup from 'react-addons-css-transition-group'
+import { render } from 'react-dom'
 import { browserHistory, Router, Route, Link } from 'react-router'
+
+import withExampleBasename from '../withExampleBasename'
+
 import './app.css'
 
 const App = ({ children, location: { pathname } }) => {
@@ -71,7 +74,7 @@ const Tab2 = () => (
 )
 
 render((
-  <Router history={browserHistory}>
+  <Router history={withExampleBasename(browserHistory, __dirname)}>
     <Route path="/" component={App}>
       <Route path="page1" component={Page1}>
         <Route path="tab1" component={Tab1} />

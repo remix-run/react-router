@@ -1,6 +1,9 @@
 import React from 'react'
 import { render } from 'react-dom'
 import { browserHistory, Router, Route, Link } from 'react-router'
+
+import withExampleBasename from '../withExampleBasename'
+
 import './app.css'
 
 const App = ({ children, routes }) => {
@@ -57,7 +60,7 @@ Orders.title = 'Orders'
 Orders.path = '/orders'
 
 render((
-  <Router history={browserHistory}>
+  <Router history={withExampleBasename(browserHistory, __dirname)}>
     <Route path={App.path} component={App}>
       <Route path={Products.path} component={Products} />
       <Route path={Orders.path} component={Orders} />

@@ -1,11 +1,11 @@
-/*eslint-disable no-unused-vars */
 import React from 'react'
 import { render } from 'react-dom'
 import { Router, browserHistory } from 'react-router'
-import stubbedCourses from './stubs/COURSES'
+
+import withExampleBasename from '../withExampleBasename'
+import './stubs/COURSES'
 
 const rootRoute = {
-  component: 'div',
   childRoutes: [ {
     path: '/',
     component: require('./components/App'),
@@ -19,10 +19,12 @@ const rootRoute = {
   } ]
 }
 
-render(
-  <Router history={browserHistory} routes={rootRoute} />,
-  document.getElementById('example')
-)
+render((
+  <Router
+    history={withExampleBasename(browserHistory, __dirname)}
+    routes={rootRoute}
+  />
+), document.getElementById('example'))
 
 // I've unrolled the recursive directory loop that is happening above to get a
 // better idea of just what this huge-apps Router looks like, or just look at the

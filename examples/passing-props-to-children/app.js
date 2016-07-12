@@ -1,6 +1,9 @@
 import React from 'react'
 import { render } from 'react-dom'
 import { browserHistory, Router, Route, Link, withRouter } from 'react-router'
+
+import withExampleBasename from '../withExampleBasename'
+
 import './app.css'
 
 const App = withRouter(
@@ -75,7 +78,7 @@ const Taco = React.createClass({
 })
 
 render((
-  <Router history={browserHistory}>
+  <Router history={withExampleBasename(browserHistory, __dirname)}>
     <Route path="/" component={App}>
       <Route path="taco/:name" component={Taco} />
     </Route>

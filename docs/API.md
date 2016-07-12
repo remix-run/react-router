@@ -333,7 +333,7 @@ Called on routes when the location changes, but the route itself neither enters 
 
 If `callback` is listed as a 4th argument, this hook will run asynchronously, and the transition will block until `callback` is called.
 
-##### `onLeave()`
+##### `onLeave(prevState)`
 Called when a route is about to be exited.
 
 

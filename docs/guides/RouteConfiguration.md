@@ -106,7 +106,7 @@ URL                     | Components
 
 ### Decoupling the UI from the URL
 
-It would be nice if we could remove the `/inbox` segment from the `/inbox/messages/:id` URL pattern, but still render `Message` nested inside the `App -> Inbox` UI. Absolute `path`s let us do exactly that.
+It would be nice if we could remove the `/inbox` segment from the `/inbox/messages/:id` URL pattern, but still render `Message` nested inside the `App -> Inbox` UI. Pathless routes let us do exactly that.
 
 ```js
 render((
@@ -125,7 +125,7 @@ render((
 ), document.body)
 ```
 
-The ability to use absolute paths in deeply nested routes gives us complete control over what the URL looks like! We don't have to add more segments to the URL just to get nested UI.
+The ability to use declare routes without paths gives us complete control over what the URL looks like! We don't have to add more segments to the URL just to get nested UI.
 
 We can now render the following URLs:
 
@@ -135,8 +135,6 @@ URL                     | Components
 `/about`                | `App -> About`
 `/inbox`                | `App -> Inbox`
 `/messages/:id`         | `App -> Inbox -> Message`
-
-**Note**: Absolute paths may not be used in route config that is [dynamically loaded](/docs/guides/DynamicRouting.md).
 
 ### Preserving URLs
 
@@ -184,7 +182,7 @@ Continuing with our example above, if a user clicked on a link to `/about` from 
 
 Since [routes](/docs/Glossary.md#route) are usually nested, it's useful to use a concise nested syntax like [JSX](https://facebook.github.io/jsx/) to describe their relationship to one another. However, you may also use an array of plain [route](/docs/Glossary.md#route) objects if you prefer to avoid using JSX.
 
-The `<Redirect>` configuration helper is not available when using plain routes, so you have to set up the redirect using the `onEnter` hook. 
+The `<Redirect>` configuration helper is not available when using plain routes, so you have to set up the redirect using the `onEnter` hook.
 
 The route config we've discussed up to this point could also be specified like this:
 
