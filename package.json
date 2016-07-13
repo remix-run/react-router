@@ -38,14 +38,16 @@
     "marked": "0.3.3",
     "mocha": "^2.0.1",
     "pygmentize-bundled": "^2.3.0",
-    "react": "0.14.x",
+    "react": "^15.0.1",
+    "react-addons-test-utils": "^15.0.1",
+    "react-dom": "^15.0.1",
     "rf-changelog": "^0.4.0",
     "rx": "2.3.18",
     "webpack": "^1.4.13",
     "webpack-dev-server": "^1.6.6"
   },
   "peerDependencies": {
-    "react": "0.13.x||0.14.x"
+    "react": "0.13.x || 0.14.x || ^15.0.1"
   },
   "dependencies": {
     "can-use-dom": "0.1.0",

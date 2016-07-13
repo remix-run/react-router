@@ -1,5 +1,7 @@
 var expect = require('expect');
 var React = require('react');
+var ReactDOM = require('react-dom');
+var ReactDOMServer = require('react-dom/server');
 var Router = require('../index');
 var Route = require('../components/Route');
 var RouteHandler = require('../components/RouteHandler');
@@ -64,7 +66,7 @@ describe('Router', function () {
         });
 
         router.run(function (Handler) {
-          React.render(<Handler/>, div, function () {
+          ReactDOM.render(<Handler/>, div, function () {
             steps.shift()();
           });
         });
@@ -100,7 +102,7 @@ describe('Router', function () {
         });
 
         router.run(function (Handler) {
-          React.render(<Handler/>, div, function () {
+          ReactDOM.render(<Handler/>, div, function () {
             steps.shift()();
           });
         });
@@ -143,7 +145,7 @@ describe('Router', function () {
         });
 
         router.run(function (Handler) {
-          React.render(<Handler/>, div, function () {
+          ReactDOM.render(<Handler/>, div, function () {
             steps.shift()();
           });
         });
@@ -181,7 +183,7 @@ describe('Router', function () {
         });
 
         router.run(function (Handler) {
-          React.render(<Handler/>, div, function () {
+          ReactDOM.render(<Handler/>, div, function () {
             steps.shift()();
           });
         });
@@ -241,7 +243,7 @@ describe('Router', function () {
         });
 
         router.run(function (Handler, state) {
-          React.render(<Handler />, div, function () {
+          ReactDOM.render(<Handler />, div, function () {
             steps.shift()();
           });
         });
@@ -255,7 +257,7 @@ describe('Router', function () {
         var div = document.createElement('div');
 
         Router.run(routes, location, function (Handler) {
-          React.render(<Handler/>, div, function () {
+          ReactDOM.render(<Handler/>, div, function () {
             expect(div.innerHTML).toMatch(/Foo/);
             done();
           });
@@ -291,7 +293,7 @@ describe('Router', function () {
         });
 
         router.run(function (Handler) {
-          React.render(<Handler/>, div, function () {
+          ReactDOM.render(<Handler/>, div, function () {
             steps.shift()();
           });
         });
@@ -327,7 +329,7 @@ describe('Router', function () {
         });
 
         router.run(function (Handler) {
-          React.render(<Handler/>, div, function () {
+          ReactDOM.render(<Handler/>, div, function () {
             steps.shift()();
           });
         });
@@ -370,7 +372,7 @@ describe('Router', function () {
         });
 
         router.run(function (Handler) {
-          React.render(<Handler/>, div, function () {
+          ReactDOM.render(<Handler/>, div, function () {
             steps.shift()();
           });
         });
@@ -408,7 +410,7 @@ describe('Router', function () {
         });
 
         router.run(function (Handler) {
-          React.render(<Handler/>, div, function () {
+          ReactDOM.render(<Handler/>, div, function () {
             steps.shift()();
           });
         });
@@ -422,7 +424,7 @@ describe('Router', function () {
         var div = document.createElement('div');
 
         Router.run(routes, location, function (Handler) {
-          React.render(<Handler/>, div, function () {
+          ReactDOM.render(<Handler/>, div, function () {
             location.push('/abort');
             expect(div.innerHTML).toMatch(/Foo/);
             expect(location.getCurrentPath()).toEqual('/foo');
@@ -459,7 +461,7 @@ describe('Router', function () {
         });
 
         router.run(function (Handler) {
-          React.render(<Handler/>, div, function () {
+          ReactDOM.render(<Handler/>, div, function () {
             steps.shift()();
           });
         });
@@ -495,7 +497,7 @@ describe('Router', function () {
         });
 
         router.run(function (Handler) {
-          React.render(<Handler/>, div, function () {
+          ReactDOM.render(<Handler/>, div, function () {
             steps.shift()();
           });
         });
@@ -538,7 +540,7 @@ describe('Router', function () {
         });
 
         router.run(function (Handler) {
-          React.render(<Handler/>, div, function () {
+          ReactDOM.render(<Handler/>, div, function () {
             steps.shift()();
           });
         });
@@ -576,7 +578,7 @@ describe('Router', function () {
         });
 
         router.run(function (Handler) {
-          React.render(<Handler/>, div, function () {
+          ReactDOM.render(<Handler/>, div, function () {
             steps.shift()();
           });
         });
@@ -630,7 +632,7 @@ describe('Router', function () {
         });
 
         router.run(function (Handler, state) {
-          React.render(<Handler />, div, function () {
+          ReactDOM.render(<Handler />, div, function () {
             steps.shift()();
           });
         });
@@ -642,7 +644,7 @@ describe('Router', function () {
     it('renders with query params', function (done) {
       var routes = <Route handler={EchoFooProp} path='/'/>;
       Router.run(routes, '/?foo=bar', function (Handler, state) {
-        var html = React.renderToString(<Handler foo={state.query.foo} />);
+        var html = ReactDOMServer.renderToString(<Handler foo={state.query.foo} />);
         expect(html).toMatch(/bar/);
         done();
       });
@@ -651,7 +653,7 @@ describe('Router', function () {
     it('renders with empty query string', function (done) {
       var routes = <Route handler={Foo} path='/'/>;
       Router.run(routes, '/?', function (Handler, state) {
-        var html = React.renderToString(<Handler />);
+        var html = ReactDOMServer.renderToString(<Handler />);
         expect(html).toMatch(/Foo/);
         done();
       });
@@ -706,7 +708,7 @@ describe('Router', function () {
 
       var div = document.createElement('div');
       Router.run(routes, location, function (Handler, state) {
-        React.render(<Handler/>, div);
+        ReactDOM.render(<Handler/>, div);
       });
 
       location.push('/spoon?filter=second');
@@ -720,7 +722,7 @@ describe('Router', function () {
       var Bar = React.createClass({
         statics: {
           willTransitionFrom: function (transition, component) {
-            expect(div.querySelector('#bar')).toBe(component.getDOMNode());
+            expect(div.querySelector('#bar')).toBe(ReactDOM.findDOMNode(component));
             done();
           }
         },
@@ -740,7 +742,7 @@ describe('Router', function () {
       var location = new TestLocation([ '/bar' ]);
 
       Router.run(routes, location, function (Handler, state) {
-        React.render(<Handler/>, div, function () {
+        ReactDOM.render(<Handler/>, div, function () {
           location.push('/baz');
         });
       });
@@ -802,9 +804,9 @@ describe('Router', function () {
       Router.run(routes, location, function (Handler, state) {
 
         // Calling render on the handler twice should be allowed
-        React.render(<Handler data={{FooBar: 1}}/>, div);
+        ReactDOM.render(<Handler data={{FooBar: 1}}/>, div);
 
-        React.render(<Handler data={{FooBar: 1}}/>, div, function () {
+        ReactDOM.render(<Handler data={{FooBar: 1}}/>, div, function () {
           setTimeout(function() {
             steps.shift()();
           }, 1);
@@ -854,7 +856,7 @@ describe('Router.run', function () {
   it('matches a root route', function (done) {
     var routes = <Route path="/" handler={EchoFooProp} />;
     Router.run(routes, '/', function (Handler, state) {
-      var html = React.renderToString(<Handler foo="bar"/>);
+      var html = ReactDOMServer.renderToString(<Handler foo="bar"/>);
       expect(html).toMatch(/bar/);
       done();
     });
@@ -866,7 +868,7 @@ describe('Router.run', function () {
       <Route handler={Bar} path="/bar"/>
     ];
     Router.run(routes, '/foo', function (Handler, state) {
-      var html = React.renderToString(<Handler/>);
+      var html = ReactDOMServer.renderToString(<Handler/>);
       expect(html).toMatch(/Foo/);
       done();
     });
@@ -879,7 +881,7 @@ describe('Router.run', function () {
       </Route>
     );
     Router.run(routes, '/foo', function (Handler, state) {
-      var html = React.renderToString(<Handler/>);
+      var html = ReactDOMServer.renderToString(<Handler/>);
       expect(html).toMatch(/Nested/);
       expect(html).toMatch(/Foo/);
       done();
@@ -894,7 +896,7 @@ describe('Router.run', function () {
       </Route>
     );
     Router.run(routes, '/Foo', function (Handler, state) {
-      React.render(<Handler/>, div, function () {
+      ReactDOM.render(<Handler/>, div, function () {
         expect(div.querySelectorAll('.Nested').length).toEqual(1);
         done();
       });
@@ -904,7 +906,7 @@ describe('Router.run', function () {
   it('supports dynamic segments', function (done) {
     var routes = <Route handler={EchoBarParam} path='/:bar'/>;
     Router.run(routes, '/d00d3tt3', function (Handler, state) {
-      var html = React.renderToString(<Handler/>);
+      var html = ReactDOMServer.renderToString(<Handler/>);
       expect(html).toMatch(/d00d3tt3/);
       done();
     });
@@ -917,7 +919,7 @@ describe('Router.run', function () {
       </Route>
     );
     Router.run(routes, '/foo/bar', function (Handler, state) {
-      var html = React.renderToString(<Handler />);
+      var html = ReactDOMServer.renderToString(<Handler />);
       expect(html).toMatch(/bar/);
       done();
     });
@@ -947,7 +949,7 @@ describe('Router.run', function () {
     });
 
     Router.run(routes, location, function (Handler, state) {
-      React.render(<Handler/>, div, function () {
+      ReactDOM.render(<Handler/>, div, function () {
         steps.shift()();
       });
     });
@@ -989,7 +991,7 @@ describe('Router.run', function () {
           location: location,
           scrollBehavior: ScrollToTopBehavior
         }).run(function (Handler) {
-          React.render(<Handler/>, div, function () {
+          ReactDOM.render(<Handler/>, div, function () {
             if (renderCount === 0) {
               position = { x: 20, y: 50 };
               window.scrollTo(position.x, position.y);
@@ -1054,7 +1056,7 @@ describe('Router.run', function () {
         renderCount = 0;
 
         Router.run(routes, location, function (Handler) {
-          React.render(<Handler/>, div, function () {
+          ReactDOM.render(<Handler/>, div, function () {
             if (renderCount === 0) {
               position = { x: 20, y: 50 };
               window.scrollTo(position.x, position.y);
@@ -1129,7 +1131,7 @@ describe('Router.run', function () {
         location: location,
         scrollBehavior: MockScrollBehavior
       }).run(function (Handler) {
-        React.render(<Handler/>, div, function () {
+        ReactDOM.render(<Handler/>, div, function () {
           if (!isDone) {
             isDone = true;
             done();
