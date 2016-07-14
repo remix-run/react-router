@@ -105,7 +105,7 @@ A `<Link>` can know when the route it links to is active and automatically apply
 
 #### Props
 ##### `to`
-A [location descriptor](https://github.com/ReactJSTraining/history/blob/master/docs/Glossary.md#locationdescriptor). Usually this is a string or an object, with the following semantics:
+A [location descriptor](https://github.com/ReactTraining/history/blob/master/docs/Glossary.md#locationdescriptor). Usually this is a string or an object, with the following semantics:
 
 * If it's a string it represents the absolute path to link to, e.g. `/users/123` (relative paths are not supported).
 * If it's an object it can have four keys:
@@ -607,9 +607,9 @@ For more details, please see the [histories guide](/docs/guides/Histories.md).
 `useRouterHistory` is a `history` enhancer that configures a given `createHistory` factory to work with React Router. This allows using custom histories in addition to the bundled singleton histories.
 
 It also pre-enhances the history with the
-[useQueries](https://github.com/ReactJSTraining/history/blob/master/docs/QuerySupport.md)
+[useQueries](https://github.com/ReactTraining/history/blob/master/docs/QuerySupport.md)
 and
-[useBasename](https://github.com/ReactJSTraining/history/blob/master/docs/BasenameSupport.md)
+[useBasename](https://github.com/ReactTraining/history/blob/master/docs/BasenameSupport.md)
 enhancers from `history`
 
 #### Example
