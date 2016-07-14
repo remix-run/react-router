@@ -1,11 +1,16 @@
 <!doctype html public "shame">
-<html lang=en>
-<meta charset=utf-8>
-<title>React Router: Declarative Routing for React.js</title>
-<style>
-html, body, #app { height: 100%; margin: 0 }
-* { box-sizing: border-box }
-</style>
-<base href="<%= htmlWebpackPlugin.options.baseHref %>"/>
-<div id=app></div>
-
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <title>React Router: Declarative Routing for React.js</title>
+  <base href="<%= htmlWebpackPlugin.options.baseHref %>"/>
+  <style>
+    html { box-sizing: border-box; }
+    body, #app { height: 100%; margin: 0 }
+    *, *:before, *:after { box-sizing: inherit; }
+  </style>
+</head>
+<body>
+  <div id="app"></div>
+</body>
+</html>
