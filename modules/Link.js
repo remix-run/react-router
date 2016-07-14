@@ -74,39 +74,31 @@ const Link = React.createClass({
   },
 
   handleClick(event) {
-    invariant(
-      this.context.router,
-      '<Link>s rendered outside of a router context cannot handle clicks.'
-    )
-    
-    let allowTransition = true
-
     if (this.props.onClick)
       this.props.onClick(event)
+
+    if (event.defaultPrevented)
+      return
+
+    invariant(
+      this.context.router,
+      '<Link>s rendered outside of a router context cannot navigate.'
+    )
 
     if (isModifiedEvent(event) || !isLeftClickEvent(event))
       return
 
-    if (event.defaultPrevented === true)
-      allowTransition = false
-
-    // If target prop is set (e.g. to "_blank") let browser handle link.
+    // If target prop is set (e.g. to "_blank"), let browser handle link.
     /* istanbul ignore if: untestable with Karma */
-    if (this.props.target) {
-      if (!allowTransition)
-        event.preventDefault()
-
+    if (this.props.target)
       return
-    }
 
     event.preventDefault()
 
-    if (allowTransition) {
-      const { to, query, hash, state } = this.props
-      const location = createLocationDescriptor(to, { query, hash, state })
+    const { to, query, hash, state } = this.props
+    const location = createLocationDescriptor(to, { query, hash, state })
 
-      this.context.router.push(location)
-    }
+    this.context.router.push(location)
   },
 
   render() {
