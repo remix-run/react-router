@@ -1,5 +1,5 @@
-/* eslint-disable no-console */
 /* eslint-env mocha */
+/* eslint-disable no-console */
 
 import expect from 'expect'
 

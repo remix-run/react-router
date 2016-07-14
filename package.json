@@ -20,7 +20,7 @@
     "build-es": "rimraf es6 && cross-env BABEL_ENV=es babel ./modules -d es6 --ignore '__tests__'",
     "build-umd": "cross-env BABEL_ENV=cjs NODE_ENV=development webpack modules/index.js umd/ReactRouter.js",
     "build-min": "cross-env BABEL_ENV=cjs NODE_ENV=production webpack -p modules/index.js umd/ReactRouter.min.js",
-    "lint": "eslint modules examples",
+    "lint": "eslint modules examples *.js",
     "start": "cross-env BABEL_ENV=cjs node examples/server.js",
     "test": "npm run lint && npm run test-node && npm run test-browser",
     "test-browser": "cross-env BABEL_ENV=cjs karma start",

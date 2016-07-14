@@ -1,12 +1,11 @@
-/*eslint no-console: 0*/
-var webpack = require('webpack')
-var path = require('path')
+const webpack = require('webpack')
+const path = require('path')
 
-module.exports = function (config) {
+module.exports = config => {
   if (process.env.RELEASE)
     config.singleRun = true
 
-  var customLaunchers = {
+  const customLaunchers = {
     // Browsers to run on BrowserStack.
     BS_Chrome: {
       base: 'BrowserStack',
@@ -29,14 +28,14 @@ module.exports = function (config) {
       browser: 'safari',
       browser_version: '9.0'
     },
-    BS_MobileSafari: {
+    BS_MobileSafari8: {
       base: 'BrowserStack',
       os: 'ios',
       os_version: '8.3',
       browser: 'iphone',
       real_mobile: false
     },
-    BS_MobileSafari: {
+    BS_MobileSafari9: {
       base: 'BrowserStack',
       os: 'ios',
       os_version: '9.1',
@@ -65,29 +64,12 @@ module.exports = function (config) {
     }
   }
 
-  var isCi = process.env.CONTINUOUS_INTEGRATION === 'true'
-  var runCoverage = process.env.COVERAGE === 'true' || isCi
-
-  var coverageLoaders = []
-  var coverageReporters = []
-
-  if (runCoverage) {
-    coverageLoaders.push({
-      test: /\.js$/,
-      include: path.resolve('modules/'),
-      exclude: /__tests__/,
-      loader: 'isparta'
-    })
-
-    coverageReporters.push('coverage')
-  }
-
   config.set({
     customLaunchers: customLaunchers,
 
     browsers: [ 'Chrome' ],
     frameworks: [ 'mocha' ],
-    reporters: [ 'mocha' ].concat(coverageReporters),
+    reporters: [ 'mocha', 'coverage' ],
 
     files: [
       'tests.webpack.js'
@@ -98,11 +80,17 @@ module.exports = function (config) {
     },
 
     webpack: {
-      devtool: 'inline-source-map',
+      devtool: 'cheap-module-inline-source-map',
       module: {
         loaders: [
-          { test: /\.js$/, exclude: /node_modules/, loader: 'babel' }
-        ].concat(coverageLoaders)
+          { test: /\.js$/, exclude: /node_modules/, loader: 'babel' },
+          {
+            test: /\.js$/,
+            include: path.resolve('modules/'),
+            exclude: /__tests__/,
+            loader: 'isparta'
+          }
+        ]
       },
       plugins: [
         new webpack.DefinePlugin({
@@ -132,7 +120,7 @@ module.exports = function (config) {
     config.captureTimeout = 120000
 
     if (process.env.TRAVIS) {
-      var buildLabel = 'TRAVIS #' + process.env.TRAVIS_BUILD_NUMBER + ' (' + process.env.TRAVIS_BUILD_ID + ')'
+      const buildLabel = 'TRAVIS #' + process.env.TRAVIS_BUILD_NUMBER + ' (' + process.env.TRAVIS_BUILD_ID + ')'
 
       config.browserStack = {
         username: process.env.BROWSER_STACK_USERNAME,
