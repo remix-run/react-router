@@ -83,6 +83,12 @@ class Link extends React.Component {
     if (props.activeStyle && this.getActiveState())
       props.style = props.activeStyle;
 
+    delete props.to;
+    delete props.params;
+    delete props.query;
+    delete props.activeClassName;
+    delete props.activeStyle;
+
     return React.DOM.a(props, this.props.children);
   }
 
