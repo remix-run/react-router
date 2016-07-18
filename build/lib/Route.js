@@ -4,7 +4,7 @@ var _createClass = (function () { function defineProperties(target, props) { for
 
 function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError('Cannot call a class as a function'); } }
 
-var assign = require('react/lib/Object.assign');
+var assign = require('object-assign');
 var invariant = require('invariant');
 var warning = require('./warning');
 var PathUtils = require('./PathUtils');

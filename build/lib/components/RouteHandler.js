@@ -10,7 +10,7 @@ function _inherits(subClass, superClass) { if (typeof superClass !== 'function' 
 
 var React = require('react');
 var ContextWrapper = require('./ContextWrapper');
-var assign = require('react/lib/Object.assign');
+var assign = require('object-assign');
 var PropTypes = require('../PropTypes');
 
 var REF_NAME = '__routeHandler__';
