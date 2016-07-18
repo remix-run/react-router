@@ -1,3 +1,14 @@
+## [v2.6.0]
+> Jul 18, 2016
+
+- **Feature:** Add `prevState` as argument to `onLeave` hooks ([#3616])
+- **Bugfix:** Fix when the `<Link>` `onClick` invariant runs ([#3636])
+
+[v2.6.0]: https://github.com/reactjs/react-router/compare/v2.5.2...v2.6.0
+[#3616]: https://github.com/reactjs/react-router/pull/3616
+[#3636]: https://github.com/reactjs/react-router/pull/3636
+
+
 ## [v2.5.2]
 > Jul 1, 2016
 
