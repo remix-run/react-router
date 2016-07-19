@@ -1,3 +1,15 @@
+## [v3.0.0-alpha.2]
+> Jul 19, 2016
+
+- **Breaking:** Remove all deprecated functionality as of v2.6.0 ([#3603], [#3646])
+- **Feature:** Add `router` to props for route components ([#3486])
+
+[v3.0.0-alpha.2]: https://github.com/reactjs/react-router/compare/v3.0.0-alpha.1...v3.0.0-alpha.2
+[#3486]: https://github.com/reactjs/react-router/pull/3486
+[#3603]: https://github.com/reactjs/react-router/pull/3603
+[#3646]: https://github.com/reactjs/react-router/pull/3646
+
+
 ## [v3.0.0-alpha.1]
 > May 19, 2016
 
