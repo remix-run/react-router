@@ -8,8 +8,8 @@ import Redirect from '../Redirect'
 import Router from '../Router'
 import Route from '../Route'
 
-describe('useRouterHistory', function () {
-  it('passes along options, especially query parsing', function (done) {
+describe('useRouterHistory', () => {
+  it('passes along options, especially query parsing', done => {
     const history = useRouterHistory(createHistory)({
       stringifyQuery() {
         assert(true)
@@ -20,40 +20,46 @@ describe('useRouterHistory', function () {
     history.push({ pathname: '/', query: { test: true } })
   })
 
-  describe('when using basename', function () {
+  describe('when using basename', () => {
 
     let node
-    beforeEach(function () {
+    beforeEach(() => {
       node = document.createElement('div')
     })
 
-    afterEach(function () {
+    afterEach(() => {
       unmountComponentAtNode(node)
     })
 
-    it('should regard basename', function (done) {
-      const pathnames = []
-      const basenames = []
+    it('should regard basename', () => {
       const history = useRouterHistory(createHistory)({
         entries: '/foo/notes/5',
         basename: '/foo'
       })
-      history.listen(function (location) {
+
+      const pathnames = []
+      const basenames = []
+
+      const currentLocation = history.getCurrentLocation()
+      pathnames.push(currentLocation.pathname)
+      basenames.push(currentLocation.basename)
+
+      history.listen(location => {
         pathnames.push(location.pathname)
         basenames.push(location.basename)
       })
-      render((
+
+      const instance = render((
         <Router history={history}>
           <Route path="/messages/:id" />
           <Redirect from="/notes/:id" to="/messages/:id" />
         </Router>
-      ), node, function () {
-        expect(pathnames).toEqual([ '/notes/5', '/messages/5' ])
-        expect(basenames).toEqual([ '/foo', '/foo' ])
-        expect(this.state.location.pathname).toEqual('/messages/5')
-        expect(this.state.location.basename).toEqual('/foo')
-        done()
-      })
+      ), node)
+
+      expect(pathnames).toEqual([ '/notes/5', '/messages/5' ])
+      expect(basenames).toEqual([ '/foo', '/foo' ])
+      expect(instance.state.location.pathname).toEqual('/messages/5')
+      expect(instance.state.location.basename).toEqual('/foo')
     })
   })
 })

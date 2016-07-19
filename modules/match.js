@@ -26,20 +26,14 @@ function match({ history, routes, location, ...options }, callback) {
     createRoutes(routes)
   )
 
-  let unlisten
-
   if (location) {
     // Allow match({ location: '/the/path', ... })
     location = history.createLocation(location)
   } else {
-    // Pick up the location from the history via synchronous history.listen
-    // call if needed.
-    unlisten = history.listen(historyLocation => {
-      location = historyLocation
-    })
+    location = history.getCurrentLocation()
   }
 
-  transitionManager.match(location, function (error, redirectLocation, nextState) {
+  transitionManager.match(location, (error, redirectLocation, nextState) => {
     let renderProps
 
     if (nextState) {
@@ -52,13 +46,6 @@ function match({ history, routes, location, ...options }, callback) {
     }
 
     callback(error, redirectLocation, renderProps)
-
-    // Defer removing the listener to here to prevent DOM histories from having
-    // to unwind DOM event listeners unnecessarily, in case callback renders a
-    // <Router> and attaches another history listener.
-    if (unlisten) {
-      unlisten()
-    }
   })
 }
 

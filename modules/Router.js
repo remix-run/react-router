@@ -8,12 +8,6 @@ import { createRoutes } from './RouteUtils'
 import { createRouterObject, assignRouterState } from './RouterUtils'
 import warning from './routerWarning'
 
-/* istanbul ignore next: sanity check */
-function isUnsupportedHistory(history) {
-  // v3 histories expose getCurrentLocation, but aren't currently supported.
-  return history && history.getCurrentLocation
-}
-
 const { func, object } = React.PropTypes
 
 /**
@@ -82,10 +76,10 @@ const Router = React.createClass({
     const { routes, children } = this.props
 
     invariant(
-      !isUnsupportedHistory(history),
-      'You have provided a history object created with history v3.x. ' +
-      'This version of React Router is not compatible with v3 history ' +
-      'objects. Please use history v2.x instead.'
+      history.getCurrentLocation,
+      'You have provided a history object created with history v2.x or ' +
+      'earlier. This version of React Router is only compatible with v3 ' +
+      'history objects. Please upgrade to history v3.x.'
     )
 
     return createTransitionManager(
