@@ -216,9 +216,7 @@ export default function createTransitionManager(history, routes) {
    * gracefully handle errors and redirects.
    */
   function listen(listener) {
-    // TODO: Only use a single history listener. Otherwise we'll
-    // end up with multiple concurrent calls to match.
-    return history.listen(function (location) {
+    function historyListener(location) {
       if (state.location === location) {
         listener(null, state)
       } else {
@@ -238,7 +236,22 @@ export default function createTransitionManager(history, routes) {
           }
         })
       }
-    })
+    }
+
+    // TODO: Only use a single history listener. Otherwise we'll end up with
+    // multiple concurrent calls to match.
+
+    // Set up the history listener first in case the initial match redirects.
+    const unsubscribe = history.listen(historyListener)
+
+    if (state.location) {
+      // Picking up on a matchContext.
+      listener(null, state)
+    } else {
+      historyListener(history.getCurrentLocation())
+    }
+
+    return unsubscribe
   }
 
   return {

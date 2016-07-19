@@ -32,7 +32,7 @@
   ],
   "license": "MIT",
   "dependencies": {
-    "history": "^2.1.2",
+    "history": "^3.0.0",
     "hoist-non-react-statics": "^1.2.0",
     "invariant": "^2.2.1",
     "warning": "^3.0.0",
