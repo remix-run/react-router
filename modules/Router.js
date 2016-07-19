@@ -32,10 +32,6 @@ const Router = React.createClass({
     onError: func,
     onUpdate: func,
 
-    // Deprecated:
-    parseQueryString: func,
-    stringifyQuery: func,
-
     // PRIVATE: For client-side rehydration of server match.
     matchContext: object
   },
