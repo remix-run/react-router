@@ -2,12 +2,14 @@
 > Jul 19, 2016
 
 - **Breaking:** Remove all deprecated functionality as of v2.6.0 ([#3603], [#3646])
+- **Breaking:** Support history v3 instead of history v2 ([#3647])
 - **Feature:** Add `router` to props for route components ([#3486])
 
 [v3.0.0-alpha.2]: https://github.com/reactjs/react-router/compare/v3.0.0-alpha.1...v3.0.0-alpha.2
 [#3486]: https://github.com/reactjs/react-router/pull/3486
 [#3603]: https://github.com/reactjs/react-router/pull/3603
 [#3646]: https://github.com/reactjs/react-router/pull/3646
+[#3647]: https://github.com/reactjs/react-router/pull/3647
 
 
 ## [v3.0.0-alpha.1]
