@@ -20,7 +20,7 @@ function isUnsupportedHistory(history) {
   return history && history.getCurrentLocation
 }
 
-const { func, object } = React.PropTypes
+const { func, object, any } = React.PropTypes
 
 /**
  * A <Router> is a high-level API for automatically setting up
@@ -37,6 +37,7 @@ const Router = React.createClass({
     createElement: func,
     onError: func,
     onUpdate: func,
+    externalContext: any,
 
     // Deprecated:
     parseQueryString: func,
@@ -100,7 +101,7 @@ const Router = React.createClass({
     }
 
     let { history } = this.props
-    const { routes, children } = this.props
+    const { routes, children, externalContext } = this.props
 
     invariant(
       !isUnsupportedHistory(history),
@@ -114,7 +115,7 @@ const Router = React.createClass({
     }
 
     const transitionManager = createTransitionManager(
-      history, createRoutes(routes || children)
+      history, createRoutes(routes || children, externalContext)
     )
     const router = createRouterObject(history, transitionManager)
     const routingHistory = createRoutingHistory(history, transitionManager)

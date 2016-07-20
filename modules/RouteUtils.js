@@ -12,12 +12,12 @@ function createRoute(defaultProps, props) {
   return { ...defaultProps, ...props }
 }
 
-export function createRouteFromReactElement(element) {
+export function createRouteFromReactElement(element, parentRoute, externalContext) {
   const type = element.type
   const route = createRoute(type.defaultProps, element.props)
 
   if (route.children) {
-    const childRoutes = createRoutesFromReactChildren(route.children, route)
+    const childRoutes = createRoutesFromReactChildren(route.children, route, externalContext)
 
     if (childRoutes.length)
       route.childRoutes = childRoutes
@@ -45,19 +45,19 @@ export function createRouteFromReactElement(element) {
  * Note: This method is automatically used when you provide <Route> children
  * to a <Router> component.
  */
-export function createRoutesFromReactChildren(children, parentRoute) {
+export function createRoutesFromReactChildren(children, parentRoute, externalContext) {
   const routes = []
 
   React.Children.forEach(children, function (element) {
     if (React.isValidElement(element)) {
       // Component classes may have a static create* method.
       if (element.type.createRouteFromReactElement) {
-        const route = element.type.createRouteFromReactElement(element, parentRoute)
+        const route = element.type.createRouteFromReactElement(element, parentRoute, externalContext)
 
         if (route)
           routes.push(route)
       } else {
-        routes.push(createRouteFromReactElement(element))
+        routes.push(createRouteFromReactElement(element, null, externalContext))
       }
     }
   })
@@ -69,9 +69,9 @@ export function createRoutesFromReactChildren(children, parentRoute) {
  * Creates and returns an array of routes from the given object which
  * may be a JSX route, a plain object route, or an array of either.
  */
-export function createRoutes(routes) {
+export function createRoutes(routes, externalContext) {
   if (isReactChildren(routes)) {
-    routes = createRoutesFromReactChildren(routes)
+    routes = createRoutesFromReactChildren(routes, null, externalContext)
   } else if (routes && !Array.isArray(routes)) {
     routes = [ routes ]
   }

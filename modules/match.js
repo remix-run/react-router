@@ -14,7 +14,7 @@ import { createRouterObject, createRoutingHistory } from './RouterUtils'
  * Note: You probably don't want to use this in a browser unless you're using
  * server-side rendering with async routes.
  */
-function match({ history, routes, location, ...options }, callback) {
+function match({ history, routes, location, externalContext, ...options }, callback) {
   invariant(
     history || location,
     'match needs a history or a location'
@@ -23,7 +23,7 @@ function match({ history, routes, location, ...options }, callback) {
   history = history ? history : createMemoryHistory(options)
   const transitionManager = createTransitionManager(
     history,
-    createRoutes(routes)
+    createRoutes(routes, externalContext)
   )
 
   let unlisten
