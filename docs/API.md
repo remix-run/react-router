@@ -362,7 +362,7 @@ const userIsInAnTeam = (nextState, replace, callback) => {
       callback();
     })
     .catch(error => {
-      // do some async error handling here
+      // do some error handling here
       callback();
     })
 }
