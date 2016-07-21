@@ -358,9 +358,8 @@ const userIsInAnOrganisation = (nextState, replace, callback) => {
           pathname: '/users/' + nextState.params.userId + '/organisations/new',
           state: { nextPathname: nextState.location.pathname }
         })
-        
-        callback(null);
       }
+      callback();
     })
 }
 
