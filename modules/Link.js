@@ -98,7 +98,9 @@ const Link = React.createClass({
     const { to, query, hash, state } = this.props
     const location = createLocationDescriptor(to, { query, hash, state })
 
-    this.context.router.push(location)
+    // Unless both `href="javascript:;"` and `href="javascript:void(0);"`
+    if (!/^javascript/i.test(to))
+        this.context.router.push(location)
   },
 
   render() {
