@@ -349,25 +349,22 @@ If `callback` is listed as a 3rd argument, this hook will run asynchronously, an
 `cb(err)`
 
 ```js
-const userIsInAnTeam = (nextState, replace, callback) => {
+const userIsInATeam = (nextState, replace, callback) => {
   fetch(...)
     .then(response = response.json())
     .then(userTeams => {
       if (userTeams.length === 0) {
-        replace({
-          pathname: '/users/' + nextState.params.userId + '/teams/new',
-          state: { nextPathname: nextState.location.pathname }
-        })
+        replace(`/users/${nextState.params.userId}/teams/new`)
       }
       callback();
     })
     .catch(error => {
       // do some error handling here
-      callback();
+      callback(error);
     })
 }
 
-<Route path="/users/:userId/teams" onEnter={userIsInAnTeam} />
+<Route path="/users/:userId/teams" onEnter={userIsInATeam} />
 ```
 
 ##### `onChange(prevState, nextState, replace, callback?)`
