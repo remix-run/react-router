@@ -345,6 +345,28 @@ Called when a route is about to be entered. It provides the next router state an
 
 If `callback` is listed as a 3rd argument, this hook will run asynchronously, and the transition will block until `callback` is called.
 
+###### `callback` signature
+`cb(err)`
+
+```js
+const userIsInATeam = (nextState, replace, callback) => {
+  fetch(...)
+    .then(response = response.json())
+    .then(userTeams => {
+      if (userTeams.length === 0) {
+        replace(`/users/${nextState.params.userId}/teams/new`)
+      }
+      callback();
+    })
+    .catch(error => {
+      // do some error handling here
+      callback(error);
+    })
+}
+
+<Route path="/users/:userId/teams" onEnter={userIsInATeam} />
+```
+
 ##### `onChange(prevState, nextState, replace, callback?)`
 Called on routes when the location changes, but the route itself neither enters or leaves. For example, this will be called when a route's children change, or when the location query changes. It provides the previous router state, the next router state, and a function to redirect to another path. `this` will be the route instance that triggered the hook.
 
