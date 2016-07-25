@@ -22,6 +22,10 @@ function isEmptyObject(object) {
   return true
 }
 
+function resolveToLocation(to, router) {
+  return typeof to === 'function' ? to(router.location) : to
+}
+
 /**
  * A <Link> is used to create an <a> element that links to a route.
  * When that route is active, the link gets the value of its
@@ -49,7 +53,7 @@ const Link = React.createClass({
   },
 
   propTypes: {
-    to: oneOfType([ string, object ]).isRequired,
+    to: oneOfType([ string, object, func ]).isRequired,
     query: object,
     hash: string,
     state: object,
@@ -74,8 +78,9 @@ const Link = React.createClass({
     if (event.defaultPrevented)
       return
 
+    const { router } = this.context
     invariant(
-      this.context.router,
+      router,
       '<Link>s rendered outside of a router context cannot navigate.'
     )
 
@@ -89,19 +94,21 @@ const Link = React.createClass({
 
     event.preventDefault()
 
-    this.context.router.push(this.props.to)
+    router.push(resolveToLocation(this.props.to, router))
   },
 
   render() {
     const { to, activeClassName, activeStyle, onlyActiveOnIndex, ...props } = this.props
-    // Ignore if rendered outside the context of router, simplifies unit testing.
+
+    // Ignore if rendered outside the context of router to simplify unit testing.
     const { router } = this.context
 
     if (router) {
-      props.href = router.createHref(to)
+      const toLocation = resolveToLocation(to, router)
+      props.href = router.createHref(toLocation)
 
       if (activeClassName || (activeStyle != null && !isEmptyObject(activeStyle))) {
-        if (router.isActive(to, onlyActiveOnIndex)) {
+        if (router.isActive(toLocation, onlyActiveOnIndex)) {
           if (activeClassName) {
             if (props.className) {
               props.className += ` ${activeClassName}`
