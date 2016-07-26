@@ -1,47 +1,40 @@
 import expect from 'expect'
-import React, { Component } from 'react'
+import React from 'react'
 import { render, unmountComponentAtNode } from 'react-dom'
 import createHistory from '../createMemoryHistory'
-import resetHash from './resetHash'
 import execSteps from './execSteps'
 import Router from '../Router'
 import Route from '../Route'
 
-describe('pushState', function () {
+describe('push', () => {
 
-  class Index extends Component {
-    render() {
-      return <h1>Index</h1>
-    }
-  }
+  const Index = () => (
+    <h1>Index</h1>
+  )
 
-  class Home extends Component {
-    render() {
-      return <h1>Home</h1>
-    }
-  }
-
-  beforeEach(resetHash)
+  const Home = () => (
+    <h1>Home</h1>
+  )
 
   let node
-  beforeEach(function () {
+  beforeEach(() => {
     node = document.createElement('div')
   })
 
-  afterEach(function () {
+  afterEach(() => {
     unmountComponentAtNode(node)
   })
 
-  describe('when the target path contains a colon', function () {
-    it('works', function (done) {
+  describe('when the target path contains a colon', () => {
+    it('works', done => {
       const history = createHistory('/')
       const steps = [
-        function () {
-          expect(this.state.location.pathname).toEqual('/')
+        ({ location }) => {
+          expect(location.pathname).toEqual('/')
           history.push('/home/hi:there')
         },
-        function () {
-          expect(this.state.location.pathname).toEqual('/home/hi:there')
+        ({ location }) => {
+          expect(location.pathname).toEqual('/home/hi:there')
         }
       ]
 
