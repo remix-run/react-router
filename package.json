@@ -5,19 +5,19 @@
   "files": [
     "*.md",
     "docs",
-    "es6",
+    "es",
     "lib",
     "umd"
   ],
   "main": "lib/index",
-  "jsnext:main": "es6/index",
+  "jsnext:main": "es/index",
   "repository": "reactjs/react-router",
   "homepage": "https://github.com/reactjs/react-router#readme",
   "bugs": "https://github.com/reactjs/react-router/issues",
   "scripts": {
     "build": "npm run build-cjs && npm run build-es",
     "build-cjs": "rimraf lib && cross-env BABEL_ENV=cjs babel ./modules -d lib --ignore '__tests__'",
-    "build-es": "rimraf es6 && cross-env BABEL_ENV=es babel ./modules -d es6 --ignore '__tests__'",
+    "build-es": "rimraf es && cross-env BABEL_ENV=es babel ./modules -d es --ignore '__tests__'",
     "build-umd": "cross-env BABEL_ENV=cjs NODE_ENV=development webpack modules/index.js umd/ReactRouter.js",
     "build-min": "cross-env BABEL_ENV=cjs NODE_ENV=production webpack -p modules/index.js umd/ReactRouter.min.js",
     "lint": "eslint modules examples *.js",
