@@ -473,4 +473,47 @@ describe('A <Link>', () => {
     })
   })
 
+  describe('with function to', () => {
+    const LinkWrapper = () => (
+      <Link
+        to={location => ({ ...location, hash: '#hash' })}
+        activeClassName="active"
+      >
+        Link
+      </Link>
+    )
+
+    it('should have the correct href and active state', () => {
+      render((
+        <Router history={createHistory('/hello')}>
+          <Route path="/hello" component={LinkWrapper} />
+        </Router>
+      ), node, () => {
+        const a = node.querySelector('a')
+        expect(a.getAttribute('href')).toEqual('/hello#hash')
+        expect(a.className.trim()).toEqual('active')
+      })
+    })
+
+    it('should transition correctly on click', done => {
+      const steps = [
+        () => {
+          click(node.querySelector('a'), { button: 0 })
+        },
+        ({ location }) => {
+          expect(location.pathname).toEqual('/hello')
+          expect(location.hash).toEqual('#hash')
+        }
+      ]
+
+      const execNextStep = execSteps(steps, done)
+
+      render((
+        <Router history={createHistory('/hello')} onUpdate={execNextStep}>
+          <Route path="/hello" component={LinkWrapper} />
+        </Router>
+      ), node, execSteps)
+    })
+  })
+
 })
