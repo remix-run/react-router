@@ -10,6 +10,7 @@
     "umd"
   ],
   "main": "lib/index",
+  "module": "es/index",
   "jsnext:main": "es/index",
   "repository": "reactjs/react-router",
   "homepage": "https://github.com/reactjs/react-router#readme",
