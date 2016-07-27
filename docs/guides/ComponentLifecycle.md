@@ -10,7 +10,7 @@ about the components being rendered at different URLs.
 
 Consider this route config:
 
-```js
+```jsx
 <Route path="/" component={App}>
   <IndexRoute component={Home}/>
   <Route path="invoices/:invoiceId" component={Invoice}/>
@@ -74,7 +74,7 @@ that data in state. Now that we understand the lifecycle of components
 when changing routes, we can implement simple data fetching inside of
 `Invoice`.
 
-```js
+```jsx
 let Invoice = React.createClass({
 
   getInitialState () {

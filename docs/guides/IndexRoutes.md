@@ -5,7 +5,7 @@
 To illustrate the use case for `IndexRoute`, imagine the following route
 config without it:
 
-```js
+```jsx
 <Router>
   <Route path="/" component={App}>
     <Route path="accounts" component={Accounts}/>
@@ -24,7 +24,7 @@ etc. You render in the same position as `Accounts` and `Statements`, so
 the router allows you to have `Home` be a first class route component with
 `IndexRoute`.
 
-```js
+```jsx
 <Router>
   <Route path="/" component={App}>
     <IndexRoute component={Home}/>
@@ -41,7 +41,7 @@ route for `Home` that can participate in routing.
 
 Suppose your basic route configuration looks like:
 
-```js
+```jsx
 <Route path="/" component={App}>
   <Route path="welcome" component={Welcome} />
   <Route path="about" component={About} />
@@ -52,7 +52,7 @@ Suppose you want to redirect `/` to `/welcome`. To do this, you need to set up
 an index route that does the redirect. To do this, use the `<IndexRedirect>`
 component:
 
-```js
+```jsx
 <Route path="/" component={App}>
   <IndexRedirect to="/welcome" />
   <Route path="welcome" component={Welcome} />
@@ -63,7 +63,7 @@ component:
 This is equivalent to setting up an index route with just an `onEnter` hook
 that redirects the user. You would set this up with plain routes as:
 
-```js
+```jsx
 const routes = [{
   path: '/',
   component: App,
