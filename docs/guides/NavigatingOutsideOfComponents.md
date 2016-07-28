@@ -12,5 +12,6 @@ render(<Router history={browserHistory} routes={routes}/>, el)
 ```jsx
 // somewhere like a redux/flux action file:
 import { browserHistory } from 'react-router'
-browserHistory.push('/some/path')
+browserHistory.push('/some/path') // go to /some/path page
+browserHistory.goBack() // go back to previous page
 ```
