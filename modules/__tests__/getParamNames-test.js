@@ -19,4 +19,10 @@ describe('getParamNames', function () {
       expect(getParamNames('/files/*.jpg')).toEqual([ 'splat' ])
     })
   })
+
+  describe('when a pattern has the same name as a built-in method', function () {
+    it('should work', function () {
+      expect(getParamNames('toString')).toEqual([])
+    })
+  })
 })

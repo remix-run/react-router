@@ -49,10 +49,10 @@ function _compilePattern(pattern) {
   }
 }
 
-const CompiledPatternsCache = {}
+const CompiledPatternsCache = Object.create(null)
 
 export function compilePattern(pattern) {
-  if (!(pattern in CompiledPatternsCache))
+  if (!CompiledPatternsCache[pattern])
     CompiledPatternsCache[pattern] = _compilePattern(pattern)
 
   return CompiledPatternsCache[pattern]
