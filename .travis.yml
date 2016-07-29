@@ -10,8 +10,7 @@ before_install:
 - export DISPLAY=:99.0
 - sh -e /etc/init.d/xvfb start
 after_success:
-- cat ./coverage/lcov.info | ./node_modules/codecov.io/bin/codecov.io.js
-- cat ./coverage/lcov.info | ./node_modules/coveralls/bin/coveralls.js
+- node_modules/.bin/codecov
 branches:
   only:
   - master

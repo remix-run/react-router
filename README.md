@@ -6,7 +6,7 @@ React Router is a complete routing library for [React](https://facebook.github.i
 
 React Router keeps your UI in sync with the URL. It has a simple API with powerful features like lazy code loading, dynamic route matching, and location transition handling built right in. Make the URL your first thought, not an after-thought.
 
-[![Coveralls][coveralls-badge]][coveralls]
+[![Codecov][codecov-badge]][codecov]
 [![Discord][discord-badge]][discord]
 
 ### Docs & Help
@@ -142,8 +142,8 @@ Also, thanks to [BrowserStack](https://www.browserstack.com/) for providing the 
 [npm-badge]: https://img.shields.io/npm/v/react-router.svg?style=flat-square
 [npm]: https://www.npmjs.org/package/react-router
 
-[coveralls-badge]: https://img.shields.io/coveralls/reactjs/react-router/master.svg?style=flat-square
-[coveralls]: https://coveralls.io/github/reactjs/react-router
+[codecov-badge]: https://img.shields.io/codecov/c/github/reactjs/react-router/master.svg?style=flat-square
+[codecov]: https://codecov.io/gh/reactjs/react-router
 
 [discord-badge]: https://img.shields.io/badge/Discord-join%20chat%20%E2%86%92-738bd7.svg?style=flat-square
 [discord]: https://discord.gg/0ZcbPKXt5bYaNQ46
