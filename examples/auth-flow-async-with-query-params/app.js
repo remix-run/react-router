@@ -61,13 +61,13 @@ function requireCredentials(nextState, replace, next) {
   const query = nextState.location.query
   if (query.qsparam) {
     serverAuth(query.qsparam)
-    .then(
-      () => next(),
-      () => {
-        replace('/error')
-        next()
-      }
-    )
+      .then(
+        () => next(),
+        () => {
+          replace('/error')
+          next()
+        }
+      )
   } else {
     replace('/error')
     next()

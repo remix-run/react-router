@@ -41,4 +41,8 @@ describe('matchPattern', function () {
     assertMatch('/**/*.jpg', '/files/path/to/file.jpg', '', [ 'splat', 'splat' ], [ 'files/path/to', 'file' ])
   })
 
+  it('works with patterns that match built-in names', function () {
+    assertMatch('toString', '/toString', '', [], [])
+  })
+
 })

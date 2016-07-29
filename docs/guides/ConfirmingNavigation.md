@@ -2,7 +2,7 @@
 
 You can prevent a transition from happening or prompt the user before leaving a [route](/docs/Glossary.md#route) with a leave hook.
 
-```js
+```jsx
 const Home = withRouter(
   React.createClass({
 

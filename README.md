@@ -6,7 +6,7 @@ React Router is a complete routing library for [React](https://facebook.github.i
 
 React Router keeps your UI in sync with the URL. It has a simple API with powerful features like lazy code loading, dynamic route matching, and location transition handling built right in. Make the URL your first thought, not an after-thought.
 
-[![Coveralls][coveralls-badge]][coveralls]
+[![Codecov][codecov-badge]][codecov]
 [![Discord][discord-badge]][discord]
 
 > **Important:** *This is the `next` branch of React Router and may contain changes that are not yet released. To see the code for stable releases, browse [the `master` branch](https://github.com/reactjs/react-router/tree/master).*
@@ -39,7 +39,7 @@ Using [npm](https://www.npmjs.com/):
 
 Then with a module bundler like [webpack](https://webpack.github.io/) that supports either CommonJS or ES2015 modules, use as you would anything else:
 
-```js
+```jsx
 // using an ES6 transpiler, like babel
 import { Router, Route, Link } from 'react-router'
 
@@ -59,7 +59,7 @@ You can find the library on `window.ReactRouter`.
 
 ### What's it look like?
 
-```js
+```jsx
 import React from 'react'
 import { render } from 'react-dom'
 import { Router, Route, Link, browserHistory } from 'react-router'
@@ -144,8 +144,8 @@ Also, thanks to [BrowserStack](https://www.browserstack.com/) for providing the 
 [npm-badge]: https://img.shields.io/npm/v/react-router.svg?style=flat-square
 [npm]: https://www.npmjs.org/package/react-router
 
-[coveralls-badge]: https://img.shields.io/coveralls/reactjs/react-router/master.svg?style=flat-square
-[coveralls]: https://coveralls.io/github/reactjs/react-router
+[codecov-badge]: https://img.shields.io/codecov/c/github/reactjs/react-router/master.svg?style=flat-square
+[codecov]: https://codecov.io/gh/reactjs/react-router
 
 [discord-badge]: https://img.shields.io/badge/Discord-join%20chat%20%E2%86%92-738bd7.svg?style=flat-square
 [discord]: https://discord.gg/0ZcbPKXt5bYaNQ46

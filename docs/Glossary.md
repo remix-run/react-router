@@ -27,7 +27,7 @@ This is a glossary of common terms used in the React Router codebase and documen
 
 ## Action
 
-```js
+```jsx
 type Action = 'PUSH' | 'REPLACE' | 'POP';
 ```
 
@@ -39,7 +39,7 @@ An *action* describes the type of change to a URL. Possible values are:
 
 ## Component
 
-```js
+```jsx
 type Component = ReactClass | string;
 ```
 
@@ -47,7 +47,7 @@ A *component* is a React component class or a string (e.g. "div"). Basically, it
 
 ## EnterHook
 
-```js
+```jsx
 type EnterHook = (nextState: RouterState, replace: RedirectFunction, callback?: Function) => any;
 ```
 
@@ -65,7 +65,7 @@ A *hash* is a string that represents the hash portion of the URL. It is synonymo
 
 ## LeaveHook
 
-```js
+```jsx
 type LeaveHook = (prevState: RouterState) => any;
 ```
 
@@ -73,7 +73,7 @@ A *leave hook* is a user-defined function that is called when a route is about t
 
 ## Location
 
-```js
+```jsx
 type Location = {
   pathname: Pathname;
   search: QueryString;
@@ -108,7 +108,7 @@ You can read more about location descriptors in [the `history` docs](https://git
 
 ## LocationKey
 
-```js
+```jsx
 type LocationKey = string;
 ```
 
@@ -116,7 +116,7 @@ A *location key* is a string that is unique to a particular [`location`](#locati
 
 ## LocationState
 
-```js
+```jsx
 type LocationState = ?Object;
 ```
 
@@ -129,7 +129,7 @@ This type gets its name from the first argument to HTML5's [`pushState`][pushSta
 
 ## Params
 
-```js
+```jsx
 type Params = Object;
 ```
 
@@ -137,7 +137,7 @@ The word *params* refers to an object of key/value pairs that were parsed out of
 
 ## Path
 
-```js
+```jsx
 type Path = Pathname + QueryString + Hash;
 ```
 
@@ -145,7 +145,7 @@ A *path* represents a URL path.
 
 ## Pathname
 
-```js
+```jsx
 type Pathname = string;
 ```
 
@@ -153,7 +153,7 @@ A *pathname* is the portion of a URL that describes a hierarchical path, includi
 
 ## Query
 
-```js
+```jsx
 type Query = Object;
 ```
 
@@ -161,7 +161,7 @@ A *query* is the parsed version of a [query string](#querystring).
 
 ## QueryString
 
-```js
+```jsx
 type QueryString = string;
 ```
 
@@ -169,7 +169,7 @@ A *query string* is the portion of the URL that follows the [pathname](#pathname
 
 ## RedirectFunction
 
-```js
+```jsx
 type RedirectFunction = (state: ?LocationState, pathname: Pathname | Path, query: ?Query) => void;
 ```
 
@@ -177,7 +177,7 @@ A *redirect function* is used in [`onEnter` hooks](#enterhook) to trigger a tran
 
 ## Route
 
-```js
+```jsx
 type Route = {
   component: RouteComponent;
   path: ?RoutePattern;
@@ -192,7 +192,7 @@ It may help to think of a route as an "entry point" into your UI. You don't need
 
 ## RouteComponent
 
-```js
+```jsx
 type RouteComponent = Component;
 ```
 
@@ -208,7 +208,7 @@ Route components should generally be component classes rather than strings. This
 
 ## RouteConfig
 
-```js
+```jsx
 type RouteConfig = Array<Route>;
 ```
 
@@ -216,7 +216,7 @@ A *route config* is an array of [route](#route)s that specifies the order in whi
 
 ## RouteHook
 
-```js
+```jsx
 type RouteHook = (nextLocation?: Location) => any;
 ```
 
@@ -224,7 +224,7 @@ A *route hook* is a function that is used to prevent the user from leaving a rou
 
 ## RoutePattern
 
-```js
+```jsx
 type RoutePattern = string;
 ```
 
@@ -239,7 +239,7 @@ Route patterns are relative to the pattern of the parent route unless they begin
 
 ## Router
 
-```js
+```jsx
 type Router = {
   push(location: LocationDescriptor) => void;
   replace(location: LocationDescriptor) => void;
@@ -255,7 +255,7 @@ A *router* object allows for procedural manipulation of the routing state.
 
 ## RouterState
 
-```js
+```jsx
 type RouterState = {
   location: Location;
   routes: Array<Route>;

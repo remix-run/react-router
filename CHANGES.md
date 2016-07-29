@@ -28,6 +28,15 @@
 [#3446]: https://github.com/reactjs/react-router/pull/3446
 
 
+## [v2.6.1]
+> Jul 29, 2016
+
+- **Bugfix:** Correctly handle routes with patterns that are the names of properties on `Object.prototype` ([#3680])
+
+[v2.6.1]: https://github.com/reactjs/react-router/compare/v2.6.0...v2.6.1
+[#3680]: https://github.com/reactjs/react-router/pull/3680
+
+
 ## [v2.6.0]
 > Jul 18, 2016
 
