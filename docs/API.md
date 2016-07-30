@@ -94,7 +94,7 @@ A `<Link>` can know when the route it links to is active and automatically apply
 
 #### Props
 ##### `to`
-A [location descriptor](https://github.com/ReactTraining/history/blob/master/docs/Glossary.md#locationdescriptor). Usually this is a string or an object, with the following semantics:
+A [location descriptor](https://github.com/ReactTraining/history/blob/master/docs/Glossary.md#locationdescriptor) or a function that takes the current location and returns a location descriptor. This location descriptor is usually a string or an object, with the following semantics:
 
 * If it's a string it represents the absolute path to link to, e.g. `/users/123` (relative paths are not supported).
 * If it's an object it can have four keys:
@@ -104,6 +104,23 @@ A [location descriptor](https://github.com/ReactTraining/history/blob/master/doc
   * `state`: State to persist to the `location`.
 
 _Note: React Router currently does not manage scroll position, and will not scroll to the element corresponding to `hash`._
+
+```jsx
+// String location descriptor.
+<Link to="/hello">
+  Hello
+</Link>
+
+// Object location descriptor.
+<Link to={{ pathname: '/hello', query: { name: 'ryan' } }}>
+  Hello
+</Link>
+
+// Function returning location descriptor.
+<Link to={location => ({ ...location, query: { name: 'ryan' } })}>
+  Hello
+</Link>
+```
 
 ##### `activeClassName`
 The className a `<Link>` receives when its route is active. No active class by default.
