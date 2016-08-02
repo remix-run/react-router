@@ -1,9 +1,6 @@
-es6
+es
 lib
 umd
-examples/**/*-bundle.js
 node_modules
 npm-debug.log
-website/index.html
-website/tags/*
 coverage
