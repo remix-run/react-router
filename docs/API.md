@@ -622,7 +622,7 @@ For more details, please see the [histories guide](/docs/guides/Histories.md).
 
 
 ### `createMemoryHistory(options)`
-`createMemoryHistory` creates an in-memory `history` object that does not interact with the browser URL. This is useful when you need to customize the `history` used for server-side rendering, as well as for automated testing or cases where you cannot/should not manipulate the browser history (for example when your application gets embedded in an iframe).
+`createMemoryHistory` creates an in-memory `history` object that does not interact with the browser URL. This is useful for when you need to customize the `history` object used for server-side rendering, for automated testing, or for when you do not want to manipulate the browser URL, such as when your application is embedded in an `<iframe>`.
 
 
 ### `useRouterHistory(createHistory)`
