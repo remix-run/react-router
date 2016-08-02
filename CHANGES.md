@@ -1,3 +1,16 @@
+## [v3.0.0-alpha.3]
+> Aug 2, 2016
+
+- **Feature:** Support function `to` prop in `<Link>` ([#3669])
+- **Chore:** Move ES module build to `es/` ([#3670])
+- **Chore:** Add `module` entry point for webpack 2 ([#3672])
+
+[v3.0.0-alpha.3]: https://github.com/reactjs/react-router/compare/v3.0.0-alpha.2...v3.0.0-alpha.3
+[#3669]: https://github.com/reactjs/react-router/pull/3669
+[#3670]: https://github.com/reactjs/react-router/pull/3670
+[#3672]: https://github.com/reactjs/react-router/pull/3672
+
+
 ## [v3.0.0-alpha.2]
 > Jul 19, 2016
 
