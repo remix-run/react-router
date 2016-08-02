@@ -69,7 +69,12 @@ const RouterContext = React.createClass({
           return element // Don't create new children; use the grandchildren.
 
         const route = routes[index]
-        const routeParams = getRouteParams(route, params)
+
+        let routeParams = getRouteParams(route, params)
+        if (__DEV__) {
+          routeParams = deprecateObjectProperties(routeParams, '`routeParams` is deprecated. Use `params` instead.')
+        }
+
         const props = {
           history,
           location,
