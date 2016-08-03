@@ -14,6 +14,7 @@ class Router extends React.Component {
     location: locationType,
     children: PropTypes.oneOfType([ PropTypes.node, PropTypes.func ]),
     createHref: PropTypes.func,
+    onChange: PropTypes.func,
     onPush: PropTypes.func,
     onReplace: PropTypes.func
   }
@@ -72,10 +73,10 @@ class Router extends React.Component {
     this.props.history.listenBefore(getPromptMessage)
 
   render() {
-    const { children, history, location } = this.props
+    const { children, history, location, onChange } = this.props
 
     return (
-      <History history={history} location={location}>
+      <History history={history} location={location} onChange={onChange}>
         {({ location }) => (
           <MatchCountProvider>
             {typeof children === 'function' ? (

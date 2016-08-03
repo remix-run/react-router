@@ -10,7 +10,7 @@ import { Provider, connect } from 'react-redux'
 
 // in a real redux app you'd want to use `window.location`
 // but for our demo we'll use this fake one
-const initialLocation = { pathname: '/' }
+const initialLocation = { pathname: '/', search: '', hash: '' }
 const locationReducer = (state = initialLocation, action) => {
   return action.type === 'LOCATION_CHANGE' ?
     action.location : state
