@@ -41,9 +41,9 @@ class NavigationPrompt extends React.Component {
     }
   }
 
-  getPromptMessage() {
+  getPromptMessage = (location) => {
     const { message } = this.props
-    return typeof message === 'function' ? message() : message
+    return typeof message === 'function' ? message(location) : message
   }
 
   block() {
