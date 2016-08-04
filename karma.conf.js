@@ -1,4 +1,3 @@
-const path = require('path')
 const webpack = require('webpack')
 const projectName = require('./package').name
 
@@ -84,18 +83,13 @@ module.exports = config => {
       devtool: 'cheap-module-inline-source-map',
       module: {
         loaders: [
-          { test: /\.js$/, exclude: /node_modules/, loader: 'babel' },
-          {
-            test: /\.js$/,
-            include: path.resolve('modules/'),
-            exclude: /__tests__/,
-            loader: 'isparta'
-          }
+          { test: /\.js$/, exclude: /node_modules/, loader: 'babel' }
         ]
       },
       plugins: [
         new webpack.DefinePlugin({
-          'process.env.NODE_ENV': JSON.stringify('test')
+          'process.env.NODE_ENV': JSON.stringify('test'),
+          __DEV__: true
         })
       ]
     },

@@ -9,6 +9,10 @@
     },
     "es": {
       "presets": ["es2015-loose-native-modules", "stage-1"]
+    },
+    "test": {
+      "presets": ["es2015-loose", "stage-1"],
+      "plugins": ["istanbul"]
     }
   }
 }

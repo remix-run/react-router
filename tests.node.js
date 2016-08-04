@@ -1,1 +1,3 @@
-import './modules/__tests__/serverRendering-test'
+global.__DEV__ = true
+
+require('./modules/__tests__/serverRendering-test')
