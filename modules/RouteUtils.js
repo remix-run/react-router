@@ -50,15 +50,19 @@ export function createRoutesFromReactChildren(children, parentRoute) {
 
   React.Children.forEach(children, function (element) {
     if (React.isValidElement(element)) {
+      let route
       // Component classes may have a static create* method.
       if (element.type.createRouteFromReactElement) {
-        const route = element.type.createRouteFromReactElement(element, parentRoute)
-
-        if (route)
-          routes.push(route)
+        route = element.type.createRouteFromReactElement(element, parentRoute)
       } else {
-        routes.push(createRouteFromReactElement(element))
+        route = createRouteFromReactElement(element)
       }
+
+      if (element.ref)
+        element.ref(route, parentRoute)
+
+      if (route)
+        routes.push(route)
     }
   })
 

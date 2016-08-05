@@ -17,6 +17,7 @@ This is a glossary of common terms used in the React Router codebase and documen
 * [Query](#query)
 * [QueryString](#querystring)
 * [RedirectFunction](#redirectfunction)
+* [Ref](#ref)
 * [Route](#route)
 * [RouteComponent](#routecomponent)
 * [RouteConfig](#routeconfig)
@@ -174,6 +175,14 @@ type RedirectFunction = (state: ?LocationState, pathname: Pathname | Path, query
 ```
 
 A *redirect function* is used in [`onEnter` hooks](#enterhook) to trigger a transition to a new URL.
+
+## Ref
+
+```jsx
+type RefHook = (route: Route, parent: ?Route) => any;
+```
+
+A *ref hook* is a user-defined function that is called when a route definition is created. It receives the route itself as its first argument and optionally the parent route (if any).
 
 ## Route
 
