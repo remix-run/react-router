@@ -3,7 +3,7 @@ import { render, unmountComponentAtNode } from 'react-dom'
 import HashHistory from '../HashHistory'
 import RenderTestSequences from './RenderTestSequences'
 
-describe.only('HashHistory', () => {
+describe('HashHistory', () => {
   let node
   beforeEach((done) => {
     window.location.hash = ''
