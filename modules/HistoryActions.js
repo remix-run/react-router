@@ -25,7 +25,7 @@ export const Push = ({ path, state }) =>
   <HistoryAction onMount={history => history.push(path, state)}/>
 
 Push.propTypes = {
-  path: PropTypes.string,
+  path: PropTypes.string.isRequired,
   state: PropTypes.any
 }
 
@@ -38,5 +38,5 @@ export const Pop = ({ n }) =>
   <HistoryAction onMount={history => history.pop(n)}/>
 
 Pop.propTypes = {
-  n: PropTypes.number
+  n: PropTypes.number.isRequired
 }
