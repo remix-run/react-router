@@ -24,8 +24,19 @@ class HistoryAction extends React.Component {
 export const Push = ({ path, state }) =>
   <HistoryAction onMount={history => history.push(path, state)}/>
 
+Push.propTypes = {
+  path: PropTypes.string,
+  state: PropTypes.any
+}
+
 export const Replace = ({ path, state }) =>
   <HistoryAction onMount={history => history.replace(path, state)}/>
 
+Replace.propTypes = Push.propTypes
+
 export const Pop = ({ n }) =>
   <HistoryAction onMount={history => history.pop(n)}/>
+
+Pop.propTypes = {
+  n: PropTypes.number
+}

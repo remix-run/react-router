@@ -1,4 +1,4 @@
-import React, { PropTypes } from 'react'
+import React from 'react'
 import { render, unmountComponentAtNode } from 'react-dom'
 import MemoryHistory from '../MemoryHistory'
 import RenderTestSequences from './RenderTestSequences'

@@ -62,14 +62,13 @@ class BrowserHistory extends React.Component {
       })
   }
 
-  handleHashChange = (event) => {
+  handleHashChange = () => {
     this.setState({
       location: this.createLocation(getHistoryState())
     })
   }
 
   handlePush = (path, state) => {
-    console.log(this.supportsHistory)
     if (!this.supportsHistory) {
       warning(
         state === undefined,
