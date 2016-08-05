@@ -12,7 +12,8 @@ export default [
   },
   (location) => {
     expect(location).toMatch({
-      path: '/hello'
+      path: '/hello',
+      key: undefined
     })
 
     return null

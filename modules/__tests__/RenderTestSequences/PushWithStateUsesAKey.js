@@ -8,11 +8,13 @@ export default [
       path: '/'
     })
 
-    return <Push path="/hello"/>
+    return <Push path="/hello" state={{ the: 'state' }}/>
   },
   (location) => {
     expect(location).toMatch({
-      path: '/hello'
+      path: '/hello',
+      state: { the: 'state' },
+      key: /^[0-9a-z]+$/
     })
 
     return null

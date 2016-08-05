@@ -5,27 +5,21 @@ import { Push, Pop } from '../../HistoryActions'
 export default [
   (location) => {
     expect(location).toMatch({
-      path: '/',
-      state: undefined,
-      key: undefined
+      path: '/'
     })
 
     return <Push path="/hello"/>
   },
   (location) => {
     expect(location).toMatch({
-      path: '/hello',
-      state: undefined,
-      key: /^[0-9a-z]+$/
+      path: '/hello'
     })
 
     return <Pop n={-1}/>
   },
   (location) => {
     expect(location).toMatch({
-      path: '/',
-      state: undefined,
-      key: undefined
+      path: '/'
     })
 
     return null

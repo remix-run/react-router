@@ -18,6 +18,13 @@ describe('MemoryHistory', () => {
       const children = RenderTestSequences.PushEmitsANewLocation(done)
       render(<MemoryHistory children={children}/>, node)
     })
+
+    describe('with state', () => {
+      it('uses a key', (done) => {
+        const children = RenderTestSequences.PushWithStateUsesAKey(done)
+        render(<MemoryHistory children={children}/>, node)
+      })
+    })
   })
 
   describe('replace', () => {

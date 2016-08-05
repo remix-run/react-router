@@ -5,18 +5,14 @@ import { Replace } from '../../HistoryActions'
 export default [
   (location) => {
     expect(location).toMatch({
-      path: '/',
-      state: undefined,
-      key: undefined
+      path: '/'
     })
 
-    return <Replace path="/hello" state={{ the: 'state' }}/>
+    return <Replace path="/hello"/>
   },
   (location) => {
     expect(location).toMatch({
-      path: '/hello',
-      state: { the: 'state' },
-      key: /^[0-9a-z]+$/
+      path: '/hello'
     })
 
     return null
