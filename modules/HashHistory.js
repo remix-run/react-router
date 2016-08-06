@@ -161,10 +161,10 @@ class HashHistory extends React.Component {
     replaceHashPath(encodedPath)
   }
 
-  handlePop = (n) => {
+  handleGo = (n) => {
     warning(
       this.goIsSupportedWithoutReload,
-      'HashHistory go(n) causes a full page reload in this browser'
+      '<HashHistory> go(n) causes a full page reload in this browser'
     )
 
     window.history.go(n)
@@ -210,7 +210,7 @@ class HashHistory extends React.Component {
         location={location}
         push={this.handlePush}
         replace={this.handleReplace}
-        pop={this.handlePop}
+        go={this.handleGo}
       />
     )
   }

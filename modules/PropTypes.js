@@ -37,7 +37,7 @@ export const historyLocation = PropTypes.shape({
 export const historyContext = PropTypes.shape({
   push: PropTypes.func.isRequired,
   replace: PropTypes.func.isRequired,
-  pop: PropTypes.func.isRequired
+  go: PropTypes.func.isRequired
 })
 
 export const stateStorage = PropTypes.shape({

@@ -68,7 +68,7 @@ class MemoryHistory extends React.Component {
     })
   }
 
-  handlePop = (n) => {
+  handleGo = (n) => {
     const { entries } = this.state
 
     this.setState({
@@ -97,7 +97,7 @@ class MemoryHistory extends React.Component {
         location={location}
         push={this.handlePush}
         replace={this.handleReplace}
-        pop={this.handlePop}
+        go={this.handleGo}
       />
     )
   }

@@ -39,7 +39,7 @@ export const Replace = ({ path, state }) =>
 Replace.propTypes = Push.propTypes
 
 export const Pop = ({ go }) =>
-  <HistoryAction perform={history => history.pop(go)}/>
+  <HistoryAction perform={history => history.go(go)}/>
 
 Pop.propTypes = {
   go: PropTypes.number.isRequired
