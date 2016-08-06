@@ -1,6 +1,9 @@
 import React, { PropTypes } from 'react'
 import HistoryContext from './HistoryContext'
 
+const clamp = (n, lowerBound, upperBound) =>
+  Math.min(Math.max(n, lowerBound), upperBound)
+
 /**
  * A history that stores its own URL entries.
  */
@@ -69,7 +72,7 @@ class MemoryHistory extends React.Component {
     const { entries } = this.state
 
     this.setState({
-      index: Math.max(Math.min(n, entries.length - 1), 0)
+      index: clamp(n, 0, entries.length - 1)
     })
   }
 
@@ -79,7 +82,7 @@ class MemoryHistory extends React.Component {
     this.setState({
       // Copy the array so we can mutate it.
       entries: initialEntries.slice(0),
-      index: initialIndex
+      index: clamp(initialIndex, 0, initialEntries.length - 1)
     })
   }
 
