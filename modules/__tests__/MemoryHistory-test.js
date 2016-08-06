@@ -32,6 +32,11 @@ describe('MemoryHistory', () => {
       const children = RenderTestSequences.ReplaceEmitsANewLocation(done)
       render(<MemoryHistory children={children}/>, node)
     })
+
+    it('changes the key', (done) => {
+      const children = RenderTestSequences.ReplaceChangesTheKey(done)
+      render(<MemoryHistory children={children}/>, node)
+    })
   })
 
   describe('pop', () => {

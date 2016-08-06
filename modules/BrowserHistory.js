@@ -102,8 +102,7 @@ class BrowserHistory extends React.Component {
       return
     }
 
-    const { location } = this.state
-    const key = (location && location.key) || this.createKey()
+    const key = this.createKey()
 
     if (state !== undefined)
       this.props.stateStorage.saveState(key, state)

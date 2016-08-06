@@ -150,10 +150,8 @@ class HashHistory extends React.Component {
   }
 
   handleReplace = (path, state) => {
-    const { location } = this.state
-    const key = (location && location.key) || this.createKey()
-
     if (state !== undefined) {
+      const key = this.createKey()
       this.props.stateStorage.saveState(key, state)
       path = addQueryStringValueToPath(path, this.props.queryKey, key)
     }

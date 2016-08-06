@@ -43,6 +43,11 @@ describe('HashHistory', () => {
       const children = RenderTestSequences.ReplaceEmitsANewLocation(done)
       render(<HashHistory children={children}/>, node)
     })
+
+    it('changes the key', (done) => {
+      const children = RenderTestSequences.ReplaceChangesTheKey(done)
+      render(<HashHistory children={children}/>, node)
+    })
   })
 
   describe('pop', () => {

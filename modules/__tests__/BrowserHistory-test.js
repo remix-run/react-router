@@ -33,6 +33,11 @@ describe('BrowserHistory', () => {
       const children = RenderTestSequences.ReplaceEmitsANewLocation(done)
       render(<BrowserHistory children={children}/>, node)
     })
+
+    it('changes the key', (done) => {
+      const children = RenderTestSequences.ReplaceChangesTheKey(done)
+      render(<BrowserHistory children={children}/>, node)
+    })
   })
 
   describe('pop', () => {

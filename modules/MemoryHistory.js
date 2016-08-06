@@ -52,9 +52,7 @@ class MemoryHistory extends React.Component {
 
   handleReplace = (path, state) => {
     const { entries, index } = this.state
-
-    const location = entries[index]
-    const key = (location && location.key) || this.createKey()
+    const key = this.createKey()
 
     entries[index] = {
       path,
