@@ -42,5 +42,9 @@ export const Pop = ({ go }) =>
   <HistoryAction perform={history => history.go(go)}/>
 
 Pop.propTypes = {
-  go: PropTypes.number.isRequired
+  go: PropTypes.number
+}
+
+Pop.defaultProps = {
+  go: -1
 }
