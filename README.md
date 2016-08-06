@@ -37,7 +37,7 @@ Using [npm](https://www.npmjs.com/):
 
 Then with a module bundler like [webpack](https://webpack.github.io/) that supports either CommonJS or ES2015 modules, use as you would anything else:
 
-```jsx
+```js
 // using an ES6 transpiler, like babel
 import { Router, Route, Link } from 'react-router'
 
@@ -57,7 +57,7 @@ You can find the library on `window.ReactRouter`.
 
 ### What's it look like?
 
-```jsx
+```js
 import React from 'react'
 import { render } from 'react-dom'
 import { Router, Route, Link, browserHistory } from 'react-router'
