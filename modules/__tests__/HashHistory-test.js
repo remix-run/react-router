@@ -5,12 +5,11 @@ import RenderTestSequences from './RenderTestSequences'
 
 describe('HashHistory', () => {
   let node
-  beforeEach((done) => {
-    window.location.hash = ''
-    node = document.createElement('div')
+  beforeEach(() => {
+    if (window.location.hash !== '')
+      window.location.hash = ''
 
-    // Some browsers need a little time to reflect the hash change.
-    setTimeout(done, 10)
+    node = document.createElement('div')
   })
 
   afterEach(() => {
@@ -50,6 +49,27 @@ describe('HashHistory', () => {
     it('emits a new location', (done) => {
       const children = RenderTestSequences.PopEmitsANewLocation(done)
       render(<HashHistory children={children}/>, node)
+    })
+  })
+
+  describe('"hashbang" hash encoding', () => {
+    it('formats the hash correctly', (done) => {
+      const children = RenderTestSequences.HashBangHashEncoding(done)
+      render(<HashHistory hashType="hashbang" children={children}/>, node)
+    })
+  })
+
+  describe('"noslash" hash encoding', () => {
+    it('formats the hash correctly', (done) => {
+      const children = RenderTestSequences.NoSlashHashEncoding(done)
+      render(<HashHistory hashType="noslash" children={children}/>, node)
+    })
+  })
+
+  describe('"slash" hash encoding', () => {
+    it('formats the hash correctly', (done) => {
+      const children = RenderTestSequences.SlashHashEncoding(done)
+      render(<HashHistory hashType="slash" children={children}/>, node)
     })
   })
 })

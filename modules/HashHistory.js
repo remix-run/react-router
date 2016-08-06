@@ -2,7 +2,14 @@ import warning from 'warning'
 import React, { PropTypes } from 'react'
 import HistoryContext from './HistoryContext'
 import DOMStateStorage from './DOMStateStorage'
-import { addEventListener, removeEventListener } from './DOMUtils'
+import {
+  addEventListener,
+  removeEventListener,
+  supportsGoWithoutReloadUsingHash
+} from './DOMUtils'
+import {
+  locationsAreEqual
+} from './LocationUtils'
 import {
   addQueryStringValueToPath,
   getQueryStringValueFromPath,
@@ -113,16 +120,14 @@ class HashHistory extends React.Component {
       // Ensure we always have a properly-encoded hash.
       replaceHashPath(encodedPath)
     } else {
-      const { hash } = window.location
+      const { location } = this.state
+      const nextLocation = this.createLocation()
 
-      if (this.prevHash === hash)
-        return // Ignore consecutive identical hashchange events.
-
-      this.prevHash = hash
-
-      this.setState({
-        location: this.createLocation()
-      })
+      // A hashchange doesn't always == a location change.
+      if (!locationsAreEqual(location, nextLocation))
+        this.setState({
+          location: nextLocation
+        })
     }
   }
 
@@ -159,11 +164,25 @@ class HashHistory extends React.Component {
   }
 
   handlePop = (n) => {
+    warning(
+      this.goIsSupportedWithoutReload,
+      'HashHistory go(n) causes a full page reload in this browser'
+    )
+
     window.history.go(n)
   }
 
   componentWillMount() {
     if (typeof window === 'object') {
+      this.goIsSupportedWithoutReload = supportsGoWithoutReloadUsingHash()
+
+      // Ensure the hash is encoded properly.
+      const path = getHashPath()
+      const encodedPath = this.encodePath(path)
+
+      if (path !== encodedPath)
+        replaceHashPath(encodedPath)
+
       this.setState({
         location: this.createLocation()
       })

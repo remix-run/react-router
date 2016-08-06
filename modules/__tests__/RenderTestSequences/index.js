@@ -1,10 +1,24 @@
-import PushEmitsANewLocation from './PushEmitsANewLocation'
-import ReplaceEmitsANewLocation from './ReplaceEmitsANewLocation'
+import HashBangHashEncoding from './HashBangHashEncoding'
+import NoSlashHashEncoding from './NoSlashHashEncoding'
 import PopEmitsANewLocation from './PopEmitsANewLocation'
+import PushEmitsANewLocation from './PushEmitsANewLocation'
 import PushWithStateUsesAKey from './PushWithStateUsesAKey'
 import PushWithoutStateOmitsTheKey from './PushWithoutStateOmitsTheKey'
+import ReplaceEmitsANewLocation from './ReplaceEmitsANewLocation'
+import SlashHashEncoding from './SlashHashEncoding'
 
-const execSteps = (steps, done) => {
+const RenderTestSequences = {
+  HashBangHashEncoding,
+  NoSlashHashEncoding,
+  PopEmitsANewLocation,
+  PushEmitsANewLocation,
+  PushWithStateUsesAKey,
+  PushWithoutStateOmitsTheKey,
+  ReplaceEmitsANewLocation,
+  SlashHashEncoding
+}
+
+const createRenderProp = (steps, done) => {
   let index = 0
 
   return (...args) => {
@@ -22,14 +36,9 @@ const execSteps = (steps, done) => {
   }
 }
 
-const sequenceRunner = steps => done => execSteps(steps, done)
+const renderPropCreators = Object.keys(RenderTestSequences).reduce((memo, key) => {
+  memo[key] = done => createRenderProp(RenderTestSequences[key], done)
+  return memo
+}, {})
 
-const RenderTestSequences = {
-  PushEmitsANewLocation: sequenceRunner(PushEmitsANewLocation),
-  ReplaceEmitsANewLocation: sequenceRunner(ReplaceEmitsANewLocation),
-  PopEmitsANewLocation: sequenceRunner(PopEmitsANewLocation),
-  PushWithStateUsesAKey: sequenceRunner(PushWithStateUsesAKey),
-  PushWithoutStateOmitsTheKey: sequenceRunner(PushWithoutStateOmitsTheKey)
-}
-
-export default RenderTestSequences
+export default renderPropCreators
