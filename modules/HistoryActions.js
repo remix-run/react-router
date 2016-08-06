@@ -12,16 +12,12 @@ class HistoryAction extends React.Component {
     perform: PropTypes.func.isRequired
   }
 
-  performAction() {
+  componentWillMount() {
     this.props.perform(this.context.history)
   }
 
-  componentDidMount() {
-    this.performAction()
-  }
-
-  componentDidUpdate() {
-    this.performAction()
+  componentWillReceiveProps(nextProps) {
+    nextProps.perform(this.context.history)
   }
 
   render() {
