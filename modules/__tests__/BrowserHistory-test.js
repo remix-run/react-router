@@ -1,7 +1,7 @@
 import React from 'react'
 import { render, unmountComponentAtNode } from 'react-dom'
 import BrowserHistory from '../BrowserHistory'
-import RenderTestSequences from './RenderTestSequences'
+import * as RenderTestSequences from './RenderTestSequences'
 
 describe('BrowserHistory', () => {
   let node
