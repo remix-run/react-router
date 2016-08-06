@@ -9,11 +9,11 @@ class HistoryAction extends React.Component {
   }
 
   static propTypes = {
-    performAction: PropTypes.func.isRequired
+    perform: PropTypes.func.isRequired
   }
 
   performAction() {
-    this.props.performAction(this.context.history)
+    this.props.perform(this.context.history)
   }
 
   componentDidMount() {
@@ -30,7 +30,7 @@ class HistoryAction extends React.Component {
 }
 
 export const Push = ({ path, state }) =>
-  <HistoryAction performAction={history => history.push(path, state)}/>
+  <HistoryAction perform={history => history.push(path, state)}/>
 
 Push.propTypes = {
   path: PropTypes.string.isRequired,
@@ -38,12 +38,12 @@ Push.propTypes = {
 }
 
 export const Replace = ({ path, state }) =>
-  <HistoryAction performAction={history => history.replace(path, state)}/>
+  <HistoryAction perform={history => history.replace(path, state)}/>
 
 Replace.propTypes = Push.propTypes
 
 export const Pop = ({ go }) =>
-  <HistoryAction performAction={history => history.pop(go)}/>
+  <HistoryAction perform={history => history.pop(go)}/>
 
 Pop.propTypes = {
   go: PropTypes.number.isRequired
