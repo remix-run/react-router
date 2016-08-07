@@ -75,7 +75,7 @@ class BrowserHistory extends React.Component {
     if (!this.supportsHistory) {
       warning(
         state === undefined,
-        'You cannot push state in browsers that do not support HTML5 history'
+        '<BrowserHistory> cannot push state in browsers that do not support HTML5 history'
       )
 
       window.location.href = path
@@ -99,7 +99,7 @@ class BrowserHistory extends React.Component {
     if (!this.supportsHistory) {
       warning(
         state === undefined,
-        'You cannot replace state in browsers that do not support HTML5 history'
+        '<BrowserHistory> cannot replace state in browsers that do not support HTML5 history'
       )
 
       window.location.replace(path)
