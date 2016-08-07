@@ -6,7 +6,7 @@ import createRenderProp from './createRenderProp'
 export default (done) => {
   const steps = [
     () => {
-      expect(window.location.hash).toBe('#!')
+      expect(window.location.hash).toBe('#!/')
       return <Push path="/hello"/>
     },
     () => {
@@ -14,7 +14,7 @@ export default (done) => {
       return <Pop go={-1}/>
     },
     () => {
-      expect(window.location.hash).toBe('#!')
+      expect(window.location.hash).toBe('#!/')
       return <Pop go={1}/>
     },
     () => {

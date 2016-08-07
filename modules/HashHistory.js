@@ -26,7 +26,7 @@ const addLeadingSlash = (path) =>
 
 const HashPathCoders = {
   hashbang: {
-    encodePath: (path) => path.charAt(0) === '!' ? path : '!' + path,
+    encodePath: (path) => path.charAt(0) === '!' ? path : '!' + addLeadingSlash(path),
     decodePath: (path) => path.charAt(0) === '!' ? path.substring(1) : path
   },
 
