@@ -12,7 +12,7 @@ export default (done) => {
     },
     () => {
       expect(window.location.hash).toBe('#hello')
-      return <Pop go={-1}/>
+      return <Pop/>
     },
     () => {
       // IE 10+ gives us "#", everyone else gives us ""

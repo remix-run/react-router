@@ -17,7 +17,7 @@ export default (done) => {
         path: '/hello'
       })
 
-      return <Pop go={-1}/>
+      return <Pop/>
     },
     (location) => {
       expect(location).toMatch({

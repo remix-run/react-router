@@ -11,7 +11,7 @@ export default (done) => {
     },
     () => {
       expect(window.location.hash).toBe('#/hello')
-      return <Pop go={-1}/>
+      return <Pop/>
     },
     () => {
       expect(window.location.hash).toBe('#/')
