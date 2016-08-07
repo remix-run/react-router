@@ -48,3 +48,6 @@ Pop.propTypes = {
 Pop.defaultProps = {
   go: -1
 }
+
+export const Revert = () =>
+  <HistoryAction perform={history => history.revert()}/>

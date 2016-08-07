@@ -1,3 +1,4 @@
+import warning from 'warning'
 import React, { PropTypes } from 'react'
 import HistoryContext from './HistoryContext'
 
@@ -22,6 +23,8 @@ class MemoryHistory extends React.Component {
   }
 
   state = {
+    prevAction: null,
+    prevIndex: null,
     action: null,
     index: null,
     entries: null
@@ -51,6 +54,8 @@ class MemoryHistory extends React.Component {
       }
 
       return {
+        prevAction: prevState.action,
+        prevIndex: prevState.index,
         action: 'PUSH',
         index: nextIndex,
         entries
@@ -71,6 +76,8 @@ class MemoryHistory extends React.Component {
       }
 
       return {
+        prevAction: prevState.action,
+        prevIndex: prevState.index,
         action: 'REPLACE',
         entries
       }
@@ -83,15 +90,30 @@ class MemoryHistory extends React.Component {
       const nextIndex = clamp(prevIndex + n, 0, prevState.entries.length - 1)
 
       return {
+        prevAction: prevState.action,
+        prevIndex,
         action: 'POP',
         index: nextIndex
       }
     })
   }
 
-    this.setState({
-      index: clamp(n, 0, entries.length - 1)
-    })
+  handleRevert = () => {
+    const { prevAction, prevIndex } = this.state
+
+    if (prevAction && prevIndex != null) {
+      this.setState({
+        prevAction: null,
+        prevIndex: null,
+        action: prevAction,
+        index: prevIndex
+      })
+    } else {
+      warning(
+        false,
+        '<MemoryHistory> cannot revert more than one entry'
+      )
+    }
   }
 
   componentWillMount() {
@@ -117,6 +139,7 @@ class MemoryHistory extends React.Component {
         push={this.handlePush}
         replace={this.handleReplace}
         go={this.handleGo}
+        revert={this.handleRevert}
       />
     )
   }

@@ -15,7 +15,8 @@ class HistoryContext extends React.Component {
     location: historyLocationType.isRequired,
     push: PropTypes.func.isRequired,
     replace: PropTypes.func.isRequired,
-    go: PropTypes.func.isRequired
+    go: PropTypes.func.isRequired,
+    revert: PropTypes.func.isRequired
   }
 
   static childContextTypes = {
@@ -27,7 +28,8 @@ class HistoryContext extends React.Component {
       history: {
         push: this.props.push,
         replace: this.props.replace,
-        go: this.props.go
+        go: this.props.go,
+        revert: this.props.revert
       }
     }
   }
