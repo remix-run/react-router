@@ -17,6 +17,11 @@ describe('HashHistory', () => {
   })
 
   describe('push', () => {
+    it('emits a PUSH action', (done) => {
+      const children = RenderTestSequences.PushEmitsAPushAction(done)
+      render(<HashHistory children={children}/>, node)
+    })
+
     it('emits a new location', (done) => {
       const children = RenderTestSequences.PushEmitsANewLocation(done)
       render(<HashHistory children={children}/>, node)
@@ -39,6 +44,11 @@ describe('HashHistory', () => {
   })
 
   describe('replace', () => {
+    it('emits a REPLACE action', (done) => {
+      const children = RenderTestSequences.ReplaceEmitsAReplaceAction(done)
+      render(<HashHistory children={children}/>, node)
+    })
+
     it('emits a new location', (done) => {
       const children = RenderTestSequences.ReplaceEmitsANewLocation(done)
       render(<HashHistory children={children}/>, node)
@@ -51,6 +61,11 @@ describe('HashHistory', () => {
   })
 
   describe('pop', () => {
+    it('emits a POP action', (done) => {
+      const children = RenderTestSequences.PopEmitsAPopAction(done)
+      render(<HashHistory children={children}/>, node)
+    })
+
     it('emits a new location', (done) => {
       const children = RenderTestSequences.PopEmitsANewLocation(done)
       render(<HashHistory children={children}/>, node)

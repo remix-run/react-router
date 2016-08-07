@@ -80,6 +80,7 @@ class HashHistory extends React.Component {
   }
 
   state = {
+    action: null,
     location: null
   }
 
@@ -123,42 +124,67 @@ class HashHistory extends React.Component {
       const { location } = this.state
       const nextLocation = this.createLocation()
 
-      // A hashchange doesn't always == a location change.
-      if (!locationsAreEqual(location, nextLocation))
-        this.setState({
-          location: nextLocation
-        })
+      if (locationsAreEqual(location, nextLocation))
+        return // A hashchange doesn't always == location change.
+
+      if (this.ignorePath === nextLocation.path)
+        return // Ignore this path; we already setState.
+
+      this.ignorePath = null
+
+      this.setState({
+        action: 'POP',
+        location: nextLocation
+      })
     }
   }
 
   handlePush = (path, state) => {
+    let key, pathWithKey
     if (state !== undefined) {
-      const key = this.createKey()
+      key = this.createKey()
       this.props.stateStorage.saveState(key, state)
-      path = addQueryStringValueToPath(path, this.props.queryKey, key)
+      pathWithKey = addQueryStringValueToPath(path, this.props.queryKey, key)
+    } else {
+      pathWithKey = path
     }
 
-    const encodedPath = this.encodePath(path)
+    const encodedPath = this.encodePath(pathWithKey)
+    const hashChanged = getHashPath() !== encodedPath
 
-    // TODO: Maybe we could use forceUpdate here and skip the warning?
-    warning(
-      getHashPath() !== encodedPath,
-      'You cannot PUSH the same path using <HashHistory>'
-    )
+    if (hashChanged) {
+      this.ignorePath = path
+      pushHashPath(encodedPath)
+    }
 
-    pushHashPath(encodedPath)
+    this.setState({
+      action: 'PUSH',
+      location: { path, state, key }
+    })
   }
 
   handleReplace = (path, state) => {
+    let key, pathWithKey
     if (state !== undefined) {
-      const key = this.createKey()
+      key = this.createKey()
       this.props.stateStorage.saveState(key, state)
-      path = addQueryStringValueToPath(path, this.props.queryKey, key)
+      pathWithKey = addQueryStringValueToPath(path, this.props.queryKey, key)
+    } else {
+      pathWithKey = path
     }
 
-    const encodedPath = this.encodePath(path)
+    const encodedPath = this.encodePath(pathWithKey)
+    const hashChanged = getHashPath() !== encodedPath
 
-    replaceHashPath(encodedPath)
+    if (hashChanged) {
+      this.ignorePath = path
+      replaceHashPath(encodedPath)
+    }
+
+    this.setState({
+      action: 'REPLACE',
+      location: { path, state, key }
+    })
   }
 
   handleGo = (n) => {
@@ -182,6 +208,7 @@ class HashHistory extends React.Component {
         replaceHashPath(encodedPath)
 
       this.setState({
+        action: 'POP',
         location: this.createLocation()
       })
     } else {
@@ -202,11 +229,12 @@ class HashHistory extends React.Component {
 
   render() {
     const { children } = this.props
-    const { location } = this.state
+    const { action, location } = this.state
 
     return (
       <HistoryContext
         children={children}
+        action={action}
         location={location}
         push={this.handlePush}
         replace={this.handleReplace}

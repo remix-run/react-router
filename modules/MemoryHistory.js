@@ -22,8 +22,9 @@ class MemoryHistory extends React.Component {
   }
 
   state = {
-    entries: null,
-    index: null
+    action: null,
+    index: null,
+    entries: null
   }
 
   createKey() {
@@ -31,45 +32,62 @@ class MemoryHistory extends React.Component {
   }
 
   handlePush = (path, state) => {
-    const { entries, index } = this.state
-    const key = this.createKey()
+    this.setState(prevState => {
+      const prevIndex = prevState.index
+      const entries = prevState.entries.slice(0)
 
-    const location = {
-      path,
-      state,
-      key
-    }
+      const key = this.createKey()
+      const location = {
+        path,
+        state,
+        key
+      }
 
-    const nextIndex = index + 1
-    if (entries.length > nextIndex) {
-      entries.splice(nextIndex, entries.length - nextIndex, location)
-    } else {
-      entries.push(location)
-    }
+      const nextIndex = prevIndex + 1
+      if (entries.length > nextIndex) {
+        entries.splice(nextIndex, entries.length - nextIndex, location)
+      } else {
+        entries.push(location)
+      }
 
-    this.setState({
-      entries,
-      index: nextIndex
+      return {
+        action: 'PUSH',
+        index: nextIndex,
+        entries
+      }
     })
   }
 
   handleReplace = (path, state) => {
-    const { entries, index } = this.state
-    const key = this.createKey()
+    this.setState(prevState => {
+      const prevIndex = prevState.index
+      const entries = prevState.entries.slice(0)
 
-    entries[index] = {
-      path,
-      state,
-      key
-    }
+      const key = this.createKey()
+      entries[prevIndex] = {
+        path,
+        state,
+        key
+      }
 
-    this.setState({
-      entries
+      return {
+        action: 'REPLACE',
+        entries
+      }
     })
   }
 
   handleGo = (n) => {
-    const { entries } = this.state
+    this.setState(prevState => {
+      const prevIndex = prevState.index
+      const nextIndex = clamp(prevIndex + n, 0, prevState.entries.length - 1)
+
+      return {
+        action: 'POP',
+        index: nextIndex
+      }
+    })
+  }
 
     this.setState({
       index: clamp(n, 0, entries.length - 1)
@@ -80,20 +98,21 @@ class MemoryHistory extends React.Component {
     const { initialEntries, initialIndex } = this.props
 
     this.setState({
-      // Copy the array so we can mutate it.
-      entries: initialEntries.slice(0),
-      index: clamp(initialIndex, 0, initialEntries.length - 1)
+      action: 'POP',
+      index: clamp(initialIndex, 0, initialEntries.length - 1),
+      entries: initialEntries
     })
   }
 
   render() {
     const { children } = this.props
-    const { entries, index } = this.state
+    const { action, index, entries } = this.state
     const location = entries[index]
 
     return (
       <HistoryContext
         children={children}
+        action={action}
         location={location}
         push={this.handlePush}
         replace={this.handleReplace}

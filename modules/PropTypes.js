@@ -27,6 +27,12 @@ export const router = PropTypes.shape({
   blockTransitions: PropTypes.func.isRequired
 })
 
+export const action = PropTypes.oneOf([
+  'PUSH',
+  'REPLACE',
+  'POP'
+])
+
 // TODO: Replace the "location" prop type with this one?
 export const historyLocation = PropTypes.shape({
   path: PropTypes.string.isRequired,

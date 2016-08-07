@@ -15,6 +15,11 @@ describe('BrowserHistory', () => {
   })
 
   describe('push', () => {
+    it('emits a PUSH action', (done) => {
+      const children = RenderTestSequences.PushEmitsAPushAction(done)
+      render(<BrowserHistory children={children}/>, node)
+    })
+
     it('emits a new location', (done) => {
       const children = RenderTestSequences.PushEmitsANewLocation(done)
       render(<BrowserHistory children={children}/>, node)
@@ -29,6 +34,11 @@ describe('BrowserHistory', () => {
   })
 
   describe('replace', () => {
+    it('emits a REPLACE action', (done) => {
+      const children = RenderTestSequences.ReplaceEmitsAReplaceAction(done)
+      render(<BrowserHistory children={children}/>, node)
+    })
+
     it('emits a new location', (done) => {
       const children = RenderTestSequences.ReplaceEmitsANewLocation(done)
       render(<BrowserHistory children={children}/>, node)
@@ -41,6 +51,11 @@ describe('BrowserHistory', () => {
   })
 
   describe('pop', () => {
+    it('emits a POP action', (done) => {
+      const children = RenderTestSequences.PopEmitsAPopAction(done)
+      render(<BrowserHistory children={children}/>, node)
+    })
+
     it('emits a new location', (done) => {
       const children = RenderTestSequences.PopEmitsANewLocation(done)
       render(<BrowserHistory children={children}/>, node)

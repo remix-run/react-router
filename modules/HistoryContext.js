@@ -1,5 +1,6 @@
 import React, { PropTypes } from 'react'
 import {
+  action as actionType,
   historyLocation as historyLocationType,
   historyContext as historyContextType
 } from './PropTypes'
@@ -10,6 +11,7 @@ import {
 class HistoryContext extends React.Component {
   static propTypes = {
     children: PropTypes.func.isRequired,
+    action: actionType.isRequired,
     location: historyLocationType.isRequired,
     push: PropTypes.func.isRequired,
     replace: PropTypes.func.isRequired,
@@ -31,7 +33,7 @@ class HistoryContext extends React.Component {
   }
 
   render() {
-    return this.props.children(this.props.location)
+    return this.props.children(this.props.location, this.props.action)
   }
 }
 

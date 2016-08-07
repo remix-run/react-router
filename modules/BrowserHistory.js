@@ -37,6 +37,7 @@ class BrowserHistory extends React.Component {
   }
 
   state = {
+    action: null,
     location: null
   }
 
@@ -58,12 +59,14 @@ class BrowserHistory extends React.Component {
   handlePopState = (event) => {
     if (event.state !== undefined) // Ignore extraneous popstate events in WebKit.
       this.setState({
+        action: 'POP',
         location: this.createLocation(event.state)
       })
   }
 
   handleHashChange = () => {
     this.setState({
+      // TODO: action
       location: this.createLocation(getHistoryState())
     })
   }
@@ -87,6 +90,7 @@ class BrowserHistory extends React.Component {
     window.history.pushState({ key }, null, path)
 
     this.setState({
+      action: 'PUSH',
       location: { path, state, key }
     })
   }
@@ -110,6 +114,7 @@ class BrowserHistory extends React.Component {
     window.history.replaceState({ key }, null, path)
 
     this.setState({
+      action: 'REPLACE',
       location: { path, state, key }
     })
   }
@@ -124,6 +129,7 @@ class BrowserHistory extends React.Component {
       this.needsHashChangeListener = !supportsPopStateOnHashChange()
 
       this.setState({
+        action: 'POP',
         location: this.createLocation(getHistoryState())
       })
     } else {
@@ -150,11 +156,12 @@ class BrowserHistory extends React.Component {
 
   render() {
     const { children } = this.props
-    const { location } = this.state
+    const { action, location } = this.state
 
     return (
       <HistoryContext
         children={children}
+        action={action}
         location={location}
         push={this.handlePush}
         replace={this.handleReplace}
