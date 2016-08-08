@@ -26,21 +26,6 @@ describe('HashHistory', () => {
       const children = RenderTestSequences.PushEmitsANewLocation(done)
       render(<HashHistory children={children}/>, node)
     })
-
-    describe('with state', () => {
-      it('uses a key', (done) => {
-        const children = RenderTestSequences.PushWithStateUsesAKey(done)
-        render(<HashHistory children={children}/>, node)
-      })
-    })
-
-    // This behavior is unique to hash history.
-    describe('without state', () => {
-      it('omits the key', (done) => {
-        const children = RenderTestSequences.PushWithoutStateOmitsTheKey(done)
-        render(<HashHistory children={children}/>, node)
-      })
-    })
   })
 
   describe('replace', () => {
@@ -51,11 +36,6 @@ describe('HashHistory', () => {
 
     it('emits a new location', (done) => {
       const children = RenderTestSequences.ReplaceEmitsANewLocation(done)
-      render(<HashHistory children={children}/>, node)
-    })
-
-    it('changes the key', (done) => {
-      const children = RenderTestSequences.ReplaceChangesTheKey(done)
       render(<HashHistory children={children}/>, node)
     })
   })

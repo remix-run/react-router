@@ -42,8 +42,9 @@ export const createPath = (location) => {
   if (location == null || typeof location === 'string')
     return location
 
-  const { basename, pathname, search, hash } = location
-  let path = (basename || '') + pathname
+  const { pathname, search, hash } = location
+
+  let path = pathname
 
   if (search && search !== '?')
     path += search
@@ -52,34 +53,4 @@ export const createPath = (location) => {
     path += hash
 
   return path
-}
-
-export const addQueryStringValueToPath = (path, key, value) => {
-  const { pathname, search, hash } = parsePath(path)
-
-  return createPath({
-    pathname,
-    search: search + (search.indexOf('?') === -1 ? '?' : '&') + key + '=' + value,
-    hash
-  })
-}
-
-export const getQueryStringValueFromPath = (path, key) => {
-  const { search } = parsePath(path)
-  const pattern = new RegExp(`[?&]${key}=([a-zA-Z0-9]+)`)
-  const match = search.match(pattern)
-  return match ? match[1] : undefined
-}
-
-export const stripQueryStringValueFromPath = (path, key) => {
-  const { pathname, search, hash } = parsePath(path)
-  const pattern = new RegExp(`([?&])${key}=[a-zA-Z0-9]+(&?)`)
-
-  return createPath({
-    pathname,
-    search: search.replace(pattern, (match, prefix, suffix) => (
-      prefix === '?' ? prefix : suffix
-    )),
-    hash
-  })
 }

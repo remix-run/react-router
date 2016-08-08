@@ -10,14 +10,6 @@ import {
 import {
   locationsAreEqual
 } from './LocationUtils'
-import {
-  addQueryStringValueToPath,
-  getQueryStringValueFromPath,
-  stripQueryStringValueFromPath
-} from './PathUtils'
-import {
-  stateStorage as stateStorageType
-} from './PropTypes'
 
 const HashChangeEvent = 'hashchange'
 
@@ -66,17 +58,11 @@ const replaceHashPath = (path) => {
 class HashHistory extends React.Component {
   static propTypes = {
     children: PropTypes.func.isRequired,
-    hashType: PropTypes.oneOf(Object.keys(HashPathCoders)),
-    keyLength: PropTypes.number,
-    queryKey: PropTypes.string,
-    stateStorage: stateStorageType
+    hashType: PropTypes.oneOf(Object.keys(HashPathCoders))
   }
 
   static defaultProps = {
-    hashType: 'slash',
-    keyLength: 6,
-    queryKey: '_k',
-    stateStorage: DOMStateStorage
+    hashType: 'slash'
   }
 
   state = {
@@ -92,24 +78,11 @@ class HashHistory extends React.Component {
     return HashPathCoders[this.props.hashType].encodePath(path)
   }
 
-  createKey() {
-    return Math.random().toString(36).substr(2, this.props.keyLength)
-  }
-
   createLocation() {
-    let path = this.decodePath(getHashPath())
-    const key = getQueryStringValueFromPath(path, this.props.queryKey)
-
-    let state
-    if (key) {
-      path = stripQueryStringValueFromPath(path, this.props.queryKey)
-      state = this.props.stateStorage.readState(key)
-    }
+    const path = this.decodePath(getHashPath())
 
     return {
-      path,
-      state,
-      key
+      path
     }
   }
 
@@ -128,62 +101,60 @@ class HashHistory extends React.Component {
         return // A hashchange doesn't always == location change.
 
       if (this.ignorePath === nextLocation.path)
-        return // Ignore this path; we already setState.
+        return // Ignore this change; we already setState.
 
       this.ignorePath = null
 
       this.setState({
-        action: 'POP',
+        action: 'POP', // Best guess.
         location: nextLocation
       })
     }
   }
 
   handlePush = (path, state) => {
-    let key, pathWithKey
-    if (state !== undefined) {
-      key = this.createKey()
-      this.props.stateStorage.saveState(key, state)
-      pathWithKey = addQueryStringValueToPath(path, this.props.queryKey, key)
-    } else {
-      pathWithKey = path
-    }
+    warning(
+      state === undefined,
+      '<HashHistory> cannot store state; it will be dropped'
+    )
 
-    const encodedPath = this.encodePath(pathWithKey)
+    const encodedPath = this.encodePath(path)
     const hashChanged = getHashPath() !== encodedPath
 
     if (hashChanged) {
+      // We cannot tell if a hashchange was caused by a PUSH, so we'd
+      // rather setState here and ignore the hashchange. The caveat here
+      // is that other <HashHistory>s in the page will consider it a POP.
       this.ignorePath = path
       pushHashPath(encodedPath)
     }
 
     this.setState({
       action: 'PUSH',
-      location: { path, state, key }
+      location: { path }
     })
   }
 
   handleReplace = (path, state) => {
-    let key, pathWithKey
-    if (state !== undefined) {
-      key = this.createKey()
-      this.props.stateStorage.saveState(key, state)
-      pathWithKey = addQueryStringValueToPath(path, this.props.queryKey, key)
-    } else {
-      pathWithKey = path
-    }
+    warning(
+      state === undefined,
+      '<HashHistory> cannot store state; it will be dropped'
+    )
 
-    const encodedPath = this.encodePath(pathWithKey)
+    const encodedPath = this.encodePath(path)
     const hashChanged = getHashPath() !== encodedPath
 
     if (hashChanged) {
+      // We cannot tell if a hashchange was caused by a REPLACE, so we'd
+      // rather setState here and ignore the hashchange. The caveat here
+      // is that other <HashHistory>s in the page will consider it a POP.
       this.ignorePath = path
       replaceHashPath(encodedPath)
     }
 
     this.setState({
       action: 'REPLACE',
-      location: { path, state, key }
+      location: { path }
     })
   }
 
