@@ -1,6 +1,6 @@
-const { buildPreset } = require('babel-preset-es2015')
+const buildPreset = require('babel-preset-es2015').buildPreset
 
-const { BABEL_ENV } = process.env
+const BABEL_ENV = process.env.BABEL_ENV
 
 module.exports = {
   presets: [
