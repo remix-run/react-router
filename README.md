@@ -125,7 +125,7 @@ See more in the [Introduction](/docs/Introduction.md), [Guides](/docs/guides/REA
 
 ### Versioning and Stability
 
-We want React Router to be a stable dependency that’s easy to keep current. We follow the same versioning as React.js itself: [React Versioning Scheme](https://facebook.github.io/react/blog/2016/02/19/new-versioning-scheme.html).
+We want React Router to be a stable dependency that’s easy to keep current. We take the same approach to versioning as React.js itself: [React Versioning Scheme](https://facebook.github.io/react/blog/2016/02/19/new-versioning-scheme.html).
 
 ### Thanks
 
