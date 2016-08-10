@@ -1,4 +1,5 @@
 import { mapAsync } from './AsyncUtils'
+import { isPromise } from './PromiseUtils'
 
 function getComponentsForRoute(nextState, route, callback) {
   if (route.component || route.components) {
@@ -8,7 +9,13 @@ function getComponentsForRoute(nextState, route, callback) {
 
   const getComponent = route.getComponent || route.getComponents
   if (getComponent) {
-    getComponent.call(route, nextState, callback)
+    const componentReturn = getComponent.call(route, nextState, callback)
+    if (isPromise(componentReturn))
+      componentReturn.then(
+        // Try module.default first in case of System.import
+        component => callback(null, component.default || component),
+        callback
+      ).catch(callback)
   } else {
     callback()
   }
