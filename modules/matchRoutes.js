@@ -33,8 +33,10 @@ function getChildRoutes(route, location, paramNames, paramValues, callback) {
     childRoutesReturn
       // Try module.default first in case of System.import and Babel 6
       .then(childRoutes => childRoutes.default || childRoutes)
-      .then(childRoutes => callback(null, createRoutes(childRoutes)))
-      .catch(callback)
+      .then(
+        childRoutes => callback(null, createRoutes(childRoutes)),
+        callback
+      )
 
   sync = false
   return result  // Might be undefined.
@@ -57,8 +59,10 @@ function getIndexRoute(route, location, paramNames, paramValues, callback) {
       indexRoutesReturn
         // Try module.default first in case of System.import and Babel 6
         .then(indexRoute => indexRoute.default || indexRoute)
-        .then(indexRoute => callback(null, createRoutes(indexRoute)[0]))
-        .catch(callback)
+        .then(
+          indexRoute => callback(null, createRoutes(indexRoute)[0]),
+          callback
+        )
   } else if (route.childRoutes) {
     const pathless = route.childRoutes.filter(childRoute => !childRoute.path)
 

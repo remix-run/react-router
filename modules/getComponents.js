@@ -14,8 +14,10 @@ function getComponentsForRoute(nextState, route, callback) {
       componentReturn
         // Try module.default first in case of System.import and Babel 6
         .then(component => component.default || component)
-        .then(component => callback(null, component))
-        .catch(callback)
+        .then(
+          component => callback(null, component),
+          callback
+        )
   } else {
     callback()
   }
