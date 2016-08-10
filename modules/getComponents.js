@@ -13,7 +13,8 @@ function getComponentsForRoute(nextState, route, callback) {
     if (isPromise(componentReturn))
       componentReturn
         // Try module.default first in case of System.import
-        .then(component => callback(null, component.default || component))
+        .then(component => component.default || component)
+        .then(component => callback(null, component))
         .catch(callback)
   } else {
     callback()
