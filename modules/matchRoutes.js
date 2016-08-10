@@ -31,7 +31,7 @@ function getChildRoutes(route, location, paramNames, paramValues, callback) {
 
   if (isPromise(childRoutesReturn))
     childRoutesReturn
-      // Try module.default first in case of System.import
+      // Try module.default first in case of System.import and Babel 6
       .then(childRoutes => childRoutes.default || childRoutes)
       .then(childRoutes => callback(null, createRoutes(childRoutes)))
       .catch(callback)
@@ -55,7 +55,7 @@ function getIndexRoute(route, location, paramNames, paramValues, callback) {
 
     if (isPromise(indexRoutesReturn))
       indexRoutesReturn
-        // Try module.default first in case of System.import
+        // Try module.default first in case of System.import and Babel 6
         .then(indexRoute => indexRoute.default || indexRoute)
         .then(indexRoute => callback(null, createRoutes(indexRoute)[0]))
         .catch(callback)
