@@ -11,11 +11,10 @@ function getComponentsForRoute(nextState, route, callback) {
   if (getComponent) {
     const componentReturn = getComponent.call(route, nextState, callback)
     if (isPromise(componentReturn))
-      componentReturn.then(
+      componentReturn
         // Try module.default first in case of System.import
-        component => callback(null, component.default || component),
-        callback
-      ).catch(callback)
+        .then(component => callback(null, component.default || component))
+        .catch(callback)
   } else {
     callback()
   }

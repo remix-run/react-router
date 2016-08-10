@@ -394,7 +394,7 @@ describe('Router', function () {
     it('should support getComponent returning a Promise', function (done) {
       const Component = () => <div />
 
-      const getComponent = () => new Promise((resolve) => resolve(Component))
+      const getComponent = () => new Promise(resolve => resolve(Component))
 
       render((
         <Router history={createHistory('/')} render={renderSpy}>
