@@ -4,6 +4,8 @@ import { Push, Pop, Revert } from '../../HistoryActions'
 import createRenderProp from './createRenderProp'
 
 export default (done) => {
+  let keyAfterPush
+
   const steps = [
     (location, action) => {
       expect(action).toBe('POP')
@@ -19,6 +21,8 @@ export default (done) => {
         path: '/hello'
       })
 
+      keyAfterPush = location.key
+
       return <Pop/>
     },
     (location, action) => {
@@ -32,7 +36,8 @@ export default (done) => {
     (location, action) => {
       expect(action).toBe('PUSH')
       expect(location).toMatch({
-        path: '/hello'
+        path: '/hello',
+        key: keyAfterPush
       })
 
       return null
