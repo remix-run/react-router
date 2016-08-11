@@ -71,7 +71,7 @@ class BrowserHistory extends React.Component {
 
   handleHashChange = () => {
     this.setState({
-      // TODO: action
+      action: 'POP', // Best guess.
       location: this.createLocation(getHistoryState())
     })
   }
