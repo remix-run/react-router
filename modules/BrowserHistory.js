@@ -8,9 +8,6 @@ import {
   supportsHistory,
   supportsPopStateOnHashChange
 } from './DOMUtils'
-import {
-  stateStorage as stateStorageType
-} from './PropTypes'
 
 const PopStateEvent = 'popstate'
 const HashChangeEvent = 'hashchange'
@@ -32,13 +29,11 @@ const getHistoryState = () => {
 class BrowserHistory extends React.Component {
   static propTypes = {
     children: PropTypes.func.isRequired,
-    keyLength: PropTypes.number,
-    stateStorage: stateStorageType
+    keyLength: PropTypes.number
   }
 
   static defaultProps = {
-    keyLength: 6,
-    stateStorage: DOMStateStorage
+    keyLength: 6
   }
 
   state = {
@@ -51,12 +46,12 @@ class BrowserHistory extends React.Component {
   }
 
   createLocation(historyState) {
-    const key = historyState && historyState.key
+    const { key, state } = (historyState || {})
     const { pathname, search, hash } = window.location
 
     return {
       path: pathname + search + hash,
-      state: key ? this.props.stateStorage.readState(key) : undefined,
+      state,
       key
     }
   }
@@ -89,10 +84,7 @@ class BrowserHistory extends React.Component {
 
     const key = this.createKey()
 
-    if (state !== undefined)
-      this.props.stateStorage.saveState(key, state)
-
-    window.history.pushState({ key }, null, path)
+    window.history.pushState({ key, state }, null, path)
 
     this.setState({
       action: 'PUSH',
@@ -113,10 +105,7 @@ class BrowserHistory extends React.Component {
 
     const key = this.createKey()
 
-    if (state !== undefined)
-      this.props.stateStorage.saveState(key, state)
-
-    window.history.replaceState({ key }, null, path)
+    window.history.replaceState({ key, state }, null, path)
 
     this.setState({
       action: 'REPLACE',
