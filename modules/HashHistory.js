@@ -1,6 +1,6 @@
 import warning from 'warning'
 import React, { PropTypes } from 'react'
-import HistoryContext from './HistoryContext'
+import DOMHistoryContext from './DOMHistoryContext'
 import {
   addEventListener,
   removeEventListener,
@@ -202,7 +202,7 @@ class HashHistory extends React.Component {
     const { action, location } = this.state
 
     return (
-      <HistoryContext
+      <DOMHistoryContext
         children={children}
         action={action}
         location={location}
