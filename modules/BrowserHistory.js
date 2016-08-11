@@ -1,7 +1,6 @@
 import warning from 'warning'
 import React, { PropTypes } from 'react'
 import HistoryContext from './HistoryContext'
-import DOMStateStorage from './DOMStateStorage'
 import {
   addEventListener,
   removeEventListener,
