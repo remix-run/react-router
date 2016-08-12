@@ -35,7 +35,12 @@ class HistoryContext extends React.Component {
   }
 
   render() {
-    return this.props.children(this.props.location, this.props.action)
+    const { action, location } = this.props
+
+    return this.props.children({
+      action,
+      location
+    })
   }
 }
 

@@ -5,15 +5,15 @@ import createRenderProp from './createRenderProp'
 
 export default (done) => {
   const steps = [
-    (location, action) => {
+    ({ action }) => {
       expect(action).toBe('POP')
       return <Push path="/hello"/>
     },
-    (location, action) => {
+    ({ action }) => {
       expect(action).toBe('PUSH')
       return <Pop/>
     },
-    (location, action) => {
+    ({ action }) => {
       expect(action).toBe('POP')
       return null
     }

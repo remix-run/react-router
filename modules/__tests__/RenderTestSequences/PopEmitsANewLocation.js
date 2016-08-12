@@ -5,21 +5,21 @@ import createRenderProp from './createRenderProp'
 
 export default (done) => {
   const steps = [
-    (location) => {
+    ({ location }) => {
       expect(location).toMatch({
         path: '/'
       })
 
       return <Push path="/hello"/>
     },
-    (location) => {
+    ({ location }) => {
       expect(location).toMatch({
         path: '/hello'
       })
 
       return <Pop/>
     },
-    (location) => {
+    ({ location }) => {
       expect(location).toMatch({
         path: '/'
       })

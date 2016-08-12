@@ -7,7 +7,7 @@ export default (done) => {
   let keyAfterPush
 
   const steps = [
-    (location) => {
+    ({ location }) => {
       expect(location).toMatch({
         path: '/',
         key: undefined
@@ -15,7 +15,7 @@ export default (done) => {
 
       return <Push path="/hello" state={{ the: 'state' }}/>
     },
-    (location) => {
+    ({ location }) => {
       expect(location).toMatch({
         path: '/hello',
         state: { the: 'state' },
@@ -26,7 +26,7 @@ export default (done) => {
 
       return <Replace path="/goodbye" state={{ more: 'state' }}/>
     },
-    (location) => {
+    ({ location }) => {
       expect(location).toMatch({
         path: '/goodbye',
         state: { more: 'state' },

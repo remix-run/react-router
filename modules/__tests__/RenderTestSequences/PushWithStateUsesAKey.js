@@ -5,14 +5,14 @@ import createRenderProp from './createRenderProp'
 
 export default (done) => {
   const steps = [
-    (location) => {
+    ({ location }) => {
       expect(location).toMatch({
         path: '/'
       })
 
       return <Push path="/hello" state={{ the: 'state' }}/>
     },
-    (location) => {
+    ({ location }) => {
       expect(location).toMatch({
         path: '/hello',
         state: { the: 'state' },

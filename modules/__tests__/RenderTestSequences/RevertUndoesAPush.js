@@ -5,7 +5,7 @@ import createRenderProp from './createRenderProp'
 
 export default (done) => {
   const steps = [
-    (location, action) => {
+    ({ action, location }) => {
       expect(action).toBe('POP')
       expect(location).toMatch({
         path: '/'
@@ -13,7 +13,7 @@ export default (done) => {
 
       return <Push path="/hello"/>
     },
-    (location, action) => {
+    ({ action, location }) => {
       expect(action).toBe('PUSH')
       expect(location).toMatch({
         path: '/hello'
@@ -21,7 +21,7 @@ export default (done) => {
 
       return <Revert/>
     },
-    (location, action) => {
+    ({ action, location }) => {
       expect(action).toBe('POP')
       expect(location).toMatch({
         path: '/'

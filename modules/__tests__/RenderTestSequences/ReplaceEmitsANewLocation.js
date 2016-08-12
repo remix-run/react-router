@@ -5,14 +5,14 @@ import createRenderProp from './createRenderProp'
 
 export default (done) => {
   const steps = [
-    (location) => {
+    ({ location }) => {
       expect(location).toMatch({
         path: '/'
       })
 
       return <Replace path="/hello"/>
     },
-    (location) => {
+    ({ location }) => {
       expect(location).toMatch({
         path: '/hello'
       })

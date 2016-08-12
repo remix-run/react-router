@@ -5,11 +5,11 @@ import createRenderProp from './createRenderProp'
 
 export default (done) => {
   const steps = [
-    (location, action) => {
+    ({ action }) => {
       expect(action).toBe('POP')
       return <Replace path="/hello"/>
     },
-    (location, action) => {
+    ({ action }) => {
       expect(action).toBe('REPLACE')
       return null
     }
