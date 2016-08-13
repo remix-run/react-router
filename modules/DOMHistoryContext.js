@@ -14,6 +14,9 @@ class DOMHistoryContext extends React.Component {
     go: PropTypes.func.isRequired
   }
 
+  handleConfirm = (message, callback) =>
+    callback(window.confirm(message)) // eslint-disable-line no-alert
+
   handleRevert = () => {
     const { action, go } = this.props
 
@@ -33,6 +36,7 @@ class DOMHistoryContext extends React.Component {
     return (
       <HistoryContext
         {...this.props}
+        confirm={this.handleConfirm}
         revert={this.handleRevert}
       />
     )

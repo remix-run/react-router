@@ -69,6 +69,13 @@ describe('HashHistory', () => {
     })
   })
 
+  describe('block', () => {
+    it('blocks a push', (done) => {
+      const children = RenderTestSequences.BlockAPush(done)
+      render(<HashHistory children={children}/>, node)
+    })
+  })
+
   describe('"hashbang" hash encoding', () => {
     it('formats the hash correctly', (done) => {
       const children = RenderTestSequences.HashBangHashEncoding(done)

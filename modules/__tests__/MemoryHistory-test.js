@@ -62,4 +62,11 @@ describe('MemoryHistory', () => {
       render(<MemoryHistory children={children}/>, node)
     })
   })
+
+  describe('block', () => {
+    it('blocks a push', (done) => {
+      const children = RenderTestSequences.BlockAPush(done)
+      render(<MemoryHistory children={children}/>, node)
+    })
+  })
 })

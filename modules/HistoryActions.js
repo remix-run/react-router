@@ -51,3 +51,13 @@ Pop.defaultProps = {
 
 export const Revert = () =>
   <HistoryAction perform={history => history.revert()}/>
+
+export const Block = ({ message }) =>
+  <HistoryAction perform={history => history.block(message)}/>
+
+Block.propTypes = {
+  message: PropTypes.oneOfType([
+    PropTypes.func,
+    PropTypes.string
+  ])
+}

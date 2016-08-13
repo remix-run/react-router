@@ -78,4 +78,11 @@ describe('BrowserHistory', () => {
       render(<BrowserHistory children={children}/>, node)
     })
   })
+
+  describe('block', () => {
+    it('blocks a push', (done) => {
+      const children = RenderTestSequences.BlockAPush(done)
+      render(<BrowserHistory children={children}/>, node)
+    })
+  })
 })

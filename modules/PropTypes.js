@@ -44,7 +44,8 @@ export const historyContext = PropTypes.shape({
   push: PropTypes.func.isRequired,
   replace: PropTypes.func.isRequired,
   go: PropTypes.func.isRequired,
-  revert: PropTypes.func.isRequired
+  revert: PropTypes.func.isRequired,
+  block: PropTypes.func.isRequired
 })
 
 export const stateStorage = PropTypes.shape({
