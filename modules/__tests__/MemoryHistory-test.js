@@ -51,5 +51,10 @@ describe('MemoryHistory', () => {
       const children = RenderTestSequences.BlocksAPush(done)
       render(<MemoryHistory children={children}/>, node)
     })
+
+    it('blocks the back button', (done) => {
+      const children = RenderTestSequences.BlocksTheBackButton(done)
+      render(<MemoryHistory children={children}/>, node)
+    })
   })
 })
