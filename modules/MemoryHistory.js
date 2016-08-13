@@ -23,7 +23,6 @@ class MemoryHistory extends React.Component {
   }
 
   state = {
-    prevAction: null,
     prevIndex: null,
     action: null,
     index: null,
@@ -54,7 +53,6 @@ class MemoryHistory extends React.Component {
       }
 
       return {
-        prevAction: prevState.action,
         prevIndex: prevState.index,
         action: 'PUSH',
         index: nextIndex,
@@ -67,8 +65,8 @@ class MemoryHistory extends React.Component {
     this.setState(prevState => {
       const prevIndex = prevState.index
       const entries = prevState.entries.slice(0)
-
       const key = this.createKey()
+
       entries[prevIndex] = {
         path,
         state,
@@ -76,7 +74,6 @@ class MemoryHistory extends React.Component {
       }
 
       return {
-        prevAction: prevState.action,
         prevIndex: prevState.index,
         action: 'REPLACE',
         entries
@@ -90,7 +87,6 @@ class MemoryHistory extends React.Component {
       const nextIndex = clamp(prevIndex + n, 0, prevState.entries.length - 1)
 
       return {
-        prevAction: prevState.action,
         prevIndex,
         action: 'POP',
         index: nextIndex
@@ -99,13 +95,12 @@ class MemoryHistory extends React.Component {
   }
 
   handleRevert = () => {
-    const { prevAction, prevIndex } = this.state
+    const { prevIndex } = this.state
 
-    if (prevAction && prevIndex != null) {
+    if (prevIndex != null) {
       this.setState({
-        prevAction: null,
         prevIndex: null,
-        action: prevAction,
+        action: 'POP',
         index: prevIndex
       })
     } else {
