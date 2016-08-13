@@ -31,14 +31,13 @@ class HistoryContext extends React.Component {
   }
 
   getChildContext() {
-    const { push, replace, go, revert } = this.props
+    const { push, replace, go } = this.props
 
     return {
       history: {
         push,
         replace,
         go,
-        revert,
         block: this.block
       }
     }

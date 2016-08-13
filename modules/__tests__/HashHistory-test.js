@@ -52,23 +52,6 @@ describe('HashHistory', () => {
     })
   })
 
-  describe('revert', () => {
-    it('undoes a push', (done) => {
-      const children = RenderTestSequences.RevertUndoesAPush(done)
-      render(<HashHistory children={children}/>, node)
-    })
-
-    it.skip('undoes a replace', (done) => {
-      const children = RenderTestSequences.RevertUndoesAReplace(done)
-      render(<HashHistory children={children}/>, node)
-    })
-
-    it.skip('undoes a pop', (done) => {
-      const children = RenderTestSequences.RevertUndoesAPop(done)
-      render(<HashHistory children={children}/>, node)
-    })
-  })
-
   describe('block', () => {
     it('blocks a push', (done) => {
       const children = RenderTestSequences.BlockAPush(done)

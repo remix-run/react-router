@@ -46,23 +46,6 @@ describe('MemoryHistory', () => {
     })
   })
 
-  describe('revert', () => {
-    it('undoes a push', (done) => {
-      const children = RenderTestSequences.RevertUndoesAPush(done)
-      render(<MemoryHistory children={children}/>, node)
-    })
-
-    it('undoes a replace', (done) => {
-      const children = RenderTestSequences.RevertUndoesAReplace(done)
-      render(<MemoryHistory children={children}/>, node)
-    })
-
-    it('undoes a pop', (done) => {
-      const children = RenderTestSequences.RevertUndoesAPop(done)
-      render(<MemoryHistory children={children}/>, node)
-    })
-  })
-
   describe('block', () => {
     it('blocks a push', (done) => {
       const children = RenderTestSequences.BlockAPush(done)

@@ -49,9 +49,6 @@ Pop.defaultProps = {
   go: -1
 }
 
-export const Revert = () =>
-  <HistoryAction perform={history => history.revert()}/>
-
 export const Block = ({ message }) =>
   <HistoryAction perform={history => history.block(message)}/>
 

@@ -62,23 +62,6 @@ describe('BrowserHistory', () => {
     })
   })
 
-  describe('revert', () => {
-    it('undoes a push', (done) => {
-      const children = RenderTestSequences.RevertUndoesAPush(done)
-      render(<BrowserHistory children={children}/>, node)
-    })
-
-    it.skip('undoes a replace', (done) => {
-      const children = RenderTestSequences.RevertUndoesAReplace(done)
-      render(<BrowserHistory children={children}/>, node)
-    })
-
-    it.skip('undoes a pop', (done) => {
-      const children = RenderTestSequences.RevertUndoesAPop(done)
-      render(<BrowserHistory children={children}/>, node)
-    })
-  })
-
   describe('block', () => {
     it('blocks a push', (done) => {
       const children = RenderTestSequences.BlockAPush(done)
