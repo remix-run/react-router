@@ -1,6 +1,6 @@
 import React from 'react'
 import expect from 'expect'
-import { Push, Block } from '../../HistoryActions'
+import { Push, Pop, Block } from '../../HistoryActions'
 import createRenderProp from './createRenderProp'
 
 export default (done) => {
@@ -22,6 +22,14 @@ export default (done) => {
       expect(action).toBe('POP')
       expect(location).toMatch({
         path: '/'
+      })
+
+      return <Pop go={1}/>
+    },
+    ({ action, location }) => {
+      expect(action).toBe('POP')
+      expect(location).toMatch({
+        path: '/hello'
       })
 
       return null

@@ -49,12 +49,27 @@ Pop.defaultProps = {
   go: -1
 }
 
-export const Block = ({ message }) =>
-  <HistoryAction perform={history => history.block(message)}/>
+export class Block extends React.Component {
+  static contextTypes = {
+    history: historyContextType.isRequired
+  }
 
-Block.propTypes = {
-  message: PropTypes.oneOfType([
-    PropTypes.func,
-    PropTypes.string
-  ])
+  static propTypes = {
+    message: PropTypes.oneOfType([
+      PropTypes.func,
+      PropTypes.string
+    ]).isRequired
+  }
+
+  componentWillMount() {
+    this.unblock = this.context.history.block(this.props.message)
+  }
+
+  componentWillUnmount() {
+    this.unblock()
+  }
+
+  render() {
+    return null
+  }
 }
