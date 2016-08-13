@@ -1,4 +1,4 @@
-export BlockAPush from './BlockAPush'
+export BlocksAPush from './BlocksAPush'
 export HashBangHashEncoding from './HashBangHashEncoding'
 export NoSlashHashEncoding from './NoSlashHashEncoding'
 export PopEmitsANewLocation from './PopEmitsANewLocation'

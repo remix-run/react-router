@@ -54,7 +54,7 @@ describe('HashHistory', () => {
 
   describe('block', () => {
     it('blocks a push', (done) => {
-      const children = RenderTestSequences.BlockAPush(done)
+      const children = RenderTestSequences.BlocksAPush(done)
       render(<HashHistory children={children}/>, node)
     })
   })
