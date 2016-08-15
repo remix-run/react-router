@@ -271,7 +271,7 @@ Routes can define one or more named components as an object of `[name]: componen
 // <App main={<Users />} sidebar={<UsersSidebar />} />
 
 const routes = (
-  <Route component={App}>
+  <Route path="/" component={App}>
     <Route path="groups" components={{main: Groups, sidebar: GroupsSidebar}} />
     <Route path="users" components={{main: Users, sidebar: UsersSidebar}}>
       <Route path=":userId" component={Profile} />
