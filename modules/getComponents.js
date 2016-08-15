@@ -12,8 +12,6 @@ function getComponentsForRoute(nextState, route, callback) {
     const componentReturn = getComponent.call(route, nextState, callback)
     if (isPromise(componentReturn))
       componentReturn
-        // Try module.default first in case of System.import and Babel 6
-        .then(component => component.default || component)
         .then(
           component => callback(null, component),
           callback
