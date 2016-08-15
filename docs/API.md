@@ -244,7 +244,7 @@ be rendered by the parent route component with `this.props.children`.
 
 ```jsx
 const routes = (
-  <Route component={App}>
+  <Route path="/" component={App}>
     <Route path="groups" component={Groups} />
     <Route path="users" component={Users} />
   </Route>
