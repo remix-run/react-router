@@ -391,6 +391,23 @@ describe('Router', function () {
       })
     })
 
+    it('should support getComponent returning a Promise', function (done) {
+      const Component = () => <div />
+
+      const getComponent = () => new Promise(resolve => resolve(Component))
+
+      render((
+        <Router history={createHistory('/')} render={renderSpy}>
+          <Route path="/" getComponent={getComponent} />
+        </Router>
+      ), node, function () {
+        setTimeout(function () {
+          expect(componentSpy).toHaveBeenCalledWith([ Component ])
+          done()
+        })
+      })
+    })
+
   })
 
   describe('error handling', function () {

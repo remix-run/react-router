@@ -290,6 +290,34 @@ describe('matchRoutes', function () {
     describeRoutes()
   })
 
+  describe('a Promise-based route config', function () {
+    function makeAsyncRouteConfig(routes) {
+      routes.forEach(function (route) {
+        const { childRoutes, indexRoute } = route
+
+        if (childRoutes) {
+          delete route.childRoutes
+
+          route.getChildRoutes = () => new Promise(resolve => resolve(childRoutes))
+
+          makeAsyncRouteConfig(childRoutes)
+        }
+
+        if (indexRoute) {
+          delete route.indexRoute
+
+          route.getIndexRoute = () => new Promise(resolve => resolve(indexRoute))
+        }
+      })
+    }
+
+    beforeEach(function () {
+      makeAsyncRouteConfig(routes)
+    })
+
+    describeRoutes()
+  })
+
   describe('an asynchronous JSX route config', function () {
     let getChildRoutes, getIndexRoute, jsxRoutes
 

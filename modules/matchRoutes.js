@@ -1,4 +1,5 @@
 import { loopAsync } from './AsyncUtils'
+import { isPromise } from './PromiseUtils'
 import { matchPattern } from './PatternUtils'
 import warning from './routerWarning'
 import { createRoutes } from './RouteUtils'
@@ -18,7 +19,7 @@ function getChildRoutes(route, location, paramNames, paramValues, callback) {
     params: createParams(paramNames, paramValues)
   }
 
-  route.getChildRoutes(partialNextState, (error, childRoutes) => {
+  const childRoutesReturn = route.getChildRoutes(partialNextState, (error, childRoutes) => {
     childRoutes = !error && createRoutes(childRoutes)
     if (sync) {
       result = [ error, childRoutes ]
@@ -27,6 +28,13 @@ function getChildRoutes(route, location, paramNames, paramValues, callback) {
 
     callback(error, childRoutes)
   })
+
+  if (isPromise(childRoutesReturn))
+    childRoutesReturn
+      .then(
+        childRoutes => callback(null, createRoutes(childRoutes)),
+        callback
+      )
 
   sync = false
   return result  // Might be undefined.
@@ -41,9 +49,16 @@ function getIndexRoute(route, location, paramNames, paramValues, callback) {
       params: createParams(paramNames, paramValues)
     }
 
-    route.getIndexRoute(partialNextState, (error, indexRoute) => {
+    const indexRoutesReturn = route.getIndexRoute(partialNextState, (error, indexRoute) => {
       callback(error, !error && createRoutes(indexRoute)[0])
     })
+
+    if (isPromise(indexRoutesReturn))
+      indexRoutesReturn
+        .then(
+          indexRoute => callback(null, createRoutes(indexRoute)[0]),
+          callback
+        )
   } else if (route.childRoutes) {
     const pathless = route.childRoutes.filter(childRoute => !childRoute.path)
 
