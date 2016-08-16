@@ -38,4 +38,25 @@ describe('withRouter', function () {
       done()
     })
   })
+
+  it('still uses router prop if provided', function (done) {
+    const Test = withRouter(function (props) {
+      props.test(props)
+      return null
+    })
+    const router = {
+      push() {},
+      replace() {},
+      go() {},
+      goBack() {},
+      goForward() {},
+      setRouteLeaveHook() {},
+      isActive() {}
+    }
+    const test = function (props) {
+      expect(props.router).toBe(router)
+    }
+
+    render(<Test router={router} test={test} />, node, done)
+  })
 })
