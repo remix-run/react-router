@@ -14,4 +14,4 @@ const Landing = React.createClass({
 
 })
 
-export default Landing
+module.exports = Landing

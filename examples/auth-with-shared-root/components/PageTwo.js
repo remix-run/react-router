@@ -6,4 +6,4 @@ const PageTwo = React.createClass({
   }
 })
 
-export default PageTwo
+module.exports = PageTwo

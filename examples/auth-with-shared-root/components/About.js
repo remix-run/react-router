@@ -6,4 +6,4 @@ const About = React.createClass({
   }
 })
 
-export default About
+module.exports = About
