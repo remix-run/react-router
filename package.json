@@ -27,10 +27,10 @@
   },
   "dependencies": {
     "path-to-regexp": "^1.5.0",
+    "react-history": "^0.3.0",
     "warning": "^3.0.0"
   },
   "peerDependencies": {
-    "history": "^3.0.0",
     "react": "^15.1.0",
     "react-dom": "^15.1.0"
   },
