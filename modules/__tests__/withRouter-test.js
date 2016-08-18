@@ -6,6 +6,7 @@ import Route from '../Route'
 import Router from '../Router'
 import routerShape from '../PropTypes'
 import withRouter from '../withRouter'
+
 describe('withRouter', function () {
   class App extends Component {
     propTypes: {
