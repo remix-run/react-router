@@ -6,7 +6,6 @@ import {
 } from './PropTypes'
 
 class StaticRouter extends React.Component {
-
   static propTypes = {
     children: PropTypes.oneOfType([ PropTypes.node, PropTypes.func ]),
     location: locationType.isRequired,
@@ -46,6 +45,7 @@ class StaticRouter extends React.Component {
         {typeof children === 'function' ? (
           children({ location })
         ) : React.Children.count(children) > 1 ? (
+          // TODO: Get rid of all DOM stuff.
           <div>{children}</div>
         ) : (
           children
