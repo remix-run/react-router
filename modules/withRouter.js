@@ -13,7 +13,7 @@ export default function withRouter(WrappedComponent, options) {
     contextTypes: { router: routerShape },
     propTypes: { router: routerShape },
     getWrappedInstance() {
-      warning(options && options.withRef, 'To access the wrappedInstance you must provide {withRef : true} as the first argument of the withRouter call')
+      warning(options && options.withRef, 'To access the wrappedInstance you must provide {withRef : true} as the second argument of the withRouter call')
       return this.refs.wrappedInstance
     },
     render() {
