@@ -23,11 +23,13 @@ class StaticRouter extends React.Component {
   }
 
   static childContextTypes = {
+    location: locationType.isRequired,
     router: routerType.isRequired
   }
 
   getChildContext() {
     return {
+      location: this.props.location,
       router: {
         createHref: (to) => this.props.createHref(to),
         transitionTo: (loc) => this.props.onPush(loc),

@@ -17,7 +17,8 @@ export const location = PropTypes.shape({
   pathname: PropTypes.string.isRequired,
   search: PropTypes.string.isRequired,
   hash: PropTypes.string.isRequired,
-  state: PropTypes.any
+  state: PropTypes.any,
+  key: PropTypes.string
 })
 
 export const router = PropTypes.shape({
@@ -33,21 +34,8 @@ export const action = PropTypes.oneOf([
   'POP'
 ])
 
-// TODO: Replace the "location" prop type with this one?
-export const historyLocation = PropTypes.shape({
-  path: PropTypes.string.isRequired,
-  state: PropTypes.object,
-  key: PropTypes.string
-})
-
 export const historyContext = PropTypes.shape({
   push: PropTypes.func.isRequired,
   replace: PropTypes.func.isRequired,
-  go: PropTypes.func.isRequired,
-  block: PropTypes.func.isRequired
-})
-
-export const stateStorage = PropTypes.shape({
-  readState: PropTypes.func.isRequired,
-  saveState: PropTypes.func.isRequired
+  go: PropTypes.func.isRequired
 })
