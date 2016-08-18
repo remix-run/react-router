@@ -28,7 +28,7 @@
   "dependencies": {
     "history": "^3.0.0",
     "path-to-regexp": "^1.5.0",
-    "react-history": "^0.3.0",
+    "react-history": "^0.4.0",
     "warning": "^3.0.0"
   },
   "peerDependencies": {
