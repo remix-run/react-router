@@ -8,6 +8,7 @@
  * [Histories](guides/Histories.md)
  * [Index Routes and Links](guides/IndexRoutes.md)
 * Advanced Usage
+ * [Testing](guides/Testing.md)
  * [Dynamic Routing](guides/DynamicRouting.md)
  * [Confirming Navigation](guides/ConfirmingNavigation.md)
  * [Server Rendering](guides/ServerRendering.md)
