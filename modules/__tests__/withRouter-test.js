@@ -31,7 +31,6 @@ describe('withRouter', function () {
   })
 
   it('puts router on context', function (done) {
-
     const WrappedApp = withRouter()(App)
 
     render((
