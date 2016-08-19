@@ -9,20 +9,23 @@ function getDisplayName(WrappedComponent) {
 }
 
 export default function withRouter(WrappedComponent, options) {
+  const { withRef } = options || {}
+
   const WithRouter = React.createClass({
     contextTypes: { router: routerShape },
     propTypes: { router: routerShape },
+
     getWrappedInstance() {
-      warning(options && options.withRef, 'To access the wrappedInstance you must provide {withRef : true} as the second argument of the withRouter call')
-      return this._wrappedComponent
+      warning(withRef, 'To access the wrappedInstance you must provide { withRef: true } as the second argument of the withRouter call')
+      return this.wrappedComponent
     },
+
     render() {
-      const router = this.props.router || this.context.router
-      if (options && options.withRef) {
-        return <WrappedComponent {...this.props} ref={(component)=>this._wrappedComponent = component} router={router} />
-      } else {
-        return <WrappedComponent {...this.props} router={router} />
-      }
+      const { router, ...props } = this.props
+
+      if (withRef) props.ref = component =>this.wrappedComponent = component
+
+      return <WrappedComponent {...props} router={router || this.context.router} />
     }
   })
 
