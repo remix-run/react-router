@@ -6,4 +6,4 @@ const User = React.createClass({
   }
 })
 
-export default User
+module.exports = User

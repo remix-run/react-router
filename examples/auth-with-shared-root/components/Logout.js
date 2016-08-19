@@ -11,4 +11,4 @@ const Logout = React.createClass({
   }
 })
 
-export default Logout
+module.exports = Logout
