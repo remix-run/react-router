@@ -63,8 +63,10 @@ describe('withRouter', function () {
     render(<Test router={router} test={test} />, node, done)
   })
 
-  it('should support withRefs as a parameter',function (done) {
-    const WrappedApp = withRouter(App,{ withRef:true })
+  it('should support withRefs as a parameter', function (done) {
+    const WrappedApp = withRouter(App,{ 
+      withRef:true 
+    })
     const router = {
       push() {},
       replace() {},
