@@ -12,6 +12,9 @@ describe('withRouter', function () {
     propTypes: {
       router: routerShape.isRequired
     }
+    testFunction() {
+      return 'hello from the test function'
+    }
     render() {
       expect(this.props.router).toExist()
       return <h1>App</h1>
@@ -58,5 +61,20 @@ describe('withRouter', function () {
     }
 
     render(<Test router={router} test={test} />, node, done)
+  })
+
+  it('should support withRefs as a parameter', function (done) {
+    const WrappedApp = withRouter(App, { withRef:true })
+    const router = {
+      push() {},
+      replace() {},
+      go() {},
+      goBack() {},
+      goForward() {},
+      setRouteLeaveHook() {},
+      isActive() {}
+    }
+    const component = render((<WrappedApp router={router}/>), node, done)
+    expect(component.getWrappedInstance().testFunction()).toEqual('hello from the test function')
   })
 })
