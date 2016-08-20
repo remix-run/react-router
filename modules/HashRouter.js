@@ -6,11 +6,10 @@ import HistoryRouter from './HistoryRouter'
  * A router that uses the URL hash.
  */
 const HashRouter = ({ basename, hashType, children }) => (
-  <HashHistory
-    basename={basename}
-    hashType={hashType}
-  >
-    {({ action, location }) => <HistoryRouter action={action} location={location} children={children}/>}
+  <HashHistory basename={basename} hashType={hashType}>
+    {({ action, location }) => (
+      <HistoryRouter action={action} location={location} children={children}/>
+    )}
   </HashHistory>
 )
 

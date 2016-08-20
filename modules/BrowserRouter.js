@@ -6,12 +6,10 @@ import HistoryRouter from './HistoryRouter'
  * A router that uses the HTML5 history API.
  */
 const BrowserRouter = ({ basename, keyLength, children }) => (
-  <BrowserHistory
-    basename={basename}
-    keyLength={keyLength}
-    children={children}
-  >
-    {({ action, location }) => <HistoryRouter action={action} location={location} children={children}/>}
+  <BrowserHistory basename={basename} keyLength={keyLength}>
+    {({ action, location }) => (
+      <HistoryRouter action={action} location={location} children={children}/>
+    )}
   </BrowserHistory>
 )
 

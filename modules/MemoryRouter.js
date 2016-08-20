@@ -11,7 +11,9 @@ const MemoryRouter = ({ initialEntries, initialIndex, keyLength, children }) => 
     initialIndex={initialIndex}
     keyLength={keyLength}
   >
-    {({ action, location }) => <HistoryRouter children={children} action={action} location={location}/>}
+    {({ action, location }) => (
+      <HistoryRouter action={action} location={location} children={children}/>
+    )}
   </MemoryHistory>
 )
 
