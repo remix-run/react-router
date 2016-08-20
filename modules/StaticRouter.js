@@ -1,6 +1,7 @@
 import React, { PropTypes } from 'react'
 import MatchCountProvider from './MatchCountProvider'
 import {
+  action as actionType,
   location as locationType,
   router as routerType
 } from './PropTypes'
@@ -8,6 +9,7 @@ import {
 class StaticRouter extends React.Component {
   static propTypes = {
     children: PropTypes.oneOfType([ PropTypes.node, PropTypes.func ]),
+    action: actionType.isRequired,
     location: locationType.isRequired,
     createHref: PropTypes.func.isRequired,
     onPush: PropTypes.func.isRequired,
