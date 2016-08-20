@@ -4,7 +4,7 @@
   - [`<Router>`](#router)
   - [`<Link>`](#link)
   - [`<IndexLink>`](#indexlink)
-  - [`withRouter`](#withroutercomponent)
+  - [`withRouter`](#withroutercomponent-options)
   - [`<RouterContext>`](#routercontext)
     - [`context.router`](#contextrouter)
   - `<RoutingContext>` (deprecated, use `<RouterContext>`)
@@ -157,8 +157,22 @@ Given a route like `<Route path="/users/:userId" />`:
 ### `<IndexLink>`
 An `<IndexLink>` is like a [`<Link>`](#link), except it is only active when the current route is exactly the linked route. It is equivalent to `<Link>` with the `onlyActiveOnIndex` prop set.
 
-### `withRouter(component)`
-A HoC (higher-order component) that wraps another component to provide `this.props.router`. Pass in your component and it will return the wrapped component.
+### `withRouter(Component, [options])`
+A HoC (higher-order component) that wraps another component to provide `props.router`. Pass in your component and it will return the wrapped component.
+
+You can explicit specify `router` as a prop to the wrapper component to override the router object from context.
+
+#### Options
+
+##### `withRef`
+If `true`, the wrapper component attaches a ref to the wrapped component, which can then be accessed via `getWrappedInstance`.
+
+```jsx
+const WrapperComponent = withRouter(MyComponent, { withRef: true })
+
+// Given a `wrapperInstance` that is of type `WrapperComponent`:
+const myInstance = wrapperInstance.getWrappedInstance()
+```
 
 ### `<RouterContext>`
 A `<RouterContext>` renders the component tree for a given router state. Its used by `<Router>` but also useful for server rendering and integrating in brownfield development.
@@ -621,7 +635,7 @@ For more details, please see the [histories guide](/docs/guides/Histories.md).
 `hashHistory` uses URL hashes, along with a query key to keep track of state. `hashHistory` requires no additional server configuration, but is generally less preferred than `browserHistory`.
 
 
-### `createMemoryHistory(options)`
+### `createMemoryHistory([options])`
 `createMemoryHistory` creates an in-memory `history` object that does not interact with the browser URL. This is useful for when you need to customize the `history` object used for server-side rendering, for automated testing, or for when you do not want to manipulate the browser URL, such as when your application is embedded in an `<iframe>`.
 
 
@@ -644,7 +658,7 @@ const history = useRouterHistory(createHashHistory)({ queryKey: false })
 
 ## Utilities
 
-### `match({ routes, location, [history], ...options }, cb)`
+### `match({ routes, location, [history], [...options] }, cb)`
 
 This function is to be used for server-side rendering. It matches a set of routes to a location, without rendering, and calls a `callback(error, redirectLocation, renderProps)` when it's done.
 
