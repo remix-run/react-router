@@ -1,3 +1,17 @@
+## [v2.7.0]
+> Aug 20, 2016
+
+- **Feature:** Support `router` as a prop on `withRouter`-wrapped components for overriding the router object from context ([#3729])
+- **Feature:** Add `withRef` option to `withRouter` that enables `getWrappedInstance` ([#3735], [#3740])
+- **Bugfix:** Warn on invalid router middlewares ([#3717])
+
+[v2.7.0]: https://github.com/reactjs/react-router/compare/v2.6.1...v2.7.0
+[#3717]: https://github.com/reactjs/react-router/pull/3717
+[#3729]: https://github.com/reactjs/react-router/pull/3729
+[#3735]: https://github.com/reactjs/react-router/pull/3735
+[#3740]: https://github.com/reactjs/react-router/pull/3740
+
+
 ## [v2.6.1]
 > Jul 29, 2016
 
