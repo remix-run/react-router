@@ -5,7 +5,7 @@ import Router from '../Router'
 import { renderToString } from 'react-dom/server'
 import createMemoryHistory from 'history/lib/createMemoryHistory'
 
-describe('Router', () => {
+describe.skip('Router', () => {
 
   describe('rendering', () => {
     it('renders static children', () => {

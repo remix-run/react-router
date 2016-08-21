@@ -20,7 +20,7 @@ const expectDeepEquality = (actual, expected) => {
 
 describe('StaticRouter', () => {
 
-  describe.only('location prop', () => {
+  describe('location prop', () => {
     const requiredProps = {
       action: 'POP',
       createHref: () => {},
@@ -74,7 +74,7 @@ describe('StaticRouter', () => {
 
   // TODO: maybe these tests just move to Link, Redirect, and NavigationPrompt,
   //       or like "integration-test.js"
-  describe('context', () => {
+  describe.skip('context', () => {
     describe('createHref', () => {
       it('creates hrefs', () => {
         const markup = renderToString(
@@ -160,7 +160,7 @@ describe('StaticRouter', () => {
     })
   })
 
-  describe('rendering', () => {
+  describe.skip('rendering', () => {
     it('renders static children', () => {
       expect(renderToString(
         <StaticRouter>

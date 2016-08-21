@@ -14,7 +14,7 @@ const renderToStringWithDOM = (el) => {
 }
 
 // definitely want this behavior
-describe('multiple matched Match', () => {
+describe.skip('multiple matched Match', () => {
   it('renders all matched Match components', () => {
     const html = renderToString(
       <Router history={createMemoryHistory([ '/foo' ])}>
@@ -33,7 +33,7 @@ describe('multiple matched Match', () => {
 
 
 // not sure what to do here...
-describe('Ambiguous matches?', () => {
+describe.skip('Ambiguous matches?', () => {
 
   it('should render both the dynamic and static patterns', () => {
     const html = renderToString(

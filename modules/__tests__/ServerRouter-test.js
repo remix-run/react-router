@@ -5,7 +5,7 @@ import Match from '../Match'
 import Redirect from '../Redirect'
 import { renderToString } from 'react-dom/server'
 
-describe('ServerRouter', () => {
+describe.skip('ServerRouter', () => {
 
   it('renders at a location', () => {
     expect(renderToString(
