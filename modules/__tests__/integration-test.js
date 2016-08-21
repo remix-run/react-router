@@ -3,8 +3,10 @@ import React from 'react'
 import Router from '../MemoryRouter'
 import Match from '../Match'
 import Miss from '../Miss'
-//import Link from '../Link'
+import { Simulate } from 'react-addons-test-utils'
+import Link from '../Link'
 import { renderToString } from 'react-dom/server'
+import { render } from 'react-dom'
 
 describe('Integration Tests', () => {
 
@@ -84,7 +86,6 @@ describe('Integration Tests', () => {
 })
 
 describe('Ambiguous matches?', () => {
-
   it('should render both the dynamic and static patterns', () => {
     const html = renderToString(
       <Router location="/foo">
@@ -97,7 +98,7 @@ describe('Ambiguous matches?', () => {
   })
 
   describe('with nested Match/Miss', () => {
-    it('allows users to match the dynamic pattern only', () => {
+    it('allows devs to match the dynamic pattern only', () => {
       const pathname = '/non-static-param'
       const html = renderToString(
         <Router location={pathname}>
@@ -113,11 +114,8 @@ describe('Ambiguous matches?', () => {
       expect(html).toContain('non-static-param')
     })
 
-    it('allows users to match the static pattern only', () => {
+    it('allows devs to match the static pattern only', () => {
       const pathname = '/foo'
-      // this fails with `renderToString`, I think the
-      // reconciler has a bug w/ context causing setState
-      // calls on the same tick, haven't looked too deep
       const html = renderToString((
         <Router location={pathname}>
           <Match pattern="/foo" render={() => <div>match</div>}/>
@@ -127,6 +125,37 @@ describe('Ambiguous matches?', () => {
       expect(html).toContain('match')
       expect(html).toNotContain('miss')
     })
+  })
+})
+
+describe('clicking around', () => {
+  const leftClickEvent = {
+    defaultPrevented: false,
+    preventDefault() { this.defaultPrevented = true },
+    metaKey: null,
+    altKey: null,
+    ctrlKey: null,
+    shiftKey: null,
+    button: 0
+  }
+
+  it('navigates', () => {
+    const div = document.createElement('div')
+    const TEXT1 = 'I AM PAGE 1'
+    render((
+      <Router>
+        <div>
+          <Link id="one" to="/one">One</Link>
+        </div>
+        <Match pattern="/one" render={() => (
+          <h1>{TEXT1}</h1>
+        )}/>
+      </Router>
+    ), div)
+    expect(div.innerHTML).toNotContain(TEXT1)
+
+    Simulate.click(div.querySelector('#one'), leftClickEvent)
+    expect(div.innerHTML).toContain(TEXT1)
   })
 })
 

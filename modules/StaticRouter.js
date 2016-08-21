@@ -26,6 +26,9 @@ class StaticRouter extends React.Component {
   }
 
   static defaultProps = {
+    createHref: (loc) => {
+      return loc
+    },
     stringifyQuery: (query) => stringify(query).replace(/%20/g, '+'),
     parseQuery
   }
