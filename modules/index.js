@@ -1,11 +1,11 @@
-export NavigationPrompt from './NavigationPrompt'
-export History from './History'
+//export History from './History'
+//export Router from './Router'
+
 export Link from './Link'
 export Match from './Match'
 export Miss from './Miss'
+export NavigationPrompt from './NavigationPrompt'
 export Redirect from './Redirect'
-export Router from './Router'
-export matchPattern from './matchPattern'
 
 // High-level wrappers
 export BrowserRouter from './BrowserRouter'
@@ -15,3 +15,6 @@ export MemoryRouter from './MemoryRouter'
 // Low-level building blocks
 export HistoryRouter from './HistoryRouter'
 export StaticRouter from './StaticRouter'
+
+// Util for server rendering "pre-render match"
+export matchPattern from './matchPattern'
