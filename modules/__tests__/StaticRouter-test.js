@@ -5,46 +5,70 @@ import Link from '../Link'
 import Redirect from '../Redirect'
 import { renderToString } from 'react-dom/server'
 
-console.error = () => {}
+//console.error = () => {}
+
+// is there a bug in expect? I thought it handled nested objects
+const expectDeepEquality = (actual, expected) => {
+  Object.keys(actual).forEach(key => {
+    if (typeof actual[key] === 'object' && actual[key] != null) {
+      expectDeepEquality(actual[key], expected[key])
+    } else {
+      expect(actual[key]).toEqual(expected[key])
+    }
+  })
+}
 
 describe('StaticRouter', () => {
 
-  describe('location prop', () => {
-    it.only('parses string `location` into a real location', () => {
+  describe.only('location prop', () => {
+    const requiredProps = {
+      action: 'POP',
+      createHref: () => {},
+      blockTransitions: () => {}, // we sure we want this required? servers don't need it.
+      onPush: () => {},
+      onReplace: () => {}
+    }
+
+    it('parses string `location` into a real location', () => {
       let actualLocation
       renderToString(
-        <StaticRouter location="/lol">
+        <StaticRouter location="/lol" {...requiredProps}>
           {({ location }) => (
             <div>{(actualLocation = location, null)}</div>
           )}
         </StaticRouter>
       )
-      expect(actualLocation).toEqual({
+      const expected = {
         action: 'POP',
         hash: '',
         key: null,
         pathname: '/lol',
         search: '',
+        query: {},
         state: null
-      })
+      }
+      expectDeepEquality(actualLocation, expected)
     })
 
     it('parses location with a `path` into a real location', () => {
       let actualLocation
+      const loc = { path: '/somewhere?a=b#lol', state: { foo: 'bar' }}
       renderToString(
-        <StaticRouter location={{ path: '/somewhere?a=b#lol', state: { foo: 'bar' }}}>
+        <StaticRouter location={loc} {...requiredProps}>
           {({ location }) => <div>{(actualLocation = location, null)}</div>}
         </StaticRouter>
       )
-      expect(actualLocation).toEqual({
+
+      const expected = {
         action: 'POP',
         key: null,
         pathname: '/somewhere',
-        search: 'a=b',
-        hash: 'lol',
+        search: '?a=b',
+        hash: '#lol',
         query: { a: 'b' },
         state: { foo: 'bar' }
-      })
+      }
+      expectDeepEquality(actualLocation, expected)
     })
   })
 

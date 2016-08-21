@@ -1,3 +1,4 @@
+import { stringify, parse as parseQuery } from 'query-string'
 import React, { PropTypes } from 'react'
 import MatchCountProvider from './MatchCountProvider'
 import { createLocation } from './LocationUtils'
@@ -9,6 +10,7 @@ import {
 
 const isPartialDescriptor = (loc) => !!loc.path
 
+
 class StaticRouter extends React.Component {
 
   static propTypes = {
@@ -18,7 +20,14 @@ class StaticRouter extends React.Component {
     createHref: PropTypes.func.isRequired,
     location: locationType.isRequired,
     onPush: PropTypes.func.isRequired,
-    onReplace: PropTypes.func.isRequired
+    onReplace: PropTypes.func.isRequired,
+    stringifyQuery: PropTypes.func.isRequired,
+    parseQuery: PropTypes.func.isRequired
+  }
+
+  static defaultProps = {
+    stringifyQuery: (query) => stringify(query).replace(/%20/g, '+'),
+    parseQuery
   }
 
   static childContextTypes = {
@@ -38,17 +47,17 @@ class StaticRouter extends React.Component {
   }
 
   createLocationFromPathname() {
-    const { location:pathname } = this.props
+    const { location:pathname, parseQuery } = this.props
     return {
-      ...createLocation(pathname),
+      ...createLocation({ input: pathname, parseQuery }),
       state: null
     }
   }
 
   createLocationFromLocationWithPath() {
-    const { location:loc } = this.props
+    const { location:loc, parseQuery } = this.props
     return {
-      ...createLocation(loc.path),
+      ...createLocation({ input: loc.path, parseQuery }),
       state: loc.state || null
     }
   }

@@ -7,16 +7,18 @@ const POP = 'POP'
 //export const createQuery = (props) =>
   //Object.assign(Object.create(null), props)
 
-export const createLocation = (input, action = POP, key = null) => {
+export const createLocation = ({ input, parseQuery, action = POP, key = null }) => {
   const object = typeof input === 'string' ? parsePath(input) : input
 
   const pathname = object.pathname || '/'
   const search = object.search || ''
+  const query = object.query || parseQuery(search)
   const hash = object.hash || ''
 
   return {
     pathname,
     search,
+    query,
     hash,
     action,
     key
