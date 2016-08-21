@@ -3,7 +3,7 @@ import React, { PropTypes } from 'react'
 import Match from '../Match'
 import { renderToString } from 'react-dom/server'
 
-describe.skip('Match', () => {
+describe('Match', () => {
 
   describe('with a `component` prop', () => {
     it('renders when the location matches', () => {

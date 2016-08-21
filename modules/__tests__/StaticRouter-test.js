@@ -20,19 +20,50 @@ const expectDeepEquality = (actual, expected) => {
 
 describe('StaticRouter', () => {
 
-  describe('location prop', () => {
-    const requiredProps = {
-      action: 'POP',
-      createHref: () => {},
-      blockTransitions: () => {}, // we sure we want this required? servers don't need it.
-      onPush: () => {},
-      onReplace: () => {}
-    }
+  const requiredProps = {
+    location: '/',
+    action: 'POP',
+    createHref: () => {},
+    blockTransitions: () => {}, // we sure we want this required? servers don't need it.
+    onPush: () => {},
+    onReplace: () => {}
+  }
 
+  describe('rendering', () => {
+    it('renders static children', () => {
+      expect(renderToString(
+        <StaticRouter {...requiredProps}>
+          <div>test</div>
+        </StaticRouter>
+      )).toContain('test')
+    })
+
+    it('passes match props to function children', () => {
+      let actualProps
+      renderToString(
+        <StaticRouter {...requiredProps} location="/lol">
+          {(props) => <div>{(actualProps = props, null)}</div>}
+        </StaticRouter>
+      )
+      expectDeepEquality(actualProps, {
+        location: {
+          action: 'POP',
+          hash: '',
+          key: null,
+          pathname: '/lol',
+          search: '',
+          query: null,
+          state: null
+        }
+      })
+    })
+  })
+
+  describe('location prop', () => {
     it('parses string `location` into a real location', () => {
       let actualLocation
       renderToString(
-        <StaticRouter location="/lol" {...requiredProps}>
+        <StaticRouter {...requiredProps} location="/lol">
           {({ location }) => (
             <div>{(actualLocation = location, null)}</div>
           )}
@@ -54,7 +85,7 @@ describe('StaticRouter', () => {
       let actualLocation
       const loc = { path: '/somewhere?a=b#lol', state: { foo: 'bar' }}
       renderToString(
-        <StaticRouter location={loc} {...requiredProps}>
+        <StaticRouter {...requiredProps} location={loc}>
           {({ location }) => <div>{(actualLocation = location, null)}</div>}
         </StaticRouter>
       )
@@ -156,35 +187,6 @@ describe('StaticRouter', () => {
             )}
           </StaticRouter>
         )
-      })
-    })
-  })
-
-  describe.skip('rendering', () => {
-    it('renders static children', () => {
-      expect(renderToString(
-        <StaticRouter>
-          <div>test</div>
-        </StaticRouter>
-      )).toContain('test')
-    })
-
-    it('passes match props to function children', () => {
-      let actualProps
-      renderToString(
-        <StaticRouter location="/lol">
-          {(props) => <div>{(actualProps = props, null)}</div>}
-        </StaticRouter>
-      )
-      expect(actualProps).toEqual({
-        location: {
-          action: 'POP',
-          hash: '',
-          key: null,
-          pathname: '/lol',
-          search: '',
-          state: undefined
-        }
       })
     })
   })
