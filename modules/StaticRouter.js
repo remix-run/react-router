@@ -1,38 +1,34 @@
 import React, { PropTypes } from 'react'
 import MatchCountProvider from './MatchCountProvider'
+import { createLocation } from './LocationUtils'
 import {
   action as actionType,
   location as locationType,
   router as routerType
 } from './PropTypes'
 
-class StaticRouter extends React.Component {
-  static propTypes = {
-    children: PropTypes.oneOfType([ PropTypes.node, PropTypes.func ]),
-    action: actionType.isRequired,
-    location: locationType.isRequired,
-    createHref: PropTypes.func.isRequired,
-    onPush: PropTypes.func.isRequired,
-    onReplace: PropTypes.func.isRequired,
-    blockTransitions: PropTypes.func.isRequired
-  }
+const isPartialDescriptor = (loc) => !!loc.path
 
-  static defaultProps = {
-    createHref: () => {},
-    onPush: () => {},
-    onReplace: () => {},
-    blockTransitions: () => {}
+class StaticRouter extends React.Component {
+
+  static propTypes = {
+    action: actionType.isRequired,
+    blockTransitions: PropTypes.func.isRequired,
+    children: PropTypes.oneOfType([ PropTypes.node, PropTypes.func ]),
+    createHref: PropTypes.func.isRequired,
+    location: locationType.isRequired,
+    onPush: PropTypes.func.isRequired,
+    onReplace: PropTypes.func.isRequired
   }
 
   static childContextTypes = {
-    location: locationType.isRequired,
     router: routerType.isRequired
   }
 
   getChildContext() {
     return {
-      location: this.props.location,
       router: {
+        location: this.props.location,
         createHref: (to) => this.props.createHref(to),
         transitionTo: (loc) => this.props.onPush(loc),
         replaceWith: (loc) => this.props.onReplace(loc),
@@ -41,15 +37,42 @@ class StaticRouter extends React.Component {
     }
   }
 
+  createLocationFromPathname() {
+    const { location:pathname } = this.props
+    return {
+      ...createLocation(pathname),
+      state: null
+    }
+  }
+
+  createLocationFromLocationWithPath() {
+    const { location:loc } = this.props
+    return {
+      ...createLocation(loc.path),
+      state: loc.state || null
+    }
+  }
+
+  getLocation() {
+    // TODO: maybe memoize this on willReceiveProps to get extreme w/ perf
+    const { location } = this.props
+    return typeof location === 'string' ? (
+      this.createLocationFromPathname(location)
+    ) : isPartialDescriptor(location) ? (
+      this.createLocationFromLocationWithPath(location.path),
+    ) : location
+  }
+
   render() {
-    const { children, location } = this.props
+    const { children } = this.props
+    const location = this.getLocation()
 
     return (
       <MatchCountProvider>
         {typeof children === 'function' ? (
           children({ location })
         ) : React.Children.count(children) > 1 ? (
-          // TODO: Get rid of all DOM stuff.
+          // #TODO get rid of all DOM stuff
           <div>{children}</div>
         ) : (
           children
