@@ -1,43 +1,93 @@
 import expect from 'expect'
 import React from 'react'
-import Router from '../Router'
+import Router from '../MemoryRouter'
 import Match from '../Match'
 import Miss from '../Miss'
+//import Link from '../Link'
 import { renderToString } from 'react-dom/server'
-import { render } from 'react-dom'
-import createMemoryHistory from 'history/lib/createMemoryHistory'
 
-const renderToStringWithDOM = (el) => {
-  const div = document.createElement('div')
-  render(el, div)
-  return div.innerHTML
-}
+describe('Integration Tests', () => {
 
-// definitely want this behavior
-describe.skip('multiple matched Match', () => {
-  it('renders all matched Match components', () => {
-    const html = renderToString(
-      <Router history={createMemoryHistory([ '/foo' ])}>
-        <aside>
-          <Match pattern="/foo" render={() => <div>sidebar</div>}/>
-        </aside>
-        <main>
-          <Match pattern="/foo" render={() => <div>main</div>}/>
-        </main>
+  it('renders root match', () => {
+    const TEXT = 'Mrs. Kato'
+    const markup = renderToString(
+      <Router location="/">
+        <Match pattern="/" render={() => (
+          <h1>{TEXT}</h1>
+        )}/>
       </Router>
     )
-    expect(html).toContain('sidebar')
-    expect(html).toContain('main')
+    expect(markup).toContain(TEXT)
   })
+
+  it('renders nested matches', () => {
+    const TEXT1 = 'Ms. Tripp'
+    const TEXT2 = 'Mrs. Schiffman'
+    const markup = renderToString(
+      <Router location="/nested">
+        <Match pattern="/" render={() => (
+          <div>
+            <h1>{TEXT1}</h1>
+            <Match pattern="/nested" render={() => (
+              <h2>{TEXT2}</h2>
+            )}/>
+          </div>
+        )}/>
+      </Router>
+    )
+    expect(markup).toContain(TEXT1)
+    expect(markup).toContain(TEXT2)
+  })
+
+  it('renders only as deep as the match', () => {
+    const TEXT1 = 'Ms. Tripp'
+    const TEXT2 = 'Mrs. Schiffman'
+    const markup = renderToString(
+      <Router location="/">
+        <Match pattern="/" render={() => (
+          <div>
+            <h1>{TEXT1}</h1>
+            <Match pattern="/nested" render={() => (
+              <h2>{TEXT2}</h2>
+            )}/>
+          </div>
+        )}/>
+      </Router>
+    )
+    expect(markup).toContain(TEXT1)
+    expect(markup).toNotContain(TEXT2)
+  })
+
+  it('renders multiple matches', () => {
+    const TEXT1 = 'Mrs. Schiffman'
+    const TEXT2 = 'Mrs. Burton'
+    const markup = renderToString(
+      <Router location="/double">
+        <div>
+          <aside>
+            <Match pattern="/double" render={() => (
+              <h1>{TEXT1}</h1>
+            )}/>
+          </aside>
+          <main>
+            <Match pattern="/double" render={() => (
+              <h1>{TEXT2}</h1>
+            )}/>
+          </main>
+        </div>
+      </Router>
+    )
+    expect(markup).toContain(TEXT1)
+    expect(markup).toContain(TEXT2)
+  })
+
 })
 
-
-// not sure what to do here...
-describe.skip('Ambiguous matches?', () => {
+describe('Ambiguous matches?', () => {
 
   it('should render both the dynamic and static patterns', () => {
     const html = renderToString(
-      <Router history={createMemoryHistory([ '/foo' ])}>
+      <Router location="/foo">
         <Match pattern="/foo" render={() => <div>static</div>}/>
         <Match pattern="/:name" render={() => <div>param</div>}/>
       </Router>
@@ -49,8 +99,8 @@ describe.skip('Ambiguous matches?', () => {
   describe('with nested Match/Miss', () => {
     it('allows users to match the dynamic pattern only', () => {
       const pathname = '/non-static-param'
-      const html = renderToStringWithDOM(
-        <Router history={createMemoryHistory([ pathname ])}>
+      const html = renderToString(
+        <Router location={pathname}>
           <Match pattern="/:name" render={({ params }) => (
             <div>
               <Match pattern="/foo" render={() => <div>foo</div>}/>
@@ -68,8 +118,8 @@ describe.skip('Ambiguous matches?', () => {
       // this fails with `renderToString`, I think the
       // reconciler has a bug w/ context causing setState
       // calls on the same tick, haven't looked too deep
-      const html = renderToStringWithDOM((
-        <Router history={createMemoryHistory([ pathname ])}>
+      const html = renderToString((
+        <Router location={pathname}>
           <Match pattern="/foo" render={() => <div>match</div>}/>
           <Miss render={() => <div>miss</div>}/>
         </Router>

@@ -17,15 +17,13 @@ class MatchCountProvider extends React.Component {
   count = 0
 
   increment = () => {
-    // have to manage manually since calling setState on same tick of event loop
-    // would result in only `1` even though many may have registered
+    // have to manage manually since we're calling `increment` in `willMount` of
+    // descendants and React doesn't intentionally support that.
     this.count += 1
-    this.forceUpdate()
   }
 
   decrement = () => {
     this.count -= 1
-    this.forceUpdate()
   }
 
   getChildContext() {
@@ -33,9 +31,7 @@ class MatchCountProvider extends React.Component {
       matchCounter: {
         increment: this.increment,
         decrement: this.decrement,
-
-        // This is a weird one...
-        matchFound: this.count > 0
+        matchFound: () => this.count > 0
       }
     }
   }

@@ -15,7 +15,7 @@ class Miss extends React.Component {
   render() {
     const { render, component:Component } = this.props
     const { location, matchCounter } = this.context
-    return matchCounter.matchFound ? null : (
+    return matchCounter.matchFound() ? null : (
       render ? (
         render({ location })
       ) : (
