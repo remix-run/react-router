@@ -12,8 +12,7 @@ export BrowserRouter from './BrowserRouter'
 export HashRouter from './HashRouter'
 export MemoryRouter from './MemoryRouter'
 
-// Low-level building blocks
-export HistoryRouter from './HistoryRouter'
+// Low-level building block
 export StaticRouter from './StaticRouter'
 
 // Util for server rendering "pre-render match"

@@ -1,14 +1,21 @@
 import React, { PropTypes } from 'react'
 import BrowserHistory from 'react-history/BrowserHistory'
-import HistoryRouter from './HistoryRouter'
+import StaticRouter from './StaticRouter'
 
 /**
  * A router that uses the HTML5 history API.
  */
-const BrowserRouter = ({ basename, keyLength, children }) => (
+const BrowserRouter = ({ basename, keyLength, ...rest }) => (
   <BrowserHistory basename={basename} keyLength={keyLength}>
-    {({ action, location }) => (
-      <HistoryRouter action={action} location={location} children={children}/>
+    {({ history, action, location }) => (
+      <StaticRouter
+        action={action}
+        location={location}
+        onPush={history.push}
+        onReplace={history.replace}
+        onGo={history.go}
+        {...rest}
+      />
     )}
   </BrowserHistory>
 )
