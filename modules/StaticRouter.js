@@ -11,6 +11,8 @@ import {
 
 const isPartialDescriptor = (loc) => !!loc.path
 
+const defaultStringifyQuery = (query) =>
+  stringify(query).replace(/%20/g, '+')
 
 class StaticRouter extends React.Component {
 
@@ -28,13 +30,10 @@ class StaticRouter extends React.Component {
 
   static defaultProps = {
     createHref: (loc) => {
-      if (typeof loc === 'string') {
-        return loc
-      } else {
-        return createPath(loc)
-      }
+      return (typeof loc === 'string') ?
+        loc : createPath(loc, defaultStringifyQuery)
     },
-    stringifyQuery: (query) => stringify(query).replace(/%20/g, '+'),
+    stringifyQuery: defaultStringifyQuery,
     parseQuery
   }
 

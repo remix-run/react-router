@@ -159,11 +159,13 @@ describe('clicking around', () => {
   })
 })
 
-describe.only('Link hrefs', () => {
+describe('Link location descriptors', () => {
   it('allows for location descriptors', () => {
     const loc = {
       pathname: '/test-url',
-      state: { isTest: true }
+      state: { isTest: true },
+      query: { foo: 'bar' },
+      hash: '#anchor'
     }
     const div = document.createElement('div')
     render((
@@ -171,7 +173,39 @@ describe.only('Link hrefs', () => {
         <Link to={loc}>link</Link>
       </Router>
     ), div)
-    expect(div.querySelector('a').getAttribute('href')).toEqual('/test-url')
+    const href = div.querySelector('a').getAttribute('href')
+    expect(href).toEqual('/test-url?foo=bar#anchor')
+  })
+
+  it('uses search', () => {
+    const loc = {
+      pathname: '/test-url',
+      search: '?foo=baz'
+    }
+    const div = document.createElement('div')
+    render((
+      <Router>
+        <Link to={loc}>link</Link>
+      </Router>
+    ), div)
+    const href = div.querySelector('a').getAttribute('href')
+    expect(href).toEqual('/test-url?foo=baz')
+  })
+
+  it('ignores search if query is present', () => {
+    const loc = {
+      pathname: '/test-url',
+      query: { foo: 'bar' },
+      search: '?foo=baz'
+    }
+    const div = document.createElement('div')
+    render((
+      <Router>
+        <Link to={loc}>link</Link>
+      </Router>
+    ), div)
+    const href = div.querySelector('a').getAttribute('href')
+    expect(href).toEqual('/test-url?foo=bar')
   })
 })
 

@@ -1,39 +1,4 @@
-// TODO: Have Michael comb over this, I don't know the history of history (hehehe)
 import warning from 'warning'
-
-//export const isAbsolutePath = (path) =>
-  //typeof path === 'string' && path.charAt(0) === '/'
-
-//export const addQueryStringValueToPath = (path, key, value) => {
-  //const { pathname, search, hash } = parsePath(path)
-
-  //return createPath({
-    //pathname,
-    //search: search + (search.indexOf('?') === -1 ? '?' : '&') + key + '=' + value,
-    //hash
-  //})
-//}
-
-//export const stripQueryStringValueFromPath = (path, key) => {
-  //const { pathname, search, hash } = parsePath(path)
-
-  //return createPath({
-    //pathname,
-    //search: search.replace(
-      //new RegExp(`([?&])${key}=[a-zA-Z0-9]+(&?)`),
-      //(match, prefix, suffix) => (
-        //prefix === '?' ? prefix : suffix
-      //)
-    //),
-    //hash
-  //})
-//}
-
-//export const getQueryStringValueFromPath = (path, key) => {
-  //const { search } = parsePath(path)
-  //const match = search.match(new RegExp(`[?&]${key}=([a-zA-Z0-9]+)`))
-  //return match && match[1]
-//}
 
 const extractPath = (string) => {
   const match = string.match(/^(https?:)?\/\/[^\/]*/)
@@ -73,14 +38,16 @@ export const parsePath = (path) => {
   }
 }
 
-export const createPath = (location) => {
+export const createPath = (location, stringifyQuery) => {
   if (location == null || typeof location === 'string')
     return location
 
-  const { basename, pathname, search, hash } = location
+  const { basename, pathname, query, search, hash } = location
   let path = (basename || '') + pathname
 
-  if (search && search !== '?')
+  if (query)
+    path += '?'+stringifyQuery(query)
+  else if (search && search !== '?')
     path += search
 
   if (hash)
