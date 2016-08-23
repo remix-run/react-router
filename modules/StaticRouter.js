@@ -72,7 +72,7 @@ class StaticRouter extends React.Component {
     return typeof location === 'string' ? (
       this.createLocationFromPathname(location)
     ) : isPartialDescriptor(location) ? (
-      this.createLocationFromLocationWithPath(location.path),
+      this.createLocationFromLocationWithPath(location.path)
     ) : location
   }
 
