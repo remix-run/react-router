@@ -159,3 +159,21 @@ describe('clicking around', () => {
   })
 })
 
+describe.only('Link hrefs', () => {
+  it('allows for location descriptors', () => {
+    const loc = {
+      pathname: '/test-url',
+      state: { isTest: true }
+    }
+    const div = document.createElement('div')
+    render((
+      <Router>
+        <Link to={loc}>link</Link>
+      </Router>
+    ), div)
+    expect(div.querySelector('a').getAttribute('href')).toEqual('/test-url')
+  })
+})
+
+
+

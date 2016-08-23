@@ -2,6 +2,7 @@ import { stringify, parse as parseQuery } from 'query-string'
 import React, { PropTypes } from 'react'
 import MatchCountProvider from './MatchCountProvider'
 import { createLocation } from './LocationUtils'
+import { createPath } from './PathUtils'
 import {
   action as actionType,
   location as locationType,
@@ -27,7 +28,11 @@ class StaticRouter extends React.Component {
 
   static defaultProps = {
     createHref: (loc) => {
-      return loc
+      if (typeof loc === 'string') {
+        return loc
+      } else {
+        return createPath(loc)
+      }
     },
     stringifyQuery: (query) => stringify(query).replace(/%20/g, '+'),
     parseQuery

@@ -73,19 +73,19 @@ export const parsePath = (path) => {
   }
 }
 
-//export const createPath = (location) => {
-  //if (location == null || typeof location === 'string')
-    //return location
+export const createPath = (location) => {
+  if (location == null || typeof location === 'string')
+    return location
 
-  //const { basename, pathname, search, hash } = location
-  //let path = (basename || '') + pathname
+  const { basename, pathname, search, hash } = location
+  let path = (basename || '') + pathname
 
-  //if (search && search !== '?')
-    //path += search
+  if (search && search !== '?')
+    path += search
 
-  //if (hash)
-    //path += hash
+  if (hash)
+    path += hash
 
-  //return path
-//}
+  return path
+}
 
