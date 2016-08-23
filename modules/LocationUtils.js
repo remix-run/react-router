@@ -1,13 +1,6 @@
-// TODO: Have Michael comb over this, I don't know the history of history (hehehe)
-//import invariant from 'invariant'
-import { parsePath } from './PathUtils'
+import warning from 'warning'
 
-const POP = 'POP'
-
-//export const createQuery = (props) =>
-  //Object.assign(Object.create(null), props)
-
-export const createLocation = ({ input, parseQuery, action = POP, key = null }) => {
+export const createLocation = ({ input, parseQuery, action = 'POP', key = null }) => {
   const object = typeof input === 'string' ? parsePath(input) : input
 
   const pathname = object.pathname || '/'
@@ -25,49 +18,59 @@ export const createLocation = ({ input, parseQuery, action = POP, key = null }) 
   }
 }
 
-//const isDate = (object) =>
-  //Object.prototype.toString.call(object) === '[object Date]'
+const extractPath = (string) => {
+  const match = string.match(/^(https?:)?\/\/[^\/]*/)
+  return match == null ? string : string.substring(match[0].length)
+}
 
-//export const statesAreEqual = (a, b) => {
-  //if (a === b)
-    //return true
+export const parsePath = (path) => {
+  let pathname = extractPath(path)
+  let search = ''
+  let hash = ''
 
-  //const typeofA = typeof a
-  //const typeofB = typeof b
+  warning(
+    path === pathname,
+    'A path must be pathname + search + hash only, not a full URL like "%s"',
+    path
+  )
 
-  //if (typeofA !== typeofB)
-    //return false
+  const hashIndex = pathname.indexOf('#')
+  if (hashIndex !== -1) {
+    hash = pathname.substring(hashIndex)
+    pathname = pathname.substring(0, hashIndex)
+  }
 
-  //invariant(
-    //typeofA !== 'function',
-    //'You must not store functions in location state'
-  //)
+  const searchIndex = pathname.indexOf('?')
+  if (searchIndex !== -1) {
+    search = pathname.substring(searchIndex)
+    pathname = pathname.substring(0, searchIndex)
+  }
 
-  //// Not the same object, but same type.
-  //if (typeofA === 'object') {
-    //invariant(
-      //!(isDate(a) && isDate(b)),
-      //'You must not store Date objects in location state'
-    //)
+  if (pathname === '')
+    pathname = '/'
 
-    //if (!Array.isArray(a))
-      //return Object.keys(a).every(key => statesAreEqual(a[key], b[key]))
+  return {
+    pathname,
+    search,
+    hash
+  }
+}
 
-    //return Array.isArray(b) &&
-      //a.length === b.length &&
-      //a.every((item, index) => statesAreEqual(item, b[index]))
-  //}
+export const createPath = (location, stringifyQuery) => {
+  if (location == null || typeof location === 'string')
+    return location
 
-  //// All other serializable types (string, number, boolean)
-  //// should be strict equal.
-  //return false
-//}
+  const { basename, pathname, query, search, hash } = location
+  let path = (basename || '') + pathname
 
-//export const locationsAreEqual = (a, b) =>
-  //a.key === b.key &&
-  //// a.action === b.action && // Different action !== location change.
-  //a.pathname === b.pathname &&
-  //a.search === b.search &&
-  //a.hash === b.hash &&
-  //statesAreEqual(a.state, b.state)
+  if (query)
+    path += '?'+stringifyQuery(query)
+  else if (search && search !== '?')
+    path += search
+
+  if (hash)
+    path += hash
+
+  return path
+}
 
