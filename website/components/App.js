@@ -1,9 +1,7 @@
 import React from 'react'
 import { PAGES, API, EXAMPLES } from '../routes'
-import createBrowserHistory from 'history/lib/createBrowserHistory'
-import useBaseName from 'history/lib/useBaseName'
-import { Router, Link, Match, Miss } from 'react-router'
-import { H, V, B, GRAY, RED, PAD } from './layout'
+import { BrowserRouter as Router, Link, Match, Miss } from 'react-router'
+import { H, V, B, GRAY, RED, PAD } from './bricks'
 import LoadBundle from './LoadBundle'
 import FakeBrowser from './FakeBrowser'
 import SourceViewer from './SourceViewer'
@@ -14,15 +12,11 @@ import logo from '../../logo/Horizontal@2x.png'
 
 const { string } = React.PropTypes
 
-const stripTrailingSlash = str => str.replace(/\/$/, '')
-
 const basename = (() => {
   const a = document.createElement('a')
   a.href = document.baseURI
-  return stripTrailingSlash(a.pathname)
+  return a.pathname.replace(/\/$/, '')
 })()
-
-const history = useBaseName(createBrowserHistory)({ basename })
 
 const Nav = (props) => (
   <B {...props}
@@ -68,6 +62,7 @@ const NavList = (props) => (
     component="ul"
     margin="0"
     padding="0"
+    listStyle="none"
     {...props}
   />
 )
@@ -124,7 +119,7 @@ const Page = ({ page }) => (
 )
 
 const App = () => (
-  <Router history={history}>
+  <Router basename={basename}>
     <H
       lineHeight="1.5"
       fontFamily="sans-serif"
@@ -135,14 +130,13 @@ const App = () => (
     >
       <Nav className="reset">
         <B component="h1">
-          <B
-            component="img"
-            props={{
-              src: logo,
-              alt: 'React Router'
+          <img
+            src={logo}
+            alt="React Router"
+            style={{
+              width: '150px',
+              margin: `${PAD}px 0`
             }}
-            width="150px"
-            margin={`${PAD}px 0`}
           />
         </B>
         <NavHeader>Pages</NavHeader>

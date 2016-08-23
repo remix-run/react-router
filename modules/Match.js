@@ -2,11 +2,9 @@ import React, { PropTypes } from 'react'
 import MatchCountProvider from './MatchCountProvider'
 import matchPattern from './matchPattern'
 
-const patternType = (props, propName, ...rest) => {
+const patternType = (props, propName) => {
   if (props[propName].charAt(0) !== '/')
     return new Error('The `pattern` prop must start with "/"')
-
-  return PropTypes.string(props, propName, ...rest)
 }
 
 class RegisterMatch extends React.Component {

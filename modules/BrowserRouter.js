@@ -13,7 +13,7 @@ const BrowserRouter = ({ basename, keyLength, ...rest }) => (
         location={location}
         onPush={history.push}
         onReplace={history.replace}
-        onGo={history.go}
+        blockTransitions={history.block}
         {...rest}
       />
     )}
