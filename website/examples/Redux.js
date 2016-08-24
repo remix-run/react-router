@@ -51,7 +51,6 @@ const App = connect(mapStateToAppProps)((props) => (
   //    it won't go there. It goes to whichever location you
   //    pass to it.
   <Router
-    history={props.history}
     location={props.location}
     onChange={(location) => {
       // 3. Dispatch location changes
@@ -61,24 +60,26 @@ const App = connect(mapStateToAppProps)((props) => (
       })
     }}
   >
-    <ul>
-      <li><Link to="/one">One</Link></li>
-      <li><Link to="/two">Two</Link></li>
-      <li><Link to="/three">Three</Link></li>
-      <li><Link to="/four">Four</Link></li>
-      <li><Link to="/five">Five</Link></li>
-    </ul>
+    <div>
+      <ul>
+        <li><Link to="/one">One</Link></li>
+        <li><Link to="/two">Two</Link></li>
+        <li><Link to="/three">Three</Link></li>
+        <li><Link to="/four">Four</Link></li>
+        <li><Link to="/five">Five</Link></li>
+      </ul>
 
-    <Match pattern="/" exactly render={() => (
-      <div>
-        <p>Open the console to see the logger middleware.</p>
-      </div>
-    )}/>
-    <Match pattern="/one" render={() => <h3>One</h3>}/>
-    <Match pattern="/two" render={() => <h3>Two</h3>}/>
-    <Match pattern="/three" render={() => <h3>Three</h3>}/>
-    <Match pattern="/four" render={() => <h3>Four</h3>}/>
-    <Match pattern="/five" render={() => <h3>Five</h3>}/>
+      <Match pattern="/" exactly render={() => (
+        <div>
+          <p>Open the console to see the logger middleware.</p>
+        </div>
+      )}/>
+      <Match pattern="/one" render={() => <h3>One</h3>}/>
+      <Match pattern="/two" render={() => <h3>Two</h3>}/>
+      <Match pattern="/three" render={() => <h3>Three</h3>}/>
+      <Match pattern="/four" render={() => <h3>Four</h3>}/>
+      <Match pattern="/five" render={() => <h3>Five</h3>}/>
+    </div>
   </Router>
 ))
 

@@ -1,66 +1,68 @@
-import React, { PropTypes } from 'react'
-import {
-  router as routerType
-} from './PropTypes'
+//import React, { PropTypes } from 'react'
+//import {
+  //router as routerType
+//} from './PropTypes'
 
-class NavigationPrompt extends React.Component {
-  static contextTypes = {
-    router: routerType.isRequired
-  }
+export default from 'react-history/Prompt'
 
-  static propTypes = {
-    message: PropTypes.oneOfType([ PropTypes.string, PropTypes.func ]),
-    when: PropTypes.bool
-  }
+//class NavigationPrompt extends React.Component {
+  //static contextTypes = {
+    //router: routerType.isRequired
+  //}
 
-  static defaultProps = {
-    when: true
-  }
+  //static propTypes = {
+    //message: PropTypes.oneOfType([ PropTypes.string, PropTypes.func ]),
+    //when: PropTypes.bool
+  //}
 
-  unblockTransitions = null
+  //static defaultProps = {
+    //when: true
+  //}
 
-  componentDidMount() {
-    this.maybeBlock()
-  }
+  //unblockTransitions = null
 
-  componentDidUpdate() {
-    this.maybeBlock()
-  }
+  //componentDidMount() {
+    //this.maybeBlock()
+  //}
 
-  componentWillUnmount() {
-    this.unblock()
-  }
+  //componentDidUpdate() {
+    //this.maybeBlock()
+  //}
 
-  maybeBlock() {
-    const { when } = this.props
+  //componentWillUnmount() {
+    //this.unblock()
+  //}
 
-    if (when) {
-      this.block()
-    } else {
-      this.unblock()
-    }
-  }
+  //maybeBlock() {
+    //const { when } = this.props
 
-  getPromptMessage = (location) => {
-    const { message } = this.props
-    return typeof message === 'function' ? message(location) : message
-  }
+    //if (when) {
+      //this.block()
+    //} else {
+      //this.unblock()
+    //}
+  //}
 
-  block() {
-    if (!this.unblockTransitions)
-      this.unblockTransitions = this.context.router.blockTransitions(this.getPromptMessage)
-  }
+  //getPromptMessage = (location) => {
+    //const { message } = this.props
+    //return typeof message === 'function' ? message(location) : message
+  //}
 
-  unblock() {
-    if (this.unblockTransitions) {
-      this.unblockTransitions()
-      this.unblockTransitions = null
-    }
-  }
+  //block() {
+    //if (!this.unblockTransitions)
+      //this.unblockTransitions = this.context.router.blockTransitions(this.getPromptMessage)
+  //}
 
-  render() {
-    return null
-  }
-}
+  //unblock() {
+    //if (this.unblockTransitions) {
+      //this.unblockTransitions()
+      //this.unblockTransitions = null
+    //}
+  //}
 
-export default NavigationPrompt
+  //render() {
+    //return null
+  //}
+//}
+
+//export default NavigationPrompt
