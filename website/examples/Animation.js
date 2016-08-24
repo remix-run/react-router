@@ -1,6 +1,11 @@
 import React from 'react'
-import { Router, Match, Link, Redirect } from 'react-router'
 import { TransitionMotion, spring } from 'react-motion'
+import Match from 'react-router/Match'
+import Miss from 'react-router/Miss'
+import Link from 'react-router/Link'
+import Redirect from 'react-router/Redirect'
+import Router from 'react-router/BrowserRouter'
+
 
 const AnimationExample = ({ history }) => (
   <Router history={history}>

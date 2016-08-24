@@ -1,6 +1,6 @@
 import React from 'react'
 import { PAGES, API, EXAMPLES } from '../routes'
-import { BrowserRouter as Router, Link, Match, Miss } from 'react-router'
+import { BrowserRouter as Router, Link, Match, Miss } from '../../modules'
 import { H, V, B, GRAY, RED, PAD } from './bricks'
 import LoadBundle from './LoadBundle'
 import FakeBrowser from './FakeBrowser'

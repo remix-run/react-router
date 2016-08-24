@@ -1,25 +1,27 @@
 import React from 'react'
-import { Router, Match, Link } from 'react-router'
+import Match from 'react-router/Match'
+import Miss from 'react-router/Miss'
+import Link from 'react-router/Link'
+import Redirect from 'react-router/Redirect'
+import Router from 'react-router/BrowserRouter'
 
 class BasicExample extends React.Component {
   render() {
-    // this history comes from the docs page, you
-    // would usually pass in a `createBrowserHistory()`
-    // from the `history` lib
-    const { history } = this.props
     return (
-      <Router history={history}>
-        <ul>
-          <li><Link to="/">Home</Link></li>
-          <li><Link to="/about">About</Link></li>
-          <li><Link to="/topics">Topics</Link></li>
-        </ul>
+      <Router>
+        <div>
+          <ul>
+            <li><Link to="/">Home</Link></li>
+            <li><Link to="/about">About</Link></li>
+            <li><Link to="/topics">Topics</Link></li>
+          </ul>
 
-        <hr/>
+          <hr/>
 
-        <Match exactly pattern="/" component={Home} />
-        <Match pattern="/about" component={About} />
-        <Match pattern="/topics" component={Topics} />
+          <Match exactly pattern="/" component={Home} />
+          <Match pattern="/about" component={About} />
+          <Match pattern="/topics" component={Topics} />
+        </div>
       </Router>
     )
   }

@@ -1,5 +1,9 @@
 import React from 'react'
-import { Router, Match, Link, matchPattern } from 'react-router'
+import Match from 'react-router/Match'
+import Miss from 'react-router/Miss'
+import Link from 'react-router/Link'
+import Redirect from 'react-router/Redirect'
+import Router from 'react-router/BrowserRouter'
 
 // Some folks find value in a centralized route config.
 // A route config is just data, React is great at mapping data

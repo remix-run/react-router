@@ -1,5 +1,9 @@
 import React from 'react'
-import { Router, Match, Link } from 'react-router'
+import Match from 'react-router/Match'
+import Miss from 'react-router/Miss'
+import Link from 'react-router/Link'
+import Redirect from 'react-router/Redirect'
+import Router from 'react-router/BrowserRouter'
 
 const PEEPS = [
   { id: 0, name: 'Michelle', friends: [ 1, 2, 3 ] },

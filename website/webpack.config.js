@@ -5,13 +5,15 @@ const path = require('path')
 const HASH = '[chunkHash]'
 const PROD = process.env.NODE_ENV === 'production'
 
+const ROUTER_SRC = path.join(__dirname, '..', 'modules')
+
 module.exports = {
 
   devtool: 'source-map',
 
   entry: {
     app: path.join(__dirname, 'index.js'),
-    vendor: [ 'react', 'react-dom', 'react-router' ]
+    vendor: [ 'react', 'react-dom' ]
   },
 
   output: {
@@ -35,7 +37,12 @@ module.exports = {
 
   resolve: {
     alias: {
-      'react-router': path.join(__dirname, '..', 'modules')
+      'react-router/Miss': path.join(ROUTER_SRC, 'Miss'),
+      'react-router/Match': path.join(ROUTER_SRC, 'Match'),
+      'react-router/Link': path.join(ROUTER_SRC, 'Link'),
+      'react-router/Redirect': path.join(ROUTER_SRC, 'Link'),
+      'react-router/NavigationPrompt': path.join(ROUTER_SRC, 'NavigationPrompt'),
+      'react-router/BrowserRouter': path.join(__dirname, 'components', 'ExampleRouter')
     }
   },
 
