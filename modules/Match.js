@@ -1,5 +1,5 @@
 import React, { PropTypes } from 'react'
-import MatchCountProvider from './MatchCountProvider'
+import MatchProvider from './MatchProvider'
 import matchPattern from './matchPattern'
 
 const patternType = (props, propName) => {
@@ -14,32 +14,32 @@ class RegisterMatch extends React.Component {
   }
 
   static contextTypes = {
-    matchCounter: PropTypes.object
+    match: PropTypes.object
   }
 
   componentWillMount() {
-    const { matchCounter } = this.context
+    const { match:matchContext } = this.context
     const { match } = this.props
 
-    if (match && matchCounter)
-      matchCounter.increment()
+    if (match && matchContext)
+      matchContext.addMatch(match)
   }
 
   componentWillReceiveProps(nextProps) {
-    const { matchCounter } = this.context
+    const { match } = this.context
 
-    if (matchCounter) {
+    if (match) {
       if (nextProps.match && !this.props.match) {
-        matchCounter.increment()
+        match.addMatch(nextProps.match)
       } else if (!nextProps.match && this.props.match) {
-        matchCounter.decrement()
+        match.removeMatch(this.props.match)
       }
     }
   }
 
   componentWillUnmount() {
     if (this.props.match)
-      this.context.matchCounter.decrement()
+      this.context.match.removeMatch(this.props.match)
   }
 
   render() {
@@ -63,7 +63,8 @@ class Match extends React.Component {
   }
 
   static contextTypes = {
-    location: PropTypes.object
+    location: PropTypes.object,
+    match: PropTypes.object
   }
 
   render() {
@@ -75,7 +76,7 @@ class Match extends React.Component {
 
     return (
       <RegisterMatch match={match}>
-        <MatchCountProvider match={match}>
+        <MatchProvider match={match}>
           {children ? (
             children({ matched: !!match, ...props })
           ) : match ? (
@@ -85,7 +86,7 @@ class Match extends React.Component {
               <Component {...props}/>
             )
           ) : null}
-        </MatchCountProvider>
+        </MatchProvider>
       </RegisterMatch>
     )
   }
