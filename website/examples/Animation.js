@@ -7,8 +7,8 @@ import Redirect from 'react-router/Redirect'
 import Router from 'react-router/BrowserRouter'
 
 
-const AnimationExample = ({ history }) => (
-  <Router history={history}>
+const AnimationExample = () => (
+  <Router>
     <div style={styles.fill}>
       <ul style={styles.nav}>
         <NavLink to="/10/50/50">Red</NavLink>
@@ -33,21 +33,21 @@ const AnimationExample = ({ history }) => (
 const MatchWithFade = ({ component:Component, ...rest }) => {
   const willLeave = () => ({ zIndex: 1, opacity: spring(0) })
   return (
-    <Match {...rest} children={({ matched, ...props}) => (
+    <Match {...rest} children={({ matched, ...props }) => (
       <TransitionMotion
         willLeave={willLeave}
-        styles={matched ? [{
-          key: props.location.key || 'initial',
+        styles={matched ? [ {
+          key: props.location.pathname,
           style: { opacity: 1 },
           data: props
-        }] : []}
+        } ] : []}
       >
         {interpolatedStyles => (
           <div>
             {interpolatedStyles.map(config => (
               <div
                 key={config.key}
-                style={{ ...styles.fill, ...config.style}}
+                style={{ ...styles.fill, ...config.style }}
               >
                 <Component {...config.data}/>
               </div>
