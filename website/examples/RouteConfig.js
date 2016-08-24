@@ -23,8 +23,8 @@ const Tacos = ({ subRoutes }) => (
       <li><Link to="/tacos/cart">Cart</Link></li>
     </ul>
 
-    {subRoutes.map(route => (
-      <MatchWithSubRoutes {...route}/>
+    {subRoutes.map((route, i) => (
+      <MatchWithSubRoutes key={i} {...route}/>
     ))}
   </div>
 )
@@ -61,16 +61,18 @@ const MatchWithSubRoutes = (route) => (
   )}/>
 )
 
-const RouteConfigExample = ({ history }) => (
-  <Router history={history}>
-    <ul>
-      <li><Link to="/tacos">Tacos</Link></li>
-      <li><Link to="/sandwiches">Sandwiches</Link></li>
-    </ul>
+const RouteConfigExample = () => (
+  <Router>
+    <div>
+      <ul>
+        <li><Link to="/tacos">Tacos</Link></li>
+        <li><Link to="/sandwiches">Sandwiches</Link></li>
+      </ul>
 
-    {routes.map(route => (
-      <MatchWithSubRoutes {...route}/>
-    ))}
+      {routes.map((route, i) => (
+        <MatchWithSubRoutes key={i} {...route}/>
+      ))}
+    </div>
   </Router>
 )
 
