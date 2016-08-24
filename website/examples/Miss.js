@@ -7,16 +7,18 @@ import Router from 'react-router/BrowserRouter'
 
 const MissExample = ({ history }) => (
   <Router history={history}>
-    <ul>
-      <li><Link to="/">Home</Link></li>
-      <li><Link to="/will-match">Will Match</Link></li>
-      <li><Link to="/will-not-match">Will Not Match</Link></li>
-      <li><Link to="/also/will/not/match">Also Will Not Match</Link></li>
-    </ul>
+    <div>
+      <ul>
+        <li><Link to="/">Home</Link></li>
+        <li><Link to="/will-match">Will Match</Link></li>
+        <li><Link to="/will-not-match">Will Not Match</Link></li>
+        <li><Link to="/also/will/not/match">Also Will Not Match</Link></li>
+      </ul>
 
-    <Match pattern="/" exactly component={Home}/>
-    <Match pattern="/will-match" component={WillMatch}/>
-    <Miss component={NoMatch} />
+      <Match pattern="/" exactly component={Home}/>
+      <Match pattern="/will-match" component={WillMatch}/>
+      <Miss component={NoMatch} />
+    </div>
   </Router>
 )
 

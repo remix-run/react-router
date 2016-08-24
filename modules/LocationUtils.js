@@ -5,7 +5,7 @@ export const createLocation = ({ input, parseQuery, action = 'POP', key = null }
 
   const pathname = object.pathname || '/'
   const search = object.search || ''
-  const query = object.query || parseQuery(search)
+  const query = object.query || search !== '' ? parseQuery(search) : {}
   const hash = object.hash || ''
 
   return {

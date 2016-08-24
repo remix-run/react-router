@@ -21,7 +21,7 @@ const createPathWithQuery = (loc, stringifyQuery) => {
   } else {
     const location = { ...loc }
     if (loc.query)
-      location.search = stringifyQuery(loc.query)
+      location.search = `?${stringifyQuery(loc.query)}`
     return createPath(location)
   }
 }
@@ -66,8 +66,10 @@ class StaticRouter extends React.Component {
       return { path, state }
     }
 
+    const location = this.getLocation()
+
     return {
-      location: this.getLocation(),
+      location,
       router: {
         createHref,
         transitionTo: (loc) => {
@@ -79,7 +81,7 @@ class StaticRouter extends React.Component {
           this.props.onReplace(path, state)
         },
         blockTransitions: (getPromptMessage) => {
-          this.blockTransitions(getPromptMessage)
+          this.props.blockTransitions(getPromptMessage)
         }
       }
     }
@@ -103,12 +105,12 @@ class StaticRouter extends React.Component {
 
   getLocation() {
     // TODO: maybe memoize this on willReceiveProps to get extreme w/ perf
-    const { location } = this.props
+    const { location, parseQuery } = this.props
     return typeof location === 'string' ? (
       this.createLocationFromPathname(location)
     ) : isPartialDescriptor(location) ? (
       this.createLocationFromLocationWithPath(location.path)
-    ) : location
+    ) : createLocation({ input: location, parseQuery })
   }
 
   render() {
