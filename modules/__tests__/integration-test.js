@@ -107,6 +107,16 @@ describe('nested Match', () => {
     )
     expect(html).toContain('Page')
   })
+
+  it('renders a nested absolute pattern like normal', () => {
+    const Page = () => <div>Page</div>
+    const html = renderToString(
+      <Router location="/test/nested/paths">
+        <Match pattern="/" render={() => <Match pattern="/test/nested" component={Page} />} />
+      </Router>
+    )
+    expect(html).toContain('Page')
+  })
 })
 
 describe('Ambiguous matches?', () => {
