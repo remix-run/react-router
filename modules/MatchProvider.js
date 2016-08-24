@@ -24,20 +24,18 @@ class MatchProvider extends React.Component {
 
   addMatch = match => {
     const { matches } = this.state
-    if (matches.indexOf(match) === -1 )
-      this.setState({
-        matches: matches.concat([match])
-      })
+
+    this.setState({
+      matches: matches.concat([match])
+    })
   }
 
   removeMatch = match => {
     const { matches } = this.state
-    const index = matches.indexOf(match)
 
-    if (index > -1 )
-      this.setState({
-        matches: matches.splice(index, 1)
-      })
+    this.setState({
+      matches: matches.splice(matches.indexOf(match), 1)
+    })
   }
 
   getChildContext() {
