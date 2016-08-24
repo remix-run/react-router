@@ -87,9 +87,9 @@ const App = connect(mapStateToAppProps)((props) => (
 ////////////////////////////////////////////////////////////
 // you don't need this history, it's passed in for the fake
 // browser window.
-const ReduxExample = ({ history }) => (
+const ReduxExample = () => (
   <Provider store={store}>
-    <App history={history}/>
+    <App/>
   </Provider>
 )
 

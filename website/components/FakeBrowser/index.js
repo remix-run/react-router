@@ -1,8 +1,26 @@
-import React from 'react'
+import React, { PropTypes } from 'react'
 import StaticRouter from '../../../modules/StaticRouter'
 import MemoryHistory from 'react-history/MemoryHistory'
 import { B, V, H, PAD, LIGHT_GRAY, GRAY } from '../bricks'
-import { button } from './style.css'
+import { button } from './style.css' // eslint-disable-line
+
+class LocationActionProvider extends React.Component {
+
+  static childContextTypes = {
+    location: PropTypes.object,
+    action: PropTypes.string
+  }
+
+  getChildContext() {
+    const { location, action } = this.props
+    return { location, action }
+  }
+
+  render() {
+    return this.props.children
+  }
+
+}
 
 const LeftArrowIcon = () => (
   <svg fill="currentColor" height="1em" width="1em" viewBox="0 0 40 40" preserveAspectRatio="xMidYMid meet" style={{ verticalAlign: 'middle' }}><g><path d="m28.3 18.3h-12.6l3.8-3.8c0.7-0.6 0.7-1.7 0-2.3s-1.7-0.7-2.3 0l-7.9 7.8 7.9 7.8c0.3 0.4 0.7 0.5 1.1 0.5s0.9-0.1 1.2-0.5c0.7-0.6 0.7-1.7 0-2.3l-3.8-3.8h12.6c1 0 1.7-0.8 1.7-1.7s-0.8-1.7-1.7-1.7z"></path></g></svg>
@@ -108,22 +126,25 @@ class FakeBrowser extends React.Component {
                     })
                   }}
                   onKeyDown={(e) => {
-                    if (e.key === 'Enter')
+                    if (e.key === 'Enter') {
                       history.push(e.target.value)
+                    }
                   }}
                 />
               </H>
             </H>
-            <B flex="1" padding={`${PAD}px`} overflow="auto" position="relative">
-              <StaticRouter
-                action={action}
+            <B
+              flex="1"
+              padding={`${PAD}px`}
+              overflow="auto"
+              position="relative"
+            >
+              <LocationActionProvider
                 location={location}
-                onPush={history.push}
-                onReplace={history.replace}
-                blockTransitions={history.block}
+                action={action}
               >
                 <Child/>
-              </StaticRouter>
+              </LocationActionProvider>
             </B>
           </V>
         )}

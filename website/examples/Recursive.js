@@ -33,9 +33,9 @@ const Person = ({ pathname, params }) => {
   )
 }
 
-const RecursiveExample = ({ history }) => {
+const RecursiveExample = () => {
   return (
-    <Router history={history}>
+    <Router>
       <Person params={{ id: 0 }} pathname=""/>
     </Router>
   )
