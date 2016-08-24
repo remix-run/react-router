@@ -4,7 +4,7 @@
 export Link from './Link'
 export Match from './Match'
 export Miss from './Miss'
-export NavigationPrompt from './NavigationPrompt'
+export NavigationPrompt from 'react-history/Prompt'
 export Redirect from './Redirect'
 
 // High-level wrappers
