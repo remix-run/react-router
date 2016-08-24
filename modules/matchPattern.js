@@ -23,7 +23,7 @@ const parseParams = (pattern, match, keys) =>
     return params
   }, {})
 
-const matchPattern = (pattern, location, matchExactly) => {
+const matchPattern = (pattern, location, matchExactly, parent) => {
   const specialCase = !matchExactly && pattern === '/'
 
   if (specialCase) {
@@ -33,6 +33,12 @@ const matchPattern = (pattern, location, matchExactly) => {
       pathname: '/'
     }
   } else {
+    if (!matchExactly && parent && pattern.charAt(0) !== '/') {
+      pattern = parent.pathname +
+        (parent.pathname.charAt(parent.pathname.length - 1) !== '/' ? '/' : '') +
+        pattern
+    }
+
     const matcher = getMatcher(pattern)
     const pathname = matchExactly ?
       location.pathname : truncatePathnameToPattern(location.pathname, pattern)

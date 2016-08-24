@@ -2,11 +2,6 @@ import React, { PropTypes } from 'react'
 import MatchProvider from './MatchProvider'
 import matchPattern from './matchPattern'
 
-const patternType = (props, propName) => {
-  if (props[propName].charAt(0) !== '/')
-    return new Error('The `pattern` prop must start with "/"')
-}
-
 class RegisterMatch extends React.Component {
   static propTypes = {
     children: PropTypes.node.isRequired,
@@ -49,7 +44,7 @@ class RegisterMatch extends React.Component {
 
 class Match extends React.Component {
   static propTypes = {
-    pattern: patternType,
+    pattern: PropTypes.string,
     exactly: PropTypes.bool,
     location: PropTypes.object,
 
@@ -70,8 +65,10 @@ class Match extends React.Component {
   render() {
     const { children, render, component:Component,
       pattern, location, exactly } = this.props
-    const loc = location || this.context.location
-    const match = matchPattern(pattern, loc, exactly)
+    const { location:locationContext, match:matchContext } = this.context
+    const loc = location || locationContext
+    const parent = matchContext && matchContext.parent
+    const match = matchPattern(pattern, loc, exactly, parent)
     const props = { ...match, location: loc, pattern }
 
     return (
