@@ -1,7 +1,8 @@
 import { stringify, parse as parseQuery } from 'query-string'
 import React, { PropTypes } from 'react'
 import MatchCountProvider from './MatchCountProvider'
-import { createLocation, createPath } from './LocationUtils'
+import { createLocation } from './LocationUtils'
+import { createPath } from 'react-history/PathUtils'
 import {
   action as actionType,
   location as locationType,
@@ -10,8 +11,20 @@ import {
 
 const isPartialDescriptor = (loc) => !!loc.path
 
-const defaultStringifyQuery = (query) =>
+const defaultStringifyQuery = (query) => (
   stringify(query).replace(/%20/g, '+')
+)
+
+const createPathWithQuery = (loc, stringifyQuery) => {
+  if (typeof loc === 'string') {
+    return loc
+  } else {
+    const location = { ...loc }
+    if (loc.query)
+      location.search = stringifyQuery(loc.query)
+    return createPath(location)
+  }
+}
 
 class StaticRouter extends React.Component {
 
@@ -24,14 +37,12 @@ class StaticRouter extends React.Component {
     onPush: PropTypes.func.isRequired,
     onReplace: PropTypes.func.isRequired,
     stringifyQuery: PropTypes.func.isRequired,
+    // TODO: parseQueryString
     parseQuery: PropTypes.func.isRequired
   }
 
   static defaultProps = {
-    createHref: (loc) => {
-      return (typeof loc === 'string') ?
-        loc : createPath(loc, defaultStringifyQuery)
-    },
+    createHref: path => path,
     stringifyQuery: defaultStringifyQuery,
     parseQuery
   }
@@ -42,13 +53,34 @@ class StaticRouter extends React.Component {
   }
 
   getChildContext() {
+    const createHref = (to) => {
+      const path = createPathWithQuery(to, this.props.stringifyQuery)
+      return this.props.createHref(path)
+    }
+
+    // TODO: move this into a HistoryRouter so the StaticRouter
+    // API is just locations, not the history API's signatures
+    const getPathAndState = (loc) => {
+      const path = createHref(loc)
+      const state = typeof loc === 'object' ? loc.state : null
+      return { path, state }
+    }
+
     return {
       location: this.getLocation(),
       router: {
-        createHref: (to) => this.props.createHref(to),
-        transitionTo: (loc) => this.props.onPush(loc),
-        replaceWith: (loc) => this.props.onReplace(loc),
-        blockTransitions: (getPromptMessage) => this.blockTransitions(getPromptMessage)
+        createHref,
+        transitionTo: (loc) => {
+          const { path, state } = getPathAndState(loc)
+          this.props.onPush(path, state)
+        },
+        replaceWith: (loc) => {
+          const { path, state } = getPathAndState(loc)
+          this.props.onReplace(path, state)
+        },
+        blockTransitions: (getPromptMessage) => {
+          this.blockTransitions(getPromptMessage)
+        }
       }
     }
   }

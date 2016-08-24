@@ -5,7 +5,10 @@ import {
 
 class Redirect extends React.Component {
   static propTypes = {
-    to: PropTypes.string.isRequired
+    to: PropTypes.oneOfType([
+      PropTypes.string,
+      PropTypes.object
+    ]).isRequired
   }
 
   static contextTypes = {

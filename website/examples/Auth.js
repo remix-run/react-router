@@ -1,10 +1,15 @@
+/*eslint-disable import/no-unresolved*/
 import React, { PropTypes } from 'react'
 import Match from 'react-router/Match'
-import Miss from 'react-router/Miss'
 import Link from 'react-router/Link'
 import Redirect from 'react-router/Redirect'
 import Router from 'react-router/BrowserRouter'
 
+////////////////////////////////////////////////////////////
+// 1. Click the public page
+// 2. Click the protected page<
+// 3. Log in
+// 4. Click the back button, note the url each time
 
 ////////////////////////////////////////////////////////////
 const fakeAuth = {
@@ -19,6 +24,51 @@ const fakeAuth = {
     //setTimeout(cb, 100) // weird bug if async?
   }
 }
+
+////////////////////////////////////////////////////////////
+const AuthExample = () => (
+  <Router>
+    {({ router }) => (
+      <div>
+        {fakeAuth.isAuthenticated ? (
+          <p>
+            Welcome! {' '}
+            <button onClick={() => {
+              fakeAuth.signout(() => {
+                router.transitionTo('/')
+              })
+            }}>Sign out</button>
+          </p>
+        ) : (
+          <p>You are not logged in.</p>
+        )}
+
+        <ul>
+          <li><Link to="/public">Public Page</Link></li>
+          <li><Link to="/protected">Protected Page</Link></li>
+        </ul>
+
+        <Match pattern="/public" component={Public}/>
+        <Match pattern="/login" component={Login}/>
+        <MatchWhenAuthorized pattern="/protected" component={Protected}/>
+      </div>
+    )}
+  </Router>
+)
+
+////////////////////////////////////////////////////////////
+const MatchWhenAuthorized = ({ component: Component, ...rest }) => (
+  <Match {...rest} render={props => (
+    fakeAuth.isAuthenticated ? (
+      <Component {...props}/>
+    ) : (
+      <Redirect to={{
+        pathname: '/login',
+        state: { from: props.location }
+      }}/>
+    )
+  )}/>
+)
 
 
 ////////////////////////////////////////////////////////////
@@ -59,68 +109,5 @@ class Login extends React.Component {
 }
 
 
-////////////////////////////////////////////////////////////
-const MatchWhenAuthorized = ({ component: Component, ...rest }) => (
-    <Match {...rest} render={props => (
-      fakeAuth.isAuthenticated ? (
-        <Component {...props}/>
-      ) : (
-        <Redirect to={{
-          pathname: '/login',
-          state: { from: props.location }
-        }}/>
-      )
-    )}/>
-  )
-
-
-////////////////////////////////////////////////////////////
-class AuthExample extends React.Component {
-  signout = () => {
-    fakeAuth.signout(() => {
-      this.props.history.push('/')
-      // FIXME: why do we stay at /protected? when 
-      // there's a setTimeout?
-    })
-  }
-
-  render() {
-    return (
-      <Router history={this.props.history}>
-        <ol style={{
-          padding: '10px 30px',
-          background: 'hsl(53, 81%, 75%)'
-        }}>
-          <li>Click the public page</li>
-          <li>Click the protected page</li>
-          <li>Log in</li>
-          <li>
-            Click the back button, note the url each time
-          </li>
-        </ol>
-
-        <div>
-          {fakeAuth.isAuthenticated ? (
-            <p>
-              Welcome! {' '}
-              <button onClick={this.signout}>Sign out</button>
-            </p>
-          ) : (
-            <p>You are not logged in.</p>
-          )}
-        </div>
-
-        <ul>
-          <li><Link to="/public">Public Page</Link></li>
-          <li><Link to="/protected">Protected Page</Link></li>
-        </ul>
-
-        <Match pattern="/public" component={Public}/>
-        <Match pattern="/login" component={Login}/>
-        <MatchWhenAuthorized pattern="/protected" component={Protected}/>
-      </Router>
-    )
-  }
-}
 
 export default AuthExample

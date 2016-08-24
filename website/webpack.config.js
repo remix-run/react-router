@@ -40,7 +40,7 @@ module.exports = {
       'react-router/Miss': path.join(ROUTER_SRC, 'Miss'),
       'react-router/Match': path.join(ROUTER_SRC, 'Match'),
       'react-router/Link': path.join(ROUTER_SRC, 'Link'),
-      'react-router/Redirect': path.join(ROUTER_SRC, 'Link'),
+      'react-router/Redirect': path.join(ROUTER_SRC, 'Redirect'),
       'react-router/NavigationPrompt': path.join(ROUTER_SRC, 'NavigationPrompt'),
       'react-router/BrowserRouter': path.join(__dirname, 'components', 'ExampleRouter')
     }
