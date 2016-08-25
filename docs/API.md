@@ -114,7 +114,7 @@ A [location descriptor](https://github.com/ReactTraining/history/blob/master/doc
   * `hash`: A hash to put in the URL, e.g. `#a-hash`.
   * `state`: State to persist to the `location`.
 
-_Note: React Router currently does not manage scroll position, and will not scroll to the element corresponding to `hash`._
+_Note: React Router currently does not manage scroll position, and will not scroll to the element corresponding to `hash`. You can use [react-router-scroll](https://github.com/taion/react-router-scroll) to manage the scroll position._
 
 ##### `activeClassName`
 The className a `<Link>` receives when its route is active. No active class by default.
