@@ -38,23 +38,21 @@ describe('StaticRouter', () => {
       )).toContain('test')
     })
 
-    it('passes match props to function children', () => {
-      let actualProps
+    it('passes the location to function children', () => {
+      let actualLocation
       renderToString(
         <StaticRouter {...requiredProps} location="/lol">
-          {(props) => <div>{(actualProps = props, null)}</div>}
+          {({ location }) => <div>{(actualLocation = location, null)}</div>}
         </StaticRouter>
       )
-      expectDeepEquality(actualProps, {
-        location: {
-          action: 'POP',
-          hash: '',
-          key: null,
-          pathname: '/lol',
-          search: '',
-          query: null,
-          state: null
-        }
+      expectDeepEquality(actualLocation, {
+        action: 'POP',
+        hash: '',
+        key: null,
+        pathname: '/lol',
+        search: '',
+        query: null,
+        state: null
       })
     })
   })
