@@ -12,11 +12,14 @@ class Redirect extends React.Component {
   }
 
   static contextTypes = {
-    router: routerType.isRequired
+    router: routerType
   }
 
   componentWillMount() {
-    this.context.router.replaceWith(this.props.to)
+    const { router } = this.context
+    // so that folks can unit test w/o hassle
+    if (router)
+      router.replaceWith(this.props.to)
   }
 
   render() {

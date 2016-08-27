@@ -1,6 +1,8 @@
 import expect from 'expect'
 import React from 'react'
 import Router from '../MemoryRouter'
+import NavigationPrompt from '../NavigationPrompt'
+import StaticRouter from '../StaticRouter'
 import Match from '../Match'
 import Miss from '../Miss'
 import { Simulate } from 'react-addons-test-utils'
@@ -235,6 +237,89 @@ describe('Link with a query', () => {
     ), div)
     const a = div.querySelector('a')
     expect(a.className).toNotEqual('active')
+  })
+})
+
+describe('Match and Miss Integration', () => {
+
+  const requiredProps = {
+    location: '/',
+    action: 'POP',
+    createHref: () => {},
+    blockTransitions: () => {}, // we sure we want this required? servers don't need it.
+    onPush: () => {},
+    onReplace: () => {}
+  }
+
+  describe('Miss', () => {
+    it('renders when nothing else matches', () => {
+      const div = document.createElement('div')
+      const FOO = '/FOO'
+      const MISS = '/MISS'
+      render((
+        <StaticRouter
+          {...requiredProps}
+          location={{ pathname: MISS }}
+        >
+          <div>
+            <Match pattern={FOO} render={() => <div>{FOO}</div>}/>
+            <Miss render={() => <div>{MISS}</div>}/>
+          </div>
+        </StaticRouter>
+      ), div)
+      expect(div.innerHTML).toNotContain(FOO)
+      expect(div.innerHTML).toContain(MISS)
+    })
+
+    it('does not render when something matches', () => {
+      const div = document.createElement('div')
+      const FOO = '/FOO'
+      const MISS = '/MISS'
+      render((
+        <StaticRouter
+          {...requiredProps}
+          location={{ pathname: FOO }}
+        >
+          <div>
+            <Match pattern={FOO} render={() => <div>{FOO}</div>}/>
+            <Miss render={() => <div>{MISS}</div>}/>
+          </div>
+        </StaticRouter>
+      ), div)
+      expect(div.innerHTML).toContain(FOO)
+      expect(div.innerHTML).toNotContain(MISS)
+    })
+  })
+})
+
+describe('NavigationPrompt', () => {
+  const TEXT = 'TEXT'
+  const leftClickEvent = {
+    defaultPrevented: false,
+    preventDefault() { this.defaultPrevented = true },
+    metaKey: null,
+    altKey: null,
+    ctrlKey: null,
+    shiftKey: null,
+    button: 0
+  }
+
+  // TODO: make this test pass when react-history supports getUserConfirmation
+  it.skip('Prompts the user to allow a transition', () => {
+    const div = document.createElement('div')
+    let message
+    render((
+      <Router
+        getUserConfirmation={(_message) => message = _message}
+      >
+        <div>
+          <Link to="/somewhere-else" id="link"/>
+          <NavigationPrompt message={TEXT}/>
+        </div>
+      </Router>
+    ), div)
+    Simulate.click(div.querySelector('a'), leftClickEvent)
+    expect(message).toEqual(TEXT)
   })
 })
 
