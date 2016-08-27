@@ -40,8 +40,7 @@ component will be rendered with the following props:
 
 - `pattern`: (string) the portion of the pattern matched.
 - `pathame`: (string) the portion of pathname matched.
-- `isTerminal`: (bool) whether or not the match is a terminal match
-  (exact match).
+- `isExact`: (bool) whether or not the match is exact (v. partial).
 - `location`: the location matched.
 - `params`: the values parsed from the pathname corresponding by name to
   the dynamic segments of the pattern.
@@ -49,7 +48,7 @@ component will be rendered with the following props:
 ```js
 class User extends React.Component {
   render() {
-    const { location, pattern, pathame, isTerminal } = this.props
+    const { location, pattern, pathame, isExact } = this.props
     const { id } = this.props.params
 
     return <pre>{JSON.stringify(this.props, null, 2)}</pre>

@@ -29,7 +29,7 @@ const matchPattern = (pattern, location, matchExactly) => {
   if (specialCase) {
     return {
       params: null,
-      isTerminal: location.pathname === '/',
+      isExact: location.pathname === '/',
       pathname: '/'
     }
   } else {
@@ -42,8 +42,8 @@ const matchPattern = (pattern, location, matchExactly) => {
       const params = parseParams(pattern, match, matcher.keys)
       const locationLength = location.pathname.split('/').length
       const patternLength = pattern.split('/').length
-      const isTerminal = locationLength === patternLength
-      return { params, isTerminal, pathname }
+      const isExact = locationLength === patternLength
+      return { params, isExact, pathname }
     } else {
       return null
     }

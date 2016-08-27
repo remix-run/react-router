@@ -50,7 +50,7 @@ describe('Match', () => {
           run({ pathname: '/one/two' }, (props) => {
             expect(props).toEqual({
               params: { foo: 'one', bar: 'two' },
-              isTerminal: true,
+              isExact: true,
               pathname: '/one/two',
               location: { pathname: '/one/two' },
               pattern: '/:foo/:bar'
@@ -64,7 +64,7 @@ describe('Match', () => {
           run({ pathname: '/one/two/three/four' }, (props) => {
             // this allows for recursive/relative matching
             expect(props.pathname).toEqual('/one/two') // only what's matched
-            expect(props.isTerminal).toEqual(false)
+            expect(props.isExact).toEqual(false)
           })
         })
       })
@@ -114,7 +114,7 @@ describe('Match', () => {
           run({ pathname: '/one/two' }, (props) => {
             expect(props).toEqual({
               params: { foo: 'one', bar: 'two' },
-              isTerminal: true,
+              isExact: true,
               pathname: '/one/two',
               location: { pathname: '/one/two' },
               pattern: '/:foo/:bar'
@@ -168,7 +168,7 @@ describe('Match', () => {
           expect(props).toEqual({
             matched: true,
             params: { foo: 'one', bar: 'two' },
-            isTerminal: true,
+            isExact: true,
             pathname: '/one/two',
             location: { pathname: '/one/two' },
             pattern: '/:foo/:bar'
@@ -220,7 +220,7 @@ describe('Match', () => {
     })
   })
 
-  describe('when rendered in context of a LocationProvider', () => {
+  describe('when rendered in context of a location', () => {
     class LocationProvider extends React.Component {
       static childContextTypes = { location: PropTypes.object }
       getChildContext = () => ({ location: this.props.location })
