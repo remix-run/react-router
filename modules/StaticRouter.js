@@ -30,10 +30,10 @@ class StaticRouter extends React.Component {
 
   static propTypes = {
     action: actionType.isRequired,
-    blockTransitions: PropTypes.func.isRequired,
+    blockTransitions: PropTypes.func,
     children: PropTypes.oneOfType([ PropTypes.node, PropTypes.func ]),
     createHref: PropTypes.func.isRequired,
-    location: locationType.isRequired,
+    location: PropTypes.oneOfType([ locationType, PropTypes.string ]).isRequired,
     onPush: PropTypes.func.isRequired,
     onReplace: PropTypes.func.isRequired,
     stringifyQuery: PropTypes.func.isRequired,
