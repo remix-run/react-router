@@ -4,10 +4,11 @@ import Match from '../Match'
 import { renderToString } from 'react-dom/server'
 
 describe('Match', () => {
+  const TEXT = 'TEXT'
 
   describe('with a `component` prop', () => {
     it('renders when the location matches', () => {
-      const Page = () => <div>Page</div>
+      const Page = () => <div>{TEXT}</div>
       const loc = { pathname: '/' }
       const html = renderToString(
         <Match
@@ -16,11 +17,11 @@ describe('Match', () => {
           component={Page}
         />
       )
-      expect(html).toContain('Page')
+      expect(html).toContain(TEXT)
     })
 
     it('does not render when the location does not match', () => {
-      const Page = () => <div>Page</div>
+      const Page = () => <div>{TEXT}</div>
       const loc = { pathname: '/' }
       const html = renderToString(
         <Match
@@ -29,7 +30,7 @@ describe('Match', () => {
           component={Page}
         />
       )
-      expect(html).toNotContain('Page')
+      expect(html).toNotContain(TEXT)
     })
 
     describe('props passed', () => {
@@ -77,10 +78,10 @@ describe('Match', () => {
         <Match
           pattern="/"
           location={loc}
-          render={() => <div>Page</div>}
+          render={() => <div>{TEXT}</div>}
         />
       )
-      expect(html).toContain('Page')
+      expect(html).toContain(TEXT)
     })
 
     it('does not render when the location does not match', () => {
@@ -89,10 +90,10 @@ describe('Match', () => {
         <Match
           pattern="/foo"
           location={loc}
-          render={() => <div>Page</div>}
+          render={() => <div>{TEXT}</div>}
         />
       )
-      expect(html).toNotContain('Page')
+      expect(html).toNotContain(TEXT)
     })
 
     describe('props passed', () => {
@@ -131,10 +132,10 @@ describe('Match', () => {
         <Match
           pattern="/"
           location={loc}
-          children={() => <div>Page</div>}
+          children={() => <div>{TEXT}</div>}
         />
       )
-      expect(html).toContain('Page')
+      expect(html).toContain(TEXT)
     })
 
     it('it renders when the location does not match', () => {
@@ -143,10 +144,10 @@ describe('Match', () => {
         <Match
           pattern="/foo"
           location={loc}
-          children={() => <div>Page</div>}
+          children={() => <div>{TEXT}</div>}
         />
       )
-      expect(html).toContain('Page')
+      expect(html).toContain(TEXT)
     })
 
     describe('props passed', () => {
@@ -188,6 +189,7 @@ describe('Match', () => {
   })
 
   describe('`exactly` prop', () => {
+    const TEXT = 'TEXT'
     const run = (location, cb) => (
       cb(renderToString(
         <Match
@@ -195,7 +197,7 @@ describe('Match', () => {
           pattern="/foo"
           location={location}
           render={() => (
-            <div>Hello</div>
+            <div>{TEXT}</div>
           )}
         />
       ))
@@ -204,7 +206,7 @@ describe('Match', () => {
     describe('when matched exactly', () => {
       it('renders', () => {
         run({ pathname: '/foo' }, (html) => {
-          expect(html).toContain('Hello')
+          expect(html).toContain(TEXT)
         })
       })
     })
@@ -212,7 +214,7 @@ describe('Match', () => {
     describe('when matched partially', () => {
       it('does not render', () => {
         run({ pathname: '/foo/bar' }, (html) => {
-          expect(html).toNotContain('Hello')
+          expect(html).toNotContain(TEXT)
         })
       })
     })
@@ -226,7 +228,8 @@ describe('Match', () => {
     }
 
     it('matches the location from context', () => {
-      const location = { pathname: '/', state: { test: 'got it' } }
+      const TEXT = 'TEXT'
+      const location = { pathname: '/', state: { test: TEXT } }
       const html = renderToString(
         <LocationProvider location={location}>
           <Match pattern="/" render={({ location }) => (
@@ -234,13 +237,15 @@ describe('Match', () => {
           )}/>
         </LocationProvider>
       )
-      expect(html).toContain('got it')
+      expect(html).toContain(TEXT)
     })
 
     describe('when giving a location prop', () => {
       it('matches the location from props', () => {
-        const contextLoc = { pathname: '/', state: { test: 'context' } }
-        const propsLoc = { pathname: '/', state: { test: 'prop' } }
+        const CONTEXT = 'CONTEXT'
+        const PROP = 'PROP'
+        const contextLoc = { pathname: '/', state: { test: CONTEXT } }
+        const propsLoc = { pathname: '/', state: { test: PROP } }
         const html = renderToString(
           <LocationProvider location={contextLoc}>
             <Match location={propsLoc} pattern="/" render={({ location }) => (
@@ -248,8 +253,8 @@ describe('Match', () => {
             )}/>
           </LocationProvider>
         )
-        expect(html).toNotContain('context')
-        expect(html).toContain('prop')
+        expect(html).toNotContain(CONTEXT)
+        expect(html).toContain(PROP)
       })
     })
   })
