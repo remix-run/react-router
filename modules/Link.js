@@ -84,7 +84,7 @@ class Link extends React.Component {
         onClick={this.handleClick}
         style={isActive ? { ...style, ...activeStyle } : style }
         className={isActive ?
-          [ activeClassName, className ].join(' ').trim() : className
+          [ className, activeClassName ].join(' ').trim() : className
         }
       />
     )

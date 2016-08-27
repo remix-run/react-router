@@ -209,5 +209,32 @@ describe('Link location descriptors', () => {
   })
 })
 
+describe('Link with a query', () => {
+  it('is active when all the query matches', () => {
+    const div = document.createElement('div')
+    const loc = { pathname: '/foo', query: { a: 'b' } }
+    render((
+      <Link
+        to={loc}
+        location={loc}
+        activeClassName="active"
+      />
+    ), div)
+    const a = div.querySelector('a')
+    expect(a.className).toEqual('active')
+  })
 
+  it('is not active when the query does not match', () => {
+    const div = document.createElement('div')
+    render((
+      <Link
+        to={{ pathname: '/foo', query: { a: 'b' } }}
+        location={{ pathname: '/foo', query: { a: 'c' } }}
+        activeClassName="active"
+      />
+    ), div)
+    const a = div.querySelector('a')
+    expect(a.className).toNotEqual('active')
+  })
+})
 
