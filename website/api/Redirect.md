@@ -3,6 +3,9 @@
 Rendering a `Redirect` will navigate to a new location and add the
 previous location onto the next location state.
 
+(If this freaks you out you can use the imperative API from the `router`
+on context.)
+
 ```js
 <Match pattern="/" exactly render={() => (
   loggedIn ? (

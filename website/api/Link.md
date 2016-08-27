@@ -92,10 +92,11 @@ Return `true` for active, `false` for inactive.
 ## `location`
 
 If you don't want to use the location from context, you can pass the
-location to match as a prop instead.
+location to match as a prop instead. Useful in redux apps for links deep
+in the hierarchy.
 
 ```js
-<Match pattern="/foo" location={{ pathname: '/foo' }}/>
+<Match pattern="/foo" location={this.props.location}/>
 ```
 
 # `</Link>`

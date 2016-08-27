@@ -1,6 +1,3 @@
-//export History from './History'
-//export Router from './Router'
-
 export Link from './Link'
 export Match from './Match'
 export Miss from './Miss'
