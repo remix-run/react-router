@@ -70,7 +70,7 @@ const Link = React.createClass({
     activeStyle: object,
     activeClassName: string,
     onlyActiveOnIndex: bool.isRequired,
-    action: oneOf(['push','replace']).isRequired,
+    action: oneOf([ 'push','replace' ]).isRequired,
     onClick: func,
     target: string
   },
