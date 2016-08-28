@@ -12,10 +12,20 @@ class Redirect extends React.Component {
   }
 
   static contextTypes = {
-    router: routerType
+    router: routerType,
+    serverRouter: PropTypes.object
   }
 
   componentWillMount() {
+    if (this.context.serverRouter)
+      this.redirect()
+  }
+
+  componentDidMount() {
+    this.redirect()
+  }
+
+  redirect() {
     const { router } = this.context
     // so that folks can unit test w/o hassle
     if (router)
