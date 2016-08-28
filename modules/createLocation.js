@@ -1,6 +1,6 @@
 import { parsePath } from 'react-history/PathUtils'
 
-export const createLocation = ({ input, parseQuery, action = 'POP', key = null }) => {
+const createLocation = ({ input, parseQuery, action = 'POP', key = null }) => {
   const object = typeof input === 'string' ? parsePath(input) : input
 
   const pathname = object.pathname || '/'
@@ -18,3 +18,4 @@ export const createLocation = ({ input, parseQuery, action = 'POP', key = null }
   }
 }
 
+export default createLocation

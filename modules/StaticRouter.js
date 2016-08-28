@@ -1,7 +1,7 @@
 import { stringify, parse as parseQuery } from 'query-string'
 import React, { PropTypes } from 'react'
 import MatchCountProvider from './MatchCountProvider'
-import { createLocation } from './LocationUtils'
+import createLocation from './createLocation'
 import { createPath } from 'react-history/PathUtils'
 import {
   action as actionType,
