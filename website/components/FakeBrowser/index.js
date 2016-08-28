@@ -3,6 +3,20 @@ import StaticRouter from '../../../modules/StaticRouter'
 import MemoryHistory from 'react-history/MemoryHistory'
 import { B, V, H, PAD, LIGHT_GRAY, GRAY } from '../bricks'
 import { button } from './style.css' // eslint-disable-line
+import { stringify as stringifyQuery } from 'query-string'
+import { createPath } from 'react-history/PathUtils'
+
+// have to recreate what StaticRouter does
+const createPathWithQuery = (loc) => {
+  if (typeof loc === 'string') {
+    return loc
+  } else {
+    const location = { ...loc }
+    if (loc.query)
+      location.search = `?${stringifyQuery(loc.query)}`
+    return createPath(location)
+  }
+}
 
 class LocationActionProvider extends React.Component {
 
@@ -119,7 +133,7 @@ class FakeBrowser extends React.Component {
                   paddingLeft={`${PAD*1.25}px`}
                   color={GRAY}
                   type="text"
-                  value={StaticRouter.defaultProps.createHref(location)}
+                  value={createPathWithQuery(location)}
                   onChange={(e) => {
                     this.setState({
                       location: e.target.value

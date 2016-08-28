@@ -11,7 +11,7 @@ echo "[publish-website] pushing to gh-pages"
 cd build
 cp index.html 404.html
 git init .
-git remote add origin git@github.com:ReactJSTraining/react-router.git
+git remote add origin git@github.com:reactjs/react-router.git
 git checkout -b gh-pages
 git add .
 git commit -m 'publish'

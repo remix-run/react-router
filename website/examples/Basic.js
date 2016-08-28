@@ -1,3 +1,7 @@
+// Run this example locally by copy/pasting it into
+// `src/App.js` of an app created with `create-react-app`
+//  https://github.com/facebookincubator/create-react-app
+
 import React from 'react'
 import Match from 'react-router/Match'
 import Miss from 'react-router/Miss'

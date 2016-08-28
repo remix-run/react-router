@@ -145,16 +145,17 @@ const App = () => (
         </NavList>
         <Break/>
 
-        <NavHeader>API</NavHeader>
-        <NavList>
-          {API.map(NavItem)}
-        </NavList>
-        <Break/>
-
         <NavHeader>Examples</NavHeader>
         <NavList component="ul">
           {EXAMPLES.map(NavItem)}
         </NavList>
+        <Break/>
+
+        <NavHeader>API</NavHeader>
+        <NavList>
+          {API.map(NavItem)}
+        </NavList>
+
       </Nav>
 
       {PAGES.map((page, index) => (
