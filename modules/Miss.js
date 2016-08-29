@@ -23,7 +23,7 @@ class Miss extends React.Component {
     if (!match) {
       // don't render if out of context (probably a unit test)
       return null
-    } else if (!match.matchFound) {
+    } else if (!match.matchFound()) {
       // side-effect in render, only happens on the server
       // and calling it multiple times should be fine
       if (serverRouter)

@@ -47,7 +47,7 @@ class MatchProvider extends React.Component {
         parent: this.state.parent,
         matches: this.state.matches,
 
-        matchFound: this.state.matches.length > 0
+        matchFound: () => this.state.matches.length > 0
       }
     }
   }
