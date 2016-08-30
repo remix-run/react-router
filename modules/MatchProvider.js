@@ -16,7 +16,7 @@ class MatchProvider extends React.Component {
   constructor(props) {
     super(props)
     this.parent = props.match
-    // React doesn't support a parent calling `setState` from an ancestor's
+    // React doesn't support a parent calling `setState` from an descendant's
     // componentWillMount, so we use an instance property to track matches
     this.matches = []
   }
