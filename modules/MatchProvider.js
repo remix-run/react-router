@@ -15,15 +15,9 @@ class MatchProvider extends React.Component {
 
   constructor(props) {
     super(props)
-
-    this.state = {
-      parent: props.match
-    }
-
-    // When accessing state along this.context, it appears any enqueued setState
-    // calls don't get dispatched on the server (renderToString) and something
-    // like Miss will never work. This works around that by using a simple
-    // instance variable. Sorry it's not idiomatic React!
+    this.parent = props.match
+    // React doesn't support a parent calling `setState` from an ancestor's
+    // componentWillMount, so we use an instance property to track matches
     this.matches = []
   }
 
@@ -41,7 +35,7 @@ class MatchProvider extends React.Component {
         addMatch: this.addMatch,
         removeMatch: this.removeMatch,
 
-        parent: this.state.parent,
+        parent: this.parent,
         matches: this.matches,
 
         matchFound: () => this.matches.length > 0
