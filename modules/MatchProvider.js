@@ -17,25 +17,22 @@ class MatchProvider extends React.Component {
     super(props)
 
     this.state = {
-      parent: props.match,
-      matches: []
+      parent: props.match
     }
+
+    // When accessing state along this.context, it appears any enqueued setState
+    // calls don't get dispatched on the server (renderToString) and something
+    // like Miss will never work. This works around that by using a simple
+    // instance variable. Sorry it's not idiomatic React!
+    this.matches = []
   }
 
   addMatch = match => {
-    const { matches } = this.state
-
-    this.setState({
-      matches: matches.concat([match])
-    })
+    this.matches = this.matches.concat([match])
   }
 
   removeMatch = match => {
-    const { matches } = this.state
-
-    this.setState({
-      matches: matches.splice(matches.indexOf(match), 1)
-    })
+    this.matches = this.matches.splice(this.matches.indexOf(match), 1)
   }
 
   getChildContext() {
@@ -45,9 +42,9 @@ class MatchProvider extends React.Component {
         removeMatch: this.removeMatch,
 
         parent: this.state.parent,
-        matches: this.state.matches,
+        matches: this.matches,
 
-        matchFound: () => this.state.matches.length > 0
+        matchFound: () => this.matches.length > 0
       }
     }
   }
