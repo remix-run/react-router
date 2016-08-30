@@ -1,11 +1,6 @@
 import React, { PropTypes } from 'react'
-import MatchCountProvider from './MatchCountProvider'
+import MatchProvider from './MatchProvider'
 import matchPattern from './matchPattern'
-
-const patternType = (props, propName) => {
-  if (props[propName].charAt(0) !== '/')
-    return new Error('The `pattern` prop must start with "/"')
-}
 
 class RegisterMatch extends React.Component {
   static propTypes = {
@@ -14,32 +9,32 @@ class RegisterMatch extends React.Component {
   }
 
   static contextTypes = {
-    matchCounter: PropTypes.object
+    match: PropTypes.object
   }
 
   componentWillMount() {
-    const { matchCounter } = this.context
+    const { match:matchContext } = this.context
     const { match } = this.props
 
-    if (match && matchCounter)
-      matchCounter.increment()
+    if (match && matchContext)
+      matchContext.addMatch(match)
   }
 
   componentWillReceiveProps(nextProps) {
-    const { matchCounter } = this.context
+    const { match } = this.context
 
-    if (matchCounter) {
+    if (match) {
       if (nextProps.match && !this.props.match) {
-        matchCounter.increment()
+        match.addMatch(nextProps.match)
       } else if (!nextProps.match && this.props.match) {
-        matchCounter.decrement()
+        match.removeMatch(this.props.match)
       }
     }
   }
 
   componentWillUnmount() {
     if (this.props.match)
-      this.context.matchCounter.decrement()
+      this.context.match.removeMatch(this.props.match)
   }
 
   render() {
@@ -49,7 +44,7 @@ class RegisterMatch extends React.Component {
 
 class Match extends React.Component {
   static propTypes = {
-    pattern: patternType,
+    pattern: PropTypes.string,
     exactly: PropTypes.bool,
     location: PropTypes.object,
 
@@ -63,19 +58,22 @@ class Match extends React.Component {
   }
 
   static contextTypes = {
-    location: PropTypes.object
+    location: PropTypes.object,
+    match: PropTypes.object
   }
 
   render() {
     const { children, render, component:Component,
       pattern, location, exactly } = this.props
-    const loc = location || this.context.location
-    const match = matchPattern(pattern, loc, exactly)
+    const { location:locationContext, match:matchContext } = this.context
+    const loc = location || locationContext
+    const parent = matchContext && matchContext.parent
+    const match = matchPattern(pattern, loc, exactly, parent)
     const props = { ...match, location: loc, pattern }
 
     return (
       <RegisterMatch match={match}>
-        <MatchCountProvider match={match}>
+        <MatchProvider match={match}>
           {children ? (
             children({ matched: !!match, ...props })
           ) : match ? (
@@ -85,7 +83,7 @@ class Match extends React.Component {
               <Component {...props}/>
             )
           ) : null}
-        </MatchCountProvider>
+        </MatchProvider>
       </RegisterMatch>
     )
   }

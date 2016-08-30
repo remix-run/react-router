@@ -7,27 +7,28 @@ import Match from '../Match'
 import Miss from '../Miss'
 import { Simulate } from 'react-addons-test-utils'
 import Link from '../Link'
-import { renderToString } from 'react-dom/server'
 import { render } from 'react-dom'
 
 describe('Integration Tests', () => {
 
   it('renders root match', () => {
+    const div = document.createElement('div')
     const TEXT = 'Mrs. Kato'
-    const markup = renderToString(
+    render((
       <Router location="/">
         <Match pattern="/" render={() => (
           <h1>{TEXT}</h1>
         )}/>
       </Router>
-    )
-    expect(markup).toContain(TEXT)
+    ), div)
+    expect(div.innerHTML).toContain(TEXT)
   })
 
   it('renders nested matches', () => {
+    const div = document.createElement('div')
     const TEXT1 = 'Ms. Tripp'
     const TEXT2 = 'Mrs. Schiffman'
-    const markup = renderToString(
+    render((
       <Router location="/nested">
         <Match pattern="/" render={() => (
           <div>
@@ -38,15 +39,16 @@ describe('Integration Tests', () => {
           </div>
         )}/>
       </Router>
-    )
-    expect(markup).toContain(TEXT1)
-    expect(markup).toContain(TEXT2)
+    ), div)
+    expect(div.innerHTML).toContain(TEXT1)
+    expect(div.innerHTML).toContain(TEXT2)
   })
 
   it('renders only as deep as the match', () => {
+    const div = document.createElement('div')
     const TEXT1 = 'Ms. Tripp'
     const TEXT2 = 'Mrs. Schiffman'
-    const markup = renderToString(
+    render((
       <Router location="/">
         <Match pattern="/" render={() => (
           <div>
@@ -57,15 +59,16 @@ describe('Integration Tests', () => {
           </div>
         )}/>
       </Router>
-    )
-    expect(markup).toContain(TEXT1)
-    expect(markup).toNotContain(TEXT2)
+    ), div)
+    expect(div.innerHTML).toContain(TEXT1)
+    expect(div.innerHTML).toNotContain(TEXT2)
   })
 
   it('renders multiple matches', () => {
+    const div = document.createElement('div')
     const TEXT1 = 'Mrs. Schiffman'
     const TEXT2 = 'Mrs. Burton'
-    const markup = renderToString(
+    render((
       <Router location="/double">
         <div>
           <aside>
@@ -80,29 +83,66 @@ describe('Integration Tests', () => {
           </main>
         </div>
       </Router>
-    )
-    expect(markup).toContain(TEXT1)
-    expect(markup).toContain(TEXT2)
+    ), div)
+    expect(div.innerHTML).toContain(TEXT1)
+    expect(div.innerHTML).toContain(TEXT2)
   })
 
 })
 
+describe('nested Match', () => {
+  it('renders a nested relative pattern', () => {
+    const div = document.createElement('div')
+    const Page = () => <div>Page</div>
+    render((
+      <Router location="/test/nested/paths">
+        <Match pattern="/test/nested" render={() => <Match pattern="paths" component={Page} />} />
+      </Router>
+    ), div)
+    expect(div.innerHTML).toContain('Page')
+  })
+
+  it('renders a nested relative pattern from the root', () => {
+    const div = document.createElement('div')
+    const Page = () => <div>Page</div>
+    render((
+      <Router location="/test">
+        <Match pattern="/" render={() => <Match pattern="test" component={Page} />} />
+      </Router>
+    ), div)
+    expect(div.innerHTML).toContain('Page')
+  })
+
+  it('renders a nested absolute pattern like normal', () => {
+    const div = document.createElement('div')
+    const Page = () => <div>Page</div>
+    render((
+      <Router location="/test/nested/paths">
+        <Match pattern="/" render={() => <Match pattern="/test/nested" component={Page} />} />
+      </Router>
+    ), div)
+    expect(div.innerHTML).toContain('Page')
+  })
+})
+
 describe('Ambiguous matches?', () => {
   it('should render both the dynamic and static patterns', () => {
-    const html = renderToString(
+    const div = document.createElement('div')
+    render(
       <Router location="/foo">
         <Match pattern="/foo" render={() => <div>static</div>}/>
         <Match pattern="/:name" render={() => <div>param</div>}/>
-      </Router>
-    )
-    expect(html).toContain('static')
-    expect(html).toContain('param')
+      </Router>,
+      div)
+    expect(div.innerHTML).toContain('static')
+    expect(div.innerHTML).toContain('param')
   })
 
   describe('with nested Match/Miss', () => {
     it('allows devs to match the dynamic pattern only', () => {
+      const div = document.createElement('div')
       const pathname = '/non-static-param'
-      const html = renderToString(
+      render((
         <Router location={pathname}>
           <Match pattern="/:name" render={({ params }) => (
             <div>
@@ -111,21 +151,22 @@ describe('Ambiguous matches?', () => {
             </div>
           )}/>
         </Router>
-      )
-      expect(html).toNotContain('foo')
-      expect(html).toContain('non-static-param')
+      ), div)
+      expect(div.innerHTML).toNotContain('foo')
+      expect(div.innerHTML).toContain('non-static-param')
     })
 
     it('allows devs to match the static pattern only', () => {
+      const div = document.createElement('div')
       const pathname = '/foo'
-      const html = renderToString((
+      render((
         <Router location={pathname}>
           <Match pattern="/foo" render={() => <div>match</div>}/>
           <Miss render={() => <div>miss</div>}/>
         </Router>
-      ))
-      expect(html).toContain('match')
-      expect(html).toNotContain('miss')
+      ), div)
+      expect(div.innerHTML).toContain('match')
+      expect(div.innerHTML).toNotContain('miss')
     })
   })
 })
@@ -322,4 +363,3 @@ describe('NavigationPrompt', () => {
     expect(message).toEqual(TEXT)
   })
 })
-

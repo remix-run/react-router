@@ -1,6 +1,6 @@
 import { stringify, parse as parseQuery } from 'query-string'
 import React, { PropTypes } from 'react'
-import MatchCountProvider from './MatchCountProvider'
+import MatchProvider from './MatchProvider'
 import createLocation from './createLocation'
 import { createPath } from 'react-history/PathUtils'
 import {
@@ -118,7 +118,7 @@ class StaticRouter extends React.Component {
     const location = this.getLocation()
 
     return (
-      <MatchCountProvider>
+      <MatchProvider>
         {typeof children === 'function' ? (
           children({ location, router: this.getChildContext().router })
         ) : React.Children.count(children) > 1 ? (
@@ -127,7 +127,7 @@ class StaticRouter extends React.Component {
         ) : (
           children
         )}
-      </MatchCountProvider>
+      </MatchProvider>
     )
   }
 }

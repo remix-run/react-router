@@ -1,8 +1,8 @@
 import { PropTypes } from 'react'
 
-export const counter = PropTypes.shape({
-  increment: PropTypes.func.isRequired,
-  decrement: PropTypes.func.isRequired
+export const matchContext = PropTypes.shape({
+  addMatch: PropTypes.func.isRequired,
+  removeMatch: PropTypes.func.isRequired
 })
 
 export const history = PropTypes.shape({
