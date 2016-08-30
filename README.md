@@ -3,6 +3,26 @@ React Router
 
 Declarative routing for [React.js][react].
 
-https://ReactJSTraining.github.io/react-router/
+Docs
+----
+
+https://reacttraining.github.io/react-router/
+
+Installation
+------------
+
+### NPM
+
+```
+npm install react-router@4.0.0-beta.1
+```
+
+### Script Tag Global
+
+```html
+<script src="https://unpkg.com/react-router@4.0.0-beta.1"></script>
+```
+
+You'll find the modules on `window.ReactRouter`
 
   [react]:https://facebook.github.io/react/

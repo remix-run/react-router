@@ -8,6 +8,7 @@ export Redirect from './Redirect'
 export BrowserRouter from './BrowserRouter'
 export HashRouter from './HashRouter'
 export MemoryRouter from './MemoryRouter'
+export ServerRouter from './ServerRouter'
 
 // Low-level building block
 export StaticRouter from './StaticRouter'
