@@ -14,7 +14,10 @@ const rootRoute = {
       require('./routes/Course'),
       require('./routes/Grades'),
       require('./routes/Messages'),
-      require('./routes/Profile')
+      require('./routes/Profile'), {
+        path: '*',
+        component: require('./components/NotFound')
+      }
     ]
   } ]
 }
