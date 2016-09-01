@@ -149,7 +149,7 @@ export function formatPattern(pattern, params) {
   params = params || {}
 
   const { tokens } = compilePattern(pattern)
-  let parenCount = 0, pathname = '', splatIndex = 0, history = ''
+  let parenCount = 0, pathname = '', splatIndex = 0, history = []
 
   let token, paramName, paramValue
   for (let i = 0, len = tokens.length; i < len; ++i) {
@@ -167,11 +167,16 @@ export function formatPattern(pattern, params) {
       if (paramValue != null)
         pathname += encodeURI(paramValue)
     } else if (token === '(') {
+      history[parenCount] = ''
       parenCount += 1
     } else if (token === ')') {
-      pathname += history
-      history = ''
+      const parenText = history.pop()
       parenCount -= 1
+
+      if (parenCount)
+        history[parenCount - 1] += parenText
+      else
+        pathname += parenText
     } else if (token.charAt(0) === ':') {
       paramName = token.substring(1)
       paramValue = params[paramName]
@@ -184,7 +189,7 @@ export function formatPattern(pattern, params) {
 
       if (paramValue == null) {
         if (parenCount) {
-          history = ''
+          history[parenCount - 1] = ''
 
           const curTokenIdx = tokens.indexOf(token)
           const nextParenIdx = tokens.slice(curTokenIdx, tokens.length)
@@ -197,17 +202,23 @@ export function formatPattern(pattern, params) {
         }
       }
       else if (parenCount)
-        history += encodeURIComponent(paramValue)
+        history[parenCount - 1] += encodeURIComponent(paramValue)
       else
         pathname += encodeURIComponent(paramValue)
 
     } else {
       if (parenCount)
-        history += token
+        history[parenCount - 1] += token
       else
         pathname += token
     }
   }
+
+  invariant(
+    history.length == 0,
+    'History is not empty [%s]',
+    JSON.stringify(history)
+  )
 
   return pathname.replace(/\/+/g, '/')
 }
