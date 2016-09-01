@@ -45,6 +45,58 @@ describe('formatPattern', function () {
       })
     })
 
+    describe('and a param is optional with addtional text prior to the params', function () {
+      const pattern = '/search(/forum/:id)'
+
+      it('returns the correct path when param is supplied', function () {
+        expect(formatPattern(pattern, { id:'123' })).toEqual('/search/forum/123')
+      })
+
+      it('returns the correct path when param is not supplied', function () {
+        expect(formatPattern(pattern, { })).toEqual('/search')
+      })
+    })
+
+    describe('and a param is optional with multiple segments and addtional text prior to the params', function () {
+      const pattern = '/search(/forum/:form_id)(/comment/:comment_id)'
+
+      it('returns the correct path when param is supplied', function () {
+        expect(formatPattern(pattern, { form_id:'123', comment_id: '456' })).toEqual('/search/forum/123/comment/456')
+      })
+
+      it('returns the correct path when param is supplied', function () {
+        expect(formatPattern(pattern, { form_id:'123' })).toEqual('/search/forum/123')
+      })
+
+      it('returns the correct path when param is supplied', function () {
+        expect(formatPattern(pattern, { comment_id:'456' })).toEqual('/search/comment/456')
+      })
+
+      it('returns the correct path when param is not supplied', function () {
+        expect(formatPattern(pattern, { })).toEqual('/search')
+      })
+    })
+
+    describe('and a param is optional with multiple segments in the optional part', function () {
+      const pattern = '/search(/forum/:form_id/comment/:comment_id)'
+
+      it('returns the correct path when param is supplied', function () {
+        expect(formatPattern(pattern, { form_id:'123', comment_id: '456' })).toEqual('/search/forum/123/comment/456')
+      })
+
+      it('returns the correct path when param is not supplied', function () {
+        expect(formatPattern(pattern, { form_id:'123' })).toEqual('/search')
+      })
+
+      it('returns the correct path when param is not supplied 2', function () {
+        expect(formatPattern(pattern, { comment_id:'456' })).toEqual('/search')
+      })
+
+      it('returns the correct path when param is not supplied', function () {
+        expect(formatPattern(pattern, { })).toEqual('/search')
+      })
+    })
+
     describe('and all params are present', function () {
       it('returns the correct path', function () {
         expect(formatPattern(pattern, { id: 'abc' })).toEqual('/comments/abc/edit')

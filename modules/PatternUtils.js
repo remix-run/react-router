@@ -149,7 +149,7 @@ export function formatPattern(pattern, params) {
   params = params || {}
 
   const { tokens } = compilePattern(pattern)
-  let parenCount = 0, pathname = '', splatIndex = 0
+  let parenCount = 0, pathname = '', splatIndex = 0, history = ''
 
   let token, paramName, paramValue
   for (let i = 0, len = tokens.length; i < len; ++i) {
@@ -169,6 +169,8 @@ export function formatPattern(pattern, params) {
     } else if (token === '(') {
       parenCount += 1
     } else if (token === ')') {
+      pathname += history
+      history = ''
       parenCount -= 1
     } else if (token.charAt(0) === ':') {
       paramName = token.substring(1)
@@ -180,10 +182,30 @@ export function formatPattern(pattern, params) {
         paramName, pattern
       )
 
-      if (paramValue != null)
+      if (paramValue == null) {
+        if (parenCount) {
+          history = ''
+
+          const curTokenIdx = tokens.indexOf(token)
+          const nextParenIdx = tokens.slice(curTokenIdx, tokens.length)
+            .findIndex(function (m) {
+              return m == ')'
+            })
+
+          // jump to ending paren
+          i = curTokenIdx + nextParenIdx - 1
+        }
+      }
+      else if (parenCount)
+        history += encodeURIComponent(paramValue)
+      else
         pathname += encodeURIComponent(paramValue)
+
     } else {
-      pathname += token
+      if (parenCount)
+        history += token
+      else
+        pathname += token
     }
   }
 
