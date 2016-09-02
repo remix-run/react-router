@@ -149,7 +149,7 @@ export function formatPattern(pattern, params) {
   params = params || {}
 
   const { tokens } = compilePattern(pattern)
-  let parenCount = 0, pathname = '', splatIndex = 0, history = []
+  let parenCount = 0, pathname = '', splatIndex = 0, parenHistory = []
 
   let token, paramName, paramValue
   for (let i = 0, len = tokens.length; i < len; ++i) {
@@ -167,14 +167,14 @@ export function formatPattern(pattern, params) {
       if (paramValue != null)
         pathname += encodeURI(paramValue)
     } else if (token === '(') {
-      history[parenCount] = ''
+      parenHistory[parenCount] = ''
       parenCount += 1
     } else if (token === ')') {
-      const parenText = history.pop()
+      const parenText = parenHistory.pop()
       parenCount -= 1
 
       if (parenCount)
-        history[parenCount - 1] += parenText
+        parenHistory[parenCount - 1] += parenText
       else
         pathname += parenText
     } else if (token.charAt(0) === ':') {
@@ -183,42 +183,46 @@ export function formatPattern(pattern, params) {
 
       invariant(
         paramValue != null || parenCount > 0,
-        'Missing "%s" parameter for path "%s"',
+        'missing "%s" parameter for path "%s"',
         paramName, pattern
       )
 
       if (paramValue == null) {
         if (parenCount) {
-          history[parenCount - 1] = ''
+          parenHistory[parenCount - 1] = ''
 
           const curTokenIdx = tokens.indexOf(token)
-          const nextParenIdx = tokens.slice(curTokenIdx, tokens.length)
-            .findIndex(function (m) {
-              return m == ')'
-            })
+          const tokensSubset = tokens.slice(curTokenIdx, tokens.length)
+          let nextParenIdx = -1
+
+          for (let i = 0; i < tokensSubset.length; i++) {
+            if (tokensSubset[i] == ')') {
+              nextParenIdx = i
+              break
+            }
+          }
+
+          invariant(
+            nextParenIdx > 0,
+            'missing end parameter'
+          )
 
           // jump to ending paren
           i = curTokenIdx + nextParenIdx - 1
         }
       }
       else if (parenCount)
-        history[parenCount - 1] += encodeURIComponent(paramValue)
+        parenHistory[parenCount - 1] += encodeURIComponent(paramValue)
       else
         pathname += encodeURIComponent(paramValue)
 
     } else {
       if (parenCount)
-        history[parenCount - 1] += token
+        parenHistory[parenCount - 1] += token
       else
         pathname += token
     }
   }
-
-  invariant(
-    history.length == 0,
-    'History is not empty [%s]',
-    JSON.stringify(history)
-  )
 
   return pathname.replace(/\/+/g, '/')
 }
