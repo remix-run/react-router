@@ -534,7 +534,7 @@ A route's component is rendered when that route matches the URL. The router will
 ### Injected Props
 
 #### `location`
-The current [location](https://github.com/reactjs/history/blob/master/docs/Location.md).
+The current [location](https://github.com/mjackson/history/blob/v2.x/docs/Location.md).
 
 #### `params`
 The dynamic segments of the URL.
