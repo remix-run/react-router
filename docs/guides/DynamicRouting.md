@@ -14,7 +14,7 @@ Routes may define [`getChildRoutes`](/docs/API.md#getchildroutespartialnextstate
 
 Coupled with a smart code splitting tool like [webpack](http://webpack.github.io/), a once tiresome architecture is now simple and declarative.
 
-```jsx
+```js
 const CourseRoute = {
   path: 'course/:courseId',
 

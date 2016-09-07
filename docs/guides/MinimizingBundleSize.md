@@ -6,13 +6,13 @@ Instead, the bindings exported from `react-router` are also available in `react-
 
 Assuming you are transpiling ES2015 modules into CommonJS modules, instead of:
 
-```jsx
+```js
 import { Link, Route, Router } from 'react-router'
 ```
 
 use:
 
-```jsx
+```js
 import Link from 'react-router/lib/Link'
 import Route from 'react-router/lib/Route'
 import Router from 'react-router/lib/Router'

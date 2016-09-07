@@ -2,7 +2,7 @@
 
 While you can use `this.props.router` from `withRouter` to navigate around, many apps want to be able to navigate outside of their components. They can do that with the history the app gives to `Router`.
 
-```jsx
+```js
 // Your main file that renders a <Router>:
 import { Router, browserHistory } from 'react-router'
 import routes from './app/routes'
@@ -13,7 +13,7 @@ render(
 )
 ```
 
-```jsx
+```js
 // Somewhere like a Redux middleware or Flux action:
 import { browserHistory } from 'react-router'
 

@@ -6,7 +6,7 @@ To illustrate the problems React Router is going to solve for you, let's build a
 
 ### Without React Router
 
-```jsx
+```js
 import React from 'react'
 import { render } from 'react-dom'
 
@@ -101,7 +101,7 @@ We'd have to make our URL parsing a lot smarter, and we would end up with a lot 
 
 Let's refactor our app to use React Router.
 
-```jsx
+```js
 import React from 'react'
 import { render } from 'react-dom'
 
@@ -148,7 +148,7 @@ React Router knows how to build nested UI for us, so we don't have to manually f
 
 Internally, the router converts your `<Route>` element hierarchy to a [route config](/docs/Glossary.md#routeconfig). But if you're not digging the JSX you can use plain objects instead:
 
-```jsx
+```js
 const routes = {
   path: '/',
   component: App,
@@ -166,7 +166,7 @@ render(<Router history={history} routes={routes} />, document.body)
 
 Alright, now we're ready to nest the inbox messages inside the inbox UI.
 
-```jsx
+```js
 // Make a new component to render inside of Inbox
 const Message = React.createClass({
   render() {
@@ -228,7 +228,7 @@ And visits to `/inbox` will build this:
 
 We're going to need to know something about the message in order to fetch it from the server. Route components get some useful properties injected into them when you render, particularly the parameters from the dynamic segment of your path. In our case, `:id`.
 
-```jsx
+```js
 const Message = React.createClass({
 
   componentDidMount() {

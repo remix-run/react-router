@@ -4,7 +4,7 @@
 
 You need to wrap your component using `withRouter` to make the router object available to you.
 
-```jsx
+```js
 const Component = withRouter(
   React.createClass({
     //...
@@ -15,7 +15,7 @@ const Component = withRouter(
 
 ### Getting the previous location
 
-```jsx
+```js
 <Route component={App}>
   {/* ... other routes */}
 </Route>
@@ -37,7 +37,7 @@ const App = React.createClass({
 
 Route matching happens in the order they are defined (think `if/else if` statement). In this case, `/about/me` will show the `<UserPage>` component because `/about/me` matches the first route. You need to reorder your routes if this happens. `<About>` will never be reachable:
 
-```jsx
+```js
 <Router>
   <Route path="/:userName/:id" component={UserPage}/>
   <Route path="/about/me" component={About}/>
@@ -46,7 +46,7 @@ Route matching happens in the order they are defined (think `if/else if` stateme
 
 `About` is now reachable:
 
-```jsx
+```js
 <Router>
   <Route path="/about/me" component={About}/>
   <Route path="/:userName/:id" component={UserPage}/>
@@ -58,7 +58,7 @@ Route matching happens in the order they are defined (think `if/else if` stateme
 
 If your routes look like:
 
-```jsx
+```js
 <Route path="/">
   <Route path="widgets" component={WidgetList} />
   <Route path="widgets/:widgetId" component={Widget} />
@@ -67,7 +67,7 @@ If your routes look like:
 
 Then the path `/widgets` will not be considered active when the current path is something like `/widgets/3`. This is because React Router looks at parent _routes_ rather than parent _paths_ to determine active state. To make the path `/widgets` active when the current path is `/widgets/3`, you need to declare your routes as:
 
-```jsx
+```js
 <Route path="/">
   <Route path="widgets">
     <IndexRoute component={WidgetList} />
@@ -94,7 +94,7 @@ There are multiple ways to do this depending on what you want specifically.
 
 You can define additional props on `<Route>` or on the plain route:
 
-```jsx
+```js
 <Route foo="bar" />
 ```
 
@@ -104,7 +104,7 @@ These properties will then be available on `this.props.route` on the route compo
 
 You can define a middleware that injects additional props into each route component:
 
-```jsx
+```js
 const useExtraProps = {
   renderRouteComponent: child => React.cloneElement(child, extraProps)
 }
@@ -112,7 +112,7 @@ const useExtraProps = {
 
 You can then use this middleware with:
 
-```jsx
+```js
 <Router
   history={history}
   routes={routes}
@@ -124,7 +124,7 @@ You can then use this middleware with:
 
 You can export React context on a top-level provider component, then access this data throughout the tree on rendered components.
 
-```jsx
+```js
 <ExtraDataProvider>
   <Router history={history} routes={routes} />
 </ExtraDataProvider>
