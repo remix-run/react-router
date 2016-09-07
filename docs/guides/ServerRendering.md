@@ -46,13 +46,13 @@ Server rendering works identically when using async routes. However, the client-
 
 On the client, instead of rendering
 
-```jsx
+```js
 render(<Router history={history} routes={routes} />, mountNode)
 ```
 
 You need to do
 
-```jsx
+```js
 match({ history, routes }, (error, redirectLocation, renderProps) => {
   render(<Router {...renderProps} />, mountNode)
 })

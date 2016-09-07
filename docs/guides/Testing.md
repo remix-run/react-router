@@ -30,14 +30,14 @@ In prior setups, react-tools was needed. This is no longer the case. You will ne
 
 Lastly, anywhere you have the following:
 
-```jsx
+```js
 var React = require('react/addons')
 var TestUtils = React.addons.TestUtils
 ```
 
 needs to be replaced with this:
 
-```jsx
+```js
 import React from 'react'
 import { render } from 'react-dom'
 import TestUtils from 'react-addons-test-utils'
@@ -58,7 +58,7 @@ Make sure you do an npm clean, install, etc. and make sure you add react-addons-
 
 Lastly ensure you are using babel-jest for the script preproccessor:
 
-```jsx
+```js
   ...
   "scriptPreprocessor": "./node_modules/babel-jest",
   ...
@@ -70,7 +70,7 @@ Example:
 
 A component:
 
-```jsx
+```js
 //../components/BasicPage.js
 
 import React, { Component, PropTypes } from 'react'
@@ -104,7 +104,7 @@ export default class BasicPage extends Component {
 
 The test for that component:
 
-```jsx
+```js
 //../components/__tests__/BasicPage-test.js
 
 jest.unmock('../BasicPage')
