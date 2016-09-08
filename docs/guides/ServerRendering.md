@@ -13,7 +13,7 @@ To facilitate these needs, you drop one level lower than the [`<Router>`](/docs/
 
 It looks something like this with an imaginary JavaScript server:
 
-```jsx
+```js
 import { renderToString } from 'react-dom/server'
 import { match, RouterContext } from 'react-router'
 import routes from './routes'
