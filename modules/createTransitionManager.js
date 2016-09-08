@@ -268,7 +268,7 @@ export default function createTransitionManager(history, routes) {
           if (error) {
             listener(error)
           } else if (redirectLocation) {
-            history.transitionTo(redirectLocation)
+            history.replace(redirectLocation)
           } else if (nextState) {
             listener(null, nextState)
           } else {
