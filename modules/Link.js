@@ -55,7 +55,7 @@ const Link = React.createClass({
   },
 
   propTypes: {
-    to: oneOfType([ string, object ]).isRequired,
+    to: oneOfType([ string, object ]),
     query: object,
     hash: string,
     state: object,
@@ -69,7 +69,8 @@ const Link = React.createClass({
   getDefaultProps() {
     return {
       onlyActiveOnIndex: false,
-      style: {}
+      style: {},
+      to: ''
     }
   },
 
@@ -103,6 +104,8 @@ const Link = React.createClass({
 
   render() {
     const { to, query, hash, state, activeClassName, activeStyle, onlyActiveOnIndex, ...props } = this.props
+
+
     warning(
       !(query || hash || state),
       'the `query`, `hash`, and `state` props on `<Link>` are deprecated, use `<Link to={{ pathname, query, hash, state }}/>. http://tiny.cc/router-isActivedeprecated'
@@ -112,6 +115,9 @@ const Link = React.createClass({
     const { router } = this.context
 
     if (router) {
+      // If user does not specify a `to` prop, return an empty anchor tag.
+      if (to === '') { return <a {...props } /> }
+
       const location = createLocationDescriptor(to, { query, hash, state })
       props.href = router.createHref(location)
 
