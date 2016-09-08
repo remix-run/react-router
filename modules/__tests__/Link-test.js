@@ -462,6 +462,7 @@ describe('A <Link>', function () {
           <div>
             <Link>Blank Link</Link>
             <Link/>
+            <Link className="kitten-link">Kittens</Link>
           </div>
         )
       }
@@ -475,8 +476,22 @@ describe('A <Link>', function () {
       ), node, function () {
         const link1 = node.querySelectorAll('a')[0]
         const link2 = node.querySelectorAll('a')[1]
+        const link3 = node.querySelectorAll('a')[1]
         expect(link1.href).toEqual('')
         expect(link2.href).toEqual('')
+        expect(link3.href).toEqual('')
+        done()
+      })
+    })
+
+    it('passes down other props', function (done) {
+      render((
+        <Router history={createHistory('/')}>
+          <Route path="/" component={App} />
+        </Router>
+      ), node, function () {
+        const link3 = node.querySelectorAll('a')[2]
+        expect(link3.className).toEqual('kitten-link')
         done()
       })
     })
