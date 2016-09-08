@@ -104,8 +104,6 @@ const Link = React.createClass({
 
   render() {
     const { to, query, hash, state, activeClassName, activeStyle, onlyActiveOnIndex, ...props } = this.props
-
-
     warning(
       !(query || hash || state),
       'the `query`, `hash`, and `state` props on `<Link>` are deprecated, use `<Link to={{ pathname, query, hash, state }}/>. http://tiny.cc/router-isActivedeprecated'
