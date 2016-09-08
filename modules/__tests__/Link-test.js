@@ -455,4 +455,30 @@ describe('A <Link>', function () {
     })
   })
 
+  describe('when the "to" prop is unspecified', function () {
+    class App extends Component {
+      render() {
+        return (
+          <div>
+            <Link>Blank Link</Link>
+            <Link/>
+          </div>
+        )
+      }
+    }
+
+    it('returns an anchor tag without an href', function (done) {
+      render((
+        <Router history={createHistory('/')}>
+          <Route path="/" component={App} />
+        </Router>
+      ), node, function () {
+        const link1 = node.querySelectorAll('a')[0]
+        const link2 = node.querySelectorAll('a')[1]
+        expect(link1.href).toEqual('')
+        expect(link2.href).toEqual('')
+        done()
+      })
+    })
+  })
 })
