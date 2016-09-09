@@ -1,3 +1,14 @@
+## [v2.8.0]
+> Sep 9, 2016
+
+- **Feature:** Support omitting `to` on `<Link>` ([#3803])
+- **Refactor:** Use `history.replace` instead of `history.transitionTo` for redirects ([#3799])
+
+[v2.8.0]: https://github.com/reactjs/react-router/compare/v2.7.0...v2.8.0
+[#3799]: https://github.com/reactjs/react-router/pull/3799
+[#3803]: https://github.com/reactjs/react-router/pull/3803
+
+
 ## [v2.7.0]
 > Aug 20, 2016
 
