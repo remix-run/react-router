@@ -476,7 +476,7 @@ describe('A <Link>', function () {
       ), node, function () {
         const link1 = node.querySelectorAll('a')[0]
         const link2 = node.querySelectorAll('a')[1]
-        const link3 = node.querySelectorAll('a')[1]
+        const link3 = node.querySelectorAll('a')[2]
         expect(link1.href).toEqual('')
         expect(link2.href).toEqual('')
         expect(link3.href).toEqual('')
