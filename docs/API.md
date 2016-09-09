@@ -113,6 +113,7 @@ A [location descriptor](https://github.com/reactjs/react-router/blob/master/docs
   * `query`: An object of key:value pairs to be stringified.
   * `hash`: A hash to put in the URL, e.g. `#a-hash`.
   * `state`: State to persist to the `location`.
+* If it is not specified, an anchor tag without an `href` attribute will be rendered.
 
 _Note: React Router currently does not manage scroll position, and will not scroll to the element corresponding to `hash`._
 
