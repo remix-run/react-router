@@ -21,7 +21,7 @@ const fakeAuth = {
   signout(cb) {
     this.isAuthenticated = false
     cb()
-    //setTimeout(cb, 100) // weird bug if async?
+    setTimeout(cb, 100) // weird bug if async?
   }
 }
 

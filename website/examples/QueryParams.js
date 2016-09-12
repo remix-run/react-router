@@ -16,11 +16,10 @@ const QueryParamsExample = () => {
         <ul>
           <li>
             <Link
-              debug
               to="/"
               activeStyle={{ color: 'red' }}
               isActive={(location) => (
-                !Object.keys(location.query).length
+                !Object.keys(location.query || {}).length
               )}
             >No query</Link>
           </li>

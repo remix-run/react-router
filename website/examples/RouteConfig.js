@@ -15,7 +15,7 @@ const Main = () => <h2>Main</h2>
 
 const Sandwiches = () => <h2>Sandwiches</h2>
 
-const Tacos = ({ subRoutes }) => (
+const Tacos = ({ routes }) => (
   <div>
     <h2>Tacos</h2>
     <ul>
@@ -23,7 +23,7 @@ const Tacos = ({ subRoutes }) => (
       <li><Link to="/tacos/cart">Cart</Link></li>
     </ul>
 
-    {subRoutes.map((route, i) => (
+    {routes.map((route, i) => (
       <MatchWithSubRoutes key={i} {...route}/>
     ))}
   </div>
@@ -41,7 +41,7 @@ const routes = [
   },
   { pattern: '/tacos',
     component: Tacos,
-    subRoutes: [
+    routes: [
       { pattern: '/tacos/bus',
         component: Bus
       },
@@ -53,11 +53,11 @@ const routes = [
 ]
 
 // wrap `Match` and use this everywhere instead, then when
-// subRoutes are added to any route it'll work
+// sub routes are added to any route it'll work
 const MatchWithSubRoutes = (route) => (
   <Match {...route} render={(props) => (
     // pass the sub-routes down to keep nesting
-    <route.component {...props} subRoutes={route.subRoutes}/>
+    <route.component {...props} routes={route.routes}/>
   )}/>
 )
 

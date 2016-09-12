@@ -41,11 +41,6 @@ export const EXAMPLES = [
     load: require('bundle?lazy!./examples/QueryParams'),
     loadSource: require('bundle?lazy!!prismjs?lang=jsx!./.examples/QueryParams.js')
   },
-  { name: 'Redux',
-    path: '/redux-integration',
-    load: require('bundle?lazy!./examples/Redux'),
-    loadSource: require('bundle?lazy!!prismjs?lang=jsx!./.examples/Redux.js')
-  },
   { name: 'Recursive Paths',
     path: '/recursive-paths',
     load: require('bundle?lazy!./examples/Recursive'),
