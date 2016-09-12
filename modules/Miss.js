@@ -10,24 +10,38 @@ class Miss extends React.Component {
   }
 
   static contextTypes = {
-    match: PropTypes.object.isRequired,
-    location: PropTypes.object.isRequired,
+    match: PropTypes.object,
+    location: PropTypes.object,
     serverRouter: PropTypes.object
+  }
+
+  state = {
+    noMatchesInContext: false
+  }
+
+  componentWillMount() {
+    // ignore if rendered out of context (probably for unit tests)
+    if (this.context.match) {
+      this.unsubscribe = this.context.match.subscribe((matchesFound) => {
+        this.setState({
+          noMatchesInContext: !matchesFound
+        })
+      })
+    }
+  }
+
+  componentWillUnmount() {
+    if (this.unsubscribe) {
+      this.unsubscribe()
+    }
   }
 
   render() {
     const { render, component:Component } = this.props
-    const { match, serverRouter } = this.context
+    const { noMatchesInContext } = this.state
     const { location:locationProp } = this.props
     const location = locationProp || this.context.location
-    if (!match) {
-      // don't render if out of context (probably a unit test)
-      return null
-    } else if (!match.matchFound()) {
-      // side-effect in render, only happens on the server
-      // and calling it multiple times should be fine
-      if (serverRouter)
-        serverRouter.onMiss(location)
+    if (noMatchesInContext) {
       return (
         render ? (
           render({ location })

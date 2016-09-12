@@ -19,6 +19,8 @@ class MatchProvider extends React.Component {
     // React doesn't support a parent calling `setState` from an descendant's
     // componentWillMount, so we use an instance property to track matches
     this.matches = []
+    this.subscribers = []
+    this.hasMatches = null // use null for initial value
   }
 
   addMatch = match => {
@@ -38,7 +40,35 @@ class MatchProvider extends React.Component {
         parent: this.parent,
         matches: this.matches,
 
-        matchFound: () => this.matches.length > 0
+        subscribe: (fn) => {
+          this.subscribers.push(fn)
+          return () => {
+            this.subscribers.splice(this.subscribers.indexOf(fn), 1)
+          }
+        }
+
+      }
+    }
+  }
+
+  componentDidUpdate() {
+    this.notifySubscribers()
+  }
+
+  componentDidMount() {
+    this.notifySubscribers()
+  }
+
+  notifySubscribers() {
+    // React's contract is that cDM of descendants is called before cDM of
+    // ancestors, so here we can safely check if we found a match
+    if (this.subscribers.length) {
+      const hadMatches = this.hasMatches
+      this.hasMatches = this.matches.length !== 0
+      // optimization, don't notify if nothing changed initial will be null, so
+      // we can get initial render correct
+      if (this.hasMatches !== hadMatches) {
+        this.subscribers.forEach(fn => fn(this.hasMatches))
       }
     }
   }

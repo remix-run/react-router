@@ -12,29 +12,31 @@ class RegisterMatch extends React.Component {
     match: PropTypes.object
   }
 
-  componentWillMount() {
+  componentDidMount() {
     const { match:matchContext } = this.context
     const { match } = this.props
 
-    if (match && matchContext)
+    if (match && matchContext) {
       matchContext.addMatch(match)
+    }
   }
 
-  componentWillReceiveProps(nextProps) {
+  componentDidUpdate(prevProps) {
     const { match } = this.context
 
     if (match) {
-      if (nextProps.match && !this.props.match) {
-        match.addMatch(nextProps.match)
-      } else if (!nextProps.match && this.props.match) {
-        match.removeMatch(this.props.match)
+      if (prevProps.match && !this.props.match) {
+        match.removeMatch(prevProps.match)
+      } else if (!prevProps.match && this.props.match) {
+        match.addMatch(this.props.match)
       }
     }
   }
 
   componentWillUnmount() {
-    if (this.props.match)
+    if (this.props.match) {
       this.context.match.removeMatch(this.props.match)
+    }
   }
 
   render() {
