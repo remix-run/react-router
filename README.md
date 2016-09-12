@@ -14,13 +14,13 @@ Installation
 ### NPM
 
 ```
-npm install react-router@4.0.0-beta.1
+npm install react-router@4.0.0-0
 ```
 
 ### Script Tag Global
 
 ```html
-<script src="https://unpkg.com/react-router@4.0.0-beta.1"></script>
+<script src="https://unpkg.com/react-router@4.0.0-0"></script>
 ```
 
 You'll find the modules on `window.ReactRouter`

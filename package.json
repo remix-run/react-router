@@ -41,7 +41,6 @@
     "eslint-plugin-react": "^5.1.1",
     "expect": "^1.20.1",
     "gzip-size": "^3.0.0",
-    "history": "^3.0.0",
     "in-publish": "^2.0.0",
     "karma": "^0.13.22",
     "karma-browserstack-launcher": "^1.0.1",
