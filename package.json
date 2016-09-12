@@ -26,10 +26,9 @@
     "lint": "eslint modules"
   },
   "dependencies": {
-    "history": "^3.0.0",
-    "path-to-regexp": "^1.5.0",
-    "react-history": "^0.8.0",
-    "warning": "^3.0.0"
+    "history": "^4.0.0",
+    "query-string": "4.2.3",
+    "react-history": "^0.12.0"
   },
   "peerDependencies": {
     "react": "^15.1.0",

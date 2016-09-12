@@ -1,4 +1,4 @@
-import { parsePath, createPath } from 'react-history/PathUtils'
+import { parsePath, createPath } from 'history/PathUtils'
 
 const createRouterLocation = (input, parseQuery, stringifyQuery) => {
   if (typeof input === 'string') {

@@ -4,9 +4,10 @@ import MemoryHistory from 'react-history/MemoryHistory'
 import { B, V, H, PAD, LIGHT_GRAY, GRAY } from '../bricks'
 import { button } from './style.css' // eslint-disable-line
 import { stringify as stringifyQuery } from 'query-string'
-import { createPath } from 'react-history/PathUtils'
+import { createPath } from 'history/PathUtils'
 
-// have to recreate what StaticRouter does
+// have to recreate what StaticRouter does, there should be a way to
+// compose?...
 const createPathWithQuery = (loc) => {
   if (typeof loc === 'string') {
     return loc
@@ -86,7 +87,12 @@ class FakeBrowser extends React.Component {
     const { children:Child } = this.props
 
     return (
-      <MemoryHistory initialEntries={[ '/' ]}>
+      <MemoryHistory
+        initialEntries={[ '/' ]}
+        getUserConfirmation={(message, callback) => {
+          callback(window.confirm(message))
+        }}
+      >
         {({ history, location, action }) => (
           <V
             background="white"
