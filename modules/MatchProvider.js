@@ -26,7 +26,7 @@ class MatchProvider extends React.Component {
   }
 
   removeMatch = match => {
-    this.matches = this.matches.splice(this.matches.indexOf(match), 1)
+    this.matches.splice(this.matches.indexOf(match), 1)
   }
 
   getChildContext() {
