@@ -1,30 +1,16 @@
 import { stringify, parse as parseQuery } from 'query-string'
 import React, { PropTypes } from 'react'
 import MatchProvider from './MatchProvider'
-import createLocation from './createLocation'
-import { createPath } from 'react-history/PathUtils'
+import { createRouterLocation, createRouterPath } from './LocationUtils'
 import {
   action as actionType,
   location as locationType,
   router as routerType
 } from './PropTypes'
 
-const isPartialDescriptor = (loc) => !!loc.path
-
 const defaultStringifyQuery = (query) => (
   stringify(query).replace(/%20/g, '+')
 )
-
-const createPathWithQuery = (loc, stringifyQuery) => {
-  if (typeof loc === 'string') {
-    return loc
-  } else {
-    const location = { ...loc }
-    if (loc.query)
-      location.search = `?${stringifyQuery(loc.query)}`
-    return createPath(location)
-  }
-}
 
 class StaticRouter extends React.Component {
 
@@ -54,12 +40,10 @@ class StaticRouter extends React.Component {
 
   getChildContext() {
     const createHref = (to) => {
-      const path = createPathWithQuery(to, this.props.stringifyQuery)
+      const path = createRouterPath(to, this.props.stringifyQuery)
       return this.props.createHref(path)
     }
 
-    // TODO: move this into a HistoryRouter so the StaticRouter
-    // API is just locations, not the history API's signatures
     const getPathAndState = (loc) => {
       const path = createHref(loc)
       const state = typeof loc === 'object' ? loc.state : null
@@ -87,30 +71,10 @@ class StaticRouter extends React.Component {
     }
   }
 
-  createLocationFromPathname() {
-    const { location:pathname, parseQuery } = this.props
-    return {
-      ...createLocation({ input: pathname, parseQuery }),
-      state: null
-    }
-  }
-
-  createLocationFromLocationWithPath() {
-    const { location:loc, parseQuery } = this.props
-    return {
-      ...createLocation({ input: loc.path, parseQuery }),
-      state: loc.state || null
-    }
-  }
-
   getLocation() {
     // TODO: maybe memoize this on willReceiveProps to get extreme w/ perf
-    const { location, parseQuery } = this.props
-    return typeof location === 'string' ? (
-      this.createLocationFromPathname(location)
-    ) : isPartialDescriptor(location) ? (
-      this.createLocationFromLocationWithPath(location.path)
-    ) : createLocation({ input: location, parseQuery })
+    const { location, parseQuery, stringifyQuery } = this.props
+    return createRouterLocation(location, parseQuery, stringifyQuery)
   }
 
   render() {

@@ -235,21 +235,6 @@ describe('Link location descriptors', () => {
     expect(href).toEqual('/test-url?foo=baz')
   })
 
-  it('ignores search if query is present', () => {
-    const loc = {
-      pathname: '/test-url',
-      query: { foo: 'bar' },
-      search: '?foo=baz'
-    }
-    const div = document.createElement('div')
-    render((
-      <Router>
-        <Link to={loc}>link</Link>
-      </Router>
-    ), div)
-    const href = div.querySelector('a').getAttribute('href')
-    expect(href).toEqual('/test-url?foo=bar')
-  })
 })
 
 describe('Link with a query', () => {

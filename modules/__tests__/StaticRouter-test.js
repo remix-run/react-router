@@ -61,7 +61,10 @@ describe('StaticRouter', () => {
     it('parses string `location` into a real location', () => {
       let actualLocation
       renderToString(
-        <StaticRouter {...requiredProps} location="/lol">
+        <StaticRouter
+          {...requiredProps}
+          location="/lol?foo=bar"
+        >
           {({ location }) => (
             <div>{(actualLocation = location, null)}</div>
           )}
@@ -70,34 +73,120 @@ describe('StaticRouter', () => {
       const expected = {
         action: 'POP',
         hash: '',
-        key: null,
         pathname: '/lol',
-        search: '',
-        query: {},
+        search: '?foo=bar',
+        query: { foo: 'bar' },
         state: null
       }
       expectDeepEquality(actualLocation, expected)
     })
 
-    it('parses location with a `path` into a real location', () => {
-      let actualLocation
-      const loc = { path: '/somewhere?a=b#lol', state: { foo: 'bar' }}
-      renderToString(
-        <StaticRouter {...requiredProps} location={loc}>
-          {({ location }) => <div>{(actualLocation = location, null)}</div>}
-        </StaticRouter>
-      )
+    describe('location descriptors', () => {
+      const assertParsedDescriptor = (loc, expected) => {
+        let actualLocation
+        renderToString(
+          <StaticRouter {...requiredProps} location={loc}>
+            {({ location }) => <div>{(actualLocation = location, null)}</div>}
+          </StaticRouter>
+        )
 
-      const expected = {
-        action: 'POP',
-        key: null,
-        pathname: '/somewhere',
-        search: '?a=b',
-        hash: '#lol',
-        query: { a: 'b' },
-        state: { foo: 'bar' }
+        expectDeepEquality(actualLocation, expected)
       }
-      expectDeepEquality(actualLocation, expected)
+
+      it('adds default properties', () => {
+        assertParsedDescriptor({}, {
+          pathname: '',
+          query: null,
+          hash: '',
+          state: null,
+          search: ''
+        })
+      })
+
+      it('parses query to add search', () => {
+        assertParsedDescriptor({
+          query: { a: 'b' }
+        }, {
+          pathname: '',
+          query: { a: 'b' },
+          hash: '',
+          state: null,
+          search: '?a=b'
+        })
+      })
+
+      it('stringifies search to add query', () => {
+        assertParsedDescriptor({
+          search: '?a=b'
+        }, {
+          pathname: '',
+          query: { a: 'b' },
+          hash: '',
+          state: null,
+          search: '?a=b'
+        })
+      })
+
+      it('uses search if provided', () => {
+        assertParsedDescriptor({
+          search: '?a=b'
+        }, {
+          pathname: '',
+          query: { a: 'b' },
+          hash: '',
+          state: null,
+          search: '?a=b'
+        })
+      })
+
+      it('uses query if provided', () => {
+        assertParsedDescriptor({
+          query: { a: 'b' }
+        }, {
+          pathname: '',
+          query: { a: 'b' },
+          hash: '',
+          state: null,
+          search: '?a=b'
+        })
+      })
+
+      it('uses pathname if provided', () => {
+        assertParsedDescriptor({
+          pathname: '/somewhere'
+        }, {
+          pathname: '/somewhere',
+          query: null,
+          hash: '',
+          state: null,
+          search: ''
+        })
+      })
+
+      it('uses state if provided', () => {
+        assertParsedDescriptor({
+          state: { status: 301 }
+        }, {
+          pathname: '',
+          query: null,
+          hash: '',
+          state: { status: 301 },
+          search: ''
+        })
+      })
+
+      it('uses hash if provided', () => {
+        assertParsedDescriptor({
+          hash: '#hi'
+        }, {
+          pathname: '',
+          query: null,
+          hash: '#hi',
+          state: null,
+          search: ''
+        })
+      })
+
     })
   })
 
