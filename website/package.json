@@ -3,9 +3,13 @@
   "version": "0.0.0",
   "private": true,
   "scripts": {
-    "start": "rm -rf .examples && cp -R examples .examples && webpack-dev-server --config webpack.config.js --inline --content-base build"
+    "dev": "rm -rf .examples && cp -R examples .examples && webpack-dev-server --config webpack.config.js --inline --content-base build",
+    "start": "pushstate-server build/"
   },
   "dependencies": {
+    "pushstate-server": "1.14.0"
+  },
+  "devDependencies": {
     "babel-eslint": "6.0.4",
     "bundle-loader": "0.5.4",
     "css-loader": "0.23.1",
@@ -15,9 +19,9 @@
     "file-loader": "^0.9.0",
     "html-loader": "^0.4.3",
     "html-webpack-plugin": "^2.22.0",
-    "jsxstyle": "0.0.18",
     "markdown-it": "^7.0.0",
     "postcss-loader": "0.9.1",
+    "pushstate-server": "^1.14.0",
     "react-motion": "^0.4.4",
     "style-loader": "0.13.1",
     "url-loader": "^0.5.7",

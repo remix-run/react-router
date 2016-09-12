@@ -5,10 +5,11 @@ export const GRAY = '#999'
 export const LIGHT_GRAY = '#f5f5f5'
 export const RED = 'hsl(5, 100%, 41%)'
 
-const STYLE_PROP_NAMES = Object.keys(document.createElement('div').style).reduce((styles, key) => {
-  styles[key] = true
-  return styles
-}, {})
+
+const STYLE_PROP_NAMES = {}
+const styles = document.createElement('div').style
+for (var key in styles)
+  STYLE_PROP_NAMES[key] = true
 
 const splitStyles = ({ style={}, ...combinedProps}) => {
   const props = {}

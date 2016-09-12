@@ -1,6 +1,6 @@
 import React from 'react'
 import 'prismjs/themes/prism.css'
-import { B, PAD } from './layout'
+import { B, PAD } from './bricks'
 
 const MarkdownViewer = ({ html }) => (
   <markdown

@@ -1,6 +1,6 @@
 import React from 'react'
 import LoadingDots from './LoadingDots'
-import { B } from './layout'
+import { B } from './bricks'
 
 class LoadBundle extends React.Component {
 
