@@ -22,7 +22,7 @@
   "dependencies": {
     "history": "^4.0.0",
     "query-string": "4.2.3",
-    "react-history": "^0.12.0"
+    "react-history": "^0.13.0"
   },
   "peerDependencies": {
     "react": "15.x",
