@@ -2,57 +2,44 @@ import React, { PropTypes } from 'react'
 import StaticRouter from './StaticRouter'
 import { location as locationType } from './PropTypes'
 
-class ServerRouterProvider extends React.Component {
+class ServerRouter extends React.Component {
 
   static propTypes = {
-    children: PropTypes.node,
-    onMiss: PropTypes.func
+    result: PropTypes.object,
+    location: locationType,
+    children: PropTypes.oneOfType([
+      PropTypes.func,
+      PropTypes.node
+    ])
   }
 
   static childContextTypes = {
-    serverRouter: PropTypes.object.isRequired
-  }
-
-  static defaultProps = {
-    onMiss: () => {}
+    serverResult: PropTypes.object.isRequired
   }
 
   getChildContext() {
     return {
-      serverRouter: {
-        onMiss: this.props.onMiss
-      }
+      serverResult: this.props.result
     }
   }
 
   render() {
-    return this.props.children
+    const { result, ...rest } = this.props
+    const redirect = (location, state) => {
+      if (!result.redirect) {
+        result.redirect = { location, state }
+      }
+    }
+    return (
+      <StaticRouter
+        action="POP"
+        location={location}
+        onReplace={redirect}
+        onPush={redirect}
+        {...rest}
+      />
+    )
   }
-}
-
-const ServerRouter = ({ location, onRedirect, onMiss, ...rest }) => (
-  <ServerRouterProvider onMiss={onMiss}>
-    <StaticRouter
-      action="POP"
-      location={location}
-      onReplace={onRedirect}
-      onPush={() => {}}
-      {...rest}
-    />
-  </ServerRouterProvider>
-)
-
-ServerRouter.propTypes = {
-  onRedirect: PropTypes.func.isRequired,
-  onMiss: PropTypes.func.isRequired,
-  location: PropTypes.oneOfType([
-    locationType,
-    PropTypes.string
-  ]).isRequired,
-  children: PropTypes.oneOfType([
-    PropTypes.func,
-    PropTypes.node
-  ])
 }
 
 export default ServerRouter

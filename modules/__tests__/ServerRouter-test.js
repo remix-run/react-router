@@ -7,17 +7,13 @@ import { renderToString } from 'react-dom/server'
 
 describe('ServerRouter', () => {
 
-  it('calls `onRedirect` with location and state', () => {
-    let redirectLocation
-    let redirectState
+  it('puts redirects on server render result', () => {
+    const result = {}
 
     renderToString(
       <ServerRouter
+        result={result}
         location="/"
-        onRedirect={(location, state) => {
-          redirectLocation = location
-          redirectState = state
-        }}
       >
         <Redirect to={{
           pathname: '/somewhere-else',
@@ -25,30 +21,47 @@ describe('ServerRouter', () => {
         }}/>
       </ServerRouter>
     )
-    expect(redirectLocation).toExist()
-    expect(redirectState).toExist()
-    expect(redirectLocation).toEqual('/somewhere-else')
-    expect(redirectState).toEqual({ status: 302 })
+    expect(result).toEqual({
+      redirect: {
+        location: '/somewhere-else',
+        state: { status: 302 }
+      }
+    })
   })
 
-  it('calls `onMiss` with the location', () => {
-    let missLocation
+  it.skip('puts misses on server render result', () => {
+    const result = {}
 
     renderToString(
       <ServerRouter
+        result={result}
         location="/anywhere"
-        onRedirect={() => {}}
-        onMiss={(location) => {
-          missLocation = location
-        }}
       >
         <Miss render={() => (
           <div>hi</div>
         )}/>
       </ServerRouter>
     )
-    expect(missLocation).toExist()
-    expect(missLocation.pathname).toEqual('/anywhere')
+    expect(result).toEqual({
+      misses: [ 0, 2 ]
+    })
+  })
+
+  it.skip('renders misses from server result', () => {
+    const result = { misses: [ 0 ] }
+
+    const markup = renderToString(
+      <ServerRouter
+        result={result}
+        location="/anywhere"
+      >
+        <Miss render={() => (
+          <div>test</div>
+        )}/>
+      </ServerRouter>
+    )
+
+    expect(markup).toContain('test')
   })
 
 })
