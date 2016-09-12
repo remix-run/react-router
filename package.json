@@ -83,12 +83,5 @@
     "routing",
     "history",
     "link"
-  ],
-  "babel": {
-    "presets": [
-      "es2015",
-      "react",
-      "stage-1"
-    ]
-  }
+  ]
 }
