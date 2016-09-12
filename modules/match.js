@@ -1,3 +1,4 @@
+import { REPLACE } from 'history/lib/Actions'
 import invariant from 'invariant'
 
 import createMemoryHistory from './createMemoryHistory'
@@ -45,7 +46,7 @@ function match({ history, routes, location, ...options }, callback) {
   transitionManager.match(location, function (error, redirectLocation, nextState) {
     callback(
       error,
-      redirectLocation,
+      redirectLocation && router.createLocation(redirectLocation, REPLACE),
       nextState && {
         ...nextState,
         history,

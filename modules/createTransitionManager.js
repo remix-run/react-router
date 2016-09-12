@@ -1,5 +1,4 @@
 import warning from './routerWarning'
-import { REPLACE } from 'history/lib/Actions'
 import computeChangedRoutes from './computeChangedRoutes'
 import { runEnterHooks, runChangeHooks, runLeaveHooks } from './TransitionUtils'
 import _isActive from './isActive'
@@ -41,10 +40,6 @@ export default function createTransitionManager(history, routes) {
     return _isActive(
       location, indexOnly, state.location, state.routes, state.params
     )
-  }
-
-  function createLocationFromRedirectInfo(location) {
-    return history.createLocation(location, REPLACE)
   }
 
   let partialNextState
@@ -104,7 +99,7 @@ export default function createTransitionManager(history, routes) {
 
     function handleErrorOrRedirect(error, redirectInfo) {
       if (error) callback(error)
-      else callback(null, createLocationFromRedirectInfo(redirectInfo))
+      else callback(null, redirectInfo)
     }
   }
 
