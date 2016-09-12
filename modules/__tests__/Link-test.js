@@ -239,7 +239,7 @@ describe('Link', () => {
         <Link
           to='/foo'
           location={{ pathname: '/foo' }}
-          isActive={(...args) => args.length === 2}
+          isActive={(...args) => args.length === 3}
           activeClassName="active"
         />
       ), div)

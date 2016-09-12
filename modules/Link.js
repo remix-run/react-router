@@ -27,8 +27,7 @@ class Link extends React.Component {
     activeClassName: '',
     style: {},
     activeStyle: {},
-    isActive: (location, props) => {
-      const to = createLocationDescriptor(props.to)
+    isActive: (location, to, props) => {
       return pathIsActive(
         to.pathname,
         location.pathname,
@@ -75,8 +74,17 @@ class Link extends React.Component {
     } = this.props
 
     const currentLocation = location || this.context.location
-    const isActive = getIsActive(currentLocation, this.props)
 
+    const isActive = getIsActive(
+      currentLocation,
+      createLocationDescriptor(to),
+      this.props
+    )
+
+    // Maybe we should use <Match> here? Not sure how the custom `isActive`
+    // prop would shake out, also, this check happens a LOT so maybe its good
+    // to optimize here w/ a faster isActive check, so we'd need to bench mark
+    // any attempt at changing to use <Match>
     return (
       <a
         {...rest}
@@ -91,6 +99,7 @@ class Link extends React.Component {
   }
 }
 
+// we should probably use LocationUtils.createLocationDescriptor
 const createLocationDescriptor = (to) =>
   typeof to === 'object' ? to : { pathname: to }
 
