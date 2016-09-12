@@ -8,15 +8,9 @@
     "Michael Jackson",
     "Ryan Florence"
   ],
-  "main": "lib",
-  "files": [
-    "lib",
-    "umd",
-    "server"
-  ],
   "scripts": {
     "start": "echo 'Make sure to `cd website && npm install`' && cd website && npm start",
-    "build-lib": "rimraf lib && babel ./modules -d lib --ignore '__tests__'",
+    "build-lib": "babel ./modules -d . --ignore '__tests__'",
     "build-umd": "webpack modules/index.js umd/react-router.js",
     "build-min": "webpack -p modules/index.js umd/react-router.min.js",
     "build": "node ./scripts/build.js",
@@ -62,7 +56,6 @@
     "react-addons-test-utils": "^15.3.1",
     "react-dom": "^15.1.0",
     "readline-sync": "^1.4.4",
-    "rimraf": "^2.5.2",
     "webpack": "^1.13.1",
     "webpack-dev-server": "^1.14.1"
   },
