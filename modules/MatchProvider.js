@@ -19,7 +19,6 @@ class MatchProvider extends React.Component {
 
   constructor(props) {
     super(props)
-    this.parent = props.match
     // React doesn't support a parent calling `setState` from an descendant's
     // componentWillMount, so we use an instance property to track matches
     // **IMPORTANT** we must mutate matches, never reassign, in order for
@@ -44,7 +43,7 @@ class MatchProvider extends React.Component {
         addMatch: this.addMatch,
         removeMatch: this.removeMatch,
         matches: this.matches,
-        parent: this.parent,
+        parent: this.props.match,
         serverRouterIndex: this.serverRouterIndex,
         subscribe: (fn) => {
           this.subscribers.push(fn)
