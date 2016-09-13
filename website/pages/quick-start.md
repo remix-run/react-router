@@ -112,7 +112,7 @@ const Topic = ({ params }) => (
   </div>
 )
 
-ReactDOM.render(<App/>)
+render(<App/>)
 ```
 
 That should get you started. We encourage you to review the examples and
