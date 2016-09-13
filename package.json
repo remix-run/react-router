@@ -21,6 +21,7 @@
   },
   "dependencies": {
     "history": "^4.0.0",
+    "path-to-regexp": "^1.5.3",
     "query-string": "4.2.3",
     "react-history": "^0.13.0"
   },
