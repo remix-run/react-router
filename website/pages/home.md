@@ -20,7 +20,7 @@ declaratively.
 
 ## Contributing
 
-We'd love your help, the code is [hosted on GitHub](https://github.com/reactjstraining/react-router).
+We'd love your help, the code is [hosted on GitHub](https://github.com/ReactTraining/react-router).
 
 ## Thanks
 
@@ -35,4 +35,4 @@ Development has been sponsored by:
   [react-training]:https://reactjs-training.com
   [instructure]:https://instructure.com
   [modus-create]:https://modus-create.com
-  [contributors]:https://github.com/reactjs/react-router/graphs/contributors
+  [contributors]:https://github.com/ReactTraining/react-router/graphs/contributors

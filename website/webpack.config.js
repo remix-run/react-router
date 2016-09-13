@@ -26,7 +26,7 @@ module.exports = {
   plugins: [
     new webpack.optimize.CommonsChunkPlugin('vendor', `vendor-${HASH}.js`),
     new HtmlWebpackPlugin({
-      baseHref: PROD ? '//reactjstraining.github.io/react-router/' : '/',
+      baseHref: PROD ? '//reacttraining.github.io/react-router/' : '/',
       template: 'index.html.ejs'
     })
   ].concat(PROD ? [
