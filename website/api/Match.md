@@ -39,7 +39,7 @@ A React component constructor to render when the location matches. The
 component will be rendered with the following props:
 
 - `pattern`: (string) the portion of the pattern matched.
-- `pathame`: (string) the portion of pathname matched.
+- `pathname`: (string) the portion of pathname matched.
 - `isExact`: (bool) whether or not the match is exact (v. partial).
 - `location`: the location matched.
 - `params`: the values parsed from the pathname corresponding by name to
@@ -48,7 +48,7 @@ component will be rendered with the following props:
 ```js
 class User extends React.Component {
   render() {
-    const { location, pattern, pathame, isExact } = this.props
+    const { location, pattern, pathname, isExact } = this.props
     const { id } = this.props.params
 
     return <pre>{JSON.stringify(this.props, null, 2)}</pre>
