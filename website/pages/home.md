@@ -20,7 +20,7 @@ declaratively.
 
 ## Contributing
 
-We'd love your help, the code is [hosted on GitHub](https://github.com/reactjstraining/react-router).
+We'd love your help, the code is [hosted on GitHub](https://github.com/reactjs/react-router).
 
 ## Thanks
 
