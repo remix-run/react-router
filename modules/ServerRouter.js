@@ -23,7 +23,7 @@ class ServerRouter extends React.Component {
   }
 
   render() {
-    const { context, ...rest } = this.props
+    const { context, location, ...rest } = this.props
     const redirect = (location) => {
       context.setRedirect(location)
     }
