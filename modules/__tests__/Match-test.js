@@ -71,7 +71,7 @@ describe('Match', () => {
       })
     })
 
-    describe.only('when deep matches', () => {
+    describe('when deep matches', () => {
 
       const Page = () => <div>{TEXT}</div>
 
