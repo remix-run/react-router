@@ -1,3 +1,12 @@
+## [v2.8.1]
+> Sep 13, 2016
+
+- **Bugfix:** Fix redirects that specify `query` ([#3808])
+
+[v2.8.1]: https://github.com/reactjs/react-router/compare/v2.8.0...v2.8.1
+[#3808]: https://github.com/reactjs/react-router/pull/3808
+
+
 ## [v2.8.0]
 > Sep 9, 2016
 
