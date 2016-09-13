@@ -139,8 +139,9 @@ class FakeBrowser extends React.Component {
                   paddingLeft={`${PAD*1.25}px`}
                   color={GRAY}
                   type="text"
-                  value={createPathWithQuery(location)}
+                  value={createPathWithQuery(this.state.location || location)}
                   onChange={(e) => {
+                    console.log(e.target.value)
                     this.setState({
                       location: e.target.value
                     })
