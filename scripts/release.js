@@ -19,7 +19,7 @@ if (process.cwd() !== resolvePath(__dirname, '..')) {
 // is a "pre-release" if nextVersion is premajor, preminor,
 // prepatch, or prerelease
 const nextVersion = prompt(`Next version (current version is ${getPackageVersion()})? `)
-const isPrerelease = nextVersion.substring(0, 3) === 'pre'
+const isPrerelease = nextVersion.substring(0, 3) === 'pre' || nextVersion.indexOf('-') !== -1
 
 // 1) Make sure the tests pass
 exec('npm test -- --single-run')
