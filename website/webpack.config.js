@@ -1,5 +1,5 @@
 const webpack = require('webpack')
-const HtmlWebpackPlugin = require('html-webpack-plugin')
+const HTMLWebpackPlugin = require('html-webpack-plugin')
 const path = require('path')
 
 const HASH = '[chunkHash]'
@@ -25,7 +25,7 @@ module.exports = {
 
   plugins: [
     new webpack.optimize.CommonsChunkPlugin('vendor', `vendor-${HASH}.js`),
-    new HtmlWebpackPlugin({
+    new HTMLWebpackPlugin({
       baseHref: PROD ? '//reacttraining.github.io/react-router/' : '/',
       template: 'index.html.ejs'
     })
