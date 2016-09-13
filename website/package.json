@@ -21,6 +21,7 @@
     "html-webpack-plugin": "^2.22.0",
     "markdown-it": "^7.0.0",
     "postcss-loader": "0.9.1",
+    "prismjs-loader": "0.0.3",
     "pushstate-server": "^1.14.0",
     "react-motion": "^0.4.4",
     "style-loader": "0.13.1",
