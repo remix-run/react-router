@@ -36,6 +36,15 @@ describe('StaticRouter', () => {
       )).toContain('test')
     })
 
+    it('renders multiple static children', () => {
+      expect(renderToString(
+        <StaticRouter {...requiredProps}>
+          <div>test</div>
+          <div>test-2</div>
+        </StaticRouter>
+      )).toContain('test-2')
+    })
+
     it('passes the location to function children', () => {
       let actualLocation
       renderToString(
