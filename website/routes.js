@@ -69,9 +69,21 @@ export const EXAMPLES = [
 ]
 
 export const API = [
-  { name: 'Router',
-    path: '/Router',
-    load: require('bundle?lazy!./api/Router.md')
+  { name: 'BrowserRouter',
+    path: '/BrowserRouter',
+    load: require('bundle?lazy!./api/BrowserRouter.md')
+  },
+  { name: 'HashRouter',
+    path: '/HashRouter',
+    load: require('bundle?lazy!./api/HashRouter.md')
+  },
+  { name: 'MemoryRouter',
+    path: '/MemoryRouter',
+    load: require('bundle?lazy!./api/MemoryRouter.md')
+  },
+  { name: 'ServerRouter',
+    path: '/ServerRouter',
+    load: require('bundle?lazy!./api/ServerRouter.md')
   },
   { name: 'Match',
     path: '/Match',
