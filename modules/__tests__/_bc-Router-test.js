@@ -173,7 +173,7 @@ describe('v1 Router', function () {
 
   describe('at a route with special characters', function () {
     it('does not double escape', function (done) {
-      // https://github.com/reactjs/react-router/issues/1574
+      // https://github.com/ReactTraining/react-router/issues/1574
       class MyComponent extends Component {
         render() {
           return <div>{this.props.params.someToken}</div>
@@ -191,7 +191,7 @@ describe('v1 Router', function () {
     })
 
     it('does not double escape when nested', function (done) {
-      // https://github.com/reactjs/react-router/issues/1574
+      // https://github.com/ReactTraining/react-router/issues/1574
       class MyWrapperComponent extends Component {
         render() {
           return this.props.children
@@ -217,7 +217,7 @@ describe('v1 Router', function () {
     })
 
     it('is happy to have colons in parameter values', function (done) {
-      // https://github.com/reactjs/react-router/issues/1759
+      // https://github.com/ReactTraining/react-router/issues/1759
       class MyComponent extends Component {
         render() {
           return <div>{this.props.params.foo}</div>
@@ -235,7 +235,7 @@ describe('v1 Router', function () {
     })
 
     it('handles % in parameters', function (done) {
-      // https://github.com/reactjs/react-router/issues/1766
+      // https://github.com/ReactTraining/react-router/issues/1766
       class MyComponent extends Component {
         render() {
           return <div>{this.props.params.name}</div>
@@ -253,7 +253,7 @@ describe('v1 Router', function () {
     })
 
     it('handles forward slashes', function (done) {
-      // https://github.com/reactjs/react-router/issues/1865
+      // https://github.com/ReactTraining/react-router/issues/1865
       class Parent extends Component {
         render() {
           return <div>{this.props.children}</div>

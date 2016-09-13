@@ -23,4 +23,4 @@ const Home = withRouter(
 )
 ```
 
-Note that this example makes use of the [withRouter](https://github.com/reactjs/react-router/blob/v2.4.0/upgrade-guides/v2.4.0.md) higher-order component introduced in v2.4.0.
+Note that this example makes use of the [withRouter](/upgrade-guides/v2.4.0.md) higher-order component introduced in v2.4.0.

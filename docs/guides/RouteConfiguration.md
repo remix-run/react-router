@@ -168,7 +168,7 @@ Now when someone clicks on that link to `/inbox/messages/5` they'll automaticall
 
 ### Enter and Leave Hooks
 
-[Route](/docs/Glossary.md#route)s may also define [`onEnter`](/docs/Glossary.md#enterhook) and [`onLeave`](/docs/Glossary.md#leavehook) hooks that are invoked once a transition has been [confirmed](/docs/guides/ConfirmingNavigation.md). These hooks are useful for various things like [requiring auth](https://github.com/reactjs/react-router/tree/master/examples/auth-flow) when a route is entered and saving stuff to persistent storage before a route unmounts.
+[Route](/docs/Glossary.md#route)s may also define [`onEnter`](/docs/Glossary.md#enterhook) and [`onLeave`](/docs/Glossary.md#leavehook) hooks that are invoked once a transition has been [confirmed](/docs/guides/ConfirmingNavigation.md). These hooks are useful for various things like [requiring auth](https://github.com/ReactTraining/react-router/tree/master/examples/auth-flow) when a route is entered and saving stuff to persistent storage before a route unmounts.
 
 During a transition, [`onLeave` hooks](/docs/Glossary.md#leavehook) run first on all routes we are leaving, starting with the leaf route on up to the first common ancestor route. Next, [`onEnter` hooks](/docs/Glossary.md#enterhook) run starting with the first parent route we're entering down to the leaf route.
 

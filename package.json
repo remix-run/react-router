@@ -11,9 +11,9 @@
   ],
   "main": "lib/index",
   "jsnext:main": "es6/index",
-  "repository": "reactjs/react-router",
-  "homepage": "https://github.com/reactjs/react-router#readme",
-  "bugs": "https://github.com/reactjs/react-router/issues",
+  "repository": "ReactTraining/react-router",
+  "homepage": "https://github.com/ReactTraining/react-router#readme",
+  "bugs": "https://github.com/ReactTraining/react-router/issues",
   "scripts": {
     "build": "npm run build-cjs && npm run build-es",
     "build-cjs": "rimraf lib && cross-env BABEL_ENV=cjs babel ./modules -d lib --ignore '__tests__'",

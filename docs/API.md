@@ -105,7 +105,7 @@ A `<Link>` can know when the route it links to is active and automatically apply
 
 #### Props
 ##### `to`
-A [location descriptor](https://github.com/reactjs/react-router/blob/master/docs/Glossary.md#locationdescriptor). Usually this is a string or an object, with the following semantics:
+A [location descriptor](/docs/Glossary.md#locationdescriptor). Usually this is a string or an object, with the following semantics:
 
 * If it's a string it represents the absolute path to link to, e.g. `/users/123` (relative paths are not supported).
 * If it's an object it can have four keys:
