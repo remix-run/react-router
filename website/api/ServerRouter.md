@@ -1,63 +1,79 @@
 # `<ServerRouter>`
 
-Renders of your React Router app on the server and notifies you of
-redirects or `Miss` rendering.
+Server rendering is a bit more involved to properly handle `<Redirect>`
+and `<Miss>` in your app. Not only do you want to respond with the
+proper status code, but also, both function on the result of rendering
+so we have to sort of recreate `componentDidMount` for the server. For
+the exeptional case of not matching any patterns you'll use a two-pass
+render to render the `<Miss>` components.
 
-This is a very bare-bones example to illustrate the moving parts that
-involve `ServerRouter`, the rest is up to you.
+Here's an example that sends 301 for redirects and properly renders your
+app when no patterns match the url:
 
 ```js
+import { createServer } from 'http'
 import React from 'react'
 import { renderToString } from 'react-dom/server'
-import { createServer } from 'http'
+import { ServerRouter, createServerRenderContext } = 'react-router'
 
 createServer((req, res) => {
 
-  // ServerRouter will callback to us if there is a redirect or Miss
-  // while rendering
-  let redirectLocation = null
-  let missLocation = null
+  // first create a context for <ServerRouter>, it's where we keep the
+  // results of rendering for the second pass if necessary
+  const context = createServerRenderContext()
 
-  const markup = renderToString(
+  // render the first time
+  let markup = renderToString(
     <ServerRouter
       location={req.url}
-      onRedirect={location => redirectLocation}
-      onMiss={location => missLocation}
+      context={context}
     >
       <App/>
     </ServerRouter>
   )
 
-  if (redirectLocation) {
+  // get the result
+  const result = context.getResult()
+
+  // the result will tell you if it redirected, if so, we ignore
+  // the markup and send a proper redirect.
+  if (result.redirect) {
     res.writeHead(301, {
-      Location: redirectLocation.pathname
+      Location: result.redirect.pathname
     })
     res.end()
   } else {
-    if (missLocation) {
+
+    // the result will tell you if there were any misses, if so
+    // we can send a 404 and then do a second render pass with
+    // the context to clue the <Miss> components into rendering
+    // this time (on the client they know from componentDidMount)
+    if (result.missed) {
       res.writeHead(404)
+      markup = renderToString(
+        <ServerRouter
+          location={req.url}
+          context={context}
+        >
+          <App/>
+        </ServerRouter>
+      )
     }
     res.write(markup)
     res.end()
   }
-
-
 }).listen(3000)
 ```
 
-## `location`
+## `location: string`
 
-The location the server received, probably the string on `req.url` of a
-node server.
+The location the server received, probably `req.url` on a node server.
 
-## `onRedirect`
+## `context`
 
-Called when any Redirect happens while rendering your app. It calls back
-with the location of the redirect so you can send a proper 301 (or 302).
-
-## `onMiss`
-
-If any `Miss` components are rendered, this will be called with the
-location so you can send a proper 404 response with the content.
+An object returned from `createServerRenderContext`. It keeps the
+rendering result so you know which status code to send and if you need
+to perform a second pass render to render the `<Miss>` components in
+your app.
 
 # `</ServerRouter>`
