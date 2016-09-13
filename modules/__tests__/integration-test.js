@@ -130,8 +130,10 @@ describe('Ambiguous matches?', () => {
     const div = document.createElement('div')
     render(
       <Router location="/foo">
-        <Match pattern="/foo" render={() => <div>static</div>}/>
-        <Match pattern="/:name" render={() => <div>param</div>}/>
+        <div>
+          <Match pattern="/foo" render={() => <div>static</div>}/>
+          <Match pattern="/:name" render={() => <div>param</div>}/>
+        </div>
       </Router>,
       div)
     expect(div.innerHTML).toContain('static')
@@ -144,12 +146,14 @@ describe('Ambiguous matches?', () => {
       const pathname = '/non-static-param'
       render((
         <Router location={pathname}>
-          <Match pattern="/:name" render={({ params }) => (
-            <div>
-              <Match pattern="/foo" render={() => <div>foo</div>}/>
-              <Miss render={() => <div>{params.name}</div>}/>
-            </div>
-          )}/>
+          <div>
+            <Match pattern="/:name" render={({ params }) => (
+              <div>
+                <Match pattern="/foo" render={() => <div>foo</div>}/>
+                <Miss render={() => <div>{params.name}</div>}/>
+              </div>
+            )}/>
+          </div>
         </Router>
       ), div)
       expect(div.innerHTML).toNotContain('foo')
@@ -161,8 +165,10 @@ describe('Ambiguous matches?', () => {
       const pathname = '/foo'
       render((
         <Router location={pathname}>
-          <Match pattern="/foo" render={() => <div>match</div>}/>
-          <Miss render={() => <div>miss</div>}/>
+          <div>
+            <Match pattern="/foo" render={() => <div>match</div>}/>
+            <Miss render={() => <div>miss</div>}/>
+          </div>
         </Router>
       ), div)
       expect(div.innerHTML).toContain('match')
@@ -189,10 +195,10 @@ describe('clicking around', () => {
       <Router>
         <div>
           <Link id="one" to="/one">One</Link>
+          <Match pattern="/one" render={() => (
+            <h1>{TEXT1}</h1>
+          )}/>
         </div>
-        <Match pattern="/one" render={() => (
-          <h1>{TEXT1}</h1>
-        )}/>
       </Router>
     ), div)
     expect(div.innerHTML).toNotContain(TEXT1)

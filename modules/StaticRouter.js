@@ -82,9 +82,6 @@ class StaticRouter extends React.Component {
       <MatchProvider>
         {typeof children === 'function' ? (
           children({ location, router: this.getChildContext().router })
-        ) : React.Children.count(children) > 1 ? (
-          // TODO: get rid of all DOM stuff
-          <div>{children}</div>
         ) : (
           children
         )}
