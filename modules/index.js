@@ -15,3 +15,6 @@ export StaticRouter from './StaticRouter'
 
 // Util for server rendering "pre-render match"
 export matchPattern from './matchPattern'
+
+// Util for server rendering context
+export createServerRenderContext from './createServerRenderContext'
