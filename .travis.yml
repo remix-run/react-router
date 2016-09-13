@@ -10,3 +10,4 @@ branches:
   - master
   - next
   - /^greenkeeper-/
+  - v4
