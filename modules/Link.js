@@ -104,7 +104,7 @@ const createLocationDescriptor = (to) =>
   typeof to === 'object' ? to : { pathname: to }
 
 const pathIsActive = (to, pathname, activeOnlyWhenExact) =>
-  activeOnlyWhenExact ? pathname === to : pathname.startsWith(to)
+  activeOnlyWhenExact ? pathname === to : pathname.indexOf(to) === 0
 
 const queryIsActive = (query, activeQuery) => {
   if (activeQuery == null)
