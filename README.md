@@ -6,7 +6,7 @@ Declarative routing for [React.js][react].
 Docs
 ----
 
-https://reacttraining.github.io/react-router/
+https://reactjs.github.io/react-router
 
 Installation
 ------------
