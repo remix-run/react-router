@@ -26,8 +26,7 @@
     "react-history": "^0.13.0"
   },
   "peerDependencies": {
-    "react": "15.x",
-    "react-dom": "15.x"
+    "react": "15.x"
   },
   "devDependencies": {
     "babel-cli": "^6.10.1",
