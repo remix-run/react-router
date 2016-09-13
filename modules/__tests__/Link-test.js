@@ -28,7 +28,10 @@ describe('Link', () => {
         getChildContext() {
           return {
             router: {
-              createHref: () => CONTEXT_HREF
+              createHref: () => CONTEXT_HREF,
+              blockTransitions: () => {},
+              transitionTo: () => {},
+              replaceWith: () => {}
             }
           }
         }
@@ -254,7 +257,13 @@ describe('Link', () => {
     class TestRouterContext extends React.Component {
       static childContextTypes = { location: PropTypes.object }
       getChildContext() {
-        return { location: { pathname: PATHNAME } }
+        return {
+          location: {
+            pathname: PATHNAME,
+            search: '',
+            hash: ''
+          }
+        }
       }
       render() { return this.props.children }
     }
