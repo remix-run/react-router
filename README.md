@@ -6,7 +6,7 @@ Declarative routing for [React.js][react].
 Docs
 ----
 
-https://reactjs.github.io/react-router
+https://react-router-website-uxmsaeusnn.now.sh/
 
 Installation
 ------------
@@ -14,13 +14,13 @@ Installation
 ### NPM
 
 ```
-npm install react-router@4.0.0-0
+npm install react-router@4.0.0-2
 ```
 
 ### Script Tag Global
 
 ```html
-<script src="https://unpkg.com/react-router@4.0.0-0"></script>
+<script src="https://unpkg.com/react-router@4.0.0-2"></script>
 ```
 
 You'll find the modules on `window.ReactRouter`
