@@ -1,10 +1,7 @@
-# React Router [![Travis][build-badge]][build] [![npm package][npm-badge]][npm]
+# React Router [![Travis][build-badge]][build]
 
-[build-badge]: https://img.shields.io/travis/ReactTraining/react-router/master.svg?style=flat-square
+[build-badge]: https://img.shields.io/travis/ReactTraining/react-router/v4.svg?style=flat-square
 [build]: https://travis-ci.org/ReactTraining/react-router
-
-[npm-badge]: https://img.shields.io/npm/v/react-router.svg?style=flat-square
-[npm]: https://www.npmjs.org/package/react-router
 
 <img src="/logo/Vertical@2x.png" height="150"/>
 
