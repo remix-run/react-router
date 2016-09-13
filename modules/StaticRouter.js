@@ -19,7 +19,7 @@ class StaticRouter extends React.Component {
     blockTransitions: PropTypes.func,
     children: PropTypes.oneOfType([ PropTypes.node, PropTypes.func ]),
     createHref: PropTypes.func.isRequired,
-    location: PropTypes.oneOfType([ locationType, PropTypes.string ]).isRequired,
+    location: PropTypes.oneOfType([ PropTypes.object, PropTypes.string ]).isRequired,
     onPush: PropTypes.func.isRequired,
     onReplace: PropTypes.func.isRequired,
     stringifyQuery: PropTypes.func.isRequired,
@@ -38,16 +38,15 @@ class StaticRouter extends React.Component {
     location: locationType.isRequired
   }
 
+  createLocationForContext(loc) {
+    const { parseQuery, stringifyQuery } = this.props
+    return createRouterLocation(loc, parseQuery, stringifyQuery)
+  }
+
   getChildContext() {
     const createHref = (to) => {
       const path = createRouterPath(to, this.props.stringifyQuery)
       return this.props.createHref(path)
-    }
-
-    const getPathAndState = (loc) => {
-      const path = createHref(loc)
-      const state = typeof loc === 'object' ? loc.state : null
-      return { path, state }
     }
 
     const location = this.getLocation()
@@ -57,12 +56,10 @@ class StaticRouter extends React.Component {
       router: {
         createHref,
         transitionTo: (loc) => {
-          const { path, state } = getPathAndState(loc)
-          this.props.onPush(path, state)
+          this.props.onPush(this.createLocationForContext(loc))
         },
         replaceWith: (loc) => {
-          const { path, state } = getPathAndState(loc)
-          this.props.onReplace(path, state)
+          this.props.onReplace(this.createLocationForContext(loc))
         },
         blockTransitions: (getPromptMessage) => {
           this.props.blockTransitions(getPromptMessage)
@@ -86,7 +83,7 @@ class StaticRouter extends React.Component {
         {typeof children === 'function' ? (
           children({ location, router: this.getChildContext().router })
         ) : React.Children.count(children) > 1 ? (
-          // #TODO get rid of all DOM stuff
+          // TODO: get rid of all DOM stuff
           <div>{children}</div>
         ) : (
           children

@@ -9,15 +9,28 @@ class RegisterMatch extends React.Component {
   }
 
   static contextTypes = {
-    match: PropTypes.object
+    match: PropTypes.object,
+    serverRouter: PropTypes.object
   }
 
-  componentDidMount() {
+  registerMatch() {
     const { match:matchContext } = this.context
     const { match } = this.props
 
     if (match && matchContext) {
       matchContext.addMatch(match)
+    }
+  }
+
+  componentWillMount() {
+    if (this.context.serverRouter) {
+      this.registerMatch()
+    }
+  }
+
+  componentDidMount() {
+    if (!this.context.serverRouter) {
+      this.registerMatch()
     }
   }
 

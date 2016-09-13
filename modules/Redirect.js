@@ -13,11 +13,11 @@ class Redirect extends React.Component {
 
   static contextTypes = {
     router: routerType,
-    serverResult: PropTypes.object
+    serverRouter: PropTypes.object
   }
 
   componentWillMount() {
-    if (this.context.serverResult)
+    if (this.context.serverRouter)
       this.redirect()
   }
 

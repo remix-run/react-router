@@ -15,18 +15,27 @@ class Miss extends React.Component {
     serverRouter: PropTypes.object
   }
 
-  state = {
-    noMatchesInContext: false
-  }
 
-  componentWillMount() {
+  constructor(props, context) {
+    super(props, context)
+
     // ignore if rendered out of context (probably for unit tests)
-    if (this.context.match) {
+    if (context.match && !context.serverRouter) {
       this.unsubscribe = this.context.match.subscribe((matchesFound) => {
         this.setState({
           noMatchesInContext: !matchesFound
         })
       })
+    }
+
+    if (context.serverRouter) {
+      context.serverRouter.registerMissPresence(
+        context.match.serverRouterIndex
+      )
+    }
+
+    this.state = {
+      noMatchesInContext: false
     }
   }
 
@@ -41,7 +50,10 @@ class Miss extends React.Component {
     const { noMatchesInContext } = this.state
     const { location:locationProp } = this.props
     const location = locationProp || this.context.location
-    if (noMatchesInContext) {
+    const { serverRouter, match } = this.context
+    const noMatchesOnServerContext = serverRouter &&
+      serverRouter.missedAtIndex(match.serverRouterIndex)
+    if (noMatchesInContext || noMatchesOnServerContext) {
       return (
         render ? (
           render({ location })

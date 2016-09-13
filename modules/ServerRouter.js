@@ -1,12 +1,11 @@
 import React, { PropTypes } from 'react'
 import StaticRouter from './StaticRouter'
-import { location as locationType } from './PropTypes'
 
 class ServerRouter extends React.Component {
 
   static propTypes = {
-    result: PropTypes.object,
-    location: locationType,
+    context: PropTypes.object.isRequired,
+    location: PropTypes.string.isRequired,
     children: PropTypes.oneOfType([
       PropTypes.func,
       PropTypes.node
@@ -14,21 +13,19 @@ class ServerRouter extends React.Component {
   }
 
   static childContextTypes = {
-    serverResult: PropTypes.object.isRequired
+    serverRouter: PropTypes.object.isRequired
   }
 
   getChildContext() {
     return {
-      serverResult: this.props.result
+      serverRouter: this.props.context
     }
   }
 
   render() {
-    const { result, ...rest } = this.props
-    const redirect = (location, state) => {
-      if (!result.redirect) {
-        result.redirect = { location, state }
-      }
+    const { context, ...rest } = this.props
+    const redirect = (location) => {
+      context.setRedirect(location)
     }
     return (
       <StaticRouter

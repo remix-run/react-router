@@ -13,18 +13,25 @@ class MatchProvider extends React.Component {
     match: matchContextType.isRequired
   }
 
+  static contextTypes = {
+    serverRouter: PropTypes.object
+  }
+
   constructor(props) {
     super(props)
     this.parent = props.match
     // React doesn't support a parent calling `setState` from an descendant's
     // componentWillMount, so we use an instance property to track matches
+    // **IMPORTANT** we must mutate matches, never reassign, in order for
+    // server rendering to work
     this.matches = []
     this.subscribers = []
     this.hasMatches = null // use null for initial value
+    this.serverRouterIndex = null
   }
 
   addMatch = match => {
-    this.matches = this.matches.concat([match])
+    this.matches.push(match)
   }
 
   removeMatch = match => {
@@ -36,23 +43,29 @@ class MatchProvider extends React.Component {
       match: {
         addMatch: this.addMatch,
         removeMatch: this.removeMatch,
-
-        parent: this.parent,
         matches: this.matches,
-
+        parent: this.parent,
+        serverRouterIndex: this.serverRouterIndex,
         subscribe: (fn) => {
           this.subscribers.push(fn)
           return () => {
             this.subscribers.splice(this.subscribers.indexOf(fn), 1)
           }
         }
-
       }
     }
   }
 
   componentDidUpdate() {
     this.notifySubscribers()
+  }
+
+  componentWillMount() {
+    const { serverRouter } = this.context
+    if (serverRouter) {
+      this.serverRouterIndex =
+        serverRouter.registerMatchContext(this.matches)
+    }
   }
 
   componentDidMount() {
