@@ -2,7 +2,7 @@
   "name": "react-router",
   "version": "4.0.0-2",
   "description": "Declarative Routing for React.js",
-  "repository": "reactjs/react-router",
+  "repository": "ReactTraining/react-router",
   "license": "MIT",
   "authors": [
     "Michael Jackson",

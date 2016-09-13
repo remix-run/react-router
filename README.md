@@ -1,28 +1,49 @@
-React Router
-============
+# React Router [![Travis][build-badge]][build] [![npm package][npm-badge]][npm]
 
-Declarative routing for [React.js][react].
+[build-badge]: https://img.shields.io/travis/ReactTraining/react-router/master.svg?style=flat-square
+[build]: https://travis-ci.org/ReactTraining/react-router
 
-Docs
-----
+[npm-badge]: https://img.shields.io/npm/v/react-router.svg?style=flat-square
+[npm]: https://www.npmjs.org/package/react-router
 
-https://react-router-website-uxmsaeusnn.now.sh/
+<img src="/logo/Vertical@2x.png" height="150"/>
 
-Installation
-------------
+Declarative routing for [React](https://facebook.github.io/react).
 
-### NPM
+React Router keeps your UI in sync with the URL. Make the URL your first thought, not an after-thought.
 
+## Installation
+
+Using [npm](https://www.npmjs.com/):
+
+    $ npm install --save react-router
+
+Then with a module bundler like [webpack](https://webpack.github.io/), use as you would anything else:
+
+```js
+// using an ES6 transpiler, like babel
+import { BrowserRouter, Match, Link } from 'react-router'
+
+// not using an ES6 transpiler
+var BrowserRouter = require('react-router').BrowserRouter
+var Match = require('react-router').Match
+var Link = require('react-router').Link
 ```
-npm install react-router@4.0.0-2
-```
 
-### Script Tag Global
+The UMD build is also available on [unpkg](https://unpkg.com):
 
 ```html
-<script src="https://unpkg.com/react-router@4.0.0-2"></script>
+<script src="https://unpkg.com/react-router@next/umd/react-router.min.js"></script>
 ```
 
-You'll find the modules on `window.ReactRouter`
+You can find the library on `window.ReactRouter`.
 
-  [react]:https://facebook.github.io/react/
+## Docs
+
+Please read [our docs here](https://react-router-website-uxmsaeusnn.now.sh/basic).
+
+## Thanks
+
+Thanks to [our sponsors](/SPONSORS.md) for supporting the development of React Router.
+
+Also, thanks to [BrowserStack](https://www.browserstack.com/) for providing the infrastructure that allows us to run our build in real browsers.
