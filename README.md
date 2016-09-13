@@ -16,7 +16,7 @@ React Router keeps your UI in sync with the URL. Make the URL your first thought
 
 Using [npm](https://www.npmjs.com/):
 
-    $ npm install --save react-router
+    $ npm install --save react-router@next
 
 Then with a module bundler like [webpack](https://webpack.github.io/), use as you would anything else:
 
