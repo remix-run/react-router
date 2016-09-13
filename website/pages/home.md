@@ -32,7 +32,7 @@ Development has been sponsored by:
 - [100s of Contributors][contributors]
 
 
-  [react-training]:https://reactjs-training.com
+  [react-training]:https://reacttraining.com
   [instructure]:https://instructure.com
-  [modus-create]:https://modus-create.com
+  [modus-create]:https://moduscreate.com
   [contributors]:https://github.com/ReactTraining/react-router/graphs/contributors
