@@ -29,13 +29,13 @@ import React from 'react'
 import { render } from 'react-dom'
 
 // 1. import a few components
-import { Router, Match, Miss, Link } from 'react-router'
+import { BrowserRouter, Match, Miss, Link } from 'react-router'
 
 const App = () => (
   // 2. render a `Router`, it will listen to the url changes
   //    and make the location available to other components
   //    automatically
-  <Router>
+  <BrowserRouter>
     <ul>
       {/* 3. Link to some paths with `Link` */}
       <li><Link to="/">Home</Link></li>
@@ -55,7 +55,7 @@ const App = () => (
 
     {/* If none of those match, then a sibling `Miss` will render. */}
     <Miss component={NoMatch}/>
-  </Router>
+  </BrowserRouter>
 )
 
 const Home = () => (
