@@ -10,7 +10,7 @@ If you're just screwing around, use a script tag, you'll find the lib on
 `window.ReactRouter`.
 
 ```html
-<script src="https://npmcdn.com/react-router/4.0.0"></script>
+<script src="https://unpkg.com/react-router@4.0.0-2/umd/react-router.min.js"></script>
 ```
 
 ## First Principles
