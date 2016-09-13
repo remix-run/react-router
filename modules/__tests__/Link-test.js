@@ -112,7 +112,7 @@ describe('Link', () => {
           />
         ), div)
         const a = div.querySelector('a')
-        expect(a.style.background).toEqual('blue')
+        expect(a.style.background).toContain('blue')
       })
     })
 
