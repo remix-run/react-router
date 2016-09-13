@@ -1,8 +1,6 @@
 import expect from 'expect'
 import React from 'react'
 import StaticRouter from '../StaticRouter'
-import Link from '../Link'
-import Redirect from '../Redirect'
 import { renderToString } from 'react-dom/server'
 
 //console.error = () => {}
