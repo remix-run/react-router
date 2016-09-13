@@ -2,6 +2,7 @@ import expect from 'expect'
 import React, { PropTypes } from 'react'
 import Match from '../Match'
 import { renderToString } from 'react-dom/server'
+import { render } from 'react-dom'
 
 describe('Match', () => {
   const TEXT = 'TEXT'
@@ -67,6 +68,56 @@ describe('Match', () => {
             expect(props.isExact).toEqual(false)
           })
         })
+      })
+    })
+
+    describe('when deep matches', () => {
+
+      const Page = () => <div>{TEXT}</div>
+
+      const SubSubMatch = ({ location }) => (
+        <Match
+          pattern="open"
+          location={location}
+          component={Page}
+        />
+      )
+
+      const SubMatch = ({ location }) => (
+        <Match
+          pattern="page"
+          location={location}
+          component={SubSubMatch}
+        />
+      )
+
+      const renderMatch = ({ location, div }) => render(
+        <Match
+          pattern="/"
+          location={location}
+          component={SubMatch}
+        />,
+        div
+      )
+
+      it('renders deep match', () => {
+        const div = document.createElement('div')
+
+        const page = { pathname: '/page/open' }
+        renderMatch({ location: page, div })
+        expect(div.textContent).toContain(TEXT)
+      })
+
+      it('should render deep match on path change', () => {
+        const div = document.createElement('div')
+
+        const initial = { pathname: '/' }
+        renderMatch({ location: initial, div })
+        expect(div.textContent).toNotContain(TEXT)
+
+        const page = { pathname: '/page/open' }
+        renderMatch({ location: page, div })
+        expect(div.textContent).toContain(TEXT)
       })
     })
   })
