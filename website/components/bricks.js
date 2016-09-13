@@ -43,7 +43,7 @@ export class B extends React.Component {
 
 export class Flex extends React.Component {
   render() {
-    return <B {...this.props} display="flex"/>
+    return <B {...this.props} display="flex" overflow="hidden" />
   }
 }
 
