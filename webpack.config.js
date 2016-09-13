@@ -1,10 +1,18 @@
 const webpack = require('webpack')
 
 module.exports = {
-
   output: {
     library: 'ReactRouter',
     libraryTarget: 'umd'
+  },
+
+  externals: {
+    react: {
+      root: 'React',
+      commonjs2: 'react',
+      commonjs: 'react',
+      amd: 'react'
+    }
   },
 
   module: {
@@ -18,5 +26,4 @@ module.exports = {
       'process.env.NODE_ENV': JSON.stringify(process.env.NODE_ENV || 'development')
     })
   ]
-
 }
