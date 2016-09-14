@@ -32,10 +32,11 @@ import { render } from 'react-dom'
 import { BrowserRouter, Match, Miss, Link } from 'react-router'
 
 const App = () => (
-  // 2. render a `Router`, it will listen to the url changes
-  //    and make the location available to other components
-  //    automatically
   <BrowserRouter>
+    {/* 2.  render a `Router`, it will listen to the url changes
+            and make the location available to other components
+            automatically
+    */}
     <ul>
       {/* 3. Link to some paths with `Link` */}
       <li><Link to="/">Home</Link></li>
@@ -54,7 +55,7 @@ const App = () => (
     <Match pattern="/topics" component={Topics} />
 
     {/* If none of those match, then a sibling `Miss` will render. */}
-    <Miss component={NoMatch}/>
+    <Miss component={NoMatch} />
   </BrowserRouter>
 )
 
@@ -78,11 +79,12 @@ const NoMatch = ({ location }) => (
 )
 
 const Topics = ({ pathname, pattern }) => (
-  // 5. Components rendered by a `Match` get some routing-specific
-  //    props, like the portion of the parent `pattern` that was
-  //    matched against the current `location.pathname`, in this case
-  //    `/topics`
   <div>
+    {/* 5.  Components rendered by a `Match` get some routing-specific
+            props, like the portion of the parent `pattern` that was
+            matched against the current `location.pathname`, in this case
+            `/topics`
+    */}
     <h2>Topics</h2>
     <ul>
       {/* 6. Use the parent's matched pathname to link relatively */}
@@ -105,14 +107,15 @@ const Topics = ({ pathname, pattern }) => (
 )
 
 const Topic = ({ params }) => (
-  // 9. the dynamic segments of a `pattern` (in this case `:topicId`)
-  //    are parsed and sent to the component from `Match`.
   <div>
+  {/* 9. the dynamic segments of a `pattern` (in this case `:topicId`)
+      are parsed and sent to the component from `Match`.
+  */}
     <h3>{params.topicId}</h3>
   </div>
 )
 
-render(<App/>)
+render(<App/>, document.querySelector('#root'))
 ```
 
 That should get you started. We encourage you to review the examples and
