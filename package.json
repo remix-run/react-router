@@ -60,7 +60,7 @@
     "css-loader": "^0.23.1",
     "eslint": "^3.2.0",
     "eslint-config-rackt": "^1.1.1",
-    "eslint-plugin-react": "^5.2.2",
+    "eslint-plugin-react": "^6.2.2",
     "expect": "^1.20.2",
     "express": "^4.14.0",
     "express-urlrewrite": "^1.2.0",
