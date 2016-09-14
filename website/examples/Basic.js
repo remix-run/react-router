@@ -1,6 +1,7 @@
-// Run this example locally by copy/pasting it into
-// `src/App.js` of an app created with `create-react-app`
-//  https://github.com/facebookincubator/create-react-app
+// To run this example locally, create a new project with 
+// 'create-react-app', install the router with 'npm i react-router@next',
+// then copy/paste the code below into `src/App.js` of your new project.
+//  For more info on 'create-react-app', see https://github.com/facebookincubator/create-react-app
 
 import React from 'react'
 import Match from 'react-router/Match'
