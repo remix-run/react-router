@@ -32,29 +32,31 @@ import { render } from 'react-dom'
 import { BrowserRouter, Match, Miss, Link } from 'react-router'
 
 const App = () => (
-  // 2. render a `Router`, it will listen to the url changes
-  //    and make the location available to other components
-  //    automatically
   <BrowserRouter>
-    <ul>
-      {/* 3. Link to some paths with `Link` */}
-      <li><Link to="/">Home</Link></li>
-      <li><Link to="/about">About</Link></li>
-      <li><Link to="/topics">Topics</Link></li>
-    </ul>
-
-    <hr/>
-
-    {/* 4. Render some `<Match/>` components.
-           When the current location matches the `pattern`
-           then the `component` will render.
+    {/* 2.  render a `Router`, it will listen to the url changes
+            and make the location available to other components
+            automatically
     */}
-    <Match exactly pattern="/" component={Home} />
-    <Match pattern="/about" component={About} />
-    <Match pattern="/topics" component={Topics} />
+    <div>
+      <ul>
+        {/* 3. Link to some paths with `Link` */}
+        <li><Link to="/">Home</Link></li>
+        <li><Link to="/about">About</Link></li>
+        <li><Link to="/topics">Topics</Link></li>
+      </ul>
 
-    {/* If none of those match, then a sibling `Miss` will render. */}
-    <Miss component={NoMatch}/>
+      <hr/>
+
+      {/* 4. Render some `<Match/>` components.
+             When the current location matches the `pattern`
+             then the `component` will render.
+      */}
+      <Match exactly pattern="/" component={Home} />
+      <Match pattern="/about" component={About} />
+      <Match pattern="/topics" component={Topics} />
+      {/* If none of those match, then a sibling `Miss` will render. */}
+      <Miss component={NoMatch} />
+    </div>
   </BrowserRouter>
 )
 
@@ -78,11 +80,12 @@ const NoMatch = ({ location }) => (
 )
 
 const Topics = ({ pathname, pattern }) => (
-  // 5. Components rendered by a `Match` get some routing-specific
-  //    props, like the portion of the parent `pattern` that was
-  //    matched against the current `location.pathname`, in this case
-  //    `/topics`
   <div>
+    {/* 5.  Components rendered by a `Match` get some routing-specific
+            props, like the portion of the parent `pattern` that was
+            matched against the current `location.pathname`, in this case
+            `/topics`
+    */}
     <h2>Topics</h2>
     <ul>
       {/* 6. Use the parent's matched pathname to link relatively */}
@@ -105,14 +108,15 @@ const Topics = ({ pathname, pattern }) => (
 )
 
 const Topic = ({ params }) => (
-  // 9. the dynamic segments of a `pattern` (in this case `:topicId`)
-  //    are parsed and sent to the component from `Match`.
   <div>
+    {/* 9. the dynamic segments of a `pattern` (in this case `:topicId`)
+        are parsed and sent to the component from `Match`.
+    */}
     <h3>{params.topicId}</h3>
   </div>
 )
 
-render(<App/>)
+render(<App />, document.querySelector('#root'))
 ```
 
 That should get you started. We encourage you to review the examples and
