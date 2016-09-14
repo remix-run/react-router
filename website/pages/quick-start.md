@@ -112,7 +112,7 @@ const Topic = ({ params }) => (
   </div>
 )
 
-render(<App/>)
+render(<App/>, document.querySelector('#root'))
 ```
 
 That should get you started. We encourage you to review the examples and
