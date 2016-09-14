@@ -13,7 +13,7 @@ React Router keeps your UI in sync with the URL. It has a simple API with powerf
 
 ### Docs & Help
 
-- [Tutorial – do this first!](https://github.com/ReactTraining/react-router-tutorial)
+- [Tutorial – do this first!](https://github.com/reactjs/react-router-tutorial)
 - [Guides and API docs](/docs)
 - [Troubleshooting guide](https://github.com/ReactTraining/react-router/blob/master/docs/Troubleshooting.md)
 - [Changelog](/CHANGES.md)
