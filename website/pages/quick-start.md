@@ -97,7 +97,7 @@ const Topics = ({ pathname, pattern }) => (
     */}
     <Match pattern={`${pathname}/:topicId`} component={Topic}/>
 
-    {/* 8. use the `render` prop to conveniently inline rendering */}
+    {/* 8. use the `render` prop for convenient inline rendering */}
     <Match pattern={pathname} exactly render={() => (
       <h3>Please select a topic</h3>
     )}/>
