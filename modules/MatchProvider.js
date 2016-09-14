@@ -19,10 +19,8 @@ class MatchProvider extends React.Component {
 
   constructor(props) {
     super(props)
-    // React doesn't support a parent calling `setState` from an descendant's
-    // componentWillMount, so we use an instance property to track matches
     // **IMPORTANT** we must mutate matches, never reassign, in order for
-    // server rendering to work
+    // server rendering to work w/ the two-pass render approach for Miss
     this.matches = []
     this.subscribers = []
     this.hasMatches = null // use null for initial value
