@@ -11,6 +11,7 @@ const BrowserRouter = ({ basename, keyLength, ...rest }) => (
       <StaticRouter
         action={action}
         location={location}
+        basename={basename}
         onPush={history.push}
         onReplace={history.replace}
         blockTransitions={history.block}

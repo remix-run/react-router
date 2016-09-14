@@ -11,6 +11,7 @@ const HashRouter = ({ basename, hashType, ...rest }) => (
       <StaticRouter
         action={action}
         location={location}
+        basename={basename}
         onPush={history.push}
         onReplace={history.replace}
         onGo={history.go}
