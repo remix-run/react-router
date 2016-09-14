@@ -5,9 +5,7 @@
 
 import React from 'react'
 import Match from 'react-router/Match'
-import Miss from 'react-router/Miss'
 import Link from 'react-router/Link'
-import Redirect from 'react-router/Redirect'
 import Router from 'react-router/BrowserRouter'
 
 class BasicExample extends React.Component {
