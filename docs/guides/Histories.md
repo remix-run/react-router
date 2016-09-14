@@ -151,7 +151,7 @@ Defining a basename:
 
 ```js
 import { useRouterHistory } from 'react-router'
-import { createHistory } from 'history'
+import { createHistory } from 'history/es6'
 
 const history = useRouterHistory(createHistory)({
   basename: '/base-path'
@@ -164,7 +164,7 @@ enhancer:
 
 ```js
 import { useRouterHistory } from 'react-router'
-import { createHistory, useBeforeUnload } from 'history'
+import { createHistory, useBeforeUnload } from 'history/es6'
 
 const history = useRouterHistory(useBeforeUnload(createHistory))()
 
