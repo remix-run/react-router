@@ -78,24 +78,26 @@ const Public = () => <h3>Public</h3>
 
 ////////////////////////////////////////////////////////////
 class Login extends React.Component {
-  static contextTypes = {
-    location: PropTypes.object,
-    router: PropTypes.object
+
+  state = {
+    redirectToReferrer: false
   }
 
   login = () => {
-    const { location } = this.props
-
     fakeAuth.authenticate(() => {
-      this.context.router.replaceWith(location.state.from)
+      this.setState({ redirectToReferrer: true })
     })
   }
 
   render() {
     const { from } = this.props.location.state
+    const { redirectToReferrer } = this.state
 
     return (
       <div>
+        {redirectToReferrer && (
+          <Redirect to={from || '/'}/>
+        )}
         {from && (
           <p>
             You must log in to view the page at
