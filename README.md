@@ -37,7 +37,7 @@ You can find the library on `window.ReactRouter`.
 
 ## Docs
 
-Please read [our docs here](https://react-router-website-uxmsaeusnn.now.sh/basic).
+Please read [our docs here](https://react-router-website-xvufzcovng.now.sh/).
 
 ## Thanks
 
