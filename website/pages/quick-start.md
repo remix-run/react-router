@@ -36,25 +36,27 @@ const App = () => (
   //    and make the location available to other components
   //    automatically
   <BrowserRouter>
-    <ul>
-      {/* 3. Link to some paths with `Link` */}
-      <li><Link to="/">Home</Link></li>
-      <li><Link to="/about">About</Link></li>
-      <li><Link to="/topics">Topics</Link></li>
-    </ul>
-
-    <hr/>
-
-    {/* 4. Render some `<Match/>` components.
-           When the current location matches the `pattern`
-           then the `component` will render.
-    */}
-    <Match exactly pattern="/" component={Home} />
-    <Match pattern="/about" component={About} />
-    <Match pattern="/topics" component={Topics} />
-
-    {/* If none of those match, then a sibling `Miss` will render. */}
-    <Miss component={NoMatch}/>
+    <div>
+      <ul>
+        {/* 3. Link to some paths with `Link` */}
+        <li><Link to="/">Home</Link></li>
+        <li><Link to="/about">About</Link></li>
+        <li><Link to="/topics">Topics</Link></li>
+      </ul>
+  
+      <hr/>
+  
+      {/* 4. Render some `<Match/>` components.
+             When the current location matches the `pattern`
+             then the `component` will render.
+      */}
+      <Match exactly pattern="/" component={Home} />
+      <Match pattern="/about" component={About} />
+      <Match pattern="/topics" component={Topics} />
+  
+      {/* If none of those match, then a sibling `Miss` will render. */}
+      <Miss component={NoMatch}/>
+    </div>
   </BrowserRouter>
 )
 
