@@ -1,7 +1,7 @@
-import { stringify, parse as parseQuery } from 'query-string'
 import React, { PropTypes } from 'react'
-import MatchProvider from './MatchProvider'
+import { stringify, parse as parseQueryString } from 'query-string'
 import { createRouterLocation, createRouterPath } from './LocationUtils'
+import MatchProvider from './MatchProvider'
 import {
   action as actionType,
   location as locationType,
@@ -30,7 +30,7 @@ class StaticRouter extends React.Component {
   static defaultProps = {
     createHref: path => path,
     stringifyQuery: defaultStringifyQuery,
-    parseQuery
+    parseQuery: parseQueryString
   }
 
   static childContextTypes = {
