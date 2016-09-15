@@ -16,6 +16,7 @@
     "build-min": "webpack -p modules/index.js umd/react-router.min.js",
     "build": "node ./scripts/build.js",
     "prepublish": "node ./scripts/build.js",
+    "clean": "rm $(ls modules | grep -v __)",
     "test": "npm run lint && karma start",
     "lint": "eslint modules"
   },
