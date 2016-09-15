@@ -46,10 +46,8 @@ class StaticRouter extends React.Component {
 
   getChildContext() {
     const createHref = (to) => {
-      const path = createRouterPath(
-        this.props.basename ? this.props.basename + to : to,
-        this.props.stringifyQuery
-      )
+      let path = createRouterPath(to, this.props.stringifyQuery)
+      if (this.props.basename) path = this.props.basename + path
       return this.props.createHref(path)
     }
 
