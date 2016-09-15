@@ -10,6 +10,28 @@ describe('formatPattern', function () {
     })
   })
 
+  describe('with a bad pattern', function () {
+    describe('that is missing an end param', function () {
+      const pattern = '/comments/(:id'
+
+      describe('with no value given to the formatPattern function', function () {
+        it('throws an error', function () {
+          expect(function () {
+            formatPattern(pattern, {})
+          }).toThrow(/Path "\/comments\/\(:id" is missing end paren at segment ":id"/)
+        })
+      })
+
+      describe('with value given to the formatPattern function', function () {
+        it('throws an error', function () {
+          expect(function () {
+            formatPattern(pattern, { id: '1' })
+          }).toThrow(/Path "\/comments\/\(:id" is missing end paren/)
+        })
+      })
+    })
+  })
+
   describe('when a pattern has dynamic segments', function () {
     const pattern = '/comments/:id/edit'
 

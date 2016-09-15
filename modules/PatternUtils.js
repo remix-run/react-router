@@ -183,7 +183,7 @@ export function formatPattern(pattern, params) {
 
       invariant(
         paramValue != null || parenCount > 0,
-        'missing "%s" parameter for path "%s"',
+        'Missing "%s" parameter for path "%s"',
         paramName, pattern
       )
 
@@ -204,7 +204,7 @@ export function formatPattern(pattern, params) {
 
           invariant(
             nextParenIdx > 0,
-            'missing end parameter'
+            'Path "%s" is missing end paren at segment "%s"', pattern, tokensSubset.join('')
           )
 
           // jump to ending paren
@@ -223,6 +223,11 @@ export function formatPattern(pattern, params) {
         pathname += token
     }
   }
+
+  invariant(
+    parenCount <= 0,
+    'Path "%s" is missing end paren', pattern
+  )
 
   return pathname.replace(/\/+/g, '/')
 }
