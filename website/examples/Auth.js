@@ -7,9 +7,9 @@ import Router from 'react-router/BrowserRouter'
 
 ////////////////////////////////////////////////////////////
 // 1. Click the public page
-// 2. Click the protected page<
+// 2. Click the protected page
 // 3. Log in
-// 4. Click the back button, note the url each time
+// 4. Click the back button, note the URL each time
 
 ////////////////////////////////////////////////////////////
 const fakeAuth = {
@@ -70,15 +70,12 @@ const MatchWhenAuthorized = ({ component: Component, ...rest }) => (
   )}/>
 )
 
-
 ////////////////////////////////////////////////////////////
 const Protected = () => <h3>Protected</h3>
 const Public = () => <h3>Public</h3>
 
-
 ////////////////////////////////////////////////////////////
 class Login extends React.Component {
-
   state = {
     redirectToReferrer: false
   }
@@ -109,7 +106,5 @@ class Login extends React.Component {
     )
   }
 }
-
-
 
 export default AuthExample
