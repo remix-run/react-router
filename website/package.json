@@ -4,7 +4,9 @@
   "private": true,
   "scripts": {
     "dev": "rm -rf .examples && cp -R examples .examples && webpack-dev-server --config webpack.config.js --inline --content-base build",
-    "start": "pushstate-server build/"
+    "build": "npm run clean && cp -R examples .examples && webpack",
+    "clean": "rm -rf .examples build",
+    "start": "npm run build && pushstate-server build/"
   },
   "dependencies": {
     "pushstate-server": "1.14.0"
