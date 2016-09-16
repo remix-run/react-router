@@ -1,6 +1,7 @@
 import expect from 'expect'
 import React from 'react'
 import StaticRouter from '../StaticRouter'
+import { router as routerType } from '../PropTypes'
 import { renderToString } from 'react-dom/server'
 
 //console.error = () => {}
@@ -185,6 +186,34 @@ describe('StaticRouter', () => {
         })
       })
 
+    })
+  })
+
+  describe('basename support', () => {
+    class Test extends React.Component {
+      static contextTypes = {
+        router: routerType
+      }
+
+      render() {
+        return <div>{this.context.router.createHref('/bar')}</div>
+      }
+    }
+
+    const BASENAME = "/foo"
+    const routerProps = {
+      location: '/',
+      action: 'POP',
+      onPush: () => {},
+      onReplace: () => {}
+    }
+
+    it('uses the basename when creating hrefs', () => {
+      expect(renderToString(
+        <StaticRouter {...routerProps} basename={BASENAME}>
+          <Test />
+        </StaticRouter>
+      )).toContain(BASENAME)
     })
   })
 })
