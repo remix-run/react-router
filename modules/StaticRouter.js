@@ -83,7 +83,7 @@ class StaticRouter extends React.Component {
         {typeof children === 'function' ? (
           children({ location, router: this.getChildContext().router })
         ) : (
-          children
+          React.Children.only(children)
         )}
       </MatchProvider>
     )
