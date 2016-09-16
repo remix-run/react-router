@@ -14,7 +14,7 @@ Routes may define [`getChildRoutes`](/docs/API.md#getchildroutespartialnextstate
 
 Coupled with a smart code splitting tool like [webpack](http://webpack.github.io/), a once tiresome architecture is now simple and declarative.
 
-```jsx
+```js
 const CourseRoute = {
   path: 'course/:courseId',
 
@@ -46,4 +46,4 @@ const CourseRoute = {
 
 Now go look at what hacks you have in place to do this. Just kidding, I don't want to make you sad right now.
 
-Run the [huge apps](https://github.com/reactjs/react-router/tree/master/examples/huge-apps) example with your web inspector open and watch code get loaded in as you navigate around the demo.
+Run the [huge apps](https://github.com/ReactTraining/react-router/tree/master/examples/huge-apps) example with your web inspector open and watch code get loaded in as you navigate around the demo.

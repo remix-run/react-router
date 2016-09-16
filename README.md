@@ -13,17 +13,17 @@ React Router keeps your UI in sync with the URL. It has a simple API with powerf
 
 ### Docs & Help
 
-- [Tutorial – do this first!](https://github.com/reactjs/react-router-tutorial)
+- [Tutorial – do this first!](https://github.com/ReactTraining/react-router-tutorial)
 - [Guides and API docs](/docs)
-- [Troubleshooting guide](https://github.com/reactjs/react-router/blob/master/docs/Troubleshooting.md)
+- [Troubleshooting guide](https://github.com/ReactTraining/react-router/blob/master/docs/Troubleshooting.md)
 - [Changelog](/CHANGES.md)
 - [Stack Overflow](http://stackoverflow.com/questions/tagged/react-router)
 - [CodePen boilerplate](http://codepen.io/anon/pen/xwQZdy?editors=001) for bug reports
 
 **Older Versions:**
 
-- 0.13.x - [docs](https://github.com/reactjs/react-router/tree/v0.13.6/doc) / [guides](https://github.com/reactjs/react-router/tree/v0.13.6/docs/guides) / [code](https://github.com/reactjs/react-router/tree/v0.13.6) / [upgrade guide](https://github.com/reactjs/react-router/blob/master/upgrade-guides/v1.0.0.md)
-- 1.0.x - [docs](https://github.com/reactjs/react-router/tree/1.0.x/docs) / [code](https://github.com/reactjs/react-router/tree/1.0.x) / [upgrade guide](https://github.com/reactjs/react-router/blob/master/upgrade-guides/v2.0.0.md)
+- 0.13.x - [docs](https://github.com/ReactTraining/react-router/tree/v0.13.6/doc) / [guides](https://github.com/ReactTraining/react-router/tree/v0.13.6/docs/guides) / [code](https://github.com/ReactTraining/react-router/tree/v0.13.6) / [upgrade guide](/upgrade-guides/v1.0.0.md)
+- 1.0.x - [docs](https://github.com/ReactTraining/react-router/tree/1.0.x/docs) / [code](https://github.com/ReactTraining/react-router/tree/1.0.x) / [upgrade guide](/upgrade-guides/v2.0.0.md)
 
 For questions and support, please visit [our channel on Reactiflux](https://discord.gg/0ZcbPKXt5bYaNQ46) or [Stack Overflow](http://stackoverflow.com/questions/tagged/react-router).
 
@@ -49,10 +49,10 @@ var Route = require('react-router').Route
 var Link = require('react-router').Link
 ```
 
-The UMD build is also available on [npmcdn](https://npmcdn.com):
+The UMD build is also available on [unpkg](https://unpkg.com):
 
 ```html
-<script src="https://npmcdn.com/react-router/umd/ReactRouter.min.js"></script>
+<script src="https://unpkg.com/react-router/umd/ReactRouter.min.js"></script>
 ```
 
 You can find the library on `window.ReactRouter`.
@@ -127,7 +127,7 @@ See more in the [Introduction](/docs/Introduction.md), [Guides](/docs/guides/REA
 
 ### Versioning and Stability
 
-We want React Router to be a stable dependency that’s easy to keep current. We follow the same versioning as React.js itself: [React Versioning Scheme](https://facebook.github.io/react/blog/2016/02/19/new-versioning-scheme.html).
+We want React Router to be a stable dependency that’s easy to keep current. We take the same approach to versioning as React.js itself: [React Versioning Scheme](https://facebook.github.io/react/blog/2016/02/19/new-versioning-scheme.html).
 
 ### Thanks
 
@@ -138,14 +138,14 @@ React Router was initially inspired by Ember's fantastic router. Many thanks to 
 
 Also, thanks to [BrowserStack](https://www.browserstack.com/) for providing the infrastructure that allows us to run our build in real browsers.
 
-[build-badge]: https://img.shields.io/travis/reactjs/react-router/master.svg?style=flat-square
-[build]: https://travis-ci.org/reactjs/react-router
+[build-badge]: https://img.shields.io/travis/ReactTraining/react-router/master.svg?style=flat-square
+[build]: https://travis-ci.org/ReactTraining/react-router
 
 [npm-badge]: https://img.shields.io/npm/v/react-router.svg?style=flat-square
 [npm]: https://www.npmjs.org/package/react-router
 
-[codecov-badge]: https://img.shields.io/codecov/c/github/reactjs/react-router/master.svg?style=flat-square
-[codecov]: https://codecov.io/gh/reactjs/react-router
+[codecov-badge]: https://img.shields.io/codecov/c/github/ReactTraining/react-router/master.svg?style=flat-square
+[codecov]: https://codecov.io/gh/ReactTraining/react-router
 
 [discord-badge]: https://img.shields.io/badge/Discord-join%20chat%20%E2%86%92-738bd7.svg?style=flat-square
 [discord]: https://discord.gg/0ZcbPKXt5bYaNQ46

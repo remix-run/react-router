@@ -6,8 +6,8 @@ Have a usage question?
 The issue tracker isn't the best place for usage questions. This format is not well-suited for Q&A, and questions here don't have as much visibility as they do elsewhere. Before you ask a question, here are some resources to get help first:
 
 - Do the tutorial: https://github.com/reactjs/react-router-tutorial
-- Read the docs: https://github.com/reactjs/react-router/tree/latest/docs
-- Explore examples: https://github.com/reactjs/react-router/tree/latest/examples
+- Read the docs: https://github.com/ReactTraining/react-router/tree/latest/docs
+- Explore examples: https://github.com/ReactTraining/react-router/tree/latest/examples
 - Look for/ask questions on stack overflow: https://stackoverflow.com/questions/ask?tags=react-router
 - Ask in chat: https://discord.gg/0ZcbPKXt5bYaNQ46
 
@@ -34,4 +34,3 @@ http://jsbin.com/sacerobuxi/edit?html,js,output
 ## Expected Behavior
 
 ## Actual Behavior
-

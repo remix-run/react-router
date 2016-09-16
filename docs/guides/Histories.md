@@ -1,6 +1,6 @@
 # Histories
 
-React Router is built with [history](https://github.com/reactjs/history).
+React Router is built with [history](https://github.com/mjackson/history).
 In a nutshell, a history knows how to listen to the browser's address
 bar for changes and parses the URL into a `location` object that the
 router can use to match routes and render the correct set of components.
@@ -15,14 +15,14 @@ consumption with React Router.
 
 You import them from the React Router package:
 
-```jsx
+```js
 // JavaScript module import
 import { browserHistory } from 'react-router'
 ```
 
 Then pass them into your `<Router>`:
 
-```jsx
+```js
 render(
   <Router history={browserHistory} routes={routes} />,
   document.getElementById('app')
@@ -38,7 +38,7 @@ Your server must be ready to handle real URLs. When the app first loads at `/` i
 
 An express app might look like this:
 
-```jsx
+```js
 const express = require('express')
 const path = require('path')
 const port = process.env.PORT || 8080
@@ -104,7 +104,7 @@ Memory history doesn't manipulate or read from the address bar. This is how we i
 It's a bit different than the other two histories because you have to
 create one, it is this way to facilitate testing:
 
-```jsx
+```js
 const history = createMemoryHistory(location)
 ```
 
@@ -113,7 +113,7 @@ const history = createMemoryHistory(location)
 Putting this all together, if we wanted to use the HTML5 history API for our
 app, the client entry point would look like:
 
-```jsx
+```js
 import React from 'react'
 import { render } from 'react-dom'
 import { browserHistory, Router, Route, IndexRoute } from 'react-router'
@@ -149,7 +149,7 @@ factory with the [useQueries](https://github.com/ReactTraining/history/blob/mast
 
 Defining a basename:
 
-```jsx
+```js
 import { useRouterHistory } from 'react-router'
 import { createHistory } from 'history'
 
@@ -162,7 +162,7 @@ Using the
 [useBeforeUnload](https://github.com/mjackson/history/blob/master/docs/ConfirmingNavigation.md)
 enhancer:
 
-```jsx
+```js
 import { useRouterHistory } from 'react-router'
 import { createHistory, useBeforeUnload } from 'history'
 
@@ -172,4 +172,3 @@ history.listenBeforeUnload(function () {
   return 'Are you sure you want to leave this page?'
 })
 ```
-

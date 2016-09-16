@@ -2,7 +2,7 @@
 
 A [route configuration](/docs/Glossary.md#routeconfig) is basically a set of instructions that tell a router how to try to [match the URL](RouteMatching.md) and what code to run when it does. To illustrate some of the features available in your route config, let's expand on the simple app from [the introduction](/docs/Introduction.md#adding-more-ui).
 
-```jsx
+```js
 import React from 'react'
 import { render } from 'react-dom'
 import { Router, Route, Link } from 'react-router'
@@ -70,7 +70,7 @@ URL                     | Components
 
 Imagine we'd like to render another component inside of `App` when the URL is `/`. Currently, `this.props.children` inside of `App`'s `render` method is `undefined` in this case. We can use an [`<IndexRoute>`](/docs/API.md#indexroute) to specify a "default" page.
 
-```jsx
+```js
 import { IndexRoute } from 'react-router'
 
 const Dashboard = React.createClass({
@@ -108,7 +108,7 @@ URL                     | Components
 
 It would be nice if we could remove the `/inbox` segment from the `/inbox/messages/:id` URL pattern, but still render `Message` nested inside the `App -> Inbox` UI. Pathless routes let us do exactly that.
 
-```jsx
+```js
 render((
   <Router>
     <Route path="/" component={App}>
@@ -142,7 +142,7 @@ Wait a minute ... we just changed a URL! [That's not cool](http://www.w3.org/Pro
 
 Not to worry. We can use a [`<Redirect>`](/docs/API.md#redirect) to make sure that URL still works!
 
-```jsx
+```js
 import { Redirect } from 'react-router'
 
 render((
@@ -168,7 +168,7 @@ Now when someone clicks on that link to `/inbox/messages/5` they'll automaticall
 
 ### Enter and Leave Hooks
 
-[Route](/docs/Glossary.md#route)s may also define [`onEnter`](/docs/Glossary.md#enterhook) and [`onLeave`](/docs/Glossary.md#leavehook) hooks that are invoked once a transition has been [confirmed](/docs/guides/ConfirmingNavigation.md). These hooks are useful for various things like [requiring auth](https://github.com/reactjs/react-router/tree/master/examples/auth-flow) when a route is entered and saving stuff to persistent storage before a route unmounts.
+[Route](/docs/Glossary.md#route)s may also define [`onEnter`](/docs/Glossary.md#enterhook) and [`onLeave`](/docs/Glossary.md#leavehook) hooks that are invoked once a transition has been [confirmed](/docs/guides/ConfirmingNavigation.md). These hooks are useful for various things like [requiring auth](https://github.com/ReactTraining/react-router/tree/master/examples/auth-flow) when a route is entered and saving stuff to persistent storage before a route unmounts.
 
 During a transition, [`onLeave` hooks](/docs/Glossary.md#leavehook) run first on all routes we are leaving, starting with the leaf route on up to the first common ancestor route. Next, [`onEnter` hooks](/docs/Glossary.md#enterhook) run starting with the first parent route we're entering down to the leaf route.
 
@@ -186,7 +186,7 @@ The `<Redirect>` configuration helper is not available when using plain routes, 
 
 The route config we've discussed up to this point could also be specified like this:
 
-```jsx
+```js
 const routes = {
   path: '/',
   component: App,

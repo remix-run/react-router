@@ -5,6 +5,7 @@ import Router from '../Router'
 import Route from '../Route'
 import createMemoryHistory from '../createMemoryHistory'
 import applyMiddleware from '../applyRouterMiddleware'
+import shouldWarn from './shouldWarn'
 
 const FOO_ROOT_CONTAINER_TEXT = 'FOO ROOT CONTAINER'
 const BAR_ROOT_CONTAINER_TEXT = 'BAR ROOT CONTAINER'
@@ -141,4 +142,14 @@ describe('applyMiddleware', () => {
     })
   })
 
+  it('should warn on invalid middleware', () => {
+    shouldWarn('at index 0 does not appear to be a valid')
+    shouldWarn('at index 2 does not appear to be a valid')
+
+    applyMiddleware(
+      {},
+      { renderRouterContext: () => {} },
+      {}
+    )
+  })
 })

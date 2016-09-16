@@ -53,7 +53,7 @@ const Link = React.createClass({
   },
 
   propTypes: {
-    to: oneOfType([ string, object, func ]).isRequired,
+    to: oneOfType([ string, object, func ]),
     query: object,
     hash: string,
     state: object,
@@ -104,6 +104,9 @@ const Link = React.createClass({
     const { router } = this.context
 
     if (router) {
+      // If user does not specify a `to` prop, return an empty anchor tag.
+      if (to == null) { return <a {...props} /> }
+
       const toLocation = resolveToLocation(to, router)
       props.href = router.createHref(toLocation)
 

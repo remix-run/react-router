@@ -16,4 +16,4 @@ const Dashboard = React.createClass({
   }
 })
 
-export default Dashboard
+module.exports = Dashboard

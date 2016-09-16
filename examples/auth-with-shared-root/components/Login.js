@@ -44,4 +44,4 @@ const Login = React.createClass({
 
 })
 
-export default withRouter(Login)
+module.exports = withRouter(Login)

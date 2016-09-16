@@ -1,3 +1,4 @@
+import { REPLACE } from 'history/lib/Actions'
 import invariant from 'invariant'
 
 import createMemoryHistory from './createMemoryHistory'
@@ -45,7 +46,11 @@ function match({ history, routes, location, ...options }, callback) {
       }
     }
 
-    callback(error, redirectLocation, renderProps)
+    callback(
+      error,
+      redirectLocation && history.createLocation(redirectLocation, REPLACE),
+      renderProps
+    )
   })
 }
 

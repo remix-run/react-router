@@ -17,7 +17,7 @@ A route path is [a string pattern](/docs/Glossary.md#routepattern) that is used 
   - `*` – Matches all characters (non-greedy) up to the next character in the pattern, or to the end of the URL if there is none, and creates a `splat` [param](/docs/Glossary.md#params)
   - `**` - Matches all characters (greedy) until the next `/`, `?`, or `#` and creates a `splat` [param](/docs/Glossary.md#params)
 
-```jsx
+```js
 <Route path="/hello/:name">         // matches /hello/michael and /hello/ryan
 <Route path="/hello(/:name)">       // matches /hello, /hello/michael, and /hello/ryan
 <Route path="/files/*.*">           // matches /files/hello.jpg and /files/hello.html
@@ -29,7 +29,7 @@ If a route uses a relative `path`, it builds upon the accumulated `path` of its 
 ### Precedence
 Finally, the routing algorithm attempts to match routes in the order they are defined, top to bottom. So, when you have two sibling routes you should be sure the first doesn't match all possible `path`s that can be matched by the later sibling. For example, **don't** do this:
 
-```jsx
+```js
 <Route path="/comments" ... />
 <Redirect from="/comments" ... />
 ```

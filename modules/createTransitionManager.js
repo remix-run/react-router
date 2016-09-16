@@ -28,10 +28,6 @@ export default function createTransitionManager(history, routes) {
     )
   }
 
-  function createLocationFromRedirectInfo(location) {
-    return history.createLocation(location, REPLACE)
-  }
-
   let partialNextState
 
   function match(location, callback) {
@@ -89,7 +85,7 @@ export default function createTransitionManager(history, routes) {
 
     function handleErrorOrRedirect(error, redirectInfo) {
       if (error) callback(error)
-      else callback(null, createLocationFromRedirectInfo(redirectInfo))
+      else callback(null, redirectInfo)
     }
   }
 
@@ -224,7 +220,7 @@ export default function createTransitionManager(history, routes) {
           if (error) {
             listener(error)
           } else if (redirectLocation) {
-            history.transitionTo(redirectLocation)
+            history.replace(redirectLocation)
           } else if (nextState) {
             listener(null, nextState)
           } else {

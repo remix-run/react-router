@@ -4,7 +4,7 @@
   - [`<Router>`](#router)
   - [`<Link>`](#link)
   - [`<IndexLink>`](#indexlink)
-  - [`withRouter`](#withroutercomponent)
+  - [`withRouter`](#withroutercomponent-options)
   - [`<RouterContext>`](#routercontext)
     - [`context.router`](#contextrouter)
 
@@ -46,7 +46,7 @@ Alias for `children`.
 ##### `history`
 The history the router should listen to. Typically `browserHistory` or `hashHistory`.
 
-```jsx
+```js
 import { browserHistory } from 'react-router'
 ReactDOM.render(<Router history={browserHistory} />, el)
 ```
@@ -54,7 +54,7 @@ ReactDOM.render(<Router history={browserHistory} />, el)
 ##### `createElement(Component, props)`
 When the router is ready to render a branch of route components, it will use this function to create the elements. You may want to take control of creating the elements when you're using some sort of data abstraction, like setting up subscriptions to stores, or passing in some sort of application module to each component via props.
 
-```jsx
+```js
 <Router createElement={createElement} />
 
 // default behavior
@@ -94,7 +94,7 @@ A `<Link>` can know when the route it links to is active and automatically apply
 
 #### Props
 ##### `to`
-A [location descriptor](https://github.com/ReactTraining/history/blob/master/docs/Glossary.md#locationdescriptor) or a function that takes the current location and returns a location descriptor. This location descriptor is usually a string or an object, with the following semantics:
+A [location descriptor](/docs/Glossary.md#locationdescriptor). Usually this is a string or an object, with the following semantics:
 
 * If it's a string it represents the absolute path to link to, e.g. `/users/123` (relative paths are not supported).
 * If it's an object it can have four keys:
@@ -102,6 +102,7 @@ A [location descriptor](https://github.com/ReactTraining/history/blob/master/doc
   * `query`: An object of key:value pairs to be stringified.
   * `hash`: A hash to put in the URL, e.g. `#a-hash`.
   * `state`: State to persist to the `location`.
+* If it is not specified, an anchor tag without an `href` attribute will be rendered.
 
 _Note: React Router currently does not manage scroll position, and will not scroll to the element corresponding to `hash`._
 
@@ -140,7 +141,7 @@ You can also pass props you'd like to be on the `<a>` such as a `title`, `id`, `
 #### Example
 Given a route like `<Route path="/users/:userId" />`:
 
-```jsx
+```js
 <Link to={`/users/${user.id}`} activeClassName="active">{user.name}</Link>
 // becomes one of these depending on your History and if the route is
 // active
@@ -157,8 +158,22 @@ Given a route like `<Route path="/users/:userId" />`:
 ### `<IndexLink>`
 An `<IndexLink>` is like a [`<Link>`](#link), except it is only active when the current route is exactly the linked route. It is equivalent to `<Link>` with the `onlyActiveOnIndex` prop set.
 
-### `withRouter(component)`
-A HoC (higher-order component) that wraps another component to provide `props.router`, `props.params`, `props.location`, and `props.routes`. Pass in your component and it will return the wrapped component.
+### `withRouter(Component, [options])`
+A HoC (higher-order component) that wraps another component to provide `props.router`. Pass in your component and it will return the wrapped component.
+
+You can explicit specify `router` as a prop to the wrapper component to override the router object from context.
+
+#### Options
+
+##### `withRef`
+If `true`, the wrapper component attaches a ref to the wrapped component, which can then be accessed via `getWrappedInstance`.
+
+```js
+const WrapperComponent = withRouter(MyComponent, { withRef: true })
+
+// Given a `wrapperInstance` that is of type `WrapperComponent`:
+const myInstance = wrapperInstance.getWrappedInstance()
+```
 
 ### `<RouterContext>`
 A `<RouterContext>` renders the component tree for a given router state. Its used by `<Router>` but also useful for server rendering and integrating in brownfield development.
@@ -172,7 +187,7 @@ Contains data and methods relevant to routing. Most useful for imperatively tran
 ##### `push(pathOrLoc)`
 Transitions to a new URL, adding a new entry in the browser history.
 
-```jsx
+```js
 router.push('/users/12')
 
 // or with a location descriptor object
@@ -242,9 +257,9 @@ If left undefined, the router will try to match the child routes.
 A single component to be rendered when the route matches the URL. It can
 be rendered by the parent route component with `this.props.children`.
 
-```jsx
+```js
 const routes = (
-  <Route component={App}>
+  <Route path="/" component={App}>
     <Route path="groups" component={Groups} />
     <Route path="users" component={Users} />
   </Route>
@@ -265,13 +280,13 @@ class App extends React.Component {
 ##### `components`
 Routes can define one or more named components as an object of `[name]: component` pairs to be rendered when the path matches the URL. They can be rendered by the parent route component with `this.props[name]`.
 
-```jsx
+```js
 // Think of it outside the context of the router - if you had pluggable
 // portions of your `render`, you might do it like this:
 // <App main={<Users />} sidebar={<UsersSidebar />} />
 
 const routes = (
-  <Route component={App}>
+  <Route path="/" component={App}>
     <Route path="groups" components={{main: Groups, sidebar: GroupsSidebar}} />
     <Route path="users" components={{main: Users, sidebar: UsersSidebar}}>
       <Route path=":userId" component={Profile} />
@@ -316,7 +331,7 @@ Same as `component` but asynchronous, useful for code-splitting.
 ###### `callback` signature
 `cb(err, component)`
 
-```jsx
+```js
 <Route path="courses/:courseId" getComponent={(nextState, cb) => {
   // do asynchronous stuff to find the components
   cb(null, Course)
@@ -330,7 +345,7 @@ code-splitting.
 ###### `callback` signature
 `cb(err, components)`
 
-```jsx
+```js
 <Route path="courses/:courseId" getComponents={(nextState, cb) => {
   // do asynchronous stuff to find the components
   cb(null, {sidebar: CourseSidebar, content: Course})
@@ -348,7 +363,7 @@ If `callback` is listed as a 3rd argument, this hook will run asynchronously, an
 ###### `callback` signature
 `cb(err)`
 
-```jsx
+```js
 const userIsInATeam = (nextState, replace, callback) => {
   fetch(...)
     .then(response = response.json())
@@ -389,7 +404,7 @@ Same as `childRoutes` but asynchronous and receives `partialNextState`. Useful f
 ###### `callback` signature
 `cb(err, routesArray)`
 
-```jsx
+```js
 let myRoute = {
   path: 'course/:courseId',
   childRoutes: [
@@ -436,7 +451,7 @@ Same as `indexRoute`, but asynchronous and receives `partialNextState`. As with 
 ###### `callback` signature
 `cb(err, route)`
 
-```jsx
+```js
 // For example:
 let myIndexRoute = {
   component: MyIndex
@@ -472,7 +487,7 @@ The path you want to redirect to.
 ##### `query`
 By default, the query parameters will just pass through but you can specify them if you need to.
 
-```jsx
+```js
 // Say we want to change from `/profile/123` to `/about/123`
 // and redirect `/get-in-touch` to `/contact`
 <Route component={App}>
@@ -484,7 +499,7 @@ By default, the query parameters will just pass through but you can specify them
 
 Note that the `<Redirect>` can be placed anywhere in the route hierarchy, though [normal precedence](/docs/guides/RouteMatching.md#precedence) rules apply. If you'd prefer the redirects to be next to their respective routes, the `from` path will match the same as a regular route `path`.
 
-```jsx
+```js
 <Route path="course/:courseId">
   <Route path="dashboard" />
   {/* /course/123/home -> /course/123/dashboard */}
@@ -520,7 +535,7 @@ A route's component is rendered when that route matches the URL. The router will
 ### Injected Props
 
 #### `location`
-The current [location](https://github.com/reactjs/history/blob/master/docs/Location.md).
+The current [location](https://github.com/mjackson/history/blob/v2.x/docs/Location.md).
 
 #### `params`
 The dynamic segments of the URL.
@@ -532,13 +547,13 @@ The route that rendered this component.
 Contains methods relevant to routing. Most useful for imperatively transitioning around the application.
 
 #### `routeParams`
-A subset of `this.props.params` that were directly specified in this component's route. For example, if the route's path is `users/:userId` and the URL is `/users/123/portfolios/345` then `this.props.routeParams` will be `{userId: '123'}`, and `this.props.params` will be `{userId: '123', portfolioId: 345}`.
+A subset of `this.props.params` that were directly specified in this component's route. For example, if the route's path is `users/:userId` and the URL is `/users/123/portfolios/345` then `this.props.routeParams` will be `{userId: '123'}`, and `this.props.params` will be `{userId: '123', portfolioId: '345'}`.
 
 #### `children`
 The matched child route element to be rendered. If the route has [named components](/docs/API.md#named-components) then this will be undefined, and the components will instead be available as direct properties on `this.props`.
 
 ##### Example
-```jsx
+```js
 render((
   <Router>
     <Route path="/" component={App}>
@@ -564,7 +579,7 @@ class App extends React.Component {
 When a route has one or more named components, the child elements are available by name on `this.props`. In this case `this.props.children` will be undefined. All route components can participate in the nesting.
 
 #### Example
-```jsx
+```js
 render((
   <Router>
     <Route path="/" component={App}>
@@ -622,7 +637,7 @@ For more details, please see the [histories guide](/docs/guides/Histories.md).
 `hashHistory` uses URL hashes, along with a query key to keep track of state. `hashHistory` requires no additional server configuration, but is generally less preferred than `browserHistory`.
 
 
-### `createMemoryHistory(options)`
+### `createMemoryHistory([options])`
 `createMemoryHistory` creates an in-memory `history` object that does not interact with the browser URL. This is useful for when you need to customize the `history` object used for server-side rendering, for automated testing, or for when you do not want to manipulate the browser URL, such as when your application is embedded in an `<iframe>`.
 
 
@@ -636,7 +651,7 @@ and
 enhancers from `history`
 
 #### Example
-```jsx
+```js
 import createHashHistory from 'history/lib/createHashHistory'
 const history = useRouterHistory(createHashHistory)({ queryKey: false })
 ```
@@ -645,7 +660,7 @@ const history = useRouterHistory(createHashHistory)({ queryKey: false })
 
 ## Utilities
 
-### `match({ routes, location, [history], ...options }, cb)`
+### `match({ routes, location, [history], [...options] }, cb)`
 
 This function is to be used for server-side rendering. It matches a set of routes to a location, without rendering, and calls a `callback(error, redirectLocation, renderProps)` when it's done.
 

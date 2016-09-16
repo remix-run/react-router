@@ -27,7 +27,7 @@ This is a glossary of common terms used in the React Router codebase and documen
 
 ## Action
 
-```jsx
+```js
 type Action = 'PUSH' | 'REPLACE' | 'POP';
 ```
 
@@ -39,7 +39,7 @@ An *action* describes the type of change to a URL. Possible values are:
 
 ## Component
 
-```jsx
+```js
 type Component = ReactClass | string;
 ```
 
@@ -47,7 +47,7 @@ A *component* is a React component class or a string (e.g. "div"). Basically, it
 
 ## EnterHook
 
-```jsx
+```js
 type EnterHook = (nextState: RouterState, replace: RedirectFunction, callback?: Function) => any;
 ```
 
@@ -65,15 +65,15 @@ A *hash* is a string that represents the hash portion of the URL. It is synonymo
 
 ## LeaveHook
 
-```jsx
+```js
 type LeaveHook = (prevState: RouterState) => any;
 ```
 
-A *leave hook* is a user-defined function that is called when a route is about to be unmounted. It receives the previous [router state](#routerstate) as its first argument. 
+A *leave hook* is a user-defined function that is called when a route is about to be unmounted. It receives the previous [router state](#routerstate) as its first argument.
 
 ## Location
 
-```jsx
+```js
 type Location = {
   pathname: Pathname;
   search: QueryString;
@@ -89,7 +89,7 @@ A *location* answers two important (philosophical) questions:
   - Where am I?
   - How did I get here?
 
-New locations are typically created each time the URL changes. You can read more about locations in [the `history` docs](https://github.com/reactjs/history/blob/master/docs/Location.md).
+New locations are typically created each time the URL changes. You can read more about locations in [the `history` docs](https://github.com/mjackson/history/blob/v2.x/docs/Location.md).
 
 ### LocationDescriptor
 
@@ -104,11 +104,11 @@ New locations are typically created each time the URL changes. You can read more
 
 A *location descriptor* is the pushable analogue of a location. Locations tell you where you are; you create location descriptors to say where to go.
 
-You can read more about location descriptors in [the `history` docs](https://github.com/reactjs/history/blob/master/docs/Location.md).
+You can read more about location descriptors in [the `history` docs](https://github.com/mjackson/history/blob/v2.x/docs/Location.md).
 
 ## LocationKey
 
-```jsx
+```js
 type LocationKey = string;
 ```
 
@@ -116,7 +116,7 @@ A *location key* is a string that is unique to a particular [`location`](#locati
 
 ## LocationState
 
-```jsx
+```js
 type LocationState = ?Object;
 ```
 
@@ -129,7 +129,7 @@ This type gets its name from the first argument to HTML5's [`pushState`][pushSta
 
 ## Params
 
-```jsx
+```js
 type Params = Object;
 ```
 
@@ -137,7 +137,7 @@ The word *params* refers to an object of key/value pairs that were parsed out of
 
 ## Path
 
-```jsx
+```js
 type Path = Pathname + QueryString + Hash;
 ```
 
@@ -145,7 +145,7 @@ A *path* represents a URL path.
 
 ## Pathname
 
-```jsx
+```js
 type Pathname = string;
 ```
 
@@ -153,7 +153,7 @@ A *pathname* is the portion of a URL that describes a hierarchical path, includi
 
 ## Query
 
-```jsx
+```js
 type Query = Object;
 ```
 
@@ -161,7 +161,7 @@ A *query* is the parsed version of a [query string](#querystring).
 
 ## QueryString
 
-```jsx
+```js
 type QueryString = string;
 ```
 
@@ -169,7 +169,7 @@ A *query string* is the portion of the URL that follows the [pathname](#pathname
 
 ## RedirectFunction
 
-```jsx
+```js
 type RedirectFunction = (state: ?LocationState, pathname: Pathname | Path, query: ?Query) => void;
 ```
 
@@ -177,7 +177,7 @@ A *redirect function* is used in [`onEnter` hooks](#enterhook) to trigger a tran
 
 ## Route
 
-```jsx
+```js
 type Route = {
   component: RouteComponent;
   path: ?RoutePattern;
@@ -192,7 +192,7 @@ It may help to think of a route as an "entry point" into your UI. You don't need
 
 ## RouteComponent
 
-```jsx
+```js
 type RouteComponent = Component;
 ```
 
@@ -208,7 +208,7 @@ Route components should generally be component classes rather than strings. This
 
 ## RouteConfig
 
-```jsx
+```js
 type RouteConfig = Array<Route>;
 ```
 
@@ -216,7 +216,7 @@ A *route config* is an array of [route](#route)s that specifies the order in whi
 
 ## RouteHook
 
-```jsx
+```js
 type RouteHook = (nextLocation?: Location) => any;
 ```
 
@@ -224,7 +224,7 @@ A *route hook* is a function that is used to prevent the user from leaving a rou
 
 ## RoutePattern
 
-```jsx
+```js
 type RoutePattern = string;
 ```
 
@@ -239,7 +239,7 @@ Route patterns are relative to the pattern of the parent route unless they begin
 
 ## Router
 
-```jsx
+```js
 type Router = {
   push(location: LocationDescriptor) => void;
   replace(location: LocationDescriptor) => void;
@@ -255,7 +255,7 @@ A *router* object allows for procedural manipulation of the routing state.
 
 ## RouterState
 
-```jsx
+```js
 type RouterState = {
   location: Location;
   routes: Array<Route>;

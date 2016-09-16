@@ -4,25 +4,17 @@ import { render, unmountComponentAtNode } from 'react-dom'
 import createHistory from '../createMemoryHistory'
 import Route from '../Route'
 import Router from '../Router'
-import { routerShape } from '../PropTypes'
 import withRouter from '../withRouter'
 
 describe('withRouter', function () {
-  class App extends Component {
-    render() {
-      expect(this.props.router).toExist()
-      expect(this.props.params).toExist()
-      expect(this.props.params).toBe(this.props.router.params)
-      expect(this.props.location).toExist()
-      expect(this.props.location).toBe(this.props.router.location)
-      expect(this.props.routes).toExist()
-      expect(this.props.routes).toBe(this.props.router.routes)
-      return <h1>{this.props.router.location.pathname}</h1>
-    }
-  }
-
-  App.propTypes = {
-    router: routerShape.isRequired
+  const routerStub = {
+    push() {},
+    replace() {},
+    go() {},
+    goBack() {},
+    goForward() {},
+    setRouteLeaveHook() {},
+    isActive() {}
   }
 
   let node
@@ -34,19 +26,80 @@ describe('withRouter', function () {
     unmountComponentAtNode(node)
   })
 
-  it('puts router, props and location on context', function (done) {
-    const WrappedApp = withRouter(App)
+  it('should put router on props', function (done) {
+    const MyComponent = withRouter(({ router }) => {
+      expect(router).toExist()
+      done()
+      return null
+    })
+
+    function App() {
+      return <MyComponent /> // Ensure no props are passed explicitly.
+    }
 
     render((
       <Router history={createHistory('/')}>
-        <Route path="/" component={WrappedApp} />
+        <Route path="/" component={App} />
       </Router>
-    ), node, function () {
+    ), node)
+  })
+
+  it('should set displayName', function () {
+    function MyComponent() {
+      return null
+    }
+
+    MyComponent.displayName = 'MyComponent'
+
+    expect(withRouter(MyComponent).displayName)
+      .toEqual('withRouter(MyComponent)')
+  })
+
+  it('should use router prop if specified', function (done) {
+    const MyComponent = withRouter(({ router }) => {
+      expect(router).toBe(routerStub)
       done()
+      return null
     })
+
+    render(<MyComponent router={routerStub} />, node)
+  })
+
+  it('should support withRef', function () {
+    const spy = expect.createSpy()
+
+    class MyComponent extends Component {
+      invokeSpy() {
+        spy()
+      }
+
+      render() {
+        return null
+      }
+    }
+
+    const WrappedComponent = withRouter(MyComponent, { withRef: true })
+
+    const instance = render(<WrappedComponent router={routerStub} />, node)
+    instance.getWrappedInstance().invokeSpy()
+
+    expect(spy).toHaveBeenCalled()
   })
 
   it('updates the context inside static containers', function (done) {
+    class App extends Component {
+      render() {
+        expect(this.props.router).toExist()
+        expect(this.props.params).toExist()
+        expect(this.props.params).toBe(this.props.router.params)
+        expect(this.props.location).toExist()
+        expect(this.props.location).toBe(this.props.router.location)
+        expect(this.props.routes).toExist()
+        expect(this.props.routes).toBe(this.props.router.routes)
+        return <h1>{this.props.router.location.pathname}</h1>
+      }
+    }
+
     const WrappedApp = withRouter(App)
 
     class StaticContainer extends Component {

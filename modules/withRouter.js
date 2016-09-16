@@ -1,3 +1,4 @@
+import invariant from 'invariant'
 import React from 'react'
 import hoistStatics from 'hoist-non-react-statics'
 import { ContextSubscriber } from './ContextUtils'
@@ -7,24 +8,35 @@ function getDisplayName(WrappedComponent) {
   return WrappedComponent.displayName || WrappedComponent.name || 'Component'
 }
 
-export default function withRouter(WrappedComponent) {
+export default function withRouter(WrappedComponent, options) {
+  const withRef = options && options.withRef
+
   const WithRouter = React.createClass({
     mixins: [ ContextSubscriber('router') ],
 
     contextTypes: { router: routerShape },
+    propTypes: { router: routerShape },
+
+    getWrappedInstance() {
+      invariant(
+        withRef,
+        'To access the wrapped instance, you need to specify ' +
+        '`{ withRef: true }` as the second argument of the withRouter() call.'
+      )
+
+      return this.wrappedInstance
+    },
 
     render() {
-      const { router } = this.context
+      const router = this.props.router || this.context.router
       const { params, location, routes } = router
-      return (
-        <WrappedComponent
-          {...this.props}
-          router={router}
-          params={params}
-          location={location}
-          routes={routes}
-        />
-      )
+      const props = { ...this.props, router, params, location, routes }
+
+      if (withRef) {
+        props.ref = (c) => { this.wrappedInstance = c }
+      }
+
+      return <WrappedComponent {...props} />
     }
   })
 

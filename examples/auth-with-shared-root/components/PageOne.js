@@ -6,4 +6,4 @@ const PageOne = React.createClass({
   }
 })
 
-export default PageOne
+module.exports = PageOne
