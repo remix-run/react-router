@@ -8,6 +8,27 @@ Provides declarative, accessible navigation around your application.
 </Link>
 ```
 
+## `children: node | func`
+
+The Link component also accepts a function as children.
+This will allow you to use custom component to render the link
+or use the router with react-native.
+
+Children function parameter is an object with the following keys:
+
+- `isActive`: (bool) whenever the Link is active
+- `location`: the location passed to the Link
+- `href`: (string) with the router url
+- `onClick`: (func) the dom onClick event handler
+- `transition`: (func) a shortcut to router.transitionTo with the "to" setted on the link
+
+```js
+<Link to="/courses">{
+  ({isActive, location, href, onClick, transition}) => 
+    <RaisedButton label="Courses" onClick={onClick} primary={isActive} href={href} />
+}</Link>
+```
+
 ## `to: string | object`
 
 The pathname or location descriptor to link to.
