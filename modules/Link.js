@@ -12,6 +12,7 @@ class Link extends React.Component {
     location: PropTypes.object,
     activeOnlyWhenExact: PropTypes.bool,
     isActive: PropTypes.func,
+    children: PropTypes.oneOfType([PropTypes.node, PropTypes.func]),
 
     // props we have to deal with but aren't necessarily
     // part of the Link API
@@ -59,6 +60,10 @@ class Link extends React.Component {
     }
   }
 
+  handleTransition = () => {
+    this.context.router.transitionTo(this.props.to)
+  }
+
   render() {
     const { router } = this.context
     const {
@@ -80,6 +85,18 @@ class Link extends React.Component {
       createLocationDescriptor(to),
       this.props
     )
+
+    // If children is a function, we are using a Function as Children Component
+    // so useful values will be passed down to the children function.
+    if (typeof rest.children == 'function') {
+      return rest.children({
+        isActive,
+        location,
+        href: router ? router.createHref(to) : to,
+        onClick: this.handleClick,
+        transition: this.handleTransition
+      })
+    }
 
     // Maybe we should use <Match> here? Not sure how the custom `isActive`
     // prop would shake out, also, this check happens a LOT so maybe its good
