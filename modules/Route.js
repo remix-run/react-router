@@ -15,7 +15,8 @@ const { string, func } = React.PropTypes
  * that lead to it are considered "active" and their components are
  * rendered into the DOM, nested in the same order as in the tree.
  */
-const Route = React.createClass({ 
+/* eslint-disable react/require-render-return */
+const Route = React.createClass({
 
   statics: {
     createRouteFromReactElement

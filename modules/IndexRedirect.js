@@ -9,6 +9,7 @@ const { string, object } = React.PropTypes
 /**
  * An <IndexRedirect> is used to redirect from an indexRoute.
  */
+/* eslint-disable react/require-render-return */
 const IndexRedirect = React.createClass({
 
   statics: {

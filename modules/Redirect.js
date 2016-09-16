@@ -13,10 +13,11 @@ const { string, object } = React.PropTypes
  * Redirects are placed alongside routes in the route configuration
  * and are traversed in the same manner.
  */
+/* eslint-disable react/require-render-return */
 const Redirect = React.createClass({
 
   statics: {
-    
+
     createRouteFromReactElement(element) {
       const route = createRouteFromReactElement(element)
 

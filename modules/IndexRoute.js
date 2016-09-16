@@ -10,6 +10,7 @@ const { func } = React.PropTypes
  * An <IndexRoute> is used to specify its parent's <Route indexRoute> in
  * a JSX route config.
  */
+/* eslint-disable react/require-render-return */
 const IndexRoute = React.createClass({
 
   statics: {
@@ -43,7 +44,7 @@ const IndexRoute = React.createClass({
       '<IndexRoute> elements are for router configuration only and should not be rendered'
     )
   }
-  
+
 })
 
 export default IndexRoute
