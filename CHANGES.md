@@ -1,3 +1,21 @@
+## [v3.0.0-beta.1]
+> Sep 16, 2016
+
+- **Feature:** Add Promise support to async route functions ([#3719])
+
+Upstream changes from [v2.7.0] through [v2.8.1]:
+
+- **Bugfix:** Fix redirects that specify `query` ([#3808])
+- **Feature:** Support omitting `to` on `<Link>` ([#3803])
+- **Refactor:** Use `history.replace` instead of `history.transitionTo` for redirects ([#3799])
+- **Feature:** Support `router` as a prop on `withRouter`-wrapped components for overriding the router object from context ([#3729])
+- **Feature:** Add `withRef` option to `withRouter` that enables `getWrappedInstance` ([#3735], [#3740])
+- **Bugfix:** Warn on invalid router middlewares ([#3717])
+
+[v3.0.0-beta.1]: https://github.com/reactjs/react-router/compare/v3.0.0-alpha.3...v3.0.0-beta.1
+[#3719]: https://github.com/reactjs/react-router/pull/3719
+
+
 ## [v3.0.0-alpha.3]
 > Aug 2, 2016
 
