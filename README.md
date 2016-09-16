@@ -169,7 +169,7 @@ you to do things (like data loading) before an initial render.
 We believe very strongly in iterative migration, not rewrites, for
 applications. We are working on a migration guide, but the basic
 strategy is that both versions will be runnable in tandem (due to npm
-limitations, we'll publish the previous version seperately so both can
+limitations, we'll publish the previous version separately so both can
 be installed).
 
 You will be able to take routes one-by-one and migrate them to the new
