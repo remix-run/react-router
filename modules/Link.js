@@ -12,6 +12,7 @@ class Link extends React.Component {
     location: PropTypes.object,
     activeOnlyWhenExact: PropTypes.bool,
     isActive: PropTypes.func,
+    children: PropTypes.oneOfType([PropTypes.node, PropTypes.func]),
 
     // props we have to deal with but aren't necessarily
     // part of the Link API
@@ -55,13 +56,18 @@ class Link extends React.Component {
       isLeftClickEvent(event)
     ) {
       event.preventDefault()
-      this.context.router.transitionTo(this.props.to)
+      this.handleTransition()
     }
+  }
+
+  handleTransition = () => {
+    this.context.router.transitionTo(this.props.to)
   }
 
   render() {
     const { router } = this.context
     const {
+      children,
       to,
       style,
       activeStyle,
@@ -81,6 +87,18 @@ class Link extends React.Component {
       this.props
     )
 
+    // If children is a function, we are using a Function as Children Component
+    // so useful values will be passed down to the children function.
+    if(typeof children == 'function'){
+      return children({
+        isActive,
+        location,
+        href: router ? router.createHref(to) : to,
+        onClick: this.handleClick,
+        transition: this.handleTransition
+      })
+    }
+
     // Maybe we should use <Match> here? Not sure how the custom `isActive`
     // prop would shake out, also, this check happens a LOT so maybe its good
     // to optimize here w/ a faster isActive check, so we'd need to bench mark
@@ -94,7 +112,7 @@ class Link extends React.Component {
         className={isActive ?
           [ className, activeClassName ].join(' ').trim() : className
         }
-      />
+      >{children}</a>
     )
   }
 }

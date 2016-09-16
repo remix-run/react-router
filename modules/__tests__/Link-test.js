@@ -282,4 +282,22 @@ describe('Link', () => {
       expect(a.className).toEqual('active')
     })
   })
+
+  describe('accepts function as children', () => {
+    it('renders the child component with isActive', () => {
+      const div = document.createElement('div')
+      render((
+        <Link
+          to='/foo'
+          location={{ pathname: '/foo/bar' }}
+        >
+        {
+          ({isActive}) => <a className={isActive ? 'active' : ''}>Test!</a>
+        }
+        </Link>
+      ), div)
+      const a = div.querySelector('a')
+      expect(a.className).toEqual('active')
+    })
+  })
 })
