@@ -107,7 +107,7 @@ ecosystem of addons to this stable base.
 We've been pulled a lot of directions with bleeding edge use-cases that
 nobody really has generic answers for: server rendering, code-splitting
 while avoiding waterfalls, anticipating streamed server rendering, loading
-data before rendering anything, etc. We unconciously tried to solve this
+data before rendering anything, etc. We unconsciously tried to solve this
 stuff when all we really want to be doing is keeping rendered UI in sync
 with the url. That's our scope of responsibility.
 
