@@ -56,7 +56,7 @@ class Link extends React.Component {
       isLeftClickEvent(event)
     ) {
       event.preventDefault()
-      this.handleTransition()
+      this.context.router.transitionTo(this.props.to)
     }
   }
 
@@ -89,7 +89,7 @@ class Link extends React.Component {
 
     // If children is a function, we are using a Function as Children Component
     // so useful values will be passed down to the children function.
-    if(typeof children == 'function'){
+    if (typeof children == 'function') {
       return children({
         isActive,
         location,
