@@ -33,7 +33,7 @@ const Example = ({ page }) => (
     flex="1"
     padding={`${PAD}px ${PAD*2}px`}
     height="100%"
-    overflow="hidden"
+    overflow="auto"
   >
     <FadeIn>
       <V height="100%">
@@ -194,4 +194,3 @@ const App = () => (
 )
 
 export default App
-
