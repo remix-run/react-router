@@ -26,6 +26,11 @@ export const EXAMPLES = [
     load: require('bundle?lazy!./examples/Auth'),
     loadSource: require('bundle?lazy!!prismjs?lang=jsx!./.examples/Auth.js')
   },
+  { name: 'Custom Link Component',
+    path: '/custom-link-component',
+    load: require('bundle?lazy!./examples/CustomLinkComponent'),
+    loadSource: require('bundle?lazy!!prismjs?lang=jsx!./.examples/CustomLinkComponent.js')
+  },
   { name: 'Preventing Transitions',
     path: '/preventing-transitions',
     load: require('bundle?lazy!./examples/PreventingTransitions'),
