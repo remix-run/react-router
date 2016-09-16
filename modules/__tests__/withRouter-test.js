@@ -85,4 +85,47 @@ describe('withRouter', function () {
 
     expect(spy).toHaveBeenCalled()
   })
+
+  it('updates the context inside static containers', function (done) {
+    class App extends Component {
+      render() {
+        expect(this.props.router).toExist()
+        expect(this.props.params).toExist()
+        expect(this.props.params).toBe(this.props.router.params)
+        expect(this.props.location).toExist()
+        expect(this.props.location).toBe(this.props.router.location)
+        expect(this.props.routes).toExist()
+        expect(this.props.routes).toBe(this.props.router.routes)
+        return <h1>{this.props.router.location.pathname}</h1>
+      }
+    }
+
+    const WrappedApp = withRouter(App)
+
+    class StaticContainer extends Component {
+      shouldComponentUpdate() {
+        return false
+      }
+
+      render() {
+        return this.props.children
+      }
+    }
+
+    const history = createHistory('/')
+
+    render((
+      <Router history={history}>
+        <Route component={StaticContainer}>
+          <Route path="/" component={WrappedApp} />
+          <Route path="/hello" component={WrappedApp} />
+        </Route>
+      </Router>
+    ), node, function () {
+      expect(node.firstChild.textContent).toEqual('/')
+      history.push('/hello')
+      expect(node.firstChild.textContent).toEqual('/hello')
+      done()
+    })
+  })
 })

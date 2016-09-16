@@ -7,7 +7,6 @@
   - [`withRouter`](#withroutercomponent-options)
   - [`<RouterContext>`](#routercontext)
     - [`context.router`](#contextrouter)
-  - `<RoutingContext>` (deprecated, use `<RouterContext>`)
 
 - [Configuration Components](#configuration-components)
   - [`<Route>`](#route)
@@ -30,12 +29,6 @@
   - [`match()`](#match-routes-location-history-options--cb)
   - [`createRoutes()`](#createroutesroutes)
   - [`PropTypes`](#proptypes)
-  - [`useRoutes()`](#useroutescreatehistory-deprecated) (deprecated)
-
-- [Mixins](#mixins-deprecated) (deprecated)
-  - `Lifecycle` (deprecated)
-  - `History` (deprecated)
-  - `RouteContext` (deprecated)
 
 
 ## Components
@@ -88,10 +81,6 @@ This is primarily for integrating with other libraries that need to participate 
 
 Ensure that you render a `<RouterContext>` at the end of the line, passing all the props passed to `render`.
 
-##### `stringifyQuery(queryObject)` (deprecated)
-
-##### `parseQueryString(queryString)` (deprecated)
-
 
 #### Examples
 Please see the [`examples/`](/examples) directory of the repository for extensive examples of using `<Router>`.
@@ -117,6 +106,23 @@ A [location descriptor](/docs/Glossary.md#locationdescriptor). Usually this is a
 
 _Note: React Router currently does not manage scroll position, and will not scroll to the element corresponding to `hash`._
 
+```jsx
+// String location descriptor.
+<Link to="/hello">
+  Hello
+</Link>
+
+// Object location descriptor.
+<Link to={{ pathname: '/hello', query: { name: 'ryan' } }}>
+  Hello
+</Link>
+
+// Function returning location descriptor.
+<Link to={location => ({ ...location, query: { name: 'ryan' } })}>
+  Hello
+</Link>
+```
+
 ##### `activeClassName`
 The className a `<Link>` receives when its route is active. No active class by default.
 
@@ -131,12 +137,6 @@ If `true`, the `<Link>` will only be active when the current route exactly match
 
 ##### *others*
 You can also pass props you'd like to be on the `<a>` such as a `title`, `id`, `className`, etc.
-
-##### `query` **([deprecated](/upgrade-guides/v2.0.0.md#link-to-onenter-and-isactive-use-location-descriptors) see `to`)**
-
-##### `hash` **([deprecated](/upgrade-guides/v2.0.0.md#link-to-onenter-and-isactive-use-location-descriptors) see `to`)**
-
-##### `state` **([deprecated](/upgrade-guides/v2.0.0.md#link-to-onenter-and-isactive-use-location-descriptors) see `to`)**
 
 #### Example
 Given a route like `<Route path="/users/:userId" />`:
@@ -543,6 +543,9 @@ The dynamic segments of the URL.
 #### `route`
 The route that rendered this component.
 
+#### `router`
+Contains methods relevant to routing. Most useful for imperatively transitioning around the application.
+
 #### `routeParams`
 A subset of `this.props.params` that were directly specified in this component's route. For example, if the route's path is `users/:userId` and the URL is `/users/123/portfolios/345` then `this.props.routeParams` will be `{userId: '123'}`, and `this.props.params` will be `{userId: '123', portfolioId: '345'}`.
 
@@ -571,8 +574,6 @@ class App extends React.Component {
   }
 }
 ```
-
-#### `history` (deprecated)
 
 ### Named Components
 When a route has one or more named components, the child elements are available by name on `this.props`. In this case `this.props.children` will be undefined. All route components can participate in the nesting.
@@ -688,13 +689,3 @@ One or many [`<Route>`](#route)s or [`PlainRoute`](#plainroute)s.
 The following prop types are exported at top level and from `react-router/lib/PropTypes`:
 - `routerShape`: Shape for the `router` object on context
 - `locationShape`: Shape for the `location` object on route component props
-
-Previously, a number of prop types intended for internal use were also exported under `PropTypes`. These are deprecated and should not be used.
-
-
-### `useRoutes(createHistory)` (deprecated)
-
-
-## Mixins (deprecated)
-
-Deprecated, please see the [upgrade guide](/upgrade-guides/v2.0.0.md#mixins-are-deprecated).

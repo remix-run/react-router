@@ -1,5 +1,5 @@
 import { loopAsync } from './AsyncUtils'
-import makeStateWithLocation from './makeStateWithLocation'
+import { isPromise } from './PromiseUtils'
 import { matchPattern } from './PatternUtils'
 import warning from './routerWarning'
 import { createRoutes } from './RouteUtils'
@@ -19,22 +19,22 @@ function getChildRoutes(route, location, paramNames, paramValues, callback) {
     params: createParams(paramNames, paramValues)
   }
 
-  const partialNextStateWithLocation = makeStateWithLocation(
-    partialNextState, location
-  )
-
-  route.getChildRoutes(
-    partialNextStateWithLocation,
-    function (error, childRoutes) {
-      childRoutes = !error && createRoutes(childRoutes)
-      if (sync) {
-        result = [ error, childRoutes ]
-        return
-      }
-
-      callback(error, childRoutes)
+  const childRoutesReturn = route.getChildRoutes(partialNextState, (error, childRoutes) => {
+    childRoutes = !error && createRoutes(childRoutes)
+    if (sync) {
+      result = [ error, childRoutes ]
+      return
     }
-  )
+
+    callback(error, childRoutes)
+  })
+
+  if (isPromise(childRoutesReturn))
+    childRoutesReturn
+      .then(
+        childRoutes => callback(null, createRoutes(childRoutes)),
+        callback
+      )
 
   sync = false
   return result  // Might be undefined.
@@ -49,16 +49,16 @@ function getIndexRoute(route, location, paramNames, paramValues, callback) {
       params: createParams(paramNames, paramValues)
     }
 
-    const partialNextStateWithLocation = makeStateWithLocation(
-      partialNextState, location
-    )
+    const indexRoutesReturn = route.getIndexRoute(partialNextState, (error, indexRoute) => {
+      callback(error, !error && createRoutes(indexRoute)[0])
+    })
 
-    route.getIndexRoute(
-      partialNextStateWithLocation,
-      function (error, indexRoute) {
-        callback(error, !error && createRoutes(indexRoute)[0])
-      }
-    )
+    if (isPromise(indexRoutesReturn))
+      indexRoutesReturn
+        .then(
+          indexRoute => callback(null, createRoutes(indexRoute)[0]),
+          callback
+        )
   } else if (route.childRoutes) {
     const pathless = route.childRoutes.filter(childRoute => !childRoute.path)
 

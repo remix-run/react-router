@@ -1,3 +1,46 @@
+## [v3.0.0-alpha.3]
+> Aug 2, 2016
+
+- **Feature:** Support function `to` prop in `<Link>` ([#3669])
+- **Chore:** Move ES module build to `es/` ([#3670])
+- **Chore:** Add `module` entry point for webpack 2 ([#3672])
+
+[v3.0.0-alpha.3]: https://github.com/reactjs/react-router/compare/v3.0.0-alpha.2...v3.0.0-alpha.3
+[#3669]: https://github.com/reactjs/react-router/pull/3669
+[#3670]: https://github.com/reactjs/react-router/pull/3670
+[#3672]: https://github.com/reactjs/react-router/pull/3672
+
+
+## [v3.0.0-alpha.2]
+> Jul 19, 2016
+
+- **Breaking:** Remove all deprecated functionality as of v2.6.0 ([#3603], [#3646])
+- **Breaking:** Support history v3 instead of history v2 ([#3647])
+- **Feature:** Add `router` to props for route components ([#3486])
+
+[v3.0.0-alpha.2]: https://github.com/reactjs/react-router/compare/v3.0.0-alpha.1...v3.0.0-alpha.2
+[#3486]: https://github.com/reactjs/react-router/pull/3486
+[#3603]: https://github.com/reactjs/react-router/pull/3603
+[#3646]: https://github.com/reactjs/react-router/pull/3646
+[#3647]: https://github.com/reactjs/react-router/pull/3647
+
+
+## [v3.0.0-alpha.1]
+> May 19, 2016
+
+- **Breaking:** Remove all deprecated functionality as of v2.3.0 ([#3340], [#3435])
+- **Breaking/Feature:** Make `<Link>` and `withRouter` update inside static containers ([#3430], [#3443])
+- **Feature:** Add `params`, `location`, and `routes` to props injected by `withRouter` and to properties on `context.router` ([#3444], [#3446])
+
+[v3.0.0-alpha.1]: https://github.com/reactjs/react-router/compare/v2.4.1...v3.0.0-alpha.1
+[#3340]: https://github.com/reactjs/react-router/pull/3340
+[#3430]: https://github.com/reactjs/react-router/pull/3430
+[#3435]: https://github.com/reactjs/react-router/pull/3435
+[#3443]: https://github.com/reactjs/react-router/pull/3443
+[#3444]: https://github.com/reactjs/react-router/pull/3444
+[#3446]: https://github.com/reactjs/react-router/pull/3446
+
+
 ## [v2.8.1]
 > Sep 13, 2016
 

@@ -1,10 +1,9 @@
 import invariant from 'invariant'
 import React from 'react'
 
-import deprecateObjectProperties from './deprecateObjectProperties'
 import getRouteParams from './getRouteParams'
+import { ContextProvider } from './ContextUtils'
 import { isReactChildren } from './RouteUtils'
-import warning from './routerWarning'
 
 const { array, func, object } = React.PropTypes
 
@@ -14,8 +13,9 @@ const { array, func, object } = React.PropTypes
  */
 const RouterContext = React.createClass({
 
+  mixins: [ ContextProvider('router') ],
+
   propTypes: {
-    history: object,
     router: object.isRequired,
     location: object.isRequired,
     routes: array.isRequired,
@@ -31,28 +31,13 @@ const RouterContext = React.createClass({
   },
 
   childContextTypes: {
-    history: object,
-    location: object.isRequired,
     router: object.isRequired
   },
 
   getChildContext() {
-    let { router, history, location } = this.props
-    if (!router) {
-      warning(false, '`<RouterContext>` expects a `router` rather than a `history`')
-
-      router = {
-        ...history,
-        setRouteLeaveHook: history.listenBeforeLeavingRoute
-      }
-      delete router.listenBeforeLeavingRoute
+    return {
+      router: this.props.router
     }
-
-    if (__DEV__) {
-      location = deprecateObjectProperties(location, '`context.location` is deprecated, please use a route component\'s `props.location` instead. http://tiny.cc/router-accessinglocation')
-    }
-
-    return { history, location, router }
   },
 
   createElement(component, props) {
@@ -60,7 +45,7 @@ const RouterContext = React.createClass({
   },
 
   render() {
-    const { history, location, routes, params, components } = this.props
+    const { location, routes, params, components, router } = this.props
     let element = null
 
     if (components) {
@@ -71,10 +56,10 @@ const RouterContext = React.createClass({
         const route = routes[index]
         const routeParams = getRouteParams(route, params)
         const props = {
-          history,
           location,
           params,
           route,
+          router,
           routeParams,
           routes
         }

@@ -12,7 +12,6 @@ const Component = withRouter(
 )
 ```
 
-
 ### Getting the previous location
 
 ```js

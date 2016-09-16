@@ -1,26 +1,17 @@
-import deprecateObjectProperties from './deprecateObjectProperties'
-
-export function createRouterObject(history, transitionManager) {
-  return {
+export function createRouterObject(history, transitionManager, state) {
+  const router = {
     ...history,
     setRouteLeaveHook: transitionManager.listenBeforeLeavingRoute,
     isActive: transitionManager.isActive
   }
+
+  return assignRouterState(router, state)
 }
 
-// deprecated
-export function createRoutingHistory(history, transitionManager) {
-  history = {
-    ...history,
-    ...transitionManager
-  }
+export function assignRouterState(router, { location, params, routes }) {
+  router.location = location
+  router.params = params
+  router.routes = routes
 
-  if (__DEV__) {
-    history = deprecateObjectProperties(
-      history,
-      '`props.history` and `context.history` are deprecated. Please use `context.router`. http://tiny.cc/router-contextchanges'
-    )
-  }
-
-  return history
+  return router
 }

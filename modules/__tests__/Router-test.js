@@ -2,10 +2,8 @@ import expect from 'expect'
 import React, { Component } from 'react'
 import { render, unmountComponentAtNode } from 'react-dom'
 import createHistory from '../createMemoryHistory'
-import { canUseMembrane } from '../deprecateObjectProperties'
 import Route from '../Route'
 import Router from '../Router'
-import shouldWarn from './shouldWarn'
 
 describe('Router', function () {
 
@@ -312,6 +310,12 @@ describe('Router', function () {
       const assertProps = (props) => {
         expect(props.routes).toEqual([ route ])
         expect(props.components).toEqual([ MyComponent ])
+
+        expect(props.params).toEqual({})
+        expect(props.location.pathname).toEqual('/')
+        expect(props.router.params).toEqual({})
+        expect(props.router.location.pathname).toEqual('/')
+
         expect(props.foo).toBe('bar')
         expect(props.render).toNotExist()
         done()
@@ -387,16 +391,10 @@ describe('Router', function () {
       })
     })
 
-    it('should supply location properties to getComponent', function (done) {
-      if (canUseMembrane) {
-        shouldWarn('deprecated')
-      }
-
+    it('should support getComponent returning a Promise', function (done) {
       const Component = () => <div />
-      const getComponent = (location, callback) => {
-        expect(location.pathname).toBe('/')
-        setTimeout(() => callback(null, Component))
-      }
+
+      const getComponent = () => new Promise(resolve => resolve(Component))
 
       render((
         <Router history={createHistory('/')} render={renderSpy}>

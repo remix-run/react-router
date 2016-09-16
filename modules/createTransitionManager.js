@@ -1,3 +1,5 @@
+import { REPLACE } from 'history/lib/Actions'
+
 import warning from './routerWarning'
 import computeChangedRoutes from './computeChangedRoutes'
 import { runEnterHooks, runChangeHooks, runLeaveHooks } from './TransitionUtils'
@@ -18,24 +20,8 @@ export default function createTransitionManager(history, routes) {
 
   // Signature should be (location, indexOnly), but needs to support (path,
   // query, indexOnly)
-  function isActive(
-    location, indexOnlyOrDeprecatedQuery=false, deprecatedIndexOnly=null
-  ) {
-    let indexOnly
-    if (
-      (indexOnlyOrDeprecatedQuery && indexOnlyOrDeprecatedQuery !== true) ||
-      deprecatedIndexOnly !== null
-    ) {
-      warning(
-        false,
-        '`isActive(pathname, query, indexOnly) is deprecated; use `isActive(location, indexOnly)` with a location descriptor instead. http://tiny.cc/router-isActivedeprecated'
-      )
-      location = { pathname: location, query: indexOnlyOrDeprecatedQuery }
-      indexOnly = deprecatedIndexOnly || false
-    } else {
-      location = history.createLocation(location)
-      indexOnly = indexOnlyOrDeprecatedQuery
-    }
+  function isActive(location, indexOnly) {
+    location = history.createLocation(location)
 
     return _isActive(
       location, indexOnly, state.location, state.routes, state.params
@@ -105,17 +91,16 @@ export default function createTransitionManager(history, routes) {
 
   let RouteGuid = 1
 
-  function getRouteID(route, create = true) {
+  function getRouteID(route, create = false) {
     return route.__id__ || create && (route.__id__ = RouteGuid++)
   }
 
   const RouteHooks = Object.create(null)
 
   function getRouteHooksForRoutes(routes) {
-    return routes.reduce(function (hooks, route) {
-      hooks.push.apply(hooks, RouteHooks[getRouteID(route)])
-      return hooks
-    }, [])
+    return routes
+      .map(route => RouteHooks[getRouteID(route)])
+      .filter(hook => hook)
   }
 
   function transitionHook(location, callback) {
@@ -168,7 +153,7 @@ export default function createTransitionManager(history, routes) {
   let unlistenBefore, unlistenBeforeUnload
 
   function removeListenBeforeHooksForRoute(route) {
-    const routeID = getRouteID(route, false)
+    const routeID = getRouteID(route)
     if (!routeID) {
       return
     }
@@ -203,47 +188,21 @@ export default function createTransitionManager(history, routes) {
    * Returns a function that may be used to unbind the listener.
    */
   function listenBeforeLeavingRoute(route, hook) {
-    // TODO: Warn if they register for a route that isn't currently
-    // active. They're probably doing something wrong, like re-creating
-    // route objects on every location change.
-    const routeID = getRouteID(route)
-    let hooks = RouteHooks[routeID]
+    const thereWereNoRouteHooks = !hasAnyProperties(RouteHooks)
+    const routeID = getRouteID(route, true)
 
-    if (!hooks) {
-      let thereWereNoRouteHooks = !hasAnyProperties(RouteHooks)
+    RouteHooks[routeID] = hook
 
-      RouteHooks[routeID] = [ hook ]
+    if (thereWereNoRouteHooks) {
+      // setup transition & beforeunload hooks
+      unlistenBefore = history.listenBefore(transitionHook)
 
-      if (thereWereNoRouteHooks) {
-        // setup transition & beforeunload hooks
-        unlistenBefore = history.listenBefore(transitionHook)
-
-        if (history.listenBeforeUnload)
-          unlistenBeforeUnload = history.listenBeforeUnload(beforeUnloadHook)
-      }
-    } else {
-      if (hooks.indexOf(hook) === -1) {
-        warning(
-          false,
-          'adding multiple leave hooks for the same route is deprecated; manage multiple confirmations in your own code instead'
-        )
-
-        hooks.push(hook)
-      }
+      if (history.listenBeforeUnload)
+        unlistenBeforeUnload = history.listenBeforeUnload(beforeUnloadHook)
     }
 
     return function () {
-      const hooks = RouteHooks[routeID]
-
-      if (hooks) {
-        const newHooks = hooks.filter(item => item !== hook)
-
-        if (newHooks.length === 0) {
-          removeListenBeforeHooksForRoute(route)
-        } else {
-          RouteHooks[routeID] = newHooks
-        }
-      }
+      removeListenBeforeHooksForRoute(route)
     }
   }
 
@@ -253,9 +212,7 @@ export default function createTransitionManager(history, routes) {
    * gracefully handle errors and redirects.
    */
   function listen(listener) {
-    // TODO: Only use a single history listener. Otherwise we'll
-    // end up with multiple concurrent calls to match.
-    return history.listen(function (location) {
+    function historyListener(location) {
       if (state.location === location) {
         listener(null, state)
       } else {
@@ -275,7 +232,22 @@ export default function createTransitionManager(history, routes) {
           }
         })
       }
-    })
+    }
+
+    // TODO: Only use a single history listener. Otherwise we'll end up with
+    // multiple concurrent calls to match.
+
+    // Set up the history listener first in case the initial match redirects.
+    const unsubscribe = history.listen(historyListener)
+
+    if (state.location) {
+      // Picking up on a matchContext.
+      listener(null, state)
+    } else {
+      historyListener(history.getCurrentLocation())
+    }
+
+    return unsubscribe
   }
 
   return {
@@ -285,5 +257,3 @@ export default function createTransitionManager(history, routes) {
     listen
   }
 }
-
-//export default useRoutes

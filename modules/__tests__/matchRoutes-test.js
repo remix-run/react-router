@@ -1,7 +1,6 @@
 import expect from 'expect'
 import { createMemoryHistory } from 'history'
 import React from 'react'
-import { canUseMembrane } from '../deprecateObjectProperties'
 import IndexRoute from '../IndexRoute'
 import matchRoutes from '../matchRoutes'
 import Route from '../Route'
@@ -291,6 +290,34 @@ describe('matchRoutes', function () {
     describeRoutes()
   })
 
+  describe('a Promise-based route config', function () {
+    function makeAsyncRouteConfig(routes) {
+      routes.forEach(function (route) {
+        const { childRoutes, indexRoute } = route
+
+        if (childRoutes) {
+          delete route.childRoutes
+
+          route.getChildRoutes = () => new Promise(resolve => resolve(childRoutes))
+
+          makeAsyncRouteConfig(childRoutes)
+        }
+
+        if (indexRoute) {
+          delete route.indexRoute
+
+          route.getIndexRoute = () => new Promise(resolve => resolve(indexRoute))
+        }
+      })
+    }
+
+    beforeEach(function () {
+      makeAsyncRouteConfig(routes)
+    })
+
+    describeRoutes()
+  })
+
   describe('an asynchronous JSX route config', function () {
     let getChildRoutes, getIndexRoute, jsxRoutes
 
@@ -335,13 +362,6 @@ describe('matchRoutes', function () {
           expect(partialNextState.params).toEqual({ groupId: 'foo' })
           expect(partialNextState.location.pathname).toEqual('/foo/users/5')
 
-          // Only the calls below this point should emit deprecation warnings.
-          if (canUseMembrane) {
-            shouldWarn('deprecated')
-          }
-
-          expect(partialNextState.pathname).toEqual('/foo/users/5')
-
           done()
         }
       )
@@ -357,13 +377,6 @@ describe('matchRoutes', function () {
           const partialNextState = getIndexRoute.calls[0].arguments[0]
           expect(partialNextState.params).toEqual({ groupId: 'bar' })
           expect(partialNextState.location.pathname).toEqual('/bar/users')
-
-          // Only the calls below this point should emit deprecation warnings.
-          if (canUseMembrane) {
-            shouldWarn('deprecated')
-          }
-
-          expect(partialNextState.pathname).toEqual('/bar/users')
 
           done()
         }

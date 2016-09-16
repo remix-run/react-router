@@ -152,6 +152,17 @@ describe('server rendering', function () {
     })
   })
 
+  it('includes params and location in the props', function (done) {
+    match({ routes, location: '/dashboard' }, function (error, redirectLocation, renderProps) {
+      expect(renderProps.params).toEqual({})
+      expect(renderProps.router.params).toEqual({})
+
+      expect(renderProps.location.pathname).toEqual('/dashboard')
+      expect(renderProps.router.location.pathname).toEqual('/dashboard')
+      done()
+    })
+  })
+
   it('accepts a basename option', function (done) {
     match({ routes, location: '/dashboard', basename: '/nasebame' }, function (error, redirectLocation, renderProps) {
       const string = renderToString(
@@ -172,13 +183,13 @@ describe('server rendering', function () {
     })
   })
 
-  describe('server/client consistency', function () {
+  describe('server/client consistency', () => {
     // Just render to static markup here to avoid having to normalize markup.
 
-    it('should match for synchronous route', function () {
+    it('should match for synchronous route', () => {
       let serverString
 
-      match({ routes, location: '/dashboard' }, function (error, redirectLocation, renderProps) {
+      match({ routes, location: '/dashboard' }, (error, redirectLocation, renderProps) => {
         serverString = renderToStaticMarkup(
           <RouterContext {...renderProps} />
         )
@@ -191,13 +202,13 @@ describe('server rendering', function () {
       expect(browserString).toEqual(serverString)
     })
 
-    it('should match for asynchronous route', function (done) {
-      match({ routes, location: '/async' }, function (error, redirectLocation, renderProps) {
+    it('should match for asynchronous route', done => {
+      match({ routes, location: '/async' }, (error, redirectLocation, renderProps) => {
         const serverString = renderToStaticMarkup(
           <RouterContext {...renderProps} />
         )
 
-        match({ history: createMemoryHistory('/async'), routes }, function (error, redirectLocation, renderProps) {
+        match({ history: createMemoryHistory('/async'), routes }, (error, redirectLocation, renderProps) => {
           const browserString = renderToStaticMarkup(
             <Router {...renderProps} />
           )
