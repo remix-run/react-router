@@ -67,7 +67,6 @@ class Link extends React.Component {
   render() {
     const { router } = this.context
     const {
-      children,
       to,
       style,
       activeStyle,
@@ -89,8 +88,8 @@ class Link extends React.Component {
 
     // If children is a function, we are using a Function as Children Component
     // so useful values will be passed down to the children function.
-    if (typeof children == 'function') {
-      return children({
+    if (typeof rest.children == 'function') {
+      return rest.children({
         isActive,
         location,
         href: router ? router.createHref(to) : to,
@@ -112,7 +111,7 @@ class Link extends React.Component {
         className={isActive ?
           [ className, activeClassName ].join(' ').trim() : className
         }
-      >{children}</a>
+      />
     )
   }
 }
