@@ -175,6 +175,16 @@ be installed).
 You will be able to take routes one-by-one and migrate them to the new
 API. Additionally, the config addon mentioned above may help out here.
 
+### What the heck happened to v3?
+
+It's in beta, will be released shortly. It's basically just v2 but w/o
+any warnings of deprecated 1.0 API.
+
+### Do I have to upgrade?
+
+No. Leave your package.json at v2/3 and move on with your life. We'll
+be merging bug fixes for v2/3 indefinitely.
+
 ### We're Pumped!
 
 We've received a ton of great feedback from people we really admire in
