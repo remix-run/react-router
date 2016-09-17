@@ -159,10 +159,8 @@ See below
 
 ### The route config is important to the ecosystem, now what?
 
-We will be providing a package that will prescribe a route config for
-others to build on. It will also provide a function that will match a
-location to the route config and return the routes that match, allowing
-you to do things (like data loading) before an initial render.
+We have started an addon that we hope people who are interested in this
+will take ownership of here: https://github.com/ReactTraining/react-router-addons-routes
 
 ### What about upgrading?
 
