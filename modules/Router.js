@@ -16,8 +16,9 @@ function isDeprecatedHistory(history) {
 
 /* istanbul ignore next: sanity check */
 function isUnsupportedHistory(history) {
-  // v3 histories expose getCurrentLocation, but aren't currently supported.
-  return history && history.getCurrentLocation
+  // v3 - v4.0.0-1 histories expose getCurrentLocation and >v4.0.0-1 histories
+  // expose location, but aren't currently supported
+  return history && (history.getCurrentLocation || history.location)
 }
 
 const { func, object } = React.PropTypes
@@ -104,8 +105,8 @@ const Router = React.createClass({
 
     invariant(
       !isUnsupportedHistory(history),
-      'You have provided a history object created with history v3.x. ' +
-      'This version of React Router is not compatible with v3 history ' +
+      'You have provided a history object created with history v>=3 ' +
+      'This version of React Router is not compatible with v>=3 history ' +
       'objects. Please use history v2.x instead.'
     )
 
