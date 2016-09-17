@@ -8,6 +8,11 @@
     "Michael Jackson",
     "Ryan Florence"
   ],
+  "files": [
+    "*.js",
+    "*.md",
+    "umd"
+  ],
   "scripts": {
     "start": "echo 'Make sure to `cd website && npm install`' && cd website && npm run dev",
     "release": "node ./scripts/release.js",
