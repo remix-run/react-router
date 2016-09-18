@@ -1,11 +1,10 @@
 import React from 'react'
 import { TransitionMotion, spring } from 'react-motion'
+import Router from 'react-router/BrowserRouter'
 import Match from 'react-router/Match'
 import Miss from 'react-router/Miss'
 import Link from 'react-router/Link'
 import Redirect from 'react-router/Redirect'
-import Router from 'react-router/BrowserRouter'
-
 
 const AnimationExample = () => (
   <Router>
@@ -28,10 +27,9 @@ const AnimationExample = () => (
   </Router>
 )
 
-
-////////////////////////////////////////////////////////////
 const MatchWithFade = ({ component:Component, ...rest }) => {
   const willLeave = () => ({ zIndex: 1, opacity: spring(0) })
+
   return (
     <Match {...rest} children={({ matched, ...props }) => (
       <TransitionMotion
@@ -59,8 +57,6 @@ const MatchWithFade = ({ component:Component, ...rest }) => {
   )
 }
 
-
-////////////////////////////////////////////////////////////
 const NavLink = (props) => (
   <li style={styles.navItem}>
     <Link {...props} style={{ color: 'inherit' }}/>

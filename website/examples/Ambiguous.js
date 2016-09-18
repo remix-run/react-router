@@ -1,11 +1,11 @@
 import React from 'react'
+import Router from 'react-router/BrowserRouter'
 import Match from 'react-router/Match'
 import Miss from 'react-router/Miss'
 import Link from 'react-router/Link'
-import Router from 'react-router/BrowserRouter'
 
 const AmbiguousExample = () => (
-  <Router history={history}>
+  <Router>
     <div>
       <ul>
         <li><Link to="/about">About Us (static)</Link></li>
@@ -51,4 +51,3 @@ const User = ({ params }) => (
 )
 
 export default AmbiguousExample
-

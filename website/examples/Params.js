@@ -30,4 +30,3 @@ const Child = ({ params }) => {
 }
 
 export default ParamsExample
-

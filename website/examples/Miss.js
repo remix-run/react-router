@@ -38,4 +38,3 @@ const NoMatch = ({ location }) => (
 )
 
 export default MissExample
-

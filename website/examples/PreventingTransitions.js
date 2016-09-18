@@ -1,9 +1,9 @@
 import React from 'react'
+import Router from 'react-router/BrowserRouter'
 import Match from 'react-router/Match'
 import Miss from 'react-router/Miss'
 import Link from 'react-router/Link'
 import Redirect from 'react-router/Redirect'
-import Router from 'react-router/BrowserRouter'
 import NavigationPrompt from 'react-router/NavigationPrompt'
 
 const PreventingTransitionsExample = () => (
@@ -23,7 +23,6 @@ const PreventingTransitionsExample = () => (
 )
 
 class Form extends React.Component {
-
   state = {
     blockTransitions: false
   }
@@ -75,4 +74,3 @@ class Form extends React.Component {
 }
 
 export default PreventingTransitionsExample
-

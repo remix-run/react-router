@@ -1,34 +1,25 @@
-// To run this example locally, create a new project with 
-// 'create-react-app', install the router with 'npm i react-router@next',
-// then copy/paste the code below into `src/App.js` of your new project.
-//  For more info on 'create-react-app', see https://github.com/facebookincubator/create-react-app
-
 import React from 'react'
+import Router from 'react-router/BrowserRouter'
 import Match from 'react-router/Match'
 import Link from 'react-router/Link'
-import Router from 'react-router/BrowserRouter'
 
-class BasicExample extends React.Component {
-  render() {
-    return (
-      <Router>
-        <div>
-          <ul>
-            <li><Link to="/">Home</Link></li>
-            <li><Link to="/about">About</Link></li>
-            <li><Link to="/topics">Topics</Link></li>
-          </ul>
+const BasicExample = () => (
+  <Router>
+    <div>
+      <ul>
+        <li><Link to="/">Home</Link></li>
+        <li><Link to="/about">About</Link></li>
+        <li><Link to="/topics">Topics</Link></li>
+      </ul>
 
-          <hr/>
+      <hr/>
 
-          <Match exactly pattern="/" component={Home} />
-          <Match pattern="/about" component={About} />
-          <Match pattern="/topics" component={Topics} />
-        </div>
-      </Router>
-    )
-  }
-}
+      <Match exactly pattern="/" component={Home} />
+      <Match pattern="/about" component={About} />
+      <Match pattern="/topics" component={Topics} />
+    </div>
+  </Router>
+)
 
 const Home = () => (
   <div>
@@ -65,4 +56,3 @@ const Topic = ({ params }) => (
 )
 
 export default BasicExample
-

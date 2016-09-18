@@ -1,9 +1,9 @@
 import React from 'react'
+import Router from 'react-router/BrowserRouter'
 import Match from 'react-router/Match'
 import Miss from 'react-router/Miss'
 import Link from 'react-router/Link'
 import Redirect from 'react-router/Redirect'
-import Router from 'react-router/BrowserRouter'
 
 const PEEPS = [
   { id: 0, name: 'Michelle', friends: [ 1, 2, 3 ] },
@@ -14,8 +14,15 @@ const PEEPS = [
 
 const find = (id) => PEEPS.find(p => p.id == id)
 
+const RecursiveExample = () => (
+  <Router>
+    <Person params={{ id: 0 }} pathname=""/>
+  </Router>
+)
+
 const Person = ({ pathname, params }) => {
   const person = find(params.id)
+
   return (
     <div>
       <h3>{person.name}’s Friends</h3>
@@ -33,14 +40,4 @@ const Person = ({ pathname, params }) => {
   )
 }
 
-const RecursiveExample = () => {
-  return (
-    <Router>
-      <Person params={{ id: 0 }} pathname=""/>
-    </Router>
-  )
-}
-
 export default RecursiveExample
-
-

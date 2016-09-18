@@ -1,12 +1,12 @@
 import React from 'react'
+import Router from 'react-router/BrowserRouter'
 import Match from 'react-router/Match'
 import Miss from 'react-router/Miss'
 import Link from 'react-router/Link'
-import Router from 'react-router/BrowserRouter'
 
 // Some folks find value in a centralized route config.
-// A route config is just data, React is great at mapping data
-// into components, and `Match` is a component.
+// A route config is just data. React is great at mapping
+// data into components, and `Match` is a component.
 
 ////////////////////////////////////////////////////////////
 // first our route components
