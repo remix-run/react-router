@@ -4,7 +4,7 @@ Server rendering is a bit more involved to properly handle `<Redirect>`
 and `<Miss>` in your app. Not only do you want to respond with the
 proper status code, but also, both function on the result of rendering
 so we have to sort of recreate `componentDidMount` for the server. For
-the exeptional case of not matching any patterns you'll use a two-pass
+the exceptional case of not matching any patterns you'll use a two-pass
 render to render the `<Miss>` components.
 
 Here's an example that sends 301 for redirects and properly renders your
