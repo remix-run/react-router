@@ -18,3 +18,6 @@ export matchPattern from './matchPattern'
 
 // Util for server rendering context
 export createServerRenderContext from './createServerRenderContext'
+
+// React PropTypes for all Components
+export * as propTypes from './PropTypes'
