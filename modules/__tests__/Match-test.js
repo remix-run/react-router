@@ -275,7 +275,7 @@ describe('Match', () => {
     class LocationProvider extends React.Component {
       static childContextTypes = { location: PropTypes.object }
       getChildContext = () => ({ location: this.props.location })
-      render = () => this.props.children
+      render = () => <div>{this.props.children}</div>
     }
 
     it('matches the location from context', () => {
@@ -284,6 +284,23 @@ describe('Match', () => {
       const html = renderToString(
         <LocationProvider location={location}>
           <Match pattern="/" render={({ location }) => (
+            <div>{location.state.test}</div>
+          )}/>
+        </LocationProvider>
+      )
+      expect(html).toContain(TEXT)
+    })
+
+
+    it('fails with multiple routes', () => {
+      const TEXT = 'TEXT'
+      const location = { pathname: '/', state: { test: TEXT } }
+      const html = renderToString(
+        <LocationProvider location={location}>
+          <Match pattern="/" render={({ location }) => (
+            <div>{location.state.test}</div>
+          )}/>
+          <Match exactly pattern="/myTest" render={({ location }) => (
             <div>{location.state.test}</div>
           )}/>
         </LocationProvider>
