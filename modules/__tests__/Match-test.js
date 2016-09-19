@@ -292,7 +292,7 @@ describe('Match', () => {
     })
 
 
-    it('fails with multiple routes', () => {
+    it('works with multiple routes', () => {
       const TEXT = 'TEXT'
       const location = { pathname: '/', state: { test: TEXT } }
       const html = renderToString(
