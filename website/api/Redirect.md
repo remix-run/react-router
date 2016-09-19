@@ -37,4 +37,13 @@ A location descriptor to redirect to.
 }}/>
 ```
 
+## `push: bool`
+
+When true, redirecting will add a new history state with `pushState` instead
+of replacing the current history state with `replaceState`.
+
+```js
+<Redirect to="/somewhere/else" push/>
+```
+
 # `</Redirect>`

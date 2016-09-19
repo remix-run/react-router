@@ -6,6 +6,7 @@ import {
 
 class Link extends React.Component {
   static defaultProps = {
+    replace: false,
     activeOnlyWhenExact: false,
     className: '',
     activeClassName: '',
@@ -38,12 +39,15 @@ class Link extends React.Component {
       isLeftClickEvent(event)
     ) {
       event.preventDefault()
-      this.context.router.transitionTo(this.props.to)
+      this.handleTransition()
     }
   }
 
   handleTransition = () => {
-    this.context.router.transitionTo(this.props.to)
+    const { router } = this.context
+    const { to, replace } = this.props
+    const navigate = replace ? router.replaceWith : router.transitionTo
+    navigate(to)
   }
 
   render() {
@@ -107,6 +111,7 @@ class Link extends React.Component {
 if (__DEV__) {
   Link.propTypes = {
     to: PropTypes.oneOfType([ PropTypes.string, PropTypes.object ]).isRequired,
+    replace: PropTypes.bool,
     activeStyle: PropTypes.object,
     activeClassName: PropTypes.string,
     location: PropTypes.object,

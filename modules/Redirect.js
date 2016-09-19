@@ -4,6 +4,10 @@ import {
 } from './PropTypes'
 
 class Redirect extends React.Component {
+  static defaultProps = {
+    push: false
+  }
+
   static contextTypes = {
     router: routerContextType,
     serverRouter: PropTypes.object
@@ -20,9 +24,12 @@ class Redirect extends React.Component {
 
   redirect() {
     const { router } = this.context
+    const { to, push } = this.props
     // so that folks can unit test w/o hassle
-    if (router)
-      router.replaceWith(this.props.to)
+    if (router) {
+      const navigate = push ? router.transitionTo : router.replaceWith
+      navigate(to)
+    }
   }
 
   render() {
@@ -35,7 +42,8 @@ if (__DEV__) {
     to: PropTypes.oneOfType([
       PropTypes.string,
       PropTypes.object
-    ]).isRequired
+    ]).isRequired,
+    push: PropTypes.bool
   }
 }
 
