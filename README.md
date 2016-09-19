@@ -41,7 +41,7 @@ Please read [our docs here](https://react-router.now.sh/).
 
 ## v4 FAQ
 
-### Why the huge change? (AGAIN?!)
+### Why the huge change?
 
 **tl;dr** Declarative Composability.
 
@@ -92,15 +92,28 @@ In other words, it's Just React™ and you're going to love it.
 
 ### How long until another huge API overhaul?
 
-We know things have been rocky. Our previous API was fighting against
-React, causing a ton of churn. With v4, our only API is components that
-receive props, so, it's hard to imagine a big change again. Now that
-we're embracing (not fighting) React's declarative composability, we
-think this API will last as long as React itself, because that's all it
-is.
+We know things have been rocky for a lot of people regarding the router
+API, to the point that the router has a reputation for huge API
+overhauls.
 
-Not only that, but we're excited to create and encourage building an
-ecosystem of addons to this stable base.
+We went back and audited the changes to the major versions.  From 0.13
+to 1.0 there were huge, backwards incompatible, changes. From 1.0 to 2.0
+there were some subtle, but fully backwards compatible changes, and 3.0
+will be 2.0 but without any deprecation warnings.
+
+It has been 18 months since the release of 1.0. So, if you've kept
+up with only the non-beta releases, you've only had to update your code
+once in a year and a half.
+
+Our previous API was fighting against React. With v4, our only API is
+components that receive props, so, it's hard to imagine a big change
+again. Now that we're embracing (not fighting) React's declarative
+composability, we think this API will last as long as React itself,
+because that's all it is.
+
+We're excited to create and encourage building an ecosystem of addons to
+this stable base. In the words of Cheng Lou, we've become more powerful
+(https://www.youtube.com/watch?v=mVVNJKv9esE).
 
 ### Why did you get rid of feature [x]?
 
