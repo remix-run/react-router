@@ -276,7 +276,7 @@ describe('Match', () => {
     class LocationProvider extends React.Component {
       static childContextTypes = { location: PropTypes.object }
       getChildContext = () => ({ location: this.props.location })
-      render = () => <div>{this.props.children}</div>
+      render = () => this.props.children
     }
 
     it('matches the location from context', () => {
