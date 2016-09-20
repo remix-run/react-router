@@ -1,6 +1,5 @@
 import expect from 'expect'
 import React, { PropTypes } from 'react'
-import MatchProvider from '../MatchProvider'
 import Match from '../Match'
 import { renderToString } from 'react-dom/server'
 import { render } from 'react-dom'
