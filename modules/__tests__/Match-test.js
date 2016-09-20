@@ -272,6 +272,69 @@ describe('Match', () => {
     })
   })
 
+  describe('with a trailing slash', () => {
+    const TEXT = 'TEXT'
+    const run = (location, cb) => (
+      cb(renderToString(
+        <Match
+          pattern="/foo/"
+          location={location}
+          render={() => (
+            <div>{TEXT}</div>
+          )}
+        />
+      ))
+    )
+
+    describe('when matched exactly', () => {
+      it('renders', () => {
+        run({ pathname: '/foo/' }, (html) => {
+          expect(html).toContain(TEXT)
+        })
+      })
+    })
+
+    describe('when matched partially', () => {
+      it('renders', () => {
+        run({ pathname: '/foo/bar/' }, (html) => {
+          expect(html).toContain(TEXT)
+        })
+      })
+    })
+  })
+
+  describe('`exactly` prop with a trailing slash', () => {
+    const TEXT = 'TEXT'
+    const run = (location, cb) => (
+      cb(renderToString(
+        <Match
+          exactly
+          pattern="/foo/"
+          location={location}
+          render={() => (
+            <div>{TEXT}</div>
+          )}
+        />
+      ))
+    )
+
+    describe('when matched exactly', () => {
+      it('renders', () => {
+        run({ pathname: '/foo/' }, (html) => {
+          expect(html).toContain(TEXT)
+        })
+      })
+    })
+
+    describe('when matched partially', () => {
+      it('does not render', () => {
+        run({ pathname: '/foo/bar/' }, (html) => {
+          expect(html).toNotContain(TEXT)
+        })
+      })
+    })
+  })
+
   describe('when rendered in context of a location', () => {
     it('matches the location from context', () => {
       const TEXT = 'TEXT'
