@@ -14,8 +14,16 @@ const getMatcher = (pattern) => {
   return matcher
 }
 
-const truncatePathnameToPattern = (pathname, pattern) =>
-  pathname.split('/').slice(0, pattern.split('/').length).join('/')
+const truncatePathnameToPattern = (pathname, pattern) => {
+  const patternSegments = pattern.split('/')
+  const pathnameSegments = pathname.split('/').slice(0, patternSegments.length)
+  // If pattern ends with a trailing slash, keep the corresponding slash in
+  // pathname but not the following segment.
+  if (patternSegments[patternSegments.length - 1] == ''
+      && pathnameSegments.length == patternSegments.length)
+    pathnameSegments[pathnameSegments.length - 1] = ''
+  return pathnameSegments.join('/')
+}
 
 const parseParams = (pattern, match, keys) =>
   match.slice(1).reduce((params, value, index) => {
