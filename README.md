@@ -205,7 +205,9 @@ bit unprecendented in the world of UI routing.
 We've never been more excited about React Router. It's no longer a
 router for React, it is truly a React Router.
 
+### Where are the examples?!?
 
+The examples are now located under [the website](/website/examples).
 
 ## Thanks
 
