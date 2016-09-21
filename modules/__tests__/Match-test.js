@@ -301,6 +301,14 @@ describe('Match', () => {
         })
       })
     })
+
+    describe('when the trailing slash is missing', () => {
+      it('does not renders', () => {
+        run({ pathname: '/foo' }, (html) => {
+          expect(html).toNotContain(TEXT)
+        })
+      })
+    })
   })
 
   describe('`exactly` prop with a trailing slash', () => {
@@ -329,6 +337,14 @@ describe('Match', () => {
     describe('when matched partially', () => {
       it('does not render', () => {
         run({ pathname: '/foo/bar/' }, (html) => {
+          expect(html).toNotContain(TEXT)
+        })
+      })
+    })
+
+    describe('when the trailing slash is missing', () => {
+      it('does not renders', () => {
+        run({ pathname: '/foo' }, (html) => {
           expect(html).toNotContain(TEXT)
         })
       })

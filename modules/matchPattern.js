@@ -7,7 +7,7 @@ const getMatcher = (pattern) => {
 
   if (!matcher) {
     const keys = []
-    const regex = pathToRegexp(pattern, keys)
+    const regex = pathToRegexp(pattern, keys, { strict: true })
     matcher = cache[pattern] = { keys, regex }
   }
 
