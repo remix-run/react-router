@@ -78,12 +78,11 @@ class StaticRouter extends React.Component {
 
   render() {
     const { children } = this.props
-    const location = this.getLocation()
 
     return (
       <MatchProvider>
         {typeof children === 'function' ? (
-          children({ location, router: this.getChildContext().router })
+          children(this.getChildContext())
         ) : (
           React.Children.only(children)
         )}
