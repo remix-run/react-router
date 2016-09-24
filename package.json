@@ -55,7 +55,7 @@
     "babel-register": "^6.11.6",
     "bundle-loader": "^0.5.4",
     "codecov": "^1.0.1",
-    "cross-env": "^2.0.0",
+    "cross-env": "^3.0.0",
     "css-loader": "^0.23.1",
     "eslint": "^3.2.0",
     "eslint-config-rackt": "^1.1.1",
