@@ -1,28 +1,18 @@
 import pathToRegexp from 'path-to-regexp'
 
-const cache = {}
+// cache[exactly][pattern] contains getMatcher(pattern, exactly)
+const cache = {true: {}, false: {}}
 
-const getMatcher = (pattern) => {
-  let matcher = cache[pattern]
+const getMatcher = (pattern, exactly) => {
+  let matcher = cache[exactly][pattern]
 
   if (!matcher) {
     const keys = []
-    const regex = pathToRegexp(pattern, keys, { strict: true })
-    matcher = cache[pattern] = { keys, regex }
+    const regex = pathToRegexp(pattern, keys, { end: exactly, strict: true })
+    matcher = cache[exactly][pattern] = { keys, regex }
   }
 
   return matcher
-}
-
-const truncatePathnameToPattern = (pathname, pattern) => {
-  const patternSegments = pattern.split('/')
-  const pathnameSegments = pathname.split('/').slice(0, patternSegments.length)
-  // If pattern ends with a trailing slash, keep the corresponding slash in
-  // pathname but not the following segment.
-  if (patternSegments[patternSegments.length - 1] == ''
-      && pathnameSegments.length == patternSegments.length)
-    pathnameSegments[pathnameSegments.length - 1] = ''
-  return pathnameSegments.join('/')
 }
 
 const parseParams = (pattern, match, keys) =>
@@ -47,16 +37,14 @@ const matchPattern = (pattern, location, matchExactly, parent) => {
         pattern
     }
 
-    const matcher = getMatcher(pattern)
-    const pathname = matchExactly ?
-      location.pathname : truncatePathnameToPattern(location.pathname, pattern)
-    const match = matcher.regex.exec(pathname)
+    const matcher = getMatcher(pattern, matchExactly)
+    const match = matcher.regex.exec(location.pathname)
 
     if (match) {
       const params = parseParams(pattern, match, matcher.keys)
-      const locationLength = location.pathname.split('/').length
-      const patternLength = pattern.split('/').length
-      const isExact = locationLength === patternLength
+      const pathname = match[0]
+      const isExact = pathname === location.pathname
+
       return { params, isExact, pathname }
     } else {
       return null
