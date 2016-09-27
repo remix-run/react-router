@@ -35,7 +35,7 @@ class Miss extends React.Component {
     }
 
     this.state = {
-      noMatchesInContext: false
+      noMatchesInContext: context.match && !context.serverRouter ? !context.match.matches.length : false
     }
   }
 
