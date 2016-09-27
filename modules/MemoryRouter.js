@@ -18,7 +18,7 @@ const MemoryRouter = ({ getUserConfirmation, initialEntries, initialIndex, keyLe
         location={location}
         onPush={history.push}
         onReplace={history.replace}
-        canGo={history.canGo}
+        blockTransitions={history.block}
         {...props}
       />
     )}

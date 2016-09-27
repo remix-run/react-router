@@ -18,7 +18,7 @@ const HashRouter = ({ basename, getUserConfirmation, hashType, ...props }) => (
         basename={basename}
         onPush={history.push}
         onReplace={history.replace}
-        onGo={history.go}
+        blockTransitions={history.block}
         {...props}
       />
     )}
