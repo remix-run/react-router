@@ -5,8 +5,13 @@ import StaticRouter from './StaticRouter'
 /**
  * A router that uses the HTML5 history API.
  */
-const BrowserRouter = ({ basename, keyLength, ...rest }) => (
-  <BrowserHistory basename={basename} keyLength={keyLength}>
+const BrowserRouter = ({ basename, forceRefresh, getUserConfirmation, keyLength, ...props }) => (
+  <BrowserHistory
+    basename={basename}
+    forceRefresh={forceRefresh}
+    getUserConfirmation={getUserConfirmation}
+    keyLength={keyLength}
+  >
     {({ history, action, location }) => (
       <StaticRouter
         action={action}
@@ -15,7 +20,7 @@ const BrowserRouter = ({ basename, keyLength, ...rest }) => (
         onPush={history.push}
         onReplace={history.replace}
         blockTransitions={history.block}
-        {...rest}
+        {...props}
       />
     )}
   </BrowserHistory>
@@ -23,6 +28,8 @@ const BrowserRouter = ({ basename, keyLength, ...rest }) => (
 
 BrowserRouter.propTypes = {
   basename: PropTypes.string,
+  forceRefresh: PropTypes.bool,
+  getUserConfirmation: PropTypes.func,
   keyLength: PropTypes.number,
   children: PropTypes.oneOfType([
     PropTypes.func,

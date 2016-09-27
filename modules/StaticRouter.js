@@ -13,7 +13,6 @@ const defaultStringifyQuery = (query) => (
 )
 
 class StaticRouter extends React.Component {
-
   static propTypes = {
     action: actionType.isRequired,
     blockTransitions: PropTypes.func,

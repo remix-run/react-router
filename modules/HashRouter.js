@@ -5,8 +5,12 @@ import StaticRouter from './StaticRouter'
 /**
  * A router that uses the URL hash.
  */
-const HashRouter = ({ basename, hashType, ...rest }) => (
-  <HashHistory basename={basename} hashType={hashType}>
+const HashRouter = ({ basename, getUserConfirmation, hashType, ...props }) => (
+  <HashHistory
+    basename={basename}
+    getUserConfirmation={getUserConfirmation}
+    hashType={hashType}
+  >
     {({ history, action, location }) => (
       <StaticRouter
         action={action}
@@ -15,7 +19,7 @@ const HashRouter = ({ basename, hashType, ...rest }) => (
         onPush={history.push}
         onReplace={history.replace}
         onGo={history.go}
-        {...rest}
+        {...props}
       />
     )}
   </HashHistory>
@@ -23,6 +27,7 @@ const HashRouter = ({ basename, hashType, ...rest }) => (
 
 HashRouter.propTypes = {
   basename: PropTypes.string,
+  getUserConfirmation: PropTypes.func,
   hashType: PropTypes.string,
   children: PropTypes.oneOfType([
     PropTypes.func,

@@ -5,13 +5,9 @@ import StaticRouter from './StaticRouter'
 /**
  * A router that stores all locations in memory.
  */
-const MemoryRouter = ({
-  initialEntries,
-  initialIndex,
-  keyLength,
-  ...rest
-}) => (
+const MemoryRouter = ({ getUserConfirmation, initialEntries, initialIndex, keyLength, ...props }) => (
   <MemoryHistory
+    getUserConfirmation={getUserConfirmation}
     initialEntries={initialEntries}
     initialIndex={initialIndex}
     keyLength={keyLength}
@@ -23,13 +19,14 @@ const MemoryRouter = ({
         onPush={history.push}
         onReplace={history.replace}
         canGo={history.canGo}
-        {...rest}
+        {...props}
       />
     )}
   </MemoryHistory>
 )
 
 MemoryRouter.propTypes = {
+  getUserConfirmation: PropTypes.func,
   initialEntries: PropTypes.array,
   initialIndex: PropTypes.number,
   keyLength: PropTypes.number,
