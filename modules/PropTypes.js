@@ -1,5 +1,11 @@
 import { PropTypes } from 'react'
 
+export const action = PropTypes.oneOf([
+  'PUSH',
+  'REPLACE',
+  'POP'
+])
+
 export const matchContext = PropTypes.shape({
   addMatch: PropTypes.func.isRequired,
   removeMatch: PropTypes.func.isRequired
@@ -27,9 +33,3 @@ export const routerContext = PropTypes.shape({
   blockTransitions: PropTypes.func.isRequired,
   createHref: PropTypes.func.isRequired
 })
-
-export const action = PropTypes.oneOf([
-  'PUSH',
-  'REPLACE',
-  'POP'
-])
