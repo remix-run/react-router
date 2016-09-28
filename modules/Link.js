@@ -46,17 +46,20 @@ class Link extends React.Component {
   }
 
   handleClick = (event) => {
+
     if (this.props.onClick)
       this.props.onClick(event)
 
-    if (
-      !event.defaultPrevented && // onClick prevented default
-      !this.props.target && // let browser handle "target=_blank" etc.
-      !isModifiedEvent(event) &&
-      isLeftClickEvent(event)
-    ) {
-      event.preventDefault()
-      this.context.router.transitionTo(this.props.to)
+    if (this.context.router) {
+      if (
+        !event.defaultPrevented && // onClick prevented default
+        !this.props.target && // let browser handle "target=_blank" etc.
+        !isModifiedEvent(event) &&
+        isLeftClickEvent(event)
+      ) {
+        event.preventDefault()
+        this.context.router.transitionTo(this.props.to)
+      }
     }
   }
 
@@ -66,6 +69,7 @@ class Link extends React.Component {
 
   render() {
     const { router } = this.context
+
     const {
       to,
       style,
@@ -80,11 +84,11 @@ class Link extends React.Component {
 
     const currentLocation = location || this.context.location
 
-    const isActive = getIsActive(
+    const isActive = router ? getIsActive(
       currentLocation,
       createLocationDescriptor(to),
       this.props
-    )
+    ) : false
 
     // If children is a function, we are using a Function as Children Component
     // so useful values will be passed down to the children function.
@@ -113,6 +117,7 @@ class Link extends React.Component {
         }
       />
     )
+
   }
 }
 
