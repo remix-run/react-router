@@ -1,8 +1,8 @@
-import { parsePath, createPath } from 'history/PathUtils'
+import { parsePath, createPath } from 'react-history/PathUtils'
 
-export { locationsAreEqual } from 'history/LocationUtils'
+export { locationsAreEqual } from 'react-history/LocationUtils'
 
-const createRouterLocation = (input, parseQueryString, stringifyQuery) => {
+export const createRouterLocation = (input, parseQueryString, stringifyQuery) => {
   if (typeof input === 'string') {
     const location = parsePath(input)
     location.query = location.search !== '' ?
@@ -24,7 +24,7 @@ const createRouterLocation = (input, parseQueryString, stringifyQuery) => {
   }
 }
 
-const createRouterPath = (input, stringifyQuery) => {
+export const createRouterPath = (input, stringifyQuery) => {
   return typeof input === 'string' ? input : createPath({
     ...input,
     search: input.search || (
@@ -32,5 +32,3 @@ const createRouterPath = (input, stringifyQuery) => {
     )
   })
 }
-
-export { createRouterLocation, createRouterPath }
