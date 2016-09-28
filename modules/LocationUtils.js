@@ -1,5 +1,7 @@
 import { parsePath, createPath } from 'history/PathUtils'
 
+export { locationsAreEqual } from 'history/LocationUtils'
+
 const createRouterLocation = (input, parseQueryString, stringifyQuery) => {
   if (typeof input === 'string') {
     const location = parsePath(input)
