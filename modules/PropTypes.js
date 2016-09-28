@@ -33,9 +33,3 @@ export const action = PropTypes.oneOf([
   'REPLACE',
   'POP'
 ])
-
-export const historyContext = PropTypes.shape({
-  push: PropTypes.func.isRequired,
-  replace: PropTypes.func.isRequired,
-  go: PropTypes.func.isRequired
-})
