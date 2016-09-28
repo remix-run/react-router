@@ -8,39 +8,42 @@ import {
   router as routerType
 } from './PropTypes'
 
-const defaultStringifyQuery = (query) => (
+const stringifyQuery = (query) => (
   stringify(query).replace(/%20/g, '+')
 )
 
 class StaticRouter extends React.Component {
   static propTypes = {
-    action: actionType.isRequired,
-    blockTransitions: PropTypes.func,
     children: PropTypes.oneOfType([ PropTypes.node, PropTypes.func ]),
-    createHref: PropTypes.func.isRequired,
+
+    action: actionType.isRequired,
     location: PropTypes.oneOfType([ PropTypes.object, PropTypes.string ]).isRequired,
-    basename: PropTypes.string,
+
     onPush: PropTypes.func.isRequired,
     onReplace: PropTypes.func.isRequired,
+    blockTransitions: PropTypes.func,
+
     stringifyQuery: PropTypes.func.isRequired,
-    // TODO: parseQueryString
-    parseQuery: PropTypes.func.isRequired
+    parseQueryString: PropTypes.func.isRequired,
+    createHref: PropTypes.func.isRequired, // TODO: Clarify why this is useful
+
+    basename: PropTypes.string // TODO: Feels like we should be able to remove this
   }
 
   static defaultProps = {
     createHref: path => path,
-    stringifyQuery: defaultStringifyQuery,
-    parseQuery: parseQueryString
+    stringifyQuery,
+    parseQueryString
   }
 
   static childContextTypes = {
     router: routerType.isRequired,
-    location: locationType.isRequired
+    location: locationType.isRequired // TODO: Keep state updates out of context
   }
 
   createLocationForContext(loc) {
-    const { parseQuery, stringifyQuery } = this.props
-    return createRouterLocation(loc, parseQuery, stringifyQuery)
+    const { parseQueryString, stringifyQuery } = this.props
+    return createRouterLocation(loc, parseQueryString, stringifyQuery)
   }
 
   getChildContext() {
@@ -71,8 +74,8 @@ class StaticRouter extends React.Component {
 
   getLocation() {
     // TODO: maybe memoize this on willReceiveProps to get extreme w/ perf
-    const { location, parseQuery, stringifyQuery } = this.props
-    return createRouterLocation(location, parseQuery, stringifyQuery)
+    const { location, parseQueryString, stringifyQuery } = this.props
+    return createRouterLocation(location, parseQueryString, stringifyQuery)
   }
 
   render() {

@@ -1,10 +1,10 @@
 import { parsePath, createPath } from 'history/PathUtils'
 
-const createRouterLocation = (input, parseQuery, stringifyQuery) => {
+const createRouterLocation = (input, parseQueryString, stringifyQuery) => {
   if (typeof input === 'string') {
     const location = parsePath(input)
     location.query = location.search !== '' ?
-      parseQuery(location.search) : null
+      parseQueryString(location.search) : null
     return location
   } else {
     // got a location descriptor
@@ -16,7 +16,7 @@ const createRouterLocation = (input, parseQuery, stringifyQuery) => {
       hash: input.hash || '',
       state: input.state || null,
       query: input.query || (
-        input.search ? parseQuery(input.search) : null
+        input.search ? parseQueryString(input.search) : null
       )
     }
   }
