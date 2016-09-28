@@ -10,6 +10,28 @@ describe('formatPattern', function () {
     })
   })
 
+  describe('with a bad pattern', function () {
+    describe('that is missing an end param', function () {
+      const pattern = '/comments/(:id'
+
+      describe('with no value given to the formatPattern function', function () {
+        it('throws an error', function () {
+          expect(function () {
+            formatPattern(pattern, {})
+          }).toThrow(/Path "\/comments\/\(:id" is missing end paren at segment ":id"/)
+        })
+      })
+
+      describe('with value given to the formatPattern function', function () {
+        it('throws an error', function () {
+          expect(function () {
+            formatPattern(pattern, { id: '1' })
+          }).toThrow(/Path "\/comments\/\(:id" is missing end paren/)
+        })
+      })
+    })
+  })
+
   describe('when a pattern has dynamic segments', function () {
     const pattern = '/comments/:id/edit'
 
@@ -42,6 +64,98 @@ describe('formatPattern', function () {
 
       it('returns the correct path when param is not supplied', function () {
         expect(formatPattern(pattern, {})).toEqual('/comments/edit')
+      })
+    })
+
+    describe('and a param is optional with addtional text prior to the params', function () {
+      const pattern = '/search(/forum/:id)'
+
+      it('returns the correct path when param is supplied', function () {
+        expect(formatPattern(pattern, { id:'123' })).toEqual('/search/forum/123')
+      })
+
+      it('returns the correct path when param is not supplied', function () {
+        expect(formatPattern(pattern, { })).toEqual('/search')
+      })
+    })
+
+    describe('and a param is optional with multiple segments and addtional text prior to the params', function () {
+      const pattern = '/search(/forum/:forum_id)(/comment/:comment_id)'
+
+      it('returns the correct path when param is supplied', function () {
+        expect(formatPattern(pattern, { forum_id: '123', comment_id: '456' })).toEqual('/search/forum/123/comment/456')
+      })
+
+      it('returns the correct path when forum_id param is supplied', function () {
+        expect(formatPattern(pattern, { forum_id: '123' })).toEqual('/search/forum/123')
+      })
+
+      it('returns the correct path when comment_id param is supplied', function () {
+        expect(formatPattern(pattern, { comment_id: '456' })).toEqual('/search/comment/456')
+      })
+
+      it('returns the correct path when param is not supplied', function () {
+        expect(formatPattern(pattern, { })).toEqual('/search')
+      })
+    })
+
+    describe('and a param is optional with multiple segments in the optional part', function () {
+      const pattern = '/search(/forum/:forum_id/comment/:comment_id)'
+
+      it('returns the correct path when param is supplied', function () {
+        expect(formatPattern(pattern, { forum_id:'123', comment_id: '456' })).toEqual('/search/forum/123/comment/456')
+      })
+
+      it('returns the correct path when forum_id param is not supplied', function () {
+        expect(formatPattern(pattern, { forum_id:'123' })).toEqual('/search')
+      })
+
+      it('returns the correct path when comment_id param is not supplied 2', function () {
+        expect(formatPattern(pattern, { comment_id:'456' })).toEqual('/search')
+      })
+
+      it('returns the correct path when param is not supplied', function () {
+        expect(formatPattern(pattern, { })).toEqual('/search')
+      })
+    })
+
+    describe('and a param is optional with nested optional segments with addtional text prior to the params', function () {
+      const pattern = '/search(/forum/:forum_id(/comment/:comment_id))'
+
+      it('returns the correct path when params are supplied', function () {
+        expect(formatPattern(pattern, { forum_id:'123', comment_id: '456' })).toEqual('/search/forum/123/comment/456')
+      })
+
+      it('returns the correct path when forum_id param is supplied', function () {
+        expect(formatPattern(pattern, { forum_id:'123' })).toEqual('/search/forum/123')
+      })
+
+      it('returns the correct path when comment_id param is supplied', function () {
+        expect(formatPattern(pattern, { comment_id: '456' })).toEqual('/search')
+      })
+
+      it('returns the correct path when param is not supplied', function () {
+        expect(formatPattern(pattern, { })).toEqual('/search')
+      })
+    })
+
+    describe('and a param is optional with nested optional segments with addtional text prior to the params in different order', function () {
+      const pattern = '/search((/forum/:forum_id)/comment/:comment_id)'
+
+      it('returns the correct path when params are supplied', function () {
+        expect(formatPattern(pattern, { forum_id:'123', comment_id: '456' })).toEqual('/search/forum/123/comment/456')
+      })
+
+      it('returns the correct path when comment_id param is supplied', function () {
+        expect(formatPattern(pattern, { comment_id: '456' })).toEqual('/search/comment/456')
+      })
+
+      it('returns the correct path when forum_id param is supplied', function () {
+        expect(formatPattern(pattern, { forum_id:'123' })).toEqual('/search')
+      })
+
+      it('returns the correct path when param is not supplied', function () {
+        expect(formatPattern(pattern, { })).toEqual('/search')
       })
     })
 
