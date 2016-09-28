@@ -21,11 +21,11 @@ export const location = PropTypes.shape({
   key: PropTypes.string
 })
 
-export const router = PropTypes.shape({
-  createHref: PropTypes.func.isRequired,
+export const routerContext = PropTypes.shape({
   transitionTo: PropTypes.func.isRequired,
   replaceWith: PropTypes.func.isRequired,
-  blockTransitions: PropTypes.func.isRequired
+  blockTransitions: PropTypes.func.isRequired,
+  createHref: PropTypes.func.isRequired
 })
 
 export const action = PropTypes.oneOf([

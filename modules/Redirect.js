@@ -1,6 +1,6 @@
 import React, { PropTypes } from 'react'
 import {
-  router as routerType
+  routerContext as routerContextType
 } from './PropTypes'
 
 class Redirect extends React.Component {
@@ -12,7 +12,7 @@ class Redirect extends React.Component {
   }
 
   static contextTypes = {
-    router: routerType,
+    router: routerContextType,
     serverRouter: PropTypes.object
   }
 

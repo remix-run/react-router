@@ -5,7 +5,7 @@ import MatchProvider from './MatchProvider'
 import {
   action as actionType,
   location as locationType,
-  router as routerType
+  routerContext as routerContextType
 } from './PropTypes'
 
 const stringifyQuery = (query) => (
@@ -37,8 +37,8 @@ class StaticRouter extends React.Component {
   }
 
   static childContextTypes = {
-    router: routerType.isRequired,
-    location: locationType.isRequired // TODO: Keep state updates out of context
+    router: routerContextType.isRequired,
+    location: locationType.isRequired // TODO: Remove location state from context
   }
 
   createLocationForContext(loc) {

@@ -1,7 +1,7 @@
 import React, { PropTypes } from 'react'
 import {
   location as locationType,
-  router as routerType
+  routerContext as routerContextType
 } from './PropTypes'
 
 class Link extends React.Component {
@@ -41,7 +41,7 @@ class Link extends React.Component {
   }
 
   static contextTypes = {
-    router: routerType, // TODO: This should be required, lazy testers be damned
+    router: routerContextType, // TODO: This should be required, lazy testers be damned
     location: locationType // TODO: This should also be required
   }
 
