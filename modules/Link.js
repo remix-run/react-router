@@ -3,7 +3,7 @@ import warning from './routerWarning'
 import invariant from 'invariant'
 import { routerShape } from './PropTypes'
 
-const { bool, object, string, func, oneOfType } = React.PropTypes
+const { bool, object, string, func, oneOf, oneOfType } = React.PropTypes
 
 function isLeftClickEvent(event) {
   return event.button === 0
@@ -47,6 +47,14 @@ function createLocationDescriptor(to, { query, hash, state }) {
  * in the state/query props, respectively.
  *
  *   <Link ... query={{ show: true }} state={{ the: 'state' }} />
+ *
+ * By default, Links will push to history as usual, but you can instruct
+ * them to replace history state instead by providing an action prop equal
+ * to 'replace'
+ *
+ * <Link to={`/posts/${post.id}`} />
+ * <Link to={`/posts/${post.id}`} action="replace" />
+ *
  */
 const Link = React.createClass({
 
@@ -62,6 +70,7 @@ const Link = React.createClass({
     activeStyle: object,
     activeClassName: string,
     onlyActiveOnIndex: bool.isRequired,
+    action: oneOf([ 'push','replace' ]).isRequired,
     onClick: func,
     target: string
   },
@@ -69,6 +78,7 @@ const Link = React.createClass({
   getDefaultProps() {
     return {
       onlyActiveOnIndex: false,
+      action: 'push',
       style: {}
     }
   },
@@ -98,7 +108,8 @@ const Link = React.createClass({
     const { to, query, hash, state } = this.props
     const location = createLocationDescriptor(to, { query, hash, state })
 
-    this.context.router.push(location)
+    // from enum we know it can only be 'push' or 'replace'
+    this.context.router[this.props.action](location)
   },
 
   render() {

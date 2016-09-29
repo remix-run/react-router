@@ -453,6 +453,85 @@ describe('A <Link>', function () {
         </Router>
       ), node, execNextStep)
     })
+
+    it('transition by push to the correct route', function (done) {
+      class LinkWrapper extends Component {
+        render() {
+          return (
+            <Link to="/hello?the=query#hash" action="push">
+              Link
+            </Link>
+          )
+        }
+      }
+
+      const history = createHistory('/')
+      const spy = spyOn(history, 'push').andCallThrough()
+
+      const steps = [
+        function () {
+          click(node.querySelector('a'), { button: 0 })
+        },
+        function () {
+          expect(node.innerHTML).toMatch(/Hello/)
+          expect(spy).toHaveBeenCalled()
+
+          const { location } = this.state
+          expect(location.pathname).toEqual('/hello')
+          expect(location.search).toEqual('?the=query')
+          expect(location.hash).toEqual('#hash')
+        }
+      ]
+
+      const execNextStep = execSteps(steps, done)
+
+      render((
+        <Router history={history} onUpdate={execNextStep}>
+          <Route path="/" component={LinkWrapper} />
+          <Route path="/hello" component={Hello} />
+        </Router>
+      ), node, execNextStep)
+    })
+
+    it('transition by replace to the correct route', function (done) {
+      class LinkWrapper extends Component {
+        render() {
+          return (
+            <Link to="/hello?the=query#hash" action="replace">
+              Link
+            </Link>
+          )
+        }
+      }
+
+      const history = createHistory('/')
+      const spy = spyOn(history, 'replace').andCallThrough()
+
+      const steps = [
+        function () {
+          click(node.querySelector('a'), { button: 0 })
+        },
+        function () {
+          expect(node.innerHTML).toMatch(/Hello/)
+          expect(spy).toHaveBeenCalled()
+
+          const { location } = this.state
+          expect(location.pathname).toEqual('/hello')
+          expect(location.search).toEqual('?the=query')
+          expect(location.hash).toEqual('#hash')
+        }
+      ]
+
+      const execNextStep = execSteps(steps, done)
+
+      render((
+        <Router history={history} onUpdate={execNextStep}>
+          <Route path="/" component={LinkWrapper} />
+          <Route path="/hello" component={Hello} />
+        </Router>
+      ), node, execNextStep)
+    })
+
   })
 
   describe('when the "to" prop is unspecified', function () {
