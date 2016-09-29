@@ -139,11 +139,11 @@ render(
 
 If you'd like to further customize the history options or use other
 enhancers from
-[history](https://github.com/ReactTraining/history/) you can use
+[history](https://github.com/mjackson/history/) you can use
 `useRouterHistory`.
 
 Be aware that `useRouterHistory` already pre-enhances your history
-factory with the [useQueries](https://github.com/ReactTraining/history/blob/master/docs/QuerySupport.md) and [useBasename](https://github.com/ReactTraining/history/blob/master/docs/BasenameSupport.md) enhancers from `history`.
+factory with the [useQueries](https://github.com/mjackson/history/blob/v2.x/docs/QuerySupport.md) and [useBasename](https://github.com/mjackson/history/blob/v2.x/docs/BasenameSupport.md) enhancers from `history`.
 
 ### Examples:
 
@@ -159,7 +159,7 @@ const history = useRouterHistory(createHistory)({
 ```
 
 Using the
-[useBeforeUnload](https://github.com/mjackson/history/blob/master/docs/ConfirmingNavigation.md)
+[useBeforeUnload](https://github.com/mjackson/history/blob/v2.x/docs/ConfirmingNavigation.md)
 enhancer:
 
 ```js
