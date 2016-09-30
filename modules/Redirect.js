@@ -4,13 +4,6 @@ import {
 } from './PropTypes'
 
 class Redirect extends React.Component {
-  static propTypes = {
-    to: PropTypes.oneOfType([
-      PropTypes.string,
-      PropTypes.object
-    ]).isRequired
-  }
-
   static contextTypes = {
     router: routerContextType,
     serverRouter: PropTypes.object
@@ -34,6 +27,15 @@ class Redirect extends React.Component {
 
   render() {
     return null
+  }
+}
+
+if (__DEV__) {
+  Redirect.propTypes = {
+    to: PropTypes.oneOfType([
+      PropTypes.string,
+      PropTypes.object
+    ]).isRequired
   }
 }
 

@@ -25,14 +25,16 @@ const HashRouter = ({ basename, getUserConfirmation, hashType, ...props }) => (
   </HashHistory>
 )
 
-HashRouter.propTypes = {
-  basename: PropTypes.string,
-  getUserConfirmation: PropTypes.func,
-  hashType: PropTypes.string,
-  children: PropTypes.oneOfType([
-    PropTypes.func,
-    PropTypes.node
-  ])
+if (__DEV__) {
+  HashRouter.propTypes = {
+    basename: PropTypes.string,
+    getUserConfirmation: PropTypes.func,
+    hashType: PropTypes.string,
+    children: PropTypes.oneOfType([
+      PropTypes.func,
+      PropTypes.node
+    ])
+  }
 }
 
 export default HashRouter

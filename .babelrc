@@ -3,5 +3,8 @@
     "es2015-loose",
     "stage-1",
     "react"
+  ],
+  "plugins": [
+    "babel-plugin-dev-expression"
   ]
 }

@@ -4,11 +4,6 @@ import {
 } from './PropTypes'
 
 class MatchProvider extends React.Component {
-  static propTypes = {
-    match: PropTypes.any,
-    children: PropTypes.node
-  }
-
   static childContextTypes = {
     match: matchContextType.isRequired
   }
@@ -85,6 +80,13 @@ class MatchProvider extends React.Component {
 
   render() {
     return this.props.children
+  }
+}
+
+if (__DEV__) {
+  MatchProvider.propTypes = {
+    match: PropTypes.any,
+    children: PropTypes.node
   }
 }
 

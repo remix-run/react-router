@@ -17,23 +17,6 @@ const stringifyQuery = (query) => (
 )
 
 class StaticRouter extends React.Component {
-  static propTypes = {
-    children: PropTypes.oneOfType([ PropTypes.node, PropTypes.func ]),
-
-    action: actionType.isRequired,
-    location: PropTypes.oneOfType([ PropTypes.object, PropTypes.string ]).isRequired,
-
-    onPush: PropTypes.func.isRequired,
-    onReplace: PropTypes.func.isRequired,
-    blockTransitions: PropTypes.func,
-
-    stringifyQuery: PropTypes.func.isRequired,
-    parseQueryString: PropTypes.func.isRequired,
-    createHref: PropTypes.func.isRequired, // TODO: Clarify why this is useful
-
-    basename: PropTypes.string // TODO: Feels like we should be able to remove this
-  }
-
   static defaultProps = {
     stringifyQuery,
     parseQueryString,
@@ -117,6 +100,25 @@ class StaticRouter extends React.Component {
         </MatchProvider>
       </LocationEmitter>
     )
+  }
+}
+
+if (__DEV__) {
+  StaticRouter.propTypes = {
+    children: PropTypes.oneOfType([ PropTypes.node, PropTypes.func ]),
+
+    action: actionType.isRequired,
+    location: PropTypes.oneOfType([ PropTypes.object, PropTypes.string ]).isRequired,
+
+    onPush: PropTypes.func.isRequired,
+    onReplace: PropTypes.func.isRequired,
+    blockTransitions: PropTypes.func,
+
+    stringifyQuery: PropTypes.func.isRequired,
+    parseQueryString: PropTypes.func.isRequired,
+    createHref: PropTypes.func.isRequired, // TODO: Clarify why this is useful
+
+    basename: PropTypes.string // TODO: Feels like we should be able to remove this
   }
 }
 

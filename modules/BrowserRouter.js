@@ -26,15 +26,17 @@ const BrowserRouter = ({ basename, forceRefresh, getUserConfirmation, keyLength,
   </BrowserHistory>
 )
 
-BrowserRouter.propTypes = {
-  basename: PropTypes.string,
-  forceRefresh: PropTypes.bool,
-  getUserConfirmation: PropTypes.func,
-  keyLength: PropTypes.number,
-  children: PropTypes.oneOfType([
-    PropTypes.func,
-    PropTypes.node
-  ])
+if (__DEV__) {
+  BrowserRouter.propTypes = {
+    basename: PropTypes.string,
+    forceRefresh: PropTypes.bool,
+    getUserConfirmation: PropTypes.func,
+    keyLength: PropTypes.number,
+    children: PropTypes.oneOfType([
+      PropTypes.func,
+      PropTypes.node
+    ])
+  }
 }
 
 export default BrowserRouter

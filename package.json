@@ -39,6 +39,7 @@
     "babel-core": "^6.9.1",
     "babel-eslint": "^6.0.4",
     "babel-loader": "^6.2.4",
+    "babel-plugin-dev-expression": "^0.2.1",
     "babel-preset-es2015": "^6.14.0",
     "babel-preset-es2015-loose": "^8.0.0",
     "babel-preset-react": "^6.5.0",

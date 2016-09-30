@@ -25,15 +25,17 @@ const MemoryRouter = ({ getUserConfirmation, initialEntries, initialIndex, keyLe
   </MemoryHistory>
 )
 
-MemoryRouter.propTypes = {
-  getUserConfirmation: PropTypes.func,
-  initialEntries: PropTypes.array,
-  initialIndex: PropTypes.number,
-  keyLength: PropTypes.number,
-  children: PropTypes.oneOfType([
-    PropTypes.func,
-    PropTypes.node
-  ])
+if (__DEV__) {
+  MemoryRouter.propTypes = {
+    getUserConfirmation: PropTypes.func,
+    initialEntries: PropTypes.array,
+    initialIndex: PropTypes.number,
+    keyLength: PropTypes.number,
+    children: PropTypes.oneOfType([
+      PropTypes.func,
+      PropTypes.node
+    ])
+  }
 }
 
 export default MemoryRouter

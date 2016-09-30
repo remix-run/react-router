@@ -2,19 +2,11 @@ import React, { PropTypes } from 'react'
 import { location as locationType } from './PropTypes'
 
 class Miss extends React.Component {
-  static propTypes = {
-    children: PropTypes.node,
-    location: locationType,
-    render: PropTypes.func,
-    component: PropTypes.func
-  }
-
   static contextTypes = {
     match: PropTypes.object,
     location: PropTypes.object,
     serverRouter: PropTypes.object
   }
-
 
   constructor(props, context) {
     super(props, context)
@@ -64,6 +56,15 @@ class Miss extends React.Component {
     } else {
       return null
     }
+  }
+}
+
+if (__DEV__) {
+  Miss.propTypes = {
+    children: PropTypes.node,
+    location: locationType,
+    render: PropTypes.func,
+    component: PropTypes.func
   }
 }
 

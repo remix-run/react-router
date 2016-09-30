@@ -2,16 +2,6 @@ import React, { PropTypes } from 'react'
 import StaticRouter from './StaticRouter'
 
 class ServerRouter extends React.Component {
-
-  static propTypes = {
-    context: PropTypes.object.isRequired,
-    location: PropTypes.string.isRequired,
-    children: PropTypes.oneOfType([
-      PropTypes.func,
-      PropTypes.node
-    ])
-  }
-
   static childContextTypes = {
     serverRouter: PropTypes.object.isRequired
   }
@@ -36,6 +26,17 @@ class ServerRouter extends React.Component {
         {...rest}
       />
     )
+  }
+}
+
+if (__DEV__) {
+  ServerRouter.propTypes = {
+    context: PropTypes.object.isRequired,
+    location: PropTypes.string.isRequired,
+    children: PropTypes.oneOfType([
+      PropTypes.func,
+      PropTypes.node
+    ])
   }
 }
 

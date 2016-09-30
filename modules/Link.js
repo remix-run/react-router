@@ -5,23 +5,6 @@ import {
 } from './PropTypes'
 
 class Link extends React.Component {
-  static propTypes = {
-    to: PropTypes.oneOfType([ PropTypes.string, PropTypes.object ]).isRequired,
-    activeStyle: PropTypes.object,
-    activeClassName: PropTypes.string,
-    location: PropTypes.object,
-    activeOnlyWhenExact: PropTypes.bool,
-    isActive: PropTypes.func,
-    children: PropTypes.oneOfType([PropTypes.node, PropTypes.func]),
-
-    // props we have to deal with but aren't necessarily
-    // part of the Link API
-    style: PropTypes.object,
-    className: PropTypes.string,
-    target: PropTypes.string,
-    onClick: PropTypes.func
-  }
-
   static defaultProps = {
     activeOnlyWhenExact: false,
     className: '',
@@ -118,6 +101,25 @@ class Link extends React.Component {
         }}
       </LocationSubscriber>
     )
+  }
+}
+
+if (__DEV__) {
+  Link.propTypes = {
+    to: PropTypes.oneOfType([ PropTypes.string, PropTypes.object ]).isRequired,
+    activeStyle: PropTypes.object,
+    activeClassName: PropTypes.string,
+    location: PropTypes.object,
+    activeOnlyWhenExact: PropTypes.bool,
+    isActive: PropTypes.func,
+    children: PropTypes.oneOfType([PropTypes.node, PropTypes.func]),
+
+    // props we have to deal with but aren't necessarily
+    // part of the Link API
+    style: PropTypes.object,
+    className: PropTypes.string,
+    target: PropTypes.string,
+    onClick: PropTypes.func
   }
 }
 

@@ -4,11 +4,6 @@ import matchPattern from './matchPattern'
 import { LocationSubscriber } from './locationEmission'
 
 class RegisterMatch extends React.Component {
-  static propTypes = {
-    children: PropTypes.node.isRequired,
-    match: PropTypes.any
-  }
-
   static contextTypes = {
     match: PropTypes.object,
     serverRouter: PropTypes.object
@@ -58,17 +53,14 @@ class RegisterMatch extends React.Component {
   }
 }
 
-class Match extends React.Component {
-  static propTypes = {
-    pattern: PropTypes.string,
-    exactly: PropTypes.bool,
-    location: PropTypes.object,
-
-    children: PropTypes.func,
-    render: PropTypes.func,
-    component: PropTypes.func
+if (__DEV__) {
+  RegisterMatch.propTypes = {
+    children: PropTypes.node.isRequired,
+    match: PropTypes.any
   }
+}
 
+class Match extends React.Component {
   static defaultProps = {
     exactly: false
   }
@@ -107,6 +99,18 @@ class Match extends React.Component {
         }}
       </LocationSubscriber>
     )
+  }
+}
+
+if (__DEV__) {
+  Match.propTypes = {
+    pattern: PropTypes.string,
+    exactly: PropTypes.bool,
+    location: PropTypes.object,
+
+    children: PropTypes.func,
+    render: PropTypes.func,
+    component: PropTypes.func
   }
 }
 
