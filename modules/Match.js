@@ -1,6 +1,7 @@
 import React, { PropTypes } from 'react'
 import MatchProvider from './MatchProvider'
 import matchPattern from './matchPattern'
+import { LocationSubscriber } from './locationEmission'
 
 class RegisterMatch extends React.Component {
   static propTypes = {
@@ -78,28 +79,33 @@ class Match extends React.Component {
   }
 
   render() {
-    const { children, render, component:Component,
-      pattern, location, exactly } = this.props
-    const { location:locationContext, match:matchContext } = this.context
-    const loc = location || locationContext
-    const parent = matchContext && matchContext.parent
-    const match = matchPattern(pattern, loc, exactly, parent)
-    const props = { ...match, location: loc, pattern }
-
     return (
-      <RegisterMatch match={match}>
-        <MatchProvider match={match}>
-          {children ? (
-            children({ matched: !!match, ...props })
-          ) : match ? (
-            render ? (
-              render(props)
-            ) : (
-              <Component {...props}/>
-            )
-          ) : null}
-        </MatchProvider>
-      </RegisterMatch>
+      <LocationSubscriber>
+        {(locationContext) => {
+          const { children, render, component:Component,
+            pattern, location, exactly } = this.props
+          const { match:matchContext } = this.context
+          const loc = location || locationContext
+          const parent = matchContext && matchContext.parent
+          const match = matchPattern(pattern, loc, exactly, parent)
+          const props = { ...match, location: loc, pattern }
+          return (
+            <RegisterMatch match={match}>
+              <MatchProvider match={match}>
+                {children ? (
+                  children({ matched: !!match, ...props })
+                ) : match ? (
+                  render ? (
+                    render(props)
+                  ) : (
+                    <Component {...props}/>
+                  )
+                ) : null}
+              </MatchProvider>
+            </RegisterMatch>
+          )
+        }}
+      </LocationSubscriber>
     )
   }
 }

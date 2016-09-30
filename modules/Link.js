@@ -1,4 +1,5 @@
 import React, { PropTypes } from 'react'
+import { LocationSubscriber } from './locationEmission'
 import {
   location as locationType,
   routerContext as routerContextType
@@ -41,8 +42,7 @@ class Link extends React.Component {
   }
 
   static contextTypes = {
-    router: routerContextType, // TODO: This should be required, lazy testers be damned
-    location: locationType // TODO: This should also be required
+    router: routerContextType
   }
 
   handleClick = (event) => {
@@ -65,53 +65,59 @@ class Link extends React.Component {
   }
 
   render() {
-    const { router } = this.context
-    const {
-      to,
-      style,
-      activeStyle,
-      className,
-      activeClassName,
-      location,
-      isActive: getIsActive,
-      activeOnlyWhenExact, // eslint-disable-line
-      ...rest
-    } = this.props
-
-    const currentLocation = location || this.context.location
-
-    const isActive = getIsActive(
-      currentLocation,
-      createLocationDescriptor(to),
-      this.props
-    )
-
-    // If children is a function, we are using a Function as Children Component
-    // so useful values will be passed down to the children function.
-    if (typeof rest.children == 'function') {
-      return rest.children({
-        isActive,
-        location,
-        href: router ? router.createHref(to) : to,
-        onClick: this.handleClick,
-        transition: this.handleTransition
-      })
-    }
-
-    // Maybe we should use <Match> here? Not sure how the custom `isActive`
-    // prop would shake out, also, this check happens a LOT so maybe its good
-    // to optimize here w/ a faster isActive check, so we'd need to bench mark
-    // any attempt at changing to use <Match>
     return (
-      <a
-        {...rest}
-        href={router ? router.createHref(to) : to}
-        onClick={this.handleClick}
-        style={isActive ? { ...style, ...activeStyle } : style }
-        className={isActive ?
-          [ className, activeClassName ].join(' ').trim() : className
-        }
-      />
+      <LocationSubscriber>
+        {(contextLocation) => {
+          const { router } = this.context
+          const {
+            to,
+            style,
+            activeStyle,
+            className,
+            activeClassName,
+            location:propLocation,
+            isActive: getIsActive,
+            activeOnlyWhenExact, // eslint-disable-line
+            ...rest
+          } = this.props
+
+          const currentLocation = propLocation || contextLocation
+
+          const isActive = getIsActive(
+            currentLocation,
+            createLocationDescriptor(to),
+            this.props
+          )
+
+          // If children is a function, we are using a Function as Children Component
+          // so useful values will be passed down to the children function.
+          if (typeof rest.children == 'function') {
+            return rest.children({
+              isActive,
+              currentLocation,
+              href: router ? router.createHref(to) : to,
+              onClick: this.handleClick,
+              transition: this.handleTransition
+            })
+          }
+
+          // Maybe we should use <Match> here? Not sure how the custom `isActive`
+          // prop would shake out, also, this check happens a LOT so maybe its good
+          // to optimize here w/ a faster isActive check, so we'd need to benchmark
+          // any attempt at changing to use <Match>
+          return (
+            <a
+              {...rest}
+              href={router ? router.createHref(to) : to}
+              onClick={this.handleClick}
+              style={isActive ? { ...style, ...activeStyle } : style }
+              className={isActive ?
+                [ className, activeClassName ].join(' ').trim() : className
+              }
+            />
+          )
+        }}
+      </LocationSubscriber>
     )
   }
 }

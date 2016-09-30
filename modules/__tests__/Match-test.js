@@ -3,6 +3,7 @@ import React, { PropTypes } from 'react'
 import Match from '../Match'
 import { renderToString } from 'react-dom/server'
 import { render } from 'react-dom'
+import { LocationEmitter } from '../locationEmission'
 
 describe('Match', () => {
   const TEXT = 'TEXT'
@@ -272,21 +273,15 @@ describe('Match', () => {
   })
 
   describe('when rendered in context of a location', () => {
-    class LocationProvider extends React.Component {
-      static childContextTypes = { location: PropTypes.object }
-      getChildContext = () => ({ location: this.props.location })
-      render = () => this.props.children
-    }
-
     it('matches the location from context', () => {
       const TEXT = 'TEXT'
       const location = { pathname: '/', state: { test: TEXT } }
       const html = renderToString(
-        <LocationProvider location={location}>
+        <LocationEmitter value={location}>
           <Match pattern="/" render={({ location }) => (
             <div>{location.state.test}</div>
           )}/>
-        </LocationProvider>
+        </LocationEmitter>
       )
       expect(html).toContain(TEXT)
     })
@@ -298,11 +293,11 @@ describe('Match', () => {
         const contextLoc = { pathname: '/', state: { test: CONTEXT } }
         const propsLoc = { pathname: '/', state: { test: PROP } }
         const html = renderToString(
-          <LocationProvider location={contextLoc}>
+          <LocationEmitter value={location}>
             <Match location={propsLoc} pattern="/" render={({ location }) => (
               <div>{location.state.test}</div>
             )}/>
-          </LocationProvider>
+          </LocationEmitter>
         )
         expect(html).toNotContain(CONTEXT)
         expect(html).toContain(PROP)

@@ -2,6 +2,7 @@ import expect from 'expect'
 import React, { PropTypes } from 'react'
 import Link from '../Link'
 import { render } from 'react-dom'
+import { LocationEmitter } from '../locationEmission'
 
 describe('Link', () => {
 
@@ -252,31 +253,17 @@ describe('Link', () => {
   })
 
   describe('when rendered in context of a location', () => {
-    const PATHNAME = '/PATHNAME'
-
-    class TestRouterContext extends React.Component {
-      static childContextTypes = { location: PropTypes.object }
-      getChildContext() {
-        return {
-          location: {
-            pathname: PATHNAME,
-            search: '',
-            hash: ''
-          }
-        }
-      }
-      render() { return this.props.children }
-    }
-
     it('uses the location from context', () => {
+      const PATHNAME = '/PATHNAME'
       const div = document.createElement('div')
+      const location = { pathname: PATHNAME, search: '', hash: '' }
       render((
-        <TestRouterContext>
+        <LocationEmitter value={location}>
           <Link
             to={PATHNAME}
             activeClassName="active"
           />
-        </TestRouterContext>
+        </LocationEmitter>
       ), div)
       const a = div.querySelector('a')
       expect(a.className).toEqual('active')

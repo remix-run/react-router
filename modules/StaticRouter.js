@@ -1,6 +1,7 @@
 import React, { PropTypes } from 'react'
 import { stringify, parse as parseQueryString } from 'query-string'
 import MatchProvider from './MatchProvider'
+import { LocationEmitter } from './locationEmission'
 import {
   locationsAreEqual,
   createRouterLocation,
@@ -8,7 +9,6 @@ import {
 } from './LocationUtils'
 import {
   action as actionType,
-  location as locationType,
   routerContext as routerContextType
 } from './PropTypes'
 
@@ -41,8 +41,7 @@ class StaticRouter extends React.Component {
   }
 
   static childContextTypes = {
-    router: routerContextType.isRequired,
-    location: locationType.isRequired // TODO: Remove location state from context
+    router: routerContextType.isRequired
   }
 
   createLocation(location) {
@@ -82,7 +81,6 @@ class StaticRouter extends React.Component {
 
   getChildContext() {
     return {
-      location: this.state.location, // TODO: Remove location state from context
       router: this.getRouterContext()
     }
   }
@@ -109,13 +107,15 @@ class StaticRouter extends React.Component {
     const { action, children } = this.props
 
     return (
-      <MatchProvider>
-        {typeof children === 'function' ? (
-          children({ action, location, router: this.getRouterContext() })
-        ) : (
-          React.Children.only(children)
-        )}
-      </MatchProvider>
+      <LocationEmitter value={location}>
+        <MatchProvider>
+          {typeof children === 'function' ? (
+            children({ action, location, router: this.getRouterContext() })
+          ) : (
+            React.Children.only(children)
+          )}
+        </MatchProvider>
+      </LocationEmitter>
     )
   }
 }

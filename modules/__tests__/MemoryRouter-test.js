@@ -4,7 +4,7 @@ import React from 'react'
 import MemoryRouter from '../MemoryRouter'
 import Match from '../Match'
 
-describe('MemoryHistory', () => {
+describe('MemoryRouter', () => {
 
   it('works', () => {
     const markup = renderToString(
