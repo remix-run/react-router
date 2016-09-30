@@ -1,7 +1,6 @@
 import React, { PropTypes } from 'react'
 import { LocationSubscriber } from './locationEmission'
 import {
-  location as locationType,
   routerContext as routerContextType
 } from './PropTypes'
 

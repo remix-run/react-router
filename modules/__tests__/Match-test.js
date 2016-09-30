@@ -1,5 +1,5 @@
 import expect from 'expect'
-import React, { PropTypes } from 'react'
+import React from 'react'
 import Match from '../Match'
 import { renderToString } from 'react-dom/server'
 import { render } from 'react-dom'
@@ -293,7 +293,7 @@ describe('Match', () => {
         const contextLoc = { pathname: '/', state: { test: CONTEXT } }
         const propsLoc = { pathname: '/', state: { test: PROP } }
         const html = renderToString(
-          <LocationEmitter value={location}>
+          <LocationEmitter value={contextLoc}>
             <Match location={propsLoc} pattern="/" render={({ location }) => (
               <div>{location.state.test}</div>
             )}/>
