@@ -1,7 +1,7 @@
 import React, { PropTypes } from 'react'
 import { stringify, parse as parseQueryString } from 'query-string'
 import MatchProvider from './MatchProvider'
-import { LocationEmitter } from './locationEmission'
+import { LocationBroadcast } from './locationBroadcast'
 import {
   locationsAreEqual,
   createRouterLocation,
@@ -90,7 +90,7 @@ class StaticRouter extends React.Component {
     const { action, children } = this.props
 
     return (
-      <LocationEmitter value={location}>
+      <LocationBroadcast value={location}>
         <MatchProvider>
           {typeof children === 'function' ? (
             children({ action, location, router: this.getRouterContext() })
@@ -98,7 +98,7 @@ class StaticRouter extends React.Component {
             React.Children.only(children)
           )}
         </MatchProvider>
-      </LocationEmitter>
+      </LocationBroadcast>
     )
   }
 }

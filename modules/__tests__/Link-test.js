@@ -2,7 +2,7 @@ import expect from 'expect'
 import React, { PropTypes } from 'react'
 import Link from '../Link'
 import { render } from 'react-dom'
-import { LocationEmitter } from '../locationEmission'
+import { LocationBroadcast } from '../locationBroadcast'
 
 describe('Link', () => {
 
@@ -258,12 +258,12 @@ describe('Link', () => {
       const div = document.createElement('div')
       const location = { pathname: PATHNAME, search: '', hash: '' }
       render((
-        <LocationEmitter value={location}>
+        <LocationBroadcast value={location}>
           <Link
             to={PATHNAME}
             activeClassName="active"
           />
-        </LocationEmitter>
+        </LocationBroadcast>
       ), div)
       const a = div.querySelector('a')
       expect(a.className).toEqual('active')

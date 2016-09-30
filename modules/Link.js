@@ -1,5 +1,5 @@
 import React, { PropTypes } from 'react'
-import { LocationSubscriber } from './locationEmission'
+import { LocationSubscriber } from './locationBroadcast'
 import {
   routerContext as routerContextType
 } from './PropTypes'

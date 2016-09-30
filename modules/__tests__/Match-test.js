@@ -3,7 +3,7 @@ import React from 'react'
 import Match from '../Match'
 import { renderToString } from 'react-dom/server'
 import { render } from 'react-dom'
-import { LocationEmitter } from '../locationEmission'
+import { LocationBroadcast } from '../locationBroadcast'
 
 describe('Match', () => {
   const TEXT = 'TEXT'
@@ -277,11 +277,11 @@ describe('Match', () => {
       const TEXT = 'TEXT'
       const location = { pathname: '/', state: { test: TEXT } }
       const html = renderToString(
-        <LocationEmitter value={location}>
+        <LocationBroadcast value={location}>
           <Match pattern="/" render={({ location }) => (
             <div>{location.state.test}</div>
           )}/>
-        </LocationEmitter>
+        </LocationBroadcast>
       )
       expect(html).toContain(TEXT)
     })
@@ -293,11 +293,11 @@ describe('Match', () => {
         const contextLoc = { pathname: '/', state: { test: CONTEXT } }
         const propsLoc = { pathname: '/', state: { test: PROP } }
         const html = renderToString(
-          <LocationEmitter value={contextLoc}>
+          <LocationBroadcast value={contextLoc}>
             <Match location={propsLoc} pattern="/" render={({ location }) => (
               <div>{location.state.test}</div>
             )}/>
-          </LocationEmitter>
+          </LocationBroadcast>
         )
         expect(html).toNotContain(CONTEXT)
         expect(html).toContain(PROP)
