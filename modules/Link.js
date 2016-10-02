@@ -51,23 +51,41 @@ class Link extends React.Component {
   }
 
   render() {
+    const { router } = this.context
+    const {
+      to,
+      style,
+      activeStyle,
+      className,
+      activeClassName,
+      location: propLocation,
+      isActive: getIsActive,
+      activeOnlyWhenExact, // eslint-disable-line
+      replace, // eslint-disable-line
+      ...rest
+    } = this.props
+
+    // If there are no props that require location information
+    // the LocationSubscriber is unnecessary.
+    if (
+      activeClassName === '' &&
+      Object.keys(activeStyle).length === 0 &&
+      typeof rest.children !== 'function'
+    ) {
+      return (
+        <a
+          {...rest}
+          href={router ? router.createHref(to) : to}
+          onClick={this.handleClick}
+          style={style}
+          className={className}
+        />
+      )
+    }
+
     return (
       <LocationSubscriber>
         {(contextLocation) => {
-          const { router } = this.context
-          const {
-            to,
-            style,
-            activeStyle,
-            className,
-            activeClassName,
-            location: propLocation,
-            isActive: getIsActive,
-            activeOnlyWhenExact, // eslint-disable-line
-            replace, // eslint-disable-line
-            ...rest
-          } = this.props
-
           const currentLocation = propLocation || contextLocation
 
           const isActive = getIsActive(
