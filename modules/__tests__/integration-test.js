@@ -141,6 +141,16 @@ describe('Ambiguous matches?', () => {
   })
 
   describe('with nested Match/Miss', () => {
+    const leftClickEvent = {
+      defaultPrevented: false,
+      preventDefault() { this.defaultPrevented = true },
+      metaKey: null,
+      altKey: null,
+      ctrlKey: null,
+      shiftKey: null,
+      button: 0
+    }
+
     it('allows devs to match the dynamic pattern only', () => {
       const div = document.createElement('div')
       const pathname = '/non-static-param'
@@ -158,6 +168,44 @@ describe('Ambiguous matches?', () => {
       ), div)
       expect(div.innerHTML).toNotContain('foo')
       expect(div.innerHTML).toContain('non-static-param')
+    })
+
+    it('should match the dynamic pattern on return visits when Miss is still mounted', () => {
+      const div = document.createElement('div')
+      render((
+        <Router>
+          <div>
+            <Link id="root" to="/">Root</Link>
+            <Link id="foo" to="/foo">Foo</Link>
+            <Link id="dynamic" to="/dynamic">Dynamic</Link>
+            <Match pattern="/" exactly render={() => <div>root component</div>}/>
+            <Match pattern="/:name" render={({ params }) => (
+              <div>
+                <Match pattern="/foo" render={() => <div>foo component</div>}/>
+                <Miss render={() => <div>{`${params.name} component`}</div>}/>
+              </div>
+            )}/>
+          </div>
+        </Router>
+      ), div)
+      expect(div.innerHTML).toNotContain('foo component')
+      expect(div.innerHTML).toNotContain('dynamic component')
+      expect(div.innerHTML).toContain('root component')
+
+      Simulate.click(div.querySelector('#dynamic'), leftClickEvent)
+      expect(div.innerHTML).toNotContain('foo component')
+      expect(div.innerHTML).toNotContain('root component')
+      expect(div.innerHTML).toContain('dynamic component')
+
+      Simulate.click(div.querySelector('#root'), leftClickEvent)
+      expect(div.innerHTML).toNotContain('foo component')
+      expect(div.innerHTML).toNotContain('dynamic component')
+      expect(div.innerHTML).toContain('root component')
+
+      Simulate.click(div.querySelector('#dynamic'), leftClickEvent)
+      expect(div.innerHTML).toNotContain('foo component')
+      expect(div.innerHTML).toNotContain('root component')
+      expect(div.innerHTML).toContain('dynamic component')
     })
 
     it('allows devs to match the static pattern only', () => {
