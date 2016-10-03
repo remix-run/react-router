@@ -75,12 +75,12 @@ class Match extends React.Component {
       <LocationSubscriber>
         {(locationContext) => {
           const { children, render, component:Component,
-            pattern, location, exactly } = this.props
+            pattern, location, exactly, ...rest } = this.props
           const { match:matchContext } = this.context
           const loc = location || locationContext
           const parent = matchContext && matchContext.parent
           const match = matchPattern(pattern, loc, exactly, parent)
-          const props = { ...match, location: loc, pattern }
+          const props = { ...match, location: loc, pattern, ...rest }
           return (
             <RegisterMatch match={match}>
               <MatchProvider match={match}>
