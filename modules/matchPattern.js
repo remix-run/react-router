@@ -4,12 +4,13 @@ import pathToRegexp from 'path-to-regexp'
 const cache = {true: {}, false: {}}
 
 const getMatcher = (pattern, exactly) => {
-  let matcher = cache[exactly][pattern]
+  const exactlyStr = exactly ? 'true' : 'false'
+  let matcher = cache[exactlyStr][pattern]
 
   if (!matcher) {
     const keys = []
     const regex = pathToRegexp(pattern, keys, { end: exactly, strict: true })
-    matcher = cache[exactly][pattern] = { keys, regex }
+    matcher = cache[exactlyStr][pattern] = { keys, regex }
   }
 
   return matcher
