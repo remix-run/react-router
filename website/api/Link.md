@@ -24,7 +24,7 @@ Children function parameter is an object with the following keys:
 
 ```js
 <Link to="/courses">{
-  ({isActive, location, href, onClick, transition}) => 
+  ({isActive, location, href, onClick, transition}) =>
     <RaisedButton label="Courses" onClick={onClick} primary={isActive} href={href} />
 }</Link>
 ```
@@ -118,6 +118,15 @@ in the hierarchy.
 
 ```js
 <Match pattern="/foo" location={this.props.location}/>
+```
+
+## `replace: bool`
+
+When true, clicking the link will replace the current history state with
+`replaceState` instead of adding a new history state with `pushState`.
+
+```js
+<Link to="/courses" replace/>
 ```
 
 # `</Link>`

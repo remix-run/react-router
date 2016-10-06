@@ -2,12 +2,22 @@ import expect from 'expect'
 import React from 'react'
 import Router from '../MemoryRouter'
 import NavigationPrompt from '../NavigationPrompt'
+import Redirect from '../Redirect'
 import StaticRouter from '../StaticRouter'
 import Match from '../Match'
 import Miss from '../Miss'
 import { Simulate } from 'react-addons-test-utils'
 import Link from '../Link'
 import { render } from 'react-dom'
+
+const requiredPropsForStaticRouter = {
+  location: '/',
+  action: 'POP',
+  createHref: () => {},
+  blockTransitions: () => {}, // we sure we want this required? servers don't need it.
+  onPush: () => {},
+  onReplace: () => {}
+}
 
 describe('Integration Tests', () => {
 
@@ -254,6 +264,46 @@ describe('clicking around', () => {
     Simulate.click(div.querySelector('#one'), leftClickEvent)
     expect(div.innerHTML).toContain(TEXT1)
   })
+
+  it('pushes a new URL', () => {
+    const div = document.createElement('div')
+    const pushes = []
+    const replaces = []
+    const TARGET = '/TARGET'
+    render((
+      <StaticRouter
+        {...requiredPropsForStaticRouter}
+        onPush={(loc) => { pushes.push(loc) }}
+        onReplace={(loc) => { replaces.push(loc) }}
+      >
+        <Link id="target" to={TARGET}>{TARGET}</Link>
+      </StaticRouter>
+    ), div)
+    Simulate.click(div.querySelector('#target'), leftClickEvent)
+    expect(pushes.length).toEqual(1)
+    expect(pushes[0].pathname).toEqual(TARGET)
+    expect(replaces.length).toEqual(0)
+  })
+
+  it('replaces the current URL with replace', () => {
+    const div = document.createElement('div')
+    const pushes = []
+    const replaces = []
+    const TARGET = '/TARGET'
+    render((
+      <StaticRouter
+        {...requiredPropsForStaticRouter}
+        onPush={(loc) => { pushes.push(loc) }}
+        onReplace={(loc) => { replaces.push(loc) }}
+      >
+        <Link id="target" to={TARGET} replace>{TARGET}</Link>
+      </StaticRouter>
+    ), div)
+    Simulate.click(div.querySelector('#target'), leftClickEvent)
+    expect(pushes.length).toEqual(0)
+    expect(replaces.length).toEqual(1)
+    expect(replaces[0].pathname).toEqual(TARGET)
+  })
 })
 
 describe('Link location descriptors', () => {
@@ -322,15 +372,6 @@ describe('Link with a query', () => {
 
 describe('Match and Miss Integration', () => {
 
-  const requiredProps = {
-    location: '/',
-    action: 'POP',
-    createHref: () => {},
-    blockTransitions: () => {}, // we sure we want this required? servers don't need it.
-    onPush: () => {},
-    onReplace: () => {}
-  }
-
   describe('Miss', () => {
     it('renders when nothing else matches', () => {
       const div = document.createElement('div')
@@ -338,7 +379,7 @@ describe('Match and Miss Integration', () => {
       const MISS = '/MISS'
       render((
         <StaticRouter
-          {...requiredProps}
+          {...requiredPropsForStaticRouter}
           location={{ pathname: MISS }}
         >
           <div>
@@ -357,7 +398,7 @@ describe('Match and Miss Integration', () => {
       const MISS = '/MISS'
       render((
         <StaticRouter
-          {...requiredProps}
+          {...requiredPropsForStaticRouter}
           location={{ pathname: FOO }}
         >
           <div>
@@ -400,5 +441,45 @@ describe('NavigationPrompt', () => {
     ), div)
     Simulate.click(div.querySelector('a'), leftClickEvent)
     expect(message).toEqual(TEXT)
+  })
+})
+
+describe('Redirect', () => {
+  it('replaces the current URL', () => {
+    const div = document.createElement('div')
+    const pushes = []
+    const replaces = []
+    const REDIRECTED = '/REDIRECTED'
+    render((
+      <StaticRouter
+        {...requiredPropsForStaticRouter}
+        onPush={(loc) => { pushes.push(loc) }}
+        onReplace={(loc) => { replaces.push(loc) }}
+      >
+        <Redirect to={REDIRECTED} />
+      </StaticRouter>
+    ), div)
+    expect(pushes.length).toEqual(0)
+    expect(replaces.length).toEqual(1)
+    expect(replaces[0].pathname).toEqual(REDIRECTED)
+  })
+
+  it('pushes a new URL with push', () => {
+    const div = document.createElement('div')
+    const pushes = []
+    const replaces = []
+    const REDIRECTED = '/REDIRECTED'
+    render((
+      <StaticRouter
+        {...requiredPropsForStaticRouter}
+        onPush={(loc) => { pushes.push(loc) }}
+        onReplace={(loc) => { replaces.push(loc) }}
+      >
+        <Redirect to={REDIRECTED} push />
+      </StaticRouter>
+    ), div)
+    expect(pushes.length).toEqual(1)
+    expect(pushes[0].pathname).toEqual(REDIRECTED)
+    expect(replaces.length).toEqual(0)
   })
 })
