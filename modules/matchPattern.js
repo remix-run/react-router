@@ -33,7 +33,7 @@ const matchPattern = (pattern, location, matchExactly, parent) => {
       pathname: '/'
     }
   } else {
-    if (!matchExactly && parent && pattern.charAt(0) !== '/') {
+    if (parent && pattern.charAt(0) !== '/') {
       pattern = parent.pathname +
         (parent.pathname.charAt(parent.pathname.length - 1) !== '/' ? '/' : '') +
         pattern
