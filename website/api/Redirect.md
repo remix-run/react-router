@@ -3,9 +3,7 @@
 Rendering a `Redirect` will navigate to a new location.
 
 The new location will override the current location in the browser's history,
-like server-side redirects (HTTP 3xx) do. For this reason, apps should push a
-new location in the browser's history with `transitionTo` before updating to a
-new state that may result in rendering a `Redirect`.
+like server-side redirects (HTTP 3xx) do.
 
 (If this freaks you out you can use the imperative API from the `router`
 on context.)
