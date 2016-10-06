@@ -1,21 +1,20 @@
 import pathToRegexp from 'path-to-regexp'
 
-const cache = {}
+// cache[exactly][pattern] contains getMatcher(pattern, exactly)
+const cache = {true: {}, false: {}}
 
-const getMatcher = (pattern) => {
-  let matcher = cache[pattern]
+const getMatcher = (pattern, exactly) => {
+  const exactlyStr = exactly ? 'true' : 'false'
+  let matcher = cache[exactlyStr][pattern]
 
   if (!matcher) {
     const keys = []
-    const regex = pathToRegexp(pattern, keys)
-    matcher = cache[pattern] = { keys, regex }
+    const regex = pathToRegexp(pattern, keys, { end: exactly, strict: true })
+    matcher = cache[exactlyStr][pattern] = { keys, regex }
   }
 
   return matcher
 }
-
-const truncatePathnameToPattern = (pathname, pattern) =>
-  pathname.split('/').slice(0, pattern.split('/').length).join('/')
 
 const parseParams = (pattern, match, keys) =>
   match.slice(1).reduce((params, value, index) => {
@@ -39,16 +38,14 @@ const matchPattern = (pattern, location, matchExactly, parent) => {
         pattern
     }
 
-    const matcher = getMatcher(pattern)
-    const pathname = matchExactly ?
-      location.pathname : truncatePathnameToPattern(location.pathname, pattern)
-    const match = matcher.regex.exec(pathname)
+    const matcher = getMatcher(pattern, matchExactly)
+    const match = matcher.regex.exec(location.pathname)
 
     if (match) {
       const params = parseParams(pattern, match, matcher.keys)
-      const locationLength = location.pathname.split('/').length
-      const patternLength = pattern.split('/').length
-      const isExact = locationLength === patternLength
+      const pathname = match[0]
+      const isExact = pathname === location.pathname
+
       return { params, isExact, pathname }
     } else {
       return null
