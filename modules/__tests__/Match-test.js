@@ -59,6 +59,17 @@ describe('Match', () => {
             })
           })
         })
+        it('decodes props', () => {
+          run({ pathname: '/first%20name/second%20name' }, (props) => {
+            expect(props).toEqual({
+              params: { foo: 'first name', bar: 'second name' },
+              isExact: true,
+              pathname: '/first%20name/second%20name',
+              location: { pathname: '/first%20name/second%20name' },
+              pattern: '/:foo/:bar'
+            })
+          })
+        })
       })
 
       describe('when matched partially', () => {
