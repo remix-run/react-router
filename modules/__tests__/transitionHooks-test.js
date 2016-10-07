@@ -11,7 +11,7 @@ describe('When a router enters a branch', function () {
     node,
     newsLeaveHookSpy, removeNewsLeaveHook, userLeaveHookSpy,
     DashboardRoute, NewsFeedRoute, InboxRoute, RedirectToInboxRoute, MessageRoute, UserRoute, AssignmentRoute,
-    routes
+    ProfileRoute, routes
 
   beforeEach(function () {
     node = document.createElement('div')
@@ -73,6 +73,24 @@ describe('When a router enters a branch', function () {
 
     User.contextTypes = {
       router: routerShape.isRequired
+    }
+
+    class Profile extends Component {
+      render() {
+        return <div>Profile</div>
+      }
+    }
+
+    class ProfileHistory extends Component {
+      render() {
+        return <div>Profile History</div>
+      }
+    }
+
+    class ProfileContact extends Component {
+      render() {
+        return <div>Profile Contact</div>
+      }
     }
 
     NewsFeedRoute = {
@@ -159,6 +177,26 @@ describe('When a router enters a branch', function () {
       onLeave() { expect(this).toBe(UserRoute) }
     }
 
+    ProfileRoute = {
+      path: '/profile',
+      component: Profile,
+      getChildRoutes() {
+        return [
+          { path: 'history', component: ProfileHistory },
+          { path: 'contact', component: ProfileContact }
+        ]
+      },
+      onEnter(nextState, replace) {
+        expect(this).toBe(ProfileRoute)
+        expect(nextState.routes).toContain(ProfileRoute)
+        expect(replace).toBeA('function')
+      },
+      onLeave(prevState) {
+        expect(this).toBe(ProfileRoute)
+        expect(prevState.routes).toContain(ProfileRoute)
+      }
+    }
+
     DashboardRoute = {
       path: '/',
       component: Dashboard,
@@ -178,7 +216,7 @@ describe('When a router enters a branch', function () {
         expect(this).toBe(DashboardRoute)
         expect(prevState.routes).toContain(DashboardRoute)
       },
-      childRoutes: [ NewsFeedRoute, InboxRoute, RedirectToInboxRoute, MessageRoute, UserRoute ]
+      childRoutes: [ NewsFeedRoute, InboxRoute, RedirectToInboxRoute, MessageRoute, UserRoute, ProfileRoute ]
     }
 
     routes = [
@@ -375,4 +413,18 @@ describe('When a router enters a branch', function () {
     })
   })
 
+  describe('with dynamic child routes', function () {
+    it('does not call onEnter or onLeave on the parent when changing between child routes', function (done) {
+      const profileRouteEnterSpy = spyOn(ProfileRoute, 'onEnter').andCallThrough()
+      const profileRouteLeaveSpy = spyOn(ProfileRoute, 'onLeave').andCallThrough()
+      const history = createHistory('/profile/history')
+
+      render(<Router history={history} routes={routes}/>, node, function () {
+        history.push({ pathname: '/profile/contact' })
+        expect(profileRouteEnterSpy).toNotHaveBeenCalled()
+        expect(profileRouteLeaveSpy).toNotHaveBeenCalled()
+        done()
+      })
+    })
+  })
 })
