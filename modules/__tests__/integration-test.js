@@ -483,3 +483,64 @@ describe('Redirect', () => {
     expect(replaces.length).toEqual(0)
   })
 })
+
+describe('Basename support', () => {
+  const leftClickEvent = {
+    defaultPrevented: false,
+    preventDefault() { this.defaultPrevented = true },
+    metaKey: null,
+    altKey: null,
+    ctrlKey: null,
+    shiftKey: null,
+    button: 0
+  }
+
+  it('supports a target that starts with a slash', () => {
+    const div = document.createElement('div')
+    const TARGET = '/bar'
+    const BASENAME = "/foo"
+    const TEXT = 'You are on page bar.'
+
+    render((
+      <Router basename={BASENAME}>
+        <div>
+          <Link id="target" to={TARGET}>{TARGET}</Link>
+          <Match pattern={TARGET} render={() => (
+            <h2>{TEXT}</h2>
+          )}/>
+        </div>
+      </Router>
+    ), div)
+
+    const href = div.querySelector('a').getAttribute('href')
+    expect(href).toEqual('/foo/bar')
+
+    Simulate.click(div.querySelector('#target'), leftClickEvent)
+    expect(div.innerHTML).toContain(TEXT)
+
+  })
+
+  it('supports a target that does not start with a slash', () => {
+    const div = document.createElement('div')
+    const TARGET = 'bar'
+    const BASENAME = "/foo"
+    const TEXT = 'You are on page bar.'
+
+    render((
+      <Router basename={BASENAME}>
+        <div>
+          <Link id="target" to={TARGET}>{TARGET}</Link>
+          <Match pattern={TARGET} render={() => (
+            <h2>{TEXT}</h2>
+          )}/>
+        </div>
+      </Router>
+    ), div)
+
+    const href = div.querySelector('a').getAttribute('href')
+    expect(href).toEqual('/foo/bar')
+
+    Simulate.click(div.querySelector('#target'), leftClickEvent)
+    expect(div.innerHTML).toContain(TEXT)
+  })
+})
