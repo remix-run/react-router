@@ -64,6 +64,7 @@ class Link extends React.Component {
             location:propLocation,
             isActive: getIsActive,
             activeOnlyWhenExact, // eslint-disable-line
+            replace, // eslint-disable-line
             ...rest
           } = this.props
 
