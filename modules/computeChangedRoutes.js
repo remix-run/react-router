@@ -35,7 +35,10 @@ function computeChangedRoutes(prevState, nextState) {
       if (parentIsLeaving) {
         return true
       } else {
-        const isLeaving = nextRoutes.indexOf(route) === -1 || routeParamsChanged(route, prevState, nextState)
+        const commonRoute = nextRoutes.find(function (nextRoute) {
+          return nextRoute.path === route.path
+        })
+        const isLeaving = !commonRoute || routeParamsChanged(route, prevState, nextState)
         if (isLeaving)
           parentIsLeaving = true
         return isLeaving
