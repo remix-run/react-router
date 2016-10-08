@@ -3,7 +3,7 @@ import React from 'react'
 import Match from '../Match'
 import { renderToString } from 'react-dom/server'
 import { render } from 'react-dom'
-import { LocationBroadcast } from '../locationBroadcast'
+import { LocationBroadcast } from '../Broadcasts'
 
 describe('Match', () => {
   const TEXT = 'TEXT'

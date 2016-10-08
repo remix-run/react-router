@@ -1,7 +1,7 @@
 import React, { PropTypes } from 'react'
 import MatchProvider from './MatchProvider'
 import matchPattern from './matchPattern'
-import { LocationSubscriber } from './locationBroadcast'
+import { LocationSubscriber } from './Broadcasts'
 
 class RegisterMatch extends React.Component {
   static contextTypes = {

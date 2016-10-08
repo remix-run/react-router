@@ -2,7 +2,7 @@ import expect from 'expect'
 import React, { PropTypes } from 'react'
 import Link from '../Link'
 import { render } from 'react-dom'
-import { LocationBroadcast } from '../locationBroadcast'
+import { LocationBroadcast } from '../Broadcasts'
 
 describe('Link', () => {
 

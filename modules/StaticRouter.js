@@ -1,7 +1,7 @@
 import React, { PropTypes } from 'react'
 import { stringify, parse as parseQueryString } from 'query-string'
 import MatchProvider from './MatchProvider'
-import { LocationBroadcast } from './locationBroadcast'
+import { LocationBroadcast } from './Broadcasts'
 import {
   locationsAreEqual,
   createRouterLocation,
