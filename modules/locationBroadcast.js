@@ -1,13 +1,10 @@
-/*eslint react/prop-types: 0*/
 import React from 'react'
 import { Broadcast, Subscriber } from 'react-broadcast'
 
-const NAME = 'location'
+const LocationChannel = 'location'
 
-const LocationBroadcast = ({ children, value }) =>
-  <Broadcast channel={NAME} value={value} children={children}/>
+export const LocationBroadcast = (props) =>
+  <Broadcast {...props} channel={LocationChannel}/>
 
-const LocationSubscriber = ({ children }) =>
-  <Subscriber channel={NAME} children={children}/>
-
-export { LocationBroadcast, LocationSubscriber }
+export const LocationSubscriber = (props) =>
+  <Subscriber {...props} channel={LocationChannel}/>
