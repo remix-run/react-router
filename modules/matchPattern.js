@@ -1,16 +1,21 @@
 import pathToRegexp from 'path-to-regexp'
+import MatcherCache from './MatcherCache'
 
 // cache[exactly][pattern] contains getMatcher(pattern, exactly)
-const cache = {true: {}, false: {}}
+const cache = {
+  true: new MatcherCache(),
+  false: new MatcherCache()
+}
 
 const getMatcher = (pattern, exactly) => {
   const exactlyStr = exactly ? 'true' : 'false'
-  let matcher = cache[exactlyStr][pattern]
+  let matcher = cache[exactlyStr].get(pattern)
 
   if (!matcher) {
     const keys = []
     const regex = pathToRegexp(pattern, keys, { end: exactly, strict: true })
-    matcher = cache[exactlyStr][pattern] = { keys, regex }
+    matcher = { keys, regex }
+    cache[exactlyStr].set(pattern, matcher)
   }
 
   return matcher
