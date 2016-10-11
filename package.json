@@ -10,6 +10,7 @@
     "umd"
   ],
   "main": "lib/index",
+  "module": "es6/index",
   "jsnext:main": "es6/index",
   "repository": "ReactTraining/react-router",
   "homepage": "https://github.com/ReactTraining/react-router#readme",
