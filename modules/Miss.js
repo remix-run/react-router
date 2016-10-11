@@ -11,13 +11,8 @@ class Miss extends React.Component {
   constructor(props, context) {
     super(props, context)
 
-    // ignore if rendered out of context (probably for unit tests)
-    if (context.match && !context.serverRouter) {
-      this.unsubscribe = this.context.match.subscribe((matchesFound) => {
-        this.setState({
-          noMatchesInContext: !matchesFound
-        })
-      })
+    this.state = {
+      noMatchesInContext: false
     }
 
     if (context.serverRouter) {
@@ -25,9 +20,18 @@ class Miss extends React.Component {
         context.match.serverRouterIndex
       )
     }
+  }
 
-    this.state = {
-      noMatchesInContext: false
+  componentWillMount() {
+    const { match, serverRouter } = this.context
+
+    // ignore if rendered out of context (probably for unit tests)
+    if (match && !serverRouter) {
+      this.unsubscribe = match.subscribe((matchesFound) => {
+        this.setState({
+          noMatchesInContext: !matchesFound
+        })
+      })
     }
   }
 

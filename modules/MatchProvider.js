@@ -40,6 +40,7 @@ class MatchProvider extends React.Component {
         serverRouterIndex: this.serverRouterIndex,
         subscribe: (fn) => {
           this.subscribers.push(fn)
+          fn(this.matches.length !== 0)
           return () => {
             this.subscribers.splice(this.subscribers.indexOf(fn), 1)
           }

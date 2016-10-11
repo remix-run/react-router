@@ -55,7 +55,7 @@ describe('ServerRouter', () => {
 
     const context = createServerRenderContext()
 
-    renderToString(
+    const markup = renderToString(
       <ServerRouter context={context} location={location}>
         <App/>
       </ServerRouter>
@@ -65,12 +65,6 @@ describe('ServerRouter', () => {
     expect(result.missed).toBe(true)
 
     if (result.missed) {
-      const markup = renderToString(
-        <ServerRouter context={context} location={location}>
-          <App/>
-        </ServerRouter>
-      )
-
       expect(markup).toContain(YES1)
       expect(markup).toContain(YES2)
       expect(markup).toNotContain(NO)

@@ -19,15 +19,7 @@ class RegisterMatch extends React.Component {
   }
 
   componentWillMount() {
-    if (this.context.serverRouter) {
-      this.registerMatch()
-    }
-  }
-
-  componentDidMount() {
-    if (!this.context.serverRouter) {
-      this.registerMatch()
-    }
+    this.registerMatch()
   }
 
   componentDidUpdate(prevProps) {
