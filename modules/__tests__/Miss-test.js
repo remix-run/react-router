@@ -6,6 +6,11 @@ import { render, unmountComponentAtNode } from 'react-dom'
 import MatchProvider from '../MatchProvider'
 import MemoryRouter from '../MemoryRouter'
 
+const MATCH = 'MATCH'
+const MISS = 'MISS'
+const MatchComp = () => <div>{MATCH}</div>
+const MissComp = () => <div>{MISS}</div>
+
 describe('Miss', () => {
   const TEXT = 'TEXT'
   const loc = { pathname: '/', search: '', hash: '', state: TEXT }
@@ -61,18 +66,16 @@ describe('Miss', () => {
   })
 
   describe('with a nested pattern', () => {
-    const MATCH = 'MATCH'
-
-    const App = ({ location }) => (
+    const App = ({ location, component }) => (
       <MemoryRouter initialEntries={[location]} initialIndex={0}>
-        <Match pattern='/parent' component={Parent} />
+        <Match pattern='/parent' component={component || Parent} />
       </MemoryRouter>
     )
 
     const Parent = () => (
       <div>
-        <Match pattern='child' exactly={true} component={() => <div>{MATCH}</div>} />
-        <Miss component={() => <div>{TEXT}</div>} />
+        <Match pattern='child' exactly={true} component={MatchComp} />
+        <Miss component={MissComp} />
       </div>
     )
 
@@ -81,7 +84,7 @@ describe('Miss', () => {
       const nestedLoc = { pathname: '/parent/child' }
 
       render(<App location={nestedLoc} />, div, () => {
-        expect(div.innerHTML).toNotContain(TEXT)
+        expect(div.innerHTML).toNotContain(MISS)
         expect(div.innerHTML).toContain(MATCH)
         done()
       })
@@ -92,8 +95,69 @@ describe('Miss', () => {
       const nestedLoc = { pathname: '/parent/child/foobar' }
 
       render(<App location={nestedLoc} />, div, () => {
-        expect(div.innerHTML).toContain(TEXT)
+        expect(div.innerHTML).toContain(MISS)
         expect(div.innerHTML).toNotContain(MATCH)
+        done()
+      })
+    })
+  })
+
+  describe('on first render pass', () => {
+    const Routes = () => (
+      <div>
+        <Match pattern='/test' exactly={true} component={MatchComp} />
+        <Miss component={MissComp} />
+      </div>
+    )
+    const App = ({ location, component = <Routes /> }) => {
+      return (
+        <MemoryRouter initialEntries={[location]} initialIndex={0}>
+          {component}
+        </MemoryRouter>
+      )
+    }
+
+    // Force miss components to only render ONCE to check the result after one pass
+    beforeEach(() => {
+      Miss.prototype.shouldComponentUpdate = () => false
+    })
+    afterEach(() => {
+      delete Miss.prototype.shouldComponentUpdate
+    })
+
+    it('miss renders when there are no matches', (done) => {
+      const div = document.createElement('div')
+      const loc = { pathname: '/no-match' }
+
+      render(<App location={loc} />, div, () => {
+        expect(div.innerHTML).toContain(MISS)
+        expect(div.innerHTML).toNotContain(MATCH)
+        done()
+      })
+    })
+
+    it('does not render misses on first pass when matches', (done) => {
+      const div = document.createElement('div')
+      const loc = { pathname: '/test' }
+      render(<App location={loc} />, div, () => {
+        expect(div.innerHTML).toNotContain(MISS)
+        expect(div.innerHTML).toContain(MATCH)
+        done()
+      })
+    })
+
+    it('show misses render on first pass when before matched elements', (done) => {
+      const div = document.createElement('div')
+      const loc = { pathname: '/test' }
+      const RoutesInverted = () => (
+        <div>
+          <Miss component={MissComp} />
+          <Match pattern='/test' exactly={true} component={MatchComp} />
+        </div>
+      )
+      render(<App location={loc} component={RoutesInverted} />, div, () => {
+        expect(div.innerHTML).toContain(MISS)
+        expect(div.innerHTML).toContain(MATCH)
         done()
       })
     })
