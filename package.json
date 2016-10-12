@@ -22,6 +22,7 @@
     "build-umd": "webpack modules/index.js umd/react-router.js",
     "build-min": "webpack -p modules/index.js umd/react-router.min.js",
     "build": "node ./scripts/build.js",
+    "watch": "babel modules -d lib --ignore __tests__ --watch",
     "prepublish": "node ./scripts/build.js",
     "clean": "rimraf lib umd",
     "test": "npm run lint && karma start",
