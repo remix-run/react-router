@@ -16,12 +16,12 @@
   "scripts": {
     "start": "echo 'Make sure to `cd website && npm install`' && cd website && npm run dev",
     "release": "node ./scripts/release.js",
-    "build-lib": "babel ./modules -d . --ignore '__tests__'",
+    "build-lib": "babel ./modules -d . --ignore __tests__",
     "build-umd": "webpack modules/index.js umd/react-router.js",
     "build-min": "webpack -p modules/index.js umd/react-router.min.js",
     "build": "node ./scripts/build.js",
     "prepublish": "node ./scripts/build.js",
-    "clean": "rm $(ls modules | grep -v __)",
+    "clean": "node ./scripts/clean.js",
     "test": "npm run lint && karma start",
     "lint": "eslint modules"
   },
@@ -44,6 +44,7 @@
     "babel-preset-es2015-loose": "^8.0.0",
     "babel-preset-react": "^6.5.0",
     "babel-preset-stage-1": "^6.5.0",
+    "delete": "^0.3.2",
     "eslint": "^2.13.1",
     "eslint-plugin-import": "^1.15.0",
     "eslint-plugin-react": "^5.2.2",
