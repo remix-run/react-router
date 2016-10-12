@@ -3,7 +3,7 @@
 If you've got a build, install React Router from npm:
 
 ```
-npm install react-router history
+npm install react-router@next
 ```
 
 If you're just screwing around, use a script tag, you'll find the lib on
