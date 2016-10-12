@@ -3,6 +3,7 @@
   "version": "4.0.0-alpha.4",
   "description": "Declarative routing for React",
   "repository": "ReactTraining/react-router",
+  "main": "./lib/index.js",
   "license": "MIT",
   "authors": [
     "Michael Jackson",
@@ -11,17 +12,19 @@
   "files": [
     "*.js",
     "*.md",
-    "umd"
+    "umd",
+    "lib"
   ],
   "scripts": {
     "start": "echo 'Make sure to `cd website && npm install`' && cd website && npm run dev",
     "release": "node ./scripts/release.js",
-    "build-lib": "babel ./modules -d . --ignore '__tests__'",
+    "build-lib": "babel modules -d lib --ignore __tests__",
     "build-umd": "webpack modules/index.js umd/react-router.js",
     "build-min": "webpack -p modules/index.js umd/react-router.min.js",
     "build": "node ./scripts/build.js",
+    "watch": "babel modules -d lib --ignore __tests__ --watch",
     "prepublish": "node ./scripts/build.js",
-    "clean": "rm $(ls modules | grep -v __)",
+    "clean": "rimraf lib umd",
     "test": "npm run lint && karma start",
     "lint": "eslint modules"
   },
@@ -63,6 +66,7 @@
     "react-addons-test-utils": "^15.3.1",
     "react-dom": "^15.3.0",
     "readline-sync": "^1.4.4",
+    "rimraf": "^2.5.4",
     "webpack": "^1.13.1",
     "webpack-dev-server": "^1.14.1"
   },
