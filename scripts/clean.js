@@ -1,6 +1,5 @@
 const fs = require('fs')
 const path = require('path')
-const deleteFiles = require('delete')
 
 const root = (...args) => path.join(__dirname, '..', ...args)
 
@@ -8,7 +7,14 @@ const files = fs.readdirSync(root('modules'))
   .filter(file => file.includes('.js'))
 
 const promises = Promise.all(
-  files.map(file => deleteFiles.promise(root(file)))
+  files.map(file => new Promise((resolve, reject) => {
+    try {
+      fs.unlinkSync(root(file))
+      resolve()
+    } catch (e) {
+      reject(e)
+    }
+  }))
 )
 
 promises
