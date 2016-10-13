@@ -62,13 +62,14 @@ class Link extends React.Component {
       isActive: getIsActive,
       activeOnlyWhenExact, // eslint-disable-line
       replace, // eslint-disable-line
+      children,
       ...rest
     } = this.props
 
     const apatheticToIsActive = (
       activeClassName === '' &&
       Object.keys(activeStyle).length === 0 &&
-      typeof rest.children !== 'function'
+      typeof children !== 'function'
     )
 
     if (apatheticToIsActive) {
@@ -78,6 +79,7 @@ class Link extends React.Component {
           onClick={this.handleClick}
           style={style}
           className={className}
+          children={children}
           {...rest}
         />
       )
@@ -96,8 +98,8 @@ class Link extends React.Component {
 
           // If children is a function, we are using a Function as Children Component
           // so useful values will be passed down to the children function.
-          if (typeof rest.children == 'function') {
-            return rest.children({
+          if (typeof children == 'function') {
+            return children({
               isActive,
               location,
               href: router ? router.createHref(to) : to,
@@ -118,6 +120,7 @@ class Link extends React.Component {
               className={isActive ?
                 [ className, activeClassName ].join(' ').trim() : className
               }
+              children={children}
               {...rest}
             />
           )
