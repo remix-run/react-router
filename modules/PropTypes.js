@@ -27,9 +27,22 @@ export const location = PropTypes.shape({
   key: PropTypes.string
 })
 
+export const historyContext = PropTypes.shape({
+  action: action.isRequired,
+  location: location.isRequired,
+  push: PropTypes.func.isRequired,
+  replace: PropTypes.func.isRequired,
+  go: PropTypes.func.isRequired,
+  goBack: PropTypes.func.isRequired,
+  goForward: PropTypes.func.isRequired,
+  canGo: PropTypes.func,
+  block: PropTypes.func.isRequired
+})
+
 export const routerContext = PropTypes.shape({
   transitionTo: PropTypes.func.isRequired,
   replaceWith: PropTypes.func.isRequired,
   blockTransitions: PropTypes.func.isRequired,
   createHref: PropTypes.func.isRequired
 })
+

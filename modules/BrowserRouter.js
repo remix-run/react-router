@@ -1,16 +1,23 @@
 import React, { PropTypes } from 'react'
-import BrowserHistory from 'react-history/BrowserHistory'
+import createBrowserHistory from 'history/createBrowserHistory'
 import StaticRouter from './StaticRouter'
+import History from './History'
 
-/**
- * A router that uses the HTML5 history API.
- */
-const BrowserRouter = ({ basename, forceRefresh, getUserConfirmation, keyLength, ...props }) => (
-  <BrowserHistory
-    basename={basename}
-    forceRefresh={forceRefresh}
-    getUserConfirmation={getUserConfirmation}
-    keyLength={keyLength}
+const BrowserRouter = ({
+  basename,
+  forceRefresh,
+  getUserConfirmation,
+  keyLength,
+  ...routerProps
+}) => (
+  <History
+    createHistory={createBrowserHistory}
+    historyOptions={{
+      basename,
+      forceRefresh,
+      getUserConfirmation,
+      keyLength
+    }}
   >
     {({ history, action, location }) => (
       <StaticRouter
@@ -20,10 +27,10 @@ const BrowserRouter = ({ basename, forceRefresh, getUserConfirmation, keyLength,
         onPush={history.push}
         onReplace={history.replace}
         blockTransitions={history.block}
-        {...props}
+        {...routerProps}
       />
     )}
-  </BrowserHistory>
+  </History>
 )
 
 if (__DEV__) {

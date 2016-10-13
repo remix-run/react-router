@@ -1,6 +1,5 @@
-import { parsePath, createPath } from 'react-history/PathUtils'
-
-export { locationsAreEqual } from 'react-history/LocationUtils'
+import { parsePath, createPath } from 'history/PathUtils'
+export { locationsAreEqual } from 'history/LocationUtils'
 
 export const createRouterLocation = (input, parseQueryString, stringifyQuery) => {
   if (typeof input === 'string') {

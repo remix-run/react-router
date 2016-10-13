@@ -1,5 +1,6 @@
 import React, { PropTypes } from 'react'
-import HashHistory from 'react-history/HashHistory'
+import createHashHistory from 'history/createHashHistory'
+import History from './History'
 import { addLeadingSlash, stripLeadingSlash } from 'history/PathUtils'
 import StaticRouter from './StaticRouter'
 
@@ -25,11 +26,19 @@ const createHref = hashType => path => {
 /**
  * A router that uses the URL hash.
  */
-const HashRouter = ({ basename, getUserConfirmation, hashType, ...props }) => (
-  <HashHistory
-    basename={basename}
-    getUserConfirmation={getUserConfirmation}
-    hashType={hashType}
+const HashRouter = ({
+  basename,
+  getUserConfirmation,
+  hashType,
+  ...routerProps
+}) => (
+  <History
+    createHistory={createHashHistory}
+    historyOptions={{
+      basename,
+      getUserConfirmation,
+      hashType
+    }}
   >
     {({ history, action, location }) => (
       <StaticRouter
@@ -40,10 +49,10 @@ const HashRouter = ({ basename, getUserConfirmation, hashType, ...props }) => (
         onReplace={history.replace}
         blockTransitions={history.block}
         createHref={createHref(hashType)}
-        {...props}
+        {...routerProps}
       />
     )}
-  </HashHistory>
+  </History>
 )
 
 if (__DEV__) {

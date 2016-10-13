@@ -1,16 +1,23 @@
 import React, { PropTypes } from 'react'
-import MemoryHistory from 'react-history/MemoryHistory'
+import createMemoryHistory from 'history/createMemoryHistory'
 import StaticRouter from './StaticRouter'
+import History from './History'
 
-/**
- * A router that stores all locations in memory.
- */
-const MemoryRouter = ({ getUserConfirmation, initialEntries, initialIndex, keyLength, ...props }) => (
-  <MemoryHistory
-    getUserConfirmation={getUserConfirmation}
-    initialEntries={initialEntries}
-    initialIndex={initialIndex}
-    keyLength={keyLength}
+const MemoryRouter = ({
+  getUserConfirmation,
+  initialEntries,
+  initialIndex,
+  keyLength,
+  ...routerProps
+}) => (
+  <History
+    createHistory={createMemoryHistory}
+    historyOptions={{
+      getUserConfirmation,
+      initialEntries,
+      initialIndex,
+      keyLength
+    }}
   >
     {({ history, action, location }) => (
       <StaticRouter
@@ -19,10 +26,10 @@ const MemoryRouter = ({ getUserConfirmation, initialEntries, initialIndex, keyLe
         onPush={history.push}
         onReplace={history.replace}
         blockTransitions={history.block}
-        {...props}
+        {...routerProps}
       />
     )}
-  </MemoryHistory>
+  </History>
 )
 
 if (__DEV__) {

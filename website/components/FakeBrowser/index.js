@@ -1,10 +1,19 @@
 import React, { PropTypes } from 'react'
-import StaticRouter from '../../../modules/StaticRouter'
-import MemoryHistory from 'react-history/MemoryHistory'
+import History from '../../../modules/History'
 import { B, V, H, PAD, LIGHT_GRAY, GRAY } from '../bricks'
 import { button } from './style.css' // eslint-disable-line
 import { stringify as stringifyQuery } from 'query-string'
 import { createPath } from 'history/PathUtils'
+import createMemoryHistory from 'history/createMemoryHistory'
+
+const MemoryHistory = ({ children, ...historyOptions }) => (
+  <History
+    children={children}
+    createHistory={createMemoryHistory}
+    historyOptions={historyOptions}
+  />
+)
+
 
 // have to recreate what StaticRouter does, there should be a way to
 // compose?...
