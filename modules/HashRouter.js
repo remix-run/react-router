@@ -1,6 +1,26 @@
 import React, { PropTypes } from 'react'
 import HashHistory from 'react-history/HashHistory'
+import { addLeadingSlash, stripLeadingSlash } from 'history/PathUtils'
 import StaticRouter from './StaticRouter'
+
+const createHref = hashType => path => {
+  let newPath
+
+  switch (hashType) {
+    case 'hashbang':
+      newPath = path.charAt(0) === '!' ? path : '!/' + stripLeadingSlash(path)
+    break
+    case 'noslash':
+      newPath = stripLeadingSlash(path)
+    break
+    case 'slash':
+    default:
+      newPath = addLeadingSlash(path)
+    break
+  }
+
+  return `#${newPath}`
+}
 
 /**
  * A router that uses the URL hash.
@@ -19,6 +39,7 @@ const HashRouter = ({ basename, getUserConfirmation, hashType, ...props }) => (
         onPush={history.push}
         onReplace={history.replace}
         blockTransitions={history.block}
+        createHref={createHref(hashType)}
         {...props}
       />
     )}
