@@ -65,20 +65,20 @@ class Link extends React.Component {
       ...rest
     } = this.props
 
-    // If there are no props that require location information
-    // the LocationSubscriber is unnecessary.
-    if (
+    const apatheticToIsActive = (
       activeClassName === '' &&
       Object.keys(activeStyle).length === 0 &&
       typeof rest.children !== 'function'
-    ) {
+    )
+
+    if (apatheticToIsActive) {
       return (
         <a
-          {...rest}
           href={router ? router.createHref(to) : to}
           onClick={this.handleClick}
           style={style}
           className={className}
+          {...rest}
         />
       )
     }
@@ -86,10 +86,10 @@ class Link extends React.Component {
     return (
       <LocationSubscriber>
         {(contextLocation) => {
-          const currentLocation = propLocation || contextLocation
+          const location = propLocation || contextLocation
 
           const isActive = getIsActive(
-            currentLocation,
+            location,
             createLocationDescriptor(to),
             this.props
           )
@@ -99,7 +99,7 @@ class Link extends React.Component {
           if (typeof rest.children == 'function') {
             return rest.children({
               isActive,
-              currentLocation,
+              location,
               href: router ? router.createHref(to) : to,
               onClick: this.handleClick,
               transition: this.handleTransition
@@ -112,13 +112,13 @@ class Link extends React.Component {
           // any attempt at changing to use <Match>
           return (
             <a
-              {...rest}
               href={router ? router.createHref(to) : to}
               onClick={this.handleClick}
               style={isActive ? { ...style, ...activeStyle } : style }
               className={isActive ?
                 [ className, activeClassName ].join(' ').trim() : className
               }
+              {...rest}
             />
           )
         }}
