@@ -1,8 +1,9 @@
-import expect from 'expect'
+import expect, { spyOn, restoreSpies } from 'expect'
 import React, { PropTypes } from 'react'
 import Link from '../Link'
 import { render } from 'react-dom'
 import { LocationBroadcast } from '../Broadcasts'
+import * as broadcasters from '../Broadcasts'
 
 describe('Link', () => {
 
@@ -285,6 +286,61 @@ describe('Link', () => {
       ), div)
       const a = div.querySelector('a')
       expect(a.className).toEqual('active')
+    })
+  })
+
+  describe('knowledge of location', () => {
+
+    beforeEach(() => {
+      spyOn(broadcasters, 'LocationSubscriber').andCallThrough()
+    })
+
+    afterEach(() => {
+      restoreSpies()
+    })
+
+    it('renders <LocationSubscriber> when it has an activeClassName', () => {
+      const div = document.createElement('div')
+      render((
+          <Link
+            to='/foo'
+            activeClassName='active'
+            location={{ pathname: '/bar' }}
+          />
+      ), div)
+      expect(broadcasters.LocationSubscriber).toHaveBeenCalled()
+    })
+
+    it('renders <LocationSubscriber> when it has an activeStyle', () => {
+      const div = document.createElement('div')
+      render((
+        <Link
+          to='/foo'
+          activeStyle={{ color: 'red' }}
+          location={{ pathname: '/bar' }}
+        />
+      ), div)
+      expect(broadcasters.LocationSubscriber).toHaveBeenCalled()
+    })
+
+    it('renders <LocationSubscriber> when props.children is a function', () => {
+      const div = document.createElement('div')
+      render((
+        <Link to='/foo' location={{ pathname: '/bar' }}>
+          {
+            ({isActive}) => <a className={isActive ? 'active' : ''}>Test!</a>
+          }
+        </Link>
+      ), div)
+      expect(broadcasters.LocationSubscriber).toHaveBeenCalled()
+    })
+
+    it('does not render <LocationSubscriber> when it has no active props', () => {
+      const div = document.createElement('div')
+      render((
+        <Link to='/foo'>Foo</Link>
+      ), div)
+      expect(broadcasters.LocationSubscriber).toNotHaveBeenCalled()
     })
   })
 })
