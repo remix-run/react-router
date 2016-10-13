@@ -4,6 +4,9 @@ export Miss from './Miss'
 export NavigationPrompt from 'react-history/Prompt'
 export Redirect from './Redirect'
 
+// withRouter higher order component
+export withRouter from './withRouter'
+
 // High-level wrappers
 export BrowserRouter from './BrowserRouter'
 export HashRouter from './HashRouter'
