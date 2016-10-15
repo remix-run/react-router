@@ -55,6 +55,73 @@ The UMD build is also available on [unpkg](https://unpkg.com):
 
 You can find the library on `window.ReactRouter`.
 
+### What's it look like (better using with ES6)?
+
+```js
+import React from 'react'
+import { render } from 'react-dom'
+import { Router, Route, Link, browserHistory } from 'react-router'
+
+import App from {/*...*/}
+import About from {/*...*/}
+import NoMatch from {/*...*/}
+
+class Users extends React.Component {
+  render() {
+    return (
+      <div>
+        <h1>Users</h1>
+        <div className="master">
+          <ul>
+            {/* use Link to route around the app */}
+            {this.state.users.map(user => (
+              <li key={user.id}><Link to={`/user/${user.id}`}>{user.name}</Link></li>
+            ))}
+          </ul>
+        </div>
+        <div className="detail">
+          {this.props.children}
+        </div>
+      </div>
+    )
+  }
+}
+
+class User extends React.Component {
+  componentDidMount() {
+    this.setState({
+      // route components are rendered with useful information, like URL params
+      user: findUserById(this.props.params.userId)
+    })
+  },
+
+  render() {
+    return (
+      <div>
+        <h2>{this.state.user.name}</h2>
+        {/* etc. */}
+      </div>
+    )
+  }
+}
+
+// Declarative route configuration (could also load this config lazily
+// instead, all you really need is a single root route, you don't need to
+// colocate the entire config).
+render((
+  <Router history={browserHistory}>
+    <Route path="/" component={App}>
+      <Route path="about" component={About}/>
+      <Route path="users" component={Users}>
+        <Route path="/user/:userId" component={User}/>
+      </Route>
+      <Route path="*" component={NoMatch}/>
+    </Route>
+  </Router>
+), document.getElementById('root'))
+```
+
+
 ### What's it look like?
 
 ```js
