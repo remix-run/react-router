@@ -232,4 +232,24 @@ describe('StaticRouter', () => {
       )).toContain('/foo?a=1</div>')
     })
   })
+
+  describe('router prop', () => {
+    describe('`.blockTransitions()`', () => {
+      it('returns a teardown function', () => {
+        let teardownPrompt
+        renderToString(
+          <StaticRouter
+            {...requiredProps}
+            blockTransitions={() => () => {}}
+          >
+            {({ router }) => (
+              <div>{teardownPrompt = router.blockTransitions('Are you sure?')}</div>
+            )}
+          </StaticRouter>
+        )
+        expect(teardownPrompt).toExist()
+        expect(teardownPrompt).toBeA('function')
+      })
+    })
+  })
 })

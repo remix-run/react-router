@@ -40,9 +40,7 @@ class StaticRouter extends React.Component {
     this.props.onReplace(this.createLocation(location))
   }
 
-  blockTransitions = (prompt) => {
-    this.props.blockTransitions(prompt)
-  }
+  blockTransitions = (prompt) => this.props.blockTransitions(prompt)
 
   createHref = (to) => {
     let path = createRouterPath(to, this.props.stringifyQuery)
