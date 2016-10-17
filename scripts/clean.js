@@ -8,6 +8,9 @@ const files = fs.readdirSync(root('modules'))
 
 const promises = Promise.all(
   files.map(file => new Promise((resolve, reject) => {
+    if (!fs.existsSync(root(file))) {
+      return resolve()
+    }
     try {
       fs.unlinkSync(root(file))
       resolve()
