@@ -12,22 +12,20 @@ const enterHooks = new PendingHooks()
 const changeHooks = new PendingHooks()
 
 function createTransitionHook(hook, route, asyncArity, pendingHooks) {
+  const isSync = hook.length < asyncArity
+
   const transitionHook = (...args) => {
     hook.apply(route, args)
 
-    if (hook.length < asyncArity) {
+    if (isSync) {
       let callback = args[args.length - 1]
-      // Add synchronous hook to pendingHooks (gets removed instantly later)
-      pendingHooks.add(transitionHook)
       // Assume hook executes synchronously and
       // automatically call the callback.
       callback()
     }
   }
 
-  if (hook.length >= asyncArity) {
-    pendingHooks.add(transitionHook)
-  }
+  pendingHooks.add(transitionHook)
 
   return transitionHook
 }

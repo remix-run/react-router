@@ -16,8 +16,8 @@
   "bugs": "https://github.com/ReactTraining/react-router/issues",
   "scripts": {
     "build": "npm run build-cjs && npm run build-es",
-    "build-cjs": "rimraf lib && cross-env BABEL_ENV=cjs babel ./modules -d lib --ignore '__tests__'",
-    "build-es": "rimraf es && cross-env BABEL_ENV=es babel ./modules -d es --ignore '__tests__'",
+    "build-cjs": "rimraf lib && cross-env BABEL_ENV=cjs babel ./modules -d lib --ignore __tests__",
+    "build-es": "rimraf es && cross-env BABEL_ENV=es babel ./modules -d es --ignore __tests__",
     "build-umd": "cross-env NODE_ENV=development webpack modules/index.js umd/ReactRouter.js",
     "build-min": "cross-env NODE_ENV=production webpack -p modules/index.js umd/ReactRouter.min.js",
     "lint": "eslint examples modules scripts tools *.js",
