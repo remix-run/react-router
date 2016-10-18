@@ -1,23 +1,41 @@
 import { loopAsync } from './AsyncUtils'
 
-function createTransitionHook(hook, route, asyncArity) {
-  return function (...args) {
+class PendingHooks {
+  hooks = []
+  add = hook => this.hooks.push(hook)
+  remove = hook => this.hooks = this.hooks.filter(h => h !== hook)
+  has = hook => this.hooks.indexOf(hook) !== -1
+  clear = () => this.hooks = []
+}
+
+const enterHooks = new PendingHooks()
+const changeHooks = new PendingHooks()
+
+function createTransitionHook(hook, route, asyncArity, pendingHooks) {
+  const transitionHook = (...args) => {
     hook.apply(route, args)
 
     if (hook.length < asyncArity) {
       let callback = args[args.length - 1]
+      // Add synchronous hook to pendingHooks (gets removed instantly later)
+      pendingHooks.add(transitionHook)
       // Assume hook executes synchronously and
       // automatically call the callback.
       callback()
     }
   }
+
+  if (hook.length >= asyncArity) {
+    pendingHooks.add(transitionHook)
+  }
+
+  return transitionHook
 }
 
 function getEnterHooks(routes) {
   return routes.reduce(function (hooks, route) {
     if (route.onEnter)
-      hooks.push(createTransitionHook(route.onEnter, route, 3))
-
+      hooks.push(createTransitionHook(route.onEnter, route, 3, enterHooks))
     return hooks
   }, [])
 }
@@ -25,7 +43,7 @@ function getEnterHooks(routes) {
 function getChangeHooks(routes) {
   return routes.reduce(function (hooks, route) {
     if (route.onChange)
-      hooks.push(createTransitionHook(route.onChange, route, 4))
+      hooks.push(createTransitionHook(route.onChange, route, 4, changeHooks))
     return hooks
   }, [])
 }
@@ -63,9 +81,16 @@ function runTransitionHooks(length, iter, callback) {
  * which could lead to a non-responsive UI if the hook is slow.
  */
 export function runEnterHooks(routes, nextState, callback) {
+  enterHooks.clear()
   const hooks = getEnterHooks(routes)
   return runTransitionHooks(hooks.length, (index, replace, next) => {
-    hooks[index](nextState, replace, next)
+    const wrappedNext = () => {
+      if (enterHooks.has(hooks[index])) {
+        next()
+        enterHooks.remove(hooks[index])
+      }
+    }
+    hooks[index](nextState, replace, wrappedNext)
   }, callback)
 }
 
@@ -80,9 +105,16 @@ export function runEnterHooks(routes, nextState, callback) {
  * which could lead to a non-responsive UI if the hook is slow.
  */
 export function runChangeHooks(routes, state, nextState, callback) {
+  changeHooks.clear()
   const hooks = getChangeHooks(routes)
   return runTransitionHooks(hooks.length, (index, replace, next) => {
-    hooks[index](state, nextState, replace, next)
+    const wrappedNext = () => {
+      if (changeHooks.has(hooks[index])) {
+        next()
+        changeHooks.remove(hooks[index])
+      }
+    }
+    hooks[index](state, nextState, replace, wrappedNext)
   }, callback)
 }
 
