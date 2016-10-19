@@ -76,10 +76,10 @@ const Router = React.createClass({
     const { routes, children } = this.props
 
     invariant(
-      history.getCurrentLocation,
-      'You have provided a history object created with history v2.x or ' +
-      'earlier. This version of React Router is only compatible with v3 ' +
-      'history objects. Please upgrade to history v3.x.'
+      history.getCurrentLocation && history.transitionTo,
+      'You have provided a history object created with a no supported ' +
+      'history version. This version of React Router is only compatible with ' +
+      'v3 history objects. Plese use history v3.x'
     )
 
     return createTransitionManager(
