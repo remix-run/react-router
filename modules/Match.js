@@ -3,63 +3,6 @@ import MatchProvider from './MatchProvider'
 import matchPattern from './matchPattern'
 import { LocationSubscriber } from './Broadcasts'
 
-class RegisterMatch extends React.Component {
-  static contextTypes = {
-    match: PropTypes.object,
-    serverRouter: PropTypes.object
-  }
-
-  registerMatch() {
-    const { match:matchContext } = this.context
-    const { match } = this.props
-
-    if (match && matchContext) {
-      matchContext.addMatch(match)
-    }
-  }
-
-  componentWillMount() {
-    if (this.context.serverRouter) {
-      this.registerMatch()
-    }
-  }
-
-  componentDidMount() {
-    if (!this.context.serverRouter) {
-      this.registerMatch()
-    }
-  }
-
-  componentDidUpdate(prevProps) {
-    const { match } = this.context
-
-    if (match) {
-      if (prevProps.match && !this.props.match) {
-        match.removeMatch(prevProps.match)
-      } else if (!prevProps.match && this.props.match) {
-        match.addMatch(this.props.match)
-      }
-    }
-  }
-
-  componentWillUnmount() {
-    if (this.props.match) {
-      this.context.match.removeMatch(this.props.match)
-    }
-  }
-
-  render() {
-    return React.Children.only(this.props.children)
-  }
-}
-
-if (__DEV__) {
-  RegisterMatch.propTypes = {
-    children: PropTypes.node.isRequired,
-    match: PropTypes.any
-  }
-}
-
 class Match extends React.Component {
   static defaultProps = {
     exactly: false
@@ -67,7 +10,72 @@ class Match extends React.Component {
 
   static contextTypes = {
     location: PropTypes.object,
-    match: PropTypes.object
+    provider: PropTypes.object,
+    serverRouter: PropTypes.object
+  }
+
+  constructor(props) {
+    super(props)
+
+    this.state = {
+      match: null
+    }
+
+    this.update = (location) => {
+      const match = this.matchCurrent(location)
+      this.setState({
+        match
+      })
+      return match !== null
+    }
+  }
+
+  matchCurrent(location) {
+    const {
+      pattern,
+      exactly
+    } = this.props
+    const { provider } = this.context
+    const parent = provider && provider.parent
+    return matchPattern(pattern, location, exactly, parent)
+  }
+
+  componentWillMount() {
+    const loc = this.props.location || this.context.location
+    const match = this.matchCurrent(loc)
+    this.setState({
+      match
+    })
+
+    const { serverRouter, provider } = this.context
+    if (serverRouter && provider) {
+      serverRouter.updateMatchStatus(
+        provider.serverRouterIndex,
+        match !== null
+      )
+      this.unsubscribe = provider.addMatch(this.update)
+    } 
+  }
+
+  componentDidMount() {
+    const { serverRouter, provider } = this.context
+    if (!serverRouter && provider) {
+      this.unsubscribe = provider.addMatch(this.update)
+    }
+  }
+
+  componentWillReceiveProps(newProps) {
+    const location = newProps.location || this.context.location
+    const match = this.matchCurrent(location)
+    this.setState({
+      match
+    })
+  }
+
+  componentWillUnmount() {
+    if (this.unsubscribe) {
+      this.unsubscribe()
+    }
   }
 
   render() {
@@ -75,26 +83,22 @@ class Match extends React.Component {
       <LocationSubscriber>
         {(locationContext) => {
           const { children, render, component:Component,
-            pattern, location, exactly } = this.props
-          const { match:matchContext } = this.context
+            pattern, location } = this.props
+          const { match } = this.state
           const loc = location || locationContext
-          const parent = matchContext && matchContext.parent
-          const match = matchPattern(pattern, loc, exactly, parent)
           const props = { ...match, location: loc, pattern }
           return (
-            <RegisterMatch match={match}>
-              <MatchProvider match={match}>
-                {children ? (
-                  children({ matched: !!match, ...props })
-                ) : match ? (
-                  render ? (
-                    render(props)
-                  ) : (
-                    <Component {...props}/>
-                  )
-                ) : null}
-              </MatchProvider>
-            </RegisterMatch>
+            <MatchProvider location={loc} match={match}>
+              {children ? (
+                children({ matched: !!match, ...props })
+              ) : match ? (
+                render ? (
+                  render(props)
+                ) : (
+                  <Component {...props}/>
+                )
+              ) : null}
+            </MatchProvider>
           )
         }}
       </LocationSubscriber>
