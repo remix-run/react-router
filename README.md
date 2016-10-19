@@ -62,9 +62,15 @@ import React from 'react'
 import { render } from 'react-dom'
 import { Router, Route, Link, browserHistory } from 'react-router'
 
-const App = React.createClass({/*...*/})
 const About = React.createClass({/*...*/})
 const NoMatch = React.createClass({/*...*/})
+
+const App = React.createClass({
+  render() {
+    {/* matched nested routes are passed as children */}
+    return <div>{this.props.children}</div>
+  }
+})
 
 const Users = React.createClass({
   render() {
