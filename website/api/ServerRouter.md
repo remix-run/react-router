@@ -65,6 +65,18 @@ createServer((req, res) => {
 }).listen(3000)
 ```
 
+## `basename`
+
+The base URL for all locations.
+
+```js
+<ServerRouter basename="/calendar" />
+
+// now links like this:
+<Link to="/today"/>
+// will generate links with an href to "/calendar/today"
+```
+
 ## `location: string`
 
 The location the server received, probably `req.url` on a node server.
