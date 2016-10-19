@@ -70,6 +70,24 @@ describe('Match', () => {
             })
           })
         })
+        it('passes undefined for missing optional props', () => {
+          renderToString(
+            <Match
+              pattern="/:foo/:bar?"
+              location={{ pathname: '/foo' }}
+              component={(props) => {
+                expect(props).toEqual({
+                  params: { foo: 'foo', bar: undefined },
+                  isExact: true,
+                  pathname: '/foo',
+                  location: { pathname: '/foo' },
+                  pattern: '/:foo/:bar?'
+                })
+                return <div />
+              }}
+            />
+          )
+        })
       })
 
       describe('when matched partially', () => {
