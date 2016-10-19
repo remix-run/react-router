@@ -75,12 +75,12 @@ class Link extends React.Component {
     if (apatheticToIsActive) {
       return (
         <a
+          {...rest}
           href={router ? router.createHref(to) : to}
           onClick={this.handleClick}
           style={style}
           className={className}
           children={children}
-          {...rest}
         />
       )
     }
@@ -114,6 +114,7 @@ class Link extends React.Component {
           // any attempt at changing to use <Match>
           return (
             <a
+              {...rest}
               href={router ? router.createHref(to) : to}
               onClick={this.handleClick}
               style={isActive ? { ...style, ...activeStyle } : style }
@@ -121,7 +122,6 @@ class Link extends React.Component {
                 [ className, activeClassName ].join(' ').trim() : className
               }
               children={children}
-              {...rest}
             />
           )
         }}
