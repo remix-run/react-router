@@ -1,9 +1,12 @@
-import expect, { spyOn, restoreSpies } from 'expect'
+import expect, { spyOn, restoreSpies, createSpy } from 'expect'
 import React, { PropTypes } from 'react'
 import Link from '../Link'
 import { render } from 'react-dom'
+import { Simulate } from 'react-addons-test-utils'
 import { LocationBroadcast } from '../Broadcasts'
 import * as broadcasters from '../Broadcasts'
+
+const { click } = Simulate
 
 describe('Link', () => {
 
@@ -341,6 +344,63 @@ describe('Link', () => {
         <Link to='/foo'>Foo</Link>
       ), div)
       expect(broadcasters.LocationSubscriber).toNotHaveBeenCalled()
+    })
+  })
+
+  describe('accepts a onClick handler', () => {
+    const transitionSpy = createSpy()
+    const clickEventData = {
+      button: 0,
+      defaultPrevented: false,
+      preventDefault: function () {
+        this.defaultPrevented = true
+      }
+    }
+    class TestRouterContext extends React.Component {
+      static childContextTypes = {
+        router: PropTypes.object
+      }
+
+      getChildContext() {
+        return {
+          router: {
+            createHref: () => 'CONTEXT_HREF',
+            blockTransitions: () => {},
+            transitionTo: transitionSpy,
+            replaceWith: () => {}
+          }
+        }
+      }
+
+      render() {
+        return this.props.children
+      }
+    }
+
+    afterEach(() => {
+      transitionSpy.reset()
+    })
+
+    it('calls both Link.handleClick and props.onClick', () => {
+      const div = document.createElement('div')
+      const customOnClick = createSpy()
+      const link = <Link {...requiredProps} to='/foo' onClick={customOnClick} />
+      render(<TestRouterContext>{link}</TestRouterContext>, div, () => {
+        click(div.querySelector('a'), clickEventData)
+      })
+      expect(customOnClick).toHaveBeenCalled()
+      expect(transitionSpy).toHaveBeenCalled()
+    })
+
+    it('does not call handleTransition when event has been prevented', () => {
+      const div = document.createElement('div')
+      const customOnClick = createSpy().andCall(e => e.preventDefault())
+      const link = <Link {...requiredProps} to='/foo' onClick={customOnClick} />
+      render(<TestRouterContext>{link}</TestRouterContext>, div, () => {
+        click(div.querySelector('a'), clickEventData)
+      })
+      expect(customOnClick).toHaveBeenCalled()
+      expect(transitionSpy).toNotHaveBeenCalled()
     })
   })
 })
