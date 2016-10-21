@@ -13,7 +13,7 @@ class ServerRouter extends React.Component {
   }
 
   render() {
-    const { context, location, ...rest } = this.props
+    const { context, location, basename, ...rest } = this.props
     const redirect = (location) => {
       context.setRedirect(location)
     }
@@ -21,6 +21,7 @@ class ServerRouter extends React.Component {
       <StaticRouter
         action="POP"
         location={location}
+        basename={basename}
         onReplace={redirect}
         onPush={redirect}
         {...rest}
@@ -31,6 +32,7 @@ class ServerRouter extends React.Component {
 
 if (__DEV__) {
   ServerRouter.propTypes = {
+    basename: PropTypes.string,
     context: PropTypes.object.isRequired,
     location: PropTypes.string.isRequired,
     children: PropTypes.oneOfType([
