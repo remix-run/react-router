@@ -32,11 +32,11 @@ describe('ServerRouter', () => {
     })
   })
 
-  it('doesn\'t render misses on first pass', () => {
+  it('doesn\'t render misses located before matches', () => {
     const NO = 'NO'
     const YES1 = 'YES1'
     const YES2 = 'YES2'
-    const NEVER = 'NEVER'
+    const NOWHERE = 'NOWHERE'
     const location = '/nowhere'
     const App = () => (
       <div>
@@ -48,9 +48,44 @@ describe('ServerRouter', () => {
             <Miss render={() => (
               <div>{YES2}</div>
             )}/>
-            <Match pattern='/never-renders' render={() => (
-              <div>{NEVER}</div>
+            <Match pattern='/nowhere' render={() => (
+              <div>{NOWHERE}</div>
             )} />
+          </div>
+        )}/>
+        <Miss render={() => <div>{NO}</div>}/>
+      </div>
+    )
+
+    const context = createServerRenderContext()
+
+    const firstRender = renderToString(
+      <ServerRouter context={context} location={location}>
+        <App/>
+      </ServerRouter>
+    )
+
+    const result = context.getResult()
+    expect(result.missed).toBe(false)
+    expect(firstRender).toNotContain(YES1)
+    expect(firstRender).toNotContain(YES2)
+  })
+
+  it('doesn\'t render misses on first pass', () => {
+    const NO = 'NO'
+    const YES1 = 'YES1'
+    const YES2 = 'YES2'
+    const location = '/nowhere'
+    const App = () => (
+      <div>
+        <Match pattern="/" render={() => (
+          <div>
+            <Miss render={() => (
+              <div>{YES1}</div>
+            )}/>
+            <Miss render={() => (
+              <div>{YES2}</div>
+            )}/>
           </div>
         )}/>
         <Miss render={() => <div>{NO}</div>}/>
