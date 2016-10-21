@@ -1,5 +1,6 @@
 import React, { PropTypes } from 'react'
 import { location as locationType } from './PropTypes'
+import { LocationSubscriber } from './Broadcasts'
 
 class Miss extends React.Component {
   static contextTypes = {
@@ -38,24 +39,30 @@ class Miss extends React.Component {
   }
 
   render() {
-    const { render, component:Component } = this.props
-    const { noMatchesInContext } = this.state
-    const { location:locationProp } = this.props
-    const location = locationProp || this.context.location
-    const { serverRouter, match } = this.context
-    const noMatchesOnServerContext = serverRouter &&
-      serverRouter.missedAtIndex(match.serverRouterIndex)
-    if (noMatchesInContext || noMatchesOnServerContext) {
-      return (
-        render ? (
-          render({ location })
-        ) : (
-          <Component location={location}/>
-        )
-      )
-    } else {
-      return null
-    }
+    return (
+      <LocationSubscriber>
+        {(locationContext) => {
+          const { render, component:Component } = this.props
+          const { noMatchesInContext } = this.state
+          const { location:locationProp } = this.props
+          const location = locationProp || locationContext
+          const { serverRouter, match } = this.context
+          const noMatchesOnServerContext = serverRouter &&
+            serverRouter.missedAtIndex(match.serverRouterIndex)
+          if (noMatchesInContext || noMatchesOnServerContext) {
+            return (
+              render ? (
+                render({ location })
+              ) : (
+                <Component location={location}/>
+              )
+            )
+          } else {
+            return null
+          }
+        }}
+      </LocationSubscriber>
+    )
   }
 }
 
