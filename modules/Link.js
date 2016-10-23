@@ -36,7 +36,8 @@ class Link extends React.Component {
       !event.defaultPrevented && // onClick prevented default
       !this.props.target && // let browser handle "target=_blank" etc.
       !isModifiedEvent(event) &&
-      isLeftClickEvent(event)
+      isLeftClickEvent(event) &&
+      this.context.router
     ) {
       event.preventDefault()
       this.handleTransition()

@@ -403,4 +403,101 @@ describe('Link', () => {
       expect(transitionSpy).toNotHaveBeenCalled()
     })
   })
+
+  describe('outside of a router', () => {
+    it('renders', () => {
+      const div = document.createElement('div')
+      const TEXT = 'TEXT'
+      render((
+        <Link to='/foo'>{TEXT}</Link>
+      ), div)
+      const a = div.querySelector('a')
+      expect(a.textContent).toContain(TEXT)
+    })
+
+    it('can be clicked', () => {
+      const div = document.createElement('div')
+      const preventDefaultSpy = createSpy().andCall(function () {
+        this.defaultPrevented = true
+      })
+      const clickEventData = {
+        button: 0,
+        defaultPrevented: false,
+        preventDefault: preventDefaultSpy
+      }
+
+      render((
+        <Link to='/other'>
+          Text
+        </Link>
+      ), div, () => {
+        const a = div.querySelector('a')
+        expect(() => {
+          click(a, clickEventData)
+        }).toNotThrow()
+      })
+      // when all handleClick checks passed,
+      // preventDefault is called before handleTransition
+      expect(preventDefaultSpy).toNotHaveBeenCalled()
+    })
+
+    describe('active', () => {
+      it('can use active props if provided location prop', () => {
+        const div = document.createElement('div')
+        const location = '/'
+        const className = () => {
+          render((
+            <Link to='/' location={{ pathname: location }} activeClassName='active'>Test</Link>
+          ), div)
+        }
+        const style = () => {
+          render((
+            <Link to='/' location={{ pathname: location }} activeStyle={{ color: 'red' }}>Test</Link>
+          ), div)
+        }
+        const children = () => {
+          render((
+            <Link to='/' location={{ pathname: location }}>
+              {(isActive, href) => (
+                <a href={href} className={isActive ? 'active link' : 'link'}>
+                  Foo
+                </a>
+              )}
+            </Link>
+          ), div)
+        }
+        [className, style, children].forEach(fn => {
+          expect(fn).toNotThrow()
+        })
+      })
+
+      it('throws if using active aware prop with no location', () => {
+        const div = document.createElement('div')
+        const className = () => {
+          render((
+            <Link to='/' activeClassName='active'>Test</Link>
+          ), div)
+        }
+        const style = () => {
+          render((
+            <Link to='/' activeStyle={{ color: 'red' }}>Test</Link>
+          ), div)
+        }
+        const children = () => {
+          render((
+            <Link to='/'>
+              {(isActive, href) => (
+                <a href={href} className={isActive ? 'active link' : 'link'}>
+                  Foo
+                </a>
+              )}
+            </Link>
+          ), div)
+        }
+        [className, style, children].forEach(fn => {
+          expect(fn).toThrow()
+        })
+      })
+    })
+  })
 })
