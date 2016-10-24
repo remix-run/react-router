@@ -1,6 +1,7 @@
 import expect from 'expect'
 import React from 'react'
 import Match from '../Match'
+import MatchProvider from '../MatchProvider'
 import { renderToString } from 'react-dom/server'
 import { render } from 'react-dom'
 import { LocationBroadcast } from '../Broadcasts'
@@ -368,9 +369,11 @@ describe('Match', () => {
       const location = { pathname: '/', state: { test: TEXT } }
       const html = renderToString(
         <LocationBroadcast value={location}>
-          <Match pattern="/" render={({ location }) => (
-            <div>{location.state.test}</div>
-          )}/>
+          <MatchProvider location={location}>
+            <Match pattern="/" render={({ location }) => (
+              <div>{location.state.test}</div>
+            )}/>
+          </MatchProvider>
         </LocationBroadcast>
       )
       expect(html).toContain(TEXT)

@@ -3,7 +3,7 @@ import { location as locationType } from './PropTypes'
 
 class Miss extends React.Component {
   static contextTypes = {
-    match: PropTypes.object,
+    provider: PropTypes.object,
     location: PropTypes.object,
     serverRouter: PropTypes.object
   }
@@ -12,8 +12,8 @@ class Miss extends React.Component {
     super(props, context)
 
     // ignore if rendered out of context (probably for unit tests)
-    if (context.match && !context.serverRouter) {
-      this.unsubscribe = this.context.match.subscribe((matchesFound) => {
+    if (context.provider && !context.serverRouter) {
+      this.unsubscribe = this.context.provider.addMiss((matchesFound) => {
         this.setState({
           noMatchesInContext: !matchesFound
         })
@@ -22,7 +22,7 @@ class Miss extends React.Component {
 
     if (context.serverRouter) {
       context.serverRouter.registerMissPresence(
-        context.match.serverRouterIndex
+        context.provider.serverRouterIndex
       )
     }
 
@@ -40,11 +40,10 @@ class Miss extends React.Component {
   render() {
     const { render, component:Component } = this.props
     const { noMatchesInContext } = this.state
-    const { location:locationProp } = this.props
-    const location = locationProp || this.context.location
-    const { serverRouter, match } = this.context
+    const location = this.props.location || this.context.location
+    const { serverRouter, provider } = this.context
     const noMatchesOnServerContext = serverRouter &&
-      serverRouter.missedAtIndex(match.serverRouterIndex)
+      serverRouter.missedAtIndex(provider.serverRouterIndex)
     if (noMatchesInContext || noMatchesOnServerContext) {
       return (
         render ? (

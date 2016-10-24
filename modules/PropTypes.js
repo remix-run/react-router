@@ -6,9 +6,9 @@ export const action = PropTypes.oneOf([
   'POP'
 ])
 
-export const matchContext = PropTypes.shape({
+export const providerContext = PropTypes.shape({
   addMatch: PropTypes.func.isRequired,
-  removeMatch: PropTypes.func.isRequired
+  addMiss: PropTypes.func.isRequired
 })
 
 export const history = PropTypes.shape({

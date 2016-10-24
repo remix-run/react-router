@@ -1,11 +1,12 @@
 import React, { PropTypes } from 'react'
 import {
-  matchContext as matchContextType
+  providerContext as providerContextType
 } from './PropTypes'
 
 class MatchProvider extends React.Component {
   static childContextTypes = {
-    match: matchContextType.isRequired
+    provider: providerContextType.isRequired,
+    location: PropTypes.object.isRequired
   }
 
   static contextTypes = {
@@ -17,34 +18,35 @@ class MatchProvider extends React.Component {
     // **IMPORTANT** we must mutate matches, never reassign, in order for
     // server rendering to work w/ the two-pass render approach for Miss
     this.matches = []
-    this.subscribers = []
-    this.hasMatches = null // use null for initial value
+    this.misses = []
+
     this.serverRouterIndex = null
   }
 
-  addMatch = match => {
-    this.matches.push(match)
+  addMatch = fn => {
+    this.matches.push(fn)
+    return () => {
+      this.matches.splice(this.matches.indexOf(fn), 1)
+    }
   }
 
-  removeMatch = match => {
-    this.matches.splice(this.matches.indexOf(match), 1)
+  addMiss = fn => {
+    this.misses.push(fn)
+    return () => {
+      this.misses.splice(this.misses.indexOf(fn), 1)
+    }
   }
 
   getChildContext() {
     return {
-      match: {
+      provider: {
         addMatch: this.addMatch,
-        removeMatch: this.removeMatch,
+        addMiss: this.addMiss,
         matches: this.matches,
         parent: this.props.match,
-        serverRouterIndex: this.serverRouterIndex,
-        subscribe: (fn) => {
-          this.subscribers.push(fn)
-          return () => {
-            this.subscribers.splice(this.subscribers.indexOf(fn), 1)
-          }
-        }
-      }
+        serverRouterIndex: this.serverRouterIndex
+      },
+      location: this.props.location
     }
   }
 
@@ -56,7 +58,7 @@ class MatchProvider extends React.Component {
     const { serverRouter } = this.context
     if (serverRouter) {
       this.serverRouterIndex =
-        serverRouter.registerMatchContext(this.matches)
+        serverRouter.registerMatchProvider(this.matches)
     }
   }
 
@@ -65,12 +67,11 @@ class MatchProvider extends React.Component {
   }
 
   notifySubscribers() {
-    // React's contract is that cDM of descendants is called before cDM of
-    // ancestors, so here we can safely check if we found a match
-    if (this.subscribers.length) {
-      this.hasMatches = this.matches.length !== 0
-      this.subscribers.forEach(fn => fn(this.hasMatches))
-    }
+    const { location } = this.props
+    const hasMatches = this.matches
+      .map(fn => fn(location))
+      .some(matches => matches)
+    this.misses.forEach(fn => fn(hasMatches))
   }
 
   render() {
@@ -81,7 +82,8 @@ class MatchProvider extends React.Component {
 if (__DEV__) {
   MatchProvider.propTypes = {
     match: PropTypes.any,
-    children: PropTypes.node
+    children: PropTypes.node,
+    location: PropTypes.object
   }
 }
 

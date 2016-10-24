@@ -32,7 +32,46 @@ describe('ServerRouter', () => {
     })
   })
 
-  it('renders misses on second pass with server render context result', (done) => {
+  it('doesn\'t render misses located before matches', () => {
+    const NO = 'NO'
+    const YES1 = 'YES1'
+    const YES2 = 'YES2'
+    const NOWHERE = 'NOWHERE'
+    const location = '/nowhere'
+    const App = () => (
+      <div>
+        <Match pattern="/" render={() => (
+          <div>
+            <Miss render={() => (
+              <div>{YES1}</div>
+            )}/>
+            <Miss render={() => (
+              <div>{YES2}</div>
+            )}/>
+            <Match pattern='/nowhere' render={() => (
+              <div>{NOWHERE}</div>
+            )} />
+          </div>
+        )}/>
+        <Miss render={() => <div>{NO}</div>}/>
+      </div>
+    )
+
+    const context = createServerRenderContext()
+
+    const firstRender = renderToString(
+      <ServerRouter context={context} location={location}>
+        <App/>
+      </ServerRouter>
+    )
+
+    const result = context.getResult()
+    expect(result.missed).toBe(false)
+    expect(firstRender).toNotContain(YES1)
+    expect(firstRender).toNotContain(YES2)
+  })
+
+  it('doesn\'t render misses on first pass', () => {
     const NO = 'NO'
     const YES1 = 'YES1'
     const YES2 = 'YES2'
@@ -47,6 +86,45 @@ describe('ServerRouter', () => {
             <Miss render={() => (
               <div>{YES2}</div>
             )}/>
+          </div>
+        )}/>
+        <Miss render={() => <div>{NO}</div>}/>
+      </div>
+    )
+
+    const context = createServerRenderContext()
+
+    const firstRender = renderToString(
+      <ServerRouter context={context} location={location}>
+        <App/>
+      </ServerRouter>
+    )
+
+    const result = context.getResult()
+    expect(result.missed).toBe(true)
+    expect(firstRender).toNotContain(YES1)
+    expect(firstRender).toNotContain(YES2)
+  })
+
+  it('renders misses on second pass with server render context result', (done) => {
+    const NO = 'NO'
+    const YES1 = 'YES1'
+    const YES2 = 'YES2'
+    const NEVER = 'NEVER'
+    const location = '/nowhere'
+    const App = () => (
+      <div>
+        <Match pattern="/" render={() => (
+          <div>
+            <Miss render={() => (
+              <div>{YES1}</div>
+            )}/>
+            <Miss render={() => (
+              <div>{YES2}</div>
+            )}/>
+            <Match pattern='/never-renders' render={() => (
+              <div>{NEVER}</div>
+            )} />
           </div>
         )}/>
         <Miss render={() => <div>{NO}</div>}/>
@@ -74,6 +152,7 @@ describe('ServerRouter', () => {
       expect(markup).toContain(YES1)
       expect(markup).toContain(YES2)
       expect(markup).toNotContain(NO)
+      expect(markup).toNotContain(NEVER)
       done()
     }
   })
