@@ -66,25 +66,6 @@ class Link extends React.Component {
       ...rest
     } = this.props
 
-    const apatheticToIsActive = (
-      activeClassName === '' &&
-      Object.keys(activeStyle).length === 0 &&
-      typeof children !== 'function'
-    )
-
-    if (apatheticToIsActive) {
-      return (
-        <a
-          {...rest}
-          href={router ? router.createHref(to) : to}
-          onClick={this.handleClick}
-          style={style}
-          className={className}
-          children={children}
-        />
-      )
-    }
-
     return (
       <LocationSubscriber>
         {(contextLocation) => {
