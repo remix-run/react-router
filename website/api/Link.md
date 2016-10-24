@@ -8,6 +8,11 @@ Provides declarative, accessible navigation around your application.
 </Link>
 ```
 
+**NOTE** The `<Link>` is designed to be used within a router component. However, it can be used outside of a router, but doing so comes with some restrictions:
+
+1. The `to` prop must be a string.
+2. If using any active aware props (`activeClassName`, `activeStyle`, or `children` as a function), you must include a `location` object prop on the `<Link>`.
+
 ## `children: node | func`
 
 The Link component also accepts a function as children.
