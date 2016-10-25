@@ -64,8 +64,8 @@ class Match extends React.Component {
     }
   }
 
-  componentWillReceiveProps(newProps) {
-    const location = newProps.location || this.context.location
+  componentWillReceiveProps(nextProps, nextContext) {
+    const location = nextProps.location || nextContext.location
     const match = this.matchCurrent(location)
     this.setState({
       match
