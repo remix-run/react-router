@@ -149,7 +149,7 @@ export function formatPattern(pattern, params) {
   params = params || {}
 
   const { tokens } = compilePattern(pattern)
-  let parenCount = 0, pathname = '', splatIndex = 0
+  let parenCount = 0, pathname = '', splatIndex = 0, parenHistory = []
 
   let token, paramName, paramValue
   for (let i = 0, len = tokens.length; i < len; ++i) {
@@ -167,9 +167,16 @@ export function formatPattern(pattern, params) {
       if (paramValue != null)
         pathname += encodeURI(paramValue)
     } else if (token === '(') {
+      parenHistory[parenCount] = ''
       parenCount += 1
     } else if (token === ')') {
+      const parenText = parenHistory.pop()
       parenCount -= 1
+
+      if (parenCount)
+        parenHistory[parenCount - 1] += parenText
+      else
+        pathname += parenText
     } else if (token.charAt(0) === ':') {
       paramName = token.substring(1)
       paramValue = params[paramName]
@@ -180,12 +187,47 @@ export function formatPattern(pattern, params) {
         paramName, pattern
       )
 
-      if (paramValue != null)
+      if (paramValue == null) {
+        if (parenCount) {
+          parenHistory[parenCount - 1] = ''
+
+          const curTokenIdx = tokens.indexOf(token)
+          const tokensSubset = tokens.slice(curTokenIdx, tokens.length)
+          let nextParenIdx = -1
+
+          for (let i = 0; i < tokensSubset.length; i++) {
+            if (tokensSubset[i] == ')') {
+              nextParenIdx = i
+              break
+            }
+          }
+
+          invariant(
+            nextParenIdx > 0,
+            'Path "%s" is missing end paren at segment "%s"', pattern, tokensSubset.join('')
+          )
+
+          // jump to ending paren
+          i = curTokenIdx + nextParenIdx - 1
+        }
+      }
+      else if (parenCount)
+        parenHistory[parenCount - 1] += encodeURIComponent(paramValue)
+      else
         pathname += encodeURIComponent(paramValue)
+
     } else {
-      pathname += token
+      if (parenCount)
+        parenHistory[parenCount - 1] += token
+      else
+        pathname += token
     }
   }
+
+  invariant(
+    parenCount <= 0,
+    'Path "%s" is missing end paren', pattern
+  )
 
   return pathname.replace(/\/+/g, '/')
 }

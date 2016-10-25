@@ -645,9 +645,9 @@ For more details, please see the [histories guide](/docs/guides/Histories.md).
 `useRouterHistory` is a `history` enhancer that configures a given `createHistory` factory to work with React Router. This allows using custom histories in addition to the bundled singleton histories.
 
 It also pre-enhances the history with the
-[useQueries](https://github.com/ReactTraining/history/blob/master/docs/QuerySupport.md)
+[useQueries](https://github.com/mjackson/history/blob/v2.x/docs/QuerySupport.md)
 and
-[useBasename](https://github.com/ReactTraining/history/blob/master/docs/BasenameSupport.md)
+[useBasename](https://github.com/mjackson/history/blob/v2.x/docs/BasenameSupport.md)
 enhancers from `history`
 
 #### Example
