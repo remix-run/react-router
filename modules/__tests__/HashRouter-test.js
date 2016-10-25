@@ -1,12 +1,17 @@
 import expect from 'expect'
-import { render } from 'react-dom'
+import { render, unmountComponentAtNode } from 'react-dom'
 import React from 'react'
 import HashRouter from '../HashRouter'
 import Link from '../Link'
 
 describe('HashRouter', () => {
+  const div = document.createElement('div')
+
+  afterEach(() => {
+    unmountComponentAtNode(div)
+  })
+
   const linkCreator = (hashType, to) => {
-    const div = document.createElement('div')
     render((
       <HashRouter hashType={hashType}>
         <Link to={to} />
