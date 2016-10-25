@@ -70,14 +70,14 @@ describe('Match', () => {
             })
           })
         })
-        it('passes undefined for missing optional props', () => {
+        it('does not pass optinal parameters if they do not occur in the URL', () => {
           renderToString(
             <Match
               pattern="/:foo/:bar?"
               location={{ pathname: '/foo' }}
               component={(props) => {
                 expect(props).toEqual({
-                  params: { foo: 'foo', bar: undefined },
+                  params: { foo: 'foo' },
                   isExact: true,
                   pathname: '/foo',
                   location: { pathname: '/foo' },
