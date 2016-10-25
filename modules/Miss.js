@@ -1,11 +1,9 @@
 import React, { PropTypes } from 'react'
-import { location as locationType } from './PropTypes'
 import { LocationSubscriber } from './Broadcasts'
 
 class Miss extends React.Component {
   static contextTypes = {
     match: PropTypes.object,
-    location: PropTypes.object,
     serverRouter: PropTypes.object
   }
 
@@ -41,11 +39,9 @@ class Miss extends React.Component {
   render() {
     return (
       <LocationSubscriber>
-        {(locationContext) => {
+        {(location) => {
           const { render, component:Component } = this.props
           const { noMatchesInContext } = this.state
-          const { location:locationProp } = this.props
-          const location = locationProp || locationContext
           const { serverRouter, match } = this.context
           const noMatchesOnServerContext = serverRouter &&
             serverRouter.missedAtIndex(match.serverRouterIndex)
@@ -69,7 +65,6 @@ class Miss extends React.Component {
 if (__DEV__) {
   Miss.propTypes = {
     children: PropTypes.node,
-    location: locationType,
     render: PropTypes.func,
     component: PropTypes.func
   }

@@ -346,11 +346,12 @@ describe('Link with a query', () => {
     const div = document.createElement('div')
     const loc = { pathname: '/foo', query: { a: 'b' } }
     render((
-      <Link
-        to={loc}
-        location={loc}
-        activeClassName="active"
-      />
+      <Router initialEntries={[ loc ]}>
+        <Link
+          to={loc}
+          activeClassName="active"
+        />
+      </Router>
     ), div)
     const a = div.querySelector('a')
     expect(a.className).toEqual('active')
@@ -359,11 +360,12 @@ describe('Link with a query', () => {
   it('is not active when the query does not match', () => {
     const div = document.createElement('div')
     render((
-      <Link
-        to={{ pathname: '/foo', query: { a: 'b' } }}
-        location={{ pathname: '/foo', query: { a: 'c' } }}
-        activeClassName="active"
-      />
+      <Router initialEntries={[{ pathname: '/foo', query: { a: 'c' } }]}>
+        <Link
+          to={{ pathname: '/foo', query: { a: 'b' } }}
+          activeClassName="active"
+        />
+      </Router>
     ), div)
     const a = div.querySelector('a')
     expect(a.className).toNotEqual('active')

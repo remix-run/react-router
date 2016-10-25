@@ -14,12 +14,9 @@ describe('Miss', () => {
     const div = document.createElement('div')
     const Page = () => <div>{TEXT}</div>
     render((
-      <MatchProvider>
-        <Miss
-          location={loc}
-          component={Page}
-        />
-      </MatchProvider>
+      <MemoryRouter initialEntries={[ loc ]}>
+        <Miss component={Page} />
+      </MemoryRouter>
     ), div, () => {
       expect(div.innerHTML).toContain(TEXT)
       unmountComponentAtNode(div)
@@ -30,31 +27,13 @@ describe('Miss', () => {
   it('renders a render prop passes a location', (done) => {
     const div = document.createElement('div')
     render((
-      <MatchProvider>
-        <Miss
-          location={loc}
-          render={({ location }) => (
-            <div>{location.state}</div>
-          )}
-        />
-      </MatchProvider>
+      <MemoryRouter initialEntries={[ loc ]}>
+        <Miss render={({ location }) => (
+          <div>{location.state}</div>
+        )}/>
+      </MemoryRouter>
     ), div, () => {
       expect(div.innerHTML).toContain(TEXT)
-      unmountComponentAtNode(div)
-      done()
-    })
-  })
-
-  it('renders null when out of context', (done) => {
-    const div = document.createElement('div')
-    const Page = () => <div>{TEXT}</div>
-    render((
-      <Miss
-        location={loc}
-        component={Page}
-      />
-    ), div, () => {
-      expect(div.innerHTML).toNotContain(TEXT)
       unmountComponentAtNode(div)
       done()
     })

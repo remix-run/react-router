@@ -58,7 +58,6 @@ class Link extends React.Component {
       activeStyle,
       className,
       activeClassName,
-      location: propLocation,
       isActive: getIsActive,
       activeOnlyWhenExact, // eslint-disable-line
       replace, // eslint-disable-line
@@ -68,9 +67,7 @@ class Link extends React.Component {
 
     return (
       <LocationSubscriber>
-        {(contextLocation) => {
-          const location = propLocation || contextLocation
-
+        {(location) => {
           const isActive = getIsActive(
             location,
             createLocationDescriptor(to),
@@ -117,7 +114,6 @@ if (__DEV__) {
     replace: PropTypes.bool,
     activeStyle: PropTypes.object,
     activeClassName: PropTypes.string,
-    location: PropTypes.object,
     activeOnlyWhenExact: PropTypes.bool,
     isActive: PropTypes.func,
     children: PropTypes.oneOfType([PropTypes.node, PropTypes.func]),

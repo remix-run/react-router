@@ -1,11 +1,18 @@
 import expect, { createSpy } from 'expect'
 import React, { PropTypes } from 'react'
 import Link from '../Link'
+import MemoryRouter from '../MemoryRouter'
 import { render } from 'react-dom'
 import { Simulate } from 'react-addons-test-utils'
 import { LocationBroadcast } from '../Broadcasts'
 
 const { click } = Simulate
+
+const LinkInContext = ({ location, ...props}) => (
+  <MemoryRouter initialEntries={[ location.pathname ]}>
+    <Link {...props}/>
+  </MemoryRouter>
+)
 
 describe('Link', () => {
 
@@ -18,7 +25,7 @@ describe('Link', () => {
   describe('to prop', () => {
     it('does not require context', () => {
       const div = document.createElement('div')
-      render(<Link {...requiredProps} to="/foo"/>, div)
+      render(<LinkInContext {...requiredProps} to="/foo"/>, div)
       expect(div.querySelector('a').getAttribute('href')).toEqual('/foo')
     })
 
@@ -41,7 +48,11 @@ describe('Link', () => {
         }
 
         render() {
-          return this.props.children
+          return (
+            <LocationBroadcast value={{ pathname: '' }}>
+              {this.props.children}
+            </LocationBroadcast>
+          )
         }
       }
 
@@ -49,7 +60,7 @@ describe('Link', () => {
         const div = document.createElement('div')
         render((
           <TestRouterContext>
-            <Link {...requiredProps} to={{}}/>
+            <Link to={{}}/>
           </TestRouterContext>
         ), div)
         expect(div.querySelector('a').getAttribute('href')).toEqual(CONTEXT_HREF)
@@ -62,7 +73,7 @@ describe('Link', () => {
       const div = document.createElement('div')
       const PATHNAME = '/foo'
       render((
-        <Link
+        <LinkInContext
           to={PATHNAME}
           location={{ pathname: PATHNAME }}
           style={{ color: 'red' }}
@@ -79,7 +90,7 @@ describe('Link', () => {
         const div = document.createElement('div')
         const PATHNAME = '/foo'
         render((
-          <Link
+          <LinkInContext
             to={PATHNAME}
             location={{ pathname: PATHNAME }}
             activeStyle={{ color: 'red' }}
@@ -93,7 +104,7 @@ describe('Link', () => {
         const div = document.createElement('div')
         const PATHNAME = '/foo'
         render((
-          <Link
+          <LinkInContext
             to={PATHNAME}
             location={{ pathname: PATHNAME }}
             style={{ color: 'blue' }}
@@ -108,7 +119,7 @@ describe('Link', () => {
         const div = document.createElement('div')
         const PATHNAME = '/foo'
         render((
-          <Link
+          <LinkInContext
             to={PATHNAME}
             location={{ pathname: PATHNAME }}
             style={{ background: 'blue' }}
@@ -124,7 +135,7 @@ describe('Link', () => {
       it('does not use active styles', () => {
         const div = document.createElement('div')
         render((
-          <Link
+          <LinkInContext
             to='/foo'
             location={{ pathname: '/' }}
             style={{ color: 'blue' }}
@@ -141,7 +152,7 @@ describe('Link', () => {
     it('is applied when active', () => {
       const div = document.createElement('div')
       render((
-        <Link
+        <LinkInContext
           to='/foo'
           location={{ pathname: '/foo' }}
           activeClassName="active"
@@ -154,7 +165,7 @@ describe('Link', () => {
     it('is not applied when inactive', () => {
       const div = document.createElement('div')
       render((
-        <Link
+        <LinkInContext
           to='/foo'
           location={{ pathname: '/' }}
           activeClassName="active"
@@ -167,7 +178,7 @@ describe('Link', () => {
     it('applies both className and activeClassName when active', () => {
       const div = document.createElement('div')
       render((
-        <Link
+        <LinkInContext
           to='/foo'
           location={{ pathname: '/foo' }}
           className="one"
@@ -183,7 +194,7 @@ describe('Link', () => {
     it('is active when location matches exactly', () => {
       const div = document.createElement('div')
       render((
-        <Link
+        <LinkInContext
           activeOnlyWhenExact
           to='/foo'
           location={{ pathname: '/foo' }}
@@ -197,7 +208,7 @@ describe('Link', () => {
     it('is not active when location matches but not exactly', () => {
       const div = document.createElement('div')
       render((
-        <Link
+        <LinkInContext
           activeOnlyWhenExact
           to='/foo'
           location={{ pathname: '/foo/bar' }}
@@ -214,7 +225,7 @@ describe('Link', () => {
       it('isActive on partial matches', () => {
         const div = document.createElement('div')
         render((
-          <Link
+          <LinkInContext
             to='/foo'
             location={{ pathname: '/foo/bar' }}
             activeClassName="active"
@@ -227,7 +238,7 @@ describe('Link', () => {
       it('isActive on exact matches', () => {
         const div = document.createElement('div')
         render((
-          <Link
+          <LinkInContext
             to='/foo'
             location={{ pathname: '/foo' }}
             activeClassName="active"
@@ -243,7 +254,7 @@ describe('Link', () => {
     it('is used', () => {
       const div = document.createElement('div')
       render((
-        <Link
+        <LinkInContext
           to='/foo'
           location={{ pathname: '/foo' }}
           isActive={(...args) => args.length === 3}
@@ -255,36 +266,18 @@ describe('Link', () => {
     })
   })
 
-  describe('when rendered in context of a location', () => {
-    it('uses the location from context', () => {
-      const PATHNAME = '/PATHNAME'
-      const div = document.createElement('div')
-      const location = { pathname: PATHNAME, search: '', hash: '' }
-      render((
-        <LocationBroadcast value={location}>
-          <Link
-            to={PATHNAME}
-            activeClassName="active"
-          />
-        </LocationBroadcast>
-      ), div)
-      const a = div.querySelector('a')
-      expect(a.className).toEqual('active')
-    })
-  })
-
   describe('accepts function as children', () => {
     it('renders the child component with isActive', () => {
       const div = document.createElement('div')
       render((
-        <Link
+        <LinkInContext
           to='/foo'
           location={{ pathname: '/foo/bar' }}
         >
         {
           ({isActive}) => <a className={isActive ? 'active' : ''}>Test!</a>
         }
-        </Link>
+        </LinkInContext>
       ), div)
       const a = div.querySelector('a')
       expect(a.className).toEqual('active')
@@ -317,7 +310,11 @@ describe('Link', () => {
       }
 
       render() {
-        return this.props.children
+        return (
+          <LocationBroadcast value={{ pathname: '' }}>
+            {this.props.children}
+          </LocationBroadcast>
+        )
       }
     }
 
@@ -328,12 +325,12 @@ describe('Link', () => {
     it('calls both Link.handleClick and props.onClick', () => {
       const div = document.createElement('div')
       const customOnClick = createSpy()
-      const link = <Link {...requiredProps} to='/foo' onClick={customOnClick} />
+      const link = <Link to='/foo' onClick={customOnClick} />
       render(<TestRouterContext>{link}</TestRouterContext>, div, () => {
         click(div.querySelector('a'), clickEventData)
+        expect(customOnClick).toHaveBeenCalled()
+        expect(transitionSpy).toHaveBeenCalled()
       })
-      expect(customOnClick).toHaveBeenCalled()
-      expect(transitionSpy).toHaveBeenCalled()
     })
 
     it('does not call handleTransition when event has been prevented', () => {
