@@ -71,6 +71,24 @@ describe('Match', () => {
             })
           })
         })
+        it('does not pass optinal parameters if they do not occur in the URL', () => {
+          renderToString(
+            <Match
+              pattern="/:foo/:bar?"
+              location={{ pathname: '/foo' }}
+              component={(props) => {
+                expect(props).toEqual({
+                  params: { foo: 'foo' },
+                  isExact: true,
+                  pathname: '/foo',
+                  location: { pathname: '/foo' },
+                  pattern: '/:foo/:bar?'
+                })
+                return <div />
+              }}
+            />
+          )
+        })
       })
 
       describe('when matched partially', () => {

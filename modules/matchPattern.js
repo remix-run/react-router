@@ -22,7 +22,7 @@ const getMatcher = (pattern, exactly) => {
 }
 
 const parseParams = (pattern, match, keys) =>
-  match.slice(1).reduce((params, value, index) => {
+  match.slice(1).filter(value => value !== undefined).reduce((params, value, index) => {
     params[keys[index].name] = decodeURIComponent(value)
     return params
   }, {})
