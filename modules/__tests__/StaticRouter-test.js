@@ -12,7 +12,7 @@ const expectDeepEquality = (actual, expected) => {
     if (typeof actual[key] === 'object' && actual[key] != null) {
       expectDeepEquality(actual[key], expected[key])
     } else {
-      expect(actual[key]).toEqual(expected[key])
+      expect(actual[key]).toBe(expected[key])
     }
   })
 }
