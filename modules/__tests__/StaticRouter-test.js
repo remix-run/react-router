@@ -7,10 +7,13 @@ import { renderToString } from 'react-dom/server'
 //console.error = () => {}
 
 // is there a bug in expect? I thought it handled nested objects
-const expectDeepEquality = (actual, expected) => {
+const expectDeepEquality = (actual, expected, allKeysRequired = false) => {
+  if (allKeysRequired){
+    expect(Object.keys(actual)).toEqual(Object.keys(expected))
+  }
   Object.keys(actual).forEach(key => {
     if (typeof actual[key] === 'object' && actual[key] != null) {
-      expectDeepEquality(actual[key], expected[key])
+      expectDeepEquality(actual[key], expected[key], true)
     } else {
       expect(actual[key]).toEqual(expected[key])
     }
