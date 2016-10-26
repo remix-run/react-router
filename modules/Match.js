@@ -1,7 +1,6 @@
 import React, { PropTypes } from 'react'
 import MatchProvider from './MatchProvider'
 import matchPattern from './matchPattern'
-import { LocationSubscriber } from './Broadcasts'
 
 class Match extends React.Component {
   static defaultProps = {
@@ -79,29 +78,23 @@ class Match extends React.Component {
   }
 
   render() {
+    const { children, render, component:Component,
+      pattern } = this.props
+    const { match } = this.state
+    const location = this.props.location || this.context.location
+    const props = { ...match, location, pattern }
     return (
-      <LocationSubscriber>
-        {(locationContext) => {
-          const { children, render, component:Component,
-            pattern, location } = this.props
-          const { match } = this.state
-          const loc = location || locationContext
-          const props = { ...match, location: loc, pattern }
-          return (
-            <MatchProvider location={loc} match={match}>
-              {children ? (
-                children({ matched: !!match, ...props })
-              ) : match ? (
-                render ? (
-                  render(props)
-                ) : (
-                  <Component {...props}/>
-                )
-              ) : null}
-            </MatchProvider>
+      <MatchProvider location={location} match={match}>
+        {children ? (
+          children({ matched: !!match, ...props })
+        ) : match ? (
+          render ? (
+            render(props)
+          ) : (
+            <Component {...props}/>
           )
-        }}
-      </LocationSubscriber>
+        ) : null}
+      </MatchProvider>
     )
   }
 }
