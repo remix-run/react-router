@@ -4,7 +4,11 @@ export { locationsAreEqual } from 'history/LocationUtils'
 const coerceValuesToStrings = (query) => {
   let transformedQuery = {}
   Object.keys(query).forEach(key =>{
-    transformedQuery[key] = query[key].toString()
+    let value = query[key]
+    if (value != null){
+      value = value.toString()
+    }
+    transformedQuery[key] = value
   })
   return transformedQuery
 }

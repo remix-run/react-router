@@ -188,13 +188,25 @@ describe('StaticRouter', () => {
 
       it('coerces query values to strings', () => {
         assertParsedDescriptor({
-          query: { a: 23 }
+          query: { a: 23, b: false }
         }, {
           pathname: '',
-          query: { a: '23' },
+          query: { a: '23', b: 'false' },
           hash: '',
           state: null,
-          search: '?a=23'
+          search: '?a=23&b=false'
+        })
+      })
+
+      it('does not try to coerce null or undefined to strings', () => {
+        assertParsedDescriptor({
+          query: { a: undefined, b: null }
+        }, {
+          pathname: '',
+          query: { a: undefined, b: null },
+          hash: '',
+          state: null,
+          search: '?b'
         })
       })
 
