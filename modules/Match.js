@@ -66,7 +66,6 @@ class Match extends React.Component {
   }
 
   static contextTypes = {
-    location: PropTypes.object,
     match: PropTypes.object
   }
 
