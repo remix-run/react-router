@@ -39,6 +39,7 @@ module.exports = {
     alias: {
       'react-router/Miss': path.join(ROUTER_SRC, 'Miss'),
       'react-router/Match': path.join(ROUTER_SRC, 'Match'),
+      'react-router/MatchGroup': path.join(ROUTER_SRC, 'MatchGroup'),
       'react-router/Link': path.join(ROUTER_SRC, 'Link'),
       'react-router/Redirect': path.join(ROUTER_SRC, 'Redirect'),
       'react-router/NavigationPrompt': path.join(ROUTER_SRC, 'NavigationPrompt'),

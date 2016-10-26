@@ -41,6 +41,11 @@ export const EXAMPLES = [
     load: require('bundle?lazy!./examples/Miss'),
     loadSource: require('bundle?lazy!!prismjs?lang=jsx!./.examples/Miss.js')
   },
+  { name: 'MatchGroup',
+    path: '/match-group',
+    load: require('bundle?lazy!./examples/MatchGroup'),
+    loadSource: require('bundle?lazy!!prismjs?lang=jsx!./.examples/MatchGroup.js')
+  },
   { name: 'Query Params',
     path: '/query-params',
     load: require('bundle?lazy!./examples/QueryParams'),
