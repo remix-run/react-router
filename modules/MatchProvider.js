@@ -61,12 +61,12 @@ class MatchProvider extends React.Component {
   }
 
   componentDidMount() {
+    // React's contract is that cDM of descendants is called before cDM of
+    // ancestors, so here we can safely check if we found a match
     this.notifySubscribers()
   }
 
   notifySubscribers() {
-    // React's contract is that cDM of descendants is called before cDM of
-    // ancestors, so here we can safely check if we found a match
     if (this.subscribers.length) {
       this.hasMatches = this.matches.length !== 0
       this.subscribers.forEach(fn => fn(this.hasMatches))
