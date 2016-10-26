@@ -11,6 +11,12 @@ describe('LocationUtils', () => {
         expect(location).toIncludeKeys(['pathname', 'search', 'hash', 'query'])
       })
 
+      it('returns object without state and key', () => {
+        const url = '/foo'
+        const location = createRouterLocation(url, parse)
+        expect(location).toNotIncludeKeys(['state', 'key'])
+      })
+
       describe('query', () => {
         it('creates the query value from the search string', () => {
           const key = 'bar'
@@ -31,7 +37,7 @@ describe('LocationUtils', () => {
 
     describe('object', () => {
 
-      it('returns object with pathname, search, hash, query, and state', () => {
+      it('returns object with pathname, search, hash, query, state, and key', () => {
         const descriptor = {
           pathname: '/foo',
           search: '?bar=baz'
@@ -144,6 +150,22 @@ describe('LocationUtils', () => {
           const descriptor = {}
           const location = createRouterLocation(descriptor, parse, stringify)
           expect(location.query).toBe(null)
+        })
+      })
+
+      describe('key', () => {
+        it('is the provided key', () => {
+          const descriptor = {
+            key: 42
+          }
+          const location = createRouterLocation(descriptor, parse, stringify)
+          expect(location.key).toBe(descriptor.key)
+        })
+
+        it('is undefined when there is no key', () => {
+          const descriptor = {}
+          const location = createRouterLocation(descriptor, parse, stringify)
+          expect(location.key).toBe(undefined)
         })
       })
     })
