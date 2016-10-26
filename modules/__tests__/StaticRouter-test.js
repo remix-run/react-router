@@ -186,6 +186,18 @@ describe('StaticRouter', () => {
         })
       })
 
+      it('coerces query values to strings', () => {
+        assertParsedDescriptor({
+          query: { a: 23 }
+        }, {
+          pathname: '',
+          query: { a: '23' },
+          hash: '',
+          state: null,
+          search: '?a=23'
+        })
+      })
+
     })
   })
 
