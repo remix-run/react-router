@@ -28,7 +28,8 @@ describe('ServerRouter', () => {
       state: { status: 302 },
       query: null,
       search: '',
-      hash: ''
+      hash: '',
+      key: undefined
     })
   })
 

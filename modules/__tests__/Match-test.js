@@ -4,7 +4,6 @@ import Match from '../Match'
 import Router from '../MemoryRouter'
 import { renderToString } from 'react-dom/server'
 import { render } from 'react-dom'
-//import { LocationBroadcast } from '../Broadcasts'
 
 describe('Match', () => {
   const TEXT = 'TEXT'
@@ -71,22 +70,23 @@ describe('Match', () => {
             })
           })
         })
-        it('does not pass optinal parameters if they do not occur in the URL', () => {
+        it('does not pass optional parameters if they do not occur in the URL', () => {
           renderToString(
-            <Match
-              pattern="/:foo/:bar?"
-              location={{ pathname: '/foo' }}
-              component={(props) => {
-                expect(props).toEqual({
-                  params: { foo: 'foo' },
-                  isExact: true,
-                  pathname: '/foo',
-                  location: { pathname: '/foo' },
-                  pattern: '/:foo/:bar?'
-                })
-                return <div />
-              }}
-            />
+            <Router intialEntries={[ { pathname: '/foo' } ]}>
+              <Match
+                pattern="/:foo/:bar?"
+                component={(props) => {
+                  expect(props).toEqual({
+                    params: { foo: 'foo' },
+                    isExact: true,
+                    pathname: '/foo',
+                    location: { pathname: '/foo' },
+                    pattern: '/:foo/:bar?'
+                  })
+                  return <div />
+                }}
+              />
+            </Router>
           )
         })
       })
@@ -192,7 +192,8 @@ describe('Match', () => {
                 pathname: '/one/two',
                 query: null,
                 search: '',
-                state: null
+                state: null,
+                key: undefined
               },
               params: { foo: 'one', bar: 'two' },
               pathname: '/one/two',
@@ -257,7 +258,8 @@ describe('Match', () => {
               pathname: '/one/two',
               query: null,
               search: '',
-              state: null
+              state: null,
+              key: undefined
             },
             pattern: '/:foo/:bar'
           })
@@ -273,7 +275,8 @@ describe('Match', () => {
               pathname: '/',
               query: null,
               search: '',
-              state: null
+              state: null,
+              key: undefined
             },
             pattern: '/:foo/:bar'
           })
