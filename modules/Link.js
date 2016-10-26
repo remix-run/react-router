@@ -25,7 +25,7 @@ class Link extends React.Component {
   }
 
   static contextTypes = {
-    router: routerContextType
+    router: routerContextType.isRequired
   }
 
   handleClick = (event) => {
