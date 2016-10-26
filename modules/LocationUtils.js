@@ -18,7 +18,8 @@ export const createRouterLocation = (input, parseQueryString, stringifyQuery) =>
       state: input.state || null,
       query: input.query || (
         input.search ? parseQueryString(input.search) : null
-      )
+      ),
+      key: input.key
     }
   }
 }
