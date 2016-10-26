@@ -3,7 +3,6 @@ import React from 'react'
 import Miss from '../Miss'
 import Match from '../Match'
 import { render, unmountComponentAtNode } from 'react-dom'
-import MatchProvider from '../MatchProvider'
 import MemoryRouter from '../MemoryRouter'
 
 describe('Miss', () => {

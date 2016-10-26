@@ -336,7 +336,7 @@ describe('Link', () => {
     it('does not call handleTransition when event has been prevented', () => {
       const div = document.createElement('div')
       const customOnClick = createSpy().andCall(e => e.preventDefault())
-      const link = <Link {...requiredProps} to='/foo' onClick={customOnClick} />
+      const link = <Link to='/foo' onClick={customOnClick} />
       render(<TestRouterContext>{link}</TestRouterContext>, div, () => {
         click(div.querySelector('a'), clickEventData)
       })
