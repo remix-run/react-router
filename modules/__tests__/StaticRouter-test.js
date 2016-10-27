@@ -6,17 +6,6 @@ import { renderToString } from 'react-dom/server'
 
 //console.error = () => {}
 
-// is there a bug in expect? I thought it handled nested objects
-const expectDeepEquality = (actual, expected) => {
-  Object.keys(actual).forEach(key => {
-    if (typeof actual[key] === 'object' && actual[key] != null) {
-      expectDeepEquality(actual[key], expected[key])
-    } else {
-      expect(actual[key]).toEqual(expected[key])
-    }
-  })
-}
-
 describe('StaticRouter', () => {
 
   const requiredProps = {
@@ -26,6 +15,12 @@ describe('StaticRouter', () => {
     blockTransitions: () => {}, // we sure we want this required? servers don't need it.
     onPush: () => {},
     onReplace: () => {}
+  }
+
+  const withoutPrototype = (object) => {
+    let result = Object.create(null)
+    Object.keys(object).forEach(key => result[key] = object[key])
+    return result
   }
 
   describe('rendering', () => {
@@ -44,14 +39,11 @@ describe('StaticRouter', () => {
           {({ location }) => <div>{(actualLocation = location, null)}</div>}
         </StaticRouter>
       )
-      expectDeepEquality(actualLocation, {
-        action: 'POP',
+      expect(actualLocation).toEqual({
         hash: '',
-        key: null,
         pathname: '/lol',
         search: '',
-        query: null,
-        state: null
+        query: null
       })
     })
   })
@@ -69,15 +61,12 @@ describe('StaticRouter', () => {
           )}
         </StaticRouter>
       )
-      const expected = {
-        action: 'POP',
+      expect(actualLocation).toEqual({
         hash: '',
         pathname: '/lol',
         search: '?foo=bar',
-        query: { foo: 'bar' },
-        state: null
-      }
-      expectDeepEquality(actualLocation, expected)
+        query: withoutPrototype({ foo: 'bar' })
+      })
     })
 
     describe('location descriptors', () => {
@@ -88,8 +77,7 @@ describe('StaticRouter', () => {
             {({ location }) => <div>{(actualLocation = location, null)}</div>}
           </StaticRouter>
         )
-
-        expectDeepEquality(actualLocation, expected)
+        expect(actualLocation).toEqual(expected)
       }
 
       it('adds default properties', () => {
@@ -119,7 +107,7 @@ describe('StaticRouter', () => {
           search: '?a=b'
         }, {
           pathname: '',
-          query: { a: 'b' },
+          query: withoutPrototype({ a: 'b' }),
           hash: '',
           state: null,
           search: '?a=b'
@@ -131,7 +119,7 @@ describe('StaticRouter', () => {
           search: '?a=b'
         }, {
           pathname: '',
-          query: { a: 'b' },
+          query: withoutPrototype({ a: 'b' }),
           hash: '',
           state: null,
           search: '?a=b'
