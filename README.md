@@ -136,7 +136,7 @@ positions of window and individual elements.
 
 ### What about Redux?
 
-We have a `<ControlledRouter>` close to being published that makes redux
+We have [a `<ControlledRouter>` component](https://github.com/ReactTraining/react-router-addons-controlled) that makes redux
 integration with React Router the same as ... uh ... integrating an
 `<input>` with Redux.
 
