@@ -136,9 +136,10 @@ positions of window and individual elements.
 
 ### What about Redux?
 
-We have a `<ControlledRouter>` close to being published that makes redux
-integration with React Router the same as ... uh ... integrating an
-`<input>` with Redux.
+We have a `<ControlledRouter>` addon published as an experimental project
+over at https://github.com/ReactTraining/react-router-addons-controlled.
+ControlledRouter makes redux integration with React Router the same as 
+... uh ... integrating an `<input>` with Redux.
 
 ### What about route transition hooks? (example needed)
 
