@@ -1,6 +1,8 @@
 import { parsePath, createPath } from 'history/PathUtils'
 export { locationsAreEqual } from 'history/LocationUtils'
 
+const hasOwnProperty = (o, property) => Object.prototype.hasOwnProperty.call(o, property)
+
 export const createRouterLocation = (input, parseQueryString, stringifyQuery) => {
   if (typeof input === 'string') {
     const location = parsePath(input)
@@ -9,7 +11,7 @@ export const createRouterLocation = (input, parseQueryString, stringifyQuery) =>
     return location
   } else {
     // got a location descriptor
-    return {
+    let result = {
       pathname: input.pathname || '',
       search: input.search || (
         input.query ? `?${stringifyQuery(input.query)}` : ''
@@ -18,9 +20,12 @@ export const createRouterLocation = (input, parseQueryString, stringifyQuery) =>
       state: input.state || null,
       query: input.query || (
         input.search ? parseQueryString(input.search) : null
-      ),
-      key: input.key
+      )
     }
+    if (hasOwnProperty(input, 'key')){
+      result.key = input.key
+    }
+    return result
   }
 }
 
