@@ -44,12 +44,13 @@ const matchPattern = (pattern, location, matchExactly, parent) => {
     }
 
     const matcher = getMatcher(pattern, matchExactly)
-    const match = matcher.regex.exec(location.pathname)
+    const decoded = decodeURIComponent(location.pathname)
+    const match = matcher.regex.exec(decoded)
 
     if (match) {
       const params = parseParams(pattern, match, matcher.keys)
       const pathname = match[0]
-      const isExact = pathname === location.pathname
+      const isExact = pathname === decoded
 
       return { params, isExact, pathname }
     } else {
