@@ -62,6 +62,7 @@ class Link extends React.Component {
       activeOnlyWhenExact, // eslint-disable-line
       replace, // eslint-disable-line
       children,
+      onClick,
       ...rest
     } = this.props
 
