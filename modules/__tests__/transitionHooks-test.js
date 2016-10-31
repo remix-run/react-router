@@ -6,6 +6,7 @@ import { routerShape } from '../PropTypes'
 import execSteps from './execSteps'
 import Router from '../Router'
 import Route from '../Route'
+import match from '../match'
 
 describe('When a router enters a branch', function () {
   let
@@ -397,13 +398,17 @@ describe('Changing location', () => {
       cb()
     })
   }
+  const onEnterError = (state, replace, cb) => {
+    cb(new Error('transition error'))
+  }
   const createRoutes = ({ enter, change }) => [
     <Route path="/" onChange={change ? onChange : noop} component={Text('Home')}>
       <Route path="child1" component={Text('Child1')} />
       <Route path="child2" component={Text('Child2')} />
     </Route>,
     <Route path="/foo" onEnter={enter ? onEnter : noop} component={Text('Foo')} />,
-    <Route path="/bar" component={Text('Bar')} />
+    <Route path="/bar" component={Text('Bar')} />,
+    <Route path="/error" onEnter={enter ? onEnterError : noop} component={Text('Error')}/>
   ]
 
   beforeEach(() => {
@@ -441,6 +446,18 @@ describe('Changing location', () => {
         expect(node.innerHTML).toContain('Bar')
         done()
       })
+    })
+  })
+
+  it('should pass error correctly', (done) => {
+    const routes = createRoutes({ enter: true })
+
+    match({ routes, location: '/error' }, (error, redirectLocation, renderProps) => {
+      expect(error).toExist()
+      expect(error.message).toEqual('transition error')
+      expect(redirectLocation).toNotExist()
+      expect(renderProps).toNotExist()
+      done()
     })
   })
 })

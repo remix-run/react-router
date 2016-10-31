@@ -82,9 +82,9 @@ export function runEnterHooks(routes, nextState, callback) {
   enterHooks.clear()
   const hooks = getEnterHooks(routes)
   return runTransitionHooks(hooks.length, (index, replace, next) => {
-    const wrappedNext = () => {
+    const wrappedNext = (...args) => {
       if (enterHooks.has(hooks[index])) {
-        next()
+        next(...args)
         enterHooks.remove(hooks[index])
       }
     }
@@ -106,9 +106,9 @@ export function runChangeHooks(routes, state, nextState, callback) {
   changeHooks.clear()
   const hooks = getChangeHooks(routes)
   return runTransitionHooks(hooks.length, (index, replace, next) => {
-    const wrappedNext = () => {
+    const wrappedNext = (...args) => {
       if (changeHooks.has(hooks[index])) {
-        next()
+        next(...args)
         changeHooks.remove(hooks[index])
       }
     }
