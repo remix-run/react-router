@@ -4,6 +4,7 @@ import Link from '../Link'
 import MemoryRouter from '../MemoryRouter'
 import StaticRouter from '../StaticRouter'
 import { render, unmountComponentAtNode } from 'react-dom'
+import Match from '../Match'
 import { Simulate } from 'react-addons-test-utils'
 
 const { click } = Simulate
@@ -27,6 +28,40 @@ describe('Link', () => {
       const div = document.createElement('div')
       render(<LinkInContext {...requiredProps} to="/foo"/>, div)
       expect(div.querySelector('a').getAttribute('href')).toEqual('/foo')
+    })
+
+    describe('relative path', () => {
+      it('works with search/hash pathnames', () => {
+        const pathname = 'test?this/../isfine'
+        const div = document.createElement('div')
+        render(<LinkInContext {...requiredProps} to={pathname}/>, div)
+        expect(div.querySelector('a').getAttribute('href')).toEqual(`/${pathname}`)
+      })
+
+      describe('with context.match', () => {
+        const BASE = '/a/b'
+        const LinkInMatch = ({pattern = BASE, ...props}) => (
+          <MemoryRouter initialEntries={[ pattern ]}>
+            <Match pattern={pattern} render={() => (
+              <Link {...props}/>
+            )} />
+          </MemoryRouter>
+        )
+
+        it('resolves using parent pathname', () => {
+          const div = document.createElement('div')
+          render(<LinkInMatch to="foo"/>, div)
+          expect(div.querySelector('a').getAttribute('href')).toEqual('/a/b/foo')  
+        })
+      })
+
+      describe('without context.match', () => {
+        it('resolves using root', () => {
+          const div = document.createElement('div')
+          render(<LinkInContext {...requiredProps} to="foo"/>, div)
+          expect(div.querySelector('a').getAttribute('href')).toEqual('/foo')
+        })
+      })
     })
 
     describe('with context.router', () => {
@@ -216,6 +251,19 @@ describe('Link', () => {
         render((
           <LinkInContext
             to='/foo'
+            location={{ pathname: '/foo' }}
+            activeClassName="active"
+          />
+        ), div)
+        const a = div.querySelector('a')
+        expect(a.className).toEqual('active')
+      })
+
+      it('works with relative links', () => {
+        const div = document.createElement('div')
+        render((
+          <LinkInContext
+            to='foo'
             location={{ pathname: '/foo' }}
             activeClassName="active"
           />
