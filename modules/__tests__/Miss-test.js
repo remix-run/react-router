@@ -76,4 +76,54 @@ describe('Miss', () => {
       })
     })
   })
+
+  describe('when added subsequently', () => {
+    const Page = () => <div>{TEXT}</div>
+
+    class DelayedMiss extends React.Component {
+      constructor(props) {
+        super(props)
+        this.state = { renderMiss: false }
+      }
+
+      componentDidMount() {
+        this.setState({ renderMiss: true }) // eslint-disable-line react/no-did-mount-set-state
+      }
+
+      render() {
+        return this.state.renderMiss && <Miss component={Page} />
+      }
+    }
+
+    it('renders without a match', (done) => {
+      const div = document.createElement('div')
+
+      render((
+        <MemoryRouter initialEntries={[ loc ]}>
+          <DelayedMiss />
+        </MemoryRouter>
+      ), div, () => {
+        expect(div.innerHTML).toContain(TEXT)
+        unmountComponentAtNode(div)
+        done()
+      })
+    })
+
+    it('does not render on match', (done) => {
+      const div = document.createElement('div')
+
+      render((
+        <MemoryRouter initialEntries={[loc]}>
+          <div>
+            <Match pattern="/" component={() => <div />}/>
+            <DelayedMiss />
+          </div>
+        </MemoryRouter>
+      ), div, () => {
+        expect(div.innerHTML).toNotContain(TEXT)
+        unmountComponentAtNode(div)
+        done()
+      })
+    })
+  })
 })
