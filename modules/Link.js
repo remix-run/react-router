@@ -9,6 +9,10 @@ function isLeftClickEvent(event) {
   return event.button === 0
 }
 
+function isExternalLinkClickEvent(event) {
+  return event.currentTarget.host !== window.location.host
+}
+
 function isModifiedEvent(event) {
   return !!(event.metaKey || event.altKey || event.ctrlKey || event.shiftKey)
 }
@@ -84,7 +88,7 @@ const Link = React.createClass({
       '<Link>s rendered outside of a router context cannot navigate.'
     )
 
-    if (isModifiedEvent(event) || !isLeftClickEvent(event))
+    if (isModifiedEvent(event) || !isLeftClickEvent(event) || isExternalLinkClickEvent(event))
       return
 
     // If target prop is set (e.g. to "_blank"), let browser handle link.
