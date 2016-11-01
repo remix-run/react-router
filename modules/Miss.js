@@ -26,7 +26,7 @@ class Miss extends React.Component {
     }
 
     this.state = {
-      noMatchesInContext: false
+      noMatchesInContext: context.match && !context.match.matches.length
     }
   }
 
