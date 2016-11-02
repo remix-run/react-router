@@ -234,6 +234,32 @@ describe('Link', () => {
         const a = div.querySelector('a')
         expect(a.className).toEqual('active')
       })
+      
+      it('isActive on complete matches location substring', () => {
+        const div = document.createElement('div')
+        render((
+          <LinkInContext
+            to='/foo-bar'
+            location={{ pathname: '/foo' }}
+            activeClassName="active"
+          />
+        ), div)
+        const a = div.querySelector('a')
+        expect(a.className).toNotEqual('active')
+      })
+      
+      it('isActive on complete matches "to" substring', () => {
+        const div = document.createElement('div')
+        render((
+          <LinkInContext
+            to='/foo'
+            location={{ pathname: '/foo-bar' }}
+            activeClassName="active"
+          />
+        ), div)
+        const a = div.querySelector('a')
+        expect(a.className).toNotEqual('active')
+      })
 
       it('isActive on exact matches', () => {
         const div = document.createElement('div')
