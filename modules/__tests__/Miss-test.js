@@ -117,5 +117,55 @@ describe('Miss', () => {
         done()
       })
     })
+
+    describe('props passed', () => {
+      const div = document.createElement('div')
+      const run = (location, cb) => {
+        render((
+          <MemoryRouter initialEntries={[ location ]}>
+            <div>
+              <Match pattern="/:foo/:bar" component={() => (<div>{MATCH}</div>)} />
+              <Miss children={(props) => (<div>{(cb(props), null)}</div>)} />
+            </div>
+          </MemoryRouter>
+        ), div)
+      }
+
+      it('passes props when matched', (done) => {
+        run({ pathname: '/one/two' }, (props) => {
+          expect(props).toEqual({
+            matched: false, // indicate Miss component is not matched
+            location: {
+              hash: '',
+              pathname: '/one/two',
+              query: null,
+              search: '',
+              state: null,
+              key: undefined
+            }
+          })
+        })
+        unmountComponentAtNode(div)
+        done()
+      })
+
+      it('passes props when not matched', (done) => {
+        run({ pathname: '/' }, (props) => {
+          expect(props).toEqual({
+            matched: true, // indicate Miss component is matched
+            location: {
+              hash: '',
+              pathname: '/',
+              query: null,
+              search: '',
+              state: null,
+              key: undefined
+            }
+          })
+        })
+        unmountComponentAtNode(div)
+        done()
+      })
+    })
   })
 })
