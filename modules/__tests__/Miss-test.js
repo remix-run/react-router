@@ -76,4 +76,46 @@ describe('Miss', () => {
       })
     })
   })
+
+  describe('with a `children` prop', () => {
+    const MATCH = 'MATCH'
+
+    it('renders when the location matches', (done) => {
+      const div = document.createElement('div')
+      const loc = { pathname: '/' }
+
+      render((
+        <MemoryRouter initialEntries={[ loc ]}>
+          <div>
+            <Match pattern="/" exactly={true} component={() => <div>{MATCH}</div>} />
+            <Miss children={() => <div>{TEXT}</div>}/>
+          </div>
+        </MemoryRouter>
+      ), div, () => {
+        expect(div.innerHTML).toContain(MATCH)
+        expect(div.innerHTML).toContain(TEXT)
+        unmountComponentAtNode(div)
+        done()
+      })
+    })
+
+    it('renders when the location does not match', (done) => {
+      const div = document.createElement('div')
+      const loc = { pathname: '/' }
+
+      render((
+        <MemoryRouter initialEntries={[ loc ]}>
+          <div>
+            <Match pattern="/foo" component={() => <div>{MATCH}</div>} />
+            <Miss children={() => <div>{TEXT}</div>} />
+          </div>
+        </MemoryRouter>
+      ), div, () => {
+        expect(div.innerHTML).toNotContain(MATCH)
+        expect(div.innerHTML).toContain(TEXT)
+        unmountComponentAtNode(div)
+        done()
+      })
+    })
+  })
 })
