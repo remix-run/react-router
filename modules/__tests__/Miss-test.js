@@ -4,6 +4,7 @@ import Miss from '../Miss'
 import Match from '../Match'
 import { render, unmountComponentAtNode } from 'react-dom'
 import MemoryRouter from '../MemoryRouter'
+import { routerContext as routerContextType } from '../PropTypes'
 
 describe('Miss', () => {
   const TEXT = 'TEXT'
@@ -74,6 +75,43 @@ describe('Miss', () => {
         expect(div.innerHTML).toNotContain(MATCH)
         done()
       })
+    })
+  })
+
+  it('does not update children with wrong location', (done) => {
+    const div = document.createElement('div')
+    let router = null
+
+    class Test extends React.Component {
+      static contextTypes = {
+        router: routerContextType
+      }
+
+      constructor(props, context) {
+        super(props, context)
+        router = context.router
+      }
+
+      componentDidUpdate() {
+        expect(this.props.location.pathname).toNotBe('/matched')
+      }
+
+      render() {
+        return null
+      }
+    }
+
+    render((
+      <MemoryRouter initialEntries={[ loc ]}>
+        <div>
+          <Miss component={Test} />
+          <Match pattern="/matched" component={() => <div />} />
+        </div>
+      </MemoryRouter>
+    ), div, () => {
+      router.transitionTo('/matched')
+      unmountComponentAtNode(div)
+      done()
     })
   })
 })
