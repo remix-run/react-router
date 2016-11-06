@@ -59,26 +59,40 @@ function getIndexRoute(route, location, paramNames, paramValues, callback) {
           indexRoute => callback(null, createRoutes(indexRoute)[0]),
           callback
         )
-  } else if (route.childRoutes) {
-    const pathless = route.childRoutes.filter(childRoute => !childRoute.path)
+  } else if (route.childRoutes || route.getChildRoutes) {
+    const onChildRoutes = (error, childRoutes) => {
+      if (error) {
+        callback(error)
+        return
+      }
 
-    loopAsync(pathless.length, function (index, next, done) {
-      getIndexRoute(
-        pathless[index], location, paramNames, paramValues,
-        function (error, indexRoute) {
-          if (error || indexRoute) {
-            const routes = [ pathless[index] ].concat(
-              Array.isArray(indexRoute) ? indexRoute : [ indexRoute ]
-            )
-            done(error, routes)
-          } else {
-            next()
+      const pathless = childRoutes.filter(childRoute => !childRoute.path)
+
+      loopAsync(pathless.length, function (index, next, done) {
+        getIndexRoute(
+          pathless[index], location, paramNames, paramValues,
+          function (error, indexRoute) {
+            if (error || indexRoute) {
+              const routes = [ pathless[index] ].concat(
+                Array.isArray(indexRoute) ? indexRoute : [ indexRoute ]
+              )
+              done(error, routes)
+            } else {
+              next()
+            }
           }
-        }
-      )
-    }, function (err, routes) {
-      callback(null, routes)
-    })
+        )
+      }, function (err, routes) {
+        callback(null, routes)
+      })
+    }
+
+    const result = getChildRoutes(
+      route, location, paramNames, paramValues, onChildRoutes
+    )
+    if (result) {
+      onChildRoutes(...result)
+    }
   } else {
     callback()
   }

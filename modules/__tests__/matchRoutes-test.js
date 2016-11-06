@@ -12,7 +12,8 @@ describe('matchRoutes', function () {
   let
     RootRoute, UsersRoute, UsersIndexRoute, UserRoute, PostRoute, FilesRoute,
     AboutRoute, TeamRoute, ProfileRoute, GreedyRoute, OptionalRoute,
-    OptionalRouteChild, CatchAllRoute
+    OptionalRouteChild, CatchAllRoute, ContactRoute, ContactContainerRoute,
+    ContactIndexRoute
   let createLocation = createMemoryHistory().createLocation
 
   beforeEach(function () {
@@ -29,6 +30,11 @@ describe('matchRoutes', function () {
     <Route path="/about" />
     <Route path="/(optional)">
       <Route path="child" />
+    </Route>
+    <Route path="/contact">
+      <Route>
+        <IndexRoute />
+      </Route>
     </Route>
     <Route path="*" />
     */
@@ -74,6 +80,14 @@ describe('matchRoutes', function () {
           }
         ]
       },
+      ContactRoute = {
+        path: '/contact',
+        childRoutes: [
+          ContactContainerRoute = {
+            indexRoute: (ContactIndexRoute = {})
+          }
+        ]
+      },
       CatchAllRoute = {
         path: '*'
       }
@@ -86,6 +100,16 @@ describe('matchRoutes', function () {
         matchRoutes(routes, createLocation('/users'), function (error, match) {
           expect(match).toExist()
           expect(match.routes).toEqual([ RootRoute, UsersRoute, UsersIndexRoute ])
+          done()
+        })
+      })
+    })
+
+    describe('when the location matches an index route inside a pathless route', function () {
+      it('matches the correct routes', function (done) {
+        matchRoutes(routes, createLocation('/contact'), function (error, match) {
+          expect(match).toExist()
+          expect(match.routes).toEqual([ ContactRoute, ContactContainerRoute, ContactIndexRoute ])
           done()
         })
       })
