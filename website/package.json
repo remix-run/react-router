@@ -3,9 +3,9 @@
   "version": "0.0.0",
   "private": true,
   "scripts": {
-    "dev": "rm -rf .examples && cp -R examples .examples && webpack-dev-server --config webpack.config.js --inline --content-base build",
-    "build": "npm run clean && cp -R examples .examples && webpack",
-    "clean": "rm -rf .examples build",
+    "dev": "webpack-dev-server --config webpack.config.js --inline --content-base build",
+    "build": "npm run clean && webpack",
+    "clean": "rm -rf build",
     "start": "npm run build && pushstate-server build/"
   },
   "dependencies": {

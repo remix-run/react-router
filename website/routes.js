@@ -13,68 +13,68 @@ export const PAGES = [
 export const EXAMPLES = [
   { name: 'Basic',
     path: '/basic',
-    load: require('bundle?lazy!./examples/Basic'),
-    loadSource: require('bundle?lazy!!prismjs?lang=jsx!./.examples/Basic.js')
+    load: require('bundle?lazy!babel!./examples/Basic'),
+    loadSource: require('bundle?lazy!prismjs?lang=jsx!./examples/Basic')
   },
   { name: 'URL Parameters',
     path: '/url-parameters',
-    load: require('bundle?lazy!./examples/Params'),
-    loadSource: require('bundle?lazy!!prismjs?lang=jsx!./.examples/Params.js')
+    load: require('bundle?lazy!babel!./examples/Params'),
+    loadSource: require('bundle?lazy!prismjs?lang=jsx!./examples/Params')
   },
   { name: 'Redirects (Auth)',
     path: '/auth-workflow',
-    load: require('bundle?lazy!./examples/Auth'),
-    loadSource: require('bundle?lazy!!prismjs?lang=jsx!./.examples/Auth.js')
+    load: require('bundle?lazy!babel!./examples/Auth'),
+    loadSource: require('bundle?lazy!prismjs?lang=jsx!./examples/Auth')
   },
   { name: 'Custom Link Component',
     path: '/custom-link-component',
-    load: require('bundle?lazy!./examples/CustomLinkComponent'),
-    loadSource: require('bundle?lazy!!prismjs?lang=jsx!./.examples/CustomLinkComponent.js')
+    load: require('bundle?lazy!babel!./examples/CustomLinkComponent'),
+    loadSource: require('bundle?lazy!prismjs?lang=jsx!./examples/CustomLinkComponent')
   },
   { name: 'Preventing Transitions',
     path: '/preventing-transitions',
-    load: require('bundle?lazy!./examples/PreventingTransitions'),
-    loadSource: require('bundle?lazy!!prismjs?lang=jsx!./.examples/PreventingTransitions.js')
+    load: require('bundle?lazy!babel!./examples/PreventingTransitions'),
+    loadSource: require('bundle?lazy!prismjs?lang=jsx!./examples/PreventingTransitions')
   },
   { name: 'Miss (No Match Handling)',
     path: '/no-match-handling',
-    load: require('bundle?lazy!./examples/Miss'),
-    loadSource: require('bundle?lazy!!prismjs?lang=jsx!./.examples/Miss.js')
+    load: require('bundle?lazy!babel!./examples/Miss'),
+    loadSource: require('bundle?lazy!prismjs?lang=jsx!./examples/Miss')
   },
   { name: 'MatchGroup',
     path: '/match-group',
-    load: require('bundle?lazy!./examples/MatchGroup'),
-    loadSource: require('bundle?lazy!!prismjs?lang=jsx!./.examples/MatchGroup.js')
+    load: require('bundle?lazy!babel!./examples/MatchGroup'),
+    loadSource: require('bundle?lazy!prismjs?lang=jsx!./examples/MatchGroup')
   },
   { name: 'Query Params',
     path: '/query-params',
-    load: require('bundle?lazy!./examples/QueryParams'),
-    loadSource: require('bundle?lazy!!prismjs?lang=jsx!./.examples/QueryParams.js')
+    load: require('bundle?lazy!babel!./examples/QueryParams'),
+    loadSource: require('bundle?lazy!prismjs?lang=jsx!./examples/QueryParams')
   },
   { name: 'Recursive Paths',
     path: '/recursive-paths',
-    load: require('bundle?lazy!./examples/Recursive'),
-    loadSource: require('bundle?lazy!!prismjs?lang=jsx!./.examples/Recursive.js')
+    load: require('bundle?lazy!babel!./examples/Recursive'),
+    loadSource: require('bundle?lazy!prismjs?lang=jsx!./examples/Recursive')
   },
   { name: 'Sidebar',
     path: '/sidebar',
-    load: require('bundle?lazy!./examples/Sidebar'),
-    loadSource: require('bundle?lazy!!prismjs?lang=jsx!./.examples/Sidebar.js')
+    load: require('bundle?lazy!babel!./examples/Sidebar'),
+    loadSource: require('bundle?lazy!prismjs?lang=jsx!./examples/Sidebar')
   },
   { name: 'Animated Transitions',
     path: '/animated-transitions',
-    load: require('bundle?lazy!./examples/Animation'),
-    loadSource: require('bundle?lazy!!prismjs?lang=jsx!./.examples/Animation.js')
+    load: require('bundle?lazy!babel!./examples/Animation'),
+    loadSource: require('bundle?lazy!prismjs?lang=jsx!./examples/Animation')
   },
   { name: 'Ambiguous Matches',
     path: '/ambiguous-matches',
-    load: require('bundle?lazy!./examples/Ambiguous'),
-    loadSource: require('bundle?lazy!!prismjs?lang=jsx!./.examples/Ambiguous.js')
+    load: require('bundle?lazy!babel!./examples/Ambiguous'),
+    loadSource: require('bundle?lazy!prismjs?lang=jsx!./examples/Ambiguous')
   },
   { name: 'Route Config',
     path: '/route-config',
-    load: require('bundle?lazy!./examples/RouteConfig'),
-    loadSource: require('bundle?lazy!!prismjs?lang=jsx!./.examples/RouteConfig.js')
+    load: require('bundle?lazy!babel!./examples/RouteConfig'),
+    loadSource: require('bundle?lazy!prismjs?lang=jsx!./examples/RouteConfig')
   }
 ]
 

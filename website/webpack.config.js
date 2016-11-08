@@ -50,22 +50,22 @@ module.exports = {
   module: {
     loaders: [
       { test: /\.js$/,
-        exclude: /node_modules|\.examples/,
-        loader: 'babel-loader'
+        exclude: /node_modules|examples/,
+        loader: 'babel'
       },
       { test: /\.css$/,
         exclude: /prismjs/,
-        loader: 'style-loader!css-loader?modules&importLoaders=1&localIdentName=[name]__[local]___[hash:base64:5]!postcss-loader'
+        loader: 'style!css?modules&importLoaders=1&localIdentName=[name]__[local]___[hash:base64:5]!postcss'
       },
       { test: /\.css$/,
         include: /prismjs/,
-        loader: 'style-loader!css-loader'
+        loader: 'style!css'
       },
       { test: /\.md$/,
         loader: './webpack/markdown-loader'
       },
       { test: /\.(gif|jpe?g|png|ico)$/,
-        loader: 'url-loader?limit=10000'
+        loader: 'url?limit=10000'
       }
     ]
   },
