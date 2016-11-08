@@ -107,7 +107,10 @@ class Match extends React.Component {
 
 if (__DEV__) {
   Match.propTypes = {
-    pattern: PropTypes.string,
+    pattern: PropTypes.oneOfType([
+      PropTypes.string,
+      PropTypes.arrayOf(PropTypes.string)
+    ]),
     exactly: PropTypes.bool,
 
     children: PropTypes.func,
