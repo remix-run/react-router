@@ -10,7 +10,7 @@ export const createRouterLocation = (input, parseQueryString, stringifyQuery) =>
   } else {
     // got a location descriptor
     return {
-      pathname: input.pathname || '',
+      pathname: decodeURI(input.pathname || ''),
       search: input.search || (
         input.query ? `?${stringifyQuery(input.query)}` : ''
       ),
