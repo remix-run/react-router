@@ -4,7 +4,7 @@
   "private": true,
   "scripts": {
     "dev": "webpack-dev-server --inline",
-    "build": "npm run clean && webpack",
+    "build": "npm run clean && webpack -p",
     "clean": "rm -rf build",
     "start": "npm run build && pushstate-server build/"
   },

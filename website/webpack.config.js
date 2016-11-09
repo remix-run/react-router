@@ -29,11 +29,7 @@ module.exports = {
       baseHref: PROD ? '//reacttraining.github.io/react-router/' : '/',
       template: 'index.html.ejs'
     })
-  ].concat(PROD ? [
-    new webpack.optimize.DedupePlugin(),
-    new webpack.optimize.OccurrenceOrderPlugin(),
-    new webpack.optimize.UglifyJsPlugin()
-  ] : []),
+  ],
 
   resolve: {
     alias: {
