@@ -1,15 +1,8 @@
 {
-  "name": "react-router-website",
-  "version": "0.0.0",
   "private": true,
   "scripts": {
-    "dev": "webpack-dev-server --inline",
-    "build": "npm run clean && webpack -p",
-    "clean": "rm -rf build",
-    "start": "npm run build && pushstate-server build/"
-  },
-  "dependencies": {
-    "pushstate-server": "1.14.0"
+    "build": "webpack -p",
+    "start": "webpack-dev-server --inline"
   },
   "devDependencies": {
     "bundle-loader": "0.5.4",
@@ -20,7 +13,6 @@
     "markdown-it": "^7.0.0",
     "postcss-loader": "0.9.1",
     "prismjs-loader": "0.0.3",
-    "pushstate-server": "^1.14.0",
     "react-motion": "^0.4.4",
     "style-loader": "0.13.1",
     "url-loader": "^0.5.7",

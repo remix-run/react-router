@@ -1,14 +1,11 @@
+const path = require('path')
 const webpack = require('webpack')
 const HTMLWebpackPlugin = require('html-webpack-plugin')
-const path = require('path')
 
 const HASH = '[chunkHash]'
-const PROD = process.env.NODE_ENV === 'production'
-
 const ROUTER_SRC = path.join(__dirname, '..', 'modules')
 
 module.exports = {
-
   devtool: 'source-map',
 
   entry: {
@@ -19,14 +16,12 @@ module.exports = {
   output: {
     path: path.join(__dirname, 'build'),
     filename: `bundle-${HASH}.js`,
-    chunkFileName: `[name]-${HASH}.js`,
-    pubicPath: PROD ? 'build/' : ''
+    chunkFileName: `[name]-${HASH}.js`
   },
 
   plugins: [
     new webpack.optimize.CommonsChunkPlugin('vendor', `vendor-${HASH}.js`),
     new HTMLWebpackPlugin({
-      baseHref: PROD ? '//reacttraining.github.io/react-router/' : '/',
       template: 'index.html.ejs'
     })
   ],
