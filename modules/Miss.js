@@ -1,64 +1,31 @@
 import React, { PropTypes } from 'react'
-import { LocationSubscriber } from './Broadcasts'
 
 class Miss extends React.Component {
   static contextTypes = {
-    match: PropTypes.object,
-    serverRouter: PropTypes.object
+    router: PropTypes.object
   }
 
-  constructor(props, context) {
-    super(props, context)
-
-    // ignore if rendered out of context (probably for unit tests)
-    if (context.match && !context.serverRouter) {
-      this.unsubscribe = this.context.match.subscribe((matchesFound) => {
-        this.setState({
-          noMatchesInContext: !matchesFound
-        })
-      })
-    }
-
-    if (context.serverRouter) {
-      context.serverRouter.registerMissPresence(
-        context.match.serverRouterIndex
-      )
-    }
-
-    this.state = {
-      noMatchesInContext: false
-    }
+  componentDidMount() {
+    this.unlisten = this.context.router.subscribe(() => {
+      this.forceUpdate()
+    })
   }
 
   componentWillUnmount() {
-    if (this.unsubscribe) {
-      this.unsubscribe()
-    }
+    this.unlisten()
   }
 
   render() {
-    return (
-      <LocationSubscriber>
-        {(location) => {
-          const { render, component:Component } = this.props
-          const { noMatchesInContext } = this.state
-          const { serverRouter, match } = this.context
-          const noMatchesOnServerContext = serverRouter &&
-            serverRouter.missedAtIndex(match.serverRouterIndex)
-          if (noMatchesInContext || noMatchesOnServerContext) {
-            return (
-              render ? (
-                render({ location })
-              ) : (
-                <Component location={location}/>
-              )
-            )
-          } else {
-            return null
-          }
-        }}
-      </LocationSubscriber>
-    )
+    const { render, component:Component } = this.props
+    const { matchCount } = this.context.router.match.getState()
+    const { location } = this.context.router.getState()
+    return matchCount === 0 ? (
+      render ? (
+        render({ location })
+      ) : (
+        <Component location={location}/>
+      )
+    ) : null
   }
 }
 

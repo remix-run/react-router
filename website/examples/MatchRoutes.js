@@ -1,11 +1,10 @@
 import React from 'react'
 import Router from 'react-router/BrowserRouter'
 import Match from 'react-router/Match'
-import Miss from 'react-router/Miss'
-import MatchGroup from 'react-router/MatchGroup'
+import MatchRoutes from 'react-router/MatchRoutes'
 import Link from 'react-router/Link'
 
-const MatchGroupExample = () => (
+const MatchRoutesExample = () => (
   <Router>
     <div>
       <ul>
@@ -16,12 +15,23 @@ const MatchGroupExample = () => (
 
       <hr/>
 
-      <MatchGroup>
-        <Match exactly pattern="/" component={Home} />
-        <Match pattern="/about" component={About} />
-        <Match pattern="/topics" component={Topics} />
-        <Miss render={() => <div>SNAP! We missed</div>}/>
-      </MatchGroup>
+      <MatchRoutes
+        routes={[
+          { pattern: '/',
+            exactly: true,
+            component: Home
+          },
+          { pattern: '/about',
+            component: About
+          },
+          { pattern: '/topics',
+            component: Topics
+          }
+        ]}
+        renderMiss={() => (
+          <div>SNAP! We missed</div>
+        )}
+      />
     </div>
   </Router>
 )
@@ -60,4 +70,4 @@ const Topic = ({ params }) => (
   </div>
 )
 
-export default MatchGroupExample
+export default MatchRoutesExample

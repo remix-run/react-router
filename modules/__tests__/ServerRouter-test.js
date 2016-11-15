@@ -1,7 +1,6 @@
 import expect from 'expect'
 import React from 'react'
 import ServerRouter from '../ServerRouter'
-import createServerRenderContext from '../createServerRenderContext'
 import Redirect from '../Redirect'
 import Match from '../Match'
 import Miss from '../Miss'
@@ -10,7 +9,7 @@ import { renderToString } from 'react-dom/server'
 describe('ServerRouter', () => {
 
   it('puts redirects on server render result', () => {
-    const context = createServerRenderContext()
+    const context = {}
 
     renderToString(
       <ServerRouter
@@ -23,7 +22,7 @@ describe('ServerRouter', () => {
         }}/>
       </ServerRouter>
     )
-    expect(context.getResult().redirect).toEqual({
+    expect(context.redirect).toEqual({
       pathname: '/somewhere-else',
       state: { status: 302 },
       query: null,
@@ -33,7 +32,7 @@ describe('ServerRouter', () => {
     })
   })
 
-  it('renders misses on second pass with server render context result', (done) => {
+  it('renders misses', (done) => {
     const NO = 'NO'
     const YES1 = 'YES1'
     const YES2 = 'YES2'
@@ -54,29 +53,19 @@ describe('ServerRouter', () => {
       </div>
     )
 
-    const context = createServerRenderContext()
+    const context = {}
 
-    renderToString(
+    const markup = renderToString(
       <ServerRouter context={context} location={location}>
         <App/>
       </ServerRouter>
     )
 
-    const result = context.getResult()
-    expect(result.missed).toBe(true)
-
-    if (result.missed) {
-      const markup = renderToString(
-        <ServerRouter context={context} location={location}>
-          <App/>
-        </ServerRouter>
-      )
-
-      expect(markup).toContain(YES1)
-      expect(markup).toContain(YES2)
-      expect(markup).toNotContain(NO)
-      done()
-    }
+    expect(context.missed).toBe(true)
+    expect(markup).toContain(YES1)
+    expect(markup).toContain(YES2)
+    expect(markup).toNotContain(NO)
+    done()
   })
 
 })

@@ -1,29 +1,47 @@
 import React, { PropTypes } from 'react'
 import StaticRouter from './StaticRouter'
 
+const ignoreFirstCall = (fn) => {
+  let called = false
+  return (...args) => {
+    if (called) {
+      fn(...args)
+    } else {
+      called = true
+    }
+  }
+}
+
 class ServerRouter extends React.Component {
-  static childContextTypes = {
-    serverRouter: PropTypes.object.isRequired
+  constructor(props) {
+    super(props)
+    const { context } = props
+    context.missed = true
+    context.redirect = null
   }
 
-  getChildContext() {
-    return {
-      serverRouter: this.props.context
-    }
+  // ignore first call because StaticRouter renders a <Match>,
+  // so we ignore that one.
+  handleMatch = ignoreFirstCall(() => {
+    this.props.context.missed = false
+  })
+
+  handleRedirect = (location) => {
+    // only take the first redirect
+    if (!this.props.context.redirect)
+      this.props.context.redirect = location
   }
 
   render() {
-    const { context, location, basename, ...rest } = this.props
-    const redirect = (location) => {
-      context.setRedirect(location)
-    }
+    const { location, basename, ...rest } = this.props
     return (
       <StaticRouter
         action="POP"
         location={location}
         basename={basename}
-        onReplace={redirect}
-        onPush={redirect}
+        onReplace={this.handleRedirect}
+        onPush={this.handleRedirect}
+        onMatch={this.handleMatch}
         {...rest}
       />
     )

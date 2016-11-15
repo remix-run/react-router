@@ -1,7 +1,4 @@
 import React, { PropTypes } from 'react'
-import {
-  routerContext as routerContextType
-} from './PropTypes'
 
 class Redirect extends React.Component {
   static defaultProps = {
@@ -9,27 +6,24 @@ class Redirect extends React.Component {
   }
 
   static contextTypes = {
-    router: routerContextType,
-    serverRouter: PropTypes.object
+    router: PropTypes.object
   }
 
   componentWillMount() {
-    if (this.context.serverRouter)
-      this.redirect()
+    this.redirect(this.props)
   }
 
-  componentDidMount() {
-    this.redirect()
-  }
-
-  redirect() {
-    const { router } = this.context
-    const { to, push } = this.props
-    // so that folks can unit test w/o hassle
-    if (router) {
-      const navigate = push ? router.transitionTo : router.replaceWith
-      navigate(to)
+  componentWillReceiveProps(nextProps) {
+    if (nextProps.to !== this.props.to) {
+      this.redirect(nextProps)
     }
+  }
+
+  redirect(props) {
+    const { router } = this.context
+    const { to, push } = props
+    const navigate = push ? router.transitionTo : router.replaceWith
+    navigate(to)
   }
 
   render() {

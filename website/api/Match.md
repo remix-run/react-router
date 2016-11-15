@@ -1,8 +1,8 @@
-# `<Match>`
+# Match
 
 Renders UI when a pattern matches a location.
 
-## `pattern: string`
+## pattern: string _Match_
 
 Any valid URL pattern that [`path-to-regexp`][ptre] understands.
 
@@ -10,7 +10,7 @@ Any valid URL pattern that [`path-to-regexp`][ptre] understands.
 <Match pattern="/users/:id" component={User}/>
 ```
 
-## `exactly: bool`
+## exactly: bool _Match_
 
 When `true`, will only match if the pattern matches the
 `location.pathname` _exactly_.
@@ -24,7 +24,7 @@ When `true`, will only match if the pattern matches the
 <Match pattern="/foo" exactly component={Foo}/>
 ```
 
-## `location`
+## location _Match_
 
 If you don't want to match the location on context, you can pass a
 location as a prop instead.
@@ -33,7 +33,7 @@ location as a prop instead.
 <Match pattern="/foo" location={{ pathname: '/foo' }}/>
 ```
 
-## `component`
+## component _Match_
 
 A React component constructor to render when the location matches. The
 component will be rendered with the following props:
@@ -58,7 +58,7 @@ class User extends React.Component {
 <Match pattern="/user/:id" component={User}/>
 ```
 
-## `render: func`
+## render: func _Match_
 
 Instead of having a `component` rendered for you, you can pass in a
 function to be called when the location matches. Your render function
@@ -82,22 +82,35 @@ const MatchWithFade = ({ component:Component, ...rest }) => (
 <MatchWithFade pattern="/cool" component={Something}/>
 ```
 
-## `children: func`
+## children: func _Match_
 
-Sometimes you need to render whether the pattern matches the location or
-not. In these cases, you can use the function `children` prop. It works
-exactly like `render` except that (1) it gets called whether there is a
-match or not and (2) includes a `matched` prop to indicate if there was
-a match.
+Sometimes you need to render whether the pattern matches the location or not. In these cases, you can use the function `children` prop. It works exactly like `render` except that (1) it gets called whether there is a match or not and (2) includes a `matched` prop to indicate if there was a match.
 
-It seems unlikely you'll need this for anything besides animating when a
-component transitions from matching to not matching and back, but who
-knows?
+Here's how to get an `active` classname onto a bootstrap-style list item:
+
+```js
+<ul>
+  <ListItemLink to="/somewhere"/>
+  <ListItemLink to="/somewhere-else"/>
+</ul>
+
+const ListItemLink = ({ to, ...rest }) => (
+  <Match pattern={to}>
+    {({ matched, ...rest }) => (
+      <li className={matched ? 'active' : ''}>
+        <Link to={to} {...rest}/>
+      </li>
+    )}
+  </Match>
+)
+```
+
+Could also be useful for animations:
 
 ```js
 <Match children={({ matched, ...rest}) => (
   {/* Animate will always render, so you can use lifecycles
-      to animate its children */}
+      to animate its child in and out */}
   <Animate>
     {matched && (
       <Something {...rest}/>
@@ -106,6 +119,5 @@ knows?
 )}/>
 ```
 
-# `</Match>`
 
   [ptre]:https://www.npmjs.com/package/path-to-regexp

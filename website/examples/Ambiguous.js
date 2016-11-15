@@ -1,7 +1,6 @@
 import React from 'react'
 import Router from 'react-router/BrowserRouter'
-import Match from 'react-router/Match'
-import Miss from 'react-router/Miss'
+import MatchRoutes from 'react-router/MatchRoutes'
 import Link from 'react-router/Link'
 
 const AmbiguousExample = () => (
@@ -24,17 +23,14 @@ const AmbiguousExample = () => (
           "route". React Router lets you match in multiple places
           on purpose (sidebars, breadcrumbs, etc). So, when you
           want to clear up any ambiguous matching, and not match
-          "/about" to "/:user", you can nest the static patterns
-          inside the dynamic pattern and then use `Miss` to catch
-          the patterns that don't match statically.
+          "/about" to "/:user", use MatchRoutes, it will take
+          the first route that matches.
       */}
-      <Match pattern="/:user" render={(matchProps) => (
-        <div>
-          <Match pattern="/about" component={About}/>
-          <Match pattern="/company" component={Company}/>
-          <Miss render={() => <User {...matchProps}/> }/>
-        </div>
-      )}/>
+      <MatchRoutes routes={[
+        { pattern: '/about', component: About },
+        { pattern: '/company', component: Company },
+        { pattern: '/:user', component: User }
+      ]}/>
     </div>
   </Router>
 )

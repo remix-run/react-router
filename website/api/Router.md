@@ -1,4 +1,4 @@
-# `<Router>`
+# Router
 
 You probably don't want this component, it is the underlying
 implementation of the top-level Routers:
@@ -8,5 +8,3 @@ implementation of the top-level Routers:
 - MemoryRouter
 
 Each of those renders one of these.
-
-# `</Router>`

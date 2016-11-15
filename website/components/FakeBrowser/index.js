@@ -1,19 +1,17 @@
 import React, { PropTypes } from 'react'
-import History from '../../../modules/History'
 import { B, V, H, PAD, LIGHT_GRAY, GRAY } from '../bricks'
 import { button } from './style.css' // eslint-disable-line
 import { stringify as stringifyQuery } from 'query-string'
 import { createPath } from 'history/PathUtils'
 import createMemoryHistory from 'history/createMemoryHistory'
+import Router from '../../../modules/Router'
 
-const MemoryHistory = ({ children, ...historyOptions }) => (
-  <History
-    children={children}
-    createHistory={createMemoryHistory}
-    historyOptions={historyOptions}
-  />
-)
-
+const history = createMemoryHistory({
+  initialEntries: [ '/' ],
+  getUserConfirmation: (message, callback) => {
+    callback(window.confirm(message))
+  }
+})
 
 // have to recreate what StaticRouter does, there should be a way to
 // compose?...
@@ -26,24 +24,6 @@ const createPathWithQuery = (loc) => {
       location.search = `?${stringifyQuery(loc.query)}`
     return createPath(location)
   }
-}
-
-class LocationActionProvider extends React.Component {
-
-  static childContextTypes = {
-    location: PropTypes.object,
-    action: PropTypes.string
-  }
-
-  getChildContext() {
-    const { location, action } = this.props
-    return { location, action }
-  }
-
-  render() {
-    return this.props.children
-  }
-
 }
 
 const LeftArrowIcon = () => (
@@ -88,6 +68,10 @@ const Button = (props) => (
 ////////////////////////////////////////////////////////////////////////////////
 class FakeBrowser extends React.Component {
 
+  static propTypes = {
+    children: PropTypes.func
+  }
+
   state = {
     location: null
   }
@@ -96,13 +80,8 @@ class FakeBrowser extends React.Component {
     const { children:Child } = this.props
 
     return (
-      <MemoryHistory
-        initialEntries={[ '/' ]}
-        getUserConfirmation={(message, callback) => {
-          callback(window.confirm(message))
-        }}
-      >
-        {({ history, location, action }) => (
+      <Router history={history}>
+        {({ location }) => (
           <V
             background="white"
             boxShadow="0px 4px 10px hsla(0, 0%, 0%, 0.25)"
@@ -150,7 +129,6 @@ class FakeBrowser extends React.Component {
                   type="text"
                   value={createPathWithQuery(this.state.location || location)}
                   onChange={(e) => {
-                    console.log(e.target.value)
                     this.setState({
                       location: e.target.value
                     })
@@ -169,16 +147,11 @@ class FakeBrowser extends React.Component {
               overflow="auto"
               position="relative"
             >
-              <LocationActionProvider
-                location={location}
-                action={action}
-              >
-                <Child/>
-              </LocationActionProvider>
+              <Child/>
             </B>
           </V>
         )}
-      </MemoryHistory>
+      </Router>
     )
   }
 }

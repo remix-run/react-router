@@ -1,10 +1,10 @@
 import expect, { createSpy } from 'expect'
-import React, { PropTypes } from 'react'
+import React from 'react'
 import Link from '../Link'
 import MemoryRouter from '../MemoryRouter'
-import { render } from 'react-dom'
+import StaticRouter from '../StaticRouter'
+import { render, unmountComponentAtNode } from 'react-dom'
 import { Simulate } from 'react-addons-test-utils'
-import { LocationBroadcast } from '../Broadcasts'
 
 const { click } = Simulate
 
@@ -30,40 +30,16 @@ describe('Link', () => {
     })
 
     describe('with context.router', () => {
-      const CONTEXT_HREF = 'CONTEXT_HREF'
-      class TestRouterContext extends React.Component {
-        static childContextTypes = {
-          router: PropTypes.object
-        }
-
-        getChildContext() {
-          return {
-            router: {
-              createHref: () => CONTEXT_HREF,
-              blockTransitions: () => {},
-              transitionTo: () => {},
-              replaceWith: () => {}
-            }
-          }
-        }
-
-        render() {
-          return (
-            <LocationBroadcast value={{ pathname: '' }}>
-              {this.props.children}
-            </LocationBroadcast>
-          )
-        }
-      }
-
       it('uses router.createHref to build the href', () => {
+        const CONTEXT_HREF = 'CONTEXT_HREF'
         const div = document.createElement('div')
         render((
-          <TestRouterContext>
+          <MemoryRouter createHref={() => CONTEXT_HREF}>
             <Link to={{}}/>
-          </TestRouterContext>
+          </MemoryRouter>
         ), div)
         expect(div.querySelector('a').getAttribute('href')).toEqual(CONTEXT_HREF)
+        unmountComponentAtNode(div)
       })
     })
   })
@@ -266,24 +242,6 @@ describe('Link', () => {
     })
   })
 
-  describe('accepts function as children', () => {
-    it('renders the child component with isActive', () => {
-      const div = document.createElement('div')
-      render((
-        <LinkInContext
-          to='/foo'
-          location={{ pathname: '/foo/bar' }}
-        >
-        {
-          ({isActive}) => <a className={isActive ? 'active' : ''}>Test!</a>
-        }
-        </LinkInContext>
-      ), div)
-      const a = div.querySelector('a')
-      expect(a.className).toEqual('active')
-    })
-  })
-
   describe('accepts a onClick handler', () => {
     const transitionSpy = createSpy()
     const clickEventData = {
@@ -291,30 +249,6 @@ describe('Link', () => {
       defaultPrevented: false,
       preventDefault: function () {
         this.defaultPrevented = true
-      }
-    }
-    class TestRouterContext extends React.Component {
-      static childContextTypes = {
-        router: PropTypes.object
-      }
-
-      getChildContext() {
-        return {
-          router: {
-            createHref: () => 'CONTEXT_HREF',
-            blockTransitions: () => {},
-            transitionTo: transitionSpy,
-            replaceWith: () => {}
-          }
-        }
-      }
-
-      render() {
-        return (
-          <LocationBroadcast value={{ pathname: '' }}>
-            {this.props.children}
-          </LocationBroadcast>
-        )
       }
     }
 
@@ -326,7 +260,16 @@ describe('Link', () => {
       const div = document.createElement('div')
       const customOnClick = createSpy()
       const link = <Link to='/foo' onClick={customOnClick} />
-      render(<TestRouterContext>{link}</TestRouterContext>, div, () => {
+      render((
+        <StaticRouter
+          location="/"
+          action="POP"
+          onReplace={() => {}}
+          onPush={transitionSpy}
+        >
+          {link}
+        </StaticRouter>
+      ), div, () => {
         click(div.querySelector('a'), clickEventData)
         expect(customOnClick).toHaveBeenCalled()
         expect(transitionSpy).toHaveBeenCalled()
@@ -337,11 +280,20 @@ describe('Link', () => {
       const div = document.createElement('div')
       const customOnClick = createSpy().andCall(e => e.preventDefault())
       const link = <Link to='/foo' onClick={customOnClick} />
-      render(<TestRouterContext>{link}</TestRouterContext>, div, () => {
+      render((
+        <StaticRouter
+          location="/"
+          action="POP"
+          onReplace={() => {}}
+          onPush={transitionSpy}
+        >
+          {link}
+        </StaticRouter>
+      ), div, () => {
         click(div.querySelector('a'), clickEventData)
+        expect(customOnClick).toHaveBeenCalled()
+        expect(transitionSpy).toNotHaveBeenCalled()
       })
-      expect(customOnClick).toHaveBeenCalled()
-      expect(transitionSpy).toNotHaveBeenCalled()
     })
   })
 })

@@ -1,5 +1,6 @@
 export Link from './Link'
 export Match from './Match'
+export MatchRoutes from './MatchRoutes'
 export Miss from './Miss'
 export NavigationPrompt from './NavigationPrompt'
 export Redirect from './Redirect'
@@ -10,14 +11,9 @@ export HashRouter from './HashRouter'
 export MemoryRouter from './MemoryRouter'
 export ServerRouter from './ServerRouter'
 
-// Low-level building block
+// Low-level building blocks
+export Router from './Router'
 export StaticRouter from './StaticRouter'
 
-// Util for server rendering "pre-render match"
+// Util for creating who-knows-what!
 export matchPattern from './matchPattern'
-
-// Util for server rendering context
-export createServerRenderContext from './createServerRenderContext'
-
-// React PropTypes for all Components
-export * as propTypes from './PropTypes'

@@ -1,8 +1,4 @@
 import React, { PropTypes } from 'react'
-import { LocationSubscriber } from './Broadcasts'
-import {
-  routerContext as routerContextType
-} from './PropTypes'
 
 class Link extends React.Component {
   static defaultProps = {
@@ -25,7 +21,26 @@ class Link extends React.Component {
   }
 
   static contextTypes = {
-    router: routerContextType.isRequired
+    router: PropTypes.object.isRequired
+  }
+
+  constructor(props, context) {
+    super(props, context)
+    this.state = {
+      isActive: this.getIsActive()
+    }
+  }
+
+  componentDidMount() {
+    this.unlisten = this.context.router.subscribe(() => {
+      this.setState({
+        isActive: this.getIsActive()
+      })
+    })
+  }
+
+  componentWillUnmount() {
+    this.unlisten()
   }
 
   handleClick = (event) => {
@@ -50,60 +65,37 @@ class Link extends React.Component {
     navigate(to)
   }
 
+  getIsActive() {
+    const { to, isActive } = this.props
+    return isActive(
+      this.context.router.getState().location,
+      createLocationDescriptor(to),
+      this.props
+    )
+  }
+
   render() {
-    const { router } = this.context
+    const { isActive } = this.state
     const {
       to,
-      style,
-      activeStyle,
-      className,
-      activeClassName,
-      isActive: getIsActive,
+      style, activeStyle,
+      className, activeClassName,
       activeOnlyWhenExact, // eslint-disable-line
       replace, // eslint-disable-line
-      children,
+      isActive:_, // eslint-disable-line
       ...rest
     } = this.props
 
     return (
-      <LocationSubscriber>
-        {(location) => {
-          const isActive = getIsActive(
-            location,
-            createLocationDescriptor(to),
-            this.props
-          )
-
-          // If children is a function, we are using a Function as Children Component
-          // so useful values will be passed down to the children function.
-          if (typeof children == 'function') {
-            return children({
-              isActive,
-              location,
-              href: router ? router.createHref(to) : to,
-              onClick: this.handleClick,
-              transition: this.handleTransition
-            })
-          }
-
-          // Maybe we should use <Match> here? Not sure how the custom `isActive`
-          // prop would shake out, also, this check happens a LOT so maybe its good
-          // to optimize here w/ a faster isActive check, so we'd need to benchmark
-          // any attempt at changing to use <Match>
-          return (
-            <a
-              {...rest}
-              href={router ? router.createHref(to) : to}
-              onClick={this.handleClick}
-              style={isActive ? { ...style, ...activeStyle } : style }
-              className={isActive ?
-                [ className, activeClassName ].join(' ').trim() : className
-              }
-              children={children}
-            />
-          )
-        }}
-      </LocationSubscriber>
+      <a
+        {...rest}
+        href={this.context.router.createHref(to)}
+        onClick={this.handleClick}
+        style={isActive ? { ...style, ...activeStyle } : style }
+        className={isActive ?
+          [ className, activeClassName ].join(' ').trim() : className
+        }
+      />
     )
   }
 }
@@ -116,7 +108,7 @@ if (__DEV__) {
     activeClassName: PropTypes.string,
     activeOnlyWhenExact: PropTypes.bool,
     isActive: PropTypes.func,
-    children: PropTypes.oneOfType([PropTypes.node, PropTypes.func]),
+    children: PropTypes.node,
 
     // props we have to deal with but aren't necessarily
     // part of the Link API
@@ -127,7 +119,6 @@ if (__DEV__) {
   }
 }
 
-// we should probably use LocationUtils.createLocationDescriptor
 const createLocationDescriptor = (to) =>
   typeof to === 'object' ? to : { pathname: to }
 

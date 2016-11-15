@@ -1,4 +1,4 @@
-# `<Miss>`
+# Miss
 
 When no `Match` components match the current location, then a sibling
 `Miss` will render.
@@ -17,7 +17,7 @@ const NoMatch = ({ location }) => (
 )
 ```
 
-## `component`
+## component _Miss_
 
 Same as `component` in `Match`, except the only prop passed is
 `location`.
@@ -26,7 +26,7 @@ Same as `component` in `Match`, except the only prop passed is
 <Miss component={NoMatch}/>
 ```
 
-## `render: func`
+## render: func _Miss_
 
 Same as `render` in `Match`, except the only prop passed is `location`.
 
@@ -35,6 +35,3 @@ Same as `render` in `Match`, except the only prop passed is `location`.
   <div>Nothing matched {location.pathname}.</div>
 )}/>
 ```
-
-# `</Miss>`
-

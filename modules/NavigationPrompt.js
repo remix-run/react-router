@@ -1,9 +1,8 @@
 import React, { PropTypes } from 'react'
-import { historyContext as historyContextType } from './PropTypes'
 
 class NavigationPrompt extends React.Component {
   static contextTypes = {
-    history: historyContextType.isRequired
+    router: PropTypes.object.isRequired
   }
 
   static defaultProps = {
@@ -12,13 +11,13 @@ class NavigationPrompt extends React.Component {
 
   block() {
     if (!this.teardownPrompt)
-      this.teardownPrompt = this.context.history.block(this.props.message)
+      this.teardownPrompt = this.context.router.blockTransitions(this.props.message)
   }
 
   unblock() {
     if (this.teardownPrompt) {
       this.teardownPrompt()
-      this.teardownPrompt = null
+      delete this.teardownPrompt
     }
   }
 
@@ -28,9 +27,9 @@ class NavigationPrompt extends React.Component {
   }
 
   componentWillReceiveProps(nextProps) {
-    if (nextProps.when) {
+    if (nextProps.when === true && this.props.when === false) {
       this.block()
-    } else {
+    } else if (nextProps.when === false && this.props.when === true) {
       this.unblock()
     }
   }

@@ -1,4 +1,4 @@
-# `<Redirect>`
+# Redirect
 
 Rendering a `Redirect` will navigate to a new location.
 
@@ -19,7 +19,7 @@ on context.)
 ```
 
 
-## `to: string`
+## to: string _Redirect_
 
 The pathname to redirect to.
 
@@ -27,7 +27,7 @@ The pathname to redirect to.
 <Redirect to="/somewhere/else" />
 ```
 
-## `to: location`
+## to: location _Redirect_
 
 A location descriptor to redirect to.
 
@@ -39,7 +39,7 @@ A location descriptor to redirect to.
 }}/>
 ```
 
-## `push: bool`
+## push: bool _Redirect_
 
 When true, redirecting will add a new history state with `pushState` instead
 of replacing the current history state with `replaceState`.
@@ -47,5 +47,3 @@ of replacing the current history state with `replaceState`.
 ```js
 <Redirect to="/somewhere/else" push/>
 ```
-
-# `</Redirect>`

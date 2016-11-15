@@ -1,4 +1,4 @@
-# `<ServerRouter>`
+# ServerRouter
 
 Server rendering is a bit more involved to properly handle `<Redirect>`
 and `<Miss>` in your app. Not only do you want to respond with the
@@ -65,7 +65,7 @@ createServer((req, res) => {
 }).listen(3000)
 ```
 
-## `basename`
+## basename _ServerRouter_
 
 The base URL for all locations.
 
@@ -77,15 +77,13 @@ The base URL for all locations.
 // will generate links with an href to "/calendar/today"
 ```
 
-## `location: string`
+## location: string _ServerRouter_
 
 The location the server received, probably `req.url` on a node server.
 
-## `context`
+## context _ServerRouter_
 
 An object returned from `createServerRenderContext`. It keeps the
 rendering result so you know which status code to send and if you need
 to perform a second pass render to render the `<Miss>` components in
 your app.
-
-# `</ServerRouter>`
