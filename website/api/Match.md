@@ -15,10 +15,10 @@ Any valid URL pattern that [`path-to-regexp`][ptre] understands.
 When `true`, will only match if the pattern matches the
 `location.pathname` _exactly_.
 
-| pattern   |  location.pathname  | exactly?   | matches?   |
+| pattern | location.pathname | exactly | matches? |
 |---|---|---|---|---|
-| `/foo`  | `/foo/bar`  | yes | no |
-| `/foo`  | `/foo/bar`  | no | yes |
+| `/foo`  | `/foo/bar`  | `true` | no |
+| `/foo`  | `/foo/bar`  | `false` | yes |
 
 ```js
 <Match pattern="/foo" exactly component={Foo}/>
