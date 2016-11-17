@@ -29,8 +29,8 @@ export default function withRouter(WrappedComponent, options) {
 
     render() {
       const router = this.props.router || this.context.router
-      const { params, location, routes } = router
-      const props = { ...this.props, router, params, location, routes }
+      const { params, location, routes, route } = router
+      const props = { ...this.props, router, params, location, routes, route }
 
       if (withRef) {
         props.ref = (c) => { this.wrappedInstance = c }
