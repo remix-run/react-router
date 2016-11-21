@@ -141,6 +141,7 @@ const isLeftClickEvent = (event) =>
 const isModifiedEvent = (event) =>
   !!(event.metaKey || event.altKey || event.ctrlKey || event.shiftKey)
 
+// use looseEqual from history/LocationUtils
 const deepEqual = (a, b) => {
   if (a == b)
     return true

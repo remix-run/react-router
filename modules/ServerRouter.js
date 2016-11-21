@@ -13,11 +13,19 @@ const ignoreFirstCall = (fn) => {
 }
 
 class ServerRouter extends React.Component {
+  static childContextTypes = {
+    serverRouter: PropTypes.bool
+  }
+
   constructor(props) {
     super(props)
     const { context } = props
     context.missed = true
     context.redirect = null
+  }
+
+  getChildContext() {
+    return { serverRouter: true }
   }
 
   // ignore first call because StaticRouter renders a <Match>,

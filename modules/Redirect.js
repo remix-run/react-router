@@ -6,14 +6,27 @@ class Redirect extends React.Component {
   }
 
   static contextTypes = {
-    router: PropTypes.object
+    router: PropTypes.object,
+    serverRouter: PropTypes.bool
+  }
+
+  isServerRender() {
+    return this.context.serverRouter
   }
 
   componentWillMount() {
-    this.redirect(this.props)
+    if (this.isServerRender())
+      this.redirect(this.props)
+  }
+
+  componentDidMount() {
+    if (!this.isServerRender())
+      this.redirect(this.props)
   }
 
   componentWillReceiveProps(nextProps) {
+    // TODO: use looseEqual from history/LocationUtils
+    // so we can allow for objects here
     if (nextProps.to !== this.props.to) {
       this.redirect(nextProps)
     }

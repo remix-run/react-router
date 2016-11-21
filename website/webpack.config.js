@@ -2,6 +2,7 @@ const path = require('path')
 const webpack = require('webpack')
 const HTMLWebpackPlugin = require('html-webpack-plugin')
 
+const PROD = process.env.NODE_ENV === 'production'
 const HASH = '[chunkHash]'
 const ROUTER_SRC = path.join(__dirname, '..', 'modules')
 
@@ -20,11 +21,14 @@ module.exports = {
   },
 
   plugins: [
+    new webpack.DefinePlugin({ 'process.env.NODE_ENV': JSON.stringify(process.env.NODE_ENV) }),
     new webpack.optimize.CommonsChunkPlugin('vendor', `vendor-${HASH}.js`),
-    new HTMLWebpackPlugin({
-      template: 'index.html.ejs'
-    })
-  ],
+    new HTMLWebpackPlugin({ template: 'index.html.ejs' })
+  ].concat(PROD ? [
+    new webpack.optimize.DedupePlugin(),
+    new webpack.optimize.OccurrenceOrderPlugin(),
+    new webpack.optimize.UglifyJsPlugin()
+  ] : []),
 
   resolve: {
     alias: {
@@ -46,14 +50,14 @@ module.exports = {
       },
       { test: /\.css$/,
         exclude: /prismjs/,
-        loader: 'style!css?modules&importLoaders=1&localIdentName=[name]__[local]___[hash:base64:5]!postcss'
+        loader: 'style!css'
       },
       { test: /\.css$/,
         include: /prismjs/,
         loader: 'style!css'
       },
       { test: /\.md$/,
-        loader: './webpack/markdown-loader'
+        loader: path.join(__dirname, 'webpack', 'markdown-loader')
       },
       { test: /\.(gif|jpe?g|png|ico)$/,
         loader: 'url?limit=10000'

@@ -13,9 +13,9 @@ class LoadBundle extends React.Component {
   }
 
   render() {
-    const { children:Child } = this.props
+    const { children } = this.props
     const { mod } = this.state
-    return mod ? <Child mod={mod} /> : <B><LoadingDots/></B>
+    return mod ? children({mod}) : <B><LoadingDots/></B>
   }
 
 }

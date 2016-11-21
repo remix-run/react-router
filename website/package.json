@@ -1,8 +1,9 @@
 {
   "private": true,
   "scripts": {
-    "build": "webpack -p",
-    "start": "webpack-dev-server --inline"
+    "build": "webpack -p && npm run service-worker",
+    "start": "webpack-dev-server --inline",
+    "service-worker": "cp -R static/ build/ && sw-precache --root='build/' --static-file-globs='build/**/!(*map*)'"
   },
   "devDependencies": {
     "bundle-loader": "0.5.4",
@@ -17,6 +18,9 @@
     "style-loader": "0.13.1",
     "url-loader": "^0.5.7",
     "webpack": "1.13.1",
-    "webpack-dev-server": "1.14.1"
+    "webpack-dev-server": "1.14.1",
+    "jsxstyle": "^1.0.1",
+    "markdown-it-anchor": "^2.5.1",
+    "sw-precache": "^4.2.2"
   }
 }

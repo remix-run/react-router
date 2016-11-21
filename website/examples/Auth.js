@@ -26,34 +26,34 @@ const fakeAuth = {
 
 ////////////////////////////////////////////////////////////
 class AuthExample extends React.Component {
-  static contextTypes = { router: React.PropTypes.object }
-
   render() {
     return (
       <Router>
-        <div>
-          {fakeAuth.isAuthenticated ? (
-            <p>
-              Welcome! {' '}
-              <button onClick={() => {
-                fakeAuth.signout(() => {
-                  this.context.router.transitionTo('/')
-                })
-              }}>Sign out</button>
-            </p>
-          ) : (
-            <p>You are not logged in.</p>
-          )}
+        {({ router }) => (
+          <div>
+            {fakeAuth.isAuthenticated ? (
+              <p>
+                Welcome! {' '}
+                <button onClick={() => {
+                  fakeAuth.signout(() => {
+                    router.transitionTo('/')
+                  })
+                }}>Sign out</button>
+              </p>
+            ) : (
+              <p>You are not logged in.</p>
+            )}
 
-          <ul>
-            <li><Link to="/public">Public Page</Link></li>
-            <li><Link to="/protected">Protected Page</Link></li>
-          </ul>
+            <ul>
+              <li><Link to="/public">Public Page</Link></li>
+              <li><Link to="/protected">Protected Page</Link></li>
+            </ul>
 
-          <Match pattern="/public" component={Public}/>
-          <Match pattern="/login" component={Login}/>
-          <MatchWhenAuthorized pattern="/protected" component={Protected}/>
-        </div>
+            <Match pattern="/public" component={Public}/>
+            <Match pattern="/login" component={Login}/>
+            <MatchWhenAuthorized pattern="/protected" component={Protected}/>
+          </div>
+        )}
       </Router>
     )
   }

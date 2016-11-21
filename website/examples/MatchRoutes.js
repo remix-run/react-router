@@ -18,7 +18,7 @@ const MatchRoutesExample = () => (
       <MatchRoutes
         routes={[
           { pattern: '/',
-            exactly: true,
+            exact: true,
             component: Home
           },
           { pattern: '/about',

@@ -6,13 +6,6 @@ import { createPath } from 'history/PathUtils'
 import createMemoryHistory from 'history/createMemoryHistory'
 import Router from '../../../modules/Router'
 
-const history = createMemoryHistory({
-  initialEntries: [ '/' ],
-  getUserConfirmation: (message, callback) => {
-    callback(window.confirm(message))
-  }
-})
-
 // have to recreate what StaticRouter does, there should be a way to
 // compose?...
 const createPathWithQuery = (loc) => {
@@ -76,34 +69,47 @@ class FakeBrowser extends React.Component {
     location: null
   }
 
+  componentWillMount() {
+    this.history = createMemoryHistory({
+      initialEntries: [ '/' ],
+      getUserConfirmation: (message, callback) => {
+        callback(window.confirm(message))
+      }
+    })
+  }
+
   render() {
-    const { children:Child } = this.props
+    const { children:Child, ...rest } = this.props
+    const { history } = this
 
     return (
       <Router history={history}>
-        {({ location }) => (
-          <V
+        {({ location, ...routerProps }) => (
+          <B
+            className="fake-browser"
             background="white"
-            boxShadow="0px 4px 10px hsla(0, 0%, 0%, 0.25)"
-            border="1px solid #ccc"
-            flex="1"
+            boxShadow="0px 5px 20px hsla(0, 0%, 0%, 0.75)"
+            borderRadius="6px"
+            {...rest}
           >
             <H
               background={LIGHT_GRAY}
+              borderTopLeftRadius="6px"
+              borderTopRightRadius="6px"
               border="none"
-              borderBottom="solid 1px #ccc"
               alignItems="center"
+              borderBottom="solid 1px #ccc"
               padding={`0 ${PAD/2}px`}
             >
               <Button
                 onClick={history.goBack}
                 disabled={!history.canGo(-1)}
-                aria-label="Go back in fake browser"
+                ariaLabel="Go back in fake browser"
               ><LeftArrowIcon/></Button>
               <Button
                 onClick={history.goForward}
                 disabled={!history.canGo(1)}
-                aria-label="Go forward in fake browser"
+                ariaLabel="Go forward in fake browser"
               ><RightArrowIcon/></Button>
               <B
                 position="relative"
@@ -147,9 +153,9 @@ class FakeBrowser extends React.Component {
               overflow="auto"
               position="relative"
             >
-              <Child/>
+              <Child location={location} {...routerProps}/>
             </B>
-          </V>
+          </B>
         )}
       </Router>
     )
