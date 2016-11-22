@@ -12,7 +12,7 @@ Exclusively renders a route when the route's pattern matches the location.
 
 **How is this different than just using `Match` and `Miss`?**
 
-This component is unique in that it renders a route *exclusively*, where every `Match` that matches the location will render. Consider this code:
+This component is unique in that it renders a route *exclusively*, in contrast to every `Match` that matches the location renders inclusively. Consider this code:
 
 ```js
 <Match pattern="/about" component={About}/>
