@@ -1,5 +1,6 @@
 import React from 'react'
-import { B, PAD, lightGray } from './bricks'
+import { I, H, B, PAD, lightGray, red } from './bricks'
+import { render } from 'react-dom'
 import MarkdownViewer from './MarkdownViewer'
 import ScrollToMe from './ScrollToMe'
 import Match from '../../modules/Match'
@@ -12,6 +13,10 @@ export const API = [
   { name: 'Miss',
     path: '/Miss',
     html: require('../api/Miss.md')
+  },
+  { name: 'MatchRoutes',
+    path: '/MatchRoutes',
+    html: require('../api/MatchRoutes.md')
   },
   { name: 'Link',
     path: '/Link',
@@ -43,20 +48,59 @@ export const API = [
   }
 ]
 
-const APIDocs = () => (
-  <B>
-    <Match pattern="/api" exactly={true} component={ScrollToMe}/>
-    <B maxWidth="800px" margin={`${PAD*2}px auto`} padding={PAD*2+'px'}>
-      <B component="h2" textTransform="uppercase" color={lightGray} fontWeight="bold" textAlign="center">
-        API
-      </B>
-      {API.map((doc, i) => (
-        <B key={i} margin={`${PAD*2}px 0`}>
-          <MarkdownViewer html={doc.html}/>
-        </B>
-      ))}
-    </B>
-  </B>
+const $ = (node, selector) => (
+  [].slice.call(node.querySelectorAll(selector))
 )
+
+class APIDocs extends React.Component {
+  componentDidMount() {
+    const items = $(this.el, '.api-entry').map(entry => {
+      const name = $(entry, 'h1')[0].childNodes[1].textContent.trim()
+      const hash = $(entry, 'h1 a')[0].hash
+      const children = $(entry, 'h2').map(node => ({
+        name: node.childNodes[1].textContent.trim(),
+        hash: $(node, 'a')[0].hash
+      }))
+      return { name, hash, children }
+    })
+    this.renderMenu(items)
+  }
+
+  renderMenu(items) {
+    const el = (
+      <B fontFamily="Monaco, monospace">
+        {items.map(item => (
+          <B margin="10px">
+            <B component="a" props={{ href: item.hash }} fontWeight="bold" color={red} hoverTextDecoration="underline">{item.name}</B>
+            <B marginLeft="20px">
+              {item.children.map(({ hash, name }) => (
+                <B component="a" props={{ href: hash }} color={lightGray} hoverTextDecoration="underline">{name}</B>
+              ))}
+            </B>
+          </B>
+        ))}
+      </B>
+    )
+    render(el, this.menu)
+  }
+
+  render() {
+    return (
+      <B props={{ ref: n => this.el = n }}>
+        <Match pattern="/api" exactly={true} component={ScrollToMe}/>
+        <H height="100vh">
+          <B props={{ ref: n => this.menu = n }} height="100%" overflow="auto" fontSize="80%" padding="40px" background="#f0f0f0"/>
+          <B flex="1" height="100%" overflow="auto">
+            {API.map((doc, i) => (
+              <B className="api-entry" key={i} padding="40px 60px">
+                <MarkdownViewer html={doc.html}/>
+              </B>
+            ))}
+          </B>
+        </H>
+      </B>
+    )
+  }
+}
 
 export default APIDocs
