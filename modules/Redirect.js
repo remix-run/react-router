@@ -16,25 +16,25 @@ class Redirect extends React.Component {
 
   componentWillMount() {
     if (this.isServerRender())
-      this.redirect(this.props)
+      this.redirect()
   }
 
   componentDidMount() {
     if (!this.isServerRender())
-      this.redirect(this.props)
+      this.redirect()
   }
 
-  componentWillReceiveProps(nextProps) {
+  componentDidUpdate(prevProps) {
     // TODO: use looseEqual from history/LocationUtils
     // so we can allow for objects here
-    if (nextProps.to !== this.props.to) {
-      this.redirect(nextProps)
+    if (prevProps.to !== this.props.to) {
+      this.redirect()
     }
   }
 
-  redirect(props) {
+  redirect() {
     const { router } = this.context
-    const { to, push } = props
+    const { to, push } = this.props
     const navigate = push ? router.transitionTo : router.replaceWith
     navigate(to)
   }
