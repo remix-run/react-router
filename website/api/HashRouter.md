@@ -1,4 +1,4 @@
-# `<HashRouter>`
+# HashRouter
 
 A router that uses the hash portion of the URL (i.e. `window.location.hash`) to keep your UI in sync with the URL.
 
@@ -10,7 +10,7 @@ A router that uses the hash portion of the URL (i.e. `window.location.hash`) to 
 </HashRouter>
 ```
 
-## `basename`
+## basename _HashRouter_
 
 The base URL for all locations.
 
@@ -22,14 +22,12 @@ The base URL for all locations.
 // will generate links with an href to "#/calendar/today"
 ```
 
-## `getUserConfirmation`
+## getUserConfirmation _HashRouter_
 
 A function to use to confirm navigation. TODO: Provide an example here.
 
-## `hashType`
+## hashType _HashRouter_
 
 - `"slash"`: default - Creates URLs like `#/` and `#/foo/bar`
 - `"noslash"` - Creates URLs like `#` and `#foo/bar`
 - `"hashbang"` - Creates extra ugly URLs like `#!/` and `#!/foo/bar`
-
-# `</HashRouter>`

@@ -1,21 +1,24 @@
 import pathToRegexp from 'path-to-regexp'
-import MatcherCache from './MatcherCache'
 
-// cache[exactly][pattern] contains getMatcher(pattern, exactly)
-const cache = {
-  true: new MatcherCache(),
-  false: new MatcherCache()
-}
+// cache[exactly][pattern]
+const cache = { true: {}, false: {} }
+
+// we stop caching after 1000 patterns, seems weird for an app to have this
+// many patterns, it'll still work though, just a bit slower
+const CACHE_LIMIT = 2000
 
 const getMatcher = (pattern, exactly) => {
   const exactlyStr = exactly ? 'true' : 'false'
-  let matcher = cache[exactlyStr].get(pattern)
+  let matcher = cache[exactlyStr][pattern]
 
   if (!matcher) {
     const keys = []
     const regex = pathToRegexp(pattern, keys, { end: exactly, strict: true })
     matcher = { keys, regex }
-    cache[exactlyStr].set(pattern, matcher)
+    const cacheSize = Object.keys(cache[exactlyStr][pattern] || {}).length
+    if (cacheSize < CACHE_LIMIT) {
+      cache[exactlyStr][pattern] = matcher
+    }
   }
 
   return matcher

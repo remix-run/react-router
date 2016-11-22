@@ -1,7 +1,6 @@
 import expect from 'expect'
-import React from 'react'
+import React, { PropTypes } from 'react'
 import StaticRouter from '../StaticRouter'
-import { routerContext as routerContextType } from '../PropTypes'
 import { renderToString } from 'react-dom/server'
 
 //console.error = () => {}
@@ -192,7 +191,7 @@ describe('StaticRouter', () => {
   describe('basename support', () => {
     class Test extends React.Component {
       static contextTypes = {
-        router: routerContextType
+        router: PropTypes.object
       }
 
       render() {

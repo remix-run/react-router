@@ -1,36 +1,41 @@
-import React, { PropTypes } from 'react'
+import React, { PropTypes, Component } from 'react'
 import createMemoryHistory from 'history/createMemoryHistory'
-import StaticRouter from './StaticRouter'
-import History from './History'
+import Router from './Router'
 
-const MemoryRouter = ({
-  getUserConfirmation,
-  initialEntries,
-  initialIndex,
-  keyLength,
-  ...routerProps
-}) => (
-  <History
-    createHistory={createMemoryHistory}
-    historyOptions={{
+class MemoryRouter extends Component {
+  componentWillMount() {
+    const {
       getUserConfirmation,
       initialEntries,
       initialIndex,
       keyLength
-    }}
-  >
-    {({ history, action, location }) => (
-      <StaticRouter
-        action={action}
-        location={location}
-        onPush={history.push}
-        onReplace={history.replace}
-        blockTransitions={history.block}
+    } = this.props
+
+    this.history = createMemoryHistory({
+      getUserConfirmation,
+      initialEntries,
+      initialIndex,
+      keyLength
+    })
+  }
+
+  render() {
+    const {
+      getUserConfirmation, // eslint-disable-line
+      initialEntries, // eslint-disable-line
+      initialIndex, // eslint-disable-line
+      keyLength, // eslint-disable-line
+      ...routerProps
+    } = this.props
+
+    return (
+      <Router
+        history={this.history}
         {...routerProps}
       />
-    )}
-  </History>
-)
+    )
+  }
+}
 
 if (__DEV__) {
   MemoryRouter.propTypes = {
@@ -38,6 +43,10 @@ if (__DEV__) {
     initialEntries: PropTypes.array,
     initialIndex: PropTypes.number,
     keyLength: PropTypes.number,
+
+    // StaticRouter props
+    stringifyQuery: PropTypes.func,
+    parseQueryString: PropTypes.func,
     children: PropTypes.oneOfType([
       PropTypes.func,
       PropTypes.node

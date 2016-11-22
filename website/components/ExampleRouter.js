@@ -1,21 +1,9 @@
-import React from 'react'
-import StaticRouter from '../../modules/StaticRouter'
+import { PropTypes } from 'react'
 
-const ExampleRouter = (props, { history, location, action }) => (
-  <StaticRouter
-    action={action}
-    location={location}
-    onPush={history.push}
-    onReplace={history.replace}
-    blockTransitions={history.block}
-    {...props}
-  />
+const ExampleRouter = ({ children, ...rest }, context) => (
+  typeof children === 'function' ? children({ ...rest, router: context.router }) : children
 )
 
-ExampleRouter.contextTypes = {
-  history: React.PropTypes.object,
-  location: React.PropTypes.object,
-  action: React.PropTypes.string
-}
+ExampleRouter.contextTypes = { router: PropTypes.object }
 
 export default ExampleRouter

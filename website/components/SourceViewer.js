@@ -1,21 +1,16 @@
+/*eslint-disable react/no-danger*/
 import React from 'react'
-import 'prismjs/themes/prism.css'
-import { B, PAD } from './bricks'
+import 'prismjs/themes/prism-tomorrow.css'
+import { B } from './bricks'
 
-class SourceViewer extends React.Component {
+const SourceViewer = ({ code, ...rest }) => (
+  <B component="pre" {...rest} fontSize="12px">
+    <code dangerouslySetInnerHTML={{ __html: code }} />
+  </B>
+)
 
-  render() {
-    return (
-      <B component="pre" flex="1" overflow="auto" paddingRight={`${PAD}px`}>
-        <code
-          dangerouslySetInnerHTML={{
-            __html: this.props.code
-          }}
-        />
-      </B>
-    )
-  }
-
+SourceViewer.propTypes = {
+  code: React.PropTypes.string.isRequired
 }
 
 export default SourceViewer

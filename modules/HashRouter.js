@@ -1,8 +1,7 @@
 import React, { PropTypes } from 'react'
 import createHashHistory from 'history/createHashHistory'
-import History from './History'
+import Router from './Router'
 import { addLeadingSlash, stripLeadingSlash } from 'history/PathUtils'
-import StaticRouter from './StaticRouter'
 
 const createHref = hashType => path => {
   let newPath
@@ -23,43 +22,49 @@ const createHref = hashType => path => {
   return `#${newPath}`
 }
 
-/**
- * A router that uses the URL hash.
- */
-const HashRouter = ({
-  basename,
-  getUserConfirmation,
-  hashType,
-  ...routerProps
-}) => (
-  <History
-    createHistory={createHashHistory}
-    historyOptions={{
+class HashRouter extends React.Component {
+  componentWillMount() {
+    const {
       basename,
       getUserConfirmation,
       hashType
-    }}
-  >
-    {({ history, action, location }) => (
-      <StaticRouter
-        action={action}
-        location={location}
-        basename={basename}
-        onPush={history.push}
-        onReplace={history.replace}
-        blockTransitions={history.block}
+    } = this.props
+
+    this.history = createHashHistory({
+      basename,
+      getUserConfirmation,
+      hashType
+    })
+  }
+
+  render() {
+    const {
+      basename, // eslint-disable-line
+      getUserConfirmation, // eslint-disable-line
+      hashType, // eslint-disable-line
+      ...routerProps
+    } = this.props
+
+    return (
+      <Router
+        history={this.history}
         createHref={createHref(hashType)}
         {...routerProps}
       />
-    )}
-  </History>
-)
+    )
+  }
+}
 
 if (__DEV__) {
   HashRouter.propTypes = {
     basename: PropTypes.string,
     getUserConfirmation: PropTypes.func,
     hashType: PropTypes.string,
+
+    // StaticRouter props
+    stringifyQuery: PropTypes.func,
+    parseQueryString: PropTypes.func,
+    createHref: PropTypes.func.isRequired,
     children: PropTypes.oneOfType([
       PropTypes.func,
       PropTypes.node

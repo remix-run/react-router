@@ -1,4 +1,4 @@
-# `<Link>`
+# Link
 
 Provides declarative, accessible navigation around your application.
 
@@ -8,28 +8,7 @@ Provides declarative, accessible navigation around your application.
 </Link>
 ```
 
-## `children: node | func`
-
-The Link component also accepts a function as children.
-This will allow you to use custom component to render the link
-or use the router with react-native.
-
-Children function parameter is an object with the following keys:
-
-- `isActive`: (bool) whenever the Link is active
-- `location`: the location passed to the Link
-- `href`: (string) with the router url
-- `onClick`: (func) the dom onClick event handler
-- `transition`: (func) a shortcut to router.transitionTo with the "to" setted on the link
-
-```js
-<Link to="/courses">{
-  ({isActive, location, href, onClick, transition}) =>
-    <RaisedButton label="Courses" onClick={onClick} primary={isActive} href={href} />
-}</Link>
-```
-
-## `to: string | object`
+## to: string | object _Link_
 
 The pathname or location descriptor to link to.
 
@@ -42,7 +21,7 @@ The pathname or location descriptor to link to.
 }}/>
 ```
 
-## `activeStyle: object`
+## activeStyle: object _Link_
 
 An object of styles to apply to the element when the location matches
 the link's `to` prop. It will be merged after a `style` prop object.
@@ -58,7 +37,7 @@ the link's `to` prop. It will be merged after a `style` prop object.
 // at /courses will be 'red' (active)
 ```
 
-## `activeClassName: string`
+## activeClassName: string _Link_
 
 A className to apply when the location matches the link's `to` prop.
 
@@ -72,7 +51,7 @@ A className to apply when the location matches the link's `to` prop.
 // at /courses it will be "course-link active"
 ```
 
-## `activeOnlyWhenExact: bool`
+## activeOnlyWhenExact: bool _Link_
 
 When true, the link will only apply `activeClassName` and `activeStyle`
 if the link's `to` matches the `location` exactly.
@@ -83,7 +62,7 @@ if the link's `to` matches the `location` exactly.
 // at /courses/123 it will not be active
 ```
 
-## `isActive: func`
+## isActive: func _Link_
 
 Allows for customized handling of whether or not the link is active.
 Return `true` for active, `false` for inactive.
@@ -110,7 +89,7 @@ Return `true` for active, `false` for inactive.
 />
 ```
 
-## `location`
+## location _Link_
 
 If you don't want to use the location from context, you can pass the
 location to match as a prop instead. Useful in redux apps for links deep
@@ -120,7 +99,7 @@ in the hierarchy.
 <Match pattern="/foo" location={this.props.location}/>
 ```
 
-## `replace: bool`
+## replace: bool _Link_
 
 When true, clicking the link will replace the current history state with
 `replaceState` instead of adding a new history state with `pushState`.
@@ -128,5 +107,3 @@ When true, clicking the link will replace the current history state with
 ```js
 <Link to="/courses" replace/>
 ```
-
-# `</Link>`

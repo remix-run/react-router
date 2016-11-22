@@ -1,6 +1,6 @@
+/*eslint react/no-danger:0 */
 import React from 'react'
-import 'prismjs/themes/prism.css'
-import { B, PAD } from './bricks'
+import 'prismjs/themes/prism-tomorrow.css'
 
 const MarkdownViewer = ({ html }) => (
   <markdown
@@ -9,5 +9,9 @@ const MarkdownViewer = ({ html }) => (
     }}
   />
 )
+
+MarkdownViewer.propTypes = {
+  html: React.PropTypes.string.isRequired
+}
 
 export default MarkdownViewer

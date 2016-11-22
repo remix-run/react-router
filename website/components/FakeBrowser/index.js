@@ -1,19 +1,10 @@
 import React, { PropTypes } from 'react'
-import History from '../../../modules/History'
 import { B, V, H, PAD, LIGHT_GRAY, GRAY } from '../bricks'
 import { button } from './style.css' // eslint-disable-line
 import { stringify as stringifyQuery } from 'query-string'
 import { createPath } from 'history/PathUtils'
 import createMemoryHistory from 'history/createMemoryHistory'
-
-const MemoryHistory = ({ children, ...historyOptions }) => (
-  <History
-    children={children}
-    createHistory={createMemoryHistory}
-    historyOptions={historyOptions}
-  />
-)
-
+import Router from '../../../modules/Router'
 
 // have to recreate what StaticRouter does, there should be a way to
 // compose?...
@@ -26,24 +17,6 @@ const createPathWithQuery = (loc) => {
       location.search = `?${stringifyQuery(loc.query)}`
     return createPath(location)
   }
-}
-
-class LocationActionProvider extends React.Component {
-
-  static childContextTypes = {
-    location: PropTypes.object,
-    action: PropTypes.string
-  }
-
-  getChildContext() {
-    const { location, action } = this.props
-    return { location, action }
-  }
-
-  render() {
-    return this.props.children
-  }
-
 }
 
 const LeftArrowIcon = () => (
@@ -88,43 +61,55 @@ const Button = (props) => (
 ////////////////////////////////////////////////////////////////////////////////
 class FakeBrowser extends React.Component {
 
+  static propTypes = {
+    children: PropTypes.func
+  }
+
   state = {
     location: null
   }
 
+  componentWillMount() {
+    this.history = createMemoryHistory({
+      initialEntries: [ '/' ],
+      getUserConfirmation: (message, callback) => {
+        callback(window.confirm(message))
+      }
+    })
+  }
+
   render() {
-    const { children:Child } = this.props
+    const { children:Child, ...rest } = this.props
+    const { history } = this
 
     return (
-      <MemoryHistory
-        initialEntries={[ '/' ]}
-        getUserConfirmation={(message, callback) => {
-          callback(window.confirm(message))
-        }}
-      >
-        {({ history, location, action }) => (
-          <V
+      <Router history={history}>
+        {({ location, ...routerProps }) => (
+          <B
+            className="fake-browser"
             background="white"
-            boxShadow="0px 4px 10px hsla(0, 0%, 0%, 0.25)"
-            border="1px solid #ccc"
-            flex="1"
+            boxShadow="0px 5px 20px hsla(0, 0%, 0%, 0.75)"
+            borderRadius="6px"
+            {...rest}
           >
             <H
               background={LIGHT_GRAY}
+              borderTopLeftRadius="6px"
+              borderTopRightRadius="6px"
               border="none"
-              borderBottom="solid 1px #ccc"
               alignItems="center"
+              borderBottom="solid 1px #ccc"
               padding={`0 ${PAD/2}px`}
             >
               <Button
                 onClick={history.goBack}
                 disabled={!history.canGo(-1)}
-                aria-label="Go back in fake browser"
+                ariaLabel="Go back in fake browser"
               ><LeftArrowIcon/></Button>
               <Button
                 onClick={history.goForward}
                 disabled={!history.canGo(1)}
-                aria-label="Go forward in fake browser"
+                ariaLabel="Go forward in fake browser"
               ><RightArrowIcon/></Button>
               <B
                 position="relative"
@@ -150,7 +135,6 @@ class FakeBrowser extends React.Component {
                   type="text"
                   value={createPathWithQuery(this.state.location || location)}
                   onChange={(e) => {
-                    console.log(e.target.value)
                     this.setState({
                       location: e.target.value
                     })
@@ -169,16 +153,11 @@ class FakeBrowser extends React.Component {
               overflow="auto"
               position="relative"
             >
-              <LocationActionProvider
-                location={location}
-                action={action}
-              >
-                <Child/>
-              </LocationActionProvider>
+              <Child location={location} {...routerProps}/>
             </B>
-          </V>
+          </B>
         )}
-      </MemoryHistory>
+      </Router>
     )
   }
 }

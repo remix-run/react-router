@@ -1,30 +1,66 @@
 import React, { PropTypes } from 'react'
 import { stringify, parse as parseQueryString } from 'query-string'
-import MatchProvider from './MatchProvider'
-import { LocationBroadcast } from './Broadcasts'
-import {
-  locationsAreEqual,
-  createRouterLocation,
-  createRouterPath
-} from './LocationUtils'
-import {
-  action as actionType,
-  routerContext as routerContextType
-} from './PropTypes'
+import Match from './Match'
+import { createRouterLocation, createRouterPath, locationsAreEqual } from './LocationUtils'
+
+const call = f => f()
 
 const stringifyQuery = (query) => (
   stringify(query).replace(/%20/g, '+')
 )
 
 class StaticRouter extends React.Component {
+
   static defaultProps = {
     stringifyQuery,
     parseQueryString,
-    createHref: path => path
+    createHref: path => path,
+    onMatch: () => {}
   }
 
   static childContextTypes = {
-    router: routerContextType.isRequired
+    router: PropTypes.object.isRequired
+  }
+
+  constructor(props) {
+    super(props)
+    // mange this ourselves instead of setState since we're notifying descendant
+    // components (Match, Miss, Link) via subscriptions, if we use setState only,
+    // then sCU will prevent valid changes from reconciling, if we use setState +
+    // subscriptions, we get double virtual renders (`setState(nextState,
+    // notifySubscribers)`), so we manage the location mutation manually.
+    this.location = this.createLocation(props.location)
+    this.subscribers = []
+  }
+
+  getChildContext() {
+    return {
+      router: this.getRouterContext()
+    }
+  }
+
+  componentWillReceiveProps(nextProps) {
+    if (!locationsAreEqual(nextProps.location, this.props.location)) {
+      this.location = this.createLocation(nextProps.location)
+      this.notifySubscribers()
+    }
+  }
+
+  getRouterContext() {
+    return {
+      transitionTo: this.transitionTo,
+      replaceWith: this.replaceWith,
+      blockTransitions: this.blockTransitions,
+      createHref: this.createHref,
+      getState: () => ({ location: this.location }),
+      onMatch: () => this.props.onMatch(),
+      subscribe: (fn) => {
+        this.subscribers.push(fn)
+        return () => {
+          this.subscribers.splice(this.subscribers.indexOf(fn), 1)
+        }
+      }
+    }
   }
 
   createLocation(location) {
@@ -56,52 +92,24 @@ class StaticRouter extends React.Component {
     return this.props.createHref(path)
   }
 
-  getRouterContext() {
-    return {
-      transitionTo: this.transitionTo,
-      replaceWith: this.replaceWith,
-      blockTransitions: this.blockTransitions,
-      createHref: this.createHref
-    }
-  }
-
-  getChildContext() {
-    return {
-      router: this.getRouterContext()
-    }
-  }
-
-  state = {
-    location: null
-  }
-
-  componentWillMount() {
-    this.setState({
-      location: this.createLocation(this.props.location)
-    })
-  }
-
-  componentWillReceiveProps(nextProps) {
-    const nextLocation = this.createLocation(nextProps.location)
-
-    if (!locationsAreEqual(this.state.location, nextLocation))
-      this.setState({ location: nextLocation })
+  notifySubscribers = () => {
+    if (this.subscribers.length)
+      this.subscribers.forEach(call)
   }
 
   render() {
-    const { location } = this.state
-    const { action, children } = this.props
-
+    const { location } = this
+    const { children, action } = this.props
     return (
-      <LocationBroadcast value={location}>
-        <MatchProvider>
-          {typeof children === 'function' ? (
+      <Match pattern="/">
+        {() => (
+          typeof children === 'function' ? (
             children({ action, location, router: this.getRouterContext() })
           ) : (
             React.Children.only(children)
-          )}
-        </MatchProvider>
-      </LocationBroadcast>
+          )
+        )}
+      </Match>
     )
   }
 }
@@ -110,18 +118,21 @@ if (__DEV__) {
   StaticRouter.propTypes = {
     children: PropTypes.oneOfType([ PropTypes.node, PropTypes.func ]),
 
-    action: actionType.isRequired,
+    history: PropTypes.object,
+
     location: PropTypes.oneOfType([ PropTypes.object, PropTypes.string ]).isRequired,
+    action: PropTypes.string.isRequired,
 
     onPush: PropTypes.func.isRequired,
     onReplace: PropTypes.func.isRequired,
+    onMatch: PropTypes.func.isRequired,
     blockTransitions: PropTypes.func,
 
     stringifyQuery: PropTypes.func.isRequired,
     parseQueryString: PropTypes.func.isRequired,
-    createHref: PropTypes.func.isRequired, // TODO: Clarify why this is useful
+    createHref: PropTypes.func.isRequired,
 
-    basename: PropTypes.string // TODO: Feels like we should be able to remove this
+    basename: PropTypes.string
   }
 }
 

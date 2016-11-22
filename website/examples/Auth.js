@@ -20,41 +20,44 @@ const fakeAuth = {
   },
   signout(cb) {
     this.isAuthenticated = false
-    cb()
-    setTimeout(cb, 100) // weird bug if async?
+    setTimeout(cb, 100)
   }
 }
 
 ////////////////////////////////////////////////////////////
-const AuthExample = () => (
-  <Router>
-    {({ router }) => (
-      <div>
-        {fakeAuth.isAuthenticated ? (
-          <p>
-            Welcome! {' '}
-            <button onClick={() => {
-              fakeAuth.signout(() => {
-                router.transitionTo('/')
-              })
-            }}>Sign out</button>
-          </p>
-        ) : (
-          <p>You are not logged in.</p>
+class AuthExample extends React.Component {
+  render() {
+    return (
+      <Router>
+        {({ router }) => (
+          <div>
+            {fakeAuth.isAuthenticated ? (
+              <p>
+                Welcome! {' '}
+                <button onClick={() => {
+                  fakeAuth.signout(() => {
+                    router.transitionTo('/')
+                  })
+                }}>Sign out</button>
+              </p>
+            ) : (
+              <p>You are not logged in.</p>
+            )}
+
+            <ul>
+              <li><Link to="/public">Public Page</Link></li>
+              <li><Link to="/protected">Protected Page</Link></li>
+            </ul>
+
+            <Match pattern="/public" component={Public}/>
+            <Match pattern="/login" component={Login}/>
+            <MatchWhenAuthorized pattern="/protected" component={Protected}/>
+          </div>
         )}
-
-        <ul>
-          <li><Link to="/public">Public Page</Link></li>
-          <li><Link to="/protected">Protected Page</Link></li>
-        </ul>
-
-        <Match pattern="/public" component={Public}/>
-        <Match pattern="/login" component={Login}/>
-        <MatchWhenAuthorized pattern="/protected" component={Protected}/>
-      </div>
-    )}
-  </Router>
-)
+      </Router>
+    )
+  }
+}
 
 ////////////////////////////////////////////////////////////
 const MatchWhenAuthorized = ({ component: Component, ...rest }) => (
@@ -97,8 +100,7 @@ class Login extends React.Component {
         )}
         {from && (
           <p>
-            You must log in to view the page at
-            <code>{from.pathname}</code>
+            You must log in to view the page at {from.pathname}
           </p>
         )}
         <button onClick={this.login}>Log in</button>

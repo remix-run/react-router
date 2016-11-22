@@ -1,5 +1,6 @@
 const markdownIt = require('markdown-it')
 const Prism = require('prismjs')
+const anchor = require('markdown-it-anchor')
 
 const aliases = {
   'js': 'jsx',
@@ -25,6 +26,10 @@ const md = markdownIt({
   linkify: true,
   typographer: true,
   highlight
+}).use(anchor, {
+  permalink: true,
+  permalinkSymbol: '#',
+  permalinkBefore: true
 })
 
 module.exports = function (content) {

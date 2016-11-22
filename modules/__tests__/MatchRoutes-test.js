@@ -1,12 +1,10 @@
 import expect from 'expect'
 import React from 'react'
 import { render, unmountComponentAtNode } from 'react-dom'
-import Match from '../Match'
-import Miss from '../Miss'
-import MatchGroup from '../MatchGroup'
+import MatchRoutes from '../MatchRoutes'
 import Router from '../MemoryRouter'
 
-describe('MatchGroup', () => {
+describe('MatchRoutes', () => {
   const div = document.createElement('div')
 
   const HOME = 'HOME'
@@ -20,11 +18,18 @@ describe('MatchGroup', () => {
 
   const App = ({ pathname }) => (
     <Router initialEntries={[{ pathname }]}>
-      <MatchGroup>
-        <Match exactly pattern="/" component={Home} />
-        <Match pattern="/foo" component={Foo} />
-        <Miss component={NoMatch} />
-      </MatchGroup>
+      <MatchRoutes
+        routes={[
+          { pattern: '/',
+            exact: true,
+            component: Home
+          },
+          { pattern: '/foo',
+            component: Foo
+          }
+        ]}
+        missComponent={NoMatch}
+      />
     </Router>
   )
 

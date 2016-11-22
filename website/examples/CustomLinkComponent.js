@@ -6,8 +6,8 @@ import Link from 'react-router/Link'
 const CustomLinkExample = () => (
   <Router>
     <div>
-      <Link activeOnlyWhenExact to="/">{({ isActive, onClick, href }) => <OldSchoolMenuLink label="Home" onClick={onClick} href={href} isActive={isActive}/>}</Link>
-      <Link to="/about">{(params) => <OldSchoolMenuLink label="About" {...params}/>}</Link>
+      <OldSchoolMenuLink activeOnlyWhenExact={true} to="/" label="Home"/>
+      <OldSchoolMenuLink to="/about" label="About"/>
 
       <hr/>
 
@@ -17,13 +17,17 @@ const CustomLinkExample = () => (
   </Router>
 )
 
-const OldSchoolMenuLink = ({ onClick, href, isActive, label }) => (
-  <div className={isActive ? 'active' : ''}>
-    {isActive ? '> ' : ''}
-    <a href={href} onClick={onClick}>
-      {label}
-    </a>
-  </div>
+const OldSchoolMenuLink = ({ label, to, activeOnlyWhenExact }) => (
+  <Match pattern={to} exactly={activeOnlyWhenExact}>
+    {({ matched }) => (
+      <div className={matched ? 'active' : ''}>
+        {matched ? '> ' : ''}
+        <Link to={to} activeOnlyWhenExact={activeOnlyWhenExact}>
+          {label}
+        </Link>
+      </div>
+    )}
+  </Match>
 )
 
 const Home = () => (

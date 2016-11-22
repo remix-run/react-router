@@ -1,37 +1,40 @@
-import React, { PropTypes } from 'react'
+import React, { PropTypes, Component } from 'react'
 import createBrowserHistory from 'history/createBrowserHistory'
-import StaticRouter from './StaticRouter'
-import History from './History'
+import Router from './Router'
 
-const BrowserRouter = ({
-  basename,
-  forceRefresh,
-  getUserConfirmation,
-  keyLength,
-  ...routerProps
-}) => (
-  <History
-    createHistory={createBrowserHistory}
-    historyOptions={{
+class BrowserRouter extends Component {
+  componentWillMount() {
+    const {
       basename,
       forceRefresh,
       getUserConfirmation,
       keyLength
-    }}
-  >
-    {({ history, action, location }) => (
-      <StaticRouter
-        action={action}
-        location={location}
-        basename={basename}
-        onPush={history.push}
-        onReplace={history.replace}
-        blockTransitions={history.block}
+    } = this.props
+
+    this.history = createBrowserHistory(
+      basename,
+      forceRefresh,
+      getUserConfirmation,
+      keyLength
+    )
+  }
+
+  render() {
+    const {
+      basename, // eslint-disable-line
+      forceRefresh, // eslint-disable-line
+      getUserConfirmation, // eslint-disable-line
+      keyLength, // eslint-disable-line
+      ...routerProps
+    } = this.props
+    return (
+      <Router
+        history={this.history}
         {...routerProps}
       />
-    )}
-  </History>
-)
+    )
+  }
+}
 
 if (__DEV__) {
   BrowserRouter.propTypes = {
@@ -39,6 +42,10 @@ if (__DEV__) {
     forceRefresh: PropTypes.bool,
     getUserConfirmation: PropTypes.func,
     keyLength: PropTypes.number,
+
+    // StaticRouter props
+    stringifyQuery: PropTypes.func,
+    parseQueryString: PropTypes.func,
     children: PropTypes.oneOfType([
       PropTypes.func,
       PropTypes.node
