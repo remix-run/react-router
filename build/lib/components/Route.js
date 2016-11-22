@@ -10,7 +10,7 @@ function _inherits(subClass, superClass) { if (typeof superClass !== 'function' 
 
 var React = require('react');
 var invariant = require('invariant');
-var PropTypes = require('proptypes');
+var PropTypes = require('../PropTypes');
 var RouteHandler = require('./RouteHandler');
 
 /**

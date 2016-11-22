@@ -1,7 +1,7 @@
 var React = require('react');
 var ContextWrapper = require('./ContextWrapper')
 var assign = require('object-assign');
-var PropTypes = require('proptypes');
+var PropTypes = require('../PropTypes');
 
 var REF_NAME = '__routeHandler__';
 
