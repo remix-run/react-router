@@ -1,6 +1,6 @@
 var React = require('react');
 var invariant = require('invariant');
-var PropTypes = require('../PropTypes');
+var PropTypes = require('proptypes');
 var RouteHandler = require('./RouteHandler');
 
 /**

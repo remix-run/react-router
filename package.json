@@ -47,12 +47,13 @@
     "webpack-dev-server": "^1.6.6"
   },
   "peerDependencies": {
-    "react": "0.13.x || 0.14.x || ^15.0.1"
+    "react": "0.13.x || 0.14.x || ^15.0.1 || ^15.4.0"
   },
   "dependencies": {
     "can-use-dom": "0.1.0",
     "invariant": "^2.0.0",
     "object-assign": "^2.0.0",
+    "proptypes": "^0.14.3",
     "qs": "2.4.1"
   },
   "tags": [
