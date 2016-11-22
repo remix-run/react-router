@@ -37,10 +37,11 @@ class Redirect extends React.Component {
     const { router } = this.context
     let { to } = this.props
     const { push } = this.props
-    
-    const routerState = router && router.getState()
-    const matchState = routerState && routerState.match
-    const base = matchState && matchState.pathname
+    let base
+    if (router.match) {
+      const matchState = router.match.getState()
+      base = matchState && matchState.match.pathname
+    }
     to = resolveLocation(to, base)
     const navigate = push ? router.transitionTo : router.replaceWith
     navigate(to)
