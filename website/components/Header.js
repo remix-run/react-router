@@ -1,13 +1,14 @@
 import React from 'react'
+import Link from '../../modules/Link'
 import Logo from './Logo'
 import { B, H, I, PAD, VSpace, HSpace, lightGray, red, bigFont } from './bricks'
 
-const NavLink = (props) => (
-  <B margin={`0 ${PAD/2}px`} cursor="pointer" {...props}/>
+const NavLink = ({ to, href, ...props }) => (
+  <B component={to ? Link : 'a'} props={{ to, href }} margin={`0 ${PAD/2}px`} cursor="pointer" {...props}/>
 )
 
-const Button = (props) => (
-  <B padding={`15px 25px`} textTransform="uppercase" cursor="pointer" fontSize="10px" fontWeight="bold" userSelect="none" background="white" borderRadius="100px" boxShadow="0 10px 30px rgba(0,0,0,.25)" hoverBoxShadow="0 10px 25px rgba(0,0,0,.25)" activeBoxShadow="2px 2px 4px rgba(0,0,0,.25)" position="relative" top="0" hoverTop="1px" activeTop="5px" {...props}/>
+const Button = ({ to, ...props }) => (
+  <B component={Link} props={{ to }} padding={`15px 25px`} textTransform="uppercase" cursor="pointer" fontSize="10px" fontWeight="bold" userSelect="none" background="white" borderRadius="100px" boxShadow="0 10px 30px rgba(0,0,0,.25)" hoverBoxShadow="0 10px 25px rgba(0,0,0,.25)" activeBoxShadow="2px 2px 4px rgba(0,0,0,.25)" position="relative" top="0" hoverTop="1px" activeTop="5px" {...props}/>
 )
 
 const NavBar = () => (
@@ -22,10 +23,10 @@ const NavBar = () => (
       </I>
     </B>
     <H fontSize="12px">
-      <NavLink>Examples</NavLink>
-      <NavLink>API</NavLink>
-      <NavLink>NPM</NavLink>
-      <NavLink>Github</NavLink>
+      <NavLink to="/examples">Examples</NavLink>
+      <NavLink to="/api">API</NavLink>
+      <NavLink href="https://npm.im/react-router">NPM</NavLink>
+      <NavLink href="https://github.com/ReactTraining/react-router">Github</NavLink>
     </H>
   </H>
 )
@@ -58,9 +59,9 @@ const Header = () => (
           </B>
           <VSpace height={PAD+'px'}/>
           <H>
-            <Button>Live Examples</Button>
+            <Button to="/examples">Live Examples</Button>
             <HSpace width={PAD+'px'}/>
-            <Button>API Documentation</Button>
+            <Button to="/api">API Documentation</Button>
           </H>
         </B>
       </H>

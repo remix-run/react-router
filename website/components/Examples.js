@@ -2,10 +2,12 @@ import React from 'react'
 import LoadBundle from './LoadBundle'
 import SourceViewer from './SourceViewer'
 import FakeBrowser from './FakeBrowser'
+import ScrollToMe from './ScrollToMe'
 import { B, H, I, PAD, VSpace, darkGray, lightGray, red } from './bricks'
 import { EXAMPLES } from '../routes'
 import Link from '../../modules/Link'
 import Match from '../../modules/Match'
+import MatchRoutes from '../../modules/MatchRoutes'
 
 const Nav = (props) => (
   <B {...props}>
@@ -66,16 +68,23 @@ class Examples extends React.Component {
 
   render() {
     return (
-      <H minHeight="90vh" background={darkGray} color="white" padding={PAD*2+'px'}>
-        <Nav width="300px"/>
-        <B flex="1">
-          {EXAMPLES.map((example, i) => (
-            <Match key={i} pattern={example.path} exactly={true} render={() => (
-              <Example example={example}/>
-            )}/>
-          ))}
-        </B>
-      </H>
+      <B>
+        <Match pattern="/examples" component={ScrollToMe}/>
+        <H minHeight="100vh" background={darkGray} color="white" padding={PAD*2+'px'}>
+          <Nav width="300px"/>
+          <B flex="1">
+            <MatchRoutes
+              renderMiss={() => (
+                <Example example={EXAMPLES[0]}/>
+              )}
+              routes={EXAMPLES.slice(1).map((route, index) => ({
+                pattern: route.path,
+                render: () => <Example key={index} example={route}/>
+              }))}
+            />
+          </B>
+        </H>
+      </B>
     )
   }
 }

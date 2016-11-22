@@ -1,6 +1,8 @@
 import React from 'react'
 import { B, PAD, lightGray } from './bricks'
 import MarkdownViewer from './MarkdownViewer'
+import ScrollToMe from './ScrollToMe'
+import Match from '../../modules/Match'
 
 export const API = [
   { name: 'Match',
@@ -42,15 +44,18 @@ export const API = [
 ]
 
 const APIDocs = () => (
-  <B maxWidth="800px" margin={`${PAD*2}px auto`} padding={PAD*2+'px'}>
-    <B component="h2" textTransform="uppercase" color={lightGray} fontWeight="bold" textAlign="center">
-      API
-    </B>
-    {API.map((doc, i) => (
-      <B key={i} margin={`${PAD*2}px 0`}>
-        <MarkdownViewer html={doc.html}/>
+  <B>
+    <Match pattern="/api" exactly={true} component={ScrollToMe}/>
+    <B maxWidth="800px" margin={`${PAD*2}px auto`} padding={PAD*2+'px'}>
+      <B component="h2" textTransform="uppercase" color={lightGray} fontWeight="bold" textAlign="center">
+        API
       </B>
-    ))}
+      {API.map((doc, i) => (
+        <B key={i} margin={`${PAD*2}px 0`}>
+          <MarkdownViewer html={doc.html}/>
+        </B>
+      ))}
+    </B>
   </B>
 )
 

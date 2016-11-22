@@ -22,7 +22,7 @@ a { color: inherit; text-decoration: none; }
 .fake-browser a { color: rgb(204, 65, 65); text-decoration: underline; display: initial; }
 .fake-browser { color: initial }
 
-pre, code { font-family: Monaco }
+pre, code { font-family: Monaco; line-height: 1.5 }
 markdown { display: block; }
 markdown pre { background: rgb(45, 45, 45); padding: 10px; border-radius: 3px; }
 markdown pre code { font-size: 13px; }

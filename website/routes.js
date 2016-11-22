@@ -1,6 +1,6 @@
 export const EXAMPLES = [
   { name: 'Basic',
-    path: '/',
+    path: '/examples/basic',
     load: require('bundle?lazy!babel!./examples/Basic'),
     loadSource: require('bundle?lazy!!prismjs?lang=jsx!./examples/Basic.js')
   },
