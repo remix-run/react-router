@@ -125,12 +125,12 @@ if (__DEV__) {
 
     onPush: PropTypes.func.isRequired,
     onReplace: PropTypes.func.isRequired,
-    onMatch: PropTypes.func.isRequired,
+    onMatch: PropTypes.func,
     blockTransitions: PropTypes.func,
 
-    stringifyQuery: PropTypes.func.isRequired,
-    parseQueryString: PropTypes.func.isRequired,
-    createHref: PropTypes.func.isRequired,
+    stringifyQuery: PropTypes.func,
+    parseQueryString: PropTypes.func,
+    createHref: PropTypes.func,
 
     basename: PropTypes.string
   }
