@@ -54,19 +54,21 @@ class Link extends React.Component {
       isLeftClickEvent(event)
     ) {
       event.preventDefault()
-      this.handleTransition()
-    }
-  }
 
-  handleTransition = () => {
-    const { router } = this.context
-    const { to, replace } = this.props
-    const navigate = replace ? router.replaceWith : router.transitionTo
-    navigate(to)
+      const { router } = this.context
+      const { to, replace } = this.props
+
+      if (replace) {
+        router.replaceWith(to)
+      } else {
+        router.transitionTo(to)
+      }
+    }
   }
 
   getIsActive() {
     const { to, isActive } = this.props
+
     return isActive(
       this.context.router.getState().location,
       createLocationDescriptor(to),
