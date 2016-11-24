@@ -85,8 +85,7 @@ Usage:
 
 ## missComponent: componentFunc _MatchRoutes_
 
-The component to render if none of the routes render. It will pass the
-current `location` as a prop to the component.
+The component to render if none of the routes render. It will pass the current `location` as a prop to the component.
 
 ```js
 <MatchRoutes
@@ -101,7 +100,7 @@ A function that will be rendered if none of the routes match. Useful over `missC
 
 ```js
 <MatchRoutes
-  render={(props) => <NoMatch {...props}/>}
+  renderMiss={(props) => <NoMatch {...props}/>}
   routes={routes}
 />
 ```
