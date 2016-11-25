@@ -70,11 +70,11 @@ class APIDocs extends React.Component {
     const el = (
       <B fontFamily="Monaco, monospace">
         {items.map(item => (
-          <B margin="10px">
+          <B key={item.hash} margin="10px">
             <B component="a" props={{ href: item.hash }} fontWeight="bold" color={red} hoverTextDecoration="underline">{item.name}</B>
             <B marginLeft="20px">
               {item.children.map(({ hash, name }) => (
-                <B component="a" props={{ href: hash }} color={lightGray} hoverTextDecoration="underline">{name}</B>
+                <B key={hash} component="a" props={{ href: hash }} color={lightGray} hoverTextDecoration="underline">{name}</B>
               ))}
             </B>
           </B>

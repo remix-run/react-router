@@ -14,11 +14,11 @@ const Button = ({ to, ...props }) => (
 const NavBar = () => (
   <H textTransform="uppercase" fontWeight="bold" width="100%">
     <B flex="1" fontSize="14px">
-      <I component="a" href="https://reacttraining.com">
+      <I component="a" props={{href:"https://reacttraining.com"}}>
         React Training
       </I>
       <I> / </I>
-      <I component="a" href="https://github.com/ReactTraining/react-router" color={lightGray}>
+      <I component="a" props={{href: "https://github.com/ReactTraining/react-router"}}color={lightGray}>
         React Router
       </I>
     </B>

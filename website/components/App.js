@@ -5,6 +5,7 @@ import APIDocs from './APIDocs'
 import Video from './Video'
 import Footer from './Footer'
 import LoadBundle from './LoadBundle'
+import NewsletterSignup from './NewsletterSignup'
 import { B } from './bricks'
 import BrowserRouter from '../../modules/BrowserRouter'
 
@@ -15,6 +16,7 @@ const App = () => (
       <Examples/>
       <Video/>
       <APIDocs/>
+      <NewsletterSignup />
       <Footer/>
     </B>
   </BrowserRouter>
