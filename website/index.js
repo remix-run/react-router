@@ -5,4 +5,3 @@ import App from './components/App'
 import './base.css'
 
 render(<App/>, document.getElementById('app'))
-

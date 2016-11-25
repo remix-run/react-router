@@ -14,9 +14,9 @@ const BasicExample = () => (
 
       <hr/>
 
-      <Match exactly pattern="/" component={Home} />
-      <Match pattern="/about" component={About} />
-      <Match pattern="/topics" component={Topics} />
+      <Match exactly pattern="/" component={Home}/>
+      <Match pattern="/about" component={About}/>
+      <Match pattern="/topics" component={Topics}/>
     </div>
   </Router>
 )

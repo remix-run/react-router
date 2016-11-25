@@ -4,6 +4,8 @@ const ExampleRouter = ({ children, ...rest }, context) => (
   typeof children === 'function' ? children({ ...rest, router: context.router }) : children
 )
 
-ExampleRouter.contextTypes = { router: PropTypes.object }
+ExampleRouter.contextTypes = {
+  router: PropTypes.object
+}
 
 export default ExampleRouter
