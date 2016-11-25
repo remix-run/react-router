@@ -2,7 +2,7 @@ import React from 'react'
 
 class LoadingDots extends React.Component {
 
-  static propTypes: {
+  static propTypes = {
     interval: React.PropTypes.number,
     dots: React.PropTypes.number
   }

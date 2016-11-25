@@ -2,7 +2,7 @@ import React from 'react'
 import { B, I, PAD, darkGray, lightGray } from './bricks'
 
 const FooterLink = ({ href, ...rest }) => (
-  <I component="a" href={href} {...rest} textDecoration="underline"/>
+  <I component="a" props={{href}} {...rest} textDecoration="underline"/>
 )
 
 FooterLink.propTypes = { href: React.PropTypes.string }
