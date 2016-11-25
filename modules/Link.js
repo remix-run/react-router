@@ -105,7 +105,7 @@ const Link = React.createClass({
 
     if (router) {
       // If user does not specify a `to` prop, return an empty anchor tag.
-      if (to == null) { return <a {...props} /> }
+      if (!to) { return <a {...props} /> }
 
       const toLocation = resolveToLocation(to, router)
       props.href = router.createHref(toLocation)
