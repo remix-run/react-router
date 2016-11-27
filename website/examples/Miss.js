@@ -5,8 +5,8 @@ import Link from 'react-router/Link'
 import Redirect from 'react-router/Redirect'
 import Router from 'react-router/BrowserRouter'
 
-const MissExample = ({ history }) => (
-  <Router history={history}>
+const MissExample = () => (
+  <Router>
     <div>
       <ul>
         <li><Link to="/">Home</Link></li>
