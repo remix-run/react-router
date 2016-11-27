@@ -53,7 +53,7 @@ const Button = (props) => (
     background="none"
     fontSize="200%"
     marginTop="-3px"
-    {...props}
+    props={props}
   />
 )
 
@@ -133,15 +133,17 @@ class FakeBrowser extends React.Component {
                   paddingLeft={`${PAD*1.25}px`}
                   color={GRAY}
                   type="text"
-                  value={createPathWithQuery(this.state.location || location)}
-                  onChange={(e) => {
-                    this.setState({
-                      location: e.target.value
-                    })
-                  }}
-                  onKeyDown={(e) => {
-                    if (e.key === 'Enter') {
-                      history.push(e.target.value)
+                  props={{
+                    value: createPathWithQuery(this.state.location || location),
+                    onChange: (e) => {
+                      this.setState({
+                        location: e.target.value
+                      })
+                    },
+                    onKeyDown: (e) => {
+                      if (e.key === 'Enter') {
+                        history.push(e.target.value)
+                      }
                     }
                   }}
                 />
