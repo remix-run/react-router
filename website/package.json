@@ -1,5 +1,4 @@
 {
-  "private": true,
   "scripts": {
     "build": "webpack -p && npm run service-worker",
     "start": "webpack-dev-server --inline",
@@ -11,16 +10,18 @@
     "file-loader": "^0.9.0",
     "html-loader": "^0.4.3",
     "html-webpack-plugin": "^2.22.0",
+    "jsxstyle": "^1.0.1",
     "markdown-it": "^7.0.0",
+    "markdown-it-anchor": "^2.5.1",
     "postcss-loader": "0.9.1",
     "prismjs-loader": "0.0.3",
+    "react": "^0.14.8",
+    "react-dom": "^0.14.8",
     "react-motion": "^0.4.4",
     "style-loader": "0.13.1",
+    "sw-precache": "^4.2.2",
     "url-loader": "^0.5.7",
     "webpack": "1.13.1",
-    "webpack-dev-server": "1.14.1",
-    "jsxstyle": "^1.0.1",
-    "markdown-it-anchor": "^2.5.1",
-    "sw-precache": "^4.2.2"
+    "webpack-dev-server": "1.14.1"
   }
 }
