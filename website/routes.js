@@ -59,10 +59,14 @@ export const EXAMPLES = [
     load: require('bundle?lazy!babel!./examples/Ambiguous'),
     loadSource: require('bundle?lazy!!prismjs?lang=jsx!./examples/Ambiguous.js')
   },
+  { name: 'Shared History',
+    path: '/examples/shared-history',
+    load: require('bundle?lazy!babel!./examples/SharedHistory'),
+    loadSource: require('bundle?lazy!!prismjs?lang=jsx!./examples/SharedHistory.js')
+  },
   { name: 'Route Config',
     path: '/examples/route-config',
     load: require('bundle?lazy!babel!./examples/RouteConfig'),
     loadSource: require('bundle?lazy!!prismjs?lang=jsx!./examples/RouteConfig.js')
   }
 ]
-
