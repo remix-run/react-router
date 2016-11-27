@@ -24,8 +24,8 @@ const routes = [
   }
 ]
 
-const SidebarExample = ({ history }) => (
-  <Router history={history}>
+const SidebarExample = () => (
+  <Router>
     <div style={{ display: 'flex' }}>
       <div style={{
         padding: '10px',
