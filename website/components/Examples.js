@@ -14,7 +14,7 @@ const Nav = (props) => (
     <B marginTop={PAD+'px'}>
       {EXAMPLES.map((example, i) => (
         <B key={i} margin={`${PAD/2}px 0`}>
-          <Link to={example.path}>
+          <Link to={example.path} activeStyle={{color: red}}>
             {example.name}
           </Link>
         </B>
