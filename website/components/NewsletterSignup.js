@@ -69,7 +69,7 @@ export default class NewsletterSignup extends Component {
     return (
       <V background={darkGray}>
         <B background={darkGray} width="65%" margin="auto" color="white" padding={PAD*2+'px'} textAlign="center"fontSize="25px" fontWeight="bold">
-          Stay up to with React Router, our workshops, courses, podcasts, and more
+          Sign up to receive updates about React Router, our workshops, online courses, and more.
         </B>
         <form onSubmit={this.handleSubmit}>
           {this.state.submitted === true
