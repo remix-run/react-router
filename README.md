@@ -148,3 +148,6 @@ Also, thanks to [BrowserStack](https://www.browserstack.com/) for providing the 
 
 [discord-badge]: https://img.shields.io/badge/Discord-join%20chat%20%E2%86%92-738bd7.svg?style=flat-square
 [discord]: https://discord.gg/0ZcbPKXt5bYaNQ46
+
+ * The MIT License (MIT)
+ * Copyright (c) 2016
