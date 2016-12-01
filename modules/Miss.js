@@ -16,10 +16,18 @@ class Miss extends React.Component {
   }
 
   render() {
-    const { render, component:Component } = this.props
+    const { children, render, component:Component } = this.props
     const { matchCount } = this.context.router.match.getState()
     const { location } = this.context.router.getState()
-    return matchCount === 0 ? (
+
+    // Miss component is matched when there is no other matches
+    const matched = matchCount === 0
+
+    if (children) {
+      return (children({ matched, location }))
+    }
+
+    return matched ? (
       render ? (
         render({ location })
       ) : (
@@ -31,7 +39,7 @@ class Miss extends React.Component {
 
 if (__DEV__) {
   Miss.propTypes = {
-    children: PropTypes.node,
+    children: PropTypes.func,
     render: PropTypes.func,
     component: PropTypes.func
   }
