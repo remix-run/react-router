@@ -512,7 +512,7 @@ describe('A <Link>', () => {
         <Router history={createHistory('/hello')} onUpdate={execNextStep}>
           <Route path="/hello" component={LinkWrapper} />
         </Router>
-      ), node, execSteps)
+      ), node, execNextStep)
     })
   })
 
@@ -555,6 +555,50 @@ describe('A <Link>', () => {
         expect(link3.className).toEqual('kitten-link')
         done()
       })
+    })
+  })
+
+  describe('when the "noHref" prop is specified', () => {
+    class App extends Component {
+      render() {
+        return (
+          <div>
+            <Link to="/hello?the=query#hash" noHref>Link with noHref</Link>
+          </div>
+        )
+      }
+    }
+
+    it('returns an anchor tag without an href', done => {
+      render((
+        <Router history={createHistory('/')}>
+          <Route path="/" component={App} />
+        </Router>
+      ), node, () => {
+        const link = node.querySelectorAll('a')[0]
+        expect(link.href).toEqual('')
+        done()
+      })
+    })
+
+    it('transitions to specified path on click', done => {
+      const steps = [
+        () => {
+          click(node.querySelector('a'), { button: 0 })
+        },
+        ({ location }) => {
+          expect(location.pathname).toEqual('/hello')
+          expect(location.hash).toEqual('#hash')
+        }
+      ]
+
+      const execNextStep = execSteps(steps, done)
+
+      render((
+        <Router history={createHistory('/hello')} onUpdate={execNextStep}>
+          <Route path="/hello" component={App} />
+        </Router>
+      ), node, execNextStep)
     })
   })
 })
