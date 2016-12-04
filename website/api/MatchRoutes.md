@@ -42,7 +42,7 @@ This is also useful for animated transitions since the matched route is rendered
 ```js
 <Fade>
   <MatchRoutes routes={routes}/>
-  {/* there will only ever be on child here */}
+  {/* there will only ever be one child here */}
 </Fade>
 
 <Fade>
