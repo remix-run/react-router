@@ -121,22 +121,25 @@ const removeExtra = (path) => {
 
 const joinSegments = (segments) => {
   // (step 6.c)
-  return segments
-    .reduce((acc, segment) => {
-      if (segment !== '..') {
-        return acc.concat(segment)
-      }
-      // remove <segment>/.. but not ../.. (or /.., but the only empty
-      // string segment should be the root segment). To do this,
-      // we want to verify that the last kept item is not a '..' or a ''.
-      // If it is a '..', that means that we already failed to match
-      // (['', 'foo', '..'] will never occur)
-      const last = acc[acc.length-1]
-      if (last !== '..' && last !== '') {
-        return acc.slice(0, -1)
-      } else {
-        return acc.concat('..')
-      }
-    }, [])
-    .join('/')
+  const output = []
+  const length = segments.length
+  for (let i=0; i<length; i++) {
+    const curr = segments[i]
+    if (curr !== '..') {
+      output.push(curr)
+      continue
+    }
+    // remove <segment>/.. but not ../.. (or /.., but the only empty
+    // string segment should be the root segment). To do this,
+    // we want to verify that the last kept item is not a '..' or a ''.
+    // If it is a '..', that means that we already failed to match
+    // (['', 'foo', '..'] will never occur in the output array)
+    const last = output[output.length-1]
+    if (last !== '..' && last !== '') {
+      output.pop()
+    } else {
+      output.push('..')
+    }
+  }
+  return output.join('/')
 }
