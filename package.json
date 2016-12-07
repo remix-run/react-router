@@ -14,7 +14,7 @@
     "umd"
   ],
   "scripts": {
-    "start": "echo 'Make sure to `cd website && npm install`' && cd website && npm run dev",
+    "start": "echo 'Make sure to `cd website && npm install && npm run build`' && cd website && npm start",
     "release": "node ./scripts/release.js",
     "build-lib": "babel ./modules -d . --ignore __tests__",
     "build-umd": "webpack modules/index.js umd/react-router.js",
