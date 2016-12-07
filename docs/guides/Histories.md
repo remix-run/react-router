@@ -80,6 +80,17 @@ RewriteCond %{REQUEST_FILENAME} !-d
 RewriteRule . /index.html [L]
 ```
 
+Within the `<VirtalHost>` context of Apache's configuration use this:
+```
+RewriteEngine On
+RewriteRule ^index\.html$ - [L]
+RewriteCond %{DOCUMENT_ROOT}%{REQUEST_URI} !-f
+RewriteCond %{DOCUMENT_ROOT}%{REQUEST_URI} !-d
+RewriteRule . /index.html [L]
+```
+
+
+
 #### IE8, IE9 Support
 We feature detect to see if we can use the browser's native `window.history` API. If not, any call to transition around the app will result in _a full page reload_, which allows you to build your app and have a better experience for newer browsers, but still support old ones.
 
