@@ -11,12 +11,12 @@ class BrowserRouter extends Component {
       keyLength
     } = this.props
 
-    this.history = createBrowserHistory(
+    this.history = createBrowserHistory({
       basename,
       forceRefresh,
       getUserConfirmation,
       keyLength
-    )
+    })
   }
 
   render() {
