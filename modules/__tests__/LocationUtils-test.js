@@ -1,6 +1,10 @@
 import expect from 'expect'
 import { parse, stringify } from 'query-string'
-import { createRouterLocation, createRouterPath } from '../LocationUtils'
+import {
+  createRouterLocation,
+  createRouterPath,
+  resolveLocation
+} from '../LocationUtils'
 
 describe('LocationUtils', () => {
   describe('createRouterLocation', () => {
@@ -191,6 +195,111 @@ describe('LocationUtils', () => {
           }
           const path = createRouterPath(loc, stringify)
           expect(path).toBe(`${loc.pathname}?${key}=${value}`)  
+        })
+      })
+    })
+  })
+
+  describe('resolveLocation', () => {
+    const BASE = '/a/b'
+
+    describe('string location', () => {
+      it('returns path if absolute', () => {
+        const path = '/foo'
+        expect(resolveLocation(path)).toBe(path)
+      })
+    })
+
+    describe('object location', () => {
+      it('does not affect the pathname if absolute', () => {
+        const descriptor = { pathname: '/foo' }
+        expect(resolveLocation(descriptor).pathname).toBe(descriptor.pathname)
+      })
+
+      describe('no pathname', () => {
+        it('resolves to base if there is a query', () => {
+          const descriptor = {
+            query: {a: 'b'}
+          }
+          expect(resolveLocation(descriptor, BASE).pathname).toBe(BASE)
+        })
+
+        it('ignores empty query when determining if relative', () => {
+          const descriptor = {
+            query: {}
+          }
+          expect(resolveLocation(descriptor, BASE).pathname).toBe(undefined)
+        })
+
+        it('resolves to base if there is a query', () => {
+          const descriptor = {
+            search: '?a=b'
+          }
+          expect(resolveLocation(descriptor, BASE).pathname).toBe(BASE)
+        })
+
+        it('resolves to base if there is a hash', () => {
+          const descriptor = {
+            hash: '#foo'
+          }
+          expect(resolveLocation(descriptor, BASE).pathname).toBe(BASE)
+        })
+      })
+    })
+
+    it('removes unnecessary segments', () => {
+      const input = 'foo//../bar'
+      expect(resolveLocation(input, BASE)).toEqual('/a/b/bar')
+    })
+
+    describe('rfc1808', () => {
+
+      // https://tools.ietf.org/html/rfc1808#section-5.1
+      it('passes normal examples', () => {
+        const cases = [
+          { input: 'g', output: '/a/b/g' },
+          { input: './g', output: '/a/b/g' },
+          { input: 'g/', output: '/a/b/g/' },
+          { input: '/g', output: '/g' },
+          { input: '?y', output: '/a/b?y' },
+          { input: 'g?y', output: '/a/b/g?y' },
+          { input: 'g?y/./x', output: '/a/b/g?y/./x' },
+          { input: '#s', output: '/a/b#s' },
+          { input: 'g#s', output: '/a/b/g#s' },
+          { input: 'g#s/./x', output: '/a/b/g#s/./x' },
+          { input: 'g?y#s', output: '/a/b/g?y#s' },
+          { input: '.', output: '/a/b' },
+          { input: './', output: '/a/b/' },
+          { input: '..', output: '/a' },
+          { input: '../', output: '/a/' },
+          { input: '../g', output: '/a/g' },
+          { input: '../..', output: '' },
+          { input: '../../', output: '/' },
+          { input: '../../g', output: '/g' }
+        ]
+        cases.forEach(test => {
+          expect(resolveLocation(test.input, BASE)).toBe(test.output)
+        })
+      })
+
+      // https://tools.ietf.org/html/rfc1808#section-5.2
+      it('passes abnormal examples', () => {
+        const cases = [
+          { input: '../../g', output: '/g' },
+          { input: '../../../g', output: '/../g' },
+          { input: '/./g', output: '/./g' },
+          { input: '/../g', output: '/../g' },
+          { input: 'g.', output: '/a/b/g.' },
+          { input: '.g', output: '/a/b/.g' },
+          { input: 'g..', output: '/a/b/g..' },
+          { input: '..g', output: '/a/b/..g' },
+          { input: './../g', output: '/a/g' },
+          { input: './g/.', output: '/a/b/g' },
+          { input: 'g/./h', output: '/a/b/g/h' },
+          { input: 'g/../h', output: '/a/b/h' }
+        ]
+        cases.forEach(test => {
+          expect(resolveLocation(test.input, BASE)).toBe(test.output)
         })
       })
     })

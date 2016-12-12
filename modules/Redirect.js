@@ -1,4 +1,5 @@
 import React, { PropTypes } from 'react'
+import { resolveLocation } from './LocationUtils'
 
 class Redirect extends React.Component {
   static defaultProps = {
@@ -34,7 +35,14 @@ class Redirect extends React.Component {
 
   redirect() {
     const { router } = this.context
-    const { to, push } = this.props
+    let { to } = this.props
+    const { push } = this.props
+    let base
+    if (router.match) {
+      const matchState = router.match.getState()
+      base = matchState && matchState.match.pathname
+    }
+    to = resolveLocation(to, base)
     const navigate = push ? router.transitionTo : router.replaceWith
     navigate(to)
   }

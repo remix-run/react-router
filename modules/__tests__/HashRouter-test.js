@@ -8,6 +8,7 @@ describe('HashRouter', () => {
   const div = document.createElement('div')
 
   afterEach(() => {
+    history.replaceState(null, document.title, '#')
     unmountComponentAtNode(div)
   })
 

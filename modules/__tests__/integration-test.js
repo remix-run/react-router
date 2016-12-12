@@ -484,3 +484,44 @@ describe('Integration Tests', () => {
     })
   })
 })
+
+describe('Link with relative to', () => {
+  it('navigates', () => {
+    const leftClickEvent = {
+      defaultPrevented: false,
+      preventDefault() { this.defaultPrevented = true },
+      metaKey: null,
+      altKey: null,
+      ctrlKey: null,
+      shiftKey: null,
+      button: 0
+    }
+    const div = document.createElement('div')
+    const TEXT1 = 'I AM PAGE 1'
+    const TEXT2 = 'I AM PAGE 2'
+    render((
+      <MemoryRouter initialEntries={[ '/' ]}>
+        <div>
+          <Link id="one" to="one">One</Link>
+          <Match pattern="/one" render={() => (
+            <div>
+              <h1>{TEXT1}</h1>
+              <Link id="two" to="two">Two</Link>
+              <Match pattern="two" render={() => (
+                <h2>{TEXT2}</h2>
+              )}/>
+            </div>
+          )}/>
+        </div>
+      </MemoryRouter>
+    ), div)
+    expect(div.innerHTML).toNotContain(TEXT1)
+
+    Simulate.click(div.querySelector('#one'), leftClickEvent)
+    expect(div.innerHTML).toContain(TEXT1)
+    expect(div.innerHTML).toNotContain(TEXT2)
+
+    Simulate.click(div.querySelector('#two'), leftClickEvent)
+    expect(div.innerHTML).toContain(TEXT2)
+  })
+})

@@ -1,4 +1,5 @@
 import React, { PropTypes } from 'react'
+import { resolveLocation } from './LocationUtils'
 
 class Link extends React.Component {
   static defaultProps = {
@@ -56,8 +57,8 @@ class Link extends React.Component {
       event.preventDefault()
 
       const { router } = this.context
-      const { to, replace } = this.props
-
+      const { replace } = this.props
+      const to = this.absoluteLocation()
       if (replace) {
         router.replaceWith(to)
       } else {
@@ -66,8 +67,21 @@ class Link extends React.Component {
     }
   }
 
+  absoluteLocation = () => {
+    const { router } = this.context
+    let { to } = this.props
+    let base
+    // use the context.router's match if it exists
+    if (router.match) {
+      const matchState = router.match.getState()
+      base = matchState && matchState.match.pathname
+    }
+    return resolveLocation(to, base)
+  }
+
   getIsActive() {
-    const { to, isActive } = this.props
+    const { isActive } = this.props
+    const to = this.absoluteLocation()
 
     return isActive(
       this.context.router.getState().location,
@@ -79,7 +93,7 @@ class Link extends React.Component {
   render() {
     const { isActive } = this.state
     const {
-      to,
+      to: undefTo, // eslint-disable-line
       style, activeStyle,
       className, activeClassName,
       activeOnlyWhenExact, // eslint-disable-line
@@ -87,6 +101,8 @@ class Link extends React.Component {
       isActive:_, // eslint-disable-line
       ...rest
     } = this.props
+
+    const to = this.absoluteLocation()
 
     return (
       <a

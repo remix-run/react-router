@@ -17,3 +17,6 @@ export StaticRouter from './StaticRouter'
 
 // Util for creating who-knows-what!
 export matchPattern from './matchPattern'
+
+// Util for resolving relative paths
+export { resolveLocation } from './LocationUtils'
