@@ -121,10 +121,11 @@ describe('LocationUtils', () => {
 
       describe('query', () => {
         it('is the provided query', () => {
+          // create query object without a prototype because query-string will do that when parsing
+          const query = Object.create(null)
+          query.bar = 'baz'
           const descriptor = {
-            query: {
-              bar: 'baz'
-            }
+            query: query
           }
           const location = createRouterLocation(descriptor, parse, stringify)
           expect(location.query).toEqual(descriptor.query)
