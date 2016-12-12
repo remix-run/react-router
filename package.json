@@ -4,6 +4,7 @@
   "description": "Declarative routing for React",
   "repository": "ReactTraining/react-router",
   "license": "MIT",
+  "typings": "typings.d.ts",
   "authors": [
     "Michael Jackson",
     "Ryan Florence"
@@ -27,9 +28,11 @@
     "lint": "eslint modules"
   },
   "dependencies": {
+    "@types/history": "^2.0.41",
+    "@types/react": "^0.14.52",
+    "history": "^4.3.0",
     "path-to-regexp": "^1.5.3",
-    "query-string": "4.2.3",
-    "history": "^4.3.0"
+    "query-string": "4.2.3"
   },
   "peerDependencies": {
     "react": "15.x"
