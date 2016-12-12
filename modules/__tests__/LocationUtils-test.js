@@ -54,6 +54,14 @@ describe('LocationUtils', () => {
           const location = createRouterLocation(descriptor, parse, stringify)
           expect(location.pathname).toBe('')
         })
+
+        it('decodes the pathname', () => {
+          const descriptor = {
+            pathname: '/%C3%BC'
+          }
+          const location = createRouterLocation(descriptor, parse, stringify)
+          expect(location.pathname).toBe('/ü')
+        })
       })
 
       describe('search', () => {
