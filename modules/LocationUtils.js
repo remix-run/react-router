@@ -1,6 +1,18 @@
 import { parsePath, createPath } from 'history/PathUtils'
 export { locationsAreEqual } from 'history/LocationUtils'
 
+const coerceValuesToStrings = (query) => {
+  let transformedQuery = {}
+  Object.keys(query).forEach(key =>{
+    let value = query[key]
+    if (value != null){
+      value = value.toString()
+    }
+    transformedQuery[key] = value
+  })
+  return transformedQuery
+}
+
 export const createRouterLocation = (input, parseQueryString, stringifyQuery) => {
   if (typeof input === 'string') {
     const location = parsePath(input)
@@ -16,7 +28,7 @@ export const createRouterLocation = (input, parseQueryString, stringifyQuery) =>
       ),
       hash: input.hash || '',
       state: input.state || null,
-      query: input.query || (
+      query: input.query ? coerceValuesToStrings(input.query) : (
         input.search ? parseQueryString(input.search) : null
       ),
       key: input.key
