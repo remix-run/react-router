@@ -1,57 +1,14 @@
-import React, { PropTypes, Component } from 'react'
-import createMemoryHistory from 'history/createMemoryHistory'
+import React from 'react'
+import MemoryHistory from 'react-history/MemoryHistory'
 import Router from './Router'
 
-class MemoryRouter extends Component {
-  componentWillMount() {
-    const {
-      getUserConfirmation,
-      initialEntries,
-      initialIndex,
-      keyLength
-    } = this.props
-
-    this.history = createMemoryHistory({
-      getUserConfirmation,
-      initialEntries,
-      initialIndex,
-      keyLength
-    })
-  }
-
-  render() {
-    const {
-      getUserConfirmation, // eslint-disable-line
-      initialEntries, // eslint-disable-line
-      initialIndex, // eslint-disable-line
-      keyLength, // eslint-disable-line
-      ...routerProps
-    } = this.props
-
-    return (
-      <Router
-        history={this.history}
-        {...routerProps}
-      />
-    )
-  }
-}
-
-if (__DEV__) {
-  MemoryRouter.propTypes = {
-    getUserConfirmation: PropTypes.func,
-    initialEntries: PropTypes.array,
-    initialIndex: PropTypes.number,
-    keyLength: PropTypes.number,
-
-    // StaticRouter props
-    stringifyQuery: PropTypes.func,
-    parseQueryString: PropTypes.func,
-    children: PropTypes.oneOfType([
-      PropTypes.func,
-      PropTypes.node
-    ])
-  }
-}
+/**
+ * The public API for a <Router> that stores location in memory.
+ */
+const MemoryRouter = (props) => (
+  <MemoryHistory {...props}>
+    <Router {...props}/>
+  </MemoryHistory>
+)
 
 export default MemoryRouter

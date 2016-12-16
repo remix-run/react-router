@@ -1,49 +1,33 @@
 import React, { PropTypes } from 'react'
-import StaticRouter from './StaticRouter'
+import matchRoutes from './matchRoutes'
+import withHistory from './withHistory'
+import {
+  action as actionType,
+  location as locationType
+} from './PropTypes'
 
+/**
+ * The public API for rendering the first child <Route> that matches.
+ */
 class Router extends React.Component {
-  constructor(props) {
-    super(props)
-    this.state = {
-      location: props.history.location,
-      action: props.history.action
-    }
-  }
-
-  componentDidMount() {
-    const { history } = this.props
-    this.unlisten = history.listen(() => {
-      this.setState({
-        location: history.location,
-        action: history.action
-      })
-    })
-  }
-
-  componentWillUnmount() {
-    this.unlisten()
+  static propTypes = {
+    location: locationType.isRequired,
+    children: PropTypes.node
   }
 
   render() {
-    const { location, action } = this.state
-    const { history, ...rest } = this.props
-    return (
-      <StaticRouter
-        action={action}
-        location={location}
-        onPush={history.push}
-        onReplace={history.replace}
-        blockTransitions={history.block}
-        {...rest}
-      />
-    )
+    const { location, children } = this.props
+
+    const routes = React.Children.map(children, child => ({
+      pattern: child.props.pattern,
+      exact: child.props.exact,
+      element: child
+    }))
+
+    const { match, route } = matchRoutes(routes, location.pathname)
+
+    return match ? route.element : null
   }
 }
 
-if (__DEV__) {
-  Router.propTypes = {
-    history: PropTypes.object.isRequired
-  }
-}
-
-export default Router
+export default withHistory(Router)

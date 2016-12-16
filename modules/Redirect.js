@@ -1,56 +1,36 @@
 import React, { PropTypes } from 'react'
+import {
+  history as historyType,
+  to as toType
+} from './PropTypes'
 
 class Redirect extends React.Component {
-  static defaultProps = {
-    push: false
-  }
-
   static contextTypes = {
-    router: PropTypes.object,
-    serverRouter: PropTypes.bool
+    history: historyType.isRequired
   }
 
-  isServerRender() {
-    return this.context.serverRouter
+  static propTypes = {
+    to: toType.isRequired
   }
 
   componentWillMount() {
-    if (this.isServerRender())
-      this.redirect()
+    this.isServerRender = typeof window !== 'object'
+
+    if (this.isServerRender)
+      this.perform()
   }
 
   componentDidMount() {
-    if (!this.isServerRender())
-      this.redirect()
+    if (!this.isServerRender)
+      this.perform()
   }
 
-  componentDidUpdate(prevProps) {
-    // TODO: use looseEqual from history/LocationUtils
-    // so we can allow for objects here
-    if (prevProps.to !== this.props.to) {
-      this.redirect()
-    }
-  }
-
-  redirect() {
-    const { router } = this.context
-    const { to, push } = this.props
-    const navigate = push ? router.transitionTo : router.replaceWith
-    navigate(to)
+  perform() {
+    this.context.history.replace(this.props.to)
   }
 
   render() {
     return null
-  }
-}
-
-if (__DEV__) {
-  Redirect.propTypes = {
-    to: PropTypes.oneOfType([
-      PropTypes.string,
-      PropTypes.object
-    ]).isRequired,
-    push: PropTypes.bool
   }
 }
 

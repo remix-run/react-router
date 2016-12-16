@@ -1,19 +1,11 @@
 export Link from './Link'
-export Match from './Match'
-export MatchRoutes from './MatchRoutes'
-export Miss from './Miss'
-export NavigationPrompt from './NavigationPrompt'
+export Prompt from 'react-history/Prompt'
 export Redirect from './Redirect'
+export Router from './Router'
+export Route from './Route'
 
 // High-level wrappers
 export BrowserRouter from './BrowserRouter'
 export HashRouter from './HashRouter'
 export MemoryRouter from './MemoryRouter'
 export ServerRouter from './ServerRouter'
-
-// Low-level building blocks
-export Router from './Router'
-export StaticRouter from './StaticRouter'
-
-// Util for creating who-knows-what!
-export matchPattern from './matchPattern'

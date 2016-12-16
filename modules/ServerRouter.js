@@ -1,70 +1,83 @@
-import React, { PropTypes } from 'react'
-import StaticRouter from './StaticRouter'
+import React from 'react'
+import invariant from 'invariant'
+import Router from './Router'
+import {
+  history as historyType
+} from './PropTypes'
 
-const ignoreFirstCall = (fn) => {
-  let called = false
-  return (...args) => {
-    if (called) {
-      fn(...args)
-    } else {
-      called = true
-    }
+const createHref = path => path
+const listen = () => {
+  invariant(
+    false,
+    'You cannot listen for location changes using <ServerRouter>'
+  )
+}
+
+const createLocation = (url) => {
+  let pathname = url || '/'
+  let search = ''
+  let hash = ''
+
+  const hashIndex = pathname.indexOf('#')
+  if (hashIndex !== -1) {
+    hash = pathname.substr(hashIndex)
+    pathname = pathname.substr(0, hashIndex)
+  }
+
+  const searchIndex = pathname.indexOf('?')
+  if (searchIndex !== -1) {
+    search = pathname.substr(searchIndex)
+    pathname = pathname.substr(0, searchIndex)
+  }
+
+  return {
+    pathname,
+    search: search === '?' ? '' : search,
+    hash: hash === '#' ? '' : hash
   }
 }
 
+/**
+ * The public top-level API for a server-side <Router>.
+ */
 class ServerRouter extends React.Component {
-  static childContextTypes = {
-    serverRouter: PropTypes.bool
+  static propTypes = {
+    url: PropTypes.string.isRequired,
+    context: PropTypes.object.isRequired
   }
 
-  constructor(props) {
-    super(props)
-    const { context } = props
-    context.missed = true
-    context.redirect = null
+  static childContextTypes = {
+    history: historyType.isRequired
   }
 
   getChildContext() {
-    return { serverRouter: true }
+    return {
+      history: {
+        createHref,
+        action: 'POP',
+        location: createLocation(this.props.url),
+        push: this.handlePush,
+        replace: this.handleReplace,
+        listen
+      }
+    }
   }
 
-  // ignore first call because StaticRouter renders a <Match>,
-  // so we ignore that one.
-  handleMatch = ignoreFirstCall(() => {
-    this.props.context.missed = false
-  })
+  handlePush = (location) => {
+    const { context } = this.props
+    context.action = 'PUSH'
+    context.location = location
+  }
 
-  handleRedirect = (location) => {
-    // only take the first redirect
-    if (!this.props.context.redirect)
-      this.props.context.redirect = location
+  handleReplace = (location) => {
+    const { context } = this.props
+    context.action = 'REPLACE'
+    context.location = location
   }
 
   render() {
-    const { location, basename, ...rest } = this.props
-    return (
-      <StaticRouter
-        action="POP"
-        location={location}
-        basename={basename}
-        onReplace={this.handleRedirect}
-        onPush={this.handleRedirect}
-        onMatch={this.handleMatch}
-        {...rest}
-      />
-    )
-  }
-}
-
-if (__DEV__) {
-  ServerRouter.propTypes = {
-    basename: PropTypes.string,
-    context: PropTypes.object.isRequired,
-    location: PropTypes.string.isRequired,
-    children: PropTypes.oneOfType([
-      PropTypes.func,
-      PropTypes.node
-    ])
+    const { url, context, ...props } = this.props
+    return <Router {...props}/>
   }
 }
 

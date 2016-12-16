@@ -28,8 +28,7 @@
   },
   "dependencies": {
     "path-to-regexp": "^1.5.3",
-    "query-string": "4.2.3",
-    "history": "^4.3.0"
+    "react-history": "^0.17.0"
   },
   "peerDependencies": {
     "react": "15.x"
