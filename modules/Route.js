@@ -13,7 +13,7 @@ class Route extends React.Component {
   static propTypes = {
     action: actionType.isRequired,
     location: locationType.isRequired,
-    pattern: PropTypes.string.isRequired,
+    pattern: PropTypes.string,
     exact: PropTypes.bool,
     component: PropTypes.func,
     render: PropTypes.func
