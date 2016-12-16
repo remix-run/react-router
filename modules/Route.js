@@ -62,7 +62,6 @@ class Route extends React.Component {
     return route.render({
       ...props,
       ...match,
-      route,
       action,
       location,
       ref: this.updateChild
