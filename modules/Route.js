@@ -66,7 +66,7 @@ class Route extends React.Component {
 
     return (
       render ? (
-        render(childProps)
+        React.cloneElement(render(childProps), { ref: this.updateChild })
       ) : (
         matched ? React.createElement(component, childProps) : null
       )
