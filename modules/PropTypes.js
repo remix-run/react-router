@@ -17,7 +17,7 @@ export const history = PropTypes.shape({
   listen: PropTypes.func.isRequired
 })
 
-export const to = PropTypes.oneOf([
+export const to = PropTypes.oneOfType([
   PropTypes.string,
   PropTypes.object
 ])
