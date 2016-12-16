@@ -72,10 +72,12 @@ const withHistory = (component) => {
       this.unlisten = history.listen((location, action) => {
         this.nextState = { action, location }
 
-        if (this.child.handleRouteChange) {
+        const child = this.child
+
+        if (typeof child.handleRouteChange === 'function') {
           const nextState = this.nextState
 
-          this.child.handleRouteChange(nextState, () => {
+          child.handleRouteChange.call(child, nextState, () => {
             // Check to make sure the state hasn't changed
             // since we first invoked handleRouteChange.
             if (nextState === this.nextState)

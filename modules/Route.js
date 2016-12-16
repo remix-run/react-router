@@ -24,8 +24,23 @@ class Route extends React.Component {
   }
 
   handleRouteChange(nextState, callback) {
-    if (this.child.routeWillChange) {
-      this.child.routeWillChange.call(this.child, nextState, callback)
+    const child = this.child
+
+    if (typeof child.routeWillChange === 'function') {
+      const { action, location, pattern, exact, component, render, ...props } = this.props // eslint-disable-line no-unused-vars
+      const { match } = matchRoutes([ { pattern, exact } ], nextState.location.pathname)
+
+      // Compute the next props the component will
+      // receive so it has access to params, etc.
+      const nextChildProps = {
+        ...props,
+        ...match,
+        action: nextState.action,
+        location: nextState.location,
+        matched: match != null
+      }
+
+      child.routeWillChange.call(child, nextChildProps, callback)
     } else {
       callback()
     }
@@ -37,35 +52,25 @@ class Route extends React.Component {
 
   render() {
     const { action, location, pattern, exact, component, render, ...props } = this.props
+    const { match } = matchRoutes([ { pattern, exact } ], location.pathname)
+    const matched = match != null
 
-    const renderMatch = (props, matched) => (
-      render ? (
-        render({ ...props, matched })
-      ) : (
-        matched ? React.createElement(component, props) : null
-      )
-    )
-
-    const routes = [{
-      pattern,
-      exact,
-      render: props => renderMatch(props, true)
-    }, {
-      render: props => renderMatch(props, false)
-    }]
-
-    const { match, route } = matchRoutes(routes, location.pathname)
-
-    if (!match)
-      return null
-
-    return route.render({
+    const childProps = {
       ...props,
       ...match,
       action,
       location,
+      matched,
       ref: this.updateChild
-    })
+    }
+
+    return (
+      render ? (
+        render(childProps)
+      ) : (
+        matched ? React.createElement(component, childProps) : null
+      )
+    )
   }
 }
 
