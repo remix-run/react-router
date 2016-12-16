@@ -52,7 +52,7 @@ class StaticRouter extends React.Component {
       replaceWith: this.replaceWith,
       blockTransitions: this.blockTransitions,
       createHref: this.createHref,
-      getState: () => ({ location: this.location }),
+      getState: () => ({ location: this.location, action: this.props.action }),
       onMatch: () => this.props.onMatch(),
       subscribe: (fn) => {
         this.subscribers.push(fn)
