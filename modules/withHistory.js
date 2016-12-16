@@ -9,7 +9,7 @@ import {
  */
 const withHistory = (component) => {
   return class extends React.Component {
-    static displayName = `withHistory(${component.displayName})`
+    static displayName = `withHistory(${component.displayName || component.name})`
 
     static contextTypes = {
       history: historyType.isRequired
