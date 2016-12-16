@@ -18,6 +18,6 @@ export const history = PropTypes.shape({
 })
 
 export const to = PropTypes.oneOf([
-  PropTypes.string
+  PropTypes.string,
   PropTypes.object
 ])

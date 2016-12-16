@@ -42,7 +42,7 @@ const matchRoutes = (routes, pathname) => {
   let match, route
   for (let i = 0, length = routes.length; match == null && i < length; ++i) {
     route = routes[i]
-    match = matchPattern(route.pattern, route.exact, location.pathname)
+    match = matchPattern(route.pattern, route.exact, pathname)
   }
 
   if (!match)

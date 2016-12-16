@@ -1,4 +1,4 @@
-import React from 'react'
+import React, { PropTypes } from 'react'
 import invariant from 'invariant'
 import Router from './Router'
 import {
@@ -76,7 +76,7 @@ class ServerRouter extends React.Component {
   }
 
   render() {
-    const { url, context, ...props } = this.props
+    const { url, context, ...props } = this.props // eslint-disable-line no-unused-vars
     return <Router {...props}/>
   }
 }

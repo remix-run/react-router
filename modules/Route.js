@@ -59,9 +59,14 @@ class Route extends React.Component {
     if (!match)
       return null
 
-    const props = { ...match, route, action, location, ref: this.updateChild }
-
-    return route.render(props)
+    return route.render({
+      ...props,
+      ...match,
+      route,
+      action,
+      location,
+      ref: this.updateChild
+    })
   }
 }
 

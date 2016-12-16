@@ -2,7 +2,6 @@ import React, { PropTypes } from 'react'
 import matchRoutes from './matchRoutes'
 import withHistory from './withHistory'
 import {
-  action as actionType,
   location as locationType
 } from './PropTypes'
 

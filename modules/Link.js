@@ -50,7 +50,7 @@ class Link extends React.Component {
   }
 
   render() {
-    const { history, replace, to, ...props } = this.props
+    const { history, replace, to, ...props } = this.props // eslint-disable-line no-unused-vars
     const href = history.createHref(to)
 
     return (
