@@ -35,7 +35,7 @@ class Route extends React.Component {
       const props = {
         action,
         location,
-        params: (match && match.params),
+        params: (match ? match.params : {}),
         match
       }
 
@@ -56,7 +56,7 @@ class Route extends React.Component {
     const props = {
       action,
       location,
-      params: (match && match.params),
+      params: (match ? match.params : {}),
       match
     }
 
