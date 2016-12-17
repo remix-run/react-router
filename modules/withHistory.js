@@ -22,8 +22,8 @@ const withHistory = (component) => {
     getChildContext() {
       this.childContextHistory = {
         ...this.context.history,
-        ...this.state, // overwrite action/location
-        listen: this.listen
+        ...this.state, // overwrite action, location
+        listen: this.listen // overwrite listen
       }
 
       return {
@@ -101,8 +101,8 @@ const withHistory = (component) => {
       return React.createElement(component, {
         ...this.props,
         ...this.state,
-        ref: this.updateChild,
-        history: this.context.history
+        history: this.context.history,
+        ref: this.updateChild
       })
     }
   }
