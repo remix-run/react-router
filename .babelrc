@@ -4,7 +4,12 @@
     "stage-1",
     "react"
   ],
-  "plugins": [
-    "babel-plugin-dev-expression"
-  ]
+  "env": {
+    "production": {
+      "plugins": [
+        "dev-expression",
+        "transform-react-remove-prop-types"
+      ]
+    }
+  }
 }
