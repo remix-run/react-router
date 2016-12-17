@@ -38,20 +38,4 @@ const matchPattern = (pattern, exact, pathname) => {
   }
 }
 
-const matchRoutes = (routes, pathname) => {
-  let match, route
-  for (let i = 0, length = routes.length; match == null && i < length; ++i) {
-    route = routes[i]
-    match = matchPattern(route.pattern, route.exact, pathname)
-  }
-
-  if (!match)
-    route = null
-
-  return {
-    match,
-    route
-  }
-}
-
-export default matchRoutes
+export default matchPattern

@@ -1,5 +1,5 @@
 import React, { PropTypes } from 'react'
-import matchRoutes from './matchRoutes'
+import matchPattern from './matchPattern'
 import withHistory from './withHistory'
 import {
   action as actionType,
@@ -23,24 +23,23 @@ class Route extends React.Component {
     exact: false
   }
 
-  handleRouteChange(nextState, callback) {
+  handleRouteChange({ action, location }, callback) {
     const child = this.child
 
     if (typeof child.routeWillChange === 'function') {
-      const { action, location, pattern, exact, component, render, ...props } = this.props // eslint-disable-line no-unused-vars
-      const { match } = matchRoutes([ { pattern, exact } ], nextState.location.pathname)
+      const { pattern, exact } = this.props
+      const match = matchPattern(pattern, exact, location.pathname)
 
       // Compute the next props the component will
       // receive so it has access to params, etc.
-      const nextChildProps = {
-        ...props,
-        ...match,
-        action: nextState.action,
-        location: nextState.location,
-        matched: match != null
+      const props = {
+        action,
+        location,
+        params: (match && match.params),
+        match
       }
 
-      child.routeWillChange.call(child, nextChildProps, callback)
+      child.routeWillChange.call(child, props, callback)
     } else {
       callback()
     }
@@ -51,24 +50,23 @@ class Route extends React.Component {
   }
 
   render() {
-    const { action, location, pattern, exact, component, render, ...props } = this.props
-    const { match } = matchRoutes([ { pattern, exact } ], location.pathname)
-    const matched = match != null
+    const { action, location, pattern, exact, component, render } = this.props
+    const match = matchPattern(pattern, exact, location.pathname)
 
-    const childProps = {
-      ...props,
-      ...match,
+    const props = {
       action,
       location,
-      matched,
-      ref: this.updateChild
+      params: (match && match.params),
+      match
     }
+
+    const ref = this.updateChild
 
     return (
       render ? (
-        React.cloneElement(render(childProps), { ref: this.updateChild })
+        React.cloneElement(render(props), { ref })
       ) : (
-        matched ? React.createElement(component, childProps) : null
+        match ? React.createElement(component, { ...props, ref }) : null
       )
     )
   }

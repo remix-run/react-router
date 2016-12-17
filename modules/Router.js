@@ -1,5 +1,5 @@
 import React, { PropTypes } from 'react'
-import matchRoutes from './matchRoutes'
+import matchPattern from './matchPattern'
 import withHistory from './withHistory'
 import {
   location as locationType
@@ -23,7 +23,11 @@ class Router extends React.Component {
       element: child
     }))
 
-    const { match, route } = matchRoutes(routes, location.pathname)
+    let match, route
+    for (let i = 0, length = routes.length; match == null && i < length; ++i) {
+      route = routes[i]
+      match = matchPattern(route.pattern, route.exact, location.pathname)
+    }
 
     return match ? route.element : null
   }
