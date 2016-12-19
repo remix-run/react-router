@@ -128,4 +128,17 @@ describe('withRouter', function () {
       done()
     })
   })
+
+  it('should render Component even without Router context', function (done) {
+    const MyComponent = withRouter(({ router }) => {
+      expect(router).toNotExist()
+
+      return <h1>Hello</h1>
+    })
+
+    render((<MyComponent />), node, function () {
+      expect(node.firstChild.textContent).toEqual('Hello')
+      done()
+    })
+  })
 })
