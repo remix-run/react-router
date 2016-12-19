@@ -29,6 +29,10 @@ export default function withRouter(WrappedComponent, options) {
 
     render() {
       const router = this.props.router || this.context.router
+      if (!router) {
+        return <WrappedComponent {...this.props} />
+      }
+
       const { params, location, routes } = router
       const props = { ...this.props, router, params, location, routes }
 
