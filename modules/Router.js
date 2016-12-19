@@ -1,6 +1,6 @@
 import React, { PropTypes } from 'react'
 import matchPattern from './matchPattern'
-import withHistory from './withHistory'
+import withRouting from './withRouting'
 import {
   location as locationType
 } from './PropTypes'
@@ -31,4 +31,4 @@ Router.propTypes = {
   children: PropTypes.node
 }
 
-export default withHistory(Router)
+export default withRouting(Router)

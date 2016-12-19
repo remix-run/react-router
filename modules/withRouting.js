@@ -7,9 +7,9 @@ import {
  * Private higher-order component API for setting up the lifecycle
  * methods on context.history and getting action/location as props.
  */
-const withHistory = (component) => {
+const withRouting = (component) => {
   return class extends React.Component {
-    static displayName = `withHistory(${component.displayName || component.name})`
+    static displayName = `withRouting(${component.displayName || component.name})`
 
     static contextTypes = {
       history: historyType.isRequired
@@ -101,11 +101,10 @@ const withHistory = (component) => {
       return React.createElement(component, {
         ...this.props,
         ...this.state,
-        history: this.context.history,
         ref: this.updateChild
       })
     }
   }
 }
 
-export default withHistory
+export default withRouting

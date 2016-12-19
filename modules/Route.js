@@ -1,6 +1,6 @@
 import React, { PropTypes } from 'react'
 import matchPattern from './matchPattern'
-import withHistory from './withHistory'
+import withRouting from './withRouting'
 import {
   action as actionType,
   location as locationType
@@ -72,4 +72,4 @@ class Route extends React.Component {
   }
 }
 
-export default withHistory(Route)
+export default withRouting(Route)
