@@ -8,29 +8,27 @@ import {
 /**
  * The public API for rendering the first child <Route> that matches.
  */
-class Router extends React.Component {
-  static propTypes = {
-    location: locationType.isRequired,
-    children: PropTypes.node
+const Router = (props) => {
+  const { location, children } = props
+
+  const routes = React.Children.map(children, child => ({
+    path: child.props.path,
+    exact: child.props.exact,
+    element: child
+  }))
+
+  let match, route
+  for (let i = 0, length = routes.length; match == null && i < length; ++i) {
+    route = routes[i]
+    match = matchPattern(route.path, route.exact, location.pathname)
   }
 
-  render() {
-    const { location, children } = this.props
+  return match ? route.element : null
+}
 
-    const routes = React.Children.map(children, child => ({
-      path: child.props.path,
-      exact: child.props.exact,
-      element: child
-    }))
-
-    let match, route
-    for (let i = 0, length = routes.length; match == null && i < length; ++i) {
-      route = routes[i]
-      match = matchPattern(route.path, route.exact, location.pathname)
-    }
-
-    return match ? route.element : null
-  }
+Router.propTypes = {
+  location: locationType.isRequired,
+  children: PropTypes.node
 }
 
 export default withHistory(Router)

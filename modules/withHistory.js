@@ -74,7 +74,7 @@ const withHistory = (component) => {
 
         const child = this.child
 
-        if (typeof child.handleRouteChange === 'function') {
+        if (child && typeof child.handleRouteChange === 'function') {
           const nextState = this.nextState
 
           child.handleRouteChange.call(child, nextState, () => {
