@@ -7,13 +7,13 @@ import {
 } from './PropTypes'
 
 /**
- * The public API for matching a single pattern.
+ * The public API for matching a single path.
  */
 class Route extends React.Component {
   static propTypes = {
     action: actionType.isRequired,
     location: locationType.isRequired,
-    pattern: PropTypes.string,
+    path: PropTypes.string,
     exact: PropTypes.bool,
     component: PropTypes.func,
     render: PropTypes.func
@@ -27,8 +27,8 @@ class Route extends React.Component {
     const child = this.child
 
     if (typeof child.routeWillChange === 'function') {
-      const { pattern, exact } = this.props
-      const match = matchPattern(pattern, exact, location.pathname)
+      const { path, exact } = this.props
+      const match = matchPattern(path, exact, location.pathname)
 
       // Compute the next props the component will
       // receive so it has access to params, etc.
@@ -50,8 +50,8 @@ class Route extends React.Component {
   }
 
   render() {
-    const { action, location, pattern, exact, component, render } = this.props
-    const match = matchPattern(pattern, exact, location.pathname)
+    const { action, location, path, exact, component, render } = this.props
+    const match = matchPattern(path, exact, location.pathname)
 
     const props = {
       action,

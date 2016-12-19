@@ -18,7 +18,7 @@ class Router extends React.Component {
     const { location, children } = this.props
 
     const routes = React.Children.map(children, child => ({
-      pattern: child.props.pattern,
+      path: child.props.path,
       exact: child.props.exact,
       element: child
     }))
@@ -26,7 +26,7 @@ class Router extends React.Component {
     let match, route
     for (let i = 0, length = routes.length; match == null && i < length; ++i) {
       route = routes[i]
-      match = matchPattern(route.pattern, route.exact, location.pathname)
+      match = matchPattern(route.path, route.exact, location.pathname)
     }
 
     return match ? route.element : null
