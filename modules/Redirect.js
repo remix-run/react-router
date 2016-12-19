@@ -1,16 +1,25 @@
-import React from 'react'
+import React, { PropTypes } from 'react'
 import {
   history as historyType,
   to as toType
 } from './PropTypes'
 
+/**
+ * The public API for updating the location programatically
+ * with a component.
+ */
 class Redirect extends React.Component {
   static contextTypes = {
     history: historyType.isRequired
   }
 
   static propTypes = {
+    push: PropTypes.bool,
     to: toType.isRequired
+  }
+
+  static defaultProps = {
+    push: false
   }
 
   componentWillMount() {
@@ -26,7 +35,14 @@ class Redirect extends React.Component {
   }
 
   perform() {
-    this.context.history.replace(this.props.to)
+    const { history } = this.context
+    const { push, to } = this.props
+
+    if (push) {
+      history.push(to)
+    } else {
+      history.replace(to)
+    }
   }
 
   render() {
