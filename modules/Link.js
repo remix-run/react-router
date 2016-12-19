@@ -1,5 +1,4 @@
 import React, { PropTypes } from 'react'
-import withHistory from './withHistory'
 import {
   history as historyType,
   to as toType
@@ -15,10 +14,13 @@ const isModifiedEvent = (event) =>
  * The public API for a history-aware <a>.
  */
 class Link extends React.Component {
+  static contextTypes = {
+    history: historyType.isRequired
+  }
+
   static propTypes = {
     onClick: PropTypes.func,
     target: PropTypes.string,
-    history: historyType.isRequired,
     replace: PropTypes.bool,
     to: toType.isRequired
   }
@@ -39,7 +41,8 @@ class Link extends React.Component {
     ) {
       event.preventDefault()
 
-      const { history, replace, to } = this.props
+      const { history } = this.context
+      const { replace, to } = this.props
 
       if (replace) {
         history.replace(to)
@@ -63,4 +66,4 @@ class Link extends React.Component {
   }
 }
 
-export default withHistory(Link)
+export default Link
