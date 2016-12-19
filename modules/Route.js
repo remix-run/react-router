@@ -26,7 +26,9 @@ class Route extends React.Component {
   handleRouteChange({ action, location }, callback) {
     const child = this.child
 
-    if (typeof child.routeWillChange === 'function') {
+    // Need to check for existence of child because
+    // functional components don't have instances.
+    if (child && typeof child.routeWillChange === 'function') {
       const { path, exact } = this.props
       const match = matchPattern(path, exact, location.pathname)
 
