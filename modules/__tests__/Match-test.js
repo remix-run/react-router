@@ -2,6 +2,7 @@ import expect from 'expect'
 import React from 'react'
 import Match from '../Match'
 import Router from '../MemoryRouter'
+import Redirect from '../Redirect'
 import { renderToString } from 'react-dom/server'
 import { render } from 'react-dom'
 
@@ -13,7 +14,7 @@ describe('Match', () => {
       const Page = () => <div>{TEXT}</div>
       const loc = { pathname: '/' }
       const html = renderToString(
-        <Router intialEntries={[ loc ]}>
+        <Router initialEntries={[ loc ]}>
           <Match
             pattern="/"
             component={Page}
@@ -27,7 +28,7 @@ describe('Match', () => {
       const Page = () => <div>{TEXT}</div>
       const loc = { pathname: '/' }
       const html = renderToString(
-        <Router intialEntries={[ loc ]}>
+        <Router initialEntries={[ loc ]}>
           <Match pattern="/foo" component={Page} />
         </Router>
       )
@@ -38,7 +39,7 @@ describe('Match', () => {
       const run = (location, cb) => {
         const Page = (props) => <div>{(cb(props), null)}</div>
         renderToString(
-          <Router intialEntries={[ location ]}>
+          <Router initialEntries={[ location ]}>
             <Match
               pattern="/:foo/:bar"
               component={Page}
@@ -54,25 +55,43 @@ describe('Match', () => {
               params: { foo: 'one', bar: 'two' },
               isExact: true,
               pathname: '/one/two',
-              location: { pathname: '/one/two' },
+              location: {
+                hash: '',
+                key: undefined,
+                query: null,
+                search: '',
+                state: null,
+                pathname: '/one/two'
+              },
+              action: 'POP',
               pattern: '/:foo/:bar'
             })
           })
         })
+
         it('decodes props', () => {
           run({ pathname: '/first%20name/second%20name' }, (props) => {
             expect(props).toEqual({
               params: { foo: 'first name', bar: 'second name' },
               isExact: true,
               pathname: '/first%20name/second%20name',
-              location: { pathname: '/first%20name/second%20name' },
+              location: {
+                hash: '',
+                key: undefined,
+                query: null,
+                search: '',
+                state: null,
+                pathname: '/first%20name/second%20name'
+              },
+              action: 'POP',
               pattern: '/:foo/:bar'
             })
           })
         })
+
         it('does not pass optional parameters if they do not occur in the URL', () => {
           renderToString(
-            <Router intialEntries={[ { pathname: '/foo' } ]}>
+            <Router initialEntries={[ { pathname: '/foo' } ]}>
               <Match
                 pattern="/:foo/:bar?"
                 component={(props) => {
@@ -80,7 +99,15 @@ describe('Match', () => {
                     params: { foo: 'foo' },
                     isExact: true,
                     pathname: '/foo',
-                    location: { pathname: '/foo' },
+                    location: {
+                      hash: '',
+                      key: undefined,
+                      query: null,
+                      search: '',
+                      state: null,
+                      pathname: '/foo'
+                    },
+                    action: 'POP',
                     pattern: '/:foo/:bar?'
                   })
                   return <div />
@@ -88,6 +115,48 @@ describe('Match', () => {
               />
             </Router>
           )
+        })
+
+        describe('appropriate action is passed', () => {
+          const runWithRedirect = (location, cb) => {
+            if (!Array.isArray(location)) location = [location]
+            const PageRedirect = () => (
+              <div>
+                <Redirect to="/second" />
+              </div>
+            )
+            const Page = (props) => (<div>{(cb(props), null)}</div>)
+            renderToString(
+              <Router initialEntries={location}>
+                <content>
+                  <Match
+                    pattern="/first"
+                    component={PageRedirect} />
+                  <Match
+                    pattern="/second"
+                    component={Page} />
+                </content>
+              </Router>
+            )
+          }
+          // I think this is chrome specific :(
+          it('passes action POP on initial route', () => {
+            run({ pathname: '/first/route' }, (props) => {
+              expect(props.action).toEqual('POP')
+            })
+          })
+
+          it('passes action PUSH on subsequent route', () => {
+            runWithRedirect({ pathname: '/first' }, (props) => {
+              expect(props.action).toEqual('PUSH')
+            })
+          })
+
+          it('passes action POP when redirect backwards in location history', () => {
+            runWithRedirect([{ pathname: '/second' }, { pathname: '/first' }], (props) => {
+              expect(props.action).toEqual('POP')
+            })
+          })
         })
       })
 
@@ -195,10 +264,53 @@ describe('Match', () => {
                 state: null,
                 key: undefined
               },
+              action: 'POP',
               params: { foo: 'one', bar: 'two' },
               pathname: '/one/two',
               pattern: '/:foo/:bar'
             })
+          })
+        })
+      })
+
+      describe('appropriate action is passed', () => {
+        const runWithRedirect = (location, cb) => {
+          if (!Array.isArray(location)) location = [location]
+          renderToString(
+            <Router initialEntries={location}>
+              <content>
+                <Match
+                  pattern="/first"
+                  render={() => (
+                    <div>
+                      <Redirect to="/second" />
+                    </div>
+                  )} />
+                <Match
+                  pattern="/second"
+                  render={(props) => (
+                    <div>{(cb(props), null)}</div>
+                  )} />
+              </content>
+            </Router>
+          )
+        }
+        // I think this is chrome specific :(
+        it('passes action POP on initial route', () => {
+          run({ pathname: '/first/route' }, (props) => {
+            expect(props.action).toEqual('POP')
+          })
+        })
+
+        it('passes action PUSH on subsequent route', () => {
+          runWithRedirect({ pathname: '/first' }, (props) => {
+            expect(props.action).toEqual('PUSH')
+          })
+        })
+
+        it('passes action POP when redirect backwards in location history', () => {
+          runWithRedirect([{ pathname: '/second' }, { pathname: '/first' }], (props) => {
+            expect(props.action).toEqual('POP')
           })
         })
       })
@@ -247,20 +359,21 @@ describe('Match', () => {
       }
 
       it('passes props when matched', () => {
-        run({ pathname: '/one/two' }, (props) => {
+        run({ pathname: '/un/deux' }, (props) => {
           expect(props).toEqual({
             matched: true,
-            params: { foo: 'one', bar: 'two' },
+            params: { foo: 'un', bar: 'deux' },
             isExact: true,
-            pathname: '/one/two',
+            pathname: '/un/deux',
             location: {
               hash: '',
-              pathname: '/one/two',
+              pathname: '/un/deux',
               query: null,
               search: '',
               state: null,
               key: undefined
             },
+            action: 'POP',
             pattern: '/:foo/:bar'
           })
         })
@@ -278,7 +391,54 @@ describe('Match', () => {
               state: null,
               key: undefined
             },
+            action: 'POP',
             pattern: '/:foo/:bar'
+          })
+        })
+      })
+
+      describe('appropriate action is passed', () => {
+        const runWithRedirect = (location, cb) => {
+          if (!Array.isArray(location)) location = [location]
+          renderToString(
+            <Router initialEntries={location}>
+              <content>
+                <Match
+                  pattern="/first"
+                  children={(props) => (
+                    props.matched ? (
+                      <div>
+                        <Redirect to="/second" />
+                      </div>
+                    ) : null
+                  )} />
+                <Match
+                  pattern="/second"
+                  children={(props) => (
+                    props.matched ? (
+                      <div>{(cb(props), null)}</div>
+                    ) : null
+                  )} />
+              </content>
+            </Router>
+          )
+        }
+        // I think this is chrome specific :(
+        it('passes action POP on initial route', () => {
+          run({ pathname: '/first/route' }, (props) => {
+            expect(props.action).toEqual('POP')
+          })
+        })
+
+        it('passes action PUSH on subsequent route', () => {
+          runWithRedirect({ pathname: '/first' }, (props) => {
+            expect(props).toEqual({ action: 'PUSH'})
+          })
+        })
+
+        it('passes action POP when redirect backwards in location history', () => {
+          runWithRedirect([{ pathname: '/second' }, { pathname: '/first' }], (props) => {
+            expect(props.action).toEqual('POP')
           })
         })
       })

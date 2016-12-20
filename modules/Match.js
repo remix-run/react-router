@@ -85,8 +85,8 @@ class Match extends React.Component {
   render() {
     const { children, render, component:Component, pattern } = this.props
     const { match } = this.state
-    const { location } = this.context.router.getState()
-    const props = { ...match, location, pattern }
+    const { location, action } = this.context.router.getState()
+    const props = { ...match, location, action, pattern }
     return (
       children ? (
         children({ matched: !!match, ...props })
