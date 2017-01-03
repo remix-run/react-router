@@ -1,24 +1,23 @@
 import React from 'react'
 import Router from 'react-router/BrowserRouter'
-import Match from 'react-router/Match'
-import Miss from 'react-router/Miss'
+import Route from 'react-router/Route'
 import Link from 'react-router/Link'
-import Redirect from 'react-router/Redirect'
 
-// Each "route" has two components, one for the sidebar
-// and one for the main area, we'll render them
-// simultaneously when the pattern matches
+// Each logical "route" has two components, one for
+// the sidebar and one for the main area. We want to
+// render both of them in different places when the
+// path matches the current URL.
 const routes = [
-  { pattern: '/',
-    exactly: true,
+  { path: '/',
+    exact: true,
     sidebar: () => <div>Home!</div>,
     main: () => <h2>Main</h2>
   },
-  { pattern: '/foo',
+  { path: '/foo',
     sidebar: () => <div>foo!</div>,
     main: () => <h2>Foo</h2>
   },
-  { pattern: '/bar',
+  { path: '/bar',
     sidebar: () => <div>Bar!</div>,
     main: () => <h2>Bar</h2>
   }
@@ -39,32 +38,31 @@ const SidebarExample = () => (
         </ul>
 
         {routes.map((route, index) => (
-          // you can render a match in as many places
-          // as you want in your app, it will match with
-          // any other `Match`s that have the same
-          // pattern. So, a sidebar, or breadcrumbs, or
-          // anything else that requires you to render
-          // multiple things in multiple places at the
-          // same location is nothing more than multiple
-          // `Match`s
-          <Match
+          // You can render a <Route> in as many places
+          // as you want in your app. It will render along
+          // with any other <Route>s that also match the URL.
+          // So, a sidebar or breadcrumbs or anything else
+          // that requires you to render multiple things
+          // in multiple places at the same URL is nothing
+          // more than multiple <Route>s.
+          <Route
             key={index}
-            pattern={route.pattern}
+            path={route.path}
+            exact={route.exact}
             component={route.sidebar}
-            exactly={route.exactly}
           />
         ))}
       </div>
 
       <div style={{ flex: 1, padding: '10px' }}>
         {routes.map((route, index) => (
-          // rendering `Match`s with different
-          // components but the same pattern as before
-          <Match
+          // Render more <Route>s with the same paths as
+          // above, but different components this time.
+          <Route
             key={index}
-            pattern={route.pattern}
+            path={route.path}
+            exact={route.exact}
             component={route.main}
-            exactly={route.exactly}
           />
         ))}
       </div>

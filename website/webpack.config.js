@@ -32,12 +32,14 @@ module.exports = {
 
   resolve: {
     alias: {
-      'react-router/Miss': path.join(ROUTER_SRC, 'Miss'),
-      'react-router/Match': path.join(ROUTER_SRC, 'Match'),
-      'react-router/MatchRoutes': path.join(ROUTER_SRC, 'MatchRoutes'),
       'react-router/Link': path.join(ROUTER_SRC, 'Link'),
+      'react-router/Prompt': path.join(ROUTER_SRC, 'Prompt'),
       'react-router/Redirect': path.join(ROUTER_SRC, 'Redirect'),
-      'react-router/NavigationPrompt': path.join(ROUTER_SRC, 'NavigationPrompt'),
+      'react-router/Route': path.join(ROUTER_SRC, 'Route'),
+      'react-router/Router': path.join(ROUTER_SRC, 'Router'),
+      'react-router/Switch': path.join(ROUTER_SRC, 'Switch'),
+
+      // Shim the real router so people can copy paste examples into create-react-app
       'react-router/BrowserRouter': path.join(__dirname, 'components', 'ExampleRouter')
     }
   },

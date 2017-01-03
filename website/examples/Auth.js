@@ -1,9 +1,8 @@
-/*eslint-disable import/no-unresolved*/
 import React, { PropTypes } from 'react'
-import Match from 'react-router/Match'
+import Router from 'react-router/BrowserRouter'
+import Route from 'react-router/Route'
 import Link from 'react-router/Link'
 import Redirect from 'react-router/Redirect'
-import Router from 'react-router/BrowserRouter'
 
 ////////////////////////////////////////////////////////////
 // 1. Click the public page
@@ -11,7 +10,6 @@ import Router from 'react-router/BrowserRouter'
 // 3. Log in
 // 4. Click the back button, note the URL each time
 
-////////////////////////////////////////////////////////////
 const fakeAuth = {
   isAuthenticated: false,
   authenticate(cb) {
@@ -24,20 +22,16 @@ const fakeAuth = {
   }
 }
 
-////////////////////////////////////////////////////////////
 class AuthExample extends React.Component {
   render() {
     return (
       <Router>
-        {({ router }) => (
+        {({ history }) => (
           <div>
             {fakeAuth.isAuthenticated ? (
               <p>
-                Welcome! {' '}
-                <button onClick={() => {
-                  fakeAuth.signout(() => {
-                    router.transitionTo('/')
-                  })
+                Welcome! <button onClick={() => {
+                  fakeAuth.signout(() => history.push('/'))
                 }}>Sign out</button>
               </p>
             ) : (
@@ -49,9 +43,9 @@ class AuthExample extends React.Component {
               <li><Link to="/protected">Protected Page</Link></li>
             </ul>
 
-            <Match pattern="/public" component={Public}/>
-            <Match pattern="/login" component={Login}/>
-            <MatchWhenAuthorized pattern="/protected" component={Protected}/>
+            <Route path="/public" component={Public}/>
+            <Route path="/login" component={Login}/>
+            <PrivateRoute path="/protected" component={Protected}/>
           </div>
         )}
       </Router>
@@ -59,11 +53,10 @@ class AuthExample extends React.Component {
   }
 }
 
-////////////////////////////////////////////////////////////
-const MatchWhenAuthorized = ({ component: Component, ...rest }) => (
-  <Match {...rest} render={props => (
+const PrivateRoute = ({ component, ...rest }) => (
+  <Route {...rest} render={props => (
     fakeAuth.isAuthenticated ? (
-      <Component {...props}/>
+      React.createElement(component, props)
     ) : (
       <Redirect to={{
         pathname: '/login',
@@ -73,11 +66,9 @@ const MatchWhenAuthorized = ({ component: Component, ...rest }) => (
   )}/>
 )
 
-////////////////////////////////////////////////////////////
-const Protected = () => <h3>Protected</h3>
 const Public = () => <h3>Public</h3>
+const Protected = () => <h3>Protected</h3>
 
-////////////////////////////////////////////////////////////
 class Login extends React.Component {
   state = {
     redirectToReferrer: false

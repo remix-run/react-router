@@ -38,5 +38,3 @@ export const HSpace = ({ width }) => (
   <I width={width}/>
 )
 HSpace.propTypes = { width: PropTypes.string }
-
-

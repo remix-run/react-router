@@ -1,11 +1,10 @@
 import React from 'react'
-import Match from 'react-router/Match'
-import Miss from 'react-router/Miss'
-import Link from 'react-router/Link'
-import Redirect from 'react-router/Redirect'
 import Router from 'react-router/BrowserRouter'
+import Switch from 'react-router/Switch'
+import Route from 'react-router/Route'
+import Link from 'react-router/Link'
 
-const MissExample = () => (
+const NoMatchExample = () => (
   <Router>
     <div>
       <ul>
@@ -15,17 +14,21 @@ const MissExample = () => (
         <li><Link to="/also/will/not/match">Also Will Not Match</Link></li>
       </ul>
 
-      <Match pattern="/" exactly component={Home}/>
-      <Match pattern="/will-match" component={WillMatch}/>
-      <Miss component={NoMatch} />
+      <Switch>
+        <Route path="/" exact component={Home}/>
+        <Route path="/will-match" component={WillMatch}/>
+        <Route component={NoMatch}/>
+      </Switch>
     </div>
   </Router>
 )
 
 const Home = () => (
   <p>
-    When no sibling <code>Match</code> matches,
-    a <code>Miss</code> component will render.
+    A <code>&lt;Switch></code> renders the
+    first child <code>&lt;Route></code> that
+    matches. A <code>&lt;Route></code> with
+    no <code>path</code> always matches.
   </p>
 )
 
@@ -37,4 +40,4 @@ const NoMatch = ({ location }) => (
   </div>
 )
 
-export default MissExample
+export default NoMatchExample

@@ -1,12 +1,11 @@
 import React from 'react'
 import Router from 'react-router/BrowserRouter'
-import Match from 'react-router/Match'
-import Miss from 'react-router/Miss'
+import Route from 'react-router/Route'
 import Link from 'react-router/Link'
 
 // Some folks find value in a centralized route config.
 // A route config is just data. React is great at mapping
-// data into components, and `Match` is a component.
+// data into components, and <Route> is a component.
 
 ////////////////////////////////////////////////////////////
 // first our route components
@@ -23,7 +22,7 @@ const Tacos = ({ routes }) => (
     </ul>
 
     {routes.map((route, i) => (
-      <MatchWithSubRoutes key={i} {...route}/>
+      <RouteWithSubRoutes key={i} {...route}/>
     ))}
   </div>
 )
@@ -35,26 +34,26 @@ const Cart = () => <h3>Cart</h3>
 ////////////////////////////////////////////////////////////
 // then our route config
 const routes = [
-  { pattern: '/sandwiches',
+  { path: '/sandwiches',
     component: Sandwiches
   },
-  { pattern: '/tacos',
+  { path: '/tacos',
     component: Tacos,
     routes: [
-      { pattern: '/tacos/bus',
+      { path: '/tacos/bus',
         component: Bus
       },
-      { pattern: '/tacos/cart',
+      { path: '/tacos/cart',
         component: Cart
       }
     ]
   }
 ]
 
-// wrap `Match` and use this everywhere instead, then when
+// wrap <Route> and use this everywhere instead, then when
 // sub routes are added to any route it'll work
-const MatchWithSubRoutes = (route) => (
-  <Match {...route} render={(props) => (
+const RouteWithSubRoutes = (route) => (
+  <Route {...route} render={(props) => (
     // pass the sub-routes down to keep nesting
     <route.component {...props} routes={route.routes}/>
   )}/>
@@ -69,7 +68,7 @@ const RouteConfigExample = () => (
       </ul>
 
       {routes.map((route, i) => (
-        <MatchWithSubRoutes key={i} {...route}/>
+        <RouteWithSubRoutes key={i} {...route}/>
       ))}
     </div>
   </Router>

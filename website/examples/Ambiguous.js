@@ -1,6 +1,7 @@
 import React from 'react'
 import Router from 'react-router/BrowserRouter'
-import MatchRoutes from 'react-router/MatchRoutes'
+import Switch from 'react-router/Switch'
+import Route from 'react-router/Route'
 import Link from 'react-router/Link'
 
 const AmbiguousExample = () => (
@@ -23,14 +24,14 @@ const AmbiguousExample = () => (
           "route". React Router lets you match in multiple places
           on purpose (sidebars, breadcrumbs, etc). So, when you
           want to clear up any ambiguous matching, and not match
-          "/about" to "/:user", use MatchRoutes, it will take
-          the first route that matches.
+          "/about" to "/:user", just wrap your <Route>s in a
+          <Switch>. It will render the first one that matches.
       */}
-      <MatchRoutes routes={[
-        { pattern: '/about', component: About },
-        { pattern: '/company', component: Company },
-        { pattern: '/:user', component: User }
-      ]}/>
+      <Switch>
+        <Route path="/about" component={About}/>
+        <Route path="/company" component={Company}/>
+        <Route path="/:user" component={User}/>
+      </Switch>
     </div>
   </Router>
 )

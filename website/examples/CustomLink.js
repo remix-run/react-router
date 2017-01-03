@@ -1,6 +1,6 @@
 import React from 'react'
 import Router from 'react-router/BrowserRouter'
-import Match from 'react-router/Match'
+import Route from 'react-router/Route'
 import Link from 'react-router/Link'
 
 const CustomLinkExample = () => (
@@ -8,26 +8,19 @@ const CustomLinkExample = () => (
     <div>
       <OldSchoolMenuLink activeOnlyWhenExact={true} to="/" label="Home"/>
       <OldSchoolMenuLink to="/about" label="About"/>
-
       <hr/>
-
-      <Match exactly pattern="/" component={Home} />
-      <Match pattern="/about" component={About} />
+      <Route exact path="/" component={Home}/>
+      <Route path="/about" component={About}/>
     </div>
   </Router>
 )
 
 const OldSchoolMenuLink = ({ label, to, activeOnlyWhenExact }) => (
-  <Match pattern={to} exactly={activeOnlyWhenExact}>
-    {({ matched }) => (
-      <div className={matched ? 'active' : ''}>
-        {matched ? '> ' : ''}
-        <Link to={to} activeOnlyWhenExact={activeOnlyWhenExact}>
-          {label}
-        </Link>
-      </div>
-    )}
-  </Match>
+  <Route path={to} exact={activeOnlyWhenExact} children={({ matched }) => (
+    <div className={matched ? 'active' : ''}>
+      {matched ? '> ' : ''}<Link to={to}>{label}</Link>
+    </div>
+  )}/>
 )
 
 const Home = () => (

@@ -3,7 +3,7 @@ import { I, H, B, PAD, lightGray, red } from './bricks'
 import { render } from 'react-dom'
 import MarkdownViewer from './MarkdownViewer'
 import ScrollToMe from './ScrollToMe'
-import Match from '../../modules/Match'
+import Route from '../../modules/Route'
 
 export const API = [
   { name: 'Match',
@@ -87,7 +87,7 @@ class APIDocs extends React.Component {
   render() {
     return (
       <B props={{ ref: n => this.el = n }}>
-        <Match pattern="/api" exactly={true} component={ScrollToMe}/>
+        <Route exact path="/api" component={ScrollToMe}/>
         <H height="100vh">
           <B props={{ ref: n => this.menu = n }} height="100%" overflow="auto" fontSize="80%" padding="40px" background="#f0f0f0"/>
           <B flex="1" height="100%" overflow="auto">

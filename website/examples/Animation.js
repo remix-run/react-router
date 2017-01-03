@@ -1,8 +1,7 @@
 import React from 'react'
 import { TransitionMotion, spring } from 'react-motion'
 import Router from 'react-router/BrowserRouter'
-import Match from 'react-router/Match'
-import Miss from 'react-router/Miss'
+import Route from 'react-router/Route'
 import Link from 'react-router/Link'
 import Redirect from 'react-router/Redirect'
 
@@ -10,28 +9,28 @@ const AnimationExample = () => (
   <Router>
     <div style={styles.fill}>
       <ul style={styles.nav}>
-        <NavLink to="/10/50/50">Red</NavLink>
-        <NavLink to="/50/70/50">Yellow</NavLink>
-        <NavLink to="/200/50/50">Blue</NavLink>
-        <NavLink to="/300/50/50">Dunno</NavLink>
+        <NavLink to="/10/90/50">Red</NavLink>
+        <NavLink to="/120/100/40">Green</NavLink>
+        <NavLink to="/200/100/40">Blue</NavLink>
+        <NavLink to="/310/100/50">Pink</NavLink>
       </ul>
 
       <div style={styles.content}>
-        <MatchWithFade pattern="/:h/:s/:l" component={HSL}/>
+        <FadeRoute path="/:h/:s/:l" component={HSL}/>
       </div>
 
-      <Match exactly pattern="/" render={() => (
-        <Redirect to="/10/50/50"/>
+      <Route exact path="/" render={() => (
+        <Redirect to="/10/90/50"/>
       )}/>
     </div>
   </Router>
 )
 
-const MatchWithFade = ({ component:Component, ...rest }) => {
+const FadeRoute = ({ component: Component, ...rest }) => {
   const willLeave = () => ({ zIndex: 1, opacity: spring(0) })
 
   return (
-    <Match {...rest} children={({ matched, ...props }) => (
+    <Route {...rest} children={({ matched, ...props }) => (
       <TransitionMotion
         willLeave={willLeave}
         styles={matched ? [ {
@@ -63,7 +62,7 @@ const NavLink = (props) => (
   </li>
 )
 
-const HSL = ({ params }) => (
+const HSL = ({ params }) => console.log(params) || (
   <div style={{
     ...styles.hsl,
     background: `hsl(${params.h}, ${params.s}%, ${params.l}%)`

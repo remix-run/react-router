@@ -1,11 +1,19 @@
-import { PropTypes } from 'react'
+import React, { PropTypes } from 'react'
 
-const ExampleRouter = ({ children, ...rest }, context) => (
-  typeof children === 'function' ? children({ ...rest, router: context.router }) : children
+const ExampleRouter = ({ children }, context) => (
+  typeof children === 'function' ? (
+    children({
+      action: context.history.action,
+      location: context.history.location,
+      history: context.history
+    })
+  ) : (
+    React.Children.only(children)
+  )
 )
 
 ExampleRouter.contextTypes = {
-  router: PropTypes.object
+  history: PropTypes.object
 }
 
 export default ExampleRouter

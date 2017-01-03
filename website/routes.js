@@ -5,7 +5,7 @@ export const EXAMPLES = [
     loadSource: require('bundle?lazy!!prismjs?lang=jsx!./examples/Basic.js')
   },
   { name: 'URL Parameters',
-    path: '/examples/url-parameters',
+    path: '/examples/url-params',
     load: require('bundle?lazy!babel!./examples/Params'),
     loadSource: require('bundle?lazy!!prismjs?lang=jsx!./examples/Params.js')
   },
@@ -14,30 +14,20 @@ export const EXAMPLES = [
     load: require('bundle?lazy!babel!./examples/Auth'),
     loadSource: require('bundle?lazy!!prismjs?lang=jsx!./examples/Auth.js')
   },
-  { name: 'Custom Link Component',
-    path: '/examples/custom-link-component',
-    load: require('bundle?lazy!babel!./examples/CustomLinkComponent'),
-    loadSource: require('bundle?lazy!!prismjs?lang=jsx!./examples/CustomLinkComponent.js')
+  { name: 'Custom Link',
+    path: '/examples/custom-link',
+    load: require('bundle?lazy!babel!./examples/CustomLink'),
+    loadSource: require('bundle?lazy!!prismjs?lang=jsx!./examples/CustomLink.js')
   },
   { name: 'Preventing Transitions',
     path: '/examples/preventing-transitions',
     load: require('bundle?lazy!babel!./examples/PreventingTransitions'),
     loadSource: require('bundle?lazy!!prismjs?lang=jsx!./examples/PreventingTransitions.js')
   },
-  { name: 'Miss (No Match Handling)',
-    path: '/examples/no-match-handling',
-    load: require('bundle?lazy!babel!./examples/Miss'),
-    loadSource: require('bundle?lazy!!prismjs?lang=jsx!./examples/Miss.js')
-  },
-  { name: 'MatchRoutes',
-    path: '/examples/match-group',
-    load: require('bundle?lazy!babel!./examples/MatchRoutes'),
-    loadSource: require('bundle?lazy!!prismjs?lang=jsx!./examples/MatchRoutes.js')
-  },
-  { name: 'Query Params',
-    path: '/examples/query-params',
-    load: require('bundle?lazy!babel!./examples/QueryParams'),
-    loadSource: require('bundle?lazy!!prismjs?lang=jsx!./examples/QueryParams.js')
+  { name: 'No Match (404)',
+    path: '/examples/no-match',
+    load: require('bundle?lazy!babel!./examples/NoMatch'),
+    loadSource: require('bundle?lazy!!prismjs?lang=jsx!./examples/NoMatch.js')
   },
   { name: 'Recursive Paths',
     path: '/examples/recursive-paths',
@@ -65,4 +55,3 @@ export const EXAMPLES = [
     loadSource: require('bundle?lazy!!prismjs?lang=jsx!./examples/RouteConfig.js')
   }
 ]
-

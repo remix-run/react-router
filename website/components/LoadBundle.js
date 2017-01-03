@@ -3,21 +3,16 @@ import LoadingDots from './LoadingDots'
 import { B } from './bricks'
 
 class LoadBundle extends React.Component {
-
-  state = { mod: null }
+  state = { value: null }
 
   componentDidMount() {
-    this.props.load((mod) => {
-      this.setState({ mod })
-    })
+    this.props.load(value => this.setState({ value }))
   }
 
   render() {
-    const { children } = this.props
-    const { mod } = this.state
-    return mod ? children({mod}) : <B><LoadingDots/></B>
+    const { value } = this.state
+    return value ? this.props.children(value) : <B><LoadingDots/></B>
   }
-
 }
 
 export default LoadBundle

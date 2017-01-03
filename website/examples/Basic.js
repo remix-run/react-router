@@ -1,6 +1,6 @@
 import React from 'react'
 import Router from 'react-router/BrowserRouter'
-import Match from 'react-router/Match'
+import Route from 'react-router/Route'
 import Link from 'react-router/Link'
 
 const BasicExample = () => (
@@ -14,9 +14,9 @@ const BasicExample = () => (
 
       <hr/>
 
-      <Match exactly pattern="/" component={Home}/>
-      <Match pattern="/about" component={About}/>
-      <Match pattern="/topics" component={Topics}/>
+      <Route path="/" exact component={Home}/>
+      <Route path="/about" component={About}/>
+      <Route path="/topics" component={Topics}/>
     </div>
   </Router>
 )
@@ -42,9 +42,9 @@ const Topics = ({ pathname }) => (
       <li><Link to={`${pathname}/props-v-state`}>Props v. State</Link></li>
     </ul>
 
-    <Match pattern={`${pathname}/:topicId`} component={Topic}/>
-    <Match pattern={pathname} exactly render={() => (
-      <h3>Please select a topic</h3>
+    <Route path={`${pathname}/:topicId`} component={Topic}/>
+    <Route path={pathname} exact render={() => (
+      <h3>Please select a topic.</h3>
     )}/>
   </div>
 )

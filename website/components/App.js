@@ -1,4 +1,7 @@
 import React from 'react'
+
+import BrowserRouter from '../../modules/BrowserRouter'
+
 import Examples from './Examples'
 import Header from './Header'
 import APIDocs from './APIDocs'
@@ -7,7 +10,6 @@ import Footer from './Footer'
 import LoadBundle from './LoadBundle'
 import NewsletterSignup from './NewsletterSignup'
 import { B } from './bricks'
-import BrowserRouter from '../../modules/BrowserRouter'
 
 const App = () => (
   <BrowserRouter>
@@ -16,7 +18,7 @@ const App = () => (
       <Examples/>
       <Video/>
       <APIDocs/>
-      <NewsletterSignup />
+      <NewsletterSignup/>
       <Footer/>
     </B>
   </BrowserRouter>
