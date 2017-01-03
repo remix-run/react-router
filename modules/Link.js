@@ -1,8 +1,4 @@
 import React, { PropTypes } from 'react'
-import {
-  history as historyType,
-  to as toType
-} from './PropTypes'
 
 const isLeftClickEvent = (event) =>
   event.button === 0
@@ -15,14 +11,21 @@ const isModifiedEvent = (event) =>
  */
 class Link extends React.Component {
   static contextTypes = {
-    history: historyType.isRequired
+    history: PropTypes.shape({
+      createHref: PropTypes.func.isRequired,
+      push: PropTypes.func.isRequired,
+      replace: PropTypes.func.isRequired
+    }).isRequired
   }
 
   static propTypes = {
     onClick: PropTypes.func,
     target: PropTypes.string,
     replace: PropTypes.bool,
-    to: toType.isRequired
+    to: PropTypes.oneOfType([
+      PropTypes.string,
+      PropTypes.object
+    ])
   }
 
   static defaultProps = {
@@ -54,7 +57,7 @@ class Link extends React.Component {
 
   render() {
     const { replace, to, ...props } = this.props // eslint-disable-line no-unused-vars
-    const href = typeof to === 'string' ? to : history.createHref(to)
+    const href = typeof to === 'string' ? to : this.context.history.createHref(to)
 
     return (
       <a

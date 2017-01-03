@@ -1,8 +1,9 @@
+export { Router, Route, Switch } from './Core'
+
+// Tools
 export Link from './Link'
-export Prompt from 'react-history/Prompt'
 export Redirect from './Redirect'
-export Router from './Router'
-export Route from './Route'
+export Prompt from './Prompt'
 
 // High-level wrappers
 export BrowserRouter from './BrowserRouter'

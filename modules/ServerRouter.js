@@ -1,9 +1,6 @@
-import React, { PropTypes } from 'react'
 import invariant from 'invariant'
+import React, { PropTypes } from 'react'
 import Router from './Router'
-import {
-  history as historyType
-} from './PropTypes'
 
 const createHref = path => path
 const listen = () => {
@@ -47,7 +44,7 @@ class ServerRouter extends React.Component {
   }
 
   static childContextTypes = {
-    history: historyType.isRequired
+    history: PropTypes.object.isRequired
   }
 
   getChildContext() {

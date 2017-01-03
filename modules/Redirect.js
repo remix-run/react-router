@@ -1,8 +1,4 @@
 import React, { PropTypes } from 'react'
-import {
-  history as historyType,
-  to as toType
-} from './PropTypes'
 
 /**
  * The public API for updating the location programatically
@@ -10,12 +6,18 @@ import {
  */
 class Redirect extends React.Component {
   static contextTypes = {
-    history: historyType.isRequired
+    history: PropTypes.shape({
+      push: PropTypes.func.isRequired,
+      replace: PropTypes.func.isRequired
+    }).isRequired
   }
 
   static propTypes = {
     push: PropTypes.bool,
-    to: toType.isRequired
+    to: PropTypes.oneOfType([
+      PropTypes.string,
+      PropTypes.object
+    ])
   }
 
   static defaultProps = {
@@ -23,6 +25,7 @@ class Redirect extends React.Component {
   }
 
   componentWillMount() {
+    // TODO: Get this from context.
     this.isServerRender = typeof window !== 'object'
 
     if (this.isServerRender)
