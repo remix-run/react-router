@@ -50,11 +50,11 @@ const createProps = (action, location, match) => ({
   matched: match != null
 })
 
-const createElement = ({ render, component, children }, props) => (
-  render ? ( // render prop gets first priority, only called if there's a match
-    props.matched ? render(props) : null
-  ) : component ? ( // component prop is next, only called if there's a match
+const createElement = ({ component, render, children }, props) => (
+  component ? ( // component prop gets first priority, only called if there's a match
     props.matched ? React.createElement(component, props) : null
+  ) : render ? ( // render prop is next, only called if there's a match
+    props.matched ? render(props) : null
   ) : children ? ( // children come last, always called
     typeof children === 'function' ? children(props) : React.Children.only(children)
   ) : (
@@ -79,8 +79,8 @@ export const Route = ({ path, exact, ...renderProps }) => (
 Route.propTypes = {
   path: PropTypes.string,
   exact: PropTypes.bool,
-  render: PropTypes.func, // TODO: Warn when used with other render props
   component: PropTypes.func, // TODO: Warn when used with other render props
+  render: PropTypes.func, // TODO: Warn when used with other render props
   children: PropTypes.oneOfType([ // TODO: Warn when used with other render props
     PropTypes.func,
     PropTypes.node
