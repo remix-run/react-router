@@ -1,15 +1,11 @@
 # Redirect
 
-Rendering a `Redirect` will navigate to a new location.
+Rendering a `<Redirect>` will navigate to a new location.
 
-The new location will override the current location in the browser's history,
-like server-side redirects (HTTP 3xx) do.
-
-(If this freaks you out you can use the imperative API from the `router`
-on context.)
+The new location will override the current location in the browser's history, like server-side redirects (HTTP 3xx) do.
 
 ```js
-<Match pattern="/" exactly render={() => (
+<Route exact path="/" render={() => (
   loggedIn ? (
     <Redirect to="/dashboard"/>
   ) : (
@@ -18,31 +14,29 @@ on context.)
 )}/>
 ```
 
-
 ## to: string _Redirect_
 
-The pathname to redirect to.
+The URL to redirect to.
 
 ```js
-<Redirect to="/somewhere/else" />
+<Redirect to="/somewhere/else"/>
 ```
 
-## to: location _Redirect_
+## to: object _Redirect_
 
-A location descriptor to redirect to.
+A location to redirect to.
 
 ```js
 <Redirect to={{
   pathname: '/login',
-  query: { utm: 'your+face' },
+  search: '?utm=your+face',
   state: { referrer: currentLocation }
 }}/>
 ```
 
 ## push: bool _Redirect_
 
-When true, redirecting will add a new history state with `pushState` instead
-of replacing the current history state with `replaceState`.
+When true, redirecting will add a new history state with `pushState` instead of replacing the current history state with `replaceState`.
 
 ```js
 <Redirect to="/somewhere/else" push/>

@@ -6,29 +6,25 @@ import ScrollToMe from './ScrollToMe'
 import Route from '../../modules/Route'
 
 export const API = [
-  { name: 'Match',
-    path: '/Match',
-    html: require('../api/Match.md')
+  { name: 'Route',
+    path: '/Route',
+    html: require('../api/Route.md')
   },
-  { name: 'Miss',
-    path: '/Miss',
-    html: require('../api/Miss.md')
-  },
-  { name: 'MatchRoutes',
-    path: '/MatchRoutes',
-    html: require('../api/MatchRoutes.md')
+  { name: 'Switch',
+    path: '/Switch',
+    html: require('../api/Switch.md')
   },
   { name: 'Link',
     path: '/Link',
     html: require('../api/Link.md')
   },
-  { name: 'NavigationPrompt',
-    path: '/NavigationPrompt',
-    html: require('../api/NavigationPrompt.md')
-  },
   { name: 'Redirect',
     path: '/Redirect',
     html: require('../api/Redirect.md')
+  },
+  { name: 'Prompt',
+    path: '/Prompt',
+    html: require('../api/Prompt.md')
   },
   { name: 'BrowserRouter',
     path: '/BrowserRouter',
