@@ -246,10 +246,9 @@ export class Router extends React.Component {
 
   render() {
     const { children } = this.props
-    const { action, location, route } = this.state
 
     const element = typeof children === 'function' ? (
-      children(route)
+      children(this.state.route)
     ) : children ? (
       React.Children.only(children)
     ) : (
