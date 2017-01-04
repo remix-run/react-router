@@ -27,6 +27,7 @@
     "lint": "eslint modules"
   },
   "dependencies": {
+    "hoist-non-react-statics": "^1.2.0",
     "path-to-regexp": "^1.5.3",
     "react-history": "^0.18.2"
   },
