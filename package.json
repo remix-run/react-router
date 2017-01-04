@@ -27,6 +27,7 @@
     "lint": "eslint modules"
   },
   "dependencies": {
+    "invariant": "^2.2.2",
     "path-to-regexp": "^1.5.3",
     "react-history": "^0.18.2"
   },
