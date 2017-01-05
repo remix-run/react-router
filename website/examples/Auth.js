@@ -26,7 +26,7 @@ class AuthExample extends React.Component {
   render() {
     return (
       <Router>
-        {({ history }) => (
+        {history => (
           <div>
             {fakeAuth.isAuthenticated ? (
               <p>

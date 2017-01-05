@@ -41,9 +41,10 @@ const matchPattern = (pattern, exact, pathname) => {
   }
 }
 
-const createProps = (action, location, match) => ({
-  action,
-  location,
+const createProps = (history, match) => ({
+  history,
+  action: history.action,
+  location: history.location,
   params: match ? match.params : {},
   pathname: match ? match.pathname : '',
   isExact: match ? match.isExact : false,
@@ -67,12 +68,10 @@ const createElement = ({ component, render, children }, props) => (
  */
 export const Route = ({ path, exact, ...renderProps }) => (
   <Router
-    match={(action, location) => ({
-      props: createProps(action, location, matchPattern(path, exact, location.pathname))
-    })}
-    children={({ props }) => (
-      createElement(renderProps, props)
-    )}
+    children={history => {
+      const match = matchPattern(path, exact, history.location.pathname)
+      return createElement(renderProps, createProps(history, match))
+    }}
   />
 )
 
@@ -100,22 +99,19 @@ export const Switch = ({ children }) => {
 
   return (
     <Router
-      match={(action, location) => {
-        let child, match
+      children={history => {
+        const { pathname } = history.location
+
+        let route, match
         for (let i = 0, length = routes.length; match == null && i < length; ++i) {
-          child = routes[i]
-          match = matchPattern(child.props.path, child.props.exact, location.pathname)
+          route = routes[i]
+          match = matchPattern(route.props.path, route.props.exact, pathname)
         }
 
-        return {
-          props: createProps(action, location, match),
-          child
+        if (match) {
+          const element = createElement(route.props, createProps(history, match))
+          return React.cloneElement(element, { key: route.key }) // preserve route.key
         }
-      }}
-      children={({ props, child }) => {
-        let element
-        if (props.matched && (element = createElement(child.props, props)))
-          return React.cloneElement(element, { key: child.key }) // preserve child key
 
         return null
       }}
@@ -131,132 +127,23 @@ Switch.propTypes = {
  * The low-level public API for subscribing to location updates
  * and rendering stuff when the location changes.
  */
-export class Router extends React.Component {
-  static contextTypes = {
-    history: PropTypes.shape({
-      action: PropTypes.oneOf([ 'PUSH', 'REPLACE', 'POP' ]).isRequired,
-      location: PropTypes.shape({
-        pathname: PropTypes.string.isRequired
-      }).isRequired,
-      listen: PropTypes.func.isRequired
-    }).isRequired
-  }
+export const Router = ({ children }, context) => (
+  typeof children === 'function' ? (
+    children(context.history)
+  ) : children ? (
+    React.Children.only(children)
+  ) : (
+    null
+  )
+)
 
-  static propTypes = {
-    match: PropTypes.func,
-    children: PropTypes.oneOfType([
-      PropTypes.func,
-      PropTypes.node
-    ])
-  }
+Router.contextTypes = {
+  history: PropTypes.object.isRequired
+}
 
-  static defaultProps = {
-    match: (action, location) => ({ props: { action, location } })
-  }
-
-  static childContextTypes = {
-    history: PropTypes.object.isRequired
-  }
-
-  getChildContext() {
-    const { action, location } = this.state
-
-    this.childContextHistory = {
-      ...this.context.history,
-      action, location, // overwrite action/location
-      listen: this.listen // overwrite listen
-    }
-
-    return {
-      history: this.childContextHistory
-    }
-  }
-
-  listen = (listener) => {
-    this.listeners.push(listener)
-
-    return () => {
-      this.listeners = this.listeners.filter(item => item !== listener)
-    }
-  }
-
-  getRoute(action, location) {
-    const route = this.props.match(action, location)
-
-    return {
-      ...route,
-      props: { ...route.props, history: this.context.history }
-    }
-  }
-
-  handleRouteChange = () => {
-    const { action, location } = this.context.history
-    const route = this.getRoute(action, location)
-    const state = this.nextState = { action, location, route }
-    const child = this.child
-
-    if (child && typeof child.routeWillChange === 'function') {
-      child.routeWillChange.call(child, route.props, () => {
-        // Ensure the route didn't change since we invoked routeWillChange.
-        if (this.nextState === state)
-          this.finishRouteChange(state)
-      })
-    } else {
-      this.finishRouteChange(state)
-    }
-  }
-
-  finishRouteChange = (state) => {
-    this.setState(state)
-
-    Object.assign(this.childContextHistory, {
-      action: state.action,
-      location: state.location
-    })
-
-    this.listeners.forEach(listener => listener())
-  }
-
-  updateChild = (child) => {
-    this.child = child
-  }
-
-  state = {
-    action: null,
-    location: null,
-    route: null
-  }
-
-  componentWillMount() {
-    this.listeners = []
-
-    const { action, location } = this.context.history
-    const route = this.getRoute(action, location)
-
-    this.setState({ action, location, route })
-  }
-
-  componentDidMount() {
-    this.unlisten = this.context.history.listen(this.handleRouteChange)
-  }
-
-  componentWillUnmount() {
-    this.unlisten()
-  }
-
-  render() {
-    const { children } = this.props
-
-    const element = typeof children === 'function' ? (
-      children(this.state.route)
-    ) : children ? (
-      React.Children.only(children)
-    ) : (
-      null
-    )
-
-    return element && React.cloneElement(element, {
-      ref: this.updateChild
-    })
-  }
+Router.propTypes = {
+  children: PropTypes.oneOfType([
+    PropTypes.func,
+    PropTypes.node
+  ])
 }
