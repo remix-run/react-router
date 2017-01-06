@@ -23,7 +23,7 @@ const compilePattern = (pattern, exact) => {
   }
 }
 
-const matchPattern = (pattern, pathname, exact = false) => {
+const matchPath = (pattern, pathname, exact = false) => {
   if (!pattern)
     return { pathname, isExact: true, params: {} }
 
@@ -111,7 +111,7 @@ const withHistory = (component) => {
  * The public API for matching a single path and rendering.
  */
 const Route = ({ history, path, exact, ...renderProps }) => {
-  const match = matchPattern(path, history.location.pathname, exact)
+  const match = matchPath(path, history.location.pathname, exact)
   return createRouteElement(renderProps, createProps(history, match))
 }
 
@@ -136,7 +136,7 @@ const Switch = ({ history, children }) => {
   let route, match
   for (let i = 0, length = routes.length; match == null && i < length; ++i) {
     route = routes[i]
-    match = matchPattern(route.props.path, history.location.pathname, route.props.exact)
+    match = matchPath(route.props.path, history.location.pathname, route.props.exact)
   }
 
   return match ? createRouteElement(route.props, createProps(history, match)) : null
@@ -174,6 +174,7 @@ const HistoryRoute = withHistory(Route)
 const HistorySwitch = withHistory(Switch)
 
 export {
+  matchPath,
   createRouteElement,
   withHistory,
   HistoryRoute as Route,
