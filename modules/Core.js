@@ -104,10 +104,12 @@ const withHistory = (component) => {
 /**
  * The public API for matching a single path and rendering.
  */
-const Route = ({ history, path, exact, ...renderProps }) => {
-  const match = matchPath(history.location.pathname, path, exact)
-  return createRouteElement(renderProps, { match, history })
-}
+const Route = ({ history, path, exact, ...renderProps }) => (
+  createRouteElement(renderProps, {
+    match: matchPath(history.location.pathname, path, exact),
+    history
+  })
+)
 
 Route.propTypes = {
   history: PropTypes.object.isRequired,
