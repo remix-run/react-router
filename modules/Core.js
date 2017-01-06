@@ -2,46 +2,50 @@ import React, { PropTypes } from 'react'
 import pathToRegexp from 'path-to-regexp'
 
 const patternCache = { true: {}, false: {} }
-
+const cacheLimit = 10000
 let cacheCount = 0
-const CACHE_LIMIT = 10000
 
-const compilePattern = (pattern, exact) => {
+const compilePath = (pattern, exact) => {
   const cache = patternCache[exact]
 
-  if (cache[pattern]) {
+  if (cache[pattern])
     return cache[pattern]
-  } else {
-    const keys = []
-    const re = pathToRegexp(pattern, keys, { end: exact, strict: true })
-    const compiledPattern = { re, keys }
-    if (cacheCount < CACHE_LIMIT) {
-      cache[pattern] = compiledPattern
-      cacheCount++
-    }
-    return compiledPattern
+
+  const keys = []
+  const re = pathToRegexp(pattern, keys, { end: exact, strict: true })
+  const compiledPattern = { re, keys }
+
+  if (cacheCount < cacheLimit) {
+    cache[pattern] = compiledPattern
+    cacheCount++
   }
+
+  return compiledPattern
 }
 
-const matchPath = (pattern, pathname, exact = false) => {
-  if (!pattern)
-    return { pathname, isExact: true, params: {} }
+/**
+ * Public API for matching a URL pathname to a path pattern.
+ */
+const matchPath = (pathname, path, exact = false) => {
+  if (!path)
+    return { url: pathname, isExact: true, params: {} }
 
-  const { re, keys } = compilePattern(pattern, exact)
+  const { re, keys } = compilePath(path, exact)
   const match = re.exec(pathname)
 
   if (!match)
     return null
 
-  const [ path, ...values ] = match
-  const isExact = pathname === path
+  const [ url, ...values ] = match
+  const isExact = pathname === url
 
   if (exact && !isExact)
     return null
 
   return {
-    isExact,
-    pathname: path,
+    path, // the path pattern used to match
+    url, // the matched portion of the URL
+    isExact, // whether or not we matched exactly
     params: keys.reduce((memo, key, index) => {
       memo[key.name] = values[index]
       return memo
@@ -49,24 +53,14 @@ const matchPath = (pattern, pathname, exact = false) => {
   }
 }
 
-const createProps = (history, match) => ({
-  history,
-  action: history.action,
-  location: history.location,
-  params: match ? match.params : {},
-  pathname: match ? match.pathname : '',
-  isExact: match ? match.isExact : false,
-  matched: match != null
-})
-
 /**
  * A utility method for creating route elements.
  */
 const createRouteElement = ({ component, render, children }, props) => (
   component ? ( // component prop gets first priority, only called if there's a match
-    props.matched ? React.createElement(component, props) : null
+    props.match ? React.createElement(component, props) : null
   ) : render ? ( // render prop is next, only called if there's a match
-    props.matched ? render(props) : null
+    props.match ? render(props) : null
   ) : children ? ( // children come last, always called
     typeof children === 'function' ? children(props) : React.Children.only(children)
   ) : (
@@ -111,8 +105,8 @@ const withHistory = (component) => {
  * The public API for matching a single path and rendering.
  */
 const Route = ({ history, path, exact, ...renderProps }) => {
-  const match = matchPath(path, history.location.pathname, exact)
-  return createRouteElement(renderProps, createProps(history, match))
+  const match = matchPath(history.location.pathname, path, exact)
+  return createRouteElement(renderProps, { match, history })
 }
 
 Route.propTypes = {
@@ -136,10 +130,10 @@ const Switch = ({ history, children }) => {
   let route, match
   for (let i = 0, length = routes.length; match == null && i < length; ++i) {
     route = routes[i]
-    match = matchPath(route.props.path, history.location.pathname, route.props.exact)
+    match = matchPath(history.location.pathname, route.props.path, route.props.exact)
   }
 
-  return match ? createRouteElement(route.props, createProps(history, match)) : null
+  return match ? createRouteElement(route.props, { match, history }) : null
 }
 
 Switch.propTypes = {

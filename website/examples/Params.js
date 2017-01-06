@@ -19,9 +19,9 @@ const ParamsExample = () => (
   </Router>
 )
 
-const Child = ({ params }) => (
+const Child = ({ match }) => (
   <div>
-    <h3>ID: {params.id}</h3>
+    <h3>ID: {match.params.id}</h3>
   </div>
 )
 

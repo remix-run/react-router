@@ -65,7 +65,7 @@ const PrivateRoute = ({ component, ...rest }) => (
     ) : (
       <Redirect to={{
         pathname: '/login',
-        state: { from: props.location }
+        state: { from: props.history.location }
       }}/>
     )
   )}/>
@@ -86,7 +86,7 @@ class Login extends React.Component {
   }
 
   render() {
-    const { from } = this.props.location.state || '/'
+    const { from } = this.props.history.location.state || '/'
     const { redirectToReferrer } = this.state
 
     return (

@@ -14,12 +14,12 @@ const find = (id) => PEEPS.find(p => p.id == id)
 
 const RecursiveExample = () => (
   <Router>
-    <Person params={{ id: 0 }} pathname=""/>
+    <Person match={{ params: { id: 0 }, url: '' }}/>
   </Router>
 )
 
-const Person = ({ params, pathname }) => {
-  const person = find(params.id)
+const Person = ({ match }) => {
+  const person = find(match.params.id)
 
   return (
     <div>
@@ -27,13 +27,13 @@ const Person = ({ params, pathname }) => {
       <ul>
         {person.friends.map(id => (
           <li key={id}>
-            <Link to={`${pathname}/${id}`}>
+            <Link to={`${match.url}/${id}`}>
               {find(id).name}
             </Link>
           </li>
         ))}
       </ul>
-      <Route path={`${pathname}/:id`} component={Person}/>
+      <Route path={`${match.url}/:id`} component={Person}/>
     </div>
   )
 }

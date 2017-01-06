@@ -33,25 +33,25 @@ const About = () => (
   </div>
 )
 
-const Topics = ({ pathname }) => (
+const Topics = ({ match }) => (
   <div>
     <h2>Topics</h2>
     <ul>
-      <li><Link to={`${pathname}/rendering`}>Rendering with React</Link></li>
-      <li><Link to={`${pathname}/components`}>Components</Link></li>
-      <li><Link to={`${pathname}/props-v-state`}>Props v. State</Link></li>
+      <li><Link to={`${match.url}/rendering`}>Rendering with React</Link></li>
+      <li><Link to={`${match.url}/components`}>Components</Link></li>
+      <li><Link to={`${match.url}/props-v-state`}>Props v. State</Link></li>
     </ul>
 
-    <Route path={`${pathname}/:topicId`} component={Topic}/>
-    <Route path={pathname} exact render={() => (
+    <Route path={`${match.url}/:topicId`} component={Topic}/>
+    <Route path={match.url} exact render={() => (
       <h3>Please select a topic.</h3>
     )}/>
   </div>
 )
 
-const Topic = ({ params }) => (
+const Topic = ({ match }) => (
   <div>
-    <h3>{params.topicId}</h3>
+    <h3>{match.params.topicId}</h3>
   </div>
 )
 

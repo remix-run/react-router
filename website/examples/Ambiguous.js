@@ -40,10 +40,10 @@ const About = () => <h2>About</h2>
 
 const Company = () => <h2>Company</h2>
 
-const User = ({ params }) => (
+const User = ({ match }) => (
   <div>
     <h2>User</h2>
-    <div>{params.user}</div>
+    <div>{match.params.user}</div>
   </div>
 )
 

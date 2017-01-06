@@ -30,11 +30,11 @@ const FadeRoute = ({ component: Component, ...rest }) => {
   const willLeave = () => ({ zIndex: 1, opacity: spring(0) })
 
   return (
-    <Route {...rest} children={({ matched, ...props }) => (
+    <Route {...rest} children={props => (
       <TransitionMotion
         willLeave={willLeave}
-        styles={matched ? [ {
-          key: props.location.pathname,
+        styles={props.match ? [ {
+          key: props.history.location.pathname,
           style: { opacity: 1 },
           data: props
         } ] : []}
@@ -62,7 +62,7 @@ const NavLink = (props) => (
   </li>
 )
 
-const HSL = ({ params }) => console.log(params) || (
+const HSL = ({ match: { params } }) => (
   <div style={{
     ...styles.hsl,
     background: `hsl(${params.h}, ${params.s}%, ${params.l}%)`

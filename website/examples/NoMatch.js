@@ -34,9 +34,9 @@ const Home = () => (
 
 const WillMatch = () => <h3>Matched!</h3>
 
-const NoMatch = ({ location }) => (
+const NoMatch = ({ history }) => (
   <div>
-    <h3>No match for <code>{location.pathname}</code></h3>
+    <h3>No match for <code>{history.location.pathname}</code></h3>
   </div>
 )
 

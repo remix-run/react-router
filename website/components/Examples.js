@@ -14,8 +14,8 @@ const Nav = (props) => (
     <B marginTop={PAD + 'px'}>
       {EXAMPLES.map((example, i) => (
         <B key={i} margin={`${PAD / 2}px 0`}>
-          <Route path={example.path} children={({ matched }) => (
-            <Link to={example.path} style={matched ? { color: red } : undefined}>{example.name}</Link>
+          <Route path={example.path} children={({ match }) => (
+            <Link to={example.path} style={match ? { color: red } : undefined}>{example.name}</Link>
           )}/>
         </B>
       ))}
