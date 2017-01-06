@@ -3,6 +3,7 @@ import Router from 'react-router/BrowserRouter'
 import Route from 'react-router/Route'
 import Link from 'react-router/Link'
 import Redirect from 'react-router/Redirect'
+import withHistory from 'react-router/withHistory'
 
 ////////////////////////////////////////////////////////////
 // 1. Click the public page
@@ -22,32 +23,36 @@ const fakeAuth = {
   }
 }
 
+const AuthButton = withHistory(({ history }) => (
+  fakeAuth.isAuthenticated ? (
+    <p>
+      Welcome! <button onClick={() => {
+        fakeAuth.signout(() => history.push('/'))
+      }}>Sign out</button>
+    </p>
+  ) : (
+    <p>You are not logged in.</p>
+  )
+))
+
 class AuthExample extends React.Component {
   render() {
+    const { history } = this.props
+
     return (
       <Router>
-        {history => (
-          <div>
-            {fakeAuth.isAuthenticated ? (
-              <p>
-                Welcome! <button onClick={() => {
-                  fakeAuth.signout(() => history.push('/'))
-                }}>Sign out</button>
-              </p>
-            ) : (
-              <p>You are not logged in.</p>
-            )}
+        <div>
+          <AuthButton/>
 
-            <ul>
-              <li><Link to="/public">Public Page</Link></li>
-              <li><Link to="/protected">Protected Page</Link></li>
-            </ul>
+          <ul>
+            <li><Link to="/public">Public Page</Link></li>
+            <li><Link to="/protected">Protected Page</Link></li>
+          </ul>
 
-            <Route path="/public" component={Public}/>
-            <Route path="/login" component={Login}/>
-            <PrivateRoute path="/protected" component={Protected}/>
-          </div>
-        )}
+          <Route path="/public" component={Public}/>
+          <Route path="/login" component={Login}/>
+          <PrivateRoute path="/protected" component={Protected}/>
+        </div>
       </Router>
     )
   }

@@ -37,14 +37,14 @@ const CRApp = () => (
 const Example = ({ example, ...props }) => (
   <H {...props}>
     <B height="100%" flex="1" padding={`${PAD / 2}px ${PAD * 2}px`}>
-      <LoadBundle load={example.load} children={mod => (
+      <LoadBundle key={example.path} load={example.load} children={mod => (
         <FakeBrowser height="85vh">
           <mod.default/>
         </FakeBrowser>
       )}/>
     </B>
     <B flex="1" padding={`0 ${PAD * 2}px`} overflow="auto">
-      <LoadBundle load={example.loadSource} children={code => (
+      <LoadBundle key={example.path} load={example.loadSource} children={code => (
         <SourceViewer code={code}/>
       )}/>
     </B>

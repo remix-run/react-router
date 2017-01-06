@@ -38,6 +38,7 @@ module.exports = {
       'react-router/Route': path.join(ROUTER_SRC, 'Route'),
       'react-router/Router': path.join(ROUTER_SRC, 'Router'),
       'react-router/Switch': path.join(ROUTER_SRC, 'Switch'),
+      'react-router/withHistory': path.join(ROUTER_SRC, 'withHistory'),
 
       // Shim the real router so people can copy paste examples into create-react-app
       'react-router/BrowserRouter': path.join(__dirname, 'components', 'ExampleRouter')

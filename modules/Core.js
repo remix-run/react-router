@@ -15,7 +15,7 @@ const compilePattern = (pattern, exact) => {
   return cache[pattern]
 }
 
-const matchPattern = (pattern, exact, pathname) => {
+const matchPattern = (pattern, pathname, exact = false) => {
   if (!pattern)
     return { pathname, isExact: true, params: {} }
 
@@ -51,7 +51,10 @@ const createProps = (history, match) => ({
   matched: match != null
 })
 
-const createElement = ({ component, render, children }, props) => (
+/**
+ * A utility method for creating route elements.
+ */
+const createRouteElement = ({ component, render, children }, props) => (
   component ? ( // component prop gets first priority, only called if there's a match
     props.matched ? React.createElement(component, props) : null
   ) : render ? ( // render prop is next, only called if there's a match
@@ -64,18 +67,47 @@ const createElement = ({ component, render, children }, props) => (
 )
 
 /**
+ * A higher-order component that adds `context.history` to the
+ * component's props and renders every time the location changes.
+ */
+const withHistory = (component) => {
+  return class extends React.Component {
+    static displayName = `withHistory(${component.displayName || component.name})`
+
+    static contextTypes = {
+      history: PropTypes.shape({
+        listen: PropTypes.func.isRequired
+      }).isRequired
+    }
+
+    componentWillMount() {
+      // Do this here so we can catch actions in componentDidMount (e.g. <Redirect>).
+      this.unlisten = this.context.history.listen(() => this.forceUpdate())
+    }
+
+    componentWillUnmount() {
+      this.unlisten()
+    }
+
+    render() {
+      return React.createElement(component, {
+        ...this.props,
+        history: this.context.history
+      })
+    }
+  }
+}
+
+/**
  * The public API for rendering a <Router> that matches a single route.
  */
-export const Route = ({ path, exact, ...renderProps }) => (
-  <Router
-    children={history => {
-      const match = matchPattern(path, exact, history.location.pathname)
-      return createElement(renderProps, createProps(history, match))
-    }}
-  />
-)
+const Route = ({ history, path, exact, ...renderProps }) => {
+  const match = matchPattern(path, history.location.pathname, exact)
+  return createRouteElement(renderProps, createProps(history, match))
+}
 
 Route.propTypes = {
+  history: PropTypes.object.isRequired,
   path: PropTypes.string,
   exact: PropTypes.bool,
   component: PropTypes.func, // TODO: Warn when used with other render props
@@ -86,64 +118,57 @@ Route.propTypes = {
   ])
 }
 
-Route.defaultProps = {
-  exact: false
-}
-
 /**
  * The public API for rendering a <Router> that matches the first
  * of many child <Route>s.
  */
-export const Switch = ({ children }) => {
+const Switch = ({ history, children }) => {
   const routes = React.Children.toArray(children)
 
-  return (
-    <Router
-      children={history => {
-        const { pathname } = history.location
+  let route, match
+  for (let i = 0, length = routes.length; match == null && i < length; ++i) {
+    route = routes[i]
+    match = matchPattern(route.props.path, history.location.pathname, route.props.exact)
+  }
 
-        let route, match
-        for (let i = 0, length = routes.length; match == null && i < length; ++i) {
-          route = routes[i]
-          match = matchPattern(route.props.path, route.props.exact, pathname)
-        }
-
-        if (match) {
-          const element = createElement(route.props, createProps(history, match))
-          return React.cloneElement(element, { key: route.key }) // preserve route.key
-        }
-
-        return null
-      }}
-    />
-  )
+  return match ? createRouteElement(route.props, createProps(history, match)) : null
 }
 
 Switch.propTypes = {
+  history: PropTypes.object.isRequired,
   children: PropTypes.node
 }
 
 /**
- * The low-level public API for subscribing to location updates
- * and rendering stuff when the location changes.
+ * The public API for putting a history on context.
  */
-export const Router = ({ children }, context) => (
-  typeof children === 'function' ? (
-    children(context.history)
-  ) : children ? (
-    React.Children.only(children)
-  ) : (
-    null
-  )
-)
+class Router extends React.Component {
+  static propTypes = {
+    history: PropTypes.object.isRequired,
+    children: PropTypes.node
+  }
 
-Router.contextTypes = {
-  history: PropTypes.object.isRequired
+  static childContextTypes = {
+    history: PropTypes.object.isRequired
+  }
+
+  getChildContext() {
+    return { history: this.props.history }
+  }
+
+  render() {
+    const { children } = this.props
+    return children ? React.Children.only(children) : null
+  }
 }
 
-Router.propTypes = {
-  children: PropTypes.oneOfType([
-    PropTypes.func,
-    PropTypes.node
-  ])
+const HistoryRoute = withHistory(Route)
+const HistorySwitch = withHistory(Switch)
+
+export {
+  createRouteElement,
+  withHistory,
+  HistoryRoute as Route,
+  HistorySwitch as Switch,
+  Router
 }

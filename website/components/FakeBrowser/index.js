@@ -1,6 +1,7 @@
 import React, { PropTypes } from 'react'
 import { B, V, H, PAD, LIGHT_GRAY, GRAY } from '../bricks'
-import MemoryHistory from 'react-history/MemoryHistory'
+import MemoryRouter from '../../../modules/MemoryRouter'
+import Route from '../../../modules/Route'
 import { button } from './style.css'
 
 const LeftArrowIcon = (props) => (
@@ -56,80 +57,82 @@ class FakeBrowser extends React.Component {
   }
 
   render() {
-    const { children, ...props } = this.props
     const { url } = this.state
+    const { children, ...props } = this.props
 
     return (
-      <MemoryHistory getUserConfirmation={getUserConfirmation} children={history => (
-        <V
-          className="fake-browser"
-          background="white"
-          boxShadow="0px 5px 20px hsla(0, 0%, 0%, 0.75)"
-          borderRadius="6px"
-          {...props}
-        >
-          <H
-            background={LIGHT_GRAY}
-            borderTopLeftRadius="6px"
-            borderTopRightRadius="6px"
-            border="none"
-            alignItems="center"
-            borderBottom="solid 1px #ccc"
-            padding={`0 ${PAD / 2}px`}
+      <MemoryRouter getUserConfirmation={getUserConfirmation}>
+        <Route render={({ history }) => (
+          <V
+            className="fake-browser"
+            background="white"
+            boxShadow="0px 5px 20px hsla(0, 0%, 0%, 0.75)"
+            borderRadius="6px"
+            {...props}
           >
-            <Button onClick={history.goBack} disabled={!history.canGo(-1)}>
-              <LeftArrowIcon height="1em" width="1em" style={{ verticalAlign: 'middle', marginTop: -3 }}/>
-            </Button>
-            <Button onClick={history.goForward} disabled={!history.canGo(1)}>
-              <RightArrowIcon height="1em" width="1em" style={{ verticalAlign: 'middle', marginTop: -3 }}/>
-            </Button>
-            <B
-              position="relative"
-              zIndex="1"
-              left={`${PAD / 2.5}px`}
-              top="-2px"
-              color={GRAY}
-            >
-              <FileCodeIcon/>
-            </B>
             <H
-              flex="1"
+              background={LIGHT_GRAY}
+              borderTopLeftRadius="6px"
+              borderTopRightRadius="6px"
+              border="none"
               alignItems="center"
-              padding={`${PAD / 3}px`}
-              marginLeft={`-${PAD}px`}
+              borderBottom="solid 1px #ccc"
+              padding={`0 ${PAD / 2}px`}
             >
+              <Button onClick={history.goBack} disabled={!history.canGo(-1)}>
+                <LeftArrowIcon height="1em" width="1em" style={{ verticalAlign: 'middle', marginTop: -3 }}/>
+              </Button>
+              <Button onClick={history.goForward} disabled={!history.canGo(1)}>
+                <RightArrowIcon height="1em" width="1em" style={{ verticalAlign: 'middle', marginTop: -3 }}/>
+              </Button>
               <B
-                component="input"
-                font="inherit"
-                width="100%"
-                paddingLeft={`${PAD * 1.25}px`}
+                position="relative"
+                zIndex="1"
+                left={`${PAD / 2.5}px`}
+                top="-2px"
                 color={GRAY}
-                type="text"
-                props={{
-                  value: url ? url : createPath(history.location),
-                  onChange: (e) => {
-                    this.setState({ url: e.target.value })
-                  },
-                  onKeyDown: (e) => {
-                    if (e.key === 'Enter') {
-                      this.setState({ url: null })
-                      history.push(e.target.value)
+              >
+                <FileCodeIcon/>
+              </B>
+              <H
+                flex="1"
+                alignItems="center"
+                padding={`${PAD / 3}px`}
+                marginLeft={`-${PAD}px`}
+              >
+                <B
+                  component="input"
+                  font="inherit"
+                  width="100%"
+                  paddingLeft={`${PAD * 1.25}px`}
+                  color={GRAY}
+                  type="text"
+                  props={{
+                    value: url ? url : createPath(history.location),
+                    onChange: (e) => {
+                      this.setState({ url: e.target.value })
+                    },
+                    onKeyDown: (e) => {
+                      if (e.key === 'Enter') {
+                        this.setState({ url: null })
+                        history.push(e.target.value)
+                      }
                     }
-                  }
-                }}
-              />
+                  }}
+                />
+              </H>
             </H>
-          </H>
-          <B
-            flex="1"
-            padding={`${PAD}px`}
-            overflow="auto"
-            position="relative"
-          >
-            {React.Children.only(children)}
-          </B>
-        </V>
-      )}/>
+            <B
+              flex="1"
+              padding={`${PAD}px`}
+              overflow="auto"
+              position="relative"
+            >
+              {React.Children.only(children)}
+            </B>
+          </V>
+        )}/>
+      </MemoryRouter>
     )
   }
 }
