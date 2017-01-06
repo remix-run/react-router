@@ -9,7 +9,9 @@ const CACHE_LIMIT = 10000
 const compilePattern = (pattern, exact) => {
   const cache = patternCache[exact]
 
-  if (!cache[pattern]) {
+  if (cache[pattern]) {
+    return cache[pattern]
+  } else {
     const keys = []
     const re = pathToRegexp(pattern, keys, { end: exact, strict: true })
     const compiledPattern = { re, keys }
@@ -17,9 +19,8 @@ const compilePattern = (pattern, exact) => {
       cache[pattern] = compiledPattern
       cacheCount++
     }
+    return compiledPattern
   }
-
-  return compiledPattern
 }
 
 const matchPattern = (pattern, pathname, exact = false) => {
