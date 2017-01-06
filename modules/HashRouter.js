@@ -16,9 +16,7 @@ class HashRouter extends React.Component {
     ])
   }
 
-  componentWillMount() {
-    this.history = createHistory(this.props)
-  }
+  history = createHistory(this.props)
 
   render() {
     return <Router history={this.history} children={this.props.children}/>
