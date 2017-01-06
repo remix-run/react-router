@@ -6,7 +6,7 @@ export {
   Router
 } from './Core'
 
-// Tools
+// Accessories
 export Link from './Link'
 export Redirect from './Redirect'
 export Prompt from './Prompt'
