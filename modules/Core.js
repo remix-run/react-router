@@ -3,16 +3,23 @@ import pathToRegexp from 'path-to-regexp'
 
 const patternCache = { true: {}, false: {} }
 
+let cacheCount = 0
+const CACHE_LIMIT = 10000
+
 const compilePattern = (pattern, exact) => {
   const cache = patternCache[exact]
 
   if (!cache[pattern]) {
     const keys = []
     const re = pathToRegexp(pattern, keys, { end: exact, strict: true })
-    cache[pattern] = { re, keys }
+    const compiledPattern = { re, keys }
+    if (cacheCount < CACHE_LIMIT) {
+      cache[pattern] = compiledPattern
+      cacheCount++
+    }
   }
 
-  return cache[pattern]
+  return compiledPattern
 }
 
 const matchPattern = (pattern, pathname, exact = false) => {
