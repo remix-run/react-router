@@ -67,8 +67,9 @@ const createRouteElement = ({ component, render, children }, props) => (
 )
 
 /**
- * A higher-order component that adds `context.history` to the
- * component's props and renders every time the location changes.
+ * A higher-order component that starts listening for location
+ * changes (calls `history.listen`) and re-renders the component
+ * each time it does. Also, passes `context.history` as a prop.
  */
 const withHistory = (component) => {
   return class extends React.Component {
@@ -99,7 +100,7 @@ const withHistory = (component) => {
 }
 
 /**
- * The public API for rendering a <Router> that matches a single route.
+ * The public API for matching a single path and rendering.
  */
 const Route = ({ history, path, exact, ...renderProps }) => {
   const match = matchPattern(path, history.location.pathname, exact)
@@ -119,8 +120,7 @@ Route.propTypes = {
 }
 
 /**
- * The public API for rendering a <Router> that matches the first
- * of many child <Route>s.
+ * The public API for rendering the first <Route> that matches.
  */
 const Switch = ({ history, children }) => {
   const routes = React.Children.toArray(children)
@@ -140,7 +140,7 @@ Switch.propTypes = {
 }
 
 /**
- * The public API for putting a history on context.
+ * The public API for putting history on context.
  */
 class Router extends React.Component {
   static propTypes = {

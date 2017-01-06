@@ -1,4 +1,10 @@
-export { Router, Route, Switch } from './Core'
+export {
+  createRouteElement,
+  withHistory,
+  Route,
+  Switch,
+  Router
+} from './Core'
 
 // Tools
 export Link from './Link'
