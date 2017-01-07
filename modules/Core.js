@@ -104,14 +104,15 @@ const withHistory = (component) => {
 /**
  * The public API for matching a single path and rendering.
  */
-const Route = ({ history, path, exact, ...renderProps }) => (
+const Route = ({ match, history, path, exact, ...renderProps }) => (
   createRouteElement(renderProps, {
-    match: matchPath(history.location.pathname, path, exact),
+    match: match || matchPath(history.location.pathname, path, exact),
     history
   })
 )
 
 Route.propTypes = {
+  match: PropTypes.object, // private, from <Switch>
   history: PropTypes.object.isRequired,
   path: PropTypes.string,
   exact: PropTypes.bool,
@@ -135,7 +136,7 @@ const Switch = ({ history, children }) => {
     match = matchPath(history.location.pathname, route.props.path, route.props.exact)
   }
 
-  return match ? createRouteElement(route.props, { match, history }) : null
+  return match ? React.cloneElement(route, { match }) : null
 }
 
 Switch.propTypes = {
