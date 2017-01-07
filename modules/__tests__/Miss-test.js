@@ -2,12 +2,19 @@ import expect from 'expect'
 import React from 'react'
 import Miss from '../Miss'
 import Match from '../Match'
+import Redirect from '../Redirect'
 import { render, unmountComponentAtNode } from 'react-dom'
 import MemoryRouter from '../MemoryRouter'
 
 describe('Miss', () => {
   const TEXT = 'TEXT'
   const loc = { pathname: '/', search: '', hash: '', state: TEXT }
+
+  const renderRouter = (element, location) => (
+    <MemoryRouter initialEntries={[location]} initialIndex={0}>
+      {element}
+    </MemoryRouter>
+  )
 
   it('renders a Component prop', (done) => {
     const div = document.createElement('div')
@@ -42,9 +49,10 @@ describe('Miss', () => {
     const MATCH = 'MATCH'
 
     const App = ({ location }) => (
-      <MemoryRouter initialEntries={[location]} initialIndex={0}>
-        <Match pattern='/parent' component={Parent} />
-      </MemoryRouter>
+      renderRouter(
+        <Match pattern='/parent' component={Parent} />,
+        location
+      )
     )
 
     const Parent = () => (
@@ -61,6 +69,7 @@ describe('Miss', () => {
       render(<App location={nestedLoc} />, div, () => {
         expect(div.innerHTML).toNotContain(TEXT)
         expect(div.innerHTML).toContain(MATCH)
+        unmountComponentAtNode(div)
         done()
       })
     })
@@ -72,8 +81,42 @@ describe('Miss', () => {
       render(<App location={nestedLoc} />, div, () => {
         expect(div.innerHTML).toContain(TEXT)
         expect(div.innerHTML).toNotContain(MATCH)
+        unmountComponentAtNode(div)
         done()
       })
+    })
+  })
+
+  describe('FAILING MISS TESTS', () => {
+    it('does not update when a `blocker` component is rendered', (done) => {
+      const div = document.createElement('div')
+
+      class Blocker extends React.Component {
+        shouldComponentUpdate() { return false }
+        render() { return <App /> }
+      }
+      const Home = () => (
+        <Redirect to='/404-it' />
+      )
+      const App = () => (
+        <div>
+          <Match pattern='/' exactly component={Home} />
+          <Miss component={() => <p>NotFound</p>} />
+        </div>
+      )
+
+      render(
+        renderRouter(
+          <Blocker />,
+          { pathname: '/' }
+        ),
+        div,
+        () => {
+          expect(div.innerHTML).toContain('NotFound')
+          unmountComponentAtNode(div)
+          done()
+        }
+      )
     })
   })
 })
