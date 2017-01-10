@@ -56,7 +56,7 @@ const matchPath = (pathname, path, exact = false) => {
 /**
  * A utility method for creating route elements.
  */
-const createRouteElement = ({ component, render, children }, props) => (
+const createRouteElement = ({ component, render, children, ...props }) => (
   component ? ( // component prop gets first priority, only called if there's a match
     props.match ? React.createElement(component, props) : null
   ) : render ? ( // render prop is next, only called if there's a match
@@ -104,8 +104,9 @@ const withHistory = (component) => {
 /**
  * The public API for matching a single path and rendering.
  */
-const Route = ({ match, history, path, exact, ...renderProps }) => (
-  createRouteElement(renderProps, {
+const Route = ({ match, history, path, exact, ...props }) => (
+  createRouteElement({
+    ...props,
     match: match || matchPath(history.location.pathname, path, exact),
     history
   })
