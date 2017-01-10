@@ -11,17 +11,6 @@ import Switch from '../Switch'
 import { render } from 'react-dom'
 import createMemoryHistory from 'history/createMemoryHistory'
 
-const Miss = 'div'
-
-const requiredPropsForStaticRouter = {
-  location: '/',
-  action: 'POP',
-  createHref: () => {},
-  blockTransitions: () => {}, // we sure we want this required? servers don't need it.
-  onPush: () => {},
-  onReplace: () => {}
-}
-
 describe('Integration Tests', () => {
 
   it('renders root Route', () => {
