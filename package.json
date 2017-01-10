@@ -27,7 +27,7 @@
     "lint": "eslint modules"
   },
   "dependencies": {
-    "history": "^4.5.0",
+    "history": "^4.5.1",
     "invariant": "^2.2.2",
     "path-to-regexp": "^1.5.3"
   },
