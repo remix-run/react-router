@@ -2,9 +2,10 @@ import expect, { createSpy } from 'expect'
 import React from 'react'
 import Link from '../Link'
 import MemoryRouter from '../MemoryRouter'
-import StaticRouter from '../StaticRouter'
 import { render, unmountComponentAtNode } from 'react-dom'
 import { Simulate } from 'react-addons-test-utils'
+
+const StaticRouter = 'div'
 
 const { click } = Simulate
 
