@@ -27,25 +27,64 @@ When `true`, will only match if the path matches the `location.pathname` _exactl
 
 ## component: func _Route_
 
-A React component to render when the location matches. The component will be rendered with the following props:
+A React component to render when the location matches.
 
-- `action`: the current action (`PUSH`, `REPLACE`, or `POP`)
-- `location`: the current location
-- `pathname`: (string) the portion of `location.pathname` matched
-- `isExact`: (bool) whether or not the match is exact (v. partial)
-- `params`: the values parsed from the pathname corresponding by name to the dynamic segments of the path
+The component will be rendered with two props: `history` and `match`.
+
+`match` is a object with the following properties
+- `isExact`: (bool) Whether or not the match is exact (v. partial)
+- `params`: (object) The values parsed from the pathname corresponding by name to the dynamic segments of the path
+- `path`: (string) The path pattern used to match
+- `url`: (string) The matched portion of the URL
+
+`history` is generated from the [history](https://github.com/mjackson/history) library and has the following properties and methods
+- `action`: (string) The current action (`PUSH`, `REPLACE`, or `POP`)
+- `length`: (number) The number of entries in the history stack
+- `location`: (object) Represents the current location and has the following properties
+  - `pathname`: (string) The path of the URL
+  - `search`: (string) The URL query string
+  - `hash`: (string) The URL hash fragment
+- `block`: (function)
+- `go`: (function)
+- `goBack`: (function)
+- `listen`: (function)
+- `push`: (function)
+- `replace`: (function)
+
+*For more detailed documentation on `history`, refer to the history [documentation](https://github.com/mjackson/history#properties)*
 
 ```js
+<Route path="/user/:id" component={User}/>
+```
+
+```js
+import React, { PropTypes } from 'react'
+const { string, shape, number, bool, object } = PropTypes
+
 class User extends React.Component {
+  propTypes: {
+    history: shape({
+      action: string,
+      length: number,
+      location: shape({
+        pathname: string,
+        search: string,
+        hash: string
+      })
+    }),
+    match: shape({
+      isExact: bool,
+      params: object,
+      path: string,
+      url: string,
+    })
+  },
   render() {
-    const { location, pathname, isExact } = this.props
-    const { id } = this.props.params
+    const { id } = this.props.match.params
 
     return <pre>{JSON.stringify(this.props, null, 2)}</pre>
   }
 }
-
-<Route path="/user/:id" component={User}/>
 ```
 
 ## render: func _Route_
