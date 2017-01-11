@@ -9,7 +9,7 @@ function _compilePattern(pattern) {
   const paramNames = []
   const tokens = []
 
-  let match, lastIndex = 0, matcher = /:([a-zA-Z_$][a-zA-Z0-9_$]*)|\*\*|\*|\(|\)/g
+  let match, lastIndex = 0, matcher = /:([a-zA-Z_$][a-zA-Z0-9_$]*)|\*\*|\*|\(|\)|\\\(|\\\)/g
   while ((match = matcher.exec(pattern))) {
     if (match.index !== lastIndex) {
       tokens.push(pattern.slice(lastIndex, match.index))
@@ -29,6 +29,10 @@ function _compilePattern(pattern) {
       regexpSource += '(?:'
     } else if (match[0] === ')') {
       regexpSource += ')?'
+    } else if (match[0] === '\\(') {
+      regexpSource += '\\('
+    } else if (match[0] === '\\)') {
+      regexpSource += '\\)'
     }
 
     tokens.push(match[0])
@@ -177,6 +181,10 @@ export function formatPattern(pattern, params) {
         parenHistory[parenCount - 1] += parenText
       else
         pathname += parenText
+    } else if (token === '\\(') {
+      pathname += '('
+    } else if (token === '\\)') {
+      pathname += ')'
     } else if (token.charAt(0) === ':') {
       paramName = token.substring(1)
       paramValue = params[paramName]

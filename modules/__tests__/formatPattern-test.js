@@ -159,6 +159,22 @@ describe('formatPattern', function () {
       })
     })
 
+    describe('and a param is parentheses escaped', function () {
+      const pattern = '/comments\\(:id\\)'
+
+      it('returns the correct path when param is supplied', function () {
+        expect(formatPattern(pattern, { id:'123' })).toEqual('/comments(123)')
+      })
+    })
+
+    describe('and a param is parentheses escaped with additional param', function () {
+      const pattern = '/comments\\(:id\\)/:mode'
+
+      it('returns the correct path when param is supplied', function () {
+        expect(formatPattern(pattern, { id:'123', mode: 'edit' })).toEqual('/comments(123)/edit')
+      })
+    })
+
     describe('and all params are present', function () {
       it('returns the correct path', function () {
         expect(formatPattern(pattern, { id: 'abc' })).toEqual('/comments/abc/edit')
