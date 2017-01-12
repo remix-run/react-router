@@ -5,13 +5,24 @@ const withMatch = (component) => {
     static displayName = `withMatch(${component.displayName || component.name})`
 
     static contextTypes = {
-      match: PropTypes.object
+      match: PropTypes.shape({
+        listen: PropTypes.func.isRequired,
+        getMatch: PropTypes.func.isRequired
+      }).isRequired
+    }
+
+    componentWillMount() {
+      this.unlisten = this.context.match.listen(() => this.forceUpdate())
+    }
+
+    componentWillUnmount() {
+      this.unlisten()
     }
 
     render() {
       return React.createElement(component, {
         ...this.props,
-        match: this.context.match
+        match: this.context.match.getMatch()
       })
     }
   }
