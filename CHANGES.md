@@ -1,4 +1,5 @@
 ## [v3.0.1](https://github.com/ReactTraining/react-router/compare/v3.0.0...v3.0.1)
+> Jan 12, 2017
 
 - Pass transition hook's arguments correctly ([#4123] by @arkist)
 - Fix index routes inside async pathless routes ([#4147] by @taurose)
