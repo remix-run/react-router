@@ -111,9 +111,11 @@ const FadingRoute = ({ component: Component, ...rest }) => (
 
 ## children: func _Route_
 
-Sometimes you need to render whether the path matches the location or not. In these cases, you can use the function `children` prop. It works exactly like `render` except that (1) it gets called whether there is a match or not and (2) includes a `matched` prop to indicate if there was a match.
+Sometimes you need to render whether the path matches the location or not. In these cases, you can use the function `children` prop. It works exactly like `render` except that it gets called whether there is a match or not.
 
-Here's how to get an `active` classname onto a bootstrap-style list item:
+The children prop will be called with an object that contains a `match` and a `history` property. `match` will be null if there was no match. This will allow you to dynamically adjust your UI based on if the route matches or not.
+
+Here we're adding an `active` class if the route matches
 
 ```js
 <ul>
@@ -122,24 +124,22 @@ Here's how to get an `active` classname onto a bootstrap-style list item:
 </ul>
 
 const ListItemLink = ({ to, ...rest }) => (
-  <Route path={to}>
-    {({ matched, ...rest }) => (
-      <li className={matched ? 'active' : ''}>
-        <Link to={to} {...rest}/>
-      </li>
-    )}
-  </Route>
+  <Route path={to} children={({ match }) => (
+    <li className={match ? 'active' : ''}>
+      <Link to={to} {...rest}/>
+    </li>
+  )}/>
 )
 ```
 
-Could also be useful for animations:
+This could also be useful for animations:
 
 ```js
-<Route children={({ matched, ...rest}) => (
+<Route children={({ match, ...rest}) => (
   {/* Animate will always render, so you can use lifecycles
       to animate its child in and out */}
   <Animate>
-    {matched && <Something {...rest}/>}
+    {match && <Something {...rest}/>}
   </Animate>
 )}/>
 ```
