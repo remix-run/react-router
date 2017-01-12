@@ -1,3 +1,17 @@
+## [v3.0.1](https://github.com/ReactTraining/react-router/compare/v3.0.0...v3.0.1)
+
+- Pass transition hook's arguments correctly ([#4123] by @arkist)
+- Fix index routes inside async pathless routes ([#4147] by @taurose)
+- 'to' maybe undefined ([#4216] by @panzj)
+- Fix withRouter error when used without a Router ([#4295] by @dropfen)
+- Adding support for escaped parentheses in Route Paths ([#4202] by @sebastiandeutsch) 
+
+[#4123]: https://github.com/ReactTraining/react-router/pull/4123
+[#4147]: https://github.com/ReactTraining/react-router/pull/4147
+[#4216]: https://github.com/ReactTraining/react-router/pull/4216
+[#4295]: https://github.com/ReactTraining/react-router/pull/4295
+[#4202]: https://github.com/ReactTraining/react-router/pull/4202
+
 ## [v3.0.0]
 > Oct 24, 2016
 
