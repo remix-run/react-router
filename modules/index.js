@@ -1,5 +1,4 @@
 export {
-  createRouteElement,
   withHistory,
   Route,
   Switch,

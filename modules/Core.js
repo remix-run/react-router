@@ -54,21 +54,6 @@ const matchPath = (pathname, path, exact = false) => {
 }
 
 /**
- * A utility method for creating route elements.
- */
-const createRouteElement = ({ component, render, children, ...props }) => (
-  component ? ( // component prop gets first priority, only called if there's a match
-    props.match ? React.createElement(component, props) : null
-  ) : render ? ( // render prop is next, only called if there's a match
-    props.match ? render(props) : null
-  ) : children ? ( // children come last, always called
-    typeof children === 'function' ? children(props) : React.Children.only(children)
-  ) : (
-    null
-  )
-)
-
-/**
  * A higher-order component that starts listening for location
  * changes (calls `history.listen`) and re-renders the component
  * each time it does. Also, passes `context.history` as a prop.
@@ -105,7 +90,7 @@ const withHistory = (component) => {
  * The public API for matching a single path and rendering.
  */
 const Route = ({ match, history, path, exact, ...props }) => (
-  createRouteElement({
+  Route.render({
     ...props,
     match: match || matchPath(history.location.pathname, path, exact),
     history
@@ -124,6 +109,21 @@ Route.propTypes = {
     PropTypes.node
   ])
 }
+
+/**
+ * Low-level API for rendering the props provided to a <Route> element.
+ */
+Route.render = ({ component, render, children, ...props }) => (
+  component ? ( // component prop gets first priority, only called if there's a match
+    props.match ? React.createElement(component, props) : null
+  ) : render ? ( // render prop is next, only called if there's a match
+    props.match ? render(props) : null
+  ) : children ? ( // children come last, always called
+    typeof children === 'function' ? children(props) : React.Children.only(children)
+  ) : (
+    null
+  )
+)
 
 /**
  * The public API for rendering the first <Route> that matches.
@@ -173,7 +173,6 @@ const HistorySwitch = withHistory(Switch)
 
 export {
   matchPath,
-  createRouteElement,
   withHistory,
   HistoryRoute as Route,
   HistorySwitch as Switch,
