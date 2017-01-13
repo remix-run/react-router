@@ -1,4 +1,5 @@
 export {
+  matchPath,
   withHistory,
   Route,
   Switch,
