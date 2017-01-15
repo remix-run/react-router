@@ -10,8 +10,10 @@ class Prompt extends React.Component {
   }
 
   static contextTypes = {
-    history: PropTypes.shape({
-      block: PropTypes.func.isRequired
+    router: PropTypes.shape({
+      history: PropTypes.shape({
+        block: PropTypes.func.isRequired
+      }).isRequired
     }).isRequired
   }
 
