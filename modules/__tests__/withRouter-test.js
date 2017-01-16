@@ -2,11 +2,11 @@ import expect, { createSpy, spyOn } from 'expect'
 import React from 'react'
 import { render, unmountComponentAtNode } from 'react-dom'
 import Route from '../Route'
-import withRouting from '../withRouting'
+import withRouter from '../withRouter'
 import Router from '../Router'
 import createMemoryHistory from 'history/createMemoryHistory'
 
-describe('withRouting', () => {
+describe('withRouter', () => {
   const div = document.createElement('div')
 
   afterEach(() => {
@@ -19,7 +19,7 @@ describe('withRouting', () => {
       initialEntries: [PATH]
     })
 
-    const ContextChecker = withRouting((props) => {
+    const ContextChecker = withRouter((props) => {
       expect(props.history).toBe(history)
       expect(props.parentMatch.path).toEqual(PATH)
       return null
@@ -48,7 +48,7 @@ describe('withRouting', () => {
     }
     let currentPath
     let currentMatch
-    const ContextChecker = withRouting((props) => {
+    const ContextChecker = withRouter((props) => {
       currentPath = props.history.location.pathname
       currentMatch = props.parentMatch
       return null

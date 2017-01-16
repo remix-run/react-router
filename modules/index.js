@@ -1,6 +1,6 @@
 export {
   matchPath,
-  withRouting,
+  withRouter,
   Route,
   Switch,
   Router

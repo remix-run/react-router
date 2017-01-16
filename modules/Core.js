@@ -58,9 +58,9 @@ const matchPath = (pathname, path, exact = false) => {
  * changes (calls `history.listen`) and re-renders the component
  * each time it does. Also, passes `context.router` as a prop.
  */
-const withRouting = (component) => {
+const withRouter = (component) => {
   return class extends React.Component {
-    static displayName = `withRouting(${component.displayName || component.name})`
+    static displayName = `withRouter(${component.displayName || component.name})`
 
     static contextTypes = {
       router: PropTypes.shape({
@@ -121,23 +121,22 @@ Route.propTypes = {
  * Low-level API for rendering the props provided to a <Route> element.
  */
 Route.render = ({ component, render, children, ...props }) => {
-  let element = null
-  if (component) {
-    element = props.match ? React.createElement(component, props) : null
-  } else if (render) {
-    element = props.match ? render(props) : null
-  } else if (children) {
-    element = typeof children === 'function' ? children(props) : React.Children.only(children)
-  }
+  const element = (
+    component ? ( // component prop gets first priority, only called if there's a match
+      props.match ? React.createElement(component, props) : null
+    ) : render ? ( // render prop is next, only called if there's a match
+      props.match ? render(props) : null
+    ) : children ? ( // children come last, always called
+      typeof children === 'function' ? children(props) : React.Children.only(children)
+    ) : (
+      null
+    )
+  )
 
-  return element === null ? null : React.createElement(RoutingProvider, {
-    match: props.match,
-    history: props.history,
-    children: element
-  })
+  return element && <RouterProvider {...props} children={element}/>
 }
 
-class RoutingProvider extends React.Component {
+class RouterProvider extends React.Component {
   
   static propTypes = {
     match: PropTypes.object,
@@ -146,12 +145,8 @@ class RoutingProvider extends React.Component {
 
   static childContextTypes = {
     router: PropTypes.shape({
-      history: PropTypes.shape({
-        listen: PropTypes.func.isRequired
-      }),
-      match: PropTypes.shape({
-        getMatch: PropTypes.func.isRequired
-      })
+      history: PropTypes.object,
+      match: PropTypes.object
     })
   }
 
@@ -167,7 +162,8 @@ class RoutingProvider extends React.Component {
   }
 
   render() {
-    return React.Children.only(this.props.children)
+    const { children } = this.props
+    return children ? React.Children.only(children) : null
   }
 }
 
@@ -196,11 +192,11 @@ Switch.propTypes = {
  * The public API for putting history on context.
  */
 const Router = ({ children, history }) => (
-  children ? React.createElement(RoutingProvider, {
-    match: null,
-    history: history,
-    children: React.Children.only(children)
-  }) : null
+  children ? (
+    <RouterProvider match={null} history={history}>
+      { children }
+    </RouterProvider>
+  ) : null
 )
 
 Router.propTypes = {
@@ -208,12 +204,12 @@ Router.propTypes = {
   children: PropTypes.node
 }
 
-const HistoryRoute = withRouting(Route)
-const HistorySwitch = withRouting(Switch)
+const HistoryRoute = withRouter(Route)
+const HistorySwitch = withRouter(Switch)
 
 export {
   matchPath,
-  withRouting,
+  withRouter,
   HistoryRoute as Route,
   HistorySwitch as Switch,
   Router
