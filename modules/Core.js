@@ -67,9 +67,7 @@ const withRouter = (component) => {
         history: PropTypes.shape({
           listen: PropTypes.func.isRequired
         }).isRequired,
-        match: PropTypes.shape({
-          getMatch: PropTypes.func.isRequired
-        })
+        getMatch: PropTypes.func.isRequired
       }).isRequired
     }
 
@@ -83,11 +81,11 @@ const withRouter = (component) => {
     }
 
     render() {
-      const { history, match } = this.context.router
+      const { history, getMatch } = this.context.router
       return React.createElement(component, {
         ...this.props,
         history,
-        parentMatch: match.getMatch()
+        parentMatch: getMatch()
       })
     }
   }
@@ -146,7 +144,7 @@ class RouterProvider extends React.Component {
   static childContextTypes = {
     router: PropTypes.shape({
       history: PropTypes.object.isRequired,
-      match: PropTypes.object
+      getMatch: PropTypes.func.isRequired
     }).isRequired
   }
 
@@ -154,9 +152,7 @@ class RouterProvider extends React.Component {
     return {
       router: {
         history: this.props.history,
-        match: {
-          getMatch: () => this.props.match
-        }
+        getMatch: () => this.props.match
       }
     }
   }
