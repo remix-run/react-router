@@ -3,7 +3,7 @@ import Router from 'react-router/BrowserRouter'
 import Route from 'react-router/Route'
 import Link from 'react-router/Link'
 import Redirect from 'react-router/Redirect'
-import withHistory from 'react-router/withHistory'
+import withRouter from 'react-router/withRouter'
 
 ////////////////////////////////////////////////////////////
 // 1. Click the public page
@@ -23,7 +23,7 @@ const fakeAuth = {
   }
 }
 
-const AuthButton = withHistory(({ history }) => (
+const AuthButton = withRouter(({ history }) => (
   fakeAuth.isAuthenticated ? (
     <p>
       Welcome! <button onClick={() => {
