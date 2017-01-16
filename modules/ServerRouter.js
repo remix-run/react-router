@@ -34,29 +34,48 @@ const createLocation = (url) => {
   }
 }
 
-const ServerRouter = ({ url, context, ...props }) => (
-  <Router
-    history={{
-      createHref,
-      action: 'POP',
-      location: createLocation(url),
-      isServer: true,
-      push: (location) => {
-        context.action = 'PUSH'
-        context.location = location
-      },
-      replace: (location) => {
-        context.action = 'REPLACE'
-        context.location = location
-      },
-      listen
-    }}
-    {...props} />
-)
+/**
+ * The public top-level API for a server-side <Router>.
+ */
+class ServerRouter extends React.Component {
+  static propTypes = {
+    url: PropTypes.string.isRequired,
+    context: PropTypes.object.isRequired
+  }
 
-ServerRouter.propTypes = {
-  url: PropTypes.string.isRequired,
-  context: PropTypes.object.isRequired
+  static childContextTypes = {
+    history: PropTypes.object.isRequired
+  }
+
+  getChildContext() {
+    return {
+      history: {
+        createHref,
+        action: 'POP',
+        location: createLocation(this.props.url),
+        push: this.handlePush,
+        replace: this.handleReplace,
+        listen
+      }
+    }
+  }
+
+  handlePush = (location) => {
+    const { context } = this.props
+    context.action = 'PUSH'
+    context.location = location
+  }
+
+  handleReplace = (location) => {
+    const { context } = this.props
+    context.action = 'REPLACE'
+    context.location = location
+  }
+
+  render() {
+    const { url, context, ...props } = this.props // eslint-disable-line no-unused-vars
+    return <Router {...props}/>
+  }
 }
 
 export default ServerRouter
