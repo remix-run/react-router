@@ -145,9 +145,9 @@ class RouterProvider extends React.Component {
 
   static childContextTypes = {
     router: PropTypes.shape({
-      history: PropTypes.object,
+      history: PropTypes.object.isRequired,
       match: PropTypes.object
-    })
+    }).isRequired
   }
 
   getChildContext() {

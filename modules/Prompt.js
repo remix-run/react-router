@@ -25,7 +25,7 @@ class Prompt extends React.Component {
     if (this.unblock)
       this.unblock()
 
-    this.unblock = this.context.history.block(message)
+    this.unblock = this.context.router.history.block(message)
   }
 
   disable() {
