@@ -10,6 +10,7 @@
     "umd"
   ],
   "main": "lib/index",
+  "module": "es/index",
   "jsnext:main": "es/index",
   "repository": "ReactTraining/react-router",
   "homepage": "https://github.com/ReactTraining/react-router#readme",
@@ -35,8 +36,8 @@
     "history": "^3.0.0",
     "hoist-non-react-statics": "^1.2.0",
     "invariant": "^2.2.1",
-    "warning": "^3.0.0",
-    "loose-envify": "^1.2.0"
+    "loose-envify": "^1.2.0",
+    "warning": "^3.0.0"
   },
   "peerDependencies": {
     "react": "^0.14.0 || ^15.0.0"
