@@ -135,7 +135,6 @@ Route.render = ({ component, render, children, ...props }) => {
 }
 
 class RouterProvider extends React.Component {
-  
   static propTypes = {
     match: PropTypes.object,
     history: PropTypes.object
@@ -162,7 +161,6 @@ class RouterProvider extends React.Component {
     return children ? React.Children.only(children) : null
   }
 }
-
 
 /**
  * The public API for rendering the first <Route> that matches.
