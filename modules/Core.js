@@ -53,6 +53,34 @@ const matchPath = (pathname, path, exact = false) => {
   }
 }
 
+class RouterProvider extends React.Component {
+  static propTypes = {
+    history: PropTypes.object,
+    match: PropTypes.object
+  }
+
+  static childContextTypes = {
+    router: PropTypes.shape({
+      history: PropTypes.object.isRequired,
+      getMatch: PropTypes.func.isRequired
+    }).isRequired
+  }
+
+  getChildContext() {
+    return {
+      router: {
+        history: this.props.history,
+        getMatch: () => this.props.match
+      }
+    }
+  }
+
+  render() {
+    const { children } = this.props
+    return children ? React.Children.only(children) : null
+  }
+}
+
 /**
  * A higher-order component that starts listening for location
  * changes (calls `history.listen`) and re-renders the component
@@ -82,6 +110,7 @@ const withRouter = (component) => {
 
     render() {
       const { history, getMatch } = this.context.router
+
       return React.createElement(component, {
         ...this.props,
         history,
@@ -132,34 +161,6 @@ Route.render = ({ component, render, children, ...props }) => {
   )
 
   return element && <RouterProvider {...props} children={element}/>
-}
-
-class RouterProvider extends React.Component {
-  static propTypes = {
-    match: PropTypes.object,
-    history: PropTypes.object
-  }
-
-  static childContextTypes = {
-    router: PropTypes.shape({
-      history: PropTypes.object.isRequired,
-      getMatch: PropTypes.func.isRequired
-    }).isRequired
-  }
-
-  getChildContext() {
-    return {
-      router: {
-        history: this.props.history,
-        getMatch: () => this.props.match
-      }
-    }
-  }
-
-  render() {
-    const { children } = this.props
-    return children ? React.Children.only(children) : null
-  }
 }
 
 /**
