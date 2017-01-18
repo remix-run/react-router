@@ -169,13 +169,13 @@ Route.render = ({ component, render, children, ...props }) => {
 const Switch = ({ history, children }) => {
   const routes = React.Children.toArray(children)
 
-  let route, match
-  for (let i = 0, length = routes.length; match == null && i < length; ++i) {
+  let route, computedMatch
+  for (let i = 0, length = routes.length; computedMatch == null && i < length; ++i) {
     route = routes[i]
-    match = matchPath(history.location.pathname, route.props.path, route.props.exact)
+    computedMatch = matchPath(history.location.pathname, route.props.path, route.props.exact)
   }
 
-  return match ? React.cloneElement(route, { computedMatch: match }) : null
+  return computedMatch ? React.cloneElement(route, { computedMatch }) : null
 }
 
 Switch.propTypes = {
