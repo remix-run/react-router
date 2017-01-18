@@ -136,9 +136,20 @@ Route.propTypes = {
   history: PropTypes.object.isRequired,
   path: PropTypes.string,
   exact: PropTypes.bool,
-  component: PropTypes.func, // TODO: Warn when used with other render props
-  render: PropTypes.func, // TODO: Warn when used with other render props
-  children: PropTypes.oneOfType([ // TODO: Warn when used with other render props
+  component: (props, propName, componentName) => {
+    if (props.component && props.render)
+      return new Error('You should not use <Route component> and <Route render> in the same route; <Route render> will be ignored')
+
+    if (props.component && props.children)
+      return new Error('You should not use <Route component> and <Route children> in the same route; <Route children> will be ignored')
+
+    if (props.render && props.children)
+      return new Error('You should not use <Route render> and <Route children> in the same route; <Route children> will be ignored')
+
+    return PropTypes.func(props, propName, componentName)
+  },
+  render: PropTypes.func,
+  children: PropTypes.oneOfType([
     PropTypes.func,
     PropTypes.node
   ])
