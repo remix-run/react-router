@@ -9,26 +9,19 @@ const NavLink = ({
   className,
   activeStyle,
   style,
-  isActive:getIsActive,
+  isActive: getIsActive,
   ...rest
 }) => (
   <Route
     path={typeof to === 'object' ? to.pathname : to}
-    children={({ match, location }) => {
-      const isActive = getIsActive ? getIsActive(match, location) : match
+    children={({ history, match }) => {
+      const isActive = !!(getIsActive ? getIsActive(match, history.location) : match)
+
       return (
         <Link
           to={to}
-          className={isActive ? (
-            [ activeClassName, className ].join(' ')
-          ) : (
-            className
-          )}
-          style={isActive ? (
-            { ...style, ...activeStyle }
-          ) : (
-            style
-          )}
+          className={isActive ? [ activeClassName, className ].join(' ') : className}
+          style={isActive ? { ...style, ...activeStyle } : style}
           {...rest}
         />
       )
