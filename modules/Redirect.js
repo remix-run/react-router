@@ -6,9 +6,11 @@ import React, { PropTypes } from 'react'
  */
 class Redirect extends React.Component {
   static contextTypes = {
-    history: PropTypes.shape({
-      push: PropTypes.func.isRequired,
-      replace: PropTypes.func.isRequired
+    router: PropTypes.shape({
+      history: PropTypes.shape({
+        push: PropTypes.func.isRequired,
+        replace: PropTypes.func.isRequired
+      }).isRequired
     }).isRequired
   }
 
@@ -38,7 +40,7 @@ class Redirect extends React.Component {
   }
 
   perform() {
-    const { history } = this.context
+    const { history } = this.context.router
     const { push, to } = this.props
 
     if (push) {

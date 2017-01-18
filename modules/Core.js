@@ -56,21 +56,24 @@ const matchPath = (pathname, path, exact = false) => {
 /**
  * A higher-order component that starts listening for location
  * changes (calls `history.listen`) and re-renders the component
- * each time it does. Also, passes `context.history` as a prop.
+ * each time it does. Also, passes `context.router` as a prop.
  */
-const withHistory = (component) => {
+const withRouter = (component) => {
   return class extends React.Component {
-    static displayName = `withHistory(${component.displayName || component.name})`
+    static displayName = `withRouter(${component.displayName || component.name})`
 
     static contextTypes = {
-      history: PropTypes.shape({
-        listen: PropTypes.func.isRequired
+      router: PropTypes.shape({
+        history: PropTypes.shape({
+          listen: PropTypes.func.isRequired
+        }).isRequired,
+        getMatch: PropTypes.func.isRequired
       }).isRequired
     }
 
     componentWillMount() {
       // Do this here so we can catch actions in componentDidMount (e.g. <Redirect>).
-      this.unlisten = this.context.history.listen(() => this.forceUpdate())
+      this.unlisten = this.context.router.history.listen(() => this.forceUpdate())
     }
 
     componentWillUnmount() {
@@ -78,9 +81,11 @@ const withHistory = (component) => {
     }
 
     render() {
+      const { history, getMatch } = this.context.router
       return React.createElement(component, {
         ...this.props,
-        history: this.context.history
+        history,
+        parentMatch: getMatch()
       })
     }
   }
@@ -113,17 +118,51 @@ Route.propTypes = {
 /**
  * Low-level API for rendering the props provided to a <Route> element.
  */
-Route.render = ({ component, render, children, ...props }) => (
-  component ? ( // component prop gets first priority, only called if there's a match
-    props.match ? React.createElement(component, props) : null
-  ) : render ? ( // render prop is next, only called if there's a match
-    props.match ? render(props) : null
-  ) : children ? ( // children come last, always called
-    typeof children === 'function' ? children(props) : React.Children.only(children)
-  ) : (
-    null
+Route.render = ({ component, render, children, ...props }) => {
+  const element = (
+    component ? ( // component prop gets first priority, only called if there's a match
+      props.match ? React.createElement(component, props) : null
+    ) : render ? ( // render prop is next, only called if there's a match
+      props.match ? render(props) : null
+    ) : children ? ( // children come last, always called
+      typeof children === 'function' ? children(props) : React.Children.only(children)
+    ) : (
+      null
+    )
   )
-)
+
+  return element && <RouterProvider {...props} children={element}/>
+}
+
+class RouterProvider extends React.Component {
+  
+  static propTypes = {
+    match: PropTypes.object,
+    history: PropTypes.object
+  }
+
+  static childContextTypes = {
+    router: PropTypes.shape({
+      history: PropTypes.object.isRequired,
+      getMatch: PropTypes.func.isRequired
+    }).isRequired
+  }
+
+  getChildContext() {
+    return {
+      router: {
+        history: this.props.history,
+        getMatch: () => this.props.match
+      }
+    }
+  }
+
+  render() {
+    const { children } = this.props
+    return children ? React.Children.only(children) : null
+  }
+}
+
 
 /**
  * The public API for rendering the first <Route> that matches.
@@ -148,32 +187,25 @@ Switch.propTypes = {
 /**
  * The public API for putting history on context.
  */
-class Router extends React.Component {
-  static propTypes = {
-    history: PropTypes.object.isRequired,
-    children: PropTypes.node
-  }
+const Router = ({ children, history }) => (
+  children ? (
+    <RouterProvider match={null} history={history}>
+      { children }
+    </RouterProvider>
+  ) : null
+)
 
-  static childContextTypes = {
-    history: PropTypes.object.isRequired
-  }
-
-  getChildContext() {
-    return { history: this.props.history }
-  }
-
-  render() {
-    const { children } = this.props
-    return children ? React.Children.only(children) : null
-  }
+Router.propTypes = {
+  history: PropTypes.object.isRequired,
+  children: PropTypes.node
 }
 
-const HistoryRoute = withHistory(Route)
-const HistorySwitch = withHistory(Switch)
+const HistoryRoute = withRouter(Route)
+const HistorySwitch = withRouter(Switch)
 
 export {
   matchPath,
-  withHistory,
+  withRouter,
   HistoryRoute as Route,
   HistorySwitch as Switch,
   Router
