@@ -21,11 +21,11 @@ describe('withRouter', () => {
 
     const ContextChecker = withRouter((props) => {
       expect(props.history).toBe(history)
-      expect(props.parentMatch.path).toEqual(PATH)
+      expect(props.match.path).toEqual(PATH)
       return null
     })
 
-    const Parent = () => <ContextChecker />
+    const Parent = () => <ContextChecker/>
     render((
       <Router history={history}>
         <Route path={PATH} component={Parent} />
@@ -43,14 +43,14 @@ describe('withRouter', () => {
       }
 
       render() {
-        return <ContextChecker />
+        return <ContextChecker/>
       }
     }
     let currentPath
     let currentMatch
     const ContextChecker = withRouter((props) => {
       currentPath = props.history.location.pathname
-      currentMatch = props.parentMatch
+      currentMatch = props.match
       return null
     })
 

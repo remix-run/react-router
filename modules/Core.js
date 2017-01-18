@@ -114,7 +114,7 @@ const withRouter = (component) => {
       return React.createElement(component, {
         ...this.props,
         history,
-        parentMatch: getMatch()
+        match: getMatch()
       })
     }
   }
@@ -123,16 +123,16 @@ const withRouter = (component) => {
 /**
  * The public API for matching a single path and rendering.
  */
-const Route = ({ match, history, path, exact, ...props }) => (
+const Route = ({ computedMatch, history, path, exact, ...props }) => (
   Route.render({
     ...props,
-    match: match || matchPath(history.location.pathname, path, exact),
+    match: computedMatch || matchPath(history.location.pathname, path, exact),
     history
   })
 )
 
 Route.propTypes = {
-  match: PropTypes.object, // private, from <Switch>
+  computedMatch: PropTypes.object, // private, from <Switch>
   history: PropTypes.object.isRequired,
   path: PropTypes.string,
   exact: PropTypes.bool,
@@ -175,7 +175,7 @@ const Switch = ({ history, children }) => {
     match = matchPath(history.location.pathname, route.props.path, route.props.exact)
   }
 
-  return match ? React.cloneElement(route, { match }) : null
+  return match ? React.cloneElement(route, { computedMatch: match }) : null
 }
 
 Switch.propTypes = {
