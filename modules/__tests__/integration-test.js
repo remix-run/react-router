@@ -1,22 +1,22 @@
 import expect from 'expect'
 import React from 'react'
+import ReactDOM from 'react-dom'
+import { Simulate } from 'react-addons-test-utils'
+import createMemoryHistory from 'history/createMemoryHistory'
 import MemoryRouter from '../MemoryRouter'
 import Router from '../Router'
 import Prompt from '../Prompt'
 import Redirect from '../Redirect'
 import Route from '../Route'
-import { Simulate } from 'react-addons-test-utils'
 import Link from '../Link'
 import Switch from '../Switch'
-import { render } from 'react-dom'
-import createMemoryHistory from 'history/createMemoryHistory'
 
 describe('Integration Tests', () => {
 
   it('renders root Route', () => {
     const div = document.createElement('div')
     const TEXT = 'Mrs. Kato'
-    render((
+    ReactDOM.render((
       <MemoryRouter initialEntries={[ '/' ]}>
         <Route path="/" render={() => (
           <h1>{TEXT}</h1>
@@ -29,7 +29,7 @@ describe('Integration Tests', () => {
   it('does not render a route that doesn\'t match', () => {
     const div = document.createElement('div')
     const TEXT = 'bubblegum'
-    render((
+    ReactDOM.render((
       <MemoryRouter initialEntries={[ '/bunnies' ]}>
         <Route path="/flowers" render={() => (
           <h1>{TEXT}</h1>
@@ -44,7 +44,7 @@ describe('Integration Tests', () => {
     const div = document.createElement('div')
     const TEXT1 = 'Ms. Tripp'
     const TEXT2 = 'Mrs. Schiffman'
-    render((
+    ReactDOM.render((
       <MemoryRouter initialEntries={[ '/nested' ]}>
         <Route path="/" render={() => (
           <div>
@@ -64,7 +64,7 @@ describe('Integration Tests', () => {
     const div = document.createElement('div')
     const TEXT1 = 'Ms. Tripp'
     const TEXT2 = 'Mrs. Schiffman'
-    render((
+    ReactDOM.render((
       <MemoryRouter initialEntries={[ '/' ]}>
         <Route path="/" render={() => (
           <div>
@@ -84,7 +84,7 @@ describe('Integration Tests', () => {
     const div = document.createElement('div')
     const TEXT1 = 'Mrs. Schiffman'
     const TEXT2 = 'Mrs. Burton'
-    render((
+    ReactDOM.render((
       <MemoryRouter initialEntries={[ '/double' ]}>
         <div>
           <aside>
@@ -117,7 +117,7 @@ describe('Integration Tests', () => {
 
     it('allows matching sequentially to disambiguate', () => {
       const div = document.createElement('div')
-      render((
+      ReactDOM.render((
         <MemoryRouter initialEntries={[ '/' ]}>
           <div>
             <Link id="root" to="/">Root</Link>
@@ -169,7 +169,7 @@ describe('Integration Tests', () => {
     it('navigates', () => {
       const div = document.createElement('div')
       const TEXT1 = 'I AM PAGE 1'
-      render((
+      ReactDOM.render((
         <MemoryRouter>
           <div>
             <Link id="one" to="/one">One</Link>
@@ -195,7 +195,7 @@ describe('Integration Tests', () => {
         hash: '#anchor'
       }
       const div = document.createElement('div')
-      render((
+      ReactDOM.render((
         <MemoryRouter>
           <Link to={loc}>link</Link>
         </MemoryRouter>
@@ -210,7 +210,7 @@ describe('Integration Tests', () => {
       const div = document.createElement('div')
       const FOO = '/cupcakes'
       const MISS = '/grown-up-onsie'
-      render((
+      ReactDOM.render((
         <MemoryRouter initialEntries={[ MISS ]}>
           <Switch>
             <Route path={FOO} render={() => <div>{FOO}</div>}/>
@@ -226,7 +226,7 @@ describe('Integration Tests', () => {
       const div = document.createElement('div')
       const FOO = '/cupcakes'
       const MISS = '/grown-up-onsie'
-      render((
+      ReactDOM.render((
         <MemoryRouter initialEntries={[ FOO ]}>
           <Switch>
             <Route path={FOO} render={() => <div>{FOO}</div>}/>
@@ -255,7 +255,7 @@ describe('Integration Tests', () => {
     it.skip('Prompts the user to allow a transition', () => {
       const div = document.createElement('div')
       let message
-      render((
+      ReactDOM.render((
         <MemoryRouter
           getUserConfirmation={(_message) => message = _message}
         >
@@ -286,9 +286,9 @@ describe('Integration Tests', () => {
       const REDIRECTED = '/REDIRECTED'
       const history = createHistoryMock()
 
-      render((
+      ReactDOM.render((
         <Router history={history}>
-          <Redirect to={REDIRECTED} />
+          <Redirect to={REDIRECTED}/>
         </Router>
       ), div, () => {
         const { pushes, replaces } = history.getResults()
@@ -303,7 +303,7 @@ describe('Integration Tests', () => {
       const div = document.createElement('div')
       const REDIRECTED = '/REDIRECTED'
       const history = createHistoryMock()
-      render((
+      ReactDOM.render((
         <Router history={history}>
           <Redirect to={REDIRECTED} push={true}/>
         </Router>

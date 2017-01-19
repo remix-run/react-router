@@ -55,6 +55,7 @@ const matchPath = (pathname, path, exact = false) => {
 
 class RouterProvider extends React.Component {
   static propTypes = {
+    children: PropTypes.node,
     history: PropTypes.object,
     match: PropTypes.object
   }

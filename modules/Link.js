@@ -59,7 +59,10 @@ class Link extends React.Component {
 
   render() {
     const { replace, to, ...props } = this.props // eslint-disable-line no-unused-vars
-    const href = typeof to === 'string' ? to : this.context.router.history.createHref(to)
+    const href = this.context.router.history.createHref(
+      typeof to === 'string' ? { pathname: to } : to
+    )
+
     return <a {...props} onClick={this.handleClick} href={href}/>
   }
 }

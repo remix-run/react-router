@@ -1,16 +1,16 @@
-import expect, { createSpy, spyOn } from 'expect'
+import expect from 'expect'
 import React from 'react'
-import { render, unmountComponentAtNode } from 'react-dom'
+import ReactDOM from 'react-dom'
+import createMemoryHistory from 'history/createMemoryHistory'
+import Router from '../Router'
 import Route from '../Route'
 import withRouter from '../withRouter'
-import Router from '../Router'
-import createMemoryHistory from 'history/createMemoryHistory'
 
 describe('withRouter', () => {
   const div = document.createElement('div')
 
   afterEach(() => {
-    unmountComponentAtNode(div)
+    ReactDOM.unmountComponentAtNode(div)
   })
 
   it('injects match and history props', () => {
@@ -26,7 +26,7 @@ describe('withRouter', () => {
     })
 
     const Parent = () => <ContextChecker/>
-    render((
+    ReactDOM.render((
       <Router history={history}>
         <Route path={PATH} component={Parent} />
       </Router>
@@ -41,7 +41,6 @@ describe('withRouter', () => {
       shouldComponentUpdate() {
         return false
       }
-
       render() {
         return <ContextChecker/>
       }
@@ -57,7 +56,7 @@ describe('withRouter', () => {
     const history = createMemoryHistory({
       initialEntries: [firstPath, secondPath]
     })
-    render((
+    ReactDOM.render((
       <Router history={history}>
         <Route path={PATH} component={MatchBlocker} />
       </Router>

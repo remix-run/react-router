@@ -23,8 +23,8 @@
     "watch": "babel ./modules -d . --ignore __tests__ --watch",
     "prepublish": "node ./scripts/build.js",
     "clean": "node ./scripts/clean.js",
-    "test": "npm run lint && karma start",
-    "lint": "echo 'PUT THIS BACK TO `eslint modules`'"
+    "lint": "eslint modules",
+    "test": "karma start --single-run"
   },
   "dependencies": {
     "history": "^4.5.1",
