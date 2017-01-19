@@ -21,8 +21,9 @@ if (process.cwd() !== resolvePath(__dirname, '..')) {
 const nextVersion = prompt(`Next version (current version is ${getPackageVersion()})? `)
 const isPrerelease = nextVersion.substr(0, 3) === 'pre' || nextVersion.indexOf('-') !== -1
 
-// 1) Make sure the tests pass
-exec('npm test -- --single-run')
+// 1) Make sure lint/tests pass
+exec('npm run lint')
+exec('npm test')
 
 // 2) Increment the package version in package.json
 // 3) Create a new commit
