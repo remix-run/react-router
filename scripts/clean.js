@@ -1,30 +1,27 @@
 const fs = require('fs')
 const path = require('path')
 
-const root = (...args) => path.join(__dirname, '..', ...args)
+const root = (...args) => path.relative(process.cwd(), path.resolve(__dirname, '..', ...args))
 
 const files = fs.readdirSync(root('modules'))
   .filter(file => file.includes('.js'))
 
-const promises = Promise.all(
+Promise.all(
   files.map(file => new Promise((resolve, reject) => {
-    if (!fs.existsSync(root(file))) {
-      return resolve()
-    }
-    try {
-      fs.unlinkSync(root(file))
+    const f = root(file)
+
+    if (fs.existsSync(f)) {
+      try {
+        fs.unlinkSync(f)
+        console.log('Removed %s', f)
+        resolve()
+      } catch (e) {
+        reject(e)
+      }
+    } else {
       resolve()
-    } catch (e) {
-      reject(e)
     }
   }))
-)
-
-promises
-  .then(() => {
-    console.log('Clean task complete')
-  })
-  .catch(err => {
-    console.log('Clean task failed')
-    console.log(err)
-  })
+).catch(error => {
+  console.error(error)
+})

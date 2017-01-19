@@ -1,3 +1,4 @@
+const resolvePath = require('path').resolve
 const readFileSync = require('fs').readFileSync
 const execSync = require('child_process').execSync
 const inInstall = require('in-publish').inInstall
@@ -18,8 +19,8 @@ exec('npm run build-lib')
 exec('npm run build-umd', webpackEnv)
 exec('npm run build-min', webpackEnv)
 
-console.log(
-  '\ngzipped, the UMD build is ' + prettyBytes(
-    gzipSize.sync(readFileSync('umd/react-router.min.js'))
-  )
+const size = gzipSize.sync(
+  readFileSync(resolvePath(__dirname, '../umd/react-router.min.js'))
 )
+
+console.log('\ngzipped, the UMD build is %s', prettyBytes(size))
