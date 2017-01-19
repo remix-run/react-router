@@ -1,8 +1,10 @@
-/*eslint react/display-name: 0*/
 import React, { PropTypes } from 'react'
 import Route from './Route'
 import Link from './Link'
 
+/**
+ * A <Link> wrapper that knows if it's "active" or not.
+ */
 const NavLink = ({
   to,
   activeClassName,
