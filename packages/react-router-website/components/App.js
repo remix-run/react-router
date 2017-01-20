@@ -1,7 +1,7 @@
 import React from 'react'
+import BrowserRouter from '../../react-router/modules/BrowserRouter'
 
-import BrowserRouter from '../../modules/BrowserRouter'
-
+import { B } from './bricks'
 import Examples from './Examples'
 import Header from './Header'
 import APIDocs from './APIDocs'
@@ -9,7 +9,6 @@ import Video from './Video'
 import Footer from './Footer'
 import LoadBundle from './LoadBundle'
 import NewsletterSignup from './NewsletterSignup'
-import { B } from './bricks'
 
 const App = () => (
   <BrowserRouter>

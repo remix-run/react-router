@@ -1,7 +1,7 @@
 import React from 'react'
-import Link from '../../modules/Link'
-import Logo from './Logo'
+import Link from '../../react-router/modules/Link'
 import { B, H, I, PAD, VSpace, HSpace, lightGray, red, bigFont } from './bricks'
+import Logo from './Logo'
 
 const NavLink = ({ to, href, ...props }) => (
   <B component={to ? Link : 'a'} props={{ to, href }} margin={`0 ${PAD/2}px`} cursor="pointer" {...props}/>

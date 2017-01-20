@@ -1,10 +1,17 @@
 {
+  "name": "react-router-website",
+  "private": true,
   "scripts": {
     "build": "webpack -p && npm run service-worker",
     "start": "webpack-dev-server --inline",
     "service-worker": "cp -R static/ build/ && sw-precache --root='build/' --static-file-globs='build/**/!(*map*)'"
   },
   "devDependencies": {
+    "babel-core": "^6.21.0",
+    "babel-loader": "^6.2.10",
+    "babel-preset-es2015": "^6.18.0",
+    "babel-preset-react": "^6.16.0",
+    "babel-preset-stage-1": "^6.16.0",
     "bundle-loader": "0.5.4",
     "css-loader": "0.23.1",
     "file-loader": "^0.9.0",

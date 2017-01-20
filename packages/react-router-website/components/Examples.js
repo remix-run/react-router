@@ -1,13 +1,13 @@
 import React from 'react'
-import Route from '../../modules/Route'
-import Switch from '../../modules/Switch'
-import Link from '../../modules/Link'
+import Route from '../../react-router/modules/Route'
+import Switch from '../../react-router/modules/Switch'
+import Link from '../../react-router/modules/Link'
+import { EXAMPLES } from '../routes'
+import { B, H, I, PAD, VSpace, darkGray, lightGray, red } from './bricks'
 import LoadBundle from './LoadBundle'
 import SourceViewer from './SourceViewer'
 import FakeBrowser from './FakeBrowser'
 import ScrollToMe from './ScrollToMe'
-import { B, H, I, PAD, VSpace, darkGray, lightGray, red } from './bricks'
-import { EXAMPLES } from '../routes'
 
 const Nav = (props) => (
   <B {...props}>

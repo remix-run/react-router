@@ -4,7 +4,7 @@ const HTMLWebpackPlugin = require('html-webpack-plugin')
 
 const PROD = process.env.NODE_ENV === 'production'
 const HASH = '[chunkHash]'
-const ROUTER_SRC = path.join(__dirname, '..', 'modules')
+const ROUTER_SRC = path.join(__dirname, '..', 'react-router/modules')
 
 module.exports = {
   devtool: 'source-map',
@@ -32,6 +32,8 @@ module.exports = {
 
   resolve: {
     alias: {
+      // These are for the examples. All modules used to build the actual
+      // site should import directly from packages/react-router
       'react-router/Link': path.join(ROUTER_SRC, 'Link'),
       'react-router/Prompt': path.join(ROUTER_SRC, 'Prompt'),
       'react-router/Redirect': path.join(ROUTER_SRC, 'Redirect'),
@@ -39,7 +41,6 @@ module.exports = {
       'react-router/Router': path.join(ROUTER_SRC, 'Router'),
       'react-router/Switch': path.join(ROUTER_SRC, 'Switch'),
       'react-router/withRouter': path.join(ROUTER_SRC, 'withRouter'),
-
       // Shim the real router so people can copy paste examples into create-react-app
       'react-router/BrowserRouter': path.join(__dirname, 'components', 'ExampleRouter')
     }

@@ -1,9 +1,9 @@
 import React from 'react'
+import ReactDOM from 'react-dom'
+import Route from '../../react-router/modules/Route'
 import { I, H, B, PAD, lightGray, red } from './bricks'
-import { render } from 'react-dom'
 import MarkdownViewer from './MarkdownViewer'
 import ScrollToMe from './ScrollToMe'
-import Route from '../../modules/Route'
 
 export const API = [
   { name: 'Route',
@@ -77,7 +77,8 @@ class APIDocs extends React.Component {
         ))}
       </B>
     )
-    render(el, this.menu)
+
+    ReactDOM.render(el, this.menu)
   }
 
   render() {

@@ -1,7 +1,7 @@
 import React, { PropTypes } from 'react'
+import MemoryRouter from '../../../react-router/modules/MemoryRouter'
+import Route from '../../../react-router/modules/Route'
 import { B, V, H, PAD, LIGHT_GRAY, GRAY } from '../bricks'
-import MemoryRouter from '../../../modules/MemoryRouter'
-import Route from '../../../modules/Route'
 import { button } from './style.css'
 
 const LeftArrowIcon = (props) => (
