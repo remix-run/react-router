@@ -1,29 +1,37 @@
 const path = require('path')
 const webpack = require('webpack')
 const HTMLWebpackPlugin = require('html-webpack-plugin')
+const CopyWebpackPlugin = require('copy-webpack-plugin')
+const SWPrecacheWebpackPlugin = require('sw-precache-webpack-plugin')
 
 const PROD = process.env.NODE_ENV === 'production'
-const HASH = '[chunkHash]'
-const ROUTER_SRC = path.join(__dirname, '..', 'react-router/modules')
+const ROUTER_SRC = path.resolve(__dirname, '../react-router/modules')
 
 module.exports = {
   devtool: 'source-map',
 
   entry: {
-    app: path.join(__dirname, 'index.js'),
+    app: path.resolve(__dirname, 'index.js'),
     vendor: [ 'react', 'react-dom' ]
   },
 
   output: {
-    path: path.join(__dirname, 'build'),
-    filename: `bundle-${HASH}.js`,
-    chunkFileName: `[name]-${HASH}.js`
+    path: path.resolve(__dirname, 'build'),
+    filename: `bundle-[chunkHash].js`,
+    chunkFileName: `[name]-[chunkHash].js`
   },
 
   plugins: [
     new webpack.DefinePlugin({ 'process.env.NODE_ENV': JSON.stringify(process.env.NODE_ENV) }),
-    new webpack.optimize.CommonsChunkPlugin('vendor', `vendor-${HASH}.js`),
-    new HTMLWebpackPlugin({ template: 'index.html.ejs' })
+    new webpack.optimize.CommonsChunkPlugin('vendor', `vendor-[chunkHash].js`),
+    new HTMLWebpackPlugin({ template: 'index.html.ejs' }),
+    new CopyWebpackPlugin([
+      { from: path.resolve(__dirname, 'static') }
+    ]),
+    new SWPrecacheWebpackPlugin({
+      cacheId: 'react-router-website',
+      staticFileGlobsIgnorePatterns: [ /\.map$/ ]
+    })
   ].concat(PROD ? [
     new webpack.optimize.DedupePlugin(),
     new webpack.optimize.OccurrenceOrderPlugin(),
