@@ -4,8 +4,7 @@ const HTMLWebpackPlugin = require('html-webpack-plugin')
 const CopyWebpackPlugin = require('copy-webpack-plugin')
 const SWPrecacheWebpackPlugin = require('sw-precache-webpack-plugin')
 
-const PROD = process.env.NODE_ENV === 'production'
-const ROUTER_SRC = path.resolve(__dirname, '../react-router/modules')
+const modulesDir = path.resolve(__dirname, '../react-router/modules')
 
 module.exports = {
   devtool: 'source-map',
@@ -32,25 +31,23 @@ module.exports = {
       cacheId: 'react-router-website',
       staticFileGlobsIgnorePatterns: [ /\.map$/ ]
     })
-  ].concat(PROD ? [
-    new webpack.optimize.DedupePlugin(),
-    new webpack.optimize.OccurrenceOrderPlugin(),
-    new webpack.optimize.UglifyJsPlugin()
-  ] : []),
+  ],
 
   resolve: {
     alias: {
-      // These are for the examples. All modules used to build the actual
-      // site should import directly from packages/react-router
-      'react-router/Link': path.join(ROUTER_SRC, 'Link'),
-      'react-router/Prompt': path.join(ROUTER_SRC, 'Prompt'),
-      'react-router/Redirect': path.join(ROUTER_SRC, 'Redirect'),
-      'react-router/Route': path.join(ROUTER_SRC, 'Route'),
-      'react-router/Router': path.join(ROUTER_SRC, 'Router'),
-      'react-router/Switch': path.join(ROUTER_SRC, 'Switch'),
-      'react-router/withRouter': path.join(ROUTER_SRC, 'withRouter'),
+      // Help the examples find the router modules. This is only for the examples.
+      // All modules used to build the docs site itself should import directly
+      // from packages/react-router.
+      'react-router/Link': path.join(modulesDir, 'Link'),
+      'react-router/Prompt': path.join(modulesDir, 'Prompt'),
+      'react-router/Redirect': path.join(modulesDir, 'Redirect'),
+      'react-router/Route': path.join(modulesDir, 'Route'),
+      'react-router/Router': path.join(modulesDir, 'Router'),
+      'react-router/Switch': path.join(modulesDir, 'Switch'),
+      'react-router/withRouter': path.join(modulesDir, 'withRouter'),
+
       // Shim the real router so people can copy paste examples into create-react-app
-      'react-router/BrowserRouter': path.join(__dirname, 'components', 'ExampleRouter')
+      'react-router/BrowserRouter': path.resolve(__dirname, 'components/ExampleRouter')
     }
   },
 
