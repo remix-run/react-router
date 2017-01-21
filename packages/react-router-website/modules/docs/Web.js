@@ -5,6 +5,7 @@ export default {
     require('../../../react-router-dom/docs/api/Link.md'),
     require('../../../react-router-dom/docs/api/NavLink.md'),
     require('../../../react-router-dom/docs/api/Prompt.md'),
+    require('../../../react-router-dom/docs/api/BrowserPrompt.md'),
     require('../../../react-router/docs/api/MemoryRouter.md?web'),
     require('../../../react-router/docs/api/Redirect.md?web'),
     require('../../../react-router/docs/api/Route.md?web'),
