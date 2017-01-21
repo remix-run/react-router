@@ -22,17 +22,22 @@ module.exports = {
   },
 
   plugins: [
-    new webpack.DefinePlugin({ 'process.env.NODE_ENV': JSON.stringify(process.env.NODE_ENV) }),
+    new webpack.DefinePlugin({
+      'process.env.NODE_ENV': JSON.stringify(process.env.NODE_ENV)
+    }),
     new webpack.optimize.CommonsChunkPlugin('vendor', `vendor-[chunkHash].js`),
-    new HTMLWebpackPlugin({ template: 'index.html.ejs' }),
+    new HTMLWebpackPlugin({
+      template: 'index.html.ejs'
+    }),
     new CopyWebpackPlugin([
       { from: path.resolve(__dirname, 'static') }
-    ]),
+    ])
+  ].concat(process.env.NODE_ENV === 'production' ? [
     new SWPrecacheWebpackPlugin({
       cacheId: 'react-router-website',
       staticFileGlobsIgnorePatterns: [ /\.map$/ ]
     })
-  ],
+  ] : []),
 
   resolve: {
     alias: {
