@@ -1,0 +1,15 @@
+{
+  "presets": [
+    [ "es2015", { "loose": true } ],
+    "stage-1",
+    "react"
+  ],
+  "env": {
+    "production": {
+      "plugins": [
+        "dev-expression",
+        "transform-react-remove-prop-types"
+      ]
+    }
+  }
+}

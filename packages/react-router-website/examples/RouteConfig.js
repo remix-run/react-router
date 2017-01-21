@@ -1,7 +1,7 @@
 import React from 'react'
-import Router from 'react-router/BrowserRouter'
 import Route from 'react-router/Route'
-import Link from 'react-router/Link'
+import Router from 'react-router-dom/BrowserRouter'
+import Link from 'react-router-dom/Link'
 
 // Some folks find value in a centralized route config.
 // A route config is just data. React is great at mapping

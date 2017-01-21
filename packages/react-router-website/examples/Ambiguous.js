@@ -1,8 +1,8 @@
 import React from 'react'
-import Router from 'react-router/BrowserRouter'
-import Switch from 'react-router/Switch'
 import Route from 'react-router/Route'
-import Link from 'react-router/Link'
+import Switch from 'react-router/Switch'
+import Router from 'react-router-dom/BrowserRouter'
+import Link from 'react-router-dom/Link'
 
 const AmbiguousExample = () => (
   <Router>

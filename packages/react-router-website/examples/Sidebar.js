@@ -1,7 +1,7 @@
 import React from 'react'
-import Router from 'react-router/BrowserRouter'
 import Route from 'react-router/Route'
-import Link from 'react-router/Link'
+import Router from 'react-router-dom/BrowserRouter'
+import Link from 'react-router-dom/Link'
 
 // Each logical "route" has two components, one for
 // the sidebar and one for the main area. We want to

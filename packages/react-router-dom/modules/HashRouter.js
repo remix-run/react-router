@@ -1,16 +1,15 @@
 import React, { PropTypes } from 'react'
-import createHistory from 'history/createBrowserHistory'
-import Router from './Router'
+import createHistory from 'history/createHashHistory'
+import Router from 'react-router/Router'
 
 /**
- * The public API for a <Router> that uses HTML5 history.
+ * The public API for a <Router> that uses window.location.hash.
  */
-class BrowserRouter extends React.Component {
+class HashRouter extends React.Component {
   static propTypes = {
     basename: PropTypes.string,
-    forceRefresh: PropTypes.bool,
     getUserConfirmation: PropTypes.func,
-    keyLength: PropTypes.number,
+    hashType: PropTypes.oneOf([ 'hashbang', 'noslash', 'slash' ]),
     children: PropTypes.oneOfType([
       PropTypes.func,
       PropTypes.node
@@ -24,4 +23,4 @@ class BrowserRouter extends React.Component {
   }
 }
 
-export default BrowserRouter
+export default HashRouter

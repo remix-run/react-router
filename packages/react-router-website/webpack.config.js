@@ -4,7 +4,8 @@ const HTMLWebpackPlugin = require('html-webpack-plugin')
 const CopyWebpackPlugin = require('copy-webpack-plugin')
 const SWPrecacheWebpackPlugin = require('sw-precache-webpack-plugin')
 
-const modulesDir = path.resolve(__dirname, '../react-router/modules')
+const ReactRouterModules = path.resolve(__dirname, '../react-router/modules')
+const ReactRouterDOMModules = path.resolve(__dirname, '../react-router-dom/modules')
 
 module.exports = {
   devtool: 'source-map',
@@ -38,16 +39,16 @@ module.exports = {
       // Help the examples find the router modules. This is only for the examples.
       // All modules used to build the docs site itself should import directly
       // from packages/react-router.
-      'react-router/Link': path.join(modulesDir, 'Link'),
-      'react-router/Prompt': path.join(modulesDir, 'Prompt'),
-      'react-router/Redirect': path.join(modulesDir, 'Redirect'),
-      'react-router/Route': path.join(modulesDir, 'Route'),
-      'react-router/Router': path.join(modulesDir, 'Router'),
-      'react-router/Switch': path.join(modulesDir, 'Switch'),
-      'react-router/withRouter': path.join(modulesDir, 'withRouter'),
+      'react-router/Prompt': path.join(ReactRouterModules, 'Prompt'),
+      'react-router/Redirect': path.join(ReactRouterModules, 'Redirect'),
+      'react-router/Route': path.join(ReactRouterModules, 'Route'),
+      'react-router/Router': path.join(ReactRouterModules, 'Router'),
+      'react-router/Switch': path.join(ReactRouterModules, 'Switch'),
+      'react-router/withRouter': path.join(ReactRouterModules, 'withRouter'),
 
       // Shim the real router so people can copy paste examples into create-react-app
-      'react-router/BrowserRouter': path.resolve(__dirname, 'components/ExampleRouter')
+      'react-router-dom/BrowserRouter': path.resolve(__dirname, 'components/ExampleRouter'),
+      'react-router-dom/Link': path.join(ReactRouterDOMModules, 'Link')
     }
   },
 

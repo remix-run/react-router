@@ -1,5 +1,5 @@
 import React from 'react'
-import BrowserRouter from '../../react-router/modules/BrowserRouter'
+import BrowserRouter from '../../react-router-dom/modules/BrowserRouter'
 
 import { B } from './bricks'
 import Examples from './Examples'

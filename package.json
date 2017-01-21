@@ -1,4 +1,6 @@
 {
+  "name": "react-router-packages",
+  "private": true,
   "scripts": {
     "postinstall": "lerna bootstrap",
     "start": "cd packages/react-router-website && npm start",

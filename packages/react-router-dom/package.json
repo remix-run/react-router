@@ -1,7 +1,7 @@
 {
-  "name": "react-router",
-  "version": "4.0.0-alpha.6",
-  "description": "Declarative routing for React",
+  "name": "react-router-dom",
+  "version": "1.0.0-beta.1",
+  "description": "DOM bindings for React Router",
   "repository": "ReactTraining/react-router",
   "license": "MIT",
   "authors": [
@@ -9,17 +9,11 @@
     "Ryan Florence"
   ],
   "files": [
-    "Core.js",
-    "MemoryRouter.js",
-    "Prompt.js",
-    "Redirect.js",
-    "Route.js",
-    "Router.js",
-    "ServerRouter.js",
-    "Switch.js",
+    "BrowserRouter.js",
+    "HashRouter.js",
+    "Link.js",
+    "NavLink.js",
     "index.js",
-    "matchPath.js",
-    "withRouter.js",
     "README.md",
     "umd"
   ],
@@ -27,8 +21,8 @@
   "scripts": {
     "release": "node ./scripts/release.js",
     "build-lib": "babel ./modules -d . --ignore __tests__",
-    "build-umd": "webpack modules/index.js umd/react-router.js",
-    "build-min": "webpack -p modules/index.js umd/react-router.min.js",
+    "build-umd": "webpack modules/index.js umd/react-router-dom.js",
+    "build-min": "webpack -p modules/index.js umd/react-router-dom.min.js",
     "build": "node ./scripts/build.js",
     "watch": "babel ./modules -d . --ignore __tests__ --watch",
     "prepublish": "node ./scripts/build.js",
@@ -40,10 +34,7 @@
     "react": "15.x"
   },
   "dependencies": {
-    "history": "^4.5.1",
-    "invariant": "^2.2.2",
-    "loose-envify": "^1.3.1",
-    "path-to-regexp": "^1.5.3"
+    "react-router": "4.0.0-alpha.6"
   },
   "devDependencies": {
     "babel-cli": "^6.18.0",
