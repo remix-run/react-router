@@ -18,12 +18,12 @@ Using [npm](https://www.npmjs.com/):
 Then with a module bundler like [webpack](https://webpack.github.io/), use as you would anything else:
 
 ```js
-// using an ES6 transpiler, like babel
-import { BrowserRouter, Match, Link } from 'react-router'
+// using ES6 modules
+import { BrowserRouter, Route, Link } from 'react-router'
 
-// not using an ES6 transpiler
+// using CommonJS modules
 var BrowserRouter = require('react-router').BrowserRouter
-var Match = require('react-router').Match
+var Route = require('react-router').Route
 var Link = require('react-router').Link
 ```
 
@@ -37,11 +37,11 @@ You can find the library on `window.ReactRouter`.
 
 ## Docs
 
-Please read [our docs here](https://react-router.now.sh/).
+API docs are [here](/packages/react-router-website/api).
 
 ## v4 FAQ
 
-### Why the huge change?
+### Why a major version bump?
 
 **tl;dr** Declarative Composability.
 
@@ -56,16 +56,15 @@ const CoolRoute = (props) => <Route {...props} cool={true}/>
 
 For apps to participate in rendering of route components, we had to create APIs we were never actually comfortable with, like `<Router createElement render>` and `createRouterMiddleware`. We took `createElement` away from you and had to give it back!
 
-We had to recreate the lifecycle hooks with `onEnter`, `onLeave`, and `onChange`. React already has `componentWillMount`,
-`componentWillReceiveProps` and `componentWillUnmount`.
+We had to recreate the lifecycle hooks with `onEnter`, `onLeave`, and `onChange`. React already has `componentWillMount`, `componentWillReceiveProps` and `componentWillUnmount`.
 
 Route configs described your view hierarchy. Turns out, React components already describe view hierarchy.
 
 To code-split, we had to introduce `getComponent` and `getChildRoutes`. Hot module replacement libs had to do specific hacks for routes to work. The list goes on and on.
 
-React Router was not a React router, it was a routing framework for React. An accidental framework with APIs that were not only redundant with React, but incredibly difficult to build an ecosystem around.
+React Router was not a "React router", it was a routing framework for React. An accidental framework with APIs that were not only redundant with React, but incredibly difficult to build an ecosystem around.
 
-What did we do? We took everything we've learned and love about React (and we're still learning!) and applied it to routing. It started with the quest to actually render a `<Route>` (we used to just strip their props). It ended with removing the idea of routes completely (surprised us too) and a completely component based API, which actually means no API at all.
+What did we do? We took everything we've learned and love about React (and still learning!) and applied it to routing. It started with the quest to actually render a `<Route>` (we used to just strip their props). It ended with removing the idea of routes completely (surprised us too) and a completely component based API, which actually means no API at all.
 
 You control routing by rendering components and passing props. Finally, we have a solid base for us and others to build an ecosystem on top of.
 
@@ -98,8 +97,7 @@ We have some code close to being published that will manage the scroll positions
 
 ### What about Redux?
 
-We have [a `<ControlledRouter>` component](https://github.com/ReactTraining/react-router-addons-controlled) that makes redux
-integration with React Router the same as ... uh ... integrating an `<input>` with Redux.
+We have [a `<ControlledRouter>` component](https://github.com/ReactTraining/react-router-addons-controlled) that makes redux integration with React Router the same as ... uh ... integrating an `<input>` with Redux.
 
 ### What about route transition hooks? (example needed)
 
@@ -146,7 +144,7 @@ We've never been more excited about React Router. It's no longer a router for Re
 
 ### Where are the examples?!?
 
-The examples are now located under [the website](/website/examples).
+The examples are now located under [the website](/packages/react-router-website/examples).
 
 ## Thanks
 
