@@ -35,21 +35,21 @@ Instead of conditionally rendering a `<Prompt>` behind a guard, you can always r
 <Prompt when={formIsHalfFilledOut} message="Are you sure?"/>
 ```
 
-## beforeUnload: bool _NavigationPrompt_
+## beforeUnload: bool _Prompt_
 Prevent user for navigating away from the site. Prompt user to warn 
 about leaving the site.
 
 ```js
-<NavigationPrompt beforeUnload={false} />
+<Prompt beforeUnload={false} />
 ```
 
-## beforeUnload: func _NavigationPrompt_
+## beforeUnload: func _Prompt_
 Prevent user for navigating away from the site. Perform custom actions, 
 for example clean up code before prompting the user.
 
 ```js
-<NavigationPrompt beforeUnload={() { 
-  console.log("custom action - i.e. saving data before leaving.")
+<Prompt beforeUnload={() { 
+  console.log("custom action")
   var dialogText = "Changes you made may not be saved."
   e.returnValue = dialogText
   return dialogText
