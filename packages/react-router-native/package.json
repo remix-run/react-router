@@ -1,0 +1,22 @@
+{
+  "name": "react-router-native",
+  "version": "0.0.0",
+  "description": "Navigational components for React Native",
+  "authors": [
+    "Michael Jackson",
+    "Ryan Florence"
+  ],
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": "ReactTraining/react-router",
+  "keywords": [],
+  "devDependencies": {
+    "react": "^15.0.2",
+    "react-native": "^0.17.0"
+  },
+  "dependencies": {
+    "react-router": "4.0.0-alpha.6"
+  },
+  "license": "MIT"
+}
