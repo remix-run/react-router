@@ -26,6 +26,10 @@ export const API = [
     path: '/Prompt',
     html: require('../api/Prompt.md')
   },
+  { name: 'BrowserPrompt',
+    path: '/BroeserPrompt',
+    html: require('../api/BrowserPrompt.md')
+  },
   { name: 'BrowserRouter',
     path: '/BrowserRouter',
     html: require('../api/BrowserRouter.md')

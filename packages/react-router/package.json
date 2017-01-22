@@ -12,6 +12,7 @@
     "Core.js",
     "MemoryRouter.js",
     "Prompt.js",
+    "BrowserPrompt.js",
     "Redirect.js",
     "Route.js",
     "Router.js",
