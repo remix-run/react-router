@@ -2,7 +2,7 @@ import React from 'react'
 import Router from 'react-router/BrowserRouter'
 import Route from 'react-router/Route'
 import Link from 'react-router/Link'
-import Prompt from 'react-router/Prompt'
+import BrowserPrompt from '../../react-router/BrowserPrompt'
 
 const PreventingTransitionsExample = () => (
   <Router>
@@ -13,9 +13,8 @@ const PreventingTransitionsExample = () => (
         <li><a href="http://www.google.co.uk">google</a></li>
       </ul>
 
-      <Route path="/" exactly component={Form}/>
+      <Route path="/" exact component={Form}/>
       <Route path="/one" render={() => <h3>One</h3>}/>
-      <Route path="/two" render={() => <h3>Two</h3>}/>
     </div>
   </Router>
 )
@@ -23,7 +22,7 @@ const PreventingTransitionsExample = () => (
 class Form extends React.Component {
   state = {
     blockTransitions: false,
-    beforeUnload: () => { console.log("custom action"); return "leave"; }
+    beforeUnload: false
   }
 
   render() {
@@ -40,7 +39,7 @@ class Form extends React.Component {
         }}
       >
 
-      <Prompt
+      <BrowserPrompt
         when={blockTransitions}
         beforeUnload={beforeUnload} 
         message={(location) => (
@@ -56,7 +55,7 @@ class Form extends React.Component {
         </p>
 
         <p>
-          beforeUnload?: {typeof beforeUnload === "function" || beforeUnload === true ? 
+          beforeUnload?: {beforeUnload ? 
             'Yes, click google.' :
             'Nope'
           }
@@ -68,12 +67,7 @@ class Form extends React.Component {
             onChange={(e) => {
               this.setState({
                 blockTransitions: e.target.value.length > 0,
-                beforeUnload: () => { 
-                  console.log("custom action")
-                  var dialogText = "leave"
-                  e.returnValue = dialogText
-                  return dialogText
-                }
+                beforeUnload: e.target.value.length > 0
               })
             }}
           />
