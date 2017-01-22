@@ -69,6 +69,8 @@ describe('Integration Tests', () => {
     const div = document.createElement('div')
     const TEXT1 = 'bubblegum'
     const TEXT2 = 'shoes'
+    const TEXT3 = 'stampede'
+    const TEXT4 = 'brady'
     ReactDOM.render((
       <MemoryRouter initialEntries={[ '/some' ]}>
         <div>
@@ -76,12 +78,14 @@ describe('Integration Tests', () => {
             <h1>{match ? TEXT1 : TEXT2}</h1>
           )}/>
           <Route path="/some-path" children={({ match }) => (
-            <h1>{match ? TEXT2 : TEXT1}</h1>
+            <h1>{match ? TEXT3 : TEXT4}</h1>
           )}/>
         </div>
       </MemoryRouter>
     ), div)
     expect(div.innerHTML).toContain(TEXT1)
+    expect(div.innerHTML).toContain(TEXT4)
+    expect(div.innerHTML).toNotContain(TEXT3)
     expect(div.innerHTML).toNotContain(TEXT2)
   })
 
@@ -89,6 +93,8 @@ describe('Integration Tests', () => {
     const div = document.createElement('div')
     const TEXT1 = 'bubblegum'
     const TEXT2 = 'shoes'
+    const TEXT3 = 'stampede'
+    const TEXT4 = 'brady'
     ReactDOM.render((
       <MemoryRouter initialEntries={[ '/some-path' ]}>
         <div>
@@ -96,12 +102,14 @@ describe('Integration Tests', () => {
             <h1>{match ? TEXT1 : TEXT2}</h1>
           )}/>
           <Route path="/some-path" children={({ match }) => (
-            <h1>{match ? TEXT2 : TEXT1}</h1>
+            <h1>{match ? TEXT3 : TEXT4}</h1>
           )}/>
         </div>
       </MemoryRouter>
     ), div)
     expect(div.innerHTML).toNotContain(TEXT1)
+    expect(div.innerHTML).toNotContain(TEXT4)
+    expect(div.innerHTML).toContain(TEXT3)
     expect(div.innerHTML).toContain(TEXT2)
   })
 
