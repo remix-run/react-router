@@ -9,32 +9,6 @@ Declarative routing for [React](https://facebook.github.io/react).
 
 React Router keeps your UI in sync with the URL. Make the URL your first thought, not an after-thought.
 
-## Installation
-
-Using [npm](https://www.npmjs.com/):
-
-    $ npm install --save react-router@next
-
-Then with a module bundler like [webpack](https://webpack.github.io/), use as you would anything else:
-
-```js
-// using ES6 modules
-import { BrowserRouter, Route, Link } from 'react-router'
-
-// using CommonJS modules
-var BrowserRouter = require('react-router').BrowserRouter
-var Route = require('react-router').Route
-var Link = require('react-router').Link
-```
-
-The UMD build is also available on [unpkg](https://unpkg.com):
-
-```html
-<script src="https://unpkg.com/react-router@next/umd/react-router.min.js"></script>
-```
-
-You can find the library on `window.ReactRouter`.
-
 ## Docs
 
 API docs are [here](/packages/react-router-website/api).
