@@ -8,7 +8,6 @@ import Router from '../Router'
 import Prompt from '../Prompt'
 import Redirect from '../Redirect'
 import Route from '../Route'
-import Link from '../Link'
 import Switch from '../Switch'
 
 describe('Integration Tests', () => {
@@ -104,106 +103,87 @@ describe('Integration Tests', () => {
     expect(div.innerHTML).toContain(TEXT2)
   })
 
-  describe('Ambiguous matches', () => {
-    const leftClickEvent = {
-      defaultPrevented: false,
-      preventDefault() { this.defaultPrevented = true },
-      metaKey: null,
-      altKey: null,
-      ctrlKey: null,
-      shiftKey: null,
-      button: 0
-    }
+  //describe('Ambiguous matches', () => {
+  //  const leftClickEvent = {
+  //    defaultPrevented: false,
+  //    preventDefault() { this.defaultPrevented = true },
+  //    metaKey: null,
+  //    altKey: null,
+  //    ctrlKey: null,
+  //    shiftKey: null,
+  //    button: 0
+  //  }
 
-    it('allows matching sequentially to disambiguate', () => {
-      const div = document.createElement('div')
-      ReactDOM.render((
-        <MemoryRouter initialEntries={[ '/' ]}>
-          <div>
-            <Link id="root" to="/">Root</Link>
-            <Link id="foo" to="/foo">Foo</Link>
-            <Link id="dynamic" to="/dynamic">Dynamic</Link>
+  //  it('allows matching sequentially to disambiguate', () => {
+  //    const div = document.createElement('div')
+  //    ReactDOM.render((
+  //      <MemoryRouter initialEntries={[ '/' ]}>
+  //        <div>
+  //          <Link id="root" to="/">Root</Link>
+  //          <Link id="static" to="/static">Static</Link>
+  //          <Link id="dynamic" to="/dynamic">Dynamic</Link>
 
-            <Route exact path="/" render={() => <div>root component</div>}/>
-            <Switch>
-              <Route path="/foo" render={() => <div>foo component</div>}/>
-              <Route path="/:name" render={({ match: { params } }) => (
-                <div>{`${params.name} component`}</div>
-              )}/>
-            </Switch>
-          </div>
-        </MemoryRouter>
-      ), div)
-      expect(div.innerHTML).toNotContain('foo component')
-      expect(div.innerHTML).toNotContain('dynamic component')
-      expect(div.innerHTML).toContain('root component')
+  //          <Route exact path="/" render={() => <div>root component</div>}/>
+  //          <Switch>
+  //            <Route path="/static" render={() => <div>static component</div>}/>
+  //            <Route path="/:name" render={({ match: { params } }) => (
+  //              <div>{`${params.name} component`}</div>
+  //            )}/>
+  //          </Switch>
+  //        </div>
+  //      </MemoryRouter>
+  //    ), div)
+  //    expect(div.innerHTML).toNotContain('static component')
+  //    expect(div.innerHTML).toNotContain('dynamic component')
+  //    expect(div.innerHTML).toContain('root component')
 
-      Simulate.click(div.querySelector('#dynamic'), leftClickEvent)
-      expect(div.innerHTML).toNotContain('foo component')
-      expect(div.innerHTML).toNotContain('root component')
-      expect(div.innerHTML).toContain('dynamic component')
+  //    Simulate.click(div.querySelector('#dynamic'), leftClickEvent)
+  //    expect(div.innerHTML).toNotContain('static component')
+  //    expect(div.innerHTML).toNotContain('root component')
+  //    expect(div.innerHTML).toContain('dynamic component')
 
-      Simulate.click(div.querySelector('#root'), leftClickEvent)
-      expect(div.innerHTML).toNotContain('foo component')
-      expect(div.innerHTML).toNotContain('dynamic component')
-      expect(div.innerHTML).toContain('root component')
+  //    Simulate.click(div.querySelector('#root'), leftClickEvent)
+  //    expect(div.innerHTML).toNotContain('static component')
+  //    expect(div.innerHTML).toNotContain('dynamic component')
+  //    expect(div.innerHTML).toContain('root component')
 
-      Simulate.click(div.querySelector('#dynamic'), leftClickEvent)
-      expect(div.innerHTML).toNotContain('foo component')
-      expect(div.innerHTML).toNotContain('root component')
-      expect(div.innerHTML).toContain('dynamic component')
-    })
-  })
+  //    Simulate.click(div.querySelector('#dynamic'), leftClickEvent)
+  //    expect(div.innerHTML).toNotContain('static component')
+  //    expect(div.innerHTML).toNotContain('root component')
+  //    expect(div.innerHTML).toContain('dynamic component')
+  //  })
+  //})
 
-  describe('clicking around', () => {
-    const leftClickEvent = {
-      defaultPrevented: false,
-      preventDefault() { this.defaultPrevented = true },
-      metaKey: null,
-      altKey: null,
-      ctrlKey: null,
-      shiftKey: null,
-      button: 0
-    }
+  //describe('clicking around', () => {
+  //  const leftClickEvent = {
+  //    defaultPrevented: false,
+  //    preventDefault() { this.defaultPrevented = true },
+  //    metaKey: null,
+  //    altKey: null,
+  //    ctrlKey: null,
+  //    shiftKey: null,
+  //    button: 0
+  //  }
 
-    it('navigates', () => {
-      const div = document.createElement('div')
-      const TEXT1 = 'I AM PAGE 1'
-      ReactDOM.render((
-        <MemoryRouter>
-          <div>
-            <Link id="one" to="/one">One</Link>
-            <Route path="/one" render={() => (
-              <h1>{TEXT1}</h1>
-            )}/>
-          </div>
-        </MemoryRouter>
-      ), div)
-      expect(div.innerHTML).toNotContain(TEXT1)
+  //  it('navigates', () => {
+  //    const div = document.createElement('div')
+  //    const TEXT1 = 'I AM PAGE 1'
+  //    ReactDOM.render((
+  //      <MemoryRouter>
+  //        <div>
+  //          <Link id="one" to="/one">One</Link>
+  //          <Route path="/one" render={() => (
+  //            <h1>{TEXT1}</h1>
+  //          )}/>
+  //        </div>
+  //      </MemoryRouter>
+  //    ), div)
+  //    expect(div.innerHTML).toNotContain(TEXT1)
 
-      Simulate.click(div.querySelector('#one'), leftClickEvent)
-      expect(div.innerHTML).toContain(TEXT1)
-    })
-  })
-
-  describe('Link location "to" prop', () => {
-    it('accepts a location "to" prop', () => {
-      const loc = {
-        pathname: '/test-url',
-        state: { isTest: true },
-        search: 'foo=bar',
-        hash: '#anchor'
-      }
-      const div = document.createElement('div')
-      ReactDOM.render((
-        <MemoryRouter>
-          <Link to={loc}>link</Link>
-        </MemoryRouter>
-      ), div)
-      const href = div.querySelector('a').getAttribute('href')
-      expect(href).toEqual('/test-url?foo=bar#anchor')
-    })
-  })
+  //    Simulate.click(div.querySelector('#one'), leftClickEvent)
+  //    expect(div.innerHTML).toContain(TEXT1)
+  //  })
+  //})
 
   describe('Switch', () => {
     it('renders pathless Routes', () => {

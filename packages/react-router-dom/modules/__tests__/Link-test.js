@@ -1,8 +1,40 @@
 import expect from 'expect'
 import React from 'react'
 import ReactDOM from 'react-dom'
+import MemoryRouter from 'react-router/MemoryRouter'
 import HashRouter from '../HashRouter'
 import Link from '../Link'
+
+describe('A <Link>', () => {
+  it('accepts a location "to" prop', () => {
+    const location = {
+      pathname: '/the/path',
+      search: 'the=query',
+      hash: '#the-hash'
+    }
+    const div = document.createElement('div')
+
+    ReactDOM.render((
+      <MemoryRouter>
+        <Link to={location}>link</Link>
+      </MemoryRouter>
+    ), div)
+
+    const href = div.querySelector('a').getAttribute('href')
+
+    expect(href).toEqual('/the/path?the=query#the-hash')
+  })
+})
+
+describe('When a <Link> is clicked', () => {
+  it('calls its onClick handler')
+
+  it('changes the location')
+
+  describe('and the onClick handler calls event.preventDefault()', () => {
+    it('does not change the location')
+  })
+})
 
 describe('A <Link> underneath a <HashRouter>', () => {
   const div = document.createElement('div')

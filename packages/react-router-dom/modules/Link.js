@@ -1,8 +1,5 @@
 import React, { PropTypes } from 'react'
 
-const isLeftClickEvent = (event) =>
-  event.button === 0
-
 const isModifiedEvent = (event) =>
   !!(event.metaKey || event.altKey || event.ctrlKey || event.shiftKey)
 
@@ -40,9 +37,9 @@ class Link extends React.Component {
 
     if (
       !event.defaultPrevented && // onClick prevented default
+      event.button === 0 && // ignore right clicks
       !this.props.target && // let browser handle "target=_blank" etc.
-      !isModifiedEvent(event) &&
-      isLeftClickEvent(event)
+      !isModifiedEvent(event) // ignore clicks with modifier keys
     ) {
       event.preventDefault()
 

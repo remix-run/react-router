@@ -211,13 +211,13 @@ Router.propTypes = {
   children: PropTypes.node
 }
 
-const HistoryRoute = withRouter(Route)
-const HistorySwitch = withRouter(Switch)
+const ConnectedRoute = withRouter(Route)
+const ConnectedSwitch = withRouter(Switch)
 
 export {
   matchPath,
   withRouter,
-  HistoryRoute as Route,
-  HistorySwitch as Switch,
+  ConnectedRoute as Route,
+  ConnectedSwitch as Switch,
   Router
 }
