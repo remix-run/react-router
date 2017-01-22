@@ -38,6 +38,31 @@ describe('Integration Tests', () => {
     expect(div.innerHTML).toNotContain(TEXT)
   })
 
+  it('renders an exact route with trailing slash', () => {
+    const div = document.createElement('div')
+    const TEXT = 'bubblegum'
+    ReactDOM.render((
+      <MemoryRouter initialEntries={[ '/somepath/' ]}>
+        <Route exact path="/somepath" render={() => (
+          <h1>{TEXT}</h1>
+        )}/>
+      </MemoryRouter>
+    ), div)
+    expect(div.innerHTML).toContain(TEXT)
+  })
+
+  it('does not render an exact strict route with trailing slash', () => {
+    const div = document.createElement('div')
+    const TEXT = 'bubblegum'
+    ReactDOM.render((
+      <MemoryRouter initialEntries={[ '/somepath/' ]}>
+        <Route exact strict path="/somepath" render={() => (
+          <h1>{TEXT}</h1>
+        )}/>
+      </MemoryRouter>
+    ), div)
+    expect(div.innerHTML).toNotContain(TEXT)
+  })
 
   it('renders nested matches', () => {
     const div = document.createElement('div')
