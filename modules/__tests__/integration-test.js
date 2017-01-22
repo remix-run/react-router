@@ -65,6 +65,46 @@ describe('Integration Tests', () => {
     expect(div.innerHTML).toNotContain(TEXT)
   })
 
+  it('matches correct route when routes have similar paths - test 1 of 2', () => {
+    const div = document.createElement('div')
+    const TEXT1 = 'bubblegum'
+    const TEXT2 = 'shoes'
+    ReactDOM.render((
+      <MemoryRouter initialEntries={[ '/some' ]}>
+        <div>
+          <Route path="/some" children={({ match }) => (
+            <h1>{match ? TEXT1 : TEXT2}</h1>
+          )}/>
+          <Route path="/some-path" children={({ match }) => (
+            <h1>{match ? TEXT2 : TEXT1}</h1>
+          )}/>
+        </div>
+      </MemoryRouter>
+    ), div)
+    expect(div.innerHTML).toContain(TEXT1)
+    expect(div.innerHTML).toNotContain(TEXT2)
+  })
+
+  it('matches correct route when routes have similar paths - test 2 of 2', () => {
+    const div = document.createElement('div')
+    const TEXT1 = 'bubblegum'
+    const TEXT2 = 'shoes'
+    ReactDOM.render((
+      <MemoryRouter initialEntries={[ '/some-path' ]}>
+        <div>
+          <Route path="/some" children={({ match }) => (
+            <h1>{match ? TEXT1 : TEXT2}</h1>
+          )}/>
+          <Route path="/some-path" children={({ match }) => (
+            <h1>{match ? TEXT2 : TEXT1}</h1>
+          )}/>
+        </div>
+      </MemoryRouter>
+    ), div)
+    expect(div.innerHTML).toNotContain(TEXT1)
+    expect(div.innerHTML).toContain(TEXT2)
+  })
+
   it('renders nested matches', () => {
     const div = document.createElement('div')
     const TEXT1 = 'Ms. Tripp'
