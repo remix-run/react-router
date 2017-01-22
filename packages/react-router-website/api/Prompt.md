@@ -48,7 +48,7 @@ Prevent user for navigating away from the site. Perform custom actions,
 for example clean up code before prompting the user.
 
 ```js
-<Prompt beforeUnload={() { 
+<Prompt beforeUnload={(e) { 
   console.log("custom action")
   var dialogText = "Changes you made may not be saved."
   e.returnValue = dialogText
