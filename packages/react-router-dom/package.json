@@ -34,6 +34,7 @@
     "react": "15.x"
   },
   "dependencies": {
+    "history": "^4.5.1",
     "react-router": "4.0.0-alpha.6"
   },
   "devDependencies": {

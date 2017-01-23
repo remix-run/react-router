@@ -21,6 +21,7 @@
     "markdown-it": "^7.0.0",
     "markdown-it-anchor": "^2.5.1",
     "postcss-loader": "0.9.1",
+    "prismjs": "^1.6.0",
     "prismjs-loader": "0.0.3",
     "react": "15.3.2",
     "react-dom": "15.3.2",
