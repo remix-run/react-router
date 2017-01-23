@@ -15,15 +15,11 @@
     "index.js",
     "README.md"
   ],
-  "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+  "peerDependencies": {
+    "react-native": "0.17+"
   },
   "dependencies": {
     "react-router": "4.0.0-alpha.6"
-  },
-  "devDependencies": {
-    "react": "^15.0.2",
-    "react-native": "^0.17.0"
   },
   "keywords": [
     "react",
