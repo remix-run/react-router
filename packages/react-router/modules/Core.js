@@ -1,18 +1,19 @@
 import React, { PropTypes } from 'react'
 import pathToRegexp from 'path-to-regexp'
 
-const patternCache = { truetrue: {}, truefalse: {}, falsefalse: {}, falsetrue: {} }
+const patternCache = {}
 const cacheLimit = 10000
 let cacheCount = 0
 
-const compilePath = (pattern, exact, strict) => {
-  const cache = patternCache[`${exact}${strict}`]
+const compilePath = (pattern, options) => {
+  const cacheKey = options.end + options.strict
+  const cache = patternCache[cacheKey] || (patternCache[cacheKey] = {})
 
   if (cache[pattern])
     return cache[pattern]
 
   const keys = []
-  const re = pathToRegexp(pattern, keys, { end: exact, strict })
+  const re = pathToRegexp(pattern, keys, options)
   const compiledPattern = { re, keys }
 
   if (cacheCount < cacheLimit) {
@@ -29,7 +30,7 @@ const compilePath = (pattern, exact, strict) => {
 const matchPath = (pathname, path, { exact = false, strict = false }) => {
   if (!path)
     return { url: pathname, isExact: true, params: {} }
-  const { re, keys } = compilePath(path, exact, strict)
+  const { re, keys } = compilePath(path, { end: exact, strict })
   const match = re.exec(pathname)
 
   if (!match)
@@ -184,7 +185,7 @@ const Switch = ({ children, history }) => {
   let route, computedMatch
   for (let i = 0, length = routes.length; computedMatch == null && i < length; ++i) {
     route = routes[i]
-    computedMatch = matchPath(history.location.pathname, route.props.path, { exact: route.props.exact, strict: route.props.strict })
+    computedMatch = matchPath(history.location.pathname, route.props.path, route.props)
   }
 
   return computedMatch ? React.cloneElement(route, { computedMatch }) : null
