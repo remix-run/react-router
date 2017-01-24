@@ -38,9 +38,9 @@ export const API = [
     path: '/MemoryRouter',
     html: require('../api/MemoryRouter.md')
   },
-  { name: 'ServerRouter',
-    path: '/ServerRouter',
-    html: require('../api/ServerRouter.md')
+  { name: 'StaticRouter',
+    path: '/StaticRouter',
+    html: require('../api/StaticRouter.md')
   }
 ]
 

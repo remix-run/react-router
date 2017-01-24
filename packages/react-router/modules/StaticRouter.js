@@ -3,8 +3,6 @@ import React, { PropTypes } from 'react'
 import { createPath, parsePath } from 'history/PathUtils'
 import Router from './Router'
 
-const createHref = path => path
-
 const normalizeLocation = (object) => {
   const { pathname = '/', search = '', hash = '' } = object
 
@@ -37,6 +35,7 @@ const staticHandler = (methodName) => () => {
  */
 class StaticRouter extends React.Component {
   static propTypes = {
+    basename: PropTypes.string,
     context: PropTypes.object.isRequired,
     location: PropTypes.oneOfType([
       PropTypes.string,
@@ -45,8 +44,12 @@ class StaticRouter extends React.Component {
   }
 
   static defaultProps = {
+    basename: '',
     location: '/'
   }
+
+  createHref = (path) =>
+    this.props.basename + createURL(path)
 
   handlePush = (location) => {
     const { context } = this.props
@@ -67,7 +70,7 @@ class StaticRouter extends React.Component {
 
     const history = {
       isStatic: true,
-      createHref,
+      createHref: this.createHref,
       action: 'POP',
       location: createLocation(location),
       push: this.handlePush,
