@@ -157,40 +157,6 @@ describe('Integration Tests', () => {
   //  })
   //})
 
-  describe('Switch', () => {
-    it('renders pathless Routes', () => {
-      const node = document.createElement('div')
-      const FOO = '/cupcakes'
-      const MISS = '/grown-up-onsie'
-      ReactDOM.render((
-        <MemoryRouter initialEntries={[ MISS ]}>
-          <Switch>
-            <Route path={FOO} render={() => <div>{FOO}</div>}/>
-            <Route render={() => <div>{MISS}</div>}/>
-          </Switch>
-        </MemoryRouter>
-      ), node)
-      expect(node.innerHTML).toNotContain(FOO)
-      expect(node.innerHTML).toContain(MISS)
-    })
-
-    it('renders the first matching Route', () => {
-      const node = document.createElement('div')
-      const FOO = '/cupcakes'
-      const MISS = '/grown-up-onsie'
-      ReactDOM.render((
-        <MemoryRouter initialEntries={[ FOO ]}>
-          <Switch>
-            <Route path={FOO} render={() => <div>{FOO}</div>}/>
-            <Route render={() => <div>{MISS}</div>}/>
-          </Switch>
-        </MemoryRouter>
-      ), node)
-      expect(node.innerHTML).toContain(FOO)
-      expect(node.innerHTML).toNotContain(MISS)
-    })
-  })
-
   describe('Prompt', () => {
     const TEXT = 'TEXT'
     const leftClickEvent = {

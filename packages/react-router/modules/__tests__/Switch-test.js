@@ -43,4 +43,20 @@ describe('A <Switch>', () => {
 
     expect(node.innerHTML).toNotMatch(/two/)
   })
+
+  it('renders pathless Routes', () => {
+    const node = document.createElement('div')
+
+    ReactDOM.render((
+      <MemoryRouter initialEntries={[ '/cupcakes' ]}>
+        <Switch>
+          <Route path="/bubblegum" render={() => <div>one</div>}/>
+          <Route render={() => <div>two</div>}/>
+        </Switch>
+      </MemoryRouter>
+    ), node)
+
+    expect(node.innerHTML).toNotContain('one')
+    expect(node.innerHTML).toContain('two')
+  })
 })
