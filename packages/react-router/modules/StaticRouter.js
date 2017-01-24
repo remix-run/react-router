@@ -27,6 +27,8 @@ const staticHandler = (methodName) => () => {
   )
 }
 
+const noop = () => {}
+
 /**
  * The public top-level API for a "static" <Router>, so-called because it
  * can't actually change the current location. Instead, it just records
@@ -65,6 +67,9 @@ class StaticRouter extends React.Component {
     context.url = createURL(location)
   }
 
+  handleListen = () =>
+    noop
+
   render() {
     const { context, location, ...props } = this.props // eslint-disable-line no-unused-vars
 
@@ -78,7 +83,7 @@ class StaticRouter extends React.Component {
       go: staticHandler('go'),
       goBack: staticHandler('goBack'),
       goForward: staticHandler('goForward'),
-      listen: staticHandler('listen')
+      listen: this.handleListen
     }
 
     return <Router {...props} history={history}/>
