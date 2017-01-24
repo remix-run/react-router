@@ -1,5 +1,5 @@
 import React, { PropTypes } from 'react'
-import Prompt from './Prompt'
+import { Prompt } from 'react-router'
 
 const BEFOREUNLOAD = "beforeunload"; // see: http://stackoverflow.com/questions/39094138/reactjs-event-listener-beforeunload-added-but-not-removed
 

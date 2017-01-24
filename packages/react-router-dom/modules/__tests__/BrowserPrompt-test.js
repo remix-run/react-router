@@ -1,20 +1,14 @@
 import expect from 'expect'
 import React from 'react'
 import ReactDOM from 'react-dom'
-import { Simulate } from 'react-addons-test-utils'
-import createMemoryHistory from 'history/createMemoryHistory'
-import MemoryRouter from '../MemoryRouter'
-import Router from '../Router'
-import BrowserPrompt from '../BrowserPrompt'
-import Redirect from '../Redirect'
-import Route from '../Route'
-import Link from '../Link'
-import Switch from '../Switch'
+import { MemoryRouter } from '../../'
+import { Router } from '../../'
+import { Route } from '../../'
+import { BrowserPrompt } from '../../'
 
 describe('<BrowserPrompt>', () => {
 
   it('renders BrowserPrompt', () => {
-
     const div = document.createElement('div')
     const TEXT = 'Mrs. Kato'
     let browserPrompt = <BrowserPrompt 

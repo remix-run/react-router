@@ -1,8 +1,8 @@
 import React from 'react'
-import Router from 'react-router/BrowserRouter'
+import Router from 'react-router-dom/BrowserRouter'
 import Route from 'react-router/Route'
-import Link from 'react-router/Link'
-import BrowserPrompt from '../../react-router/BrowserPrompt'
+import Link from 'react-router-dom/Link'
+import BrowserPrompt from '../../react-router-dom/BrowserPrompt'
 
 const PreventingTransitionsExample = () => (
   <Router>
