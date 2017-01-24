@@ -1,9 +1,9 @@
 import expect from 'expect'
 import React, { PropTypes } from 'react'
 import ReactDOM from 'react-dom'
-import HashRouter from '../HashRouter'
+import MemoryRouter from '../MemoryRouter'
 
-describe('A <HashRouter>', () => {
+describe('A <MemoryRouter>', () => {
   it('puts a router on context', () => {
     let router
     const RouterSubject = (props, context) => {
@@ -18,9 +18,9 @@ describe('A <HashRouter>', () => {
     const node = document.createElement('div')
 
     ReactDOM.render((
-      <HashRouter>
+      <MemoryRouter>
         <RouterSubject/>
-      </HashRouter>
+      </MemoryRouter>
     ), node)
 
     expect(router).toBeAn('object')

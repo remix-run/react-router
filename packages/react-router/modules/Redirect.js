@@ -8,6 +8,7 @@ class Redirect extends React.Component {
   static contextTypes = {
     router: PropTypes.shape({
       history: PropTypes.shape({
+        isStatic: PropTypes.bool,
         push: PropTypes.func.isRequired,
         replace: PropTypes.func.isRequired
       }).isRequired
@@ -27,15 +28,12 @@ class Redirect extends React.Component {
   }
 
   componentWillMount() {
-    // TODO: Get this from context.
-    this.isServerRender = typeof window !== 'object'
-
-    if (this.isServerRender)
+    if (this.context.router.history.isStatic)
       this.perform()
   }
 
   componentDidMount() {
-    if (!this.isServerRender)
+    if (!this.context.router.history.isStatic)
       this.perform()
   }
 

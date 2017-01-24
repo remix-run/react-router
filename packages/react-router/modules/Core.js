@@ -137,7 +137,7 @@ Route.propTypes = {
   path: PropTypes.string,
   exact: PropTypes.bool,
   strict: PropTypes.bool,
-  component: (props, propName, componentName) => {
+  component: (props, propName, componentName, ...rest) => {
     if (props.component && props.render)
       return new Error('You should not use <Route component> and <Route render> in the same route; <Route render> will be ignored')
 
@@ -147,7 +147,7 @@ Route.propTypes = {
     if (props.render && props.children)
       return new Error('You should not use <Route render> and <Route children> in the same route; <Route children> will be ignored')
 
-    return PropTypes.func(props, propName, componentName)
+    return PropTypes.func(props, propName, componentName, ...rest)
   },
   render: PropTypes.func,
   children: PropTypes.oneOfType([
@@ -178,7 +178,7 @@ Route.render = ({ component, render, children, ...props }) => {
 /**
  * The public API for rendering the first <Route> that matches.
  */
-const Switch = ({ history, children }) => {
+const Switch = ({ children, history }) => {
   const routes = React.Children.toArray(children)
 
   let route, computedMatch
@@ -191,24 +191,24 @@ const Switch = ({ history, children }) => {
 }
 
 Switch.propTypes = {
-  history: PropTypes.object.isRequired,
-  children: PropTypes.node
+  children: PropTypes.node,
+  history: PropTypes.shape({
+    location: PropTypes.shape({
+      pathname: PropTypes.string.isRequired
+    }).isRequired
+  }).isRequired
 }
 
 /**
  * The public API for putting history on context.
  */
 const Router = ({ children, history }) => (
-  children ? (
-    <RouterProvider match={null} history={history}>
-      { children }
-    </RouterProvider>
-  ) : null
+  children ? <RouterProvider children={children} history={history} match={null}/> : null
 )
 
 Router.propTypes = {
-  history: PropTypes.object.isRequired,
-  children: PropTypes.node
+  children: PropTypes.node,
+  history: PropTypes.object.isRequired
 }
 
 const ConnectedRoute = withRouter(Route)

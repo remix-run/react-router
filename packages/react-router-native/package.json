@@ -15,9 +15,6 @@
     "index.js",
     "README.md"
   ],
-  "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
-  },
   "dependencies": {
     "react-router": "4.0.0-alpha.6"
   },
