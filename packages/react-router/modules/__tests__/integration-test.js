@@ -11,135 +11,8 @@ import Route from '../Route'
 import Switch from '../Switch'
 
 describe('Integration Tests', () => {
-
-  it('renders root Route', () => {
-    const div = document.createElement('div')
-    const TEXT = 'Mrs. Kato'
-    ReactDOM.render((
-      <MemoryRouter initialEntries={[ '/' ]}>
-        <Route path="/" render={() => (
-          <h1>{TEXT}</h1>
-        )}/>
-      </MemoryRouter>
-    ), div)
-    expect(div.innerHTML).toContain(TEXT)
-  })
-
-  it('does not render a route that doesn\'t match', () => {
-    const div = document.createElement('div')
-    const TEXT = 'bubblegum'
-    ReactDOM.render((
-      <MemoryRouter initialEntries={[ '/bunnies' ]}>
-        <Route path="/flowers" render={() => (
-          <h1>{TEXT}</h1>
-        )}/>
-      </MemoryRouter>
-    ), div)
-    expect(div.innerHTML).toNotContain(TEXT)
-  })
-
-  it('renders an exact route with trailing slash - 1 of 2', () => {
-    const div = document.createElement('div')
-    const TEXT = 'bubblegum'
-    ReactDOM.render((
-      <MemoryRouter initialEntries={[ '/somepath/' ]}>
-        <Route exact path="/somepath" render={() => (
-          <h1>{TEXT}</h1>
-        )}/>
-      </MemoryRouter>
-    ), div)
-    expect(div.innerHTML).toContain(TEXT)
-  })
-
-  it('renders an exact route with trailing slash - 2 of 2', () => {
-    const div = document.createElement('div')
-    const TEXT = 'bubblegum'
-    ReactDOM.render((
-      <MemoryRouter initialEntries={[ '/somepath' ]}>
-        <Route exact path="/somepath/" render={() => (
-          <h1>{TEXT}</h1>
-        )}/>
-      </MemoryRouter>
-    ), div)
-    expect(div.innerHTML).toContain(TEXT)
-  })
-
-  it('does not render an exact strict route with trailing slash - 1 of 2', () => {
-    const div = document.createElement('div')
-    const TEXT = 'bubblegum'
-    ReactDOM.render((
-      <MemoryRouter initialEntries={[ '/somepath/' ]}>
-        <Route exact strict path="/somepath" render={() => (
-          <h1>{TEXT}</h1>
-        )}/>
-      </MemoryRouter>
-    ), div)
-    expect(div.innerHTML).toNotContain(TEXT)
-  })
-
-  it('does not render an exact strict route with trailing slash - 2 of 2', () => {
-    const div = document.createElement('div')
-    const TEXT = 'bubblegum'
-    ReactDOM.render((
-      <MemoryRouter initialEntries={[ '/somepath' ]}>
-        <Route exact strict path="/somepath/" render={() => (
-          <h1>{TEXT}</h1>
-        )}/>
-      </MemoryRouter>
-    ), div)
-    expect(div.innerHTML).toNotContain(TEXT)
-  })
-
-  it('matches correct route when routes have similar paths - test 1 of 2', () => {
-    const div = document.createElement('div')
-    const TEXT1 = 'bubblegum'
-    const TEXT2 = 'shoes'
-    const TEXT3 = 'stampede'
-    const TEXT4 = 'brady'
-    ReactDOM.render((
-      <MemoryRouter initialEntries={[ '/some' ]}>
-        <div>
-          <Route path="/some" children={({ match }) => (
-            <h1>{match ? TEXT1 : TEXT2}</h1>
-          )}/>
-          <Route path="/some-path" children={({ match }) => (
-            <h1>{match ? TEXT3 : TEXT4}</h1>
-          )}/>
-        </div>
-      </MemoryRouter>
-    ), div)
-    expect(div.innerHTML).toContain(TEXT1)
-    expect(div.innerHTML).toContain(TEXT4)
-    expect(div.innerHTML).toNotContain(TEXT3)
-    expect(div.innerHTML).toNotContain(TEXT2)
-  })
-
-  it('matches correct route when routes have similar paths - test 2 of 2', () => {
-    const div = document.createElement('div')
-    const TEXT1 = 'bubblegum'
-    const TEXT2 = 'shoes'
-    const TEXT3 = 'stampede'
-    const TEXT4 = 'brady'
-    ReactDOM.render((
-      <MemoryRouter initialEntries={[ '/some-path' ]}>
-        <div>
-          <Route path="/some" children={({ match }) => (
-            <h1>{match ? TEXT1 : TEXT2}</h1>
-          )}/>
-          <Route path="/some-path" children={({ match }) => (
-            <h1>{match ? TEXT3 : TEXT4}</h1>
-          )}/>
-        </div>
-      </MemoryRouter>
-    ), div)
-    expect(div.innerHTML).toNotContain(TEXT1)
-    expect(div.innerHTML).toNotContain(TEXT4)
-    expect(div.innerHTML).toContain(TEXT3)
-    expect(div.innerHTML).toContain(TEXT2)
-  })
-
   it('renders nested matches', () => {
-    const div = document.createElement('div')
+    const node = document.createElement('div')
     const TEXT1 = 'Ms. Tripp'
     const TEXT2 = 'Mrs. Schiffman'
     ReactDOM.render((
@@ -153,13 +26,13 @@ describe('Integration Tests', () => {
           </div>
         )}/>
       </MemoryRouter>
-    ), div)
-    expect(div.innerHTML).toContain(TEXT1)
-    expect(div.innerHTML).toContain(TEXT2)
+    ), node)
+    expect(node.innerHTML).toContain(TEXT1)
+    expect(node.innerHTML).toContain(TEXT2)
   })
 
   it('renders only as deep as the matching Route', () => {
-    const div = document.createElement('div')
+    const node = document.createElement('div')
     const TEXT1 = 'Ms. Tripp'
     const TEXT2 = 'Mrs. Schiffman'
     ReactDOM.render((
@@ -173,13 +46,13 @@ describe('Integration Tests', () => {
           </div>
         )}/>
       </MemoryRouter>
-    ), div)
-    expect(div.innerHTML).toContain(TEXT1)
-    expect(div.innerHTML).toNotContain(TEXT2)
+    ), node)
+    expect(node.innerHTML).toContain(TEXT1)
+    expect(node.innerHTML).toNotContain(TEXT2)
   })
 
   it('renders multiple matching routes', () => {
-    const div = document.createElement('div')
+    const node = document.createElement('div')
     const TEXT1 = 'Mrs. Schiffman'
     const TEXT2 = 'Mrs. Burton'
     ReactDOM.render((
@@ -197,9 +70,9 @@ describe('Integration Tests', () => {
           </main>
         </div>
       </MemoryRouter>
-    ), div)
-    expect(div.innerHTML).toContain(TEXT1)
-    expect(div.innerHTML).toContain(TEXT2)
+    ), node)
+    expect(node.innerHTML).toContain(TEXT1)
+    expect(node.innerHTML).toContain(TEXT2)
   })
 
   //describe('Ambiguous matches', () => {
@@ -214,7 +87,7 @@ describe('Integration Tests', () => {
   //  }
 
   //  it('allows matching sequentially to disambiguate', () => {
-  //    const div = document.createElement('div')
+  //    const node = document.createElement('div')
   //    ReactDOM.render((
   //      <MemoryRouter initialEntries={[ '/' ]}>
   //        <div>
@@ -231,25 +104,25 @@ describe('Integration Tests', () => {
   //          </Switch>
   //        </div>
   //      </MemoryRouter>
-  //    ), div)
-  //    expect(div.innerHTML).toNotContain('static component')
-  //    expect(div.innerHTML).toNotContain('dynamic component')
-  //    expect(div.innerHTML).toContain('root component')
+  //    ), node)
+  //    expect(node.innerHTML).toNotContain('static component')
+  //    expect(node.innerHTML).toNotContain('dynamic component')
+  //    expect(node.innerHTML).toContain('root component')
 
-  //    Simulate.click(div.querySelector('#dynamic'), leftClickEvent)
-  //    expect(div.innerHTML).toNotContain('static component')
-  //    expect(div.innerHTML).toNotContain('root component')
-  //    expect(div.innerHTML).toContain('dynamic component')
+  //    Simulate.click(node.querySelector('#dynamic'), leftClickEvent)
+  //    expect(node.innerHTML).toNotContain('static component')
+  //    expect(node.innerHTML).toNotContain('root component')
+  //    expect(node.innerHTML).toContain('dynamic component')
 
-  //    Simulate.click(div.querySelector('#root'), leftClickEvent)
-  //    expect(div.innerHTML).toNotContain('static component')
-  //    expect(div.innerHTML).toNotContain('dynamic component')
-  //    expect(div.innerHTML).toContain('root component')
+  //    Simulate.click(node.querySelector('#root'), leftClickEvent)
+  //    expect(node.innerHTML).toNotContain('static component')
+  //    expect(node.innerHTML).toNotContain('dynamic component')
+  //    expect(node.innerHTML).toContain('root component')
 
-  //    Simulate.click(div.querySelector('#dynamic'), leftClickEvent)
-  //    expect(div.innerHTML).toNotContain('static component')
-  //    expect(div.innerHTML).toNotContain('root component')
-  //    expect(div.innerHTML).toContain('dynamic component')
+  //    Simulate.click(node.querySelector('#dynamic'), leftClickEvent)
+  //    expect(node.innerHTML).toNotContain('static component')
+  //    expect(node.innerHTML).toNotContain('root component')
+  //    expect(node.innerHTML).toContain('dynamic component')
   //  })
   //})
 
@@ -265,7 +138,7 @@ describe('Integration Tests', () => {
   //  }
 
   //  it('navigates', () => {
-  //    const div = document.createElement('div')
+  //    const node = document.createElement('div')
   //    const TEXT1 = 'I AM PAGE 1'
   //    ReactDOM.render((
   //      <MemoryRouter>
@@ -276,17 +149,17 @@ describe('Integration Tests', () => {
   //          )}/>
   //        </div>
   //      </MemoryRouter>
-  //    ), div)
-  //    expect(div.innerHTML).toNotContain(TEXT1)
+  //    ), node)
+  //    expect(node.innerHTML).toNotContain(TEXT1)
 
-  //    Simulate.click(div.querySelector('#one'), leftClickEvent)
-  //    expect(div.innerHTML).toContain(TEXT1)
+  //    Simulate.click(node.querySelector('#one'), leftClickEvent)
+  //    expect(node.innerHTML).toContain(TEXT1)
   //  })
   //})
 
   describe('Switch', () => {
     it('renders pathless Routes', () => {
-      const div = document.createElement('div')
+      const node = document.createElement('div')
       const FOO = '/cupcakes'
       const MISS = '/grown-up-onsie'
       ReactDOM.render((
@@ -296,13 +169,13 @@ describe('Integration Tests', () => {
             <Route render={() => <div>{MISS}</div>}/>
           </Switch>
         </MemoryRouter>
-      ), div)
-      expect(div.innerHTML).toNotContain(FOO)
-      expect(div.innerHTML).toContain(MISS)
+      ), node)
+      expect(node.innerHTML).toNotContain(FOO)
+      expect(node.innerHTML).toContain(MISS)
     })
 
     it('renders the first matching Route', () => {
-      const div = document.createElement('div')
+      const node = document.createElement('div')
       const FOO = '/cupcakes'
       const MISS = '/grown-up-onsie'
       ReactDOM.render((
@@ -312,9 +185,9 @@ describe('Integration Tests', () => {
             <Route render={() => <div>{MISS}</div>}/>
           </Switch>
         </MemoryRouter>
-      ), div)
-      expect(div.innerHTML).toContain(FOO)
-      expect(div.innerHTML).toNotContain(MISS)
+      ), node)
+      expect(node.innerHTML).toContain(FOO)
+      expect(node.innerHTML).toNotContain(MISS)
     })
   })
 
@@ -332,7 +205,7 @@ describe('Integration Tests', () => {
 
     // TODO
     it.skip('Prompts the user to allow a transition', () => {
-      const div = document.createElement('div')
+      const node = document.createElement('div')
       let message
       ReactDOM.render((
         <MemoryRouter
@@ -343,55 +216,9 @@ describe('Integration Tests', () => {
             <Prompt message={TEXT}/>
           </div>
         </MemoryRouter>
-      ), div)
-      Simulate.click(div.querySelector('a'), leftClickEvent)
+      ), node)
+      Simulate.click(node.querySelector('a'), leftClickEvent)
       expect(message).toEqual(TEXT)
-    })
-  })
-
-  describe('Redirect', () => {
-    const createHistoryMock = () => {
-      const pushes = []
-      const replaces = []
-      const history = createMemoryHistory()
-      history.push = (loc) => pushes.push(loc)
-      history.replace = (loc) => replaces.push(loc)
-      history.getResults = () => ({ replaces, pushes })
-      return history
-    }
-
-    it('replaces the current URL', (done) => {
-      const div = document.createElement('div')
-      const REDIRECTED = '/REDIRECTED'
-      const history = createHistoryMock()
-
-      ReactDOM.render((
-        <Router history={history}>
-          <Redirect to={REDIRECTED}/>
-        </Router>
-      ), div, () => {
-        const { pushes, replaces } = history.getResults()
-        expect(pushes.length).toEqual(0)
-        expect(replaces.length).toEqual(1)
-        expect(replaces[0]).toEqual(REDIRECTED)
-        done()
-      })
-    })
-
-    it('pushes a new URL with push', () => {
-      const div = document.createElement('div')
-      const REDIRECTED = '/REDIRECTED'
-      const history = createHistoryMock()
-      ReactDOM.render((
-        <Router history={history}>
-          <Redirect to={REDIRECTED} push={true}/>
-        </Router>
-      ), div, () => {
-        const { pushes, replaces } = history.getResults()
-        expect(pushes.length).toEqual(1)
-        expect(pushes[0]).toEqual(REDIRECTED)
-        expect(replaces.length).toEqual(0)
-      })
     })
   })
 })
