@@ -1,24 +1,12 @@
 import invariant from 'invariant'
 import React, { PropTypes } from 'react'
+import { createPath, parsePath } from 'history/PathUtils'
 import Router from './Router'
 
 const createHref = path => path
-const createLocation = (url) => {
-  let pathname = url || '/'
-  let search = ''
-  let hash = ''
 
-  const hashIndex = pathname.indexOf('#')
-  if (hashIndex !== -1) {
-    hash = pathname.substr(hashIndex)
-    pathname = pathname.substr(0, hashIndex)
-  }
-
-  const searchIndex = pathname.indexOf('?')
-  if (searchIndex !== -1) {
-    search = pathname.substr(searchIndex)
-    pathname = pathname.substr(0, searchIndex)
-  }
+const normalizeLocation = (object) => {
+  const { pathname = '/', search = '', hash = '' } = object
 
   return {
     pathname,
@@ -27,56 +15,67 @@ const createLocation = (url) => {
   }
 }
 
-const createURL = (location) =>
-  typeof location === 'string' ? location : location.pathname + location.search
+const createLocation = (location) =>
+  typeof location === 'string' ? parsePath(location) : normalizeLocation(location)
 
-const listen = () => {
+const createURL = (location) =>
+  typeof location === 'string' ? location : createPath(location)
+
+const staticHandler = (methodName) => () => {
   invariant(
     false,
-    'You cannot listen for location changes using <StaticRouter>'
+    'You cannot %s with <StaticRouter>',
+    methodName
   )
 }
 
 /**
- * The public top-level API for a "static" <Router>. It's static because
- * it doesn't actually change the location anywhere. Instead, it just records
- * location changes in a context object.
+ * The public top-level API for a "static" <Router>, so-called because it
+ * can't actually change the current location. Instead, it just records
+ * location changes in a context object. Useful mainly in testing and
+ * server-rendering scenarios.
  */
 class StaticRouter extends React.Component {
   static propTypes = {
     context: PropTypes.object.isRequired,
-    url: PropTypes.string
+    location: PropTypes.oneOfType([
+      PropTypes.string,
+      PropTypes.object
+    ])
   }
 
   static defaultProps = {
-    url: '/'
+    location: '/'
   }
 
   handlePush = (location) => {
     const { context } = this.props
     context.action = 'PUSH'
-    context.location = location
+    context.location = createLocation(location)
     context.url = createURL(location)
   }
 
   handleReplace = (location) => {
     const { context } = this.props
     context.action = 'REPLACE'
-    context.location = location
+    context.location = createLocation(location)
     context.url = createURL(location)
   }
 
   render() {
-    const { context, url, ...props } = this.props // eslint-disable-line no-unused-vars
+    const { context, location, ...props } = this.props // eslint-disable-line no-unused-vars
 
     const history = {
       isStatic: true,
       createHref,
       action: 'POP',
-      location: createLocation(this.props.url),
+      location: createLocation(location),
       push: this.handlePush,
       replace: this.handleReplace,
-      listen
+      go: staticHandler('go'),
+      goBack: staticHandler('goBack'),
+      goForward: staticHandler('goForward'),
+      listen: staticHandler('listen')
     }
 
     return <Router {...props} history={history}/>

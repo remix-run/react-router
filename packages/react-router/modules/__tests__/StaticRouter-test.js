@@ -52,4 +52,46 @@ describe('A <StaticRouter>', () => {
     expect(context.action).toBe('REPLACE')
     expect(context.url).toBe('/somewhere-else')
   })
+
+  it('knows how to serialize location objects', () => {
+    const context = {}
+
+    ReactDOMServer.renderToStaticMarkup(
+      <StaticRouter context={context}>
+        <Redirect to={{ pathname: '/somewhere-else' }}/>
+      </StaticRouter>
+    )
+
+    expect(context.action).toBe('REPLACE')
+    expect(context.location.pathname).toBe('/somewhere-else')
+    expect(context.location.search).toBe('')
+    expect(context.location.hash).toBe('')
+    expect(context.url).toBe('/somewhere-else')
+  })
+
+  it('knows how to parse raw URLs', () => {
+    let location
+    const LocationSubject = (props, context) => {
+      location = context.router.history.location
+      return null
+    }
+
+    LocationSubject.contextTypes = {
+      router: PropTypes.object.isRequired
+    }
+
+    const context = {}
+
+    ReactDOMServer.renderToStaticMarkup(
+      <StaticRouter location="/the/path?the=query#the-hash" context={context}>
+        <LocationSubject/>
+      </StaticRouter>
+    )
+
+    expect(location).toMatch({
+      pathname: '/the/path',
+      search: '?the=query',
+      hash: '#the-hash'
+    })
+  })
 })
