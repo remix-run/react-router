@@ -1,18 +1,18 @@
 import React, { PropTypes } from 'react'
 import pathToRegexp from 'path-to-regexp'
 
-const patternCache = { true: {}, false: {} }
+const patternCache = { truetrue: {}, truefalse: {}, falsefalse: {}, falsetrue: {} }
 const cacheLimit = 10000
 let cacheCount = 0
 
-const compilePath = (pattern, exact) => {
-  const cache = patternCache[exact]
+const compilePath = (pattern, exact, strict) => {
+  const cache = patternCache[`${exact}${strict}`]
 
   if (cache[pattern])
     return cache[pattern]
 
   const keys = []
-  const re = pathToRegexp(pattern, keys, { end: exact, strict: true })
+  const re = pathToRegexp(pattern, keys, { end: exact, strict })
   const compiledPattern = { re, keys }
 
   if (cacheCount < cacheLimit) {
@@ -26,11 +26,10 @@ const compilePath = (pattern, exact) => {
 /**
  * Public API for matching a URL pathname to a path pattern.
  */
-const matchPath = (pathname, path, exact = false) => {
+const matchPath = (pathname, path, { exact = false, strict = false }) => {
   if (!path)
     return { url: pathname, isExact: true, params: {} }
-
-  const { re, keys } = compilePath(path, exact)
+  const { re, keys } = compilePath(path, exact, strict)
   const match = re.exec(pathname)
 
   if (!match)
@@ -124,10 +123,10 @@ const withRouter = (component) => {
 /**
  * The public API for matching a single path and rendering.
  */
-const Route = ({ computedMatch, history, path, exact, ...props }) => (
+const Route = ({ computedMatch, history, path, exact, strict, ...props }) => (
   Route.render({
     ...props,
-    match: computedMatch || matchPath(history.location.pathname, path, exact),
+    match: computedMatch || matchPath(history.location.pathname, path, { exact, strict }),
     history
   })
 )
@@ -137,6 +136,7 @@ Route.propTypes = {
   history: PropTypes.object.isRequired,
   path: PropTypes.string,
   exact: PropTypes.bool,
+  strict: PropTypes.bool,
   component: (props, propName, componentName, ...rest) => {
     if (props.component && props.render)
       return new Error('You should not use <Route component> and <Route render> in the same route; <Route render> will be ignored')
@@ -184,7 +184,7 @@ const Switch = ({ children, history }) => {
   let route, computedMatch
   for (let i = 0, length = routes.length; computedMatch == null && i < length; ++i) {
     route = routes[i]
-    computedMatch = matchPath(history.location.pathname, route.props.path, route.props.exact)
+    computedMatch = matchPath(history.location.pathname, route.props.path, { exact: route.props.exact, strict: route.props.strict })
   }
 
   return computedMatch ? React.cloneElement(route, { computedMatch }) : null
