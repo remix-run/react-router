@@ -26,7 +26,7 @@
     "build": "node ./scripts/build.js",
     "watch": "babel ./modules -d . --ignore __tests__ --watch",
     "prepublish": "node ./scripts/build.js",
-    "clean": "node ./scripts/clean.js",
+    "clean": "git clean -fX .",
     "lint": "eslint modules",
     "test": "karma start --single-run"
   },
