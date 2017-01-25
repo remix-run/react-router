@@ -13,7 +13,8 @@ describe('<BrowserPrompt>', () => {
     const TEXT = 'Mrs. Kato'
     let browserPrompt = <BrowserPrompt 
       beforeUnload={true} 
-      when={true} />
+      when={true} 
+      message="Changes you made may not be saved." />
 
     ReactDOM.render((
       <MemoryRouter initialEntries={[ '/' ]}>
@@ -26,6 +27,6 @@ describe('<BrowserPrompt>', () => {
       </MemoryRouter>
     ), div)
     expect(div.innerHTML).toContain(TEXT)
-    expect(browserPrompt.props).toEqual({ beforeUnload: true, when: true })
+    expect(browserPrompt.props).toEqual({ beforeUnload: true, when: true, message: "Changes you made may not be saved." })
   })
 });
