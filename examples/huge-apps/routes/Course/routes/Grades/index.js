@@ -1,4 +1,4 @@
-module.exports = {
+export default {
   path: 'grades',
   getComponent(nextState, cb) {
     System.import('./components/Grades')
