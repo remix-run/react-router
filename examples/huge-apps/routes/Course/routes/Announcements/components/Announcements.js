@@ -11,4 +11,4 @@ class Announcements extends Component {
   }
 }
 
-module.exports = Announcements
+export default Announcements

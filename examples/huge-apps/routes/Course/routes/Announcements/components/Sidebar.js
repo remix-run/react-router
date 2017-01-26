@@ -23,4 +23,4 @@ class AnnouncementsSidebar extends Component {
   }
 }
 
-module.exports = AnnouncementsSidebar
+export default AnnouncementsSidebar

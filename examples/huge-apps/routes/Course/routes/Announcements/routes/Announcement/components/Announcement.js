@@ -15,4 +15,4 @@ class Announcement extends Component {
   }
 }
 
-module.exports = Announcement
+export default Announcement

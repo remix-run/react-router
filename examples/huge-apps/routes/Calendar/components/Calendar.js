@@ -19,4 +19,4 @@ class Calendar extends Component {
   }
 }
 
-module.exports = Calendar
+export default Calendar

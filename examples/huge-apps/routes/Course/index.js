@@ -1,19 +1,21 @@
-module.exports = {
+import Announcements from './routes/Announcements';
+import Assignments from './routes/Assignments';
+import Grades from './routes/Grades';
+
+export default {
   path: 'course/:courseId',
 
   getChildRoutes(partialNextState, cb) {
-    require.ensure([], (require) => {
-      cb(null, [
-        require('./routes/Announcements'),
-        require('./routes/Assignments'),
-        require('./routes/Grades')
-      ])
-    })
+    cb(null, [
+      Announcements,
+      Assignments,
+      Grades
+    ])
   },
 
   getComponent(nextState, cb) {
-    require.ensure([], (require) => {
-      cb(null, require('./components/Course'))
-    })
+    System.import('./components/Course')
+           .then(module => cb(null, module.default))
+           .catch(err => console.error(`Partial module loading failed ${err}`))
   }
 }

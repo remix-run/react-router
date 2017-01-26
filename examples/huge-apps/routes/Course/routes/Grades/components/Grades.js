@@ -18,4 +18,4 @@ class Grades extends Component {
   }
 }
 
-module.exports = Grades
+export default Grades

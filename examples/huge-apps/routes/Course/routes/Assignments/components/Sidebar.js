@@ -23,4 +23,4 @@ class Sidebar extends Component {
   }
 }
 
-module.exports = Sidebar
+export default Sidebar
