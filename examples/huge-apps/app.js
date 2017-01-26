@@ -5,11 +5,11 @@ import { Router, browserHistory } from 'react-router'
 import withExampleBasename from '../withExampleBasename'
 import './stubs/COURSES'
 
-import Calendar from './routes/Calendar';
-import Course from './routes/Course';
-import Grades from './routes/Grades';
-import Messages from './routes/Messages';
-import Profile from './routes/Profile';
+import Calendar from './routes/Calendar'
+import Course from './routes/Course'
+import Grades from './routes/Grades'
+import Messages from './routes/Messages'
+import Profile from './routes/Profile'
 
 const rootRoute = {
   childRoutes: [ {
