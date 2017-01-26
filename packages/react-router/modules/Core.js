@@ -1,26 +1,32 @@
+import invariant from 'invariant'
 import React, { PropTypes } from 'react'
 import matchPath from './matchPath'
+
+/**
+ * The public API for putting history on context.router.
+ */
+const Router = ({ children, history }) => (
+  children ? <RouterProvider children={children} router={history}/> : null
+)
+
+Router.propTypes = {
+  children: PropTypes.node,
+  history: PropTypes.object.isRequired
+}
 
 class RouterProvider extends React.Component {
   static propTypes = {
     children: PropTypes.node,
-    history: PropTypes.object,
-    match: PropTypes.object
+    router: PropTypes.object
   }
 
   static childContextTypes = {
-    router: PropTypes.shape({
-      history: PropTypes.object.isRequired,
-      getMatch: PropTypes.func.isRequired
-    }).isRequired
+    router: PropTypes.object.isRequired
   }
 
   getChildContext() {
     return {
-      router: {
-        history: this.props.history,
-        getMatch: () => this.props.match
-      }
+      router: this.props.router
     }
   }
 
@@ -31,9 +37,8 @@ class RouterProvider extends React.Component {
 }
 
 /**
- * A higher-order component that starts listening for location
- * changes (calls `history.listen`) and re-renders the component
- * each time it does. Also, passes `context.router` as a prop.
+ * The public API for listening for route changes and re-rendering
+ * when it does. Also, passes context.router as a prop.
  */
 const withRouter = (component) => {
   return class extends React.Component {
@@ -41,16 +46,13 @@ const withRouter = (component) => {
 
     static contextTypes = {
       router: PropTypes.shape({
-        history: PropTypes.shape({
-          listen: PropTypes.func.isRequired
-        }).isRequired,
-        getMatch: PropTypes.func.isRequired
+        listen: PropTypes.func.isRequired
       }).isRequired
     }
 
     componentWillMount() {
-      // Do this here so we can catch actions in componentDidMount (e.g. <Redirect>).
-      this.unlisten = this.context.router.history.listen(() => this.forceUpdate())
+      // Use cWM so we can <Redirect> on the initial render.
+      this.unlisten = this.context.router.listen(() => this.forceUpdate())
     }
 
     componentWillUnmount() {
@@ -58,114 +60,125 @@ const withRouter = (component) => {
     }
 
     render() {
-      const { history, getMatch } = this.context.router
-
       return React.createElement(component, {
         ...this.props,
-        history,
-        match: getMatch()
+        router: this.context.router
       })
     }
   }
 }
 
+const computeMatch = ({ computedMatch, router, path, exact, strict }) =>
+  computedMatch || matchPath(router.location.pathname, path, { exact, strict })
+
 /**
  * The public API for matching a single path and rendering.
  */
-const Route = ({ computedMatch, history, path, exact, strict, ...props }) => (
-  Route.render({
-    ...props,
-    match: computedMatch || matchPath(history.location.pathname, path, { exact, strict }),
-    history
-  })
-)
+class Route extends React.Component {
+  static propTypes = {
+    path: PropTypes.string,
+    exact: PropTypes.bool,
+    strict: PropTypes.bool,
+    component: (props, propName, componentName, ...rest) => {
+      if (props.component && props.render)
+        return new Error('You should not use <Route component> and <Route render> in the same route; <Route render> will be ignored')
 
-Route.propTypes = {
-  computedMatch: PropTypes.object, // private, from <Switch>
-  history: PropTypes.object.isRequired,
-  path: PropTypes.string,
-  exact: PropTypes.bool,
-  strict: PropTypes.bool,
-  component: (props, propName, componentName, ...rest) => {
-    if (props.component && props.render)
-      return new Error('You should not use <Route component> and <Route render> in the same route; <Route render> will be ignored')
+      if (props.component && props.children)
+        return new Error('You should not use <Route component> and <Route children> in the same route; <Route children> will be ignored')
 
-    if (props.component && props.children)
-      return new Error('You should not use <Route component> and <Route children> in the same route; <Route children> will be ignored')
+      if (props.render && props.children)
+        return new Error('You should not use <Route render> and <Route children> in the same route; <Route children> will be ignored')
 
-    if (props.render && props.children)
-      return new Error('You should not use <Route render> and <Route children> in the same route; <Route children> will be ignored')
+      return PropTypes.func(props, propName, componentName, ...rest)
+    },
+    render: PropTypes.func,
+    children: PropTypes.oneOfType([
+      PropTypes.func,
+      PropTypes.node
+    ]),
+    computedMatch: PropTypes.object, // private, from <Switch>
+    router: PropTypes.shape({ // private, from withRouter
+      location: PropTypes.shape({
+        pathname: PropTypes.string.isRequired
+      }).isRequired
+    }).isRequired
+  }
 
-    return PropTypes.func(props, propName, componentName, ...rest)
-  },
-  render: PropTypes.func,
-  children: PropTypes.oneOfType([
-    PropTypes.func,
-    PropTypes.node
-  ])
-}
+  /**
+   * Low-level API for rendering the props provided to a <Route> element.
+   */
+  static render = ({ component, render, children, ...props }) => {
+    const { router } = props
 
-/**
- * Low-level API for rendering the props provided to a <Route> element.
- */
-Route.render = ({ component, render, children, ...props }) => {
-  const element = (
-    component ? ( // component prop gets first priority, only called if there's a match
-      props.match ? React.createElement(component, props) : null
-    ) : render ? ( // render prop is next, only called if there's a match
-      props.match ? render(props) : null
-    ) : children ? ( // children come last, always called
-      typeof children === 'function' ? children(props) : React.Children.only(children)
-    ) : (
-      null
+    invariant(
+      router,
+      'Route.render is missing the "router" prop. Did you forget to pass it along?'
     )
-  )
 
-  return element && <RouterProvider {...props} children={element}/>
+    const child = (
+      component ? ( // component prop gets first priority, only called if there's a match
+        router.match ? React.createElement(component, props) : null
+      ) : render ? ( // render prop is next, only called if there's a match
+        router.match ? render(props) : null
+      ) : children ? ( // children come last, always called
+        typeof children === 'function' ? children(props) : React.Children.only(children)
+      ) : (
+        null
+      )
+    )
+
+    return child && <RouterProvider {...props} children={child}/>
+  }
+
+  componentWillMount() {
+    this.router = {
+      ...this.props.router,
+      match: computeMatch(this.props)
+    }
+  }
+
+  componentWillReceiveProps(nextProps) {
+    Object.assign(this.router, {
+      ...nextProps.router,
+      match: computeMatch(nextProps)
+    })
+  }
+
+  render() {
+    return Route.render({ ...this.props, router: this.router })
+  }
 }
 
 /**
  * The public API for rendering the first <Route> that matches.
  */
-const Switch = ({ children, history }) => {
+const Switch = ({ children, router }) => {
   const routes = React.Children.toArray(children)
 
-  let route, computedMatch
-  for (let i = 0, length = routes.length; computedMatch == null && i < length; ++i) {
+  let route, match
+  for (let i = 0, length = routes.length; match == null && i < length; ++i) {
     route = routes[i]
-    computedMatch = matchPath(history.location.pathname, route.props.path, route.props)
+    match = matchPath(router.location.pathname, route.props.path, route.props)
   }
 
-  return computedMatch ? React.cloneElement(route, { computedMatch }) : null
+  return match ? React.cloneElement(route, { computedMatch: match }) : null
 }
 
 Switch.propTypes = {
   children: PropTypes.node,
-  history: PropTypes.shape({
+  router: PropTypes.shape({ // private, from withRouter
     location: PropTypes.shape({
       pathname: PropTypes.string.isRequired
     }).isRequired
   }).isRequired
 }
 
-/**
- * The public API for putting history on context.
- */
-const Router = ({ children, history }) => (
-  children ? <RouterProvider children={children} history={history} match={null}/> : null
-)
-
-Router.propTypes = {
-  children: PropTypes.node,
-  history: PropTypes.object.isRequired
-}
-
-const ConnectedRoute = withRouter(Route)
-const ConnectedSwitch = withRouter(Switch)
+const xRoute = withRouter(Route)
+const xSwitch = withRouter(Switch)
 
 export {
+  Router,
   withRouter,
-  ConnectedRoute as Route,
-  ConnectedSwitch as Switch,
-  Router
+  xRoute as Route,
+  xSwitch as Switch
 }

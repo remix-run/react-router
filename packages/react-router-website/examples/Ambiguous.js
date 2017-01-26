@@ -37,10 +37,8 @@ const AmbiguousExample = () => (
 )
 
 const About = () => <h2>About</h2>
-
 const Company = () => <h2>Company</h2>
-
-const User = ({ match }) => (
+const User = ({ router: { match } }) => (
   <div>
     <h2>User</h2>
     <div>{match.params.user}</div>

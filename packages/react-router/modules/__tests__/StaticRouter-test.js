@@ -7,12 +7,12 @@ import Redirect from '../Redirect'
 describe('A <StaticRouter>', () => {
   it('puts a router on context', () => {
     let router
-    const RouterSubject = (props, context) => {
+    const ContextChecker = (props, context) => {
       router = context.router
       return null
     }
 
-    RouterSubject.contextTypes = {
+    ContextChecker.contextTypes = {
       router: PropTypes.object.isRequired
     }
 
@@ -20,7 +20,7 @@ describe('A <StaticRouter>', () => {
 
     ReactDOMServer.renderToStaticMarkup(
       <StaticRouter context={context}>
-        <RouterSubject/>
+        <ContextChecker/>
       </StaticRouter>
     )
 
@@ -72,7 +72,7 @@ describe('A <StaticRouter>', () => {
   it('knows how to parse raw URLs', () => {
     let location
     const LocationSubject = (props, context) => {
-      location = context.router.history.location
+      location = context.router.location
       return null
     }
 

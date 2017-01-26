@@ -6,12 +6,12 @@ import MemoryRouter from '../MemoryRouter'
 describe('A <MemoryRouter>', () => {
   it('puts a router on context', () => {
     let router
-    const RouterSubject = (props, context) => {
+    const ContextChecker = (props, context) => {
       router = context.router
       return null
     }
 
-    RouterSubject.contextTypes = {
+    ContextChecker.contextTypes = {
       router: PropTypes.object.isRequired
     }
 
@@ -19,7 +19,7 @@ describe('A <MemoryRouter>', () => {
 
     ReactDOM.render((
       <MemoryRouter>
-        <RouterSubject/>
+        <ContextChecker/>
       </MemoryRouter>
     ), node)
 

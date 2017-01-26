@@ -13,7 +13,6 @@ const NoMatchExample = () => (
         <li><Link to="/will-not-match">Will Not Match</Link></li>
         <li><Link to="/also/will/not/match">Also Will Not Match</Link></li>
       </ul>
-
       <Switch>
         <Route path="/" exact component={Home}/>
         <Route path="/will-match" component={WillMatch}/>
@@ -34,9 +33,9 @@ const Home = () => (
 
 const WillMatch = () => <h3>Matched!</h3>
 
-const NoMatch = ({ history }) => (
+const NoMatch = ({ router }) => (
   <div>
-    <h3>No match for <code>{history.location.pathname}</code></h3>
+    <h3>No match for <code>{router.location.pathname}</code></h3>
   </div>
 )
 

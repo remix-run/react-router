@@ -10,16 +10,16 @@ import Link from 'react-router-dom/Link'
 const routes = [
   { path: '/',
     exact: true,
-    sidebar: () => <div>Home!</div>,
-    main: () => <h2>Main</h2>
+    sidebar: () => <div>home!</div>,
+    main: () => <h2>Home</h2>
   },
-  { path: '/foo',
-    sidebar: () => <div>foo!</div>,
-    main: () => <h2>Foo</h2>
+  { path: '/bubblegum',
+    sidebar: () => <div>bubblegum!</div>,
+    main: () => <h2>Bubblegum</h2>
   },
-  { path: '/bar',
-    sidebar: () => <div>Bar!</div>,
-    main: () => <h2>Bar</h2>
+  { path: '/shoelaces',
+    sidebar: () => <div>shoelaces!</div>,
+    main: () => <h2>Shoelaces</h2>
   }
 ]
 
@@ -31,10 +31,10 @@ const SidebarExample = () => (
         width: '40%',
         background: '#f0f0f0'
       }}>
-        <ul>
+        <ul style={{ listStyleType: 'none', padding: 0 }}>
           <li><Link to="/">Home</Link></li>
-          <li><Link to="/foo">Foo</Link></li>
-          <li><Link to="/bar">Bar</Link></li>
+          <li><Link to="/bubblegum">Bubblegum</Link></li>
+          <li><Link to="/shoelaces">Shoelaces</Link></li>
         </ul>
 
         {routes.map((route, index) => (

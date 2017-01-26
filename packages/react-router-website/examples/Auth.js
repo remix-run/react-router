@@ -11,6 +11,21 @@ import Link from 'react-router-dom/Link'
 // 3. Log in
 // 4. Click the back button, note the URL each time
 
+const AuthExample = () => (
+  <Router>
+    <div>
+      <AuthButton/>
+      <ul>
+        <li><Link to="/public">Public Page</Link></li>
+        <li><Link to="/protected">Protected Page</Link></li>
+      </ul>
+      <Route path="/public" component={Public}/>
+      <Route path="/login" component={Login}/>
+      <PrivateRoute path="/protected" component={Protected}/>
+    </div>
+  </Router>
+)
+
 const fakeAuth = {
   isAuthenticated: false,
   authenticate(cb) {
@@ -23,40 +38,17 @@ const fakeAuth = {
   }
 }
 
-const AuthButton = withRouter(({ history }) => (
+const AuthButton = withRouter(({ router }) => (
   fakeAuth.isAuthenticated ? (
     <p>
       Welcome! <button onClick={() => {
-        fakeAuth.signout(() => history.push('/'))
+        fakeAuth.signout(() => router.push('/'))
       }}>Sign out</button>
     </p>
   ) : (
     <p>You are not logged in.</p>
   )
 ))
-
-class AuthExample extends React.Component {
-  render() {
-    const { history } = this.props
-
-    return (
-      <Router>
-        <div>
-          <AuthButton/>
-
-          <ul>
-            <li><Link to="/public">Public Page</Link></li>
-            <li><Link to="/protected">Protected Page</Link></li>
-          </ul>
-
-          <Route path="/public" component={Public}/>
-          <Route path="/login" component={Login}/>
-          <PrivateRoute path="/protected" component={Protected}/>
-        </div>
-      </Router>
-    )
-  }
-}
 
 const PrivateRoute = ({ component, ...rest }) => (
   <Route {...rest} render={props => (
@@ -65,7 +57,7 @@ const PrivateRoute = ({ component, ...rest }) => (
     ) : (
       <Redirect to={{
         pathname: '/login',
-        state: { from: props.history.location }
+        state: { from: props.router.location }
       }}/>
     )
   )}/>
@@ -86,7 +78,7 @@ class Login extends React.Component {
   }
 
   render() {
-    const { from } = this.props.history.location.state || '/'
+    const { from } = this.props.router.location.state || '/'
     const { redirectToReferrer } = this.state
 
     return (
@@ -95,9 +87,7 @@ class Login extends React.Component {
           <Redirect to={from || '/'}/>
         )}
         {from && (
-          <p>
-            You must log in to view the page at {from.pathname}
-          </p>
+          <p>You must log in to view the page at {from.pathname}</p>
         )}
         <button onClick={this.login}>Log in</button>
       </div>

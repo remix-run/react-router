@@ -14,11 +14,12 @@ const find = (id) => PEEPS.find(p => p.id == id)
 
 const RecursiveExample = () => (
   <Router>
-    <Person match={{ params: { id: 0 }, url: '' }}/>
+    <Person topMatch={{ params: { id: 0 }, url: '' }}/>
   </Router>
 )
 
-const Person = ({ match }) => {
+const Person = ({ topMatch, router }) => {
+  const match = topMatch || router.match
   const person = find(match.params.id)
 
   return (

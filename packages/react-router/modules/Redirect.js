@@ -7,11 +7,9 @@ import React, { PropTypes } from 'react'
 class Redirect extends React.Component {
   static contextTypes = {
     router: PropTypes.shape({
-      history: PropTypes.shape({
-        isStatic: PropTypes.bool,
-        push: PropTypes.func.isRequired,
-        replace: PropTypes.func.isRequired
-      }).isRequired
+      push: PropTypes.func.isRequired,
+      replace: PropTypes.func.isRequired,
+      isStatic: PropTypes.bool
     }).isRequired
   }
 
@@ -28,23 +26,23 @@ class Redirect extends React.Component {
   }
 
   componentWillMount() {
-    if (this.context.router.history.isStatic)
+    if (this.context.router.isStatic)
       this.perform()
   }
 
   componentDidMount() {
-    if (!this.context.router.history.isStatic)
+    if (!this.context.router.isStatic)
       this.perform()
   }
 
   perform() {
-    const { history } = this.context.router
+    const { router } = this.context
     const { push, to } = this.props
 
     if (push) {
-      history.push(to)
+      router.push(to)
     } else {
-      history.replace(to)
+      router.replace(to)
     }
   }
 

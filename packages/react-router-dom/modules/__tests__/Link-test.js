@@ -12,15 +12,15 @@ describe('A <Link>', () => {
       search: 'the=query',
       hash: '#the-hash'
     }
-    const div = document.createElement('div')
+    const node = document.createElement('div')
 
     ReactDOM.render((
       <MemoryRouter>
         <Link to={location}>link</Link>
       </MemoryRouter>
-    ), div)
+    ), node)
 
-    const href = div.querySelector('a').getAttribute('href')
+    const href = node.querySelector('a').getAttribute('href')
 
     expect(href).toEqual('/the/path?the=query#the-hash')
   })
@@ -37,10 +37,10 @@ describe('When a <Link> is clicked', () => {
 })
 
 describe('A <Link> underneath a <HashRouter>', () => {
-  const div = document.createElement('div')
+  const node = document.createElement('div')
 
   afterEach(() => {
-    ReactDOM.unmountComponentAtNode(div)
+    ReactDOM.unmountComponentAtNode(node)
   })
 
   const createLinkNode = (hashType, to) => {
@@ -48,9 +48,9 @@ describe('A <Link> underneath a <HashRouter>', () => {
       <HashRouter hashType={hashType}>
         <Link to={to}/>
       </HashRouter>
-    ), div)
+    ), node)
 
-    return div.querySelector('a')
+    return node.querySelector('a')
   }
 
   describe('with the "slash" hashType', () => {

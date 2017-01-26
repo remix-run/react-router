@@ -30,13 +30,13 @@ const FadeRoute = ({ component: Component, ...rest }) => {
   const willLeave = () => ({ zIndex: 1, opacity: spring(0) })
 
   return (
-    <Route {...rest} children={props => (
+    <Route {...rest} children={({ router }) => (
       <TransitionMotion
         willLeave={willLeave}
-        styles={props.match ? [ {
-          key: props.history.location.pathname,
+        styles={router.match ? [ {
+          key: router.location.pathname,
           style: { opacity: 1 },
-          data: props
+          data: router.match
         } ] : []}
       >
         {interpolatedStyles => (
@@ -62,7 +62,7 @@ const NavLink = (props) => (
   </li>
 )
 
-const HSL = ({ match: { params } }) => (
+const HSL = ({ params }) => (
   <div style={{
     ...styles.hsl,
     background: `hsl(${params.h}, ${params.s}%, ${params.l}%)`
