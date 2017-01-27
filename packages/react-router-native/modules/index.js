@@ -1,3 +1,10 @@
-export NativeRouter from './NativeRouter'
-export DeepLinkListener from './DeepLinkListener'
-export Link from './Link'
+export * from 'react-router'
+import NativeRouter from './NativeRouter'
+import Link from './Link'
+import DeepLinking from './DeepLinking'
+
+export {
+  NativeRouter,
+  Link,
+  DeepLinking
+}

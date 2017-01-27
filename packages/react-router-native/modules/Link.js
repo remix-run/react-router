@@ -7,29 +7,28 @@ class Link extends Component {
   }
 
   static defaultProps = {
-    component: TouchableHighlight
+    component: TouchableHighlight,
+    replace: false
   }
 
   static propTypes = {
-    to: PropTypes.oneOf([
-      PropTypes.string,
-      PropTypes.object
-    ]).isRequired
+    to: PropTypes.string,
+    replace: PropTypes.bool,
     component: PropTypes.func
   }
 
   handlePress = () => {
     const { router } = this.context
-    const { to } = this.props
+    const { to, replace } = this.props
     if (replace) {
-      router.replaceWith(to)
+      router.replace(to)
     } else {
-      router.transitionTo(to)
+      router.push(to)
     }
   }
 
   render() {
-    const { component: Component, ...rest }
+    const { component: Component, ...rest } = this.props
     return <Component onPress={this.handlePress} {...rest}/>
   }
 }
