@@ -24,6 +24,11 @@ export const EXAMPLES = [
     load: require('bundle?lazy!babel!./examples/PreventingTransitions'),
     loadSource: require('bundle?lazy!!prismjs?lang=jsx!./examples/PreventingTransitions.js')
   },
+  { name: 'Preventing Unload',
+    path: '/examples/preventing-unload',
+    load: require('bundle?lazy!babel!./examples/PreventingUnload'),
+    loadSource: require('bundle?lazy!!prismjs?lang=jsx!./examples/PreventingUnload.js')
+   },  
   { name: 'No Match (404)',
     path: '/examples/no-match',
     load: require('bundle?lazy!babel!./examples/NoMatch'),

@@ -2,6 +2,7 @@ export BrowserRouter from './BrowserRouter'
 export HashRouter from './HashRouter'
 export Link from './Link'
 export NavLink from './NavLink'
+export BrowserPrompt from './BrowserPrompt'
 
 // Re-export a bunch of stuff from react-router for convenience.
 export MemoryRouter from 'react-router/MemoryRouter'
@@ -12,3 +13,4 @@ export Router from 'react-router/Router'
 export Switch from 'react-router/Switch'
 export matchPath from 'react-router/matchPath'
 export withRouter from 'react-router/withRouter'
+
