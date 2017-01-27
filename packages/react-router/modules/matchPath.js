@@ -46,7 +46,7 @@ const matchPath = (pathname, path, options={}) => {
 
   return {
     path, // the path pattern used to match
-    url, // the matched portion of the URL
+    url: path === '/' && url === '' ? '/' : url, // the matched portion of the URL
     isExact, // whether or not we matched exactly
     params: keys.reduce((memo, key, index) => {
       memo[key.name] = values[index]
