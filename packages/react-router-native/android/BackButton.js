@@ -1,7 +1,7 @@
 import React, { Component, PropTypes } from 'react'
 import { BackAndroid } from 'react-native'
 
-class AndroidBackButton extends Component {
+class BackButton extends Component {
   static contextTypes = {
     router: PropTypes.object
   }
@@ -29,4 +29,4 @@ class AndroidBackButton extends Component {
   }
 }
 
-export default AndroidBackButton
+export default BackButton

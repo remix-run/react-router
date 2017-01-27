@@ -12,7 +12,7 @@ import {
   View
 } from 'react-native';
 
-import { NativeRouter, Route, Link, DeepLinking } from './modules'
+import { NativeRouter, Route, Link, DeepLinking } from './index'
 
 export default class ReactRouterNative extends Component {
   render() {

@@ -1,15 +1,15 @@
 import React, { Component } from 'react'
 import { AppRegistry, StyleSheet, Text, View } from 'react-native'
 
-import { NativeRouter, Route, Link, DeepLinking } from './modules'
-import AndroidBackButton from './modules/AndroidBackButton'
+import { NativeRouter, Route, Link, DeepLinking } from './index'
+import BackButton from './android/BackButton'
 
 export default class ReactRouterNative extends Component {
   render() {
     return (
       <NativeRouter>
         <View style={styles.container}>
-          <AndroidBackButton/>
+          <BackButton/>
           <DeepLinking/>
 
           <Route exact path="/" render={() => (

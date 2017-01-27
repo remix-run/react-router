@@ -6,6 +6,13 @@
 		"start": "node node_modules/react-native/local-cli/cli.js start",
 		"test": "jest"
 	},
+  "files": {
+    "index.js",
+    "modules/DeepLinking.js",
+    "modules/Link.js",
+    "modules/NativeRouter.js",
+    "android/BackButton.js"
+  },
 	"dependencies": {
 		"react": "~15.4.0-rc.4",
 		"react-native": "0.40.0",
