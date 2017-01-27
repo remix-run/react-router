@@ -2,16 +2,17 @@
 	"name": "react-router-native",
 	"version": "0.0.1",
 	"private": true,
+  "main": "main.js",
 	"scripts": {
 		"start": "node node_modules/react-native/local-cli/cli.js start",
 		"test": "jest"
 	},
   "files": {
-    "index.js",
-    "modules/DeepLinking.js",
-    "modules/Link.js",
-    "modules/NativeRouter.js",
-    "android/BackButton.js"
+    "main.js",
+    "DeepLinking.js",
+    "Link.js",
+    "NativeRouter.js",
+    "AndroidBackButton.js"
   },
 	"dependencies": {
 		"react": "~15.4.0-rc.4",

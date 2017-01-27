@@ -1,8 +1,7 @@
 import React, { Component } from 'react'
 import { AppRegistry, StyleSheet, Text, View } from 'react-native'
 
-import { NativeRouter, Route, Link, DeepLinking } from './index'
-import BackButton from './android/BackButton'
+import { NativeRouter, Route, Link, DeepLinking, AndroidBackButton } from './main'
 
 export default class ReactRouterNative extends Component {
   render() {
