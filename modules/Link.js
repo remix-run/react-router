@@ -38,11 +38,6 @@ function resolveToLocation(to, router) {
  * You could use the following component to link to that route:
  *
  *   <Link to={`/posts/${post.id}`} />
- *
- * Links may pass along location state and/or query string parameters
- * in the state/query props, respectively.
- *
- *   <Link ... query={{ show: true }} state={{ the: 'state' }} />
  */
 const Link = React.createClass({
 
@@ -54,9 +49,6 @@ const Link = React.createClass({
 
   propTypes: {
     to: oneOfType([ string, object, func ]),
-    query: object,
-    hash: string,
-    state: object,
     activeStyle: object,
     activeClassName: string,
     onlyActiveOnIndex: bool.isRequired,
