@@ -1,33 +1,23 @@
 {
-  "name": "react-router-native",
-  "version": "0.0.0",
-  "description": "React Native bindings for React Router",
-  "repository": "ReactTraining/react-router",
-  "license": "MIT",
-  "authors": [
-    "Michael Jackson",
-    "Ryan Florence"
-  ],
-  "files": [
-    "DeepLinkListener.js",
-    "Link.js",
-    "NativeRouter.js",
-    "index.js",
-    "README.md"
-  ],
-  "dependencies": {
+	"name": "react-router-native",
+	"version": "0.0.1",
+	"private": true,
+	"scripts": {
+		"start": "node node_modules/react-native/local-cli/cli.js start",
+		"test": "jest"
+	},
+	"dependencies": {
+		"react": "~15.4.0-rc.4",
+		"react-native": "0.40.0",
     "react-router": "4.0.0-alpha.6"
-  },
-  "devDependencies": {
-    "react": "^15.0.2",
-    "react-native": "^0.17.0"
-  },
-  "keywords": [
-    "react",
-    "router",
-    "route",
-    "routing",
-    "history",
-    "link"
-  ]
+	},
+	"devDependencies": {
+		"babel-jest": "18.0.0",
+		"babel-preset-react-native": "1.9.1",
+		"jest": "18.1.0",
+		"react-test-renderer": "~15.4.0-rc.4"
+	},
+	"jest": {
+		"preset": "react-native"
+	}
 }

@@ -1,10 +1,10 @@
 import React, { Component, PropTypes } from 'react'
 import MemoryRouter from 'react-router/MemoryRouter'
-import { AsyncStorage } from 'react-native'
+import { AsyncStorage, View } from 'react-native'
 
 class StoreHistory extends React.Component {
   static contextTypes = {
-    history: PropTypes.object
+    router: PropTypes.object
   }
 
   componentDidMount() {
@@ -16,7 +16,7 @@ class StoreHistory extends React.Component {
   }
 
   store() {
-    const { entries, index } = this.context.history
+    const { router: { entries, index } } = this.context
     AsyncStorage.setItem('history', JSON.stringify({ entries, index }))
   }
 
@@ -49,15 +49,9 @@ class NativeRouter extends React.Component {
         initialEntries={savedHistory.entries}
         initialIndex={savedHistory.index}
       >
-        {({ location, ...rest }) => (
-          <StoreHistory>
-            {typeof children === 'function' ? (
-              children({ location, ...rest })
-            ) : (
-              children
-            )}
-          </StoreHistory>
-        )}
+        <StoreHistory>
+          {React.Children.only(children)}
+        </StoreHistory>
       </MemoryRouter>
     ) : null
   }
