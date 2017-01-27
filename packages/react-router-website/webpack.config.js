@@ -44,16 +44,16 @@ module.exports = {
       // Help the examples find the router modules. This is only for the examples.
       // All modules used to build the docs site itself should import directly
       // from packages/react-router.
-      'react-router/Prompt': path.join(ReactRouterModules, 'Prompt'),
-      'react-router/Redirect': path.join(ReactRouterModules, 'Redirect'),
-      'react-router/Route': path.join(ReactRouterModules, 'Route'),
-      'react-router/Router': path.join(ReactRouterModules, 'Router'),
-      'react-router/Switch': path.join(ReactRouterModules, 'Switch'),
-      'react-router/withRouter': path.join(ReactRouterModules, 'withRouter'),
+      'react-router-dom/Link': path.join(ReactRouterDOMModules, 'Link'),
+      'react-router-dom/Prompt': path.join(ReactRouterModules, 'Prompt'),
+      'react-router-dom/Redirect': path.join(ReactRouterModules, 'Redirect'),
+      'react-router-dom/Route': path.join(ReactRouterModules, 'Route'),
+      'react-router-dom/Router': path.join(ReactRouterModules, 'Router'),
+      'react-router-dom/Switch': path.join(ReactRouterModules, 'Switch'),
+      'react-router-dom/withRouter': path.join(ReactRouterModules, 'withRouter'),
 
       // Shim the real router so people can copy paste examples into create-react-app
-      'react-router-dom/BrowserRouter': path.resolve(__dirname, 'components/ExampleRouter'),
-      'react-router-dom/Link': path.join(ReactRouterDOMModules, 'Link')
+      'react-router-dom/BrowserRouter': path.resolve(__dirname, 'components/ExampleRouter')
     }
   },
 

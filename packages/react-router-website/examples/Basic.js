@@ -1,6 +1,6 @@
 import React from 'react'
-import Route from 'react-router/Route'
 import Router from 'react-router-dom/BrowserRouter'
+import Route from 'react-router-dom/Route'
 import Link from 'react-router-dom/Link'
 
 const BasicExample = () => (

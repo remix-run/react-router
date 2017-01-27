@@ -27,7 +27,7 @@ class Switch extends React.Component {
     })
 
     // Start listening here so we can <Redirect> on the initial render.
-    this.unlisten = this.context.router.listen(() => {
+    this.unlisten = router.listen(() => {
       this.setState({
         location: router.location
       })
