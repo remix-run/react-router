@@ -14,9 +14,9 @@ describe('withRouter', () => {
     ReactDOM.unmountComponentAtNode(node)
   })
 
-  it('injects a "router" prop', () => {
+  it('injects a "location" prop', () => {
     const ContextChecker = withRouter(props => {
-      expect(props.router).toBeAn('object')
+      expect(props.location).toBeAn('object')
       return null
     })
 
@@ -37,9 +37,10 @@ describe('withRouter', () => {
       }
     }
 
-    let router
+    let location, goForward
     const ContextChecker = withRouter(props => {
-      router = props.router
+      location = props.location
+      goForward = props.goForward
       return null
     })
 
@@ -49,10 +50,10 @@ describe('withRouter', () => {
       </MemoryRouter>
     ), node)
 
-    expect(router.location.pathname).toBe('/bubblegum')
+    expect(location.pathname).toBe('/bubblegum')
 
-    router.goForward()
+    goForward()
 
-    expect(router.location.pathname).toBe('/shoelaces')
+    expect(location.pathname).toBe('/shoelaces')
   })
 })

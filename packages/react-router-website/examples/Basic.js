@@ -14,7 +14,7 @@ const BasicExample = () => (
 
       <hr/>
 
-      <Route path="/" exact component={Home}/>
+      <Route exact path="/" component={Home}/>
       <Route path="/about" component={About}/>
       <Route path="/topics" component={Topics}/>
     </div>
@@ -33,7 +33,7 @@ const About = () => (
   </div>
 )
 
-const Topics = ({ router: { match } }) => (
+const Topics = ({ match }) => (
   <div>
     <h2>Topics</h2>
     <ul>
@@ -43,13 +43,13 @@ const Topics = ({ router: { match } }) => (
     </ul>
 
     <Route path={`${match.url}/:topicId`} component={Topic}/>
-    <Route path={match.url} exact render={() => (
+    <Route exact path={match.url} render={() => (
       <h3>Please select a topic.</h3>
     )}/>
   </div>
 )
 
-const Topic = ({ router: { match } }) => (
+const Topic = ({ match }) => (
   <div>
     <h3>{match.params.topicId}</h3>
   </div>

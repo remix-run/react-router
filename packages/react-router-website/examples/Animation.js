@@ -30,13 +30,13 @@ const FadeRoute = ({ component: Component, ...rest }) => {
   const willLeave = () => ({ zIndex: 1, opacity: spring(0) })
 
   return (
-    <Route {...rest} children={({ router }) => (
+    <Route {...rest} children={({ location, match }) => (
       <TransitionMotion
         willLeave={willLeave}
-        styles={router.match ? [ {
-          key: router.location.pathname,
+        styles={match ? [ {
+          key: location.pathname,
           style: { opacity: 1 },
-          data: router.match
+          data: match
         } ] : []}
       >
         {interpolatedStyles => (

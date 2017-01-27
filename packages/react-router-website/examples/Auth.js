@@ -38,11 +38,11 @@ const fakeAuth = {
   }
 }
 
-const AuthButton = withRouter(({ router }) => (
+const AuthButton = withRouter(({ push }) => (
   fakeAuth.isAuthenticated ? (
     <p>
       Welcome! <button onClick={() => {
-        fakeAuth.signout(() => router.push('/'))
+        fakeAuth.signout(() => push('/'))
       }}>Sign out</button>
     </p>
   ) : (
@@ -57,7 +57,7 @@ const PrivateRoute = ({ component, ...rest }) => (
     ) : (
       <Redirect to={{
         pathname: '/login',
-        state: { from: props.router.location }
+        state: { from: props.location }
       }}/>
     )
   )}/>
@@ -78,7 +78,7 @@ class Login extends React.Component {
   }
 
   render() {
-    const { from } = this.props.router.location.state || '/'
+    const { from } = this.props.location.state || '/'
     const { redirectToReferrer } = this.state
 
     return (
