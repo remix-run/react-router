@@ -1,7 +1,6 @@
 {
   "name": "react-router-native",
   "version": "0.0.1",
-  "private": true,
   "main": "main.js",
   "scripts": {
     "start": "node node_modules/react-native/local-cli/cli.js start",
