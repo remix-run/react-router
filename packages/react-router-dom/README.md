@@ -1,6 +1,6 @@
 # react-router-dom
 
-DOM bindings for [React Router](https://www.npmjs.com/package/react-router).
+DOM bindings for [React Router](https://reacttraining.com/react-router).
 
 ## Installation
 
@@ -12,11 +12,12 @@ Then with a module bundler like [webpack](https://webpack.github.io/), use as yo
 
 ```js
 // using ES6 modules
-import { BrowserRouter, Link } from 'react-router-dom'
+import { BrowserRouter, Route, Link } from 'react-router-dom'
 
 // using CommonJS modules
-var BrowserRouter = require('react-router').BrowserRouter
-var Link = require('react-router').Link
+var BrowserRouter = require('react-router-dom').BrowserRouter
+var Route = require('react-router-dom').Route
+var Link = require('react-router-dom').Link
 ```
 
 The UMD build is also available on [unpkg](https://unpkg.com):
@@ -26,3 +27,11 @@ The UMD build is also available on [unpkg](https://unpkg.com):
 ```
 
 You can find the library on `window.ReactRouterDOM`.
+
+## Issues
+
+If you find a bug, please file an issue on [our issue tracker on GitHub](https://github.com/ReactTraining/react-router/issues).
+
+## Credits
+
+React Router is built and maintained by [React Training](https://reacttraining.com).
