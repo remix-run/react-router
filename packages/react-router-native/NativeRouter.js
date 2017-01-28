@@ -1,10 +1,10 @@
-import React, { Component, PropTypes } from 'react'
+import React, { PropTypes } from 'react'
 import MemoryRouter from 'react-router/MemoryRouter'
 import { AsyncStorage, View } from 'react-native'
 
 class StoreHistory extends React.Component {
   static contextTypes = {
-    router: PropTypes.object
+    router: PropTypes.object.isRequired
   }
 
   componentDidMount() {
@@ -44,6 +44,7 @@ class NativeRouter extends React.Component {
   render() {
     const { children } = this.props
     const { savedHistory } = this.state
+
     return savedHistory != null ? (
       <MemoryRouter
         initialEntries={savedHistory.entries}
