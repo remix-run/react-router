@@ -1,6 +1,6 @@
 import React, { PropTypes } from 'react'
 import MemoryRouter from 'react-router/MemoryRouter'
-import { AsyncStorage, View } from 'react-native'
+import { AsyncStorage, Alert } from 'react-native'
 
 class StoreHistory extends React.Component {
   static contextTypes = {
@@ -25,7 +25,26 @@ class StoreHistory extends React.Component {
   }
 }
 
+/**
+ * The public API for a <Router> designed for React Native. Stores
+ * locations using AsyncStorage and prompts using Alert.
+ */
 class NativeRouter extends React.Component {
+  static propTypes = {
+    getUserConfirmation: PropTypes.func,
+    keyLength: PropTypes.number,
+    children: PropTypes.node
+  }
+
+  static defaultProps = {
+    getUserConfirmation: (message, callback) => {
+      Alert.alert('Confirm', message, [
+        { text: 'Cancel', onPress: () => callback(false) },
+        { text: 'OK', onPress: () => callback(true) }
+      ])
+    }
+  }
+
   state = {
     savedHistory: null
   }
@@ -42,13 +61,15 @@ class NativeRouter extends React.Component {
   }
 
   render() {
-    const { children } = this.props
+    const { getUserConfirmation, keyLength, children } = this.props
     const { savedHistory } = this.state
 
     return savedHistory != null ? (
       <MemoryRouter
         initialEntries={savedHistory.entries}
         initialIndex={savedHistory.index}
+        getUserConfirmation={getUserConfirmation}
+        keyLength={keyLength}
       >
         <StoreHistory>
           {React.Children.only(children)}
