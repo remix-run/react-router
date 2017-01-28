@@ -1,14 +1,14 @@
 import React, { Component } from 'react'
 import { AppRegistry, StyleSheet, Text, View } from 'react-native'
 
-import { NativeRouter, Route, Link, DeepLinking, AndroidBackButton } from './main'
+import { NativeRouter, Route, Link, DeepLinking, AndroidBackButton, Prompt } from './main'
 
 export default class ReactRouterNative extends Component {
   render() {
     return (
       <NativeRouter>
         <View style={styles.container}>
-          <BackButton/>
+          <AndroidBackButton/>
           <DeepLinking/>
 
           <Route exact path="/" render={() => (
@@ -26,6 +26,7 @@ export default class ReactRouterNative extends Component {
 
           <Route exact path="/one" render={({ match }) => (
             <View>
+              <Prompt message="Are you sure you want to leave?"/>
               <Text style={styles.welcome}>
                 ONE! {match.url}
               </Text>

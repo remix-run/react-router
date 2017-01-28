@@ -12,7 +12,7 @@ import {
   View
 } from 'react-native';
 
-import { NativeRouter, Route, Link, DeepLinking } from './main'
+import { NativeRouter, Route, Link, DeepLinking, Prompt } from './main'
 
 export default class ReactRouterNative extends Component {
   render() {
@@ -35,6 +35,7 @@ export default class ReactRouterNative extends Component {
 
           <Route exact path="/one" render={() => (
             <View>
+              <Prompt message="Are you sure you want to leave this screen?"/>
               <Text style={styles.welcome}>
                 ONE!
               </Text>
