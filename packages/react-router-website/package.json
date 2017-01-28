@@ -2,7 +2,7 @@
   "name": "react-router-website",
   "private": true,
   "scripts": {
-    "build": "webpack -p",
+    "build": "NODE_ENV=production webpack -p",
     "start": "webpack-dev-server --inline"
   },
   "devDependencies": {
