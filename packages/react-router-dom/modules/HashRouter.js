@@ -10,10 +10,7 @@ class HashRouter extends React.Component {
     basename: PropTypes.string,
     getUserConfirmation: PropTypes.func,
     hashType: PropTypes.oneOf([ 'hashbang', 'noslash', 'slash' ]),
-    children: PropTypes.oneOfType([
-      PropTypes.func,
-      PropTypes.node
-    ])
+    children: PropTypes.node
   }
 
   history = createHistory(this.props)

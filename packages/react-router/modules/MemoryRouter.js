@@ -7,14 +7,11 @@ import Router from './Router'
  */
 class MemoryRouter extends React.Component {
   static propTypes = {
-    getUserConfirmation: PropTypes.func,
     initialEntries: PropTypes.array,
     initialIndex: PropTypes.number,
+    getUserConfirmation: PropTypes.func,
     keyLength: PropTypes.number,
-    children: PropTypes.oneOfType([
-      PropTypes.func,
-      PropTypes.node
-    ])
+    children: PropTypes.node
   }
 
   history = createHistory(this.props)

@@ -5,8 +5,8 @@ import React, { PropTypes } from 'react'
  */
 class Router extends React.Component {
   static propTypes = {
-    children: PropTypes.node,
-    history: PropTypes.object.isRequired
+    history: PropTypes.object.isRequired,
+    children: PropTypes.node
   }
 
   static childContextTypes = {

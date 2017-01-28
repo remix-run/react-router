@@ -11,10 +11,7 @@ class BrowserRouter extends React.Component {
     forceRefresh: PropTypes.bool,
     getUserConfirmation: PropTypes.func,
     keyLength: PropTypes.number,
-    children: PropTypes.oneOfType([
-      PropTypes.func,
-      PropTypes.node
-    ])
+    children: PropTypes.node
   }
 
   history = createHistory(this.props)
