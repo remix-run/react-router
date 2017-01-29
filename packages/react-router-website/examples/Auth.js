@@ -1,9 +1,11 @@
 import React, { PropTypes } from 'react'
-import Router from 'react-router-dom/BrowserRouter'
-import Route from 'react-router-dom/Route'
-import Link from 'react-router-dom/Link'
-import Redirect from 'react-router-dom/Redirect'
-import withRouter from 'react-router-dom/withRouter'
+import {
+  BrowserRouter as Router,
+  Route,
+  Link,
+  Redirect,
+  withRouter
+} from 'react-router-dom'
 
 ////////////////////////////////////////////////////////////
 // 1. Click the public page

@@ -38,8 +38,7 @@ module.exports = {
 
   resolve: {
     alias: {
-      // Shim <BrowserRouter> so people can copy paste examples into create-react-app
-      'react-router-dom/BrowserRouter': path.resolve(__dirname, 'components/ExampleRouter')
+      'react-router-dom': path.resolve(__dirname, 'react-router-dom-shim')
     }
   },
 

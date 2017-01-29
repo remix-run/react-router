@@ -1,8 +1,10 @@
 import React from 'react'
-import Router from 'react-router-dom/BrowserRouter'
-import Route from 'react-router-dom/Route'
-import Link from 'react-router-dom/Link'
-import Switch from 'react-router-dom/Switch'
+import {
+  BrowserRouter as Router,
+  Route,
+  Link,
+  Switch
+} from 'react-router-dom'
 
 const NoMatchExample = () => (
   <Router>

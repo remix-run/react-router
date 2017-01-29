@@ -1,9 +1,11 @@
 import React from 'react'
 import { TransitionMotion, spring } from 'react-motion'
-import Router from 'react-router-dom/BrowserRouter'
-import Route from 'react-router-dom/Route'
-import Link from 'react-router-dom/Link'
-import Redirect from 'react-router-dom/Redirect'
+import {
+  BrowserRouter as Router,
+  Route,
+  Link,
+  Redirect
+} from 'react-router-dom'
 
 const AnimationExample = () => (
   <Router>

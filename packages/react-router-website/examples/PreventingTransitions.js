@@ -1,8 +1,10 @@
 import React from 'react'
-import Router from 'react-router-dom/BrowserRouter'
-import Route from 'react-router-dom/Route'
-import Link from 'react-router-dom/Link'
-import Prompt from 'react-router-dom/Prompt'
+import {
+  BrowserRouter as Router,
+  Route,
+  Link,
+  Prompt
+} from 'react-router-dom'
 
 const PreventingTransitionsExample = () => (
   <Router>
