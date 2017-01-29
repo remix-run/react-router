@@ -15,7 +15,8 @@ module.exports = {
   output: {
     path: path.resolve(__dirname, 'build'),
     filename: `bundle-[chunkHash].js`,
-    chunkFileName: `[name]-[chunkHash].js`
+    chunkFileName: `[name]-[chunkHash].js`,
+    publicPath: '/'
   },
 
   plugins: [
