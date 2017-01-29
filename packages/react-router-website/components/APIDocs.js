@@ -6,6 +6,30 @@ import MarkdownViewer from './MarkdownViewer'
 import ScrollToMe from './ScrollToMe'
 
 export const API = [
+  { name: 'BrowserRouter',
+    path: '/BrowserRouter',
+    html: require('../api/BrowserRouter.md')
+  },
+  { name: 'HashRouter',
+    path: '/HashRouter',
+    html: require('../api/HashRouter.md')
+  },
+  { name: 'MemoryRouter',
+    path: '/MemoryRouter',
+    html: require('../api/MemoryRouter.md')
+  },
+  { name: 'NativeRouter',
+    path: '/NativeRouter',
+    html: require('../api/NativeRouter.md')
+  },
+  { name: 'StaticRouter',
+    path: '/StaticRouter',
+    html: require('../api/StaticRouter.md')
+  },
+  { name: 'Router',
+    path: '/Router',
+    html: require('../api/Router.md')
+  },
   { name: 'Route',
     path: '/Route',
     html: require('../api/Route.md')
@@ -25,22 +49,6 @@ export const API = [
   { name: 'Prompt',
     path: '/Prompt',
     html: require('../api/Prompt.md')
-  },
-  { name: 'BrowserRouter',
-    path: '/BrowserRouter',
-    html: require('../api/BrowserRouter.md')
-  },
-  { name: 'HashRouter',
-    path: '/HashRouter',
-    html: require('../api/HashRouter.md')
-  },
-  { name: 'MemoryRouter',
-    path: '/MemoryRouter',
-    html: require('../api/MemoryRouter.md')
-  },
-  { name: 'StaticRouter',
-    path: '/StaticRouter',
-    html: require('../api/StaticRouter.md')
   }
 ]
 
@@ -50,7 +58,7 @@ const $ = (node, selector) => (
 
 class APIDocs extends React.Component {
   componentDidMount() {
-    const items = $(this.el, '.api-entry').map(entry => {
+    const items = $(this.root, '.api-entry').map(entry => {
       const name = $(entry, 'h1')[0].childNodes[1].textContent.trim()
       const hash = $(entry, 'h1 a')[0].hash
       const children = $(entry, 'h2').map(node => ({
@@ -59,11 +67,12 @@ class APIDocs extends React.Component {
       }))
       return { name, hash, children }
     })
+
     this.renderMenu(items)
   }
 
   renderMenu(items) {
-    const el = (
+    const element = (
       <B fontFamily="Monaco, monospace">
         {items.map(item => (
           <B key={item.hash} margin="10px">
@@ -78,15 +87,15 @@ class APIDocs extends React.Component {
       </B>
     )
 
-    ReactDOM.render(el, this.menu)
+    ReactDOM.render(element, this.menu)
   }
 
   render() {
     return (
-      <B props={{ ref: n => this.el = n }}>
+      <B props={{ ref: node => this.root = node }}>
         <Route exact path="/api" component={ScrollToMe}/>
         <H height="100vh">
-          <B props={{ ref: n => this.menu = n }} height="100%" overflow="auto" fontSize="80%" padding="40px" background="#f0f0f0"/>
+          <B props={{ ref: node => this.menu = node }} height="100%" overflow="auto" fontSize="80%" padding="40px" background="#f0f0f0"/>
           <B flex="1" height="100%" overflow="auto">
             {API.map((doc, i) => (
               <B className="api-entry" key={i} padding="40px 60px">

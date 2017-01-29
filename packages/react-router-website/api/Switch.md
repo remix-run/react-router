@@ -1,4 +1,4 @@
-# Switch
+# &lt;Switch>
 
 Renders the first child `<Route>` that matches the location.
 
@@ -47,6 +47,6 @@ This is also useful for animated transitions since the matched `<Route>` is rend
 </Fade>
 ```
 
-## children: node _Switch_ 
+## children: node _`<Switch>`_ 
 
 The first `<Route>` in `children` to match the current location will be rendered.

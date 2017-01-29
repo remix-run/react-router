@@ -1,4 +1,4 @@
-# Prompt
+# `<Prompt>`
 
 Used to prompt the user before navigating away from a page. When your application enters a state that should prevent the user from navigating away (like a form is half-filled out), render a `<Prompt>`.
 

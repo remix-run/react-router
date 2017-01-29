@@ -1,8 +1,8 @@
-# Route
+# &lt;Route>
 
 Renders UI when a URL path matches a location.
 
-## path: string _Route_
+## path: string _`<Route>`_
 
 Any valid URL path that [`path-to-regexp`](https://www.npmjs.com/package/path-to-regexp) understands.
 
@@ -12,46 +12,66 @@ Any valid URL path that [`path-to-regexp`](https://www.npmjs.com/package/path-to
 
 Routes without a `path` _always_ match.
 
-## exact: bool _Route_
+## exact: bool _`<Route>`_
 
 When `true`, will only match if the path matches the `location.pathname` _exactly_.
 
 | path | location.pathname | exact | matches? |
 |---|---|---|---|---|
-| `/foo`  | `/foo/bar`  | `true` | no |
-| `/foo`  | `/foo/bar`  | `false` | yes |
+| `/one`  | `/one/two`  | `true` | no |
+| `/one`  | `/one/two`  | `false` | yes |
 
 ```js
-<Route exact path="/foo" component={Foo}/>
+<Route exact path="/one" component={About}/>
 ```
 
-## component: func _Route_
+## strict: bool _`<Route>`_
+
+When `true`, enforces strict matching of trailing slashes on `location.pathname`.
+
+| path | location.pathname | strict | matches? |
+|---|---|---|---|---|
+| `/one/two`  | `/one/two/`  | `false` | yes |
+| `/one/two`  | `/one/two/`  | `true` | no |
+| `/one/two/`  | `/one/two/`  | `false` | yes |
+| `/one/two/`  | `/one/two/`  | `true` | yes |
+
+```js
+<Route strict path="/one/two/" component={About}/>
+```
+
+## component: func _`<Route>`_
 
 A React component to render when the location matches.
 
-The component will be rendered with two props: `history` and `match`.
+The component receives the following props from the [`history`](https://github.com/mjackson/history) object:
 
-`match` is a object with the following properties
-- `isExact`: (bool) Whether or not the match is exact (v. partial)
-- `params`: (object) The values parsed from the pathname corresponding by name to the dynamic segments of the path
-- `path`: (string) The path pattern used to match
-- `url`: (string) The matched portion of the URL
+- `length` - (number) The number of entries in the history stack
+- `action` - (string) The current action (`PUSH`, `REPLACE`, or `POP`)
+- `location` - (object) The current location. May have the following properties:
+  - `pathname` - (string) The path of the URL
+  - `search` - (string) The URL query string
+  - `hash` - (string) The URL hash fragment
+  - `state` - (string) location-specific state that was provided to `push(path, state)` when this location was pushed onto the stack. Only available in browser and memory history.
 
-`history` is generated from the [history](https://github.com/mjackson/history) library and has the following properties and methods
-- `action`: (string) The current action (`PUSH`, `REPLACE`, or `POP`)
-- `length`: (number) The number of entries in the history stack
-- `location`: (object) Represents the current location and has the following properties
-  - `pathname`: (string) The path of the URL
-  - `search`: (string) The URL query string
-  - `hash`: (string) The URL hash fragment
-- `block`: (function)
-- `go`: (function)
-- `goBack`: (function)
-- `listen`: (function)
-- `push`: (function)
-- `replace`: (function)
+Additionally, the component also receives these props from the `history` object for navigation:
 
-*For more detailed documentation on `history`, refer to the history [documentation](https://github.com/mjackson/history#properties)*
+- `push(path, [state])` - (function) Pushes a new entry onto the history stack
+- `replace(path, [state])` - (function) Replaces the current entry on the history stack
+- `go(n)` - (function) Moves the pointer in the history stack by `n` entries
+- `goBack()` - (function) Equivalent to `go(-1)`
+- `goForward()` - (function) Equivalent to `go(1)`
+- `block(prompt)` - (function) Prevents navigation (see [the history docs](https://github.com/mjackson/history#blocking-transitions))
+
+Additional props may also be received depending on the history implementation you're using. Please refer to [the history documentation](https://github.com/mjackson/history#properties) for more details.
+
+If the route matched, the component also receives:
+
+- `match` - (object) Information about the match. May have the following properties:
+  - `params` - (object) The values parsed from the pathname corresponding by name to the dynamic segments of the path
+  - `isExact` - (bool) Whether or not the match is exact (v. partial)
+  - `path` - (string) The path pattern used to match. Useful for building nested `<Route>`s
+  - `url` - (string) The matched portion of the URL. Useful for building nested `<Link>`s
 
 ```js
 <Route path="/user/:id" component={User}/>
@@ -59,35 +79,33 @@ The component will be rendered with two props: `history` and `match`.
 
 ```js
 import React, { PropTypes } from 'react'
-const { string, shape, number, bool, object } = PropTypes
 
 class User extends React.Component {
-  propTypes: {
-    history: shape({
-      action: string,
-      length: number,
-      location: shape({
-        pathname: string,
-        search: string,
-        hash: string
-      })
+  static propTypes = {
+    length: PropTypes.number,
+    action: PropTypes.string,
+    location: PropTypes.shape({
+      pathname: PropTypes.string,
+      search: PropTypes.string,
+      hash: PropTypes.string,
+      state: PropTypes.object
     }),
-    match: shape({
-      isExact: bool,
-      params: object,
-      path: string,
-      url: string,
+    match: PropTypes.shape({
+      params: PropTypes.object,
+      isExact: PropTypes.bool,
+      path: PropTypes.string,
+      url: PropTypes.string,
     })
-  },
+  }
+
   render() {
     const { id } = this.props.match.params
-
     return <pre>{JSON.stringify(this.props, null, 2)}</pre>
   }
 }
 ```
 
-## render: func _Route_
+## render: func _`<Route>`_
 
 Instead of having a `component` rendered for you, you can pass in a function to be called when the location matches. This function will be called with the same props that are passed to the `component`.
 
@@ -109,7 +127,9 @@ const FadingRoute = ({ component: Component, ...rest }) => (
 <FadingRoute path="/cool" component={Something}/>
 ```
 
-## children: func _Route_
+**NOTE:** `<Route component>` takes precendence over `<Route render>` so don't use both in the same `<Route>`.
+
+## children: func _`<Route>`_
 
 Sometimes you need to render whether the path matches the location or not. In these cases, you can use the function `children` prop. It works exactly like `render` except that it gets called whether there is a match or not.
 
@@ -142,12 +162,4 @@ This could also be useful for animations:
     {match && <Something {...rest}/>}
   </Animate>
 )}/>
-```
-
-## location: object _Route_
-
-If you don't want to match the location on context, you can pass a location as a prop instead.
-
-```js
-<Route path="/foo" location={{ pathname: '/foo' }}/>
 ```

@@ -25,8 +25,8 @@ const NavBar = () => (
     <H fontSize="12px">
       <NavLink to="/examples">Examples</NavLink>
       <NavLink to="/api">API</NavLink>
-      <NavLink href="https://npm.im/react-router">NPM</NavLink>
-      <NavLink href="https://github.com/ReactTraining/react-router">Github</NavLink>
+      <NavLink href="https://www.npmjs.com/package/react-router">NPM</NavLink>
+      <NavLink href="https://github.com/ReactTraining/react-router">GitHub</NavLink>
     </H>
   </H>
 )

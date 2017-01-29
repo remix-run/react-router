@@ -1,8 +1,12 @@
-# Link
+# &lt;Link>
 
 Provides declarative, accessible navigation around your application.
 
+You get this from the `react-router-dom` package.
+
 ```js
+import Link from 'react-router-dom/Link'
+
 <Link to="/about">About</Link>
 ```
 

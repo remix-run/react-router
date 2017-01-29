@@ -1,8 +1,8 @@
-# Redirect
+# &lt;Redirect>
 
 Rendering a `<Redirect>` will navigate to a new location.
 
-The new location will override the current location in the browser's history, like server-side redirects (HTTP 3xx) do.
+The new location will override the current location in the history stack, like server-side redirects (HTTP 3xx) do.
 
 ```js
 <Route exact path="/" render={() => (
@@ -14,7 +14,7 @@ The new location will override the current location in the browser's history, li
 )}/>
 ```
 
-## to: string _Redirect_
+## to: string _`<Redirect>`_
 
 The URL to redirect to.
 
@@ -22,7 +22,7 @@ The URL to redirect to.
 <Redirect to="/somewhere/else"/>
 ```
 
-## to: object _Redirect_
+## to: object _`<Redirect>`_
 
 A location to redirect to.
 
@@ -34,10 +34,10 @@ A location to redirect to.
 }}/>
 ```
 
-## push: bool _Redirect_
+## push: bool _`<Redirect>`_
 
-When true, redirecting will add a new history state with `pushState` instead of replacing the current history state with `replaceState`.
+When true, redirecting will push a new entry onto the history instead of replacing the current one.
 
 ```js
-<Redirect to="/somewhere/else" push/>
+<Redirect push to="/somewhere/else"/>
 ```
