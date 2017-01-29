@@ -3,14 +3,14 @@
 Renders some UI when a URL matches a location.
 
 ```js
-import { BrowserRouter, Route } from 'react-router-dom'
+import { BrowserRouter as Router, Route } from 'react-router-dom'
 
-<BrowserRouter>
+<Router>
   <div>
     <Route exact path="/" component={Home}/>
     <Route path="/news" component={NewsFeed}/>
   </div>
-</BrowserRouter>
+</Router>
 ```
 
 There are 3 ways to render something with a `<Route>`:
@@ -19,76 +19,25 @@ There are 3 ways to render something with a `<Route>`:
 - [`<Route render>`](#route.render)
 - [`<Route children>`](#route.children)
 
-You should only use one of these props on a given `<Route>`. See their explanations below to understand why you have 3 options.
+You should use only one of these props on a given `<Route>`. See their explanations below to understand why you have 3 options.
 
 ## component: func _`<Route>`_ {id=route.component}
 
-A React component to render when the location matches.
-
-The component receives the following props from the [`history`](https://github.com/mjackson/history) object:
-
-- `length` - (number) The number of entries in the history stack
-- `action` - (string) The current action (`PUSH`, `REPLACE`, or `POP`)
-- `location` - (object) The current location. May have the following properties:
-  - `pathname` - (string) The path of the URL
-  - `search` - (string) The URL query string
-  - `hash` - (string) The URL hash fragment
-  - `state` - (string) location-specific state that was provided to `push(path, state)` when this location was pushed onto the stack. Only available in browser and memory history.
-
-Additionally, the component also receives these props from the `history` object for navigation:
-
-- `push(path, [state])` - (function) Pushes a new entry onto the history stack
-- `replace(path, [state])` - (function) Replaces the current entry on the history stack
-- `go(n)` - (function) Moves the pointer in the history stack by `n` entries
-- `goBack()` - (function) Equivalent to `go(-1)`
-- `goForward()` - (function) Equivalent to `go(1)`
-- `block(prompt)` - (function) Prevents navigation (see [the history docs](https://github.com/mjackson/history#blocking-transitions))
-
-Additional props may also be received depending on the history implementation you're using. Please refer to [the history documentation](https://github.com/mjackson/history#properties) for more details.
-
-If the route matched, the component also receives:
-
-- `match` - (object) Information about the match. May have the following properties:
-  - `params` - (object) The values parsed from the pathname corresponding by name to the dynamic segments of the path
-  - `isExact` - (bool) Whether or not the match is exact (v. partial)
-  - `path` - (string) The path pattern used to match. Useful for building nested `<Route>`s
-  - `url` - (string) The matched portion of the URL. Useful for building nested `<Link>`s
+A React component to render when the location matches. The component receives all the properties on [`context.router`](#context.router).
 
 ```js
-<Route path="/user/:id" component={User}/>
+<Route path="/user/:username" component={User}/>
 ```
 
 ```js
-import React, { PropTypes } from 'react'
-
-class User extends React.Component {
-  static propTypes = {
-    length: PropTypes.number,
-    action: PropTypes.string,
-    location: PropTypes.shape({
-      pathname: PropTypes.string,
-      search: PropTypes.string,
-      hash: PropTypes.string,
-      state: PropTypes.object
-    }),
-    match: PropTypes.shape({
-      params: PropTypes.object,
-      isExact: PropTypes.bool,
-      path: PropTypes.string,
-      url: PropTypes.string,
-    })
-  }
-
-  render() {
-    const { id } = this.props.match.params
-    return <pre>{JSON.stringify(this.props, null, 2)}</pre>
-  }
+const User = ({ match }) => {
+  return <h1>Hello {match.username}!</h1>
 }
 ```
 
 ## render: func _`<Route>`_ {id=route.render}
 
-Instead of having a `component` rendered for you, you can pass in a function to be called when the location matches. This function will be called with the same props that are passed to the `component`.
+Instead of having a [`component`](#route.component) rendered for you, you can pass in a function to be called when the location matches. This function will be called with the same props that are passed to the `component`.
 
 This allows for convenient inline match rendering and wrapping.
 
@@ -144,6 +93,8 @@ This could also be useful for animations:
   </Animate>
 )}/>
 ```
+
+**NOTE:** Both `<Route component>` and `<Route render>` take precendence over `<Route children>` so don't use more than one in the same `<Route>`.
 
 ## path: string _`<Route>`_ {id=route.path}
 

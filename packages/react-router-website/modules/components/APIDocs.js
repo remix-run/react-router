@@ -7,48 +7,46 @@ import ScrollToMe from './ScrollToMe'
 
 export const API = [
   { name: 'BrowserRouter',
-    path: '/BrowserRouter',
     html: require('../api/BrowserRouter.md')
   },
   { name: 'HashRouter',
-    path: '/HashRouter',
     html: require('../api/HashRouter.md')
   },
   { name: 'MemoryRouter',
-    path: '/MemoryRouter',
     html: require('../api/MemoryRouter.md')
   },
   { name: 'NativeRouter',
-    path: '/NativeRouter',
     html: require('../api/NativeRouter.md')
   },
   { name: 'StaticRouter',
-    path: '/StaticRouter',
     html: require('../api/StaticRouter.md')
   },
   { name: 'Router',
-    path: '/Router',
     html: require('../api/Router.md')
   },
   { name: 'Route',
-    path: '/Route',
     html: require('../api/Route.md')
   },
   { name: 'Switch',
-    path: '/Switch',
     html: require('../api/Switch.md')
   },
   { name: 'Link',
-    path: '/Link',
     html: require('../api/Link.md')
   },
   { name: 'Redirect',
-    path: '/Redirect',
     html: require('../api/Redirect.md')
   },
   { name: 'Prompt',
-    path: '/Prompt',
     html: require('../api/Prompt.md')
+  },
+  { name: 'context.router',
+    html: require('../api/context.router.md')
+  },
+  { name: 'history',
+    html: require('../api/history.md')
+  },
+  { name: 'match',
+    html: require('../api/match.md')
   }
 ]
 
