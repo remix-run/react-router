@@ -1,6 +1,6 @@
 import React, { PropTypes } from 'react'
-import MemoryRouter from '../../../react-router/modules/MemoryRouter'
-import Route from '../../../react-router/modules/Route'
+import MemoryRouter from 'react-router-dom/MemoryRouter'
+import Route from 'react-router-dom/Route'
 import { B, V, H, PAD, LIGHT_GRAY, GRAY } from '../bricks'
 import { button } from './style.css'
 
