@@ -1,6 +1,6 @@
 import React from 'react'
 import { B, H, darkGray } from './bricks'
-import logo from '../img/Logo.png'
+import LogoImage from '../logo.png'
 
 const Logo = () => (
   <H
@@ -12,7 +12,7 @@ const Logo = () => (
     boxShadow="2px 10px 50px hsla(0, 0%, 0%, 0.35)"
   >
     <B position="relative" top="-8px" textAlign="center" width="100%">
-      <img src={logo} width="75%"/>
+      <img src={LogoImage} width="75%"/>
     </B>
   </H>
 )

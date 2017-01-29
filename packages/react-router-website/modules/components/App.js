@@ -2,7 +2,7 @@ import React from 'react'
 
 // We have to import this one using a relative path because we
 // shim <BrowserRouter> in our webpack config to use <ExampleRouter>
-import BrowserRouter from '../../react-router-dom/BrowserRouter'
+import BrowserRouter from '../../../react-router-dom/BrowserRouter'
 
 import { B } from './bricks'
 import Examples from './Examples'

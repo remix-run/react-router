@@ -8,7 +8,7 @@ module.exports = {
   devtool: 'source-map',
 
   entry: {
-    app: path.resolve(__dirname, 'index.js'),
+    app: path.resolve(__dirname, 'modules/index.js'),
     vendor: [ 'react', 'react-dom' ]
   },
 
@@ -38,7 +38,7 @@ module.exports = {
 
   resolve: {
     alias: {
-      'react-router-dom': path.resolve(__dirname, 'react-router-dom-shim')
+      'react-router-dom': path.resolve(__dirname, 'modules/ReactRouterDOMShim')
     }
   },
 
