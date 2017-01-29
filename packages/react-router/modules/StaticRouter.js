@@ -71,10 +71,10 @@ class StaticRouter extends React.Component {
     noop
 
   render() {
-    const { context, location, ...props } = this.props // eslint-disable-line no-unused-vars
+    const { context, location, ...props } = this.props
 
     const history = {
-      isStatic: true,
+      staticContext: context,
       createHref: this.createHref,
       action: 'POP',
       location: createLocation(location),
