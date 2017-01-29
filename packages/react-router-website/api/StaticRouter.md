@@ -1,6 +1,8 @@
 # &lt;StaticRouter> {id=staticrouter}
 
-A "static" [router can be useful in server-side rendering scenarios when the user isn't actually clicking around, so the location never actually changes. Hence, the name static. It's also useful in simple tests when you just need to plug in a location and make assertions on the render output.
+A [`<Router>`](#router) that never changes location.
+
+This can be useful in server-side rendering scenarios when the user isn't actually clicking around, so the location never actually changes. Hence, the name: static. It's also useful in simple tests when you just need to plug in a location and make assertions on the render output.
 
 Here's an example node server that sends a 302 status code for `<Redirect>`s and regular HTML for other requests:
 
@@ -44,17 +46,29 @@ The base URL for all locations.
 </StaticRouter>
 ```
 
-## context: object _`<StaticRouter>`_ {id=staticrouter.context}
-
-A plain JavaScript object that records the results of the render. See the example above.
-
 ## location: string _`<StaticRouter>`_ {id=staticrouter.location-string}
 
 The URL the server received, probably `req.url` on a node server.
 
+```js
+<StaticRouter location={req.url}>
+  <App/>
+</StaticRouter>
+```
+
 ## location: object _`<StaticRouter>`_ {id=staticrouter.location-object}
 
 A location object shaped like `{ pathname, search, hash, state }`
+
+```js
+<StaticRouter location={{ pathname: '/bubblegum' }}>
+  <App/>
+</StaticRouter>
+```
+
+## context: object _`<StaticRouter>`_ {id=staticrouter.context}
+
+A plain JavaScript object that records the results of the render. See the example above.
 
 ## children: node _`<StaticRouter>`_ {id=staticrouter.children}
 
