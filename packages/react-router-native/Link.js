@@ -6,20 +6,21 @@ class Link extends Component {
     router: React.PropTypes.object
   }
 
+  static propTypes = {
+    component: PropTypes.func,
+    replace: PropTypes.bool,
+    to: PropTypes.string.isRequired
+  }
+
   static defaultProps = {
     component: TouchableHighlight,
     replace: false
   }
 
-  static propTypes = {
-    to: PropTypes.string,
-    replace: PropTypes.bool,
-    component: PropTypes.func
-  }
-
   handlePress = () => {
     const { router } = this.context
     const { to, replace } = this.props
+
     if (replace) {
       router.replace(to)
     } else {
@@ -29,7 +30,7 @@ class Link extends Component {
 
   render() {
     const { component: Component, ...rest } = this.props
-    return <Component onPress={this.handlePress} {...rest}/>
+    return <Component {...rest} onPress={this.handlePress}/>
   }
 }
 
