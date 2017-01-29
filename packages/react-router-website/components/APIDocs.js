@@ -1,6 +1,6 @@
 import React from 'react'
 import ReactDOM from 'react-dom'
-import Route from 'react-router-dom/Route'
+import { Route } from 'react-router-dom'
 import { I, H, B, PAD, lightGray, red } from './bricks'
 import MarkdownViewer from './MarkdownViewer'
 import ScrollToMe from './ScrollToMe'

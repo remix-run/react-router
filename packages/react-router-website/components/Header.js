@@ -1,5 +1,5 @@
 import React from 'react'
-import Link from 'react-router-dom/Link'
+import { Link } from 'react-router-dom'
 import { B, H, I, PAD, VSpace, HSpace, lightGray, red, bigFont } from './bricks'
 import Logo from './Logo'
 

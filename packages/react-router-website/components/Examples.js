@@ -1,7 +1,5 @@
 import React from 'react'
-import Route from 'react-router-dom/Route'
-import Switch from 'react-router-dom/Switch'
-import Link from 'react-router-dom/Link'
+import { Route, Switch, Link } from 'react-router-dom'
 import { EXAMPLES } from '../routes'
 import { B, H, I, PAD, VSpace, darkGray, lightGray, red } from './bricks'
 import LoadBundle from './LoadBundle'
