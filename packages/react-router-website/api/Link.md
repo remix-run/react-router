@@ -2,10 +2,8 @@
 
 Provides declarative, accessible navigation around your application.
 
-You get this from the `react-router-dom` package.
-
 ```js
-import Link from 'react-router-dom/Link'
+import { Link } from 'react-router-dom'
 
 <Link to="/about">About</Link>
 ```

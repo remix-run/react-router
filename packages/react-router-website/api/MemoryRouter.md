@@ -3,6 +3,8 @@
 A [`<Router>`](#router) that keeps the history of your "URL" in memory (does not read or write to the address bar). Useful in tests and non-browser environments like [React Native](https://facebook.github.io/react-native/).
 
 ```js
+import { MemoryRouter } from 'react-router'
+
 <MemoryRouter>
   <App/>
 </MemoryRouter>

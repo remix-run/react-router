@@ -1,6 +1,17 @@
 # &lt;Route>
 
-Renders UI when a URL path matches a location.
+Renders some UI when a URL matches a location.
+
+```js
+import { BrowserRouter, Route } from 'react-router-dom'
+
+<BrowserRouter>
+  <div>
+    <Route exact path="/" component={Home}/>
+    <Route path="/news" component={NewsFeed}/>
+  </div>
+</BrowserRouter>
+```
 
 ## path: string _`<Route>`_
 

@@ -10,6 +10,17 @@ The common low-level interface for all router components. Higher-level routers i
 
 Use a `<Router>` directly if you already have a `history` object.
 
+```js
+import { Router } from 'react-router'
+import createHistory from 'history/createBrowserHistory'
+
+const history = createBrowserHistory()
+
+<Router history={history}>
+  <App/>
+</Router>
+```
+
 ## history: object _`<Router>`_
 
 A [`history`](https://github.com/mjackson/history) object to use for navigation.

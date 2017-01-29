@@ -2,8 +2,6 @@
 
 A [`<Router>`](#router) for native iOS and Android apps built using [React Native](https://facebook.github.io/react-native/).
 
-You get this from the `react-router-native` package.
-
 ```js
 import { NativeRouter } from 'react-router-native'
 
