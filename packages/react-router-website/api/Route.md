@@ -1,4 +1,4 @@
-# &lt;Route>
+# &lt;Route> {id=route}
 
 Renders some UI when a URL matches a location.
 
@@ -13,45 +13,15 @@ import { BrowserRouter, Route } from 'react-router-dom'
 </BrowserRouter>
 ```
 
-## path: string _`<Route>`_
+There are 3 ways to render something with a `<Route>`:
 
-Any valid URL path that [`path-to-regexp`](https://www.npmjs.com/package/path-to-regexp) understands.
+- [`<Route component>`](#route.component)
+- [`<Route render>`](#route.render)
+- [`<Route children>`](#route.children)
 
-```js
-<Route path="/users/:id" component={User}/>
-```
+You should only use one of these props on a given `<Route>`. See their explanations below to understand why you have 3 options.
 
-Routes without a `path` _always_ match.
-
-## exact: bool _`<Route>`_
-
-When `true`, will only match if the path matches the `location.pathname` _exactly_.
-
-| path | location.pathname | exact | matches? |
-|---|---|---|---|---|
-| `/one`  | `/one/two`  | `true` | no |
-| `/one`  | `/one/two`  | `false` | yes |
-
-```js
-<Route exact path="/one" component={About}/>
-```
-
-## strict: bool _`<Route>`_
-
-When `true`, enforces strict matching of trailing slashes on `location.pathname`.
-
-| path | location.pathname | strict | matches? |
-|---|---|---|---|---|
-| `/one/two`  | `/one/two/`  | `false` | yes |
-| `/one/two`  | `/one/two/`  | `true` | no |
-| `/one/two/`  | `/one/two/`  | `false` | yes |
-| `/one/two/`  | `/one/two/`  | `true` | yes |
-
-```js
-<Route strict path="/one/two/" component={About}/>
-```
-
-## component: func _`<Route>`_
+## component: func _`<Route>`_ {id=route.component}
 
 A React component to render when the location matches.
 
@@ -116,7 +86,7 @@ class User extends React.Component {
 }
 ```
 
-## render: func _`<Route>`_
+## render: func _`<Route>`_ {id=route.render}
 
 Instead of having a `component` rendered for you, you can pass in a function to be called when the location matches. This function will be called with the same props that are passed to the `component`.
 
@@ -140,7 +110,7 @@ const FadingRoute = ({ component: Component, ...rest }) => (
 
 **NOTE:** `<Route component>` takes precendence over `<Route render>` so don't use both in the same `<Route>`.
 
-## children: func _`<Route>`_
+## children: func _`<Route>`_ {id=route.children}
 
 Sometimes you need to render whether the path matches the location or not. In these cases, you can use the function `children` prop. It works exactly like `render` except that it gets called whether there is a match or not.
 
@@ -173,4 +143,42 @@ This could also be useful for animations:
     {match && <Something {...rest}/>}
   </Animate>
 )}/>
+```
+
+## path: string _`<Route>`_ {id=route.path}
+
+Any valid URL path that [`path-to-regexp`](https://www.npmjs.com/package/path-to-regexp) understands.
+
+```js
+<Route path="/users/:id" component={User}/>
+```
+
+Routes without a `path` _always_ match.
+
+## exact: bool _`<Route>`_ {id=route.exact}
+
+When `true`, will only match if the path matches the `location.pathname` _exactly_.
+
+| path | location.pathname | exact | matches? |
+|---|---|---|---|---|
+| `/one`  | `/one/two`  | `true` | no |
+| `/one`  | `/one/two`  | `false` | yes |
+
+```js
+<Route exact path="/one" component={About}/>
+```
+
+## strict: bool _`<Route>`_ {id=route.strict}
+
+When `true`, enforces strict matching of trailing slashes on `location.pathname`.
+
+| path | location.pathname | strict | matches? |
+|---|---|---|---|---|
+| `/one/two`  | `/one/two/`  | `false` | yes |
+| `/one/two`  | `/one/two/`  | `true` | no |
+| `/one/two/`  | `/one/two/`  | `false` | yes |
+| `/one/two/`  | `/one/two/`  | `true` | yes |
+
+```js
+<Route strict path="/one/two/" component={About}/>
 ```

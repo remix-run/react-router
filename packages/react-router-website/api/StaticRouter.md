@@ -1,4 +1,4 @@
-# &lt;StaticRouter>
+# &lt;StaticRouter> {id=staticrouter}
 
 A "static" [router can be useful in server-side rendering scenarios when the user isn't actually clicking around, so the location never actually changes. Hence, the name static. It's also useful in simple tests when you just need to plug in a location and make assertions on the render output.
 
@@ -34,7 +34,7 @@ createServer((req, res) => {
 }).listen(3000)
 ```
 
-## basename: string _`<StaticRouter>`_
+## basename: string _`<StaticRouter>`_ {id=staticrouter.basename}
 
 The base URL for all locations.
 
@@ -44,18 +44,18 @@ The base URL for all locations.
 </StaticRouter>
 ```
 
-## context: object _`<StaticRouter>`_
+## context: object _`<StaticRouter>`_ {id=staticrouter.context}
 
 A plain JavaScript object that records the results of the render. See the example above.
 
-## location: string _`<StaticRouter>`_
+## location: string _`<StaticRouter>`_ {id=staticrouter.location-string}
 
 The URL the server received, probably `req.url` on a node server.
 
-## location: object _`<StaticRouter>`_
+## location: object _`<StaticRouter>`_ {id=staticrouter.location-object}
 
 A location object shaped like `{ pathname, search, hash, state }`
 
-## children: node _`<StaticRouter>`_
+## children: node _`<StaticRouter>`_ {id=staticrouter.children}
 
 A [single child element](https://facebook.github.io/react/docs/react-api.html#react.children.only) to render.

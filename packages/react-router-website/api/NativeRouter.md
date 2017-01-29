@@ -1,4 +1,4 @@
-# &lt;NativeRouter>
+# &lt;NativeRouter> {id=nativerouter}
 
 A [`<Router>`](#router) for native iOS and Android apps built using [React Native](https://facebook.github.io/react-native/).
 
@@ -10,7 +10,7 @@ import { NativeRouter } from 'react-router-native'
 </NativeRouter>
 ```
 
-## getUserConfirmation: func _`<NativeRouter>`_
+## getUserConfirmation: func _`<NativeRouter>`_ {id=nativerouter.getuserconfirmation}
 
 A function to use to confirm navigation. Defaults to using [`window.confirm`](https://developer.mozilla.org/en-US/docs/Web/API/Window/confirm).
 
@@ -28,7 +28,7 @@ const getConfirmation = (message, callback) => {
 <NativeRouter getUserConfirmation={getConfirmation}/>
 ```
 
-## keyLength: number _`<NativeRouter>`_
+## keyLength: number _`<NativeRouter>`_ {id=nativerouter.keylength}
 
 The length of `location.key`. Defaults to 6.
 
@@ -36,6 +36,6 @@ The length of `location.key`. Defaults to 6.
 <NativeRouter keyLength={12}/>
 ```
 
-## children: node _`<NativeRouter>`_
+## children: node _`<NativeRouter>`_ {id=nativerouter.children}
 
 A [single child element](https://facebook.github.io/react/docs/react-api.html#react.children.only) to render.

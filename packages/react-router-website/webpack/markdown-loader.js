@@ -1,5 +1,6 @@
 const markdownIt = require('markdown-it')
 const Prism = require('prismjs')
+const attrs = require('markdown-it-attrs')
 const anchor = require('markdown-it-anchor')
 
 const aliases = {
@@ -26,7 +27,9 @@ const md = markdownIt({
   linkify: true,
   typographer: true,
   highlight
-}).use(anchor, {
+})
+.use(attrs)
+.use(anchor, {
   permalink: true,
   permalinkSymbol: '#',
   permalinkBefore: true

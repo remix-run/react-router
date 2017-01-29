@@ -1,4 +1,4 @@
-# &lt;Redirect>
+# &lt;Redirect> {id=redirect}
 
 Rendering a `<Redirect>` will navigate to a new location.
 
@@ -16,7 +16,7 @@ import { Route, Redirect } from 'react-router'
 )}/>
 ```
 
-## to: string _`<Redirect>`_
+## to: string _`<Redirect>`_ {id=redirect.to-string}
 
 The URL to redirect to.
 
@@ -24,7 +24,7 @@ The URL to redirect to.
 <Redirect to="/somewhere/else"/>
 ```
 
-## to: object _`<Redirect>`_
+## to: object _`<Redirect>`_ {id=redirect.to-object}
 
 A location to redirect to.
 
@@ -36,9 +36,9 @@ A location to redirect to.
 }}/>
 ```
 
-## push: bool _`<Redirect>`_
+## push: bool _`<Redirect>`_ {id=redirect.push}
 
-When true, redirecting will push a new entry onto the history instead of replacing the current one.
+When `true`, redirecting will push a new entry onto the history instead of replacing the current one.
 
 ```js
 <Redirect push to="/somewhere/else"/>

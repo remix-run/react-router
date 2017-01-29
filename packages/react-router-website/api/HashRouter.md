@@ -1,4 +1,4 @@
-# &lt;HashRouter>
+# &lt;HashRouter> {id=hashrouter}
 
 A [`<Router>`](#router) that uses the hash portion of the URL (i.e. `window.location.hash`) to keep your UI in sync with the URL.
 
@@ -12,7 +12,7 @@ import { HashRouter } from 'react-router-dom'
 </HashRouter>
 ```
 
-## basename: string _`<HashRouter>`_
+## basename: string _`<HashRouter>`_ {id=hashrouter.basename}
 
 The base URL for all locations.
 
@@ -21,7 +21,7 @@ The base URL for all locations.
 <Link to="/today"/> // renders <a href="#/calendar/today">
 ```
 
-## getUserConfirmation: func _`<HashRouter>`_
+## getUserConfirmation: func _`<HashRouter>`_ {id=hashrouter.getuserconfirmation}
 
 A function to use to confirm navigation. Defaults to using [`window.confirm`](https://developer.mozilla.org/en-US/docs/Web/API/Window/confirm).
 
@@ -35,7 +35,7 @@ const getConfirmation = (message, callback) => {
 <HashRouter getUserConfirmation={getConfirmation}/>
 ```
 
-## hashType: string _`<HashRouter>`_
+## hashType: string _`<HashRouter>`_ {id=hashrouter.hashtype}
 
 The type of encoding to use for `window.location.hash`. Available values are:
 
@@ -45,6 +45,6 @@ The type of encoding to use for `window.location.hash`. Available values are:
 
 Defaults to `"slash"`.
 
-## children: node _`<HashRouter>`_
+## children: node _`<HashRouter>`_ {id=hashrouter.children}
 
 A [single child element](https://facebook.github.io/react/docs/react-api.html#react.children.only) to render.

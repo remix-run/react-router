@@ -1,4 +1,4 @@
-# &lt;BrowserRouter>
+# &lt;BrowserRouter> {id=browserrouter}
 
 A [`<Router>`](#router) that uses the HTML5 history API (`pushState`, `replaceState` and the `popstate` event) to keep your UI in sync with the URL.
 
@@ -15,7 +15,7 @@ import { BrowserRouter } from 'react-router-dom'
 </BrowserRouter>
 ```
 
-## basename: string _`<BrowserRouter>`_
+## basename: string _`<BrowserRouter>`_ {id=browserrouter.basename}
 
 The base URL for all locations. If your app is served from a sub-directory on your server, you'll want to set this to the sub-directory.
 
@@ -24,7 +24,7 @@ The base URL for all locations. If your app is served from a sub-directory on yo
 <Link to="/today"/> // renders <a href="/calendar/today">
 ```
 
-## getUserConfirmation: func _`<BrowserRouter>`_
+## getUserConfirmation: func _`<BrowserRouter>`_ {id=browserrouter.getuserconfirmation}
 
 A function to use to confirm navigation. Defaults to using [`window.confirm`](https://developer.mozilla.org/en-US/docs/Web/API/Window/confirm).
 
@@ -38,7 +38,7 @@ const getConfirmation = (message, callback) => {
 <BrowserRouter getUserConfirmation={getConfirmation}/>
 ```
 
-## forceRefresh: bool _`<BrowserRouter>`_
+## forceRefresh: bool _`<BrowserRouter>`_ {id=browserrouter.forcerefresh}
 
 If `true` the router will use full page refreshes on page navigation. You probably only want this in [browsers that don't support the HTML5 history API](http://caniuse.com/#feat=history).
 
@@ -47,7 +47,7 @@ const supportsHistory = 'pushState' in window.history
 <BrowserRouter forceRefresh={!supportsHistory}/>
 ```
 
-## keyLength: number _`<BrowserRouter>`_
+## keyLength: number _`<BrowserRouter>`_ {id=browserrouter.keylength}
 
 The length of `location.key`. Defaults to 6.
 
@@ -55,6 +55,6 @@ The length of `location.key`. Defaults to 6.
 <BrowserRouter keyLength={12}/>
 ```
 
-## children: node _`<BrowserRouter>`_
+## children: node _`<BrowserRouter>`_ {id=browserrouter.children}
 
 A [single child element](https://facebook.github.io/react/docs/react-api.html#react.children.only) to render.
