@@ -2,5 +2,6 @@
   "lerna": "2.0.0-beta.32",
   "packages": [
     "packages/*"
-  ]
+  ],
+  "version": "4.0.0-beta.3"
 }
