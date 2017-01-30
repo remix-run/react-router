@@ -9,13 +9,12 @@
     "Ryan Florence"
   ],
   "files": [
-    "Core.js",
     "MemoryRouter.js",
     "Prompt.js",
     "Redirect.js",
     "Route.js",
     "Router.js",
-    "ServerRouter.js",
+    "StaticRouter.js",
     "Switch.js",
     "index.js",
     "matchPath.js",
