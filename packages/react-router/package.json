@@ -25,7 +25,6 @@
   ],
   "main": "index.js",
   "scripts": {
-    "release": "node ./scripts/release.js",
     "build-lib": "babel ./modules -d . --ignore __tests__",
     "build-umd": "webpack modules/index.js umd/react-router.js",
     "build-min": "webpack -p modules/index.js umd/react-router.min.js",
