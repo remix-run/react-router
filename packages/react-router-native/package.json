@@ -1,6 +1,6 @@
 {
   "name": "react-router-native",
-  "version": "4.0.0-beta.2",
+  "version": "4.0.0-beta.3",
   "main": "main.js",
   "scripts": {
     "start": "node node_modules/react-native/local-cli/cli.js start",
@@ -16,7 +16,7 @@
   "dependencies": {
     "react": "~15.4.0-rc.4",
     "react-native": "0.40.0",
-    "react-router": "4.0.0-beta.2"
+    "react-router": "^4.0.0-beta.3"
   },
   "devDependencies": {
     "babel-jest": "18.0.0",

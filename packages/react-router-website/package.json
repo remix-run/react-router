@@ -26,12 +26,13 @@
     "react": "15.3.2",
     "react-dom": "15.3.2",
     "react-motion": "^0.4.4",
-    "react-router-dom": "4.0.0-beta.2",
+    "react-router-dom": "^4.0.0-beta.3",
     "style-loader": "0.13.1",
     "sw-precache": "^4.2.2",
     "sw-precache-webpack-plugin": "^0.7.2",
     "url-loader": "^0.5.7",
     "webpack": "1.13.1",
     "webpack-dev-server": "1.14.1"
-  }
+  },
+  "version": "4.0.0-beta.3"
 }
