@@ -26,7 +26,7 @@
     "react": "15.3.2",
     "react-dom": "15.3.2",
     "react-motion": "^0.4.4",
-    "react-router-dom": "4.0.0-beta.1",
+    "react-router-dom": "4.0.0-beta.2",
     "style-loader": "0.13.1",
     "sw-precache": "^4.2.2",
     "sw-precache-webpack-plugin": "^0.7.2",
