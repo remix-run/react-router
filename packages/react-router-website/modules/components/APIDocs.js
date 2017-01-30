@@ -58,7 +58,30 @@ const $ = (node, selector) => (
 )
 
 class APIDocs extends React.Component {
+  state = {
+    overflow: 'hidden'
+  }
+
+  listenToWindowScroll() {
+    window.addEventListener('scroll', this.handleWindowScroll)
+  }
+
+  handleWindowScroll = () => {
+    const top = this.root.offsetTop
+    const bottom = top + this.root.offsetHeight
+    const fold = window.innerHeight + window.scrollY
+    const topIsVisible = top <= fold && window.scrollY <= top
+    const bottomIsVisible = bottom <= fold
+    console.log('BLAH')
+    if (topIsVisible && bottomIsVisible) {
+      this.setState({ overflow: 'auto' })
+    } else if (this.state.overflow === 'auto') {
+      this.setState({ overflow: 'hidden' })
+    }
+  }
+
   componentDidMount() {
+    this.listenToWindowScroll()
     const items = $(this.root, '.api-entry').map(entry => {
       const name = $(entry, 'h1')[0].childNodes[1].textContent.trim()
       const hash = $(entry, 'h1 a')[0].hash
@@ -92,12 +115,14 @@ class APIDocs extends React.Component {
   }
 
   render() {
+    const { overflow } = this.state
     return (
       <B props={{ ref: node => this.root = node }}>
         <Route exact path="/api" component={ScrollToMe}/>
-        <H height="100vh">
-          <B props={{ ref: node => this.menu = node }} height="100%" overflow="auto" fontSize="80%" padding="40px" background="#f0f0f0"/>
-          <B flex="1" height="100%" overflow="auto">
+        <H height="95vh">
+          <B props={{ ref: node => this.menu = node }} height="100%" overflow={overflow} fontSize="80%" padding="40px" background="#f0f0f0"/>
+          <B flex="1" height="100%" overflow={overflow}>
+            <B>{this.state.overflow}</B>
             {API.map((doc, i) => (
               <B className="api-entry" key={i} padding="40px 60px">
                 <MarkdownViewer html={doc.html}/>
