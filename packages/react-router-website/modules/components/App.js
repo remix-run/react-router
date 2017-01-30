@@ -12,8 +12,11 @@ import Footer from './Footer'
 import LoadBundle from './LoadBundle'
 import NewsletterSignup from './NewsletterSignup'
 
+const base = document.querySelector('base')
+const baseHref = base ? base.getAttribute('href') : '/'
+
 const App = () => (
-  <BrowserRouter>
+  <BrowserRouter basename={baseHref.replace(/\/$/, '')}>
     <B>
       <Header/>
       <Examples/>
