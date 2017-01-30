@@ -91,7 +91,7 @@ const CRApp = () => (
 
 const Example = ({ load, loadSource, ...props }) => (
   <H {...props}>
-    <B height="100%" flex="1" padding={`${PAD / 2}px ${PAD * 2}px`}>
+    <B position="sticky" top="0" height="100%" flex="1" padding={`${PAD / 2}px ${PAD * 2}px`}>
       <LoadBundle load={load} children={mod => (
         <FakeBrowser height="85vh">
           <mod.default/>
@@ -135,7 +135,7 @@ class Examples extends React.Component {
       <B>
         <Route exact path="/examples" component={ScrollToMe}/>
         <H minHeight="100vh" background={darkGray} color="white" padding={PAD * 2 + 'px'}>
-          <Nav width="300px"/>
+          <Nav width="300px" height="100%" position="sticky" top="0"/>
           <B flex="1">
             <Switch children={routes}/>
           </B>
