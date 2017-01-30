@@ -89,17 +89,17 @@ const CRApp = () => (
   </I>
 )
 
-const Example = ({ example, ...props }) => (
+const Example = ({ load, loadSource, ...props }) => (
   <H {...props}>
     <B height="100%" flex="1" padding={`${PAD / 2}px ${PAD * 2}px`}>
-      <LoadBundle load={example.load} children={mod => (
+      <LoadBundle load={load} children={mod => (
         <FakeBrowser height="85vh">
           <mod.default/>
         </FakeBrowser>
       )}/>
     </B>
     <B flex="1" padding={`0 ${PAD * 2}px`} overflow="auto">
-      <LoadBundle load={example.loadSource} children={code => (
+      <LoadBundle load={loadSource} children={code => (
         <SourceViewer code={code}/>
       )}/>
     </B>
@@ -124,11 +124,11 @@ class Examples extends React.Component {
 
   render() {
     const routes = EXAMPLES.slice(1).map((example, index) => (
-      <Route key={example.path} path={example.path} render={() => <Example example={example}/>}/>
+      <Route key={example.path} path={example.path} render={() => <Example {...example}/>}/>
     ))
 
     routes.push(
-      <Route key="basic" render={() => <Example example={EXAMPLES[0]}/>}/>
+      <Route key="basic" render={() => <Example {...EXAMPLES[0]}/>}/>
     )
 
     return (
