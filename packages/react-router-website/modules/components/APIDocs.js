@@ -39,6 +39,9 @@ export const API = [
   { name: 'Prompt',
     html: require('../api/Prompt.md')
   },
+  { name: 'withRouter',
+    html: require('../api/withRouter.md')
+  },
   { name: 'context.router',
     html: require('../api/context.router.md')
   },
