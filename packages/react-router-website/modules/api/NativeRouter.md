@@ -12,7 +12,7 @@ import { NativeRouter } from 'react-router-native'
 
 ## getUserConfirmation: func _`<NativeRouter>`_ {id=nativerouter.getuserconfirmation}
 
-A function to use to confirm navigation. Defaults to using [`window.confirm`](https://developer.mozilla.org/en-US/docs/Web/API/Window/confirm).
+A function to use to confirm navigation.
 
 ```js
 import { Alert } from 'react-native'
