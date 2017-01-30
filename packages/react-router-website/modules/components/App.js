@@ -5,12 +5,11 @@ import React from 'react'
 import BrowserRouter from '../../../react-router-dom/BrowserRouter'
 
 import { B } from './bricks'
-import Examples from './Examples'
 import Header from './Header'
+import Examples from './Examples'
 import APIDocs from './APIDocs'
-import Footer from './Footer'
-import LoadBundle from './LoadBundle'
 import NewsletterSignup from './NewsletterSignup'
+import Footer from './Footer'
 
 const base = document.querySelector('base')
 const baseHref = base ? base.getAttribute('href') : '/'
