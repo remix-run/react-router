@@ -122,7 +122,6 @@ class APIDocs extends React.Component {
         <H height="95vh">
           <B props={{ ref: node => this.menu = node }} height="100%" overflow={overflow} fontSize="80%" padding="40px" background="#f0f0f0"/>
           <B flex="1" height="100%" overflow={overflow}>
-            <B>{this.state.overflow}</B>
             {API.map((doc, i) => (
               <B className="api-entry" key={i} padding="40px 60px">
                 <MarkdownViewer html={doc.html}/>
