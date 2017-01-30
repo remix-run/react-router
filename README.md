@@ -11,7 +11,7 @@ React Router keeps your UI in sync with the URL. Make the URL your first thought
 
 ## Docs
 
-API docs are [here](/packages/react-router-website/api).
+API docs are [here](https://reacttraining.com/react-router/api).
 
 ## v4 FAQ
 
@@ -118,7 +118,7 @@ We've never been more excited about React Router. It's no longer a router for Re
 
 ### Where are the examples?!?
 
-The examples are now located under [the website](/packages/react-router-website/examples).
+The examples are now located under [the website](https://reacttraining.com/react-router/examples).
 
 ## Thanks
 
