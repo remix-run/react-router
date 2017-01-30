@@ -15,7 +15,8 @@ class Route extends React.Component {
    * provided to a <Route>. This is mainly useful when wrapping <Route>s.
    */
   static render = (props) => {
-    const { component, render, children, match } = props
+    // TODO: eslint-plugin-react thinks this is a missing propType. File a bug.
+    const { component, render, children, match } = props // eslint-disable-line react/prop-types
 
     warning(
       !(component && render),
