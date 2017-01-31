@@ -11,7 +11,9 @@
     "Link.js",
     "NativeRouter.js",
     "AndroidBackButton.js",
-    "main.js"
+    "main.js",
+    "experimental/StackRoute.js",
+    "experimental/TabRoutes.js"
   ],
   "peerDependencies": {
     "react": ">=15",
