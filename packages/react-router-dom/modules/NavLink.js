@@ -16,8 +16,8 @@ const NavLink = ({
 }) => (
   <Route
     path={typeof to === 'object' ? to.pathname : to}
-    children={({ history, match }) => {
-      const isActive = !!(getIsActive ? getIsActive(match, history.location) : match)
+    children={({ location, match }) => {
+      const isActive = !!(getIsActive ? getIsActive(match, location) : match)
 
       return (
         <Link
