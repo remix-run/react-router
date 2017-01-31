@@ -5,7 +5,7 @@ React Router runs in multiple environments: browsers, servers, native, and even 
 ## Web {id=installationweb}
 
 ```bash
-npm install react-router-dom@next`
+npm install react-router-dom@next
 # or
 yarn add react-router-dom@next
 ```
