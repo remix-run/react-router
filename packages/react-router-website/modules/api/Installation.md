@@ -19,7 +19,7 @@ import {
   Route,
   Link
   // etc.
-} from 'reat-router-dom'
+} from 'react-router-dom'
 ```
 
 If you're going for a really minimal bundle sizes on the web you can import modules directly. Theoretically a tree-shaking bundler like Webpack makes this unnecessary but we haven't tested it yet. We welcome you to!
@@ -68,7 +68,7 @@ import {
   MemoryRouter as Router,
   Route
   // etc.
-} from 'reat-router'
+} from 'react-router'
 ```
 
 You can use React Router's navigation anywhere you run React, the navigation state is kept in a memory router. You can look at the implementation of NativeRouter to get an idea on how to integrate.
