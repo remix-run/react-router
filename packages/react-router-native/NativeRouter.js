@@ -14,7 +14,7 @@ class StoreHistory extends React.Component {
 
   static defaultProps = {
     initialIndex: 0,
-    initialEntries: ['/']
+    initialEntries: [ '/' ]
   }
 
   componentDidMount() {
