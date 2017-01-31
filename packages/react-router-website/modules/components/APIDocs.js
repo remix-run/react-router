@@ -6,20 +6,23 @@ import MarkdownViewer from './MarkdownViewer'
 import ScrollToMe from './ScrollToMe'
 
 export const API = [
+  { name: 'Installation',
+    html: require('../api/Installation.md')
+  },
   { name: 'BrowserRouter',
     html: require('../api/BrowserRouter.md')
-  },
-  { name: 'HashRouter',
-    html: require('../api/HashRouter.md')
-  },
-  { name: 'MemoryRouter',
-    html: require('../api/MemoryRouter.md')
   },
   { name: 'NativeRouter',
     html: require('../api/NativeRouter.md')
   },
   { name: 'StaticRouter',
     html: require('../api/StaticRouter.md')
+  },
+  { name: 'HashRouter',
+    html: require('../api/HashRouter.md')
+  },
+  { name: 'MemoryRouter',
+    html: require('../api/MemoryRouter.md')
   },
   { name: 'Router',
     html: require('../api/Router.md')
