@@ -23,7 +23,7 @@ An array of `location`s in the history stack. These may be full-blown location o
 </MemoryRouter>
 ```
 
-## initialIndex: array _`<MemoryRouter>`_ {id=memoryrouter.initialindex}
+## initialIndex: number _`<MemoryRouter>`_ {id=memoryrouter.initialindex}
 
 The initial location's index in the array of `initialEntries`.
 
