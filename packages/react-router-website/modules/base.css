@@ -22,13 +22,13 @@ a { color: inherit; text-decoration: none; }
 .fake-browser a { color: rgb(204, 65, 65); text-decoration: underline; display: initial; }
 .fake-browser { color: initial }
 
-pre, code { font-family: Monaco; line-height: 1.5 }
+pre, code { font-family: Monaco, monospace; line-height: 1.5 }
 markdown { display: block; }
 markdown pre { background: rgb(45, 45, 45); padding: 10px; border-radius: 3px; }
 markdown pre code { font-size: 13px; }
 markdown code { font-size: 16px; }
 markdown h1 { font-family: Monaco, monospace; margin: 50px 0 10px 0; color: rgb(204, 65, 65); font-size: 200%; }
-markdown h2 { font-family: Monaco; margin: 40px 0 0 0; font-size: 150%; color: rgb(81, 81, 81); }
+markdown h2 { font-family: Monaco, monospace; margin: 40px 0 0 0; font-size: 150%; color: rgb(81, 81, 81); }
 markdown h2 code { font-size: 100%; font-weight: 100; }
 markdown h2 + p { margin-top: 10px; }
 markdown h2 em { float: right; color: #ccc; }
