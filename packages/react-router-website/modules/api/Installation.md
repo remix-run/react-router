@@ -26,7 +26,7 @@ If you're going for a really minimal bundle sizes on the web you can import modu
 
 ```js
 import Router from 'react-router-dom/BrowserRouter'
-import Route from 'react-router/Route'
+import Route from 'react-router-dom/Route'
 // etc.
 ```
 
