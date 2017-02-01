@@ -7,6 +7,16 @@ class StoreHistory extends React.Component {
     router: PropTypes.object.isRequired
   }
 
+  static propTypes = {
+    initialIndex: PropTypes.number,
+    initialEntries: PropTypes.array
+  }
+
+  static defaultProps = {
+    initialIndex: 0,
+    initialEntries: [ '/' ]
+  }
+
   componentDidMount() {
     this.store()
   }
@@ -53,8 +63,8 @@ class NativeRouter extends React.Component {
     AsyncStorage.getItem('history', (err, history) => {
       this.setState({
         savedHistory: history ? JSON.parse(history) : {
-          entries: [ '/' ],
-          index: 0
+          entries: this.props.initialEntries,
+          index: this.props.initialIndex
         }
       })
     })
