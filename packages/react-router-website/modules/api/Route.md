@@ -13,6 +13,8 @@ import { BrowserRouter as Router, Route } from 'react-router-dom'
 </Router>
 ```
 
+You can test out a `<Route>` configuration using the [Test Route Props](examples/test-route-props) example.
+
 There are 3 ways to render something with a `<Route>`:
 
 - [`<Route component>`](#route.component)

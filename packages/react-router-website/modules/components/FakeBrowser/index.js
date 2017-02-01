@@ -111,6 +111,9 @@ class FakeBrowser extends React.Component {
                     onChange: (e) => {
                       this.setState({ url: e.target.value })
                     },
+                    onBlur: (e) => {
+                      this.setState({ url: null})
+                    },
                     onKeyDown: (e) => {
                       if (e.key === 'Enter') {
                         this.setState({ url: null })
