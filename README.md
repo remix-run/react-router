@@ -13,6 +13,12 @@ React Router keeps your UI in sync with the URL. Make the URL your first thought
 
 API docs are [here](https://reacttraining.com/react-router/api).
 
+## Installation
+
+`npm install --save react-router@next` or `yarn add react-router@next`
+
+You can also install specific router package via `react-router-[package]@next`, all posible packages are avaliable [here](https://github.com/ReactTraining/react-router/tree/v4/packages)
+
 ## v4 FAQ
 
 ### Why a major version bump?
