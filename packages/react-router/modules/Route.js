@@ -16,7 +16,10 @@ class Route extends React.Component {
    */
   static render = (props) => {
     // TODO: eslint-plugin-react thinks this is a missing propType. File a bug.
-    const { component, render, children, match } = props // eslint-disable-line react/prop-types
+    const { component, render, match } = props // eslint-disable-line react/prop-types
+    let children = props.children  // eslint-disable-line react/prop-types
+
+    if (children && !children.length) children = null
 
     warning(
       !(component && render),

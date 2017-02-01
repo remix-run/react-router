@@ -34,6 +34,23 @@ describe('A <Route>', () => {
 
     expect(node.innerHTML).toNotContain(TEXT)
   })
+
+  it('supports preact by nulling out children prop when empty array is passed', () => {
+    const TEXT = 'Mrs. Kato'
+    const node = document.createElement('div')
+
+    ReactDOM.render((
+      <MemoryRouter initialEntries={[ '/' ]}>
+        <Route path="/" render={() => (
+          <h1>{TEXT}</h1>
+        )}>
+          {[]}
+        </Route>
+      </MemoryRouter>
+    ), node)
+
+    expect(node.innerHTML).toContain(TEXT)
+  })
 })
 
 describe('A <Route exact>', () => {
