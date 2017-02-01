@@ -20,11 +20,14 @@
     "matchPath.js",
     "withRouter.js",
     "README.md",
+    "es",
     "umd"
   ],
   "main": "index.js",
+  "module": "es/index.js",
   "scripts": {
-    "build-lib": "babel ./modules -d . --ignore __tests__",
+    "build-es": "BABEL_ENV=es babel modules -d es --ignore __tests__",
+    "build-lib": "BABEL_ENV=cjs babel modules -d . --ignore __tests__",
     "build-umd": "webpack modules/index.js umd/react-router.js",
     "build-min": "webpack -p modules/index.js umd/react-router.min.js",
     "build": "node ./scripts/build.js",

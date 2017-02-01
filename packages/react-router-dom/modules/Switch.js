@@ -1,1 +1,1 @@
-export default from 'react-router/Switch'
+export { Switch as default } from 'react-router'

@@ -1,1 +1,1 @@
-export default from 'react-router/Redirect'
+export { Redirect as default } from 'react-router'

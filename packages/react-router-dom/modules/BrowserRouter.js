@@ -1,6 +1,6 @@
 import React, { PropTypes } from 'react'
 import createHistory from 'history/createBrowserHistory'
-import Router from 'react-router/Router'
+import { Router } from 'react-router'
 
 /**
  * The public API for a <Router> that uses HTML5 history.

@@ -1,5 +1,5 @@
 import React, { PropTypes } from 'react'
-import Route from 'react-router/Route'
+import { Route } from 'react-router'
 import Link from './Link'
 
 /**

@@ -1,1 +1,1 @@
-export default from 'react-router/MemoryRouter'
+export { MemoryRouter as default } from 'react-router'
