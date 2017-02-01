@@ -19,7 +19,7 @@ describe('NavLink', () => {
         </MemoryRouter>
       ), node)
       const a = node.getElementsByTagName('a')[0]
-      expect(a.classList.contains('active')).toBe(true)
+      expect(a.className).toContain('active')
     })
 
     it('applies its activeStyle', () => {
@@ -50,7 +50,7 @@ describe('NavLink', () => {
         </MemoryRouter>
       ), node)
       const a = node.getElementsByTagName('a')[0]
-      expect(a.classList.contains('acative')).toBe(false)
+      expect(a.className).toNotContain('active')
     })
 
     it('does not apply its activeStyle', () => {
