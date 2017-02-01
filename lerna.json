@@ -1,7 +1,8 @@
 {
-  "lerna": "2.0.0-beta.32",
+  "lerna": "2.0.0-beta.35",
   "packages": [
     "packages/*"
   ],
+  "hoist": true,
   "version": "4.0.0-beta.3"
 }
