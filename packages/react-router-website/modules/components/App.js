@@ -10,6 +10,7 @@ import Examples from './Examples'
 import APIDocs from './APIDocs'
 import NewsletterSignup from './NewsletterSignup'
 import Footer from './Footer'
+import Video from './Video'
 
 const base = document.querySelector('base')
 const baseHref = base ? base.getAttribute('href') : '/'
@@ -19,6 +20,7 @@ const App = () => (
     <B>
       <Header/>
       <Examples/>
+      <Video/>
       <APIDocs/>
       <NewsletterSignup/>
       <Footer/>
