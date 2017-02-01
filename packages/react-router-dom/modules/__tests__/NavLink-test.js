@@ -73,4 +73,40 @@ describe('NavLink', () => {
     })
   })
   
+  describe('isActive', () => {
+    const activeExact = (match, location) => !!match && match.isExact
+
+    it('applies active props when isActive returns true', () => {
+      ReactDOM.render((
+        <MemoryRouter initialEntries={['/pizza']}>
+          <NavLink
+            to='/pizza'
+            activeClassName='active'
+            isActive={activeExact}
+            >
+            Pizza!
+          </NavLink>
+        </MemoryRouter>
+      ), node)
+      const a = node.getElementsByTagName('a')[0]
+      expect(a.className).toContain('active')
+    })
+
+    it('does not apply active props when isActive returns false', () => {
+      ReactDOM.render((
+        <MemoryRouter initialEntries={['/pizza']}>
+          <NavLink
+            to='/pizza/anchovies'
+            activeClassName='active'
+            isActive={activeExact}
+            >
+            Pizza!
+          </NavLink>
+        </MemoryRouter>
+      ), node)
+      const a = node.getElementsByTagName('a')[0]
+      expect(a.className).toNotContain('active')
+    })
+  })
+
 })
