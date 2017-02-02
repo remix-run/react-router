@@ -17,7 +17,7 @@ API docs are [here](https://reacttraining.com/react-router/api).
 
 `npm install --save react-router@next` or `yarn add react-router@next`
 
-You can also install specific router package via `react-router-[package]@next`, all posible packages are avaliable [here](https://github.com/ReactTraining/react-router/tree/v4/packages)
+You can also install a specific router package via `react-router-[package]@next`. All possible packages are available [here](https://github.com/ReactTraining/react-router/tree/v4/packages).
 
 ## v4 FAQ
 
