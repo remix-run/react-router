@@ -1,1 +1,1 @@
-export default from 'react-router/StaticRouter'
+export { StaticRouter as default } from 'react-router'

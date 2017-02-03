@@ -1,1 +1,1 @@
-export default from 'react-router/Prompt'
+export { Prompt as default } from 'react-router'

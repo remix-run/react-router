@@ -1,1 +1,1 @@
-export default from 'react-router/Router'
+export { Router as default } from 'react-router'

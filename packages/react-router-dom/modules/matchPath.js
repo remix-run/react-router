@@ -1,1 +1,1 @@
-export default from 'react-router/matchPath'
+export { matchPath as default } from 'react-router'
