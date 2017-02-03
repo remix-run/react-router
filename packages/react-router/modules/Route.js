@@ -1,13 +1,13 @@
 import warning from 'warning'
 import React, { PropTypes } from 'react'
 import matchPath from './matchPath'
-import { simpleResolve } from './resolve'
 
 const computeMatch = (router, { computedMatch, path, exact, strict }) =>
   computedMatch || matchPath(
     router.location.pathname,
-    simpleResolve(path, router.match && router.match.path ? router.match.path : ''),
-    { exact, strict }
+    path,
+    { exact, strict },
+    router.match
   )
 
 /**

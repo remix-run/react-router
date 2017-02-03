@@ -1,6 +1,5 @@
 import React, { PropTypes } from 'react'
 import matchPath from './matchPath'
-import { simpleResolve } from './resolve'
 
 /**
  * The public API for rendering the first <Route> that matches.
@@ -46,15 +45,14 @@ class Switch extends React.Component {
     const { match:parentMatch } = this.context.router
 
     const routes = React.Children.toArray(children)
-
-    const parentPath = parentMatch && parentMatch.path ? parentMatch.path : ''
     let route, match
     for (let i = 0, length = routes.length; match == null && i < length; ++i) {
       route = routes[i]
       match = matchPath(
         location.pathname,
-        simpleResolve(route.props.path, parentPath),
-        route.props
+        route.props.path,
+        route.props,
+        parentMatch
       )
     }
 

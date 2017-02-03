@@ -116,59 +116,76 @@ describe('A <Route exact strict>', () => {
     expect(node.innerHTML).toNotContain(TEXT)
   })
 
-  describe('relative paths', () => {
-    it('resolves using the parent match', () => {      
-      const initialEntries = ['/', '/recipes', '/recipes/pizza']
-      const TEXT = 'TEXT'
-      const node = document.createElement('div')
-      ReactDOM.render((
-        <MemoryRouter initialEntries={initialEntries} initialIndex={2}>
-          <Route path='/recipes' render={() => (
-            <Route path='pizza' render={() => <div>{TEXT}</div>} />
-          )} />
-        </MemoryRouter>
-      ), node)
-      expect(node.textContent).toContain(TEXT)
-    })
+})
 
-    it('works when match is null', () => {
-      const initialEntries = ['/', '/recipes']
-      const TEXT = 'TEXT'
-      const node = document.createElement('div')
-      ReactDOM.render((
-        <MemoryRouter initialEntries={initialEntries} initialIndex={1}>
-          <Route path='recipes' render={() => <div>{TEXT}</div>} />
-        </MemoryRouter>
-      ), node)
-      expect(node.textContent).toContain(TEXT)
-    })
+describe('A <Route> with a relative path', () => {
+  it('resolves using the parent match', () => {
+    const initialEntries = ['/', '/recipes', '/recipes/pizza']
+    const TEXT = 'TEXT'
+    const node = document.createElement('div')
+    ReactDOM.render((
+      <MemoryRouter initialEntries={initialEntries} initialIndex={2}>
+        <Route path='/recipes' render={() => (
+          <Route path='pizza' render={() => <div>{TEXT}</div>} />
+        )} />
+      </MemoryRouter>
+    ), node)
+    expect(node.textContent).toContain(TEXT)
+  })
 
-    it('works when path is empty string', () => {
-      const initialEntries = ['/hello']
-      const TEXT = 'TEXT'
-      const node = document.createElement('div')
-      ReactDOM.render((
-        <MemoryRouter initialEntries={initialEntries} initialIndex={0}>
-          <Route path='hello' render={() => (
-            <Route path='' render={() => <div>{TEXT}</div>} />
-          )} />
-        </MemoryRouter>
-      ), node)
-      expect(node.textContent).toContain(TEXT)
-    })
+  it('works when match is null', () => {
+    const initialEntries = ['/', '/recipes']
+    const TEXT = 'TEXT'
+    const node = document.createElement('div')
+    ReactDOM.render((
+      <MemoryRouter initialEntries={initialEntries} initialIndex={1}>
+        <Route path='recipes' render={() => <div>{TEXT}</div>} />
+      </MemoryRouter>
+    ), node)
+    expect(node.textContent).toContain(TEXT)
+  })
 
-    it('works with pathless routes', () => {
-      const initialEntries = ['/', '/pizza']
-      const TEXT = 'TEXT'
-      const node = document.createElement('div')
-      ReactDOM.render((
-        <MemoryRouter initialEntries={initialEntries} initialIndex={1}>
-          <Route render={() => (
-            <Route path='pizza' render={() => <div>{TEXT}</div>} />
-          )} />
-        </MemoryRouter>
-      ), node)
-      expect(node.textContent).toContain(TEXT)
-    })
+  it('works when path is empty string', () => {
+    const initialEntries = ['/hello']
+    const TEXT = 'TEXT'
+    const node = document.createElement('div')
+    ReactDOM.render((
+      <MemoryRouter initialEntries={initialEntries} initialIndex={0}>
+        <Route path='hello' render={() => (
+          <Route path='' render={() => <div>{TEXT}</div>} />
+        )} />
+      </MemoryRouter>
+    ), node)
+    expect(node.textContent).toContain(TEXT)
+  })
+
+  it('works with pathless routes', () => {
+    const initialEntries = ['/', '/pizza']
+    const TEXT = 'TEXT'
+    const node = document.createElement('div')
+    ReactDOM.render((
+      <MemoryRouter initialEntries={initialEntries} initialIndex={1}>
+        <Route render={() => (
+          <Route path='pizza' render={() => <div>{TEXT}</div>} />
+        )} />
+      </MemoryRouter>
+    ), node)
+    expect(node.textContent).toContain(TEXT)
+  })
+
+  it('inherits params from its parent match', () => {
+    const FOOD = 'pizza'
+    const TOPPING = 'pineapple'
+    const initialEntries = [`/${FOOD}/${TOPPING}`]
+    const TEXT = 'TEXT'
+    const node = document.createElement('div')
+    ReactDOM.render((
+      <MemoryRouter initialEntries={initialEntries} initialIndex={0}>
+        <Route path=':food' render={() => (
+          <Route path=':topping' render={() => <div>{FOOD} {TOPPING}</div>} />
+        )} />
+      </MemoryRouter>
+    ), node)
+    expect(node.textContent).toContain(`${FOOD} ${TOPPING}`)
   })
 })

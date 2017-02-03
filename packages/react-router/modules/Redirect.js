@@ -10,7 +10,7 @@ class Redirect extends React.Component {
     router: PropTypes.shape({
       push: PropTypes.func.isRequired,
       replace: PropTypes.func.isRequired,
-      staticContext: PropTypes.object
+      staticContext: PropTypes.object,
       match: PropTypes.shape({
         url: PropTypes.string
       })
