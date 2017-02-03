@@ -9,7 +9,7 @@ describe('A <Link>', () => {
   it('accepts a location "to" prop', () => {
     const location = {
       pathname: '/the/path',
-      search: 'the=query',
+      search: '?the=query',
       hash: '#the-hash'
     }
     const node = document.createElement('div')
@@ -21,8 +21,9 @@ describe('A <Link>', () => {
     ), node)
 
     const href = node.querySelector('a').getAttribute('href')
+    const { pathname, search, hash } = location
 
-    expect(href).toEqual('/the/path?the=query#the-hash')
+    expect(href).toEqual(pathname + search + hash)
   })
 })
 
