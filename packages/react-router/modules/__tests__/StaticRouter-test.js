@@ -3,6 +3,7 @@ import React, { PropTypes } from 'react'
 import ReactDOMServer from 'react-dom/server'
 import StaticRouter from '../StaticRouter'
 import Redirect from '../Redirect'
+import Route from '../Route'
 
 describe('A <StaticRouter>', () => {
   it('puts a router on context', () => {
@@ -71,20 +72,16 @@ describe('A <StaticRouter>', () => {
 
   it('knows how to parse raw URLs', () => {
     let location
-    const LocationSubject = (props, context) => {
-      location = context.router.location
+    const LocationChecker = (props) => {
+      location = props.location
       return null
-    }
-
-    LocationSubject.contextTypes = {
-      router: PropTypes.object.isRequired
     }
 
     const context = {}
 
     ReactDOMServer.renderToStaticMarkup(
-      <StaticRouter location="/the/path?the=query#the-hash" context={context}>
-        <LocationSubject/>
+      <StaticRouter context={context} location="/the/path?the=query#the-hash">
+        <Route component={LocationChecker}/>
       </StaticRouter>
     )
 
@@ -92,6 +89,54 @@ describe('A <StaticRouter>', () => {
       pathname: '/the/path',
       search: '?the=query',
       hash: '#the-hash'
+    })
+  })
+
+  describe('with a basename', () => {
+    it('strips the basename from location pathnames', () => {
+      let location
+      const LocationChecker = (props) => {
+        location = props.location
+        return null
+      }
+
+      const context = {}
+
+      ReactDOMServer.renderToStaticMarkup(
+        <StaticRouter context={context} basename="/the-base" location="/the-base/path">
+          <Route component={LocationChecker}/>
+        </StaticRouter>
+      )
+
+      expect(location).toMatch({
+        pathname: '/path'
+      })
+    })
+
+    it('reports PUSH actions on the context object', () => {
+      const context = {}
+
+      ReactDOMServer.renderToStaticMarkup(
+        <StaticRouter context={context} basename="/the-base">
+          <Redirect push to="/somewhere-else"/>
+        </StaticRouter>
+      )
+
+      expect(context.action).toBe('PUSH')
+      expect(context.url).toBe('/the-base/somewhere-else')
+    })
+
+    it('reports REPLACE actions on the context object', () => {
+      const context = {}
+
+      ReactDOMServer.renderToStaticMarkup(
+        <StaticRouter context={context} basename="/the-base">
+          <Redirect to="/somewhere-else"/>
+        </StaticRouter>
+      )
+
+      expect(context.action).toBe('REPLACE')
+      expect(context.url).toBe('/the-base/somewhere-else')
     })
   })
 })

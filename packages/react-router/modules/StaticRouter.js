@@ -1,6 +1,6 @@
 import invariant from 'invariant'
 import React, { PropTypes } from 'react'
-import { createPath, parsePath } from 'history/PathUtils'
+import { addLeadingSlash, createPath, parsePath } from 'history/PathUtils'
 import Router from './Router'
 
 const normalizeLocation = (object) => {
@@ -10,6 +10,32 @@ const normalizeLocation = (object) => {
     pathname,
     search: search === '?' ? '' : search,
     hash: hash === '#' ? '' : hash
+  }
+}
+
+const addBasename = (basename, location) => {
+  if (!basename)
+    return location
+
+  return {
+    ...location,
+    pathname: addLeadingSlash(basename) + location.pathname
+  }
+}
+
+const stripBasename = (basename, location) => {
+  if (!basename)
+    return location
+
+  const base = addLeadingSlash(basename)
+  const { pathname } = location
+
+  if (location.pathname.indexOf(base) !== 0)
+    return location
+
+  return {
+    ...location,
+    pathname: location.pathname.substr(base.length)
   }
 }
 
@@ -51,33 +77,33 @@ class StaticRouter extends React.Component {
   }
 
   createHref = (path) =>
-    this.props.basename + createURL(path)
+    addLeadingSlash(this.props.basename) + createURL(path)
 
   handlePush = (location) => {
-    const { context } = this.props
+    const { basename, context } = this.props
     context.action = 'PUSH'
-    context.location = createLocation(location)
-    context.url = createURL(location)
+    context.location = addBasename(basename, createLocation(location))
+    context.url = createURL(context.location)
   }
 
   handleReplace = (location) => {
-    const { context } = this.props
+    const { basename, context } = this.props
     context.action = 'REPLACE'
-    context.location = createLocation(location)
-    context.url = createURL(location)
+    context.location = addBasename(basename, createLocation(location))
+    context.url = createURL(context.location)
   }
 
   handleListen = () =>
     noop
 
   render() {
-    const { context, location, ...props } = this.props
+    const { basename, context, location, ...props } = this.props
 
     const history = {
       staticContext: context,
       createHref: this.createHref,
       action: 'POP',
-      location: createLocation(location),
+      location: stripBasename(basename, createLocation(location)),
       push: this.handlePush,
       replace: this.handleReplace,
       go: staticHandler('go'),
