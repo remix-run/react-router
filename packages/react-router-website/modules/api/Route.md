@@ -110,26 +110,37 @@ Routes without a `path` _always_ match.
 
 When `true`, will only match if the path matches the `location.pathname` _exactly_.
 
-| path | location.pathname | exact | matches? |
-|---|---|---|---|---|
-| `/one`  | `/one/two`  | `true` | no |
-| `/one`  | `/one/two`  | `false` | yes |
-
 ```js
 <Route exact path="/one" component={About}/>
 ```
 
+| path | location.pathname | exact | matches? |   
+|---|---|---|---|---|   
+| `/one`  | `/one/two`  | `true` | no |   
+| `/one`  | `/one/two`  | `false` | yes |   
+
 ## strict: bool _`<Route>`_ {id=route.strict}
 
-When `true`, enforces strict matching of trailing slashes on `location.pathname`.
-
-| path | location.pathname | strict | matches? |
-|---|---|---|---|---|
-| `/one/two`  | `/one/two/`  | `false` | yes |
-| `/one/two`  | `/one/two/`  | `true` | no |
-| `/one/two/`  | `/one/two/`  | `false` | yes |
-| `/one/two/`  | `/one/two/`  | `true` | yes |
+When `true`, a `path` that has a trailing slash will only match a `location.pathname` with a trailing slash. This has no effect when there are additional URL segments in the `location.pathname`.
 
 ```js
-<Route strict path="/one/two/" component={About}/>
+<Route strict path="/one/" component={About}/>
 ```
+
+| path | location.pathname | matches? |
+| --- | --- | --- |
+| `/one/` | `/one` | no |
+| `/one/` | `/one/` | yes |
+| `/one/` | `/one/two` | yes |
+
+**NOTE:** `strict` can be used to enforce that a `location.pathname` has no trailing slash, but in order to do this both `strict` and `exact` must be `true`.
+
+```js
+<Route exact strict path="/one" component={About}/>
+```
+
+| path | location.pathname | matches? |
+| --- | --- | --- |
+| `/one` | `/one` | yes |
+| `/one` | `/one/` | no |
+| `/one` | `/one/two` | no |
