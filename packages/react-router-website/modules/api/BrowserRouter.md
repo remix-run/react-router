@@ -10,7 +10,7 @@ import { BrowserRouter } from 'react-router-dom'
   forceRefresh={optionalBool}
   getUserConfirmation={optionalFunc}
   keyLength={optionalNumber}
-/>
+>
   <App/>
 </BrowserRouter>
 ```
