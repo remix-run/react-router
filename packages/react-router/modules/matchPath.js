@@ -5,7 +5,7 @@ const cacheLimit = 10000
 let cacheCount = 0
 
 const compilePath = (pattern, options) => {
-  const cacheKey = options.end + options.strict
+  const cacheKey = `${options.end}${options.strict}`
   const cache = patternCache[cacheKey] || (patternCache[cacheKey] = {})
 
   if (cache[pattern])
