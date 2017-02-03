@@ -58,9 +58,8 @@ class Link extends React.Component {
   }
 
   absolutePathname() {
-    const { router } = this.context
     const { to } = this.props
-    const { match } = router
+    const { match } = this.context.router
     const base = (match && match.url) ? match.url : ''
     return resolveLocation(to, base)
   }

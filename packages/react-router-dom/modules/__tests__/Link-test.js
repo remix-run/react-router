@@ -91,92 +91,91 @@ describe('A <Link> underneath a <HashRouter>', () => {
       expect(linkNode.getAttribute('href')).toEqual('#foo')
     })
   })
+})
 
-  describe('relative to', () => {
-    const node = document.createElement('div')
+describe('A <Link> with a relative to', () => {
+  const node = document.createElement('div')
 
-    afterEach(() => {
-      ReactDOM.unmountComponentAtNode(node)
-    })
+  afterEach(() => {
+    ReactDOM.unmountComponentAtNode(node)
+  })
 
-    it('resolves using the parent match', () => {
-      const initialEntries = ['/', '/recipes']
-      ReactDOM.render((
-        <MemoryRouter initialEntries={initialEntries} initialIndex={1}>
+  it('resolves using the parent match', () => {
+    const initialEntries = ['/', '/recipes']
+    ReactDOM.render((
+      <MemoryRouter initialEntries={initialEntries} initialIndex={1}>
+        <Route path='/recipes' render={() => (
+          <Link to='tacos'>Chess</Link>
+        )} />
+      </MemoryRouter>
+    ), node)
+    const a = node.getElementsByTagName('a')[0]
+    expect(a.pathname).toBe('/recipes/tacos')
+  })
+
+  it('works when not in a route', () => {
+    const initialEntries = ['/']
+    ReactDOM.render((
+      <MemoryRouter initialEntries={initialEntries} initialIndex={0}>
+        <Link to='recipes'>Recipes</Link>
+      </MemoryRouter>
+    ), node)
+    const a = node.getElementsByTagName('a')[0]
+    expect(a.pathname).toBe('/recipes')
+  })
+
+  it('navigates correctly', () => {
+    const initialEntries = ['/', '/recipes']
+    const RESTAURANTS = 'RESTAURANTS'
+    ReactDOM.render((
+      <MemoryRouter initialEntries={initialEntries} initialIndex={1}>
+        <Switch>
           <Route path='/recipes' render={() => (
-            <Link to='tacos'>Chess</Link>
+            <Link to='../restaurants'>Order Takeout</Link>
           )} />
-        </MemoryRouter>
-      ), node)
-      const a = node.getElementsByTagName('a')[0]
-      expect(a.pathname).toBe('/recipes/tacos')
+          <Route path='/restaurants' render={() => (
+            <div>{RESTAURANTS}</div>
+          )} />
+        </Switch>
+      </MemoryRouter>
+    ), node)
+    expect(node.textContent).toNotContain(RESTAURANTS)
+    const a = node.getElementsByTagName('a')[0]
+    Simulate.click(a, {
+      defaultPrevented: false,
+      preventDefault() { this.defaultPrevented = true },
+      metaKey: null,
+      altKey: null,
+      ctrlKey: null,
+      shiftKey: null,
+      button: 0
     })
+    expect(node.textContent).toContain(RESTAURANTS)
+  })
 
-    it('works when not in a route', () => {
-      const initialEntries = ['/']
-      ReactDOM.render((
-        <MemoryRouter initialEntries={initialEntries} initialIndex={0}>
-          <Link to='recipes'>Recipes</Link>
-        </MemoryRouter>
-      ), node)
-      const a = node.getElementsByTagName('a')[0]
-      expect(a.pathname).toBe('/recipes')
-    })
-
-    it('navigates correctly', () => {
-      const initialEntries = ['/', '/recipes']
-      const RESTAURANTS = 'RESTAURANTS'
-      ReactDOM.render((
-        <MemoryRouter initialEntries={initialEntries} initialIndex={1}>
-          <Switch>
-            <Route path='/recipes' render={() => (
-              <Link to='../restaurants'>Order Takeout</Link>
-            )} />
-            <Route path='/restaurants' render={() => (
-              <div>{RESTAURANTS}</div>
-            )} />
-          </Switch>
-        </MemoryRouter>
-      ), node)
-      expect(node.textContent).toNotContain(RESTAURANTS)
-      const a = node.getElementsByTagName('a')[0]
-      Simulate.click(a, {
-        defaultPrevented: false,
-        preventDefault() { this.defaultPrevented = true },
-        metaKey: null,
-        altKey: null,
-        ctrlKey: null,
-        shiftKey: null,
-        button: 0
-      })
-      expect(node.textContent).toContain(RESTAURANTS)
-    })
-
-    it('updates regardless of sCU blocks', () => {
-      let goForward
-      class UpdateBlocker extends React.Component {
-        shouldComponentUpdate() {
-          return false
-        }
-        render() {
-          goForward = this.props.goForward
-          return <Link to='store' />
-        }
+  it('updates regardless of sCU blocks', () => {
+    let goForward
+    class UpdateBlocker extends React.Component {
+      shouldComponentUpdate() {
+        return false
       }
+      render() {
+        goForward = this.props.goForward
+        return <Link to='store' />
+      }
+    }
 
-      ReactDOM.render((
-        <MemoryRouter initialEntries={[ '/bubblegum', '/shoelaces' ]}>
-          <Route component={UpdateBlocker}/>
-        </MemoryRouter>
-      ), node)
+    ReactDOM.render((
+      <MemoryRouter initialEntries={[ '/bubblegum', '/shoelaces' ]}>
+        <Route path='/:store' component={UpdateBlocker}/>
+      </MemoryRouter>
+    ), node)
 
-      let href = node.querySelector('a').getAttribute('href')
-      expect(href).toEqual('/bubblegum/store')
+    let href = node.querySelector('a').getAttribute('href')
+    expect(href).toEqual('/bubblegum/store')
+    goForward()
 
-      goForward()
-
-      href = node.querySelector('a').getAttribute('href')
-      expect(href).toEqual('/shoelaces/store')
-    })
+    href = node.querySelector('a').getAttribute('href')
+    expect(href).toEqual('/shoelaces/store')
   })
 })
