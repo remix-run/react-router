@@ -43,8 +43,10 @@ class Link extends React.Component {
 
       const { router } = this.context
       const { replace, to } = this.props
+			const { pathname, search, hash } = router.location
+      const toUrl = typeof to === 'string' ? to : to.pathname + to.search + to.hash
 
-      if (replace) {
+      if (replace || pathname + search + hash === toUrl) {
         router.replace(to)
       } else {
         router.push(to)
