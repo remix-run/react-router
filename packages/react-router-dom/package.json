@@ -30,10 +30,6 @@
   "main": "index.js",
   "module": "es/index.js",
   "scripts": {
-    "build-es": "cross-env BABEL_ENV=es babel modules -d es --ignore __tests__",
-    "build-lib": "cross-env BABEL_ENV=cjs babel modules -d . --ignore __tests__",
-    "build-umd": "webpack modules/index.js umd/react-router-dom.js",
-    "build-min": "webpack -p modules/index.js umd/react-router-dom.min.js",
     "build": "node ./scripts/build.js",
     "watch": "babel ./modules -d . --ignore __tests__ --watch",
     "prepublish": "node ./scripts/build.js",
@@ -57,7 +53,6 @@
     "babel-preset-es2015": "^6.14.0",
     "babel-preset-react": "^6.5.0",
     "babel-preset-stage-1": "^6.5.0",
-    "cross-env": "^3.1.4",
     "eslint": "^2.13.1",
     "eslint-plugin-import": "^1.15.0",
     "eslint-plugin-react": "^5.2.2",
