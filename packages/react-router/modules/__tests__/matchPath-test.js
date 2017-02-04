@@ -76,18 +76,154 @@ describe("matchPath", () => {
   describe("cache", () => {
     it("creates a cache entry for each exact/strict pair", () => {
       // true/false and false/true will collide when adding booleans
-      const trueFalse = matchPath("/one/two", {
-        path: "/one/two/",
-        exact: true,
-        strict: false
-      });
-      const falseTrue = matchPath("/one/two", {
-        path: "/one/two/",
-        exact: false,
-        strict: true
-      });
-      expect(!!trueFalse).toBe(true);
-      expect(!!falseTrue).toBe(false);
-    });
-  });
-});
+      const trueFalse = matchPath(
+        '/one/two',
+        { path: '/one/two/', exact : true, strict: false }
+      )
+      const falseTrue = matchPath(
+        '/one/two',
+        { path: '/one/two/', exact : false, strict: true }
+      )
+      expect(!!trueFalse).toBe(true)
+      expect(!!falseTrue).toBe(false)
+    })
+  })
+
+  describe('parentMatch', () => {
+    describe('absolute path', () => {   
+      it('does not merge parent params', () => {
+        const parentMatch = {
+          url: '/state/GA',
+          path: '/state/:abbr',
+          params: { abbr: 'GA' },
+          isExact: true
+        }
+        const match = matchPath(
+          '/state/GA',
+          '/state/GA',
+          {},
+          parentMatch
+        )
+
+        expect(match.params.abbr).toBe(undefined)
+      })
+
+    })
+
+    describe('relative path', () => {
+      it('resolves using parentMatch.url before matching', () => {
+        const parentMatch = {
+          url: '/state',
+          path: '/state',
+          params: {},
+          isExact: false
+        }
+        const match = matchPath(
+          '/state/WI',
+          'WI',
+          {},
+          parentMatch
+        )
+        
+        expect(match.url).toBe('/state/WI')
+      })
+
+      it('merges parentMatch.params into match.params', () => {
+        const parentMatch = {
+          url: '/state/CO',
+          path: '/state/:state',
+          params: { state: 'CO' },
+          isExact: false
+        }
+        const match = matchPath(
+          '/state/CO/Denver',
+          ':city',
+          {},
+          parentMatch
+        )
+        
+        expect(match.params).toIncludeKeys(['state', 'city'])
+      })
+
+      it('works when parentMatch.url has trailing slash', () => {
+        const parentMatch = {
+          url: '/state/',
+          path: '/state/',
+          params: {},
+          isExact: false
+        }
+        const match = matchPath(
+          '/state/OR',
+          ':state',
+          {},
+          parentMatch
+        )
+        
+        expect(match.url).toBe('/state/OR')
+        expect(match.path).toBe('/state/:state')
+      })
+
+      it('matches using parentMatch.url when path is empty string', () => {
+        const parentMatch = {
+          url: '/state',
+          path: '/state',
+          params: {},
+          isExact: false
+        }
+        const match = matchPath(
+          '/state/WA',
+          '',
+          {},
+          parentMatch
+        )
+        
+        expect(match.url).toBe('/state')
+        expect(match.path).toBe('/state')
+      })
+
+      it('resolves using root when parentMatch is null', () => {
+        const match = matchPath(
+          '/state/CA',
+          'state/:state',
+          {},
+          null
+        )
+        
+        expect(match.url).toBe('/state/CA')
+        expect(match.path).toBe('/state/:state')
+      })
+    })
+
+    describe('undefined path', () => {
+      it('inherits parent\'s match.url', () => {
+        const parentMatch = {
+          url: '/state',
+          path: '/state',
+          params: {},
+          isExact: false
+        }
+        const match = matchPath(
+          '/state/OR',
+          undefined,
+          {},
+          parentMatch
+        )
+
+        expect(match.url).toBe('/state')
+        expect(match.path).toBe(undefined)
+      })
+
+      it('sets url to / when there is no parent match', () => {
+        const match = matchPath(
+          '/state/OR',
+          undefined,
+          {},
+          null
+        )
+
+        expect(match.url).toBe('/')
+        expect(match.path).toBe(undefined)
+      })
+    })
+  })
+})
