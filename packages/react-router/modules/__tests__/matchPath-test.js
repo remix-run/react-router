@@ -33,4 +33,22 @@ describe('matchPath', () => {
       expect(match.url).toBe('/somewhere')
     })
   })
+
+  describe('cache', () => {
+    it('creates a cache entry for each exact/strict pair', () => {
+      // true/false and false/true will collide when adding booleans
+      const trueFalse = matchPath(
+        '/one/two',
+        '/one/two/',
+        { exact : true, strict: false }
+      )
+      const falseTrue = matchPath(
+        '/one/two',
+        '/one/two/',
+        { exact : false, strict: true }
+      )
+      expect(!!trueFalse).toBe(true)
+      expect(!!falseTrue).toBe(false)
+    })
+  })
 })
