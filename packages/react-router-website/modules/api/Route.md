@@ -31,7 +31,7 @@ A React component to render when the location matches. The component receives al
 
 ```js
 const User = ({ match }) => {
-  return <h1>Hello {match.username}!</h1>
+  return <h1>Hello {match.params.username}!</h1>
 }
 ```
 
