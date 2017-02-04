@@ -4,6 +4,8 @@ import ReactDOM from 'react-dom'
 import MemoryRouter from 'react-router/MemoryRouter'
 import HashRouter from '../HashRouter'
 import Link from '../Link'
+import Route from 'react-router/Route'
+import resolveLocation from 'react-router/resolveLocation'
 
 describe('A <Link>', () => {
   it('accepts a location "to" prop', () => {
@@ -87,5 +89,20 @@ describe('A <Link> underneath a <HashRouter>', () => {
       const linkNode = createLinkNode('noslash', '/foo')
       expect(linkNode.getAttribute('href')).toEqual('#foo')
     })
+  })
+})
+
+describe('resolving a relative Link', () => {
+  it('can use resolveLocation to resolve relative to parent Route', () => {
+    const node = document.createElement('div')
+    ReactDOM.render((
+      <MemoryRouter initialEntries={[ '/state' ]}>
+        <Route path='/state' render={({ match }) => (
+          <Link to={resolveLocation('CO', match.url)}>Colorado</Link>
+        )} />
+      </MemoryRouter>
+    ), node)
+    const a = node.getElementsByTagName('a')[0]
+    expect(a.getAttribute('href')).toEqual('/state/CO')
   })
 })

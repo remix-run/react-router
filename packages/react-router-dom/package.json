@@ -23,6 +23,7 @@
     "index.js",
     "matchPath.js",
     "withRouter.js",
+    "resolveLocation.js",
     "es",
     "umd"
   ],
