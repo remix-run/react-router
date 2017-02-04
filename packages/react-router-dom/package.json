@@ -38,7 +38,7 @@
     "test": "karma start --single-run"
   },
   "peerDependencies": {
-    "react": "15.x"
+    "react": ">=15"
   },
   "dependencies": {
     "history": "^4.5.1",
