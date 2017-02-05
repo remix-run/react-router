@@ -20,7 +20,7 @@ describe('A <Router>', () => {
           </Router>,
           node
         )
-      }).toThrow(/A <Router> must have at most one child element/)
+      }).toThrow(/A <Router> may have only one child element/)
     })
   })
 

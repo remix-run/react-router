@@ -24,7 +24,7 @@ class Router extends React.Component {
     const { children } = this.props
     invariant(
       children == undefined || React.Children.count(children) === 1,
-      'A <Router> must have at most one child element.'
+      'A <Router> may have only one child element'
     )
 
     return children ? React.Children.only(children) : null
