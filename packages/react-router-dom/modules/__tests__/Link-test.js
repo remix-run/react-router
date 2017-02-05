@@ -37,13 +37,15 @@ describe('When a <Link> is clicked', () => {
     {
       pathname: '/the/path' + ++locationInd,
       search: '?the=query' + locationInd,
-      hash: '#the-hash' + locationInd
+      hash: '#the-hash' + locationInd,
+      state: { locationInd }
     }
   )
 
   const extractCurrentLocation = () => {
     const { pathname, search, hash } = window.location
-    return { pathname, search, hash }
+		const { state } = window.history.state
+    return { pathname, search, hash, state }
   }
 
   const createLinkAndClick = ({to = generateNextLocation(), ...props} = {}) => {
