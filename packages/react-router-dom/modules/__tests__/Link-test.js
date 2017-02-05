@@ -44,7 +44,7 @@ describe('When a <Link> is clicked', () => {
 
   const extractCurrentLocation = () => {
     const { pathname, search, hash } = window.location
-		const { state } = window.history.state
+    const { state } = window.history.state
     return { pathname, search, hash, state }
   }
 
