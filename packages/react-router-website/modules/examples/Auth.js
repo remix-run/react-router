@@ -80,17 +80,18 @@ class Login extends React.Component {
   }
 
   render() {
-    const { from } = this.props.location.state || '/'
+    const { from } = this.props.location.state || { from: { pathname: '/' } }
     const { redirectToReferrer } = this.state
-
+    
+    if (redirectToReferrer) {
+      return (
+        <Redirect to={from}/>
+      )
+    }
+    
     return (
       <div>
-        {redirectToReferrer && (
-          <Redirect to={from || '/'}/>
-        )}
-        {from && (
-          <p>You must log in to view the page at {from.pathname}</p>
-        )}
+        <p>You must log in to view the page at {from.pathname}</p>
         <button onClick={this.login}>Log in</button>
       </div>
     )
