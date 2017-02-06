@@ -14,8 +14,8 @@ All of the package modules can be imported from the top:
 
 ```js
 import {
-  BrowserRouter as Router
-  StaticRouter // for server rendering
+  BrowserRouter as Router,
+  StaticRouter, // for server rendering
   Route,
   Link
   // etc.
@@ -44,7 +44,7 @@ All of the package modules can be imported from the top:
 
 ```js
 import {
-  NativeRouter as Router
+  NativeRouter as Router,
   DeepLinking,
   AndroidBackButton,
   Link,
