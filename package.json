@@ -33,7 +33,7 @@
   ],
   "license": "MIT",
   "dependencies": {
-    "history": "^3.0.0",
+    "history": "github:rocketpuppy/history",
     "hoist-non-react-statics": "^1.2.0",
     "invariant": "^2.2.1",
     "loose-envify": "^1.2.0",
