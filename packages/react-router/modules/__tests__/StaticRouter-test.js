@@ -1,6 +1,7 @@
 import expect from 'expect'
 import React, { PropTypes } from 'react'
 import ReactDOMServer from 'react-dom/server'
+import ReactDOM from 'react-dom'
 import StaticRouter from '../StaticRouter'
 import Redirect from '../Redirect'
 import Route from '../Route'
@@ -137,6 +138,28 @@ describe('A <StaticRouter>', () => {
 
       expect(context.action).toBe('REPLACE')
       expect(context.url).toBe('/the-base/somewhere-else')
+    })
+  })
+
+  describe('no basename', () => {
+    it('createHref does not append extra leading slash', () => {
+      const context = {}
+      const node = document.createElement('div')
+      const pathname = '/test-path-please-ignore'
+
+      const Link = ({ to, children }) => (
+        <Route children={({ createHref }) => (
+          <a href={createHref(to)}>{children}</a>
+        )} />
+      )
+
+      ReactDOM.render((
+        <StaticRouter context={context}>
+          <Link to={pathname} />
+        </StaticRouter>
+      ), node)
+      const a = node.getElementsByTagName('a')[0]
+      expect(a.getAttribute('href')).toEqual(pathname)
     })
   })
 })

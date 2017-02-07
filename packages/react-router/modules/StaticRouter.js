@@ -77,7 +77,7 @@ class StaticRouter extends React.Component {
   }
 
   createHref = (path) =>
-    addLeadingSlash(this.props.basename) + createURL(path)
+    addLeadingSlash(this.props.basename + createURL(path))
 
   handlePush = (location) => {
     const { basename, context } = this.props
