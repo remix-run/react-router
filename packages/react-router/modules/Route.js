@@ -19,7 +19,7 @@ class Route extends React.Component {
     const { component, render, match } = props // eslint-disable-line react/prop-types
     let children = props.children  // eslint-disable-line react/prop-types
 
-    if (children && !children.length) children = null
+    if (Array.isArray(children) && !children.length) children = null
 
     warning(
       !(component && render),

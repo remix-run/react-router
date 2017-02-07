@@ -35,6 +35,57 @@ describe('A <Route>', () => {
     expect(node.innerHTML).toNotContain(TEXT)
   })
 
+  describe('component prop', () => {
+    const TEXT = 'Mrs. Kato'
+    const node = document.createElement('div')
+    const Home = () => <div>{TEXT}</div>
+    ReactDOM.render((
+      <MemoryRouter initialEntries={[ '/' ]}>
+        <Route path="/" component={Home} />
+      </MemoryRouter>
+    ), node)
+
+    expect(node.innerHTML).toContain(TEXT)
+  })
+
+  describe('render prop', () => {
+    const TEXT = 'Mrs. Kato'
+    const node = document.createElement('div')
+    ReactDOM.render((
+      <MemoryRouter initialEntries={[ '/' ]}>
+        <Route path="/" render={() => <div>{TEXT}</div>} />
+      </MemoryRouter>
+    ), node)
+
+    expect(node.innerHTML).toContain(TEXT)
+  })
+
+  describe('children function prop', () => {
+    const TEXT = 'Mrs. Kato'
+    const node = document.createElement('div')
+    ReactDOM.render((
+      <MemoryRouter initialEntries={[ '/' ]}>
+        <Route path="/" children={() => <div>{TEXT}</div>} />
+      </MemoryRouter>
+    ), node)
+
+    expect(node.innerHTML).toContain(TEXT)
+  })
+
+  describe('children element prop', () => {
+    const TEXT = 'Mrs. Kato'
+    const node = document.createElement('div')
+    ReactDOM.render((
+      <MemoryRouter initialEntries={[ '/' ]}>
+        <Route path="/">
+          <div>{TEXT}</div>
+        </Route>
+      </MemoryRouter>
+    ), node)
+
+    expect(node.innerHTML).toContain(TEXT)
+  })
+
   it('supports preact by nulling out children prop when empty array is passed', () => {
     const TEXT = 'Mrs. Kato'
     const node = document.createElement('div')
