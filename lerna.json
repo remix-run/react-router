@@ -1,6 +1,8 @@
 {
-  "lerna": "2.0.0-beta.32",
+  "lerna": "2.0.0-beta.36",
   "version": "4.0.0-beta.4",
+  "hoist": true,
+  "nohoist": "react-native",
   "packages": [
     "packages/*"
   ]
