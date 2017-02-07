@@ -9,7 +9,10 @@ class Link extends Component {
   static propTypes = {
     component: PropTypes.func,
     replace: PropTypes.bool,
-    to: PropTypes.string.isRequired
+    to: PropTypes.oneOfType([
+      PropTypes.string,
+      PropTypes.object
+    ])
   }
 
   static defaultProps = {
