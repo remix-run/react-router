@@ -22,7 +22,7 @@ class Link extends React.Component {
     to: PropTypes.oneOfType([
       PropTypes.string,
       PropTypes.object
-    ])
+    ]).isRequired
   }
 
   static defaultProps = {
