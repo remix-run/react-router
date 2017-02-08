@@ -75,10 +75,6 @@ We will be creating some addons and hope to see others too.
 
 We have some code close to being published that will manage the scroll positions of window and individual elements.
 
-### What about Redux?
-
-We have [a `<ControlledRouter>` component](https://github.com/ReactTraining/react-router-addons-controlled) that makes redux integration with React Router the same as ... uh ... integrating an `<input>` with Redux.
-
 ### What about route transition hooks? (example needed)
 
 Because we are just components, you have the component lifecycle as transition hooks. They are completely parallel. The only difference is that the route transition hooks could be asynchronous. The problem with that was you weren't in the render lifecycle so you couldn't use React to indicate to the user something was happening.
