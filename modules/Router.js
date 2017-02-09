@@ -10,6 +10,19 @@ import warning from './routerWarning'
 
 const { func, object } = React.PropTypes
 
+const propTypes = {
+  history: object,
+  children: routes,
+  routes, // alias for children
+  render: func,
+  createElement: func,
+  onError: func,
+  onUpdate: func,
+
+  // PRIVATE: For client-side rehydration of server match.
+  matchContext: object
+}
+
 /**
  * A <Router> is a high-level API for automatically setting up
  * a router that renders a <RouterContext> with all the props
@@ -17,18 +30,7 @@ const { func, object } = React.PropTypes
  */
 const Router = React.createClass({
 
-  propTypes: {
-    history: object,
-    children: routes,
-    routes, // alias for children
-    render: func,
-    createElement: func,
-    onError: func,
-    onUpdate: func,
-
-    // PRIVATE: For client-side rehydration of server match.
-    matchContext: object
-  },
+  propTypes,
 
   getDefaultProps() {
     return {
@@ -132,7 +134,7 @@ const Router = React.createClass({
 
     // Only forward non-Router-specific props to routing context, as those are
     // the only ones that might be custom routing context props.
-    Object.keys(Router.propTypes).forEach(propType => delete props[propType])
+    Object.keys(propTypes).forEach(propType => delete props[propType])
 
     return render({
       ...props,
