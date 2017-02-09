@@ -36,6 +36,9 @@ export const API = [
   { name: 'Link',
     html: require('../api/Link.md')
   },
+  { name: 'NavLink',
+    html: require('../api/NavLink.md')
+  },
   { name: 'Redirect',
     html: require('../api/Redirect.md')
   },
