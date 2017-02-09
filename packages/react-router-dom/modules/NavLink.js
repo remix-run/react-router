@@ -21,7 +21,7 @@ const NavLink = ({
     exact={exact}
     strict={strict}
     children={({ location, match }) => {
-      const isActive = !!(getIsActive ? getIsActive(match, location) : match)
+      const isActive = !!(getIsActive ? getIsActive(match, location, to) : match)
 
       return (
         <Link

@@ -105,6 +105,23 @@ describe('NavLink', () => {
       const a = node.getElementsByTagName('a')[0]
       expect(a.className).toNotContain('active')
     })
+
+    it('can use the to prop that is passed to the NavLink', () => {
+      const matchSearch = (match, location, to) => match && location.search === to.search
+      ReactDOM.render((
+        <MemoryRouter initialEntries={['/pizza?size=large&toppings=pepperoni']}>
+          <NavLink
+            to={{ pathname: '/pizza', search: '?size=medium&toppings=olives' }}
+            activeClassName='active'
+            isActive={matchSearch}
+            >
+            Pizza!
+          </NavLink>
+        </MemoryRouter>
+      ), node)
+      const a = node.getElementsByTagName('a')[0]
+      expect(a.className).toNotContain('active')
+    })
   })
 
   describe('exact', () => {
