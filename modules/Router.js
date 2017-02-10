@@ -18,7 +18,7 @@ const { func, object } = React.PropTypes
 const Router = React.createClass({
 
   propTypes: {
-    history: object,
+    history: object.isRequired,
     children: routes,
     routes, // alias for children
     render: func,
