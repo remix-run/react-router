@@ -26,9 +26,9 @@
   "main": "index.js",
   "module": "es/index.js",
   "scripts": {
-    "build": "node ./scripts/build.js",
+    "build": "node ./tools/build.js",
     "watch": "babel ./modules -d . --ignore __tests__ --watch",
-    "prepublish": "node ./scripts/build.js",
+    "prepublish": "node ./tools/build.js",
     "clean": "git clean -fX .",
     "lint": "eslint modules",
     "test": "karma start --single-run"
