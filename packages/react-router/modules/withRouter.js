@@ -1,7 +1,7 @@
 import React, { PropTypes } from 'react'
 
 /**
- * The public higher-order component API for re-rendering as the
+ * A public higher-order component for re-rendering as the
  * location changes. Also, passes ...context.router as props.
  */
 const withRouter = (component) => {
