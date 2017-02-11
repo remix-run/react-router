@@ -51,4 +51,4 @@ This is also useful for animated transitions since the matched `<Route>` is rend
 
 ## children: node _`<Switch>`_ {id=switch.children}
 
-The first `<Route>` in `children` to match the current location will be rendered.
+All children of a `<Switch>` should be `<Route>` elements. Only the first child to match the current location will be rendered.
