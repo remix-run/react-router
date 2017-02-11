@@ -3,6 +3,7 @@
   "private": true,
   "scripts": {
     "build": "NODE_ENV=production webpack -p",
+    "clean": "git clean -e '!node_modules' -fdX .",
     "start": "webpack-dev-server --inline"
   },
   "devDependencies": {
