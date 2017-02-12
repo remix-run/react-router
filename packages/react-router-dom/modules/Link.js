@@ -1,4 +1,5 @@
 import React, { PropTypes } from 'react'
+import { resolveLocation } from 'react-router/resolve'
 
 const isModifiedEvent = (event) =>
   !!(event.metaKey || event.altKey || event.ctrlKey || event.shiftKey)
@@ -7,11 +8,15 @@ const isModifiedEvent = (event) =>
  * The public API for rendering a router-aware <a>.
  */
 class Link extends React.Component {
+
   static contextTypes = {
     router: PropTypes.shape({
       push: PropTypes.func.isRequired,
       replace: PropTypes.func.isRequired,
-      createHref: PropTypes.func.isRequired
+      createHref: PropTypes.func.isRequired,
+      match: PropTypes.shape({
+        url: PropTypes.string
+      })
     }).isRequired
   }
 
@@ -42,8 +47,8 @@ class Link extends React.Component {
       event.preventDefault()
 
       const { router } = this.context
-      const { replace, to } = this.props
-
+      const { replace } = this.props
+      const to = this.absolutePathname()
       if (replace) {
         router.replace(to)
       } else {
@@ -52,11 +57,28 @@ class Link extends React.Component {
     }
   }
 
-  render() {
-    const { replace, to, ...props } = this.props // eslint-disable-line no-unused-vars
+  absolutePathname() {
+    const { to } = this.props
+    const { match } = this.context.router
+    const base = (match && match.url) ? match.url : ''
+    return resolveLocation(to, base)
+  }
 
-    const href = this.context.router.createHref(
-      typeof to === 'string' ? { pathname: to } : to
+  componentWillMount() {
+    const { router } = this.context
+    this.unlisten = router.listen(() => this.forceUpdate())
+  }
+
+  componentWillUnmount() {
+    this.unlisten()
+  }
+
+  render() {
+    const { router } = this.context
+    const { replace, to, ...props } = this.props // eslint-disable-line no-unused-vars
+    const absoluteTo = this.absolutePathname()
+    const href = router.createHref(
+      typeof absoluteTo === 'string' ? { pathname: absoluteTo } : absoluteTo
     )
 
     return <a {...props} onClick={this.handleClick} href={href}/>

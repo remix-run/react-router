@@ -59,4 +59,19 @@ describe('A <Switch>', () => {
     expect(node.innerHTML).toNotContain('one')
     expect(node.innerHTML).toContain('two')
   })
+
+  it('works with relative Routes', () => {
+    const node = document.createElement('div')
+
+    const initialEntries = ['/recipes']
+    const TEXT = 'TEXT'
+    ReactDOM.render((
+      <MemoryRouter initialEntries={initialEntries}>
+        <Switch>
+          <Route path='recipes' render={() => <div>{TEXT}</div>} />
+        </Switch>
+      </MemoryRouter>
+    ), node)
+    expect(node.textContent).toContain(TEXT)
+  })
 })

@@ -3,7 +3,12 @@ import React, { PropTypes } from 'react'
 import matchPath from './matchPath'
 
 const computeMatch = (router, { computedMatch, path, exact, strict }) =>
-  computedMatch || matchPath(router.location.pathname, path, { exact, strict })
+  computedMatch || matchPath(
+    router.location.pathname,
+    path,
+    { exact, strict },
+    router.match
+  )
 
 /**
  * The public API for matching a single path and rendering.
@@ -51,7 +56,8 @@ class Route extends React.Component {
 
   static contextTypes = {
     router: PropTypes.shape({
-      listen: PropTypes.func.isRequired
+      listen: PropTypes.func.isRequired,
+      match: PropTypes.object
     }).isRequired
   }
 
@@ -98,7 +104,7 @@ class Route extends React.Component {
 
   componentWillReceiveProps(nextProps) {
     Object.assign(this.router, {
-      match: computeMatch(this.router, nextProps)
+      match: computeMatch(this.context.router, nextProps)
     })
   }
 

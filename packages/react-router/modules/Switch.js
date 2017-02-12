@@ -7,7 +7,8 @@ import matchPath from './matchPath'
 class Switch extends React.Component {
   static contextTypes = {
     router: PropTypes.shape({
-      listen: PropTypes.func.isRequired
+      listen: PropTypes.func.isRequired,
+      match: PropTypes.object
     }).isRequired
   }
 
@@ -41,12 +42,18 @@ class Switch extends React.Component {
   render() {
     const { children } = this.props
     const { location } = this.state
-    const routes = React.Children.toArray(children)
+    const { match:parentMatch } = this.context.router
 
+    const routes = React.Children.toArray(children)
     let route, match
     for (let i = 0, length = routes.length; match == null && i < length; ++i) {
       route = routes[i]
-      match = matchPath(location.pathname, route.props.path, route.props)
+      match = matchPath(
+        location.pathname,
+        route.props.path,
+        route.props,
+        parentMatch
+      )
     }
 
     return match ? React.cloneElement(route, { computedMatch: match }) : null
