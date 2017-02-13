@@ -35,9 +35,11 @@ const User = ({ match }) => {
 }
 ```
 
+When you use `component` (instead of `render`, below) the router uses [`React.createElement`](https://facebook.github.io/react/docs/react-api.html#createelement) to create a new [React element](https://facebook.github.io/react/docs/rendering-elements.html) from the given component.
+
 ## render: func _`<Route>`_ {id=route.render}
 
-Instead of having a [`component`](#route.component) rendered for you, you can pass in a function to be called when the location matches. This function will be called with the same props that are passed to the `component`.
+Instead of having a new [React element](https://facebook.github.io/react/docs/rendering-elements.html) created for you using the [`component`](#route.component) prop, you can pass in a function to be called when the location matches. This function will be called with the same props that are passed to the `component`.
 
 This allows for convenient inline match rendering and wrapping.
 
