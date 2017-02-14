@@ -61,7 +61,7 @@ class FakeBrowser extends React.Component {
 
     return (
       <MemoryRouter getUserConfirmation={getUserConfirmation}>
-        <Route render={({ canGo, goBack, goForward, push, location }) => (
+        <Route render={({ history : { canGo, goBack, goForward, push, location }}) => (
           <V
             className="fake-browser"
             background="white"
