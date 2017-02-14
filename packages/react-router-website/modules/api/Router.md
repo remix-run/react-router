@@ -12,7 +12,7 @@ Use a `<Router>` directly if you already have a `history` object.
 
 ```js
 import { Router } from 'react-router'
-import createHistory from 'history/createBrowserHistory'
+import createBrowserHistory from 'history/createBrowserHistory'
 
 const history = createBrowserHistory()
 
