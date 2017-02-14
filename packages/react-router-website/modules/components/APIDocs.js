@@ -5,57 +5,57 @@ import { I, H, B, PAD, lightGray, red } from './bricks'
 import MarkdownViewer from './MarkdownViewer'
 import ScrollToMe from './ScrollToMe'
 
-export const API = [
+const docs = [
   { name: 'Installation',
-    html: require('../api/Installation.md')
+    html: require('../../../../docs/api/Installation.md')
   },
   { name: 'BrowserRouter',
-    html: require('../api/BrowserRouter.md')
+    html: require('../../../../docs/api/BrowserRouter.md')
   },
   { name: 'NativeRouter',
-    html: require('../api/NativeRouter.md')
+    html: require('../../../../docs/api/NativeRouter.md')
   },
   { name: 'StaticRouter',
-    html: require('../api/StaticRouter.md')
+    html: require('../../../../docs/api/StaticRouter.md')
   },
   { name: 'HashRouter',
-    html: require('../api/HashRouter.md')
+    html: require('../../../../docs/api/HashRouter.md')
   },
   { name: 'MemoryRouter',
-    html: require('../api/MemoryRouter.md')
+    html: require('../../../../docs/api/MemoryRouter.md')
   },
   { name: 'Router',
-    html: require('../api/Router.md')
+    html: require('../../../../docs/api/Router.md')
   },
   { name: 'Route',
-    html: require('../api/Route.md')
+    html: require('../../../../docs/api/Route.md')
   },
   { name: 'Switch',
-    html: require('../api/Switch.md')
+    html: require('../../../../docs/api/Switch.md')
   },
   { name: 'Link',
-    html: require('../api/Link.md')
+    html: require('../../../../docs/api/Link.md')
   },
   { name: 'NavLink',
-    html: require('../api/NavLink.md')
+    html: require('../../../../docs/api/NavLink.md')
   },
   { name: 'Redirect',
-    html: require('../api/Redirect.md')
+    html: require('../../../../docs/api/Redirect.md')
   },
   { name: 'Prompt',
-    html: require('../api/Prompt.md')
+    html: require('../../../../docs/api/Prompt.md')
   },
   { name: 'withRouter',
-    html: require('../api/withRouter.md')
+    html: require('../../../../docs/api/withRouter.md')
   },
   { name: 'context.router',
-    html: require('../api/context.router.md')
+    html: require('../../../../docs/api/context.router.md')
   },
   { name: 'history',
-    html: require('../api/history.md')
+    html: require('../../../../docs/api/history.md')
   },
   { name: 'match',
-    html: require('../api/match.md')
+    html: require('../../../../docs/api/match.md')
   }
 ]
 
@@ -114,7 +114,7 @@ class APIDocs extends React.Component {
             height="100vh"
           />
           <B flex="1">
-            {API.map((doc, i) => (
+            {docs.map((doc, i) => (
               <B className="api-entry" key={i} padding="40px 60px">
                 <MarkdownViewer html={doc.html}/>
               </B>
