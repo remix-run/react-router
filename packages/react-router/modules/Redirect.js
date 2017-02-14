@@ -18,7 +18,8 @@ class Redirect extends React.Component {
     to: PropTypes.oneOfType([
       PropTypes.string,
       PropTypes.object
-    ])
+    ]),
+    state: PropTypes.object
   }
 
   static defaultProps = {
