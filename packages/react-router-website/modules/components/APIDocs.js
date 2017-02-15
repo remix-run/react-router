@@ -7,55 +7,55 @@ import ScrollToMe from './ScrollToMe'
 
 const docs = [
   { name: 'Installation',
-    html: require('../../../../docs/api/Installation.md')
+    html: require('../../../react-router/docs/Installation.md')
   },
   { name: 'BrowserRouter',
-    html: require('../../../../docs/api/BrowserRouter.md')
+    html: require('../../../react-router-dom/docs/BrowserRouter.md')
   },
   { name: 'NativeRouter',
-    html: require('../../../../docs/api/NativeRouter.md')
+    html: require('../../../react-router-native/docs/NativeRouter.md')
   },
   { name: 'StaticRouter',
-    html: require('../../../../docs/api/StaticRouter.md')
+    html: require('../../../react-router/docs/StaticRouter.md')
   },
   { name: 'HashRouter',
-    html: require('../../../../docs/api/HashRouter.md')
+    html: require('../../../react-router-dom/docs/HashRouter.md')
   },
   { name: 'MemoryRouter',
-    html: require('../../../../docs/api/MemoryRouter.md')
+    html: require('../../../react-router/docs/MemoryRouter.md')
   },
   { name: 'Router',
-    html: require('../../../../docs/api/Router.md')
+    html: require('../../../react-router/docs/Router.md')
   },
   { name: 'Route',
-    html: require('../../../../docs/api/Route.md')
+    html: require('../../../react-router/docs/Route.md')
   },
   { name: 'Switch',
-    html: require('../../../../docs/api/Switch.md')
+    html: require('../../../react-router/docs/Switch.md')
   },
   { name: 'Link',
-    html: require('../../../../docs/api/Link.md')
+    html: require('../../../react-router-dom/docs/Link.md')
   },
   { name: 'NavLink',
-    html: require('../../../../docs/api/NavLink.md')
+    html: require('../../../react-router-dom/docs/NavLink.md')
   },
   { name: 'Redirect',
-    html: require('../../../../docs/api/Redirect.md')
+    html: require('../../../react-router/docs/Redirect.md')
   },
   { name: 'Prompt',
-    html: require('../../../../docs/api/Prompt.md')
+    html: require('../../../react-router/docs/Prompt.md')
   },
   { name: 'withRouter',
-    html: require('../../../../docs/api/withRouter.md')
+    html: require('../../../react-router/docs/withRouter.md')
   },
   { name: 'context.router',
-    html: require('../../../../docs/api/context.router.md')
+    html: require('../../../react-router/docs/context.router.md')
   },
   { name: 'history',
-    html: require('../../../../docs/api/history.md')
+    html: require('../../../react-router/docs/history.md')
   },
   { name: 'match',
-    html: require('../../../../docs/api/match.md')
+    html: require('../../../react-router/docs/match.md')
   }
 ]
 
