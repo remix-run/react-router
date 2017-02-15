@@ -1,4 +1,4 @@
-# history {id=history}
+# history
 
 The term "history" and "`history` object" in this documentation refers to [the `history` package](https://github.com/mjackson/history), which is one of only 2 major dependencies of React Router (besides React itself), and which provides several different implementations for managing session history in JavaScript in various environments.
 

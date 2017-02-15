@@ -1,6 +1,7 @@
 {
-  "name": "react-router-website",
   "private": true,
+  "name": "react-router-website",
+  "version": "4.0.0-beta.6",
   "scripts": {
     "build": "NODE_ENV=production webpack -p",
     "clean": "git clean -e '!node_modules' -fdX .",
@@ -20,8 +21,7 @@
     "html-webpack-plugin": "^2.22.0",
     "jsxstyle": "^1.0.1",
     "markdown-it": "^7.0.0",
-    "markdown-it-anchor": "mjackson/markdown-it-anchor#use-existing-id-build",
-    "markdown-it-attrs": "^0.8.0",
+    "markdown-it-anchor": "^3.0.0",
     "postcss-loader": "0.9.1",
     "prismjs-loader": "0.0.3",
     "react": "^15.4.2",
@@ -34,6 +34,5 @@
     "url-loader": "^0.5.7",
     "webpack": "^1.13.1",
     "webpack-dev-server": "^1.14.1"
-  },
-  "version": "4.0.0-beta.6"
+  }
 }

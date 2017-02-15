@@ -1,4 +1,4 @@
-# &lt;NavLink> {id=navlink}
+# &lt;NavLink>
 
 A special version of the [`<Link>`](#link) that will add styling attributes to the rendered element when it matches the current URL.
 
@@ -8,7 +8,7 @@ import { NavLink } from 'react-router-dom'
 <NavLink to="/about" activeClassName="active">About</NavLink>
 ```
 
-## activeClassName: string _`<NavLink>`_ {id=navlink.activeclassname}
+## activeClassName: string
 
 The class to give the element when it is active. There is no default active class. This will be joined with the `className` prop.
 
@@ -16,7 +16,7 @@ The class to give the element when it is active. There is no default active clas
 <NavLink to="/faq" activeClassName="active">FAQs</NavLink>
 ```
 
-## activeStyle: object _`<NavLink>`_ {id=navlink.activestyle}
+## activeStyle: object
 
 The styles to apply to the element when it is active.
 
@@ -24,7 +24,7 @@ The styles to apply to the element when it is active.
 <NavLink to="/faq" activeStyle={{ fontWeight: 'bold', color: 'red' }}>FAQs</NavLink>
 ```
 
-## exact: bool _`<NavLink>`_ {id=navlink.exact}
+## exact: bool
 
 When `true`, the active class/style will only be applied if the location is matched exactly.
 
@@ -32,7 +32,7 @@ When `true`, the active class/style will only be applied if the location is matc
 <NavLink exact to="/profile" activeClassName='active'>Profile</NavLink>
 ```
 
-## strict: bool _`<NavLink>`_ {id=navlink.strict}
+## strict: bool
 
 When `true`, the trailing slash on a location's `pathname` will be taken into consideration when determining if the location matches the current URL. See the [`<Route strict>`](#route.strict) documentation for more information.
 
@@ -40,7 +40,7 @@ When `true`, the trailing slash on a location's `pathname` will be taken into co
 <NavLink strict to="/events/" activeClassName='active'>Events</NavLink>
 ```
 
-## isActive: func _`<NavLink>`_ {id=navlink.isactive}
+## isActive: func
 
 A function to add extra logic for determining whether the link is active. This should be used if you want to do more than verify that the link's pathname matches the current URL's `pathname`.
 

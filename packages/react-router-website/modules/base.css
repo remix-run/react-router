@@ -31,7 +31,6 @@ markdown h1 { font-family: Monaco, monospace; margin: 50px 0 10px 0; color: rgb(
 markdown h2 { font-family: Monaco, monospace; margin: 40px 0 0 0; font-size: 150%; color: rgb(81, 81, 81); }
 markdown h2 code { font-size: 100%; font-weight: 100; }
 markdown h2 + p { margin-top: 10px; }
-markdown h2 em { float: right; color: #ccc; }
 
 markdown h1, h2, h3 { position: relative; }
 markdown .header-anchor { position: absolute; left: -1em; top: 0.1em; color: #ccc; }

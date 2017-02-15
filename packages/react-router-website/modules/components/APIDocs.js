@@ -63,15 +63,20 @@ const $ = (node, selector) => (
   [].slice.call(node.querySelectorAll(selector))
 )
 
+const trimAnchor = (text) => (
+  text.replace(/^#\s*/, '')
+)
+
 class APIDocs extends React.Component {
   componentDidMount() {
     const items = $(this.root, '.api-entry').map(entry => {
-      const name = $(entry, 'h1')[0].childNodes[1].textContent.trim()
+      const name = trimAnchor($(entry, 'h1')[0].innerText)
       const hash = $(entry, 'h1 a')[0].hash
       const children = $(entry, 'h2').map(node => ({
-        name: node.childNodes[1].textContent.trim(),
+        name: trimAnchor(node.innerText),
         hash: $(node, 'a')[0].hash
       }))
+
       return { name, hash, children }
     })
 
@@ -114,8 +119,8 @@ class APIDocs extends React.Component {
             height="100vh"
           />
           <B flex="1">
-            {docs.map((doc, i) => (
-              <B className="api-entry" key={i} padding="40px 60px">
+            {docs.map(doc => (
+              <B className="api-entry" key={doc.name} padding="40px 60px">
                 <MarkdownViewer html={doc.html}/>
               </B>
             ))}

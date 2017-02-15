@@ -1,4 +1,4 @@
-# context.router {id=context.router}
+# context.router
 
 Every [`<Router>`](#router) puts a `router` object on [`context`](https://facebook.github.io/react/docs/context.html). This object opens a channel of communication between e.g. a `<Router>` and its descendant `<Route>`s, `<Link>`s, and `<Prompt>`s, etc.
 

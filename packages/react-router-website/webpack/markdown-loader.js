@@ -1,7 +1,6 @@
 const markdownIt = require('markdown-it')
-const Prism = require('prismjs')
-const attrs = require('markdown-it-attrs')
 const anchor = require('markdown-it-anchor')
+const Prism = require('prismjs')
 
 const aliases = {
   'js': 'jsx',
@@ -28,7 +27,6 @@ const md = markdownIt({
   typographer: true,
   highlight
 })
-.use(attrs)
 .use(anchor, {
   permalink: true,
   permalinkSymbol: '#',

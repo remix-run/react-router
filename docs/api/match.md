@@ -1,4 +1,4 @@
-# match {id=match}
+# match
 
 A `match` object contains information about how a `<Route path>` matched the URL. `match` objects may contain the following properties:
 

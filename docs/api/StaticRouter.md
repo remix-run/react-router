@@ -1,4 +1,4 @@
-# &lt;StaticRouter> {id=staticrouter}
+# &lt;StaticRouter>
 
 A [`<Router>`](#router) that never changes location.
 
@@ -36,7 +36,7 @@ createServer((req, res) => {
 }).listen(3000)
 ```
 
-## basename: string _`<StaticRouter>`_ {id=staticrouter.basename}
+## basename: string
 
 The base URL for all locations.
 
@@ -46,7 +46,7 @@ The base URL for all locations.
 </StaticRouter>
 ```
 
-## location: string _`<StaticRouter>`_ {id=staticrouter.location-string}
+## location: string
 
 The URL the server received, probably `req.url` on a node server.
 
@@ -56,7 +56,7 @@ The URL the server received, probably `req.url` on a node server.
 </StaticRouter>
 ```
 
-## location: object _`<StaticRouter>`_ {id=staticrouter.location-object}
+## location: object
 
 A location object shaped like `{ pathname, search, hash, state }`
 
@@ -66,10 +66,10 @@ A location object shaped like `{ pathname, search, hash, state }`
 </StaticRouter>
 ```
 
-## context: object _`<StaticRouter>`_ {id=staticrouter.context}
+## context: object
 
 A plain JavaScript object that records the results of the render. See the example above.
 
-## children: node _`<StaticRouter>`_ {id=staticrouter.children}
+## children: node
 
 A [single child element](https://facebook.github.io/react/docs/react-api.html#react.children.only) to render.

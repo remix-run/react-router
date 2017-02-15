@@ -1,4 +1,4 @@
-# &lt;Route> {id=route}
+# &lt;Route>
 
 Renders some UI when a URL matches a location.
 
@@ -21,7 +21,7 @@ There are 3 ways to render something with a `<Route>`:
 
 You should use only one of these props on a given `<Route>`. See their explanations below to understand why you have 3 options.
 
-## component: func _`<Route>`_ {id=route.component}
+## component: func
 
 A React component to render when the location matches. The component receives all the properties on [`context.router`](#context.router).
 
@@ -37,7 +37,7 @@ const User = ({ match }) => {
 
 When you use `component` (instead of `render`, below) the router uses [`React.createElement`](https://facebook.github.io/react/docs/react-api.html#createelement) to create a new [React element](https://facebook.github.io/react/docs/rendering-elements.html) from the given component.
 
-## render: func _`<Route>`_ {id=route.render}
+## render: func
 
 Instead of having a new [React element](https://facebook.github.io/react/docs/rendering-elements.html) created for you using the [`component`](#route.component) prop, you can pass in a function to be called when the location matches. This function will be called with the same props that are passed to the `component`.
 
@@ -61,7 +61,7 @@ const FadingRoute = ({ component: Component, ...rest }) => (
 
 **NOTE:** `<Route component>` takes precendence over `<Route render>` so don't use both in the same `<Route>`.
 
-## children: func _`<Route>`_ {id=route.children}
+## children: func
 
 Sometimes you need to render whether the path matches the location or not. In these cases, you can use the function `children` prop. It works exactly like `render` except that it gets called whether there is a match or not.
 
@@ -98,7 +98,7 @@ This could also be useful for animations:
 
 **NOTE:** Both `<Route component>` and `<Route render>` take precendence over `<Route children>` so don't use more than one in the same `<Route>`.
 
-## path: string _`<Route>`_ {id=route.path}
+## path: string
 
 Any valid URL path that [`path-to-regexp`](https://www.npmjs.com/package/path-to-regexp) understands.
 
@@ -108,7 +108,7 @@ Any valid URL path that [`path-to-regexp`](https://www.npmjs.com/package/path-to
 
 Routes without a `path` _always_ match.
 
-## exact: bool _`<Route>`_ {id=route.exact}
+## exact: bool
 
 When `true`, will only match if the path matches the `location.pathname` _exactly_.
 
@@ -121,7 +121,7 @@ When `true`, will only match if the path matches the `location.pathname` _exactl
 | `/one`  | `/one/two`  | `true` | no |   
 | `/one`  | `/one/two`  | `false` | yes |   
 
-## strict: bool _`<Route>`_ {id=route.strict}
+## strict: bool
 
 When `true`, a `path` that has a trailing slash will only match a `location.pathname` with a trailing slash. This has no effect when there are additional URL segments in the `location.pathname`.
 
