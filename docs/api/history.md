@@ -1,6 +1,6 @@
 # history
 
-The term "history" and "`history` object" in this documentation refers to [the `history` package](https://github.com/mjackson/history), which is one of only 2 major dependencies of React Router (besides React itself), and which provides several different implementations for managing session history in JavaScript in various environments.
+The term "history" and "`history` object" in this documentation refers to [the `history` package](https://github.com/ReactTraining/history), which is one of only 2 major dependencies of React Router (besides React itself), and which provides several different implementations for managing session history in JavaScript in various environments.
 
 The following terms are also used:
 
@@ -22,6 +22,6 @@ The following terms are also used:
 - `go(n)` - (function) Moves the pointer in the history stack by `n` entries
 - `goBack()` - (function) Equivalent to `go(-1)`
 - `goForward()` - (function) Equivalent to `go(1)`
-- `block(prompt)` - (function) Prevents navigation (see [the history docs](https://github.com/mjackson/history#blocking-transitions))
+- `block(prompt)` - (function) Prevents navigation (see [the history docs](https://github.com/ReactTraining/history#blocking-transitions))
 
-Additional properties may also be present depending on the implementation you're using. Please refer to [the history documentation](https://github.com/mjackson/history#properties) for more details.
+Additional properties may also be present depending on the implementation you're using. Please refer to [the history documentation](https://github.com/ReactTraining/history#properties) for more details.

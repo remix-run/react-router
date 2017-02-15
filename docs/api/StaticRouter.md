@@ -1,10 +1,10 @@
 # &lt;StaticRouter>
 
-A [`<Router>`](#router) that never changes location.
+A [`<Router>`](Router.md) that never changes location.
 
 This can be useful in server-side rendering scenarios when the user isn't actually clicking around, so the location never actually changes. Hence, the name: static. It's also useful in simple tests when you just need to plug in a location and make assertions on the render output.
 
-Here's an example node server that sends a 302 status code for `<Redirect>`s and regular HTML for other requests:
+Here's an example node server that sends a 302 status code for [`<Redirect>`](Redirect.md)s and regular HTML for other requests:
 
 ```js
 import { createServer } from 'http'

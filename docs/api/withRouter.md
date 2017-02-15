@@ -1,6 +1,6 @@
 # withRouter
 
-You can get access to the [`router`](#context.router) object's properties via the `withRouter` higher-order component. This is the recommended way to access the `router` object. `withRouter` will re-render the component every time the route changes.
+You can get access to the [`router`](context.router.md)'s properties via the `withRouter` higher-order component. This is the recommended way to access the `router` object. `withRouter` will re-render its component every time the route changes.
 
 ```js
 import React, { PropTypes } from 'react'

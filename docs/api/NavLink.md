@@ -1,6 +1,6 @@
 # &lt;NavLink>
 
-A special version of the [`<Link>`](#link) that will add styling attributes to the rendered element when it matches the current URL.
+A special version of the [`<Link>`](Link.md) that will add styling attributes to the rendered element when it matches the current URL.
 
 ```js
 import { NavLink } from 'react-router-dom'

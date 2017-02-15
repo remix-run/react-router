@@ -1,6 +1,6 @@
 # &lt;MemoryRouter>
 
-A [`<Router>`](#router) that keeps the history of your "URL" in memory (does not read or write to the address bar). Useful in tests and non-browser environments like [React Native](https://facebook.github.io/react-native/).
+A [`<Router>`](Router.md) that keeps the history of your "URL" in memory (does not read or write to the address bar). Useful in tests and non-browser environments like [React Native](https://facebook.github.io/react-native/).
 
 ```js
 import { MemoryRouter } from 'react-router'
@@ -31,7 +31,7 @@ The initial location's index in the array of `initialEntries`.
 
 A function to use to confirm navigation. You must use this option when using `<MemoryRouter>` directly with a `<Prompt>`.
 
-## keyLength: number _`<MemoryRouter>`_ {id=memoryrouter.keylength}
+## keyLength: number
 
 The length of `location.key`. Defaults to 6.
 

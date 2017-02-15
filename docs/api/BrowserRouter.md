@@ -1,6 +1,6 @@
 # &lt;BrowserRouter>
 
-A [`<Router>`](Router) that uses the HTML5 history API (`pushState`, `replaceState` and the `popstate` event) to keep your UI in sync with the URL.
+A [`<Router>`](Router.md) that uses the HTML5 history API (`pushState`, `replaceState` and the `popstate` event) to keep your UI in sync with the URL.
 
 ```js
 import { BrowserRouter } from 'react-router-dom'

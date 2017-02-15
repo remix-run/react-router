@@ -15,15 +15,15 @@ import { BrowserRouter as Router, Route } from 'react-router-dom'
 
 There are 3 ways to render something with a `<Route>`:
 
-- [`<Route component>`](#route.component)
-- [`<Route render>`](#route.render)
-- [`<Route children>`](#route.children)
+- [`<Route component>`](#component-func)
+- [`<Route render>`](#render-func)
+- [`<Route children>`](#children-func)
 
 You should use only one of these props on a given `<Route>`. See their explanations below to understand why you have 3 options.
 
 ## component: func
 
-A React component to render when the location matches. The component receives all the properties on [`context.router`](#context.router).
+A React component to render when the location matches. The component receives all the properties on [`context.router`](context.router.md).
 
 ```js
 <Route path="/user/:username" component={User}/>
@@ -39,7 +39,7 @@ When you use `component` (instead of `render`, below) the router uses [`React.cr
 
 ## render: func
 
-Instead of having a new [React element](https://facebook.github.io/react/docs/rendering-elements.html) created for you using the [`component`](#route.component) prop, you can pass in a function to be called when the location matches. This function will be called with the same props that are passed to the `component`.
+Instead of having a new [React element](https://facebook.github.io/react/docs/rendering-elements.html) created for you using the [`component`](#component-func) prop, you can pass in a function to be called when the location matches. The `render` prop receives all the properties of [`context.router`](context.router.md) in a single object.
 
 This allows for convenient inline match rendering and wrapping.
 
@@ -49,9 +49,9 @@ This allows for convenient inline match rendering and wrapping.
 
 // wrapping/composing
 const FadingRoute = ({ component: Component, ...rest }) => (
-  <Route {...rest} render={matchProps => (
+  <Route {...rest} render={props => (
     <FadeIn>
-      <Component {...matchProps}/>
+      <Component {...props}/>
     </FadeIn>
   )}/>
 )
@@ -59,13 +59,13 @@ const FadingRoute = ({ component: Component, ...rest }) => (
 <FadingRoute path="/cool" component={Something}/>
 ```
 
-**NOTE:** `<Route component>` takes precendence over `<Route render>` so don't use both in the same `<Route>`.
+**Warning:** `<Route component>` takes precendence over `<Route render>` so don't use both in the same `<Route>`.
 
 ## children: func
 
 Sometimes you need to render whether the path matches the location or not. In these cases, you can use the function `children` prop. It works exactly like `render` except that it gets called whether there is a match or not.
 
-The children prop will be called with an object that contains a `match` and a `history` property. `match` will be null if there was no match. This will allow you to dynamically adjust your UI based on if the route matches or not.
+The `children` prop will be called with an object that contains all the properties on [`context.router`](context.router.md). If a route fails to match the URL, the `match` prop will be `null`. This allows you to dynamically adjust your UI based on if the route matches or not.
 
 Here we're adding an `active` class if the route matches
 
@@ -96,7 +96,7 @@ This could also be useful for animations:
 )}/>
 ```
 
-**NOTE:** Both `<Route component>` and `<Route render>` take precendence over `<Route children>` so don't use more than one in the same `<Route>`.
+**Warning:** Both `<Route component>` and `<Route render>` take precendence over `<Route children>` so don't use more than one in the same `<Route>`.
 
 ## path: string
 
@@ -135,7 +135,7 @@ When `true`, a `path` that has a trailing slash will only match a `location.path
 | `/one/` | `/one/` | yes |
 | `/one/` | `/one/two` | yes |
 
-**NOTE:** `strict` can be used to enforce that a `location.pathname` has no trailing slash, but in order to do this both `strict` and `exact` must be `true`.
+**Warning:** `strict` can be used to enforce that a `location.pathname` has no trailing slash, but in order to do this both `strict` and `exact` must be `true`.
 
 ```js
 <Route exact strict path="/one" component={About}/>

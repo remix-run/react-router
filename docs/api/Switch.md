@@ -1,6 +1,6 @@
 # &lt;Switch>
 
-Renders the first child `<Route>` that matches the location.
+Renders the first child [`<Route>`](Route.md) that matches the location.
 
 **How is this different than just using a bunch of `<Route>`s?**
 
