@@ -42,11 +42,11 @@ When `true`, the trailing slash on a location's `pathname` will be taken into co
 
 ## isActive: func
 
-A function to add extra logic for determining whether the link is active. This should be used if you want to do more than verify that the link's pathname matches the current URL's `pathname`.
+A function to add extra logic for determining whether the link is active. This should be used if you want to do more than verify that the link's pathname matches the current URL's `pathname`. The function will be passed its `match`, the current `location`, and the `<NavLink>`'s `to` prop.
 
 ```js
 // only consider an event active if its event id is an odd number
-const oddEvent = (match, location) => {
+const oddEvent = (match, location, to) => {
   if (!match) {
     return false
   }
