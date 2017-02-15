@@ -2,10 +2,10 @@
 
 The common low-level interface for all router components. Higher-level routers include:
 
-- [`<BrowserRouter>`](BrowserRouter.md)
-- [`<HashRouter>`](HashRouter.md)
+- [`<BrowserRouter>`](../../react-router-dom/docs/BrowserRouter.md)
+- [`<HashRouter>`](../../react-router-dom/docs/HashRouter.md)
 - [`<MemoryRouter>`](MemoryRouter.md)
-- [`<NativeRouter>`](NativeRouter.md)
+- [`<NativeRouter>`](../../react-router-native/docs/NativeRouter.md)
 - [`<StaticRouter>`](StaticRouter.md)
 
 Use a `<Router>` directly if you already have a `history` object.

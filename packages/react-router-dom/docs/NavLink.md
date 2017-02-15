@@ -34,7 +34,7 @@ When `true`, the active class/style will only be applied if the location is matc
 
 ## strict: bool
 
-When `true`, the trailing slash on a location's `pathname` will be taken into consideration when determining if the location matches the current URL. See the [`<Route strict>`](#route.strict) documentation for more information.
+When `true`, the trailing slash on a location's `pathname` will be taken into consideration when determining if the location matches the current URL. See the [`<Route strict>`](../../react-router/docs/Route.md#strict-bool) documentation for more information.
 
 ```js
 <NavLink strict to="/events/" activeClassName='active'>Events</NavLink>

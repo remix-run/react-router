@@ -1,8 +1,6 @@
 # &lt;Redirect>
 
-Rendering a `<Redirect>` will navigate to a new location.
-
-The new location will override the current location in the history stack, like server-side redirects (HTTP 3xx) do.
+Rendering a `<Redirect>` will navigate to a new location. The new location will override the current location in the history stack, like server-side redirects (HTTP 3xx) do.
 
 ```js
 import { Route, Redirect } from 'react-router'
