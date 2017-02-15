@@ -9,15 +9,19 @@ Declarative routing for [React](https://facebook.github.io/react).
 
 React Router keeps your UI in sync with the URL. Make the URL your first thought, not an after-thought.
 
-## Docs
+## Packages
 
-API docs are [here](https://reacttraining.com/react-router/api).
+This repository is a monorepo that we manage using [Lerna](https://github.com/lerna/lerna). That means that we actually publish [several packages](https://github.com/ReactTraining/react-router/tree/v4/packages) to npm from the same codebase, including: 
 
-## Installation
+- `react-router` - The core of React Router ([API docs](packages/react-router/docs))
+- `react-router-dom` - DOM bindings for React Router ([API docs](packages/react-router-dom/docs))
+- `react-router-native` - [React Native](https://facebook.github.io/react-native/) bindings for React Router ([API docs](packages/react-router-native/docs))
+
+While we're in beta, all packages are published to npm with the `next` tag. So you can install them with e.g.
 
 `npm install --save react-router@next` or `yarn add react-router@next`
 
-You can also install a specific router package via `react-router-[package]@next`. All possible packages are available [here](https://github.com/ReactTraining/react-router/tree/v4/packages).
+You can also install a specific router package via `react-router-[package]@next`.
 
 ## v4 FAQ
 
