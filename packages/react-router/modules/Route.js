@@ -1,8 +1,15 @@
 import React, { PropTypes } from 'react'
 import matchPath from './matchPath'
 
-const computeMatch = (router, { computedMatch, path, exact, strict }) =>
-  computedMatch || matchPath(router.location.pathname, path, { exact, strict })
+const computeMatch = (router, { computedMatch, path, exact, strict }) => {
+  if (computedMatch) {
+    return computedMatch
+  }
+  if (path.slice(0, 2) === './') {
+    path = ((router.match && router.match.url) || '/') + path.slice(2)
+  }
+  return matchPath(router.location.pathname, path, { exact, strict })
+}
 
 /**
  * The public API for matching a single path and rendering.
