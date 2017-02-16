@@ -344,4 +344,20 @@ describe("A <Switch location>", () => {
       expect(propLocation).toEqual(switchLocation);
     });
   });
-});
+
+  it('renders relative Routes', () => {
+    const node = document.createElement('div')
+
+    ReactDOM.render((
+      <MemoryRouter initialEntries={[ '/sauce/sriracha' ]}>
+        <Route path='/sauce' render={() => (
+          <Switch>
+            <Route path="sriracha" render={() => <div>sriracha</div>}/>
+          </Switch>
+        )} />
+      </MemoryRouter>
+    ), node)
+
+    expect(node.innerHTML).toContain('sriracha')
+  })
+})

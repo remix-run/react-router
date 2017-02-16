@@ -30,15 +30,15 @@ const matchPath = (pathname, options = {}, parentMatch = null) => {
     options = { path: options }
 
   const { exact = false, strict = false, sensitive = false } = options
-  let path = options.path || options.from
+  let path = options.path !== undefined ? options.path : options.from
+
   const absolute = isAbsolute(path)
 
-  if (path === undefined)
-    return { url: parentMatch ? parentMatch.url : '/', isExact: true, params: {} }
+  if (path == null) 
+    return parentMatch ? parentMatch : { url: '/', isExact: true, params: {} }
 
-  if (!absolute) {
+  if (!absolute)
     path = resolvePath(path, parentMatch && parentMatch.url)
-  }
 
   const { re, keys } = compilePath(path, { end: exact, strict, sensitive })
   const match = re.exec(pathname)
@@ -96,13 +96,13 @@ const resolvePath = (pathname, base) => {
   if (pathname === '') {
     return base
   } else {
-    return `${withTrailingSlash(base)}${pathname}`
+    return `${addTrailingSlash(base)}${pathname}`
   }
 }
 
 const isAbsolute = pathname => !!(pathname && pathname.charAt(0) === '/')
 
-const withTrailingSlash = pathname =>
+const addTrailingSlash = pathname =>
   hasTrailingSlash(pathname) ? pathname : pathname + '/'
 
 const hasTrailingSlash = pathname => 

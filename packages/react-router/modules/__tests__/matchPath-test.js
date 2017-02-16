@@ -100,8 +100,7 @@ describe("matchPath", () => {
         }
         const match = matchPath(
           '/state/GA',
-          '/state/GA',
-          {},
+          { path: '/state/GA' },
           parentMatch
         )
 
@@ -120,11 +119,10 @@ describe("matchPath", () => {
         }
         const match = matchPath(
           '/state/WI',
-          'WI',
-          {},
+          { path: 'WI' },
           parentMatch
         )
-        
+        expect(match).toNotBe(null)
         expect(match.url).toBe('/state/WI')
       })
 
@@ -137,8 +135,7 @@ describe("matchPath", () => {
         }
         const match = matchPath(
           '/state/CO/Denver',
-          ':city',
-          {},
+          { path: ':city' },
           parentMatch
         )
         
@@ -154,8 +151,7 @@ describe("matchPath", () => {
         }
         const match = matchPath(
           '/state/OR',
-          ':state',
-          {},
+          { path: ':state' },
           parentMatch
         )
         
@@ -172,8 +168,7 @@ describe("matchPath", () => {
         }
         const match = matchPath(
           '/state/WA',
-          '',
-          {},
+          { path: '' },
           parentMatch
         )
         
@@ -184,8 +179,7 @@ describe("matchPath", () => {
       it('resolves using root when parentMatch is null', () => {
         const match = matchPath(
           '/state/CA',
-          'state/:state',
-          {},
+          { path: 'state/:state' },
           null
         )
         
@@ -195,7 +189,7 @@ describe("matchPath", () => {
     })
 
     describe('undefined path', () => {
-      it('inherits parent\'s match.url', () => {
+      it('inherits parent\'s match.url and path', () => {
         const parentMatch = {
           url: '/state',
           path: '/state',
@@ -204,19 +198,17 @@ describe("matchPath", () => {
         }
         const match = matchPath(
           '/state/OR',
-          undefined,
           {},
           parentMatch
         )
 
         expect(match.url).toBe('/state')
-        expect(match.path).toBe(undefined)
+        expect(match.path).toBe('/state')
       })
 
       it('sets url to / when there is no parent match', () => {
         const match = matchPath(
           '/state/OR',
-          undefined,
           {},
           null
         )

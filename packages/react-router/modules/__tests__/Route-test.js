@@ -435,3 +435,37 @@ describe("A pathless <Route>", () => {
     expect(rootContext).toBe(undefined);
   });
 });
+
+describe('A relative <Route>', () => {
+  it('resolves when there is no parent match', () => {
+    const TEXT = 'uncle'
+    const node = document.createElement('div')
+
+    ReactDOM.render((
+      <MemoryRouter initialEntries={[ '/uncle' ]}>
+        <Route path="uncle" render={() => (
+          <h1>{TEXT}</h1>
+        )}/>
+      </MemoryRouter>
+    ), node)
+
+    expect(node.innerHTML).toContain(TEXT)
+  })
+
+  it('resolves relative to parent match', () => {
+    const TEXT = 'cousin'
+    const node = document.createElement('div')
+
+    ReactDOM.render((
+      <MemoryRouter initialEntries={[ '/uncle/cousin' ]}>
+        <Route path="uncle" render={() => (
+          <Route path="cousin" render={() => (
+            <h1>{TEXT}</h1>
+          )} />
+        )}/>
+      </MemoryRouter>
+    ), node)
+
+    expect(node.innerHTML).toContain(TEXT)
+  })
+})
