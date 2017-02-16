@@ -80,12 +80,11 @@ describe('resolveLocation', () => {
     })
   })
 
-  describe('slash strategy', () => {
-    it('preserves pathname\'s slash strategy', () => {
+  describe('trailing slash', () => {
+    it('preserves pathname\'s lack of a trailing slash', () => {
       // this is mostly useful for dot notation and empty pathnames
       const cases = [
         // base without trailing slash
-        ['/base', '', '/base'],
         ['/base', 'test', '/base/test'],
         ['/base', 'test/', '/base/test/'],
         ['/base', 'test/.', '/base/test'],

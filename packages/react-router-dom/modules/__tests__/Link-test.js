@@ -1,11 +1,12 @@
 import expect from 'expect'
 import React from 'react'
 import ReactDOM from 'react-dom'
+import { Simulate } from 'react-addons-test-utils'
 import MemoryRouter from 'react-router/MemoryRouter'
 import HashRouter from '../HashRouter'
 import Link from '../Link'
 import Route from 'react-router/Route'
-import resolveLocation from 'react-router/resolveLocation'
+import Switch from 'react-router/Switch'
 
 describe('A <Link>', () => {
   it('accepts a location "to" prop', () => {
@@ -92,17 +93,63 @@ describe('A <Link> underneath a <HashRouter>', () => {
   })
 })
 
-describe('resolving a relative Link', () => {
-  it('can use resolveLocation to resolve relative to parent Route', () => {
-    const node = document.createElement('div')
+describe('A relative <Link>', () => {
+  const node = document.createElement('div')
+
+  afterEach(() => {
+    ReactDOM.unmountComponentAtNode(node)
+  })
+
+  it('resolves using the parent match', () => {
+    const initialEntries = ['/', '/recipes']
     ReactDOM.render((
-      <MemoryRouter initialEntries={[ '/state' ]}>
-        <Route path='/state' render={({ match }) => (
-          <Link to={resolveLocation('CO', match.url)}>Colorado</Link>
+      <MemoryRouter initialEntries={initialEntries} initialIndex={1}>
+        <Route path='/recipes' render={() => (
+          <Link to='tacos'>Chess</Link>
         )} />
       </MemoryRouter>
     ), node)
     const a = node.getElementsByTagName('a')[0]
-    expect(a.getAttribute('href')).toEqual('/state/CO')
+    expect(a.pathname).toBe('/recipes/tacos')
+  })
+
+  it('works when not in a route', () => {
+    const initialEntries = ['/']
+    ReactDOM.render((
+      <MemoryRouter initialEntries={initialEntries} initialIndex={0}>
+        <Link to='recipes'>Recipes</Link>
+      </MemoryRouter>
+    ), node)
+    const a = node.getElementsByTagName('a')[0]
+    expect(a.pathname).toBe('/recipes')
+  })
+
+  it('navigates correctly', () => {
+    const initialEntries = ['/', '/recipes']
+    const RESTAURANTS = 'RESTAURANTS'
+    ReactDOM.render((
+      <MemoryRouter initialEntries={initialEntries} initialIndex={1}>
+        <Switch>
+          <Route path='/recipes' render={() => (
+            <Link to='../restaurants'>Order Takeout</Link>
+          )} />
+          <Route path='/restaurants' render={() => (
+            <div>{RESTAURANTS}</div>
+          )} />
+        </Switch>
+      </MemoryRouter>
+    ), node)
+    expect(node.textContent).toNotContain(RESTAURANTS)
+    const a = node.getElementsByTagName('a')[0]
+    Simulate.click(a, {
+      defaultPrevented: false,
+      preventDefault() { this.defaultPrevented = true },
+      metaKey: null,
+      altKey: null,
+      ctrlKey: null,
+      shiftKey: null,
+      button: 0
+    })
+    expect(node.textContent).toContain(RESTAURANTS)
   })
 })
