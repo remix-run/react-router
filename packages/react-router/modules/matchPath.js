@@ -30,7 +30,7 @@ const matchPath = (pathname, options = {}, parentMatch = null) => {
     options = { path: options }
 
   const { exact = false, strict = false, sensitive = false } = options
-  let path = options.path !== undefined ? options.path : options.from
+  let path = options.path != null ? options.path : options.from
 
   const absolute = isAbsolute(path)
 
