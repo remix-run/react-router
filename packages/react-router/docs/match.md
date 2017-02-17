@@ -14,7 +14,8 @@ However, you may find it useful to manually calculate the match if you have a pr
 ```js
 import { matchPath } from 'react-router'
 
-const match = matchPath('/the/pathname', '/the/:dynamicId', {
+const match = matchPath('/the/pathname', {
+  path: '/the/:dynamicId',
   exact: true,
   strict: false
 })

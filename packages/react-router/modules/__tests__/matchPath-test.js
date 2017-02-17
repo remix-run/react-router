@@ -39,13 +39,11 @@ describe('matchPath', () => {
       // true/false and false/true will collide when adding booleans
       const trueFalse = matchPath(
         '/one/two',
-        '/one/two/',
-        { exact : true, strict: false }
+        { path: '/one/two/', exact : true, strict: false }
       )
       const falseTrue = matchPath(
         '/one/two',
-        '/one/two/',
-        { exact : false, strict: true }
+        { path: '/one/two/', exact : false, strict: true }
       )
       expect(!!trueFalse).toBe(true)
       expect(!!falseTrue).toBe(false)

@@ -46,7 +46,7 @@ class Switch extends React.Component {
     let route, match
     for (let i = 0, length = routes.length; match == null && i < length; ++i) {
       route = routes[i]
-      match = matchPath(location.pathname, route.props.path, route.props)
+      match = matchPath(location.pathname, route.props)
     }
 
     return match ? React.cloneElement(route, { computedMatch: match }) : null

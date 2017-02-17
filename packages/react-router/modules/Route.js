@@ -2,7 +2,7 @@ import React, { PropTypes } from 'react'
 import matchPath from './matchPath'
 
 const computeMatch = (router, { computedMatch, path, exact, strict }) =>
-  computedMatch || matchPath(router.location.pathname, path, { exact, strict })
+  computedMatch || matchPath(router.location.pathname, { path, exact, strict })
 
 /**
  * The public API for matching a single path and rendering.
