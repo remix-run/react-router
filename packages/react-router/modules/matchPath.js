@@ -30,7 +30,8 @@ const matchPath = (pathname, options = {}) => {
   if (typeof options === 'string')
     options = { path: options }
 
-  const { path, exact = false, strict = false } = options
+  const { exact = false, strict = false } = options
+  const path = options.path || options.from
 
   if (!path)
     return { url: pathname, isExact: true, params: {} }
