@@ -5,6 +5,7 @@ import ReactDOM from 'react-dom'
 import StaticRouter from '../StaticRouter'
 import Redirect from '../Redirect'
 import Route from '../Route'
+import Prompt from '../Prompt'
 
 describe('A <StaticRouter>', () => {
   it('puts a router on context', () => {
@@ -160,6 +161,22 @@ describe('A <StaticRouter>', () => {
       ), node)
       const a = node.getElementsByTagName('a')[0]
       expect(a.getAttribute('href')).toEqual(pathname)
+    })
+  })
+
+  describe('render a <Prompt />', () => {
+    it('does nothing', () => {
+      const context = {}
+      const node = document.createElement('div')
+      const pathname = '/test-path-please-ignore'
+
+      expect(() => {
+        ReactDOM.render((
+          <StaticRouter context={context}>
+            <Prompt />
+          </StaticRouter>
+        ), node)
+      }).toNotThrow()
     })
   })
 })

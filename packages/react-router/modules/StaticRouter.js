@@ -96,6 +96,9 @@ class StaticRouter extends React.Component {
   handleListen = () =>
     noop
 
+  handleBlock = () =>
+    noop
+
   render() {
     const { basename, context, location, ...props } = this.props
 
@@ -109,7 +112,8 @@ class StaticRouter extends React.Component {
       go: staticHandler('go'),
       goBack: staticHandler('goBack'),
       goForward: staticHandler('goForward'),
-      listen: this.handleListen
+      listen: this.handleListen,
+      block: this.handleBlock
     }
 
     return <Router {...props} history={history}/>
