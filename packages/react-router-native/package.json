@@ -3,8 +3,7 @@
   "version": "4.0.0-beta.6",
   "main": "main.js",
   "scripts": {
-    "start": "node node_modules/react-native/local-cli/cli.js start",
-    "test": "jest"
+    "start": "node node_modules/react-native/local-cli/cli.js start"
   },
   "files": [
     "DeepLinking.js",
