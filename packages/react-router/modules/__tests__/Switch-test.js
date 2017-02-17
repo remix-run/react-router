@@ -4,6 +4,7 @@ import ReactDOM from 'react-dom'
 import MemoryRouter from '../MemoryRouter'
 import Switch from '../Switch'
 import Route from '../Route'
+import Redirect from '../Redirect'
 
 describe('A <Switch>', () => {
   it('renders the first <Route> that matches the URL', () => {
@@ -25,7 +26,28 @@ describe('A <Switch>', () => {
     expect(node.innerHTML).toMatch(/one/)
   })
 
-  it('does not render a second <Route> that also matches the URL', () => {
+  it('renders the first <Redirect from> that matches the URL', () => {
+    const node = document.createElement('div')
+
+    ReactDOM.render((
+      <MemoryRouter initialEntries={[ '/three' ]}>
+        <Switch>
+          <Route path="/one" render={() => (
+            <h1>one</h1>
+          )}/>
+          <Redirect from="/four" to="/one"/>
+          <Redirect from="/three" to="/two"/>
+          <Route path="/two" render={() => (
+            <h1>two</h1>
+          )}/>
+        </Switch>
+      </MemoryRouter>
+    ), node)
+
+    expect(node.innerHTML).toMatch(/two/)
+  })
+
+  it('does not render a second <Route> or <Redirect> that also matches the URL', () => {
     const node = document.createElement('div')
 
     ReactDOM.render((
@@ -34,7 +56,11 @@ describe('A <Switch>', () => {
           <Route path="/one" render={() => (
             <h1>one</h1>
           )}/>
+          <Redirect from="/one" to="/two"/>
           <Route path="/one" render={() => (
+            <h1>two</h1>
+          )}/>
+          <Route path="/two" render={() => (
             <h1>two</h1>
           )}/>
         </Switch>
@@ -58,5 +84,21 @@ describe('A <Switch>', () => {
 
     expect(node.innerHTML).toNotContain('one')
     expect(node.innerHTML).toContain('two')
+  })
+  it('handles from-less Redirects', () => {
+    const node = document.createElement('div')
+
+    ReactDOM.render((
+      <MemoryRouter initialEntries={[ '/cupcakes' ]}>
+        <Switch>
+          <Route path="/bubblegum" render={() => <div>bub</div>}/>
+          <Redirect to="/bubblegum"/>
+          <Route path="/cupcakes" render={() => <div>cup</div>}/>
+        </Switch>
+      </MemoryRouter>
+    ), node)
+
+    expect(node.innerHTML).toNotContain('cup')
+    expect(node.innerHTML).toContain('bub')
   })
 })
