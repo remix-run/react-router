@@ -360,4 +360,21 @@ describe("A <Switch location>", () => {
 
     expect(node.innerHTML).toContain('sriracha')
   })
+
+  it('renders relative <Redirect>s', () => {
+    const node = document.createElement('div')
+
+    ReactDOM.render((
+      <MemoryRouter initialEntries={[ '/sauce/tobasco' ]}>
+        <Route path='/sauce' render={() => (
+          <Switch>
+            <Route path="sriracha" render={() => <div>sriracha</div>}/>
+            <Redirect from="tobasco" to="/sauce/sriracha"/>
+          </Switch>
+        )} />
+      </MemoryRouter>
+    ), node)
+
+    expect(node.innerHTML).toContain('sriracha')
+  })
 })
