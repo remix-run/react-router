@@ -13,7 +13,7 @@ React Router uses the concept of nested routes to let you declare nested sets of
 A route path is [a string pattern](/docs/Glossary.md#routepattern) that is used to match a URL (or a portion of one). Route paths are interpreted literally, except for the following special symbols:
 
   - `:paramName` – matches a URL segment up to the next `/`, `?`, or `#`. The matched string is called a [param](/docs/Glossary.md#params)
-  - `()` – Wraps a portion of the URL that is optional. You may escape parentheses if you want to use them in a url using a blackslash \
+  - `()` – Wraps a portion of the URL that is optional. You may escape parentheses if you want to use them in a url using a backslash \
   - `*` – Matches all characters (non-greedy) up to the next character in the pattern, or to the end of the URL if there is none, and creates a `splat` [param](/docs/Glossary.md#params)
   - `**` - Matches all characters (greedy) until the next `/`, `?`, or `#` and creates a `splat` [param](/docs/Glossary.md#params)
 
