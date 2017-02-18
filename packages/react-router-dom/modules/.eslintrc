@@ -17,8 +17,5 @@
     "prefer-arrow-callback": 2,
     "react/display-name": 0,
     "semi": [ 2, "never" ]
-  },
-  "globals": {
-    "__DEV__": true
   }
 }

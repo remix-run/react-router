@@ -28,7 +28,6 @@ const stripBasename = (basename, location) => {
     return location
 
   const base = addLeadingSlash(basename)
-  const { pathname } = location
 
   if (location.pathname.indexOf(base) !== 0)
     return location

@@ -121,7 +121,7 @@ describe('NavLink', () => {
     it('sets active value only for exact matches', () => {
       ReactDOM.render((
         <MemoryRouter initialEntries={['/pizza']}>
-          <NavLink exact to='/pizza' exact activeClassName='active'>Pizza!</NavLink>
+          <NavLink exact to='/pizza' activeClassName='active'>Pizza!</NavLink>
         </MemoryRouter>
       ), node)
       const a = node.getElementsByTagName('a')[0]

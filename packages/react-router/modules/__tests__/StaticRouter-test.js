@@ -168,7 +168,6 @@ describe('A <StaticRouter>', () => {
     it('does nothing', () => {
       const context = {}
       const node = document.createElement('div')
-      const pathname = '/test-path-please-ignore'
 
       expect(() => {
         ReactDOM.render((
