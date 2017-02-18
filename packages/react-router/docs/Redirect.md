@@ -41,3 +41,14 @@ When `true`, redirecting will push a new entry onto the history instead of repla
 ```js
 <Redirect push to="/somewhere/else"/>
 ```
+
+## from: string
+
+A pathname to redirect from. This can be used to match a location when rendering a `<Redirect>` inside of a `<Switch>`.
+
+```js
+<Switch>
+  <Redirect from='/old-path' to='/new-path'/>
+  <Route path='/new-path' component={Place}/>
+</Switch>
+```

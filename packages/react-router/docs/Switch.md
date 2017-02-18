@@ -1,6 +1,6 @@
 # &lt;Switch>
 
-Renders the first child [`<Route>`](Route.md) that matches the location.
+Renders the first child [`<Route>`](Route.md) or [`<Redirect>`](Redirect.md) that matches the location.
 
 **How is this different than just using a bunch of `<Route>`s?**
 
@@ -51,4 +51,17 @@ This is also useful for animated transitions since the matched `<Route>` is rend
 
 ## children: node
 
-All children of a `<Switch>` should be `<Route>` elements. Only the first child to match the current location will be rendered.
+All children of a `<Switch>` should be `<Route>` or `<Redirect>` elements. Only the first child to match the current location will be rendered.
+
+`<Route>` elements are matched using their `path` prop and `<Redirect>` elements are matched using their `from` prop. A `<Route>` with no `path` prop or a `<Redirect>` with no `from` prop will always match the current location.
+
+```js
+<Switch>
+  <Route exact path="/" component={Home}/>
+
+  <Route path="/users" component={Users}/>
+  <Redirect from="/accounts" to="/users"/>
+
+  <Route component={NoMatch}/>
+</Switch>
+```
