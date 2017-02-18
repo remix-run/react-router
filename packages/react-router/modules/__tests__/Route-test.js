@@ -147,6 +147,28 @@ describe('A <Route>', () => {
     expect(node.innerHTML).toContain(TEXT)
   })
 
+  describe('children prop always renders IIF function', () => {
+    const TEXT = 'Mrs. Kato'
+    const node = document.createElement('div')
+    ReactDOM.render((
+      <MemoryRouter initialEntries={[ '/' ]}>
+        <Route path="/nomatch">
+          <div>{TEXT}</div>
+        </Route>
+      </MemoryRouter>
+    ), node)
+
+    expect(node.innerHTML).toNotContain(TEXT)
+
+    ReactDOM.render((
+      <MemoryRouter initialEntries={[ '/' ]}>
+        <Route path="/nomatch" children={() => <div>{TEXT}</div>} />
+      </MemoryRouter>
+    ), node)
+
+    expect(node.innerHTML).toContain(TEXT)
+  })
+
   it('supports preact by nulling out children prop when empty array is passed', () => {
     const TEXT = 'Mrs. Kato'
     const node = document.createElement('div')

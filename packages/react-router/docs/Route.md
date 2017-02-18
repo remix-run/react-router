@@ -61,6 +61,18 @@ const FadingRoute = ({ component: Component, ...rest }) => (
 
 **Warning:** `<Route component>` takes precendence over `<Route render>` so don't use both in the same `<Route>`.
 
+## children: React element
+
+If you specify a regular child, it will be rendered if the route matches.
+
+```js
+<Route path="/sayhello">
+  <h1>Hello!</h1>
+</Route>
+```
+
+The child must be a single child, `<Route/>` does not introduce wrapper components.
+
 ## children: func
 
 Sometimes you need to render whether the path matches the location or not. In these cases, you can use the function `children` prop. It works exactly like `render` except that it gets called whether there is a match or not.
