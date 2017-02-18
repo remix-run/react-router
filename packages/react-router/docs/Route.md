@@ -154,3 +154,11 @@ When `true`, this will behave as if there was a match, so you can use a `render`
 ```js
 <Route path="/maybe" always render={({match}) => <p>{match ? 'Matched' : 'No match'}</p>}/>
 ```
+
+## props: object
+
+You can use `props` to pass extra properties to the route child. This can be useful to use a generic component for a route, or to keep from having to create a new function every time the `Route` re-renders.
+
+```js
+<Route path="/one" always component={MenuItem} props={{icon: "star"}}/>
+```

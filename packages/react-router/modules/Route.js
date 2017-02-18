@@ -66,8 +66,8 @@ class Route extends React.Component {
   }
 
   render() {
-    const { children, component, render, always } = this.props
-    const props = { ...this.router }
+    const { children, component, render, always, props:subProps } = this.props
+    const props = { ...this.router, ...subProps }
     const match = always || props.match
 
     return (

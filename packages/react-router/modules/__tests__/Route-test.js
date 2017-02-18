@@ -73,6 +73,42 @@ describe('A <Route>', () => {
     expect(node.innerHTML).toContain(TEXT)
   })
 
+  describe('props prop', () => {
+    const props = {TEXT: 'Mrs. Kato component'}
+    const node = document.createElement('div')
+    const Home = ({TEXT}) => <div>{TEXT}</div>
+    ReactDOM.render((
+      <MemoryRouter initialEntries={[ '/' ]}>
+        <Route path="/" component={Home} props={props}/>
+      </MemoryRouter>
+    ), node)
+
+    expect(node.innerHTML).toContain(props.TEXT)
+
+    props.TEXT = 'Mrs. Kato render'
+    ReactDOM.render((
+      <MemoryRouter initialEntries={[ '/' ]}>
+        <Route path="/" render={({TEXT}) => <h1>{TEXT}</h1>} props={props}/>
+      </MemoryRouter>
+    ), node)
+
+    expect(node.innerHTML).toContain(props.TEXT)
+  })
+
+  describe('props prop overrides routing props', () => {
+    const TEXT = 'The library'
+    const props = {location: TEXT}
+    const node = document.createElement('div')
+    const Home = ({location}) => <div>{location}</div>
+    ReactDOM.render((
+      <MemoryRouter initialEntries={[ '/' ]}>
+        <Route path="/" component={Home} props={props}/>
+      </MemoryRouter>
+    ), node)
+
+    expect(node.innerHTML).toContain(TEXT)
+  })
+
   describe('render prop', () => {
     const TEXT = 'Mrs. Kato'
     const node = document.createElement('div')
