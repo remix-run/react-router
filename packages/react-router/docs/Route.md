@@ -146,3 +146,11 @@ When `true`, a `path` that has a trailing slash will only match a `location.path
 | `/one` | `/one` | yes |
 | `/one` | `/one/` | no |
 | `/one` | `/one/two` | no |
+
+## always: bool
+
+When `true`, this will behave as if there was a match, so you can use a `render` function or a `component` that tests if the `match` prop exists.
+
+```js
+<Route path="/maybe" always render={({match}) => <p>{match ? 'Matched' : 'No match'}</p>}/>
+```

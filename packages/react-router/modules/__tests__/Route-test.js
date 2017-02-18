@@ -35,6 +35,31 @@ describe('A <Route>', () => {
     expect(node.innerHTML).toNotContain(TEXT)
   })
 
+  it('renders when it does not match but `always` is specified', () => {
+    const node = document.createElement('div')
+
+    let TEXT = 'bubblegum always render'
+    ReactDOM.render((
+      <MemoryRouter initialEntries={[ '/bunnies' ]}>
+        <Route path="/flowers" always render={() => (
+          <h1>{TEXT}</h1>
+        )}/>
+      </MemoryRouter>
+    ), node)
+
+    expect(node.innerHTML).toContain(TEXT)
+
+    TEXT = 'bubblegum always component'
+    const Text = () => <h1>{TEXT}</h1>
+    ReactDOM.render((
+      <MemoryRouter initialEntries={[ '/bunnies' ]}>
+        <Route path="/flowers" always component={Text}/>
+      </MemoryRouter>
+    ), node)
+
+    expect(node.innerHTML).toContain(TEXT)
+  })
+
   describe('component prop', () => {
     const TEXT = 'Mrs. Kato'
     const node = document.createElement('div')
