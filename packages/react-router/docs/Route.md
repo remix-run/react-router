@@ -61,6 +61,18 @@ const FadingRoute = ({ component: Component, ...rest }) => (
 
 **Warning:** `<Route component>` takes precendence over `<Route render>` so don't use both in the same `<Route>`.
 
+## children: React element
+
+If you specify a regular child, it will be rendered if the route matches.
+
+```js
+<Route path="/sayhello">
+  <h1>Hello!</h1>
+</Route>
+```
+
+The child must be a single child, `<Route/>` does not introduce wrapper components.
+
 ## children: func
 
 Sometimes you need to render whether the path matches the location or not. In these cases, you can use the function `children` prop. It works exactly like `render` except that it gets called whether there is a match or not.
@@ -146,3 +158,19 @@ When `true`, a `path` that has a trailing slash will only match a `location.path
 | `/one` | `/one` | yes |
 | `/one` | `/one/` | no |
 | `/one` | `/one/two` | no |
+
+## always: bool
+
+When `true`, this will behave as if there was a match, so you can use a `render` function or a `component` that tests if the `match` prop exists.
+
+```js
+<Route path="/maybe" always render={({match}) => <p>{match ? 'Matched' : 'No match'}</p>}/>
+```
+
+## props: object
+
+You can use `props` to pass extra properties to the route child. This can be useful to use a generic component for a route, or to keep from having to create a new function every time the `Route` re-renders.
+
+```js
+<Route path="/one" always component={MenuItem} props={{icon: "star"}}/>
+```

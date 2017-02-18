@@ -66,19 +66,20 @@ class Route extends React.Component {
   }
 
   render() {
-    const { children, component, render } = this.props
-    const props = { ...this.router }
+    const { children, component, render, always, props:subProps } = this.props
+    const props = { ...this.router, ...subProps }
+    const match = always || props.match
 
     return (
       component ? ( // component prop gets first priority, only called if there's a match
-        props.match ? React.createElement(component, props) : null
+        match ? React.createElement(component, props) : null
       ) : render ? ( // render prop is next, only called if there's a match
-        props.match ? render(props) : null
+        match ? render(props) : null
       ) : children ? ( // children come last, always called
         typeof children === 'function' ? (
           children(props)
         ) : !Array.isArray(children) || children.length ? ( // Preact defaults to empty children array
-          React.Children.only(children)
+          match ? React.Children.only(children) : null
         ) : (
           null
         )

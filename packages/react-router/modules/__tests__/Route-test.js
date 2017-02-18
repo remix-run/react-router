@@ -35,6 +35,31 @@ describe('A <Route>', () => {
     expect(node.innerHTML).toNotContain(TEXT)
   })
 
+  it('renders when it does not match but `always` is specified', () => {
+    const node = document.createElement('div')
+
+    let TEXT = 'bubblegum always render'
+    ReactDOM.render((
+      <MemoryRouter initialEntries={[ '/bunnies' ]}>
+        <Route path="/flowers" always render={() => (
+          <h1>{TEXT}</h1>
+        )}/>
+      </MemoryRouter>
+    ), node)
+
+    expect(node.innerHTML).toContain(TEXT)
+
+    TEXT = 'bubblegum always component'
+    const Text = () => <h1>{TEXT}</h1>
+    ReactDOM.render((
+      <MemoryRouter initialEntries={[ '/bunnies' ]}>
+        <Route path="/flowers" always component={Text}/>
+      </MemoryRouter>
+    ), node)
+
+    expect(node.innerHTML).toContain(TEXT)
+  })
+
   describe('component prop', () => {
     const TEXT = 'Mrs. Kato'
     const node = document.createElement('div')
@@ -42,6 +67,42 @@ describe('A <Route>', () => {
     ReactDOM.render((
       <MemoryRouter initialEntries={[ '/' ]}>
         <Route path="/" component={Home} />
+      </MemoryRouter>
+    ), node)
+
+    expect(node.innerHTML).toContain(TEXT)
+  })
+
+  describe('props prop', () => {
+    const props = {TEXT: 'Mrs. Kato component'}
+    const node = document.createElement('div')
+    const Home = ({TEXT}) => <div>{TEXT}</div>
+    ReactDOM.render((
+      <MemoryRouter initialEntries={[ '/' ]}>
+        <Route path="/" component={Home} props={props}/>
+      </MemoryRouter>
+    ), node)
+
+    expect(node.innerHTML).toContain(props.TEXT)
+
+    props.TEXT = 'Mrs. Kato render'
+    ReactDOM.render((
+      <MemoryRouter initialEntries={[ '/' ]}>
+        <Route path="/" render={({TEXT}) => <h1>{TEXT}</h1>} props={props}/>
+      </MemoryRouter>
+    ), node)
+
+    expect(node.innerHTML).toContain(props.TEXT)
+  })
+
+  describe('props prop overrides routing props', () => {
+    const TEXT = 'The library'
+    const props = {location: TEXT}
+    const node = document.createElement('div')
+    const Home = ({location}) => <div>{location}</div>
+    ReactDOM.render((
+      <MemoryRouter initialEntries={[ '/' ]}>
+        <Route path="/" component={Home} props={props}/>
       </MemoryRouter>
     ), node)
 
@@ -80,6 +141,28 @@ describe('A <Route>', () => {
         <Route path="/">
           <div>{TEXT}</div>
         </Route>
+      </MemoryRouter>
+    ), node)
+
+    expect(node.innerHTML).toContain(TEXT)
+  })
+
+  describe('children prop always renders IIF function', () => {
+    const TEXT = 'Mrs. Kato'
+    const node = document.createElement('div')
+    ReactDOM.render((
+      <MemoryRouter initialEntries={[ '/' ]}>
+        <Route path="/nomatch">
+          <div>{TEXT}</div>
+        </Route>
+      </MemoryRouter>
+    ), node)
+
+    expect(node.innerHTML).toNotContain(TEXT)
+
+    ReactDOM.render((
+      <MemoryRouter initialEntries={[ '/' ]}>
+        <Route path="/nomatch" children={() => <div>{TEXT}</div>} />
       </MemoryRouter>
     ), node)
 
