@@ -159,23 +159,6 @@ describe("matchPath", () => {
         expect(match.path).toBe('/state/:state')
       })
 
-      it('matches using parentMatch.url when path is empty string', () => {
-        const parentMatch = {
-          url: '/state',
-          path: '/state',
-          params: {},
-          isExact: false
-        }
-        const match = matchPath(
-          '/state/WA',
-          { path: '' },
-          parentMatch
-        )
-        
-        expect(match.url).toBe('/state')
-        expect(match.path).toBe('/state')
-      })
-
       it('resolves using root when parentMatch is null', () => {
         const match = matchPath(
           '/state/CA',
@@ -186,6 +169,64 @@ describe("matchPath", () => {
         expect(match.url).toBe('/state/CA')
         expect(match.path).toBe('/state/:state')
       })
+
+      describe('with path=""', () => {
+        it('matches using parentMatch.url', () => {
+          const parentMatch = {
+            url: '/state',
+            path: '/state',
+            params: {},
+            isExact: false
+          }
+          const match = matchPath(
+            '/state/WA',
+            { path: '' },
+            parentMatch
+          )
+          
+          expect(match.url).toBe('/state')
+          expect(match.path).toBe('/state')
+        })
+
+        it('exact=true, but pathname is not exact', () => {
+          const parentMatch = {
+            url: '/state',
+            path: '/state',
+            params: {},
+            isExact: false
+          }
+          const match = matchPath(
+            '/state/WY',
+            {
+              path: '',
+              exact: true
+            },
+            parentMatch
+          )
+          expect(match).toBe(null)
+        })
+
+        it('exact=true, and pathname is exact', () => {
+          const parentMatch = {
+            url: '/state',
+            path: '/state',
+            params: {},
+            isExact: false
+          }
+          const match = matchPath(
+            '/state',
+            {
+              path: '',
+              exact: true
+            },
+            parentMatch
+          )
+
+          expect(match.url).toBe('/state')
+          expect(match.path).toBe('/state')
+        })
+      })
+
     })
 
     describe('undefined path', () => {
