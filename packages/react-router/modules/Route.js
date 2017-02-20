@@ -1,8 +1,8 @@
 import React, { PropTypes } from 'react'
 import matchPath from './matchPath'
 
-const computeMatch = (router, { computedMatch, path, exact, strict }) =>
-  computedMatch || matchPath(router.location.pathname, { path, exact, strict })
+const computeMatch = (router, { location, computedMatch, path, exact, strict }) =>
+  computedMatch || matchPath((location || router.location).pathname, { path, exact, strict })
 
 /**
  * The public API for matching a single path and rendering.
@@ -24,7 +24,8 @@ class Route extends React.Component {
     children: PropTypes.oneOfType([
       PropTypes.func,
       PropTypes.node
-    ])
+    ]),
+    location: PropTypes.location
   }
 
   static childContextTypes = {
@@ -59,6 +60,15 @@ class Route extends React.Component {
     Object.assign(this.router, {
       match: computeMatch(this.router, nextProps)
     })
+
+    warning(
+      !(nextProps.location && !this.props.location),
+      'You cannot change from an uncontrolled to controlled Route. You passed in a `location` prop on a re-render when initially there was none.'
+    )
+    warning(
+      !nextProps.location && this.props.location,
+      'You cannot change from a controlled to an uncontrolled Route. You passed in a `location` prop initially but on a re-render there was none.'
+    )
   }
 
   componentWillUnmount() {

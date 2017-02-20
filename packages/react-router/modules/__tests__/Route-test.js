@@ -35,6 +35,26 @@ describe('A <Route>', () => {
     expect(node.innerHTML).toNotContain(TEXT)
   })
 
+  it('can use a `location` prop instead of `router.location`', () => {
+    const TEXT = 'tamarind chutney'
+    const node = document.createElement('div')
+
+    ReactDOM.render((
+      <MemoryRouter initialEntries={[ '/mint' ]}>
+        <Route
+          location={{ pathname: '/tamarind' }}
+          path="/tamarind"
+          render={() => (
+            <h1>{TEXT}</h1>
+          )}
+        />
+      </MemoryRouter>
+    ), node)
+
+    expect(node.innerHTML).toContain(TEXT)
+  })
+
+
   describe('component prop', () => {
     const TEXT = 'Mrs. Kato'
     const node = document.createElement('div')

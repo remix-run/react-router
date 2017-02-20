@@ -12,30 +12,41 @@ class Switch extends React.Component {
   }
 
   static propTypes = {
-    children: PropTypes.node
+    children: PropTypes.node,
+    location: PropTypes.object
   }
 
   state = {
-    location: null
+    location: this.props.location || this.context.router.location
   }
 
   componentWillMount() {
-    const { router } = this.context
+    if (!this.props.location) {
+      const { router } = this.context
 
-    this.setState({ 
-      location: router.location
-    })
-
-    // Start listening here so we can <Redirect> on the initial render.
-    this.unlisten = router.listen(() => {
-      this.setState({
-        location: router.location
+      // Start listening here so we can <Redirect> on the initial render.
+      this.unlisten = router.listen(() => {
+        this.setState({
+          location: router.location
+        })
       })
-    })
+    }
+  }
+
+  componentWillReceiveProps(nextProps) {
+    warning(
+      !(nextProps.location && !this.props.location),
+      'You cannot change from an uncontrolled to controlled Switch. You passed in a `location` prop on a re-render when initially there was none.'
+    )
+    warning(
+      !nextProps.location && this.props.location,
+      'You cannot change from a controlled to an uncontrolled Switch. You passed in a `location` prop initially but on a re-render there was none.'
+    )
   }
 
   componentWillUnmount() {
-    this.unlisten()
+    if (this.unlisten)
+      this.unlisten()
   }
 
   render() {
