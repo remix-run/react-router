@@ -1,4 +1,5 @@
 import React, { PropTypes } from 'react'
+import warning from 'warning'
 import matchPath from './matchPath'
 
 /**
