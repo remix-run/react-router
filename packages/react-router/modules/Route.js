@@ -25,7 +25,7 @@ class Route extends React.Component {
       PropTypes.func,
       PropTypes.node
     ]),
-    location: PropTypes.location
+    location: PropTypes.object
   }
 
   static childContextTypes = {
