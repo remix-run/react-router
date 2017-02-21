@@ -172,7 +172,7 @@ describe('A <StaticRouter>', () => {
       expect(() => {
         ReactDOM.render((
           <StaticRouter context={context}>
-            <Prompt />
+            <Prompt message="this is only a test"/>
           </StaticRouter>
         ), node)
       }).toNotThrow()
