@@ -23,29 +23,13 @@ class NativeRouter extends Component {
     }
   }
 
-  state = {
-    savedHistory: null
-  }
-
-  componentDidMount() {
-    AsyncStorage.getItem('history', (err, history) => {
-      this.setState({
-        savedHistory: history ? JSON.parse(history) : {
-          entries: this.props.initialEntries,
-          index: this.props.initialIndex
-        }
-      })
-    })
-  }
-
   render() {
-    const { getUserConfirmation, keyLength, children } = this.props
-    const { savedHistory } = this.state
+    const { initialEntries, initialIndex, getUserConfirmation, keyLength, children } = this.props
 
-    return savedHistory != null ? (
+    return (
       <MemoryRouter
-        initialEntries={savedHistory.entries}
-        initialIndex={savedHistory.index}
+        initialEntries={initialEntries}
+        initialIndex={initialIndex}
         getUserConfirmation={getUserConfirmation}
         keyLength={keyLength}
       >
@@ -55,7 +39,7 @@ class NativeRouter extends Component {
           </StoreHistory>
         )}/>
       </MemoryRouter>
-    ) : null
+    )
   }
 }
 
