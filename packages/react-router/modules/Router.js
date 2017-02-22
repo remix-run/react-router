@@ -16,17 +16,30 @@ class Router extends React.Component {
 
   getChildContext() {
     return {
-      router: this.props.history
+      router: this.router
     }
   }
 
   componentWillMount() {
-    const { children } = this.props
+    const { children, history } = this.props
 
     invariant(
       children == null || React.Children.count(children) === 1,
       'A <Router> may have only one child element'
     )
+
+    this.router = {
+      ...history,
+      match: {
+        path: '/',
+        url: '/',
+        params: {}
+      }
+    }
+
+    history.listen(() => {
+      Object.assign(this.router, history)
+    })
   }
 
   render() {
