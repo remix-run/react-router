@@ -93,6 +93,7 @@ describe('A <Router>', () => {
       expect(rootContext.route.match.url).toEqual('/')
       expect(rootContext.route.match.params).toEqual({})
       expect(rootContext.route.match.isExact).toEqual(true)
+      expect(rootContext.route.location).toEqual(history.location)
     })
 
     it('updates context.route upon navigation', () => {

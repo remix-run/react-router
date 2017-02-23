@@ -20,6 +20,7 @@ class Router extends React.Component {
     return {
       history: this.props.history,
       route: {
+        location: this.props.history.location,
         match: this.state.match
       }
     }
