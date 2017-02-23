@@ -1,6 +1,8 @@
 import expect from 'expect'
 import React from 'react'
 import ReactDOM from 'react-dom'
+import createMemoryHistory from 'history/createMemoryHistory'
+import Router from '../Router'
 import MemoryRouter from '../MemoryRouter'
 import Switch from '../Switch'
 import Route from '../Route'
@@ -89,6 +91,33 @@ describe('A <Switch>', () => {
     expect(node.innerHTML).toNotMatch(/two/)
   })
 
+  it('does not remount a route', () => {
+    const node = document.createElement('div')
+    const history = createMemoryHistory({ initialEntries: ['/foo'] })
+
+    let mountCount = 0
+
+    class App extends React.Component {
+      componentWillMount() { mountCount++ }
+      render() { return <div /> }
+    }
+
+    ReactDOM.render((
+      <Router history={history}>
+        <Switch>
+          <Route path="/foo" component={App}/>
+          <Route path="/bar" component={App}/>
+        </Switch>
+      </Router>
+    ), node)
+
+    expect(mountCount).toBe(1)
+    history.push('/bar')
+    expect(mountCount).toBe(1)
+    history.push('/foo')
+    expect(mountCount).toBe(1)
+  })
+
   it('renders pathless Routes', () => {
     const node = document.createElement('div')
 
@@ -104,6 +133,7 @@ describe('A <Switch>', () => {
     expect(node.innerHTML).toNotContain('one')
     expect(node.innerHTML).toContain('two')
   })
+
   it('handles from-less Redirects', () => {
     const node = document.createElement('div')
 
