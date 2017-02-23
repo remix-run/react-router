@@ -57,7 +57,7 @@ module.exports = {
         include: /prismjs/,
         loader: 'style!css'
       },
-      { test: /\.md$/,
+      { test: /\.md(\?(.+))?$/,
         loader: path.join(__dirname, 'webpack', 'markdown-loader')
       },
       { test: /\.(gif|jpe?g|png|ico)$/,

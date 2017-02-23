@@ -2,7 +2,7 @@
 import React from 'react'
 import 'prismjs/themes/prism-tomorrow.css'
 
-const MarkdownViewer = ({ html }) => (
+const MarkdownViewer = ({ html, id }) => (
   <markdown
     dangerouslySetInnerHTML={{
       __html: html

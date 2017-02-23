@@ -5,7 +5,7 @@
   "scripts": {
     "build": "NODE_ENV=production webpack -p",
     "clean": "git clean -e '!node_modules' -fdX .",
-    "start": "webpack-dev-server --inline"
+    "start": "webpack-dev-server --inline --host 0.0.0.0"
   },
   "devDependencies": {
     "babel-core": "^6.21.0",
@@ -24,8 +24,8 @@
     "markdown-it-anchor": "^3.0.0",
     "postcss-loader": "0.9.1",
     "prismjs-loader": "0.0.3",
-    "react": "^15.4.2",
-    "react-dom": "^15.3.0",
+    "react": "^15.4.0",
+    "react-dom": "^15.4.0",
     "react-motion": "^0.4.4",
     "react-router-dom": "^4.0.0-beta.7",
     "style-loader": "0.13.1",
@@ -33,6 +33,17 @@
     "sw-precache-webpack-plugin": "^0.7.2",
     "url-loader": "^0.5.7",
     "webpack": "^1.13.1",
-    "webpack-dev-server": "^1.14.1"
+    "webpack-dev-server": "^1.14.1",
+    "babel-eslint": "^6.0.4",
+    "eslint": "^2.13.1",
+    "eslint-plugin-import": "^1.15.0",
+    "eslint-plugin-react": "^5.2.2"
+  },
+  "dependencies": {
+    "animated": "^0.2.0",
+    "cheerio": "^0.22.0",
+    "react-icons": "^2.2.3",
+    "react-media": "^1.5.1",
+    "slug": "^0.9.1"
   }
 }

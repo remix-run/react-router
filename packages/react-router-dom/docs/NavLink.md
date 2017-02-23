@@ -13,7 +13,10 @@ import { NavLink } from 'react-router-dom'
 The class to give the element when it is active. There is no default active class. This will be joined with the `className` prop.
 
 ```js
-<NavLink to="/faq" activeClassName="active">FAQs</NavLink>
+<NavLink
+  to="/faq"
+  activeClassName="active"
+>FAQs</NavLink>
 ```
 
 ## activeStyle: object
@@ -21,7 +24,13 @@ The class to give the element when it is active. There is no default active clas
 The styles to apply to the element when it is active.
 
 ```js
-<NavLink to="/faq" activeStyle={{ fontWeight: 'bold', color: 'red' }}>FAQs</NavLink>
+<NavLink
+  to="/faq"
+  activeStyle={{
+    fontWeight: 'bold',
+    color: 'red'
+   }}
+>FAQs</NavLink>
 ```
 
 ## exact: bool
@@ -29,7 +38,11 @@ The styles to apply to the element when it is active.
 When `true`, the active class/style will only be applied if the location is matched exactly.
 
 ```js
-<NavLink exact to="/profile" activeClassName='active'>Profile</NavLink>
+<NavLink
+  exact
+  to="/profile"
+  activeClassName="active"
+>Profile</NavLink>
 ```
 
 ## strict: bool
@@ -37,7 +50,11 @@ When `true`, the active class/style will only be applied if the location is matc
 When `true`, the trailing slash on a location's `pathname` will be taken into consideration when determining if the location matches the current URL. See the [`<Route strict>`](../../react-router/docs/Route.md#strict-bool) documentation for more information.
 
 ```js
-<NavLink strict to="/events/" activeClassName='active'>Events</NavLink>
+<NavLink
+  strict
+  to="/events/"
+  activeClassName="active"
+>Events</NavLink>
 ```
 
 ## isActive: func
@@ -54,5 +71,9 @@ const oddEvent = (match, location) => {
   return !isNaN(eventID) && eventID % 2 === 1
 }
 
-<NavLink to="/events/123" isActive={oddEvent} activeClassName="active">Event 123</NavLink> 
+<NavLink
+  to="/events/123"
+  isActive={oddEvent}
+  activeClassName="active"
+>Event 123</NavLink> 
 ```

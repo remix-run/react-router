@@ -1,20 +1,22 @@
 import React from 'react'
-import { B, H, darkGray } from './bricks'
+import { Block, Row } from 'jsxstyle'
+import { DARK_GRAY } from '../Theme'
 import LogoImage from '../logo.png'
 
-const Logo = () => (
-  <H
-    background={darkGray}
-    width="230px"
-    height="230px"
+const Logo = ({ size = 230, shadow = true }) => (
+  <Row
+    background={DARK_GRAY}
+    width={size+'px'}
+    height={size+'px'}
     alignItems="center"
+    justifyContent="center"
     borderRadius="50%"
-    boxShadow="2px 10px 50px hsla(0, 0%, 0%, 0.35)"
+    boxShadow={shadow ? `2px ${size/20}px ${size/5}px hsla(0, 0%, 0%, 0.35)` : null}
   >
-    <B position="relative" top="-8px" textAlign="center" width="100%">
+    <Block position="relative" top="-4%" textAlign="center" width="100%">
       <img src={LogoImage} width="75%"/>
-    </B>
-  </H>
+    </Block>
+  </Row>
 )
 
 export default Logo

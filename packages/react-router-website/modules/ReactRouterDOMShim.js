@@ -1,3 +1,5 @@
+import React from 'react'
+
 export {
   HashRouter,
   Link,
@@ -16,4 +18,8 @@ export {
 // Need to shim <BrowserRouter> so people can copy/paste
 // examples into create-react-app but our docs site already
 // has a <BrowserRouter> rendered up top!
-export BrowserRouter from './components/ExampleRouter'
+const BrowserRouter = ({ children }) => (
+  children ? React.Children.only(children) : null
+)
+
+export { BrowserRouter }

@@ -1,24 +1,13 @@
-import React, { Component } from 'react';
-import {
-  StyleSheet,
-  Text,
-  View
-} from 'react-native'
+import React, { Component } from 'react'
+import { StyleSheet, Text, View } from 'react-native'
 
-import {
-  NativeRouter,
-  Route,
-  Link,
-  DeepLinking,
-  Prompt
-} from '../main'
+import { NativeRouter, Route, Link } from '../main'
 
 export default class App extends Component {
   render() {
     return (
       <NativeRouter>
         <View style={styles.container}>
-          <DeepLinking/>
           <Route exact path="/" render={() => (
             <View>
               <Text style={styles.welcome}>
@@ -34,7 +23,6 @@ export default class App extends Component {
 
           <Route exact path="/one" render={() => (
             <View>
-              <Prompt message="Are you sure you want to leave this screen?"/>
               <Text style={styles.welcome}>
                 ONE!
               </Text>
@@ -47,7 +35,7 @@ export default class App extends Component {
           )}/>
         </View>
       </NativeRouter>
-    );
+    )
   }
 }
 
@@ -56,17 +44,17 @@ const styles = StyleSheet.create({
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
-    backgroundColor: '#F5FCFF',
+    backgroundColor: '#F5FCFF'
   },
   welcome: {
     fontSize: 20,
     textAlign: 'center',
-    margin: 10,
+    margin: 10
   },
   instructions: {
     textAlign: 'center',
     color: '#333333',
-    marginBottom: 5,
-  },
-});
+    marginBottom: 5
+  }
+})
 

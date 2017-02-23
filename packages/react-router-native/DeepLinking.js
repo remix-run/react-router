@@ -1,11 +1,7 @@
 import React, { Component, PropTypes } from 'react'
-import { Linking, Platform } from 'react-native'
+import { Linking } from 'react-native'
 
-const regex = Platform.OS === 'android' ? (
-  /.*?:\/\/.*?\//g
-) : (
-  /.*?:\/\//g
-)
+const regex = /.*?:\/\//g
 
 class DeepLinking extends Component {
   static contextTypes = {
@@ -33,7 +29,7 @@ class DeepLinking extends Component {
   }
 
   render() {
-    return null
+    return this.props.children
   }
 }
 

@@ -1,12 +1,19 @@
 /*eslint-disable react/no-danger*/
 import React from 'react'
 import 'prismjs/themes/prism-tomorrow.css'
-import { B } from './bricks'
+import { Block } from 'jsxstyle'
 
 const SourceViewer = ({ code, ...rest }) => (
-  <B component="pre" {...rest} fontSize="12px">
+  <Block
+    component="pre"
+    background="rgb(45, 45, 45)"
+    color="white"
+    margin="0"
+    overflow="auto"
+    {...rest}
+  >
     <code dangerouslySetInnerHTML={{ __html: code }} />
-  </B>
+  </Block>
 )
 
 SourceViewer.propTypes = {

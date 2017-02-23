@@ -1,40 +1,169 @@
 body {
-  font-family: -apple-system, 
-                BlinkMacSystemFont, 
-                "Segoe UI", 
-                Roboto, 
-                Oxygen-Sans, 
-                Ubuntu, 
-                Cantarell, 
-                "Helvetica Neue", 
+  font-family: -apple-system,
+                BlinkMacSystemFont,
+                "Segoe UI",
+                Roboto,
+                Oxygen-Sans,
+                Ubuntu,
+                Cantarell,
+                "Helvetica Neue",
                 sans-serif;
   line-height: 1.3;
 }
 h1, h2, h3, h4, h5, h6 { margin: 0; font: inherit; }
 
 p { margin: 0 }
-a { color: inherit; text-decoration: none; }
+a {
+  color: inherit;
+  text-decoration: none;
+}
+
+.no-tap-highlight {
+  -webkit-tap-highlight-color: transparent;
+}
+
+.no-tap-highlight:active {
+  transition: background 1s ease;
+  transition-delay: 1s;
+}
+
+.mobile-scroll {
+  -webkit-overflow-scrolling: touch
+}
+
 * { box-sizing: border-box; }
 
 .fake-browser h1 { margin: initial; font-size: 150%; }
 .fake-browser h2 { margin: initial; font-size: 125%; }
 .fake-browser h3 { margin: initial; font-size: 100%; }
-.fake-browser a { color: rgb(204, 65, 65); text-decoration: underline; display: initial; }
+
+.fake-browser a {
+  color: hsl(200, 50%, 50%);
+  text-decoration: underline;
+  display: initial;
+}
+
+.fake-browser a:active {
+  color: hsl(0, 78%, 60%);
+}
+
 .fake-browser { color: initial }
 
-pre, code { font-family: Monaco, monospace; line-height: 1.5 }
-markdown { display: block; }
-markdown pre { background: rgb(45, 45, 45); padding: 10px; border-radius: 3px; }
-markdown pre code { font-size: 13px; }
-markdown code { font-size: 16px; }
-markdown h1 { font-family: Monaco, monospace; margin: 50px 0 10px 0; color: rgb(204, 65, 65); font-size: 200%; }
-markdown h2 { font-family: Monaco, monospace; margin: 40px 0 0 0; font-size: 150%; color: rgb(81, 81, 81); }
+pre, code { font-family: Menlo, monospace; line-height: 1.5 }
+
+/* have messed with these! */
+
+.api-doc-wrapper {
+  background: rgb(45, 45, 45);
+}
+
+.api-doc {
+  padding-left: 20px;
+  display: block;
+  box-shadow:
+    inset 500px 0 #fff,
+    inset 1020px 0 rgb(45, 45, 45);
+}
+markdown > pre {
+  background: rgb(45, 45, 45);
+  float: left;
+  clear: right;
+  white-space: pre-wrap;
+}
+
+/* all the things we render *except* headers and <pre>, add them as needed! */
+markdown > *:not(pre):not(h1):not(h2) {
+  display: block;
+  clear: both;
+  float: left;
+  width: 500px;
+  padding-right: 40px;
+}
+
+markdown:after {
+  content: ' ';
+  display: block;
+  clear: both;
+  height: 80px;
+}
+
+markdown h1,
+markdown h2 {
+  padding-right: 40px;
+  font-weight: bold;
+}
+
+markdown h1 {
+  font-family: Menlo, monospace;
+  padding: 40px 0px 10px 0px;
+  color: rgb(204, 65, 65);
+  font-size: 200%;
+}
+
+markdown h2 {
+  font-family: Menlo, monospace;
+  font-size: 150%;
+  padding-top: 40px;
+  position: relative;
+}
+
+markdown h2:before {
+  content: ' ';
+  height: 1px;
+  width: 200px;
+  background: linear-gradient(to right, rgba(100, 100, 100, 1) 0%, rgba(85, 85, 85, 0) 100%);
+  position: absolute;
+  left: 480px;
+}
+
+markdown h2 a {
+  color: rgb(45, 45, 45);
+}
+
+markdown pre code { font-size: 11px; }
+markdown code { font-size: 12px; }
 markdown h2 code { font-size: 100%; font-weight: 100; }
 markdown h2 + p { margin-top: 10px; }
 
-markdown h1, h2, h3 { position: relative; }
-markdown .header-anchor { position: absolute; left: -1em; top: 0.1em; color: #ccc; }
-markdown .header-anchor:hover { color: rgb(45, 45, 45); }
+markdown h1, h2, h3 {
+  position: relative;
+  clear: both;
+}
+
+@media screen and (max-width: 1170px) {
+  .api-doc-wrapper {
+    background: white;
+  }
+  .api-doc {
+    box-shadow: none;
+    padding: 0 20px;
+  }
+
+  markdown > pre {
+    float: none;
+    padding: 20px;
+    border-radius: 6px;
+    overflow: auto;
+  }
+
+  markdown > *:not(pre):not(h1):not(h2) {
+    display: block;
+    float: none;
+    width: auto;
+  }
+
+  markdown h2:before {
+    display: none;
+  }
+}
+
+@media screen and (max-width: 600px) {
+  markdown > *:not(pre):not(h1):not(h2) {
+    /*width: auto;*/
+  }
+}
+
+/* /old stuff */
 
 markdown p { margin: 1em 0; }
 

@@ -1,7 +1,7 @@
 import React, { PropTypes } from 'react'
 import { MemoryRouter, Route } from 'react-router-dom'
-import { B, V, H, PAD, LIGHT_GRAY, GRAY } from '../bricks'
-import { button } from './style.css'
+import { Block, Col, Row } from 'jsxstyle'
+import { LIGHT_GRAY, GRAY } from '../Theme'
 
 const LeftArrowIcon = (props) => (
   <svg {...props} fill="currentColor" viewBox="0 0 40 40" preserveAspectRatio="xMidYMid meet">
@@ -29,9 +29,8 @@ const FileCodeIcon = () => (
 )
 
 const Button = ({ children, ...props }) => (
-  <B
+  <Block
     component="button"
-    className={button}
     display="inline-block"
     border="none"
     margin="0"
@@ -41,6 +40,11 @@ const Button = ({ children, ...props }) => (
     marginTop="-3px"
     props={props}
     children={children}
+    outline="none"
+    focusColor="hsl(200, 50%, 50%)"
+    activeTop="1px"
+    activeLeft="1px"
+    position={props.disabled ? '' : 'relative'}
   />
 )
 
@@ -62,21 +66,21 @@ class FakeBrowser extends React.Component {
     return (
       <MemoryRouter getUserConfirmation={getUserConfirmation}>
         <Route render={({ history, location }) => (
-          <V
+          <Col
             className="fake-browser"
             background="white"
             boxShadow="0px 5px 20px hsla(0, 0%, 0%, 0.75)"
             borderRadius="6px"
             {...props}
           >
-            <H
-              background={LIGHT_GRAY}
+            <Row
+              background="#eee"
               borderTopLeftRadius="6px"
               borderTopRightRadius="6px"
               border="none"
               alignItems="center"
               borderBottom="solid 1px #ccc"
-              padding={`0 ${PAD / 2}px`}
+              padding="0 10px"
             >
               <Button onClick={history.goBack} disabled={!history.canGo(-1)}>
                 <LeftArrowIcon height="1em" width="1em" style={{ verticalAlign: 'middle', marginTop: -3 }}/>
@@ -84,27 +88,27 @@ class FakeBrowser extends React.Component {
               <Button onClick={history.goForward} disabled={!history.canGo(1)}>
                 <RightArrowIcon height="1em" width="1em" style={{ verticalAlign: 'middle', marginTop: -3 }}/>
               </Button>
-              <B
+              <Block
                 position="relative"
                 zIndex="1"
-                left={`${PAD / 2.5}px`}
+                left="8px"
                 top="-2px"
                 color={GRAY}
               >
                 <FileCodeIcon/>
-              </B>
-              <H
+              </Block>
+              <Row
                 flex="1"
                 alignItems="center"
-                padding={`${PAD / 3}px`}
-                marginLeft={`-${PAD}px`}
+                padding="5px"
+                marginLeft="-20px"
               >
-                <B
+                <Block
                   component="input"
                   font="inherit"
                   width="100%"
-                  paddingLeft={`${PAD * 1.25}px`}
-                  color={GRAY}
+                  paddingLeft="25px"
+                  color={LIGHT_GRAY}
                   type="text"
                   props={{
                     value: url ? url : createPath(location),
@@ -119,17 +123,17 @@ class FakeBrowser extends React.Component {
                     }
                   }}
                 />
-              </H>
-            </H>
-            <B
+              </Row>
+            </Row>
+            <Block
               flex="1"
-              padding={`${PAD}px`}
+              padding="20px"
               overflow="auto"
               position="relative"
             >
               {React.Children.only(children)}
-            </B>
-          </V>
+            </Block>
+          </Col>
         )}/>
       </MemoryRouter>
     )

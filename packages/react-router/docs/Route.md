@@ -1,6 +1,11 @@
 # &lt;Route>
 
-Renders some UI when a URL matches a location.
+The Route component is perhaps the most important component in React
+Router to understand and learn to use well. Its most basic
+responsibility is to render some UI when a [location](./location.md)
+matches the route's `path`.
+
+Consider the following code:
 
 ```js
 import { BrowserRouter as Router, Route } from 'react-router-dom'
@@ -12,6 +17,26 @@ import { BrowserRouter as Router, Route } from 'react-router-dom'
   </div>
 </Router>
 ```
+
+If the location of the app is `/` then the UI hierarchy will be something like:
+
+```html
+<div>
+  <Home/>
+  <!-- react-empty: 2 -->
+</div>
+```
+
+And if the location of the app is `/news` then the UI hierarchy will be:
+
+```html
+<div>
+  <!-- react-empty: 1 -->
+  <NewsFeed/>
+</div>
+```
+
+The "react-empty" comments are just implementation details of React's `null` rendering. But for our purposes, it is instructive. A Route is always technically "rendered" even though its rendering `null`. As soon as the app location matches the route's path, your component will be rendered.
 
 ## route props
 
@@ -36,9 +61,7 @@ rendered with [route props](#route-props).
 
 ```js
 <Route path="/user/:username" component={User}/>
-```
 
-```js
 const User = ({ match }) => {
   return <h1>Hello {match.params.username}!</h1>
 }
@@ -74,9 +97,7 @@ const FadingRoute = ({ component: Component, ...rest }) => (
 
 Sometimes you need to render whether the path matches the location or not. In these cases, you can use the function `children` prop. It works exactly like `render` except that it gets called whether there is a match or not.
 
-The `children` render prop receives all the same [route props](#route-props) as the `component` and `render` methods, except when a route fails to match the URL, then `match` is `null`. This allows you to dynamically adjust your UI based on whether or not the route matches.
-
-Here we're adding an `active` class if the route matches
+The `children` render prop receives all the same [route props](#route-props) as the `component` and `render` methods, except when a route fails to match the URL, then `match` is `null`. This allows you to dynamically adjust your UI based on whether or not the route matches. Here we're adding an `active` class if the route matches
 
 ```js
 <ul>
@@ -96,7 +117,7 @@ const ListItemLink = ({ to, ...rest }) => (
 This could also be useful for animations:
 
 ```js
-<Route children={({ match, ...rest}) => (
+<Route children={({ match, ...rest }) => (
   {/* Animate will always render, so you can use lifecycles
       to animate its child in and out */}
   <Animate>

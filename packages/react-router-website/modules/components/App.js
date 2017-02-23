@@ -1,30 +1,24 @@
 import React from 'react'
 
-// We have to import this one using a relative path because we
-// shim <BrowserRouter> in our webpack config to use <ExampleRouter>
+// don't want the shimmed one
+// eslint-disable-next-line
 import BrowserRouter from '../../../react-router-dom/BrowserRouter'
 
-import { B } from './bricks'
-import Header from './Header'
-import Examples from './Examples'
-import APIDocs from './APIDocs'
-import NewsletterSignup from './NewsletterSignup'
-import Footer from './Footer'
-import Video from './Video'
+// this stuff is shimmed, see ReactRouterDOMShim.js for more details
+import { Switch, Route } from 'react-router-dom'
 
-const base = document.querySelector('base')
-const baseHref = base ? base.getAttribute('href') : '/'
+import DelegateMarkdownLinks from './DelegateMarkdownLinks'
+import Home from './Home'
+import Environment from './Environment'
 
 const App = () => (
-  <BrowserRouter basename={baseHref.replace(/\/$/, '')}>
-    <B>
-      <Header/>
-      <Examples/>
-      <Video/>
-      <APIDocs/>
-      <NewsletterSignup/>
-      <Footer/>
-    </B>
+  <BrowserRouter>
+    <DelegateMarkdownLinks>
+      <Switch>
+        <Route path="/" exact={true} component={Home}/>
+        <Route path="/:environment" component={Environment}/>
+      </Switch>
+    </DelegateMarkdownLinks>
   </BrowserRouter>
 )
 

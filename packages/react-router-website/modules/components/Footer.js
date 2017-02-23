@@ -1,13 +1,11 @@
 import React from 'react'
-import { B, I, PAD, darkGray, lightGray } from './bricks'
+import { Block, Inline } from 'jsxstyle'
+import { DARK_GRAY, BRIGHT_GRAY, LIGHT_GRAY } from '../Theme'
+import NewsletterSignup from './NewsletterSignup'
 
 const FooterLink = ({ href, ...rest }) => (
-  <I component="a" props={{href}} {...rest} textDecoration="underline"/>
+  <Inline component="a" props={{ href }} {...rest} textDecoration="underline"/>
 )
-
-FooterLink.propTypes = {
-  href: React.PropTypes.string
-}
 
 const ReactTraining = () => (
   <FooterLink href="https://reacttraining.com">React Training</FooterLink>
@@ -26,11 +24,30 @@ const CC = () => (
 const year = new Date().getFullYear()
 
 const Footer = () => (
-  <B background={darkGray} color="white" padding={PAD*2+'px'} textAlign="center">
-    <B component="p">React Router is built and maintained by <ReactTraining/> and hundreds of <Contributors/>.</B>
-    <B marginTop={PAD+'px'} color={lightGray}>&copy; {year} React Training</B>
-    <B color={lightGray}>Code examples and documentation <CC/></B>
-  </B>
+  <Block>
+    <NewsletterSignup/>
+    <Block
+      background={DARK_GRAY}
+      color={BRIGHT_GRAY}
+      padding="40px"
+      textAlign="center"
+      fontSize="80%"
+    >
+      <Block component="p">
+        React Router is built and maintained by <ReactTraining/> and
+        hundreds of <Contributors/>.
+      </Block>
+      <Block
+        marginTop="20px"
+        color={LIGHT_GRAY}
+      >
+        &copy; {year} React Training
+      </Block>
+      <Block color={LIGHT_GRAY}>
+        Code examples and documentation <CC/>
+      </Block>
+    </Block>
+  </Block>
 )
 
 export default Footer
