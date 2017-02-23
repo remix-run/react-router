@@ -51,9 +51,8 @@ class Switch extends React.Component {
   }
 
   render() {
-    const { children } = this.props
+    const { children:routes } = this.props
     const { location } = this.state
-    const routes = React.Children.toArray(children)
 
     let route, match
     for (let i = 0, length = routes.length; match == null && i < length; ++i) {
