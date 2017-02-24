@@ -1,7 +1,6 @@
 import React, { PropTypes, Component } from 'react'
 import MemoryRouter from 'react-router/MemoryRouter'
-import Route from 'react-router/Route'
-import { AsyncStorage, Alert } from 'react-native'
+import { Alert } from 'react-native'
 
 /**
  * The public API for a <Router> designed for React Native. Stores
@@ -23,66 +22,19 @@ class NativeRouter extends Component {
     }
   }
 
-  state = {
-    savedHistory: null
-  }
-
-  componentDidMount() {
-    AsyncStorage.getItem('history', (err, history) => {
-      this.setState({
-        savedHistory: history ? JSON.parse(history) : {
-          entries: this.props.initialEntries,
-          index: this.props.initialIndex
-        }
-      })
-    })
-  }
-
   render() {
-    const { getUserConfirmation, keyLength, children } = this.props
-    const { savedHistory } = this.state
+    const { initialEntries, initialIndex, getUserConfirmation, keyLength, children } = this.props
 
-    return savedHistory != null ? (
+    return (
       <MemoryRouter
-        initialEntries={savedHistory.entries}
-        initialIndex={savedHistory.index}
+        initialEntries={initialEntries}
+        initialIndex={initialIndex}
         getUserConfirmation={getUserConfirmation}
         keyLength={keyLength}
       >
-        <Route render={({ entries, index }) => (
-          <StoreHistory entries={entries} index={index}>
-            {React.Children.only(children)}
-          </StoreHistory>
-        )}/>
+        {React.Children.only(children)}
       </MemoryRouter>
-    ) : null
-  }
-}
-
-class StoreHistory extends Component {
-  static propTypes = {
-    index: PropTypes.number.isRequired,
-    entries: PropTypes.array.isRequired
-  }
-
-  componentDidMount() {
-    this.store()
-  }
-
-  componentDidUpdate() {
-    this.store()
-  }
-
-  store() {
-    const { entries, index } = this.props
-    AsyncStorage.setItem(
-      'history',
-      JSON.stringify({ entries, index })
     )
-  }
-
-  render() {
-    return this.props.children
   }
 }
 
