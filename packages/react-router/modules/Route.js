@@ -2,17 +2,17 @@ import React, { PropTypes } from 'react'
 import warning from 'warning'
 import matchPath from './matchPath'
 
-const computeMatch = (router, { location, computedMatch, path, exact, strict }) =>
-  computedMatch || matchPath((location || router.location).pathname, { path, exact, strict })
 
 /**
  * The public API for matching a single path and rendering.
  */
 class Route extends React.Component {
   static contextTypes = {
-    router: PropTypes.shape({
-      listen: PropTypes.func.isRequired
-    }).isRequired
+    router: PropTypes.object.isRequired
+  }
+
+  static childContextTypes = {
+    router: PropTypes.object.isRequired
   }
 
   static propTypes = {
@@ -29,37 +29,22 @@ class Route extends React.Component {
     location: PropTypes.object
   }
 
-  static childContextTypes = {
-    router: PropTypes.object.isRequired
+  state = {
+    match: this.computeMatch(this.props)
   }
 
   getChildContext() {
     return {
-      router: this.router
+      router: {
+        ...this.context.router,
+        match: this.state.match
+      }
     }
-  }
-
-  componentWillMount() {
-    const parentRouter = this.context.router
-
-    this.router = {
-      ...parentRouter,
-      match: computeMatch(parentRouter, this.props)
-    }
-
-    // Start listening here so we can <Redirect> on the initial render.
-    this.unlisten = parentRouter.listen(() => {
-      Object.assign(this.router, parentRouter, {
-        match: computeMatch(parentRouter, this.props)
-      })
-
-      this.forceUpdate()
-    })
   }
 
   componentWillReceiveProps(nextProps) {
-    Object.assign(this.router, {
-      match: computeMatch(this.router, nextProps)
+    this.setState({
+      match: this.computeMatch(nextProps)
     })
 
     warning(
@@ -72,19 +57,23 @@ class Route extends React.Component {
     )
   }
 
-  componentWillUnmount() {
-    this.unlisten()
+  computeMatch(props) {
+    const { location, computedMatch, path, exact, strict } = props
+    const { router } = this.context
+    const pathname = (location || router.location).pathname
+    return computedMatch || matchPath(pathname, { path, exact, strict })
   }
 
   render() {
     const { children, component, render } = this.props
-    const props = { ...this.router }
+    const { match } = this.state
+    const props = { ...this.context.router, match }
 
     return (
       component ? ( // component prop gets first priority, only called if there's a match
-        props.match ? React.createElement(component, props) : null
+        match ? React.createElement(component, props) : null
       ) : render ? ( // render prop is next, only called if there's a match
-        props.match ? render(props) : null
+        match ? render(props) : null
       ) : children ? ( // children come last, always called
         typeof children === 'function' ? (
           children(props)
