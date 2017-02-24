@@ -37,11 +37,12 @@ class Switch extends React.Component {
   componentWillReceiveProps(nextProps) {
     warning(
       !(nextProps.location && !this.props.location),
-      'You cannot change from an uncontrolled to controlled Switch. You passed in a `location` prop on a re-render when initially there was none.'
+      '<Switch> elements should not change from controlled to uncontrolled (or vice versa). You initially used no "location" prop and then provided one on a subsequent render.'
     )
+
     warning(
       !(!nextProps.location && this.props.location),
-      'You cannot change from a controlled to an uncontrolled Switch. You passed in a `location` prop initially but on a re-render there was none.'
+      '<Switch> elements should not change from controlled to uncontrolled (or vice versa). You provided a "location" prop initially but omitted it on a subsequent render.'
     )
   }
 
