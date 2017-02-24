@@ -55,15 +55,15 @@ class Switch extends React.Component {
     const { children } = this.props
     const { location } = this.state
 
-    let match, matchedRoute
-    React.Children.forEach(children, route => {
+    let match, child
+    React.Children.forEach(children, element => {
       if (match == null) {
-        matchedRoute = route
-        match = matchPath(location.pathname, route.props)
+        child = element
+        match = matchPath(location.pathname, element.props)
       }
     })
 
-    return match ? React.cloneElement(matchedRoute, { computedMatch: match }) : null
+    return match ? React.cloneElement(child, { computedMatch: match }) : null
   }
 }
 
