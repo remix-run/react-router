@@ -1,6 +1,5 @@
 import React, { PropTypes, Component } from 'react'
 import MemoryRouter from 'react-router/MemoryRouter'
-import Route from 'react-router/Route'
 import { Alert } from 'react-native'
 
 /**
@@ -33,7 +32,7 @@ class NativeRouter extends Component {
         getUserConfirmation={getUserConfirmation}
         keyLength={keyLength}
       >
-        <Route render={() => React.Children.only(children)} />
+        {React.Children.only(children)}
       </MemoryRouter>
     )
   }
