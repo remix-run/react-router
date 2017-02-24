@@ -2,7 +2,7 @@ import expect from 'expect'
 import React from 'react'
 import Router from '../Router'
 import ReactDOM from 'react-dom'
-import { createMemoryHistory } from 'history'
+import createHistory from 'history/createMemoryHistory'
 
 describe('A <Router>', () => {
   const node = document.createElement('div')
@@ -15,7 +15,7 @@ describe('A <Router>', () => {
     it('throws an error explaining a Router can only have one child', () => {
       expect(() => {
         ReactDOM.render(
-          <Router history={createMemoryHistory()}>
+          <Router history={createHistory()}>
             <p>Foo</p>
             <p>Bar</p>
           </Router>,
@@ -29,7 +29,7 @@ describe('A <Router>', () => {
     it('does not throw an error', () => {
       expect(() => {
         ReactDOM.render(
-          <Router history={createMemoryHistory()}>
+          <Router history={createHistory()}>
             <p>Bar</p>
           </Router>,
           node
@@ -42,7 +42,7 @@ describe('A <Router>', () => {
     it('does not throw an error', () => {
       expect(() => {
         ReactDOM.render(
-          <Router history={createMemoryHistory()} />,
+          <Router history={createHistory()} />,
           node
         )
       }).toNotThrow()
@@ -62,7 +62,7 @@ describe('A <Router>', () => {
     })
 
     it('sets a root match', () => {
-      const history = createMemoryHistory({ initialEntries: ['/'] })
+      const history = createHistory({ initialEntries: ['/'] })
       ReactDOM.render(
         <Router history={history}>
           <ContextChecker />
@@ -78,7 +78,7 @@ describe('A <Router>', () => {
     })
 
     it('spreads the history object\'s properties', () => {
-      const history = createMemoryHistory()
+      const history = createHistory()
       ReactDOM.render(
         <Router history={history}>
           <ContextChecker />
@@ -92,7 +92,7 @@ describe('A <Router>', () => {
     })
 
     it('updates history properties upon navigation', () => {
-      const history = createMemoryHistory()
+      const history = createHistory()
       ReactDOM.render(
         <Router history={history}>
           <ContextChecker />
@@ -112,7 +112,7 @@ describe('A <Router>', () => {
     })
 
     it('updates match.isExact upon navigation', () => {
-      const history = createMemoryHistory({ initialEntries: ['/'] })
+      const history = createHistory({ initialEntries: ['/'] })
       ReactDOM.render(
         <Router history={history}>
           <ContextChecker />
