@@ -1,13 +1,15 @@
-import React, { PropTypes, Component } from 'react'
+import React, { PropTypes } from 'react'
 import MemoryRouter from 'react-router/MemoryRouter'
 import { Alert } from 'react-native'
 
 /**
- * The public API for a <Router> designed for React Native. Stores
- * locations using AsyncStorage and prompts using Alert.
+ * The public API for a <Router> designed for React Native. Gets
+ * user confirmations via Alert by default.
  */
-class NativeRouter extends Component {
+class NativeRouter extends React.Component {
   static propTypes = {
+    initialEntries: PropTypes.array,
+    initialIndex: PropTypes.number,
     getUserConfirmation: PropTypes.func,
     keyLength: PropTypes.number,
     children: PropTypes.node
@@ -23,18 +25,7 @@ class NativeRouter extends Component {
   }
 
   render() {
-    const { initialEntries, initialIndex, getUserConfirmation, keyLength, children } = this.props
-
-    return (
-      <MemoryRouter
-        initialEntries={initialEntries}
-        initialIndex={initialIndex}
-        getUserConfirmation={getUserConfirmation}
-        keyLength={keyLength}
-      >
-        {React.Children.only(children)}
-      </MemoryRouter>
-    )
+    return <MemoryRouter {...this.props}/>
   }
 }
 
