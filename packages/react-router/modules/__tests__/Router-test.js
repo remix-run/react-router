@@ -62,7 +62,7 @@ describe('A <Router>', () => {
     })
 
     it('sets a root match', () => {
-      const history = createMemoryHistory()
+      const history = createMemoryHistory({ initialEntries: ['/'] })
       ReactDOM.render(
         <Router history={history}>
           <ContextChecker />
@@ -72,7 +72,8 @@ describe('A <Router>', () => {
       expect(rootContext.match).toEqual({
         path: '/',
         url: '/',
-        params: {}
+        params: {},
+        isExact: true
       })
     })
 
@@ -90,7 +91,7 @@ describe('A <Router>', () => {
       })
     })
 
-    it('listens to history and updates history properties upon navigation', () => {
+    it('updates history properties upon navigation', () => {
       const history = createMemoryHistory()
       ReactDOM.render(
         <Router history={history}>
@@ -108,6 +109,22 @@ describe('A <Router>', () => {
       })
       expect(rootContext.action).toBe('PUSH')
       expect(rootContext.length).toBe(2)
+    })
+
+    it('updates match.isExact upon navigation', () => {
+      const history = createMemoryHistory({ initialEntries: ['/'] })
+      ReactDOM.render(
+        <Router history={history}>
+          <ContextChecker />
+        </Router>,
+        node
+      )
+      expect(rootContext.match.isExact).toBe(true)
+
+      const newLocation = { pathname: '/new' }
+      history.push(newLocation)
+
+      expect(rootContext.match.isExact).toBe(false)
     })
   })
 })

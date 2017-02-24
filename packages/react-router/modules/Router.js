@@ -33,12 +33,16 @@ class Router extends React.Component {
       match: {
         path: '/',
         url: '/',
-        params: {}
+        params: {},
+        isExact: history.location.pathname === '/'
       }
     }
 
     history.listen(() => {
       Object.assign(this.router, history)
+      Object.assign(this.router.match, {
+        isExact: history.location.pathname === '/'
+      })
     })
   }
 
