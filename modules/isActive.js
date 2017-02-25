@@ -94,6 +94,7 @@ function routeIsActive(pathname, routes, params) {
         // We have an exact match on the route. Just check that all the params
         // match.
         // FIXME: This doesn't work on repeated params.
+        if (paramNames.length == 0) return false
         return paramNames.every((paramName, index) => (
           String(paramValues[index]) === String(params[paramName])
         ))
