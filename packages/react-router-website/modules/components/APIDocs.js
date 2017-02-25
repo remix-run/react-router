@@ -54,7 +54,7 @@ const docs = [
   { name: 'history',
     html: require('../../../react-router/docs/history.md')
   },
-  { name: 'match',
+  { name: 'matchPath',
     html: require('../../../react-router/docs/match.md')
   }
 ]
