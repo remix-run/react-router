@@ -3,13 +3,15 @@ import React from 'react'
 import ReactDOM from 'react-dom'
 import MemoryRouter from 'react-router/MemoryRouter'
 import HashRouter from '../HashRouter'
+import BrowserRouter from '../BrowserRouter'
 import Link from '../Link'
+import { Simulate } from 'react-addons-test-utils'
 
 describe('A <Link>', () => {
   it('accepts a location "to" prop', () => {
     const location = {
       pathname: '/the/path',
-      search: 'the=query',
+      search: '?the=query',
       hash: '#the-hash'
     }
     const node = document.createElement('div')
@@ -21,18 +23,106 @@ describe('A <Link>', () => {
     ), node)
 
     const href = node.querySelector('a').getAttribute('href')
+    const { pathname, search, hash } = location
 
-    expect(href).toEqual('/the/path?the=query#the-hash')
+    expect(href).toEqual(pathname + search + hash)
   })
 })
 
 describe('When a <Link> is clicked', () => {
-  it('calls its onClick handler')
+  const node = document.createElement('div')
 
-  it('changes the location')
+  let locationInd = 0
+  const generateNextLocation = () => (
+    {
+      pathname: '/the/path' + ++locationInd,
+      search: '?the=query' + locationInd,
+      hash: '#the-hash' + locationInd,
+      state: { locationInd }
+    }
+  )
+
+  const extractCurrentLocation = () => {
+    const { pathname, search, hash } = window.location
+    const { state } = window.history.state
+    return { pathname, search, hash, state }
+  }
+
+  const createLinkAndClick = ({to = generateNextLocation(), ...props} = {}) => {
+    ReactDOM.render((
+      <BrowserRouter>
+        <Link to={to} {...props}>link</Link>
+      </BrowserRouter>
+    ), node)
+
+    const link = node.querySelector('a')
+    Simulate.click(link, {button: 0})
+  }
+
+  afterEach(() => {
+    ReactDOM.unmountComponentAtNode(node)
+  })
+
+  it('calls its onClick handler', () => {
+		let clicked = false
+		const onClick = () => clicked = true
+
+    createLinkAndClick({onClick})
+
+		expect(clicked).toEqual(true)
+	})
+
+  it('changes the location', () => {
+    const location = generateNextLocation()
+    expect(extractCurrentLocation()).toNotEqual(location)
+
+    createLinkAndClick({to: location})
+
+    expect(extractCurrentLocation()).toEqual(location)
+  })
+
+  it('pushes to history', () => {
+    const historyLength = window.history.length
+    createLinkAndClick()
+
+    expect(window.history.length).toEqual(historyLength + 1)
+  })
 
   describe('and the onClick handler calls event.preventDefault()', () => {
-    it('does not change the location')
+    const onClick = (e) => e.preventDefault()
+
+    it('does not change the location', () => {
+      const currentLocation = extractCurrentLocation()
+      createLinkAndClick({onClick})
+
+      expect(extractCurrentLocation()).toEqual(currentLocation)
+    })
+
+    it('does not push to history', () => {
+      const historyLength = window.history.length
+      createLinkAndClick({onClick})
+
+      expect(window.history.length).toEqual(historyLength)
+    })
+  })
+
+  describe('and has a truthy "replace" property', () => {
+    it('does not push to history', () => {
+      const historyLength = window.history.length
+      createLinkAndClick({replace: true})
+
+      expect(window.history.length).toEqual(historyLength)
+    })
+  })
+
+	describe('and it leads to the same (current) location', () => {
+    it('does not push to history', () => {
+      const historyLength = window.history.length
+      const currentLocation = extractCurrentLocation()
+      createLinkAndClick({to: currentLocation})
+
+      expect(window.history.length).toEqual(historyLength)
+    })
   })
 })
 

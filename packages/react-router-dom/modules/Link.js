@@ -1,7 +1,22 @@
 import React, { PropTypes } from 'react'
+import valueEqual from 'value-equal'
 
 const isModifiedEvent = (event) =>
   !!(event.metaKey || event.altKey || event.ctrlKey || event.shiftKey)
+	
+const locationsAreMostlyEqual = (current, next)  => {
+	if (typeof next === "string") {
+		if (current.state !== undefined) return false
+
+		const { pathname, search, hash } = current
+		return pathname + search + hash === next
+	}
+
+	return current.pathname === next.pathname &&
+	current.search === next.search &&
+	current.hash === next.hash &&
+	valueEqual(current.state, next.state)
+}
 
 /**
  * The public API for rendering a router-aware <a>.
@@ -44,7 +59,7 @@ class Link extends React.Component {
       const { router } = this.context
       const { replace, to } = this.props
 
-      if (replace) {
+      if (replace || locationsAreMostlyEqual(router.location, to)) {
         router.replace(to)
       } else {
         router.push(to)
