@@ -7,31 +7,12 @@ import matchPath from './matchPath'
  */
 class Switch extends React.Component {
   static contextTypes = {
-    router: PropTypes.shape({
-      listen: PropTypes.func.isRequired
-    }).isRequired
+    router: PropTypes.object.isRequired
   }
 
   static propTypes = {
     children: PropTypes.node,
     location: PropTypes.object
-  }
-
-  state = {
-    location: this.props.location || this.context.router.location
-  }
-
-  componentWillMount() {
-    if (!this.props.location) {
-      const { router } = this.context
-
-      // Start listening here so we can <Redirect> on the initial render.
-      this.unlisten = router.listen(() => {
-        this.setState({
-          location: router.location
-        })
-      })
-    }
   }
 
   componentWillReceiveProps(nextProps) {
@@ -46,14 +27,9 @@ class Switch extends React.Component {
     )
   }
 
-  componentWillUnmount() {
-    if (this.unlisten)
-      this.unlisten()
-  }
-
   render() {
     const { children } = this.props
-    const { location } = this.state
+    const location = this.props.location || this.context.router.location
 
     let match, child
     React.Children.forEach(children, element => {
