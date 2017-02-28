@@ -24,4 +24,22 @@ The following terms are also used:
 - `goForward()` - (function) Equivalent to `go(1)`
 - `block(prompt)` - (function) Prevents navigation (see [the history docs](https://github.com/ReactTraining/history#blocking-transitions))
 
+## history is mutable
+
+The history object is mutable. Therefore it is recommended to access the [`location`](./location.md) from the render props of [`<Route>`](./Route.md), not from `history.location`. This ensures your assumptions about React are correct in lifecycle hooks. For example:
+
+```js
+class Comp extends React.Component {
+  componentWillReceiveProps(nextProps) {
+    // will be true
+    const locationChanged = nextProps.location !== this.props.location
+
+    // INCORRECT, will *always* be false because history is mutable.
+    const locationChanged= nextProps.history.location !== this.props.history.location
+  }
+}
+
+<Route component={Comp}/>
+```
+
 Additional properties may also be present depending on the implementation you're using. Please refer to [the history documentation](https://github.com/ReactTraining/history#properties) for more details.

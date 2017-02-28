@@ -12,9 +12,11 @@ describe('withRouter', () => {
     ReactDOM.unmountComponentAtNode(node)
   })
 
-  it('injects a "router" prop', () => {
+  it('passes `{ match, location, history }`', () => {
     const ContextChecker = withRouter(props => {
-      expect(props.router).toBeAn('object')
+      expect(props.match).toBeAn('object')
+      expect(props.location).toBeAn('object')
+      expect(props.history).toBeAn('object')
       return null
     })
 

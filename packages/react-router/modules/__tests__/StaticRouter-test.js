@@ -149,7 +149,7 @@ describe('A <StaticRouter>', () => {
       const pathname = '/test-path-please-ignore'
 
       const Link = ({ to, children }) => (
-        <Route children={({ createHref }) => (
+        <Route children={({ history: { createHref } }) => (
           <a href={createHref(to)}>{children}</a>
         )} />
       )

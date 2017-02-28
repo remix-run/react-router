@@ -13,17 +13,26 @@ import { BrowserRouter as Router, Route } from 'react-router-dom'
 </Router>
 ```
 
+## route props
+
 There are 3 ways to render something with a `<Route>`:
 
 - [`<Route component>`](#component-func)
 - [`<Route render>`](#render-func)
 - [`<Route children>`](#children-func)
 
+All three methods will be passed the same three route props
+
+- [match](./match.md)
+- [location](./location.md)
+- [history](./history.md)
+
 You should use only one of these props on a given `<Route>`. See their explanations below to understand why you have 3 options.
 
 ## component: func
 
-A React component to render when the location matches. The component receives all the properties of the [`history`](history.md) object as well as the [`match`](match.md) object that describes how the route matched the current `location`.
+A React component to render only when the location matches. It will be
+rendered with [route props](#route-props).
 
 ```js
 <Route path="/user/:username" component={User}/>
@@ -35,13 +44,13 @@ const User = ({ match }) => {
 }
 ```
 
-When you use `component` (instead of `render`, below) the router uses [`React.createElement`](https://facebook.github.io/react/docs/react-api.html#createelement) to create a new [React element](https://facebook.github.io/react/docs/rendering-elements.html) from the given component.
+When you use `component` (instead of `render`, below) the router uses [`React.createElement`](https://facebook.github.io/react/docs/react-api.html#createelement) to create a new [React element](https://facebook.github.io/react/docs/rendering-elements.html) from the given component. That means if you provide an inline function you will get a lot of undesired remounting. For inline rendering, use the `render` prop (below).
 
 ## render: func
 
-Instead of having a new [React element](https://facebook.github.io/react/docs/rendering-elements.html) created for you using the [`component`](#component-func) prop, you can pass in a function to be called when the location matches. The `render` prop receives all the properties of the [`history`](history.md) object and the [`match`](match.md) in a single object (same props as the `component` receives).
+This allows for convenient inline rendering and wrapping without the undesired remounting explained above.
 
-This allows for convenient inline match rendering and wrapping.
+Instead of having a new [React element](https://facebook.github.io/react/docs/rendering-elements.html) created for you using the [`component`](#component-func) prop, you can pass in a function to be called when the location matches. The `render` prop receives all the same [route props](#route-props) as the `component` render prop.
 
 ```js
 // convenient inline rendering
@@ -65,7 +74,7 @@ const FadingRoute = ({ component: Component, ...rest }) => (
 
 Sometimes you need to render whether the path matches the location or not. In these cases, you can use the function `children` prop. It works exactly like `render` except that it gets called whether there is a match or not.
 
-The `children` prop will be called with an object that contains all the properties of the [`history`](history.md) object. If a route fails to match the URL, the `match` prop will be `null`. This allows you to dynamically adjust your UI based on if the route matches or not.
+The `children` render prop receives all the same [route props](#route-props) as the `component` and `render` methods, except when a route fails to match the URL, then `match` is `null`. This allows you to dynamically adjust your UI based on whether or not the route matches.
 
 Here we're adding an `active` class if the route matches
 

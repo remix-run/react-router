@@ -2,6 +2,8 @@ import expect from 'expect'
 import React from 'react'
 import ReactDOM from 'react-dom'
 import MemoryRouter from '../MemoryRouter'
+import Router from '../Router'
+import createMemoryHistory from 'history/createMemoryHistory'
 import Route from '../Route'
 
 describe('A <Route>', () => {
@@ -35,7 +37,7 @@ describe('A <Route>', () => {
     expect(node.innerHTML).toNotContain(TEXT)
   })
 
-  it('can use a `location` prop instead of `router.location`', () => {
+  it('can use a `location` prop instead of `context.history.location`', () => {
     const TEXT = 'tamarind chutney'
     const node = document.createElement('div')
 
@@ -121,6 +123,60 @@ describe('A <Route>', () => {
     ), node)
 
     expect(node.innerHTML).toContain(TEXT)
+  })
+
+
+})
+
+describe('<Route> render props', () => {
+  const history = createMemoryHistory()
+  const node = document.createElement('div')
+
+  afterEach(() => {
+    ReactDOM.unmountComponentAtNode(node)
+  })
+
+  it('passes `{ match, location, history }` props to `render`', () => {
+    let actual = null
+
+    ReactDOM.render((
+      <Router history={history}>
+        <Route path="/" render={(props) => (actual = props) && null}/>
+      </Router>
+    ), node)
+
+    expect(actual.history).toBe(history)
+    expect(actual.match).toBeAn('object')
+    expect(actual.location).toBeAn('object')
+  })
+
+  it('passes `{ match, location, history }` props to `component`', () => {
+    let actual = null
+    const Component = (props) => (actual = props) && null
+
+    ReactDOM.render((
+      <Router history={history}>
+        <Route path="/" component={Component}/>
+      </Router>
+    ), node)
+
+    expect(actual.history).toBe(history)
+    expect(actual.match).toBeAn('object')
+    expect(actual.location).toBeAn('object')
+  })
+
+  it('passes `{ match, location, history }` props to `children`', () => {
+    let actual = null
+
+    ReactDOM.render((
+      <Router history={history}>
+        <Route path="/" children={(props) => (actual = props) && null}/>
+      </Router>
+    ), node)
+
+    expect(actual.history).toBe(history)
+    expect(actual.match).toBeAn('object')
+    expect(actual.location).toBeAn('object')
   })
 })
 
