@@ -31,7 +31,7 @@ class Route extends React.Component {
   getChildContext() {
     return {
       route: {
-        ...this.props,
+        location: this.props.location || this.context.history.location,
         match: this.state.match
       }
     }
@@ -69,7 +69,9 @@ class Route extends React.Component {
   render() {
     const { match } = this.state
     const { children, component, render } = this.props
-    const props = { ...this.context.history, match }
+    const { history } = this.context
+    const { location } = history
+    const props = { match, location, history }
 
     return (
       component ? ( // component prop gets first priority, only called if there's a match
