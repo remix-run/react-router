@@ -1,8 +1,9 @@
+import warning from 'warning'
 import invariant from 'invariant'
 import React, { PropTypes } from 'react'
 
 /**
- * The public API for putting history on context.router.
+ * The public API for putting history on context.
  */
 class Router extends React.Component {
   static propTypes = {
@@ -11,12 +12,27 @@ class Router extends React.Component {
   }
 
   static childContextTypes = {
-    router: PropTypes.object.isRequired
+    history: PropTypes.object.isRequired,
+    route: PropTypes.object.isRequired
   }
 
   getChildContext() {
     return {
-      router: this.router
+      history: this.props.history,
+      route: this.state.match
+    }
+  }
+
+  state = {
+    match: this.computeMatch(this.props.history.location.pathname)
+  }
+
+  computeMatch(pathname) {
+    return {
+      path: '/',
+      url: '/',
+      params: {},
+      isExact: pathname === '/'
     }
   }
 
@@ -28,22 +44,25 @@ class Router extends React.Component {
       'A <Router> may have only one child element'
     )
 
-    this.router = {
-      ...history,
-      match: {
-        path: '/',
-        url: '/',
-        params: {},
-        isExact: history.location.pathname === '/'
-      }
-    }
-
-    history.listen(() => {
-      Object.assign(this.router, history)
-      Object.assign(this.router.match, {
-        isExact: history.location.pathname === '/'
+    // Do this here so we can setState when a <Redirect> changes the
+    // location in componentWillMount. This happens e.g. when doing
+    // server rendering using a <StaticRouter>.
+    this.unlisten = history.listen(() => {
+      this.setState({
+        match: this.computeMatch(history.location.pathname)
       })
     })
+  }
+
+  componentWillReceiveProps(nextProps) {
+    warning(
+      this.props.history === nextProps.history,
+      'You cannot change <Router history>'
+    )
+  }
+
+  componentWillUnmount() {
+    this.unlisten()
   }
 
   render() {

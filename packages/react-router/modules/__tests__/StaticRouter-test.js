@@ -8,15 +8,15 @@ import Route from '../Route'
 import Prompt from '../Prompt'
 
 describe('A <StaticRouter>', () => {
-  it('puts a router on context', () => {
-    let router
+  it('puts history on context', () => {
+    let history
     const ContextChecker = (props, context) => {
-      router = context.router
+      history = context.history
       return null
     }
 
     ContextChecker.contextTypes = {
-      router: PropTypes.object.isRequired
+      history: PropTypes.object.isRequired
     }
 
     const context = {}
@@ -27,7 +27,7 @@ describe('A <StaticRouter>', () => {
       </StaticRouter>
     )
 
-    expect(router).toBeAn('object')
+    expect(history).toBeAn('object')
   })
 
   it('reports PUSH actions on the context object', () => {
@@ -164,7 +164,7 @@ describe('A <StaticRouter>', () => {
     })
   })
 
-  describe('render a <Prompt />', () => {
+  describe('render a <Prompt>', () => {
     it('does nothing', () => {
       const context = {}
       const node = document.createElement('div')

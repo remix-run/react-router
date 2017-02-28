@@ -4,25 +4,25 @@ import ReactDOM from 'react-dom'
 import BrowserRouter from '../BrowserRouter'
 
 describe('A <BrowserRouter>', () => {
-  it('puts a router on context', () => {
-    let router
-    const RouterSubject = (props, context) => {
-      router = context.router
+  it('puts history on context', () => {
+    let history
+    const ContextChecker = (props, context) => {
+      history = context.history
       return null
     }
 
-    RouterSubject.contextTypes = {
-      router: PropTypes.object.isRequired
+    ContextChecker.contextTypes = {
+      history: PropTypes.object.isRequired
     }
 
     const node = document.createElement('div')
 
     ReactDOM.render((
       <BrowserRouter>
-        <RouterSubject/>
+        <ContextChecker/>
       </BrowserRouter>
     ), node)
 
-    expect(router).toBeAn('object')
+    expect(history).toBeAn('object')
   })
 })

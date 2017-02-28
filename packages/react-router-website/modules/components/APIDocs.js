@@ -48,8 +48,8 @@ const docs = [
   { name: 'withRouter',
     html: require('../../../react-router/docs/withRouter.md')
   },
-  { name: 'context.router',
-    html: require('../../../react-router/docs/context.router.md')
+  { name: 'context.history',
+    html: require('../../../react-router/docs/context.history.md')
   },
   { name: 'history',
     html: require('../../../react-router/docs/history.md')

@@ -23,7 +23,7 @@ You should use only one of these props on a given `<Route>`. See their explanati
 
 ## component: func
 
-A React component to render when the location matches. The component receives all the properties on [`context.router`](context.router.md).
+A React component to render when the location matches. The component receives all the properties of the [`history`](history.md) object as well as the [`match`](match.md) object that describes how the route matched the current `location`.
 
 ```js
 <Route path="/user/:username" component={User}/>
@@ -39,7 +39,7 @@ When you use `component` (instead of `render`, below) the router uses [`React.cr
 
 ## render: func
 
-Instead of having a new [React element](https://facebook.github.io/react/docs/rendering-elements.html) created for you using the [`component`](#component-func) prop, you can pass in a function to be called when the location matches. The `render` prop receives all the properties of [`context.router`](context.router.md) in a single object.
+Instead of having a new [React element](https://facebook.github.io/react/docs/rendering-elements.html) created for you using the [`component`](#component-func) prop, you can pass in a function to be called when the location matches. The `render` prop receives all the properties of the [`history`](history.md) object and the [`match`](match.md) in a single object (same props as the `component` receives).
 
 This allows for convenient inline match rendering and wrapping.
 
@@ -65,7 +65,7 @@ const FadingRoute = ({ component: Component, ...rest }) => (
 
 Sometimes you need to render whether the path matches the location or not. In these cases, you can use the function `children` prop. It works exactly like `render` except that it gets called whether there is a match or not.
 
-The `children` prop will be called with an object that contains all the properties on [`context.router`](context.router.md). If a route fails to match the URL, the `match` prop will be `null`. This allows you to dynamically adjust your UI based on if the route matches or not.
+The `children` prop will be called with an object that contains all the properties of the [`history`](history.md) object. If a route fails to match the URL, the `match` prop will be `null`. This allows you to dynamically adjust your UI based on if the route matches or not.
 
 Here we're adding an `active` class if the route matches
 

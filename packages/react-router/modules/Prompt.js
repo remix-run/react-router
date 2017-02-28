@@ -6,7 +6,7 @@ import React, { PropTypes } from 'react'
  */
 class Prompt extends React.Component {
   static contextTypes = {
-    router: PropTypes.shape({
+    history: PropTypes.shape({
       block: PropTypes.func.isRequired
     }).isRequired
   }
@@ -27,7 +27,7 @@ class Prompt extends React.Component {
     if (this.unblock)
       this.unblock()
 
-    this.unblock = this.context.router.block(message)
+    this.unblock = this.context.history.block(message)
   }
 
   disable() {

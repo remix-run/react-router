@@ -4,15 +4,15 @@ import ReactDOM from 'react-dom'
 import MemoryRouter from '../MemoryRouter'
 
 describe('A <MemoryRouter>', () => {
-  it('puts a router on context', () => {
-    let router
+  it('puts history on context', () => {
+    let history
     const ContextChecker = (props, context) => {
-      router = context.router
+      history = context.history
       return null
     }
 
     ContextChecker.contextTypes = {
-      router: PropTypes.object.isRequired
+      history: PropTypes.object.isRequired
     }
 
     const node = document.createElement('div')
@@ -23,6 +23,6 @@ describe('A <MemoryRouter>', () => {
       </MemoryRouter>
     ), node)
 
-    expect(router).toBeAn('object')
+    expect(history).toBeAn('object')
   })
 })

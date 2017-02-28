@@ -4,11 +4,11 @@ const isModifiedEvent = (event) =>
   !!(event.metaKey || event.altKey || event.ctrlKey || event.shiftKey)
 
 /**
- * The public API for rendering a router-aware <a>.
+ * The public API for rendering a history-aware <a>.
  */
 class Link extends React.Component {
   static contextTypes = {
-    router: PropTypes.shape({
+    history: PropTypes.shape({
       push: PropTypes.func.isRequired,
       replace: PropTypes.func.isRequired,
       createHref: PropTypes.func.isRequired
@@ -41,13 +41,13 @@ class Link extends React.Component {
     ) {
       event.preventDefault()
 
-      const { router } = this.context
+      const { history } = this.context
       const { replace, to } = this.props
 
       if (replace) {
-        router.replace(to)
+        history.replace(to)
       } else {
-        router.push(to)
+        history.push(to)
       }
     }
   }
@@ -55,7 +55,7 @@ class Link extends React.Component {
   render() {
     const { replace, to, ...props } = this.props // eslint-disable-line no-unused-vars
 
-    const href = this.context.router.createHref(
+    const href = this.context.history.createHref(
       typeof to === 'string' ? { pathname: to } : to
     )
 

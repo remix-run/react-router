@@ -12,7 +12,7 @@ describe('A <Router>', () => {
   })
 
   describe('when it has more than one child', () => {
-    it('throws an error explaining a Router can only have one child', () => {
+    it('throws an error explaining a Router may have only one child', () => {
       expect(() => {
         ReactDOM.render(
           <Router history={createHistory()}>
@@ -49,27 +49,47 @@ describe('A <Router>', () => {
     })
   })
 
-  describe('context.router', () => {
+  describe('context', () => {
     let rootContext
     const ContextChecker = (props, context) => {
-      rootContext = context.router
+      rootContext = context
       return null
     }
-    ContextChecker.contextTypes = { router: React.PropTypes.object }
+
+    ContextChecker.contextTypes = {
+      history: React.PropTypes.object,
+      route: React.PropTypes.object
+    }
 
     afterEach(() => {
       rootContext = undefined
     })
 
-    it('sets a root match', () => {
-      const history = createHistory({ initialEntries: ['/'] })
+    it('puts history on context.history', () => {
+      const history = createHistory()
       ReactDOM.render(
         <Router history={history}>
           <ContextChecker />
         </Router>,
         node
       )
-      expect(rootContext.match).toEqual({
+
+      expect(rootContext.history).toBe(history)
+    })
+
+    it('sets context.route at the root', () => {
+      const history = createHistory({
+        initialEntries: ['/']
+      })
+
+      ReactDOM.render(
+        <Router history={history}>
+          <ContextChecker/>
+        </Router>,
+        node
+      )
+
+      expect(rootContext.route).toEqual({
         path: '/',
         url: '/',
         params: {},
@@ -77,54 +97,24 @@ describe('A <Router>', () => {
       })
     })
 
-    it('spreads the history object\'s properties', () => {
-      const history = createHistory()
-      ReactDOM.render(
-        <Router history={history}>
-          <ContextChecker />
-        </Router>,
-        node
-      )
-
-      Object.keys(history).forEach(key => {
-        expect(rootContext[key]).toEqual(history[key])
+    it('updates context.route upon navigation', () => {
+      const history = createHistory({
+        initialEntries: [ '/' ]
       })
-    })
 
-    it('updates history properties upon navigation', () => {
-      const history = createHistory()
       ReactDOM.render(
         <Router history={history}>
           <ContextChecker />
         </Router>,
         node
       )
-      expect(rootContext.length).toBe(1)
+
+      expect(rootContext.route.isExact).toBe(true)
 
       const newLocation = { pathname: '/new' }
       history.push(newLocation)
 
-      Object.keys(newLocation).forEach(key => {
-        expect(rootContext.location[key]).toEqual(newLocation[key])
-      })
-      expect(rootContext.action).toBe('PUSH')
-      expect(rootContext.length).toBe(2)
-    })
-
-    it('updates match.isExact upon navigation', () => {
-      const history = createHistory({ initialEntries: ['/'] })
-      ReactDOM.render(
-        <Router history={history}>
-          <ContextChecker />
-        </Router>,
-        node
-      )
-      expect(rootContext.match.isExact).toBe(true)
-
-      const newLocation = { pathname: '/new' }
-      history.push(newLocation)
-
-      expect(rootContext.match.isExact).toBe(false)
+      expect(rootContext.route.isExact).toBe(false)
     })
   })
 })

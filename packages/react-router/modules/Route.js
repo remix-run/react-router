@@ -1,18 +1,13 @@
-import React, { PropTypes } from 'react'
 import warning from 'warning'
+import React, { PropTypes } from 'react'
 import matchPath from './matchPath'
-
-const computeMatch = (router, { location, computedMatch, path, exact, strict }) =>
-  computedMatch || matchPath((location || router.location).pathname, { path, exact, strict })
 
 /**
  * The public API for matching a single path and rendering.
  */
 class Route extends React.Component {
   static contextTypes = {
-    router: PropTypes.shape({
-      listen: PropTypes.func.isRequired
-    }).isRequired
+    history: PropTypes.object.isRequired
   }
 
   static propTypes = {
@@ -30,61 +25,57 @@ class Route extends React.Component {
   }
 
   static childContextTypes = {
-    router: PropTypes.object.isRequired
+    route: PropTypes.object.isRequired
   }
 
   getChildContext() {
     return {
-      router: this.router
+      route: {
+        ...this.props,
+        match: this.state.match
+      }
     }
   }
 
-  componentWillMount() {
-    const parentRouter = this.context.router
+  state = {
+    match: this.computeMatch(this.props)
+  }
 
-    this.router = {
-      ...parentRouter,
-      match: computeMatch(parentRouter, this.props)
-    }
+  computeMatch({ computedMatch, location, path, strict, exact }) {
+    if (computedMatch)
+      return computedMatch // <Switch> already computed the match for us
 
-    // Start listening here so we can <Redirect> on the initial render.
-    this.unlisten = parentRouter.listen(() => {
-      Object.assign(this.router, parentRouter, {
-        match: computeMatch(parentRouter, this.props)
-      })
+    const pathname = (location || this.context.history.location).pathname
 
-      this.forceUpdate()
-    })
+    return matchPath(pathname, { path, strict, exact })
   }
 
   componentWillReceiveProps(nextProps) {
-    Object.assign(this.router, {
-      match: computeMatch(this.router, nextProps)
-    })
-
     warning(
       !(nextProps.location && !this.props.location),
-      'You cannot change from an uncontrolled to controlled Route. You passed in a `location` prop on a re-render when initially there was none.'
+      '<Route> elements should not change from uncontrolled to controlled (or vice versa). You initially used no "location" prop and then provided one on a subsequent render.'
     )
+
     warning(
       !(!nextProps.location && this.props.location),
-      'You cannot change from a controlled to an uncontrolled Route. You passed in a `location` prop initially but on a re-render there was none.'
+      '<Route> elements should not change from controlled to uncontrolled (or vice versa). You provided a "location" prop initially but omitted it on a subsequent render.'
     )
-  }
 
-  componentWillUnmount() {
-    this.unlisten()
+    this.setState({
+      match: this.computeMatch(nextProps)
+    })
   }
 
   render() {
+    const { match } = this.state
     const { children, component, render } = this.props
-    const props = { ...this.router }
+    const props = { ...this.context.history, match }
 
     return (
       component ? ( // component prop gets first priority, only called if there's a match
-        props.match ? React.createElement(component, props) : null
+        match ? React.createElement(component, props) : null
       ) : render ? ( // render prop is next, only called if there's a match
-        props.match ? render(props) : null
+        match ? render(props) : null
       ) : children ? ( // children come last, always called
         typeof children === 'function' ? (
           children(props)

@@ -32,7 +32,7 @@ describe('NavLink', () => {
             to='/pizza'
             style={defaultStyle}
             activeStyle={activeStyle}
-            >
+          >
             Pizza!
           </NavLink>
         </MemoryRouter>

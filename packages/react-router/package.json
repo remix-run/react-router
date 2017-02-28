@@ -48,7 +48,6 @@
     "babel-eslint": "^6.0.4",
     "babel-loader": "^6.2.10",
     "babel-plugin-dev-expression": "^0.2.1",
-    "babel-plugin-transform-object-assign": "^6.22.0",
     "babel-plugin-transform-react-remove-prop-types": "^0.2.11",
     "babel-preset-es2015": "^6.14.0",
     "babel-preset-react": "^6.5.0",

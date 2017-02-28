@@ -1,35 +1,21 @@
-import React, { PropTypes } from 'react'
+import React from 'react'
+import Route from './Route'
 
 /**
  * A public higher-order component for re-rendering as the
- * location changes. Also, passes ...context.router as props.
+ * location changes. Also, passes through all <Route> props
+ * on the "router" prop.
  */
 const withRouter = (component) => {
-  return class extends React.Component {
-    static displayName = `withRouter(${component.displayName || component.name})`
+  const c = (props) => (
+    <Route render={router => (
+      React.createElement(component, { ...props, router })
+    )}/>
+  )
 
-    static contextTypes = {
-      router: PropTypes.shape({
-        listen: PropTypes.func.isRequired
-      }).isRequired
-    }
+  c.displayName = `withRouter(${component.displayName || component.name})`
 
-    componentWillMount() {
-      // Start listening here so we can <Redirect> on the initial render.
-      this.unlisten = this.context.router.listen(() => this.forceUpdate())
-    }
-
-    componentWillUnmount() {
-      this.unlisten()
-    }
-
-    render() {
-      return React.createElement(component, {
-        ...this.props,
-        ...this.context.router
-      })
-    }
-  }
+  return c
 }
 
 export default withRouter
