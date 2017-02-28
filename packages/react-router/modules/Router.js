@@ -19,7 +19,9 @@ class Router extends React.Component {
   getChildContext() {
     return {
       history: this.props.history,
-      route: this.state.match
+      route: {
+        match: this.state.match
+      }
     }
   }
 
