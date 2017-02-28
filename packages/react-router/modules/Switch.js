@@ -15,10 +15,6 @@ class Switch extends React.Component {
     location: PropTypes.object
   }
 
-  state = {
-    location: this.props.location || this.context.history.location
-  }
-
   componentWillReceiveProps(nextProps) {
     warning(
       !(nextProps.location && !this.props.location),
@@ -29,15 +25,11 @@ class Switch extends React.Component {
       !(!nextProps.location && this.props.location),
       '<Switch> elements should not change from controlled to uncontrolled (or vice versa). You provided a "location" prop initially but omitted it on a subsequent render.'
     )
-
-    this.setState({
-      location: nextProps.location || this.context.history.location
-    })
   }
 
   render() {
     const { children } = this.props
-    const { location } = this.state
+    const location = this.props.location || this.context.history.location
 
     let match, child
     React.Children.forEach(children, element => {
