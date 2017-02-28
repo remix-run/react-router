@@ -1,5 +1,6 @@
 import warning from 'warning'
 import invariant from 'invariant'
+import Route from './Route'
 import React, { PropTypes } from 'react'
 
 /**
@@ -18,23 +19,7 @@ class Router extends React.Component {
 
   getChildContext() {
     return {
-      history: this.props.history,
-      route: {
-        match: this.state.match
-      }
-    }
-  }
-
-  state = {
-    match: this.computeMatch(this.props.history.location.pathname)
-  }
-
-  computeMatch(pathname) {
-    return {
-      path: '/',
-      url: '/',
-      params: {},
-      isExact: pathname === '/'
+      history: this.props.history
     }
   }
 
@@ -50,9 +35,7 @@ class Router extends React.Component {
     // location in componentWillMount. This happens e.g. when doing
     // server rendering using a <StaticRouter>.
     this.unlisten = history.listen(() => {
-      this.setState({
-        match: this.computeMatch(history.location.pathname)
-      })
+      this.forceUpdate()
     })
   }
 
@@ -69,7 +52,11 @@ class Router extends React.Component {
 
   render() {
     const { children } = this.props
-    return children ? React.Children.only(children) : null
+    return children ? (
+      <Route path="/" render={() => (
+        React.Children.only(children)
+      )}/>
+    ) : null
   }
 }
 

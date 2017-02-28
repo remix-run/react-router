@@ -89,12 +89,10 @@ describe('A <Router>', () => {
         node
       )
 
-      expect(rootContext.route).toEqual({
-        path: '/',
-        url: '/',
-        params: {},
-        isExact: true
-      })
+      expect(rootContext.route.match.path).toEqual('/')
+      expect(rootContext.route.match.url).toEqual('/')
+      expect(rootContext.route.match.params).toEqual({})
+      expect(rootContext.route.match.isExact).toEqual(true)
     })
 
     it('updates context.route upon navigation', () => {
@@ -109,12 +107,12 @@ describe('A <Router>', () => {
         node
       )
 
-      expect(rootContext.route.isExact).toBe(true)
+      expect(rootContext.route.match.isExact).toBe(true)
 
       const newLocation = { pathname: '/new' }
       history.push(newLocation)
 
-      expect(rootContext.route.isExact).toBe(false)
+      expect(rootContext.route.match.isExact).toBe(false)
     })
   })
 })
