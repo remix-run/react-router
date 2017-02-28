@@ -121,4 +121,21 @@ describe('A <Switch>', () => {
     expect(node.innerHTML).toNotContain('cup')
     expect(node.innerHTML).toContain('bub')
   })
+
+  it('handles comments', () => {
+    const node = document.createElement('div')
+
+    ReactDOM.render((
+      <MemoryRouter initialEntries={[ '/cupcakes' ]}>
+        <Switch>
+          <Route path="/bubblegum" render={() => <div>bub</div>}/>
+          {/* this is a comment */}
+          <Route path="/cupcakes" render={() => <div>cup</div>}/>
+        </Switch>
+      </MemoryRouter>
+    ), node)
+
+    expect(node.innerHTML).toNotContain('bub')
+    expect(node.innerHTML).toContain('cup')
+  })
 })
