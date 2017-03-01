@@ -37,7 +37,7 @@ describe('A <Route>', () => {
     expect(node.innerHTML).toNotContain(TEXT)
   })
 
-  it('can use a `location` prop instead of `context.history.location`', () => {
+  it('can use a `location` prop instead of `context.route.location`', () => {
     const TEXT = 'tamarind chutney'
     const node = document.createElement('div')
 
@@ -125,7 +125,21 @@ describe('A <Route>', () => {
     expect(node.innerHTML).toContain(TEXT)
   })
 
+  it('matches using nextContext when updating', () => {
+    const node = document.createElement('div')
 
+    let push
+    ReactDOM.render((
+      <MemoryRouter initialEntries={[ '/sushi/california' ]}>
+        <Route path="/sushi/:roll" render={({ history, match }) => {
+          push = history.push
+          return <div>{match.url}</div>
+        }}/>
+      </MemoryRouter>
+    ), node)
+    push('/sushi/spicy-tuna')
+    expect(node.innerHTML).toContain('/sushi/spicy-tuna')
+  })
 })
 
 describe('<Route> render props', () => {
