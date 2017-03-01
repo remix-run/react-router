@@ -3,7 +3,7 @@ import { TouchableHighlight } from 'react-native'
 
 class Link extends Component {
   static contextTypes = {
-    router: React.PropTypes.object
+    history: React.PropTypes.object
   }
 
   static propTypes = {
@@ -21,13 +21,13 @@ class Link extends Component {
   }
 
   handlePress = () => {
-    const { router } = this.context
+    const { history } = this.context
     const { to, replace } = this.props
 
     if (replace) {
-      router.replace(to)
+      history.replace(to)
     } else {
-      router.push(to)
+      history.push(to)
     }
   }
 
