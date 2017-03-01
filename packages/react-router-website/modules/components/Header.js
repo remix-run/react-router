@@ -27,6 +27,7 @@ const NavBar = () => (
       <NavLink to="/api">API</NavLink>
       <NavLink href="https://www.npmjs.com/package/react-router">NPM</NavLink>
       <NavLink href="https://github.com/ReactTraining/react-router">GitHub</NavLink>
+      <NavLink href="https://reacttraining.com">Learn React</NavLink>
     </H>
   </H>
 )
