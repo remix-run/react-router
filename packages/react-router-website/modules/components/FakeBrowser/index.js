@@ -61,7 +61,7 @@ class FakeBrowser extends React.Component {
 
     return (
       <MemoryRouter getUserConfirmation={getUserConfirmation}>
-        <Route render={({ canGo, goBack, goForward, push, location }) => (
+        <Route render={({ history, location }) => (
           <V
             className="fake-browser"
             background="white"
@@ -78,10 +78,10 @@ class FakeBrowser extends React.Component {
               borderBottom="solid 1px #ccc"
               padding={`0 ${PAD / 2}px`}
             >
-              <Button onClick={goBack} disabled={!canGo(-1)}>
+              <Button onClick={history.goBack} disabled={!history.canGo(-1)}>
                 <LeftArrowIcon height="1em" width="1em" style={{ verticalAlign: 'middle', marginTop: -3 }}/>
               </Button>
-              <Button onClick={goForward} disabled={!canGo(1)}>
+              <Button onClick={history.goForward} disabled={!history.canGo(1)}>
                 <RightArrowIcon height="1em" width="1em" style={{ verticalAlign: 'middle', marginTop: -3 }}/>
               </Button>
               <B
@@ -114,7 +114,7 @@ class FakeBrowser extends React.Component {
                     onKeyDown: (e) => {
                       if (e.key === 'Enter') {
                         this.setState({ url: null })
-                        push(e.target.value)
+                        history.push(e.target.value)
                       }
                     }
                   }}

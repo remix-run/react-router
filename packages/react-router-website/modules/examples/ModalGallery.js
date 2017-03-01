@@ -67,14 +67,14 @@ const ImageView = ({ match }) => {
   )
 }
 
-const Modal = ({ match, goBack }) => {
+const Modal = ({ match, history }) => {
   const image = IMAGES[parseInt(match.params.id, 10)]
   if (!image) {
     return null
   }
   const back = (e) => {
     e.stopPropagation()
-    goBack()
+    history.goBack()
   }
   return (
     <div
@@ -117,7 +117,7 @@ class ModalSwitch extends React.Component {
   componentWillUpdate(nextProps) {
     const { location } = this.props
     // set previousLocation if props.location is not modal
-    if (nextProps.action !== 'POP' && (!location.state || !location.state.modal)) {
+    if (nextProps.history.action !== 'POP' && (!location.state || !location.state.modal)) {
       this.previousLocation = this.props.location
     }
   }
