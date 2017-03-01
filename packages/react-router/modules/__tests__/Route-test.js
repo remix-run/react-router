@@ -266,7 +266,7 @@ describe('A <Route location>', () => {
 
   describe('children', () => {
     it('uses parent\'s prop location', () => {
-      const TEXT = 'tamarind chutney'
+      const TEXT = 'cheddar pretzel'
       const node = document.createElement('div')
 
       ReactDOM.render((
@@ -287,7 +287,7 @@ describe('A <Route location>', () => {
     })
     
     it('continues to use parent\'s prop location after navigation', () => {
-      const TEXT = 'tamarind chutney'
+      const TEXT = 'cheddar pretzel'
       const node = document.createElement('div')
       let push
       ReactDOM.render((
@@ -295,8 +295,8 @@ describe('A <Route location>', () => {
           <Route
             location={{ pathname: '/pretzels/cheddar' }}
             path="/pretzels"
-            render={({ push:pushFn }) => {
-              push = pushFn
+            render={({ history }) => {
+              push = history.push
               return (
                 <Route path='/pretzels/cheddar' render={() => (
                 <h1>{TEXT}</h1>

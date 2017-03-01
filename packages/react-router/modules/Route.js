@@ -70,8 +70,8 @@ class Route extends React.Component {
   render() {
     const { match } = this.state
     const { children, component, render } = this.props
-    const { history } = this.context
-    const { location } = history
+    const { history, route } = this.context
+    const location = this.props.location || route.location
     const props = { match, location, history }
 
     return (
