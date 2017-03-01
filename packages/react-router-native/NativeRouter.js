@@ -6,26 +6,24 @@ import { Alert } from 'react-native'
  * The public API for a <Router> designed for React Native. Gets
  * user confirmations via Alert by default.
  */
-class NativeRouter extends React.Component {
-  static propTypes = {
-    initialEntries: PropTypes.array,
-    initialIndex: PropTypes.number,
-    getUserConfirmation: PropTypes.func,
-    keyLength: PropTypes.number,
-    children: PropTypes.node
-  }
+const NativeRouter = (props) => (
+  <MemoryRouter {...props}/>
+)
 
-  static defaultProps = {
-    getUserConfirmation: (message, callback) => {
-      Alert.alert('Confirm', message, [
-        { text: 'Cancel', onPress: () => callback(false) },
-        { text: 'OK', onPress: () => callback(true) }
-      ])
-    }
-  }
+NativeRouter.propTypes = {
+  initialEntries: PropTypes.array,
+  initialIndex: PropTypes.number,
+  getUserConfirmation: PropTypes.func,
+  keyLength: PropTypes.number,
+  children: PropTypes.node
+}
 
-  render() {
-    return <MemoryRouter {...this.props}/>
+NativeRouter.defaultProps = {
+  getUserConfirmation: (message, callback) => {
+    Alert.alert('Confirm', message, [
+      { text: 'Cancel', onPress: () => callback(false) },
+      { text: 'OK', onPress: () => callback(true) }
+    ])
   }
 }
 
