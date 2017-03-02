@@ -18,7 +18,7 @@ The next version of React Router (v4) is in beta now.
 ### Docs & Help
 
 - [Tutorial – do this first!](https://github.com/reactjs/react-router-tutorial)
-- [Guides and API docs](/docs)
+- [Guides and API docs (v2, v3)](/docs)
 - [Troubleshooting guide](https://github.com/ReactTraining/react-router/blob/master/docs/Troubleshooting.md)
 - [Changelog](/CHANGES.md)
 - [Stack Overflow](http://stackoverflow.com/questions/tagged/react-router)
