@@ -10,14 +10,9 @@ import {
 const IMAGES = [
   { id: 0, title: 'Dark Orchid', color: 'DarkOrchid' },
   { id: 1, title: 'Lime Green', color: 'LimeGreen' },
-  { id: 2, title: 'Gold', color: 'Gold' },
-  { id: 3, title: 'Midnight Blue', color: 'MidnightBlue' },
-  { id: 4, title: 'Dark Slate Gray', color: 'DarkSlateGray' },
-  { id: 5, title: 'Tomato', color: 'Tomato' },
-  { id: 6, title: 'Seven Ate Nine', color: '#789' },
-  { id: 7, title: 'Olive Drab', color: 'OliveDrab' },
-  { id: 8, title: 'Crimson', color: 'Crimson' },
-  { id: 9, title: 'Sea Green', color: 'SeaGreen' }
+  { id: 2, title: 'Tomato', color: 'Tomato' },
+  { id: 3, title: 'Seven Ate Nine', color: '#789' },
+  { id: 4, title: 'Crimson', color: 'Crimson' }
 ]
 
 const Thumbnail = ({ color }) =>
@@ -31,8 +26,8 @@ const Home = () => (
     <Link to='/gallery'>Visit the Gallery</Link>
     <h2>Featured Images</h2>
     <ul>
-      <li><Link to='/img/5'>Tomato</Link></li>
-      <li><Link to='/img/9'>Sea Green</Link></li>
+      <li><Link to='/img/2'>Tomato</Link></li>
+      <li><Link to='/img/4'>Crimson</Link></li>
     </ul>
   </div>
 )
