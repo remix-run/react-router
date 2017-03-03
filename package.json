@@ -102,5 +102,8 @@
     "route",
     "routes",
     "router"
-  ]
+  ],
+  "system": { 
+    "main": "lib/umd/ReactRouter.min" 
+  }
 }
