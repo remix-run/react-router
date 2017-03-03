@@ -7,7 +7,7 @@ import matchPath from './matchPath'
  */
 class Switch extends React.Component {
   static contextTypes = {
-    history: PropTypes.object.isRequired
+    route: PropTypes.object.isRequired
   }
 
   static propTypes = {
@@ -29,7 +29,7 @@ class Switch extends React.Component {
 
   render() {
     const { children } = this.props
-    const location = this.props.location || this.context.history.location
+    const location = this.props.location || this.context.route.location
 
     let match, child
     React.Children.forEach(children, element => {
@@ -39,7 +39,7 @@ class Switch extends React.Component {
       }
     })
 
-    return match ? React.cloneElement(child, { computedMatch: match }) : null
+    return match ? React.cloneElement(child, { location, computedMatch: match }) : null
   }
 }
 

@@ -61,6 +61,11 @@ const EXAMPLES = [
     path: '/examples/route-config',
     load: require('bundle?lazy!babel!../examples/RouteConfig'),
     loadSource: require('bundle?lazy!!prismjs?lang=jsx!../examples/RouteConfig.js')
+  },
+  { name: 'Modal Gallery',
+    path: '/examples/modal-gallery',
+    load: require('bundle?lazy!babel!../examples/ModalGallery'),
+    loadSource: require('bundle?lazy!!prismjs?lang=jsx!../examples/ModalGallery.js')
   }
 ]
 

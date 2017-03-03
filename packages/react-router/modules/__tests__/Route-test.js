@@ -37,7 +37,7 @@ describe('A <Route>', () => {
     expect(node.innerHTML).toNotContain(TEXT)
   })
 
-  it('can use a `location` prop instead of `context.history.location`', () => {
+  it('can use a `location` prop instead of `context.route.location`', () => {
     const TEXT = 'tamarind chutney'
     const node = document.createElement('div')
 
@@ -125,7 +125,21 @@ describe('A <Route>', () => {
     expect(node.innerHTML).toContain(TEXT)
   })
 
+  it('matches using nextContext when updating', () => {
+    const node = document.createElement('div')
 
+    let push
+    ReactDOM.render((
+      <MemoryRouter initialEntries={[ '/sushi/california' ]}>
+        <Route path="/sushi/:roll" render={({ history, match }) => {
+          push = history.push
+          return <div>{match.url}</div>
+        }}/>
+      </MemoryRouter>
+    ), node)
+    push('/sushi/spicy-tuna')
+    expect(node.innerHTML).toContain('/sushi/spicy-tuna')
+  })
 })
 
 describe('<Route> render props', () => {
@@ -241,5 +255,74 @@ describe('A <Route exact strict>', () => {
     ), node)
 
     expect(node.innerHTML).toNotContain(TEXT)
+  })
+})
+
+describe('A <Route location>', () => {
+  it('can use a `location` prop instead of `router.location`', () => {
+    const TEXT = 'tamarind chutney'
+    const node = document.createElement('div')
+
+    ReactDOM.render((
+      <MemoryRouter initialEntries={[ '/mint' ]}>
+        <Route
+          location={{ pathname: '/tamarind' }}
+          path="/tamarind"
+          render={() => (
+            <h1>{TEXT}</h1>
+          )}
+        />
+      </MemoryRouter>
+    ), node)
+
+    expect(node.innerHTML).toContain(TEXT)
+  })
+
+  describe('children', () => {
+    it('uses parent\'s prop location', () => {
+      const TEXT = 'cheddar pretzel'
+      const node = document.createElement('div')
+
+      ReactDOM.render((
+        <MemoryRouter initialEntries={[ '/popcorn' ]}>
+          <Route
+            location={{ pathname: '/pretzels/cheddar' }}
+            path="/pretzels"
+            render={() => (
+              <Route path='/pretzels/cheddar' render={() => (
+                <h1>{TEXT}</h1>
+              )} />
+            )}
+          />
+        </MemoryRouter>
+      ), node)
+
+      expect(node.innerHTML).toContain(TEXT)
+    })
+    
+    it('continues to use parent\'s prop location after navigation', () => {
+      const TEXT = 'cheddar pretzel'
+      const node = document.createElement('div')
+      let push
+      ReactDOM.render((
+        <MemoryRouter initialEntries={[ '/popcorn' ]}>
+          <Route
+            location={{ pathname: '/pretzels/cheddar' }}
+            path="/pretzels"
+            render={({ history }) => {
+              push = history.push
+              return (
+                <Route path='/pretzels/cheddar' render={() => (
+                <h1>{TEXT}</h1>
+              )} />
+              )
+            }}
+          />
+        </MemoryRouter>
+      ), node)
+      expect(node.innerHTML).toContain(TEXT)
+      push('/chips')
+      expect(node.innerHTML).toContain(TEXT)
+    })
   })
 })

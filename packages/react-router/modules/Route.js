@@ -7,7 +7,8 @@ import matchPath from './matchPath'
  */
 class Route extends React.Component {
   static contextTypes = {
-    history: PropTypes.object.isRequired
+    history: PropTypes.object.isRequired,
+    route: PropTypes.object.isRequired
   }
 
   static propTypes = {
@@ -31,26 +32,26 @@ class Route extends React.Component {
   getChildContext() {
     return {
       route: {
-        location: this.props.location || this.context.history.location,
+        location: this.props.location || this.context.route.location,
         match: this.state.match
       }
     }
   }
 
   state = {
-    match: this.computeMatch(this.props)
+    match: this.computeMatch(this.props, this.context)
   }
 
-  computeMatch({ computedMatch, location, path, strict, exact }) {
+  computeMatch({ computedMatch, location, path, strict, exact }, { route }) {
     if (computedMatch)
       return computedMatch // <Switch> already computed the match for us
 
-    const pathname = (location || this.context.history.location).pathname
+    const pathname = (location || route.location).pathname
 
     return matchPath(pathname, { path, strict, exact })
   }
 
-  componentWillReceiveProps(nextProps) {
+  componentWillReceiveProps(nextProps, nextContext) {
     warning(
       !(nextProps.location && !this.props.location),
       '<Route> elements should not change from uncontrolled to controlled (or vice versa). You initially used no "location" prop and then provided one on a subsequent render.'
@@ -62,15 +63,15 @@ class Route extends React.Component {
     )
 
     this.setState({
-      match: this.computeMatch(nextProps)
+      match: this.computeMatch(nextProps, nextContext)
     })
   }
 
   render() {
     const { match } = this.state
     const { children, component, render } = this.props
-    const { history } = this.context
-    const { location } = history
+    const { history, route } = this.context
+    const location = this.props.location || route.location
     const props = { match, location, history }
 
     return (

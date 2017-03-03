@@ -40,11 +40,11 @@ const fakeAuth = {
   }
 }
 
-const AuthButton = withRouter(({ push }) => (
+const AuthButton = withRouter(({ history }) => (
   fakeAuth.isAuthenticated ? (
     <p>
       Welcome! <button onClick={() => {
-        fakeAuth.signout(() => push('/'))
+        fakeAuth.signout(() => history.push('/'))
       }}>Sign out</button>
     </p>
   ) : (

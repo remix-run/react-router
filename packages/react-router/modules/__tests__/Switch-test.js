@@ -47,25 +47,6 @@ describe('A <Switch>', () => {
     expect(node.innerHTML).toMatch(/two/)
   })
 
-  it('can use a `location` prop instead of `router.location`', () => {
-    const node = document.createElement('div')
-
-    ReactDOM.render((
-      <MemoryRouter initialEntries={[ '/one' ]}>
-        <Switch location={{ pathname: '/two' }}>
-          <Route path="/one" render={() => (
-            <h1>one</h1>
-          )}/>
-          <Route path="/two" render={() => (
-            <h1>two</h1>
-          )}/>
-        </Switch>
-      </MemoryRouter>
-    ), node)
-
-    expect(node.innerHTML).toMatch(/two/)
-  })
-
   it('does not render a second <Route> or <Redirect> that also matches the URL', () => {
     const node = document.createElement('div')
 
@@ -137,5 +118,46 @@ describe('A <Switch>', () => {
 
     expect(node.innerHTML).toNotContain('bub')
     expect(node.innerHTML).toContain('cup')
+  })
+})
+
+
+describe('A <Switch location>', () => {
+  it('can use a `location` prop instead of `router.location`', () => {
+    const node = document.createElement('div')
+
+    ReactDOM.render((
+      <MemoryRouter initialEntries={[ '/one' ]}>
+        <Switch location={{ pathname: '/two' }}>
+          <Route path="/one" render={() => <h1>one</h1>}/>
+          <Route path="/two" render={() => <h1>two</h1>}/>
+        </Switch>
+      </MemoryRouter>
+    ), node)
+
+    expect(node.innerHTML).toMatch(/two/)
+  })
+
+  describe('children', () => {
+    it('passes location prop to matched <Route>', () => {
+      const node = document.createElement('div')
+
+      let propLocation
+      const RouteHoneytrap = (props) => {
+        propLocation = props.location
+        return <Route {...props} />
+      }
+
+      const switchLocation = { pathname: '/two' } 
+      ReactDOM.render((
+        <MemoryRouter initialEntries={[ '/one' ]}>
+          <Switch location={switchLocation}>
+            <Route path="/one" render={() => <h1>one</h1>}/>
+            <RouteHoneytrap path="/two" render={() => <h1>two</h1>}/>
+          </Switch>
+        </MemoryRouter>
+      ), node)
+      expect(propLocation).toEqual(switchLocation)
+    })
   })
 })
