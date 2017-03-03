@@ -1,3 +1,18 @@
+## [v4.0.0-beta.7]
+> Mar 3, 2017
+
+- Added support for `<Redirect>` as a child of a `<Switch>`
+- Fixed a bug where `<Switch>` would always remount children
+- Removed subscriptions to avoid unneccessary rerendering in every `<Route>`
+- Added `<Switch location>` and `<Route location>` props so that "pure" route
+  components can know when the location changes
+- Removed location persistence across app restarts in `<NativeRouter>`
+- Made docs easier to find in individual `packages` directories
+- Split `context.router` into two parts: `context.history` and `context.route`
+- Changed `matchPath` signature to `matchPath(pathname, options)`
+
+[v4.0.0-beta.7]: https://github.com/ReactTraining/react-router/compare/v4.0.0-beta.6...v4.0.0-beta.7
+
 ## [v4.0.0-beta.6]
 > Feb 13, 2017
 
