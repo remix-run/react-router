@@ -94,6 +94,19 @@ describe('isActive', function () {
         })
       })
     })
+
+    it('is active when its optional params match', function (done) {
+      render((
+        <Router history={createHistory('/hello/ryan')}>
+          <Route path="/hello(/:name)" />
+        </Router>
+      ), node, function () {
+        expect(this.router.isActive('/hello/ryan')).toBe(true)
+        expect(this.router.isActive('/hello')).toBe(true)
+        expect(this.router.isActive('/hello/michael')).toBe(true)
+        done()
+      })
+    })
   })
 
   describe('nested routes', function () {
