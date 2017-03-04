@@ -3,8 +3,6 @@
 [build-badge]: https://img.shields.io/travis/ReactTraining/react-router/v4.svg?style=flat-square
 [build]: https://travis-ci.org/ReactTraining/react-router
 
-<img src="/logo/Vertical@2x.png" height="150"/>
-
 Declarative routing for [React](https://facebook.github.io/react).
 
 React Router keeps your UI in sync with the URL. Make the URL your first thought, not an after-thought.
