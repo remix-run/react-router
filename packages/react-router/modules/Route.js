@@ -31,10 +31,7 @@ class Route extends React.Component {
 
   getChildContext() {
     return {
-      route: {
-        location: this.props.location || this.context.route.location,
-        match: this.state.match
-      }
+      route: this.route
     }
   }
 
@@ -51,6 +48,13 @@ class Route extends React.Component {
     return matchPath(pathname, { path, strict, exact })
   }
 
+  componentWillMount() {
+    this.route = {
+      match: this.state.match,
+      location: this.props.location || this.context.route.location
+    }
+  }
+
   componentWillReceiveProps(nextProps, nextContext) {
     warning(
       !(nextProps.location && !this.props.location),
@@ -62,9 +66,14 @@ class Route extends React.Component {
       '<Route> elements should not change from controlled to uncontrolled (or vice versa). You provided a "location" prop initially but omitted it on a subsequent render.'
     )
 
-    this.setState({
-      match: this.computeMatch(nextProps, nextContext)
+    const match = this.computeMatch(nextProps, nextContext)
+
+    Object.assign(this.route, {
+      match,
+      location: nextProps.location || nextContext.route.location
     })
+
+    this.setState({ match })
   }
 
   render() {

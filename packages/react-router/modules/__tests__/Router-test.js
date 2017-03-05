@@ -115,5 +115,61 @@ describe('A <Router>', () => {
 
       expect(rootContext.route.match.isExact).toBe(false)
     })
+
+    it('mutates route object when updating', () => {
+      let location, goForward
+
+      class UpdateBlocker extends React.Component {
+        static contextTypes = {
+          history: React.PropTypes.object
+        }
+
+        shouldComponentUpdate() {
+          return false
+        }
+
+        render() {
+          return <Listener />
+        }
+
+        componentDidMount() {
+          goForward = this.context.history.goForward
+        }
+      }
+
+      class Listener extends React.Component {
+        static contextTypes = {
+          history: React.PropTypes.shape({
+            listen: React.PropTypes.func.isRequired
+          }).isRequired,
+          route: React.PropTypes.object.isRequired
+        }
+
+        componentWillMount() {
+          this.unlisten = this.context.history.listen(() => {
+            this.forceUpdate()
+          })
+        }
+
+        render() {
+          location = this.context.route.location
+          return null
+        }
+      }
+
+      const history = createHistory({
+        initialEntries: [ '/bubblegum', '/shoelaces' ]
+      })
+
+      ReactDOM.render((
+        <Router history={history}>
+          <UpdateBlocker />
+        </Router>
+      ), node)
+
+      expect(location.pathname).toBe('/bubblegum')
+      goForward()
+      expect(location.pathname).toBe('/shoelaces')
+    })
   })
 })

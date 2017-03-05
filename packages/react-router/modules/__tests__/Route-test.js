@@ -140,6 +140,115 @@ describe('A <Route>', () => {
     push('/sushi/spicy-tuna')
     expect(node.innerHTML).toContain('/sushi/spicy-tuna')
   })
+
+  describe('context', () => {
+    const node = document.createElement('div')
+
+    let rootContext
+    const ContextChecker = (props, context) => {
+      rootContext = context
+      return null
+    }
+
+    ContextChecker.contextTypes = {
+      history: React.PropTypes.object,
+      route: React.PropTypes.object
+    }
+
+    afterEach(() => {
+      rootContext = undefined
+      ReactDOM.unmountComponentAtNode(node)
+    })
+
+    it('places its match on context.route', () => {
+      ReactDOM.render(
+        <MemoryRouter initialEntries={[ '/nested/location' ]}>
+          <Route path='/nested' component={ContextChecker} />
+        </MemoryRouter>,
+        node
+      )
+
+      expect(rootContext.route.match.url).toEqual('/nested')
+      expect(rootContext.route.match.path).toEqual('/nested')
+      expect(rootContext.route.match.params).toEqual({})
+      expect(rootContext.route.match.isExact).toEqual(false)
+    })
+
+    it('places its prop location on context.route', () => {
+      const propLocation = {
+        pathname: '/other-location'
+      }
+      ReactDOM.render(
+        <MemoryRouter initialEntries={[ '/nested/location' ]}>
+          <Route
+            location={propLocation}
+            path='/other-location'
+            component={ContextChecker}
+          />
+        </MemoryRouter>,
+        node
+      )
+      expect(rootContext.route.location).toEqual(propLocation)   
+    })
+
+    it('mutates route object when updating', () => {
+      let location, goForward
+
+      class UpdateBlocker extends React.Component {
+        static contextTypes = {
+          history: React.PropTypes.object
+        }
+
+        shouldComponentUpdate() {
+          return false
+        }
+
+        render() {
+          return <Listener />
+        }
+
+        componentDidMount() {
+          goForward = this.context.history.goForward
+        }
+      }
+
+      class Listener extends React.Component {
+        static contextTypes = {
+          history: React.PropTypes.shape({
+            listen: React.PropTypes.func.isRequired
+          }).isRequired,
+          route: React.PropTypes.object.isRequired
+        }
+
+        componentWillMount() {
+          this.unlisten = this.context.history.listen(() => {
+            this.forceUpdate()
+          })
+        }
+
+        render() {
+          location = this.context.route.location
+          return null
+        }
+      }
+
+      const history = createMemoryHistory({
+        initialEntries: [ '/bubblegum', '/shoelaces' ]
+      })
+
+      ReactDOM.render((
+        <Router history={history}>
+          <Route render={() => (
+            <UpdateBlocker />
+          )}/>
+        </Router>
+      ), node)
+
+      expect(location.pathname).toBe('/bubblegum')
+      goForward()
+      expect(location.pathname).toBe('/shoelaces')
+    })
+  })
 })
 
 describe('<Route> render props', () => {
