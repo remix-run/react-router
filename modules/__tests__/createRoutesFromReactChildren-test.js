@@ -29,6 +29,21 @@ describe('createRoutesFromReactChildren', function () {
     }
   }
 
+  class RouteComposite extends Route {
+  }
+  RouteComposite.createRouteFromReactElement = function () {
+    return [
+      {
+        path: '/one',
+        component: Hello
+      },
+      {
+        path: '/two',
+        component: Goodbye
+      }
+    ]
+  }
+
   it('works with index routes', function () {
     const routes = createRoutesFromReactChildren(
       <Route path="/" component={Parent}>
@@ -104,6 +119,23 @@ describe('createRoutesFromReactChildren', function () {
             component: Hello
           }
         ]
+      }
+    ])
+  })
+
+  it('allows createRouteFromReactElement to return an array', function () {
+    const routes = createRoutesFromReactChildren(
+      <RouteComposite />
+    )
+
+    expect(routes).toEqual([
+      {
+        path: '/one',
+        component: Hello
+      },
+      {
+        path: '/two',
+        component: Goodbye
       }
     ])
   })
