@@ -15,6 +15,7 @@ class Redirect extends React.Component {
 
   static propTypes = {
     push: PropTypes.bool,
+    from: PropTypes.string,
     to: PropTypes.oneOfType([
       PropTypes.string,
       PropTypes.object
