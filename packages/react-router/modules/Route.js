@@ -48,7 +48,7 @@ class Route extends React.Component {
 
     const pathname = (location || route.location).pathname
 
-    return matchPath(pathname, { path, strict, exact })
+    return matchPath(pathname, { path, strict, exact }, route.match)
   }
 
   componentWillReceiveProps(nextProps, nextContext) {

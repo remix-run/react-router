@@ -26,7 +26,7 @@ const compilePath = (pattern, options) => {
 /**
  * Public API for matching a URL pathname to a path pattern.
  */
-const matchPath = (pathname, options = {}) => {
+const matchPath = (pathname, options = {}, parent) => {
   if (typeof options === 'string')
     options = { path: options }
 
@@ -34,7 +34,7 @@ const matchPath = (pathname, options = {}) => {
   const path = options.path || options.from
 
   if (!path)
-    return { url: pathname, isExact: true, params: {} }
+    return parent != null ? parent : { url: pathname, isExact: true, params: {} }
 
   const { re, keys } = compilePath(path, { end: exact, strict })
   const match = re.exec(pathname)
