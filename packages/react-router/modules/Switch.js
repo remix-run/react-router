@@ -28,14 +28,18 @@ class Switch extends React.Component {
   }
 
   render() {
+    const { route } = this.context
     const { children } = this.props
-    const location = this.props.location || this.context.route.location
-    const parent = this.context.route.match
+    const location = this.props.location || route.location
+
     let match, child
     React.Children.forEach(children, element => {
+      const { path: pathProp, exact, strict, from } = element.props
+      const path = pathProp || from
+
       if (match == null) {
         child = element
-        match = matchPath(location.pathname, element.props, parent)
+        match = path ? matchPath(location.pathname, { path, exact, strict }) : route.match
       }
     })
 
