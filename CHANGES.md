@@ -1,3 +1,8 @@
+## HEAD
+
+- Pass through the parent `match` object to `<Route>`s w/out a `path`. This also
+  includes components wrapped using `withRouter`
+
 ## [v4.0.0-beta.7]
 > Mar 3, 2017
 
