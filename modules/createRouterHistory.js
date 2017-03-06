@@ -5,7 +5,7 @@ const canUseDOM = !!(
 )
 
 export default function (createHistory) {
-  let history
+  let history = {}
   if (canUseDOM)
     history = useRouterHistory(createHistory)()
   return history
