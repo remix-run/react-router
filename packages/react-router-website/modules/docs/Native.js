@@ -1,6 +1,9 @@
 export default {
   api: [
-    require('../../../react-router-native/docs/api/NativeRouter.md')
+    require('../../../react-router-native/docs/api/NativeRouter.md'),
+    require('../../../react-router-native/docs/api/Link.md'),
+    require('../../../react-router-native/docs/api/DeepLinking.md'),
+    require('../../../react-router-native/docs/api/AndroidBackButton.md'),
   ],
   examples: [
     { label: 'Basic',
