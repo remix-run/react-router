@@ -70,6 +70,11 @@ export default {
       slug: 'route-config',
       load: require('bundle?lazy!babel!../examples/RouteConfig'),
       loadSource: require('bundle?lazy!!prismjs?lang=jsx!../examples/RouteConfig.js')
+    },
+    { label: 'Modal Gallery',
+      slug: 'modal-gallery',
+      load: require('bundle?lazy!babel!../examples/ModalGallery'),
+      loadSource: require('bundle?lazy!!prismjs?lang=jsx!../examples/ModalGallery.js')
     }
   ]
 }
