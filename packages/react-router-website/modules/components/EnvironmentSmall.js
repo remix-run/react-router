@@ -38,6 +38,22 @@ class EnvironmentSmall extends Component {
     animating: false
   }
 
+  componentDidMount() {
+    this.preloadExamples()
+  }
+
+  preloadExamples() {
+    const { data } = this.props
+    data.examples.forEach((example) => {
+      // native doesn't have `load`
+      if (example.load)
+        example.load(() => {})
+      // all have `loadSource`
+      if (example.loadSource)
+        example.loadSource(() => {})
+    })
+  }
+
   componentWillReceiveProps(nextProps) {
     const { anim } = this.state
 
