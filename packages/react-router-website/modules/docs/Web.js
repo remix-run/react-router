@@ -1,18 +1,18 @@
 export default {
   api: [
-    require('../../../react-router-dom/docs/BrowserRouter.md'),
-    require('../../../react-router-dom/docs/HashRouter.md'),
-    require('../../../react-router-dom/docs/Link.md'),
-    require('../../../react-router-dom/docs/NavLink.md'),
+    require('../../../react-router-dom/docs/api/BrowserRouter.md'),
+    require('../../../react-router-dom/docs/api/HashRouter.md'),
+    require('../../../react-router-dom/docs/api/Link.md'),
+    require('../../../react-router-dom/docs/api/NavLink.md')
   ],
 
   guides: [
-    require('../../../react-router-dom/guides/quick-start.md'),
-    require('../../../react-router-dom/guides/server-rendering.md'),
-    require('../../../react-router-dom/guides/data-loading.md'),
-    require('../../../react-router-dom/guides/code-splitting.md'),
-    require('../../../react-router-dom/guides/scroll-restoration.md'),
-    require('../../../react-router/guides/testing.md?web')
+    require('../../../react-router-dom/docs/guides/quick-start.md'),
+    require('../../../react-router-dom/docs/guides/server-rendering.md'),
+    require('../../../react-router-dom/docs/guides/data-loading.md'),
+    require('../../../react-router-dom/docs/guides/code-splitting.md'),
+    require('../../../react-router-dom/docs/guides/scroll-restoration.md'),
+    require('../../../react-router/docs/guides/testing.md?web')
   ],
 
   examples: [

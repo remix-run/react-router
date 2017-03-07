@@ -1,6 +1,6 @@
 export default {
   api: [
-    require('../../../react-router-native/docs/NativeRouter.md')
+    require('../../../react-router-native/docs/api/NativeRouter.md')
   ],
   examples: [
     { label: 'Basic',
@@ -9,8 +9,8 @@ export default {
     }
   ],
   guides: [
-    require('../../../react-router-native/guides/quick-start.md'),
-    require('../../../react-router-native/guides/deep-linking.md'),
-    require('../../../react-router-native/guides/animation.md'),
+    require('../../../react-router-native/docs/guides/quick-start.md'),
+    require('../../../react-router-native/docs/guides/deep-linking.md'),
+    require('../../../react-router-native/docs/guides/animation.md')
   ]
 }
