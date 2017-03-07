@@ -75,7 +75,7 @@ class EnvironmentSmall extends Component {
       }, () => {
         Animated.timing(anim, {
           toValue: goingToChild ? 1 : 0,
-          duration: 375
+          duration: 350
         }).start(() => {
           this.setState({
             animating: false
@@ -220,12 +220,11 @@ class AnimatedParentHeader extends Component {
     const { anim, children } = this.props
     return (
       <Animated.div children={children} style={{
-        transform: [{
-          translateY: anim.interpolate({
-            inputRange: [ 0, 1 ],
-            outputRange: [ '0px', '-50px' ]
-          })
-        }],
+        position: 'relative',
+        top: anim.interpolate({
+          inputRange: [ 0, 1 ],
+          outputRange: [ 0, -50 ]
+        }),
         opacity: anim.interpolate({
           inputRange: [ 0, 0.5 ],
           outputRange: [ 1, 0 ]
@@ -251,12 +250,10 @@ class AnimatedNav extends Component {
         width: '100%',
         bottom: 0,
         background: 'white',
-        transform: [{
-          translateX: anim.interpolate({
-            inputRange: [ 0, 1 ],
-            outputRange: [ '0%', '-25%' ]
-          })
-        }]
+        left: anim.interpolate({
+          inputRange: [ 0, 1 ],
+          outputRange: [ '0%', '-25%' ]
+        })
       }}>
         {children}
       </Animated.div>
@@ -301,28 +298,22 @@ class AnimatedChild extends Component {
         top: 0,
         width: '100%',
         bottom: 0,
-        left: '100%',
         background: 'white',
-        transform: [{
-          translateX: anim.interpolate({
-            inputRange: [ 0, 1 ],
-            outputRange: [ '0%', '-100%' ]
-          })
-        }]
+        left: anim.interpolate({
+          inputRange: [ 0, 1 ],
+          outputRange: [ '100%', '0%' ]
+        })
       }}>
         <Animated.div style={{
           position: 'absolute',
           top: 0,
           width: '80px',
           bottom: 0,
-          left: 0,
-          background: 'linear-gradient(to left, rgba(0,0,0,0.25) 10%, rgba(255,255,255,0) 100%)',
-          transform: [{
-            translateX: anim.interpolate({
-              inputRange: [ 0, 1 ],
-              outputRange: [ '0px', '-80px' ]
-            })
-          }]
+          background: 'linear-gradient(to left, rgba(0,0,0,0.20) 10%, rgba(255,255,255,0) 100%)',
+          left: anim.interpolate({
+            inputRange: [ 0, 1 ],
+            outputRange: [ '0px', '-80px' ]
+          })
         }}/>
         {previousChildren || children}
       </Animated.div>
