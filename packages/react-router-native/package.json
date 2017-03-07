@@ -19,7 +19,7 @@
     "react-native": ">=0.40"
   },
   "dependencies": {
-    "react-router": "^4.0.0-beta.7"
+    "react-router": "4.0.0-beta.7"
   },
   "devDependencies": {
     "babel-jest": "18.0.0",
