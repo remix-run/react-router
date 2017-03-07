@@ -16,11 +16,6 @@ const paths = {
   guide: match => `${match.path}/guides/:mod/:header?`
 }
 
-const getSwitchKey = (location) => (
-  // use same key for api routes so we can scroll headers
-  location.pathname.match(/\/api\//) ? 'api' : location.key
-)
-
 class EnvironmentSmall extends Component {
   static propTypes = {
     data: PropTypes.object,
@@ -108,7 +103,7 @@ class EnvironmentSmall extends Component {
               atParent={match.isExact}
               animating={animating}
             >
-              <Switch key={getSwitchKey(location)} location={location}>
+              <Switch location={location}>
                 <Route
                   path={paths.api(match)}
                   render={({ match: { params: { mod } } }) => (
@@ -150,7 +145,7 @@ class EnvironmentSmall extends Component {
           animating={animating}
         >
           <Page>
-            <Switch key={getSwitchKey(location)} location={location}>
+            <Switch location={location}>
               <Route
                 path={paths.api(match)}
                 render={(props) => (
