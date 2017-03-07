@@ -37,7 +37,7 @@ describe('A <Route>', () => {
     expect(node.innerHTML).toNotContain(TEXT)
   })
 
-  it('can use a `location` prop instead of `context.route.location`', () => {
+  it('can use a `location` prop instead of `context.react_router_route.location`', () => {
     const TEXT = 'tamarind chutney'
     const node = document.createElement('div')
 
@@ -299,7 +299,7 @@ describe('A <Route location>', () => {
 
       expect(node.innerHTML).toContain(TEXT)
     })
-    
+
     it('continues to use parent\'s prop location after navigation', () => {
       const TEXT = 'cheddar pretzel'
       const node = document.createElement('div')

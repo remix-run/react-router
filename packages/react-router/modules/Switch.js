@@ -7,7 +7,7 @@ import matchPath from './matchPath'
  */
 class Switch extends React.Component {
   static contextTypes = {
-    route: PropTypes.object.isRequired
+    react_router_route: PropTypes.object.isRequired
   }
 
   static propTypes = {
@@ -28,9 +28,9 @@ class Switch extends React.Component {
   }
 
   render() {
-    const { route } = this.context
+    const { react_router_route } = this.context
     const { children } = this.props
-    const location = this.props.location || route.location
+    const location = this.props.location || react_router_route.location
 
     let match, child
     React.Children.forEach(children, element => {
@@ -39,7 +39,7 @@ class Switch extends React.Component {
 
       if (match == null) {
         child = element
-        match = path ? matchPath(location.pathname, { path, exact, strict }) : route.match
+        match = path ? matchPath(location.pathname, { path, exact, strict }) : react_router_route.match
       }
     })
 

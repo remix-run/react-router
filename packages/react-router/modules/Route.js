@@ -8,7 +8,7 @@ import matchPath from './matchPath'
 class Route extends React.Component {
   static contextTypes = {
     history: PropTypes.object.isRequired,
-    route: PropTypes.object.isRequired
+    react_router_route: PropTypes.object.isRequired
   }
 
   static propTypes = {
@@ -26,13 +26,13 @@ class Route extends React.Component {
   }
 
   static childContextTypes = {
-    route: PropTypes.object.isRequired
+    react_router_route: PropTypes.object.isRequired
   }
 
   getChildContext() {
     return {
-      route: {
-        location: this.props.location || this.context.route.location,
+      react_router_route: {
+        location: this.props.location || this.context.react_router_route.location,
         match: this.state.match
       }
     }
@@ -42,13 +42,13 @@ class Route extends React.Component {
     match: this.computeMatch(this.props, this.context)
   }
 
-  computeMatch({ computedMatch, location, path, strict, exact }, { route }) {
+  computeMatch({ computedMatch, location, path, strict, exact }, { react_router_route }) {
     if (computedMatch)
       return computedMatch // <Switch> already computed the match for us
 
-    const pathname = (location || route.location).pathname
+    const pathname = (location || react_router_route.location).pathname
 
-    return path ? matchPath(pathname, { path, strict, exact }) : route.match
+    return path ? matchPath(pathname, { path, strict, exact }) : react_router_route.match
   }
 
   componentWillReceiveProps(nextProps, nextContext) {
@@ -70,8 +70,8 @@ class Route extends React.Component {
   render() {
     const { match } = this.state
     const { children, component, render } = this.props
-    const { history, route } = this.context
-    const location = this.props.location || route.location
+    const { history, react_router_route } = this.context
+    const location = this.props.location || react_router_route.location
     const props = { match, location, history }
 
     return (

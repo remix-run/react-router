@@ -58,7 +58,7 @@ describe('A <Router>', () => {
 
     ContextChecker.contextTypes = {
       history: React.PropTypes.object,
-      route: React.PropTypes.object
+      react_router_route: React.PropTypes.object
     }
 
     afterEach(() => {
@@ -77,7 +77,7 @@ describe('A <Router>', () => {
       expect(rootContext.history).toBe(history)
     })
 
-    it('sets context.route at the root', () => {
+    it('sets context.react_router_route at the root', () => {
       const history = createHistory({
         initialEntries: ['/']
       })
@@ -89,14 +89,14 @@ describe('A <Router>', () => {
         node
       )
 
-      expect(rootContext.route.match.path).toEqual('/')
-      expect(rootContext.route.match.url).toEqual('/')
-      expect(rootContext.route.match.params).toEqual({})
-      expect(rootContext.route.match.isExact).toEqual(true)
-      expect(rootContext.route.location).toEqual(history.location)
+      expect(rootContext.react_router_route.match.path).toEqual('/')
+      expect(rootContext.react_router_route.match.url).toEqual('/')
+      expect(rootContext.react_router_route.match.params).toEqual({})
+      expect(rootContext.react_router_route.match.isExact).toEqual(true)
+      expect(rootContext.react_router_route.location).toEqual(history.location)
     })
 
-    it('updates context.route upon navigation', () => {
+    it('updates context.react_router_route upon navigation', () => {
       const history = createHistory({
         initialEntries: [ '/' ]
       })
@@ -108,12 +108,12 @@ describe('A <Router>', () => {
         node
       )
 
-      expect(rootContext.route.match.isExact).toBe(true)
+      expect(rootContext.react_router_route.match.isExact).toBe(true)
 
       const newLocation = { pathname: '/new' }
       history.push(newLocation)
 
-      expect(rootContext.route.match.isExact).toBe(false)
+      expect(rootContext.react_router_route.match.isExact).toBe(false)
     })
   })
 })
