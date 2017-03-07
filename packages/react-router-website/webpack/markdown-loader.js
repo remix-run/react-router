@@ -148,15 +148,13 @@ module.exports = function (content) {
 
 module.exports.pitch = function(remainingRequest, precedingRequest, data) {
   // figures out the environment by either parsing off a query
-  // i.e. '../../react-router/docs/Route.md?web'
-  // so we can import Route.md and render at "/web/api/Route.md"
+  // i.e. '../../react-router/docs/api/Route.md?web'
+  // so we can import Route.md and render at "/web/api/Route"
   // if there is no query then it figures it out based on the
   // require path
   const envMatch = remainingRequest.match(/\?(.+)$/)
   const reverseSplit = remainingRequest.split('/').reverse()
   data.environment = envMatch ?
-    envMatch[1] : envMap[reverseSplit[2]]
-  // we want API docs to be case sensitive `BrowserRouter` not `browserrouter`
-  // but we want guides to be lowercase `getting-started` not `Getting-Started`
-  data.type = reverseSplit[1] === 'docs' ? 'api' : 'guides'
+    envMatch[1] : envMap[reverseSplit[3]] // 3 = react-router|react-router-dom etc.
+  data.type = reverseSplit[1] // api | guide
 }
