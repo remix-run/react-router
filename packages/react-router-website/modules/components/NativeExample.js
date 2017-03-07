@@ -4,6 +4,7 @@ import { Block, Col } from 'jsxstyle'
 import Bundle from './Bundle'
 import SourceViewer from './SourceViewer'
 import SmallScreen from './SmallScreen'
+import Loading from './Loading'
 
 const NativeExample = ({ example }) => (
   <Bundle load={example.loadSource}>
@@ -44,7 +45,7 @@ const NativeExample = ({ example }) => (
           </SmallScreen>
         )}
       </Media>
-    ) : <Block>Loading...</Block>}
+    ) : <Loading/>}
   </Bundle>
 )
 

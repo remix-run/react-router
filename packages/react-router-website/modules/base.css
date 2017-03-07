@@ -187,3 +187,22 @@ markdown table th {
 }
 
 markdown a { color: #d0021b; text-decoration: none }
+
+@keyframes loading {
+  0% { background-position: 0% 50% }
+  50% { background-position: 100% 50% }
+  100% { background-position: 0% 50% }
+}
+
+.loading {
+  animation: loading 10s ease infinite;
+  background-image: linear-gradient(
+    125deg,
+    #fff,
+    #f3f3f3 41%,
+    #ededed 0,
+    #fff
+  );
+  background-size: 300% 300%
+}
+

@@ -4,6 +4,7 @@ import { Block } from 'jsxstyle'
 import Bundle from './Bundle'
 import FakeBrowser from './FakeBrowser'
 import SourceViewer from './SourceViewer'
+import Loading from './Loading'
 
 const WebExample = ({ example }) => (
   <Bundle load={example.load}>
@@ -37,7 +38,7 @@ const WebExample = ({ example }) => (
               </Block>
             )}
           </Media>
-        ) : <Block>Loading...</Block>}
+        ) : <Loading/>}
       </Bundle>
     )}
   </Bundle>

@@ -4,6 +4,7 @@ import EnvironmentSmall from './EnvironmentSmall'
 import Bundle from './Bundle'
 import { Block } from 'jsxstyle'
 import SmallScreen from './SmallScreen'
+import Loading from './Loading'
 
 const envData = {
   web: require('bundle?lazy!../docs/Web'),
@@ -48,7 +49,7 @@ class Environment extends Component {
                 <EnvironmentLarge data={data} match={match}/>
               )
             ) : (
-              <Block>Loading...</Block>
+              <Loading/>
             )}
           </Bundle>
         )}
