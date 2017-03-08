@@ -1,6 +1,7 @@
 import React, { PropTypes } from 'react'
 import Media from 'react-media'
 import { Block } from 'jsxstyle'
+import { Route } from 'react-router-dom'
 import Bundle from './Bundle'
 import FakeBrowser from './FakeBrowser'
 import SourceViewer from './SourceViewer'
@@ -18,17 +19,19 @@ const WebExample = ({ example }) => (
                 background="rgb(45, 45, 45)"
                 padding="40px"
               >
-                <FakeBrowser
-                  key={location.key /*force new instance*/}
-                  position={largeScreen ? 'fixed' : 'static'}
-                  width={largeScreen ? '400px' : 'auto'}
-                  height={largeScreen ? 'auto' : '70vh'}
-                  left="290px"
-                  top="40px"
-                  bottom="40px"
-                >
-                  <Example/>
-                </FakeBrowser>
+                <Route render={({ location }) => (
+                  <FakeBrowser
+                    key={location.key /*force new instance*/}
+                    position={largeScreen ? 'fixed' : 'static'}
+                    width={largeScreen ? '400px' : 'auto'}
+                    height={largeScreen ? 'auto' : '70vh'}
+                    left="290px"
+                    top="40px"
+                    bottom="40px"
+                  >
+                    <Example/>
+                  </FakeBrowser>
+                )}/>
                 <SourceViewer
                   code={src}
                   fontSize="11px"
