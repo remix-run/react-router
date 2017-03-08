@@ -1,6 +1,6 @@
 {
   "name": "react-router-dom",
-  "version": "4.0.0-beta.7",
+  "version": "4.0.0-beta.8",
   "description": "DOM bindings for React Router",
   "repository": "ReactTraining/react-router",
   "license": "MIT",
@@ -42,7 +42,7 @@
   },
   "dependencies": {
     "history": "^4.5.1",
-    "react-router": "^4.0.0-beta.7"
+    "react-router": "^4.0.0-beta.8"
   },
   "devDependencies": {
     "babel-cli": "^6.18.0",
