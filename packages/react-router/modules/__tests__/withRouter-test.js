@@ -13,8 +13,8 @@ describe('withRouter', () => {
     ReactDOM.unmountComponentAtNode(node)
   })
 
-  it('passes `{ match, location, history }`', () => {
-    const ContextChecker = withRouter(props => {
+  it('provides { match, location, history } props', () => {
+    const PropsChecker = withRouter(props => {
       expect(props.match).toBeAn('object')
       expect(props.location).toBeAn('object')
       expect(props.history).toBeAn('object')
@@ -24,15 +24,15 @@ describe('withRouter', () => {
     ReactDOM.render((
       <MemoryRouter initialEntries={[ '/bubblegum' ]}>
         <Route path="/bubblegum" render={() => (
-          <ContextChecker/>
+          <PropsChecker/>
         )}/>
       </MemoryRouter>
     ), node)
   })
 
-  it('passes parent match to wrapped component', () => {
+  it('provides the parent match as a prop to the wrapped component', () => {
     let parentMatch
-    const ContextChecker = withRouter(props => {
+    const PropsChecker = withRouter(props => {
       expect(props.match).toEqual(parentMatch)
       return null
     })
@@ -41,7 +41,7 @@ describe('withRouter', () => {
       <MemoryRouter initialEntries={[ '/bubblegum' ]}>
         <Route path="/:flavor" render={({ match }) => {
           parentMatch = match
-          return <ContextChecker/>
+          return <PropsChecker/>
         }}/>
       </MemoryRouter>
     ), node)

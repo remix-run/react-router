@@ -49,9 +49,8 @@ describe('A <StaticRouter>', () => {
   })
 
   it('provides context.router.history', () => {
-    let history
-    const ContextChecker = (props, context) => {
-      history = context.router.history
+    const ContextChecker = (props, reactContext) => {
+      expect(reactContext.router.history).toBeAn('object')
       return null
     }
 
@@ -66,8 +65,6 @@ describe('A <StaticRouter>', () => {
         <ContextChecker/>
       </StaticRouter>
     )
-
-    expect(history).toBeAn('object')
   })
 
   it('reports PUSH actions on the context object', () => {
@@ -113,9 +110,12 @@ describe('A <StaticRouter>', () => {
   })
 
   it('knows how to parse raw URLs', () => {
-    let location
     const LocationChecker = (props) => {
-      location = props.location
+      expect(props.location).toMatch({
+        pathname: '/the/path',
+        search: '?the=query',
+        hash: '#the-hash'
+      })
       return null
     }
 
@@ -126,19 +126,14 @@ describe('A <StaticRouter>', () => {
         <Route component={LocationChecker}/>
       </StaticRouter>
     )
-
-    expect(location).toMatch({
-      pathname: '/the/path',
-      search: '?the=query',
-      hash: '#the-hash'
-    })
   })
 
   describe('with a basename', () => {
     it('strips the basename from location pathnames', () => {
-      let location
       const LocationChecker = (props) => {
-        location = props.location
+        expect(props.location).toMatch({
+          pathname: '/path'
+        })
         return null
       }
 
@@ -149,10 +144,6 @@ describe('A <StaticRouter>', () => {
           <Route component={LocationChecker}/>
         </StaticRouter>
       )
-
-      expect(location).toMatch({
-        pathname: '/path'
-      })
     })
 
     it('reports PUSH actions on the context object', () => {
@@ -199,6 +190,7 @@ describe('A <StaticRouter>', () => {
           <Link to={pathname} />
         </StaticRouter>
       ), node)
+
       const a = node.getElementsByTagName('a')[0]
       expect(a.getAttribute('href')).toEqual(pathname)
     })
