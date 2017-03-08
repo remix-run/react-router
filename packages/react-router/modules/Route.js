@@ -58,6 +58,25 @@ class Route extends React.Component {
     return path ? matchPath(pathname, { path, strict, exact }) : route.match
   }
 
+  componentWillMount() {
+    const { component, render, children } = this.props
+
+    warning(
+      !(component && render),
+      'You should not use <Route component> and <Route render> in the same route; <Route render> will be ignored'   
+    )
+
+    warning(
+      !(component && children),
+      'You should not use <Route component> and <Route children> in the same route; <Route children> will be ignored'   
+    )
+
+    warning(
+      !(render && children),
+      'You should not use <Route render> and <Route children> in the same route; <Route children> will be ignored'    
+    )
+  }
+
   componentWillReceiveProps(nextProps, nextContext) {
     warning(
       !(nextProps.location && !this.props.location),
