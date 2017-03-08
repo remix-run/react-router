@@ -19,10 +19,7 @@ class Router extends React.Component {
   getChildContext() {
     return {
       history: this.props.history,
-      route: {
-        location: this.props.history.location,
-        match: this.state.match
-      }
+      route: this.route
     }
   }
 
@@ -47,13 +44,21 @@ class Router extends React.Component {
       'A <Router> may have only one child element'
     )
 
+    this.route = {
+      match: this.state.match,
+      location: this.props.history.location
+    }
+
     // Do this here so we can setState when a <Redirect> changes the
     // location in componentWillMount. This happens e.g. when doing
     // server rendering using a <StaticRouter>.
     this.unlisten = history.listen(() => {
-      this.setState({
-        match: this.computeMatch(history.location.pathname)
+      const match = this.computeMatch(history.location.pathname)
+      Object.assign(this.route, {
+        location: history.location,
+        match
       })
+      this.setState({ match })
     })
   }
 
