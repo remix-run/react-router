@@ -46,4 +46,8 @@ NavLink.propTypes = {
   isActive: PropTypes.func
 }
 
+NavLink.defaultProps = {
+  activeClassName: 'active'
+}
+
 export default NavLink
