@@ -1,9 +1,17 @@
 export default {
   api: [
-    require('../../../react-router-native/docs/api/NativeRouter.md'),
-    require('../../../react-router-native/docs/api/Link.md'),
-    require('../../../react-router-native/docs/api/DeepLinking.md'),
     require('../../../react-router-native/docs/api/AndroidBackButton.md'),
+    require('../../../react-router-native/docs/api/DeepLinking.md'),
+    require('../../../react-router-native/docs/api/Link.md'),
+    require('../../../react-router-native/docs/api/NativeRouter.md'),
+    require('../../../react-router/docs/api/MemoryRouter.md?native'),
+    require('../../../react-router/docs/api/Redirect.md?native'),
+    require('../../../react-router/docs/api/Route.md?native'),
+    require('../../../react-router/docs/api/Router.md?native'),
+    require('../../../react-router/docs/api/StaticRouter.md?native'),
+    require('../../../react-router/docs/api/Switch.md?native'),
+    require('../../../react-router/docs/api/matchPath.md?native'),
+    require('../../../react-router/docs/api/withRouter.md?native')
   ],
   examples: [
     { label: 'Basic',

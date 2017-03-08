@@ -1,15 +1,18 @@
-import React, { Component, PropTypes } from 'react'
+import { Component, PropTypes } from 'react'
 
 let delegate = (history) => {
   document.body.addEventListener('click', (e) => {
     let node = e.target
-    let link = null
-    while (node && node.className && typeof node.className === 'string') {
-      if (node.className.match(/internal-link/)) {
-        e.preventDefault()
-        const href = node.getAttribute('href')
-        history.push(href)
-        break;
+    while (node) {
+      // document or svg has weird stuff
+      if (typeof node.className === 'string') {
+        if (node.className.match(/internal-link/)) {
+          e.preventDefault()
+          const href = node.getAttribute('href')
+          console.log(href)
+          history.push(href)
+          break
+        }
       }
       node = node.parentNode
     }
@@ -21,6 +24,10 @@ class DelegateMarkdownLinks extends Component {
 
   static contextTypes = {
     history: PropTypes.object
+  }
+
+  static propTypes = {
+    children: PropTypes.node
   }
 
   componentDidMount() {

@@ -25,7 +25,7 @@ class AndroidBackButton extends Component {
   }
 
   render() {
-    return null
+    return this.props.children
   }
 }
 

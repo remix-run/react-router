@@ -3,7 +3,16 @@ export default {
     require('../../../react-router-dom/docs/api/BrowserRouter.md'),
     require('../../../react-router-dom/docs/api/HashRouter.md'),
     require('../../../react-router-dom/docs/api/Link.md'),
-    require('../../../react-router-dom/docs/api/NavLink.md')
+    require('../../../react-router-dom/docs/api/NavLink.md'),
+    require('../../../react-router-dom/docs/api/Prompt.md'),
+    require('../../../react-router/docs/api/MemoryRouter.md?web'),
+    require('../../../react-router/docs/api/Redirect.md?web'),
+    require('../../../react-router/docs/api/Route.md?web'),
+    require('../../../react-router/docs/api/Router.md?web'),
+    require('../../../react-router/docs/api/StaticRouter.md?web'),
+    require('../../../react-router/docs/api/Switch.md?web'),
+    require('../../../react-router/docs/api/matchPath.md?web'),
+    require('../../../react-router/docs/api/withRouter.md?web')
   ],
 
   guides: [

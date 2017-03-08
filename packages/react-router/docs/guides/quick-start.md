@@ -2,8 +2,8 @@
 
 You probably want to read one of these instead:
 
-- [Web Quick Start](../../react-router-dom/guides/quick-start.md)
-- [Native Quick Start](../../react-router-native/guides/quick-start.md)
+- [Web Quick Start](../../../react-router-dom/docs/guides/quick-start.md)
+- [Native Quick Start](../../../react-router-native/docs/guides/quick-start.md)
 
 ## Installation
 

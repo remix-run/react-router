@@ -13,6 +13,7 @@ const Prism = require('prismjs')
 const cheerio = require('cheerio')
 const path = require('path')
 const slug = require('slug')
+const resolve = require('resolve-pathname')
 
 const routerDelegationClassName = 'internal-link'
 
@@ -65,7 +66,7 @@ const correctLinks = ($, moduleSlug, environment, type) => {
 
     // this assumes the docs/ folder is not ever nested in any package
     const isSamePage = href.startsWith('#')
-    const isCrossPackage = href.startsWith('../../')
+    const isCrossPackage = href.startsWith('../../../')
     const isSiblingDoc = !isCrossPackage && !href.startsWith('/') && !href.match(/http[s]?:/)
 
     // from github: href="#render-func"
@@ -82,15 +83,15 @@ const correctLinks = ($, moduleSlug, environment, type) => {
       $e.attr('href', `/${environment}/${type}/${doc}`)
     }
 
-    // from github: href="../../react-router/docs/Route.md"
+    // from github: href="../../../react-router/docs/api/Route.md"
     // to website:  href="/core/api/Router"
-    // from github: href="../../react-router-dom/guides/getting-started.md"
-    // to website:  href="/web/guides/Router"
+    // from github: href="../../../react-router-dom/docs/guides/getting-started.md"
+    // to website:  href="/web/guides/getting-started"
     else if (isCrossPackage) {
-      const split = href.split('/')
-      const env = envMap[split[2]]
-      const type = split[3]
-      const doc = split[4].replace(/\.md$/, '')
+      const split = href.split('/').reverse()
+      const doc = split[0].replace(/\.md$/, '')
+      const type = split[1]
+      const env = envMap[split[3]]
       $e.attr('href', `/${env}/${type}/${doc}`)
     }
 

@@ -1,6 +1,6 @@
 # &lt;NativeRouter>
 
-A [`<Router>`](../../react-router/docs/Router.md) for iOS and Android apps built using [React Native](https://facebook.github.io/react-native/).
+A [`<Router>`](../../../react-router/docs/api/Router.md) for iOS and Android apps built using [React Native](https://facebook.github.io/react-native/).
 
 ```js
 import { NativeRouter } from 'react-router-native'

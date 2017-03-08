@@ -184,7 +184,7 @@ const Content = ({ data, match }) => (
       <Route
         path={`${match.path}/api/:mod?/:header?`}
         render={(props) => (
-          <API {...props} data={data}/>
+          <API key={props.match.params.environment} {...props} data={data}/>
         )}
       />
       <Route

@@ -2,10 +2,10 @@
 
 The common low-level interface for all router components. Typically apps will use one of the high-level routers instead:
 
-- [`<BrowserRouter>`](../../react-router-dom/docs/BrowserRouter.md)
-- [`<HashRouter>`](../../react-router-dom/docs/HashRouter.md)
+- [`<BrowserRouter>`](../../../react-router-dom/docs/api/BrowserRouter.md)
+- [`<HashRouter>`](../../../react-router-dom/docs/api/HashRouter.md)
 - [`<MemoryRouter>`](MemoryRouter.md)
-- [`<NativeRouter>`](../../react-router-native/docs/NativeRouter.md)
+- [`<NativeRouter>`](../../../react-router-native/docs/api/NativeRouter.md)
 - [`<StaticRouter>`](StaticRouter.md)
 
 The most common use-case for using the low-level `<Router>` is to
