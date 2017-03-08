@@ -23,7 +23,8 @@ class Route extends React.Component {
   static contextTypes = {
     router: PropTypes.shape({
       history: PropTypes.object.isRequired,
-      route: PropTypes.object.isRequired
+      route: PropTypes.object.isRequired,
+      staticContext: PropTypes.object
     })
   }
 
@@ -76,9 +77,9 @@ class Route extends React.Component {
   render() {
     const { match } = this.state
     const { children, component, render } = this.props
-    const { history, route } = this.context.router
+    const { history, route, staticContext } = this.context.router
     const location = this.props.location || route.location
-    const props = { match, location, history }
+    const props = { match, location, history, staticContext }
 
     return (
       component ? ( // component prop gets first priority, only called if there's a match

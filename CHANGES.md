@@ -1,7 +1,11 @@
 ## HEAD
 
+- Updated website
+- Revert to using `context.router` for everything since Relay uses `context.route`
+- Add `staticContext` route prop when rendering `<Route>`s inside a `<StaticRouter>`
 - Pass through the parent `match` object to `<Route>`s w/out a `path`. This also
   includes components wrapped using `withRouter`
+- Fix unicode `<Route>` paths
 
 ## [v4.0.0-beta.7]
 > Mar 3, 2017

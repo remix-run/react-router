@@ -2,6 +2,7 @@ import expect from 'expect'
 import React from 'react'
 import ReactDOM from 'react-dom'
 import MemoryRouter from '../MemoryRouter'
+import StaticRouter from '../StaticRouter'
 import Route from '../Route'
 import withRouter from '../withRouter'
 
@@ -44,5 +45,23 @@ describe('withRouter', () => {
         }}/>
       </MemoryRouter>
     ), node)
+  })
+
+  describe('inside a <StaticRouter>', () => {
+    it('provides the staticContext prop', () => {
+      const PropsChecker = withRouter(props => {
+        expect(props.staticContext).toBeAn('object')
+        expect(props.staticContext).toBe(context)
+        return null
+      })
+
+      const context = {}
+
+      ReactDOM.render((
+        <StaticRouter context={context}>
+          <Route component={PropsChecker}/>
+        </StaticRouter>
+      ), node)
+    })
   })
 })
