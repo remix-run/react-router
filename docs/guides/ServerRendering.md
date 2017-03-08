@@ -6,7 +6,7 @@ Server rendering is a bit different than in a client because you'll want to:
 - Send `30x` responses for redirects
 - Fetch data before rendering (and use the router to help you do it)
 
-To facilitate these needs, you drop one level lower than the [`<Router>`](/docs/API.md#Router) API with:  
+To facilitate these needs, you drop one level lower than the [`<Router>`](/docs/API.md#Router) API with:
 
 - [`match`](/docs/API.md#match-routes-location-history-options--cb) to match the routes to a location without rendering
 - `RouterContext` for synchronous rendering of route components
@@ -53,9 +53,25 @@ render(<Router history={history} routes={routes} />, mountNode)
 You need to do
 
 ```js
-match({ history, routes }, (error, redirectLocation, renderProps) => {
-  render(<Router {...renderProps} />, mountNode)
-})
+function initiateRender(history) {
+  match({ history, routes }, (error, redirectLocation, renderProps) => {
+    if (redirectLocation == null) {
+      render(<Router {...renderProps} />, mountNode)
+    } else {
+      switch (redirectLocation.action) {
+        case "PUSH":
+          history.push(redirectLocation);
+          break;
+        case "REPLACE":
+          history.replace(redirectLocation);
+          break;
+      }
+      initiateRender(history);
+    }
+  })
+}
+
+initiateRender(history)
 ```
 
 ## History Singletons
