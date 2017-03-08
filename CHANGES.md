@@ -8,6 +8,8 @@
   includes components wrapped using `withRouter`
 - Fix unicode `<Route>` paths
 
+[v4.0.0-beta.8]: https://github.com/ReactTraining/react-router/compare/v4.0.0-beta.7...v4.0.0-beta.8
+
 ## [v4.0.0-beta.7]
 > Mar 3, 2017
 
