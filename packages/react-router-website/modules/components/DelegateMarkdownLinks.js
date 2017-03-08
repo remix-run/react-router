@@ -1,4 +1,5 @@
 import { Component, PropTypes } from 'react'
+import { withRouter } from 'react-router-dom'
 
 let delegate = (history) => {
   document.body.addEventListener('click', (e) => {
@@ -20,23 +21,19 @@ let delegate = (history) => {
   delegate = () => {}
 }
 
-class DelegateMarkdownLinks extends Component {
-
-  static contextTypes = {
-    history: PropTypes.object
-  }
-
+const DelegateMarkdownLinks = withRouter(class extends Component {
   static propTypes = {
+    history: PropTypes.object.isRequired,
     children: PropTypes.node
   }
 
   componentDidMount() {
-    delegate(this.context.history)
+    delegate(this.props.history)
   }
 
   render() {
     return this.props.children
   }
-}
+})
 
 export default DelegateMarkdownLinks
