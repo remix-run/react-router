@@ -8,7 +8,30 @@ import Route from '../Route'
 import Prompt from '../Prompt'
 
 describe('A <StaticRouter>', () => {
-  it('puts history on context', () => {
+  it('provides context.router.staticContext', () => {
+    let router
+    const ContextChecker = (props, context) => {
+      router = context.router
+      return null
+    }
+
+    ContextChecker.contextTypes = {
+      router: PropTypes.object.isRequired
+    }
+
+    const context = {}
+
+    ReactDOMServer.renderToStaticMarkup(
+      <StaticRouter context={context}>
+        <ContextChecker/>
+      </StaticRouter>
+    )
+
+    expect(router).toBeAn('object')
+    expect(router.staticContext).toBe(context)
+  })
+
+  it('provides context.history', () => {
     let history
     const ContextChecker = (props, context) => {
       history = context.history
