@@ -56,58 +56,6 @@ describe('A <Route>', () => {
     expect(node.innerHTML).toContain(TEXT)
   })
 
-
-  describe('component prop', () => {
-    const TEXT = 'Mrs. Kato'
-    const node = document.createElement('div')
-    const Home = () => <div>{TEXT}</div>
-    ReactDOM.render((
-      <MemoryRouter initialEntries={[ '/' ]}>
-        <Route path="/" component={Home} />
-      </MemoryRouter>
-    ), node)
-
-    expect(node.innerHTML).toContain(TEXT)
-  })
-
-  describe('render prop', () => {
-    const TEXT = 'Mrs. Kato'
-    const node = document.createElement('div')
-    ReactDOM.render((
-      <MemoryRouter initialEntries={[ '/' ]}>
-        <Route path="/" render={() => <div>{TEXT}</div>} />
-      </MemoryRouter>
-    ), node)
-
-    expect(node.innerHTML).toContain(TEXT)
-  })
-
-  describe('children function prop', () => {
-    const TEXT = 'Mrs. Kato'
-    const node = document.createElement('div')
-    ReactDOM.render((
-      <MemoryRouter initialEntries={[ '/' ]}>
-        <Route path="/" children={() => <div>{TEXT}</div>} />
-      </MemoryRouter>
-    ), node)
-
-    expect(node.innerHTML).toContain(TEXT)
-  })
-
-  describe('children element prop', () => {
-    const TEXT = 'Mrs. Kato'
-    const node = document.createElement('div')
-    ReactDOM.render((
-      <MemoryRouter initialEntries={[ '/' ]}>
-        <Route path="/">
-          <div>{TEXT}</div>
-        </Route>
-      </MemoryRouter>
-    ), node)
-
-    expect(node.innerHTML).toContain(TEXT)
-  })
-
   it('supports preact by nulling out children prop when empty array is passed', () => {
     const TEXT = 'Mrs. Kato'
     const node = document.createElement('div')
@@ -142,7 +90,7 @@ describe('A <Route>', () => {
   })
 })
 
-describe('<Route> render props', () => {
+describe('<Route render>', () => {
   const history = createMemoryHistory()
   const node = document.createElement('div')
 
@@ -150,12 +98,24 @@ describe('<Route> render props', () => {
     ReactDOM.unmountComponentAtNode(node)
   })
 
-  it('passes `{ match, location, history }` props to `render`', () => {
+  it('renders its return value', () => {
+    const TEXT = 'Mrs. Kato'
+    const node = document.createElement('div')
+    ReactDOM.render((
+      <MemoryRouter initialEntries={[ '/' ]}>
+        <Route path="/" render={() => <div>{TEXT}</div>} />
+      </MemoryRouter>
+    ), node)
+
+    expect(node.innerHTML).toContain(TEXT)
+  })
+
+  it('receives { match, location, history } props', () => {
     let actual = null
 
     ReactDOM.render((
       <Router history={history}>
-        <Route path="/" render={(props) => (actual = props) && null}/>
+        <Route path="/" render={props => (actual = props) && null}/>
       </Router>
     ), node)
 
@@ -163,8 +123,30 @@ describe('<Route> render props', () => {
     expect(actual.match).toBeAn('object')
     expect(actual.location).toBeAn('object')
   })
+})
 
-  it('passes `{ match, location, history }` props to `component`', () => {
+describe('<Route component>', () => {
+  const history = createMemoryHistory()
+  const node = document.createElement('div')
+
+  afterEach(() => {
+    ReactDOM.unmountComponentAtNode(node)
+  })
+
+  it('renders the component', () => {
+    const TEXT = 'Mrs. Kato'
+    const node = document.createElement('div')
+    const Home = () => <div>{TEXT}</div>
+    ReactDOM.render((
+      <MemoryRouter initialEntries={[ '/' ]}>
+        <Route path="/" component={Home} />
+      </MemoryRouter>
+    ), node)
+
+    expect(node.innerHTML).toContain(TEXT)
+  })
+
+  it('receives { match, location, history } props', () => {
     let actual = null
     const Component = (props) => (actual = props) && null
 
@@ -178,13 +160,48 @@ describe('<Route> render props', () => {
     expect(actual.match).toBeAn('object')
     expect(actual.location).toBeAn('object')
   })
+})
 
-  it('passes `{ match, location, history }` props to `children`', () => {
+describe('<Route children>', () => {
+  const history = createMemoryHistory()
+  const node = document.createElement('div')
+
+  afterEach(() => {
+    ReactDOM.unmountComponentAtNode(node)
+  })
+
+  it('renders a function', () => {
+    const TEXT = 'Mrs. Kato'
+    const node = document.createElement('div')
+    ReactDOM.render((
+      <MemoryRouter initialEntries={[ '/' ]}>
+        <Route path="/" children={() => <div>{TEXT}</div>} />
+      </MemoryRouter>
+    ), node)
+
+    expect(node.innerHTML).toContain(TEXT)
+  })
+
+  it('renders a child element', () => {
+    const TEXT = 'Mrs. Kato'
+    const node = document.createElement('div')
+    ReactDOM.render((
+      <MemoryRouter initialEntries={[ '/' ]}>
+        <Route path="/">
+          <div>{TEXT}</div>
+        </Route>
+      </MemoryRouter>
+    ), node)
+
+    expect(node.innerHTML).toContain(TEXT)
+  })
+
+  it('receives { match, location, history } props', () => {
     let actual = null
 
     ReactDOM.render((
       <Router history={history}>
-        <Route path="/" children={(props) => (actual = props) && null}/>
+        <Route path="/" children={props => (actual = props) && null}/>
       </Router>
     ), node)
 
