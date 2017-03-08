@@ -90,6 +90,19 @@ describe('A <Route>', () => {
   })
 })
 
+describe('A <Route> with dynamic segments in the path', () => {
+  it('decodes them', () => {
+    const node = document.createElement('div')
+    ReactDOM.render((
+      <MemoryRouter initialEntries={[ '/a%20dynamic%20segment' ]}>
+        <Route path="/:id" render={({ match }) => <div>{match.params.id}</div>} />
+      </MemoryRouter>
+    ), node)
+
+    expect(node.innerHTML).toContain('a dynamic segment')
+  })
+})
+
 describe('<Route render>', () => {
   const history = createMemoryHistory()
   const node = document.createElement('div')
