@@ -58,6 +58,8 @@ class Route extends React.Component {
   }
 
   componentWillMount() {
+    const { component, render, children } = this.props
+
     warning(
       !(component && render),
       'You should not use <Route component> and <Route render> in the same route; <Route render> will be ignored'   
