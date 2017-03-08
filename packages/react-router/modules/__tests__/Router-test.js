@@ -117,5 +117,20 @@ describe('A <Router>', () => {
 
       expect(rootContext.router.route.match.isExact).toBe(false)
     })
+
+    it('does not contain context.router.staticContext by default', () => {
+      const history = createHistory({
+        initialEntries: [ '/' ]
+      })
+
+      ReactDOM.render(
+        <Router history={history}>
+          <ContextChecker />
+        </Router>,
+        node
+      )
+
+      expect(rootContext.router.staticContext).toBe(undefined)
+    })
   })
 })
