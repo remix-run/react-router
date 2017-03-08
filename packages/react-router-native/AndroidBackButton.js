@@ -3,7 +3,12 @@ import { BackAndroid } from 'react-native'
 
 class AndroidBackButton extends Component {
   static contextTypes = {
-    router: PropTypes.object
+    router: PropTypes.shape({
+      history: PropTypes.shape({
+        goBack: PropTypes.func.isRequired,
+        index: PropTypes.number.isRequired
+      }).isRequired
+    }).isRequired
   }
 
   componentDidMount() {
@@ -15,11 +20,11 @@ class AndroidBackButton extends Component {
   }
 
   handleBack = () => {
-    const { router } = this.context
-    if (router.index === 0) {
+    const { history } = this.context.router
+    if (history.index === 0) {
       return false // home screen
     } else {
-      router.goBack()
+      history.goBack()
       return true
     }
   }

@@ -7,7 +7,9 @@ import matchPath from './matchPath'
  */
 class Switch extends React.Component {
   static contextTypes = {
-    route: PropTypes.object.isRequired
+    router: PropTypes.shape({
+      route: PropTypes.object.isRequired
+    }).isRequired
   }
 
   static propTypes = {
@@ -28,7 +30,7 @@ class Switch extends React.Component {
   }
 
   render() {
-    const { route } = this.context
+    const { route } = this.context.router
     const { children } = this.props
     const location = this.props.location || route.location
 

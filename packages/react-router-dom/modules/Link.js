@@ -8,10 +8,12 @@ const isModifiedEvent = (event) =>
  */
 class Link extends React.Component {
   static contextTypes = {
-    history: PropTypes.shape({
-      push: PropTypes.func.isRequired,
-      replace: PropTypes.func.isRequired,
-      createHref: PropTypes.func.isRequired
+    router: PropTypes.shape({
+      history: PropTypes.shape({
+        push: PropTypes.func.isRequired,
+        replace: PropTypes.func.isRequired,
+        createHref: PropTypes.func.isRequired
+      }).isRequired
     }).isRequired
   }
 
@@ -41,7 +43,7 @@ class Link extends React.Component {
     ) {
       event.preventDefault()
 
-      const { history } = this.context
+      const { history } = this.context.router
       const { replace, to } = this.props
 
       if (replace) {
@@ -55,7 +57,7 @@ class Link extends React.Component {
   render() {
     const { replace, to, ...props } = this.props // eslint-disable-line no-unused-vars
 
-    const href = this.context.history.createHref(
+    const href = this.context.router.history.createHref(
       typeof to === 'string' ? { pathname: to } : to
     )
 

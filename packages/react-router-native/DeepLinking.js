@@ -5,7 +5,11 @@ const regex = /.*?:\/\//g
 
 class DeepLinking extends Component {
   static contextTypes = {
-    router: PropTypes.object
+    router: PropTypes.shape({
+      history: PropTypes.shape({
+        push: PropTypes.func.isRequired
+      }).isRequired
+    }).isRequired
   }
 
   async componentDidMount() {

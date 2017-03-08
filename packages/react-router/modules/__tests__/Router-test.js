@@ -57,8 +57,10 @@ describe('A <Router>', () => {
     }
 
     ContextChecker.contextTypes = {
-      history: React.PropTypes.object,
-      route: React.PropTypes.object
+      router: React.PropTypes.shape({
+        history: React.PropTypes.object,
+        route: React.PropTypes.object
+      })
     }
 
     afterEach(() => {
@@ -74,10 +76,10 @@ describe('A <Router>', () => {
         node
       )
 
-      expect(rootContext.history).toBe(history)
+      expect(rootContext.router.history).toBe(history)
     })
 
-    it('sets context.route at the root', () => {
+    it('sets context.router.route at the root', () => {
       const history = createHistory({
         initialEntries: ['/']
       })
@@ -89,14 +91,14 @@ describe('A <Router>', () => {
         node
       )
 
-      expect(rootContext.route.match.path).toEqual('/')
-      expect(rootContext.route.match.url).toEqual('/')
-      expect(rootContext.route.match.params).toEqual({})
-      expect(rootContext.route.match.isExact).toEqual(true)
-      expect(rootContext.route.location).toEqual(history.location)
+      expect(rootContext.router.route.match.path).toEqual('/')
+      expect(rootContext.router.route.match.url).toEqual('/')
+      expect(rootContext.router.route.match.params).toEqual({})
+      expect(rootContext.router.route.match.isExact).toEqual(true)
+      expect(rootContext.router.route.location).toEqual(history.location)
     })
 
-    it('updates context.route upon navigation', () => {
+    it('updates context.router.route upon navigation', () => {
       const history = createHistory({
         initialEntries: [ '/' ]
       })
@@ -108,12 +110,27 @@ describe('A <Router>', () => {
         node
       )
 
-      expect(rootContext.route.match.isExact).toBe(true)
+      expect(rootContext.router.route.match.isExact).toBe(true)
 
       const newLocation = { pathname: '/new' }
       history.push(newLocation)
 
-      expect(rootContext.route.match.isExact).toBe(false)
+      expect(rootContext.router.route.match.isExact).toBe(false)
+    })
+
+    it('does not contain context.router.staticContext by default', () => {
+      const history = createHistory({
+        initialEntries: [ '/' ]
+      })
+
+      ReactDOM.render(
+        <Router history={history}>
+          <ContextChecker />
+        </Router>,
+        node
+      )
+
+      expect(rootContext.router.staticContext).toBe(undefined)
     })
   })
 })
