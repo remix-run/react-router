@@ -10,7 +10,6 @@ let delegate = (history) => {
         if (node.className.match(/internal-link/)) {
           e.preventDefault()
           const href = node.getAttribute('href')
-          console.log(href)
           history.push(href)
           break
         }
