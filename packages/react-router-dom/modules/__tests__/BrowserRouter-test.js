@@ -4,15 +4,15 @@ import ReactDOM from 'react-dom'
 import BrowserRouter from '../BrowserRouter'
 
 describe('A <BrowserRouter>', () => {
-  it('puts history on context', () => {
+  it('puts history on context.router', () => {
     let history
     const ContextChecker = (props, context) => {
-      history = context.history
+      history = context.router.history
       return null
     }
 
     ContextChecker.contextTypes = {
-      history: PropTypes.object.isRequired
+      router: PropTypes.object.isRequired
     }
 
     const node = document.createElement('div')

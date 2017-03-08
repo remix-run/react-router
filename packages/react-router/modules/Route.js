@@ -7,8 +7,10 @@ import matchPath from './matchPath'
  */
 class Route extends React.Component {
   static contextTypes = {
-    history: PropTypes.object.isRequired,
-    route: PropTypes.object.isRequired
+    router: PropTypes.shape({
+      history: PropTypes.object.isRequired,
+      route: PropTypes.object.isRequired
+    })
   }
 
   static propTypes = {
@@ -26,20 +28,24 @@ class Route extends React.Component {
   }
 
   static childContextTypes = {
-    route: PropTypes.object.isRequired
+    router: PropTypes.object.isRequired
   }
 
   getChildContext() {
+    const { router } = this.context
     return {
-      route: {
-        location: this.props.location || this.context.route.location,
-        match: this.state.match
+      router: {
+        ...this.context.router,
+        route: {
+          location: this.props.location || this.context.router.route.location,
+          match: this.state.match
+        }
       }
     }
   }
 
   state = {
-    match: this.computeMatch(this.props, this.context)
+    match: this.computeMatch(this.props, this.context.router)
   }
 
   computeMatch({ computedMatch, location, path, strict, exact }, { route }) {
@@ -63,14 +69,14 @@ class Route extends React.Component {
     )
 
     this.setState({
-      match: this.computeMatch(nextProps, nextContext)
+      match: this.computeMatch(nextProps, nextContext.router)
     })
   }
 
   render() {
     const { match } = this.state
     const { children, component, render } = this.props
-    const { history, route } = this.context
+    const { history, route } = this.context.router
     const location = this.props.location || route.location
     const props = { match, location, history }
 

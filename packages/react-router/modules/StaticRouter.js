@@ -75,18 +75,6 @@ class StaticRouter extends React.Component {
     location: '/'
   }
 
-  static childContextTypes = {
-    router: PropTypes.object.isRequired
-  }
-
-  getChildContext() {
-    return {
-      router: {
-        staticContext: this.props.context
-      }
-    }
-  }
-
   createHref = (path) =>
     addLeadingSlash(this.props.basename + createURL(path))
 
@@ -123,7 +111,8 @@ class StaticRouter extends React.Component {
       goBack: staticHandler('goBack'),
       goForward: staticHandler('goForward'),
       listen: this.handleListen,
-      block: this.handleBlock
+      block: this.handleBlock,
+      staticContext: context
     }
 
     return <Router {...props} history={history}/>

@@ -37,7 +37,7 @@ describe('A <Route>', () => {
     expect(node.innerHTML).toNotContain(TEXT)
   })
 
-  it('can use a `location` prop instead of `context.route.location`', () => {
+  it('can use a `location` prop instead of `context.router.route.location`', () => {
     const TEXT = 'tamarind chutney'
     const node = document.createElement('div')
 

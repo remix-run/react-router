@@ -31,15 +31,38 @@ describe('A <StaticRouter>', () => {
     expect(router.staticContext).toBe(context)
   })
 
-  it('provides context.history', () => {
-    let history
+  it('context.router.staticContext persists inside of a <Route>', () => {
+    let router
     const ContextChecker = (props, context) => {
-      history = context.history
+      router = context.router
       return null
     }
 
     ContextChecker.contextTypes = {
-      history: PropTypes.object.isRequired
+      router: PropTypes.object.isRequired
+    }
+
+    const context = {  }
+
+    ReactDOMServer.renderToStaticMarkup(
+      <StaticRouter context={context}>
+        <Route component={ContextChecker}/>
+      </StaticRouter>
+    )
+
+    expect(router).toBeAn('object')
+    expect(router.staticContext).toBe(context)
+  })
+
+  it('provides context.router.history', () => {
+    let history
+    const ContextChecker = (props, context) => {
+      history = context.router.history
+      return null
+    }
+
+    ContextChecker.contextTypes = {
+      router: PropTypes.object.isRequired
     }
 
     const context = {}
