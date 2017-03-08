@@ -1,4 +1,5 @@
-## HEAD
+## [v4.0.0-beta.8]
+> Mar 8, 2017
 
 - Updated website
 - Revert to using `context.router` for everything since Relay uses `context.route`
