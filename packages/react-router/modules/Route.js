@@ -6,13 +6,6 @@ import matchPath from './matchPath'
  * The public API for matching a single path and rendering.
  */
 class Route extends React.Component {
-  static contextTypes = {
-    router: PropTypes.shape({
-      history: PropTypes.object.isRequired,
-      route: PropTypes.object.isRequired
-    })
-  }
-
   static propTypes = {
     computedMatch: PropTypes.object, // private, from <Switch>
     path: PropTypes.string,
@@ -25,6 +18,13 @@ class Route extends React.Component {
       PropTypes.node
     ]),
     location: PropTypes.object
+  }
+
+  static contextTypes = {
+    router: PropTypes.shape({
+      history: PropTypes.object.isRequired,
+      route: PropTypes.object.isRequired
+    })
   }
 
   static childContextTypes = {

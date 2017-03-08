@@ -5,14 +5,6 @@ import React, { PropTypes } from 'react'
  * from a screen with a component.
  */
 class Prompt extends React.Component {
-  static contextTypes = {
-    router: PropTypes.shape({
-      history: PropTypes.shape({
-        block: PropTypes.func.isRequired
-      }).isRequired
-    }).isRequired
-  }
-
   static propTypes = {
     when: PropTypes.bool,
     message: PropTypes.oneOfType([
@@ -23,6 +15,14 @@ class Prompt extends React.Component {
 
   static defaultProps = {
     when: true
+  }
+
+  static contextTypes = {
+    router: PropTypes.shape({
+      history: PropTypes.shape({
+        block: PropTypes.func.isRequired
+      }).isRequired
+    }).isRequired
   }
 
   enable(message) {

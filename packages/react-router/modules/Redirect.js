@@ -5,16 +5,6 @@ import React, { PropTypes } from 'react'
  * with a component.
  */
 class Redirect extends React.Component {
-  static contextTypes = {
-    router: PropTypes.shape({
-      history: PropTypes.shape({
-        push: PropTypes.func.isRequired,
-        replace: PropTypes.func.isRequired
-      }).isRequired,
-      staticContext: PropTypes.object
-    }).isRequired
-  }
-
   static propTypes = {
     push: PropTypes.bool,
     from: PropTypes.string,
@@ -26,6 +16,16 @@ class Redirect extends React.Component {
 
   static defaultProps = {
     push: false
+  }
+
+  static contextTypes = {
+    router: PropTypes.shape({
+      history: PropTypes.shape({
+        push: PropTypes.func.isRequired,
+        replace: PropTypes.func.isRequired
+      }).isRequired,
+      staticContext: PropTypes.object
+    }).isRequired
   }
 
   isStatic() {

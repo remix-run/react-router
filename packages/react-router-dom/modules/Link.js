@@ -7,16 +7,6 @@ const isModifiedEvent = (event) =>
  * The public API for rendering a history-aware <a>.
  */
 class Link extends React.Component {
-  static contextTypes = {
-    router: PropTypes.shape({
-      history: PropTypes.shape({
-        push: PropTypes.func.isRequired,
-        replace: PropTypes.func.isRequired,
-        createHref: PropTypes.func.isRequired
-      }).isRequired
-    }).isRequired
-  }
-
   static propTypes = {
     onClick: PropTypes.func,
     target: PropTypes.string,
@@ -29,6 +19,16 @@ class Link extends React.Component {
 
   static defaultProps = {
     replace: false
+  }
+
+  static contextTypes = {
+    router: PropTypes.shape({
+      history: PropTypes.shape({
+        push: PropTypes.func.isRequired,
+        replace: PropTypes.func.isRequired,
+        createHref: PropTypes.func.isRequired
+      }).isRequired
+    }).isRequired
   }
 
   handleClick = (event) => {
