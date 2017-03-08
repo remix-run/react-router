@@ -103,6 +103,19 @@ describe('A <Route> with dynamic segments in the path', () => {
   })
 })
 
+describe('A unicode <Route>', () => {
+  it('is able to match', () => {
+    const node = document.createElement('div')
+    ReactDOM.render((
+      <MemoryRouter initialEntries={[ '/パス名' ]}>
+        <Route path="/パス名" render={({ match }) => <div>{match.url}</div>} />
+      </MemoryRouter>
+    ), node)
+
+    expect(node.innerHTML).toContain('/パス名')
+  })
+})
+
 describe('<Route render>', () => {
   const history = createMemoryHistory()
   const node = document.createElement('div')
