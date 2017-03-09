@@ -24,8 +24,8 @@ Consider this route config:
 
     | Component | Lifecycle Hooks called |
     |-----------|------------------------|
-    | App | (2) `componentDidMount` |
-    | Home | (1) `componentDidMount` |
+    | App | (1) `componentDidMount` |
+    | Home | (2) `componentDidMount` |
     | Invoice | N/A |
     | Account | N/A |
 
