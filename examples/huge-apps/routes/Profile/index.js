@@ -1,8 +1,8 @@
-module.exports = {
+export default {
   path: 'profile',
   getComponent(nextState, cb) {
-    require.ensure([], (require) => {
-      cb(null, require('./components/Profile'))
-    })
+    System.import('./components/Profile')
+           .then(module => cb(null, module.default))
+           .catch(err => console.error(`Partial module loading failed ${err}`)) // eslint-disable-line no-console
   }
 }

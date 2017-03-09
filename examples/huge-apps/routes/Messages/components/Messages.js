@@ -12,4 +12,4 @@ class Messages extends Component {
 
 }
 
-module.exports = Messages
+export default Messages

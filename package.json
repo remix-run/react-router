@@ -63,9 +63,11 @@
     "eslint-config-rackt": "^1.1.1",
     "eslint-plugin-react": "^6.2.2",
     "expect": "^1.20.2",
+    "exports-loader": "^0.6.3",
     "express": "^4.14.0",
     "express-urlrewrite": "^1.2.0",
     "gzip-size": "^3.0.0",
+    "imports-loader": "^0.7.0",
     "karma": "^1.1.2",
     "karma-browserstack-launcher": "^1.0.1",
     "karma-chrome-launcher": "^1.0.1",
@@ -83,8 +85,8 @@
     "react-dom": "^15.3.0",
     "rimraf": "^2.5.4",
     "style-loader": "^0.13.1",
-    "webpack": "^1.13.1",
-    "webpack-dev-middleware": "^1.6.1"
+    "webpack": "^2.2.0",
+    "webpack-dev-middleware": "^1.9.0"
   },
   "browserify": {
     "transform": [

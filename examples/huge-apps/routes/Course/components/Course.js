@@ -46,4 +46,4 @@ class Course extends Component {
   }
 }
 
-module.exports = Course
+export default Course

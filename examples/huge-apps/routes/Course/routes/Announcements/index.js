@@ -1,20 +1,19 @@
-module.exports = {
+export default {
   path: 'announcements',
 
   getChildRoutes(partialNextState, cb) {
-    require.ensure([], (require) => {
-      cb(null, [
-        require('./routes/Announcement')
-      ])
-    })
+    System.import('./routes/Announcement')
+           .then(module => cb(null, module.default))
+           .catch(err => console.error(`Partial module loading failed ${err}`)) // eslint-disable-line no-console
   },
 
   getComponents(nextState, cb) {
-    require.ensure([], (require) => {
-      cb(null, {
-        sidebar: require('./components/Sidebar'),
-        main: require('./components/Announcements')
-      })
-    })
+    Promise.all([
+      System.import('./components/Sidebar'),
+      System.import('./components/Announcements')
+    ]).then(modules => cb(null, {
+      sidebar: modules[0].default,
+      main: modules[1].default
+    }))
   }
 }

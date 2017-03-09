@@ -11,4 +11,4 @@ class Assignments extends Component {
   }
 }
 
-module.exports = Assignments
+export default Assignments
