@@ -9,9 +9,9 @@ When the `<UpdateBlocker>` is mounting, any location-aware child components will
 ```js
 // location = { pathname: '/about' }
 <UpdateBlocker>
-  <NavLink to='/about' activeClassName='active'>About</NavLink>
+  <NavLink to='/about'>About</NavLink>
   // <a href='/about' class='active'>About</a>
-  <NavLink to='/faq' activeClassName='active'>F.A.Q.</NavLink>
+  <NavLink to='/faq'>F.A.Q.</NavLink>
   // <a href='/faq'>F.A.Q.</a>
 </UpdateBlocker>
 ```
@@ -22,9 +22,9 @@ When the location changes, the `<UpdateBlocker>`'s `shouldComponentUpdate` metho
 // location = { pathname: '/faq' }
 <UpdateBlocker>
   // the links will not re-render, so they retain their previous attributes
-  <NavLink to='/about' activeClassName='active'>About</NavLink>
+  <NavLink to='/about'>About</NavLink>
   // <a href='/about' class='active'>About</a>
-  <NavLink to='/faq' activeClassName='active'>F.A.Q.</NavLink>
+  <NavLink to='/faq'>F.A.Q.</NavLink>
   // <a href='/faq'>F.A.Q.</a>
 </UpdateBlocker>
 ```
@@ -51,17 +51,17 @@ The key to getting around `shouldComponentUpdate` blocking re-renders after loca
 ```js
 // location = { pathname: '/about' }
 <UpdateBlocker location={location}>
-  <NavLink to='/about' activeClassName='active'>About</NavLink>
+  <NavLink to='/about'>About</NavLink>
   // <a href='/about' class='active'>About</a>
-  <NavLink to='/faq' activeClassName='active'>F.A.Q.</NavLink>
+  <NavLink to='/faq'>F.A.Q.</NavLink>
   // <a href='/faq'>F.A.Q.</a>
 </UpdateBlocker>
 
 // location = { pathname: '/faq' }
 <UpdateBlocker location={location}>
-  <NavLink to='/about' activeClassName='active'>About</NavLink>
+  <NavLink to='/about'>About</NavLink>
   // <a href='/about'>About</a>
-  <NavLink to='/faq' activeClassName='active'>F.A.Q.</NavLink>
+  <NavLink to='/faq'>F.A.Q.</NavLink>
   // <a href='/faq' class='active'>F.A.Q.</a>
 </UpdateBlocker>
 ```
