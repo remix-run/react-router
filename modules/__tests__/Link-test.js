@@ -1,4 +1,4 @@
-import expect, { spyOn } from 'expect'
+import expect, { spyOn, createSpy } from 'expect'
 import React, { Component } from 'react'
 import { Simulate } from 'react-addons-test-utils'
 import { render } from 'react-dom'
@@ -8,7 +8,6 @@ import Router from '../Router'
 import Route from '../Route'
 import Link from '../Link'
 import execSteps from './execSteps'
-
 const { click } = Simulate
 
 describe('A <Link>', () => {
@@ -556,5 +555,35 @@ describe('A <Link>', () => {
         done()
       })
     })
+  })
+
+  describe('when the "to" prop contains external URL', function () {
+    it('should navigate to external page', function (done) {
+      const handleClick = createSpy().andCallThrough()
+      class App extends Component {
+        render() {
+          return (
+            <div>
+              <Link to="https://google.com/newpath" onClick={handleClick}>External link</Link>
+            </div>
+          )
+        }
+      }
+      const history = createHistory('/')
+      const spy = spyOn(history, 'push').andCallThrough()
+      render((
+        <Router history={createHistory('/')} >
+          <Route path="/" component={App}/>
+        </Router>
+      ), node, function () {
+        click(node.querySelector('a'), { button: 0 })
+        expect(spy).toNotHaveBeenCalled()
+        expect(handleClick).toHaveBeenCalled()
+        const event = handleClick.calls[0].arguments[0]
+        expect(event.isDefaultPrevented()).toEqual(false)
+        done()
+      })
+    })
+
   })
 })
