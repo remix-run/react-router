@@ -7,6 +7,7 @@
 - Pass through the parent `match` object to `<Route>`s w/out a `path`. This also
   includes components wrapped using `withRouter`
 - Fix unicode `<Route>` paths
+- Set `NavLink`'s default `activeClassName` prop to `active`
 
 [v4.0.0-beta.8]: https://github.com/ReactTraining/react-router/compare/v4.0.0-beta.7...v4.0.0-beta.8
 
