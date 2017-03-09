@@ -183,6 +183,13 @@ describe('server rendering', function () {
     })
   })
 
+  it('gracefully handles invalid urls', function (done) {
+    match({ routes, location: '/foo?18924%2S%24' }, function (error) {
+      expect(error).to.not.be(undefined)
+      done()
+    })
+  })
+
   describe('server/client consistency', () => {
     // Just render to static markup here to avoid having to normalize markup.
 
