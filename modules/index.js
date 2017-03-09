@@ -16,7 +16,7 @@ export RouterContext from './RouterContext'
 export { locationShape, routerShape } from './PropTypes'
 export match from './match'
 export useRouterHistory from './useRouterHistory'
-export { formatPattern } from './PatternUtils'
+export { formatPattern, matchPattern } from './PatternUtils'
 export applyRouterMiddleware from './applyRouterMiddleware'
 
 /* histories */
