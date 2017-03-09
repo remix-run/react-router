@@ -49,6 +49,24 @@ describe('isActive', function () {
       })
     })
 
+    describe('with a query that was transformed by custom stringifyQuery function', function () {
+      it('is active', function (done) {
+        render((
+          <Router history={createHistory({ stringifyQuery: query => qs.stringify(query, { filter: (prefix, value) => prefix === 'test' ? undefined : value }) })}>
+            <Route path="/" />
+            <Route path="/home" />
+          </Router>
+        ), node, function () {
+          this.router.push({ pathname: '/home', query: { test: 'hello' } })
+          expect(this.router.isActive({
+            pathname: '/home',
+            query: { test: 'hello' }
+          })).toBe(true)
+          done()
+        })
+      })
+    })
+
     describe('with a query that also matches by value, but not by type', function () {
       it('is active', function (done) {
         render((
