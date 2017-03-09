@@ -83,12 +83,25 @@ export function compilePattern(pattern) {
  * - paramValues
  */
 export function matchPattern(pattern, pathname) {
+  // Check if pattern has pipes separating the paths
+  if (/\|/.test(pattern)) {
+    let pipedPath = pattern.match(/[a-zA-Z0-9_-]+\|[a-zA-Z0-9_-]+((\|[a-zA-Z0-9_-]*)*)?/)
+    if (pipedPath != null) {
+      pipedPath = pipedPath[0]
+    }
+
+    let match = pathname.match(`(${pipedPath})`)
+    if (match != null) {
+      pattern = pattern.replace(pipedPath, match[0])
+    }
+  }
+
   // Ensure pattern starts with leading slash for consistency with pathname.
   if (pattern.charAt(0) !== '/') {
     pattern = `/${pattern}`
   }
-  let { regexpSource, paramNames, tokens } = compilePattern(pattern)
 
+  let { regexpSource, paramNames, tokens } = compilePattern(pattern)
   if (pattern.charAt(pattern.length - 1) !== '/') {
     regexpSource += '/?' // Allow optional path separator at end.
   }
