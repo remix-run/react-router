@@ -7,7 +7,6 @@
   "env": {
     "production": {
       "plugins": [
-        "dev-expression",
         "transform-react-remove-prop-types"
       ]
     }
