@@ -178,6 +178,24 @@ Continuing with our example above, if a user clicked on a link to `/about` from 
   - `onLeave` on the `/inbox` route
   - `onEnter` on the `/about` route
 
+
+
+### Refs
+
+[Route](/docs/Glossary.md#route)s may also define [`ref`](/docs/Glossary.md#ref) hooks that are invoked once a route is instantiated. These hooks are useful when a route is created and you want to keep a reference to it, but you prefer JSX.
+
+```jsx
+let usersRoute
+
+render((
+  <Router>
+    <Route path="/" component={Parent}>
+      <Rote ref={ (route, parentRoute) => usersRoute = route} path="users" component={Users} />
+    </Route>
+  </Router>
+), document.body)
+```
+
 ### Configuration with Plain Routes
 
 Since [routes](/docs/Glossary.md#route) are usually nested, it's useful to use a concise nested syntax like [JSX](https://facebook.github.io/jsx/) to describe their relationship to one another. However, you may also use an array of plain [route](/docs/Glossary.md#route) objects if you prefer to avoid using JSX.

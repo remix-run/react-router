@@ -108,4 +108,21 @@ describe('createRoutesFromReactChildren', function () {
     ])
   })
 
+  describe('when the route definition has "ref" property', function () {
+    it('calls it', function () {
+      let routeRef
+      createRoutesFromReactChildren([
+        <Route ref={ route => routeRef = route } path="/one" component={Hello} />
+      ])
+
+      expect(routeRef).toEqual(
+        {
+          path: '/one',
+          component: Hello
+        }
+      )
+    })
+  })
+
+
 })

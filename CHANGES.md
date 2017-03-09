@@ -125,6 +125,7 @@ Upstream changes from [v2.7.0] through [v2.8.1]:
 ## [v2.6.1]
 > Jul 29, 2016
 
+- **Feature:** Add support for `ref` hook on JSX routes ([#TODO])
 - **Bugfix:** Correctly handle routes with patterns that are the names of properties on `Object.prototype` ([#3680])
 
 [v2.6.1]: https://github.com/ReactTraining/react-router/compare/v2.6.0...v2.6.1
