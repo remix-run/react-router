@@ -74,7 +74,8 @@ function createElement(Component, props) {
 While the router is matching, errors may bubble up, here is your opportunity to catch and deal with them. Typically these will come from async features like [`route.getComponents`](#getcomponentsnextstate-callback), [`route.getIndexRoute`](#getindexroutepartialnextstate-callback), and [`route.getChildRoutes`](#getchildroutespartialnextstate-callback).
 
 ##### `onUpdate()`
-Called whenever the router updates its state in response to URL changes.
+Called whenever the router updates its state in response to URL changes. 
+Within this function the current location is accessible through `this.state.location.pathname`.
 
 ##### `render(props)`
 This is primarily for integrating with other libraries that need to participate in rendering before the route components are rendered. It defaults to `render={(props) => <RouterContext {...props} />}`.
