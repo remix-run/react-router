@@ -655,7 +655,7 @@ enhancers from `history`
 
 #### Example
 ```js
-import createHashHistory from 'history/lib/createHashHistory'
+import createHashHistory from 'history/createHashHistory'
 const history = useRouterHistory(createHashHistory)({ queryKey: false })
 ```
 
