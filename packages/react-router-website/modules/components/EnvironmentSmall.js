@@ -379,8 +379,7 @@ const getExampleTitle = (data, slug) => {
 }
 
 const getGuideTitle = (data, slug) => {
-  console.log(slug)
-  const item = data.guides.find(item => console.log(item) || item.title.slug === slug)
+  const item = data.guides.find(item => item.title.slug === slug)
   return item ? item.title.text : null
 }
 

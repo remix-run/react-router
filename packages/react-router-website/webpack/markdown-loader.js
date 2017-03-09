@@ -59,43 +59,59 @@ const envMap = {
   'react-router-dom': 'web'
 }
 
+const isSelfHeader = (href) =>
+  href === ''
+
+const isSibling = (href) =>
+  href.startsWith('./')
+
+const isOtherTypeSibling = (href) =>
+  href.startsWith('../api') ||
+  href.startsWith('../guide')
+
+const isCrossPackage = (href) =>
+  href.startsWith('../../../')
+
+const makeHref = (hash, ...segments) => {
+  let href = '/' + segments.join('/').replace(/\.md$/, '')
+  if (hash) href += '/' + hash
+  return href
+}
+
 const correctLinks = ($, moduleSlug, environment, type) => {
   $('a[href]').each((i, e) => {
     const $e = $(e)
-    const href = $e.attr('href')
+    const [ href, hash ] = $e.attr('href').split('#')
 
-    // this assumes the docs/ folder is not ever nested in any package
-    const isSamePage = href.startsWith('#')
-    const isCrossPackage = href.startsWith('../../../')
-    const isSiblingDoc = !isCrossPackage && !href.startsWith('/') && !href.match(/http[s]?:/)
-
-    // from github: href="#render-func"
-    // to website:  href="/web/api/Route/render-func"
-    if (isSamePage) {
-      $e.attr('href', `/${environment}/${type}/${moduleSlug}/${href.substr(1)}`)
+    if (isSelfHeader(href)) {
+      // #render-func
+      // /web/api/Route/render-func
+      $e.attr('href', `/${environment}/${type}/${moduleSlug}/${hash}`)
+      $e.addClass(routerDelegationClassName)
     }
 
-    // from github: href="context.router.md"
-    // to website:  href="/core/api/context.router"
-    // NOTE: Does not handle "context.router.md#foo"
-    else if (isSiblingDoc) {
-      const doc = href.replace(/\.md$/, '')
-      $e.attr('href', `/${environment}/${type}/${doc}`)
+    else if (isSibling(href)) {
+      // ./quick-start.md
+      // /web/guides/quick-start
+      const [ _, doc ] = href.split('/')
+
+      $e.attr('href', makeHref(hash, environment, type, doc))
+      $e.addClass(routerDelegationClassName)
     }
 
-    // from github: href="../../../react-router/docs/api/Route.md"
-    // to website:  href="/core/api/Router"
-    // from github: href="../../../react-router-dom/docs/guides/getting-started.md"
-    // to website:  href="/web/guides/getting-started"
-    else if (isCrossPackage) {
-      const split = href.split('/').reverse()
-      const doc = split[0].replace(/\.md$/, '')
-      const type = split[1]
-      const env = envMap[split[3]]
-      $e.attr('href', `/${env}/${type}/${doc}`)
+    else if (isOtherTypeSibling(href)) {
+      // ../api/NativeRouter.md
+      // /web/api/NativeRouter
+      const [ _, type, doc ] = href.split('/')
+      $e.attr('href', makeHref(hash, environment, type, doc))
+      $e.addClass(routerDelegationClassName)
     }
 
-    if (isSamePage || isSiblingDoc || isCrossPackage) {
+    else if (isCrossPackage(href)) {
+      // ../../../react-router/docs/api/Route.md
+      // /core/api/Route
+      const [ $0, $1, $2, env, $4, type, doc ]= href.split('/')
+      $e.attr('href', makeHref(hash, envMap[env], type, doc))
       $e.addClass(routerDelegationClassName)
     }
   })

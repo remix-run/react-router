@@ -5,4 +5,3 @@ import App from './components/App'
 import './base.css'
 
 ReactDOM.render(<App/>, document.getElementById('app'))
-

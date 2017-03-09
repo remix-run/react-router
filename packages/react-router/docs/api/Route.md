@@ -38,7 +38,7 @@ And if the location of the app is `/news` then the UI hierarchy will be:
 
 The "react-empty" comments are just implementation details of React's `null` rendering. But for our purposes, it is instructive. A Route is always technically "rendered" even though its rendering `null`. As soon as the app location matches the route's path, your component will be rendered.
 
-## route props
+## Route render methods
 
 There are 3 ways to render something with a `<Route>`:
 
@@ -46,15 +46,17 @@ There are 3 ways to render something with a `<Route>`:
 - [`<Route render>`](#render-func)
 - [`<Route children>`](#children-func)
 
-All three methods will be passed the same three route props
+Each is useful in different circumstances. You should use only one of these props on a given `<Route>`. See their explanations below to understand why you have 3 options. Most of the time you'll use `component`.
+
+## Route props
+
+All three [render methods](#route-render-methods) will be passed the same three route props
 
 - [match](./match.md)
 - [location](./location.md)
 - [history](./history.md)
 
-You should use only one of these props on a given `<Route>`. See their explanations below to understand why you have 3 options.
-
-## component: func
+## component
 
 A React component to render only when the location matches. It will be
 rendered with [route props](#route-props).

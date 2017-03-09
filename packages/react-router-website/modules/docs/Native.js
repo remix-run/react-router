@@ -10,6 +10,9 @@ export default {
     require('../../../react-router/docs/api/Router.md?native'),
     require('../../../react-router/docs/api/StaticRouter.md?native'),
     require('../../../react-router/docs/api/Switch.md?native'),
+    require('../../../react-router/docs/api/history.md?native'),
+    require('../../../react-router/docs/api/location.md?native'),
+    require('../../../react-router/docs/api/match.md?native'),
     require('../../../react-router/docs/api/matchPath.md?native'),
     require('../../../react-router/docs/api/withRouter.md?native')
   ],

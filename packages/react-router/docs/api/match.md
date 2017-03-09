@@ -1,22 +1,19 @@
 # match
 
-A `match` object contains information about how a `<Route path>` matched the URL. `match` objects may contain the following properties:
+A `match` object contains information about how a `<Route path>` matched the URL. `match` objects contain the following properties:
 
   - `params` - (object) Key/value pairs parsed from the URL corresponding to the dynamic segments of the path
   - `isExact` - `true` if the entire URL was matched (no trailing characters)
   - `path` - (string) The path pattern used to match. Useful for building nested `<Route>`s
   - `url` - (string) The matched portion of the URL. Useful for building nested `<Link>`s
 
-The majority of the time you can get a `match` object as a prop to your [`<Route component>`](Route.md#component-func) or in your [`<Route render>`](Route.md#render-func) callback, so you shouldn't need to manually generate them.
+You'll have access `match` objects in various places:
 
-However, you may find it useful to manually calculate the match if you have a pre-determined route config that you'd like to traverse in order to know which routes match. In that case, we also export our `matchPath` function so you can use it to match just like we do internally.
+- [Route component](./Route.md#component) as `this.props.match`
+- [Route render](./Route.md#render-func) as `({ match }) => ()`
+- [Route children](./Route.md#children-func) as `({ match }) => ()`
+- [withRouter](./withRouter.md) as `this.props.match`
+- [matchPath](./withRouter.md) as the return value
 
-```js
-import { matchPath } from 'react-router'
+If a Route does not have a `path`, and therefore always matches, you'll get the closest parent match. Same goes for `withRouter`.
 
-const match = matchPath('/the/pathname', {
-  path: '/the/:dynamicId',
-  exact: true,
-  strict: false
-})
-```

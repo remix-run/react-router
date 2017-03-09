@@ -16,7 +16,6 @@ const Guide = ({ match, data }) => {
     <Block
       className="api-doc-wrapper"
       fontSize="80%"
-      paddingBottom={"60vh" /*so that scrolling headers can go all the way to the top*/}
     >
       <Block className="api-doc">
         <MarkdownViewer html={doc.markup}/>

@@ -11,6 +11,9 @@ export default {
     require('../../../react-router/docs/api/Router.md?web'),
     require('../../../react-router/docs/api/StaticRouter.md?web'),
     require('../../../react-router/docs/api/Switch.md?web'),
+    require('../../../react-router/docs/api/history.md?web'),
+    require('../../../react-router/docs/api/location.md?web'),
+    require('../../../react-router/docs/api/match.md?web'),
     require('../../../react-router/docs/api/matchPath.md?web'),
     require('../../../react-router/docs/api/withRouter.md?web')
   ],
@@ -18,7 +21,6 @@ export default {
   guides: [
     require('../../../react-router-dom/docs/guides/quick-start.md'),
     require('../../../react-router-dom/docs/guides/server-rendering.md'),
-    require('../../../react-router-dom/docs/guides/data-loading.md'),
     require('../../../react-router-dom/docs/guides/code-splitting.md'),
     require('../../../react-router-dom/docs/guides/scroll-restoration.md'),
     require('../../../react-router/docs/guides/testing.md?web')
