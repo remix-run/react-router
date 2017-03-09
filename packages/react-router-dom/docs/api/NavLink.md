@@ -5,17 +5,17 @@ A special version of the [`<Link>`](Link.md) that will add styling attributes to
 ```js
 import { NavLink } from 'react-router-dom'
 
-<NavLink to="/about" activeClassName="active">About</NavLink>
+<NavLink to="/about">About</NavLink>
 ```
 
 ## activeClassName: string
 
-The class to give the element when it is active. There is no default active class. This will be joined with the `className` prop.
+The class to give the element when it is active. The default given class is `active`. This will be joined with the `className` prop.
 
 ```js
 <NavLink
   to="/faq"
-  activeClassName="active"
+  activeClassName="selected"
 >FAQs</NavLink>
 ```
 
@@ -41,7 +41,6 @@ When `true`, the active class/style will only be applied if the location is matc
 <NavLink
   exact
   to="/profile"
-  activeClassName="active"
 >Profile</NavLink>
 ```
 
@@ -53,7 +52,6 @@ When `true`, the trailing slash on a location's `pathname` will be taken into co
 <NavLink
   strict
   to="/events/"
-  activeClassName="active"
 >Events</NavLink>
 ```
 
@@ -74,6 +72,5 @@ const oddEvent = (match, location) => {
 <NavLink
   to="/events/123"
   isActive={oddEvent}
-  activeClassName="active"
->Event 123</NavLink> 
+>Event 123</NavLink>
 ```
