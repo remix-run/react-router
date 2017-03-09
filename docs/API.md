@@ -198,6 +198,8 @@ router.push({
 })
 ```
 
+The pushed state can be accessed from `this.props.location.state`.
+
 ##### `replace(pathOrLoc)`
 Identical to `push` except replaces the current history entry with a new one.
 
