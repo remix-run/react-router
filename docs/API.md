@@ -104,7 +104,7 @@ A [location descriptor](/docs/Glossary.md#locationdescriptor). Usually this is a
   * `state`: State to persist to the `location`.
 * If it is not specified, an anchor tag without an `href` attribute will be rendered.
 
-_Note: React Router currently does not manage scroll position, and will not scroll to the element corresponding to `hash`._
+_Note: React Router currently does not manage scroll position, and will not scroll to the element corresponding to `hash`. You can use [react-router-scroll](https://github.com/taion/react-router-scroll) to manage the scroll position._
 
 ```jsx
 // String location descriptor.
