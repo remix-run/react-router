@@ -19,3 +19,5 @@ import Router from 'react-router/lib/Router'
 ```
 
 The public API available in this manner is defined as the set of imports available from the top-level `react-router` module. Anything not available through the top-level `react-router` module is a private API, and is subject to change without notice.
+
+Alternatively you can enable the [react-router-optimize](https://www.npmjs.com/package/babel-plugin-transform-react-router-optimize) babel transform to rewrite the imports automatically.
