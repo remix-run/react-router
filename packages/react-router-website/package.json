@@ -9,6 +9,7 @@
   },
   "devDependencies": {
     "babel-core": "^6.21.0",
+    "babel-eslint": "^6.0.4",
     "babel-loader": "^6.2.10",
     "babel-preset-es2015": "^6.14.0",
     "babel-preset-react": "^6.5.0",
@@ -16,6 +17,9 @@
     "bundle-loader": "0.5.4",
     "copy-webpack-plugin": "^4.0.1",
     "css-loader": "0.23.1",
+    "eslint": "^2.13.1",
+    "eslint-plugin-import": "^1.15.0",
+    "eslint-plugin-react": "^5.2.2",
     "file-loader": "^0.9.0",
     "html-loader": "^0.4.3",
     "html-webpack-plugin": "^2.22.0",
@@ -25,6 +29,7 @@
     "postcss-loader": "0.9.1",
     "prismjs-loader": "0.0.3",
     "react": "^15.4.0",
+    "react-addons-css-transition-group": "^15.4.2",
     "react-dom": "^15.4.0",
     "react-motion": "^0.4.4",
     "react-router-dom": "^4.0.0-beta.8",
@@ -33,11 +38,7 @@
     "sw-precache-webpack-plugin": "^0.7.2",
     "url-loader": "^0.5.7",
     "webpack": "^1.13.1",
-    "webpack-dev-server": "^1.14.1",
-    "babel-eslint": "^6.0.4",
-    "eslint": "^2.13.1",
-    "eslint-plugin-import": "^1.15.0",
-    "eslint-plugin-react": "^5.2.2"
+    "webpack-dev-server": "^1.14.1"
   },
   "dependencies": {
     "animated": "^0.2.0",

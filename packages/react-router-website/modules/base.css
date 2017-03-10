@@ -206,3 +206,13 @@ markdown a { color: #d0021b; text-decoration: none }
   background-size: 300% 300%
 }
 
+.fade-enter {
+  opacity: 0;
+  z-index: 1;
+}
+
+.fade-enter.fade-enter-active {
+  opacity: 1;
+  transition: opacity 250ms ease-in;
+}
+
