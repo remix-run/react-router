@@ -7,7 +7,7 @@ const Button = ({ children, ...props }) => (
   <Block
     component="button"
     color="#fff"
-    padding="9px 0"
+    padding="15px 10px"
     background={RED}
     borderRadius={0}
     cursor="pointer"
@@ -68,7 +68,8 @@ export default class NewsletterSignup extends Component {
 
   handleSubmit = (e) => {
     e.preventDefault()
-    if (this.state.email) {
+    window.location.href='https://reacttraining.com/online/react-router'
+    /*if (this.state.email) {
       const request = new XMLHttpRequest()
       request.open('POST', `//api.convertkit.com/v3/forms/129214/subscribe?${this.getReqURI()}`, true)
       request.onload = () => {
@@ -80,7 +81,7 @@ export default class NewsletterSignup extends Component {
           })
         }
       }
-      request.send()
+      request.send()*/
     }
   }
 
@@ -102,8 +103,9 @@ export default class NewsletterSignup extends Component {
               fontSize={isSmallScreen ? '100%' : '150%'}
               fontWeight="bold"
             >
-              Sign up to receive updates about React Router, our workshops,
-              online courses, and more:
+      {/*Sign up to receive updates about React Router, our workshops,
+              online courses, and more:*/}
+              As a companion to the documentation, we'll be launching a free course on React Router v4 within the next few weeks.
             </Block>
             <form onSubmit={this.handleSubmit}>
               {submitted ? (
@@ -115,7 +117,7 @@ export default class NewsletterSignup extends Component {
                   flexDirection={isSmallScreen ? 'column' : 'row'}
                   justifyContent="space-around"
                 >
-                  <Input
+                {/*<Input
                     value={name}
                     onChange={(e) => this.setState({ name: e.target.value })}
                     type="text"
@@ -130,9 +132,10 @@ export default class NewsletterSignup extends Component {
                     name="email"
                     placeholder="EMAIL ADDRESS"
                     margin={isSmallScreen ? '0 0 5px 0' : '0 5px 0 0'}
-                  />
+                  /> */}
                   <Button type="submit">
-                    Subscribe
+                    {/*Subscribe*/}
+                    More Information
                   </Button>
                 </Flex>
               )}
