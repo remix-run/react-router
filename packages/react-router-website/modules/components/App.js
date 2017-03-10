@@ -11,8 +11,11 @@ import DelegateMarkdownLinks from './DelegateMarkdownLinks'
 import Home from './Home'
 import Environment from './Environment'
 
+const base = document.querySelector('base')
+const baseHref = base ? base.getAttribute('href') : '/'
+
 const App = () => (
-  <BrowserRouter>
+  <BrowserRouter basename={baseHref.replace(/\/$/, '')}>
     <DelegateMarkdownLinks>
       <Switch>
         <Route path="/" exact={true} component={Home}/>
