@@ -24,3 +24,5 @@ const Home = withRouter(
 ```
 
 Note that this example makes use of the [withRouter](/upgrade-guides/v2.4.0.md) higher-order component introduced in v2.4.0.
+
+Alternatively if you are using `Link` component you can pass a function to its `onClick` property and then call `event.preventDefault()` with its event parameter.
