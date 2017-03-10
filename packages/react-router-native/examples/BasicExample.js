@@ -1,30 +1,5 @@
-# Quick Start
-
-If this is your first time building a React Native app, we recommend you check out the official ["Getting Started"](https://facebook.github.io/react-native/docs/getting-started.html) guide.
-
-## Installation
-
-React Router Native is published to [npm](https://npm.im/react-router-native). You can install it with either `npm` or [`yarn`](https://yarnpkg.com).
-
-```sh
-npm install react-router-native@next
-# or
-yarn add react-router-native@next
-```
-
-Once you've initialized a new React Native project, you can copy/paste any of the examples into your `index.ios.js` or `index.android.js` files to play around with them.
-
-Here's the basic example:
-
-```jsx
 import React from 'react'
-import {
-  StyleSheet,
-  Text,
-  View,
-  AppRegistry,
-} from 'react-native'
-
+import { StyleSheet, Text, View } from 'react-native'
 import { NativeRouter, Route, Link } from 'react-router-native'
 
 const Home = () => (
@@ -76,7 +51,7 @@ const Topics = ({ match }) => (
   </View>
 )
 
-const nativeRouterExamples = () => (
+const App = () => (
   <NativeRouter>
     <View style={styles.container}>
       <View style={styles.nav}>
@@ -133,5 +108,4 @@ const styles = StyleSheet.create({
   }
 })
 
-AppRegistry.registerComponent('MyApp', () => App);
-```
+export default App
