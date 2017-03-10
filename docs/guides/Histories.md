@@ -147,6 +147,8 @@ factory with the [useQueries](https://github.com/ReactTraining/history/blob/v2/d
 
 ### Examples:
 
+**Note**: You'll need to install `history` module with `npm install --save history`.
+
 Defining a basename:
 
 ```js
