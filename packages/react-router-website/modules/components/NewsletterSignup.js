@@ -1,6 +1,6 @@
 import React, { PropTypes, Component } from 'react'
-import { Block, Row, Flex } from 'jsxstyle'
-import { DARK_GRAY, RED } from '../Theme'
+import { Block, Flex } from 'jsxstyle'
+import { RED } from '../Theme'
 import SmallScreen from './SmallScreen'
 
 const Button = ({ children, ...props }) => (
@@ -19,9 +19,12 @@ const Button = ({ children, ...props }) => (
   />
 )
 
-const Input = ({ margin, ...props}) => (
+Button.propTypes = {
+  children: PropTypes.node
+}
+
+const Input = ({ margin, ...props }) => (
   <Block
-    component="input"
     component="input"
     padding="10px 8px"
     border="1px solid #d6d6d6"
@@ -34,21 +37,25 @@ const Input = ({ margin, ...props}) => (
   />
 )
 
+Input.propTypes = {
+  margin: PropTypes.any
+}
+
 export default class NewsletterSignup extends Component {
   static propTypes = {
     tags: PropTypes.string.isRequired,
-    id: PropTypes.string.isRequired,
+    id: PropTypes.string.isRequired
   }
 
   static defaultProps = {
     tags: '125835',
-    id: '129214',
+    id: '129214'
   }
 
   state = {
     submitted: false,
     name: '',
-    email: '',
+    email: ''
   }
 
   getReqURI = () => {
@@ -57,7 +64,7 @@ export default class NewsletterSignup extends Component {
       api_key: '0DZDEQZjU_laOYXzD6cQRA',
       name: this.state.name.trim(),
       email: this.state.email.trim(),
-      tags: this.props.tags,
+      tags: this.props.tags
     }
 
     return Object.keys(info).reduce((prev, next, index) => {
@@ -81,12 +88,12 @@ export default class NewsletterSignup extends Component {
           })
         }
       }
-      request.send()*/
-    }
+      request.send()
+    }*/
   }
 
   render () {
-    const { submitted, name, email } = this.state
+    const { submitted } = this.state
     return (
       <SmallScreen>
         {(isSmallScreen) => (
