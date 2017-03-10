@@ -19,7 +19,8 @@ export default {
   examples: [
     { label: 'Basic',
       slug: 'Basic',
-      loadSource: require('bundle?lazy!!prismjs?lang=jsx!../../../react-router-native/examples/BoringExample.js')
+      appetizeURL: 'https://appetize.io/embed/kq15zzzz6u328rvg49bdu75vum',
+      loadSource: require('bundle?lazy!!prismjs?lang=jsx!../../../react-router-native/examples/BasicExample.js')
     }
   ],
   guides: [

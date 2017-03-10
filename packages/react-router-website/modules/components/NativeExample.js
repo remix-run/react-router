@@ -25,14 +25,15 @@ const NativeExample = ({ example }) => (
                   top="40px"
                   bottom="40px"
                 >
-                  <iframe
-                    src="https://appetize.io/embed/8weq26ndh2cgtze6txtffq0mq0?device=iphone6&scale=50&autoplay=false&orientation=portrait&deviceColor=white"
-                    width="208px"
-                    height="435px"
-                    style={smallScreen ? { margin: 'auto' } : null}
-                    frameBorder="0"
-                    scrolling="no"
-                  ></iframe>
+                  {example.appetizeURL &&
+                    <iframe
+                      src={`${example.appetizeURL}?device=iphone6&scale=50&autoplay=false&orientation=portrait&deviceColor=white`}
+                      width="208px"
+                      height="435px"
+                      style={smallScreen ? { margin: 'auto' } : null}
+                      frameBorder="0"
+                      scrolling="no"
+                    ></iframe>}
                 </Col>
                 <SourceViewer
                   code={src}
