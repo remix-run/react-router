@@ -7,9 +7,9 @@ If this is your first time building a React Native app, we recommend you check o
 React Router Native is published to [npm](https://npm.im/react-router-native). You can install it with either `npm` or [`yarn`](https://yarnpkg.com).
 
 ```sh
-npm install react-router-native@next
+npm install react-router-native
 # or
-yarn add react-router-native@next
+yarn add react-router-native
 ```
 
 Once you've initialized a new React Native project, you can copy/paste any of the examples into your `index.ios.js` or `index.android.js` files to play around with them.

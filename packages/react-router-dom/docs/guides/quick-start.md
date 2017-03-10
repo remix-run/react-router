@@ -19,7 +19,7 @@ React Router DOM is [published to npm](https://npm.im/react-router-dom) so you c
 ```sh
 yarn add react-router-dom
 # or, if you're not using yarn
-npm install react-router-dom@next
+npm install react-router-dom
 ```
 
 Now you can copy/paste any of the examples into `src/App.js`. Here's the

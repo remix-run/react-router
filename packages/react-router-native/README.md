@@ -6,7 +6,7 @@
 
 Using [npm](https://www.npmjs.com/):
 
-    $ npm install --save react-router-native@next
+    $ npm install --save react-router-native
 
 Then `import` or `require` as you would anything else:
 

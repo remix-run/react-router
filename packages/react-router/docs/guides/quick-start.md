@@ -10,8 +10,8 @@ You probably want to read one of these instead:
 React Router Core is published to [npm](https://npm.im/react-router) so you can install it with either `npm` or [`yarn`](https://yarnpkg.com).
 
 ```sh
-npm install react-router@next
+npm install react-router
 # or
-yarn add react-router@next
+yarn add react-router
 ```
 

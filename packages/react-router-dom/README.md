@@ -6,7 +6,7 @@ DOM bindings for [React Router](https://reacttraining.com/react-router).
 
 Using [npm](https://www.npmjs.com/):
 
-    $ npm install --save react-router-dom@next
+    $ npm install --save react-router-dom
 
 Then with a module bundler like [webpack](https://webpack.github.io/), use as you would anything else:
 
@@ -23,7 +23,7 @@ var Link = require('react-router-dom').Link
 The UMD build is also available on [unpkg](https://unpkg.com):
 
 ```html
-<script src="https://unpkg.com/react-router-dom@next/umd/react-router-dom.min.js"></script>
+<script src="https://unpkg.com/react-router-dom/umd/react-router-dom.min.js"></script>
 ```
 
 You can find the library on `window.ReactRouterDOM`.

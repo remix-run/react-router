@@ -5,9 +5,9 @@ React Router runs in multiple environments: browsers, servers, native, and even 
 ## Web
 
 ```bash
-npm install react-router-dom@next
+npm install react-router-dom
 # or
-yarn add react-router-dom@next
+yarn add react-router-dom
 ```
 
 All of the package modules can be imported from the top:
@@ -35,9 +35,9 @@ import Route from 'react-router-dom/Route'
 We're still working on great documentation for the native capabilities of React Router. For now we recommend you [read the source](https://github.com/ReactTraining/react-router/tree/v4/packages/react-router-native).
 
 ```bash
-yarn add react-router-native@next
+yarn add react-router-native
 # or if not using the react-native cli
-npm install react-router-native@next
+npm install react-router-native
 ```
 
 All of the package modules can be imported from the top:
@@ -56,9 +56,9 @@ import {
 ## Who-knows-where
 
 ```bash
-yarn add react-router@next
+yarn add react-router
 # or if not using the react-native cli
-npm install react-router@next
+npm install react-router
 ```
 
 All of the package modules can be imported from the top:
