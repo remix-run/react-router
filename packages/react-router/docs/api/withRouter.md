@@ -37,4 +37,4 @@ withRouter(connect(...)(MyComponent)
 connect(...)(withRouter(MyComponent))
 ```
 
-See [this post](https://github.com/ReactTraining/react-router/blob/v4.0.0-beta.8/packages/react-router/docs/guides/blocked-updates.md) for more information.
+See [this post](https://github.com/ReactTraining/react-router/blob/master/packages/react-router/docs/guides/blocked-updates.md) for more information.
