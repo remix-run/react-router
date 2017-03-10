@@ -4,6 +4,12 @@
 
 > **Keep your state in sync with your router** :sparkles:
 
+This is beta software, it needs:
+
+1. A working example
+2. Some people to try it out and find bugs
+3. A strategy for working with the devtools
+   - (issue describing a different approach to what we've seen previously coming soon)
 
 ## Installation
 

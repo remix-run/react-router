@@ -63,6 +63,7 @@ pre, code { font-family: Menlo, monospace; line-height: 1.5 }
   box-shadow:
     inset 500px 0 #fff,
     inset 1020px 0 rgb(45, 45, 45);
+  min-height: 100vh;
 }
 markdown > pre {
   background: rgb(45, 45, 45);

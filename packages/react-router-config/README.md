@@ -2,6 +2,11 @@
 
 Static route configuration helpers for React Router.
 
+This is alpha software, it needs:
+
+1. Realistic server rendering example with data preloading
+2. Pending navigation example
+
 ## Installation
 
 Using [npm](https://www.npmjs.com/):

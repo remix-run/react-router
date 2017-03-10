@@ -81,6 +81,8 @@ export default {
   guides: [
     require('../../../react-router-native/docs/guides/quick-start.md'),
     require('../../../react-router-native/docs/guides/deep-linking.md'),
-    require('../../../react-router-native/docs/guides/animation.md')
+    require('../../../react-router-native/docs/guides/animation.md'),
+    require('../../../react-router/docs/guides/redux.md'),
+    require('../../../react-router/docs/guides/static-routes.md')
   ]
 }
