@@ -28,7 +28,7 @@ class ShowTheLocation extends React.Component {
 const ShowTheLocationWithRouter = withRouter(ShowTheLocation)
 ```
 
-**IMPORTANT NOTE:** If you are using withRouter to prevent shouldComponentUpdate blocks, it is important that withRouter wraps the component that implements shouldComponentUpate. For example, when using Redux: 
+**IMPORTANT NOTE:** If you are using `withRouter` to prevent `shouldComponentUpdate` blocks, it is important that `withRouter` wraps the component that implements `shouldComponentUpate`. For example, when using Redux: 
 
 ```js
 // This gets around shouldComponentUpdate
