@@ -1,6 +1,4 @@
-es
-lib
-umd
 node_modules
+lerna-debug.log
 npm-debug.log
-coverage
+node_modules

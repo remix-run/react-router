@@ -1,9 +1,65 @@
-## [v3.0.2](https://github.com/ReactTraining/react-router/compare/v3.0.1...v3.0.2)
+## [v4.0.0-beta.8]
+> Mar 8, 2017
+
+- Updated website
+- Revert to using `context.router` for everything since Relay uses `context.route`
+- Add `staticContext` route prop when rendering `<Route>`s inside a `<StaticRouter>`
+- Pass through the parent `match` object to `<Route>`s w/out a `path`. This also
+  includes components wrapped using `withRouter`
+- Fix unicode `<Route>` paths
+- Set `NavLink`'s default `activeClassName` prop to `active`
+
+[v4.0.0-beta.8]: https://github.com/ReactTraining/react-router/compare/v4.0.0-beta.7...v4.0.0-beta.8
+
+## [v4.0.0-beta.7]
+> Mar 3, 2017
+
+- Added support for `<Redirect>` as a child of a `<Switch>`
+- Fixed a bug where `<Switch>` would always remount children
+- Removed subscriptions to avoid unneccessary rerendering in every `<Route>`
+- Added `<Switch location>` and `<Route location>` props so that "pure" route
+  components can know when the location changes
+- Removed location persistence across app restarts in `<NativeRouter>`
+- Made docs easier to find in individual `packages` directories
+- Split `context.router` into two parts: `context.history` and `context.route`
+- Changed `matchPath` signature to `matchPath(pathname, options)`
+
+[v4.0.0-beta.7]: https://github.com/ReactTraining/react-router/compare/v4.0.0-beta.6...v4.0.0-beta.7
+
+## [v4.0.0-beta.6]
+> Feb 13, 2017
+
+- Fixed a bug with `<StaticRouter>`'s `createHref` ([#4484] thanks @pshrmn)
+- Added support for objects in `<Link to>` in `react-router-native` ([#4483] by @CodogoFreddie)
+- Include `react-router` in `react-router-dom`'s UMD bundle
+
+[v4.0.0-beta.6]: https://github.com/ReactTraining/react-router/compare/v4.0.0-beta.5...v4.0.0-beta.6
+[#4484]: https://github.com/ReactTraining/react-router/pull/4484
+[#4483]: https://github.com/ReactTraining/react-router/pull/4483
+
+## [v4.0.0-beta.5]
+> Feb 7, 2017
+
+[v4.0.0-beta.5]: https://github.com/ReactTraining/react-router/compare/v4.0.0-beta.4...v4.0.0-beta.5
+
+## [v4.0.0-beta.4]
+> Feb 1, 2017
+
+[v4.0.0-beta.4]: https://github.com/ReactTraining/react-router/compare/v4.0.0-beta.3...v4.0.0-beta.4
+
+## [v4.0.0-beta.3]
+> Jan 30, 2017
+
+[v4.0.0-beta.3]: https://github.com/ReactTraining/react-router/compare/v4.0.0-beta.2...v4.0.0-beta.3
+
+## [v3.0.2]
 > Jan 18, 2017
 
 - Re-add module entry to package.json
 
-## [v3.0.1](https://github.com/ReactTraining/react-router/compare/v3.0.0...v3.0.1)
+[v3.0.2]: https://github.com/ReactTraining/react-router/compare/v3.0.1...v3.0.2
+
+## [v3.0.1]
 > Jan 12, 2017
 
 - Pass transition hook's arguments correctly ([#4123] by @arkist)
@@ -12,6 +68,7 @@
 - Fix withRouter error when used without a Router ([#4295] by @dropfen)
 - Adding support for escaped parentheses in Route Paths ([#4202] by @sebastiandeutsch)
 
+[v3.0.1]: https://github.com/ReactTraining/react-router/compare/v3.0.0...v3.0.1
 [#4123]: https://github.com/ReactTraining/react-router/pull/4123
 [#4147]: https://github.com/ReactTraining/react-router/pull/4147
 [#4216]: https://github.com/ReactTraining/react-router/pull/4216

@@ -1,0 +1,22 @@
+{
+  "parser": "babel-eslint",
+  "env": {
+    "browser": true,
+    "node": true
+  },
+  "plugins": [
+    "import",
+    "react"
+  ],
+  "extends": [
+    "eslint:recommended",
+    "plugin:import/errors",
+    "plugin:react/recommended"
+  ],
+  "rules": {
+    "prefer-arrow-callback": 2,
+    "react/display-name": 0,
+    "react/no-did-mount-set-state": 0,
+    "semi": [ 2, "never" ]
+  }
+}
