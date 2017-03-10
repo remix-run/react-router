@@ -5,6 +5,7 @@ import Bundle from './Bundle'
 import { Block } from 'jsxstyle'
 import SmallScreen from './SmallScreen'
 import Loading from './Loading'
+import { Redirect } from 'react-router-dom'
 
 const envData = {
   web: require('bundle?lazy!../docs/Web'),
@@ -33,28 +34,32 @@ class Environment extends Component {
 
   render() {
     const { history, location, match, match: { params: { environment }}} = this.props
-    return (
-      <SmallScreen>
-        {(isSmallScreen) => (
-          <Bundle load={envData[environment]}>
-            {(data) => data ? (
-              isSmallScreen ? (
-                <EnvironmentSmall
-                  data={data}
-                  match={match}
-                  location={location}
-                  history={history}
-                />
+    if (!envData[environment]) {
+      return <Redirect to="/"/>
+    } else {
+      return (
+        <SmallScreen>
+          {(isSmallScreen) => (
+            <Bundle name="Environment" load={envData[environment]}>
+              {(data) => data ? (
+                isSmallScreen ? (
+                  <EnvironmentSmall
+                    data={data}
+                    match={match}
+                    location={location}
+                    history={history}
+                  />
+                ) : (
+                  <EnvironmentLarge data={data} match={match}/>
+                )
               ) : (
-                <EnvironmentLarge data={data} match={match}/>
-              )
-            ) : (
-              <Loading/>
-            )}
-          </Bundle>
-        )}
-      </SmallScreen>
-    )
+                <Loading/>
+              )}
+            </Bundle>
+          )}
+        </SmallScreen>
+      )
+    }
   }
 }
 
