@@ -66,7 +66,7 @@ class Route extends React.Component {
     const { route } = router
     const pathname = (location || route.location).pathname
 
-    return path ? matchPath(pathname, { path, strict, exact, sensitive }) : route.match
+    return matchPath(pathname, { path, strict, exact, sensitive }, route.match)
   }
 
   componentWillMount() {
