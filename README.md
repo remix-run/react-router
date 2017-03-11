@@ -16,7 +16,7 @@ This repository is a monorepo that we manage using [Lerna](https://github.com/le
 - `react-router` - The core of React Router ([API docs](packages/react-router/docs))
 - `react-router-dom` - DOM bindings for React Router ([API docs](packages/react-router-dom/docs))
 - `react-router-native` - [React Native](https://facebook.github.io/react-native/) bindings for React Router ([API docs](packages/react-router-native/docs))
-- `react-router-redux` - [React Router Redux](packages/react-router-config) Integration with React Router and Redux
+- `react-router-redux` - [React Router Redux](packages/react-router-redux) Integration with React Router and Redux
 - `react-router-config` - [React Router Config](packages/react-router-config) static route config helpers
 
 ## Thanks
