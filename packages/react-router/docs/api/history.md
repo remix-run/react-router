@@ -35,7 +35,7 @@ class Comp extends React.Component {
     const locationChanged = nextProps.location !== this.props.location
 
     // INCORRECT, will *always* be false because history is mutable.
-    const locationChanged= nextProps.history.location !== this.props.history.location
+    const locationChanged = nextProps.history.location !== this.props.history.location
   }
 }
 
