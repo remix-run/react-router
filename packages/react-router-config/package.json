@@ -1,6 +1,6 @@
 {
   "name": "react-router-config",
-  "version": "4.0.0-beta.8",
+  "version": "1.0.0-beta.1",
   "description": "Static route config matching for React Router",
   "repository": "ReactTraining/react-router-config",
   "license": "MIT",
@@ -22,11 +22,11 @@
     "test": "karma start --single-run"
   },
   "peerDependencies": {
-    "react": ">=15",
-    "react-router": "4.0.0-beta.8"
+    "react": "^15",
+    "react-router": "^4"
   },
   "devDependencies": {
-    "react-router": "4.0.0-beta.8",
+    "react-router": "^4.0.0",
     "babel-cli": "^6.18.0",
     "babel-eslint": "^6.0.4",
     "babel-loader": "^6.2.10",

@@ -1,6 +1,6 @@
 {
   "name": "react-router",
-  "version": "4.0.0-beta.8",
+  "version": "4.0.0",
   "description": "Declarative routing for React",
   "repository": "ReactTraining/react-router",
   "license": "MIT",
@@ -34,7 +34,7 @@
     "test": "karma start --single-run"
   },
   "peerDependencies": {
-    "react": ">=15"
+    "react": "^15"
   },
   "dependencies": {
     "history": "^4.6.0",
