@@ -1,9 +1,22 @@
-# React Router [![Travis][build-badge]][build]
+<p align="center">
+  <a href="https://reacttraining.com/react-router/">
+    <img alt="babel" src="https://reacttraining.com/react-router/android-chrome-144x144.png" width="144">
+  </a>
+</p>
 
-[build-badge]: https://img.shields.io/travis/ReactTraining/react-router/v4.svg?style=flat-square
-[build]: https://travis-ci.org/ReactTraining/react-router
+<h3 align="center">
+  React Router
+</h3>
 
-Declarative routing for [React](https://facebook.github.io/react).
+<p align="center">
+  Declarative routing for <a href="https://facebook.github.io/react">React</a>
+</p>
+
+<p align="center">
+  <a href="https://www.npmjs.com/package/react-router"><img src="https://img.shields.io/npm/v/react-router.svg?style=flat-square"></a>
+  <a href="https://www.npmjs.com/package/react-router"><img src="https://img.shields.io/npm/dm/react-router.svg?style=flat-square"></a>
+  <a href="https://travis-ci.org/ReactTraining/react-router"><img src="https://img.shields.io/travis/ReactTraining/react-router/master.svg?style=flat-square"></a>
+</p>
 
 ## Docs
 
@@ -11,13 +24,15 @@ Declarative routing for [React](https://facebook.github.io/react).
 
 ## Packages
 
-This repository is a monorepo that we manage using [Lerna](https://github.com/lerna/lerna). That means that we actually publish [several packages](https://github.com/ReactTraining/react-router/tree/v4/packages) to npm from the same codebase, including: 
+This repository is a monorepo that we manage using [Lerna](https://github.com/lerna/lerna). That means that we actually publish [several packages](/packages) to npm from the same codebase, including: 
 
-- `react-router` - The core of React Router ([API docs](packages/react-router/docs))
-- `react-router-dom` - DOM bindings for React Router ([API docs](packages/react-router-dom/docs))
-- `react-router-native` - [React Native](https://facebook.github.io/react-native/) bindings for React Router ([API docs](packages/react-router-native/docs))
-- `react-router-redux` - [React Router Redux](packages/react-router-redux) Integration with React Router and Redux
-- `react-router-config` - [React Router Config](packages/react-router-config) static route config helpers
+| Package | Version | Docs | Description |
+|---------|---------|------|-------------|
+| [`react-router`](/packages/react-router) | [![npm](https://img.shields.io/npm/v/react-router.svg?style=flat-square)](https://www.npmjs.com/package/react-router) | [![](https://img.shields.io/badge/API%20Docs-markdown-green.svg?style=flat-square)](/packages/react-router/docs) | The core of React Router |
+| [`react-router`](/packages/react-router-dom) | [![npm](https://img.shields.io/npm/v/react-router-dom.svg?style=flat-square)](https://www.npmjs.com/package/react-router-dom) | [![](https://img.shields.io/badge/API%20Docs-markdown-green.svg?style=flat-square)](/packages/react-router-dom/docs) | DOM bindings for React Router |
+| [`react-router`](/packages/react-router-native) | [![npm](https://img.shields.io/npm/v/react-router-native.svg?style=flat-square)](https://www.npmjs.com/package/react-router-native) | [![](https://img.shields.io/badge/API%20Docs-markdown-green.svg?style=flat-square)](/packages/react-router-native/docs) | [React Native](https://facebook.github.io/react-native/) bindings for React Router |
+| [`react-router`](/packages/react-router-redux) | [![npm](https://img.shields.io/badge/npm-5.0.0alpha.1-orange.svg?style=flat-square)](https://www.npmjs.com/package/react-router-redux) | [![](https://img.shields.io/badge/API%20Docs-readme-orange.svg?style=flat-square)](/packages/react-router-redux/#readme) |  Integration with React Router and Redux |
+| [`react-router`](/packages/react-router-config) | [![npm](https://img.shields.io/npm/v/react-router-config.svg?style=flat-square)](https://www.npmjs.com/package/react-router-config) | [![](https://img.shields.io/badge/API%20Docs-readme-orange.svg?style=flat-square)](/packages/react-router-config/#readme) | Static route config helpers |
 
 ## Thanks
 
