@@ -88,6 +88,11 @@ export default {
       slug: 'modal-gallery',
       load: require('bundle?lazy!babel!../examples/ModalGallery'),
       loadSource: require('bundle?lazy!!prismjs?lang=jsx!../examples/ModalGallery.js')
+    },
+    { label: 'Nested Routes',
+      slug: 'nested-routes',
+      load: require('bundle?lazy!babel!../examples/NestedRoutes'),
+      loadSource: require('bundle?lazy!!prismjs?lang=jsx!../examples/NestedRoutes.js')
     }
   ]
 }
