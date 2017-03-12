@@ -22,7 +22,7 @@
 
 [View the docs here](https://reacttraining.com/react-router)
 
-[3.x docs](https://github.com/ReactTraining/react-router/blob/v3.0.2/docs)
+[3.x docs](https://github.com/ReactTraining/react-router/blob/v3/docs)
 
 [2.x docs](https://github.com/ReactTraining/react-router/blob/v2.8.1/docs)
 
