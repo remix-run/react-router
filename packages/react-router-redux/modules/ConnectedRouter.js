@@ -1,3 +1,4 @@
+import invariant from 'invariant'
 import React, { Component, PropTypes } from 'react'
 import { Router, Route } from 'react-router'
 
@@ -14,6 +15,15 @@ class ConnectedRouter extends Component {
     store: PropTypes.object
   }
 
+  componentWillMount() {
+    const { children } = this.props
+
+    invariant(
+      children == null || React.Children.count(children) === 1,
+      'A <ConnectedRouter> may have only one child element'
+    )
+  }
+
   render() {
     const { store:propsStore, history, children, ...props } = this.props
     let store = propsStore || this.context.store
@@ -26,7 +36,7 @@ class ConnectedRouter extends Component {
               payload: location
             })
 
-            return children
+            return React.Children.only(children)
           }}/>
       </Router>
     )

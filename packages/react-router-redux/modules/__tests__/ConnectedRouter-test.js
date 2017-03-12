@@ -57,4 +57,14 @@ describe('A <ConnectedRouter>', () => {
 
     expect(store.getState()).toHaveProperty('router.location.pathname', '/foo')
   })
+
+  it('renders its children', () => {
+    const tree = renderer.create(
+      <ConnectedRouter store={store} history={history}>
+        <div>Test</div>
+      </ConnectedRouter>
+    ).toJSON()
+
+    expect(tree).toMatchSnapshot()
+  })
 })
