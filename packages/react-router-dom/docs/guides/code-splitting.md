@@ -91,7 +91,7 @@ The `Bundle` component is great for loading as you approach a new screen, but it
 
 ```js
 import loadAbout from 'bundle?lazy!./loadAbout'
-import loadDashboard from 'bundle?lazy!./loadAbout'
+import loadDashboard from 'bundle?lazy!./loadDashboard'
 
 // components load their module for initial visit
 const About = () => (
