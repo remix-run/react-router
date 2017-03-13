@@ -39,15 +39,13 @@ class Route extends React.Component {
         ...this.context.router,
         route: {
           location: this.props.location || this.context.router.route.location,
-          match: this.state.match
+          match: this.match
         }
       }
     }
   }
 
-  state = {
-    match: this.computeMatch(this.props, this.context.router)
-  }
+  match = this.computeMatch(this.props, this.context.router)
 
   computeMatch({ computedMatch, location, path, strict, exact }, { route }) {
     if (computedMatch)
@@ -63,17 +61,17 @@ class Route extends React.Component {
 
     warning(
       !(component && render),
-      'You should not use <Route component> and <Route render> in the same route; <Route render> will be ignored'   
+      'You should not use <Route component> and <Route render> in the same route; <Route render> will be ignored'
     )
 
     warning(
       !(component && children),
-      'You should not use <Route component> and <Route children> in the same route; <Route children> will be ignored'   
+      'You should not use <Route component> and <Route children> in the same route; <Route children> will be ignored'
     )
 
     warning(
       !(render && children),
-      'You should not use <Route render> and <Route children> in the same route; <Route children> will be ignored'    
+      'You should not use <Route render> and <Route children> in the same route; <Route children> will be ignored'
     )
   }
 
@@ -88,13 +86,11 @@ class Route extends React.Component {
       '<Route> elements should not change from controlled to uncontrolled (or vice versa). You provided a "location" prop initially but omitted it on a subsequent render.'
     )
 
-    this.setState({
-      match: this.computeMatch(nextProps, nextContext.router)
-    })
+    this.match = this.computeMatch(nextProps, nextContext.router);
   }
 
   render() {
-    const { match } = this.state
+    const { match } = this;
     const { children, component, render } = this.props
     const { history, route, staticContext } = this.context.router
     const location = this.props.location || route.location
