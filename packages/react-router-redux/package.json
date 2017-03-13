@@ -1,6 +1,6 @@
 {
   "name": "react-router-redux",
-  "version": "5.0.0-alpha.2",
+  "version": "5.0.0-alpha.3",
   "description": "Redux bindings for React Router",
   "repository": "ReactTraining/react-router",
   "license": "MIT",
@@ -10,6 +10,8 @@
   "files": [
     "ConnectedRouter.js",
     "reducer.js",
+    "middleware.js",
+    "actions.js",
     "index.js",
     "README.md",
     "es",
