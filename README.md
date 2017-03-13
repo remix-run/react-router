@@ -22,6 +22,10 @@
 
 [View the docs here](https://reacttraining.com/react-router)
 
+[3.x docs](https://github.com/ReactTraining/react-router/blob/v3/docs)
+
+[2.x docs](https://github.com/ReactTraining/react-router/blob/v2.8.1/docs)
+
 ## Packages
 
 This repository is a monorepo that we manage using [Lerna](https://github.com/lerna/lerna). That means that we actually publish [several packages](/packages) to npm from the same codebase, including:
