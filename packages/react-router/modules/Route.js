@@ -86,11 +86,11 @@ class Route extends React.Component {
       '<Route> elements should not change from controlled to uncontrolled (or vice versa). You provided a "location" prop initially but omitted it on a subsequent render.'
     )
 
-    this.match = this.computeMatch(nextProps, nextContext.router);
+    this.match = this.computeMatch(nextProps, nextContext.router)
   }
 
   render() {
-    const { match } = this;
+    const { match } = this
     const { children, component, render } = this.props
     const { history, route, staticContext } = this.context.router
     const location = this.props.location || route.location
