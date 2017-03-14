@@ -119,6 +119,22 @@ describe('A <Switch>', () => {
     expect(node.innerHTML).toNotContain('bub')
     expect(node.innerHTML).toContain('cup')
   })
+
+  it('renders with non-element children', () => {
+    const node = document.createElement('div')
+
+    ReactDOM.render((
+      <MemoryRouter initialEntries={[ '/one' ]}>
+        <Switch>
+          <Route path="/one" render={() => (<h1>one</h1>)}/>
+          {false}
+          {undefined}
+        </Switch>
+      </MemoryRouter>
+    ), node)
+
+    expect(node.innerHTML).toMatch(/one/)
+  })
 })
 
 
@@ -148,7 +164,7 @@ describe('A <Switch location>', () => {
         return <Route {...props} />
       }
 
-      const switchLocation = { pathname: '/two' } 
+      const switchLocation = { pathname: '/two' }
       ReactDOM.render((
         <MemoryRouter initialEntries={[ '/one' ]}>
           <Switch location={switchLocation}>
