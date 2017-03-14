@@ -6,7 +6,7 @@ download the entire app before they can use it. You can think of code splitting 
 Here's the way the website you're using right now does code splitting: `<Bundle>`. What's most notable is that the router actually has nothing to do with this. When you're "at a route" that simply means "you're rendering a component". So we can make a component that loads dynamic imports as the user navigates to it. This approach works for any part of your app.
 
 ```js
-import loadSomething from 'bundle?lazy!./Something'
+import loadSomething from 'bundle-loader?lazy!./Something'
 
 <Bundle load={loadSomething}>
   {(mod) => (
@@ -90,8 +90,8 @@ Regardless of the way you import, the idea is the same: a component that handles
 The `Bundle` component is great for loading as you approach a new screen, but it's also beneficial to preload the rest of the app in the background.
 
 ```js
-import loadAbout from 'bundle?lazy!./loadAbout'
-import loadDashboard from 'bundle?lazy!./loadDashboard'
+import loadAbout from 'bundle-loader?lazy!./loadAbout'
+import loadDashboard from 'bundle-loader?lazy!./loadDashboard'
 
 // components load their module for initial visit
 const About = () => (
