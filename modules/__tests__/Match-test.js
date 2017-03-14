@@ -195,7 +195,10 @@ describe('Match', () => {
                 state: null,
                 key: undefined
               },
-              params: { foo: 'one', bar: 'two' },
+              params: {
+                bar: 'two',
+                foo: 'one'
+              },
               pathname: '/one/two',
               pattern: '/:foo/:bar'
             })

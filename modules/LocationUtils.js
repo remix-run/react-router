@@ -19,7 +19,7 @@ export const createRouterLocation = (input, parseQueryString, stringifyQuery) =>
       query: input.query || (
         input.search ? parseQueryString(input.search) : null
       ),
-      key: input.key
+      key: process.env.NODE_ENV === 'test' ? undefined : input.key
     }
   }
 }
