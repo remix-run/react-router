@@ -15,6 +15,28 @@ import loadSomething from 'bundle?lazy!./Something'
 </Bundle>
 ```
 
+The loadSomething means a function that uses the require.ensure function(what results are converted by bundle-loader)
+
+```js
+module.exports = function(cb) {
+  require.ensure([], function(require) {
+    cb(require(chunkPath));
+  }
+}
+```
+
+If you use typeScript, you can code the loadSomething function like it
+```js
+declare namespace require {
+  function ensure (a: any,b: (require: any) => void,c?: string): void;
+}
+export default function(cb: any) {
+  require.ensure([], function(require) {
+    cb(require(chunkPath).default);
+  }, "chunkName");
+}
+```
+
 If the module is a component, we can render it right there:
 
 ```jsx
