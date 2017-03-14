@@ -36,7 +36,7 @@ class ConnectedRouter extends Component {
               payload: location
             })
 
-            return React.Children.only(children)
+            return children ? React.Children.only(children) : null
           }}/>
       </Router>
     )
