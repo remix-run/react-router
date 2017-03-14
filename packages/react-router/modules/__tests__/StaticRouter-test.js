@@ -109,6 +109,29 @@ describe('A <StaticRouter>', () => {
     expect(context.url).toBe('/somewhere-else')
   })
 
+  it('sets state on context', () => {
+    const context = {
+      state: {
+        value: 'something'
+      }
+    }
+
+    ReactDOMServer.renderToStaticMarkup(
+      <StaticRouter context={context}>
+        <Redirect to={{
+          pathname: '/somewhere-else',
+          state: {
+            status: 303
+          }
+        }} />
+      </StaticRouter>
+    )
+
+    expect(context.url).toBe('/somewhere-else')
+    expect(context.state.status).toBe(303)
+    expect(context.state.value).toBe('something')
+  })
+
   it('knows how to parse raw URLs', () => {
     const LocationChecker = (props) => {
       expect(props.location).toMatch({

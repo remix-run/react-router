@@ -95,6 +95,7 @@ class StaticRouter extends React.Component {
     context.action = 'PUSH'
     context.location = addBasename(basename, createLocation(location))
     context.url = createURL(context.location)
+    context.state = Object.assign({}, context.state, location.state)
   }
 
   handleReplace = (location) => {
@@ -102,6 +103,7 @@ class StaticRouter extends React.Component {
     context.action = 'REPLACE'
     context.location = addBasename(basename, createLocation(location))
     context.url = createURL(context.location)
+    context.state = Object.assign({}, context.state, location.state)
   }
 
   handleListen = () =>
