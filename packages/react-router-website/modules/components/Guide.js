@@ -9,7 +9,6 @@ const Guide = ({ match, data }) => {
   const { params: { mod, header: headerParam, environment } } = match
   const doc = data.guides.find(doc => mod === doc.title.slug)
   const header = doc && headerParam ? doc.headers.find(h => h.slug === headerParam) : null
-
   return !doc ? (
     <Redirect to={`/${environment}`}/>
   ) : (
@@ -18,6 +17,7 @@ const Guide = ({ match, data }) => {
       fontSize="80%"
     >
       <Block className="api-doc">
+        <ScrollToDoc doc={doc} header={header}/>
         <MarkdownViewer html={doc.markup}/>
       </Block>
       <Route
