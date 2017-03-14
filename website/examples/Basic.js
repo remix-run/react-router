@@ -1,7 +1,7 @@
 import React from 'react'
-import Router from 'react-router/BrowserRouter'
-import Match from 'react-router/Match'
-import Link from 'react-router/Link'
+import Router from 'teardrop/BrowserRouter'
+import Match from 'teardrop/Match'
+import Link from 'teardrop/Link'
 
 const BasicExample = () => (
   <Router>

@@ -28,13 +28,13 @@ module.exports = {
 
   resolve: {
     alias: {
-      'react-router/Miss': path.join(ROUTER_SRC, 'Miss'),
-      'react-router/Match': path.join(ROUTER_SRC, 'Match'),
-      'react-router/MatchGroup': path.join(ROUTER_SRC, 'MatchGroup'),
-      'react-router/Link': path.join(ROUTER_SRC, 'Link'),
-      'react-router/Redirect': path.join(ROUTER_SRC, 'Redirect'),
-      'react-router/NavigationPrompt': path.join(ROUTER_SRC, 'NavigationPrompt'),
-      'react-router/BrowserRouter': path.join(__dirname, 'components', 'ExampleRouter')
+      'teardrop/Miss': path.join(ROUTER_SRC, 'Miss'),
+      'teardrop/Match': path.join(ROUTER_SRC, 'Match'),
+      'teardrop/MatchGroup': path.join(ROUTER_SRC, 'MatchGroup'),
+      'teardrop/Link': path.join(ROUTER_SRC, 'Link'),
+      'teardrop/Redirect': path.join(ROUTER_SRC, 'Redirect'),
+      'teardrop/NavigationPrompt': path.join(ROUTER_SRC, 'NavigationPrompt'),
+      'teardrop/BrowserRouter': path.join(__dirname, 'components', 'ExampleRouter')
     }
   },
 

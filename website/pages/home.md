@@ -20,7 +20,7 @@ declaratively.
 
 ## Contributing
 
-We'd love your help, the code is [hosted on GitHub](https://github.com/ReactTraining/react-router).
+We'd love your help, the code is [hosted on GitHub](https://github.com/ReactTraining/teardrop).
 
 ## Thanks
 
@@ -35,4 +35,4 @@ Development has been sponsored by:
   [react-training]:https://reacttraining.com
   [instructure]:https://instructure.com
   [modus-create]:https://moduscreate.com
-  [contributors]:https://github.com/ReactTraining/react-router/graphs/contributors
+  [contributors]:https://github.com/ReactTraining/teardrop/graphs/contributors

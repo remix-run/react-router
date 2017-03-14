@@ -1,8 +1,8 @@
 {
-  "name": "react-router",
+  "name": "teardrop",
   "version": "4.0.0-alpha.6",
   "description": "Declarative routing for React",
-  "repository": "ReactTraining/react-router",
+  "repository": "ReactTraining/teardrop",
   "license": "MIT",
   "authors": [
     "Michael Jackson",
@@ -17,8 +17,8 @@
     "start": "echo 'Make sure to `cd website && npm install`' && cd website && npm run dev",
     "release": "node ./scripts/release.js",
     "build-lib": "babel ./modules -d . --ignore __tests__",
-    "build-umd": "webpack modules/index.js umd/react-router.js",
-    "build-min": "webpack -p modules/index.js umd/react-router.min.js",
+    "build-umd": "webpack modules/index.js umd/teardrop.js",
+    "build-min": "webpack -p modules/index.js umd/teardrop.min.js",
     "build": "node ./scripts/build.js",
     "watch": "babel ./modules -d . --ignore __tests__ --watch",
     "prepublish": "node ./scripts/build.js",

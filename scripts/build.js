@@ -20,6 +20,6 @@ exec('npm run build-min', webpackEnv)
 
 console.log(
   '\ngzipped, the UMD build is ' + prettyBytes(
-    gzipSize.sync(readFileSync('umd/react-router.min.js'))
+    gzipSize.sync(readFileSync('umd/teardrop.min.js'))
   )
 )

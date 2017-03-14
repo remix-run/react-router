@@ -14,7 +14,7 @@ app when no patterns match the url:
 import { createServer } from 'http'
 import React from 'react'
 import { renderToString } from 'react-dom/server'
-import { ServerRouter, createServerRenderContext } from 'react-router'
+import { ServerRouter, createServerRenderContext } from 'teardrop'
 
 createServer((req, res) => {
 

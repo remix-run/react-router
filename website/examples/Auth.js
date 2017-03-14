@@ -1,9 +1,9 @@
 /*eslint-disable import/no-unresolved*/
 import React, { PropTypes } from 'react'
-import Match from 'react-router/Match'
-import Link from 'react-router/Link'
-import Redirect from 'react-router/Redirect'
-import Router from 'react-router/BrowserRouter'
+import Match from 'teardrop/Match'
+import Link from 'teardrop/Link'
+import Redirect from 'teardrop/Redirect'
+import Router from 'teardrop/BrowserRouter'
 
 ////////////////////////////////////////////////////////////
 // 1. Click the public page

@@ -3,14 +3,14 @@
 If you've got a build, install React Router from npm:
 
 ```
-npm install react-router@next
+npm install teardrop@next
 ```
 
 If you're just screwing around, use a script tag, you'll find the lib on
-`window.ReactRouter`.
+`window.Teardrop`.
 
 ```html
-<script src="https://unpkg.com/react-router@4.0.0-2/umd/react-router.min.js"></script>
+<script src="https://unpkg.com/teardrop@4.0.0-2/umd/teardrop.min.js"></script>
 ```
 
 ## First Principles
@@ -29,7 +29,7 @@ import React from 'react'
 import { render } from 'react-dom'
 
 // 1. import a few components
-import { BrowserRouter, Match, Miss, Link } from 'react-router'
+import { BrowserRouter, Match, Miss, Link } from 'teardrop'
 
 const App = () => (
   // 2. render a `Router`, it will listen to the url changes
@@ -43,9 +43,9 @@ const App = () => (
         <li><Link to="/about">About</Link></li>
         <li><Link to="/topics">Topics</Link></li>
       </ul>
-  
+
       <hr/>
-  
+
       {/* 4. Render some `<Match/>` components.
              When the current location matches the `pattern`
              then the `component` will render.
@@ -53,7 +53,7 @@ const App = () => (
       <Match exactly pattern="/" component={Home} />
       <Match pattern="/about" component={About} />
       <Match pattern="/topics" component={Topics} />
-  
+
       {/* If none of those match, then a sibling `Miss` will render. */}
       <Miss component={NoMatch}/>
     </div>
@@ -121,4 +121,3 @@ That should get you started. We encourage you to review the examples and
 read the API docs for more inspiration.
 
 Happy routing!
-

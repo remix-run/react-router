@@ -1,8 +1,8 @@
 import React from 'react'
-import Router from 'react-router/BrowserRouter'
-import Match from 'react-router/Match'
-import Miss from 'react-router/Miss'
-import Link from 'react-router/Link'
+import Router from 'teardrop/BrowserRouter'
+import Match from 'teardrop/Match'
+import Miss from 'teardrop/Miss'
+import Link from 'teardrop/Link'
 
 const AmbiguousExample = () => (
   <Router>

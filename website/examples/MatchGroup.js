@@ -1,9 +1,9 @@
 import React from 'react'
-import Router from 'react-router/BrowserRouter'
-import Match from 'react-router/Match'
-import Miss from 'react-router/Miss'
-import MatchGroup from 'react-router/MatchGroup'
-import Link from 'react-router/Link'
+import Router from 'teardrop/BrowserRouter'
+import Match from 'teardrop/Match'
+import Miss from 'teardrop/Miss'
+import MatchGroup from 'teardrop/MatchGroup'
+import Link from 'teardrop/Link'
 
 const MatchGroupExample = () => (
   <Router>

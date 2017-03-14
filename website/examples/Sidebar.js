@@ -1,9 +1,9 @@
 import React from 'react'
-import Router from 'react-router/BrowserRouter'
-import Match from 'react-router/Match'
-import Miss from 'react-router/Miss'
-import Link from 'react-router/Link'
-import Redirect from 'react-router/Redirect'
+import Router from 'teardrop/BrowserRouter'
+import Match from 'teardrop/Match'
+import Miss from 'teardrop/Miss'
+import Link from 'teardrop/Link'
+import Redirect from 'teardrop/Redirect'
 
 // Each "route" has two components, one for the sidebar
 // and one for the main area, we'll render them
