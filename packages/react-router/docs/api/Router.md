@@ -29,7 +29,7 @@ A [`history`](https://github.com/ReactTraining/history) object to use for naviga
 ```js
 import createBrowserHistory from 'history/createBrowserHistory'
 
-const history = createBrowserHistory()
+const customHistory = createBrowserHistory()
 <Router history={customHistory}/>
 ```
 
