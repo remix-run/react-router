@@ -52,7 +52,7 @@ module.exports = (config) => {
       browser: 'ie',
       browser_version: '11.0'
     },
-    Travis_Chrome: {
+    Chrome_travis_ci: {
       base: 'Chrome',
       flags: ['--no-sandbox']
     }
@@ -101,7 +101,6 @@ module.exports = (config) => {
     config.browserDisconnectTolerance = 3
 
     if (process.env.TRAVIS) {
-      config.browsers = ['Travis_Chrome']
       config.browserStack = {
         project: projectName,
         build: process.env.TRAVIS_BUILD_NUMBER,
@@ -114,5 +113,8 @@ module.exports = (config) => {
         project: projectName
       }
     }
+  }
+  if (process.env.TRAVIS) {
+    config.browsers = ['Chrome_travis_ci']
   }
 }
