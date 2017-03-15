@@ -83,8 +83,7 @@ The key to avoiding blocked re-renders after location changes is to pass the blo
 
 In order to pass the current `location` object as a prop, you must have access to it. There are two approaches that you should consider for this:
 
-1.
-Render a pathless `<Route>`. While `<Route>`s are typically used for matching a specific path, a pathless `<Route>` will always match, so it will always render its component. The current `location` object is one of the props that a `<Route>` passes to the component it renders.
+1. Render a pathless `<Route>`. While `<Route>`s are typically used for matching a specific path, a pathless `<Route>` will always match, so it will always render its component. The current `location` object is one of the props that a `<Route>` passes to the component it renders.
 
 ```js
 <Route render={({ location }) => (
@@ -94,8 +93,7 @@ Render a pathless `<Route>`. While `<Route>`s are typically used for matching a 
 )}/>
 ```
 
-2.
-You can wrap a component with the `withRouter` higher-order component and it will be given the current `location` as one of its props.
+2. You can wrap a component with the `withRouter` higher-order component and it will be given the current `location` as one of its props.
 
 ```js
 class BlockAvoider extends React.Component {
