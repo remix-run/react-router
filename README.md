@@ -1,6 +1,6 @@
 # Teardrop [![Travis][build-badge]][build]
 
-[build-badge]: https://img.shields.io/travis/OpenClubDev/teardrop/v5.svg?style=flat-square
+[build-badge]: https://img.shields.io/travis/OpenClubDev/teardrop/master.svg?style=flat-square
 [build]: https://travis-ci.org/OpenClubDev/teardrop
 
 <img src="/logo/teardrop.png" height="150"/>
