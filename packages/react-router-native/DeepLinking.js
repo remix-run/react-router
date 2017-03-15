@@ -29,7 +29,7 @@ class DeepLinking extends Component {
 
   push = (url) => {
     const pathname = url.replace(regex, '')
-    this.context.router.push(pathname)
+    this.context.router.history.push(pathname)
   }
 
   render() {
