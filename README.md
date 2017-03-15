@@ -3,7 +3,7 @@
 [build-badge]: https://img.shields.io/travis/OpenClubDev/teardrop/master.svg?style=flat-square
 [build]: https://travis-ci.org/OpenClubDev/teardrop
 
-<img src="/logo/teardrop.png" height="150"/>
+<img src="https://github.com/OpenClubDev/teardrop/raw/master/logo/teardrop.png" height="150"/>
 
 Declarative routing for [React](https://facebook.github.io/react).
 
