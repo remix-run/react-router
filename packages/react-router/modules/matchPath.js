@@ -37,7 +37,13 @@ const matchPath = (pathname, options = {}, parent) => {
 
 
   if (path == null)
-    return parent != null ? parent : { url: pathname, isExact: true, params: {} }
+    return parent != null
+      ? parent
+      : {
+          url: '/_FAKE_MATCH_DO_NOT_ATTEMPT_TO_RESOLVE_USING_THIS_OR_YOU_WILL_BE_DISAPPOINTED',
+          isExact: true,
+          params: {}
+        }
 
   const { re, keys } = compilePath(path, { end: exact, strict, sensitive });
   const match = re.exec(pathname);
