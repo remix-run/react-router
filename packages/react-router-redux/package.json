@@ -23,7 +23,7 @@
     "build": "node ./tools/build.js",
     "prepublish": "node ./tools/build.js",
     "watch": "babel ./modules -d . --ignore __tests__ --watch",
-    "clean": "git clean -e '!node_modules' -fdX .",
+    "clean": "git clean -fdX .",
     "lint": "eslint modules",
     "test": "jest"
   },

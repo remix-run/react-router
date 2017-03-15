@@ -32,7 +32,7 @@
     "build": "node ./tools/build.js",
     "watch": "babel ./modules -d . --ignore __tests__ --watch",
     "prepublish": "node ./tools/build.js",
-    "clean": "git clean -e '!node_modules' -fdX .",
+    "clean": "git clean -fdX .",
     "lint": "eslint modules",
     "test": "karma start --single-run"
   },
