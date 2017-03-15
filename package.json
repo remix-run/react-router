@@ -2,7 +2,7 @@
   "name": "teardrop",
   "version": "5.0.0",
   "description": "Declarative routing for React",
-  "repository": "ReactTraining/teardrop",
+  "repository": "OpenClubDev/teardrop",
   "license": "MIT",
   "authors": [
     "Michael Jackson",
