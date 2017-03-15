@@ -19,7 +19,6 @@
     "index.js",
     "matchPath.js",
     "withRouter.js",
-    "README.md",
     "es",
     "umd"
   ],
