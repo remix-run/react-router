@@ -421,7 +421,7 @@ describe('A pathless <Route>', () => {
     const { match } = rootContext.router.route
 
     expect(match.path).toBe(undefined)
-    expect(match.url).toBe('/somepath')
+    expect(match.url).toBe('/_FAKE_MATCH_DO_NOT_ATTEMPT_TO_RESOLVE_USING_THIS_OR_YOU_WILL_BE_DISAPPOINTED')
     expect(match.isExact).toBe(true)
     expect(match.params).toEqual({})
   })
