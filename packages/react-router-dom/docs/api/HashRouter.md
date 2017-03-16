@@ -14,7 +14,7 @@ import { HashRouter } from 'react-router-dom'
 
 ## basename: string
 
-The base URL for all locations.
+The base URL for all locations. A properly formatted basename should have a leading slash, but no trailing slash.
 
 ```js
 <HashRouter basename="/calendar"/>

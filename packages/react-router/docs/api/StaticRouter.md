@@ -38,7 +38,7 @@ createServer((req, res) => {
 
 ## basename: string
 
-The base URL for all locations.
+The base URL for all locations. A properly formatted basename should have a leading slash, but no trailing slash.
 
 ```js
 <StaticRouter basename="/calendar">
