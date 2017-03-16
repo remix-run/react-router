@@ -52,10 +52,10 @@ const AuthButton = withRouter(({ history }) => (
   )
 ))
 
-const PrivateRoute = ({ component, ...rest }) => (
+const PrivateRoute = ({ component: Component, ...rest }) => (
   <Route {...rest} render={props => (
     fakeAuth.isAuthenticated ? (
-      React.createElement(component, props)
+      <Component {...props}/>
     ) : (
       <Redirect to={{
         pathname: '/login',
