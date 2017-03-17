@@ -6,6 +6,16 @@ React provides two approaches to optimize the rendering performance of applicati
 
 ### Example of the Problem
 
+We start out with a component that prevents updates.
+
+```js
+class UpdateBlocker extends React.PureComponent {
+  render() {
+    return this.props.children
+  }
+}
+```
+
 When the `<UpdateBlocker>` is mounting, any location-aware child components will use the current `location` and `match` objects to render.
 
 ```js
@@ -18,7 +28,7 @@ When the `<UpdateBlocker>` is mounting, any location-aware child components will
 </UpdateBlocker>
 ```
 
-When the location changes, the `<UpdateBlocker>`'s `shouldComponentUpdate` method will return `false`, and its child components will not be re-rendered.
+When the location changes, the `<UpdateBlocker>` does not detect any prop or state changes, so its child components will not be re-rendered.
 
 ```js
 // location = { pathname: '/faq' }
@@ -81,30 +91,74 @@ The key to avoiding blocked re-renders after location changes is to pass the blo
 
 #### Getting the location
 
-In order to pass the current `location` object as a prop, you must have access to it. There are two approaches that you should consider for this:
-
-1. Render a pathless `<Route>`. While `<Route>`s are typically used for matching a specific path, a pathless `<Route>` will always match, so it will always render its component. The current `location` object is one of the props that a `<Route>` passes to the component it renders.
+In order to pass the current `location` object as a prop to a component, you must have access to it. The primary way that a component can get access to the `location` is via a `<Route>` component. When a `<Route>` matches (or always if you are using the `children` prop), it passes the current `location` to the child element it renders.
 
 ```js
-<Route render={({ location }) => (
-  <UpdateBlocker location={location}>
-    ...
-  </UpdateBlocker>
-)}/>
+<Route path='/here' component={Here}/>
+const Here = (props) => {
+  // props.location = { pathname: '/here', ... }
+  return <div>You are here</div>
+}
+
+<Route path='/there' render={(props) => {
+  // props.location = { pathname: '/there', ... }
+  return <div>You are there</div>
+}}/>
+
+<Route path='/everywhere' children={(props) => {
+  // props.location = { pathname: '/everywhere', ... }
+  return <div>You are everywhere</div>
+}}/>
+```
+
+This means that you can easily pass the `location` as a prop to a component the following ways:
+
+1. A component rendered directly by a `<Route>` does not have to worry about blocked updates because it has the `location` injected as a prop.
+
+```js
+// The <UpdateBlocker>'s location prop will change whenever
+// the location changes
+<Route path='/some-path' component={UpdateBlocker}/>
+```
+
+2. A component rendered directly by a `<Route>` can pass that location prop to any child elements it creates.
+
+```js
+<Route path='/parent' component={Parent} />
+
+const Parent = (props) => {
+  // <Parent> receives the location as a prop. Any child
+  // element is creates can be passed the location.
+  return (
+    <SomeComponent>
+      <UpdateBlocker location={props.location} />
+    </SomeComponent>
+  )
+}
+```
+
+What happens when the component isn't being rendered by a `<Route>` and the component rendering it does not have the `location` in its variable scope? There are two approaches that you can take to automatically inject the `location` as a prop of your component.
+
+1. Render a pathless `<Route>`. While `<Route>`s are typically used for matching a specific path, a pathless `<Route>` will always match, so it will always render its component.
+
+```js
+// pathless <Route> = <UpdateBlocker> will always be rendered
+const MyComponent= () => (
+  <SomeComponent>
+    <Route component={UpdateBlocker} />
+  </SomeComponent>
+)
 ```
 
 2. You can wrap a component with the `withRouter` higher-order component and it will be given the current `location` as one of its props.
 
 ```js
-class BlockAvoider extends React.Component {
-  render() {
-    return (
-      <UpdateBlocker location={location}>
-        ...
-      </UpdateBlocker>
-    )
-  }
-}
+// internally, withRouter just renders a pathless <Route>
+const BlockAvoider = withRouter(UpdateBlocker)
 
-BlockAvoider = withRouter(BlockAvoider)
+const MyComponent = () => (
+  <SomeComponent>
+    <BlockerAvoider />
+  </SomeComponent>
+)
 ```
