@@ -118,7 +118,7 @@ class Parent extends Component {
 }
 ```
 
-Once that works with animations, we're ready to add an animation around it.
+Once that works without animations, we're ready to add an animation around it.
 
 
 ```js
