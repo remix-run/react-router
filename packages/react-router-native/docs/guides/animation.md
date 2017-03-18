@@ -118,7 +118,7 @@ class Parent extends Component {
 }
 ```
 
-Once that works with animations, we're ready to add an animation around it.
+Once that works without animations, we're ready to add an animation around it.
 
 
 ```js
@@ -199,7 +199,7 @@ class AnimatedChildRoute extends Component {
 }
 ```
 
-Hope that helps get you thinking. Again, the animations themselves are teh same with the router or not, the difference is knowing when to trigger them. Here's list for things to check in `componentWillReceiveProps` to decide what to do with an animation based on the router's location:
+Hope that helps get you thinking. Again, the animations themselves are the same with the router or not, the difference is knowing when to trigger them. Here's a list for things to check in `componentWillReceiveProps` to decide what to do with an animation based on the router's location:
 
 General change in location
 
