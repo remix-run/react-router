@@ -15,6 +15,15 @@ class ConnectedRouter extends Component {
     store: PropTypes.object
   }
 
+  state = {
+    history: null,
+    location: {
+      key: null
+    }
+  }
+  
+  unlisten = null
+
   componentWillMount() {
     const { children } = this.props
 
@@ -24,22 +33,46 @@ class ConnectedRouter extends Component {
     )
   }
 
+  componentDidMount() {
+    this.handleProps(this.props)
+    this.handleLocation(this.props.history.location)
+  }
+  
+  componentDidUpdate() {
+    this.handleProps(this.props)
+  }
+  
+  componentWillUnmount() {
+    if (this.unlisten) {
+      this.unlisten()
+    }
+  }
+
+  handleProps(props) {
+    const { history } = props
+    if (history !== this.state.history) {
+      if (this.unlisten) {
+        this.unlisten()
+      }
+      this.setState({ history, location: history.location })
+      this.unlisten = history.listen(this.handleLocation.bind(this))
+    }
+  }
+  
+  handleLocation(nextLocation) {
+    const store = this.props.store || this.context.store
+    if (nextLocation.key !== this.state.location.key) {
+      this.setState({
+        location: nextLocation
+      }, () => store.dispatch({
+        type: LOCATION_CHANGE,
+        payload: nextLocation
+      }));
+    }
+  }
+
   render() {
-    const { store:propsStore, history, children, ...props } = this.props
-    let store = propsStore || this.context.store
-
-    return (
-      <Router {...props} history={history}>
-        <Route render={({ location }) => {
-            store.dispatch({
-              type: LOCATION_CHANGE,
-              payload: location
-            })
-
-            return children ? React.Children.only(children) : null
-          }}/>
-      </Router>
-    )
+    return <Router {...this.props} />;
   }
 }
 
