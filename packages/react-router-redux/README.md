@@ -29,9 +29,9 @@ import { createStore, combineReducers, applyMiddleware } from 'redux'
 import { Provider } from 'react-redux'
 
 import createHistory from 'history/createBrowserHistory'
-import { Route } from 'react-router'
+import { Router, Route } from 'react-router'
 
-import { ConnectedRouter, routerReducer, routerMiddleware, push } from 'react-router-redux'
+import { routerReducer, routerMiddleware, push } from 'react-router-redux'
 
 import reducers from './reducers' // Or wherever you keep your reducers
 
@@ -56,14 +56,13 @@ const store = createStore(
 
 ReactDOM.render(
   <Provider store={store}>
-    { /* ConnectedRouter will use the store from Provider automatically */ }
-    <ConnectedRouter history={history}>
+    <Router history={history}>
       <div>
         <Route exact path="/" component={Home}/>
         <Route path="/about" component={About}/>
         <Route path="/topics" component={Topics}/>
       </div>
-    </ConnectedRouter>
+    </Router>
   </Provider>,
   document.getElementById('root')
 )
