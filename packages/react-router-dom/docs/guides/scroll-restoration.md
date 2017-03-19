@@ -34,7 +34,7 @@ const App = () => (
     <ScrollToTop>
       <App/>
     </ScrollToTop>
-  </div>
+  </Router>
 )
 
 // or just render it bare anywhere you want, but just one :)
