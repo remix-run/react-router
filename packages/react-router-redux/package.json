@@ -32,7 +32,6 @@
   },
   "dependencies": {
     "history": "^4.5.1",
-    "invariant": "^2.2.2",
     "react-router": "^4.0.0"
   },
   "devDependencies": {
