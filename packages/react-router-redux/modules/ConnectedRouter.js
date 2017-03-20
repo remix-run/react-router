@@ -29,12 +29,12 @@ class ConnectedRouter extends Component {
     this.handleLocationChange(history.location)
   }
 
-  render() {
-    const { history, ...props } = this.props
+  componentWillUnmount() {
+    if (this.unsubscribeFromHistory) this.unsubscribeFromHistory()
+  }
 
-    return (
-      <Router {...props} history={history} />
-    )
+  render() {
+    return <Router {...this.props} />
   }
 }
 
