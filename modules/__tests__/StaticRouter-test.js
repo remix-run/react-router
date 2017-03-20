@@ -54,6 +54,29 @@ describe('StaticRouter', () => {
         state: null
       })
     })
+    it('passes the location to children when not a function', () => {
+      let testLocation
+      const NotAFunction = ({ location }) => {
+        testLocation = location;
+        return <div />;
+      }
+      renderToString(
+        <StaticRouter {...requiredProps} location="/test">
+          <NotAFunction />
+        </StaticRouter>
+      )
+      console.log(testLocation);
+      expectDeepEquality(testLocation, {
+        action: 'POP',
+        hash: '',
+        key: null,
+        pathname: '/test',
+        search: '',
+        query: null,
+        state: null
+      })
+    })
+
   })
 
   describe('location prop', () => {

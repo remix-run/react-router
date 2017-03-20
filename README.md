@@ -65,3 +65,9 @@ One use case was loading data and waiting to render the next screen until the da
 
 Check out the "Route Config" example.
 `website/examples/RouterConfig.js`
+
+### Changelog
+
+**5.0.1**
+
+ - Now sending `router` and `location` props to the Router's only child.
