@@ -111,7 +111,7 @@ const Here = (props) => {
 }}/>
 ```
 
-This means that given a component that blocks updates, you can easily pass the `location` as a prop to a component the following ways:
+This means that given a component that blocks updates, you can easily pass it the `location` as a prop in the following ways:
 
 ```js
 // the Blocker is a "pure" component, so it will only
