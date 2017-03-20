@@ -2,7 +2,7 @@
   "name": "react-router-config",
   "version": "1.0.0-beta.1",
   "description": "Static route config matching for React Router",
-  "repository": "ReactTraining/react-router-config",
+  "repository": "ReactTraining/react-router",
   "license": "MIT",
   "authors": [
     "Ryan Florence"
