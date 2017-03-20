@@ -111,14 +111,27 @@ const Here = (props) => {
 }}/>
 ```
 
-This means that you can easily pass the `location` as a prop to a component the following ways:
+This means that given a component that blocks updates, you can easily pass the `location` as a prop to a component the following ways:
+
+```js
+// the Blocker is a "pure" component, so it will only
+// update when it receives new props
+class Blocker extends React.PureComponent {
+  render() {
+    <div>
+      <NavLink to='/oz'>Oz</NavLink>
+      <NavLink to='/kansas'>Kansas</NavLink>
+    </div>
+  }
+}
+```
 
 1. A component rendered directly by a `<Route>` does not have to worry about blocked updates because it has the `location` injected as a prop.
 
 ```js
-// The <UpdateBlocker>'s location prop will change whenever
+// The <Blocker>'s location prop will change whenever
 // the location changes
-<Route path='/some-path' component={UpdateBlocker}/>
+<Route path='/:place' component={Blocker}/>
 ```
 
 2. A component rendered directly by a `<Route>` can pass that location prop to any child elements it creates.
@@ -131,7 +144,7 @@ const Parent = (props) => {
   // element is creates can be passed the location.
   return (
     <SomeComponent>
-      <UpdateBlocker location={props.location} />
+      <Blocker location={props.location} />
     </SomeComponent>
   )
 }
@@ -142,10 +155,10 @@ What happens when the component isn't being rendered by a `<Route>` and the comp
 1. Render a pathless `<Route>`. While `<Route>`s are typically used for matching a specific path, a pathless `<Route>` will always match, so it will always render its component.
 
 ```js
-// pathless <Route> = <UpdateBlocker> will always be rendered
+// pathless <Route> = <Blocker> will always be rendered
 const MyComponent= () => (
   <SomeComponent>
-    <Route component={UpdateBlocker} />
+    <Route component={Blocker} />
   </SomeComponent>
 )
 ```
@@ -154,7 +167,7 @@ const MyComponent= () => (
 
 ```js
 // internally, withRouter just renders a pathless <Route>
-const BlockAvoider = withRouter(UpdateBlocker)
+const BlockAvoider = withRouter(Blocker)
 
 const MyComponent = () => (
   <SomeComponent>
