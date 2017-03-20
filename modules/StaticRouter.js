@@ -98,7 +98,9 @@ class StaticRouter extends React.Component {
           {typeof children === 'function' ? (
             children({ action, location, router: this.getRouterContext() })
           ) : (
-            React.Children.only(children)
+            React.Children.only(React.cloneElement(children, {
+              location, router
+            }))
           )}
         </MatchProvider>
       </LocationBroadcast>
