@@ -125,7 +125,7 @@ class App extends React.Component {
 }
 ```
 
-When, and how much, of your app to load is your own decision. It need not be tied to specific routes. Maybe you only wnat to do it when the user is inactive, maybe only when they visit a route, maybe you want to preload the rest of the app after the initial render:
+When, and how much, of your app to load is your own decision. It need not be tied to specific routes. Maybe you only want to do it when the user is inactive, maybe only when they visit a route, maybe you want to preload the rest of the app after the initial render:
 
 ```js
 ReactDOM.render(<App/>, preloadTheRestOfTheApp)
