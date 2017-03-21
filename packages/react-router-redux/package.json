@@ -55,6 +55,7 @@
     "react-redux": "^5.0.3",
     "react-test-renderer": "^15.3.2",
     "redux": "^3.6.0",
+    "redux-devtools": "^3.3.2",
     "rollup": "^0.41.4",
     "rollup-plugin-babel": "^2.7.1",
     "rollup-plugin-uglify": "^1.0.1"
