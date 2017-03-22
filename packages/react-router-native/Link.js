@@ -31,13 +31,15 @@ class Link extends Component {
     if (this.props.onPress)
       this.props.onPress(event)
 
-    const { history } = this.context.router
-    const { to, replace } = this.props
+    if (!event.defaultPrevented) {
+      const { history } = this.context.router
+      const { to, replace } = this.props
 
-    if (replace) {
-      history.replace(to)
-    } else {
-      history.push(to)
+      if (replace) {
+        history.replace(to)
+      } else {
+        history.push(to)
+      }
     }
   }
 
