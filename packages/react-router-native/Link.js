@@ -13,6 +13,7 @@ class Link extends Component {
   }
 
   static propTypes = {
+    onPress: PropTypes.func,
     component: PropTypes.func,
     replace: PropTypes.bool,
     to: PropTypes.oneOfType([
@@ -26,7 +27,10 @@ class Link extends Component {
     replace: false
   }
 
-  handlePress = () => {
+  handlePress = (event) => {
+    if (this.props.onPress)
+      this.props.onPress(event)
+
     const { history } = this.context.router
     const { to, replace } = this.props
 
