@@ -25,7 +25,8 @@ export default {
     require('../../../react-router-dom/docs/guides/scroll-restoration.md'),
     require('../../../react-router/docs/guides/testing.md?web'),
     require('../../../react-router/docs/guides/redux.md'),
-    require('../../../react-router/docs/guides/static-routes.md')
+    require('../../../react-router/docs/guides/static-routes.md'),
+    require('../../../react-router/docs/guides/blocked-updates.md')
   ],
 
   examples: [

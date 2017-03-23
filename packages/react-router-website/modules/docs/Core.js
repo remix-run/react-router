@@ -18,6 +18,7 @@ export default {
     require('../../../react-router/docs/guides/quick-start.md'),
     require('../../../react-router/docs/guides/testing.md'),
     require('../../../react-router/docs/guides/redux.md'),
-    require('../../../react-router/docs/guides/static-routes.md')
+    require('../../../react-router/docs/guides/static-routes.md'),
+    require('../../../react-router/docs/guides/blocked-updates.md')
   ]
 }
