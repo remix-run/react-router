@@ -111,32 +111,17 @@ describe('integration', () => {
     )
 
     const routes = [
+      // should skip
       {
-        path: '/pepper',
+        path: '/pepper/habanero',
         component: Comp,
-        exact: true,
-        routes: [
-          {
-            path: '/pepper/child',
-            component: Comp
-          }
-        ]
+        exact: true
       },
+      // should match
       {
         path: '/pepper',
         component: Comp,
-        routes: [
-          {
-            path: '/pepper/:type',
-            component: Comp,
-            routes: [
-              {
-                path: '/pepper/:type/scoville',
-                component: Comp
-              }
-            ]
-          }
-        ]
+        exact: true
       }
     ]
 
@@ -154,8 +139,8 @@ describe('integration', () => {
 
 
 
-  it('generates the same matches in renderRoutes and matchRoutes with routes using strict', () => {
-    let rendered = []
+  it('generates the same matches in renderRoutes and matchRoutes with routes using exact + strict', () => {
+    const rendered = []
 
     const Comp = ({ match, route: { routes } }) => (
       rendered.push(match),
@@ -163,15 +148,19 @@ describe('integration', () => {
     )
 
     const routes = [
+      // should match
       {
         path: '/pepper/',
         component: Comp,
         strict: true,
+        exact: true,
         routes: [
+          // should skip
           {
             path: '/pepper',
             component: Comp,
-            strict: true
+            strict: true,
+            exact: true
           }
         ]
       }
@@ -189,17 +178,15 @@ describe('integration', () => {
 
     pathname = '/pepper/'
     branch = matchRoutes(routes, pathname)
-    rendered = [];
     renderToString(
       <StaticRouter location={pathname} context={{}}>
         {renderRoutes(routes)}
       </StaticRouter>
     )
 
-    expect(branch.length).toEqual(2)
-    expect(rendered.length).toEqual(2)
+    expect(branch.length).toEqual(1)
+    expect(rendered.length).toEqual(1)
     expect(branch[0].match).toEqual(rendered[0])
-    expect(branch[1].match).toEqual(rendered[1])
   })
 })
 
