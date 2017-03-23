@@ -3,7 +3,7 @@
 A `match` object contains information about how a `<Route path>` matched the URL. `match` objects contain the following properties:
 
   - `params` - (object) Key/value pairs parsed from the URL corresponding to the dynamic segments of the path
-  - `isExact` - `true` if the entire URL was matched (no trailing characters)
+  - `isExact` - (boolean) `true` if the entire URL was matched (no trailing characters)
   - `path` - (string) The path pattern used to match. Useful for building nested `<Route>`s
   - `url` - (string) The matched portion of the URL. Useful for building nested `<Link>`s
 
