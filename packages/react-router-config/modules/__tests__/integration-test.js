@@ -99,5 +99,107 @@ describe('integration', () => {
     expect(branch[0].match).toEqual(rendered[0])
     expect(branch[1].match).toEqual(rendered[1])
   })
+
+
+
+  it('generates the same matches in renderRoutes and matchRoutes with routes using exact', () => {
+    const rendered = []
+
+    const Comp = ({ match, route: { routes } }) => (
+      rendered.push(match),
+      renderRoutes(routes)
+    )
+
+    const routes = [
+      {
+        path: '/pepper',
+        component: Comp,
+        exact: true,
+        routes: [
+          {
+            path: '/pepper/child',
+            component: Comp
+          }
+        ]
+      },
+      {
+        path: '/pepper',
+        component: Comp,
+        routes: [
+          {
+            path: '/pepper/:type',
+            component: Comp,
+            routes: [
+              {
+                path: '/pepper/:type/scoville',
+                component: Comp
+              }
+            ]
+          }
+        ]
+      }
+    ]
+
+    const pathname = '/pepper'
+    const branch = matchRoutes(routes, pathname)
+    renderToString(
+      <StaticRouter location={pathname} context={{}}>
+        {renderRoutes(routes)}
+      </StaticRouter>
+    )
+    expect(branch.length).toEqual(1)
+    expect(rendered.length).toEqual(1)
+    expect(branch[0].match).toEqual(rendered[0])
+  })
+
+
+
+  it('generates the same matches in renderRoutes and matchRoutes with routes using strict', () => {
+    let rendered = []
+
+    const Comp = ({ match, route: { routes } }) => (
+      rendered.push(match),
+      renderRoutes(routes)
+    )
+
+    const routes = [
+      {
+        path: '/pepper/',
+        component: Comp,
+        strict: true,
+        routes: [
+          {
+            path: '/pepper',
+            component: Comp,
+            strict: true
+          }
+        ]
+      }
+    ]
+
+    let pathname = '/pepper'
+    let branch = matchRoutes(routes, pathname)
+    renderToString(
+      <StaticRouter location={pathname} context={{}}>
+        {renderRoutes(routes)}
+      </StaticRouter>
+    )
+    expect(branch.length).toEqual(0)
+    expect(rendered.length).toEqual(0)
+
+    pathname = '/pepper/'
+    branch = matchRoutes(routes, pathname)
+    rendered = [];
+    renderToString(
+      <StaticRouter location={pathname} context={{}}>
+        {renderRoutes(routes)}
+      </StaticRouter>
+    )
+
+    expect(branch.length).toEqual(2)
+    expect(rendered.length).toEqual(2)
+    expect(branch[0].match).toEqual(rendered[0])
+    expect(branch[1].match).toEqual(rendered[1])
+  })
 })
 
