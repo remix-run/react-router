@@ -149,7 +149,7 @@ When `true`, will only match if the path matches the `location.pathname` _exactl
 ```
 
 | path | location.pathname | exact | matches? |   
-|---|---|---|---|---|   
+| --- | --- | --- | --- |   
 | `/one`  | `/one/two`  | `true` | no |   
 | `/one`  | `/one/two`  | `false` | yes |   
 
