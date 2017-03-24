@@ -5,9 +5,15 @@ import Route from 'react-router/Route'
 const renderRoutes = (routes) => routes ? (
   <Switch>
     {routes.map((route, i) => (
-      <Route key={i} path={route.path} render={(props) => (
-        <route.component {...props} route={route}/>
-      )}/>
+      <Route
+        exact={route.exact}
+        key={i}
+        path={route.path}
+        strict={route.strict}
+        render={(props) => (
+          <route.component {...props} route={route}/>
+        )}
+      />
     ))}
   </Switch>
 ) : null
