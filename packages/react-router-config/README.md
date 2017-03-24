@@ -60,8 +60,9 @@ const routes = [
       { path: '/child/:id',
         component: Child,
         routes: [
-          path: '/child/:id/grand-child',
-          component: GrandChild
+          { path: '/child/:id/grand-child',
+            component: GrandChild
+          }
         ]
       }
     ]
@@ -212,8 +213,9 @@ const routes = [
       { path: '/child/:id',
         component: Child,
         routes: [
-          path: '/child/:id/grand-child',
-          component: GrandChild
+          { path: '/child/:id/grand-child',
+            component: GrandChild
+          }
         ]
       }
     ]
