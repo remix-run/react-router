@@ -41,3 +41,17 @@ connect(...)(withRouter(MyComponent))
 ```
 
 See [this guide](https://github.com/ReactTraining/react-router/blob/master/packages/react-router/docs/guides/blocked-updates.md) for more information.
+
+## Component.WrappedComponent
+
+The wrapped component is exposed as the static property `WrappedComponent` on the returned component, which can be used
+for testing the component in isolation, among other things.
+
+```js
+// MyComponent.js
+export default withRouter(MyComponent)
+
+// MyComponent.test.js
+import MyComponent from './MyComponent'
+render(<MyComponent.WrappedComponent location={{...}} ... />)
+```

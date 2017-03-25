@@ -64,4 +64,10 @@ describe('withRouter', () => {
       ), node)
     })
   })
+
+  it('exposes the wrapped component as WrappedComponent', () => {
+    const Component = () => <div/>
+    const decorated = withRouter(Component)
+    expect(decorated.WrappedComponent).toBe(Component)
+  })
 })

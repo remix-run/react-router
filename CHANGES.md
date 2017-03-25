@@ -1,3 +1,7 @@
+## HEAD
+
+- Add `wrappedComponent` to the component returned by `withRouter`
+
 ## [v4.0.0-beta.8]
 > Mar 8, 2017
 
