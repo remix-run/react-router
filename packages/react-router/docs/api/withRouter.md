@@ -42,6 +42,11 @@ connect(...)(withRouter(MyComponent))
 
 See [this guide](https://github.com/ReactTraining/react-router/blob/master/packages/react-router/docs/guides/blocked-updates.md) for more information.
 
+#### Static Methods and Properties
+
+All non-react specific static methods and properties of the wrapped component are automatically copied to the 
+"connected" component.
+
 ## Component.WrappedComponent
 
 The wrapped component is exposed as the static property `WrappedComponent` on the returned component, which can be used

@@ -1,4 +1,5 @@
 import React, { PropTypes } from 'react'
+import hoistStatics from 'hoist-non-react-statics'
 import Route from './Route'
 
 /**
@@ -20,7 +21,7 @@ const withRouter = (Component) => {
     wrappedComponentRef: PropTypes.func
   }
 
-  return C
+  return hoistStatics(C, Component)
 }
 
 export default withRouter

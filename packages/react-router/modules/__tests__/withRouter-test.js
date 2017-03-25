@@ -90,4 +90,23 @@ describe('withRouter', () => {
 
     expect(ref).toBeA(WrappedComponent)
   })
+
+  it('hoists non-react statics from the wrapped component', () => {
+    class Component extends React.Component {
+      static foo() {
+        return 'bar'
+      }
+
+      render() {
+        return null
+      }
+    }
+    Component.hello = 'world'
+
+    const decorated = withRouter(Component)
+
+    expect(decorated.hello).toBe('world')
+    expect(decorated.foo).toBeA('function')
+    expect(decorated.foo()).toBe('bar')
+  })
 })
