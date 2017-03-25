@@ -70,4 +70,24 @@ describe('withRouter', () => {
     const decorated = withRouter(Component)
     expect(decorated.WrappedComponent).toBe(Component)
   })
+
+  it('exposes the instance of the wrapped component via wrappedComponentRef', () => {
+    class WrappedComponent extends React.Component {
+      render() {
+        return null
+      }
+    }
+    const Component = withRouter(WrappedComponent)
+
+    let ref
+    ReactDOM.render((
+      <MemoryRouter initialEntries={[ '/bubblegum' ]}>
+        <Route path="/bubblegum" render={() => (
+          <Component wrappedComponentRef={r => ref = r}/>
+        )}/>
+      </MemoryRouter>
+    ), node)
+
+    expect(ref).toBeA(WrappedComponent)
+  })
 })

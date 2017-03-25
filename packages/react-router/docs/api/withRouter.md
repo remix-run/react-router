@@ -55,3 +55,21 @@ export default withRouter(MyComponent)
 import MyComponent from './MyComponent'
 render(<MyComponent.WrappedComponent location={{...}} ... />)
 ```
+
+## wrappedComponentRef: func
+
+A function that will be passed as the `ref` prop to the wrapped component.
+
+```js
+class Container extends React.Component {
+  componentDidMount() {
+    this.component.doSomething()  
+  }
+  
+  render() {
+    return (
+      <MyComponent wrappedComponentRef={c => this.component = c}/>
+    )
+  }
+}
+```
