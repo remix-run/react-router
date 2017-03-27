@@ -19,6 +19,7 @@ export default {
   ],
 
   guides: [
+    require('../../../react-router/docs/guides/philosophy.md'),
     require('../../../react-router-dom/docs/guides/quick-start.md'),
     require('../../../react-router-dom/docs/guides/server-rendering.md'),
     require('../../../react-router-dom/docs/guides/code-splitting.md'),
