@@ -44,7 +44,7 @@ When `true`, redirecting will push a new entry onto the history instead of repla
 
 ## from: string
 
-A pathname to redirect from. This can be used to match a location when rendering a `<Redirect>` inside of a `<Switch>`.
+A pathname to redirect from. This can only be used to match a location when rendering a `<Redirect>` inside of a `<Switch>`. See [`<Switch children>`](./Switch.md#children-node) for more details.
 
 ```js
 <Switch>
