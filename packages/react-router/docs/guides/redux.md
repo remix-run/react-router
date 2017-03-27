@@ -36,7 +36,7 @@ All of this requires deeper integration. Please note you don't need this deep in
 
 - Route changes are unlikely to matter for time travel debugging.
 - Rather than dispatching actions to navigate you can pass the `history` object provided to route components to your actions and navigate with it there.
-- Routing data is already a prop of most of your components that care about it, whether it comes from the store the router doesn't change your code.
+- Routing data is already a prop of most of your components that care about it, whether it comes from the store or the router doesn't change your component's code.
 
 However, we know some people feel strongly about this and so we want to provide the best deep integration possible. As of version 4 of React Router, the React Router Redux package is a part of the project.  Please refer to it for deep integration.
 
