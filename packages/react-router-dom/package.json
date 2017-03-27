@@ -71,7 +71,6 @@
     "react": "^15.4.2",
     "react-addons-test-utils": "^15.4.2",
     "react-dom": "^15.3.0",
-    "readline-sync": "^1.4.4",
     "webpack": "^1.13.1",
     "webpack-dev-server": "^1.14.1"
   },
