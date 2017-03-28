@@ -1,3 +1,10 @@
+## [v3.0.3](https://github.com/ReactTraining/react-router/compare/v3.0.2...v3.0.3)
+> Mar 28, 2017
+
+- Fix webpack-related anonymous function issue (#4857 by @alisd23)
+- Fix usage with babel-plugin-transform-remove-prop-types (#4505 by @oliviertassinari)
+- Remove references to Link hash/query/state props (#4377 by @insin)
+
 ## [v3.0.2](https://github.com/ReactTraining/react-router/compare/v3.0.1...v3.0.2)
 > Jan 18, 2017
 
