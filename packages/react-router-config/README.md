@@ -125,32 +125,8 @@ loadBranchData(req.url).then(data => {
 
 // THIS IS JUST SOME THEORETICAL PSEUDO CODE :)
 class PendingNavDataLoader extends Component {
-  static childContextTypes = {
-    router: PropTypes.object
-  }
-
-  static contextTypes = {
-    router: PropTypes.object
-  }
-
   state = {
-    previousProps: null
-  }
-
-  getChildContext() {
-    const { router } = this.context
-    const { previousProps } = this.state
-    // shadow context.router so all the routes below are
-    // tricked into thinking the location hasn't changed yet
-    return {
-      router : !previousProps ? router : {
-        ...router,
-        route: {
-          location: previousProps.location,
-          match: previousProps.match
-        }
-      }
-    }
+    previousLocation: null
   }
 
   componentWillReceiveProps(nextProps) {
@@ -158,25 +134,34 @@ class PendingNavDataLoader extends Component {
     const { routes } = this.props
 
     if (navigated) {
-      // save the props so we can render the old screen
+      // save the location so we can render the old screen
       this.setState({
-        previousProps: this.props
+        previousLocation: this.props.location
       })
 
       // load data while the old screen remains
       loadNextData(routes, nextProps.location).then((data) => {
         putTheDataSomewhereRoutesCanFindIt(data)
-        // clear previousProps so the next screen renders
+        // clear previousLocation so the next screen renders
         this.setState({
-          previousProps: null
+          previousLocation: null
         })
       })
     }
   }
 
   render() {
-    const { children } = this.state.previousProps || this.props
-    return children
+    const { children, location } = this.props
+    const { previousLocation } = this.state
+    
+    // use a controlled <Route> to trick all descendants into 
+    // rendering the old location
+    return (
+      <Route 
+        location={previousLocation || location} 
+        render={() => children}
+      />
+    )
   }
 }
 
