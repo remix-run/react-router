@@ -13,7 +13,7 @@ You'll have access `match` objects in various places:
 - [Route render](./Route.md#render-func) as `({ match }) => ()`
 - [Route children](./Route.md#children-func) as `({ match }) => ()`
 - [withRouter](./withRouter.md) as `this.props.match`
-- [matchPath](./withRouter.md) as the return value
+- [matchPath](./matchPath.md) as the return value
 
 If a Route does not have a `path`, and therefore always matches, you'll get the closest parent match. Same goes for `withRouter`.
 
