@@ -116,6 +116,30 @@ describe('A unicode <Route>', () => {
   })
 })
 
+describe('A <Route> can contain several paths', () => {
+  it('matches the first path', () => {
+    const node = document.createElement('div')
+    ReactDOM.render((
+      <MemoryRouter initialEntries={[ '/sushi/tuna' ]}>
+        <Route path={[ '/sushi/:neta', '/sake' ]} render={({ match }) => <div>{match.params.neta}</div>} />
+      </MemoryRouter>
+    ), node)
+
+    expect(node.innerHTML).toContain('tuna')
+  })
+
+  it('matches the second path', () => {
+    const node = document.createElement('div')
+    ReactDOM.render((
+      <MemoryRouter initialEntries={[ '/sake' ]}>
+        <Route path={[ '/sushi/:neta', '/sake' ]} render={({ match }) => <div>{match.url}</div>} />
+      </MemoryRouter>
+    ), node)
+
+    expect(node.innerHTML).toContain('/sake')
+  })
+})
+
 describe('<Route render>', () => {
   const history = createMemoryHistory()
   const node = document.createElement('div')
