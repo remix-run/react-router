@@ -69,7 +69,7 @@ const User = ({ match }) => {
 }
 ```
 
-When you use `component` (instead of `render`, below) the router uses [`React.createElement`](https://facebook.github.io/react/docs/react-api.html#createelement) to create a new [React element](https://facebook.github.io/react/docs/rendering-elements.html) from the given component. That means if you provide an inline function you will get a lot of undesired remounting. For inline rendering, use the `render` prop (below).
+When you use `component` (instead of `render`, below) the router uses [`React.createElement`](https://facebook.github.io/react/docs/react-api.html#createelement) to create a new [React element](https://facebook.github.io/react/docs/rendering-elements.html) from the given component. That means if you provide an inline function, you are creating a new component every render. This results in the existing component unmounting and the new component mounting instead of just updating the existing component. For inline rendering, use the `render` prop (below).
 
 ## render: func
 
