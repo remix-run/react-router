@@ -76,7 +76,7 @@ const Topics = ({ match }) => (
   </View>
 )
 
-const nativeRouterExamples = () => (
+const App = () => (
   <NativeRouter>
     <View style={styles.container}>
       <View style={styles.nav}>
