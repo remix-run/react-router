@@ -1,6 +1,6 @@
 # Scroll Restoration
 
-In earlier version of React Router we provided out-of-the-box support for scroll restoration and people have been asking for it ever since. Hopefully this document helps you get what you need out of the scroll bar and routing!
+In earlier versions of React Router we provided out-of-the-box support for scroll restoration and people have been asking for it ever since. Hopefully this document helps you get what you need out of the scroll bar and routing!
 
 Browsers are starting to handle scroll restoration with `history.pushState` on their own in the same manner they handle it with normal browser navigation. It already works in chrome and it's really great. [Here's the Scroll Restoration Spec](https://majido.github.io/scroll-restoration-proposal/history-based-api.html#web-idl).
 
