@@ -19,14 +19,13 @@
     "prepublish": "node ./tools/build.js",
     "clean": "git clean -fdX .",
     "lint": "eslint modules",
-    "test": "karma start --single-run"
+    "test": "jest"
   },
   "peerDependencies": {
     "react": "^15",
     "react-router": "^4"
   },
   "devDependencies": {
-    "react-router": "^4.0.0",
     "babel-cli": "^6.18.0",
     "babel-eslint": "^6.0.4",
     "babel-loader": "^6.2.10",
@@ -41,6 +40,7 @@
     "expect": "^1.20.1",
     "gzip-size": "^3.0.0",
     "in-publish": "^2.0.0",
+    "jest": "^19.0.2",
     "karma": "^0.13.22",
     "karma-browserstack-launcher": "^1.0.1",
     "karma-chrome-launcher": "^1.0.1",
@@ -53,6 +53,7 @@
     "react": "^15.4.2",
     "react-addons-test-utils": "^15.4.2",
     "react-dom": "^15.3.0",
+    "react-router": "^4.0.0",
     "webpack": "^1.13.1",
     "webpack-dev-server": "^1.14.1"
   },
