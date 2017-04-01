@@ -6,6 +6,7 @@ If there is a support question that you frequently see being asked, please open 
 
 * [Why aren't my components updating when the location changes?](#why-arent-my-components-updating-when-the-location-changes)
 * [Why doesn't my application render after refreshing?](#why-doesnt-my-application-render-after-refreshing)
+* [Why doesn't my application work when loading nested routes?](#why-doesnt-my-application-work-when-loading-nested-routes)
 
 ### Why aren't my components updating when the location changes?
 
@@ -61,3 +62,14 @@ When you use a static server, your application should have just one `index.html`
 
 Then, you can use a hash history (created by a `<HashRouter>`) to encode the location in the URL's `hash` fragment. The pathname of the real url will always point to the same file on the server (e.g., both `http://www.example.com/#/` and `http://www.example.com/#/other-page` will load the root `index.html` file). This results in URLs that are not as pretty as the ones created when you use a `<BrowserRouter>`, but it is a necessary limitation of working with a static file server.
 
+### Why doesn't my application work when loading nested routes?
+
+If the `src` of the `<script>` tag that is used to load your application has a relative path, you will run into issues when loading your application from nested locations (e.g., `/parent` works, but `/parent/child` does not). All that you have to do to fix this is to ensure that the `src` path is absolute.
+
+```html
+<!-- good -->
+<script src='/static/js/bundle.js'></script>
+<!-- bad -->
+<script src='static/js/bundle.js'></script>
+<script src='./static/js/bundle.js'></script>
+```
