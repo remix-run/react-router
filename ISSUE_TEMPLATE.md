@@ -24,7 +24,7 @@ Remove the template from below and provide thoughtful commentary *and code sampl
 4.0.0
 
 ## Test Case
-http://jsbin.com/sacerobuxi/edit?html,js,output
+https://codepen.io/ReactJSTraining/pen/jyYjeW
 
 ## Steps to reproduce
 
