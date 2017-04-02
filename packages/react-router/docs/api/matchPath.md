@@ -6,7 +6,7 @@ This lets you use the same matching code that `<Route>` uses except outside of t
 import { matchPath } from 'react-router'
 
 const match = matchPath('/users/123', {
-  path: '/users/:id'
+  path: '/users/:id',
   exact: true,
   strict: false
 })
