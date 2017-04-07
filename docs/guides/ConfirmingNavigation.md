@@ -13,6 +13,9 @@ const Home = withRouter(
     routerWillLeave(nextLocation) {
       // return false to prevent a transition w/o prompting the user,
       // or return a string to allow the user to decide:
+      // return `null` or nothing to let other hooks to be executed
+      //
+      // NOTE: if you return true, other hooks will not be executed!
       if (!this.state.isSaved)
         return 'Your work is not saved! Are you sure you want to leave?'
     },
