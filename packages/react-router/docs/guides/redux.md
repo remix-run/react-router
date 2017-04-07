@@ -8,7 +8,7 @@ Generally, React Router and Redux work just fine together. Occasionally though, 
 
 This happens if:
 
-1. The componet is connected to redux via `connect()(Comp)`.
+1. The component is connected to redux via `connect()(Comp)`.
 2. The component is **not** a "route component", meaning it is not
    rendered like so: `<Route component={SomeConnectedThing}/>`
 
