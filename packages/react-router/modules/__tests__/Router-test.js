@@ -1,5 +1,6 @@
 import expect from 'expect'
 import React from 'react'
+import PropTypes from 'prop-types'
 import Router from '../Router'
 import ReactDOM from 'react-dom'
 import createHistory from 'history/createMemoryHistory'
@@ -57,9 +58,9 @@ describe('A <Router>', () => {
     }
 
     ContextChecker.contextTypes = {
-      router: React.PropTypes.shape({
-        history: React.PropTypes.object,
-        route: React.PropTypes.object
+      router: PropTypes.shape({
+        history: PropTypes.object,
+        route: PropTypes.object
       })
     }
 

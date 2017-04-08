@@ -33,6 +33,7 @@
     "test": "karma start --single-run"
   },
   "peerDependencies": {
+    "prop-types": "^15",
     "react": "^15"
   },
   "dependencies": {
@@ -66,6 +67,7 @@
     "karma-webpack": "^1.7.0",
     "mocha": "^2.5.3",
     "pretty-bytes": "^3.0.1",
+    "prop-types": "^15.5.4",
     "react": "^15.4.2",
     "react-addons-test-utils": "^15.4.2",
     "react-dom": "^15.3.0",
