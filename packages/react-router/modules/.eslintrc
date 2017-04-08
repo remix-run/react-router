@@ -14,6 +14,7 @@
     "plugin:react/recommended"
   ],
   "rules": {
+    "no-unused-vars": [ 2, { "ignoreRestSiblings": true }],
     "prefer-arrow-callback": 2,
     "react/display-name": 0,
     "semi": [ 2, "never" ]

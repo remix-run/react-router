@@ -6,7 +6,7 @@ import StaticRouter from 'react-router/StaticRouter'
 
 describe('renderRoutes', () => {
   let rendered
-  const Comp = ({ match, route, route: { routes } }) => (
+  const Comp = ({ route, route: { routes } }) => (
     rendered.push(route),
     renderRoutes(routes)
   )
@@ -37,7 +37,7 @@ describe('renderRoutes', () => {
         path: '/'
       }
       const routes = [routeToMatch, {
-        component: Comp,
+        component: Comp
       }]
 
       renderToString(
@@ -52,7 +52,7 @@ describe('renderRoutes', () => {
     it('renders the first matched route in nested routes', () => {
       const childRouteToMatch = {
         component: Comp,
-        path: '/',
+        path: '/'
       }
       const routeToMatch = {
         component: Comp,
@@ -62,7 +62,7 @@ describe('renderRoutes', () => {
         }]
       }
       const routes = [routeToMatch, {
-        component: Comp,
+        component: Comp
       }]
 
       renderToString(
