@@ -19,6 +19,7 @@
     "react-native": ">=0.40"
   },
   "dependencies": {
+    "prop-types": "^15.5.4",
     "react-router": "^4.0.0"
   },
   "devDependencies": {

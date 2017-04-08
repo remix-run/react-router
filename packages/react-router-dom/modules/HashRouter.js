@@ -1,4 +1,5 @@
-import React, { PropTypes } from 'react'
+import React from 'react'
+import PropTypes from 'prop-types'
 import createHistory from 'history/createHashHistory'
 import { Router } from 'react-router'
 
