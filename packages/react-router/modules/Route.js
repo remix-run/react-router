@@ -34,7 +34,6 @@ class Route extends React.Component {
   }
 
   getChildContext() {
-    const { router } = this.context
     return {
       router: {
         ...this.context.router,
