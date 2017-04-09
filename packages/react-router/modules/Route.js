@@ -33,6 +33,10 @@ class Route extends React.Component {
   }
 
   getChildContext() {
+    if (!this.context.router) {
+      throw new Error('You should not use <Route> or withRoute() outside a valid <Router>');
+    }
+
     return {
       router: {
         ...this.context.router,
