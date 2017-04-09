@@ -33,12 +33,10 @@
   ],
   "license": "MIT",
   "dependencies": {
-    "create-react-class": "^15.5.1",
     "history": "^3.0.0",
     "hoist-non-react-statics": "^1.2.0",
     "invariant": "^2.2.1",
     "loose-envify": "^1.2.0",
-    "react-transition-group": "^1.1.1",
     "warning": "^3.0.0"
   },
   "peerDependencies": {
@@ -59,6 +57,7 @@
     "babel-register": "^6.11.6",
     "bundle-loader": "^0.5.4",
     "codecov": "^2.1.0",
+    "create-react-class": "^15.5.1",
     "cross-env": "^3.2.4",
     "css-loader": "^0.27.3",
     "eslint": "^3.2.0",
@@ -81,6 +80,7 @@
     "qs": "^6.2.1",
     "react": "^15.5.3",
     "react-dom": "^15.5.3",
+    "react-transition-group": "^1.1.1",
     "rimraf": "^2.5.4",
     "style-loader": "^0.16.1",
     "webpack": "^1.13.1",

@@ -1,7 +1,8 @@
 import React from 'react'
+import createReactClass from 'create-react-class'
 import auth from '../utils/auth'
 
-const Dashboard = React.createClass({
+const Dashboard = createReactClass({
   render() {
     const token = auth.getToken()
 

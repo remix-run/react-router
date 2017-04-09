@@ -1,4 +1,5 @@
 import React from 'react'
+import createReactClass from 'create-react-class'
 import { render, findDOMNode } from 'react-dom'
 import { browserHistory, Router, Route, IndexRoute, Link, withRouter } from 'react-router'
 
@@ -7,7 +8,7 @@ import ContactStore from './ContactStore'
 
 import './app.css'
 
-const App = React.createClass({
+const App = createReactClass({
   getInitialState() {
     return {
       contacts: ContactStore.getContacts(),
@@ -55,14 +56,14 @@ const App = React.createClass({
   }
 })
 
-const Index = React.createClass({
+const Index = createReactClass({
   render() {
     return <h1>Address Book</h1>
   }
 })
 
 const Contact = withRouter(
-  React.createClass({
+  createReactClass({
 
     getStateFromStore(props) {
       const { id } = props ? props.params : this.props.params
@@ -115,7 +116,7 @@ const Contact = withRouter(
 )
 
 const NewContact = withRouter(
-  React.createClass({
+  createReactClass({
 
     createContact(event) {
       event.preventDefault()
@@ -144,7 +145,7 @@ const NewContact = withRouter(
   })
 )
 
-const NotFound = React.createClass({
+const NotFound = createReactClass({
   render() {
     return <h2>Not found</h2>
   }

@@ -1,10 +1,11 @@
 import React from 'react'
+import createReactClass from 'create-react-class'
 import { render } from 'react-dom'
 import { browserHistory, Router, Route, Link, withRouter } from 'react-router'
 
 import withExampleBasename from '../withExampleBasename'
 
-const App = React.createClass({
+const App = createReactClass({
   render() {
     return (
       <div>
@@ -18,14 +19,14 @@ const App = React.createClass({
   }
 })
 
-const Dashboard = React.createClass({
+const Dashboard = createReactClass({
   render() {
     return <h1>Dashboard</h1>
   }
 })
 
 const Form = withRouter(
-  React.createClass({
+  createReactClass({
 
     componentWillMount() {
       this.props.router.setRouteLeaveHook(

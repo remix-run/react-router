@@ -1,4 +1,5 @@
 import React from 'react'
+import createReactClass from 'create-react-class'
 import { render } from 'react-dom'
 import { browserHistory, Router, Route, IndexRoute, Link } from 'react-router'
 
@@ -10,7 +11,7 @@ const PICTURES = [
   { id: 2, src: 'http://placekitten.com/620/620' }
 ]
 
-const Modal = React.createClass({
+const Modal = createReactClass({
   styles: {
     position: 'fixed',
     top: '20%',
@@ -33,7 +34,7 @@ const Modal = React.createClass({
   }
 })
 
-const App = React.createClass({
+const App = createReactClass({
 
   componentWillReceiveProps(nextProps) {
     // if we changed routes...
@@ -77,7 +78,7 @@ const App = React.createClass({
   }
 })
 
-const Index = React.createClass({
+const Index = createReactClass({
   render() {
     return (
       <div>
@@ -114,7 +115,7 @@ const Index = React.createClass({
   }
 })
 
-const Deep = React.createClass({
+const Deep = createReactClass({
   render() {
     return (
       <div>
@@ -136,7 +137,7 @@ const Deep = React.createClass({
   }
 })
 
-const Picture = React.createClass({
+const Picture = createReactClass({
   render() {
     return (
       <div>

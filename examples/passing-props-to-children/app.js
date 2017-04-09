@@ -1,4 +1,5 @@
 import React from 'react'
+import createReactClass from 'create-react-class'
 import { render } from 'react-dom'
 import { browserHistory, Router, Route, Link, withRouter } from 'react-router'
 
@@ -7,7 +8,7 @@ import withExampleBasename from '../withExampleBasename'
 import './app.css'
 
 const App = withRouter(
-  React.createClass({
+  createReactClass({
 
     getInitialState() {
       return {
@@ -62,7 +63,7 @@ const App = withRouter(
   })
 )
 
-const Taco = React.createClass({
+const Taco = createReactClass({
   remove() {
     this.props.onRemoveTaco(this.props.params.name)
   },

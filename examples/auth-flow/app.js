@@ -1,11 +1,12 @@
 import React from 'react'
+import createReactClass from 'create-react-class'
 import { render } from 'react-dom'
 import { browserHistory, Router, Route, Link, withRouter } from 'react-router'
 
 import withExampleBasename from '../withExampleBasename'
 import auth from './auth'
 
-const App = React.createClass({
+const App = createReactClass({
   getInitialState() {
     return {
       loggedIn: auth.loggedIn()
@@ -43,7 +44,7 @@ const App = React.createClass({
   }
 })
 
-const Dashboard = React.createClass({
+const Dashboard = createReactClass({
   render() {
     const token = auth.getToken()
 
@@ -58,7 +59,7 @@ const Dashboard = React.createClass({
 })
 
 const Login = withRouter(
-  React.createClass({
+  createReactClass({
 
     getInitialState() {
       return {
@@ -101,13 +102,13 @@ const Login = withRouter(
   })
 )
 
-const About = React.createClass({
+const About = createReactClass({
   render() {
     return <h1>About</h1>
   }
 })
 
-const Logout = React.createClass({
+const Logout = createReactClass({
   componentDidMount() {
     auth.logout()
   },

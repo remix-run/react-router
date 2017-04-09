@@ -1,4 +1,5 @@
-import React, { createClass } from 'react'
+import React from 'react'
+import createClass from 'create-react-class'
 import { render } from 'react-dom'
 import { Router, Route, IndexRoute, browserHistory, Link, withRouter } from 'react-router'
 
