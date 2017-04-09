@@ -11,10 +11,12 @@ var config = {
   ],
   external: [
     'react',
+    'prop-types',
     'react-router'
   ],
   globals: {
     react: 'React',
+    'prop-types': 'PropTypes',
     'react-router': 'ReactRouter'
   }
 }

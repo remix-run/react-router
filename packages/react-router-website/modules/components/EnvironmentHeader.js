@@ -1,4 +1,5 @@
-import React, { PropTypes } from 'react'
+import React from 'react'
+import PropTypes from 'prop-types'
 import { Block, Row, Inline, Col } from 'jsxstyle'
 import { Link, Route } from 'react-router-dom'
 import { LIGHT_GRAY, RED } from '../Theme'

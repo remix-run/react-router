@@ -5,7 +5,8 @@
 // Any help cleaning it up would be appreciated.
 // <3 <3 <3 - Ryan
 
-import React, { Component, PropTypes } from 'react'
+import React, { Component } from 'react'
+import PropTypes from 'prop-types'
 
 import {
   Text,

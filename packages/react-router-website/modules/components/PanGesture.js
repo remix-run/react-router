@@ -1,6 +1,7 @@
 // Thanks @iammerrick! <3 <3 <3
 
-import React, { Component, PropTypes } from 'react'
+import React, { Component } from 'react'
+import PropTypes from 'prop-types'
 import { findDOMNode } from 'react-dom'
 
 const getPointRelativeToElement = (point, element) => {

@@ -28,6 +28,7 @@
     "test": "jest"
   },
   "peerDependencies": {
+    "prop-types": "^15",
     "react": "^15"
   },
   "dependencies": {
@@ -50,6 +51,7 @@
     "in-publish": "^2.0.0",
     "jest": "^19.0.2",
     "pretty-bytes": "^4.0.2",
+    "prop-types": "^15.5.4",
     "react": "^15.4.2",
     "react-dom": "^15.4.2",
     "react-redux": "^5.0.3",

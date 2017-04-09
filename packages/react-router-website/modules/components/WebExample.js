@@ -1,4 +1,5 @@
-import React, { PropTypes } from 'react'
+import React from 'react'
+import PropTypes from 'prop-types'
 import Media from 'react-media'
 import { Block } from 'jsxstyle'
 import { Route } from 'react-router-dom'
