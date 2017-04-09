@@ -34,10 +34,6 @@ class Route extends React.Component {
   }
 
   getChildContext() {
-    if (!this.context.router) {
-      throw new Error('You should not use <Route> or withRoute() outside a valid <Router>')
-    }
-
     return {
       router: {
         ...this.context.router,
@@ -53,10 +49,15 @@ class Route extends React.Component {
     match: this.computeMatch(this.props, this.context.router)
   }
 
-  computeMatch({ computedMatch, location, path, strict, exact }, { route }) {
+  computeMatch({ computedMatch, location, path, strict, exact }, router) {
     if (computedMatch)
       return computedMatch // <Switch> already computed the match for us
 
+    if (!router) {
+      throw new Error('You should not use <Route> or withRoute() outside a valid <Router>')
+    }
+
+    const { route } = router
     const pathname = (location || route.location).pathname
 
     return path ? matchPath(pathname, { path, strict, exact }) : route.match
