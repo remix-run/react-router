@@ -1,4 +1,5 @@
-import React, { Component, PropTypes } from 'react'
+import React, { Component } from 'react'
+import PropTypes from 'prop-types'
 import { Block, Col } from 'jsxstyle'
 import EnvironmentHeader from './EnvironmentHeader'
 import { Link, Switch, Route } from 'react-router-dom'

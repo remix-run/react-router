@@ -1,4 +1,5 @@
-import React, { Component, PropTypes } from 'react'
+import React, { Component } from 'react'
+import PropTypes from 'prop-types'
 import WebExample from './WebExample'
 import NativeExample from './NativeExample'
 import { Redirect } from 'react-router-dom'
