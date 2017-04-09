@@ -1,6 +1,7 @@
 import invariant from 'invariant'
 import React from 'react'
 import createReactClass from 'create-react-class'
+import { func, object } from 'prop-types'
 
 import createTransitionManager from './createTransitionManager'
 import { routes } from './InternalPropTypes'
@@ -8,8 +9,6 @@ import RouterContext from './RouterContext'
 import { createRoutes } from './RouteUtils'
 import { createRouterObject, assignRouterState } from './RouterUtils'
 import warning from './routerWarning'
-
-const { func, object } = React.PropTypes
 
 const propTypes = {
   history: object,

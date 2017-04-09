@@ -1,6 +1,4 @@
-import { PropTypes } from 'react'
-
-const { func, object, shape, string } = PropTypes
+import { func, object, shape, string } from 'prop-types'
 
 export const routerShape = shape({
   push: func.isRequired,

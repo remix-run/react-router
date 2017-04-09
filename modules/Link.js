@@ -1,10 +1,9 @@
 import React from 'react'
 import createReactClass from 'create-react-class'
+import { bool, object, string, func, oneOfType } from 'prop-types'
 import invariant from 'invariant'
 import { routerShape } from './PropTypes'
 import { ContextSubscriber } from './ContextUtils'
-
-const { bool, object, string, func, oneOfType } = React.PropTypes
 
 function isLeftClickEvent(event) {
   return event.button === 0

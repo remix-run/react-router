@@ -1,12 +1,11 @@
 import invariant from 'invariant'
 import React from 'react'
 import createReactClass from 'create-react-class'
+import { array, func, object } from 'prop-types'
 
 import getRouteParams from './getRouteParams'
 import { ContextProvider } from './ContextUtils'
 import { isReactChildren } from './RouteUtils'
-
-const { array, func, object } = React.PropTypes
 
 /**
  * A <RouterContext> renders the component tree for a given router state

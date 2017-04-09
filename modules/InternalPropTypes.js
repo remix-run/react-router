@@ -1,6 +1,4 @@
-import { PropTypes } from 'react'
-
-const { func, object, arrayOf, oneOfType, element, shape, string } = PropTypes
+import { func, object, arrayOf, oneOfType, element, shape, string } from 'prop-types'
 
 export function falsy(props, propName, componentName) {
   if (props[propName])
