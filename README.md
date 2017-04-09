@@ -9,11 +9,11 @@ React Router keeps your UI in sync with the URL. It has a simple API with powerf
 [![Codecov][codecov-badge]][codecov]
 [![Discord][discord-badge]][discord]
 
-### v4 Is Coming
+### 4.0 is here!
 
-The next version of React Router (v4) is in beta now.
+The next version of React Router (4.0) has been released! Check out the `master` branch.
 
-[v4 Documentation](https://reacttraining.com/react-router/)
+[4.0 Documentation](https://reacttraining.com/react-router/)
 
 ### Docs & Help
 
