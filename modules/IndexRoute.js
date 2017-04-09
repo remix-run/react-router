@@ -1,4 +1,5 @@
 import React from 'react'
+import createReactClass from 'create-react-class'
 import warning from './routerWarning'
 import invariant from 'invariant'
 import { createRouteFromReactElement } from './RouteUtils'
@@ -11,7 +12,7 @@ const { func } = React.PropTypes
  * a JSX route config.
  */
 /* eslint-disable react/require-render-return */
-const IndexRoute = React.createClass({
+const IndexRoute = createReactClass({
 
   statics: {
 

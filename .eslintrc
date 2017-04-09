@@ -5,6 +5,7 @@
   },
   "rules": {
     "react/display-name": 0,
+    "react/prop-types": 0,
     "react/jsx-wrap-multilines": 2
   },
   "plugins": [

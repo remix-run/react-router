@@ -1,5 +1,6 @@
 import invariant from 'invariant'
 import React from 'react'
+import createReactClass from 'create-react-class'
 
 import createTransitionManager from './createTransitionManager'
 import { routes } from './InternalPropTypes'
@@ -28,7 +29,7 @@ const propTypes = {
  * a router that renders a <RouterContext> with all the props
  * it needs each time the URL changes.
  */
-const Router = React.createClass({
+const Router = createReactClass({
 
   propTypes,
 

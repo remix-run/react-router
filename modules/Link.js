@@ -1,4 +1,5 @@
 import React from 'react'
+import createReactClass from 'create-react-class'
 import invariant from 'invariant'
 import { routerShape } from './PropTypes'
 import { ContextSubscriber } from './ContextUtils'
@@ -39,7 +40,7 @@ function resolveToLocation(to, router) {
  *
  *   <Link to={`/posts/${post.id}`} />
  */
-const Link = React.createClass({
+const Link = createReactClass({
 
   mixins: [ ContextSubscriber('router') ],
 

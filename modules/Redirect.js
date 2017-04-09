@@ -1,4 +1,5 @@
 import React from 'react'
+import createReactClass from 'create-react-class'
 import invariant from 'invariant'
 import { createRouteFromReactElement } from './RouteUtils'
 import { formatPattern } from './PatternUtils'
@@ -14,7 +15,7 @@ const { string, object } = React.PropTypes
  * and are traversed in the same manner.
  */
 /* eslint-disable react/require-render-return */
-const Redirect = React.createClass({
+const Redirect = createReactClass({
 
   statics: {
 
