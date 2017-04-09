@@ -1,5 +1,5 @@
 import React from 'react'
-import ReactCSSTransitionGroup from 'react-addons-css-transition-group'
+import CSSTransitionGroup from 'react-transition-group/CSSTransitionGroup'
 import { render } from 'react-dom'
 import { browserHistory, Router, Route, IndexRoute, Link } from 'react-router'
 
@@ -14,7 +14,7 @@ const App = ({ children, location }) => (
       <li><Link to="/page2">Page 2</Link></li>
     </ul>
 
-    <ReactCSSTransitionGroup
+    <CSSTransitionGroup
       component="div"
       transitionName="example"
       transitionEnterTimeout={500}
@@ -23,7 +23,7 @@ const App = ({ children, location }) => (
       {React.cloneElement(children, {
         key: location.pathname
       })}
-    </ReactCSSTransitionGroup>
+    </CSSTransitionGroup>
   </div>
 )
 

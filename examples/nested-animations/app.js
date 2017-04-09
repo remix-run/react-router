@@ -1,5 +1,5 @@
 import React from 'react'
-import ReactCSSTransitionGroup from 'react-addons-css-transition-group'
+import CSSTransitionGroup from 'react-transition-group/CSSTransitionGroup'
 import { render } from 'react-dom'
 import { browserHistory, Router, Route, Link } from 'react-router'
 
@@ -17,12 +17,12 @@ const App = ({ children, location: { pathname } }) => {
         <li><Link to="/page1">Page 1</Link></li>
         <li><Link to="/page2">Page 2</Link></li>
       </ul>
-      <ReactCSSTransitionGroup
+      <CSSTransitionGroup
         component="div" transitionName="swap"
         transitionEnterTimeout={500} transitionLeaveTimeout={500}
       >
         {React.cloneElement(children || <div />, { key })}
-      </ReactCSSTransitionGroup>
+      </CSSTransitionGroup>
     </div>
   )
 }
@@ -34,12 +34,12 @@ const Page1 = ({ children, location: { pathname } }) => (
       <li><Link to="/page1/tab1">Tab 1</Link></li>
       <li><Link to="/page1/tab2">Tab 2</Link></li>
     </ul>
-    <ReactCSSTransitionGroup
+    <CSSTransitionGroup
       component="div" transitionName="example"
       transitionEnterTimeout={500} transitionLeaveTimeout={500}
     >
       {React.cloneElement(children || <div/>, { key: pathname })}
-    </ReactCSSTransitionGroup>
+    </CSSTransitionGroup>
   </div>
 )
 
@@ -50,12 +50,12 @@ const Page2 = ({ children, location: { pathname } }) => (
       <li><Link to="/page2/tab1">Tab 1</Link></li>
       <li><Link to="/page2/tab2">Tab 2</Link></li>
     </ul>
-    <ReactCSSTransitionGroup
+    <CSSTransitionGroup
       component="div" transitionName="example"
       transitionEnterTimeout={500} transitionLeaveTimeout={500}
     >
       {React.cloneElement(children || <div/>, { key: pathname })}
-    </ReactCSSTransitionGroup>
+    </CSSTransitionGroup>
   </div>
 )
 
