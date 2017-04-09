@@ -32,6 +32,7 @@
   },
   "dependencies": {
     "history": "^4.5.1",
+    "prop-types": "^15.5.4",
     "react-router": "^4.0.0"
   },
   "devDependencies": {

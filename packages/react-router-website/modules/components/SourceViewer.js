@@ -1,5 +1,6 @@
 /*eslint-disable react/no-danger*/
 import React from 'react'
+import PropTypes from 'prop-types'
 import 'prismjs/themes/prism-tomorrow.css'
 import { Block } from 'jsxstyle'
 
@@ -17,7 +18,7 @@ const SourceViewer = ({ code, ...rest }) => (
 )
 
 SourceViewer.propTypes = {
-  code: React.PropTypes.string.isRequired
+  code: PropTypes.string.isRequired
 }
 
 export default SourceViewer
