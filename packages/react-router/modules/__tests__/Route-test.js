@@ -57,20 +57,13 @@ describe('A <Route>', () => {
   })
 
   it('supports preact by nulling out children prop when empty array is passed', () => {
-    const TEXT = 'Mrs. Kato'
     const node = document.createElement('div')
 
-    ReactDOM.render((
-      <MemoryRouter initialEntries={[ '/' ]}>
-        <Route path="/" render={() => (
-          <h1>{TEXT}</h1>
-        )}>
-          {[]}
-        </Route>
-      </MemoryRouter>
-    ), node)
-
-    expect(node.innerHTML).toContain(TEXT)
+    expect(() => {
+      ReactDOM.render((
+        <Route path="/" render={() => null} />
+      ), node)
+    }).toThrow(/You should not use <Route> or withRoute\(\) outside a valid <Router>/)
   })
 
   it('matches using nextContext when updating', () => {
@@ -87,6 +80,10 @@ describe('A <Route>', () => {
     ), node)
     push('/sushi/spicy-tuna')
     expect(node.innerHTML).toContain('/sushi/spicy-tuna')
+  })
+
+  it('crash explicitly with no valid <Router>', () => {
+
   })
 })
 
@@ -342,7 +339,7 @@ describe('A <Route location>', () => {
 
       expect(node.innerHTML).toContain(TEXT)
     })
-    
+
     it('continues to use parent\'s prop location after navigation', () => {
       const TEXT = 'cheddar pretzel'
       const node = document.createElement('div')

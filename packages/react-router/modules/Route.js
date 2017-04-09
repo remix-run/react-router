@@ -34,7 +34,7 @@ class Route extends React.Component {
 
   getChildContext() {
     if (!this.context.router) {
-      throw new Error('You should not use <Route> or withRoute() outside a valid <Router>');
+      throw new Error('You should not use <Route> or withRoute() outside a valid <Router>')
     }
 
     return {
@@ -66,17 +66,17 @@ class Route extends React.Component {
 
     warning(
       !(component && render),
-      'You should not use <Route component> and <Route render> in the same route; <Route render> will be ignored'   
+      'You should not use <Route component> and <Route render> in the same route; <Route render> will be ignored'
     )
 
     warning(
       !(component && children),
-      'You should not use <Route component> and <Route children> in the same route; <Route children> will be ignored'   
+      'You should not use <Route component> and <Route children> in the same route; <Route children> will be ignored'
     )
 
     warning(
       !(render && children),
-      'You should not use <Route render> and <Route children> in the same route; <Route children> will be ignored'    
+      'You should not use <Route render> and <Route children> in the same route; <Route children> will be ignored'
     )
   }
 
