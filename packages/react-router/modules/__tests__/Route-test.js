@@ -57,13 +57,20 @@ describe('A <Route>', () => {
   })
 
   it('supports preact by nulling out children prop when empty array is passed', () => {
+    const TEXT = 'Mrs. Kato'
     const node = document.createElement('div')
 
-    expect(() => {
-      ReactDOM.render((
-        <Route path="/" render={() => null} />
-      ), node)
-    }).toThrow(/You should not use <Route> or withRoute\(\) outside a valid <Router>/)
+    ReactDOM.render((
+      <MemoryRouter initialEntries={[ '/' ]}>
+        <Route path="/" render={() => (
+          <h1>{TEXT}</h1>
+        )}>
+          {[]}
+        </Route>
+      </MemoryRouter>
+    ), node)
+
+    expect(node.innerHTML).toContain(TEXT)
   })
 
   it('matches using nextContext when updating', () => {
@@ -83,7 +90,13 @@ describe('A <Route>', () => {
   })
 
   it('crash explicitly with no valid <Router>', () => {
+    const node = document.createElement('div')
 
+    expect(() => {
+      ReactDOM.render((
+        <Route path="/" render={() => null} />
+      ), node)
+    }).toThrow(/You should not use <Route> or withRoute\(\) outside a valid <Router>/)
   })
 })
 
