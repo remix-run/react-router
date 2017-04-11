@@ -24,6 +24,16 @@ describe('A <Link>', () => {
 
     expect(href).toEqual('/the/path?the=query#the-hash')
   })
+
+  it('crash explicitly with no valid <Router>', () => {
+    const node = document.createElement('div')
+
+    expect(() => {
+      ReactDOM.render((
+        <Link to="/">link</Link>
+      ), node)
+    }).toThrow(/You should not use <Link> outside a valid <Router>/)
+  })
 })
 
 describe('When a <Link> is clicked', () => {

@@ -135,6 +135,23 @@ describe('A <Switch>', () => {
 
     expect(node.innerHTML).toMatch(/one/)
   })
+
+  it('crash explicitly with no valid <Router>', () => {
+    const node = document.createElement('div')
+
+    expect(() => {
+      ReactDOM.render((
+        <Switch>
+          <Route path="/one" render={() => (
+            <h1>one</h1>
+          )}/>
+          <Route path="/two" render={() => (
+            <h1>two</h1>
+          )}/>
+        </Switch>
+      ), node)
+    }).toThrow(/You should not use <Switch> outside a valid <Router>/)
+  })
 })
 
 

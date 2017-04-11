@@ -1,5 +1,6 @@
 import React from 'react'
 import PropTypes from 'prop-types'
+import invariant from 'invariant'
 
 /**
  * The public API for updating the location programatically
@@ -34,6 +35,11 @@ class Redirect extends React.Component {
   }
 
   componentWillMount() {
+    invariant(
+      this.context.router,
+      'You should not use <Redirect> outside a valid <Router>'
+    )
+
     if (this.isStatic())
       this.perform()
   }

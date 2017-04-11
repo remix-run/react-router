@@ -1,6 +1,7 @@
 import React from 'react'
 import PropTypes from 'prop-types'
 import warning from 'warning'
+import invariant from 'invariant'
 import matchPath from './matchPath'
 
 /**
@@ -16,6 +17,13 @@ class Switch extends React.Component {
   static propTypes = {
     children: PropTypes.node,
     location: PropTypes.object
+  }
+
+  componentWillMount() {
+    invariant(
+      this.context.router,
+      'You should not use <Switch> outside a valid <Router>'
+    )
   }
 
   componentWillReceiveProps(nextProps) {
