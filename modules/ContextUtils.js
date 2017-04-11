@@ -1,4 +1,6 @@
+import React from 'react'
 import PropTypes from 'prop-types'
+import invariant from 'invariant'
 
 // Works around issues with context updates failing to propagate.
 // Caveat: the context value is expected to never change its identity.
@@ -14,16 +16,21 @@ function makeContextName(name) {
   return `@@contextSubscriber/${name}`
 }
 
-export function ContextProvider(name) {
+export function ContextProviderEnhancer(ComposedComponent, name, options) {
   const contextName = makeContextName(name)
   const listenersKey = `${contextName}/listeners`
   const eventIndexKey = `${contextName}/eventIndex`
   const subscribeKey = `${contextName}/subscribe`
+  const withRef = options && options.withRef
 
-  return {
-    childContextTypes: {
+  return class extends React.Component {
+    static childContextTypes = {
       [contextName]: contextProviderShape.isRequired
-    },
+    }
+
+    constructor(props) {
+      super(props)
+    }
 
     getChildContext() {
       return {
@@ -32,24 +39,34 @@ export function ContextProvider(name) {
           subscribe: this[subscribeKey]
         }
       }
-    },
+    }
 
     componentWillMount() {
       this[listenersKey] = []
       this[eventIndexKey] = 0
-    },
+    }
 
     componentWillReceiveProps() {
       this[eventIndexKey]++
-    },
+    }
 
     componentDidUpdate() {
       this[listenersKey].forEach(listener =>
         listener(this[eventIndexKey])
       )
-    },
+    }
 
-    [subscribeKey](listener) {
+    getWrappedInstance = () => {
+      invariant(
+        withRef,
+        'To access the wrapped instance, you need to specify ' +
+        '`{ withRef: true }` as the second argument of the withRouter() call.'
+      )
+
+      return this.wrappedInstance
+    }
+
+    [subscribeKey] = (listener) => {
       // No need to immediately call listener here.
       this[listenersKey].push(listener)
 
@@ -59,29 +76,44 @@ export function ContextProvider(name) {
         )
       }
     }
+
+    render() {
+      const props = { ...this.props };
+      if (withRef) {
+        props.withRef = (c) => {
+          this.wrappedInstance = c
+        }
+      }
+
+      return <ComposedComponent {...props} />
+    }
   }
 }
 
-export function ContextSubscriber(name) {
+export function ContextSubscriberEnhancer(ComposedComponent, name, options) {
   const contextName = makeContextName(name)
   const lastRenderedEventIndexKey = `${contextName}/lastRenderedEventIndex`
   const handleContextUpdateKey = `${contextName}/handleContextUpdate`
   const unsubscribeKey = `${contextName}/unsubscribe`
+  const withRef = options && options.withRef
 
-  return {
-    contextTypes: {
+  return class extends React.Component {
+    static displayName = `ContextSubscriberEnhancer(${ComposedComponent.displayName}, ${contextName})`;
+    static contextTypes = {
       [contextName]: contextProviderShape
-    },
+    }
 
-    getInitialState() {
-      if (!this.context[contextName]) {
-        return {}
-      }
+    constructor(props, context) {
+      super(props, context)
 
-      return {
-        [lastRenderedEventIndexKey]: this.context[contextName].eventIndex
+      if (!context[contextName]) {
+        this.state = {}
+      } else {
+        this.state = {
+          [lastRenderedEventIndexKey]: context[contextName].eventIndex
+        }
       }
-    },
+    }
 
     componentDidMount() {
       if (!this.context[contextName]) {
@@ -91,7 +123,7 @@ export function ContextSubscriber(name) {
       this[unsubscribeKey] = this.context[contextName].subscribe(
         this[handleContextUpdateKey]
       )
-    },
+    }
 
     componentWillReceiveProps() {
       if (!this.context[contextName]) {
@@ -101,7 +133,7 @@ export function ContextSubscriber(name) {
       this.setState({
         [lastRenderedEventIndexKey]: this.context[contextName].eventIndex
       })
-    },
+    }
 
     componentWillUnmount() {
       if (!this[unsubscribeKey]) {
@@ -110,12 +142,39 @@ export function ContextSubscriber(name) {
 
       this[unsubscribeKey]()
       this[unsubscribeKey] = null
-    },
+    }
 
-    [handleContextUpdateKey](eventIndex) {
+    getWrappedInstance = () => {
+      invariant(
+        withRef,
+        'To access the wrapped instance, you need to specify ' +
+        '`{ withRef: true }` as the second argument of the withRouter() call.'
+      )
+
+      return this.wrappedInstance
+    }
+
+    [handleContextUpdateKey] = (eventIndex) => {
       if (eventIndex !== this.state[lastRenderedEventIndexKey]) {
         this.setState({ [lastRenderedEventIndexKey]: eventIndex })
       }
     }
+
+    render() {
+      const props = { ...this.props }
+      if (withRef) {
+        props.withRef = (c) => {
+          this.wrappedInstance = c
+        }
+      }
+
+      return <ComposedComponent {...props} />
+    }
   }
 }
+
+// TODO: Remove this once React 16 is out?
+export {
+  ContextProvider,
+  ContextSubscriber
+} from './ContextUtilsMixins'

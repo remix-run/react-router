@@ -1,6 +1,5 @@
 import invariant from 'invariant'
-import React from 'react'
-import createReactClass from 'create-react-class'
+import React, { Component } from 'react'
 import { func, object } from 'prop-types'
 
 import createTransitionManager from './createTransitionManager'
@@ -28,27 +27,30 @@ const propTypes = {
  * a router that renders a <RouterContext> with all the props
  * it needs each time the URL changes.
  */
-const Router = createReactClass({
-  displayName: 'Router',
+class Router extends Component {
+  static displayName = 'Router'
 
-  propTypes,
+  static propTypes = propTypes
 
-  getDefaultProps() {
-    return {
-      render(props) {
-        return <RouterContext {...props} />
-      }
-    }
-  },
+  static defaultProps = {
+    render: (props) => <RouterContext {...props} />
+  }
 
-  getInitialState() {
-    return {
+  constructor(props) {
+    super(props)
+
+    this.state = {
       location: null,
       routes: null,
       params: null,
       components: null
     }
-  },
+
+    // No auto bind in ES6
+    this.handleError             = this.handleError.bind(this);
+    this.createRouterObject      = this.createRouterObject.bind(this)
+    this.createTransitionManager = this.createTransitionManager.bind(this)
+  }
 
   handleError(error) {
     if (this.props.onError) {
@@ -57,7 +59,7 @@ const Router = createReactClass({
       // Throw errors by default so we don't silently swallow them!
       throw error // This error probably occurred in getChildRoutes or getComponents.
     }
-  },
+  }
 
   createRouterObject(state) {
     const { matchContext } = this.props
@@ -67,7 +69,7 @@ const Router = createReactClass({
 
     const { history } = this.props
     return createRouterObject(history, this.transitionManager, state)
-  },
+  }
 
   createTransitionManager() {
     const { matchContext } = this.props
@@ -89,7 +91,7 @@ const Router = createReactClass({
       history,
       createRoutes(routes || children)
     )
-  },
+  }
 
   componentWillMount() {
     this.transitionManager = this.createTransitionManager()
@@ -105,7 +107,7 @@ const Router = createReactClass({
         this.setState(state, this.props.onUpdate)
       }
     })
-  },
+  }
 
   /* istanbul ignore next: sanity check */
   componentWillReceiveProps(nextProps) {
@@ -119,12 +121,12 @@ const Router = createReactClass({
         (this.props.routes || this.props.children),
       'You cannot change <Router routes>; it will be ignored'
     )
-  },
+  }
 
   componentWillUnmount() {
     if (this._unlisten)
       this._unlisten()
-  },
+  }
 
   render() {
     const { location, routes, params, components } = this.state
@@ -147,7 +149,6 @@ const Router = createReactClass({
       createElement
     })
   }
-
-})
+}
 
 export default Router
