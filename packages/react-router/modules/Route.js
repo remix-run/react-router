@@ -1,5 +1,6 @@
 import warning from 'warning'
-import React, { PropTypes } from 'react'
+import React from 'react'
+import PropTypes from 'prop-types'
 import matchPath from './matchPath'
 
 /**
@@ -33,7 +34,6 @@ class Route extends React.Component {
   }
 
   getChildContext() {
-    const { router } = this.context
     return {
       router: {
         ...this.context.router,

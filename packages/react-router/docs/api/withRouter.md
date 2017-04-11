@@ -28,13 +28,16 @@ class ShowTheLocation extends React.Component {
 const ShowTheLocationWithRouter = withRouter(ShowTheLocation)
 ```
 
-**IMPORTANT NOTE:** If you are using `withRouter` to prevent `shouldComponentUpdate` blocks, it is important that `withRouter` wraps the component that implements `shouldComponentUpate`. For example, when using Redux: 
+#### Important Note 
+
+If you are using `withRouter` to prevent updates from being blocked by `shouldComponentUpdate`, it is important that `withRouter` wraps the component that implements `shouldComponentUpate`. For example, when using Redux: 
 
 ```js
 // This gets around shouldComponentUpdate
 withRouter(connect(...)(MyComponent)
+
 // This does not
 connect(...)(withRouter(MyComponent))
 ```
 
-See [this post](https://github.com/ReactTraining/react-router/blob/master/packages/react-router/docs/guides/blocked-updates.md) for more information.
+See [this guide](https://github.com/ReactTraining/react-router/blob/master/packages/react-router/docs/guides/blocked-updates.md) for more information.

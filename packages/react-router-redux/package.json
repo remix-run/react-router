@@ -1,6 +1,6 @@
 {
   "name": "react-router-redux",
-  "version": "5.0.0-alpha.1",
+  "version": "5.0.0-alpha.4",
   "description": "Redux bindings for React Router",
   "repository": "ReactTraining/react-router",
   "license": "MIT",
@@ -10,6 +10,8 @@
   "files": [
     "ConnectedRouter.js",
     "reducer.js",
+    "middleware.js",
+    "actions.js",
     "index.js",
     "README.md",
     "es",
@@ -19,8 +21,9 @@
   "module": "es/index.js",
   "scripts": {
     "build": "node ./tools/build.js",
+    "prepublish": "node ./tools/build.js",
     "watch": "babel ./modules -d . --ignore __tests__ --watch",
-    "clean": "git clean -e '!node_modules' -fdX .",
+    "clean": "git clean -fdX .",
     "lint": "eslint modules",
     "test": "jest"
   },
@@ -29,6 +32,7 @@
   },
   "dependencies": {
     "history": "^4.5.1",
+    "prop-types": "^15.5.4",
     "react-router": "^4.0.0"
   },
   "devDependencies": {

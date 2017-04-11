@@ -1,4 +1,5 @@
-import React, { Component, PropTypes } from 'react'
+import React, { Component } from 'react'
+import PropTypes from 'prop-types'
 import { BackAndroid } from 'react-native'
 
 class AndroidBackButton extends Component {
@@ -30,7 +31,7 @@ class AndroidBackButton extends Component {
   }
 
   render() {
-    return this.props.children
+    return this.props.children || null;
   }
 }
 

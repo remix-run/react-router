@@ -2,7 +2,7 @@
   "name": "react-router-config",
   "version": "1.0.0-beta.1",
   "description": "Static route config matching for React Router",
-  "repository": "ReactTraining/react-router-config",
+  "repository": "ReactTraining/react-router",
   "license": "MIT",
   "authors": [
     "Ryan Florence"
@@ -17,7 +17,7 @@
     "build": "node ./tools/build.js",
     "watch": "babel ./modules -d . --ignore __tests__ --watch",
     "prepublish": "node ./tools/build.js",
-    "clean": "git clean -e '!node_modules' -fdX .",
+    "clean": "git clean -fdX .",
     "lint": "eslint modules",
     "test": "karma start --single-run"
   },
@@ -53,7 +53,6 @@
     "react": "^15.4.2",
     "react-addons-test-utils": "^15.4.2",
     "react-dom": "^15.3.0",
-    "readline-sync": "^1.4.4",
     "webpack": "^1.13.1",
     "webpack-dev-server": "^1.14.1"
   },

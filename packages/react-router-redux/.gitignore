@@ -1,5 +1,6 @@
 es
 node_modules
 umd
+test
 /*.js
 !rollup.config.js

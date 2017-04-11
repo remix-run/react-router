@@ -236,4 +236,4 @@ You might be interested in our [React Router Config][RRC] package to assist with
   [StaticRouter]:../api/StaticRouter.md
   [BrowserRouter]:../api/BrowserRouter.md
   [Redirect]:../api/Redirect.md
-  [RRC]:https://github.com/reacttraining/react-router/packages/react-router-config
+  [RRC]:https://github.com/ReactTraining/react-router/tree/master/packages/react-router-config

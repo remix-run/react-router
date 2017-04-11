@@ -11,22 +11,22 @@ Please read https://reactjs.org/ and the Code of Conduct before opening an issue
 - [Development](#development)
 - [Hacking](#hacking)
 
-<a name="bug"/>
+<a name="bug"/></a>
 ## Think You Found a Bug?
 
 Please provide a test case of some sort. Best is a pull request with a failing test. Next is a link to CodePen/JS Bin or repository that illustrates the bug. Finally, some copy/pastable code is acceptable.
 
-<a name="api"/>
+<a name="api"/></a>
 ## Proposing New or Changed API?
 
 Please provide thoughtful comments and some sample code. Proposals without substance will be closed.
 
-<a name="attention"/>
+<a name="attention"/></a>
 ## Issue Not Getting Attention?
 
 If you need a bug fixed and nobody is fixing it, it is your responsibility to fix it. Issues with no activity for 30 days may be closed.
 
-<a name="pr"/>
+<a name="pr"/></a>
 ## Making a Pull Request?
 
 Pull requests need only the :+1: of two or more collaborators to be merged; when the PR author is a collaborator, that counts as one.

@@ -1,4 +1,4 @@
-import React, { PropTypes } from 'react'
+import React from 'react'
 import {
   BrowserRouter as Router,
   Route,
@@ -52,10 +52,10 @@ const AuthButton = withRouter(({ history }) => (
   )
 ))
 
-const PrivateRoute = ({ component, ...rest }) => (
+const PrivateRoute = ({ component: Component, ...rest }) => (
   <Route {...rest} render={props => (
     fakeAuth.isAuthenticated ? (
-      React.createElement(component, props)
+      <Component {...props}/>
     ) : (
       <Redirect to={{
         pathname: '/login',

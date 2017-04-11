@@ -14,7 +14,7 @@ This is beta software, it needs:
 ## Installation
 
 ```
-npm install --save react-router-redux
+npm install --save react-router-redux@next
 ```
 
 ## Usage

@@ -1,4 +1,5 @@
 node_modules
 lerna-debug.log
 npm-debug.log
-node_modules
+yarn-error.log
+packages/*/yarn.lock

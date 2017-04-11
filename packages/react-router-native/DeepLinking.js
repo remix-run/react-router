@@ -1,4 +1,5 @@
-import React, { Component, PropTypes } from 'react'
+import React, { Component } from 'react'
+import PropTypes from 'prop-types'
 import { Linking } from 'react-native'
 
 const regex = /.*?:\/\//g
@@ -29,7 +30,7 @@ class DeepLinking extends Component {
 
   push = (url) => {
     const pathname = url.replace(regex, '')
-    this.context.router.push(pathname)
+    this.context.router.history.push(pathname)
   }
 
   render() {

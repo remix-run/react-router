@@ -1,5 +1,6 @@
-import React, { Component, PropTypes } from 'react'
-import { Router, Route } from 'react-router'
+import React, { Component } from 'react'
+import PropTypes from 'prop-types'
+import { Router } from 'react-router'
 
 import { LOCATION_CHANGE } from './reducer'
 
@@ -14,22 +15,27 @@ class ConnectedRouter extends Component {
     store: PropTypes.object
   }
 
+  handleLocationChange = location => {
+    this.store.dispatch({
+      type: LOCATION_CHANGE,
+      payload: location
+    })
+  }
+
+  componentWillMount() {
+    const { store:propsStore, history } = this.props
+    this.store = propsStore || this.context.store
+
+    this.unsubscribeFromHistory = history.listen(this.handleLocationChange)
+    this.handleLocationChange(history.location)
+  }
+
+  componentWillUnmount() {
+    if (this.unsubscribeFromHistory) this.unsubscribeFromHistory()
+  }
+
   render() {
-    const { store:propsStore, history, children, ...props } = this.props
-    let store = propsStore || this.context.store
-
-    return (
-      <Router {...props} history={history}>
-        <Route render={({ location }) => {
-            store.dispatch({
-              type: LOCATION_CHANGE,
-              payload: location
-            })
-
-            return children
-          }}/>
-      </Router>
-    )
+    return <Router {...this.props} />
   }
 }
 

@@ -1,4 +1,5 @@
-import React, { PropTypes } from 'react'
+import React from 'react'
+import PropTypes from 'prop-types'
 import warning from 'warning'
 import matchPath from './matchPath'
 
@@ -36,6 +37,8 @@ class Switch extends React.Component {
 
     let match, child
     React.Children.forEach(children, element => {
+      if (!React.isValidElement(element)) return
+
       const { path: pathProp, exact, strict, from } = element.props
       const path = pathProp || from
 
