@@ -1,4 +1,5 @@
-## HEAD
+## [v4.1.0]
+> Apr 11, 2017
 
 - Add `wrappedComponent` to the component returned by `withRouter`
 - Add `wrappedComponentRef` prop to the component returned by `withRouter`
