@@ -38,7 +38,7 @@ class Link extends Component {
   }
 
   render() {
-    const { component: Component, ...rest } = this.props
+    const { component: Component, to, replace, ...rest } = this.props
     return <Component {...rest} onPress={this.handlePress}/>
   }
 }
