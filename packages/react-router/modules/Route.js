@@ -1,4 +1,5 @@
 import warning from 'warning'
+import invariant from 'invariant';
 import React from 'react'
 import PropTypes from 'prop-types'
 import matchPath from './matchPath'
@@ -53,9 +54,10 @@ class Route extends React.Component {
     if (computedMatch)
       return computedMatch // <Switch> already computed the match for us
 
-    if (!router) {
-      throw new Error('You should not use <Route> or withRoute() outside a valid <Router>')
-    }
+    invariant(
+      router,
+      'You should not use <Route> or withRouter() outside a valid <Router>'
+    )
 
     const { route } = router
     const pathname = (location || route.location).pathname

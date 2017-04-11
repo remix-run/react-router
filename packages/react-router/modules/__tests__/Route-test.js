@@ -96,7 +96,7 @@ describe('A <Route>', () => {
       ReactDOM.render((
         <Route path="/" render={() => null} />
       ), node)
-    }).toThrow(/You should not use <Route> or withRoute\(\) outside a valid <Router>/)
+    }).toThrow(/You should not use <Route> or withRouter\(\) outside a valid <Router>/)
   })
 })
 
