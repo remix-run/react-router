@@ -40,6 +40,7 @@ function resolveToLocation(to, router) {
  *   <Link to={`/posts/${post.id}`} />
  */
 const Link = createReactClass({
+  displayName: 'Link',
 
   mixins: [ ContextSubscriber('router') ],
 

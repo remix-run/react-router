@@ -14,6 +14,7 @@ import { falsy } from './InternalPropTypes'
  */
 /* eslint-disable react/require-render-return */
 const Redirect = createReactClass({
+  displayName: 'Redirect',
 
   statics: {
 

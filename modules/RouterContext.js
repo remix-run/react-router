@@ -12,6 +12,7 @@ import { isReactChildren } from './RouteUtils'
  * and sets the history object and the current location in context.
  */
 const RouterContext = createReactClass({
+  displayName: 'RouterContext',
 
   mixins: [ ContextProvider('router') ],
 

@@ -29,6 +29,7 @@ const propTypes = {
  * it needs each time the URL changes.
  */
 const Router = createReactClass({
+  displayName: 'Router',
 
   propTypes,
 

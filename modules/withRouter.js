@@ -13,6 +13,8 @@ export default function withRouter(WrappedComponent, options) {
   const withRef = options && options.withRef
 
   const WithRouter = createReactClass({
+    displayName: 'WithRouter',
+    
     mixins: [ ContextSubscriber('router') ],
 
     contextTypes: { router: routerShape },

@@ -16,6 +16,7 @@ import { component, components } from './InternalPropTypes'
  */
 /* eslint-disable react/require-render-return */
 const Route = createReactClass({
+  displayName: 'Route',
 
   statics: {
     createRouteFromReactElement

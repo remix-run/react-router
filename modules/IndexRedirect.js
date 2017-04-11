@@ -10,6 +10,7 @@ import { falsy } from './InternalPropTypes'
  */
 /* eslint-disable react/require-render-return */
 const IndexRedirect = createReactClass({
+  displayName: 'IndexRedirect',
 
   statics: {
 

@@ -11,6 +11,7 @@ import { component, components, falsy } from './InternalPropTypes'
  */
 /* eslint-disable react/require-render-return */
 const IndexRoute = createReactClass({
+  displayName: 'IndexRoute',
 
   statics: {
 
