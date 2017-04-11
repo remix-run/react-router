@@ -1,3 +1,9 @@
+## [v3.0.5](https://github.com/ReactTraining/react-router/compare/v3.0.4...v3.0.5)
+> Apr 10, 2017
+
+- Manually set displayName for components
+- Async hooks could be removed during simultaneous server requests (#4941 by @s-yadav)
+
 ## [v3.0.4](https://github.com/ReactTraining/react-router/compare/v3.0.3...v3.0.4)
 > Apr 9, 2017
 
