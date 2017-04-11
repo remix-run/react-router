@@ -1,3 +1,9 @@
+## HEAD
+
+- Add `wrappedComponent` to the component returned by `withRouter`
+- Add `wrappedComponentRef` prop to the component returned by `withRouter`
+- Add non-react static methods and properties of the wrapped component to the component returned by `withRouter`
+
 ## [v4.0.0-beta.8]
 > Mar 8, 2017
 

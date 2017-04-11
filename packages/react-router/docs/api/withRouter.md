@@ -41,3 +41,40 @@ connect(...)(withRouter(MyComponent))
 ```
 
 See [this guide](https://github.com/ReactTraining/react-router/blob/master/packages/react-router/docs/guides/blocked-updates.md) for more information.
+
+#### Static Methods and Properties
+
+All non-react specific static methods and properties of the wrapped component are automatically copied to the 
+"connected" component.
+
+## Component.WrappedComponent
+
+The wrapped component is exposed as the static property `WrappedComponent` on the returned component, which can be used
+for testing the component in isolation, among other things.
+
+```js
+// MyComponent.js
+export default withRouter(MyComponent)
+
+// MyComponent.test.js
+import MyComponent from './MyComponent'
+render(<MyComponent.WrappedComponent location={{...}} ... />)
+```
+
+## wrappedComponentRef: func
+
+A function that will be passed as the `ref` prop to the wrapped component.
+
+```js
+class Container extends React.Component {
+  componentDidMount() {
+    this.component.doSomething()  
+  }
+  
+  render() {
+    return (
+      <MyComponent wrappedComponentRef={c => this.component = c}/>
+    )
+  }
+}
+```
