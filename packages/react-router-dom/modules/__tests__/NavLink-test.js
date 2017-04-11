@@ -262,4 +262,25 @@ describe('NavLink', () => {
     })
   })
 
+  describe('location property', () => {
+    it('overrides the current location', () => {
+      ReactDOM.render((
+        <MemoryRouter initialEntries={['/pizza']}>
+          <NavLink to='/pasta' activeClassName='selected' location={{pathname: '/pasta'}}>Pasta!</NavLink>
+        </MemoryRouter>
+      ), node)
+      const a = node.getElementsByTagName('a')[0]
+      expect(a.className).toNotContain('active').toContain('selected')
+    })
+    
+    it('is not overwritten by the current location', () => {
+      ReactDOM.render((
+        <MemoryRouter initialEntries={['/pasta']}>
+          <NavLink to='/pasta' activeClassName='selected' location={{pathname: '/pizza'}}>Pasta!</NavLink>
+        </MemoryRouter>
+      ), node)
+      const a = node.getElementsByTagName('a')[0]
+      expect(a.className).toNotContain('active').toNotContain('selected')
+    })
+  })
 })
