@@ -1,6 +1,6 @@
 {
   "name": "react-router-redux",
-  "version": "5.0.0-alpha.5",
+  "version": "5.0.0-alpha.6",
   "description": "Redux bindings for React Router",
   "repository": "ReactTraining/react-router",
   "license": "MIT",
@@ -33,7 +33,7 @@
   "dependencies": {
     "history": "^4.5.1",
     "prop-types": "^15.5.4",
-    "react-router": "^4.1.0"
+    "react-router": "^4.1.1"
   },
   "devDependencies": {
     "babel-cli": "^6.14.0",
