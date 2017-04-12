@@ -1,11 +1,21 @@
-## [v4.1.0]
+## [v4.1.1](https://github.com/ReactTraining/react-router/compare/v4.1.0...v4.1.1)
+> Apr 12, 2017
+
+- Fixes for the various PropTypes related issues.
+
+## [v4.1.0](https://github.com/ReactTraining/react-router/compare/v4.0.0...v4.1.0)
 > Apr 11, 2017
 
 - Add `wrappedComponent` to the component returned by `withRouter`
 - Add `wrappedComponentRef` prop to the component returned by `withRouter`
 - Add non-react static methods and properties of the wrapped component to the component returned by `withRouter`
 
-## [v4.0.0-beta.8]
+## [v4.0.0](https://github.com/ReactTraining/react-router/compare/dc2149ec0c63bfc95b71e40c81431e34cfbfeda9...v4.0.0?w=1)
+> Mar 10, 2017
+
+- Released! No code changes from 4.0.0-beta.8
+
+## [v4.0.0-beta.8](https://github.com/ReactTraining/react-router/compare/v4.0.0-beta.7...v4.0.0-beta.8)
 > Mar 8, 2017
 
 - Updated website
@@ -16,9 +26,7 @@
 - Fix unicode `<Route>` paths
 - Set `NavLink`'s default `activeClassName` prop to `active`
 
-[v4.0.0-beta.8]: https://github.com/ReactTraining/react-router/compare/v4.0.0-beta.7...v4.0.0-beta.8
-
-## [v4.0.0-beta.7]
+## [v4.0.0-beta.7](https://github.com/ReactTraining/react-router/compare/v4.0.0-beta.6...v4.0.0-beta.7)
 > Mar 3, 2017
 
 - Added support for `<Redirect>` as a child of a `<Switch>`
@@ -30,8 +38,6 @@
 - Made docs easier to find in individual `packages` directories
 - Split `context.router` into two parts: `context.history` and `context.route`
 - Changed `matchPath` signature to `matchPath(pathname, options)`
-
-[v4.0.0-beta.7]: https://github.com/ReactTraining/react-router/compare/v4.0.0-beta.6...v4.0.0-beta.7
 
 ## [v4.0.0-beta.6]
 > Feb 13, 2017
