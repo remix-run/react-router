@@ -1,5 +1,5 @@
 import React from 'react'
-import ReactTestUtils from 'react-addons-test-utils'
+import ShallowRenderer from 'react-test-renderer/shallow'
 import Link from '../Link'
 
 const createContext = () => ({
@@ -19,7 +19,7 @@ class EventStub {
 
 describe('<Link />', () => {
   it('navigates using push when pressed', () => {
-    const renderer = ReactTestUtils.createRenderer()
+    const renderer = new ShallowRenderer()
     const context = createContext()
     renderer.render((
       <Link to='/push'/>
@@ -35,7 +35,7 @@ describe('<Link />', () => {
   })
 
   it('navigates using replace when replace is true', () => {
-    const renderer = ReactTestUtils.createRenderer()
+    const renderer = new ShallowRenderer()
     const context = createContext()
     renderer.render((
       <Link to='/replace' replace={true}/>
@@ -51,7 +51,7 @@ describe('<Link />', () => {
   })
 
   it('calls onPress when pressed', () =>{
-    const renderer = ReactTestUtils.createRenderer()
+    const renderer = new ShallowRenderer()
     const onPress = jest.fn()
     const context = createContext()
     renderer.render((
@@ -67,7 +67,7 @@ describe('<Link />', () => {
   })
 
   it('does not navigate when the press event is cancelled', () =>{
-    const renderer = ReactTestUtils.createRenderer()
+    const renderer = new ShallowRenderer()
     const onPress = (event) =>  event.preventDefault()
     const context = createContext()
     renderer.render((
