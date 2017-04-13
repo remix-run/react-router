@@ -35,7 +35,7 @@ If you are using `withRouter` to prevent updates from being blocked by `shouldCo
 
 ```js
 // This gets around shouldComponentUpdate
-withRouter(connect(...)(MyComponent)
+withRouter(connect(...)(MyComponent))
 
 // This does not
 connect(...)(withRouter(MyComponent))
