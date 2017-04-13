@@ -176,7 +176,7 @@ const myInstance = wrapperInstance.getWrappedInstance()
 ```
 
 ### `<RouterContext>`
-A `<RouterContext>` renders the component tree for a given router state. Its used by `<Router>` but also useful for server rendering and integrating in brownfield development.
+A `<RouterContext>` renders the component tree for a given router state. It's used by `<Router>` but also useful for server rendering and integrating in brownfield development.
 
 It also provides a `router` object on [context](https://facebook.github.io/react/docs/context.html).
 
