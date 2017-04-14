@@ -44,15 +44,23 @@ if (context.url) {
 The router only ever adds `context.url`. But you may want some redirects to be 301 and others 302. Or maybe you'd like to send a 404 response if some specific branch of UI is rendered, or a 401 if they aren't authorized. The context prop is yours, so you can mutate it. Here's a way to distinguish between 301 and 302 redirects:
 
 ```js
-const RedirectWithStatus = ({ from, to, status }) => (
-  <Route render={({ staticContext }) => {
-    // there is no `staticContext` on the client, so
-    // we need to guard against that here
-    if (staticContext)
-      staticContext.status = status
+class RedirectWithStatus extends React.Component {
+  static contextTypes = {
+    router: React.PropTypes.shape({
+      staticContext: React.PropTypes.object
+    }).isRequired
+  }
+  componentWillMount () {
+    const { router: { staticContext } } = this.context
+    if (staticContext) {
+      staticContext.status = this.props.code
+    }
+  }
+  render () {
+    const { from, to } = this.props
     return <Redirect from={from} to={to}/>
-  }}/>
-)
+  }
+}
 
 // somewhere in your app
 const App = () => (
@@ -92,13 +100,22 @@ if (context.url) {
 We can do the same thing as above. Create a component that adds some context and render it anywhere in the app to get a different status code.
 
 ```js
-const Status = ({ code, children }) => (
-  <Route render={({ staticContext }) => {
-    if (staticContext)
-      staticContext.status = code
-    return children
-  }}/>
-)
+class Status extends React.Component {
+  static contextTypes = {
+    router: React.PropTypes.shape({
+      staticContext: React.PropTypes.object
+    }).isRequired
+  }
+  componentWillMount () {
+    const { router: { staticContext } } = this.context
+    if (staticContext) {
+      staticContext.status = this.props.code
+    }
+  }
+  render () {
+    return this.props.children
+  }
+}
 ```
 
 Now you can render a `Status` anywhere in the app that you want to add the code to `staticContext`.
