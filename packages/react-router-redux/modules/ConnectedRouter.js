@@ -4,6 +4,8 @@ import { Router } from 'react-router'
 
 import { LOCATION_CHANGE } from './reducer'
 
+const STORES = []
+
 class ConnectedRouter extends Component {
   static propTypes = {
     store: PropTypes.object,
@@ -27,7 +29,11 @@ class ConnectedRouter extends Component {
     this.store = propsStore || this.context.store
 
     this.unsubscribeFromHistory = history.listen(this.handleLocationChange)
-    this.handleLocationChange(history.location)
+    let isNewStore = STORES.every(store => this.store !== store)
+    if (isNewStore) {
+      STORES.push(this.store)
+      this.handleLocationChange(history.location)
+    }
   }
 
   componentWillUnmount() {
