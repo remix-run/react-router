@@ -11,6 +11,7 @@
     "babel-core": "^6.21.0",
     "babel-eslint": "^6.0.4",
     "babel-loader": "^6.2.10",
+    "babel-polyfill": "^6.23.0",
     "babel-preset-es2015": "^6.14.0",
     "babel-preset-react": "^6.5.0",
     "babel-preset-stage-1": "^6.5.0",
