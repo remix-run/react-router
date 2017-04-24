@@ -60,7 +60,7 @@ const store = createStore(
 const Root = () => (
     { /* ConnectedRouter will use the store from Provider automatically */ }
     <ConnectedRouter history={history}>
-      <div>
+      <div> {/* or <View> for react-native */}
         <Route exact path="/" component={Home}/>
         <Route path="/about" component={About}/>
         <Route path="/topics" component={Topics}/>
