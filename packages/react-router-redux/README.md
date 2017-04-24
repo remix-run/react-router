@@ -58,7 +58,6 @@ const store = createStore(
 | > store.routing.location.[pathname + key]
 | but will not necessarily cause page to re-render */
 const Root = () => (
- <Provider store={store}>
     { /* ConnectedRouter will use the store from Provider automatically */ }
     <ConnectedRouter history={history}>
       <div>
@@ -67,7 +66,6 @@ const Root = () => (
         <Route path="/topics" component={Topics}/>
       </div>
     </ConnectedRouter>
-  </Provider>
 )
 
 const mapStateToProps = (state, ownProps) => {
@@ -77,9 +75,11 @@ const mapStateToProps = (state, ownProps) => {
    */
    return { ...ownProps, routing }
 }
-const connectedRoot = connect(mapStateToProps)(Root)
+const ConnectedRoot = connect(mapStateToProps)(Root)
 ReactDOM.render(
-   connectedRoot,
+   <Provider store={store}>
+     <ConnectedRoot/>
+   </Provider>,
    document.getElementById('root')
 )
 ```
