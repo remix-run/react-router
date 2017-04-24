@@ -1,4 +1,4 @@
-import expect from 'expect'
+import expect from 'jest-matchers'
 import React from 'react'
 import PropTypes from 'prop-types'
 import ReactDOMServer from 'react-dom/server'
@@ -11,7 +11,7 @@ import Prompt from '../Prompt'
 describe('A <StaticRouter>', () => {
   it('provides context.router.staticContext in props.staticContext', () => {
     const ContextChecker = (props, reactContext) => {
-      expect(reactContext.router).toBeAn('object')
+      expect(typeof reactContext.router).toBe('object')
       expect(reactContext.router.staticContext).toBe(props.staticContext)
       return null
     }
@@ -31,7 +31,7 @@ describe('A <StaticRouter>', () => {
 
   it('context.router.staticContext persists inside of a <Route>', () => {
     const ContextChecker = (props, reactContext) => {
-      expect(reactContext.router).toBeAn('object')
+      expect(typeof reactContext.router).toBe('object')
       expect(reactContext.router.staticContext).toBe(context)
       return null
     }
@@ -51,7 +51,7 @@ describe('A <StaticRouter>', () => {
 
   it('provides context.router.history', () => {
     const ContextChecker = (props, reactContext) => {
-      expect(reactContext.router.history).toBeAn('object')
+      expect(typeof reactContext.router.history).toBe('object')
       return null
     }
 
@@ -112,7 +112,7 @@ describe('A <StaticRouter>', () => {
 
   it('knows how to parse raw URLs', () => {
     const LocationChecker = (props) => {
-      expect(props.location).toMatch({
+      expect(props.location).toMatchObject({
         pathname: '/the/path',
         search: '?the=query',
         hash: '#the-hash'
@@ -132,7 +132,7 @@ describe('A <StaticRouter>', () => {
   describe('with a basename', () => {
     it('strips the basename from location pathnames', () => {
       const LocationChecker = (props) => {
-        expect(props.location).toMatch({
+        expect(props.location).toMatchObject({
           pathname: '/path'
         })
         return null
@@ -208,7 +208,7 @@ describe('A <StaticRouter>', () => {
             <Prompt message="this is only a test"/>
           </StaticRouter>
         ), node)
-      }).toNotThrow()
+      }).not.toThrow()
     })
   })
 })

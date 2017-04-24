@@ -1,4 +1,4 @@
-import expect from 'expect'
+import expect from 'jest-matchers'
 import React from 'react'
 import ReactDOM from 'react-dom'
 import MemoryRouter from '../MemoryRouter'
@@ -42,7 +42,7 @@ describe('Integration Tests', () => {
       </MemoryRouter>
     ), node)
     expect(node.innerHTML).toContain(TEXT1)
-    expect(node.innerHTML).toNotContain(TEXT2)
+    expect(node.innerHTML).not.toContain(TEXT2)
   })
 
   it('renders multiple matching routes', () => {

@@ -1,4 +1,4 @@
-import expect from 'expect'
+import expect from 'jest-matchers'
 import matchPath from '../matchPath'
 
 describe('matchPath', () => {
@@ -37,7 +37,7 @@ describe('matchPath', () => {
   describe('with no path', () => {
     it('matches the root URL', () => {
       const match = matchPath('/test-location/7', {})
-      expect(match).toMatch({
+      expect(match).toMatchObject({
         url: '/',
         path: '/',
         params: {},

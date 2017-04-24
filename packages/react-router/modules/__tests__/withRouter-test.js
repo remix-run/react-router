@@ -1,4 +1,4 @@
-import expect from 'expect'
+import expect from 'jest-matchers'
 import React from 'react'
 import ReactDOM from 'react-dom'
 import MemoryRouter from '../MemoryRouter'
@@ -15,9 +15,9 @@ describe('withRouter', () => {
 
   it('provides { match, location, history } props', () => {
     const PropsChecker = withRouter(props => {
-      expect(props.match).toBeAn('object')
-      expect(props.location).toBeAn('object')
-      expect(props.history).toBeAn('object')
+      expect(typeof props.match).toBe('object')
+      expect(typeof props.location).toBe('object')
+      expect(typeof props.history).toBe('object')
       return null
     })
 
@@ -50,7 +50,7 @@ describe('withRouter', () => {
   describe('inside a <StaticRouter>', () => {
     it('provides the staticContext prop', () => {
       const PropsChecker = withRouter(props => {
-        expect(props.staticContext).toBeAn('object')
+        expect(typeof props.staticContext).toBe('object')
         expect(props.staticContext).toBe(context)
         return null
       })
@@ -88,7 +88,7 @@ describe('withRouter', () => {
       </MemoryRouter>
     ), node)
 
-    expect(ref).toBeA(WrappedComponent)
+    expect(ref).toBeInstanceOf(WrappedComponent)
   })
 
   it('hoists non-react statics from the wrapped component', () => {
@@ -106,7 +106,7 @@ describe('withRouter', () => {
     const decorated = withRouter(Component)
 
     expect(decorated.hello).toBe('world')
-    expect(decorated.foo).toBeA('function')
+    expect(typeof decorated.foo).toBe('function')
     expect(decorated.foo()).toBe('bar')
   })
 })

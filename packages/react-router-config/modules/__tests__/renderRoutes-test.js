@@ -1,5 +1,5 @@
 import renderRoutes from '../renderRoutes'
-import expect from 'expect'
+import expect from 'jest-matchers'
 import React from 'react'
 import { renderToString } from 'react-dom/server'
 import StaticRouter from 'react-router/StaticRouter'
@@ -27,7 +27,7 @@ describe('renderRoutes', () => {
       </StaticRouter>
     )
     expect(rendered.length).toEqual(1)
-    expect(rendered[0]).toMatch(routeToMatch)
+    expect(rendered[0]).toEqual(routeToMatch)
   })
 
   describe('Switch usage', () => {
@@ -46,7 +46,7 @@ describe('renderRoutes', () => {
         </StaticRouter>
       )
       expect(rendered.length).toEqual(1)
-      expect(rendered[0]).toMatch(routeToMatch)
+      expect(rendered[0]).toEqual(routeToMatch)
     })
 
     it('renders the first matched route in nested routes', () => {
@@ -71,8 +71,8 @@ describe('renderRoutes', () => {
         </StaticRouter>
       )
       expect(rendered.length).toEqual(2)
-      expect(rendered[0]).toMatch(routeToMatch)
-      expect(rendered[1]).toMatch(childRouteToMatch)
+      expect(rendered[0]).toEqual(routeToMatch)
+      expect(rendered[1]).toEqual(childRouteToMatch)
     })
   })
 

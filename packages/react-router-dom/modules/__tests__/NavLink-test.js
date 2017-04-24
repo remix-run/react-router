@@ -1,4 +1,4 @@
-import expect from 'expect'
+import expect from 'jest-matchers'
 import React from 'react'
 import ReactDOM from 'react-dom'
 import MemoryRouter from 'react-router/MemoryRouter'
@@ -29,7 +29,8 @@ describe('NavLink', () => {
         </MemoryRouter>
       ), node)
       const a = node.getElementsByTagName('a')[0]
-      expect(a.className).toNotContain('active').toEqual('selected')
+      expect(a.className).not.toContain('active')
+      expect(a.className).toEqual('selected')
     })
 
     it('applies its activeStyle', () => {
@@ -60,7 +61,7 @@ describe('NavLink', () => {
         </MemoryRouter>
       ), node)
       const a = node.getElementsByTagName('a')[0]
-      expect(a.className).toNotContain('active')
+      expect(a.className).not.toContain('active')
     })
 
     it('does not apply its passed activeClassName', () => {
@@ -70,7 +71,8 @@ describe('NavLink', () => {
         </MemoryRouter>
       ), node)
       const a = node.getElementsByTagName('a')[0]
-      expect(a.className).toNotContain('active').toNotContain('selected')
+      expect(a.className).not.toContain('active')
+      expect(a.className).not.toContain('selected')
     })
 
     it('does not apply its activeStyle', () => {
@@ -122,7 +124,8 @@ describe('NavLink', () => {
         </MemoryRouter>
       ), node)
       const a = node.getElementsByTagName('a')[0]
-      expect(a.className).toNotContain('active').toEqual('selected')
+      expect(a.className).not.toContain('active')
+      expect(a.className).toEqual('selected')
     })
 
     it('does not apply active default props when isActive returns false', () => {
@@ -137,7 +140,7 @@ describe('NavLink', () => {
         </MemoryRouter>
       ), node)
       const a = node.getElementsByTagName('a')[0]
-      expect(a.className).toNotContain('active')
+      expect(a.className).not.toContain('active')
     })
 
     it('does not apply active passed props when isActive returns false', () => {
@@ -153,7 +156,8 @@ describe('NavLink', () => {
         </MemoryRouter>
       ), node)
       const a = node.getElementsByTagName('a')[0]
-      expect(a.className).toNotContain('active').toNotContain('selected')
+      expect(a.className).not.toContain('active')
+      expect(a.className).not.toContain('selected')
     })
   })
 
@@ -185,7 +189,8 @@ describe('NavLink', () => {
         </MemoryRouter>
       ), node)
       const a = node.getElementsByTagName('a')[0]
-      expect(a.className).toNotContain('active').toEqual('selected')
+      expect(a.className).not.toContain('active')
+      expect(a.className).toEqual('selected')
     })
 
     it('does not set active default value for partial matches', () => {
@@ -195,7 +200,7 @@ describe('NavLink', () => {
         </MemoryRouter>
       ), node)
       const a = node.getElementsByTagName('a')[0]
-      expect(a.className).toNotContain('active')
+      expect(a.className).not.toContain('active')
     })
 
     it('does not set active passed value for partial matches', () => {
@@ -205,7 +210,8 @@ describe('NavLink', () => {
         </MemoryRouter>
       ), node)
       const a = node.getElementsByTagName('a')[0]
-      expect(a.className).toNotContain('active').toNotContain('selected')
+      expect(a.className).not.toContain('active')
+      expect(a.className).not.toContain('selected')
     })
   })
 
@@ -228,7 +234,7 @@ describe('NavLink', () => {
         </MemoryRouter>
       ), node)
       const a = node.getElementsByTagName('a')[0]
-      expect(a.className).toNotContain('active')
+      expect(a.className).not.toContain('active')
     })
 
     it('does not set active passed value when location.pathname has no trailing slash', () => {
@@ -238,7 +244,8 @@ describe('NavLink', () => {
         </MemoryRouter>
       ), node)
       const a = node.getElementsByTagName('a')[0]
-      expect(a.className).toNotContain('active').toNotContain('selected')
+      expect(a.className).not.toContain('active')
+      expect(a.className).not.toContain('selected')
     })
 
     it('sets active default value when pathname has trailing slash', () => {
@@ -258,7 +265,8 @@ describe('NavLink', () => {
         </MemoryRouter>
       ), node)
       const a = node.getElementsByTagName('a')[0]
-      expect(a.className).toNotContain('active').toEqual('selected')
+      expect(a.className).not.toContain('active')
+      expect(a.className).toEqual('selected')
     })
   })
 
@@ -270,9 +278,10 @@ describe('NavLink', () => {
         </MemoryRouter>
       ), node)
       const a = node.getElementsByTagName('a')[0]
-      expect(a.className).toNotContain('active').toContain('selected')
+      expect(a.className).not.toContain('active')
+      expect(a.className).toContain('selected')
     })
-    
+
     it('is not overwritten by the current location', () => {
       ReactDOM.render((
         <MemoryRouter initialEntries={['/pasta']}>
@@ -280,7 +289,8 @@ describe('NavLink', () => {
         </MemoryRouter>
       ), node)
       const a = node.getElementsByTagName('a')[0]
-      expect(a.className).toNotContain('active').toNotContain('selected')
+      expect(a.className).not.toContain('active')
+      expect(a.className).not.toContain('selected')
     })
   })
 })
