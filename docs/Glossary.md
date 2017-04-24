@@ -89,7 +89,7 @@ A *location* answers two important (philosophical) questions:
   - Where am I?
   - How did I get here?
 
-New locations are typically created each time the URL changes. You can read more about locations in [the `history` docs](https://github.com/mjackson/history/blob/v2.x/docs/Location.md).
+New locations are typically created each time the URL changes. You can read more about locations in [the `history` docs](https://github.com/ReactTraining/history/blob/v3/docs/Location.md).
 
 ### LocationDescriptor
 
@@ -104,7 +104,7 @@ New locations are typically created each time the URL changes. You can read more
 
 A *location descriptor* is the pushable analogue of a location. Locations tell you where you are; you create location descriptors to say where to go.
 
-You can read more about location descriptors in [the `history` docs](https://github.com/mjackson/history/blob/v2.x/docs/Location.md).
+You can read more about location descriptors in [the `history` docs](https://github.com/ReactTraining/history/blob/v3/docs/Location.md).
 
 ## LocationKey
 
