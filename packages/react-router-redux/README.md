@@ -26,7 +26,7 @@ import React from 'react'
 import ReactDOM from 'react-dom'
 
 import { createStore, combineReducers, applyMiddleware } from 'redux'
-import { Provider } from 'react-redux'
+import { Provider, connect } from 'react-redux'
 
 import createHistory from 'history/createBrowserHistory'
 import { Route } from 'react-router'
@@ -51,11 +51,14 @@ const store = createStore(
   applyMiddleware(middleware)
 )
 
-// Now you can dispatch navigation actions from anywhere!
-// store.dispatch(push('/foo'))
-
-ReactDOM.render(
-  <Provider store={store}>
+/* Now you can dispatch navigation actions from anywhere!
+| store.dispatch(push('/foo'))
+| This will cause changes to:
+| > browser's window.location.href
+| > store.routing.location.[pathname + key]
+| but will not necessarily cause page to re-render */
+const Root = () => (
+ <Provider store={store}>
     { /* ConnectedRouter will use the store from Provider automatically */ }
     <ConnectedRouter history={history}>
       <div>
@@ -64,7 +67,19 @@ ReactDOM.render(
         <Route path="/topics" component={Topics}/>
       </div>
     </ConnectedRouter>
-  </Provider>,
-  document.getElementById('root')
+  </Provider>
+)
+
+const mapStateToProps = (state, ownProps) => {
+   const { routing } = state
+   /* location.pathname changes will cause component To Receive Props.
+   | Therefore... will re-render to the new route.
+   */
+   return { ...ownProps, routing }
+}
+const connectedRoot = connect(mapStateToProps)(Root)
+ReactDOM.render(
+   connectedRoot,
+   document.getElementById('root')
 )
 ```
