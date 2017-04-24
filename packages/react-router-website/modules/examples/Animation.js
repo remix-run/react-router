@@ -1,5 +1,5 @@
 import React from 'react'
-import CSSTransitionGroup from 'react-transition-group/CSSTransitionGroup'
+import ReactCSSTransitionGroup from 'react-transition-group/CSSTransitionGroup'
 import {
   BrowserRouter as Router,
   Route,
@@ -35,7 +35,7 @@ const AnimationExample = () => (
         </ul>
 
         <div style={styles.content}>
-          <CSSTransitionGroup
+          <ReactCSSTransitionGroup
             transitionName="fade"
             transitionEnterTimeout={300}
             transitionLeaveTimeout={300}
@@ -52,7 +52,7 @@ const AnimationExample = () => (
               path="/:h/:s/:l"
               component={HSL}
             />
-          </CSSTransitionGroup>
+          </ReactCSSTransitionGroup>
         </div>
       </div>
     )}/>
