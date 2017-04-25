@@ -119,7 +119,7 @@ const Banner = () => (
             margin={`${isSmallScreen ? 20 : 20}px 0`}
             textTransform="uppercase"
           >
-            Documentations
+            Documentation
           </Block>
           <Row>
             <Button to="/web" small={isSmallScreen}>Web</Button>
