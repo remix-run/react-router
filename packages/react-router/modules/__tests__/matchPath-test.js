@@ -66,13 +66,10 @@ describe('matchPath', () => {
       expect(match).toBe(parentMatch)
     })
 
-    it('returns match with default values when parent match is null', () => {
+    it('returns null when parent match is null', () => {
       const pathname = '/some/path'
       const match = matchPath(pathname, {}, null)
-      expect(match.url).toBe('/_FAKE_MATCH_DO_NOT_ATTEMPT_TO_RESOLVE_USING_THIS_OR_YOU_WILL_BE_DISAPPOINTED')
-      expect(match.path).toBe(undefined)
-      expect(match.params).toEqual({})
-      expect(match.isExact).toBe(true)
+      expect(match).toBe(null)
     })
   })
 

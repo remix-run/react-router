@@ -62,14 +62,13 @@ describe('withRouter', () => {
       <MemoryRouter initialEntries={[ '/somepath' ]}>
         <Route path='/no-match' children={({ match }) => {
           parentMatch = match
-          return <Route component={WrappedPropChecker} />
+          return <WrappedPropChecker />
         }}/>
       </MemoryRouter>
     ), node)
 
-    const { match } = injectedProps
     expect(parentMatch).toBe(null)
-    expect(match).not.toBe(null)
+    expect(injectedProps.match).toBe(null)
   })
 
   describe('inside a <StaticRouter>', () => {
