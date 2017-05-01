@@ -11,7 +11,7 @@ const withRouter = Component => {
     const { wrappedComponentRef, ...remainingProps } = props;
     return (
       <Route
-        render={routeComponentProps => (
+        children={routeComponentProps => (
           <Component
             {...remainingProps}
             {...routeComponentProps}

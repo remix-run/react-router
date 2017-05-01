@@ -404,7 +404,7 @@ describe('A pathless <Route>', () => {
     rootContext = undefined
   })
 
-  it("inherits its parent match", () => {
+  it('inherits its parent match', () => {
     const node = document.createElement('div')
     ReactDOM.render((
       <MemoryRouter initialEntries={[ '/somepath' ]}>
@@ -419,7 +419,7 @@ describe('A pathless <Route>', () => {
     expect(match.params).toEqual({})
   })
 
-  it('computes match with default values when parent match is null', () => {
+  it('does not render when parent match is null', () => {
     const node = document.createElement('div')
     ReactDOM.render((
       <MemoryRouter initialEntries={[ '/somepath' ]}>
@@ -428,11 +428,6 @@ describe('A pathless <Route>', () => {
         )}/>
       </MemoryRouter>
     ), node)
-    const { match } = rootContext.router.route
-
-    expect(match.path).toBe(undefined)
-    expect(match.url).toBe('/_FAKE_MATCH_DO_NOT_ATTEMPT_TO_RESOLVE_USING_THIS_OR_YOU_WILL_BE_DISAPPOINTED')
-    expect(match.isExact).toBe(true)
-    expect(match.params).toEqual({})
+    expect(rootContext).toBe(undefined)
   })
 })
