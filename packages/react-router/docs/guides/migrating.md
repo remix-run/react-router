@@ -114,7 +114,7 @@ const Parent = () => (
 
 React Router v3 provides `onEnter`, `onUpdate`, and `onLeave` methods. These were essentially recreating React's lifecycle methods.
 
-With v4, you should use the lifecycle methods of the component rendered by a `<Route>`. Instead of `onEnter`, you would use `componentDidMount` or `componentWillMount`. Where you would use `onUpdate`, you can use `componentDidUpdate` or `componentWillUpdate (or possibly `componentWillReceiveProps`). `onLeave` can be replaced with `componentWillUnmount`.
+With v4, you should use the lifecycle methods of the component rendered by a `<Route>`. Instead of `onEnter`, you would use `componentDidMount` or `componentWillMount`. Where you would use `onUpdate`, you can use `componentDidUpdate` or `componentWillUpdate` (or possibly `componentWillReceiveProps`). `onLeave` can be replaced with `componentWillUnmount`.
 
 ### `<Switch>`
 
