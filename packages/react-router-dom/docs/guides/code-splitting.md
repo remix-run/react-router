@@ -60,7 +60,7 @@ class Bundle extends Component {
   }
 
   render() {
-    return this.props.children(this.state.mod)
+    return this.state.mod ? this.props.children(this.state.mod) : null
   }
 }
 
@@ -94,15 +94,15 @@ import loadAbout from 'bundle-loader?lazy!./loadAbout'
 import loadDashboard from 'bundle-loader?lazy!./loadDashboard'
 
 // components load their module for initial visit
-const About = () => (
+const About = (props) => (
   <Bundle load={loadAbout}>
-    {(About) => <About/>}
+    {(About) => <About {...props}/>}
   </Bundle>
 )
 
-const Dashboard = () => (
+const Dashboard = (props) => (
   <Bundle load={loadDashboard}>
-    {(Dashboard) => <Dashboard/>}
+    {(Dashboard) => <Dashboard {...props}/>}
   </Bundle>
 )
 
