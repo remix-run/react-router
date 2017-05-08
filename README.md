@@ -20,7 +20,7 @@
 
 ## Docs
 
-[View the docs here](https://reacttraining.com/react-router)
+**[View the docs here](https://reacttraining.com/react-router)**
 
 [Migrating from 2.x/3.x?](/packages/react-router/docs/guides/migrating.md)
 
