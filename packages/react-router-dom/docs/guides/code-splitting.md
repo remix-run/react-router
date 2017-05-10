@@ -19,7 +19,7 @@ If the module is a component, we can render it right there:
 
 ```jsx
 <Bundle load={loadSomething}>
-  {(Comp) => Comp
+  {(Comp) => (Comp
     ? <Comp/>
     : <Loading/>
   )}
