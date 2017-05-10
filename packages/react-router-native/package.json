@@ -9,7 +9,7 @@
     "DeepLinking.js",
     "Link.js",
     "NativeRouter.js",
-    "AndroidBackButton.js",
+    "BackButton.js",
     "main.js",
     "experimental/StackRoute.js",
     "experimental/TabRoutes.js"
