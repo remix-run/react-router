@@ -2,7 +2,7 @@ import warning from 'warning'
 import React from 'react'
 import PropTypes from 'prop-types'
 import createHistory from 'history/createBrowserHistory'
-import { Router } from 'react-router'
+import Router from './Router'
 
 /**
  * The public API for a <Router> that uses HTML5 history.
