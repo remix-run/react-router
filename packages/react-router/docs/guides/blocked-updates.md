@@ -171,7 +171,7 @@ const BlockAvoider = withRouter(Blocker)
 
 const MyComponent = () => (
   <SomeComponent>
-    <BlockerAvoider />
+    <BlockAvoider />
   </SomeComponent>
 )
 ```
