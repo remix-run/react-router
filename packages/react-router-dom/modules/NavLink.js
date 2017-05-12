@@ -29,7 +29,7 @@ const NavLink = ({
       return (
         <Link
           to={to}
-          className={isActive ? [ activeClassName, className ].filter(i => i).join(' ') : className}
+          className={isActive ? [ className, activeClassName ].filter(i => i).join(' ') : className}
           style={isActive ? { ...style, ...activeStyle } : style}
           {...rest}
         />
