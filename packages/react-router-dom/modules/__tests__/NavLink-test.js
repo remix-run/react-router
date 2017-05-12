@@ -284,3 +284,31 @@ describe('NavLink', () => {
     })
   })
 })
+
+describe('relative <NavLink>', () => {
+  const node = document.createElement('div')
+
+  afterEach(() => {
+    ReactDOM.unmountComponentAtNode(node)
+  })
+
+  it('applies its active values when it matches', () => {
+    ReactDOM.render((
+      <MemoryRouter initialEntries={['/pizza']}>
+        <NavLink to='pizza' activeClassName='active'>Pizza!</NavLink>
+      </MemoryRouter>
+    ), node)
+    const a = node.getElementsByTagName('a')[0]
+    expect(a.className).toContain('active')
+  })
+
+  it('does not apply its active values when it does not match', () => {
+    ReactDOM.render((
+      <MemoryRouter initialEntries={['/pizza']}>
+        <NavLink to='salad' activeClassName='active'>Salad?</NavLink>
+      </MemoryRouter>
+    ), node)
+    const a = node.getElementsByTagName('a')[0]
+    expect(a.className).toNotContain('active')
+  })
+})
