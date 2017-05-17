@@ -77,5 +77,5 @@ const oddEvent = (match, location) => {
 
 ## location: object
 
-The [`isActive`](#isactive-func) compares the current browser location.
-To compare to a different location, a [`location`](location.md) object can be passed.
+The [`isActive`](#isactive-func) compares the current history location (usually the current browser URL).
+To compare to a different location, a [`location`](location.md) can be passed.
