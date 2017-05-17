@@ -1,8 +1,7 @@
 import invariant from 'invariant'
-import React from 'react'
-import createReactClass from 'create-react-class'
+import React, { Component } from 'react'
 import hoistStatics from 'hoist-non-react-statics'
-import { ContextSubscriber } from './ContextUtils'
+import { ContextSubscriberEnhancer } from './ContextUtils'
 import { routerShape } from './PropTypes'
 
 function getDisplayName(WrappedComponent) {
@@ -10,25 +9,14 @@ function getDisplayName(WrappedComponent) {
 }
 
 export default function withRouter(WrappedComponent, options) {
-  const withRef = options && options.withRef
+  class WithRouter extends Component{
+    static contextTypes = {
+      router: routerShape
+    }
 
-  const WithRouter = createReactClass({
-    displayName: 'WithRouter',
-    
-    mixins: [ ContextSubscriber('router') ],
-
-    contextTypes: { router: routerShape },
-    propTypes: { router: routerShape },
-
-    getWrappedInstance() {
-      invariant(
-        withRef,
-        'To access the wrapped instance, you need to specify ' +
-        '`{ withRef: true }` as the second argument of the withRouter() call.'
-      )
-
-      return this.wrappedInstance
-    },
+    static propTypes = {
+      router: routerShape
+    }
 
     render() {
       const router = this.props.router || this.context.router
@@ -39,16 +27,19 @@ export default function withRouter(WrappedComponent, options) {
       const { params, location, routes } = router
       const props = { ...this.props, router, params, location, routes }
 
-      if (withRef) {
-        props.ref = (c) => { this.wrappedInstance = c }
+      if (props.withRef) {
+        props.ref = (c) => props.withRef(c);
       }
 
       return <WrappedComponent {...props} />
     }
-  })
+  }
 
-  WithRouter.displayName = `withRouter(${getDisplayName(WrappedComponent)})`
-  WithRouter.WrappedComponent = WrappedComponent
+  const withRef = options && options.withRef
+  const enhancedWithRouter = ContextSubscriberEnhancer(WithRouter, 'router', { withRef });
 
-  return hoistStatics(WithRouter, WrappedComponent)
+  enhancedWithRouter.displayName = `withRouter(${getDisplayName(WrappedComponent)})`
+  enhancedWithRouter.WrappedComponent = WrappedComponent
+
+  return hoistStatics(enhancedWithRouter, WrappedComponent)
 }

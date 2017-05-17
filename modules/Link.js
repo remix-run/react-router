@@ -1,9 +1,8 @@
-import React from 'react'
-import createReactClass from 'create-react-class'
+import React, { Component } from 'react'
 import { bool, object, string, func, oneOfType } from 'prop-types'
 import invariant from 'invariant'
 import { routerShape } from './PropTypes'
-import { ContextSubscriber } from './ContextUtils'
+import { ContextSubscriberEnhancer } from './ContextUtils'
 
 function isLeftClickEvent(event) {
   return event.button === 0
@@ -39,30 +38,31 @@ function resolveToLocation(to, router) {
  *
  *   <Link to={`/posts/${post.id}`} />
  */
-const Link = createReactClass({
-  displayName: 'Link',
-
-  mixins: [ ContextSubscriber('router') ],
-
-  contextTypes: {
+class Link extends Component{
+  static contextTypes = {
     router: routerShape
-  },
+  }
 
-  propTypes: {
+  static propTypes = {
     to: oneOfType([ string, object, func ]),
     activeStyle: object,
     activeClassName: string,
     onlyActiveOnIndex: bool.isRequired,
     onClick: func,
     target: string
-  },
+  }
 
-  getDefaultProps() {
-    return {
-      onlyActiveOnIndex: false,
-      style: {}
-    }
-  },
+  static defaultProps = {
+    onlyActiveOnIndex: false,
+    style: {}
+  }
+
+  constructor(props) {
+    super(props)
+
+    // No autobind in classes
+    this.handleClick = this.handleClick.bind(this);
+  }
 
   handleClick(event) {
     if (this.props.onClick)
@@ -88,20 +88,26 @@ const Link = createReactClass({
     event.preventDefault()
 
     router.push(resolveToLocation(this.props.to, router))
-  },
+  }
 
   render() {
-    const { to, activeClassName, activeStyle, onlyActiveOnIndex, ...props } = this.props
+    const { to, activeClassName, activeStyle, onlyActiveOnIndex, withRef, ...props } = this.props
 
     // Ignore if rendered outside the context of router to simplify unit testing.
     const { router } = this.context
 
     if (router) {
       // If user does not specify a `to` prop, return an empty anchor tag.
-      if (!to) { return <a {...props} /> }
+      if (!to) {
+        return <a {...props}/>
+      }
 
       const toLocation = resolveToLocation(to, router)
       props.href = router.createHref(toLocation)
+
+      if (props.withRef) {
+        props.ref = (c) => props.withRef(c);
+      }
 
       if (activeClassName || (activeStyle != null && !isEmptyObject(activeStyle))) {
         if (router.isActive(toLocation, onlyActiveOnIndex)) {
@@ -119,9 +125,11 @@ const Link = createReactClass({
       }
     }
 
-    return <a {...props} onClick={this.handleClick} />
+    return <a onClick={this.handleClick} {...props}/>
   }
+}
 
-})
+const EnhancedLink = ContextSubscriberEnhancer(Link, 'router', { withRef: true })
+EnhancedLink.displayName = 'Link'
 
-export default Link
+export default EnhancedLink

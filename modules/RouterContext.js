@@ -1,49 +1,42 @@
 import invariant from 'invariant'
-import React from 'react'
-import createReactClass from 'create-react-class'
+import React, { Component } from 'react'
 import { array, func, object } from 'prop-types'
 
 import getRouteParams from './getRouteParams'
-import { ContextProvider } from './ContextUtils'
+import { ContextProviderEnhancer } from './ContextUtils'
 import { isReactChildren } from './RouteUtils'
 
 /**
  * A <RouterContext> renders the component tree for a given router state
  * and sets the history object and the current location in context.
  */
-const RouterContext = createReactClass({
-  displayName: 'RouterContext',
-
-  mixins: [ ContextProvider('router') ],
-
-  propTypes: {
+class RouterContext extends Component {
+  static propTypes = {
     router: object.isRequired,
     location: object.isRequired,
     routes: array.isRequired,
     params: object.isRequired,
     components: array.isRequired,
     createElement: func.isRequired
-  },
+  }
 
-  getDefaultProps() {
-    return {
-      createElement: React.createElement
-    }
-  },
-
-  childContextTypes: {
+  static childContextTypes = {
     router: object.isRequired
-  },
+  }
+
+  static defaultProps = {
+    createElement: React.createElement
+  }
 
   getChildContext() {
     return {
       router: this.props.router
     }
-  },
+  }
 
   createElement(component, props) {
     return component == null ? null : this.props.createElement(component, props)
-  },
+  }
 
   render() {
     const { location, routes, params, components, router } = this.props
@@ -101,7 +94,9 @@ const RouterContext = createReactClass({
 
     return element
   }
+}
 
-})
+const EnhancedRouterContext = ContextProviderEnhancer(RouterContext, 'router')
+EnhancedRouterContext.displayName = 'RouterContext';
 
-export default RouterContext
+export default EnhancedRouterContext
