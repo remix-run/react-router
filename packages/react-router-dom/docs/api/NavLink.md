@@ -78,4 +78,4 @@ const oddEvent = (match, location) => {
 ## location: object
 
 The [`isActive`](#isactive-func) compares the current history location (usually the current browser URL).
-To compare to a different location, a [`location`](location.md) can be passed.
+To compare to a different location, a [`location`](../../../react-router/docs/api/location.md) can be passed.
