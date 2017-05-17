@@ -48,8 +48,13 @@ This is also useful for animated transitions since the matched `<Route>` is rend
       a bit more cumbersome to work out */}
 </Fade>
 ```
+## Switch props
 
-## children: node
+### location: object
+
+A [`location`](location.md) object to be used for matching children elements instead of the current browser location.
+
+### children: node
 
 All children of a `<Switch>` should be `<Route>` or `<Redirect>` elements. Only the first child to match the current location will be rendered.
 
