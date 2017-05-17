@@ -62,6 +62,8 @@ All children of a `<Switch>` should be `<Route>` or `<Redirect>` elements. Only 
 
 When you include a `<Redirect>` in a `<Switch>`, it can use any of the `<Route>`'s location matching props: `path`, `exact`, and `strict`. `from` is just an alias for the `path` prop.
 
+If a `location` prop is given to the `<Switch>`, it will override the `location` prop on the matching child element.
+
 ```js
 <Switch>
   <Route exact path="/" component={Home}/>
