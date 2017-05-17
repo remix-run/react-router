@@ -74,3 +74,8 @@ const oddEvent = (match, location) => {
   isActive={oddEvent}
 >Event 123</NavLink>
 ```
+
+## location: object
+
+The [`isActive`](#isactive-func) compares the current browser location.
+To compare to a different location, a [`location`](location.md) object can be passed.
