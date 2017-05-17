@@ -5,14 +5,17 @@ import { renderToString } from 'react-dom/server'
 import StaticRouter from 'react-router/StaticRouter'
 
 describe('renderRoutes', () => {
-  let rendered
-  const Comp = ({ route, route: { routes } }) => (
-    rendered.push(route),
+  let renderedRoutes
+  let renderedExtraProps
+  const Comp = ({ route, route: { routes }, ...extraProps }) => (
+    renderedRoutes.push(route),
+    renderedExtraProps.push(extraProps),
     renderRoutes(routes)
   )
 
   beforeEach(() => {
-    rendered = []
+    renderedRoutes = []
+    renderedExtraProps = []
   })
 
   it('renders pathless routes', () => {
@@ -26,8 +29,43 @@ describe('renderRoutes', () => {
         {renderRoutes(routes)}
       </StaticRouter>
     )
-    expect(rendered.length).toEqual(1)
-    expect(rendered[0]).toMatch(routeToMatch)
+    expect(renderedRoutes.length).toEqual(1)
+    expect(renderedRoutes[0]).toMatch(routeToMatch)
+  })
+
+  it('passes extraProps to the component rendered by a pathless route', () => {
+    const routeToMatch = {
+      component: Comp
+    }
+    const routes = [routeToMatch]
+    const extraProps = { anExtraProp: 'anExtraPropValue' }
+
+    renderToString(
+      <StaticRouter location='/path' context={{}}>
+        {renderRoutes(routes, extraProps)}
+      </StaticRouter>
+    )
+    expect(renderedExtraProps.length).toEqual(1)
+    expect(renderedExtraProps[0].anExtraProp).toEqual('anExtraPropValue')
+  })
+
+  it('passes extraProps to the component rendered by a matched route', () => {
+    const routeToMatch = {
+      component: Comp,
+      path: '/'
+    }
+    const routes = [routeToMatch, {
+      component: Comp
+    }]
+    const extraProps = { anExtraProp: 'anExtraPropValue' }
+
+    renderToString(
+      <StaticRouter location='/' context={{}}>
+        {renderRoutes(routes, extraProps)}
+      </StaticRouter>
+    )
+    expect(renderedExtraProps.length).toEqual(1)
+    expect(renderedExtraProps[0].anExtraProp).toEqual('anExtraPropValue')
   })
 
   describe('Switch usage', () => {
@@ -45,8 +83,8 @@ describe('renderRoutes', () => {
           {renderRoutes(routes)}
         </StaticRouter>
       )
-      expect(rendered.length).toEqual(1)
-      expect(rendered[0]).toMatch(routeToMatch)
+      expect(renderedRoutes.length).toEqual(1)
+      expect(renderedRoutes[0]).toMatch(routeToMatch)
     })
 
     it('renders the first matched route in nested routes', () => {
@@ -70,9 +108,9 @@ describe('renderRoutes', () => {
           {renderRoutes(routes)}
         </StaticRouter>
       )
-      expect(rendered.length).toEqual(2)
-      expect(rendered[0]).toMatch(routeToMatch)
-      expect(rendered[1]).toMatch(childRouteToMatch)
+      expect(renderedRoutes.length).toEqual(2)
+      expect(renderedRoutes[0]).toMatch(routeToMatch)
+      expect(renderedRoutes[1]).toMatch(childRouteToMatch)
     })
   })
 
@@ -97,9 +135,9 @@ describe('renderRoutes', () => {
           {renderRoutes(routes)}
         </StaticRouter>
       )
-      expect(rendered.length).toEqual(2)
-      expect(rendered[0]).toEqual(routeToMatch)
-      expect(rendered[1]).toEqual({ component: Comp })
+      expect(renderedRoutes.length).toEqual(2)
+      expect(renderedRoutes[0]).toEqual(routeToMatch)
+      expect(renderedRoutes[1]).toEqual({ component: Comp })
     })
 
     it('skips exact route and does not render it and any of its child routes', () => {
@@ -124,7 +162,7 @@ describe('renderRoutes', () => {
           {renderRoutes(routes)}
         </StaticRouter>
       )
-      expect(rendered.length).toEqual(0)
+      expect(renderedRoutes.length).toEqual(0)
     })
 
     it('renders the matched exact route but not its child routes if they do not match', () => {
@@ -154,9 +192,9 @@ describe('renderRoutes', () => {
           {renderRoutes(routes)}
         </StaticRouter>
       )
-      expect(rendered.length).toEqual(2)
-      expect(rendered[0]).toEqual(routes[0])
-      expect(rendered[1]).toEqual(routes[0].routes[1])
+      expect(renderedRoutes.length).toEqual(2)
+      expect(renderedRoutes[0]).toEqual(routes[0])
+      expect(renderedRoutes[1]).toEqual(routes[0].routes[1])
     })
   })
 
@@ -182,8 +220,8 @@ describe('renderRoutes', () => {
           {renderRoutes(routes)}
         </StaticRouter>
       )
-      expect(rendered.length).toEqual(1)
-      expect(rendered[0]).toEqual(routeToMatch)
+      expect(renderedRoutes.length).toEqual(1)
+      expect(renderedRoutes[0]).toEqual(routeToMatch)
     })
 
     it('skips exact strict route and does not render it and any of its child routes', () => {
@@ -214,7 +252,7 @@ describe('renderRoutes', () => {
           {renderRoutes(routes)}
         </StaticRouter>
       )
-      expect(rendered.length).toEqual(0)
+      expect(renderedRoutes.length).toEqual(0)
     })
 
     it('renders the matched exact strict route but not its child routes if they do not match', () => {
@@ -255,9 +293,9 @@ describe('renderRoutes', () => {
           {renderRoutes(routes)}
         </StaticRouter>
       )
-      expect(rendered.length).toEqual(2)
-      expect(rendered[0]).toEqual(routes[1])
-      expect(rendered[1]).toEqual(routes[1].routes[1])
+      expect(renderedRoutes.length).toEqual(2)
+      expect(renderedRoutes[0]).toEqual(routes[1])
+      expect(renderedRoutes[1]).toEqual(routes[1].routes[1])
     })
   })
 })
