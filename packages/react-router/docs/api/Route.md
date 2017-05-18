@@ -148,10 +148,10 @@ When `true`, will only match if the path matches the `location.pathname` _exactl
 <Route exact path="/one" component={About}/>
 ```
 
-| path | location.pathname | exact | matches? |   
-| --- | --- | --- | --- |   
-| `/one`  | `/one/two`  | `true` | no |   
-| `/one`  | `/one/two`  | `false` | yes |   
+| path | location.pathname | exact | matches? |
+| --- | --- | --- | --- |
+| `/one`  | `/one/two`  | `true` | no |
+| `/one`  | `/one/two`  | `false` | yes |
 
 ## strict: bool
 
@@ -178,3 +178,12 @@ When `true`, a `path` that has a trailing slash will only match a `location.path
 | `/one` | `/one` | yes |
 | `/one` | `/one/` | no |
 | `/one` | `/one/two` | no |
+
+## location: object
+
+A `<Route>` element tries to match its `path` to the current history location (usually the current browser URL).
+However, a [`location`](location.md) with a different `pathname` can also be passed for matching.
+
+This is useful in cases when you need to match a `<Route>` to a location other than the current history location, as shown in the [Animated Transitions](https://reacttraining.com/react-router/web/example/animated-transitions) example.
+
+If a `<Route>` element is wrapped in a `<Switch>` and matches the location passed to the `<Switch>` (or the current history location), then the `location` prop passed to `<Route>` will be overridden by the one used by the `<Switch>` (given [here](https://github.com/ReactTraining/react-router/blob/master/packages/react-router/modules/Switch.js#L51)).
