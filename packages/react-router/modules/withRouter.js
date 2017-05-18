@@ -10,7 +10,7 @@ const withRouter = (Component) => {
   const C = (props) => {
     const { wrappedComponentRef, ...remainingProps } = props
     return (
-      <Route render={routeComponentProps => (
+      <Route children={routeComponentProps => (
         <Component {...remainingProps} {...routeComponentProps} ref={wrappedComponentRef}/>
       )}/>
     )
