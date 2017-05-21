@@ -127,6 +127,12 @@ class StaticRouter extends React.Component {
       block: this.handleBlock
     }
 
+    if (this.props.history) {
+      console.error(
+        '`<StaticRouter history={...}` prop has been ignored. For custom history, ' +
+        'make sure to `import {Router}` and not `import {... as Router}`.')
+    }
+
     return <Router {...props} history={history}/>
   }
 }
