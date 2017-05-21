@@ -112,6 +112,7 @@ class StaticRouter extends React.Component {
     noop
 
   render() {
+    // eslint-disable-next-line no-unused-vars
     const { basename, context, location, ...props } = this.props
 
     const history = {
