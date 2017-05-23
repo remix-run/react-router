@@ -130,9 +130,9 @@ This could also be useful for animations:
 
 **Warning:** Both `<Route component>` and `<Route render>` take precendence over `<Route children>` so don't use more than one in the same `<Route>`.
 
-## path: string
+## path: string | array
 
-Any valid URL path that [`path-to-regexp`](https://www.npmjs.com/package/path-to-regexp) understands.
+Any valid URL path(s) that [`path-to-regexp`](https://www.npmjs.com/package/path-to-regexp) understands.
 
 ```js
 <Route path="/users/:id" component={User}/>
