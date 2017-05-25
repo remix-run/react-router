@@ -31,7 +31,7 @@ const ShowTheLocationWithRouter = withRouter(ShowTheLocation)
 
 #### Important Note
 
-If you are using `withRouter` to prevent updates from being blocked by `shouldComponentUpdate`, it is important that `withRouter` wraps the component that implements `shouldComponentUpate`. For example, when using Redux:
+If you are using `withRouter` to prevent updates from being blocked by `shouldComponentUpdate`, it is important that `withRouter` wraps the component that implements `shouldComponentUpdate`. For example, when using Redux:
 
 ```js
 // This gets around shouldComponentUpdate
