@@ -41,4 +41,4 @@ A similar, but more subtle situation occurs when you use a pathless `<Route>` in
 )}/>
 ```
 
-Pathless `<Route>`s always match, so they need to have a `match` object. To deal with this, a pseudo-match object is created. In order to make it clear that it is not a real match, the match's `url` property is set to `/_FAKE_MATCH_DO_NOT_ATTEMPT_TO_RESOLVE_USING_THIS_OR_YOU_WILL_BE_DISAPPOINTED`. If that string is part of a URL that you generate, you know that it is because you are attempting to 
+Pathless `<Route>`s inherit their `match` object from their parent. If their parent `match` is `null`, then their match will also be `null`. This means that a) any child routes/links will have to be absolute because there is no parent to resolve with and b) a pathless route whose parent `match` can be `null` will need to use the `children` prop to render.
