@@ -46,14 +46,14 @@
     "karma-mocha": "^1.0.1",
     "karma-mocha-reporter": "^2.0.4",
     "karma-sourcemap-loader": "^0.3.7",
-    "karma-webpack": "^1.7.0",
+    "karma-webpack": "^2.0.3",
     "mocha": "^2.5.3",
     "pretty-bytes": "^3.0.1",
     "react": "^15.4.2",
     "react-addons-test-utils": "^15.4.2",
     "react-dom": "^15.3.0",
     "react-router": "^4.1.1",
-    "webpack": "^1.13.1",
+    "webpack": "^2.6.1",
     "webpack-dev-server": "^1.14.1"
   },
   "browserify": {
