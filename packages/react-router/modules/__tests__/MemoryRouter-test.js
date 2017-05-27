@@ -38,7 +38,7 @@ describe('A <MemoryRouter>', () => {
 
     expect(console.error.calls.length).toBe(1)
     expect(console.error.calls[0].arguments[0]).toMatch(
-      /<MemoryRouter.*import \{Router}/)
+      /<MemoryRouter.*import \{ Router }/)
     expect.restoreSpies()
   })
 })

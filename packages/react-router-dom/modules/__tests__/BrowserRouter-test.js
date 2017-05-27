@@ -38,7 +38,7 @@ describe('A <BrowserRouter>', () => {
 
     expect(console.error.calls.length).toBe(1)
     expect(console.error.calls[0].arguments[0]).toMatch(
-      /<BrowserRouter.*import \{Router}/)
+      /<BrowserRouter.*import \{ Router }/)
     expect.restoreSpies()
   })
 })

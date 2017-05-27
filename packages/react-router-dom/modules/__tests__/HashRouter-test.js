@@ -38,7 +38,7 @@ describe('A <HashRouter>', () => {
 
     expect(console.error.calls.length).toBe(1)
     expect(console.error.calls[0].arguments[0]).toMatch(
-      /<HashRouter.*import \{Router}/)
+      /<HashRouter.*import \{ Router }/)
     expect.restoreSpies()
   })
 })

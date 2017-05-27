@@ -1,3 +1,4 @@
+import warning from 'warning'
 import React from 'react'
 import PropTypes from 'prop-types'
 import createHistory from 'history/createHashHistory'
@@ -17,11 +18,11 @@ class HashRouter extends React.Component {
   history = createHistory(this.props)
 
   render() {
-    if (this.props.history) {
-      console.error(
-        '`<HashRouter history={...}` prop has been ignored. For custom history, ' +
-        'make sure to `import {Router}` and not `import {... as Router}`.')
-    }
+    warning(
+      !this.props.history,
+      '`<HashRouter history={...}` prop has been ignored. For custom history, ' +
+      'make sure to `import { Router }` and not `import { ... as Router }`.'
+    )
 
     return <Router history={this.history} children={this.props.children}/>
   }

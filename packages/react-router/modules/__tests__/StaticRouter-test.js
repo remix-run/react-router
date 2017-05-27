@@ -80,7 +80,7 @@ describe('A <StaticRouter>', () => {
 
     expect(console.error.calls.length).toBe(1)
     expect(console.error.calls[0].arguments[0]).toMatch(
-      /<StaticRouter.*import \{Router}/)
+      /<StaticRouter.*import \{ Router }/)
     expect.restoreSpies()
   })
 
