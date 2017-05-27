@@ -110,7 +110,7 @@ class App extends React.Component {
   componentDidMount() {
     // preloads the rest
     loadAbout(() => {})
-    loadDashbaord(() => {})
+    loadDashboard(() => {})
   }
 
   render() {
