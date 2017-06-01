@@ -42,7 +42,7 @@ The "react-empty" comments are just implementation details of React's `null` ren
 
 There are 3 ways to render something with a `<Route>`:
 
-- [`<Route component>`](#component-func)
+- [`<Route component>`](#component)
 - [`<Route render>`](#render-func)
 - [`<Route children>`](#children-func)
 
