@@ -46,7 +46,7 @@ const extractHeaders = ($, level, type) => (
     const text = $e.text()
     return {
       text: text,
-      slug: type === 'api'
+      slug: type === 'api' && level === 'h1'
         ? slugify(text)
         : slugify(text).toLowerCase()
     }
@@ -131,7 +131,7 @@ const makeHeaderLinks = ($, moduleSlug, environment, type) => {
   $('h2').each((i, e) => {
     const $e = $(e)
     const rawSlug = slugify($e.text())
-    const slug = type === 'api' ? rawSlug : rawSlug.toLowerCase()
+    const slug = rawSlug.toLowerCase()
     $e.attr('id', `${moduleSlug}-${slug}`)
     const children = $e.html()
     const link = $(`<a href="/${environment}/${type}/${moduleSlug}/${slug}" class="${routerDelegationClassName}"/>`)
