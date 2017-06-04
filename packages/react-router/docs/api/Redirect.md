@@ -16,7 +16,8 @@ import { Route, Redirect } from 'react-router'
 
 ## to: string
 
-The URL to redirect to.
+The URL to redirect to. Any valid URL path that [`path-to-regexp`](https://www.npmjs.com/package/path-to-regexp) understands.
+All URL parameters that are used in `to` must be covered by `from`.
 
 ```js
 <Redirect to="/somewhere/else"/>
@@ -24,7 +25,7 @@ The URL to redirect to.
 
 ## to: object
 
-A location to redirect to.
+A location to redirect to. `pathname` can be any valid URL path that [`path-to-regexp`](https://www.npmjs.com/package/path-to-regexp) understands.
 
 ```js
 <Redirect to={{
@@ -44,11 +45,22 @@ When `true`, redirecting will push a new entry onto the history instead of repla
 
 ## from: string
 
-A pathname to redirect from. This can only be used to match a location when rendering a `<Redirect>` inside of a `<Switch>`. See [`<Switch children>`](./Switch.md#children-node) for more details.
+A pathname to redirect from. Any valid URL path that [`path-to-regexp`](https://www.npmjs.com/package/path-to-regexp) understands.
+All matched URL parameters are provided to the pattern in `to`. Must contain all parameters that are used in `to`. Additional parameters not used by `to` are ignored. 
+
+This can only be used to match a location when rendering a `<Redirect>` inside of a `<Switch>`. See [`<Switch children>`](./Switch.md#children-node) for more details.
 
 ```js
 <Switch>
   <Redirect from='/old-path' to='/new-path'/>
   <Route path='/new-path' component={Place}/>
+</Switch>
+```
+
+```js
+// Redirect with matched parameters
+<Switch>
+  <Redirect from='/users/:id' to='/users/profile/:id'/>
+  <Route path='/users/profile/:id' component={Profile}/>
 </Switch>
 ```
