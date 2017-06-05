@@ -76,7 +76,7 @@ In v3, the `<Route>` was not really a component. Instead, all of your applicatio
 
 With v4, you layout your app's components just like a regular React application. Anywhere that you want to render content based on the location (specifically, its `pathname`), you render a `<Route>`.
 
-The v4 `<Route>` component is actually a component. so wherever you render a `<Route>` component, content will be rendered. When the `<Route>`'s `path` matches the current location, it will use its rendering prop (`component`, `render`, or `children`) to render. When the `<Route>`'s `path` does not match, it will render `null`.
+The v4 `<Route>` component is actually a component, so wherever you render a `<Route>` component, content will be rendered. When the `<Route>`'s `path` matches the current location, it will use its rendering prop (`component`, `render`, or `children`) to render. When the `<Route>`'s `path` does not match, it will render `null`.
 
 ### Nesting Routes
 
