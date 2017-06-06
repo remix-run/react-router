@@ -60,6 +60,36 @@ The `<Switch>` is not required for grouping `<Route>`s, but it can be quite usef
 </Switch>
 ```
 
+## Route Rendering Props
+
+You have three prop choices for how you render a component for a given `<Route>`: `component`, `render`, and `children`. You can check the out the [`<Route>` documentation](../api/Route.md) for more information on each one, but here we'll focus on `component` and `render` because those are the two you will almost always use.
+
+`component` should be used when you have an existing component (either a `React.Component` or a stateless functional component) that you want to render. `render` should only be used when you have to pass in-scope variables to the component you want to render. You should **not** use the `component` prop to pass in-scope variables because you will get undesired component unmounts/remounts.
+
+```js
+const Home = () => <div>Home</div>
+
+const App = () => {
+  const someVariable = true;
+  
+  return (
+    <Switch>
+      {/* these are good */}
+      <Route exact path='/' component={Home} />
+      <Route
+        path='/about'
+        render={(props) => <About {...props} extra={someVariable} />}
+      />
+      {/* do not do this */}
+      <Route
+        path='/contact'
+        component={(props) => <Contact {...props} extra={someVariable} />}
+      />  
+    </Switch>
+  )
+}
+```
+
 ## Navigation
 
 React Router provides a `<Link>` component to create links in your application. Wherever you render a `<Link>`, an anchor (`<a>`) will be rendered in your application's HTML.
