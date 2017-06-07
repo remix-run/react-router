@@ -32,7 +32,7 @@ class Switch extends React.Component {
 
   render() {
     const { route } = this.context.router
-    const { children } = this.props
+    const { children, style } = this.props
     const location = this.props.location || route.location
 
     let match, child
@@ -48,7 +48,7 @@ class Switch extends React.Component {
       }
     })
 
-    return match ? React.cloneElement(child, { location, computedMatch: match }) : null
+    return match ? React.cloneElement(child, { location, computedMatch: match, style }) : null
   }
 }
 
