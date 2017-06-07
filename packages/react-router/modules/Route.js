@@ -9,7 +9,14 @@ import matchPath from './matchPath'
 class Route extends React.Component {
   static propTypes = {
     computedMatch: PropTypes.object, // private, from <Switch>
-    path: PropTypes.string,
+    path: function(props, propName, componentName) {
+      if (!(typeof props[propName] === 'string' || props[propName] instanceof RegExp)) {
+        return new Error(
+          'Invalid prop `' + propName + '` of type `' + typeof props[propName] + '` supplied to' +
+          ' `' + componentName + '`. Expected `string` or `RegExp`.'
+        )
+      }
+    },
     exact: PropTypes.bool,
     strict: PropTypes.bool,
     component: PropTypes.func,
