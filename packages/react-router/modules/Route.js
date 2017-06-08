@@ -108,7 +108,7 @@ class Route extends React.Component {
       ) : children ? ( // children come last, always called
         typeof children === 'function' ? (
           children(props)
-        ) : !Array.isArray(children) || children.length ? ( // Preact defaults to empty children array
+        ) : !Array.isArray(children) || children.length ? ( // React defaults to empty children array
           React.Children.only(children)
         ) : (
           null
