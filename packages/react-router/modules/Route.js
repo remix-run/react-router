@@ -98,7 +98,7 @@ class Route extends React.Component {
     const { children, component, render } = this.props
     const { history, route, staticContext } = this.context.router
     const location = this.props.location || route.location
-    const props = { match, location, history, staticContext }
+    const props = { ...this.props, match, location, history, staticContext }
 
     return (
       component ? ( // component prop gets first priority, only called if there's a match
