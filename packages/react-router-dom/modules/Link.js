@@ -19,6 +19,7 @@ class Link extends React.Component {
   }
 
   static defaultProps = {
+    onClick: () => {},
     replace: false
   }
 
@@ -33,8 +34,7 @@ class Link extends React.Component {
   }
 
   handleClick = (event) => {
-    if (this.props.onClick)
-      this.props.onClick(event)
+    this.props.onClick(event)
 
     if (
       !event.defaultPrevented && // onClick prevented default
