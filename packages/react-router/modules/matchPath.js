@@ -23,6 +23,16 @@ const compilePath = (pattern, options) => {
   return compiledPattern
 }
 
+const normalizeURL = (path, url) => {
+  if (path === '/' && url === '') {
+    return '/';
+  }
+  if (path[path.length - 1] !== '/' && url[url.length - 1] === '/') {
+    return url.substr(0, url.length - 1);
+  }
+  return url;
+}
+
 /**
  * Public API for matching a URL pathname to a path pattern.
  */
@@ -45,7 +55,7 @@ const matchPath = (pathname, options = {}) => {
 
   return {
     path, // the path pattern used to match
-    url: path === '/' && url === '' ? '/' : url, // the matched portion of the URL
+    url: normalizeURL(path, url), // the matched portion of the URL
     isExact, // whether or not we matched exactly
     params: keys.reduce((memo, key, index) => {
       memo[key.name] = values[index]
