@@ -394,12 +394,12 @@ class StackRootContainer extends Component {
   handlePanBack = () => {
     if (this.state.parentLocation) {
       this.panCancelLocation = this.props.location
-      this.context.router.replace(this.state.parentLocation)
+      this.context.router.history.replace(this.state.parentLocation)
     }
   }
 
   handlePanCancel = () => {
-    this.context.router.replace(this.panCancelLocation)
+    this.context.router.history.replace(this.panCancelLocation)
   }
 
   render() {

@@ -22,13 +22,13 @@ class ModalSwitch extends React.Component {
   // prop instead.
   //
   // We can also use "location state" to tell the app the user
-  // wants to go to `/images/2` in a modal, rather than as the
+  // wants to go to `/img/2` in a modal, rather than as the
   // main page, keeping the gallery visible behind it.
   //
-  // Normally, `/images/2` wouldn't match the gallery at `/`.
+  // Normally, `/img/2` wouldn't match the gallery at `/`.
   // So, to get both screens to render, we can save the old
   // location and pass it to Switch, so it will think the location
-  // is still `/` even though its `/images/2`.
+  // is still `/` even though its `/img/2`.
   previousLocation = this.props.location
 
   componentWillUpdate(nextProps) {

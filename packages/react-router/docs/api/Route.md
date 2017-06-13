@@ -42,7 +42,7 @@ The "react-empty" comments are just implementation details of React's `null` ren
 
 There are 3 ways to render something with a `<Route>`:
 
-- [`<Route component>`](#component-func)
+- [`<Route component>`](#component)
 - [`<Route render>`](#render-func)
 - [`<Route children>`](#children-func)
 
@@ -50,7 +50,7 @@ Each is useful in different circumstances. You should use only one of these prop
 
 ## Route props
 
-All three [render methods](#route-render-methods) will be passed the same three route props
+All three [render methods](#Route-render-methods) will be passed the same three route props
 
 - [match](./match.md)
 - [location](./location.md)
@@ -59,7 +59,7 @@ All three [render methods](#route-render-methods) will be passed the same three 
 ## component
 
 A React component to render only when the location matches. It will be
-rendered with [route props](#route-props).
+rendered with [route props](#Route-props).
 
 ```js
 <Route path="/user/:username" component={User}/>
@@ -75,7 +75,7 @@ When you use `component` (instead of `render` or `children`, below) the router u
 
 This allows for convenient inline rendering and wrapping without the undesired remounting explained above.
 
-Instead of having a new [React element](https://facebook.github.io/react/docs/rendering-elements.html) created for you using the [`component`](#component-func) prop, you can pass in a function to be called when the location matches. The `render` prop receives all the same [route props](#route-props) as the `component` render prop.
+Instead of having a new [React element](https://facebook.github.io/react/docs/rendering-elements.html) created for you using the [`component`](#component) prop, you can pass in a function to be called when the location matches. The `render` prop receives all the same [route props](#Route-props) as the `component` render prop.
 
 ```js
 // convenient inline rendering
@@ -99,7 +99,7 @@ const FadingRoute = ({ component: Component, ...rest }) => (
 
 Sometimes you need to render whether the path matches the location or not. In these cases, you can use the function `children` prop. It works exactly like `render` except that it gets called whether there is a match or not.
 
-The `children` render prop receives all the same [route props](#route-props) as the `component` and `render` methods, except when a route fails to match the URL, then `match` is `null`. This allows you to dynamically adjust your UI based on whether or not the route matches. Here we're adding an `active` class if the route matches
+The `children` render prop receives all the same [route props](#Route-props) as the `component` and `render` methods, except when a route fails to match the URL, then `match` is `null`. This allows you to dynamically adjust your UI based on whether or not the route matches. Here we're adding an `active` class if the route matches
 
 ```js
 <ul>
@@ -148,10 +148,10 @@ When `true`, will only match if the path matches the `location.pathname` _exactl
 <Route exact path="/one" component={About}/>
 ```
 
-| path | location.pathname | exact | matches? |   
-| --- | --- | --- | --- |   
-| `/one`  | `/one/two`  | `true` | no |   
-| `/one`  | `/one/two`  | `false` | yes |   
+| path | location.pathname | exact | matches? |
+| --- | --- | --- | --- |
+| `/one`  | `/one/two`  | `true` | no |
+| `/one`  | `/one/two`  | `false` | yes |
 
 ## strict: bool
 
@@ -178,3 +178,12 @@ When `true`, a `path` that has a trailing slash will only match a `location.path
 | `/one` | `/one` | yes |
 | `/one` | `/one/` | no |
 | `/one` | `/one/two` | no |
+
+## location: object
+
+A `<Route>` element tries to match its `path` to the current history location (usually the current browser URL).
+However, a [`location`](location.md) with a different `pathname` can also be passed for matching.
+
+This is useful in cases when you need to match a `<Route>` to a location other than the current history location, as shown in the [Animated Transitions](https://reacttraining.com/react-router/web/example/animated-transitions) example.
+
+If a `<Route>` element is wrapped in a `<Switch>` and matches the location passed to the `<Switch>` (or the current history location), then the `location` prop passed to `<Route>` will be overridden by the one used by the `<Switch>` (given [here](https://github.com/ReactTraining/react-router/blob/master/packages/react-router/modules/Switch.js#L51)).

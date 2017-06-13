@@ -74,3 +74,8 @@ const oddEvent = (match, location) => {
   isActive={oddEvent}
 >Event 123</NavLink>
 ```
+
+## location: object
+
+The [`isActive`](#isactive-func) compares the current history location (usually the current browser URL).
+To compare to a different location, a [`location`](../../../react-router/docs/api/location.md) can be passed.

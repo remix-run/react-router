@@ -31,7 +31,6 @@
     "prismjs-loader": "0.0.3",
     "prop-types": "^15.5.4",
     "react": "^15.4.0",
-    "react-addons-css-transition-group": "^15.4.2",
     "react-dom": "^15.4.0",
     "react-motion": "^0.4.4",
     "react-router-dom": "^4.1.1",
@@ -47,6 +46,7 @@
     "cheerio": "^0.22.0",
     "react-icons": "^2.2.3",
     "react-media": "^1.5.1",
+    "react-transition-group": "^1.1.2",
     "resolve-pathname": "^2.0.2",
     "slug": "^0.9.1"
   }

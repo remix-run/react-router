@@ -20,7 +20,9 @@
 
 ## Docs
 
-[View the docs here](https://reacttraining.com/react-router)
+**[View the docs here](https://reacttraining.com/react-router)**
+
+[Migrating from 2.x/3.x?](/packages/react-router/docs/guides/migrating.md)
 
 [3.x docs](https://github.com/ReactTraining/react-router/blob/v3/docs)
 
