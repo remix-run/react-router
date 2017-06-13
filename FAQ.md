@@ -7,7 +7,7 @@ If there is a support question that you frequently see being asked, please open 
 * [Why aren't my components updating when the location changes?](#why-arent-my-components-updating-when-the-location-changes)
 * [Why doesn't my application render after refreshing?](#why-doesnt-my-application-render-after-refreshing)
 * [Why doesn't my application work when loading nested routes?](#why-doesnt-my-application-work-when-loading-nested-routes)
-
+* [How do I pass props to the component rendered by a `<Route>`?](#how-do-i-pass-props-to-the-component-rendered-by-a-route)
 ### Why aren't my components updating when the location changes?
 
 React Router relies on updates propagating from your router component to every child component. If you (or a component you use) implements `shouldComponentUpdate` or is a `React.PureComponent`, you may run into issues where your components do not update when the location changes. For a detailed review of the problem, please see the [blocked updates guide](packages/react-router/docs/guides/blocked-updates.md).
@@ -72,4 +72,20 @@ If the `src` of the `<script>` tag that is used to load your application has a r
 <!-- bad -->
 <script src='static/js/bundle.js'></script>
 <script src='./static/js/bundle.js'></script>
+```
+### How do I pass props to the component rendered by a `<Route>`?
+
+If you need to pass props to the component rendered by a `<Route>`, you should use the `<Route>`'s `render` prop. The `render` prop can take an inline function as its value, which means that you can pass variables from the local scope to the component that the `<Route>` renders.
+
+**Note:** The `render` function receives a `props` argument, which you should pass on to the element that your `render` function returned. If you do not do this, the component that you are rendering will not have acccess to the router variables (`match`, `location`, and `history`).
+
+```js
+const App = () => {
+  const color = 'red'
+  return (
+    <Route path='/somewhere' render={(props) => (
+      <MyComponent {...props} color={color} />
+    )} />
+  )
+}
 ```
