@@ -33,8 +33,13 @@ class Link extends React.Component {
   }
 
   handleClick = (event) => {
-    if (this.props.onClick)
-      this.props.onClick(event)
+    if (this.props.onClick) {
+      try {
+        this.props.onClick(event);
+      } catch (error) {
+        console.error(error);
+      }
+    }
 
     if (
       !event.defaultPrevented && // onClick prevented default
