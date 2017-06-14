@@ -1,6 +1,6 @@
-# Philosophy 
+# Philosophy
 
-This guide's purpose is to explain the mental model to have when using React Router. It is unlike any other web router we've used. We call it "Dynamic Routing", which is quite different from what you're probably used to: "Static Routing".
+This guide's purpose is to explain the mental model to have when using React Router. We call it "Dynamic Routing", which is quite different from the "Static Routing" you're probably more familiar with.
 
 ## Static Routing
 
