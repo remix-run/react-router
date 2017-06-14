@@ -15,6 +15,7 @@ export default {
   ],
   examples: [],
   guides: [
+    require('../../../react-router/docs/guides/philosophy.md'),
     require('../../../react-router/docs/guides/quick-start.md'),
     require('../../../react-router/docs/guides/testing.md'),
     require('../../../react-router/docs/guides/redux.md'),
