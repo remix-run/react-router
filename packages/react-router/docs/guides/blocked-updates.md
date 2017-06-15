@@ -65,7 +65,7 @@ Both `connect` and `observer` create components whose `shouldComponentUpdate` me
 
 ### `PureComponent`
 
-React's `PureComponent` does not implement `shouldComponentUpdate`, but it takes a similar approach to preventing updates. When a "pure" component updates, it will do a shallow comparison of its current `props` and `state` to the next `props` and `state`. If the comparison does not detect any differences, the component will not update. Like with `shouldComponentUpdate`, that means that in order to force a "pure" component to update when the location changes, it needs to have a prop or state that has changed.
+React's `PureComponent` implements `shouldComponentUpdate` with a shallow prop and state comparison. When a "pure" component updates, it will do a shallow comparison of its current `props` and `state` to the next `props` and `state`. If the comparison does not detect any differences, the component will not update. That means that in order to force a "pure" component to update when the location changes, it needs to have a prop or state that has changed.
 
 ### The Solution
 
