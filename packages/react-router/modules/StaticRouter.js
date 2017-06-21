@@ -130,8 +130,8 @@ class StaticRouter extends React.Component {
 
     warning(
       !this.props.history,
-      '`<StaticRouter history={...}` prop has been ignored. For custom history, ' +
-      'make sure to `import { Router }` and not `import { ... as Router }`.'
+      '<StaticRouter> ignores the history prop. To use a custom history, ' +
+      'make sure you are using `import { Router }` and not `import { StaticRouter as Router }`.'
     )
 
     return <Router {...props} history={history}/>
