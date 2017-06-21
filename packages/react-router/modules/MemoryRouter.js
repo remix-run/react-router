@@ -21,8 +21,8 @@ class MemoryRouter extends React.Component {
   render() {
     warning(
       !this.props.history,
-      '`<MemoryRouter history={...}` prop has been ignored. For custom history, ' +
-      'make sure to `import { Router }` and not `import { ... as Router }`.'
+      '<MemoryRouter> ignores the history prop. To use a custom history, ' +
+      'make sure you are using `import { Router }` and not `import { MemoryRouter as Router }`.'
     )
 
     return <Router history={this.history} children={this.props.children}/>
