@@ -40,6 +40,19 @@ it('stops matching after finding the first match, just like <Switch>', () => {
   expect(branch[0].route).toEqual(routes[0])
 })
 
+it('decodes params', () => {
+  const dynamicParam = 'τένις'
+
+  const routes = [
+    { path: '/el/:dynamic',
+      exact: true
+    }
+  ]
+
+  const branch = matchRoutes(routes, `/el/${encodeURI(dynamicParam)}`)
+  expect(branch.length).toEqual(1)
+  expect(branch[0].match.params.dynamic).toEqual(dynamicParam)
+})
 
 describe('pathless routes', () => {
 
