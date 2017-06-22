@@ -38,6 +38,10 @@ class Redirect extends React.Component {
       this.perform()
   }
 
+  componentWillReceiveProps() {
+    this.perform();
+  }
+
   componentDidMount() {
     if (!this.isStatic())
       this.perform()
