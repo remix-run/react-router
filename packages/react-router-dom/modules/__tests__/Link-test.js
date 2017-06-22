@@ -24,6 +24,50 @@ describe('A <Link>', () => {
 
     expect(href).toEqual('/the/path?the=query#the-hash')
   })
+
+  describe('when the "to" prop is unspecified', () => {
+    it('returns an anchor tag without a href', () => {
+      const node = document.createElement('div')
+
+      ReactDOM.render((
+        <MemoryRouter>
+          <Link>link</Link>
+        </MemoryRouter>
+      ), node)
+
+      const href = node.querySelector('a').getAttribute('href')
+
+      expect(href).toEqual(null)
+    })
+
+    it('omits href prop', () => {
+      const node = document.createElement('div')
+
+      ReactDOM.render((
+        <MemoryRouter>
+          <Link href="/path">link</Link>
+        </MemoryRouter>
+      ), node)
+
+      const href = node.querySelector('a').getAttribute('href')
+
+      expect(href).toEqual(null)
+    })
+
+    it('passes down other props', () => {
+      const node = document.createElement('div')
+
+      ReactDOM.render((
+        <MemoryRouter>
+          <Link className="link-class">link</Link>
+        </MemoryRouter>
+      ), node)
+
+      const className = node.querySelector('a').getAttribute('class')
+
+      expect(className).toEqual('link-class')
+    })
+  })
 })
 
 describe('When a <Link> is clicked', () => {

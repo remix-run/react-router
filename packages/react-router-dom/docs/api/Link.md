@@ -6,6 +6,7 @@ Provides declarative, accessible navigation around your application.
 import { Link } from 'react-router-dom'
 
 <Link to="/about">About</Link>
+<Link>Disabled</Link> // renders <a> without a href attribute
 ```
 
 ## to: string
