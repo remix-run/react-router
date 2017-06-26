@@ -146,7 +146,7 @@ const App = () => (
 
 ### `<Redirect>`
 
-In v3, if you wanted to redirect from one path to another, for instance /welcome to /, you would use `<IndexRedirect >`.
+In v3, if you wanted to redirect from one path to another, for instance / to /welcome, you would use `<IndexRedirect >`.
 
 ```js
 // v3
@@ -160,6 +160,6 @@ In v4, you can achieve the same functionality using `<Redirect>`.
 
 ```js
 // v4
-<Route path="/" component={() => <Redirect to="/welcome" component={App} />} />
+<Route exact path="/" render={() => <Redirect to="/welcome" component={App} />} />
 
 ```
