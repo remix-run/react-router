@@ -216,7 +216,7 @@ const promises = []
 // the first to match
 routes.some(route => {
   // use `matchPath` here
-  const match = matchPath(req.url, route)
+  const match = matchPath(req.path, route)
   if (match)
     promises.push(route.loadData(match))
   return match
