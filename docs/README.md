@@ -1,3 +1,5 @@
+# React Router 3 Documentation
+
 ## Table of Contents
 
 * [Tutorial](https://github.com/reactjs/react-router-tutorial)
@@ -19,5 +21,5 @@
  * [Upgrading to v1.0.0](../upgrade-guides/v1.0.0.md)
  * [Upgrading to v2.0.0](../upgrade-guides/v2.0.0.md)
 * [Troubleshooting](Troubleshooting.md)
-* [API](API.md)
+* [React Router 3 API](API.md)
 * [Glossary](Glossary.md)

@@ -1,4 +1,4 @@
-# API Reference
+# React Router 3 API Reference
 
 - [Components](#components)
   - [`<Router>`](#router)
