@@ -68,6 +68,22 @@ describe('A <Link>', () => {
       expect(className).toEqual('link-class')
     })
   })
+
+  it('exposes its ref via an innerRef prop', done => {
+    const node = document.createElement('div')
+
+    const refCallback = n => {
+      expect(n.tagName).toEqual('A')
+      done()
+    }
+
+    ReactDOM.render(
+      <MemoryRouter>
+        <Link to="/" innerRef={refCallback}>link</Link>
+      </MemoryRouter>,
+      node
+    )
+  })
 })
 
 describe('When a <Link> is clicked', () => {

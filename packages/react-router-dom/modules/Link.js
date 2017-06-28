@@ -56,7 +56,7 @@ class Link extends React.Component {
   }
 
   render() {
-    const { replace, to, ...props } = this.props // eslint-disable-line no-unused-vars
+    const { replace, to, innerRef, ...props } = this.props // eslint-disable-line no-unused-vars
 
     if (to == null) {
       return <a {...props} href={null} />
@@ -66,7 +66,7 @@ class Link extends React.Component {
       typeof to === 'string' ? { pathname: to } : to
     )
 
-    return <a {...props} onClick={this.handleClick} href={href}/>
+    return <a {...props} onClick={this.handleClick} href={href} ref={innerRef}/>
   }
 }
 

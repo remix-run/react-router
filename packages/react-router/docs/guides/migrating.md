@@ -9,6 +9,7 @@ React Router v4 is a complete rewrite, so there is not a simple migration path. 
   * [Nesting Routes](#nesting-routes)
   * [on* properties](#on-properties)
   * [Switch](#switch)
+  * [Redirect](#redirect)
 
 ## The Router
 
@@ -140,4 +141,25 @@ const App = () => (
     <Route path='/contact' component={Contact} />
   </Switch>
 )
+
+```
+
+### `<Redirect>`
+
+In v3, if you wanted to redirect from one path to another, for instance / to /welcome, you would use `<IndexRedirect >`.
+
+```js
+// v3
+<Route path="/" component={App}>
+  <IndexRedirect to="/welcome" />
+</Route>
+
+```
+
+In v4, you can achieve the same functionality using `<Redirect>`.
+
+```js
+// v4
+<Route exact path="/" render={() => <Redirect to="/welcome" component={App} />} />
+
 ```
