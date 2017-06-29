@@ -8,5 +8,6 @@ export {
   NativeRouter,
   Link,
   DeepLinking,
-  BackButton
+  BackButton,
+  BackButton as AndroidBackButton
 }
