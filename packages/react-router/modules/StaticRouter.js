@@ -16,8 +16,9 @@ const normalizeLocation = (object) => {
 }
 
 const addBasename = (basename, location) => {
-  if (!basename)
+  if (!basename) {
     return location
+  }
 
   return {
     ...location,
@@ -26,13 +27,15 @@ const addBasename = (basename, location) => {
 }
 
 const stripBasename = (basename, location) => {
-  if (!basename)
+  if (!basename) {
     return location
+  }
 
   const base = addLeadingSlash(basename)
 
-  if (location.pathname.indexOf(base) !== 0)
+  if (location.pathname.indexOf(base) !== 0) {
     return location
+  }
 
   return {
     ...location,
