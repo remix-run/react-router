@@ -8,7 +8,7 @@ import {
 
 // This example shows how to render two different screens
 // (or the same screen in a different context) at the same url,
-// depending on you got there.
+// depending on how you got there.
 //
 // Click the colors and see them full screen, then "visit the
 // gallery" and click on the colors. Note the URL and the component
