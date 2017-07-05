@@ -3,7 +3,8 @@
   "version": "4.1.1",
   "main": "main.js",
   "scripts": {
-    "start": "node node_modules/react-native/local-cli/cli.js start"
+    "start": "node node_modules/react-native/local-cli/cli.js start",
+    "test": "jest"
   },
   "files": [
     "DeepLinking.js",
@@ -28,7 +29,7 @@
     "jest": "18.1.0",
     "react": "15.4.1",
     "react-native": "0.42.0",
-    "react-test-renderer": "~15.4.0-rc.4"
+    "react-test-renderer": "15.5.4"
   },
   "jest": {
     "preset": "react-native"
