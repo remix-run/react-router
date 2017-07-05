@@ -2,7 +2,7 @@ import React, { Component } from 'react'
 import PropTypes from 'prop-types'
 import { BackHandler } from 'react-native'
 
-class AndroidBackButton extends Component {
+class BackButton extends Component {
   static contextTypes = {
     router: PropTypes.shape({
       history: PropTypes.shape({
@@ -35,4 +35,4 @@ class AndroidBackButton extends Component {
   }
 }
 
-export default AndroidBackButton
+export default BackButton

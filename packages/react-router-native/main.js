@@ -2,11 +2,12 @@ export * from 'react-router'
 import NativeRouter from './NativeRouter'
 import Link from './Link'
 import DeepLinking from './DeepLinking'
-import AndroidBackButton from './AndroidBackButton'
+import BackButton from './BackButton'
 
 export {
   NativeRouter,
   Link,
   DeepLinking,
-  AndroidBackButton
+  BackButton,
+  BackButton as AndroidBackButton
 }
