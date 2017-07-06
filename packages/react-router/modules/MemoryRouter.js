@@ -16,7 +16,7 @@ class MemoryRouter extends React.Component {
     children: PropTypes.node
   }
 
-  history = createHistory(this.props)
+  history = this.props.history || createHistory(this.props)
 
   render() {
     warning(
