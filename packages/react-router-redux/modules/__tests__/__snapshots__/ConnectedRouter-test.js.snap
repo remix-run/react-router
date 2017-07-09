@@ -6,4 +6,16 @@ exports[`A <ConnectedRouter> with children to render 1`] = `
 </div>
 `;
 
+exports[`A <ConnectedRouter> with isServer set to false does not create a child context 1`] = `
+<div>
+  staticContext: undefined
+</div>
+`;
+
+exports[`A <ConnectedRouter> with isServer set to true creates a child context 1`] = `
+<div>
+  staticContext: {}
+</div>
+`;
+
 exports[`A <ConnectedRouter> with no children to render 1`] = `null`;

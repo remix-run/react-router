@@ -8,11 +8,26 @@ class ConnectedRouter extends Component {
   static propTypes = {
     store: PropTypes.object,
     history: PropTypes.object,
-    children: PropTypes.node
+    children: PropTypes.node,
+    isServer: PropTypes.bool
   }
 
   static contextTypes = {
     store: PropTypes.object
+  }
+
+  static childContextTypes = {
+    router: PropTypes.shape({
+      staticContext: PropTypes.object
+    })
+  }
+
+  getChildContext() {
+    return this.props.isServer ? {
+      router: {
+        staticContext: {}
+      }
+    } : undefined
   }
 
   handleLocationChange = location => {
