@@ -2,11 +2,11 @@
   "name": "react-router-packages",
   "private": true,
   "scripts": {
-    "postinstall": "lerna bootstrap --concurrency=1",
+    "postinstall": "lerna bootstrap",
     "start": "cd packages/react-router-website && npm start",
     "test": "lerna run test"
   },
   "devDependencies": {
-    "lerna": "^2.0.0-rc.1"
+    "lerna": "^2.0.0"
   }
 }
