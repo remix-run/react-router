@@ -2,9 +2,9 @@
   "name": "react-router-packages",
   "private": true,
   "scripts": {
-    "postinstall": "lerna bootstrap --loglevel verbose",
+    "postinstall": "lerna bootstrap --stream",
     "start": "cd packages/react-router-website && npm start",
-    "test": "lerna run test"
+    "test": "lerna run test --stream"
   },
   "devDependencies": {
     "lerna": "^2.0.0"
