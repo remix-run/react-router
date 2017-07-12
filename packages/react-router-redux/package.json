@@ -21,7 +21,7 @@
   "module": "es/index.js",
   "scripts": {
     "build": "node ./tools/build.js",
-    "prepublish": "node ./tools/build.js",
+    "prepublishOnly": "node ./tools/build.js",
     "watch": "babel ./modules -d . --ignore __tests__ --watch",
     "clean": "git clean -fdX .",
     "lint": "eslint modules",
