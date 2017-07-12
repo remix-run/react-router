@@ -1,4 +1,5 @@
 import React from 'react'
+import PropTypes from 'prop-types'
 import renderer from 'react-test-renderer'
 import { createStore, combineReducers } from 'redux'
 import { Provider } from 'react-redux'
@@ -58,7 +59,42 @@ describe('A <ConnectedRouter>', () => {
     expect(store.getState()).toHaveProperty('router.location.pathname', '/foo')
   })
 
+  describe('with isServer set to true', () => {
+    const ChildWithContext = (_, { router }) => <div>{'staticContext: ' + JSON.stringify(router.staticContext)}</div>
+    ChildWithContext.contextTypes = {
+      router: PropTypes.object.isRequired
+    }
+
+    it('creates a child context', () => {
+      const tree = renderer.create(
+        <ConnectedRouter store={store} history={history}  isServer={true}>
+          <ChildWithContext />
+        </ConnectedRouter>
+      ).toJSON()
+      
+      expect(tree).toMatchSnapshot()
+    })
+  })  
+
+  describe('with isServer set to false', () => {
+    const ChildWithContext = (_, { router }) => <div>{'staticContext: ' + JSON.stringify(router.staticContext)}</div>
+    ChildWithContext.contextTypes = {
+      router: PropTypes.object.isRequired
+    }
+
+    it('does not create a child context', () => {
+      const tree = renderer.create(
+        <ConnectedRouter store={store} history={history}  isServer={false}>
+          <ChildWithContext />
+        </ConnectedRouter>
+      ).toJSON()
+      
+      expect(tree).toMatchSnapshot()
+    })
+  })
+
   describe('with children', () => {
+
     it('to render', () => {      
       const tree = renderer.create(
         <ConnectedRouter store={store} history={history}>

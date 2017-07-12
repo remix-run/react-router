@@ -58,7 +58,8 @@ const store = createStore(
 ReactDOM.render(
   <Provider store={store}>
     { /* ConnectedRouter will use the store from Provider automatically */ }
-    <ConnectedRouter history={history}>
+    { /* isServer tells ConnectedRouter to create a staticContext for Route/Redirect */ }
+    <ConnectedRouter history={history} isServer={true}>
       <div>
         <Route exact path="/" component={Home}/>
         <Route path="/about" component={About}/>
