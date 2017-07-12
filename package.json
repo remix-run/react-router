@@ -2,7 +2,7 @@
   "name": "react-router-packages",
   "private": true,
   "scripts": {
-    "postinstall": "lerna bootstrap",
+    "postinstall": "lerna bootstrap --loglevel verbose",
     "start": "cd packages/react-router-website && npm start",
     "test": "lerna run test"
   },
