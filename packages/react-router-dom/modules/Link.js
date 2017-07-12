@@ -15,7 +15,7 @@ class Link extends React.Component {
     to: PropTypes.oneOfType([
       PropTypes.string,
       PropTypes.object
-    ]).isRequired
+    ])
   }
 
   static defaultProps = {
@@ -57,6 +57,10 @@ class Link extends React.Component {
 
   render() {
     const { replace, to, innerRef, ...props } = this.props // eslint-disable-line no-unused-vars
+
+    if (to == null) {
+      return <a {...props} href={null} />
+    }
 
     const href = this.context.router.history.createHref(
       typeof to === 'string' ? { pathname: to } : to
