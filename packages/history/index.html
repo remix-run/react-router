@@ -1,0 +1,27 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <script src="/bundle.js"></script>
+    <script>
+      var createHistory = History.createBrowserHistory
+
+      var page = 0
+      var h = createHistory()
+
+      h.block(function (location, action) {
+        return 'Are you sure you want to go to ' + location.path + '?'
+      })
+
+      h.listen(function (location) {
+        console.log(location)
+      })
+    </script>
+  </head>
+  <body>
+    <p>Use the two buttons below to test normal transitions.</p>
+    <p>
+      <button onclick="page++; h.push('/' + page, { page: page })">history.push</button>
+      <button onclick="h.goBack()">history.goBack</button>
+    </p>
+  </body>
+</html>
