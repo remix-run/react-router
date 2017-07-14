@@ -162,4 +162,10 @@ In v4, you can achieve the same functionality using `<Redirect>`.
 // v4
 <Route exact path="/" render={() => <Redirect to="/welcome" component={App} />} />
 
+<Switch  >
+  <Route exact path="/" component={App} />
+  <Route path="/login" component={Login} />
+  <Redirect path="*" to="/" />
+</Switch>
+
 ```
