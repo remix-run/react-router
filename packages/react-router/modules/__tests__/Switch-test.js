@@ -138,6 +138,8 @@ describe('A <Switch>', () => {
   it('throws with no <Router>', () => {
     const node = document.createElement('div')
 
+    spyOn(console, 'error')
+
     expect(() => {
       ReactDOM.render((
         <Switch>
@@ -150,6 +152,11 @@ describe('A <Switch>', () => {
         </Switch>
       ), node)
     }).toThrow(/You should not use <Switch> outside a <Router>/)
+
+    expect(console.error.calls.count()).toBe(1)
+    expect(console.error.calls.argsFor(0)[0]).toContain(
+      'The context `router` is marked as required in `Switch`'
+    )
   })
 })
 
