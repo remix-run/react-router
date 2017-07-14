@@ -24,14 +24,22 @@ describe('A <Link>', () => {
     expect(href).toEqual('/the/path?the=query#the-hash')
   })
 
-  it('crashes explicitly with no valid <Router>', () => {
+  it('throws with no <Router>', () => {
     const node = document.createElement('div')
+
+    spyOn(console, 'error')
 
     expect(() => {
       ReactDOM.render((
         <Link to="/">link</Link>
       ), node)
-    }).toThrow(/You should not use <Link> outside a valid <Router>/)
+    }).toThrow(/You should not use <Link> outside a <Router>/)
+
+    expect(console.error.calls.count()).toBe(1)
+    expect(console.error.calls.argsFor(0)[0]).toContain(
+      'The context `router` is marked as required in `Link`'
+    )
+  })
 
   it('exposes its ref via an innerRef prop', done => {
     const node = document.createElement('div')

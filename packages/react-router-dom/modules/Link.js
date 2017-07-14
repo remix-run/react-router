@@ -61,7 +61,7 @@ class Link extends React.Component {
 
     invariant(
       this.context.router,
-      'You should not use <Link> outside a valid <Router>'
+      'You should not use <Link> outside a <Router>'
     )
 
     const href = this.context.router.history.createHref(
