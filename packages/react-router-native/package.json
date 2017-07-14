@@ -24,7 +24,7 @@
     "main.js"
   ],
   "peerDependencies": {
-    "react": "^15",
+    "react": ">=15",
     "react-native": ">=0.44"
   },
   "dependencies": {

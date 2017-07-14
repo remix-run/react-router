@@ -33,7 +33,7 @@
     "test": "jest"
   },
   "peerDependencies": {
-    "react": "^15"
+    "react": ">=15"
   },
   "dependencies": {
     "history": "^4.6.0",

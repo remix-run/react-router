@@ -25,7 +25,7 @@
     "test": "jest"
   },
   "peerDependencies": {
-    "react": "^15",
+    "react": ">=15",
     "react-router": "^4.1.1"
   },
   "devDependencies": {
