@@ -23,15 +23,17 @@ exec('babel modules -d es --ignore __tests__', {
 
 console.log('\nBuilding react-router.js ...')
 
-exec('webpack modules/index.js umd/react-router.js', {
-  NODE_ENV: 'development'
-})
+exec(
+  'rollup -c -f umd -o umd/react-router.js',
+  { NODE_ENV: 'development', BABEL_ENV: 'umd' }
+)
 
 console.log('\nBuilding react-router.min.js ...')
 
-exec('webpack -p modules/index.js umd/react-router.min.js', {
-  NODE_ENV: 'production'
-})
+exec(
+  'rollup -c -f umd -o umd/react-router.min.js',
+  { NODE_ENV: 'production', BABEL_ENV: 'umd' }
+)
 
 const size = gzipSize.sync(
   fs.readFileSync('umd/react-router.min.js')
