@@ -24,7 +24,7 @@ exec('babel modules -d es --ignore __tests__', {
 console.log('\nBuilding react-router-config.js ...')
 
 exec('webpack modules/index.js umd/react-router-config.js', {
-  NODE_ENV: 'production'
+  NODE_ENV: 'development'
 })
 
 console.log('\nBuilding react-router-config.min.js ...')
