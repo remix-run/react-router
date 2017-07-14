@@ -32,9 +32,9 @@
     "react-router": "^4.1.1"
   },
   "devDependencies": {
-    "babel-jest": "18.0.0",
+    "babel-jest": "^20.0.3",
     "babel-preset-react-native": "1.9.1",
-    "jest": "18.1.0",
+    "jest": "^20.0.4",
     "react": "^16.0.0-alpha.6",
     "react-native": "0.44.0",
     "react-test-renderer": "15.5.4"
