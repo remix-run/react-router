@@ -1,6 +1,13 @@
 {
   "name": "react-router-native",
   "version": "4.1.1",
+  "description": "React Native bindings for React Router",
+  "repository": "ReactTraining/react-router",
+  "license": "MIT",
+  "authors": [
+    "Michael Jackson",
+    "Ryan Florence"
+  ],
   "main": "main.js",
   "scripts": {
     "start": "node node_modules/react-native/local-cli/cli.js start",
