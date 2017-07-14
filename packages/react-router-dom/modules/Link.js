@@ -1,5 +1,6 @@
 import React from 'react'
 import PropTypes from 'prop-types'
+import invariant from 'invariant'
 
 const isModifiedEvent = (event) =>
   !!(event.metaKey || event.altKey || event.ctrlKey || event.shiftKey)
@@ -57,6 +58,11 @@ class Link extends React.Component {
 
   render() {
     const { replace, to, innerRef, ...props } = this.props // eslint-disable-line no-unused-vars
+
+    invariant(
+      this.context.router,
+      'You should not use <Link> outside a valid <Router>'
+    )
 
     const href = this.context.router.history.createHref(
       typeof to === 'string' ? { pathname: to } : to

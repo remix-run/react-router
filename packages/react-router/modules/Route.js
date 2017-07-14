@@ -1,4 +1,5 @@
 import warning from 'warning'
+import invariant from 'invariant';
 import React from 'react'
 import PropTypes from 'prop-types'
 import matchPath from './matchPath'
@@ -49,10 +50,16 @@ class Route extends React.Component {
     match: this.computeMatch(this.props, this.context.router)
   }
 
-  computeMatch({ computedMatch, location, path, strict, exact }, { route }) {
+  computeMatch({ computedMatch, location, path, strict, exact }, router) {
     if (computedMatch)
       return computedMatch // <Switch> already computed the match for us
 
+    invariant(
+      router,
+      'You should not use <Route> or withRouter() outside a valid <Router>'
+    )
+
+    const { route } = router
     const pathname = (location || route.location).pathname
 
     return path ? matchPath(pathname, { path, strict, exact }) : route.match
@@ -63,17 +70,17 @@ class Route extends React.Component {
 
     warning(
       !(component && render),
-      'You should not use <Route component> and <Route render> in the same route; <Route render> will be ignored'   
+      'You should not use <Route component> and <Route render> in the same route; <Route render> will be ignored'
     )
 
     warning(
       !(component && children),
-      'You should not use <Route component> and <Route children> in the same route; <Route children> will be ignored'   
+      'You should not use <Route component> and <Route children> in the same route; <Route children> will be ignored'
     )
 
     warning(
       !(render && children),
-      'You should not use <Route render> and <Route children> in the same route; <Route children> will be ignored'    
+      'You should not use <Route render> and <Route children> in the same route; <Route children> will be ignored'
     )
   }
 

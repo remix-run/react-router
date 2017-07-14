@@ -1,5 +1,6 @@
 import React from 'react'
 import PropTypes from 'prop-types'
+import invariant from 'invariant'
 
 /**
  * The public API for prompting the user before navigating away
@@ -41,6 +42,11 @@ class Prompt extends React.Component {
   }
 
   componentWillMount() {
+    invariant(
+      this.context.router,
+      'You should not use <Prompt> outside a valid <Router>'
+    )
+
     if (this.props.when)
       this.enable(this.props.message)
   }

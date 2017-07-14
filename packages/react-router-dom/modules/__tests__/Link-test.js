@@ -25,6 +25,15 @@ describe('A <Link>', () => {
     expect(href).toEqual('/the/path?the=query#the-hash')
   })
 
+  it('crashes explicitly with no valid <Router>', () => {
+    const node = document.createElement('div')
+
+    expect(() => {
+      ReactDOM.render((
+        <Link to="/">link</Link>
+      ), node)
+    }).toThrow(/You should not use <Link> outside a valid <Router>/)
+
   it('exposes its ref via an innerRef prop', done => {
     const node = document.createElement('div')
 
