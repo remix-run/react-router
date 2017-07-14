@@ -1,4 +1,4 @@
-import expect from 'expect'
+import expect from 'jest-matchers'
 import React from 'react'
 import PropTypes from 'prop-types'
 import ReactDOM from 'react-dom'
@@ -24,7 +24,7 @@ describe('A <HashRouter>', () => {
       </HashRouter>
     ), node)
 
-    expect(history).toBeAn('object')
+    expect(typeof history).toBe('object')
   })
 
   it('warns when passed a history prop', () => {

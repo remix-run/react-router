@@ -1,4 +1,4 @@
-import expect from 'expect'
+import expect from 'jest-matchers'
 import React from 'react'
 import ReactDOM from 'react-dom'
 import MemoryRouter from 'react-router/MemoryRouter'

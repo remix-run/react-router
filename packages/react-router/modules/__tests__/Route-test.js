@@ -1,4 +1,4 @@
-import expect from 'expect'
+import expect from 'jest-matchers'
 import React from 'react'
 import ReactDOM from 'react-dom'
 import MemoryRouter from '../MemoryRouter'
@@ -34,7 +34,7 @@ describe('A <Route>', () => {
       </MemoryRouter>
     ), node)
 
-    expect(node.innerHTML).toNotContain(TEXT)
+    expect(node.innerHTML).not.toContain(TEXT)
   })
 
   it('can use a `location` prop instead of `context.router.route.location`', () => {
@@ -146,8 +146,8 @@ describe('<Route render>', () => {
     ), node)
 
     expect(actual.history).toBe(history)
-    expect(actual.match).toBeAn('object')
-    expect(actual.location).toBeAn('object')
+    expect(typeof actual.match).toBe('object')
+    expect(typeof actual.location).toBe('object')
   })
 })
 
@@ -183,8 +183,8 @@ describe('<Route component>', () => {
     ), node)
 
     expect(actual.history).toBe(history)
-    expect(actual.match).toBeAn('object')
-    expect(actual.location).toBeAn('object')
+    expect(typeof actual.match).toBe('object')
+    expect(typeof actual.location).toBe('object')
   })
 })
 
@@ -232,8 +232,8 @@ describe('<Route children>', () => {
     ), node)
 
     expect(actual.history).toBe(history)
-    expect(actual.match).toBeAn('object')
-    expect(actual.location).toBeAn('object')
+    expect(typeof actual.match).toBe('object')
+    expect(typeof actual.location).toBe('object')
   })
 })
 
@@ -282,7 +282,7 @@ describe('A <Route exact strict>', () => {
       </MemoryRouter>
     ), node)
 
-    expect(node.innerHTML).toNotContain(TEXT)
+    expect(node.innerHTML).not.toContain(TEXT)
   })
 
   it('does not render when the URL does not have a trailing slash', () => {
@@ -297,7 +297,7 @@ describe('A <Route exact strict>', () => {
       </MemoryRouter>
     ), node)
 
-    expect(node.innerHTML).toNotContain(TEXT)
+    expect(node.innerHTML).not.toContain(TEXT)
   })
 })
 

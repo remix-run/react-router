@@ -1,4 +1,4 @@
-import expect from 'expect'
+import expect from 'jest-matchers'
 import React from 'react'
 import PropTypes from 'prop-types'
 import Router from '../Router'
@@ -35,7 +35,7 @@ describe('A <Router>', () => {
           </Router>,
           node
         )
-      }).toNotThrow()
+      }).not.toThrow()
     })
   })
 
@@ -46,7 +46,7 @@ describe('A <Router>', () => {
           <Router history={createHistory()} />,
           node
         )
-      }).toNotThrow()
+      }).not.toThrow()
     })
   })
 

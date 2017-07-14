@@ -1,5 +1,5 @@
 import matchRoutes from '../matchRoutes'
-import expect from 'expect'
+import expect from 'jest-matchers'
 
 it('finds matched routes', () => {
   const routes = [

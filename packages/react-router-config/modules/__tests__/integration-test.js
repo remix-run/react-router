@@ -1,6 +1,6 @@
 import matchRoutes from '../matchRoutes'
 import renderRoutes from '../renderRoutes'
-import expect from 'expect'
+import expect from 'jest-matchers'
 import { renderToString } from 'react-dom/server'
 import React from 'react'
 import StaticRouter from 'react-router/StaticRouter'
