@@ -17,13 +17,15 @@ class HashRouter extends React.Component {
 
   history = createHistory(this.props)
 
-  render() {
+  componentWillMount() {
     warning(
       !this.props.history,
       '<HashRouter> ignores the history prop. To use a custom history, ' +
-      'make sure you are using `import { Router }` and not `import { HashRouter as Router }`.'
+      'use `import { Router }` instead of `import { HashRouter as Router }`.'
     )
+  }
 
+  render() {
     return <Router history={this.history} children={this.props.children}/>
   }
 }

@@ -112,6 +112,14 @@ class StaticRouter extends React.Component {
   handleBlock = () =>
     noop
 
+  componentWillMount() {
+    warning(
+      !this.props.history,
+      '<StaticRouter> ignores the history prop. To use a custom history, ' +
+      'use `import { Router }` instead of `import { StaticRouter as Router }`.'
+    )
+  }
+
   render() {
     const { basename, context, location, ...props } = this.props
 
@@ -127,12 +135,6 @@ class StaticRouter extends React.Component {
       listen: this.handleListen,
       block: this.handleBlock
     }
-
-    warning(
-      !this.props.history,
-      '<StaticRouter> ignores the history prop. To use a custom history, ' +
-      'make sure you are using `import { Router }` and not `import { StaticRouter as Router }`.'
-    )
 
     return <Router {...props} history={history}/>
   }

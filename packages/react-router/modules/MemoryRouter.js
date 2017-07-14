@@ -18,13 +18,15 @@ class MemoryRouter extends React.Component {
 
   history = createHistory(this.props)
 
-  render() {
+  componentWillMount() {
     warning(
       !this.props.history,
       '<MemoryRouter> ignores the history prop. To use a custom history, ' +
-      'make sure you are using `import { Router }` and not `import { MemoryRouter as Router }`.'
+      'use `import { Router }` instead of `import { MemoryRouter as Router }`.'
     )
+  }
 
+  render() {
     return <Router history={this.history} children={this.props.children}/>
   }
 }
