@@ -95,4 +95,3 @@ describe('pathless routes', () => {
     })
   })
 })
-

@@ -1,9 +1,8 @@
+import React from 'react'
+import ReactDOMServer from 'react-dom/server'
+import StaticRouter from 'react-router/StaticRouter'
 import matchRoutes from '../matchRoutes'
 import renderRoutes from '../renderRoutes'
-import expect from 'expect'
-import { renderToString } from 'react-dom/server'
-import React from 'react'
-import StaticRouter from 'react-router/StaticRouter'
 
 describe('integration', () => {
   it('generates the same matches in renderRoutes and matchRoutes', () => {
@@ -41,7 +40,7 @@ describe('integration', () => {
 
     const pathname = '/pepper/jalepeno'
     const branch = matchRoutes(routes, pathname)
-    renderToString(
+    ReactDOMServer.renderToString(
       <StaticRouter location={pathname} context={{}}>
         {renderRoutes(routes)}
       </StaticRouter>
@@ -89,7 +88,7 @@ describe('integration', () => {
 
     const pathname = '/ghost'
     const branch = matchRoutes(routes, pathname)
-    renderToString(
+    ReactDOMServer.renderToString(
       <StaticRouter location={pathname} context={{}}>
         {renderRoutes(routes)}
       </StaticRouter>
@@ -127,7 +126,7 @@ describe('integration', () => {
 
     const pathname = '/pepper'
     const branch = matchRoutes(routes, pathname)
-    renderToString(
+    ReactDOMServer.renderToString(
       <StaticRouter location={pathname} context={{}}>
         {renderRoutes(routes)}
       </StaticRouter>
@@ -168,7 +167,7 @@ describe('integration', () => {
 
     let pathname = '/pepper'
     let branch = matchRoutes(routes, pathname)
-    renderToString(
+    ReactDOMServer.renderToString(
       <StaticRouter location={pathname} context={{}}>
         {renderRoutes(routes)}
       </StaticRouter>
@@ -178,7 +177,7 @@ describe('integration', () => {
 
     pathname = '/pepper/'
     branch = matchRoutes(routes, pathname)
-    renderToString(
+    ReactDOMServer.renderToString(
       <StaticRouter location={pathname} context={{}}>
         {renderRoutes(routes)}
       </StaticRouter>
@@ -189,4 +188,3 @@ describe('integration', () => {
     expect(branch[0].match).toEqual(rendered[0])
   })
 })
-

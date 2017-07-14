@@ -1,9 +1,9 @@
 import expect from 'expect'
 import React from 'react'
 import ReactDOM from 'react-dom'
+import createMemoryHistory from 'history/createMemoryHistory'
 import MemoryRouter from '../MemoryRouter'
 import Router from '../Router'
-import createMemoryHistory from 'history/createMemoryHistory'
 import Route from '../Route'
 
 describe('A <Route>', () => {

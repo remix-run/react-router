@@ -1,7 +1,7 @@
 import expect from 'expect'
 import React from 'react'
-import PropTypes from 'prop-types'
 import ReactDOM from 'react-dom'
+import PropTypes from 'prop-types'
 import HashRouter from '../HashRouter'
 
 describe('A <HashRouter>', () => {

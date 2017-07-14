@@ -1,8 +1,7 @@
-import renderRoutes from '../renderRoutes'
-import expect from 'expect'
 import React from 'react'
-import { renderToString } from 'react-dom/server'
+import ReactDOMServer from 'react-dom/server'
 import StaticRouter from 'react-router/StaticRouter'
+import renderRoutes from '../renderRoutes'
 
 describe('renderRoutes', () => {
   let rendered
@@ -21,7 +20,7 @@ describe('renderRoutes', () => {
     }
     const routes = [routeToMatch]
 
-    renderToString(
+    ReactDOMServer.renderToString(
       <StaticRouter location='/path' context={{}}>
         {renderRoutes(routes)}
       </StaticRouter>
@@ -40,7 +39,7 @@ describe('renderRoutes', () => {
         component: Comp
       }]
 
-      renderToString(
+      ReactDOMServer.renderToString(
         <StaticRouter location='/' context={{}}>
           {renderRoutes(routes)}
         </StaticRouter>
@@ -65,7 +64,7 @@ describe('renderRoutes', () => {
         component: Comp
       }]
 
-      renderToString(
+      ReactDOMServer.renderToString(
         <StaticRouter location='/' context={{}}>
           {renderRoutes(routes)}
         </StaticRouter>
@@ -92,7 +91,7 @@ describe('renderRoutes', () => {
         exact: true
       }, routeToMatch]
 
-      renderToString(
+      ReactDOMServer.renderToString(
         <StaticRouter location='/path/child' context={{}}>
           {renderRoutes(routes)}
         </StaticRouter>
@@ -114,12 +113,12 @@ describe('renderRoutes', () => {
         }]
       }]
 
-      renderToString(
+      ReactDOMServer.renderToString(
         <StaticRouter location='/path/child' context={{}}>
           {renderRoutes(routes)}
         </StaticRouter>
       )
-      renderToString(
+      ReactDOMServer.renderToString(
         <StaticRouter location='/' context={{}}>
           {renderRoutes(routes)}
         </StaticRouter>
@@ -144,12 +143,12 @@ describe('renderRoutes', () => {
         }]
       }]
 
-      renderToString(
+      ReactDOMServer.renderToString(
         <StaticRouter location='/path/child/grandchild' context={{}}>
           {renderRoutes(routes)}
         </StaticRouter>
       )
-      renderToString(
+      ReactDOMServer.renderToString(
         <StaticRouter location='/path' context={{}}>
           {renderRoutes(routes)}
         </StaticRouter>
@@ -177,7 +176,7 @@ describe('renderRoutes', () => {
         // should render
       }, routeToMatch]
 
-      renderToString(
+      ReactDOMServer.renderToString(
         <StaticRouter location='/path/' context={{}}>
           {renderRoutes(routes)}
         </StaticRouter>
@@ -199,17 +198,17 @@ describe('renderRoutes', () => {
         }]
       }]
 
-      renderToString(
+      ReactDOMServer.renderToString(
         <StaticRouter location='/path/child' context={{}}>
           {renderRoutes(routes)}
         </StaticRouter>
       )
-      renderToString(
+      ReactDOMServer.renderToString(
         <StaticRouter location='/' context={{}}>
           {renderRoutes(routes)}
         </StaticRouter>
       )
-      renderToString(
+      ReactDOMServer.renderToString(
         <StaticRouter location='/path' context={{}}>
           {renderRoutes(routes)}
         </StaticRouter>
@@ -245,12 +244,12 @@ describe('renderRoutes', () => {
         }]
       }]
 
-      renderToString(
+      ReactDOMServer.renderToString(
         <StaticRouter location='/path/child/grandchild' context={{}}>
           {renderRoutes(routes)}
         </StaticRouter>
       )
-      renderToString(
+      ReactDOMServer.renderToString(
         <StaticRouter location='/path/' context={{}}>
           {renderRoutes(routes)}
         </StaticRouter>

@@ -20,10 +20,10 @@
     "Router.js",
     "StaticRouter.js",
     "Switch.js",
+    "es",
     "index.js",
     "matchPath.js",
     "withRouter.js",
-    "es",
     "umd"
   ],
   "main": "index.js",

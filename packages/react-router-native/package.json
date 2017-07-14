@@ -7,13 +7,13 @@
     "test": "jest"
   },
   "files": [
+    "BackButton.js",
     "DeepLinking.js",
     "Link.js",
     "NativeRouter.js",
-    "BackButton.js",
-    "main.js",
     "experimental/StackRoute.js",
-    "experimental/TabRoutes.js"
+    "experimental/TabRoutes.js",
+    "main.js"
   ],
   "peerDependencies": {
     "react": "^15",
