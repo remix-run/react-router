@@ -5,7 +5,7 @@ node_js:
 before_install:
   - npm i -g npm
 before_script:
-  - lerna run build
+  - npm run build
 cache:
   directories:
   - node_modules
