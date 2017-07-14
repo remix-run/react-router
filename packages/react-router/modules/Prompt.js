@@ -44,7 +44,7 @@ class Prompt extends React.Component {
   componentWillMount() {
     invariant(
       this.context.router,
-      'You should not use <Prompt> outside a valid <Router>'
+      'You should not use <Prompt> outside a <Router>'
     )
 
     if (this.props.when)

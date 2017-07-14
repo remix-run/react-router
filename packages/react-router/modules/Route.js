@@ -59,7 +59,7 @@ class Route extends React.Component {
 
     invariant(
       router,
-      'You should not use <Route> or withRouter() outside a valid <Router>'
+      'You should not use <Route> or withRouter() outside a <Router>'
     )
 
     const { route } = router

@@ -135,7 +135,7 @@ describe('A <Switch>', () => {
     expect(node.innerHTML).toMatch(/one/)
   })
 
-  it('crash explicitly with no valid <Router>', () => {
+  it('throws with no <Router>', () => {
     const node = document.createElement('div')
 
     expect(() => {
@@ -149,7 +149,7 @@ describe('A <Switch>', () => {
           )}/>
         </Switch>
       ), node)
-    }).toThrow(/You should not use <Switch> outside a valid <Router>/)
+    }).toThrow(/You should not use <Switch> outside a <Router>/)
   })
 })
 

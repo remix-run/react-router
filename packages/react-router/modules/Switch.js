@@ -22,7 +22,7 @@ class Switch extends React.Component {
   componentWillMount() {
     invariant(
       this.context.router,
-      'You should not use <Switch> outside a valid <Router>'
+      'You should not use <Switch> outside a <Router>'
     )
   }
 

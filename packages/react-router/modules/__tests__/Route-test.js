@@ -88,14 +88,14 @@ describe('A <Route>', () => {
     expect(node.innerHTML).toContain('/sushi/spicy-tuna')
   })
 
-  it('crash explicitly with no valid <Router>', () => {
+  it('throws with no <Router>', () => {
     const node = document.createElement('div')
 
     expect(() => {
       ReactDOM.render((
         <Route path="/" render={() => null} />
       ), node)
-    }).toThrow(/You should not use <Route> or withRouter\(\) outside a valid <Router>/)
+    }).toThrow(/You should not use <Route> or withRouter\(\) outside a <Router>/)
   })
 })
 

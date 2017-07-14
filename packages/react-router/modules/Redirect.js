@@ -37,7 +37,7 @@ class Redirect extends React.Component {
   componentWillMount() {
     invariant(
       this.context.router,
-      'You should not use <Redirect> outside a valid <Router>'
+      'You should not use <Redirect> outside a <Router>'
     )
 
     if (this.isStatic())
