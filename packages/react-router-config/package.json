@@ -8,8 +8,11 @@
     "Ryan Florence"
   ],
   "files": [
+    "es",
+    "index.js",
     "matchRoutes.js",
-    "renderRoutes.js"
+    "renderRoutes.js",
+    "umd"
   ],
   "main": "index.js",
   "module": "es/index.js",
