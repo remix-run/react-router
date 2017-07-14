@@ -4,6 +4,8 @@ node_js:
 - stable
 before_install:
   - npm i -g npm
+before_script:
+  - lerna run build
 cache:
   directories:
   - node_modules
@@ -11,4 +13,3 @@ branches:
   only:
   - master
   - next
-  - /^greenkeeper-/
