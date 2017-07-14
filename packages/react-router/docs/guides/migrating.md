@@ -163,8 +163,8 @@ In v4, you can achieve the same functionality using `<Redirect>`.
 <Route exact path="/" render={() => <Redirect to="/welcome" component={App} />} />
 
 <Switch  >
-  <Route exact path="/login" component={Login} />
   <Route exact path="/" component={App} />
+  <Route path="/login" component={Login} />
   <Redirect path="*" to="/" />
 </Switch>
 
