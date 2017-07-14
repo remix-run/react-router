@@ -3,6 +3,8 @@
   "name": "react-router-packages",
   "scripts": {
     "postinstall": "lerna bootstrap --stream",
+    "build": "lerna run build",
+    "clean": "lerna run clean",
     "start": "cd packages/react-router-website && npm start",
     "test": "lerna run test --stream"
   },
