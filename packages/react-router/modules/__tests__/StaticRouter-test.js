@@ -1,4 +1,3 @@
-import expect from 'expect'
 import React from 'react'
 import ReactDOM from 'react-dom'
 import ReactDOMServer from 'react-dom/server'
@@ -11,7 +10,7 @@ import Prompt from '../Prompt'
 describe('A <StaticRouter>', () => {
   it('provides context.router.staticContext in props.staticContext', () => {
     const ContextChecker = (props, reactContext) => {
-      expect(reactContext.router).toBeAn('object')
+      expect(typeof reactContext.router).toBe('object')
       expect(reactContext.router.staticContext).toBe(props.staticContext)
       return null
     }
@@ -31,7 +30,7 @@ describe('A <StaticRouter>', () => {
 
   it('context.router.staticContext persists inside of a <Route>', () => {
     const ContextChecker = (props, reactContext) => {
-      expect(reactContext.router).toBeAn('object')
+      expect(typeof reactContext.router).toBe('object')
       expect(reactContext.router.staticContext).toBe(context)
       return null
     }
@@ -51,7 +50,7 @@ describe('A <StaticRouter>', () => {
 
   it('provides context.router.history', () => {
     const ContextChecker = (props, reactContext) => {
-      expect(reactContext.router.history).toBeAn('object')
+      expect(typeof reactContext.router.history).toBe('object')
       return null
     }
 
@@ -72,16 +71,17 @@ describe('A <StaticRouter>', () => {
     const context = {}
     const history = {}
     const node = document.createElement('div')
-    expect.spyOn(console, 'error')
+
+    spyOn(console, 'error')
 
     ReactDOM.render((
       <StaticRouter context={context} history={history} />
     ), node)
 
-    expect(console.error.calls.length).toBe(1)
-    expect(console.error.calls[0].arguments[0]).toMatch(
-      /<StaticRouter.*import \{ Router }/)
-    expect.restoreSpies()
+    expect(console.error.calls.count()).toBe(1)
+    expect(console.error.calls.argsFor(0)[0]).toContain(
+      '<StaticRouter> ignores the history prop'
+    )
   })
 
   it('reports PUSH actions on the context object', () => {
@@ -128,7 +128,7 @@ describe('A <StaticRouter>', () => {
 
   it('knows how to parse raw URLs', () => {
     const LocationChecker = (props) => {
-      expect(props.location).toMatch({
+      expect(props.location).toMatchObject({
         pathname: '/the/path',
         search: '?the=query',
         hash: '#the-hash'
@@ -148,7 +148,7 @@ describe('A <StaticRouter>', () => {
   describe('with a basename', () => {
     it('strips the basename from location pathnames', () => {
       const LocationChecker = (props) => {
-        expect(props.location).toMatch({
+        expect(props.location).toMatchObject({
           pathname: '/path'
         })
         return null
@@ -224,7 +224,7 @@ describe('A <StaticRouter>', () => {
             <Prompt message="this is only a test"/>
           </StaticRouter>
         ), node)
-      }).toNotThrow()
+      }).not.toThrow()
     })
   })
 

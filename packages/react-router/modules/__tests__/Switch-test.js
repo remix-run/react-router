@@ -1,4 +1,3 @@
-import expect from 'expect'
 import React from 'react'
 import ReactDOM from 'react-dom'
 import MemoryRouter from '../MemoryRouter'
@@ -67,7 +66,7 @@ describe('A <Switch>', () => {
       </MemoryRouter>
     ), node)
 
-    expect(node.innerHTML).toNotMatch(/two/)
+    expect(node.innerHTML).not.toMatch(/two/)
   })
 
   it('renders pathless Routes', () => {
@@ -82,7 +81,7 @@ describe('A <Switch>', () => {
       </MemoryRouter>
     ), node)
 
-    expect(node.innerHTML).toNotContain('one')
+    expect(node.innerHTML).not.toContain('one')
     expect(node.innerHTML).toContain('two')
   })
 
@@ -99,7 +98,7 @@ describe('A <Switch>', () => {
       </MemoryRouter>
     ), node)
 
-    expect(node.innerHTML).toNotContain('cup')
+    expect(node.innerHTML).not.toContain('cup')
     expect(node.innerHTML).toContain('bub')
   })
 
@@ -116,7 +115,7 @@ describe('A <Switch>', () => {
       </MemoryRouter>
     ), node)
 
-    expect(node.innerHTML).toNotContain('bub')
+    expect(node.innerHTML).not.toContain('bub')
     expect(node.innerHTML).toContain('cup')
   })
 

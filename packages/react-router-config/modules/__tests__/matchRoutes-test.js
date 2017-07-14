@@ -1,5 +1,4 @@
 import matchRoutes from '../matchRoutes'
-import expect from 'expect'
 
 it('finds matched routes', () => {
   const routes = [
