@@ -26,4 +26,19 @@ describe('A <HashRouter>', () => {
 
     expect(history).toBeAn('object')
   })
+
+  it('warns when passed a history prop', () => {
+    const history = {}
+    const node = document.createElement('div')
+    expect.spyOn(console, 'error')
+
+    ReactDOM.render((
+      <HashRouter history={history} />
+    ), node)
+
+    expect(console.error.calls.length).toBe(1)
+    expect(console.error.calls[0].arguments[0]).toMatch(
+      /<HashRouter.*import \{ Router }/)
+    expect.restoreSpies()
+  })
 })

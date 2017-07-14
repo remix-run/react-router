@@ -19,7 +19,7 @@ describe('NavLink', () => {
         </MemoryRouter>
       ), node)
       const a = node.getElementsByTagName('a')[0]
-      expect(a.className).toContain('active')
+      expect(a.className).toEqual('active')
     })
 
     it('applies its passed activeClassName', () => {
@@ -29,7 +29,7 @@ describe('NavLink', () => {
         </MemoryRouter>
       ), node)
       const a = node.getElementsByTagName('a')[0]
-      expect(a.className).toNotContain('active').toContain('selected')
+      expect(a.className).toNotContain('active').toEqual('selected')
     })
 
     it('applies its activeStyle', () => {
@@ -106,7 +106,7 @@ describe('NavLink', () => {
         </MemoryRouter>
       ), node)
       const a = node.getElementsByTagName('a')[0]
-      expect(a.className).toContain('active')
+      expect(a.className).toEqual('active')
     })
 
     it('applies active passed props when isActive returns true', () => {
@@ -122,7 +122,7 @@ describe('NavLink', () => {
         </MemoryRouter>
       ), node)
       const a = node.getElementsByTagName('a')[0]
-      expect(a.className).toNotContain('active').toContain('selected')
+      expect(a.className).toNotContain('active').toEqual('selected')
     })
 
     it('does not apply active default props when isActive returns false', () => {
@@ -165,7 +165,7 @@ describe('NavLink', () => {
         </MemoryRouter>
       ), node)
       const a = node.getElementsByTagName('a')[0]
-      expect(a.className).toContain('active')
+      expect(a.className).toEqual('active')
     })
 
     it('sets active default value only for exact matches', () => {
@@ -175,7 +175,7 @@ describe('NavLink', () => {
         </MemoryRouter>
       ), node)
       const a = node.getElementsByTagName('a')[0]
-      expect(a.className).toContain('active')
+      expect(a.className).toEqual('active')
     })
 
     it('sets active passed value only for exact matches', () => {
@@ -185,7 +185,7 @@ describe('NavLink', () => {
         </MemoryRouter>
       ), node)
       const a = node.getElementsByTagName('a')[0]
-      expect(a.className).toNotContain('active').toContain('selected')
+      expect(a.className).toNotContain('active').toEqual('selected')
     })
 
     it('does not set active default value for partial matches', () => {
@@ -218,7 +218,7 @@ describe('NavLink', () => {
         </MemoryRouter>
       ), node)
       const a = node.getElementsByTagName('a')[0]
-      expect(a.className).toContain('active')
+      expect(a.className).toEqual('active')
     })
 
     it('does not set active default value when location.pathname has no trailing slash', () => {
@@ -248,7 +248,7 @@ describe('NavLink', () => {
         </MemoryRouter>
       ), node)
       const a = node.getElementsByTagName('a')[0]
-      expect(a.className).toContain('active')
+      expect(a.className).toEqual('active')
     })
 
     it('sets active passed value when pathname has trailing slash', () => {
@@ -258,8 +258,29 @@ describe('NavLink', () => {
         </MemoryRouter>
       ), node)
       const a = node.getElementsByTagName('a')[0]
-      expect(a.className).toNotContain('active').toContain('selected')
+      expect(a.className).toNotContain('active').toEqual('selected')
     })
   })
 
+  describe('location property', () => {
+    it('overrides the current location', () => {
+      ReactDOM.render((
+        <MemoryRouter initialEntries={['/pizza']}>
+          <NavLink to='/pasta' activeClassName='selected' location={{pathname: '/pasta'}}>Pasta!</NavLink>
+        </MemoryRouter>
+      ), node)
+      const a = node.getElementsByTagName('a')[0]
+      expect(a.className).toNotContain('active').toContain('selected')
+    })
+    
+    it('is not overwritten by the current location', () => {
+      ReactDOM.render((
+        <MemoryRouter initialEntries={['/pasta']}>
+          <NavLink to='/pasta' activeClassName='selected' location={{pathname: '/pizza'}}>Pasta!</NavLink>
+        </MemoryRouter>
+      ), node)
+      const a = node.getElementsByTagName('a')[0]
+      expect(a.className).toNotContain('active').toNotContain('selected')
+    })
+  })
 })

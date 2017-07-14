@@ -3,3 +3,4 @@ lerna-debug.log
 npm-debug.log
 yarn-error.log
 packages/*/yarn.lock
+packages/*/package-lock.json

@@ -1,8 +1,8 @@
 import React, { Component } from 'react'
 import PropTypes from 'prop-types'
-import { BackAndroid } from 'react-native'
+import { BackHandler } from 'react-native'
 
-class AndroidBackButton extends Component {
+class BackButton extends Component {
   static contextTypes = {
     router: PropTypes.shape({
       history: PropTypes.shape({
@@ -13,11 +13,11 @@ class AndroidBackButton extends Component {
   }
 
   componentDidMount() {
-    BackAndroid.addEventListener('hardwareBackPress', this.handleBack)
+    BackHandler.addEventListener('hardwareBackPress', this.handleBack)
   }
 
   componentWillUnmount() {
-    BackAndroid.removeEventListener('hardwareBackPress', this.handleBack)
+    BackHandler.removeEventListener('hardwareBackPress', this.handleBack)
   }
 
   handleBack = () => {
@@ -35,4 +35,4 @@ class AndroidBackButton extends Component {
   }
 }
 
-export default AndroidBackButton
+export default BackButton

@@ -1,11 +1,7 @@
 const fs = require('fs')
 const execSync = require('child_process').execSync
-const inInstall = require('in-publish').inInstall
 const prettyBytes = require('pretty-bytes')
 const gzipSize = require('gzip-size')
-
-if (inInstall())
-  process.exit(0)
 
 const exec = (command, extraEnv) =>
   execSync(command, {
@@ -28,7 +24,7 @@ exec('babel modules -d es --ignore __tests__', {
 console.log('\nBuilding react-router-dom.js ...')
 
 exec('webpack modules/index.js umd/react-router-dom.js', {
-  NODE_ENV: 'production'
+  NODE_ENV: 'development'
 })
 
 console.log('\nBuilding react-router-dom.min.js ...')

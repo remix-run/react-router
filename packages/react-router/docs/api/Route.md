@@ -42,7 +42,7 @@ The "react-empty" comments are just implementation details of React's `null` ren
 
 There are 3 ways to render something with a `<Route>`:
 
-- [`<Route component>`](#component-func)
+- [`<Route component>`](#component)
 - [`<Route render>`](#render-func)
 - [`<Route children>`](#children-func)
 
@@ -69,13 +69,13 @@ const User = ({ match }) => {
 }
 ```
 
-When you use `component` (instead of `render`, below) the router uses [`React.createElement`](https://facebook.github.io/react/docs/react-api.html#createelement) to create a new [React element](https://facebook.github.io/react/docs/rendering-elements.html) from the given component. That means if you provide an inline function, you are creating a new component every render. This results in the existing component unmounting and the new component mounting instead of just updating the existing component. For inline rendering, use the `render` prop (below).
+When you use `component` (instead of `render` or `children`, below) the router uses [`React.createElement`](https://facebook.github.io/react/docs/react-api.html#createelement) to create a new [React element](https://facebook.github.io/react/docs/rendering-elements.html) from the given component. That means if you provide an inline function to the `component` attribute, you would create a new component every render. This results in the existing component unmounting and the new component mounting instead of just updating the existing component. When using an inline function for inline rendering, use the `render` or the `children` prop (below).
 
 ## render: func
 
 This allows for convenient inline rendering and wrapping without the undesired remounting explained above.
 
-Instead of having a new [React element](https://facebook.github.io/react/docs/rendering-elements.html) created for you using the [`component`](#component-func) prop, you can pass in a function to be called when the location matches. The `render` prop receives all the same [route props](#route-props) as the `component` render prop.
+Instead of having a new [React element](https://facebook.github.io/react/docs/rendering-elements.html) created for you using the [`component`](#component) prop, you can pass in a function to be called when the location matches. The `render` prop receives all the same [route props](#route-props) as the `component` render prop.
 
 ```js
 // convenient inline rendering
@@ -148,10 +148,10 @@ When `true`, will only match if the path matches the `location.pathname` _exactl
 <Route exact path="/one" component={About}/>
 ```
 
-| path | location.pathname | exact | matches? |   
-| --- | --- | --- | --- |   
-| `/one`  | `/one/two`  | `true` | no |   
-| `/one`  | `/one/two`  | `false` | yes |   
+| path | location.pathname | exact | matches? |
+| --- | --- | --- | --- |
+| `/one`  | `/one/two`  | `true` | no |
+| `/one`  | `/one/two`  | `false` | yes |
 
 ## strict: bool
 
@@ -178,3 +178,12 @@ When `true`, a `path` that has a trailing slash will only match a `location.path
 | `/one` | `/one` | yes |
 | `/one` | `/one/` | no |
 | `/one` | `/one/two` | no |
+
+## location: object
+
+A `<Route>` element tries to match its `path` to the current history location (usually the current browser URL).
+However, a [`location`](location.md) with a different `pathname` can also be passed for matching.
+
+This is useful in cases when you need to match a `<Route>` to a location other than the current history location, as shown in the [Animated Transitions](https://reacttraining.com/react-router/web/example/animated-transitions) example.
+
+If a `<Route>` element is wrapped in a `<Switch>` and matches the location passed to the `<Switch>` (or the current history location), then the `location` prop passed to `<Route>` will be overridden by the one used by the `<Switch>` (given [here](https://github.com/ReactTraining/react-router/blob/master/packages/react-router/modules/Switch.js#L51)).

@@ -1,7 +1,7 @@
 {
   "private": true,
   "name": "react-router-website",
-  "version": "4.0.0",
+  "version": "4.1.1",
   "scripts": {
     "build": "NODE_ENV=production webpack -p",
     "clean": "git clean -fdX .",
@@ -11,6 +11,7 @@
     "babel-core": "^6.21.0",
     "babel-eslint": "^6.0.4",
     "babel-loader": "^6.2.10",
+    "babel-polyfill": "^6.23.0",
     "babel-preset-es2015": "^6.14.0",
     "babel-preset-react": "^6.5.0",
     "babel-preset-stage-1": "^6.5.0",
@@ -30,13 +31,13 @@
     "prismjs-loader": "0.0.3",
     "prop-types": "^15.5.4",
     "react": "^15.4.0",
-    "react-addons-css-transition-group": "^15.4.2",
     "react-dom": "^15.4.0",
     "react-motion": "^0.4.4",
-    "react-router-dom": "^4.0.0",
+    "react-router-dom": "^4.1.1",
     "style-loader": "0.13.1",
     "sw-precache": "^4.2.2",
     "sw-precache-webpack-plugin": "^0.7.2",
+    "unicode": "^9.0.1",
     "url-loader": "^0.5.7",
     "webpack": "^1.13.1",
     "webpack-dev-server": "^1.14.1"
@@ -46,6 +47,7 @@
     "cheerio": "^0.22.0",
     "react-icons": "^2.2.3",
     "react-media": "^1.5.1",
+    "react-transition-group": "^1.1.2",
     "resolve-pathname": "^2.0.2",
     "slug": "^0.9.1"
   }

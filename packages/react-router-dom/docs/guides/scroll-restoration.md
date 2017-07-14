@@ -8,7 +8,7 @@ Because browsers are starting to handle the "default case" and apps have varying
 
 ## Scroll to top
 
-Most of the time all you need is to "scroll to the top" because you have a long content page, that when navigated to, stays scrolled down. This is straightforward to handle with a `<ScrollToTop>` component that will scroll the window up on every navigation:
+Most of the time all you need is to "scroll to the top" because you have a long content page, that when navigated to, stays scrolled down. This is straightforward to handle with a `<ScrollToTop>` component that will scroll the window up on every navigation, make sure to wrap it in `withRouter` to give it access to the router's props:
 
 ```jsx
 class ScrollToTop extends Component {

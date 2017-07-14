@@ -13,6 +13,7 @@ class Link extends Component {
   }
 
   static propTypes = {
+    onPress: PropTypes.func,
     component: PropTypes.func,
     replace: PropTypes.bool,
     to: PropTypes.oneOfType([
@@ -26,19 +27,24 @@ class Link extends Component {
     replace: false
   }
 
-  handlePress = () => {
-    const { history } = this.context.router
-    const { to, replace } = this.props
+  handlePress = (event) => {
+    if (this.props.onPress)
+      this.props.onPress(event)
 
-    if (replace) {
-      history.replace(to)
-    } else {
-      history.push(to)
+    if (!event.defaultPrevented) {
+      const { history } = this.context.router
+      const { to, replace } = this.props
+
+      if (replace) {
+        history.replace(to)
+      } else {
+        history.push(to)
+      }
     }
   }
 
   render() {
-    const { component: Component, ...rest } = this.props
+    const { component: Component, to, replace, ...rest } = this.props
     return <Component {...rest} onPress={this.handlePress}/>
   }
 }

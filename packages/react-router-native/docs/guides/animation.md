@@ -1,6 +1,6 @@
 # Animation
 
-This guide is a little sparse right now, but should provide enough insight to help you implement some great animations if you're already comfortable with animations generally. Because React Router mostly just components, all the typical animation strategies apply. The only difference is the things that trigger an animation. This guide attempts to spark some inspiration rather than provide copy/paste code.
+This guide is a little sparse right now, but should provide enough insight to help you implement some great animations if you're already comfortable with animations generally. Because React Router mostly is just components, all the typical animation strategies apply. The only difference is the things that trigger an animation. This guide attempts to spark some inspiration rather than provide copy/paste code.
 
 # Element Transitions
 
