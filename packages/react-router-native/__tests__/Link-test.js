@@ -68,7 +68,7 @@ describe('<Link />', () => {
 
   it('does not navigate when the press event is cancelled', () =>{
     const renderer = new ShallowRenderer()
-    const onPress = (event) =>  event.preventDefault()
+    const onPress = (event) => event.preventDefault()
     const context = createContext()
     renderer.render((
       <Link onPress={onPress} to='/'/>
