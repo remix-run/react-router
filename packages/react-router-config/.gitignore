@@ -2,4 +2,4 @@ es
 node_modules
 umd
 /*.js
-!webpack.config.js
+!rollup.config.js
