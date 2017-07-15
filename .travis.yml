@@ -1,14 +1,19 @@
 sudo: false
 language: node_js
 node_js:
-- stable
+  - "node"
 before_install:
   - npm i -g npm
 before_script:
   - npm run build
 cache:
   directories:
-  - node_modules
+  - packages/react-router/node_modules
+  - packages/react-router-dom/node_modules
+  - packages/react-router-native/node_modules
+  - packages/react-router-config/node_modules
+  - packages/react-router-redux/node_modules
+  - packages/react-router-website/node_modules
 branches:
   only:
   - master
