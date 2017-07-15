@@ -19,9 +19,9 @@ module.exports = {
     [ 'es2015', {
       loose: true,
       modules: building ? false : 'commonjs'
-    }],
-    "stage-1",
-    "react"
+    } ],
+    'stage-1',
+    'react'
   ],
   plugins: plugins
 }
