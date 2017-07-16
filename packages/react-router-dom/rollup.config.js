@@ -3,9 +3,10 @@ import uglify from 'rollup-plugin-uglify'
 import replace from 'rollup-plugin-replace'
 import commonjs from 'rollup-plugin-commonjs'
 import resolve from 'rollup-plugin-node-resolve'
+import multiEntry from 'rollup-plugin-multi-entry'
 
 const config = {
-  input: 'modules/index.js',
+  input: ['modules/index.js', 'modules/assignWindow.js'],
   name: 'ReactRouterDOM',
   globals: {
     react: 'React'
@@ -14,6 +15,7 @@ const config = {
     'react'
   ],
   plugins: [
+    multiEntry(),
     babel({
       exclude: 'node_modules/**'
     }),
