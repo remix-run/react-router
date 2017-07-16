@@ -49,7 +49,6 @@
   "devDependencies": {
     "babel-cli": "^6.18.0",
     "babel-eslint": "^6.0.4",
-    "babel-loader": "^6.2.10",
     "babel-plugin-dev-expression": "^0.2.1",
     "babel-plugin-external-helpers": "^6.22.0",
     "babel-plugin-transform-react-remove-prop-types": "^0.2.11",
