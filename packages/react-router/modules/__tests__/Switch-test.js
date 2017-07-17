@@ -123,7 +123,7 @@ describe('A <Switch>', () => {
     const node = document.createElement('div')
     let redirected = false
 
-    expect.spyOn(console, 'error')
+    spyOn(console, 'error')
 
     ReactDOM.render((
       <MemoryRouter initialEntries={[ '/one' ]}>
@@ -139,16 +139,15 @@ describe('A <Switch>', () => {
       </MemoryRouter>
     ), node)
 
-    expect(console.error.calls.length).toBe(1)
-    expect(console.error.calls[0].arguments[0]).toMatch(/Warning:.*"\/one"/)
-    expect.restoreSpies()
+    expect(console.error.calls.count()).toBe(1)
+    expect(console.error.calls.argsFor(0)[0]).toMatch(/Warning:.*"\/one"/)
   })
 
   it('warns when redirecting to same route, mixed types', () => {
     const node = document.createElement('div')
     let redirected = false
 
-    expect.spyOn(console, 'error')
+    spyOn(console, 'error')
 
     ReactDOM.render((
       <MemoryRouter initialEntries={[ '/one' ]}>
@@ -165,9 +164,8 @@ describe('A <Switch>', () => {
       </MemoryRouter>
     ), node)
 
-    expect(console.error.calls.length).toBe(1)
-    expect(console.error.calls[0].arguments[0]).toMatch(/Warning:.*"\/one"/)
-    expect.restoreSpies()
+    expect(console.error.calls.count()).toBe(1)
+    expect(console.error.calls.argsFor(0)[0]).toMatch(/Warning:.*"\/one"/)
   })
 
   it('does NOT warn when redirecting to same route with different `search`', () => {
@@ -175,7 +173,7 @@ describe('A <Switch>', () => {
     let redirected = false
     let done = false
 
-    expect.spyOn(console, 'error')
+    spyOn(console, 'error')
 
     ReactDOM.render((
       <MemoryRouter initialEntries={[ '/one' ]}>
@@ -198,8 +196,7 @@ describe('A <Switch>', () => {
     ), node)
 
     expect(node.innerHTML).toContain('done')
-    expect(console.error.calls.length).toBe(0)
-    expect.restoreSpies()
+    expect(console.error.calls.count()).toBe(0)
   })
 
   it('handles comments', () => {
