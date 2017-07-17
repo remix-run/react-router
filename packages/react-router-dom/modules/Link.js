@@ -34,24 +34,26 @@ class Link extends React.Component {
   }
 
   handleClick = (event) => {
-    if (this.props.onClick)
-      this.props.onClick(event)
+    try {
+      if (this.props.onClick)
+        this.props.onClick(event)
+    } finally {
+      if (
+        !event.defaultPrevented && // onClick prevented default
+        event.button === 0 && // ignore right clicks
+        !this.props.target && // let browser handle "target=_blank" etc.
+        !isModifiedEvent(event) // ignore clicks with modifier keys
+      ) {
+        event.preventDefault()
 
-    if (
-      !event.defaultPrevented && // onClick prevented default
-      event.button === 0 && // ignore right clicks
-      !this.props.target && // let browser handle "target=_blank" etc.
-      !isModifiedEvent(event) // ignore clicks with modifier keys
-    ) {
-      event.preventDefault()
+        const { history } = this.context.router
+        const { replace, to } = this.props
 
-      const { history } = this.context.router
-      const { replace, to } = this.props
-
-      if (replace) {
-        history.replace(to)
-      } else {
-        history.push(to)
+        if (replace) {
+          history.replace(to)
+        } else {
+          history.push(to)
+        }
       }
     }
   }
