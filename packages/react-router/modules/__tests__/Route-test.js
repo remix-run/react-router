@@ -183,14 +183,36 @@ describe('A <Route> with dynamic segments in the path', () => {
       })
 
       it('correctly decodes params which have an encoded :', () => {
-        props = prepHistoryAndGetProps('/foo%3abar/baz')
+        props = prepHistoryAndGetProps('/%3abar/baz')
         ReactDOM.render((
             <RouterComponent {...props}>
               <Route path="/:param1/baz" render={({ match }) => <div>{match.params.param1}</div>} />
             </RouterComponent>
         ), node)
 
-        expect(node.innerText).toBe('foo:bar')
+        expect(node.innerText).toBe(':bar')
+      })
+
+      it('matches paths which themselves contain a percent-encoded slash', () => {
+        props = prepHistoryAndGetProps('/foo%2fbar/baz')
+        ReactDOM.render((
+            <RouterComponent {...props}>
+              <Route path="/foo%2fbar/:param1" render={({ match }) => <div>{match.params.param1}</div>} />
+            </RouterComponent>
+        ), node)
+
+        expect(node.innerText).toBe('baz')
+      })
+
+      it('matches paths which themselves contain a percent-encoded colon', () => {
+        props = prepHistoryAndGetProps('/%3abar/baz')
+        ReactDOM.render((
+            <RouterComponent {...props}>
+              <Route path="/%3abar/:param1" render={({ match }) => <div>{match.params.param1}</div>} />
+            </RouterComponent>
+        ), node)
+
+        expect(node.innerText).toBe('baz')
       })
     })
   )

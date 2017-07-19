@@ -135,7 +135,7 @@ describe('matchPath', () => {
     })
 
     it('correctly decodes params which have an encoded :', () => {
-      url = '/foo%3abar/baz'
+      url = '/%3abar/baz'
 
       const match = matchPath(url, {
         path: '/:param1/baz',
@@ -144,7 +144,33 @@ describe('matchPath', () => {
       })
 
       expect(match.isExact).toBe(true)
-      expect(match.params.param1).toBe('foo:bar')
+      expect(match.params.param1).toBe(':bar')
+    })
+
+    it('matches paths which themselves contain a percent-encoded slash', () => {
+      url = '/foo%2fbar/baz'
+
+      const match = matchPath(url, {
+        path: '/foo%2fbar/:param1',
+        exact: true,
+        strict: true
+      })
+
+      expect(match.isExact).toBe(true)
+      expect(match.params.param1).toBe('baz')
+    })
+
+    it('matches paths which themselves contain a percent-encoded colon', () => {
+      url = '/%3abar/baz'
+
+      const match = matchPath(url, {
+        path: '/%3abar/:param1',
+        exact: true,
+        strict: true
+      })
+
+      expect(match.isExact).toBe(true)
+      expect(match.params.param1).toBe('baz')
     })
   })
 })
