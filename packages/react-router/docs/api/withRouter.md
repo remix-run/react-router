@@ -1,6 +1,6 @@
 # withRouter
 
-You can get access to the [`history`](./history.md) object's properties and the closest [`<Route>`](./Route.md)'s [`match`](./match.md) via the `withRouter` higher-order component. `withRouter` will re-render its component every time the route changes with the same props as [`<Route>`](./Route.md) render props: `{ match, location, history }`.
+You can get access to the [`history`](./history.md) object's properties and the closest [`<Route>`](./Route.md)'s [`match`](./match.md) via the `withRouter` higher-order component. `withRouter` will pass updated `match`, `location`, and `history` props to the wrapped component whenever it renders.
 
 ```js
 import React from 'react'
@@ -31,14 +31,24 @@ const ShowTheLocationWithRouter = withRouter(ShowTheLocation)
 
 #### Important Note
 
-If you are using `withRouter` to prevent updates from being blocked by `shouldComponentUpdate`, it is important that `withRouter` wraps the component that implements `shouldComponentUpdate`. For example, when using Redux:
+`withRouter` does not subscribe to location changes like React Redux's `connect` does for state changes.  Instead, re-renders after location changes propagate out from the `<Router>` component.  This means that `withRouter` does _not_ re-render on route transitions unless its parent component re-renders. If you are using `withRouter` to prevent updates from being blocked by `shouldComponentUpdate`, it is important that `withRouter` wraps the component that implements `shouldComponentUpdate`. For example, when using Redux:
 
 ```js
 // This gets around shouldComponentUpdate
 withRouter(connect(...)(MyComponent))
+// or
+compose(
+  withRouter,
+  connect(...)
+)(MyComponent)
 
 // This does not
 connect(...)(withRouter(MyComponent))
+// nor
+compose(
+  connect(...),
+  withRouter
+)(MyComponent)
 ```
 
 See [this guide](https://github.com/ReactTraining/react-router/blob/master/packages/react-router/docs/guides/blocked-updates.md) for more information.
@@ -69,7 +79,7 @@ A function that will be passed as the `ref` prop to the wrapped component.
 ```js
 class Container extends React.Component {
   componentDidMount() {
-    this.component.doSomething()  
+    this.component.doSomething()
   }
 
   render() {
