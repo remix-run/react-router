@@ -61,4 +61,90 @@ describe('matchPath', () => {
       expect(!!falseTrue).toBe(false)
     })
   })
+
+  describe('with dynamic segments in the path', () => {
+    let url
+
+    it('decodes them', () => {
+      url = '/a%20dynamic%20segment'
+      const match = matchPath(url, {
+        path: '/:id',
+        exact: true,
+        strict: true
+      })
+
+      expect(match.isExact).toBe(true)
+      expect(match.params.id).toBe('a dynamic segment')
+    })
+
+    it('correctly finds multiple params', () => {
+      url = '/first/second'
+
+      const match = matchPath(url, {
+        path: '/:param1/:param2',
+        exact: true,
+        strict: true
+      })
+
+      expect(match.isExact).toBe(true)
+      expect(match.params.param1).toBe('first')
+      expect(match.params.param2).toBe('second')
+    })
+
+    it('correctly finds and decodes params in the middle of a complex path rule', () => {
+      // This test case is modeled after a real-world case where we'd seen some inconsistent behavior
+      url = '/foo/some%20param/edit'
+
+      const match = matchPath(url, {
+        path: '/foo/:param1/:param2(edit|view|history)?',
+        exact: true,
+        strict: false
+      })
+
+      expect(match.isExact).toBe(true)
+      expect(match.params.param1).toBe('some param')
+      expect(match.params.param2).toBe('edit')
+    })
+
+    it('correctly finds and decodes params in the middle of a complex path rule 2', () => {
+      // This test case is modeled after a real-world case where we'd seen some inconsistent behavior
+      url = '/foo/some%20param'
+
+      const match = matchPath(url, {
+        path: '/foo/:param1/:param2(edit|view|history)?',
+        exact: true,
+        strict: false
+      })
+
+      expect(match.isExact).toBe(true)
+      expect(match.params.param1).toBe('some param')
+      expect(match.params.param2).toBe(null)
+    })
+
+    it('correctly decodes params which have an encoded /', () => {
+      url = '/foo%2fbar/baz'
+
+      const match = matchPath(url, {
+        path: '/:param1/baz',
+        exact: true,
+        strict: true
+      })
+
+      expect(match.isExact).toBe(true)
+      expect(match.params.param1).toBe('foo/bar')
+    })
+
+    it('correctly decodes params which have an encoded :', () => {
+      url = '/foo%3abar/baz'
+
+      const match = matchPath(url, {
+        path: '/:param1/baz',
+        exact: true,
+        strict: true
+      })
+
+      expect(match.isExact).toBe(true)
+      expect(match.params.param1).toBe('foo:bar')
+    })
+  })
 })

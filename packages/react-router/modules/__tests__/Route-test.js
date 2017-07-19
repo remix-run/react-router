@@ -2,6 +2,7 @@ import expect from 'expect'
 import React from 'react'
 import ReactDOM from 'react-dom'
 import MemoryRouter from '../MemoryRouter'
+import StaticRouter from '../StaticRouter'
 import Router from '../Router'
 import createMemoryHistory from 'history/createMemoryHistory'
 import Route from '../Route'
@@ -91,16 +92,108 @@ describe('A <Route>', () => {
 })
 
 describe('A <Route> with dynamic segments in the path', () => {
-  it('decodes them', () => {
-    const node = document.createElement('div')
-    ReactDOM.render((
-      <MemoryRouter initialEntries={[ '/a%20dynamic%20segment' ]}>
-        <Route path="/:id" render={({ match }) => <div>{match.params.id}</div>} />
-      </MemoryRouter>
-    ), node)
+  // This test group also demonstrates that the param parsing and decoding behavior differs according to the containing
+  // router component.
+  //
+  // Rather than copy/paste the same tests for every containing router we might have, we'll loop through them
+  // and pass all potentially used props to each (extras are expected to be ignored)
+  //
+  // TODO: Getting HashRouter and BrowserRouter to work here is left as an exercise for the reader
 
-    expect(node.innerHTML).toContain('a dynamic segment')
-  })
+  [StaticRouter, MemoryRouter, Router].forEach((RouterComponent) =>
+    describe(`${`${RouterComponent}`.split('\n')[0]}...}`, () => {
+      let history, props
+      const node = document.createElement('div')
+
+      function prepHistoryAndGetProps(url) {
+        history.push(url)
+        return {
+          initialEntries: [ url ],
+          location: url,
+          history
+        }
+      }
+
+      beforeEach(() => {
+        history = createMemoryHistory()
+      })
+
+      afterEach(() => {
+        ReactDOM.unmountComponentAtNode(node)
+      })
+
+      it('decodes them', () => {
+        props = prepHistoryAndGetProps('/a%20dynamic%20segment')
+        ReactDOM.render((
+            <RouterComponent {...props}>
+              <Route path="/:id" render={({ match }) => <div>{match.params.id}</div>} />
+            </RouterComponent>
+        ), node)
+
+        expect(node.innerText).toBe('a dynamic segment')
+      })
+
+      it('correctly finds multiple params', () => {
+        props = prepHistoryAndGetProps('/first/second')
+        ReactDOM.render((
+            <RouterComponent {...props}>
+              <Route path="/:param1/:param2"
+                     render={({ match }) => <div>{match.params.param1}:{match.params.param2}</div>} />
+            </RouterComponent>
+        ), node)
+
+        expect(node.innerText).toBe('first:second')
+      })
+
+      it('correctly finds and decodes params in the middle of a complex path rule', () => {
+        // This test case is modeled after a real-world case where we'd seen some inconsistent behavior
+        props = prepHistoryAndGetProps('/foo/some%20param/edit')
+        ReactDOM.render((
+            <RouterComponent {...props}>
+              <Route path="/foo/:param1/:param2(edit|view|history)?"
+                     render={({ match }) => <div>{match.params.param1}:{match.params.param2}</div>} />
+            </RouterComponent>
+        ), node)
+
+        expect(node.innerText).toBe('some param:edit')
+      })
+
+      it('correctly finds and decodes params in the middle of a complex path rule 2', () => {
+        // This test case is modeled after a real-world case where we'd seen some inconsistent behavior
+        props = prepHistoryAndGetProps('/foo/some%20param')
+        ReactDOM.render((
+            <RouterComponent {...props}>
+              <Route path="/foo/:param1/:param2(edit|view|history)?"
+                     render={({ match }) => <div>{match.params.param1}:{match.params.param2}</div>} />
+            </RouterComponent>
+        ), node)
+
+        expect(node.innerText).toBe('some param:')
+      })
+
+      it('correctly decodes params which have an encoded /', () => {
+        props = prepHistoryAndGetProps('/foo%2fbar/baz')
+        ReactDOM.render((
+            <RouterComponent {...props}>
+              <Route path="/:param1/baz" render={({ match }) => <div>{match.params.param1}</div>} />
+            </RouterComponent>
+        ), node)
+
+        expect(node.innerText).toBe('foo/bar')
+      })
+
+      it('correctly decodes params which have an encoded :', () => {
+        props = prepHistoryAndGetProps('/foo%3abar/baz')
+        ReactDOM.render((
+            <RouterComponent {...props}>
+              <Route path="/:param1/baz" render={({ match }) => <div>{match.params.param1}</div>} />
+            </RouterComponent>
+        ), node)
+
+        expect(node.innerText).toBe('foo:bar')
+      })
+    })
+  )
 })
 
 describe('A unicode <Route>', () => {
