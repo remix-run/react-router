@@ -11,6 +11,7 @@ React Router v4 is a complete rewrite, so there is not a simple migration path. 
   * [Switch](#switch)
   * [Redirect](#redirect)
 * [PatternUtils](#patternutils)
+* [Link](#link)
 
 ## The Router
 
@@ -195,4 +196,36 @@ const THING_PATH = '/thing/:id';
 const thingPath = pathToRegexp.compile(THING_PATH);
 
 <Link to={thingPath({id: 1})}>A thing</Link>
+```
+
+## Link
+
+### `to` property is required
+In v3, you could omit `to` property or set it to null to create an anchor tag without `href` attribute.
+
+```js
+// v3
+<Link to={disabled ? null : `/item/${id}`} className="item">
+  // item content
+</Link>
+```
+
+In v4, you should always provide `to`. In case you are rely on empty `to` you can make a simple wrapper.
+
+```js
+// v4
+import { Link } from 'react-router-dom'
+
+const LinkWrapper = (props) => {
+  const Component = props.to ? Link : 'a'
+  return (
+    <Component {...props}>
+      { props.children }
+    </Component>
+  )
+)
+
+<LinkWrapper to={disabled ? null : `/item/${id}`} className="item">
+  // item content
+</LinkWrapper>
 ```
