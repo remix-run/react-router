@@ -31,7 +31,7 @@ const ShowTheLocationWithRouter = withRouter(ShowTheLocation)
 
 #### Important Note
 
-`withRouter` only injects router props whenever it itself rerender. It does _not_ automatically rerender on route transitions unless its parent component re-renders. If you are using `withRouter` to prevent updates from being blocked by `shouldComponentUpdate`, it is important that `withRouter` wraps the component that implements `shouldComponentUpdate`. For example, when using Redux:
+`withRouter` does not subscribe to location changes like React Redux's `connect` does for state changes.  Instead, re-renders after location changes propagate out from the `<Router>` component.  This means that `withRouter` does _not_ re-render on route transitions unless its parent component re-renders. If you are using `withRouter` to prevent updates from being blocked by `shouldComponentUpdate`, it is important that `withRouter` wraps the component that implements `shouldComponentUpdate`. For example, when using Redux:
 
 ```js
 // This gets around shouldComponentUpdate
