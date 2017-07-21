@@ -66,6 +66,10 @@ describe('When a <Link> is clicked', () => {
   describe('and the onClick handler calls event.preventDefault()', () => {
     it('does not change the location')
   })
+
+  describe('and the URL already matches "to"', () => {
+    it('does not push the location')
+  })
 })
 
 describe('A <Link> underneath a <HashRouter>', () => {
