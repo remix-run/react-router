@@ -48,8 +48,13 @@ class Link extends React.Component {
       const { history } = this.context.router
       const { replace, to } = this.props
 
+      const alreadyThere = (window && to === window.location.pathname) ||
+                           (document && to === document.location.pathname)
+
       if (replace) {
         history.replace(to)
+      } else if (alreadyThere) {
+        // don't push the url we're already at
       } else {
         history.push(to)
       }
