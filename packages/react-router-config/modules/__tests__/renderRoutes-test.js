@@ -28,8 +28,43 @@ describe('renderRoutes', () => {
         {renderRoutes(routes)}
       </StaticRouter>
     )
-    expect(rendered.length).toEqual(1)
-    expect(rendered[0]).toEqual(routeToMatch)
+    expect(renderedRoutes.length).toEqual(1)
+    expect(renderedRoutes[0]).toEqual(routeToMatch)
+  })
+
+  it('passes extraProps to the component rendered by a pathless route', () => {
+    const routeToMatch = {
+      component: Comp
+    }
+    const routes = [routeToMatch]
+    const extraProps = { anExtraProp: 'anExtraPropValue' }
+
+    ReactDOMServer.renderToString(
+      <StaticRouter location='/path' context={{}}>
+        {renderRoutes(routes, extraProps)}
+      </StaticRouter>
+    )
+    expect(renderedExtraProps.length).toEqual(1)
+    expect(renderedExtraProps[0].anExtraProp).toEqual('anExtraPropValue')
+  })
+
+  it('passes extraProps to the component rendered by a matched route', () => {
+    const routeToMatch = {
+      component: Comp,
+      path: '/'
+    }
+    const routes = [routeToMatch, {
+      component: Comp
+    }]
+    const extraProps = { anExtraProp: 'anExtraPropValue' }
+
+    ReactDOMServer.renderToString(
+      <StaticRouter location='/' context={{}}>
+        {renderRoutes(routes, extraProps)}
+      </StaticRouter>
+    )
+    expect(renderedExtraProps.length).toEqual(1)
+    expect(renderedExtraProps[0].anExtraProp).toEqual('anExtraPropValue')
   })
 
   describe('Switch usage', () => {
@@ -47,8 +82,8 @@ describe('renderRoutes', () => {
           {renderRoutes(routes)}
         </StaticRouter>
       )
-      expect(rendered.length).toEqual(1)
-      expect(rendered[0]).toEqual(routeToMatch)
+      expect(renderedRoutes.length).toEqual(1)
+      expect(renderedRoutes[0]).toEqual(routeToMatch)
     })
 
     it('renders the first matched route in nested routes', () => {
@@ -72,9 +107,9 @@ describe('renderRoutes', () => {
           {renderRoutes(routes)}
         </StaticRouter>
       )
-      expect(rendered.length).toEqual(2)
-      expect(rendered[0]).toEqual(routeToMatch)
-      expect(rendered[1]).toEqual(childRouteToMatch)
+      expect(renderedRoutes.length).toEqual(2)
+      expect(renderedRoutes[0]).toEqual(routeToMatch)
+      expect(renderedRoutes[1]).toEqual(childRouteToMatch)
     })
   })
 
