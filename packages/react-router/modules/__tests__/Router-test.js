@@ -1,8 +1,7 @@
-import expect from 'expect'
 import React from 'react'
+import ReactDOM from 'react-dom'
 import PropTypes from 'prop-types'
 import Router from '../Router'
-import ReactDOM from 'react-dom'
 import createHistory from 'history/createMemoryHistory'
 
 describe('A <Router>', () => {
@@ -35,7 +34,7 @@ describe('A <Router>', () => {
           </Router>,
           node
         )
-      }).toNotThrow()
+      }).not.toThrow()
     })
   })
 
@@ -46,7 +45,7 @@ describe('A <Router>', () => {
           <Router history={createHistory()} />,
           node
         )
-      }).toNotThrow()
+      }).not.toThrow()
     })
   })
 

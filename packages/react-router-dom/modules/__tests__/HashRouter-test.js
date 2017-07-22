@@ -1,7 +1,6 @@
-import expect from 'expect'
 import React from 'react'
-import PropTypes from 'prop-types'
 import ReactDOM from 'react-dom'
+import PropTypes from 'prop-types'
 import HashRouter from '../HashRouter'
 
 describe('A <HashRouter>', () => {
@@ -24,6 +23,22 @@ describe('A <HashRouter>', () => {
       </HashRouter>
     ), node)
 
-    expect(history).toBeAn('object')
+    expect(typeof history).toBe('object')
+  })
+
+  it('warns when passed a history prop', () => {
+    const history = {}
+    const node = document.createElement('div')
+
+    spyOn(console, 'error')
+
+    ReactDOM.render((
+      <HashRouter history={history} />
+    ), node)
+
+    expect(console.error.calls.count()).toBe(1)
+    expect(console.error.calls.argsFor(0)[0]).toContain(
+      '<HashRouter> ignores the history prop'
+    )
   })
 })

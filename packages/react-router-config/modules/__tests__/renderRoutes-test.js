@@ -1,8 +1,7 @@
-import renderRoutes from '../renderRoutes'
-import expect from 'expect'
 import React from 'react'
-import { renderToString } from 'react-dom/server'
+import ReactDOMServer from 'react-dom/server'
 import StaticRouter from 'react-router/StaticRouter'
+import renderRoutes from '../renderRoutes'
 
 describe('renderRoutes', () => {
   let renderedRoutes
@@ -24,48 +23,13 @@ describe('renderRoutes', () => {
     }
     const routes = [routeToMatch]
 
-    renderToString(
+    ReactDOMServer.renderToString(
       <StaticRouter location='/path' context={{}}>
         {renderRoutes(routes)}
       </StaticRouter>
     )
-    expect(renderedRoutes.length).toEqual(1)
-    expect(renderedRoutes[0]).toMatch(routeToMatch)
-  })
-
-  it('passes extraProps to the component rendered by a pathless route', () => {
-    const routeToMatch = {
-      component: Comp
-    }
-    const routes = [routeToMatch]
-    const extraProps = { anExtraProp: 'anExtraPropValue' }
-
-    renderToString(
-      <StaticRouter location='/path' context={{}}>
-        {renderRoutes(routes, extraProps)}
-      </StaticRouter>
-    )
-    expect(renderedExtraProps.length).toEqual(1)
-    expect(renderedExtraProps[0].anExtraProp).toEqual('anExtraPropValue')
-  })
-
-  it('passes extraProps to the component rendered by a matched route', () => {
-    const routeToMatch = {
-      component: Comp,
-      path: '/'
-    }
-    const routes = [routeToMatch, {
-      component: Comp
-    }]
-    const extraProps = { anExtraProp: 'anExtraPropValue' }
-
-    renderToString(
-      <StaticRouter location='/' context={{}}>
-        {renderRoutes(routes, extraProps)}
-      </StaticRouter>
-    )
-    expect(renderedExtraProps.length).toEqual(1)
-    expect(renderedExtraProps[0].anExtraProp).toEqual('anExtraPropValue')
+    expect(rendered.length).toEqual(1)
+    expect(rendered[0]).toEqual(routeToMatch)
   })
 
   describe('Switch usage', () => {
@@ -78,13 +42,13 @@ describe('renderRoutes', () => {
         component: Comp
       }]
 
-      renderToString(
+      ReactDOMServer.renderToString(
         <StaticRouter location='/' context={{}}>
           {renderRoutes(routes)}
         </StaticRouter>
       )
-      expect(renderedRoutes.length).toEqual(1)
-      expect(renderedRoutes[0]).toMatch(routeToMatch)
+      expect(rendered.length).toEqual(1)
+      expect(rendered[0]).toEqual(routeToMatch)
     })
 
     it('renders the first matched route in nested routes', () => {
@@ -103,14 +67,14 @@ describe('renderRoutes', () => {
         component: Comp
       }]
 
-      renderToString(
+      ReactDOMServer.renderToString(
         <StaticRouter location='/' context={{}}>
           {renderRoutes(routes)}
         </StaticRouter>
       )
-      expect(renderedRoutes.length).toEqual(2)
-      expect(renderedRoutes[0]).toMatch(routeToMatch)
-      expect(renderedRoutes[1]).toMatch(childRouteToMatch)
+      expect(rendered.length).toEqual(2)
+      expect(rendered[0]).toEqual(routeToMatch)
+      expect(rendered[1]).toEqual(childRouteToMatch)
     })
   })
 
@@ -130,7 +94,7 @@ describe('renderRoutes', () => {
         exact: true
       }, routeToMatch]
 
-      renderToString(
+      ReactDOMServer.renderToString(
         <StaticRouter location='/path/child' context={{}}>
           {renderRoutes(routes)}
         </StaticRouter>
@@ -152,12 +116,12 @@ describe('renderRoutes', () => {
         }]
       }]
 
-      renderToString(
+      ReactDOMServer.renderToString(
         <StaticRouter location='/path/child' context={{}}>
           {renderRoutes(routes)}
         </StaticRouter>
       )
-      renderToString(
+      ReactDOMServer.renderToString(
         <StaticRouter location='/' context={{}}>
           {renderRoutes(routes)}
         </StaticRouter>
@@ -182,12 +146,12 @@ describe('renderRoutes', () => {
         }]
       }]
 
-      renderToString(
+      ReactDOMServer.renderToString(
         <StaticRouter location='/path/child/grandchild' context={{}}>
           {renderRoutes(routes)}
         </StaticRouter>
       )
-      renderToString(
+      ReactDOMServer.renderToString(
         <StaticRouter location='/path' context={{}}>
           {renderRoutes(routes)}
         </StaticRouter>
@@ -215,7 +179,7 @@ describe('renderRoutes', () => {
         // should render
       }, routeToMatch]
 
-      renderToString(
+      ReactDOMServer.renderToString(
         <StaticRouter location='/path/' context={{}}>
           {renderRoutes(routes)}
         </StaticRouter>
@@ -237,17 +201,17 @@ describe('renderRoutes', () => {
         }]
       }]
 
-      renderToString(
+      ReactDOMServer.renderToString(
         <StaticRouter location='/path/child' context={{}}>
           {renderRoutes(routes)}
         </StaticRouter>
       )
-      renderToString(
+      ReactDOMServer.renderToString(
         <StaticRouter location='/' context={{}}>
           {renderRoutes(routes)}
         </StaticRouter>
       )
-      renderToString(
+      ReactDOMServer.renderToString(
         <StaticRouter location='/path' context={{}}>
           {renderRoutes(routes)}
         </StaticRouter>
@@ -283,12 +247,12 @@ describe('renderRoutes', () => {
         }]
       }]
 
-      renderToString(
+      ReactDOMServer.renderToString(
         <StaticRouter location='/path/child/grandchild' context={{}}>
           {renderRoutes(routes)}
         </StaticRouter>
       )
-      renderToString(
+      ReactDOMServer.renderToString(
         <StaticRouter location='/path/' context={{}}>
           {renderRoutes(routes)}
         </StaticRouter>

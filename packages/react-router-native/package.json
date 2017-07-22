@@ -1,21 +1,30 @@
 {
   "name": "react-router-native",
   "version": "4.1.1",
+  "description": "React Native bindings for React Router",
+  "repository": "ReactTraining/react-router",
+  "license": "MIT",
+  "authors": [
+    "Michael Jackson",
+    "Ryan Florence"
+  ],
   "main": "main.js",
   "scripts": {
-    "start": "node node_modules/react-native/local-cli/cli.js start"
+    "start": "node node_modules/react-native/local-cli/cli.js start",
+    "clean": "git clean -fdX .",
+    "test": "jest"
   },
   "files": [
+    "BackButton.js",
     "DeepLinking.js",
     "Link.js",
     "NativeRouter.js",
-    "AndroidBackButton.js",
-    "main.js",
     "experimental/StackRoute.js",
-    "experimental/TabRoutes.js"
+    "experimental/TabRoutes.js",
+    "main.js"
   ],
   "peerDependencies": {
-    "react": "^15",
+    "react": ">=15",
     "react-native": ">=0.44"
   },
   "dependencies": {
@@ -23,12 +32,12 @@
     "react-router": "^4.1.1"
   },
   "devDependencies": {
-    "babel-jest": "18.0.0",
+    "babel-jest": "^20.0.3",
     "babel-preset-react-native": "1.9.1",
-    "jest": "18.1.0",
-    "react": "15.4.1",
-    "react-native": "0.42.0",
-    "react-test-renderer": "~15.4.0-rc.4"
+    "jest": "^20.0.4",
+    "react": "16.0.0-alpha.6",
+    "react-native": "0.44.0",
+    "react-test-renderer": "15.5.4"
   },
   "jest": {
     "preset": "react-native"

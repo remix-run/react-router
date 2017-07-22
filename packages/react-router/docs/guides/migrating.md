@@ -9,6 +9,9 @@ React Router v4 is a complete rewrite, so there is not a simple migration path. 
   * [Nesting Routes](#nesting-routes)
   * [on* properties](#on-properties)
   * [Switch](#switch)
+  * [Redirect](#redirect)
+* [PatternUtils](#patternutils)
+* [Link](#link)
 
 ## The Router
 
@@ -76,7 +79,7 @@ In v3, the `<Route>` was not really a component. Instead, all of your applicatio
 
 With v4, you layout your app's components just like a regular React application. Anywhere that you want to render content based on the location (specifically, its `pathname`), you render a `<Route>`.
 
-The v4 `<Route>` component is actually a component. so wherever you render a `<Route>` component, content will be rendered. When the `<Route>`'s `path` matches the current location, it will use its rendering prop (`component`, `render`, or `children`) to render. When the `<Route>`'s `path` does not match, it will render `null`.
+The v4 `<Route>` component is actually a component, so wherever you render a `<Route>` component, content will be rendered. When the `<Route>`'s `path` matches the current location, it will use its rendering prop (`component`, `render`, or `children`) to render. When the `<Route>`'s `path` does not match, it will render `null`.
 
 ### Nesting Routes
 
@@ -140,4 +143,89 @@ const App = () => (
     <Route path='/contact' component={Contact} />
   </Switch>
 )
+
+```
+
+### `<Redirect>`
+
+In v3, if you wanted to redirect from one path to another, for instance / to /welcome, you would use `<IndexRedirect >`.
+
+```js
+// v3
+<Route path="/" component={App}>
+  <IndexRedirect to="/welcome" />
+</Route>
+
+```
+
+In v4, you can achieve the same functionality using `<Redirect>`.
+
+```js
+// v4
+<Route exact path="/" render={() => <Redirect to="/welcome" component={App} />} />
+
+<Switch  >
+  <Route exact path="/" component={App} />
+  <Route path="/login" component={Login} />
+  <Redirect path="*" to="/" />
+</Switch>
+
+```
+
+## PatternUtils
+
+### matchPattern(pattern, pathname)
+In v3, you could use the same matching code used internally to check if a path matched a pattern. In v4 this has been replaced by [matchPath](/packages/react-router/docs/api/matchPath.md) which is powered by the [path-to-regexp](https://github.com/pillarjs/path-to-regexp) library.
+
+### formatPattern(pattern, params)
+In v3, you could use PatternUtils.formatPattern to generate a valid path from a path pattern (perhaps in a constant or in your central routing config) and an object containing the names parameters:
+
+```js
+// v3
+const THING_PATH = '/thing/:id';
+
+<Link to={PatternUtils.formatPattern(THING_PATH, {id: 1})}>A thing</Link>
+```
+
+In v4, you can achieve the same functionality using the [compile](https://github.com/pillarjs/path-to-regexp#compile-reverse-path-to-regexp) function in [path-to-regexp](https://github.com/pillarjs/path-to-regexp).
+
+```js
+// v4
+const THING_PATH = '/thing/:id';
+
+const thingPath = pathToRegexp.compile(THING_PATH);
+
+<Link to={thingPath({id: 1})}>A thing</Link>
+```
+
+## Link
+
+### `to` property is required
+In v3, you could omit `to` property or set it to null to create an anchor tag without `href` attribute.
+
+```js
+// v3
+<Link to={disabled ? null : `/item/${id}`} className="item">
+  // item content
+</Link>
+```
+
+In v4, you should always provide `to`. In case you are rely on empty `to` you can make a simple wrapper.
+
+```js
+// v4
+import { Link } from 'react-router-dom'
+
+const LinkWrapper = (props) => {
+  const Component = props.to ? Link : 'a'
+  return (
+    <Component {...props}>
+      { props.children }
+    </Component>
+  )
+)
+
+<LinkWrapper to={disabled ? null : `/item/${id}`} className="item">
+  // item content
+</LinkWrapper>
 ```

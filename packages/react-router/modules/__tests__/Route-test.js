@@ -1,9 +1,8 @@
-import expect from 'expect'
 import React from 'react'
 import ReactDOM from 'react-dom'
+import createMemoryHistory from 'history/createMemoryHistory'
 import MemoryRouter from '../MemoryRouter'
 import Router from '../Router'
-import createMemoryHistory from 'history/createMemoryHistory'
 import Route from '../Route'
 
 describe('A <Route>', () => {
@@ -34,7 +33,7 @@ describe('A <Route>', () => {
       </MemoryRouter>
     ), node)
 
-    expect(node.innerHTML).toNotContain(TEXT)
+    expect(node.innerHTML).not.toContain(TEXT)
   })
 
   it('can use a `location` prop instead of `context.router.route.location`', () => {
@@ -87,6 +86,16 @@ describe('A <Route>', () => {
     ), node)
     push('/sushi/spicy-tuna')
     expect(node.innerHTML).toContain('/sushi/spicy-tuna')
+  })
+
+  it('throws with no <Router>', () => {
+    const node = document.createElement('div')
+
+    expect(() => {
+      ReactDOM.render((
+        <Route path="/" render={() => null} />
+      ), node)
+    }).toThrow(/You should not use <Route> or withRouter\(\) outside a <Router>/)
   })
 })
 
@@ -146,8 +155,8 @@ describe('<Route render>', () => {
     ), node)
 
     expect(actual.history).toBe(history)
-    expect(actual.match).toBeAn('object')
-    expect(actual.location).toBeAn('object')
+    expect(typeof actual.match).toBe('object')
+    expect(typeof actual.location).toBe('object')
   })
 })
 
@@ -183,8 +192,8 @@ describe('<Route component>', () => {
     ), node)
 
     expect(actual.history).toBe(history)
-    expect(actual.match).toBeAn('object')
-    expect(actual.location).toBeAn('object')
+    expect(typeof actual.match).toBe('object')
+    expect(typeof actual.location).toBe('object')
   })
 })
 
@@ -232,8 +241,8 @@ describe('<Route children>', () => {
     ), node)
 
     expect(actual.history).toBe(history)
-    expect(actual.match).toBeAn('object')
-    expect(actual.location).toBeAn('object')
+    expect(typeof actual.match).toBe('object')
+    expect(typeof actual.location).toBe('object')
   })
 })
 
@@ -282,7 +291,7 @@ describe('A <Route exact strict>', () => {
       </MemoryRouter>
     ), node)
 
-    expect(node.innerHTML).toNotContain(TEXT)
+    expect(node.innerHTML).not.toContain(TEXT)
   })
 
   it('does not render when the URL does not have a trailing slash', () => {
@@ -297,7 +306,7 @@ describe('A <Route exact strict>', () => {
       </MemoryRouter>
     ), node)
 
-    expect(node.innerHTML).toNotContain(TEXT)
+    expect(node.innerHTML).not.toContain(TEXT)
   })
 })
 
@@ -342,7 +351,7 @@ describe('A <Route location>', () => {
 
       expect(node.innerHTML).toContain(TEXT)
     })
-    
+
     it('continues to use parent\'s prop location after navigation', () => {
       const TEXT = 'cheddar pretzel'
       const node = document.createElement('div')

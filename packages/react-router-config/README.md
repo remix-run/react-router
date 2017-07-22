@@ -88,9 +88,9 @@ const branch = matchRoutes(routes, '/child/23')
 // ]
 ```
 
-Each item in the array contains two properties: `route` and `match`.
+Each item in the array contains two properties: `routes` and `match`.
 
-- `route`: A reference to the route used to match
+- `routes`: A reference to the routes array used to match
 - `match`: The match object that also gets passed to `<Route>` render methods.
 
 ```js

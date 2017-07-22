@@ -1,9 +1,9 @@
-import React, { Component } from 'react'
+import React from 'react'
 import { AppRegistry, StyleSheet, Text, View } from 'react-native'
 
 import { NativeRouter, Route, Link, DeepLinking, AndroidBackButton, Prompt } from './main'
 
-export default class ReactRouterNative extends Component {
+export default class ReactRouterNative extends React.Component {
   render() {
     return (
       <NativeRouter>
@@ -39,7 +39,7 @@ export default class ReactRouterNative extends Component {
           )}/>
         </View>
       </NativeRouter>
-    );
+    )
   }
 }
 
@@ -59,7 +59,7 @@ const styles = StyleSheet.create({
     textAlign: 'center',
     color: '#333333',
     marginBottom: 5,
-  },
-});
+  }
+})
 
-AppRegistry.registerComponent('ReactRouterNative', () => ReactRouterNative);
+AppRegistry.registerComponent('ReactRouterNative', () => ReactRouterNative)

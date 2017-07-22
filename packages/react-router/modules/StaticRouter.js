@@ -1,3 +1,4 @@
+import warning from 'warning'
 import invariant from 'invariant'
 import React from 'react'
 import PropTypes from 'prop-types'
@@ -110,6 +111,14 @@ class StaticRouter extends React.Component {
 
   handleBlock = () =>
     noop
+
+  componentWillMount() {
+    warning(
+      !this.props.history,
+      '<StaticRouter> ignores the history prop. To use a custom history, ' +
+      'use `import { Router }` instead of `import { StaticRouter as Router }`.'
+    )
+  }
 
   render() {
     const { basename, context, location, ...props } = this.props

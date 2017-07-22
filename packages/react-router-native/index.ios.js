@@ -1,6 +1,8 @@
 import { AppRegistry } from 'react-native'
 
-import App from './examples/BasicExample'
-//import App from './examples/ExperimentalExample'
+import ReactRouterNative from './examples/BasicExample'
+//import ReactRouterNative from './examples/ExperimentalExample'
 
-AppRegistry.registerComponent('ReactRouterNative', () => App)
+export default ReactRouterNative
+
+AppRegistry.registerComponent('ReactRouterNative', () => ReactRouterNative)

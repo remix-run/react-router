@@ -7,6 +7,8 @@ If there is a support question that you frequently see being asked, please open 
 * [Why aren't my components updating when the location changes?](#why-arent-my-components-updating-when-the-location-changes)
 * [Why doesn't my application render after refreshing?](#why-doesnt-my-application-render-after-refreshing)
 * [Why doesn't my application work when loading nested routes?](#why-doesnt-my-application-work-when-loading-nested-routes)
+* [How do I access the `history` object outside of components?](#how-do-i-access-the-history-object-outside-of-components)
+* [How do I pass props to the component rendered by a `<Route>`?](#how-do-i-pass-props-to-the-component-rendered-by-a-route)
 
 ### Why aren't my components updating when the location changes?
 
@@ -72,4 +74,53 @@ If the `src` of the `<script>` tag that is used to load your application has a r
 <!-- bad -->
 <script src='static/js/bundle.js'></script>
 <script src='./static/js/bundle.js'></script>
+```
+### How do I access the `history` object outside of components?
+
+When you use the `<BrowserRouter>`, `<HashRouter>`, `<MemoryRouter>`, and `<NativeRouter>`, a `history` object will be created for you. This is convenient, and the `history` object is readily accessible from within your React components, but it can be a pain to use it outside of them. If you need to access a `history` object outside of your components, you will need to create your own `history` object (in its own module) and import it throughout your project.
+
+If you do this, make sure that you use the generic `<Router>` component and not one of the specialty routers.
+
+```js
+// history.js
+import { createBrowserHistory } from 'history'
+export default createBrowserHistory()
+```
+```js
+// index.js
+import { Router } from 'react-router-dom';
+import history from './history'
+
+ReactDOM.render((
+  <Router history={history}>
+    <App />
+  </Router>
+), document.getElementById('root'))
+```
+```js
+// nav.js
+import history from './history'
+
+export default function nav(loc) {
+  history.push(loc);
+}
+```
+
+You can see a demonstration of how this works in this [CodeSandbox demo](https://codesandbox.io/s/owQ8Wrk3).
+
+### How do I pass props to the component rendered by a `<Route>`?
+
+If you need to pass props to the component rendered by a `<Route>`, you should use the `<Route>`'s `render` prop. The `render` prop can take an inline function as its value, which means that you can pass variables from the local scope to the component that the `<Route>` renders.
+
+**Note:** The `render` function receives a `props` argument, which you should pass on to the element that your `render` function returned. If you do not do this, the component that you are rendering will not have acccess to the router variables (`match`, `location`, and `history`).
+
+```js
+const App = () => {
+  const color = 'red'
+  return (
+    <Route path='/somewhere' render={(props) => (
+      <MyComponent {...props} color={color} />
+    )} />
+  )
+}
 ```

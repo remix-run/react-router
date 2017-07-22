@@ -1,8 +1,8 @@
-import React, { Component } from 'react'
+import React from 'react'
 import PropTypes from 'prop-types'
 import { BackHandler } from 'react-native'
 
-class AndroidBackButton extends Component {
+class BackButton extends React.Component {
   static contextTypes = {
     router: PropTypes.shape({
       history: PropTypes.shape({
@@ -22,6 +22,7 @@ class AndroidBackButton extends Component {
 
   handleBack = () => {
     const { history } = this.context.router
+
     if (history.index === 0) {
       return false // home screen
     } else {
@@ -31,8 +32,8 @@ class AndroidBackButton extends Component {
   }
 
   render() {
-    return this.props.children || null;
+    return this.props.children || null
   }
 }
 
-export default AndroidBackButton
+export default BackButton

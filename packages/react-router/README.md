@@ -8,6 +8,9 @@ Using [npm](https://www.npmjs.com/):
 
     $ npm install --save react-router
 
+**Note:** This package provides the core routing functionality for React Router, but you might not want to install it directly. If you are writing an application that will run in the browser, you should instead install `react-router-dom`. Similarly, if you are writing a React Native application, you should instead install `react-router-native`. Both of those will install `react-router` as a dependency.
+
+
 Then with a module bundler like [webpack](https://webpack.github.io/), use as you would anything else:
 
 ```js

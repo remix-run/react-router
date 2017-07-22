@@ -22,10 +22,10 @@ Remove the template from below and provide thoughtful commentary *and code sampl
 
 <!-- BUG TEMPLATE -->
 ## Version
-4.0.0
+4.1.1
 
 ## Test Case
-https://codepen.io/ReactJSTraining/pen/jyYjeW
+https://codesandbox.io/s/n55VljYk7
 
 ## Steps to reproduce
 

@@ -1,3 +1,8 @@
+## v4.1.2
+> July 16, 2017
+
+- Re-publish of v4.1.1, but with an updated version of prop-types to fix warnings in the UMD build.
+
 ## [v4.1.1](https://github.com/ReactTraining/react-router/compare/v4.1.0...v4.1.1)
 > Apr 12, 2017
 

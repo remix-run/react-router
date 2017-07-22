@@ -1,4 +1,3 @@
-import expect from 'expect'
 import React from 'react'
 import ReactDOM from 'react-dom'
 import MemoryRouter from 'react-router/MemoryRouter'
@@ -23,6 +22,39 @@ describe('A <Link>', () => {
     const href = node.querySelector('a').getAttribute('href')
 
     expect(href).toEqual('/the/path?the=query#the-hash')
+  })
+
+  it('throws with no <Router>', () => {
+    const node = document.createElement('div')
+
+    spyOn(console, 'error')
+
+    expect(() => {
+      ReactDOM.render((
+        <Link to="/">link</Link>
+      ), node)
+    }).toThrow(/You should not use <Link> outside a <Router>/)
+
+    expect(console.error.calls.count()).toBe(1)
+    expect(console.error.calls.argsFor(0)[0]).toContain(
+      'The context `router` is marked as required in `Link`'
+    )
+  })
+
+  it('exposes its ref via an innerRef prop', done => {
+    const node = document.createElement('div')
+
+    const refCallback = n => {
+      expect(n.tagName).toEqual('A')
+      done()
+    }
+
+    ReactDOM.render(
+      <MemoryRouter>
+        <Link to="/" innerRef={refCallback}>link</Link>
+      </MemoryRouter>,
+      node
+    )
   })
 })
 

@@ -8,7 +8,7 @@ import {
 
 // This example shows how to render two different screens
 // (or the same screen in a different context) at the same url,
-// depending on you got there.
+// depending on how you got there.
 //
 // Click the colors and see them full screen, then "visit the
 // gallery" and click on the colors. Note the URL and the component
@@ -22,13 +22,13 @@ class ModalSwitch extends React.Component {
   // prop instead.
   //
   // We can also use "location state" to tell the app the user
-  // wants to go to `/images/2` in a modal, rather than as the
+  // wants to go to `/img/2` in a modal, rather than as the
   // main page, keeping the gallery visible behind it.
   //
-  // Normally, `/images/2` wouldn't match the gallery at `/`.
+  // Normally, `/img/2` wouldn't match the gallery at `/`.
   // So, to get both screens to render, we can save the old
   // location and pass it to Switch, so it will think the location
-  // is still `/` even though its `/images/2`.
+  // is still `/` even though its `/img/2`.
   previousLocation = this.props.location
 
   componentWillUpdate(nextProps) {

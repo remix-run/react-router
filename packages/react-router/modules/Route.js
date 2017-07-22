@@ -1,7 +1,11 @@
 import warning from 'warning'
+import invariant from 'invariant';
 import React from 'react'
 import PropTypes from 'prop-types'
 import matchPath from './matchPath'
+
+const isEmptyChildren = (children) =>
+  React.Children.count(children) === 0
 
 /**
  * The public API for matching a single path and rendering.
@@ -49,31 +53,35 @@ class Route extends React.Component {
     match: this.computeMatch(this.props, this.context.router)
   }
 
-  computeMatch({ computedMatch, location, path, strict, exact }, { route }) {
+  computeMatch({ computedMatch, location, path, strict, exact }, router) {
     if (computedMatch)
       return computedMatch // <Switch> already computed the match for us
 
+    invariant(
+      router,
+      'You should not use <Route> or withRouter() outside a <Router>'
+    )
+
+    const { route } = router
     const pathname = (location || route.location).pathname
 
     return path ? matchPath(pathname, { path, strict, exact }) : route.match
   }
 
   componentWillMount() {
-    const { component, render, children } = this.props
-
     warning(
-      !(component && render),
-      'You should not use <Route component> and <Route render> in the same route; <Route render> will be ignored'   
+      !(this.props.component && this.props.render),
+      'You should not use <Route component> and <Route render> in the same route; <Route render> will be ignored'
     )
 
     warning(
-      !(component && children),
-      'You should not use <Route component> and <Route children> in the same route; <Route children> will be ignored'   
+      !(this.props.component && this.props.children && !isEmptyChildren(this.props.children)),
+      'You should not use <Route component> and <Route children> in the same route; <Route children> will be ignored'
     )
 
     warning(
-      !(render && children),
-      'You should not use <Route render> and <Route children> in the same route; <Route children> will be ignored'    
+      !(this.props.render && this.props.children && !isEmptyChildren(this.props.children)),
+      'You should not use <Route render> and <Route children> in the same route; <Route children> will be ignored'
     )
   }
 
@@ -108,7 +116,7 @@ class Route extends React.Component {
       ) : children ? ( // children come last, always called
         typeof children === 'function' ? (
           children(props)
-        ) : !Array.isArray(children) || children.length ? ( // Preact defaults to empty children array
+        ) : !isEmptyChildren(children) ? (
           React.Children.only(children)
         ) : (
           null

@@ -36,3 +36,16 @@ When `true`, clicking the link will replace the current entry in the history sta
 ```js
 <Link to="/courses" replace />
 ```
+
+## innerRef: function
+
+Allows access to the underlying `ref` of the component
+
+```js
+
+const refCallback = node => {
+  // `node` refers to the mounted DOM element or null when unmounted
+}
+
+<Link to="/" innerRef={refCallback} />
+```
