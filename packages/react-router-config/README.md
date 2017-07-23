@@ -181,7 +181,7 @@ import routes from './routes'
 
 Again, that's all pseudo-code. There are a lot of ways to do server rendering with data and pending navigation and we haven't settled on one. The point here is that `matchRoutes` gives you a chance to match statically outside of the render lifecycle. We'd like to make a demo app of this approach eventually.
 
-### `renderRoutes(routes)`
+### `renderRoutes(routes, extraProps = {})`
 
 In order to ensure that matching outside of render with `matchRoutes` and inside of render result in the same branch, you must use `renderRoutes` instead of `<Route>` inside your components. You can render a `<Route>` still, but know that it will not be accounted for in `matchRoutes` outside of render.
 
@@ -225,13 +225,14 @@ const Child = ({ route }) => (
   <div>
     <h2>Child</h2>
     {/* child routes won't render without this */}
-    {renderRoutes(route.routes)}
+    {renderRoutes(route.routes, { someProp: 'these extra props are optional' })}
   </div>
 )
 
-const GrandChild = () => (
+const GrandChild = ({ someProp }) => (
   <div>
     <h3>Grand Child</h3>
+    <div>{someProp}</div>
   </div>
 )
 
