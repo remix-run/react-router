@@ -18,7 +18,11 @@ The pathname or location to link to.
 
 ## to: object
 
-The location to link to.
+* If it's an object it can have four keys:
+  * `pathname`: A string representing the path to link to.
+  * `query`: An object of key:value pairs to be stringified.
+  * `hash`: A hash to put in the URL, e.g. `#a-hash`.
+  * `state`: State to persist to the `location`.
 
 ```js
 <Link to={{
