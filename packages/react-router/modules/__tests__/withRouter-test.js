@@ -90,6 +90,26 @@ describe('withRouter', () => {
     expect(ref instanceof WrappedComponent).toBe(true)
   })
 
+  it('exposes the instance of the wrapper via ref', () => {
+    class WrappedComponent extends React.Component {
+      render() {
+        return null
+      }
+    }
+    const Component = withRouter(WrappedComponent)
+
+    let ref
+    ReactDOM.render((
+      <MemoryRouter initialEntries={[ '/bubblegum' ]}>
+        <Route path="/bubblegum" render={() => (
+          <Component ref={r => ref = r}/>
+        )}/>
+      </MemoryRouter>
+    ), node)
+
+    expect(ref instanceof Component).toBe(true)
+  })
+
   it('hoists non-react statics from the wrapped component', () => {
     class Component extends React.Component {
       static foo() {
