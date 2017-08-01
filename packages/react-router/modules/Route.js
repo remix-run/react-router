@@ -54,7 +54,7 @@ class Route extends React.Component {
   }
 
   computeMatch({ computedMatch, location, path, strict, exact }, router) {
-    if (computedMatch)
+    if (computedMatch!==undefined)
       return computedMatch // <Switch> already computed the match for us
 
     invariant(
