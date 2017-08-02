@@ -40,7 +40,16 @@ module.exports = {
   resolve: {
     alias: {
       'react-router-dom': path.resolve(__dirname, 'modules/ReactRouterDOMShim')
-    }
+    },
+    root: [
+      path.resolve('./node_modules'),
+    ]
+  },
+
+  resolveLoader: {
+    root: [
+      path.resolve('./node_modules'),
+    ]
   },
 
   resolveLoader: {
