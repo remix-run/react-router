@@ -43,6 +43,12 @@ module.exports = {
     }
   },
 
+  resolveLoader: {
+    modulesDirectories: [
+      path.resolve(__dirname, 'node_modules')
+    ]
+  },
+
   module: {
     loaders: [
       { test: /\.js$/,
