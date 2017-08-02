@@ -117,7 +117,7 @@ class Route extends React.Component {
         typeof children === 'function' ? (
           children(props)
         ) : !isEmptyChildren(children) ? (
-          React.Children.only(children)
+          React.cloneElement(React.Children.only(children), props)
         ) : (
           null
         )
