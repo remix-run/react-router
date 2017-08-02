@@ -36,9 +36,9 @@ describe('A <MemoryRouter>', () => {
       <MemoryRouter history={history} />
     ), node)
 
-    expect(console.error.calls.count()).toBe(1)
-    expect(console.error.calls.argsFor(0)[0]).toContain(
-      '<MemoryRouter> ignores the history prop'
+    expect(console.error).toHaveBeenCalledTimes(1)
+    expect(console.error).toHaveBeenCalledWith(
+      expect.stringContaining('<MemoryRouter> ignores the history prop')
     )
   })
 })

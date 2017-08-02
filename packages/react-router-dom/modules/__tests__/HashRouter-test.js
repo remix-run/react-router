@@ -36,9 +36,9 @@ describe('A <HashRouter>', () => {
       <HashRouter history={history} />
     ), node)
 
-    expect(console.error.calls.count()).toBe(1)
-    expect(console.error.calls.argsFor(0)[0]).toContain(
-      '<HashRouter> ignores the history prop'
+    expect(console.error).toHaveBeenCalledTimes(1)
+    expect(console.error).toHaveBeenCalledWith(
+      expect.stringContaining('<HashRouter> ignores the history prop')
     )
   })
 })
