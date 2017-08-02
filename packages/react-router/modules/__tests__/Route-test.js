@@ -181,13 +181,42 @@ describe('<Route component>', () => {
     expect(node.innerHTML).toContain(TEXT)
   })
 
-  it('receives { match, location, history } props', () => {
+  it('receives { match, location, history } props with component', () => {
     let actual = null
     const Component = (props) => (actual = props) && null
 
     ReactDOM.render((
       <Router history={history}>
         <Route path="/" component={Component}/>
+      </Router>
+    ), node)
+
+    expect(actual.history).toBe(history)
+    expect(typeof actual.match).toBe('object')
+    expect(typeof actual.location).toBe('object')
+  })
+
+  it('receives { match, location, history } props with render', () => {
+    let actual = null
+
+    ReactDOM.render((
+      <Router history={history}>
+        <Route path="/" render={props => (actual = props) && null} />
+      </Router>
+    ), node)
+
+    expect(actual.history).toBe(history)
+    expect(typeof actual.match).toBe('object')
+    expect(typeof actual.location).toBe('object')
+  })
+
+  it('receives { match, location, history } props with children', () => {
+    let actual = null
+    const Component = (props) => (actual = props) && null
+
+    ReactDOM.render((
+      <Router history={history}>
+        <Route path="/"><Component /></Route>
       </Router>
     ), node)
 
