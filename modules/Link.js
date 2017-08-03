@@ -54,7 +54,8 @@ const Link = createReactClass({
     activeClassName: string,
     onlyActiveOnIndex: bool.isRequired,
     onClick: func,
-    target: string
+    target: string,
+    replace: bool
   },
 
   getDefaultProps() {
@@ -87,11 +88,18 @@ const Link = createReactClass({
 
     event.preventDefault()
 
-    router.push(resolveToLocation(this.props.to, router))
+    const toLocation = resolveToLocation(this.props.to, router)
+
+    if (this.props.replace) {
+      router.replace(toLocation)
+    } else {
+      router.push(toLocation)
+    }
   },
 
   render() {
-    const { to, activeClassName, activeStyle, onlyActiveOnIndex, ...props } = this.props
+    // eslint-disable-next-line no-unused-vars
+    const { to, activeClassName, activeStyle, onlyActiveOnIndex, replace, ...props } = this.props
 
     // Ignore if rendered outside the context of router to simplify unit testing.
     const { router } = this.context
