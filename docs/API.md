@@ -135,6 +135,9 @@ A custom handler for the click event. Works just like a handler on an `<a>` tag 
 ##### `onlyActiveOnIndex`
 If `true`, the `<Link>` will only be active when the current route exactly matches the linked route.
 
+##### `replace`
+If `true`, clicking the `<Link>` will replace the current entry in the history stack instead of adding a new one.
+
 ##### *others*
 You can also pass props you'd like to be on the `<a>` such as a `title`, `id`, `className`, etc.
 

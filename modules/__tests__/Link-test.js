@@ -396,6 +396,39 @@ describe('A <Link>', () => {
       ), node, execNextStep)
     })
 
+    it('replaces history entry when replace prop is passed', done => {
+      const LinkWrapper = () => (
+        <Link to="/hello" replace>
+          Link
+        </Link>
+      )
+
+      const history = createHistory('/')
+      const replaceSpy = spyOn(history, 'replace').andCallThrough()
+      const pushSpy = spyOn(history, 'push').andCallThrough()
+
+      const steps = [
+        () => {
+          click(node.querySelector('a'), { button: 0 })
+        },
+        ({ location }) => {
+          expect(node.innerHTML).toMatch(/Hello/)
+          expect(replaceSpy).toHaveBeenCalled()
+          expect(pushSpy).toNotHaveBeenCalled()
+          expect(location.pathname).toEqual('/hello')
+        }
+      ]
+
+      const execNextStep = execSteps(steps, done)
+
+      render((
+        <Router history={history} onUpdate={execNextStep}>
+          <Route path="/" component={LinkWrapper} />
+          <Route path="/hello" component={Hello} />
+        </Router>
+      ), node, execNextStep)
+    })
+
     it('transitions to the correct route for object', done => {
       const LinkWrapper = () => (
         <Link
