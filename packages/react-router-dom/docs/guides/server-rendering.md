@@ -211,21 +211,17 @@ Then on the server you'd have something like:
 import { matchPath } from 'react-router-dom'
 
 // inside a request
-const promises = []
-// use `some` to imitate `<Switch>` behavior of selecting only
-// the first to match
-routes.some(route => {
-  // use `matchPath` here
-  const match = matchPath(req.path, route)
-  if (match)
-    promises.push(route.loadData(match))
-  return match
-})
 
-Promise.all(promises).then(data => {
-  // do something w/ the data so the client
-  // can access it then render the app
-})
+// use `find` to imitate `<Switch>` behavior of selecting only
+// the first to match
+const match = routes.find(route => matchPath(req.url, route));
+
+if (match) {
+  route.loadData(match).then(data => {
+    // do something w/ the data so the client
+    // can access it then render the app
+  });
+}
 ```
 
 And finally, the client will need to pick up the data. Again, we aren't in the business of prescribing a data loading pattern for your app, but these are the touch points you'll need to implement.
