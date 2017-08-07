@@ -86,7 +86,7 @@ header.
   {chutneys.map(chutney => (
     <Route path={`/chutney/${chutney.id}`}>
       {({ match }) => (
-        <Chutney isActive={match}>
+        <Chutney isActive={match}/>
       )}
     </Route>
   ))}
