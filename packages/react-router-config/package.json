@@ -41,6 +41,7 @@
     "eslint-plugin-import": "^1.15.0",
     "eslint-plugin-react": "^5.2.2",
     "gzip-size": "^3.0.0",
+    "history": "^4.6.3",
     "jest": "^20.0.4",
     "pretty-bytes": "^3.0.1",
     "react": "^15.4.2",
