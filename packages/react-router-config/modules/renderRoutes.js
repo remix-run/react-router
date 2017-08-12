@@ -4,10 +4,16 @@ import Route from 'react-router/Route'
 
 const renderRoutes = (routes, extraProps = {}) => routes ? (
   <Switch>
-    {routes.map((route, i) => (
-      <Route key={i} path={route.path} exact={route.exact} strict={route.strict} render={(props) => (
-        <route.component {...props} {...extraProps} route={route}/>
-      )}/>
+    {routes.map(route => (
+      <Route
+        key='prevent-remount-and-use-static-key'
+        path={route.path}
+        exact={route.exact}
+        strict={route.strict}
+        render={(props) => (
+          <route.component {...props} {...extraProps} route={route}/>
+        )}
+      />
     ))}
   </Switch>
 ) : null
