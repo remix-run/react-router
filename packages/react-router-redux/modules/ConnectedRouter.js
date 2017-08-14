@@ -1,6 +1,6 @@
 import React, { Component } from 'react'
 import PropTypes from 'prop-types'
-import { Router } from 'react-router'
+import { Router as DefaultRouter } from 'react-router'
 
 import { LOCATION_CHANGE } from './reducer'
 
@@ -8,7 +8,8 @@ class ConnectedRouter extends Component {
   static propTypes = {
     store: PropTypes.object,
     history: PropTypes.object,
-    children: PropTypes.node
+    children: PropTypes.node,
+    router: PropTypes.any,
   }
 
   static contextTypes = {
@@ -38,6 +39,7 @@ class ConnectedRouter extends Component {
   }
 
   render() {
+    const Router = this.props.router || DefaultRouter
     return <Router {...this.props} />
   }
 }
