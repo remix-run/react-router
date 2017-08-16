@@ -122,7 +122,7 @@ describe("matchPath", () => {
           { path: 'WI' },
           parentMatch
         )
-        expect(match).toNotBe(null)
+        expect(match).not.toBeNull()
         expect(match.url).toBe('/state/WI')
       })
 
@@ -139,7 +139,10 @@ describe("matchPath", () => {
           parentMatch
         )
         
-        expect(match.params).toIncludeKeys(['state', 'city'])
+        expect(match.params).toMatchObject({
+          state: 'CO',
+          city: 'Denver'
+        })
       })
 
       it('works when parentMatch.url has trailing slash', () => {
