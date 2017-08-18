@@ -4,9 +4,9 @@ The common low-level interface for all router components. Typically apps will us
 
 - [`<BrowserRouter>`](../../../react-router-dom/docs/api/BrowserRouter.md)
 - [`<HashRouter>`](../../../react-router-dom/docs/api/HashRouter.md)
-- [`<MemoryRouter>`](MemoryRouter.md)
+- [`<MemoryRouter>`](./MemoryRouter.md)
 - [`<NativeRouter>`](../../../react-router-native/docs/api/NativeRouter.md)
-- [`<StaticRouter>`](StaticRouter.md)
+- [`<StaticRouter>`](./StaticRouter.md)
 
 The most common use-case for using the low-level `<Router>` is to
 synchronize a custom history with a state management lib like Redux or Mobx. Note that this is not required to use state management libs alongside React Router, it's only for deep integration.
