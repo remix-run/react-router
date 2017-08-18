@@ -345,7 +345,7 @@ describe("A <Switch location>", () => {
     });
   });
 
-  it('renders relative Routes', () => {
+  it('renders partial Routes', () => {
     const node = document.createElement('div')
 
     ReactDOM.render((
@@ -361,7 +361,7 @@ describe("A <Switch location>", () => {
     expect(node.innerHTML).toContain('sriracha')
   })
 
-  it('renders relative <Redirect>s', () => {
+  it('renders partial <Redirect>s', () => {
     const node = document.createElement('div')
 
     ReactDOM.render((

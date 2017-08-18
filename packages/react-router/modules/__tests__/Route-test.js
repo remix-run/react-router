@@ -436,8 +436,8 @@ describe("A pathless <Route>", () => {
   });
 });
 
-describe('A relative <Route>', () => {
-  it('resolves when there is no parent match', () => {
+describe('A partial <Route>', () => {
+  it('joins with root (/) when there is no parent match', () => {
     const TEXT = 'uncle'
     const node = document.createElement('div')
 
@@ -452,7 +452,7 @@ describe('A relative <Route>', () => {
     expect(node.innerHTML).toContain(TEXT)
   })
 
-  it('resolves relative to parent match', () => {
+  it('joins its path with parent match', () => {
     const TEXT = 'cousin'
     const node = document.createElement('div')
 

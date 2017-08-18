@@ -109,8 +109,8 @@ describe("matchPath", () => {
 
     })
 
-    describe('relative path', () => {
-      it('resolves using parentMatch.url before matching', () => {
+    describe('partial path', () => {
+      it('joins with parentMatch.url before matching', () => {
         const parentMatch = {
           url: '/state',
           path: '/state',

@@ -60,8 +60,8 @@ const matchPath = (pathname, options = {}, parentMatch = null) => {
     return memo
   }, {})
 
-  // merge parent match's params for relative paths
-  // this allows resolving using parent match's url instead of path
+  // merge parent match's params for partial paths
+  // this allows us to join paths using the parent match's url instead of path
   const params = absolute
     ? matchParams
     : Object.assign({}, parentMatch && parentMatch.params, matchParams)
