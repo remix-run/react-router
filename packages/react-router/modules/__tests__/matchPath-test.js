@@ -33,6 +33,27 @@ describe('matchPath', () => {
     })
   })
 
+  describe('with sensitive path', () => {
+    it('returns non-sensitive url', () => {
+      const options = {
+        path: '/SomeWhere',
+      }
+      const pathname = '/somewhere'
+      const match = matchPath(pathname, options)
+      expect(match.url).toBe('/somewhere')
+    })
+
+    it('returns sensitive url', () => {
+      const options = {
+        path: '/SomeWhere',
+        sensitive: true
+      }
+      const pathname = '/somewhere'
+      const match = matchPath(pathname, options)
+      expect(match).toBe(null)
+    })
+  })
+
   describe('with no path', () => {
     it('matches the root URL', () => {
       const match = matchPath('/test-location/7', {})
