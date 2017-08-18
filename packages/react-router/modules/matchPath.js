@@ -5,7 +5,7 @@ const cacheLimit = 10000
 let cacheCount = 0
 
 const compilePath = (pattern, options) => {
-  const cacheKey = `${options.end}${options.strict}`
+  const cacheKey = `${options.end}${options.strict}${options.sensitive}`
   const cache = patternCache[cacheKey] || (patternCache[cacheKey] = {})
 
   if (cache[pattern])
@@ -30,8 +30,8 @@ const matchPath = (pathname, options = {}) => {
   if (typeof options === 'string')
     options = { path: options }
 
-  const { path = '/', exact = false, strict = false } = options
-  const { re, keys } = compilePath(path, { end: exact, strict })
+  const { path = '/', exact = false, strict = false, sensitive = false } = options
+  const { re, keys } = compilePath(path, { end: exact, strict, sensitive })
   const match = re.exec(pathname)
 
   if (!match)
