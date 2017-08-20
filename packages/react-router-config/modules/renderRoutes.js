@@ -1,7 +1,7 @@
 import React from 'react'
 import Switch from 'react-router/Switch'
 import Route from 'react-router/Route'
-import PrivateRoute from '../components/PrivateRoute'
+import PrivateRoute from 'react-router/PrivateRoute'
 
 const renderRoutes = (routes, extraProps = {}) => routes ? (
   <Switch>
