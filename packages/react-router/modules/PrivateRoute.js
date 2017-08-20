@@ -1,11 +1,10 @@
 import {Route, Redirect} from 'react-router-dom';
-import React, {Component} from 'react'
+import React from 'react'
 
 /**
-* A route that checks for an authenticated property and redirects if not.
+* A route that checks for an authenticated property and redirects if not present or false.
 */
 export default ({component: Component, ...extraProps}) => {
-  console.log(extraProps);
   return (<Route
     {...extraProps}
     render={(props) =>
