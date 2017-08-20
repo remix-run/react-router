@@ -1,4 +1,6 @@
 import warning from 'warning'
+import warning from 'warning'
+import warning from 'warning'
 import invariant from 'invariant';
 import React from 'react'
 import PropTypes from 'prop-types'
