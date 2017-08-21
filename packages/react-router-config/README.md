@@ -48,6 +48,7 @@ Routes are objects with the same properties as a `<Route>` with a couple differe
 - the only render prop it accepts is `component` (no `render` or `children`)
 - introduces the `routes` key for sub routes
 - Consumers are free to add any additional props they'd like to a route, you can access `props.route` inside the `component`, this object is a reference to the object used to render and match.
+- accepts `key` prop to prevent remounting component when transition was made from route with the same component and same `key` prop
 
 ```js
 const routes = [

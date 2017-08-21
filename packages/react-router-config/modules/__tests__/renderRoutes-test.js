@@ -1,7 +1,10 @@
 import React from 'react'
+import ReactDOM from 'react-dom'
 import ReactDOMServer from 'react-dom/server'
 import StaticRouter from 'react-router/StaticRouter'
+import Router from 'react-router/Router'
 import renderRoutes from '../renderRoutes'
+import createHistory from 'history/createMemoryHistory'
 
 describe('renderRoutes', () => {
   let renderedRoutes
@@ -110,6 +113,66 @@ describe('renderRoutes', () => {
       expect(renderedRoutes.length).toEqual(2)
       expect(renderedRoutes[0]).toEqual(routeToMatch)
       expect(renderedRoutes[1]).toEqual(childRouteToMatch)
+    })
+
+    it('does not remount a <Route>', () => {
+      const node = document.createElement('div')
+
+      let mountCount = 0
+
+      const App = ({ route: { routes } }) => (
+        renderRoutes(routes)
+      )
+
+      class Comp extends React.Component {
+        componentDidMount() {
+          mountCount++
+        }
+
+        render() {
+          return <div />
+        }
+      }
+
+      const routes = [
+        { path: '/',
+          component: App,
+          routes: [
+            { path: '/one',
+              component: Comp,
+              key: 'comp'
+            },
+            { path: '/two',
+              component: Comp,
+              key: 'comp'
+            },
+            { path: '/three',
+              component: Comp,
+            }
+          ]
+        }
+      ]
+
+      const history = createHistory({
+        initialEntries: [ '/one' ]
+      })
+
+      ReactDOM.render((
+        <Router history={history}>
+          {renderRoutes(routes)}
+        </Router>
+      ), node)
+
+      expect(mountCount).toBe(1)
+
+      history.push('/one')
+      expect(mountCount).toBe(1)
+
+      history.push('/two')
+      expect(mountCount).toBe(1)
+
+      history.push('/three')
+      expect(mountCount).toBe(2)
     })
   })
 
