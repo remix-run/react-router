@@ -139,10 +139,15 @@ describe('renderRoutes', () => {
           component: App,
           routes: [
             { path: '/one',
-              component: Comp
+              component: Comp,
+              key: 'comp'
             },
             { path: '/two',
-              component: Comp
+              component: Comp,
+              key: 'comp'
+            },
+            { path: '/three',
+              component: Comp,
             }
           ]
         }
@@ -165,6 +170,9 @@ describe('renderRoutes', () => {
 
       history.push('/two')
       expect(mountCount).toBe(1)
+
+      history.push('/three')
+      expect(mountCount).toBe(2)
     })
   })
 

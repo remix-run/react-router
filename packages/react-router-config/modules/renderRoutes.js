@@ -4,9 +4,9 @@ import Route from 'react-router/Route'
 
 const renderRoutes = (routes, extraProps = {}) => routes ? (
   <Switch>
-    {routes.map(route => (
+    {routes.map((route, i) => (
       <Route
-        key='prevent-remount-and-use-static-key'
+        key={route.key || i}
         path={route.path}
         exact={route.exact}
         strict={route.strict}
