@@ -2,7 +2,7 @@ import React from 'react'
 import PropTypes from 'prop-types'
 import warning from 'warning'
 import invariant from 'invariant'
-import { locationsAreEqual } from 'history'
+import { createLocation, locationsAreEqual } from 'history'
 
 /**
  * The public API for updating the location programmatically
@@ -52,19 +52,14 @@ class Redirect extends React.Component {
   }
 
   componentDidUpdate(prevProps) {
-    let prevTo = prevProps.to
-    let nextTo = this.props.to
+    const prevTo = createLocation(prevProps.to)
+    const nextTo = createLocation(this.props.to)
 
-    prevTo = typeof prevTo === 'string' ? { pathname: prevTo } : prevTo
-    nextTo = typeof nextTo === 'string' ? { pathname: nextTo } : nextTo
-
-    if (locationsAreEqual(prevTo, nextTo))
-      return warning(
-        false,
-        `You tried to redirect to the same route you're currently on: "%s%s"`,
-        nextTo.pathname,
-        nextTo.search || ''
-      )
+    if (locationsAreEqual(prevTo, nextTo)) {
+      warning(false, `You tried to redirect to the same route you're currently on: ` +
+        `"${nextTo.pathname}${nextTo.search}"`)
+      return
+    }
 
     this.perform()
   }

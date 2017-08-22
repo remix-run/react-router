@@ -122,6 +122,7 @@ describe('A <Switch>', () => {
   it('warns when redirecting to same route, both strings', () => {
     const node = document.createElement('div')
     let redirected = false
+    let done = false
 
     spyOn(console, 'error')
 
@@ -129,9 +130,13 @@ describe('A <Switch>', () => {
       <MemoryRouter initialEntries={[ '/one' ]}>
         <Switch>
           <Route path="/one" render={() => {
+            if (done)
+              return <h1>done</h1>
+
             if (!redirected) {
               return <Redirect to="/one"/>
             }
+            done = true
 
             return <Redirect to='/one'/>
           }}/>
@@ -139,6 +144,7 @@ describe('A <Switch>', () => {
       </MemoryRouter>
     ), node)
 
+    expect(node.innerHTML).not.toContain('done')
     expect(console.error.calls.count()).toBe(1)
     expect(console.error.calls.argsFor(0)[0]).toMatch(/Warning:.*"\/one"/)
   })
@@ -146,6 +152,7 @@ describe('A <Switch>', () => {
   it('warns when redirecting to same route, mixed types', () => {
     const node = document.createElement('div')
     let redirected = false
+    let done = false
 
     spyOn(console, 'error')
 
@@ -153,19 +160,55 @@ describe('A <Switch>', () => {
       <MemoryRouter initialEntries={[ '/one' ]}>
         <Switch>
           <Route path="/one" render={() => {
+            if (done)
+              return <h1>done</h1>
+
             if (!redirected) {
               redirected = true
               return <Redirect to="/one"/>
             }
+            done = true
 
-            return <Redirect to={{pathname: '/one'}}/>
+            return <Redirect to={{ pathname: '/one' }}/>
           }}/>
         </Switch>
       </MemoryRouter>
     ), node)
 
+    expect(node.innerHTML).not.toContain('done')
     expect(console.error.calls.count()).toBe(1)
     expect(console.error.calls.argsFor(0)[0]).toMatch(/Warning:.*"\/one"/)
+  })
+
+  it('warns when redirecting to same route, mixed types, string with query', () => {
+    const node = document.createElement('div')
+    let redirected = false
+    let done = false
+
+    spyOn(console, 'error')
+
+    ReactDOM.render((
+      <MemoryRouter initialEntries={[ '/one' ]}>
+        <Switch>
+          <Route path="/one" render={() => {
+            if (done)
+              return <h1>done</h1>
+
+            if (!redirected) {
+              redirected = true
+              return <Redirect to="/one?utm=1"/>
+            }
+            done = true
+
+            return <Redirect to={{ pathname: '/one', search: '?utm=1' }}/>
+          }}/>
+        </Switch>
+      </MemoryRouter>
+    ), node)
+
+    expect(node.innerHTML).not.toContain('done')
+    expect(console.error.calls.count()).toBe(1)
+    expect(console.error.calls.argsFor(0)[0]).toMatch(/Warning:.*"\/one\?utm=1"/)
   })
 
   it('does NOT warn when redirecting to same route with different `search`', () => {
@@ -184,12 +227,11 @@ describe('A <Switch>', () => {
 
             if (!redirected) {
               redirected = true
-              return <Redirect to={{pathname: '/one', search: '?utm=1'}}/>
+              return <Redirect to={{ pathname: '/one', search: '?utm=1' }}/>
             }
-
             done = true
 
-            return <Redirect to={{pathname: '/one', search: '?utm=2'}}/>
+            return <Redirect to={{ pathname: '/one', search: '?utm=2' }}/>
           }}/>
         </Switch>
       </MemoryRouter>
