@@ -1,9 +1,11 @@
 import React from 'react'
 import PropTypes from 'prop-types'
+import warning from 'warning'
 import invariant from 'invariant'
+import { createLocation, locationsAreEqual } from 'history'
 
 /**
- * The public API for updating the location programatically
+ * The public API for updating the location programmatically
  * with a component.
  */
 class Redirect extends React.Component {
@@ -13,7 +15,7 @@ class Redirect extends React.Component {
     to: PropTypes.oneOfType([
       PropTypes.string,
       PropTypes.object
-    ])
+    ]).isRequired
   }
 
   static defaultProps = {
@@ -47,6 +49,19 @@ class Redirect extends React.Component {
   componentDidMount() {
     if (!this.isStatic())
       this.perform()
+  }
+
+  componentDidUpdate(prevProps) {
+    const prevTo = createLocation(prevProps.to)
+    const nextTo = createLocation(this.props.to)
+
+    if (locationsAreEqual(prevTo, nextTo)) {
+      warning(false, `You tried to redirect to the same route you're currently on: ` +
+        `"${nextTo.pathname}${nextTo.search}"`)
+      return
+    }
+
+    this.perform()
   }
 
   perform() {
