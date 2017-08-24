@@ -1,4 +1,5 @@
-## HEAD
+## [v4.2.0](https://github.com/ReactTraining/react-router/compare/v4.1.1...v4.2.0)
+> Aug 23, 2017
 
 - Re-run Redirect on props update ([#5162] by @alexilyaev)
 - Prevent remounts on routes with the same component in renderRoutes ([#5430] by @artywhite)
