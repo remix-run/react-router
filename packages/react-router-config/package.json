@@ -1,6 +1,6 @@
 {
   "name": "react-router-config",
-  "version": "1.0.0-beta.3",
+  "version": "1.0.0-beta.4",
   "description": "Static route config matching for React Router",
   "repository": "ReactTraining/react-router",
   "license": "MIT",
@@ -26,7 +26,7 @@
   },
   "peerDependencies": {
     "react": ">=15",
-    "react-router": "^4.1.1"
+    "react-router": "^4.2.0"
   },
   "devDependencies": {
     "babel-cli": "^6.26.0",
@@ -47,7 +47,7 @@
     "react": "^15.4.2",
     "react-addons-test-utils": "^15.4.2",
     "react-dom": "^15.3.0",
-    "react-router": "^4.1.1",
+    "react-router": "^4.2.0",
     "rollup": "^0.48.2",
     "rollup-plugin-babel": "^3.0.2",
     "rollup-plugin-commonjs": "^8.2.0",

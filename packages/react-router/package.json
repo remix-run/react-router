@@ -1,6 +1,6 @@
 {
   "name": "react-router",
-  "version": "4.1.1",
+  "version": "4.2.0",
   "description": "Declarative routing for React",
   "repository": "ReactTraining/react-router",
   "license": "MIT",

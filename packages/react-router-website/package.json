@@ -1,7 +1,7 @@
 {
   "private": true,
   "name": "react-router-website",
-  "version": "4.1.1",
+  "version": "4.2.0",
   "scripts": {
     "build": "NODE_ENV=production webpack -p",
     "clean": "git clean -fdX .",
@@ -33,7 +33,7 @@
     "react": "^15.4.0",
     "react-dom": "^15.4.0",
     "react-motion": "^0.4.4",
-    "react-router-dom": "^4.1.1",
+    "react-router-dom": "^4.2.0",
     "style-loader": "0.13.1",
     "sw-precache": "^4.2.2",
     "sw-precache-webpack-plugin": "^0.7.2",
