@@ -1,5 +1,5 @@
 import warning from 'warning'
-import invariant from 'invariant';
+import invariant from 'invariant'
 import React from 'react'
 import PropTypes from 'prop-types'
 import matchPath from './matchPath'

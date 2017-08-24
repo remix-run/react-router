@@ -16,7 +16,11 @@ class Link extends React.Component {
     to: PropTypes.oneOfType([
       PropTypes.string,
       PropTypes.object
-    ]).isRequired
+    ]).isRequired,
+    innerRef: PropTypes.oneOfType([
+      PropTypes.string,
+      PropTypes.func
+    ])
   }
 
   static defaultProps = {
