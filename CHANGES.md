@@ -1,3 +1,25 @@
+## HEAD
+
+- Re-run Redirect on props update (#5162 by @alexilyaev)
+- Prevent remounts on routes with the same component in renderRoutes (#5430 by @artywhite)
+- Case sensitive routes (#5438 by @paustria)
+- Use direct imports in platform packages (#5095 by @ruiaraujo)
+- Add optional otherProps argument renderRoutes (#5137 by @jharris4)
+- Bump hoist-non-react-statics (#5347 by @roderickhsiao)
+- 3x build speed improvements on CI (ea1212a by @timdorr)
+- Use Jest for testing (172dc16 by @mjackson)
+- Explicit error using Route outside of Router (#4939 by @eXon)
+- react-router-native Link improvements (#4816 by @benstepp)
+- aria-current on NavLink (#4708 by @JasonEtco)
+- Make AndroidBackButton a generic BackButton component (#5295 by @DonnieWest)
+- Access Link's underlying node via innerRef (#5294 by @danielberndt)
+- Return null from react-router-native DeepLinking if children is undefined (#5278 by @seekshiva)
+- Warn when using the history prop on a pre-configured Router (#5151 by @Aprillion)
+- Fix memory leak in ConnectedRouter during server side rendering (#5203 by @klis87)
+- Reorder NavLink activeClassName/className priority (#5109 by @carloluis)
+- Change react-native BackAndroid to BackHandler (#5093 by @SeanGroff)
+- Fix react-router-native StackRouter (#5071 by @kafein)
+
 ## v4.1.2
 > July 16, 2017
 
