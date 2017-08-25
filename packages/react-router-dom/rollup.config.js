@@ -17,7 +17,11 @@ const config = {
     babel({
       exclude: 'node_modules/**'
     }),
-    resolve(),
+    resolve({
+      customResolveOptions: {
+        moduleDirectory: ['node_modules', '../']
+      }
+    }),
     commonjs({
       include: /node_modules/
     }),
