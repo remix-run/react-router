@@ -1,6 +1,6 @@
 {
   "name": "react-router-dom",
-  "version": "4.2.1",
+  "version": "4.2.2",
   "description": "DOM bindings for React Router",
   "repository": "ReactTraining/react-router",
   "license": "MIT",
