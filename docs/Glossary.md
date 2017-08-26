@@ -40,7 +40,7 @@ An *action* describes the type of change to a URL. Possible values are:
 ## Component
 
 ```js
-type Component = ReactClass | string;
+type Component = ReactClass<any> | string;
 ```
 
 A *component* is a React component class or a string (e.g. "div"). Basically, it's anything that can be used as the first argument to [`React.createElement`](https://facebook.github.io/react/docs/top-level-api.html#react.createelement).
@@ -48,7 +48,8 @@ A *component* is a React component class or a string (e.g. "div"). Basically, it
 ## EnterHook
 
 ```js
-type EnterHook = (nextState: RouterState, replace: RedirectFunction, callback?: Function) => any;
+type EnterHook = ((nextState: RouterState, replace: RedirectFunction) => any)
+  | ((nextState: RouterState, replace: RedirectFunction, callback: (error?: ?Error) => any) => any);
 ```
 
 An *enter hook* is a user-defined function that is called when a route is about to be rendered. It receives the next [router state](#routerstate) as its first argument. The [`replace` function](#redirectfunction) may be used to trigger a transition to a different URL.
@@ -95,9 +96,9 @@ New locations are typically created each time the URL changes. You can read more
 
     type LocationDescriptorObject = {
       pathname: Pathname;
-      search: Search;
-      query: Query;
-      state: LocationState;
+      search?: Search;
+      query?: Query;
+      state?: LocationState;
     };
 
     type LocationDescriptor = LocationDescriptorObject | Path;
@@ -170,7 +171,7 @@ A *query string* is the portion of the URL that follows the [pathname](#pathname
 ## RedirectFunction
 
 ```js
-type RedirectFunction = (state: ?LocationState, pathname: Pathname | Path, query: ?Query) => void;
+type RedirectFunction = (location: LocationDescriptor) => void;
 ```
 
 A *redirect function* is used in [`onEnter` hooks](#enterhook) to trigger a transition to a new URL.
@@ -179,10 +180,10 @@ A *redirect function* is used in [`onEnter` hooks](#enterhook) to trigger a tran
 
 ```js
 type Route = {
-  component: RouteComponent;
-  path: ?RoutePattern;
-  onEnter: ?EnterHook;
-  onLeave: ?LeaveHook;
+  component?: RouteComponent;
+  path?: RoutePattern;
+  onEnter?: EnterHook;
+  onLeave?: LeaveHook;
 };
 ```
 
