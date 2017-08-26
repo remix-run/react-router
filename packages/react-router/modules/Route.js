@@ -109,23 +109,19 @@ class Route extends React.Component {
     const location = this.props.location || route.location
     const props = { match, location, history, staticContext }
 
-    return (
-      component ? ( // component prop gets first priority, only called if there's a match
-        match ? React.createElement(component, props) : null
-      ) : render ? ( // render prop is next, only called if there's a match
-        match ? render(props) : null
-      ) : children ? ( // children come last, always called
-        typeof children === 'function' ? (
-          children(props)
-        ) : !isEmptyChildren(children) ? (
-          React.Children.only(children)
-        ) : (
-          null
-        )
-      ) : (
-        null
-      )
-    )
+    if (component)
+      return match ? React.createElement(component, props) : null
+
+    if (render)
+      return match ? render(props) : null
+
+    if (typeof children === 'function')
+      return children(props)
+
+    if (children && !isEmptyChildren(children))
+      return React.Children.only(children)
+
+    return null
   }
 }
 
