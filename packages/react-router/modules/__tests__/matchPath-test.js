@@ -77,7 +77,6 @@ describe('matchPath', () => {
         '/one/two',
         { path: '/one/two/', exact : false, strict: true }
       )
-
       expect(!!trueFalse).toBe(true)
       expect(!!falseTrue).toBe(false)
     })

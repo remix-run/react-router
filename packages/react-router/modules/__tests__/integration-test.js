@@ -10,7 +10,7 @@ describe('Integration Tests', () => {
     const TEXT2 = 'Mrs. Schiffman'
     ReactDOM.render((
       <MemoryRouter initialEntries={[ '/nested' ]}>
-        <Route path="" render={({ match }) => (
+        <Route path="" render={() => (
           <div>
             <h1>{TEXT1}</h1>
             <Route path="/nested" render={() => (
