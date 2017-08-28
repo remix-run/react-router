@@ -81,4 +81,13 @@ describe('matchPath', () => {
       expect(!!falseTrue).toBe(false)
     })
   })
+
+  describe('with non-latin characters', () => {
+    it('should match correctly', () => {
+      const encodedPath = '/ans%C3%B6kan'
+      const definedPath = '/ansökan'
+
+      expect(!!matchPath(encodedPath, {path: definedPath})).toBe(true)
+    })
+  })
 })
