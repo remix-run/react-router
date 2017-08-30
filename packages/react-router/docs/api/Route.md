@@ -75,7 +75,7 @@ When you use `component` (instead of `render` or `children`, below) the router u
 
 This allows for convenient inline rendering and wrapping without the undesired remounting explained above.
 
-Instead of having a new [React element](https://facebook.github.io/react/docs/rendering-elements.html) created for you using the [`component`](#component) prop, you can pass in a function to be called when the location matches. The `render` prop receives all the same [route props](#route-props) as the `component` render prop.
+Instead of having a new [React element](https://facebook.github.io/react/docs/rendering-elements.html) created for you using the [`component`](#component) prop, you can pass in a function to be called when the location matches. The `render` prop receives all the same [route props](#route-props), which can be used as the `component` render prop.
 
 ```js
 // convenient inline rendering
