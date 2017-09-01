@@ -30,7 +30,7 @@
     "react": ">=15"
   },
   "dependencies": {
-    "history": "^4.5.1",
+    "history": "^4.7.2",
     "prop-types": "^15.5.4",
     "react-router": "^4.2.0"
   },
