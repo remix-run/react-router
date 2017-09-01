@@ -24,6 +24,47 @@ describe('A <Link>', () => {
     expect(href).toEqual('/the/path?the=query#the-hash')
   })
 
+  it('re-renders with correct href when to prop changes', () => {
+    const location = { pathname: '/the/path' }
+    const newLocation = { pathname: '/another/path' }
+
+    const node = document.createElement('div')
+
+    ReactDOM.render((
+      <MemoryRouter>
+        <Link to={location}>link</Link>
+      </MemoryRouter>
+    ), node)
+
+    const anchor = node.querySelector('a')
+    let href = anchor.getAttribute('href')
+    expect(href).toEqual('/the/path')
+
+    ReactDOM.render((
+      <MemoryRouter>
+        <Link to={newLocation}>link</Link>
+      </MemoryRouter>
+    ), node)
+    href = anchor.getAttribute('href')
+    expect(href).toEqual('/another/path')
+  })
+
+  describe('to as a string', () => {
+    it('resolves to with no pathname using current location', () => {
+      const node = document.createElement('div')
+      
+      ReactDOM.render((
+        <MemoryRouter initialEntries={[ '/somewhere' ]}>
+          <Link to='?rendersWithPathname=true'>link</Link>
+        </MemoryRouter>
+      ), node)
+  
+      const href = node.querySelector('a').getAttribute('href')
+  
+      expect(href).toEqual('/somewhere?rendersWithPathname=true')
+    })
+  })
+
   it('throws with no <Router>', () => {
     const node = document.createElement('div')
 
@@ -73,6 +114,7 @@ describe('A <Link> underneath a <HashRouter>', () => {
 
   afterEach(() => {
     ReactDOM.unmountComponentAtNode(node)
+    window.history.replaceState(null, '', '#')
   })
 
   const createLinkNode = (hashType, to) => {
