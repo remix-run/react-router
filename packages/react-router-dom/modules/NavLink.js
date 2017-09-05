@@ -10,6 +10,7 @@ const NavLink = ({
   to,
   exact,
   strict,
+  component: RenderComponent,
   location,
   activeClassName,
   className,
@@ -28,7 +29,7 @@ const NavLink = ({
       const isActive = !!(getIsActive ? getIsActive(match, location) : match)
 
       return (
-        <Link
+        <RenderComponent
           to={to}
           className={isActive ? [ className, activeClassName ].filter(i => i).join(' ') : className}
           style={isActive ? { ...style, ...activeStyle } : style}
@@ -44,6 +45,7 @@ NavLink.propTypes = {
   to: Link.propTypes.to,
   exact: PropTypes.bool,
   strict: PropTypes.bool,
+  component: PropTypes.func,
   location: PropTypes.object,
   activeClassName: PropTypes.string,
   className: PropTypes.string,
@@ -55,7 +57,8 @@ NavLink.propTypes = {
 
 NavLink.defaultProps = {
   activeClassName: 'active',
-  ariaCurrent: 'true'
+  ariaCurrent: 'true',
+  component: Link
 }
 
 export default NavLink

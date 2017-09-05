@@ -292,4 +292,21 @@ describe('NavLink', () => {
       expect(a.className).not.toContain('selected')
     })
   })
+
+  describe('component property', () => {
+    it('renders a custom component instead of Link if supplied as prop', () => {
+      const AbsoluteLink = ({to}) => {
+        const href = to.startsWith('/') ? to : `/${to}`
+        return <a href={href}/>
+      }
+
+      ReactDOM.render((
+        <MemoryRouter initialEntries={['/pizza']}>
+          <NavLink to='pizza' component={AbsoluteLink}>Pizza!</NavLink>
+        </MemoryRouter>
+      ), node)
+      const href = node.querySelector('a').getAttribute('href')
+      expect(href).toEqual('/pizza')
+    })
+  })
 })
