@@ -23,8 +23,7 @@
     "prepublishOnly": "node ./tools/build.js",
     "watch": "babel ./modules -d . --ignore __tests__ --watch",
     "clean": "git clean -fdX .",
-    "lint": "eslint modules",
-    "test": "jest"
+    "lint": "eslint modules"
   },
   "peerDependencies": {
     "react": ">=15"
@@ -47,7 +46,6 @@
     "eslint-plugin-import": "^2.2.0",
     "eslint-plugin-react": "^6.3.0",
     "gzip-size": "^3.0.0",
-    "jest": "^20.0.0",
     "pretty-bytes": "^4.0.2",
     "react": "^15.4.2",
     "react-dom": "^15.4.2",
