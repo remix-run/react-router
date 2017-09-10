@@ -60,7 +60,7 @@ class Switch extends React.Component {
       ? React.cloneElement(child, {
         location,
         computedMatch: match,
-        key: child.key != null ? child.key : child.path
+        key: child.key != null ? child.key : child.props.path
       })
       : null
     
