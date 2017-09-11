@@ -16,7 +16,9 @@ class Switch extends React.Component {
 
   static propTypes = {
     children: PropTypes.node,
-    location: PropTypes.object
+    location: PropTypes.object,
+    render: PropTypes.func,
+    component: PropTypes.func
   }
 
   componentWillMount() {
