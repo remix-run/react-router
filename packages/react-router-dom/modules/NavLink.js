@@ -32,7 +32,7 @@ const NavLink = ({
           to={to}
           className={isActive ? [ className, activeClassName ].filter(i => i).join(' ') : className}
           style={isActive ? { ...style, ...activeStyle } : style}
-          aria-current={isActive && ariaCurrent}
+          aria-current={isActive && ariaCurrent ? "true" : null}
           {...rest}
         />
       )
