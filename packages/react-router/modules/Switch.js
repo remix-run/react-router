@@ -57,12 +57,7 @@ class Switch extends React.Component {
     })
     
     const routeElement = match 
-      ? React.cloneElement(child, {
-        location,
-        computedMatch: match,
-        key: child.key != null ? child.key : child.props.path
-      })
-      : null
+      ? React.cloneElement(child, { location, computedMatch: match }) : null
     
     const props = { location, match, children: routeElement }
     if (component) return React.createElement(component, props)
