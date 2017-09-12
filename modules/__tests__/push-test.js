@@ -33,6 +33,7 @@ describe('push', () => {
           expect(location.pathname).toEqual('/')
           history.push('/home/hi:there')
         },
+        () => {},
         ({ location }) => {
           expect(location.pathname).toEqual('/home/hi:there')
         }

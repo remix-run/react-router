@@ -6,26 +6,31 @@ import withExampleBasename from '../withExampleBasename'
 
 const ACTIVE = { color: 'red' }
 
-const App = ({ children }) => (
-  <div>
-    <h1>APP!</h1>
-    <ul>
-      <li><Link      to="/"           activeStyle={ACTIVE}>/</Link></li>
-      <li><IndexLink to="/"           activeStyle={ACTIVE}>/ IndexLink</IndexLink></li>
+class App extends React.Component {
+  render() {
+    console.log('render')
+    return (
+      <div>
+        <h1>APP!</h1>
+        <ul>
+          <li><Link      to="/"           activeStyle={ACTIVE}>/</Link></li>
+          <li><IndexLink to="/"           activeStyle={ACTIVE}>/ IndexLink</IndexLink></li>
 
-      <li><Link      to="/users"      activeStyle={ACTIVE}>/users</Link></li>
-      <li><IndexLink to="/users"      activeStyle={ACTIVE}>/users IndexLink</IndexLink></li>
+          <li><Link      to="/users"      activeStyle={ACTIVE}>/users</Link></li>
+          <li><IndexLink to="/users"      activeStyle={ACTIVE}>/users IndexLink</IndexLink></li>
 
-      <li><Link      to="/users/ryan" activeStyle={ACTIVE}>/users/ryan</Link></li>
-      <li><Link      to={{ pathname: '/users/ryan', query: { foo: 'bar' } }}
-                                      activeStyle={ACTIVE}>/users/ryan?foo=bar</Link></li>
+          <li><Link      to="/users/ryan" activeStyle={ACTIVE}>/users/ryan</Link></li>
+          <li><Link      to={{ pathname: '/users/ryan', query: { foo: 'bar' } }}
+                                          activeStyle={ACTIVE}>/users/ryan?foo=bar</Link></li>
 
-      <li><Link      to="/about"      activeStyle={ACTIVE}>/about</Link></li>
-    </ul>
+          <li><Link      to="/about"      activeStyle={ACTIVE}>/about</Link></li>
+        </ul>
 
-    {children}
-  </div>
-)
+        {this.props.children}
+      </div>
+    )
+  }
+}
 
 const Index = () => (
   <div>
