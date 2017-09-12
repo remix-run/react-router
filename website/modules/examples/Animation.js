@@ -1,5 +1,5 @@
 import React from 'react'
-import { CSSTransitionGroup } from 'react-transition-group'
+import { TransitionGroup, CSSTransition } from 'react-transition-group'
 import {
   BrowserRouter as Router,
   Switch,
@@ -36,22 +36,27 @@ const AnimationExample = () => (
         </ul>
 
         <div style={styles.content}>
-          <CSSTransitionGroup
-            transitionName="fade"
-            transitionEnterTimeout={300}
-            transitionLeaveTimeout={300}
-          >
+          <TransitionGroup>
             {/* no different than other usage of
-                CSSTransitionGroup, just make
-                sure to pass `location` to `Switch`
-                so it can match the old location
-                as it animates out
+                CSSTransition, just make sure to pass
+                `location` to `Switch` so it can match
+                the old location as it animates out
             */}
-            <Switch location={location} key={location.key}>
-              <Route exact path="/hsl/:h/:s/:l" component={HSL} />
-              <Route exact path="/rgb/:r/:g/:b" component={RGB} />
-            </Switch>
-          </CSSTransitionGroup>
+            <CSSTransition
+              key={location.key}
+              classNames="fade"
+              timeout={300}
+            >
+              <Switch location={location}>
+                <Route exact path="/hsl/:h/:s/:l" component={HSL} />
+                <Route exact path="/rgb/:r/:g/:b" component={RGB} />
+                {/* Without this `Route`, we would get errors during
+                    the initial transition from `/` to `/hsl/10/90/50`
+                */}
+                <Route render={() => <div>Not Found</div>} />
+              </Switch>
+            </CSSTransition>
+          </TransitionGroup>
         </div>
       </div>
     )}/>
