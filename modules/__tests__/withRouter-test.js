@@ -87,7 +87,7 @@ describe('withRouter', function () {
     expect(spy).toHaveBeenCalled()
   })
 
-  it.skip('updates the context inside static containers', function (done) {
+  it('updates the context inside static containers', function (done) {
     class App extends Component {
       render() {
         expect(this.props.router).toExist()
@@ -121,7 +121,11 @@ describe('withRouter', function () {
         history.push('/hello')
       },
       () => {
-        expect(node.firstChild.textContent).toEqual('/hello')
+        // React 16 has slightly different update timing so we'll just sorta
+        // punt a bit with a setTimeout.
+        setTimeout(() => {
+          expect(node.firstChild.textContent).toEqual('/hello')
+        }, 10)
       }
     ], done)
 
