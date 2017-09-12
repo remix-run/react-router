@@ -431,14 +431,13 @@ describe('Router', function () {
       })
     })
 
-    it('should throw without onError', function () {
-      expect(function () {
-        render((
-          <Router history={createHistory('/')}>
-            <Route path="/" getComponent={getComponent} />
-          </Router>
-        ), node)
-      }).toThrow('error fixture')
+    it('should throw without onError', function (done) {
+      const callback = expect(() => { done() }).toThrow('error fixture')
+      render((
+        <Router history={createHistory('/')}>
+          <Route path="/" getComponent={getComponent} />
+        </Router>
+      ), node, callback)
     })
   })
 })
