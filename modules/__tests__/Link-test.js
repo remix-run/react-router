@@ -211,7 +211,6 @@ describe('A <Link>', () => {
         // to wait for another router `onUpdate` ... not sure if this is okay
         // or gonna break something in people's apps... Anyway, you'll see a
         // bunch of them in this commit.
-        () => { },
         () => {
           expect(a.className).toEqual('dontKillMe highlight')
         }
@@ -226,7 +225,7 @@ describe('A <Link>', () => {
             <Route path="hello" component={Hello} />
           </Route>
         </Router>
-      ), node, execNextStep)
+      ), node)
     })
 
     it('has its activeStyle', done => {
@@ -251,7 +250,6 @@ describe('A <Link>', () => {
           expect(a.style.color).toEqual('white')
           history.push('/hello')
         },
-        () => {},
         () => {
           expect(a.style.color).toEqual('red')
         }
@@ -266,7 +264,7 @@ describe('A <Link>', () => {
             <Route path="goodbye" component={Goodbye} />
           </Route>
         </Router>
-      ), node, execNextStep)
+      ), node)
     })
   })
 
@@ -287,7 +285,6 @@ describe('A <Link>', () => {
           expect(a.className).toEqual('')
           history.push('/hello')
         },
-        () => {},
         () => {
           expect(a.className).toEqual('active')
         }
@@ -302,7 +299,7 @@ describe('A <Link>', () => {
             <Route path="hello" component={Hello} />
           </Route>
         </Router>
-      ), node, execNextStep)
+      ), node)
     })
 
     // FIXME: Haven't dug in yet, so I don't know why this is failing,
@@ -385,7 +382,6 @@ describe('A <Link>', () => {
         () => {
           click(node.querySelector('a'), { button: 0 })
         },
-        () => {},
         ({ location }) => {
           expect(node.innerHTML).toMatch(/Hello/)
           expect(spy).toHaveBeenCalled()
@@ -403,7 +399,7 @@ describe('A <Link>', () => {
           <Route path="/" component={LinkWrapper} />
           <Route path="/hello" component={Hello} />
         </Router>
-      ), node, execNextStep)
+      ), node)
     })
 
     it('transitions to the correct route for object', done => {
@@ -427,7 +423,6 @@ describe('A <Link>', () => {
         () => {
           click(node.querySelector('a'), { button: 0 })
         },
-        () => {},
         ({ location }) => {
           expect(node.innerHTML).toMatch(/Hello/)
           expect(spy).toHaveBeenCalled()
@@ -446,7 +441,7 @@ describe('A <Link>', () => {
           <Route path="/" component={LinkWrapper} />
           <Route path="/hello" component={Hello} />
         </Router>
-      ), node, execNextStep)
+      ), node)
     })
 
     it('does not transition when onClick prevents default', done => {

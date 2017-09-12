@@ -33,7 +33,6 @@ describe('push', () => {
           expect(location.pathname).toEqual('/')
           history.push('/home/hi:there')
         },
-        () => {},
         ({ location }) => {
           expect(location.pathname).toEqual('/home/hi:there')
         }
@@ -46,7 +45,7 @@ describe('push', () => {
           <Route path="/" component={Index}/>
           <Route path="/home/hi:there" component={Home}/>
         </Router>
-      ), node, execNextStep)
+      ), node)
     })
   })
 
