@@ -5,6 +5,7 @@ import createHistory from '../createMemoryHistory'
 import Route from '../Route'
 import Router from '../Router'
 import withRouter from '../withRouter'
+import execSteps from './execSteps'
 
 describe('withRouter', function () {
   const routerStub = {
@@ -114,19 +115,28 @@ describe('withRouter', function () {
 
     const history = createHistory('/')
 
+    const execNextStep = execSteps([
+      () => {
+        expect(node.firstChild.textContent).toEqual('/')
+        history.push('/hello')
+      },
+      () => {
+        // React 16 has slightly different update timing so we'll just sorta
+        // punt a bit with a setTimeout.
+        setTimeout(() => {
+          expect(node.firstChild.textContent).toEqual('/hello')
+        }, 10)
+      }
+    ], done)
+
     render((
-      <Router history={history}>
+      <Router history={history} onUpdate={execNextStep}>
         <Route component={StaticContainer}>
           <Route path="/" component={WrappedApp} />
           <Route path="/hello" component={WrappedApp} />
         </Route>
       </Router>
-    ), node, function () {
-      expect(node.firstChild.textContent).toEqual('/')
-      history.push('/hello')
-      expect(node.firstChild.textContent).toEqual('/hello')
-      done()
-    })
+    ), node)
   })
 
   it('should render Component even without Router context', function (done) {

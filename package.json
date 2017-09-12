@@ -1,6 +1,6 @@
 {
   "name": "react-router",
-  "version": "3.0.5",
+  "version": "3.1.0-rc.1",
   "description": "A complete routing library for React",
   "files": [
     "*.md",
@@ -42,7 +42,7 @@
     "warning": "^3.0.0"
   },
   "peerDependencies": {
-    "react": "^0.14.0 || ^15.0.0"
+    "react": "^0.14.0 || ^15.0.0 || ^16.0.0-rc"
   },
   "devDependencies": {
     "babel-cli": "^6.11.4",
@@ -79,9 +79,9 @@
     "mocha": "^3.2.0",
     "pretty-bytes": "^4.0.2",
     "qs": "^6.2.1",
-    "react": "^15.5.3",
-    "react-dom": "^15.5.3",
-    "react-transition-group": "^1.1.1",
+    "react": "^16.0.0-rc",
+    "react-addons-css-transition-group": "^15.6.0",
+    "react-dom": "^16.0.0-rc",
     "rimraf": "^2.5.4",
     "style-loader": "^0.16.1",
     "webpack": "^1.13.1",

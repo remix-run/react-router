@@ -221,7 +221,7 @@ describe('A <Link>', () => {
             <Route path="hello" component={Hello} />
           </Route>
         </Router>
-      ), node, execNextStep)
+      ), node)
     })
 
     it('has its activeStyle', done => {
@@ -260,7 +260,7 @@ describe('A <Link>', () => {
             <Route path="goodbye" component={Goodbye} />
           </Route>
         </Router>
-      ), node, execNextStep)
+      ), node)
     })
   })
 
@@ -295,7 +295,7 @@ describe('A <Link>', () => {
             <Route path="hello" component={Hello} />
           </Route>
         </Router>
-      ), node, execNextStep)
+      ), node)
     })
 
     it('changes active state inside static containers', done => {
@@ -323,7 +323,11 @@ describe('A <Link>', () => {
           history.push('/hello')
         },
         () => {
-          expect(a.className).toEqual('active')
+          // React 16 has slightly different update timing so we'll just sorta
+          // punt a bit with a setTimeout.
+          setTimeout(() => {
+            expect(a.className).toEqual('active')
+          }, 10)
         }
       ]
 
@@ -393,7 +397,7 @@ describe('A <Link>', () => {
           <Route path="/" component={LinkWrapper} />
           <Route path="/hello" component={Hello} />
         </Router>
-      ), node, execNextStep)
+      ), node)
     })
 
     it('transitions to the correct route for object', done => {
@@ -435,7 +439,7 @@ describe('A <Link>', () => {
           <Route path="/" component={LinkWrapper} />
           <Route path="/hello" component={Hello} />
         </Router>
-      ), node, execNextStep)
+      ), node)
     })
 
     it('does not transition when onClick prevents default', done => {

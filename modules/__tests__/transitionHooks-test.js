@@ -206,27 +206,43 @@ describe('When a router enters a branch', function () {
   it('calls the route leave hooks when leaving the route', function (done) {
     const history = createHistory('/news')
 
-    render(<Router history={history} routes={routes}/>, node, function () {
-      expect(newsLeaveHookSpy.calls.length).toEqual(0)
-      history.push('/inbox')
-      expect(newsLeaveHookSpy.calls.length).toEqual(1)
-      history.push('/news')
-      expect(newsLeaveHookSpy.calls.length).toEqual(1)
-      history.push('/inbox')
-      expect(newsLeaveHookSpy.calls.length).toEqual(2)
-      done()
-    })
+    const steps = [
+      () => {
+        expect(newsLeaveHookSpy.calls.length).toEqual(0)
+        history.push('/inbox')
+      },
+      () => {
+        expect(newsLeaveHookSpy.calls.length).toEqual(1)
+        history.push('/news')
+      },
+      () => {
+        expect(newsLeaveHookSpy.calls.length).toEqual(1)
+        history.push('/inbox')
+      },
+      () => {
+        expect(newsLeaveHookSpy.calls.length).toEqual(2)
+      }
+    ]
+
+    const execNextStep = execSteps(steps, done)
+
+    render(<Router history={history} routes={routes} onUpdate={execNextStep}/>, node)
   })
 
   it('does not call removed route leave hooks', function (done) {
     const history = createHistory('/news')
 
-    render(<Router history={history} routes={routes}/>, node, function () {
-      removeNewsLeaveHook()
-      history.push('/inbox')
-      expect(newsLeaveHookSpy).toNotHaveBeenCalled()
-      done()
-    })
+    const execNextStep = execSteps([
+      () => {
+        removeNewsLeaveHook()
+        history.push('/inbox')
+      },
+      () => {
+        expect(newsLeaveHookSpy).toNotHaveBeenCalled()
+      }
+    ], done)
+
+    render(<Router history={history} routes={routes} onUpdate={execNextStep}/>, node)
   })
 
   it('does not remove route leave hooks when changing params', function (done) {

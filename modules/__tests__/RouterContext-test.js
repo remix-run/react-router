@@ -57,17 +57,13 @@ describe('RouterContext', () => {
     })
   }
 
-  describe('2.0', () => {
-    it('exports only `router` to context')
-  })
-
   it('exports a `router` object to routing context', (done) => {
     renderTest(() => {
       expect(context.router).toExist()
       done()
     })
   })
-  
+
   it('injects a `router` object into props of route components', (done) => {
     class RoutedComponent extends React.Component {
       render() {

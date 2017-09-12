@@ -45,7 +45,7 @@ describe('push', () => {
           <Route path="/" component={Index}/>
           <Route path="/home/hi:there" component={Home}/>
         </Router>
-      ), node, execNextStep)
+      ), node)
     })
   })
 
