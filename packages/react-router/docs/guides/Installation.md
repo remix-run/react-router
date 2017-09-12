@@ -46,7 +46,7 @@ All of the package modules can be imported from the top:
 import {
   NativeRouter as Router,
   DeepLinking,
-  AndroidBackButton,
+  BackButton,
   Link,
   Route
   // etc.
