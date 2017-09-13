@@ -16,7 +16,7 @@ const NavLink = ({
   activeStyle,
   style,
   isActive: getIsActive,
-  ariaCurrent,
+  'aria-current': ariaCurrent,
   ...rest
 }) => (
   <Route
@@ -50,12 +50,12 @@ NavLink.propTypes = {
   activeStyle: PropTypes.object,
   style: PropTypes.object,
   isActive: PropTypes.func,
-  ariaCurrent: PropTypes.oneOf(['page', 'step', 'location', 'true'])
+  'aria-current': PropTypes.oneOf(['page', 'step', 'location', 'date', 'time', 'true'])
 }
 
 NavLink.defaultProps = {
   activeClassName: 'active',
-  ariaCurrent: 'true'
+  'aria-current': 'true'
 }
 
 export default NavLink
