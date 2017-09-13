@@ -63,16 +63,14 @@ class Link extends React.Component {
 
   render() {
     const { replace, to, innerRef, ...props } = this.props // eslint-disable-line no-unused-vars
-    
+
     invariant(
       this.context.router,
       'You should not use <Link> outside a <Router>'
     )
 
     const { history } = this.context.router
-    const location = typeof to === 'string'
-      ? createLocation(to, null, null, history.location)
-      : to
+    const location = typeof to === 'string' ? createLocation(to, null, null, history.location) : to
 
     const href = history.createHref(location)
     return <a {...props} onClick={this.handleClick} href={href} ref={innerRef}/>
