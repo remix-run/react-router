@@ -8,8 +8,8 @@ module.exports = {
   devtool: 'source-map',
 
   entry: {
-    app: path.resolve(__dirname, 'modules/index.js'),
-    vendor: [ 'react', 'react-dom' ]
+    app: path.resolve(__dirname, '../modules/index.js'),
+    vendor: ['react', 'react-dom']
   },
 
   output: {
@@ -21,52 +21,65 @@ module.exports = {
 
   plugins: [
     new webpack.DefinePlugin({
-      'process.env.NODE_ENV': JSON.stringify(process.env.NODE_ENV || 'development')
+      'process.env.NODE_ENV': JSON.stringify(
+        process.env.NODE_ENV || 'development'
+      )
     }),
     new webpack.optimize.CommonsChunkPlugin('vendor', `vendor-[chunkHash].js`),
     new HTMLWebpackPlugin({
       template: 'index.html.ejs'
     }),
-    new CopyWebpackPlugin([
-      { from: path.resolve(__dirname, 'static') }
-    ])
-  ].concat(process.env.NODE_ENV === 'production' ? [
-    new SWPrecacheWebpackPlugin({
-      cacheId: 'react-router-website',
-      staticFileGlobsIgnorePatterns: [ /\.map$/ ]
-    })
-  ] : []),
+    new CopyWebpackPlugin([{ from: path.resolve(__dirname, '../static') }])
+  ].concat(
+    process.env.NODE_ENV === 'production'
+      ? [
+          new SWPrecacheWebpackPlugin({
+            cacheId: 'react-router-website',
+            staticFileGlobsIgnorePatterns: [/\.map$/]
+          })
+        ]
+      : []
+  ),
 
   resolve: {
     alias: {
-      'react-router-dom': path.resolve(__dirname, 'modules/ReactRouterDOMShim')
+      'react-router-dom': path.resolve(
+        __dirname,
+        '../modules/ReactRouterDOMShim'
+      )
     }
   },
 
   resolveLoader: {
     modulesDirectories: [
-      path.resolve(__dirname, 'node_modules')
+      path.resolve(__dirname, '../node_modules'),
+      path.resolve(__dirname, '../../node_modules')
     ]
   },
 
   module: {
     loaders: [
-      { test: /\.js$/,
+      {
+        test: /\.js$/,
         exclude: /node_modules|examples/,
         loader: 'babel'
       },
-      { test: /\.css$/,
+      {
+        test: /\.css$/,
         exclude: /prismjs/,
         loader: 'style!css'
       },
-      { test: /\.css$/,
+      {
+        test: /\.css$/,
         include: /prismjs/,
         loader: 'style!css'
       },
-      { test: /\.md(\?(.+))?$/,
-        loader: path.join(__dirname, 'webpack', 'markdown-loader')
+      {
+        test: /\.md(\?(.+))?$/,
+        loader: path.join(__dirname, 'markdown-loader')
       },
-      { test: /\.(gif|jpe?g|png|ico)$/,
+      {
+        test: /\.(gif|jpe?g|png|ico)$/,
         loader: 'url?limit=10000'
       }
     ]

@@ -2,7 +2,7 @@ import React from 'react'
 
 // don't want the shimmed one
 // eslint-disable-next-line
-import BrowserRouter from '../../../react-router-dom/BrowserRouter'
+import BrowserRouter from '../../../packages/react-router-dom/BrowserRouter'
 
 // this stuff is shimmed, see ReactRouterDOMShim.js for more details
 import { Switch, Route } from 'react-router-dom'
@@ -18,8 +18,8 @@ const App = () => (
   <BrowserRouter basename={baseHref.replace(/\/$/, '')}>
     <DelegateMarkdownLinks>
       <Switch>
-        <Route path="/" exact={true} component={Home}/>
-        <Route path="/:environment" component={Environment}/>
+        <Route path="/" exact={true} component={Home} />
+        <Route path="/:environment" component={Environment} />
       </Switch>
     </DelegateMarkdownLinks>
   </BrowserRouter>
