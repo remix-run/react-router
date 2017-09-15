@@ -112,7 +112,15 @@ const Banner = () => (
             way to navigate in <b>React Native</b>, React Router works wherever React
             is rendering--so take your pick!
           </Block>
-
+          <Block
+            component="h3"
+            fontWeight="bold"
+            lineHeight="1"
+            margin={`${isSmallScreen ? 20 : 20}px 0`}
+            textTransform="uppercase"
+          >
+            Documentation
+          </Block>
           <Row>
             <Button to="/web" small={isSmallScreen}>Web</Button>
             <Button to="/native" small={isSmallScreen}>Native</Button>
