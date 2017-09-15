@@ -262,7 +262,7 @@ describe('A <Route exact>', () => {
     expect(node.innerHTML).toContain(TEXT)
   })
 
-  it('renders when the URL has trailing slash', () => {
+  it('does not render when the URL has trailing slash', () => {
     const TEXT = 'bubblegum'
     const node = document.createElement('div')
 
@@ -274,7 +274,7 @@ describe('A <Route exact>', () => {
       </MemoryRouter>
     ), node)
 
-    expect(node.innerHTML).toContain(TEXT)
+    expect(node.innerHTML).not.toContain(TEXT)
   })
 })
 

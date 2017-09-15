@@ -43,7 +43,7 @@ it('stops matching after finding the first match, just like <Switch>', () => {
 describe('pathless routes', () => {
 
   const routes = [
-    { path: '/',
+    { path: '',
       routes: [
         { path: undefined,
           routes: [

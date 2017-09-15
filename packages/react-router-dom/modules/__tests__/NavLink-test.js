@@ -214,17 +214,8 @@ describe('NavLink', () => {
     })
   })
 
-  describe('strict (enforce path\'s trailing slash)', () => {
+  describe('to pathname with a trailing slash', () => {
     const PATH = '/pizza/'
-    it('does not do strict matching by default', () => {
-      ReactDOM.render((
-        <MemoryRouter initialEntries={['/pizza']}>
-          <NavLink to={PATH}>Pizza!</NavLink>
-        </MemoryRouter>
-      ), node)
-      const a = node.getElementsByTagName('a')[0]
-      expect(a.className).toEqual('active')
-    })
 
     it('does not set active default value when location.pathname has no trailing slash', () => {
       ReactDOM.render((

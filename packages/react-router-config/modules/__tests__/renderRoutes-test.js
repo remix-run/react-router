@@ -135,7 +135,7 @@ describe('renderRoutes', () => {
       }
 
       const routes = [
-        { path: '/',
+        { path: '',
           component: App,
           routes: [
             { path: '/one',
