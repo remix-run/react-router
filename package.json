@@ -5,7 +5,7 @@
     "postinstall": "lerna bootstrap --stream",
     "build": "lerna run build --stream",
     "clean": "lerna run clean",
-    "start": "cd packages/react-router-website && npm start",
+    "start": "cd website && npm start",
     "test": "lerna run test --stream"
   },
   "devDependencies": {

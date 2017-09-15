@@ -2,6 +2,7 @@
   "lerna": "2.0.0",
   "version": "independent",
   "packages": [
-    "packages/*"
+    "packages/*",
+    "website"
   ]
 }
