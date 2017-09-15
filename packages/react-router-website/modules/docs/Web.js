@@ -24,6 +24,7 @@ export default {
     require('../../../react-router-dom/docs/guides/server-rendering.md'),
     require('../../../react-router-dom/docs/guides/code-splitting.md'),
     require('../../../react-router-dom/docs/guides/scroll-restoration.md'),
+    require('../../../react-router-dom/docs/guides/query-string-parsing.md'),
     require('../../../react-router/docs/guides/testing.md?web'),
     require('../../../react-router/docs/guides/redux.md'),
     require('../../../react-router/docs/guides/static-routes.md'),
