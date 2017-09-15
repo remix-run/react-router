@@ -93,7 +93,7 @@ const FadingRoute = ({ component: Component, ...rest }) => (
 <FadingRoute path="/cool" component={Something}/>
 ```
 
-**Warning:** `<Route component>` takes precendence over `<Route render>` so don't use both in the same `<Route>`.
+**Warning:** `<Route component>` takes precedence over `<Route render>` so don't use both in the same `<Route>`.
 
 ## children: func
 
