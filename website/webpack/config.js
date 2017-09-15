@@ -51,7 +51,10 @@ module.exports = {
   },
 
   resolveLoader: {
-    modulesDirectories: [path.resolve(__dirname, '../node_modules')]
+    modulesDirectories: [
+      path.resolve(__dirname, '../node_modules'),
+      path.resolve(__dirname, '../../node_modules')
+    ]
   },
 
   module: {
