@@ -3,9 +3,9 @@
   "name": "react-router-website",
   "version": "4.2.0",
   "scripts": {
-    "build": "NODE_ENV=production webpack --config webpack/config.js -p",
+    "build": "NODE_ENV=production webpack -p",
     "clean": "git clean -fdX .",
-    "start": "webpack-dev-server --config webpack/config.js --inline --host 0.0.0.0"
+    "start": "webpack-dev-server --inline --host 0.0.0.0"
   },
   "devDependencies": {
     "babel-core": "^6.21.0",

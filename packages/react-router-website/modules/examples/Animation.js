@@ -21,60 +21,56 @@ import {
 
 const AnimationExample = () => (
   <Router>
-    <Route
-      render={({ location }) => (
-        <div style={styles.fill}>
-          <Route exact path="/" render={() => <Redirect to="/10/90/50" />} />
+    <Route render={({ location }) => (
+      <div style={styles.fill}>
+        <Route exact path="/" render={() => (
+          <Redirect to="/10/90/50"/>
+        )}/>
 
-          <ul style={styles.nav}>
-            <NavLink to="/10/90/50">Red</NavLink>
-            <NavLink to="/120/100/40">Green</NavLink>
-            <NavLink to="/200/100/40">Blue</NavLink>
-            <NavLink to="/310/100/50">Pink</NavLink>
-          </ul>
+        <ul style={styles.nav}>
+          <NavLink to="/10/90/50">Red</NavLink>
+          <NavLink to="/120/100/40">Green</NavLink>
+          <NavLink to="/200/100/40">Blue</NavLink>
+          <NavLink to="/310/100/50">Pink</NavLink>
+        </ul>
 
-          <div style={styles.content}>
-            <CSSTransitionGroup
-              transitionName="fade"
-              transitionEnterTimeout={300}
-              transitionLeaveTimeout={300}
-            >
-              {/* no different than other usage of
+        <div style={styles.content}>
+          <CSSTransitionGroup
+            transitionName="fade"
+            transitionEnterTimeout={300}
+            transitionLeaveTimeout={300}
+          >
+            {/* no different than other usage of
                 CSSTransitionGroup, just make
                 sure to pass `location` to `Route`
                 so it can match the old location
                 as it animates out
             */}
-              <Route
-                location={location}
-                key={location.key}
-                path="/:h/:s/:l"
-                component={HSL}
-              />
-            </CSSTransitionGroup>
-          </div>
+            <Route
+              location={location}
+              key={location.key}
+              path="/:h/:s/:l"
+              component={HSL}
+            />
+          </CSSTransitionGroup>
         </div>
-      )}
-    />
+      </div>
+    )}/>
   </Router>
 )
 
-const NavLink = props => (
+const NavLink = (props) => (
   <li style={styles.navItem}>
-    <Link {...props} style={{ color: 'inherit' }} />
+    <Link {...props} style={{ color: 'inherit' }}/>
   </li>
 )
 
 const HSL = ({ match: { params } }) => (
-  <div
-    style={{
-      ...styles.fill,
-      ...styles.hsl,
-      background: `hsl(${params.h}, ${params.s}%, ${params.l}%)`
-    }}
-  >
-    hsl({params.h}, {params.s}%, {params.l}%)
-  </div>
+  <div style={{
+    ...styles.fill,
+    ...styles.hsl,
+    background: `hsl(${params.h}, ${params.s}%, ${params.l}%)`
+  }}>hsl({params.h}, {params.s}%, {params.l}%)</div>
 )
 
 const styles = {}
@@ -110,7 +106,7 @@ styles.navItem = {
   padding: '10px'
 }
 
-styles.hsl = {
+styles.hsl  = {
   ...styles.fill,
   color: 'white',
   paddingTop: '20px',

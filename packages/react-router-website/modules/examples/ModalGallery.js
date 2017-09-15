@@ -1,5 +1,10 @@
 import React from 'react'
-import { BrowserRouter as Router, Switch, Route, Link } from 'react-router-dom'
+import {
+  BrowserRouter as Router,
+  Switch,
+  Route,
+  Link
+} from 'react-router-dom'
 
 // This example shows how to render two different screens
 // (or the same screen in a different context) at the same url,
@@ -11,6 +16,7 @@ import { BrowserRouter as Router, Switch, Route, Link } from 'react-router-dom'
 // on top of the old screen.
 
 class ModalSwitch extends React.Component {
+
   // We can pass a location to <Switch/> that will tell it to
   // ignore the router's current location and use the location
   // prop instead.
@@ -41,16 +47,16 @@ class ModalSwitch extends React.Component {
     const isModal = !!(
       location.state &&
       location.state.modal &&
-      this.previousLocation !== location
-    ) // not initial render
+      this.previousLocation !== location // not initial render
+    )
     return (
       <div>
         <Switch location={isModal ? this.previousLocation : location}>
-          <Route exact path="/" component={Home} />
-          <Route path="/gallery" component={Gallery} />
-          <Route path="/img/:id" component={ImageView} />
+          <Route exact path='/' component={Home}/>
+          <Route path='/gallery' component={Gallery}/>
+          <Route path='/img/:id' component={ImageView}/>
         </Switch>
-        {isModal ? <Route path="/img/:id" component={Modal} /> : null}
+        {isModal ? <Route path='/img/:id' component={Modal} /> : null}
       </div>
     )
   }
@@ -64,37 +70,27 @@ const IMAGES = [
   { id: 4, title: 'Crimson', color: 'Crimson' }
 ]
 
-const Thumbnail = ({ color }) => (
-  <div
-    style={{
-      width: 50,
-      height: 50,
-      background: color
-    }}
-  />
-)
+const Thumbnail = ({ color }) =>
+  <div style={{
+    width: 50,
+    height: 50,
+    background: color
+  }}/>
 
-const Image = ({ color }) => (
-  <div
-    style={{
-      width: '100%',
-      height: 400,
-      background: color
-    }}
-  />
-)
+const Image = ({ color }) =>
+  <div style={{
+    width: '100%',
+    height: 400,
+    background: color
+  }}></div>
 
 const Home = () => (
   <div>
-    <Link to="/gallery">Visit the Gallery</Link>
+    <Link to='/gallery'>Visit the Gallery</Link>
     <h2>Featured Images</h2>
     <ul>
-      <li>
-        <Link to="/img/2">Tomato</Link>
-      </li>
-      <li>
-        <Link to="/img/4">Crimson</Link>
-      </li>
+      <li><Link to='/img/2'>Tomato</Link></li>
+      <li><Link to='/img/4'>Crimson</Link></li>
     </ul>
   </div>
 )
@@ -136,7 +132,7 @@ const Modal = ({ match, history }) => {
   if (!image) {
     return null
   }
-  const back = e => {
+  const back = (e) => {
     e.stopPropagation()
     history.goBack()
   }
@@ -152,21 +148,18 @@ const Modal = ({ match, history }) => {
         background: 'rgba(0, 0, 0, 0.15)'
       }}
     >
-      <div
-        className="modal"
-        style={{
-          position: 'absolute',
-          background: '#fff',
-          top: 25,
-          left: '10%',
-          right: '10%',
-          padding: 15,
-          border: '2px solid #444'
-        }}
-      >
+      <div className='modal' style={{
+      position: 'absolute',
+        background: '#fff',
+        top: 25,
+        left: '10%',
+        right: '10%',
+        padding: 15,
+        border: '2px solid #444'
+      }}>
         <h1>{image.title}</h1>
         <Image color={image.color} />
-        <button type="button" onClick={back}>
+        <button type='button' onClick={back}>
           Close
         </button>
       </div>
