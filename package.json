@@ -2,8 +2,8 @@
   "private": true,
   "name": "react-router-packages",
   "scripts": {
-    "postinstall": "lerna bootstrap --stream",
-    "build": "lerna run build --stream",
+    "postinstall": "node ./scripts/postinstall.js",
+    "build": "node ./scripts/build.js",
     "clean": "lerna run clean",
     "start": "cd website && npm start",
     "test": "lerna run test --stream"
