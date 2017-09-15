@@ -79,3 +79,34 @@ const oddEvent = (match, location) => {
 
 The [`isActive`](#isactive-func) compares the current history location (usually the current browser URL).
 To compare to a different location, a [`location`](../../../react-router/docs/api/location.md) can be passed.
+
+## component
+
+The React component which gets rendered by `NavLink`. Defaults to [`Link`](Link.md). This should be used if you want to change the rendered component, for example when you want to apply a higher order component
+function to `Link` or render something completely different.
+
+```js
+import { Link, NavLink } from 'react-router-dom'
+// Custom Link component
+const AbsoluteLink = ({to, ...rest}) => {
+  // Always pass an absolute link, but don't touch links which are already absolute
+  const absolute = to.startsWith('/') ? to : `/${to}`
+  return <Link to={absolute} {...rest} />
+}
+
+// Wrapping Link using a higher order component
+const makeAbsolute = Component => {
+  const Wrapped = ({to, ...rest}) => {
+    // Always pass an absolute link, but don't touch links which are already absolute
+    const absolute = to.startsWith('/') ? to : `/${to}`
+    return <Component to={absolute} {...rest} />
+  }
+  return Wrapped
+}
+const AbsoluteWrappedLink = makeAbsolute(Link)
+
+// All three of these will have the same effect and link to "/about"
+<NavLink to="/about">About</NavLink>
+<NavLink to="about" component={AbsoluteLink}>About</NavLink>
+<NavLink to="about" component={AbsoluteWrappedLink}>About</NavLink>
+```
