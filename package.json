@@ -6,9 +6,10 @@
     "build": "lerna run build --stream",
     "clean": "lerna run clean",
     "start": "cd packages/react-router-website && npm start",
-    "test": "lerna run test --stream"
+    "test": "jest --projects packages/**/package.json"
   },
   "devDependencies": {
+    "jest": "^21.0.1",
     "lerna": "^2.0.0"
   }
 }
