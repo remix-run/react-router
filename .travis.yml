@@ -3,16 +3,10 @@ language: node_js
 node_js:
   - "node"
 before_script:
-  - npm run build
-cache:
-  directories:
-    - packages/react-router/node_modules
-    - packages/react-router-dom/node_modules
-    - packages/react-router-native/node_modules
-    - packages/react-router-config/node_modules
-    - packages/react-router-redux/node_modules
-    - website/node_modules
+  - yarn build
+cache: yarn
 branches:
   only:
     - master
     - next
+    - use-yarn

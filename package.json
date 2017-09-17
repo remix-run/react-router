@@ -2,13 +2,16 @@
   "private": true,
   "name": "react-router-packages",
   "scripts": {
-    "postinstall": "lerna bootstrap --stream",
     "build": "lerna run build --stream",
     "clean": "lerna run clean",
-    "start": "cd website && npm start",
+    "start": "cd website && yarn start",
     "test": "lerna run test --stream"
   },
   "devDependencies": {
     "lerna": "2.2.0"
-  }
+  },
+  "workspaces": [
+    "packages/*",
+    "website"
+  ]
 }
