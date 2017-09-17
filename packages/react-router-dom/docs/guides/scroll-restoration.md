@@ -69,7 +69,7 @@ class LongContent extends Component {
 
 ## Generic Solution
 
-For a generic solution (and what browser are starting to implement natively) we're talking about two things:
+For a generic solution (and what browsers are starting to implement natively) we're talking about two things:
 
 1. Scrolling up on navigation so you don't start a new screen scrolled to the bottom
 2. Restoring scroll positions of the window and overflow elements on "back" and "forward" clicks (but not Link clicks!)
