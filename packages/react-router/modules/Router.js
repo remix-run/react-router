@@ -24,44 +24,18 @@ class Router extends React.Component {
     return {
       router: {
         ...this.context.router,
-        history: this.props.history,
-        route: {
-          location: this.props.history.location,
-          match: this.state.match
-        }
+        history: this.props.history
       }
     }
   }
 
-  state = {
-    match: this.computeMatch(this.props.history.location.pathname)
-  }
-
-  computeMatch(pathname) {
-    return {
-      path: '/',
-      url: '/',
-      params: {},
-      isExact: pathname === '/'
-    }
-  }
-
   componentWillMount() {
-    const { children, history } = this.props
+    const { children } = this.props
 
     invariant(
       children == null || React.Children.count(children) === 1,
       'A <Router> may have only one child element'
     )
-
-    // Do this here so we can setState when a <Redirect> changes the
-    // location in componentWillMount. This happens e.g. when doing
-    // server rendering using a <StaticRouter>.
-    this.unlisten = history.listen(() => {
-      this.setState({
-        match: this.computeMatch(history.location.pathname)
-      })
-    })
   }
 
   componentWillReceiveProps(nextProps) {
@@ -69,10 +43,6 @@ class Router extends React.Component {
       this.props.history === nextProps.history,
       'You cannot change <Router history>'
     )
-  }
-
-  componentWillUnmount() {
-    this.unlisten()
   }
 
   render() {

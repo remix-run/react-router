@@ -10,13 +10,12 @@ import matchPath from './matchPath'
 class Switch extends React.Component {
   static contextTypes = {
     router: PropTypes.shape({
-      route: PropTypes.object.isRequired
+      history: PropTypes.object.isRequired
     }).isRequired
   }
 
   static propTypes = {
-    children: PropTypes.node,
-    location: PropTypes.object
+    children: PropTypes.node
   }
 
   componentWillMount() {
@@ -24,24 +23,19 @@ class Switch extends React.Component {
       this.context.router,
       'You should not use <Switch> outside a <Router>'
     )
+
+    this.unlisten = this.context.router.history.listen(() => {
+      this.forceUpdate();
+    })
   }
 
-  componentWillReceiveProps(nextProps) {
-    warning(
-      !(nextProps.location && !this.props.location),
-      '<Switch> elements should not change from uncontrolled to controlled (or vice versa). You initially used no "location" prop and then provided one on a subsequent render.'
-    )
-
-    warning(
-      !(!nextProps.location && this.props.location),
-      '<Switch> elements should not change from controlled to uncontrolled (or vice versa). You provided a "location" prop initially but omitted it on a subsequent render.'
-    )
+  componentWillUnmount() {
+    this.unlisten();
   }
 
   render() {
-    const { route } = this.context.router
+    const { history: { location } } = this.context.router
     const { children } = this.props
-    const location = this.props.location || route.location
 
     let match, child
     React.Children.forEach(children, element => {
@@ -50,13 +44,13 @@ class Switch extends React.Component {
       const { path: pathProp, exact, strict, sensitive, from } = element.props
       const path = pathProp || from
 
-      if (match == null) {
+      if (!match) {
         child = element
-        match = path ? matchPath(location.pathname, { path, exact, strict, sensitive }) : route.match
+        match = !path || matchPath(location.pathname, { path, exact, strict, sensitive })
       }
     })
 
-    return match ? React.cloneElement(child, { location, computedMatch: match }) : null
+    return match ? child : null
   }
 }
 

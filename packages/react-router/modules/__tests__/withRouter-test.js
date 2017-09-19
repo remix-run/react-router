@@ -14,8 +14,6 @@ describe('withRouter', () => {
 
   it('provides { match, location, history } props', () => {
     const PropsChecker = withRouter(props => {
-      expect(typeof props.match).toBe('object')
-      expect(typeof props.location).toBe('object')
       expect(typeof props.history).toBe('object')
       return null
     })
@@ -25,23 +23,6 @@ describe('withRouter', () => {
         <Route path="/bubblegum" render={() => (
           <PropsChecker/>
         )}/>
-      </MemoryRouter>
-    ), node)
-  })
-
-  it('provides the parent match as a prop to the wrapped component', () => {
-    let parentMatch
-    const PropsChecker = withRouter(props => {
-      expect(props.match).toEqual(parentMatch)
-      return null
-    })
-
-    ReactDOM.render((
-      <MemoryRouter initialEntries={[ '/bubblegum' ]}>
-        <Route path="/:flavor" render={({ match }) => {
-          parentMatch = match
-          return <PropsChecker/>
-        }}/>
       </MemoryRouter>
     ), node)
   })

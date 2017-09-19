@@ -58,8 +58,7 @@ describe('A <Router>', () => {
 
     ContextChecker.contextTypes = {
       router: PropTypes.shape({
-        history: PropTypes.object,
-        route: PropTypes.object
+        history: PropTypes.object
       })
     }
 
@@ -77,45 +76,6 @@ describe('A <Router>', () => {
       )
 
       expect(rootContext.router.history).toBe(history)
-    })
-
-    it('sets context.router.route at the root', () => {
-      const history = createHistory({
-        initialEntries: ['/']
-      })
-
-      ReactDOM.render(
-        <Router history={history}>
-          <ContextChecker/>
-        </Router>,
-        node
-      )
-
-      expect(rootContext.router.route.match.path).toEqual('/')
-      expect(rootContext.router.route.match.url).toEqual('/')
-      expect(rootContext.router.route.match.params).toEqual({})
-      expect(rootContext.router.route.match.isExact).toEqual(true)
-      expect(rootContext.router.route.location).toEqual(history.location)
-    })
-
-    it('updates context.router.route upon navigation', () => {
-      const history = createHistory({
-        initialEntries: [ '/' ]
-      })
-
-      ReactDOM.render(
-        <Router history={history}>
-          <ContextChecker />
-        </Router>,
-        node
-      )
-
-      expect(rootContext.router.route.match.isExact).toBe(true)
-
-      const newLocation = { pathname: '/new' }
-      history.push(newLocation)
-
-      expect(rootContext.router.route.match.isExact).toBe(false)
     })
 
     it('does not contain context.router.staticContext by default', () => {
