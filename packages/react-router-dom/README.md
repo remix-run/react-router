@@ -1,6 +1,6 @@
 # react-router-dom
 
-DOM bindings for [React Router](https://reacttraining.com/react-router).
+DOM bindings for [React Router](https://reacttraining.com/react-router). As of version 4, `react-router` only exports the core components and functions. To connect these to the browser, `react-router-dom` exports DOM-aware components, like `<Link>`, which renders an `<a>`, and `<BrowserRouter>` to interact with the Browser's history API. Since `react-router-dom` re-exports all of `react-router`'s exports, you only need to import from `react-router-dom` in your project.
 
 ## Installation
 
