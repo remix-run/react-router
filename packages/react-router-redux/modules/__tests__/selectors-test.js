@@ -4,7 +4,7 @@ import { routerReducer, LOCATION_CHANGE } from '../reducer'
 
 describe('selectors', () => {
 
-  let store, history
+  let store
 
   beforeEach(() => {
     store = createStore(combineReducers({
