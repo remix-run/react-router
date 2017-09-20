@@ -26,21 +26,6 @@ describe('selectors', () => {
 
   describe('createMatchSelector', () => {
     it('matches correctly', () => {
-      store.dispatch({
-        type: LOCATION_CHANGE,
-        payload: { pathname: '/' }
-      })
-      const state = store.getState()
-      const matchSelector = createMatchSelector('/')
-      expect(matchSelector(state)).toEqual({
-        isExact: true,
-        params: {},
-        path: '/',
-        url: '/'
-      })
-    })
-
-    it('matches correctly', () => {
       const matchSelector = createMatchSelector('/')
       store.dispatch({
         type: LOCATION_CHANGE,
