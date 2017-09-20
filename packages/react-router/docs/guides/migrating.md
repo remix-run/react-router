@@ -223,7 +223,7 @@ const LinkWrapper = (props) => {
       { props.children }
     </Component>
   )
-)
+}
 
 <LinkWrapper to={disabled ? null : `/item/${id}`} className="item">
   // item content
