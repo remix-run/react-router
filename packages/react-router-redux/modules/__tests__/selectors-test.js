@@ -20,7 +20,7 @@ describe('selectors', () => {
         payload: location
       })
       const state = store.getState()
-      expect(getLocation(state)).toEqual(location)
+      expect(getLocation(state)).toBe(location)
     })
   })
 
