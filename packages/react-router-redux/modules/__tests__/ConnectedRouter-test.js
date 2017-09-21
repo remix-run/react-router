@@ -30,6 +30,7 @@ describe('A <ConnectedRouter>', () => {
     )
 
     expect(store.getState()).toHaveProperty('router.location.pathname')
+    expect(store.getState()).toHaveProperty('router.location.action', 'POP')
   })
 
   it('connects to a store via props', () => {
@@ -42,6 +43,7 @@ describe('A <ConnectedRouter>', () => {
     )
 
     expect(store.getState()).toHaveProperty('router.location.pathname')
+    expect(store.getState()).toHaveProperty('router.location.action', 'POP')
   })
 
   it('updates the store with location changes', () => {
@@ -56,6 +58,8 @@ describe('A <ConnectedRouter>', () => {
     history.push('/foo')
 
     expect(store.getState()).toHaveProperty('router.location.pathname', '/foo')
+    expect(store.getState()).toHaveProperty('router.location.action', 'PUSH')
+
   })
 
   describe('with children', () => {
