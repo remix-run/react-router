@@ -4,8 +4,6 @@ React Router has a number of location-aware components that use the current `loc
 
 React provides two approaches to optimize the rendering performance of applications: the `shouldComponentUpdate` lifecycle method and the `PureComponent`. Both block the re-rendering of components unless the right conditions are met. Unfortunately, this means that React Router's location-aware components can become out of sync with the current location if their re-rendering was prevented.
 
-Note, if you using Redux and are experiencing a blocked updates problem, be sure to read [Redux blocked updates](https://github.com/ReactTraining/react-router/blob/master/packages/react-router/docs/guides/redux.md#blocked-updates).
-
 ### Example of the Problem
 
 We start out with a component that prevents updates.
@@ -71,6 +69,24 @@ React's `PureComponent` does not implement `shouldComponentUpdate`, but it takes
 
 ### The Solution
 
+#### Quick Solution
+If you are running into this issue while using a higher-order component like `connect` (from react-redux) or `observer` (from Mobx), you can just wrap that component in a `withRouter` to remove the blocked updates.
+
+```javascript
+// redux before
+const MyConnectedComponent = connect(mapStateToProps)(MyComponent)
+// redux after
+const MyConnectedComponent = withRouter(connect(mapStateToProps)(MyComponent))
+
+// mobx before
+const MyConnectedComponent = observer(MyComponent)
+// mobx after
+const MyConnectedComponent = withRouter(observer(MyComponent))
+```
+
+This is not the most efficient solution, but will prevent the blocked updates. For more context on why this is not the most optimal solution, read [this thread](https://github.com/ReactTraining/react-router/pull/5552#issuecomment-331502281). For more info regarding this solution, read this [Redux guide](https://github.com/ReactTraining/react-router/blob/master/packages/react-router/docs/guides/redux.md#blocked-updates)
+
+#### Recommended Solution
 The key to avoiding blocked re-renders after location changes is to pass the blocking component the `location` object as a prop. This will be different whenever the location changes, so comparisons will detect that the current and next location are different.
 
 ```js
