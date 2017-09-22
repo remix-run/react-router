@@ -4,6 +4,8 @@ React Router has a number of location-aware components that use the current `loc
 
 React provides two approaches to optimize the rendering performance of applications: the `shouldComponentUpdate` lifecycle method and the `PureComponent`. Both block the re-rendering of components unless the right conditions are met. Unfortunately, this means that React Router's location-aware components can become out of sync with the current location if their re-rendering was prevented.
 
+Note, if you using Redux and are experiencing a blocked updates problem, be sure to read [Redux blocked updates]( https://github.com/ReactTraining/react-router/blob/master/packages/react-router/docs/guides/redux.md#blocked-updates).
+
 ### Example of the Problem
 
 We start out with a component that prevents updates.
