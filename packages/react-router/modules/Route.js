@@ -10,7 +10,7 @@ const isEmptyChildren = (children) =>
 /**
  * The public API for matching a single path and rendering.
  */
-class Route extends React.Component {
+class Route extends React.PureComponent {
   static propTypes = {
     computedMatch: PropTypes.object, // private, from <Switch>
     path: PropTypes.string,
@@ -29,25 +29,12 @@ class Route extends React.Component {
   static contextTypes = {
     router: PropTypes.shape({
       history: PropTypes.object.isRequired,
-      route: PropTypes.object.isRequired,
       staticContext: PropTypes.object
     })
   }
 
-  static childContextTypes = {
-    router: PropTypes.object.isRequired
-  }
-
-  getChildContext() {
-    return {
-      router: {
-        ...this.context.router,
-        route: {
-          location: this.props.location || this.context.router.route.location,
-          match: this.state.match
-        }
-      }
-    }
+  static defaultProps = {
+    path: '/'
   }
 
   state = {
@@ -63,13 +50,15 @@ class Route extends React.Component {
       'You should not use <Route> or withRouter() outside a <Router>'
     )
 
-    const { route } = router
-    const pathname = (location || route.location).pathname
+    const { history } = router
+    const pathname = (location || history.location).pathname
 
-    return path ? matchPath(pathname, { path, strict, exact, sensitive }) : route.match
+    return path ? matchPath(pathname, { path, strict, exact, sensitive }) : null
   }
 
   componentWillMount() {
+    const { history } = this.context.router
+
     warning(
       !(this.props.component && this.props.render),
       'You should not use <Route component> and <Route render> in the same route; <Route render> will be ignored'
@@ -84,6 +73,12 @@ class Route extends React.Component {
       !(this.props.render && this.props.children && !isEmptyChildren(this.props.children)),
       'You should not use <Route render> and <Route children> in the same route; <Route children> will be ignored'
     )
+
+    this.unlisten = history.listen(() => {
+      this.setState({
+        match: this.computeMatch(this.props, this.context.router)
+      })
+    })
   }
 
   componentWillReceiveProps(nextProps, nextContext) {
@@ -102,11 +97,19 @@ class Route extends React.Component {
     })
   }
 
+  shouldComponentUpdate(nextProps, nextState) {
+    return !this.state.match || !nextState.match || this.state.match.url !== nextState.match.url
+  }
+
+  componentWillUnmount() {
+    this.unlisten()
+  }
+
   render() {
     const { match } = this.state
     const { children, component, render } = this.props
-    const { history, route, staticContext } = this.context.router
-    const location = this.props.location || route.location
+    const { history, staticContext } = this.context.router
+    const location = this.props.location || history.location
     const props = { match, location, history, staticContext }
 
     if (component)

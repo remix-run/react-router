@@ -36,25 +36,6 @@ describe('A <Route>', () => {
     expect(node.innerHTML).not.toContain(TEXT)
   })
 
-  it('can use a `location` prop instead of `context.router.route.location`', () => {
-    const TEXT = 'tamarind chutney'
-    const node = document.createElement('div')
-
-    ReactDOM.render((
-      <MemoryRouter initialEntries={[ '/mint' ]}>
-        <Route
-          location={{ pathname: '/tamarind' }}
-          path="/tamarind"
-          render={() => (
-            <h1>{TEXT}</h1>
-          )}
-        />
-      </MemoryRouter>
-    ), node)
-
-    expect(node.innerHTML).toContain(TEXT)
-  })
-
   it('supports preact by nulling out children prop when empty array is passed', () => {
     const TEXT = 'Mrs. Kato'
     const node = document.createElement('div')
@@ -96,6 +77,58 @@ describe('A <Route>', () => {
         <Route path="/" render={() => null} />
       ), node)
     }).toThrow(/You should not use <Route> or withRouter\(\) outside a <Router>/)
+  })
+
+  it('updates itself even when the parent blocks an update', () => {
+    const node = document.createElement('div')
+
+    class Blocking extends React.Component {
+      shouldComponentUpdate() {
+        return false
+      }
+
+      render() {
+        return this.props.children
+      }
+    }
+
+    let push
+    ReactDOM.render((
+      <MemoryRouter initialEntries={[ '/sushi/california' ]}>
+        <Blocking>
+          <Route path="/sushi/:roll" render={({ history, match }) => {
+            push = history.push
+            return <div>{match.url}</div>
+          }}/>
+        </Blocking>
+      </MemoryRouter>
+    ), node)
+    push('/sushi/dynamite')
+    expect(node.innerHTML).toContain('/sushi/dynamite')
+  })
+
+  it('updates itself even when the match is different', () => {
+    const node = document.createElement('div')
+
+    let push
+    let count = 0
+    ReactDOM.render((
+      <MemoryRouter initialEntries={[ '/sushi/california' ]}>
+        <Route path="/sushi/:roll" render={({ history, match }) => {
+          push = history.push
+          count = count + 1
+          return <div>{count}</div>
+        }}/>
+    </MemoryRouter>
+    ), node)
+    push('/sushi/dynamite')
+    expect(node.innerHTML).toContain(2)
+    push('/sushi/dynamite')
+    expect(node.innerHTML).toContain(2)
+    push('/sushi/dynamite/eat')
+    expect(node.innerHTML).toContain(2)
+    push('/sushi/california')
+    expect(node.innerHTML).toContain(3)
   })
 })
 
@@ -307,74 +340,5 @@ describe('A <Route exact strict>', () => {
     ), node)
 
     expect(node.innerHTML).not.toContain(TEXT)
-  })
-})
-
-describe('A <Route location>', () => {
-  it('can use a `location` prop instead of `router.location`', () => {
-    const TEXT = 'tamarind chutney'
-    const node = document.createElement('div')
-
-    ReactDOM.render((
-      <MemoryRouter initialEntries={[ '/mint' ]}>
-        <Route
-          location={{ pathname: '/tamarind' }}
-          path="/tamarind"
-          render={() => (
-            <h1>{TEXT}</h1>
-          )}
-        />
-      </MemoryRouter>
-    ), node)
-
-    expect(node.innerHTML).toContain(TEXT)
-  })
-
-  describe('children', () => {
-    it('uses parent\'s prop location', () => {
-      const TEXT = 'cheddar pretzel'
-      const node = document.createElement('div')
-
-      ReactDOM.render((
-        <MemoryRouter initialEntries={[ '/popcorn' ]}>
-          <Route
-            location={{ pathname: '/pretzels/cheddar' }}
-            path="/pretzels"
-            render={() => (
-              <Route path='/pretzels/cheddar' render={() => (
-                <h1>{TEXT}</h1>
-              )} />
-            )}
-          />
-        </MemoryRouter>
-      ), node)
-
-      expect(node.innerHTML).toContain(TEXT)
-    })
-
-    it('continues to use parent\'s prop location after navigation', () => {
-      const TEXT = 'cheddar pretzel'
-      const node = document.createElement('div')
-      let push
-      ReactDOM.render((
-        <MemoryRouter initialEntries={[ '/popcorn' ]}>
-          <Route
-            location={{ pathname: '/pretzels/cheddar' }}
-            path="/pretzels"
-            render={({ history }) => {
-              push = history.push
-              return (
-                <Route path='/pretzels/cheddar' render={() => (
-                <h1>{TEXT}</h1>
-              )} />
-              )
-            }}
-          />
-        </MemoryRouter>
-      ), node)
-      expect(node.innerHTML).toContain(TEXT)
-      push('/chips')
-      expect(node.innerHTML).toContain(TEXT)
-    })
   })
 })
