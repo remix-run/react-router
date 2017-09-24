@@ -84,7 +84,7 @@ const MyConnectedComponent = observer(MyComponent)
 const MyConnectedComponent = withRouter(observer(MyComponent))
 ```
 
-This is not the most efficient solution, but will prevent the blocked updates. For more context on why this is not the most optimal solution, read [this thread](https://github.com/ReactTraining/react-router/pull/5552#issuecomment-331502281). For more info regarding this solution, read this [Redux guide](https://github.com/ReactTraining/react-router/blob/master/packages/react-router/docs/guides/redux.md#blocked-updates)
+**This is not the most efficient solution**, but will prevent the blocked updates issue. For more info regarding this solution, read the [Redux guide](https://github.com/ReactTraining/react-router/blob/master/packages/react-router/docs/guides/redux.md#blocked-updates).  To understand why this is not the most optimal solution, read [this thread](https://github.com/ReactTraining/react-router/pull/5552#issuecomment-331502281).
 
 #### Recommended Solution
 The key to avoiding blocked re-renders after location changes is to pass the blocking component the `location` object as a prop. This will be different whenever the location changes, so comparisons will detect that the current and next location are different.
