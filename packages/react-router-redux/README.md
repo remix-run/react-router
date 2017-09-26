@@ -1,6 +1,6 @@
 # react-router-redux
 
-[![npm version](https://img.shields.io/npm/v/react-router-redux.svg?style=flat-square)](https://www.npmjs.com/package/react-router-redux) [![npm downloads](https://img.shields.io/npm/dm/react-router-redux.svg?style=flat-square)](https://www.npmjs.com/package/react-router-redux) [![build status](https://img.shields.io/travis/reactjs/react-router-redux/master.svg?style=flat-square)](https://travis-ci.org/reactjs/react-router-redux)
+[![npm version](https://img.shields.io/npm/v/react-router-redux/next.svg?style=flat-square)](https://www.npmjs.com/package/react-router-redux)  [![npm downloads](https://img.shields.io/npm/dm/react-router-redux.svg?style=flat-square)](https://www.npmjs.com/package/react-router-redux) [![build status](https://img.shields.io/travis/reactjs/react-router-redux/master.svg?style=flat-square)](https://travis-ci.org/reactjs/react-router-redux)
 
 > **Keep your state in sync with your router** :sparkles:
 
@@ -10,6 +10,11 @@ This is beta software, it needs:
 2. Some people to try it out and find bugs
 3. A strategy for working with the devtools
    - (issue describing a different approach to what we've seen previously coming soon)
+   
+## Versions
+
+This (react-router-redux 5.x) is the version of react-router-redux for use with react-router 4.x. 
+Users of react-router 2.x and 3.x want to use react-router-redux found at [the legacy repository](https://github.com/reactjs/react-router-redux).
 
 ## Installation
 
