@@ -16,4 +16,3 @@ branches:
   only:
     - master
     - next
-    - ignore-website-in-ci
