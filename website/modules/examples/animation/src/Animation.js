@@ -7,6 +7,8 @@ import {
   Redirect
 } from 'react-router-dom'
 
+import './styles.css'
+
 /* you'll need this CSS somewhere
 .fade-enter {
   opacity: 0;

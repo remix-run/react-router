@@ -47,3 +47,4 @@ const User = ({ match }) => (
 )
 
 export default AmbiguousExample
+
