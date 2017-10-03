@@ -10,7 +10,10 @@ const isModifiedEvent = (event) =>
  */
 class Link extends React.Component {
   static propTypes = {
-    onClick: PropTypes.func,
+    onClick: PropTypes.oneOfType([
+      PropTypes.bool,
+      PropTypes.func
+    ]),
     target: PropTypes.string,
     replace: PropTypes.bool,
     to: PropTypes.oneOfType([
