@@ -1,6 +1,7 @@
 import React from 'react'
 import PropTypes from 'prop-types'
 import invariant from 'invariant'
+import { createLocation } from 'history'
 
 const isModifiedEvent = (event) =>
   !!(event.metaKey || event.altKey || event.ctrlKey || event.shiftKey)
@@ -68,10 +69,10 @@ class Link extends React.Component {
       'You should not use <Link> outside a <Router>'
     )
 
-    const href = this.context.router.history.createHref(
-      typeof to === 'string' ? { pathname: to } : to
-    )
+    const { history } = this.context.router
+    const location = typeof to === 'string' ? createLocation(to, null, null, history.location) : to
 
+    const href = history.createHref(location)
     return <a {...props} onClick={this.handleClick} href={href} ref={innerRef}/>
   }
 }
