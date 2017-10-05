@@ -46,7 +46,7 @@ NavLink.propTypes = {
   strict: PropTypes.bool,
   location: PropTypes.object,
   activeClassName: PropTypes.string,
-  className: PropTypes.string,
+  className: PropTypes.oneOfType([PropTypes.string, PropTypes.object]),
   activeStyle: PropTypes.object,
   style: PropTypes.object,
   isActive: PropTypes.func,
