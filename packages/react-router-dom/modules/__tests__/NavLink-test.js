@@ -50,6 +50,19 @@ describe('NavLink', () => {
       const a = node.getElementsByTagName('a')[0]
       expect(a.style.color).toBe(activeStyle.color)
     })
+
+    it('it properly escapes path-to-regexp special characters', () => {
+      ReactDOM.render((
+        <MemoryRouter initialEntries={['/pizza (1)']}>
+          <NavLink to='/pizza (1)'>Pizza!</NavLink>
+        </MemoryRouter>
+      ), node)
+
+      const href = node.querySelector('a').getAttribute('href')
+      expect(href).toEqual('/pizza (1)')
+      const a = node.getElementsByTagName('a')[0]
+      expect(a.className).toEqual('active')
+    })
   })
 
   describe('When a <NavLink> is not active', () => {
