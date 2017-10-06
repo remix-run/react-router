@@ -19,20 +19,14 @@ const NavLink = ({
   ariaCurrent,
   ...rest
 }) => {
-  // Escape special Route path matching characters since `to` is expected to be an exact url.
-  let unescapedPath;
-  if (typeof to === 'object') {
-    unescapedPath = to.pathname;
-  } else {
-    unescapedPath = to;
-  }
+  const path = typeof to === 'object' ? to.pathname : to
 
   // Regex taken from: https://github.com/pillarjs/path-to-regexp/blob/master/index.js#L202
-  const path = unescapedPath.replace(/([.+*?=^!:${}()[\]|/\\])/g, '\\$1');
+  const escapedPath = path.replace(/([.+*?=^!:${}()[\]|/\\])/g, '\\$1')
 
   return (
     <Route
-      path={path}
+      path={escapedPath}
       exact={exact}
       strict={strict}
       location={location}
