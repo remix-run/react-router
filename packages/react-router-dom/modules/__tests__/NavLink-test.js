@@ -65,6 +65,55 @@ describe('NavLink', () => {
     })
   })
 
+  describe('With multiple sub routes', () => {
+    it('applies activeClassName to the current index', () => {
+      ReactDOM.render((
+        <MemoryRouter initialEntries={['/pizza', '/about']}>
+          <div>
+            <NavLink to='/pizza'>Pizza!</NavLink>
+            <NavLink to='/about'>About</NavLink>
+          </div>
+        </MemoryRouter>
+      ), node)
+      const a = node.getElementsByTagName('a')[0]
+      expect(a.className).toEqual('active')
+      const b = node.getElementsByTagName('a')[1]
+      expect(b.className).not.toEqual('active')
+    })
+
+    it('applies activeClassName to the current index', () => {
+      ReactDOM.render((
+        <MemoryRouter initialEntries={['/pizza', '/about']} initialIndex={1}>
+          <div>
+            <NavLink to='/pizza'>Pizza!</NavLink>
+            <NavLink to='/about'>About</NavLink>
+          </div>
+        </MemoryRouter>
+      ), node)
+      const a = node.getElementsByTagName('a')[0]
+      expect(a.className).not.toEqual('active')
+      const b = node.getElementsByTagName('a')[1]
+      expect(b.className).toEqual('active')
+    })
+  })
+
+  describe('With multiple routes and root', () => {
+    it('applies activeClassName to subroute', () => {
+      ReactDOM.render((
+        <MemoryRouter initialEntries={['/pizza', '/']}>
+          <div>
+            <NavLink to='/'>Pizza!</NavLink>
+            <NavLink to='/pizza'>About</NavLink>
+          </div>
+        </MemoryRouter>
+      ), node)
+      const a = node.getElementsByTagName('a')[0]
+      expect(a.className).not.toEqual('active')
+      const b = node.getElementsByTagName('a')[1]
+      expect(b.className).toEqual('active')
+    })
+  })
+
   describe('When a <NavLink> is not active', () => {
     it('does not apply its default activeClassName', () => {
       ReactDOM.render((
