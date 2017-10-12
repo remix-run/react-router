@@ -14,7 +14,7 @@ class Route extends React.Component {
   static propTypes = {
     computedMatch: PropTypes.object, // private, from <Switch>
     path: PropTypes.string,
-    exact: PropTypes.bool,
+    parent: PropTypes.bool,
     strict: PropTypes.bool,
     sensitive: PropTypes.bool,
     component: PropTypes.func,
@@ -54,7 +54,7 @@ class Route extends React.Component {
     match: this.computeMatch(this.props, this.context.router)
   }
 
-  computeMatch({ computedMatch, location, path, strict, exact, sensitive }, router) {
+  computeMatch({ computedMatch, location, path, strict, parent, sensitive }, router) {
     if (computedMatch)
       return computedMatch // <Switch> already computed the match for us
 
@@ -66,7 +66,7 @@ class Route extends React.Component {
     const { route } = router
     const pathname = (location || route.location).pathname
 
-    return path ? matchPath(pathname, { path, strict, exact, sensitive }) : route.match
+    return path ? matchPath(pathname, { path, strict, end: !parent, sensitive }) : route.match
   }
 
   componentWillMount() {
