@@ -8,7 +8,7 @@ const renderRoutes = (routes, extraProps = {}) => routes ? (
       <Route
         key={route.key || i}
         path={route.path}
-        exact={route.exact}
+        parent={route.parent}
         strict={route.strict}
         render={(props) => (
           <route.component {...props} {...extraProps} route={route}/>

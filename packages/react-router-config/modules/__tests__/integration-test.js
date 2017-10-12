@@ -5,7 +5,7 @@ import matchRoutes from '../matchRoutes'
 import renderRoutes from '../renderRoutes'
 
 describe('integration', () => {
-  it('generates the same matches in renderRoutes and matchRoutes', () => {
+  it('generates the same matches in renderRoutes and matchRoutes with parent', () => {
     const rendered = []
 
     const Comp = ({ match, route: { routes } }) => (
@@ -16,9 +16,11 @@ describe('integration', () => {
     const routes = [
       { path: '/pepper',
         component: Comp,
+        parent: true,
         routes: [
           { path: '/pepper/:type',
             component: Comp,
+            parent: true,
             routes: [
               { path: '/pepper/:type/scoville',
                 component: Comp
@@ -30,6 +32,7 @@ describe('integration', () => {
 
       { path: undefined,
         component: Comp,
+        parent: true,
         routes: [
           { path: '/ghost',
             component: Comp
@@ -113,14 +116,12 @@ describe('integration', () => {
       // should skip
       {
         path: '/pepper/habanero',
-        component: Comp,
-        exact: true
+        component: Comp
       },
       // should match
       {
         path: '/pepper',
-        component: Comp,
-        exact: true
+        component: Comp
       }
     ]
 
@@ -152,14 +153,12 @@ describe('integration', () => {
         path: '/pepper/',
         component: Comp,
         strict: true,
-        exact: true,
         routes: [
           // should skip
           {
             path: '/pepper',
             component: Comp,
-            strict: true,
-            exact: true
+            strict: true
           }
         ]
       }
