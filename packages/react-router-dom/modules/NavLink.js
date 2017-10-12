@@ -27,7 +27,7 @@ const NavLink = ({
   return (
     <Route
       path={escapedPath}
-      exact={exact}
+      parent={!exact}
       strict={strict}
       location={location}
       children={({ location, match }) => {
