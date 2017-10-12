@@ -6,14 +6,14 @@
 
 This is beta software, it needs:
 
-1. A working example
+1. ~~A working example~~
 2. Some people to try it out and find bugs
 3. A strategy for working with the devtools
    - (issue describing a different approach to what we've seen previously coming soon)
-   
+
 ## Versions
 
-This (react-router-redux 5.x) is the version of react-router-redux for use with react-router 4.x. 
+This (react-router-redux 5.x) is the version of react-router-redux for use with react-router 4.x.
 Users of react-router 2.x and 3.x want to use react-router-redux found at [the legacy repository](https://github.com/reactjs/react-router-redux).
 
 ## Installation
@@ -74,3 +74,6 @@ ReactDOM.render(
   document.getElementById('root')
 )
 ```
+
+## Server-side Rendering
+A basic demo of using `react-router-redux` with server-side rendering alongside `create-react-app` [is available here](https://github.com/cereallarceny/cra-ssr). A tutorial surrounding this [is available here](https://medium.com/@cereallarceny/server-side-rendering-with-create-react-app-fiber-react-router-v4-helmet-redux-and-thunk-275cb25ca972). The demo also doesn't require that you actually do server-side rendering in your application, but includes a demo directly inside the `src` directory.
