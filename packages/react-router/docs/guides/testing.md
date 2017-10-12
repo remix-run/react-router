@@ -141,7 +141,7 @@ const renderTestSequence = ({
 // section of your app too
 const App = () => (
   <div>
-    <Route exact path="/" render={() => (
+    <Route path="/" render={() => (
       <div>
         <h1>Welcome</h1>
       </div>
