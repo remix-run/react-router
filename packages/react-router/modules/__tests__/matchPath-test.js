@@ -36,11 +36,11 @@ describe('matchPath', () => {
     })
   })
 
-  describe('with end = false', () => {
+  describe('with parent = true', () => {
     it('allows partial matches', () => {
       const path = '/'
       const pathname = '/somewhere/else'
-      const match = matchPath(pathname, { path, end: false })
+      const match = matchPath(pathname, { path, parent: true })
       expect(match).toMatchObject({
         url: '/',
         isExact: false
@@ -82,8 +82,8 @@ describe('matchPath', () => {
       expect(nonRootMatch).toBe(null)
     })
 
-    it('matches all locations if end=false', () => {
-      const match = matchPath('/test-location/7', { end: false })
+    it('matches all locations if parent=true', () => {
+      const match = matchPath('/test-location/7', { parent: true })
       expect(match).toMatchObject({
         path: '/',
         isExact: false

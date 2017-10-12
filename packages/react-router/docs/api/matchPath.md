@@ -19,13 +19,13 @@ this on the server with Node.js, it would be `req.url`.
 
 ## props
 
-The second argument are the `path` to match and the props to match against. The props are the `options` that [`path-to-regexp`](https://github.com/pillarjs/path-to-regexp/blob/v1.7.0/Readme.md#usage) accepts.
+The second argument are the `path` to match and the props to match against. The props are the same props that `<Route>` accepts.
 
 ```js
 {
   path, // like /users/:id
   strict, // optional, defaults to false
-  end, // optional, defaults to true
+  parent, // optional, defaults to false
   sensitive // optional, defaults to false
 }
 ```

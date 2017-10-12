@@ -30,7 +30,8 @@ const matchPath = (pathname, options = {}) => {
   if (typeof options === 'string')
     options = { path: options }
 
-  const { path = '/', end = true, strict = false, sensitive = false } = options
+  const { path = '/', parent = false, strict = false, sensitive = false } = options
+  const end = !parent;
   const { re, keys } = compilePath(path, { end, strict, sensitive })
   const match = re.exec(pathname)
 
