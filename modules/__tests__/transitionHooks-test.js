@@ -11,7 +11,7 @@ import match from '../match'
 describe('When a router enters a branch', function () {
   let
     node,
-    newsLeaveHookSpy, removeNewsLeaveHook, userLeaveHookSpy,
+    newsLeaveHookSpy, removeNewsLeaveHook, userLeaveHookSpy, unmatchSpy,
     DashboardRoute, NewsFeedRoute, InboxRoute, RedirectToInboxRoute, MessageRoute, UserRoute, AssignmentRoute,
     routes
 
@@ -19,6 +19,7 @@ describe('When a router enters a branch', function () {
     node = document.createElement('div')
     newsLeaveHookSpy = expect.createSpy()
     userLeaveHookSpy = expect.createSpy()
+    unmatchSpy = expect.createSpy()
 
     class Dashboard extends Component {
       render() {
@@ -199,6 +200,13 @@ describe('When a router enters a branch', function () {
     render(<Router history={createHistory('/news')} routes={routes}/>, node, function () {
       expect(dashboardRouteEnterSpy).toHaveBeenCalled()
       expect(newsFeedRouteEnterSpy).toHaveBeenCalled()
+      done()
+    })
+  })
+
+  it('calls the onUnmatch hooks of Router on /unmatch_url', function (done) {
+    render(<Router history={createHistory('/unmatch_url')} routes={routes} onUnmatch={unmatchSpy}/>, node, function () {
+      expect(unmatchSpy).toHaveBeenCalled()
       done()
     })
   })

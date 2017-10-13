@@ -211,7 +211,7 @@ export default function createTransitionManager(history, routes) {
    * changes, we update state and call the listener. We can also
    * gracefully handle errors and redirects.
    */
-  function listen(listener) {
+  function listen(listener, unmatchHandler) {
     function historyListener(location) {
       if (state.location === location) {
         listener(null, state)
@@ -224,11 +224,15 @@ export default function createTransitionManager(history, routes) {
           } else if (nextState) {
             listener(null, nextState)
           } else {
-            warning(
-              false,
-              'Location "%s" did not match any routes',
-              location.pathname + location.search + location.hash
-            )
+            if (typeof unmatchHandler === 'function') {
+              unmatchHandler(location)
+            } else {
+              warning(
+                false,
+                'Location "%s" did not match any routes',
+                location.pathname + location.search + location.hash
+              )
+            }
           }
         })
       }

@@ -104,7 +104,7 @@ const Router = createReactClass({
         assignRouterState(this.router, state)
         this.setState(state, this.props.onUpdate)
       }
-    })
+    }, this.props.onUnmatch)
   },
 
   /* istanbul ignore next: sanity check */
