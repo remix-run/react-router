@@ -20,7 +20,6 @@ Users of react-router 2.x and 3.x want to use react-router-redux found at [the l
 
 ```
 npm install --save react-router-redux@next
-npm install --save history
 ```
 
 ## Usage
