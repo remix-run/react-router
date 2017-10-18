@@ -5,7 +5,7 @@ import {Switch} from "react-router-dom";
 export default class InceptionSwitch extends Switch {
 
 
-    searchPath(children, elem, globalPath) {
+    searchPath(children, elem, route, globalPath) {
 
         if(globalPath === undefined) {
             globalPath = "";
@@ -25,8 +25,14 @@ export default class InceptionSwitch extends Switch {
                 if (path[0] !== "/") path = "/" + path;
                 path = globalPath + path;
 
+                path = path.replace(/\/\//g, "/");
+
+                if (path.length > 1 && path[path.length -1] === "/") {
+                    path = path.substring(0, path.length - 1);
+                }
+
                 if (element.props.children) {
-                    this.searchPath(element.props.children, elem, path);
+                    this.searchPath(element.props.children, elem, route, path);
 
                     // Found Route
                     if(elem.match !== null) {
@@ -55,7 +61,7 @@ export default class InceptionSwitch extends Switch {
             child: null
         };
 
-        this.searchPath(children, elem);
+        this.searchPath(children, elem, route);
 
         return elem.match ? React.cloneElement(elem.child, { location, computedMatch: elem.match }) : null
     }
