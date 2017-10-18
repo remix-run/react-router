@@ -292,7 +292,7 @@ describe('A <Switch>', () => {
       ), node)
     }).toThrow(/You should not use <Switch> outside a <Router>/)
 
-    expect(console.error.calls.count()).toBe(1)
+    expect(console.error.calls.count()).toBe(2)
     expect(console.error.calls.argsFor(0)[0]).toContain(
       'The context `router` is marked as required in `Switch`'
     )
