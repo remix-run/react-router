@@ -57,6 +57,8 @@ A [`location`](location.md) object to be used for matching children elements ins
 
 All children of a `<Switch>` should be `<Route>` or `<Redirect>` elements. Only the first child to match the current location will be rendered.
 
+Any other element that is a child of `<Switch>` will behave similairly to a `<Route>` element: it will match depending on the props you pass to it (`path`, `exact`, `strict`, `sensitive` and `from`). Note that the child does not have to actually do anything with the props, it's the `<Switch>` that does the matching.
+
 `<Route>` elements are matched using their `path` prop and `<Redirect>` elements are matched using their `from` prop. A `<Route>` with no `path` prop or a `<Redirect>` with no `from` prop will always match the current location.
 
 When you include a `<Redirect>` in a `<Switch>`, it can use any of the `<Route>`'s location matching props: `path`, `exact`, and `strict`. `from` is just an alias for the `path` prop.
