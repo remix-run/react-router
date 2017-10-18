@@ -12,6 +12,7 @@
     "actions.js",
     "es",
     "index.js",
+    "selectors.js",
     "middleware.js",
     "reducer.js",
     "umd"
