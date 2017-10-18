@@ -2,8 +2,10 @@ import babel from 'rollup-plugin-babel'
 import uglify from 'rollup-plugin-uglify'
 
 var config = {
-  format: 'umd',
-  moduleName: 'ReactRouterRedux',
+  output: {
+    format: 'umd',
+    name: 'ReactRouterRedux',
+  },
   plugins: [
     babel({
       exclude: 'node_modules/**'
