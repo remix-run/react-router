@@ -55,7 +55,7 @@ const ConnectedSwitch = connect(state => ({
 
 class LoginContainer extends React.Component {
   render() {
-    return <button onClick={() => this.props.login()}>Login Here!</button>
+    return <button onClick={this.props.login}>Login Here!</button>
   }
 }
 
@@ -65,7 +65,7 @@ class HomeContainer extends React.Component {
   }
 
   render() {
-    return <button onClick={() => this.props.logout()}>Logout Here!</button>
+    return <button onClick={this.props.logout}>Logout Here!</button>
   }
 }
 
@@ -73,7 +73,7 @@ const AppContainer = ({ location }) => (
   <ConnectedSwitch>
     <PrivateRoute component={Home} />
   </ConnectedSwitch>
-);
+)
 
 class PrivateRouteContainer extends React.Component {
   render() {
