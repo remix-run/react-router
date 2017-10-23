@@ -15,10 +15,10 @@ class ConnectedRouter extends Component {
     store: PropTypes.object
   }
 
-  handleLocationChange = location => {
+  handleLocationChange = (location, action) => {
     this.store.dispatch({
       type: LOCATION_CHANGE,
-      payload: location
+      payload: { ...location, action }
     })
   }
 
