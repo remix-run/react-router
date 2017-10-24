@@ -39,7 +39,7 @@ class Link extends React.Component {
   }
 
   getHref = () => {
-    const { replace, to } = this.props // eslint-disable-line no-unused-vars
+    const { to } = this.props
     
     invariant(
       this.context.router,
@@ -76,9 +76,9 @@ class Link extends React.Component {
   }
 
   render() {
-    const { innerRef, ...props } = this.props // eslint-disable-line no-unused-vars
+    const { replace, innerRef, ...props } = this.props // eslint-disable-line no-unused-vars
     const href = this.getHref()
-    
+
     return <a {...props} onClick={this.handleClick} href={href} ref={innerRef}/>
   }
 }
