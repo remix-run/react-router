@@ -25,7 +25,7 @@ describe('selectors', () => {
   })
 
   describe('createMatchSelector', () => {
-    it('matches correctly', () => {
+    it('matches correctly if the router is initialized', () => {
       const matchSelector = createMatchSelector('/')
       store.dispatch({
         type: LOCATION_CHANGE,
@@ -38,6 +38,12 @@ describe('selectors', () => {
         path: '/',
         url: '/'
       })
+    })
+    
+    it('does not throw error if router has not yet initialized', () => {
+      const matchSelector = createMatchSelector('/')
+      const state = store.getState()
+      expect(() => matchSelector(state)).not.toThrow()
     })
 
     it('does not update if the match is the same', () => {
