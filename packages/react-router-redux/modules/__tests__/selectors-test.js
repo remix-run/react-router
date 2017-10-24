@@ -43,7 +43,7 @@ describe('selectors', () => {
     it('does not throw error if router has not yet initialized', () => {
       const matchSelector = createMatchSelector('/')
       const state = store.getState()
-      expect(matchSelector(state))
+      expect(() => matchSelector(state)).not.toThrow()
     })
 
     it('does not update if the match is the same', () => {
