@@ -8,7 +8,8 @@ class ConnectedRouter extends Component {
   static propTypes = {
     store: PropTypes.object,
     history: PropTypes.object,
-    children: PropTypes.node
+    children: PropTypes.node,
+    namespace: PropTypes.string
   }
 
   static contextTypes = {
@@ -16,9 +17,13 @@ class ConnectedRouter extends Component {
   }
 
   handleLocationChange = location => {
+    const { namespace } = this.props
     this.store.dispatch({
       type: LOCATION_CHANGE,
-      payload: location
+      payload: {
+        location,
+        namespace
+      }
     })
   }
 

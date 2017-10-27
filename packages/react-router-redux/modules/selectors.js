@@ -1,6 +1,6 @@
 import { matchPath } from 'react-router'
 
-export const getLocation = state => state.router.location
+export const getLocation = (state, namespace='default') => state.router.location[namespace]
 
 export const createMatchSelector = (path) => {
   let lastPathname = null
