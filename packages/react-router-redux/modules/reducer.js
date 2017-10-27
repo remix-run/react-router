@@ -5,7 +5,7 @@
 export const LOCATION_CHANGE = '@@router/LOCATION_CHANGE'
 
 const initialState = {
-  location: null
+  location: { default: null },
 }
 
 /**
@@ -16,7 +16,11 @@ const initialState = {
  */
 export function routerReducer(state = initialState, { type, payload } = {}) {
   if (type === LOCATION_CHANGE) {
-    return { ...state, location: payload }
+    const { location, namespace } = payload
+    return { ...state, location: {
+      ...state.location,
+      [namespace || 'default']: location,
+    }}
   }
 
   return state

@@ -7,9 +7,9 @@
 export const CALL_HISTORY_METHOD = '@@router/CALL_HISTORY_METHOD'
 
 function updateLocation(method) {
-  return (...args) => ({
+  return (namespace) => (...args) => ({
     type: CALL_HISTORY_METHOD,
-    payload: { method, args }
+    payload: { method, args, namespace }
   })
 }
 
@@ -18,10 +18,23 @@ function updateLocation(method) {
  * The associated routerMiddleware will capture these events before they get to
  * your reducer and reissue them as the matching function on your history.
  */
-export const push = updateLocation('push')
-export const replace = updateLocation('replace')
-export const go = updateLocation('go')
-export const goBack = updateLocation('goBack')
-export const goForward = updateLocation('goForward')
+export const namespacedPush = updateLocation('push')
+export const namespacedReplace = updateLocation('replace')
+export const namespacedGo = updateLocation('go')
+export const namespacedGoBack = updateLocation('goBack')
+export const namespacedGoForward = updateLocation('goForward')
+
+export const push = namespacedPush()
+export const replace = namespacedReplace()
+export const go = namespacedGo()
+export const goBack = namespacedGoBack()
+export const goForward = namespacedGoForward()
 
 export const routerActions = { push, replace, go, goBack, goForward }
+export const namespacedRouterActions = (namespace) => ({
+  push: namespacedPush(namespace),
+  replace: namespacedReplace(namespace),
+  go: namespacedGo(namespace),
+  goBack: namespacedGoBack(namespace),
+  goForward: namespacedGoForward(namespace),
+})

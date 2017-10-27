@@ -17,7 +17,7 @@ describe('selectors', () => {
       const location = { pathname: '/' }
       store.dispatch({
         type: LOCATION_CHANGE,
-        payload: location
+        payload: { location }
       })
       const state = store.getState()
       expect(getLocation(state)).toBe(location)
@@ -29,7 +29,9 @@ describe('selectors', () => {
       const matchSelector = createMatchSelector('/')
       store.dispatch({
         type: LOCATION_CHANGE,
-        payload: { pathname: '/test' }
+        payload: {
+          location: { pathname: '/test' }
+        }
       })
       const state = store.getState()
       expect(matchSelector(state)).toEqual({
@@ -39,7 +41,7 @@ describe('selectors', () => {
         url: '/'
       })
     })
-    
+
     it('does not throw error if router has not yet initialized', () => {
       const matchSelector = createMatchSelector('/')
       const state = store.getState()
@@ -50,12 +52,16 @@ describe('selectors', () => {
       const matchSelector = createMatchSelector('/')
       store.dispatch({
         type: LOCATION_CHANGE,
-        payload: { pathname: '/test1' }
+        payload: {
+          location: { pathname: '/test1' }
+        }
       })
       const match1 = matchSelector(store.getState())
       store.dispatch({
         type: LOCATION_CHANGE,
-        payload: { pathname: '/test2' }
+        payload: {
+          location: { pathname: '/test2' }
+        }
       })
       const match2 = matchSelector(store.getState())
       expect(match1).toBe(match2)
@@ -65,12 +71,16 @@ describe('selectors', () => {
       const matchSelector = createMatchSelector('/sushi/:type')
       store.dispatch({
         type: LOCATION_CHANGE,
-        payload: { pathname: '/sushi/california' }
+        payload: {
+          location: { pathname: '/sushi/california' }
+        }
       })
       const match1 = matchSelector(store.getState())
       store.dispatch({
         type: LOCATION_CHANGE,
-        payload: { pathname: '/sushi/dynamite' }
+        payload: {
+          location: { pathname: '/sushi/dynamite' }
+        }
       })
       const match2 = matchSelector(store.getState())
       expect(match1).not.toBe(match2)
