@@ -12,6 +12,7 @@ import { createStore, applyMiddleware, combineReducers } from 'redux'
 import createHistory from 'history/createBrowserHistory'
 
 import { Route, Switch } from 'react-router'
+import { Redirect } from 'react-router-dom'
 
 const history = createHistory()
 
@@ -49,10 +50,6 @@ const store = createStore(
   applyMiddleware(routerMiddleware(history)),
 )
 
-const ConnectedSwitch = connect(state => ({
-	location: state.location
-}))(Switch)
-
 class LoginContainer extends React.Component {
   render() {
     return <button onClick={this.props.login}>Login Here!</button>
@@ -69,17 +66,29 @@ class HomeContainer extends React.Component {
   }
 }
 
-const AppContainer = ({ location }) => (
-  <ConnectedSwitch>
-    <PrivateRoute component={Home} />
-  </ConnectedSwitch>
-)
-
 class PrivateRouteContainer extends React.Component {
   render() {
-    return this.props.isAuthenticated ?
-        <Route exact path="/" component={this.props.component} />
-    :   <Route exact path="/" component={Login} />
+    const {
+      isAuthenticated,
+      component: Component,
+      ...props
+    } = this.props
+
+    return (
+      <Route
+        {...props}
+        render={props =>
+          isAuthenticated
+            ? <Component {...props} />
+            : (
+            <Redirect to={{
+              pathname: '/login',
+              state: { from: props.location }
+            }} />
+          )
+        }
+      />
+    )
   }
 }
 
@@ -97,18 +106,17 @@ const Login = connect(null, dispatch => ({
 const Home = connect(null, dispatch => ({
   logout: () => {
     dispatch(authFail())
-    dispatch(push('/'))
+    dispatch(push('/login'))
   }
 }))(HomeContainer)
-
-const App = connect(state => ({
-  location: state.location,
-}))(AppContainer)
 
 render(
   <Provider store={store}>
     <ConnectedRouter history={history}>
-      <App />
+      <Switch>
+        <Route path="/login" component={Login} />
+        <PrivateRoute exact path="/" component={Home} />
+      </Switch>
     </ConnectedRouter>
   </Provider>,
   document.getElementById('root'),
