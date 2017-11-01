@@ -3,6 +3,23 @@ const webpack = require('webpack')
 const HTMLWebpackPlugin = require('html-webpack-plugin')
 const CopyWebpackPlugin = require('copy-webpack-plugin')
 const SWPrecacheWebpackPlugin = require('sw-precache-webpack-plugin')
+const codesandboxUrl = require('codesandbox/lib/github/url')
+
+const CODESANDBOX_OPTIONS = {
+  currentModuleView: true,
+  examplePath: 'examples',
+}
+
+// Generate the base codesandbox url for the examples. For production
+// we override the info to point to the examples on master.
+const CODESANDBOX_URL = process.env.NODE_ENV === 'production'
+  ? codesandboxUrl.getSandboxUrl({
+    ...CODESANDBOX_OPTIONS,
+    gitRepo: 'react-router',
+    gitBranch: 'master',
+    gitUsername: 'ReactTraining'
+  })
+  : codesandboxUrl.getSandboxUrl(CODESANDBOX_OPTIONS)
 
 module.exports = {
   devtool: 'source-map',
@@ -23,7 +40,8 @@ module.exports = {
     new webpack.DefinePlugin({
       'process.env.NODE_ENV': JSON.stringify(
         process.env.NODE_ENV || 'development'
-      )
+      ),
+      'process.env.CODESANDBOX_URL': JSON.stringify(CODESANDBOX_URL)
     }),
     new webpack.optimize.CommonsChunkPlugin('vendor', `vendor-[chunkHash].js`),
     new HTMLWebpackPlugin({

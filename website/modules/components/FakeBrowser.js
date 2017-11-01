@@ -2,6 +2,7 @@ import React from 'react'
 import { MemoryRouter, Route } from 'react-router-dom'
 import { Block, Col, Row } from 'jsxstyle'
 import { LIGHT_GRAY, GRAY } from '../Theme'
+import CodeSandboxLogo from './CodeSandboxLogo'
 
 const LeftArrowIcon = (props) => (
   <svg {...props} fill="currentColor" viewBox="0 0 40 40" preserveAspectRatio="xMidYMid meet">
@@ -61,7 +62,7 @@ class FakeBrowser extends React.Component {
 
   render() {
     const { url } = this.state
-    const { children, ...props } = this.props
+    const { children, codesandboxUrl, ...props } = this.props
 
     return (
       <MemoryRouter getUserConfirmation={getUserConfirmation}>
@@ -124,6 +125,17 @@ class FakeBrowser extends React.Component {
                   }}
                 />
               </Row>
+              <Block
+                component="a"
+                marginTop={3}
+                props={{
+                  rel: "noopener referrer",
+                  href: codesandboxUrl,
+                  target: "_blank"
+                }}
+              >
+                <CodeSandboxLogo color={LIGHT_GRAY} width={24} height={24} />
+              </Block>
             </Row>
             <Block
               flex="1"
@@ -138,6 +150,10 @@ class FakeBrowser extends React.Component {
       </MemoryRouter>
     )
   }
+}
+
+FakeBrowser.propTypes = {
+  codesandboxUrl: React.PropTypes.string
 }
 
 export default FakeBrowser

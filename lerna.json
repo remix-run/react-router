@@ -3,6 +3,7 @@
   "version": "independent",
   "packages": [
     "packages/*",
-    "website"
+    "website",
+    "examples"
   ]
 }

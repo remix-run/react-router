@@ -29,6 +29,7 @@ const WebExample = ({ example }) => (
                     left="290px"
                     top="40px"
                     bottom="40px"
+                    codesandboxUrl={example.codesandboxUrl}
                   >
                     <Example/>
                   </FakeBrowser>

@@ -16,6 +16,7 @@
     "babel-preset-react": "^6.5.0",
     "babel-preset-stage-1": "^6.5.0",
     "bundle-loader": "0.5.4",
+    "codesandbox": "^1.1.12",
     "copy-webpack-plugin": "^4.0.1",
     "css-loader": "0.23.1",
     "eslint": "^2.13.1",
