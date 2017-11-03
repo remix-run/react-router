@@ -94,7 +94,7 @@ describe('A <Link>', () => {
 
       const name = node.querySelector('a').getAttribute('name')
 
-      expect(name).toEqual(null)
+      expect(name).toBeNull()
     })
   })
 

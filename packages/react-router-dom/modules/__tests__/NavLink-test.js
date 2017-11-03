@@ -397,7 +397,7 @@ describe('NavLink', () => {
 
       const name = node.getElementsByTagName('a')[0].getAttribute('name')
 
-      expect(name).toEqual(null)
+      expect(name).toBeNull()
     })
   })
 })
