@@ -42,8 +42,8 @@ describe('A <Link>', () => {
     })
   })
 
-  describe('has a name attr', () => {
-    it('by default when innerHTML is a string and not explicitly set', () => {
+  describe('name attr', () => {
+    it('is set by default when innerHTML is a string and not explicitly declared', () => {
       const node = document.createElement('div')
 
       ReactDOM.render(
@@ -60,7 +60,7 @@ describe('A <Link>', () => {
       expect(name).toEqual('internet fundamentals')
     })
 
-    it('when set explicitly', () => {
+    it('is set when declared explicitly', () => {
       const node = document.createElement('div')
 
       ReactDOM.render(
@@ -79,10 +79,8 @@ describe('A <Link>', () => {
 
       expect(name).toEqual('accessibility')
     })
-  })
 
-  describe('does not have a name attr', () => {
-    it('when not set, and innerText is not a string', () => {
+    it('is empty when not set AND child is not a string', () => {
       const node = document.createElement('div')
 
       ReactDOM.render(
@@ -97,26 +95,6 @@ describe('A <Link>', () => {
       const name = node.querySelector('a').getAttribute('name')
 
       expect(name).toEqual(null)
-    })
-
-    it('when set explicitly', () => {
-      const node = document.createElement('div')
-
-      ReactDOM.render(
-        <MemoryRouter initialEntries={['/somewhere']}>
-          <Link
-            to="https://dequeuniversity.com/rules/axe/2.2/link-name"
-            name={'accessibility'}
-          >
-            internet fundamentals
-          </Link>
-        </MemoryRouter>,
-        node
-      )
-
-      const name = node.querySelector('a').getAttribute('name')
-
-      expect(name).toEqual('accessibility')
     })
   })
 
