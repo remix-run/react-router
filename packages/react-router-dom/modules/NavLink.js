@@ -17,12 +17,16 @@ const NavLink = ({
   style,
   isActive: getIsActive,
   ariaCurrent,
+  name,
+  children,
   ...rest
 }) => {
   const path = typeof to === 'object' ? to.pathname : to
 
   // Regex taken from: https://github.com/pillarjs/path-to-regexp/blob/master/index.js#L202
   const escapedPath = path.replace(/([.+*?=^!:${}()[\]|/\\])/g, '\\$1')
+
+  rest.name = name || (typeof children === 'string' ? children : null)
 
   return (
     <Route
@@ -36,7 +40,11 @@ const NavLink = ({
         return (
           <Link
             to={to}
-            className={isActive ? [ className, activeClassName ].filter(i => i).join(' ') : className}
+            className={
+              isActive
+                ? [className, activeClassName].filter(i => i).join(' ')
+                : className
+            }
             style={isActive ? { ...style, ...activeStyle } : style}
             aria-current={isActive && ariaCurrent}
             {...rest}
@@ -57,7 +65,9 @@ NavLink.propTypes = {
   activeStyle: PropTypes.object,
   style: PropTypes.object,
   isActive: PropTypes.func,
-  ariaCurrent: PropTypes.oneOf(['page', 'step', 'location', 'true'])
+  ariaCurrent: PropTypes.oneOf(['page', 'step', 'location', 'true']),
+  name: PropTypes.string,
+  children: PropTypes.node
 }
 
 NavLink.defaultProps = {
