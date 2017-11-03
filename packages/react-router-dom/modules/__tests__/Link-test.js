@@ -13,11 +13,12 @@ describe('A <Link>', () => {
     }
     const node = document.createElement('div')
 
-    ReactDOM.render((
+    ReactDOM.render(
       <MemoryRouter>
         <Link to={location}>link</Link>
-      </MemoryRouter>
-    ), node)
+      </MemoryRouter>,
+      node
+    )
 
     const href = node.querySelector('a').getAttribute('href')
 
@@ -27,16 +28,95 @@ describe('A <Link>', () => {
   describe('to as a string', () => {
     it('resolves to with no pathname using current location', () => {
       const node = document.createElement('div')
-      
-      ReactDOM.render((
-        <MemoryRouter initialEntries={[ '/somewhere' ]}>
-          <Link to='?rendersWithPathname=true'>link</Link>
-        </MemoryRouter>
-      ), node)
-  
+
+      ReactDOM.render(
+        <MemoryRouter initialEntries={['/somewhere']}>
+          <Link to="?rendersWithPathname=true">link</Link>
+        </MemoryRouter>,
+        node
+      )
+
       const href = node.querySelector('a').getAttribute('href')
-  
+
       expect(href).toEqual('/somewhere?rendersWithPathname=true')
+    })
+  })
+
+  describe('has a name attr', () => {
+    it('by default when innerHTML is a string and not explicitly set', () => {
+      const node = document.createElement('div')
+
+      ReactDOM.render(
+        <MemoryRouter initialEntries={['/somewhere']}>
+          <Link to="https://dequeuniversity.com/rules/axe/2.2/link-name">
+            internet fundamentals
+          </Link>
+        </MemoryRouter>,
+        node
+      )
+
+      const name = node.querySelector('a').getAttribute('name')
+
+      expect(name).toEqual('internet fundamentals')
+    })
+
+    it('when set explicitly', () => {
+      const node = document.createElement('div')
+
+      ReactDOM.render(
+        <MemoryRouter initialEntries={['/somewhere']}>
+          <Link
+            to="https://dequeuniversity.com/rules/axe/2.2/link-name"
+            name={'accessibility'}
+          >
+            internet fundamentals
+          </Link>
+        </MemoryRouter>,
+        node
+      )
+
+      const name = node.querySelector('a').getAttribute('name')
+
+      expect(name).toEqual('accessibility')
+    })
+  })
+
+  describe('does not have a name attr', () => {
+    it('when not set, and innerText is not a string', () => {
+      const node = document.createElement('div')
+
+      ReactDOM.render(
+        <MemoryRouter initialEntries={['/somewhere']}>
+          <Link to="https://dequeuniversity.com/rules/axe/2.2/link-name">
+            <img scr={'/images/pretend'} alt="ignore" />
+          </Link>
+        </MemoryRouter>,
+        node
+      )
+
+      const name = node.querySelector('a').getAttribute('name')
+
+      expect(name).toEqual(null)
+    })
+
+    it('when set explicitly', () => {
+      const node = document.createElement('div')
+
+      ReactDOM.render(
+        <MemoryRouter initialEntries={['/somewhere']}>
+          <Link
+            to="https://dequeuniversity.com/rules/axe/2.2/link-name"
+            name={'accessibility'}
+          >
+            internet fundamentals
+          </Link>
+        </MemoryRouter>,
+        node
+      )
+
+      const name = node.querySelector('a').getAttribute('name')
+
+      expect(name).toEqual('accessibility')
     })
   })
 
@@ -46,9 +126,7 @@ describe('A <Link>', () => {
     spyOn(console, 'error')
 
     expect(() => {
-      ReactDOM.render((
-        <Link to="/">link</Link>
-      ), node)
+      ReactDOM.render(<Link to="/">link</Link>, node)
     }).toThrow(/You should not use <Link> outside a <Router>/)
 
     expect(console.error.calls.count()).toBe(2)
@@ -67,7 +145,9 @@ describe('A <Link>', () => {
 
     ReactDOM.render(
       <MemoryRouter>
-        <Link to="/" innerRef={refCallback}>link</Link>
+        <Link to="/" innerRef={refCallback}>
+          link
+        </Link>
       </MemoryRouter>,
       node
     )
@@ -93,11 +173,12 @@ describe('A <Link> underneath a <HashRouter>', () => {
   })
 
   const createLinkNode = (hashType, to) => {
-    ReactDOM.render((
+    ReactDOM.render(
       <HashRouter hashType={hashType}>
-        <Link to={to}/>
-      </HashRouter>
-    ), node)
+        <Link to={to} />
+      </HashRouter>,
+      node
+    )
 
     return node.querySelector('a')
   }

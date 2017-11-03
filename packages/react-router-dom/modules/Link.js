@@ -3,7 +3,7 @@ import PropTypes from 'prop-types'
 import invariant from 'invariant'
 import { createLocation } from 'history'
 
-const isModifiedEvent = (event) =>
+const isModifiedEvent = event =>
   !!(event.metaKey || event.altKey || event.ctrlKey || event.shiftKey)
 
 /**
@@ -14,14 +14,10 @@ class Link extends React.Component {
     onClick: PropTypes.func,
     target: PropTypes.string,
     replace: PropTypes.bool,
-    to: PropTypes.oneOfType([
-      PropTypes.string,
-      PropTypes.object
-    ]).isRequired,
-    innerRef: PropTypes.oneOfType([
-      PropTypes.string,
-      PropTypes.func
-    ])
+    name: PropTypes.string,
+    to: PropTypes.oneOfType([PropTypes.string, PropTypes.object]).isRequired,
+    innerRef: PropTypes.oneOfType([PropTypes.string, PropTypes.func]),
+    children: PropTypes.node
   }
 
   static defaultProps = {
@@ -38,9 +34,8 @@ class Link extends React.Component {
     }).isRequired
   }
 
-  handleClick = (event) => {
-    if (this.props.onClick)
-      this.props.onClick(event)
+  handleClick = event => {
+    if (this.props.onClick) this.props.onClick(event)
 
     if (
       !event.defaultPrevented && // onClick prevented default
@@ -62,7 +57,7 @@ class Link extends React.Component {
   }
 
   render() {
-    const { replace, to, innerRef, ...props } = this.props // eslint-disable-line no-unused-vars
+    const { replace, to, innerRef, name, children, ...props } = this.props // eslint-disable-line no-unused-vars
 
     invariant(
       this.context.router,
@@ -70,10 +65,18 @@ class Link extends React.Component {
     )
 
     const { history } = this.context.router
-    const location = typeof to === 'string' ? createLocation(to, null, null, history.location) : to
+    const location =
+      typeof to === 'string'
+        ? createLocation(to, null, null, history.location)
+        : to
+
+    props.name = name || (typeof children === 'string' ? children : null)
 
     const href = history.createHref(location)
-    return <a {...props} onClick={this.handleClick} href={href} ref={innerRef}/>
+
+    return (
+      <a {...props} onClick={this.handleClick} href={href} ref={innerRef} />
+    )
   }
 }
 
