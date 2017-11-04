@@ -1,5 +1,5 @@
 import React from 'react'
-import { CSSTransitionGroup } from 'react-transition-group'
+import { CSSTransition, TransitionGroup } from 'react-transition-group'
 import {
   BrowserRouter as Router,
   Route,
@@ -35,24 +35,26 @@ const AnimationExample = () => (
         </ul>
 
         <div style={styles.content}>
-          <CSSTransitionGroup
-            transitionName="fade"
-            transitionEnterTimeout={300}
-            transitionLeaveTimeout={300}
-          >
-            {/* no different than other usage of
+          <TransitionGroup>
+            <CSSTransition
+              classNames="fade"
+              timeout = {300}
+              key={location.key}
+            >
+              {/* no different than other usage of
                 CSSTransitionGroup, just make
                 sure to pass `location` to `Route`
                 so it can match the old location
                 as it animates out
-            */}
-            <Route
-              location={location}
-              key={location.key}
-              path="/:h/:s/:l"
-              component={HSL}
-            />
-          </CSSTransitionGroup>
+              */}
+              <Route
+                location={location}
+                key={location.key}
+                path="/:h/:s/:l"
+                component={HSL}
+              />
+            </CSSTransition>
+          </TransitionGroup>
         </div>
       </div>
     )}/>
