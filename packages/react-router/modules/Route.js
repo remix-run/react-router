@@ -104,10 +104,10 @@ class Route extends React.Component {
 
   render() {
     const { match } = this.state
-    const { children, component, render } = this.props
+    const { children, component, render, ...rest } = this.props
     const { history, route, staticContext } = this.context.router
     const location = this.props.location || route.location
-    const props = { match, location, history, staticContext }
+    const props = { match, location, history, staticContext, ...rest }
 
     if (component)
       return match ? React.createElement(component, props) : null
