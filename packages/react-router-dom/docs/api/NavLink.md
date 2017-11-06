@@ -33,9 +33,9 @@ The styles to apply to the element when it is active.
 >FAQs</NavLink>
 ```
 
-## exact: bool
+## parent: bool
 
-When `true`, the active class/style will only be applied if the location is matched exactly.
+When `true`, the active class/style will be applied for partial matches.
 
 ```js
 <NavLink

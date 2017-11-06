@@ -217,11 +217,21 @@ describe('NavLink', () => {
     })
   })
 
-  describe('exact', () => {
-    it('does not do exact matching by default', () => {
+  describe('parent', () => {
+    it('does exact matching by default', () => {
       ReactDOM.render((
         <MemoryRouter initialEntries={['/pizza/anchovies']}>
           <NavLink to='/pizza' activeClassName='active'>Pizza!</NavLink>
+        </MemoryRouter>
+      ), node)
+      const a = node.getElementsByTagName('a')[0]
+      expect(a.className).not.toEqual('active')
+    })
+
+    it('does partial matching when parent=true', () => {
+      ReactDOM.render((
+        <MemoryRouter initialEntries={['/pizza/anchovies']}>
+          <NavLink parent to='/pizza' activeClassName='active'>Pizza!</NavLink>
         </MemoryRouter>
       ), node)
       const a = node.getElementsByTagName('a')[0]
@@ -231,7 +241,7 @@ describe('NavLink', () => {
     it('sets active default value only for exact matches', () => {
       ReactDOM.render((
         <MemoryRouter initialEntries={['/pizza']}>
-          <NavLink exact to='/pizza'>Pizza!</NavLink>
+          <NavLink to='/pizza'>Pizza!</NavLink>
         </MemoryRouter>
       ), node)
       const a = node.getElementsByTagName('a')[0]
@@ -241,7 +251,7 @@ describe('NavLink', () => {
     it('sets active passed value only for exact matches', () => {
       ReactDOM.render((
         <MemoryRouter initialEntries={['/pizza']}>
-          <NavLink exact to='/pizza' activeClassName="selected">Pizza!</NavLink>
+          <NavLink to='/pizza' activeClassName="selected">Pizza!</NavLink>
         </MemoryRouter>
       ), node)
       const a = node.getElementsByTagName('a')[0]
@@ -249,20 +259,10 @@ describe('NavLink', () => {
       expect(a.className).toEqual('selected')
     })
 
-    it('does not set active default value for partial matches', () => {
-      ReactDOM.render((
-        <MemoryRouter initialEntries={['/pizza/anchovies']}>
-          <NavLink exact to='/pizza'>Pizza!</NavLink>
-        </MemoryRouter>
-      ), node)
-      const a = node.getElementsByTagName('a')[0]
-      expect(a.className).not.toContain('active')
-    })
-
     it('does not set active passed value for partial matches', () => {
       ReactDOM.render((
         <MemoryRouter initialEntries={['/pizza/anchovies']}>
-          <NavLink exact to='/pizza' activeClassName='selected'>Pizza!</NavLink>
+          <NavLink to='/pizza' activeClassName='selected'>Pizza!</NavLink>
         </MemoryRouter>
       ), node)
       const a = node.getElementsByTagName('a')[0]
