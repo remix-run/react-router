@@ -1,13 +1,11 @@
 import React from 'react';
 import { render } from 'react-dom';
-import { Provider } from 'react-redux';
-import { ConnectedRouter } from 'react-router-redux';
+import { Provider, connect } from 'react-redux';
+import { ConnectedRouter, routerReducer, routerMiddleware } from 'react-router-redux';
 
 import { createStore, applyMiddleware } from 'redux';
 import createHistory from 'history/createBrowserHistory';
-import { routerReducer, routerMiddleware } from 'react-router-redux';
 
-import { connect } from 'react-redux';
 import { Link } from 'react-router-dom';
 import { Route, Switch } from 'react-router';
 
