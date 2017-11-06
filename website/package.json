@@ -47,7 +47,7 @@
     "cheerio": "^0.22.0",
     "react-icons": "^2.2.3",
     "react-media": "^1.5.1",
-    "react-transition-group": "^1.1.2",
+    "react-transition-group": "^2.2.1",
     "resolve-pathname": "^2.0.2",
     "slug": "^0.9.1"
   }
