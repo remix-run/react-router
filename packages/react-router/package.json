@@ -18,6 +18,7 @@
     "Switch.js",
     "es",
     "index.js",
+    "generatePath.js",
     "matchPath.js",
     "withRouter.js",
     "umd"
