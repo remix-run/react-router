@@ -50,7 +50,7 @@ Normally you just use a string, but if you need to add some "location state" tha
 
 // but you can use a location instead
 const location = {
-  pathname: '/somewhere'
+  pathname: '/somewhere',
   state: { fromDashboard: true }
 }
 
