@@ -11,10 +11,8 @@ describe("A <Router>", () => {
     ReactDOM.unmountComponentAtNode(node);
   });
 
-  describe("when it has more than one child", () => {
-    it("throws an error explaining a Router may have only one child", () => {
-      spyOn(console, "error");
-
+  describe('when it has more than one child', () => {
+    it('renders all children', () => {
       expect(() => {
         ReactDOM.render(
           <Router history={createHistory()}>
@@ -22,10 +20,11 @@ describe("A <Router>", () => {
             <p>Bar</p>
           </Router>,
           node
-        );
-      }).toThrow(/A <Router> may have only one child element/);
-    });
-  });
+        )
+      }).not.toThrow()
+      expect(node.textContent).toBe('FooBar')
+    })
+  })
 
   describe("with exactly one child", () => {
     it("does not throw an error", () => {
