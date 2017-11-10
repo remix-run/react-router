@@ -159,7 +159,7 @@ class Blocker extends React.PureComponent {
 
 const Parent = (props) => {
   // <Parent> receives the location as a prop. Any child
-  // element is creates can be passed the location.
+  // element it creates can be passed the location.
   return (
     <SomeComponent>
       <Blocker location={props.location} />

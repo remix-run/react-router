@@ -44,7 +44,7 @@ const NavLink = ({
         )
       }}
     />
-  );
+  )
 }
 
 NavLink.propTypes = {

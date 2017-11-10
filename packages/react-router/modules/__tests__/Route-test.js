@@ -90,6 +90,8 @@ describe('A <Route>', () => {
 
   it('throws with no <Router>', () => {
     const node = document.createElement('div')
+    
+    spyOn(console, 'error')
 
     expect(() => {
       ReactDOM.render((
