@@ -10,10 +10,10 @@ This is beta software, it needs:
 2. Some people to try it out and find bugs
 3. A strategy for working with the devtools
    - (issue describing a different approach to what we've seen previously coming soon)
-   
+
 ## Versions
 
-This (react-router-redux 5.x) is the version of react-router-redux for use with react-router 4.x. 
+This (react-router-redux 5.x) is the version of react-router-redux for use with react-router 4.x.
 Users of react-router 2.x and 3.x want to use react-router-redux found at [the legacy repository](https://github.com/reactjs/react-router-redux).
 
 ## Installation
@@ -74,3 +74,11 @@ ReactDOM.render(
   document.getElementById('root')
 )
 ```
+
+## Examples
+
+A few basic examples are provided for you.
+
+ - [Basic Example](examples/BasicExample.js)
+ - [Authentication](examples/AuthExample.js)
+ - [Server-side Rendering](examples/ssr)
