@@ -4,7 +4,7 @@ import thunk from 'redux-thunk';
 
 // On the server we use MemoryHistory, that's an important distinction
 import createHistory from 'history/createMemoryHistory';
-g;
+
 // Where your reducers come from (see client-side example above)
 import rootReducer from './reducers';
 
