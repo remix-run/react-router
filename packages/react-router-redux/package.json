@@ -1,6 +1,6 @@
 {
   "name": "react-router-redux",
-  "version": "5.0.0-alpha.7",
+  "version": "5.0.0-alpha.8",
   "description": "Redux bindings for React Router",
   "repository": "ReactTraining/react-router",
   "license": "MIT",
