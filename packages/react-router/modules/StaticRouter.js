@@ -2,18 +2,8 @@ import warning from "warning";
 import invariant from "invariant";
 import React from "react";
 import PropTypes from "prop-types";
-import { createPath, parsePath } from "history";
+import { createLocation, createPath } from "history";
 import Router from "./Router";
-
-const normalizeLocation = object => {
-  const { pathname = "/", search = "", hash = "" } = object;
-
-  return {
-    pathname,
-    search: search === "?" ? "" : search,
-    hash: hash === "#" ? "" : hash
-  };
-};
 
 const addLeadingSlash = path => {
   return path.charAt(0) === "/" ? path : "/" + path;
@@ -40,11 +30,6 @@ const stripBasename = (basename, location) => {
     pathname: location.pathname.substr(base.length)
   };
 };
-
-const createLocation = location =>
-  typeof location === "string"
-    ? parsePath(location)
-    : normalizeLocation(location);
 
 const createURL = location =>
   typeof location === "string" ? location : createPath(location);
