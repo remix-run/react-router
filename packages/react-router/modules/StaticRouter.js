@@ -2,7 +2,7 @@ import warning from 'warning'
 import invariant from 'invariant'
 import React from 'react'
 import PropTypes from 'prop-types'
-import { addLeadingSlash, createPath, parsePath } from 'history/PathUtils'
+import { createPath, parsePath } from 'history'
 import Router from './Router'
 
 const normalizeLocation = (object) => {
@@ -13,6 +13,10 @@ const normalizeLocation = (object) => {
     search: search === '?' ? '' : search,
     hash: hash === '#' ? '' : hash
   }
+}
+
+const addLeadingSlash = (path) => {
+  return path.charAt(0) === '/' ? path : '/' + path;
 }
 
 const addBasename = (basename, location) => {

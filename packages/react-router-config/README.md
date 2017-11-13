@@ -79,6 +79,10 @@ const routes = [
 
 Returns an array of matched routes.
 
+#### Parameters
+- routes - the route configuration
+- pathname - the [pathname](https://developer.mozilla.org/en-US/docs/Web/API/HTMLHyperlinkElementUtils/pathname) component of the url. This must be a decoded string representing the path.
+
 ```js
 import { matchRoutes } from 'react-router-config'
 const branch = matchRoutes(routes, '/child/23')
@@ -154,12 +158,12 @@ class PendingNavDataLoader extends Component {
   render() {
     const { children, location } = this.props
     const { previousLocation } = this.state
-    
-    // use a controlled <Route> to trick all descendants into 
+
+    // use a controlled <Route> to trick all descendants into
     // rendering the old location
     return (
-      <Route 
-        location={previousLocation || location} 
+      <Route
+        location={previousLocation || location}
         render={() => children}
       />
     )

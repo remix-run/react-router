@@ -51,7 +51,7 @@ This is also useful for animated transitions since the matched `<Route>` is rend
 
 ## location: object
 
-A [`location`](location.md) object to be used for matching children elements instead of the current history location (usually the current browser URL).
+A [`location`](./location.md) object to be used for matching children elements instead of the current history location (usually the current browser URL).
 
 ## children: node
 

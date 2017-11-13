@@ -2,7 +2,7 @@ import React from 'react'
 import ReactDOM from 'react-dom'
 import PropTypes from 'prop-types'
 import Router from '../Router'
-import createHistory from 'history/createMemoryHistory'
+import { createMemoryHistory as createHistory } from 'history'
 
 describe('A <Router>', () => {
   const node = document.createElement('div')
@@ -12,7 +12,9 @@ describe('A <Router>', () => {
   })
 
   describe('when it has more than one child', () => {
-    it('throws an error explaining a Router may have only one child', () => {
+    it('throws an error explaining a Router may have only one child', () => {      
+      spyOn(console, 'error')
+  
       expect(() => {
         ReactDOM.render(
           <Router history={createHistory()}>
