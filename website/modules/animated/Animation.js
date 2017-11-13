@@ -8,7 +8,7 @@
  *
  * @flow
  */
-'use strict';
+'use strict'
 
 export type EndResult = {finished: bool};
 export type EndCallback = (result: EndResult) => void;
@@ -32,10 +32,10 @@ class Animation {
   stop(): void {}
   // Helper function for subclasses to make sure onEnd is only called once.
   __debouncedOnEnd(result: EndResult) {
-    var onEnd = this.__onEnd;
-    this.__onEnd = null;
-    onEnd && onEnd(result);
+    var onEnd = this.__onEnd
+    this.__onEnd = null
+    onEnd && onEnd(result)
   }
 }
 
-module.exports = Animation;
+module.exports = Animation
