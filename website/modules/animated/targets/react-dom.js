@@ -10,7 +10,7 @@
  */
 'use strict'
 
-var CSSPropertyOperations = require('react-dom/lib/CSSPropertyOperations')
+var CSSPropertyOperations = require('react-css-property-operations')
 var Animated = require('../')
 
 // { scale: 2 } => 'scale(2)'
