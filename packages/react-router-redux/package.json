@@ -37,7 +37,7 @@
   },
   "devDependencies": {
     "babel-cli": "^6.26.0",
-    "babel-core": "^6.26.0",
+    "babel-core": "^6.21.0",
     "babel-eslint": "^8.0.1",
     "babel-jest": "^21.2.0",
     "babel-plugin-transform-react-remove-prop-types": "^0.4.10",
@@ -53,7 +53,7 @@
     "react": "^16.0.0",
     "react-dom": "^16.0.0",
     "react-redux": "^5.0.6",
-    "react-test-renderer": "^16.0.0",
+    "react-test-renderer": "^16.1.0",
     "redux": "^3.6.0",
     "rollup": "^0.50.0",
     "rollup-plugin-babel": "^3.0.2",
