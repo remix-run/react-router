@@ -16,7 +16,7 @@ const NavLink = ({
   activeStyle,
   style,
   isActive: getIsActive,
-  ariaCurrent,
+  'aria-current': ariaCurrent,
   ...rest
 }) => {
   const path = typeof to === 'object' ? to.pathname : to
@@ -38,7 +38,7 @@ const NavLink = ({
             to={to}
             className={isActive ? [ className, activeClassName ].filter(i => i).join(' ') : className}
             style={isActive ? { ...style, ...activeStyle } : style}
-            aria-current={isActive && ariaCurrent}
+            aria-current={isActive && ariaCurrent || null}
             {...rest}
           />
         )
@@ -57,12 +57,12 @@ NavLink.propTypes = {
   activeStyle: PropTypes.object,
   style: PropTypes.object,
   isActive: PropTypes.func,
-  ariaCurrent: PropTypes.oneOf(['page', 'step', 'location', 'true'])
+  'aria-current': PropTypes.oneOf(['page', 'step', 'location', 'date', 'time', 'true'])
 }
 
 NavLink.defaultProps = {
   activeClassName: 'active',
-  ariaCurrent: 'true'
+  'aria-current': 'true'
 }
 
 export default NavLink
