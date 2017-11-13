@@ -15,7 +15,7 @@ module.exports = {
   output: {
     path: path.resolve(__dirname, '../build'),
     filename: `bundle-[chunkHash].js`,
-    chunkFileName: `[name]-[chunkHash].js`,
+    chunkFilename: `[name]-[chunkHash].js`,
     publicPath: '/'
   },
 
@@ -25,7 +25,10 @@ module.exports = {
         process.env.NODE_ENV || 'development'
       )
     }),
-    new webpack.optimize.CommonsChunkPlugin('vendor', `vendor-[chunkHash].js`),
+    new webpack.optimize.CommonsChunkPlugin({
+      name: 'vendor',
+      filename: `vendor-[chunkHash].js`
+    }),
     new HTMLWebpackPlugin({
       template: 'index.html.ejs'
     }),
@@ -55,25 +58,31 @@ module.exports = {
   },
 
   resolveLoader: {
-    modulesDirectories: [path.resolve(__dirname, '../node_modules')]
+    modules: [path.resolve(__dirname, '../../node_modules')]
   },
 
   module: {
-    loaders: [
+    rules: [
       {
         test: /\.js$/,
         exclude: /node_modules|examples/,
-        loader: 'babel'
+        loader: 'babel-loader'
       },
       {
         test: /\.css$/,
         exclude: /prismjs/,
-        loader: 'style!css'
+        use: [
+          { loader: 'style-loader' },
+          { loader: 'css-loader' }
+        ]
       },
       {
         test: /\.css$/,
         include: /prismjs/,
-        loader: 'style!css'
+        use: [
+          { loader: 'style-loader' },
+          { loader: 'css-loader' }
+        ]
       },
       {
         test: /\.md(\?(.+))?$/,
@@ -81,7 +90,14 @@ module.exports = {
       },
       {
         test: /\.(gif|jpe?g|png|ico)$/,
-        loader: 'url?limit=10000'
+        use: [
+          {
+            loader: 'url-loader',
+            options: {
+              limit: 10000
+            }
+          }
+        ]
       }
     ]
   },
