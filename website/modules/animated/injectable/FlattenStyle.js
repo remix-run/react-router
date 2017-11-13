@@ -8,13 +8,13 @@
  *
  * @flow
  */
-'use strict';
+'use strict'
 
 var FlattenStyle = {
   current: style => style,
   inject(flatten) {
-    FlattenStyle.current = flatten;
-  },
-};
+    FlattenStyle.current = flatten
+  }
+}
 
-module.exports = FlattenStyle;
+module.exports = FlattenStyle

@@ -36,8 +36,8 @@
     "babel-preset-react-native": "^4.0.0",
     "jest": "^21.2.1",
     "react": "^16.0.0-beta.5",
-    "react-native": "^0.49.3",
-    "react-test-renderer": "^16.0.0"
+    "react-native": "^0.49.5",
+    "react-test-renderer": "^16.1.0"
   },
   "jest": {
     "preset": "react-native"
