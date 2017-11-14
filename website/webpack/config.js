@@ -45,6 +45,10 @@ module.exports = {
   ),
 
   resolve: {
+    modules: [
+      path.resolve(__dirname, '../../'),
+      path.resolve(__dirname, '../../node_modules')
+    ],
     alias: {
       'react-router': path.resolve(
         __dirname,
