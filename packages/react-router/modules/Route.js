@@ -13,7 +13,10 @@ const isEmptyChildren = (children) =>
 class Route extends React.Component {
   static propTypes = {
     computedMatch: PropTypes.object, // private, from <Switch>
-    path: PropTypes.string,
+    path: PropTypes.oneOfType([
+      PropTypes.string,
+      PropTypes.object
+    ]),
     exact: PropTypes.bool,
     strict: PropTypes.bool,
     sensitive: PropTypes.bool,
