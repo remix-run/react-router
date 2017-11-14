@@ -58,7 +58,10 @@ module.exports = {
   },
 
   resolveLoader: {
-    modules: [path.resolve(__dirname, '../../node_modules')]
+    modules: [
+      path.resolve(__dirname, '../../node_modules'),
+      __dirname
+    ]
   },
 
   module: {
@@ -67,6 +70,39 @@ module.exports = {
         test: /\.js$/,
         exclude: /node_modules|examples/,
         loader: 'babel-loader'
+      },
+      {
+        test: /\.js$/,
+        include: /examples/,
+        resourceQuery: /bundle/,
+        use: [
+          {
+            loader: 'bundle-loader',
+            options: {
+              lazy: true
+            }
+          },
+          { loader: 'babel-loader' }
+        ]
+      },
+      {
+        test: /\.js$/,
+        include: /examples/,
+        resourceQuery: /prismjs/,
+        use: [
+          {
+            loader: 'bundle-loader',
+            options: {
+              lazy: true
+            }
+          },
+          {
+            loader: 'prismjs-loader',
+            options: {
+              lang: 'jsx'
+            }
+          }
+        ]
       },
       {
         test: /\.css$/,
@@ -86,7 +122,7 @@ module.exports = {
       },
       {
         test: /\.md(\?(.+))?$/,
-        loader: path.resolve(__dirname, 'markdown-loader')
+        loader: 'markdown-loader'
       },
       {
         test: /\.(gif|jpe?g|png|ico)$/,

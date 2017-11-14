@@ -35,80 +35,80 @@ export default {
     {
       label: 'Basic',
       slug: 'basic',
-      load: require('bundle-loader?lazy!babel-loader!../examples/Basic'),
-      loadSource: require('bundle-loader?lazy!!prismjs-loader?lang=jsx!../examples/Basic.js')
+      load: require('../examples/Basic?bundle'),
+      loadSource: require('../examples/Basic.js?prismjs')
     },
     {
       label: 'URL Parameters',
       slug: 'url-params',
-      load: require('bundle-loader?lazy!babel-loader!../examples/Params'),
-      loadSource: require('bundle-loader?lazy!!prismjs-loader?lang=jsx!../examples/Params.js')
+      load: require('../examples/Params?bundle'),
+      loadSource: require('../examples/Params.js?prismjs')
     },
     {
       label: 'Redirects (Auth)',
       slug: 'auth-workflow',
-      load: require('bundle-loader?lazy!babel-loader!../examples/Auth'),
-      loadSource: require('bundle-loader?lazy!!prismjs-loader?lang=jsx!../examples/Auth.js')
+      load: require('../examples/Auth?bundle'),
+      loadSource: require('../examples/Auth.js?prismjs')
     },
     {
       label: 'Custom Link',
       slug: 'custom-link',
-      load: require('bundle-loader?lazy!babel-loader!../examples/CustomLink'),
-      loadSource: require('bundle-loader?lazy!!prismjs-loader?lang=jsx!../examples/CustomLink.js')
+      load: require('../examples/CustomLink?bundle'),
+      loadSource: require('../examples/CustomLink.js?prismjs')
     },
     {
       label: 'Preventing Transitions',
       slug: 'preventing-transitions',
-      load: require('bundle-loader?lazy!babel-loader!../examples/PreventingTransitions'),
-      loadSource: require('bundle-loader?lazy!!prismjs-loader?lang=jsx!../examples/PreventingTransitions.js')
+      load: require('../examples/PreventingTransitions?bundle'),
+      loadSource: require('../examples/PreventingTransitions.js?prismjs')
     },
     {
       label: 'No Match (404)',
       slug: 'no-match',
-      load: require('bundle-loader?lazy!babel-loader!../examples/NoMatch'),
-      loadSource: require('bundle-loader?lazy!!prismjs-loader?lang=jsx!../examples/NoMatch.js')
+      load: require('../examples/NoMatch?bundle'),
+      loadSource: require('../examples/NoMatch.js?prismjs')
     },
     {
       label: 'Recursive Paths',
       slug: 'recursive-paths',
-      load: require('bundle-loader?lazy!babel-loader!../examples/Recursive'),
-      loadSource: require('bundle-loader?lazy!!prismjs-loader?lang=jsx!../examples/Recursive.js')
+      load: require('../examples/Recursive?bundle'),
+      loadSource: require('../examples/Recursive.js?prismjs')
     },
     {
       label: 'Sidebar',
       slug: 'sidebar',
-      load: require('bundle-loader?lazy!babel-loader!../examples/Sidebar'),
-      loadSource: require('bundle-loader?lazy!!prismjs-loader?lang=jsx!../examples/Sidebar.js')
+      load: require('../examples/Sidebar?bundle'),
+      loadSource: require('../examples/Sidebar.js?prismjs')
     },
     {
       label: 'Animated Transitions',
       slug: 'animated-transitions',
-      load: require('bundle-loader?lazy!babel-loader!../examples/Animation'),
-      loadSource: require('bundle-loader?lazy!!prismjs-loader?lang=jsx!../examples/Animation.js')
+      load: require('../examples/Animation?bundle'),
+      loadSource: require('../examples/Animation.js?prismjs')
     },
     {
       label: 'Ambiguous Matches',
       slug: 'ambiguous-matches',
-      load: require('bundle-loader?lazy!babel-loader!../examples/Ambiguous'),
-      loadSource: require('bundle-loader?lazy!!prismjs-loader?lang=jsx!../examples/Ambiguous.js')
+      load: require('../examples/Ambiguous?bundle'),
+      loadSource: require('../examples/Ambiguous.js?prismjs')
     },
     {
       label: 'Route Config',
       slug: 'route-config',
-      load: require('bundle-loader?lazy!babel-loader!../examples/RouteConfig'),
-      loadSource: require('bundle-loader?lazy!!prismjs-loader?lang=jsx!../examples/RouteConfig.js')
+      load: require('../examples/RouteConfig?bundle'),
+      loadSource: require('../examples/RouteConfig.js?prismjs')
     },
     {
       label: 'Modal Gallery',
       slug: 'modal-gallery',
-      load: require('bundle-loader?lazy!babel-loader!../examples/ModalGallery'),
-      loadSource: require('bundle-loader?lazy!!prismjs-loader?lang=jsx!../examples/ModalGallery.js')
+      load: require('../examples/ModalGallery?bundle'),
+      loadSource: require('../examples/ModalGallery.js?prismjs')
     },
     {
       label: 'StaticRouter Context',
       slug: 'static-router',
-      load: require('bundle-loader?lazy!babel-loader!../examples/StaticRouter'),
-      loadSource: require('bundle-loader?lazy!!prismjs-loader?lang=jsx!../examples/StaticRouter.js')
+      load: require('../examples/StaticRouter?bundle'),
+      loadSource: require('../examples/StaticRouter.js?prismjs')
     }
   ]
 }
