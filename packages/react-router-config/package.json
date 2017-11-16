@@ -28,9 +28,7 @@
     "react": ">=15",
     "react-router": "^4.2.0"
   },
-  "dependencies": {
-    "warning": "^3.0.0"
-  },
+  "dependencies": {},
   "devDependencies": {
     "babel-cli": "^6.26.0",
     "babel-eslint": "^8.0.1",
