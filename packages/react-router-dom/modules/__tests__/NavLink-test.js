@@ -217,8 +217,63 @@ describe('NavLink', () => {
     })
   })
 
+  describe('exact', () => {
+    it('does not do exact matching by default', () => {
+      ReactDOM.render((
+        <MemoryRouter initialEntries={['/pizza/anchovies']}>
+          <NavLink to='/pizza' activeClassName='active'>Pizza!</NavLink>
+        </MemoryRouter>
+      ), node)
+      const a = node.getElementsByTagName('a')[0]
+      expect(a.className).toEqual('active')
+    })
+
+    it('sets active default value only for exact matches', () => {
+      ReactDOM.render((
+        <MemoryRouter initialEntries={['/pizza']}>
+          <NavLink exact to='/pizza'>Pizza!</NavLink>
+        </MemoryRouter>
+      ), node)
+      const a = node.getElementsByTagName('a')[0]
+      expect(a.className).toEqual('active')
+    })
+
+    it('sets active passed value only for exact matches', () => {
+      ReactDOM.render((
+        <MemoryRouter initialEntries={['/pizza']}>
+          <NavLink exact to='/pizza' activeClassName="selected">Pizza!</NavLink>
+        </MemoryRouter>
+      ), node)
+      const a = node.getElementsByTagName('a')[0]
+      expect(a.className).not.toContain('active')
+      expect(a.className).toEqual('selected')
+    })
+
+    it('does not set active default value for partial matches', () => {
+      ReactDOM.render((
+        <MemoryRouter initialEntries={['/pizza/anchovies']}>
+          <NavLink exact to='/pizza'>Pizza!</NavLink>
+        </MemoryRouter>
+      ), node)
+      const a = node.getElementsByTagName('a')[0]
+      expect(a.className).not.toContain('active')
+    })
+
+    it('does not set active passed value for partial matches', () => {
+      ReactDOM.render((
+        <MemoryRouter initialEntries={['/pizza/anchovies']}>
+          <NavLink exact to='/pizza' activeClassName='selected'>Pizza!</NavLink>
+        </MemoryRouter>
+      ), node)
+      const a = node.getElementsByTagName('a')[0]
+      expect(a.className).not.toContain('active')
+      expect(a.className).not.toContain('selected')
+    })
+  })
+
   describe('parent', () => {
-    it('does exact matching by default', () => {
+    it.skip('does exact matching by default', () => {
+      // v5 test
       ReactDOM.render((
         <MemoryRouter initialEntries={['/pizza/anchovies']}>
           <NavLink to='/pizza' activeClassName='active'>Pizza!</NavLink>
@@ -259,7 +314,8 @@ describe('NavLink', () => {
       expect(a.className).toEqual('selected')
     })
 
-    it('does not set active passed value for partial matches', () => {
+    it.skip('does not set active passed value for partial matches', () => {
+      // v5 test
       ReactDOM.render((
         <MemoryRouter initialEntries={['/pizza/anchovies']}>
           <NavLink to='/pizza' activeClassName='selected'>Pizza!</NavLink>
@@ -268,6 +324,18 @@ describe('NavLink', () => {
       const a = node.getElementsByTagName('a')[0]
       expect(a.className).not.toContain('active')
       expect(a.className).not.toContain('selected')
+    })
+  })
+
+  describe('exact = true and parent = true', () => {
+    it('uses exact, not parent', () => {
+      ReactDOM.render((
+        <MemoryRouter initialEntries={['/pizza/anchovies']}>
+          <NavLink to='/pizza' exact parent activeClassName='active'>Pizza!</NavLink>
+        </MemoryRouter>
+      ), node)
+      const a = node.getElementsByTagName('a')[0]
+      expect(a.className).not.toEqual('active')
     })
   })
 

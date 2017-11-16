@@ -248,6 +248,38 @@ describe('<Route children>', () => {
   })
 })
 
+describe('A <Route exact>', () => {
+  it('renders when the URL does not have a trailing slash', () => {
+    const TEXT = 'bubblegum'
+    const node = document.createElement('div')
+
+    ReactDOM.render((
+      <MemoryRouter initialEntries={[ '/somepath/' ]}>
+        <Route exact path="/somepath" render={() => (
+          <h1>{TEXT}</h1>
+        )}/>
+      </MemoryRouter>
+    ), node)
+
+    expect(node.innerHTML).toContain(TEXT)
+  })
+
+  it('renders when the URL has trailing slash', () => {
+    const TEXT = 'bubblegum'
+    const node = document.createElement('div')
+
+    ReactDOM.render((
+      <MemoryRouter initialEntries={[ '/somepath' ]}>
+        <Route exact path="/somepath/" render={() => (
+          <h1>{TEXT}</h1>
+        )}/>
+      </MemoryRouter>
+    ), node)
+
+    expect(node.innerHTML).toContain(TEXT)
+  })
+})
+
 describe('A <Route parent>', () => {
   describe('parent = false (default)', () => {
     it('only matches if the pathname exactly matches the path', () => {
@@ -284,14 +316,31 @@ describe('A <Route parent>', () => {
   })
 })
 
-describe('A <Route strict>', () => {
+describe('A <Route exact parent>', () => {
+  it('uses exact prop, not parent', () => {
+    const TEXT = 'Mr. Kult'
+    const node = document.createElement('div')
+
+    ReactDOM.render((
+      <MemoryRouter initialEntries={[ '/' ]}>
+        <Route exact parent path="/:teacher" render={() => (
+          <h1>{TEXT}</h1>
+        )}/>
+      </MemoryRouter>
+    ), node)
+
+    expect(node.innerHTML).not.toContain(TEXT)
+  })
+})
+
+describe('A <Route exact strict>', () => {
   it('does not render when the URL has a trailing slash', () => {
     const TEXT = 'bubblegum'
     const node = document.createElement('div')
 
     ReactDOM.render((
       <MemoryRouter initialEntries={[ '/somepath/' ]}>
-        <Route strict path="/somepath" render={() => (
+        <Route exact strict path="/somepath" render={() => (
           <h1>{TEXT}</h1>
         )}/>
       </MemoryRouter>
@@ -306,7 +355,7 @@ describe('A <Route strict>', () => {
 
     ReactDOM.render((
       <MemoryRouter initialEntries={[ '/somepath' ]}>
-        <Route strict path="/somepath/" render={() => (
+        <Route exact strict path="/somepath/" render={() => (
           <h1>{TEXT}</h1>
         )}/>
       </MemoryRouter>
@@ -346,7 +395,6 @@ describe('A <Route location>', () => {
           <Route
             location={{ pathname: '/pretzels/cheddar' }}
             path="/pretzels"
-            parent
             render={() => (
               <Route path='/pretzels/cheddar' render={() => (
                 <h1>{TEXT}</h1>
@@ -368,7 +416,6 @@ describe('A <Route location>', () => {
           <Route
             location={{ pathname: '/pretzels/cheddar' }}
             path="/pretzels"
-            parent
             render={({ history }) => {
               push = history.push
               return (

@@ -7,7 +7,7 @@ import { matchPath } from 'react-router'
 
 const match = matchPath('/users/123', {
   path: '/users/:id',
-  end: true,
+  exact: true,
   strict: false
 })
 ```
@@ -19,13 +19,13 @@ this on the server with Node.js, it would be `req.url`.
 
 ## props
 
-The second argument are the `path` to match and the props to match against. The props are the same props that `<Route>` accepts.
+The second argument are the props to match against, they are identical
+to the matching props `Route` accepts:
 
 ```js
 {
   path, // like /users/:id
   strict, // optional, defaults to false
-  parent, // optional, defaults to false
-  sensitive // optional, defaults to false
+  exact // optional, defaults to false
 }
 ```

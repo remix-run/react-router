@@ -2,12 +2,14 @@ import React from 'react'
 import PropTypes from 'prop-types'
 import Route from './Route'
 import Link from './Link'
+import warning from 'warning'
 
 /**
  * A <Link> wrapper that knows if it's "active" or not.
  */
 const NavLink = ({
   to,
+  exact,
   parent,
   strict,
   location,
@@ -21,12 +23,20 @@ const NavLink = ({
 }) => {
   const path = typeof to === 'object' ? to.pathname : to
 
+  warning(
+    exact === undefined,
+    'Deprecation warning: In v5, the "exact" prop will be removed. Instead, ' +
+    'exact matching will be the default behavior and you should use the "parent" ' +
+    'prop to specify that the <NavLink> should be active for non-exact matches.'
+  )
+
   // Regex taken from: https://github.com/pillarjs/path-to-regexp/blob/master/index.js#L202
   const escapedPath = path.replace(/([.+*?=^!:${}()[\]|/\\])/g, '\\$1')
 
   return (
     <Route
       path={escapedPath}
+      exact={exact}
       parent={parent}
       strict={strict}
       location={location}

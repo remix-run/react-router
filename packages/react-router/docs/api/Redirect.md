@@ -5,7 +5,7 @@ Rendering a `<Redirect>` will navigate to a new location. The new location will 
 ```js
 import { Route, Redirect } from 'react-router'
 
-<Route path="/" render={() => (
+<Route exact path="/" render={() => (
   loggedIn ? (
     <Redirect to="/dashboard"/>
   ) : (

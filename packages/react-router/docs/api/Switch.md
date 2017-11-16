@@ -20,7 +20,7 @@ Occasionally, however, we want to pick only one `<Route>` to render. If we're at
 import { Switch, Route } from 'react-router'
 
 <Switch>
-  <Route path="/" component={Home}/>
+  <Route exact path="/" component={Home}/>
   <Route path="/about" component={About}/>
   <Route path="/:user" component={User}/>
   <Route component={NoMatch}/>
@@ -59,13 +59,13 @@ All children of a `<Switch>` should be `<Route>` or `<Redirect>` elements. Only 
 
 `<Route>` elements are matched using their `path` prop and `<Redirect>` elements are matched using their `from` prop. A `<Route>` with no `path` prop or a `<Redirect>` with no `from` prop will always match the current location.
 
-When you include a `<Redirect>` in a `<Switch>`, it can use any of the `<Route>`'s location matching props: `path`, `parent`, and `strict`. `from` is just an alias for the `path` prop.
+When you include a `<Redirect>` in a `<Switch>`, it can use any of the `<Route>`'s location matching props: `path`, `exact`, and `strict`. `from` is just an alias for the `path` prop.
 
 If a `location` prop is given to the `<Switch>`, it will override the `location` prop on the matching child element.
 
 ```js
 <Switch>
-  <Route path="/" component={Home}/>
+  <Route exact path="/" component={Home}/>
 
   <Route path="/users" component={Users}/>
   <Redirect from="/accounts" to="/users"/>

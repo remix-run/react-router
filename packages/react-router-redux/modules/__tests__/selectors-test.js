@@ -26,17 +26,17 @@ describe('selectors', () => {
 
   describe('createMatchSelector', () => {
     it('matches correctly if the router is initialized', () => {
-      const matchSelector = createMatchSelector('/test')
+      const matchSelector = createMatchSelector('/')
       store.dispatch({
         type: LOCATION_CHANGE,
         payload: { pathname: '/test' }
       })
       const state = store.getState()
       expect(matchSelector(state)).toMatchObject({
-        isExact: true,
+        isExact: false,
         params: {},
-        path: '/test',
-        url: '/test'
+        path: '/',
+        url: '/'
       })
     })
     

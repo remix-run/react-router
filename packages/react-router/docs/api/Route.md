@@ -12,7 +12,7 @@ import { BrowserRouter as Router, Route } from 'react-router-dom'
 
 <Router>
   <div>
-    <Route path="/" component={Home}/>
+    <Route exact path="/" component={Home}/>
     <Route path="/news" component={NewsFeed}/>
   </div>
 </Router>
@@ -140,6 +140,21 @@ Any valid URL path that [`path-to-regexp`](https://www.npmjs.com/package/path-to
 
 Routes without a `path` _always_ match.
 
+## exact: bool
+
+When `true`, will only match if the path matches the `location.pathname` _exactly_.
+
+**Deprecated** This prop will be removed in React Router v5; you should use the `parent` prop instead. In v4, a `<Route>` without an `exact` or `parent` prop will continue to do non-exact matching, but in v5, a `<Route>` with no `parent` prop will do exact matching.
+
+```js
+<Route exact path="/one" component={About}/>
+```
+
+| path | location.pathname | exact | matches? |
+| --- | --- | --- | --- |
+| `/one`  | `/one/two`  | `true` | no |
+| `/one`  | `/one/two`  | `false` | yes |
+
 ## parent: bool
 
 When `false` (default), will only match if the path matches the `location.pathname` _exactly_. When `true`, will match if the `path` matches the beginning of the location's `pathname`.
@@ -166,6 +181,18 @@ When `true`, a `path` that has a trailing slash will only match a `location.path
 | `/one/` | `/one` | no |
 | `/one/` | `/one/` | yes |
 | `/one/` | `/one/two` | yes |
+
+**Warning:** `strict` can be used to enforce that a `location.pathname` has no trailing slash, but in order to do this both `strict` and `exact` must be `true`.
+
+```js
+<Route exact strict path="/one" component={About}/>
+```
+
+| path | location.pathname | matches? |
+| --- | --- | --- |
+| `/one` | `/one` | yes |
+| `/one` | `/one/` | no |
+| `/one` | `/one/two` | no |
 
 ## location: object
 

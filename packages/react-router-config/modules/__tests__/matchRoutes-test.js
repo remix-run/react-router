@@ -7,7 +7,6 @@ it('finds matched routes', () => {
     },
 
     { path: '/pepper',
-      parent: true,
       routes: [
         { path: '/pepper/:type',
           routes: [
@@ -18,7 +17,6 @@ it('finds matched routes', () => {
     },
 
     { path: undefined,
-      parent: true,
       routes: [
         { path: '/ghost' }
       ]
@@ -46,10 +44,8 @@ describe('pathless routes', () => {
 
   const routes = [
     { path: '/',
-      parent: true,
       routes: [
         { path: undefined,
-          parent: true,
           routes: [
             { path: '/habenero' }
           ]
