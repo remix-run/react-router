@@ -288,7 +288,7 @@ describe('A <Route parent>', () => {
   
       ReactDOM.render((
         <MemoryRouter initialEntries={[ '/' ]}>
-          <Route path="/:teacher" render={() => (
+          <Route parent={false} path="/:teacher" render={() => (
             <h1>{TEXT}</h1>
           )}/>
         </MemoryRouter>
