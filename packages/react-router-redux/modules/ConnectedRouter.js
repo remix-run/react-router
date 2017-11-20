@@ -26,10 +26,6 @@ class ConnectedRouter extends Component {
     const { store:propsStore, history } = this.props
     this.store = propsStore || this.context.store
     this.handleLocationChange(history.location)
-  }
-
-  componentDidMount() {
-    const { history } = this.props
     this.unsubscribeFromHistory = history.listen(this.handleLocationChange)
   }
 
