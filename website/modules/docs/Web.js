@@ -37,91 +37,91 @@ export default {
       slug: 'basic',
       load: require('bundle?lazy!babel!../../../examples/src/Basic'),
       loadSource: require('bundle?lazy!!prismjs?lang=jsx!../../../examples/src/Basic.js'),
-      codesandboxUrl: process.env.CODESANDBOX_URL + '&module=/Basic.js'
+      codesandboxUrl: process.env.CODESANDBOX_URL + '&module=/src/Basic.js'
     },
     {
       label: 'URL Parameters',
       slug: 'url-params',
       load: require('bundle?lazy!babel!../../../examples/src/Params'),
       loadSource: require('bundle?lazy!!prismjs?lang=jsx!../../../examples/src/Params.js'),
-      codesandboxUrl: process.env.CODESANDBOX_URL + '&module=/Params.js'
+      codesandboxUrl: process.env.CODESANDBOX_URL + '&module=/src/Params.js'
     },
     {
       label: 'Redirects (Auth)',
       slug: 'auth-workflow',
       load: require('bundle?lazy!babel!../../../examples/src/Auth'),
       loadSource: require('bundle?lazy!!prismjs?lang=jsx!../../../examples/src/Auth.js'),
-      codesandboxUrl: process.env.CODESANDBOX_URL + '&module=/Auth.js'
+      codesandboxUrl: process.env.CODESANDBOX_URL + '&module=/src/Auth.js'
     },
     {
       label: 'Custom Link',
       slug: 'custom-link',
       load: require('bundle?lazy!babel!../../../examples/src/CustomLink'),
       loadSource: require('bundle?lazy!!prismjs?lang=jsx!../../../examples/src/CustomLink.js'),
-      codesandboxUrl: process.env.CODESANDBOX_URL + '&module=/CustomLink.js'
+      codesandboxUrl: process.env.CODESANDBOX_URL + '&module=/src/CustomLink.js'
     },
     {
       label: 'Preventing Transitions',
       slug: 'preventing-transitions',
       load: require('bundle?lazy!babel!../../../examples/src/PreventingTransitions'),
       loadSource: require('bundle?lazy!!prismjs?lang=jsx!../../../examples/src/PreventingTransitions.js'),
-      codesandboxUrl: process.env.CODESANDBOX_URL + '&module=/PreventingTransitions.js'
+      codesandboxUrl: process.env.CODESANDBOX_URL + '&module=/src/PreventingTransitions.js'
     },
     {
       label: 'No Match (404)',
       slug: 'no-match',
       load: require('bundle?lazy!babel!../../../examples/src/NoMatch'),
       loadSource: require('bundle?lazy!!prismjs?lang=jsx!../../../examples/src/NoMatch.js'),
-      codesandboxUrl: process.env.CODESANDBOX_URL + '&module=/NoMatch.js'
+      codesandboxUrl: process.env.CODESANDBOX_URL + '&module=/src/NoMatch.js'
     },
     {
       label: 'Recursive Paths',
       slug: 'recursive-paths',
       load: require('bundle?lazy!babel!../../../examples/src/Recursive'),
       loadSource: require('bundle?lazy!!prismjs?lang=jsx!../../../examples/src/Recursive.js'),
-      codesandboxUrl: process.env.CODESANDBOX_URL + '&module=/Recursive.js'
+      codesandboxUrl: process.env.CODESANDBOX_URL + '&module=/src/Recursive.js'
     },
     {
       label: 'Sidebar',
       slug: 'sidebar',
       load: require('bundle?lazy!babel!../../../examples/src/Sidebar'),
       loadSource: require('bundle?lazy!!prismjs?lang=jsx!../../../examples/src/Sidebar.js'),
-      codesandboxUrl: process.env.CODESANDBOX_URL + '&module=/Sidebar.js'
+      codesandboxUrl: process.env.CODESANDBOX_URL + '&module=/src/Sidebar.js'
     },
     {
       label: 'Animated Transitions',
       slug: 'animated-transitions',
       load: require('bundle?lazy!babel!../../../examples/src/Animation/index'),
       loadSource: require('bundle?lazy!!prismjs?lang=jsx!../../../examples/src/Animation/index.js'),
-      codesandboxUrl: process.env.CODESANDBOX_URL + '&module=/Animation/index.js'
+      codesandboxUrl: process.env.CODESANDBOX_URL + '&module=/src/Animation/index.js'
     },
     {
       label: 'Ambiguous Matches',
       slug: 'ambiguous-matches',
       load: require('bundle?lazy!babel!../../../examples/src/Ambiguous'),
       loadSource: require('bundle?lazy!!prismjs?lang=jsx!../../../examples/src/Ambiguous.js'),
-      codesandboxUrl: process.env.CODESANDBOX_URL + '&module=/Ambiguous.js'
+      codesandboxUrl: process.env.CODESANDBOX_URL + '&module=/src/Ambiguous.js'
     },
     {
       label: 'Route Config',
       slug: 'route-config',
       load: require('bundle?lazy!babel!../../../examples/src/RouteConfig'),
       loadSource: require('bundle?lazy!!prismjs?lang=jsx!../../../examples/src/RouteConfig.js'),
-      codesandboxUrl: process.env.CODESANDBOX_URL + '&module=/RouteConfig.js'
+      codesandboxUrl: process.env.CODESANDBOX_URL + '&module=/src/RouteConfig.js'
     },
     {
       label: 'Modal Gallery',
       slug: 'modal-gallery',
       load: require('bundle?lazy!babel!../../../examples/src/ModalGallery'),
       loadSource: require('bundle?lazy!!prismjs?lang=jsx!../../../examples/src/ModalGallery.js'),
-      codesandboxUrl: process.env.CODESANDBOX_URL + '&module=/ModalGallery.js'
+      codesandboxUrl: process.env.CODESANDBOX_URL + '&module=/src/ModalGallery.js'
     },
     {
       label: 'StaticRouter Context',
       slug: 'static-router',
       load: require('bundle?lazy!babel!../../../examples/src/StaticRouter'),
       loadSource: require('bundle?lazy!!prismjs?lang=jsx!../../../examples/src/StaticRouter.js'),
-      codesandboxUrl: process.env.CODESANDBOX_URL + '&module=/StaticRouter.js'
+      codesandboxUrl: process.env.CODESANDBOX_URL + '&module=/src/StaticRouter.js'
     }
   ]
 }
