@@ -77,7 +77,10 @@ describe('selectors', () => {
     })
 
     it('updates if the exact match is different', () => {
-      const matchSelector = createMatchSelector('/sushi')
+      const matchSelector = createMatchSelector({
+        path: '/sushi',
+        exact: true,
+      })
       store.dispatch({
         type: LOCATION_CHANGE,
         payload: { pathname: '/sushi' }

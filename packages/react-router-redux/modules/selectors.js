@@ -12,10 +12,7 @@ export const createMatchSelector = (path) => {
     }
     lastPathname = pathname
     const match = matchPath(pathname, path)
-    if (
-      !match || !lastMatch || match.url !== lastMatch.url
-      || match.isExact !== lastMatch.isExact
-    ) {
+    if (!match || !lastMatch || match.url !== lastMatch.url) {
       lastMatch = match
     }
     return lastMatch
