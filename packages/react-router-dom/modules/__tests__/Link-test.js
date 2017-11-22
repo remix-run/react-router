@@ -24,6 +24,22 @@ describe('A <Link>', () => {
     expect(href).toEqual('/the/path?the=query#the-hash')
   })
 
+  describe('to as a string', () => {
+    it('resolves to with no pathname using current location', () => {
+      const node = document.createElement('div')
+      
+      ReactDOM.render((
+        <MemoryRouter initialEntries={[ '/somewhere' ]}>
+          <Link to='?rendersWithPathname=true'>link</Link>
+        </MemoryRouter>
+      ), node)
+  
+      const href = node.querySelector('a').getAttribute('href')
+  
+      expect(href).toEqual('/somewhere?rendersWithPathname=true')
+    })
+  })
+
   it('throws with no <Router>', () => {
     const node = document.createElement('div')
 
@@ -35,7 +51,7 @@ describe('A <Link>', () => {
       ), node)
     }).toThrow(/You should not use <Link> outside a <Router>/)
 
-    expect(console.error.calls.count()).toBe(1)
+    expect(console.error.calls.count()).toBe(2)
     expect(console.error.calls.argsFor(0)[0]).toContain(
       'The context `router` is marked as required in `Link`'
     )
@@ -73,6 +89,7 @@ describe('A <Link> underneath a <HashRouter>', () => {
 
   afterEach(() => {
     ReactDOM.unmountComponentAtNode(node)
+    window.history.replaceState(null, '', '#')
   })
 
   const createLinkNode = (hashType, to) => {

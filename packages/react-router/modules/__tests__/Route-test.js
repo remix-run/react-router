@@ -1,6 +1,6 @@
 import React from 'react'
 import ReactDOM from 'react-dom'
-import createMemoryHistory from 'history/createMemoryHistory'
+import { createMemoryHistory } from 'history'
 import MemoryRouter from '../MemoryRouter'
 import Router from '../Router'
 import Route from '../Route'
@@ -90,6 +90,8 @@ describe('A <Route>', () => {
 
   it('throws with no <Router>', () => {
     const node = document.createElement('div')
+    
+    spyOn(console, 'error')
 
     expect(() => {
       ReactDOM.render((

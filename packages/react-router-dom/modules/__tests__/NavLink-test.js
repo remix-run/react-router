@@ -50,6 +50,41 @@ describe('NavLink', () => {
       const a = node.getElementsByTagName('a')[0]
       expect(a.style.color).toBe(activeStyle.color)
     })
+
+    it('applies aria-current of true if no override value is given', () => {
+      ReactDOM.render((
+        <MemoryRouter initialEntries={['/pizza']}>
+          <NavLink to='/pizza' activeClassName='selected'>Pizza!</NavLink>
+        </MemoryRouter>
+      ), node)
+      const a = node.getElementsByTagName('a')[0]
+      expect(a.getAttribute('aria-current')).toEqual('true')
+    })
+
+    it('applies the override aria-current value when given', () => {
+      ReactDOM.render((
+        <MemoryRouter initialEntries={['/pizza']}>
+          <NavLink to='/pizza'
+                   activeClassName='selected'
+                   aria-current="page">Pizza!</NavLink>
+        </MemoryRouter>
+      ), node)
+      const a = node.getElementsByTagName('a')[0]
+      expect(a.getAttribute('aria-current')).toEqual('page')
+    })
+        
+    it('it properly escapes path-to-regexp special characters', () => {
+      ReactDOM.render((
+        <MemoryRouter initialEntries={['/pizza (1)']}>
+          <NavLink to='/pizza (1)'>Pizza!</NavLink>
+        </MemoryRouter>
+      ), node)
+
+      const href = node.querySelector('a').getAttribute('href')
+      expect(href).toEqual('/pizza (1)')
+      const a = node.getElementsByTagName('a')[0]
+      expect(a.className).toEqual('active')
+    })
   })
 
   describe('When a <NavLink> is not active', () => {
@@ -91,6 +126,28 @@ describe('NavLink', () => {
       ), node)
       const a = node.getElementsByTagName('a')[0]
       expect(a.style.color).toBe(defaultStyle.color)
+    })
+
+    it('does not apply an aria-current value if no override value is given', () => {
+      ReactDOM.render((
+        <MemoryRouter initialEntries={['/pizza']}>
+          <NavLink to='/salad'
+                   activeClassName='selected'
+                   aria-current="page">Pizza!</NavLink>
+        </MemoryRouter>
+      ), node)
+      const a = node.getElementsByTagName('a')[0]
+      expect(a.getAttribute('aria-current')).toBeNull()
+    })
+
+    it('does not apply an aria-current value if an override value is given', () => {
+      ReactDOM.render((
+        <MemoryRouter initialEntries={['/pizza']}>
+          <NavLink to='/salad' activeClassName='selected'>Pizza!</NavLink>
+        </MemoryRouter>
+      ), node)
+      const a = node.getElementsByTagName('a')[0]
+      expect(a.getAttribute('aria-current')).toBeNull()
     })
   })
 

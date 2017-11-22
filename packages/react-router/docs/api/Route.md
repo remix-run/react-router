@@ -187,3 +187,17 @@ However, a [`location`](location.md) with a different `pathname` can also be pas
 This is useful in cases when you need to match a `<Route>` to a location other than the current history location, as shown in the [Animated Transitions](https://reacttraining.com/react-router/web/example/animated-transitions) example.
 
 If a `<Route>` element is wrapped in a `<Switch>` and matches the location passed to the `<Switch>` (or the current history location), then the `location` prop passed to `<Route>` will be overridden by the one used by the `<Switch>` (given [here](https://github.com/ReactTraining/react-router/blob/master/packages/react-router/modules/Switch.js#L51)).
+
+## sensitive: bool
+
+When `true`, will match if the path is __case sensitive__.
+
+```js
+<Route sensitive path="/one" component={About}/>
+```
+
+| path | location.pathname | sensitive | matches? |
+| --- | --- | --- | --- |
+| `/one`  | `/one`  | `true` | yes |
+| `/One`  | `/one`  | `false` | no |
+

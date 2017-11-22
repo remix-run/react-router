@@ -1,7 +1,8 @@
 import React from 'react'
-import { CSSTransitionGroup } from 'react-transition-group'
+import { TransitionGroup, CSSTransition } from 'react-transition-group'
 import {
   BrowserRouter as Router,
+  Switch,
   Route,
   Link,
   Redirect
@@ -26,35 +27,38 @@ const AnimationExample = () => (
     <Route render={({ location }) => (
       <div style={styles.fill}>
         <Route exact path="/" render={() => (
-          <Redirect to="/10/90/50"/>
+          <Redirect to="/hsl/10/90/50"/>
         )}/>
 
         <ul style={styles.nav}>
-          <NavLink to="/10/90/50">Red</NavLink>
-          <NavLink to="/120/100/40">Green</NavLink>
-          <NavLink to="/200/100/40">Blue</NavLink>
-          <NavLink to="/310/100/50">Pink</NavLink>
+          <NavLink to="/hsl/10/90/50">Red</NavLink>
+          <NavLink to="/hsl/120/100/40">Green</NavLink>
+          <NavLink to="/rgb/33/150/243">Blue</NavLink>
+          <NavLink to="/rgb/240/98/146">Pink</NavLink>
         </ul>
 
         <div style={styles.content}>
-          <CSSTransitionGroup
-            transitionName="fade"
-            transitionEnterTimeout={300}
-            transitionLeaveTimeout={300}
-          >
+          <TransitionGroup>
             {/* no different than other usage of
-                CSSTransitionGroup, just make
-                sure to pass `location` to `Route`
-                so it can match the old location
-                as it animates out
+                CSSTransition, just make sure to pass
+                `location` to `Switch` so it can match
+                the old location as it animates out
             */}
-            <Route
-              location={location}
+            <CSSTransition
               key={location.key}
-              path="/:h/:s/:l"
-              component={HSL}
-            />
-          </CSSTransitionGroup>
+              classNames="fade"
+              timeout={300}
+            >
+              <Switch location={location}>
+                <Route exact path="/hsl/:h/:s/:l" component={HSL} />
+                <Route exact path="/rgb/:r/:g/:b" component={RGB} />
+                {/* Without this `Route`, we would get errors during
+                    the initial transition from `/` to `/hsl/10/90/50`
+                */}
+                <Route render={() => <div>Not Found</div>} />
+              </Switch>
+            </CSSTransition>
+          </TransitionGroup>
         </div>
       </div>
     )}/>
@@ -73,6 +77,14 @@ const HSL = ({ match: { params } }) => (
     ...styles.hsl,
     background: `hsl(${params.h}, ${params.s}%, ${params.l}%)`
   }}>hsl({params.h}, {params.s}%, {params.l}%)</div>
+)
+
+const RGB = ({ match: { params } }) => (
+  <div style={{
+    ...styles.fill,
+    ...styles.rgb,
+    background: `rgb(${params.r}, ${params.g}, ${params.b})`
+  }}>rgb({params.r}, {params.g}, {params.b})</div>
 )
 
 const styles = {}
@@ -109,6 +121,13 @@ styles.navItem = {
 }
 
 styles.hsl  = {
+  ...styles.fill,
+  color: 'white',
+  paddingTop: '20px',
+  fontSize: '30px'
+}
+
+styles.rgb  = {
   ...styles.fill,
   color: 'white',
   paddingTop: '20px',

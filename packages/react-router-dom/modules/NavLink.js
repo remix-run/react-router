@@ -16,29 +16,36 @@ const NavLink = ({
   activeStyle,
   style,
   isActive: getIsActive,
-  ariaCurrent,
+  'aria-current': ariaCurrent,
   ...rest
-}) => (
-  <Route
-    path={typeof to === 'object' ? to.pathname : to}
-    exact={exact}
-    strict={strict}
-    location={location}
-    children={({ location, match }) => {
-      const isActive = !!(getIsActive ? getIsActive(match, location) : match)
+}) => {
+  const path = typeof to === 'object' ? to.pathname : to
 
-      return (
-        <Link
-          to={to}
-          className={isActive ? [ className, activeClassName ].filter(i => i).join(' ') : className}
-          style={isActive ? { ...style, ...activeStyle } : style}
-          aria-current={isActive && ariaCurrent}
-          {...rest}
-        />
-      )
-    }}
-  />
-)
+  // Regex taken from: https://github.com/pillarjs/path-to-regexp/blob/master/index.js#L202
+  const escapedPath = path.replace(/([.+*?=^!:${}()[\]|/\\])/g, '\\$1')
+
+  return (
+    <Route
+      path={escapedPath}
+      exact={exact}
+      strict={strict}
+      location={location}
+      children={({ location, match }) => {
+        const isActive = !!(getIsActive ? getIsActive(match, location) : match)
+
+        return (
+          <Link
+            to={to}
+            className={isActive ? [ className, activeClassName ].filter(i => i).join(' ') : className}
+            style={isActive ? { ...style, ...activeStyle } : style}
+            aria-current={isActive && ariaCurrent || null}
+            {...rest}
+          />
+        )
+      }}
+    />
+  )
+}
 
 NavLink.propTypes = {
   to: Link.propTypes.to,
@@ -50,12 +57,12 @@ NavLink.propTypes = {
   activeStyle: PropTypes.object,
   style: PropTypes.object,
   isActive: PropTypes.func,
-  ariaCurrent: PropTypes.oneOf(['page', 'step', 'location', 'true'])
+  'aria-current': PropTypes.oneOf(['page', 'step', 'location', 'date', 'time', 'true'])
 }
 
 NavLink.defaultProps = {
   activeClassName: 'active',
-  ariaCurrent: 'true'
+  'aria-current': 'true'
 }
 
 export default NavLink

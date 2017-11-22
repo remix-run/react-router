@@ -64,3 +64,11 @@ This can only be used to match a location when rendering a `<Redirect>` inside o
   <Route path='/users/profile/:id' component={Profile}/>
 </Switch>
 ```
+
+## exact: bool
+
+Match `from` exactly; equivalent to [Route.exact](./Route.md#exact-bool).
+
+## strict: bool
+
+Match `from` strictly; equivalent to [Route.strict](./Route.md#strict-bool).

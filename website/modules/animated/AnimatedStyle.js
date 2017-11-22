@@ -8,69 +8,69 @@
  *
  * @flow
  */
-'use strict';
+'use strict'
 
-var Animated = require('./Animated');
-var AnimatedWithChildren = require('./AnimatedWithChildren');
-var AnimatedTransform = require('./AnimatedTransform');
-var FlattenStyle = require('./injectable/FlattenStyle');
+var Animated = require('./Animated')
+var AnimatedWithChildren = require('./AnimatedWithChildren')
+var AnimatedTransform = require('./AnimatedTransform')
+var FlattenStyle = require('./injectable/FlattenStyle')
 
 class AnimatedStyle extends AnimatedWithChildren {
   _style: Object;
 
   constructor(style: any) {
-    super();
-    style = FlattenStyle.current(style) || {};
+    super()
+    style = FlattenStyle.current(style) || {}
     if (style.transform && !(style.transform instanceof Animated)) {
       style = {
         ...style,
-        transform: new AnimatedTransform(style.transform),
-      };
+        transform: new AnimatedTransform(style.transform)
+      }
     }
-    this._style = style;
+    this._style = style
   }
 
   __getValue(): Object {
-    var style = {};
+    var style = {}
     for (var key in this._style) {
-      var value = this._style[key];
+      var value = this._style[key]
       if (value instanceof Animated) {
-        style[key] = value.__getValue();
+        style[key] = value.__getValue()
       } else {
-        style[key] = value;
+        style[key] = value
       }
     }
-    return style;
+    return style
   }
 
   __getAnimatedValue(): Object {
-    var style = {};
+    var style = {}
     for (var key in this._style) {
-      var value = this._style[key];
+      var value = this._style[key]
       if (value instanceof Animated) {
-        style[key] = value.__getAnimatedValue();
+        style[key] = value.__getAnimatedValue()
       }
     }
-    return style;
+    return style
   }
 
   __attach(): void {
     for (var key in this._style) {
-      var value = this._style[key];
+      var value = this._style[key]
       if (value instanceof Animated) {
-        value.__addChild(this);
+        value.__addChild(this)
       }
     }
   }
 
   __detach(): void {
     for (var key in this._style) {
-      var value = this._style[key];
+      var value = this._style[key]
       if (value instanceof Animated) {
-        value.__removeChild(this);
+        value.__removeChild(this)
       }
     }
   }
 }
 
-module.exports = AnimatedStyle;
+module.exports = AnimatedStyle

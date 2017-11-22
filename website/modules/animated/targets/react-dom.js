@@ -8,15 +8,15 @@
  *
  * @flow
  */
-'use strict';
+'use strict'
 
-var CSSPropertyOperations = require('react-dom/lib/CSSPropertyOperations');
-var Animated = require('../');
+var CSSPropertyOperations = require('react-css-property-operations')
+var Animated = require('../')
 
 // { scale: 2 } => 'scale(2)'
 function mapTransform(t) {
-  var k = Object.keys(t)[0];
-  return `${k}(${t[k]})`;
+  var k = Object.keys(t)[0]
+  return `${k}(${t[k]})`
 }
 
 // NOTE(lmr):
@@ -25,28 +25,28 @@ function mapTransform(t) {
 function mapStyle(style) {
   if (style && style.transform && typeof style.transform !== 'string') {
     // TODO(lmr): this doesn't attempt to use vendor prefixed styles
-    style.transform = style.transform.map(mapTransform).join(' ');
+    style.transform = style.transform.map(mapTransform).join(' ')
   }
-  return style;
+  return style
 }
 
 function ApplyAnimatedValues(instance, props, comp) {
   if (instance.setNativeProps) {
-    instance.setNativeProps(props);
+    instance.setNativeProps(props)
   } else if (instance.nodeType && instance.setAttribute !== undefined) {
-    CSSPropertyOperations.setValueForStyles(instance, mapStyle(props.style), comp._reactInternalInstance);
+    CSSPropertyOperations.setValueForStyles(instance, mapStyle(props.style), comp._reactInternalInstance)
   } else {
-    return false;
+    return false
   }
 }
 
 Animated
   .inject
-  .ApplyAnimatedValues(ApplyAnimatedValues);
+  .ApplyAnimatedValues(ApplyAnimatedValues)
 
 module.exports = {
   ...Animated,
   div: Animated.createAnimatedComponent('div'),
   span: Animated.createAnimatedComponent('span'),
-  img: Animated.createAnimatedComponent('img'),
-};
+  img: Animated.createAnimatedComponent('img')
+}

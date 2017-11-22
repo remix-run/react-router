@@ -6,7 +6,7 @@ export const createMatchSelector = (path) => {
   let lastPathname = null
   let lastMatch = null
   return (state) => {
-    const { pathname } = getLocation(state)
+    const { pathname } = getLocation(state) || {}
     if (pathname === lastPathname) {
       return lastMatch
     }

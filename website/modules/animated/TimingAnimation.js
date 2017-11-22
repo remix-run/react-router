@@ -8,17 +8,17 @@
  *
  * @flow
  */
-'use strict';
+'use strict'
 
-var Animation = require('./Animation');
-var AnimatedValue = require('./AnimatedValue');
-var Easing = require('./Easing');
-var RequestAnimationFrame = require('./injectable/RequestAnimationFrame');
-var CancelAnimationFrame = require('./injectable/CancelAnimationFrame');
+var Animation = require('./Animation')
+var AnimatedValue = require('./AnimatedValue')
+var Easing = require('./Easing')
+var RequestAnimationFrame = require('./injectable/RequestAnimationFrame')
+var CancelAnimationFrame = require('./injectable/CancelAnimationFrame')
 
-import type { AnimationConfig, EndCallback } from './Animation';
+import type { AnimationConfig, EndCallback } from './Animation'
 
-var easeInOut = Easing.inOut(Easing.ease);
+var easeInOut = Easing.inOut(Easing.ease)
 
 type TimingAnimationConfigSingle = AnimationConfig & {
   toValue: number | AnimatedValue;
@@ -41,12 +41,12 @@ class TimingAnimation extends Animation {
   constructor(
     config: TimingAnimationConfigSingle,
   ) {
-    super();
-    this._toValue = config.toValue;
-    this._easing = config.easing !== undefined ? config.easing : easeInOut;
-    this._duration = config.duration !== undefined ? config.duration : 500;
-    this._delay = config.delay !== undefined ? config.delay : 0;
-    this.__isInteraction = config.isInteraction !== undefined ? config.isInteraction : true;
+    super()
+    this._toValue = config.toValue
+    this._easing = config.easing !== undefined ? config.easing : easeInOut
+    this._duration = config.duration !== undefined ? config.duration : 500
+    this._delay = config.delay !== undefined ? config.delay : 0
+    this.__isInteraction = config.isInteraction !== undefined ? config.isInteraction : true
   }
 
   start(
@@ -54,57 +54,57 @@ class TimingAnimation extends Animation {
     onUpdate: (value: number) => void,
     onEnd: ?EndCallback,
   ): void {
-    this.__active = true;
-    this._fromValue = fromValue;
-    this._onUpdate = onUpdate;
-    this.__onEnd = onEnd;
+    this.__active = true
+    this._fromValue = fromValue
+    this._onUpdate = onUpdate
+    this.__onEnd = onEnd
 
     var start = () => {
       if (this._duration === 0) {
-        this._onUpdate(this._toValue);
-        this.__debouncedOnEnd({finished: true});
+        this._onUpdate(this._toValue)
+        this.__debouncedOnEnd({finished: true})
       } else {
-        this._startTime = Date.now();
-        this._animationFrame = RequestAnimationFrame.current(this.onUpdate.bind(this));
+        this._startTime = Date.now()
+        this._animationFrame = RequestAnimationFrame.current(this.onUpdate.bind(this))
       }
-    };
+    }
     if (this._delay) {
-      this._timeout = setTimeout(start, this._delay);
+      this._timeout = setTimeout(start, this._delay)
     } else {
-      start();
+      start()
     }
   }
 
   onUpdate(): void {
-    var now = Date.now();
+    var now = Date.now()
     if (now >= this._startTime + this._duration) {
       if (this._duration === 0) {
-        this._onUpdate(this._toValue);
+        this._onUpdate(this._toValue)
       } else {
         this._onUpdate(
           this._fromValue + this._easing(1) * (this._toValue - this._fromValue)
-        );
+        )
       }
-      this.__debouncedOnEnd({finished: true});
-      return;
+      this.__debouncedOnEnd({finished: true})
+      return
     }
 
     this._onUpdate(
       this._fromValue +
         this._easing((now - this._startTime) / this._duration) *
         (this._toValue - this._fromValue)
-    );
+    )
     if (this.__active) {
-      this._animationFrame = RequestAnimationFrame.current(this.onUpdate.bind(this));
+      this._animationFrame = RequestAnimationFrame.current(this.onUpdate.bind(this))
     }
   }
 
   stop(): void {
-    this.__active = false;
-    clearTimeout(this._timeout);
-    CancelAnimationFrame.current(this._animationFrame);
-    this.__debouncedOnEnd({finished: false});
+    this.__active = false
+    clearTimeout(this._timeout)
+    CancelAnimationFrame.current(this._animationFrame)
+    this.__debouncedOnEnd({finished: false})
   }
 }
 
-module.exports = TimingAnimation;
+module.exports = TimingAnimation
