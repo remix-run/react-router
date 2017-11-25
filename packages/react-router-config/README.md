@@ -186,7 +186,7 @@ import routes from './routes'
 
 Again, that's all pseudo-code. There are a lot of ways to do server rendering with data and pending navigation and we haven't settled on one. The point here is that `matchRoutes` gives you a chance to match statically outside of the render lifecycle. We'd like to make a demo app of this approach eventually.
 
-### `renderRoutes(routes, extraProps = {})`
+### `renderRoutes(routes, extraProps = {}, switchProps = {})`
 
 In order to ensure that matching outside of render with `matchRoutes` and inside of render result in the same branch, you must use `renderRoutes` instead of `<Route>` inside your components. You can render a `<Route>` still, but know that it will not be accounted for in `matchRoutes` outside of render.
 
