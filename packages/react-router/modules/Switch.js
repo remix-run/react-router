@@ -16,7 +16,8 @@ class Switch extends React.Component {
 
   static propTypes = {
     children: PropTypes.node,
-    location: PropTypes.object
+    location: PropTypes.object,
+    render: PropTypes.func
   }
 
   componentWillMount() {
@@ -40,21 +41,25 @@ class Switch extends React.Component {
 
   render() {
     const { route } = this.context.router
-    const { children } = this.props
+    const { children, render } = this.props
     const location = this.props.location || route.location
 
-    let match, child
-    React.Children.forEach(children, element => {
+    let match, child, index = -1
+    React.Children.forEach(children, (element, i) => {
       if (match == null && React.isValidElement(element)) {
         const { path: pathProp, exact, strict, sensitive, from } = element.props
         const path = pathProp || from
 
         child = element
         match = path ? matchPath(location.pathname, { path, exact, strict, sensitive }) : route.match
+        if (match != null) {
+          index = i
+        }
       }
     })
 
-    return match ? React.cloneElement(child, { location, computedMatch: match }) : null
+    const result = match ? React.cloneElement(child, { location, computedMatch: match }) : null
+    return render ? render(result, index, children) : result
   }
 }
 
