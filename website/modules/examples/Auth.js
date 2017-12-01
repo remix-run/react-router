@@ -52,17 +52,17 @@ const AuthButton = withRouter(({ history }) => (
   )
 ))
 
-const PrivateRoute = ({ component: Component, ...rest }) => (
-  <Route {...rest} render={props => (
-    fakeAuth.isAuthenticated ? (
-      <Component {...props}/>
-    ) : (
-      <Redirect to={{
-        pathname: '/login',
-        state: { from: props.location }
-      }}/>
-    )
-  )}/>
+const PrivateRoute = ({ component: Component, render, ...rest }) => (
+  <Route
+    {...rest} render={
+      fakeAuth.isAuthenticated
+        ? render ? render : props => <Component {...props} />
+        : props => 
+          <Redirect to={{
+            pathname: '/login',
+            state: { from: props.location }
+          }}/>
+    }/>
 )
 
 const Public = () => <h3>Public</h3>
