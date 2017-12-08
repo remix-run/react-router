@@ -12,7 +12,7 @@ class ConnectedRouter extends Component {
   }
 
   static contextTypes = {
-    store: PropTypes.object.isRequired
+    store: PropTypes.object
   }
 
   handleLocationChange = location => {
