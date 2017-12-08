@@ -7,7 +7,7 @@ import { LOCATION_CHANGE } from './reducer'
 class ConnectedRouter extends Component {
   static propTypes = {
     store: PropTypes.object,
-    history: PropTypes.object,
+    history: PropTypes.object.isRequired,
     children: PropTypes.node
   }
 
