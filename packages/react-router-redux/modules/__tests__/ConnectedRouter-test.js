@@ -1,5 +1,6 @@
 import React from 'react'
 import renderer from 'react-test-renderer'
+import {Switch, Route, Redirect} from 'react-router'
 import { createStore, combineReducers } from 'redux'
 import { Provider } from 'react-redux'
 import createHistory from 'history/createMemoryHistory'
@@ -78,5 +79,20 @@ describe('A <ConnectedRouter>', () => {
       
       expect(tree).toMatchSnapshot()
     })
+  })
+
+  it('redirects properly', () => {
+    expect(store.getState()).toHaveProperty('router.location', null)
+
+    renderer.create(
+      <ConnectedRouter store={store} history={history}>
+        <Switch>
+          <Route path="/test" render={() => null} />
+          <Redirect to="/test" />
+        </Switch>
+      </ConnectedRouter>
+    )
+
+    expect(store.getState()).toHaveProperty('router.location.pathname', '/test')
   })
 })

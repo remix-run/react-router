@@ -8,7 +8,8 @@ class ConnectedRouter extends Component {
   static propTypes = {
     store: PropTypes.object,
     history: PropTypes.object.isRequired,
-    children: PropTypes.node
+    children: PropTypes.node,
+    isSSR: PropTypes.bool
   }
 
   static contextTypes = {
@@ -23,14 +24,12 @@ class ConnectedRouter extends Component {
   }
 
   componentWillMount() {
-    const { store:propsStore, history } = this.props
+    const { store:propsStore, history, isSSR } = this.props
     this.store = propsStore || this.context.store
     this.handleLocationChange(history.location)
-  }
 
-  componentDidMount() {
-    const { history } = this.props
-    this.unsubscribeFromHistory = history.listen(this.handleLocationChange)
+    if (!isSSR)
+      this.unsubscribeFromHistory = history.listen(this.handleLocationChange)
   }
 
   componentWillUnmount() {
