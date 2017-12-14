@@ -69,6 +69,11 @@ class Link extends React.Component {
       'You should not use <Link> outside a <Router>'
     )
 
+    invariant(
+      to !== undefined,
+      'You must specify the "to" property'
+    )
+
     const { history } = this.context.router
     const location = typeof to === 'string' ? createLocation(to, null, null, history.location) : to
 
