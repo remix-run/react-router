@@ -1,12 +1,14 @@
 import React from 'react'
 import renderer from 'react-test-renderer'
 import {Switch, Route, Redirect} from 'react-router'
-import { createStore, combineReducers } from 'redux'
+import { applyMiddleware, createStore, combineReducers } from 'redux'
 import { Provider } from 'react-redux'
 import createHistory from 'history/createMemoryHistory'
 
 import ConnectedRouter from '../ConnectedRouter'
-import { routerReducer } from '../reducer'
+import { LOCATION_CHANGE, routerReducer } from '../reducer'
+import routerMiddleware from '../middleware'
+import { push } from '../actions'
 
 describe('A <ConnectedRouter>', () => {
   let store, history
@@ -91,6 +93,31 @@ describe('A <ConnectedRouter>', () => {
           <Redirect to="/test" />
         </Switch>
       </ConnectedRouter>
+    )
+
+    expect(store.getState()).toHaveProperty('router.location.pathname', '/test')
+  })
+
+  it('stays in sync if other middlewares dispatch routerActions as a reaction to the inital LOCATION_CHANGE', () => {
+
+    let waitingForFirstLocationChange = true
+    const customMiddleware = st => next => action => {
+      const res = next(action)
+      if (waitingForFirstLocationChange && action.type === LOCATION_CHANGE) {
+        waitingForFirstLocationChange = false
+        st.dispatch(push('/test'))
+      }
+      return res
+    }
+    
+    store = createStore(combineReducers({
+      router: routerReducer
+    }), applyMiddleware(routerMiddleware(history), customMiddleware))
+
+    expect(store.getState()).toHaveProperty('router.location', null)
+
+    renderer.create(
+      <ConnectedRouter store={store} history={history} />
     )
 
     expect(store.getState()).toHaveProperty('router.location.pathname', '/test')
