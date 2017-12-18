@@ -53,3 +53,8 @@ const refCallback = node => {
 
 <Link to="/" innerRef={refCallback} />
 ```
+
+## others
+
+You can also pass props you'd like to be on the `<a>` such as a `title`, `id`, `className`, etc.
+
