@@ -17,6 +17,13 @@ const ParamsExample = () => (
       </ul>
 
       <Route path="/:id" component={Child}/>
+  
+      {/*
+         It's possible to use regular expressions to control what param values should be matched.
+            * "/order/asc"  - matched
+            * "/order/desc" - matched
+            * "/order/foo"  - not matched
+      */}
       <Route path="/order/:direction(asc|desc)" component={ComponentWithRegex}/>
     </div>
   </Router>
