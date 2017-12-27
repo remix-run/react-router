@@ -2,7 +2,7 @@ import React from 'react'
 import ReactDOM from 'react-dom'
 import PropTypes from 'prop-types'
 import Router from '../Router'
-import createHistory from 'history/createMemoryHistory'
+import { createMemoryHistory as createHistory } from 'history'
 
 describe('A <Router>', () => {
   const node = document.createElement('div')

@@ -75,6 +75,24 @@ describe('selectors', () => {
       const match2 = matchSelector(store.getState())
       expect(match1).not.toBe(match2)
     })
+
+    it('updates if the exact match is different', () => {
+      const matchSelector = createMatchSelector({
+        path: '/sushi',
+        exact: true,
+      })
+      store.dispatch({
+        type: LOCATION_CHANGE,
+        payload: { pathname: '/sushi' }
+      })
+      const match1 = matchSelector(store.getState())
+      store.dispatch({
+        type: LOCATION_CHANGE,
+        payload: { pathname: '/sushi/dynamite' }
+      })
+      const match2 = matchSelector(store.getState())
+      expect(match1).not.toBe(match2)
+    })
   })
 
 })

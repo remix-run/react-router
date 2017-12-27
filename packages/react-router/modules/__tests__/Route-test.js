@@ -1,6 +1,6 @@
 import React from 'react'
 import ReactDOM from 'react-dom'
-import createMemoryHistory from 'history/createMemoryHistory'
+import { createMemoryHistory } from 'history'
 import MemoryRouter from '../MemoryRouter'
 import Router from '../Router'
 import Route from '../Route'

@@ -7,20 +7,20 @@
  * of patent rights can be found in the PATENTS file in the same directory.
  */
 
-'use strict';
+'use strict'
 
 function SetPolyfill() {
-  this._cache = [];
+  this._cache = []
 }
 
 SetPolyfill.prototype.add = function(e) {
   if (this._cache.indexOf(e) === -1) {
-    this._cache.push(e);
+    this._cache.push(e)
   }
-};
+}
 
 SetPolyfill.prototype.forEach = function(cb) {
-  this._cache.forEach(cb);
-};
+  this._cache.forEach(cb)
+}
 
-module.exports = SetPolyfill;
+module.exports = SetPolyfill

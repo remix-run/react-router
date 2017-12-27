@@ -63,7 +63,7 @@ Router.map(function() {
 export default Router
 ```
 
-Though the API's are different, they all share the model of "static routes". React Router also followed that lead up until v4.
+Though the APIs are different, they all share the model of "static routes". React Router also followed that lead up until v4.
 
 To be successful with React Router, you need to forget all that! :O
 

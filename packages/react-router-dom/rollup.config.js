@@ -19,7 +19,7 @@ const config = {
     }),
     resolve({
       customResolveOptions: {
-        moduleDirectory: ['node_modules', '../']
+        moduleDirectory: ['../../node_modules', '../']
       }
     }),
     commonjs({

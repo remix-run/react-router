@@ -174,6 +174,37 @@ describe('renderRoutes', () => {
       history.push('/three')
       expect(mountCount).toBe(2)
     })
+
+    it('passes props to Switch', () => {
+      const App = ({ route: { routes } }) => (
+        renderRoutes(routes)
+      )
+
+      const routeToMatch = {
+        component: Comp,
+        path: '/one'
+      }
+
+      const routes = [
+        { path: '/',
+          component: App,
+          routes: [
+            { path: '/one',
+              component: Comp
+            }
+          ]
+        }
+      ]
+
+      ReactDOMServer.renderToString(
+        <StaticRouter location='/two' context={{}}>
+          {renderRoutes(routes, {}, {location: { pathname: '/one' }})}
+        </StaticRouter>
+      )
+
+      expect(renderedRoutes.length).toEqual(1)
+      expect(renderedRoutes[0]).toEqual(routeToMatch)
+    })
   })
 
   describe('routes with exact', () => {
