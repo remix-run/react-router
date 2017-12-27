@@ -17,6 +17,7 @@ const ParamsExample = () => (
       </ul>
 
       <Route path="/:id" component={Child}/>
+      <Route path="/order/:direction(asc|desc)" component={ComponentWithRegex}/>
     </div>
   </Router>
 )
@@ -24,6 +25,12 @@ const ParamsExample = () => (
 const Child = ({ match }) => (
   <div>
     <h3>ID: {match.params.id}</h3>
+  </div>
+)
+
+const ComponentWithRegex = ({ match }) => (
+  <div>
+    <h3>Only asc/desc are allowed: {match.params.direction}</h3>
   </div>
 )
 
