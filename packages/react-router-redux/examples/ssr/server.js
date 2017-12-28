@@ -4,10 +4,8 @@ import fs from 'fs';
 import React from 'react';
 import { renderToString } from 'react-dom/server';
 
-import { Provider } from 'react-redux';
-import { ConnectedRouter } from 'react-router-redux';
+import { StaticRouter } from 'react-router-redux';
 import { Route } from 'react-router-dom';
-import createServerStore from './server-store';
 
 // The same <App> that we loaded on the client
 // Creating a single app container allows you to not need to duplicate your routes on both the client and server
@@ -24,16 +22,14 @@ const universalLoader = (req, res) => {
       return res.status(404).end();
     }
 
-    // Create a store and sense of history based on the current path
-    const { store, history } = createServerStore(req.path);
+    // Declare an empty context
+    const context = {};
 
-    // Render <App> in React same as on the client-side (see above)
+    // Render <App> in React
     const routeMarkup = renderToString(
-      <Provider store={store}>
-        <ConnectedRouter history={history}>
-          <Route component={App} />
-        </ConnectedRouter>
-      </Provider>
+      <StaticRouter location={req.url} context={context}>
+        <Route component={App} />
+      </StaticRouter>
     );
 
     res.send(
