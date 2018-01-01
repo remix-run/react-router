@@ -128,7 +128,7 @@ This could also be useful for animations:
 )}/>
 ```
 
-**Warning:** Both `<Route component>` and `<Route render>` take precendence over `<Route children>` so don't use more than one in the same `<Route>`.
+**Warning:** Both `<Route component>` and `<Route render>` take precedence over `<Route children>` so don't use more than one in the same `<Route>`.
 
 ## path: string
 
