@@ -164,12 +164,33 @@ In v4, you can achieve the same functionality using `<Redirect>`.
 // v4
 <Route exact path="/" render={() => <Redirect to="/welcome" component={App} />} />
 
-<Switch  >
+<Switch>
   <Route exact path="/" component={App} />
   <Route path="/login" component={Login} />
   <Redirect path="*" to="/" />
 </Switch>
 
+```
+
+In v3, `<Redirect>` preserved the query string:
+
+```js
+// v3
+
+<Redirect from="/" to="/welcome" />
+// /?source=google → /welcome?source=google
+```
+
+In v4, you must re-pass these properties to the `to` prop:
+
+```js
+// v4
+
+<Redirect from="/" to="/welcome" />
+// /?source=google → /welcome
+
+<Redirect from="/" to={{ ...location, pathname: "/welcome" }} />
+// /?source=google → /welcome?source=google
 ```
 
 ## PatternUtils
