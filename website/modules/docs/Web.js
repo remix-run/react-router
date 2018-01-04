@@ -105,6 +105,12 @@ export default {
       loadSource: require('bundle?lazy!!prismjs?lang=jsx!../examples/ModalGallery.js')
     },
     {
+      label: 'Stack Routes',
+      slug: 'stack-routes',
+      load: require('bundle?lazy!babel!../examples/StackRoutes'),
+      loadSource: require('bundle?lazy!!prismjs?lang=jsx!../examples/StackRoutes.js')
+    },
+    {
       label: 'StaticRouter Context',
       slug: 'static-router',
       load: require('bundle?lazy!babel!../examples/StaticRouter'),
