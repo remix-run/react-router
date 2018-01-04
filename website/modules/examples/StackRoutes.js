@@ -57,6 +57,7 @@ const Author = ({ match, location, history }) => {
   const posts = db.posts.filter(p => p.author_id === author_id)
   const others = db.authors.filter(a => a.id !== author_id)
   return <div style={styles.page}>
+    <h1>↖ Try to click the backward and forward button.</h1><br/><br/><br/>
     <h1>OPEN THE DEV-TOOLS AND INSPECT THE DOM ELEMENTS!!!</h1>
     <h2>name: {author.name}</h2>
     <h6>gender: {author.gender}</h6>
