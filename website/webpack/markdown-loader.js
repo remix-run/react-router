@@ -155,12 +155,12 @@ module.exports = function (content) {
   correctLinks($markup, title.slug, this.data.environment, this.data.type)
   makeHeaderLinks($markup, title.slug, this.data.environment, this.data.type)
   const headers = extractHeaders($markup, 'h2', this.data.type)
-  this.value = {
+  const value = {
     markup: $markup.html(),
     headers: headers,
     title: title
   }
-  return `module.exports = ${JSON.stringify(this.value)}`
+  return `module.exports = ${JSON.stringify(value)}`
 }
 
 module.exports.pitch = function(remainingRequest, precedingRequest, data) {

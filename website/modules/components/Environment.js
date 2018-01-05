@@ -9,9 +9,9 @@ import Loading from './Loading'
 import { Redirect } from 'react-router-dom'
 
 const envData = {
-  web: require('bundle?lazy!../docs/Web'),
-  native: require('bundle?lazy!../docs/Native'),
-  core: require('bundle?lazy!../docs/Core')
+  web: require('bundle-loader?lazy!../docs/Web'),
+  native: require('bundle-loader?lazy!../docs/Native'),
+  core: require('bundle-loader?lazy!../docs/Core')
 }
 
 class Environment extends Component {

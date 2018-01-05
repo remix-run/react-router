@@ -15,7 +15,7 @@ module.exports = {
   output: {
     path: path.resolve(__dirname, '../build'),
     filename: `bundle-[chunkHash].js`,
-    chunkFileName: `[name]-[chunkHash].js`,
+    chunkFilename: `[name]-[chunkHash].js`,
     publicPath: '/'
   },
 
@@ -25,7 +25,10 @@ module.exports = {
         process.env.NODE_ENV || 'development'
       )
     }),
-    new webpack.optimize.CommonsChunkPlugin('vendor', `vendor-[chunkHash].js`),
+    new webpack.optimize.CommonsChunkPlugin({
+      name: 'vendor',
+      filename: `vendor-[chunkHash].js`
+    }),
     new HTMLWebpackPlugin({
       template: 'index.html.ejs'
     }),
@@ -42,6 +45,10 @@ module.exports = {
   ),
 
   resolve: {
+    modules: [
+      path.resolve(__dirname, '../../'),
+      path.resolve(__dirname, '../../node_modules')
+    ],
     alias: {
       'react-router': path.resolve(
         __dirname,
@@ -55,33 +62,82 @@ module.exports = {
   },
 
   resolveLoader: {
-    modulesDirectories: [path.resolve(__dirname, '../node_modules')]
+    modules: [
+      path.resolve(__dirname, '../../node_modules'),
+      __dirname
+    ]
   },
 
   module: {
-    loaders: [
+    rules: [
       {
         test: /\.js$/,
         exclude: /node_modules|examples/,
-        loader: 'babel'
+        loader: 'babel-loader'
+      },
+      {
+        test: /\.js$/,
+        include: /examples/,
+        resourceQuery: /bundle/,
+        use: [
+          {
+            loader: 'bundle-loader',
+            options: {
+              lazy: true
+            }
+          },
+          { loader: 'babel-loader' }
+        ]
+      },
+      {
+        test: /\.js$/,
+        include: /examples/,
+        resourceQuery: /prismjs/,
+        use: [
+          {
+            loader: 'bundle-loader',
+            options: {
+              lazy: true
+            }
+          },
+          {
+            loader: 'prismjs-loader',
+            options: {
+              lang: 'jsx'
+            }
+          }
+        ]
       },
       {
         test: /\.css$/,
         exclude: /prismjs/,
-        loader: 'style!css'
+        use: [
+          { loader: 'style-loader' },
+          { loader: 'css-loader' }
+        ]
       },
       {
         test: /\.css$/,
         include: /prismjs/,
-        loader: 'style!css'
+        use: [
+          { loader: 'style-loader' },
+          { loader: 'css-loader' }
+        ]
       },
       {
         test: /\.md(\?(.+))?$/,
-        loader: path.resolve(__dirname, 'markdown-loader')
+        loader: 'markdown-loader'
       },
       {
         test: /\.(gif|jpe?g|png|ico)$/,
-        loader: 'url?limit=10000'
+        use: [
+          {
+            loader: 'url-loader',
+            options: {
+              limit: 10000
+            }
+          }
+        ]
       }
     ]
   },
