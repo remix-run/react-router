@@ -7,7 +7,7 @@ matches the route's `path`.
 
 Consider the following code:
 
-```js
+```jsx
 import { BrowserRouter as Router, Route } from 'react-router-dom'
 
 <Router>
@@ -61,7 +61,7 @@ All three [render methods](#route-render-methods) will be passed the same three 
 A React component to render only when the location matches. It will be
 rendered with [route props](#route-props).
 
-```js
+```jsx
 <Route path="/user/:username" component={User}/>
 
 const User = ({ match }) => {
@@ -77,7 +77,7 @@ This allows for convenient inline rendering and wrapping without the undesired r
 
 Instead of having a new [React element](https://facebook.github.io/react/docs/rendering-elements.html) created for you using the [`component`](#component) prop, you can pass in a function to be called when the location matches. The `render` prop receives all the same [route props](#route-props) as the `component` render prop.
 
-```js
+```jsx
 // convenient inline rendering
 <Route path="/home" render={() => <div>Home</div>}/>
 
@@ -101,7 +101,7 @@ Sometimes you need to render whether the path matches the location or not. In th
 
 The `children` render prop receives all the same [route props](#route-props) as the `component` and `render` methods, except when a route fails to match the URL, then `match` is `null`. This allows you to dynamically adjust your UI based on whether or not the route matches. Here we're adding an `active` class if the route matches
 
-```js
+```jsx
 <ul>
   <ListItemLink to="/somewhere"/>
   <ListItemLink to="/somewhere-else"/>
@@ -118,7 +118,7 @@ const ListItemLink = ({ to, ...rest }) => (
 
 This could also be useful for animations:
 
-```js
+```jsx
 <Route children={({ match, ...rest }) => (
   {/* Animate will always render, so you can use lifecycles
       to animate its child in and out */}
@@ -134,7 +134,7 @@ This could also be useful for animations:
 
 Any valid URL path that [`path-to-regexp`](https://www.npmjs.com/package/path-to-regexp) understands.
 
-```js
+```jsx
 <Route path="/users/:id" component={User}/>
 ```
 
@@ -144,7 +144,7 @@ Routes without a `path` _always_ match.
 
 When `true`, will only match if the path matches the `location.pathname` _exactly_.
 
-```js
+```jsx
 <Route exact path="/one" component={About}/>
 ```
 
@@ -157,7 +157,7 @@ When `true`, will only match if the path matches the `location.pathname` _exactl
 
 When `true`, a `path` that has a trailing slash will only match a `location.pathname` with a trailing slash. This has no effect when there are additional URL segments in the `location.pathname`.
 
-```js
+```jsx
 <Route strict path="/one/" component={About}/>
 ```
 
@@ -169,7 +169,7 @@ When `true`, a `path` that has a trailing slash will only match a `location.path
 
 **Warning:** `strict` can be used to enforce that a `location.pathname` has no trailing slash, but in order to do this both `strict` and `exact` must be `true`.
 
-```js
+```jsx
 <Route exact strict path="/one" component={About}/>
 ```
 
@@ -192,7 +192,7 @@ If a `<Route>` element is wrapped in a `<Switch>` and matches the location passe
 
 When `true`, will match if the path is __case sensitive__.
 
-```js
+```jsx
 <Route sensitive path="/one" component={About}/>
 ```
 

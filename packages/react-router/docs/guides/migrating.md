@@ -19,7 +19,7 @@ In React Router v3, there was a single `<Router>` component. It would be provide
 
 Also, you would provide it your application's route configuration to the `<Router>` either using the `routes` prop or as the `children` of the `<Router>`.
 
-```js
+```jsx
 // v3
 import routes from './routes'
 <Router history={browserHistory} routes={routes} />
@@ -35,7 +35,7 @@ With React Router v4, one of the big changes is that there are a number of diffe
 
 In v4, there is no centralized route configuration. Anywhere that you need to render content based on a route, you will just render a `<Route>` component.
 
-```js
+```jsx
 //v4
 <BrowserRouter>
   <div>
@@ -47,7 +47,7 @@ In v4, there is no centralized route configuration. Anywhere that you need to re
 
 One thing to note is that the router component must only be given one child element.
 
-```js
+```jsx
 // yes
 <BrowserRouter>
   <div>
@@ -67,7 +67,7 @@ One thing to note is that the router component must only be given one child elem
 
 In v3, the `<Route>` was not really a component. Instead, all of your application's `<Route>` elements were just used to created a route configuration object.
 
-```js
+```jsx
 /// in v3 the element
 <Route path='contact' component={Contact} />
 // was equivalent to
@@ -85,7 +85,7 @@ The v4 `<Route>` component is actually a component, so wherever you render a `<R
 
 In v3, `<Route>`s were nested by passing them as the `children` of their parent `<Route>`.
 
-```js
+```jsx
 <Route path='parent' component={Parent}>
   <Route path='child' component={Child} />
   <Route path='other' component={Other} />
@@ -94,7 +94,7 @@ In v3, `<Route>`s were nested by passing them as the `children` of their parent 
 
 When a nested `<Route>` matched, React elements would be created using both the child and parent `<Route>`'s `component` prop. The child element would be passed to the parent element as its `children` prop.
 
-```js
+```jsx
 <Parent {...routeProps}>
   <Child {...routeProps} />
 </Parent>
@@ -102,7 +102,7 @@ When a nested `<Route>` matched, React elements would be created using both the 
 
 With v4, children `<Route>`s should just be rendered by the parent `<Route>`'s component.
 
-```js
+```jsx
 <Route path='parent' component={Parent} />
 
 const Parent = () => (
@@ -123,7 +123,7 @@ With v4, you should use the lifecycle methods of the component rendered by a `<R
 
 In v3, you could specify a number of child routes, and only the first one that matched would be rendered.
 
-```js
+```jsx
 // v3
 <Route path='/' component={App}>
   <IndexRoute component={Home} />
@@ -134,7 +134,7 @@ In v3, you could specify a number of child routes, and only the first one that m
 
 v4 provides a similar functionality with the `<Switch>` component. When a `<Switch>` is rendered, it will only render the first child `<Route>` that matches the current location.
 
-```js
+```jsx
 // v4
 const App = () => (
   <Switch>
@@ -150,7 +150,7 @@ const App = () => (
 
 In v3, if you wanted to redirect from one path to another, for instance / to /welcome, you would use `<IndexRedirect >`.
 
-```js
+```jsx
 // v3
 <Route path="/" component={App}>
   <IndexRedirect to="/welcome" />
@@ -160,7 +160,7 @@ In v3, if you wanted to redirect from one path to another, for instance / to /we
 
 In v4, you can achieve the same functionality using `<Redirect>`.
 
-```js
+```jsx
 // v4
 <Route exact path="/" render={() => <Redirect to="/welcome" component={App} />} />
 
@@ -174,7 +174,7 @@ In v4, you can achieve the same functionality using `<Redirect>`.
 
 In v3, `<Redirect>` preserved the query string:
 
-```js
+```jsx
 // v3
 
 <Redirect from="/" to="/welcome" />
@@ -183,7 +183,7 @@ In v3, `<Redirect>` preserved the query string:
 
 In v4, you must re-pass these properties to the `to` prop:
 
-```js
+```jsx
 // v4
 
 <Redirect from="/" to="/welcome" />
@@ -201,7 +201,7 @@ In v3, you could use the same matching code used internally to check if a path m
 ### formatPattern(pattern, params)
 In v3, you could use PatternUtils.formatPattern to generate a valid path from a path pattern (perhaps in a constant or in your central routing config) and an object containing the names parameters:
 
-```js
+```jsx
 // v3
 const THING_PATH = '/thing/:id';
 
@@ -210,7 +210,7 @@ const THING_PATH = '/thing/:id';
 
 In v4, you can achieve the same functionality using the [compile](https://github.com/pillarjs/path-to-regexp#compile-reverse-path-to-regexp) function in [path-to-regexp](https://github.com/pillarjs/path-to-regexp).
 
-```js
+```jsx
 // v4
 const THING_PATH = '/thing/:id';
 
@@ -224,7 +224,7 @@ const thingPath = pathToRegexp.compile(THING_PATH);
 ### `to` property is required
 In v3, you could omit `to` property or set it to null to create an anchor tag without `href` attribute.
 
-```js
+```jsx
 // v3
 <Link to={disabled ? null : `/item/${id}`} className="item">
   // item content
@@ -233,7 +233,7 @@ In v3, you could omit `to` property or set it to null to create an anchor tag wi
 
 In v4, you should always provide `to`. In case you are rely on empty `to` you can make a simple wrapper.
 
-```js
+```jsx
 // v4
 import { Link } from 'react-router-dom'
 

@@ -10,7 +10,7 @@ page. The [`Route`][Route] `children` prop is perfect for these situations.
 Consider this app without the router. When the `<TouchableHighlight/>` is pressed
 the sidebar's animation will toggle.
 
-```js
+```jsx
 class Sidebar extends Component {
   state {
     anim: new Animated.Value(
@@ -121,7 +121,7 @@ class Parent extends Component {
 Once that works without animations, we're ready to add an animation around it.
 
 
-```js
+```jsx
 <AnimatedChild
   anim={this.state.anim}
   atParent={this.props.match.isExact}
@@ -138,7 +138,7 @@ It's important to use a [`<Switch>`][Switch]. It will ensure that only one route
 
 There are a handful of props handed to `AnimatedChild` that the parent will know about as it manages the animation. Again, this guide is more inspiration than copy/paste right now, feel free to look at the source of this website for exact implementation. Alright, let's check out the implementation of `AnimatedChild` (it's copy pasted from the animation used on this site).
 
-```js
+```jsx
 class AnimatedChildRoute extends Component {
 
   static propTypes = {

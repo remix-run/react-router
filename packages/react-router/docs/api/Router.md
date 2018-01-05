@@ -11,7 +11,7 @@ The common low-level interface for all router components. Typically apps will us
 The most common use-case for using the low-level `<Router>` is to
 synchronize a custom history with a state management lib like Redux or Mobx. Note that this is not required to use state management libs alongside React Router, it's only for deep integration.
 
-```js
+```jsx
 import { Router } from 'react-router'
 import createBrowserHistory from 'history/createBrowserHistory'
 
@@ -26,7 +26,7 @@ const history = createBrowserHistory()
 
 A [`history`](https://github.com/ReactTraining/history) object to use for navigation.
 
-```js
+```jsx
 import createBrowserHistory from 'history/createBrowserHistory'
 
 const customHistory = createBrowserHistory()
@@ -37,7 +37,7 @@ const customHistory = createBrowserHistory()
 
 A [single child element](https://facebook.github.io/react/docs/react-api.html#react.children.only) to render.
 
-```js
+```jsx
 <Router>
   <App/>
 </Router>
