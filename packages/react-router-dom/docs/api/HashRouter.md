@@ -4,7 +4,7 @@ A [`<Router>`](../../../react-router/docs/api/Router.md) that uses the hash port
 
 **IMPORTANT NOTE:** Hash history does not support `location.key` or `location.state`. In previous versions we attempted to shim the behavior but there were edge-cases we couldn't solve. Any code or plugin that needs this behavior won't work. As this technique is only intended to support legacy browsers, we encourage you to configure your server to work with `<BrowserHistory>` instead.
 
-```js
+```jsx
 import { HashRouter } from 'react-router-dom'
 
 <HashRouter>
@@ -16,7 +16,7 @@ import { HashRouter } from 'react-router-dom'
 
 The base URL for all locations. A properly formatted basename should have a leading slash, but no trailing slash.
 
-```js
+```jsx
 <HashRouter basename="/calendar"/>
 <Link to="/today"/> // renders <a href="#/calendar/today">
 ```
@@ -25,7 +25,7 @@ The base URL for all locations. A properly formatted basename should have a lead
 
 A function to use to confirm navigation. Defaults to using [`window.confirm`](https://developer.mozilla.org/en-US/docs/Web/API/Window/confirm).
 
-```js
+```jsx
 // this is the default behavior
 const getConfirmation = (message, callback) => {
   const allowTransition = window.confirm(message)

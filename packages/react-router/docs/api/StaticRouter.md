@@ -6,7 +6,7 @@ This can be useful in server-side rendering scenarios when the user isn't actual
 
 Here's an example node server that sends a 302 status code for [`<Redirect>`](Redirect.md)s and regular HTML for other requests:
 
-```js
+```jsx
 import { createServer } from 'http'
 import React from 'react'
 import ReactDOMServer from 'react-dom/server'
@@ -40,7 +40,7 @@ createServer((req, res) => {
 
 The base URL for all locations. A properly formatted basename should have a leading slash, but no trailing slash.
 
-```js
+```jsx
 <StaticRouter basename="/calendar">
   <Link to="/today"/> // renders <a href="/calendar/today">
 </StaticRouter>
@@ -50,7 +50,7 @@ The base URL for all locations. A properly formatted basename should have a lead
 
 The URL the server received, probably `req.url` on a node server.
 
-```js
+```jsx
 <StaticRouter location={req.url}>
   <App/>
 </StaticRouter>
@@ -60,7 +60,7 @@ The URL the server received, probably `req.url` on a node server.
 
 A location object shaped like `{ pathname, search, hash, state }`
 
-```js
+```jsx
 <StaticRouter location={{ pathname: '/bubblegum' }}>
   <App/>
 </StaticRouter>
@@ -70,7 +70,7 @@ A location object shaped like `{ pathname, search, hash, state }`
 
 A plain JavaScript object. During the render, components can add properties to the object to store information about the render.
 
-```js
+```jsx
 const context = {}
 <StaticRouter context={context}>
   <App />

@@ -3,7 +3,7 @@
 Rendering on the server is a bit different since it's all stateless. The basic idea is that we wrap the app in a stateless [`<StaticRouter>`][StaticRouter] instead of a [`<BrowserRouter>`][BrowserRouter]. We pass in the requested url from the server so the routes can match and a `context` prop we'll discuss next.
 
 
-```js
+```jsx
 // client
 <BrowserRouter>
   <App/>
@@ -20,7 +20,7 @@ Rendering on the server is a bit different since it's all stateless. The basic i
 
 When you render a [`<Redirect>`][Redirect] on the client, the browser history changes state and we get the new screen. In a static server environment we can't change the app state. Instead, we use the `context` prop to find out what the result of rendering was. If we find a `context.url`, then we know the app redirected. This allows us to send a proper redirect from the server.
 
-```js
+```jsx
 const context = {}
 const markup = ReactDOMServer.renderToString(
   <StaticRouter
@@ -43,7 +43,7 @@ if (context.url) {
 
 The router only ever adds `context.url`. But you may want some redirects to be 301 and others 302. Or maybe you'd like to send a 404 response if some specific branch of UI is rendered, or a 401 if they aren't authorized. The context prop is yours, so you can mutate it. Here's a way to distinguish between 301 and 302 redirects:
 
-```js
+```jsx
 const RedirectWithStatus = ({ from, to, status }) => (
   <Route render={({ staticContext }) => {
     // there is no `staticContext` on the client, so
@@ -91,7 +91,7 @@ if (context.url) {
 
 We can do the same thing as above. Create a component that adds some context and render it anywhere in the app to get a different status code.
 
-```js
+```jsx
 const Status = ({ code, children }) => (
   <Route render={({ staticContext }) => {
     if (staticContext)
@@ -103,7 +103,7 @@ const Status = ({ code, children }) => (
 
 Now you can render a `Status` anywhere in the app that you want to add the code to `staticContext`.
 
-```js
+```jsx
 const NotFound = () => (
   <Status code={404}>
     <div>
@@ -125,7 +125,7 @@ const NotFound = () => (
 This isn't a real app, but it shows all of the general pieces you'll
 need to put it all together.
 
-```js
+```jsx
 import { createServer } from 'http'
 import React from 'react'
 import ReactDOMServer from 'react-dom/server'
@@ -161,7 +161,7 @@ createServer((req, res) => {
 
 And then the client:
 
-```js
+```jsx
 import ReactDOM from 'react-dom'
 import { BrowserRouter } from 'react-router-dom'
 import App from './App'
@@ -193,7 +193,7 @@ const routes = [
 
 Then use this config to render your routes in the app:
 
-```js
+```jsx
 import { routes } from './routes'
 
 const App = () => (

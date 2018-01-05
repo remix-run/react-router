@@ -18,7 +18,7 @@ class UpdateBlocker extends React.PureComponent {
 
 When the `<UpdateBlocker>` is mounting, any location-aware child components will use the current `location` and `match` objects to render.
 
-```js
+```jsx
 // location = { pathname: '/about' }
 <UpdateBlocker>
   <NavLink to='/about'>About</NavLink>
@@ -30,7 +30,7 @@ When the `<UpdateBlocker>` is mounting, any location-aware child components will
 
 When the location changes, the `<UpdateBlocker>` does not detect any prop or state changes, so its child components will not be re-rendered.
 
-```js
+```jsx
 // location = { pathname: '/faq' }
 <UpdateBlocker>
   // the links will not re-render, so they retain their previous attributes
@@ -89,7 +89,7 @@ const MyConnectedComponent = withRouter(observer(MyComponent))
 #### Recommended Solution
 The key to avoiding blocked re-renders after location changes is to pass the blocking component the `location` object as a prop. This will be different whenever the location changes, so comparisons will detect that the current and next location are different.
 
-```js
+```jsx
 // location = { pathname: '/about' }
 <UpdateBlocker location={location}>
   <NavLink to='/about'>About</NavLink>
@@ -111,7 +111,7 @@ The key to avoiding blocked re-renders after location changes is to pass the blo
 
 In order to pass the current `location` object as a prop to a component, you must have access to it. The primary way that a component can get access to the `location` is via a `<Route>` component. When a `<Route>` matches (or always if you are using the `children` prop), it passes the current `location` to the child element it renders.
 
-```js
+```jsx
 <Route path='/here' component={Here}/>
 const Here = (props) => {
   // props.location = { pathname: '/here', ... }
@@ -131,7 +131,7 @@ const Here = (props) => {
 
 This means that given a component that blocks updates, you can easily pass it the `location` as a prop in the following ways:
 
-```js
+```jsx
 // the Blocker is a "pure" component, so it will only
 // update when it receives new props
 class Blocker extends React.PureComponent {
@@ -146,7 +146,7 @@ class Blocker extends React.PureComponent {
 
 1. A component rendered directly by a `<Route>` does not have to worry about blocked updates because it has the `location` injected as a prop.
 
-```js
+```jsx
 // The <Blocker>'s location prop will change whenever
 // the location changes
 <Route path='/:place' component={Blocker}/>
@@ -154,7 +154,7 @@ class Blocker extends React.PureComponent {
 
 2. A component rendered directly by a `<Route>` can pass that location prop to any child elements it creates.
 
-```js
+```jsx
 <Route path='/parent' component={Parent} />
 
 const Parent = (props) => {
@@ -172,7 +172,7 @@ What happens when the component isn't being rendered by a `<Route>` and the comp
 
 1. Render a pathless `<Route>`. While `<Route>`s are typically used for matching a specific path, a pathless `<Route>` will always match, so it will always render its component.
 
-```js
+```jsx
 // pathless <Route> = <Blocker> will always be rendered
 const MyComponent= () => (
   <SomeComponent>
@@ -183,7 +183,7 @@ const MyComponent= () => (
 
 2. You can wrap a component with the `withRouter` higher-order component and it will be given the current `location` as one of its props.
 
-```js
+```jsx
 // internally, withRouter just renders a pathless <Route>
 const BlockAvoider = withRouter(Blocker)
 

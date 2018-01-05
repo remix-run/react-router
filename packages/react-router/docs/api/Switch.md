@@ -6,7 +6,7 @@ Renders the first child [`<Route>`](Route.md) or [`<Redirect>`](Redirect.md) tha
 
 `<Switch>` is unique in that it renders a route *exclusively*. In contrast, every `<Route>` that matches the location renders *inclusively*. Consider this code:
 
-```js
+```jsx
 <Route path="/about" component={About}/>
 <Route path="/:user" component={User}/>
 <Route component={NoMatch}/>
@@ -16,7 +16,7 @@ If the URL is `/about`, then `<About>`, `<User>`, and `<NoMatch>` will all rende
 
 Occasionally, however, we want to pick only one `<Route>` to render. If we're at `/about` we don't want to also match `/:user` (or show our "404" page). Here's how to do it with `Switch`:
 
-```js
+```jsx
 import { Switch, Route } from 'react-router'
 
 <Switch>
@@ -31,7 +31,7 @@ Now, if we're at `/about`, `<Switch>` will start looking for a matching `<Route>
 
 This is also useful for animated transitions since the matched `<Route>` is rendered in the same position as the previous one.
 
-```js
+```jsx
 <Fade>
   <Switch>
     {/* there will only ever be one child here */}
@@ -63,7 +63,7 @@ When you include a `<Redirect>` in a `<Switch>`, it can use any of the `<Route>`
 
 If a `location` prop is given to the `<Switch>`, it will override the `location` prop on the matching child element.
 
-```js
+```jsx
 <Switch>
   <Route exact path="/" component={Home}/>
 

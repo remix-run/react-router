@@ -17,7 +17,7 @@ One great feature of the web is that we don't have to make our visitors download
 
 [`react-loadable`] is a higher-order component for loading components with dynamic imports. It handles all sorts of edge cases automatically and makes code splitting simple! Here's an example of how to use [`react-loadable`]:
 
-```js
+```jsx
 import Loadable from 'react-loadable';
 import Loading from './Loading';
 
