@@ -27,15 +27,15 @@ describe('A <Link>', () => {
   describe('to as a string', () => {
     it('resolves to with no pathname using current location', () => {
       const node = document.createElement('div')
-      
+
       ReactDOM.render((
         <MemoryRouter initialEntries={[ '/somewhere' ]}>
           <Link to='?rendersWithPathname=true'>link</Link>
         </MemoryRouter>
       ), node)
-  
+
       const href = node.querySelector('a').getAttribute('href')
-  
+
       expect(href).toEqual('/somewhere?rendersWithPathname=true')
     })
   })
@@ -54,6 +54,25 @@ describe('A <Link>', () => {
     expect(console.error.calls.count()).toBe(2)
     expect(console.error.calls.argsFor(0)[0]).toContain(
       'The context `router` is marked as required in `Link`'
+    )
+  })
+
+  it('throws with no "to" prop', () => {
+    const node = document.createElement('div')
+
+    spyOn(console, 'error')
+
+    expect(() => {
+      ReactDOM.render((
+        <MemoryRouter>
+          <Link>link</Link>
+        </MemoryRouter>
+      ), node)
+    }).toThrow(/You must specify the "to" property/)
+
+    expect(console.error.calls.count()).toBe(2)
+    expect(console.error.calls.argsFor(0)[0]).toContain(
+      'The prop `to` is marked as required in `Link`'
     )
   })
 
