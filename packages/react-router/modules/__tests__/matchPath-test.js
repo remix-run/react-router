@@ -33,6 +33,83 @@ describe('matchPath', () => {
     })
   })
 
+  describe('with exact option', () => {
+    it('returns match for exact match when exact=true', () => {
+      const path = '/'
+      const pathname = '/'
+      const match = matchPath(pathname, { path, exact: true })
+      expect(match).toMatchObject({
+        url: '/',
+        isExact: true
+      })
+    })
+
+    it('returns match for non-exact match when exact=false', () => {
+      const path = '/'
+      const pathname = '/somewhere/else'
+      const match = matchPath(pathname, { path, exact: false })
+      expect(match).toMatchObject({
+        url: '/',
+        isExact: false
+      })
+    })
+
+    it('returns null for non-exact match when exact=true', () => {
+      const path = '/'
+      const pathname = '/somewhere/else'
+      const match = matchPath(pathname, { path, exact: true })
+      expect(match).toBe(null)
+    })
+  })
+
+  describe('with parent option', () => {
+    it('returns match for non-exact match when parent=true', () => {
+      const path = '/somewhere'
+      const pathname = '/somewhere/else'
+      const match = matchPath(pathname, { path, parent: true })
+      expect(match).toMatchObject({
+        path: '/somewhere',
+        isExact: false
+      })
+    })
+
+    it('returns match for exact match when parent=true', () => {
+      const path = '/somewhere'
+      const pathname = '/somewhere'
+      const match = matchPath(pathname, { path, parent: true })
+      expect(match).toMatchObject({
+        path: '/somewhere',
+        isExact: true
+      })
+    })
+
+    it('returns null for non-exact match when parent=false', () => {
+      const path = '/somewhere'
+      const pathname = '/somewhere/else'
+      const match = matchPath(pathname, { path, parent: false })
+      expect(match).toBe(null)
+    })
+  })
+
+  describe('with exact and parent options', () => {
+    it('matches based on exact value', () => {
+      const path = '/'
+      const pathname = '/'
+      const match = matchPath(pathname, { path, exact: true, parent: true })
+      expect(match).toMatchObject({
+        path: '/',
+        isExact: true
+      })
+    })
+
+    it('returns correct url at "/somewhere/else"', () => {
+      const path = '/'
+      const pathname = '/somewhere/else'
+      const match = matchPath(pathname, { path, exact: true, parent: true })
+      expect(match).toBe(null)
+    })
+  })
+
   describe('with sensitive path', () => {
     it('returns non-sensitive url', () => {
       const options = {

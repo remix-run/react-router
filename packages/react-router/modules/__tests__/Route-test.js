@@ -280,6 +280,59 @@ describe('A <Route exact>', () => {
   })
 })
 
+describe('A <Route parent>', () => {
+  describe('parent = false (default)', () => {
+    it('only matches if the pathname exactly matches the path', () => {
+      const TEXT = 'Mr. Kult'
+      const node = document.createElement('div')
+  
+      ReactDOM.render((
+        <MemoryRouter initialEntries={[ '/' ]}>
+          <Route parent={false} path="/:teacher" render={() => (
+            <h1>{TEXT}</h1>
+          )}/>
+        </MemoryRouter>
+      ), node)
+  
+      expect(node.innerHTML).not.toContain(TEXT)
+    })
+  })
+
+  describe('parent = true', () => {
+    it('renders when the path is a partial match of the pathname', () => {
+      const TEXT = 'Mr. Kult'
+      const node = document.createElement('div')
+  
+      ReactDOM.render((
+        <MemoryRouter initialEntries={[ '/' ]}>
+          <Route parent path="/:teacher" render={() => (
+            <h1>{TEXT}</h1>
+          )}/>
+        </MemoryRouter>
+      ), node)
+  
+      expect(node.innerHTML).not.toContain(TEXT)
+    })
+  })
+})
+
+describe('A <Route exact parent>', () => {
+  it('uses exact prop, not parent', () => {
+    const TEXT = 'Mr. Kult'
+    const node = document.createElement('div')
+
+    ReactDOM.render((
+      <MemoryRouter initialEntries={[ '/' ]}>
+        <Route exact parent path="/:teacher" render={() => (
+          <h1>{TEXT}</h1>
+        )}/>
+      </MemoryRouter>
+    ), node)
+
+    expect(node.innerHTML).not.toContain(TEXT)
+  })
+})
+
 describe('A <Route exact strict>', () => {
   it('does not render when the URL has a trailing slash', () => {
     const TEXT = 'bubblegum'

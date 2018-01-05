@@ -15,6 +15,7 @@ class Route extends React.Component {
     computedMatch: PropTypes.object, // private, from <Switch>
     path: PropTypes.string,
     exact: PropTypes.bool,
+    parent: PropTypes.bool,
     strict: PropTypes.bool,
     sensitive: PropTypes.bool,
     component: PropTypes.func,
@@ -54,7 +55,7 @@ class Route extends React.Component {
     match: this.computeMatch(this.props, this.context.router)
   }
 
-  computeMatch({ computedMatch, location, path, strict, exact, sensitive }, router) {
+  computeMatch({ computedMatch, location, path, strict, exact, parent, sensitive }, router) {
     if (computedMatch)
       return computedMatch // <Switch> already computed the match for us
 
@@ -66,10 +67,17 @@ class Route extends React.Component {
     const { route } = router
     const pathname = (location || route.location).pathname
 
-    return path ? matchPath(pathname, { path, strict, exact, sensitive }) : route.match
+    return path ? matchPath(pathname, { path, strict, exact, parent, sensitive }) : route.match
   }
 
   componentWillMount() {
+    warning(
+      this.props.exact === undefined,
+      'Deprecation warning: In v5, the "exact" prop will be removed. Instead, ' +
+      'exact matching will be the default behavior and you should use the "parent" ' +
+      'prop to specify that the <Route> should match for non-exact matches.'
+    )
+
     warning(
       !(this.props.component && this.props.render),
       'You should not use <Route component> and <Route render> in the same route; <Route render> will be ignored'
@@ -87,6 +95,13 @@ class Route extends React.Component {
   }
 
   componentWillReceiveProps(nextProps, nextContext) {
+    warning(
+      nextProps.exact === undefined,
+      'Deprecation warning: In v5, the "exact" prop will be removed. Instead, ' +
+      'exact matching will be the default behavior and you should use the "parent" ' +
+      'prop to specify that the <Route> should match for non-exact matches.'
+    )
+
     warning(
       !(nextProps.location && !this.props.location),
       '<Route> elements should not change from uncontrolled to controlled (or vice versa). You initially used no "location" prop and then provided one on a subsequent render.'

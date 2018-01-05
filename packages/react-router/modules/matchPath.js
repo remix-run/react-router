@@ -30,8 +30,14 @@ const matchPath = (pathname, options = {}) => {
   if (typeof options === 'string')
     options = { path: options }
 
-  const { path = '/', exact = false, strict = false, sensitive = false } = options
-  const { re, keys } = compilePath(path, { end: exact, strict, sensitive })
+  const { path = '/', exact, parent, strict = false, sensitive = false } = options
+  let end = exact !== undefined
+    ? exact
+    : parent !== undefined
+      ? !parent
+      : false // default behavior if neither exact or parent is defined
+
+  const { re, keys } = compilePath(path, { end, strict, sensitive })
   const match = re.exec(pathname)
 
   if (!match)
@@ -40,7 +46,7 @@ const matchPath = (pathname, options = {}) => {
   const [ url, ...values ] = match
   const isExact = pathname === url
 
-  if (exact && !isExact)
+  if (end && !isExact)
     return null
 
   return {

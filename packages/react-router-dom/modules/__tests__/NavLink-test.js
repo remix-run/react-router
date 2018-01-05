@@ -271,6 +271,74 @@ describe('NavLink', () => {
     })
   })
 
+  describe('parent', () => {
+    it.skip('does exact matching by default', () => {
+      // v5 test
+      ReactDOM.render((
+        <MemoryRouter initialEntries={['/pizza/anchovies']}>
+          <NavLink to='/pizza' activeClassName='active'>Pizza!</NavLink>
+        </MemoryRouter>
+      ), node)
+      const a = node.getElementsByTagName('a')[0]
+      expect(a.className).not.toEqual('active')
+    })
+
+    it('does partial matching when parent=true', () => {
+      ReactDOM.render((
+        <MemoryRouter initialEntries={['/pizza/anchovies']}>
+          <NavLink parent to='/pizza' activeClassName='active'>Pizza!</NavLink>
+        </MemoryRouter>
+      ), node)
+      const a = node.getElementsByTagName('a')[0]
+      expect(a.className).toEqual('active')
+    })
+
+    it('sets active default value only for exact matches', () => {
+      ReactDOM.render((
+        <MemoryRouter initialEntries={['/pizza']}>
+          <NavLink to='/pizza'>Pizza!</NavLink>
+        </MemoryRouter>
+      ), node)
+      const a = node.getElementsByTagName('a')[0]
+      expect(a.className).toEqual('active')
+    })
+
+    it('sets active passed value only for exact matches', () => {
+      ReactDOM.render((
+        <MemoryRouter initialEntries={['/pizza']}>
+          <NavLink to='/pizza' activeClassName="selected">Pizza!</NavLink>
+        </MemoryRouter>
+      ), node)
+      const a = node.getElementsByTagName('a')[0]
+      expect(a.className).not.toContain('active')
+      expect(a.className).toEqual('selected')
+    })
+
+    it.skip('does not set active passed value for partial matches', () => {
+      // v5 test
+      ReactDOM.render((
+        <MemoryRouter initialEntries={['/pizza/anchovies']}>
+          <NavLink to='/pizza' activeClassName='selected'>Pizza!</NavLink>
+        </MemoryRouter>
+      ), node)
+      const a = node.getElementsByTagName('a')[0]
+      expect(a.className).not.toContain('active')
+      expect(a.className).not.toContain('selected')
+    })
+  })
+
+  describe('exact = true and parent = true', () => {
+    it('uses exact, not parent', () => {
+      ReactDOM.render((
+        <MemoryRouter initialEntries={['/pizza/anchovies']}>
+          <NavLink to='/pizza' exact parent activeClassName='active'>Pizza!</NavLink>
+        </MemoryRouter>
+      ), node)
+      const a = node.getElementsByTagName('a')[0]
+      expect(a.className).not.toEqual('active')
+    })
+  })
+
   describe('strict (enforce path\'s trailing slash)', () => {
     const PATH = '/pizza/'
     it('does not do strict matching by default', () => {

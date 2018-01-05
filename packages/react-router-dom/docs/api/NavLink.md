@@ -37,11 +37,25 @@ The styles to apply to the element when it is active.
 
 When `true`, the active class/style will only be applied if the location is matched exactly.
 
+**Deprecated** This prop will be removed in React Router v5; you should use the `parent` prop instead. In v4, a `<NavLink>` without an `exact` or `parent` prop will continue to do non-exact matching, but in v5, a `<NavLink>` with no `parent` prop will do exact matching.
+
 ```js
 <NavLink
   exact
   to="/profile"
 >Profile</NavLink>
+```
+
+## parent: bool
+
+When `true`, the active class/style will be applied for partial matches.
+
+```js
+<NavLink
+  parent
+  to="/profile"
+>Profile</NavLink>
+// the above link we be active for both `/profile` and `/profile/2341`
 ```
 
 ## strict: bool

@@ -32,7 +32,7 @@ describe('selectors', () => {
         payload: { pathname: '/test' }
       })
       const state = store.getState()
-      expect(matchSelector(state)).toEqual({
+      expect(matchSelector(state)).toMatchObject({
         isExact: false,
         params: {},
         path: '/',

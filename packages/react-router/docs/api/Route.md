@@ -144,6 +144,8 @@ Routes without a `path` _always_ match.
 
 When `true`, will only match if the path matches the `location.pathname` _exactly_.
 
+**Deprecated** This prop will be removed in React Router v5; you should use the `parent` prop instead. In v4, a `<Route>` without an `exact` or `parent` prop will continue to do non-exact matching, but in v5, a `<Route>` with no `parent` prop will do exact matching.
+
 ```js
 <Route exact path="/one" component={About}/>
 ```
@@ -152,6 +154,19 @@ When `true`, will only match if the path matches the `location.pathname` _exactl
 | --- | --- | --- | --- |
 | `/one`  | `/one/two`  | `true` | no |
 | `/one`  | `/one/two`  | `false` | yes |
+
+## parent: bool
+
+When `false` (default), will only match if the path matches the `location.pathname` _exactly_. When `true`, will match if the `path` matches the beginning of the location's `pathname`.
+
+```js
+<Route parent path="/one" component={About}/>
+```
+
+| path | location.pathname | parent | matches? |
+| --- | --- | --- | --- |
+| `/one`  | `/one/two`  | `true` | yes |
+| `/one`  | `/one/two`  | `false` | no |
 
 ## strict: bool
 

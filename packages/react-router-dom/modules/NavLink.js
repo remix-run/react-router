@@ -9,6 +9,7 @@ import Link from './Link'
 const NavLink = ({
   to,
   exact,
+  parent,
   strict,
   location,
   activeClassName,
@@ -28,6 +29,7 @@ const NavLink = ({
     <Route
       path={escapedPath}
       exact={exact}
+      parent={parent}
       strict={strict}
       location={location}
       children={({ location, match }) => {
@@ -49,7 +51,7 @@ const NavLink = ({
 
 NavLink.propTypes = {
   to: Link.propTypes.to,
-  exact: PropTypes.bool,
+  parent: PropTypes.bool,
   strict: PropTypes.bool,
   location: PropTypes.object,
   activeClassName: PropTypes.string,
