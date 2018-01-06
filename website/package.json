@@ -46,6 +46,7 @@
     "react-dom": "^16.2.0",
     "react-icons": "^2.2.7",
     "react-media": "^1.6.1",
+    "react-motion": "^0.5.2",
     "react-router-dom": "^4.2.2",
     "react-transition-group": "^2.2.1",
     "resolve-pathname": "^2.2.0",
