@@ -2,7 +2,7 @@
 
 Provide declarative, accessible navigation around your application.
 
-```js
+```jsx
 import { Link } from 'react-router-native'
 
 <Link to='/about'>About</Link>
@@ -12,7 +12,7 @@ import { Link } from 'react-router-native'
 
 A string representation of the location to link to, created by concatenating the location's pathname, search, and hash properties.
 
-```js
+```jsx
 <Link to='/courses?sort=name'/>
 ```
 
@@ -24,7 +24,7 @@ An object that can have any of the following properties:
   * `hash`: A hash to put in the URL, e.g. `#a-hash`.
   * `state`: State to persist to the `location`.
 
-```js
+```jsx
 <Link to={{
   pathname: '/courses',
   search: '?sort=name',
@@ -37,7 +37,7 @@ An object that can have any of the following properties:
 
 When `true`, clicking the link will replace the current entry in the history stack instead of adding a new one.
 
-```js
+```jsx
 <Link to="/courses" replace />
 ```
 
@@ -45,7 +45,7 @@ When `true`, clicking the link will replace the current entry in the history sta
 
 A component for making `Link` respond properly to touches. Typically will be one React Native's "touchable" components (`TouchableHighlight`, `TouchableOpacity`, etc). All props passed to `Link` will be passed along to this component. Defaults to `TouchableHighlight`.
 
-```js
+```jsx
 <Link
   to='/about'
   component={TouchableOpacity}

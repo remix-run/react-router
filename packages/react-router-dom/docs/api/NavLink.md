@@ -2,7 +2,7 @@
 
 A special version of the [`<Link>`](Link.md) that will add styling attributes to the rendered element when it matches the current URL.
 
-```js
+```jsx
 import { NavLink } from 'react-router-dom'
 
 <NavLink to="/about">About</NavLink>
@@ -12,7 +12,7 @@ import { NavLink } from 'react-router-dom'
 
 The class to give the element when it is active. The default given class is `active`. This will be joined with the `className` prop.
 
-```js
+```jsx
 <NavLink
   to="/faq"
   activeClassName="selected"
@@ -23,7 +23,7 @@ The class to give the element when it is active. The default given class is `act
 
 The styles to apply to the element when it is active.
 
-```js
+```jsx
 <NavLink
   to="/faq"
   activeStyle={{
@@ -37,7 +37,7 @@ The styles to apply to the element when it is active.
 
 When `true`, the active class/style will only be applied if the location is matched exactly.
 
-```js
+```jsx
 <NavLink
   exact
   to="/profile"
@@ -48,7 +48,7 @@ When `true`, the active class/style will only be applied if the location is matc
 
 When `true`, the trailing slash on a location's `pathname` will be taken into consideration when determining if the location matches the current URL. See the [`<Route strict>`](../../../react-router/docs/api/Route.md#strict-bool) documentation for more information.
 
-```js
+```jsx
 <NavLink
   strict
   to="/events/"
@@ -59,7 +59,7 @@ When `true`, the trailing slash on a location's `pathname` will be taken into co
 
 A function to add extra logic for determining whether the link is active. This should be used if you want to do more than verify that the link's pathname matches the current URL's `pathname`.
 
-```js
+```jsx
 // only consider an event active if its event id is an odd number
 const oddEvent = (match, location) => {
   if (!match) {

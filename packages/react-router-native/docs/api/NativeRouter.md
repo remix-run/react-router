@@ -2,7 +2,7 @@
 
 A [`<Router>`](../../../react-router/docs/api/Router.md) for iOS and Android apps built using [React Native](https://facebook.github.io/react-native/).
 
-```js
+```jsx
 import { NativeRouter } from 'react-router-native'
 
 <NativeRouter>
@@ -14,7 +14,7 @@ import { NativeRouter } from 'react-router-native'
 
 A function to use to confirm navigation.
 
-```js
+```jsx
 import { Alert } from 'react-native'
 
 // This is the default behavior
@@ -32,7 +32,7 @@ const getConfirmation = (message, callback) => {
 
 The length of `location.key`. Defaults to 6.
 
-```js
+```jsx
 <NativeRouter keyLength={12}/>
 ```
 

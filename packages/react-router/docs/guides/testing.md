@@ -59,7 +59,7 @@ That's all there is to it.
 so you can boot up an app (or any smaller part of an app) at a specific
 location.
 
-```js
+```jsx
 test('current user is active in sidebar', () => {
   render(
     <MemoryRouter initialEntries={[ '/users/2' ]}>
@@ -74,7 +74,7 @@ test('current user is active in sidebar', () => {
 
 We have a lot of tests that the routes work when the location changes, so you probably don't need to test this stuff. But if you must, since everything happens in render, we do something a little clever like this:
 
-```js
+```jsx
 import { render, unmountComponentAtNode } from 'react-dom'
 import React from 'react'
 import { Route, Link, MemoryRouter } from 'react-router-dom'

@@ -2,7 +2,7 @@
 
 A [`<Router>`](../../../react-router/docs/api/Router.md) that uses the HTML5 history API (`pushState`, `replaceState` and the `popstate` event) to keep your UI in sync with the URL.
 
-```js
+```jsx
 import { BrowserRouter } from 'react-router-dom'
 
 <BrowserRouter
@@ -19,7 +19,7 @@ import { BrowserRouter } from 'react-router-dom'
 
 The base URL for all locations. If your app is served from a sub-directory on your server, you'll want to set this to the sub-directory. A properly formatted basename should have a leading slash, but no trailing slash.
 
-```js
+```jsx
 <BrowserRouter basename="/calendar"/>
 <Link to="/today"/> // renders <a href="/calendar/today">
 ```
@@ -28,7 +28,7 @@ The base URL for all locations. If your app is served from a sub-directory on yo
 
 A function to use to confirm navigation. Defaults to using [`window.confirm`](https://developer.mozilla.org/en-US/docs/Web/API/Window/confirm).
 
-```js
+```jsx
 // this is the default behavior
 const getConfirmation = (message, callback) => {
   const allowTransition = window.confirm(message)
@@ -42,7 +42,7 @@ const getConfirmation = (message, callback) => {
 
 If `true` the router will use full page refreshes on page navigation. You probably only want this in [browsers that don't support the HTML5 history API](http://caniuse.com/#feat=history).
 
-```js
+```jsx
 const supportsHistory = 'pushState' in window.history
 <BrowserRouter forceRefresh={!supportsHistory}/>
 ```
@@ -51,7 +51,7 @@ const supportsHistory = 'pushState' in window.history
 
 The length of `location.key`. Defaults to 6.
 
-```js
+```jsx
 <BrowserRouter keyLength={12}/>
 ```
 

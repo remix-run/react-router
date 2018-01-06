@@ -2,7 +2,7 @@
 
 A [`<Router>`](Router.md) that keeps the history of your "URL" in memory (does not read or write to the address bar). Useful in tests and non-browser environments like [React Native](https://facebook.github.io/react-native/).
 
-```js
+```jsx
 import { MemoryRouter } from 'react-router'
 
 <MemoryRouter>
@@ -14,7 +14,7 @@ import { MemoryRouter } from 'react-router'
 
 An array of `location`s in the history stack. These may be full-blown location objects with `{ pathname, search, hash, state }` or simple string URLs.
 
-```js
+```jsx
 <MemoryRouter
   initialEntries={[ '/one', '/two', { pathname: '/three' } ]}
   initialIndex={1}
@@ -35,7 +35,7 @@ A function to use to confirm navigation. You must use this option when using `<M
 
 The length of `location.key`. Defaults to 6.
 
-```js
+```jsx
 <MemoryRouter keyLength={12}/>
 ```
 

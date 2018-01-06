@@ -28,7 +28,7 @@ The following terms are also used:
 
 The history object is mutable. Therefore it is recommended to access the [`location`](./location.md) from the render props of [`<Route>`](./Route.md), not from `history.location`. This ensures your assumptions about React are correct in lifecycle hooks. For example:
 
-```js
+```jsx
 class Comp extends React.Component {
   componentWillReceiveProps(nextProps) {
     // will be true

@@ -2,7 +2,7 @@
 
 You can get access to the [`history`](./history.md) object's properties and the closest [`<Route>`](./Route.md)'s [`match`](./match.md) via the `withRouter` higher-order component. `withRouter` will pass updated `match`, `location`, and `history` props to the wrapped component whenever it renders.
 
-```js
+```jsx
 import React from 'react'
 import PropTypes from 'prop-types'
 import { withRouter } from 'react-router'
@@ -63,7 +63,7 @@ All non-react specific static methods and properties of the wrapped component ar
 The wrapped component is exposed as the static property `WrappedComponent` on the returned component, which can be used
 for testing the component in isolation, among other things.
 
-```js
+```jsx
 // MyComponent.js
 export default withRouter(MyComponent)
 
@@ -76,7 +76,7 @@ render(<MyComponent.WrappedComponent location={{...}} ... />)
 
 A function that will be passed as the `ref` prop to the wrapped component.
 
-```js
+```jsx
 class Container extends React.Component {
   componentDidMount() {
     this.component.doSomething()

@@ -27,7 +27,7 @@ npm install --save history
 
 Here's a basic idea of how it works:
 
-```js
+```jsx
 import React from 'react'
 import ReactDOM from 'react-dom'
 

@@ -2,7 +2,7 @@
 
 Rendering a `<Redirect>` will navigate to a new location. The new location will override the current location in the history stack, like server-side redirects (HTTP 3xx) do.
 
-```js
+```jsx
 import { Route, Redirect } from 'react-router'
 
 <Route exact path="/" render={() => (
@@ -19,7 +19,7 @@ import { Route, Redirect } from 'react-router'
 The URL to redirect to. Any valid URL path that [`path-to-regexp`](https://www.npmjs.com/package/path-to-regexp) understands.
 All URL parameters that are used in `to` must be covered by `from`.
 
-```js
+```jsx
 <Redirect to="/somewhere/else"/>
 ```
 
@@ -27,7 +27,7 @@ All URL parameters that are used in `to` must be covered by `from`.
 
 A location to redirect to. `pathname` can be any valid URL path that [`path-to-regexp`](https://www.npmjs.com/package/path-to-regexp) understands.
 
-```js
+```jsx
 <Redirect to={{
   pathname: '/login',
   search: '?utm=your+face',
@@ -39,7 +39,7 @@ A location to redirect to. `pathname` can be any valid URL path that [`path-to-r
 
 When `true`, redirecting will push a new entry onto the history instead of replacing the current one.
 
-```js
+```jsx
 <Redirect push to="/somewhere/else"/>
 ```
 
@@ -50,14 +50,14 @@ All matched URL parameters are provided to the pattern in `to`. Must contain all
 
 This can only be used to match a location when rendering a `<Redirect>` inside of a `<Switch>`. See [`<Switch children>`](./Switch.md#children-node) for more details.
 
-```js
+```jsx
 <Switch>
   <Redirect from='/old-path' to='/new-path'/>
   <Route path='/new-path' component={Place}/>
 </Switch>
 ```
 
-```js
+```jsx
 // Redirect with matched parameters
 <Switch>
   <Redirect from='/users/:id' to='/users/profile/:id'/>
