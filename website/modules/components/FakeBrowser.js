@@ -1,4 +1,5 @@
 import React from 'react'
+import PropTypes from 'prop-types';
 import { MemoryRouter, Route } from 'react-router-dom'
 import { Block, Col, Row } from 'jsxstyle'
 import { LIGHT_GRAY, GRAY } from '../Theme'
@@ -153,7 +154,7 @@ class FakeBrowser extends React.Component {
 }
 
 FakeBrowser.propTypes = {
-  codesandboxUrl: React.PropTypes.string
+  codesandboxUrl: PropTypes.string
 }
 
 export default FakeBrowser

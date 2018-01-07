@@ -1,4 +1,5 @@
 import React from 'react';
+import PropTypes from 'prop-types';
 
 const CodeSandboxLogo = ({
   width = 35,
@@ -56,9 +57,9 @@ const CodeSandboxLogo = ({
 )
 
 CodeSandboxLogo.propTypes = {
-  height: React.PropTypes.number,
-  width: React.PropTypes.number,
-  color: React.PropTypes.string
+  height: PropTypes.number,
+  width: PropTypes.number,
+  color: PropTypes.string
 }
 
 
