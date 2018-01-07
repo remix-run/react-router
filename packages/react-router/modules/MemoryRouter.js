@@ -7,7 +7,7 @@ import Router from './Router'
 /**
  * The public API for a <Router> that stores location in memory.
  */
-class MemoryRouter extends React.Component {
+class MemoryRouter extends React.PureComponent {
   static propTypes = {
     initialEntries: PropTypes.array,
     initialIndex: PropTypes.number,

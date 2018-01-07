@@ -10,7 +10,7 @@ const isEmptyChildren = (children) =>
 /**
  * The public API for matching a single path and rendering.
  */
-class Route extends React.Component {
+class Route extends React.PureComponent {
   static propTypes = {
     computedMatch: PropTypes.object, // private, from <Switch>
     path: PropTypes.string,

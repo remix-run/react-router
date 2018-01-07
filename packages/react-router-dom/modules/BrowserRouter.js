@@ -7,7 +7,7 @@ import Router from './Router'
 /**
  * The public API for a <Router> that uses HTML5 history.
  */
-class BrowserRouter extends React.Component {
+class BrowserRouter extends React.PureComponent {
   static propTypes = {
     basename: PropTypes.string,
     forceRefresh: PropTypes.bool,

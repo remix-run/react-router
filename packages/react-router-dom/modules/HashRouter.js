@@ -7,7 +7,7 @@ import Router from './Router'
 /**
  * The public API for a <Router> that uses window.location.hash.
  */
-class HashRouter extends React.Component {
+class HashRouter extends React.PureComponent {
   static propTypes = {
     basename: PropTypes.string,
     getUserConfirmation: PropTypes.func,

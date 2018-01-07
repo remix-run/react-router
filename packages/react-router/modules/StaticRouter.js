@@ -66,7 +66,7 @@ const noop = () => {}
  * location changes in a context object. Useful mainly in testing and
  * server-rendering scenarios.
  */
-class StaticRouter extends React.Component {
+class StaticRouter extends React.PureComponent {
   static propTypes = {
     basename: PropTypes.string,
     context: PropTypes.object.isRequired,

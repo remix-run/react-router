@@ -1,8 +1,8 @@
-import React, { Component } from 'react'
+import React from 'react'
 import PropTypes from 'prop-types'
 import { TouchableHighlight } from 'react-native'
 
-class Link extends Component {
+class Link extends React.PureComponent {
   static contextTypes = {
     router: PropTypes.shape({
       history: PropTypes.shape({

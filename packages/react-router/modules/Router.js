@@ -6,7 +6,7 @@ import PropTypes from 'prop-types'
 /**
  * The public API for putting history on context.
  */
-class Router extends React.Component {
+class Router extends React.PureComponent {
   static propTypes = {
     history: PropTypes.object.isRequired,
     children: PropTypes.node

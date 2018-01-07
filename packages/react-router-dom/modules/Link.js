@@ -9,7 +9,7 @@ const isModifiedEvent = (event) =>
 /**
  * The public API for rendering a history-aware <a>.
  */
-class Link extends React.Component {
+class Link extends React.PureComponent {
   static propTypes = {
     onClick: PropTypes.func,
     target: PropTypes.string,

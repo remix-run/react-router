@@ -6,7 +6,7 @@ import invariant from 'invariant'
  * The public API for prompting the user before navigating away
  * from a screen with a component.
  */
-class Prompt extends React.Component {
+class Prompt extends React.PureComponent {
   static propTypes = {
     when: PropTypes.bool,
     message: PropTypes.oneOfType([
