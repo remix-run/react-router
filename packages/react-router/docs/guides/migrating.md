@@ -4,6 +4,8 @@ React Router v4 is a complete rewrite, so there is not a simple migration path. 
 
 **Note:** This migration guide is for both React Router v2 and v3, but for brevity, references to previous versions will only mention v3.
 
+**Caution for react-router-redux users:** Not all packages are compatible with React Router v4 or are feature complete. In particular, time travel in Redux DevTools is [not yet available](https://github.com/ReactTraining/react-router/pull/4717) in the latest react-router-redux (currently in alpha).
+
 * [The Router](#the-router)
 * [Routes](#routes)
   * [Nesting Routes](#nesting-routes)
