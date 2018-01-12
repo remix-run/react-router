@@ -1,96 +1,90 @@
-import matchRoutes from '../matchRoutes'
+import matchRoutes from "../matchRoutes";
 
-it('finds matched routes', () => {
+it("finds matched routes", () => {
   const routes = [
-    { path: '/',
+    {
+      path: "/",
       exact: true
     },
 
-    { path: '/pepper',
+    {
+      path: "/pepper",
       routes: [
-        { path: '/pepper/:type',
-          routes: [
-            { path: '/pepper/:type/scoville' }
-          ]
+        {
+          path: "/pepper/:type",
+          routes: [{ path: "/pepper/:type/scoville" }]
         }
       ]
     },
 
-    { path: undefined,
-      routes: [
-        { path: '/ghost' }
-      ]
+    {
+      path: undefined,
+      routes: [{ path: "/ghost" }]
     }
-  ]
+  ];
 
-  const branch = matchRoutes(routes, '/pepper/jalepeno')
-  expect(branch.length).toEqual(2)
-  expect(branch[0].route).toEqual(routes[1])
-  expect(branch[1].route).toEqual(routes[1].routes[0])
-})
+  const branch = matchRoutes(routes, "/pepper/jalepeno");
+  expect(branch.length).toEqual(2);
+  expect(branch[0].route).toEqual(routes[1]);
+  expect(branch[1].route).toEqual(routes[1].routes[0]);
+});
 
-it('stops matching after finding the first match, just like <Switch>', () => {
+it("stops matching after finding the first match, just like <Switch>", () => {
+  const routes = [{ path: "/static" }, { path: "/:dynamic" }];
+  const branch = matchRoutes(routes, "/static");
+  expect(branch.length).toEqual(1);
+  expect(branch[0].route).toEqual(routes[0]);
+});
+
+describe("pathless routes", () => {
   const routes = [
-    { path: '/static' },
-    { path: '/:dynamic' }
-  ]
-  const branch = matchRoutes(routes, '/static')
-  expect(branch.length).toEqual(1)
-  expect(branch[0].route).toEqual(routes[0])
-})
-
-
-describe('pathless routes', () => {
-
-  const routes = [
-    { path: '/',
+    {
+      path: "/",
       routes: [
-        { path: undefined,
-          routes: [
-            { path: '/habenero' }
-          ]
+        {
+          path: undefined,
+          routes: [{ path: "/habenero" }]
         }
       ]
     }
-  ]
+  ];
 
-  it('matches child paths', () => {
-    const branch = matchRoutes(routes, '/habenero')
-    expect(branch.length).toEqual(3)
-    expect(branch[0].route).toEqual(routes[0])
-    expect(branch[1].route).toEqual(routes[0].routes[0])
-    expect(branch[2].route).toEqual(routes[0].routes[0].routes[0])
-  })
+  it("matches child paths", () => {
+    const branch = matchRoutes(routes, "/habenero");
+    expect(branch.length).toEqual(3);
+    expect(branch[0].route).toEqual(routes[0]);
+    expect(branch[1].route).toEqual(routes[0].routes[0]);
+    expect(branch[2].route).toEqual(routes[0].routes[0].routes[0]);
+  });
 
-  it('returns the parent match', () => {
-    const branch = matchRoutes(routes, '/habenero')
-    expect(branch.length).toBe(3)
-    expect(branch[1].match).toBe(branch[0].match)
-  })
+  it("returns the parent match", () => {
+    const branch = matchRoutes(routes, "/habenero");
+    expect(branch.length).toBe(3);
+    expect(branch[1].match).toBe(branch[0].match);
+  });
 
-  describe('at the root', () => {
+  describe("at the root", () => {
     const routes = [
-      { path: undefined,
-        routes: [
-          { path: '/anaheim' }
-        ]
+      {
+        path: undefined,
+        routes: [{ path: "/anaheim" }]
       }
-    ]
+    ];
 
     it('matches "/"', () => {
-      const branch = matchRoutes(routes, '/')
-      expect(branch.length).toEqual(1)
-      expect(branch[0].route).toEqual(routes[0])
-    })
+      const branch = matchRoutes(routes, "/");
+      expect(branch.length).toEqual(1);
+      expect(branch[0].route).toEqual(routes[0]);
+    });
 
-    it('returns a root match for a pathless root route', () => {
-      const branch = matchRoutes(routes, '/')
+    it("returns a root match for a pathless root route", () => {
+      const branch = matchRoutes(routes, "/");
       expect(branch[0].match).toEqual({
-        path: '/',
-        url: '/',
+        path: "/",
+        url: "/",
         params: {},
         isExact: true
-      })
-    })
-  })
-})
+      });
+    });
+  });
+});

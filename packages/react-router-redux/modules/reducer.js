@@ -2,11 +2,11 @@
  * This action type will be dispatched when your history
  * receives a location change.
  */
-export const LOCATION_CHANGE = '@@router/LOCATION_CHANGE'
+export const LOCATION_CHANGE = "@@router/LOCATION_CHANGE";
 
 const initialState = {
   location: null
-}
+};
 
 /**
  * This reducer will update the state with the most recent location history
@@ -16,8 +16,8 @@ const initialState = {
  */
 export function routerReducer(state = initialState, { type, payload } = {}) {
   if (type === LOCATION_CHANGE) {
-    return { ...state, location: payload }
+    return { ...state, location: payload };
   }
 
-  return state
+  return state;
 }

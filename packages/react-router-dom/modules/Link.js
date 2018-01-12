@@ -1,10 +1,10 @@
-import React from 'react'
-import PropTypes from 'prop-types'
-import invariant from 'invariant'
-import { createLocation } from 'history'
+import React from "react";
+import PropTypes from "prop-types";
+import invariant from "invariant";
+import { createLocation } from "history";
 
-const isModifiedEvent = (event) =>
-  !!(event.metaKey || event.altKey || event.ctrlKey || event.shiftKey)
+const isModifiedEvent = event =>
+  !!(event.metaKey || event.altKey || event.ctrlKey || event.shiftKey);
 
 /**
  * The public API for rendering a history-aware <a>.
@@ -14,19 +14,13 @@ class Link extends React.Component {
     onClick: PropTypes.func,
     target: PropTypes.string,
     replace: PropTypes.bool,
-    to: PropTypes.oneOfType([
-      PropTypes.string,
-      PropTypes.object
-    ]).isRequired,
-    innerRef: PropTypes.oneOfType([
-      PropTypes.string,
-      PropTypes.func
-    ])
-  }
+    to: PropTypes.oneOfType([PropTypes.string, PropTypes.object]).isRequired,
+    innerRef: PropTypes.oneOfType([PropTypes.string, PropTypes.func])
+  };
 
   static defaultProps = {
     replace: false
-  }
+  };
 
   static contextTypes = {
     router: PropTypes.shape({
@@ -36,11 +30,10 @@ class Link extends React.Component {
         createHref: PropTypes.func.isRequired
       }).isRequired
     }).isRequired
-  }
+  };
 
-  handleClick = (event) => {
-    if (this.props.onClick)
-      this.props.onClick(event)
+  handleClick = event => {
+    if (this.props.onClick) this.props.onClick(event);
 
     if (
       !event.defaultPrevented && // onClick prevented default
@@ -48,38 +41,40 @@ class Link extends React.Component {
       !this.props.target && // let browser handle "target=_blank" etc.
       !isModifiedEvent(event) // ignore clicks with modifier keys
     ) {
-      event.preventDefault()
+      event.preventDefault();
 
-      const { history } = this.context.router
-      const { replace, to } = this.props
+      const { history } = this.context.router;
+      const { replace, to } = this.props;
 
       if (replace) {
-        history.replace(to)
+        history.replace(to);
       } else {
-        history.push(to)
+        history.push(to);
       }
     }
-  }
+  };
 
   render() {
-    const { replace, to, innerRef, ...props } = this.props // eslint-disable-line no-unused-vars
+    const { replace, to, innerRef, ...props } = this.props; // eslint-disable-line no-unused-vars
 
     invariant(
       this.context.router,
-      'You should not use <Link> outside a <Router>'
-    )
+      "You should not use <Link> outside a <Router>"
+    );
 
-    invariant(
-      to !== undefined,
-      'You must specify the "to" property'
-    )
+    invariant(to !== undefined, 'You must specify the "to" property');
 
-    const { history } = this.context.router
-    const location = typeof to === 'string' ? createLocation(to, null, null, history.location) : to
+    const { history } = this.context.router;
+    const location =
+      typeof to === "string"
+        ? createLocation(to, null, null, history.location)
+        : to;
 
-    const href = history.createHref(location)
-    return <a {...props} onClick={this.handleClick} href={href} ref={innerRef}/>
+    const href = history.createHref(location);
+    return (
+      <a {...props} onClick={this.handleClick} href={href} ref={innerRef} />
+    );
   }
 }
 
-export default Link
+export default Link;

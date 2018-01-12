@@ -1,7 +1,7 @@
-import warning from 'warning'
-import invariant from 'invariant'
-import React from 'react'
-import PropTypes from 'prop-types'
+import warning from "warning";
+import invariant from "invariant";
+import React from "react";
+import PropTypes from "prop-types";
 
 /**
  * The public API for putting history on context.
@@ -10,15 +10,15 @@ class Router extends React.Component {
   static propTypes = {
     history: PropTypes.object.isRequired,
     children: PropTypes.node
-  }
+  };
 
   static contextTypes = {
     router: PropTypes.object
-  }
+  };
 
   static childContextTypes = {
     router: PropTypes.object.isRequired
-  }
+  };
 
   getChildContext() {
     return {
@@ -30,29 +30,29 @@ class Router extends React.Component {
           match: this.state.match
         }
       }
-    }
+    };
   }
 
   state = {
     match: this.computeMatch(this.props.history.location.pathname)
-  }
+  };
 
   computeMatch(pathname) {
     return {
-      path: '/',
-      url: '/',
+      path: "/",
+      url: "/",
       params: {},
-      isExact: pathname === '/'
-    }
+      isExact: pathname === "/"
+    };
   }
 
   componentWillMount() {
-    const { children, history } = this.props
+    const { children, history } = this.props;
 
     invariant(
       children == null || React.Children.count(children) === 1,
-      'A <Router> may have only one child element'
-    )
+      "A <Router> may have only one child element"
+    );
 
     // Do this here so we can setState when a <Redirect> changes the
     // location in componentWillMount. This happens e.g. when doing
@@ -60,25 +60,25 @@ class Router extends React.Component {
     this.unlisten = history.listen(() => {
       this.setState({
         match: this.computeMatch(history.location.pathname)
-      })
-    })
+      });
+    });
   }
 
   componentWillReceiveProps(nextProps) {
     warning(
       this.props.history === nextProps.history,
-      'You cannot change <Router history>'
-    )
+      "You cannot change <Router history>"
+    );
   }
 
   componentWillUnmount() {
-    this.unlisten()
+    this.unlisten();
   }
 
   render() {
-    const { children } = this.props
-    return children ? React.Children.only(children) : null
+    const { children } = this.props;
+    return children ? React.Children.only(children) : null;
   }
 }
 
-export default Router
+export default Router;

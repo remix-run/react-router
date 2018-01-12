@@ -1,29 +1,25 @@
-import babel from 'rollup-plugin-babel'
-import uglify from 'rollup-plugin-uglify'
+import babel from "rollup-plugin-babel";
+import uglify from "rollup-plugin-uglify";
 
 var config = {
   output: {
-    format: 'umd',
-    name: 'ReactRouterRedux',
+    format: "umd",
+    name: "ReactRouterRedux"
   },
   plugins: [
     babel({
-      exclude: 'node_modules/**'
+      exclude: "node_modules/**"
     })
   ],
-  external: [
-    'react',
-    'prop-types',
-    'react-router'
-  ],
+  external: ["react", "prop-types", "react-router"],
   globals: {
-    react: 'React',
-    'prop-types': 'PropTypes',
-    'react-router': 'ReactRouter'
+    react: "React",
+    "prop-types": "PropTypes",
+    "react-router": "ReactRouter"
   }
-}
+};
 
-if (process.env.NODE_ENV === 'production') {
+if (process.env.NODE_ENV === "production") {
   config.plugins.push(
     uglify({
       compress: {
@@ -33,7 +29,7 @@ if (process.env.NODE_ENV === 'production') {
         warnings: false
       }
     })
-  )
+  );
 }
 
-export default config
+export default config;

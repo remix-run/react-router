@@ -1,20 +1,20 @@
-import { matchPath } from 'react-router'
+import { matchPath } from "react-router";
 
-export const getLocation = state => state.router.location
+export const getLocation = state => state.router.location;
 
-export const createMatchSelector = (path) => {
-  let lastPathname = null
-  let lastMatch = null
-  return (state) => {
-    const { pathname } = getLocation(state) || {}
+export const createMatchSelector = path => {
+  let lastPathname = null;
+  let lastMatch = null;
+  return state => {
+    const { pathname } = getLocation(state) || {};
     if (pathname === lastPathname) {
-      return lastMatch
+      return lastMatch;
     }
-    lastPathname = pathname
-    const match = matchPath(pathname, path)
+    lastPathname = pathname;
+    const match = matchPath(pathname, path);
     if (!match || !lastMatch || match.url !== lastMatch.url) {
-      lastMatch = match
+      lastMatch = match;
     }
-    return lastMatch
-  }
-}
+    return lastMatch;
+  };
+};

@@ -1,45 +1,46 @@
-import React from 'react'
-import ReactDOM from 'react-dom'
-import { createMemoryHistory as createHistory } from 'history'
-import Router from '../Router'
-import Switch from '../Switch'
-import Route from '../Route'
+import React from "react";
+import ReactDOM from "react-dom";
+import { createMemoryHistory as createHistory } from "history";
+import Router from "../Router";
+import Switch from "../Switch";
+import Route from "../Route";
 
-describe('A <Switch>', () => {
-  it('does not remount a <Route>', () => {
-    const node = document.createElement('div')
+describe("A <Switch>", () => {
+  it("does not remount a <Route>", () => {
+    const node = document.createElement("div");
 
-    let mountCount = 0
+    let mountCount = 0;
 
     class App extends React.Component {
       componentWillMount() {
-        mountCount++
+        mountCount++;
       }
 
       render() {
-        return <div/>
+        return <div />;
       }
     }
 
     const history = createHistory({
-      initialEntries: [ '/one' ]
-    })
+      initialEntries: ["/one"]
+    });
 
-    ReactDOM.render((
+    ReactDOM.render(
       <Router history={history}>
         <Switch>
-          <Route path="/one" component={App}/>
-          <Route path="/two" component={App}/>
+          <Route path="/one" component={App} />
+          <Route path="/two" component={App} />
         </Switch>
-      </Router>
-    ), node)
+      </Router>,
+      node
+    );
 
-    expect(mountCount).toBe(1)
-    history.push('/two')
+    expect(mountCount).toBe(1);
+    history.push("/two");
 
-    expect(mountCount).toBe(1)
-    history.push('/one')
+    expect(mountCount).toBe(1);
+    history.push("/one");
 
-    expect(mountCount).toBe(1)
-  })
-})
+    expect(mountCount).toBe(1);
+  });
+});
