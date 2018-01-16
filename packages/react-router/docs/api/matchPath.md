@@ -15,7 +15,7 @@ const match = matchPath('/users/123', {
 ## pathname
 
 The first argument is the pathname you want to match. If you're using
-this on the server with Node.js, it would be `req.url`.
+this on the server with Node.js, it would be `req.path`.
 
 ## props
 
