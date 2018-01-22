@@ -433,4 +433,47 @@ describe("renderRoutes", () => {
       expect(renderedRoutes[1]).toEqual(routes[1].routes[1]);
     });
   });
+
+  describe("routes with precondition + onPreconditionFailed", () => {
+    it("renders the matched route if given precondition & precondition is satisfied", () => {
+      const precondition = jest.fn().mockReturnValue(true);
+      const onPreconditionFailed = jest.fn();
+      const routeToMatch = {
+        component: Comp,
+        path: "/foo/bar",
+        precondition,
+        onPreconditionFailed
+      };
+      const routes = [routeToMatch]
+      ReactDOMServer.renderToString(
+        <StaticRouter location="/foo/bar" context={{}}>
+          {renderRoutes(routes)}
+        </StaticRouter>
+      )
+      expect(precondition).toHaveBeenCalled();
+      expect(renderedRoutes.length).toBe(1);
+      expect(renderedRoutes[0]).toEqual(routeToMatch);
+      // onPreconditionFailed should not be called if precondition is satisfied
+      expect(onPreconditionFailed.mock.calls.length).toBe(0);
+    });
+
+    it("renders the onPreconditionFailed if precondition is not satisfied", () => {
+      const onPreconditionFailed = jest.fn().mockImplementation(Comp);
+      const routeToMatch = {
+        component: () => null,
+        path: "/foo/bar",
+        precondition: () => false,
+        onPreconditionFailed,
+      };
+      const routes = [routeToMatch]
+      ReactDOMServer.renderToString(
+        <StaticRouter location="/foo/bar" context={{}}>
+          {renderRoutes(routes)}
+        </StaticRouter>
+      )
+      expect(onPreconditionFailed).toHaveBeenCalled();
+      expect(onPreconditionFailed.mock.calls[0][0].route).toEqual(routeToMatch);
+      expect(renderedRoutes.length).toBe(1);
+    });
+  });
 });
