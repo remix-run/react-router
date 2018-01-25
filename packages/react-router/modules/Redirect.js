@@ -81,7 +81,10 @@ class Redirect extends React.Component {
 
   perform() {
     const { history } = this.context.router;
-    const { push } = this.props;
+    const { enabled = true, push } = this.props;
+
+    if (!enabled) return;
+
     const to = this.computeTo(this.props);
 
     if (push) {
