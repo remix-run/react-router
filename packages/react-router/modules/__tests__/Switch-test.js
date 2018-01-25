@@ -282,6 +282,38 @@ describe("A <Switch>", () => {
     expect(node.innerHTML).toMatch(/one/);
   });
 
+  it("skip children with enabled={false}", () => {
+    const node = document.createElement("div");
+
+    ReactDOM.render(
+      <MemoryRouter initialEntries={["/one"]}>
+        <Switch>
+          <Route path="/one" enabled={false} render={() => <h1>one</h1>} />
+          <Route path="/one" render={() => <h1>two</h1>} />
+        </Switch>
+      </MemoryRouter>,
+      node
+    );
+
+    expect(node.innerHTML).toMatch(/two/);
+  });
+
+  it("not skip children with enabled={true}", () => {
+    const node = document.createElement("div");
+
+    ReactDOM.render(
+      <MemoryRouter initialEntries={["/one"]}>
+        <Switch>
+          <Route path="/one" enabled={true} render={() => <h1>one</h1>} />
+          <Route path="/one" render={() => <h1>two</h1>} />
+        </Switch>
+      </MemoryRouter>,
+      node
+    );
+
+    expect(node.innerHTML).toMatch(/one/);
+  });
+
   it("throws with no <Router>", () => {
     const node = document.createElement("div");
 

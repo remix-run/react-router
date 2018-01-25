@@ -37,4 +37,50 @@ describe("A <Redirect>", () => {
       });
     });
   });
+
+  describe("A <Redirect enabled>", () => {
+    it("follow redirect if enabled", () => {
+      const node = document.createElement("div");
+
+      ReactDOM.render(
+        <MemoryRouter initialEntries={["/initialroute"]}>
+          <div>
+            <Route path="/redirectto" render={() => <h1>one</h1>} />
+            <Redirect enabled={true} from="/initialroute" to="/redirectto" />
+          </div>
+        </MemoryRouter>,
+        node
+      );
+      expect(node.innerHTML).toMatch(/one/);
+    });
+
+    it("default is to be enabled", () => {
+      const node = document.createElement("div");
+
+      ReactDOM.render(
+        <MemoryRouter initialEntries={["/initialroute"]}>
+          <div>
+            <Route path="/redirectto" render={() => <h1>one</h1>} />
+            <Redirect from="/initialroute" to="/redirectto" />
+          </div>
+        </MemoryRouter>,
+        node
+      );
+      expect(node.innerHTML).toMatch(/one/);
+    });
+
+    it("not follow redirect if not enabled", () => {
+      const node = document.createElement("div");
+      ReactDOM.render(
+        <MemoryRouter initialEntries={["/initialroute"]}>
+          <div>
+            <Route path="/redirectto" render={() => <h1>one</h1>} />
+            <Redirect enabled={false} from="/initialroute" to="/redirectto" />
+          </div>
+        </MemoryRouter>,
+        node
+      );
+      expect(node.innerHTML).not.toMatch(/one/);
+    });
+  });
 });
