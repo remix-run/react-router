@@ -44,10 +44,12 @@ describe("A <Redirect>", () => {
 
       ReactDOM.render(
         <MemoryRouter initialEntries={["/initialroute"]}>
-          <div>
+          <Switch>
             <Route path="/redirectto" render={() => <h1>one</h1>} />
-            <Redirect enabled={true} from="/initialroute" to="/redirectto" />
-          </div>
+            <Route>
+              <Redirect enabled={true} from="/initialroute" to="/redirectto" />
+            </Route>
+          </Switch>
         </MemoryRouter>,
         node
       );
@@ -59,10 +61,12 @@ describe("A <Redirect>", () => {
 
       ReactDOM.render(
         <MemoryRouter initialEntries={["/initialroute"]}>
-          <div>
+          <Switch>
             <Route path="/redirectto" render={() => <h1>one</h1>} />
-            <Redirect from="/initialroute" to="/redirectto" />
-          </div>
+            <Route>
+              <Redirect from="/initialroute" to="/redirectto" />
+            </Route>
+          </Switch>
         </MemoryRouter>,
         node
       );
@@ -73,10 +77,12 @@ describe("A <Redirect>", () => {
       const node = document.createElement("div");
       ReactDOM.render(
         <MemoryRouter initialEntries={["/initialroute"]}>
-          <div>
+          <Switch>
             <Route path="/redirectto" render={() => <h1>one</h1>} />
-            <Redirect enabled={false} from="/initialroute" to="/redirectto" />
-          </div>
+            <Route>
+              <Redirect enabled={false} from="/initialroute" to="/redirectto" />
+            </Route>
+          </Switch>
         </MemoryRouter>,
         node
       );
