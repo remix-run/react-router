@@ -388,3 +388,51 @@ describe("A <Route location>", () => {
     });
   });
 });
+
+describe("A <Route enabled>", () => {
+  it("does render when the route is not enabled", () => {
+    const TEXT = "bubblegum";
+    const node = document.createElement("div");
+
+    ReactDOM.render(
+      <MemoryRouter initialEntries={["/somepath"]}>
+        <Route enabled={true} path="/somepath" render={() => <h1>{TEXT}</h1>} />
+      </MemoryRouter>,
+      node
+    );
+
+    expect(node.innerHTML).toContain(TEXT);
+  });
+
+  it("defaults to enabled", () => {
+    const TEXT = "bubblegum";
+    const node = document.createElement("div");
+
+    ReactDOM.render(
+      <MemoryRouter initialEntries={["/somepath"]}>
+        <Route path="/somepath" render={() => <h1>{TEXT}</h1>} />
+      </MemoryRouter>,
+      node
+    );
+
+    expect(node.innerHTML).toContain(TEXT);
+  });
+
+  it("does not render when the route is not enabled", () => {
+    const TEXT = "bubblegum";
+    const node = document.createElement("div");
+
+    ReactDOM.render(
+      <MemoryRouter initialEntries={["/somepath"]}>
+        <Route
+          enabled={false}
+          path="/somepath"
+          render={() => <h1>{TEXT}</h1>}
+        />
+      </MemoryRouter>,
+      node
+    );
+
+    expect(node.innerHTML).not.toContain(TEXT);
+  });
+});

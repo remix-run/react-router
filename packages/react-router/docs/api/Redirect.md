@@ -20,7 +20,7 @@ The URL to redirect to. Any valid URL path that [`path-to-regexp`](https://www.n
 All URL parameters that are used in `to` must be covered by `from`.
 
 ```jsx
-<Redirect to="/somewhere/else"/>
+<Redirect to="/somewhere/else" />
 ```
 
 ## to: object
@@ -28,11 +28,13 @@ All URL parameters that are used in `to` must be covered by `from`.
 A location to redirect to. `pathname` can be any valid URL path that [`path-to-regexp`](https://www.npmjs.com/package/path-to-regexp) understands.
 
 ```jsx
-<Redirect to={{
-  pathname: '/login',
-  search: '?utm=your+face',
-  state: { referrer: currentLocation }
-}}/>
+<Redirect
+  to={{
+    pathname: "/login",
+    search: "?utm=your+face",
+    state: { referrer: currentLocation }
+  }}
+/>
 ```
 
 ## push: bool
@@ -40,28 +42,28 @@ A location to redirect to. `pathname` can be any valid URL path that [`path-to-r
 When `true`, redirecting will push a new entry onto the history instead of replacing the current one.
 
 ```jsx
-<Redirect push to="/somewhere/else"/>
+<Redirect push to="/somewhere/else" />
 ```
 
 ## from: string
 
 A pathname to redirect from. Any valid URL path that [`path-to-regexp`](https://www.npmjs.com/package/path-to-regexp) understands.
-All matched URL parameters are provided to the pattern in `to`. Must contain all parameters that are used in `to`. Additional parameters not used by `to` are ignored. 
+All matched URL parameters are provided to the pattern in `to`. Must contain all parameters that are used in `to`. Additional parameters not used by `to` are ignored.
 
 This can only be used to match a location when rendering a `<Redirect>` inside of a `<Switch>`. See [`<Switch children>`](./Switch.md#children-node) for more details.
 
 ```jsx
 <Switch>
-  <Redirect from='/old-path' to='/new-path'/>
-  <Route path='/new-path' component={Place}/>
+  <Redirect from="/old-path" to="/new-path" />
+  <Route path="/new-path" component={Place} />
 </Switch>
 ```
 
 ```jsx
 // Redirect with matched parameters
 <Switch>
-  <Redirect from='/users/:id' to='/users/profile/:id'/>
-  <Route path='/users/profile/:id' component={Profile}/>
+  <Redirect from="/users/:id" to="/users/profile/:id" />
+  <Route path="/users/profile/:id" component={Profile} />
 </Switch>
 ```
 
@@ -72,3 +74,15 @@ Match `from` exactly; equivalent to [Route.exact](./Route.md#exact-bool).
 ## strict: bool
 
 Match `from` strictly; equivalent to [Route.strict](./Route.md#strict-bool).
+
+## strict: bool
+
+When `false` ignore this redirect.
+
+```jsx
+<Switch>
+  <Redirect enabled={false} from="/users/:id" to="/do/not/route/here" />
+  <Redirect from="/users/:id" to="/users/profile/:id" />
+  <Route path="/users/profile/:id" component={Profile} />
+</Switch>
+```

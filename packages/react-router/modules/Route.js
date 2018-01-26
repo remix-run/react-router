@@ -51,9 +51,10 @@ class Route extends React.Component {
   };
 
   computeMatch(
-    { computedMatch, location, path, strict, exact, sensitive },
+    { computedMatch, location, path, strict, exact, sensitive, enabled = true },
     router
   ) {
+    if (!enabled) return null;
     if (computedMatch) return computedMatch; // <Switch> already computed the match for us
 
     invariant(

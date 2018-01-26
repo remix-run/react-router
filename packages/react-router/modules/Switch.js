@@ -48,6 +48,7 @@ class Switch extends React.Component {
       if (match == null && React.isValidElement(element)) {
         const {
           path: pathProp,
+          enabled = true,
           exact,
           strict,
           sensitive,
@@ -55,10 +56,12 @@ class Switch extends React.Component {
         } = element.props;
         const path = pathProp || from;
 
-        child = element;
-        match = path
-          ? matchPath(location.pathname, { path, exact, strict, sensitive })
-          : route.match;
+        if (enabled) {
+          child = element;
+          match = path
+            ? matchPath(location.pathname, { path, exact, strict, sensitive })
+            : route.match;
+        }
       }
     });
 
