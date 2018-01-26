@@ -51,7 +51,7 @@ describe("A <Link>", () => {
       ReactDOM.render(<Link to="/">link</Link>, node);
     }).toThrow(/You should not use <Link> outside a <Router>/);
 
-    expect(console.error.calls.count()).toBe(2);
+    expect(console.error.calls.count()).toBe(3);
     expect(console.error.calls.argsFor(0)[0]).toContain(
       "The context `router` is marked as required in `Link`"
     );
@@ -71,7 +71,7 @@ describe("A <Link>", () => {
       );
     }).toThrow(/You must specify the "to" property/);
 
-    expect(console.error.calls.count()).toBe(2);
+    expect(console.error.calls.count()).toBe(3);
     expect(console.error.calls.argsFor(0)[0]).toContain(
       "The prop `to` is marked as required in `Link`"
     );
