@@ -1,10 +1,10 @@
 # &lt;Switch>
 
-Renders the first child [`<Route>`](Route.md) or [`<Redirect>`](Redirect.md) that matches the location.
+Renders the first enabled child [`<Route>`](Route.md) or [`<Redirect>`](Redirect.md) that matches the location.
 
 **How is this different than just using a bunch of `<Route>`s?**
 
-`<Switch>` is unique in that it renders a route *exclusively*. In contrast, every `<Route>` that matches the location renders *inclusively*. Consider this code:
+`<Switch>` is unique in that it renders a route _exclusively_. In contrast, every `<Route>` that matches the location renders _inclusively_. Consider this code:
 
 ```jsx
 <Route path="/about" component={About}/>
@@ -49,6 +49,21 @@ This is also useful for animated transitions since the matched `<Route>` is rend
 </Fade>
 ```
 
+In order to programatically ignore a [`<Route>`](Route.md) or [`<Redirect>`](Redirect.md) use the `enabled` flag on the children of the Switch.
+
+```jsx
+import { Switch, Route } from 'react-router'
+
+<Switch>
+  <Route exact path="/" component={Home}/>
+  <Route path="/about" component={About}/>
+  <Route enabled={props.user.isLoggedIn} path="/edit" component={User}/>
+  <Route component={NoMatch}/>
+</Switch>
+```
+
+Would only allow logged in users to route to /edit, all others will see NoMatch.
+
 ## location: object
 
 A [`location`](./location.md) object to be used for matching children elements instead of the current history location (usually the current browser URL).
@@ -65,11 +80,11 @@ If a `location` prop is given to the `<Switch>`, it will override the `location`
 
 ```jsx
 <Switch>
-  <Route exact path="/" component={Home}/>
+  <Route exact path="/" component={Home} />
 
-  <Route path="/users" component={Users}/>
-  <Redirect from="/accounts" to="/users"/>
+  <Route path="/users" component={Users} />
+  <Redirect from="/accounts" to="/users" />
 
-  <Route component={NoMatch}/>
+  <Route component={NoMatch} />
 </Switch>
 ```

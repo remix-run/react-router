@@ -42,9 +42,9 @@ The "react-empty" comments are just implementation details of React's `null` ren
 
 There are 3 ways to render something with a `<Route>`:
 
-- [`<Route component>`](#component)
-- [`<Route render>`](#render-func)
-- [`<Route children>`](#children-func)
+* [`<Route component>`](#component)
+* [`<Route render>`](#render-func)
+* [`<Route children>`](#children-func)
 
 Each is useful in different circumstances. You should use only one of these props on a given `<Route>`. See their explanations below to understand why you have 3 options. Most of the time you'll use `component`.
 
@@ -52,9 +52,9 @@ Each is useful in different circumstances. You should use only one of these prop
 
 All three [render methods](#route-render-methods) will be passed the same three route props
 
-- [match](./match.md)
-- [location](./location.md)
-- [history](./history.md)
+* [match](./match.md)
+* [location](./location.md)
+* [history](./history.md)
 
 ## component
 
@@ -62,11 +62,11 @@ A React component to render only when the location matches. It will be
 rendered with [route props](#route-props).
 
 ```jsx
-<Route path="/user/:username" component={User}/>
+<Route path="/user/:username" component={User} />;
 
 const User = ({ match }) => {
-  return <h1>Hello {match.params.username}!</h1>
-}
+  return <h1>Hello {match.params.username}!</h1>;
+};
 ```
 
 When you use `component` (instead of `render` or `children`, below) the router uses [`React.createElement`](https://facebook.github.io/react/docs/react-api.html#createelement) to create a new [React element](https://facebook.github.io/react/docs/rendering-elements.html) from the given component. That means if you provide an inline function to the `component` prop, you would create a new component every render. This results in the existing component unmounting and the new component mounting instead of just updating the existing component. When using an inline function for inline rendering, use the `render` or the `children` prop (below).
@@ -103,17 +103,20 @@ The `children` render prop receives all the same [route props](#route-props) as 
 
 ```jsx
 <ul>
-  <ListItemLink to="/somewhere"/>
-  <ListItemLink to="/somewhere-else"/>
-</ul>
+  <ListItemLink to="/somewhere" />
+  <ListItemLink to="/somewhere-else" />
+</ul>;
 
 const ListItemLink = ({ to, ...rest }) => (
-  <Route path={to} children={({ match }) => (
-    <li className={match ? 'active' : ''}>
-      <Link to={to} {...rest}/>
-    </li>
-  )}/>
-)
+  <Route
+    path={to}
+    children={({ match }) => (
+      <li className={match ? "active" : ""}>
+        <Link to={to} {...rest} />
+      </li>
+    )}
+  />
+);
 ```
 
 This could also be useful for animations:
@@ -135,7 +138,7 @@ This could also be useful for animations:
 Any valid URL path that [`path-to-regexp`](https://www.npmjs.com/package/path-to-regexp) understands.
 
 ```jsx
-<Route path="/users/:id" component={User}/>
+<Route path="/users/:id" component={User} />
 ```
 
 Routes without a `path` _always_ match.
@@ -145,39 +148,39 @@ Routes without a `path` _always_ match.
 When `true`, will only match if the path matches the `location.pathname` _exactly_.
 
 ```jsx
-<Route exact path="/one" component={About}/>
+<Route exact path="/one" component={About} />
 ```
 
-| path | location.pathname | exact | matches? |
-| --- | --- | --- | --- |
-| `/one`  | `/one/two`  | `true` | no |
-| `/one`  | `/one/two`  | `false` | yes |
+| path   | location.pathname | exact   | matches? |
+| ------ | ----------------- | ------- | -------- |
+| `/one` | `/one/two`        | `true`  | no       |
+| `/one` | `/one/two`        | `false` | yes      |
 
 ## strict: bool
 
 When `true`, a `path` that has a trailing slash will only match a `location.pathname` with a trailing slash. This has no effect when there are additional URL segments in the `location.pathname`.
 
 ```jsx
-<Route strict path="/one/" component={About}/>
+<Route strict path="/one/" component={About} />
 ```
 
-| path | location.pathname | matches? |
-| --- | --- | --- |
-| `/one/` | `/one` | no |
-| `/one/` | `/one/` | yes |
-| `/one/` | `/one/two` | yes |
+| path    | location.pathname | matches? |
+| ------- | ----------------- | -------- |
+| `/one/` | `/one`            | no       |
+| `/one/` | `/one/`           | yes      |
+| `/one/` | `/one/two`        | yes      |
 
 **Warning:** `strict` can be used to enforce that a `location.pathname` has no trailing slash, but in order to do this both `strict` and `exact` must be `true`.
 
 ```jsx
-<Route exact strict path="/one" component={About}/>
+<Route exact strict path="/one" component={About} />
 ```
 
-| path | location.pathname | matches? |
-| --- | --- | --- |
-| `/one` | `/one` | yes |
-| `/one` | `/one/` | no |
-| `/one` | `/one/two` | no |
+| path   | location.pathname | matches? |
+| ------ | ----------------- | -------- |
+| `/one` | `/one`            | yes      |
+| `/one` | `/one/`           | no       |
+| `/one` | `/one/two`        | no       |
 
 ## location: object
 
@@ -190,14 +193,24 @@ If a `<Route>` element is wrapped in a `<Switch>` and matches the location passe
 
 ## sensitive: bool
 
-When `true`, will match if the path is __case sensitive__.
+When `true`, will match if the path is **case sensitive**.
 
 ```jsx
-<Route sensitive path="/one" component={About}/>
+<Route sensitive path="/one" component={About} />
 ```
 
-| path | location.pathname | sensitive | matches? |
-| --- | --- | --- | --- |
-| `/one`  | `/one`  | `true` | yes |
-| `/One`  | `/one`  | `false` | no |
+| path   | location.pathname | sensitive | matches? |
+| ------ | ----------------- | --------- | -------- |
+| `/one` | `/one`            | `true`    | yes      |
+| `/One` | `/one`            | `false`   | no       |
 
+## enabled: bool
+
+When `false` ignore this route.
+
+```jsx
+<Switch>
+  <Route enabled={props.isSuperUser} path="/one" component={SuperUserOnly} />
+  <Route path="/one" component={EveryoneElse} />
+</Switch>
+```
