@@ -32,12 +32,12 @@
     "react-router": "^4.2.0"
   },
   "devDependencies": {
-    "babel-jest": "^21.2.0",
+    "babel-jest": "^22.1.0",
     "babel-preset-react-native": "^4.0.0",
-    "jest": "^21.2.1",
-    "react": "^16.0.0-beta.5",
+    "jest": "^22.1.4",
+    "react": "^16.0.0",
     "react-native": "^0.49.5",
-    "react-test-renderer": "^16.1.0"
+    "react-test-renderer": "^16.2.0"
   },
   "jest": {
     "preset": "react-native"
