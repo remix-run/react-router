@@ -45,7 +45,7 @@ If you have a tab interface connected to the router, then you probably don't wan
 
 ```jsx
 class ScrollToTopOnMount extends Component {
-  componentDidMount(prevProps) {
+  componentDidMount() {
     window.scrollTo(0, 0)
   }
 
