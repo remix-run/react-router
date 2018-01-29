@@ -2,6 +2,7 @@ import warning from "warning";
 import invariant from "invariant";
 import React from "react";
 import PropTypes from "prop-types";
+import RouterContext from "./RouterContext";
 
 /**
  * The public API for putting history on context.
@@ -76,8 +77,7 @@ class Router extends React.Component {
   }
 
   render() {
-    const { children } = this.props;
-    return children ? React.Children.only(children) : null;
+    return RouterContext.provide(this.getChildContext(), this.props.children);
   }
 }
 
