@@ -10,10 +10,7 @@ import RouterContext from "./RouterContext";
 class Router extends React.Component {
   static propTypes = {
     history: PropTypes.object.isRequired,
-    children: PropTypes.node
-  };
-
-  static contextTypes = {
+    children: PropTypes.node,
     router: PropTypes.object
   };
 
@@ -24,7 +21,7 @@ class Router extends React.Component {
   getChildContext() {
     return {
       router: {
-        ...this.context.router,
+        ...this.props.router,
         history: this.props.history,
         route: {
           location: this.props.history.location,
