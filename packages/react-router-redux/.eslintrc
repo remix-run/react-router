@@ -5,10 +5,7 @@
     "es6": true,
     "jest": true
   },
-  "plugins": [
-    "import",
-    "react"
-  ],
+  "plugins": ["import", "react"],
   "extends": [
     "eslint:recommended",
     "plugin:import/errors",
@@ -16,7 +13,6 @@
   ],
   "rules": {
     "prefer-arrow-callback": 2,
-    "react/display-name": 0,
-    "semi": [ 2, "never" ]
+    "react/display-name": 0
   }
 }
