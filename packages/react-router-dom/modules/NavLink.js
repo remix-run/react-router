@@ -1,7 +1,7 @@
 import React from "react";
 import PropTypes from "prop-types";
 import Route from "./Route";
-import Link from "./Link";
+import Link, { InnerLink } from "./Link";
 
 /**
  * A <Link> wrapper that knows if it's "active" or not.
@@ -52,7 +52,7 @@ const NavLink = ({
 };
 
 NavLink.propTypes = {
-  to: Link.propTypes.to,
+  to: InnerLink.propTypes.to,
   exact: PropTypes.bool,
   strict: PropTypes.bool,
   location: PropTypes.object,
