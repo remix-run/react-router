@@ -77,7 +77,11 @@ class Router extends React.Component {
   }
 
   render() {
-    return RouterContext.provide(this.getChildContext(), this.props.children);
+    const { children } = this.props;
+    return RouterContext.provide(
+      this.getChildContext(),
+      children ? React.Children.only(children) : null
+    );
   }
 }
 
