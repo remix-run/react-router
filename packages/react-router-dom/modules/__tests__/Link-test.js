@@ -53,7 +53,7 @@ describe("A <Link>", () => {
 
     expect(console.error.calls.count()).toBe(3);
     expect(console.error.calls.argsFor(0)[0]).toContain(
-      "The context `router` is marked as required in `Link`"
+      "The prop `router` is marked as required in `InnerLink`"
     );
   });
 
@@ -73,7 +73,7 @@ describe("A <Link>", () => {
 
     expect(console.error.calls.count()).toBe(3);
     expect(console.error.calls.argsFor(0)[0]).toContain(
-      "The prop `to` is marked as required in `Link`"
+      "The prop `to` is marked as required in `InnerLink`"
     );
   });
 

@@ -2,6 +2,7 @@ import React from "react";
 import PropTypes from "prop-types";
 import invariant from "invariant";
 import { createLocation } from "history";
+import RouterContext from "./RouterContext";
 
 const isModifiedEvent = event =>
   !!(event.metaKey || event.altKey || event.ctrlKey || event.shiftKey);
@@ -9,20 +10,13 @@ const isModifiedEvent = event =>
 /**
  * The public API for rendering a history-aware <a>.
  */
-class Link extends React.Component {
+class InnerLink extends React.Component {
   static propTypes = {
     onClick: PropTypes.func,
     target: PropTypes.string,
     replace: PropTypes.bool,
     to: PropTypes.oneOfType([PropTypes.string, PropTypes.object]).isRequired,
-    innerRef: PropTypes.oneOfType([PropTypes.string, PropTypes.func])
-  };
-
-  static defaultProps = {
-    replace: false
-  };
-
-  static contextTypes = {
+    innerRef: PropTypes.oneOfType([PropTypes.string, PropTypes.func]),
     router: PropTypes.shape({
       history: PropTypes.shape({
         push: PropTypes.func.isRequired,
@@ -30,6 +24,10 @@ class Link extends React.Component {
         createHref: PropTypes.func.isRequired
       }).isRequired
     }).isRequired
+  };
+
+  static defaultProps = {
+    replace: false
   };
 
   handleClick = event => {
@@ -43,8 +41,7 @@ class Link extends React.Component {
     ) {
       event.preventDefault();
 
-      const { history } = this.context.router;
-      const { replace, to } = this.props;
+      const { replace, to, router: { history } } = this.props;
 
       if (replace) {
         history.replace(to);
@@ -55,16 +52,16 @@ class Link extends React.Component {
   };
 
   render() {
-    const { replace, to, innerRef, ...props } = this.props; // eslint-disable-line no-unused-vars
+    const { replace, to, innerRef, router, ...props } = this.props; // eslint-disable-line no-unused-vars
 
     invariant(
-      this.context.router,
+      this.props.router,
       "You should not use <Link> outside a <Router>"
     );
 
     invariant(to !== undefined, 'You must specify the "to" property');
 
-    const { history } = this.context.router;
+    const { history } = router;
     const location =
       typeof to === "string"
         ? createLocation(to, null, null, history.location)
@@ -76,5 +73,12 @@ class Link extends React.Component {
     );
   }
 }
+
+export { InnerLink };
+
+const Link = props =>
+  RouterContext.consume(({ router }) => (
+    <InnerLink {...props} router={router} />
+  ));
 
 export default Link;
