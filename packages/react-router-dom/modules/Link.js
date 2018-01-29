@@ -10,27 +10,20 @@ const isModifiedEvent = event =>
 /**
  * The public API for rendering a history-aware <a>.
  */
-class InnerLink extends React.Component {
+class Link extends React.Component {
   static propTypes = {
     onClick: PropTypes.func,
     target: PropTypes.string,
     replace: PropTypes.bool,
     to: PropTypes.oneOfType([PropTypes.string, PropTypes.object]).isRequired,
-    innerRef: PropTypes.oneOfType([PropTypes.string, PropTypes.func]),
-    router: PropTypes.shape({
-      history: PropTypes.shape({
-        push: PropTypes.func.isRequired,
-        replace: PropTypes.func.isRequired,
-        createHref: PropTypes.func.isRequired
-      }).isRequired
-    }).isRequired
+    innerRef: PropTypes.oneOfType([PropTypes.string, PropTypes.func])
   };
 
   static defaultProps = {
     replace: false
   };
 
-  handleClick = event => {
+  handleClick = history => event => {
     if (this.props.onClick) this.props.onClick(event);
 
     if (
@@ -41,7 +34,7 @@ class InnerLink extends React.Component {
     ) {
       event.preventDefault();
 
-      const { replace, to, router: { history } } = this.props;
+      const { replace, to } = this.props;
 
       if (replace) {
         history.replace(to);
@@ -52,33 +45,30 @@ class InnerLink extends React.Component {
   };
 
   render() {
-    const { replace, to, innerRef, router, ...props } = this.props; // eslint-disable-line no-unused-vars
-
-    invariant(
-      this.props.router,
-      "You should not use <Link> outside a <Router>"
-    );
+    const { replace, to, innerRef, ...props } = this.props; // eslint-disable-line no-unused-vars
 
     invariant(to !== undefined, 'You must specify the "to" property');
 
-    const { history } = router;
-    const location =
-      typeof to === "string"
-        ? createLocation(to, null, null, history.location)
-        : to;
+    return RouterContext.consume(({ router }) => {
+      invariant(router, "You should not use <Link> outside a <Router>");
 
-    const href = history.createHref(location);
-    return (
-      <a {...props} onClick={this.handleClick} href={href} ref={innerRef} />
-    );
+      const { history } = router;
+      const location =
+        typeof to === "string"
+          ? createLocation(to, null, null, history.location)
+          : to;
+
+      const href = history.createHref(location);
+      return (
+        <a
+          {...props}
+          onClick={this.handleClick(history)}
+          href={href}
+          ref={innerRef}
+        />
+      );
+    });
   }
 }
-
-export { InnerLink };
-
-const Link = props =>
-  RouterContext.consume(({ router }) => (
-    <InnerLink {...props} router={router} />
-  ));
 
 export default Link;

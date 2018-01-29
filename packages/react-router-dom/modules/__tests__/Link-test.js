@@ -51,10 +51,7 @@ describe("A <Link>", () => {
       ReactDOM.render(<Link to="/">link</Link>, node);
     }).toThrow(/You should not use <Link> outside a <Router>/);
 
-    expect(console.error.calls.count()).toBe(3);
-    expect(console.error.calls.argsFor(0)[0]).toContain(
-      "The prop `router` is marked as required in `InnerLink`"
-    );
+    expect(console.error.calls.count()).toBe(2);
   });
 
   it('throws with no "to" prop', () => {
@@ -73,7 +70,7 @@ describe("A <Link>", () => {
 
     expect(console.error.calls.count()).toBe(3);
     expect(console.error.calls.argsFor(0)[0]).toContain(
-      "The prop `to` is marked as required in `InnerLink`"
+      "The prop `to` is marked as required in `Link`"
     );
   });
 
