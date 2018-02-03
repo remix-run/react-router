@@ -68,9 +68,10 @@ class InnerSwitch extends React.Component {
   }
 }
 
-const Switch = props =>
-  RouterContext.consume(({ router }) => (
-    <InnerSwitch {...props} router={router} />
-  ));
+const Switch = props => (
+  <RouterContext.Consumer>
+    {({ router }) => <InnerSwitch {...props} router={router} />}
+  </RouterContext.Consumer>
+);
 
 export default Switch;

@@ -135,13 +135,18 @@ class InnerRoute extends React.Component {
   }
 
   render() {
-    return RouterContext.provide(this.getChildContext(), this.renderChildren());
+    return (
+      <RouterContext.Provider value={this.getChildContext()}>
+        {this.renderChildren()}
+      </RouterContext.Provider>
+    );
   }
 }
 
-const Route = props =>
-  RouterContext.consume(({ router }) => (
-    <InnerRoute {...props} router={router} />
-  ));
+const Route = props => (
+  <RouterContext.Consumer>
+    {({ router }) => <InnerRoute {...props} router={router} />}
+  </RouterContext.Consumer>
+);
 
 export default Route;

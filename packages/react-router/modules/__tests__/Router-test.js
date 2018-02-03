@@ -51,11 +51,14 @@ describe("A <Router>", () => {
 
   describe("context", () => {
     let rootContext;
-    const ContextChecker = () =>
-      RouterContext.consume(context => {
-        rootContext = context;
-        return null;
-      });
+    const ContextChecker = () => (
+      <RouterContext.Consumer>
+        {context => {
+          rootContext = context;
+          return null;
+        }}
+      </RouterContext.Consumer>
+    );
 
     afterEach(() => {
       rootContext = undefined;
