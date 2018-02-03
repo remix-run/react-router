@@ -49,25 +49,29 @@ class Link extends React.Component {
 
     invariant(to !== undefined, 'You must specify the "to" property');
 
-    return RouterContext.consume(({ router }) => {
-      invariant(router, "You should not use <Link> outside a <Router>");
+    return (
+      <RouterContext.Consumer>
+        {({ router }) => {
+          invariant(router, "You should not use <Link> outside a <Router>");
 
-      const { history } = router;
-      const location =
-        typeof to === "string"
-          ? createLocation(to, null, null, history.location)
-          : to;
+          const { history } = router;
+          const location =
+            typeof to === "string"
+              ? createLocation(to, null, null, history.location)
+              : to;
 
-      const href = history.createHref(location);
-      return (
-        <a
-          {...props}
-          onClick={this.handleClick(history)}
-          href={href}
-          ref={innerRef}
-        />
-      );
-    });
+          const href = history.createHref(location);
+          return (
+            <a
+              {...props}
+              onClick={this.handleClick(history)}
+              href={href}
+              ref={innerRef}
+            />
+          );
+        }}
+      </RouterContext.Consumer>
+    );
   }
 }
 

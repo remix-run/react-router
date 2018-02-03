@@ -62,9 +62,10 @@ class InnerPrompt extends React.Component {
   }
 }
 
-const Prompt = props =>
-  RouterContext.consume(({ router }) => (
-    <InnerPrompt {...props} router={router} />
-  ));
+const Prompt = props => (
+  <RouterContext.Consumer>
+    {({ router }) => <InnerPrompt {...props} router={router} />}
+  </RouterContext.Consumer>
+);
 
 export default Prompt;

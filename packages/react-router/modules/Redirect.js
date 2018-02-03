@@ -93,9 +93,10 @@ class InnerRedirect extends React.Component {
   }
 }
 
-const Redirect = props =>
-  RouterContext.consume(({ router }) => (
-    <InnerRedirect {...props} router={router} />
-  ));
+const Redirect = props => (
+  <RouterContext.Consumer>
+    {({ router }) => <InnerRedirect {...props} router={router} />}
+  </RouterContext.Consumer>
+);
 
 export default Redirect;
