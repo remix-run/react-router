@@ -50,13 +50,13 @@ const store = createStore(
   applyMiddleware(routerMiddleware(history)),
 )
 
-class Login extends React.Component {//
+class Login extends React.Component {
   render() {
     return <button onClick={this.props.login}>Login Here!</button>
   }
 }
 
-class Home extends React.Component {//
+class Home extends React.Component {
   componentWillMount() {
     alert('Private home is at: ' + this.props.location.pathname)
   }
@@ -66,7 +66,7 @@ class Home extends React.Component {//
   }
 }
 
-class PrivateRoute extends React.Component {//
+class PrivateRoute extends React.Component {
   render() {
     const {
       isAuthenticated,
@@ -94,21 +94,21 @@ class PrivateRoute extends React.Component {//
 
 const PrivateRouteContainer = connect(state => ({
   isAuthenticated: state.authReducer.isAuthenticated
-}))(PrivateRoute)//
+}))(PrivateRoute)
 
 const LoginContainer = connect(null, dispatch => ({
   login: () => {
     dispatch(authSuccess())
     dispatch(push('/'))
   }
-}))(Login)//
+}))(Login)
 
 const HomeContainer = connect(null, dispatch => ({
   logout: () => {
     dispatch(authFail())
     dispatch(push('/login'))
   }
-}))(Home)//
+}))(Home)
 
 render(
   <Provider store={store}>
