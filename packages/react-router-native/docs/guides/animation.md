@@ -139,7 +139,7 @@ It's important to use a [`<Switch>`][Switch]. It will ensure that only one route
 There are a handful of props handed to `AnimatedChild` that the parent will know about as it manages the animation. Again, this guide is more inspiration than copy/paste right now, feel free to look at the source of this website for exact implementation. Alright, let's check out the implementation of `AnimatedChild` (it's copy pasted from the animation used on this site).
 
 ```jsx
-class AnimatedChildRoute extends Component {
+class AnimatedChild extends Component {
 
   static propTypes = {
     children: PropTypes.node,
