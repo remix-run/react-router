@@ -22,6 +22,10 @@ const compilePath = (pattern, options) => {
   return compiledPattern;
 };
 
+const stripQueryString = url => {
+  return url.indexOf("?") < 0 ? url : url.split("?")[0];
+};
+
 /**
  * Public API for matching a URL pathname to a path pattern.
  */
@@ -35,7 +39,9 @@ const matchPath = (pathname, options = {}) => {
     sensitive = false
   } = options;
   const { re, keys } = compilePath(path, { end: exact, strict, sensitive });
-  const match = re.exec(pathname);
+  const basePath =
+    typeof pathname === "string" ? stripQueryString(pathname) : pathname;
+  const match = re.exec(basePath);
 
   if (!match) return null;
 
