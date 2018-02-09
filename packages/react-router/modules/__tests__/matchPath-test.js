@@ -66,6 +66,33 @@ describe("matchPath", () => {
     });
   });
 
+  describe("with query string", () => {
+    it("matches the base URL only with trailing param", () => {
+      const options = {
+        path: "/base/:id"
+      };
+      const match = matchPath("/base/7?query=param", options);
+      expect(match).toMatchObject({
+        url: "/base/7",
+        path: "/base/:id",
+        params: { id: "7" },
+        isExact: false
+      });
+    });
+    it("matches the base URL only without trailing param", () => {
+      const options = {
+        path: "/base/home"
+      };
+      const match = matchPath("/base/home?query=param", options);
+      expect(match).toMatchObject({
+        url: "/base/home",
+        path: "/base/home",
+        params: {},
+        isExact: false
+      });
+    });
+  });
+
   describe("cache", () => {
     it("creates a cache entry for each exact/strict pair", () => {
       // true/false and false/true will collide when adding booleans
