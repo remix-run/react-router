@@ -1,47 +1,45 @@
-import React, { Component } from 'react'
-import PropTypes from 'prop-types'
-import { Block, InlineBlock } from 'jsxstyle'
-import { Link, Route, Redirect, Switch } from 'react-router-dom'
-import { LIGHT_GRAY, RED } from '../Theme'
-import EnvironmentHeader from './EnvironmentHeader'
-import Example from './Example'
-import Guide from './Guide'
-import API from './API'
+import React, { Component } from "react";
+import PropTypes from "prop-types";
+import { Block, InlineBlock } from "jsxstyle";
+import { Link, Route, Redirect, Switch } from "react-router-dom";
+import { LIGHT_GRAY, RED } from "../Theme";
+import EnvironmentHeader from "./EnvironmentHeader";
+import Example from "./Example";
+import Guide from "./Guide";
+import API from "./API";
 
 class EnvironmentLarge extends Component {
   static propTypes = {
     data: PropTypes.object,
     match: PropTypes.object
-  }
+  };
 
   componentDidMount() {
-    this.preloadExamples()
+    this.preloadExamples();
   }
 
   preloadExamples() {
-    const { data } = this.props
-    data.examples.forEach((example) => {
+    const { data } = this.props;
+    data.examples.forEach(example => {
       // native doesn't have `load`
-      if (example.load)
-        example.load(() => {})
+      if (example.load) example.load(() => {});
       // all have `loadSource`
-      if (example.loadSource)
-        example.loadSource(() => {})
-    })
+      if (example.loadSource) example.loadSource(() => {});
+    });
   }
 
   render() {
-    const { data, match } = this.props
+    const { data, match } = this.props;
     return (
       <Block>
-        <Nav data={data} environment={match.params.environment}/>
-        <Content data={data} match={match}/>
+        <Nav data={data} environment={match.params.environment} />
+        <Content data={data} match={match} />
       </Block>
-    )
+    );
   }
 }
 
-const Title = (props) => (
+const Title = props => (
   <Block
     textTransform="uppercase"
     fontWeight="bold"
@@ -49,7 +47,7 @@ const Title = (props) => (
     marginTop="20px"
     {...props}
   />
-)
+);
 
 const Triangle = ({ color }) => (
   <InlineBlock
@@ -61,39 +59,37 @@ const Triangle = ({ color }) => (
     borderBottom="10px solid transparent"
     borderRight={`10px solid ${color}`}
   />
-)
+);
 
-Triangle.propTypes = { color: PropTypes.string }
+Triangle.propTypes = { color: PropTypes.string };
 
 const NavLink = ({ children, to, color, triangleColor }) => (
-  <Route path={to} children={({ match }) => (
-    <Block
-      component={Link}
-      hoverTextDecoration="underline"
-      color={match ? RED : color}
-      position="relative"
-      props={{ to }}
-    >
-      {children}
-      {match && (
-        <Triangle color={triangleColor}/>
-      )}
-    </Block>
-  )}/>
-)
+  <Route
+    path={to}
+    children={({ match }) => (
+      <Block
+        component={Link}
+        hoverTextDecoration="underline"
+        color={match ? RED : color}
+        position="relative"
+        props={{ to }}
+      >
+        {children}
+        {match && <Triangle color={triangleColor} />}
+      </Block>
+    )}
+  />
+);
 
 NavLink.propTypes = {
   children: PropTypes.string,
   to: PropTypes.string,
   color: PropTypes.string,
   triangleColor: PropTypes.string
-}
+};
 
 const NavLinks = ({ data, environment }) => (
-  <Block
-    lineHeight="1.8"
-    padding="10px"
-  >
+  <Block lineHeight="1.8" padding="10px">
     {data.examples && (
       <Block>
         <Title>Examples</Title>
@@ -112,14 +108,15 @@ const NavLinks = ({ data, environment }) => (
 
     <Title>Guides</Title>
     <Block paddingLeft="10px">
-      {data.guides && data.guides.map((item, i) => (
-        <NavLink
-          key={i}
-          to={`/${environment}/guides/${item.title.slug}`}
-          triangleColor="white"
-          children={item.title.text}
-        />
-      ))}
+      {data.guides &&
+        data.guides.map((item, i) => (
+          <NavLink
+            key={i}
+            to={`/${environment}/guides/${item.title.slug}`}
+            triangleColor="white"
+            children={item.title.text}
+          />
+        ))}
     </Block>
 
     <Title>API</Title>
@@ -147,12 +144,12 @@ const NavLinks = ({ data, environment }) => (
       ))}
     </Block>
   </Block>
-)
+);
 
 NavLinks.propTypes = {
   data: PropTypes.object,
   environment: PropTypes.string
-}
+};
 
 const Nav = ({ data, environment }) => (
   <Block
@@ -166,51 +163,48 @@ const Nav = ({ data, environment }) => (
     bottom="0"
     width="250px"
   >
-    <EnvironmentHeader/>
-    <NavLinks
-      data={data}
-      environment={environment}
-    />
+    <EnvironmentHeader />
+    <NavLinks data={data} environment={environment} />
   </Block>
-)
+);
 
 Nav.propTypes = {
   data: PropTypes.object,
   environment: PropTypes.string
-}
+};
 
 const Content = ({ data, match }) => (
   <Block marginLeft="250px">
     <Switch>
       <Route
         path={`${match.path}/api/:mod?/:header?`}
-        render={(props) => (
-          <API key={props.match.params.environment} {...props} data={data}/>
+        render={props => (
+          <API key={props.match.params.environment} {...props} data={data} />
         )}
       />
       <Route
         path={`${match.path}/example/:example`}
-        render={(props) => (
-          <Example {...props} data={data}/>
-        )}
+        render={props => <Example {...props} data={data} />}
       />
       <Route
         path={`${match.path}/guides/:mod/:header?`}
-        render={(props) => (
-          <Guide {...props} data={data}/>
+        render={props => <Guide {...props} data={data} />}
+      />
+      <Route
+        exact
+        path={match.url}
+        render={() => (
+          <Redirect to={`${match.url}/guides/${data.guides[0].title.slug}`} />
         )}
       />
-      <Route exact path={match.url} render={() => (
-        <Redirect to={`${match.url}/guides/${data.guides[0].title.slug}`}/>
-      )}/>
-      <Redirect to={match.url}/>
+      <Redirect to={match.url} />
     </Switch>
   </Block>
-)
+);
 
 Content.propTypes = {
   data: PropTypes.object,
   match: PropTypes.object
-}
+};
 
-export default EnvironmentLarge
+export default EnvironmentLarge;

@@ -9,72 +9,76 @@
  * @flow
  */
 /* eslint no-bitwise: 0 */
-'use strict'
+"use strict";
 
-var normalizeColor = require('normalize-css-color')
+var normalizeColor = require("normalize-css-color");
 
-var invariant = require('invariant')
+var invariant = require("invariant");
 
-type ExtrapolateType = 'extend' | 'identity' | 'clamp';
+type ExtrapolateType = "extend" | "identity" | "clamp";
 
 export type InterpolationConfigType = {
-  inputRange: Array<number>;
-  outputRange: (Array<number> | Array<string>);
-  easing?: ((input: number) => number);
-  extrapolate?: ExtrapolateType;
-  extrapolateLeft?: ExtrapolateType;
-  extrapolateRight?: ExtrapolateType;
+  inputRange: Array<number>,
+  outputRange: Array<number> | Array<string>,
+  easing?: (input: number) => number,
+  extrapolate?: ExtrapolateType,
+  extrapolateLeft?: ExtrapolateType,
+  extrapolateRight?: ExtrapolateType
 };
 
-var linear = (t) => t
+var linear = t => t;
 
 /**
  * Very handy helper to map input ranges to output ranges with an easing
  * function and custom behavior outside of the ranges.
  */
 class Interpolation {
-  static create(config: InterpolationConfigType): (input: number) => number | string {
-
-    if (config.outputRange && typeof config.outputRange[0] === 'string') {
-      return createInterpolationFromStringOutputRange(config)
+  static create(
+    config: InterpolationConfigType
+  ): (input: number) => number | string {
+    if (config.outputRange && typeof config.outputRange[0] === "string") {
+      return createInterpolationFromStringOutputRange(config);
     }
 
-    var outputRange: Array<number> = (config.outputRange: any)
-    checkInfiniteRange('outputRange', outputRange)
+    var outputRange: Array<number> = (config.outputRange: any);
+    checkInfiniteRange("outputRange", outputRange);
 
-    var inputRange = config.inputRange
-    checkInfiniteRange('inputRange', inputRange)
-    checkValidInputRange(inputRange)
+    var inputRange = config.inputRange;
+    checkInfiniteRange("inputRange", inputRange);
+    checkValidInputRange(inputRange);
 
     invariant(
       inputRange.length === outputRange.length,
-      'inputRange (' + inputRange.length + ') and outputRange (' +
-      outputRange.length + ') must have the same length'
-    )
+      "inputRange (" +
+        inputRange.length +
+        ") and outputRange (" +
+        outputRange.length +
+        ") must have the same length"
+    );
 
-    var easing = config.easing || linear
+    var easing = config.easing || linear;
 
-    var extrapolateLeft: ExtrapolateType = 'extend'
+    var extrapolateLeft: ExtrapolateType = "extend";
     if (config.extrapolateLeft !== undefined) {
-      extrapolateLeft = config.extrapolateLeft
+      extrapolateLeft = config.extrapolateLeft;
     } else if (config.extrapolate !== undefined) {
-      extrapolateLeft = config.extrapolate
+      extrapolateLeft = config.extrapolate;
     }
 
-    var extrapolateRight: ExtrapolateType = 'extend'
+    var extrapolateRight: ExtrapolateType = "extend";
     if (config.extrapolateRight !== undefined) {
-      extrapolateRight = config.extrapolateRight
+      extrapolateRight = config.extrapolateRight;
     } else if (config.extrapolate !== undefined) {
-      extrapolateRight = config.extrapolate
+      extrapolateRight = config.extrapolate;
     }
 
-    return (input) => {
+    return input => {
       invariant(
-        typeof input === 'number',
-        'Cannot interpolation an input which is not a number'
-      )
+        typeof input === "number",
+        "Cannot interpolation an input which is not a number"
+      );
 
-      var range = findRange(input, inputRange)
+      var range = findRange(input, inputRange);
       return interpolate(
         input,
         inputRange[range],
@@ -83,9 +87,9 @@ class Interpolation {
         outputRange[range + 1],
         easing,
         extrapolateLeft,
-        extrapolateRight,
-      )
-    }
+        extrapolateRight
+      );
+    };
   }
 }
 
@@ -95,85 +99,85 @@ function interpolate(
   inputMax: number,
   outputMin: number,
   outputMax: number,
-  easing: ((input: number) => number),
+  easing: (input: number) => number,
   extrapolateLeft: ExtrapolateType,
-  extrapolateRight: ExtrapolateType,
+  extrapolateRight: ExtrapolateType
 ) {
-  var result = input
+  var result = input;
 
   // Extrapolate
   if (result < inputMin) {
-    if (extrapolateLeft === 'identity') {
-      return result
-    } else if (extrapolateLeft === 'clamp') {
-      result = inputMin
-    } else if (extrapolateLeft === 'extend') {
+    if (extrapolateLeft === "identity") {
+      return result;
+    } else if (extrapolateLeft === "clamp") {
+      result = inputMin;
+    } else if (extrapolateLeft === "extend") {
       // noop
     }
   }
 
   if (result > inputMax) {
-    if (extrapolateRight === 'identity') {
-      return result
-    } else if (extrapolateRight === 'clamp') {
-      result = inputMax
-    } else if (extrapolateRight === 'extend') {
+    if (extrapolateRight === "identity") {
+      return result;
+    } else if (extrapolateRight === "clamp") {
+      result = inputMax;
+    } else if (extrapolateRight === "extend") {
       // noop
     }
   }
 
   if (outputMin === outputMax) {
-    return outputMin
+    return outputMin;
   }
 
   if (inputMin === inputMax) {
     if (input <= inputMin) {
-      return outputMin
+      return outputMin;
     }
-    return outputMax
+    return outputMax;
   }
 
   // Input Range
   if (inputMin === -Infinity) {
-    result = -result
+    result = -result;
   } else if (inputMax === Infinity) {
-    result = result - inputMin
+    result = result - inputMin;
   } else {
-    result = (result - inputMin) / (inputMax - inputMin)
+    result = (result - inputMin) / (inputMax - inputMin);
   }
 
   // Easing
-  result = easing(result)
+  result = easing(result);
 
   // Output Range
   if (outputMin === -Infinity) {
-    result = -result
+    result = -result;
   } else if (outputMax === Infinity) {
-    result = result + outputMin
+    result = result + outputMin;
   } else {
-    result = result * (outputMax - outputMin) + outputMin
+    result = result * (outputMax - outputMin) + outputMin;
   }
 
-  return result
+  return result;
 }
 
 function colorToRgba(input: string): string {
-  var int32Color = normalizeColor(input)
+  var int32Color = normalizeColor(input);
   if (int32Color === null) {
-   return input
+    return input;
   }
 
-  int32Color = int32Color || 0 // $FlowIssue
+  int32Color = int32Color || 0; // $FlowIssue
 
-  var r = (int32Color & 0xff000000) >>> 24
-  var g = (int32Color & 0x00ff0000) >>> 16
-  var b = (int32Color & 0x0000ff00) >>> 8
-  var a = (int32Color & 0x000000ff) / 255
+  var r = (int32Color & 0xff000000) >>> 24;
+  var g = (int32Color & 0x00ff0000) >>> 16;
+  var b = (int32Color & 0x0000ff00) >>> 8;
+  var a = (int32Color & 0x000000ff) / 255;
 
-  return `rgba(${r}, ${g}, ${b}, ${a})`
+  return `rgba(${r}, ${g}, ${b}, ${a})`;
 }
 
-var stringShapeRegex = /[0-9\.-]+/g
+var stringShapeRegex = /[0-9\.-]+/g;
 
 /**
  * Supports string shapes by extracting numbers so new values can be computed,
@@ -184,12 +188,12 @@ var stringShapeRegex = /[0-9\.-]+/g
  *   -45deg                  // values with units
  */
 function createInterpolationFromStringOutputRange(
-  config: InterpolationConfigType,
+  config: InterpolationConfigType
 ): (input: number) => string {
-  var outputRange: Array<string> = (config.outputRange: any)
-  invariant(outputRange.length >= 2, 'Bad output range')
-  outputRange = outputRange.map(colorToRgba)
-  checkPattern(outputRange)
+  var outputRange: Array<string> = (config.outputRange: any);
+  invariant(outputRange.length >= 2, "Bad output range");
+  outputRange = outputRange.map(colorToRgba);
+  checkPattern(outputRange);
 
   // ['rgba(0, 100, 200, 0)', 'rgba(50, 150, 250, 0.5)']
   // ->
@@ -202,63 +206,65 @@ function createInterpolationFromStringOutputRange(
   /* $FlowFixMe(>=0.18.0): `outputRange[0].match()` can return `null`. Need to
    * guard against this possibility.
    */
-  var outputRanges = outputRange[0].match(stringShapeRegex).map(() => [])
+  var outputRanges = outputRange[0].match(stringShapeRegex).map(() => []);
   outputRange.forEach(value => {
     /* $FlowFixMe(>=0.18.0): `value.match()` can return `null`. Need to guard
      * against this possibility.
      */
     value.match(stringShapeRegex).forEach((number, i) => {
-      outputRanges[i].push(+number)
-    })
-  })
+      outputRanges[i].push(+number);
+    });
+  });
 
   /* $FlowFixMe(>=0.18.0): `outputRange[0].match()` can return `null`. Need to
    * guard against this possibility.
    */
-  var interpolations = outputRange[0].match(stringShapeRegex).map((value, i) => {
-    return Interpolation.create({
-      ...config,
-      outputRange: outputRanges[i]
-    })
-  })
+  var interpolations = outputRange[0]
+    .match(stringShapeRegex)
+    .map((value, i) => {
+      return Interpolation.create({
+        ...config,
+        outputRange: outputRanges[i]
+      });
+    });
 
   // rgba requires that the r,g,b are integers.... so we want to round them, but we *dont* want to
   // round the opacity (4th column).
-  const shouldRound = (/^rgb/).test(outputRange[0])
+  const shouldRound = /^rgb/.test(outputRange[0]);
 
-  return (input) => {
-    var i = 0
+  return input => {
+    var i = 0;
     // 'rgba(0, 100, 200, 0)'
     // ->
     // 'rgba(${interpolations[0](input)}, ${interpolations[1](input)}, ...'
     return outputRange[0].replace(stringShapeRegex, () => {
-      const val = interpolations[i++](input)
-      return String(shouldRound && i < 4 ? Math.round(val) : val)
-    })
-  }
+      const val = interpolations[i++](input);
+      return String(shouldRound && i < 4 ? Math.round(val) : val);
+    });
+  };
 }
 
 function checkPattern(arr: Array<string>) {
-  var pattern = arr[0].replace(stringShapeRegex, '')
+  var pattern = arr[0].replace(stringShapeRegex, "");
   for (var i = 1; i < arr.length; ++i) {
     invariant(
-      pattern === arr[i].replace(stringShapeRegex, ''),
-      'invalid pattern ' + arr[0] + ' and ' + arr[i],
-    )
+      pattern === arr[i].replace(stringShapeRegex, ""),
+      "invalid pattern " + arr[0] + " and " + arr[i]
+    );
   }
 }
 
 function findRange(input: number, inputRange: Array<number>) {
   for (var i = 1; i < inputRange.length - 1; ++i) {
     if (inputRange[i] >= input) {
-      break
+      break;
     }
   }
-  return i - 1
+  return i - 1;
 }
 
 function checkValidInputRange(arr: Array<number>) {
-  invariant(arr.length >= 2, 'inputRange must have at least 2 elements')
+  invariant(arr.length >= 2, "inputRange must have at least 2 elements");
   for (var i = 1; i < arr.length; ++i) {
     invariant(
       arr[i] >= arr[i - 1],
@@ -268,13 +274,13 @@ function checkValidInputRange(arr: Array<number>) {
        * mean this implicit string conversion, you can do something like
        * String(myThing)
        */
-      'inputRange must be monotonically increasing ' + arr
-    )
+      "inputRange must be monotonically increasing " + arr
+    );
   }
 }
 
 function checkInfiniteRange(name: string, arr: Array<number>) {
-  invariant(arr.length >= 2, name + ' must have at least 2 elements')
+  invariant(arr.length >= 2, name + " must have at least 2 elements");
   invariant(
     arr.length !== 2 || arr[0] !== -Infinity || arr[1] !== Infinity,
     /* $FlowFixMe(>=0.13.0) - In the addition expression below this comment,
@@ -283,8 +289,8 @@ function checkInfiniteRange(name: string, arr: Array<number>) {
      * this implicit string conversion, you can do something like
      * String(myThing)
      */
-    name + 'cannot be ]-infinity;+infinity[ ' + arr
-  )
+    name + "cannot be ]-infinity;+infinity[ " + arr
+  );
 }
 
-module.exports = Interpolation
+module.exports = Interpolation;

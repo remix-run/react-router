@@ -8,10 +8,10 @@
  *
  * @flow
  */
-'use strict'
+"use strict";
 
-var _uniqueId = 0
+var _uniqueId = 0;
 
 module.exports = function uniqueId(): string {
-  return String(_uniqueId++)
-}
+  return String(_uniqueId++);
+};

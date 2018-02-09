@@ -1,13 +1,9 @@
-import React from 'react'
-import { Block } from 'jsxstyle'
-import { DARK_GRAY } from '../../Theme'
+import React from "react";
+import { Block } from "jsxstyle";
+import { DARK_GRAY } from "../../Theme";
 
 const Video = () => (
-  <Block
-    background={DARK_GRAY}
-    color="white"
-    padding="80px 0"
-  >
+  <Block background={DARK_GRAY} color="white" padding="80px 0">
     <Block
       height="45vw"
       width="80vw"
@@ -18,12 +14,12 @@ const Video = () => (
       <iframe
         width="100%"
         height="100%"
-        src="https://www.youtube.com/embed/a4kqMQorcnE"
+        src="https://www.youtube.com/embed/cKnc8gXn80Q"
         frameBorder="0"
         allowFullScreen={true}
       />
     </Block>
   </Block>
-)
+);
 
-export default Video
+export default Video;

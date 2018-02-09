@@ -8,19 +8,19 @@
  *
  * @flow
  */
-'use strict'
+"use strict";
 
 var ApplyAnimatedValues = {
   current: function ApplyAnimatedValues(instance, props) {
     if (instance.setNativeProps) {
-      instance.setNativeProps(props)
+      instance.setNativeProps(props);
     } else {
-      return false
+      return false;
     }
   },
   inject(apply) {
-    ApplyAnimatedValues.current = apply
+    ApplyAnimatedValues.current = apply;
   }
-}
+};
 
-module.exports = ApplyAnimatedValues
+module.exports = ApplyAnimatedValues;

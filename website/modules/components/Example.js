@@ -1,8 +1,8 @@
-import React, { Component } from 'react'
-import PropTypes from 'prop-types'
-import WebExample from './WebExample'
-import NativeExample from './NativeExample'
-import { Redirect } from 'react-router-dom'
+import React, { Component } from "react";
+import PropTypes from "prop-types";
+import WebExample from "./WebExample";
+import NativeExample from "./NativeExample";
+import { Redirect } from "react-router-dom";
 
 class Example extends Component {
   static propTypes = {
@@ -13,30 +13,25 @@ class Example extends Component {
         environment: PropTypes.string
       })
     })
-  }
+  };
 
   render() {
     const {
       data,
-      match: {
-        params: {
-          example: exampleParam,
-          environment
-        }
-      }
-    } = this.props
-    const example = data.examples.find(e => e.slug === exampleParam)
-    const isNative = environment === 'native'
+      match: { params: { example: exampleParam, environment } }
+    } = this.props;
+    const example = data.examples.find(e => e.slug === exampleParam);
+    const isNative = environment === "native";
     return example ? (
       isNative ? (
-        <NativeExample example={example}/>
+        <NativeExample example={example} />
       ) : (
-        <WebExample example={example}/>
+        <WebExample example={example} />
       )
     ) : (
-      <Redirect to={`/${environment}/example/${data.examples[0].slug}`}/>
-    )
+      <Redirect to={`/${environment}/example/${data.examples[0].slug}`} />
+    );
   }
 }
 
-export default Example
+export default Example;

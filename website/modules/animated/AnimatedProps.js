@@ -8,76 +8,73 @@
  *
  * @flow
  */
-'use strict'
+"use strict";
 
-var Animated = require('./Animated')
-var AnimatedStyle = require('./AnimatedStyle')
+var Animated = require("./Animated");
+var AnimatedStyle = require("./AnimatedStyle");
 
 class AnimatedProps extends Animated {
   _props: Object;
   _callback: () => void;
 
-  constructor(
-    props: Object,
-    callback: () => void,
-  ) {
-    super()
+  constructor(props: Object, callback: () => void) {
+    super();
     if (props.style) {
       props = {
         ...props,
         style: new AnimatedStyle(props.style)
-      }
+      };
     }
-    this._props = props
-    this._callback = callback
-    this.__attach()
+    this._props = props;
+    this._callback = callback;
+    this.__attach();
   }
 
   __getValue(): Object {
-    var props = {}
+    var props = {};
     for (var key in this._props) {
-      var value = this._props[key]
+      var value = this._props[key];
       if (value instanceof Animated) {
-        props[key] = value.__getValue()
+        props[key] = value.__getValue();
       } else {
-        props[key] = value
+        props[key] = value;
       }
     }
-    return props
+    return props;
   }
 
   __getAnimatedValue(): Object {
-    var props = {}
+    var props = {};
     for (var key in this._props) {
-      var value = this._props[key]
+      var value = this._props[key];
       if (value instanceof Animated) {
-        props[key] = value.__getAnimatedValue()
+        props[key] = value.__getAnimatedValue();
       }
     }
-    return props
+    return props;
   }
 
   __attach(): void {
     for (var key in this._props) {
-      var value = this._props[key]
+      var value = this._props[key];
       if (value instanceof Animated) {
-        value.__addChild(this)
+        value.__addChild(this);
       }
     }
   }
 
   __detach(): void {
     for (var key in this._props) {
-      var value = this._props[key]
+      var value = this._props[key];
       if (value instanceof Animated) {
-        value.__removeChild(this)
+        value.__removeChild(this);
       }
     }
   }
 
   update(): void {
-    this._callback()
+    this._callback();
   }
 }
 
-module.exports = AnimatedProps
+module.exports = AnimatedProps;

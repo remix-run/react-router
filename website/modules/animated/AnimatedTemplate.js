@@ -8,41 +8,41 @@
  *
  * @flow
  */
-'use strict'
+"use strict";
 
-var Animated = require('./Animated')
-var AnimatedWithChildren = require('./AnimatedWithChildren')
+var Animated = require("./Animated");
+var AnimatedWithChildren = require("./AnimatedWithChildren");
 
 class AnimatedTemplate extends AnimatedWithChildren {
   _strings: Array<string>;
   _values: Array;
 
   constructor(strings, values) {
-    super()
-    this._strings = strings
-    this._values = values
+    super();
+    this._strings = strings;
+    this._values = values;
   }
 
   __transformValue(value): any {
     if (value instanceof Animated) {
-      return value.__getValue()
+      return value.__getValue();
     } else {
-      return value
+      return value;
     }
   }
 
   __getValue(): String {
-    var value = this._strings[0]
+    var value = this._strings[0];
     for (var i = 0; i < this._values.length; ++i) {
-      value += this.__transformValue(this._values[i]) + this._strings[1 + i]
+      value += this.__transformValue(this._values[i]) + this._strings[1 + i];
     }
-    return value
+    return value;
   }
 
   __attach(): void {
     for (var i = 0; i < this._values.length; ++i) {
       if (this._values[i] instanceof Animated) {
-        this._values[i].__addChild(this)
+        this._values[i].__addChild(this);
       }
     }
   }
@@ -50,10 +50,10 @@ class AnimatedTemplate extends AnimatedWithChildren {
   __detach(): void {
     for (var i = 0; i < this._values.length; ++i) {
       if (this._values[i] instanceof Animated) {
-        this._values[i].__removeChild(this)
+        this._values[i].__removeChild(this);
       }
     }
   }
 }
 
-module.exports = AnimatedTemplate
+module.exports = AnimatedTemplate;

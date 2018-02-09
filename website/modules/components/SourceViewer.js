@@ -1,8 +1,8 @@
 /*eslint-disable react/no-danger*/
-import React from 'react'
-import PropTypes from 'prop-types'
-import 'prismjs/themes/prism-tomorrow.css'
-import { Block } from 'jsxstyle'
+import React from "react";
+import PropTypes from "prop-types";
+import "prismjs/themes/prism-tomorrow.css";
+import { Block } from "jsxstyle";
 
 const SourceViewer = ({ code, ...rest }) => (
   <Block
@@ -15,10 +15,10 @@ const SourceViewer = ({ code, ...rest }) => (
   >
     <code dangerouslySetInnerHTML={{ __html: code }} />
   </Block>
-)
+);
 
 SourceViewer.propTypes = {
   code: PropTypes.string.isRequired
-}
+};
 
-export default SourceViewer
+export default SourceViewer;

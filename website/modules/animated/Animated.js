@@ -8,7 +8,7 @@
  *
  * @flow
  */
-'use strict'
+"use strict";
 
 // Note(vjeux): this would be better as an interface but flow doesn't
 // support them yet
@@ -16,10 +16,14 @@ class Animated {
   __attach(): void {}
   __detach(): void {}
   __getValue(): any {}
-  __getAnimatedValue(): any { return this.__getValue() }
+  __getAnimatedValue(): any {
+    return this.__getValue();
+  }
   __addChild(child: Animated) {}
   __removeChild(child: Animated) {}
-  __getChildren(): Array<Animated> { return [] }
+  __getChildren(): Array<Animated> {
+    return [];
+  }
 }
 
-module.exports = Animated
+module.exports = Animated;

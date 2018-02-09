@@ -8,12 +8,12 @@
  *
  * @flow
  */
-'use strict'
+"use strict";
 
-var Animated = require('./Animated')
+var Animated = require("./Animated");
 
 function isAnimated(obj) {
-  return obj instanceof Animated
+  return obj instanceof Animated;
 }
 
-module.exports = isAnimated
+module.exports = isAnimated;

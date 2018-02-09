@@ -8,10 +8,10 @@
  *
  * @flow
  */
-'use strict'
+"use strict";
 
-var { View, Image, Text } = require('react-native')
-var Animated = require('../')
+var { View, Image, Text } = require("react-native");
+var Animated = require("../");
 
 // TODO(lmr): inject flattenStyle
 // TODO(lmr): inject InteractionManager
@@ -21,4 +21,4 @@ module.exports = {
   View: Animated.createAnimatedComponent(View),
   Text: Animated.createAnimatedComponent(Text),
   Image: Animated.createAnimatedComponent(Image)
-}
+};

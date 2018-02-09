@@ -1,5 +1,5 @@
-import React from 'react'
-import { Block } from 'jsxstyle'
+import React from "react";
+import { Block } from "jsxstyle";
 
 const Loading = () => (
   <Block
@@ -10,6 +10,6 @@ const Loading = () => (
     bottom="0"
     left="0"
   />
-)
+);
 
-export default Loading
+export default Loading;

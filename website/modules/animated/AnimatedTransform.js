@@ -8,71 +8,71 @@
  *
  * @flow
  */
-'use strict'
+"use strict";
 
-var Animated = require('./Animated')
-var AnimatedWithChildren = require('./AnimatedWithChildren')
+var Animated = require("./Animated");
+var AnimatedWithChildren = require("./AnimatedWithChildren");
 
 class AnimatedTransform extends AnimatedWithChildren {
   _transforms: Array<Object>;
 
   constructor(transforms: Array<Object>) {
-    super()
-    this._transforms = transforms
+    super();
+    this._transforms = transforms;
   }
 
   __getValue(): Array<Object> {
     return this._transforms.map(transform => {
-      var result = {}
+      var result = {};
       for (var key in transform) {
-        var value = transform[key]
+        var value = transform[key];
         if (value instanceof Animated) {
-          result[key] = value.__getValue()
+          result[key] = value.__getValue();
         } else {
-          result[key] = value
+          result[key] = value;
         }
       }
-      return result
-    })
+      return result;
+    });
   }
 
   __getAnimatedValue(): Array<Object> {
     return this._transforms.map(transform => {
-      var result = {}
+      var result = {};
       for (var key in transform) {
-        var value = transform[key]
+        var value = transform[key];
         if (value instanceof Animated) {
-          result[key] = value.__getAnimatedValue()
+          result[key] = value.__getAnimatedValue();
         } else {
           // All transform components needed to recompose matrix
-          result[key] = value
+          result[key] = value;
         }
       }
-      return result
-    })
+      return result;
+    });
   }
 
   __attach(): void {
     this._transforms.forEach(transform => {
       for (var key in transform) {
-        var value = transform[key]
+        var value = transform[key];
         if (value instanceof Animated) {
-          value.__addChild(this)
+          value.__addChild(this);
         }
       }
-    })
+    });
   }
 
   __detach(): void {
     this._transforms.forEach(transform => {
       for (var key in transform) {
-        var value = transform[key]
+        var value = transform[key];
         if (value instanceof Animated) {
-          value.__removeChild(this)
+          value.__removeChild(this);
         }
       }
-    })
+    });
   }
 }
 
-module.exports = AnimatedTransform
+module.exports = AnimatedTransform;

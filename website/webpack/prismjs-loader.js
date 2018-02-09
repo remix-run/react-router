@@ -25,14 +25,14 @@
  * SOFTWARE.
  */
 
-'use strict';
-const Prism = require('prismjs');
+"use strict";
+const Prism = require("prismjs");
 
 module.exports = function loader(content) {
-  const query = this.query
+  const query = this.query;
 
   if (!query.lang) {
-    throw new Error('You need to provide `lang` query parameter');
+    throw new Error("You need to provide `lang` query parameter");
   }
 
   if (!Prism.languages[query.lang]) {

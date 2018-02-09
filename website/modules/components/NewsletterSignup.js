@@ -1,8 +1,8 @@
-import React, { Component } from 'react'
-import PropTypes from 'prop-types'
-import { Block, Flex } from 'jsxstyle'
-import { RED } from '../Theme'
-import SmallScreen from './SmallScreen'
+import React, { Component } from "react";
+import PropTypes from "prop-types";
+import { Block, Flex } from "jsxstyle";
+import { RED } from "../Theme";
+import SmallScreen from "./SmallScreen";
 
 const Button = ({ children, ...props }) => (
   <Block
@@ -18,11 +18,11 @@ const Button = ({ children, ...props }) => (
     children={children}
     {...props}
   />
-)
+);
 
 Button.propTypes = {
   children: PropTypes.node
-}
+};
 
 const Input = ({ margin, ...props }) => (
   <Block
@@ -36,47 +36,47 @@ const Input = ({ margin, ...props }) => (
     props={props}
     margin={margin}
   />
-)
+);
 
 Input.propTypes = {
   margin: PropTypes.any
-}
+};
 
 export default class NewsletterSignup extends Component {
   static propTypes = {
     tags: PropTypes.string.isRequired,
     id: PropTypes.string.isRequired
-  }
+  };
 
   static defaultProps = {
-    tags: '125835',
-    id: '129214'
-  }
+    tags: "125835",
+    id: "129214"
+  };
 
   state = {
     submitted: false,
-    name: '',
-    email: ''
-  }
+    name: "",
+    email: ""
+  };
 
   getReqURI = () => {
-   const info = {
+    const info = {
       id: this.props.id,
-      api_key: '0DZDEQZjU_laOYXzD6cQRA',
+      api_key: "0DZDEQZjU_laOYXzD6cQRA",
       name: this.state.name.trim(),
       email: this.state.email.trim(),
       tags: this.props.tags
-    }
+    };
 
     return Object.keys(info).reduce((prev, next, index) => {
-      const and = index === 0 ? '' : '&'
-      return prev + and + next + '=' + info[next]
-    }, '')
-  }
+      const and = index === 0 ? "" : "&";
+      return prev + and + next + "=" + info[next];
+    }, "");
+  };
 
-  handleSubmit = (e) => {
-    e.preventDefault()
-    window.location.href='https://reacttraining.com/online/react-router'
+  handleSubmit = e => {
+    e.preventDefault();
+    window.location.href = "https://reacttraining.com/online/react-router";
     /*if (this.state.email) {
       const request = new XMLHttpRequest()
       request.open('POST', `//api.convertkit.com/v3/forms/129214/subscribe?${this.getReqURI()}`, true)
@@ -91,41 +91,42 @@ export default class NewsletterSignup extends Component {
       }
       request.send()
     }*/
-  }
+  };
 
-  render () {
-    const { submitted } = this.state
+  render() {
+    const { submitted } = this.state;
     return (
       <SmallScreen>
-        {(isSmallScreen) => (
+        {isSmallScreen => (
           <Block
             background="white"
             maxWidth="700px"
             margin="auto"
-            padding={isSmallScreen ? '40px' : '80px'}
+            padding={isSmallScreen ? "40px" : "80px"}
           >
             <Block
               margin="auto"
-              paddingBottom={isSmallScreen ? '20px' : '40px'}
+              paddingBottom={isSmallScreen ? "20px" : "40px"}
               textAlign="center"
-              fontSize={isSmallScreen ? '100%' : '150%'}
+              fontSize={isSmallScreen ? "100%" : "150%"}
               fontWeight="bold"
             >
-      {/*Sign up to receive updates about React Router, our workshops,
+              {/*Sign up to receive updates about React Router, our workshops,
               online courses, and more:*/}
-              As a companion to the documentation, we'll be launching a free course on React Router v4 within the next few weeks.
+              As a companion to the documentation, we'll be launching a free
+              course on React Router v4 within the next few weeks.
             </Block>
             <form onSubmit={this.handleSubmit}>
               {submitted ? (
-                <Block color='white' textAlign='center'>
+                <Block color="white" textAlign="center">
                   Thank you for signing up :)
                 </Block>
               ) : (
                 <Flex
-                  flexDirection={isSmallScreen ? 'column' : 'row'}
+                  flexDirection={isSmallScreen ? "column" : "row"}
                   justifyContent="space-around"
                 >
-                {/*<Input
+                  {/*<Input
                     value={name}
                     onChange={(e) => this.setState({ name: e.target.value })}
                     type="text"
@@ -151,6 +152,6 @@ export default class NewsletterSignup extends Component {
           </Block>
         )}
       </SmallScreen>
-    )
+    );
   }
 }

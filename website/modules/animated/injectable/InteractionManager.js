@@ -8,7 +8,7 @@
  *
  * @flow
  */
-'use strict'
+"use strict";
 
 var InteractionManager = {
   current: {
@@ -16,8 +16,8 @@ var InteractionManager = {
     clearInteractionHandle: function() {}
   },
   inject(manager) {
-    InteractionManager.current = manager
+    InteractionManager.current = manager;
   }
-}
+};
 
-module.exports = InteractionManager
+module.exports = InteractionManager;
