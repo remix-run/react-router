@@ -14,7 +14,8 @@ class Redirect extends React.Component {
     computedMatch: PropTypes.object, // private, from <Switch>
     push: PropTypes.bool,
     from: PropTypes.string,
-    to: PropTypes.oneOfType([PropTypes.string, PropTypes.object]).isRequired
+    to: PropTypes.oneOfType([PropTypes.string, PropTypes.object]).isRequired,
+    addContext: PropTypes.object
   };
 
   static defaultProps = {
@@ -81,8 +82,13 @@ class Redirect extends React.Component {
 
   perform() {
     const { history } = this.context.router;
-    const { push } = this.props;
+    const { push, addContext } = this.props;
     const to = this.computeTo(this.props);
+
+    if (addContext && this.isStatic()) {
+      const { staticContext } = this.context.router;
+      Object.assign(staticContext, addContext);
+    }
 
     if (push) {
       history.push(to);
