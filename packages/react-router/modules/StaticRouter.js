@@ -6,12 +6,13 @@ import { createPath, parsePath } from "history";
 import Router from "./Router";
 
 const normalizeLocation = object => {
-  const { pathname = "/", search = "", hash = "" } = object;
+  const { pathname = "/", search = "", hash = "", state } = object;
 
   return {
     pathname,
     search: search === "?" ? "" : search,
-    hash: hash === "#" ? "" : hash
+    hash: hash === "#" ? "" : hash,
+    state
   };
 };
 
