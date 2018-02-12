@@ -25,7 +25,7 @@ Will be called with the next `location` and `action` the user is attempting to n
 
 ```jsx
 <Prompt message={location => (
-  `Are you sure you want to go to ${location.pathname}?`
+  location.pathname.startsWith('/app') ? true : `Are you sure you want to go to ${location.pathname}?`
 )}/>
 ```
 
