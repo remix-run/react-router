@@ -1,3 +1,26 @@
+## [Unreleased](https://github.com/ReactTraining/react-router/compare/v4.2.0...master)
+> Like, right now.
+
+- Redirect with parameters ([#5209] by @dlindenkreuz)
+- Fix with missing pathname: `<Link to="?foo=bar">` ([#5489] by @pshrmn)
+- Escape NavLink path to allow special characters in path. ([#5596] by @esiegel)
+- Expose `generatePath` ([#5661] by @rybon)
+- Use named import of history module. ([#5589] by @RoboBurned)
+- Hoist dependencies for smaller UMD builds ([#5720] by @pshrmn)
+- Remove aria-current from navLink when inactive ([#5508] by @AlmeroSteyn)
+- Add invariant for missing "to" property on `<Link>` ([#5792] by @selbekk)
+- Use Prettier on the code ([e6f9017] by @mjackson)
+
+[#5209]: https://github.com/ReactTraining/react-router/pull/5209
+[#5489]: https://github.com/ReactTraining/react-router/pull/5489
+[#5596]: https://github.com/ReactTraining/react-router/pull/5596
+[#5661]: https://github.com/ReactTraining/react-router/pull/5661
+[#5589]: https://github.com/ReactTraining/react-router/pull/5589
+[#5720]: https://github.com/ReactTraining/react-router/pull/5720
+[#5508]: https://github.com/ReactTraining/react-router/pull/5508
+[#5792]: https://github.com/ReactTraining/react-router/pull/5792
+[e6f9017]: https://github.com/ReactTraining/react-router/commit/e6f9017c947b3ae49affa24cc320d0a86f765b55
+
 ## [v4.2.0](https://github.com/ReactTraining/react-router/compare/v4.1.1...v4.2.0)
 > Aug 23, 2017
 
