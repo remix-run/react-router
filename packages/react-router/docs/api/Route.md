@@ -199,5 +199,6 @@ When `true`, will match if the path is __case sensitive__.
 | path | location.pathname | sensitive | matches? |
 | --- | --- | --- | --- |
 | `/one`  | `/one`  | `true` | yes |
-| `/One`  | `/one`  | `false` | no |
+| `/One`  | `/one`  | `true` | no |
+| `/One`  | `/one`  | `false`| yes |
 
