@@ -8,12 +8,12 @@ module.exports = {
   devtool: "source-map",
 
   entry: {
-    app: path.resolve(__dirname, "../modules/index.js"),
+    app: path.resolve(__dirname, "modules/index.js"),
     vendor: ["react", "react-dom"]
   },
 
   output: {
-    path: path.resolve(__dirname, "../build"),
+    path: path.resolve(__dirname, "build"),
     filename: `bundle-[chunkHash].js`,
     chunkFilename: `[name]-[chunkHash].js`,
     publicPath: "/"
@@ -32,7 +32,7 @@ module.exports = {
     new HTMLWebpackPlugin({
       template: "index.html.ejs"
     }),
-    new CopyWebpackPlugin([{ from: path.resolve(__dirname, "../static") }])
+    new CopyWebpackPlugin([{ from: path.resolve(__dirname, "static") }])
   ].concat(
     process.env.NODE_ENV === "production"
       ? [
@@ -46,20 +46,20 @@ module.exports = {
 
   resolve: {
     modules: [
-      path.resolve(__dirname, "../../"),
-      path.resolve(__dirname, "../../node_modules")
+      path.resolve(__dirname, "../"),
+      path.resolve(__dirname, "../node_modules")
     ],
     alias: {
-      "react-router": path.resolve(__dirname, "../../packages/react-router"),
-      "react-router-dom": path.resolve(
-        __dirname,
-        "../modules/ReactRouterDOMShim"
-      )
+      "react-router": path.resolve(__dirname, "../packages/react-router"),
+      "react-router-dom": path.resolve(__dirname, "modules/ReactRouterDOMShim")
     }
   },
 
   resolveLoader: {
-    modules: [path.resolve(__dirname, "../../node_modules"), __dirname]
+    modules: [
+      path.resolve(__dirname, "../node_modules"),
+      path.resolve(__dirname, "webpack")
+    ]
   },
 
   module: {
