@@ -1,7 +1,7 @@
 import React from "react";
 import { Block, Inline } from "jsxstyle";
 import { DARK_GRAY, BRIGHT_GRAY, LIGHT_GRAY } from "../Theme";
-import NewsletterSignup from "./NewsletterSignup";
+import MailingListSignup from "./MailingListSignup";
 
 const FooterLink = ({ href, ...rest }) => (
   <Inline component="a" props={{ href }} {...rest} textDecoration="underline" />
@@ -27,7 +27,7 @@ const year = new Date().getFullYear();
 
 const Footer = () => (
   <Block>
-    <NewsletterSignup />
+    <MailingListSignup />
     <Block
       background={DARK_GRAY}
       color={BRIGHT_GRAY}

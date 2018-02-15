@@ -1,7 +1,6 @@
 {
   "private": true,
   "name": "react-router-website",
-  "version": "4.2.0",
   "scripts": {
     "build": "NODE_ENV=production webpack -p",
     "clean": "git clean -fdX .",
@@ -40,7 +39,9 @@
   "dependencies": {
     "animated": "^0.2.1",
     "cheerio": "^0.22.0",
+    "isomorphic-fetch": "^2.2.1",
     "prop-types": "^15.6.0",
+    "query-string": "^5.1.0",
     "react": "^16.2.0",
     "react-css-property-operations": "^15.4.1",
     "react-dom": "^16.2.0",
