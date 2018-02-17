@@ -22,7 +22,8 @@ Remove the template from below and provide thoughtful commentary *and code sampl
 
 <!-- BUG TEMPLATE -->
 ## Version
-4.1.1
+
+**Please replace this sentence with the React Router version that you are using.**
 
 ## Test Case
 https://codesandbox.io/s/n55VljYk7
