@@ -69,18 +69,20 @@ describe("matchPath", () => {
   describe("cache", () => {
     it("creates a cache entry for each exact/strict pair", () => {
       // true/false and false/true will collide when adding booleans
-      const trueFalse = matchPath("/one/two", {
-        path: "/one/two/",
+      const trueFalse = matchPath("/one/two/", {
+        path: "/one/two",
         exact: true,
         strict: false
       });
-      const falseTrue = matchPath("/one/two", {
-        path: "/one/two/",
-        exact: false,
+      const trueTrue = matchPath("/one/two/", {
+        path: "/one/two",
+        exact: true,
         strict: true
       });
       expect(!!trueFalse).toBe(true);
-      expect(!!falseTrue).toBe(false);
+
+      // this test fails if the cache-key doesn't include exact & strict details
+      expect(!!trueTrue).toBe(false);
     });
   });
 });

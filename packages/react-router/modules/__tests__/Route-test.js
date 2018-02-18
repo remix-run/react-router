@@ -275,19 +275,6 @@ describe("A <Route exact>", () => {
     expect(node.innerHTML).toContain(TEXT);
   });
 
-  it("renders when the URL has trailing slash", () => {
-    const TEXT = "bubblegum";
-    const node = document.createElement("div");
-
-    ReactDOM.render(
-      <MemoryRouter initialEntries={["/somepath"]}>
-        <Route exact path="/somepath/" render={() => <h1>{TEXT}</h1>} />
-      </MemoryRouter>,
-      node
-    );
-
-    expect(node.innerHTML).toContain(TEXT);
-  });
 });
 
 describe("A <Route exact strict>", () => {
@@ -319,6 +306,157 @@ describe("A <Route exact strict>", () => {
     expect(node.innerHTML).not.toContain(TEXT);
   });
 });
+
+describe("with <Route args>", () => {
+  const TEXT = "dragon snot";
+  const roomTemp = "roomTemp"
+  const ARGS = {
+    spicy: 0,
+    stable: { 
+      default: roomTemp,
+      required: true,
+    },
+    sort: {
+      pattern: '(stable|spicy|rating)',
+    }
+  }
+  const yesSpicy="ohYesSpicy"
+  const testWithArgs = ({path:testPath, ...settings}) => {
+    const node = document.createElement("div");
+    const renderSettings = settings.render || {};
+    	
+    if (settings.debug) {
+      console.log(`testing route for url: ${testPath}`);
+      console.log({renderSettings});
+    }
+    ReactDOM.render(
+      <MemoryRouter initialEntries={[testPath]}>
+        <Route
+          args={ARGS}
+          path="/sauces"
+          render={({update,location,history,match,match:{params:{spicy,stable,sort}}}) => {
+            if(renderSettings.updater) renderSettings.updater(update)
+            return <h1>spicy={spicy}, stable={stable}, sort={sort}</h1>
+          }}
+        />
+      </MemoryRouter>,
+      node
+    );
+    return node;
+  }
+  it("supports args", () => {
+    let node = testWithArgs({path:`/sauces.spicy-${yesSpicy}`});
+    expect(node.innerHTML).toContain(yesSpicy);
+  });
+
+  it("exposes default args", () => { 
+    let node = testWithArgs({path:`/sauces`});
+    expect(node.innerHTML).toContain(roomTemp);
+    expect(node.innerHTML).toContain("spicy=0");
+  });
+  
+  it("allows defaults to be overridden to empty, unless required", () => {
+    let node = testWithArgs({path:`/sauces.spicy-,stable-`});
+    expect(node.innerHTML).toContain("spicy=,");
+    expect(node.innerHTML).toContain(roomTemp);
+  })
+  
+  describe("args updater", () => {
+    it("is supported", () => {
+      let updater;
+      let node = testWithArgs({path:`/sauces`, render: {updater: (updateFn) => {
+        updater = updateFn
+      }}});
+      expect(updater).toBeTruthy();
+      let newPath = updater({spicy:yesSpicy,sort:"rating"})
+      expect(newPath).toMatch(`spicy-${yesSpicy}`);
+      expect(newPath).toMatch(`sort-rating`);
+    });
+  })
+
+  describe("with surrounding route context", () => {
+    it("exposes args", () => {
+      const TEXT = "seafood gumbo";
+  
+      const node = document.createElement("div");
+      let updater;
+      let hist;
+      ReactDOM.render(
+        <MemoryRouter initialEntries={[`/seafood/gumbo.spicy-${yesSpicy}/instance/42`]}>
+            <Route
+              path="/seafood"
+              render={({match:m1}) => <h1>Seafood...
+                <Route
+                  args={{okra: "true", spicy: "false"}}
+                  path={`${m1.url}/gumbo`}
+                  render={({match:m2}) => <div>
+                    {TEXT} - okra:{m2.params.okra} - spicy:{m2.params.spicy}
+                    <Route
+                      path={`${m2.url}/instance/:instanceId`}
+                      render={({match:m3}) => <ul><li>instance {m3.params.instanceId}</li></ul>}
+                    />
+                  </div>}
+                />
+              </h1>}
+            />
+
+          </MemoryRouter>,
+          node
+        );
+      expect(node.innerHTML).toContain(TEXT);
+      expect(node.innerHTML).toContain("okra:true");
+      expect(node.innerHTML).toContain(`spicy:${yesSpicy}`);
+      expect(node.innerHTML).toContain(`instance 42`);
+    });
+
+    it("supports incremental update() function for args", () => {
+      const TEXT = "seafood soup";
+  
+      const node = document.createElement("div");
+      let updater;
+      let hist;
+      ReactDOM.render(
+        <MemoryRouter initialEntries={[`/sea[f]ood/cioppino.spicy-${yesSpicy}/instance/21`]}>
+            <Route
+              path="/sea[f]ood"
+              render={({match:m1, history}) => { hist=history; return <h1>Seafood...
+                <Route
+                  args={{octopus: "true", spicy: "false"}}
+                  path={`${m1.url}/cioppino`}
+                  render={({match:m2,update}) => { updater = update; return <div>
+                    {TEXT} - octopus:{m2.params.octopus} - spicy:{m2.params.spicy}
+                    <Route
+                      path={`${m2.url}/instance/:instanceId`}
+                      render={({match:m3}) => <ul><li>instance {m3.params.instanceId}</li></ul>}
+                    />
+                  </div> }}
+                />
+              </h1> }}
+            />
+
+          </MemoryRouter>,
+          node
+        );
+      expect(node.innerHTML).toContain(TEXT);
+      expect(node.innerHTML).toContain(`instance 21`);
+      expect(node.innerHTML).toContain("octopus:true");
+
+      const newUrl = updater({octopus:"false"});
+      expect(newUrl).toMatch("/sea[f]ood")
+      expect(newUrl).toMatch('/cioppino')
+      expect(newUrl).toMatch(`octopus-false`)
+      expect(newUrl).toMatch(`spicy-${yesSpicy}`)
+      expect(newUrl).toMatch("instance/21")
+
+      hist.push(newUrl)
+      expect(node.innerHTML).toContain(`spicy:${yesSpicy}`);
+      expect(node.innerHTML).toContain("octopus:false");
+      expect(node.innerHTML).toContain(`instance 21`);
+    });
+
+  });
+
+})
 
 describe("A <Route location>", () => {
   it("can use a `location` prop instead of `router.location`", () => {
