@@ -282,6 +282,124 @@ describe("A <Switch>", () => {
     expect(node.innerHTML).toMatch(/one/);
   });
 
+  it("does handle fragments", () => {
+    const node = document.createElement("div");
+
+    ReactDOM.render(
+      <MemoryRouter initialEntries={["/two"]}>
+        <Switch>
+          <Route path="/one" render={() => <h1>one</h1>} />
+          <React.Fragment>
+            <Route path="/two" render={() => <h1>two</h1>} />
+          </React.Fragment>
+          <Route path="/three" render={() => <h1>three</h1>} />
+        </Switch>
+      </MemoryRouter>,
+      node
+    );
+
+    expect(node.innerHTML).toMatch(/two/);
+  });
+
+  it("does handle nested fragments", () => {
+    const node = document.createElement("div");
+
+    ReactDOM.render(
+      <MemoryRouter initialEntries={["/three"]}>
+        <Switch>
+          <Route path="/one" render={() => <h1>one</h1>} />
+          <React.Fragment>
+            <Route path="/two" render={() => <h1>two</h1>} />
+            <React.Fragment>
+              {null}
+              <Route path="/three" render={() => <h1>three</h1>} />
+            </React.Fragment>
+          </React.Fragment>
+          <Route path="/four" render={() => <h1>four</h1>} />
+        </Switch>
+      </MemoryRouter>,
+      node
+    );
+
+    expect(node.innerHTML).toMatch(/three/);
+  });
+
+  it("does not stop on nested fragments", () => {
+    const node = document.createElement("div");
+
+    ReactDOM.render(
+      <MemoryRouter initialEntries={["/three"]}>
+        <Switch>
+          <Route path="/one" render={() => <h1>one</h1>} />
+          <React.Fragment>
+            <Route path="/two" render={() => <h1>two</h1>} />
+          </React.Fragment>
+          <Route path="/three" render={() => <h1>three</h1>} />
+        </Switch>
+      </MemoryRouter>,
+      node
+    );
+
+    expect(node.innerHTML).toMatch(/three/);
+  });
+
+  it("does handle arrays", () => {
+    const node = document.createElement("div");
+
+    ReactDOM.render(
+      <MemoryRouter initialEntries={["/two"]}>
+        <Switch>
+          <Route path="/one" render={() => <h1>one</h1>} />
+          {[<Route key={2} path="/two" render={() => <h1>two</h1>} />]}
+          <Route path="/three" render={() => <h1>three</h1>} />
+        </Switch>
+      </MemoryRouter>,
+      node
+    );
+
+    expect(node.innerHTML).toMatch(/two/);
+  });
+
+  it("does handle nested arrays", () => {
+    const node = document.createElement("div");
+
+    ReactDOM.render(
+      <MemoryRouter initialEntries={["/three"]}>
+        <Switch>
+          <Route path="/one" render={() => <h1>one</h1>} />
+          {[
+            <Route key={2} path="/two" render={() => <h1>two</h1>} />,
+            [
+              null,
+              <Route key={3} path="/three" render={() => <h1>three</h1>} />
+            ]
+          ]}
+          <Route path="/four" render={() => <h1>four</h1>} />
+        </Switch>
+      </MemoryRouter>,
+      node
+    );
+
+    expect(node.innerHTML).toMatch(/three/);
+  });
+
+  it("does not stop on nested arrays", () => {
+    const node = document.createElement("div");
+
+    ReactDOM.render(
+      <MemoryRouter initialEntries={["/three"]}>
+        <Switch>
+          <Route path="/one" render={() => <h1>one</h1>} />
+          {[<Route key={2} path="/two" render={() => <h1>two</h1>} />]}
+          <Route path="/three" render={() => <h1>three</h1>} />
+        </Switch>
+      </MemoryRouter>,
+      node
+    );
+
+    expect(node.innerHTML).toMatch(/three/);
+  });
+
   it("throws with no <Router>", () => {
     const node = document.createElement("div");
 
