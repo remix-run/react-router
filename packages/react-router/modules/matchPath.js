@@ -6,6 +6,7 @@ let cacheCount = 0;
 
 const compilePath = (pattern, options) => {
   const cacheKey = `${options.end}${options.strict}${options.sensitive}`;
+  console.log({pattern,options,cacheKey})
   const cache = patternCache[cacheKey] || (patternCache[cacheKey] = {});
 
   if (cache[pattern]) return cache[pattern];
