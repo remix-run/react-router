@@ -10,6 +10,7 @@
 - Remove aria-current from navLink when inactive ([#5508] by @AlmeroSteyn)
 - Add invariant for missing "to" property on `<Link>` ([#5792] by @selbekk)
 - Use Prettier on the code ([e6f9017] by @mjackson)
+- Fix pathless route's match when parent is null ([#5964] by @pshrmn)
 
 [#5209]: https://github.com/ReactTraining/react-router/pull/5209
 [#5489]: https://github.com/ReactTraining/react-router/pull/5489
@@ -20,6 +21,7 @@
 [#5508]: https://github.com/ReactTraining/react-router/pull/5508
 [#5792]: https://github.com/ReactTraining/react-router/pull/5792
 [e6f9017]: https://github.com/ReactTraining/react-router/commit/e6f9017c947b3ae49affa24cc320d0a86f765b55
+[#5964]: https://github.com/ReactTraining/react-router/pull/5964
 
 ## [v4.2.0](https://github.com/ReactTraining/react-router/compare/v4.1.1...v4.2.0)
 > Aug 23, 2017
