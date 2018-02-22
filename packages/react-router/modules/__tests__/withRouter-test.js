@@ -114,4 +114,18 @@ describe("withRouter", () => {
     expect(typeof decorated.foo).toBe("function");
     expect(decorated.foo()).toBe("bar");
   });
+
+  it("renders component wrapped in withRouter even if parent route is not matched", () => {
+    const Component = () => "hello";
+    const ComponentWithRouter = withRouter(Component);
+
+    ReactDOM.render(
+      <MemoryRouter>
+        <Route to="/no-match-route" children={() => <ComponentWithRouter/>}/>
+      </MemoryRouter>,
+      node
+    );
+
+    expect(node.innerHTML).toBe("hello")
+  });
 });
