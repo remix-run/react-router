@@ -2,6 +2,7 @@ import React from "react";
 import ReactDOM from "react-dom";
 import MemoryRouter from "react-router/MemoryRouter";
 import NavLink from "../NavLink";
+import withRouter from "../withRouter";
 
 describe("NavLink", () => {
   const node = document.createElement("div");
@@ -91,6 +92,27 @@ describe("NavLink", () => {
       const a = node.getElementsByTagName("a")[0];
       expect(a.className).toEqual("active");
     });
+
+    it("renders child components that use withRouter", () => {
+      class WrappedComponent extends React.Component {
+        render() {
+          return null;
+        }
+      }
+      const Component = withRouter(WrappedComponent);
+
+      let ref;
+      ReactDOM.render(
+        <MemoryRouter initialEntries={["/pizza"]}>
+          <NavLink to="/pizza">
+            <Component wrappedComponentRef={r => (ref = r)} />
+          </NavLink>
+        </MemoryRouter>,
+        node
+      );
+
+      expect(ref instanceof WrappedComponent).toBe(true);
+    });
   });
 
   describe("When a <NavLink> is not active", () => {
@@ -159,6 +181,27 @@ describe("NavLink", () => {
       );
       const a = node.getElementsByTagName("a")[0];
       expect(a.getAttribute("aria-current")).toBeNull();
+    });
+
+    it("renders child components that use withRouter", () => {
+      class WrappedComponent extends React.Component {
+        render() {
+          return null;
+        }
+      }
+      const Component = withRouter(WrappedComponent);
+
+      let ref;
+      ReactDOM.render(
+        <MemoryRouter initialEntries={["/pizza"]}>
+          <NavLink exact to="/salad">
+            <Component wrappedComponentRef={r => (ref = r)} />
+          </NavLink>
+        </MemoryRouter>,
+        node
+      );
+
+      expect(ref instanceof WrappedComponent).toBe(true);
     });
   });
 
