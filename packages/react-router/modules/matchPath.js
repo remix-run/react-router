@@ -25,15 +25,13 @@ const compilePath = (pattern, options) => {
 /**
  * Public API for matching a URL pathname to a path pattern.
  */
-const matchPath = (pathname, options = {}) => {
+const matchPath = (pathname, options = {}, parent) => {
   if (typeof options === "string") options = { path: options };
 
-  const {
-    path = "/",
-    exact = false,
-    strict = false,
-    sensitive = false
-  } = options;
+  const { path, exact = false, strict = false, sensitive = false } = options;
+
+  if (path == null) return parent;
+
   const { re, keys } = compilePath(path, { end: exact, strict, sensitive });
   const match = re.exec(pathname);
 

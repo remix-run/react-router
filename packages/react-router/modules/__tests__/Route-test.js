@@ -1,5 +1,6 @@
 import React from "react";
 import ReactDOM from "react-dom";
+import PropTypes from "prop-types";
 import { createMemoryHistory } from "history";
 import MemoryRouter from "../MemoryRouter";
 import Router from "../Router";
@@ -386,5 +387,51 @@ describe("A <Route location>", () => {
       push("/chips");
       expect(node.innerHTML).toContain(TEXT);
     });
+  });
+});
+
+describe("A pathless <Route>", () => {
+  let rootContext;
+  const ContextChecker = (props, context) => {
+    rootContext = context;
+    return null;
+  };
+
+  ContextChecker.contextTypes = {
+    router: PropTypes.object
+  };
+
+  afterEach(() => {
+    rootContext = undefined;
+  });
+
+  it("inherits its parent match", () => {
+    const node = document.createElement("div");
+    ReactDOM.render(
+      <MemoryRouter initialEntries={["/somepath"]}>
+        <Route component={ContextChecker} />
+      </MemoryRouter>,
+      node
+    );
+
+    const { match } = rootContext.router.route;
+    expect(match.path).toBe("/");
+    expect(match.url).toBe("/");
+    expect(match.isExact).toBe(false);
+    expect(match.params).toEqual({});
+  });
+
+  it("does not render when parent match is null", () => {
+    const node = document.createElement("div");
+    ReactDOM.render(
+      <MemoryRouter initialEntries={["/somepath"]}>
+        <Route
+          path="/no-match"
+          children={() => <Route component={ContextChecker} />}
+        />
+      </MemoryRouter>,
+      node
+    );
+    expect(rootContext).toBe(undefined);
   });
 });
