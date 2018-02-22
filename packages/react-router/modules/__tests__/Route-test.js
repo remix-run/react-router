@@ -1,5 +1,6 @@
 import React from "react";
 import ReactDOM from "react-dom";
+import PropTypes from "prop-types";
 import { createMemoryHistory } from "history";
 import MemoryRouter from "../MemoryRouter";
 import Router from "../Router";
@@ -389,45 +390,48 @@ describe("A <Route location>", () => {
   });
 });
 
-describe('A pathless <Route>', () => {
-  let rootContext
+describe("A pathless <Route>", () => {
+  let rootContext;
   const ContextChecker = (props, context) => {
-    rootContext = context
-    return null
-  }
+    rootContext = context;
+    return null;
+  };
 
   ContextChecker.contextTypes = {
-    router: React.PropTypes.object
-  }
+    router: PropTypes.object
+  };
 
   afterEach(() => {
-    rootContext = undefined
-  })
+    rootContext = undefined;
+  });
 
-  it('inherits its parent match', () => {
-    const node = document.createElement('div')
-    ReactDOM.render((
-      <MemoryRouter initialEntries={[ '/somepath' ]}>
+  it("inherits its parent match", () => {
+    const node = document.createElement("div");
+    ReactDOM.render(
+      <MemoryRouter initialEntries={["/somepath"]}>
         <Route component={ContextChecker} />
-      </MemoryRouter>
-    ), node)
+      </MemoryRouter>,
+      node
+    );
 
-    const { match } = rootContext.router.route
-    expect(match.path).toBe('/')
-    expect(match.url).toBe('/')
-    expect(match.isExact).toBe(false)
-    expect(match.params).toEqual({})
-  })
+    const { match } = rootContext.router.route;
+    expect(match.path).toBe("/");
+    expect(match.url).toBe("/");
+    expect(match.isExact).toBe(false);
+    expect(match.params).toEqual({});
+  });
 
-  it('does not render when parent match is null', () => {
-    const node = document.createElement('div')
-    ReactDOM.render((
-      <MemoryRouter initialEntries={[ '/somepath' ]}>
-        <Route path='/no-match' children={({ match }) => (
-          <Route component={ContextChecker} />
-        )}/>
-      </MemoryRouter>
-    ), node)
-    expect(rootContext).toBe(undefined)
-  })
-})
+  it("does not render when parent match is null", () => {
+    const node = document.createElement("div");
+    ReactDOM.render(
+      <MemoryRouter initialEntries={["/somepath"]}>
+        <Route
+          path="/no-match"
+          children={() => <Route component={ContextChecker} />}
+        />
+      </MemoryRouter>,
+      node
+    );
+    expect(rootContext).toBe(undefined);
+  });
+});

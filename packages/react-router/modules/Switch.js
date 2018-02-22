@@ -56,7 +56,11 @@ class Switch extends React.Component {
         const path = pathProp || from;
 
         child = element;
-        match = matchPath(location.pathname, { path, exact, strict, sensitive }, route.match);
+        match = matchPath(
+          location.pathname,
+          { path, exact, strict, sensitive },
+          route.match
+        );
       }
     });
 

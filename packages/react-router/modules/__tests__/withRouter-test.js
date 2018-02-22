@@ -49,33 +49,37 @@ describe("withRouter", () => {
     );
   });
 
-  it('works when parent match is null', () => {
-    let injectedProps
-    let parentMatch
+  it("works when parent match is null", () => {
+    let injectedProps;
+    let parentMatch;
 
-    const PropChecker = (props) => {
-      injectedProps = props
-      return null
-    }
+    const PropChecker = props => {
+      injectedProps = props;
+      return null;
+    };
 
-    const WrappedPropChecker = withRouter(PropChecker)
+    const WrappedPropChecker = withRouter(PropChecker);
 
-    const node = document.createElement('div')
-        ReactDOM.render((
-      <MemoryRouter initialEntries={[ '/somepath' ]}>
-        <Route path='/no-match' children={({ match }) => {
-          parentMatch = match
-          return <WrappedPropChecker />
-        }}/>
-      </MemoryRouter>
-    ), node)
+    const node = document.createElement("div");
+    ReactDOM.render(
+      <MemoryRouter initialEntries={["/somepath"]}>
+        <Route
+          path="/no-match"
+          children={({ match }) => {
+            parentMatch = match;
+            return <WrappedPropChecker />;
+          }}
+        />
+      </MemoryRouter>,
+      node
+    );
 
-    expect(parentMatch).toBe(null)
-    expect(injectedProps.match).toBe(null)
-  })
+    expect(parentMatch).toBe(null);
+    expect(injectedProps.match).toBe(null);
+  });
 
-  describe('inside a <StaticRouter>', () => {
-    it('provides the staticContext prop', () => {
+  describe("inside a <StaticRouter>", () => {
+    it("provides the staticContext prop", () => {
       const PropsChecker = withRouter(props => {
         expect(typeof props.staticContext).toBe("object");
         expect(props.staticContext).toBe(context);
