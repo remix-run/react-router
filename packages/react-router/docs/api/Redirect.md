@@ -29,7 +29,7 @@ A location to redirect to. `pathname` can be any valid URL path that [`path-to-r
 
 ```jsx
 <Redirect to={{
-  pathname: '/login',
+  path: '/login',
   search: '?utm=your+face',
   state: { referrer: currentLocation }
 }}/>
