@@ -79,6 +79,17 @@ describe("NavLink", () => {
       expect(a.getAttribute("aria-current")).toEqual("page");
     });
 
+    it("handles locations without a pathname", () => {
+      expect(() => {
+        ReactDOM.render(
+          <MemoryRouter initialEntries={["/pizza"]}>
+            <NavLink to={{ search: "foo=bar" }}>Pizza!</NavLink>
+          </MemoryRouter>,
+          node
+        );
+      }).not.toThrow();
+    });
+
     it("it properly escapes path-to-regexp special characters", () => {
       ReactDOM.render(
         <MemoryRouter initialEntries={["/pizza (1)"]}>
