@@ -1,9 +1,10 @@
 sudo: false
 language: node_js
 node_js:
-  - "node"
-before_script:
-  - npm run build
+  - "8"
+script:
+  - npm i
+  - bash ./scripts/deploy.sh
 cache:
   directories:
     - packages/react-router/node_modules
@@ -14,5 +15,4 @@ cache:
     - website/node_modules
 branches:
   only:
-    - master
-    - next
+    - cn
