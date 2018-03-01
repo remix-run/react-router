@@ -192,6 +192,23 @@ describe("<Route component>", () => {
     expect(node.innerHTML).toContain(TEXT);
   });
 
+  it("renders the react element", () => {
+    const TEXT = "Mrs. Kato";
+    const node = document.createElement("div");
+    const Home = props => <div>{props.text}</div>;
+    const home = React.createElement(Home, {
+      text: TEXT
+    });
+    ReactDOM.render(
+      <MemoryRouter initialEntries={["/"]}>
+        <Route path="/" component={home} />
+      </MemoryRouter>,
+      node
+    );
+
+    expect(node.innerHTML).toContain(TEXT);
+  });
+
   it("receives { match, location, history } props", () => {
     let actual = null;
     const Component = props => (actual = props) && null;

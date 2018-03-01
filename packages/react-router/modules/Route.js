@@ -115,7 +115,14 @@ class Route extends React.Component {
     const location = this.props.location || route.location;
     const props = { match, location, history, staticContext };
 
-    if (component) return match ? React.createElement(component, props) : null;
+    if (component) {
+      if (match) {
+        if (React.isValidElement(component) === true) {
+          return React.cloneElement(component, props);
+        }
+        return React.createElement(component, props);
+      }
+    }
 
     if (render) return match ? render(props) : null;
 
