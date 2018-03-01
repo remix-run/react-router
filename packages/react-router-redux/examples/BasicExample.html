@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html lang="en" xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta charset="utf-8">
+    <title>React Router Redux Example</title>
+    <script src="https://cdn.jsdelivr.net/npm/react@16.2.0/umd/react.production.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/react-dom@16.2.0/umd/react-dom.production.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/prop-types@15.6.1/prop-types.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/react-router@4.2.0/umd/react-router.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/react-router-dom@4.2.2/umd/react-router-dom.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/redux@3.7.2/dist/redux.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/react-redux@5.0.7/dist/react-redux.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/react-router-redux@5.0.0-alpha.9/umd/react-router-redux.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/history@4.7.2/umd/history.min.js"></script>
+  </head>
+  <body>
+    <div id="root"></div>
+    <script>
+      /* <![CDATA[ */
+      /* global document window */
+
+      // This is a simplified/standalone version of: https://github.com/notrab/create-react-app-redux
+
+      // npm i history react react-dom react-redux react-router-dom react-router-redux@next redux
+
+      // import { createElement as h } from "react"
+      // import { render } from "react-dom"
+      // import { Link, Route } from "react-router-dom"
+      // import { applyMiddleware, compose, createStore } from "redux"
+      // import { Provider } from "react-redux"
+      // import { ConnectedRouter, routerReducer, routerMiddleware } from "react-router-redux"
+      // import createHistory from "history/createBrowserHistory"
+
+      const h = window.React.createElement
+      const render = window.ReactDOM.render
+      const { Link, Route } = window.ReactRouterDOM
+      const { applyMiddleware, compose, createStore } = window.Redux
+      const { Provider } = window.ReactRedux
+      const { ConnectedRouter, routerReducer, routerMiddleware } = window.ReactRouterRedux
+      const createHistory = window.History.createBrowserHistory
+
+      const history = createHistory ()
+
+      const enhancers = [applyMiddleware (routerMiddleware (history))]
+
+      if (typeof window.devToolsExtension === "function") {
+        enhancers.push (window.devToolsExtension ())
+      }
+
+      const store = createStore (routerReducer, compose (... enhancers))
+
+      const App = () =>
+        h ("div", {},
+          h ("header", {},
+            h (Link, { "to": "/" }, "Home"),
+            h ("span", {}, " "),
+            h (Link, { "to": "/about" }, "About")
+          ),
+
+          h ("main", {},
+            h (Route, {
+              "component": () =>
+                h ("h1", {}, "Home ",
+                  h (Link, { "to": "/about" }, "About")
+                ),
+              "exact": true,
+              "path": "/"
+            }),
+            h (Route, {
+              "component": () =>
+                h ("h1", {}, "About ",
+                  h (Link, { "to": "/" }, "Home")
+                ),
+              "exact": true,
+              "path": "/about"
+            })
+          )
+        )
+
+      render (
+        h (Provider, { "store": store },
+          h (ConnectedRouter, { "history": history },
+            h (App)
+          )
+        ),
+        document.getElementById ("root")
+      )
+
+      /* ]]> */
+    </script>
+  </body>
+</html>
