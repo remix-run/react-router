@@ -2,6 +2,7 @@ import React, { Component } from "react";
 import PropTypes from "prop-types";
 import { Router } from "react-router";
 
+import assertHistory from "./assertHistory";
 import { LOCATION_CHANGE } from "./reducer";
 
 class ConnectedRouter extends Component {
@@ -25,6 +26,9 @@ class ConnectedRouter extends Component {
 
   componentWillMount() {
     const { store: propsStore, history, isSSR } = this.props;
+
+    assertHistory(history);
+
     this.store = propsStore || this.context.store;
 
     if (!isSSR)

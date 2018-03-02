@@ -1,4 +1,5 @@
 import { CALL_HISTORY_METHOD } from "./actions";
+import assertHistory from "./assertHistory";
 
 /**
  * This middleware captures CALL_HISTORY_METHOD actions to redirect to the
@@ -6,6 +7,8 @@ import { CALL_HISTORY_METHOD } from "./actions";
  * reducer or any middleware that comes after this one.
  */
 export default function routerMiddleware(history) {
+  assertHistory(history);
+
   return () => next => action => {
     if (action.type !== CALL_HISTORY_METHOD) {
       return next(action);
