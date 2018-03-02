@@ -1,8 +1,8 @@
-# 处理更新阻止
+# blocked-updates.md
 
-React Router 有许多位置感知组件，它们使用当前 `location` 对象来确定它们呈现的内容。默认情况下，使用React 的上下文模型将当前 `location` 隐式传递给组件。当 location 发生变化时，这些组件应该使用上下文中的新 `location` 对象重新渲染。
+React Router 有许多位置感知组件，它们使用当前 `location` 对象来确定它们呈现的内容。默认情况下，使用 React 的上下文模型将当前 `location` 隐式传递给组件。当 location 发生变化时，这些组件应该使用上下文中的新 `location` 对象重新渲染。
 
-React 提供了两种方法来优化应用程序的渲染性能： `shouldComponentUpdate` 生命周期方法和 `PureComponent `。除非满足正确的条件，否则都会阻止组件的重新渲染。可惜的是，如果它们的再现被阻止的话，就意味着 React Router 的 location-aware 组件可能会与当前的 location 不同步。
+React 提供了两种方法来优化应用程序的渲染性能： `shouldComponentUpdate` 生命周期方法和 `PureComponent`。除非满足正确的条件，否则都会阻止组件的重新渲染。可惜的是，如果它们的再现被阻止的话，就意味着 React Router 的 location-aware 组件可能会与当前的 location 不同步。
 
 ### 问题的例子
 
@@ -11,7 +11,7 @@ React 提供了两种方法来优化应用程序的渲染性能： `shouldCompon
 ```js
 class UpdateBlocker extends React.PureComponent {
   render() {
-    return this.props.children
+    return this.props.children;
   }
 }
 ```
@@ -21,10 +21,12 @@ class UpdateBlocker extends React.PureComponent {
 ```jsx
 // location = { pathname: '/about' }
 <UpdateBlocker>
-  <NavLink to='/about'>About</NavLink>
-  // <a href='/about' class='active'>About</a>
-  <NavLink to='/faq'>F.A.Q.</NavLink>
-  // <a href='/faq'>F.A.Q.</a>
+  <NavLink to="/about">About</NavLink>
+  // <a href="/about" class="active">
+    About
+  </a>
+  <NavLink to="/faq">F.A.Q.</NavLink>
+  // <a href="/faq">F.A.Q.</a>
 </UpdateBlocker>
 ```
 
@@ -34,10 +36,13 @@ class UpdateBlocker extends React.PureComponent {
 // location = { pathname: '/faq' }
 <UpdateBlocker>
   // the links will not re-render, so they retain their previous attributes
-  <NavLink to='/about'>About</NavLink>
-  // <a href='/about' class='active'>About</a>
-  <NavLink to='/faq'>F.A.Q.</NavLink>
-  // <a href='/faq'>F.A.Q.</a>
+  <NavLink to="/about">About</NavLink>
+  //{" "}
+  <a href="/about" class="active">
+    About
+  </a>
+  <NavLink to="/faq">F.A.Q.</NavLink>
+  // <a href="/faq">F.A.Q.</a>
 </UpdateBlocker>
 ```
 
@@ -53,15 +58,15 @@ class UpdateBlocker extends React.PureComponent {
 
 ```js
 // react-redux
-const MyConnectedComponent = connect(mapStateToProps)(MyComponent)
+const MyConnectedComponent = connect(mapStateToProps)(MyComponent);
 
 // mobx-react
-const MyObservedComponent = observer(MyComponent)
+const MyObservedComponent = observer(MyComponent);
 ```
 
 使用第三方代码，你甚至可能无法控制 `shouldComponentUpdate` 的实现。相反，你必须构造代码以使这些方法的地址变得明显。
 
- `connect` 和 `observer` 都要创建组件，其 `shouldComponentUpdate` 方法对其当前 `props` 和其下一个 `props` 进行浅层比较。这些组件只有在至少有一个属性发生了变化时才会重新渲染。这意味着为了确保他们在 location 发生变化时进行更新，他们需要在 location 发生变化时获得更改的属性。
+`connect` 和 `observer` 都要创建组件，其 `shouldComponentUpdate` 方法对其当前 `props` 和其下一个 `props` 进行浅层比较。这些组件只有在至少有一个属性发生了变化时才会重新渲染。这意味着为了确保他们在 location 发生变化时进行更新，他们需要在 location 发生变化时获得更改的属性。
 
 ### `PureComponent`
 
@@ -71,23 +76,24 @@ React 的 `PureComponent` 没有实现 `shouldComponentUpdate`，但它采取了
 
 #### 快速解决方案
 
-如果您在使用高级组件  `connect`（如 react-redux ）或 `observer` （来自 Mobx ）时遇到此问题，则可以将该组件包装在 withRouter 中以删除被阻塞的更新。
+如果您在使用高级组件 `connect`（如 react-redux ）或 `observer` （来自 Mobx ）时遇到此问题，则可以将该组件包装在 withRouter 中以删除被阻塞的更新。
 
 ```javascript
 // redux before
-const MyConnectedComponent = connect(mapStateToProps)(MyComponent)
+const MyConnectedComponent = connect(mapStateToProps)(MyComponent);
 // redux after
-const MyConnectedComponent = withRouter(connect(mapStateToProps)(MyComponent))
+const MyConnectedComponent = withRouter(connect(mapStateToProps)(MyComponent));
 
 // mobx before
-const MyConnectedComponent = observer(MyComponent)
+const MyConnectedComponent = observer(MyComponent);
 // mobx after
-const MyConnectedComponent = withRouter(observer(MyComponent))
+const MyConnectedComponent = withRouter(observer(MyComponent));
 ```
 
-**这不是最有效的解决方案**, 但可以防止被阻塞的更新问题。有关此解决方案的更多信息，请阅读  [this thread](https://github.com/ReactTraining/react-router/pull/5552#issuecomment-331502281)。
+**这不是最有效的解决方案**, 但可以防止被阻塞的更新问题。有关此解决方案的更多信息，请阅读 [this thread](https://github.com/ReactTraining/react-router/pull/5552#issuecomment-331502281)。
 
 #### 推荐解决方案
+
 建议在 location 更改后避免重新呈现被阻塞的关键是将阻塞组件传递给地址 `location` 作为属性。只要 location 发生变化，就会有所不同，因此通过比较可以检测到当前地址和下一个 location 是不同的。
 
 ```jsx
@@ -140,9 +146,9 @@ This means that given a component that blocks updates, you can easily pass it th
 class Blocker extends React.PureComponent {
   render() {
     <div>
-      <NavLink to='/oz'>Oz</NavLink>
-      <NavLink to='/kansas'>Kansas</NavLink>
-    </div>
+      <NavLink to="/oz">Oz</NavLink>
+      <NavLink to="/kansas">Kansas</NavLink>
+    </div>;
   }
 }
 ```
@@ -152,23 +158,23 @@ class Blocker extends React.PureComponent {
 ```jsx
 // The <Blocker>'s location prop will change whenever
 // the location changes
-<Route path='/:place' component={Blocker}/>
+<Route path="/:place" component={Blocker} />
 ```
 
 2. 直接由 `<Route>` 呈现的组件可以将该 location 属性传递给它创建的任何子元素。
 
 ```jsx
-<Route path='/parent' component={Parent} />
+<Route path="/parent" component={Parent} />;
 
-const Parent = (props) => {
+const Parent = props => {
   // <Parent> receives the location as a prop. Any child
   // element it creates can be passed the location.
   return (
     <SomeComponent>
       <Blocker location={props.location} />
     </SomeComponent>
-  )
-}
+  );
+};
 ```
 
 当组件未被 `<Route>` 呈现时，以及组件在其变量范围内没有 `location` 时会发生什么？你可以采取两种方法将 `location` 自动注入组件中。
@@ -177,22 +183,22 @@ const Parent = (props) => {
 
 ```jsx
 // pathless <Route> = <Blocker> will always be rendered
-const MyComponent= () => (
+const MyComponent = () => (
   <SomeComponent>
     <Route component={Blocker} />
   </SomeComponent>
-)
+);
 ```
 
 2. 你可以使用 `withRouter` 高阶组件封装组件，并将其作为其属性之一给予当前 `location` 。
 
 ```jsx
 // internally, withRouter just renders a pathless <Route>
-const BlockAvoider = withRouter(Blocker)
+const BlockAvoider = withRouter(Blocker);
 
 const MyComponent = () => (
   <SomeComponent>
     <BlockAvoider />
   </SomeComponent>
-)
+);
 ```
