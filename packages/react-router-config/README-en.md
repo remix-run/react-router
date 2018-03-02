@@ -1,19 +1,19 @@
 # React Router Config
 
-React Router 的静态路由配置助手。
+Static route configuration helpers for React Router.
 
-这是阿尔法软件，它需要：
+This is alpha software, it needs:
 
-1. 数据预加载的真实服务器渲染示例
-2. 导航示例
+1. Realistic server rendering example with data preloading
+2. Pending navigation example
 
-## 安装
+## Installation
 
-运用 [npm](https://www.npmjs.com/):
+Using [npm](https://www.npmjs.com/):
 
     $ npm install --save react-router-config
 
-然后使用像 [webpack](https://webpack.github.io/) 这样的模块打包工具，像你使用其他工具一样：
+Then with a module bundler like [webpack](https://webpack.github.io/), use as you would anything else:
 
 ```js
 // using an ES6 transpiler, like babel
@@ -23,32 +23,32 @@ import { matchRoutes, renderRoutes } from "react-router-config";
 var matchRoutes = require("react-router-config").matchRoutes;
 ```
 
-UMD 版本也可在 [unpkg](https://unpkg.com) 上得到：
+The UMD build is also available on [unpkg](https://unpkg.com):
 
 ```html
 <script src="https://unpkg.com/react-router-config/umd/react-router-config.min.js"></script>
 ```
 
-你可以在 `window.ReactRouterConfig` 上找到这个库
+You can find the library on `window.ReactRouterConfig`
 
-## 动机(Motivation)
+## Motivation
 
-随着 React Router v4 的推出，不再有一个集中的路由配置。有一些示例可以了解所有应用程序的潜在 routes ，例如：
+With the introduction of React Router v4, there is no longer a centralized route configuration. There are some use-cases where it is valuable to know about all the app's potential routes such as:
 
-* 从服务器加载数据或者在声明周期之前渲染下一屏幕
-* 通过 name 链接 routes
-* 静态分析
+* Loading data on the server or in the lifecycle before rendering the next screen
+* Linking to routes by name
+* Static analysis
 
-这个 project 旨在为其他( routes )定义一个共享格式来构建模式。
+This project seeks to define a shared format for others to build patterns on top of.
 
 ## Route Configuration Shape
 
-Routes 是与 `<Route>` 具有相同属性的对象，但有一些区别：
+Routes are objects with the same properties as a `<Route>` with a couple differences:
 
-* 只接受 `component` 属性 ( 不接受 `render` 或 `children` )
-* 引入 `routes` key (键) 给子 routes
-* 使用者可以自由添加任何他们想要的 route 的其他 props ，你可以访问 `component` 里的 `props.route` ，这个对象 ( object ) 是用于渲染和匹配对象 ( object ) 的引用。
-* 当从具有相同组件和相同 `key` prop 的 route 进行转换时接受 `key` prop 以防止重载组件
+* the only render prop it accepts is `component` (no `render` or `children`)
+* introduces the `routes` key for sub routes
+* Consumers are free to add any additional props they'd like to a route, you can access `props.route` inside the `component`, this object is a reference to the object used to render and match.
+* accepts `key` prop to prevent remounting component when transition was made from route with the same component and same `key` prop
 
 ```js
 const routes = [
@@ -75,18 +75,18 @@ const routes = [
 ];
 ```
 
-**注意**：就像 `<Route>` 一样，相对路径还没有被支持。当它被支持时，它将在这里得到支持。
+**Note**: Just like `<Route>`, relative paths are not (yet) supported. When it is supported there, it will be supported here.
 
 ## API
 
 ### `matchRoutes(routes, pathname)`
 
-返回一个匹配 routes 的数组。
+Returns an array of matched routes.
 
-#### 参数
+#### Parameters
 
-* routes - route 配置
-* pathname - [pathname](https://developer.mozilla.org/en-US/docs/Web/API/HTMLHyperlinkElementUtils/pathname) 组件的 url。必须为字符串类型的路径。
+* routes - the route configuration
+* pathname - the [pathname](https://developer.mozilla.org/en-US/docs/Web/API/HTMLHyperlinkElementUtils/pathname) component of the url. This must be a decoded string representing the path.
 
 ```js
 import { matchRoutes } from "react-router-config";
@@ -98,10 +98,10 @@ const branch = matchRoutes(routes, "/child/23");
 // ]
 ```
 
-数组中的每项都包含两个属性：`routes` 和 `match`。
+Each item in the array contains two properties: `routes` and `match`.
 
-* `routes`：用于匹配 routes 数组
-* `match`： 传递给 `<Route>` 对象的渲染方法
+* `routes`: A reference to the routes array used to match
+* `match`: The match object that also gets passed to `<Route>` render methods.
 
 ```js
 branch[0].match.url;
@@ -109,7 +109,7 @@ branch[0].match.isExact;
 // etc.
 ```
 
-你可以使用此分支路径来确定在实际渲染之前将渲染什么。你可以在服务器上渲染之前，或在组件的生命周期挂钩，包装你的整个应用程序
+You can use this branch of routes to figure out what is going to be rendered before it actually is rendered. You could do something like this on the server before rendering, or in a lifecycle hook of a component that wraps your entire app
 
 ```js
 const loadBranchData = (location) => {
@@ -189,11 +189,11 @@ import routes from './routes'
 </BrowserRouter>
 ```
 
-再次，这是所有的伪代码。有很多方法可以使用数据和待定导航进行服务器呈现，但我们尚未解决。这里的要点是 `matchRoutes` 让你有机会在渲染生命周期外进行静态匹配。我们希望最终制作一个这种方法的演示应用程序。
+Again, that's all pseudo-code. There are a lot of ways to do server rendering with data and pending navigation and we haven't settled on one. The point here is that `matchRoutes` gives you a chance to match statically outside of the render lifecycle. We'd like to make a demo app of this approach eventually.
 
 ### `renderRoutes(routes, extraProps = {}, switchProps = {})`
 
-为了确保使用 `matchRoutes` 与渲染内部的渲染结果在同一个分支之外进行匹配，必须在组件内使用 `renderRoutes` 而不是 `<Route>`。你仍然可以渲染一个 `<Route>` ，但是知道它不会在渲染之外的 `matchRoutes` 中。
+In order to ensure that matching outside of render with `matchRoutes` and inside of render result in the same branch, you must use `renderRoutes` instead of `<Route>` inside your components. You can render a `<Route>` still, but know that it will not be accounted for in `matchRoutes` outside of render.
 
 ```js
 import { renderRoutes } from "react-router-config";
