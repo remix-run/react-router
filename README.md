@@ -20,3 +20,4 @@
 * 如果需要进行任何商业推广，请接洽**印记中文负责人李成熙**([lcxfs1991](https://github.com/lcxfs1991))（QQ: 249806703 && 邮箱：[lcxfs1991@gmail.com](mailto:lcxfs1991@gmail.com)），我们将给出积极的回应。
 
 # react-router
+[![Build Status](https://travis-ci.org/docschina/react-router.cn.svg?branch=cn)](https://travis-ci.org/docschina/react-router.cn)
