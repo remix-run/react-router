@@ -12,11 +12,11 @@ const Video = () => (
       boxShadow="0px 10px 30px hsla(0, 0%, 0%, 0.5)"
     >
       <iframe
-        frameborder="0"
+        frameBorder="0"
         width="100%"
         height="100%"
         src="https://v.qq.com/iframe/player.html?vid=f0562kt6cds&tiny=0&auto=0"
-        allowfullscreen
+        allowFullScreen
       />
     </Block>
   </Block>
