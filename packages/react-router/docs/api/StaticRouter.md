@@ -36,7 +36,7 @@ createServer((req, res) => {
 }).listen(3000)
 ```
 
-## basename: 字符串
+## basename: string
 
 所有位置的基本网址。一个正确的命名格式应该有一个前导斜线，而不是后面的斜线。
 
@@ -46,7 +46,7 @@ createServer((req, res) => {
 </StaticRouter>
 ```
 
-## location: 字符串
+## location: string
 
 服务器收到的URL,或许 `req.url` 会位于节点服务器上。
 
@@ -56,7 +56,7 @@ createServer((req, res) => {
 </StaticRouter>
 ```
 
-## location: 对象
+## location: object
 
 一个位置对象形似 `{ pathname, search, hash, state }`。
 
@@ -66,7 +66,7 @@ createServer((req, res) => {
 </StaticRouter>
 ```
 
-## context: 对象
+## context: object
 
 一个普通的 JavaScript 对象。在渲染过程中，组件可以向对象添加属性，用来存储有关渲染的信息。
 
@@ -87,6 +87,6 @@ if(context.status === '404') {
 }
 ```
 
-## children: 节点
+## children: node
 
 一个用来渲染的 [单一的子元素](https://facebook.github.io/react/docs/react-api.html#react.children.only)。 
