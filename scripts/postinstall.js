@@ -8,7 +8,7 @@ const exec = (cmd, env) =>
 
 if (process.env.CI) {
   exec(
-    "lerna bootstrap --stream --ignore react-router-website --hoist --nohoist react-native --nohoist react-test-renderer"
+    "lerna bootstrap --stream --hoist --nohoist react-native --nohoist react-test-renderer"
   );
 } else {
   exec(

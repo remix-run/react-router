@@ -1,45 +1,23 @@
-<p align="center">
-  <a href="https://reacttraining.com/react-router/">
-    <img alt="react-router" src="https://reacttraining.com/react-router/android-chrome-144x144.png" width="144">
+<div align="center">
+  <a href="https://docschina.org">
+    <img width="200" heigth="200" src="http://p4w4o0hm6.bkt.clouddn.com/image/png/site.png">
   </a>
-</p>
+</div>
 
-<h3 align="center">
-  React Router
-</h3>
+<h2 align="center">主要链接</h2>
 
-<p align="center">
-  Declarative routing for <a href="https://facebook.github.io/react">React</a>
-</p>
+* 首页链接：https://docschina.org
+* git 仓库：https://github.com/docschina
+* 群聊：https://docschina.org/talk
+* 团队：https://docschina.org/team
+* gitter：https://gitter.im/docschina
+* slack：https://docschina.slack.com/
 
-<p align="center">
-  <a href="https://www.npmjs.com/package/react-router"><img src="https://img.shields.io/npm/v/react-router.svg?style=flat-square"></a>
-  <a href="https://www.npmjs.com/package/react-router"><img src="https://img.shields.io/npm/dm/react-router.svg?style=flat-square"></a>
-  <a href="https://travis-ci.org/ReactTraining/react-router"><img src="https://img.shields.io/travis/ReactTraining/react-router/master.svg?style=flat-square"></a>
-</p>
+<h2 align="center">授权方式</h2>
 
-## Docs
+* 印记中文所有的翻译文档，统一遵循 [“保留署名—非商用”创意共享 4.0 许可证（CC BY-NC 4.0）](https://creativecommons.org/licenses/by-nc/4.0/deed.zh) 授权方式。
+* 你不用知会我们就可以转载，但**必须保持署名为“印记中文”，以及链接到 [https://docschina.org](https://docschina.org) ，并且不得去掉本页入口链接，也不得修改文档内容），并且不得用于商业目的**。
+* 如果需要进行任何商业推广，请接洽**印记中文负责人李成熙**([lcxfs1991](https://github.com/lcxfs1991))（QQ: 249806703 && 邮箱：[lcxfs1991@gmail.com](mailto:lcxfs1991@gmail.com)），我们将给出积极的回应。
 
-**[View the docs here](https://reacttraining.com/react-router)**
-
-[Migrating from 2.x/3.x?](/packages/react-router/docs/guides/migrating.md)
-
-[3.x docs](https://github.com/ReactTraining/react-router/blob/v3/docs)
-
-[2.x docs](https://github.com/ReactTraining/react-router/blob/v2.8.1/docs)
-
-## Packages
-
-This repository is a monorepo that we manage using [Lerna](https://github.com/lerna/lerna). That means that we actually publish [several packages](/packages) to npm from the same codebase, including:
-
-| Package                                                | Version                                                                                                                                   | Docs                                                                                                                                                                                                                                                                          | Description                                                                        |
-| ------------------------------------------------------ | ----------------------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------- |
-| [`react-router`](/packages/react-router)               | [![npm](https://img.shields.io/npm/v/react-router.svg?style=flat-square)](https://www.npmjs.com/package/react-router)                     | [![](https://img.shields.io/badge/API%20Docs-site-green.svg?style=flat-square)](https://reacttraining.com/react-router/core/guides/quick-start) [![](https://img.shields.io/badge/API%20Docs-markdown-lightgrey.svg?style=flat-square)](/packages/react-router/docs)          | The core of React Router                                                           |
-| [`react-router-dom`](/packages/react-router-dom)       | [![npm](https://img.shields.io/npm/v/react-router-dom.svg?style=flat-square)](https://www.npmjs.com/package/react-router-dom)             | [![](https://img.shields.io/badge/API%20Docs-site-green.svg?style=flat-square)](https://reacttraining.com/react-router/web/guides/quick-start) [![](https://img.shields.io/badge/API%20Docs-markdown-lightgrey.svg?style=flat-square)](/packages/react-router-dom/docs)       | DOM bindings for React Router                                                      |
-| [`react-router-native`](/packages/react-router-native) | [![npm](https://img.shields.io/npm/v/react-router-native.svg?style=flat-square)](https://www.npmjs.com/package/react-router-native)       | [![](https://img.shields.io/badge/API%20Docs-site-green.svg?style=flat-square)](https://reacttraining.com/react-router/native/guides/quick-start) [![](https://img.shields.io/badge/API%20Docs-markdown-lightgrey.svg?style=flat-square)](/packages/react-router-native/docs) | [React Native](https://facebook.github.io/react-native/) bindings for React Router |
-| [`react-router-redux`](/packages/react-router-redux)   | [![npm](https://img.shields.io/badge/npm-v5.0.0--alpha.7-orange.svg?style=flat-square)](https://www.npmjs.com/package/react-router-redux) | [![](https://img.shields.io/badge/API%20Docs-readme-orange.svg?style=flat-square)](/packages/react-router-redux/#readme)                                                                                                                                                      | Integration with React Router and Redux                                            |
-| [`react-router-config`](/packages/react-router-config) | [![npm](https://img.shields.io/npm/v/react-router-config.svg?style=flat-square)](https://www.npmjs.com/package/react-router-config)       | [![](https://img.shields.io/badge/API%20Docs-readme-orange.svg?style=flat-square)](/packages/react-router-config/#readme)                                                                                                                                                     | Static route config helpers                                                        |
-
-## About
-
-`react-router` is developed and maintained by [React Training](https://reacttraining.com) and many [amazing contributors](https://github.com/ReactTraining/react-router/graphs/contributors). If you're interested in learning more about what React can do for your company, please [get in touch](mailto:hello@reacttraining.com)!
+# react-router
+[![Build Status](https://travis-ci.org/docschina/react-router.cn.svg?branch=cn)](https://travis-ci.org/docschina/react-router.cn)

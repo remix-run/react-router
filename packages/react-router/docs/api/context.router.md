@@ -1,5 +1,5 @@
 # context.router
 
-React Router uses `context.router` to facilitate communication between a `<Router>` and its descendant [`<Route>`](Route.md)s, [`<Link>`](../../../react-router-dom/docs/api/Link.md)s, [`<Prompt>`](Prompt.md)s, etc.  
+React Router 使用 context.router 来促进 `<Router>` 及其后代 [`<Route>`](Route.md)，[`<Link>`](../../../react-router-dom/docs/api/Link.md)，[`<Prompt>`](Prompt.md) 等之间的通信。
 
-`context.router` should not be considered public API. Since context itself is an experimental API and may change in a future release of React, you should avoid accessing `this.context.router` directly in your components. Instead, you can access the variables we store on context through the props that are passed to your [`<Route>`](Route.md) component or a component wrapped in [`withRouter`](withRouter.md).
+context.router 不应被视为公共 API。由于上下文本身是一个实验性的 API，并且可能在未来的 React 版本中发生变化，所以应避免直接在组件中访问 `this.context.router`。相反，您可以通过传递给 [`<Route>`](Route.md) 组件或使用 [`withRouter`](withRouter.md) 包裹组件来访问我们在上下文中存储的变量。

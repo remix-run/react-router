@@ -7,7 +7,7 @@ const exec = (cmd, env) =>
   });
 
 if (process.env.CI) {
-  exec("lerna run build --stream --ignore react-router-website");
+  exec("lerna run build --stream");
 } else {
   exec("lerna run build --stream");
 }

@@ -1,10 +1,9 @@
 # &lt;Switch>
+渲染与该地址匹配的第一个子节点 `<Route>` 或者 `<Redirect>`。
 
-Renders the first child [`<Route>`](Route.md) or [`<Redirect>`](Redirect.md) that matches the location.
+**呈现第一个子级 `<Route>` 或 `<Redirect>` 与位置匹配的?**
 
-**How is this different than just using a bunch of `<Route>`s?**
-
-`<Switch>` is unique in that it renders a route *exclusively*. In contrast, every `<Route>` that matches the location renders *inclusively*. Consider this code:
+`<Switch>` 的独特之处在于它专门呈现路由。相比之下，与位置匹配的每个 `<Route>` 都已包含方式呈现。请考虑以下代码
 
 ```jsx
 <Route path="/about" component={About}/>
@@ -12,9 +11,7 @@ Renders the first child [`<Route>`](Route.md) or [`<Redirect>`](Redirect.md) tha
 <Route component={NoMatch}/>
 ```
 
-If the URL is `/about`, then `<About>`, `<User>`, and `<NoMatch>` will all render because they all match the path. This is by design, allowing us to compose `<Route>`s into our apps in many ways, like sidebars and breadcrumbs, bootstrap tabs, etc.
-
-Occasionally, however, we want to pick only one `<Route>` to render. If we're at `/about` we don't want to also match `/:user` (or show our "404" page). Here's how to do it with `Switch`:
+如果 URL 是 `/about` ， 那么 `<About>` ， `<User>` ， `<NoMatch>`将全部渲染，因为他们都与路径匹配。这是通过设计实现的，允许我们以多种方式将 `<Route>` 组合到应用程序中，类似侧边栏（sidebars）和面包屑导（breadcrumbs）， bootstrap标签等等，有时我们只想选择一条 `<Route >` 进行渲染，如果我们在 `/about` ，我们又不想匹配 `/:user` （或者显示404）。以下是如何使用 `Switch` 执行此操作:
 
 ```jsx
 import { Switch, Route } from 'react-router'
@@ -27,9 +24,9 @@ import { Switch, Route } from 'react-router'
 </Switch>
 ```
 
-Now, if we're at `/about`, `<Switch>` will start looking for a matching `<Route>`. `<Route path="/about"/>` will match and `<Switch>` will stop looking for matches and render `<About>`. Similarly, if we're at `/michael` then `<User>` will render.
+现在，如果我们在 `/about` ，`<Switch>` 将开始查找匹配的  `<Route>` ，`<Route path="/about”/><Switch>` 将停止查找匹配项并渲染 `<About>` ，同样，如果是 `/Michael` ，则 `< User >` 将渲染。
 
-This is also useful for animated transitions since the matched `<Route>` is rendered in the same position as the previous one.
+这对于动画过渡效果也很有用，因为匹配的 `<Route>` 被渲染到与前一个位置相同的位置
 
 ```jsx
 <Fade>
@@ -51,17 +48,16 @@ This is also useful for animated transitions since the matched `<Route>` is rend
 
 ## location: object
 
-A [`location`](./location.md) object to be used for matching children elements instead of the current history location (usually the current browser URL).
+用于匹配子元素而不是当前历史位置（通常是当前浏览器 URL ）的位置对象。
 
-## children: node
+## children: nodex
 
-All children of a `<Switch>` should be `<Route>` or `<Redirect>` elements. Only the first child to match the current location will be rendered.
+`<Switch>` 的所有子级都应该是 `<Route>` 或 `<Redirect>` 元素。将呈现当前位置匹配的第一个子级。
 
-`<Route>` elements are matched using their `path` prop and `<Redirect>` elements are matched using their `from` prop. A `<Route>` with no `path` prop or a `<Redirect>` with no `from` prop will always match the current location.
+`<Route>` 元素使用其路径进行匹配， `<Redirect>` 元素使用其 `from` 进行匹配，不带路径的 `<Route>` 或
+不带 `from` 的 `<Redirect>` 将始终与当前路径匹配。
 
-When you include a `<Redirect>` in a `<Switch>`, it can use any of the `<Route>`'s location matching props: `path`, `exact`, and `strict`. `from` is just an alias for the `path` prop.
-
-If a `location` prop is given to the `<Switch>`, it will override the `location` prop on the matching child element.
+在 `<Redirect>` 包含 `<Switch>` 时，它可以使用 `<Route >` 的任何位置匹配路径，准确的来说， `from` 只是路径属性的别名，如果为 `<Switch>` 提供了位置支持，它将覆盖匹配子元素上的位置。
 
 ```jsx
 <Switch>
@@ -73,3 +69,4 @@ If a `location` prop is given to the `<Switch>`, it will override the `location`
   <Route component={NoMatch}/>
 </Switch>
 ```
+
