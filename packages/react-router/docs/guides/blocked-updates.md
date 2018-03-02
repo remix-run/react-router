@@ -1,4 +1,4 @@
-# blocked-updates.md
+# Dealing with Update Blocking
 
 React Router 有许多位置感知组件，它们使用当前 `location` 对象来确定它们呈现的内容。默认情况下，使用 React 的上下文模型将当前 `location` 隐式传递给组件。当 location 发生变化时，这些组件应该使用上下文中的新 `location` 对象重新渲染。
 
