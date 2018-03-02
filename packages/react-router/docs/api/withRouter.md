@@ -58,7 +58,7 @@ compose(
 所有 non-react 的特定静态方法和包装组件的属性都被复制到 "connected" 组件中。
 
 
-## 组件.WrappedComponent
+## Component.WrappedComponent
 
 被包装的组件作为返回组件上的静态属性   `WrappedComponent` 公开，该属性可用与在其他组件中隔离测试组件。
 
