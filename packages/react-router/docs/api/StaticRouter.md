@@ -1,10 +1,10 @@
 # &lt;StaticRouter>
 
-A [`<Router>`](Router.md) that never changes location.
+一个永不改变地址的 [`<Router>`](Router.md)。
 
-This can be useful in server-side rendering scenarios when the user isn't actually clicking around, so the location never actually changes. Hence, the name: static. It's also useful in simple tests when you just need to plug in a location and make assertions on the render output.
+当用户没有真正点击时，它对于服务器端渲染脚本是有帮助的，因此该位置实际上并未发生变化。由此命名：静态。当你只需要插入一个位置并且在渲染输出上作出断言时，它在简单测试中也很有用。
 
-Here's an example node server that sends a 302 status code for [`<Redirect>`](Redirect.md)s and regular HTML for other requests:
+以下是一个节点服务器示例，它为 [`<Redirect>`](Redirect.md) 发送302状态码，并为其他请求发送常规的 HTML。
 
 ```jsx
 import { createServer } from 'http'
@@ -14,7 +14,7 @@ import { StaticRouter } from 'react-router'
 
 createServer((req, res) => {
 
-  // This context object contains the results of the render
+  // 这个上下文对象包含渲染结果
   const context = {}
 
   const html = ReactDOMServer.renderToString(
@@ -23,7 +23,7 @@ createServer((req, res) => {
     </StaticRouter>
   )
 
-  // context.url will contain the URL to redirect to if a <Redirect> was used
+  // 如果一个 <Redirect> 被使用，context.url 将包含 URL 重定向
   if (context.url) {
     res.writeHead(302, {
       Location: context.url
@@ -36,9 +36,9 @@ createServer((req, res) => {
 }).listen(3000)
 ```
 
-## basename: string
+## basename: 字符串
 
-The base URL for all locations. A properly formatted basename should have a leading slash, but no trailing slash.
+所有位置的基本网址。一个正确的命名格式应该有一个前导斜线，而不是后面的斜线。
 
 ```jsx
 <StaticRouter basename="/calendar">
@@ -46,9 +46,9 @@ The base URL for all locations. A properly formatted basename should have a lead
 </StaticRouter>
 ```
 
-## location: string
+## location: 字符串
 
-The URL the server received, probably `req.url` on a node server.
+服务器收到的URL,或许 `req.url` 会位于节点服务器上。
 
 ```jsx
 <StaticRouter location={req.url}>
@@ -56,9 +56,9 @@ The URL the server received, probably `req.url` on a node server.
 </StaticRouter>
 ```
 
-## location: object
+## location: 对象
 
-A location object shaped like `{ pathname, search, hash, state }`
+一个位置对象形似 `{ pathname, search, hash, state }`。
 
 ```jsx
 <StaticRouter location={{ pathname: '/bubblegum' }}>
@@ -66,9 +66,9 @@ A location object shaped like `{ pathname, search, hash, state }`
 </StaticRouter>
 ```
 
-## context: object
+## context: 对象
 
-A plain JavaScript object. During the render, components can add properties to the object to store information about the render.
+一个普通的 JavaScript 对象。在渲染过程中，组件可以向对象添加属性，用来存储有关渲染的信息。
 
 ```jsx
 const context = {}
@@ -77,9 +77,9 @@ const context = {}
 </StaticRouter>
 ```
 
-When a `<Route>` matches, it will pass the context object to the component it renders as the `staticContext` prop. Check out the [Server Rendering guide](../../../react-router-dom/docs/guides/server-rendering.md) for more information on how to do this yourself.
+当一个 `<Route>` 匹配时，它会将上下文对象传递给作为 `staticContext` 属性渲染的组件。查看 [Server Rendering guide](../../../react-router-dom/docs/guides/server-rendering.md) 来获得更多有关如何自行完成此操作的信息。
 
-After the render, these properties can be used to to configure the server's response.
+渲染之后，可以使用这些属性来配置服务器的响应。
 
 ```js
 if(context.status === '404') {
@@ -87,6 +87,6 @@ if(context.status === '404') {
 }
 ```
 
-## children: node
+## children: 节点
 
-A [single child element](https://facebook.github.io/react/docs/react-api.html#react.children.only) to render.
+一个用来渲染的 [单一的子元素](https://facebook.github.io/react/docs/react-api.html#react.children.only)。 

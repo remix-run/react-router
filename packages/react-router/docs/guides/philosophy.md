@@ -1,10 +1,10 @@
-# Philosophy
+# 原理
 
-This guide's purpose is to explain the mental model to have when using React Router. We call it "Dynamic Routing", which is quite different from the "Static Routing" you're probably more familiar with.
+本指南的目的是解释在使用 React Router 时的构思模型。 我们称之为“动态路由”，它与你可能更熟悉的“静态路由”截然不同。
 
-## Static Routing
+## 静态路由
 
-If you've used Rails, Express, Ember, Angular etc. you've used static routing. In these frameworks, you declare your routes as part of your app's initialization before any rendering takes place. React Router pre-v4 was also static (mostly). Let's take a look at how to configure routes in express:
+如果你使用过 Rails，Express，Ember，Angular 等，那么你应该熟悉静态路由。 在这些框架中，你的路由声明应该为程序初始化中的一部分，在任何渲染之前。 React Router pre-v4 也是静态的（主要是）。 我们来看看如何用 express 来配置路由：
 
 ```js
 app.get('/', handleIndex)
@@ -15,7 +15,7 @@ app.get('/invoices/:id/edit', handleInvoiceEdit)
 app.listen()
 ```
 
-Note how the routes are declared before the app listens. The client side routers we've used are similar. In Angular you declare your routes up front and then import them to the top-level `AppModule` before rendering:
+请注意路由在应用程序监听之前是如何声明的。 我们使用的客户端路由器类似。 在 Angular 中，你先声明你的路由，然后在渲染之前将它们导入到顶层`AppModule` ：
 
 ```js
 const appRoutes: Routes = [
@@ -47,9 +47,7 @@ const appRoutes: Routes = [
 export class AppModule { }
 ```
 
-Ember has a conventional `routes.js` file that the build reads and
-imports into the application for you. Again, this happens before
-your app renders.
+Ember 在你的应用程序中构建并读取一个常规的 `routes.js` 文件。 同样，这发生在你的应用程序渲染之前。
 
 ```js
 Router.map(function() {
@@ -63,23 +61,29 @@ Router.map(function() {
 export default Router
 ```
 
-Though the APIs are different, they all share the model of "static routes". React Router also followed that lead up until v4.
+虽然API不同，但它们的模式都是“静态路由”。 React Router也一直保持这种模式，直到升级至v4版本。
 
-To be successful with React Router, you need to forget all that! :O
+要成功的使用React Router，你需要忘记这种模式！：o
 
-## Backstory
 
-To be candid, we were pretty frustrated with the direction we'd taken React Router by v2. We (Michael and Ryan) felt limited by the API, recognized we were reimplementing parts of React (lifecycles, and more), and it just didn't match the mental model React has given us for composing UI.
 
-We were walking through the hallway of a hotel just before a workshop discussing what to do about it. We asked each other: "What would it look like if we built the router using the patterns we teach in our workshops?"
+## 背景故事
 
-It was only a matter of hours into development that we had a proof-of-concept that we knew was the future we wanted for routing. We ended up with API that wasn't "outside" of React, an API that composed, or naturally fell into place, with the rest of React. We think you'll love it.
+坦率地说，我们对我们在第2版采用 React Router 的方向感到非常沮丧。 我们（ Michael 和 Ryan ）受 API 的限制，在我们重构 React（生命周期等）的部分内容时，都认为它与 React 编写UI的构思模型不匹配。
 
-## Dynamic Routing
+在研讨会讨论如何处理之前，我们正走在一家旅馆的走廊， 我们互相问：“如果我们使用在研讨会上研讨的模式构建路由器，看起来会是什么样子？”
 
-When we say dynamic routing, we mean routing that takes place **as your app is rendering**, not in a configuration or convention outside of a running app.  That means almost everything is a component in React Router. Here's a 60 second review of the API to see how it works:
+开发过程只有几个小时，我们就有了一个概念证明，我们知道这是我们希望的路由的未来。我们最终得到的 API 不在 React 的“外部”，这是一个与 React 的其余部分组成或自然放置到位的 API。我们想你会喜欢的。
 
-First, grab yourself a `Router` component for the environment you're targeting and render it at the top of your app.
+
+
+## 动态路由
+
+当我们说动态路由时，我们指的是在**应用程序渲染时**发生的路由，而不是在运行应用程序之外的配置或约定中发生的路由。这意味着几乎所有一切都是React路由器中的一个组件。下面是对 API 的60秒钟回顾，以了解其工作原理:
+
+
+
+首先，在目标环境中获取一个 `Router` 组件，并将其渲染在应用的顶部。
 
 ```jsx
 // react-native
@@ -95,7 +99,7 @@ ReactDOM.render((
 ), el)
 ```
 
-Next, grab the link component to link to a new location:
+接下来，将 link 组件链接到新位置:
 
 ```jsx
 const App = () => (
@@ -107,8 +111,7 @@ const App = () => (
 )
 ```
 
-Finally, render a `Route` to show some UI when the user visits
-`/dashboard`.
+最后，渲染 `Route` 以在用户访问 `/dashboard` 时渲染一些用户界面。
 
 ```jsx
 const App = () => (
@@ -123,11 +126,11 @@ const App = () => (
 )
 ```
 
-The `Route` will render `<Dashboard {...props}/>` where `props` are some router specific things that look like `{ match, location, history }`. If the user is **not** at `/dashboard` then the `Route` will render `null`.  That's pretty much all there is to it.
+ `Route`  将渲染 `<Dashboard {...props}/>`，其中`props`是一些路由器特有的东西，看起来像 `{ match, location, history }`。如果用户不在 `/dashboard` 处，则 `Route` 将渲染 `null`。这就是它的全部内容。
 
-## Nested Routes
+## 嵌套路由
 
-Lots of routers have some concept of "nested routes". If you've used versions of React Router previous to v4, you'll know it did too!  When you move from a static route configuration to dynamic, rendered routes, how do you "nest routes"? Well, how do you nest a `div`?
+很多路由器都有一些“嵌套路由”的概念。 如果你使用 v4 之前版本的 React Router，你也会知道它也是如此！ 当你从静态路由配置移动到动态渲染路由时，你如何“嵌套路由”？ 那么，你如何嵌入 `div`？
 
 ```jsx
 const App = () => (
@@ -154,13 +157,13 @@ const Tacos  = ({ match }) => (
 )
 ```
 
-See how the router has no "nesting" API? `Route` is just a component, just like `div`. So to nest a `Route` or a `div`, you just ... do it.
+如何看待路由器没有“嵌套”API？ `Route` 只是一个组件，就像 `div` 一样。 因此，为了嵌入 `Route` 或 `div`，你只需...做到这一点。
 
-Let's get trickier.
+让我们变得更机警。
 
-## Responsive Routes
+## 响应式路线
 
-Consider a user navigates to `/invoices`.  Your app is adaptive to different screen sizes, they have a narrow viewport, and so you only show them the list of invoices and a link to the invoice dashboard. They can navigate deeper from there.
+考虑用户导航到  `/invoices`。 你的应用程序适应不同的屏幕尺寸，它们具有较窄的视窗，因此你只能向他们显示发票列表和连接到发票仪表板。 他们可以从那里进入到更深一步的导航。
 
 ```asciidoc
 Small Screen
@@ -189,7 +192,7 @@ url: /invoices
 +----------------------+
 ```
 
-On a larger screen we'd like to show a master-detail view where the navigation is on the left and the dashboard or specific invoices show up on the right.
+在较大的屏幕上，我们希望显示一个主-详细视图，其中导航位于左侧，仪表板或特定发票显示在右侧。
 
 ```asciidoc
 Large Screen
@@ -218,7 +221,7 @@ url: /invoices/dashboard
 +----------------------+---------------------------+
 ```
 
-Now pause for a minute and think about the `/invoices` url for both screen sizes. Is it even a valid route for a large screen? What should we put on the right side?
+现在暂停一分钟，考虑两种屏幕大小的 `/invoices`  URL。它甚至是大屏幕的有效路径吗？我们应该把什么放在右边？
 
 ```asciidoc
 Large Screen
@@ -246,9 +249,9 @@ url: /invoices
 +----------------------+---------------------------+
 ```
 
-On a large screen, `/invoices` isn't a valid route, but on a small screen it is!  To make things more interesting, consider somebody with a giant phone. They could be looking at `/invoices` in portrait orientation and then rotate their phone to landscape. Suddenly, we have enough room to show the master-detail UI, so you ought to redirect right then!
+在大屏幕上，`/invoices` 不是有效的路线，但在小屏幕上！ 为了让事情变得更有趣，可以考虑带有巨大手机的人。 他们可能会以纵向方向查看 `/invoices`，然后将手机旋转至横向。 突然之间，我们有足够的空间来显示主细节 UI，所以你应该立即重定向！
 
-React Router's previous versions' static routes didn't really have a composable answer for this. When routing is dynamic, however, you can declaratively compose this functionality. If you start thinking about routing as UI, not as static configuration, your intuition will lead you to the following code:
+React 路由器的以前版本的静态路由并没有真正的组合答案。 但是，如果路由是动态的，则可以声明性地编写此功能。 如果你开始考虑将 UI 作为 UI 进行思考，而不是静态配置，那么你的直觉会将你引导至以下代码：
 
 ```js
 const App = () => (
@@ -282,7 +285,5 @@ const Invoices = () => (
 )
 ```
 
-As the user rotates their phone from portrait to landscape, this code will automatically redirect them to the dashboard. *The set of valid routes change depending on the dynamic nature of a mobile device in a user's hands*.
-
-This is just one example. There are many others we could discuss but we'll sum it up with this advice: To get your intuition in line with React Router's, think about components, not static routes. Think about how to solve the problem with React's declarative composability because nearly every "React Router question" is probably a "React question".
-
+当用户将电话从纵向旋转到横向时，此代码将自动将其重定向到仪表板。有效路由的集合根据用户手中的移动设备的动态特性而改变。
+这只是一个例子。我们还可以讨论其他许多问题，但我们将总结为以下建议:为了使你的直觉与 React Router 一致，请考虑组件，而不是静态路由。这只是一个例子。 还有很多其他的我们可以讨论，但我们总结这个建议：为了让你的直觉符合React Router的思想，考虑组件，而不是静态路由。考虑如何用 React 的声明式组合来解决问题，因为几乎每个 “React Router问题” 都可能是 “React问题”。
