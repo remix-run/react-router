@@ -1,18 +1,29 @@
 sudo: false
 language: node_js
-node_js:
-  - "node"
-before_script:
-  - npm run build
+node_js: node
 cache:
   directories:
-    - packages/react-router/node_modules
-    - packages/react-router-dom/node_modules
-    - packages/react-router-native/node_modules
-    - packages/react-router-config/node_modules
-    - packages/react-router-redux/node_modules
-    - website/node_modules
+  - packages/react-router/node_modules
+  - packages/react-router-config/node_modules
+  - packages/react-router-dom/node_modules
+  - packages/react-router-native/node_modules
+  - packages/react-router-redux/node_modules
+  - website/node_modules
 branches:
   only:
-    - master
-    - next
+  - master
+  - website
+before_script:
+- npm run build
+before_deploy:
+- openssl aes-256-cbc -K $encrypted_70c5e56b421c_key -iv $encrypted_70c5e56b421c_iv
+  -in website_deploy_key.enc -out website_deploy_key -d
+- chmod 600 website_deploy_key
+- eval $(ssh-agent -s)
+- ssh-add website_deploy_key
+deploy:
+  provider: script
+  script: bash scripts/deploy-website.sh
+  skip_cleanup: true
+  on:
+    branch: website

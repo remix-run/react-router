@@ -47,7 +47,7 @@ Input.propTypes = {
 class MailingListSignup extends Component {
   state = {
     email: "",
-    submitted: true
+    submitted: false
   };
 
   handleSubmit = e => {
