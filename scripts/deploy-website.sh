@@ -13,6 +13,8 @@ cd $tmp_dir
 
 git add -A
 git commit \
-  -m "Update react-router website\n\nhttps://travis-ci.org/$TRAVIS_REPO_SLUG/builds/$TRAVIS_BUILD_ID" \
+  -m "Update react-router website
+
+https://travis-ci.org/$TRAVIS_REPO_SLUG/builds/$TRAVIS_BUILD_ID" \
   --author "Travis CI <travis@reacttraining.com>"
 git push origin master
