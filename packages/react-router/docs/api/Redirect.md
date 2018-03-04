@@ -35,6 +35,8 @@ A location to redirect to. `pathname` can be any valid URL path that [`path-to-r
 }}/>
 ```
 
+The `state` object can be accessed via `this.props.location.state` in the redirected-to component. This new `referrer` key (which is not a special name) would then be accessed via `this.props.location.state.referrer` in the `Login` component pointed to by the pathname `'/login'`
+
 ## push: bool
 
 When `true`, redirecting will push a new entry onto the history instead of replacing the current one.
