@@ -7,7 +7,7 @@ A `match` object contains information about how a `<Route path>` matched the URL
   - `path` - (string) The path pattern used to match. Useful for building nested `<Route>`s
   - `url` - (string) The matched portion of the URL. Useful for building nested `<Link>`s
 
-You'll have access `match` objects in various places:
+You'll have access to `match` objects in various places:
 
 - [Route component](./Route.md#component) as `this.props.match`
 - [Route render](./Route.md#render-func) as `({ match }) => ()`
