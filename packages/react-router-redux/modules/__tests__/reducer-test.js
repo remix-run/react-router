@@ -3,9 +3,9 @@ import { LOCATION_CHANGE, routerReducer } from "../reducer";
 describe("routerReducer", () => {
   const state = {
     location: {
-      pathname: "/foo",
-      action: "POP"
-    }
+      pathname: "/foo"
+    },
+    action: "POP"
   };
 
   it("updates the path", () => {
@@ -13,15 +13,13 @@ describe("routerReducer", () => {
       routerReducer(state, {
         type: LOCATION_CHANGE,
         payload: {
-          path: "/bar",
+          location: { path: "/bar" },
           action: "PUSH"
         }
       })
     ).toEqual({
-      location: {
-        path: "/bar",
-        action: "PUSH"
-      }
+      location: { path: "/bar" },
+      action: "PUSH"
     });
   });
 
@@ -30,15 +28,13 @@ describe("routerReducer", () => {
       routerReducer(undefined, {
         type: LOCATION_CHANGE,
         payload: {
-          path: "/bar",
+          location: { path: "/bar" },
           action: "PUSH"
         }
       })
     ).toEqual({
-      location: {
-        path: "/bar",
-        action: "PUSH"
-      }
+      location: { path: "/bar" },
+      action: "PUSH"
     });
   });
 
@@ -47,15 +43,13 @@ describe("routerReducer", () => {
       routerReducer(state, {
         type: LOCATION_CHANGE,
         payload: {
-          path: "/bar",
+          location: { path: "/bar" },
           action: "REPLACE"
         }
       })
     ).toEqual({
-      location: {
-        path: "/bar",
-        action: "REPLACE"
-      }
+      location: { path: "/bar" },
+      action: "REPLACE"
     });
   });
 });

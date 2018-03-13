@@ -61,6 +61,8 @@ describe("A <ConnectedRouter>", () => {
     history.push("/foo");
 
     expect(store.getState()).toHaveProperty("router.location.pathname", "/foo");
+    expect(store.getState()).toHaveProperty("router.location.pathname", "/foo");
+    expect(store.getState()).toHaveProperty("router.action", "PUSH");
   });
 
   describe("with children", () => {
