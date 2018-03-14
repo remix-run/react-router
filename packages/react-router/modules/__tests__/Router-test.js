@@ -11,8 +11,8 @@ describe("A <Router>", () => {
     ReactDOM.unmountComponentAtNode(node);
   });
 
-  describe('when it has more than one child', () => {
-    it('renders all children', () => {
+  describe("when it has more than one child", () => {
+    it("renders all children", () => {
       expect(() => {
         ReactDOM.render(
           <Router history={createHistory()}>
@@ -20,11 +20,11 @@ describe("A <Router>", () => {
             <p>Bar</p>
           </Router>,
           node
-        )
-      }).not.toThrow()
-      expect(node.textContent).toBe('FooBar')
-    })
-  })
+        );
+      }).not.toThrow();
+      expect(node.textContent).toBe("FooBar");
+    });
+  });
 
   describe("with exactly one child", () => {
     it("does not throw an error", () => {
