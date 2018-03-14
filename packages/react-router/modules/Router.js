@@ -3,11 +3,6 @@ import invariant from "invariant";
 import React from "react";
 import PropTypes from "prop-types";
 
-function is16Plus() {
-  const [major] = React.version.split('.');
-  return parseInt(major) >= 16;
-}
-
 /**
  * The public API for putting history on context.
  */
@@ -55,9 +50,11 @@ class Router extends React.Component {
     const { children, history } = this.props;
 
     invariant(
-      is16Plus() || children == null || React.Children.count(children) === 1,
-      'A <Router> may have only one child element'
-    )
+      React.Fragment !== undefined ||
+        children == null ||
+        React.Children.count(children) === 1,
+      "A <Router> may have only one child element"
+    );
 
     // Do this here so we can setState when a <Redirect> changes the
     // location in componentWillMount. This happens e.g. when doing
@@ -81,7 +78,7 @@ class Router extends React.Component {
   }
 
   render() {
-    return this.props.children || null
+    return this.props.children || null;
   }
 }
 
