@@ -108,47 +108,53 @@ describe("A <StaticRouter>", () => {
     expect(context.url).toBe("/somewhere-else");
   });
 
-  it("knows how to serialize location objects", () => {
-    const context = {};
-
-    ReactDOMServer.renderToStaticMarkup(
-      <StaticRouter context={context}>
-        <Redirect to={{ pathname: "/somewhere-else" }} />
-      </StaticRouter>
-    );
-
-    expect(context.action).toBe("REPLACE");
-    expect(context.location.pathname).toBe("/somewhere-else");
-    expect(context.location.search).toBe("");
-    expect(context.location.hash).toBe("");
-    expect(context.url).toBe("/somewhere-else");
-  });
-
-  it("knows how to parse raw URLs", () => {
-    const LocationChecker = props => {
-      expect(props.location).toMatchObject({
-        pathname: "/the/path",
-        search: "?the=query",
-        hash: "#the-hash"
-      });
-      return null;
-    };
-
-    const context = {};
-
-    ReactDOMServer.renderToStaticMarkup(
-      <StaticRouter context={context} location="/the/path?the=query#the-hash">
-        <Route component={LocationChecker} />
-      </StaticRouter>
-    );
-  });
-
-  describe("with a basename", () => {
-    it("strips the basename from location pathnames", () => {
+  describe("location", () => {
+    it("knows how to parse raw URL string into an object", () => {
       const LocationChecker = props => {
         expect(props.location).toMatchObject({
-          pathname: "/path"
+          pathname: "/the/path",
+          search: "?the=query",
+          hash: "#the-hash"
         });
+        return null;
+      };
+
+      const context = {};
+
+      ReactDOMServer.renderToStaticMarkup(
+        <StaticRouter context={context} location="/the/path?the=query#the-hash">
+          <Route component={LocationChecker} />
+        </StaticRouter>
+      );
+    });
+
+    it("adds missing properties to location object", () => {
+      const LocationChecker = props => {
+        expect(props.location).toMatchObject({
+          pathname: "/test",
+          search: "",
+          hash: ""
+        });
+        return null;
+      };
+
+      const context = {};
+
+      ReactDOMServer.renderToStaticMarkup(
+        <StaticRouter context={context} location={{ pathname: "/test" }}>
+          <Route component={LocationChecker} />
+        </StaticRouter>
+      );
+    });
+
+    it("decodes an encoded pathname", () => {
+      const LocationChecker = props => {
+        expect(props.location).toMatchObject({
+          pathname: "/estático",
+          search: "",
+          hash: ""
+        });
+        expect(props.match.params.type).toBe("estático");
         return null;
       };
 
@@ -157,64 +163,102 @@ describe("A <StaticRouter>", () => {
       ReactDOMServer.renderToStaticMarkup(
         <StaticRouter
           context={context}
-          basename="/the-base"
-          location="/the-base/path"
+          location={{ pathname: "/est%C3%A1tico" }}
         >
-          <Route component={LocationChecker} />
+          <Route path="/:type" component={LocationChecker} />
         </StaticRouter>
       );
     });
 
-    it("reports PUSH actions on the context object", () => {
+    it("knows how to serialize location objects", () => {
       const context = {};
 
       ReactDOMServer.renderToStaticMarkup(
-        <StaticRouter context={context} basename="/the-base">
-          <Redirect push to="/somewhere-else" />
-        </StaticRouter>
-      );
-
-      expect(context.action).toBe("PUSH");
-      expect(context.url).toBe("/the-base/somewhere-else");
-    });
-
-    it("reports REPLACE actions on the context object", () => {
-      const context = {};
-
-      ReactDOMServer.renderToStaticMarkup(
-        <StaticRouter context={context} basename="/the-base">
-          <Redirect to="/somewhere-else" />
+        <StaticRouter context={context}>
+          <Redirect to={{ pathname: "/somewhere-else" }} />
         </StaticRouter>
       );
 
       expect(context.action).toBe("REPLACE");
-      expect(context.url).toBe("/the-base/somewhere-else");
+      expect(context.location.pathname).toBe("/somewhere-else");
+      expect(context.location.search).toBe("");
+      expect(context.location.hash).toBe("");
+      expect(context.url).toBe("/somewhere-else");
     });
-  });
 
-  describe("no basename", () => {
-    it("createHref does not append extra leading slash", () => {
-      const context = {};
-      const node = document.createElement("div");
-      const pathname = "/test-path-please-ignore";
+    describe("with a basename", () => {
+      it("strips the basename from location pathnames", () => {
+        const LocationChecker = props => {
+          expect(props.location).toMatchObject({
+            pathname: "/path"
+          });
+          return null;
+        };
 
-      const Link = ({ to, children }) => (
-        <Route
-          children={({ history: { createHref } }) => (
-            <a href={createHref(to)}>{children}</a>
-          )}
-        />
-      );
+        const context = {};
 
-      ReactDOM.render(
-        <StaticRouter context={context}>
-          <Link to={pathname} />
-        </StaticRouter>,
-        node
-      );
+        ReactDOMServer.renderToStaticMarkup(
+          <StaticRouter
+            context={context}
+            basename="/the-base"
+            location="/the-base/path"
+          >
+            <Route component={LocationChecker} />
+          </StaticRouter>
+        );
+      });
 
-      const a = node.getElementsByTagName("a")[0];
-      expect(a.getAttribute("href")).toEqual(pathname);
+      it("reports PUSH actions on the context object", () => {
+        const context = {};
+
+        ReactDOMServer.renderToStaticMarkup(
+          <StaticRouter context={context} basename="/the-base">
+            <Redirect push to="/somewhere-else" />
+          </StaticRouter>
+        );
+
+        expect(context.action).toBe("PUSH");
+        expect(context.url).toBe("/the-base/somewhere-else");
+      });
+
+      it("reports REPLACE actions on the context object", () => {
+        const context = {};
+
+        ReactDOMServer.renderToStaticMarkup(
+          <StaticRouter context={context} basename="/the-base">
+            <Redirect to="/somewhere-else" />
+          </StaticRouter>
+        );
+
+        expect(context.action).toBe("REPLACE");
+        expect(context.url).toBe("/the-base/somewhere-else");
+      });
+    });
+
+    describe("no basename", () => {
+      it("createHref does not append extra leading slash", () => {
+        const context = {};
+        const node = document.createElement("div");
+        const pathname = "/test-path-please-ignore";
+
+        const Link = ({ to, children }) => (
+          <Route
+            children={({ history: { createHref } }) => (
+              <a href={createHref(to)}>{children}</a>
+            )}
+          />
+        );
+
+        ReactDOM.render(
+          <StaticRouter context={context}>
+            <Link to={pathname} />
+          </StaticRouter>,
+          node
+        );
+
+        const a = node.getElementsByTagName("a")[0];
+        expect(a.getAttribute("href")).toEqual(pathname);
+      });
     });
   });
 
