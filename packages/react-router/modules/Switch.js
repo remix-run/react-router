@@ -43,30 +43,32 @@ class Switch extends React.Component {
     const { children } = this.props;
     const location = this.props.location || route.location;
 
-    let match, child;
-    React.Children.forEach(children, element => {
-      if (match == null && React.isValidElement(element)) {
-        const {
-          path: pathProp,
-          exact,
-          strict,
-          sensitive,
-          from
-        } = element.props;
-        const path = pathProp || from;
-
-        child = element;
-        match = matchPath(
-          location.pathname,
-          { path, exact, strict, sensitive },
-          route.match
-        );
+    let match;
+    return React.Children.map(children, element => {
+      if (match !== null && React.isValidElement(element)) {
+        if (!element.props.children) {
+          return null;
+        }
+        return React.cloneElement(element, {location, computedMatch: null});
       }
-    });
 
-    return match
-      ? React.cloneElement(child, { location, computedMatch: match })
-      : null;
+      const {
+        path: pathProp,
+        exact,
+        strict,
+        sensitive,
+        from
+      } = element.props;
+      const path = pathProp || from;
+
+      match = matchPath(
+        location.pathname,
+        { path, exact, strict, sensitive },
+        route.match
+      );
+
+      return React.cloneElement(element, {location, computedMatch: match});
+    });
   }
 }
 
