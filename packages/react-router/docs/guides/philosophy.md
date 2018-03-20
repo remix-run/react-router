@@ -98,7 +98,7 @@ ReactDOM.render((
 Next, grab the link component to link to a new location:
 
 ```jsx
-const App = () => (
+const Dashboard = () => (
   <div>
     <nav>
       <Link to="/dashboard">Dashboard</Link>
