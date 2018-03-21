@@ -62,7 +62,7 @@ The `<Switch>` is not required for grouping `<Route>`s, but it can be quite usef
 
 ## Route Rendering Props
 
-You have three prop choices for how you render a component for a given `<Route>`: `component`, `render`, and `children`. You can check the out the [`<Route>` documentation](../api/Route.md) for more information on each one, but here we'll focus on `component` and `render` because those are the two you will almost always use.
+You have three prop choices for how you render a component for a given `<Route>`: `component`, `render`, and `children`. You can check out the [`<Route>` documentation](../api/Route.md) for more information on each one, but here we'll focus on `component` and `render` because those are the two you will almost always use.
 
 `component` should be used when you have an existing component (either a `React.Component` or a stateless functional component) that you want to render. `render`, which takes an inline function, should only be used when you have to pass in-scope variables to the component you want to render. You should **not** use the `component` prop with an inline function to pass in-scope variables because you will get undesired component unmounts/remounts.
 
