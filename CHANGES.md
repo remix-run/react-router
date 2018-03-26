@@ -1,5 +1,5 @@
-## [Unreleased](https://github.com/ReactTraining/react-router/compare/v4.2.0...master)
-> Like, right now.
+## [v4.3.0-rc.1](https://github.com/ReactTraining/react-router/compare/v4.2.0...v4.3.0-rc.1)
+> Mar 26, 2018
 
 - Redirect with parameters ([#5209] by @dlindenkreuz)
 - Fix with missing pathname: `<Link to="?foo=bar">` ([#5489] by @pshrmn)
