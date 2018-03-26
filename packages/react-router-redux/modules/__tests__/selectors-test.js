@@ -1,4 +1,4 @@
-import { getLocation, createMatchSelector } from "../selectors";
+import { getLocation, createMatchSelector, getAction } from "../selectors";
 import { createStore, combineReducers } from "redux";
 import { routerReducer, LOCATION_CHANGE } from "../reducer";
 
@@ -18,10 +18,26 @@ describe("selectors", () => {
       const location = { pathname: "/" };
       store.dispatch({
         type: LOCATION_CHANGE,
-        payload: location
+        payload: {
+          location
+        }
       });
       const state = store.getState();
       expect(getLocation(state)).toBe(location);
+    });
+  });
+
+  describe("getLocation", () => {
+    it("gets the location from the state", () => {
+      const action = "PUSH";
+      store.dispatch({
+        type: LOCATION_CHANGE,
+        payload: {
+          action
+        }
+      });
+      const state = store.getState();
+      expect(getAction(state)).toBe(action);
     });
   });
 
@@ -30,7 +46,9 @@ describe("selectors", () => {
       const matchSelector = createMatchSelector("/");
       store.dispatch({
         type: LOCATION_CHANGE,
-        payload: { pathname: "/test" }
+        payload: {
+          location: { pathname: "/test" }
+        }
       });
       const state = store.getState();
       expect(matchSelector(state)).toEqual({
@@ -51,12 +69,16 @@ describe("selectors", () => {
       const matchSelector = createMatchSelector("/");
       store.dispatch({
         type: LOCATION_CHANGE,
-        payload: { pathname: "/test1" }
+        payload: {
+          location: { pathname: "/test1" }
+        }
       });
       const match1 = matchSelector(store.getState());
       store.dispatch({
         type: LOCATION_CHANGE,
-        payload: { pathname: "/test2" }
+        payload: {
+          location: { pathname: "/test2" }
+        }
       });
       const match2 = matchSelector(store.getState());
       expect(match1).toBe(match2);
@@ -66,7 +88,9 @@ describe("selectors", () => {
       const matchSelector = createMatchSelector("/sushi/:type");
       store.dispatch({
         type: LOCATION_CHANGE,
-        payload: { pathname: "/sushi/california" }
+        payload: {
+          location: { pathname: "/sushi/california" }
+        }
       });
       const match1 = matchSelector(store.getState());
       store.dispatch({
@@ -84,7 +108,9 @@ describe("selectors", () => {
       });
       store.dispatch({
         type: LOCATION_CHANGE,
-        payload: { pathname: "/sushi" }
+        payload: {
+          location: { pathname: "/sushi" }
+        }
       });
       const match1 = matchSelector(store.getState());
       store.dispatch({

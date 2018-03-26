@@ -1,5 +1,5 @@
 export ConnectedRouter from "./ConnectedRouter";
-export { getLocation, createMatchSelector } from "./selectors";
+export { getAction, getLocation, createMatchSelector } from "./selectors";
 export { LOCATION_CHANGE, routerReducer } from "./reducer";
 export {
   CALL_HISTORY_METHOD,
