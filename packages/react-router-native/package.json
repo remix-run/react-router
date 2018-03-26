@@ -29,7 +29,7 @@
   },
   "dependencies": {
     "prop-types": "^15.6.0",
-    "react-router": "^4.2.0"
+    "react-router": "^4.3.0-rc.1"
   },
   "devDependencies": {
     "babel-jest": "^22.1.0",
