@@ -16,6 +16,7 @@
   ],
   "main": "index.js",
   "module": "es/index.js",
+  "sideEffects": false,
   "scripts": {
     "build": "node ./tools/build.js",
     "watch": "babel ./modules -d . --ignore __tests__ --watch",
