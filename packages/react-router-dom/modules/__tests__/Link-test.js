@@ -1,5 +1,6 @@
 import React from "react";
 import ReactDOM from "react-dom";
+import jest from "jest";
 import MemoryRouter from "react-router/MemoryRouter";
 import HashRouter from "../HashRouter";
 import Link from "../Link";
@@ -103,6 +104,12 @@ describe("When a <Link> is clicked", () => {
 
   describe("and the onClick handler calls event.preventDefault()", () => {
     it("does not change the location");
+  });
+
+  describe("and the alt modifier key is pressed", () => {
+    it("does not change the location when `allowModifiedKeys` prop is false");
+
+    it("change the location when `allowModifiedKeys` prop is true");
   });
 });
 
