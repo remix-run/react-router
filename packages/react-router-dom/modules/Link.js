@@ -14,12 +14,14 @@ class Link extends React.Component {
     onClick: PropTypes.func,
     target: PropTypes.string,
     replace: PropTypes.bool,
+    allowModifiedKeys: PropTypes.bool,
     to: PropTypes.oneOfType([PropTypes.string, PropTypes.object]).isRequired,
     innerRef: PropTypes.oneOfType([PropTypes.string, PropTypes.func])
   };
 
   static defaultProps = {
-    replace: false
+    replace: false,
+    allowModifiedKeys: false
   };
 
   static contextTypes = {
@@ -39,7 +41,7 @@ class Link extends React.Component {
       !event.defaultPrevented && // onClick prevented default
       event.button === 0 && // ignore everything but left clicks
       !this.props.target && // let browser handle "target=_blank" etc.
-      !isModifiedEvent(event) // ignore clicks with modifier keys
+      (this.props.allowModifiedKeys ? true : !isModifiedEvent(event)) // ignore clicks with modifier keys when this.props.allowModifiedKeys=false
     ) {
       event.preventDefault();
 
@@ -55,7 +57,7 @@ class Link extends React.Component {
   };
 
   render() {
-    const { replace, to, innerRef, ...props } = this.props; // eslint-disable-line no-unused-vars
+    const { replace, to, innerRef, allowModifiedKeys, ...props } = this.props; // eslint-disable-line no-unused-vars
 
     invariant(
       this.context.router,
