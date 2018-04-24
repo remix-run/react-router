@@ -131,7 +131,7 @@ markdown h1, h2, h3 {
   clear: both;
 }
 
-@media screen and (max-width: 1170px) {
+@media screen and (max-width: 1270px) {
   .api-doc-wrapper {
     background: white;
   }
