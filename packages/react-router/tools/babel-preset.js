@@ -3,10 +3,6 @@ const building = BABEL_ENV != undefined && BABEL_ENV !== 'cjs'
 
 const plugins = []
 
-if (BABEL_ENV === 'umd') {
-  plugins.push('external-helpers')
-}
-
 if (process.env.NODE_ENV === 'production') {
   plugins.push(
     'dev-expression',

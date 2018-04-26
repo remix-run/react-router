@@ -29,16 +29,16 @@
     "react-native": ">=0.44"
   },
   "dependencies": {
-    "prop-types": "^15.6.0",
+    "prop-types": "^15.6.1",
     "react-router": "^4.3.0-rc.1"
   },
   "devDependencies": {
-    "babel-jest": "^22.1.0",
+    "babel-jest": "^22.4.3",
     "babel-preset-react-native": "^4.0.0",
-    "jest": "^22.1.4",
-    "react": "^16.0.0",
+    "jest": "^22.4.3",
+    "react": "^16.3.2",
     "react-native": "^0.49.5",
-    "react-test-renderer": "^16.2.0"
+    "react-test-renderer": "^16.3.2"
   },
   "jest": {
     "preset": "react-native"

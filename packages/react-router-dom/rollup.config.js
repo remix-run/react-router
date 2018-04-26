@@ -6,14 +6,17 @@ import resolve from "rollup-plugin-node-resolve";
 
 const config = {
   input: "modules/index.js",
-  name: "ReactRouterDOM",
-  globals: {
-    react: "React"
+  output: {
+    name: "ReactRouterDOM",
+    globals: {
+      react: "React"
+    }
   },
   external: ["react"],
   plugins: [
     babel({
-      exclude: "node_modules/**"
+      exclude: "node_modules/**",
+      plugins: ["external-helpers"]
     }),
     resolve({
       customResolveOptions: {

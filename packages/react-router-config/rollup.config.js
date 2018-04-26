@@ -6,13 +6,15 @@ import resolve from "rollup-plugin-node-resolve";
 
 const config = {
   input: "modules/index.js",
-  name: "ReactRouterConfig",
-  globals: {
-    react: "React",
-    "react-router/Switch": "ReactRouter.Switch",
-    "react-router/Router": "ReactRouter.Router",
-    "react-router/Route": "ReactRouter.Route",
-    "react-router/matchPath": "ReactRouter.matchPath"
+  output: {
+    name: "ReactRouterConfig",
+    globals: {
+      react: "React",
+      "react-router/Switch": "ReactRouter.Switch",
+      "react-router/Router": "ReactRouter.Router",
+      "react-router/Route": "ReactRouter.Route",
+      "react-router/matchPath": "ReactRouter.matchPath"
+    }
   },
   external: [
     "react",
@@ -23,7 +25,8 @@ const config = {
   ],
   plugins: [
     babel({
-      exclude: "node_modules/**"
+      exclude: "node_modules/**",
+      plugins: ["external-helpers"]
     }),
     resolve(),
     commonjs({
