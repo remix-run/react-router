@@ -198,7 +198,7 @@ In v4, you must re-pass these properties to the `to` prop:
 ## PatternUtils
 
 ### matchPattern(pattern, pathname)
-In v3, you could use the same matching code used internally to check if a path matched a pattern. In v4 this has been replaced by [matchPath](/packages/react-router/docs/api/matchPath.md) which is powered by the [path-to-regexp](https://github.com/pillarjs/path-to-regexp) library.
+In v3, you could use the same matching code used internally to check if a path matched a pattern. In v4 this has been replaced by [matchPath](/packages/react-router/docs/api/matchPath.md) which is powered by the [`path-to-regexp@^1.7.0`](https://github.com/pillarjs/path-to-regexp/tree/v1.7.0) library.
 
 ### formatPattern(pattern, params)
 In v3, you could use PatternUtils.formatPattern to generate a valid path from a path pattern (perhaps in a constant or in your central routing config) and an object containing the names parameters:
@@ -210,7 +210,7 @@ const THING_PATH = '/thing/:id';
 <Link to={PatternUtils.formatPattern(THING_PATH, {id: 1})}>A thing</Link>
 ```
 
-In v4, you can achieve the same functionality using the [compile](https://github.com/pillarjs/path-to-regexp#compile-reverse-path-to-regexp) function in [path-to-regexp](https://github.com/pillarjs/path-to-regexp).
+In v4, you can achieve the same functionality using the [compile](https://github.com/pillarjs/path-to-regexp/tree/v1.7.0#compile-reverse-path-to-regexp) function in [`path-to-regexp@^1.7.0`](https://github.com/pillarjs/path-to-regexp/tree/v1.7.0).
 
 ```jsx
 // v4

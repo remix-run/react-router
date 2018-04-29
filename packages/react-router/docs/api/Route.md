@@ -132,7 +132,7 @@ This could also be useful for animations:
 
 ## path: string
 
-Any valid URL path that [`path-to-regexp`](https://www.npmjs.com/package/path-to-regexp) understands.
+Any valid URL path that [`path-to-regexp@^1.7.0`](https://github.com/pillarjs/path-to-regexp/tree/v1.7.0) understands.
 
 ```jsx
 <Route path="/users/:id" component={User}/>
