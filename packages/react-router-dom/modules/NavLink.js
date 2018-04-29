@@ -67,8 +67,7 @@ NavLink.propTypes = {
     "location",
     "date",
     "time",
-    "true",
-    "false"
+    "true"
   ])
 };
 
