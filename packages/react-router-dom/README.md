@@ -15,9 +15,9 @@ Then with a module bundler like [webpack](https://webpack.github.io/), use as yo
 import { BrowserRouter, Route, Link } from 'react-router-dom'
 
 // using CommonJS modules
-var BrowserRouter = require('react-router-dom').BrowserRouter
-var Route = require('react-router-dom').Route
-var Link = require('react-router-dom').Link
+const BrowserRouter = require('react-router-dom').BrowserRouter
+const Route = require('react-router-dom').Route
+const Link = require('react-router-dom').Link
 ```
 
 The UMD build is also available on [unpkg](https://unpkg.com):
