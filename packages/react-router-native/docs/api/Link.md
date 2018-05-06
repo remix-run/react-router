@@ -20,7 +20,7 @@ A string representation of the location to link to, created by concatenating the
 
 An object that can have any of the following properties:
   * `pathname`: A string representing the path to link to.
-  * `search`: A string represenation of query parameters, e.g. `?key=value`.
+  * `search`: A string representation of query parameters, e.g. `?key=value`.
   * `hash`: A hash to put in the URL, e.g. `#a-hash`.
   * `state`: State to persist to the `location`.
 
