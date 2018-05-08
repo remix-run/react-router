@@ -73,7 +73,7 @@ NavLink.propTypes = {
 
 NavLink.defaultProps = {
   activeClassName: "active",
-  "aria-current": "true"
+  "aria-current": "page"
 };
 
 export default NavLink;
