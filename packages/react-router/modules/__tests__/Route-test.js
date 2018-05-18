@@ -435,3 +435,93 @@ describe("A pathless <Route>", () => {
     expect(rootContext).toBe(undefined);
   });
 });
+
+describe("A <Route updateOnLocationChange>", () => {
+  const history = createMemoryHistory();
+  const node = document.createElement("div");
+  const originalConsoleError = console.error;
+
+  afterEach(() => {
+    ReactDOM.unmountComponentAtNode(node);
+    console.error = originalConsoleError;
+  });
+
+  it("triggers rerender on location change (history push), regardless of whether its parent updates", () => {
+    let counter = 0;
+    class Wrapper extends React.Component {
+      shouldComponentUpdate() {
+        return false;
+      }
+      render() {
+        return this.props.children;
+      }
+    }
+    ReactDOM.render(
+      <Router history={history}>
+        <Wrapper>
+          <Route
+            updateOnLocationChange
+            render={() => <span>{++counter}</span>}
+          />
+        </Wrapper>
+      </Router>,
+      node
+    );
+    expect(counter).toEqual(1);
+    history.push("/anything");
+    expect(counter).toEqual(2);
+  });
+
+  it("is false by default, does not change default Route behavior", () => {
+    let counter = 0;
+    class Wrapper extends React.Component {
+      shouldComponentUpdate() {
+        return false;
+      }
+      render() {
+        return this.props.children;
+      }
+    }
+    ReactDOM.render(
+      <Router history={history}>
+        <Wrapper>
+          <Route render={() => <span>{++counter}</span>} />
+        </Wrapper>
+      </Router>,
+      node
+    );
+    expect(counter).toEqual(1);
+    history.push("/anything");
+    expect(counter).toEqual(1);
+  });
+
+  it("stops rerendering when the Route unmounts (i.e. does not cause an obvious memory leak)", done => {
+    let stopRendering;
+    class Wrapper extends React.Component {
+      state = {
+        renderChildren: true
+      };
+      render() {
+        stopRendering = cb => this.setState({ renderChildren: false }, cb);
+        return this.state.renderChildren ? this.props.children : null;
+      }
+    }
+    ReactDOM.render(
+      <Router history={history}>
+        <Wrapper>
+          <Route updateOnLocationChange />
+        </Wrapper>
+      </Router>,
+      node
+    );
+    stopRendering(() => {
+      console.error = warning => {
+        done(
+          new Error(`(Detected console.error call in unit test)\n${warning}`)
+        );
+      };
+      history.push("/anything");
+      done();
+    });
+  });
+});

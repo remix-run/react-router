@@ -19,7 +19,8 @@ class Route extends React.Component {
     component: PropTypes.func,
     render: PropTypes.func,
     children: PropTypes.oneOfType([PropTypes.func, PropTypes.node]),
-    location: PropTypes.object
+    location: PropTypes.object,
+    updateOnLocationChange: PropTypes.bool
   };
 
   static contextTypes = {
@@ -92,6 +93,16 @@ class Route extends React.Component {
     );
   }
 
+  componentDidMount() {
+    const { updateOnLocationChange } = this.props;
+    const { history } = this.context.router;
+    if (updateOnLocationChange) {
+      this.historyUnlisten = history.listen(() => {
+        this.forceUpdate();
+      });
+    }
+  }
+
   componentWillReceiveProps(nextProps, nextContext) {
     warning(
       !(nextProps.location && !this.props.location),
@@ -106,6 +117,12 @@ class Route extends React.Component {
     this.setState({
       match: this.computeMatch(nextProps, nextContext.router)
     });
+  }
+
+  componentWillUnmount() {
+    if (typeof this.historyUnlisten === "function") {
+      this.historyUnlisten();
+    }
   }
 
   render() {

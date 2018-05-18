@@ -6,11 +6,12 @@ import Route from "./Route";
 /**
  * A public higher-order component to access the imperative API
  */
-const withRouter = Component => {
+const withRouter = (Component, { updateOnLocationChange } = {}) => {
   const C = props => {
     const { wrappedComponentRef, ...remainingProps } = props;
     return (
       <Route
+        updateOnLocationChange={updateOnLocationChange}
         children={routeComponentProps => (
           <Component
             {...remainingProps}

@@ -143,4 +143,36 @@ describe("withRouter", () => {
     expect(typeof decorated.foo).toBe("function");
     expect(decorated.foo()).toBe("bar");
   });
+
+  describe("config object second parameter", () => {
+    afterEach(() => {
+      jest.restoreAllMocks();
+    });
+
+    it("is optional", () => {
+      // expectation is that no error occurs when not providing a second parameter
+      const decorated = withRouter(() => <div />);
+      ReactDOM.render(
+        <MemoryRouter>{React.createElement(decorated)}</MemoryRouter>,
+        node
+      );
+      // again no explicit expect, just checking that a simple default simply does not error
+    });
+
+    it("can contain an `updateOnLocationChange` which it forwards to its rendered `Route`", () => {
+      let capturedProps;
+      jest.spyOn(Route.prototype, "render").mockImplementation(function() {
+        capturedProps = this.props;
+        return null;
+      });
+      const decorated = withRouter(() => <div />, {
+        updateOnLocationChange: true
+      });
+      ReactDOM.render(
+        <MemoryRouter>{React.createElement(decorated)}</MemoryRouter>,
+        node
+      );
+      expect(capturedProps.updateOnLocationChange).toEqual(true);
+    });
+  });
 });
