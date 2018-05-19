@@ -62,23 +62,19 @@ const AuthButton = withRouter(
     )
 );
 
-const PrivateRoute = ({ component: Component, ...rest }) => (
-  <Route
-    {...rest}
-    render={props =>
-      fakeAuth.isAuthenticated ? (
-        <Component {...props} />
-      ) : (
-        <Redirect
-          to={{
-            pathname: "/login",
-            state: { from: props.location }
-          }}
-        />
-      )
-    }
-  />
-);
+class PrivateRoute extends Route {
+  render() {
+    const Component = this.props.component;
+    //Updating match in PrivateRoute props since match is updated only at render time.
+    const mergedPropsAfterMatch = Object.assign({}, this.props, {match: this.state.match});
+    return fakeAuth.isAuthenticated ? <Component {...mergedPropsAfterMatch} /> : <Redirect
+      to={{
+        pathname: '/login',
+        state: { from: this.props.location.pathname },
+      }}
+    />;
+  }
+}
 
 const Public = () => <h3>Public</h3>;
 const Protected = () => <h3>Protected</h3>;
