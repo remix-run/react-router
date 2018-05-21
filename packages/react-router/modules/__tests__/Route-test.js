@@ -35,6 +35,20 @@ describe("A <Route>", () => {
     expect(node.innerHTML).not.toContain(TEXT);
   });
 
+  it("accepts regular expression as a `path`", () => {
+    const node = document.createElement("div");
+    const TEXT = "i should match";
+
+    ReactDOM.render(
+      <MemoryRouter initialEntries={["/bunnies"]}>
+        <Route path={/^\/bunnies$/} render={() => <h1>{TEXT}</h1>} />
+      </MemoryRouter>,
+      node
+    );
+
+    expect(node.innerHTML).toContain(TEXT);
+  });
+
   it("can use a `location` prop instead of `context.router.route.location`", () => {
     const TEXT = "tamarind chutney";
     const node = document.createElement("div");
