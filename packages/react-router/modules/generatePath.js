@@ -10,7 +10,7 @@ const compileGenerator = pattern => {
 
   if (cache[pattern]) return cache[pattern];
 
-  const compiledGenerator = pathToRegexp.compile(pattern);
+  const compiledGenerator = pathToRegexp.compile(pattern, { pretty: true });
 
   if (cacheCount < cacheLimit) {
     cache[pattern] = compiledGenerator;
