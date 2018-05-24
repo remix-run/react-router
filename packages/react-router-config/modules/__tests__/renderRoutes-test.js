@@ -47,6 +47,38 @@ function buildTests(title, RenderRoutes) {
       expect(renderedRoutes[0]).toEqual(routeToMatch);
     });
 
+    it("renders componentless routes", () => {
+      const routeToMatch = {
+        component: RenderRoutes
+      };
+      const routes = [
+        {
+          props: {
+            theProp: true
+          },
+          routes: [
+            {
+              props: {
+                otherProp: true
+              },
+              routes: [routeToMatch]
+            }
+          ]
+        }
+      ];
+
+      ReactDOMServer.renderToString(
+        <StaticRouter location="/path" context={{}}>
+          {renderRoutes(routes)}
+        </StaticRouter>
+      );
+      expect(renderedRoutes.length).toEqual(1);
+      expect(renderedRoutes[0]).toEqual(routeToMatch);
+      expect(renderedExtraProps.length).toEqual(1);
+      expect(renderedExtraProps[0].theProp).toBe(true);
+      expect(renderedExtraProps[0].otherProp).toBe(true);
+    });
+
     it("passes extraProps to the component rendered by a pathless route", () => {
       const routeToMatch = {
         component: RenderRoutes
