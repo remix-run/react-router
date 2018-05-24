@@ -13,7 +13,8 @@ const config = {
       "react-router/Switch": "ReactRouter.Switch",
       "react-router/Router": "ReactRouter.Router",
       "react-router/Route": "ReactRouter.Route",
-      "react-router/matchPath": "ReactRouter.matchPath"
+      "react-router/matchPath": "ReactRouter.matchPath",
+      "react-router/generatePath": "ReactRouter.generatePath"
     }
   },
   external: [
@@ -21,7 +22,8 @@ const config = {
     "react-router/Switch",
     "react-router/Router",
     "react-router/Route",
-    "react-router/matchPath"
+    "react-router/matchPath",
+    "react-router/generatePath"
   ],
   plugins: [
     babel({
