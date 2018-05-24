@@ -2,6 +2,7 @@ import React from "react";
 import Switch from "react-router/Switch";
 import Route from "react-router/Route";
 import Redirect from "react-router/Redirect";
+import generatePath from "react-router/generatePath";
 
 const EMPTY = {};
 
@@ -11,10 +12,17 @@ const renderRoutes = (routes, extraProps = EMPTY, switchProps = EMPTY) =>
       {routes.map(
         (route, i) =>
           route.redirect !== void 0 ? (
-            <Redirect
+            <Route
               key={route.key || i}
-              from={route.path}
-              to={route.redirect}
+              path={route.path}
+              exact={route.exact}
+              strict={route.strict}
+              render={props => (
+                <Redirect
+                  from={route.path}
+                  to={generatePath(route.redirect, props.match)}
+                />
+              )}
             />
           ) : (
             <Route
