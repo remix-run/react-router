@@ -46,11 +46,13 @@ This project seeks to define a shared format for others to build patterns on top
 Routes are objects with the same properties as a `<Route>` with a couple differences:
 
 * the only render prop it accepts is `component` (no `render` or `children`)
-* introduces the `routes` key for sub routes
-* introduces the `redirect` key which can be a path that should be redirected ro when the route is matched
-* introduces the `props` and `forcedProps` keys, which can be used for convenience to inject props into the route.component
-* Consumers are free to add any additional props they'd like to a route, you can access `props.route` inside the `component`, this object is a reference to the object used to render and match.
 * accepts `key` prop to prevent remounting component when transition was made from route with the same component and same `key` prop
+* introduces the `routes` key for sub routes
+* introduces the `redirect` key which can be a path that should be redirected to (with parameter matching) when the route is matched
+* introduces the `props` and `forcedProps` keys, which can be used for convenience to inject props into the route.component
+* Consumers are free to add any additional props they'd like to a route
+* The `route` is passed as a prop to the `component` (prop name configurable)
+* A convenience `renderChild` function is passed as a prop to the `component` (prop name configurable). This function invokes `props => renderRoutes(route.routes, props)`.
 
 ```js
 const routes = [
@@ -193,9 +195,9 @@ import routes from './routes'
 
 Again, that's all pseudo-code. There are a lot of ways to do server rendering with data and pending navigation and we haven't settled on one. The point here is that `matchRoutes` gives you a chance to match statically outside of the render lifecycle. We'd like to make a demo app of this approach eventually.
 
-### `renderRoutes(routes, extraProps = {}, switchProps = {})`
+### `renderRoutes(routes, { extraProps = {}, switchProps = {}, routeProp = 'route', renderChildProp = 'renderChild' } = {})`
 
-In order to ensure that matching outside of render with `matchRoutes` and inside of render result in the same branch, you must use `renderRoutes` instead of `<Route>` inside your components. You can render a `<Route>` still, but know that it will not be accounted for in `matchRoutes` outside of render.
+In order to ensure that matching outside of render with `matchRoutes` and inside of render result in the same branch, you must use `renderRoutes` or `renderChild` instead of `<Route>` inside your components. You can render a `<Route>` still, but know that it will not be accounted for in `matchRoutes` outside of render.
 
 ```js
 import { renderRoutes } from "react-router-config";
@@ -265,5 +267,38 @@ ReactDOM.render(
     {renderRoutes(routes)}
   </BrowserRouter>,
   document.getElementById("root")
+);
+```
+
+Or you can update the above examples to use `props.renderChild` which eleminates the need to import the `renderRoutes` function
+
+```js
+const Root = ({ renderChild }) => (
+  <div>
+    <h1>Root</h1>
+    {/* child routes won't render without this */}
+    {renderChild()}
+  </div>
+);
+
+const Home = ({ route, renderChild }) => (
+  <div>
+    <h2>Home</h2>
+  </div>
+);
+
+const Child = ({ renderChild }) => (
+  <div>
+    <h2>Child</h2>
+    {/* child routes won't render without this */}
+    {renderChild({ someProp: "these extra props are optional" })}
+  </div>
+);
+
+const GrandChild = ({ someProp }) => (
+  <div>
+    <h3>Grand Child</h3>
+    <div>{someProp}</div>
+  </div>
 );
 ```
