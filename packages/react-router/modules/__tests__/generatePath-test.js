@@ -59,7 +59,7 @@ describe("generatePath", () => {
       const pattern = "/view/:id";
       const params = { id: "Q29tcGxhaW50OjVhZjFhMDg0MzhjMTk1MThiMTdlOTQ2Yg==" };
 
-      const generated = generatePath(pattern, path);
+      const generated = generatePath(pattern, params);
       expect(generated).toBe(
         "/view/Q29tcGxhaW50OjVhZjFhMDg0MzhjMTk1MThiMTdlOTQ2Yg=="
       );
