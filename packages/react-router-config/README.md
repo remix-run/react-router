@@ -52,7 +52,7 @@ Routes are objects with the same properties as a `<Route>` with a couple differe
 * introduces the `props` and `forcedProps` keys, which can be used for convenience to inject props into the route.component
 * Consumers are free to add any additional props they'd like to a route
 * The `route` is passed as a prop to the `component` (prop name configurable)
-* A convenience `renderChild` function is passed as a prop to the `component` (prop name configurable). This function invokes `props => renderRoutes(route.routes, props)`.
+* A convenience `renderChild` function is passed as a prop to the `component` (prop name configurable).
 
 ```js
 const routes = [
@@ -301,4 +301,30 @@ const GrandChild = ({ someProp }) => (
     <div>{someProp}</div>
   </div>
 );
+```
+
+## Route Component Prop Injection
+
+When route `components` are rendered they are passed props that are merged in the order illustrated below
+
+* Use `route.props` for props that should be overriden by props passed to the component
+* Use `route.forcedProps` for props that should override any props passed to the component
+
+```js
+function renderRoutes(routes, { extraProps, routeProp = 'route', renderChildProp = 'renderChild' }) {
+  routes.forEach(route => {
+    let routeProps = props => getPropsForComponent(extraProps, route, props, routeProp, renderChildProp);
+  })
+}
+
+function getPropsForComponent(extraProps, route, props, routeProp, renderChildProp) {
+  return {
+    ...route.props,
+    ...props,
+    ...extraProps,
+    [routeProp] = route,
+    [renderChildProp] = props => renderRoutes(route.routes, ( { extraProps: props }),
+    ...route.forcedProps
+  }
+}
 ```
