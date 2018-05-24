@@ -20,7 +20,7 @@ const renderRoutes = (routes, extraProps = EMPTY, switchProps = EMPTY) =>
               render={props => (
                 <Redirect
                   from={route.path}
-                  to={generatePath(route.redirect, props.match)}
+                  to={generatePath(route.redirect, props.match.params)}
                 />
               )}
             />
