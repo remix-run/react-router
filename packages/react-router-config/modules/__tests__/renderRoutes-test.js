@@ -2,9 +2,11 @@ import React from "react";
 import ReactDOM from "react-dom";
 import ReactDOMServer from "react-dom/server";
 import StaticRouter from "react-router/StaticRouter";
+import MemoryRouter from "react-router/MemoryRouter";
 import Router from "react-router/Router";
 import renderRoutes from "../renderRoutes";
 import createHistory from "history/createMemoryHistory";
+import Switch from "react-router/Switch";
 
 describe("renderRoutes", () => {
   let renderedRoutes;
@@ -217,6 +219,225 @@ describe("renderRoutes", () => {
 
       expect(renderedRoutes.length).toEqual(1);
       expect(renderedRoutes[0]).toEqual(routeToMatch);
+    });
+  });
+
+  describe("routes with redirect", () => {
+    it("redirects for a matching path", () => {
+      const node = document.createElement("div");
+
+      const App = ({ route: { routes } }) => renderRoutes(routes);
+
+      let params = void 0;
+
+      const Target = props => {
+        params = props.match.params;
+        return false;
+      };
+
+      const routes = [
+        {
+          path: "/users/:username/messages/:messageId",
+          redirect: "/:username/messages/:messageId"
+        },
+        {
+          path: "/:username/messages/:messageId",
+          component: Target
+        }
+      ];
+
+      ReactDOM.render(
+        <MemoryRouter initialEntries={["/users/mjackson/messages/123"]}>
+          {renderRoutes(routes)}
+        </MemoryRouter>,
+        node
+      );
+
+      expect(params).toMatchObject({
+        username: "mjackson",
+        messageId: "123"
+      });
+    });
+
+    it("does not redirect for a non matching path", () => {
+      const node = document.createElement("div");
+
+      const App = ({ route: { routes } }) => renderRoutes(routes);
+
+      let params = void 0;
+
+      const Target = props => {
+        params = props.match.params;
+        return false;
+      };
+
+      const routes = [
+        {
+          path: "/users/:username/details/:messageId",
+          redirect: "/users/:username/messages/:messageId"
+        },
+        {
+          path: "/users/:username/messages/:messageId",
+          component: Target
+        }
+      ];
+
+      ReactDOM.render(
+        <MemoryRouter initialEntries={["/users/mjackson/messages/123"]}>
+          {renderRoutes(routes)}
+        </MemoryRouter>,
+        node
+      );
+
+      expect(params).toMatchObject({
+        username: "mjackson",
+        messageId: "123"
+      });
+    });
+  });
+
+  describe("routes with props", () => {
+    it("passes the route props to the component", () => {
+      const routeToMatch = {
+        component: Comp,
+        path: "/",
+        props: {
+          anExtraProp: "anExtraPropValue"
+        }
+      };
+      const routes = [
+        routeToMatch,
+        {
+          component: Comp
+        }
+      ];
+
+      ReactDOMServer.renderToString(
+        <StaticRouter location="/" context={{}}>
+          {renderRoutes(routes)}
+        </StaticRouter>
+      );
+      expect(renderedExtraProps.length).toEqual(1);
+      expect(renderedExtraProps[0].anExtraProp).toEqual("anExtraPropValue");
+    });
+
+    it("passes the route props to the component before the extra props", () => {
+      const routeToMatch = {
+        component: Comp,
+        path: "/",
+        props: {
+          anExtraProp: "anExtraPropValue2"
+        }
+      };
+      const routes = [
+        routeToMatch,
+        {
+          component: Comp
+        }
+      ];
+
+      ReactDOMServer.renderToString(
+        <StaticRouter location="/" context={{}}>
+          {renderRoutes(routes, { anExtraProp: "anExtraPropValue" })}
+        </StaticRouter>
+      );
+      expect(renderedExtraProps.length).toEqual(1);
+      expect(renderedExtraProps[0].anExtraProp).toEqual("anExtraPropValue");
+    });
+  });
+
+  describe("routes with forced props", () => {
+    it("passes the forced route props to the component", () => {
+      const routeToMatch = {
+        component: Comp,
+        path: "/",
+        forcedProps: {
+          anExtraProp: "anExtraPropValue"
+        }
+      };
+      const routes = [
+        routeToMatch,
+        {
+          component: Comp
+        }
+      ];
+
+      ReactDOMServer.renderToString(
+        <StaticRouter location="/" context={{}}>
+          {renderRoutes(routes)}
+        </StaticRouter>
+      );
+      expect(renderedExtraProps.length).toEqual(1);
+      expect(renderedExtraProps[0].anExtraProp).toEqual("anExtraPropValue");
+    });
+
+    it("passes the route props to the component after the extra props", () => {
+      const routeToMatch = {
+        component: Comp,
+        path: "/",
+        forcedProps: {
+          anExtraProp: "anExtraPropValue"
+        }
+      };
+      const routes = [
+        routeToMatch,
+        {
+          component: Comp
+        }
+      ];
+
+      ReactDOMServer.renderToString(
+        <StaticRouter location="/" context={{}}>
+          {renderRoutes(routes, { anExtraProp: "anExtraPropValue2" })}
+        </StaticRouter>
+      );
+      expect(renderedExtraProps.length).toEqual(1);
+      expect(renderedExtraProps[0].anExtraProp).toEqual("anExtraPropValue");
+    });
+  });
+
+  it("ingores the route component when it redirects for a matching path", () => {
+    const node = document.createElement("div");
+
+    const App = ({ route: { routes } }) => renderRoutes(routes);
+
+    let params = void 0;
+    let redirectRendered = false;
+
+    const Target = props => {
+      params = props.match.params;
+      return false;
+    };
+
+    const RedirectComponent = props => {
+      redirectRendered = true;
+      return false;
+    };
+
+    const routes = [
+      {
+        path: "/users/:username/messages/:messageId",
+        redirect: "/:username/messages/:messageId",
+        component: RedirectComponent
+      },
+      {
+        path: "/:username/messages/:messageId",
+        component: Target
+      }
+    ];
+
+    ReactDOM.render(
+      <MemoryRouter initialEntries={["/users/mjackson/messages/123"]}>
+        {renderRoutes(routes)}
+      </MemoryRouter>,
+      node
+    );
+
+    expect(redirectRendered).toBe(false);
+
+    expect(params).toMatchObject({
+      username: "mjackson",
+      messageId: "123"
     });
   });
 
