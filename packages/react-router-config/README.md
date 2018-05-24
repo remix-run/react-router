@@ -49,7 +49,7 @@ Routes are objects with the same properties as a `<Route>` with a couple differe
 * accepts `key` prop to prevent remounting component when transition was made from route with the same component and same `key` prop
 * introduces the `routes` key for sub routes
 * introduces the `redirect` key which can be a path that should be redirected to (with parameter matching) when the route is matched
-* introduces the `props` and `forcedProps` keys, which can be used for convenience to inject props into the route.component
+* introduces the `props` and `forcedProps` keys, which can be used for convenience to pass props from the route configuration into the route component
 * Consumers are free to add any additional props they'd like to a route
 * The `route` is passed as a prop to the `component` (prop name configurable)
 * A convenience `renderChild` function is passed as a prop to the `component` (prop name configurable).
@@ -303,28 +303,76 @@ const GrandChild = ({ someProp }) => (
 );
 ```
 
-## Route Component Prop Injection
+## Route Component Prop Order
 
-When route `components` are rendered they are passed props that are merged in the order illustrated below
+When route `components` are rendered they are passed a collection of props that are merged in a specific order.
+
+The are `route` keys that allow you to control this merge order.
 
 * Use `route.props` for props that should be overriden by props passed to the component
 * Use `route.forcedProps` for props that should override any props passed to the component
 
+This merge order is important if you are trying to do something like the following:
+
+```
+const routes = [
+  {
+    props: {
+      className: 'the-app-theme'
+    },
+    routes: [
+      {
+        path: '/abc',
+        routes: [
+          {
+            props: {
+              className: 'the-abc-theme' // will always be overriden by 'the-app-theme'
+            }
+          }
+        ]
+      }
+    ]
+  }
+];
+```
+
+You need to instead do the following for the className to be correctly applied:
+
+```
+const routes = [
+  {
+    props: {
+      className: 'the-app-theme'
+    },
+    routes: [
+      {
+        path: '/abc',
+        routes: [
+          {
+            forcedProps: {
+              className: 'the-abc-theme' // will override 'the-app-theme'
+            }
+          }
+        ]
+      }
+    ]
+  }
+];
+```
+
+The following illustrates the merge order of route component props:
+
 ```js
 function renderRoutes(routes, { extraProps, routeProp = 'route', renderChildProp = 'renderChild' }) {
-  routes.forEach(route => {
-    let routeProps = props => getPropsForComponent(extraProps, route, props, routeProp, renderChildProp);
-  })
-}
-
-function getPropsForComponent(extraProps, route, props, routeProp, renderChildProp) {
-  return {
-    ...route.props,
-    ...props,
-    ...extraProps,
-    [routeProp] = route,
-    [renderChildProp] = props => renderRoutes(route.routes, ( { extraProps: props }),
-    ...route.forcedProps
-  }
+  return routes.map(route =>
+    props => {
+      ...route.props,
+      ...props,
+      ...extraProps,
+      [routeProp] = route,
+      [renderChildProp] = props => renderRoutes(route.routes, ( { extraProps: props }),
+      ...route.forcedProps
+    }
+  )
 }
 ```
