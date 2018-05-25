@@ -10,7 +10,7 @@ const compileGenerator = pattern => {
 
   if (cache[pattern]) return cache[pattern];
 
-  const compiledGenerator = pathToRegexp.compile(pattern, { pretty: true });
+  const compiledGenerator = pathToRegexp.compile(pattern);
 
   if (cacheCount < cacheLimit) {
     cache[pattern] = compiledGenerator;
@@ -28,7 +28,7 @@ const generatePath = (pattern = "/", params = {}) => {
     return pattern;
   }
   const generator = compileGenerator(pattern);
-  return generator(params);
+  return generator(params, { pretty: true });
 };
 
 export default generatePath;
