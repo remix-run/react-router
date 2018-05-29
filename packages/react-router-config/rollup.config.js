@@ -11,6 +11,7 @@ const config = {
     globals: {
       react: "React",
       "react-router/Switch": "ReactRouter.Switch",
+      "react-router/Redirect": "ReactRouter.Redirect",
       "react-router/Router": "ReactRouter.Router",
       "react-router/Route": "ReactRouter.Route",
       "react-router/matchPath": "ReactRouter.matchPath",
@@ -20,6 +21,7 @@ const config = {
   external: [
     "react",
     "react-router/Switch",
+    "react-router/Redirect",
     "react-router/Router",
     "react-router/Route",
     "react-router/matchPath",
@@ -27,10 +29,13 @@ const config = {
   ],
   plugins: [
     babel({
-      exclude: "node_modules/**",
-      plugins: ["external-helpers"]
+      exclude: "node_modules/**"
     }),
-    resolve(),
+    resolve({
+      customResolveOptions: {
+        moduleDirectory: ["../../node_modules", "../node_modules"]
+      }
+    }),
     commonjs({
       include: /node_modules/
     }),
