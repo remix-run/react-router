@@ -18,6 +18,7 @@
     "Redirect.js",
     "Route.js",
     "Router.js",
+    "RouterContext.js",
     "StaticRouter.js",
     "Switch.js",
     "es",
