@@ -38,7 +38,7 @@
     "react": ">=15"
   },
   "dependencies": {
-    "create-react-context": "^0.1.6",
+    "create-react-context": "^0.2.2",
     "history": "^4.7.2",
     "hoist-non-react-statics": "^2.5.0",
     "invariant": "^2.2.4",
