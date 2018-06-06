@@ -34,7 +34,7 @@
   "dependencies": {
     "history": "^4.7.2",
     "prop-types": "^15.6.1",
-    "react-router": "^4.3.0"
+    "react-router": "^4.3.1"
   },
   "devDependencies": {
     "babel-cli": "^6.26.0",

@@ -30,7 +30,7 @@
   },
   "dependencies": {
     "prop-types": "^15.6.1",
-    "react-router": "^4.3.0"
+    "react-router": "^4.3.1"
   },
   "devDependencies": {
     "babel-jest": "^23.0.1",

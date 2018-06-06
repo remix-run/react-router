@@ -27,7 +27,7 @@
   },
   "peerDependencies": {
     "react": ">=15",
-    "react-router": "^4.3.0"
+    "react-router": "^4.3.1"
   },
   "devDependencies": {
     "babel-cli": "^6.26.0",
@@ -50,7 +50,7 @@
     "react": "^16.4.0",
     "react-addons-test-utils": "^15.6.2",
     "react-dom": "^16.4.0",
-    "react-router": "^4.3.0",
+    "react-router": "^4.3.1",
     "rollup": "^0.60.0",
     "rollup-plugin-babel": "^3.0.4",
     "rollup-plugin-commonjs": "^9.1.3",
