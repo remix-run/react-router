@@ -50,7 +50,7 @@ const renderRoutes = (
       : noRenderChildComponent;
 
   const mergeRouteProps = (route, props) => {
-    const { route: stirpRoute, match, ...otherProps } = props;
+    const { route: stripRoute, match, ...otherProps } = props;
     return {
       ...(route.props ? route.props : EMPTY),
       ...otherProps,
