@@ -46,13 +46,15 @@ This project seeks to define a shared format for others to build patterns on top
 Routes are objects with the same properties as a `<Route>` with a couple differences:
 
 * the only render prop it accepts is `component` (no `render` or `children`)
+* If no `component` is provided but `routes` are provided, then the child routes will still be rendered.
 * accepts `key` prop to prevent remounting component when transition was made from route with the same component and same `key` prop
 * introduces the `routes` key for sub routes
 * introduces the `redirect` key which can be a path that should be redirected to (with parameter matching) when the route is matched
 * introduces the `props` and `forcedProps` keys, which can be used for convenience to pass props from the route configuration into the route component
 * Consumers are free to add any additional props they'd like to a route
-* The `route` is passed as a prop to the `component` (prop name configurable)
+* The `route` and `match` are passed as props to the `component` (prop names configurable)
 * A convenience `renderChild` function is passed as a prop to the `component` (prop name configurable).
+* The `addParamProps` option can be used to directly inject all values in `match.params` as props.
 
 ```js
 const routes = [
@@ -363,16 +365,28 @@ const routes = [
 The following illustrates the merge order of route component props:
 
 ```js
-function renderRoutes(routes, { extraProps, routeProp = 'route', renderChildProp = 'renderChild' }) {
-  return routes.map(route =>
-    props => {
-      ...route.props,
-      ...props,
-      ...extraProps,
-      [routeProp] = route,
-      [renderChildProp] = props => renderRoutes(route.routes, ( { extraProps: props }),
-      ...route.forcedProps
-    }
-  )
-}
+const {
+  extraProps = {},
+  switchProps = {},
+  routeProp = "route",
+  matchProp = "match",
+  renderChildProp = "renderChild",
+  addParamProps = false,
+  noRenderChildComponent = () => false,
+  overrideRenderRoutes = false
+} = (renderRoutesOptions = {});
+
+const mergeRouteProps = (route, props) => {
+  const { route: stripRoute, match, ...otherProps } = props;
+  return {
+    ...(route.props ? route.props : {}),
+    ...otherProps,
+    ...extraProps,
+    ...(route.forcedProps ? route.forcedProps : {}),
+    ...(routeProp ? { [routeProp]: route } : {}),
+    ...(matchProp ? { [matchProp]: match } : {}),
+    ...(addParamProps ? (match ? (match.params ? match.params : {}) : {}) : {}),
+    ...(renderChildProp ? { [renderChildProp]: renderChild(route) } : {})
+  };
+};
 ```
