@@ -96,16 +96,6 @@ describe("A <Link>", () => {
   });
 });
 
-describe("When a <Link> is clicked", () => {
-  it("calls its onClick handler");
-
-  it("changes the location");
-
-  describe("and the onClick handler calls event.preventDefault()", () => {
-    it("does not change the location");
-  });
-});
-
 describe("A <Link> underneath a <HashRouter>", () => {
   const node = document.createElement("div");
 

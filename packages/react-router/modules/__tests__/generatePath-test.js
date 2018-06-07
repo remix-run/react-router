@@ -53,4 +53,16 @@ describe("generatePath", () => {
       expect(generated).toBe("/");
     });
   });
+
+  describe('simple pattern="/view/:id"', () => {
+    it("handle = on params", () => {
+      const pattern = "/view/:id";
+      const params = { id: "Q29tcGxhaW50OjVhZjFhMDg0MzhjMTk1MThiMTdlOTQ2Yg==" };
+
+      const generated = generatePath(pattern, params);
+      expect(generated).toBe(
+        "/view/Q29tcGxhaW50OjVhZjFhMDg0MzhjMTk1MThiMTdlOTQ2Yg=="
+      );
+    });
+  });
 });

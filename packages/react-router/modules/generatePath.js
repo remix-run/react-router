@@ -28,7 +28,7 @@ const generatePath = (pattern = "/", params = {}) => {
     return pattern;
   }
   const generator = compileGenerator(pattern);
-  return generator(params);
+  return generator(params, { pretty: true });
 };
 
 export default generatePath;
