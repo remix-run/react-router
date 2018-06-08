@@ -10,6 +10,9 @@ React Router v4 is a complete rewrite, so there is not a simple migration path. 
 * [Routes](#routes)
   * [Nesting Routes](#nesting-routes)
   * [on* properties](#on-properties)
+  * [optional parameters](#optional-parameters)
+  * [`routeParams`](#routeparams)
+  * [`location.query`](#query-object)
   * [Switch](#switch)
   * [Redirect](#redirect)
 * [PatternUtils](#patternutils)
@@ -121,6 +124,28 @@ React Router v3 provides `onEnter`, `onUpdate`, and `onLeave` methods. These wer
 
 With v4, you should use the lifecycle methods of the component rendered by a `<Route>`. Instead of `onEnter`, you would use `componentDidMount` or `componentWillMount`. Where you would use `onUpdate`, you can use `componentDidUpdate` or `componentWillUpdate` (or possibly `componentWillReceiveProps`). `onLeave` can be replaced with `componentWillUnmount`.
 
+### Optional parameters
+
+in v3 you declared optional parameters as so: `path="/entity/:entityId(/:parentId)"` (here `prentId` is optional)
+
+in v4 the syntax is changed to: `path="/entity/:entityId/:parentId?"`
+
+### `routeParams`
+
+In v3 `Component` that matched location was given `routeParams` object via `props` containing required data from the react-router
+
+In v4 `match` property is passed to `Route`'s `Component`. Use it instead of `routeParams`.
+
+### `query` object
+
+In react-router v4 there is no `query` property on `location` object no more. Only unparsed searched string on `search` property.
+
+You can either implement your own search parsing logic, relevant for your application needs, or use ready implementations.
+
+You can also add v3-like `query` property on `location` object by using [qhistory](https://github.com/pshrmn/qhistory) package.
+
+Read more regarding intentions for this change, and possible solution in this [Issue](https://github.com/ReactTraining/react-router/issues/4410)
+
 ### `<Switch>`
 
 In v3, you could specify a number of child routes, and only the first one that matched would be rendered.
@@ -220,6 +245,10 @@ const thingPath = pathToRegexp.compile(THING_PATH);
 
 <Link to={thingPath({id: 1})}>A thing</Link>
 ```
+
+### getParamNames
+
+`getParamNames` functionality can be achieved using  [parse](https://github.com/pillarjs/path-to-regexp/tree/v1.7.0#parse) function in [`path-to-regexp@^1.7.0`](https://github.com/pillarjs/path-to-regexp/tree/v1.7.0)
 
 ## Link
 
