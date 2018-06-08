@@ -10,9 +10,8 @@ React Router v4 is a complete rewrite, so there is not a simple migration path. 
 * [Routes](#routes)
   * [Nesting Routes](#nesting-routes)
   * [on* properties](#on-properties)
-  * [optional parameters](#optional-parameters)
-  * [`routeParams`](#routeparams)
-  * [`location.query`](#query-object)
+  * [Optional Parameters](#optional-parameters)
+  * [Query Strings](#query-strings)
   * [Switch](#switch)
   * [Redirect](#redirect)
 * [PatternUtils](#patternutils)
@@ -124,27 +123,19 @@ React Router v3 provides `onEnter`, `onUpdate`, and `onLeave` methods. These wer
 
 With v4, you should use the lifecycle methods of the component rendered by a `<Route>`. Instead of `onEnter`, you would use `componentDidMount` or `componentWillMount`. Where you would use `onUpdate`, you can use `componentDidUpdate` or `componentWillUpdate` (or possibly `componentWillReceiveProps`). `onLeave` can be replaced with `componentWillUnmount`.
 
-### Optional parameters
+### Optional Parameters
 
-in v3 you declared optional parameters as so: `path="/entity/:entityId(/:parentId)"` (here `prentId` is optional)
+In v3, parameters were made optional with parentheses: `path="/entity/:entityId(/:parentId)"`
 
-in v4 the syntax is changed to: `path="/entity/:entityId/:parentId?"`
+In v4, the syntax is changed to a trailing question mark: `path="/entity/:entityId/:parentId?"`
 
-### `routeParams`
+### Query Strings
 
-In v3 `Component` that matched location was given `routeParams` object via `props` containing required data from the react-router
+In v4, there is no parsing done on query strings. The unparsed query string is available on the `location.search` property.
 
-In v4 `match` property is passed to `Route`'s `Component`. Use it instead of `routeParams`.
+The [qhistory](https://github.com/pshrmn/qhistory) library can provide this functionality if it is necessary for your application.
 
-### `query` object
-
-In react-router v4 there is no `query` property on `location` object no more. Only unparsed searched string on `search` property.
-
-You can either implement your own search parsing logic, relevant for your application needs, or use ready implementations.
-
-You can also add v3-like `query` property on `location` object by using [qhistory](https://github.com/pshrmn/qhistory) package.
-
-Read more regarding intentions for this change, and possible solution in this [Issue](https://github.com/ReactTraining/react-router/issues/4410)
+Read more regarding intentions for this change and possible solutions in [this issue](https://github.com/ReactTraining/react-router/issues/4410).
 
 ### `<Switch>`
 
@@ -235,7 +226,7 @@ const THING_PATH = '/thing/:id';
 <Link to={PatternUtils.formatPattern(THING_PATH, {id: 1})}>A thing</Link>
 ```
 
-In v4, you can achieve the same functionality using the [compile](https://github.com/pillarjs/path-to-regexp/tree/v1.7.0#compile-reverse-path-to-regexp) function in [`path-to-regexp@^1.7.0`](https://github.com/pillarjs/path-to-regexp/tree/v1.7.0).
+In v4, you can achieve the same functionality using the [`compile`](https://github.com/pillarjs/path-to-regexp/tree/v1.7.0#compile-reverse-path-to-regexp) function in [`path-to-regexp@^1.7.0`](https://github.com/pillarjs/path-to-regexp/tree/v1.7.0).
 
 ```jsx
 // v4
@@ -248,7 +239,7 @@ const thingPath = pathToRegexp.compile(THING_PATH);
 
 ### getParamNames
 
-`getParamNames` functionality can be achieved using  [parse](https://github.com/pillarjs/path-to-regexp/tree/v1.7.0#parse) function in [`path-to-regexp@^1.7.0`](https://github.com/pillarjs/path-to-regexp/tree/v1.7.0)
+The `getParamNames` functionality can be achieved using the [`parse`](https://github.com/pillarjs/path-to-regexp/tree/v1.7.0#parse) function in [`path-to-regexp@^1.7.0`](https://github.com/pillarjs/path-to-regexp/tree/v1.7.0).
 
 ## Link
 
