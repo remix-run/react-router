@@ -6,6 +6,12 @@ switch (process.env.TEST_ENV) {
   case "es":
     mappedModule = "<rootDir>/es/index";
     break;
+  case "umd":
+    mappedModule = "<rootDir>/umd/react-router-config.js";
+    break;
+  case "min":
+    mappedModule = "<rootDir>/umd/react-router-config.min.js";
+    break;
   default:
     mappedModule = "<rootDir>/modules/index";
 }

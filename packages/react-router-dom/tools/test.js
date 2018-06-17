@@ -23,3 +23,9 @@ console.log("Testing es build");
 exec("jest", {
   TEST_ENV: "es"
 });
+
+console.log("Testing UMD build");
+
+exec("jest", {
+  TEST_ENV: "umd"
+});
