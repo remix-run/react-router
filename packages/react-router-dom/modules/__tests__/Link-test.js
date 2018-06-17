@@ -1,8 +1,10 @@
 import React from "react";
 import ReactDOM from "react-dom";
-import { MemoryRouter, HashRouter, Link } from "react-router-dom";
 
 import renderStrict from "./utils/renderStrict";
+
+// resolved by jest
+import { MemoryRouter, HashRouter, Link } from "react-router-dom";
 
 describe("A <Link>", () => {
   const node = document.createElement("div");

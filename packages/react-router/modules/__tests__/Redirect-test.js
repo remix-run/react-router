@@ -1,8 +1,10 @@
 import React from "react";
 import ReactDOM from "react-dom";
-import { MemoryRouter, Redirect, Route, Switch } from "react-router";
 
 import renderStrict from "./utils/renderStrict";
+
+// resolved by jest
+import { MemoryRouter, Redirect, Route, Switch } from "react-router";
 
 describe("A <Redirect>", () => {
   const node = document.createElement("div");
