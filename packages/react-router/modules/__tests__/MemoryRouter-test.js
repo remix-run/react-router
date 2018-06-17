@@ -1,7 +1,8 @@
 import React from "react";
 import ReactDOM from "react-dom";
 import PropTypes from "prop-types";
-import MemoryRouter from "../MemoryRouter";
+
+import { MemoryRouter } from "react-router";
 
 describe("A <MemoryRouter>", () => {
   it("puts history on context.router", () => {

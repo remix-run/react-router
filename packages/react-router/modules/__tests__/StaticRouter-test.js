@@ -2,10 +2,8 @@ import React from "react";
 import ReactDOM from "react-dom";
 import ReactDOMServer from "react-dom/server";
 import PropTypes from "prop-types";
-import StaticRouter from "../StaticRouter";
-import Redirect from "../Redirect";
-import Route from "../Route";
-import Prompt from "../Prompt";
+
+import { StaticRouter, Redirect, Route, Prompt } from "react-router";
 
 describe("A <StaticRouter>", () => {
   it("provides context.router.staticContext in props.staticContext", () => {

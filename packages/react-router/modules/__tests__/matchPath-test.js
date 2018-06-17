@@ -1,4 +1,4 @@
-import matchPath from "../matchPath";
+import { matchPath } from "react-router";
 
 describe("matchPath", () => {
   describe('with path="/"', () => {

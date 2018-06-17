@@ -1,9 +1,8 @@
 import React from "react";
 import ReactDOM from "react-dom";
 import { createMemoryHistory as createHistory } from "history";
-import Router from "../Router";
-import Switch from "../Switch";
-import Route from "../Route";
+
+import { Router, Switch, Route } from "react-router";
 
 describe("A <Switch>", () => {
   it("does not remount a <Route>", () => {

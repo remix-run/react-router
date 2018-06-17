@@ -1,9 +1,7 @@
 import React from "react";
 import ReactDOM from "react-dom";
-import MemoryRouter from "../MemoryRouter";
-import Switch from "../Switch";
-import Route from "../Route";
-import Redirect from "../Redirect";
+
+import { MemoryRouter, Switch, Route, Redirect } from "react-router";
 
 describe("A <Switch>", () => {
   it("renders the first <Route> that matches the URL", () => {
