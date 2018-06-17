@@ -1,8 +1,7 @@
 import React from "react";
 import ReactDOM from "react-dom";
-import MemoryRouter from "react-router/MemoryRouter";
-import NavLink from "../NavLink";
-import withRouter from "../withRouter";
+
+import { MemoryRouter, NavLink, withRouter } from "react-router-dom";
 
 describe("NavLink", () => {
   const node = document.createElement("div");

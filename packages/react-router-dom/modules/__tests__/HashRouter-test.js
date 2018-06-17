@@ -1,7 +1,7 @@
 import React from "react";
 import ReactDOM from "react-dom";
 import PropTypes from "prop-types";
-import HashRouter from "../HashRouter";
+import { HashRouter } from "react-router-dom";
 
 describe("A <HashRouter>", () => {
   it("puts history on context.router", () => {

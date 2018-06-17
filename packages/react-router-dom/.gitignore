@@ -2,4 +2,5 @@ es
 node_modules
 umd
 /*.js
+!jest.config.js
 !rollup.config.js
