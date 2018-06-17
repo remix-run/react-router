@@ -23,7 +23,7 @@
     "prepublishOnly": "node ./tools/build.js",
     "clean": "git clean -fdX .",
     "lint": "eslint modules",
-    "test": "jest"
+    "test": "node ./tools/test.js"
   },
   "peerDependencies": {
     "react": ">=15",

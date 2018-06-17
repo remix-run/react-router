@@ -1,4 +1,4 @@
-import matchRoutes from "../matchRoutes";
+import { matchRoutes } from "react-router-config";
 
 it("finds matched routes", () => {
   const routes = [

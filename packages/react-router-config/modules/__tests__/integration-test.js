@@ -1,8 +1,8 @@
 import React from "react";
 import ReactDOMServer from "react-dom/server";
 import StaticRouter from "react-router/StaticRouter";
-import matchRoutes from "../matchRoutes";
-import renderRoutes from "../renderRoutes";
+
+import { matchRoutes, renderRoutes } from "react-router-config";
 
 describe("integration", () => {
   it("generates the same matches in renderRoutes and matchRoutes", () => {
