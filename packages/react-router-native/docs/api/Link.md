@@ -5,7 +5,7 @@ Provide declarative, accessible navigation around your application.
 ```jsx
 import { Link } from 'react-router-native'
 
-<Link to='/about'>About</Link>
+<Link to='/about'><Text>About</Text></Link>
 ```
 
 ## to: string
