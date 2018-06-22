@@ -13,7 +13,7 @@ const renderRoutes = (routes, extraProps = {}, switchProps = {}) =>
           strict={route.strict}
           render={props =>
             route.render ? (
-              route.render(props)
+              route.render({ ...props, ...extraProps, route: route })
             ) : (
               <route.component {...props} {...extraProps} route={route} />
             )
