@@ -11,9 +11,13 @@ const renderRoutes = (routes, extraProps = {}, switchProps = {}) =>
           path={route.path}
           exact={route.exact}
           strict={route.strict}
-          render={props => (
-            <route.component {...props} {...extraProps} route={route} />
-          )}
+          render={props =>
+            route.render ? (
+              route.render({ ...props, ...extraProps, route: route })
+            ) : (
+              <route.component {...props} {...extraProps} route={route} />
+            )
+          }
         />
       ))}
     </Switch>
