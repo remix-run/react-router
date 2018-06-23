@@ -181,4 +181,69 @@ describe("A <Switch>", () => {
 
     expect(node.innerHTML).toMatch(/two/);
   });
+
+  describe("children", () => {
+    it("passes location prop to matched <Route>", () => {
+      const node = document.createElement("div");
+
+      let propLocation;
+      const RouteHoneytrap = props => {
+        propLocation = props.location;
+        return <Route {...props} />;
+      };
+
+      const switchLocation = { pathname: "/two" };
+      ReactDOM.render(
+        <MemoryRouter initialEntries={["/one"]}>
+          <Switch location={switchLocation}>
+            <Route path="/one" render={() => <h1>one</h1>} />
+            <RouteHoneytrap path="/two" render={() => <h1>two</h1>} />
+          </Switch>
+        </MemoryRouter>,
+        node
+      );
+      expect(propLocation).toEqual(switchLocation);
+    });
+
+    it("renders partial Routes", () => {
+      const node = document.createElement("div");
+
+      ReactDOM.render(
+        <MemoryRouter initialEntries={["/sauce/sriracha"]}>
+          <Route
+            path="/sauce"
+            render={() => (
+              <Switch>
+                <Route path="sriracha" render={() => <div>sriracha</div>} />
+              </Switch>
+            )}
+          />
+        </MemoryRouter>,
+        node
+      );
+
+      expect(node.innerHTML).toContain("sriracha");
+    });
+
+    it("renders partial <Redirect>s", () => {
+      const node = document.createElement("div");
+
+      ReactDOM.render(
+        <MemoryRouter initialEntries={["/sauce/tobasco"]}>
+          <Route
+            path="/sauce"
+            render={() => (
+              <Switch>
+                <Route path="sriracha" render={() => <div>sriracha</div>} />
+                <Redirect from="tobasco" to="/sauce/sriracha" />
+              </Switch>
+            )}
+          />
+        </MemoryRouter>,
+        node
+      );
+
+      expect(node.innerHTML).toContain("sriracha");
+    });
+  });
 });
