@@ -54,6 +54,48 @@ describe("matchPath", () => {
     });
   });
 
+  describe("with relative path (no leading slash)", () => {
+    it("returns correct match url and params with no parent", () => {
+      const pathname = "/7";
+      const options = {
+        path: ":number"
+      };
+      const match = matchPath(pathname, options, null);
+      expect(match.url).toBe("/7");
+      expect(match.params).toEqual({ number: "7" });
+    });
+    it("returns correct match url and params with parent", () => {
+      const pathname = "/test-location/7";
+      const options = {
+        path: ":number"
+      };
+      const parentMatch = {
+        url: "/test-location",
+        path: "/test-location",
+        params: {},
+        isExact: true
+      };
+      const match = matchPath(pathname, options, parentMatch);
+      expect(match.url).toBe("/test-location/7");
+      expect(match.params).toEqual({ number: "7" });
+    });
+    it("passes along parent match params", () => {
+      const pathname = "/test-location/hello/7";
+      const options = {
+        path: ":number"
+      };
+      const parentMatch = {
+        url: "/test-location/:something",
+        path: "/test-location/hello",
+        params: { something: "hello" },
+        isExact: true
+      };
+      const match = matchPath(pathname, options, parentMatch);
+      expect(match.url).toBe("/test-location/hello/7");
+      expect(match.params).toEqual({ something: "hello", number: "7" });
+    });
+  });
+
   describe("cache", () => {
     it("creates a cache entry for each exact/strict pair", () => {
       // true/false and false/true will collide when adding booleans
