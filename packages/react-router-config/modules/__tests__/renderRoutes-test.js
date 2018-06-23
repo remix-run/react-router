@@ -433,4 +433,21 @@ describe("renderRoutes", () => {
       expect(renderedRoutes[1]).toEqual(routes[1].routes[1]);
     });
   });
+
+  it("allows rendering a component using a function with render property", () => {
+    const routes = [
+      {
+        path: "/path",
+        render: props => <Comp {...props} />
+      }
+    ];
+
+    ReactDOMServer.renderToString(
+      <StaticRouter location="/path" context={{}}>
+        {renderRoutes(routes)}
+      </StaticRouter>
+    );
+    expect(renderedRoutes.length).toEqual(1);
+    expect(renderedRoutes[0]).toEqual(routes[0]);
+  });
 });

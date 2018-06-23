@@ -7,8 +7,6 @@ import { BrowserRouter as Router, Route, Link } from "react-router-dom";
 
 ////////////////////////////////////////////////////////////
 // first our route components
-const Main = () => <h2>Main</h2>;
-
 const Sandwiches = () => <h2>Sandwiches</h2>;
 
 const Tacos = ({ routes }) => (
