@@ -119,83 +119,6 @@ describe("A <Route> with dynamic segments in the path", () => {
   });
 });
 
-describe("A <Route> with relative path", () => {
-  it("renders them as children", () => {
-    const TEXT = "some text";
-    const node = document.createElement("div");
-    ReactDOM.render(
-      <MemoryRouter initialEntries={["/some/path"]}>
-        <Route path="/">
-          <Route path="some/path">
-            <div>{TEXT}</div>
-          </Route>
-        </Route>
-      </MemoryRouter>,
-      node
-    );
-
-    expect(node.innerHTML).toContain(TEXT);
-  });
-
-  it("renders them as using child function", () => {
-    const TEXT = "some text";
-    const node = document.createElement("div");
-    ReactDOM.render(
-      <MemoryRouter initialEntries={["/some/path"]}>
-        <Route path="/">
-          {() => (
-            <Route path="some/path">
-              <div>{TEXT}</div>
-            </Route>
-          )}
-        </Route>
-      </MemoryRouter>,
-      node
-    );
-
-    expect(node.innerHTML).toContain(TEXT);
-  });
-
-  it("renders them as using render prop", () => {
-    const TEXT = "some text";
-    const node = document.createElement("div");
-    ReactDOM.render(
-      <MemoryRouter initialEntries={["/some/path"]}>
-        <Route
-          path="/"
-          render={() => (
-            <Route path="some/path">
-              <div>{TEXT}</div>
-            </Route>
-          )}
-        />
-      </MemoryRouter>,
-      node
-    );
-
-    expect(node.innerHTML).toContain(TEXT);
-  });
-
-  it("renders them as children despite dom nesting", () => {
-    const TEXT = "some text";
-    const node = document.createElement("div");
-    ReactDOM.render(
-      <MemoryRouter initialEntries={["/some/path"]}>
-        <Route path="/">
-          <div>
-            <Route path="some/path">
-              <div>{TEXT}</div>
-            </Route>
-          </div>
-        </Route>
-      </MemoryRouter>,
-      node
-    );
-
-    expect(node.innerHTML).toContain(TEXT);
-  });
-});
-
 describe("A unicode <Route>", () => {
   it("is able to match", () => {
     const node = document.createElement("div");
@@ -510,5 +433,38 @@ describe("A pathless <Route>", () => {
       node
     );
     expect(rootContext).toBe(undefined);
+  });
+});
+
+describe("A partial <Route>", () => {
+  it("joins with root (/) when there is no parent match", () => {
+    const TEXT = "uncle";
+    const node = document.createElement("div");
+
+    ReactDOM.render(
+      <MemoryRouter initialEntries={["/uncle"]}>
+        <Route path="uncle" render={() => <h1>{TEXT}</h1>} />
+      </MemoryRouter>,
+      node
+    );
+
+    expect(node.innerHTML).toContain(TEXT);
+  });
+
+  it("joins its path with parent match", () => {
+    const TEXT = "cousin";
+    const node = document.createElement("div");
+
+    ReactDOM.render(
+      <MemoryRouter initialEntries={["/uncle/cousin"]}>
+        <Route
+          path="uncle"
+          render={() => <Route path="cousin" render={() => <h1>{TEXT}</h1>} />}
+        />
+      </MemoryRouter>,
+      node
+    );
+
+    expect(node.innerHTML).toContain(TEXT);
   });
 });

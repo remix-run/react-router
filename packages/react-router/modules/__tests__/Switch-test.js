@@ -338,5 +338,46 @@ describe("A <Switch location>", () => {
       );
       expect(propLocation).toEqual(switchLocation);
     });
+
+    it("renders partial Routes", () => {
+      const node = document.createElement("div");
+
+      ReactDOM.render(
+        <MemoryRouter initialEntries={["/sauce/sriracha"]}>
+          <Route
+            path="/sauce"
+            render={() => (
+              <Switch>
+                <Route path="sriracha" render={() => <div>sriracha</div>} />
+              </Switch>
+            )}
+          />
+        </MemoryRouter>,
+        node
+      );
+
+      expect(node.innerHTML).toContain("sriracha");
+    });
+
+    it("renders partial <Redirect>s", () => {
+      const node = document.createElement("div");
+
+      ReactDOM.render(
+        <MemoryRouter initialEntries={["/sauce/tobasco"]}>
+          <Route
+            path="/sauce"
+            render={() => (
+              <Switch>
+                <Route path="sriracha" render={() => <div>sriracha</div>} />
+                <Redirect from="tobasco" to="/sauce/sriracha" />
+              </Switch>
+            )}
+          />
+        </MemoryRouter>,
+        node
+      );
+
+      expect(node.innerHTML).toContain("sriracha");
+    });
   });
 });
