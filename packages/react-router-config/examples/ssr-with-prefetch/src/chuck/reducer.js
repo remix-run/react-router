@@ -1,4 +1,4 @@
-import { NEW_JOKE } from './action';
+import { NEW_JOKE, CLEAR_JOKES } from './action';
 const initialState = []
 
 export default (state=initialState, action) => {
@@ -8,6 +8,8 @@ export default (state=initialState, action) => {
         action.payload,
         ...state,
       ];
+    case CLEAR_JOKES:
+      return [];
     default:
       return state;
   }

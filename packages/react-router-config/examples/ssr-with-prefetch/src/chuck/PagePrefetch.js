@@ -4,23 +4,24 @@ import { Link } from 'react-router-dom';
 import cn from 'classnames/bind';
 import PropTypes from 'prop-types';
 
-import { fetchJoke, refreshPage } from './action';
+import { fetchJoke, refreshPage, clearJokes } from './action';
 import styles from './PagePrefetch.scss';
 
 const cx = cn.bind(styles);
 
-const ChuckJokePage = ({ jokes, fetchJoke }) => (
+const ChuckJokePage = ({ jokes, fetchJoke, clearJokes }) => (
   <div>
     <div>
       <Link className={cx('title')} to="/">True facts about Chuck Norris...</Link>
       <button className={cx('button')} onClick={refreshPage}>Refresh Page</button>
+      <button className={cx('button')} onClick={clearJokes}>Clear Jokes</button>
       <button className={cx('button')} onClick={fetchJoke}>Fetch another Joke</button>
     </div>
     <div className={cx('jokeList')}>
       {
         jokes.map((joke, i) => {
           return (
-            <div className={cx('joke')} key={joke}>
+            <div className={cx('joke')} key={joke.id}>
               <span className={cx('number')}>{i + 1}.</span>
               {joke.value}
             </div>
@@ -45,6 +46,7 @@ const mapState = state => {
 
 const mapDispatch = {
   fetchJoke,
+  clearJokes,
 }
 
 export default connect(mapState, mapDispatch)(ChuckJokePage);

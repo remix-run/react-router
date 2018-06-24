@@ -19,8 +19,10 @@ export default [
         path: '/pre-fetch',
         exact: true,
         component: ChuckJokePage,
-        fetchData: ({ dispatch, getState}) => {
-          dispatch(fetchJoke());
+        fetchData: async ({ dispatch, getState }) => {
+          // these calls must be asynchronous. It is important that this function
+          // does not resolve until the function fetchJoke is finished resolving.
+          await dispatch(fetchJoke());
         }
       },
       {

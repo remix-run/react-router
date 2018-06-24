@@ -7,8 +7,12 @@ import { ConnectedRouter } from 'react-router-redux';
 import App from './App';
 import configureStore from './store/configureStore';
 
+// grab state from window object, then delete it.
 const preloadedState = window.__PRELOADED_STATE__;
-// delete window.__PRELOADED_STATE__;
+console.log(preloadedState);
+console.log(window);
+delete window.__PRELOADED_STATE__;
+
 const history = createHistory();
 const store = configureStore(history, preloadedState);
 

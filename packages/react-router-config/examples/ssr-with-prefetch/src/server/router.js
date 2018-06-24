@@ -15,18 +15,26 @@ const router = express.Router();
 /*eslint-enable*/
 
 router.get("*", (req, res) => {
+  // load data from ./utils --> dispatches preFetch for matching routes.
   loadData(store, routes, req.baseUrl)
-    .then(data => {
+    .then(preloadedData => {
+      // we return preloadedData after all preFetch actions are dsipatched and
+      // resolved.
       let context = {};
-      const preloadedData = store.getState();
       const markup = getMarkup(store, req.url, context);
+      if (context.url) {
+        res.writeHead(301, {
+          Location: context.url
+        })
+        res.end()
+      }
       res.status(200).send(
         html(assets, preloadedData, markup)
       );
     })
     .catch(e => {
       console.log(e);
-      res.status(300).send({error: e})
+      res.status(500).send({error: e})
     })
 });
 
