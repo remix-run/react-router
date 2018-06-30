@@ -10,3 +10,4 @@ build
 .env.development.local
 .env.test.local
 .env.production.local
+yarn.lock
