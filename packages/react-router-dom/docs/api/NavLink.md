@@ -79,3 +79,18 @@ const oddEvent = (match, location) => {
 
 The [`isActive`](#isactive-func) compares the current history location (usually the current browser URL).
 To compare to a different location, a [`location`](../../../react-router/docs/api/location.md) can be passed.
+
+## ariaCurrent: string
+
+The value of the `aria-current` attribute used on an active link. Available values are:
+
+* `"page"` - used to indicate a link within a set of pagination links
+* `"step"` - used to indicate a link within a step indicator for a step-based process
+* `"location"` - used to indicate the image that is visually highlighted as the current component of a flow chart
+* `"date"` - used to indicate the current date within a calendar
+* `"time"` - used to indicate the current time within a timetable
+* `"true"` - used to indicate if the NavLink is active
+
+Defaults to `"page"`.
+
+Based on [WAI-ARIA 1.1 specifications](https://www.w3.org/TR/wai-aria-1.1/#aria-current)
