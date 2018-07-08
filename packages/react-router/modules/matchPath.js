@@ -41,11 +41,6 @@ const matchPath = (pathname, options = {}, parentMatch = null) => {
   const { re, keys } = compilePath(path, { end: exact, strict, sensitive });
   const match = re.exec(pathname);
 
-  if (path == null) return parent;
-
-  const { re, keys } = compilePath(path, { end: exact, strict, sensitive });
-  const match = re.exec(pathname);
-
   if (!match) return null;
 
   const [url, ...values] = match;
