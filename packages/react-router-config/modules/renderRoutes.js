@@ -11,12 +11,16 @@ const renderRoutes = (routes, extraProps = {}, switchProps = {}) =>
           path={route.path}
           exact={route.exact}
           strict={route.strict}
-          render={props =>
-            route.render ? (
-              route.render({ ...props, ...extraProps, route: route })
-            ) : (
-              <route.component {...props} {...extraProps} route={route} />
-            )
+          render={props => {
+            if (route.render) {
+              return route.render({ ...props, ...extraProps, route: route })
+            } else {
+              return route.routes
+                ? <route.component {...props} {...extraProps} route={route}>
+                    {renderRoutes(route.routes, extraProps, switchProps)}
+                  </route>
+                : <route.component {...props} {...extraProps} route={route} />
+            }
           }
         />
       ))}
