@@ -18,7 +18,7 @@ const renderRoutes = (routes, extraProps = {}, switchProps = {}) =>
               return route.routes
                 ? ( <route.component {...props} {...extraProps} route={route}>
                       {renderRoutes(route.routes, extraProps, switchProps)}
-                    </route> )
+                    </route.component> )
                 : ( <route.component {...props} {...extraProps} route={route} /> )
             }
           }
