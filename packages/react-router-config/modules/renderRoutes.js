@@ -28,6 +28,6 @@ const renderRoutes = (routes, extraProps = {}, switchProps = {}) => {
       ))}
     </Switch>
   ) : null;
-}
+};
 
 export default renderRoutes;
