@@ -33,10 +33,6 @@ class Router extends React.Component {
     };
   }
 
-  state = {
-    match: this.computeMatch(this.props.history.location.pathname)
-  };
-
   computeMatch(pathname) {
     return {
       path: "/",
@@ -46,8 +42,9 @@ class Router extends React.Component {
     };
   }
 
-  componentWillMount() {
-    const { children, history } = this.props;
+  constructor(props) {
+    super(props);
+    const { children, history } = props;
 
     invariant(
       children == null || React.Children.count(children) === 1,
@@ -62,13 +59,18 @@ class Router extends React.Component {
         match: this.computeMatch(history.location.pathname)
       });
     });
+
+    this.state = {
+      match: this.computeMatch(this.props.history.location.pathname)
+    };
   }
 
-  componentWillReceiveProps(nextProps) {
+  shouldComponentUpdate(nextProps) {
     warning(
       this.props.history === nextProps.history,
       "You cannot change <Router history>"
     );
+    return true;
   }
 
   componentWillUnmount() {
