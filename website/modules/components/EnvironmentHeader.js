@@ -57,7 +57,7 @@ const Branding = () => (
       fontWeight="bold"
       fontSize="90%"
     >
-      <Inline component="a" props={{ href: "https://reacttraining.com" }}>
+      <Inline component="a" props={{ href: "/" }}>
         React Training
       </Inline>
       <Inline> / </Inline>
@@ -68,6 +68,14 @@ const Branding = () => (
       >
         React Router
       </Inline>
+    </Block>
+    <Block marginTop="10px" flex="1" fontSize="90%" textAlign="center">
+      <a href="/">
+        Learn React from the authors of<br />React Router.{" "}
+        <Inline textDecoration="underline" hoverColor={RED}>
+          View courses
+        </Inline>.
+      </a>
     </Block>
   </Col>
 );
