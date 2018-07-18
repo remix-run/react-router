@@ -33,6 +33,10 @@ class Router extends React.Component {
     };
   }
 
+  state = {
+    match: this.computeMatch(this.props.history.location.pathname)
+  };
+
   computeMatch(pathname) {
     return {
       path: "/",
@@ -59,10 +63,6 @@ class Router extends React.Component {
         match: this.computeMatch(history.location.pathname)
       });
     });
-
-    this.state = {
-      match: this.computeMatch(this.props.history.location.pathname)
-    };
   }
 
   shouldComponentUpdate(nextProps) {
