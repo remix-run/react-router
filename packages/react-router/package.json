@@ -81,7 +81,8 @@
   "jest": {
     "setupFiles": [
       "raf/polyfill"
-    ]
+    ],
+    "testURL": "http://localhost/"
   },
   "keywords": [
     "react",
