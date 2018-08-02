@@ -59,5 +59,8 @@
     "rollup": "^0.60.0",
     "rollup-plugin-babel": "^3.0.4",
     "rollup-plugin-uglify": "^3.0.0"
+  },
+  "jest": {
+    "testURL": "http://localhost/"
   }
 }
