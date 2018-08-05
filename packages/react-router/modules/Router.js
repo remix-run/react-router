@@ -20,6 +20,17 @@ class Router extends React.Component {
     router: PropTypes.object.isRequired
   };
 
+  static getDerivedStateFromProps(nextProps) {
+    const { children } = nextProps;
+
+    invariant(
+      children == null || React.Children.count(children) === 1,
+      "A <Router> may have only one child element"
+    );
+
+    return null;
+  }
+
   getChildContext() {
     return {
       router: {
@@ -50,11 +61,6 @@ class Router extends React.Component {
     super(props);
     const { children, history } = props;
 
-    invariant(
-      children == null || React.Children.count(children) === 1,
-      "A <Router> may have only one child element"
-    );
-
     // Do this here so we can setState when a <Redirect> changes the
     // location in componentWillMount. This happens e.g. when doing
     // server rendering using a <StaticRouter>.
@@ -65,9 +71,9 @@ class Router extends React.Component {
     });
   }
 
-  shouldComponentUpdate(nextProps) {
+  componentDidUpdate(prevProps) {
     warning(
-      this.props.history === nextProps.history,
+      this.props.history === prevProps.history,
       "You cannot change <Router history>"
     );
     return true;
