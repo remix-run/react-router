@@ -76,7 +76,6 @@ class Router extends React.Component {
       this.props.history === prevProps.history,
       "You cannot change <Router history>"
     );
-    return true;
   }
 
   componentWillUnmount() {
