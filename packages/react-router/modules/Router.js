@@ -64,9 +64,9 @@ class Router extends React.Component {
     });
   }
 
-  componentWillReceiveProps(nextProps) {
+  componentDidUpdate(prevProps) {
     warning(
-      this.props.history === nextProps.history,
+      prevProps.history === this.props.history,
       "You cannot change <Router history>"
     );
   }

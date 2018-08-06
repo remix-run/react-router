@@ -18,7 +18,7 @@ class BrowserRouter extends React.Component {
 
   history = createHistory(this.props);
 
-  componentWillMount() {
+  componentDidMount() {
     warning(
       !this.props.history,
       "<BrowserRouter> ignores the history prop. To use a custom history, " +
