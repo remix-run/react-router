@@ -40,4 +40,19 @@ describe("A <MemoryRouter>", () => {
       expect.stringContaining("<MemoryRouter> ignores the history prop")
     );
   });
+
+  it.skip("does not error in StrictMode", () => {
+    const node = document.createElement("div");
+
+    spyOn(console, "error");
+
+    ReactDOM.render(
+      <React.StrictMode>
+        <MemoryRouter />
+      </React.StrictMode>,
+      node
+    );
+
+    expect(console.error).toHaveBeenCalledTimes(0);
+  });
 });

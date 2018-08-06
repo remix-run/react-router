@@ -67,6 +67,31 @@ describe("A <StaticRouter>", () => {
     );
   });
 
+  it.skip("does not error in StrictMode", () => {
+    const ContextChecker = (props, reactContext) => {
+      expect(typeof reactContext.router.history).toBe("object");
+      return null;
+    };
+
+    ContextChecker.contextTypes = {
+      router: PropTypes.object.isRequired
+    };
+
+    const context = {};
+
+    spyOn(console, "error");
+
+    ReactDOMServer.renderToStaticMarkup(
+      <React.StrictMode>
+        <StaticRouter context={context}>
+          <ContextChecker />
+        </StaticRouter>
+      </React.StrictMode>
+    );
+
+    expect(console.error).toHaveBeenCalledTimes(0);
+  });
+
   it("warns when passed a history prop", () => {
     const context = {};
     const history = {};

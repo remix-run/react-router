@@ -36,5 +36,28 @@ describe("A <Redirect>", () => {
         messageId: "123"
       });
     });
+
+    it.skip("does not error in StrictMode", () => {
+      const node = document.createElement("div");
+
+      spyOn(console, "error");
+
+      ReactDOM.render(
+        <MemoryRouter initialEntries={["/one"]}>
+          <Switch>
+            <React.StrictMode>
+              <Redirect
+                from="/users/:username/messages/:messageId"
+                to="/:username/messages/:messageId"
+              />
+            </React.StrictMode>
+            <Route path="/:username/messages/:messageId" render={() => null} />
+          </Switch>
+        </MemoryRouter>,
+        node
+      );
+
+      expect(console.error).toHaveBeenCalledTimes(0);
+    });
   });
 });

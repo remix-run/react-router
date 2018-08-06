@@ -27,6 +27,21 @@ describe("A <HashRouter>", () => {
     expect(typeof history).toBe("object");
   });
 
+  it("does not error in StrictMode", () => {
+    const node = document.createElement("div");
+
+    spyOn(console, "error");
+
+    ReactDOM.render(
+      <React.StrictMode>
+        <HashRouter />
+      </React.StrictMode>,
+      node
+    );
+
+    expect(console.error).toHaveBeenCalledTimes(0);
+  });
+
   it("warns when passed a history prop", () => {
     const history = {};
     const node = document.createElement("div");
