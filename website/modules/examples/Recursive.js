@@ -8,6 +8,8 @@ const PEEPS = [
   { id: 3, name: "David", friends: [1, 2] }
 ];
 
+const NOT_FOUND = { id: -1, name: "¯\\_(ツ)_/¯", friends: [0, 1, 2, 3] };
+
 const find = id => PEEPS.find(p => p.id == id);
 
 const RecursiveExample = () => (
@@ -17,7 +19,7 @@ const RecursiveExample = () => (
 );
 
 const Person = ({ match }) => {
-  const person = find(match.params.id);
+  const person = find(match.params.id) || NOT_FOUND;
 
   return (
     <div>
