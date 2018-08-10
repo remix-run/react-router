@@ -2,7 +2,7 @@ import React from "react";
 import PropTypes from "prop-types";
 import warning from "warning";
 import invariant from "invariant";
-import { createLocation, locationsAreEqual } from "history/LocationUtils";
+import { createLocation, locationsAreEqual } from "history";
 import generatePath from "./generatePath";
 
 /**
