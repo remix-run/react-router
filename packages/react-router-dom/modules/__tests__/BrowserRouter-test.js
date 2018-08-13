@@ -27,7 +27,7 @@ describe("A <BrowserRouter>", () => {
     expect(typeof history).toBe("object");
   });
 
-  it("does not error in StrictMode", () => {
+  it.skip("does not error in StrictMode", () => {
     const node = document.createElement("div");
 
     spyOn(console, "error");
