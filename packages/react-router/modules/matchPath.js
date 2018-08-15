@@ -1,6 +1,6 @@
 import pathToRegexp from "path-to-regexp";
 
-const isAbsolute = pathname => !!(pathname && pathname.charAt(0) === "/");
+const isAbsolute = pathname => /^\\?\/.*/.test(pathname);
 
 const addTrailingSlash = pathname =>
   hasTrailingSlash(pathname) ? pathname : pathname + "/";
