@@ -8,6 +8,7 @@ import { Prompt } from 'react-router'
 <Prompt
   when={formIsHalfFilledOut}
   message="Are you sure you want to leave?"
+  beforeUnload={promptOnExternalNavigation}
 />
 ```
 
@@ -35,4 +36,12 @@ Instead of conditionally rendering a `<Prompt>` behind a guard, you can always r
 
 ```jsx
 <Prompt when={formIsHalfFilledOut} message="Are you sure?"/>
+```
+
+## beforeUnload: bool
+
+If you need to warn on external navigation in addition to internal app navation, `beforeUnload={true}` can be used. This prop defaults to `false` to avoid hijacking external navigation unless explicitly opted in to.
+
+```jsx
+<Prompt when={formIsHalfFilledOut} message="Are you sure?" beforeUnload/>
 ```

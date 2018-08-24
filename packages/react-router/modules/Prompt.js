@@ -9,11 +9,13 @@ import invariant from "invariant";
 class Prompt extends React.Component {
   static propTypes = {
     when: PropTypes.bool,
-    message: PropTypes.oneOfType([PropTypes.func, PropTypes.string]).isRequired
+    message: PropTypes.oneOfType([PropTypes.func, PropTypes.string]).isRequired,
+    beforeUnload: propTypes.bool
   };
 
   static defaultProps = {
-    when: true
+    when: true,
+    beforeUnload: false
   };
 
   static contextTypes = {
@@ -37,6 +39,14 @@ class Prompt extends React.Component {
     }
   }
 
+  handleBeforeUnload = () => {
+    if (this.props.when) {
+      return typeof this.props.message === 'function'
+        ? this.props.message()
+        : this.props.message;
+    }
+  }
+
   componentWillMount() {
     invariant(
       this.context.router,
@@ -44,6 +54,10 @@ class Prompt extends React.Component {
     );
 
     if (this.props.when) this.enable(this.props.message);
+  }
+
+  componentDidMount() {
+    window.addEventListener('beforeunload', this.handleBeforeUnload);
   }
 
   componentWillReceiveProps(nextProps) {
@@ -57,6 +71,7 @@ class Prompt extends React.Component {
 
   componentWillUnmount() {
     this.disable();
+    window.removeEventListener('beforeunload', this.handleBeforeUnload);
   }
 
   render() {
