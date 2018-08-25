@@ -1,12 +1,12 @@
 import pathToRegexp from "path-to-regexp";
 
-const isAbsolute = pathname => !!(pathname && pathname.charAt(0) === "/");
+const isAbsolute = pathname => pathname.charAt(0) === "/";
 
-const addTrailingSlash = pathname =>
+const ensureTrailingSlash = pathname =>
   hasTrailingSlash(pathname) ? pathname : pathname + "/";
 
 const hasTrailingSlash = pathname =>
-  !!pathname && pathname.charAt(pathname.length - 1) === "/";
+  pathname.charAt(pathname.length - 1) === "/";
 
 const resolvePath = (pathname, base) => {
   if (pathname === undefined || isAbsolute(pathname)) {
@@ -20,7 +20,7 @@ const resolvePath = (pathname, base) => {
   if (pathname === "") {
     return base;
   } else {
-    return `${addTrailingSlash(base)}${pathname}`;
+    return `${ensureTrailingSlash(base)}${pathname}`;
   }
 };
 
@@ -55,9 +55,9 @@ const matchPath = (pathname, options = {}, parent) => {
   const { exact = false, strict = false, sensitive = false } = options;
   let path = options.path != null ? options.path : options.from;
 
-  const absolute = isAbsolute(path);
-
   if (path == null) return parent;
+
+  const absolute = isAbsolute(path);
 
   if (!absolute) path = resolvePath(path, parent && parent.url);
 
@@ -71,14 +71,14 @@ const matchPath = (pathname, options = {}, parent) => {
 
   if (exact && !isExact) return null;
 
-  const matchParams = keys.reduce((memo, key, index) => {
-    memo[key.name] = values[index];
-    return memo;
+  const matchParams = keys.reduce((params, key, index) => {
+    params[key.name] = values[index];
+    return params;
   }, {});
 
   const params = absolute
     ? matchParams
-    : Object.assign({}, parent && parent.params, matchParams);
+    : { ...(parent && parent.params), ...matchParams };
 
   return {
     path, // the path pattern used to match
