@@ -46,7 +46,7 @@ class Router extends React.Component {
     };
   }
 
-  componentWillMount() {
+  UNSAFE_componentWillMount() {
     const { children, history } = this.props;
 
     invariant(
@@ -64,7 +64,7 @@ class Router extends React.Component {
     });
   }
 
-  componentWillReceiveProps(nextProps) {
+  UNSAFE_componentWillReceiveProps(nextProps) {
     warning(
       this.props.history === nextProps.history,
       "You cannot change <Router history>"

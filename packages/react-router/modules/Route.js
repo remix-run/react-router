@@ -67,7 +67,7 @@ class Route extends React.Component {
     return matchPath(pathname, { path, strict, exact, sensitive }, route.match);
   }
 
-  componentWillMount() {
+  UNSAFE_componentWillMount() {
     warning(
       !(this.props.component && this.props.render),
       "You should not use <Route component> and <Route render> in the same route; <Route render> will be ignored"
@@ -92,7 +92,7 @@ class Route extends React.Component {
     );
   }
 
-  componentWillReceiveProps(nextProps, nextContext) {
+  UNSAFE_componentWillReceiveProps(nextProps, nextContext) {
     warning(
       !(nextProps.location && !this.props.location),
       '<Route> elements should not change from uncontrolled to controlled (or vice versa). You initially used no "location" prop and then provided one on a subsequent render.'

@@ -37,7 +37,7 @@ class Prompt extends React.Component {
     }
   }
 
-  componentWillMount() {
+  UNSAFE_componentWillMount() {
     invariant(
       this.context.router,
       "You should not use <Prompt> outside a <Router>"
@@ -46,7 +46,7 @@ class Prompt extends React.Component {
     if (this.props.when) this.enable(this.props.message);
   }
 
-  componentWillReceiveProps(nextProps) {
+  UNSAFE_componentWillReceiveProps(nextProps) {
     if (nextProps.when) {
       if (!this.props.when || this.props.message !== nextProps.message)
         this.enable(nextProps.message);
