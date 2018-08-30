@@ -12,7 +12,7 @@ describe("A <Switch>", () => {
     let mountCount = 0;
 
     class App extends React.Component {
-      componentWillMount() {
+      UNSAFE_componentWillMount() {
         mountCount++;
       }
 

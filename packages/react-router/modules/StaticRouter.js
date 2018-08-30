@@ -90,7 +90,7 @@ class StaticRouter extends React.Component {
 
   handleBlock = () => noop;
 
-  componentWillMount() {
+  UNSAFE_componentWillMount() {
     warning(
       !this.props.history,
       "<StaticRouter> ignores the history prop. To use a custom history, " +
