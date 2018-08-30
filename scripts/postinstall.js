@@ -1,17 +1,15 @@
 const execSync = require("child_process").execSync;
 
-const exec = (cmd, env) =>
-  execSync(cmd, {
-    stdio: "inherit",
-    env: Object.assign({}, process.env, env)
-  });
+function exec(cmd, env) {
+  execSync(cmd, { stdio: "inherit", env: process.env });
+}
 
-if (process.env.CI) {
+if (process.env.CI && process.env.TRAVIS_BRANCH !== "website") {
   exec(
-    "lerna bootstrap --stream --ignore react-router-website --hoist --nohoist react-native --nohoist react-test-renderer"
+    "lerna bootstrap --stream --hoist --nohoist react-native --nohoist react-test-renderer --ignore react-router-website"
   );
 } else {
   exec(
-    "lerna bootstrap  --stream --hoist --nohoist react-native --nohoist react-test-renderer"
+    "lerna bootstrap --stream --hoist --nohoist react-native --nohoist react-test-renderer"
   );
 }
