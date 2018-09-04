@@ -11,7 +11,12 @@ We start out with a component that prevents updates.
 ```js
 class UpdateBlocker extends React.PureComponent {
   render() {
-    return this.props.children
+    return (
+      <div>
+        <NavLink to='/about'>About</NavLink>
+        <NavLink to='/faq'>F.A.Q.</NavLink>
+      </div>
+    )
   }
 }
 ```
@@ -20,25 +25,23 @@ When the `<UpdateBlocker>` is mounting, any location-aware child components will
 
 ```jsx
 // location = { pathname: '/about' }
-<UpdateBlocker>
-  <NavLink to='/about'>About</NavLink>
-  // <a href='/about' class='active'>About</a>
-  <NavLink to='/faq'>F.A.Q.</NavLink>
-  // <a href='/faq'>F.A.Q.</a>
-</UpdateBlocker>
+<UpdateBlocker />
+// <div>
+//   <a href='/about' class='active'>About</a>
+//   <a href='/faq'>F.A.Q.</a>
+// </div>
 ```
 
 When the location changes, the `<UpdateBlocker>` does not detect any prop or state changes, so its child components will not be re-rendered.
 
 ```jsx
 // location = { pathname: '/faq' }
-<UpdateBlocker>
-  // the links will not re-render, so they retain their previous attributes
-  <NavLink to='/about'>About</NavLink>
-  // <a href='/about' class='active'>About</a>
-  <NavLink to='/faq'>F.A.Q.</NavLink>
-  // <a href='/faq'>F.A.Q.</a>
-</UpdateBlocker>
+<UpdateBlocker />
+// the links will not re-render, so they retain their previous attributes
+// <div>
+//   <a href='/about' class='active'>About</a>
+//   <a href='/faq'>F.A.Q.</a>
+// </div>
 ```
 
 ### `shouldComponentUpdate`
@@ -91,20 +94,18 @@ The key to avoiding blocked re-renders after location changes is to pass the blo
 
 ```jsx
 // location = { pathname: '/about' }
-<UpdateBlocker location={location}>
-  <NavLink to='/about'>About</NavLink>
-  // <a href='/about' class='active'>About</a>
-  <NavLink to='/faq'>F.A.Q.</NavLink>
-  // <a href='/faq'>F.A.Q.</a>
-</UpdateBlocker>
+<UpdateBlocker location={location} />
+// <div>
+//   <a href='/about' class='active'>About</a>
+//   <a href='/faq'>F.A.Q.</a>
+// </div>
 
 // location = { pathname: '/faq' }
-<UpdateBlocker location={location}>
-  <NavLink to='/about'>About</NavLink>
-  // <a href='/about'>About</a>
-  <NavLink to='/faq'>F.A.Q.</NavLink>
-  // <a href='/faq' class='active'>F.A.Q.</a>
-</UpdateBlocker>
+<UpdateBlocker location={location} />
+// <div>
+//   <a href='/about'>About</a>
+//   <a href='/faq' class='active'>F.A.Q.</a>
+// </div>
 ```
 
 #### Getting the location
