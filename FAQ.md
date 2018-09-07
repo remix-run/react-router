@@ -83,8 +83,10 @@ If you do this, make sure that you use the generic `<Router>` component and not 
 
 ```js
 // history.js
-import { createBrowserHistory } from 'history'
-export default createBrowserHistory()
+import createBrowserHistory from 'history/createBrowserHistory'
+
+const customHistory = createBrowserHistory()
+export default customHistory;
 ```
 ```js
 // index.js
