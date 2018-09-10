@@ -2,6 +2,7 @@ import warning from "warning";
 import invariant from "invariant";
 import React from "react";
 import PropTypes from "prop-types";
+import PropTypesElementType from "prop-types-elementtype";
 import matchPath from "./matchPath";
 
 const isEmptyChildren = children => React.Children.count(children) === 0;
@@ -16,7 +17,7 @@ class Route extends React.Component {
     exact: PropTypes.bool,
     strict: PropTypes.bool,
     sensitive: PropTypes.bool,
-    component: PropTypes.func,
+    component: PropTypesElementType,
     render: PropTypes.func,
     children: PropTypes.oneOfType([PropTypes.func, PropTypes.node]),
     location: PropTypes.object
