@@ -80,6 +80,23 @@ const oddEvent = (match, location) => {
 The [`isActive`](#isactive-func) compares the current history location (usually the current browser URL).
 To compare to a different location, a [`location`](../../../react-router/docs/api/location.md) can be passed.
 
+## matchPath: string
+
+When `matchPath` is provided, `NavLink` will become active when the current location matches `matchPath` instead of the `to` props.
+This is useful when the path linked is a subroute of `matchPath`.
+
+```jsx
+// This NavLink will become active in `/events/dashboard`,
+// `/events/otherRoute` and any other route matching `/events`,
+// but when clicked will navigate to `/events/dashboard`
+<NavLink
+  matchPath="/events"
+  to="/events/dashboard"
+>
+  Events dashboard
+</NavLink>
+```
+
 ## ariaCurrent: string
 
 The value of the `aria-current` attribute used on an active link. Available values are:

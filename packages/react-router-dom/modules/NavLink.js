@@ -8,6 +8,7 @@ import Link from "./Link";
  */
 const NavLink = ({
   to,
+  matchPath,
   exact,
   strict,
   location,
@@ -19,7 +20,7 @@ const NavLink = ({
   "aria-current": ariaCurrent,
   ...rest
 }) => {
-  const path = typeof to === "object" ? to.pathname : to;
+  const path = matchPath || (typeof to === "object" ? to.pathname : to);
 
   // Regex taken from: https://github.com/pillarjs/path-to-regexp/blob/master/index.js#L202
   const escapedPath = path && path.replace(/([.+*?=^!:${}()[\]|/\\])/g, "\\$1");
@@ -53,6 +54,7 @@ const NavLink = ({
 
 NavLink.propTypes = {
   to: Link.propTypes.to,
+  matchPath: PropTypes.string,
   exact: PropTypes.bool,
   strict: PropTypes.bool,
   location: PropTypes.object,
