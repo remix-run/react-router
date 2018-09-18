@@ -56,6 +56,18 @@ describe('A <Link>', () => {
     })
   })
 
+  it('exposes its ref via an innerRef prop', function (done) {
+    const refCallback = n => {
+      expect(n.tagName).toEqual('A')
+      done()
+    }
+
+    render(
+      <Link to="/something" innerRef={refCallback}>Link</Link>,
+      node
+    )
+  })
+
   describe('with hash history', () => {
     it('should know how to make its href', () => {
       const LinkWrapper = () => (
@@ -547,6 +559,24 @@ describe('A <Link>', () => {
         expect(link3.href).toEqual('')
         done()
       })
+    })
+
+    it('exposes its ref via an innerRef prop', function (done) {
+      const refCallback = n => {
+        expect(n.tagName).toEqual('A')
+        done()
+      }
+
+      const LinkWrapper = () => (
+        <Link innerRef={refCallback}>Link</Link>
+      )
+
+      render(
+        <Router history={createHistory('/')}>
+          <Route path="/" component={LinkWrapper} />
+        </Router>,
+        node
+      )
     })
 
     it('passes down other props', function (done) {

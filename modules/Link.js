@@ -54,7 +54,8 @@ const Link = createReactClass({
     activeClassName: string,
     onlyActiveOnIndex: bool.isRequired,
     onClick: func,
-    target: string
+    target: string,
+    innerRef: oneOfType([ string, func ])
   },
 
   getDefaultProps() {
@@ -91,14 +92,14 @@ const Link = createReactClass({
   },
 
   render() {
-    const { to, activeClassName, activeStyle, onlyActiveOnIndex, ...props } = this.props
+    const { to, activeClassName, activeStyle, onlyActiveOnIndex, innerRef, ...props } = this.props
 
     // Ignore if rendered outside the context of router to simplify unit testing.
     const { router } = this.context
 
     if (router) {
       // If user does not specify a `to` prop, return an empty anchor tag.
-      if (!to) { return <a {...props} /> }
+      if (!to) { return <a {...props} ref={innerRef} /> }
 
       const toLocation = resolveToLocation(to, router)
       props.href = router.createHref(toLocation)
@@ -119,7 +120,7 @@ const Link = createReactClass({
       }
     }
 
-    return <a {...props} onClick={this.handleClick} />
+    return <a {...props} onClick={this.handleClick} ref={innerRef} />
   }
 
 })

@@ -135,6 +135,9 @@ A custom handler for the click event. Works just like a handler on an `<a>` tag 
 ##### `onlyActiveOnIndex`
 If `true`, the `<Link>` will only be active when the current route exactly matches the linked route.
 
+##### `innerRef`
+Allows access to the underlying `ref` of the component.
+
 ##### *others*
 You can also pass props you'd like to be on the `<a>` such as a `title`, `id`, `className`, etc.
 
@@ -153,6 +156,11 @@ Given a route like `<Route path="/users/:userId" />`:
 
 // change style when link is active
 <Link to="/users" style={{color: 'white'}} activeStyle={{color: 'red'}}>Users</Link>
+
+const refCallback = node => {
+  // `node` refers to the mounted DOM element or null when unmounted
+}
+<Link to="/" innerRef={refCallback} />
 ```
 
 ### `<IndexLink>`
