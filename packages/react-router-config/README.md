@@ -146,7 +146,7 @@ class PendingNavDataLoader extends Component {
     if (navigated) {
       // save the location so we can render the old screen
       this.setState({
-        previousLocation: prevProp.location
+        previousLocation: prevProps.location
       })
 
       // load data while the old screen remains
