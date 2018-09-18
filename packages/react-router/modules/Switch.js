@@ -19,21 +19,21 @@ class Switch extends React.Component {
     location: PropTypes.object
   };
 
-  componentWillMount() {
+  componentDidMount() {
     invariant(
       this.context.router,
       "You should not use <Switch> outside a <Router>"
     );
   }
 
-  componentWillReceiveProps(nextProps) {
+  componentDidUpdate(prevProps) {
     warning(
-      !(nextProps.location && !this.props.location),
+      !(prevProps.location && !this.props.location),
       '<Switch> elements should not change from uncontrolled to controlled (or vice versa). You initially used no "location" prop and then provided one on a subsequent render.'
     );
 
     warning(
-      !(!nextProps.location && this.props.location),
+      !(!prevProps.location && this.props.location),
       '<Switch> elements should not change from controlled to uncontrolled (or vice versa). You provided a "location" prop initially but omitted it on a subsequent render.'
     );
   }

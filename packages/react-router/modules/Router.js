@@ -46,7 +46,7 @@ class Router extends React.Component {
     };
   }
 
-  componentWillMount() {
+  componentDidMount() {
     const { children, history } = this.props;
 
     invariant(
@@ -55,7 +55,7 @@ class Router extends React.Component {
     );
 
     // Do this here so we can setState when a <Redirect> changes the
-    // location in componentWillMount. This happens e.g. when doing
+    // location in componentDidMount. This happens e.g. when doing
     // server rendering using a <StaticRouter>.
     this.unlisten = history.listen(() => {
       this.setState({
@@ -64,9 +64,9 @@ class Router extends React.Component {
     });
   }
 
-  componentWillReceiveProps(nextProps) {
+  componentDidUpdate(prevProps) {
     warning(
-      this.props.history === nextProps.history,
+      this.props.history === prevProps.history,
       "You cannot change <Router history>"
     );
   }

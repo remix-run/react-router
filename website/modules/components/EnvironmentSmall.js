@@ -46,16 +46,16 @@ class EnvironmentSmall extends Component {
     });
   }
 
-  componentWillReceiveProps(nextProps) {
+  componentDidUpdate(prevProps) {
     const { anim } = this.state;
 
     // only animate if we're going from here to direct child.
     // child to child we'll ignore
     const goingToChild =
-      nextProps.match.isExact === false && this.props.match.isExact === true;
+      this.props.match.isExact === false && prevProps.match.isExact === true;
 
     const comingFromChild =
-      nextProps.match.isExact === true && this.props.match.isExact === false;
+      this.props.match.isExact === true && prevProps.match.isExact === false;
 
     if (goingToChild || comingFromChild) {
       this.setState(
@@ -102,7 +102,11 @@ class EnvironmentSmall extends Component {
               <Switch location={location}>
                 <Route
                   path={paths.api(match)}
-                  render={({ match: { params: { mod } } }) => (
+                  render={({
+                    match: {
+                      params: { mod }
+                    }
+                  }) => (
                     <Header
                       url={match.url}
                       fontFamily="Menlo, monospace"
@@ -114,7 +118,11 @@ class EnvironmentSmall extends Component {
                 />
                 <Route
                   path={paths.example(match)}
-                  render={({ match: { params: { example } } }) => (
+                  render={({
+                    match: {
+                      params: { example }
+                    }
+                  }) => (
                     <Header url={match.url}>
                       {getExampleTitle(data, example)}
                     </Header>
@@ -122,7 +130,11 @@ class EnvironmentSmall extends Component {
                 />
                 <Route
                   path={paths.guide(match)}
-                  render={({ match: { params: { mod } } }) => (
+                  render={({
+                    match: {
+                      params: { mod }
+                    }
+                  }) => (
                     <Header url={match.url}>{getGuideTitle(data, mod)}</Header>
                   )}
                 />
@@ -264,13 +276,13 @@ class AnimatedChild extends Component {
     previousChildren: null
   };
 
-  componentWillReceiveProps(nextProps) {
-    const navigatingToParent = nextProps.atParent && !this.props.atParent;
-    const animationEnded = this.props.animating && !nextProps.animating;
+  componentDidUpdate(prevProps) {
+    const navigatingToParent = this.props.atParent && !prevProps.atParent;
+    const animationEnded = prevProps.animating && !this.props.animating;
 
     if (navigatingToParent) {
       this.setState({
-        previousChildren: this.props.children
+        previousChildren: prevProps.children
       });
     } else if (animationEnded) {
       this.setState({
@@ -328,13 +340,13 @@ class AnimatedChildHeader extends Component {
     previousChildren: null
   };
 
-  componentWillReceiveProps(nextProps) {
-    const navigatingToParent = nextProps.atParent && !this.props.atParent;
-    const animationEnded = this.props.animating && !nextProps.animating;
+  componentDidUpdate(prevProps) {
+    const navigatingToParent = this.props.atParent && !prevProps.atParent;
+    const animationEnded = prevProps.animating && !this.props.animating;
 
     if (navigatingToParent) {
       this.setState({
-        previousChildren: this.props.children
+        previousChildren: prevProps.children
       });
     } else if (animationEnded) {
       this.setState({

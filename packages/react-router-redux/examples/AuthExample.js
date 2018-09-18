@@ -1,114 +1,112 @@
-import React from 'react'
-import { render } from 'react-dom'
-import { connect, Provider } from 'react-redux'
+import React from "react";
+import { render } from "react-dom";
+import { connect, Provider } from "react-redux";
 import {
   ConnectedRouter,
   routerReducer,
   routerMiddleware,
   push
-} from 'react-router-redux'
+} from "react-router-redux";
 
-import { createStore, applyMiddleware, combineReducers } from 'redux'
-import createHistory from 'history/createBrowserHistory'
+import { createStore, applyMiddleware, combineReducers } from "redux";
+import createHistory from "history/createBrowserHistory";
 
-import { Route, Switch } from 'react-router'
-import { Redirect } from 'react-router-dom'
+import { Route, Switch } from "react-router";
+import { Redirect } from "react-router-dom";
 
-const history = createHistory()
+const history = createHistory();
 
 const authSuccess = () => ({
-  type: 'AUTH_SUCCESS'
-})
+  type: "AUTH_SUCCESS"
+});
 
 const authFail = () => ({
-  type: 'AUTH_FAIL'
-})
+  type: "AUTH_FAIL"
+});
 
 const initialState = {
   isAuthenticated: false
-}
+};
 
-const authReducer = (state = initialState , action) => {
+const authReducer = (state = initialState, action) => {
   switch (action.type) {
-    case 'AUTH_SUCCESS':
+    case "AUTH_SUCCESS":
       return {
         ...state,
         isAuthenticated: true
-      }
-    case 'AUTH_FAIL':
+      };
+    case "AUTH_FAIL":
       return {
         ...state,
         isAuthenticated: false
-      }
+      };
     default:
-      return state
+      return state;
   }
-}
+};
 
 const store = createStore(
   combineReducers({ routerReducer, authReducer }),
-  applyMiddleware(routerMiddleware(history)),
-)
+  applyMiddleware(routerMiddleware(history))
+);
 
 class LoginContainer extends React.Component {
   render() {
-    return <button onClick={this.props.login}>Login Here!</button>
+    return <button onClick={this.props.login}>Login Here!</button>;
   }
 }
 
 class HomeContainer extends React.Component {
-  componentWillMount() {
-    alert('Private home is at: ' + this.props.location.pathname)
+  componentDidMount() {
+    alert("Private home is at: " + this.props.location.pathname);
   }
 
   render() {
-    return <button onClick={this.props.logout}>Logout Here!</button>
+    return <button onClick={this.props.logout}>Logout Here!</button>;
   }
 }
 
 class PrivateRouteContainer extends React.Component {
   render() {
-    const {
-      isAuthenticated,
-      component: Component,
-      ...props
-    } = this.props
+    const { isAuthenticated, component: Component, ...props } = this.props;
 
     return (
       <Route
         {...props}
         render={props =>
-          isAuthenticated
-            ? <Component {...props} />
-            : (
-            <Redirect to={{
-              pathname: '/login',
-              state: { from: props.location }
-            }} />
+          isAuthenticated ? (
+            <Component {...props} />
+          ) : (
+            <Redirect
+              to={{
+                pathname: "/login",
+                state: { from: props.location }
+              }}
+            />
           )
         }
       />
-    )
+    );
   }
 }
 
 const PrivateRoute = connect(state => ({
   isAuthenticated: state.authReducer.isAuthenticated
-}))(PrivateRouteContainer)
+}))(PrivateRouteContainer);
 
 const Login = connect(null, dispatch => ({
   login: () => {
-    dispatch(authSuccess())
-    dispatch(push('/'))
+    dispatch(authSuccess());
+    dispatch(push("/"));
   }
-}))(LoginContainer)
+}))(LoginContainer);
 
 const Home = connect(null, dispatch => ({
   logout: () => {
-    dispatch(authFail())
-    dispatch(push('/login'))
+    dispatch(authFail());
+    dispatch(push("/login"));
   }
-}))(HomeContainer)
+}))(HomeContainer);
 
 render(
   <Provider store={store}>
@@ -119,5 +117,5 @@ render(
       </Switch>
     </ConnectedRouter>
   </Provider>,
-  document.getElementById('root'),
-)
+  document.getElementById("root")
+);

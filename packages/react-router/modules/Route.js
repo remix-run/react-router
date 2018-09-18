@@ -67,7 +67,7 @@ class Route extends React.Component {
     return matchPath(pathname, { path, strict, exact, sensitive }, route.match);
   }
 
-  componentWillMount() {
+  componentDidMount() {
     warning(
       !(this.props.component && this.props.render),
       "You should not use <Route component> and <Route render> in the same route; <Route render> will be ignored"
@@ -92,19 +92,19 @@ class Route extends React.Component {
     );
   }
 
-  componentWillReceiveProps(nextProps, nextContext) {
+  componentDidUpdate(prevProps) {
     warning(
-      !(nextProps.location && !this.props.location),
+      !(prevProps.location && !this.props.location),
       '<Route> elements should not change from uncontrolled to controlled (or vice versa). You initially used no "location" prop and then provided one on a subsequent render.'
     );
 
     warning(
-      !(!nextProps.location && this.props.location),
+      !(!prevProps.location && this.props.location),
       '<Route> elements should not change from controlled to uncontrolled (or vice versa). You provided a "location" prop initially but omitted it on a subsequent render.'
     );
 
     this.setState({
-      match: this.computeMatch(nextProps, nextContext.router)
+      match: this.computeMatch(this.props, this.context.router)
     });
   }
 

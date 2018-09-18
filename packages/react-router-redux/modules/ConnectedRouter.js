@@ -26,7 +26,7 @@ class ConnectedRouter extends Component {
     });
   };
 
-  componentWillMount() {
+  componentDidMount() {
     const { store: propsStore, history, isSSR } = this.props;
     this.store = propsStore || this.context.store;
 
