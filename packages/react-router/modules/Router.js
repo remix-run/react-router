@@ -20,6 +20,26 @@ class Router extends React.Component {
     router: PropTypes.object.isRequired
   };
 
+  constructor(props) {
+    super(props);
+
+    const { children, history } = props;
+
+    invariant(
+      children == null || React.Children.count(children) === 1,
+      "A <Router> may have only one child element"
+    );
+
+    // Do this here so we can setState when a <Redirect> changes the
+    // location in componentDidMount. This happens e.g. when doing
+    // server rendering using a <StaticRouter>.
+    this.unlisten = history.listen(() => {
+      this.setState({
+        match: this.computeMatch(history.location.pathname)
+      });
+    });
+  }
+
   getChildContext() {
     return {
       router: {
@@ -44,24 +64,6 @@ class Router extends React.Component {
       params: {},
       isExact: pathname === "/"
     };
-  }
-
-  componentDidMount() {
-    const { children, history } = this.props;
-
-    invariant(
-      children == null || React.Children.count(children) === 1,
-      "A <Router> may have only one child element"
-    );
-
-    // Do this here so we can setState when a <Redirect> changes the
-    // location in componentDidMount. This happens e.g. when doing
-    // server rendering using a <StaticRouter>.
-    this.unlisten = history.listen(() => {
-      this.setState({
-        match: this.computeMatch(history.location.pathname)
-      });
-    });
   }
 
   componentDidUpdate(prevProps) {

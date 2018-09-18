@@ -3,6 +3,7 @@ import invariant from "invariant";
 import React from "react";
 import PropTypes from "prop-types";
 import matchPath from "./matchPath";
+import isEqual from "lodash.isequal";
 
 const isEmptyChildren = children => React.Children.count(children) === 0;
 
@@ -103,9 +104,13 @@ class Route extends React.Component {
       '<Route> elements should not change from controlled to uncontrolled (or vice versa). You provided a "location" prop initially but omitted it on a subsequent render.'
     );
 
-    this.setState({
-      match: this.computeMatch(this.props, this.context.router)
-    });
+    const newMatch = this.computeMatch(this.props, this.context.router);
+
+    if (!isEqual(newMatch, this.state.match)) {
+      this.setState({
+        match: newMatch
+      });
+    }
   }
 
   render() {

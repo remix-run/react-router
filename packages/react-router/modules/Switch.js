@@ -19,11 +19,10 @@ class Switch extends React.Component {
     location: PropTypes.object
   };
 
-  componentDidMount() {
-    invariant(
-      this.context.router,
-      "You should not use <Switch> outside a <Router>"
-    );
+  constructor(props, context) {
+    super(props);
+
+    invariant(context.router, "You should not use <Switch> outside a <Router>");
   }
 
   componentDidUpdate(prevProps) {
