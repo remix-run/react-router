@@ -20,8 +20,8 @@ class Router extends React.Component {
     router: PropTypes.object.isRequired
   };
 
-  constructor(props) {
-    super(props);
+  constructor(props, context) {
+    super(props, context);
 
     const { children, history } = props;
 
@@ -30,14 +30,30 @@ class Router extends React.Component {
       "A <Router> may have only one child element"
     );
 
-    // Do this here so we can setState when a <Redirect> changes the
-    // location in componentDidMount. This happens e.g. when doing
-    // server rendering using a <StaticRouter>.
-    this.unlisten = history.listen(() => {
-      this.setState({
-        match: this.computeMatch(history.location.pathname)
+    if (!this.isStatic()) {
+      // Do this here so we can setState when a <Redirect> changes the
+      // location in componentDidMount. This happens e.g. when doing
+      // server rendering using a <StaticRouter>.
+      this.unlisten = history.listen(() => {
+        this.setState({
+          match: this.computeMatch(history.location.pathname)
+        });
       });
-    });
+    }
+  }
+
+  componentDidMount() {
+    if (this.isStatic()) {
+      const { history } = this.props;
+      // Do this here so we can setState when a <Redirect> changes the
+      // location in componentDidMount. This happens e.g. when doing
+      // server rendering using a <StaticRouter>.
+      this.unlisten = history.listen(() => {
+        this.setState({
+          match: this.computeMatch(history.location.pathname)
+        });
+      });
+    }
   }
 
   getChildContext() {
@@ -80,6 +96,12 @@ class Router extends React.Component {
   render() {
     const { children } = this.props;
     return children ? React.Children.only(children) : null;
+  }
+
+  isStatic() {
+    return (
+      this.context && this.context.router && this.context.router.staticContext
+    );
   }
 }
 
