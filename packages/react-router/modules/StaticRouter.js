@@ -62,6 +62,16 @@ class StaticRouter extends React.Component {
     router: PropTypes.object.isRequired
   };
 
+  constructor(props) {
+    super(props);
+
+    warning(
+      !this.props.history,
+      "<StaticRouter> ignores the history prop. To use a custom history, " +
+        "use `import { Router }` instead of `import { StaticRouter as Router }`."
+    );
+  }
+
   getChildContext() {
     return {
       router: {
@@ -89,14 +99,6 @@ class StaticRouter extends React.Component {
   handleListen = () => noop;
 
   handleBlock = () => noop;
-
-  componentDidMount() {
-    warning(
-      !this.props.history,
-      "<StaticRouter> ignores the history prop. To use a custom history, " +
-        "use `import { Router }` instead of `import { StaticRouter as Router }`."
-    );
-  }
 
   render() {
     const { basename, context, location, ...props } = this.props;

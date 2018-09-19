@@ -3,7 +3,6 @@ import invariant from "invariant";
 import React from "react";
 import PropTypes from "prop-types";
 import matchPath from "./matchPath";
-import isEqual from "lodash.isequal";
 
 const isEmptyChildren = children => React.Children.count(children) === 0;
 
@@ -105,8 +104,23 @@ class Route extends React.Component {
     );
 
     const newMatch = this.computeMatch(this.props, this.context.router);
+    let matchesAreTheSame = true;
 
-    if (!isEqual(newMatch, this.state.match)) {
+    Object.keys(newMatch).forEach(key => {
+      if (typeof newMatch[key] !== "object") {
+        matchesAreTheSame =
+          matchesAreTheSame && newMatch[key] === this.state.match[key];
+      } else {
+        Object.keys(newMatch[key]).forEach(subKey => {
+          matchesAreTheSame =
+            matchesAreTheSame &&
+            this.state.match[key] &&
+            newMatch[key][subKey] === this.state.match[key][subKey];
+        });
+      }
+    });
+
+    if (!matchesAreTheSame) {
       this.setState({
         match: newMatch
       });
