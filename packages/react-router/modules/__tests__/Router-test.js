@@ -2,6 +2,7 @@ import React from "react";
 import ReactDOM from "react-dom";
 import PropTypes from "prop-types";
 import Router from "../Router";
+import RouterContext from "../RouterContext";
 import { createMemoryHistory as createHistory } from "history";
 
 describe("A <Router>", () => {
@@ -50,17 +51,14 @@ describe("A <Router>", () => {
 
   describe("context", () => {
     let rootContext;
-    const ContextChecker = (props, context) => {
-      rootContext = context;
-      return null;
-    };
-
-    ContextChecker.contextTypes = {
-      router: PropTypes.shape({
-        history: PropTypes.object,
-        route: PropTypes.object
-      })
-    };
+    const ContextChecker = () => (
+      <RouterContext.Consumer>
+        {context => {
+          rootContext = context;
+          return null;
+        }}
+      </RouterContext.Consumer>
+    );
 
     afterEach(() => {
       rootContext = undefined;

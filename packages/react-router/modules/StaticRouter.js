@@ -114,7 +114,13 @@ class StaticRouter extends React.Component {
       block: this.handleBlock
     };
 
-    return <Router {...props} history={history} />;
+    return (
+      <Router
+        {...props}
+        history={history}
+        router={this.getChildContext().router}
+      />
+    );
   }
 }
 

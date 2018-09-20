@@ -2,6 +2,7 @@ import warning from "warning";
 import invariant from "invariant";
 import React from "react";
 import PropTypes from "prop-types";
+import RouterContext from "./RouterContext";
 import matchPath from "./matchPath";
 
 const isEmptyChildren = children => React.Children.count(children) === 0;
@@ -9,7 +10,7 @@ const isEmptyChildren = children => React.Children.count(children) === 0;
 /**
  * The public API for matching a single path and rendering.
  */
-class Route extends React.Component {
+class InnerRoute extends React.Component {
   static propTypes = {
     computedMatch: PropTypes.object, // private, from <Switch>
     path: PropTypes.string,
@@ -19,10 +20,7 @@ class Route extends React.Component {
     component: PropTypes.func,
     render: PropTypes.func,
     children: PropTypes.oneOfType([PropTypes.func, PropTypes.node]),
-    location: PropTypes.object
-  };
-
-  static contextTypes = {
+    location: PropTypes.object,
     router: PropTypes.shape({
       history: PropTypes.object.isRequired,
       route: PropTypes.object.isRequired,
@@ -37,9 +35,9 @@ class Route extends React.Component {
   getChildContext() {
     return {
       router: {
-        ...this.context.router,
+        ...this.props.router,
         route: {
-          location: this.props.location || this.context.router.route.location,
+          location: this.props.location || this.props.router.route.location,
           match: this.state.match
         }
       }
@@ -47,13 +45,18 @@ class Route extends React.Component {
   }
 
   state = {
-    match: this.computeMatch(this.props, this.context.router)
+    match: this.computeMatch(this.props)
   };
 
-  computeMatch(
-    { computedMatch, location, path, strict, exact, sensitive },
-    router
-  ) {
+  computeMatch({
+    computedMatch,
+    router,
+    location,
+    path,
+    strict,
+    exact,
+    sensitive
+  }) {
     if (computedMatch) return computedMatch; // <Switch> already computed the match for us
 
     invariant(
@@ -92,7 +95,7 @@ class Route extends React.Component {
     );
   }
 
-  componentWillReceiveProps(nextProps, nextContext) {
+  componentWillReceiveProps(nextProps) {
     warning(
       !(nextProps.location && !this.props.location),
       '<Route> elements should not change from uncontrolled to controlled (or vice versa). You initially used no "location" prop and then provided one on a subsequent render.'
@@ -104,14 +107,18 @@ class Route extends React.Component {
     );
 
     this.setState({
-      match: this.computeMatch(nextProps, nextContext.router)
+      match: this.computeMatch(nextProps)
     });
   }
 
-  render() {
+  renderChildren() {
     const { match } = this.state;
-    const { children, component, render } = this.props;
-    const { history, route, staticContext } = this.context.router;
+    const {
+      children,
+      component,
+      render,
+      router: { history, route, staticContext }
+    } = this.props;
     const location = this.props.location || route.location;
     const props = { match, location, history, staticContext };
 
@@ -126,6 +133,20 @@ class Route extends React.Component {
 
     return null;
   }
+
+  render() {
+    return (
+      <RouterContext.Provider value={this.getChildContext()}>
+        {this.renderChildren()}
+      </RouterContext.Provider>
+    );
+  }
 }
+
+const Route = props => (
+  <RouterContext.Consumer>
+    {({ router }) => <InnerRoute {...props} router={router} />}
+  </RouterContext.Consumer>
+);
 
 export default Route;
