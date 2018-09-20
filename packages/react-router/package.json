@@ -81,6 +81,9 @@
     ]
   },
   "jest": {
+    "globals": {
+      "__DEV__": true
+    },
     "setupFiles": [
       "raf/polyfill"
     ],

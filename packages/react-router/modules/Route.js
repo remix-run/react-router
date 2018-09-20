@@ -1,7 +1,8 @@
-import warning from "warning";
-import invariant from "invariant";
 import React from "react";
 import PropTypes from "prop-types";
+import invariant from "invariant";
+import warning from "warning";
+
 import RouterContext from "./RouterContext";
 import matchPath from "./matchPath";
 
@@ -11,23 +12,6 @@ const isEmptyChildren = children => React.Children.count(children) === 0;
  * The public API for matching a single path and rendering.
  */
 class InnerRoute extends React.Component {
-  static propTypes = {
-    computedMatch: PropTypes.object, // private, from <Switch>
-    path: PropTypes.string,
-    exact: PropTypes.bool,
-    strict: PropTypes.bool,
-    sensitive: PropTypes.bool,
-    component: PropTypes.func,
-    render: PropTypes.func,
-    children: PropTypes.oneOfType([PropTypes.func, PropTypes.node]),
-    location: PropTypes.object,
-    router: PropTypes.shape({
-      history: PropTypes.object.isRequired,
-      route: PropTypes.object.isRequired,
-      staticContext: PropTypes.object
-    })
-  };
-
   static childContextTypes = {
     router: PropTypes.object.isRequired
   };
@@ -141,6 +125,25 @@ class InnerRoute extends React.Component {
       </RouterContext.Provider>
     );
   }
+}
+
+if (__DEV__) {
+  InnerRoute.propTypes = {
+    computedMatch: PropTypes.object, // private, from <Switch>
+    path: PropTypes.string,
+    exact: PropTypes.bool,
+    strict: PropTypes.bool,
+    sensitive: PropTypes.bool,
+    component: PropTypes.func,
+    render: PropTypes.func,
+    children: PropTypes.oneOfType([PropTypes.func, PropTypes.node]),
+    location: PropTypes.object,
+    router: PropTypes.shape({
+      history: PropTypes.object.isRequired,
+      route: PropTypes.object.isRequired,
+      staticContext: PropTypes.object
+    })
+  };
 }
 
 const Route = props => (

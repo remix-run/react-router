@@ -1,8 +1,9 @@
 import React from "react";
 import PropTypes from "prop-types";
-import warning from "warning";
-import invariant from "invariant";
 import { createLocation, locationsAreEqual } from "history";
+import invariant from "invariant";
+import warning from "warning";
+
 import RouterContext from "./RouterContext";
 import generatePath from "./generatePath";
 
@@ -11,20 +12,6 @@ import generatePath from "./generatePath";
  * with a component.
  */
 class InnerRedirect extends React.Component {
-  static propTypes = {
-    computedMatch: PropTypes.object, // private, from <Switch>
-    push: PropTypes.bool,
-    from: PropTypes.string,
-    to: PropTypes.oneOfType([PropTypes.string, PropTypes.object]).isRequired,
-    router: PropTypes.shape({
-      history: PropTypes.shape({
-        push: PropTypes.func.isRequired,
-        replace: PropTypes.func.isRequired
-      }).isRequired,
-      staticContext: PropTypes.object
-    }).isRequired
-  };
-
   static defaultProps = {
     push: false
   };
@@ -78,7 +65,10 @@ class InnerRedirect extends React.Component {
   }
 
   perform() {
-    const { push, router: { history } } = this.props;
+    const {
+      push,
+      router: { history }
+    } = this.props;
     const to = this.computeTo(this.props);
 
     if (push) {
@@ -91,6 +81,22 @@ class InnerRedirect extends React.Component {
   render() {
     return null;
   }
+}
+
+if (__DEV__) {
+  InnerRedirect.propTypes = {
+    computedMatch: PropTypes.object, // private, from <Switch>
+    push: PropTypes.bool,
+    from: PropTypes.string,
+    to: PropTypes.oneOfType([PropTypes.string, PropTypes.object]).isRequired,
+    router: PropTypes.shape({
+      history: PropTypes.shape({
+        push: PropTypes.func.isRequired,
+        replace: PropTypes.func.isRequired
+      }).isRequired,
+      staticContext: PropTypes.object
+    }).isRequired
+  };
 }
 
 const Redirect = props => (

@@ -1,8 +1,9 @@
-import warning from "warning";
-import invariant from "invariant";
 import React from "react";
 import PropTypes from "prop-types";
 import { createLocation, createPath } from "history";
+import invariant from "invariant";
+import warning from "warning";
+
 import Router from "./Router";
 
 const addLeadingSlash = path => {
@@ -47,12 +48,6 @@ const noop = () => {};
  * server-rendering scenarios.
  */
 class StaticRouter extends React.Component {
-  static propTypes = {
-    basename: PropTypes.string,
-    context: PropTypes.object.isRequired,
-    location: PropTypes.oneOfType([PropTypes.string, PropTypes.object])
-  };
-
   static defaultProps = {
     basename: "",
     location: "/"
@@ -122,6 +117,14 @@ class StaticRouter extends React.Component {
       />
     );
   }
+}
+
+if (__DEV__) {
+  StaticRouter.propTypes = {
+    basename: PropTypes.string,
+    context: PropTypes.object.isRequired,
+    location: PropTypes.oneOfType([PropTypes.string, PropTypes.object])
+  };
 }
 
 export default StaticRouter;

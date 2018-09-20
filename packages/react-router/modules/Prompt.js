@@ -1,6 +1,7 @@
 import React from "react";
 import PropTypes from "prop-types";
 import invariant from "invariant";
+
 import RouterContext from "./RouterContext";
 
 /**
@@ -8,16 +9,6 @@ import RouterContext from "./RouterContext";
  * from a screen with a component.
  */
 class InnerPrompt extends React.Component {
-  static propTypes = {
-    when: PropTypes.bool,
-    message: PropTypes.oneOfType([PropTypes.func, PropTypes.string]).isRequired,
-    router: PropTypes.shape({
-      history: PropTypes.shape({
-        block: PropTypes.func.isRequired
-      }).isRequired
-    }).isRequired
-  };
-
   static defaultProps = {
     when: true
   };
@@ -60,6 +51,18 @@ class InnerPrompt extends React.Component {
   render() {
     return null;
   }
+}
+
+if (__DEV__) {
+  InnerPrompt.propTypes = {
+    when: PropTypes.bool,
+    message: PropTypes.oneOfType([PropTypes.func, PropTypes.string]).isRequired,
+    router: PropTypes.shape({
+      history: PropTypes.shape({
+        block: PropTypes.func.isRequired
+      }).isRequired
+    }).isRequired
+  };
 }
 
 const Prompt = props => (

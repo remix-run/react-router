@@ -1,7 +1,8 @@
 import React from "react";
 import PropTypes from "prop-types";
-import warning from "warning";
 import invariant from "invariant";
+import warning from "warning";
+
 import RouterContext from "./RouterContext";
 import matchPath from "./matchPath";
 
@@ -9,14 +10,6 @@ import matchPath from "./matchPath";
  * The public API for rendering the first <Route> that matches.
  */
 class InnerSwitch extends React.Component {
-  static propTypes = {
-    children: PropTypes.node,
-    location: PropTypes.object,
-    router: PropTypes.shape({
-      route: PropTypes.object.isRequired
-    }).isRequired
-  };
-
   componentWillMount() {
     invariant(
       this.props.router,
@@ -66,6 +59,16 @@ class InnerSwitch extends React.Component {
       ? React.cloneElement(child, { location, computedMatch: match })
       : null;
   }
+}
+
+if (__DEV__) {
+  InnerSwitch.propTypes = {
+    children: PropTypes.node,
+    location: PropTypes.object,
+    router: PropTypes.shape({
+      route: PropTypes.object.isRequired
+    }).isRequired
+  };
 }
 
 const Switch = props => (

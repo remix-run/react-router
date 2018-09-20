@@ -1,8 +1,10 @@
-const BABEL_ENV = process.env.BABEL_ENV;
-const building = BABEL_ENV != undefined && BABEL_ENV !== "cjs";
+const babelEnv = process.env.BABEL_ENV;
+const building = babelEnv != undefined && babelEnv !== "cjs";
+
 const transformImports = require("babel-plugin-transform-imports");
 
 const plugins = [
+  "dev-expression",
   [
     transformImports,
     {
@@ -17,10 +19,11 @@ const plugins = [
 ];
 
 if (process.env.NODE_ENV === "production") {
-  plugins.push("dev-expression", "transform-react-remove-prop-types");
+  plugins.push("transform-react-remove-prop-types");
 }
 
 module.exports = {
+  plugins: plugins,
   presets: [
     [
       "es2015",
@@ -31,6 +34,5 @@ module.exports = {
     ],
     "stage-1",
     "react"
-  ],
-  plugins: plugins
+  ]
 };

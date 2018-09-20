@@ -1,19 +1,14 @@
-import warning from "warning";
-import invariant from "invariant";
 import React from "react";
 import PropTypes from "prop-types";
+import invariant from "invariant";
+import warning from "warning";
+
 import RouterContext from "./RouterContext";
 
 /**
  * The public API for putting history on context.
  */
 class Router extends React.Component {
-  static propTypes = {
-    history: PropTypes.object.isRequired,
-    children: PropTypes.node,
-    router: PropTypes.object
-  };
-
   static childContextTypes = {
     router: PropTypes.object.isRequired
   };
@@ -81,6 +76,14 @@ class Router extends React.Component {
       </RouterContext.Provider>
     );
   }
+}
+
+if (__DEV__) {
+  Router.propTypes = {
+    history: PropTypes.object.isRequired,
+    children: PropTypes.node,
+    router: PropTypes.object
+  };
 }
 
 export default Router;

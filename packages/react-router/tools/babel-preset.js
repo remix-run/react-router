@@ -1,23 +1,23 @@
-const BABEL_ENV = process.env.BABEL_ENV
-const building = BABEL_ENV != undefined && BABEL_ENV !== 'cjs'
+const babelEnv = process.env.BABEL_ENV;
+const building = babelEnv != undefined && babelEnv !== "cjs";
 
-const plugins = []
+const plugins = ["dev-expression"];
 
-if (process.env.NODE_ENV === 'production') {
-  plugins.push(
-    'dev-expression',
-    'transform-react-remove-prop-types'
-  )
+if (process.env.NODE_ENV === "production") {
+  plugins.push("transform-react-remove-prop-types");
 }
 
 module.exports = {
+  plugins: plugins,
   presets: [
-    [ 'es2015', {
-      loose: true,
-      modules: building ? false : 'commonjs'
-    } ],
-    'stage-1',
-    'react'
-  ],
-  plugins: plugins
-}
+    [
+      "es2015",
+      {
+        loose: true,
+        modules: building ? false : "commonjs"
+      }
+    ],
+    "stage-1",
+    "react"
+  ]
+};

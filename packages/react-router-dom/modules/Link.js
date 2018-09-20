@@ -11,14 +11,6 @@ const isModifiedEvent = event =>
  * The public API for rendering a history-aware <a>.
  */
 class Link extends React.Component {
-  static propTypes = {
-    onClick: PropTypes.func,
-    target: PropTypes.string,
-    replace: PropTypes.bool,
-    to: PropTypes.oneOfType([PropTypes.string, PropTypes.object]).isRequired,
-    innerRef: PropTypes.oneOfType([PropTypes.string, PropTypes.func])
-  };
-
   static defaultProps = {
     replace: false
   };
@@ -73,6 +65,16 @@ class Link extends React.Component {
       </RouterContext.Consumer>
     );
   }
+}
+
+if (__DEV__) {
+  Link.propTypes = {
+    onClick: PropTypes.func,
+    target: PropTypes.string,
+    replace: PropTypes.bool,
+    to: PropTypes.oneOfType([PropTypes.string, PropTypes.object]).isRequired,
+    innerRef: PropTypes.oneOfType([PropTypes.string, PropTypes.func])
+  };
 }
 
 export default Link;
