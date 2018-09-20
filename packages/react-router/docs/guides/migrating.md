@@ -69,7 +69,7 @@ One thing to note is that the router component must only be given one child elem
 
 ## Routes
 
-In v3, the `<Route>` was not really a component. Instead, all of your application's `<Route>` elements were just used to created a route configuration object.
+In v3, the `<Route>` was not really a component. Instead, all of your application's `<Route>` elements were just used to create a route configuration object.
 
 ```jsx
 /// in v3 the element
