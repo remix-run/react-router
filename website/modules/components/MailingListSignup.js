@@ -45,20 +45,14 @@ Input.propTypes = {
 };
 
 class MailingListSignup extends Component {
-  state = {
-    email: "",
-    submitted: true
-  };
+  state = { email: "", submitted: false };
 
   handleSubmit = e => {
     e.preventDefault();
 
     if (this.state.email) {
       subscribeToMailingList(this.state.email).then(() => {
-        this.setState({
-          email: "",
-          submitted: true
-        });
+        this.setState({ email: "", submitted: true });
       });
     }
   };

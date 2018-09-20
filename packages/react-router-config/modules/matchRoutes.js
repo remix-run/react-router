@@ -1,5 +1,4 @@
-import matchPath from "react-router/matchPath";
-import Router from "react-router/Router";
+import { matchPath, Router } from "react-router";
 
 // ensure we're using the exact code for default root match
 const { computeMatch } = Router.prototype;
