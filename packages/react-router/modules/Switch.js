@@ -2,27 +2,25 @@ import React from "react";
 import PropTypes from "prop-types";
 import warning from "warning";
 import invariant from "invariant";
+import RouterContext from "./RouterContext";
 import matchPath from "./matchPath";
 
 /**
  * The public API for rendering the first <Route> that matches.
  */
-class Switch extends React.Component {
-  static contextTypes = {
+class InnerSwitch extends React.Component {
+  static propTypes = {
+    children: PropTypes.node,
+    location: PropTypes.object,
     router: PropTypes.shape({
       route: PropTypes.object.isRequired
     }).isRequired
   };
 
-  static propTypes = {
-    children: PropTypes.node,
-    location: PropTypes.object
-  };
-
-  constructor(props, context) {
+  constructor(props) {
     super(props);
 
-    invariant(context.router, "You should not use <Switch> outside a <Router>");
+    invariant(props.router, "You should not use <Switch> outside a <Router>");
   }
 
   componentDidUpdate(prevProps) {
@@ -38,7 +36,7 @@ class Switch extends React.Component {
   }
 
   render() {
-    const { route } = this.context.router;
+    const { route } = this.props.router;
     const { children } = this.props;
     const location = this.props.location || route.location;
 
@@ -68,5 +66,11 @@ class Switch extends React.Component {
       : null;
   }
 }
+
+const Switch = props => (
+  <RouterContext.Consumer>
+    {({ router }) => <InnerSwitch {...props} router={router} />}
+  </RouterContext.Consumer>
+);
 
 export default Switch;

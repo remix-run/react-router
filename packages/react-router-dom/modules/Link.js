@@ -2,6 +2,7 @@ import React from "react";
 import PropTypes from "prop-types";
 import invariant from "invariant";
 import { createLocation } from "history";
+import RouterContext from "./RouterContext";
 
 const isModifiedEvent = event =>
   !!(event.metaKey || event.altKey || event.ctrlKey || event.shiftKey);
@@ -22,17 +23,7 @@ class Link extends React.Component {
     replace: false
   };
 
-  static contextTypes = {
-    router: PropTypes.shape({
-      history: PropTypes.shape({
-        push: PropTypes.func.isRequired,
-        replace: PropTypes.func.isRequired,
-        createHref: PropTypes.func.isRequired
-      }).isRequired
-    }).isRequired
-  };
-
-  handleClick = event => {
+  handleClick = history => event => {
     if (this.props.onClick) this.props.onClick(event);
 
     if (
@@ -43,7 +34,6 @@ class Link extends React.Component {
     ) {
       event.preventDefault();
 
-      const { history } = this.context.router;
       const { replace, to } = this.props;
 
       if (replace) {
@@ -57,22 +47,30 @@ class Link extends React.Component {
   render() {
     const { replace, to, innerRef, ...props } = this.props; // eslint-disable-line no-unused-vars
 
-    invariant(
-      this.context.router,
-      "You should not use <Link> outside a <Router>"
-    );
-
     invariant(to !== undefined, 'You must specify the "to" property');
 
-    const { history } = this.context.router;
-    const location =
-      typeof to === "string"
-        ? createLocation(to, null, null, history.location)
-        : to;
-
-    const href = history.createHref(location);
     return (
-      <a {...props} onClick={this.handleClick} href={href} ref={innerRef} />
+      <RouterContext.Consumer>
+        {({ router }) => {
+          invariant(router, "You should not use <Link> outside a <Router>");
+
+          const { history } = router;
+          const location =
+            typeof to === "string"
+              ? createLocation(to, null, null, history.location)
+              : to;
+
+          const href = history.createHref(location);
+          return (
+            <a
+              {...props}
+              onClick={this.handleClick(history)}
+              href={href}
+              ref={innerRef}
+            />
+          );
+        }}
+      </RouterContext.Consumer>
     );
   }
 }

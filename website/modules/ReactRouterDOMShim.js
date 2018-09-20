@@ -9,6 +9,7 @@ export {
   Redirect,
   Route,
   Router,
+  RouterContext,
   StaticRouter,
   Switch,
   matchPath,
