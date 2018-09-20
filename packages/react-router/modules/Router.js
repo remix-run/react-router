@@ -50,7 +50,9 @@ class Router extends React.Component {
     const { children, history } = this.props;
 
     invariant(
-      children == null || React.Children.count(children) === 1,
+      React.Fragment !== undefined ||
+        children == null ||
+        React.Children.count(children) === 1,
       "A <Router> may have only one child element"
     );
 
@@ -76,8 +78,7 @@ class Router extends React.Component {
   }
 
   render() {
-    const { children } = this.props;
-    return children ? React.Children.only(children) : null;
+    return this.props.children || null;
   }
 }
 
