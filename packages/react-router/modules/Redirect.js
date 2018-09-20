@@ -3,25 +3,19 @@ import PropTypes from "prop-types";
 import warning from "warning";
 import invariant from "invariant";
 import { createLocation, locationsAreEqual } from "history";
+import RouterContext from "./RouterContext";
 import generatePath from "./generatePath";
 
 /**
  * The public API for updating the location programmatically
  * with a component.
  */
-class Redirect extends React.Component {
+class InnerRedirect extends React.Component {
   static propTypes = {
     computedMatch: PropTypes.object, // private, from <Switch>
     push: PropTypes.bool,
     from: PropTypes.string,
-    to: PropTypes.oneOfType([PropTypes.string, PropTypes.object]).isRequired
-  };
-
-  static defaultProps = {
-    push: false
-  };
-
-  static contextTypes = {
+    to: PropTypes.oneOfType([PropTypes.string, PropTypes.object]).isRequired,
     router: PropTypes.shape({
       history: PropTypes.shape({
         push: PropTypes.func.isRequired,
@@ -31,13 +25,17 @@ class Redirect extends React.Component {
     }).isRequired
   };
 
+  static defaultProps = {
+    push: false
+  };
+
   isStatic() {
-    return this.context.router && this.context.router.staticContext;
+    return this.props.router && this.props.router.staticContext;
   }
 
   componentWillMount() {
     invariant(
-      this.context.router,
+      this.props.router,
       "You should not use <Redirect> outside a <Router>"
     );
 
@@ -80,8 +78,7 @@ class Redirect extends React.Component {
   }
 
   perform() {
-    const { history } = this.context.router;
-    const { push } = this.props;
+    const { push, router: { history } } = this.props;
     const to = this.computeTo(this.props);
 
     if (push) {
@@ -95,5 +92,11 @@ class Redirect extends React.Component {
     return null;
   }
 }
+
+const Redirect = props => (
+  <RouterContext.Consumer>
+    {({ router }) => <InnerRedirect {...props} router={router} />}
+  </RouterContext.Consumer>
+);
 
 export default Redirect;

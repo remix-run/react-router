@@ -1,22 +1,16 @@
 import React from "react";
 import PropTypes from "prop-types";
 import invariant from "invariant";
+import RouterContext from "./RouterContext";
 
 /**
  * The public API for prompting the user before navigating away
  * from a screen with a component.
  */
-class Prompt extends React.Component {
+class InnerPrompt extends React.Component {
   static propTypes = {
     when: PropTypes.bool,
-    message: PropTypes.oneOfType([PropTypes.func, PropTypes.string]).isRequired
-  };
-
-  static defaultProps = {
-    when: true
-  };
-
-  static contextTypes = {
+    message: PropTypes.oneOfType([PropTypes.func, PropTypes.string]).isRequired,
     router: PropTypes.shape({
       history: PropTypes.shape({
         block: PropTypes.func.isRequired
@@ -24,10 +18,14 @@ class Prompt extends React.Component {
     }).isRequired
   };
 
+  static defaultProps = {
+    when: true
+  };
+
   enable(message) {
     if (this.unblock) this.unblock();
 
-    this.unblock = this.context.router.history.block(message);
+    this.unblock = this.props.router.history.block(message);
   }
 
   disable() {
@@ -39,7 +37,7 @@ class Prompt extends React.Component {
 
   componentWillMount() {
     invariant(
-      this.context.router,
+      this.props.router,
       "You should not use <Prompt> outside a <Router>"
     );
 
@@ -63,5 +61,11 @@ class Prompt extends React.Component {
     return null;
   }
 }
+
+const Prompt = props => (
+  <RouterContext.Consumer>
+    {({ router }) => <InnerPrompt {...props} router={router} />}
+  </RouterContext.Consumer>
+);
 
 export default Prompt;

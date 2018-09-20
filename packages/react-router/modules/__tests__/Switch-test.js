@@ -299,7 +299,7 @@ describe("A <Switch>", () => {
 
     expect(console.error.calls.count()).toBe(3);
     expect(console.error.calls.argsFor(0)[0]).toContain(
-      "The context `router` is marked as required in `Switch`"
+      "The prop `router` is marked as required in `InnerSwitch`"
     );
   });
 });
