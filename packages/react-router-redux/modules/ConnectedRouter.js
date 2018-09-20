@@ -16,6 +16,18 @@ class ConnectedRouter extends Component {
     store: PropTypes.object
   };
 
+  constructor(props, context) {
+    super(props, context);
+
+    const { store: propsStore, history, isSSR } = this.props;
+    this.store = propsStore || this.context.store;
+
+    if (!isSSR)
+      this.unsubscribeFromHistory = history.listen(this.handleLocationChange);
+
+    this.handleLocationChange(history.location);
+  }
+
   handleLocationChange = (location, action) => {
     this.store.dispatch({
       type: LOCATION_CHANGE,
@@ -25,16 +37,6 @@ class ConnectedRouter extends Component {
       }
     });
   };
-
-  componentWillMount() {
-    const { store: propsStore, history, isSSR } = this.props;
-    this.store = propsStore || this.context.store;
-
-    if (!isSSR)
-      this.unsubscribeFromHistory = history.listen(this.handleLocationChange);
-
-    this.handleLocationChange(history.location);
-  }
 
   componentWillUnmount() {
     if (this.unsubscribeFromHistory) this.unsubscribeFromHistory();

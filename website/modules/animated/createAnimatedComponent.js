@@ -35,7 +35,7 @@ function createAnimatedComponent(Component: any): any {
       }
     }
 
-    componentWillMount() {
+    componentDidMount() {
       this.attachProps(this.props);
     }
 
@@ -72,8 +72,8 @@ function createAnimatedComponent(Component: any): any {
       oldPropsAnimated && oldPropsAnimated.__detach();
     }
 
-    componentWillReceiveProps(nextProps) {
-      this.attachProps(nextProps);
+    componentDidUpdate() {
+      this.attachProps(this.props);
     }
 
     render() {

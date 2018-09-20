@@ -18,6 +18,42 @@ class Router extends React.Component {
     router: PropTypes.object.isRequired
   };
 
+  constructor(props, context) {
+    super(props, context);
+
+    const { children, history } = props;
+
+    invariant(
+      children == null || React.Children.count(children) === 1,
+      "A <Router> may have only one child element"
+    );
+
+    if (!this.isStatic()) {
+      // Do this here so we can setState when a <Redirect> changes the
+      // location in componentDidMount. This happens e.g. when doing
+      // server rendering using a <StaticRouter>.
+      this.unlisten = history.listen(() => {
+        this.setState({
+          match: this.computeMatch(history.location.pathname)
+        });
+      });
+    }
+  }
+
+  componentDidMount() {
+    if (this.isStatic()) {
+      const { history } = this.props;
+      // Do this here so we can setState when a <Redirect> changes the
+      // location in componentDidMount. This happens e.g. when doing
+      // server rendering using a <StaticRouter>.
+      this.unlisten = history.listen(() => {
+        this.setState({
+          match: this.computeMatch(history.location.pathname)
+        });
+      });
+    }
+  }
+
   getChildContext() {
     return {
       router: {
@@ -44,27 +80,9 @@ class Router extends React.Component {
     };
   }
 
-  componentWillMount() {
-    const { children, history } = this.props;
-
-    invariant(
-      children == null || React.Children.count(children) === 1,
-      "A <Router> may have only one child element"
-    );
-
-    // Do this here so we can setState when a <Redirect> changes the
-    // location in componentWillMount. This happens e.g. when doing
-    // server rendering using a <StaticRouter>.
-    this.unlisten = history.listen(() => {
-      this.setState({
-        match: this.computeMatch(history.location.pathname)
-      });
-    });
-  }
-
-  componentWillReceiveProps(nextProps) {
+  componentDidUpdate(prevProps) {
     warning(
-      this.props.history === nextProps.history,
+      this.props.history === prevProps.history,
       "You cannot change <Router history>"
     );
   }
@@ -79,6 +97,12 @@ class Router extends React.Component {
       <RouterContext.Provider value={this.getChildContext()}>
         {children ? React.Children.only(children) : null}
       </RouterContext.Provider>
+    );
+  }
+
+  isStatic() {
+    return (
+      this.context && this.context.router && this.context.router.staticContext
     );
   }
 }

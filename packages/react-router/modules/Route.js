@@ -70,7 +70,7 @@ class InnerRoute extends React.Component {
     return matchPath(pathname, { path, strict, exact, sensitive }, route.match);
   }
 
-  componentWillMount() {
+  componentDidMount() {
     warning(
       !(this.props.component && this.props.render),
       "You should not use <Route component> and <Route render> in the same route; <Route render> will be ignored"
@@ -95,20 +95,39 @@ class InnerRoute extends React.Component {
     );
   }
 
-  componentWillReceiveProps(nextProps) {
+  componentDidUpdate(prevProps) {
     warning(
-      !(nextProps.location && !this.props.location),
+      !(prevProps.location && !this.props.location),
       '<Route> elements should not change from uncontrolled to controlled (or vice versa). You initially used no "location" prop and then provided one on a subsequent render.'
     );
 
     warning(
-      !(!nextProps.location && this.props.location),
+      !(!prevProps.location && this.props.location),
       '<Route> elements should not change from controlled to uncontrolled (or vice versa). You provided a "location" prop initially but omitted it on a subsequent render.'
     );
 
-    this.setState({
-      match: this.computeMatch(nextProps)
+    const newMatch = this.computeMatch(this.props, this.context.router);
+    let matchesAreTheSame = true;
+
+    Object.keys(newMatch).forEach(key => {
+      if (typeof newMatch[key] !== "object") {
+        matchesAreTheSame =
+          matchesAreTheSame && newMatch[key] === this.state.match[key];
+      } else {
+        Object.keys(newMatch[key]).forEach(subKey => {
+          matchesAreTheSame =
+            matchesAreTheSame &&
+            this.state.match[key] &&
+            newMatch[key][subKey] === this.state.match[key][subKey];
+        });
+      }
     });
+
+    if (!matchesAreTheSame) {
+      this.setState({
+        match: newMatch
+      });
+    }
   }
 
   renderChildren() {

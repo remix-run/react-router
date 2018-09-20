@@ -46,9 +46,9 @@ class PanGesture extends Component {
     }
   }
 
-  componentWillReceiveProps(next) {
-    if (this.props.when !== next.when) {
-      if (next.when) {
+  componentDidUpdate(prevProps) {
+    if (this.props.when !== prevProps.when) {
+      if (this.props.when) {
         this.listen();
       } else {
         this.unlisten();

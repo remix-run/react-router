@@ -17,7 +17,7 @@ class HashRouter extends React.Component {
 
   history = createHistory(this.props);
 
-  componentWillMount() {
+  componentDidMount() {
     warning(
       !this.props.history,
       "<HashRouter> ignores the history prop. To use a custom history, " +

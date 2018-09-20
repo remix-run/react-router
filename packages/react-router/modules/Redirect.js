@@ -25,6 +25,12 @@ class InnerRedirect extends React.Component {
     }).isRequired
   };
 
+  constructor(props) {
+    super(props);
+
+    if (this.isStatic()) this.perform();
+  }
+
   static defaultProps = {
     push: false
   };
@@ -33,16 +39,11 @@ class InnerRedirect extends React.Component {
     return this.props.router && this.props.router.staticContext;
   }
 
-  componentWillMount() {
+  componentDidMount() {
     invariant(
       this.props.router,
       "You should not use <Redirect> outside a <Router>"
     );
-
-    if (this.isStatic()) this.perform();
-  }
-
-  componentDidMount() {
     if (!this.isStatic()) this.perform();
   }
 
@@ -78,7 +79,10 @@ class InnerRedirect extends React.Component {
   }
 
   perform() {
-    const { push, router: { history } } = this.props;
+    const {
+      push,
+      router: { history }
+    } = this.props;
     const to = this.computeTo(this.props);
 
     if (push) {
