@@ -67,7 +67,7 @@ if (__DEV__) {
 
 const Prompt = props => (
   <RouterContext.Consumer>
-    {({ router }) => <InnerPrompt {...props} router={router} />}
+    {router => <InnerPrompt {...props} router={router} />}
   </RouterContext.Consumer>
 );
 

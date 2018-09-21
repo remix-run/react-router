@@ -70,8 +70,9 @@ class Router extends React.Component {
 
   render() {
     const { children } = this.props;
+
     return (
-      <RouterContext.Provider value={this.getChildContext()}>
+      <RouterContext.Provider value={this.getChildContext().router}>
         {children ? React.Children.only(children) : null}
       </RouterContext.Provider>
     );

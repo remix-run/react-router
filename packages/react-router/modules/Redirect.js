@@ -101,7 +101,7 @@ if (__DEV__) {
 
 const Redirect = props => (
   <RouterContext.Consumer>
-    {({ router }) => <InnerRedirect {...props} router={router} />}
+    {router => <InnerRedirect {...props} router={router} />}
   </RouterContext.Consumer>
 );
 

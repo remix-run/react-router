@@ -120,7 +120,7 @@ class InnerRoute extends React.Component {
 
   render() {
     return (
-      <RouterContext.Provider value={this.getChildContext()}>
+      <RouterContext.Provider value={this.getChildContext().router}>
         {this.renderChildren()}
       </RouterContext.Provider>
     );
@@ -137,18 +137,13 @@ if (__DEV__) {
     component: PropTypes.func,
     render: PropTypes.func,
     children: PropTypes.oneOfType([PropTypes.func, PropTypes.node]),
-    location: PropTypes.object,
-    router: PropTypes.shape({
-      history: PropTypes.object.isRequired,
-      route: PropTypes.object.isRequired,
-      staticContext: PropTypes.object
-    })
+    location: PropTypes.object
   };
 }
 
 const Route = props => (
   <RouterContext.Consumer>
-    {({ router }) => <InnerRoute {...props} router={router} />}
+    {router => <InnerRoute {...props} router={router} />}
   </RouterContext.Consumer>
 );
 

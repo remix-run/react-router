@@ -73,7 +73,7 @@ describe("A <Router>", () => {
         node
       );
 
-      expect(rootContext.router.history).toBe(history);
+      expect(rootContext.history).toBe(history);
     });
 
     it("sets context.router.route at the root", () => {
@@ -88,11 +88,11 @@ describe("A <Router>", () => {
         node
       );
 
-      expect(rootContext.router.route.match.path).toEqual("/");
-      expect(rootContext.router.route.match.url).toEqual("/");
-      expect(rootContext.router.route.match.params).toEqual({});
-      expect(rootContext.router.route.match.isExact).toEqual(true);
-      expect(rootContext.router.route.location).toEqual(history.location);
+      expect(rootContext.route.match.path).toEqual("/");
+      expect(rootContext.route.match.url).toEqual("/");
+      expect(rootContext.route.match.params).toEqual({});
+      expect(rootContext.route.match.isExact).toEqual(true);
+      expect(rootContext.route.location).toEqual(history.location);
     });
 
     it("updates context.router.route upon navigation", () => {
@@ -107,12 +107,12 @@ describe("A <Router>", () => {
         node
       );
 
-      expect(rootContext.router.route.match.isExact).toBe(true);
+      expect(rootContext.route.match.isExact).toBe(true);
 
       const newLocation = { pathname: "/new" };
       history.push(newLocation);
 
-      expect(rootContext.router.route.match.isExact).toBe(false);
+      expect(rootContext.route.match.isExact).toBe(false);
     });
 
     it("does not contain context.router.staticContext by default", () => {
@@ -127,7 +127,7 @@ describe("A <Router>", () => {
         node
       );
 
-      expect(rootContext.router.staticContext).toBe(undefined);
+      expect(rootContext.staticContext).toBe(undefined);
     });
   });
 });

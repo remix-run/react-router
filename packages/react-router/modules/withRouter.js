@@ -10,6 +10,7 @@ import Route from "./Route";
 const withRouter = Component => {
   const C = props => {
     const { wrappedComponentRef, ...remainingProps } = props;
+
     return (
       <Route
         children={routeComponentProps => (

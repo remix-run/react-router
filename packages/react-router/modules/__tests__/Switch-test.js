@@ -296,11 +296,6 @@ describe("A <Switch>", () => {
         node
       );
     }).toThrow(/You should not use <Switch> outside a <Router>/);
-
-    expect(console.error.calls.count()).toBe(3);
-    expect(console.error.calls.argsFor(0)[0]).toContain(
-      "The prop `router` is marked as required in `InnerSwitch`"
-    );
   });
 });
 

@@ -64,16 +64,13 @@ class InnerSwitch extends React.Component {
 if (__DEV__) {
   InnerSwitch.propTypes = {
     children: PropTypes.node,
-    location: PropTypes.object,
-    router: PropTypes.shape({
-      route: PropTypes.object.isRequired
-    }).isRequired
+    location: PropTypes.object
   };
 }
 
 const Switch = props => (
   <RouterContext.Consumer>
-    {({ router }) => <InnerSwitch {...props} router={router} />}
+    {router => <InnerSwitch {...props} router={router} />}
   </RouterContext.Consumer>
 );
 

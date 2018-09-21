@@ -43,7 +43,7 @@ class Link extends React.Component {
 
     return (
       <RouterContext.Consumer>
-        {({ router }) => {
+        {router => {
           invariant(router, "You should not use <Link> outside a <Router>");
 
           const { history } = router;
