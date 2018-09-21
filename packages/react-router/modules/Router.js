@@ -9,6 +9,10 @@ import RouterContext from "./RouterContext";
  * The public API for putting history on context.
  */
 class Router extends React.Component {
+  static computeRootMatch(pathname) {
+    return { path: "/", url: "/", params: {}, isExact: pathname === "/" };
+  }
+
   static childContextTypes = {
     router: PropTypes.object.isRequired
   };
@@ -16,28 +20,19 @@ class Router extends React.Component {
   getChildContext() {
     return {
       router: {
-        ...this.props.router,
         history: this.props.history,
         route: {
-          location: this.props.history.location,
-          match: this.state.match
-        }
+          location: this.state.location,
+          match: Router.computeRootMatch(this.state.location.pathname)
+        },
+        staticContext: this.props.staticContext
       }
     };
   }
 
   state = {
-    match: this.computeMatch(this.props.history.location.pathname)
+    location: this.props.history.location
   };
-
-  computeMatch(pathname) {
-    return {
-      path: "/",
-      url: "/",
-      params: {},
-      isExact: pathname === "/"
-    };
-  }
 
   componentWillMount() {
     const { children, history } = this.props;
@@ -50,10 +45,8 @@ class Router extends React.Component {
     // Do this here so we can setState when a <Redirect> changes the
     // location in componentWillMount. This happens e.g. when doing
     // server rendering using a <StaticRouter>.
-    this.unlisten = history.listen(() => {
-      this.setState({
-        match: this.computeMatch(history.location.pathname)
-      });
+    this.unlisten = history.listen(location => {
+      this.setState({ location });
     });
   }
 
@@ -81,9 +74,9 @@ class Router extends React.Component {
 
 if (__DEV__) {
   Router.propTypes = {
-    history: PropTypes.object.isRequired,
     children: PropTypes.node,
-    router: PropTypes.object
+    history: PropTypes.object.isRequired,
+    staticContext: PropTypes.object
   };
 }
 
