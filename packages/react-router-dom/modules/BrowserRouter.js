@@ -11,14 +11,6 @@ import Router from "./Router";
 class BrowserRouter extends React.Component {
   history = createHistory(this.props);
 
-  componentWillMount() {
-    warning(
-      !this.props.history,
-      "<BrowserRouter> ignores the history prop. To use a custom history, " +
-        "use `import { Router }` instead of `import { BrowserRouter as Router }`."
-    );
-  }
-
   render() {
     return <Router history={this.history} children={this.props.children} />;
   }
@@ -27,10 +19,18 @@ class BrowserRouter extends React.Component {
 if (__DEV__) {
   BrowserRouter.propTypes = {
     basename: PropTypes.string,
+    children: PropTypes.node,
     forceRefresh: PropTypes.bool,
     getUserConfirmation: PropTypes.func,
-    keyLength: PropTypes.number,
-    children: PropTypes.node
+    keyLength: PropTypes.number
+  };
+
+  BrowserRouter.prototype.componentDidMount = function() {
+    warning(
+      !this.props.history,
+      "<BrowserRouter> ignores the history prop. To use a custom history, " +
+        "use `import { Router }` instead of `import { BrowserRouter as Router }`."
+    );
   };
 }
 
