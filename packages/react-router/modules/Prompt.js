@@ -26,7 +26,7 @@ class InnerPrompt extends React.Component {
     }
   }
 
-  componentWillMount() {
+  componentDidMount() {
     invariant(
       this.props.router,
       "You should not use <Prompt> outside a <Router>"
@@ -35,10 +35,10 @@ class InnerPrompt extends React.Component {
     if (this.props.when) this.enable(this.props.message);
   }
 
-  componentWillReceiveProps(nextProps) {
-    if (nextProps.when) {
-      if (!this.props.when || this.props.message !== nextProps.message)
-        this.enable(nextProps.message);
+  componentDidUpdate(prevProps) {
+    if (this.props.when) {
+      if (!prevProps.when || prevProps.message !== this.props.message)
+        this.enable(this.props.message);
     } else {
       this.disable();
     }

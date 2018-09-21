@@ -17,14 +17,14 @@ class InnerSwitch extends React.Component {
     );
   }
 
-  componentWillReceiveProps(nextProps) {
+  componentDidUpdate(prevProps) {
     warning(
-      !(nextProps.location && !this.props.location),
+      !(this.props.location && !prevProps.location),
       '<Switch> elements should not change from uncontrolled to controlled (or vice versa). You initially used no "location" prop and then provided one on a subsequent render.'
     );
 
     warning(
-      !(!nextProps.location && this.props.location),
+      !(!this.props.location && prevProps.location),
       '<Switch> elements should not change from controlled to uncontrolled (or vice versa). You provided a "location" prop initially but omitted it on a subsequent render.'
     );
   }

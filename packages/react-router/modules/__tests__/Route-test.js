@@ -21,6 +21,24 @@ describe("A <Route>", () => {
     expect(node.innerHTML).toContain(TEXT);
   });
 
+  it.skip("does not error in StrictMode", () => {
+    const TEXT = "Mrs. Kato";
+    const node = document.createElement("div");
+
+    spyOn(console, "error");
+
+    ReactDOM.render(
+      <MemoryRouter initialEntries={["/"]}>
+        <React.StrictMode>
+          <Route path="/" render={() => <h1>{TEXT}</h1>} />
+        </React.StrictMode>
+      </MemoryRouter>,
+      node
+    );
+
+    expect(console.error).toHaveBeenCalledTimes(0);
+  });
+
   it("does not render when it does not match", () => {
     const TEXT = "bubblegum";
     const node = document.createElement("div");

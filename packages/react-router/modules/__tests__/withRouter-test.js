@@ -28,6 +28,28 @@ describe("withRouter", () => {
     );
   });
 
+  it.skip("does not error in StrictMode", () => {
+    const WrappedComponent = withRouter(() => null);
+
+    spyOn(console, "error");
+
+    ReactDOM.render(
+      <MemoryRouter initialEntries={["/bubblegum"]}>
+        <Route
+          path="/bubblegum"
+          render={() => (
+            <React.StrictMode>
+              <WrappedComponent />
+            </React.StrictMode>
+          )}
+        />
+      </MemoryRouter>,
+      node
+    );
+
+    expect(console.error).toHaveBeenCalledTimes(0);
+  });
+
   it("provides the parent match as a prop to the wrapped component", () => {
     let parentMatch;
     const PropsChecker = withRouter(props => {

@@ -22,6 +22,26 @@ describe("A <Switch>", () => {
     expect(node.innerHTML).toMatch(/one/);
   });
 
+  it.skip("does not error in StrictMode", () => {
+    const node = document.createElement("div");
+
+    spyOn(console, "error");
+
+    ReactDOM.render(
+      <MemoryRouter initialEntries={["/one"]}>
+        <React.StrictMode>
+          <Switch>
+            <Route path="/one" render={() => <h1>one</h1>} />
+            <Route path="/two" render={() => <h1>two</h1>} />
+          </Switch>
+        </React.StrictMode>
+      </MemoryRouter>,
+      node
+    );
+
+    expect(console.error).toHaveBeenCalledTimes(0);
+  });
+
   it("renders the first <Redirect from> that matches the URL", () => {
     const node = document.createElement("div");
 

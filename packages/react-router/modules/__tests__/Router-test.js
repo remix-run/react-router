@@ -31,6 +31,21 @@ describe("A <Router>", () => {
         );
       }).not.toThrow();
     });
+
+    it.skip("does not error in StrictMode", () => {
+      spyOn(console, "error");
+
+      ReactDOM.render(
+        <React.StrictMode>
+          <Router history={createHistory()}>
+            <p>Bar</p>
+          </Router>
+        </React.StrictMode>,
+        node
+      );
+
+      expect(console.error).toHaveBeenCalledTimes(0);
+    });
   });
 
   describe("with more than one child", () => {
