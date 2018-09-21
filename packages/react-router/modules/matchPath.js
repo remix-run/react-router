@@ -2,13 +2,13 @@ import pathToRegexp from "path-to-regexp";
 
 const cache = {};
 
-const isAbsolute = pathname => /^\\?\/.*/.test(pathname);
+const isAbsolute = pathname => pathname.charAt(0) === "/";
 
-const addTrailingSlash = pathname =>
+const ensureTrailingSlash = pathname =>
   hasTrailingSlash(pathname) ? pathname : pathname + "/";
 
 const hasTrailingSlash = pathname =>
-  !!pathname && pathname.charAt(pathname.length - 1) === "/";
+  pathname.charAt(pathname.length - 1) === "/";
 
 const resolvePath = (pathname, base) => {
   if (pathname === undefined || isAbsolute(pathname)) {
@@ -22,7 +22,7 @@ const resolvePath = (pathname, base) => {
   if (pathname === "") {
     return base;
   } else {
-    return `${addTrailingSlash(base)}${pathname}`;
+    return `${ensureTrailingSlash(base)}${pathname}`;
   }
 };
 
@@ -80,23 +80,20 @@ function matchPath(pathname, options = {}, parent = null) {
 
     if (exact && !isExact) return null;
 
-    const matchParams = keys.reduce((memo, key, index) => {
-      memo[key.name] = values[index];
-      return memo;
+    const matchParams = keys.reduce((params, key, index) => {
+      params[key.name] = values[index];
+      return params;
     }, {});
 
     const params = absolute
       ? matchParams
-      : Object.assign({}, parent && parent.params, matchParams);
+      : { ...(parent && parent.params), ...matchParams };
 
     return {
       path, // the path used to match
       url: path === "/" && url === "" ? "/" : url, // the matched portion of the URL
       isExact, // whether or not we matched exactly
-      params: keys.reduce((memo, key, index) => {
-        memo[key.name] = values[index];
-        return memo;
-      }, {})
+      params
     };
   }, null);
 }
