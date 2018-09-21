@@ -15,7 +15,7 @@ class Link extends React.Component {
     replace: false
   };
 
-  handleClick = history => event => {
+  handleClick = (event, history) => {
     if (this.props.onClick) this.props.onClick(event);
 
     if (
@@ -56,7 +56,7 @@ class Link extends React.Component {
           return (
             <a
               {...props}
-              onClick={this.handleClick(history)}
+              onClick={event => this.handleClick(event, history)}
               href={href}
               ref={innerRef}
             />
