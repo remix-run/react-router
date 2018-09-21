@@ -42,13 +42,6 @@ class Router extends React.Component {
     });
   }
 
-  componentWillReceiveProps(nextProps) {
-    warning(
-      this.props.history === nextProps.history,
-      "You cannot change <Router history>"
-    );
-  }
-
   componentWillUnmount() {
     this.unlisten();
   }
@@ -67,6 +60,13 @@ if (__DEV__) {
     children: PropTypes.node,
     history: PropTypes.object.isRequired,
     staticContext: PropTypes.object
+  };
+
+  Router.prototype.componentDidUpdate = function(prevProps) {
+    warning(
+      prevProps.history === this.props.history,
+      "You cannot change <Router history>"
+    );
   };
 }
 

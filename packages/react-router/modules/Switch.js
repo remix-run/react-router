@@ -10,26 +10,14 @@ import matchPath from "./matchPath";
  * The public API for rendering the first <Route> that matches.
  */
 class InnerSwitch extends React.Component {
-  componentWillMount() {
-    invariant(
-      this.props.router,
-      "You should not use <Switch> outside a <Router>"
-    );
-  }
-
-  componentWillReceiveProps(nextProps) {
-    warning(
-      !(nextProps.location && !this.props.location),
-      '<Switch> elements should not change from uncontrolled to controlled (or vice versa). You initially used no "location" prop and then provided one on a subsequent render.'
-    );
-
-    warning(
-      !(!nextProps.location && this.props.location),
-      '<Switch> elements should not change from controlled to uncontrolled (or vice versa). You provided a "location" prop initially but omitted it on a subsequent render.'
-    );
-  }
-
   render() {
+    if (__DEV__) {
+      invariant(
+        this.props.router,
+        "You should not use <Switch> outside a <Router>"
+      );
+    }
+
     const location = this.props.location || this.props.router.route.location;
 
     let child, match;
@@ -53,16 +41,32 @@ class InnerSwitch extends React.Component {
 }
 
 if (__DEV__) {
-  InnerSwitch.propTypes = {
+  InnerSwitch.prototype.componentDidUpdate = function(prevProps) {
+    warning(
+      !(this.props.location && !prevProps.location),
+      '<Switch> elements should not change from uncontrolled to controlled (or vice versa). You initially used no "location" prop and then provided one on a subsequent render.'
+    );
+
+    warning(
+      !(!this.props.location && prevProps.location),
+      '<Switch> elements should not change from controlled to uncontrolled (or vice versa). You provided a "location" prop initially but omitted it on a subsequent render.'
+    );
+  };
+}
+
+function Switch(props) {
+  return (
+    <RouterContext.Consumer>
+      {router => <InnerSwitch {...props} router={router} />}
+    </RouterContext.Consumer>
+  );
+}
+
+if (__DEV__) {
+  Switch.propTypes = {
     children: PropTypes.node,
     location: PropTypes.object
   };
 }
-
-const Switch = props => (
-  <RouterContext.Consumer>
-    {router => <InnerSwitch {...props} router={router} />}
-  </RouterContext.Consumer>
-);
 
 export default Switch;

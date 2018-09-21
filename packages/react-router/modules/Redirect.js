@@ -38,11 +38,14 @@ class InnerRedirect extends React.Component {
     const nextTo = createLocation(this.props.to);
 
     if (locationsAreEqual(prevTo, nextTo)) {
-      warning(
-        false,
-        `You tried to redirect to the same route you're currently on: ` +
-          `"${nextTo.pathname}${nextTo.search}"`
-      );
+      if (__DEV__) {
+        warning(
+          false,
+          `You tried to redirect to the same route you're currently on: ` +
+            `"${nextTo.pathname}${nextTo.search}"`
+        );
+      }
+
       return;
     }
 
@@ -83,18 +86,20 @@ class InnerRedirect extends React.Component {
   }
 }
 
+function Redirect(props) {
+  return (
+    <RouterContext.Consumer>
+      {router => <InnerRedirect {...props} router={router} />}
+    </RouterContext.Consumer>
+  );
+}
+
 if (__DEV__) {
-  InnerRedirect.propTypes = {
+  Redirect.propTypes = {
     push: PropTypes.bool,
     from: PropTypes.string,
     to: PropTypes.oneOfType([PropTypes.string, PropTypes.object]).isRequired
   };
 }
-
-const Redirect = props => (
-  <RouterContext.Consumer>
-    {router => <InnerRedirect {...props} router={router} />}
-  </RouterContext.Consumer>
-);
 
 export default Redirect;

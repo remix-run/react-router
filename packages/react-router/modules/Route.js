@@ -27,6 +27,13 @@ class InnerRoute extends React.Component {
   };
 
   getChildContext() {
+    if (__DEV__) {
+      invariant(
+        this.props.router,
+        "You should not use <Route> or withRouter() outside a <Router>"
+      );
+    }
+
     return {
       router: {
         ...this.props.router,
@@ -36,48 +43,6 @@ class InnerRoute extends React.Component {
         }
       }
     };
-  }
-
-  componentWillMount() {
-    invariant(
-      this.props.router,
-      "You should not use <Route> or withRouter() outside a <Router>"
-    );
-
-    warning(
-      !(this.props.component && this.props.render),
-      "You should not use <Route component> and <Route render> in the same route; <Route render> will be ignored"
-    );
-
-    warning(
-      !(
-        this.props.component &&
-        this.props.children &&
-        !isEmptyChildren(this.props.children)
-      ),
-      "You should not use <Route component> and <Route children> in the same route; <Route children> will be ignored"
-    );
-
-    warning(
-      !(
-        this.props.render &&
-        this.props.children &&
-        !isEmptyChildren(this.props.children)
-      ),
-      "You should not use <Route render> and <Route children> in the same route; <Route children> will be ignored"
-    );
-  }
-
-  componentWillReceiveProps(nextProps) {
-    warning(
-      !(nextProps.location && !this.props.location),
-      '<Route> elements should not change from uncontrolled to controlled (or vice versa). You initially used no "location" prop and then provided one on a subsequent render.'
-    );
-
-    warning(
-      !(!nextProps.location && this.props.location),
-      '<Route> elements should not change from controlled to uncontrolled (or vice versa). You provided a "location" prop initially but omitted it on a subsequent render.'
-    );
   }
 
   render() {
@@ -117,7 +82,54 @@ class InnerRoute extends React.Component {
 }
 
 if (__DEV__) {
-  InnerRoute.propTypes = {
+  InnerRoute.prototype.componentDidMount = function() {
+    warning(
+      !(this.props.component && this.props.render),
+      "You should not use <Route component> and <Route render> in the same route; <Route render> will be ignored"
+    );
+
+    warning(
+      !(
+        this.props.component &&
+        this.props.children &&
+        !isEmptyChildren(this.props.children)
+      ),
+      "You should not use <Route component> and <Route children> in the same route; <Route children> will be ignored"
+    );
+
+    warning(
+      !(
+        this.props.render &&
+        this.props.children &&
+        !isEmptyChildren(this.props.children)
+      ),
+      "You should not use <Route render> and <Route children> in the same route; <Route children> will be ignored"
+    );
+  };
+
+  InnerRoute.prototype.componentDidUpdate = function(prevProps) {
+    warning(
+      !(this.props.location && !prevProps.location),
+      '<Route> elements should not change from uncontrolled to controlled (or vice versa). You initially used no "location" prop and then provided one on a subsequent render.'
+    );
+
+    warning(
+      !(!this.props.location && prevProps.location),
+      '<Route> elements should not change from controlled to uncontrolled (or vice versa). You provided a "location" prop initially but omitted it on a subsequent render.'
+    );
+  };
+}
+
+function Route(props) {
+  return (
+    <RouterContext.Consumer>
+      {router => <InnerRoute {...props} router={router} />}
+    </RouterContext.Consumer>
+  );
+}
+
+if (__DEV__) {
+  Route.propTypes = {
     path: PropTypes.string,
     exact: PropTypes.bool,
     strict: PropTypes.bool,
@@ -128,11 +140,5 @@ if (__DEV__) {
     location: PropTypes.object
   };
 }
-
-const Route = props => (
-  <RouterContext.Consumer>
-    {router => <InnerRoute {...props} router={router} />}
-  </RouterContext.Consumer>
-);
 
 export default Route;

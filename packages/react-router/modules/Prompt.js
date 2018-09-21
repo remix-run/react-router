@@ -35,10 +35,11 @@ class InnerPrompt extends React.Component {
     if (this.props.when) this.enable(this.props.message);
   }
 
-  componentWillReceiveProps(nextProps) {
-    if (nextProps.when) {
-      if (!this.props.when || this.props.message !== nextProps.message)
-        this.enable(nextProps.message);
+  componentDidUpdate(prevProps) {
+    if (this.props.when) {
+      if (!this.props.when || prevProps.message !== this.props.message) {
+        this.enable(this.props.message);
+      }
     } else {
       this.disable();
     }
@@ -60,10 +61,12 @@ if (__DEV__) {
   };
 }
 
-const Prompt = props => (
-  <RouterContext.Consumer>
-    {router => <InnerPrompt {...props} router={router} />}
-  </RouterContext.Consumer>
-);
+function Prompt(props) {
+  return (
+    <RouterContext.Consumer>
+      {router => <InnerPrompt {...props} router={router} />}
+    </RouterContext.Consumer>
+  );
+}
 
 export default Prompt;
