@@ -7,6 +7,21 @@ import warning from "warning";
 import RouterContext from "./RouterContext";
 import generatePath from "./generatePath";
 
+function computeTo(props) {
+  if (props.computedMatch) {
+    if (typeof props.to === "string") {
+      return generatePath(props.to, props.computedMatch.params);
+    } else {
+      return {
+        ...props.to,
+        pathname: generatePath(props.to.pathname, props.computedMatch.params)
+      };
+    }
+  }
+
+  return props.to;
+}
+
 /**
  * The public API for updating the location programmatically
  * with a component.
@@ -52,29 +67,11 @@ class InnerRedirect extends React.Component {
     this.perform();
   }
 
-  computeTo({ computedMatch, to }) {
-    if (computedMatch) {
-      if (typeof to === "string") {
-        return generatePath(to, computedMatch.params);
-      } else {
-        return {
-          ...to,
-          pathname: generatePath(to.pathname, computedMatch.params)
-        };
-      }
-    }
-
-    return to;
-  }
-
   perform() {
-    const {
-      push,
-      router: { history }
-    } = this.props;
-    const to = this.computeTo(this.props);
+    const history = this.props.router.history;
+    const to = computeTo(this.props);
 
-    if (push) {
+    if (this.props.push) {
       history.push(to);
     } else {
       history.replace(to);
