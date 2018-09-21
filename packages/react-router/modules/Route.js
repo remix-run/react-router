@@ -118,7 +118,6 @@ class InnerRoute extends React.Component {
 
 if (__DEV__) {
   InnerRoute.propTypes = {
-    computedMatch: PropTypes.object, // private, from <Switch>
     path: PropTypes.string,
     exact: PropTypes.bool,
     strict: PropTypes.bool,

@@ -56,12 +56,7 @@ class InnerPrompt extends React.Component {
 if (__DEV__) {
   InnerPrompt.propTypes = {
     when: PropTypes.bool,
-    message: PropTypes.oneOfType([PropTypes.func, PropTypes.string]).isRequired,
-    router: PropTypes.shape({
-      history: PropTypes.shape({
-        block: PropTypes.func.isRequired
-      }).isRequired
-    }).isRequired
+    message: PropTypes.oneOfType([PropTypes.func, PropTypes.string]).isRequired
   };
 }
 

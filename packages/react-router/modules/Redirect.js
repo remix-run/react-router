@@ -85,17 +85,9 @@ class InnerRedirect extends React.Component {
 
 if (__DEV__) {
   InnerRedirect.propTypes = {
-    computedMatch: PropTypes.object, // private, from <Switch>
     push: PropTypes.bool,
     from: PropTypes.string,
-    to: PropTypes.oneOfType([PropTypes.string, PropTypes.object]).isRequired,
-    router: PropTypes.shape({
-      history: PropTypes.shape({
-        push: PropTypes.func.isRequired,
-        replace: PropTypes.func.isRequired
-      }).isRequired,
-      staticContext: PropTypes.object
-    }).isRequired
+    to: PropTypes.oneOfType([PropTypes.string, PropTypes.object]).isRequired
   };
 }
 
