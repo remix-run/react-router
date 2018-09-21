@@ -137,10 +137,12 @@ This means that given a component that blocks updates, you can easily pass it th
 // update when it receives new props
 class Blocker extends React.PureComponent {
   render() {
-    <div>
-      <NavLink to='/oz'>Oz</NavLink>
-      <NavLink to='/kansas'>Kansas</NavLink>
-    </div>
+    return (
+      <div>
+        <NavLink to='/oz'>Oz</NavLink>
+        <NavLink to='/kansas'>Kansas</NavLink>
+      </div>
+    )
   }
 }
 ```
