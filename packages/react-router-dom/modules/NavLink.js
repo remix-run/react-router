@@ -52,29 +52,31 @@ const NavLink = ({
   );
 };
 
-NavLink.propTypes = {
-  to: Link.propTypes.to,
-  exact: PropTypes.bool,
-  strict: PropTypes.bool,
-  location: PropTypes.object,
-  activeClassName: PropTypes.string,
-  className: PropTypes.string,
-  activeStyle: PropTypes.object,
-  style: PropTypes.object,
-  isActive: PropTypes.func,
-  "aria-current": PropTypes.oneOf([
-    "page",
-    "step",
-    "location",
-    "date",
-    "time",
-    "true"
-  ])
-};
-
 NavLink.defaultProps = {
   activeClassName: "active",
   "aria-current": "page"
 };
+
+if (__DEV__) {
+  NavLink.propTypes = {
+    to: Link.propTypes.to,
+    exact: PropTypes.bool,
+    strict: PropTypes.bool,
+    location: PropTypes.object,
+    activeClassName: PropTypes.string,
+    className: PropTypes.string,
+    activeStyle: PropTypes.object,
+    style: PropTypes.object,
+    isActive: PropTypes.func,
+    "aria-current": PropTypes.oneOf([
+      "page",
+      "step",
+      "location",
+      "date",
+      "time",
+      "true"
+    ])
+  };
+}
 
 export default NavLink;
