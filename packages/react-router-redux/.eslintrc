@@ -2,8 +2,7 @@
   "parser": "babel-eslint",
   "env": {
     "node": true,
-    "es6": true,
-    "jest": true
+    "es6": true
   },
   "plugins": ["import", "react"],
   "extends": [
@@ -14,5 +13,10 @@
   "rules": {
     "prefer-arrow-callback": 2,
     "react/display-name": 0
+  },
+  "settings": {
+    "react": {
+      "version": "15"
+    }
   }
 }
