@@ -6,7 +6,17 @@ import warning from "warning";
 import RouterContext from "./RouterContext";
 import matchPath from "./matchPath";
 
-const isEmptyChildren = children => React.Children.count(children) === 0;
+function isEmptyChildren(children) {
+  return React.Children.count(children) === 0;
+}
+
+function computeMatch(props, parentRoute) {
+  if (props.computedMatch) return props.computedMatch; // <Switch> already computed the match for us
+
+  return props.path == null
+    ? parentRoute.match
+    : matchPath((props.location || parentRoute.location).pathname, props);
+}
 
 /**
  * The public API for matching a single path and rendering.
@@ -22,39 +32,18 @@ class InnerRoute extends React.Component {
         ...this.props.router,
         route: {
           location: this.props.location || this.props.router.route.location,
-          match: this.state.match
+          match: computeMatch(this.props, this.props.router.route)
         }
       }
     };
   }
 
-  state = {
-    match: this.computeMatch(this.props)
-  };
-
-  computeMatch({
-    computedMatch,
-    router,
-    location,
-    path,
-    strict,
-    exact,
-    sensitive
-  }) {
-    if (computedMatch) return computedMatch; // <Switch> already computed the match for us
-
+  componentWillMount() {
     invariant(
-      router,
+      this.props.router,
       "You should not use <Route> or withRouter() outside a <Router>"
     );
 
-    const { route } = router;
-    const pathname = (location || route.location).pathname;
-
-    return matchPath(pathname, { path, strict, exact, sensitive }, route.match);
-  }
-
-  componentWillMount() {
     warning(
       !(this.props.component && this.props.render),
       "You should not use <Route component> and <Route render> in the same route; <Route render> will be ignored"
@@ -89,39 +78,39 @@ class InnerRoute extends React.Component {
       !(!nextProps.location && this.props.location),
       '<Route> elements should not change from controlled to uncontrolled (or vice versa). You provided a "location" prop initially but omitted it on a subsequent render.'
     );
-
-    this.setState({
-      match: this.computeMatch(nextProps)
-    });
-  }
-
-  renderChildren() {
-    const { match } = this.state;
-    const {
-      children,
-      component,
-      render,
-      router: { history, route, staticContext }
-    } = this.props;
-    const location = this.props.location || route.location;
-    const props = { match, location, history, staticContext };
-
-    if (component) return match ? React.createElement(component, props) : null;
-
-    if (render) return match ? render(props) : null;
-
-    if (typeof children === "function") return children(props);
-
-    if (children && !isEmptyChildren(children))
-      return React.Children.only(children);
-
-    return null;
   }
 
   render() {
+    const context = this.getChildContext().router;
+    const props = {
+      ...context.route,
+      history: this.props.router.history,
+      staticContext: this.props.router.staticContext
+    };
+
+    let { children, component, render } = this.props;
+
+    if (Array.isArray(children) && children.length === 0) {
+      children = null; // Preact uses an empty array as children by default
+    }
+
     return (
-      <RouterContext.Provider value={this.getChildContext().router}>
-        {this.renderChildren()}
+      <RouterContext.Provider value={context}>
+        {children
+          ? typeof children === "function"
+            ? children(props)
+            : isEmptyChildren(children)
+              ? null
+              : children
+          : component
+            ? props.match
+              ? React.createElement(component, props)
+              : null
+            : render
+              ? props.match
+                ? render(props)
+                : null
+              : null}
       </RouterContext.Provider>
     );
   }

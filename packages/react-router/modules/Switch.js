@@ -30,28 +30,19 @@ class InnerSwitch extends React.Component {
   }
 
   render() {
-    const { route } = this.props.router;
-    const { children } = this.props;
-    const location = this.props.location || route.location;
+    const location = this.props.location || this.props.router.route.location;
 
-    let match, child;
-    React.Children.forEach(children, element => {
+    let child, match;
+    React.Children.forEach(this.props.children, element => {
       if (match == null && React.isValidElement(element)) {
-        const {
-          path: pathProp,
-          exact,
-          strict,
-          sensitive,
-          from
-        } = element.props;
-        const path = pathProp || from;
-
         child = element;
-        match = matchPath(
-          location.pathname,
-          { path, exact, strict, sensitive },
-          route.match
-        );
+
+        const path = element.props.path || element.props.from;
+
+        match =
+          path == null
+            ? this.props.router.route.match
+            : matchPath(location.pathname, { ...element.props, path });
       }
     });
 

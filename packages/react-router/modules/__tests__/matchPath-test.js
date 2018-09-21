@@ -54,25 +54,6 @@ describe("matchPath", () => {
     });
   });
 
-  describe("with no path", () => {
-    it("returns parent match", () => {
-      const parentMatch = {
-        url: "/test-location/7",
-        path: "/test-location/:number",
-        params: { number: 7 },
-        isExact: true
-      };
-      const match = matchPath("/test-location/7", {}, parentMatch);
-      expect(match).toBe(parentMatch);
-    });
-
-    it("returns null when parent match is null", () => {
-      const pathname = "/some/path";
-      const match = matchPath(pathname, {}, null);
-      expect(match).toBe(null);
-    });
-  });
-
   describe("cache", () => {
     it("creates a cache entry for each exact/strict pair", () => {
       // true/false and false/true will collide when adding booleans
