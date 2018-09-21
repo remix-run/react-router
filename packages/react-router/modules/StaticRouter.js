@@ -6,20 +6,20 @@ import warning from "warning";
 
 import Router from "./Router";
 
-const addLeadingSlash = path => {
+function addLeadingSlash(path) {
   return path.charAt(0) === "/" ? path : "/" + path;
-};
+}
 
-const addBasename = (basename, location) => {
+function addBasename(basename, location) {
   if (!basename) return location;
 
   return {
     ...location,
     pathname: addLeadingSlash(basename) + location.pathname
   };
-};
+}
 
-const stripBasename = (basename, location) => {
+function stripBasename(basename, location) {
   if (!basename) return location;
 
   const base = addLeadingSlash(basename);
@@ -30,16 +30,19 @@ const stripBasename = (basename, location) => {
     ...location,
     pathname: location.pathname.substr(base.length)
   };
-};
+}
 
-const createURL = location =>
-  typeof location === "string" ? location : createPath(location);
+function createURL(location) {
+  return typeof location === "string" ? location : createPath(location);
+}
 
-const staticHandler = methodName => () => {
-  invariant(false, "You cannot %s with <StaticRouter>", methodName);
-};
+function staticHandler(methodName) {
+  return () => {
+    invariant(false, "You cannot %s with <StaticRouter>", methodName);
+  };
+}
 
-const noop = () => {};
+function noop() {}
 
 /**
  * The public top-level API for a "static" <Router>, so-called because it

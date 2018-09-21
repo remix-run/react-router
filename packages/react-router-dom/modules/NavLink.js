@@ -7,7 +7,7 @@ import Link from "./Link";
 /**
  * A <Link> wrapper that knows if it's "active" or not.
  */
-const NavLink = ({
+function NavLink({
   to,
   exact,
   strict,
@@ -19,7 +19,7 @@ const NavLink = ({
   isActive: getIsActive,
   "aria-current": ariaCurrent,
   ...rest
-}) => {
+}) {
   const path = typeof to === "object" ? to.pathname : to;
 
   // Regex taken from: https://github.com/pillarjs/path-to-regexp/blob/master/index.js#L202
@@ -50,7 +50,7 @@ const NavLink = ({
       }}
     />
   );
-};
+}
 
 NavLink.defaultProps = {
   activeClassName: "active",

@@ -7,7 +7,7 @@ import Route from "./Route";
 /**
  * A public higher-order component to access the imperative API
  */
-const withRouter = Component => {
+function withRouter(Component) {
   const C = props => {
     const { wrappedComponentRef, ...remainingProps } = props;
 
@@ -34,6 +34,6 @@ const withRouter = Component => {
   }
 
   return hoistStatics(C, Component);
-};
+}
 
 export default withRouter;

@@ -1,6 +1,6 @@
 import { matchPath, Router } from "react-router";
 
-const matchRoutes = (routes, pathname, /*not public API*/ branch = []) => {
+function matchRoutes(routes, pathname, /*not public API*/ branch = []) {
   routes.some(route => {
     const match = route.path
       ? matchPath(pathname, route)
@@ -20,6 +20,6 @@ const matchRoutes = (routes, pathname, /*not public API*/ branch = []) => {
   });
 
   return branch;
-};
+}
 
 export default matchRoutes;

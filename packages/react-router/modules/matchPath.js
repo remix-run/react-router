@@ -4,7 +4,7 @@ const patternCache = {};
 const cacheLimit = 10000;
 let cacheCount = 0;
 
-const compilePath = (pattern, options) => {
+function compilePath(pattern, options) {
   const cacheKey = `${options.end}${options.strict}${options.sensitive}`;
   const cache = patternCache[cacheKey] || (patternCache[cacheKey] = {});
 
@@ -20,12 +20,12 @@ const compilePath = (pattern, options) => {
   }
 
   return compiledPattern;
-};
+}
 
 /**
  * Public API for matching a URL pathname to a path pattern.
  */
-const matchPath = (pathname, options = {}) => {
+function matchPath(pathname, options = {}) {
   if (typeof options === "string") options = { path: options };
 
   const { path, exact = false, strict = false, sensitive = false } = options;
@@ -49,6 +49,6 @@ const matchPath = (pathname, options = {}) => {
       return memo;
     }, {})
   };
-};
+}
 
 export default matchPath;

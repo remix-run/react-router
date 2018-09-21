@@ -4,7 +4,7 @@ const patternCache = {};
 const cacheLimit = 10000;
 let cacheCount = 0;
 
-const compileGenerator = pattern => {
+function compileGenerator(pattern) {
   const cacheKey = pattern;
   const cache = patternCache[cacheKey] || (patternCache[cacheKey] = {});
 
@@ -18,17 +18,19 @@ const compileGenerator = pattern => {
   }
 
   return compiledGenerator;
-};
+}
 
 /**
  * Public API for generating a URL pathname from a pattern and parameters.
  */
-const generatePath = (pattern = "/", params = {}) => {
+function generatePath(pattern = "/", params = {}) {
   if (pattern === "/") {
     return pattern;
   }
+
   const generator = compileGenerator(pattern);
+
   return generator(params, { pretty: true });
-};
+}
 
 export default generatePath;
