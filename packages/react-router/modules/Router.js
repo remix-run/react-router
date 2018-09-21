@@ -1,6 +1,5 @@
 import React from "react";
 import PropTypes from "prop-types";
-import invariant from "invariant";
 import warning from "warning";
 
 import RouterContext from "./RouterContext";
@@ -35,17 +34,10 @@ class Router extends React.Component {
   };
 
   componentWillMount() {
-    const { children, history } = this.props;
-
-    invariant(
-      children == null || React.Children.count(children) === 1,
-      "A <Router> may have only one child element"
-    );
-
     // Do this here so we can setState when a <Redirect> changes the
     // location in componentWillMount. This happens e.g. when doing
     // server rendering using a <StaticRouter>.
-    this.unlisten = history.listen(location => {
+    this.unlisten = this.props.history.listen(location => {
       this.setState({ location });
     });
   }
@@ -62,11 +54,9 @@ class Router extends React.Component {
   }
 
   render() {
-    const { children } = this.props;
-
     return (
       <RouterContext.Provider value={this.getChildContext().router}>
-        {children ? React.Children.only(children) : null}
+        {this.props.children || null}
       </RouterContext.Provider>
     );
   }
