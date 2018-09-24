@@ -55,8 +55,10 @@ class InnerRoute extends React.Component {
 
     let { children, component, render } = this.props;
 
+    // Preact uses an empty array as children by
+    // default, so use null if that's the case.
     if (Array.isArray(children) && children.length === 0) {
-      children = null; // Preact uses an empty array as children by default
+      children = null;
     }
 
     return (
@@ -67,15 +69,13 @@ class InnerRoute extends React.Component {
             : isEmptyChildren(children)
               ? null
               : children
-          : component
-            ? props.match
+          : props.match
+            ? component
               ? React.createElement(component, props)
-              : null
-            : render
-              ? props.match
+              : render
                 ? render(props)
                 : null
-              : null}
+            : null}
       </RouterContext.Provider>
     );
   }
