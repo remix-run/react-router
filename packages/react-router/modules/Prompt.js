@@ -4,51 +4,21 @@ import invariant from "invariant";
 
 import RouterContext from "./RouterContext";
 
-/**
- * The public API for prompting the user before navigating away
- * from a screen with a component.
- */
-class InnerPrompt extends React.Component {
-  static defaultProps = {
-    when: true
-  };
-
-  enable(message) {
-    if (this.unblock) {
-      this.unblock();
-    }
-
-    this.unblock = this.props.router.history.block(message);
-  }
-
-  disable() {
-    if (this.unblock) {
-      this.unblock();
-      this.unblock = null;
-    }
-  }
-
-  componentDidMount() {
-    invariant(
-      this.props.router,
-      "You should not use <Prompt> outside a <Router>"
-    );
-
-    if (this.props.when) this.enable(this.props.message);
+class Block extends React.Component {
+  constructor(props) {
+    super(props);
+    this.release = props.method(props.message);
   }
 
   componentDidUpdate(prevProps) {
-    if (this.props.when) {
-      if (!prevProps.when || prevProps.message !== this.props.message) {
-        this.enable(this.props.message);
-      }
-    } else {
-      this.disable();
+    if (prevProps.message !== this.props.message) {
+      this.release();
+      this.release = this.props.method(this.props.message);
     }
   }
 
   componentWillUnmount() {
-    this.disable();
+    this.release();
   }
 
   render() {
@@ -56,13 +26,33 @@ class InnerPrompt extends React.Component {
   }
 }
 
+if (__DEV__) {
+  Block.propTypes = {
+    method: PropTypes.func.isRequired,
+    message: PropTypes.oneOfType([PropTypes.func, PropTypes.string]).isRequired
+  };
+}
+
+/**
+ * The public API for prompting the user before navigating away from a screen.
+ */
 function Prompt(props) {
   return (
     <RouterContext.Consumer>
-      {router => <InnerPrompt {...props} router={router} />}
+      {router => {
+        invariant(router, "You should not use <Prompt> outside a <Router>");
+
+        return props.when ? (
+          <Block method={router.history.block} message={props.message} />
+        ) : null;
+      }}
     </RouterContext.Consumer>
   );
 }
+
+Prompt.defaultProps = {
+  when: true
+};
 
 if (__DEV__) {
   Prompt.propTypes = {
