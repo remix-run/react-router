@@ -28,21 +28,20 @@ class Router extends React.Component {
   };
 
   getChildContext() {
-    // TODO: Warn about accessing context directly. It will be removed.
+    // TODO: Warn about accessing this.context.router directly. It will be removed.
     return {
       router: getContext(this.props, this.state)
     };
   }
 
-  state = {
-    location: this.props.history.location
-  };
+  constructor(props) {
+    super(props);
 
-  componentWillMount() {
-    // Do this here so we can setState when a <Redirect> changes the
-    // location in componentWillMount. This happens e.g. when doing
-    // server rendering using a <StaticRouter>.
-    this.unlisten = this.props.history.listen(location => {
+    this.state = {
+      location: props.history.location
+    };
+
+    this.unlisten = props.history.listen(location => {
       this.setState({ location });
     });
   }
@@ -55,9 +54,10 @@ class Router extends React.Component {
     const context = getContext(this.props, this.state);
 
     return (
-      <RouterContext.Provider value={context}>
-        {this.props.children || null}
-      </RouterContext.Provider>
+      <RouterContext.Provider
+        children={this.props.children || null}
+        value={context}
+      />
     );
   }
 }

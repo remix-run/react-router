@@ -46,10 +46,35 @@ class Route extends React.Component {
   };
 
   getChildContext() {
-    // TODO: Warn about accessing context directly. It will be removed.
+    // TODO: Warn about accessing this.context.router directly. It will be removed.
     return {
       router: getContext(this.props, this.context.router)
     };
+  }
+
+  constructor(props) {
+    super(props);
+
+    if (__DEV__) {
+      warning(
+        !(props.component && props.render),
+        "You should not use <Route component> and <Route render> in the same route; <Route render> will be ignored"
+      );
+
+      warning(
+        !(
+          props.component &&
+          props.children &&
+          !isEmptyChildren(props.children)
+        ),
+        "You should not use <Route component> and <Route children> in the same route; <Route children> will be ignored"
+      );
+
+      warning(
+        !(props.render && props.children && !isEmptyChildren(props.children)),
+        "You should not use <Route render> and <Route children> in the same route; <Route children> will be ignored"
+      );
+    }
   }
 
   render() {
@@ -105,31 +130,6 @@ if (__DEV__) {
     render: PropTypes.func,
     children: PropTypes.oneOfType([PropTypes.func, PropTypes.node]),
     location: PropTypes.object
-  };
-
-  Route.prototype.componentDidMount = function() {
-    warning(
-      !(this.props.component && this.props.render),
-      "You should not use <Route component> and <Route render> in the same route; <Route render> will be ignored"
-    );
-
-    warning(
-      !(
-        this.props.component &&
-        this.props.children &&
-        !isEmptyChildren(this.props.children)
-      ),
-      "You should not use <Route component> and <Route children> in the same route; <Route children> will be ignored"
-    );
-
-    warning(
-      !(
-        this.props.render &&
-        this.props.children &&
-        !isEmptyChildren(this.props.children)
-      ),
-      "You should not use <Route render> and <Route children> in the same route; <Route children> will be ignored"
-    );
   };
 
   Route.prototype.componentDidUpdate = function(prevProps) {

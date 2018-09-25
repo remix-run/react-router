@@ -23,29 +23,22 @@ function computeTo(props) {
 }
 
 /**
- * The public API for updating the location programmatically
- * with a component.
+ * The public API for updating the location programmatically with a component.
  */
 class InnerRedirect extends React.Component {
   static defaultProps = {
     push: false
   };
 
-  isStatic() {
-    return this.props.router && this.props.router.staticContext;
-  }
+  constructor(props) {
+    super(props);
 
-  componentWillMount() {
     invariant(
       this.props.router,
       "You should not use <Redirect> outside a <Router>"
     );
 
-    if (this.isStatic()) this.perform();
-  }
-
-  componentDidMount() {
-    if (!this.isStatic()) this.perform();
+    this.perform();
   }
 
   componentDidUpdate(prevProps) {

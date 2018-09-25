@@ -14,7 +14,7 @@ describe("A <Switch>", () => {
   });
 
   describe("without a <Router>", () => {
-    it("throws", () => {
+    it("throws an error", () => {
       spyOn(console, "error");
 
       expect(() => {
@@ -34,80 +34,90 @@ describe("A <Switch>", () => {
       node
     );
 
-    expect(node.innerHTML).toMatch(/one/);
+    expect(node.innerHTML).toContain("one");
   });
 
-  it("renders the first <Redirect from> that matches the URL", () => {
-    ReactDOM.render(
-      <MemoryRouter initialEntries={["/three"]}>
-        <Switch>
-          <Route path="/one" render={() => <h1>one</h1>} />
-          <Redirect from="/four" to="/one" />
-          <Redirect from="/three" to="/two" />
-          <Route path="/two" render={() => <h1>two</h1>} />
-        </Switch>
-      </MemoryRouter>,
-      node
-    );
-
-    expect(node.innerHTML).toMatch(/two/);
-  });
-
-  it("does not render a second <Route> or <Redirect> that also matches the URL", () => {
+  it("does not render a second <Route> that also matches the URL", () => {
     ReactDOM.render(
       <MemoryRouter initialEntries={["/one"]}>
         <Switch>
           <Route path="/one" render={() => <h1>one</h1>} />
-          <Redirect from="/one" to="/two" />
           <Route path="/one" render={() => <h1>two</h1>} />
+        </Switch>
+      </MemoryRouter>,
+      node
+    );
+
+    expect(node.innerHTML).not.toContain("two");
+  });
+
+  it("renders the first <Redirect> that matches the URL", () => {
+    ReactDOM.render(
+      <MemoryRouter initialEntries={["/three"]}>
+        <Switch>
+          <Route path="/one" render={() => <h1>one</h1>} />
+          <Route path="/two" render={() => <h1>two</h1>} />
+          <Redirect from="/three" to="/two" />
+        </Switch>
+      </MemoryRouter>,
+      node
+    );
+
+    expect(node.innerHTML).toContain("two");
+  });
+
+  it("does not render a second <Redirect> that also matches the URL", () => {
+    ReactDOM.render(
+      <MemoryRouter initialEntries={["/three"]}>
+        <Switch>
+          <Route path="/one" render={() => <h1>one</h1>} />
+          <Route path="/two" render={() => <h1>two</h1>} />
+          <Redirect from="/three" to="/two" />
+          <Redirect from="/three" to="/one" />
+        </Switch>
+      </MemoryRouter>,
+      node
+    );
+
+    expect(node.innerHTML).toContain("two");
+  });
+
+  it("renders a Route with no `path` prop", () => {
+    ReactDOM.render(
+      <MemoryRouter initialEntries={["/two"]}>
+        <Switch>
+          <Route path="/one" render={() => <h1>one</h1>} />
+          <Route render={() => <h1>two</h1>} />
+        </Switch>
+      </MemoryRouter>,
+      node
+    );
+
+    expect(node.innerHTML).toContain("two");
+  });
+
+  it("renders a Redirect with no `from` prop", () => {
+    ReactDOM.render(
+      <MemoryRouter initialEntries={["/three"]}>
+        <Switch>
+          <Route path="/one" render={() => <h1>one</h1>} />
+          <Redirect to="/one" />
           <Route path="/two" render={() => <h1>two</h1>} />
         </Switch>
       </MemoryRouter>,
       node
     );
 
-    expect(node.innerHTML).not.toMatch(/two/);
-  });
-
-  it("renders pathless Routes", () => {
-    ReactDOM.render(
-      <MemoryRouter initialEntries={["/cupcakes"]}>
-        <Switch>
-          <Route path="/bubblegum" render={() => <div>one</div>} />
-          <Route render={() => <div>two</div>} />
-        </Switch>
-      </MemoryRouter>,
-      node
-    );
-
-    expect(node.innerHTML).not.toContain("one");
-    expect(node.innerHTML).toContain("two");
-  });
-
-  it("handles from-less Redirects", () => {
-    ReactDOM.render(
-      <MemoryRouter initialEntries={["/cupcakes"]}>
-        <Switch>
-          <Route path="/bubblegum" render={() => <div>bub</div>} />
-          <Redirect to="/bubblegum" />
-          <Route path="/cupcakes" render={() => <div>cup</div>} />
-        </Switch>
-      </MemoryRouter>,
-      node
-    );
-
-    expect(node.innerHTML).not.toContain("cup");
-    expect(node.innerHTML).toContain("bub");
+    expect(node.innerHTML).toContain("one");
   });
 
   it("handles subsequent redirects", () => {
     ReactDOM.render(
       <MemoryRouter initialEntries={["/one"]}>
         <Switch>
-          <Redirect exact from="/one" to="/two" />
-          <Redirect exact from="/two" to="/three" />
-
-          <Route path="/three" render={() => <div>three</div>} />
+          <Redirect from="/one" to="/two" />
+          <Redirect from="/two" to="/three" />
+          <Route path="/three" render={() => <h1>three</h1>} />
         </Switch>
       </MemoryRouter>,
       node
