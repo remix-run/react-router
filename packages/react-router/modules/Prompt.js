@@ -14,7 +14,9 @@ class InnerPrompt extends React.Component {
   };
 
   enable(message) {
-    if (this.unblock) this.unblock();
+    if (this.unblock) {
+      this.unblock();
+    }
 
     this.unblock = this.props.router.history.block(message);
   }
@@ -26,7 +28,7 @@ class InnerPrompt extends React.Component {
     }
   }
 
-  componentWillMount() {
+  componentDidMount() {
     invariant(
       this.props.router,
       "You should not use <Prompt> outside a <Router>"
@@ -37,7 +39,7 @@ class InnerPrompt extends React.Component {
 
   componentDidUpdate(prevProps) {
     if (this.props.when) {
-      if (!this.props.when || prevProps.message !== this.props.message) {
+      if (!prevProps.when || prevProps.message !== this.props.message) {
         this.enable(this.props.message);
       }
     } else {
@@ -54,19 +56,19 @@ class InnerPrompt extends React.Component {
   }
 }
 
-if (__DEV__) {
-  InnerPrompt.propTypes = {
-    when: PropTypes.bool,
-    message: PropTypes.oneOfType([PropTypes.func, PropTypes.string]).isRequired
-  };
-}
-
 function Prompt(props) {
   return (
     <RouterContext.Consumer>
       {router => <InnerPrompt {...props} router={router} />}
     </RouterContext.Consumer>
   );
+}
+
+if (__DEV__) {
+  Prompt.propTypes = {
+    when: PropTypes.bool,
+    message: PropTypes.oneOfType([PropTypes.func, PropTypes.string]).isRequired
+  };
 }
 
 export default Prompt;
