@@ -1,36 +1,27 @@
 import pathToRegexp from "path-to-regexp";
 
-const patternCache = {};
+const cache = {};
 const cacheLimit = 10000;
 let cacheCount = 0;
 
-function compileGenerator(pattern) {
-  const cacheKey = pattern;
-  const cache = patternCache[cacheKey] || (patternCache[cacheKey] = {});
+function compilePath(path) {
+  if (cache[path]) return cache[path];
 
-  if (cache[pattern]) return cache[pattern];
-
-  const compiledGenerator = pathToRegexp.compile(pattern);
+  const generator = pathToRegexp.compile(path);
 
   if (cacheCount < cacheLimit) {
-    cache[pattern] = compiledGenerator;
+    cache[path] = generator;
     cacheCount++;
   }
 
-  return compiledGenerator;
+  return generator;
 }
 
 /**
- * Public API for generating a URL pathname from a pattern and parameters.
+ * Public API for generating a URL pathname from a path and parameters.
  */
-function generatePath(pattern = "/", params = {}) {
-  if (pattern === "/") {
-    return pattern;
-  }
-
-  const generator = compileGenerator(pattern);
-
-  return generator(params, { pretty: true });
+function generatePath(path = "/", params = {}) {
+  return path === "/" ? path : compilePath(path)(params, { pretty: true });
 }
 
 export default generatePath;
