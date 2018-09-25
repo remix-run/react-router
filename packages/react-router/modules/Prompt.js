@@ -27,9 +27,11 @@ class Block extends React.Component {
 }
 
 if (__DEV__) {
+  const messageType = PropTypes.oneOfType([PropTypes.func, PropTypes.string]);
+
   Block.propTypes = {
     method: PropTypes.func.isRequired,
-    message: PropTypes.oneOfType([PropTypes.func, PropTypes.string]).isRequired
+    message: messageType.isRequired
   };
 }
 
@@ -55,9 +57,11 @@ Prompt.defaultProps = {
 };
 
 if (__DEV__) {
+  const messageType = PropTypes.oneOfType([PropTypes.func, PropTypes.string]);
+
   Prompt.propTypes = {
     when: PropTypes.bool,
-    message: PropTypes.oneOfType([PropTypes.func, PropTypes.string]).isRequired
+    message: messageType.isRequired
   };
 }
 

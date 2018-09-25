@@ -7,10 +7,8 @@ import RouterContext from "./RouterContext";
 function getContext(props, state) {
   return {
     history: props.history,
-    route: {
-      location: state.location,
-      match: Router.computeRootMatch(state.location.pathname)
-    },
+    location: state.location,
+    match: Router.computeRootMatch(state.location.pathname),
     staticContext: props.staticContext
   };
 }

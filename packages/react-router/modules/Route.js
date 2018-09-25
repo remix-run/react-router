@@ -10,26 +10,18 @@ function isEmptyChildren(children) {
   return React.Children.count(children) === 0;
 }
 
-function computeMatch(props, parentRoute) {
-  if (props.computedMatch) return props.computedMatch; // <Switch> already computed the match for us
-
-  return props.path == null
-    ? parentRoute.match
-    : matchPath((props.location || parentRoute.location).pathname, props);
-}
-
-function getContext(props, parentContext) {
-  invariant(
-    parentContext,
-    "You should not use <Route> or withRouter() outside a <Router>"
-  );
+function getContext(props, context) {
+  const location = props.location || context.location;
+  const match = props.computedMatch
+    ? props.computedMatch // <Switch> already computed the match for us
+    : props.path == null
+      ? context.match
+      : matchPath(location.pathname, props);
 
   return {
-    ...parentContext,
-    route: {
-      location: props.location || parentContext.route.location,
-      match: computeMatch(props, parentContext.route)
-    }
+    ...context,
+    location: location,
+    match: match
   };
 }
 
@@ -46,48 +38,25 @@ class Route extends React.Component {
   };
 
   getChildContext() {
+    invariant(
+      this.context.router,
+      "You should not use <Route> outside a <Router>"
+    );
+
     // TODO: Warn about accessing this.context.router directly. It will be removed.
     return {
       router: getContext(this.props, this.context.router)
     };
   }
 
-  constructor(props) {
-    super(props);
-
-    if (__DEV__) {
-      warning(
-        !(props.component && props.render),
-        "You should not use <Route component> and <Route render> in the same route; <Route render> will be ignored"
-      );
-
-      warning(
-        !(
-          props.component &&
-          props.children &&
-          !isEmptyChildren(props.children)
-        ),
-        "You should not use <Route component> and <Route children> in the same route; <Route children> will be ignored"
-      );
-
-      warning(
-        !(props.render && props.children && !isEmptyChildren(props.children)),
-        "You should not use <Route render> and <Route children> in the same route; <Route children> will be ignored"
-      );
-    }
-  }
-
   render() {
     return (
       <RouterContext.Consumer>
-        {router => {
-          const context = getContext(this.props, router);
+        {context => {
+          invariant(context, "You should not use <Route> outside a <Router>");
 
-          const props = {
-            history: router.history,
-            staticContext: router.staticContext,
-            ...context.route
-          };
+          const childContext = getContext(this.props, context);
+          const props = { ...context, ...childContext };
 
           let { children, component, render } = this.props;
 
@@ -98,7 +67,7 @@ class Route extends React.Component {
           }
 
           return (
-            <RouterContext.Provider value={context}>
+            <RouterContext.Provider value={childContext}>
               {children
                 ? typeof children === "function"
                   ? children(props)
@@ -122,14 +91,39 @@ class Route extends React.Component {
 
 if (__DEV__) {
   Route.propTypes = {
-    path: PropTypes.string,
-    exact: PropTypes.bool,
-    strict: PropTypes.bool,
-    sensitive: PropTypes.bool,
-    component: PropTypes.func,
-    render: PropTypes.func,
     children: PropTypes.oneOfType([PropTypes.func, PropTypes.node]),
-    location: PropTypes.object
+    component: PropTypes.func,
+    exact: PropTypes.bool,
+    location: PropTypes.object,
+    path: PropTypes.string,
+    render: PropTypes.func,
+    sensitive: PropTypes.bool,
+    strict: PropTypes.bool
+  };
+
+  Route.prototype.componentDidMount = function() {
+    warning(
+      !(this.props.component && this.props.render),
+      "You should not use <Route component> and <Route render> in the same route; <Route render> will be ignored"
+    );
+
+    warning(
+      !(
+        this.props.component &&
+        this.props.children &&
+        !isEmptyChildren(this.props.children)
+      ),
+      "You should not use <Route component> and <Route children> in the same route; <Route children> will be ignored"
+    );
+
+    warning(
+      !(
+        this.props.render &&
+        this.props.children &&
+        !isEmptyChildren(this.props.children)
+      ),
+      "You should not use <Route render> and <Route children> in the same route; <Route children> will be ignored"
+    );
   };
 
   Route.prototype.componentDidUpdate = function(prevProps) {

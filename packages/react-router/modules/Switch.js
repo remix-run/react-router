@@ -13,12 +13,10 @@ class Switch extends React.Component {
   render() {
     return (
       <RouterContext.Consumer>
-        {router => {
-          if (__DEV__) {
-            invariant(router, "You should not use <Switch> outside a <Router>");
-          }
+        {context => {
+          invariant(context, "You should not use <Switch> outside a <Router>");
 
-          const location = this.props.location || router.route.location;
+          const location = this.props.location || context.location;
 
           let element, match;
 
@@ -34,7 +32,7 @@ class Switch extends React.Component {
 
               match =
                 path == null
-                  ? router.route.match
+                  ? context.match
                   : matchPath(location.pathname, { ...child.props, path });
             }
           });

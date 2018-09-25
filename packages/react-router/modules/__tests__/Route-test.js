@@ -1,6 +1,6 @@
 import React from "react";
 import ReactDOM from "react-dom";
-import { createMemoryHistory } from "history";
+import { createMemoryHistory as createHistory } from "history";
 
 import MemoryRouter from "../MemoryRouter";
 import Router from "../Router";
@@ -15,91 +15,70 @@ describe("A <Route>", () => {
   });
 
   describe("without a <Router>", () => {
-    it("throws", () => {
+    it("throws an error", () => {
       spyOn(console, "error");
 
       expect(() => {
         ReactDOM.render(<Route />, node);
-      }).toThrow(
-        /You should not use <Route> or withRouter\(\) outside a <Router>/
-      );
+      }).toThrow(/You should not use <Route> outside a <Router>/);
     });
   });
 
-  it("renders at the root", () => {
-    const TEXT = "Mrs. Kato";
+  it("renders when it matches", () => {
+    const text = "cupcakes";
 
     ReactDOM.render(
-      <MemoryRouter initialEntries={["/"]}>
-        <Route path="/" render={() => <h1>{TEXT}</h1>} />
+      <MemoryRouter initialEntries={["/cupcakes"]}>
+        <Route path="/cupcakes" render={() => <h1>{text}</h1>} />
       </MemoryRouter>,
       node
     );
 
-    expect(node.innerHTML).toContain(TEXT);
+    expect(node.innerHTML).toContain(text);
+  });
+
+  it("renders when it matches at the root URL", () => {
+    const text = "cupcakes";
+
+    ReactDOM.render(
+      <MemoryRouter initialEntries={["/"]}>
+        <Route path="/" render={() => <h1>{text}</h1>} />
+      </MemoryRouter>,
+      node
+    );
+
+    expect(node.innerHTML).toContain(text);
   });
 
   it("does not render when it does not match", () => {
-    const TEXT = "bubblegum";
+    const text = "bubblegum";
 
     ReactDOM.render(
       <MemoryRouter initialEntries={["/bunnies"]}>
-        <Route path="/flowers" render={() => <h1>{TEXT}</h1>} />
+        <Route path="/flowers" render={() => <h1>{text}</h1>} />
       </MemoryRouter>,
       node
     );
 
-    expect(node.innerHTML).not.toContain(TEXT);
-  });
-
-  it("can use a `location` prop instead of `context.router.route.location`", () => {
-    const TEXT = "tamarind chutney";
-
-    ReactDOM.render(
-      <MemoryRouter initialEntries={["/mint"]}>
-        <Route
-          location={{ pathname: "/tamarind" }}
-          path="/tamarind"
-          render={() => <h1>{TEXT}</h1>}
-        />
-      </MemoryRouter>,
-      node
-    );
-
-    expect(node.innerHTML).toContain(TEXT);
-  });
-
-  it("supports preact by nulling out children prop when empty array is passed", () => {
-    const TEXT = "Mrs. Kato";
-
-    ReactDOM.render(
-      <MemoryRouter initialEntries={["/"]}>
-        <Route path="/" render={() => <h1>{TEXT}</h1>}>
-          {[]}
-        </Route>
-      </MemoryRouter>,
-      node
-    );
-
-    expect(node.innerHTML).toContain(TEXT);
+    expect(node.innerHTML).not.toContain(text);
   });
 
   it("matches using nextContext when updating", () => {
-    let push;
+    const history = createHistory({
+      initialEntries: ["/sushi/california"]
+    });
+
     ReactDOM.render(
-      <MemoryRouter initialEntries={["/sushi/california"]}>
+      <Router history={history}>
         <Route
           path="/sushi/:roll"
-          render={({ history, match }) => {
-            push = history.push;
-            return <div>{match.url}</div>;
-          }}
+          render={({ match }) => <h1>{match.url}</h1>}
         />
-      </MemoryRouter>,
+      </Router>,
       node
     );
 
-    push("/sushi/spicy-tuna");
+    history.push("/sushi/spicy-tuna");
 
     expect(node.innerHTML).toContain("/sushi/spicy-tuna");
   });
@@ -110,7 +89,7 @@ describe("A <Route>", () => {
         <MemoryRouter initialEntries={["/a%20dynamic%20segment"]}>
           <Route
             path="/:id"
-            render={({ match }) => <div>{match.params.id}</div>}
+            render={({ match }) => <h1>{match.params.id}</h1>}
           />
         </MemoryRouter>,
         node
@@ -124,10 +103,7 @@ describe("A <Route>", () => {
     it("is able to match", () => {
       ReactDOM.render(
         <MemoryRouter initialEntries={["/パス名"]}>
-          <Route
-            path="/パス名"
-            render={({ match }) => <div>{match.url}</div>}
-          />
+          <Route path="/パス名" render={({ match }) => <h1>{match.url}</h1>} />
         </MemoryRouter>,
         node
       );
@@ -135,329 +111,234 @@ describe("A <Route>", () => {
       expect(node.innerHTML).toContain("/パス名");
     });
   });
-});
 
-describe("<Route render>", () => {
-  const node = document.createElement("div");
-
-  afterEach(() => {
-    ReactDOM.unmountComponentAtNode(node);
-  });
-
-  it("renders its return value", () => {
-    const TEXT = "Mrs. Kato";
-
-    ReactDOM.render(
-      <MemoryRouter initialEntries={["/"]}>
-        <Route path="/" render={() => <div>{TEXT}</div>} />
-      </MemoryRouter>,
-      node
-    );
-
-    expect(node.innerHTML).toContain(TEXT);
-  });
-
-  it("receives { match, location, history } props", () => {
-    const history = createMemoryHistory();
-
-    let actual = null;
-
-    ReactDOM.render(
-      <Router history={history}>
-        <Route path="/" render={props => (actual = props) && null} />
-      </Router>,
-      node
-    );
-
-    expect(actual.history).toBe(history);
-    expect(typeof actual.match).toBe("object");
-    expect(typeof actual.location).toBe("object");
-  });
-});
-
-describe("<Route component>", () => {
-  const node = document.createElement("div");
-
-  afterEach(() => {
-    ReactDOM.unmountComponentAtNode(node);
-  });
-
-  it("renders the component", () => {
-    const TEXT = "Mrs. Kato";
-
-    const Home = () => <div>{TEXT}</div>;
-
-    ReactDOM.render(
-      <MemoryRouter initialEntries={["/"]}>
-        <Route path="/" component={Home} />
-      </MemoryRouter>,
-      node
-    );
-
-    expect(node.innerHTML).toContain(TEXT);
-  });
-
-  it("receives { match, location, history } props", () => {
-    const history = createMemoryHistory();
-
-    let actual = null;
-    const Component = props => (actual = props) && null;
-
-    ReactDOM.render(
-      <Router history={history}>
-        <Route path="/" component={Component} />
-      </Router>,
-      node
-    );
-
-    expect(actual.history).toBe(history);
-    expect(typeof actual.match).toBe("object");
-    expect(typeof actual.location).toBe("object");
-  });
-});
-
-describe("<Route children>", () => {
-  const node = document.createElement("div");
-
-  afterEach(() => {
-    ReactDOM.unmountComponentAtNode(node);
-  });
-
-  it("renders a function", () => {
-    const TEXT = "Mrs. Kato";
-
-    ReactDOM.render(
-      <MemoryRouter initialEntries={["/"]}>
-        <Route path="/" children={() => <div>{TEXT}</div>} />
-      </MemoryRouter>,
-      node
-    );
-
-    expect(node.innerHTML).toContain(TEXT);
-  });
-
-  it("renders a child element", () => {
-    const TEXT = "Mrs. Kato";
-
-    ReactDOM.render(
-      <MemoryRouter initialEntries={["/"]}>
-        <Route path="/">
-          <div>{TEXT}</div>
-        </Route>
-      </MemoryRouter>,
-      node
-    );
-
-    expect(node.innerHTML).toContain(TEXT);
-  });
-
-  it("receives { match, location, history } props", () => {
-    const history = createMemoryHistory();
-
-    let actual = null;
-
-    ReactDOM.render(
-      <Router history={history}>
-        <Route path="/" children={props => (actual = props) && null} />
-      </Router>,
-      node
-    );
-
-    expect(actual.history).toBe(history);
-    expect(typeof actual.match).toBe("object");
-    expect(typeof actual.location).toBe("object");
-  });
-});
-
-describe("A <Route exact>", () => {
-  const node = document.createElement("div");
-
-  afterEach(() => {
-    ReactDOM.unmountComponentAtNode(node);
-  });
-
-  it("renders when the URL does not have a trailing slash", () => {
-    const TEXT = "bubblegum";
-
-    ReactDOM.render(
-      <MemoryRouter initialEntries={["/somepath/"]}>
-        <Route exact path="/somepath" render={() => <h1>{TEXT}</h1>} />
-      </MemoryRouter>,
-      node
-    );
-
-    expect(node.innerHTML).toContain(TEXT);
-  });
-
-  it("renders when the URL has trailing slash", () => {
-    const TEXT = "bubblegum";
-
-    ReactDOM.render(
-      <MemoryRouter initialEntries={["/somepath"]}>
-        <Route exact path="/somepath/" render={() => <h1>{TEXT}</h1>} />
-      </MemoryRouter>,
-      node
-    );
-
-    expect(node.innerHTML).toContain(TEXT);
-  });
-});
-
-describe("A <Route exact strict>", () => {
-  const node = document.createElement("div");
-
-  afterEach(() => {
-    ReactDOM.unmountComponentAtNode(node);
-  });
-
-  it("does not render when the URL has a trailing slash", () => {
-    const TEXT = "bubblegum";
-
-    ReactDOM.render(
-      <MemoryRouter initialEntries={["/somepath/"]}>
-        <Route exact strict path="/somepath" render={() => <h1>{TEXT}</h1>} />
-      </MemoryRouter>,
-      node
-    );
-
-    expect(node.innerHTML).not.toContain(TEXT);
-  });
-
-  it("does not render when the URL does not have a trailing slash", () => {
-    const TEXT = "bubblegum";
-
-    ReactDOM.render(
-      <MemoryRouter initialEntries={["/somepath"]}>
-        <Route exact strict path="/somepath/" render={() => <h1>{TEXT}</h1>} />
-      </MemoryRouter>,
-      node
-    );
-
-    expect(node.innerHTML).not.toContain(TEXT);
-  });
-});
-
-describe("A <Route location>", () => {
-  const node = document.createElement("div");
-
-  afterEach(() => {
-    ReactDOM.unmountComponentAtNode(node);
-  });
-
-  it("can use a `location` prop instead of `router.location`", () => {
-    const TEXT = "tamarind chutney";
-
-    ReactDOM.render(
-      <MemoryRouter initialEntries={["/mint"]}>
-        <Route
-          location={{ pathname: "/tamarind" }}
-          path="/tamarind"
-          render={() => <h1>{TEXT}</h1>}
-        />
-      </MemoryRouter>,
-      node
-    );
-
-    expect(node.innerHTML).toContain(TEXT);
-  });
-
-  describe("children", () => {
-    it("uses parent's prop location", () => {
-      const TEXT = "cheddar pretzel";
+  describe("with `exact=true`", () => {
+    it("renders when the URL does not have a trailing slash", () => {
+      const text = "bubblegum";
 
       ReactDOM.render(
-        <MemoryRouter initialEntries={["/popcorn"]}>
+        <MemoryRouter initialEntries={["/somepath/"]}>
+          <Route exact path="/somepath" render={() => <h1>{text}</h1>} />
+        </MemoryRouter>,
+        node
+      );
+
+      expect(node.innerHTML).toContain(text);
+    });
+
+    it("renders when the URL has trailing slash", () => {
+      const text = "bubblegum";
+
+      ReactDOM.render(
+        <MemoryRouter initialEntries={["/somepath"]}>
+          <Route exact path="/somepath/" render={() => <h1>{text}</h1>} />
+        </MemoryRouter>,
+        node
+      );
+
+      expect(node.innerHTML).toContain(text);
+    });
+
+    describe("and `strict=true`", () => {
+      it("does not render when the URL has a trailing slash", () => {
+        const text = "bubblegum";
+
+        ReactDOM.render(
+          <MemoryRouter initialEntries={["/somepath/"]}>
+            <Route
+              exact
+              strict
+              path="/somepath"
+              render={() => <h1>{text}</h1>}
+            />
+          </MemoryRouter>,
+          node
+        );
+
+        expect(node.innerHTML).not.toContain(text);
+      });
+
+      it("does not render when the URL does not have a trailing slash", () => {
+        const text = "bubblegum";
+
+        ReactDOM.render(
+          <MemoryRouter initialEntries={["/somepath"]}>
+            <Route
+              exact
+              strict
+              path="/somepath/"
+              render={() => <h1>{text}</h1>}
+            />
+          </MemoryRouter>,
+          node
+        );
+
+        expect(node.innerHTML).not.toContain(text);
+      });
+    });
+  });
+
+  describe("the `location` prop", () => {
+    it("overrides `context.location`", () => {
+      const text = "bubblegum";
+
+      ReactDOM.render(
+        <MemoryRouter initialEntries={["/cupcakes"]}>
           <Route
-            location={{ pathname: "/pretzels/cheddar" }}
-            path="/pretzels"
-            render={() => (
-              <Route path="/pretzels/cheddar" render={() => <h1>{TEXT}</h1>} />
-            )}
+            location={{ pathname: "/bubblegum" }}
+            path="/bubblegum"
+            render={() => <h1>{text}</h1>}
           />
         </MemoryRouter>,
         node
       );
 
-      expect(node.innerHTML).toContain(TEXT);
+      expect(node.innerHTML).toContain(text);
+    });
+  });
+
+  describe("the `children` prop", () => {
+    it("renders a child element", () => {
+      const text = "bubblegum";
+
+      ReactDOM.render(
+        <MemoryRouter initialEntries={["/"]}>
+          <Route path="/">
+            <h1>{text}</h1>
+          </Route>
+        </MemoryRouter>,
+        node
+      );
+
+      expect(node.innerHTML).toContain(text);
     });
 
-    it("continues to use parent's prop location after navigation", () => {
-      const TEXT = "cheddar pretzel";
+    it("renders a function", () => {
+      const text = "bubblegum";
 
-      let push;
       ReactDOM.render(
-        <MemoryRouter initialEntries={["/popcorn"]}>
+        <MemoryRouter initialEntries={["/"]}>
+          <Route path="/" children={() => <h1>{text}</h1>} />
+        </MemoryRouter>,
+        node
+      );
+
+      expect(node.innerHTML).toContain(text);
+    });
+
+    it("receives { history, location, match } props", () => {
+      const history = createHistory();
+
+      let props = null;
+      ReactDOM.render(
+        <Router history={history}>
           <Route
-            location={{ pathname: "/pretzels/cheddar" }}
-            path="/pretzels"
-            render={({ history }) => {
-              push = history.push;
-              return (
-                <Route
-                  path="/pretzels/cheddar"
-                  render={() => <h1>{TEXT}</h1>}
-                />
-              );
+            path="/"
+            children={p => {
+              props = p;
+              return null;
             }}
           />
+        </Router>,
+        node
+      );
+
+      expect(props).not.toBe(null);
+      expect(props.history).toBe(history);
+      expect(typeof props.location).toBe("object");
+      expect(typeof props.match).toBe("object");
+    });
+
+    describe("that is an empty array (as in Preact)", () => {
+      it("ignores the children", () => {
+        const text = "bubblegum";
+
+        ReactDOM.render(
+          <MemoryRouter>
+            <Route render={() => <h1>{text}</h1>}>{[]}</Route>
+          </MemoryRouter>,
+          node
+        );
+
+        expect(node.innerHTML).toContain(text);
+      });
+    });
+  });
+
+  describe("the `component` prop", () => {
+    it("renders the component", () => {
+      const text = "bubblegum";
+
+      const Home = () => <h1>{text}</h1>;
+
+      ReactDOM.render(
+        <MemoryRouter initialEntries={["/"]}>
+          <Route path="/" component={Home} />
         </MemoryRouter>,
         node
       );
 
-      expect(node.innerHTML).toContain(TEXT);
+      expect(node.innerHTML).toContain(text);
+    });
 
-      push("/chips");
+    it("receives { history, location, match } props", () => {
+      const history = createHistory();
 
-      expect(node.innerHTML).toContain(TEXT);
+      let props = null;
+      const Component = p => {
+        props = p;
+        return null;
+      };
+
+      ReactDOM.render(
+        <Router history={history}>
+          <Route path="/" component={Component} />
+        </Router>,
+        node
+      );
+
+      expect(props).not.toBe(null);
+      expect(props.history).toBe(history);
+      expect(typeof props.location).toBe("object");
+      expect(typeof props.match).toBe("object");
     });
   });
-});
 
-describe("A pathless <Route>", () => {
-  const node = document.createElement("div");
+  describe("the `render` prop", () => {
+    it("renders its return value", () => {
+      const text = "Mrs. Kato";
 
-  let context;
-  function ContextChecker() {
-    return (
-      <RouterContext.Consumer>
-        {value => {
-          context = value;
-          return null;
-        }}
-      </RouterContext.Consumer>
-    );
-  }
+      ReactDOM.render(
+        <MemoryRouter initialEntries={["/"]}>
+          <Route path="/" render={() => <h1>{text}</h1>} />
+        </MemoryRouter>,
+        node
+      );
 
-  afterEach(() => {
-    context = undefined;
-    ReactDOM.unmountComponentAtNode(node);
-  });
+      expect(node.innerHTML).toContain(text);
+    });
 
-  it("inherits its parent match", () => {
-    ReactDOM.render(
-      <MemoryRouter initialEntries={["/somepath"]}>
-        <Route component={ContextChecker} />
-      </MemoryRouter>,
-      node
-    );
+    it("receives { history, location, match } props", () => {
+      const history = createHistory();
 
-    expect(context.route.match.path).toBe("/");
-    expect(context.route.match.url).toBe("/");
-    expect(context.route.match.isExact).toBe(false);
-    expect(context.route.match.params).toEqual({});
-  });
+      let props = null;
+      ReactDOM.render(
+        <Router history={history}>
+          <Route
+            path="/"
+            render={p => {
+              props = p;
+              return null;
+            }}
+          />
+        </Router>,
+        node
+      );
 
-  it("does not render when parent match is null", () => {
-    ReactDOM.render(
-      <MemoryRouter initialEntries={["/somepath"]}>
-        <Route
-          path="/no-match"
-          children={() => <Route component={ContextChecker} />}
-        />
-      </MemoryRouter>,
-      node
-    );
-
-    expect(context).toBe(undefined);
+      expect(props).not.toBe(null);
+      expect(props.history).toBe(history);
+      expect(typeof props.location).toBe("object");
+      expect(typeof props.match).toBe("object");
+    });
   });
 });
