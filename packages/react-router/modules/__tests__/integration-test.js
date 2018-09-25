@@ -1,13 +1,20 @@
 import React from "react";
 import ReactDOM from "react-dom";
+
 import MemoryRouter from "../MemoryRouter";
 import Route from "../Route";
 
 describe("Integration Tests", () => {
+  const node = document.createElement("div");
+
+  afterEach(() => {
+    ReactDOM.unmountComponentAtNode(node);
+  });
+
   it("renders nested matches", () => {
-    const node = document.createElement("div");
     const TEXT1 = "Ms. Tripp";
     const TEXT2 = "Mrs. Schiffman";
+
     ReactDOM.render(
       <MemoryRouter initialEntries={["/nested"]}>
         <Route
@@ -22,14 +29,15 @@ describe("Integration Tests", () => {
       </MemoryRouter>,
       node
     );
+
     expect(node.innerHTML).toContain(TEXT1);
     expect(node.innerHTML).toContain(TEXT2);
   });
 
   it("renders only as deep as the matching Route", () => {
-    const node = document.createElement("div");
     const TEXT1 = "Ms. Tripp";
     const TEXT2 = "Mrs. Schiffman";
+
     ReactDOM.render(
       <MemoryRouter initialEntries={["/"]}>
         <Route
@@ -44,14 +52,15 @@ describe("Integration Tests", () => {
       </MemoryRouter>,
       node
     );
+
     expect(node.innerHTML).toContain(TEXT1);
     expect(node.innerHTML).not.toContain(TEXT2);
   });
 
   it("renders multiple matching routes", () => {
-    const node = document.createElement("div");
     const TEXT1 = "Mrs. Schiffman";
     const TEXT2 = "Mrs. Burton";
+
     ReactDOM.render(
       <MemoryRouter initialEntries={["/double"]}>
         <div>
@@ -65,6 +74,7 @@ describe("Integration Tests", () => {
       </MemoryRouter>,
       node
     );
+
     expect(node.innerHTML).toContain(TEXT1);
     expect(node.innerHTML).toContain(TEXT2);
   });
