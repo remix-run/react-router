@@ -4,6 +4,17 @@ import warning from "warning";
 
 import RouterContext from "./RouterContext";
 
+function getContext(props, state) {
+  return {
+    history: props.history,
+    route: {
+      location: state.location,
+      match: Router.computeRootMatch(state.location.pathname)
+    },
+    staticContext: props.staticContext
+  };
+}
+
 /**
  * The public API for putting history on context.
  */
@@ -17,15 +28,9 @@ class Router extends React.Component {
   };
 
   getChildContext() {
+    // TODO: Warn about accessing context directly. It will be removed.
     return {
-      router: {
-        history: this.props.history,
-        route: {
-          location: this.state.location,
-          match: Router.computeRootMatch(this.state.location.pathname)
-        },
-        staticContext: this.props.staticContext
-      }
+      router: getContext(this.props, this.state)
     };
   }
 
@@ -47,8 +52,10 @@ class Router extends React.Component {
   }
 
   render() {
+    const context = getContext(this.props, this.state);
+
     return (
-      <RouterContext.Provider value={this.getChildContext().router}>
+      <RouterContext.Provider value={context}>
         {this.props.children || null}
       </RouterContext.Provider>
     );

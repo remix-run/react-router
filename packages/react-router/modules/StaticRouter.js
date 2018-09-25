@@ -93,7 +93,11 @@ class StaticRouter extends React.Component {
     };
 
     return (
-      <Router {...props} history={history} staticContext={this.props.context} />
+      <Router
+        {...props}
+        history={history}
+        staticContext={this.props.context || {}}
+      />
     );
   }
 }

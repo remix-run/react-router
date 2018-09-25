@@ -1,14 +1,29 @@
 import React from "react";
 import ReactDOM from "react-dom";
+
 import MemoryRouter from "../MemoryRouter";
-import Switch from "../Switch";
 import Route from "../Route";
 import Redirect from "../Redirect";
+import Switch from "../Switch";
 
 describe("A <Switch>", () => {
-  it("renders the first <Route> that matches the URL", () => {
-    const node = document.createElement("div");
+  const node = document.createElement("div");
 
+  afterEach(() => {
+    ReactDOM.unmountComponentAtNode(node);
+  });
+
+  describe("without a <Router>", () => {
+    it("throws", () => {
+      spyOn(console, "error");
+
+      expect(() => {
+        ReactDOM.render(<Switch />, node);
+      }).toThrow(/You should not use <Switch> outside a <Router>/);
+    });
+  });
+
+  it("renders the first <Route> that matches the URL", () => {
     ReactDOM.render(
       <MemoryRouter initialEntries={["/one"]}>
         <Switch>
@@ -23,8 +38,6 @@ describe("A <Switch>", () => {
   });
 
   it("renders the first <Redirect from> that matches the URL", () => {
-    const node = document.createElement("div");
-
     ReactDOM.render(
       <MemoryRouter initialEntries={["/three"]}>
         <Switch>
@@ -41,8 +54,6 @@ describe("A <Switch>", () => {
   });
 
   it("does not render a second <Route> or <Redirect> that also matches the URL", () => {
-    const node = document.createElement("div");
-
     ReactDOM.render(
       <MemoryRouter initialEntries={["/one"]}>
         <Switch>
@@ -59,8 +70,6 @@ describe("A <Switch>", () => {
   });
 
   it("renders pathless Routes", () => {
-    const node = document.createElement("div");
-
     ReactDOM.render(
       <MemoryRouter initialEntries={["/cupcakes"]}>
         <Switch>
@@ -76,8 +85,6 @@ describe("A <Switch>", () => {
   });
 
   it("handles from-less Redirects", () => {
-    const node = document.createElement("div");
-
     ReactDOM.render(
       <MemoryRouter initialEntries={["/cupcakes"]}>
         <Switch>
@@ -94,8 +101,6 @@ describe("A <Switch>", () => {
   });
 
   it("handles subsequent redirects", () => {
-    const node = document.createElement("div");
-
     ReactDOM.render(
       <MemoryRouter initialEntries={["/one"]}>
         <Switch>
@@ -112,7 +117,6 @@ describe("A <Switch>", () => {
   });
 
   it("warns when redirecting to same route, both strings", () => {
-    const node = document.createElement("div");
     let redirected = false;
     let done = false;
 
@@ -140,12 +144,13 @@ describe("A <Switch>", () => {
     );
 
     expect(node.innerHTML).not.toContain("done");
-    expect(console.error.calls.count()).toBe(1);
-    expect(console.error.calls.argsFor(0)[0]).toMatch(/Warning:.*"\/one"/);
+
+    expect(console.error).toHaveBeenCalledWith(
+      expect.stringMatching(/Warning:.*"\/one"/)
+    );
   });
 
   it("warns when redirecting to same route, mixed types", () => {
-    const node = document.createElement("div");
     let redirected = false;
     let done = false;
 
@@ -174,12 +179,13 @@ describe("A <Switch>", () => {
     );
 
     expect(node.innerHTML).not.toContain("done");
-    expect(console.error.calls.count()).toBe(1);
-    expect(console.error.calls.argsFor(0)[0]).toMatch(/Warning:.*"\/one"/);
+
+    expect(console.error).toHaveBeenCalledWith(
+      expect.stringMatching(/Warning:.*"\/one"/)
+    );
   });
 
   it("warns when redirecting to same route, mixed types, string with query", () => {
-    const node = document.createElement("div");
     let redirected = false;
     let done = false;
 
@@ -208,14 +214,13 @@ describe("A <Switch>", () => {
     );
 
     expect(node.innerHTML).not.toContain("done");
-    expect(console.error.calls.count()).toBe(1);
-    expect(console.error.calls.argsFor(0)[0]).toMatch(
-      /Warning:.*"\/one\?utm=1"/
+
+    expect(console.error).toHaveBeenCalledWith(
+      expect.stringMatching(/Warning:.*"\/one\?utm=1"/)
     );
   });
 
   it("does NOT warn when redirecting to same route with different `search`", () => {
-    const node = document.createElement("div");
     let redirected = false;
     let done = false;
 
@@ -248,8 +253,6 @@ describe("A <Switch>", () => {
   });
 
   it("handles comments", () => {
-    const node = document.createElement("div");
-
     ReactDOM.render(
       <MemoryRouter initialEntries={["/cupcakes"]}>
         <Switch>
@@ -266,8 +269,6 @@ describe("A <Switch>", () => {
   });
 
   it("renders with non-element children", () => {
-    const node = document.createElement("div");
-
     ReactDOM.render(
       <MemoryRouter initialEntries={["/one"]}>
         <Switch>
@@ -282,27 +283,7 @@ describe("A <Switch>", () => {
     expect(node.innerHTML).toMatch(/one/);
   });
 
-  it("throws with no <Router>", () => {
-    const node = document.createElement("div");
-
-    spyOn(console, "error");
-
-    expect(() => {
-      ReactDOM.render(
-        <Switch>
-          <Route path="/one" render={() => <h1>one</h1>} />
-          <Route path="/two" render={() => <h1>two</h1>} />
-        </Switch>,
-        node
-      );
-    }).toThrow(/You should not use <Switch> outside a <Router>/);
-  });
-});
-
-describe("A <Switch location>", () => {
   it("can use a `location` prop instead of `router.location`", () => {
-    const node = document.createElement("div");
-
     ReactDOM.render(
       <MemoryRouter initialEntries={["/one"]}>
         <Switch location={{ pathname: "/two" }}>
@@ -314,29 +295,5 @@ describe("A <Switch location>", () => {
     );
 
     expect(node.innerHTML).toMatch(/two/);
-  });
-
-  describe("children", () => {
-    it("passes location prop to matched <Route>", () => {
-      const node = document.createElement("div");
-
-      let propLocation;
-      const RouteHoneytrap = props => {
-        propLocation = props.location;
-        return <Route {...props} />;
-      };
-
-      const switchLocation = { pathname: "/two" };
-      ReactDOM.render(
-        <MemoryRouter initialEntries={["/one"]}>
-          <Switch location={switchLocation}>
-            <Route path="/one" render={() => <h1>one</h1>} />
-            <RouteHoneytrap path="/two" render={() => <h1>two</h1>} />
-          </Switch>
-        </MemoryRouter>,
-        node
-      );
-      expect(propLocation).toEqual(switchLocation);
-    });
   });
 });

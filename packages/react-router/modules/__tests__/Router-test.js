@@ -1,9 +1,9 @@
 import React from "react";
 import ReactDOM from "react-dom";
-import PropTypes from "prop-types";
+import { createMemoryHistory as createHistory } from "history";
+
 import Router from "../Router";
 import RouterContext from "../RouterContext";
-import { createMemoryHistory as createHistory } from "history";
 
 describe("A <Router>", () => {
   const node = document.createElement("div");
@@ -49,14 +49,16 @@ describe("A <Router>", () => {
 
   describe("context", () => {
     let rootContext;
-    const ContextChecker = () => (
-      <RouterContext.Consumer>
-        {context => {
-          rootContext = context;
-          return null;
-        }}
-      </RouterContext.Consumer>
-    );
+    function ContextChecker() {
+      return (
+        <RouterContext.Consumer>
+          {context => {
+            rootContext = context;
+            return null;
+          }}
+        </RouterContext.Consumer>
+      );
+    }
 
     afterEach(() => {
       rootContext = undefined;
@@ -64,6 +66,7 @@ describe("A <Router>", () => {
 
     it("puts history on context.history", () => {
       const history = createHistory();
+
       ReactDOM.render(
         <Router history={history}>
           <ContextChecker />
@@ -107,8 +110,7 @@ describe("A <Router>", () => {
 
       expect(rootContext.route.match.isExact).toBe(true);
 
-      const newLocation = { pathname: "/new" };
-      history.push(newLocation);
+      history.push("/new");
 
       expect(rootContext.route.match.isExact).toBe(false);
     });
