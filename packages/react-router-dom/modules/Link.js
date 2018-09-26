@@ -1,11 +1,13 @@
 import React from "react";
 import PropTypes from "prop-types";
-import invariant from "invariant";
 import { createLocation } from "history";
+import invariant from "invariant";
+
 import RouterContext from "./RouterContext";
 
-const isModifiedEvent = event =>
-  !!(event.metaKey || event.altKey || event.ctrlKey || event.shiftKey);
+function isModifiedEvent(event) {
+  return !!(event.metaKey || event.altKey || event.ctrlKey || event.shiftKey);
+}
 
 /**
  * The public API for rendering a history-aware <a>.
@@ -15,7 +17,7 @@ class Link extends React.Component {
     replace: false
   };
 
-  handleClick = (event, history) => {
+  handleClick(event, context) {
     if (this.props.onClick) this.props.onClick(event);
 
     if (
@@ -26,37 +28,32 @@ class Link extends React.Component {
     ) {
       event.preventDefault();
 
-      const { replace, to } = this.props;
+      const method = this.props.replace
+        ? context.history.replace
+        : context.history.push;
 
-      if (replace) {
-        history.replace(to);
-      } else {
-        history.push(to);
-      }
+      method(this.props.to);
     }
-  };
+  }
 
   render() {
-    const { replace, to, innerRef, ...props } = this.props; // eslint-disable-line no-unused-vars
-
-    invariant(to !== undefined, 'You must specify the "to" property');
+    const { innerRef, replace, to, ...props } = this.props; // eslint-disable-line no-unused-vars
 
     return (
       <RouterContext.Consumer>
-        {router => {
-          invariant(router, "You should not use <Link> outside a <Router>");
+        {context => {
+          invariant(context, "You should not use <Link> outside a <Router>");
 
-          const { history } = router;
           const location =
             typeof to === "string"
-              ? createLocation(to, null, null, history.location)
+              ? createLocation(to, null, null, context.location)
               : to;
+          const href = location ? context.history.createHref(location) : "";
 
-          const href = history.createHref(location);
           return (
             <a
               {...props}
-              onClick={event => this.handleClick(event, history)}
+              onClick={event => this.handleClick(event, context)}
               href={href}
               ref={innerRef}
             />
@@ -68,12 +65,14 @@ class Link extends React.Component {
 }
 
 if (__DEV__) {
+  const toType = PropTypes.oneOfType([PropTypes.string, PropTypes.object]);
+
   Link.propTypes = {
+    innerRef: PropTypes.oneOfType([PropTypes.string, PropTypes.func]),
     onClick: PropTypes.func,
-    target: PropTypes.string,
     replace: PropTypes.bool,
-    to: PropTypes.oneOfType([PropTypes.string, PropTypes.object]).isRequired,
-    innerRef: PropTypes.oneOfType([PropTypes.string, PropTypes.func])
+    target: PropTypes.string,
+    to: toType.isRequired
   };
 }
 

@@ -111,6 +111,22 @@ describe("A <Route>", () => {
     });
   });
 
+  describe("with escaped special characters in the path", () => {
+    it("is able to match", () => {
+      ReactDOM.render(
+        <MemoryRouter initialEntries={["/pizza (1)"]}>
+          <Route
+            path="/pizza \(1\)"
+            render={({ match }) => <h1>{match.url}</h1>}
+          />
+        </MemoryRouter>,
+        node
+      );
+
+      expect(node.innerHTML).toContain("/pizza (1)");
+    });
+  });
+
   describe("with `exact=true`", () => {
     it("renders when the URL does not have a trailing slash", () => {
       const text = "bubblegum";
