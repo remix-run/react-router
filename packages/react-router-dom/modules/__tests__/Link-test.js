@@ -41,8 +41,23 @@ describe("A <Link>", () => {
     });
   });
 
-  it("accepts a location `to` prop", () => {
-    const location = {
+  it("accepts a string `to` prop", () => {
+    const to = "/the/path?the=query#the-hash";
+
+    ReactDOM.render(
+      <MemoryRouter>
+        <Link to={to}>link</Link>
+      </MemoryRouter>,
+      node
+    );
+
+    const a = node.querySelector("a");
+
+    expect(a.getAttribute("href")).toEqual("/the/path?the=query#the-hash");
+  });
+
+  it("accepts an object `to` prop", () => {
+    const to = {
       pathname: "/the/path",
       search: "the=query",
       hash: "#the-hash"
@@ -50,14 +65,14 @@ describe("A <Link>", () => {
 
     ReactDOM.render(
       <MemoryRouter>
-        <Link to={location}>link</Link>
+        <Link to={to}>link</Link>
       </MemoryRouter>,
       node
     );
 
-    const href = node.querySelector("a").getAttribute("href");
+    const a = node.querySelector("a");
 
-    expect(href).toEqual("/the/path?the=query#the-hash");
+    expect(a.getAttribute("href")).toEqual("/the/path?the=query#the-hash");
   });
 
   describe("with no pathname", () => {
@@ -69,16 +84,20 @@ describe("A <Link>", () => {
         node
       );
 
-      const href = node.querySelector("a").getAttribute("href");
+      const a = node.querySelector("a");
 
-      expect(href).toEqual("/somewhere?rendersWithPathname=true");
+      expect(a.getAttribute("href")).toEqual(
+        "/somewhere?rendersWithPathname=true"
+      );
     });
   });
 
   it("exposes its ref via an innerRef prop", done => {
     function refCallback(n) {
-      expect(n.tagName).toEqual("A");
-      done();
+      if (n) {
+        expect(n.tagName).toEqual("A");
+        done();
+      }
     }
 
     ReactDOM.render(
