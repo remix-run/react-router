@@ -14,9 +14,9 @@ function getContext(props, context) {
   const location = props.location || context.location;
   const match = props.computedMatch
     ? props.computedMatch // <Switch> already computed the match for us
-    : props.path == null
-      ? context.match
-      : matchPath(location.pathname, props);
+    : props.path
+      ? matchPath(location.pathname, props)
+      : context.match;
 
   return {
     ...context,
