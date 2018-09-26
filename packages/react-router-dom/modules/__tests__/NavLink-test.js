@@ -268,7 +268,7 @@ describe("A <NavLink>", () => {
       expect(a.className).toContain("selected");
     });
 
-    it("does not apply active default props when isActive returns false", () => {
+    it("does not apply default activeClassName when isActive returns false", () => {
       ReactDOM.render(
         <MemoryRouter initialEntries={["/pizza"]}>
           <NavLink to="/pizza" isActive={() => false}>
@@ -283,7 +283,7 @@ describe("A <NavLink>", () => {
       expect(a.className).not.toContain("active");
     });
 
-    it("does not apply activeClassName when isActive returns false", () => {
+    it("does not apply custom activeClassName when isActive returns false", () => {
       ReactDOM.render(
         <MemoryRouter initialEntries={["/pizza"]}>
           <NavLink

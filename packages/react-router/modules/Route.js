@@ -18,11 +18,7 @@ function getContext(props, context) {
       ? matchPath(location.pathname, props)
       : context.match;
 
-  return {
-    ...context,
-    location: location,
-    match: match
-  };
+  return { ...context, location, match };
 }
 
 /**
