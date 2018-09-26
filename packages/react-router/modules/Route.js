@@ -106,26 +106,26 @@ if (__DEV__) {
 
   Route.prototype.componentDidMount = function() {
     warning(
+      !(
+        this.props.children &&
+        !isEmptyChildren(this.props.children) &&
+        this.props.component
+      ),
+      "You should not use <Route component> and <Route children> in the same route; <Route component> will be ignored"
+    );
+
+    warning(
+      !(
+        this.props.children &&
+        !isEmptyChildren(this.props.children) &&
+        this.props.render
+      ),
+      "You should not use <Route render> and <Route children> in the same route; <Route render> will be ignored"
+    );
+
+    warning(
       !(this.props.component && this.props.render),
       "You should not use <Route component> and <Route render> in the same route; <Route render> will be ignored"
-    );
-
-    warning(
-      !(
-        this.props.component &&
-        this.props.children &&
-        !isEmptyChildren(this.props.children)
-      ),
-      "You should not use <Route component> and <Route children> in the same route; <Route children> will be ignored"
-    );
-
-    warning(
-      !(
-        this.props.render &&
-        this.props.children &&
-        !isEmptyChildren(this.props.children)
-      ),
-      "You should not use <Route render> and <Route children> in the same route; <Route children> will be ignored"
     );
   };
 
