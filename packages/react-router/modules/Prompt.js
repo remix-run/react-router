@@ -41,11 +41,11 @@ if (__DEV__) {
 function Prompt(props) {
   return (
     <RouterContext.Consumer>
-      {router => {
-        invariant(router, "You should not use <Prompt> outside a <Router>");
+      {context => {
+        invariant(context, "You should not use <Prompt> outside a <Router>");
 
         return props.when ? (
-          <Block method={router.history.block} message={props.message} />
+          <Block method={context.history.block} message={props.message} />
         ) : null;
       }}
     </RouterContext.Consumer>

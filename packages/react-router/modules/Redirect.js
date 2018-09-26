@@ -42,12 +42,12 @@ if (__DEV__) {
 function Redirect(props) {
   return (
     <RouterContext.Consumer>
-      {router => {
-        invariant(router, "You should not use <Redirect> outside a <Router>");
+      {context => {
+        invariant(context, "You should not use <Redirect> outside a <Router>");
 
         const method = props.push
-          ? router.history.push
-          : router.history.replace;
+          ? context.history.push
+          : context.history.replace;
         const to = createLocation(
           props.computedMatch
             ? typeof props.to === "string"
