@@ -29,14 +29,17 @@ function getContext(props, context) {
  * The public API for matching a single path and rendering.
  */
 class Route extends React.Component {
+  // TODO: Remove this
   static contextTypes = {
     router: PropTypes.object.isRequired
   };
 
+  // TODO: Remove this
   static childContextTypes = {
     router: PropTypes.object.isRequired
   };
 
+  // TODO: Remove this
   getChildContext() {
     invariant(
       this.context.router,

@@ -4,7 +4,6 @@ import createMemoryHistory from "history/createMemoryHistory";
 
 import MemoryRouter from "../MemoryRouter";
 import Prompt from "../Prompt";
-import Route from "../Route";
 import Router from "../Router";
 
 describe("A <Prompt>", () => {

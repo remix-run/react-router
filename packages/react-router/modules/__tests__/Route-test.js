@@ -3,9 +3,8 @@ import ReactDOM from "react-dom";
 import { createMemoryHistory as createHistory } from "history";
 
 import MemoryRouter from "../MemoryRouter";
-import Router from "../Router";
-import RouterContext from "../RouterContext";
 import Route from "../Route";
+import Router from "../Router";
 
 describe("A <Route>", () => {
   const node = document.createElement("div");

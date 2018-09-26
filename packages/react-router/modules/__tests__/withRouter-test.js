@@ -90,9 +90,8 @@ describe("withRouter", () => {
     it("provides the staticContext prop", () => {
       let props;
 
-      const PropsChecker = withRouter(props => {
-        expect(typeof props.staticContext).toBe("object");
-        expect(props.staticContext).toBe(context);
+      const PropsChecker = withRouter(p => {
+        props = p;
         return null;
       });
 
@@ -104,6 +103,10 @@ describe("withRouter", () => {
         </StaticRouter>,
         node
       );
+
+      expect(typeof props).toBe("object");
+      expect(typeof props.staticContext).toBe("object");
+      expect(props.staticContext).toBe(context);
     });
   });
 

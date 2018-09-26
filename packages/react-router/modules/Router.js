@@ -21,10 +21,12 @@ class Router extends React.Component {
     return { path: "/", url: "/", params: {}, isExact: pathname === "/" };
   }
 
+  // TODO: Remove this
   static childContextTypes = {
     router: PropTypes.object.isRequired
   };
 
+  // TODO: Remove this
   getChildContext() {
     // TODO: Warn about accessing this.context.router directly. It will be removed.
     return {
