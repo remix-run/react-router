@@ -1,18 +1,18 @@
-const babelEnv = process.env.BABEL_ENV;
-const building = babelEnv != undefined && babelEnv !== "cjs";
-
-const transformImports = require("babel-plugin-transform-imports");
+const buildFormat = process.env.BUILD_FORMAT;
 
 module.exports = {
   plugins: [
     "dev-expression",
     [
-      transformImports,
+      "transform-imports",
       {
         "react-router": {
-          transform: building
-            ? "react-router/es/${member}"
-            : "react-router/${member}",
+          transform:
+            buildFormat == null
+              ? "react-router/modules/${member}"
+              : buildFormat === "cjs"
+                ? "react-router/${member}"
+                : "react-router/es/${member}",
           preventFullImport: true
         }
       }
@@ -23,7 +23,8 @@ module.exports = {
       "es2015",
       {
         loose: true,
-        modules: building ? false : "commonjs"
+        modules:
+          buildFormat == null || buildFormat === "cjs" ? "commonjs" : false
       }
     ],
     "stage-1",

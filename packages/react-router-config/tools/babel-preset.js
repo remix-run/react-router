@@ -1,14 +1,30 @@
-const BABEL_ENV = process.env.BABEL_ENV;
-const building = BABEL_ENV != undefined && BABEL_ENV !== "cjs";
+const buildFormat = process.env.BUILD_FORMAT;
 
 module.exports = {
-  plugins: ["dev-expression"],
+  plugins: [
+    "dev-expression",
+    [
+      "transform-imports",
+      {
+        "react-router": {
+          transform:
+            buildFormat == null
+              ? "react-router/modules/${member}"
+              : buildFormat === "cjs"
+                ? "react-router/${member}"
+                : "react-router/es/${member}",
+          preventFullImport: true
+        }
+      }
+    ]
+  ],
   presets: [
     [
       "es2015",
       {
         loose: true,
-        modules: building ? false : "commonjs"
+        modules:
+          buildFormat == null || buildFormat === "cjs" ? "commonjs" : false
       }
     ],
     "stage-1",

@@ -13,26 +13,26 @@ function exec(command, extraEnv) {
 console.log("Building CommonJS modules ...");
 
 exec("babel modules -d . --ignore __tests__", {
-  BABEL_ENV: "cjs"
+  BUILD_FORMAT: "cjs"
 });
 
 console.log("\nBuilding ES modules ...");
 
 exec("babel modules -d es --ignore __tests__", {
-  BABEL_ENV: "es"
+  BUILD_FORMAT: "esm"
 });
 
 console.log("\nBuilding react-router-config.js ...");
 
 exec("rollup -c -f umd -o umd/react-router-config.js", {
-  BABEL_ENV: "umd",
+  BUILD_FORMAT: "umd",
   NODE_ENV: "development"
 });
 
 console.log("\nBuilding react-router.min.js ...");
 
 exec("rollup -c -f umd -o umd/react-router-config.min.js", {
-  BABEL_ENV: "umd",
+  BUILD_FORMAT: "umd",
   NODE_ENV: "production"
 });
 
