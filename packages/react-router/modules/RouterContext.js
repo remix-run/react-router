@@ -1,3 +1,9 @@
-// TODO: Remove once we can assume React 16+
+// TODO: Replace with React.createContext once we can assume React 16+
 import createContext from "create-react-context";
-export default createContext();
+
+const context = createContext();
+
+context.Provider.displayName = "Router.Provider";
+context.Consumer.displayName = "Router.Consumer";
+
+export default context;
