@@ -24,9 +24,14 @@ function NavLink({
   to,
   ...rest
 }) {
+  const path = typeof to === "object" ? to.pathname : to;
+
+  // Regex taken from: https://github.com/pillarjs/path-to-regexp/blob/master/index.js#L202
+  const escapedPath = path && path.replace(/([.+*?=^!:${}()[\]|/\\])/g, "\\$1");
+
   return (
     <Route
-      path={typeof to === "object" ? to.pathname : to}
+      path={escapedPath}
       exact={exact}
       strict={strict}
       location={location}
