@@ -6,7 +6,15 @@
         "dev-expression",
         "transform-class-properties",
         ["transform-object-rest-spread", { "useBuiltIns": true }],
-        "transform-export-default"
+        "transform-export-default",
+        [
+          "transform-imports",
+          {
+            "react-router": {
+              "transform": "react-router/${member}"
+            }
+          }
+        ]
       ]
     },
     "build-esm": {
@@ -15,7 +23,15 @@
         "dev-expression",
         "transform-class-properties",
         ["transform-object-rest-spread", { "useBuiltIns": true }],
-        "transform-export-default"
+        "transform-export-default",
+        [
+          "transform-imports",
+          {
+            "react-router": {
+              "transform": "react-router/es/${member}"
+            }
+          }
+        ]
       ]
     },
     "test": {
