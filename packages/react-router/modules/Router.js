@@ -3,6 +3,7 @@ import PropTypes from "prop-types";
 import warning from "warning";
 
 import RouterContext from "./RouterContext";
+import warnAboutGettingProperty from "./utils/warnAboutGettingProperty";
 
 function getContext(props, state) {
   return {
@@ -28,9 +29,25 @@ class Router extends React.Component {
 
   // TODO: Remove this
   getChildContext() {
-    // TODO: Warn about accessing this.context.router directly. It will be removed.
+    const context = getContext(this.props, this.state);
+    const contextWithoutWarnings = { ...context };
+
+    if (__DEV__) {
+      Object.keys(context).forEach(key => {
+        warnAboutGettingProperty(
+          context,
+          key,
+          `You should not be using this.context.router.${key} directly. It is private API ` +
+            "for internal use only and is subject to change at any time. Instead, use " +
+            "a <Route> or withRouter() to access the current location, match, etc."
+        );
+      });
+    }
+
+    context._withoutWarnings = contextWithoutWarnings;
+
     return {
-      router: getContext(this.props, this.state)
+      router: context
     };
   }
 

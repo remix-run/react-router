@@ -76,35 +76,6 @@ describe("A <Router>", () => {
       });
     });
 
-    it("updates the `match` upon navigation", () => {
-      const history = createHistory({
-        initialEntries: ["/"]
-      });
-
-      ReactDOM.render(
-        <Router history={history}>
-          <ContextChecker />
-        </Router>,
-        node
-      );
-
-      expect(context.match).toMatchObject({
-        path: "/",
-        url: "/",
-        params: {},
-        isExact: true
-      });
-
-      history.push("/new");
-
-      expect(context.match).toMatchObject({
-        path: "/",
-        url: "/",
-        params: {},
-        isExact: false
-      });
-    });
-
     it("does not have a `staticContext` property", () => {
       const history = createHistory();
 
@@ -136,7 +107,9 @@ describe("A <Router>", () => {
       context = undefined;
     });
 
-    it("has a `history` property", () => {
+    it("has a `history` property that warns when it is accessed", () => {
+      spyOn(console, "error");
+
       const history = createHistory();
 
       ReactDOM.render(
@@ -147,9 +120,17 @@ describe("A <Router>", () => {
       );
 
       expect(context.history).toBe(history);
+
+      expect(console.error).toHaveBeenCalledWith(
+        expect.stringMatching(
+          "You should not be using this.context.router.history directly"
+        )
+      );
     });
 
-    it("has a `location` property", () => {
+    it("has a `location` property that warns when it is accessed", () => {
+      spyOn(console, "error");
+
       const history = createHistory();
 
       ReactDOM.render(
@@ -160,9 +141,17 @@ describe("A <Router>", () => {
       );
 
       expect(context.location).toBe(history.location);
+
+      expect(console.error).toHaveBeenCalledWith(
+        expect.stringMatching(
+          "You should not be using this.context.router.location directly"
+        )
+      );
     });
 
-    it("has a `match` property", () => {
+    it("has a `match` property that warns when it is accessed", () => {
+      spyOn(console, "error");
+
       const history = createHistory({
         initialEntries: ["/"]
       });
@@ -180,38 +169,17 @@ describe("A <Router>", () => {
         params: {},
         isExact: true
       });
-    });
 
-    it("updates the `match` upon navigation", () => {
-      const history = createHistory({
-        initialEntries: ["/"]
-      });
-
-      ReactDOM.render(
-        <Router history={history}>
-          <LegacyContextChecker />
-        </Router>,
-        node
+      expect(console.error).toHaveBeenCalledWith(
+        expect.stringMatching(
+          "You should not be using this.context.router.match directly"
+        )
       );
-
-      expect(context.match).toMatchObject({
-        path: "/",
-        url: "/",
-        params: {},
-        isExact: true
-      });
-
-      history.push("/new");
-
-      expect(context.match).toMatchObject({
-        path: "/",
-        url: "/",
-        params: {},
-        isExact: false
-      });
     });
 
-    it("does not have a `staticContext` property", () => {
+    it("has a `staticContext` property that warns when it is accessed", () => {
+      spyOn(console, "error");
+
       const history = createHistory();
 
       ReactDOM.render(
@@ -222,6 +190,12 @@ describe("A <Router>", () => {
       );
 
       expect(context.staticContext).toBe(undefined);
+
+      expect(console.error).toHaveBeenCalledWith(
+        expect.stringMatching(
+          "You should not be using this.context.router.staticContext directly"
+        )
+      );
     });
   });
 });

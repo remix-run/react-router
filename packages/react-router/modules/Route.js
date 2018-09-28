@@ -5,6 +5,7 @@ import warning from "warning";
 
 import RouterContext from "./RouterContext";
 import matchPath from "./matchPath";
+import warnAboutGettingProperty from "./utils/warnAboutGettingProperty";
 
 function isEmptyChildren(children) {
   return React.Children.count(children) === 0;
@@ -42,9 +43,28 @@ class Route extends React.Component {
       "You should not use <Route> outside a <Router>"
     );
 
-    // TODO: Warn about accessing this.context.router directly. It will be removed.
+    const context = getContext(
+      this.props,
+      this.context.router._withoutWarnings
+    );
+    const contextWithoutWarnings = { ...context };
+
+    if (__DEV__) {
+      Object.keys(context).forEach(key => {
+        warnAboutGettingProperty(
+          context,
+          key,
+          `You should not be using this.context.router.${key} directly. It is private API ` +
+            "for internal use only and is subject to change at any time. Instead, use " +
+            "a <Route> or withRouter() to access the current location, match, etc."
+        );
+      });
+    }
+
+    context._withoutWarnings = contextWithoutWarnings;
+
     return {
-      router: getContext(this.props, this.context.router)
+      router: context
     };
   }
 
@@ -54,8 +74,7 @@ class Route extends React.Component {
         {context => {
           invariant(context, "You should not use <Route> outside a <Router>");
 
-          const childContext = getContext(this.props, context);
-          const props = { ...context, ...childContext };
+          const props = getContext(this.props, context);
 
           let { children, component, render } = this.props;
 
@@ -66,7 +85,7 @@ class Route extends React.Component {
           }
 
           return (
-            <RouterContext.Provider value={childContext}>
+            <RouterContext.Provider value={props}>
               {children
                 ? typeof children === "function"
                   ? children(props)

@@ -44,7 +44,7 @@ describe("A <MemoryRouter>", () => {
       context = undefined;
     });
 
-    it("has a history property", () => {
+    it("has a `history` property", () => {
       ReactDOM.render(
         <MemoryRouter>
           <ContextChecker />
@@ -73,7 +73,9 @@ describe("A <MemoryRouter>", () => {
       context = undefined;
     });
 
-    it("has a history property", () => {
+    it("has a `history` property that warns when it is accessed", () => {
+      spyOn(console, "error");
+
       ReactDOM.render(
         <MemoryRouter>
           <LegacyContextChecker />
@@ -82,6 +84,12 @@ describe("A <MemoryRouter>", () => {
       );
 
       expect(typeof context.history).toBe("object");
+
+      expect(console.error).toHaveBeenCalledWith(
+        expect.stringContaining(
+          "You should not be using this.context.router.history directly"
+        )
+      );
     });
   });
 });

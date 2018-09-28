@@ -48,7 +48,7 @@ describe("A <StaticRouter>", () => {
       context = undefined;
     });
 
-    it("has a history property", () => {
+    it("has a `history` property", () => {
       ReactDOM.render(
         <StaticRouter>
           <ContextChecker />
@@ -59,7 +59,7 @@ describe("A <StaticRouter>", () => {
       expect(typeof context.history).toBe("object");
     });
 
-    it("has a staticContext property", () => {
+    it("has a `staticContext` property", () => {
       ReactDOM.render(
         <StaticRouter>
           <ContextChecker />
@@ -88,7 +88,9 @@ describe("A <StaticRouter>", () => {
       context = undefined;
     });
 
-    it("has a history property", () => {
+    it("has a `history` property that warns when it is accessed", () => {
+      spyOn(console, "error");
+
       ReactDOM.render(
         <StaticRouter>
           <LegacyContextChecker />
@@ -97,9 +99,17 @@ describe("A <StaticRouter>", () => {
       );
 
       expect(typeof context.history).toBe("object");
+
+      expect(console.error).toHaveBeenCalledWith(
+        expect.stringContaining(
+          "You should not be using this.context.router.history directly"
+        )
+      );
     });
 
-    it("has a staticContext property", () => {
+    it("has a `staticContext` property that warns when it is accessed", () => {
+      spyOn(console, "error");
+
       ReactDOM.render(
         <StaticRouter>
           <LegacyContextChecker />
@@ -108,6 +118,12 @@ describe("A <StaticRouter>", () => {
       );
 
       expect(typeof context.staticContext).toBe("object");
+
+      expect(console.error).toHaveBeenCalledWith(
+        expect.stringContaining(
+          "You should not be using this.context.router.staticContext directly"
+        )
+      );
     });
   });
 

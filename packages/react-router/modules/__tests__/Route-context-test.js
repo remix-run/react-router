@@ -95,7 +95,9 @@ describe("A <Route>", () => {
       context = undefined;
     });
 
-    it("has a `history` property", () => {
+    it("has a `history` property that warns when it is accessed", () => {
+      spyOn(console, "error");
+
       const history = createHistory();
 
       ReactDOM.render(
@@ -106,9 +108,17 @@ describe("A <Route>", () => {
       );
 
       expect(context.history).toBe(history);
+
+      expect(console.error).toHaveBeenCalledWith(
+        expect.stringMatching(
+          "You should not be using this.context.router.history"
+        )
+      );
     });
 
-    it("has a `location` property", () => {
+    it("has a `location` property that warns when it is accessed", () => {
+      spyOn(console, "error");
+
       const history = createHistory();
 
       ReactDOM.render(
@@ -119,9 +129,17 @@ describe("A <Route>", () => {
       );
 
       expect(context.location).toBe(history.location);
+
+      expect(console.error).toHaveBeenCalledWith(
+        expect.stringMatching(
+          "You should not be using this.context.router.location directly"
+        )
+      );
     });
 
-    it("has a `match` property", () => {
+    it("has a `match` property that warns when it is accessed", () => {
+      spyOn(console, "error");
+
       const history = createHistory({
         initialEntries: ["/"]
       });
@@ -139,6 +157,12 @@ describe("A <Route>", () => {
         params: {},
         isExact: true
       });
+
+      expect(console.error).toHaveBeenCalledWith(
+        expect.stringMatching(
+          "You should not be using this.context.router.match directly"
+        )
+      );
     });
   });
 });

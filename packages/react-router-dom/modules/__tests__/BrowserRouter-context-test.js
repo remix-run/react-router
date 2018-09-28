@@ -51,7 +51,9 @@ describe("A <BrowserRouter>", () => {
       }
     }
 
-    it("has a `history` property", () => {
+    it("has a `history` property that warns when it is accessed", () => {
+      spyOn(console, "error");
+
       ReactDOM.render(
         <BrowserRouter>
           <LegacyContextChecker />
@@ -61,6 +63,12 @@ describe("A <BrowserRouter>", () => {
 
       expect(context).toBeDefined();
       expect(typeof context.history).toBe("object");
+
+      expect(console.error).toHaveBeenCalledWith(
+        expect.stringContaining(
+          "You should not be using this.context.router.history directly"
+        )
+      );
     });
   });
 });
