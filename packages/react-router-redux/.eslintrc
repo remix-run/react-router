@@ -14,6 +14,9 @@
     "prefer-arrow-callback": 2,
     "react/display-name": 0
   },
+  "globals": {
+    "__DEV__": true
+  },
   "settings": {
     "react": {
       "version": "15"
