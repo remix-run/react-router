@@ -5,8 +5,8 @@ import commonjs from "rollup-plugin-commonjs";
 import resolve from "rollup-plugin-node-resolve";
 
 const config = {
-  input: "modules/index.js",
   output: {
+    format: "umd",
     name: "ReactRouterDOM",
     globals: {
       react: "React"
@@ -18,11 +18,7 @@ const config = {
       exclude: "node_modules/**",
       plugins: ["external-helpers"]
     }),
-    resolve({
-      customResolveOptions: {
-        moduleDirectory: ["../../node_modules", "../"]
-      }
-    }),
+    resolve(),
     commonjs({
       include: /node_modules/
     }),

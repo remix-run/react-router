@@ -5,24 +5,15 @@ import commonjs from "rollup-plugin-commonjs";
 import resolve from "rollup-plugin-node-resolve";
 
 const config = {
-  input: "modules/index.js",
   output: {
+    format: "umd",
     name: "ReactRouterConfig",
     globals: {
       react: "React",
-      "react-router/Switch": "ReactRouter.Switch",
-      "react-router/Router": "ReactRouter.Router",
-      "react-router/Route": "ReactRouter.Route",
-      "react-router/matchPath": "ReactRouter.matchPath"
+      "react-router": "ReactRouter"
     }
   },
-  external: [
-    "react",
-    "react-router/Switch",
-    "react-router/Router",
-    "react-router/Route",
-    "react-router/matchPath"
-  ],
+  external: ["react", "react-router"],
   plugins: [
     babel({
       exclude: "node_modules/**",

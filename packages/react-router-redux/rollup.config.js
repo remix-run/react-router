@@ -1,7 +1,7 @@
 import babel from "rollup-plugin-babel";
 import uglify from "rollup-plugin-uglify";
 
-var config = {
+const config = {
   output: {
     format: "umd",
     name: "ReactRouterRedux",
@@ -11,12 +11,13 @@ var config = {
       "react-router": "ReactRouter"
     }
   },
+  external: ["react", "prop-types", "react-router"],
   plugins: [
     babel({
-      exclude: "node_modules/**"
+      exclude: "node_modules/**",
+      plugins: ["external-helpers"]
     })
-  ],
-  external: ["react", "prop-types", "react-router"]
+  ]
 };
 
 if (process.env.NODE_ENV === "production") {

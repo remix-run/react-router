@@ -32,9 +32,9 @@
   "module": "es/index.js",
   "sideEffects": false,
   "scripts": {
-    "build": "node ./tools/build.js",
+    "build": "node ./scripts/build.js",
     "watch": "babel ./modules -d . --ignore __tests__ --watch",
-    "prepublishOnly": "node ./tools/build.js",
+    "prepublishOnly": "node ./scripts/build.js",
     "clean": "git clean -fdX .",
     "lint": "eslint modules",
     "test": "jest"

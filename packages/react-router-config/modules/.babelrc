@@ -1,3 +1,39 @@
 {
-  "presets": [ "../tools/babel-preset" ]
+  "env": {
+    "build-cjs": {
+      "presets": [["env", { "loose": true }], "react"],
+      "plugins": [
+        "dev-expression",
+        "transform-class-properties",
+        ["transform-object-rest-spread", { "useBuiltIns": true }],
+        "transform-export-default"
+      ]
+    },
+    "build-esm": {
+      "presets": [["env", { "loose": true, "modules": false }], "react"],
+      "plugins": [
+        "dev-expression",
+        "transform-class-properties",
+        ["transform-object-rest-spread", { "useBuiltIns": true }],
+        "transform-export-default"
+      ]
+    },
+    "test": {
+      "presets": [["env", { "loose": true }], "react"],
+      "plugins": [
+        "dev-expression",
+        "transform-class-properties",
+        ["transform-object-rest-spread", { "useBuiltIns": true }],
+        "transform-export-default",
+        [
+          "transform-imports",
+          {
+            "react-router": {
+              "transform": "react-router/modules/${member}"
+            }
+          }
+        ]
+      ]
+    }
+  }
 }

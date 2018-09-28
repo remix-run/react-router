@@ -5,8 +5,8 @@ import commonjs from "rollup-plugin-commonjs";
 import resolve from "rollup-plugin-node-resolve";
 
 const config = {
-  input: "modules/index.js",
   output: {
+    format: "umd",
     name: "ReactRouter",
     globals: {
       react: "React"

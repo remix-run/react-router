@@ -13,29 +13,29 @@ function exec(command, extraEnv) {
 console.log("Building CommonJS modules ...");
 
 exec("babel modules -d . --ignore __tests__", {
-  BABEL_ENV: "cjs"
+  BABEL_ENV: "build-cjs"
 });
 
 console.log("\nBuilding ES modules ...");
 
 exec("babel modules -d es --ignore __tests__", {
-  BABEL_ENV: "es"
+  BABEL_ENV: "build-esm"
 });
 
-console.log("\nBuilding react-router.js ...");
+console.log("\nBuilding react-router-redux.js ...");
 
-exec("rollup -c -f umd -o umd/react-router.js", {
-  BABEL_ENV: "umd",
+exec("rollup -c -i modules/index.js -o umd/react-router-redux.js", {
+  BABEL_ENV: "build-esm",
   NODE_ENV: "development"
 });
 
-console.log("\nBuilding react-router.min.js ...");
+console.log("\nBuilding react-router-redux.min.js ...");
 
-exec("rollup -c -f umd -o umd/react-router.min.js", {
-  BABEL_ENV: "umd",
+exec("rollup -c -i modules/index.js -o umd/react-router-redux.min.js", {
+  BABEL_ENV: "build-esm",
   NODE_ENV: "production"
 });
 
-const size = gzipSize.sync(fs.readFileSync("umd/react-router.min.js"));
+const size = gzipSize.sync(fs.readFileSync("umd/react-router-redux.min.js"));
 
 console.log("\ngzipped, the UMD build is %s", prettyBytes(size));
