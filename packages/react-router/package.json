@@ -22,7 +22,8 @@
     "generatePath.js",
     "matchPath.js",
     "withRouter.js",
-    "umd"
+    "umd",
+    "utils"
   ],
   "main": "index.js",
   "module": "es/index.js",
