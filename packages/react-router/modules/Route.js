@@ -43,13 +43,15 @@ class Route extends React.Component {
       "You should not use <Route> outside a <Router>"
     );
 
-    const context = getContext(
-      this.props,
-      this.context.router._withoutWarnings
-    );
-    const contextWithoutWarnings = { ...context };
-
+    let parentContext = this.context.router;
     if (__DEV__) {
+      parentContext = parentContext._withoutWarnings;
+    }
+
+    const context = getContext(this.props, parentContext);
+    if (__DEV__) {
+      const contextWithoutWarnings = { ...context };
+
       Object.keys(context).forEach(key => {
         warnAboutGettingProperty(
           context,
@@ -59,9 +61,9 @@ class Route extends React.Component {
             "a <Route> or withRouter() to access the current location, match, etc."
         );
       });
-    }
 
-    context._withoutWarnings = contextWithoutWarnings;
+      context._withoutWarnings = contextWithoutWarnings;
+    }
 
     return {
       router: context

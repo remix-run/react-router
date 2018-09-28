@@ -30,9 +30,10 @@ class Router extends React.Component {
   // TODO: Remove this
   getChildContext() {
     const context = getContext(this.props, this.state);
-    const contextWithoutWarnings = { ...context };
 
     if (__DEV__) {
+      const contextWithoutWarnings = { ...context };
+
       Object.keys(context).forEach(key => {
         warnAboutGettingProperty(
           context,
@@ -42,9 +43,9 @@ class Router extends React.Component {
             "a <Route> or withRouter() to access the current location, match, etc."
         );
       });
-    }
 
-    context._withoutWarnings = contextWithoutWarnings;
+      context._withoutWarnings = contextWithoutWarnings;
+    }
 
     return {
       router: context
