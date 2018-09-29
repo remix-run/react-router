@@ -213,55 +213,80 @@ describe("A <Route>", () => {
   });
 
   describe("the `children` prop", () => {
-    it("renders a child element", () => {
-      const text = "bubblegum";
+    describe("that is an element", () => {
+      it("renders", () => {
+        const text = "bubblegum";
 
-      ReactDOM.render(
-        <MemoryRouter initialEntries={["/"]}>
-          <Route path="/">
-            <h1>{text}</h1>
-          </Route>
-        </MemoryRouter>,
-        node
-      );
+        ReactDOM.render(
+          <MemoryRouter initialEntries={["/"]}>
+            <Route path="/">
+              <h1>{text}</h1>
+            </Route>
+          </MemoryRouter>,
+          node
+        );
 
-      expect(node.innerHTML).toContain(text);
+        expect(node.innerHTML).toContain(text);
+      });
     });
 
-    it("renders a function", () => {
-      const text = "bubblegum";
+    describe("that is a function", () => {
+      it("receives { history, location, match } props", () => {
+        const history = createHistory();
 
-      ReactDOM.render(
-        <MemoryRouter initialEntries={["/"]}>
-          <Route path="/" children={() => <h1>{text}</h1>} />
-        </MemoryRouter>,
-        node
-      );
+        let props = null;
+        ReactDOM.render(
+          <Router history={history}>
+            <Route
+              path="/"
+              children={p => {
+                props = p;
+                return null;
+              }}
+            />
+          </Router>,
+          node
+        );
 
-      expect(node.innerHTML).toContain(text);
-    });
+        expect(props).not.toBe(null);
+        expect(props.history).toBe(history);
+        expect(typeof props.location).toBe("object");
+        expect(typeof props.match).toBe("object");
+      });
 
-    it("receives { history, location, match } props", () => {
-      const history = createHistory();
+      it("renders", () => {
+        const text = "bubblegum";
 
-      let props = null;
-      ReactDOM.render(
-        <Router history={history}>
-          <Route
-            path="/"
-            children={p => {
-              props = p;
-              return null;
-            }}
-          />
-        </Router>,
-        node
-      );
+        ReactDOM.render(
+          <MemoryRouter initialEntries={["/"]}>
+            <Route path="/" children={() => <h1>{text}</h1>} />
+          </MemoryRouter>,
+          node
+        );
 
-      expect(props).not.toBe(null);
-      expect(props.history).toBe(history);
-      expect(typeof props.location).toBe("object");
-      expect(typeof props.match).toBe("object");
+        expect(node.innerHTML).toContain(text);
+      });
+
+      describe("that returns `undefined`", () => {
+        it("logs a warning to the console and renders nothing", () => {
+          spyOn(console, "error");
+
+          ReactDOM.render(
+            <MemoryRouter initialEntries={["/"]}>
+              <Route path="/" children={() => undefined} />
+            </MemoryRouter>,
+            node
+          );
+
+          expect(node.innerHTML).toEqual("");
+
+          expect(console.error).toHaveBeenCalledWith(
+            expect.stringContaining(
+              "You returned `undefined` from the `children` function"
+            )
+          );
+        });
+      });
     });
 
     describe("that is an empty array (as in Preact)", () => {
