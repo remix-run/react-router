@@ -1,5 +1,5 @@
-es
-node_modules
-umd
+/es
+/node_modules
+/umd
 /*.js
 !rollup.config.js

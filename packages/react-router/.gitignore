@@ -1,6 +1,6 @@
-es
-node_modules
-umd
-utils
+/es
+/node_modules
+/umd
+/utils
 /*.js
 !rollup.config.js
