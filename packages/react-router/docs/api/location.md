@@ -66,4 +66,3 @@ Finally, you can pass a location to the following components:
 - [Switch](./Switch.md#location)
 
 This will prevent them from using the actual location in the router's state. This is useful for animation and pending navigation, or any time you want to trick a component into rendering at a different location than the real one.
-

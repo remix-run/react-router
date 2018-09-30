@@ -32,14 +32,15 @@ The history object is mutable. Therefore it is recommended to access the [`locat
 class Comp extends React.Component {
   componentWillReceiveProps(nextProps) {
     // will be true
-    const locationChanged = nextProps.location !== this.props.location
+    const locationChanged = nextProps.location !== this.props.location;
 
     // INCORRECT, will *always* be false because history is mutable.
-    const locationChanged = nextProps.history.location !== this.props.history.location
+    const locationChanged =
+      nextProps.history.location !== this.props.history.location;
   }
 }
 
-<Route component={Comp}/>
+<Route component={Comp} />;
 ```
 
 Additional properties may also be present depending on the implementation you're using. Please refer to [the history documentation](https://github.com/ReactTraining/history#properties) for more details.

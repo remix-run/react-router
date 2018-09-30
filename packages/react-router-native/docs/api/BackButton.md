@@ -3,7 +3,7 @@
 Connects the global back button on Android and tvOS to the router's history. On Android, when the initial location is reached, the default back behavior takes over. Just render one somewhere in your app.
 
 ```jsx
-<BackButton/>
+<BackButton />
 ```
 
 ## children

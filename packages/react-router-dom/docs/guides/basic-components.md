@@ -5,7 +5,7 @@ There are three types of components in React Router: router components, route ma
 All of the components that you use in a web application should be imported from `react-router-dom`.
 
 ```js
-import { BrowserRouter, Route, Link } from 'react-router-dom'
+import { BrowserRouter, Route, Link } from "react-router-dom";
 ```
 
 ## Routers
@@ -13,12 +13,13 @@ import { BrowserRouter, Route, Link } from 'react-router-dom'
 At the core of every React Router application should be a router component. For web projects, `react-router-dom` provides `<BrowserRouter>` and `<HashRouter>` routers. Both of these will create a specialized `history` object for you. Generally speaking, you should use a `<BrowserRouter>` if you have a server that responds to requests and a `<HashRouter>` if you are using a static file server.
 
 ```jsx
-import { BrowserRouter } from 'react-router-dom'
-ReactDOM.render((
+import { BrowserRouter } from "react-router-dom";
+ReactDOM.render(
   <BrowserRouter>
-    <App/>
-  </BrowserRouter>
-), holder)
+    <App />
+  </BrowserRouter>,
+  holder
+);
 ```
 
 ## Route Matching
@@ -26,7 +27,7 @@ ReactDOM.render((
 There are two route matching components: `<Route>` and `<Switch>`.
 
 ```js
-import { Route, Switch } from 'react-router-dom'
+import { Route, Switch } from "react-router-dom";
 ```
 
 Route matching is done by comparing a `<Route>`'s `path` prop to the current location's `pathname`. When a `<Route>` matches it will render its content and when it does not match, it will render `null`. A `<Route>` with no path will always match.
@@ -42,9 +43,9 @@ You can include a `<Route>` anywhere that you want to render content based on th
 
 ```jsx
 <Switch>
-  <Route exact path='/' component={Home}/>
-  <Route path='/about' component={About}/>
-  <Route path='/contact' component={Contact}/>
+  <Route exact path="/" component={Home} />
+  <Route path="/about" component={About} />
+  <Route path="/contact" component={Contact} />
 </Switch>
 ```
 
@@ -52,11 +53,11 @@ The `<Switch>` is not required for grouping `<Route>`s, but it can be quite usef
 
 ```jsx
 <Switch>
-  <Route exact path='/' component={Home}/>
-  <Route path='/about' component={About}/>
-  <Route path='/contact' component={Contact}/>
+  <Route exact path="/" component={Home} />
+  <Route path="/about" component={About} />
+  <Route path="/contact" component={Contact} />
   {/* when none of the above match, <NoMatch> will be rendered */}
-  <Route component={NoMatch}/>
+  <Route component={NoMatch} />
 </Switch>
 ```
 
@@ -67,27 +68,27 @@ You have three prop choices for how you render a component for a given `<Route>`
 `component` should be used when you have an existing component (either a `React.Component` or a stateless functional component) that you want to render. `render`, which takes an inline function, should only be used when you have to pass in-scope variables to the component you want to render. You should **not** use the `component` prop with an inline function to pass in-scope variables because you will get undesired component unmounts/remounts.
 
 ```jsx
-const Home = () => <div>Home</div>
+const Home = () => <div>Home</div>;
 
 const App = () => {
   const someVariable = true;
-  
+
   return (
     <Switch>
       {/* these are good */}
-      <Route exact path='/' component={Home} />
+      <Route exact path="/" component={Home} />
       <Route
-        path='/about'
-        render={(props) => <About {...props} extra={someVariable} />}
+        path="/about"
+        render={props => <About {...props} extra={someVariable} />}
       />
       {/* do not do this */}
       <Route
-        path='/contact'
-        component={(props) => <Contact {...props} extra={someVariable} />}
-      />  
+        path="/contact"
+        component={props => <Contact {...props} extra={someVariable} />}
+      />
     </Switch>
-  )
-}
+  );
+};
 ```
 
 ## Navigation
@@ -95,7 +96,7 @@ const App = () => {
 React Router provides a `<Link>` component to create links in your application. Wherever you render a `<Link>`, an anchor (`<a>`) will be rendered in your application's HTML.
 
 ```jsx
-<Link to='/'>Home</Link>
+<Link to="/">Home</Link>
 // <a href='/'>Home</a>
 ```
 
@@ -103,12 +104,14 @@ The `<NavLink>` is a special type of `<Link>` that can style itself as "active" 
 
 ```jsx
 // location = { pathname: '/react' }
-<NavLink to='/react' activeClassName='hurray'>React</NavLink>
+<NavLink to="/react" activeClassName="hurray">
+  React
+</NavLink>
 // <a href='/react' className='hurray'>React</a>
 ```
 
 Any time that you want to force navigation, you can render a `<Redirect>`. When a `<Redirect>` renders, it will navigate using its `to` prop.
 
 ```jsx
-<Redirect to='/login'/>
+<Redirect to="/login" />
 ```

@@ -16,7 +16,7 @@ import { Prompt } from 'react-router'
 The message to prompt the user with when they try to navigate away.
 
 ```jsx
-<Prompt message="Are you sure you want to leave?"/>
+<Prompt message="Are you sure you want to leave?" />
 ```
 
 ## message: func
@@ -24,9 +24,13 @@ The message to prompt the user with when they try to navigate away.
 Will be called with the next `location` and `action` the user is attempting to navigate to. Return a string to show a prompt to the user or `true` to allow the transition.
 
 ```jsx
-<Prompt message={location => (
-  location.pathname.startsWith('/app') ? true : `Are you sure you want to go to ${location.pathname}?`
-)}/>
+<Prompt
+  message={location =>
+    location.pathname.startsWith("/app")
+      ? true
+      : `Are you sure you want to go to ${location.pathname}?`
+  }
+/>
 ```
 
 ## when: bool
@@ -34,5 +38,5 @@ Will be called with the next `location` and `action` the user is attempting to n
 Instead of conditionally rendering a `<Prompt>` behind a guard, you can always render it but pass `when={true}` or `when={false}` to prevent or allow navigation accordingly.
 
 ```jsx
-<Prompt when={formIsHalfFilledOut} message="Are you sure?"/>
+<Prompt when={formIsHalfFilledOut} message="Are you sure?" />
 ```

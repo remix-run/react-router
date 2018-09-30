@@ -39,6 +39,6 @@ A [single child element](https://facebook.github.io/react/docs/react-api.html#re
 
 ```jsx
 <Router>
-  <App/>
+  <App />
 </Router>
 ```

@@ -16,10 +16,10 @@ An array of `location`s in the history stack. These may be full-blown location o
 
 ```jsx
 <MemoryRouter
-  initialEntries={[ '/one', '/two', { pathname: '/three' } ]}
+  initialEntries={["/one", "/two", { pathname: "/three" }]}
   initialIndex={1}
 >
-  <App/>
+  <App />
 </MemoryRouter>
 ```
 
@@ -36,7 +36,7 @@ A function to use to confirm navigation. You must use this option when using `<M
 The length of `location.key`. Defaults to 6.
 
 ```jsx
-<MemoryRouter keyLength={12}/>
+<MemoryRouter keyLength={12} />
 ```
 
 ## children: node

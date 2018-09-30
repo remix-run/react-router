@@ -13,24 +13,27 @@ import { Link } from 'react-router-dom'
 A string representation of the location to link to, created by concatenating the location's pathname, search, and hash properties.
 
 ```jsx
-<Link to='/courses?sort=name'/>
+<Link to="/courses?sort=name" />
 ```
 
 ## to: object
 
 An object that can have any of the following properties:
-  * `pathname`: A string representing the path to link to.
-  * `search`: A string representation of query parameters.
-  * `hash`: A hash to put in the URL, e.g. `#a-hash`.
-  * `state`: State to persist to the `location`.
+
+- `pathname`: A string representing the path to link to.
+- `search`: A string representation of query parameters.
+- `hash`: A hash to put in the URL, e.g. `#a-hash`.
+- `state`: State to persist to the `location`.
 
 ```jsx
-<Link to={{
-  pathname: '/courses',
-  search: '?sort=name',
-  hash: '#the-hash',
-  state: { fromDashboard: true }
-}}/>
+<Link
+  to={{
+    pathname: "/courses",
+    search: "?sort=name",
+    hash: "#the-hash",
+    state: { fromDashboard: true }
+  }}
+/>
 ```
 
 ## replace: bool
@@ -56,4 +59,3 @@ const refCallback = node => {
 ## others
 
 You can also pass props you'd like to be on the `<a>` such as a `title`, `id`, `className`, etc.
-

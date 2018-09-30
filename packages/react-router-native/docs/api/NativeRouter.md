@@ -33,7 +33,7 @@ const getConfirmation = (message, callback) => {
 The length of `location.key`. Defaults to 6.
 
 ```jsx
-<NativeRouter keyLength={12}/>
+<NativeRouter keyLength={12} />
 ```
 
 ## children: node

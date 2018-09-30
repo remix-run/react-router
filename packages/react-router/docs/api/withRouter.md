@@ -3,9 +3,9 @@
 You can get access to the [`history`](./history.md) object's properties and the closest [`<Route>`](./Route.md)'s [`match`](./match.md) via the `withRouter` higher-order component. `withRouter` will pass updated `match`, `location`, and `history` props to the wrapped component whenever it renders.
 
 ```jsx
-import React from 'react'
-import PropTypes from 'prop-types'
-import { withRouter } from 'react-router'
+import React from "react";
+import PropTypes from "prop-types";
+import { withRouter } from "react-router";
 
 // A simple component that shows the pathname of the current location
 class ShowTheLocation extends React.Component {
@@ -13,25 +13,23 @@ class ShowTheLocation extends React.Component {
     match: PropTypes.object.isRequired,
     location: PropTypes.object.isRequired,
     history: PropTypes.object.isRequired
-  }
+  };
 
   render() {
-    const { match, location, history } = this.props
+    const { match, location, history } = this.props;
 
-    return (
-      <div>You are now at {location.pathname}</div>
-    )
+    return <div>You are now at {location.pathname}</div>;
   }
 }
 
 // Create a new component that is "connected" (to borrow redux
 // terminology) to the router.
-const ShowTheLocationWithRouter = withRouter(ShowTheLocation)
+const ShowTheLocationWithRouter = withRouter(ShowTheLocation);
 ```
 
 #### Important Note
 
-`withRouter` does not subscribe to location changes like React Redux's `connect` does for state changes.  Instead, re-renders after location changes propagate out from the `<Router>` component.  This means that `withRouter` does _not_ re-render on route transitions unless its parent component re-renders. If you are using `withRouter` to prevent updates from being blocked by `shouldComponentUpdate`, it is important that `withRouter` wraps the component that implements `shouldComponentUpdate`. For example, when using Redux:
+`withRouter` does not subscribe to location changes like React Redux's `connect` does for state changes. Instead, re-renders after location changes propagate out from the `<Router>` component. This means that `withRouter` does _not_ re-render on route transitions unless its parent component re-renders. If you are using `withRouter` to prevent updates from being blocked by `shouldComponentUpdate`, it is important that `withRouter` wraps the component that implements `shouldComponentUpdate`. For example, when using Redux:
 
 ```js
 // This gets around shouldComponentUpdate
@@ -79,13 +77,11 @@ A function that will be passed as the `ref` prop to the wrapped component.
 ```jsx
 class Container extends React.Component {
   componentDidMount() {
-    this.component.doSomething()
+    this.component.doSomething();
   }
 
   render() {
-    return (
-      <MyComponent wrappedComponentRef={c => this.component = c}/>
-    )
+    return <MyComponent wrappedComponentRef={c => (this.component = c)} />;
   }
 }
 ```

@@ -13,10 +13,10 @@ class UpdateBlocker extends React.PureComponent {
   render() {
     return (
       <div>
-        <NavLink to='/about'>About</NavLink>
-        <NavLink to='/faq'>F.A.Q.</NavLink>
+        <NavLink to="/about">About</NavLink>
+        <NavLink to="/faq">F.A.Q.</NavLink>
       </div>
-    )
+    );
   }
 }
 ```
@@ -56,10 +56,10 @@ You may run into issues with components not updating after a location change des
 
 ```js
 // react-redux
-const MyConnectedComponent = connect(mapStateToProps)(MyComponent)
+const MyConnectedComponent = connect(mapStateToProps)(MyComponent);
 
 // mobx-react
-const MyObservedComponent = observer(MyComponent)
+const MyObservedComponent = observer(MyComponent);
 ```
 
 With third-party code, you likely cannot even control the implementation of `shouldComponentUpdate`. Instead, you will have to structure your code to make location changes obvious to those methods.
@@ -73,23 +73,25 @@ React's `PureComponent` does not implement `shouldComponentUpdate`, but it takes
 ### The Solution
 
 #### Quick Solution
+
 If you are running into this issue while using a higher-order component like `connect` (from react-redux) or `observer` (from Mobx), you can just wrap that component in a `withRouter` to remove the blocked updates.
 
 ```javascript
 // redux before
-const MyConnectedComponent = connect(mapStateToProps)(MyComponent)
+const MyConnectedComponent = connect(mapStateToProps)(MyComponent);
 // redux after
-const MyConnectedComponent = withRouter(connect(mapStateToProps)(MyComponent))
+const MyConnectedComponent = withRouter(connect(mapStateToProps)(MyComponent));
 
 // mobx before
-const MyConnectedComponent = observer(MyComponent)
+const MyConnectedComponent = observer(MyComponent);
 // mobx after
-const MyConnectedComponent = withRouter(observer(MyComponent))
+const MyConnectedComponent = withRouter(observer(MyComponent));
 ```
 
-**This is not the most efficient solution**, but will prevent the blocked updates issue. For more info regarding this solution, read the [Redux guide](https://github.com/ReactTraining/react-router/blob/master/packages/react-router/docs/guides/redux.md#blocked-updates).  To understand why this is not the most optimal solution, read [this thread](https://github.com/ReactTraining/react-router/pull/5552#issuecomment-331502281).
+**This is not the most efficient solution**, but will prevent the blocked updates issue. For more info regarding this solution, read the [Redux guide](https://github.com/ReactTraining/react-router/blob/master/packages/react-router/docs/guides/redux.md#blocked-updates). To understand why this is not the most optimal solution, read [this thread](https://github.com/ReactTraining/react-router/pull/5552#issuecomment-331502281).
 
 #### Recommended Solution
+
 The key to avoiding blocked re-renders after location changes is to pass the blocking component the `location` object as a prop. This will be different whenever the location changes, so comparisons will detect that the current and next location are different.
 
 ```jsx
@@ -139,10 +141,10 @@ class Blocker extends React.PureComponent {
   render() {
     return (
       <div>
-        <NavLink to='/oz'>Oz</NavLink>
-        <NavLink to='/kansas'>Kansas</NavLink>
+        <NavLink to="/oz">Oz</NavLink>
+        <NavLink to="/kansas">Kansas</NavLink>
       </div>
-    )
+    );
   }
 }
 ```
@@ -152,23 +154,23 @@ class Blocker extends React.PureComponent {
 ```jsx
 // The <Blocker>'s location prop will change whenever
 // the location changes
-<Route path='/:place' component={Blocker}/>
+<Route path="/:place" component={Blocker} />
 ```
 
 2. A component rendered directly by a `<Route>` can pass that location prop to any child elements it creates.
 
 ```jsx
-<Route path='/parent' component={Parent} />
+<Route path="/parent" component={Parent} />;
 
-const Parent = (props) => {
+const Parent = props => {
   // <Parent> receives the location as a prop. Any child
   // element it creates can be passed the location.
   return (
     <SomeComponent>
       <Blocker location={props.location} />
     </SomeComponent>
-  )
-}
+  );
+};
 ```
 
 What happens when the component isn't being rendered by a `<Route>` and the component rendering it does not have the `location` in its variable scope? There are two approaches that you can take to automatically inject the `location` as a prop of your component.
@@ -177,22 +179,22 @@ What happens when the component isn't being rendered by a `<Route>` and the comp
 
 ```jsx
 // pathless <Route> = <Blocker> will always be rendered
-const MyComponent= () => (
+const MyComponent = () => (
   <SomeComponent>
     <Route component={Blocker} />
   </SomeComponent>
-)
+);
 ```
 
 2. You can wrap a component with the `withRouter` higher-order component and it will be given the current `location` as one of its props.
 
 ```jsx
 // internally, withRouter just renders a pathless <Route>
-const BlockAvoider = withRouter(Blocker)
+const BlockAvoider = withRouter(Blocker);
 
 const MyComponent = () => (
   <SomeComponent>
     <BlockAvoider />
   </SomeComponent>
-)
+);
 ```

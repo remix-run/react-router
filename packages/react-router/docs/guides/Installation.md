@@ -1,6 +1,6 @@
 # Installation
 
-React Router runs in multiple environments: browsers, servers, native, and even VR (works in the dev preview!) While many components are shared (like `Route`) others are specific to environment (like `NativeRouter`).  Rather than requiring you install two packages, you only have to install the package for the target environment. Any shared components between the environments are re-exported from the environment specific package.
+React Router runs in multiple environments: browsers, servers, native, and even VR (works in the dev preview!) While many components are shared (like `Route`) others are specific to environment (like `NativeRouter`). Rather than requiring you install two packages, you only have to install the package for the target environment. Any shared components between the environments are re-exported from the environment specific package.
 
 ## Web
 
@@ -19,15 +19,7 @@ import {
   Route,
   Link
   // etc.
-} from 'react-router-dom'
-```
-
-If you're going for a really minimal bundle sizes on the web you can import modules directly. Theoretically a tree-shaking bundler like Webpack makes this unnecessary but we haven't tested it yet. We welcome you to!
-
-```js
-import Router from 'react-router-dom/BrowserRouter'
-import Route from 'react-router-dom/Route'
-// etc.
+} from "react-router-dom";
 ```
 
 ## Native
@@ -50,7 +42,7 @@ import {
   Link,
   Route
   // etc.
-} from 'react-router-native'
+} from "react-router-native";
 ```
 
 ## Who-knows-where
@@ -68,7 +60,7 @@ import {
   MemoryRouter as Router,
   Route
   // etc.
-} from 'react-router'
+} from "react-router";
 ```
 
 You can use React Router's navigation anywhere you run React, the navigation state is kept in a memory router. You can look at the implementation of NativeRouter to get an idea on how to integrate.

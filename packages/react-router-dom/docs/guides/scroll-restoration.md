@@ -14,16 +14,16 @@ Most of the time all you need is to "scroll to the top" because you have a long 
 class ScrollToTop extends Component {
   componentDidUpdate(prevProps) {
     if (this.props.location !== prevProps.location) {
-      window.scrollTo(0, 0)
+      window.scrollTo(0, 0);
     }
   }
 
   render() {
-    return this.props.children
+    return this.props.children;
   }
 }
 
-export default withRouter(ScrollToTop)
+export default withRouter(ScrollToTop);
 ```
 
 Then render it at the top of your app, but below Router
@@ -46,25 +46,25 @@ If you have a tab interface connected to the router, then you probably don't wan
 ```jsx
 class ScrollToTopOnMount extends Component {
   componentDidMount() {
-    window.scrollTo(0, 0)
+    window.scrollTo(0, 0);
   }
 
   render() {
-    return null
+    return null;
   }
 }
 
 class LongContent extends Component {
   render() {
     <div>
-      <ScrollToTopOnMount/>
+      <ScrollToTopOnMount />
       <h1>Here is my long content page</h1>
-    </div>
+    </div>;
   }
 }
 
 // somewhere else
-<Route path="/long-content" component={LongContent}/>
+<Route path="/long-content" component={LongContent} />;
 ```
 
 ## Generic Solution
@@ -83,18 +83,16 @@ At one point we were wanting to ship a generic API. Here's what we were headed t
       <h1>App</h1>
 
       <RestoredScroll id="bunny">
-        <div style={{ height: '200px', overflow: 'auto' }}>
-          I will overflow
-        </div>
+        <div style={{ height: "200px", overflow: "auto" }}>I will overflow</div>
       </RestoredScroll>
     </div>
   </ScrollRestoration>
 </Router>
 ```
 
-First, `ScrollRestoration` would scroll the window up on navigation. Second, it would use `location.key` to save the window scroll position *and* the scroll positions of `RestoredScroll` components to `sessionStorage`. Then, when `ScrollRestoration` or `RestoredScroll` components mount, they could look up their position from `sessionsStorage`.
+First, `ScrollRestoration` would scroll the window up on navigation. Second, it would use `location.key` to save the window scroll position _and_ the scroll positions of `RestoredScroll` components to `sessionStorage`. Then, when `ScrollRestoration` or `RestoredScroll` components mount, they could look up their position from `sessionsStorage`.
 
-What got tricky for me was defining an "opt-out" API for when I didn't want the window scroll to be managed. For example, if you have some tab navigation floating inside the content of your page you probably *don't* want to scroll to the top (the tabs might be scrolled out of view!).
+What got tricky for me was defining an "opt-out" API for when I didn't want the window scroll to be managed. For example, if you have some tab navigation floating inside the content of your page you probably _don't_ want to scroll to the top (the tabs might be scrolled out of view!).
 
 When I learned that chrome manages scroll position for us now, and realized that different apps are going to have different scrolling needs, I kind of lost the belief that we needed to provide something--especially when people just want to scroll to the top (which you saw is straight-forward to add to your app on your own).
 
