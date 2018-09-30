@@ -6,7 +6,7 @@ One great feature of the web is that we don't have to make our visitors download
 
 ```json
 {
-  "presets": ["react"],
+  "presets": ["@babel/react"],
   "plugins": ["@babel/plugin-syntax-dynamic-import"]
 }
 ```
@@ -37,9 +37,9 @@ That's all there is to it! Simply use `LoadableDashboard` (or whatever you named
 
 ```json
 {
-  "presets": ["react"],
+  "presets": ["@babel/react"],
   "plugins": [
-    "syntax-dynamic-import",
+    "@babel/plugin-syntax-dynamic-import",
     [
       "import-inspector",
       {
