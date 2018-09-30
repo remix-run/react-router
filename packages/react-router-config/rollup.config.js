@@ -10,10 +10,21 @@ const config = {
     name: "ReactRouterConfig",
     globals: {
       react: "React",
-      "react-router": "ReactRouter"
+      "react-router": "ReactRouter",
+      "react-router/es/Route": "ReactRouter.Route",
+      "react-router/es/Router": "ReactRouter.Router",
+      "react-router/es/Switch": "ReactRouter.Switch",
+      "react-router/es/matchPath": "ReactRouter.matchPath"
     }
   },
-  external: ["react", "react-router"],
+  external: [
+    "react",
+    "react-router",
+    "react-router/es/Route",
+    "react-router/es/Router",
+    "react-router/es/Switch",
+    "react-router/es/matchPath"
+  ],
   plugins: [
     babel({
       exclude: "node_modules/**",
