@@ -15,6 +15,14 @@
     "prefer-arrow-callback": 2,
     "react/display-name": 0,
     "react/no-children-prop": 0,
-    "react/prop-types": [2, { "ignore": ["history"] }]
+    "react/prop-types": 0
+  },
+  "globals": {
+    "__DEV__": true
+  },
+  "settings": {
+    "react": {
+      "version": "15"
+    }
   }
 }

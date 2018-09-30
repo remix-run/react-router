@@ -3,13 +3,13 @@
 This lets you use the same matching code that `<Route>` uses except outside of the normal render cycle, like gathering up data dependencies before rendering on the server.
 
 ```js
-import { matchPath } from 'react-router'
+import { matchPath } from "react-router";
 
-const match = matchPath('/users/123', {
-  path: '/users/:id',
+const match = matchPath("/users/123", {
+  path: "/users/:id",
   exact: true,
   strict: false
-})
+});
 ```
 
 ## pathname
@@ -25,7 +25,7 @@ to the matching props `Route` accepts:
 ```js
 {
   path, // like /users/:id
-  strict, // optional, defaults to false
-  exact // optional, defaults to false
+    strict, // optional, defaults to false
+    exact; // optional, defaults to false
 }
 ```

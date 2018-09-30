@@ -6,25 +6,21 @@ One great feature of the web is that we don't have to make our visitors download
 
 ```json
 {
-  "presets": [
-    "react"
-  ],
-  "plugins": [
-    "syntax-dynamic-import"
-  ]
+  "presets": ["react"],
+  "plugins": ["syntax-dynamic-import"]
 }
 ```
 
 [`react-loadable`] is a higher-order component for loading components with dynamic imports. It handles all sorts of edge cases automatically and makes code splitting simple! Here's an example of how to use [`react-loadable`]:
 
 ```jsx
-import Loadable from 'react-loadable';
-import Loading from './Loading';
+import Loadable from "react-loadable";
+import Loading from "./Loading";
 
 const LoadableComponent = Loadable({
-  loader: () => import('./Dashboard'),
-  loading: Loading,
-})
+  loader: () => import("./Dashboard"),
+  loading: Loading
+});
 
 export default class LoadableDashboard extends React.Component {
   render() {
@@ -41,22 +37,23 @@ That's all there is to it! Simply use `LoadableDashboard` (or whatever you named
 
 ```json
 {
-  "presets": [
-    "react"
-  ],
+  "presets": ["react"],
   "plugins": [
     "syntax-dynamic-import",
-    ["import-inspector", {
-      "serverSideRequirePath": true
-    }]
+    [
+      "import-inspector",
+      {
+        "serverSideRequirePath": true
+      }
+    ]
   ]
 }
 ```
 
-  [Babel]: https://babeljs.io/
-  [`babel-plugin-syntax-dynamic-import`]: https://babeljs.io/docs/plugins/syntax-dynamic-import/
-  [`babel-plugin-import-inspector`]: https://github.com/thejameskyle/react-loadable/tree/6902cc87f618446c54daa85d8fecec6836c9461a#babel-plugin-import-inspector
-  [`react-loadable`]: https://github.com/thejameskyle/react-loadable
-  [import]: https://github.com/tc39/proposal-dynamic-import
-  [webpack]: https://webpack.js.org/
-  [ssr]: https://github.com/thejameskyle/react-loadable/tree/6902cc87f618446c54daa85d8fecec6836c9461a#server-side-rendering
+[babel]: https://babeljs.io/
+[`babel-plugin-syntax-dynamic-import`]: https://babeljs.io/docs/plugins/syntax-dynamic-import/
+[`babel-plugin-import-inspector`]: https://github.com/thejameskyle/react-loadable/tree/6902cc87f618446c54daa85d8fecec6836c9461a#babel-plugin-import-inspector
+[`react-loadable`]: https://github.com/thejameskyle/react-loadable
+[import]: https://github.com/tc39/proposal-dynamic-import
+[webpack]: https://webpack.js.org/
+[ssr]: https://github.com/thejameskyle/react-loadable/tree/6902cc87f618446c54daa85d8fecec6836c9461a#server-side-rendering

@@ -2,7 +2,7 @@ import React from "react";
 
 // don't want the shimmed one
 // eslint-disable-next-line
-import BrowserRouter from "../../../packages/react-router-dom/BrowserRouter";
+import { BrowserRouter } from "../../../packages/react-router-dom";
 
 // this stuff is shimmed, see ReactRouterDOMShim.js for more details
 import { Switch, Route } from "react-router-dom";

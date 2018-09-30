@@ -2,10 +2,10 @@
 
 A `match` object contains information about how a `<Route path>` matched the URL. `match` objects contain the following properties:
 
-  - `params` - (object) Key/value pairs parsed from the URL corresponding to the dynamic segments of the path
-  - `isExact` - (boolean) `true` if the entire URL was matched (no trailing characters)
-  - `path` - (string) The path pattern used to match. Useful for building nested `<Route>`s
-  - `url` - (string) The matched portion of the URL. Useful for building nested `<Link>`s
+- `params` - (object) Key/value pairs parsed from the URL corresponding to the dynamic segments of the path
+- `isExact` - (boolean) `true` if the entire URL was matched (no trailing characters)
+- `path` - (string) The path pattern used to match. Useful for building nested `<Route>`s
+- `url` - (string) The matched portion of the URL. Useful for building nested `<Link>`s
 
 You'll have access to `match` objects in various places:
 
@@ -24,7 +24,7 @@ A `<Route>` that uses the `children` prop will call its `children` function even
 The default way to "resolve" URLs is to join the `match.url` string to the "relative" path.
 
 ```js
-`${match.url}/relative-path`
+`${match.url}/relative-path`;
 ```
 
 If you attempt to do this when the match is `null`, you will end up with a `TypeError`. This means that it is considered unsafe to attempt to join "relative" paths inside of a `<Route>` when using the `children` prop.

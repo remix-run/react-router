@@ -1,24 +1,25 @@
-import warning from "warning";
-import invariant from "invariant";
 import React from "react";
 import PropTypes from "prop-types";
 import { createLocation, createPath } from "history";
+import invariant from "invariant";
+import warning from "warning";
+
 import Router from "./Router";
 
-const addLeadingSlash = path => {
+function addLeadingSlash(path) {
   return path.charAt(0) === "/" ? path : "/" + path;
-};
+}
 
-const addBasename = (basename, location) => {
+function addBasename(basename, location) {
   if (!basename) return location;
 
   return {
     ...location,
     pathname: addLeadingSlash(basename) + location.pathname
   };
-};
+}
 
-const stripBasename = (basename, location) => {
+function stripBasename(basename, location) {
   if (!basename) return location;
 
   const base = addLeadingSlash(basename);
@@ -29,16 +30,19 @@ const stripBasename = (basename, location) => {
     ...location,
     pathname: location.pathname.substr(base.length)
   };
-};
+}
 
-const createURL = location =>
-  typeof location === "string" ? location : createPath(location);
+function createURL(location) {
+  return typeof location === "string" ? location : createPath(location);
+}
 
-const staticHandler = methodName => () => {
-  invariant(false, "You cannot %s with <StaticRouter>", methodName);
-};
+function staticHandler(methodName) {
+  return () => {
+    invariant(false, "You cannot %s with <StaticRouter>", methodName);
+  };
+}
 
-const noop = () => {};
+function noop() {}
 
 /**
  * The public top-level API for a "static" <Router>, so-called because it
@@ -47,28 +51,10 @@ const noop = () => {};
  * server-rendering scenarios.
  */
 class StaticRouter extends React.Component {
-  static propTypes = {
-    basename: PropTypes.string,
-    context: PropTypes.object.isRequired,
-    location: PropTypes.oneOfType([PropTypes.string, PropTypes.object])
-  };
-
   static defaultProps = {
     basename: "",
     location: "/"
   };
-
-  static childContextTypes = {
-    router: PropTypes.object.isRequired
-  };
-
-  getChildContext() {
-    return {
-      router: {
-        staticContext: this.props.context
-      }
-    };
-  }
 
   createHref = path => addLeadingSlash(this.props.basename + createURL(path));
 
@@ -90,14 +76,6 @@ class StaticRouter extends React.Component {
 
   handleBlock = () => noop;
 
-  componentWillMount() {
-    warning(
-      !this.props.history,
-      "<StaticRouter> ignores the history prop. To use a custom history, " +
-        "use `import { Router }` instead of `import { StaticRouter as Router }`."
-    );
-  }
-
   render() {
     const { basename, context, location, ...props } = this.props;
 
@@ -114,8 +92,30 @@ class StaticRouter extends React.Component {
       block: this.handleBlock
     };
 
-    return <Router {...props} history={history} />;
+    return (
+      <Router
+        {...props}
+        history={history}
+        staticContext={this.props.context || {}}
+      />
+    );
   }
+}
+
+if (__DEV__) {
+  StaticRouter.propTypes = {
+    basename: PropTypes.string,
+    context: PropTypes.object.isRequired,
+    location: PropTypes.oneOfType([PropTypes.string, PropTypes.object])
+  };
+
+  StaticRouter.prototype.componentDidMount = function() {
+    warning(
+      !this.props.history,
+      "<StaticRouter> ignores the history prop. To use a custom history, " +
+        "use `import { Router }` instead of `import { StaticRouter as Router }`."
+    );
+  };
 }
 
 export default StaticRouter;

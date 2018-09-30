@@ -12,8 +12,11 @@
   ],
   "rules": {
     "prefer-arrow-callback": 2,
-    "react/display-name": 0,
-    "react/no-children-prop": 0,
-    "react/prop-types": [2, { "ignore": ["history"] }]
+    "react/display-name": 0
+  },
+  "settings": {
+    "react": {
+      "version": "15"
+    }
   }
 }

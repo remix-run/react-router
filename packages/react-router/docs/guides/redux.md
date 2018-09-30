@@ -12,7 +12,7 @@ This happens if:
 2. The component is **not** a "route component", meaning it is not
    rendered like so: `<Route component={SomeConnectedThing}/>`
 
-The problem is that Redux implements `shouldComponentUpdate` and there's no indication that anything has changed if it isn't receiving props from the router.  This is straightforward to fix. Find where you `connect` your component and wrap it in `withRouter`.
+The problem is that Redux implements `shouldComponentUpdate` and there's no indication that anything has changed if it isn't receiving props from the router. This is straightforward to fix. Find where you `connect` your component and wrap it in `withRouter`.
 
 ```js
 // before

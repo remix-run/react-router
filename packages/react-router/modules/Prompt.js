@@ -2,66 +2,67 @@ import React from "react";
 import PropTypes from "prop-types";
 import invariant from "invariant";
 
-/**
- * The public API for prompting the user before navigating away
- * from a screen with a component.
- */
-class Prompt extends React.Component {
-  static propTypes = {
-    when: PropTypes.bool,
-    message: PropTypes.oneOfType([PropTypes.func, PropTypes.string]).isRequired
-  };
+import RouterContext from "./RouterContext";
 
-  static defaultProps = {
-    when: true
-  };
-
-  static contextTypes = {
-    router: PropTypes.shape({
-      history: PropTypes.shape({
-        block: PropTypes.func.isRequired
-      }).isRequired
-    }).isRequired
-  };
-
-  enable(message) {
-    if (this.unblock) this.unblock();
-
-    this.unblock = this.context.router.history.block(message);
+class Block extends React.Component {
+  constructor(props) {
+    super(props);
+    this.release = props.method(props.message);
   }
 
-  disable() {
-    if (this.unblock) {
-      this.unblock();
-      this.unblock = null;
-    }
-  }
-
-  componentWillMount() {
-    invariant(
-      this.context.router,
-      "You should not use <Prompt> outside a <Router>"
-    );
-
-    if (this.props.when) this.enable(this.props.message);
-  }
-
-  componentWillReceiveProps(nextProps) {
-    if (nextProps.when) {
-      if (!this.props.when || this.props.message !== nextProps.message)
-        this.enable(nextProps.message);
-    } else {
-      this.disable();
+  componentDidUpdate(prevProps) {
+    if (prevProps.message !== this.props.message) {
+      this.release();
+      this.release = this.props.method(this.props.message);
     }
   }
 
   componentWillUnmount() {
-    this.disable();
+    this.release();
   }
 
   render() {
     return null;
   }
+}
+
+if (__DEV__) {
+  const messageType = PropTypes.oneOfType([PropTypes.func, PropTypes.string]);
+
+  Block.propTypes = {
+    method: PropTypes.func.isRequired,
+    message: messageType.isRequired
+  };
+}
+
+/**
+ * The public API for prompting the user before navigating away from a screen.
+ */
+function Prompt(props) {
+  return (
+    <RouterContext.Consumer>
+      {context => {
+        invariant(context, "You should not use <Prompt> outside a <Router>");
+
+        return props.when ? (
+          <Block method={context.history.block} message={props.message} />
+        ) : null;
+      }}
+    </RouterContext.Consumer>
+  );
+}
+
+Prompt.defaultProps = {
+  when: true
+};
+
+if (__DEV__) {
+  const messageType = PropTypes.oneOfType([PropTypes.func, PropTypes.string]);
+
+  Prompt.propTypes = {
+    when: PropTypes.bool,
+    message: messageType.isRequired
+  };
 }
 
 export default Prompt;

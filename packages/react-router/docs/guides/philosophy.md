@@ -7,44 +7,46 @@ This guide's purpose is to explain the mental model to have when using React Rou
 If you've used Rails, Express, Ember, Angular etc. you've used static routing. In these frameworks, you declare your routes as part of your app's initialization before any rendering takes place. React Router pre-v4 was also static (mostly). Let's take a look at how to configure routes in express:
 
 ```js
-app.get('/', handleIndex)
-app.get('/invoices', handleInvoices)
-app.get('/invoices/:id', handleInvoice)
-app.get('/invoices/:id/edit', handleInvoiceEdit)
+app.get("/", handleIndex);
+app.get("/invoices", handleInvoices);
+app.get("/invoices/:id", handleInvoice);
+app.get("/invoices/:id/edit", handleInvoiceEdit);
 
-app.listen()
+app.listen();
 ```
 
 Note how the routes are declared before the app listens. The client side routers we've used are similar. In Angular you declare your routes up front and then import them to the top-level `AppModule` before rendering:
 
 ```js
 const appRoutes: Routes = [
-  { path: 'crisis-center',
+  {
+    path: "crisis-center",
     component: CrisisListComponent
   },
-  { path: 'hero/:id',
+  {
+    path: "hero/:id",
     component: HeroDetailComponent
   },
-  { path: 'heroes',
+  {
+    path: "heroes",
     component: HeroListComponent,
-    data: { title: 'Heroes List' }
+    data: { title: "Heroes List" }
   },
-  { path: '',
-    redirectTo: '/heroes',
-    pathMatch: 'full'
+  {
+    path: "",
+    redirectTo: "/heroes",
+    pathMatch: "full"
   },
-  { path: '**',
+  {
+    path: "**",
     component: PageNotFoundComponent
   }
 ];
 
 @NgModule({
-  imports: [
-    RouterModule.forRoot(appRoutes)
-  ]
+  imports: [RouterModule.forRoot(appRoutes)]
 })
-
-export class AppModule { }
+export class AppModule {}
 ```
 
 Ember has a conventional `routes.js` file that the build reads and
@@ -53,14 +55,14 @@ your app renders.
 
 ```js
 Router.map(function() {
-  this.route('about');
-  this.route('contact');
-  this.route('rentals', function() {
-    this.route('show', { path: '/:rental_id' });
+  this.route("about");
+  this.route("contact");
+  this.route("rentals", function() {
+    this.route("show", { path: "/:rental_id" });
   });
 });
 
-export default Router
+export default Router;
 ```
 
 Though the APIs are different, they all share the model of "static routes". React Router also followed that lead up until v4.
@@ -77,22 +79,23 @@ It was only a matter of hours into development that we had a proof-of-concept th
 
 ## Dynamic Routing
 
-When we say dynamic routing, we mean routing that takes place **as your app is rendering**, not in a configuration or convention outside of a running app.  That means almost everything is a component in React Router. Here's a 60 second review of the API to see how it works:
+When we say dynamic routing, we mean routing that takes place **as your app is rendering**, not in a configuration or convention outside of a running app. That means almost everything is a component in React Router. Here's a 60 second review of the API to see how it works:
 
 First, grab yourself a `Router` component for the environment you're targeting and render it at the top of your app.
 
 ```jsx
 // react-native
-import { NativeRouter } from 'react-router-native'
+import { NativeRouter } from "react-router-native";
 
 // react-dom (what we'll use here)
-import { BrowserRouter } from 'react-router-dom'
+import { BrowserRouter } from "react-router-dom";
 
-ReactDOM.render((
+ReactDOM.render(
   <BrowserRouter>
-    <App/>
-  </BrowserRouter>
-), el)
+    <App />
+  </BrowserRouter>,
+  el
+);
 ```
 
 Next, grab the link component to link to a new location:
@@ -104,7 +107,7 @@ const App = () => (
       <Link to="/dashboard">Dashboard</Link>
     </nav>
   </div>
-)
+);
 ```
 
 Finally, render a `Route` to show some UI when the user visits
@@ -117,17 +120,17 @@ const App = () => (
       <Link to="/dashboard">Dashboard</Link>
     </nav>
     <div>
-      <Route path="/dashboard" component={Dashboard}/>
+      <Route path="/dashboard" component={Dashboard} />
     </div>
   </div>
-)
+);
 ```
 
-The `Route` will render `<Dashboard {...props}/>` where `props` are some router specific things that look like `{ match, location, history }`. If the user is **not** at `/dashboard` then the `Route` will render `null`.  That's pretty much all there is to it.
+The `Route` will render `<Dashboard {...props}/>` where `props` are some router specific things that look like `{ match, location, history }`. If the user is **not** at `/dashboard` then the `Route` will render `null`. That's pretty much all there is to it.
 
 ## Nested Routes
 
-Lots of routers have some concept of "nested routes". If you've used versions of React Router previous to v4, you'll know it did too!  When you move from a static route configuration to dynamic, rendered routes, how do you "nest routes"? Well, how do you nest a `div`?
+Lots of routers have some concept of "nested routes". If you've used versions of React Router previous to v4, you'll know it did too! When you move from a static route configuration to dynamic, rendered routes, how do you "nest routes"? Well, how do you nest a `div`?
 
 ```jsx
 const App = () => (
@@ -135,23 +138,20 @@ const App = () => (
     {/* here's a div */}
     <div>
       {/* here's a Route */}
-      <Route path="/tacos" component={Tacos}/>
+      <Route path="/tacos" component={Tacos} />
     </div>
   </BrowserRouter>
-)
+);
 
 // when the url matches `/tacos` this component renders
-const Tacos  = ({ match }) => (
+const Tacos = ({ match }) => (
   // here's a nested div
   <div>
     {/* here's a nested Route,
         match.url helps us make a relative path */}
-    <Route
-      path={match.url + '/carnitas'}
-      component={Carnitas}
-    />
+    <Route path={match.url + "/carnitas"} component={Carnitas} />
   </div>
-)
+);
 ```
 
 See how the router has no "nesting" API? `Route` is just a component, just like `div`. So to nest a `Route` or a `div`, you just ... do it.
@@ -160,7 +160,7 @@ Let's get trickier.
 
 ## Responsive Routes
 
-Consider a user navigates to `/invoices`.  Your app is adaptive to different screen sizes, they have a narrow viewport, and so you only show them the list of invoices and a link to the invoice dashboard. They can navigate deeper from there.
+Consider a user navigates to `/invoices`. Your app is adaptive to different screen sizes, they have a narrow viewport, and so you only show them the list of invoices and a link to the invoice dashboard. They can navigate deeper from there.
 
 ```asciidoc
 Small Screen
@@ -246,43 +246,44 @@ url: /invoices
 +----------------------+---------------------------+
 ```
 
-On a large screen, `/invoices` isn't a valid route, but on a small screen it is!  To make things more interesting, consider somebody with a giant phone. They could be looking at `/invoices` in portrait orientation and then rotate their phone to landscape. Suddenly, we have enough room to show the master-detail UI, so you ought to redirect right then!
+On a large screen, `/invoices` isn't a valid route, but on a small screen it is! To make things more interesting, consider somebody with a giant phone. They could be looking at `/invoices` in portrait orientation and then rotate their phone to landscape. Suddenly, we have enough room to show the master-detail UI, so you ought to redirect right then!
 
 React Router's previous versions' static routes didn't really have a composable answer for this. When routing is dynamic, however, you can declaratively compose this functionality. If you start thinking about routing as UI, not as static configuration, your intuition will lead you to the following code:
 
 ```js
 const App = () => (
   <AppLayout>
-    <Route path="/invoices" component={Invoices}/>
+    <Route path="/invoices" component={Invoices} />
   </AppLayout>
-)
+);
 
 const Invoices = () => (
   <Layout>
-
     {/* always show the nav */}
-    <InvoicesNav/>
+    <InvoicesNav />
 
     <Media query={PRETTY_SMALL}>
-      {screenIsSmall => screenIsSmall
-        // small screen has no redirect
-        ? <Switch>
-            <Route exact path="/invoices/dashboard" component={Dashboard}/>
-            <Route path="/invoices/:id" component={Invoice}/>
+      {screenIsSmall =>
+        screenIsSmall ? (
+          // small screen has no redirect
+          <Switch>
+            <Route exact path="/invoices/dashboard" component={Dashboard} />
+            <Route path="/invoices/:id" component={Invoice} />
           </Switch>
-        // large screen does!
-        : <Switch>
-            <Route exact path="/invoices/dashboard" component={Dashboard}/>
-            <Route path="/invoices/:id" component={Invoice}/>
-            <Redirect from="/invoices" to="/invoices/dashboard"/>
+        ) : (
+          // large screen does!
+          <Switch>
+            <Route exact path="/invoices/dashboard" component={Dashboard} />
+            <Route path="/invoices/:id" component={Invoice} />
+            <Redirect from="/invoices" to="/invoices/dashboard" />
           </Switch>
+        )
       }
     </Media>
   </Layout>
-)
+);
 ```
 
-As the user rotates their phone from portrait to landscape, this code will automatically redirect them to the dashboard. *The set of valid routes change depending on the dynamic nature of a mobile device in a user's hands*.
+As the user rotates their phone from portrait to landscape, this code will automatically redirect them to the dashboard. _The set of valid routes change depending on the dynamic nature of a mobile device in a user's hands_.
 
 This is just one example. There are many others we could discuss but we'll sum it up with this advice: To get your intuition in line with React Router's, think about components, not static routes. Think about how to solve the problem with React's declarative composability because nearly every "React Router question" is probably a "React question".
-

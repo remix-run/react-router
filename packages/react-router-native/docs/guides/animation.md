@@ -5,7 +5,7 @@ This guide is a little sparse right now, but should provide enough insight to he
 # Element Transitions
 
 As the user navigates, some elements should animate while remaining on the
-page. The [`Route`][Route] `children` prop is perfect for these situations.
+page. The [`Route`][route] `children` prop is perfect for these situations.
 
 Consider this app without the router. When the `<TouchableHighlight/>` is pressed
 the sidebar's animation will toggle.
@@ -60,18 +60,21 @@ class App extends Component {
   render() {
     return (
       <View>
-        <Route path="/sidebar" children={({ match }) => (
-          // `children` always renders, match or not. This
-          // way we can always render the sidebar, and then
-          // tell it if its open or not
-          <Sidebar isOpen={!!match}/>
-        )}/>
+        <Route
+          path="/sidebar"
+          children={({ match }) => (
+            // `children` always renders, match or not. This
+            // way we can always render the sidebar, and then
+            // tell it if its open or not
+            <Sidebar isOpen={!!match} />
+          )}
+        />
         <Link to="/sidebar">
           <Text>Open Sidebar</Text>
         </Link>
-        <Screen/>
+        <Screen />
       </View>
-    )
+    );
   }
 }
 ```
@@ -85,9 +88,7 @@ header.
 <View>
   {chutneys.map(chutney => (
     <Route path={`/chutney/${chutney.id}`}>
-      {({ match }) => (
-        <Chutney isActive={match}/>
-      )}
+      {({ match }) => <Chutney isActive={match} />}
     </Route>
   ))}
 </View>
@@ -97,9 +98,9 @@ Each chutney has its own route thats always rendering as part of the list, when 
 
 ## Page Transitions
 
-Because of components' declarative nature, when you're at one screen, press a link, and navigate to another, the old page is not in the render tree to even animate anymore! The key is remembering that React elements are just objects. You can save them and render them again.  That's the strategy for animating from one page (that leaves the render tree) to another.
+Because of components' declarative nature, when you're at one screen, press a link, and navigate to another, the old page is not in the render tree to even animate anymore! The key is remembering that React elements are just objects. You can save them and render them again. That's the strategy for animating from one page (that leaves the render tree) to another.
 
-If you visited this site on mobile, or you shrink the browser really small, you can click the back button to see this type of animation.  The strategy is to not think about animations at first. Just render your routes and links and make that all work, then wrap your components with animated components to spiff things up.
+If you visited this site on mobile, or you shrink the browser really small, you can click the back button to see this type of animation. The strategy is to not think about animations at first. Just render your routes and links and make that all work, then wrap your components with animated components to spiff things up.
 
 We'll consider some child routes in a page:
 
@@ -109,17 +110,16 @@ class Parent extends Component {
     return (
       <View>
         <Switch>
-          <Route path="/settings"/>
-          <Route path="/notifications"/>
+          <Route path="/settings" />
+          <Route path="/notifications" />
         </Switch>
       </View>
-    )
+    );
   }
 }
 ```
 
 Once that works without animations, we're ready to add an animation around it.
-
 
 ```jsx
 <AnimatedChild
@@ -128,36 +128,35 @@ Once that works without animations, we're ready to add an animation around it.
   animating={this.state.animating}
 >
   <Switch location={this.props.location}>
-    <Route path="/settings"/>
-    <Route path="/notifications"/>
+    <Route path="/settings" />
+    <Route path="/notifications" />
   </Switch>
 </AnimatedChild>
 ```
 
-It's important to use a [`<Switch>`][Switch]. It will ensure that only one route can match, and therefore gives us a single element on `props.children` to hang on to and render during the animation. Finally, you *must* pass the location to `Switch`. It prefers `props.location` over the internal router location, which enables the saved child element to be renered later and continue to match the old location.
+It's important to use a [`<Switch>`][switch]. It will ensure that only one route can match, and therefore gives us a single element on `props.children` to hang on to and render during the animation. Finally, you _must_ pass the location to `Switch`. It prefers `props.location` over the internal router location, which enables the saved child element to be renered later and continue to match the old location.
 
 There are a handful of props handed to `AnimatedChild` that the parent will know about as it manages the animation. Again, this guide is more inspiration than copy/paste right now, feel free to look at the source of this website for exact implementation. Alright, let's check out the implementation of `AnimatedChild` (it's copy pasted from the animation used on this site).
 
 ```jsx
 class AnimatedChild extends Component {
-
   static propTypes = {
     children: PropTypes.node,
     anim: PropTypes.object,
     atParent: PropTypes.bool,
     animating: PropTypes.bool
-  }
+  };
 
   state = {
     // we're going to save the old children so we can render
     // it when it doesnt' actually match the location anymore
     previousChildren: null
-  }
+  };
 
   componentWillReceiveProps(nextProps) {
     // figure out what to do with the children
-    const navigatingToParent = nextProps.atParent && !this.props.atParent
-    const animationEnded = this.props.animating && !nextProps.animating
+    const navigatingToParent = nextProps.atParent && !this.props.atParent;
+    const animationEnded = this.props.animating && !nextProps.animating;
 
     if (navigatingToParent) {
       // we were rendering, but now we're heading back up to the parent,
@@ -165,36 +164,38 @@ class AnimatedChild extends Component {
       // while the animation is playing
       this.setState({
         previousChildren: this.props.children
-      })
+      });
     } else if (animationEnded) {
       // When we're done animating, we can get rid of the old children.
       this.setState({
         previousChildren: null
-      })
+      });
     }
   }
 
   render() {
-    const { anim, children } = this.props
-    const { previousChildren } = this.state
+    const { anim, children } = this.props;
+    const { previousChildren } = this.state;
     return (
-      <Animated.View style={{
-        position: 'absolute',
-        left: 0,
-        right: 0,
-        top: anim.interpolate({
-          inputRange: [ 0, 1 ],
-          outputRange: [ 20, 0 ]
-        }),
-        opacity: anim.interpolate({
-          inputRange: [ 0, 0.75 ],
-          outputRange: [ 0, 1 ]
-        })
-      }}>
+      <Animated.View
+        style={{
+          position: "absolute",
+          left: 0,
+          right: 0,
+          top: anim.interpolate({
+            inputRange: [0, 1],
+            outputRange: [20, 0]
+          }),
+          opacity: anim.interpolate({
+            inputRange: [0, 0.75],
+            outputRange: [0, 1]
+          })
+        }}
+      >
         {/* render the old ones if we have them */}
         {previousChildren || children}
       </Animated.View>
-    )
+    );
   }
 }
 ```
@@ -210,16 +211,16 @@ nextProps.location !== this.props.location`
 Going from child to parent:
 
 ```js
-nextProps.match.isExact && !this.props.match.isExact
+nextProps.match.isExact && !this.props.match.isExact;
 ```
 
 Going from parent to child:
 
 ```js
-!nextProps.match.isExact && this.props.match.isExact
+!nextProps.match.isExact && this.props.match.isExact;
 ```
 
 Good luck! We hope to expand on this section with a lot more detail and live examples.
 
-  [Route]:../api/Route.md
-  [Switch]:../api/Switch.md
+[route]: ../api/Route.md
+[switch]: ../api/Switch.md

@@ -52,7 +52,7 @@ const supportsHistory = 'pushState' in window.history
 The length of `location.key`. Defaults to 6.
 
 ```jsx
-<BrowserRouter keyLength={12}/>
+<BrowserRouter keyLength={12} />
 ```
 
 ## children: node

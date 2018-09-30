@@ -1,99 +1,83 @@
 import React from "react";
 import PropTypes from "prop-types";
-import warning from "warning";
-import invariant from "invariant";
 import { createLocation, locationsAreEqual } from "history";
+import invariant from "invariant";
+
+import RouterContext from "./RouterContext";
 import generatePath from "./generatePath";
 
-/**
- * The public API for updating the location programmatically
- * with a component.
- */
-class Redirect extends React.Component {
-  static propTypes = {
-    computedMatch: PropTypes.object, // private, from <Switch>
-    push: PropTypes.bool,
-    from: PropTypes.string,
-    to: PropTypes.oneOfType([PropTypes.string, PropTypes.object]).isRequired
-  };
-
-  static defaultProps = {
-    push: false
-  };
-
-  static contextTypes = {
-    router: PropTypes.shape({
-      history: PropTypes.shape({
-        push: PropTypes.func.isRequired,
-        replace: PropTypes.func.isRequired
-      }).isRequired,
-      staticContext: PropTypes.object
-    }).isRequired
-  };
-
-  isStatic() {
-    return this.context.router && this.context.router.staticContext;
-  }
-
-  componentWillMount() {
-    invariant(
-      this.context.router,
-      "You should not use <Redirect> outside a <Router>"
-    );
-
-    if (this.isStatic()) this.perform();
-  }
-
-  componentDidMount() {
-    if (!this.isStatic()) this.perform();
+class Navigate extends React.Component {
+  constructor(props) {
+    super(props);
+    props.method(props.to);
   }
 
   componentDidUpdate(prevProps) {
-    const prevTo = createLocation(prevProps.to);
-    const nextTo = createLocation(this.props.to);
-
-    if (locationsAreEqual(prevTo, nextTo)) {
-      warning(
-        false,
-        `You tried to redirect to the same route you're currently on: ` +
-          `"${nextTo.pathname}${nextTo.search}"`
-      );
-      return;
-    }
-
-    this.perform();
-  }
-
-  computeTo({ computedMatch, to }) {
-    if (computedMatch) {
-      if (typeof to === "string") {
-        return generatePath(to, computedMatch.params);
-      } else {
-        return {
-          ...to,
-          pathname: generatePath(to.pathname, computedMatch.params)
-        };
-      }
-    }
-
-    return to;
-  }
-
-  perform() {
-    const { history } = this.context.router;
-    const { push } = this.props;
-    const to = this.computeTo(this.props);
-
-    if (push) {
-      history.push(to);
-    } else {
-      history.replace(to);
+    if (!locationsAreEqual(prevProps.to, this.props.to)) {
+      this.props.method(this.props.to);
     }
   }
 
   render() {
     return null;
   }
+}
+
+if (__DEV__) {
+  const locationType = PropTypes.shape({
+    pathname: PropTypes.string.isRequired,
+    search: PropTypes.string.isRequired,
+    hash: PropTypes.string.isRequired
+  });
+
+  Navigate.propTypes = {
+    method: PropTypes.func.isRequired,
+    to: locationType.isRequired
+  };
+}
+
+/**
+ * The public API for navigating programmatically with a component.
+ */
+function Redirect(props) {
+  return (
+    <RouterContext.Consumer>
+      {context => {
+        invariant(context, "You should not use <Redirect> outside a <Router>");
+
+        const method = props.push
+          ? context.history.push
+          : context.history.replace;
+        const to = createLocation(
+          props.computedMatch
+            ? typeof props.to === "string"
+              ? generatePath(props.to, props.computedMatch.params)
+              : {
+                  ...props.to,
+                  pathname: generatePath(
+                    props.to.pathname,
+                    props.computedMatch.params
+                  )
+                }
+            : props.to
+        );
+
+        return <Navigate method={method} to={to} />;
+      }}
+    </RouterContext.Consumer>
+  );
+}
+
+Redirect.defaultProps = {
+  push: false
+};
+
+if (__DEV__) {
+  Redirect.propTypes = {
+    push: PropTypes.bool,
+    from: PropTypes.string,
+    to: PropTypes.oneOfType([PropTypes.string, PropTypes.object]).isRequired
+  };
 }
 
 export default Redirect;

@@ -1,132 +1,178 @@
-import warning from "warning";
-import invariant from "invariant";
 import React from "react";
 import PropTypes from "prop-types";
 import PropTypesElementType from "prop-types-elementtype";
-import matchPath from "./matchPath";
+import invariant from "invariant";
+import warning from "warning";
 
-const isEmptyChildren = children => React.Children.count(children) === 0;
+import RouterContext from "./RouterContext";
+import matchPath from "./matchPath";
+import warnAboutGettingProperty from "./utils/warnAboutGettingProperty";
+
+function isEmptyChildren(children) {
+  return React.Children.count(children) === 0;
+}
+
+function getContext(props, context) {
+  const location = props.location || context.location;
+  const match = props.computedMatch
+    ? props.computedMatch // <Switch> already computed the match for us
+    : props.path
+      ? matchPath(location.pathname, props)
+      : context.match;
+
+  return { ...context, location, match };
+}
 
 /**
  * The public API for matching a single path and rendering.
  */
 class Route extends React.Component {
-  static propTypes = {
-    computedMatch: PropTypes.object, // private, from <Switch>
-    path: PropTypes.string,
-    exact: PropTypes.bool,
-    strict: PropTypes.bool,
-    sensitive: PropTypes.bool,
-    component: PropTypesElementType,
-    render: PropTypes.func,
-    children: PropTypes.oneOfType([PropTypes.func, PropTypes.node]),
-    location: PropTypes.object
-  };
-
+  // TODO: Remove this
   static contextTypes = {
-    router: PropTypes.shape({
-      history: PropTypes.object.isRequired,
-      route: PropTypes.object.isRequired,
-      staticContext: PropTypes.object
-    })
+    router: PropTypes.object.isRequired
   };
 
+  // TODO: Remove this
   static childContextTypes = {
     router: PropTypes.object.isRequired
   };
 
+  // TODO: Remove this
   getChildContext() {
+    invariant(
+      this.context.router,
+      "You should not use <Route> outside a <Router>"
+    );
+
+    let parentContext = this.context.router;
+    if (__DEV__) {
+      parentContext = parentContext._withoutWarnings;
+    }
+
+    const context = getContext(this.props, parentContext);
+    if (__DEV__) {
+      const contextWithoutWarnings = { ...context };
+
+      Object.keys(context).forEach(key => {
+        warnAboutGettingProperty(
+          context,
+          key,
+          `You should not be using this.context.router.${key} directly. It is private API ` +
+            "for internal use only and is subject to change at any time. Instead, use " +
+            "a <Route> or withRouter() to access the current location, match, etc."
+        );
+      });
+
+      context._withoutWarnings = contextWithoutWarnings;
+    }
+
     return {
-      router: {
-        ...this.context.router,
-        route: {
-          location: this.props.location || this.context.router.route.location,
-          match: this.state.match
-        }
-      }
+      router: context
     };
   }
 
-  state = {
-    match: this.computeMatch(this.props, this.context.router)
+  render() {
+    return (
+      <RouterContext.Consumer>
+        {context => {
+          invariant(context, "You should not use <Route> outside a <Router>");
+
+          const props = getContext(this.props, context);
+
+          let { children, component, render } = this.props;
+
+          // Preact uses an empty array as children by
+          // default, so use null if that's the case.
+          if (Array.isArray(children) && children.length === 0) {
+            children = null;
+          }
+
+          if (typeof children === "function") {
+            children = children(props);
+
+            if (children === undefined) {
+              if (__DEV__) {
+                const { path } = this.props;
+
+                warning(
+                  false,
+                  "You returned `undefined` from the `children` function of " +
+                    `<Route${path ? ` path="${path}"` : ""}>, but you ` +
+                    "should have returned a React element or `null`"
+                );
+              }
+
+              children = null;
+            }
+          }
+
+          return (
+            <RouterContext.Provider value={props}>
+              {children && !isEmptyChildren(children)
+                ? children
+                : props.match
+                  ? component
+                    ? React.createElement(component, props)
+                    : render
+                      ? render(props)
+                      : null
+                  : null}
+            </RouterContext.Provider>
+          );
+        }}
+      </RouterContext.Consumer>
+    );
+  }
+}
+
+if (__DEV__) {
+  Route.propTypes = {
+    children: PropTypes.oneOfType([PropTypes.func, PropTypes.node]),
+    component: PropTypesElementType,
+    exact: PropTypes.bool,
+    location: PropTypes.object,
+    path: PropTypes.string,
+    render: PropTypes.func,
+    sensitive: PropTypes.bool,
+    strict: PropTypes.bool
   };
 
-  computeMatch(
-    { computedMatch, location, path, strict, exact, sensitive },
-    router
-  ) {
-    if (computedMatch) return computedMatch; // <Switch> already computed the match for us
-
-    invariant(
-      router,
-      "You should not use <Route> or withRouter() outside a <Router>"
+  Route.prototype.componentDidMount = function() {
+    warning(
+      !(
+        this.props.children &&
+        !isEmptyChildren(this.props.children) &&
+        this.props.component
+      ),
+      "You should not use <Route component> and <Route children> in the same route; <Route component> will be ignored"
     );
 
-    const { route } = router;
-    const pathname = (location || route.location).pathname;
+    warning(
+      !(
+        this.props.children &&
+        !isEmptyChildren(this.props.children) &&
+        this.props.render
+      ),
+      "You should not use <Route render> and <Route children> in the same route; <Route render> will be ignored"
+    );
 
-    return matchPath(pathname, { path, strict, exact, sensitive }, route.match);
-  }
-
-  componentWillMount() {
     warning(
       !(this.props.component && this.props.render),
       "You should not use <Route component> and <Route render> in the same route; <Route render> will be ignored"
     );
+  };
 
+  Route.prototype.componentDidUpdate = function(prevProps) {
     warning(
-      !(
-        this.props.component &&
-        this.props.children &&
-        !isEmptyChildren(this.props.children)
-      ),
-      "You should not use <Route component> and <Route children> in the same route; <Route children> will be ignored"
-    );
-
-    warning(
-      !(
-        this.props.render &&
-        this.props.children &&
-        !isEmptyChildren(this.props.children)
-      ),
-      "You should not use <Route render> and <Route children> in the same route; <Route children> will be ignored"
-    );
-  }
-
-  componentWillReceiveProps(nextProps, nextContext) {
-    warning(
-      !(nextProps.location && !this.props.location),
+      !(this.props.location && !prevProps.location),
       '<Route> elements should not change from uncontrolled to controlled (or vice versa). You initially used no "location" prop and then provided one on a subsequent render.'
     );
 
     warning(
-      !(!nextProps.location && this.props.location),
+      !(!this.props.location && prevProps.location),
       '<Route> elements should not change from controlled to uncontrolled (or vice versa). You provided a "location" prop initially but omitted it on a subsequent render.'
     );
-
-    this.setState({
-      match: this.computeMatch(nextProps, nextContext.router)
-    });
-  }
-
-  render() {
-    const { match } = this.state;
-    const { children, component, render } = this.props;
-    const { history, route, staticContext } = this.context.router;
-    const location = this.props.location || route.location;
-    const props = { match, location, history, staticContext };
-
-    if (component) return match ? React.createElement(component, props) : null;
-
-    if (render) return match ? render(props) : null;
-
-    if (typeof children === "function") return children(props);
-
-    if (children && !isEmptyChildren(children))
-      return React.Children.only(children);
-
-    return null;
-  }
+  };
 }
 
 export default Route;

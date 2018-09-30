@@ -1,17 +1,10 @@
-import React, { Component } from "react";
+import React from "react";
 import PropTypes from "prop-types";
 import { Router } from "react-router";
 
 import { LOCATION_CHANGE } from "./reducer";
 
-class ConnectedRouter extends Component {
-  static propTypes = {
-    store: PropTypes.object,
-    history: PropTypes.object.isRequired,
-    children: PropTypes.node,
-    isSSR: PropTypes.bool
-  };
-
+class ConnectedRouter extends React.Component {
   static contextTypes = {
     store: PropTypes.object
   };
@@ -43,6 +36,15 @@ class ConnectedRouter extends Component {
   render() {
     return <Router {...this.props} />;
   }
+}
+
+if (__DEV__) {
+  ConnectedRouter.propTypes = {
+    store: PropTypes.object,
+    history: PropTypes.object.isRequired,
+    children: PropTypes.node,
+    isSSR: PropTypes.bool
+  };
 }
 
 export default ConnectedRouter;
