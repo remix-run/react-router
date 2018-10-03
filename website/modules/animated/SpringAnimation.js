@@ -2,8 +2,9 @@
  * Copyright (c) 2015-present, Facebook, Inc.
  * All rights reserved.
  *
- * This source code is licensed under the MIT license found in the
- * LICENSE file in the root directory of this source tree.
+ * This source code is licensed under the BSD-style license found in the
+ * LICENSE file in the root directory of this source tree. An additional grant
+ * of patent rights can be found in the PATENTS file in the same directory.
  *
  * @flow
  */
@@ -155,29 +156,29 @@ class SpringAnimation extends Animation {
       var aAcceleration =
         this._tension * (this._toValue - tempPosition) -
         this._friction * tempVelocity;
-      var tempPosition = position + (aVelocity * step) / 2;
-      var tempVelocity = velocity + (aAcceleration * step) / 2;
+      var tempPosition = position + aVelocity * step / 2;
+      var tempVelocity = velocity + aAcceleration * step / 2;
 
       var bVelocity = tempVelocity;
       var bAcceleration =
         this._tension * (this._toValue - tempPosition) -
         this._friction * tempVelocity;
-      tempPosition = position + (bVelocity * step) / 2;
-      tempVelocity = velocity + (bAcceleration * step) / 2;
+      tempPosition = position + bVelocity * step / 2;
+      tempVelocity = velocity + bAcceleration * step / 2;
 
       var cVelocity = tempVelocity;
       var cAcceleration =
         this._tension * (this._toValue - tempPosition) -
         this._friction * tempVelocity;
-      tempPosition = position + (cVelocity * step) / 2;
-      tempVelocity = velocity + (cAcceleration * step) / 2;
+      tempPosition = position + cVelocity * step / 2;
+      tempVelocity = velocity + cAcceleration * step / 2;
 
       var dVelocity = tempVelocity;
       var dAcceleration =
         this._tension * (this._toValue - tempPosition) -
         this._friction * tempVelocity;
-      tempPosition = position + (cVelocity * step) / 2;
-      tempVelocity = velocity + (cAcceleration * step) / 2;
+      tempPosition = position + cVelocity * step / 2;
+      tempVelocity = velocity + cAcceleration * step / 2;
 
       var dxdt = (aVelocity + 2 * (bVelocity + cVelocity) + dVelocity) / 6;
       var dvdt =

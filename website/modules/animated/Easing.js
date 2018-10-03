@@ -2,8 +2,9 @@
  * Copyright (c) 2015-present, Facebook, Inc.
  * All rights reserved.
  *
- * This source code is licensed under the MIT license found in the
- * LICENSE file in the root directory of this source tree.
+ * This source code is licensed under the BSD-style license found in the
+ * LICENSE file in the root directory of this source tree. An additional grant
+ * of patent rights can be found in the PATENTS file in the same directory.
  *
  * @flow
  */
@@ -46,7 +47,7 @@ class Easing {
   }
 
   static sin(t) {
-    return 1 - Math.cos((t * Math.PI) / 2);
+    return 1 - Math.cos(t * Math.PI / 2);
   }
 
   static circle(t) {
@@ -69,7 +70,7 @@ class Easing {
    */
   static elastic(bounciness: number = 1): (t: number) => number {
     var p = bounciness * Math.PI;
-    return t => 1 - Math.pow(Math.cos((t * Math.PI) / 2), 3) * Math.cos(t * p);
+    return t => 1 - Math.pow(Math.cos(t * Math.PI / 2), 3) * Math.cos(t * p);
   }
 
   static back(s: number): (t: number) => number {
