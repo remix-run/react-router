@@ -1,30 +1,23 @@
 import React from "react";
 import { BrowserRouter as Router, Link } from "react-router-dom";
-import { parse as Parse, stringify as Stringify } from "query-string";
+import { parse, stringify } from "query-string";
 
 const ParamsExample = props => {
-  const urlParams = Parse(props.location.search);
+  const urlParams = parse(props.location.search);
 
   return (
     <Router>
       <p>
-        React Router v4 no longer includes its own query parameter
-        functionality. Instead you will want to include a library that provides
-        the functionality that you need. Below is an example using the{" "}
-        <a
-          href="https://github.com/sindresorhus/query-string"
-          target="_blank"
-          rel="noreferrer noopener"
-        >
-          query-string
-        </a>{" "}
+        React Router no longer handles query parameters in URLs. You will need
+        to use a 3rd-party library to handle them. Below is an example using the{" "}
+        <a href="https://github.com/sindresorhus/query-string">query-string</a>{" "}
         library.
       </p>
       <p>
         <em>
-          Again, this is only an example! You are free to use any library for
-          working with URL parameters that provides the functionality you are
-          looking for!
+          This is only an example of one such library. You are free to use any
+          library for working with query parameters that provides the
+          functionality you are looking for.
         </em>
       </p>
       <div>
@@ -34,7 +27,7 @@ const ParamsExample = props => {
             <Link
               to={{
                 pathname: "/account",
-                search: Stringify({ name: "netflix" })
+                search: stringify({ name: "netflix" })
               }}
             >
               Netflix
@@ -44,7 +37,7 @@ const ParamsExample = props => {
             <Link
               to={{
                 pathname: "/account",
-                search: Stringify({ name: "zillow-group" })
+                search: stringify({ name: "zillow-group" })
               }}
             >
               Zillow Group
@@ -54,7 +47,7 @@ const ParamsExample = props => {
             <Link
               to={{
                 pathname: "/account",
-                search: Stringify({ name: "yahoo" })
+                search: stringify({ name: "yahoo" })
               }}
             >
               Yahoo
@@ -64,7 +57,7 @@ const ParamsExample = props => {
             <Link
               to={{
                 pathname: "/account",
-                search: Stringify({ name: "modus-create" })
+                search: stringify({ name: "modus-create" })
               }}
             >
               Modus Create
