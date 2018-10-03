@@ -109,6 +109,12 @@ export default {
       slug: "static-router",
       load: require("../examples/StaticRouter?bundle"),
       loadSource: require("../examples/StaticRouter.js?prismjs")
+    },
+    {
+      label: "Query Parameters",
+      slug: "query-parameters",
+      load: require("../examples/QueryParams?bundle"),
+      loadSource: require("../examples/QueryParams.js?prismjs")
     }
   ]
 };
