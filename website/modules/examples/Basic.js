@@ -52,10 +52,10 @@ const Topics = ({ match }) => (
       </li>
     </ul>
 
-    <Route path={`${match.url}/:topicId`} component={Topic} />
+    <Route path={`${match.path}/:topicId`} component={Topic} />
     <Route
       exact
-      path={match.url}
+      path={match.path}
       render={() => <h3>Please select a topic.</h3>}
     />
   </div>
