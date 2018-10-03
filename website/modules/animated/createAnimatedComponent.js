@@ -2,9 +2,8 @@
  * Copyright (c) 2015-present, Facebook, Inc.
  * All rights reserved.
  *
- * This source code is licensed under the BSD-style license found in the
- * LICENSE file in the root directory of this source tree. An additional grant
- * of patent rights can be found in the PATENTS file in the same directory.
+ * This source code is licensed under the MIT license found in the
+ * LICENSE file in the root directory of this source tree.
  *
  * @flow
  */
@@ -15,8 +14,6 @@ var AnimatedProps = require("./AnimatedProps");
 var ApplyAnimatedValues = require("./injectable/ApplyAnimatedValues");
 
 function createAnimatedComponent(Component: any): any {
-  var refName = "node";
-
   class AnimatedComponent extends React.Component {
     _propsAnimated: AnimatedProps;
 
@@ -26,7 +23,7 @@ function createAnimatedComponent(Component: any): any {
 
     setNativeProps(props) {
       var didUpdate = ApplyAnimatedValues.current(
-        this.refs[refName],
+        this.componentRef,
         props,
         this
       );
@@ -50,7 +47,7 @@ function createAnimatedComponent(Component: any): any {
       // forceUpdate.
       var callback = () => {
         var didUpdate = ApplyAnimatedValues.current(
-          this.refs[refName],
+          this.componentRef,
           this._propsAnimated.__getAnimatedValue(),
           this
         );
@@ -77,7 +74,21 @@ function createAnimatedComponent(Component: any): any {
     }
 
     render() {
-      return <Component {...this._propsAnimated.__getValue()} ref={refName} />;
+      const { style, ...other } = this._propsAnimated.__getValue();
+
+      return (
+        <Component
+          {...other}
+          style={ApplyAnimatedValues.transformStyles(style)}
+          ref={node => {
+            this.componentRef = node;
+          }}
+        />
+      );
+    }
+
+    getNode() {
+      return this.componentRef;
     }
   }
   AnimatedComponent.propTypes = {
