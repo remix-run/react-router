@@ -57,10 +57,10 @@ const Topics = ({ match }) => (
       </Link>
     </View>
 
-    <Route path={`${match.url}/:topicId`} component={Topic} />
+    <Route path={`${match.path}/:topicId`} component={Topic} />
     <Route
       exact
-      path={match.url}
+      path={match.path}
       render={() => <Text style={styles.topic}>Please select a topic.</Text>}
     />
   </View>
