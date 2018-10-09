@@ -11,7 +11,7 @@ function isEmptyChildren(children) {
   return React.Children.count(children) === 0;
 }
 
-function getContext(props, context) {
+export function getContext(props, context) {
   const location = props.location || context.location;
   const match = props.computedMatch
     ? props.computedMatch // <Switch> already computed the match for us
