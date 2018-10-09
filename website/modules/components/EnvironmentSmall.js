@@ -8,8 +8,7 @@ import { RED } from "../Theme";
 import Example from "./Example";
 import API from "./APISmall";
 import Guide from "./Guide";
-
-const Animated = require("../animated/targets/react-dom");
+import Animated from "animated/lib/targets/react-dom";
 
 const paths = {
   api: match => `${match.path}/api/:mod`,
@@ -102,7 +101,11 @@ class EnvironmentSmall extends Component {
               <Switch location={location}>
                 <Route
                   path={paths.api(match)}
-                  render={({ match: { params: { mod } } }) => (
+                  render={({
+                    match: {
+                      params: { mod }
+                    }
+                  }) => (
                     <Header
                       url={match.url}
                       fontFamily="Menlo, monospace"
@@ -114,7 +117,11 @@ class EnvironmentSmall extends Component {
                 />
                 <Route
                   path={paths.example(match)}
-                  render={({ match: { params: { example } } }) => (
+                  render={({
+                    match: {
+                      params: { example }
+                    }
+                  }) => (
                     <Header url={match.url}>
                       {getExampleTitle(data, example)}
                     </Header>
@@ -122,7 +129,11 @@ class EnvironmentSmall extends Component {
                 />
                 <Route
                   path={paths.guide(match)}
-                  render={({ match: { params: { mod } } }) => (
+                  render={({
+                    match: {
+                      params: { mod }
+                    }
+                  }) => (
                     <Header url={match.url}>{getGuideTitle(data, mod)}</Header>
                   )}
                 />
