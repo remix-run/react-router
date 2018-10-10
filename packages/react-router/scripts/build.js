@@ -11,25 +11,30 @@ function exec(command, extraEnv) {
 }
 
 console.log("Building CommonJS modules ...");
+console.log();
 
 exec("babel modules -d . --ignore __tests__", {
   BABEL_ENV: "build-cjs"
 });
 
-console.log("\nBuilding ES modules ...");
+console.log();
+console.log("Building ES modules ...");
+console.log();
 
 exec("babel modules -d es --ignore __tests__", {
   BABEL_ENV: "build-esm"
 });
 
-console.log("\nBuilding react-router.js ...");
+console.log();
+console.log("Building react-router.js ...");
 
 exec("rollup -c -i modules/index.js -o umd/react-router.js", {
   BABEL_ENV: "build-esm",
   NODE_ENV: "development"
 });
 
-console.log("\nBuilding react-router.min.js ...");
+console.log();
+console.log("Building react-router.min.js ...");
 
 exec("rollup -c -i modules/index.js -o umd/react-router.min.js", {
   BABEL_ENV: "build-esm",
