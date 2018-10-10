@@ -4,7 +4,7 @@
   "scripts": {
     "postinstall": "node ./scripts/postinstall.js",
     "build": "node ./scripts/build.js",
-    "clean": "lerna run clean",
+    "clean": "git clean -fdX .",
     "precommit": "pretty-quick --staged",
     "start": "cd website && npm start",
     "test": "lerna run test --stream"

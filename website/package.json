@@ -3,7 +3,6 @@
   "name": "react-router-website",
   "scripts": {
     "build": "NODE_ENV=production webpack -p",
-    "clean": "git clean -fdX .",
     "start": "webpack-dev-server --inline --host 0.0.0.0"
   },
   "devDependencies": {

@@ -1,9 +1,7 @@
 # OSX
-#
 .DS_Store
 
 # Xcode
-#
 build/
 *.pbxuser
 !default.pbxuser
@@ -23,17 +21,11 @@ DerivedData
 project.xcworkspace
 
 # Android/IntelliJ
-#
 build/
 .idea
 .gradle
 local.properties
 *.iml
-
-# node.js
-#
-node_modules/
-npm-debug.log
 
 # BUCK
 buck-out/

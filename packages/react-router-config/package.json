@@ -21,7 +21,6 @@
     "build": "node ./scripts/build.js",
     "watch": "babel ./modules -d . --ignore __tests__ --watch",
     "prepublishOnly": "node ./scripts/build.js",
-    "clean": "git clean -fdX .",
     "lint": "eslint modules",
     "test": "jest"
   },
