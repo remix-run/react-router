@@ -7,7 +7,7 @@
     "clean": "git clean -fdX .",
     "precommit": "pretty-quick --staged",
     "start": "node ./scripts/start.js",
-    "test": "lerna run test --stream"
+    "test": "node ./scripts/test.js"
   },
   "devDependencies": {
     "husky": "^0.14.3",
