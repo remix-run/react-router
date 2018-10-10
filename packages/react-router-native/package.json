@@ -1,6 +1,6 @@
 {
   "name": "react-router-native",
-  "version": "4.3.0",
+  "version": "4.4.0-beta.1",
   "description": "React Native bindings for React Router",
   "repository": "ReactTraining/react-router",
   "license": "MIT",
@@ -30,7 +30,7 @@
   },
   "dependencies": {
     "prop-types": "^15.6.1",
-    "react-router": "^4.3.1"
+    "react-router": "4.4.0-beta.1"
   },
   "devDependencies": {
     "babel-jest": "^23.0.1",
