@@ -29,7 +29,7 @@ exec("rollup -c -i modules/index.js -o umd/react-router-config.js", {
   NODE_ENV: "development"
 });
 
-console.log("\nBuilding react-router.min.js ...");
+console.log("\nBuilding react-router-config.min.js ...");
 
 exec("rollup -c -i modules/index.js -o umd/react-router-config.min.js", {
   BABEL_ENV: "build-esm",
