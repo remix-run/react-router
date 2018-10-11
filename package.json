@@ -1,6 +1,5 @@
 {
   "private": true,
-  "name": "react-router-packages",
   "scripts": {
     "postinstall": "node ./scripts/postinstall.js",
     "build": "node ./scripts/build.js",
@@ -11,7 +10,7 @@
   },
   "devDependencies": {
     "husky": "^0.14.3",
-    "lerna": "^2.11.0",
+    "lerna": "^3.4.3",
     "prettier": "^1.12.1",
     "pretty-quick": "^1.4.1"
   }

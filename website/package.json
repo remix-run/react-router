@@ -5,6 +5,22 @@
     "build": "NODE_ENV=production webpack -p",
     "start": "webpack-dev-server --inline --host 0.0.0.0"
   },
+  "dependencies": {
+    "animated": "^0.2.1",
+    "cheerio": "^0.22.0",
+    "isomorphic-fetch": "^2.2.1",
+    "prop-types": "^15.6.1",
+    "query-string": "^5.1.0",
+    "react": "^16.4.0",
+    "react-css-property-operations": "^15.4.1",
+    "react-dom": "^16.4.0",
+    "react-icons": "^2.2.7",
+    "react-media": "^1.6.1",
+    "react-motion": "^0.5.2",
+    "react-transition-group": "^2.2.1",
+    "resolve-pathname": "^2.2.0",
+    "slug": "^0.9.1"
+  },
   "devDependencies": {
     "babel-core": "^6.26.3",
     "babel-eslint": "^8.2.3",
@@ -14,6 +30,7 @@
     "babel-plugin-transform-export-default": "^7.0.0-alpha.20",
     "babel-plugin-transform-object-rest-spread": "^6.26.0",
     "babel-polyfill": "^6.23.0",
+    "babel-preset-env": "^1.7.0",
     "babel-preset-react": "^6.5.0",
     "bundle-loader": "^0.5.5",
     "copy-webpack-plugin": "^4.0.1",
@@ -36,21 +53,5 @@
     "url-loader": "^0.6.2",
     "webpack": "^3.12.0",
     "webpack-dev-server": "^2.9.7"
-  },
-  "dependencies": {
-    "animated": "^0.2.1",
-    "cheerio": "^0.22.0",
-    "isomorphic-fetch": "^2.2.1",
-    "prop-types": "^15.6.1",
-    "query-string": "^5.1.0",
-    "react": "^16.4.0",
-    "react-css-property-operations": "^15.4.1",
-    "react-dom": "^16.4.0",
-    "react-icons": "^2.2.7",
-    "react-media": "^1.6.1",
-    "react-motion": "^0.5.2",
-    "react-transition-group": "^2.2.1",
-    "resolve-pathname": "^2.2.0",
-    "slug": "^0.9.1"
   }
 }

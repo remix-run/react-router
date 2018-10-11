@@ -45,10 +45,6 @@ module.exports = {
   ),
 
   resolve: {
-    modules: [
-      path.resolve(__dirname, "../"),
-      path.resolve(__dirname, "../node_modules")
-    ],
     alias: {
       "react-router": path.resolve(__dirname, "../packages/react-router"),
       "react-router-dom": path.resolve(__dirname, "modules/ReactRouterDOMShim")
@@ -57,7 +53,7 @@ module.exports = {
 
   resolveLoader: {
     modules: [
-      path.resolve(__dirname, "../node_modules"),
+      path.resolve(__dirname, "node_modules"),
       path.resolve(__dirname, "webpack")
     ]
   },

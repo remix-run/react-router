@@ -5,11 +5,7 @@ function exec(cmd) {
 }
 
 if (process.env.CI && process.env.TRAVIS_BRANCH !== "website") {
-  exec(
-    "lerna bootstrap --stream --hoist --nohoist react-native --nohoist react-test-renderer --ignore react-router-website"
-  );
+  exec("lerna bootstrap --ignore react-router-website");
 } else {
-  exec(
-    "lerna bootstrap --stream --hoist --nohoist react-native --nohoist react-test-renderer"
-  );
+  exec("lerna bootstrap");
 }

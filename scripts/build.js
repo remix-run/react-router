@@ -16,9 +16,8 @@ const cwd = process.cwd();
   }
 );
 
+// Skip building the website in CI.
 if (!process.env.CI) {
-  // Don't bother building the website now. Instead, build it in
-  // deploy-website.sh when we're on the "website" branch.
   process.chdir(path.resolve(__dirname, "../website"));
   exec("npm run build");
 }
