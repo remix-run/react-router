@@ -5,7 +5,7 @@ function exec(cmd) {
 }
 
 if (process.env.CI && process.env.TRAVIS_BRANCH !== "website") {
-  exec("lerna bootstrap --ignore react-router-website");
+  exec("lerna bootstrap --ci --ignore react-router-website");
 } else {
-  exec("lerna bootstrap");
+  exec("lerna bootstrap --ci");
 }
