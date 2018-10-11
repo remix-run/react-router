@@ -105,7 +105,7 @@ class StaticRouter extends React.Component {
 if (__DEV__) {
   StaticRouter.propTypes = {
     basename: PropTypes.string,
-    context: PropTypes.object.isRequired,
+    context: PropTypes.object,
     location: PropTypes.oneOfType([PropTypes.string, PropTypes.object])
   };
 
