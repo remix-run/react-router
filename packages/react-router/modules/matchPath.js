@@ -30,25 +30,34 @@ function matchPath(pathname, options = {}) {
 
   const { path, exact = false, strict = false, sensitive = false } = options;
 
-  const { regexp, keys } = compilePath(path, { end: exact, strict, sensitive });
-  const match = regexp.exec(pathname);
+  const paths = [].concat(path);
 
-  if (!match) return null;
+  return paths.reduce((matched, path) => {
+    if (matched) return matched;
+    const { regexp, keys } = compilePath(path, {
+      end: exact,
+      strict,
+      sensitive
+    });
+    const match = regexp.exec(pathname);
 
-  const [url, ...values] = match;
-  const isExact = pathname === url;
+    if (!match) return null;
 
-  if (exact && !isExact) return null;
+    const [url, ...values] = match;
+    const isExact = pathname === url;
 
-  return {
-    path, // the path used to match
-    url: path === "/" && url === "" ? "/" : url, // the matched portion of the URL
-    isExact, // whether or not we matched exactly
-    params: keys.reduce((memo, key, index) => {
-      memo[key.name] = values[index];
-      return memo;
-    }, {})
-  };
+    if (exact && !isExact) return null;
+
+    return {
+      path, // the path used to match
+      url: path === "/" && url === "" ? "/" : url, // the matched portion of the URL
+      isExact, // whether or not we matched exactly
+      params: keys.reduce((memo, key, index) => {
+        memo[key.name] = values[index];
+        return memo;
+      }, {})
+    };
+  }, null);
 }
 
 export default matchPath;
