@@ -1,7 +1,7 @@
 import React from "react";
 import ReactDOM from "react-dom";
 
-import HashRouter from "../HashRouter";
+import { HashRouter } from "react-router-dom";
 
 describe("A <HashRouter>", () => {
   const node = document.createElement("div");

@@ -3,11 +3,13 @@ import ReactDOM from "react-dom";
 import ReactDOMServer from "react-dom/server";
 import PropTypes from "prop-types";
 
-import Route from "../Route";
-import RouterContext from "../RouterContext";
-import Prompt from "../Prompt";
-import Redirect from "../Redirect";
-import StaticRouter from "../StaticRouter";
+import {
+  Route,
+  Prompt,
+  Redirect,
+  StaticRouter,
+  __RouterContext as RouterContext
+} from "react-router";
 
 describe("A <StaticRouter>", () => {
   const node = document.createElement("div");

@@ -1,9 +1,8 @@
 import React from "react";
 import ReactDOM from "react-dom";
-import { __RouterContext as RouterContext } from "react-router";
 import PropTypes from "prop-types";
 
-import HashRouter from "../HashRouter";
+import { HashRouter, __RouterContext as RouterContext } from "react-router-dom";
 
 describe("A <HashRouter>", () => {
   const node = document.createElement("div");

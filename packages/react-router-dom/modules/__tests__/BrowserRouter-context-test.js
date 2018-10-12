@@ -1,9 +1,11 @@
 import React from "react";
 import ReactDOM from "react-dom";
-import { __RouterContext as RouterContext } from "react-router";
 import PropTypes from "prop-types";
 
-import BrowserRouter from "../BrowserRouter";
+import {
+  BrowserRouter,
+  __RouterContext as RouterContext
+} from "react-router-dom";
 
 describe("A <BrowserRouter>", () => {
   const node = document.createElement("div");

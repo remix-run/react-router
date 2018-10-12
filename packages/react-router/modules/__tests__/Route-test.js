@@ -2,9 +2,7 @@ import React from "react";
 import ReactDOM from "react-dom";
 import { createMemoryHistory as createHistory } from "history";
 
-import MemoryRouter from "../MemoryRouter";
-import Route from "../Route";
-import Router from "../Router";
+import { MemoryRouter, Route, Router } from "react-router";
 
 describe("A <Route>", () => {
   const node = document.createElement("div");

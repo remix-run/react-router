@@ -51,7 +51,6 @@
     "warning": "^4.0.1"
   },
   "devDependencies": {
-    "babel-cli": "^6.26.0",
     "babel-eslint": "^8.2.3",
     "babel-jest": "^23.0.1",
     "babel-plugin-dev-expression": "^0.2.1",
@@ -89,7 +88,7 @@
       "__DEV__": true
     },
     "moduleNameMapper": {
-      "react-router": "<rootDir>/../react-router/cjs/react-router.js"
+      "^react-router-dom$": "<rootDir>/cjs/react-router-dom.js"
     },
     "setupFiles": [
       "raf/polyfill"

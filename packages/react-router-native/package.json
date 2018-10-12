@@ -40,6 +40,9 @@
     "react-test-renderer": "^16.3.1"
   },
   "jest": {
-    "preset": "react-native"
+    "preset": "react-native",
+    "moduleNameMapper": {
+      "^react-router$": "<rootDir>/../react-router/cjs/react-router.js"
+    }
   }
 }

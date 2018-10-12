@@ -1,10 +1,7 @@
 import React from "react";
 import ReactDOM from "react-dom";
 
-import MemoryRouter from "../MemoryRouter";
-import Route from "../Route";
-import Redirect from "../Redirect";
-import Switch from "../Switch";
+import { MemoryRouter, Route, Redirect, Switch } from "react-router";
 
 describe("A <Switch>", () => {
   const node = document.createElement("div");

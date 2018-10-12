@@ -3,9 +3,7 @@ import ReactDOM from "react-dom";
 import PropTypes from "prop-types";
 import { createMemoryHistory as createHistory } from "history";
 
-import Route from "../Route";
-import Router from "../Router";
-import RouterContext from "../RouterContext";
+import { Route, Router, __RouterContext as RouterContext } from "react-router";
 
 describe("A <Route>", () => {
   const node = document.createElement("div");

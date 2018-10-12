@@ -2,8 +2,7 @@ import React from "react";
 import ReactDOM from "react-dom";
 import PropTypes from "prop-types";
 
-import MemoryRouter from "../MemoryRouter";
-import RouterContext from "../RouterContext";
+import { MemoryRouter, __RouterContext as RouterContext } from "react-router";
 
 describe("A <MemoryRouter>", () => {
   const node = document.createElement("div");

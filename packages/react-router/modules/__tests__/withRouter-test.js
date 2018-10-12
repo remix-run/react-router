@@ -1,10 +1,7 @@
 import React from "react";
 import ReactDOM from "react-dom";
 
-import MemoryRouter from "../MemoryRouter";
-import StaticRouter from "../StaticRouter";
-import Route from "../Route";
-import withRouter from "../withRouter";
+import { MemoryRouter, StaticRouter, Route, withRouter } from "react-router";
 
 describe("withRouter", () => {
   const node = document.createElement("div");

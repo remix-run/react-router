@@ -1,10 +1,10 @@
 import React from "react";
 import ReactDOM from "react-dom";
 import ReactDOMServer from "react-dom/server";
-import { Router, StaticRouter } from "react-router";
 import createHistory from "history/createMemoryHistory";
 
-import renderRoutes from "../renderRoutes";
+import { Router, StaticRouter } from "react-router";
+import { renderRoutes } from "react-router-config";
 
 describe("renderRoutes", () => {
   let renderedRoutes;

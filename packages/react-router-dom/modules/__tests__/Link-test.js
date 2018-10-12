@@ -1,9 +1,7 @@
 import React from "react";
 import ReactDOM from "react-dom";
-import { MemoryRouter } from "react-router";
 
-import HashRouter from "../HashRouter";
-import Link from "../Link";
+import { MemoryRouter, HashRouter, Link } from "react-router-dom";
 
 describe("A <Link>", () => {
   const node = document.createElement("div");

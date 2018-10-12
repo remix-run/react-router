@@ -2,9 +2,7 @@ import React from "react";
 import ReactDOM from "react-dom";
 import createMemoryHistory from "history/createMemoryHistory";
 
-import MemoryRouter from "../MemoryRouter";
-import Prompt from "../Prompt";
-import Router from "../Router";
+import { MemoryRouter, Prompt, Router } from "react-router";
 
 describe("A <Prompt>", () => {
   const node = document.createElement("div");

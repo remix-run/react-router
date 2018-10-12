@@ -1,7 +1,7 @@
 import React from "react";
 import ReactDOM from "react-dom";
 
-import BrowserRouter from "../BrowserRouter";
+import { BrowserRouter } from "react-router-dom";
 
 describe("A <BrowserRouter>", () => {
   const node = document.createElement("div");
