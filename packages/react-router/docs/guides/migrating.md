@@ -109,19 +109,21 @@ With v4, children `<Route>`s should just be rendered by the parent `<Route>`'s c
 ```jsx
 <Route path="parent" component={Parent} />;
 
-const Parent = () => (
-  <div>
-    <Route path="child" component={Child} />
-    <Route path="other" component={Other} />
-  </div>
-);
+function Parent() {
+  return (
+    <div>
+      <Route path="child" component={Child} />
+      <Route path="other" component={Other} />
+    </div>
+  );
+}
 ```
 
 ### `on*` properties
 
 React Router v3 provides `onEnter`, `onUpdate`, and `onLeave` methods. These were essentially recreating React's lifecycle methods.
 
-With v4, you should use the lifecycle methods of the component rendered by a `<Route>`. Instead of `onEnter`, you would use `componentDidMount` or `componentWillMount`. Where you would use `onUpdate`, you can use `componentDidUpdate` or `componentWillUpdate` (or possibly `componentWillReceiveProps`). `onLeave` can be replaced with `componentWillUnmount`.
+With v4, you should use the lifecycle methods of the component rendered by a `<Route>`. Instead of `onEnter`, you would use `componentDidMount`. Where you would use `onUpdate`, you can use `componentDidUpdate`. `onLeave` can be replaced with `componentWillUnmount`.
 
 ### Optional Parameters
 
@@ -230,7 +232,6 @@ In v4, you can achieve the same functionality using the [`compile`](https://gith
 ```jsx
 // v4
 const THING_PATH = "/thing/:id";
-
 const thingPath = pathToRegexp.compile(THING_PATH);
 
 <Link to={thingPath({ id: 1 })}>A thing</Link>;

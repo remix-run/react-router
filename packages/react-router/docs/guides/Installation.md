@@ -24,7 +24,7 @@ import {
 
 ## Native
 
-We're still working on great documentation for the native capabilities of React Router. For now we recommend you [read the source](https://github.com/ReactTraining/react-router/tree/v4/packages/react-router-native).
+We're still working on great documentation for the native capabilities of React Router. For now we recommend you [read the source](https://github.com/ReactTraining/react-router/tree/master/packages/react-router-native).
 
 ```bash
 yarn add react-router-native
@@ -63,4 +63,4 @@ import {
 } from "react-router";
 ```
 
-You can use React Router's navigation anywhere you run React, the navigation state is kept in a memory router. You can look at the implementation of NativeRouter to get an idea on how to integrate.
+You can use React Router's navigation anywhere you run React, the navigation state is kept in a memory router. You can look at the implementation of `NativeRouter` to get an idea on how to integrate.
