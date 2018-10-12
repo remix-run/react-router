@@ -1,7 +1,7 @@
 import React from "react";
+import { Route } from "react-router";
 import PropTypes from "prop-types";
 
-import Route from "./Route";
 import Link from "./Link";
 
 function joinClassnames(...classnames) {

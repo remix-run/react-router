@@ -1,3 +1,4 @@
+import alias from "rollup-plugin-alias";
 import babel from "rollup-plugin-babel";
 import uglify from "rollup-plugin-uglify";
 import replace from "rollup-plugin-replace";
@@ -6,7 +7,6 @@ import resolve from "rollup-plugin-node-resolve";
 
 const config = {
   output: {
-    format: "umd",
     name: "ReactRouterDOM",
     globals: {
       react: "React"
@@ -14,13 +14,19 @@ const config = {
   },
   external: ["react"],
   plugins: [
+    alias({
+      "react-router":
+        process.env.NODE_ENV === "production"
+          ? "../react-router/esm/react-router.min.js"
+          : "../react-router/esm/react-router.js"
+    }),
     babel({
       exclude: "node_modules/**",
       plugins: ["external-helpers"]
     }),
     resolve(),
     commonjs({
-      include: /node_modules/
+      include: "node_modules/**"
     }),
     replace({
       "process.env.NODE_ENV": JSON.stringify(process.env.NODE_ENV)

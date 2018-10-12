@@ -1,54 +1,19 @@
 {
+  "presets": [["env", { "loose": true, "modules": false }], "react"],
+  "plugins": [
+    "dev-expression",
+    "transform-class-properties",
+    ["transform-object-rest-spread", { "useBuiltIns": true }],
+    "transform-export-extensions"
+  ],
   "env": {
-    "build-cjs": {
-      "presets": [["env", { "loose": true }], "react"],
-      "plugins": [
-        "dev-expression",
-        "transform-class-properties",
-        ["transform-object-rest-spread", { "useBuiltIns": true }],
-        "transform-export-default",
-        [
-          "transform-imports",
-          {
-            "react-router": {
-              "transform": "react-router/${member}"
-            }
-          }
-        ]
-      ]
-    },
-    "build-esm": {
-      "presets": [["env", { "loose": true, "modules": false }], "react"],
-      "plugins": [
-        "dev-expression",
-        "transform-class-properties",
-        ["transform-object-rest-spread", { "useBuiltIns": true }],
-        "transform-export-default",
-        [
-          "transform-imports",
-          {
-            "react-router": {
-              "transform": "react-router/es/${member}"
-            }
-          }
-        ]
-      ]
-    },
     "test": {
       "presets": [["env", { "loose": true }], "react"],
       "plugins": [
         "dev-expression",
         "transform-class-properties",
         ["transform-object-rest-spread", { "useBuiltIns": true }],
-        "transform-export-default",
-        [
-          "transform-imports",
-          {
-            "react-router": {
-              "transform": "react-router/modules/${member}"
-            }
-          }
-        ]
+        "transform-export-extensions"
       ]
     }
   }

@@ -10,34 +10,27 @@ function exec(command, extraEnv) {
   });
 }
 
-console.log("Building CommonJS modules ...");
-console.log();
-
-exec("babel modules -d . --ignore __tests__", {
-  BABEL_ENV: "build-cjs"
-});
-
-console.log();
-console.log("Building ES modules ...");
-console.log();
-
-exec("babel modules -d es --ignore __tests__", {
-  BABEL_ENV: "build-esm"
-});
-
-console.log();
-console.log("Building react-router.js ...");
-
-exec("rollup -c -i modules/index.js -o umd/react-router.js", {
-  BABEL_ENV: "build-esm",
+exec("rollup -c -i modules/index.js -o cjs/react-router.js -f cjs", {
   NODE_ENV: "development"
 });
 
-console.log();
-console.log("Building react-router.min.js ...");
+exec("rollup -c -i modules/index.js -o cjs/react-router.min.js -f cjs", {
+  NODE_ENV: "production"
+});
 
-exec("rollup -c -i modules/index.js -o umd/react-router.min.js", {
-  BABEL_ENV: "build-esm",
+exec("rollup -c -i modules/index.js -o esm/react-router.js -f esm", {
+  NODE_ENV: "development"
+});
+
+exec("rollup -c -i modules/index.js -o esm/react-router.min.js -f esm", {
+  NODE_ENV: "production"
+});
+
+exec("rollup -c -i modules/index.js -o umd/react-router.js -f umd", {
+  NODE_ENV: "development"
+});
+
+exec("rollup -c -i modules/index.js -o umd/react-router.min.js -f umd", {
   NODE_ENV: "production"
 });
 

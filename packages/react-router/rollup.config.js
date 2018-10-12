@@ -6,7 +6,6 @@ import resolve from "rollup-plugin-node-resolve";
 
 const config = {
   output: {
-    format: "umd",
     name: "ReactRouter",
     globals: {
       react: "React"
@@ -20,7 +19,7 @@ const config = {
     }),
     resolve(),
     commonjs({
-      include: /node_modules/
+      include: "node_modules/**"
     }),
     replace({
       "process.env.NODE_ENV": JSON.stringify(process.env.NODE_ENV)

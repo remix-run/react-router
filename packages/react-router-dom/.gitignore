@@ -1,4 +1,3 @@
-es/
+cjs/
+esm/
 umd/
-/*.js
-!/rollup.config.js

@@ -8,14 +8,16 @@
     "Ryan Florence"
   ],
   "files": [
+    "cjs",
     "es",
+    "esm",
     "index.js",
     "matchRoutes.js",
     "renderRoutes.js",
     "umd"
   ],
   "main": "index.js",
-  "module": "es/index.js",
+  "module": "esm/index.js",
   "sideEffects": false,
   "scripts": {
     "build": "node ./scripts/build.js",
@@ -34,7 +36,7 @@
     "babel-jest": "^23.0.1",
     "babel-plugin-dev-expression": "^0.2.1",
     "babel-plugin-external-helpers": "^6.22.0",
-    "babel-plugin-transform-export-default": "^7.0.0-alpha.20",
+    "babel-plugin-transform-export-extensions": "^6.22.0",
     "babel-plugin-transform-imports": "^1.5.1",
     "babel-plugin-transform-object-rest-spread": "^6.26.0",
     "babel-preset-env": "^1.7.0",

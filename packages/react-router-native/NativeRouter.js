@@ -1,7 +1,7 @@
 import React from "react";
-import PropTypes from "prop-types";
-import MemoryRouter from "react-router/MemoryRouter";
+import { MemoryRouter } from "react-router";
 import { Alert } from "react-native";
+import PropTypes from "prop-types";
 
 /**
  * The public API for a <Router> designed for React Native. Gets
