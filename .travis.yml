@@ -8,12 +8,11 @@ cache:
     - packages/react-router-config/node_modules
     - packages/react-router-dom/node_modules
     - packages/react-router-native/node_modules
-    - packages/react-router-redux/node_modules
     - website/node_modules
 install:
   - npm ci
 before_script:
-  - npm run build
+  - npm run build -- --no-website
 before_deploy:
   - openssl aes-256-cbc -K $encrypted_70c5e56b421c_key -iv $encrypted_70c5e56b421c_iv
     -in website_deploy_key.enc -out website_deploy_key -d

@@ -16,8 +16,7 @@ const cwd = process.cwd();
   }
 );
 
-// Skip building the website in CI.
-if (!process.env.CI) {
+if (!process.argv.includes("--no-website")) {
   process.chdir(path.resolve(__dirname, "../website"));
   exec("npm run build");
 }
