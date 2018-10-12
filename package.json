@@ -11,7 +11,7 @@
   "devDependencies": {
     "husky": "^0.14.3",
     "lerna": "^3.4.3",
-    "prettier": "^1.12.1",
+    "prettier": "^1.14.3",
     "pretty-quick": "^1.4.1"
   }
 }
