@@ -63,7 +63,6 @@
     "eslint": "^4.19.1",
     "eslint-plugin-import": "^2.12.0",
     "eslint-plugin-react": "^7.9.1",
-    "fbjs": "^1.0.0",
     "gzip-size": "^4.1.0",
     "jest": "^23.1.0",
     "pretty-bytes": "^5.0.0",
@@ -82,26 +81,6 @@
     "transform": [
       "loose-envify"
     ]
-  },
-  "jest": {
-    "globals": {
-      "__DEV__": true
-    },
-    "moduleNameMapper": {
-      "^react$": "<rootDir>/../../react-builds/react.js",
-      "^react-dom$": "<rootDir>/../../react-builds/react-dom.js",
-      "^react-router-dom$": "<rootDir>/cjs/react-router-dom.js"
-    },
-    "modulePaths": [
-      "<rootDir>/node_modules"
-    ],
-    "setupFiles": [
-      "raf/polyfill"
-    ],
-    "testMatch": [
-      "**/__tests__/**/*-test.js"
-    ],
-    "testURL": "http://localhost/"
   },
   "keywords": [
     "react",

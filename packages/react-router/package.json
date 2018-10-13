@@ -66,7 +66,6 @@
     "prop-types": "^15.6.2",
     "raf": "^3.4.0",
     "react": "^16.5.2",
-    "react-addons-test-utils": "^15.6.2",
     "react-dom": "^16.5.2",
     "rollup": "^0.60.0",
     "rollup-plugin-babel": "^3.0.4",
@@ -79,26 +78,6 @@
     "transform": [
       "loose-envify"
     ]
-  },
-  "jest": {
-    "globals": {
-      "__DEV__": true
-    },
-    "moduleNameMapper": {
-      "^react$": "<rootDir>/../../react-builds/react.js",
-      "^react-dom$": "<rootDir>/../../react-builds/react-dom.js",
-      "^react-router$": "<rootDir>/cjs/react-router.js"
-    },
-    "modulePaths": [
-      "<rootDir>/node_modules"
-    ],
-    "setupFiles": [
-      "raf/polyfill"
-    ],
-    "testMatch": [
-      "**/__tests__/**/*-test.js"
-    ],
-    "testURL": "http://localhost/"
   },
   "keywords": [
     "react",
