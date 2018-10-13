@@ -80,7 +80,7 @@ class Route extends React.Component {
   }
 }
 
-// TODO: Remove this
+// TODO: Remove this in v5
 if (!React.createContext) {
   Route.contextTypes = {
     router: PropTypes.object.isRequired

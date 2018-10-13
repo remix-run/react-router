@@ -2,38 +2,8 @@ import React from "react";
 import PropTypes from "prop-types";
 import invariant from "invariant";
 
+import Lifecycle from "./Lifecycle";
 import RouterContext from "./RouterContext";
-
-class Block extends React.Component {
-  constructor(props) {
-    super(props);
-    this.release = props.method(props.message);
-  }
-
-  componentDidUpdate(prevProps) {
-    if (prevProps.message !== this.props.message) {
-      this.release();
-      this.release = this.props.method(this.props.message);
-    }
-  }
-
-  componentWillUnmount() {
-    this.release();
-  }
-
-  render() {
-    return null;
-  }
-}
-
-if (__DEV__) {
-  const messageType = PropTypes.oneOfType([PropTypes.func, PropTypes.string]);
-
-  Block.propTypes = {
-    method: PropTypes.func.isRequired,
-    message: messageType.isRequired
-  };
-}
 
 /**
  * The public API for prompting the user before navigating away from a screen.
@@ -44,9 +14,27 @@ function Prompt(props) {
       {context => {
         invariant(context, "You should not use <Prompt> outside a <Router>");
 
-        return props.when ? (
-          <Block method={context.history.block} message={props.message} />
-        ) : null;
+        if (!props.when) return null;
+
+        const method = context.history.block;
+        const message = props.message;
+
+        return (
+          <Lifecycle
+            onMount={self => {
+              self.release = method(message);
+            }}
+            onUpdate={(self, prevProps) => {
+              if (prevProps.message !== message) {
+                self.release();
+                self.release = method(message);
+              }
+            }}
+            onUnmount={self => {
+              self.release();
+            }}
+          />
+        );
       }}
     </RouterContext.Consumer>
   );

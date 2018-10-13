@@ -3,38 +3,9 @@ import PropTypes from "prop-types";
 import { createLocation, locationsAreEqual } from "history";
 import invariant from "invariant";
 
+import Lifecycle from "./Lifecycle";
 import RouterContext from "./RouterContext";
 import generatePath from "./generatePath";
-
-class Navigate extends React.Component {
-  constructor(props) {
-    super(props);
-    props.method(props.to);
-  }
-
-  componentDidUpdate(prevProps) {
-    if (!locationsAreEqual(prevProps.to, this.props.to)) {
-      this.props.method(this.props.to);
-    }
-  }
-
-  render() {
-    return null;
-  }
-}
-
-if (__DEV__) {
-  const locationType = PropTypes.shape({
-    pathname: PropTypes.string.isRequired,
-    search: PropTypes.string.isRequired,
-    hash: PropTypes.string.isRequired
-  });
-
-  Navigate.propTypes = {
-    method: PropTypes.func.isRequired,
-    to: locationType.isRequired
-  };
-}
 
 /**
  * The public API for navigating programmatically with a component.
@@ -62,7 +33,26 @@ function Redirect(props) {
             : props.to
         );
 
-        return <Navigate method={method} to={to} />;
+        // When rendering in a static context,
+        // set the new location immediately.
+        if (context.staticContext) {
+          method(to);
+          return null;
+        }
+
+        return (
+          <Lifecycle
+            onMount={() => {
+              method(to);
+            }}
+            onUpdate={(self, prevProps) => {
+              if (!locationsAreEqual(prevProps.to, to)) {
+                method(to);
+              }
+            }}
+            to={to}
+          />
+        );
       }}
     </RouterContext.Consumer>
   );

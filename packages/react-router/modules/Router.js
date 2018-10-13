@@ -29,9 +29,29 @@ class Router extends React.Component {
       location: props.history.location
     };
 
+    // This is a bit of a hack. We have to start listening for location
+    // changes here in the constructor in case there are any <Redirect>s
+    // on the initial render. If there are, they will replace/push when
+    // they mount and since cDM fires in children before parents, we may
+    // get a new location before the <Router> is mounted.
+    this._isMounted = false;
+    this._pendingLocation = null;
+
     this.unlisten = props.history.listen(location => {
-      this.setState({ location });
+      if (this._isMounted) {
+        this.setState({ location });
+      } else {
+        this._pendingLocation = location;
+      }
     });
+  }
+
+  componentDidMount() {
+    this._isMounted = true;
+
+    if (this._pendingLocation) {
+      this.setState({ location: this._pendingLocation });
+    }
   }
 
   componentWillUnmount() {
@@ -50,7 +70,7 @@ class Router extends React.Component {
   }
 }
 
-// TODO: Remove this
+// TODO: Remove this in v5
 if (!React.createContext) {
   Router.childContextTypes = {
     router: PropTypes.object.isRequired

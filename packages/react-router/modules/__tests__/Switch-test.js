@@ -4,6 +4,7 @@ import ReactDOM from "react-dom";
 import { MemoryRouter, Route, Redirect, Switch } from "react-router";
 
 import renderStrict from "./utils/renderStrict";
+import waitForRedirects from "./utils/waitForRedirects";
 
 describe("A <Switch>", () => {
   const node = document.createElement("div");
@@ -50,7 +51,7 @@ describe("A <Switch>", () => {
     expect(node.innerHTML).not.toContain("two");
   });
 
-  it("renders the first <Redirect> that matches the URL", () => {
+  it("renders the first <Redirect> that matches the URL", done => {
     renderStrict(
       <MemoryRouter initialEntries={["/three"]}>
         <Switch>
@@ -62,10 +63,13 @@ describe("A <Switch>", () => {
       node
     );
 
-    expect(node.innerHTML).toContain("two");
+    waitForRedirects(() => {
+      expect(node.innerHTML).toContain("two");
+      done();
+    });
   });
 
-  it("does not render a second <Redirect> that also matches the URL", () => {
+  it("does not render a second <Redirect> that also matches the URL", done => {
     renderStrict(
       <MemoryRouter initialEntries={["/three"]}>
         <Switch>
@@ -78,7 +82,10 @@ describe("A <Switch>", () => {
       node
     );
 
-    expect(node.innerHTML).toContain("two");
+    waitForRedirects(() => {
+      expect(node.innerHTML).toContain("two");
+      done();
+    });
   });
 
   it("renders a Route with no `path` prop", () => {
@@ -95,7 +102,7 @@ describe("A <Switch>", () => {
     expect(node.innerHTML).toContain("two");
   });
 
-  it("renders a Redirect with no `from` prop", () => {
+  it("renders a Redirect with no `from` prop", done => {
     renderStrict(
       <MemoryRouter initialEntries={["/three"]}>
         <Switch>
@@ -107,10 +114,13 @@ describe("A <Switch>", () => {
       node
     );
 
-    expect(node.innerHTML).toContain("one");
+    waitForRedirects(() => {
+      expect(node.innerHTML).toContain("one");
+      done();
+    });
   });
 
-  it("handles subsequent redirects", () => {
+  it("handles subsequent redirects", done => {
     renderStrict(
       <MemoryRouter initialEntries={["/one"]}>
         <Switch>
@@ -122,7 +132,10 @@ describe("A <Switch>", () => {
       node
     );
 
-    expect(node.innerHTML).toContain("three");
+    waitForRedirects(() => {
+      expect(node.innerHTML).toContain("three");
+      done();
+    });
   });
 
   it("handles comments", () => {
