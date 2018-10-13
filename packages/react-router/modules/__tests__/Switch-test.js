@@ -3,6 +3,8 @@ import ReactDOM from "react-dom";
 
 import { MemoryRouter, Route, Redirect, Switch } from "react-router";
 
+import renderStrict from "./utils/renderStrict";
+
 describe("A <Switch>", () => {
   const node = document.createElement("div");
 
@@ -15,13 +17,13 @@ describe("A <Switch>", () => {
       spyOn(console, "error");
 
       expect(() => {
-        ReactDOM.render(<Switch />, node);
+        renderStrict(<Switch />, node);
       }).toThrow(/You should not use <Switch> outside a <Router>/);
     });
   });
 
   it("renders the first <Route> that matches the URL", () => {
-    ReactDOM.render(
+    renderStrict(
       <MemoryRouter initialEntries={["/one"]}>
         <Switch>
           <Route path="/one" render={() => <h1>one</h1>} />
@@ -35,7 +37,7 @@ describe("A <Switch>", () => {
   });
 
   it("does not render a second <Route> that also matches the URL", () => {
-    ReactDOM.render(
+    renderStrict(
       <MemoryRouter initialEntries={["/one"]}>
         <Switch>
           <Route path="/one" render={() => <h1>one</h1>} />
@@ -49,7 +51,7 @@ describe("A <Switch>", () => {
   });
 
   it("renders the first <Redirect> that matches the URL", () => {
-    ReactDOM.render(
+    renderStrict(
       <MemoryRouter initialEntries={["/three"]}>
         <Switch>
           <Route path="/one" render={() => <h1>one</h1>} />
@@ -64,7 +66,7 @@ describe("A <Switch>", () => {
   });
 
   it("does not render a second <Redirect> that also matches the URL", () => {
-    ReactDOM.render(
+    renderStrict(
       <MemoryRouter initialEntries={["/three"]}>
         <Switch>
           <Route path="/one" render={() => <h1>one</h1>} />
@@ -80,7 +82,7 @@ describe("A <Switch>", () => {
   });
 
   it("renders a Route with no `path` prop", () => {
-    ReactDOM.render(
+    renderStrict(
       <MemoryRouter initialEntries={["/two"]}>
         <Switch>
           <Route path="/one" render={() => <h1>one</h1>} />
@@ -94,7 +96,7 @@ describe("A <Switch>", () => {
   });
 
   it("renders a Redirect with no `from` prop", () => {
-    ReactDOM.render(
+    renderStrict(
       <MemoryRouter initialEntries={["/three"]}>
         <Switch>
           <Route path="/one" render={() => <h1>one</h1>} />
@@ -109,7 +111,7 @@ describe("A <Switch>", () => {
   });
 
   it("handles subsequent redirects", () => {
-    ReactDOM.render(
+    renderStrict(
       <MemoryRouter initialEntries={["/one"]}>
         <Switch>
           <Redirect from="/one" to="/two" />
@@ -124,7 +126,7 @@ describe("A <Switch>", () => {
   });
 
   it("handles comments", () => {
-    ReactDOM.render(
+    renderStrict(
       <MemoryRouter initialEntries={["/cupcakes"]}>
         <Switch>
           <Route path="/bubblegum" render={() => <div>bub</div>} />
@@ -140,7 +142,7 @@ describe("A <Switch>", () => {
   });
 
   it("renders with non-element children", () => {
-    ReactDOM.render(
+    renderStrict(
       <MemoryRouter initialEntries={["/one"]}>
         <Switch>
           <Route path="/one" render={() => <h1>one</h1>} />
@@ -155,7 +157,7 @@ describe("A <Switch>", () => {
   });
 
   it("can use a `location` prop instead of `router.location`", () => {
-    ReactDOM.render(
+    renderStrict(
       <MemoryRouter initialEntries={["/one"]}>
         <Switch location={{ pathname: "/two" }}>
           <Route path="/one" render={() => <h1>one</h1>} />

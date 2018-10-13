@@ -3,6 +3,8 @@ import ReactDOM from "react-dom";
 
 import { MemoryRouter, Redirect, Route, Switch } from "react-router";
 
+import renderStrict from "./utils/renderStrict";
+
 describe("A <Redirect>", () => {
   const node = document.createElement("div");
 
@@ -14,7 +16,7 @@ describe("A <Redirect>", () => {
     it("automatically interpolates params", () => {
       let params;
 
-      ReactDOM.render(
+      renderStrict(
         <MemoryRouter initialEntries={["/users/mjackson/messages/123"]}>
           <Switch>
             <Redirect

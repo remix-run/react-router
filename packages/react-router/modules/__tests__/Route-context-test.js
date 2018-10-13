@@ -5,6 +5,8 @@ import { createMemoryHistory as createHistory } from "history";
 
 import { Route, Router, __RouterContext as RouterContext } from "react-router";
 
+import renderStrict from "./utils/renderStrict";
+
 describe("A <Route>", () => {
   const node = document.createElement("div");
 
@@ -32,7 +34,7 @@ describe("A <Route>", () => {
     it("has a `history` property", () => {
       const history = createHistory();
 
-      ReactDOM.render(
+      renderStrict(
         <Router history={history}>
           <Route component={ContextChecker} />
         </Router>,
@@ -45,7 +47,7 @@ describe("A <Route>", () => {
     it("has a `location` property", () => {
       const history = createHistory();
 
-      ReactDOM.render(
+      renderStrict(
         <Router history={history}>
           <Route component={ContextChecker} />
         </Router>,
@@ -60,7 +62,7 @@ describe("A <Route>", () => {
         initialEntries: ["/"]
       });
 
-      ReactDOM.render(
+      renderStrict(
         <Router history={history}>
           <Route component={ContextChecker} />
         </Router>,
@@ -76,91 +78,93 @@ describe("A <Route>", () => {
     });
   });
 
-  describe("legacy context", () => {
-    let context;
-    class LegacyContextChecker extends React.Component {
-      static contextTypes = {
-        router: PropTypes.object.isRequired
-      };
+  if (!React.createContext) {
+    describe("legacy context", () => {
+      let context;
+      class LegacyContextChecker extends React.Component {
+        static contextTypes = {
+          router: PropTypes.object.isRequired
+        };
 
-      render() {
-        context = this.context.router;
-        return null;
+        render() {
+          context = this.context.router;
+          return null;
+        }
       }
-    }
 
-    afterEach(() => {
-      context = undefined;
-    });
-
-    it("has a `history` property that warns when it is accessed", () => {
-      spyOn(console, "error");
-
-      const history = createHistory();
-
-      ReactDOM.render(
-        <Router history={history}>
-          <Route component={LegacyContextChecker} />
-        </Router>,
-        node
-      );
-
-      expect(context.history).toBe(history);
-
-      expect(console.error).toHaveBeenCalledWith(
-        expect.stringMatching(
-          "You should not be using this.context.router.history"
-        )
-      );
-    });
-
-    it("has a `location` property that warns when it is accessed", () => {
-      spyOn(console, "error");
-
-      const history = createHistory();
-
-      ReactDOM.render(
-        <Router history={history}>
-          <Route component={LegacyContextChecker} />
-        </Router>,
-        node
-      );
-
-      expect(context.location).toBe(history.location);
-
-      expect(console.error).toHaveBeenCalledWith(
-        expect.stringMatching(
-          "You should not be using this.context.router.location directly"
-        )
-      );
-    });
-
-    it("has a `match` property that warns when it is accessed", () => {
-      spyOn(console, "error");
-
-      const history = createHistory({
-        initialEntries: ["/"]
+      afterEach(() => {
+        context = undefined;
       });
 
-      ReactDOM.render(
-        <Router history={history}>
-          <Route component={LegacyContextChecker} />
-        </Router>,
-        node
-      );
+      it("has a `history` property that warns when it is accessed", () => {
+        spyOn(console, "error");
 
-      expect(context.match).toMatchObject({
-        path: "/",
-        url: "/",
-        params: {},
-        isExact: true
+        const history = createHistory();
+
+        renderStrict(
+          <Router history={history}>
+            <Route component={LegacyContextChecker} />
+          </Router>,
+          node
+        );
+
+        expect(context.history).toBe(history);
+
+        expect(console.error).toHaveBeenCalledWith(
+          expect.stringMatching(
+            "You should not be using this.context.router.history"
+          )
+        );
       });
 
-      expect(console.error).toHaveBeenCalledWith(
-        expect.stringMatching(
-          "You should not be using this.context.router.match directly"
-        )
-      );
+      it("has a `location` property that warns when it is accessed", () => {
+        spyOn(console, "error");
+
+        const history = createHistory();
+
+        renderStrict(
+          <Router history={history}>
+            <Route component={LegacyContextChecker} />
+          </Router>,
+          node
+        );
+
+        expect(context.location).toBe(history.location);
+
+        expect(console.error).toHaveBeenCalledWith(
+          expect.stringMatching(
+            "You should not be using this.context.router.location directly"
+          )
+        );
+      });
+
+      it("has a `match` property that warns when it is accessed", () => {
+        spyOn(console, "error");
+
+        const history = createHistory({
+          initialEntries: ["/"]
+        });
+
+        renderStrict(
+          <Router history={history}>
+            <Route component={LegacyContextChecker} />
+          </Router>,
+          node
+        );
+
+        expect(context.match).toMatchObject({
+          path: "/",
+          url: "/",
+          params: {},
+          isExact: true
+        });
+
+        expect(console.error).toHaveBeenCalledWith(
+          expect.stringMatching(
+            "You should not be using this.context.router.match directly"
+          )
+        );
+      });
     });
-  });
+  }
 });

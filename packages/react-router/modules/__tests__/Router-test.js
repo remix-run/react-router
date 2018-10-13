@@ -4,6 +4,8 @@ import { createMemoryHistory as createHistory } from "history";
 
 import { Router } from "react-router";
 
+import renderStrict from "./utils/renderStrict";
+
 describe("A <Router>", () => {
   const node = document.createElement("div");
 
@@ -14,7 +16,7 @@ describe("A <Router>", () => {
   describe("with no children", () => {
     it("does not throw an error", () => {
       expect(() => {
-        ReactDOM.render(<Router history={createHistory()} />, node);
+        renderStrict(<Router history={createHistory()} />, node);
       }).not.toThrow();
     });
   });
@@ -22,7 +24,7 @@ describe("A <Router>", () => {
   describe("with one child", () => {
     it("does not throw an error", () => {
       expect(() => {
-        ReactDOM.render(
+        renderStrict(
           <Router history={createHistory()}>
             <p>Bar</p>
           </Router>,
@@ -35,7 +37,7 @@ describe("A <Router>", () => {
   describe("with more than one child", () => {
     it("does not throw an error", () => {
       expect(() => {
-        ReactDOM.render(
+        renderStrict(
           <Router history={createHistory()}>
             <p>Bubblegum</p>
             <p>Cupcakes</p>

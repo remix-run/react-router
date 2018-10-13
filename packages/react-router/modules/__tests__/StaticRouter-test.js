@@ -11,6 +11,8 @@ import {
   __RouterContext as RouterContext
 } from "react-router";
 
+import renderStrict from "./utils/renderStrict";
+
 describe("A <StaticRouter>", () => {
   const node = document.createElement("div");
 
@@ -23,108 +25,10 @@ describe("A <StaticRouter>", () => {
       spyOn(console, "error");
 
       const history = {};
-      ReactDOM.render(<StaticRouter history={history} />, node);
+      renderStrict(<StaticRouter history={history} />, node);
 
       expect(console.error).toHaveBeenCalledWith(
         expect.stringContaining("<StaticRouter> ignores the history prop")
-      );
-    });
-  });
-
-  describe("context", () => {
-    let context;
-    class ContextChecker extends React.Component {
-      render() {
-        return (
-          <RouterContext.Consumer>
-            {value => {
-              context = value;
-              return null;
-            }}
-          </RouterContext.Consumer>
-        );
-      }
-    }
-
-    afterEach(() => {
-      context = undefined;
-    });
-
-    it("has a `history` property", () => {
-      ReactDOM.render(
-        <StaticRouter>
-          <ContextChecker />
-        </StaticRouter>,
-        node
-      );
-
-      expect(typeof context.history).toBe("object");
-    });
-
-    it("has a `staticContext` property", () => {
-      ReactDOM.render(
-        <StaticRouter>
-          <ContextChecker />
-        </StaticRouter>,
-        node
-      );
-
-      expect(typeof context.staticContext).toBe("object");
-    });
-  });
-
-  describe("legacy context", () => {
-    let context;
-    class LegacyContextChecker extends React.Component {
-      static contextTypes = {
-        router: PropTypes.object.isRequired
-      };
-
-      render() {
-        context = this.context.router;
-        return null;
-      }
-    }
-
-    afterEach(() => {
-      context = undefined;
-    });
-
-    it("has a `history` property that warns when it is accessed", () => {
-      spyOn(console, "error");
-
-      ReactDOM.render(
-        <StaticRouter>
-          <LegacyContextChecker />
-        </StaticRouter>,
-        node
-      );
-
-      expect(typeof context.history).toBe("object");
-
-      expect(console.error).toHaveBeenCalledWith(
-        expect.stringContaining(
-          "You should not be using this.context.router.history directly"
-        )
-      );
-    });
-
-    it("has a `staticContext` property that warns when it is accessed", () => {
-      spyOn(console, "error");
-
-      ReactDOM.render(
-        <StaticRouter>
-          <LegacyContextChecker />
-        </StaticRouter>,
-        node
-      );
-
-      expect(typeof context.staticContext).toBe("object");
-
-      expect(console.error).toHaveBeenCalledWith(
-        expect.stringContaining(
-          "You should not be using this.context.router.staticContext directly"
-        )
       );
     });
   });
@@ -317,7 +221,7 @@ describe("A <StaticRouter>", () => {
         );
       }
 
-      ReactDOM.render(
+      renderStrict(
         <StaticRouter>
           <HrefChecker to={pathname} />
         </StaticRouter>,
@@ -333,7 +237,7 @@ describe("A <StaticRouter>", () => {
   describe("render a <Prompt>", () => {
     it("does not throw", () => {
       expect(() => {
-        ReactDOM.render(
+        renderStrict(
           <StaticRouter>
             <Prompt message="this is only a test" />
           </StaticRouter>,

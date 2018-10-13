@@ -1,34 +1,20 @@
-import React, { Component } from "react";
-import PropTypes from "prop-types";
+import React from "react";
 import { TouchableHighlight } from "react-native";
+import PropTypes from "prop-types";
 
-class Link extends Component {
-  static contextTypes = {
-    router: PropTypes.shape({
-      history: PropTypes.shape({
-        push: PropTypes.func.isRequired,
-        replace: PropTypes.func.isRequired
-      }).isRequired
-    }).isRequired
-  };
+import { __RouterContext as RouterContext } from "react-router";
 
-  static propTypes = {
-    onPress: PropTypes.func,
-    component: PropTypes.func,
-    replace: PropTypes.bool,
-    to: PropTypes.oneOfType([PropTypes.string, PropTypes.object])
-  };
-
+class Link extends React.Component {
   static defaultProps = {
     component: TouchableHighlight,
     replace: false
   };
 
-  handlePress = event => {
+  handlePress = (event, history) => {
+    console.log(history);
     if (this.props.onPress) this.props.onPress(event);
 
     if (!event.defaultPrevented) {
-      const { history } = this.context.router;
       const { to, replace } = this.props;
 
       if (replace) {
@@ -41,8 +27,29 @@ class Link extends Component {
 
   render() {
     const { component: Component, to, replace, ...rest } = this.props;
-    return <Component {...rest} onPress={this.handlePress} />;
+
+    return (
+      <RouterContext.Consumer>
+        {context => (
+          <Component
+            {...rest}
+            onPress={event => this.handlePress(event, context.history)}
+          />
+        )}
+      </RouterContext.Consumer>
+    );
   }
+}
+
+const __DEV__ = true; // TODO
+
+if (__DEV__) {
+  Link.propTypes = {
+    onPress: PropTypes.func,
+    component: PropTypes.func,
+    replace: PropTypes.bool,
+    to: PropTypes.oneOfType([PropTypes.string, PropTypes.object])
+  };
 }
 
 export default Link;

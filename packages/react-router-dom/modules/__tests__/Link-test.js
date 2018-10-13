@@ -3,6 +3,8 @@ import ReactDOM from "react-dom";
 
 import { MemoryRouter, HashRouter, Link } from "react-router-dom";
 
+import renderStrict from "./utils/renderStrict";
+
 describe("A <Link>", () => {
   const node = document.createElement("div");
 
@@ -15,7 +17,7 @@ describe("A <Link>", () => {
       spyOn(console, "error");
 
       expect(() => {
-        ReactDOM.render(<Link to="/">link</Link>, node);
+        renderStrict(<Link to="/">link</Link>, node);
       }).toThrow(/You should not use <Link> outside a <Router>/);
 
       expect(console.error.calls.count()).toBe(2);
@@ -26,7 +28,7 @@ describe("A <Link>", () => {
     it("logs an error to the console", () => {
       spyOn(console, "error");
 
-      ReactDOM.render(
+      renderStrict(
         <MemoryRouter>
           <Link>link</Link>
         </MemoryRouter>,
@@ -42,7 +44,7 @@ describe("A <Link>", () => {
   it("accepts a string `to` prop", () => {
     const to = "/the/path?the=query#the-hash";
 
-    ReactDOM.render(
+    renderStrict(
       <MemoryRouter>
         <Link to={to}>link</Link>
       </MemoryRouter>,
@@ -61,7 +63,7 @@ describe("A <Link>", () => {
       hash: "#the-hash"
     };
 
-    ReactDOM.render(
+    renderStrict(
       <MemoryRouter>
         <Link to={to}>link</Link>
       </MemoryRouter>,
@@ -75,7 +77,7 @@ describe("A <Link>", () => {
 
   describe("with no pathname", () => {
     it("resolves using the current location", () => {
-      ReactDOM.render(
+      renderStrict(
         <MemoryRouter initialEntries={["/somewhere"]}>
           <Link to="?rendersWithPathname=true">link</Link>
         </MemoryRouter>,
@@ -98,7 +100,7 @@ describe("A <Link>", () => {
       }
     }
 
-    ReactDOM.render(
+    renderStrict(
       <MemoryRouter>
         <Link to="/" innerRef={refCallback}>
           link
@@ -114,7 +116,7 @@ describe("A <Link>", () => {
     });
 
     function createLinkNode(hashType, to) {
-      ReactDOM.render(
+      renderStrict(
         <HashRouter hashType={hashType}>
           <Link to={to} />
         </HashRouter>,

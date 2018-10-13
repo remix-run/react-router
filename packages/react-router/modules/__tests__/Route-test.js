@@ -4,6 +4,8 @@ import { createMemoryHistory as createHistory } from "history";
 
 import { MemoryRouter, Route, Router } from "react-router";
 
+import renderStrict from "./utils/renderStrict";
+
 describe("A <Route>", () => {
   const node = document.createElement("div");
 
@@ -16,7 +18,7 @@ describe("A <Route>", () => {
       spyOn(console, "error");
 
       expect(() => {
-        ReactDOM.render(<Route />, node);
+        renderStrict(<Route />, node);
       }).toThrow(/You should not use <Route> outside a <Router>/);
     });
   });
@@ -24,7 +26,7 @@ describe("A <Route>", () => {
   it("renders when it matches", () => {
     const text = "cupcakes";
 
-    ReactDOM.render(
+    renderStrict(
       <MemoryRouter initialEntries={["/cupcakes"]}>
         <Route path="/cupcakes" render={() => <h1>{text}</h1>} />
       </MemoryRouter>,
@@ -37,7 +39,7 @@ describe("A <Route>", () => {
   it("renders when it matches at the root URL", () => {
     const text = "cupcakes";
 
-    ReactDOM.render(
+    renderStrict(
       <MemoryRouter initialEntries={["/"]}>
         <Route path="/" render={() => <h1>{text}</h1>} />
       </MemoryRouter>,
@@ -50,7 +52,7 @@ describe("A <Route>", () => {
   it("does not render when it does not match", () => {
     const text = "bubblegum";
 
-    ReactDOM.render(
+    renderStrict(
       <MemoryRouter initialEntries={["/bunnies"]}>
         <Route path="/flowers" render={() => <h1>{text}</h1>} />
       </MemoryRouter>,
@@ -65,7 +67,7 @@ describe("A <Route>", () => {
       initialEntries: ["/sushi/california"]
     });
 
-    ReactDOM.render(
+    renderStrict(
       <Router history={history}>
         <Route
           path="/sushi/:roll"
@@ -82,7 +84,7 @@ describe("A <Route>", () => {
 
   describe("with dynamic segments in the path", () => {
     it("decodes them", () => {
-      ReactDOM.render(
+      renderStrict(
         <MemoryRouter initialEntries={["/a%20dynamic%20segment"]}>
           <Route
             path="/:id"
@@ -98,7 +100,7 @@ describe("A <Route>", () => {
 
   describe("with a unicode path", () => {
     it("is able to match", () => {
-      ReactDOM.render(
+      renderStrict(
         <MemoryRouter initialEntries={["/パス名"]}>
           <Route path="/パス名" render={({ match }) => <h1>{match.url}</h1>} />
         </MemoryRouter>,
@@ -111,7 +113,7 @@ describe("A <Route>", () => {
 
   describe("with escaped special characters in the path", () => {
     it("is able to match", () => {
-      ReactDOM.render(
+      renderStrict(
         <MemoryRouter initialEntries={["/pizza (1)"]}>
           <Route
             path="/pizza \(1\)"
@@ -129,7 +131,7 @@ describe("A <Route>", () => {
     it("renders when the URL does not have a trailing slash", () => {
       const text = "bubblegum";
 
-      ReactDOM.render(
+      renderStrict(
         <MemoryRouter initialEntries={["/somepath/"]}>
           <Route exact path="/somepath" render={() => <h1>{text}</h1>} />
         </MemoryRouter>,
@@ -142,7 +144,7 @@ describe("A <Route>", () => {
     it("renders when the URL has trailing slash", () => {
       const text = "bubblegum";
 
-      ReactDOM.render(
+      renderStrict(
         <MemoryRouter initialEntries={["/somepath"]}>
           <Route exact path="/somepath/" render={() => <h1>{text}</h1>} />
         </MemoryRouter>,
@@ -156,7 +158,7 @@ describe("A <Route>", () => {
       it("does not render when the URL has a trailing slash", () => {
         const text = "bubblegum";
 
-        ReactDOM.render(
+        renderStrict(
           <MemoryRouter initialEntries={["/somepath/"]}>
             <Route
               exact
@@ -174,7 +176,7 @@ describe("A <Route>", () => {
       it("does not render when the URL does not have a trailing slash", () => {
         const text = "bubblegum";
 
-        ReactDOM.render(
+        renderStrict(
           <MemoryRouter initialEntries={["/somepath"]}>
             <Route
               exact
@@ -195,7 +197,7 @@ describe("A <Route>", () => {
     it("overrides `context.location`", () => {
       const text = "bubblegum";
 
-      ReactDOM.render(
+      renderStrict(
         <MemoryRouter initialEntries={["/cupcakes"]}>
           <Route
             location={{ pathname: "/bubblegum" }}
@@ -215,7 +217,7 @@ describe("A <Route>", () => {
       it("renders", () => {
         const text = "bubblegum";
 
-        ReactDOM.render(
+        renderStrict(
           <MemoryRouter initialEntries={["/"]}>
             <Route path="/">
               <h1>{text}</h1>
@@ -233,7 +235,7 @@ describe("A <Route>", () => {
         const history = createHistory();
 
         let props = null;
-        ReactDOM.render(
+        renderStrict(
           <Router history={history}>
             <Route
               path="/"
@@ -255,7 +257,7 @@ describe("A <Route>", () => {
       it("renders", () => {
         const text = "bubblegum";
 
-        ReactDOM.render(
+        renderStrict(
           <MemoryRouter initialEntries={["/"]}>
             <Route path="/" children={() => <h1>{text}</h1>} />
           </MemoryRouter>,
@@ -269,7 +271,7 @@ describe("A <Route>", () => {
         it("logs a warning to the console and renders nothing", () => {
           spyOn(console, "error");
 
-          ReactDOM.render(
+          renderStrict(
             <MemoryRouter initialEntries={["/"]}>
               <Route path="/" children={() => undefined} />
             </MemoryRouter>,
@@ -291,7 +293,7 @@ describe("A <Route>", () => {
       it("ignores the children", () => {
         const text = "bubblegum";
 
-        ReactDOM.render(
+        renderStrict(
           <MemoryRouter>
             <Route render={() => <h1>{text}</h1>}>{[]}</Route>
           </MemoryRouter>,
@@ -309,7 +311,7 @@ describe("A <Route>", () => {
 
       const Home = () => <h1>{text}</h1>;
 
-      ReactDOM.render(
+      renderStrict(
         <MemoryRouter initialEntries={["/"]}>
           <Route path="/" component={Home} />
         </MemoryRouter>,
@@ -328,7 +330,7 @@ describe("A <Route>", () => {
         return null;
       };
 
-      ReactDOM.render(
+      renderStrict(
         <Router history={history}>
           <Route path="/" component={Component} />
         </Router>,
@@ -346,7 +348,7 @@ describe("A <Route>", () => {
     it("renders its return value", () => {
       const text = "Mrs. Kato";
 
-      ReactDOM.render(
+      renderStrict(
         <MemoryRouter initialEntries={["/"]}>
           <Route path="/" render={() => <h1>{text}</h1>} />
         </MemoryRouter>,
@@ -360,7 +362,7 @@ describe("A <Route>", () => {
       const history = createHistory();
 
       let props = null;
-      ReactDOM.render(
+      renderStrict(
         <Router history={history}>
           <Route
             path="/"

@@ -26,50 +26,6 @@ function getContext(props, context) {
  * The public API for matching a single path and rendering.
  */
 class Route extends React.Component {
-  // TODO: Remove this
-  static contextTypes = {
-    router: PropTypes.object.isRequired
-  };
-
-  // TODO: Remove this
-  static childContextTypes = {
-    router: PropTypes.object.isRequired
-  };
-
-  // TODO: Remove this
-  getChildContext() {
-    invariant(
-      this.context.router,
-      "You should not use <Route> outside a <Router>"
-    );
-
-    let parentContext = this.context.router;
-    if (__DEV__) {
-      parentContext = parentContext._withoutWarnings;
-    }
-
-    const context = getContext(this.props, parentContext);
-    if (__DEV__) {
-      const contextWithoutWarnings = { ...context };
-
-      Object.keys(context).forEach(key => {
-        warnAboutGettingProperty(
-          context,
-          key,
-          `You should not be using this.context.router.${key} directly. It is private API ` +
-            "for internal use only and is subject to change at any time. Instead, use " +
-            "a <Route> or withRouter() to access the current location, match, etc."
-        );
-      });
-
-      context._withoutWarnings = contextWithoutWarnings;
-    }
-
-    return {
-      router: context
-    };
-  }
-
   render() {
     return (
       <RouterContext.Consumer>
@@ -122,6 +78,50 @@ class Route extends React.Component {
       </RouterContext.Consumer>
     );
   }
+}
+
+// TODO: Remove this
+if (!React.createContext) {
+  Route.contextTypes = {
+    router: PropTypes.object.isRequired
+  };
+
+  Route.childContextTypes = {
+    router: PropTypes.object.isRequired
+  };
+
+  Route.prototype.getChildContext = function() {
+    invariant(
+      this.context.router,
+      "You should not use <Route> outside a <Router>"
+    );
+
+    let parentContext = this.context.router;
+    if (__DEV__) {
+      parentContext = parentContext._withoutWarnings;
+    }
+
+    const context = getContext(this.props, parentContext);
+    if (__DEV__) {
+      const contextWithoutWarnings = { ...context };
+
+      Object.keys(context).forEach(key => {
+        warnAboutGettingProperty(
+          context,
+          key,
+          `You should not be using this.context.router.${key} directly. It is private API ` +
+            "for internal use only and is subject to change at any time. Instead, use " +
+            "a <Route> or withRouter() to access the current location, match, etc."
+        );
+      });
+
+      context._withoutWarnings = contextWithoutWarnings;
+    }
+
+    return {
+      router: context
+    };
+  };
 }
 
 if (__DEV__) {

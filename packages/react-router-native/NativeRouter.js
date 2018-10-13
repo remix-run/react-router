@@ -1,21 +1,15 @@
 import React from "react";
-import { MemoryRouter } from "react-router";
 import { Alert } from "react-native";
+import { MemoryRouter } from "react-router";
 import PropTypes from "prop-types";
 
 /**
  * The public API for a <Router> designed for React Native. Gets
  * user confirmations via Alert by default.
  */
-const NativeRouter = props => <MemoryRouter {...props} />;
-
-NativeRouter.propTypes = {
-  initialEntries: PropTypes.array,
-  initialIndex: PropTypes.number,
-  getUserConfirmation: PropTypes.func,
-  keyLength: PropTypes.number,
-  children: PropTypes.node
-};
+function NativeRouter(props) {
+  return <MemoryRouter {...props} />;
+}
 
 NativeRouter.defaultProps = {
   getUserConfirmation: (message, callback) => {
@@ -25,5 +19,17 @@ NativeRouter.defaultProps = {
     ]);
   }
 };
+
+const __DEV__ = true; // TODO
+
+if (__DEV__) {
+  NativeRouter.propTypes = {
+    initialEntries: PropTypes.array,
+    initialIndex: PropTypes.number,
+    getUserConfirmation: PropTypes.func,
+    keyLength: PropTypes.number,
+    children: PropTypes.node
+  };
+}
 
 export default NativeRouter;

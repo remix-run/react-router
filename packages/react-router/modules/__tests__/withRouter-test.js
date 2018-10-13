@@ -3,6 +3,8 @@ import ReactDOM from "react-dom";
 
 import { MemoryRouter, StaticRouter, Route, withRouter } from "react-router";
 
+import renderStrict from "./utils/renderStrict";
+
 describe("withRouter", () => {
   const node = document.createElement("div");
 
@@ -18,7 +20,7 @@ describe("withRouter", () => {
       return null;
     });
 
-    ReactDOM.render(
+    renderStrict(
       <MemoryRouter>
         <PropsChecker />
       </MemoryRouter>,
@@ -39,7 +41,7 @@ describe("withRouter", () => {
       return null;
     });
 
-    ReactDOM.render(
+    renderStrict(
       <MemoryRouter initialEntries={["/bubblegum"]}>
         <Route
           path="/:flavor"
@@ -65,7 +67,7 @@ describe("withRouter", () => {
       return null;
     });
 
-    ReactDOM.render(
+    renderStrict(
       <MemoryRouter initialEntries={["/somepath"]}>
         <Route
           path="/no-match"
@@ -94,7 +96,7 @@ describe("withRouter", () => {
 
       const context = {};
 
-      ReactDOM.render(
+      renderStrict(
         <StaticRouter context={context}>
           <Route component={PropsChecker} />
         </StaticRouter>,
@@ -122,7 +124,7 @@ describe("withRouter", () => {
     const Component = withRouter(WrappedComponent);
 
     let ref;
-    ReactDOM.render(
+    renderStrict(
       <MemoryRouter initialEntries={["/bubblegum"]}>
         <Route
           path="/bubblegum"

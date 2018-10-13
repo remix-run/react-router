@@ -3,6 +3,8 @@ import ReactDOM from "react-dom";
 
 import { HashRouter } from "react-router-dom";
 
+import renderStrict from "./utils/renderStrict";
+
 describe("A <HashRouter>", () => {
   const node = document.createElement("div");
 
@@ -15,7 +17,7 @@ describe("A <HashRouter>", () => {
       spyOn(console, "error");
 
       const history = {};
-      ReactDOM.render(<HashRouter history={history} />, node);
+      renderStrict(<HashRouter history={history} />, node);
 
       expect(console.error).toHaveBeenCalledWith(
         expect.stringContaining("<HashRouter> ignores the history prop")

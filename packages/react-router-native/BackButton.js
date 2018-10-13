@@ -1,15 +1,16 @@
 import React from "react";
-import PropTypes from "prop-types";
 import { BackHandler } from "react-native";
 
+import { __RouterContext as RouterContext } from "react-router";
+
 class BackButton extends React.Component {
-  static contextTypes = {
-    router: PropTypes.shape({
-      history: PropTypes.shape({
-        goBack: PropTypes.func.isRequired,
-        index: PropTypes.number.isRequired
-      }).isRequired
-    }).isRequired
+  handleBack = () => {
+    if (this.history.index === 0) {
+      return false; // home screen
+    } else {
+      this.history.goBack();
+      return true;
+    }
   };
 
   componentDidMount() {
@@ -20,19 +21,15 @@ class BackButton extends React.Component {
     BackHandler.removeEventListener("hardwareBackPress", this.handleBack);
   }
 
-  handleBack = () => {
-    const { history } = this.context.router;
-
-    if (history.index === 0) {
-      return false; // home screen
-    } else {
-      history.goBack();
-      return true;
-    }
-  };
-
   render() {
-    return this.props.children || null;
+    return (
+      <RouterContext.Consumer>
+        {context => {
+          this.history = context.history;
+          return this.props.children || null;
+        }}
+      </RouterContext.Consumer>
+    );
   }
 }
 

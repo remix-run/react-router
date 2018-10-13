@@ -3,6 +3,8 @@ import ReactDOM from "react-dom";
 
 import { MemoryRouter, Route, Switch } from "react-router";
 
+import renderStrict from "./utils/renderStrict";
+
 describe("A <Switch>", () => {
   const node = document.createElement("div");
 
@@ -25,7 +27,7 @@ describe("A <Switch>", () => {
       }
     }
 
-    ReactDOM.render(
+    renderStrict(
       <MemoryRouter initialEntries={["/one"]}>
         <Switch>
           <Route path="/one" component={MountCounter} />

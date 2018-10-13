@@ -3,6 +3,8 @@ import ReactDOM from "react-dom";
 
 import { MemoryRouter, Route } from "react-router";
 
+import renderStrict from "./utils/renderStrict";
+
 describe("Integration Tests", () => {
   const node = document.createElement("div");
 
@@ -14,7 +16,7 @@ describe("Integration Tests", () => {
     const TEXT1 = "Ms. Tripp";
     const TEXT2 = "Mrs. Schiffman";
 
-    ReactDOM.render(
+    renderStrict(
       <MemoryRouter initialEntries={["/nested"]}>
         <Route
           path="/"
@@ -37,7 +39,7 @@ describe("Integration Tests", () => {
     const TEXT1 = "Ms. Tripp";
     const TEXT2 = "Mrs. Schiffman";
 
-    ReactDOM.render(
+    renderStrict(
       <MemoryRouter initialEntries={["/"]}>
         <Route
           path="/"
@@ -60,7 +62,7 @@ describe("Integration Tests", () => {
     const TEXT1 = "Mrs. Schiffman";
     const TEXT2 = "Mrs. Burton";
 
-    ReactDOM.render(
+    renderStrict(
       <MemoryRouter initialEntries={["/double"]}>
         <div>
           <aside>

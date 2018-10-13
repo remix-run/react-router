@@ -63,13 +63,13 @@
     "eslint": "^4.19.1",
     "eslint-plugin-import": "^2.12.0",
     "eslint-plugin-react": "^7.9.1",
+    "fbjs": "^1.0.0",
     "gzip-size": "^4.1.0",
     "jest": "^23.1.0",
     "pretty-bytes": "^5.0.0",
     "raf": "^3.4.0",
-    "react": "^16.4.0",
-    "react-addons-test-utils": "^15.6.2",
-    "react-dom": "^16.4.0",
+    "react": "^16.5.2",
+    "react-dom": "^16.5.2",
     "rollup": "^0.66.6",
     "rollup-plugin-alias": "^1.4.0",
     "rollup-plugin-babel": "^3.0.4",
@@ -88,10 +88,18 @@
       "__DEV__": true
     },
     "moduleNameMapper": {
+      "^react$": "<rootDir>/../../react-builds/react.js",
+      "^react-dom$": "<rootDir>/../../react-builds/react-dom.js",
       "^react-router-dom$": "<rootDir>/cjs/react-router-dom.js"
     },
+    "modulePaths": [
+      "<rootDir>/node_modules"
+    ],
     "setupFiles": [
       "raf/polyfill"
+    ],
+    "testMatch": [
+      "**/__tests__/**/*-test.js"
     ],
     "testURL": "http://localhost/"
   },

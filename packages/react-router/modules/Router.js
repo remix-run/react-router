@@ -22,36 +22,6 @@ class Router extends React.Component {
     return { path: "/", url: "/", params: {}, isExact: pathname === "/" };
   }
 
-  // TODO: Remove this
-  static childContextTypes = {
-    router: PropTypes.object.isRequired
-  };
-
-  // TODO: Remove this
-  getChildContext() {
-    const context = getContext(this.props, this.state);
-
-    if (__DEV__) {
-      const contextWithoutWarnings = { ...context };
-
-      Object.keys(context).forEach(key => {
-        warnAboutGettingProperty(
-          context,
-          key,
-          `You should not be using this.context.router.${key} directly. It is private API ` +
-            "for internal use only and is subject to change at any time. Instead, use " +
-            "a <Route> or withRouter() to access the current location, match, etc."
-        );
-      });
-
-      context._withoutWarnings = contextWithoutWarnings;
-    }
-
-    return {
-      router: context
-    };
-  }
-
   constructor(props) {
     super(props);
 
@@ -78,6 +48,37 @@ class Router extends React.Component {
       />
     );
   }
+}
+
+// TODO: Remove this
+if (!React.createContext) {
+  Router.childContextTypes = {
+    router: PropTypes.object.isRequired
+  };
+
+  Router.prototype.getChildContext = function() {
+    const context = getContext(this.props, this.state);
+
+    if (__DEV__) {
+      const contextWithoutWarnings = { ...context };
+
+      Object.keys(context).forEach(key => {
+        warnAboutGettingProperty(
+          context,
+          key,
+          `You should not be using this.context.router.${key} directly. It is private API ` +
+            "for internal use only and is subject to change at any time. Instead, use " +
+            "a <Route> or withRouter() to access the current location, match, etc."
+        );
+      });
+
+      context._withoutWarnings = contextWithoutWarnings;
+    }
+
+    return {
+      router: context
+    };
+  };
 }
 
 if (__DEV__) {

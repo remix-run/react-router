@@ -3,6 +3,8 @@ import ReactDOM from "react-dom";
 
 import { MemoryRouter, NavLink, withRouter } from "react-router-dom";
 
+import renderStrict from "./utils/renderStrict";
+
 describe("A <NavLink>", () => {
   const node = document.createElement("div");
 
@@ -12,7 +14,7 @@ describe("A <NavLink>", () => {
 
   describe("when active", () => {
     it("applies its default activeClassName", () => {
-      ReactDOM.render(
+      renderStrict(
         <MemoryRouter initialEntries={["/pizza"]}>
           <NavLink to="/pizza">Pizza!</NavLink>
         </MemoryRouter>,
@@ -25,7 +27,7 @@ describe("A <NavLink>", () => {
     });
 
     it("applies a custom activeClassName instead of the default", () => {
-      ReactDOM.render(
+      renderStrict(
         <MemoryRouter initialEntries={["/pizza"]}>
           <NavLink to="/pizza" activeClassName="selected">
             Pizza!
@@ -44,7 +46,7 @@ describe("A <NavLink>", () => {
       const defaultStyle = { color: "black" };
       const activeStyle = { color: "red" };
 
-      ReactDOM.render(
+      renderStrict(
         <MemoryRouter initialEntries={["/pizza"]}>
           <NavLink to="/pizza" style={defaultStyle} activeStyle={activeStyle}>
             Pizza!
@@ -59,7 +61,7 @@ describe("A <NavLink>", () => {
     });
 
     it("applies the default aria-current", () => {
-      ReactDOM.render(
+      renderStrict(
         <MemoryRouter initialEntries={["/pizza"]}>
           <NavLink to="/pizza">Pizza!</NavLink>
         </MemoryRouter>,
@@ -72,7 +74,7 @@ describe("A <NavLink>", () => {
     });
 
     it("applies a custom aria-current instead of the default", () => {
-      ReactDOM.render(
+      renderStrict(
         <MemoryRouter initialEntries={["/pizza"]}>
           <NavLink to="/pizza" aria-current="true">
             Pizza!
@@ -88,7 +90,7 @@ describe("A <NavLink>", () => {
 
     it("handles locations without a pathname", () => {
       expect(() => {
-        ReactDOM.render(
+        renderStrict(
           <MemoryRouter initialEntries={["/pizza"]}>
             <NavLink to={{ search: "foo=bar" }}>Pizza!</NavLink>
           </MemoryRouter>,
@@ -98,7 +100,7 @@ describe("A <NavLink>", () => {
     });
 
     it("it automatically escapes special characters in the path", () => {
-      ReactDOM.render(
+      renderStrict(
         <MemoryRouter initialEntries={["/pizza (1)"]}>
           <NavLink to="/pizza (1)">Pizza!</NavLink>
         </MemoryRouter>,
@@ -121,7 +123,7 @@ describe("A <NavLink>", () => {
       const Component = withRouter(WrappedComponent);
 
       let ref;
-      ReactDOM.render(
+      renderStrict(
         <MemoryRouter initialEntries={["/pizza"]}>
           <NavLink to="/pizza">
             <Component wrappedComponentRef={r => (ref = r)} />
@@ -136,7 +138,7 @@ describe("A <NavLink>", () => {
 
   describe("when inactive", () => {
     it("does not apply its default activeClassName", () => {
-      ReactDOM.render(
+      renderStrict(
         <MemoryRouter initialEntries={["/pizza"]}>
           <NavLink to="/salad">Salad?</NavLink>
         </MemoryRouter>,
@@ -149,7 +151,7 @@ describe("A <NavLink>", () => {
     });
 
     it("does not apply its activeClassName", () => {
-      ReactDOM.render(
+      renderStrict(
         <MemoryRouter initialEntries={["/pizza"]}>
           <NavLink to="/salad" activeClassName="selected">
             Salad?
@@ -168,7 +170,7 @@ describe("A <NavLink>", () => {
       const defaultStyle = { color: "black" };
       const activeStyle = { color: "red" };
 
-      ReactDOM.render(
+      renderStrict(
         <MemoryRouter initialEntries={["/pizza"]}>
           <NavLink to="/salad" style={defaultStyle} activeStyle={activeStyle}>
             Salad?
@@ -183,7 +185,7 @@ describe("A <NavLink>", () => {
     });
 
     it("does not apply an aria-current value if no override value is given", () => {
-      ReactDOM.render(
+      renderStrict(
         <MemoryRouter initialEntries={["/pizza"]}>
           <NavLink to="/salad" activeClassName="selected" aria-current="page">
             Pizza!
@@ -198,7 +200,7 @@ describe("A <NavLink>", () => {
     });
 
     it("does not apply an aria-current value if an override value is given", () => {
-      ReactDOM.render(
+      renderStrict(
         <MemoryRouter initialEntries={["/pizza"]}>
           <NavLink to="/salad" activeClassName="selected">
             Pizza!
@@ -222,7 +224,7 @@ describe("A <NavLink>", () => {
       const Component = withRouter(WrappedComponent);
 
       let ref;
-      ReactDOM.render(
+      renderStrict(
         <MemoryRouter initialEntries={["/pizza"]}>
           <NavLink exact to="/salad">
             <Component wrappedComponentRef={r => (ref = r)} />
@@ -237,7 +239,7 @@ describe("A <NavLink>", () => {
 
   describe("isActive", () => {
     it("applies active default props when isActive returns true", () => {
-      ReactDOM.render(
+      renderStrict(
         <MemoryRouter initialEntries={["/pizza"]}>
           <NavLink to="/pizza" isActive={() => true}>
             Pizza!
@@ -252,7 +254,7 @@ describe("A <NavLink>", () => {
     });
 
     it("applies activeClassName when isActive returns true", () => {
-      ReactDOM.render(
+      renderStrict(
         <MemoryRouter initialEntries={["/pizza"]}>
           <NavLink to="/pizza" activeClassName="selected" isActive={() => true}>
             Pizza!
@@ -268,7 +270,7 @@ describe("A <NavLink>", () => {
     });
 
     it("does not apply default activeClassName when isActive returns false", () => {
-      ReactDOM.render(
+      renderStrict(
         <MemoryRouter initialEntries={["/pizza"]}>
           <NavLink to="/pizza" isActive={() => false}>
             Pizza!
@@ -283,7 +285,7 @@ describe("A <NavLink>", () => {
     });
 
     it("does not apply custom activeClassName when isActive returns false", () => {
-      ReactDOM.render(
+      renderStrict(
         <MemoryRouter initialEntries={["/pizza"]}>
           <NavLink
             to="/pizza"
@@ -304,7 +306,7 @@ describe("A <NavLink>", () => {
   });
 
   it("does not do exact matching by default", () => {
-    ReactDOM.render(
+    renderStrict(
       <MemoryRouter initialEntries={["/pizza/anchovies"]}>
         <NavLink to="/pizza" activeClassName="active">
           Pizza!
@@ -320,7 +322,7 @@ describe("A <NavLink>", () => {
 
   describe("with `exact=true`", () => {
     it("applies default activeClassName for exact matches", () => {
-      ReactDOM.render(
+      renderStrict(
         <MemoryRouter initialEntries={["/pizza"]}>
           <NavLink exact to="/pizza">
             Pizza!
@@ -335,7 +337,7 @@ describe("A <NavLink>", () => {
     });
 
     it("does not apply default activeClassName for partial matches", () => {
-      ReactDOM.render(
+      renderStrict(
         <MemoryRouter initialEntries={["/pizza/anchovies"]}>
           <NavLink exact to="/pizza">
             Pizza!
@@ -350,7 +352,7 @@ describe("A <NavLink>", () => {
     });
 
     it("applies custom activeClassName for exact matches", () => {
-      ReactDOM.render(
+      renderStrict(
         <MemoryRouter initialEntries={["/pizza"]}>
           <NavLink exact to="/pizza" activeClassName="selected">
             Pizza!
@@ -365,7 +367,7 @@ describe("A <NavLink>", () => {
     });
 
     it("applies custom activeClassName for partial matches", () => {
-      ReactDOM.render(
+      renderStrict(
         <MemoryRouter initialEntries={["/pizza/anchovies"]}>
           <NavLink exact to="/pizza" activeClassName="selected">
             Pizza!
@@ -381,7 +383,7 @@ describe("A <NavLink>", () => {
   });
 
   it("does not do strict matching by default", () => {
-    ReactDOM.render(
+    renderStrict(
       <MemoryRouter initialEntries={["/pizza"]}>
         <NavLink to="/pizza/">Pizza!</NavLink>
       </MemoryRouter>,
@@ -395,7 +397,7 @@ describe("A <NavLink>", () => {
 
   describe("with `strict=true`", () => {
     it("applies default activeClassName for strict matches", () => {
-      ReactDOM.render(
+      renderStrict(
         <MemoryRouter initialEntries={["/pizza/"]}>
           <NavLink strict to="/pizza/">
             Pizza!
@@ -410,7 +412,7 @@ describe("A <NavLink>", () => {
     });
 
     it("does not apply default activeClassName for non-strict matches", () => {
-      ReactDOM.render(
+      renderStrict(
         <MemoryRouter initialEntries={["/pizza"]}>
           <NavLink strict to="/pizza/">
             Pizza!
@@ -425,7 +427,7 @@ describe("A <NavLink>", () => {
     });
 
     it("applies custom activeClassName for strict matches", () => {
-      ReactDOM.render(
+      renderStrict(
         <MemoryRouter initialEntries={["/pizza/"]}>
           <NavLink strict to="/pizza/" activeClassName="selected">
             Pizza!
@@ -440,7 +442,7 @@ describe("A <NavLink>", () => {
     });
 
     it("does not apply custom activeClassName for non-strict matches", () => {
-      ReactDOM.render(
+      renderStrict(
         <MemoryRouter initialEntries={["/pizza"]}>
           <NavLink strict to="/pizza/" activeClassName="selected">
             Pizza!
@@ -457,7 +459,7 @@ describe("A <NavLink>", () => {
 
   describe("the `location` prop", () => {
     it("overrides the current location", () => {
-      ReactDOM.render(
+      renderStrict(
         <MemoryRouter initialEntries={["/pizza"]}>
           <NavLink to="/pasta" location={{ pathname: "/pasta" }}>
             Pasta!
@@ -472,7 +474,7 @@ describe("A <NavLink>", () => {
     });
 
     it("is not overwritten by the current location", () => {
-      ReactDOM.render(
+      renderStrict(
         <MemoryRouter initialEntries={["/pasta"]}>
           <NavLink to="/pasta" location={{ pathname: "/pizza" }}>
             Pasta!

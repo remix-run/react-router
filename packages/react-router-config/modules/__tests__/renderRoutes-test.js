@@ -1,10 +1,12 @@
 import React from "react";
 import ReactDOM from "react-dom";
-import ReactDOMServer from "react-dom/server";
 import createHistory from "history/createMemoryHistory";
 
 import { Router, StaticRouter } from "react-router";
 import { renderRoutes } from "react-router-config";
+
+import renderStrict from "./utils/renderStrict";
+import renderToStringStrict from "./utils/renderToStringStrict";
 
 describe("renderRoutes", () => {
   let renderedRoutes;
@@ -26,7 +28,7 @@ describe("renderRoutes", () => {
     };
     const routes = [routeToMatch];
 
-    ReactDOMServer.renderToString(
+    renderToStringStrict(
       <StaticRouter location="/path" context={{}}>
         {renderRoutes(routes)}
       </StaticRouter>
@@ -42,7 +44,7 @@ describe("renderRoutes", () => {
     const routes = [routeToMatch];
     const extraProps = { anExtraProp: "anExtraPropValue" };
 
-    ReactDOMServer.renderToString(
+    renderToStringStrict(
       <StaticRouter location="/path" context={{}}>
         {renderRoutes(routes, extraProps)}
       </StaticRouter>
@@ -64,7 +66,7 @@ describe("renderRoutes", () => {
     ];
     const extraProps = { anExtraProp: "anExtraPropValue" };
 
-    ReactDOMServer.renderToString(
+    renderToStringStrict(
       <StaticRouter location="/" context={{}}>
         {renderRoutes(routes, extraProps)}
       </StaticRouter>
@@ -86,7 +88,7 @@ describe("renderRoutes", () => {
         }
       ];
 
-      ReactDOMServer.renderToString(
+      renderToStringStrict(
         <StaticRouter location="/" context={{}}>
           {renderRoutes(routes)}
         </StaticRouter>
@@ -117,7 +119,7 @@ describe("renderRoutes", () => {
         }
       ];
 
-      ReactDOMServer.renderToString(
+      renderToStringStrict(
         <StaticRouter location="/" context={{}}>
           {renderRoutes(routes)}
         </StaticRouter>
@@ -171,7 +173,7 @@ describe("renderRoutes", () => {
         initialEntries: ["/one"]
       });
 
-      ReactDOM.render(
+      renderStrict(
         <Router history={history}>{renderRoutes(routes)}</Router>,
         node
       );
@@ -209,7 +211,7 @@ describe("renderRoutes", () => {
         }
       ];
 
-      ReactDOMServer.renderToString(
+      renderToStringStrict(
         <StaticRouter location="/two" context={{}}>
           {renderRoutes(routes, {}, { location: { pathname: "/one" } })}
         </StaticRouter>
@@ -241,7 +243,7 @@ describe("renderRoutes", () => {
         routeToMatch
       ];
 
-      ReactDOMServer.renderToString(
+      renderToStringStrict(
         <StaticRouter location="/path/child" context={{}}>
           {renderRoutes(routes)}
         </StaticRouter>
@@ -268,12 +270,12 @@ describe("renderRoutes", () => {
         }
       ];
 
-      ReactDOMServer.renderToString(
+      renderToStringStrict(
         <StaticRouter location="/path/child" context={{}}>
           {renderRoutes(routes)}
         </StaticRouter>
       );
-      ReactDOMServer.renderToString(
+      renderToStringStrict(
         <StaticRouter location="/" context={{}}>
           {renderRoutes(routes)}
         </StaticRouter>
@@ -303,12 +305,12 @@ describe("renderRoutes", () => {
         }
       ];
 
-      ReactDOMServer.renderToString(
+      renderToStringStrict(
         <StaticRouter location="/path/child/grandchild" context={{}}>
           {renderRoutes(routes)}
         </StaticRouter>
       );
-      ReactDOMServer.renderToString(
+      renderToStringStrict(
         <StaticRouter location="/path" context={{}}>
           {renderRoutes(routes)}
         </StaticRouter>
@@ -339,7 +341,7 @@ describe("renderRoutes", () => {
         routeToMatch
       ];
 
-      ReactDOMServer.renderToString(
+      renderToStringStrict(
         <StaticRouter location="/path/" context={{}}>
           {renderRoutes(routes)}
         </StaticRouter>
@@ -366,17 +368,17 @@ describe("renderRoutes", () => {
         }
       ];
 
-      ReactDOMServer.renderToString(
+      renderToStringStrict(
         <StaticRouter location="/path/child" context={{}}>
           {renderRoutes(routes)}
         </StaticRouter>
       );
-      ReactDOMServer.renderToString(
+      renderToStringStrict(
         <StaticRouter location="/" context={{}}>
           {renderRoutes(routes)}
         </StaticRouter>
       );
-      ReactDOMServer.renderToString(
+      renderToStringStrict(
         <StaticRouter location="/path" context={{}}>
           {renderRoutes(routes)}
         </StaticRouter>
@@ -418,16 +420,18 @@ describe("renderRoutes", () => {
         }
       ];
 
-      ReactDOMServer.renderToString(
+      renderToStringStrict(
         <StaticRouter location="/path/child/grandchild" context={{}}>
           {renderRoutes(routes)}
         </StaticRouter>
       );
-      ReactDOMServer.renderToString(
+
+      renderToStringStrict(
         <StaticRouter location="/path/" context={{}}>
           {renderRoutes(routes)}
         </StaticRouter>
       );
+
       expect(renderedRoutes.length).toEqual(2);
       expect(renderedRoutes[0]).toEqual(routes[1]);
       expect(renderedRoutes[1]).toEqual(routes[1].routes[1]);
@@ -442,11 +446,12 @@ describe("renderRoutes", () => {
       }
     ];
 
-    ReactDOMServer.renderToString(
+    renderToStringStrict(
       <StaticRouter location="/path" context={{}}>
         {renderRoutes(routes)}
       </StaticRouter>
     );
+
     expect(renderedRoutes.length).toEqual(1);
     expect(renderedRoutes[0]).toEqual(routes[0]);
   });

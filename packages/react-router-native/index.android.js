@@ -8,9 +8,9 @@ import {
   DeepLinking,
   BackButton,
   Prompt
-} from "./main";
+} from "react-router-native";
 
-export default class ReactRouterNative extends React.Component {
+class ReactRouterNative extends React.Component {
   render() {
     return (
       <NativeRouter>
@@ -72,3 +72,5 @@ const styles = StyleSheet.create({
 });
 
 AppRegistry.registerComponent("ReactRouterNative", () => ReactRouterNative);
+
+export default ReactRouterNative;

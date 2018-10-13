@@ -1,17 +1,15 @@
-import React, { Component } from "react";
-import PropTypes from "prop-types";
+import React from "react";
 import { Linking } from "react-native";
 
-const regex = /.*?:\/\//g;
+import { __RouterContext as RouterContext } from "react-router";
 
-class DeepLinking extends Component {
-  static contextTypes = {
-    router: PropTypes.shape({
-      history: PropTypes.shape({
-        push: PropTypes.func.isRequired
-      }).isRequired
-    }).isRequired
-  };
+const protocolAndSlashes = /.*?:\/\//g;
+
+class DeepLinking extends React.Component {
+  push(url) {
+    const pathname = url.replace(protocolAndSlashes, "");
+    this.history.push(pathname);
+  }
 
   async componentDidMount() {
     const url = await Linking.getInitialURL();
@@ -27,13 +25,15 @@ class DeepLinking extends Component {
     this.push(e.url);
   };
 
-  push = url => {
-    const pathname = url.replace(regex, "");
-    this.context.router.history.push(pathname);
-  };
-
   render() {
-    return this.props.children || null;
+    return (
+      <RouterContext.Consumer>
+        {context => {
+          this.history = context.history;
+          return this.props.children || null;
+        }}
+      </RouterContext.Consumer>
+    );
   }
 }
 

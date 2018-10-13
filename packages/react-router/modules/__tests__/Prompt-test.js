@@ -4,6 +4,8 @@ import createMemoryHistory from "history/createMemoryHistory";
 
 import { MemoryRouter, Prompt, Router } from "react-router";
 
+import renderStrict from "./utils/renderStrict";
+
 describe("A <Prompt>", () => {
   const node = document.createElement("div");
 
@@ -15,7 +17,7 @@ describe("A <Prompt>", () => {
     it("logs a warning to the console", () => {
       spyOn(console, "error");
 
-      ReactDOM.render(
+      renderStrict(
         <MemoryRouter>
           <Prompt />
         </MemoryRouter>,
@@ -39,7 +41,7 @@ describe("A <Prompt>", () => {
       getUserConfirmation: getUserConfirmation
     });
 
-    ReactDOM.render(
+    renderStrict(
       <Router history={history}>
         <Prompt message="Are you sure?" />
       </Router>,
@@ -64,7 +66,7 @@ describe("A <Prompt>", () => {
         getUserConfirmation: getUserConfirmation
       });
 
-      ReactDOM.render(
+      renderStrict(
         <Router history={history}>
           <Prompt message="Are you sure?" when={false} />
         </Router>,
