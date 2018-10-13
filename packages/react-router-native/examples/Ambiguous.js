@@ -1,32 +1,40 @@
-import React from 'react'
-import { StyleSheet, Text, AppRegistry, View } from 'react-native'
-import { NativeRouter, Route, Link, Switch } from 'react-router-native'
+import React from "react";
+import { StyleSheet, Text, AppRegistry, View } from "react-native";
 
-const About = () => <Text style={styles.header}>About</Text>
-const Company = () => <Text style={styles.header}>Company</Text>
-const User = ({ match }) => (
-  <Text style={styles.header}>User: {match.params.user}</Text>
-)
+import { NativeRouter, Route, Link, Switch } from "react-router-native";
 
-const AmbiguousExample = () => (
-  <NativeRouter>
-    <View style={styles.container}>
-      <View>
-        <Link to="/about" underlayColor='#f0f4f7'>
-          <Text>About Us (static)</Text>
-        </Link>
-        <Link to="/company" underlayColor='#f0f4f7'>
-          <Text>Company (static)</Text>
-        </Link>
-        <Link to="/kim" underlayColor='#f0f4f7'>
-          <Text>Kim (dynamic)</Text>
-        </Link>
-        <Link to="/chris" underlayColor='#f0f4f7'>
-          <Text>Chris (dynamic)</Text>
-        </Link>
-      </View>
+function About() {
+  return <Text style={styles.header}>About</Text>;
+}
 
-      {/*
+function Company() {
+  return <Text style={styles.header}>Company</Text>;
+}
+
+function User({ match }) {
+  return <Text style={styles.header}>User: {match.params.user}</Text>;
+}
+
+function AmbiguousExample() {
+  return (
+    <NativeRouter>
+      <View style={styles.container}>
+        <View>
+          <Link to="/about" underlayColor="#f0f4f7">
+            <Text>About Us (static)</Text>
+          </Link>
+          <Link to="/company" underlayColor="#f0f4f7">
+            <Text>Company (static)</Text>
+          </Link>
+          <Link to="/kim" underlayColor="#f0f4f7">
+            <Text>Kim (dynamic)</Text>
+          </Link>
+          <Link to="/chris" underlayColor="#f0f4f7">
+            <Text>Chris (dynamic)</Text>
+          </Link>
+        </View>
+
+        {/*
           Sometimes you want to have a whitelist of static paths
           like "/about" and "/company" but also allow for dynamic
           patterns like "/:user". The problem is that "/about"
@@ -39,23 +47,24 @@ const AmbiguousExample = () => (
           "/about" to "/:user", just wrap your <Route>s in a
           <Switch>. It will render the first one that matches.
       */}
-      <Switch>
-        <Route path="/about" component={About}/>
-        <Route path="/company" component={Company}/>
-        <Route path="/:user" component={User}/>
-      </Switch>
-    </View>
-  </NativeRouter>
-)
+        <Switch>
+          <Route path="/about" component={About} />
+          <Route path="/company" component={Company} />
+          <Route path="/:user" component={User} />
+        </Switch>
+      </View>
+    </NativeRouter>
+  );
+}
 
 const styles = StyleSheet.create({
   container: {
     marginTop: 25,
-    padding: 10,
+    padding: 10
   },
   header: {
-    fontSize: 20,
-  },
-})
+    fontSize: 20
+  }
+});
 
-export default AmbiguousExample
+export default AmbiguousExample;

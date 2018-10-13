@@ -1,139 +1,160 @@
-import React, { Component } from 'react'
+import React, { Component } from "react";
 import {
   StyleSheet,
   Text,
   View,
   AppRegistry,
   TouchableHighlight
-} from 'react-native'
+} from "react-native";
 
-import { NativeRouter, Route, Link, Redirect, withRouter } from 'react-router-native'
+import {
+  NativeRouter,
+  Route,
+  Link,
+  Redirect,
+  withRouter
+} from "react-router-native";
 
-const AuthExample = () => (
-  <NativeRouter>
-    <View style={styles.container}>
-      <AuthButton/>
-      <View style={styles.nav}>
-        <Link
-          to="/public"
-          style={styles.navItem}
-          underlayColor='#f0f4f7'>
+function AuthExample() {
+  return (
+    <NativeRouter>
+      <View style={styles.container}>
+        <AuthButton />
+        <View style={styles.nav}>
+          <Link to="/public" style={styles.navItem} underlayColor="#f0f4f7">
             <Text>Public Page</Text>
-        </Link>
-        <Link
-          to="/protected"
-          style={styles.navItem}
-          underlayColor='#f0f4f7'>
+          </Link>
+          <Link to="/protected" style={styles.navItem} underlayColor="#f0f4f7">
             <Text>Protected Page</Text>
-        </Link>
-      </View>
+          </Link>
+        </View>
 
-      <Route path="/public" component={Public}/>
-      <Route path="/login" component={Login}/>
-      <PrivateRoute path="/protected" component={Protected}/>
-    </View>
-  </NativeRouter>
-)
+        <Route path="/public" component={Public} />
+        <Route path="/login" component={Login} />
+        <PrivateRoute path="/protected" component={Protected} />
+      </View>
+    </NativeRouter>
+  );
+}
 
 const fakeAuth = {
   isAuthenticated: false,
   authenticate(cb) {
-    this.isAuthenticated = true
-    setTimeout(cb, 100) // fake async
+    this.isAuthenticated = true;
+    setTimeout(cb, 100); // fake async
   },
   signout(cb) {
-    this.isAuthenticated = false
-    setTimeout(cb, 100)
+    this.isAuthenticated = false;
+    setTimeout(cb, 100);
   }
+};
+
+const AuthButton = withRouter(
+  ({ history }) =>
+    fakeAuth.isAuthenticated ? (
+      <View>
+        <Text>Welcome!</Text>
+        <TouchableHighlight
+          style={styles.btn}
+          underlayColor="#f0f4f7"
+          onPress={() => {
+            fakeAuth.signout(() => history.push("/"));
+          }}
+        >
+          <Text>Sign out</Text>
+        </TouchableHighlight>
+      </View>
+    ) : (
+      <Text>You are not logged in.</Text>
+    )
+);
+
+function PrivateRoute({ component: Component, ...rest }) {
+  return (
+    <Route
+      {...rest}
+      render={props =>
+        fakeAuth.isAuthenticated ? (
+          <Component {...props} />
+        ) : (
+          <Redirect
+            to={{
+              pathname: "/login",
+              state: { from: props.location }
+            }}
+          />
+        )
+      }
+    />
+  );
 }
 
-const AuthButton = withRouter(({ history }) => (
-  fakeAuth.isAuthenticated ? (
-    <View>
-      <Text>Welcome!</Text>
-      <TouchableHighlight style={styles.btn} underlayColor='#f0f4f7' onPress={() => {
-        fakeAuth.signout(() => history.push('/'))
-      }}><Text>Sign out</Text></TouchableHighlight>
-    </View>
-  ) : (
-    <Text>You are not logged in.</Text>
-  )
-))
+function Public() {
+  return <Text style={styles.header}>Public</Text>;
+}
 
-const PrivateRoute = ({ component: Component, ...rest }) => (
-  <Route {...rest} render={props => (
-    fakeAuth.isAuthenticated ? (
-      <Component {...props}/>
-    ) : (
-      <Redirect to={{
-        pathname: '/login',
-        state: { from: props.location }
-      }}/>
-    )
-  )}/>
-)
-
-const Public = () => <Text style={styles.header}>Public</Text>
-const Protected = () => <Text style={styles.header}>Protected</Text>
+function Protected() {
+  return <Text style={styles.header}>Protected</Text>;
+}
 
 class Login extends Component {
-  state = {
-    redirectToReferrer: false
-  }
+  state = { redirectToReferrer: false };
 
   login = () => {
     fakeAuth.authenticate(() => {
-      this.setState({ redirectToReferrer: true })
-    })
-  }
+      this.setState({ redirectToReferrer: true });
+    });
+  };
 
   render() {
-    const { from } = this.props.location.state || { from: { pathname: '/' } }
-    const { redirectToReferrer } = this.state
+    const { from } = this.props.location.state || { from: { pathname: "/" } };
+    const { redirectToReferrer } = this.state;
 
     if (redirectToReferrer) {
-      return (
-        <Redirect to={from}/>
-      )
+      return <Redirect to={from} />;
     }
 
     return (
       <View>
         <Text>You must log in to view the page at {from.pathname}</Text>
 
-        <TouchableHighlight style={styles.btn} underlayColor='#f0f4f7' onPress={this.login}>
+        <TouchableHighlight
+          style={styles.btn}
+          underlayColor="#f0f4f7"
+          onPress={this.login}
+        >
           <Text>Log in</Text>
         </TouchableHighlight>
       </View>
-    )
+    );
   }
 }
 
 const styles = StyleSheet.create({
   container: {
     marginTop: 25,
-    padding: 10,
+    padding: 10
   },
   header: {
-    fontSize: 20,
+    fontSize: 20
   },
   nav: {
-    flexDirection: 'row',
-    justifyContent: 'space-around'
+    flexDirection: "row",
+    justifyContent: "space-around"
   },
   navItem: {
     flex: 1,
-    alignItems: 'center',
-    padding: 10,
+    alignItems: "center",
+    padding: 10
   },
   btn: {
     width: 200,
-    backgroundColor: '#E94949',
-    justifyContent: 'center',
-    alignItems: 'center',
+    backgroundColor: "#E94949",
+    justifyContent: "center",
+    alignItems: "center",
     padding: 10,
-    marginTop: 10,
+    marginTop: 10
   }
-})
+});
 
-export default AuthExample
+export default AuthExample;
