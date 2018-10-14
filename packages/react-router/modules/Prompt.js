@@ -14,7 +14,7 @@ function Prompt(props) {
       {context => {
         invariant(context, "You should not use <Prompt> outside a <Router>");
 
-        if (!props.when) return null;
+        if (!props.when || context.staticContext) return null;
 
         const method = context.history.block;
         const message = props.message;
