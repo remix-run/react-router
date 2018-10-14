@@ -10,7 +10,7 @@ if (React.StrictMode) {
 }
 
 function renderStrict(element, node) {
-  return ReactDOM.render(<StrictMode>{element}</StrictMode>, node);
+  ReactDOM.render(<StrictMode>{element}</StrictMode>, node);
 }
 
 export default renderStrict;

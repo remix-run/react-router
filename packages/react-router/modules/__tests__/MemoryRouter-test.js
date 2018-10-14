@@ -1,8 +1,7 @@
 import React from "react";
 import ReactDOM from "react-dom";
-import PropTypes from "prop-types";
 
-import { MemoryRouter, __RouterContext as RouterContext } from "react-router";
+import { MemoryRouter } from "react-router";
 
 import renderStrict from "./utils/renderStrict";
 

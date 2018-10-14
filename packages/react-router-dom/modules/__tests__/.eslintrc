@@ -6,6 +6,7 @@
     "spyOn": true
   },
   "rules": {
+    "import/no-unresolved": [2, { "ignore": ["react-router-dom"] }],
     "no-console": 0,
     "react/display-name": 0,
     "react/prop-types": 0

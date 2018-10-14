@@ -1,5 +1,4 @@
 import React from "react";
-import ReactDOM from "react-dom";
 import createHistory from "history/createMemoryHistory";
 
 import { Router, StaticRouter } from "react-router";
@@ -33,6 +32,7 @@ describe("renderRoutes", () => {
         {renderRoutes(routes)}
       </StaticRouter>
     );
+
     expect(renderedRoutes.length).toEqual(1);
     expect(renderedRoutes[0]).toEqual(routeToMatch);
   });
@@ -49,6 +49,7 @@ describe("renderRoutes", () => {
         {renderRoutes(routes, extraProps)}
       </StaticRouter>
     );
+
     expect(renderedExtraProps.length).toEqual(1);
     expect(renderedExtraProps[0].anExtraProp).toEqual("anExtraPropValue");
   });
@@ -71,6 +72,7 @@ describe("renderRoutes", () => {
         {renderRoutes(routes, extraProps)}
       </StaticRouter>
     );
+
     expect(renderedExtraProps.length).toEqual(1);
     expect(renderedExtraProps[0].anExtraProp).toEqual("anExtraPropValue");
   });
@@ -93,6 +95,7 @@ describe("renderRoutes", () => {
           {renderRoutes(routes)}
         </StaticRouter>
       );
+
       expect(renderedRoutes.length).toEqual(1);
       expect(renderedRoutes[0]).toEqual(routeToMatch);
     });
@@ -124,6 +127,7 @@ describe("renderRoutes", () => {
           {renderRoutes(routes)}
         </StaticRouter>
       );
+
       expect(renderedRoutes.length).toEqual(2);
       expect(renderedRoutes[0]).toEqual(routeToMatch);
       expect(renderedRoutes[1]).toEqual(childRouteToMatch);
