@@ -17,7 +17,7 @@
     "umd"
   ],
   "main": "index.js",
-  "module": "esm/index.js",
+  "module": "esm/react-router-config.js",
   "sideEffects": false,
   "scripts": {
     "build": "node ./scripts/build.js",
