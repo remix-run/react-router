@@ -152,7 +152,9 @@ class FakeBrowser extends React.Component {
                 overflow="auto"
                 position="relative"
               >
-                {React.Children.only(children)}
+                {React.cloneElement(React.Children.only(children), {
+                  location
+                })}
               </Block>
             </Col>
           )}
