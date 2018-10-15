@@ -133,12 +133,16 @@ This could also be useful for animations:
 
 **Warning:** Both `<Route component>` and `<Route render>` take precedence over `<Route children>` so don't use more than one in the same `<Route>`.
 
-## path: string
+## path: string | string[]
 
-Any valid URL path that [`path-to-regexp@^1.7.0`](https://github.com/pillarjs/path-to-regexp/tree/v1.7.0) understands.
+Any valid URL path or array of paths that [`path-to-regexp@^1.7.0`](https://github.com/pillarjs/path-to-regexp/tree/v1.7.0) understands.
 
 ```jsx
 <Route path="/users/:id" component={User} />
+```
+
+```jsx
+<Route path={["/users/:id", "/profile/:id"]} component={User} />
 ```
 
 Routes without a `path` _always_ match.

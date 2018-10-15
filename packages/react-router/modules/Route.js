@@ -130,7 +130,10 @@ if (__DEV__) {
     component: PropTypes.func,
     exact: PropTypes.bool,
     location: PropTypes.object,
-    path: PropTypes.string,
+    path: PropTypes.oneOfType([
+      PropTypes.string,
+      PropTypes.arrayOf(PropTypes.string)
+    ]),
     render: PropTypes.func,
     sensitive: PropTypes.bool,
     strict: PropTypes.bool
