@@ -23,6 +23,14 @@ import { withRouter } from 'react-router-dom'
 export default withRouter(connect(mapStateToProps)(Something))
 ```
 
+Important to note that the opposite configuration of Higher Order Components does *not* work correctly.
+
+```js
+// does not work!
+import { withRouter } from 'react-router-dom'
+export default connect(mapStateToProps)(withRouter(Something))
+```
+
 ## Deep integration
 
 Some folks want to:
