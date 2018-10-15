@@ -1,41 +1,49 @@
 import React from "react";
 import { BrowserRouter as Router, Route, Link } from "react-router-dom";
 
-const CustomLinkExample = () => (
-  <Router>
-    <div>
-      <OldSchoolMenuLink activeOnlyWhenExact={true} to="/" label="Home" />
-      <OldSchoolMenuLink to="/about" label="About" />
-      <hr />
-      <Route exact path="/" component={Home} />
-      <Route path="/about" component={About} />
-    </div>
-  </Router>
-);
-
-const OldSchoolMenuLink = ({ label, to, activeOnlyWhenExact }) => (
-  <Route
-    path={to}
-    exact={activeOnlyWhenExact}
-    children={({ match }) => (
-      <div className={match ? "active" : ""}>
-        {match ? "> " : ""}
-        <Link to={to}>{label}</Link>
+function CustomLinkExample() {
+  return (
+    <Router>
+      <div>
+        <OldSchoolMenuLink activeOnlyWhenExact={true} to="/" label="Home" />
+        <OldSchoolMenuLink to="/about" label="About" />
+        <hr />
+        <Route exact path="/" component={Home} />
+        <Route path="/about" component={About} />
       </div>
-    )}
-  />
-);
+    </Router>
+  );
+}
 
-const Home = () => (
-  <div>
-    <h2>Home</h2>
-  </div>
-);
+function OldSchoolMenuLink({ label, to, activeOnlyWhenExact }) {
+  return (
+    <Route
+      path={to}
+      exact={activeOnlyWhenExact}
+      children={({ match }) => (
+        <div className={match ? "active" : ""}>
+          {match ? "> " : ""}
+          <Link to={to}>{label}</Link>
+        </div>
+      )}
+    />
+  );
+}
 
-const About = () => (
-  <div>
-    <h2>About</h2>
-  </div>
-);
+function Home() {
+  return (
+    <div>
+      <h2>Home</h2>
+    </div>
+  );
+}
+
+function About() {
+  return (
+    <div>
+      <h2>About</h2>
+    </div>
+  );
+}
 
 export default CustomLinkExample;

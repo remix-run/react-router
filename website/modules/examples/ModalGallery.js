@@ -26,7 +26,8 @@ class ModalSwitch extends React.Component {
   previousLocation = this.props.location;
 
   componentWillUpdate(nextProps) {
-    const { location } = this.props;
+    let { location } = this.props;
+
     // set previousLocation if props.location is not modal
     if (
       nextProps.history.action !== "POP" &&
@@ -37,12 +38,14 @@ class ModalSwitch extends React.Component {
   }
 
   render() {
-    const { location } = this.props;
-    const isModal = !!(
+    let { location } = this.props;
+
+    let isModal = !!(
       location.state &&
       location.state.modal &&
       this.previousLocation !== location
     ); // not initial render
+
     return (
       <div>
         <Switch location={isModal ? this.previousLocation : location}>
@@ -64,64 +67,71 @@ const IMAGES = [
   { id: 4, title: "Crimson", color: "Crimson" }
 ];
 
-const Thumbnail = ({ color }) => (
-  <div
-    style={{
-      width: 50,
-      height: 50,
-      background: color
-    }}
-  />
-);
+function Thumbnail({ color }) {
+  return (
+    <div
+      style={{
+        width: 50,
+        height: 50,
+        background: color
+      }}
+    />
+  );
+}
 
-const Image = ({ color }) => (
-  <div
-    style={{
-      width: "100%",
-      height: 400,
-      background: color
-    }}
-  />
-);
+function Image({ color }) {
+  return (
+    <div
+      style={{
+        width: "100%",
+        height: 400,
+        background: color
+      }}
+    />
+  );
+}
 
-const Home = () => (
-  <div>
-    <Link to="/gallery">Visit the Gallery</Link>
-    <h2>Featured Images</h2>
-    <ul>
-      <li>
-        <Link to="/img/2">Tomato</Link>
-      </li>
-      <li>
-        <Link to="/img/4">Crimson</Link>
-      </li>
-    </ul>
-  </div>
-);
+function Home() {
+  return (
+    <div>
+      <Link to="/gallery">Visit the Gallery</Link>
+      <h2>Featured Images</h2>
+      <ul>
+        <li>
+          <Link to="/img/2">Tomato</Link>
+        </li>
+        <li>
+          <Link to="/img/4">Crimson</Link>
+        </li>
+      </ul>
+    </div>
+  );
+}
 
-const Gallery = () => (
-  <div>
-    {IMAGES.map(i => (
-      <Link
-        key={i.id}
-        to={{
-          pathname: `/img/${i.id}`,
-          // this is the trick!
-          state: { modal: true }
-        }}
-      >
-        <Thumbnail color={i.color} />
-        <p>{i.title}</p>
-      </Link>
-    ))}
-  </div>
-);
+function Gallery() {
+  return (
+    <div>
+      {IMAGES.map(i => (
+        <Link
+          key={i.id}
+          to={{
+            pathname: `/img/${i.id}`,
+            // this is the trick!
+            state: { modal: true }
+          }}
+        >
+          <Thumbnail color={i.color} />
+          <p>{i.title}</p>
+        </Link>
+      ))}
+    </div>
+  );
+}
 
-const ImageView = ({ match }) => {
-  const image = IMAGES[parseInt(match.params.id, 10)];
-  if (!image) {
-    return <div>Image not found</div>;
-  }
+function ImageView({ match }) {
+  let image = IMAGES[parseInt(match.params.id, 10)];
+
+  if (!image) return <div>Image not found</div>;
 
   return (
     <div>
@@ -129,17 +139,18 @@ const ImageView = ({ match }) => {
       <Image color={image.color} />
     </div>
   );
-};
+}
 
-const Modal = ({ match, history }) => {
-  const image = IMAGES[parseInt(match.params.id, 10)];
-  if (!image) {
-    return null;
-  }
-  const back = e => {
+function Modal({ match, history }) {
+  let image = IMAGES[parseInt(match.params.id, 10)];
+
+  if (!image) return null;
+
+  let back = e => {
     e.stopPropagation();
     history.goBack();
   };
+
   return (
     <div
       onClick={back}
@@ -172,12 +183,14 @@ const Modal = ({ match, history }) => {
       </div>
     </div>
   );
-};
+}
 
-const ModalGallery = () => (
-  <Router>
-    <Route component={ModalSwitch} />
-  </Router>
-);
+function ModalGallery() {
+  return (
+    <Router>
+      <Route component={ModalSwitch} />
+    </Router>
+  );
+}
 
 export default ModalGallery;

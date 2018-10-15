@@ -8,20 +8,27 @@ const PEEPS = [
   { id: 3, name: "David", friends: [1, 2] }
 ];
 
-const find = id => PEEPS.find(p => p.id == id);
+function find(id) {
+  return PEEPS.find(p => p.id == id);
+}
 
-const RecursiveExample = () => (
-  <Router>
-    <Person match={{ params: { id: 0 }, url: "" }} />
-  </Router>
-);
+function RecursiveExample() {
+  return (
+    <Router>
+      <Person match={{ params: { id: 0 }, url: "" }} />
+    </Router>
+  );
+}
 
-const Person = ({ match }) => {
-  const person = find(match.params.id);
+function Person({ match }) {
+  let person = find(match.params.id);
 
   return (
     <div>
-      <h3>{person.name}’s Friends</h3>
+      <h3>
+        {person.name}
+        ’s Friends
+      </h3>
       <ul>
         {person.friends.map(id => (
           <li key={id}>
@@ -32,6 +39,6 @@ const Person = ({ match }) => {
       <Route path={`${match.url}/:id`} component={Person} />
     </div>
   );
-};
+}
 
 export default RecursiveExample;
