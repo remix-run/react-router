@@ -4,6 +4,7 @@ import commonjs from "rollup-plugin-commonjs";
 import nodeResolve from "rollup-plugin-node-resolve";
 import { sizeSnapshot } from "rollup-plugin-size-snapshot";
 import { uglify } from "rollup-plugin-uglify";
+
 import pkg from "./package.json";
 
 const input = "modules/index.js";
