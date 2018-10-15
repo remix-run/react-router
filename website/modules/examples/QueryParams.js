@@ -1,80 +1,76 @@
 import React from "react";
 import { BrowserRouter as Router, Link } from "react-router-dom";
-import { parse, stringify } from "query-string";
 
-const ParamsExample = props => {
-  const urlParams = parse(props.location.search);
+function ParamsExample({ location }) {
+  let params = new URLSearchParams(location.search);
 
   return (
     <Router>
       <p>
-        React Router no longer handles query parameters in URLs. You will need
-        to use a 3rd-party library to handle them. Below is an example using the{" "}
-        <a href="https://github.com/sindresorhus/query-string">query-string</a>{" "}
-        library.
+        React Router does not have any opinions about how your parse URL query
+        strings. Some applications use simple key=value query strings, but
+        others embed arrays and objects in the query string. So it's up to you
+        to parse the search string yourself.
       </p>
       <p>
-        <em>
-          This is only an example of one such library. You are free to use any
-          library for working with query parameters that provides the
-          functionality you are looking for.
-        </em>
+        In modern browsers that support{" "}
+        <a href="https://developer.mozilla.org/en-US/docs/Web/API/URL">
+          the URL API
+        </a>
+        , you can instantiate a <code>URLSearchParams</code> object from{" "}
+        <code>location.search</code> and use that.
+      </p>
+      <p>
+        In{" "}
+        <a href="https://caniuse.com/#feat=url">
+          browsers that do not support the URL API (read: IE)
+        </a>{" "}
+        you can use a 3rd party library such as{" "}
+        <a href="https://github.com/sindresorhus/query-string">query-string</a>.
       </p>
       <div>
         <h2>Accounts</h2>
         <ul>
           <li>
-            <Link
-              to={{
-                pathname: "/account",
-                search: stringify({ name: "netflix" })
-              }}
-            >
+            <Link to={{ pathname: "/account", search: "?name=netflix" }}>
               Netflix
             </Link>
           </li>
           <li>
-            <Link
-              to={{
-                pathname: "/account",
-                search: stringify({ name: "zillow-group" })
-              }}
-            >
+            <Link to={{ pathname: "/account", search: "?name=zillow-group" }}>
               Zillow Group
             </Link>
           </li>
           <li>
-            <Link
-              to={{
-                pathname: "/account",
-                search: stringify({ name: "yahoo" })
-              }}
-            >
+            <Link to={{ pathname: "/account", search: "?name=yahoo" }}>
               Yahoo
             </Link>
           </li>
           <li>
-            <Link
-              to={{
-                pathname: "/account",
-                search: stringify({ name: "modus-create" })
-              }}
-            >
+            <Link to={{ pathname: "/account", search: "?name=modus-create" }}>
               Modus Create
             </Link>
           </li>
         </ul>
 
-        {urlParams && urlParams.name && <Child name={urlParams.name} />}
+        <Child name={params.get("name")} />
       </div>
     </Router>
   );
-};
+}
 
-const Child = ({ name }) => (
-  <div>
-    <h3>NAME: {name}</h3>
-  </div>
-);
+function Child({ name }) {
+  return (
+    <div>
+      {name ? (
+        <h3>
+          The <code>name</code> in the query string is "{name}"
+        </h3>
+      ) : (
+        <h3>There is no name in the query string</h3>
+      )}
+    </div>
+  );
+}
 
 export default ParamsExample;
