@@ -1,0 +1,26 @@
+{
+  "esm/react-router-dom.js": {
+    "bundled": 166266,
+    "minified": 72036,
+    "gzipped": 18017,
+    "treeshaked": {
+      "rollup": {
+        "code": 33730,
+        "import_statements": 21
+      },
+      "webpack": {
+        "code": 36316
+      }
+    }
+  },
+  "umd/react-router-dom.js": {
+    "bundled": 166876,
+    "minified": 59434,
+    "gzipped": 16287
+  },
+  "umd/react-router-dom.min.js": {
+    "bundled": 106206,
+    "minified": 38143,
+    "gzipped": 10242
+  }
+}
