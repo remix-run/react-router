@@ -13,44 +13,32 @@ const globals = {
   react: "React"
 };
 const babelOptions = {
-  exclude: "node_modules/**",
+  exclude: "**/node_modules/**",
   plugins: ["external-helpers"]
 };
 const commonjsOptions = {
-  include: "node_modules/**"
+  include: /node_modules/
 };
+
+const external = id => !id.startsWith(".") && !id.startsWith("/");
 
 export default [
   {
     input,
-    output: {
-      file: `cjs/${pkg.name}.js`,
-      format: "cjs",
-      name,
-      globals
-    },
-    external: Object.keys(globals),
+    output: { file: `cjs/${pkg.name}.js`, format: "cjs" },
+    external,
     plugins: [
       babel(babelOptions),
-      nodeResolve(),
-      commonjs(commonjsOptions),
       replace({ "process.env.NODE_ENV": JSON.stringify("development") })
     ]
   },
 
   {
     input,
-    output: {
-      file: `cjs/${pkg.name}.min.js`,
-      format: "cjs",
-      name,
-      globals
-    },
-    external: Object.keys(globals),
+    output: { file: `cjs/${pkg.name}.min.js`, format: "cjs" },
+    external,
     plugins: [
       babel(babelOptions),
-      nodeResolve(),
-      commonjs(commonjsOptions),
       replace({ "process.env.NODE_ENV": JSON.stringify("production") }),
       uglify()
     ]
@@ -58,29 +46,14 @@ export default [
 
   {
     input,
-    output: {
-      file: `esm/${pkg.name}.js`,
-      format: "esm",
-      name,
-      globals
-    },
-    external: Object.keys(globals),
-    plugins: [
-      babel(babelOptions),
-      nodeResolve(),
-      commonjs(commonjsOptions),
-      sizeSnapshot()
-    ]
+    output: { file: `esm/${pkg.name}.js`, format: "esm" },
+    external,
+    plugins: [babel(babelOptions), sizeSnapshot()]
   },
 
   {
     input,
-    output: {
-      file: `umd/${pkg.name}.js`,
-      format: "umd",
-      name,
-      globals
-    },
+    output: { file: `umd/${pkg.name}.js`, format: "umd", name, globals },
     external: Object.keys(globals),
     plugins: [
       babel(babelOptions),
@@ -93,12 +66,7 @@ export default [
 
   {
     input,
-    output: {
-      file: `umd/${pkg.name}.min.js`,
-      format: "umd",
-      name,
-      globals
-    },
+    output: { file: `umd/${pkg.name}.min.js`, format: "umd", name, globals },
     external: Object.keys(globals),
     plugins: [
       babel(babelOptions),
