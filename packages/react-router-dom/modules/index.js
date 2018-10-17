@@ -1,6 +1,6 @@
 export * from "react-router";
 
-export BrowserRouter from "./BrowserRouter";
-export HashRouter from "./HashRouter";
-export Link from "./Link";
-export NavLink from "./NavLink";
+export { default as BrowserRouter } from "./BrowserRouter";
+export { default as HashRouter } from "./HashRouter";
+export { default as Link } from "./Link";
+export { default as NavLink } from "./NavLink";
