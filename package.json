@@ -13,5 +13,6 @@
     "lerna": "^3.4.3",
     "prettier": "^1.14.3",
     "pretty-quick": "^1.4.1"
-  }
+  },
+  "dependencies": {}
 }
