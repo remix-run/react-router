@@ -54,5 +54,5 @@
     "webpack": "^3.12.0",
     "webpack-dev-server": "^2.9.7"
   },
-  "version": "4.4.0-beta.3"
+  "version": "4.4.0-beta.4"
 }
