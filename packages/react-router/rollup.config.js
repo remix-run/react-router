@@ -12,9 +12,13 @@ const name = "ReactRouter";
 const globals = {
   react: "React"
 };
-const babelOptions = {
-  exclude: "**/node_modules/**",
-  plugins: ["external-helpers"]
+const babelOptionsCJS = {
+  exclude: /node_modules/
+};
+const babelOptionsESM = {
+  exclude: /node_modules/,
+  runtimeHelpers: true,
+  plugins: [["@babel/transform-runtime", { useESModules: true }]]
 };
 const commonjsOptions = {
   include: /node_modules/
@@ -28,7 +32,7 @@ export default [
     output: { file: `cjs/${pkg.name}.js`, format: "cjs" },
     external,
     plugins: [
-      babel(babelOptions),
+      babel(babelOptionsCJS),
       replace({ "process.env.NODE_ENV": JSON.stringify("development") })
     ]
   },
@@ -38,7 +42,7 @@ export default [
     output: { file: `cjs/${pkg.name}.min.js`, format: "cjs" },
     external,
     plugins: [
-      babel(babelOptions),
+      babel(babelOptionsCJS),
       replace({ "process.env.NODE_ENV": JSON.stringify("production") }),
       uglify()
     ]
@@ -48,7 +52,7 @@ export default [
     input,
     output: { file: `esm/${pkg.name}.js`, format: "esm" },
     external,
-    plugins: [babel(babelOptions), sizeSnapshot()]
+    plugins: [babel(babelOptionsESM), sizeSnapshot()]
   },
 
   {
@@ -56,7 +60,7 @@ export default [
     output: { file: `umd/${pkg.name}.js`, format: "umd", name, globals },
     external: Object.keys(globals),
     plugins: [
-      babel(babelOptions),
+      babel(babelOptionsESM),
       nodeResolve(),
       commonjs(commonjsOptions),
       replace({ "process.env.NODE_ENV": JSON.stringify("development") }),
@@ -69,7 +73,7 @@ export default [
     output: { file: `umd/${pkg.name}.min.js`, format: "umd", name, globals },
     external: Object.keys(globals),
     plugins: [
-      babel(babelOptions),
+      babel(babelOptionsESM),
       nodeResolve(),
       commonjs(commonjsOptions),
       replace({ "process.env.NODE_ENV": JSON.stringify("production") }),
