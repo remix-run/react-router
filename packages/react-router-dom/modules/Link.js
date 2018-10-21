@@ -36,7 +36,7 @@ class Link extends React.Component {
   }
 
   render() {
-    const { innerRef, replace, to, ...props } = this.props; // eslint-disable-line no-unused-vars
+    const { innerRef, replace, to, ...rest } = this.props; // eslint-disable-line no-unused-vars
 
     return (
       <RouterContext.Consumer>
@@ -51,7 +51,7 @@ class Link extends React.Component {
 
           return (
             <a
-              {...props}
+              {...rest}
               onClick={event => this.handleClick(event, context)}
               href={href}
               ref={innerRef}
@@ -65,9 +65,10 @@ class Link extends React.Component {
 
 if (__DEV__) {
   const toType = PropTypes.oneOfType([PropTypes.string, PropTypes.object]);
+  const innerRefType = PropTypes.oneOfType([PropTypes.string, PropTypes.func]);
 
   Link.propTypes = {
-    innerRef: PropTypes.oneOfType([PropTypes.string, PropTypes.func]),
+    innerRef: innerRefType,
     onClick: PropTypes.func,
     replace: PropTypes.bool,
     target: PropTypes.string,
