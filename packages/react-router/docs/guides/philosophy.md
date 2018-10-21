@@ -7,7 +7,7 @@ This guide's purpose is to explain the mental model to have when using React Rou
 If you've used Rails, Express, Ember, Angular etc. you've used static routing. In these frameworks, you declare your routes as part of your app's initialization before any rendering takes place. React Router pre-v4 was also static (mostly). Let's take a look at how to configure routes in express:
 
 ```js
-// Express style routing:
+// Express Style routing:
 app.get("/", handleIndex);
 app.get("/invoices", handleInvoices);
 app.get("/invoices/:id", handleInvoice);
@@ -19,7 +19,7 @@ app.listen();
 Note how the routes are declared before the app listens. The client side routers we've used are similar. In Angular you declare your routes up front and then import them to the top-level `AppModule` before rendering:
 
 ```js
-// Angular style routing:
+// Angular Style routing:
 const appRoutes: Routes = [
   {
     path: "crisis-center",
