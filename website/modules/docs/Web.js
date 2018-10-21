@@ -19,9 +19,9 @@ export default {
   ],
 
   guides: [
+    require("../../../packages/react-router-dom/docs/guides/quick-start.md"),
     require("../../../packages/react-router/docs/guides/philosophy.md"),
     require("../../../packages/react-router-dom/docs/guides/basic-components.md"),
-    require("../../../packages/react-router-dom/docs/guides/quick-start.md"),
     require("../../../packages/react-router-dom/docs/guides/server-rendering.md"),
     require("../../../packages/react-router-dom/docs/guides/code-splitting.md"),
     require("../../../packages/react-router-dom/docs/guides/scroll-restoration.md"),
