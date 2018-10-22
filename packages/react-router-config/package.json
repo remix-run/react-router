@@ -14,6 +14,7 @@
     "index.js",
     "matchRoutes.js",
     "renderRoutes.js",
+    "warnAboutDeprecatedCJSRequire.js",
     "umd"
   ],
   "main": "index.js",
