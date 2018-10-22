@@ -1,6 +1,6 @@
 # Quick Start
 
-You need a React web app to add `react-router`.
+You'll need a React web app to add `react-router`.
 
 If you need to create one, the easiest way to get started is with a popular tool called [Create React App][crapp].
 
