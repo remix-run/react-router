@@ -30,13 +30,13 @@ The history object is mutable. Therefore it is recommended to access the [`locat
 
 ```jsx
 class Comp extends React.Component {
-  componentWillReceiveProps(nextProps) {
+  componentDidUpdate(prevProps) {
     // will be true
-    const locationChanged = nextProps.location !== this.props.location;
+    const locationChanged = this.props.location !== prevProps.location;
 
     // INCORRECT, will *always* be false because history is mutable.
     const locationChanged =
-      nextProps.history.location !== this.props.history.location;
+      this.props.history.location !== prevProps.history.location;
   }
 }
 
