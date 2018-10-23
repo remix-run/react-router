@@ -419,6 +419,34 @@ describe("A <Route>", () => {
       expect(typeof props.location).toBe("object");
       expect(typeof props.match).toBe("object");
     });
+
+    it("won't throw a prop-type warning when passed valid React components that aren't functions", () => {
+      function forwardRef(Component) {
+        class ForwardComponent extends React.Component {
+          render() {
+            const { forwardedRef, ...rest } = this.props;
+            return <Component ref={forwardedRef} {...rest} />;
+          }
+        }
+        return React.forwardRef((props, ref) => {
+          return <ForwardComponent {...props} forwardedRef={ref} />;
+        });
+      }
+
+      const history = createHistory();
+      const Component = () => null;
+      const WrappedComponent = forwardRef(Component);
+      const errorSpy = jest.spyOn(console, "error");
+
+      ReactDOM.render(
+        <Router history={history}>
+          <Route path="/" component={WrappedComponent} />
+        </Router>,
+        node
+      );
+
+      expect(errorSpy).not.toHaveBeenCalled();
+    });
   });
 
   describe("the `render` prop", () => {
