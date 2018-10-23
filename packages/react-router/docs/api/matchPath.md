@@ -24,8 +24,8 @@ to the matching props `Route` accepts:
 
 ```js
 {
-  path, // like /users/:id; either a single string or an array of strings
-    strict, // optional, defaults to false
-    exact; // optional, defaults to false
+    path,    // like /users/:id; either a single string or an array of strings
+    strict,  // optional, defaults to false
+    exact    // optional, defaults to false
 }
 ```
