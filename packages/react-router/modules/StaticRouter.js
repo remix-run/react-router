@@ -77,7 +77,7 @@ class StaticRouter extends React.Component {
   handleBlock = () => noop;
 
   render() {
-    const { basename, context, location, ...props } = this.props;
+    const { basename, context, location, ...rest } = this.props;
 
     const history = {
       createHref: this.createHref,
@@ -94,7 +94,7 @@ class StaticRouter extends React.Component {
 
     return (
       <Router
-        {...props}
+        {...rest}
         history={history}
         staticContext={this.props.context || {}}
       />

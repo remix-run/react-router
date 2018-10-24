@@ -70,7 +70,7 @@ class FakeBrowser extends React.Component {
 
   render() {
     const { url } = this.state;
-    const { children, ...props } = this.props;
+    const { children, ...rest } = this.props;
 
     return (
       <MemoryRouter getUserConfirmation={getUserConfirmation}>
@@ -81,7 +81,7 @@ class FakeBrowser extends React.Component {
               background="white"
               boxShadow="0px 5px 20px hsla(0, 0%, 0%, 0.75)"
               borderRadius="6px"
-              {...props}
+              {...rest}
             >
               <Row
                 background="#eee"
