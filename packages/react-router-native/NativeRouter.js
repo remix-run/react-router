@@ -20,6 +20,8 @@ NativeRouter.defaultProps = {
   }
 };
 
+const __DEV__ = true; // TODO
+
 if (__DEV__) {
   NativeRouter.propTypes = {
     initialEntries: PropTypes.array,

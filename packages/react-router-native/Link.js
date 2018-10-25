@@ -41,6 +41,8 @@ class Link extends React.Component {
   }
 }
 
+const __DEV__ = true; // TODO
+
 if (__DEV__) {
   Link.propTypes = {
     onPress: PropTypes.func,
