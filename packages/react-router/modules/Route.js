@@ -131,7 +131,7 @@ if (__DEV__) {
     component: function(props, propName) {
       if (props[propName] && !ReactIs.isValidElementType(props[propName])) {
         return new Error(
-          `Invalid prop 'component' supplied to 'Route': ${propName} is not a valid React component`
+          `Invalid prop 'component' supplied to 'Route': the prop is not a valid React component`
         );
       }
     },
