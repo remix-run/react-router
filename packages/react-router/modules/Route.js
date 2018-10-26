@@ -1,4 +1,5 @@
 import React from "react";
+import ReactIs from "react-is";
 import PropTypes from "prop-types";
 import invariant from "invariant";
 import warning from "warning";
@@ -127,7 +128,13 @@ if (!React.createContext) {
 if (__DEV__) {
   Route.propTypes = {
     children: PropTypes.oneOfType([PropTypes.func, PropTypes.node]),
-    component: PropTypes.func,
+    component: function(props, propName) {
+      if (props[propName] && !ReactIs.isValidElementType(props[propName])) {
+        return new Error(
+          `Invalid prop 'component' supplied to 'Route': the prop is not a valid React component`
+        );
+      }
+    },
     exact: PropTypes.bool,
     location: PropTypes.object,
     path: PropTypes.oneOfType([
