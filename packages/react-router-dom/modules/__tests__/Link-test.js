@@ -14,19 +14,19 @@ describe("A <Link>", () => {
 
   describe("with no <Router>", () => {
     it("throws an error", () => {
-      spyOn(console, "error");
+      jest.spyOn(console, "error").mockImplementation(() => {});
 
       expect(() => {
         renderStrict(<Link to="/">link</Link>, node);
       }).toThrow(/You should not use <Link> outside a <Router>/);
 
-      expect(console.error.calls.count()).toBe(2);
+      expect(console.error).toHaveBeenCalledTimes(2);
     });
   });
 
   describe("with no `to` prop", () => {
     it("logs an error to the console", () => {
-      spyOn(console, "error");
+      jest.spyOn(console, "error").mockImplementation(() => {});
 
       renderStrict(
         <MemoryRouter>

@@ -14,7 +14,7 @@ describe("A <BrowserRouter>", () => {
 
   describe("with a `history` prop", () => {
     it("logs a warning to the console", () => {
-      spyOn(console, "error");
+      jest.spyOn(console, "error").mockImplementation(() => {});
 
       const history = {};
       renderStrict(<BrowserRouter history={history} />, node);

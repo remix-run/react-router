@@ -15,7 +15,7 @@ describe("A <Switch>", () => {
 
   describe("without a <Router>", () => {
     it("throws an error", () => {
-      spyOn(console, "error");
+      jest.spyOn(console, "error").mockImplementation(() => {});
 
       expect(() => {
         renderStrict(<Switch />, node);
