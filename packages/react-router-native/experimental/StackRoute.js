@@ -7,16 +7,7 @@
 
 import React, { Component } from "react";
 import { Route, Redirect } from "react-router";
-import {
-  Text,
-  View,
-  TouchableHighlight,
-  ScrollView,
-  StatusBar,
-  Dimensions,
-  Animated,
-  PanResponder
-} from "react-native";
+import { Text, View, Dimensions, Animated, PanResponder } from "react-native";
 import PropTypes from "prop-types";
 
 import Link from "../Link";
