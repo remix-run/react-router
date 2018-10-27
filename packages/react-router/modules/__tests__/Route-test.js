@@ -15,7 +15,7 @@ describe("A <Route>", () => {
 
   describe("without a <Router>", () => {
     it("throws an error", () => {
-      spyOn(console, "error");
+      jest.spyOn(console, "error").mockImplementation(() => {});
 
       expect(() => {
         renderStrict(<Route />, node);
@@ -346,7 +346,7 @@ describe("A <Route>", () => {
 
       describe("that returns `undefined`", () => {
         it("logs a warning to the console and renders nothing", () => {
-          spyOn(console, "error");
+          jest.spyOn(console, "error").mockImplementation(() => {});
 
           renderStrict(
             <MemoryRouter initialEntries={["/"]}>
@@ -436,7 +436,7 @@ describe("A <Route>", () => {
       const history = createHistory();
       const Component = () => null;
       const WrappedComponent = forwardRef(Component);
-      const errorSpy = jest.spyOn(console, "error");
+      jest.spyOn(console, "error").mockImplementation(() => {});
 
       ReactDOM.render(
         <Router history={history}>
@@ -445,7 +445,7 @@ describe("A <Route>", () => {
         node
       );
 
-      expect(errorSpy).not.toHaveBeenCalled();
+      expect(console.error).not.toHaveBeenCalled();
     });
   });
 

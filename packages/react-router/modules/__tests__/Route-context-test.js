@@ -97,7 +97,7 @@ describe("A <Route>", () => {
       });
 
       it("has a `history` property that warns when it is accessed", () => {
-        spyOn(console, "error");
+        jest.spyOn(console, "error").mockImplementation(() => {});
 
         const history = createHistory();
 
@@ -118,7 +118,7 @@ describe("A <Route>", () => {
       });
 
       it("has a `location` property that warns when it is accessed", () => {
-        spyOn(console, "error");
+        jest.spyOn(console, "error").mockImplementation(() => {});
 
         const history = createHistory();
 
@@ -139,7 +139,7 @@ describe("A <Route>", () => {
       });
 
       it("has a `match` property that warns when it is accessed", () => {
-        spyOn(console, "error");
+        jest.spyOn(console, "error").mockImplementation(() => {});
 
         const history = createHistory({
           initialEntries: ["/"]

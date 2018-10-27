@@ -14,7 +14,7 @@ describe("A <MemoryRouter>", () => {
 
   describe("with a history prop", () => {
     it("logs a warning", () => {
-      spyOn(console, "error");
+      jest.spyOn(console, "error").mockImplementation(() => {});
 
       const history = {};
       renderStrict(<MemoryRouter history={history} />, node);

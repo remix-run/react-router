@@ -15,7 +15,7 @@ describe("A <Prompt>", () => {
 
   describe("with no message", () => {
     it("logs a warning to the console", () => {
-      spyOn(console, "error");
+      jest.spyOn(console, "error").mockImplementation(() => {});
 
       renderStrict(
         <MemoryRouter>

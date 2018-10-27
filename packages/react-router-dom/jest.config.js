@@ -1,4 +1,6 @@
 module.exports = {
+  testRunner: "jest-circus/runner",
+  restoreMocks: true,
   globals: {
     __DEV__: true
   },
