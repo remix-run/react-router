@@ -27,6 +27,23 @@ function getContext(props, context) {
  * The public API for matching a single path and rendering.
  */
 class Route extends React.Component {
+  state = {
+    renderedAsync: null
+  };
+  renderingAsync = false;
+
+  getRenderedAsyncState(...args) {
+    if (!this.renderingAsync) this.renderAsync(...args);
+    return this.state.renderedAsync;
+  }
+
+  async renderAsync(render, props) {
+    this.renderingAsync = true;
+    const renderedAsync = await render(props);
+    this.setState({ renderedAsync });
+    this.renderingAsync = false;
+  }
+
   render() {
     return (
       <RouterContext.Consumer>
@@ -70,7 +87,7 @@ class Route extends React.Component {
                   ? component
                     ? React.createElement(component, props)
                     : render
-                      ? render(props)
+                      ? this.getRenderedAsyncState(render, props)
                       : null
                   : null}
             </RouterContext.Provider>
