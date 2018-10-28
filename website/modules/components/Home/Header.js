@@ -114,9 +114,6 @@ const Banner = () => (
             <Button to="/native" small={isSmallScreen}>
               Native
             </Button>
-            <Button to="/core" small={isSmallScreen}>
-              Anywhere
-            </Button>
           </Row>
         </Block>
       </Row>
