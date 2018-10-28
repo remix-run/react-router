@@ -40,17 +40,9 @@ const AppRouter = () => (
   <Router>
     <div>
       <nav>
-        <ul>
-          <li>
-            <Link to="/">Home</Link>
-          </li>
-          <li>
-            <Link to="/about/">About</Link>
-          </li>
-          <li>
-            <Link to="/users/">Users</Link>
-          </li>
-        </ul>
+        <Link to="/">Home</Link>
+        <Link to="/about/">About</Link>
+        <Link to="/users/">Users</Link>
       </nav>
 
       <Route path="/" exact component={Index} />
@@ -74,7 +66,11 @@ import { BrowserRouter as Router, Route, Link } from "react-router-dom";
 const App = () => (
   <Router>
     <div>
-      <Header />
+      <nav>
+        <Link to="/">Home</Link>
+        <Link to="/about">About</Link>
+        <Link to="/topics">Topics</Link>
+      </nav>
 
       <Route exact path="/" component={Home} />
       <Route path="/about" component={About} />
@@ -90,14 +86,10 @@ const Topics = ({ match }) => (
   <div>
     <h2>Topics</h2>
 
-    <ul>
-      <li>
-        <Link to={`${match.url}/components`}>Components</Link>
-      </li>
-      <li>
-        <Link to={`${match.url}/props-v-state`}>Props v. State</Link>
-      </li>
-    </ul>
+    <nav>
+      <Link to={`${match.url}/components`}>Components</Link>
+      <Link to={`${match.url}/props-v-state`}>Props v. State</Link>
+    </nav>
 
     <Route path={`${match.path}/:id`} component={Topic} />
     <Route
@@ -106,19 +98,6 @@ const Topics = ({ match }) => (
       render={() => <h3>Please select a topic.</h3>}
     />
   </div>
-);
-const Header = () => (
-  <ul>
-    <li>
-      <Link to="/">Home</Link>
-    </li>
-    <li>
-      <Link to="/about">About</Link>
-    </li>
-    <li>
-      <Link to="/topics">Topics</Link>
-    </li>
-  </ul>
 );
 
 export default App;
