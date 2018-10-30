@@ -1,6 +1,5 @@
 import React from "react";
-import createHistory from "history/createMemoryHistory";
-
+import { createMemoryHistory as createHistory } from "history";
 import { Router, StaticRouter } from "react-router";
 import { renderRoutes } from "react-router-config";
 

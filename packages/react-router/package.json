@@ -41,7 +41,7 @@
   "dependencies": {
     "@babel/runtime": "^7.1.2",
     "create-react-context": "^0.2.2",
-    "history": "^4.7.2",
+    "history": "^4.8.0-beta.0",
     "hoist-non-react-statics": "^2.5.0",
     "invariant": "^2.2.4",
     "loose-envify": "^1.3.1",
