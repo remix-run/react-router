@@ -1,5 +1,5 @@
 import React from "react";
-import { StyleSheet, Text, ScrollView, AppRegistry } from "react-native";
+import { StyleSheet, Text, ScrollView } from "react-native";
 
 import { NativeRouter, Route, Link } from "react-router-native";
 
