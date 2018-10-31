@@ -1,7 +1,7 @@
 let mappedModule;
 switch (process.env.TEST_ENV) {
   case "cjs":
-    mappedModule = "<rootDir>/index";
+    mappedModule = "<rootDir>/cjs/react-router-dom.js";
     break;
   case "umd":
     mappedModule = "<rootDir>/umd/react-router-dom.js";
