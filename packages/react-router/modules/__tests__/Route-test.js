@@ -345,7 +345,7 @@ describe("A <Route>", () => {
 
       describe("that returns `undefined`", () => {
         it("logs a warning to the console and renders nothing", () => {
-          jest.spyOn(console, "error").mockImplementation(() => {});
+          jest.spyOn(console, "warn").mockImplementation(() => {});
 
           renderStrict(
             <MemoryRouter initialEntries={["/"]}>
@@ -356,7 +356,7 @@ describe("A <Route>", () => {
 
           expect(node.innerHTML).toEqual("");
 
-          expect(console.error).toHaveBeenCalledWith(
+          expect(console.warn).toHaveBeenCalledWith(
             expect.stringContaining(
               "You returned `undefined` from the `children` function"
             )
