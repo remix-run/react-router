@@ -21,7 +21,10 @@ const babelOptionsESM = {
   plugins: [["@babel/transform-runtime", { useESModules: true }]]
 };
 const commonjsOptions = {
-  include: /node_modules/
+  include: /node_modules/,
+  namedExports: {
+    "node_modules/react-is/index.js": ["isValidElementType"]
+  }
 };
 
 const external = id => !id.startsWith(".") && !id.startsWith("/");

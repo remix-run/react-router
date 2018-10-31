@@ -7,7 +7,7 @@ switch (process.env.TEST_ENV) {
     mappedModule = "<rootDir>/umd/react-router-config.js";
     break;
   default:
-    mappedModule = "<rootDir>/modules/index";
+    mappedModule = "<rootDir>/modules/index.js";
 }
 
 module.exports = {
