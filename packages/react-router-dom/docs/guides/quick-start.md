@@ -2,9 +2,7 @@
 
 You'll need a React web app to add `react-router`.
 
-If you need to create one, the easiest way to get started is with a popular tool called [Create React App][crapp].
-
-The easiest way to run `create-react-app` is with `npx`.
+If you need to create one, the popular tool [Create React App][crapp] can get you started quickly. Calling `npx create-react-app <app-name>` will create an application and install its dependencies for you.
 
 ```sh
 npx create-react-app demo-app
