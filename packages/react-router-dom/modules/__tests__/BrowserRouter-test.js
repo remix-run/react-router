@@ -13,12 +13,12 @@ describe("A <BrowserRouter>", () => {
 
   describe("with a `history` prop", () => {
     it("logs a warning to the console", () => {
-      jest.spyOn(console, "error").mockImplementation(() => {});
+      jest.spyOn(console, "warn").mockImplementation(() => {});
 
       const history = {};
       renderStrict(<BrowserRouter history={history} />, node);
 
-      expect(console.error).toHaveBeenCalledWith(
+      expect(console.warn).toHaveBeenCalledWith(
         expect.stringContaining("<BrowserRouter> ignores the history prop")
       );
     });
