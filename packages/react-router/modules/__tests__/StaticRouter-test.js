@@ -14,12 +14,12 @@ describe("A <StaticRouter>", () => {
 
   describe("with a history prop", () => {
     it("logs a warning", () => {
-      jest.spyOn(console, "error").mockImplementation(() => {});
+      jest.spyOn(console, "warn").mockImplementation(() => {});
 
       const history = {};
       renderStrict(<StaticRouter history={history} />, node);
 
-      expect(console.error).toHaveBeenCalledWith(
+      expect(console.warn).toHaveBeenCalledWith(
         expect.stringContaining("<StaticRouter> ignores the history prop")
       );
     });
