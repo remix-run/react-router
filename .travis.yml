@@ -1,7 +1,5 @@
 sudo: false
 language: node_js
-node_js:
-  - "10"
 cache:
   directories:
     - packages/react-router/node_modules
@@ -9,6 +7,12 @@ cache:
     - packages/react-router-dom/node_modules
     - packages/react-router-native/node_modules
     - website/node_modules
+node_js:
+  - "10"
+env:
+  - TEST_ENV=cjs
+  - TEST_ENV=umd
+  - TEST_ENV=source
 install:
   - npm ci
 before_script:
