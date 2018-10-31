@@ -33,7 +33,7 @@
     "build": "del cjs esm umd && rollup -c",
     "prepublishOnly": "del cjs esm umd && rollup -c",
     "lint": "eslint modules",
-    "test": "jest"
+    "test": "node ./scripts/test.js"
   },
   "peerDependencies": {
     "react": ">=15"
