@@ -1,10 +1,8 @@
 import React from "react";
 import ReactDOM from "react-dom";
+import { MemoryRouter, NavLink, withRouter } from "react-router-dom";
 
 import renderStrict from "./utils/renderStrict";
-
-// resolved by jest
-import { MemoryRouter, NavLink, withRouter } from "react-router-dom";
 
 describe("A <NavLink>", () => {
   const node = document.createElement("div");

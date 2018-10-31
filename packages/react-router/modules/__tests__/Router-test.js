@@ -1,11 +1,9 @@
 import React from "react";
 import ReactDOM from "react-dom";
 import { createMemoryHistory as createHistory } from "history";
+import { Router } from "react-router";
 
 import renderStrict from "./utils/renderStrict";
-
-// resolved by jest
-import { Router } from "react-router";
 
 describe("A <Router>", () => {
   const node = document.createElement("div");

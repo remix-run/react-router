@@ -1,10 +1,8 @@
 import React from "react";
 import ReactDOM from "react-dom";
+import { MemoryRouter, StaticRouter, Route, withRouter } from "react-router";
 
 import renderStrict from "./utils/renderStrict";
-
-// resolved by jest
-import { MemoryRouter, StaticRouter, Route, withRouter } from "react-router";
 
 describe("withRouter", () => {
   const node = document.createElement("div");

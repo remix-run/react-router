@@ -1,11 +1,9 @@
 import React from "react";
 import ReactDOM from "react-dom";
 import ReactDOMServer from "react-dom/server";
+import { StaticRouter, Redirect, Route, Prompt } from "react-router";
 
 import renderStrict from "./utils/renderStrict";
-
-// resolved by jest
-import { StaticRouter, Redirect, Route, Prompt } from "react-router";
 
 describe("A <StaticRouter>", () => {
   const node = document.createElement("div");

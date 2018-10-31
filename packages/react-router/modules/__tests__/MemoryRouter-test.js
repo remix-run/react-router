@@ -1,10 +1,8 @@
 import React from "react";
 import ReactDOM from "react-dom";
+import { MemoryRouter } from "react-router";
 
 import renderStrict from "./utils/renderStrict";
-
-// resolved by jest
-import { MemoryRouter } from "react-router";
 
 describe("A <MemoryRouter>", () => {
   const node = document.createElement("div");

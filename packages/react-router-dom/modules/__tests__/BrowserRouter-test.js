@@ -1,10 +1,8 @@
 import React from "react";
 import ReactDOM from "react-dom";
+import { BrowserRouter } from "react-router-dom";
 
 import renderStrict from "./utils/renderStrict";
-
-// resolved by jest
-import { BrowserRouter } from "react-router-dom";
 
 describe("A <BrowserRouter>", () => {
   const node = document.createElement("div");
