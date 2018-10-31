@@ -1,5 +1,5 @@
 import React from "react";
-import ReactIs from "react-is";
+import * as ReactIs from "react-is";
 import PropTypes from "prop-types";
 import invariant from "tiny-invariant";
 import warning from "tiny-warning";
