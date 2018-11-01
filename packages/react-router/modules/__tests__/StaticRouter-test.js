@@ -1,7 +1,6 @@
 import React from "react";
 import ReactDOM from "react-dom";
 import ReactDOMServer from "react-dom/server";
-
 import { Route, Prompt, Redirect, StaticRouter } from "react-router";
 
 import renderStrict from "./utils/renderStrict";
@@ -15,12 +14,12 @@ describe("A <StaticRouter>", () => {
 
   describe("with a history prop", () => {
     it("logs a warning", () => {
-      spyOn(console, "error");
+      jest.spyOn(console, "warn").mockImplementation(() => {});
 
       const history = {};
       renderStrict(<StaticRouter history={history} />, node);
 
-      expect(console.error).toHaveBeenCalledWith(
+      expect(console.warn).toHaveBeenCalledWith(
         expect.stringContaining("<StaticRouter> ignores the history prop")
       );
     });

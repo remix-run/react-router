@@ -1,6 +1,5 @@
 import React from "react";
 import ReactDOM from "react-dom";
-
 import { MemoryRouter } from "react-router";
 
 import renderStrict from "./utils/renderStrict";
@@ -14,12 +13,12 @@ describe("A <MemoryRouter>", () => {
 
   describe("with a history prop", () => {
     it("logs a warning", () => {
-      spyOn(console, "error");
+      jest.spyOn(console, "warn").mockImplementation(() => {});
 
       const history = {};
       renderStrict(<MemoryRouter history={history} />, node);
 
-      expect(console.error).toHaveBeenCalledWith(
+      expect(console.warn).toHaveBeenCalledWith(
         expect.stringContaining("<MemoryRouter> ignores the history prop")
       );
     });

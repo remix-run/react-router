@@ -1,8 +1,8 @@
 import React from "react";
 import PropTypes from "prop-types";
 import { createLocation, createPath } from "history";
-import invariant from "invariant";
-import warning from "warning";
+import invariant from "tiny-invariant";
+import warning from "tiny-warning";
 
 import Router from "./Router";
 
@@ -77,7 +77,7 @@ class StaticRouter extends React.Component {
   handleBlock = () => noop;
 
   render() {
-    const { basename, context, location, ...props } = this.props;
+    const { basename, context, location, ...rest } = this.props;
 
     const history = {
       createHref: this.createHref,
@@ -94,7 +94,7 @@ class StaticRouter extends React.Component {
 
     return (
       <Router
-        {...props}
+        {...rest}
         history={history}
         staticContext={this.props.context || {}}
       />

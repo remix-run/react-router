@@ -1,0 +1,7 @@
+# Browsers we support
+last 2 versions
+> 0.5%
+ie >= 10
+safari >= 9
+firefox >= 43
+iOS >= 8

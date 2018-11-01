@@ -1,7 +1,7 @@
 import React from "react";
 import PropTypes from "prop-types";
 import { createMemoryHistory as createHistory } from "history";
-import warning from "warning";
+import warning from "tiny-warning";
 
 import Router from "./Router";
 

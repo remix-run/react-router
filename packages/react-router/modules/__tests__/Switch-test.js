@@ -1,6 +1,5 @@
 import React from "react";
 import ReactDOM from "react-dom";
-
 import { MemoryRouter, Route, Redirect, Switch } from "react-router";
 
 import renderStrict from "./utils/renderStrict";
@@ -15,7 +14,7 @@ describe("A <Switch>", () => {
 
   describe("without a <Router>", () => {
     it("throws an error", () => {
-      spyOn(console, "error");
+      jest.spyOn(console, "error").mockImplementation(() => {});
 
       expect(() => {
         renderStrict(<Switch />, node);

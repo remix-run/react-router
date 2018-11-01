@@ -79,10 +79,10 @@ export default {
     }
   ],
   guides: [
-    require("../../../packages/react-router/docs/guides/philosophy.md"),
     require("../../../packages/react-router-native/docs/guides/quick-start.md"),
     require("../../../packages/react-router-native/docs/guides/deep-linking.md"),
     require("../../../packages/react-router-native/docs/guides/animation.md"),
+    require("../../../packages/react-router/docs/guides/philosophy.md"),
     require("../../../packages/react-router/docs/guides/redux.md"),
     require("../../../packages/react-router/docs/guides/blocked-updates.md")
   ]

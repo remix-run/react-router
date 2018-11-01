@@ -1,4 +1,4 @@
-import warning from "warning";
+import warning from "tiny-warning";
 
 let warnAboutGettingProperty = () => {};
 if (__DEV__) {

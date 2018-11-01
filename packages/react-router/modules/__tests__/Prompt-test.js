@@ -1,7 +1,6 @@
 import React from "react";
 import ReactDOM from "react-dom";
-import createMemoryHistory from "history/createMemoryHistory";
-
+import { createMemoryHistory as createHistory } from "history";
 import { MemoryRouter, Prompt, Router } from "react-router";
 
 import renderStrict from "./utils/renderStrict";
@@ -15,7 +14,7 @@ describe("A <Prompt>", () => {
 
   describe("with no message", () => {
     it("logs a warning to the console", () => {
-      spyOn(console, "error");
+      jest.spyOn(console, "error").mockImplementation(() => {});
 
       renderStrict(
         <MemoryRouter>
@@ -37,7 +36,7 @@ describe("A <Prompt>", () => {
       callback(false);
     });
 
-    const history = createMemoryHistory({
+    const history = createHistory({
       getUserConfirmation: getUserConfirmation
     });
 
@@ -62,7 +61,7 @@ describe("A <Prompt>", () => {
         callback(false);
       });
 
-      const history = createMemoryHistory({
+      const history = createHistory({
         getUserConfirmation: getUserConfirmation
       });
 

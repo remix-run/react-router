@@ -2,7 +2,6 @@ import React from "react";
 import ReactDOM from "react-dom";
 import PropTypes from "prop-types";
 import { createMemoryHistory as createHistory } from "history";
-
 import { Route, Router, __RouterContext as RouterContext } from "react-router";
 
 import renderStrict from "./utils/renderStrict";
@@ -97,7 +96,7 @@ describe("A <Route>", () => {
       });
 
       it("has a `history` property that warns when it is accessed", () => {
-        spyOn(console, "error");
+        jest.spyOn(console, "error").mockImplementation(() => {});
 
         const history = createHistory();
 
@@ -118,7 +117,7 @@ describe("A <Route>", () => {
       });
 
       it("has a `location` property that warns when it is accessed", () => {
-        spyOn(console, "error");
+        jest.spyOn(console, "error").mockImplementation(() => {});
 
         const history = createHistory();
 
@@ -139,7 +138,7 @@ describe("A <Route>", () => {
       });
 
       it("has a `match` property that warns when it is accessed", () => {
-        spyOn(console, "error");
+        jest.spyOn(console, "error").mockImplementation(() => {});
 
         const history = createHistory({
           initialEntries: ["/"]

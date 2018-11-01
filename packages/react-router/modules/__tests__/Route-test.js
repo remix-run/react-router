@@ -1,8 +1,7 @@
 import React from "react";
 import ReactDOM from "react-dom";
 import { createMemoryHistory as createHistory } from "history";
-
-import { MemoryRouter, Route, Router } from "react-router";
+import { MemoryRouter, Router, Route } from "react-router";
 
 import renderStrict from "./utils/renderStrict";
 
@@ -15,7 +14,7 @@ describe("A <Route>", () => {
 
   describe("without a <Router>", () => {
     it("throws an error", () => {
-      spyOn(console, "error");
+      jest.spyOn(console, "error").mockImplementation(() => {});
 
       expect(() => {
         renderStrict(<Route />, node);
@@ -346,7 +345,7 @@ describe("A <Route>", () => {
 
       describe("that returns `undefined`", () => {
         it("logs a warning to the console and renders nothing", () => {
-          spyOn(console, "error");
+          jest.spyOn(console, "warn").mockImplementation(() => {});
 
           renderStrict(
             <MemoryRouter initialEntries={["/"]}>
@@ -357,7 +356,7 @@ describe("A <Route>", () => {
 
           expect(node.innerHTML).toEqual("");
 
-          expect(console.error).toHaveBeenCalledWith(
+          expect(console.warn).toHaveBeenCalledWith(
             expect.stringContaining(
               "You returned `undefined` from the `children` function"
             )
@@ -418,6 +417,34 @@ describe("A <Route>", () => {
       expect(props.history).toBe(history);
       expect(typeof props.location).toBe("object");
       expect(typeof props.match).toBe("object");
+    });
+
+    it("won't throw a prop-type warning when passed valid React components that aren't functions", () => {
+      function forwardRef(Component) {
+        class ForwardComponent extends React.Component {
+          render() {
+            const { forwardedRef, ...rest } = this.props;
+            return <Component ref={forwardedRef} {...rest} />;
+          }
+        }
+        return React.forwardRef((props, ref) => {
+          return <ForwardComponent {...props} forwardedRef={ref} />;
+        });
+      }
+
+      const history = createHistory();
+      const Component = () => null;
+      const WrappedComponent = forwardRef(Component);
+      jest.spyOn(console, "error").mockImplementation(() => {});
+
+      ReactDOM.render(
+        <Router history={history}>
+          <Route path="/" component={WrappedComponent} />
+        </Router>,
+        node
+      );
+
+      expect(console.error).not.toHaveBeenCalled();
     });
   });
 

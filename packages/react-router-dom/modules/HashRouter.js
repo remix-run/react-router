@@ -2,7 +2,7 @@ import React from "react";
 import { Router } from "react-router";
 import { createHashHistory as createHistory } from "history";
 import PropTypes from "prop-types";
-import warning from "warning";
+import warning from "tiny-warning";
 
 /**
  * The public API for a <Router> that uses window.location.hash.

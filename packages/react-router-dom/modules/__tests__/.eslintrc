@@ -2,9 +2,6 @@
   "env": {
     "jest": true
   },
-  "globals": {
-    "spyOn": true
-  },
   "rules": {
     "import/no-unresolved": [2, { "ignore": ["react-router-dom"] }],
     "no-console": 0,
