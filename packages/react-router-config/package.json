@@ -1,6 +1,6 @@
 {
   "name": "react-router-config",
-  "version": "4.4.0-beta.5",
+  "version": "4.4.0-beta.6",
   "description": "Static route config matching for React Router",
   "repository": "ReactTraining/react-router",
   "license": "MIT",
@@ -50,7 +50,7 @@
     "raf": "^3.4.0",
     "react": "^16.5.2",
     "react-dom": "^16.5.2",
-    "react-router": "^4.4.0-beta.5",
+    "react-router": "^4.4.0-beta.6",
     "rollup": "^0.66.6",
     "rollup-plugin-babel": "^4.0.3",
     "rollup-plugin-commonjs": "^9.1.3",
