@@ -1,6 +1,5 @@
 import React from "react";
 import ReactDOM from "react-dom";
-
 import { MemoryRouter, Redirect, Route, Switch } from "react-router";
 
 import renderStrict from "./utils/renderStrict";

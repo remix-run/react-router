@@ -11,7 +11,8 @@ export default {
     require("../../../packages/react-router/docs/api/history.md"),
     require("../../../packages/react-router/docs/api/location.md"),
     require("../../../packages/react-router/docs/api/match.md"),
-    require("../../../packages/react-router/docs/api/withRouter.md")
+    require("../../../packages/react-router/docs/api/withRouter.md"),
+    require("../../../packages/react-router/docs/api/generatePath.md")
   ],
   examples: [],
   guides: [

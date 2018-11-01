@@ -2,7 +2,6 @@ import React from "react";
 import ReactDOM from "react-dom";
 import PropTypes from "prop-types";
 import { createMemoryHistory as createHistory } from "history";
-
 import { Route, Router, __RouterContext as RouterContext } from "react-router";
 
 import renderStrict from "./utils/renderStrict";

@@ -1,6 +1,6 @@
 import React from "react";
 import PropTypes from "prop-types";
-import warning from "warning";
+import warning from "tiny-warning";
 
 import RouterContext from "./RouterContext";
 import warnAboutGettingProperty from "./utils/warnAboutGettingProperty";

@@ -2,7 +2,7 @@ import React from "react";
 import { __RouterContext as RouterContext } from "react-router";
 import { createLocation } from "history";
 import PropTypes from "prop-types";
-import invariant from "invariant";
+import invariant from "tiny-invariant";
 
 function isModifiedEvent(event) {
   return !!(event.metaKey || event.altKey || event.ctrlKey || event.shiftKey);

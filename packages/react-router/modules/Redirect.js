@@ -1,7 +1,7 @@
 import React from "react";
 import PropTypes from "prop-types";
 import { createLocation, locationsAreEqual } from "history";
-import invariant from "invariant";
+import invariant from "tiny-invariant";
 
 import Lifecycle from "./Lifecycle";
 import RouterContext from "./RouterContext";

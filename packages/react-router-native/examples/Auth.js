@@ -1,11 +1,5 @@
 import React, { Component } from "react";
-import {
-  StyleSheet,
-  Text,
-  View,
-  AppRegistry,
-  TouchableHighlight
-} from "react-native";
+import { StyleSheet, Text, View, TouchableHighlight } from "react-native";
 
 import {
   NativeRouter,

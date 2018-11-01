@@ -1,8 +1,8 @@
 import React from "react";
-import ReactIs from "react-is";
+import { isValidElementType } from "react-is";
 import PropTypes from "prop-types";
-import invariant from "invariant";
-import warning from "warning";
+import invariant from "tiny-invariant";
+import warning from "tiny-warning";
 
 import RouterContext from "./RouterContext";
 import matchPath from "./matchPath";
@@ -128,8 +128,8 @@ if (!React.createContext) {
 if (__DEV__) {
   Route.propTypes = {
     children: PropTypes.oneOfType([PropTypes.func, PropTypes.node]),
-    component: function(props, propName) {
-      if (props[propName] && !ReactIs.isValidElementType(props[propName])) {
+    component: (props, propName) => {
+      if (props[propName] && !isValidElementType(props[propName])) {
         return new Error(
           `Invalid prop 'component' supplied to 'Route': the prop is not a valid React component`
         );

@@ -1,8 +1,7 @@
 import React from "react";
 import ReactDOM from "react-dom";
 import { createMemoryHistory as createHistory } from "history";
-
-import { MemoryRouter, Route, Router } from "react-router";
+import { MemoryRouter, Router, Route } from "react-router";
 
 import renderStrict from "./utils/renderStrict";
 
@@ -346,7 +345,7 @@ describe("A <Route>", () => {
 
       describe("that returns `undefined`", () => {
         it("logs a warning to the console and renders nothing", () => {
-          jest.spyOn(console, "error").mockImplementation(() => {});
+          jest.spyOn(console, "warn").mockImplementation(() => {});
 
           renderStrict(
             <MemoryRouter initialEntries={["/"]}>
@@ -357,7 +356,7 @@ describe("A <Route>", () => {
 
           expect(node.innerHTML).toEqual("");
 
-          expect(console.error).toHaveBeenCalledWith(
+          expect(console.warn).toHaveBeenCalledWith(
             expect.stringContaining(
               "You returned `undefined` from the `children` function"
             )
