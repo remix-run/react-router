@@ -1,16 +1,13 @@
 import React from "react";
 import { __RouterContext as RouterContext } from "react-router";
 import warning from "tiny-warning";
+import PropTypes from "prop-types";
+import { locationsAreEqual } from "history";
 
 class FocusWithLocation extends React.Component {
   setRef = element => {
     this.eleToFocus = element;
   };
-
-  render() {
-    const { children } = this.props;
-    return children(this.setRef);
-  }
 
   componentDidMount() {
     this.focus();
@@ -18,13 +15,13 @@ class FocusWithLocation extends React.Component {
 
   componentDidUpdate(prevProps) {
     // only re-focus when the location changes
-    if (this.props.location !== prevProps.location) {
+    if (!locationsAreEqual(this.props.location, prevProps.location)) {
       this.focus();
     }
   }
 
   focus() {
-    const { preserve, preventScroll = false } = this.props;
+    const { preserve, preventScroll } = this.props;
     // https://developers.google.com/web/fundamentals/accessibility/focus/using-tabindex#managing_focus_at_the_page_level
     if (this.eleToFocus != null) {
       warning(
@@ -48,6 +45,11 @@ class FocusWithLocation extends React.Component {
       );
     }
   }
+
+  render() {
+    const { children } = this.props;
+    return children(this.setRef);
+  }
 }
 
 const Focus = props => (
@@ -55,5 +57,17 @@ const Focus = props => (
     {context => <FocusWithLocation location={context.location} {...props} />}
   </RouterContext.Consumer>
 );
+
+Focus.defaultProps = {
+  preventScroll: false
+};
+
+if (__DEV__) {
+  Focus.propTypes = {
+    preventScroll: PropTypes.bool,
+    preserve: PropTypes.bool,
+    children: PropTypes.func
+  };
+}
 
 export default Focus;
