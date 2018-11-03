@@ -37,8 +37,7 @@ class Route extends React.Component {
 
           let { children, component, render } = this.props;
 
-          // Preact uses an empty array as children by
-          // default, so use null if that's the case.
+          // Preact uses an empty array as children by default, so use null instead.
           if (Array.isArray(children) && children.length === 0) {
             children = null;
           }
