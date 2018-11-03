@@ -48,6 +48,7 @@ if (__DEV__) {
     onPress: PropTypes.func,
     component: PropTypes.oneOfType([
       PropTypes.func,
+      // TODO: Use forwardRef PropType when it is available.
       PropTypes.shape({
         render: PropTypes.func.isRequired,
       }),
