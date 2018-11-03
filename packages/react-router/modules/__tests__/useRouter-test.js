@@ -4,7 +4,7 @@ import { MemoryRouter, Route, useRouter } from "react-router";
 
 import renderStrict from "./utils/renderStrict";
 
-describe("useContext", () => {
+describe("useRouter", () => {
   let node = document.createElement("div");
 
   afterEach(() => {
