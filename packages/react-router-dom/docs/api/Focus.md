@@ -20,7 +20,7 @@ In order for `Focus` to work, the component type for the focused element needs t
 
 Focusing a DOM element will give it an outline; you can style it with `outline: none;` to hide this outline.
 
-**Note:** Only the element that is passed the `ref` should have the `outline: none;` style. A global `outline: none;` rule should **not** be used because it will make your application inaccessible to users who navigate the page using their keyboard.
+**Note:** Only the element that is passed the `ref` should have the `outline: none` style. A global `outline: none` rule should **not** be used because it will make your application inaccessible to users who navigate the page using their keyboard. You also should not use `outline: none` style if you are attaching the `ref` to a natively focusable element, like an `input`, `a`, or `button`.
 
 ```jsx
 <Focus>
