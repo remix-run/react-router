@@ -5,6 +5,7 @@ import warning from "tiny-warning";
 
 import RouterContext from "./RouterContext";
 import matchPath from "./matchPath";
+import resolvePath from "./utils/resolvePath";
 
 /**
  * The public API for rendering the first <Route> that matches.
@@ -28,7 +29,8 @@ class Switch extends React.Component {
             if (match == null && React.isValidElement(child)) {
               element = child;
 
-              const path = child.props.path || child.props.from;
+              const path =
+                resolvePath(child.props.path, location) || child.props.from;
 
               match = path
                 ? matchPath(location.pathname, { ...child.props, path })

@@ -7,6 +7,7 @@ import warning from "tiny-warning";
 import RouterContext from "./RouterContext";
 import matchPath from "./matchPath";
 import warnAboutGettingProperty from "./utils/warnAboutGettingProperty";
+import resolvePath from "./utils/resolvePath";
 
 function isEmptyChildren(children) {
   return React.Children.count(children) === 0;
@@ -14,10 +15,11 @@ function isEmptyChildren(children) {
 
 function getContext(props, context) {
   const location = props.location || context.location;
+  const path = resolvePath(props.path, location);
   const match = props.computedMatch
     ? props.computedMatch // <Switch> already computed the match for us
-    : props.path
-      ? matchPath(location.pathname, props)
+    : path
+      ? matchPath(location.pathname, { ...props, path })
       : context.match;
 
   return { ...context, location, match };
@@ -139,6 +141,7 @@ if (__DEV__) {
     location: PropTypes.object,
     path: PropTypes.oneOfType([
       PropTypes.string,
+      PropTypes.func,
       PropTypes.arrayOf(PropTypes.string)
     ]),
     render: PropTypes.func,

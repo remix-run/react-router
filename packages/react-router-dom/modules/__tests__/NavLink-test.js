@@ -25,6 +25,21 @@ describe("A <NavLink>", () => {
       expect(a.className).toContain("active");
     });
 
+    it("applies its default activeClassName with function `to` prop", () => {
+      renderStrict(
+        <MemoryRouter initialEntries={["/pizza"]}>
+          <NavLink to={location => ({ ...location, pathname: "/pizza" })}>
+            Pizza!
+          </NavLink>
+        </MemoryRouter>,
+        node
+      );
+
+      const a = node.querySelector("a");
+
+      expect(a.className).toContain("active");
+    });
+
     it("applies a custom activeClassName instead of the default", () => {
       renderStrict(
         <MemoryRouter initialEntries={["/pizza"]}>
@@ -470,6 +485,25 @@ describe("A <NavLink>", () => {
       const a = node.querySelector("a");
 
       expect(a.className).toContain("active");
+    });
+
+    it("is passed as an argument to function `to` prop", () => {
+      renderStrict(
+        <MemoryRouter initialEntries={["/pizza"]}>
+          <NavLink
+            to={location => location}
+            activeClassName="selected"
+            location={{ pathname: "/pasta" }}
+          >
+            Pasta!
+          </NavLink>
+        </MemoryRouter>,
+        node
+      );
+
+      const a = node.querySelector("a");
+      expect(a.className).not.toContain("active");
+      expect(a.className).toContain("selected");
     });
 
     it("is not overwritten by the current location", () => {

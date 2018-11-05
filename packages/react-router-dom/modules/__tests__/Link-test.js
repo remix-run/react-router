@@ -1,6 +1,7 @@
 import React from "react";
 import ReactDOM from "react-dom";
-import { MemoryRouter, HashRouter, Link } from "react-router-dom";
+import { MemoryRouter, HashRouter, Link, Route } from "react-router-dom";
+import { Simulate } from "react-dom/test-utils";
 
 import renderStrict from "./utils/renderStrict";
 
@@ -74,6 +75,34 @@ describe("A <Link>", () => {
     expect(a.getAttribute("href")).toEqual("/the/path?the=query#the-hash");
   });
 
+  it("accepts an object returning function `to` prop", () => {
+    const to = location => ({ ...location, search: "foo=bar" });
+
+    renderStrict(
+      <MemoryRouter initialEntries={["/hello"]}>
+        <Link to={to}>link</Link>
+      </MemoryRouter>,
+      node
+    );
+
+    const a = node.querySelector("a");
+    expect(a.getAttribute("href")).toEqual("/hello?foo=bar");
+  });
+
+  it("accepts a string returning function `to` prop", () => {
+    const to = location => `${location.pathname}?foo=bar`;
+
+    ReactDOM.render(
+      <MemoryRouter initialEntries={["/hello"]}>
+        <Link to={to}>link</Link>
+      </MemoryRouter>,
+      node
+    );
+
+    const a = node.querySelector("a");
+    expect(a.getAttribute("href")).toEqual("/hello?foo=bar");
+  });
+
   describe("with no pathname", () => {
     it("resolves using the current location", () => {
       renderStrict(
@@ -107,6 +136,36 @@ describe("A <Link>", () => {
       </MemoryRouter>,
       node
     );
+  });
+
+  describe("When a <Link> is clicked", () => {
+    it("changes the location with function `to` prop", () => {
+      const to = location => ({
+        ...location,
+        pathname: "hello",
+        search: "world"
+      });
+
+      renderStrict(
+        <MemoryRouter initialEntries={["/hi"]}>
+          <div>
+            <Route path="/hi" render={() => <Link to={to}>link</Link>} />
+            <Route
+              path="/hello"
+              render={({ location }) => (
+                <div>{`Hello, ${location.search.substr(1)}`}</div>
+              )}
+            />
+          </div>
+        </MemoryRouter>,
+        node
+      );
+
+      expect(node.textContent).not.toBe("Hello, world");
+      const a = node.getElementsByTagName("a")[0];
+      Simulate.click(a, { button: 0 });
+      expect(node.textContent).toBe("Hello, world");
+    });
   });
 
   describe("with a <HashRouter>", () => {

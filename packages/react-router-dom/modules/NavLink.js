@@ -3,9 +3,20 @@ import { Route } from "react-router";
 import PropTypes from "prop-types";
 
 import Link from "./Link";
+import { resolveToLocation, normalizeToLocation } from "./utils/locationUtils";
 
 function joinClassnames(...classnames) {
   return classnames.filter(i => i).join(" ");
+}
+
+function resolvePath(to, location) {
+  const { pathname } = normalizeToLocation(
+    resolveToLocation(to, location),
+    location
+  );
+
+  // Regex taken from: https://github.com/pillarjs/path-to-regexp/blob/master/index.js#L202
+  return pathname && pathname.replace(/([.+*?=^!:${}()[\]|/\\])/g, "\\$1");
 }
 
 /**
@@ -18,23 +29,18 @@ function NavLink({
   className: classNameProp,
   exact,
   isActive: isActiveProp,
-  location,
+  location: locationProp,
   strict,
   style: styleProp,
   to,
   ...rest
 }) {
-  const path = typeof to === "object" ? to.pathname : to;
-
-  // Regex taken from: https://github.com/pillarjs/path-to-regexp/blob/master/index.js#L202
-  const escapedPath = path && path.replace(/([.+*?=^!:${}()[\]|/\\])/g, "\\$1");
-
   return (
     <Route
-      path={escapedPath}
+      path={location => resolvePath(to, locationProp || location)}
       exact={exact}
       strict={strict}
-      location={location}
+      location={locationProp}
       children={({ location, match }) => {
         const isActive = !!(isActiveProp
           ? isActiveProp(match, location)
