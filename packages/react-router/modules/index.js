@@ -7,7 +7,8 @@ export { default as StaticRouter } from "./StaticRouter";
 export { default as Switch } from "./Switch";
 export { default as generatePath } from "./generatePath";
 export { default as matchPath } from "./matchPath";
-export { default as useRouter } from "./useRouter";
 export { default as withRouter } from "./withRouter";
+
+export { default as unstable_useRouter } from "./useRouter";
 
 export { default as __RouterContext } from "./RouterContext";
