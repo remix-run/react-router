@@ -16,7 +16,7 @@ class Link extends React.Component {
     replace: false
   };
 
-  handleClick(event, context) {
+  handleClick(event, history) {
     if (this.props.onClick) this.props.onClick(event);
 
     if (
@@ -27,9 +27,7 @@ class Link extends React.Component {
     ) {
       event.preventDefault();
 
-      const method = this.props.replace
-        ? context.history.replace
-        : context.history.push;
+      const method = this.props.replace ? history.replace : history.push;
 
       method(this.props.to);
     }
@@ -52,7 +50,7 @@ class Link extends React.Component {
           return (
             <a
               {...rest}
-              onClick={event => this.handleClick(event, context)}
+              onClick={event => this.handleClick(event, context.history)}
               href={href}
               ref={innerRef}
             />
