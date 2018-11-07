@@ -120,12 +120,10 @@ describe("A <Link>", () => {
     });
   });
 
-  it("exposes its ref via an innerRef callback prop", done => {
+  it("exposes its ref via an innerRef callbar prop", () => {
+    let refNode;
     function refCallback(n) {
-      if (n) {
-        expect(n.tagName).toEqual("A");
-        done();
-      }
+      refNode = n;
     }
 
     renderStrict(
@@ -136,6 +134,30 @@ describe("A <Link>", () => {
       </MemoryRouter>,
       node
     );
+
+    expect(refNode).not.toBe(undefined);
+    expect(refNode.tagName).toEqual("A");
+  });
+
+  it("uses a custom component prop", () => {
+    let linkProps;
+    function MyComponent(p) {
+      linkProps = p;
+      return null;
+    }
+
+    renderStrict(
+      <MemoryRouter>
+        <Link component={MyComponent} to="/">
+          link
+        </Link>
+      </MemoryRouter>,
+      node
+    );
+
+    expect(linkProps).not.toBe(undefined);
+    expect(typeof linkProps.href).toBe("string");
+    expect(typeof linkProps.navigate).toBe("function");
   });
 
   it("exposes its ref via an innerRef RefObject prop", done => {
