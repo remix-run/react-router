@@ -12,10 +12,6 @@ function isModifiedEvent(event) {
  * The public API for rendering a history-aware <a>.
  */
 class Link extends React.Component {
-  static defaultProps = {
-    replace: false
-  };
-
   handleClick(event, history) {
     if (this.props.onClick) this.props.onClick(event);
 
