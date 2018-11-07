@@ -23,7 +23,7 @@ const babelOptionsESM = {
 const commonjsOptions = {
   include: /node_modules/,
   namedExports: {
-    "react-is": ["isValidElementType"]
+    "../react-router/node_modules/react-is/index.js": ["isValidElementType"]
   }
 };
 
