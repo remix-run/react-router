@@ -12,8 +12,8 @@ function joinClassnames(...classnames) {
  * A <Link> wrapper that knows if it's "active" or not.
  */
 function NavLink({
-  "aria-current": ariaCurrent,
-  activeClassName,
+  "aria-current": ariaCurrent = "page",
+  activeClassName = "active",
   activeStyle,
   className: classNameProp,
   exact,
@@ -58,11 +58,6 @@ function NavLink({
     />
   );
 }
-
-NavLink.defaultProps = {
-  "aria-current": "page",
-  activeClassName: "active"
-};
 
 if (__DEV__) {
   const ariaCurrentType = PropTypes.oneOf([
