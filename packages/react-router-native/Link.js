@@ -11,7 +11,6 @@ class Link extends React.Component {
   };
 
   handlePress = (event, history) => {
-    console.log(history);
     if (this.props.onPress) this.props.onPress(event);
 
     if (!event.defaultPrevented) {
