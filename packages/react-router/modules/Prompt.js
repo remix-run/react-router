@@ -8,16 +8,15 @@ import RouterContext from "./RouterContext";
 /**
  * The public API for prompting the user before navigating away from a screen.
  */
-function Prompt(props) {
+function Prompt({ message, when = true }) {
   return (
     <RouterContext.Consumer>
       {context => {
         invariant(context, "You should not use <Prompt> outside a <Router>");
 
-        if (!props.when || context.staticContext) return null;
+        if (!when || context.staticContext) return null;
 
         const method = context.history.block;
-        const message = props.message;
 
         return (
           <Lifecycle
@@ -33,16 +32,13 @@ function Prompt(props) {
             onUnmount={self => {
               self.release();
             }}
+            message={message}
           />
         );
       }}
     </RouterContext.Consumer>
   );
 }
-
-Prompt.defaultProps = {
-  when: true
-};
 
 if (__DEV__) {
   const messageType = PropTypes.oneOfType([PropTypes.func, PropTypes.string]);

@@ -51,36 +51,23 @@ function noop() {}
  * server-rendering scenarios.
  */
 class StaticRouter extends React.Component {
-  static defaultProps = {
-    basename: "",
-    location: "/"
-  };
-
-  createHref = path => addLeadingSlash(this.props.basename + createURL(path));
-
-  handlePush = location => {
-    const { basename, context } = this.props;
-    context.action = "PUSH";
+  navigateTo(location, action) {
+    const { basename = "", context } = this.props;
+    context.action = action;
     context.location = addBasename(basename, createLocation(location));
     context.url = createURL(context.location);
-  };
+  }
 
-  handleReplace = location => {
-    const { basename, context } = this.props;
-    context.action = "REPLACE";
-    context.location = addBasename(basename, createLocation(location));
-    context.url = createURL(context.location);
-  };
-
+  handlePush = location => this.navigateTo(location, "PUSH");
+  handleReplace = location => this.navigateTo(location, "REPLACE");
   handleListen = () => noop;
-
   handleBlock = () => noop;
 
   render() {
-    const { basename, context, location, ...rest } = this.props;
+    const { basename = "", context = {}, location = "/", ...rest } = this.props;
 
     const history = {
-      createHref: this.createHref,
+      createHref: path => addLeadingSlash(basename + createURL(path)),
       action: "POP",
       location: stripBasename(basename, createLocation(location)),
       push: this.handlePush,
@@ -92,13 +79,7 @@ class StaticRouter extends React.Component {
       block: this.handleBlock
     };
 
-    return (
-      <Router
-        {...rest}
-        history={history}
-        staticContext={this.props.context || {}}
-      />
-    );
+    return <Router {...rest} history={history} staticContext={context} />;
   }
 }
 

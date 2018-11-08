@@ -10,44 +10,41 @@ import generatePath from "./generatePath";
 /**
  * The public API for navigating programmatically with a component.
  */
-function Redirect(props) {
+function Redirect({ computedMatch, to, push = false }) {
   return (
     <RouterContext.Consumer>
       {context => {
         invariant(context, "You should not use <Redirect> outside a <Router>");
 
-        const method = props.push
-          ? context.history.push
-          : context.history.replace;
-        const to = createLocation(
-          props.computedMatch
-            ? typeof props.to === "string"
-              ? generatePath(props.to, props.computedMatch.params)
+        const { history, staticContext } = context;
+
+        const method = push ? history.push : history.replace;
+        const location = createLocation(
+          computedMatch
+            ? typeof to === "string"
+              ? generatePath(to, computedMatch.params)
               : {
-                  ...props.to,
-                  pathname: generatePath(
-                    props.to.pathname,
-                    props.computedMatch.params
-                  )
+                  ...to,
+                  pathname: generatePath(to.pathname, computedMatch.params)
                 }
-            : props.to
+            : to
         );
 
         // When rendering in a static context,
         // set the new location immediately.
-        if (context.staticContext) {
-          method(to);
+        if (staticContext) {
+          method(location);
           return null;
         }
 
         return (
           <Lifecycle
             onMount={() => {
-              method(to);
+              method(location);
             }}
             onUpdate={(self, prevProps) => {
-              if (!locationsAreEqual(prevProps.to, to)) {
-                method(to);
+              if (!locationsAreEqual(prevProps.to, location)) {
+                method(location);
               }
             }}
             to={to}
@@ -57,10 +54,6 @@ function Redirect(props) {
     </RouterContext.Consumer>
   );
 }
-
-Redirect.defaultProps = {
-  push: false
-};
 
 if (__DEV__) {
   Redirect.propTypes = {
