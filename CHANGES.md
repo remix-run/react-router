@@ -118,7 +118,7 @@
 
 * Added support for `<Redirect>` as a child of a `<Switch>`
 * Fixed a bug where `<Switch>` would always remount children
-* Removed subscriptions to avoid unneccessary rerendering in every `<Route>`
+* Removed subscriptions to avoid unnecessary rerendering in every `<Route>`
 * Added `<Switch location>` and `<Route location>` props so that "pure" route
   components can know when the location changes
 * Removed location persistence across app restarts in `<NativeRouter>`
