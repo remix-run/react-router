@@ -134,7 +134,7 @@ Once that works without animations, we're ready to add an animation around it.
 </AnimatedChild>
 ```
 
-It's important to use a [`<Switch>`][switch]. It will ensure that only one route can match, and therefore gives us a single element on `props.children` to hang on to and render during the animation. Finally, you _must_ pass the location to `Switch`. It prefers `props.location` over the internal router location, which enables the saved child element to be renered later and continue to match the old location.
+It's important to use a [`<Switch>`][switch]. It will ensure that only one route can match, and therefore gives us a single element on `props.children` to hang on to and render during the animation. Finally, you _must_ pass the location to `Switch`. It prefers `props.location` over the internal router location, which enables the saved child element to be rendered later and continue to match the old location.
 
 There are a handful of props handed to `AnimatedChild` that the parent will know about as it manages the animation. Again, this guide is more inspiration than copy/paste right now, feel free to look at the source of this website for exact implementation. Alright, let's check out the implementation of `AnimatedChild` (it's copy pasted from the animation used on this site).
 
