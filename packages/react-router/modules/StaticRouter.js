@@ -5,6 +5,7 @@ import invariant from "tiny-invariant";
 import warning from "tiny-warning";
 
 import Router from "./Router";
+import Lifecycle from "./Lifecycle";
 
 function addLeadingSlash(path) {
   return path.charAt(0) === "/" ? path : "/" + path;
@@ -50,37 +51,48 @@ function noop() {}
  * location changes in a context object. Useful mainly in testing and
  * server-rendering scenarios.
  */
-class StaticRouter extends React.Component {
-  navigateTo(location, action) {
-    const { basename = "", context } = this.props;
+function StaticRouter(props) {
+  const { basename = "", context = {}, location = "/", ...rest } = props;
+  const navigateTo = (location, action) => {
+    const { basename = "", context } = props;
     context.action = action;
     context.location = addBasename(basename, createLocation(location));
     context.url = createURL(context.location);
-  }
+  };
 
-  handlePush = location => this.navigateTo(location, "PUSH");
-  handleReplace = location => this.navigateTo(location, "REPLACE");
-  handleListen = () => noop;
-  handleBlock = () => noop;
+  const handlePush = location => navigateTo(location, "PUSH");
+  const handleReplace = location => navigateTo(location, "REPLACE");
+  const handleListen = () => noop;
+  const handleBlock = () => noop;
 
-  render() {
-    const { basename = "", context = {}, location = "/", ...rest } = this.props;
+  const history = {
+    createHref: path => addLeadingSlash(basename + createURL(path)),
+    action: "POP",
+    location: stripBasename(basename, createLocation(location)),
+    push: handlePush,
+    replace: handleReplace,
+    go: staticHandler("go"),
+    goBack: staticHandler("goBack"),
+    goForward: staticHandler("goForward"),
+    listen: handleListen,
+    block: handleBlock
+  };
 
-    const history = {
-      createHref: path => addLeadingSlash(basename + createURL(path)),
-      action: "POP",
-      location: stripBasename(basename, createLocation(location)),
-      push: this.handlePush,
-      replace: this.handleReplace,
-      go: staticHandler("go"),
-      goBack: staticHandler("goBack"),
-      goForward: staticHandler("goForward"),
-      listen: this.handleListen,
-      block: this.handleBlock
-    };
-
-    return <Router {...rest} history={history} staticContext={context} />;
-  }
+  return (
+    <Lifecycle
+      onMount={() => {
+        warning(
+          !props.history,
+          "<StaticRouter> ignores the history prop. To use a custom history, " +
+            "use `import { Router }` instead of `import { StaticRouter as Router }`."
+        );
+      }}
+    >
+      {() => {
+        return <Router {...rest} history={history} staticContext={context} />;
+      }}
+    </Lifecycle>
+  );
 }
 
 if (__DEV__) {
@@ -88,14 +100,6 @@ if (__DEV__) {
     basename: PropTypes.string,
     context: PropTypes.object,
     location: PropTypes.oneOfType([PropTypes.string, PropTypes.object])
-  };
-
-  StaticRouter.prototype.componentDidMount = function() {
-    warning(
-      !this.props.history,
-      "<StaticRouter> ignores the history prop. To use a custom history, " +
-        "use `import { Router }` instead of `import { StaticRouter as Router }`."
-    );
   };
 }
 
