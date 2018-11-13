@@ -14,7 +14,7 @@ class Lifecycle extends React.Component {
   }
 
   render() {
-    return this.props.children(this);
+    return this.props.children ? this.props.children(this) : null;
   }
 }
 
