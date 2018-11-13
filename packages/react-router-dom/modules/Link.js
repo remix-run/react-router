@@ -11,50 +11,48 @@ function isModifiedEvent(event) {
 /**
  * The public API for rendering a history-aware <a>.
  */
-class Link extends React.Component {
-  handleClick(event, history) {
-    if (this.props.onClick) this.props.onClick(event);
+function Link(props) {
+  const { innerRef, replace, to, ...rest } = props; // eslint-disable-line no-unused-vars
+
+  const handleClick = (event, history) => {
+    if (props.onClick) props.onClick(event);
 
     if (
       !event.defaultPrevented && // onClick prevented default
       event.button === 0 && // ignore everything but left clicks
-      (!this.props.target || this.props.target === "_self") && // let browser handle "target=_blank" etc.
+      (!props.target || props.target === "_self") && // let browser handle "target=_blank" etc.
       !isModifiedEvent(event) // ignore clicks with modifier keys
     ) {
       event.preventDefault();
 
-      const method = this.props.replace ? history.replace : history.push;
+      const method = props.replace ? history.replace : history.push;
 
-      method(this.props.to);
+      method(props.to);
     }
-  }
+  };
 
-  render() {
-    const { innerRef, replace, to, ...rest } = this.props; // eslint-disable-line no-unused-vars
+  return (
+    <RouterContext.Consumer>
+      {context => {
+        invariant(context, "You should not use <Link> outside a <Router>");
 
-    return (
-      <RouterContext.Consumer>
-        {context => {
-          invariant(context, "You should not use <Link> outside a <Router>");
+        const location =
+          typeof to === "string"
+            ? createLocation(to, null, null, context.location)
+            : to;
+        const href = location ? context.history.createHref(location) : "";
 
-          const location =
-            typeof to === "string"
-              ? createLocation(to, null, null, context.location)
-              : to;
-          const href = location ? context.history.createHref(location) : "";
-
-          return (
-            <a
-              {...rest}
-              onClick={event => this.handleClick(event, context.history)}
-              href={href}
-              ref={innerRef}
-            />
-          );
-        }}
-      </RouterContext.Consumer>
-    );
-  }
+        return (
+          <a
+            {...rest}
+            onClick={event => handleClick(event, context.history)}
+            href={href}
+            ref={innerRef}
+          />
+        );
+      }}
+    </RouterContext.Consumer>
+  );
 }
 
 if (__DEV__) {
