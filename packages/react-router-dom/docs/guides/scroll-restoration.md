@@ -13,7 +13,7 @@ Most of the time all you need is to "scroll to the top" because you have a long 
 ```jsx
 class ScrollToTop extends Component {
   componentDidUpdate(prevProps) {
-    if (this.props.location !== prevProps.location) {
+    if (this.props.location.pathname !== prevProps.location.pathname) {
       window.scrollTo(0, 0);
     }
   }
