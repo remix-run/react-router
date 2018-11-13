@@ -10,3 +10,4 @@ export { default as matchPath } from "./matchPath";
 export { default as withRouter } from "./withRouter";
 
 export { default as __RouterContext } from "./RouterContext";
+export { default as __Lifecycle } from "./Lifecycle";
