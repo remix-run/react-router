@@ -10,7 +10,6 @@ Please read https://reactjs.org/ and the Code of Conduct before opening an issue
 - [Making a Pull Request?](#pr)
 - [Setup](#setup)
 - [Development](#development)
-- [Hacking](#hacking)
 
 <a name="bug"/></a>
 ## Think You Found a Bug?
@@ -69,6 +68,19 @@ npm run build
 
 React Router uses a monorepo to host code for multiple packages. These packages live in the `packages` directory.
 
+React Router uses Lerna to manage the monorepo. Lerna sets up symlinks between the packages, so when you build one package, its changes will be automatically available to the packages that depend on it.
+
+### Building
+
+Calling `npm run build` from the root directory will build every package. If you want to build a specific package, you should `cd` into that directory.
+```bash
+# build everything
+npm run build
+# build react-router-dom
+cd packages/react-router-dom
+npm run build
+```
+
 ### Testing
 
 Calling `npm test` from the root directory will run **every** package's tests. If you want to run tests for a specific package, you should `cd` into that directory.
@@ -88,7 +100,3 @@ The code for the documentation website lives in the `website` directory. `cd` in
 cd website
 npm start
 ```
-
-## Hacking
-
-The best way to hack on the router is to symlink it into your project using [`npm link`](https://docs.npmjs.com/cli/link). Then, use `npm run watch` to automatically watch the `modules` directory and output a new build every time something changes.
