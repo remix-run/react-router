@@ -85,7 +85,7 @@ code {
 }
 markdown > pre {
   background: rgb(45, 45, 45);
-  float: left;
+  float: right;
   clear: right;
   white-space: pre-wrap;
 }
@@ -178,6 +178,7 @@ h3 {
     padding: 20px;
     border-radius: 6px;
     overflow: auto;
+    width: 100%;
   }
 
   markdown > *:not(pre):not(h1):not(h2) {
