@@ -17,10 +17,10 @@ Then with a module bundler like [webpack](https://webpack.github.io/), use as yo
 
 ```js
 // using an ES6 transpiler, like babel
-import { matchRoutes, renderRoutes } from 'react-router-config'
+import { matchRoutes, renderRoutes } from "react-router-config";
 
 // not using an ES6 transpiler
-var matchRoutes = require('react-router-config').matchRoutes
+var matchRoutes = require("react-router-config").matchRoutes;
 ```
 
 The UMD build is also available on [unpkg](https://unpkg.com):
@@ -52,23 +52,27 @@ Routes are objects with the same properties as a `<Route>` with a couple differe
 
 ```js
 const routes = [
-  { component: Root,
+  {
+    component: Root,
     routes: [
-      { path: '/',
+      {
+        path: "/",
         exact: true,
         component: Home
       },
-      { path: '/child/:id',
+      {
+        path: "/child/:id",
         component: Child,
         routes: [
-          { path: '/child/:id/grand-child',
+          {
+            path: "/child/:id/grand-child",
             component: GrandChild
           }
         ]
       }
     ]
   }
-]
+];
 ```
 
 **Note**: Just like `<Route>`, relative paths are not (yet) supported. When it is supported there, it will be supported here.
@@ -80,12 +84,13 @@ const routes = [
 Returns an array of matched routes.
 
 #### Parameters
+
 - routes - the route configuration
 - pathname - the [pathname](https://developer.mozilla.org/en-US/docs/Web/API/HTMLHyperlinkElementUtils/pathname) component of the url. This must be a decoded string representing the path.
 
 ```js
-import { matchRoutes } from 'react-router-config'
-const branch = matchRoutes(routes, '/child/23')
+import { matchRoutes } from "react-router-config";
+const branch = matchRoutes(routes, "/child/23");
 // using the routes shown earlier, this returns
 // [
 //   routes[0],
@@ -99,8 +104,8 @@ Each item in the array contains two properties: `routes` and `match`.
 - `match`: The match object that also gets passed to `<Route>` render methods.
 
 ```js
-branch[0].match.url
-branch[0].match.isExact
+branch[0].match.url;
+branch[0].match.isExact;
 // etc.
 ```
 
@@ -191,26 +196,30 @@ Again, that's all pseudo-code. There are a lot of ways to do server rendering wi
 In order to ensure that matching outside of render with `matchRoutes` and inside of render result in the same branch, you must use `renderRoutes` instead of `<Route>` inside your components. You can render a `<Route>` still, but know that it will not be accounted for in `matchRoutes` outside of render.
 
 ```js
-import { renderRoutes } from 'react-router-config'
+import { renderRoutes } from "react-router-config";
 
 const routes = [
-  { component: Root,
+  {
+    component: Root,
     routes: [
-      { path: '/',
+      {
+        path: "/",
         exact: true,
         component: Home
       },
-      { path: '/child/:id',
+      {
+        path: "/child/:id",
         component: Child,
         routes: [
-          { path: '/child/:id/grand-child',
+          {
+            path: "/child/:id/grand-child",
             component: GrandChild
           }
         ]
       }
     ]
   }
-]
+];
 
 const Root = ({ route }) => (
   <div>
@@ -218,36 +227,34 @@ const Root = ({ route }) => (
     {/* child routes won't render without this */}
     {renderRoutes(route.routes)}
   </div>
-)
+);
 
 const Home = ({ route }) => (
   <div>
     <h2>Home</h2>
   </div>
-)
+);
 
 const Child = ({ route }) => (
   <div>
     <h2>Child</h2>
     {/* child routes won't render without this */}
-    {renderRoutes(route.routes, { someProp: 'these extra props are optional' })}
+    {renderRoutes(route.routes, { someProp: "these extra props are optional" })}
   </div>
-)
+);
 
 const GrandChild = ({ someProp }) => (
   <div>
     <h3>Grand Child</h3>
     <div>{someProp}</div>
   </div>
-)
+);
 
-
-ReactDOM.render((
+ReactDOM.render(
   <BrowserRouter>
     {/* kick it all off with the root route */}
     {renderRoutes(routes)}
-  </BrowserRouter>
-), document.getElementById('root'))
-
+  </BrowserRouter>,
+  document.getElementById("root")
+);
 ```
-

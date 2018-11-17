@@ -18,7 +18,9 @@ class Example extends Component {
   render() {
     const {
       data,
-      match: { params: { example: exampleParam, environment } }
+      match: {
+        params: { example: exampleParam, environment }
+      }
     } = this.props;
     const example = data.examples.find(e => e.slug === exampleParam);
     const isNative = environment === "native";

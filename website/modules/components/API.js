@@ -15,7 +15,9 @@ class API extends Component {
 
   render() {
     const { match, data } = this.props;
-    const { params: { mod, header: headerParam, environment } } = match;
+    const {
+      params: { mod, header: headerParam, environment }
+    } = match;
     const doc = mod && data.api.find(doc => mod === doc.title.slug);
     const header =
       doc && headerParam ? doc.headers.find(h => h.slug === headerParam) : null;
@@ -23,7 +25,9 @@ class API extends Component {
       <Block className="api-doc-wrapper" fontSize="80%">
         <Block className="api-doc">
           <ScrollToDoc doc={doc} header={header} />
-          {data.api.map((d, i) => <MarkdownViewer key={i} html={d.markup} />)}
+          {data.api.map((d, i) => (
+            <MarkdownViewer key={i} html={d.markup} />
+          ))}
         </Block>
         {mod && !doc && <Redirect to={`/${environment}/api`} />}
         {headerParam &&

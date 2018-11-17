@@ -38,7 +38,9 @@ class Environment extends Component {
       history,
       location,
       match,
-      match: { params: { environment } }
+      match: {
+        params: { environment }
+      }
     } = this.props;
     if (!envData[environment]) {
       return <Redirect to="/" />;

@@ -12,12 +12,12 @@ Then with a module bundler like [webpack](https://webpack.github.io/), use as yo
 
 ```js
 // using ES6 modules
-import { BrowserRouter, Route, Link } from 'react-router-dom'
+import { BrowserRouter, Route, Link } from "react-router-dom";
 
 // using CommonJS modules
-const BrowserRouter = require('react-router-dom').BrowserRouter
-const Route = require('react-router-dom').Route
-const Link = require('react-router-dom').Link
+const BrowserRouter = require("react-router-dom").BrowserRouter;
+const Route = require("react-router-dom").Route;
+const Link = require("react-router-dom").Link;
 ```
 
 The UMD build is also available on [unpkg](https://unpkg.com):

@@ -96,7 +96,8 @@ class MailingListSignup extends Component {
                     style={{ textDecoration: "underline" }}
                   >
                     our React workshops
-                  </a>, and more:
+                  </a>
+                  , and more:
                 </Block>
                 <form onSubmit={this.handleSubmit}>
                   <Flex

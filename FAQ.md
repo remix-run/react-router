@@ -1,14 +1,14 @@
 # Frequently Asked Questions
 
-This is a list of support questions that frequently show up in GitHub issues. This list is intended to minimize the frequency of this happening. The issues section is intended for bug reports, not developer support. Support questions should be asked at StackOverflow or in the Reactiflux chat. 
+This is a list of support questions that frequently show up in GitHub issues. This list is intended to minimize the frequency of this happening. The issues section is intended for bug reports, not developer support. Support questions should be asked at StackOverflow or in the Reactiflux chat.
 
 If there is a support question that you frequently see being asked, please open a PR to add it to this list.
 
-* [Why aren't my components updating when the location changes?](#why-arent-my-components-updating-when-the-location-changes)
-* [Why doesn't my application render after refreshing?](#why-doesnt-my-application-render-after-refreshing)
-* [Why doesn't my application work when loading nested routes?](#why-doesnt-my-application-work-when-loading-nested-routes)
-* [How do I access the `history` object outside of components?](#how-do-i-access-the-history-object-outside-of-components)
-* [How do I pass props to the component rendered by a `<Route>`?](#how-do-i-pass-props-to-the-component-rendered-by-a-route)
+- [Why aren't my components updating when the location changes?](#why-arent-my-components-updating-when-the-location-changes)
+- [Why doesn't my application render after refreshing?](#why-doesnt-my-application-render-after-refreshing)
+- [Why doesn't my application work when loading nested routes?](#why-doesnt-my-application-work-when-loading-nested-routes)
+- [How do I access the `history` object outside of components?](#how-do-i-access-the-history-object-outside-of-components)
+- [How do I pass props to the component rendered by a `<Route>`?](#how-do-i-pass-props-to-the-component-rendered-by-a-route)
 
 ### Why aren't my components updating when the location changes?
 
@@ -19,13 +19,14 @@ React Router relies on updates propagating from your router component to every c
 If your application is hosted on a static file server, you need to use a `<HashRouter>` instead of a `<BrowserRouter>`.
 
 ```js
-import { HashRouter } from 'react-router-dom'
+import { HashRouter } from "react-router-dom";
 
-ReactDOM.render((
+ReactDOM.render(
   <HashRouter>
     <App />
-  </HashRouter>
-), holder)
+  </HashRouter>,
+  holder
+);
 ```
 
 When you load the root page of a website hosted on a static file server (e.g., `http://www.example.com`), a `<BrowserHistory>` might appear to work. However, this is only because when the browser makes the request for the root page, the server responds with the root `index.html` file.
@@ -45,9 +46,9 @@ However, you will end up with a blank screen if you were to refresh a non-root p
 This is not an issue when your server can respond to dynamic requests. In that situation, you can instruct the server to catch all requests and serve up the same `index.html` file.
 
 ```js
-app.get('*', (req, res) => {
-  res.sendFile(path.resolve(__dirname, 'index.html'))
-})
+app.get("*", (req, res) => {
+  res.sendFile(path.resolve(__dirname, "index.html"));
+});
 ```
 
 When you use a static server, your application should have just one `index.html` file.
@@ -75,6 +76,7 @@ If the `src` of the `<script>` tag that is used to load your application has a r
 <script src='static/js/bundle.js'></script>
 <script src='./static/js/bundle.js'></script>
 ```
+
 ### How do I access the `history` object outside of components?
 
 When you use the `<BrowserRouter>`, `<HashRouter>`, `<MemoryRouter>`, and `<NativeRouter>`, a `history` object will be created for you. This is convenient, and the `history` object is readily accessible from within your React components, but it can be a pain to use it outside of them. If you need to access a `history` object outside of your components, you will need to create your own `history` object (in its own module) and import it throughout your project.
@@ -83,23 +85,26 @@ If you do this, make sure that you use the generic `<Router>` component and not 
 
 ```js
 // history.js
-import { createBrowserHistory } from 'history'
-export default createBrowserHistory()
+import { createBrowserHistory } from "history";
+export default createBrowserHistory();
 ```
+
 ```js
 // index.js
-import { Router } from 'react-router-dom';
-import history from './history'
+import { Router } from "react-router-dom";
+import history from "./history";
 
-ReactDOM.render((
+ReactDOM.render(
   <Router history={history}>
     <App />
-  </Router>
-), document.getElementById('root'))
+  </Router>,
+  document.getElementById("root")
+);
 ```
+
 ```js
 // nav.js
-import history from './history'
+import history from "./history";
 
 export default function nav(loc) {
   history.push(loc);
@@ -116,11 +121,12 @@ If you need to pass props to the component rendered by a `<Route>`, you should u
 
 ```js
 const App = () => {
-  const color = 'red'
+  const color = "red";
   return (
-    <Route path='/somewhere' render={(props) => (
-      <MyComponent {...props} color={color} />
-    )} />
-  )
-}
+    <Route
+      path="/somewhere"
+      render={props => <MyComponent {...props} color={color} />}
+    />
+  );
+};
 ```
