@@ -1,5 +1,6 @@
 import React from "react";
 import ReactDOM from "react-dom";
+import * as ReactIs from "react-is";
 import { MemoryRouter, StaticRouter, Route, withRouter } from "react-router";
 
 import renderStrict from "./utils/renderStrict";
@@ -154,4 +155,10 @@ describe("withRouter", () => {
     expect(typeof decorated.foo).toBe("function");
     expect(decorated.foo()).toBe("bar");
   });
+
+  it('does not allow ref forwarding', () => {
+    const WrappedComponent = React.forwardRef((props, ref) => <div {...props} ref={ref} />)
+    const Component = withRouter(WrappedComponent);
+    expect(ReactIs.isForwardRef(<Component />)).toBe(false);
+  })
 });
