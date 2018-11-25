@@ -3,16 +3,6 @@ import PropTypes from "prop-types";
 import warning from "tiny-warning";
 
 import RouterContext from "./RouterContext";
-import warnAboutGettingProperty from "./utils/warnAboutGettingProperty";
-
-function getContext(props, state) {
-  return {
-    history: props.history,
-    location: state.location,
-    match: Router.computeRootMatch(state.location.pathname),
-    staticContext: props.staticContext
-  };
-}
 
 /**
  * The public API for putting history on context.
@@ -61,46 +51,18 @@ class Router extends React.Component {
   }
 
   render() {
-    const context = getContext(this.props, this.state);
-
     return (
       <RouterContext.Provider
         children={this.props.children || null}
-        value={context}
+        value={{
+          history: this.props.history,
+          location: this.state.location,
+          match: Router.computeRootMatch(this.state.location.pathname),
+          staticContext: this.props.staticContext
+        }}
       />
     );
   }
-}
-
-// TODO: Remove this in v5
-if (!React.createContext) {
-  Router.childContextTypes = {
-    router: PropTypes.object.isRequired
-  };
-
-  Router.prototype.getChildContext = function() {
-    const context = getContext(this.props, this.state);
-
-    if (__DEV__) {
-      const contextWithoutWarnings = { ...context };
-
-      Object.keys(context).forEach(key => {
-        warnAboutGettingProperty(
-          context,
-          key,
-          `You should not be using this.context.router.${key} directly. It is private API ` +
-            "for internal use only and is subject to change at any time. Instead, use " +
-            "a <Route> or withRouter() to access the current location, match, etc."
-        );
-      });
-
-      context._withoutWarnings = contextWithoutWarnings;
-    }
-
-    return {
-      router: context
-    };
-  };
 }
 
 if (__DEV__) {
