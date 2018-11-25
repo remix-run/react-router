@@ -11,50 +11,47 @@ function isModifiedEvent(event) {
 /**
  * The public API for rendering a history-aware <a>.
  */
-class Link extends React.Component {
-  handleClick(event, history) {
-    if (this.props.onClick) this.props.onClick(event);
+function Link(props) {
+  const { innerRef, replace, to, ...rest } = props;
 
-    if (
-      !event.defaultPrevented && // onClick prevented default
-      event.button === 0 && // ignore everything but left clicks
-      (!this.props.target || this.props.target === "_self") && // let browser handle "target=_blank" etc.
-      !isModifiedEvent(event) // ignore clicks with modifier keys
-    ) {
-      event.preventDefault();
+  return (
+    <RouterContext.Consumer>
+      {context => {
+        invariant(context, "You should not use <Link> outside a <Router>");
 
-      const method = this.props.replace ? history.replace : history.push;
+        const history = context.history;
 
-      method(this.props.to);
-    }
-  }
+        const handleClick = event => {
+          if (props.onClick) props.onClick(event);
 
-  render() {
-    const { innerRef, replace, to, ...rest } = this.props; // eslint-disable-line no-unused-vars
+          if (
+            // onClick prevented default
+            !event.defaultPrevented &&
+            // ignore everything but left clicks
+            event.button === 0 &&
+            // let browser handle "target=_blank" etc.
+            (!props.target || props.target === "_self") &&
+            // ignore clicks with modifier keys
+            !isModifiedEvent(event)
+          ) {
+            event.preventDefault();
 
-    return (
-      <RouterContext.Consumer>
-        {context => {
-          invariant(context, "You should not use <Link> outside a <Router>");
+            const method = props.replace ? history.replace : history.push;
 
-          const location =
-            typeof to === "string"
-              ? createLocation(to, null, null, context.location)
-              : to;
-          const href = location ? context.history.createHref(location) : "";
+            method(props.to);
+          }
+        };
 
-          return (
-            <a
-              {...rest}
-              onClick={event => this.handleClick(event, context.history)}
-              href={href}
-              ref={innerRef}
-            />
-          );
-        }}
-      </RouterContext.Consumer>
-    );
-  }
+        const location =
+          typeof to === "string"
+            ? createLocation(to, null, null, context.location)
+            : to;
+        const href = location ? history.createHref(location) : "";
+
+        return <a {...rest} onClick={handleClick} href={href} ref={innerRef} />;
+      }}
+    </RouterContext.Consumer>
+  );
 }
 
 if (__DEV__) {
