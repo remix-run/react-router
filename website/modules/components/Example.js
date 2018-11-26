@@ -1,6 +1,6 @@
 import React, { Component } from "react";
 import PropTypes from "prop-types";
-import WebExample from "./WebExample";
+import { SandboxEmbed } from "@codesandbox/react-embed";
 import NativeExample from "./NativeExample";
 import { Redirect } from "react-router-dom";
 
@@ -28,7 +28,35 @@ class Example extends Component {
       isNative ? (
         <NativeExample example={example} />
       ) : (
-        <WebExample example={example} />
+        <SandboxEmbed
+          sandboxOptions={{
+            name: `React Router - ${example.label}`,
+            examplePath: example.path,
+            gitInfo: {
+              account: "ReactTraining",
+              repository: "react-router",
+              host: "github"
+            },
+            dependencies: {
+              "react-router-dom": "latest",
+              ...(example.extraDependencies || {})
+            },
+            example: example.code
+          }}
+          embedOptions={{
+            codemirror: true,
+            fontsize: 14
+          }}
+          height="100vh"
+        >
+          <div
+            style={{
+              width: "100%",
+              height: "100vh",
+              backgroundColor: "#1C1F21"
+            }}
+          />
+        </SandboxEmbed>
       )
     ) : (
       <Redirect to={`/${environment}/example/${data.examples[0].slug}`} />
