@@ -1,7 +1,6 @@
 import React, { Component } from "react";
 import PropTypes from "prop-types";
-import { SandboxEmbed } from "@codesandbox/react-embed";
-import NativeExample from "./NativeExample";
+import SandboxExample from "./SandboxExample";
 import { Redirect } from "react-router-dom";
 
 class Example extends Component {
@@ -26,37 +25,30 @@ class Example extends Component {
     const isNative = environment === "native";
     return example ? (
       isNative ? (
-        <NativeExample example={example} />
+        <SandboxExample
+          label={example.label}
+          path={example.path}
+          dependencies={{
+            "react-router-native": "latest",
+            "react-native-web": "latest",
+            "react-art": "latest",
+            "react-scripts": "2.0.0",
+            ...(example.extraDependencies || {})
+          }}
+          code={example.code}
+          extraEmbedOptions={{ editorsize: 66, hidenavigation: true }}
+        />
       ) : (
-        <SandboxEmbed
-          sandboxOptions={{
-            name: `React Router - ${example.label}`,
-            examplePath: example.path,
-            gitInfo: {
-              account: "ReactTraining",
-              repository: "react-router",
-              host: "github"
-            },
-            dependencies: {
-              "react-router-dom": "latest",
-              ...(example.extraDependencies || {})
-            },
-            example: example.code
+        <SandboxExample
+          label={example.label}
+          path={example.path}
+          dependencies={{
+            "react-router-dom": "latest",
+            "react-scripts": "2.0.0",
+            ...(example.extraDependencies || {})
           }}
-          embedOptions={{
-            codemirror: true,
-            fontsize: 14
-          }}
-          height="100vh"
-        >
-          <div
-            style={{
-              width: "100%",
-              height: "100vh",
-              backgroundColor: "#1C1F21"
-            }}
-          />
-        </SandboxEmbed>
+          code={example.code}
+        />
       )
     ) : (
       <Redirect to={`/${environment}/example/${data.examples[0].slug}`} />
