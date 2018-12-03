@@ -24,6 +24,8 @@ jobs:
   - stage: Deploy Website
     if: branch = website
     env: PUBLIC_PATH=/react-router/
+    # The website is built as part of the deploy script,
+    # so we don't need to build it yet.
     before_script: npm run build -- --no-website
     script: echo "Deploying website to https://reacttraining.com$PUBLIC_PATH"
     before_deploy:
