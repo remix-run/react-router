@@ -1,9 +1,9 @@
 {
   "private": true,
   "scripts": {
-    "postinstall": "node ./scripts/postinstall.js",
     "build": "node ./scripts/build.js",
     "clean": "git clean -fdX .",
+    "postinstall": "node ./scripts/postinstall.js",
     "start": "node ./scripts/start.js",
     "test": "node ./scripts/test.js"
   },

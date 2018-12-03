@@ -1,2 +1,3 @@
+.travis.yml
 package.json
 package-lock.json

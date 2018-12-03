@@ -2,33 +2,39 @@ language: node_js
 node_js: node
 cache:
   directories:
-    - packages/react-router/node_modules
-    - packages/react-router-config/node_modules
-    - packages/react-router-dom/node_modules
-    - packages/react-router-native/node_modules
-    - website/node_modules
+  - packages/react-router/node_modules
+  - packages/react-router-config/node_modules
+  - packages/react-router-dom/node_modules
+  - packages/react-router-native/node_modules
+  - website/node_modules
 env:
-  - TEST_ENV=cjs BUILD_ENV=cjs
-  - TEST_ENV=umd BUILD_ENV=umd
-  - TEST_ENV=source
+- TEST_ENV=cjs BUILD_ENV=cjs
+- TEST_ENV=umd BUILD_ENV=umd
+- TEST_ENV=source
 before_script:
-  - ([[ -z "$BUILD_ENV" ]] || npm run build -- --no-website)
+# react-router ESM build is imported by react-router-dom UMD,
+# so we need to build it before building react-router-dom UMD
+- ([[ "$BUILD_ENV" != "umd" ]] || (cd packages/react-router && BUILD_ENV=esm npm run build))
+- ([[ -z "$BUILD_ENV" ]] || npm run build -- --no-website)
+# react-router CJS build is imported by react-router-config tests,
+# so we need to build it before running react-router-config tests
+- ([[ "$BUILD_ENV" = "cjs" ]] || (cd packages/react-router && BUILD_ENV=cjs npm run build))
 jobs:
   include:
-    - stage: Deploy Website
-      if: branch = website
-      env: PUBLIC_PATH=/react-router/
-      before_script: npm run build
-      script: echo "Deploying website to https://reacttraining.com$PUBLIC_PATH"
-      before_deploy:
-        - openssl aes-256-cbc -K $encrypted_70c5e56b421c_key -iv $encrypted_70c5e56b421c_iv
-          -in website_deploy_key.enc -out website_deploy_key -d
-        - chmod 600 website_deploy_key
-        - eval $(ssh-agent -s)
-        - ssh-add website_deploy_key
-      deploy:
-        provider: script
-        script: bash scripts/deploy-website.sh
-        skip_cleanup: true
-        on:
-          branch: website
+  - stage: Deploy Website
+    if: branch = website
+    env: PUBLIC_PATH=/react-router/
+    before_script: npm run build -- --no-website
+    script: echo "Deploying website to https://reacttraining.com$PUBLIC_PATH"
+    before_deploy:
+    - openssl aes-256-cbc -K $encrypted_70c5e56b421c_key -iv $encrypted_70c5e56b421c_iv
+      -in website_deploy_key.enc -out website_deploy_key -d
+    - chmod 600 website_deploy_key
+    - eval $(ssh-agent -s)
+    - ssh-add website_deploy_key
+    deploy:
+      provider: script
+      script: bash scripts/deploy-website.sh
+      skip_cleanup: true
+      on:
+        branch: website
