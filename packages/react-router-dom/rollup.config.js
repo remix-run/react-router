@@ -8,80 +8,125 @@ import { uglify } from "rollup-plugin-uglify";
 import pkg from "./package.json";
 
 const input = "modules/index.js";
-const name = "ReactRouterDOM";
-const globals = {
-  react: "React"
-};
-const babelOptionsCJS = {
-  exclude: /node_modules/
-};
-const babelOptionsESM = {
-  exclude: /node_modules/,
-  runtimeHelpers: true,
-  plugins: [["@babel/transform-runtime", { useESModules: true }]]
-};
-const commonjsOptions = {
-  include: /node_modules/,
-  namedExports: {
-    "../react-router/node_modules/react-is/index.js": ["isValidElementType"]
-  }
-};
+const globalName = "ReactRouterDOM";
 
-const external = id => !id.startsWith(".") && !id.startsWith("/");
+function external(id) {
+  return !id.startsWith(".") && !id.startsWith("/");
+}
 
-export default [
+const cjs = [
   {
     input,
     output: { file: `cjs/${pkg.name}.js`, format: "cjs" },
     external,
     plugins: [
-      babel(babelOptionsCJS),
+      babel({ exclude: /node_modules/ }),
       replace({ "process.env.NODE_ENV": JSON.stringify("development") })
     ]
   },
-
   {
     input,
     output: { file: `cjs/${pkg.name}.min.js`, format: "cjs" },
     external,
     plugins: [
-      babel(babelOptionsCJS),
+      babel({ exclude: /node_modules/ }),
       replace({ "process.env.NODE_ENV": JSON.stringify("production") }),
       uglify()
     ]
-  },
+  }
+];
 
+const esm = [
   {
     input,
     output: { file: `esm/${pkg.name}.js`, format: "esm" },
     external,
-    plugins: [babel(babelOptionsESM), sizeSnapshot()]
-  },
+    plugins: [
+      babel({
+        exclude: /node_modules/,
+        runtimeHelpers: true,
+        plugins: [["@babel/transform-runtime", { useESModules: true }]]
+      }),
+      sizeSnapshot()
+    ]
+  }
+];
 
+const globals = { react: "React" };
+
+const umd = [
   {
     input,
-    output: { file: `umd/${pkg.name}.js`, format: "umd", name, globals },
+    output: {
+      file: `umd/${pkg.name}.js`,
+      format: "umd",
+      name: globalName,
+      globals
+    },
     external: Object.keys(globals),
     plugins: [
-      babel(babelOptionsESM),
+      babel({
+        exclude: /node_modules/,
+        runtimeHelpers: true,
+        plugins: [["@babel/transform-runtime", { useESModules: true }]]
+      }),
       nodeResolve(),
-      commonjs(commonjsOptions),
+      commonjs({
+        include: /node_modules/,
+        namedExports: {
+          "../react-router/node_modules/react-is/index.js": [
+            "isValidElementType"
+          ]
+        }
+      }),
       replace({ "process.env.NODE_ENV": JSON.stringify("development") }),
       sizeSnapshot()
     ]
   },
-
   {
     input,
-    output: { file: `umd/${pkg.name}.min.js`, format: "umd", name, globals },
+    output: {
+      file: `umd/${pkg.name}.min.js`,
+      format: "umd",
+      name: globalName,
+      globals
+    },
     external: Object.keys(globals),
     plugins: [
-      babel(babelOptionsESM),
+      babel({
+        exclude: /node_modules/,
+        runtimeHelpers: true,
+        plugins: [["@babel/transform-runtime", { useESModules: true }]]
+      }),
       nodeResolve(),
-      commonjs(commonjsOptions),
+      commonjs({
+        include: /node_modules/,
+        namedExports: {
+          "../react-router/node_modules/react-is/index.js": [
+            "isValidElementType"
+          ]
+        }
+      }),
       replace({ "process.env.NODE_ENV": JSON.stringify("production") }),
       sizeSnapshot(),
       uglify()
     ]
   }
 ];
+
+let config;
+switch (process.env.BUILD_ENV) {
+  case "cjs":
+    config = cjs;
+    break;
+  case "esm":
+    config = esm;
+    break;
+  case "umd":
+    config = umd;
+    break;
+  default:
+    config = cjs.concat(esm).concat(umd);
+}
+
+export default config;

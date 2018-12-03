@@ -1,5 +1,5 @@
-sudo: false
 language: node_js
+node_js: node
 cache:
   directories:
     - packages/react-router/node_modules
@@ -7,25 +7,28 @@ cache:
     - packages/react-router-dom/node_modules
     - packages/react-router-native/node_modules
     - website/node_modules
-node_js:
-  - "10"
 env:
-  - TEST_ENV=cjs
-  - TEST_ENV=umd
+  - TEST_ENV=cjs BUILD_ENV=cjs
+  - TEST_ENV=umd BUILD_ENV=umd
   - TEST_ENV=source
-install:
-  - npm ci
 before_script:
-  - npm run build -- --no-website
-before_deploy:
-  - openssl aes-256-cbc -K $encrypted_70c5e56b421c_key -iv $encrypted_70c5e56b421c_iv
-    -in website_deploy_key.enc -out website_deploy_key -d
-  - chmod 600 website_deploy_key
-  - eval $(ssh-agent -s)
-  - ssh-add website_deploy_key
-deploy:
-  provider: script
-  script: bash scripts/deploy-website.sh
-  skip_cleanup: true
-  on:
-    branch: website
+  - ([[ -z "$BUILD_ENV" ]] || npm run build -- --no-website)
+jobs:
+  include:
+    - stage: Deploy Website
+      if: branch = website
+      env: PUBLIC_PATH=/react-router/
+      before_script: npm run build
+      script: echo "Deploying website to https://reacttraining.com$PUBLIC_PATH"
+      before_deploy:
+        - openssl aes-256-cbc -K $encrypted_70c5e56b421c_key -iv $encrypted_70c5e56b421c_iv
+          -in website_deploy_key.enc -out website_deploy_key -d
+        - chmod 600 website_deploy_key
+        - eval $(ssh-agent -s)
+        - ssh-add website_deploy_key
+      deploy:
+        provider: script
+        script: bash scripts/deploy-website.sh
+        skip_cleanup: true
+        on:
+          branch: website
