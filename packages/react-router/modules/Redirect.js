@@ -10,7 +10,7 @@ import generatePath from "./generatePath";
 /**
  * The public API for navigating programmatically with a component.
  */
-function Redirect({ computedMatch, to, push = false }) {
+function Redirect({ match, to, push = false }) {
   return (
     <RouterContext.Consumer>
       {context => {
@@ -20,12 +20,12 @@ function Redirect({ computedMatch, to, push = false }) {
 
         const method = push ? history.push : history.replace;
         const location = createLocation(
-          computedMatch
+          match
             ? typeof to === "string"
-              ? generatePath(to, computedMatch.params)
+              ? generatePath(to, match.params)
               : {
                   ...to,
-                  pathname: generatePath(to.pathname, computedMatch.params)
+                  pathname: generatePath(to.pathname, match.params)
                 }
             : to
         );

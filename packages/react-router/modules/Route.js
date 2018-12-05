@@ -22,11 +22,11 @@ class Route extends React.Component {
           invariant(context, "You should not use <Route> outside a <Router>");
 
           const location = this.props.location || context.location;
-          const match = this.props.computedMatch
-            ? this.props.computedMatch // <Switch> already computed the match for us
+          const match = this.props.match
+            ? this.props.match // <Switch> already computed the match for us
             : this.props.path
-              ? matchPath(location.pathname, this.props)
-              : context.match;
+            ? matchPath(location.pathname, this.props)
+            : context.match;
 
           const props = { ...context, location, match };
 
@@ -62,12 +62,12 @@ class Route extends React.Component {
               {children && !isEmptyChildren(children)
                 ? children
                 : props.match
-                  ? component
-                    ? React.createElement(component, props)
-                    : render
-                      ? render(props)
-                      : null
-                  : null}
+                ? component
+                  ? React.createElement(component, props)
+                  : render
+                  ? render(props)
+                  : null
+                : null}
             </RouterContext.Provider>
           );
         }}

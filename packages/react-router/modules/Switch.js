@@ -37,7 +37,7 @@ class Switch extends React.Component {
           });
 
           return match
-            ? React.cloneElement(element, { location, computedMatch: match })
+            ? React.cloneElement(element, { location, match })
             : null;
         }}
       </RouterContext.Consumer>
