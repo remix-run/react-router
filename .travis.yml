@@ -1,12 +1,6 @@
 language: node_js
 node_js: node
-cache:
-  directories:
-  - packages/react-router/node_modules
-  - packages/react-router-config/node_modules
-  - packages/react-router-dom/node_modules
-  - packages/react-router-native/node_modules
-  - website/node_modules
+cache: npm
 env:
 - TEST_ENV=cjs BUILD_ENV=cjs
 - TEST_ENV=umd BUILD_ENV=umd
@@ -19,6 +13,8 @@ before_script:
 # react-router CJS build is imported by react-router-config tests,
 # so we need to build it before running react-router-config tests
 - ([[ "$BUILD_ENV" = "cjs" ]] || (cd packages/react-router && BUILD_ENV=cjs npm run build))
+script:
+- npm test
 jobs:
   include:
   - stage: Deploy Website

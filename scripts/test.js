@@ -14,7 +14,7 @@ const cwd = process.cwd();
   "react-router-native"
 ].forEach(packageName => {
   process.chdir(path.resolve(__dirname, "../packages/" + packageName));
-  exec("npm run test");
+  exec("npm test");
 });
 
 process.chdir(cwd);
