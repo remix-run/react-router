@@ -70,6 +70,7 @@ if (__DEV__) {
   ]);
 
   NavLink.propTypes = {
+    ...Link.propTypes,
     "aria-current": ariaCurrentType,
     activeClassName: PropTypes.string,
     activeStyle: PropTypes.object,
@@ -78,8 +79,7 @@ if (__DEV__) {
     isActive: PropTypes.func,
     location: PropTypes.object,
     strict: Route.propTypes.strict,
-    style: PropTypes.object,
-    to: Link.propTypes.to
+    style: PropTypes.object
   };
 }
 
