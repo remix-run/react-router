@@ -6,7 +6,7 @@ One great feature of the web is that we don't have to make our visitors download
 
 ```json
 {
-  "presets": ["@babel/react"],
+  "presets": ["@babel/preset-react"],
   "plugins": ["@babel/plugin-syntax-dynamic-import"]
 }
 ```
@@ -37,7 +37,7 @@ That's all there is to it! Simply use `LoadableDashboard` (or whatever you named
 
 ```json
 {
-  "presets": ["@babel/react"],
+  "presets": ["@babel/preset-react"],
   "plugins": [
     "@babel/plugin-syntax-dynamic-import",
     [
@@ -51,6 +51,7 @@ That's all there is to it! Simply use `LoadableDashboard` (or whatever you named
 ```
 
 [babel]: https://babeljs.io/
+[`@babel/preset-react`]:  https://babeljs.io/docs/en/babel-preset-react
 [`@babel/plugin-syntax-dynamic-import`]: https://babeljs.io/docs/plugins/syntax-dynamic-import/
 [`babel-plugin-import-inspector`]: https://github.com/thejameskyle/react-loadable/tree/6902cc87f618446c54daa85d8fecec6836c9461a#babel-plugin-import-inspector
 [`react-loadable`]: https://github.com/thejameskyle/react-loadable
