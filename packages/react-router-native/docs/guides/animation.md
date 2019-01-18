@@ -205,7 +205,7 @@ Hope that helps get you thinking. Again, the animations themselves are the same 
 General change in location
 
 ```js
-nextProps.location !== this.props.location`
+nextProps.location !== this.props.location;
 ```
 
 Going from child to parent:
