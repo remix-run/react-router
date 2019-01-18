@@ -91,7 +91,7 @@ if (__DEV__) {
     path: PropTypes.oneOfType([
       PropTypes.string,
       PropTypes.arrayOf(PropTypes.string)
-    ]),
+    ]).isRequired,
     render: PropTypes.func,
     sensitive: PropTypes.bool,
     strict: PropTypes.bool
