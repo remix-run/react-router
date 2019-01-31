@@ -56,6 +56,16 @@ const refCallback = node => {
 <Link to="/" innerRef={refCallback} />
 ```
 
+## innerRef: RefObject
+
+Get the underlying `ref` of the component with `React.createRef()`
+
+```jsx
+const anchorRef = React.createRef()
+
+<Link to="/" innerRef={anchorRef} />
+```
+
 ## others
 
 You can also pass props you'd like to be on the `<a>` such as a `title`, `id`, `className`, etc.
