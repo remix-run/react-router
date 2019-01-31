@@ -59,7 +59,11 @@ class Link extends React.Component {
 
 if (__DEV__) {
   const toType = PropTypes.oneOfType([PropTypes.string, PropTypes.object]);
-  const innerRefType = PropTypes.oneOfType([PropTypes.string, PropTypes.func]);
+  const innerRefType = PropTypes.oneOfType([
+    PropTypes.string,
+    PropTypes.func,
+    PropTypes.shape({ current: PropTypes.instanceOf(Element) })
+  ]);
 
   Link.propTypes = {
     innerRef: innerRefType,

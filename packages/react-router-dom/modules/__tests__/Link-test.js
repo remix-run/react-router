@@ -91,7 +91,7 @@ describe("A <Link>", () => {
     });
   });
 
-  it("exposes its ref via an innerRef prop", done => {
+  it("exposes its ref via an innerRef callback prop", done => {
     function refCallback(n) {
       if (n) {
         expect(n.tagName).toEqual("A");
@@ -102,6 +102,29 @@ describe("A <Link>", () => {
     renderStrict(
       <MemoryRouter>
         <Link to="/" innerRef={refCallback}>
+          link
+        </Link>
+      </MemoryRouter>,
+      node
+    );
+  });
+
+  it("exposes its ref via an innerRef RefObject prop", done => {
+    const refObject = {
+      get current() {
+        return null;
+      },
+      set current(n) {
+        if (n) {
+          expect(n.tagName).toEqual("A");
+          done();
+        }
+      }
+    };
+
+    renderStrict(
+      <MemoryRouter>
+        <Link to="/" innerRef={refObject}>
           link
         </Link>
       </MemoryRouter>,
