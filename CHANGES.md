@@ -1,9 +1,3 @@
-## [Unreleased]
-
-- Add `React.createRef()` as valid for `Link`'s `innerRef` prop ([#6567] by @gcangussu)
-
-[#6567]: https://github.com/ReactTraining/react-router/pull/6567
-
 ## [v4.3.0](https://github.com/ReactTraining/react-router/compare/v4.2.0...v4.3.0)
 
 > Jun 6, 2018
