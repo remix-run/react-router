@@ -88,3 +88,57 @@ describe("pathless routes", () => {
     });
   });
 });
+
+describe("exact matching", () => {
+  it("matches only exact routes", () => {
+    const routes = [
+      {
+        path: "/"
+      },
+      {
+        path: "/anaheim",
+        exact: true
+      }
+    ];
+
+    const branch = matchRoutes(routes, "/anaheim", true);
+    expect(branch.length).toEqual(1);
+    expect(branch[0].route).toEqual(routes[1]);
+  });
+
+  it("fails when no exact route is found", () => {
+    const routes = [
+      {
+        path: "/"
+      }
+    ];
+
+    const branch = matchRoutes(routes, "/anaheim", true);
+    expect(branch.length).toEqual(0);
+  });
+
+  it("matches the first exact route", () => {
+    const routes = [
+      {
+        path: "/"
+      },
+      {
+        path: "/pepper",
+        routes: [
+          {
+            path: "/pepper/jalepeno",
+            exact: true
+          }
+        ]
+      },
+      {
+        path: "/pepper/jalepeno",
+        exact: true
+      }
+    ];
+
+    const branch = matchRoutes(routes, "/pepper/jalepeno", true);
+    expect(branch.length).toEqual(2);
+    expect(branch[0].route).toEqual(routes[1]);
+  });
+});

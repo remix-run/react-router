@@ -1,25 +1,31 @@
 import { matchPath, Router } from "react-router";
 
-function matchRoutes(routes, pathname, /*not public API*/ branch = []) {
-  routes.some(route => {
+function matchRoutes(
+  routes,
+  pathname,
+  exact = false,
+  /*not public API*/ parent = []
+) {
+  for (const route of routes) {
     const match = route.path
       ? matchPath(pathname, route)
-      : branch.length
-        ? branch[branch.length - 1].match // use parent match
+      : parent.length
+        ? parent[parent.length - 1].match // use parent match
         : Router.computeRootMatch(pathname); // use default "root" match
 
     if (match) {
-      branch.push({ route, match });
+      const node = [...parent, { route, match }];
+      const res =
+        (route.routes && matchRoutes(route.routes, pathname, exact, node)) ||
+        node;
 
-      if (route.routes) {
-        matchRoutes(route.routes, pathname, branch);
+      if (!exact || (res && res[res.length - 1].match.isExact)) {
+        return res;
       }
     }
+  }
 
-    return match;
-  });
-
-  return branch;
+  return parent;
 }
 
 export default matchRoutes;
