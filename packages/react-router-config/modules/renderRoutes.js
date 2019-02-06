@@ -1,26 +1,34 @@
 import React from "react";
-import { Switch, Route } from "react-router";
+import { Route } from "react-router";
+import matchRoutes from "./matchRoutes";
 
-function renderRoutes(routes, extraProps = {}, switchProps = {}) {
-  return routes ? (
-    <Switch {...switchProps}>
-      {routes.map((route, i) => (
-        <Route
-          key={route.key || i}
-          path={route.path}
-          exact={route.exact}
-          strict={route.strict}
-          render={props =>
+function renderRoutes(routes, extraProps = {}) {
+  if (!routes) {
+    return null;
+  }
+
+  return (
+    <Route
+      render={({ location }) => {
+        const branches = matchRoutes(routes, location.pathname);
+
+        return branches.reduceRight(
+          (children, { route, match }) =>
             route.render ? (
-              route.render({ ...props, ...extraProps, route: route })
+              route.render({ ...extraProps, route, match, children })
             ) : (
-              <route.component {...props} {...extraProps} route={route} />
-            )
-          }
-        />
-      ))}
-    </Switch>
-  ) : null;
+              <route.component
+                {...extraProps}
+                route={route}
+                match={match}
+                children={children}
+              />
+            ),
+          null
+        );
+      }}
+    />
+  );
 }
 
 export default renderRoutes;
