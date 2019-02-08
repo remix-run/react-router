@@ -84,7 +84,7 @@ describe("A <Route>", () => {
   describe("with dynamic segments in the path", () => {
     it("decodes them", () => {
       renderStrict(
-        <MemoryRouter initialEntries={["/a%20dynamic%20segment"]}>
+        <MemoryRouter initialEntries={["/a%20dynamic%20segment%20%3A%2F%3F%C8%A9%20with%20encoding"]}>
           <Route
             path="/:id"
             render={({ match }) => <h1>{match.params.id}</h1>}
@@ -93,7 +93,7 @@ describe("A <Route>", () => {
         node
       );
 
-      expect(node.innerHTML).toContain("a dynamic segment");
+      expect(node.innerHTML).toContain("a dynamic segment :/?ȩ with encoding");
     });
   });
 
