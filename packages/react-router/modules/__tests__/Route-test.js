@@ -32,7 +32,7 @@ describe("A <Route>", () => {
       node
     );
 
-    expect(node.innerHTML).toContain(text);
+    expect(node.textContent).toEqual(text);
   });
 
   it("renders when it matches at the root URL", () => {
@@ -45,7 +45,7 @@ describe("A <Route>", () => {
       node
     );
 
-    expect(node.innerHTML).toContain(text);
+    expect(node.textContent).toEqual(text);
   });
 
   it("does not render when it does not match", () => {
@@ -58,7 +58,7 @@ describe("A <Route>", () => {
       node
     );
 
-    expect(node.innerHTML).not.toContain(text);
+    expect(node.textContent).not.toContain(text);
   });
 
   it("matches using nextContext when updating", () => {
@@ -78,7 +78,7 @@ describe("A <Route>", () => {
 
     history.push("/sushi/spicy-tuna");
 
-    expect(node.innerHTML).toContain("/sushi/spicy-tuna");
+    expect(node.textContent).toEqual("/sushi/spicy-tuna");
   });
 
   describe("with dynamic segments in the path", () => {
@@ -93,7 +93,7 @@ describe("A <Route>", () => {
         node
       );
 
-      expect(node.innerHTML).toContain("a dynamic segment :/?ȩ with encoding");
+      expect(node.textContent).toEqual("a dynamic segment :/?ȩ with encoding");
     });
   });
 
@@ -110,7 +110,7 @@ describe("A <Route>", () => {
         node
       );
 
-      expect(node.innerHTML).toContain("Hello World");
+      expect(node.textContent).toEqual("Hello World");
     });
 
     it("matches other provided paths", () => {
@@ -125,7 +125,7 @@ describe("A <Route>", () => {
         node
       );
 
-      expect(node.innerHTML).toContain("Hello World");
+      expect(node.textContent).toEqual("Hello World");
     });
 
     it("provides the matched path as a string", () => {
@@ -140,7 +140,7 @@ describe("A <Route>", () => {
         node
       );
 
-      expect(node.innerHTML).toContain("/world");
+      expect(node.textContent).toEqual("/world");
     });
 
     it("doesn't remount when moving from one matching path to another", () => {
@@ -165,12 +165,12 @@ describe("A <Route>", () => {
       );
 
       expect(mount).toHaveBeenCalledTimes(1);
-      expect(node.innerHTML).toContain("Hello World");
+      expect(node.textContent).toEqual("Hello World");
 
       history.push("/world/somewhere/else");
 
       expect(mount).toHaveBeenCalledTimes(1);
-      expect(node.innerHTML).toContain("Hello World");
+      expect(node.textContent).toEqual("Hello World");
     });
   });
 
@@ -183,7 +183,7 @@ describe("A <Route>", () => {
         node
       );
 
-      expect(node.innerHTML).toContain("/パス名");
+      expect(node.textContent).toEqual("/パス名");
     });
   });
 
@@ -199,7 +199,7 @@ describe("A <Route>", () => {
         node
       );
 
-      expect(node.innerHTML).toContain("/pizza (1)");
+      expect(node.textContent).toEqual("/pizza (1)");
     });
   });
 
@@ -214,7 +214,7 @@ describe("A <Route>", () => {
         node
       );
 
-      expect(node.innerHTML).toContain(text);
+      expect(node.textContent).toEqual(text);
     });
 
     it("renders when the URL has trailing slash", () => {
@@ -227,7 +227,7 @@ describe("A <Route>", () => {
         node
       );
 
-      expect(node.innerHTML).toContain(text);
+      expect(node.textContent).toEqual(text);
     });
 
     describe("and `strict=true`", () => {
@@ -246,7 +246,7 @@ describe("A <Route>", () => {
           node
         );
 
-        expect(node.innerHTML).not.toContain(text);
+        expect(node.textContent).not.toContain(text);
       });
 
       it("does not render when the URL does not have a trailing slash", () => {
@@ -264,7 +264,7 @@ describe("A <Route>", () => {
           node
         );
 
-        expect(node.innerHTML).not.toContain(text);
+        expect(node.textContent).not.toContain(text);
       });
     });
   });
@@ -284,7 +284,7 @@ describe("A <Route>", () => {
         node
       );
 
-      expect(node.innerHTML).toContain(text);
+      expect(node.textContent).toEqual(text);
     });
   });
 
@@ -302,7 +302,7 @@ describe("A <Route>", () => {
           node
         );
 
-        expect(node.innerHTML).toContain(text);
+        expect(node.textContent).toEqual(text);
       });
     });
 
@@ -340,7 +340,7 @@ describe("A <Route>", () => {
           node
         );
 
-        expect(node.innerHTML).toContain(text);
+        expect(node.textContent).toEqual(text);
       });
 
       describe("that returns `undefined`", () => {
@@ -376,7 +376,7 @@ describe("A <Route>", () => {
           node
         );
 
-        expect(node.innerHTML).toContain(text);
+        expect(node.textContent).toEqual(text);
       });
     });
   });
@@ -394,7 +394,7 @@ describe("A <Route>", () => {
         node
       );
 
-      expect(node.innerHTML).toContain(text);
+      expect(node.textContent).toEqual(text);
     });
 
     it("receives { history, location, match } props", () => {
@@ -459,7 +459,7 @@ describe("A <Route>", () => {
         node
       );
 
-      expect(node.innerHTML).toContain(text);
+      expect(node.textContent).toEqual(text);
     });
 
     it("receives { history, location, match } props", () => {
