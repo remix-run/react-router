@@ -53,7 +53,11 @@ function matchPath(pathname, options = {}) {
       url: path === "/" && url === "" ? "/" : url, // the matched portion of the URL
       isExact, // whether or not we matched exactly
       params: keys.reduce((memo, key, index) => {
-        memo[key.name] = values[index];
+        // `values` here contains substrings of a URI, extracted by a regex
+        // These URI substrings will be URI encoded if they contain any URI metachars
+        // Any matched params therefore need URI decoding before they can be
+        // presented to the caller as string typed params
+        memo[key.name] = decodeURIComponent(values[index]);
         return memo;
       }, {})
     };
