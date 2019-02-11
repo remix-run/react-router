@@ -13,8 +13,12 @@ function isModifiedEvent(event) {
  */
 class Link extends React.Component {
   handleClick(event, history) {
-    if (this.props.onClick) this.props.onClick(event);
 
+    if (this.props.onClick) this.props.onClick(event);
+    
+    const {to} = this.props;
+    if (typeof to === 'function') to(event);
+    
     if (
       !event.defaultPrevented && // onClick prevented default
       event.button === 0 && // ignore everything but left clicks
