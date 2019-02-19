@@ -346,7 +346,9 @@ class Users extends React.Component {
 ```
 
 ##### `getComponent(nextState, callback)`
-Same as `component` but asynchronous, useful for code-splitting.
+Same as `component` but asynchronous, useful for code-splitting. 
+
+You can pass a Promise, in which case you should not use the `callback` function and instead use `resolve` like you normally would. You can also pass an async function, which is a Promise under the hood, and just `return` like normal. Any thrown exception will report an error to the router.
 
 ###### `callback` signature
 `cb(err, component)`
@@ -357,6 +359,7 @@ Same as `component` but asynchronous, useful for code-splitting.
   cb(null, Course)
 }} />
 ```
+
 
 ##### `getComponents(nextState, callback)`
 Same as `components` but asynchronous, useful for
