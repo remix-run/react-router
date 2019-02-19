@@ -351,15 +351,26 @@ Same as `component` but asynchronous, useful for code-splitting.
 ###### `callback` signature
 `cb(err, component)`
 
-
-If you use promise instead of function call just `resolve` not `callback`!
-
 ```js
 <Route path="courses/:courseId" getComponent={(nextState, cb) => {
   // do asynchronous stuff to find the components
   cb(null, Course)
 }} />
 ```
+
+If you use promise instead of function call just `resolve` not `callback`!
+
+```js
+<Route path="courses/:courseId" getComponent={async() => {
+  // do asynchronous stuff to find the components
+  if (error) {
+    throw new Error(error)
+  }
+  
+  return Course
+}} />
+```
+
 
 ##### `getComponents(nextState, callback)`
 Same as `components` but asynchronous, useful for
