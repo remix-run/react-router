@@ -1,4 +1,4 @@
-import React from "react";
+import React, { Component } from "react";
 import { BrowserRouter as Router, Switch, Route, Link } from "react-router-dom";
 
 // This example shows how to render two different screens
@@ -10,7 +10,7 @@ import { BrowserRouter as Router, Switch, Route, Link } from "react-router-dom";
 // are the same as before but now we see them inside a modal
 // on top of the old screen.
 
-class ModalSwitch extends React.Component {
+class ModalSwitch extends Component {
   // We can pass a location to <Switch/> that will tell it to
   // ignore the router's current location and use the location
   // prop instead.

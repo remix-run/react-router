@@ -40,25 +40,29 @@ if (context.url) {
 The router only ever adds `context.url`. But you may want some redirects to be 301 and others 302. Or maybe you'd like to send a 404 response if some specific branch of UI is rendered, or a 401 if they aren't authorized. The context prop is yours, so you can mutate it. Here's a way to distinguish between 301 and 302 redirects:
 
 ```jsx
-const RedirectWithStatus = ({ from, to, status }) => (
-  <Route
-    render={({ staticContext }) => {
-      // there is no `staticContext` on the client, so
-      // we need to guard against that here
-      if (staticContext) staticContext.status = status;
-      return <Redirect from={from} to={to} />;
-    }}
-  />
-);
+function RedirectWithStatus({ from, to, status }) {
+  return (
+    <Route
+      render={({ staticContext }) => {
+        // there is no `staticContext` on the client, so
+        // we need to guard against that here
+        if (staticContext) staticContext.status = status;
+        return <Redirect from={from} to={to} />;
+      }}
+    />
+  );
+}
 
 // somewhere in your app
-const App = () => (
-  <Switch>
-    {/* some other routes */}
-    <RedirectWithStatus status={301} from="/users" to="/profiles" />
-    <RedirectWithStatus status={302} from="/courses" to="/dashboard" />
-  </Switch>
-);
+function App() {
+  return (
+    <Switch>
+      {/* some other routes */}
+      <RedirectWithStatus status={301} from="/users" to="/profiles" />
+      <RedirectWithStatus status={302} from="/courses" to="/dashboard" />
+    </Switch>
+  );
+}
 
 // on the server
 const context = {};
@@ -81,33 +85,37 @@ if (context.url) {
 We can do the same thing as above. Create a component that adds some context and render it anywhere in the app to get a different status code.
 
 ```jsx
-const Status = ({ code, children }) => (
-  <Route
-    render={({ staticContext }) => {
-      if (staticContext) staticContext.status = code;
-      return children;
-    }}
-  />
-);
+function Status({ code, children }) {
+  return (
+    <Route
+      render={({ staticContext }) => {
+        if (staticContext) staticContext.status = code;
+        return children;
+      }}
+    />
+  );
+}
 ```
 
 Now you can render a `Status` anywhere in the app that you want to add the code to `staticContext`.
 
 ```jsx
-const NotFound = () => (
-  <Status code={404}>
-    <div>
-      <h1>Sorry, can’t find that.</h1>
-    </div>
-  </Status>
-)
+function NotFound() {
+  return (
+    <Status code={404}>
+      <div>
+        <h1>Sorry, can’t find that.</h1>
+      </div>
+    </Status>
+  );
+}
 
 // somewhere else
 <Switch>
-  <Route path="/about" component={About}/>
-  <Route path="/dashboard" component={Dashboard}/>
-  <Route component={NotFound}/>
-</Switch>
+  <Route path="/about" component={About} />
+  <Route path="/dashboard" component={Dashboard} />
+  <Route component={NotFound} />
+</Switch>;
 ```
 
 ## Putting it all together
@@ -185,13 +193,15 @@ Then use this config to render your routes in the app:
 ```jsx
 import { routes } from "./routes";
 
-const App = () => (
-  <Switch>
-    {routes.map(route => (
-      <Route {...route} />
-    ))}
-  </Switch>
-);
+function App() {
+  return (
+    <Switch>
+      {routes.map(route => (
+        <Route {...route} />
+      ))}
+    </Switch>
+  );
+}
 ```
 
 Then on the server you'd have something like:

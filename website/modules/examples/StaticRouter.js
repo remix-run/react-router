@@ -1,4 +1,4 @@
-import React from "react";
+import React, { Component } from "react";
 import { StaticRouter, Route } from "react-router-dom";
 
 // This example renders a route within a StaticRouter and populates its
@@ -44,7 +44,7 @@ function PrintContext(props) {
   return <p>Static context: {JSON.stringify(props.staticContext)}</p>;
 }
 
-class StaticRouterExample extends React.Component {
+class StaticRouterExample extends Component {
   // This is the context object that we pass to the StaticRouter.
   // It can be modified by routes to provide additional information
   // for the server-side render

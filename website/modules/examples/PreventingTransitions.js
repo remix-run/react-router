@@ -1,4 +1,4 @@
-import React from "react";
+import React, { Component } from "react";
 import { BrowserRouter as Router, Route, Link, Prompt } from "react-router-dom";
 
 function PreventingTransitionsExample() {
@@ -24,7 +24,7 @@ function PreventingTransitionsExample() {
   );
 }
 
-class Form extends React.Component {
+class Form extends Component {
   state = { isBlocking: false };
 
   render() {

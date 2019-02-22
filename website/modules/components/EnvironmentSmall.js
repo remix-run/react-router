@@ -395,7 +395,7 @@ const getGuideTitle = (data, slug) => {
   return item ? item.title.text : null;
 };
 
-class GoUp extends React.Component {
+class GoUp extends Component {
   static propTypes = {
     url: PropTypes.string
   };

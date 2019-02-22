@@ -27,12 +27,12 @@ A function to use to confirm navigation. Defaults to using [`window.confirm`](ht
 
 ```jsx
 // this is the default behavior
-const getConfirmation = (message, callback) => {
-  const allowTransition = window.confirm(message)
-  callback(allowTransition)
+function getConfirmation(message, callback) {
+  const allowTransition = window.confirm(message);
+  callback(allowTransition);
 }
 
-<HashRouter getUserConfirmation={getConfirmation}/>
+<HashRouter getUserConfirmation={getConfirmation} />;
 ```
 
 ## hashType: string
