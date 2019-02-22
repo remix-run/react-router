@@ -1,14 +1,15 @@
 import React, { Component } from "react";
+import { Link, Switch, Route } from "react-router-dom";
+import Animated from "animated/lib/targets/react-dom";
+import ChevronLeft from "react-icons/lib/md/chevron-left";
 import PropTypes from "prop-types";
 import { Block, Col } from "jsxstyle";
+
 import EnvironmentHeader from "./EnvironmentHeader";
-import { Link, Switch, Route } from "react-router-dom";
-import ChevronLeft from "react-icons/lib/md/chevron-left";
 import { RED } from "../Theme";
 import Example from "./Example";
 import API from "./APISmall";
 import Guide from "./Guide";
-import Animated from "animated/lib/targets/react-dom";
 
 const paths = {
   api: match => `${match.path}/api/:mod`,

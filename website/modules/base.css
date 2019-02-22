@@ -83,7 +83,7 @@ code {
   box-shadow: inset 500px 0 #fff, inset 1020px 0 rgb(45, 45, 45);
   min-height: 100vh;
 }
-markdown > pre {
+.markdown > pre {
   background: rgb(45, 45, 45);
   float: right;
   clear: right;
@@ -91,7 +91,7 @@ markdown > pre {
 }
 
 /* all the things we render *except* headers and <pre>, add them as needed! */
-markdown > *:not(pre):not(h1):not(h2) {
+.markdown > *:not(pre):not(h1):not(h2) {
   display: block;
   clear: both;
   float: left;
@@ -99,34 +99,34 @@ markdown > *:not(pre):not(h1):not(h2) {
   padding-right: 40px;
 }
 
-markdown:after {
+.markdown:after {
   content: " ";
   display: block;
   clear: both;
   height: 80px;
 }
 
-markdown h1,
-markdown h2 {
+.markdown h1,
+.markdown h2 {
   padding-right: 40px;
   font-weight: bold;
 }
 
-markdown h1 {
+.markdown h1 {
   font-family: Menlo, monospace;
   padding: 40px 0px 10px 0px;
   color: rgb(204, 65, 65);
   font-size: 200%;
 }
 
-markdown h2 {
+.markdown h2 {
   font-family: Menlo, monospace;
   font-size: 150%;
   padding-top: 40px;
   position: relative;
 }
 
-markdown h2:before {
+.markdown h2:before {
   content: " ";
   height: 1px;
   width: 200px;
@@ -139,25 +139,25 @@ markdown h2:before {
   left: 480px;
 }
 
-markdown h2 a {
+.markdown h2 a {
   color: rgb(45, 45, 45);
 }
 
-markdown pre code {
+.markdown pre code {
   font-size: 11px;
 }
-markdown code {
+.markdown code {
   font-size: 12px;
 }
-markdown h2 code {
+.markdown h2 code {
   font-size: 100%;
   font-weight: 100;
 }
-markdown h2 + p {
+.markdown h2 + p {
   margin-top: 10px;
 }
 
-markdown h1,
+.markdown h1,
 h2,
 h3 {
   position: relative;
@@ -173,7 +173,7 @@ h3 {
     padding: 0 20px;
   }
 
-  markdown > pre {
+  .markdown > pre {
     float: none;
     padding: 20px;
     border-radius: 6px;
@@ -181,35 +181,35 @@ h3 {
     width: 100%;
   }
 
-  markdown > *:not(pre):not(h1):not(h2) {
+  .markdown > *:not(pre):not(h1):not(h2) {
     display: block;
     float: none;
     width: auto;
   }
 
-  markdown h2:before {
+  .markdown h2:before {
     display: none;
   }
 }
 
 @media screen and (max-width: 600px) {
-  markdown > *:not(pre):not(h1):not(h2) {
+  .markdown > *:not(pre):not(h1):not(h2) {
     /*width: auto;*/
   }
 }
 
 /* /old stuff */
 
-markdown p {
+.markdown p {
   margin: 1em 0;
 }
 
-markdown h1 + h2 {
+.markdown h1 + h2 {
   margin-top: -40px;
   font-weight: normal;
 }
 
-markdown th {
+.markdown th {
   border-bottom: 1px solid #f0f0f0;
   text-align: center;
   font-size: 80%;
@@ -217,16 +217,16 @@ markdown th {
   font-style: italic;
 }
 
-markdown tr:nth-child(even) {
+.markdown tr:nth-child(even) {
   background: #f0f0f0;
 }
 
-markdown table td,
-markdown table th {
+.markdown table td,
+.markdown table th {
   padding: 2px 4px;
 }
 
-markdown a {
+.markdown a {
   color: #d0021b;
   text-decoration: none;
 }

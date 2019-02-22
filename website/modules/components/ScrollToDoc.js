@@ -1,6 +1,6 @@
 import React, { Component } from "react";
-import PropTypes from "prop-types";
 import { Motion, spring } from "react-motion";
+import PropTypes from "prop-types";
 
 class ScrollY extends Component {
   static contextTypes = {

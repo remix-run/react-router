@@ -14,15 +14,17 @@ import Environment from "./Environment";
 const base = document.querySelector("base");
 const baseHref = base ? base.getAttribute("href") : "/";
 
-const App = () => (
-  <BrowserRouter basename={baseHref.replace(/\/$/, "")}>
-    <DelegateMarkdownLinks>
-      <Switch>
-        <Route path="/" exact={true} component={Home} />
-        <Route path="/:environment" component={Environment} />
-      </Switch>
-    </DelegateMarkdownLinks>
-  </BrowserRouter>
-);
+function App() {
+  return (
+    <BrowserRouter basename={baseHref.replace(/\/$/, "")}>
+      <DelegateMarkdownLinks>
+        <Switch>
+          <Route path="/" exact={true} component={Home} />
+          <Route path="/:environment" component={Environment} />
+        </Switch>
+      </DelegateMarkdownLinks>
+    </BrowserRouter>
+  );
+}
 
 export default App;

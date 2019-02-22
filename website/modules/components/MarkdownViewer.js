@@ -1,15 +1,13 @@
-/*eslint react/no-danger:0 */
+/*eslint-disable react/no-danger*/
 import React from "react";
 import PropTypes from "prop-types";
 import "prismjs/themes/prism-tomorrow.css";
 
-const MarkdownViewer = ({ html, id }) => (
-  <markdown
-    dangerouslySetInnerHTML={{
-      __html: html
-    }}
-  />
-);
+function MarkdownViewer({ html, id }) {
+  return (
+    <div className="markdown" dangerouslySetInnerHTML={{ __html: html }} />
+  );
+}
 
 MarkdownViewer.propTypes = {
   html: PropTypes.string.isRequired

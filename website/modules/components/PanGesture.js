@@ -1,23 +1,22 @@
 // Thanks @iammerrick! <3 <3 <3
-
 import React, { Component } from "react";
-import PropTypes from "prop-types";
 import { findDOMNode } from "react-dom";
+import PropTypes from "prop-types";
 
-const getPointRelativeToElement = (point, element) => {
+function getPointRelativeToElement(point, element) {
   const rect = element.getBoundingClientRect();
-  return {
-    x: point.x - rect.left,
-    y: point.y - rect.top
-  };
-};
+  return { x: point.x - rect.left, y: point.y - rect.top };
+}
 
-const getDistanceBetweenPoints = (pointA, pointB) =>
-  Math.max(Math.abs(pointA.x - pointB.x), Math.abs(pointA.y - pointB.y));
+function getDistanceBetweenPoints(pointA, pointB) {
+  return Math.max(Math.abs(pointA.x - pointB.x), Math.abs(pointA.y - pointB.y));
+}
+
+function pointFromTouch(touch) {
+  return { x: touch.clientX, y: touch.clientY };
+}
 
 const THRESHOLD = 10;
-
-const pointFromTouch = touch => ({ x: touch.clientX, y: touch.clientY });
 
 class PanGesture extends Component {
   static propTypes = {
@@ -33,9 +32,7 @@ class PanGesture extends Component {
   };
 
   startPoint = null;
-
   point = null;
-
   isRecognizing = false;
 
   componentDidMount() {

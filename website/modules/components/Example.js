@@ -1,8 +1,9 @@
 import React, { Component } from "react";
+import { Redirect } from "react-router-dom";
 import PropTypes from "prop-types";
+
 import WebExample from "./WebExample";
 import NativeExample from "./NativeExample";
-import { Redirect } from "react-router-dom";
 
 class Example extends Component {
   static propTypes = {

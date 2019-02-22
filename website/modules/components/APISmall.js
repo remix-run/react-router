@@ -1,7 +1,8 @@
 import React, { Component } from "react";
-import PropTypes from "prop-types";
 import { Redirect, Route } from "react-router-dom";
 import { Block } from "jsxstyle";
+import PropTypes from "prop-types";
+
 import ScrollToDoc from "./ScrollToDoc";
 import MarkdownViewer from "./MarkdownViewer";
 
