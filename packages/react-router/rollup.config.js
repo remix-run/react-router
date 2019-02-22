@@ -18,7 +18,10 @@ const cjs = [
     external: isBareModuleId,
     plugins: [
       babel({ exclude: /node_modules/ }),
-      replace({ "process.env.NODE_ENV": JSON.stringify("development") })
+      replace({
+        "process.env.NODE_ENV": JSON.stringify("development"),
+        "process.env.BUILD_FORMAT": JSON.stringify("cjs")
+      })
     ]
   },
   {
@@ -27,7 +30,10 @@ const cjs = [
     external: isBareModuleId,
     plugins: [
       babel({ exclude: /node_modules/ }),
-      replace({ "process.env.NODE_ENV": JSON.stringify("production") }),
+      replace({
+        "process.env.NODE_ENV": JSON.stringify("production"),
+        "process.env.BUILD_FORMAT": JSON.stringify("cjs")
+      }),
       uglify()
     ]
   }
@@ -44,6 +50,7 @@ const esm = [
         runtimeHelpers: true,
         plugins: [["@babel/transform-runtime", { useESModules: true }]]
       }),
+      replace({ "process.env.BUILD_FORMAT": JSON.stringify("esm") }),
       sizeSnapshot()
     ]
   }
@@ -74,7 +81,10 @@ const umd = [
           "node_modules/react-is/index.js": ["isValidElementType"]
         }
       }),
-      replace({ "process.env.NODE_ENV": JSON.stringify("development") }),
+      replace({
+        "process.env.NODE_ENV": JSON.stringify("development"),
+        "process.env.BUILD_FORMAT": JSON.stringify("umd")
+      }),
       sizeSnapshot()
     ]
   },
@@ -100,7 +110,10 @@ const umd = [
           "node_modules/react-is/index.js": ["isValidElementType"]
         }
       }),
-      replace({ "process.env.NODE_ENV": JSON.stringify("production") }),
+      replace({
+        "process.env.NODE_ENV": JSON.stringify("production"),
+        "process.env.BUILD_FORMAT": JSON.stringify("umd")
+      }),
       sizeSnapshot(),
       uglify()
     ]

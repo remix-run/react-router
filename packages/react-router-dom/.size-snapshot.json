@@ -14,9 +14,9 @@
     }
   },
   "umd/react-router-dom.js": {
-    "bundled": 161325,
-    "minified": 57478,
-    "gzipped": 16483
+    "bundled": 162042,
+    "minified": 57823,
+    "gzipped": 16684
   },
   "umd/react-router-dom.min.js": {
     "bundled": 97926,
