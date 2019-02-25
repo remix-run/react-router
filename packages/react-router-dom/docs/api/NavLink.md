@@ -79,7 +79,7 @@ const oddEvent = (match, location) => {
 The [`isActive`](#isactive-func) compares the current history location (usually the current browser URL).
 To compare to a different location, a [`location`](../../../react-router/docs/api/location.md) can be passed.
 
-## ariaCurrent: string
+## aria-current: string
 
 The value of the `aria-current` attribute used on an active link. Available values are:
 
