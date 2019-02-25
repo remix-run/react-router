@@ -12,7 +12,7 @@ export default function routerWarning(falseToWarn, message, ...args) {
     warned[message] = true
   }
 
-  message = `[react-router] ${message}`
+  message = `[@americanexpress/one-app-router] ${message}`
   warning(falseToWarn, message, ...args)
 }
 

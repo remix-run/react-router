@@ -1,6 +1,6 @@
 import React from 'react'
 import { render } from 'react-dom'
-import { browserHistory, Router, Route, Link } from 'react-router'
+import { browserHistory, Router, Route, Link } from '@americanexpress/one-app-router'
 
 import withExampleBasename from '../withExampleBasename'
 import data from './data'
@@ -84,11 +84,13 @@ const App = ({ content, sidebar }) => (
 )
 
 render((
-  <Router history={withExampleBasename(browserHistory, __dirname)}>
-    <Route path="/" component={App}>
-      <Route path="category/:category" components={{ content: Category, sidebar: CategorySidebar }}>
-        <Route path=":item" component={Item} />
+  <React.StrictMode>
+    <Router history={withExampleBasename(browserHistory, __dirname)}>
+      <Route path="/" component={App}>
+        <Route path="category/:category" components={{ content: Category, sidebar: CategorySidebar }}>
+          <Route path=":item" component={Item} />
+        </Route>
       </Route>
-    </Route>
-  </Router>
+    </Router>
+  </React.StrictMode>
 ), document.getElementById('example'))

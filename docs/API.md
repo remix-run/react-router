@@ -1,4 +1,4 @@
-# React Router 3 API Reference
+# One App Router API Reference
 
 - [Components](#components)
   - [`<Router>`](#router)
@@ -34,7 +34,7 @@
 ## Components
 
 ### `<Router>`
-Primary component of React Router. It keeps your UI and the URL in sync.
+Primary component of One App Router. It keeps your UI and the URL in sync.
 
 #### Props
 ##### `children` (required)
@@ -47,7 +47,7 @@ Alias for `children`.
 The history the router should listen to. Typically `browserHistory` or `hashHistory`.
 
 ```js
-import { browserHistory } from 'react-router'
+import { browserHistory } from '@americanexpress/one-app-router'
 ReactDOM.render(<Router history={browserHistory} />, el)
 ```
 
@@ -104,7 +104,7 @@ A [location descriptor](/docs/Glossary.md#locationdescriptor). Usually this is a
   * `state`: State to persist to the `location`.
 * If it is not specified, an anchor tag without an `href` attribute will be rendered.
 
-_Note: React Router currently does not manage scroll position, and will not scroll to the element corresponding to `hash`._
+_Note: One App Router currently does not manage scroll position, and will not scroll to the element corresponding to `hash`._
 
 ```jsx
 // String location descriptor.
@@ -668,7 +668,7 @@ For more details, please see the [histories guide](/docs/guides/Histories.md).
 
 
 ### `useRouterHistory(createHistory)`
-`useRouterHistory` is a `history` enhancer that configures a given `createHistory` factory to work with React Router. This allows using custom histories in addition to the bundled singleton histories.
+`useRouterHistory` is a `history` enhancer that configures a given `createHistory` factory to work with One App Router. This allows using custom histories in addition to the bundled singleton histories.
 
 It also pre-enhances the history with the
 [useQueries](https://github.com/ReactTraining/history/blob/v2/docs/QuerySupport.md)
@@ -712,6 +712,6 @@ One or many [`<Route>`](#route)s or [`PlainRoute`](#plainroute)s.
 
 
 ### `PropTypes`
-The following prop types are exported at top level and from `react-router/lib/PropTypes`:
+The following prop types are exported at top level and from `@americanexpress/one-app-router/lib/PropTypes`:
 - `routerShape`: Shape for the `router` object on context
 - `locationShape`: Shape for the `location` object on route component props

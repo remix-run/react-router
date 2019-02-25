@@ -1,15 +1,14 @@
-import React from 'react'
-import createReactClass from 'create-react-class'
+import React, { Component } from 'react'
 import auth from '../utils/auth'
 
-const Logout = createReactClass({
+class Logout extends Component {
   componentDidMount() {
     auth.logout()
-  },
+  }
 
   render() {
     return <p>You are now logged out</p>
   }
-})
+}
 
 module.exports = Logout

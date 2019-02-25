@@ -1,6 +1,6 @@
 import React from 'react'
 import { render } from 'react-dom'
-import { Router, Route, IndexRoute, Link, IndexLink, browserHistory } from 'react-router'
+import { Router, Route, IndexRoute, Link, IndexLink, browserHistory } from '@americanexpress/one-app-router'
 
 import withExampleBasename from '../withExampleBasename'
 
@@ -18,7 +18,7 @@ const App = ({ children }) => (
 
       <li><Link      to="/users/ryan" activeStyle={ACTIVE}>/users/ryan</Link></li>
       <li><Link      to={{ pathname: '/users/ryan', query: { foo: 'bar' } }}
-                                      activeStyle={ACTIVE}>/users/ryan?foo=bar</Link></li>
+        activeStyle={ACTIVE}>/users/ryan?foo=bar</Link></li>
 
       <li><Link      to="/about"      activeStyle={ACTIVE}>/about</Link></li>
     </ul>
@@ -59,14 +59,16 @@ const About = () => (
 )
 
 render((
-  <Router history={withExampleBasename(browserHistory, __dirname)}>
-    <Route path="/" component={App}>
-      <IndexRoute component={Index}/>
-      <Route path="/about" component={About}/>
-      <Route path="users" component={Users}>
-        <IndexRoute component={UsersIndex}/>
-        <Route path=":id" component={User}/>
+  <React.StrictMode>
+    <Router history={withExampleBasename(browserHistory, __dirname)}>
+      <Route path="/" component={App}>
+        <IndexRoute component={Index}/>
+        <Route path="/about" component={About}/>
+        <Route path="users" component={Users}>
+          <IndexRoute component={UsersIndex}/>
+          <Route path=":id" component={User}/>
+        </Route>
       </Route>
-    </Route>
-  </Router>
+    </Router>
+  </React.StrictMode>
 ), document.getElementById('example'))

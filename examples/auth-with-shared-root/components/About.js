@@ -1,10 +1,9 @@
-import React from 'react'
-import createReactClass from 'create-react-class'
+import React, { Component } from 'react'
 
-const About = createReactClass({
+class About extends Component {
   render() {
     return <h1>About</h1>
   }
-})
+}
 
 module.exports = About

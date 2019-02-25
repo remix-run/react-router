@@ -7,7 +7,7 @@ A [route](/docs/Glossary.md#route) has three attributes that determine whether o
 3. its [precedence](#precedence)
 
 ### Nesting
-React Router uses the concept of nested routes to let you declare nested sets of views that should be rendered when a given URL is invoked. Nested routes are arranged in a tree-like structure. To find a match, React Router traverses the [route config](/docs/Glossary.md#routeconfig) depth-first searching for a route that matches the URL.
+One App Router uses the concept of nested routes to let you declare nested sets of views that should be rendered when a given URL is invoked. Nested routes are arranged in a tree-like structure. To find a match, One App Router traverses the [route config](/docs/Glossary.md#routeconfig) depth-first searching for a route that matches the URL.
 
 ### Path Syntax
 A route path is [a string pattern](/docs/Glossary.md#routepattern) that is used to match a URL (or a portion of one). Route paths are interpreted literally, except for the following special symbols:

@@ -1,26 +1,22 @@
-import React from 'react'
-import createReactClass from 'create-react-class'
-import { Link } from 'react-router'
+import React, { Component } from 'react'
+import { Link } from '@americanexpress/one-app-router'
 import auth from '../utils/auth'
 
-const App = createReactClass({
+class App extends Component {
+  state = {
+    loggedIn: auth.loggedIn()
+  }
 
-  getInitialState() {
-    return {
-      loggedIn: auth.loggedIn()
-    }
-  },
-
-  updateAuth(loggedIn) {
+  updateAuth = (loggedIn) => {
     this.setState({
       loggedIn: !!loggedIn
     })
-  },
+  }
 
-  componentWillMount() {
+  UNSAFE_componentWillMount() {
     auth.onChange = this.updateAuth
     auth.login()
-  },
+  }
 
   render() {
     return (
@@ -42,7 +38,6 @@ const App = createReactClass({
       </div>
     )
   }
-
-})
+}
 
 module.exports = App

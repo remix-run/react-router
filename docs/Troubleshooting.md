@@ -64,7 +64,7 @@ If your routes look like:
 </Route>
 ```
 
-Then the path `/widgets` will not be considered active when the current path is something like `/widgets/3`. This is because React Router looks at parent _routes_ rather than parent _paths_ to determine active state. To make the path `/widgets` active when the current path is `/widgets/3`, you need to declare your routes as:
+Then the path `/widgets` will not be considered active when the current path is something like `/widgets/3`. This is because One App Router looks at parent _routes_ rather than parent _paths_ to determine active state. To make the path `/widgets` active when the current path is `/widgets/3`, you need to declare your routes as:
 
 ```js
 <Route path="/">

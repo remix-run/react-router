@@ -1,121 +1,81 @@
-import PropTypes from 'prop-types'
+import React, { Component } from 'react'
 
 // Works around issues with context updates failing to propagate.
 // Caveat: the context value is expected to never change its identity.
 // https://github.com/facebook/react/issues/2517
 // https://github.com/reactjs/react-router/issues/470
 
-const contextProviderShape = PropTypes.shape({
-  subscribe: PropTypes.func.isRequired,
-  eventIndex: PropTypes.number.isRequired
-})
-
-function makeContextName(name) {
+export function makeContextName(name) {
   return `@@contextSubscriber/${name}`
 }
 
-export function ContextProvider(name) {
-  const contextName = makeContextName(name)
-  const listenersKey = `${contextName}/listeners`
-  const eventIndexKey = `${contextName}/eventIndex`
-  const subscribeKey = `${contextName}/subscribe`
+export const RouterContext = React.createContext({})
 
-  return {
-    childContextTypes: {
-      [contextName]: contextProviderShape.isRequired
-    },
+const contextName = makeContextName('router')
 
-    getChildContext() {
-      return {
-        [contextName]: {
-          eventIndex: this[eventIndexKey],
-          subscribe: this[subscribeKey]
-        }
-      }
-    },
+// subscriber keys
+const lastRenderedEventIndexKey = `${contextName}/lastRenderedEventIndex`
+const handleContextUpdateKey = `${contextName}/handleContextUpdate`
+const unsubscribeKey = `${contextName}/unsubscribe`
 
-    componentWillMount() {
-      this[listenersKey] = []
-      this[eventIndexKey] = 0
-    },
+function contextHOC(Subscriber) {
+  return class WrappedSubscriber extends Component {
+    static contextType = RouterContext
 
-    componentWillReceiveProps() {
-      this[eventIndexKey]++
-    },
-
-    componentDidUpdate() {
-      this[listenersKey].forEach(listener =>
-        listener(this[eventIndexKey])
-      )
-    },
-
-    [subscribeKey](listener) {
-      // No need to immediately call listener here.
-      this[listenersKey].push(listener)
-
-      return () => {
-        this[listenersKey] = this[listenersKey].filter(item =>
-          item !== listener
-        )
-      }
+    render() {
+      const newProps = { ...this.props, context: this.context }
+      return <Subscriber {...newProps} />
     }
   }
 }
 
-export function ContextSubscriber(name) {
-  const contextName = makeContextName(name)
-  const lastRenderedEventIndexKey = `${contextName}/lastRenderedEventIndex`
-  const handleContextUpdateKey = `${contextName}/handleContextUpdate`
-  const unsubscribeKey = `${contextName}/unsubscribe`
+class ContextSubscriberBase extends Component {
+  constructor(props, context) {
+    super(props)
 
-  return {
-    contextTypes: {
-      [contextName]: contextProviderShape
-    },
+    const initialState = {}
 
-    getInitialState() {
-      if (!this.context[contextName]) {
-        return {}
-      }
+    if(context[contextName]) {
+      initialState[lastRenderedEventIndexKey] = context[contextName].eventIndex
+    }
 
-      return {
-        [lastRenderedEventIndexKey]: this.context[contextName].eventIndex
-      }
-    },
+    this.state = initialState
+  }
 
-    componentDidMount() {
-      if (!this.context[contextName]) {
-        return
-      }
+  static getDerivedStateFromProps(props) {
+    if (!props.context[contextName]) {
+      return
+    }
 
-      this[unsubscribeKey] = this.context[contextName].subscribe(
-        this[handleContextUpdateKey]
-      )
-    },
+    return {
+      [lastRenderedEventIndexKey]: props.context[contextName].eventIndex
+    }
+  }
 
-    componentWillReceiveProps() {
-      if (!this.context[contextName]) {
-        return
-      }
+  componentDidMount() {
+    if (!this.context[contextName]) {
+      return
+    }
 
-      this.setState({
-        [lastRenderedEventIndexKey]: this.context[contextName].eventIndex
-      })
-    },
+    this[unsubscribeKey] = this.context[contextName].subscribe(
+      this[handleContextUpdateKey]
+    )
+  }
 
-    componentWillUnmount() {
-      if (!this[unsubscribeKey]) {
-        return
-      }
+  componentWillUnmount() {
+    if (!this[unsubscribeKey]) {
+      return
+    }
 
-      this[unsubscribeKey]()
-      this[unsubscribeKey] = null
-    },
+    this[unsubscribeKey]()
+    this[unsubscribeKey] = null
+  }
 
-    [handleContextUpdateKey](eventIndex) {
-      if (eventIndex !== this.state[lastRenderedEventIndexKey]) {
-        this.setState({ [lastRenderedEventIndexKey]: eventIndex })
-      }
+  [handleContextUpdateKey] = (eventIndex) => {
+    if (eventIndex !== this.state[lastRenderedEventIndexKey]) {
+      this.setState({ [lastRenderedEventIndexKey]: eventIndex })
     }
   }
 }
+
+export const ContextSubscriber = contextHOC(ContextSubscriberBase)

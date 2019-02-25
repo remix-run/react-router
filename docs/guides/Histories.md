@@ -1,23 +1,23 @@
 # Histories
 
-React Router is built with [history](https://github.com/ReactTraining/history).
+One App Router is built with [history](https://github.com/ReactTraining/history).
 In a nutshell, a history knows how to listen to the browser's address
 bar for changes and parses the URL into a `location` object that the
 router can use to match routes and render the correct set of components.
 
 There are three types of histories you'll come across most often, but
 note that anyone can build a custom history implementation for
-consumption with React Router.
+consumption with One App Router.
 
 - [`browserHistory`](#browserhistory)
 - [`hashHistory`](#hashhistory)
 - [`createMemoryHistory`](#creatememoryhistory)
 
-You import them from the React Router package:
+You import them from the One App Router package:
 
 ```js
 // JavaScript module import
-import { browserHistory } from 'react-router'
+import { browserHistory } from '@americanexpress/one-app-router'
 ```
 
 Then pass them into your `<Router>`:
@@ -30,7 +30,7 @@ render(
 ```
 
 ### `browserHistory`
-Browser history is the recommended history for browser application with React Router. It uses the [History](https://developer.mozilla.org/en-US/docs/Web/API/History) API built into the browser to manipulate the URL, creating real URLs that look like `example.com/some/path`.
+Browser history is the recommended history for browser application with One App Router. It uses the [History](https://developer.mozilla.org/en-US/docs/Web/API/History) API built into the browser to manipulate the URL, creating real URLs that look like `example.com/some/path`.
 
 #### Configuring Your Server
 
@@ -116,7 +116,7 @@ app, the client entry point would look like:
 ```js
 import React from 'react'
 import { render } from 'react-dom'
-import { browserHistory, Router, Route, IndexRoute } from 'react-router'
+import { browserHistory, Router, Route, IndexRoute } from '@americanexpress/one-app-router'
 
 import App from '../components/App'
 import Home from '../components/Home'
@@ -150,7 +150,7 @@ factory with the [useQueries](https://github.com/ReactTraining/history/blob/v2/d
 Defining a basename:
 
 ```js
-import { useRouterHistory } from 'react-router'
+import { useRouterHistory } from '@americanexpress/one-app-router'
 import { createHistory } from 'history'
 
 const history = useRouterHistory(createHistory)({
@@ -163,7 +163,7 @@ Using the
 enhancer:
 
 ```js
-import { useRouterHistory } from 'react-router'
+import { useRouterHistory } from '@americanexpress/one-app-router'
 import { createHistory, useBeforeUnload } from 'history'
 
 const history = useRouterHistory(useBeforeUnload(createHistory))()

@@ -1,6 +1,6 @@
 import React from 'react'
 import { render } from 'react-dom'
-import { browserHistory, Router, Route, Link } from 'react-router'
+import { browserHistory, Router, Route, Link } from '@americanexpress/one-app-router'
 
 import withExampleBasename from '../withExampleBasename'
 
@@ -27,9 +27,11 @@ const App = ({ children }) => (
 )
 
 render((
-  <Router history={withExampleBasename(browserHistory, __dirname)}>
-    <Route path="/" component={App}>
-      <Route path="user/:userID" component={User} />
-    </Route>
-  </Router>
+  <React.StrictMode>
+    <Router history={withExampleBasename(browserHistory, __dirname)}>
+      <Route path="/" component={App}>
+        <Route path="user/:userID" component={User} />
+      </Route>
+    </Router>
+  </React.StrictMode>
 ), document.getElementById('example'))

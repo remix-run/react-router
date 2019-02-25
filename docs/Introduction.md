@@ -1,10 +1,10 @@
 # Introduction
 
-React Router is a powerful routing library built on top of [React](http://facebook.github.io/react/) that helps you add new screens and flows to your application incredibly quickly, all while keeping the URL in sync with what's being displayed on the page.
+One App Router is a powerful routing library built on top of [React](http://facebook.github.io/react/) that helps you add new screens and flows to your application incredibly quickly, all while keeping the URL in sync with what's being displayed on the page.
 
-To illustrate the problems React Router is going to solve for you, let's build a small application without it. We will be using [ES6/ES2015 syntax and language features](https://github.com/lukehoban/es6features#readme) throughout the documentation for any example code.
+To illustrate the problems One App Router is going to solve for you, let's build a small application without it. We will be using [ES6/ES2015 syntax and language features](https://github.com/lukehoban/es6features#readme) throughout the documentation for any example code.
 
-### Without React Router
+### Without One App Router
 
 ```js
 import React from 'react'
@@ -97,16 +97,16 @@ path: /inbox
 
 We'd have to make our URL parsing a lot smarter, and we would end up with a lot of code to figure out which branch of nested components to be rendered at any given URL: `App -> About`, `App -> Inbox -> Messages -> Message`, `App -> Inbox -> Messages -> Stats`, etc.
 
-### With React Router
+### With One App Router
 
-Let's refactor our app to use React Router.
+Let's refactor our app to use One App Router.
 
 ```js
 import React from 'react'
 import { render } from 'react-dom'
 
 // First we import some modules...
-import { Router, Route, IndexRoute, Link, hashHistory } from 'react-router'
+import { Router, Route, IndexRoute, Link, hashHistory } from '@americanexpress/one-app-router'
 
 // Then we delete a bunch of code from App and
 // add some <Link> elements...
@@ -144,7 +144,7 @@ render((
 ), document.body)
 ```
 
-React Router knows how to build nested UI for us, so we don't have to manually figure out which `<Child>` component to render. For example, for a full path `/about` it would build `<App><About /></App>`.
+One App Router knows how to build nested UI for us, so we don't have to manually figure out which `<Child>` component to render. For example, for a full path `/about` it would build `<App><About /></App>`.
 
 Internally, the router converts your `<Route>` element hierarchy to a [route config](/docs/Glossary.md#routeconfig). But if you're not digging the JSX you can use plain objects instead:
 
@@ -247,6 +247,6 @@ const Message = React.createClass({
 
 You can also access parameters from the query string. For instance, if you're on `/foo?bar=baz`, you can access `this.props.location.query.bar` to get the value `"baz"` from your Route component.
 
-That's the gist of React Router. Application UIs are boxes inside of boxes inside of boxes; now you can keep those boxes in sync with the URL and link to them easily.
+That's the gist of One App Router. Application UIs are boxes inside of boxes inside of boxes; now you can keep those boxes in sync with the URL and link to them easily.
 
 The docs about [route configuration](/docs/guides/RouteConfiguration.md) describe more of the router's features in depth.

@@ -2,11 +2,11 @@ import expect, { spyOn } from 'expect'
 import React, { Component } from 'react'
 import { render, unmountComponentAtNode } from 'react-dom'
 import createHistory from '../createMemoryHistory'
-import { routerShape } from '../PropTypes'
 import execSteps from './execSteps'
 import Router from '../Router'
 import Route from '../Route'
 import match from '../match'
+import { RouterContext } from '../ContextUtils'
 
 describe('When a router enters a branch', function () {
   let
@@ -32,7 +32,7 @@ describe('When a router enters a branch', function () {
     }
 
     class NewsFeed extends Component {
-      componentWillMount() {
+      componentDidMount() {
         removeNewsLeaveHook = this.context.router.setRouteLeaveHook(
           this.props.route,
           () => newsLeaveHookSpy() // Break reference equality.
@@ -44,9 +44,7 @@ describe('When a router enters a branch', function () {
       }
     }
 
-    NewsFeed.contextTypes = {
-      router: routerShape.isRequired
-    }
+    NewsFeed.contextType = RouterContext
 
     class Inbox extends Component {
       render() {
@@ -61,7 +59,7 @@ describe('When a router enters a branch', function () {
     }
 
     class User extends Component {
-      componentWillMount() {
+      componentDidMount() {
         this.context.router.setRouteLeaveHook(
           this.props.route,
           userLeaveHookSpy
@@ -73,9 +71,7 @@ describe('When a router enters a branch', function () {
       }
     }
 
-    User.contextTypes = {
-      router: routerShape.isRequired
-    }
+    User.contextType = RouterContext
 
     NewsFeedRoute = {
       path: 'news',
@@ -299,8 +295,8 @@ describe('When a router enters a branch', function () {
 
       render(
         <Router history={history}
-                routes={routes}
-                onUpdate={execNextStep}
+          routes={routes}
+          onUpdate={execNextStep}
         />, node, execNextStep)
     })
   })
@@ -336,8 +332,8 @@ describe('When a router enters a branch', function () {
 
       render(
         <Router history={history}
-                routes={routes}
-                onUpdate={execNextStep}
+          routes={routes}
+          onUpdate={execNextStep}
         />, node, execNextStep)
     })
   })
@@ -368,8 +364,8 @@ describe('When a router enters a branch', function () {
 
       render(
         <Router history={history}
-                routes={routes}
-                onUpdate={execNextStep}
+          routes={routes}
+          onUpdate={execNextStep}
         />, node, execNextStep)
     })
   })

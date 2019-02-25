@@ -89,7 +89,7 @@ describe('createRoutesFromReactChildren', function () {
   it('works with comments', function () {
     const routes = createRoutesFromReactChildren(
       <Route path="/one" component={Parent}>
-        // This is a comment.
+        { /* This is a comment */ }
         <Route path="/two" component={Hello} />
       </Route>
     )

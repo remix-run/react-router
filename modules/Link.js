@@ -1,8 +1,6 @@
 import React from 'react'
-import createReactClass from 'create-react-class'
 import { bool, object, string, func, oneOfType } from 'prop-types'
 import invariant from 'invariant'
-import { routerShape } from './PropTypes'
 import { ContextSubscriber } from './ContextUtils'
 
 function isLeftClickEvent(event) {
@@ -39,16 +37,10 @@ function resolveToLocation(to, router) {
  *
  *   <Link to={`/posts/${post.id}`} />
  */
-const Link = createReactClass({
-  displayName: 'Link',
+class Link extends ContextSubscriber {
+  static displayName = 'Link'
 
-  mixins: [ ContextSubscriber('router') ],
-
-  contextTypes: {
-    router: routerShape
-  },
-
-  propTypes: {
+  static propTypes = {
     to: oneOfType([ string, object, func ]),
     activeStyle: object,
     activeClassName: string,
@@ -56,16 +48,14 @@ const Link = createReactClass({
     onClick: func,
     target: string,
     innerRef: oneOfType([ string, func ])
-  },
+  }
 
-  getDefaultProps() {
-    return {
-      onlyActiveOnIndex: false,
-      style: {}
-    }
-  },
+  static defaultProps = {
+    onlyActiveOnIndex: false,
+    style: {}
+  }
 
-  handleClick(event) {
+  handleClick = (event) => {
     if (this.props.onClick)
       this.props.onClick(event)
 
@@ -89,7 +79,7 @@ const Link = createReactClass({
     event.preventDefault()
 
     router.push(resolveToLocation(this.props.to, router))
-  },
+  }
 
   render() {
     const { to, activeClassName, activeStyle, onlyActiveOnIndex, innerRef, ...props } = this.props
@@ -122,7 +112,6 @@ const Link = createReactClass({
 
     return <a {...props} onClick={this.handleClick} ref={innerRef} />
   }
-
-})
+}
 
 export default Link

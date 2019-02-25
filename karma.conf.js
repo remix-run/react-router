@@ -104,6 +104,13 @@ module.exports = config => {
     }
   })
 
+  if (process.env.JENKINS_HOME) {
+    process.env.CHROME_BIN = require('puppeteer').executablePath()
+
+    config.browsers = [ 'ChromeHeadless' ]
+    config.singleRun = true
+  }
+
   if (process.env.USE_CLOUD) {
     config.browsers = Object.keys(customLaunchers)
     config.reporters[0] = 'dots'

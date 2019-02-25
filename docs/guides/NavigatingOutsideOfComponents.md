@@ -4,7 +4,7 @@ While you can use `this.props.router` from `withRouter` to navigate around, many
 
 ```js
 // Your main file that renders a <Router>:
-import { Router, browserHistory } from 'react-router'
+import { Router, browserHistory } from '@americanexpress/one-app-router'
 import routes from './app/routes'
 
 render(
@@ -15,7 +15,7 @@ render(
 
 ```js
 // Somewhere like a Redux middleware or Flux action:
-import { browserHistory } from 'react-router'
+import { browserHistory } from '@americanexpress/one-app-router'
 
 // Go to /some/path.
 browserHistory.push('/some/path')

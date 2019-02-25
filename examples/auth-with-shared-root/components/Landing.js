@@ -1,8 +1,6 @@
-import React from 'react'
-import createReactClass from 'create-react-class'
+import React, { Component } from 'react'
 
-const Landing = createReactClass({
-
+class Landing extends Component {
   render() {
     return (
       <div>
@@ -12,7 +10,6 @@ const Landing = createReactClass({
       </div>
     )
   }
-
-})
+}
 
 module.exports = Landing

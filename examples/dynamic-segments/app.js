@@ -1,6 +1,6 @@
 import React from 'react'
 import { render } from 'react-dom'
-import { browserHistory, Router, Route, Link, Redirect } from 'react-router'
+import { browserHistory, Router, Route, Link, Redirect } from '@americanexpress/one-app-router'
 
 import withExampleBasename from '../withExampleBasename'
 
@@ -33,12 +33,14 @@ const Task = ({ params: { userID, taskID } }) => (
 )
 
 render((
-  <Router history={withExampleBasename(browserHistory, __dirname)}>
-    <Route path="/" component={App}>
-      <Route path="user/:userID" component={User}>
-        <Route path="tasks/:taskID" component={Task} />
-        <Redirect from="todos/:taskID" to="tasks/:taskID" />
+  <React.StrictMode>
+    <Router history={withExampleBasename(browserHistory, __dirname)}>
+      <Route path="/" component={App}>
+        <Route path="user/:userID" component={User}>
+          <Route path="tasks/:taskID" component={Task} />
+          <Redirect from="todos/:taskID" to="tasks/:taskID" />
+        </Route>
       </Route>
-    </Route>
-  </Router>
+    </Router>
+  </React.StrictMode>
 ), document.getElementById('example'))

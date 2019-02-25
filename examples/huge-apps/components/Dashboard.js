@@ -1,5 +1,5 @@
 import React, { Component } from 'react'
-import { Link } from 'react-router'
+import { Link } from '@americanexpress/one-app-router'
 
 class Dashboard extends Component {
   render() {

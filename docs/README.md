@@ -1,8 +1,7 @@
-# React Router 3 Documentation
+# One App Router Documentation
 
 ## Table of Contents
 
-* [Tutorial](https://github.com/reactjs/react-router-tutorial)
 * [Introduction](Introduction.md)
 * Basics
  * [Route Configuration](guides/RouteConfiguration.md)
@@ -17,9 +16,6 @@
  * [Component Lifecycle](guides/ComponentLifecycle.md)
  * [Navigating Outside of Components](guides/NavigatingOutsideOfComponents.md)
  * [Minimizing Bundle Size](guides/MinimizingBundleSize.md)
-* [Change Log](/CHANGES.md)
- * [Upgrading to v1.0.0](../upgrade-guides/v1.0.0.md)
- * [Upgrading to v2.0.0](../upgrade-guides/v2.0.0.md)
 * [Troubleshooting](Troubleshooting.md)
-* [React Router 3 API](API.md)
+* [One App Router API](API.md)
 * [Glossary](Glossary.md)

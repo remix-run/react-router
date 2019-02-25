@@ -1,11 +1,10 @@
-import React from 'react'
-import createReactClass from 'create-react-class'
+import React, { Component } from 'react'
 import { render } from 'react-dom'
-import { browserHistory, Router, Route, Link, withRouter } from 'react-router'
+import { browserHistory, Router, Route, Link, withRouter } from '@americanexpress/one-app-router'
 
 import withExampleBasename from '../withExampleBasename'
 
-const App = createReactClass({
+class App extends Component {
   render() {
     return (
       <div>
@@ -17,70 +16,70 @@ const App = createReactClass({
       </div>
     )
   }
-})
+}
 
-const Dashboard = createReactClass({
+class FormBase extends Component {
+  constructor(props) {
+    super(props)
+    this.state = {
+      textValue: 'ohai'
+    }
+
+    this.props.router.setRouteLeaveHook(
+      this.props.route,
+      this.routerWillLeave
+    )
+  }
+
+  routerWillLeave = () => {
+    if (this.state.textValue)
+      return 'You have unsaved information, are you sure you want to leave this page?'
+  }
+
+  handleChange = (event) => {
+    this.setState({
+      textValue: event.target.value
+    })
+  }
+
+  handleSubmit = (event) => {
+    event.preventDefault()
+
+    this.setState({
+      textValue: ''
+    }, () => {
+      this.props.router.push('/')
+    })
+  }
+
+  render() {
+    return (
+      <div>
+        <form onSubmit={this.handleSubmit}>
+          <p>Click the dashboard link with text in the input.</p>
+          <input type="text" name="userInput" value={this.state.textValue} onChange={this.handleChange} />
+          <button type="submit">Go</button>
+        </form>
+      </div>
+    )
+  }
+}
+
+const Form = withRouter(FormBase)
+
+class Dashboard extends Component {
   render() {
     return <h1>Dashboard</h1>
   }
-})
-
-const Form = withRouter(
-  createReactClass({
-
-    componentWillMount() {
-      this.props.router.setRouteLeaveHook(
-        this.props.route,
-        this.routerWillLeave
-      )
-    },
-
-    getInitialState() {
-      return {
-        textValue: 'ohai'
-      }
-    },
-
-    routerWillLeave() {
-      if (this.state.textValue)
-        return 'You have unsaved information, are you sure you want to leave this page?'
-    },
-
-    handleChange(event) {
-      this.setState({
-        textValue: event.target.value
-      })
-    },
-
-    handleSubmit(event) {
-      event.preventDefault()
-
-      this.setState({
-        textValue: ''
-      }, () => {
-        this.props.router.push('/')
-      })
-    },
-
-    render() {
-      return (
-        <div>
-          <form onSubmit={this.handleSubmit}>
-            <p>Click the dashboard link with text in the input.</p>
-            <input type="text" ref="userInput" value={this.state.textValue} onChange={this.handleChange} />
-            <button type="submit">Go</button>
-          </form>
-        </div>
-      )
-    }
-  })
-)
+}
 
 render((
-  <Router history={withExampleBasename(browserHistory, __dirname)}>
-    <Route path="/" component={App}>
-      <Route path="dashboard" component={Dashboard} />
-      <Route path="form" component={Form} />
-    </Route>
-  </Router>
+  <React.StrictMode>
+    <Router history={withExampleBasename(browserHistory, __dirname)}>
+      <Route path="/" component={App}>
+        <Route path="dashboard" component={Dashboard} />
+        <Route path="form" component={Form} />
+      </Route>
+    </Router>
+  </React.StrictMode>
 ), document.getElementById('example'))

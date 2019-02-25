@@ -1,55 +1,145 @@
-Thanks for contributing, you rock!
+# Contributing
 
-If you use our code, it is now *our* code.
+The following guidelines must be followed by all contributors to this repository. Please review them carefully and do not hesitate to ask for help.
 
-Please read https://reactjs.org/ and the Code of Conduct before opening an issue.
+### Code of Conduct
 
-- [Think You Found a Bug?](#bug)
-- [Proposing New or Changed API?](#api)
-- [Issue Not Getting Attention?](#attention)
-- [Making a Pull Request?](#pr)
-- [Development](#development)
-- [Hacking](#hacking)
+* Review and test your code before submitting a pull request.
+* Be kind and professional. Avoid assumptions; oversights happen.
+* Be clear and concise when documenting code; focus on value.
+* Don't commit commented code to the main repo (stash locally, if needed).
 
-<a name="bug"/>
-## Think You Found a Bug?
+### Git Commit Guidelines
 
-Please provide a test case of some sort. Best is a pull request with a failing test. Next is a link to CodePen/JS Bin or repository that illustrates the bug. Finally, some copy/pastable code is acceptable.
+We follow precise rules for git commit message formatting. These rules make it easier to review commit logs and improve contextual understanding of code changes. This also allows us to auto-generate the CHANGELOG from commit messages.
 
-<a name="api"/>
-## Proposing New or Changed API?
+Each commit message consists of a **header**, **body** and **footer**.
 
-Please provide thoughtful comments and some sample code. Proposals without substance will be closed.
+#### Header
 
-<a name="attention"/>
-## Issue Not Getting Attention?
+The header is required and must not exceed 70 characters to ensure it is well-formatted in common git tools. It has a special format that includes a *type*, *scope* and *subject*:
 
-If you need a bug fixed and nobody is fixing it, it is your responsibility to fix it. Issues with no activity for 30 days may be closed.
+Syntax:
 
-<a name="pr"/>
-## Making a Pull Request?
+```bash
+<type>(<scope>): <subject>
+```
 
-Pull requests need only the :+1: of two or more collaborators to be merged; when the PR author is a collaborator, that counts as one.
+#### Type
 
-### Tests
+The *type* should always be lowercase as shown below.
 
-All commits that fix bugs or add features need a test.
+##### Allowed `<type>` values:
 
-`<blink>`Do not merge code without tests.`</blink>`
+* **feat** (new feature for the user)
+* **fix** (bug fix for the user, not a fix to build scripts)
+* **docs** (changes to documentation)
+* **style** (formatting, missing semi colons, etc; no functional code change)
+* **refactor** (refactoring production code, eg. renaming a variable)
+* **test** (adding missing tests, refactoring tests; no production code change)
+* **chore** (updating build/env/packages, etc; no production code change)
 
-### Changelog
+#### Scope
 
-All commits that change or add to the API must be done in a pull request that also:
+The *scope* describes the affected code. The descriptor may be a route, component, feature, utility, etc. It should be one word or camelCased, if needed:
 
-- Adds an entry to `CHANGES.md` with clear steps for updating code for changed or removed API
-- Updates examples
-- Updates the docs
+```bash
+feat(transactions): added column for quantity
+feat(BalanceModule): initial setup
+```
 
-## Development
+The commit headers above work well if the commit affects many parts of a larger feature. If changes are more specific, it may be too broad. To better clarify specific scopes, you should use a `feature/scope` syntax:
 
-- `npm test` starts a karma test runner and watch for changes
-- `npm start` starts a webpack dev server that will watch for changes and build the examples
+```bash
+fix(transaction/details): missing quantity field
+```
 
-## Hacking
+The above syntax helps reduce verbosity in the _subject_. In comparison, consider the following example:
 
-The best way to hack on the router is to symlink it into your project using [`npm link`](https://docs.npmjs.com/cli/link). Then, use `npm run watch` to automatically watch the `modules` directory and output a new build every time something changes.
+```bash
+fix(transaction): missing quantity field in txn details
+```
+
+Another scenario for scope is using a `route/scope` (or `context/scope`) syntax. This would be useful when a commit only affects a particular instance of code that is used in multiple places.
+
+*Example*: Transactions may be shown in multiple routes/contexts, but a bug affecting transaction actions may only exist under the "home" route, possibly related to other code. In such cases, you could use the following format:
+
+```bash
+fix(home/transactions): txn actions not working
+```
+
+This header makes it clear that the fix is limited in scope to transactions within the home route/context.
+
+#### Subject
+
+Short summary of the commit. Avoid redundancy and simplify wording in ways that do not compromise understanding.
+
+Good:
+
+```bash
+$ git commit -m "fix(nav/link): incorrect URL for Travel"
+```
+
+Bad:
+
+```bash
+$ git commit -m "fix(nav): incorrect URL for Travel nav item :P"
+```
+
+> Note that the _Bad_ example results in a longer commit header. This is partly attributed to the scope not being more specific and personal expression tacked on the end.
+
+**Note regarding subjects for bug fixes:**
+
+Summarize _what is fixed_, rather than stating that it _is_ fixed. The _type_ ("fix") already specifies the state of the issue.
+
+For example, don't do:
+
+```bash
+$ git commit -m "fix(nav): corrected Travel URL"
+```
+
+Instead, do:
+
+```bash
+$ git commit -m "fix(nav): broken URL for Travel"
+```
+
+
+#### Body and Footer (optional)
+
+The body and footer should wrap at 80 characters.
+
+The **body** describes the commit in more detail and should not be more than 1 paragraph (3-5 sentences). Details are important, but too much verbosity can inhibit understanding and productivity -- keep it clear and concise.
+
+The **footer** should only reference Pull Requests or Issues associated with the commit.
+
+For bug fixes that address open issues, the footer should be formatted like so:
+
+```bash
+Closes #17, #26
+```
+and for Pull Requests, use the format:
+
+```bash
+Related #37
+```
+
+If a commit is associated with issues and pull requests, use the following format:
+
+```bash
+Closes #17, #26
+Related #37
+```
+> Issues should always be referenced before pull requests, as shown above.
+
+#### Piecing It All Together
+
+Below is an example of a full commit message that includes a header, body and footer:
+
+```bash
+refactor(nav/item): added prop (isActive)
+
+NavItem now supports an "isActive" property. This property is used to control the styling of active navigation links.
+
+Closes #21
+```

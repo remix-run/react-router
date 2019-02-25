@@ -8,7 +8,7 @@ export default (...middlewares) => {
       warning(
         middleware.renderRouterContext || middleware.renderRouteComponent,
         `The middleware specified at index ${index} does not appear to be ` +
-        'a valid React Router middleware.'
+        'a valid One App Router middleware.'
       )
     })
   }

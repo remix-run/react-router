@@ -1,7 +1,7 @@
 import React from 'react'
 import CSSTransitionGroup from 'react-transition-group/CSSTransitionGroup'
 import { render } from 'react-dom'
-import { browserHistory, Router, Route, Link } from 'react-router'
+import { browserHistory, Router, Route, Link } from '@americanexpress/one-app-router'
 
 import withExampleBasename from '../withExampleBasename'
 
@@ -74,16 +74,18 @@ const Tab2 = () => (
 )
 
 render((
-  <Router history={withExampleBasename(browserHistory, __dirname)}>
-    <Route path="/" component={App}>
-      <Route path="page1" component={Page1}>
-        <Route path="tab1" component={Tab1} />
-        <Route path="tab2" component={Tab2} />
+  <React.StrictMode>
+    <Router history={withExampleBasename(browserHistory, __dirname)}>
+      <Route path="/" component={App}>
+        <Route path="page1" component={Page1}>
+          <Route path="tab1" component={Tab1} />
+          <Route path="tab2" component={Tab2} />
+        </Route>
+        <Route path="page2" component={Page2}>
+          <Route path="tab1" component={Tab1} />
+          <Route path="tab2" component={Tab2} />
+        </Route>
       </Route>
-      <Route path="page2" component={Page2}>
-        <Route path="tab1" component={Tab1} />
-        <Route path="tab2" component={Tab2} />
-      </Route>
-    </Route>
-  </Router>
+    </Router>
+  </React.StrictMode>
 ), document.getElementById('example'))

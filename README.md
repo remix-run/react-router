@@ -1,115 +1,117 @@
-# React Router [![Travis][build-badge]][build] [![npm package][npm-badge]][npm]
+# One App Router
+<h1>
+  <center>
+    <br />
+    <img src="./one-app-router.png" alt="one-app-router - One App Router" width="50%" />
+    <br /><br />
+  </center>
+</h1>
 
-<img src="/logo/vertical@2x.png" height="150"/>
+[![npm version](https://badge.fury.io/js/one-app-router.svg)](https://badge.fury.io/js/one-app-router)
+[![Build Status](https://travis-ci.org/americanexpress/one-app-router.svg?branch=master)](https://travis-ci.org/americanexpress/one-app-router)
 
-React Router is a complete routing library for [React](https://facebook.github.io/react).
+> One App Router keeps your UI in sync with the URL. It has a simple API with powerful features like lazy code
+> loading, dynamic route matching, and location transition handling built right in.
+> Make the URL your first thought, not an after-thought.
 
-React Router keeps your UI in sync with the URL. It has a simple API with powerful features like lazy code loading, dynamic route matching, and location transition handling built right in. Make the URL your first thought, not an after-thought.
+> One App Router was forked from [React Router v3](https://github.com/ReactTraining/@americanexpress/one-app-router/tree/v3)
+> as it provided the best initial fit. This is not meant to be a generic standalone Routing library but
+> one which will be tailored for use with the One ecosystem.
 
-[![Codecov][codecov-badge]][codecov]
-[![Discord][discord-badge]][discord]
+## 👩‍💻 Hiring 👨‍💻
 
-### 4.0 is here!
+Want to get paid for your contributions to `one-app-router`?
+> Send your resume to oneamex.careers@aexp.com
 
-The next version of React Router (4.0) has been released! Check out the `master` branch.
+## 📖 Table of Contents
 
-[4.0 Documentation](https://reacttraining.com/react-router/)
+* [Features](#-features)
+* [Usage](#-usage)
+* [Available Scripts](#-available-scripts)
+* [Git Hooks](#-git-hooks)
+* [Contributing](#-contributing)
+* [License](#-license)
+* [Code of Conduct](#-code-of-conduct)
 
-### Docs & Help
+## ✨ Features
 
-- [Tutorial – do this first!](https://github.com/reactjs/react-router-tutorial)
-- [Guides and API docs (v2, v3)](/docs)
-- [Troubleshooting guide](https://github.com/ReactTraining/react-router/blob/master/docs/Troubleshooting.md)
-- [Changelog](/CHANGES.md)
-- [Stack Overflow](http://stackoverflow.com/questions/tagged/react-router)
-- [CodePen boilerplate](http://codepen.io/anon/pen/xwQZdy?editors=001) for bug reports
+* Keeps your UI in sync with the URL
+* Lazy code loading
+* Dynamic route matching
+* Location transition handling
 
-**Older Versions:**
-
-- 0.13.x - [docs](https://github.com/ReactTraining/react-router/tree/v0.13.6/doc) / [guides](https://github.com/ReactTraining/react-router/tree/v0.13.6/docs/guides) / [code](https://github.com/ReactTraining/react-router/tree/v0.13.6) / [upgrade guide](/upgrade-guides/v1.0.0.md)
-- 1.0.x - [docs](https://github.com/ReactTraining/react-router/tree/1.0.x/docs) / [code](https://github.com/ReactTraining/react-router/tree/1.0.x) / [upgrade guide](/upgrade-guides/v2.0.0.md)
-
-For questions and support, please visit [our channel on Reactiflux](https://discord.gg/0ZcbPKXt5bYaNQ46) or [Stack Overflow](http://stackoverflow.com/questions/tagged/react-router).
-
-### Browser Support
-
-We support all browsers and environments where React runs.
+## 🤹‍ Usage
 
 ### Installation
-
-Using [npm](https://www.npmjs.com/):
-
-    $ npm install --save react-router
+```
+$ npm install @americanexpress/one-app-router
+```
 
 Then with a module bundler like [webpack](https://webpack.github.io/) that supports either CommonJS or ES2015 modules, use as you would anything else:
 
 ```js
 // using an ES6 transpiler, like babel
-import { Router, Route, Link } from 'react-router'
+import { Router, Route, Link } from '@americanexpress/one-app-router'
 
 // not using an ES6 transpiler
-var Router = require('react-router').Router
-var Route = require('react-router').Route
-var Link = require('react-router').Link
+var Router = require('@americanexpress/one-app-router').Router
+var Route = require('@americanexpress/one-app-router').Route
+var Link = require('@americanexpress/one-app-router').Link
 ```
 
-The UMD build is also available on [unpkg](https://unpkg.com):
-
-```html
-<script src="https://unpkg.com/react-router/umd/ReactRouter.min.js"></script>
-```
-
-You can find the library on `window.ReactRouter`.
-
-### What's it look like?
+### See it in action
 
 ```js
-import React from 'react'
-import { render } from 'react-dom'
-import { Router, Route, Link, browserHistory } from 'react-router'
+import React from 'react';
+import { render } from 'react-dom';
+import { Router, Route, Link, browserHistory } from '@americanexpress/one-app-router';
 
-const App = React.createClass({/*...*/})
-const About = React.createClass({/*...*/})
-const NoMatch = React.createClass({/*...*/})
+function App() {/*...*/}
+function About() {/*...*/}
+function NoMatch() {/*...*/}
 
-const Users = React.createClass({
-  render() {
-    return (
-      <div>
-        <h1>Users</h1>
-        <div className="master">
-          <ul>
-            {/* use Link to route around the app */}
-            {this.state.users.map(user => (
-              <li key={user.id}><Link to={`/user/${user.id}`}>{user.name}</Link></li>
-            ))}
-          </ul>
-        </div>
-        <div className="detail">
-          {this.props.children}
-        </div>
+async function getUsersFragment() {/*...*/}
+async function findUserById() {/*...*/}
+
+function Users({ children }) {
+  const [users, setUsers] = React.useState([]);
+  React.useEffect(() => {
+    getUsersFragment().then(setUsers);
+  }, []);
+
+  return (
+    <div>
+      <h1>Users</h1>
+      <div className="master">
+        <ul>
+          {/* use Link to route around the app */}
+          {users.map(user => (
+            <li key={user.id}>
+              <Link to={`/user/${user.id}`}>{user.name}</Link>
+            </li>
+          ))}
+        </ul>
       </div>
-    )
-  }
-})
-
-const User = React.createClass({
-  componentDidMount() {
-    this.setState({
-      // route components are rendered with useful information, like URL params
-      user: findUserById(this.props.params.userId)
-    })
-  },
-
-  render() {
-    return (
-      <div>
-        <h2>{this.state.user.name}</h2>
-        {/* etc. */}
+      <div className="detail">
+        {children}
       </div>
-    )
-  }
-})
+    </div>
+  );
+}
+
+function User({ params }) {
+  const [user, setUser] = React.useState(null);
+  React.useEffect(() => {
+    findUserById(params.userId).then(setUser);
+  }, []);
+
+  return user && (
+    <div>
+      <h2>{user.name}</h2>
+      {/* etc. */}
+    </div>
+  );
+}
 
 // Declarative route configuration (could also load this config lazily
 // instead, all you really need is a single root route, you don't need to
@@ -129,27 +131,56 @@ render((
 
 See more in the [Introduction](/docs/Introduction.md), [Guides](/docs/guides/README.md), and [Examples](/examples).
 
-### Versioning and Stability
+## 📜 Available Scripts
 
-We want React Router to be a stable dependency that’s easy to keep current. We take the same approach to versioning as React.js itself: [React Versioning Scheme](https://facebook.github.io/react/blog/2016/02/19/new-versioning-scheme.html).
+**`npm run lint`**
 
-### Thanks
+Verifies that your code matches the American Express code style defined in
+[`eslint-config-amex`](https://github.com/americanexpress/eslint-config-amex).
 
-Thanks to [our sponsors](/SPONSORS.md) for supporting the development of
-React Router.
+**`npm run build`**
 
-React Router was initially inspired by Ember's fantastic router. Many thanks to the Ember team.
+Runs `babel` to compile `src` files to transpiled JavaScript into `lib` using
+[`babel-preset-amex`](https://github.com/americanexpress/babel-preset-amex).
 
-Also, thanks to [BrowserStack](https://www.browserstack.com/) for providing the infrastructure that allows us to run our build in real browsers.
+**`npm test`**
 
-[build-badge]: https://img.shields.io/travis/ReactTraining/react-router/master.svg?style=flat-square
-[build]: https://travis-ci.org/ReactTraining/react-router
+Runs unit tests **and** verifies the format of all commit messages on the current branch.
 
-[npm-badge]: https://img.shields.io/npm/v/react-router.svg?style=flat-square
-[npm]: https://www.npmjs.org/package/react-router
+**`npm posttest`**
 
-[codecov-badge]: https://img.shields.io/codecov/c/github/ReactTraining/react-router/master.svg?style=flat-square
-[codecov]: https://codecov.io/gh/ReactTraining/react-router
+Runs linting on the current branch.
 
-[discord-badge]: https://img.shields.io/badge/Discord-join%20chat%20%E2%86%92-738bd7.svg?style=flat-square
-[discord]: https://discord.gg/0ZcbPKXt5bYaNQ46
+## 🎣 Git Hooks
+
+These commands will be automatically run during normal git operations like committing code.
+
+**`pre-commit`**
+
+This hook runs `npm test` before allowing a commit to be checked in.
+
+**`commit-msg`**
+
+This hook verifies that your commit message matches the One Amex conventions. See the **commit
+message** section in the [contribution guidelines](./CONTRIBUTING.md).
+
+## 🏆 Contributing
+
+We welcome Your interest in the American Express Open Source Community on Github.
+Any Contributor to any Open Source Project managed by the American Express Open
+Source Community must accept and sign an Agreement indicating agreement to the
+terms below. Except for the rights granted in this Agreement to American Express
+and to recipients of software distributed by American Express, You reserve all
+right, title, and interest, if any, in and to Your Contributions. Please [fill
+out the Agreement](https://cla-assistant.io/americanexpress/one-app-router).
+
+Please feel free to open pull requests and see [CONTRIBUTING.md](./CONTRIBUTING.md) for commit formatting details.
+
+## 🗝️ License
+
+Any contributions made under this project will be governed by the [MIT License](./LICENSE.md).
+
+## 🗣️ Code of Conduct
+
+This project adheres to the [American Express Community Guidelines](./CODE_OF_CONDUCT.md).
+By participating, you are expected to honor these guidelines.

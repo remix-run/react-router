@@ -31,7 +31,7 @@ module.exports = {
 
   resolve: {
     alias: {
-      'react-router': path.join(__dirname, '..', 'modules')
+      '@americanexpress/one-app-router': path.join(__dirname, '..', 'modules')
     }
   },
 

@@ -1,7 +1,6 @@
-import React from 'react'
-import createReactClass from 'create-react-class'
+import React, { Component } from 'react'
 import { render } from 'react-dom'
-import { browserHistory, Router, Route, IndexRoute, Link } from 'react-router'
+import { browserHistory, Router, Route, IndexRoute, Link } from '@americanexpress/one-app-router'
 
 import withExampleBasename from '../withExampleBasename'
 
@@ -11,8 +10,8 @@ const PICTURES = [
   { id: 2, src: 'http://placekitten.com/620/620' }
 ]
 
-const Modal = createReactClass({
-  styles: {
+class Modal extends Component {
+  styles = {
     position: 'fixed',
     top: '20%',
     right: '20%',
@@ -22,7 +21,7 @@ const Modal = createReactClass({
     boxShadow: '0px 0px 150px 130px rgba(0, 0, 0, 0.5)',
     overflow: 'auto',
     background: '#fff'
-  },
+  }
 
   render() {
     return (
@@ -32,11 +31,10 @@ const Modal = createReactClass({
       </div>
     )
   }
-})
+}
 
-const App = createReactClass({
-
-  componentWillReceiveProps(nextProps) {
+class App extends Component {
+  UNSAFE_componentWillReceiveProps(nextProps) {
     // if we changed routes...
     if ((
       nextProps.location.key !== this.props.location.key &&
@@ -46,7 +44,7 @@ const App = createReactClass({
       // save the old children (just like animation)
       this.previousChildren = this.props.children
     }
-  },
+  }
 
   render() {
     let { location } = this.props
@@ -76,9 +74,9 @@ const App = createReactClass({
       </div>
     )
   }
-})
+}
 
-const Index = createReactClass({
+class Index extends Component {
   render() {
     return (
       <div>
@@ -90,7 +88,7 @@ const Index = createReactClass({
         <p>
           Click on an item and see its rendered as a modal, then copy/paste the
           url into a different browser window (with a different session, like
-          Chrome -> Firefox), and see that the image does not render inside the
+          Chrome to Firefox), and see that the image does not render inside the
           overlay. One URL, two session dependent screens :D
         </p>
 
@@ -113,9 +111,9 @@ const Index = createReactClass({
       </div>
     )
   }
-})
+}
 
-const Deep = createReactClass({
+class Deep extends Component {
   render() {
     return (
       <div>
@@ -135,9 +133,9 @@ const Deep = createReactClass({
       </div>
     )
   }
-})
+}
 
-const Picture = createReactClass({
+class Picture extends Component {
   render() {
     return (
       <div>
@@ -145,14 +143,16 @@ const Picture = createReactClass({
       </div>
     )
   }
-})
+}
 
 render((
-  <Router history={withExampleBasename(browserHistory, __dirname)}>
-    <Route path="/" component={App}>
-      <IndexRoute component={Index}/>
-      <Route path="/pictures/:id" component={Picture}/>
-      <Route path="/some/:one/deep/:two/route" component={Deep}/>
-    </Route>
-  </Router>
+  <React.StrictMode>
+    <Router history={withExampleBasename(browserHistory, __dirname)}>
+      <Route path="/" component={App}>
+        <IndexRoute component={Index}/>
+        <Route path="/pictures/:id" component={Picture}/>
+        <Route path="/some/:one/deep/:two/route" component={Deep}/>
+      </Route>
+    </Router>
+  </React.StrictMode>
 ), document.getElementById('example'))

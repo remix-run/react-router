@@ -1,39 +1,36 @@
-import React from 'react'
-import createReactClass from 'create-react-class'
-import { render, findDOMNode } from 'react-dom'
-import { browserHistory, Router, Route, IndexRoute, Link, withRouter } from 'react-router'
+import React, { Component } from 'react'
+import { render } from 'react-dom'
+import { browserHistory, Router, Route, IndexRoute, Link, withRouter } from '@americanexpress/one-app-router'
 
 import withExampleBasename from '../withExampleBasename'
 import ContactStore from './ContactStore'
 
 import './app.css'
 
-const App = createReactClass({
-  getInitialState() {
-    return {
+class App extends Component {
+  constructor(props) {
+    super(props)
+    this.state = {
       contacts: ContactStore.getContacts(),
       loading: true
     }
-  },
-
-  componentWillMount() {
     ContactStore.init()
-  },
+  }
 
   componentDidMount() {
     ContactStore.addChangeListener(this.updateContacts)
-  },
+  }
 
   componentWillUnmount() {
     ContactStore.removeChangeListener(this.updateContacts)
-  },
+  }
 
-  updateContacts() {
+  updateContacts = () => {
     this.setState({
       contacts: ContactStore.getContacts(),
       loading: false
     })
-  },
+  }
 
   render() {
     const contacts = this.state.contacts.map(function (contact) {
@@ -54,110 +51,128 @@ const App = createReactClass({
       </div>
     )
   }
-})
+}
 
-const Index = createReactClass({
+class Index extends Component {
   render() {
     return <h1>Address Book</h1>
   }
-})
+}
 
-const Contact = withRouter(
-  createReactClass({
+class ContactBase extends Component {
+  constructor(props) {
+    super(props)
+    this.state = this.getStateFromStore(props)
+  }
 
-    getStateFromStore(props) {
-      const { id } = props ? props.params : this.props.params
+  getStateFromStore = (props) => {
+    const { id } = props ? props.params : this.props.params
+    return {
+      contact: ContactStore.getContact(id)
+    }
+  }
 
+  updateContact = () => {
+    this.setState(this.getStateFromStore())
+  }
+
+  componentDidMount() {
+    ContactStore.addChangeListener(this.updateContact)
+  }
+
+  componentWillUnmount() {
+    ContactStore.removeChangeListener(this.updateContact)
+  }
+
+  static getDerivedStateFromProps(props, state) {
+    if (props.contact !== state.contact) {
+      const { id } = props.params
       return {
         contact: ContactStore.getContact(id)
       }
-    },
-
-    getInitialState() {
-      return this.getStateFromStore()
-    },
-
-    componentDidMount() {
-      ContactStore.addChangeListener(this.updateContact)
-    },
-
-    componentWillUnmount() {
-      ContactStore.removeChangeListener(this.updateContact)
-    },
-
-    componentWillReceiveProps(nextProps) {
-      this.setState(this.getStateFromStore(nextProps))
-    },
-
-    updateContact() {
-      this.setState(this.getStateFromStore())
-    },
-
-    destroy() {
-      const { id } = this.props.params
-      ContactStore.removeContact(id)
-      this.props.router.push('/')
-    },
-
-    render() {
-      const contact = this.state.contact || {}
-      const name = contact.first + ' ' + contact.last
-      const avatar = contact.avatar || 'http://placecage.com/50/50'
-
-      return (
-        <div className="Contact">
-          <img height="50" src={avatar} key={avatar} />
-          <h3>{name}</h3>
-          <button onClick={this.destroy}>Delete</button>
-        </div>
-      )
     }
-  })
-)
+    return null
+  }
 
-const NewContact = withRouter(
-  createReactClass({
+  destroy = () => {
+    const { id } = this.props.params
+    ContactStore.removeContact(id)
+    this.props.router.push('/')
+  }
 
-    createContact(event) {
-      event.preventDefault()
+  render() {
+    const contact = this.state.contact || {}
+    const name = contact.first + ' ' + contact.last
+    const avatar = contact.avatar || 'https://www.fillmurray.com/50/50'
 
-      ContactStore.addContact({
-        first: findDOMNode(this.refs.first).value,
-        last: findDOMNode(this.refs.last).value
-      }, (contact) => {
-        this.props.router.push(`/contact/${contact.id}`)
-      })
-    },
+    return (
+      <div className="Contact">
+        <img height="50" src={avatar} key={avatar} />
+        <h3>{name}</h3>
+        <button onClick={this.destroy}>Delete</button>
+      </div>
+    )
+  }
+}
 
-    render() {
-      return (
-        <form onSubmit={this.createContact}>
-          <p>
-            <input type="text" ref="first" placeholder="First name" />
-            <input type="text" ref="last" placeholder="Last name" />
-          </p>
-          <p>
-            <button type="submit">Save</button> <Link to="/">Cancel</Link>
-          </p>
-        </form>
-      )
-    }
-  })
-)
+const Contact = withRouter(ContactBase)
 
-const NotFound = createReactClass({
+class NewContactBase extends Component {
+  state = {
+    first: '',
+    last: ''
+  }
+
+  createContact = (event) => {
+    event.preventDefault()
+
+    const { first, last } = this.state
+
+    ContactStore.addContact({
+      first,
+      last
+    }, (contact) => {
+      this.props.router.push(`/contact/${contact.id}`)
+    })
+  }
+
+  handleChange = ({ target: { name, value } }) => {
+    this.setState({ [name]: value })
+  }
+
+  render() {
+    const { first, last } = this.state
+    return (
+      <form onSubmit={this.createContact}>
+        <p>
+          <input type="text" onChange={this.handleChange} value={first} name="first" placeholder="First name" />
+          <input type="text" onChange={this.handleChange} value={last} name="last" placeholder="Last name" />
+        </p>
+        <p>
+          <button type="submit">Save</button> <Link to="/">Cancel</Link>
+        </p>
+      </form>
+    )
+  }
+}
+
+const NewContact = withRouter(NewContactBase)
+
+class NotFound extends Component {
   render() {
     return <h2>Not found</h2>
   }
-})
+}
 
 render((
-  <Router history={withExampleBasename(browserHistory, __dirname)}>
-    <Route path="/" component={App}>
-      <IndexRoute component={Index} />
-      <Route path="contact/new" component={NewContact} />
-      <Route path="contact/:id" component={Contact} />
-      <Route path="*" component={NotFound} />
-    </Route>
-  </Router>
+  <React.StrictMode>
+    <Router history={withExampleBasename(browserHistory, __dirname)}>
+      <Route path="/" component={App}>
+        <IndexRoute component={Index} />
+        <Route path="contact/new" component={NewContact} />
+        <Route path="contact/:id" component={Contact} />
+        <Route path="*" component={NotFound} />
+      </Route>
+    </Router>
+  </React.StrictMode>
 ), document.getElementById('example'))

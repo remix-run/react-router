@@ -1,10 +1,9 @@
-import React from 'react'
-import createReactClass from 'create-react-class'
+import React, { Component } from 'react'
 
-const PageOne = createReactClass({
+class PageOne extends Component {
   render() {
     return <h2>Page One!</h2>
   }
-})
+}
 
 module.exports = PageOne

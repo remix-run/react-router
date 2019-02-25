@@ -5,7 +5,7 @@ A [route configuration](/docs/Glossary.md#routeconfig) is basically a set of ins
 ```js
 import React from 'react'
 import { render } from 'react-dom'
-import { Router, Route, Link } from 'react-router'
+import { Router, Route, Link } from '@americanexpress/one-app-router'
 
 const App = React.createClass({
   render() {
@@ -71,7 +71,7 @@ URL                     | Components
 Imagine we'd like to render another component inside of `App` when the URL is `/`. Currently, `this.props.children` inside of `App`'s `render` method is `undefined` in this case. We can use an [`<IndexRoute>`](/docs/API.md#indexroute) to specify a "default" page.
 
 ```js
-import { IndexRoute } from 'react-router'
+import { IndexRoute } from '@americanexpress/one-app-router'
 
 const Dashboard = React.createClass({
   render() {
@@ -143,7 +143,7 @@ Wait a minute ... we just changed a URL! [That's not cool](http://www.w3.org/Pro
 Not to worry. We can use a [`<Redirect>`](/docs/API.md#redirect) to make sure that URL still works!
 
 ```js
-import { Redirect } from 'react-router'
+import { Redirect } from '@americanexpress/one-app-router'
 
 render((
   <Router>
@@ -168,7 +168,7 @@ Now when someone clicks on that link to `/inbox/messages/5` they'll automaticall
 
 ### Enter and Leave Hooks
 
-[Route](/docs/Glossary.md#route)s may also define [`onEnter`](/docs/Glossary.md#enterhook) and [`onLeave`](/docs/Glossary.md#leavehook) hooks that are invoked once a transition has been [confirmed](/docs/guides/ConfirmingNavigation.md). These hooks are useful for various things like [requiring auth](https://github.com/ReactTraining/react-router/tree/v3/examples/auth-flow) when a route is entered and saving stuff to persistent storage before a route unmounts.
+[Route](/docs/Glossary.md#route)s may also define [`onEnter`](/docs/Glossary.md#enterhook) and [`onLeave`](/docs/Glossary.md#leavehook) hooks that are invoked once a transition has been [confirmed](/docs/guides/ConfirmingNavigation.md). These hooks are useful for various things like [requiring auth](https://github.com/ReactTraining/@americanexpress/one-app-router/tree/v3/examples/auth-flow) when a route is entered and saving stuff to persistent storage before a route unmounts.
 
 During a transition, [`onLeave` hooks](/docs/Glossary.md#leavehook) run first on all routes we are leaving, starting with the leaf route on up to the first common ancestor route. Next, [`onEnter` hooks](/docs/Glossary.md#enterhook) run starting with the first parent route we're entering down to the leaf route.
 

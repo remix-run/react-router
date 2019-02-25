@@ -33,7 +33,7 @@ export function createRouteFromReactElement(element) {
  * provides a convenient way to visualize how routes in the hierarchy are
  * nested.
  *
- *   import { Route, createRoutesFromReactChildren } from 'react-router'
+ *   import { Route, createRoutesFromReactChildren } from '@americanexpress/one-app-router'
  *
  *   const routes = createRoutesFromReactChildren(
  *     <Route component={App}>

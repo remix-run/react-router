@@ -1,6 +1,6 @@
 # Glossary
 
-This is a glossary of common terms used in the React Router codebase and documentation listed in alphabetical order, along with their [type signatures](http://flowtype.org/docs/quick-reference.html).
+This is a glossary of common terms used in the One App Router codebase and documentation listed in alphabetical order, along with their [type signatures](http://flowtype.org/docs/quick-reference.html).
 
 * [Action](#action)
 * [Component](#component)

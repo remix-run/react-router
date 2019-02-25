@@ -1,7 +1,7 @@
 import React from 'react'
 import CSSTransitionGroup from 'react-transition-group/CSSTransitionGroup'
 import { render } from 'react-dom'
-import { browserHistory, Router, Route, IndexRoute, Link } from 'react-router'
+import { browserHistory, Router, Route, IndexRoute, Link } from '@americanexpress/one-app-router'
 
 import withExampleBasename from '../withExampleBasename'
 
@@ -30,7 +30,7 @@ const App = ({ children, location }) => (
 const Index = () => (
   <div className="Image">
     <h1>Index</h1>
-    <p>Animations with React Router are not different than any other animation.</p>
+    <p>Animations with One App Router are not different than any other animation.</p>
   </div>
 )
 
@@ -49,11 +49,13 @@ const Page2 = () => (
 )
 
 render((
-  <Router history={withExampleBasename(browserHistory, __dirname)}>
-    <Route path="/" component={App}>
-      <IndexRoute component={Index}/>
-      <Route path="page1" component={Page1} />
-      <Route path="page2" component={Page2} />
-    </Route>
-  </Router>
+  <React.StrictMode>
+    <Router history={withExampleBasename(browserHistory, __dirname)}>
+      <Route path="/" component={App}>
+        <IndexRoute component={Index}/>
+        <Route path="page1" component={Page1} />
+        <Route path="page2" component={Page2} />
+      </Route>
+    </Router>
+  </React.StrictMode>
 ), document.getElementById('example'))

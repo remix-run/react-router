@@ -1,6 +1,6 @@
 import React from 'react'
 import { render } from 'react-dom'
-import { browserHistory, Router, Route, Link } from 'react-router'
+import { browserHistory, Router, Route, Link } from '@americanexpress/one-app-router'
 
 import withExampleBasename from '../withExampleBasename'
 
@@ -20,7 +20,7 @@ const App = ({ children, routes }) => {
       <main>
         <ul className="breadcrumbs-list">
           {routes.map((item, index) =>
-            <li key={index}>
+            (<li key={index}>
               <Link
                 onlyActiveOnIndex={true}
                 activeClassName="breadcrumb-active"
@@ -28,7 +28,7 @@ const App = ({ children, routes }) => {
                 {item.component.title}
               </Link>
               {(index + 1) < depth && '\u2192'}
-            </li>
+            </li>)
           )}
         </ul>
         {children}
@@ -60,10 +60,12 @@ Orders.title = 'Orders'
 Orders.path = '/orders'
 
 render((
-  <Router history={withExampleBasename(browserHistory, __dirname)}>
-    <Route path={App.path} component={App}>
-      <Route path={Products.path} component={Products} />
-      <Route path={Orders.path} component={Orders} />
-    </Route>
-  </Router>
+  <React.StrictMode>
+    <Router history={withExampleBasename(browserHistory, __dirname)}>
+      <Route path={App.path} component={App}>
+        <Route path={Products.path} component={Products} />
+        <Route path={Orders.path} component={Orders} />
+      </Route>
+    </Router>
+  </React.StrictMode>
 ), document.getElementById('example'))

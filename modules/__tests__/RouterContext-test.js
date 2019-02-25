@@ -3,9 +3,9 @@ import React from 'react'
 import { render, unmountComponentAtNode } from 'react-dom'
 
 import match from '../match'
-import { routerShape } from '../PropTypes'
 import RouterContext from '../RouterContext'
 import { createRouterObject } from '../RouterUtils'
+import { RouterContext as ProvidableRouterContext } from '../ContextUtils'
 
 describe('RouterContext', () => {
   let node, routes, context, history, transitionManager, router
@@ -41,9 +41,7 @@ describe('RouterContext', () => {
       render() { return null }
     }
 
-    Component.contextTypes = {
-      router: routerShape.isRequired
-    }
+    Component.contextType = ProvidableRouterContext
 
     routes = { path: '/', component: Component }
   })
