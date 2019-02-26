@@ -71,7 +71,7 @@ class MailingListSignup extends Component {
           >
             {submitted ? (
               <Block textAlign="center">
-                <p>Thanks! You've been added to the list.</p>
+                <p>Thanks! You've been added to our list.</p>
                 <p style={{ marginTop: 10 }}>
                   <a
                     style={{ textDecoration: "underline", cursor: "pointer" }}
