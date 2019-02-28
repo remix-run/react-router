@@ -9,10 +9,10 @@ tmp_dir="/tmp/reacttraining.com"
 rm -rf $tmp_dir
 git clone --depth 2 --branch master "git@github.com:ReactTraining/reacttraining.com.git" $tmp_dir
 
-# Build the website into the public/react-router dir
-rm -rf "$tmp_dir/public/react-router"
+# Build the website into the static/react-router dir
+rm -rf "$tmp_dir/static/react-router"
 cd "$root_dir/website"
-npm run build -- --output-path "$tmp_dir/public/react-router" --output-public-path $PUBLIC_PATH
+npm run build -- --output-path "$tmp_dir/static/react-router" --output-public-path $PUBLIC_PATH
 
 # Commit all changes
 cd $tmp_dir
