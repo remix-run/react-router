@@ -59,6 +59,8 @@ class Link extends React.Component {
 
 if (__DEV__) {
   const toType = PropTypes.oneOfType([PropTypes.string, PropTypes.object]);
+  // polyfill for Node
+  Element = typeof Element === 'undefined' ? function(){} : Element;
   const innerRefType = PropTypes.oneOfType([
     PropTypes.string,
     PropTypes.func,
