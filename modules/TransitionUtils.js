@@ -63,7 +63,11 @@ export default function getTransitionUtils() {
         if (error || redirectInfo) {
           done(error, redirectInfo) // No need to continue.
         } else {
-          next()
+          try {
+            next()
+          } catch (err) {
+            callback(err)
+          }
         }
       })
     }, callback)
