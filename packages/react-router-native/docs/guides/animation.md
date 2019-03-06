@@ -149,7 +149,7 @@ class AnimatedChild extends Component {
 
   state = {
     // we're going to save the old children so we can render
-    // it when it doesnt' actually match the location anymore
+    // it when it doesn't actually match the location anymore
     previousChildren: null
   };
 
