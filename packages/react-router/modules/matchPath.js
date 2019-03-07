@@ -51,7 +51,9 @@ function compilePath(path, options) {
  * Public API for matching a URL pathname to a path.
  */
 function matchPath(pathname, options = {}, parent = null) {
-  if (typeof options === "string") options = { path: options };
+  if (typeof options === "string") {
+    options = { path: options };
+  }
 
   const { exact = false, strict = false, sensitive = false } = options;
   let path = options.path != null ? options.path : options.from;
@@ -64,7 +66,9 @@ function matchPath(pathname, options = {}, parent = null) {
 
     const absolute = isAbsolute(path);
 
-    if (!absolute) path = resolvePath(path, parent && parent.url);
+    if (!absolute) {
+      path = resolvePath(path, parent && parent.url);
+    }
 
     const { regexp, keys } = compilePath(path, {
       end: exact,
@@ -73,21 +77,25 @@ function matchPath(pathname, options = {}, parent = null) {
     });
     const match = regexp.exec(pathname);
 
-    if (!match) return null;
+    if (!match) {
+      return null;
+    }
 
     const [url, ...values] = match;
     const isExact = pathname === url;
 
-    if (exact && !isExact) return null;
+    if (exact && !isExact) {
+      return null;
+    }
 
     const matchParams = keys.reduce((params, key, index) => {
       params[key.name] = values[index];
       return params;
     }, {});
 
-    const params = absolute
-      ? matchParams
-      : { ...(parent && parent.params), ...matchParams };
+    const parentParams = (parent && parent.params) || {};
+
+    const params = absolute ? matchParams : { ...parentParams, ...matchParams };
 
     return {
       path, // the path used to match
