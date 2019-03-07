@@ -15,6 +15,17 @@ const resolvePath = (pathname, base) => {
     return pathname;
   }
 
+  if (pathname.charAt(0) === ".") {
+    switch (pathname.charAt(1)) {
+      // pathname points to previous segment (../)
+      case ".":
+        throw new Error("cannot resolve pathname with leading dot-dot");
+      // pathname points to current segment (./)
+      case "/":
+        pathname = pathname.substr(2);
+    }
+  }
+
   if (!base) {
     base = "/";
   }
