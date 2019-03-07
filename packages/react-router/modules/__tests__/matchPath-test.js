@@ -132,6 +132,28 @@ describe("matchPath", () => {
       expect(match.url).toBe("/test-location/hello/7");
       expect(match.params).toEqual({ something: "hello", number: "7" });
     });
+    it("resolves relative path with leading ./", () => {
+      const pathname = "/sauce/sriracha";
+      const options = {
+        path: "./sriracha"
+      };
+      const parentMatch = {
+        url: "/sauce"
+      };
+
+      const match = matchPath(pathname, options, parentMatch);
+      expect(match.url).toBe("/sauce/sriracha");
+    });
+    it("throws an error for relative path with leading ..", () => {
+      const pathname = "/sauce/sriracha";
+      const options = {
+        path: "../tobasco"
+      };
+
+      expect(() => {
+        matchPath(pathname, options);
+      }).toThrow(/cannot resolve pathname/);
+    });
   });
 
   describe("cache", () => {
