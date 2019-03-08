@@ -2,10 +2,13 @@ import { matchPath, Router } from "react-router";
 
 function matchRoutes(routes, pathname, /*not public API*/ branch = []) {
   routes.some(route => {
+    const parentMatch =
+      branch[branch.length - 1] && branch[branch.length - 1].match;
+
     const match = route.path
-      ? matchPath(pathname, route)
-      : branch.length
-        ? branch[branch.length - 1].match // use parent match
+      ? matchPath(pathname, route, parentMatch)
+      : parentMatch
+        ? parentMatch // use parent match
         : Router.computeRootMatch(pathname); // use default "root" match
 
     if (match) {

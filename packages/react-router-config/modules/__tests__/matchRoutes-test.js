@@ -36,6 +36,26 @@ it("stops matching after finding the first match, just like <Switch>", () => {
   expect(branch[0].route).toEqual(routes[0]);
 });
 
+describe("partial route paths", () => {
+  const routes = [
+    {
+      path: "/sauce",
+      routes: [
+        {
+          path: "./sriracha"
+        }
+      ]
+    }
+  ];
+
+  it("matches the partial route path", () => {
+    const branch = matchRoutes(routes, "/sauce/sriracha");
+    expect(branch.length).toEqual(2);
+    expect(branch[0].route).toEqual(routes[0]);
+    expect(branch[1].route).toEqual(routes[0].routes[0]);
+  });
+});
+
 describe("pathless routes", () => {
   const routes = [
     {
