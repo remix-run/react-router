@@ -2,15 +2,19 @@ import pathToRegexp from "path-to-regexp";
 
 const cache = {};
 
-const isAbsolute = pathname => pathname.charAt(0) === "/";
+function isAbsolute(pathname) {
+  return pathname.charAt(0) === "/";
+}
 
-const ensureTrailingSlash = pathname =>
-  hasTrailingSlash(pathname) ? pathname : pathname + "/";
+function ensureTrailingSlash(pathname) {
+  return hasTrailingSlash(pathname) ? pathname : pathname + "/";
+}
 
-const hasTrailingSlash = pathname =>
-  pathname.charAt(pathname.length - 1) === "/";
+function hasTrailingSlash(pathname) {
+  return pathname.charAt(pathname.length - 1) === "/";
+}
 
-const resolvePath = (pathname, base) => {
+function resolvePath(pathname, base) {
   if (pathname === undefined || isAbsolute(pathname)) {
     return pathname;
   }
@@ -35,7 +39,7 @@ const resolvePath = (pathname, base) => {
   } else {
     return `${ensureTrailingSlash(base)}${pathname}`;
   }
-};
+}
 
 const cacheLimit = 10000;
 let cacheCount = 0;
@@ -72,8 +76,13 @@ function matchPath(pathname, options = {}, parent = null) {
   const paths = [].concat(path);
 
   return paths.reduce((matched, path) => {
-    if (!path) return null;
-    if (matched) return matched;
+    if (!path) {
+      return null;
+    }
+
+    if (matched) {
+      return matched;
+    }
 
     const absolute = isAbsolute(path);
 
