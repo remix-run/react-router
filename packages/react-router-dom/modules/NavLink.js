@@ -1,5 +1,5 @@
 import React from "react";
-import { Route } from "react-router";
+import { Route, matchPath } from "react-router";
 import PropTypes from "prop-types";
 
 import Link from "./Link";
@@ -18,7 +18,7 @@ function NavLink({
   className: classNameProp,
   exact,
   isActive: isActiveProp,
-  location,
+  location: locationProp,
   strict,
   style: styleProp,
   to,
@@ -31,11 +31,13 @@ function NavLink({
 
   return (
     <Route
-      path={escapedPath}
-      exact={exact}
-      strict={strict}
-      location={location}
-      children={({ location, match }) => {
+      children={({ location }) => {
+        const pathToMatch = locationProp
+          ? locationProp.pathname
+          : location.pathname;
+        const match = escapedPath
+          ? matchPath(pathToMatch, { path: escapedPath, exact, strict })
+          : null;
         const isActive = !!(isActiveProp
           ? isActiveProp(match, location)
           : match);
