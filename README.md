@@ -16,6 +16,8 @@
   <a href="https://www.npmjs.com/package/react-router"><img src="https://img.shields.io/npm/v/react-router.svg?style=flat-square"></a>
   <a href="https://www.npmjs.com/package/react-router"><img src="https://img.shields.io/npm/dm/react-router.svg?style=flat-square"></a>
   <a href="https://travis-ci.org/ReactTraining/react-router"><img src="https://img.shields.io/travis/ReactTraining/react-router/master.svg?style=flat-square"></a>
+  <a href="#backers" alt="sponsors on Open Collective"><img src="https://opencollective.com/react-router/backers/badge.svg?style=flat-square" /></a> 
+  <a href="#sponsors" alt="Sponsors on Open Collective"><img src="https://opencollective.com/react-router/sponsors/badge.svg?style=flat-square" /></a> 
 </p>
 
 ## Docs
@@ -44,3 +46,29 @@ This repository is a monorepo that we manage using [Lerna](https://github.com/le
 ## About
 
 `react-router` is developed and maintained by [React Training](https://reacttraining.com) and many [amazing contributors](https://github.com/ReactTraining/react-router/graphs/contributors). If you're interested in learning more about what React can do for your company, please [get in touch](mailto:hello@reacttraining.com)!
+
+## Contributors
+
+This project exists thanks to all the people who contribute. [[Contribute](CONTRIBUTING.md)].
+<a href="https://github.com/ReactTraining/react-router/graphs/contributors"><img src="https://opencollective.com/react-router/contributors.svg?width=890&button=false" /></a>
+
+## Backers
+
+Thank you to all our backers! 🙏 [[Become a backer](https://opencollective.com/react-router#backer)]
+
+<a href="https://opencollective.com/react-router#backers" target="_blank"><img src="https://opencollective.com/react-router/backers.svg?width=890"></a>
+
+## Sponsors
+
+Support this project by becoming a sponsor. Your logo will show up here with a link to your website. [[Become a sponsor](https://opencollective.com/react-router#sponsor)]
+
+<a href="https://opencollective.com/react-router/sponsor/0/website" target="_blank"><img src="https://opencollective.com/react-router/sponsor/0/avatar.svg"></a>
+<a href="https://opencollective.com/react-router/sponsor/1/website" target="_blank"><img src="https://opencollective.com/react-router/sponsor/1/avatar.svg"></a>
+<a href="https://opencollective.com/react-router/sponsor/2/website" target="_blank"><img src="https://opencollective.com/react-router/sponsor/2/avatar.svg"></a>
+<a href="https://opencollective.com/react-router/sponsor/3/website" target="_blank"><img src="https://opencollective.com/react-router/sponsor/3/avatar.svg"></a>
+<a href="https://opencollective.com/react-router/sponsor/4/website" target="_blank"><img src="https://opencollective.com/react-router/sponsor/4/avatar.svg"></a>
+<a href="https://opencollective.com/react-router/sponsor/5/website" target="_blank"><img src="https://opencollective.com/react-router/sponsor/5/avatar.svg"></a>
+<a href="https://opencollective.com/react-router/sponsor/6/website" target="_blank"><img src="https://opencollective.com/react-router/sponsor/6/avatar.svg"></a>
+<a href="https://opencollective.com/react-router/sponsor/7/website" target="_blank"><img src="https://opencollective.com/react-router/sponsor/7/avatar.svg"></a>
+<a href="https://opencollective.com/react-router/sponsor/8/website" target="_blank"><img src="https://opencollective.com/react-router/sponsor/8/avatar.svg"></a>
+<a href="https://opencollective.com/react-router/sponsor/9/website" target="_blank"><img src="https://opencollective.com/react-router/sponsor/9/avatar.svg"></a>
