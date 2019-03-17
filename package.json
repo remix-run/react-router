@@ -4,7 +4,7 @@
   "scripts": {
     "build": "node ./scripts/build.js",
     "clean": "git clean -fdX .",
-    "postinstall": "node ./scripts/postinstall.js",
+    "postinstall": "node ./scripts/postinstall.js && opencollective-postinstall",
     "start": "node ./scripts/start.js",
     "test": "node ./scripts/test.js"
   },
@@ -14,10 +14,17 @@
     "prettier": "^1.14.3",
     "pretty-quick": "^1.4.1"
   },
-  "dependencies": {},
+  "dependencies": {
+    "opencollective-postinstall": "^2.0.2",
+    "opencollective": "^1.0.3"
+  },
   "husky": {
     "hooks": {
       "pre-commit": "pretty-quick --staged"
     }
+  },
+  "collective": {
+    "type": "opencollective",
+    "url": "https://opencollective.com/react-router"
   }
 }
