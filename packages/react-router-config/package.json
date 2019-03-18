@@ -23,7 +23,7 @@
   "scripts": {
     "build": "rollup -c",
     "lint": "eslint modules",
-    "prepublishOnly": "npm run build",
+    "prepare": "npm run build",
     "test": "jest"
   },
   "peerDependencies": {

@@ -71,9 +71,7 @@ const umd = [
       commonjs({
         include: /node_modules/,
         namedExports: {
-          "../react-router/node_modules/react-is/index.js": [
-            "isValidElementType"
-          ]
+          "../../node_modules/react-is/index.js": ["isValidElementType"]
         }
       }),
       replace({ "process.env.NODE_ENV": JSON.stringify("development") }),
@@ -99,9 +97,7 @@ const umd = [
       commonjs({
         include: /node_modules/,
         namedExports: {
-          "../react-router/node_modules/react-is/index.js": [
-            "isValidElementType"
-          ]
+          "../../node_modules/react-is/index.js": ["isValidElementType"]
         }
       }),
       replace({ "process.env.NODE_ENV": JSON.stringify("production") }),
