@@ -29,15 +29,6 @@
   },
   "dependencies": {
     "prop-types": "^15.6.1",
-    "react-router": "5.0.0"
-  },
-  "devDependencies": {
-    "babel-jest": "^23.6.0",
-    "babel-preset-react-native": "^4.0.0",
-    "jest": "^23.6.0",
-    "jest-circus": "^23.6.0",
-    "react": "^16.3.1",
-    "react-native": "^0.55.3",
-    "react-test-renderer": "^16.3.1"
+    "react-router": "file:../react-router"
   }
 }
