@@ -34,7 +34,6 @@
     "react": "^16.5.2",
     "react-dom": "^16.5.2",
     "react-native": "^0.55.3",
-    "react-router": "^4.4.0",
     "react-test-renderer": "^16.3.1",
     "rollup": "^0.66.6",
     "rollup-plugin-babel": "^4.0.3",

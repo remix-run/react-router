@@ -30,9 +30,6 @@
     "react": ">=15",
     "react-router": ">=5"
   },
-  "devDependencies": {
-    "react-router": "file:../react-router"
-  },
   "browserify": {
     "transform": [
       "loose-envify"
