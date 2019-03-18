@@ -1,7 +1,7 @@
 {
   "private": true,
   "name": "react-router-website",
-  "version": "4.4.0",
+  "version": "5.0.0",
   "scripts": {
     "build": "NODE_ENV=production webpack -p",
     "start": "webpack-dev-server --inline --host 0.0.0.0"
