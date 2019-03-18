@@ -97,7 +97,7 @@ const umd = [
   }
 ];
 
-let config;
+/* let config;
 switch (process.env.BUILD_ENV) {
   case "cjs":
     config = cjs;
@@ -110,6 +110,6 @@ switch (process.env.BUILD_ENV) {
     break;
   default:
     config = cjs.concat(esm).concat(umd);
-}
+} */
 
-module.exports = config;
+module.exports = [cjs, esm, umd];

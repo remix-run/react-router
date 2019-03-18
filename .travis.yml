@@ -2,17 +2,9 @@ language: node_js
 node_js: node
 cache: npm
 env:
-- TEST_ENV=cjs BUILD_ENV=cjs
-- TEST_ENV=umd BUILD_ENV=umd
+- TEST_ENV=cjs
+- TEST_ENV=umd
 - TEST_ENV=source
-before_script:
-# react-router ESM build is imported by react-router-dom UMD,
-# so we need to build it before building react-router-dom UMD
-- ([[ "$BUILD_ENV" != "umd" ]] || (cd packages/react-router && BUILD_ENV=esm npm run build))
-- ([[ -z "$BUILD_ENV" ]] || npm run build -- --no-website)
-# react-router CJS build is imported by react-router-config tests,
-# so we need to build it before running react-router-config tests
-- ([[ "$BUILD_ENV" = "cjs" ]] || (cd packages/react-router && BUILD_ENV=cjs npm run build))
 script:
 - npm test
 jobs:
