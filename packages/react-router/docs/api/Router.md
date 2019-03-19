@@ -13,7 +13,7 @@ synchronize a custom history with a state management lib like Redux or Mobx. Not
 
 ```jsx
 import { Router } from "react-router";
-import createBrowserHistory from "history/createBrowserHistory";
+import { createBrowserHistory } from "history";
 
 const history = createBrowserHistory()
 
@@ -27,7 +27,7 @@ const history = createBrowserHistory()
 A [`history`](https://github.com/ReactTraining/history) object to use for navigation.
 
 ```jsx
-import createBrowserHistory from "history/createBrowserHistory";
+import { createBrowserHistory } from "history";
 
 const customHistory = createBrowserHistory();
 
