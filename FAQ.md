@@ -4,15 +4,10 @@ This is a list of support questions that frequently show up in GitHub issues. Th
 
 If there is a support question that you frequently see being asked, please open a PR to add it to this list.
 
-- [Why aren't my components updating when the location changes?](#why-arent-my-components-updating-when-the-location-changes)
 - [Why doesn't my application render after refreshing?](#why-doesnt-my-application-render-after-refreshing)
 - [Why doesn't my application work when loading nested routes?](#why-doesnt-my-application-work-when-loading-nested-routes)
 - [How do I access the `history` object outside of components?](#how-do-i-access-the-history-object-outside-of-components)
 - [How do I pass props to the component rendered by a `<Route>`?](#how-do-i-pass-props-to-the-component-rendered-by-a-route)
-
-### Why aren't my components updating when the location changes?
-
-React Router relies on updates propagating from your router component to every child component. If you (or a component you use) implements `shouldComponentUpdate` or is a `React.PureComponent`, you may run into issues where your components do not update when the location changes. For a detailed review of the problem, please see the [blocked updates guide](packages/react-router/docs/guides/blocked-updates.md).
 
 ### Why doesn't my application render after refreshing?
 
