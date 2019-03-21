@@ -85,7 +85,7 @@ code {
 }
 .markdown > pre {
   background: rgb(45, 45, 45);
-  float: right;
+  float: left;
   clear: right;
   white-space: pre-wrap;
 }
