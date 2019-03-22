@@ -258,3 +258,40 @@ h3 {
   opacity: 1;
   transition: opacity 250ms ease-in;
 }
+
+/* Just some temporary CSS for our hooks tour ad */
+
+.hooks-tour {
+  padding: 1.5em;
+  background-image: url(https://reacttraining.com/images/blue-fade.svg),
+    url(https://reacttraining.com/images/blue-fade.svg);
+  background-position: 50% 0, 0 -20%;
+  background-size: 100%;
+  background-repeat: no-repeat;
+  background-color: #edf4f7;
+  border: 1px solid #d3dbde;
+  text-align: center;
+  border-radius: 0.5em;
+}
+
+.hooks-tour .logo {
+  width: 60%;
+}
+
+.hooks-tour a {
+  display: inline-block;
+  margin: 0.2em 0;
+  padding: 0.2em 0.5em;
+  background-color: #e94948;
+  color: #fff;
+  border-radius: 0.2em;
+}
+
+.hooks-tour hr {
+  border: none;
+  border-bottom: 1px solid #d3dbde;
+}
+
+.hooks-tour p:last-of-type {
+  font-size: 0.7em;
+}
