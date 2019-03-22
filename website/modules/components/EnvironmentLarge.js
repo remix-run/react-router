@@ -98,21 +98,22 @@ NavLink.propTypes = {
 function NavLinks({ data, environment }) {
   return (
     <Block lineHeight="1.8" padding="10px">
-      {data.examples && (
-        <Block>
-          <Title>Examples</Title>
-          <Block paddingLeft="10px">
-            {data.examples.map((item, i) => (
-              <NavLink
-                key={i}
-                to={`/${environment}/example/${item.slug}`}
-                triangleColor="rgb(45, 45, 45)"
-                children={item.label}
-              />
-            ))}
+      {Array.isArray(data.examples) &&
+        data.examples.length > 0 && (
+          <Block>
+            <Title>Examples</Title>
+            <Block paddingLeft="10px">
+              {data.examples.map((item, i) => (
+                <NavLink
+                  key={i}
+                  to={`/${environment}/example/${item.slug}`}
+                  triangleColor="rgb(45, 45, 45)"
+                  children={item.label}
+                />
+              ))}
+            </Block>
           </Block>
-        </Block>
-      )}
+        )}
 
       <Title>Guides</Title>
       <Block paddingLeft="10px">

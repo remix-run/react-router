@@ -1,11 +1,11 @@
 import React from "react";
-import { BrowserRouter as Router, Link } from "react-router-dom";
+import { BrowserRouter as Router, Route, Link } from "react-router-dom";
 
-function ParamsExample({ location }) {
+function ParamsDemo({ location }) {
   let params = new URLSearchParams(location.search);
 
   return (
-    <Router>
+    <div>
       <p>
         React Router does not have any opinions about how your parse URL query
         strings. Some applications use simple key=value query strings, but
@@ -55,7 +55,7 @@ function ParamsExample({ location }) {
 
         <Child name={params.get("name")} />
       </div>
-    </Router>
+    </div>
   );
 }
 
@@ -70,6 +70,14 @@ function Child({ name }) {
         <h3>There is no name in the query string</h3>
       )}
     </div>
+  );
+}
+
+function ParamsExample() {
+  return (
+    <Router>
+      <Route component={ParamsDemo} />
+    </Router>
   );
 }
 

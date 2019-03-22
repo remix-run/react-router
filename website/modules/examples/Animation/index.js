@@ -8,17 +8,7 @@ import {
   Redirect
 } from "react-router-dom";
 
-/* you'll need this CSS somewhere
-.fade-enter {
-  opacity: 0;
-  z-index: 1;
-}
-
-.fade-enter.fade-enter-active {
-  opacity: 1;
-  transition: opacity 250ms ease-in;
-}
-*/
+import "./styles.css";
 
 function AnimationExample() {
   return (

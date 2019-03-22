@@ -532,20 +532,21 @@ class Nav extends Component {
         overflow="scroll"
         paddingTop="150px"
       >
-        {data.examples && (
-          <Block>
-            <Title>Examples</Title>
+        {Array.isArray(data.examples) &&
+          data.examples.length > 0 && (
             <Block>
-              {data.examples.map((item, i) => (
-                <NavLink
-                  key={i}
-                  to={`/${environment}/example/${item.slug}`}
-                  children={item.label}
-                />
-              ))}
+              <Title>Examples</Title>
+              <Block>
+                {data.examples.map((item, i) => (
+                  <NavLink
+                    key={i}
+                    to={`/${environment}/example/${item.slug}`}
+                    children={item.label}
+                  />
+                ))}
+              </Block>
             </Block>
-          </Block>
-        )}
+          )}
 
         <Block>
           <Title>Guides</Title>
