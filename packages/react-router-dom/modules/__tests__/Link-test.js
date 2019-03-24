@@ -275,6 +275,117 @@ describe("A <Link>", () => {
       });
 
       expect(memoryHistory.push).toBeCalledTimes(0);
+		});
+	});
+	
+	describe("on keypress events", () => {
+    const memoryHistory = createMemoryHistory();
+    memoryHistory.push = jest.fn();
+
+    beforeEach(() => {
+      memoryHistory.push.mockReset();
+    });
+
+    it("calls onKeyPress eventhandler", () => {
+      const keyPressHandler = jest.fn();
+      const to = "/the/path?the=query#the-hash";
+
+      renderStrict(
+        <Router history={memoryHistory}>
+          <Link to={to} onKeyPress={keyPressHandler}>
+            link
+          </Link>
+        </Router>,
+        node
+      );
+
+      const a = node.querySelector("a");
+      ReactTestUtils.Simulate.keyPress(a, {
+        defaultPrevented: false,
+        key: "A"
+      });
+
+      expect(keyPressHandler).toBeCalledTimes(1);
+    });
+
+    it("calls history.push on Enter", () => {
+      const to = "/the/path?the=query#the-hash";
+
+      renderStrict(
+        <Router history={memoryHistory}>
+          <Link to={to}>link</Link>
+        </Router>,
+        node
+      );
+
+      const a = node.querySelector("a");
+      ReactTestUtils.Simulate.keyPress(a, {
+        defaultPrevented: false,
+        key: "Enter"
+      });
+
+      expect(memoryHistory.push).toBeCalledTimes(1);
+      expect(memoryHistory.push).toBeCalledWith(to);
+    });
+
+    it("calls history.push on space", () => {
+      const to = "/the/path?the=query#the-hash";
+
+      renderStrict(
+        <Router history={memoryHistory}>
+          <Link to={to}>link</Link>
+        </Router>,
+        node
+      );
+
+      const a = node.querySelector("a");
+      ReactTestUtils.Simulate.keyPress(a, {
+        defaultPrevented: false,
+        key: " "
+      });
+
+      expect(memoryHistory.push).toBeCalledTimes(1);
+      expect(memoryHistory.push).toBeCalledWith(to);
+    });
+
+    it("does not call history.push on prevented event.", () => {
+      const to = "/the/path?the=query#the-hash";
+
+      renderStrict(
+        <Router history={memoryHistory}>
+          <Link to={to}>link</Link>
+        </Router>,
+        node
+      );
+
+      const a = node.querySelector("a");
+      ReactTestUtils.Simulate.keyPress(a, {
+        defaultPrevented: true,
+        key: "Enter"
+      });
+
+      expect(memoryHistory.push).toBeCalledTimes(0);
+    });
+
+    it("does not call history.push target not specifying 'self'", () => {
+      const to = "/the/path?the=query#the-hash";
+
+      renderStrict(
+        <Router history={memoryHistory}>
+          <Link to={to} target="_blank">
+            link
+          </Link>
+        </Router>,
+        node
+      );
+
+      const a = node.querySelector("a");
+      ReactTestUtils.Simulate.keyPress(a, {
+        defaultPrevented: false,
+        key: "Enter"
+      });
+
+      expect(memoryHistory.push).toBeCalledTimes(0);
     });
   });
 });

@@ -12,6 +12,23 @@ function isModifiedEvent(event) {
  * The public API for rendering a history-aware <a>.
  */
 class Link extends React.Component {
+  handleKeyPress(event, history) {
+    if (this.props.onKeyPress) this.props.onKeyPress(event);
+
+    if (
+      (event.key === "Enter" || event.key === " ") &&
+      !event.defaultPrevented && // onClick prevented default
+      (!this.props.target || this.props.target === "_self") && // let browser handle "target=_blank" etc.
+      !isModifiedEvent(event) // ignore clicks with modifier keys
+    ) {
+      event.preventDefault();
+
+      const method = this.props.replace ? history.replace : history.push;
+
+      method(this.props.to);
+    }
+  }
+
   handleClick(event, history) {
     if (this.props.onClick) this.props.onClick(event);
 
@@ -47,6 +64,7 @@ class Link extends React.Component {
             <a
               {...rest}
               onClick={event => this.handleClick(event, context.history)}
+              onKeyPress={event => this.handleKeyPress(event, context.history)}
               href={href}
               ref={innerRef}
             />
@@ -68,6 +86,7 @@ if (__DEV__) {
   Link.propTypes = {
     innerRef: innerRefType,
     onClick: PropTypes.func,
+    onKeyPress: PropTypes.func,
     replace: PropTypes.bool,
     target: PropTypes.string,
     to: toType.isRequired
