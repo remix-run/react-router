@@ -1,8 +1,9 @@
 import React from "react";
 import ReactDOM from "react-dom";
-import { MemoryRouter, HashRouter, Link } from "react-router-dom";
-
+import { MemoryRouter, Router, HashRouter, Link } from "react-router-dom";
+import { createMemoryHistory } from "history";
 import renderStrict from "./utils/renderStrict";
+import ReactTestUtils from "react-dom/test-utils";
 
 describe("A <Link>", () => {
   const node = document.createElement("div");
@@ -182,6 +183,98 @@ describe("A <Link>", () => {
         const linkNode = createLinkNode("noslash", "/foo");
         expect(linkNode.getAttribute("href")).toEqual("#foo");
       });
+    });
+  });
+
+  describe("on click events", () => {
+    const memoryHistory = createMemoryHistory();
+    memoryHistory.push = jest.fn();
+
+    beforeEach(() => {
+      memoryHistory.push.mockReset();
+    });
+
+    it("calls onClick eventhandler and history.push", () => {
+      const clickHandler = jest.fn();
+      const to = "/the/path?the=query#the-hash";
+
+      renderStrict(
+        <Router history={memoryHistory}>
+          <Link to={to} onClick={clickHandler}>
+            link
+          </Link>
+        </Router>,
+        node
+      );
+
+      const a = node.querySelector("a");
+      ReactTestUtils.Simulate.click(a, {
+        defaultPrevented: false,
+        button: 0
+      });
+
+      expect(clickHandler).toBeCalledTimes(1);
+      expect(memoryHistory.push).toBeCalledTimes(1);
+      expect(memoryHistory.push).toBeCalledWith(to);
+    });
+
+    it("does not call history.push on right click", () => {
+      const to = "/the/path?the=query#the-hash";
+
+      renderStrict(
+        <Router history={memoryHistory}>
+          <Link to={to}>link</Link>
+        </Router>,
+        node
+      );
+
+      const a = node.querySelector("a");
+      ReactTestUtils.Simulate.click(a, {
+        defaultPrevented: false,
+        button: 1
+      });
+
+      expect(memoryHistory.push).toBeCalledTimes(0);
+    });
+
+    it("does not call history.push on prevented event.", () => {
+      const to = "/the/path?the=query#the-hash";
+
+      renderStrict(
+        <Router history={memoryHistory}>
+          <Link to={to}>link</Link>
+        </Router>,
+        node
+      );
+
+      const a = node.querySelector("a");
+      ReactTestUtils.Simulate.click(a, {
+        defaultPrevented: true,
+        button: 0
+      });
+
+      expect(memoryHistory.push).toBeCalledTimes(0);
+    });
+
+    it("does not call history.push target not specifying 'self'", () => {
+      const to = "/the/path?the=query#the-hash";
+
+      renderStrict(
+        <Router history={memoryHistory}>
+          <Link to={to} target="_blank">
+            link
+          </Link>
+        </Router>,
+        node
+      );
+
+      const a = node.querySelector("a");
+      ReactTestUtils.Simulate.click(a, {
+        defaultPrevented: false,
+        button: 0
+      });
+
+      expect(memoryHistory.push).toBeCalledTimes(0);
     });
   });
 });
