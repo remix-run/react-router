@@ -31,5 +31,6 @@ export { default as Switch } from "./Switch";
 export { default as generatePath } from "./generatePath";
 export { default as matchPath } from "./matchPath";
 export { default as withRouter } from "./withRouter";
+export { default as Match } from "./Match";
 
 export { default as __RouterContext } from "./RouterContext";
