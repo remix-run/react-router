@@ -55,6 +55,9 @@ class Match extends React.Component {
             }
           }
 
+          if (children === null) {
+            return null;
+          }
           return (
             <RouterContext.Provider value={props}>
               {children}
