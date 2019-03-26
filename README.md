@@ -28,12 +28,6 @@
 
 [2.x docs](https://github.com/ReactTraining/react-router/blob/v2.8.1/docs)
 
-## Changes
-
-Detailed release notes for a given version can be found [on our releases page](https://github.com/ReactTraining/react-router/releases).
-
-For change notes prior to version 4, please see [the CHANGES.md file](https://github.com/ReactTraining/react-router/blob/8365d4b2e91084265a1da7de911766169fb9e96e/CHANGES.md).
-
 ## Packages
 
 This repository is a monorepo that we manage using [Lerna](https://github.com/lerna/lerna). That means that we actually publish [several packages](/packages) to npm from the same codebase, including:
@@ -46,6 +40,12 @@ This repository is a monorepo that we manage using [Lerna](https://github.com/le
 | [`react-router-config`](/packages/react-router-config) | [![npm](https://img.shields.io/npm/v/react-router-config.svg?style=flat-square)](https://www.npmjs.com/package/react-router-config) | [![](https://img.shields.io/badge/API%20Docs-readme-orange.svg?style=flat-square)](/packages/react-router-config/#readme)                                                                                                                                                     | Static route config helpers                                                        |
 
 > **Redux users:** The [`react-router-redux` package](https://github.com/ReactTraining/react-router/tree/5345a820818c8d43ac923558670538a479ac2234/packages/react-router-redux) is now deprecated. See [Redux Integration](https://reacttraining.com/react-router/web/guides/redux-integration) for a better approach.
+
+## Changes
+
+Detailed release notes for a given version can be found [on our releases page](https://github.com/ReactTraining/react-router/releases).
+
+For change notes prior to version 4, please see [the CHANGES.md file](https://github.com/ReactTraining/react-router/blob/8365d4b2e91084265a1da7de911766169fb9e96e/CHANGES.md).
 
 ## About
 
