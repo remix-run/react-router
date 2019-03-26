@@ -28,6 +28,12 @@
 
 [2.x docs](https://github.com/ReactTraining/react-router/blob/v2.8.1/docs)
 
+## Changes
+
+Detailed release notes for a given version can be found [on our releases page](https://github.com/ReactTraining/react-router/releases).
+
+For change notes prior to version 4, please see [the CHANGES.md file](https://github.com/ReactTraining/react-router/blob/8365d4b2e91084265a1da7de911766169fb9e96e/CHANGES.md).
+
 ## Packages
 
 This repository is a monorepo that we manage using [Lerna](https://github.com/lerna/lerna). That means that we actually publish [several packages](/packages) to npm from the same codebase, including:

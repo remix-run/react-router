@@ -1,9 +1,5 @@
 Thanks for contributing, you rock!
 
-If you use our code, it is now _our_ code.
-
-Please read https://reactjs.org/ and the Code of Conduct before opening an issue.
-
 - [Think You Found a Bug?](#bug)
 - [Proposing New or Changed API?](#api)
 - [Issue Not Getting Attention?](#attention)
@@ -41,13 +37,9 @@ All commits that fix bugs or add features need a test.
 
 `<blink>`Do not merge code without tests.`</blink>`
 
-### Changelog
+### Docs + Examples
 
-All commits that change or add to the API must be done in a pull request that also:
-
-- Adds an entry to `CHANGES.md` with clear steps for updating code for changed or removed API
-- Updates examples
-- Updates the docs
+All commits that change or add to the API must be done in a pull request that also updates all relevant examples and docs.
 
 ## Setup
 
@@ -105,7 +97,7 @@ React Router uses Jest to run its tests, so you can provide the `--watch` flag t
 
 ### Website
 
-The code for the documentation website lives in the `website` directory. `cd` into there and call `npm start` to start a webpack dev server on `localhost:8080` that will watch for changes.
+The code for the documentation website lives in the `website` directory. `cd` into there and call `npm start` to start a development server on `http://localhost:8080` that will watch for changes.
 
 ```bash
 cd website
