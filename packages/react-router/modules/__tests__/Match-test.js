@@ -12,6 +12,25 @@ describe("A <Match>", () => {
     ReactDOM.unmountComponentAtNode(node);
   });
 
+  it("passes props to class component child", () => {
+    class MatchedRoute extends React.Component {
+      render() {
+        return <div> {this.props.match && this.props.match.url} </div>;
+      }
+    }
+
+    renderStrict(
+      <MemoryRouter initialEntries={["/pizza"]}>
+        <Match path="/pizza">
+          <MatchedRoute />
+        </Match>
+      </MemoryRouter>,
+      node
+    );
+
+    expect(node.innerHTML).toContain("/pizza");
+  });
+
   describe("without a <Router>", () => {
     it("throws an error", () => {
       jest.spyOn(console, "error").mockImplementation(() => {});
