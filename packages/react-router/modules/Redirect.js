@@ -1,6 +1,6 @@
 import React from "react";
 import PropTypes from "prop-types";
-import { createLocation, locationsAreEqual } from "history";
+import { createLocation } from "history";
 import invariant from "tiny-invariant";
 
 import Lifecycle from "./Lifecycle";
@@ -43,7 +43,11 @@ function Redirect({ computedMatch, to, push = false }) {
               method(location);
             }}
             onUpdate={(self, prevProps) => {
-              if (!locationsAreEqual(prevProps.to, location)) {
+              if (typeof prevProps.to === "string") {
+                if (prevProps.to !== location.pathname) {
+                  method(location);
+                }
+              } else if (!locationsAreEqual(prevProps.to, location)) {
                 method(location);
               }
             }}
