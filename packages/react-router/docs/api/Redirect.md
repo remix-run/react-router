@@ -74,3 +74,7 @@ Match `from` exactly; equivalent to [Route.exact](./Route.md#exact-bool).
 ## strict: bool
 
 Match `from` strictly; equivalent to [Route.strict](./Route.md#strict-bool).
+
+## sensitive: bool
+
+Match `from` case sensitive; equivalent to [Route.sensitive](./Route.md#sensitive-bool).
