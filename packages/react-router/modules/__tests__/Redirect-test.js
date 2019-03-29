@@ -1,7 +1,7 @@
 import React from "react";
 import ReactDOM from "react-dom";
 import { MemoryRouter, Redirect, Route, Switch } from "react-router";
-
+import { createLocation } from "history";
 import renderStrict from "./utils/renderStrict";
 
 describe("A <Redirect>", () => {
@@ -14,17 +14,29 @@ describe("A <Redirect>", () => {
   describe("inside a functional component", () => {
     const Stateless = props => {
       if (props.flag === 1) {
-        return <Redirect to="/go-out" />;
+        return <Redirect to={props.to} />;
       }
 
       return <b>Stateless!</b>;
     };
 
-    it("doesn't break / throw when rendered", () => {
+    it("doesn't break / throw when rendered with string `to`", () => {
       expect(() => {
         renderStrict(
           <MemoryRouter>
-            <Stateless flag={1} />
+            <Stateless flag={1} to="go-out" />
+          </MemoryRouter>,
+          node
+        );
+      }).not.toThrow();
+    });
+
+    it("doesn't break / throw when rendered with location `to`", () => {
+      const to = createLocation("/go-out?search=foo#hash");
+      expect(() => {
+        renderStrict(
+          <MemoryRouter>
+            <Stateless flag={1} to={to} />
           </MemoryRouter>,
           node
         );
