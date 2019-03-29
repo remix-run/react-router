@@ -11,20 +11,12 @@ describe("A <Redirect>", () => {
     ReactDOM.unmountComponentAtNode(node);
   });
 
-  describe("inside a functional component", () => {
-    const Stateless = props => {
-      if (props.flag === 1) {
-        return <Redirect to={props.to} />;
-      }
-
-      return <b>Stateless!</b>;
-    };
-
+  describe("that always renders", () => {
     it("doesn't break / throw when rendered with string `to`", () => {
       expect(() => {
         renderStrict(
           <MemoryRouter>
-            <Stateless flag={1} to="go-out" />
+            <Redirect to="go-out" />
           </MemoryRouter>,
           node
         );
@@ -36,7 +28,7 @@ describe("A <Redirect>", () => {
       expect(() => {
         renderStrict(
           <MemoryRouter>
-            <Stateless flag={1} to={to} />
+            <Redirect to={to} />
           </MemoryRouter>,
           node
         );
