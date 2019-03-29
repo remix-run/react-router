@@ -3,8 +3,8 @@ import createContext from "create-react-context";
 
 const createNamedContext = name => {
   const context = createContext();
-  context.Provider.displayName = `${name}.Provider`;
-  context.Consumer.displayName = `${name}.Consumer`;
+  context.displayName = name;
+
   return context;
 }
 
