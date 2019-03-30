@@ -47,7 +47,12 @@ function Redirect({ computedMatch, to, push = false }) {
                 typeof prevProps.to === "string"
                   ? createLocation(prevProps.to)
                   : prevProps.to;
-              if (!locationsAreEqual(prevLocation, location)) {
+              if (
+                !locationsAreEqual(prevLocation, {
+                  ...location,
+                  key: prevLocation.key
+                })
+              ) {
                 method(location);
               }
             }}
