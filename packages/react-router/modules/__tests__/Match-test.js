@@ -243,6 +243,63 @@ describe("A <Match>", () => {
       });
     });
 
+    describe("that is a functional component react child", () => {
+      it("receives { history, location, match } props", () => {
+        const history = createHistory();
+        let props = null;
+
+        const PropChecker = p => {
+          props = p;
+          return null;
+        };
+
+        renderStrict(
+          <Router history={history}>
+            <Match path="/">
+              <PropChecker />
+            </Match>
+          </Router>,
+          node
+        );
+
+        expect(props).not.toBe(null);
+        expect(props.history).toBe(history);
+        expect(typeof props.location).toBe("object");
+        expect(typeof props.match).toBe("object");
+      });
+    });
+
+    describe("that is a class component react child", () => {
+      it("receives { history, location, match } props", () => {
+        const history = createHistory();
+        let props = null;
+
+        class PropChecker extends React.Component {
+          componentDidMount() {
+            props = this.props;
+          }
+
+          render() {
+            return null;
+          }
+        }
+
+        renderStrict(
+          <Router history={history}>
+            <Match path="/">
+              <PropChecker />
+            </Match>
+          </Router>,
+          node
+        );
+
+        expect(props).not.toBe(null);
+        expect(props.history).toBe(history);
+        expect(typeof props.location).toBe("object");
+        expect(typeof props.match).toBe("object");
+      });
+    });
+
     describe("that is a function", () => {
       it("receives { history, location, match } props", () => {
         const history = createHistory();

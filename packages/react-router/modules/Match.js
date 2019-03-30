@@ -53,6 +53,17 @@ class Match extends React.Component {
 
               children = null;
             }
+          } else if (!!children) {
+            return React.Children.map(children, child => {
+              if (
+                React.isValidElement(child) &&
+                typeof child.type !== "string"
+              ) {
+                return React.cloneElement(child, props);
+              } else {
+                return child;
+              }
+            });
           }
 
           if (children === null) {
