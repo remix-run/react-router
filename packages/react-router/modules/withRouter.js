@@ -1,30 +1,37 @@
 import React from "react";
 import PropTypes from "prop-types";
+import RouterContext from "./RouterContext";
 import hoistStatics from "hoist-non-react-statics";
-
-import Route from "./Route";
+import invariant from "tiny-invariant";
 
 /**
  * A public higher-order component to access the imperative API
  */
 function withRouter(Component) {
+  const displayName = `withRouter(${Component.displayName || Component.name})`;
   const C = props => {
     const { wrappedComponentRef, ...remainingProps } = props;
 
     return (
-      <Route
-        children={routeComponentProps => (
-          <Component
-            {...remainingProps}
-            {...routeComponentProps}
-            ref={wrappedComponentRef}
-          />
-        )}
-      />
+      <RouterContext.Consumer>
+        {context => {
+          invariant(
+            context,
+            `You should not use <${displayName} /> outside a <Router>`
+          );
+          return (
+            <Component
+              {...remainingProps}
+              {...context}
+              ref={wrappedComponentRef}
+            />
+          );
+        }}
+      </RouterContext.Consumer>
     );
   };
 
-  C.displayName = `withRouter(${Component.displayName || Component.name})`;
+  C.displayName = displayName;
   C.WrappedComponent = Component;
 
   if (__DEV__) {
