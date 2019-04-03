@@ -1,9 +1,5 @@
 import React from "react";
-import {
-  __RouterContext as RouterContext,
-  Route,
-  matchPath
-} from "react-router";
+import { __RouterContext as RouterContext, matchPath } from "react-router";
 import PropTypes from "prop-types";
 import Link from "./Link";
 import invariant from "tiny-invariant";
@@ -83,10 +79,10 @@ if (__DEV__) {
     activeClassName: PropTypes.string,
     activeStyle: PropTypes.object,
     className: PropTypes.string,
-    exact: Route.propTypes.exact,
+    exact: PropTypes.bool,
     isActive: PropTypes.func,
     location: PropTypes.object,
-    strict: Route.propTypes.strict,
+    strict: PropTypes.bool,
     style: PropTypes.object
   };
 }
