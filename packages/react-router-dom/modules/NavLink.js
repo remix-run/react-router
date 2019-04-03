@@ -1,8 +1,12 @@
 import React from "react";
-import { Route, matchPath } from "react-router";
+import {
+  __RouterContext as RouterContext,
+  Route,
+  matchPath
+} from "react-router";
 import PropTypes from "prop-types";
-
 import Link from "./Link";
+import invariant from "tiny-invariant";
 
 function joinClassnames(...classnames) {
   return classnames.filter(i => i).join(" ");
@@ -30,16 +34,18 @@ function NavLink({
   const escapedPath = path && path.replace(/([.+*?=^!:${}()[\]|/\\])/g, "\\$1");
 
   return (
-    <Route
-      children={({ location }) => {
+    <RouterContext.Consumer>
+      {context => {
+        invariant(context, "You should not use <NavLink> outside a <Router>");
+
         const pathToMatch = locationProp
           ? locationProp.pathname
-          : location.pathname;
+          : context.location.pathname;
         const match = escapedPath
           ? matchPath(pathToMatch, { path: escapedPath, exact, strict })
           : null;
         const isActive = !!(isActiveProp
-          ? isActiveProp(match, location)
+          ? isActiveProp(match, context.location)
           : match);
 
         const className = isActive
@@ -57,7 +63,7 @@ function NavLink({
           />
         );
       }}
-    />
+    </RouterContext.Consumer>
   );
 }
 
