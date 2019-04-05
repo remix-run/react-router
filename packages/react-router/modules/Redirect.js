@@ -43,10 +43,7 @@ function Redirect({ computedMatch, to, push = false }) {
               method(location);
             }}
             onUpdate={(self, prevProps) => {
-              const prevLocation =
-                typeof prevProps.to === "string"
-                  ? createLocation(prevProps.to)
-                  : prevProps.to;
+              const prevLocation = createLocation(prevProps.to);
               if (
                 !locationsAreEqual(prevLocation, {
                   ...location,
