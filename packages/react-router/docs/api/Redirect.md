@@ -67,6 +67,20 @@ This can only be used to match a location when rendering a `<Redirect>` inside o
 </Switch>
 ```
 
+## noMatchedParams: bool
+
+Opt-out of generating a path based on the matched URL parameters described above.
+This is useful if your redirect to includes characters used for [`path-to-regexp@^1.7.0`](https://github.com/pillarjs/path-to-regexp/tree/v1.7.0) (not recommended).
+
+```jsx
+// redirect without matched paramters
+<Switch>
+  <Route path="/:id(user:\d+)" component={User} />
+  <Route path="/:id(task:\d+)" component={Task} />
+  <Redirect to="/user:1" noMatchedParams />
+</Switch>
+```
+
 ## exact: bool
 
 Match `from` exactly; equivalent to [Route.exact](./Route.md#exact-bool).

@@ -64,5 +64,29 @@ describe("A <Redirect>", () => {
         messageId: "123"
       });
     });
+
+    it("opts-out of automatically interpolated params", () => {
+      let params;
+
+      renderStrict(
+        <MemoryRouter initialEntries={["/"]}>
+          <Switch>
+            <Redirect from="/" exact to="/user:1" noMatchedParams />
+            <Route
+              path="/:userId(user:\d+)"
+              render={({ match }) => {
+                params = match.params;
+                return null;
+              }}
+            />
+          </Switch>
+        </MemoryRouter>,
+        node
+      );
+
+      expect(params).toMatchObject({
+        userId: "user:1"
+      });
+    });
   });
 });
