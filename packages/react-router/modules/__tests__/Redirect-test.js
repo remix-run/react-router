@@ -23,8 +23,42 @@ describe("A <Redirect>", () => {
       }).not.toThrow();
     });
 
-    it("doesn't break / throw when rendered with location `to`", () => {
+    it("doesn't break / throw when rendered with location `to` created from string", () => {
       const to = createLocation("/go-out?search=foo#hash");
+      expect(() => {
+        renderStrict(
+          <MemoryRouter>
+            <Redirect to={to} />
+          </MemoryRouter>,
+          node
+        );
+      }).not.toThrow();
+    });
+
+    it("doesn't break / throw when rendered with object `to`", () => {
+      const to = {
+        pathname: "/path",
+        state: {
+          someState: "state"
+        }
+      };
+      expect(() => {
+        renderStrict(
+          <MemoryRouter>
+            <Redirect to={to} />
+          </MemoryRouter>,
+          node
+        );
+      }).not.toThrow();
+    });
+
+    it("doesn't break / throw when rendered with location `to` created from object", () => {
+      const to = createLocation({
+        pathname: "/path",
+        state: {
+          someState: "state"
+        }
+      });
       expect(() => {
         renderStrict(
           <MemoryRouter>
