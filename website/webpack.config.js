@@ -32,11 +32,11 @@ module.exports = {
   ].concat(
     process.env.NODE_ENV === "production"
       ? [
-          new SWPrecacheWebpackPlugin({
-            cacheId: "react-router-website",
-            staticFileGlobsIgnorePatterns: [/\.map$/]
-          })
-        ]
+        new SWPrecacheWebpackPlugin({
+          cacheId: "react-router-website",
+          staticFileGlobsIgnorePatterns: [/\.map$/]
+        })
+      ]
       : []
   ),
 
@@ -112,7 +112,10 @@ module.exports = {
       },
       {
         test: /\.md(\?(.+))?$/,
-        loader: "markdown-loader"
+        loader: "markdown-loader",
+        options: {
+          basename: process.env.NODE_ENV === "production" ? "/react-router" : undefined
+        }
       },
       {
         test: /\.(gif|jpe?g|png|ico)$/,
@@ -132,6 +135,7 @@ module.exports = {
     historyApiFallback: true,
     quiet: false,
     noInfo: false,
+    publicPath: "/",
     stats: {
       assets: true,
       version: false,

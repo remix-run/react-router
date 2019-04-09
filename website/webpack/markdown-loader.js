@@ -14,6 +14,7 @@ const cheerio = require("cheerio");
 const path = require("path");
 const slug = require("slug");
 const resolve = require("resolve-pathname");
+const loaderUtils = require("loader-utils");
 
 const routerDelegationClassName = "internal-link";
 
@@ -70,13 +71,13 @@ const isOtherTypeSibling = href =>
 
 const isCrossPackage = href => href.startsWith("../../../");
 
-const makeHref = (hash, ...segments) => {
-  let href = "/" + segments.join("/").replace(/\.md$/, "");
+const makeHref = (basename, hash, ...segments) => {
+  let href = basename + "/" + segments.join("/").replace(/\.md$/, "");
   if (hash) href += "/" + hash;
   return href;
 };
 
-const correctLinks = ($, moduleSlug, environment, type) => {
+const correctLinks = ($, moduleSlug, environment, type, basename) => {
   $("a[href]").each((i, e) => {
     const $e = $(e);
     const [href, hash] = $e.attr("href").split("#");
@@ -84,39 +85,39 @@ const correctLinks = ($, moduleSlug, environment, type) => {
     if (isSelfHeader(href)) {
       // #render-func
       // /web/api/Route/render-func
-      $e.attr("href", `/${environment}/${type}/${moduleSlug}/${hash}`);
+      $e.attr("href", `${basename}/${environment}/${type}/${moduleSlug}/${hash}`);
       $e.addClass(routerDelegationClassName);
     } else if (isSibling(href)) {
       // ./quick-start.md
       // /web/guides/quick-start
       const [_, doc] = href.split("/");
 
-      $e.attr("href", makeHref(hash, environment, type, doc));
+      $e.attr("href", makeHref(basename, hash, environment, type, doc));
       $e.addClass(routerDelegationClassName);
     } else if (isOtherTypeSibling(href)) {
       // ../api/NativeRouter.md
       // /web/api/NativeRouter
       const [_, type, doc] = href.split("/");
-      $e.attr("href", makeHref(hash, environment, type, doc));
+      $e.attr("href", makeHref(basename, hash, environment, type, doc));
       $e.addClass(routerDelegationClassName);
     } else if (isCrossPackage(href)) {
       // ../../../react-router/docs/api/Route.md
       // /core/api/Route
       const [$0, $1, $2, env, $4, type, doc] = href.split("/");
-      $e.attr("href", makeHref(hash, envMap[env], type, doc));
+      $e.attr("href", makeHref(basename, hash, envMap[env], type, doc));
       $e.addClass(routerDelegationClassName);
     }
   });
 };
 
-const makeHeaderLinks = ($, moduleSlug, environment, type) => {
+const makeHeaderLinks = ($, moduleSlug, environment, type, basename) => {
   // can abstract these two things a bit, but it's late.
   $("h1").each((i, e) => {
     const $e = $(e);
     $e.attr("id", moduleSlug);
     const children = $e.html();
     const link = $(
-      `<a href="/${environment}/${type}/${moduleSlug}" class="${routerDelegationClassName}"/>`
+      `<a href="${basename}/${environment}/${type}/${moduleSlug}" class="${routerDelegationClassName}"/>`
     );
     link.html(children);
     $e.empty().append(link);
@@ -129,7 +130,7 @@ const makeHeaderLinks = ($, moduleSlug, environment, type) => {
     $e.attr("id", `${moduleSlug}-${slug}`);
     const children = $e.html();
     const link = $(
-      `<a href="/${environment}/${type}/${moduleSlug}/${slug}" class="${routerDelegationClassName}"/>`
+      `<a href="${basename}/${environment}/${type}/${moduleSlug}/${slug}" class="${routerDelegationClassName}"/>`
     );
     link.html(children);
     $e.empty().append(link);
@@ -145,11 +146,13 @@ const md = markdownIt({
 
 module.exports = function(content) {
   this.cacheable();
+  const options = loaderUtils.getOptions(this);
+  const basename = options.basename || "";
   const markup = md.render(content);
   const $markup = cheerio.load(markup);
   const title = extractHeaders($markup, "h1", this.data.type)[0];
-  correctLinks($markup, title.slug, this.data.environment, this.data.type);
-  makeHeaderLinks($markup, title.slug, this.data.environment, this.data.type);
+  correctLinks($markup, title.slug, this.data.environment, this.data.type, basename);
+  makeHeaderLinks($markup, title.slug, this.data.environment, this.data.type, basename);
   const headers = extractHeaders($markup, "h2", this.data.type);
   const value = {
     markup: $markup.html(),
