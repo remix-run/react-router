@@ -52,7 +52,7 @@ function noop() {}
  */
 class StaticRouter extends React.Component {
   navigateTo(location, action) {
-    const { basename = "", context } = this.props;
+    const { basename = "", context = {} } = this.props;
     context.action = action;
     context.location = addBasename(basename, createLocation(location));
     context.url = createURL(context.location);
