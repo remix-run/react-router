@@ -29,3 +29,34 @@ to the matching props `Route` accepts:
     exact; // optional, defaults to false
 }
 ```
+
+## returns
+
+It returns `null` when provided pathname does not match `path` prop or an object when it does. 
+
+```
+matchPath("/users/2", {
+      path: "/users/:id",
+      exact: true,
+      strict: true
+    })
+    
+//  {
+//    isExact: true
+//    params: {
+//        id: "2"
+//    }
+//    path: "/users/:id"
+//    url: "/users/2"
+//  } 
+```
+
+```
+matchPath("/users", {
+      path: "/users/:id",
+      exact: true,
+      strict: true
+    })
+    
+//  null
+```
