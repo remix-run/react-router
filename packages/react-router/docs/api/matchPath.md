@@ -32,7 +32,7 @@ to the matching props `Route` accepts:
 
 ## returns
 
-It returns an object when provided pathname does match `path` prop or null when it doesn't. 
+It returns an object when provided pathname does match `path` prop or `null` otherwise.
 
 ```
 matchPath("/users/2", {
