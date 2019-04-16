@@ -14,10 +14,5 @@
     "prettier": "^1.14.3",
     "pretty-quick": "^1.4.1"
   },
-  "dependencies": {},
-  "husky": {
-    "hooks": {
-      "pre-commit": "pretty-quick --staged"
-    }
-  }
+  "dependencies": {}
 }
