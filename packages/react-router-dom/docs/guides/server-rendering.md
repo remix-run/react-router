@@ -46,7 +46,7 @@ function RedirectWithStatus({ from, to, status }) {
       render={({ staticContext }) => {
         // there is no `staticContext` on the client, so
         // we need to guard against that here
-        if (staticContext) staticContext.status = status;
+        if (staticContext) staticContext.statusCode = status;
         return <Redirect from={from} to={to} />;
       }}
     />
@@ -89,7 +89,7 @@ function Status({ code, children }) {
   return (
     <Route
       render={({ staticContext }) => {
-        if (staticContext) staticContext.status = code;
+        if (staticContext) staticContext.statusCode = code;
         return children;
       }}
     />
