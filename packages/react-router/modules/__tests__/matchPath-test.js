@@ -1,6 +1,14 @@
 import { matchPath } from "react-router";
 
 describe("matchPath", () => {
+  describe("without path property on params", () => {
+    it("doesn't throw an exception", () => {
+      expect(() => {
+        matchPath("/milkyway/eridani", { hash: "foo" });
+      }).not.toThrow();
+    });
+  });
+
   describe('with path="/"', () => {
     it('returns correct url at "/"', () => {
       const path = "/";
