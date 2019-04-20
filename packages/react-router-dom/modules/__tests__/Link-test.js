@@ -276,5 +276,42 @@ describe("A <Link>", () => {
 
       expect(memoryHistory.push).toBeCalledTimes(0);
     });
+
+    it("prevents the default event handler if an error occurs", () => {
+      const memoryHistory = createMemoryHistory();
+      memoryHistory.push = jest.fn();
+      const error = new Error();
+      const clickHandler = () => {
+        throw error;
+      };
+      const mockPreventDefault = jest.fn();
+      const to = "/the/path?the=query#the-hash";
+
+      renderStrict(
+        <Router history={memoryHistory}>
+          <Link to={to} onClick={clickHandler}>
+            link
+          </Link>
+        </Router>,
+        node
+      );
+
+      console.error = jest.fn(); // keep console clean. Dunno why the catch doesn't do the job correctly.
+      try {
+        const a = node.querySelector("a");
+        ReactTestUtils.Simulate.click(a, {
+          defaultPrevented: false,
+          preventDefault: mockPreventDefault,
+          button: 1
+        });
+      } catch (e) {
+        expect(e).toBe(error);
+      }
+
+      console.error.mockRestore();
+      expect(clickHandler).toThrow(error);
+      expect(mockPreventDefault).toHaveBeenCalled();
+      expect(memoryHistory.push).toBeCalledTimes(0);
+    });
   });
 });
