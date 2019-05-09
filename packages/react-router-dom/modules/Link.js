@@ -48,14 +48,7 @@ class Link extends React.Component {
           };
 
           Object.keys(attrs).forEach(key => {
-            if (
-              [
-                "onMouseDown",
-                "onMouseUp",
-                "onPointerDown",
-                "onPointerUp"
-              ].includes(key)
-            ) {
+            if (["onMouseDown", "onMouseUp"].includes(key)) {
               delete attrs.onClick;
               attrs[key] = event =>
                 this.handleClick(event, context.history, this.props[key]);
