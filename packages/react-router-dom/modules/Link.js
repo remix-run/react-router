@@ -13,7 +13,14 @@ function isModifiedEvent(event) {
  */
 class Link extends React.Component {
   handleClick(event, history, handler) {
+    try {
+      if (handler) handler(event);
+    } catch(ex) {
+      event.preventDefault();
+      throw ex;
+    }
     if (handler) handler(event);
+
 
     if (
       !event.defaultPrevented && // onClick prevented default

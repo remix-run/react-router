@@ -33,7 +33,9 @@ function matchPath(pathname, options = {}) {
   const paths = [].concat(path);
 
   return paths.reduce((matched, path) => {
+    if (!path) return null;
     if (matched) return matched;
+
     const { regexp, keys } = compilePath(path, {
       end: exact,
       strict,
