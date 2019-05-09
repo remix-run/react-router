@@ -218,6 +218,54 @@ describe("A <Link>", () => {
       expect(memoryHistory.push).toBeCalledWith(to);
     });
 
+    it("calls mouseDown eventhandler and history.push", () => {
+      const mouseDownHandler = jest.fn();
+      const to = "/the/path?the=query#the-hash";
+
+      renderStrict(
+        <Router history={memoryHistory}>
+          <Link to={to} onMouseDown={mouseDownHandler}>
+            link
+          </Link>
+        </Router>,
+        node
+      );
+
+      const a = node.querySelector("a");
+      ReactTestUtils.Simulate.mouseDown(a, {
+        defaultPrevented: false,
+        button: 0
+      });
+
+      expect(mouseDownHandler).toBeCalledTimes(1);
+      expect(memoryHistory.push).toBeCalledTimes(1);
+      expect(memoryHistory.push).toBeCalledWith(to);
+    });
+
+    it("calls mouseUp eventhandler and history.push", () => {
+      const mouseUpHandler = jest.fn();
+      const to = "/the/path?the=query#the-hash";
+
+      renderStrict(
+        <Router history={memoryHistory}>
+          <Link to={to} onMouseUp={mouseUpHandler}>
+            link
+          </Link>
+        </Router>,
+        node
+      );
+
+      const a = node.querySelector("a");
+      ReactTestUtils.Simulate.mouseUp(a, {
+        defaultPrevented: false,
+        button: 0
+      });
+
+      expect(mouseUpHandler).toBeCalledTimes(1);
+      expect(memoryHistory.push).toBeCalledTimes(1);
+      expect(memoryHistory.push).toBeCalledWith(to);
+    });
+
     it("does not call history.push on right click", () => {
       const to = "/the/path?the=query#the-hash";
 

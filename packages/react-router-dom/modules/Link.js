@@ -12,8 +12,8 @@ function isModifiedEvent(event) {
  * The public API for rendering a history-aware <a>.
  */
 class Link extends React.Component {
-  handleClick(event, history) {
-    if (this.props.onClick) this.props.onClick(event);
+  handleClick(event, history, handler) {
+    if (handler) handler(event);
 
     if (
       !event.defaultPrevented && // onClick prevented default
@@ -30,7 +30,7 @@ class Link extends React.Component {
   }
 
   render() {
-    const { innerRef, replace, to, ...rest } = this.props; // eslint-disable-line no-unused-vars
+    const { innerRef, replace, to, onClick, ...rest } = this.props; // eslint-disable-line no-unused-vars
 
     return (
       <RouterContext.Consumer>
@@ -42,15 +42,27 @@ class Link extends React.Component {
               ? createLocation(to, null, null, context.location)
               : to;
           const href = location ? context.history.createHref(location) : "";
+          let attrs = {
+            onClick: event => this.handleClick(event, context.history, onClick),
+            ...rest
+          };
 
-          return (
-            <a
-              {...rest}
-              onClick={event => this.handleClick(event, context.history)}
-              href={href}
-              ref={innerRef}
-            />
-          );
+          Object.keys(attrs).forEach(key => {
+            if (
+              [
+                "onMouseDown",
+                "onMouseUp",
+                "onPointerDown",
+                "onPointerUp"
+              ].includes(key)
+            ) {
+              delete attrs.onClick;
+              attrs[key] = event =>
+                this.handleClick(event, context.history, this.props[key]);
+            }
+          });
+
+          return <a {...attrs} href={href} ref={innerRef} />;
         }}
       </RouterContext.Consumer>
     );
