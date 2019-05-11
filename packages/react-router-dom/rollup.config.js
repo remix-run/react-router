@@ -4,11 +4,13 @@ const commonjs = require("rollup-plugin-commonjs");
 const nodeResolve = require("rollup-plugin-node-resolve");
 const { sizeSnapshot } = require("rollup-plugin-size-snapshot");
 const { uglify } = require("rollup-plugin-uglify");
-
+const path = require("path");
 const pkg = require("./package.json");
 
 function isBareModuleId(id) {
-  return !id.startsWith(".") && !id.startsWith("/");
+  return (
+    !id.startsWith(".") && !id.includes(path.join(process.cwd(), "modules"))
+  );
 }
 
 const cjs = [
