@@ -3,7 +3,7 @@
   "name": "react-router-website",
   "version": "5.0.0",
   "scripts": {
-    "build": "NODE_ENV=production webpack -p",
+    "build": "cross-env NODE_ENV=production webpack -p",
     "start": "webpack-dev-server --inline --host 0.0.0.0"
   },
   "dependencies": {
@@ -37,6 +37,7 @@
     "bundle-loader": "^0.5.5",
     "cheerio": "^0.22.0",
     "copy-webpack-plugin": "^4.0.1",
+    "cross-env": "^5.2.0",
     "css-loader": "^0.28.7",
     "eslint": "^4.19.1",
     "eslint-plugin-import": "^2.12.0",
