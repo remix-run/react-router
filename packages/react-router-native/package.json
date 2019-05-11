@@ -32,12 +32,12 @@
     "react-router": "5.0.0"
   },
   "devDependencies": {
-    "babel-jest": "^24.5.0",
-    "jest": "^24.5.0",
-    "jest-circus": "^24.5.0",
+    "babel-jest": "^24.8.0",
+    "jest": "^24.8.0",
+    "jest-circus": "^24.8.0",
     "metro-react-native-babel-preset": "^0.53.1",
     "react": "^16.8.3",
-    "react-native": "^0.59.2",
+    "react-native": "^0.59.8",
     "react-test-renderer": "^16.8.3"
   }
 }
