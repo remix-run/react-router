@@ -1,32 +1,18 @@
-import React, { Component } from "react";
+import { useState, useEffect } from "react";
 
-class Bundle extends Component {
-  state = {
-    mod: null
-  };
+function Bundle({ children, load }) {
+  const [mod, setMod] = useState();
 
-  componentWillMount() {
-    this.load(this.props);
-  }
+  useEffect(
+    () => {
+      load(mod => {
+        setMod(mod.default ? mod.default : mod);
+      });
+    },
+    [load]
+  );
 
-  componentWillReceiveProps(nextProps) {
-    if (nextProps.load !== this.props.load) {
-      this.load(nextProps);
-    }
-  }
-
-  load(props) {
-    this.setState({
-      mod: null
-    });
-    props.load(mod => {
-      this.setState({ mod: mod.default ? mod.default : mod });
-    });
-  }
-
-  render() {
-    return this.props.children(this.state.mod);
-  }
+  return children(mod);
 }
 
 export default Bundle;
