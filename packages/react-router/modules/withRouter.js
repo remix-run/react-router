@@ -36,7 +36,11 @@ function withRouter(Component) {
 
   if (__DEV__) {
     C.propTypes = {
-      wrappedComponentRef: PropTypes.func
+      wrappedComponentRef: PropTypes.oneOfType([
+        PropTypes.string,
+        PropTypes.func,
+        PropTypes.object
+      ])
     };
   }
 
