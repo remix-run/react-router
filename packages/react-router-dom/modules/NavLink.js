@@ -1,8 +1,8 @@
 import React from "react";
-import { Route } from "react-router";
+import { __RouterContext as RouterContext, matchPath } from "react-router";
 import PropTypes from "prop-types";
-
 import Link from "./Link";
+import invariant from "tiny-invariant";
 
 function joinClassnames(...classnames) {
   return classnames.filter(i => i).join(" ");
@@ -18,7 +18,7 @@ function NavLink({
   className: classNameProp,
   exact,
   isActive: isActiveProp,
-  location,
+  location: locationProp,
   strict,
   style: styleProp,
   to,
@@ -30,14 +30,18 @@ function NavLink({
   const escapedPath = path && path.replace(/([.+*?=^!:${}()[\]|/\\])/g, "\\$1");
 
   return (
-    <Route
-      path={escapedPath}
-      exact={exact}
-      strict={strict}
-      location={location}
-      children={({ location, match }) => {
+    <RouterContext.Consumer>
+      {context => {
+        invariant(context, "You should not use <NavLink> outside a <Router>");
+
+        const pathToMatch = locationProp
+          ? locationProp.pathname
+          : context.location.pathname;
+        const match = escapedPath
+          ? matchPath(pathToMatch, { path: escapedPath, exact, strict })
+          : null;
         const isActive = !!(isActiveProp
-          ? isActiveProp(match, location)
+          ? isActiveProp(match, context.location)
           : match);
 
         const className = isActive
@@ -55,7 +59,7 @@ function NavLink({
           />
         );
       }}
-    />
+    </RouterContext.Consumer>
   );
 }
 
@@ -75,10 +79,10 @@ if (__DEV__) {
     activeClassName: PropTypes.string,
     activeStyle: PropTypes.object,
     className: PropTypes.string,
-    exact: Route.propTypes.exact,
+    exact: PropTypes.bool,
     isActive: PropTypes.func,
     location: PropTypes.object,
-    strict: Route.propTypes.strict,
+    strict: PropTypes.bool,
     style: PropTypes.object
   };
 }

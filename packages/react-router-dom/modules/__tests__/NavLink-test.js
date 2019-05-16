@@ -1,6 +1,6 @@
 import React from "react";
 import ReactDOM from "react-dom";
-import { MemoryRouter, NavLink, withRouter } from "react-router-dom";
+import { MemoryRouter, NavLink, withRouter, Route } from "react-router-dom";
 
 import renderStrict from "./utils/renderStrict";
 
@@ -485,6 +485,72 @@ describe("A <NavLink>", () => {
       const a = node.querySelector("a");
 
       expect(a.className).not.toContain("active");
+    });
+  });
+
+  describe("doesn't interfere with withRouter", () => {
+    let props;
+
+    const PropsChecker = withRouter(p => {
+      props = p;
+      return null;
+    });
+
+    beforeEach(() => {
+      props = null;
+    });
+
+    it("allows withRouter to access the correct match without route", () => {
+      renderStrict(
+        <MemoryRouter initialEntries={["/pizza/"]}>
+          <NavLink to="/pizza/">
+            <PropsChecker />
+          </NavLink>
+        </MemoryRouter>,
+        node
+      );
+
+      expect(props.match).not.toBeNull();
+      expect(props.match.url).toBe("/");
+    });
+
+    it("allows withRouter to access the correct match inside a route", () => {
+      renderStrict(
+        <MemoryRouter initialEntries={["/pizza/"]}>
+          <Route
+            path="/pizza"
+            component={() => (
+              <NavLink to="/pizza/">
+                <PropsChecker />
+              </NavLink>
+            )}
+          />
+        </MemoryRouter>,
+        node
+      );
+
+      expect(props.match).not.toBeNull();
+      expect(props.match.url).toBe("/pizza/");
+    });
+
+    it("allows withRouter to access the correct match with params inside a route", () => {
+      renderStrict(
+        <MemoryRouter initialEntries={["/pizza/cheese"]}>
+          <Route
+            path="/pizza/:topping"
+            component={() => (
+              <NavLink to="/pizza/">
+                <PropsChecker />
+              </NavLink>
+            )}
+          />
+        </MemoryRouter>,
+        node
+      );
+
+      expect(props.match).not.toBeNull();
+      expect(props.match.url).toBe("/pizza/cheese");
+      expect(props.match.params).toEqual({ topping: "cheese" });
     });
   });
 });

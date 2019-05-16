@@ -1,8 +1,8 @@
 {
   "esm/react-router-dom.js": {
-    "bundled": 8159,
-    "minified": 4903,
-    "gzipped": 1641,
+    "bundled": 8362,
+    "minified": 5058,
+    "gzipped": 1651,
     "treeshaked": {
       "rollup": {
         "code": 453,
@@ -14,13 +14,13 @@
     }
   },
   "umd/react-router-dom.js": {
-    "bundled": 159187,
-    "minified": 56687,
-    "gzipped": 16378
+    "bundled": 159395,
+    "minified": 56787,
+    "gzipped": 16387
   },
   "umd/react-router-dom.min.js": {
-    "bundled": 96042,
-    "minified": 33707,
-    "gzipped": 9946
+    "bundled": 96151,
+    "minified": 33747,
+    "gzipped": 9951
   }
 }
