@@ -32,4 +32,7 @@ export { default as generatePath } from "./generatePath";
 export { default as matchPath } from "./matchPath";
 export { default as withRouter } from "./withRouter";
 
-export { default as __RouterContext } from "./RouterContext";
+import RouterContext from "./RouterContext";
+export const __FOR_INTERNAL_USE_ONLY__ = {
+  RouterContext
+};

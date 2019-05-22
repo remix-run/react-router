@@ -2,7 +2,9 @@ import React from "react";
 import { TouchableHighlight } from "react-native";
 import PropTypes from "prop-types";
 
-import { __RouterContext as RouterContext } from "react-router";
+import { __FOR_INTERNAL_USE_ONLY__ } from "react-router";
+
+const { RouterContext } = __FOR_INTERNAL_USE_ONLY__;
 
 class Link extends React.Component {
   static defaultProps = {

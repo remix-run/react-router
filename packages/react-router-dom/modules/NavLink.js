@@ -1,8 +1,10 @@
 import React from "react";
-import { __RouterContext as RouterContext, matchPath } from "react-router";
+import { __FOR_INTERNAL_USE_ONLY__, matchPath } from "react-router";
 import PropTypes from "prop-types";
 import Link from "./Link";
 import invariant from "tiny-invariant";
+
+const { RouterContext } = __FOR_INTERNAL_USE_ONLY__;
 
 function joinClassnames(...classnames) {
   return classnames.filter(i => i).join(" ");

@@ -1,9 +1,11 @@
 import React from "react";
 import ReactDOM from "react-dom";
 import { createMemoryHistory as createHistory } from "history";
-import { Router, __RouterContext as RouterContext } from "react-router";
+import { __FOR_INTERNAL_USE_ONLY__, Router } from "react-router";
 
 import renderStrict from "./utils/renderStrict";
+
+const { RouterContext } = __FOR_INTERNAL_USE_ONLY__;
 
 describe("A <Router>", () => {
   const node = document.createElement("div");

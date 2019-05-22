@@ -1,7 +1,9 @@
 import React from "react";
 import { BackHandler } from "react-native";
 
-import { __RouterContext as RouterContext } from "react-router";
+import { __FOR_INTERNAL_USE_ONLY__ } from "react-router";
+
+const { RouterContext } = __FOR_INTERNAL_USE_ONLY__;
 
 class BackButton extends React.Component {
   handleBack = () => {
