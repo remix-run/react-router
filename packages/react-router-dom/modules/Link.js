@@ -1,8 +1,8 @@
 import React from "react";
 import { __RouterContext as RouterContext } from "react-router";
-import { createLocation } from "history";
 import PropTypes from "prop-types";
 import invariant from "tiny-invariant";
+import { resolveToLocation, normalizeToLocation } from "./utils/locationUtils";
 
 function isModifiedEvent(event) {
   return !!(event.metaKey || event.altKey || event.ctrlKey || event.shiftKey);
@@ -12,7 +12,7 @@ function isModifiedEvent(event) {
  * The public API for rendering a history-aware <a>.
  */
 class Link extends React.Component {
-  handleClick(event, history) {
+  handleClick(event, context) {
     try {
       if (this.props.onClick) this.props.onClick(event);
     } catch (ex) {
@@ -28,9 +28,13 @@ class Link extends React.Component {
     ) {
       event.preventDefault();
 
-      const method = this.props.replace ? history.replace : history.push;
+      const location = resolveToLocation(this.props.to, context.location);
 
-      method(this.props.to);
+      const method = this.props.replace
+        ? context.history.replace
+        : context.history.push;
+
+      method(location);
     }
   }
 
@@ -42,16 +46,17 @@ class Link extends React.Component {
         {context => {
           invariant(context, "You should not use <Link> outside a <Router>");
 
-          const location =
-            typeof to === "string"
-              ? createLocation(to, null, null, context.location)
-              : to;
+          const location = normalizeToLocation(
+            resolveToLocation(to, context.location),
+            context.location
+          );
+
           const href = location ? context.history.createHref(location) : "";
 
           return (
             <a
               {...rest}
-              onClick={event => this.handleClick(event, context.history)}
+              onClick={event => this.handleClick(event, context)}
               href={href}
               ref={innerRef}
             />
@@ -63,7 +68,11 @@ class Link extends React.Component {
 }
 
 if (__DEV__) {
-  const toType = PropTypes.oneOfType([PropTypes.string, PropTypes.object]);
+  const toType = PropTypes.oneOfType([
+    PropTypes.string,
+    PropTypes.object,
+    PropTypes.func
+  ]);
   const innerRefType = PropTypes.oneOfType([
     PropTypes.string,
     PropTypes.func,
