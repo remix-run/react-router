@@ -16,7 +16,7 @@ function isBareModuleId(id) {
 const cjs = [
   {
     input: "modules/index.js",
-    output: { file: `cjs/${pkg.name}.js`, format: "cjs" },
+    output: { file: `cjs/${pkg.name}.js`, format: "cjs", esModule: false },
     external: isBareModuleId,
     plugins: [
       babel({ exclude: /node_modules/ }),
