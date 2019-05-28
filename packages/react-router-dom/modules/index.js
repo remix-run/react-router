@@ -1,4 +1,15 @@
-export * from "react-router";
+export {
+  MemoryRouter,
+  Prompt,
+  Redirect,
+  Route,
+  Router,
+  StaticRouter,
+  Switch,
+  generatePath,
+  matchPath,
+  withRouter
+} from "react-router";
 
 export { default as BrowserRouter } from "./BrowserRouter";
 export { default as HashRouter } from "./HashRouter";
