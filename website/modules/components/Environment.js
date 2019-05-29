@@ -1,6 +1,5 @@
-import React, { Component } from "react";
+import React, { useEffect } from "react";
 import { Redirect } from "react-router-dom";
-import { Block } from "jsxstyle";
 import PropTypes from "prop-types";
 
 import EnvironmentLarge from "./EnvironmentLarge";
@@ -15,63 +14,56 @@ const envData = {
   core: require("bundle-loader?lazy!../docs/Core")
 };
 
-class Environment extends Component {
-  static propTypes = {
-    location: PropTypes.object,
-    history: PropTypes.object,
-    match: PropTypes.shape({
-      params: PropTypes.shape({
-        environment: PropTypes.string
-      })
-    })
-  };
-
-  componentDidMount() {
-    this.preload();
+function Environment({
+  history,
+  location,
+  match,
+  match: {
+    params: { environment }
   }
-
-  preload() {
+}) {
+  useEffect(() => {
     Object.keys(envData).forEach(key => envData[key](() => {}));
-  }
+  }, []);
 
-  render() {
-    const {
-      history,
-      location,
-      match,
-      match: {
-        params: { environment }
-      }
-    } = this.props;
-    if (!envData[environment]) {
-      return <Redirect to="/" />;
-    } else {
-      return (
-        <SmallScreen>
-          {isSmallScreen => (
-            <Bundle name="Environment" load={envData[environment]}>
-              {data =>
-                data ? (
-                  isSmallScreen ? (
-                    <EnvironmentSmall
-                      data={data}
-                      match={match}
-                      location={location}
-                      history={history}
-                    />
-                  ) : (
-                    <EnvironmentLarge data={data} match={match} />
-                  )
+  if (!envData[environment]) {
+    return <Redirect to="/" />;
+  } else {
+    return (
+      <SmallScreen>
+        {isSmallScreen => (
+          <Bundle load={envData[environment]}>
+            {data =>
+              data ? (
+                isSmallScreen ? (
+                  <EnvironmentSmall
+                    data={data}
+                    match={match}
+                    location={location}
+                    history={history}
+                  />
                 ) : (
-                  <Loading />
+                  <EnvironmentLarge data={data} match={match} />
                 )
-              }
-            </Bundle>
-          )}
-        </SmallScreen>
-      );
-    }
+              ) : (
+                <Loading />
+              )
+            }
+          </Bundle>
+        )}
+      </SmallScreen>
+    );
   }
 }
+
+Environment.propTypes = {
+  location: PropTypes.object,
+  history: PropTypes.object,
+  match: PropTypes.shape({
+    params: PropTypes.shape({
+      environment: PropTypes.string
+    })
+  })
+};
 
 export default Environment;

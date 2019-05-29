@@ -27,8 +27,7 @@ export default {
     require("../../../packages/react-router/docs/guides/philosophy.md"),
     require("../../../packages/react-router/docs/guides/testing.md?web"),
     require("../../../packages/react-router/docs/guides/redux.md"),
-    require("../../../packages/react-router/docs/guides/static-routes.md"),
-    require("../../../packages/react-router/docs/guides/blocked-updates.md")
+    require("../../../packages/react-router/docs/guides/static-routes.md")
   ],
 
   examples: [
