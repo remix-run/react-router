@@ -26,6 +26,20 @@ class ScrollToTop extends Component {
 export default withRouter(ScrollToTop);
 ```
 
+Or if you are running React 16.8 and above, you can use hooks:
+
+```jsx
+const ScrollToTop = ({ children, location: { pathname } }) => {
+  useEffect(() => {
+    window.scrollTo(0, 0);
+  }, [pathname]);
+
+  return children;
+};
+
+export default withRouter(ScrollToTop);
+```
+
 Then render it at the top of your app, but below Router
 
 ```jsx
