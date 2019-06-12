@@ -75,6 +75,34 @@ describe("A <Link>", () => {
     expect(a.getAttribute("href")).toEqual("/the/path?the=query#the-hash");
   });
 
+  it("accepts an object returning function `to` prop", () => {
+    const to = location => ({ ...location, search: "foo=bar" });
+
+    renderStrict(
+      <MemoryRouter initialEntries={["/hello"]}>
+        <Link to={to}>link</Link>
+      </MemoryRouter>,
+      node
+    );
+
+    const a = node.querySelector("a");
+    expect(a.getAttribute("href")).toEqual("/hello?foo=bar");
+  });
+
+  it("accepts a string returning function `to` prop", () => {
+    const to = location => `${location.pathname}?foo=bar`;
+
+    ReactDOM.render(
+      <MemoryRouter initialEntries={["/hello"]}>
+        <Link to={to}>link</Link>
+      </MemoryRouter>,
+      node
+    );
+
+    const a = node.querySelector("a");
+    expect(a.getAttribute("href")).toEqual("/hello?foo=bar");
+  });
+
   describe("with no pathname", () => {
     it("resolves using the current location", () => {
       renderStrict(
@@ -216,6 +244,42 @@ describe("A <Link>", () => {
       expect(clickHandler).toBeCalledTimes(1);
       expect(memoryHistory.push).toBeCalledTimes(1);
       expect(memoryHistory.push).toBeCalledWith(to);
+    });
+
+    it("calls onClick eventhandler and history.push with function `to` prop", () => {
+      const memoryHistoryFoo = createMemoryHistory({
+        initialEntries: ["/foo"]
+      });
+      memoryHistoryFoo.push = jest.fn();
+      const clickHandler = jest.fn();
+      let to = null;
+      const toFn = location => {
+        to = {
+          ...location,
+          pathname: "hello",
+          search: "world"
+        };
+        return to;
+      };
+
+      renderStrict(
+        <Router history={memoryHistoryFoo}>
+          <Link to={toFn} onClick={clickHandler}>
+            link
+          </Link>
+        </Router>,
+        node
+      );
+
+      const a = node.querySelector("a");
+      ReactTestUtils.Simulate.click(a, {
+        defaultPrevented: false,
+        button: 0
+      });
+
+      expect(clickHandler).toBeCalledTimes(1);
+      expect(memoryHistoryFoo.push).toBeCalledTimes(1);
+      expect(memoryHistoryFoo.push).toBeCalledWith(to);
     });
 
     it("does not call history.push on right click", () => {

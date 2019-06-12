@@ -1,8 +1,9 @@
 import React from "react";
 import { __RouterContext as RouterContext, matchPath } from "react-router";
 import PropTypes from "prop-types";
-import Link from "./Link";
 import invariant from "tiny-invariant";
+import Link from "./Link";
+import { resolveToLocation, normalizeToLocation } from "./utils/locationUtils";
 
 function joinClassnames(...classnames) {
   return classnames.filter(i => i).join(" ");
@@ -24,19 +25,22 @@ function NavLink({
   to,
   ...rest
 }) {
-  const path = typeof to === "object" ? to.pathname : to;
-
-  // Regex taken from: https://github.com/pillarjs/path-to-regexp/blob/master/index.js#L202
-  const escapedPath = path && path.replace(/([.+*?=^!:${}()[\]|/\\])/g, "\\$1");
-
   return (
     <RouterContext.Consumer>
       {context => {
         invariant(context, "You should not use <NavLink> outside a <Router>");
 
-        const pathToMatch = locationProp
-          ? locationProp.pathname
-          : context.location.pathname;
+        const currentLocation = locationProp || context.location;
+        const { pathname: pathToMatch } = currentLocation;
+        const toLocation = normalizeToLocation(
+          resolveToLocation(to, currentLocation),
+          currentLocation
+        );
+        const { pathname: path } = toLocation;
+        // Regex taken from: https://github.com/pillarjs/path-to-regexp/blob/master/index.js#L202
+        const escapedPath =
+          path && path.replace(/([.+*?=^!:${}()[\]|/\\])/g, "\\$1");
+
         const match = escapedPath
           ? matchPath(pathToMatch, { path: escapedPath, exact, strict })
           : null;
@@ -54,7 +58,7 @@ function NavLink({
             aria-current={(isActive && ariaCurrent) || null}
             className={className}
             style={style}
-            to={to}
+            to={toLocation}
             {...rest}
           />
         );

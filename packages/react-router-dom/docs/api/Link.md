@@ -36,6 +36,18 @@ An object that can have any of the following properties:
 />
 ```
 
+## to: function
+
+A function to which current location is passed as an argument and which should return location representation as a string or as an object
+
+```jsx
+<Link to={location => ({ ...location, pathname: "/courses" })} />
+```
+
+```jsx
+<Link to={location => `${location.pathname}?sort=name`} />
+```
+
 ## replace: bool
 
 When `true`, clicking the link will replace the current entry in the history stack instead of adding a new one.
