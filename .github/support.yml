@@ -1,0 +1,24 @@
+# Configuration for Support Requests - https://github.com/dessant/support-requests
+
+# Label used to mark issues as support requests
+supportLabel: support
+
+# Comment to post on issues marked as support requests, `{issue-author}` is an
+# optional placeholder. Set to `false` to disable
+supportComment: >
+  :wave: @{issue-author}, we use the issue tracker exclusively for bug reports
+  and feature requests. However, this issue appears to be a support request.
+  For usage questions, please use [Stack Overflow](https://stackoverflow.com/questions/tagged/react-router)
+  or [Reactiflux](https://www.reactiflux.com/) where there are a lot more people ready to help you out. 
+
+# Close issues marked as support requests
+close: true
+
+# Lock issues marked as support requests
+lock: false
+
+# Assign `off-topic` as the reason for locking. Set to `false` to disable
+setLockReason: true
+
+# Repository to extend settings from
+# _extends: repo
