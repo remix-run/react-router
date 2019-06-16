@@ -64,8 +64,9 @@ rendered with [route props](#route-props).
 ```jsx
 <Route path="/user/:username" component={User} />;
 
-function User({ match }) {
-  return <h1>Hello {match.params.username}!</h1>;
+// All route props (match, location and history) are available to User
+function User(props) {
+  return <h1>Hello {props.match.params.username}!</h1>;
 }
 ```
 
@@ -75,17 +76,18 @@ When you use `component` (instead of `render` or `children`, below) the router u
 
 This allows for convenient inline rendering and wrapping without the undesired remounting explained above.
 
-Instead of having a new [React element](https://facebook.github.io/react/docs/rendering-elements.html) created for you using the [`component`](#component) prop, you can pass in a function to be called when the location matches. The `render` prop receives all the same [route props](#route-props) as the `component` render prop.
+Instead of having a new [React element](https://facebook.github.io/react/docs/rendering-elements.html) created for you using the [`component`](#component) prop, you can pass in a function to be called when the location matches. The `render` prop function has access to all the same [route props](#route-props) (match, location and history) as the `component` render prop.
 
 ```jsx
 // convenient inline rendering
 <Route path="/home" render={() => <div>Home</div>}/>
 
 // wrapping/composing
+// You can spread routeProps to make them available to your rendered Component
 const FadingRoute = ({ component: Component, ...rest }) => (
-  <Route {...rest} render={props => (
+  <Route {...rest} render={routeProps => (
     <FadeIn>
-      <Component {...props}/>
+      <Component {...routeProps}/>
     </FadeIn>
   )}/>
 )
