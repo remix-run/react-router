@@ -100,15 +100,14 @@ function matchPath(pathname, options = {}, parent = null) {
 
     const absolute = isAbsolute(path);
 
-    if (!absolute) {
-      path = resolvePath(path, parent && parent.url);
-    }
+    path = resolvePath(path, parent && parent.url);
 
     const { regexp, keys } = compilePath(path, {
       end: exact,
       strict,
       sensitive
     });
+
     const match = regexp.exec(pathname);
 
     if (!match) {
