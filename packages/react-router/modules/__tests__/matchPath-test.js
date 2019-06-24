@@ -102,6 +102,7 @@ describe("matchPath", () => {
       expect(match.url).toBe("/7");
       expect(match.params).toEqual({ number: "7" });
     });
+
     it("returns correct match url and params with parent", () => {
       const pathname = "/test-location/7";
       const options = {
@@ -117,6 +118,7 @@ describe("matchPath", () => {
       expect(match.url).toBe("/test-location/7");
       expect(match.params).toEqual({ number: "7" });
     });
+
     it("passes along parent match params", () => {
       const pathname = "/test-location/hello/7";
       const options = {
@@ -132,6 +134,7 @@ describe("matchPath", () => {
       expect(match.url).toBe("/test-location/hello/7");
       expect(match.params).toEqual({ something: "hello", number: "7" });
     });
+
     it("resolves relative path with leading ./", () => {
       const pathname = "/sauce/sriracha";
       const options = {
@@ -144,6 +147,7 @@ describe("matchPath", () => {
       const match = matchPath(pathname, options, parentMatch);
       expect(match.url).toBe("/sauce/sriracha");
     });
+
     it("throws an error for relative path with leading ..", () => {
       const pathname = "/sauce/sriracha";
       const options = {

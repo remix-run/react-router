@@ -1,7 +1,5 @@
 import pathToRegexp from "path-to-regexp";
 
-const cache = {};
-
 function isAbsolute(pathname) {
   return pathname.charAt(0) === "/";
 }
@@ -14,20 +12,35 @@ function hasTrailingSlash(pathname) {
   return pathname.charAt(pathname.length - 1) === "/";
 }
 
+function isMalformed(pathname) {
+  return pathname.slice(0, 3) === "...";
+}
+
+function refersToParentSegment(pathname) {
+  return pathname.slice(0, 3) === "../";
+}
+
+function refersToCurrentSegment(pathname) {
+  return pathname.slice(0, 2) === "./";
+}
+
 function resolvePath(pathname, base) {
   if (pathname === undefined || isAbsolute(pathname)) {
     return pathname;
   }
 
-  if (pathname.charAt(0) === ".") {
-    switch (pathname.charAt(1)) {
-      // pathname points to previous segment (../)
-      case ".":
-        throw new Error("cannot resolve pathname with leading dot-dot");
-      // pathname points to current segment (./)
-      case "/":
-        pathname = pathname.substr(2);
-    }
+  if (isMalformed(pathname)) {
+    throw new Error("cannot resolve pathname: pathname is malformed");
+  }
+
+  if (refersToParentSegment(pathname)) {
+    throw new Error(
+      "cannot resolve pathname: pathname refers to parent path-segment"
+    );
+  }
+
+  if (refersToCurrentSegment(pathname)) {
+    pathname = pathname.substr(2);
   }
 
   if (!base) {
@@ -41,6 +54,7 @@ function resolvePath(pathname, base) {
   }
 }
 
+const cache = {};
 const cacheLimit = 10000;
 let cacheCount = 0;
 
