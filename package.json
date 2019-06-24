@@ -38,7 +38,7 @@
     "hoist-non-react-statics": "^2.3.1",
     "invariant": "^2.2.1",
     "loose-envify": "^1.2.0",
-    "prop-types": "^15.5.6",
+    "prop-types": "^15.7.2",
     "react-is": "^16.8.6",
     "warning": "^3.0.0"
   },
