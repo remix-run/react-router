@@ -34,7 +34,7 @@ const ScrollToTop = ({ children, location: { pathname } }) => {
     window.scrollTo(0, 0);
   }, [pathname]);
 
-  return children;
+  return children || null;
 };
 
 export default withRouter(ScrollToTop);
