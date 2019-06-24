@@ -518,4 +518,26 @@ describe("A partial <Route>", () => {
 
     expect(node.innerHTML).toContain(TEXT);
   });
+
+  it("matches against an array of paths", () => {
+    const TEXT = "Hello World";
+    const node = document.createElement("div");
+
+    ReactDOM.render(
+      <MemoryRouter initialEntries={["/hello/world"]}>
+        <Route
+          path="hello"
+          render={() => (
+            <Route
+              path={["world", "everybody"]}
+              render={() => <div>{TEXT}</div>}
+            />
+          )}
+        />
+      </MemoryRouter>,
+      node
+    );
+
+    expect(node.innerHTML).toContain(TEXT);
+  });
 });
