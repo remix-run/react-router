@@ -30,11 +30,14 @@ Or if you are running React 16.8 and above, you can use hooks:
 
 ```jsx
 const ScrollToTop = ({ children, location: { pathname } }) => {
-  useEffect(() => {
-    window.scrollTo(0, 0);
-  }, [pathname]);
+  useEffect(
+    () => {
+      window.scrollTo(0, 0);
+    },
+    [pathname]
+  );
 
-  return children;
+  return children || null;
 };
 
 export default withRouter(ScrollToTop);

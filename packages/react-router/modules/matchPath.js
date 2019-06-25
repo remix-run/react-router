@@ -80,7 +80,7 @@ function compilePath(path, options) {
  * Public API for matching a URL pathname to a path.
  */
 function matchPath(pathname, options = {}, parent = null) {
-  if (typeof options === "string") {
+  if (typeof options === "string" || Array.isArray(options)) {
     options = { path: options };
   }
 
