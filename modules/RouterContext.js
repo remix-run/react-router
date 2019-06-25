@@ -1,6 +1,6 @@
 import invariant from 'invariant'
 import React from 'react'
-import * as ReactIs from 'react-is'
+import { isValidElementType } from 'react-is'
 import createReactClass from 'create-react-class'
 import { array, func, object } from 'prop-types'
 
@@ -76,7 +76,7 @@ const RouterContext = createReactClass({
 
         // Handle components is object for { [name]: component } but not valid element
         // type of react, such as React.memo, React.lazy and so on.
-        if (typeof components === 'object' && !ReactIs.isValidElementType(components)) {
+        if (typeof components === 'object' && !isValidElementType(components)) {
           const elements = {}
 
           for (const key in components) {
