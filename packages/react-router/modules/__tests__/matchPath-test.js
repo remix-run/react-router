@@ -42,6 +42,13 @@ describe("matchPath", () => {
   });
 
   describe("with an array of paths", () => {
+    it("accepts an array as 2nd argument", () => {
+      const path = ["/somewhere", "/elsewhere"];
+      const pathname = "/elsewhere";
+      const match = matchPath(pathname, path);
+      expect(match.url).toBe("/elsewhere");
+    });
+
     it('return the correct url at "/elsewhere"', () => {
       const path = ["/somewhere", "/elsewhere"];
       const pathname = "/elsewhere";
