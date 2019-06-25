@@ -69,7 +69,7 @@
     "express": "^4.14.0",
     "express-urlrewrite": "^1.2.0",
     "gzip-size": "^4.1.0",
-    "karma": "^2.0.0",
+    "karma": "^4.1.0",
     "karma-browserstack-launcher": "^1.0.1",
     "karma-chrome-launcher": "^2.0.0",
     "karma-coverage": "^1.1.1",
