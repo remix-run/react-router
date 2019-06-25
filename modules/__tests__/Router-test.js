@@ -1,5 +1,5 @@
 import expect from 'expect'
-import React, { Component } from 'react'
+import React, { Component, Fragment, forwardRef, memo } from 'react'
 import { render, unmountComponentAtNode } from 'react-dom'
 import createHistory from '../createMemoryHistory'
 import Route from '../Route'
@@ -101,6 +101,41 @@ describe('Router', function () {
     ), node, function () {
       expect(node.textContent).toEqual('wrapped')
       done()
+    })
+  })
+
+  describe('components for React 16', function () {
+    it('renders routes for React.memo', function (done) {
+      render((
+        <Router history={createHistory('/')}>
+          <Route path="/" component={memo(() => <div>memo</div>)} />
+        </Router>
+      ), node, function () {
+        expect(node.textContent).toEqual('memo')
+        done()
+      })
+    })
+
+    it('renders routes for React.forwardRef', function (done) {
+      render((
+        <Router history={createHistory('/')}>
+          <Route path="/" component={forwardRef(() => <div>forwardRef</div>)} />
+        </Router>
+      ), node, function () {
+        expect(node.textContent).toEqual('forwardRef')
+        done()
+      })
+    })
+
+    it('renders routes for React.Fragment', function (done) {
+      render((
+        <Router history={createHistory('/')}>
+          <Route path="/" component={() => <Fragment><div>Fragment</div></Fragment>} />
+        </Router>
+      ), node, function () {
+        expect(node.textContent).toEqual('Fragment')
+        done()
+      })
     })
   })
 

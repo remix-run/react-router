@@ -38,7 +38,8 @@
     "hoist-non-react-statics": "^2.3.1",
     "invariant": "^2.2.1",
     "loose-envify": "^1.2.0",
-    "prop-types": "^15.5.6",
+    "prop-types": "^15.7.2",
+    "react-is": "^16.8.6",
     "warning": "^3.0.0"
   },
   "peerDependencies": {
@@ -79,9 +80,9 @@
     "mocha": "^5.0.4",
     "pretty-bytes": "^4.0.2",
     "qs": "^6.2.1",
-    "react": "^16.0.0-rc",
+    "react": "^16.8.6",
     "react-addons-css-transition-group": "^15.6.0",
-    "react-dom": "^16.0.0-rc",
+    "react-dom": "^16.8.6",
     "rimraf": "^2.5.4",
     "style-loader": "^0.16.1",
     "webpack": "^1.13.1",

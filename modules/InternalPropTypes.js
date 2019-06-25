@@ -1,4 +1,4 @@
-import { func, object, arrayOf, oneOfType, element, shape, string } from 'prop-types'
+import { func, object, arrayOf, oneOfType, element, shape, elementType } from 'prop-types'
 
 export function falsy(props, propName, componentName) {
   if (props[propName])
@@ -14,7 +14,7 @@ export const history = shape({
   goForward: func.isRequired
 })
 
-export const component = oneOfType([ func, string ])
+export const component = elementType
 export const components = oneOfType([ component, object ])
 export const route = oneOfType([ object, element ])
 export const routes = oneOfType([ route, arrayOf(route) ])
