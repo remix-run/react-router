@@ -26,7 +26,9 @@ function compilePath(path, options) {
  * Public API for matching a URL pathname to a path.
  */
 function matchPath(pathname, options = {}) {
-  if (typeof options === "string") options = { path: options };
+  if (typeof options === "string" || Array.isArray(options)) {
+    options = { path: options };
+  }
 
   const { path, exact = false, strict = false, sensitive = false } = options;
 
