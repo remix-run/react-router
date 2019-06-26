@@ -22,6 +22,7 @@
     "build-umd": "cross-env NODE_ENV=development webpack modules/index.js umd/ReactRouter.js",
     "build-min": "cross-env NODE_ENV=production webpack -p modules/index.js umd/ReactRouter.min.js",
     "lint": "eslint examples modules scripts tools *.js",
+    "prepublishOnly": "node ./scripts/build.js",
     "start": "node examples/server.js",
     "test": "npm run lint && npm run test-node && npm run test-browser",
     "test-browser": "cross-env NODE_ENV=test karma start",
