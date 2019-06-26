@@ -84,8 +84,7 @@ function matchPath(pathname, options = {}, parent = null) {
     options = { path: options };
   }
 
-  const { exact = false, strict = false, sensitive = false } = options;
-  let path = options.path != null ? options.path : options.from;
+  const { path, exact = false, strict = false, sensitive = false } = options;
 
   const paths = [].concat(path);
 
