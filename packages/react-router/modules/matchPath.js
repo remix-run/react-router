@@ -79,7 +79,7 @@ function compilePath(path, options) {
 /**
  * Public API for matching a URL pathname to a path.
  */
-function matchPath(pathname, options = {}, parent = null) {
+function matchPath(pathname, options = {}, parentMatch = null) {
   if (typeof options === "string" || Array.isArray(options)) {
     options = { path: options };
   }
@@ -99,7 +99,7 @@ function matchPath(pathname, options = {}, parent = null) {
 
     const absolute = isAbsolute(path);
 
-    path = resolvePath(path, parent && parent.url);
+    path = resolvePath(path, parentMatch && parentMatch.url);
 
     const { regexp, keys } = compilePath(path, {
       end: exact,
@@ -125,7 +125,7 @@ function matchPath(pathname, options = {}, parent = null) {
       return params;
     }, {});
 
-    const parentParams = (parent && parent.params) || {};
+    const parentParams = (parentMatch && parentMatch.params) || {};
 
     const params = absolute ? matchParams : { ...parentParams, ...matchParams };
 
