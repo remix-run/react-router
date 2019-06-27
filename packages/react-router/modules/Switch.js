@@ -34,7 +34,7 @@ class Switch extends React.Component {
                 ? matchPath(
                     location.pathname,
                     { ...child.props, path },
-                    context.match.url
+                    context.match.path
                   )
                 : context.match;
             }
