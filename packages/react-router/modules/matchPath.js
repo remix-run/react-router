@@ -13,11 +13,7 @@ function hasTrailingSlash(pathname) {
 }
 
 function isMalformed(pathname) {
-  return pathname.slice(0, 3) === "...";
-}
-
-function refersToParentSegment(pathname) {
-  return pathname.slice(0, 3) === "../";
+  return pathname.slice(0, 2) === "..";
 }
 
 function refersToCurrentSegment(pathname) {
@@ -30,12 +26,8 @@ function resolvePath(pathname, base) {
   }
 
   if (isMalformed(pathname)) {
-    throw new Error("cannot resolve pathname: pathname is malformed");
-  }
-
-  if (refersToParentSegment(pathname)) {
     throw new Error(
-      "cannot resolve pathname: pathname refers to parent path-segment"
+      `cannot resolve pathname: pathname '${pathname}' is malformed`
     );
   }
 
@@ -50,7 +42,7 @@ function resolvePath(pathname, base) {
   if (pathname === "") {
     return base;
   } else {
-    return `${ensureTrailingSlash(base)}${pathname}`;
+    return ensureTrailingSlash(base) + pathname;
   }
 }
 
