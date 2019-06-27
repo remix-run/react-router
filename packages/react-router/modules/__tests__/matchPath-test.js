@@ -115,13 +115,9 @@ describe("matchPath", () => {
       const options = {
         path: ":number"
       };
-      const parentMatch = {
-        url: "/test-location",
-        path: "/test-location",
-        params: {},
-        isExact: true
-      };
-      const match = matchPath(pathname, options, parentMatch);
+      const base = "/test-location";
+
+      const match = matchPath(pathname, options, base);
       expect(match.url).toBe("/test-location/7");
       expect(match.params).toEqual({ number: "7" });
     });
@@ -131,13 +127,8 @@ describe("matchPath", () => {
       const options = {
         path: ":number"
       };
-      const parentMatch = {
-        url: "/test-location/:something",
-        path: "/test-location/hello",
-        params: { something: "hello" },
-        isExact: true
-      };
-      const match = matchPath(pathname, options, parentMatch);
+      const base = "/test-location/:something";
+      const match = matchPath(pathname, options, base);
       expect(match.url).toBe("/test-location/hello/7");
       expect(match.params).toEqual({ something: "hello", number: "7" });
     });
@@ -147,11 +138,9 @@ describe("matchPath", () => {
       const options = {
         path: "./sriracha"
       };
-      const parentMatch = {
-        url: "/sauce"
-      };
+      const base = "/sauce";
 
-      const match = matchPath(pathname, options, parentMatch);
+      const match = matchPath(pathname, options, base);
       expect(match.url).toBe("/sauce/sriracha");
     });
 

@@ -71,7 +71,7 @@ function compilePath(path, options) {
 /**
  * Public API for matching a URL pathname to a path.
  */
-function matchPath(pathname, options = {}, parentMatch = null) {
+function matchPath(pathname, options = {}, base = null) {
   if (typeof options === "string" || Array.isArray(options)) {
     options = { path: options };
   }
@@ -91,7 +91,7 @@ function matchPath(pathname, options = {}, parentMatch = null) {
 
     const absolute = isAbsolute(path);
 
-    path = resolvePath(path, parentMatch && parentMatch.url);
+    path = resolvePath(path, base);
 
     const { regexp, keys } = compilePath(path, {
       end: exact,
@@ -112,14 +112,10 @@ function matchPath(pathname, options = {}, parentMatch = null) {
       return null;
     }
 
-    const matchParams = keys.reduce((params, key, index) => {
+    const params = keys.reduce((params, key, index) => {
       params[key.name] = values[index];
       return params;
     }, {});
-
-    const parentParams = (parentMatch && parentMatch.params) || {};
-
-    const params = absolute ? matchParams : { ...parentParams, ...matchParams };
 
     return {
       path, // the path used to match
