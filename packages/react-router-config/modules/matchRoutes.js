@@ -6,7 +6,7 @@ function matchRoutes(routes, pathname, /*not public API*/ branch = []) {
       branch[branch.length - 1] && branch[branch.length - 1].match;
 
     const match = route.path
-      ? matchPath(pathname, route, parentMatch)
+      ? matchPath(pathname, route, parentMatch && parentMatch.url)
       : parentMatch
         ? parentMatch // use parent match
         : Router.computeRootMatch(pathname); // use default "root" match
