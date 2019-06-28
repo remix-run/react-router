@@ -89,8 +89,6 @@ function matchPath(pathname, options = {}, base = null) {
       return matched;
     }
 
-    const absolute = isAbsolute(path);
-
     path = resolvePath(path, base);
 
     const { regexp, keys } = compilePath(path, {
