@@ -9,7 +9,10 @@ let useRouter = null;
 if (useContext) {
   useRouter = function useRouter() {
     const context = useContext(RouterContext);
-    invariant(context, "You should not use useRouter() outside a <Router>");
+    invariant(
+      context,
+      "You should not use useRouter() or other hooks outside a <Router>"
+    );
     return context;
   };
 } else {
