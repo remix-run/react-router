@@ -17,10 +17,10 @@ const match = matchPath("/users/123", {
 The first argument is the pathname you want to match. If you're using
 this on the server with Node.js, it would be `req.path`.
 
-## props
+## options
 
-The second argument are the props to match against, they are identical
-to the matching props `Route` accepts. It could also be a string or
+The second argument are the options to match against, they are identical
+to the matching options `Route` accepts. It could also be a string or
 an array of strings as shortcut for `{ path }`:
 
 ```js
@@ -30,6 +30,12 @@ an array of strings as shortcut for `{ path }`:
   exact, // optional, defaults to false
 }
 ```
+
+## base
+
+The optional third argument is for relative routes and is the path,
+from where your path should be relative to, e.g. your `path` is `"./baz"` and your `base`
+is `"/foobar"`, then the resulting path will be `"/foobar/baz"`.
 
 ## returns
 
