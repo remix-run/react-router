@@ -35,7 +35,9 @@ describe("useParams()", () => {
 
         expect(() => {
           renderStrict(<TestComponent />, node);
-        }).toThrow(/You should not use useRouter\(\) outside a <Router>/);
+        }).toThrow(
+          /You should not use useRouter\(\) or other hooks outside a <Router>/
+        );
       });
     });
 
