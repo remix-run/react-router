@@ -12,7 +12,7 @@ In earlier versions of React you will get an error noticing you about this.
 import { useLocation } from "react-router";
 
 function MyComponent() {
-  const { navigate, location } = useLOcation();
+  const { navigate, location } = useLocation();
 
   // navigate to /foobar/baz and add it to the history
   navigate("/foobar/baz");
