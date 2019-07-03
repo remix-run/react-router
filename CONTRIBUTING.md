@@ -19,6 +19,8 @@ Please provide a test case of some sort. Best is a pull request with a failing t
 
 Please provide thoughtful comments and some sample code. Proposals without substance will be closed.
 
+It's generally a good idea to open an issue for the proposal first before working on the implementation and submitting a pull request. Please also take a look at the [timeline issue](https://github.com/ReactTraining/react-router/issues/6497) and consider ongoing work that might conflict with your proposed changes.
+
 <a name="attention"/></a>
 
 ## Issue Not Getting Attention?
