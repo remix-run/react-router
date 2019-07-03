@@ -11,7 +11,7 @@ Thanks for contributing, you rock!
 
 ## Think You Found a Bug?
 
-Please provide a test case of some sort. Best is a pull request with a failing test. Next is a link to CodePen/JS Bin or repository that illustrates the bug. Finally, some copy/pastable code is acceptable.
+Please conform to the issue template and provide a clear path to reproduction with a code example. Best is a pull request with a failing test. Next is a link to CodePen/JS Bin or repository that illustrates the bug. Finally, some copy/pastable code is acceptable.
 
 <a name="api"/></a>
 
@@ -25,7 +25,7 @@ It's generally a good idea to open an issue for the proposal first before workin
 
 ## Issue Not Getting Attention?
 
-If you need a bug fixed and nobody is fixing it, it is your responsibility to fix it. Issues with no activity for 30 days may be closed.
+If you need a bug fixed and nobody is fixing it, it is greatly appreciated if you provide a fix for it. Issues with no activity for 60 days will be automatically closed, with a warning 7 days before closing.
 
 <a name="pr"/></a>
 
