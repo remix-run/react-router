@@ -26,6 +26,8 @@
     "index.js",
     "generatePath.js",
     "matchPath.js",
+    "modules/*.js",
+    "modules/utils/*.js",
     "withRouter.js",
     "warnAboutDeprecatedCJSRequire.js",
     "umd"
