@@ -13,6 +13,8 @@
     "esm",
     "index.js",
     "matchRoutes.js",
+    "modules/*.js",
+    "modules/utils/*.js",
     "renderRoutes.js",
     "warnAboutDeprecatedCJSRequire.js",
     "umd"

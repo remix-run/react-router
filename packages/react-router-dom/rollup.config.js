@@ -16,19 +16,24 @@ function isBareModuleId(id) {
 const cjs = [
   {
     input: "modules/index.js",
-    output: { file: `cjs/${pkg.name}.js`, format: "cjs", esModule: false },
+    output: {
+      file: `cjs/${pkg.name}.js`,
+      sourcemap: true,
+      format: "cjs",
+      esModule: false
+    },
     external: isBareModuleId,
     plugins: [
-      babel({ exclude: /node_modules/ }),
+      babel({ exclude: /node_modules/, sourceMaps: true }),
       replace({ "process.env.NODE_ENV": JSON.stringify("development") })
     ]
   },
   {
     input: "modules/index.js",
-    output: { file: `cjs/${pkg.name}.min.js`, format: "cjs" },
+    output: { file: `cjs/${pkg.name}.min.js`, sourcemap: true, format: "cjs" },
     external: isBareModuleId,
     plugins: [
-      babel({ exclude: /node_modules/ }),
+      babel({ exclude: /node_modules/, sourceMaps: true }),
       replace({ "process.env.NODE_ENV": JSON.stringify("production") }),
       uglify()
     ]
@@ -38,12 +43,13 @@ const cjs = [
 const esm = [
   {
     input: "modules/index.js",
-    output: { file: `esm/${pkg.name}.js`, format: "esm" },
+    output: { file: `esm/${pkg.name}.js`, sourcemap: true, format: "esm" },
     external: isBareModuleId,
     plugins: [
       babel({
         exclude: /node_modules/,
         runtimeHelpers: true,
+        sourceMaps: true,
         plugins: [["@babel/transform-runtime", { useESModules: true }]]
       }),
       sizeSnapshot()
@@ -58,6 +64,9 @@ const umd = [
     input: "modules/index.js",
     output: {
       file: `umd/${pkg.name}.js`,
+      sourcemap: true,
+      sourcemapPathTransform: relativePath =>
+        relativePath.replace(/^.*?\/node_modules/, "../../node_modules"),
       format: "umd",
       name: "ReactRouterDOM",
       globals
@@ -67,6 +76,7 @@ const umd = [
       babel({
         exclude: /node_modules/,
         runtimeHelpers: true,
+        sourceMaps: true,
         plugins: [["@babel/transform-runtime", { useESModules: true }]]
       }),
       nodeResolve(),
@@ -86,6 +96,9 @@ const umd = [
     input: "modules/index.js",
     output: {
       file: `umd/${pkg.name}.min.js`,
+      sourcemap: true,
+      sourcemapPathTransform: relativePath =>
+        relativePath.replace(/^.*?\/node_modules/, "../../node_modules"),
       format: "umd",
       name: "ReactRouterDOM",
       globals
@@ -95,6 +108,7 @@ const umd = [
       babel({
         exclude: /node_modules/,
         runtimeHelpers: true,
+        sourceMaps: true,
         plugins: [["@babel/transform-runtime", { useESModules: true }]]
       }),
       nodeResolve(),
