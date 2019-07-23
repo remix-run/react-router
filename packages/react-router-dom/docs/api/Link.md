@@ -10,7 +10,7 @@ import { Link } from 'react-router-dom'
 
 ## to: string
 
-A string representation of the location to link to, created by concatenating the location's pathname, search, and hash properties.
+A string representation of the Link location, created by concatenating the location's pathname, search, and hash properties.
 
 ```jsx
 <Link to="/courses?sort=name" />
