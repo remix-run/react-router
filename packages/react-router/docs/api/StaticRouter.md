@@ -88,4 +88,4 @@ if (context.status === "404") {
 
 ## children: node
 
-A [single child element](https://facebook.github.io/react/docs/react-api.html#react.children.only) to render.
+A [single child element](https://facebook.github.io/react/docs/react-api.html#reactchildrenonly) to render.
