@@ -317,6 +317,31 @@ describe("A <NavLink>", () => {
       expect(a.className).not.toContain("active");
       expect(a.className).not.toContain("selected");
     });
+
+    it("applies active default props when isActive returns true due to toLocation custom logic", () => {
+      const isNavLinkActive = (match, current, to) => {
+        const baseLink = "/pizza";
+        const currentLink = current.pathname;
+        const toLink = to.pathname;
+
+        return !!(
+          currentLink.indexOf(baseLink) >= 0 && toLink.indexOf(baseLink) >= 0
+        );
+      };
+
+      renderStrict(
+        <MemoryRouter initialEntries={["/pizza/quattro-stagioni"]}>
+          <NavLink to="/pizza/funghi" isActive={isNavLinkActive}>
+            Pizza!
+          </NavLink>
+        </MemoryRouter>,
+        node
+      );
+
+      const a = node.querySelector("a");
+
+      expect(a.className).toContain("active");
+    });
   });
 
   it("does not do exact matching by default", () => {

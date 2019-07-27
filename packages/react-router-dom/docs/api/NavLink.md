@@ -3,9 +3,9 @@
 A special version of the [`<Link>`](Link.md) that will add styling attributes to the rendered element when it matches the current URL.
 
 ```jsx
-import { NavLink } from 'react-router-dom'
+import { NavLink } from "react-router-dom";
 
-<NavLink to="/about">About</NavLink>
+<NavLink to="/about">About</NavLink>;
 ```
 
 ## activeClassName: string
@@ -60,18 +60,17 @@ A function to add extra logic for determining whether the link is active. This s
 
 ```jsx
 // only consider an event active if its event id is an odd number
-const oddEvent = (match, location) => {
+const oddEvent = (match, currentLocation, toLocation) => {
   if (!match) {
-    return false
+    return false;
   }
-  const eventID = parseInt(match.params.eventID)
-  return !isNaN(eventID) && eventID % 2 === 1
-}
+  const eventID = parseInt(match.params.eventID);
+  return !isNaN(eventID) && eventID % 2 === 1;
+};
 
-<NavLink
-  to="/events/123"
-  isActive={oddEvent}
->Event 123</NavLink>
+<NavLink to="/events/123" isActive={oddEvent}>
+  Event 123
+</NavLink>;
 ```
 
 ## location: object

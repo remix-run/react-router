@@ -45,7 +45,7 @@ function NavLink({
           ? matchPath(pathToMatch, { path: escapedPath, exact, strict })
           : null;
         const isActive = !!(isActiveProp
-          ? isActiveProp(match, context.location)
+          ? isActiveProp(match, context.location, toLocation)
           : match);
 
         const className = isActive
