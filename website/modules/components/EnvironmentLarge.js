@@ -8,20 +8,16 @@ import EnvironmentHeader from "./EnvironmentHeader";
 import Example from "./Example";
 import Guide from "./Guide";
 import API from "./API";
-import HooksTourAd from "./HooksTourAd";
 
 function EnvironmentLarge({ data, match }) {
-  useEffect(
-    () => {
-      data.examples.forEach(example => {
-        // native doesn't have `load`
-        if (example.load) example.load(() => {});
-        // all have `loadSource`
-        if (example.loadSource) example.loadSource(() => {});
-      });
-    },
-    [data]
-  );
+  useEffect(() => {
+    data.examples.forEach(example => {
+      // native doesn't have `load`
+      if (example.load) example.load(() => {});
+      // all have `loadSource`
+      if (example.loadSource) example.loadSource(() => {});
+    });
+  }, [data]);
 
   return (
     <Fragment>
@@ -94,24 +90,21 @@ NavLink.propTypes = {
 function NavLinks({ data, environment }) {
   return (
     <Block lineHeight="1.8" padding="10px">
-      <HooksTourAd />
-
-      {Array.isArray(data.examples) &&
-        data.examples.length > 0 && (
-          <Block>
-            <Title>Examples</Title>
-            <Block paddingLeft="10px">
-              {data.examples.map((item, i) => (
-                <NavLink
-                  key={i}
-                  to={`/${environment}/example/${item.slug}`}
-                  triangleColor="rgb(45, 45, 45)"
-                  children={item.label}
-                />
-              ))}
-            </Block>
+      {Array.isArray(data.examples) && data.examples.length > 0 && (
+        <Block>
+          <Title>Examples</Title>
+          <Block paddingLeft="10px">
+            {data.examples.map((item, i) => (
+              <NavLink
+                key={i}
+                to={`/${environment}/example/${item.slug}`}
+                triangleColor="rgb(45, 45, 45)"
+                children={item.label}
+              />
+            ))}
           </Block>
-        )}
+        </Block>
+      )}
 
       <Title>Guides</Title>
       <Block paddingLeft="10px">

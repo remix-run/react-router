@@ -2,9 +2,8 @@ import React from "react";
 import { Link, Route } from "react-router-dom";
 import { Block, Row, Inline, Col } from "jsxstyle";
 import PropTypes from "prop-types";
-import Media from "react-media";
 
-import { LIGHT_GRAY, RED, SMALL_SCREEN } from "../Theme";
+import { LIGHT_GRAY, RED } from "../Theme";
 import Logo from "./Logo";
 
 function Tab({ to, ...rest }) {
@@ -83,24 +82,6 @@ function Branding() {
 function EnvironmentHeader() {
   return (
     <Block>
-      <Media query={SMALL_SCREEN}>
-        <Block
-          padding="1px"
-          backgroundColor={RED}
-          textAlign="center"
-          color="#fff"
-        >
-          <p>
-            <a
-              href="https://reacttraining.com"
-              style={{ textDecoration: "underline" }}
-            >
-              Attend a React Workshop
-            </a>{" "}
-            in a city near you this Spring!
-          </p>
-        </Block>
-      </Media>
       <Branding />
       <Tabs />
     </Block>
