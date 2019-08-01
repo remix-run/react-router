@@ -10,14 +10,17 @@ import Guide from "./Guide";
 import API from "./API";
 
 function EnvironmentLarge({ data, match }) {
-  useEffect(() => {
-    data.examples.forEach(example => {
-      // native doesn't have `load`
-      if (example.load) example.load(() => {});
-      // all have `loadSource`
-      if (example.loadSource) example.loadSource(() => {});
-    });
-  }, [data]);
+  useEffect(
+    () => {
+      data.examples.forEach(example => {
+        // native doesn't have `load`
+        if (example.load) example.load(() => {});
+        // all have `loadSource`
+        if (example.loadSource) example.loadSource(() => {});
+      });
+    },
+    [data]
+  );
 
   return (
     <Fragment>
@@ -90,21 +93,37 @@ NavLink.propTypes = {
 function NavLinks({ data, environment }) {
   return (
     <Block lineHeight="1.8" padding="10px">
-      {Array.isArray(data.examples) && data.examples.length > 0 && (
-        <Block>
-          <Title>Examples</Title>
-          <Block paddingLeft="10px">
-            {data.examples.map((item, i) => (
-              <NavLink
-                key={i}
-                to={`/${environment}/example/${item.slug}`}
-                triangleColor="rgb(45, 45, 45)"
-                children={item.label}
-              />
-            ))}
+      <Block>
+        <Title>Announcements</Title>
+        <Block paddingLeft="10px">
+          <Block
+            component={Link}
+            hoverTextDecoration="underline"
+            color="black"
+            props={{
+              href: "https://reacttraining.com/blog/reach-react-router-future/"
+            }}
+          >
+            The Future of React Router
           </Block>
         </Block>
-      )}
+      </Block>
+      {Array.isArray(data.examples) &&
+        data.examples.length > 0 && (
+          <Block>
+            <Title>Examples</Title>
+            <Block paddingLeft="10px">
+              {data.examples.map((item, i) => (
+                <NavLink
+                  key={i}
+                  to={`/${environment}/example/${item.slug}`}
+                  triangleColor="rgb(45, 45, 45)"
+                  children={item.label}
+                />
+              ))}
+            </Block>
+          </Block>
+        )}
 
       <Title>Guides</Title>
       <Block paddingLeft="10px">
