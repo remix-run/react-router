@@ -97,7 +97,7 @@ function NavLinks({ data, environment }) {
         <Title>Announcements</Title>
         <Block paddingLeft="10px">
           <Block
-            component={Link}
+            component="a"
             hoverTextDecoration="underline"
             color="black"
             props={{
