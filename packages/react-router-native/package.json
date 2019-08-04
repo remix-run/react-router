@@ -11,6 +11,7 @@
   "main": "main.js",
   "sideEffects": false,
   "scripts": {
+    "lint": "eslint *.js",
     "start": "node node_modules/react-native/local-cli/cli.js start",
     "test": "jest"
   },
@@ -32,7 +33,11 @@
     "react-router": "5.0.1"
   },
   "devDependencies": {
+    "babel-eslint": "^10.0.2",
     "babel-jest": "^24.8.0",
+    "eslint": "^6.1.0",
+    "eslint-plugin-import": "^2.18.2",
+    "eslint-plugin-react": "^7.14.3",
     "jest": "^24.8.0",
     "jest-circus": "^24.8.0",
     "metro-react-native-babel-preset": "^0.53.1",
