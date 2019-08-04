@@ -15,6 +15,14 @@ const cwd = process.cwd();
 ].forEach(packageName => {
   process.chdir(path.resolve(__dirname, "../packages/" + packageName));
   exec("npm test");
+});
+
+[
+  "react-router",
+  "react-router-dom",
+  "react-router-config"
+].forEach(packageName => {
+  process.chdir(path.resolve(__dirname, "../packages/" + packageName));
   exec("npm run lint");
 });
 
