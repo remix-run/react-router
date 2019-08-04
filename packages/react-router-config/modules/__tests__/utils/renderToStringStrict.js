@@ -7,4 +7,4 @@ function renderToStringStrict(element) {
   return ReactDOMServer.renderToString(<StrictMode>{element}</StrictMode>);
 }
 
-module.exports = renderToStringStrict;
+export default renderToStringStrict;
