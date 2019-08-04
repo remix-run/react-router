@@ -15,6 +15,7 @@ const cwd = process.cwd();
 ].forEach(packageName => {
   process.chdir(path.resolve(__dirname, "../packages/" + packageName));
   exec("npm test");
+  exec("npm run lint");
 });
 
 process.chdir(cwd);
