@@ -31,7 +31,6 @@ function NavLink({
         invariant(context, "You should not use <NavLink> outside a <Router>");
 
         const currentLocation = locationProp || context.location;
-        const { pathname: pathToMatch } = currentLocation;
         const toLocation = normalizeToLocation(
           resolveToLocation(to, currentLocation),
           currentLocation
@@ -42,10 +41,10 @@ function NavLink({
           path && path.replace(/([.+*?=^!:${}()[\]|/\\])/g, "\\$1");
 
         const match = escapedPath
-          ? matchPath(pathToMatch, { path: escapedPath, exact, strict })
+          ? matchPath(currentLocation.pathname, { path: escapedPath, exact, strict })
           : null;
         const isActive = !!(isActiveProp
-          ? isActiveProp(match, context.location)
+          ? isActiveProp(match, currentLocation)
           : match);
 
         const className = isActive

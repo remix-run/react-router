@@ -487,6 +487,21 @@ describe("A <NavLink>", () => {
       expect(a.className).toContain("active");
     });
 
+    it("overrides the current location for isActive", () => {
+      renderStrict(
+        <MemoryRouter initialEntries={["/pizza"]}>
+          <NavLink to="/pasta" isActive={(_, location) => location.pathname === '/pasta'} location={{ pathname: "/pasta" }}>
+            Pasta!
+          </NavLink>
+        </MemoryRouter>,
+        node
+      );
+
+      const a = node.querySelector("a");
+
+      expect(a.className).toContain("active");
+    });
+
     it("is passed as an argument to function `to` prop", () => {
       renderStrict(
         <MemoryRouter initialEntries={["/pizza"]}>
