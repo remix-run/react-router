@@ -11,7 +11,7 @@
   "main": "main.js",
   "sideEffects": false,
   "scripts": {
-    "lint": "eslint *.js",
+    "lint": "eslint main.js",
     "start": "node node_modules/react-native/local-cli/cli.js start",
     "test": "jest"
   },
