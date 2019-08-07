@@ -4,6 +4,7 @@
   "scripts": {
     "build": "node ./scripts/build.js",
     "clean": "git clean -fdX .",
+    "lint": "node ./scripts/lint.js",
     "postinstall": "node ./scripts/postinstall.js",
     "start": "node ./scripts/start.js",
     "test": "node ./scripts/test.js"
