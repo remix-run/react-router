@@ -15,7 +15,7 @@ function makeContextName(name) {
   return `@@contextSubscriber/${name}`
 }
 
-const prefixUnsafeLicycleMethods = parseFloat(React.version) >= 16.3
+const prefixUnsafeLifeycleMethods = parseFloat(React.version) >= 16.3
 
 export function ContextProvider(name) {
   const contextName = makeContextName(name)
@@ -23,7 +23,7 @@ export function ContextProvider(name) {
   const eventIndexKey = `${contextName}/eventIndex`
   const subscribeKey = `${contextName}/subscribe`
 
-  return {
+  const config = {
     childContextTypes: {
       [contextName]: contextProviderShape.isRequired
     },
@@ -37,12 +37,12 @@ export function ContextProvider(name) {
       }
     },
 
-    [`${prefixUnsafeLicycleMethods && 'UNSAFE_'}componentWillMount`]() {
+    componentWillMount() {
       this[listenersKey] = []
       this[eventIndexKey] = 0
     },
 
-    [`${prefixUnsafeLicycleMethods && 'UNSAFE_'}componentWillReceiveProps`]() {
+    componentWillReceiveProps() {
       this[eventIndexKey]++
     },
 
@@ -63,6 +63,14 @@ export function ContextProvider(name) {
       }
     }
   }
+
+  if (prefixUnsafeLifeycleMethods) {
+    config.UNSAFE_componentWillMount = config.componentWillMount
+    config.UNSAFE_componentWillReceiveProps = config.componentWillReceiveProps
+    delete config.componentWillMount
+    delete config.componentWillReceiveProps
+  }
+  return config
 }
 
 export function ContextSubscriber(name) {
@@ -71,7 +79,7 @@ export function ContextSubscriber(name) {
   const handleContextUpdateKey = `${contextName}/handleContextUpdate`
   const unsubscribeKey = `${contextName}/unsubscribe`
 
-  return {
+  const config = {
     contextTypes: {
       [contextName]: contextProviderShape
     },
@@ -96,7 +104,7 @@ export function ContextSubscriber(name) {
       )
     },
 
-    [`${prefixUnsafeLicycleMethods && 'UNSAFE_'}componentWillReceiveProps`]() {
+    componentWillReceiveProps() {
       if (!this.context[contextName]) {
         return
       }
@@ -121,4 +129,10 @@ export function ContextSubscriber(name) {
       }
     }
   }
+
+  if (prefixUnsafeLifeycleMethods) {
+    config.UNSAFE_componentWillReceiveProps = config.componentWillReceiveProps
+    delete config.componentWillReceiveProps
+  }
+  return config
 }

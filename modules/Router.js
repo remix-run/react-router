@@ -23,7 +23,7 @@ const propTypes = {
   matchContext: object
 }
 
-const prefixUnsafeLicycleMethods = parseFloat(React.version) >= 16.3
+const prefixUnsafeLifeycleMethods = parseFloat(React.version) >= 16.3
 
 /**
  * A <Router> is a high-level API for automatically setting up
@@ -93,7 +93,8 @@ const Router = createReactClass({
     )
   },
 
-  [`${prefixUnsafeLicycleMethods && 'UNSAFE_'}componentWillMount`]() {
+  // this method will be updated to UNSAFE_componentWillMount below if supported
+  componentWillMount() {
     this.transitionManager = this.createTransitionManager()
     this.router = this.createRouterObject(this.state)
 
@@ -109,8 +110,9 @@ const Router = createReactClass({
     })
   },
 
+  // this method will be updated to UNSAFE_componentWillReceiveProps below if supported
   /* istanbul ignore next: sanity check */
-  [`${prefixUnsafeLicycleMethods && 'UNSAFE_'}componentWillReceiveProps`](nextProps) {
+  componentWillReceiveProps(nextProps) {
     warning(
       nextProps.history === this.props.history,
       'You cannot change <Router history>; it will be ignored'
@@ -151,5 +153,12 @@ const Router = createReactClass({
   }
 
 })
+
+if (prefixUnsafeLifeycleMethods) {
+  Router.prototype.UNSAFE_componentWillReceiveProps = Router.prototype.componentWillReceiveProps
+  Router.prototype.UNSAFE_componentWillMount = Router.prototype.componentWillMount
+  delete Router.prototype.componentWillReceiveProps
+  delete Router.prototype.componentWillMount
+}
 
 export default Router
