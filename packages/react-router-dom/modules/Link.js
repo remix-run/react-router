@@ -9,7 +9,7 @@ function isModifiedEvent(event) {
 }
 
 function LinkAnchor({ innerRef, navigate, onClick, ...rest }) {
-  const { target } = rest;
+  const { target, href } = rest;
 
   return (
     <a
@@ -17,7 +17,7 @@ function LinkAnchor({ innerRef, navigate, onClick, ...rest }) {
       ref={innerRef} // TODO: Use forwardRef instead
       onClick={event => {
         try {
-          if (onClick) onClick(event);
+          if (href && onClick) onClick(event);
         } catch (ex) {
           event.preventDefault();
           throw ex;
@@ -47,18 +47,22 @@ function Link({ component = LinkAnchor, replace, to, ...rest }) {
         invariant(context, "You should not use <Link> outside a <Router>");
 
         const { history } = context;
+    
+        let href;
+        if (to) {
+          const location = normalizeToLocation(
+            resolveToLocation(to, context.location),
+            context.location
+          );
 
-        const location = normalizeToLocation(
-          resolveToLocation(to, context.location),
-          context.location
-        );
-
-        const href = location ? history.createHref(location) : "";
+          href = location ? history.createHref(location) : "";
+        }
 
         return React.createElement(component, {
           ...rest,
           href,
           navigate() {
+            if (!to) return;
             const location = resolveToLocation(to, context.location);
             const method = replace ? history.replace : history.push;
 
@@ -87,7 +91,7 @@ if (__DEV__) {
     onClick: PropTypes.func,
     replace: PropTypes.bool,
     target: PropTypes.string,
-    to: toType.isRequired
+    to: toType
   };
 }
 
