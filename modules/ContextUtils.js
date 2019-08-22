@@ -1,3 +1,4 @@
+import React from 'react'
 import PropTypes from 'prop-types'
 
 // Works around issues with context updates failing to propagate.
@@ -13,6 +14,8 @@ const contextProviderShape = PropTypes.shape({
 function makeContextName(name) {
   return `@@contextSubscriber/${name}`
 }
+
+const prefixUnsafeLicycleMethods = parseFloat(React.version) >= 16.3
 
 export function ContextProvider(name) {
   const contextName = makeContextName(name)
@@ -34,12 +37,12 @@ export function ContextProvider(name) {
       }
     },
 
-    componentWillMount() {
+    [`${prefixUnsafeLicycleMethods && 'UNSAFE_'}componentWillMount`]() {
       this[listenersKey] = []
       this[eventIndexKey] = 0
     },
 
-    componentWillReceiveProps() {
+    [`${prefixUnsafeLicycleMethods && 'UNSAFE_'}componentWillReceiveProps`]() {
       this[eventIndexKey]++
     },
 
@@ -93,7 +96,7 @@ export function ContextSubscriber(name) {
       )
     },
 
-    componentWillReceiveProps() {
+    [`${prefixUnsafeLicycleMethods && 'UNSAFE_'}componentWillReceiveProps`]() {
       if (!this.context[contextName]) {
         return
       }

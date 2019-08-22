@@ -23,6 +23,8 @@ const propTypes = {
   matchContext: object
 }
 
+const prefixUnsafeLicycleMethods = parseFloat(React.version) >= 16.3
+
 /**
  * A <Router> is a high-level API for automatically setting up
  * a router that renders a <RouterContext> with all the props
@@ -91,7 +93,7 @@ const Router = createReactClass({
     )
   },
 
-  componentWillMount() {
+  [`${prefixUnsafeLicycleMethods && 'UNSAFE_'}componentWillMount`]() {
     this.transitionManager = this.createTransitionManager()
     this.router = this.createRouterObject(this.state)
 
@@ -108,7 +110,7 @@ const Router = createReactClass({
   },
 
   /* istanbul ignore next: sanity check */
-  componentWillReceiveProps(nextProps) {
+  [`${prefixUnsafeLicycleMethods && 'UNSAFE_'}componentWillReceiveProps`](nextProps) {
     warning(
       nextProps.history === this.props.history,
       'You cannot change <Router history>; it will be ignored'
