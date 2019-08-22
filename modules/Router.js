@@ -93,7 +93,7 @@ const Router = createReactClass({
     )
   },
 
-  // this method will be updated to UNSAFE_componentWillMount below if supported
+  // this method will be updated to UNSAFE_componentWillMount below for React versions >= 16.3
   componentWillMount() {
     this.transitionManager = this.createTransitionManager()
     this.router = this.createRouterObject(this.state)
@@ -110,7 +110,7 @@ const Router = createReactClass({
     })
   },
 
-  // this method will be updated to UNSAFE_componentWillReceiveProps below if supported
+  // this method will be updated to UNSAFE_componentWillReceiveProps below for React versions >= 16.3
   /* istanbul ignore next: sanity check */
   componentWillReceiveProps(nextProps) {
     warning(

@@ -37,11 +37,13 @@ export function ContextProvider(name) {
       }
     },
 
+    // this method will be updated to UNSAFE_componentWillMount below for React versions >= 16.3
     componentWillMount() {
       this[listenersKey] = []
       this[eventIndexKey] = 0
     },
 
+    // this method will be updated to UNSAFE_componentWillReceiveProps below for React versions >= 16.3
     componentWillReceiveProps() {
       this[eventIndexKey]++
     },
@@ -104,6 +106,7 @@ export function ContextSubscriber(name) {
       )
     },
 
+    // this method will be updated to UNSAFE_componentWillReceiveProps below for React versions >= 16.3
     componentWillReceiveProps() {
       if (!this.context[contextName]) {
         return
