@@ -32,7 +32,7 @@ describe('When a router enters a branch', function () {
     }
 
     class NewsFeed extends Component {
-      componentWillMount() {
+      UNSAFE_componentWillMount() {
         removeNewsLeaveHook = this.context.router.setRouteLeaveHook(
           this.props.route,
           () => newsLeaveHookSpy() // Break reference equality.
@@ -61,7 +61,7 @@ describe('When a router enters a branch', function () {
     }
 
     class User extends Component {
-      componentWillMount() {
+      UNSAFE_componentWillMount() {
         this.context.router.setRouteLeaveHook(
           this.props.route,
           userLeaveHookSpy
