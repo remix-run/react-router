@@ -1,3 +1,4 @@
+import React from 'react'
 import PropTypes from 'prop-types'
 
 // Works around issues with context updates failing to propagate.
@@ -14,13 +15,15 @@ function makeContextName(name) {
   return `@@contextSubscriber/${name}`
 }
 
+const prefixUnsafeLifecycleMethods = parseFloat(React.version) >= 16.3
+
 export function ContextProvider(name) {
   const contextName = makeContextName(name)
   const listenersKey = `${contextName}/listeners`
   const eventIndexKey = `${contextName}/eventIndex`
   const subscribeKey = `${contextName}/subscribe`
 
-  return {
+  const config = {
     childContextTypes: {
       [contextName]: contextProviderShape.isRequired
     },
@@ -34,11 +37,13 @@ export function ContextProvider(name) {
       }
     },
 
+    // this method will be updated to UNSAFE_componentWillMount below for React versions >= 16.3
     componentWillMount() {
       this[listenersKey] = []
       this[eventIndexKey] = 0
     },
 
+    // this method will be updated to UNSAFE_componentWillReceiveProps below for React versions >= 16.3
     componentWillReceiveProps() {
       this[eventIndexKey]++
     },
@@ -60,6 +65,14 @@ export function ContextProvider(name) {
       }
     }
   }
+
+  if (prefixUnsafeLifecycleMethods) {
+    config.UNSAFE_componentWillMount = config.componentWillMount
+    config.UNSAFE_componentWillReceiveProps = config.componentWillReceiveProps
+    delete config.componentWillMount
+    delete config.componentWillReceiveProps
+  }
+  return config
 }
 
 export function ContextSubscriber(name) {
@@ -68,7 +81,7 @@ export function ContextSubscriber(name) {
   const handleContextUpdateKey = `${contextName}/handleContextUpdate`
   const unsubscribeKey = `${contextName}/unsubscribe`
 
-  return {
+  const config = {
     contextTypes: {
       [contextName]: contextProviderShape
     },
@@ -93,6 +106,7 @@ export function ContextSubscriber(name) {
       )
     },
 
+    // this method will be updated to UNSAFE_componentWillReceiveProps below for React versions >= 16.3
     componentWillReceiveProps() {
       if (!this.context[contextName]) {
         return
@@ -118,4 +132,10 @@ export function ContextSubscriber(name) {
       }
     }
   }
+
+  if (prefixUnsafeLifecycleMethods) {
+    config.UNSAFE_componentWillReceiveProps = config.componentWillReceiveProps
+    delete config.componentWillReceiveProps
+  }
+  return config
 }
