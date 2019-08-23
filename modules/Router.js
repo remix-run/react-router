@@ -23,7 +23,7 @@ const propTypes = {
   matchContext: object
 }
 
-const prefixUnsafeLifeycleMethods = parseFloat(React.version) >= 16.3
+const prefixUnsafeLifecycleMethods = parseFloat(React.version) >= 16.3
 
 /**
  * A <Router> is a high-level API for automatically setting up
@@ -154,7 +154,7 @@ const Router = createReactClass({
 
 })
 
-if (prefixUnsafeLifeycleMethods) {
+if (prefixUnsafeLifecycleMethods) {
   Router.prototype.UNSAFE_componentWillReceiveProps = Router.prototype.componentWillReceiveProps
   Router.prototype.UNSAFE_componentWillMount = Router.prototype.componentWillMount
   delete Router.prototype.componentWillReceiveProps

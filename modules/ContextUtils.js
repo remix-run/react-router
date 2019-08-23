@@ -15,7 +15,7 @@ function makeContextName(name) {
   return `@@contextSubscriber/${name}`
 }
 
-const prefixUnsafeLifeycleMethods = parseFloat(React.version) >= 16.3
+const prefixUnsafeLifecycleMethods = parseFloat(React.version) >= 16.3
 
 export function ContextProvider(name) {
   const contextName = makeContextName(name)
@@ -66,7 +66,7 @@ export function ContextProvider(name) {
     }
   }
 
-  if (prefixUnsafeLifeycleMethods) {
+  if (prefixUnsafeLifecycleMethods) {
     config.UNSAFE_componentWillMount = config.componentWillMount
     config.UNSAFE_componentWillReceiveProps = config.componentWillReceiveProps
     delete config.componentWillMount
@@ -133,7 +133,7 @@ export function ContextSubscriber(name) {
     }
   }
 
-  if (prefixUnsafeLifeycleMethods) {
+  if (prefixUnsafeLifecycleMethods) {
     config.UNSAFE_componentWillReceiveProps = config.componentWillReceiveProps
     delete config.componentWillReceiveProps
   }
