@@ -1,5 +1,7 @@
 Thanks for contributing, you rock!
 
+When it comes to open source, there are many different kinds of contributions that can be made, all of which are valuable. Below are a few guidelines that should help you as you prepare your contribution.
+
 - [Think You Found a Bug?](#bug)
 - [Proposing New or Changed API?](#api)
 - [Issue Not Getting Attention?](#attention)
@@ -11,7 +13,9 @@ Thanks for contributing, you rock!
 
 ## Think You Found a Bug?
 
-Please conform to the issue template and provide a clear path to reproduction with a code example. Best is a pull request with a failing test. Next is a link to CodePen/JS Bin or repository that illustrates the bug. Finally, some copy/pastable code is acceptable.
+Please conform to the issue template and provide a clear path to reproduction with a code example. Best is a pull request with a failing test. Next best is a link to CodeSandbox or repository that illustrates the bug.
+
+You may wish to use [this starter CodeSandbox](https://codesandbox.io/s/react-router-v5-starter-4g9ei) to help you get going.
 
 <a name="api"/></a>
 
@@ -19,7 +23,7 @@ Please conform to the issue template and provide a clear path to reproduction wi
 
 Please provide thoughtful comments and some sample code. Proposals without substance will be closed.
 
-It's generally a good idea to open an issue for the proposal first before working on the implementation and submitting a pull request. Please also take a look at the [timeline issue](https://github.com/ReactTraining/react-router/issues/6497) and consider ongoing work that might conflict with your proposed changes.
+It's generally a good idea to open an issue for the proposal first before working on the implementation and submitting a pull request. Please also take a look at [our current roadmap](https://github.com/ReactTraining/react-router/issues/6885) and consider ongoing work that might conflict with your proposed changes.
 
 <a name="attention"/></a>
 
@@ -47,8 +51,8 @@ All commits that change or add to the API must be done in a pull request that al
 
 The following steps will get you setup to contribute changes to this repo:
 
-1. Fork the repo (click the <kbd>Fork</kbd> button at the top right of this page).
-2. Clone your fork locally.
+1. Fork the repo (click the <kbd>Fork</kbd> button at the top right of [this page](https://github.com/ReactTraining/react-router))
+2. Clone your fork locally
 
 ```bash
 # in a terminal, cd to parent directory where you want your clone to be, then
