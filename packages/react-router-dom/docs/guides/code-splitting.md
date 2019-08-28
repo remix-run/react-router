@@ -18,7 +18,7 @@ import loadable from '@loadable/component'
 import Loading from "./Loading";
 
 const LoadableComponent = loadable(() => import('./Dashboard'), {
-  fallback: Loading,
+  fallback: <Loading />,
 })
 
 export default class LoadableDashboard extends React.Component {
