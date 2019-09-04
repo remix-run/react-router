@@ -121,7 +121,7 @@ function Topics({ match }) {
         </li>
       </ul>
 
-      <Route path={`${match.path}/:id`} component={Topic} />
+      <Route path={`${match.url}/:id`} component={Topic} />
       <Route
         exact
         path={match.path}
