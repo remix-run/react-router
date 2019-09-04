@@ -1,6 +1,7 @@
-# node.js
 node_modules/
 npm-debug.log
-
-# lerna
 lerna-debug.log
+packages/*/cjs/
+packages/*/esm/
+packages/*/umd/
+website/build/
