@@ -1,6 +1,6 @@
 language: node_js
 node_js: node
-cache: npm
+cache: yarn
 env:
 - TEST_ENV=cjs BUILD_ENV=cjs
 - TEST_ENV=umd BUILD_ENV=umd
@@ -8,13 +8,13 @@ env:
 before_script:
 # react-router ESM build is imported by react-router-dom UMD,
 # so we need to build it before building react-router-dom UMD
-- ([[ "$BUILD_ENV" != "umd" ]] || (cd packages/react-router && BUILD_ENV=esm npm run build))
-- ([[ -z "$BUILD_ENV" ]] || npm run build -- --no-website)
+- ([[ "$BUILD_ENV" != "umd" ]] || (cd packages/react-router && BUILD_ENV=esm yarn build))
+- ([[ -z "$BUILD_ENV" ]] || yarn build)
 # react-router CJS build is imported by react-router-config tests,
 # so we need to build it before running react-router-config tests
-- ([[ "$BUILD_ENV" = "cjs" ]] || (cd packages/react-router && BUILD_ENV=cjs npm run build))
+- ([[ "$BUILD_ENV" = "cjs" ]] || (cd packages/react-router && BUILD_ENV=cjs yarn build))
 script:
-- npm test
+- yarn test
 jobs:
   include:
   - stage: Release
@@ -34,7 +34,7 @@ jobs:
     env: PUBLIC_PATH=/react-router/
     # The website is built as part of the deploy script,
     # so we don't need to build it yet.
-    before_script: npm run build -- --no-website
+    before_script: yarn build
     script: echo "Deploying website to https://reacttraining.com$PUBLIC_PATH"
     before_deploy:
     - openssl aes-256-cbc -K $encrypted_70c5e56b421c_key -iv $encrypted_70c5e56b421c_iv
