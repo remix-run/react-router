@@ -135,6 +135,8 @@ it("navigates home when you click the logo", async => {
   
   // Assert about new location
   expect(window.location.pathname).toBe('/homepage');
-  expect()
+  
+  // Check correct page content showed up
+  expect(document.body.textContent).toBe('Home')
 });
 ```
