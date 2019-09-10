@@ -7,7 +7,7 @@ When it comes to open source, there are many different kinds of contributions th
 - [Issue Not Getting Attention?](#attention)
 - [Making a Pull Request?](#pr)
 - [Setup](#setup)
-- [Development](#development)
+- [Development](#dev)
 
 <a name="bug"/></a>
 
@@ -47,6 +47,8 @@ All commits that fix bugs or add features need a test.
 
 All commits that change or add to the API must be done in a pull request that also updates all relevant examples and docs.
 
+<a name="setup"/></a>
+
 ## Setup
 
 The following steps will get you setup to contribute changes to this repo:
@@ -66,6 +68,8 @@ cd react-router
 yarn install
 yarn build
 ```
+
+<a name="dev"/></a>
 
 ## Development
 
