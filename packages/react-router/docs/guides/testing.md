@@ -115,7 +115,7 @@ it("navigates home when you click the logo", async => {
   document.body.appendChild(root);
   
   // Set initial location
-  window.location.href = '/my/initial/route';
+  window.history.pushState({}, '', '/my/initial/route');
   
   // Render app
   render(
