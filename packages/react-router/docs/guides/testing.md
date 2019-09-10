@@ -5,7 +5,7 @@ test your components that use our components.
 
 ## Context
 
-If you try to unit test one of your components that renders a `<Link>` or a `<Route>`, etc. you'll get some errors and warnings about context. While you may be tempted to stub out the router context yourself, we recommend you wrap your unit test in a `<StaticRouter>` or a `<MemoryRouter>`. Check it out:
+If you try to unit test one of your components that renders a `<Link>` or a `<Route>`, etc. you'll get some errors and warnings about context. While you may be tempted to stub out the router context yourself, we recommend you wrap your unit test in a `<StaticRouter>`, `<MemoryRouter>`, or `<BrowserRouter>` (if browser globals like `window` are available in the test). Check it out:
 
 ```jsx
 class Sidebar extends Component {
@@ -66,71 +66,19 @@ test("current user is active in sidebar", () => {
 
 ## Navigating
 
-We have a lot of tests that the routes work when the location changes, so you probably don't need to test this stuff. But if you must, since everything happens in render, we do something a little clever like this:
+We have a lot of tests that the routes work when the location changes, so you probably don't need to test this stuff. But if you need to test navigation within your app, you can do so like this:
+
+> Note
+> 
+> The example assumes your test includes browser globals. This is the default in [Jest](https://jestjs.io)
+> and any other testing environment that includes [JSDOM](https://github.com/jsdom/jsdom).
 
 ```jsx
-import { render, unmountComponentAtNode } from "react-dom";
 import React from "react";
-import { Route, Link, MemoryRouter } from "react-router-dom";
-import { Simulate } from "react-addons-test-utils";
-
-// a way to render any part of your app inside a MemoryRouter
-// you pass it a list of steps to execute when the location
-// changes, it will call back to you with stuff like
-// `match` and `location`, and `history` so you can control
-// the flow and make assertions.
-const renderTestSequence = ({
-  initialEntries,
-  initialIndex,
-  subject: Subject,
-  steps
-}) => {
-  const div = document.createElement("div");
-
-  class Assert extends React.Component {
-    componentDidMount() {
-      this.assert();
-    }
-
-    componentDidUpdate() {
-      this.assert();
-    }
-
-    assert() {
-      const nextStep = steps.shift();
-      if (nextStep) {
-        nextStep({ ...this.props, div });
-      } else {
-        unmountComponentAtNode(div);
-      }
-    }
-
-    render() {
-      return this.props.children;
-    }
-  }
-
-  class Test extends React.Component {
-    render() {
-      return (
-        <MemoryRouter
-          initialIndex={initialIndex}
-          initialEntries={initialEntries}
-        >
-          <Route
-            render={props => (
-              <Assert {...props}>
-                <Subject />
-              </Assert>
-            )}
-          />
-        </MemoryRouter>
-      );
-    }
-  }
-
-  render(<Test />, div);
-};
+import { Route, Link, BrowserRouter } from "react-router-dom";
+// you can also use a renderer like "@testing-library/react" or "enzyme/mount" here
+import { render, unmountComponentAtNode } from "react-dom";
+import { act } from 'react-dom/test-utils';
 
 // our Subject, the App, but you can test any sub
 // section of your app too
@@ -160,41 +108,33 @@ const App = () => (
 );
 
 // the actual test!
-it("navigates around", done => {
-  renderTestSequence({
-    // tell it the subject you're testing
-    subject: App,
-
-    // and the steps to execute each time the location changes
-    steps: [
-      // initial render
-      ({ history, div }) => {
-        // assert the screen says what we think it should
-        console.assert(div.innerHTML.match(/Welcome/));
-
-        // now we can imperatively navigate as the test
-        history.push("/dashboard");
-      },
-
-      // second render from new location
-      ({ div }) => {
-        console.assert(div.innerHTML.match(/Dashboard/));
-
-        // or we can simulate clicks on Links instead of
-        // using history.push
-        Simulate.click(div.querySelector("#click-me"), {
-          button: 0
-        });
-      },
-
-      // final render
-      ({ location }) => {
-        console.assert(location.pathname === "/");
-        // you'll want something like `done()` so your test
-        // fails if you never make it here.
-        done();
-      }
-    ]
+it("navigates home when you click the logo", async => {
+  // in a real test a renderer like "@testing-library/react"
+  // would take care of setting up the DOM elements
+  const root = document.createElement('div')
+  document.body.appendChild(root);
+  
+  // Set initial location
+  window.location.href = '/my/initial/route';
+  
+  // Render app
+  render(
+    <BrowserRouter>
+      <App />
+    <BrowserRouter>,
+    root
+  )
+  
+  // Interact with page
+  act(() => {
+    // Find the link (perhaps using the text content)
+    const goHomeLink = document.querySelector('#nav-logo-home');
+    // Click it
+    goHomeLink.dispatchEvent(new MouseEvent("click", { bubbles: true }));
   });
+  
+  // Assert about new location
+  expect(window.location.pathname).toBe('/homepage');
+  expect()
 });
 ```
