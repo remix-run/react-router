@@ -6,7 +6,7 @@ even where it was. It looks like this:
 ```js
 {
   key: 'ac3df4', // not with HashHistory!
-  pathname: '/somewhere'
+  pathname: '/somewhere',
   search: '?some=search-string',
   hash: '#howdy',
   state: {
