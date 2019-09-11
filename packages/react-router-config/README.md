@@ -136,21 +136,32 @@ loadBranchData(req.url).then(data => {
 // THIS IS JUST SOME THEORETICAL PSEUDO CODE :)
 class PendingNavDataLoader extends Component {
   state = {
-    previousLocation: null
+    previousLocation: null,
+    currentLocation: this.props.location
   }
 
-  componentWillReceiveProps(nextProps) {
-    const navigated = nextProps.location !== this.props.location
-    const { routes } = this.props
+  static getDerivedStateFromProps(props, state) {
+    const currentLocation = props.location
+    const previousLocation = state.currentLocation
 
+    const navigated = currentLocation !== previousLocation
     if (navigated) {
       // save the location so we can render the old screen
-      this.setState({
-        previousLocation: this.props.location
-      })
+      return {
+        previousLocation,
+        currentLocation
+      }
+    }
 
+    return null
+  }
+
+  componentDidUpdate(prevProps) {
+    const navigated = prevProps.location !== this.props.location
+
+    if (navigated) {
       // load data while the old screen remains
-      loadNextData(routes, nextProps.location).then((data) => {
+      loadNextData(routes, this.props.location).then(data => {
         putTheDataSomewhereRoutesCanFindIt(data)
         // clear previousLocation so the next screen renders
         this.setState({
