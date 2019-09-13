@@ -52,7 +52,7 @@ When `true`, redirecting will push a new entry onto the history instead of repla
 A pathname to redirect from. Any valid URL path that [`path-to-regexp@^1.7.0`](https://github.com/pillarjs/path-to-regexp/tree/v1.7.0) understands.
 All matched URL parameters are provided to the pattern in `to`. Must contain all parameters that are used in `to`. Additional parameters not used by `to` are ignored.
 
-This can only be used to match a location when rendering a `<Redirect>` inside of a `<Switch>`. See [`<Switch children>`](./Switch.md#children-node) for more details.
+**Note:** This can only be used to match a location when rendering a `<Redirect>` inside of a `<Switch>`. See [`<Switch children>`](./Switch.md#children-node) for more details.
 
 ```jsx
 <Switch>
@@ -71,9 +71,28 @@ This can only be used to match a location when rendering a `<Redirect>` inside o
 
 Match `from` exactly; equivalent to [Route.exact](./Route.md#exact-bool).
 
+**Note:** This can only be used in conjunction with `from` to exactly match a location when rendering a `<Redirect>` inside of a `<Switch>`. See [`<Switch children>`](./Switch.md#children-node) for more details.
+```jsx
+<Switch>
+  <Redirect exact from='/' to='/home'/>
+  <Route path='/home' component={Home}/>
+  <Route path='/about' component={About}/>
+</Switch>
+```
+
 ## strict: bool
 
 Match `from` strictly; equivalent to [Route.strict](./Route.md#strict-bool).
+
+**Note:** This can only be used in conjunction with `from` to strictly match a location when rendering a `<Redirect>` inside of a `<Switch>`. See [`<Switch children>`](./Switch.md#children-node) for more details.
+```jsx
+<Switch>
+  <Redirect strict from='/one/' to='/home'/>
+  <Route path='/home' component={Home}/>
+  <Route path='/about' component={About}/>
+</Switch>
+```
+
 
 ## sensitive: bool
 
