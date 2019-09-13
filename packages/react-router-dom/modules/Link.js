@@ -4,71 +4,89 @@ import PropTypes from "prop-types";
 import invariant from "tiny-invariant";
 import { resolveToLocation, normalizeToLocation } from "./utils/locationUtils";
 
+// React 15 compat
+let { forwardRef } = React;
+if (typeof forwardRef === "undefined") {
+  forwardRef = C => C;
+}
+
 function isModifiedEvent(event) {
   return !!(event.metaKey || event.altKey || event.ctrlKey || event.shiftKey);
 }
 
-function LinkAnchor({ innerRef, navigate, onClick, ...rest }) {
-  const { target } = rest;
+const LinkAnchor = forwardRef(
+  ({ innerRef, navigate, onClick, ...rest }, forwardedRef) => {
+    const { target } = rest;
 
-  return (
-    <a
-      {...rest}
-      ref={innerRef} // TODO: Use forwardRef instead
-      onClick={event => {
-        try {
-          if (onClick) onClick(event);
-        } catch (ex) {
-          event.preventDefault();
-          throw ex;
-        }
+    return (
+      <a
+        {...rest}
+        ref={forwardedRef || innerRef}
+        onClick={event => {
+          try {
+            if (onClick) onClick(event);
+          } catch (ex) {
+            event.preventDefault();
+            throw ex;
+          }
 
-        if (
-          !event.defaultPrevented && // onClick prevented default
-          event.button === 0 && // ignore everything but left clicks
-          (!target || target === "_self") && // let browser handle "target=_blank" etc.
-          !isModifiedEvent(event) // ignore clicks with modifier keys
-        ) {
-          event.preventDefault();
-          navigate();
-        }
-      }}
-    />
-  );
+          if (
+            !event.defaultPrevented && // onClick prevented default
+            event.button === 0 && // ignore everything but left clicks
+            (!target || target === "_self") && // let browser handle "target=_blank" etc.
+            !isModifiedEvent(event) // ignore clicks with modifier keys
+          ) {
+            event.preventDefault();
+            navigate();
+          }
+        }}
+      />
+    );
+  }
+);
+
+if (__DEV__) {
+  LinkAnchor.displayName = "LinkAnchor";
 }
 
 /**
  * The public API for rendering a history-aware <a>.
  */
-function Link({ component = LinkAnchor, replace, to, ...rest }) {
-  return (
-    <RouterContext.Consumer>
-      {context => {
-        invariant(context, "You should not use <Link> outside a <Router>");
+const Link = forwardRef(
+  (
+    { component = LinkAnchor, replace, to, innerRef, ...rest },
+    forwardedRef
+  ) => {
+    return (
+      <RouterContext.Consumer>
+        {context => {
+          invariant(context, "You should not use <Link> outside a <Router>");
 
-        const { history } = context;
+          const { history } = context;
 
-        const location = normalizeToLocation(
-          resolveToLocation(to, context.location),
-          context.location
-        );
+          const location = normalizeToLocation(
+            resolveToLocation(to, context.location),
+            context.location
+          );
 
-        const href = location ? history.createHref(location) : "";
+          const href = location ? history.createHref(location) : "";
 
-        return React.createElement(component, {
-          ...rest,
-          href,
-          navigate() {
-            const location = resolveToLocation(to, context.location);
-            const method = replace ? history.replace : history.push;
+          return React.createElement(component, {
+            ...rest,
+            ref: forwardedRef || innerRef,
+            href,
+            navigate() {
+              const location = resolveToLocation(to, context.location);
+              const method = replace ? history.replace : history.push;
 
-            method(location);
-          }
-        });
-      }}
-    </RouterContext.Consumer>
-  );
-}
+              method(location);
+            }
+          });
+        }}
+      </RouterContext.Consumer>
+    );
+  }
+);
 
 if (__DEV__) {
   const toType = PropTypes.oneOfType([
@@ -81,6 +99,8 @@ if (__DEV__) {
     PropTypes.func,
     PropTypes.shape({ current: PropTypes.any })
   ]);
+
+  Link.displayName = "Link";
 
   Link.propTypes = {
     innerRef: refType,

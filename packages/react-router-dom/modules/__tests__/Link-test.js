@@ -107,7 +107,26 @@ describe("A <Link>", () => {
     });
   });
 
-  it("exposes its ref via an innerRef callbar prop", () => {
+  it("forwards a ref", () => {
+    let refNode;
+    function refCallback(n) {
+      refNode = n;
+    }
+
+    renderStrict(
+      <MemoryRouter>
+        <Link to="/" ref={refCallback}>
+          link
+        </Link>
+      </MemoryRouter>,
+      node
+    );
+
+    expect(refNode).not.toBe(undefined);
+    expect(refNode.tagName).toEqual("A");
+  });
+
+  it("exposes its ref via an innerRef callback prop", () => {
     let refNode;
     function refCallback(n) {
       refNode = n;
@@ -116,6 +135,31 @@ describe("A <Link>", () => {
     renderStrict(
       <MemoryRouter>
         <Link to="/" innerRef={refCallback}>
+          link
+        </Link>
+      </MemoryRouter>,
+      node
+    );
+
+    expect(refNode).not.toBe(undefined);
+    expect(refNode.tagName).toEqual("A");
+  });
+
+  it("prefers forwardRef over innerRef", () => {
+    let refNode;
+    function refCallback(n) {
+      refNode = n;
+    }
+
+    renderStrict(
+      <MemoryRouter>
+        <Link
+          to="/"
+          ref={refCallback}
+          innerRef={() => {
+            throw new Error("wrong ref, champ");
+          }}
+        >
           link
         </Link>
       </MemoryRouter>,
