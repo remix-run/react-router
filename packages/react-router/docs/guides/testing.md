@@ -74,6 +74,7 @@ We have a lot of tests that the routes work when the location changes, so you pr
 > and any other testing environment that includes [JSDOM](https://github.com/jsdom/jsdom).
 
 ```jsx
+// app.js (a component file)
 import React from "react";
 import { Route, Link, BrowserRouter } from "react-router-dom";
 // you can also use a renderer like "@testing-library/react" or "enzyme/mount" here
@@ -106,8 +107,10 @@ const App = () => (
     />
   </div>
 );
+```
 
-// the actual test!
+```jsx
+// app.test.js
 it("navigates home when you click the logo", async => {
   // in a real test a renderer like "@testing-library/react"
   // would take care of setting up the DOM elements
@@ -140,3 +143,7 @@ it("navigates home when you click the logo", async => {
   expect(document.body.textContent).toBe('Home')
 });
 ```
+
+## React Testing Library
+
+See an example in the official documentation: [Testing React Router with React Testing Library](https://testing-library.com/docs/example-react-router)
