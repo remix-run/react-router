@@ -11,6 +11,19 @@ function isEmptyChildren(children) {
   return React.Children.count(children) === 0;
 }
 
+function evalChildrenDev(children, props, path) {
+  const value = children(props);
+
+  warning(
+    value !== undefined,
+    "You returned `undefined` from the `children` function of " +
+      `<Route${path ? ` path="${path}"` : ""}>, but you ` +
+      "should have returned a React element or `null`"
+  );
+
+  return value || null;
+}
+
 /**
  * The public API for matching a single path and rendering.
  */
@@ -25,8 +38,8 @@ class Route extends React.Component {
           const match = this.props.computedMatch
             ? this.props.computedMatch // <Switch> already computed the match for us
             : this.props.path
-              ? matchPath(location.pathname, this.props)
-              : context.match;
+            ? matchPath(location.pathname, this.props)
+            : context.match;
 
           const props = { ...context, location, match };
 
@@ -38,36 +51,25 @@ class Route extends React.Component {
             children = null;
           }
 
-          if (typeof children === "function") {
-            children = children(props);
-
-            if (children === undefined) {
-              if (__DEV__) {
-                const { path } = this.props;
-
-                warning(
-                  false,
-                  "You returned `undefined` from the `children` function of " +
-                    `<Route${path ? ` path="${path}"` : ""}>, but you ` +
-                    "should have returned a React element or `null`"
-                );
-              }
-
-              children = null;
-            }
-          }
-
           return (
             <RouterContext.Provider value={props}>
-              {children && !isEmptyChildren(children)
+              {props.match
                 ? children
-                : props.match
-                  ? component
-                    ? React.createElement(component, props)
-                    : render
-                      ? render(props)
-                      : null
-                  : null}
+                  ? typeof children === "function"
+                    ? __DEV__
+                      ? evalChildrenDev(children, props, this.props.path)
+                      : children(props)
+                    : children
+                  : component
+                  ? React.createElement(component, props)
+                  : render
+                  ? render(props)
+                  : null
+                : typeof children === "function"
+                ? __DEV__
+                  ? evalChildrenDev(children, props, this.props.path)
+                  : children(props)
+                : null}
             </RouterContext.Provider>
           );
         }}

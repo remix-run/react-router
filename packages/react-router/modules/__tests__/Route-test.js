@@ -22,43 +22,133 @@ describe("A <Route>", () => {
     });
   });
 
-  it("renders when it matches", () => {
-    const text = "cupcakes";
+  describe("with a child element", () => {
+    it("renders when it matches", () => {
+      const text = "cupcakes";
 
-    renderStrict(
-      <MemoryRouter initialEntries={["/cupcakes"]}>
-        <Route path="/cupcakes" render={() => <h1>{text}</h1>} />
-      </MemoryRouter>,
-      node
-    );
+      renderStrict(
+        <MemoryRouter initialEntries={["/cupcakes"]}>
+          <Route path="/cupcakes">
+            <h1>{text}</h1>
+          </Route>
+        </MemoryRouter>,
+        node
+      );
 
-    expect(node.innerHTML).toContain(text);
+      expect(node.innerHTML).toContain(text);
+    });
+
+    it("renders when it matches at the root URL", () => {
+      const text = "cupcakes";
+
+      renderStrict(
+        <MemoryRouter initialEntries={["/"]}>
+          <Route path="/">
+            <h1>{text}</h1>
+          </Route>
+        </MemoryRouter>,
+        node
+      );
+
+      expect(node.innerHTML).toContain(text);
+    });
+
+    it("does not render when it does not match", () => {
+      const text = "bubblegum";
+
+      renderStrict(
+        <MemoryRouter initialEntries={["/bunnies"]}>
+          <Route path="/flowers">
+            <h1>{text}</h1>
+          </Route>
+        </MemoryRouter>,
+        node
+      );
+
+      expect(node.innerHTML).not.toContain(text);
+    });
   });
 
-  it("renders when it matches at the root URL", () => {
-    const text = "cupcakes";
+  describe("with a children function", () => {
+    it("renders when it matches", () => {
+      const text = "cupcakes";
 
-    renderStrict(
-      <MemoryRouter initialEntries={["/"]}>
-        <Route path="/" render={() => <h1>{text}</h1>} />
-      </MemoryRouter>,
-      node
-    );
+      renderStrict(
+        <MemoryRouter initialEntries={["/cupcakes"]}>
+          <Route path="/cupcakes" children={() => <h1>{text}</h1>} />
+        </MemoryRouter>,
+        node
+      );
 
-    expect(node.innerHTML).toContain(text);
+      expect(node.innerHTML).toContain(text);
+    });
+
+    it("renders when it matches at the root URL", () => {
+      const text = "cupcakes";
+
+      renderStrict(
+        <MemoryRouter initialEntries={["/"]}>
+          <Route path="/" children={() => <h1>{text}</h1>} />
+        </MemoryRouter>,
+        node
+      );
+
+      expect(node.innerHTML).toContain(text);
+    });
+
+    it("renders when it does not match", () => {
+      const text = "bubblegum";
+
+      renderStrict(
+        <MemoryRouter initialEntries={["/bunnies"]}>
+          <Route path="/flowers" children={() => <h1>{text}</h1>} />
+        </MemoryRouter>,
+        node
+      );
+
+      expect(node.innerHTML).toContain(text);
+    });
   });
 
-  it("does not render when it does not match", () => {
-    const text = "bubblegum";
+  describe("with a render prop", () => {
+    it("renders when it matches", () => {
+      const text = "cupcakes";
 
-    renderStrict(
-      <MemoryRouter initialEntries={["/bunnies"]}>
-        <Route path="/flowers" render={() => <h1>{text}</h1>} />
-      </MemoryRouter>,
-      node
-    );
+      renderStrict(
+        <MemoryRouter initialEntries={["/cupcakes"]}>
+          <Route path="/cupcakes" render={() => <h1>{text}</h1>} />
+        </MemoryRouter>,
+        node
+      );
 
-    expect(node.innerHTML).not.toContain(text);
+      expect(node.innerHTML).toContain(text);
+    });
+
+    it("renders when it matches at the root URL", () => {
+      const text = "cupcakes";
+
+      renderStrict(
+        <MemoryRouter initialEntries={["/"]}>
+          <Route path="/" render={() => <h1>{text}</h1>} />
+        </MemoryRouter>,
+        node
+      );
+
+      expect(node.innerHTML).toContain(text);
+    });
+
+    it("does not render when it does not match", () => {
+      const text = "bubblegum";
+
+      renderStrict(
+        <MemoryRouter initialEntries={["/bunnies"]}>
+          <Route path="/flowers" render={() => <h1>{text}</h1>} />
+        </MemoryRouter>,
+        node
+      );
+
+      expect(node.innerHTML).not.toContain(text);
+    });
   });
 
   it("matches using nextContext when updating", () => {
