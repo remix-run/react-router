@@ -5,7 +5,9 @@ test your components that use our components.
 
 ## Context
 
-If you try to unit test one of your components that renders a `<Link>` or a `<Route>`, etc. you'll get some errors and warnings about context. While you may be tempted to stub out the router context yourself, we recommend you wrap your unit test in a `<StaticRouter>`, `<MemoryRouter>`, or `<BrowserRouter>` (if browser globals like `window` are available in the test). Check it out:
+If you try to unit test one of your components that renders a `<Link>` or a `<Route>`, etc. you'll get some errors and warnings about context. While you may be tempted to stub out the router context yourself, we recommend you wrap your unit test in one of the `Router` components: the base `Router` with a `history` prop, or a `<StaticRouter>`, `<MemoryRouter>`, or `<BrowserRouter>` (if `window.history` is available as a global in the test enviroment).
+
+Using `MemoryRouter` or a custom `history` is recommended in order to be able to reset the router between tests.
 
 ```jsx
 class Sidebar extends Component {
@@ -45,8 +47,6 @@ test("it expands when the button is clicked", () => {
 });
 ```
 
-That's all there is to it.
-
 ## Starting at specific routes
 
 `<MemoryRouter>` supports the `initialEntries` and `initialIndex` props,
@@ -68,18 +68,10 @@ test("current user is active in sidebar", () => {
 
 We have a lot of tests that the routes work when the location changes, so you probably don't need to test this stuff. But if you need to test navigation within your app, you can do so like this:
 
-> Note
-> 
-> The example assumes your test includes browser globals. This is the default in [Jest](https://jestjs.io)
-> and any other testing environment that includes [JSDOM](https://github.com/jsdom/jsdom).
-
 ```jsx
 // app.js (a component file)
 import React from "react";
-import { Route, Link, BrowserRouter } from "react-router-dom";
-// you can also use a renderer like "@testing-library/react" or "enzyme/mount" here
-import { render, unmountComponentAtNode } from "react-dom";
-import { act } from 'react-dom/test-utils';
+import { Route, Link } from "react-router-dom";
 
 // our Subject, the App, but you can test any sub
 // section of your app too
@@ -110,23 +102,31 @@ const App = () => (
 ```
 
 ```jsx
+// you can also use a renderer like "@testing-library/react" or "enzyme/mount" here
+import { render, unmountComponentAtNode } from "react-dom";
+import { act } from 'react-dom/test-utils';
+import { Router } from "react-router";
+import { createMemoryHistory } from "history";
+
 // app.test.js
 it("navigates home when you click the logo", async => {
   // in a real test a renderer like "@testing-library/react"
   // would take care of setting up the DOM elements
-  const root = document.createElement('div')
+  const root = document.createElement('div');
   document.body.appendChild(root);
   
+  const history = createMemoryHistory();
+  
   // Set initial location
-  window.history.pushState({}, '', '/my/initial/route');
+  history.push('/my/initial/route');
   
   // Render app
   render(
-    <BrowserRouter>
+    <Router history={history}>
       <App />
-    <BrowserRouter>,
+    <Router>,
     root
-  )
+  );
   
   // Interact with page
   act(() => {
@@ -137,10 +137,10 @@ it("navigates home when you click the logo", async => {
   });
   
   // Assert about new location
-  expect(window.location.pathname).toBe('/homepage');
+  expect(history.location.pathname).toBe('/homepage');
   
   // Check correct page content showed up
-  expect(document.body.textContent).toBe('Home')
+  expect(document.body.textContent).toBe('Home');
 });
 ```
 
