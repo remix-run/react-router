@@ -4,7 +4,7 @@ const commonConfig = {
 };
 
 module.exports = {
-  babelrcRoots: [".", "packages/react-router-native/"],
+  babelrcRoots: [".", "packages/react-router-native/", "website/"],
   overrides: [
     {
       test: "./packages/react-router/modules/*",
