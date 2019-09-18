@@ -24,7 +24,7 @@ const cjs = [
     },
     external: isBareModuleId,
     plugins: [
-      babel({ exclude: /node_modules/, sourceMaps: true }),
+      babel({ exclude: /node_modules/, sourceMaps: true, rootMode: "upward" }),
       replace({ "process.env.NODE_ENV": JSON.stringify("development") })
     ]
   },
@@ -33,7 +33,7 @@ const cjs = [
     output: { file: `cjs/${pkg.name}.min.js`, sourcemap: true, format: "cjs" },
     external: isBareModuleId,
     plugins: [
-      babel({ exclude: /node_modules/, sourceMaps: true }),
+      babel({ exclude: /node_modules/, sourceMaps: true, rootMode: "upward" }),
       replace({ "process.env.NODE_ENV": JSON.stringify("production") }),
       uglify()
     ]
@@ -50,7 +50,8 @@ const esm = [
         exclude: /node_modules/,
         sourceMaps: true,
         runtimeHelpers: true,
-        plugins: [["@babel/transform-runtime", { useESModules: true }]]
+        plugins: [["@babel/transform-runtime", { useESModules: true }]],
+        rootMode: "upward"
       }),
       sizeSnapshot()
     ]
@@ -77,7 +78,8 @@ const umd = [
         exclude: /node_modules/,
         runtimeHelpers: true,
         sourceMaps: true,
-        plugins: [["@babel/transform-runtime", { useESModules: true }]]
+        plugins: [["@babel/transform-runtime", { useESModules: true }]],
+        rootMode: "upward"
       }),
       nodeResolve(),
       commonjs({ include: /node_modules/ }),
@@ -102,7 +104,8 @@ const umd = [
         exclude: /node_modules/,
         runtimeHelpers: true,
         sourceMaps: true,
-        plugins: [["@babel/transform-runtime", { useESModules: true }]]
+        plugins: [["@babel/transform-runtime", { useESModules: true }]],
+        rootMode: "upward"
       }),
       nodeResolve(),
       commonjs({ include: /node_modules/ }),
