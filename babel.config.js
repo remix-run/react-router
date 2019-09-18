@@ -24,15 +24,6 @@ module.exports = {
       test: "./packages/react-router-config/modules/*",
       presets: commonConfig.presets,
       plugins: commonConfig.plugins
-    },
-    {
-      test: "./packages/website/modules/*",
-      presets: commonConfig.presets,
-      plugins: commonConfig.plugins.concat([
-        "transform-class-properties",
-        ["transform-object-rest-spread", { useBuiltIns: true }],
-        "transform-export-default"
-      ])
     }
   ]
 };
