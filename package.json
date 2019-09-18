@@ -5,7 +5,7 @@
     "build": "node ./scripts/build.js",
     "clean": "git clean -fdX .",
     "start": "node ./scripts/start.js",
-    "test": "node ./scripts/test.js"
+    "test": "jest --config jest.config.js"
   },
   "dependencies": {
     "@babel/core": "^7.5.5",
@@ -14,7 +14,6 @@
     "@babel/preset-env": "^7.5.5",
     "@babel/preset-react": "^7.0.0",
     "babel-eslint": "^10.0.3",
-    "babel-jest": "^24.9.0",
     "babel-plugin-dev-expression": "^0.2.2",
     "eslint": "^6.3.0",
     "eslint-plugin-import": "^2.18.2",
@@ -38,7 +37,12 @@
     "rollup-plugin-uglify": "^6.0.3"
   },
   "workspaces": {
-    "packages": ["packages/*"],
-    "nohoist": ["**/react-native", "**/react-native/**"]
+    "packages": [
+      "packages/*"
+    ],
+    "nohoist": [
+      "**/react-native",
+      "**/react-native/**"
+    ]
   }
 }

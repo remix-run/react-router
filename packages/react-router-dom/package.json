@@ -38,8 +38,7 @@
   "scripts": {
     "build": "rollup -c",
     "lint": "eslint modules",
-    "prepublishOnly": "npm run build",
-    "test": "jest"
+    "prepublishOnly": "npm run build"
   },
   "peerDependencies": {
     "react": ">=15"

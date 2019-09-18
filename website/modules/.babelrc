@@ -1,9 +1,0 @@
-{
-  "presets": [["env", { "loose": true }], "react"],
-  "plugins": [
-    "dev-expression",
-    "transform-class-properties",
-    ["transform-object-rest-spread", { "useBuiltIns": true }],
-    "transform-export-default"
-  ]
-}
