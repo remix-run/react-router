@@ -39,6 +39,6 @@ module.exports = {
   },
   modulePaths: ["<rootDir>/node_modules"],
   setupFiles: ["raf/polyfill"],
-  testMatch: ["**/__tests__/**/*-test.js"],
+  testMatch: ["packages/**/__tests__/**/*-test.js"],
   testURL: "http://localhost/"
 };
