@@ -113,7 +113,7 @@ it("navigates home when you click the logo", async => {
   // would take care of setting up the DOM elements
   const root = document.createElement('div');
   document.body.appendChild(root);
-  
+
   // Render app
   render(
     <MemoryRouter initialEntries={['/my/initial/route']}>
@@ -121,7 +121,7 @@ it("navigates home when you click the logo", async => {
     <MemoryRouter>,
     root
   );
-  
+
   // Interact with page
   act(() => {
     // Find the link (perhaps using the text content)
@@ -129,7 +129,7 @@ it("navigates home when you click the logo", async => {
     // Click it
     goHomeLink.dispatchEvent(new MouseEvent("click", { bubbles: true }));
   });
-  
+
   // Check correct page content showed up
   expect(document.body.textContent).toBe('Home');
 });
@@ -141,17 +141,16 @@ You shouldn't have to access the `location` or `history` objects very often in t
 
 ```diff
 // app.test.js
-
 test('clicking filter links updates product query params', () => {
-+ let history, location;
+  let history, location;
   render(
     <MemoryRouter initialEntries={['/my/initial/route']}>
       <App />
-+     <Route path="*" render={({ location, location }) => {
-+       history = history;
-+       location = location;
-+       return null;
-+     }} />
+      <Route path="*" render={({ location, location }) => {
+        history = history;
+        location = location;
+        return null;
+      }} />
     </MemoryRouter>,
     node
   );
@@ -160,12 +159,12 @@ test('clicking filter links updates product query params', () => {
     // example: click a <Link> to /products?id=1234
   });
 
-+   // assert about url
-+   expect(location.pathname).toBe('/products');
-+   const searchParams = new URLSearchParams(location.search);
-+   expect(searchParams.has('id')).toBe(true);
-+   expect(searchParams.get('id')).toEqual('1234');
-})
+  // assert about url
+  expect(location.pathname).toBe('/products');
+  const searchParams = new URLSearchParams(location.search);
+  expect(searchParams.has('id')).toBe(true);
+  expect(searchParams.get('id')).toEqual('1234');
+});
 ```
 
 ### Alternatives
@@ -175,10 +174,10 @@ test('clicking filter links updates product query params', () => {
 
 ```js
 // app.test.js
-import { createMemoryHistory } from 'history';
-import { Router } from 'react-router';
+import { createMemoryHistory } from "history";
+import { Router } from "react-router";
 
-test('redirects to login page', () => {
+test("redirects to login page", () => {
   const history = createMemoryHistory();
   render(
     <Router history={history}>
@@ -186,8 +185,8 @@ test('redirects to login page', () => {
     </Router>,
     node
   );
-  expect(history.location.pathname).toBe('/login');
-})
+  expect(history.location.pathname).toBe("/login");
+});
 ```
 
 ## React Testing Library
