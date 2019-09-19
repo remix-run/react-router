@@ -105,8 +105,7 @@ const App = () => (
 // you can also use a renderer like "@testing-library/react" or "enzyme/mount" here
 import { render, unmountComponentAtNode } from "react-dom";
 import { act } from 'react-dom/test-utils';
-import { Router } from "react-router";
-import { createMemoryHistory } from "history";
+import { MemoryRouter } from "react-router-dom";
 
 // app.test.js
 it("navigates home when you click the logo", async => {
@@ -115,16 +114,11 @@ it("navigates home when you click the logo", async => {
   const root = document.createElement('div');
   document.body.appendChild(root);
   
-  const history = createMemoryHistory();
-  
-  // Set initial location
-  history.push('/my/initial/route');
-  
   // Render app
   render(
-    <Router history={history}>
+    <MemoryRouter initialEntries={['/my/initial/route']}>
       <App />
-    <Router>,
+    <MemoryRouter>,
     root
   );
   
@@ -136,12 +130,64 @@ it("navigates home when you click the logo", async => {
     goHomeLink.dispatchEvent(new MouseEvent("click", { bubbles: true }));
   });
   
-  // Assert about new location
-  expect(history.location.pathname).toBe('/homepage');
-  
   // Check correct page content showed up
   expect(document.body.textContent).toBe('Home');
 });
+```
+
+## Checking location in tests
+
+You shouldn't have to access the `location` or `history` objects very often in tests, but if you do (such as to validate that new query params are set in the url bar), you can add a route that updates a variable in the test:
+
+```diff
+// app.test.js
+
+test('clicking filter links updates product query params', () => {
++ let history, location;
+  render(
+    <MemoryRouter initialEntries={['/my/initial/route']}>
+      <App />
++     <Route path="*" render={({ location, location }) => {
++       history = history;
++       location = location;
++       return null;
++     }} />
+    </MemoryRouter>,
+    node
+  );
+
+  act(() => {
+    // example: click a <Link> to /products?id=1234
+  });
+
++   // assert about url
++   expect(location.pathname).toBe('/products');
++   const searchParams = new URLSearchParams(location.search);
++   expect(searchParams.has('id')).toBe(true);
++   expect(searchParams.get('id')).toEqual('1234');
+})
+```
+
+### Alternatives
+
+1. You can also use `BrowserRouter` if your test environment has the browser globals `window.location` and `window.history` (which is the default in Jest through JSDOM, but you cannot reset the history between tests).
+1. Instead of passing a custom route to MemoryRouter, you can use the base `Router` with a `history` prop from the [`history`](https://github.com/ReactTraining/history) package:
+
+```js
+// app.test.js
+import { createMemoryHistory } from 'history';
+import { Router } from 'react-router';
+
+test('redirects to login page', () => {
+  const history = createMemoryHistory();
+  render(
+    <Router history={history}>
+      <App signedInUser={null} />
+    </Router>,
+    node
+  );
+  expect(history.location.pathname).toBe('/login');
+})
 ```
 
 ## React Testing Library
