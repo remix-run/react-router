@@ -5,7 +5,9 @@ test your components that use our components.
 
 ## Context
 
-If you try to unit test one of your components that renders a `<Link>` or a `<Route>`, etc. you'll get some errors and warnings about context. While you may be tempted to stub out the router context yourself, we recommend you wrap your unit test in a `<StaticRouter>` or a `<MemoryRouter>`. Check it out:
+If you try to unit test one of your components that renders a `<Link>` or a `<Route>`, etc. you'll get some errors and warnings about context. While you may be tempted to stub out the router context yourself, we recommend you wrap your unit test in one of the `Router` components: the base `Router` with a `history` prop, or a `<StaticRouter>`, `<MemoryRouter>`, or `<BrowserRouter>` (if `window.history` is available as a global in the test enviroment).
+
+Using `MemoryRouter` or a custom `history` is recommended in order to be able to reset the router between tests.
 
 ```jsx
 class Sidebar extends Component {
@@ -45,8 +47,6 @@ test("it expands when the button is clicked", () => {
 });
 ```
 
-That's all there is to it.
-
 ## Starting at specific routes
 
 `<MemoryRouter>` supports the `initialEntries` and `initialIndex` props,
@@ -66,71 +66,12 @@ test("current user is active in sidebar", () => {
 
 ## Navigating
 
-We have a lot of tests that the routes work when the location changes, so you probably don't need to test this stuff. But if you must, since everything happens in render, we do something a little clever like this:
+We have a lot of tests that the routes work when the location changes, so you probably don't need to test this stuff. But if you need to test navigation within your app, you can do so like this:
 
 ```jsx
-import { render, unmountComponentAtNode } from "react-dom";
+// app.js (a component file)
 import React from "react";
-import { Route, Link, MemoryRouter } from "react-router-dom";
-import { Simulate } from "react-addons-test-utils";
-
-// a way to render any part of your app inside a MemoryRouter
-// you pass it a list of steps to execute when the location
-// changes, it will call back to you with stuff like
-// `match` and `location`, and `history` so you can control
-// the flow and make assertions.
-const renderTestSequence = ({
-  initialEntries,
-  initialIndex,
-  subject: Subject,
-  steps
-}) => {
-  const div = document.createElement("div");
-
-  class Assert extends React.Component {
-    componentDidMount() {
-      this.assert();
-    }
-
-    componentDidUpdate() {
-      this.assert();
-    }
-
-    assert() {
-      const nextStep = steps.shift();
-      if (nextStep) {
-        nextStep({ ...this.props, div });
-      } else {
-        unmountComponentAtNode(div);
-      }
-    }
-
-    render() {
-      return this.props.children;
-    }
-  }
-
-  class Test extends React.Component {
-    render() {
-      return (
-        <MemoryRouter
-          initialIndex={initialIndex}
-          initialEntries={initialEntries}
-        >
-          <Route
-            render={props => (
-              <Assert {...props}>
-                <Subject />
-              </Assert>
-            )}
-          />
-        </MemoryRouter>
-      );
-    }
-  }
-
-  render(<Test />, div);
-};
+import { Route, Link } from "react-router-dom";
 
 // our Subject, the App, but you can test any sub
 // section of your app too
@@ -158,43 +99,97 @@ const App = () => (
     />
   </div>
 );
+```
 
-// the actual test!
-it("navigates around", done => {
-  renderTestSequence({
-    // tell it the subject you're testing
-    subject: App,
+```jsx
+// you can also use a renderer like "@testing-library/react" or "enzyme/mount" here
+import { render, unmountComponentAtNode } from "react-dom";
+import { act } from 'react-dom/test-utils';
+import { MemoryRouter } from "react-router-dom";
 
-    // and the steps to execute each time the location changes
-    steps: [
-      // initial render
-      ({ history, div }) => {
-        // assert the screen says what we think it should
-        console.assert(div.innerHTML.match(/Welcome/));
-
-        // now we can imperatively navigate as the test
-        history.push("/dashboard");
-      },
-
-      // second render from new location
-      ({ div }) => {
-        console.assert(div.innerHTML.match(/Dashboard/));
-
-        // or we can simulate clicks on Links instead of
-        // using history.push
-        Simulate.click(div.querySelector("#click-me"), {
-          button: 0
-        });
-      },
-
-      // final render
-      ({ location }) => {
-        console.assert(location.pathname === "/");
-        // you'll want something like `done()` so your test
-        // fails if you never make it here.
-        done();
-      }
-    ]
+// app.test.js
+it("navigates home when you click the logo", async => {
+  // in a real test a renderer like "@testing-library/react"
+  // would take care of setting up the DOM elements
+  const root = document.createElement('div');
+  document.body.appendChild(root);
+  
+  // Render app
+  render(
+    <MemoryRouter initialEntries={['/my/initial/route']}>
+      <App />
+    <MemoryRouter>,
+    root
+  );
+  
+  // Interact with page
+  act(() => {
+    // Find the link (perhaps using the text content)
+    const goHomeLink = document.querySelector('#nav-logo-home');
+    // Click it
+    goHomeLink.dispatchEvent(new MouseEvent("click", { bubbles: true }));
   });
+  
+  // Check correct page content showed up
+  expect(document.body.textContent).toBe('Home');
 });
 ```
+
+## Checking location in tests
+
+You shouldn't have to access the `location` or `history` objects very often in tests, but if you do (such as to validate that new query params are set in the url bar), you can add a route that updates a variable in the test:
+
+```diff
+// app.test.js
+
+test('clicking filter links updates product query params', () => {
++ let history, location;
+  render(
+    <MemoryRouter initialEntries={['/my/initial/route']}>
+      <App />
++     <Route path="*" render={({ location, location }) => {
++       history = history;
++       location = location;
++       return null;
++     }} />
+    </MemoryRouter>,
+    node
+  );
+
+  act(() => {
+    // example: click a <Link> to /products?id=1234
+  });
+
++   // assert about url
++   expect(location.pathname).toBe('/products');
++   const searchParams = new URLSearchParams(location.search);
++   expect(searchParams.has('id')).toBe(true);
++   expect(searchParams.get('id')).toEqual('1234');
+})
+```
+
+### Alternatives
+
+1. You can also use `BrowserRouter` if your test environment has the browser globals `window.location` and `window.history` (which is the default in Jest through JSDOM, but you cannot reset the history between tests).
+1. Instead of passing a custom route to MemoryRouter, you can use the base `Router` with a `history` prop from the [`history`](https://github.com/ReactTraining/history) package:
+
+```js
+// app.test.js
+import { createMemoryHistory } from 'history';
+import { Router } from 'react-router';
+
+test('redirects to login page', () => {
+  const history = createMemoryHistory();
+  render(
+    <Router history={history}>
+      <App signedInUser={null} />
+    </Router>,
+    node
+  );
+  expect(history.location.pathname).toBe('/login');
+})
+```
+
+## React Testing Library
+
+See an example in the official documentation: [Testing React Router with React Testing Library](https://testing-library.com/docs/example-react-router)
