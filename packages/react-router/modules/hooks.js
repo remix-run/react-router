@@ -2,29 +2,19 @@ import React from "react";
 import invariant from "tiny-invariant";
 
 import Context from "./RouterContext.js";
+import matchPath from "./matchPath.js";
 
 const useContext = React.useContext;
 
-export function useMatch() {
+export function useHistory() {
   if (__DEV__) {
     invariant(
       typeof useContext === "function",
-      "You must use React >= 16.8 in order to use useMatch()"
+      "You must use React >= 16.8 in order to use useHistory()"
     );
   }
 
-  return useContext(Context).match;
-}
-
-export function useParams() {
-  if (__DEV__) {
-    invariant(
-      typeof useContext === "function",
-      "You must use React >= 16.8 in order to use useParams()"
-    );
-  }
-
-  return useMatch().params;
+  return useContext(Context).history;
 }
 
 export function useLocation() {
@@ -38,13 +28,26 @@ export function useLocation() {
   return useContext(Context).location;
 }
 
-export function useHistory() {
+export function useParams() {
   if (__DEV__) {
     invariant(
       typeof useContext === "function",
-      "You must use React >= 16.8 in order to use useHistory()"
+      "You must use React >= 16.8 in order to use useParams()"
     );
   }
 
-  return useContext(Context).history;
+  return useContext(Context).match.params;
+}
+
+export function useRouteMatch(path) {
+  if (__DEV__) {
+    invariant(
+      typeof useContext === "function",
+      "You must use React >= 16.8 in order to use useMatch()"
+    );
+  }
+
+  return path
+    ? matchPath(useLocation().pathname, path)
+    : useContext(Context).match;
 }

@@ -1,6 +1,6 @@
 import React from "react";
 import ReactDOM from "react-dom";
-import { MemoryRouter, Route, useMatch, useParams } from "react-router";
+import { MemoryRouter, Route, useParams, useRouteMatch } from "react-router";
 
 import renderStrict from "./utils/renderStrict.js";
 
@@ -68,7 +68,7 @@ describe("useParams", () => {
         }
 
         function Users() {
-          const match = useMatch();
+          const match = useRouteMatch();
           return (
             <div>
               <h1>Users</h1>

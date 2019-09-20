@@ -1,10 +1,10 @@
 import React from "react";
 import ReactDOM from "react-dom";
-import { MemoryRouter, Route, useMatch } from "react-router";
+import { MemoryRouter, useRouteMatch } from "react-router";
 
 import renderStrict from "./utils/renderStrict.js";
 
-describe("useMatch", () => {
+describe("useRouteMatch", () => {
   const node = document.createElement("div");
 
   afterEach(() => {
@@ -15,15 +15,13 @@ describe("useMatch", () => {
     let match;
 
     function HomePage() {
-      match = useMatch();
+      match = useRouteMatch("/home");
       return null;
     }
 
     renderStrict(
       <MemoryRouter initialEntries={["/home"]}>
-        <Route path="/home">
-          <HomePage />
-        </Route>
+        <HomePage />
       </MemoryRouter>,
       node
     );
