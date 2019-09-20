@@ -24,16 +24,16 @@ class Sidebar extends Component {
           ))}
         </ul>
       </div>
-    );
+    )
   }
 }
 
 // broken
 test("it expands when the button is clicked", () => {
-  render(<Sidebar />);
-  click(theButton);
-  expect(theThingToBeOpen);
-});
+  render(<Sidebar />)
+  click(theButton)
+  expect(theThingToBeOpen)
+})
 
 // fixed!
 test("it expands when the button is clicked", () => {
@@ -41,10 +41,10 @@ test("it expands when the button is clicked", () => {
     <MemoryRouter>
       <Sidebar />
     </MemoryRouter>
-  );
-  click(theButton);
-  expect(theThingToBeOpen);
-});
+  )
+  click(theButton)
+  expect(theThingToBeOpen)
+})
 ```
 
 ## Starting at specific routes
@@ -59,9 +59,9 @@ test("current user is active in sidebar", () => {
     <MemoryRouter initialEntries={["/users/2"]}>
       <Sidebar />
     </MemoryRouter>
-  );
-  expectUserToBeActive(2);
-});
+  )
+  expectUserToBeActive(2)
+})
 ```
 
 ## Navigating
@@ -70,8 +70,8 @@ We have a lot of tests that the routes work when the location changes, so you pr
 
 ```jsx
 // app.js (a component file)
-import React from "react";
-import { Route, Link } from "react-router-dom";
+import React from "react"
+import { Route, Link } from "react-router-dom"
 
 // our Subject, the App, but you can test any sub
 // section of your app too
@@ -98,7 +98,7 @@ const App = () => (
       )}
     />
   </div>
-);
+)
 ```
 
 ```jsx
@@ -174,19 +174,19 @@ test('clicking filter links updates product query params', () => {
 
 ```js
 // app.test.js
-import { createMemoryHistory } from "history";
-import { Router } from "react-router";
+import { createMemoryHistory } from "history"
+import { Router } from "react-router"
 
 test("redirects to login page", () => {
-  const history = createMemoryHistory();
+  const history = createMemoryHistory()
   render(
     <Router history={history}>
       <App signedInUser={null} />
     </Router>,
     node
-  );
-  expect(history.location.pathname).toBe("/login");
-});
+  )
+  expect(history.location.pathname).toBe("/login")
+})
 ```
 
 ## React Testing Library

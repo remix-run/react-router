@@ -24,7 +24,7 @@ A `<Route>` that uses the `children` prop will call its `children` function even
 The default way to "resolve" URLs is to join the `match.url` string to the "relative" path.
 
 ```js
-`${match.url}/relative-path`;
+;`${match.url}/relative-path`
 ```
 
 If you attempt to do this when the match is `null`, you will end up with a `TypeError`. This means that it is considered unsafe to attempt to join "relative" paths inside of a `<Route>` when using the `children` prop.

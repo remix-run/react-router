@@ -7,32 +7,32 @@ This can be useful in server-side rendering scenarios when the user isn't actual
 Here's an example node server that sends a 302 status code for [`<Redirect>`](Redirect.md)s and regular HTML for other requests:
 
 ```jsx
-import { createServer } from "http";
-import React from "react";
-import ReactDOMServer from "react-dom/server";
-import { StaticRouter } from "react-router";
+import { createServer } from "http"
+import React from "react"
+import ReactDOMServer from "react-dom/server"
+import { StaticRouter } from "react-router"
 
 createServer((req, res) => {
   // This context object contains the results of the render
-  const context = {};
+  const context = {}
 
   const html = ReactDOMServer.renderToString(
     <StaticRouter location={req.url} context={context}>
       <App />
     </StaticRouter>
-  );
+  )
 
   // context.url will contain the URL to redirect to if a <Redirect> was used
   if (context.url) {
     res.writeHead(302, {
       Location: context.url
-    });
-    res.end();
+    })
+    res.end()
   } else {
-    res.write(html);
-    res.end();
+    res.write(html)
+    res.end()
   }
-}).listen(3000);
+}).listen(3000)
 ```
 
 ## basename: string
