@@ -1,29 +1,5 @@
-let RouterMappedModule;
-let RouterConfigMappedModule;
-let RouterDomMappedModule;
-
-switch (process.env.TEST_ENV) {
-  case "cjs":
-    RouterMappedModule = "<rootDir>/packages/react-router/cjs/react-router.js";
-    RouterConfigMappedModule =
-      "<rootDir>/packages/react-router-config/cjs/react-router-config.js";
-    RouterDomMappedModule =
-      "<rootDir>/packages/react-router-dom/cjs/react-router-dom.js";
-    break;
-  case "umd":
-    RouterMappedModule = "<rootDir>/packages/react-router/umd/react-router.js";
-    RouterConfigMappedModule =
-      "<rootDir>/packages/react-router-config/umd/react-router-config.js";
-    RouterDomMappedModule =
-      "<rootDir>/packages/react-router-dom/umd/react-router-dom.js";
-    break;
-  default:
-    RouterMappedModule = "<rootDir>/packages/react-router/modules/index.js";
-    RouterConfigMappedModule =
-      "<rootDir>/packages/react-router-config/modules/index.js";
-    RouterDomMappedModule =
-      "<rootDir>/packages/react-router-dom/modules/index.js";
-}
+// Bundle type "cjs" | "umd" | "modules"
+const moduleType = process.env.TEST_ENV || "modules";
 
 module.exports = {
   // preset: "react-native",
@@ -33,9 +9,9 @@ module.exports = {
     __DEV__: true
   },
   moduleNameMapper: {
-    "^react-router$": RouterMappedModule,
-    "^react-router-config$": RouterConfigMappedModule,
-    "^react-router-dom$": RouterDomMappedModule
+    "^react-router$": `<rootDir>/packages/react-router/${moduleType}/index.js`,
+    "^react-router-config$": `<rootDir>/packages/react-router-config/${moduleType}/index.js`,
+    "^react-router-dom$": `<rootDir>/packages/react-router-dom/${moduleType}/index.js`
   },
   modulePaths: ["<rootDir>/node_modules"],
   setupFiles: ["raf/polyfill"],

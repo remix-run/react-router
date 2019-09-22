@@ -1,29 +1,20 @@
-const commonConfig = {
-  presets: [["@babel/env", { loose: true }], "@babel/react"],
-  plugins: ["dev-expression"]
-};
-
 module.exports = {
-  babelrcRoots: [".", "packages/react-router-native/", "website/"],
+  babelrcRoots: [".", "./packages/react-router-native/*", "./website/*"],
+  presets: [["@babel/env", { loose: true }], "@babel/react"],
+  plugins: ["dev-expression"],
+  env: {
+    test: {
+      presets: [["@babel/preset-env", { targets: { node: "current" } }]]
+    }
+  },
   overrides: [
     {
       test: "./packages/react-router/modules/*",
-      presets: commonConfig.presets,
-      plugins: commonConfig.plugins.concat([
-        ["@babel/proposal-class-properties", { loose: true }]
-      ])
+      plugins: [["@babel/plugin-proposal-class-properties", { loose: true }]]
     },
     {
       test: "./packages/react-router-dom/modules/*",
-      presets: commonConfig.presets,
-      plugins: commonConfig.plugins.concat([
-        ["@babel/proposal-class-properties", { loose: true }]
-      ])
-    },
-    {
-      test: "./packages/react-router-config/modules/*",
-      presets: commonConfig.presets,
-      plugins: commonConfig.plugins
+      plugins: [["@babel/plugin-proposal-class-properties", { loose: true }]]
     }
   ]
 };
