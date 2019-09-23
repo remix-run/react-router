@@ -1,5 +1,5 @@
 import React, { Component } from "react";
-import { StaticRouter, Route } from "react-router-dom";
+import { StaticRouter as Router, Route } from "react-router-dom";
 
 // This example renders a route within a StaticRouter and populates its
 // staticContext, which it then prints out. In the real world you would
@@ -44,7 +44,7 @@ function PrintContext(props) {
   return <p>Static context: {JSON.stringify(props.staticContext)}</p>;
 }
 
-class StaticRouterExample extends Component {
+export default class StaticRouterExample extends Component {
   // This is the context object that we pass to the StaticRouter.
   // It can be modified by routes to provide additional information
   // for the server-side render
@@ -52,16 +52,14 @@ class StaticRouterExample extends Component {
 
   render() {
     return (
-      <StaticRouter location="/foo" context={this.staticContext}>
+      <Router location="/foo" context={this.staticContext}>
         <div>
           <RouteStatus statusCode={404}>
             <p>Route with statusCode 404</p>
             <PrintContext staticContext={this.staticContext} />
           </RouteStatus>
         </div>
-      </StaticRouter>
+      </Router>
     );
   }
 }
-
-export default StaticRouterExample;
