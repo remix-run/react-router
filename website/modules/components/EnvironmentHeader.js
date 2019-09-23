@@ -34,19 +34,19 @@ Tab.propTypes = { to: PropTypes.string };
 function Tabs() {
   return (
     <Row boxShadow="0px 1px 1px hsla(0, 0%, 0%, 0.15)" margin="10px">
-      <Tab to="/web" borderTopLeftRadius="3px" borderBottomLeftRadius="3px">
+      <Tab to="/core" borderTopLeftRadius="3px" borderBottomLeftRadius="3px">
+        Core
+      </Tab>
+      <Tab to="/web" marginLeft="-1px">
         Web
       </Tab>
-      <Tab to="/native" marginLeft="-1px">
-        Native
-      </Tab>
       <Tab
-        to="/core"
+        to="/native"
         marginLeft="-1px"
         borderTopRightRadius="3px"
         borderBottomRightRadius="3px"
       >
-        Core
+        Native
       </Tab>
     </Row>
   );

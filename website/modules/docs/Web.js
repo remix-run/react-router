@@ -1,5 +1,6 @@
 export default {
   api: [
+    require("../../../packages/react-router/docs/api/hooks.md?web"),
     require("../../../packages/react-router-dom/docs/api/BrowserRouter.md"),
     require("../../../packages/react-router-dom/docs/api/HashRouter.md"),
     require("../../../packages/react-router-dom/docs/api/Link.md"),
@@ -16,18 +17,6 @@ export default {
     require("../../../packages/react-router/docs/api/match.md?web"),
     require("../../../packages/react-router/docs/api/matchPath.md?web"),
     require("../../../packages/react-router/docs/api/withRouter.md?web")
-  ],
-
-  guides: [
-    require("../../../packages/react-router-dom/docs/guides/quick-start.md"),
-    require("../../../packages/react-router-dom/docs/guides/basic-components.md"),
-    require("../../../packages/react-router-dom/docs/guides/server-rendering.md"),
-    require("../../../packages/react-router-dom/docs/guides/code-splitting.md"),
-    require("../../../packages/react-router-dom/docs/guides/scroll-restoration.md"),
-    require("../../../packages/react-router/docs/guides/philosophy.md"),
-    require("../../../packages/react-router/docs/guides/testing.md?web"),
-    require("../../../packages/react-router/docs/guides/redux.md"),
-    require("../../../packages/react-router/docs/guides/static-routes.md")
   ],
 
   examples: [
@@ -116,5 +105,17 @@ export default {
       path: "website/modules/examples/QueryParams",
       code: require("!raw-loader!../examples/QueryParams")
     }
+  ],
+
+  guides: [
+    require("../../../packages/react-router-dom/docs/guides/quick-start.md"),
+    require("../../../packages/react-router-dom/docs/guides/basic-components.md"),
+    require("../../../packages/react-router-dom/docs/guides/server-rendering.md"),
+    require("../../../packages/react-router-dom/docs/guides/code-splitting.md"),
+    require("../../../packages/react-router-dom/docs/guides/scroll-restoration.md"),
+    require("../../../packages/react-router/docs/guides/philosophy.md"),
+    require("../../../packages/react-router/docs/guides/testing.md?web"),
+    require("../../../packages/react-router/docs/guides/redux.md"),
+    require("../../../packages/react-router/docs/guides/static-routes.md")
   ]
 };

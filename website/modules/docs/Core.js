@@ -1,5 +1,6 @@
 export default {
   api: [
+    require("../../../packages/react-router/docs/api/hooks.md"),
     require("../../../packages/react-router/docs/api/MemoryRouter.md"),
     require("../../../packages/react-router/docs/api/Prompt.md"),
     require("../../../packages/react-router/docs/api/Redirect.md"),
@@ -14,7 +15,9 @@ export default {
     require("../../../packages/react-router/docs/api/withRouter.md"),
     require("../../../packages/react-router/docs/api/generatePath.md")
   ],
+
   examples: [],
+
   guides: [
     require("../../../packages/react-router/docs/guides/philosophy.md"),
     require("../../../packages/react-router/docs/guides/quick-start.md"),

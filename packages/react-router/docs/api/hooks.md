@@ -1,6 +1,8 @@
 # Hooks
 
-React Router ships with a few hooks that let you access the state of the router in your components.
+React Router ships with a few [hooks](https://reactjs.org/docs/hooks-intro.html) that let you access the state of the router and perform navigation from inside your components.
+
+Please note: You need to be using React >= 16.8 in order to use any of these hooks!
 
 - [`useHistory`](#usehistory)
 - [`useLocation`](#uselocation)

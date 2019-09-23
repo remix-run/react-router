@@ -26,34 +26,32 @@ export default function Environment({
     Object.keys(envData).forEach(key => envData[key](() => {}));
   }, []);
 
-  if (!envData[environment]) {
-    return <Redirect to="/" />;
-  } else {
-    return (
-      <SmallScreen>
-        {isSmallScreen => (
-          <Bundle load={envData[environment]}>
-            {data =>
-              data ? (
-                isSmallScreen ? (
-                  <EnvironmentSmall
-                    data={data}
-                    match={match}
-                    location={location}
-                    history={history}
-                  />
-                ) : (
-                  <EnvironmentLarge data={data} match={match} />
-                )
+  if (!envData[environment]) return <Redirect to="/" />;
+
+  return (
+    <SmallScreen>
+      {isSmallScreen => (
+        <Bundle load={envData[environment]}>
+          {data =>
+            data ? (
+              isSmallScreen ? (
+                <EnvironmentSmall
+                  data={data}
+                  match={match}
+                  location={location}
+                  history={history}
+                />
               ) : (
-                <Loading />
+                <EnvironmentLarge data={data} match={match} />
               )
-            }
-          </Bundle>
-        )}
-      </SmallScreen>
-    );
-  }
+            ) : (
+              <Loading />
+            )
+          }
+        </Bundle>
+      )}
+    </SmallScreen>
+  );
 }
 
 Environment.propTypes = {
