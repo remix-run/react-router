@@ -32,11 +32,11 @@ module.exports = {
   ].concat(
     process.env.NODE_ENV === "production"
       ? [
-        new SWPrecacheWebpackPlugin({
-          cacheId: "react-router-website",
-          staticFileGlobsIgnorePatterns: [/\.map$/]
-        })
-      ]
+          new SWPrecacheWebpackPlugin({
+            cacheId: "react-router-website",
+            staticFileGlobsIgnorePatterns: [/\.map$/]
+          })
+        ]
       : []
   ),
 
@@ -49,7 +49,10 @@ module.exports = {
   resolve: {
     alias: {
       "react-router": path.resolve(__dirname, "../packages/react-router"),
-      "react-router-dom": path.resolve(__dirname, "modules/ReactRouterDOMShim")
+      "react-router-dom": path.resolve(
+        __dirname,
+        "../packages/react-router-dom"
+      )
     }
   },
 
@@ -114,7 +117,8 @@ module.exports = {
         test: /\.md(\?(.+))?$/,
         loader: "markdown-loader",
         options: {
-          basename: process.env.NODE_ENV === "production" ? "/react-router" : undefined
+          basename:
+            process.env.NODE_ENV === "production" ? "/react-router" : undefined
         }
       },
       {
