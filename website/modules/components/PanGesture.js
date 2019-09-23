@@ -18,7 +18,7 @@ function pointFromTouch(touch) {
 
 const THRESHOLD = 10;
 
-class PanGesture extends Component {
+export default class PanGesture extends Component {
   static propTypes = {
     when: PropTypes.bool,
     onPanStart: PropTypes.func,
@@ -124,5 +124,3 @@ class PanGesture extends Component {
     return React.Children.only(this.props.children);
   }
 }
-
-export default PanGesture;

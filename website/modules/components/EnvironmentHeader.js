@@ -3,8 +3,8 @@ import { Link, Route } from "react-router-dom";
 import { Block, Row, Inline, Col } from "jsxstyle";
 import PropTypes from "prop-types";
 
-import { LIGHT_GRAY, RED } from "../Theme";
-import Logo from "./Logo";
+import { LIGHT_GRAY, RED } from "../Theme.js";
+import Logo from "./Logo.js";
 
 function Tab({ to, ...rest }) {
   return (
@@ -79,7 +79,7 @@ function Branding() {
   );
 }
 
-function EnvironmentHeader() {
+export default function EnvironmentHeader() {
   return (
     <Block>
       <Branding />
@@ -87,5 +87,3 @@ function EnvironmentHeader() {
     </Block>
   );
 }
-
-export default EnvironmentHeader;

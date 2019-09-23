@@ -4,7 +4,7 @@ import PropTypes from "prop-types";
 import "prismjs/themes/prism-tomorrow.css";
 import { Block } from "jsxstyle";
 
-function SourceViewer({ code, ...rest }) {
+export default function SourceViewer({ code, ...rest }) {
   return (
     <Block
       component="pre"
@@ -22,5 +22,3 @@ function SourceViewer({ code, ...rest }) {
 SourceViewer.propTypes = {
   code: PropTypes.string.isRequired
 };
-
-export default SourceViewer;

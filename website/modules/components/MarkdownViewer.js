@@ -3,7 +3,7 @@ import React from "react";
 import PropTypes from "prop-types";
 import "prismjs/themes/prism-tomorrow.css";
 
-function MarkdownViewer({ html, id }) {
+export default function MarkdownViewer({ html, id }) {
   return (
     <div className="markdown" dangerouslySetInnerHTML={{ __html: html }} />
   );
@@ -12,5 +12,3 @@ function MarkdownViewer({ html, id }) {
 MarkdownViewer.propTypes = {
   html: PropTypes.string.isRequired
 };
-
-export default MarkdownViewer;

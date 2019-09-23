@@ -1,10 +1,8 @@
 import React from "react";
 import Media from "react-media";
 
-import { SMALL_SCREEN } from "../Theme";
+import { SMALL_SCREEN } from "../Theme.js";
 
-function SmallScreen({ children }) {
+export default function SmallScreen({ children }) {
   return <Media query={SMALL_SCREEN} children={children} />;
 }
-
-export default SmallScreen;

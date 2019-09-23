@@ -34,7 +34,7 @@ class ScrollY extends Component {
   }
 }
 
-class ScrollToDoc extends Component {
+export default class ScrollToDoc extends Component {
   static propTypes = {
     doc: PropTypes.object,
     header: PropTypes.object
@@ -112,5 +112,3 @@ class ScrollToDoc extends Component {
     );
   }
 }
-
-export default ScrollToDoc;

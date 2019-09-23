@@ -1,10 +1,10 @@
 import React from "react";
 import { Link } from "react-router-dom";
-import { Block, Flex, Row, Inline } from "jsxstyle";
+import { Block, Row, Inline } from "jsxstyle";
 
-import Logo from "../Logo";
-import SmallScreen from "../SmallScreen";
-import { SMALL_SCREEN, LIGHT_GRAY, BRIGHT_GRAY } from "../../Theme";
+import { SMALL_SCREEN, LIGHT_GRAY } from "../../Theme.js";
+import Logo from "../Logo.js";
+import SmallScreen from "../SmallScreen.js";
 
 function NavLink({ href, ...props }) {
   return <Block component="a" props={{ href }} margin="0 10px" {...props} />;
@@ -133,7 +133,7 @@ function Banner() {
   );
 }
 
-function Header() {
+export default function Header() {
   return (
     <SmallScreen query={SMALL_SCREEN}>
       {isSmallScreen => (
@@ -149,5 +149,3 @@ function Header() {
     </SmallScreen>
   );
 }
-
-export default Header;

@@ -1,12 +1,12 @@
 import React from "react";
 import { BrowserRouter as Router, Switch, Route } from "react-router-dom";
 
-import DelegateMarkdownLinks from "./DelegateMarkdownLinks";
-import Home from "./Home";
-import Environment from "./Environment";
-import basename from "../basename";
+import basename from "../basename.js";
+import DelegateMarkdownLinks from "./DelegateMarkdownLinks.js";
+import Home from "./Home/index.js";
+import Environment from "./Environment.js";
 
-function App() {
+export default function App() {
   return (
     <Router basename={basename}>
       <DelegateMarkdownLinks>
@@ -18,5 +18,3 @@ function App() {
     </Router>
   );
 }
-
-export default App;

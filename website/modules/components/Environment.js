@@ -2,11 +2,11 @@ import React, { useEffect } from "react";
 import { Redirect } from "react-router-dom";
 import PropTypes from "prop-types";
 
-import EnvironmentLarge from "./EnvironmentLarge";
-import EnvironmentSmall from "./EnvironmentSmall";
-import Bundle from "./Bundle";
-import SmallScreen from "./SmallScreen";
-import Loading from "./Loading";
+import EnvironmentLarge from "./EnvironmentLarge.js";
+import EnvironmentSmall from "./EnvironmentSmall.js";
+import Bundle from "./Bundle.js";
+import SmallScreen from "./SmallScreen.js";
+import Loading from "./Loading.js";
 
 const envData = {
   web: require("bundle-loader?lazy!../docs/Web"),
@@ -14,7 +14,7 @@ const envData = {
   core: require("bundle-loader?lazy!../docs/Core")
 };
 
-function Environment({
+export default function Environment({
   history,
   location,
   match,
@@ -65,5 +65,3 @@ Environment.propTypes = {
     })
   })
 };
-
-export default Environment;

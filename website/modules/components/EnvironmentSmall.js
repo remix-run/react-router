@@ -5,11 +5,11 @@ import ChevronLeft from "react-icons/lib/md/chevron-left";
 import PropTypes from "prop-types";
 import { Block, Col } from "jsxstyle";
 
-import EnvironmentHeader from "./EnvironmentHeader";
-import { RED } from "../Theme";
-import Example from "./Example";
-import API from "./APISmall";
-import Guide from "./Guide";
+import EnvironmentHeader from "./EnvironmentHeader.js";
+import { RED } from "../Theme.js";
+import Example from "./Example.js";
+import API from "./APISmall.js";
+import Guide from "./Guide.js";
 
 const paths = {
   api: match => `${match.path}/api/:mod`,
@@ -17,7 +17,7 @@ const paths = {
   guide: match => `${match.path}/guides/:mod/:header?`
 };
 
-class EnvironmentSmall extends Component {
+export default class EnvironmentSmall extends Component {
   static propTypes = {
     data: PropTypes.object,
     match: PropTypes.object,
@@ -532,21 +532,20 @@ class Nav extends Component {
         overflow="scroll"
         paddingTop="150px"
       >
-        {Array.isArray(data.examples) &&
-          data.examples.length > 0 && (
+        {Array.isArray(data.examples) && data.examples.length > 0 && (
+          <Block>
+            <Title>Examples</Title>
             <Block>
-              <Title>Examples</Title>
-              <Block>
-                {data.examples.map((item, i) => (
-                  <NavLink
-                    key={i}
-                    to={`/${environment}/example/${item.slug}`}
-                    children={item.label}
-                  />
-                ))}
-              </Block>
+              {data.examples.map((item, i) => (
+                <NavLink
+                  key={i}
+                  to={`/${environment}/example/${item.slug}`}
+                  children={item.label}
+                />
+              ))}
             </Block>
-          )}
+          </Block>
+        )}
 
         <Block>
           <Title>Guides</Title>
@@ -584,5 +583,3 @@ class Nav extends Component {
     );
   }
 }
-
-export default EnvironmentSmall;

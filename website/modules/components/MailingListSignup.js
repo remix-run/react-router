@@ -2,9 +2,9 @@ import React, { Component } from "react";
 import PropTypes from "prop-types";
 import { Block, Flex } from "jsxstyle";
 
-import subscribeToMailingList from "../utils/subscribeToMailingList";
-import SmallScreen from "./SmallScreen";
-import { RED } from "../Theme";
+import { RED } from "../Theme.js";
+import subscribeToMailingList from "../utils/subscribeToMailingList.js";
+import SmallScreen from "./SmallScreen.js";
 
 function Button({ children, ...props }) {
   return (
@@ -44,7 +44,7 @@ function Input({ margin, ...props }) {
 
 Input.propTypes = { margin: PropTypes.any };
 
-class MailingListSignup extends Component {
+export default class MailingListSignup extends Component {
   state = { email: "", submitted: false };
 
   handleSubmit = e => {
@@ -128,5 +128,3 @@ class MailingListSignup extends Component {
     );
   }
 }
-
-export default MailingListSignup;

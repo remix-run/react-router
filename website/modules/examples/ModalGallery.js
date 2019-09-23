@@ -2,13 +2,21 @@ import React, { Component } from "react";
 import { BrowserRouter as Router, Switch, Route, Link } from "react-router-dom";
 
 // This example shows how to render two different screens
-// (or the same screen in a different context) at the same url,
+// (or the same screen in a different context) at the same URL,
 // depending on how you got there.
 //
 // Click the colors and see them full screen, then "visit the
 // gallery" and click on the colors. Note the URL and the component
 // are the same as before but now we see them inside a modal
 // on top of the old screen.
+
+export default function ModalGalleryExample() {
+  return (
+    <Router>
+      <Route component={ModalSwitch} />
+    </Router>
+  );
+}
 
 class ModalSwitch extends Component {
   // We can pass a location to <Switch/> that will tell it to
@@ -184,13 +192,3 @@ function Modal({ match, history }) {
     </div>
   );
 }
-
-function ModalGallery() {
-  return (
-    <Router>
-      <Route component={ModalSwitch} />
-    </Router>
-  );
-}
-
-export default ModalGallery;

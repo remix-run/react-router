@@ -1,9 +1,9 @@
 import React from "react";
 import { Block } from "jsxstyle";
 
-import { DARK_GRAY } from "../../Theme";
+import { DARK_GRAY } from "../../Theme.js";
 
-function Video() {
+export default function Video() {
   return (
     <Block background={DARK_GRAY} color="white" padding="80px 0">
       <Block
@@ -25,5 +25,3 @@ function Video() {
     </Block>
   );
 }
-
-export default Video;

@@ -1,10 +1,10 @@
 import React from "react";
 import { Block, Row } from "jsxstyle";
 
-import { DARK_GRAY } from "../Theme";
+import { DARK_GRAY } from "../Theme.js";
 import LogoImage from "../logo.png";
 
-function Logo({ size = 230, shadow = true }) {
+export default function Logo({ size = 230, shadow = true }) {
   return (
     <Row
       background={DARK_GRAY}
@@ -23,5 +23,3 @@ function Logo({ size = 230, shadow = true }) {
     </Row>
   );
 }
-
-export default Logo;

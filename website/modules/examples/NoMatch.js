@@ -7,7 +7,7 @@ import {
   Redirect
 } from "react-router-dom";
 
-function NoMatchExample() {
+export default function NoMatchExample() {
   return (
     <Router>
       <div>
@@ -62,5 +62,3 @@ function NoMatch({ location }) {
     </div>
   );
 }
-
-export default NoMatchExample;
