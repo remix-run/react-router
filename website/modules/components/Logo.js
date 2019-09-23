@@ -18,7 +18,7 @@ function Logo({ size = 230, shadow = true }) {
       }
     >
       <Block position="relative" top="-4%" textAlign="center" width="100%">
-        <img src={LogoImage} width="75%" />
+        <img src={LogoImage} alt="React Training" width="75%" />
       </Block>
     </Row>
   );

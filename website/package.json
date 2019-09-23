@@ -4,7 +4,8 @@
   "version": "5.0.1",
   "scripts": {
     "build": "cross-env NODE_ENV=production webpack -p",
-    "start": "webpack-dev-server --inline --host 0.0.0.0"
+    "start": "webpack-dev-server --inline --host 0.0.0.0",
+    "lint": "eslint modules"
   },
   "dependencies": {
     "@codesandbox/react-embed": "0.0.14",
@@ -24,8 +25,10 @@
     "slug": "^0.9.2"
   },
   "devDependencies": {
+    "@typescript-eslint/eslint-plugin": "2.x",
+    "@typescript-eslint/parser": "2.x",
     "babel-core": "^6.26.3",
-    "babel-eslint": "^8.2.3",
+    "babel-eslint": "10.x",
     "babel-loader": "^7.1.2",
     "babel-plugin-dev-expression": "^0.2.1",
     "babel-plugin-transform-class-properties": "^6.24.1",
@@ -38,9 +41,13 @@
     "copy-webpack-plugin": "^4.0.1",
     "cross-env": "^5.2.0",
     "css-loader": "^2.1.1",
-    "eslint": "^4.19.1",
-    "eslint-plugin-import": "^2.12.0",
-    "eslint-plugin-react": "^7.9.1",
+    "eslint": "6.x",
+    "eslint-config-react-app": "^5.0.2",
+    "eslint-plugin-flowtype": "3.x",
+    "eslint-plugin-import": "2.x",
+    "eslint-plugin-jsx-a11y": "6.x",
+    "eslint-plugin-react": "7.x",
+    "eslint-plugin-react-hooks": "1.x",
     "file-loader": "^1.1.5",
     "html-loader": "^0.5.1",
     "html-webpack-plugin": "^3.2.0",

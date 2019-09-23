@@ -109,7 +109,7 @@ function Banner() {
               margin={`${isSmallScreen ? 20 : 20}px 0`}
               fontSize={isSmallScreen ? "80%" : null}
             >
-              Components are the heart of React's powerful, declarative
+              Components are the heart of React&apos;s powerful, declarative
               programming model. React Router is a collection of{" "}
               <b>navigational components</b> that compose declaratively with
               your application. Whether you want to have{" "}

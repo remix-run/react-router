@@ -73,12 +73,17 @@ class MailingListSignup extends Component {
               <Block textAlign="center">
                 <p>Thanks! You've been added to our list.</p>
                 <p style={{ marginTop: 10 }}>
-                  <a
-                    style={{ textDecoration: "underline", cursor: "pointer" }}
+                  <button
+                    style={{
+                      border: "none",
+                      textDecoration: "underline",
+                      fontSize: "1em",
+                      cursor: "pointer"
+                    }}
                     onClick={() => this.setState({ submitted: false })}
                   >
                     Reset
-                  </a>
+                  </button>
                 </p>
               </Block>
             ) : (
