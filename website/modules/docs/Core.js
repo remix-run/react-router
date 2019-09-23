@@ -8,7 +8,6 @@ export default {
     require("../../../packages/react-router/docs/api/Router.md"),
     require("../../../packages/react-router/docs/api/StaticRouter.md"),
     require("../../../packages/react-router/docs/api/Switch.md"),
-    require("../../../packages/react-router/docs/api/context.router.md"),
     require("../../../packages/react-router/docs/api/history.md"),
     require("../../../packages/react-router/docs/api/location.md"),
     require("../../../packages/react-router/docs/api/match.md"),
