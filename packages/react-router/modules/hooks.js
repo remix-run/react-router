@@ -51,3 +51,14 @@ export function useRouteMatch(path) {
     ? matchPath(useLocation().pathname, path)
     : useContext(Context).match;
 }
+
+export function useRouter() {
+  if (__DEV__) {
+    invariant(
+      typeof useContext === "function",
+      "You must use React >= 16.8 in order to use useRouter()"
+    );
+  }
+
+  return useContext(Context);
+}

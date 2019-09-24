@@ -14,13 +14,13 @@
     }
   },
   "umd/react-router-dom.js": {
-    "bundled": 131334,
-    "minified": 46991,
-    "gzipped": 14275
+    "bundled": 131656,
+    "minified": 47150,
+    "gzipped": 14295
   },
   "umd/react-router-dom.min.js": {
-    "bundled": 87085,
-    "minified": 29827,
-    "gzipped": 9885
+    "bundled": 87264,
+    "minified": 29901,
+    "gzipped": 9899
   }
 }
