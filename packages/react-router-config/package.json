@@ -25,7 +25,7 @@
   "scripts": {
     "build": "rollup -c",
     "lint": "eslint modules",
-    "prepublishOnly": "npm run build",
+    "prepublishOnly": "yarn build",
     "test": "jest"
   },
   "peerDependencies": {
