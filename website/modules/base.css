@@ -1,8 +1,23 @@
+html {
+  box-sizing: border-box;
+}
+*,
+*:before,
+*:after {
+  box-sizing: inherit;
+}
+
 body {
   font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto,
     Oxygen-Sans, Ubuntu, Cantarell, "Helvetica Neue", sans-serif;
-  line-height: 1.3;
+  font-size: 18px;
+  line-height: 1.5;
 }
+
+code {
+  font-family: Menlo, monospace;
+}
+
 h1,
 h2,
 h3,
@@ -32,16 +47,6 @@ a {
 
 .mobile-scroll {
   -webkit-overflow-scrolling: touch;
-}
-
-* {
-  box-sizing: border-box;
-}
-
-pre,
-code {
-  font-family: Menlo, monospace;
-  line-height: 1.5;
 }
 
 /* have messed with these! */
@@ -89,12 +94,12 @@ code {
   font-family: Menlo, monospace;
   padding: 40px 0px 10px 0px;
   color: rgb(204, 65, 65);
-  font-size: 200%;
+  font-size: 2em;
 }
 
 .markdown h2 {
   font-family: Menlo, monospace;
-  font-size: 150%;
+  font-size: 1.5em;
   padding-top: 40px;
   position: relative;
 }
@@ -116,16 +121,6 @@ code {
   color: rgb(45, 45, 45);
 }
 
-.markdown pre code {
-  font-size: 11px;
-}
-.markdown code {
-  font-size: 12px;
-}
-.markdown h2 code {
-  font-size: 100%;
-  font-weight: 100;
-}
 .markdown h2 + p {
   margin-top: 10px;
 }
@@ -185,7 +180,7 @@ h3 {
 .markdown th {
   border-bottom: 1px solid #f0f0f0;
   text-align: center;
-  font-size: 80%;
+  font-size: 0.8em;
   font-weight: normal;
   font-style: italic;
 }
