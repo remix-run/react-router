@@ -38,33 +38,6 @@ a {
   box-sizing: border-box;
 }
 
-.fake-browser h1 {
-  margin: initial;
-  font-size: 150%;
-}
-.fake-browser h2 {
-  margin: initial;
-  font-size: 125%;
-}
-.fake-browser h3 {
-  margin: initial;
-  font-size: 100%;
-}
-
-.fake-browser a {
-  color: hsl(200, 50%, 50%);
-  text-decoration: underline;
-  display: initial;
-}
-
-.fake-browser a:active {
-  color: hsl(0, 78%, 60%);
-}
-
-.fake-browser {
-  color: initial;
-}
-
 pre,
 code {
   font-family: Menlo, monospace;
