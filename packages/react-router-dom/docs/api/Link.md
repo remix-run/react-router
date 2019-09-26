@@ -17,6 +17,7 @@ A string representation of the Link location, created by concatenating the locat
 ```
 
 ## to: object
+<i>Note: The "to" as a function API has not yet been released.</i>
 
 An object that can have any of the following properties:
 
