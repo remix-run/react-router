@@ -15,6 +15,7 @@
     "@babel/preset-react": "^7.0.0",
     "babel-eslint": "^10.0.3",
     "babel-plugin-dev-expression": "^0.2.2",
+    "metro-react-native-babel-preset": "^0.56.0",
     "eslint": "^6.3.0",
     "eslint-plugin-import": "^2.18.2",
     "eslint-plugin-react": "^7.14.3",
@@ -34,18 +35,14 @@
     "rollup-plugin-node-resolve": "^5.2.0",
     "rollup-plugin-replace": "^2.2.0",
     "rollup-plugin-size-snapshot": "^0.10.0",
-    "rollup-plugin-uglify": "^6.0.3"
+    "rollup-plugin-uglify": "^6.0.3",
+    "babel-jest": "^24.9.0",
+    "react-native": "^0.61.1",
+    "react-test-renderer": "^16.8.3"
   },
   "workspaces": {
     "packages": [
       "packages/*"
-    ],
-    "nohoist": [
-      "**/react-native",
-      "**/react-native/**"
     ]
-  },
-  "devDependencies": {
-    "babel-jest": "^24.9.0"
   }
 }

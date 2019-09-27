@@ -1,5 +1,5 @@
 module.exports = {
-  babelrcRoots: [".", "./packages/react-router-native/*", "./website/*"],
+  babelrcRoots: [".", "./website/*"],
   presets: [["@babel/env", { loose: true }], "@babel/react"],
   plugins: ["dev-expression"],
   env: {

@@ -2,7 +2,10 @@
 const moduleType = process.env.TEST_ENV || "modules";
 
 module.exports = {
-  // preset: "react-native",
+  projects: [
+    "<rootDir>",
+    "<rootDir>/packages/react-router-native/jest.config.js"
+  ],
   testRunner: "jest-circus/runner",
   restoreMocks: true,
   globals: {
@@ -15,6 +18,9 @@ module.exports = {
   },
   modulePaths: ["<rootDir>/node_modules"],
   setupFiles: ["raf/polyfill"],
-  testMatch: ["packages/**/__tests__/**/*-test.js"],
+  testMatch: ["<rootDir>/packages/**/__tests__/**/*-test.js"],
+  transform: {
+    "^.+\\.[jt]sx?$": "babel-jest"
+  },
   testURL: "http://localhost/"
 };
