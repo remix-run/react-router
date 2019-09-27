@@ -1,10 +1,10 @@
+const path = require("path");
 const babel = require("rollup-plugin-babel");
 const replace = require("rollup-plugin-replace");
 const commonjs = require("rollup-plugin-commonjs");
 const nodeResolve = require("rollup-plugin-node-resolve");
-const { sizeSnapshot } = require("rollup-plugin-size-snapshot");
 const { uglify } = require("rollup-plugin-uglify");
-const path = require("path");
+
 const pkg = require("./package.json");
 
 function isBareModuleId(id) {
@@ -58,8 +58,9 @@ const esm = [
         sourceMaps: true,
         plugins: [["@babel/transform-runtime", { useESModules: true }]]
       }),
-      replace({ "process.env.BUILD_FORMAT": JSON.stringify("esm") }),
-      sizeSnapshot()
+      replace({
+        "process.env.BUILD_FORMAT": JSON.stringify("esm")
+      })
     ]
   }
 ];
@@ -96,8 +97,7 @@ const umd = [
       replace({
         "process.env.NODE_ENV": JSON.stringify("development"),
         "process.env.BUILD_FORMAT": JSON.stringify("umd")
-      }),
-      sizeSnapshot()
+      })
     ]
   },
   {
@@ -130,7 +130,6 @@ const umd = [
         "process.env.NODE_ENV": JSON.stringify("production"),
         "process.env.BUILD_FORMAT": JSON.stringify("umd")
       }),
-      sizeSnapshot(),
       uglify()
     ]
   }
