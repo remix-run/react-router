@@ -38,7 +38,6 @@
   "scripts": {
     "build": "rollup -c",
     "lint": "eslint modules",
-    "prepublishOnly": "yarn build",
     "test": "jest"
   },
   "peerDependencies": {
