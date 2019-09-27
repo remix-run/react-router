@@ -98,4 +98,25 @@ describe("useParams", () => {
       });
     });
   });
+
+  describe("when the route isn't matched", () => {
+    it("returns empty object", () => {
+      let params;
+
+      function HomePage() {
+        params = useParams();
+        return null;
+      }
+
+      renderStrict(
+        <MemoryRouter initialEntries={["/home"]}>
+          <Route path="/not-the-current-route" children={() => <HomePage />} />
+        </MemoryRouter>,
+        node
+      );
+
+      expect(typeof params).toBe("object");
+      expect(Object.keys(params)).toHaveLength(0);
+    });
+  });
 });
