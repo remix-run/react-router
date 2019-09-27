@@ -36,7 +36,8 @@ export function useParams() {
     );
   }
 
-  return useContext(Context).match.params;
+  const match = useContext(Context).match;
+  return match ? match.params : {};
 }
 
 export function useRouteMatch(path) {
