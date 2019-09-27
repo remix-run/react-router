@@ -6,9 +6,10 @@ import Link from "./Link";
 import { resolveToLocation, normalizeToLocation } from "./utils/locationUtils";
 
 // React 15 compat
+const forwardRefShim = C => C;
 let { forwardRef } = React;
 if (typeof forwardRef === "undefined") {
-  forwardRef = C => C;
+  forwardRef = forwardRefShim;
 }
 
 function joinClassnames(...classnames) {
@@ -67,16 +68,23 @@ const NavLink = forwardRef(
             : classNameProp;
           const style = isActive ? { ...styleProp, ...activeStyle } : styleProp;
 
-          return (
-            <Link
-              ref={forwardedRef || innerRef}
-              aria-current={(isActive && ariaCurrent) || null}
-              className={className}
-              style={style}
-              to={toLocation}
-              {...rest}
-            />
-          );
+          const props = {
+            "aria-current": (isActive && ariaCurrent) || null,
+            className,
+            style,
+            to: toLocation,
+            ...rest
+          };
+
+          // React 15 compat
+          if (forwardRefShim !== forwardRef) {
+            props.ref = forwardedRef || innerRef;
+          } else {
+            // TODO: deprecate
+            props.innerRef = innerRef;
+          }
+
+          return <Link {...props} />;
         }}
       </RouterContext.Consumer>
     );
