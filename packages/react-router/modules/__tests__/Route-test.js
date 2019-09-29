@@ -67,6 +67,30 @@ describe("A <Route>", () => {
 
       expect(node.innerHTML).not.toContain(text);
     });
+
+    it("receives { history, location, match } props", () => {
+      const history = createHistory();
+
+      let props = null;
+      const Component = p => {
+        props = p;
+        return null;
+      };
+
+      renderStrict(
+        <Router history={history}>
+          <Route path="/">
+            <Component />
+          </Route>
+        </Router>,
+        node
+      );
+
+      expect(props).not.toBe(null);
+      expect(props.history).toBe(history);
+      expect(typeof props.location).toBe("object");
+      expect(typeof props.match).toBe("object");
+    });
   });
 
   describe("with a children function", () => {
