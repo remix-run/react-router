@@ -121,7 +121,7 @@ you can just
 
 ```jsx
 function BlogPost() {
-  let match = useMatch("/blog/:slug")
+  let match = useRouteMatch("/blog/:slug")
   // Do whatever you want with the match...
 }
 ```
