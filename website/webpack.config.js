@@ -32,11 +32,11 @@ module.exports = {
   ].concat(
     process.env.NODE_ENV === "production"
       ? [
-        new SWPrecacheWebpackPlugin({
-          cacheId: "react-router-website",
-          staticFileGlobsIgnorePatterns: [/\.map$/]
-        })
-      ]
+          new SWPrecacheWebpackPlugin({
+            cacheId: "react-router-website",
+            staticFileGlobsIgnorePatterns: [/\.map$/]
+          })
+        ]
       : []
   ),
 
@@ -65,7 +65,10 @@ module.exports = {
       {
         test: /\.js$/,
         exclude: /node_modules|examples/,
-        loader: "babel-loader"
+        use: {
+          loader: "babel-loader",
+          options: { rootMode: "upward" }
+        }
       },
       {
         test: /\.js$/,
@@ -78,7 +81,10 @@ module.exports = {
               lazy: true
             }
           },
-          { loader: "babel-loader" }
+          {
+            loader: "babel-loader",
+            options: { rootMode: "upward" }
+          }
         ]
       },
       {
@@ -114,7 +120,8 @@ module.exports = {
         test: /\.md(\?(.+))?$/,
         loader: "markdown-loader",
         options: {
-          basename: process.env.NODE_ENV === "production" ? "/react-router" : undefined
+          basename:
+            process.env.NODE_ENV === "production" ? "/react-router" : undefined
         }
       },
       {

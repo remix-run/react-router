@@ -4728,6 +4728,13 @@ get-caller-file@^2.0.1:
   resolved "https://registry.yarnpkg.com/get-caller-file/-/get-caller-file-2.0.5.tgz#4f94412a82db32f36e3b0b9741f8a97feb031f7e"
   integrity sha512-DyFP3BM/3YHTQOCUL/w0OZHR0lpKeGrxotcHWcqNEdnltqFwXVfhEBQ94eIo34AfQpo0rGki4cyIiftY06h2Fg==
 
+get-lerna-packages@^0.1.1:
+  version "0.1.1"
+  resolved "https://registry.npmjs.org/get-lerna-packages/-/get-lerna-packages-0.1.1.tgz#37aaaac36fd14f00082f17b1096dd6c69290cef9"
+  integrity sha512-venxkvga57gOUZoTmXZlJ0zHc8cmvsx7Y0GTMcoEK/7OCEK3PLpG5gVTbUUMJaLxbzK13AWQdKPf1LSkuEfWqA==
+  dependencies:
+    glob "^7.1.2"
+
 get-pkg-repo@^1.0.0:
   version "1.4.0"
   resolved "https://registry.yarnpkg.com/get-pkg-repo/-/get-pkg-repo-1.4.0.tgz#c73b489c06d80cc5536c2c853f9e05232056972d"
@@ -6240,6 +6247,13 @@ left-pad@^1.3.0:
   version "1.3.0"
   resolved "https://registry.yarnpkg.com/left-pad/-/left-pad-1.3.0.tgz#5b8a3a7765dfe001261dde915589e782f8c94d1e"
   integrity sha512-XI5MPzVNApjAyhQzphX8BkmKsKUxD4LdyK24iZeQGinBN9yTQT3bFlCBy/aVx2HrNcqQGsdot8ghrjyrvMCoEA==
+
+lerna-alias@3.0.3-0:
+  version "3.0.3-0"
+  resolved "https://registry.npmjs.org/lerna-alias/-/lerna-alias-3.0.3-0.tgz#d681842deed66644ab9f38a7b365658cfe52dd43"
+  integrity sha512-IX0c2QH3v4rkgE+iG7Ro0FSEWKqqrMhvbGbB1txrnaJ8YbcrNbJ0IPpcJi+uiiPLV3olNX74EO08x9hGZ+J5ig==
+  dependencies:
+    get-lerna-packages "^0.1.1"
 
 lerna@^3.13.4:
   version "3.16.4"

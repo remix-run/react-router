@@ -1,25 +1,40 @@
-// Bundle type "cjs" | "umd" | "modules"
-const moduleType = process.env.TEST_ENV || "modules";
+const preset = require("react-native/jest-preset");
+const { jest: lernaAliases } = require("lerna-alias");
+
+const mapValues = (obj, mapper) => {
+  const mapped = {};
+  Object.keys(obj).forEach(key => {
+    mapped[key] = mapper(obj[key]);
+  });
+  return mapped;
+};
+
+const omitBy = (obj, predicate) => {
+  const mapped = {};
+  Object.keys(obj).forEach(key => {
+    if (predicate(obj[key], key)) {
+      return;
+    }
+    mapped[key] = obj[key];
+  });
+  return mapped;
+};
+
+const monorepoAliases = lernaAliases();
+const transpilableAliases = omitBy(monorepoAliases, (_, key) =>
+  key.includes("react-router-native")
+);
 
 module.exports = {
-  rootDir: ".",
-  preset: "react-native",
+  ...preset,
   testRunner: "jest-circus/runner",
   restoreMocks: true,
-  moduleNameMapper: {
-    "^react-router$": `<rootDir>/../react-router/${moduleType}/index.js`
-  },
-  modulePaths: ["<rootDir>/node_modules"],
-  testMatch: ["<rootDir>/__tests__/**/*.js"],
-  transform: {
-    "^.+\\.[jt]sx?$": [
-      "babel-jest",
-      {
-        // Add Babel config inline to avoide Babel's file config merge behaviour
-        rootMode: "root",
-        presets: ["module:metro-react-native-babel-preset"],
-        plugins: [["@babel/plugin-proposal-class-properties", { loose: true }]]
-      }
-    ]
-  }
+  moduleNameMapper: mapValues(transpilableAliases, path =>
+    path.replace("/src/index", `/modules/index`)
+  ),
+  transform: mapValues(preset.transform, transformer =>
+    transformer === "babel-jest"
+      ? ["babel-jest", { rootMode: "upward" }]
+      : transformer
+  )
 };
