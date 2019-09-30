@@ -32,7 +32,7 @@ const NavLink = forwardRef(
       strict,
       style: styleProp,
       to,
-      innerRef,
+      innerRef, // TODO: deprecate
       ...rest
     },
     forwardedRef
@@ -80,7 +80,6 @@ const NavLink = forwardRef(
           if (forwardRefShim !== forwardRef) {
             props.ref = forwardedRef || innerRef;
           } else {
-            // TODO: deprecate
             props.innerRef = innerRef;
           }
 
