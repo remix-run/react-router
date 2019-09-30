@@ -13,7 +13,7 @@ function isEmptyChildren(children) {
 
 function addRouterPropsToChildren(children, routerProps) {
   return React.Children.map(children, child => {
-    if (React.isValidElement(child)) {
+    if (React.isValidElement(child) && typeof child.type !== "string") {
       return React.cloneElement(child, { ...routerProps, ...child.props });
     } else {
       return child;
@@ -48,8 +48,8 @@ class Route extends React.Component {
           const match = this.props.computedMatch
             ? this.props.computedMatch // <Switch> already computed the match for us
             : this.props.path
-              ? matchPath(location.pathname, this.props)
-              : context.match;
+            ? matchPath(location.pathname, this.props)
+            : context.match;
 
           const props = { ...context, location, match };
 
@@ -71,15 +71,15 @@ class Route extends React.Component {
                       : children(props)
                     : addRouterPropsToChildren(children, props)
                   : component
-                    ? React.createElement(component, props)
-                    : render
-                      ? render(props)
-                      : null
+                  ? React.createElement(component, props)
+                  : render
+                  ? render(props)
+                  : null
                 : typeof children === "function"
-                  ? __DEV__
-                    ? evalChildrenDev(children, props, this.props.path)
-                    : children(props)
-                  : null}
+                ? __DEV__
+                  ? evalChildrenDev(children, props, this.props.path)
+                  : children(props)
+                : null}
             </RouterContext.Provider>
           );
         }}

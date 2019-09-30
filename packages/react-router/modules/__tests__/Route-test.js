@@ -68,7 +68,7 @@ describe("A <Route>", () => {
       expect(node.innerHTML).not.toContain(text);
     });
 
-    it("receives { history, location, match } props", () => {
+    it("passes routing props to composite components", () => {
       const history = createHistory();
 
       let props = null;
