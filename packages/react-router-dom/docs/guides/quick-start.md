@@ -152,15 +152,9 @@ export default function App() {
         <Navigation />
 
         <Switch>
-          <Route path="/about">
-            <About />
-          </Route>
-          <Route path="/topics">
-            <Topics />
-          </Route>
-          <Route path="/">
-            <Home />
-          </Route>
+          <Route path="/about" component={About} />
+          <Route path="/topics" component={Topics} />
+          <Route path="/" component={Home} />
         </Switch>
       </div>
     </Router>
