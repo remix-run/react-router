@@ -21,7 +21,7 @@ export default function RecursiveExample() {
 }
 
 function Person({ match }) {
-  let person = find(Number.parseInt(match.params.id, 10));
+  let person = find(parseInt(match.params.id));
 
   return (
     <div>
