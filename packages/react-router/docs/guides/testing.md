@@ -139,7 +139,7 @@ it("navigates home when you click the logo", async => {
 
 You shouldn't have to access the `location` or `history` objects very often in tests, but if you do (such as to validate that new query params are set in the url bar), you can add a route that updates a variable in the test:
 
-```diff
+```jsx
 // app.test.js
 test('clicking filter links updates product query params', () => {
   let history, location;
@@ -172,7 +172,7 @@ test('clicking filter links updates product query params', () => {
 1. You can also use `BrowserRouter` if your test environment has the browser globals `window.location` and `window.history` (which is the default in Jest through JSDOM, but you cannot reset the history between tests).
 1. Instead of passing a custom route to MemoryRouter, you can use the base `Router` with a `history` prop from the [`history`](https://github.com/ReactTraining/history) package:
 
-```js
+```jsx
 // app.test.js
 import { createMemoryHistory } from "history"
 import { Router } from "react-router"
