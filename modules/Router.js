@@ -23,7 +23,7 @@ const propTypes = {
   matchContext: object
 }
 
-const prefixUnsafeLifecycleMethods = parseFloat(React.version) >= 16.3
+const prefixUnsafeLifecycleMethods = typeof React.forwardRef !== 'undefined'
 
 /**
  * A <Router> is a high-level API for automatically setting up

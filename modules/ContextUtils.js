@@ -15,7 +15,7 @@ function makeContextName(name) {
   return `@@contextSubscriber/${name}`
 }
 
-const prefixUnsafeLifecycleMethods = parseFloat(React.version) >= 16.3
+const prefixUnsafeLifecycleMethods = typeof React.forwardRef !== 'undefined'
 
 export function ContextProvider(name) {
   const contextName = makeContextName(name)
