@@ -146,7 +146,7 @@ test('clicking filter links updates product query params', () => {
   render(
     <MemoryRouter initialEntries={['/my/initial/route']}>
       <App />
-      <Route path="*" render={({ location, location }) => {
+      <Route path="*" render={({ history, location }) => {
         history = history;
         location = location;
         return null;
