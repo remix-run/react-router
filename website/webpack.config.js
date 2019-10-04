@@ -69,8 +69,7 @@ module.exports = {
         test: /\.js$/,
         exclude: /node_modules|examples/,
         use: {
-          loader: "babel-loader",
-          options: { rootMode: "upward" }
+          loader: "babel-loader"
         }
       },
       {
@@ -85,8 +84,7 @@ module.exports = {
             }
           },
           {
-            loader: "babel-loader",
-            options: { rootMode: "upward" }
+            loader: "babel-loader"
           }
         ]
       },
