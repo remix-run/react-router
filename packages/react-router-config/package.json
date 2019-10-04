@@ -24,8 +24,7 @@
   "sideEffects": false,
   "scripts": {
     "build": "rollup -c",
-    "lint": "eslint modules",
-    "prepublishOnly": "npm run build"
+    "lint": "eslint modules"
   },
   "peerDependencies": {
     "react": ">=15",
