@@ -1,8 +1,8 @@
 import React from "react";
 import { Block, Inline } from "jsxstyle";
 
-import { DARK_GRAY, BRIGHT_GRAY, LIGHT_GRAY } from "../Theme";
-import MailingListSignup from "./MailingListSignup";
+import { DARK_GRAY, BRIGHT_GRAY, LIGHT_GRAY } from "../Theme.js";
+import MailingListSignup from "./MailingListSignup.js";
 
 function FooterLink({ href, ...rest }) {
   return (
@@ -39,7 +39,7 @@ function CC() {
 
 const year = new Date().getFullYear();
 
-function Footer() {
+export default function Footer() {
   return (
     <Block>
       <MailingListSignup />
@@ -64,5 +64,3 @@ function Footer() {
     </Block>
   );
 }
-
-export default Footer;

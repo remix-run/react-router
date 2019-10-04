@@ -8,7 +8,7 @@ import MarkdownViewer from "./MarkdownViewer";
 
 // nearly identical to Guide, haven't taken the time to abstact cause I'm not sure it'll
 // remain so identical ... maybe it will?
-class API extends Component {
+export default class API extends Component {
   static propTypes = {
     match: PropTypes.object,
     data: PropTypes.object
@@ -31,12 +31,10 @@ class API extends Component {
           ))}
         </Block>
         {mod && !doc && <Redirect to={`/${environment}/api`} />}
-        {headerParam &&
-          doc &&
-          !header && <Redirect to={`/${environment}/api/${mod}`} />}
+        {headerParam && doc && !header && (
+          <Redirect to={`/${environment}/api/${mod}`} />
+        )}
       </Block>
     );
   }
 }
-
-export default API;

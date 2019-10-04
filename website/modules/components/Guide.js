@@ -3,11 +3,11 @@ import PropTypes from "prop-types";
 import { Redirect, Route } from "react-router-dom";
 import { Block } from "jsxstyle";
 
-import ScrollToDoc from "./ScrollToDoc";
-import MarkdownViewer from "./MarkdownViewer";
+import ScrollToDoc from "./ScrollToDoc.js";
+import MarkdownViewer from "./MarkdownViewer.js";
 
 // almost identical to `API`, but I'm lazy rn
-function Guide({ match, data }) {
+export default function Guide({ match, data }) {
   const {
     params: { mod, header: headerParam, environment }
   } = match;
@@ -45,5 +45,3 @@ Guide.propTypes = {
   match: PropTypes.object,
   data: PropTypes.object
 };
-
-export default Guide;

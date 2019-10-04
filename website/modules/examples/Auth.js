@@ -13,7 +13,7 @@ import {
 // 3. Log in
 // 4. Click the back button, note the URL each time
 
-function AuthExample() {
+export default function AuthExample() {
   return (
     <Router>
       <div>
@@ -46,22 +46,21 @@ const fakeAuth = {
   }
 };
 
-const AuthButton = withRouter(
-  ({ history }) =>
-    fakeAuth.isAuthenticated ? (
-      <p>
-        Welcome!{" "}
-        <button
-          onClick={() => {
-            fakeAuth.signout(() => history.push("/"));
-          }}
-        >
-          Sign out
-        </button>
-      </p>
-    ) : (
-      <p>You are not logged in.</p>
-    )
+const AuthButton = withRouter(({ history }) =>
+  fakeAuth.isAuthenticated ? (
+    <p>
+      Welcome!{" "}
+      <button
+        onClick={() => {
+          fakeAuth.signout(() => history.push("/"));
+        }}
+      >
+        Sign out
+      </button>
+    </p>
+  ) : (
+    <p>You are not logged in.</p>
+  )
 );
 
 function PrivateRoute({ component: Component, ...rest }) {
@@ -115,5 +114,3 @@ class Login extends Component {
     );
   }
 }
-
-export default AuthExample;

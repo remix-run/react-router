@@ -24,7 +24,7 @@ const routes = [
   }
 ];
 
-function SidebarExample() {
+export default function SidebarExample() {
   return (
     <Router>
       <div style={{ display: "flex" }}>
@@ -80,5 +80,3 @@ function SidebarExample() {
     </Router>
   );
 }
-
-export default SidebarExample;

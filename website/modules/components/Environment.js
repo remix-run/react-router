@@ -2,11 +2,11 @@ import React, { useEffect } from "react";
 import { Redirect } from "react-router-dom";
 import PropTypes from "prop-types";
 
-import EnvironmentLarge from "./EnvironmentLarge";
-import EnvironmentSmall from "./EnvironmentSmall";
-import Bundle from "./Bundle";
-import SmallScreen from "./SmallScreen";
-import Loading from "./Loading";
+import EnvironmentLarge from "./EnvironmentLarge.js";
+import EnvironmentSmall from "./EnvironmentSmall.js";
+import Bundle from "./Bundle.js";
+import SmallScreen from "./SmallScreen.js";
+import Loading from "./Loading.js";
 
 const envData = {
   web: require("bundle-loader?lazy!../docs/Web"),
@@ -14,7 +14,7 @@ const envData = {
   core: require("bundle-loader?lazy!../docs/Core")
 };
 
-function Environment({
+export default function Environment({
   history,
   location,
   match,
@@ -26,34 +26,32 @@ function Environment({
     Object.keys(envData).forEach(key => envData[key](() => {}));
   }, []);
 
-  if (!envData[environment]) {
-    return <Redirect to="/" />;
-  } else {
-    return (
-      <SmallScreen>
-        {isSmallScreen => (
-          <Bundle load={envData[environment]}>
-            {data =>
-              data ? (
-                isSmallScreen ? (
-                  <EnvironmentSmall
-                    data={data}
-                    match={match}
-                    location={location}
-                    history={history}
-                  />
-                ) : (
-                  <EnvironmentLarge data={data} match={match} />
-                )
+  if (!envData[environment]) return <Redirect to="/" />;
+
+  return (
+    <SmallScreen>
+      {isSmallScreen => (
+        <Bundle load={envData[environment]}>
+          {data =>
+            data ? (
+              isSmallScreen ? (
+                <EnvironmentSmall
+                  data={data}
+                  match={match}
+                  location={location}
+                  history={history}
+                />
               ) : (
-                <Loading />
+                <EnvironmentLarge data={data} match={match} />
               )
-            }
-          </Bundle>
-        )}
-      </SmallScreen>
-    );
-  }
+            ) : (
+              <Loading />
+            )
+          }
+        </Bundle>
+      )}
+    </SmallScreen>
+  );
 }
 
 Environment.propTypes = {
@@ -65,5 +63,3 @@ Environment.propTypes = {
     })
   })
 };
-
-export default Environment;

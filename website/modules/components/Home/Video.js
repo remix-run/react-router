@@ -1,9 +1,9 @@
 import React from "react";
 import { Block } from "jsxstyle";
 
-import { DARK_GRAY } from "../../Theme";
+import { DARK_GRAY } from "../../Theme.js";
 
-function Video() {
+export default function Video() {
   return (
     <Block background={DARK_GRAY} color="white" padding="80px 0">
       <Block
@@ -14,6 +14,7 @@ function Video() {
         boxShadow="0px 10px 30px hsla(0, 0%, 0%, 0.5)"
       >
         <iframe
+          title="Intro to React Router"
           width="100%"
           height="100%"
           src="https://www.youtube.com/embed/cKnc8gXn80Q"
@@ -24,5 +25,3 @@ function Video() {
     </Block>
   );
 }
-
-export default Video;

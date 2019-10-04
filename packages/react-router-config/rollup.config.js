@@ -2,7 +2,6 @@ const babel = require("rollup-plugin-babel");
 const replace = require("rollup-plugin-replace");
 const commonjs = require("rollup-plugin-commonjs");
 const nodeResolve = require("rollup-plugin-node-resolve");
-const { sizeSnapshot } = require("rollup-plugin-size-snapshot");
 const { uglify } = require("rollup-plugin-uglify");
 const path = require("path");
 const pkg = require("./package.json");
@@ -52,8 +51,7 @@ const esm = [
         runtimeHelpers: true,
         plugins: [["@babel/transform-runtime", { useESModules: true }]],
         rootMode: "upward"
-      }),
-      sizeSnapshot()
+      })
     ]
   }
 ];
@@ -82,9 +80,12 @@ const umd = [
         rootMode: "upward"
       }),
       nodeResolve(),
-      commonjs({ include: /node_modules/ }),
-      replace({ "process.env.NODE_ENV": JSON.stringify("development") }),
-      sizeSnapshot()
+      commonjs({
+        include: /node_modules/
+      }),
+      replace({
+        "process.env.NODE_ENV": JSON.stringify("development")
+      })
     ]
   },
   {
@@ -108,9 +109,12 @@ const umd = [
         rootMode: "upward"
       }),
       nodeResolve(),
-      commonjs({ include: /node_modules/ }),
-      replace({ "process.env.NODE_ENV": JSON.stringify("production") }),
-      sizeSnapshot(),
+      commonjs({
+        include: /node_modules/
+      }),
+      replace({
+        "process.env.NODE_ENV": JSON.stringify("production")
+      }),
       uglify()
     ]
   }

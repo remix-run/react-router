@@ -10,7 +10,7 @@ import {
 
 import "./styles.css";
 
-function AnimationExample() {
+export default function AnimationExample() {
   return (
     <Router>
       <Route
@@ -145,5 +145,3 @@ styles.rgb = {
   paddingTop: "20px",
   fontSize: "30px"
 };
-
-export default AnimationExample;
