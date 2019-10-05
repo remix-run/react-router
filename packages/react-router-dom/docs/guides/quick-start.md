@@ -95,7 +95,9 @@ function About() {
   return <h2>About</h2>;
 }
 
-function Topics({ match }) {
+function Topics() {
+  const match = useRouteMatch();
+
   return (
     <div>
       <h2>Topics</h2>
@@ -125,7 +127,9 @@ function Topics({ match }) {
   );
 }
 
-function Topic({ match }) {
+function Topic() {
+  const match = useRouteMatch();
+
   return <h3>Requested topic ID: {match.params.topicId}</h3>;
 }
 
