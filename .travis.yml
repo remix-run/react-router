@@ -25,15 +25,13 @@ jobs:
     script: yarn test
   - stage: Release
     if: tag =~ ^v[0-9]
-    env: NPM_TAG=$([[ "$TRAVIS_TAG" == *-* ]] && echo "next" || echo "latest")
     before_script: yarn build
-    script: echo "Releasing $TRAVIS_TAG to npm with tag \"$NPM_TAG\" ..."
-    before_deploy:
-    - echo "//registry.npmjs.org/:_authToken=$NPM_TOKEN" > "$HOME/.npmrc"
+    script: echo "Publishing $TRAVIS_TAG to npm ..."
+    before_deploy: echo "//registry.npmjs.org/:_authToken=$NPM_TOKEN" > "$HOME/.npmrc"
     deploy:
       provider: script
       skip_cleanup: true
-      script: lerna publish from-git -y --dist-tag $NPM_TAG
+      script: lerna publish from-git --yes --pre-dist-tag next
       on:
         tags: true
   - stage: Deploy Website
