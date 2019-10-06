@@ -1,22 +1,28 @@
 language: node_js
 node_js: node
 cache: yarn
-env:
-- TEST_ENV=cjs BUILD_ENV=cjs
-- TEST_ENV=umd BUILD_ENV=umd
-- TEST_ENV=source
-before_script:
-# react-router ESM build is imported by react-router-dom UMD,
-# so we need to build it before building react-router-dom UMD
-- ([[ "$BUILD_ENV" != "umd" ]] || (cd packages/react-router && BUILD_ENV=esm yarn build))
-- ([[ -z "$BUILD_ENV" ]] || yarn build)
-# react-router CJS build is imported by react-router-config tests,
-# so we need to build it before running react-router-config tests
-- ([[ "$BUILD_ENV" = "cjs" ]] || (cd packages/react-router && BUILD_ENV=cjs yarn build))
-script:
-- yarn test
 jobs:
   include:
+  - stage: Test
+    env: TEST_ENV=source
+    before_script:
+    # react-router CJS build is imported by react-router-config tests,
+    # so we need to build it before running react-router-config tests
+    - cd packages/react-router && BUILD_ENV=cjs yarn build && cd -
+    script: yarn test
+  - env: TEST_ENV=cjs BUILD_ENV=cjs
+    before_script: yarn build
+    script: yarn test
+  - env: TEST_ENV=umd BUILD_ENV=umd
+    before_script:
+    # react-router ESM build is imported by react-router-dom UMD,
+    # so we need to build it before building react-router-dom UMD
+    - cd packages/react-router && BUILD_ENV=esm yarn build && cd -
+    - yarn build
+    # react-router CJS build is imported by react-router-config tests,
+    # so we need to build it before running react-router-config tests
+    - cd packages/react-router && BUILD_ENV=cjs yarn build && cd -
+    script: yarn test
   - stage: Release
     if: tag =~ ^v[0-9]
     env: NPM_TAG=$([[ "$TRAVIS_TAG" == *-* ]] && echo "next" || echo "latest")
