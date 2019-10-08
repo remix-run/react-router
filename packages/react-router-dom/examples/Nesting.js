@@ -74,12 +74,14 @@ function Topics() {
         </li>
       </ul>
 
-      <Route exact path={path}>
-        <h3>Please select a topic.</h3>
-      </Route>
-      <Route path={`${path}/:topicId`}>
-        <Topic />
-      </Route>
+      <Switch>
+        <Route exact path={path}>
+          <h3>Please select a topic.</h3>
+        </Route>
+        <Route path={`${path}/:topicId`}>
+          <Topic />
+        </Route>
+      </Switch>
     </div>
   );
 }

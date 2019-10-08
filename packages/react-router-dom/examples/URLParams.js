@@ -1,6 +1,7 @@
 import React from "react";
 import {
   BrowserRouter as Router,
+  Switch,
   Route,
   Link,
   useParams
@@ -33,12 +34,9 @@ export default function ParamsExample() {
           </li>
         </ul>
 
-        {/* A <Route> may be rendered all by itself. If its
-            path matches the URL, it will render its children.
-            Otherwise, null. */}
-        <Route path="/:id">
-          <Child />
-        </Route>
+        <Switch>
+          <Route path="/:id" children={<Child />} />
+        </Switch>
       </div>
     </Router>
   );
