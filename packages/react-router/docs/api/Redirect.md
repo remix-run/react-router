@@ -3,16 +3,9 @@
 Rendering a `<Redirect>` will navigate to a new location. The new location will override the current location in the history stack, like server-side redirects (HTTP 3xx) do.
 
 ```jsx
-import React from "react"
-import ReactDOM from "react-dom"
-import { Route, Redirect } from "react-router"
-
-ReactDOM.render(
-  <Route exact path="/">
-    {loggedIn ? <Redirect to="/dashboard" /> : <PublicHomePage />}
-  </Route>,
-  node
-)
+<Route exact path="/">
+  {loggedIn ? <Redirect to="/dashboard" /> : <PublicHomePage />}
+</Route>
 ```
 
 ## to: string

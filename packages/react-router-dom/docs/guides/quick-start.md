@@ -28,19 +28,12 @@ Note: Behind the scenes a `<Link>` renders an `<a>` with a real `href`, so peopl
 
 ```jsx
 import React from "react";
-import { BrowserRouter as Router, Switch, Route, Link } from "react-router-dom";
-
-function Home() {
-  return <h2>Home</h2>;
-}
-
-function About() {
-  return <h2>About</h2>;
-}
-
-function Users() {
-  return <h2>Users</h2>;
-}
+import {
+  BrowserRouter as Router,
+  Switch,
+  Route,
+  Link
+} from "react-router-dom";
 
 export default function App() {
   return (
@@ -77,15 +70,6 @@ export default function App() {
     </Router>
   );
 }
-```
-
-## 2nd Example: Nested Routing
-
-This example shows how nested routing works. The route `/topics` loads the `Topics` component, which renders any further `<Route>`'s conditionally on the paths `:id` value.
-
-```jsx
-import React from "react";
-import { BrowserRouter as Router, Switch, Route, Link } from "react-router-dom";
 
 function Home() {
   return <h2>Home</h2>;
@@ -95,7 +79,69 @@ function About() {
   return <h2>About</h2>;
 }
 
-function Topics({ match }) {
+function Users() {
+  return <h2>Users</h2>;
+}
+```
+
+## 2nd Example: Nested Routing
+
+This example shows how nested routing works. The route `/topics` loads the `Topics` component, which renders any further `<Route>`'s conditionally on the paths `:id` value.
+
+```jsx
+import React from "react";
+import {
+  BrowserRouter as Router,
+  Switch,
+  Route,
+  Link,
+  useRouterMatch,
+  useParams
+} from "react-router-dom";
+
+export default function App() {
+  return (
+    <Router>
+      <div>
+        <ul>
+          <li>
+            <Link to="/">Home</Link>
+          </li>
+          <li>
+            <Link to="/about">About</Link>
+          </li>
+          <li>
+            <Link to="/topics">Topics</Link>
+          </li>
+        </ul>
+
+        <Switch>
+          <Route path="/about">
+            <About />
+          </Route>
+          <Route path="/topics">
+            <Topics />
+          </Route>
+          <Route path="/">
+            <Home />
+          </Route>
+        </Switch>
+      </div>
+    </Router>
+  );
+}
+
+function Home() {
+  return <h2>Home</h2>;
+}
+
+function About() {
+  return <h2>About</h2>;
+}
+
+function Topics() {
+  let match = useRouterMatch();
+
   return (
     <div>
       <h2>Topics</h2>
@@ -105,7 +151,9 @@ function Topics({ match }) {
           <Link to={`${match.url}/components`}>Components</Link>
         </li>
         <li>
-          <Link to={`${match.url}/props-v-state`}>Props v. State</Link>
+          <Link to={`${match.url}/props-v-state`}>
+            Props v. State
+          </Link>
         </li>
       </ul>
 
@@ -125,46 +173,9 @@ function Topics({ match }) {
   );
 }
 
-function Topic({ match }) {
-  return <h3>Requested topic ID: {match.params.topicId}</h3>;
-}
-
-function Navigation() {
-  return (
-    <ul>
-      <li>
-        <Link to="/">Home</Link>
-      </li>
-      <li>
-        <Link to="/about">About</Link>
-      </li>
-      <li>
-        <Link to="/topics">Topics</Link>
-      </li>
-    </ul>
-  );
-}
-
-export default function App() {
-  return (
-    <Router>
-      <div>
-        <Navigation />
-
-        <Switch>
-          <Route path="/about">
-            <About />
-          </Route>
-          <Route path="/topics">
-            <Topics />
-          </Route>
-          <Route path="/">
-            <Home />
-          </Route>
-        </Switch>
-      </div>
-    </Router>
-  );
+function Topic() {
+  let { topicId } = useParams();
+  return <h3>Requested topic ID: {topicId}</h3>;
 }
 ```
 

@@ -3,15 +3,14 @@
 A [`<Router>`](Router.md) that keeps the history of your "URL" in memory (does not read or write to the address bar). Useful in tests and non-browser environments like [React Native](https://facebook.github.io/react-native/).
 
 ```jsx
-import React from "react"
-import TestRenderer from "react-test-renderer"
-import { MemoryRouter } from "react-router"
-
-let renderer = TestRenderer.create(
-  <MemoryRouter>
-    <App />
-  </MemoryRouter>
-)
+<MemoryRouter
+  initialEntries={optionalArray}
+  initialIndex={optionalNumber}
+  getUserConfirmation={optionalFunc}
+  keyLength={optionalNumber}
+>
+  <App />
+</MemoryRouter>
 ```
 
 ## initialEntries: array
@@ -45,4 +44,6 @@ The length of `location.key`. Defaults to 6.
 
 ## children: node
 
-A [single child element](https://facebook.github.io/react/docs/react-api.html#reactchildrenonly) to render.
+The child elements to render.
+
+Note: On React &lt; 16 you must use a [single child element](https://facebook.github.io/react/docs/react-api.html#reactchildrenonly) since a render method cannot return more than one element. If you need more than one element, you might try wrapping them in an extra `<div>`.

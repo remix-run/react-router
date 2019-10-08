@@ -16,33 +16,47 @@ function isModifiedEvent(event) {
 }
 
 const LinkAnchor = forwardRef(
-  ({ innerRef, navigate, onClick, ...rest }, forwardedRef) => {
+  (
+    {
+      innerRef, // TODO: deprecate
+      navigate,
+      onClick,
+      ...rest
+    },
+    forwardedRef
+  ) => {
     const { target } = rest;
 
-    return (
-      <a
-        {...rest}
-        ref={forwardedRef || innerRef}
-        onClick={event => {
-          try {
-            if (onClick) onClick(event);
-          } catch (ex) {
-            event.preventDefault();
-            throw ex;
-          }
+    let props = {
+      ...rest,
+      onClick: event => {
+        try {
+          if (onClick) onClick(event);
+        } catch (ex) {
+          event.preventDefault();
+          throw ex;
+        }
 
-          if (
-            !event.defaultPrevented && // onClick prevented default
-            event.button === 0 && // ignore everything but left clicks
-            (!target || target === "_self") && // let browser handle "target=_blank" etc.
-            !isModifiedEvent(event) // ignore clicks with modifier keys
-          ) {
-            event.preventDefault();
-            navigate();
-          }
-        }}
-      />
-    );
+        if (
+          !event.defaultPrevented && // onClick prevented default
+          event.button === 0 && // ignore everything but left clicks
+          (!target || target === "_self") && // let browser handle "target=_blank" etc.
+          !isModifiedEvent(event) // ignore clicks with modifier keys
+        ) {
+          event.preventDefault();
+          navigate();
+        }
+      }
+    };
+
+    // React 15 compat
+    if (forwardRefShim !== forwardRef) {
+      props.ref = forwardedRef || innerRef;
+    } else {
+      props.ref = innerRef;
+    }
+
+    return <a {...props} />;
   }
 );
 
@@ -55,7 +69,13 @@ if (__DEV__) {
  */
 const Link = forwardRef(
   (
-    { component = LinkAnchor, replace, to, innerRef, ...rest },
+    {
+      component = LinkAnchor,
+      replace,
+      to,
+      innerRef, // TODO: deprecate
+      ...rest
+    },
     forwardedRef
   ) => {
     return (
@@ -86,7 +106,6 @@ const Link = forwardRef(
           if (forwardRefShim !== forwardRef) {
             props.ref = forwardedRef || innerRef;
           } else {
-            // TODO: deprecate
             props.innerRef = innerRef;
           }
 

@@ -1,6 +1,16 @@
 {
   "packages": ["packages/*", "website"],
-  "version": "5.1.1",
+  "version": "5.1.2",
   "npmClient": "yarn",
-  "useWorkspaces": true
+  "useWorkspaces": true,
+  "changelog": {
+    "repo": "ReactTraining/react-router",
+    "cacheDir": ".changelog",
+    "labels": {
+      "breaking": "BREAKING CHANGE",
+      "feature": "FEATURE",
+      "bug": "BUGFIX",
+      "docs": "DOCUMENTATION"
+    }
+  }
 }

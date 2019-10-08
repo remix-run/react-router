@@ -24,16 +24,16 @@ class Sidebar extends Component {
           ))}
         </ul>
       </div>
-    )
+    );
   }
 }
 
 // broken
 test("it expands when the button is clicked", () => {
-  render(<Sidebar />)
-  click(theButton)
-  expect(theThingToBeOpen)
-})
+  render(<Sidebar />);
+  click(theButton);
+  expect(theThingToBeOpen);
+});
 
 // fixed!
 test("it expands when the button is clicked", () => {
@@ -41,10 +41,10 @@ test("it expands when the button is clicked", () => {
     <MemoryRouter>
       <Sidebar />
     </MemoryRouter>
-  )
-  click(theButton)
-  expect(theThingToBeOpen)
-})
+  );
+  click(theButton);
+  expect(theThingToBeOpen);
+});
 ```
 
 ## Starting at specific routes
@@ -59,9 +59,9 @@ test("current user is active in sidebar", () => {
     <MemoryRouter initialEntries={["/users/2"]}>
       <Sidebar />
     </MemoryRouter>
-  )
-  expectUserToBeActive(2)
-})
+  );
+  expectUserToBeActive(2);
+});
 ```
 
 ## Navigating
@@ -70,8 +70,8 @@ We have a lot of tests that the routes work when the location changes, so you pr
 
 ```jsx
 // app.js (a component file)
-import React from "react"
-import { Route, Link } from "react-router-dom"
+import React from "react";
+import { Route, Link } from "react-router-dom";
 
 // our Subject, the App, but you can test any sub
 // section of your app too
@@ -98,7 +98,7 @@ const App = () => (
       )}
     />
   </div>
-)
+);
 ```
 
 ```jsx
@@ -139,18 +139,21 @@ it("navigates home when you click the logo", async => {
 
 You shouldn't have to access the `location` or `history` objects very often in tests, but if you do (such as to validate that new query params are set in the url bar), you can add a route that updates a variable in the test:
 
-```diff
+```jsx
 // app.test.js
-test('clicking filter links updates product query params', () => {
+test("clicking filter links updates product query params", () => {
   let history, location;
   render(
-    <MemoryRouter initialEntries={['/my/initial/route']}>
+    <MemoryRouter initialEntries={["/my/initial/route"]}>
       <App />
-      <Route path="*" render={({ location, location }) => {
-        history = history;
-        location = location;
-        return null;
-      }} />
+      <Route
+        path="*"
+        render={({ history, location }) => {
+          history = history;
+          location = location;
+          return null;
+        }}
+      />
     </MemoryRouter>,
     node
   );
@@ -160,10 +163,10 @@ test('clicking filter links updates product query params', () => {
   });
 
   // assert about url
-  expect(location.pathname).toBe('/products');
+  expect(location.pathname).toBe("/products");
   const searchParams = new URLSearchParams(location.search);
-  expect(searchParams.has('id')).toBe(true);
-  expect(searchParams.get('id')).toEqual('1234');
+  expect(searchParams.has("id")).toBe(true);
+  expect(searchParams.get("id")).toEqual("1234");
 });
 ```
 
@@ -172,21 +175,21 @@ test('clicking filter links updates product query params', () => {
 1. You can also use `BrowserRouter` if your test environment has the browser globals `window.location` and `window.history` (which is the default in Jest through JSDOM, but you cannot reset the history between tests).
 1. Instead of passing a custom route to MemoryRouter, you can use the base `Router` with a `history` prop from the [`history`](https://github.com/ReactTraining/history) package:
 
-```js
+```jsx
 // app.test.js
-import { createMemoryHistory } from "history"
-import { Router } from "react-router"
+import { createMemoryHistory } from "history";
+import { Router } from "react-router";
 
 test("redirects to login page", () => {
-  const history = createMemoryHistory()
+  const history = createMemoryHistory();
   render(
     <Router history={history}>
       <App signedInUser={null} />
     </Router>,
     node
-  )
-  expect(history.location.pathname).toBe("/login")
-})
+  );
+  expect(history.location.pathname).toBe("/login");
+});
 ```
 
 ## React Testing Library

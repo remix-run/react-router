@@ -24,6 +24,7 @@
     "jest": "^24.9.0",
     "jest-circus": "^24.9.0",
     "lerna": "^3.13.4",
+    "lerna-changelog": "^0.8.2",
     "prettier": "^1.14.3",
     "pretty-quick": "^1.4.1",
     "raf": "^3.4.1",

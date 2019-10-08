@@ -23,87 +23,89 @@ export default {
     {
       label: "Basic",
       slug: "basic",
-      path: "website/modules/examples/Basic",
-      code: require("!raw-loader!../examples/Basic")
+      path: "packages/react-router-dom/examples/Basic.js",
+      code: require("!raw-loader!../../../packages/react-router-dom/examples/Basic.js")
     },
     {
       label: "URL Parameters",
       slug: "url-params",
-      path: "website/modules/examples/Params",
-      code: require("!raw-loader!../examples/Params")
+      path: "packages/react-router-dom/examples/URLParams.js",
+      code: require("!raw-loader!../../../packages/react-router-dom/examples/URLParams.js")
+    },
+    {
+      label: "Nesting",
+      slug: "nesting",
+      path: "packages/react-router-dom/examples/Nesting.js",
+      code: require("!raw-loader!../../../packages/react-router-dom/examples/Nesting.js")
     },
     {
       label: "Redirects (Auth)",
       slug: "auth-workflow",
-      path: "website/modules/examples/Auth",
-      code: require("!raw-loader!../examples/Auth")
+      path: "packages/react-router-dom/examples/Auth.js",
+      code: require("!raw-loader!../../../packages/react-router-dom/examples/Auth.js")
     },
     {
       label: "Custom Link",
       slug: "custom-link",
-      path: "website/modules/examples/CustomLink",
-      code: require("!raw-loader!../examples/CustomLink")
+      path: "packages/react-router-dom/examples/CustomLink.js",
+      code: require("!raw-loader!../../../packages/react-router-dom/examples/CustomLink.js")
     },
     {
       label: "Preventing Transitions",
       slug: "preventing-transitions",
-      path: "website/modules/examples/PreventingTransitions",
-      code: require("!raw-loader!../examples/PreventingTransitions")
+      path: "packages/react-router-dom/examples/PreventingTransitions.js",
+      code: require("!raw-loader!../../../packages/react-router-dom/examples/PreventingTransitions.js")
     },
     {
       label: "No Match (404)",
       slug: "no-match",
-      path: "website/modules/examples/NoMatch",
-      code: require("!raw-loader!../examples/NoMatch")
+      path: "packages/react-router-dom/examples/NoMatch.js",
+      code: require("!raw-loader!../../../packages/react-router-dom/examples/NoMatch.js")
     },
     {
       label: "Recursive Paths",
       slug: "recursive-paths",
-      path: "website/modules/examples/Recursive",
-      code: require("!raw-loader!../examples/Recursive")
+      path: "packages/react-router-dom/examples/Recursive.js",
+      code: require("!raw-loader!../../../packages/react-router-dom/examples/Recursive.js")
     },
     {
       label: "Sidebar",
       slug: "sidebar",
-      path: "website/modules/examples/Sidebar",
-      code: require("!raw-loader!../examples/Sidebar")
+      path: "packages/react-router-dom/examples/Sidebar.js",
+      code: require("!raw-loader!../../../packages/react-router-dom/examples/Sidebar.js")
     },
     {
       label: "Animated Transitions",
       slug: "animated-transitions",
-      path: "website/modules/examples/Animation/index",
-      code: require("!raw-loader!../examples/Animation/index"),
-      extraDependencies: { "react-transition-group": "^2.2.1" }
-    },
-    {
-      label: "Ambiguous Matches",
-      slug: "ambiguous-matches",
-      path: "website/modules/examples/Ambiguous",
-      code: require("!raw-loader!../examples/Ambiguous")
+      path: "packages/react-router-dom/examples/Animation/index.js",
+      code: require("!raw-loader!../../../packages/react-router-dom/examples/Animation/index.js"),
+      extraDependencies: {
+        "react-transition-group": "^2.2.1"
+      }
     },
     {
       label: "Route Config",
       slug: "route-config",
-      path: "website/modules/examples/RouteConfig",
-      code: require("!raw-loader!../examples/RouteConfig")
+      path: "packages/react-router-dom/examples/RouteConfig.js",
+      code: require("!raw-loader!../../../packages/react-router-dom/examples/RouteConfig.js")
     },
     {
       label: "Modal Gallery",
       slug: "modal-gallery",
-      path: "website/modules/examples/ModalGallery",
-      code: require("!raw-loader!../examples/ModalGallery")
+      path: "packages/react-router-dom/examples/ModalGallery.js",
+      code: require("!raw-loader!../../../packages/react-router-dom/examples/ModalGallery.js")
     },
     {
       label: "StaticRouter Context",
       slug: "static-router",
-      path: "website/modules/examples/StaticRouter",
-      code: require("!raw-loader!../examples/StaticRouter")
+      path: "packages/react-router-dom/examples/StaticRouter.js",
+      code: require("!raw-loader!../../../packages/react-router-dom/examples/StaticRouter.js")
     },
     {
       label: "Query Parameters",
       slug: "query-parameters",
-      path: "website/modules/examples/QueryParams",
-      code: require("!raw-loader!../examples/QueryParams")
+      path: "packages/react-router-dom/examples/QueryParams.js",
+      code: require("!raw-loader!../../../packages/react-router-dom/examples/QueryParams.js")
     }
   ],
 

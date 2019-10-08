@@ -16,20 +16,20 @@ Please note: You need to be using React >= 16.8 in order to use any of these hoo
 The `useHistory` hook gives you access to the [`history`](./history.md) instance that you may use to navigate.
 
 ```jsx
-import { useHistory } from "react-router"
+import { useHistory } from "react-router-dom";
 
 function HomeButton() {
-  let history = useHistory()
+  let history = useHistory();
 
   function handleClick() {
-    history.push("/home")
+    history.push("/home");
   }
 
   return (
     <button type="button" onClick={handleClick}>
       Go home
     </button>
-  )
+  );
 }
 ```
 
@@ -42,20 +42,24 @@ The `useLocation` hook returns the [`location`](./location.md) object that repre
 This could be really useful e.g. in a situation where you would like to trigger a new "page view" event using your web analytics tool whenever a new page loads, as in the following example:
 
 ```jsx
-import React from "react"
-import ReactDOM from "react-dom"
-import { BrowserRouter as Router, Switch, useLocation } from "react-router"
+import React from "react";
+import ReactDOM from "react-dom";
+import {
+  BrowserRouter as Router,
+  Switch,
+  useLocation
+} from "react-router-dom";
 
 function usePageViews() {
-  let location = useLocation()
+  let location = useLocation();
   React.useEffect(() => {
-    ga.send(["pageview", location.pathname])
-  }, [location])
+    ga.send(["pageview", location.pathname]);
+  }, [location]);
 }
 
 function App() {
-  usePageViews()
-  return <Switch>...</Switch>
+  usePageViews();
+  return <Switch>...</Switch>;
 }
 
 ReactDOM.render(
@@ -63,7 +67,7 @@ ReactDOM.render(
     <App />
   </Router>,
   node
-)
+);
 ```
 
 <a id="useparams" />
@@ -73,13 +77,18 @@ ReactDOM.render(
 `useParams` returns an object of key/value pairs of URL parameters. Use it to access `match.params` of the current `<Route>`.
 
 ```jsx
-import React from "react"
-import ReactDOM from "react-dom"
-import { BrowserRouter as Router, Switch, Route, useParams } from "react-router"
+import React from "react";
+import ReactDOM from "react-dom";
+import {
+  BrowserRouter as Router,
+  Switch,
+  Route,
+  useParams
+} from "react-router-dom";
 
 function BlogPost() {
-  let { slug } = useParams()
-  return <div>Now showing post {slug}</div>
+  let { slug } = useParams();
+  return <div>Now showing post {slug}</div>;
 }
 
 ReactDOM.render(
@@ -94,7 +103,7 @@ ReactDOM.render(
     </Switch>
   </Router>,
   node
-)
+);
 ```
 
 ## `useRouteMatch`
@@ -104,24 +113,30 @@ The `useRouteMatch` hook attempts to [match](./match.md) the current URL in the 
 Now, instead of
 
 ```jsx
+import { Route } from "react-router-dom";
+
 function BlogPost() {
   return (
     <Route
       path="/blog/:slug"
       render={({ match }) => {
-        // Do whatever you want with the match ...
-        return <div />
+        // Do whatever you want with the match...
+        return <div />;
       }}
     />
-  )
+  );
 }
 ```
 
 you can just
 
 ```jsx
+import { useRouteMatch } from "react-router-dom";
+
 function BlogPost() {
-  let match = useMatch("/blog/:slug")
+  let match = useRouteMatch("/blog/:slug");
+
   // Do whatever you want with the match...
+  return <div />;
 }
 ```

@@ -1,3 +1,8 @@
+---
+name: "\U0001F41BBug report"
+about: Something is wrong with React Router.
+---
+
 <!--
 Thank you for contributing!
 
@@ -28,7 +33,7 @@ Remove the template from below and provide thoughtful commentary *and code sampl
 
 ## Test Case
 
-https://codesandbox.io/s/7zwjlm2j3q
+https://codesandbox.io/s/react-router-gh6n7
 
 ## Steps to reproduce
 
