@@ -45,10 +45,10 @@ This could be really useful e.g. in a situation where you would like to trigger 
 import React from "react"
 import ReactDOM from "react-dom"
 import { 
-  BrowserRouter as Router, 
   Switch, 
   useLocation
 } from "react-router"
+import { BrowserRouter as Router } from "react-router-dom"
 
 function usePageViews() {
   let location = useLocation()
@@ -80,11 +80,11 @@ ReactDOM.render(
 import React from "react"
 import ReactDOM from "react-dom"
 import { 
-  BrowserRouter as Router, 
   Switch, 
   Route, 
   useParams 
 } from "react-router"
+import { BrowserRouter as Router } from "react-router-dom"
 
 function BlogPost() {
   let { slug } = useParams()
