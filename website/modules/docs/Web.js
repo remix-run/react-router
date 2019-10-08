@@ -29,8 +29,14 @@ export default {
     {
       label: "URL Parameters",
       slug: "url-params",
-      path: "packages/react-router-dom/examples/Params.js",
-      code: require("!raw-loader!../../../packages/react-router-dom/examples/Params.js")
+      path: "packages/react-router-dom/examples/URLParams.js",
+      code: require("!raw-loader!../../../packages/react-router-dom/examples/URLParams.js")
+    },
+    {
+      label: "Nesting",
+      slug: "nesting",
+      path: "packages/react-router-dom/examples/Nesting.js",
+      code: require("!raw-loader!../../../packages/react-router-dom/examples/Nesting.js")
     },
     {
       label: "Redirects (Auth)",
@@ -76,12 +82,6 @@ export default {
       extraDependencies: {
         "react-transition-group": "^2.2.1"
       }
-    },
-    {
-      label: "Ambiguous Matches",
-      slug: "ambiguous-matches",
-      path: "packages/react-router-dom/examples/Ambiguous.js",
-      code: require("!raw-loader!../../../packages/react-router-dom/examples/Ambiguous.js")
     },
     {
       label: "Route Config",

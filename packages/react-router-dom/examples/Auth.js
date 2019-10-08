@@ -1,23 +1,35 @@
-import React, { Component } from "react";
+import React from "react";
 import {
   BrowserRouter as Router,
+  Switch,
   Route,
   Link,
   Redirect,
-  withRouter
+  useHistory,
+  useLocation
 } from "react-router-dom";
 
-////////////////////////////////////////////////////////////
-// 1. Click the public page
-// 2. Click the protected page
-// 3. Log in
-// 4. Click the back button, note the URL each time
+// This example has 3 pages: a public page, a protected
+// page, and a login screen. In order to see the protected
+// page, you must first login. Pretty standard stuff.
+//
+// First, visit the public page. Then, visit the protected
+// page. You're not yet logged in, so you are redirected
+// to the login page. After you login, you are redirected
+// back to the protected page.
+//
+// Notice the URL change each time. If you click the back
+// button at this point, would you expect to go back to the
+// login page? No! You're already logged in. Try it out,
+// and you'll see you go back to the page you visited
+// just *before* logging in, the public page.
 
 export default function AuthExample() {
   return (
     <Router>
       <div>
         <AuthButton />
+
         <ul>
           <li>
             <Link to="/public">Public Page</Link>
@@ -26,9 +38,18 @@ export default function AuthExample() {
             <Link to="/protected">Protected Page</Link>
           </li>
         </ul>
-        <Route path="/public" component={Public} />
-        <Route path="/login" component={Login} />
-        <PrivateRoute path="/protected" component={Protected} />
+
+        <Switch>
+          <Route path="/public">
+            <PublicPage />
+          </Route>
+          <Route path="/login">
+            <LoginPage />
+          </Route>
+          <PrivateRoute path="/protected">
+            <ProtectedPage />
+          </PrivateRoute>
+        </Switch>
       </div>
     </Router>
   );
@@ -37,17 +58,19 @@ export default function AuthExample() {
 const fakeAuth = {
   isAuthenticated: false,
   authenticate(cb) {
-    this.isAuthenticated = true;
+    fakeAuth.isAuthenticated = true;
     setTimeout(cb, 100); // fake async
   },
   signout(cb) {
-    this.isAuthenticated = false;
+    fakeAuth.isAuthenticated = false;
     setTimeout(cb, 100);
   }
 };
 
-const AuthButton = withRouter(({ history }) =>
-  fakeAuth.isAuthenticated ? (
+function AuthButton() {
+  let history = useHistory();
+
+  return fakeAuth.isAuthenticated ? (
     <p>
       Welcome!{" "}
       <button
@@ -60,21 +83,23 @@ const AuthButton = withRouter(({ history }) =>
     </p>
   ) : (
     <p>You are not logged in.</p>
-  )
-);
+  );
+}
 
-function PrivateRoute({ component: Component, ...rest }) {
+// A wrapper for <Route> that redirects to the login
+// screen if you're not yet authenticated.
+function PrivateRoute({ children, ...rest }) {
   return (
     <Route
       {...rest}
-      render={props =>
+      render={({ location }) =>
         fakeAuth.isAuthenticated ? (
-          <Component {...props} />
+          children
         ) : (
           <Redirect
             to={{
               pathname: "/login",
-              state: { from: props.location }
+              state: { from: location }
             }}
           />
         )
@@ -83,34 +108,29 @@ function PrivateRoute({ component: Component, ...rest }) {
   );
 }
 
-function Public() {
+function PublicPage() {
   return <h3>Public</h3>;
 }
 
-function Protected() {
+function ProtectedPage() {
   return <h3>Protected</h3>;
 }
 
-class Login extends Component {
-  state = { redirectToReferrer: false };
+function LoginPage() {
+  let history = useHistory();
+  let location = useLocation();
 
-  login = () => {
+  let { from } = location.state || { from: { pathname: "/" } };
+  let login = () => {
     fakeAuth.authenticate(() => {
-      this.setState({ redirectToReferrer: true });
+      history.replace(from);
     });
   };
 
-  render() {
-    let { from } = this.props.location.state || { from: { pathname: "/" } };
-    let { redirectToReferrer } = this.state;
-
-    if (redirectToReferrer) return <Redirect to={from} />;
-
-    return (
-      <div>
-        <p>You must log in to view the page at {from.pathname}</p>
-        <button onClick={this.login}>Log in</button>
-      </div>
-    );
-  }
+  return (
+    <div>
+      <p>You must log in to view the page at {from.pathname}</p>
+      <button onClick={login}>Log in</button>
+    </div>
+  );
 }

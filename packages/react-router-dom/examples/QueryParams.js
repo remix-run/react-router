@@ -1,63 +1,48 @@
 import React from "react";
-import { BrowserRouter as Router, Link, Route } from "react-router-dom";
+import {
+  BrowserRouter as Router,
+  Link,
+  useLocation
+} from "react-router-dom";
+
+// React Router does not have any opinions about
+// how you should parse URL query strings.
+//
+// If you use simple key=value query strings and
+// you do not need to support IE 11, you can use
+// the browser's built-in URLSearchParams API.
+//
+// If your query strings contain array or object
+// syntax, you'll probably need to bring your own
+// query parsing function.
 
 export default function QueryParamsExample() {
   return (
     <Router>
-      <Route component={QueryParamsDemo} />
+      <QueryParamsDemo />
     </Router>
   );
 }
 
-function QueryParamsDemo({ location }) {
-  let params = new URLSearchParams(location.search);
+function QueryParamsDemo() {
+  let params = new URLSearchParams(useLocation().search);
 
   return (
     <div>
-      <p>
-        React Router does not have any opinions about how your parse URL query
-        strings. Some applications use simple key=value query strings, but
-        others embed arrays and objects in the query string. So it's up to you
-        to parse the search string yourself.
-      </p>
-      <p>
-        In modern browsers that support{" "}
-        <a href="https://developer.mozilla.org/en-US/docs/Web/API/URL">
-          the URL API
-        </a>
-        , you can instantiate a <code>URLSearchParams</code> object from{" "}
-        <code>location.search</code> and use that.
-      </p>
-      <p>
-        In{" "}
-        <a href="https://caniuse.com/#feat=url">
-          browsers that do not support the URL API (read: IE)
-        </a>{" "}
-        you can use a 3rd party library such as{" "}
-        <a href="https://github.com/sindresorhus/query-string">query-string</a>.
-      </p>
       <div>
         <h2>Accounts</h2>
         <ul>
           <li>
-            <Link to={{ pathname: "/account", search: "?name=netflix" }}>
-              Netflix
-            </Link>
+            <Link to="/account?name=netflix">Netflix</Link>
           </li>
           <li>
-            <Link to={{ pathname: "/account", search: "?name=zillow-group" }}>
-              Zillow Group
-            </Link>
+            <Link to="/account?name=zillow-group">Zillow Group</Link>
           </li>
           <li>
-            <Link to={{ pathname: "/account", search: "?name=yahoo" }}>
-              Yahoo
-            </Link>
+            <Link to="/account?name=yahoo">Yahoo</Link>
           </li>
           <li>
-            <Link to={{ pathname: "/account", search: "?name=modus-create" }}>
-              Modus Create
-            </Link>
+            <Link to="/account?name=modus-create">Modus Create</Link>
           </li>
         </ul>
 
@@ -72,7 +57,8 @@ function Child({ name }) {
     <div>
       {name ? (
         <h3>
-          The <code>name</code> in the query string is "{name}"
+          The <code>name</code> in the query string is &quot;{name}
+          &quot;
         </h3>
       ) : (
         <h3>There is no name in the query string</h3>

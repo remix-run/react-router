@@ -8,12 +8,12 @@ If you've used Rails, Express, Ember, Angular etc. you've used static routing. I
 
 ```js
 // Express Style routing:
-app.get("/", handleIndex)
-app.get("/invoices", handleInvoices)
-app.get("/invoices/:id", handleInvoice)
-app.get("/invoices/:id/edit", handleInvoiceEdit)
+app.get("/", handleIndex);
+app.get("/invoices", handleInvoices);
+app.get("/invoices/:id", handleInvoice);
+app.get("/invoices/:id/edit", handleInvoiceEdit);
 
-app.listen()
+app.listen();
 ```
 
 Note how the routes are declared before the app listens. The client side routers we've used are similar. In Angular you declare your routes up front and then import them to the top-level `AppModule` before rendering:
@@ -43,7 +43,7 @@ const appRoutes: Routes = [
     path: "**",
     component: PageNotFoundComponent
   }
-]
+];
 
 @NgModule({
   imports: [RouterModule.forRoot(appRoutes)]
@@ -58,14 +58,14 @@ your app renders.
 ```js
 // Ember Style Router:
 Router.map(function() {
-  this.route("about")
-  this.route("contact")
+  this.route("about");
+  this.route("contact");
   this.route("rentals", function() {
-    this.route("show", { path: "/:rental_id" })
-  })
-})
+    this.route("show", { path: "/:rental_id" });
+  });
+});
 
-export default Router
+export default Router;
 ```
 
 Though the APIs are different, they all share the model of "static routes". React Router also followed that lead up until v4.
@@ -88,17 +88,17 @@ First, grab yourself a `Router` component for the environment you're targeting a
 
 ```jsx
 // react-native
-import { NativeRouter } from "react-router-native"
+import { NativeRouter } from "react-router-native";
 
 // react-dom (what we'll use here)
-import { BrowserRouter } from "react-router-dom"
+import { BrowserRouter } from "react-router-dom";
 
 ReactDOM.render(
   <BrowserRouter>
     <App />
   </BrowserRouter>,
   el
-)
+);
 ```
 
 Next, grab the link component to link to a new location:
@@ -110,7 +110,7 @@ const App = () => (
       <Link to="/dashboard">Dashboard</Link>
     </nav>
   </div>
-)
+);
 ```
 
 Finally, render a `Route` to show some UI when the user visits
@@ -126,7 +126,7 @@ const App = () => (
       <Route path="/dashboard" component={Dashboard} />
     </div>
   </div>
-)
+);
 ```
 
 The `Route` will render `<Dashboard {...props}/>` where `props` are some router specific things that look like `{ match, location, history }`. If the user is **not** at `/dashboard` then the `Route` will render `null`. That's pretty much all there is to it.
@@ -144,7 +144,7 @@ const App = () => (
       <Route path="/tacos" component={Tacos} />
     </div>
   </BrowserRouter>
-)
+);
 
 // when the url matches `/tacos` this component renders
 const Tacos = ({ match }) => (
@@ -154,7 +154,7 @@ const Tacos = ({ match }) => (
         match.url helps us make a relative path */}
     <Route path={match.url + "/carnitas"} component={Carnitas} />
   </div>
-)
+);
 ```
 
 See how the router has no "nesting" API? `Route` is just a component, just like `div`. So to nest a `Route` or a `div`, you just ... do it.
@@ -258,7 +258,7 @@ const App = () => (
   <AppLayout>
     <Route path="/invoices" component={Invoices} />
   </AppLayout>
-)
+);
 
 const Invoices = () => (
   <Layout>
@@ -270,13 +270,21 @@ const Invoices = () => (
         screenIsSmall ? (
           // small screen has no redirect
           <Switch>
-            <Route exact path="/invoices/dashboard" component={Dashboard} />
+            <Route
+              exact
+              path="/invoices/dashboard"
+              component={Dashboard}
+            />
             <Route path="/invoices/:id" component={Invoice} />
           </Switch>
         ) : (
           // large screen does!
           <Switch>
-            <Route exact path="/invoices/dashboard" component={Dashboard} />
+            <Route
+              exact
+              path="/invoices/dashboard"
+              component={Dashboard}
+            />
             <Route path="/invoices/:id" component={Invoice} />
             <Redirect from="/invoices" to="/invoices/dashboard" />
           </Switch>
@@ -284,7 +292,7 @@ const Invoices = () => (
       }
     </Media>
   </Layout>
-)
+);
 ```
 
 As the user rotates their phone from portrait to landscape, this code will automatically redirect them to the dashboard. _The set of valid routes change depending on the dynamic nature of a mobile device in a user's hands_.
