@@ -59,7 +59,11 @@ function App() {
     <Switch>
       {/* some other routes */}
       <RedirectWithStatus status={301} from="/users" to="/profiles" />
-      <RedirectWithStatus status={302} from="/courses" to="/dashboard" />
+      <RedirectWithStatus
+        status={302}
+        from="/courses"
+        to="/dashboard"
+      />
     </Switch>
   );
 }
@@ -110,12 +114,15 @@ function NotFound() {
   );
 }
 
-// somewhere else
-<Switch>
-  <Route path="/about" component={About} />
-  <Route path="/dashboard" component={Dashboard} />
-  <Route component={NotFound} />
-</Switch>;
+function App() {
+  return (
+    <Switch>
+      <Route path="/about" component={About} />
+      <Route path="/dashboard" component={Dashboard} />
+      <Route component={NotFound} />
+    </Switch>
+  );
+}
 ```
 
 ## Putting it all together
@@ -124,34 +131,37 @@ This isn't a real app, but it shows all of the general pieces you'll
 need to put it all together.
 
 ```jsx
-import { createServer } from "http";
+import http from "http";
 import React from "react";
 import ReactDOMServer from "react-dom/server";
-import { StaticRouter } from "react-router";
-import App from "./App";
+import { StaticRouter } from "react-router-dom";
 
-createServer((req, res) => {
-  const context = {};
+import App from "./App.js";
 
-  const html = ReactDOMServer.renderToString(
-    <StaticRouter location={req.url} context={context}>
-      <App />
-    </StaticRouter>
-  );
+http
+  .createServer((req, res) => {
+    const context = {};
 
-  if (context.url) {
-    res.writeHead(301, {
-      Location: context.url
-    });
-    res.end();
-  } else {
-    res.write(`
+    const html = ReactDOMServer.renderToString(
+      <StaticRouter location={req.url} context={context}>
+        <App />
+      </StaticRouter>
+    );
+
+    if (context.url) {
+      res.writeHead(301, {
+        Location: context.url
+      });
+      res.end();
+    } else {
+      res.write(`
       <!doctype html>
       <div id="app">${html}</div>
     `);
-    res.end();
-  }
-}).listen(3000);
+      res.end();
+    }
+  })
+  .listen(3000);
 ```
 
 And then the client:
@@ -159,7 +169,8 @@ And then the client:
 ```jsx
 import ReactDOM from "react-dom";
 import { BrowserRouter } from "react-router-dom";
-import App from "./App";
+
+import App from "./App.js";
 
 ReactDOM.render(
   <BrowserRouter>
@@ -191,7 +202,7 @@ const routes = [
 Then use this config to render your routes in the app:
 
 ```jsx
-import { routes } from "./routes";
+import { routes } from "./routes.js";
 
 function App() {
   return (

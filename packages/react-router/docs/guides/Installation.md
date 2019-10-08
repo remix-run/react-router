@@ -19,7 +19,7 @@ import {
   Route,
   Link
   // etc.
-} from "react-router-dom"
+} from "react-router-dom";
 ```
 
 ## Native
@@ -42,7 +42,7 @@ import {
   Link,
   Route
   // etc.
-} from "react-router-native"
+} from "react-router-native";
 ```
 
 ## Who-knows-where
@@ -60,7 +60,7 @@ import {
   MemoryRouter as Router,
   Route
   // etc.
-} from "react-router"
+} from "react-router";
 ```
 
 You can use React Router's navigation anywhere you run React, the navigation state is kept in a memory router. You can look at the implementation of `NativeRouter` to get an idea on how to integrate.

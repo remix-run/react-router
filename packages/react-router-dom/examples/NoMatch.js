@@ -4,13 +4,35 @@ import {
   Route,
   Link,
   Switch,
-  Redirect
+  Redirect,
+  useLocation
 } from "react-router-dom";
 
 export default function NoMatchExample() {
   return (
     <Router>
       <div>
+        <div>
+          <p>
+            There are a few useful things to note about this example:
+          </p>
+
+          <ol>
+            <li>
+              A <code>&lt;Switch&gt;</code> renders the first child{" "}
+              <code>&lt;Route&gt;</code> that matches
+            </li>
+            <li>
+              A <code>&lt;Redirect&gt;</code> may be used to redirect
+              old URLs to new ones
+            </li>
+            <li>
+              A <code>&lt;Route path=&quot;*&quot;&gt;</code> always
+              matches
+            </li>
+          </ol>
+        </div>
+
         <ul>
           <li>
             <Link to="/">Home</Link>
@@ -28,11 +50,20 @@ export default function NoMatchExample() {
             <Link to="/also/will/not/match">Also Will Not Match</Link>
           </li>
         </ul>
+
         <Switch>
-          <Route path="/" exact component={Home} />
-          <Redirect from="/old-match" to="/will-match" />
-          <Route path="/will-match" component={WillMatch} />
-          <Route component={NoMatch} />
+          <Route exact path="/">
+            <Home />
+          </Route>
+          <Route path="/old-match">
+            <Redirect to="/will-match" />
+          </Route>
+          <Route path="/will-match">
+            <WillMatch />
+          </Route>
+          <Route path="*">
+            <NoMatch />
+          </Route>
         </Switch>
       </div>
     </Router>
@@ -40,20 +71,16 @@ export default function NoMatchExample() {
 }
 
 function Home() {
-  return (
-    <p>
-      A <code>&lt;Switch></code> renders the first child <code>&lt;Route></code>{" "}
-      that matches. A <code>&lt;Route></code> with no <code>path</code> always
-      matches.
-    </p>
-  );
+  return <h3>Home</h3>;
 }
 
 function WillMatch() {
   return <h3>Matched!</h3>;
 }
 
-function NoMatch({ location }) {
+function NoMatch() {
+  let location = useLocation();
+
   return (
     <div>
       <h3>

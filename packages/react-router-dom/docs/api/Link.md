@@ -3,8 +3,6 @@
 Provides declarative, accessible navigation around your application.
 
 ```jsx
-import { Link } from 'react-router-dom'
-
 <Link to="/about">About</Link>
 ```
 
@@ -58,22 +56,28 @@ When `true`, clicking the link will replace the current entry in the history sta
 
 ## innerRef: function
 
-Allows access to the underlying `ref` of the component
+As of React Router 5.1, if you are using React 16 you should not need this prop because we [forward the ref](https://reactjs.org/docs/forwarding-refs.html) to the underlying `<a>`. Use a normal `ref` instead.
+
+Allows access to the underlying `ref` of the component.
 
 ```jsx
-const refCallback = node => {
-  // `node` refers to the mounted DOM element or null when unmounted
-}
-
-<Link to="/" innerRef={refCallback} />
+<Link
+  to="/"
+  innerRef={node => {
+    // `node` refers to the mounted DOM element
+    // or null when unmounted
+  }}
+/>
 ```
 
 ## innerRef: RefObject
 
-Get the underlying `ref` of the component with `React.createRef()`
+As of React Router 5.1, if you are using React 16 you should not need this prop because we [forward the ref](https://reactjs.org/docs/forwarding-refs.html) to the underlying `<a>`. Use a normal `ref` instead.
+
+Get the underlying `ref` of the component using [`React.createRef`](https://reactjs.org/docs/refs-and-the-dom.html#creating-refs).
 
 ```jsx
-const anchorRef = React.createRef()
+let anchorRef = React.createRef()
 
 <Link to="/" innerRef={anchorRef} />
 ```

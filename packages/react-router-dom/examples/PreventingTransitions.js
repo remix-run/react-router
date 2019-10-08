@@ -1,5 +1,10 @@
 import React, { Component } from "react";
-import { BrowserRouter as Router, Route, Link, Prompt } from "react-router-dom";
+import {
+  BrowserRouter as Router,
+  Route,
+  Link,
+  Prompt
+} from "react-router-dom";
 
 export default function PreventingTransitionsExample() {
   return (
@@ -49,7 +54,9 @@ class Form extends Component {
 
         <p>
           Blocking?{" "}
-          {isBlocking ? "Yes, click a link or the back button" : "Nope"}
+          {isBlocking
+            ? "Yes, click a link or the back button"
+            : "Nope"}
         </p>
 
         <p>

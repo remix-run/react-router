@@ -155,8 +155,10 @@ class AnimatedChild extends Component {
 
   componentWillReceiveProps(nextProps) {
     // figure out what to do with the children
-    const navigatingToParent = nextProps.atParent && !this.props.atParent;
-    const animationEnded = this.props.animating && !nextProps.animating;
+    const navigatingToParent =
+      nextProps.atParent && !this.props.atParent;
+    const animationEnded =
+      this.props.animating && !nextProps.animating;
 
     if (navigatingToParent) {
       // we were rendering, but now we're heading back up to the parent,

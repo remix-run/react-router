@@ -14,12 +14,12 @@ One great feature of the web is that we don't have to make our visitors download
 [`loadable-components`] is a library for loading components with dynamic imports. It handles all sorts of edge cases automatically and makes code splitting simple! Here's an example of how to use [`loadable-components`]:
 
 ```jsx
-import loadable from '@loadable/component'
-import Loading from "./Loading";
+import loadable from "@loadable/component";
+import Loading from "./Loading.js";
 
-const LoadableComponent = loadable(() => import('./Dashboard'), {
-  fallback: <Loading />,
-})
+const LoadableComponent = loadable(() => import("./Dashboard.js"), {
+  fallback: <Loading />
+});
 
 export default class LoadableDashboard extends React.Component {
   render() {
@@ -37,7 +37,7 @@ Full documentation is available [here](https://www.smooth-code.com/open-source/l
 [`loadable-components`] includes [a guide for server-side rendering][ssr].
 
 [babel]: https://babeljs.io/
-[`@babel/preset-react`]:  https://babeljs.io/docs/en/babel-preset-react
+[`@babel/preset-react`]: https://babeljs.io/docs/en/babel-preset-react
 [`@babel/plugin-syntax-dynamic-import`]: https://babeljs.io/docs/plugins/syntax-dynamic-import/
 [`babel-plugin-import-inspector`]: https://github.com/thejameskyle/react-loadable/tree/6902cc87f618446c54daa85d8fecec6836c9461a#babel-plugin-import-inspector
 [`loadable-components`]: https://github.com/smooth-code/loadable-components

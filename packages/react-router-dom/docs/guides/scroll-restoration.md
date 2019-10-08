@@ -8,34 +8,42 @@ Because browsers are starting to handle the "default case" and apps have varying
 
 ## Scroll to top
 
-Most of the time all you need is to "scroll to the top" because you have a long content page, that when navigated to, stays scrolled down. This is straightforward to handle with a `<ScrollToTop>` component that will scroll the window up on every navigation, make sure to wrap it in `withRouter` to give it access to the router's props:
+Most of the time all you need is to "scroll to the top" because you have a long content page, that when navigated to, stays scrolled down. This is straightforward to handle with a `<ScrollToTop>` component that will scroll the window up on every navigation:
 
 ```jsx
-class ScrollToTop extends Component {
+import { useEffect } from "react";
+import { useLocation } from "react-router-dom";
+
+export default function ScrollToTop() {
+  const { pathname } = useLocation();
+
+  useEffect(() => {
+    window.scrollTo(0, 0);
+  }, [pathname]);
+
+  return null;
+}
+```
+
+If you aren't running React 16.8 yet, you can do the same thing with a `React.Component` subclass:
+
+```jsx
+import React from "react";
+import { withRouter } from "react-router-dom";
+
+class ScrollToTop extends React.Component {
   componentDidUpdate(prevProps) {
-    if (this.props.location.pathname !== prevProps.location.pathname) {
+    if (
+      this.props.location.pathname !== prevProps.location.pathname
+    ) {
       window.scrollTo(0, 0);
     }
   }
 
   render() {
-    return this.props.children;
+    return null;
   }
 }
-
-export default withRouter(ScrollToTop);
-```
-
-Or if you are running React 16.8 and above, you can use hooks:
-
-```jsx
-const ScrollToTop = ({ children, location: { pathname } }) => {
-  useEffect(() => {
-    window.scrollTo(0, 0);
-  }, [pathname]);
-
-  return children || null;
-};
 
 export default withRouter(ScrollToTop);
 ```
@@ -46,21 +54,46 @@ Then render it at the top of your app, but below Router
 function App() {
   return (
     <Router>
-      <ScrollToTop>
-        <App />
-      </ScrollToTop>
+      <ScrollToTop />
+      <App />
     </Router>
   );
 }
-
-// or just render it bare anywhere you want, but just one :)
-<ScrollToTop />;
 ```
 
 If you have a tab interface connected to the router, then you probably don't want to be scrolling to the top when they switch tabs. Instead, how about a `<ScrollToTopOnMount>` in the specific places you need it?
 
 ```jsx
-class ScrollToTopOnMount extends Component {
+import { useEffect } from "react";
+
+function ScrollToTopOnMount() {
+  useEffect(() => {
+    window.scrollTo(0, 0);
+  }, []);
+
+  return null;
+}
+
+// Render this somewhere using:
+// <Route path="..." children={<LongContent />} />
+function LongContent() {
+  return (
+    <div>
+      <ScrollToTopOnMount />
+
+      <h1>Here is my long content page</h1>
+      <p>...</p>
+    </div>
+  );
+}
+```
+
+Again, if you aren't running React 16.8 yet, you can do the same thing with a `React.Component` subclass:
+
+```jsx
+import React from "react";
+
+class ScrollToTopOnMount extends React.Component {
   componentDidMount() {
     window.scrollTo(0, 0);
   }
@@ -70,17 +103,20 @@ class ScrollToTopOnMount extends Component {
   }
 }
 
-class LongContent extends Component {
+// Render this somewhere using:
+// <Route path="..." children={<LongContent />} />
+class LongContent extends React.Component {
   render() {
-    <div>
-      <ScrollToTopOnMount />
-      <h1>Here is my long content page</h1>
-    </div>;
+    return (
+      <div>
+        <ScrollToTopOnMount />
+
+        <h1>Here is my long content page</h1>
+        <p>...</p>
+      </div>
+    );
   }
 }
-
-// somewhere else
-<Route path="/long-content" component={LongContent} />;
 ```
 
 ## Generic Solution
@@ -99,7 +135,9 @@ At one point we were wanting to ship a generic API. Here's what we were headed t
       <h1>App</h1>
 
       <RestoredScroll id="bunny">
-        <div style={{ height: "200px", overflow: "auto" }}>I will overflow</div>
+        <div style={{ height: "200px", overflow: "auto" }}>
+          I will overflow
+        </div>
       </RestoredScroll>
     </div>
   </ScrollRestoration>
@@ -108,8 +146,8 @@ At one point we were wanting to ship a generic API. Here's what we were headed t
 
 First, `ScrollRestoration` would scroll the window up on navigation. Second, it would use `location.key` to save the window scroll position _and_ the scroll positions of `RestoredScroll` components to `sessionStorage`. Then, when `ScrollRestoration` or `RestoredScroll` components mount, they could look up their position from `sessionsStorage`.
 
-What got tricky for me was defining an "opt-out" API for when I didn't want the window scroll to be managed. For example, if you have some tab navigation floating inside the content of your page you probably _don't_ want to scroll to the top (the tabs might be scrolled out of view!).
+The tricky part was defining an "opt-out" API for when you don't want the window scroll to be managed. For example, if you have some tab navigation floating inside the content of your page you probably _don't_ want to scroll to the top (the tabs might be scrolled out of view!).
 
-When I learned that chrome manages scroll position for us now, and realized that different apps are going to have different scrolling needs, I kind of lost the belief that we needed to provide something--especially when people just want to scroll to the top (which you saw is straight-forward to add to your app on your own).
+When we learned that Chrome manages scroll position for us now, and realized that different apps are going to have different scrolling needs, we kind of lost the belief that we needed to provide something--especially when people just want to scroll to the top (which you saw is straight-forward to add to your app on your own).
 
 Based on this, we no longer feel strongly enough to do the work ourselves (like you we have limited time!). But, we'd love to help anybody who feels inclined to implement a generic solution. A solid solution could even live in the project. Hit us up if you get started on it :)
