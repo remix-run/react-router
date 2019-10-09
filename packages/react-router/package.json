@@ -1,5 +1,5 @@
 {
-  "name": "react-router",
+  "name": "@ouihelp/deprecated-react-router",
   "version": "4.4.0",
   "description": "Declarative routing for React",
   "repository": "ReactTraining/react-router",

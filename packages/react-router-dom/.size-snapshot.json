@@ -22,5 +22,29 @@
     "bundled": 97926,
     "minified": 34445,
     "gzipped": 10220
+  },
+  "esm/@ouihelp/deprecated-react-router-dom.js": {
+    "bundled": 8076,
+    "minified": 4865,
+    "gzipped": 1626,
+    "treeshaked": {
+      "rollup": {
+        "code": 453,
+        "import_statements": 417
+      },
+      "webpack": {
+        "code": 1661
+      }
+    }
+  },
+  "umd/@ouihelp/deprecated-react-router-dom.js": {
+    "bundled": 64480,
+    "minified": 21839,
+    "gzipped": 7354
+  },
+  "umd/@ouihelp/deprecated-react-router-dom.min.js": {
+    "bundled": 37412,
+    "minified": 12577,
+    "gzipped": 4697
   }
 }
