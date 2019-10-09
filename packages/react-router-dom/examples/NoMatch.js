@@ -8,31 +8,19 @@ import {
   useLocation
 } from "react-router-dom";
 
+// You can use the last <Route> in a <Switch> as a kind of
+// "fallback" route, to catch 404 errors.
+//
+// There are a few useful things to note about this example:
+//
+// - A <Switch> renders the first child <Route> that matches
+// - A <Redirect> may be used to redirect old URLs to new ones
+// - A <Route path="*> always matches
+
 export default function NoMatchExample() {
   return (
     <Router>
       <div>
-        <div>
-          <p>
-            There are a few useful things to note about this example:
-          </p>
-
-          <ol>
-            <li>
-              A <code>&lt;Switch&gt;</code> renders the first child{" "}
-              <code>&lt;Route&gt;</code> that matches
-            </li>
-            <li>
-              A <code>&lt;Redirect&gt;</code> may be used to redirect
-              old URLs to new ones
-            </li>
-            <li>
-              A <code>&lt;Route path=&quot;*&quot;&gt;</code> always
-              matches
-            </li>
-          </ol>
-        </div>
-
         <ul>
           <li>
             <Link to="/">Home</Link>
