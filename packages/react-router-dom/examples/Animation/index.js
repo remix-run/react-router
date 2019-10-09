@@ -1,61 +1,68 @@
+import "./styles.css";
+
 import React from "react";
-import { TransitionGroup, CSSTransition } from "react-transition-group";
+import {
+  TransitionGroup,
+  CSSTransition
+} from "react-transition-group";
 import {
   BrowserRouter as Router,
   Switch,
   Route,
   Link,
-  Redirect
+  Redirect,
+  useLocation,
+  useParams
 } from "react-router-dom";
-
-import "./styles.css";
 
 export default function AnimationExample() {
   return (
     <Router>
-      <Route
-        render={({ location }) => (
-          <div style={styles.fill}>
-            <Route
-              exact
-              path="/"
-              render={() => <Redirect to="/hsl/10/90/50" />}
-            />
-
-            <ul style={styles.nav}>
-              <NavLink to="/hsl/10/90/50">Red</NavLink>
-              <NavLink to="/hsl/120/100/40">Green</NavLink>
-              <NavLink to="/rgb/33/150/243">Blue</NavLink>
-              <NavLink to="/rgb/240/98/146">Pink</NavLink>
-            </ul>
-
-            <div style={styles.content}>
-              <TransitionGroup>
-                {/* no different than other usage of
-                CSSTransition, just make sure to pass
-                `location` to `Switch` so it can match
-                the old location as it animates out
-            */}
-                <CSSTransition
-                  key={location.key}
-                  classNames="fade"
-                  timeout={300}
-                >
-                  <Switch location={location}>
-                    <Route exact path="/hsl/:h/:s/:l" component={HSL} />
-                    <Route exact path="/rgb/:r/:g/:b" component={RGB} />
-                    {/* Without this `Route`, we would get errors during
-                    the initial transition from `/` to `/hsl/10/90/50`
-                */}
-                    <Route render={() => <div>Not Found</div>} />
-                  </Switch>
-                </CSSTransition>
-              </TransitionGroup>
-            </div>
-          </div>
-        )}
-      />
+      <Switch>
+        <Route exact path="/">
+          <Redirect to="/hsl/10/90/50" />
+        </Route>
+        <Route path="*">
+          <AnimationApp />
+        </Route>
+      </Switch>
     </Router>
+  );
+}
+
+function AnimationApp() {
+  let location = useLocation();
+
+  return (
+    <div style={styles.fill}>
+      <ul style={styles.nav}>
+        <NavLink to="/hsl/10/90/50">Red</NavLink>
+        <NavLink to="/hsl/120/100/40">Green</NavLink>
+        <NavLink to="/rgb/33/150/243">Blue</NavLink>
+        <NavLink to="/rgb/240/98/146">Pink</NavLink>
+      </ul>
+
+      <div style={styles.content}>
+        <TransitionGroup>
+          {/*
+            This is no different than other usage of
+            <CSSTransition>, just make sure to pass
+            `location` to `Switch` so it can match
+            the old location as it animates out.
+          */}
+          <CSSTransition
+            key={location.key}
+            classNames="fade"
+            timeout={300}
+          >
+            <Switch location={location}>
+              <Route path="/hsl/:h/:s/:l" children={<HSL />} />
+              <Route path="/rgb/:r/:g/:b" children={<RGB />} />
+            </Switch>
+          </CSSTransition>
+        </TransitionGroup>
+      </div>
+    </div>
   );
 }
 
@@ -67,34 +74,34 @@ function NavLink(props) {
   );
 }
 
-function HSL({ match: { params } }) {
+function HSL() {
+  let { h, s, l } = useParams();
+
   return (
     <div
       style={{
         ...styles.fill,
         ...styles.hsl,
-        background: `hsl(${params.h}, ${params.s}%, ${params.l}%)`
+        background: `hsl(${h}, ${s}%, ${l}%)`
       }}
     >
-      hsl(
-      {params.h}, {params.s}
-      %, {params.l}
-      %)
+      hsl({h}, {s}%, {l}%)
     </div>
   );
 }
 
-function RGB({ match: { params } }) {
+function RGB() {
+  let { r, g, b } = useParams();
+
   return (
     <div
       style={{
         ...styles.fill,
         ...styles.rgb,
-        background: `rgb(${params.r}, ${params.g}, ${params.b})`
+        background: `rgb(${r}, ${g}, ${b})`
       }}
     >
-      rgb(
-      {params.r}, {params.g}, {params.b})
+      rgb({r}, {g}, {b})
     </div>
   );
 }
