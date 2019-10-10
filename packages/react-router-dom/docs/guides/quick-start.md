@@ -95,7 +95,7 @@ import {
   Switch,
   Route,
   Link,
-  useRouterMatch,
+  useRouteMatch,
   useParams
 } from "react-router-dom";
 
@@ -140,7 +140,7 @@ function About() {
 }
 
 function Topics() {
-  let match = useRouterMatch();
+  let match = useRouteMatch();
 
   return (
     <div>
