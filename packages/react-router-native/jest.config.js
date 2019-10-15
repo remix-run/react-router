@@ -1,37 +1,36 @@
 const preset = require("react-native/jest-preset");
-const { jest: lernaAliases } = require("lerna-alias");
 
-const mapValues = (obj, mapper) => {
+function mapValues(obj, mapper) {
   const mapped = {};
+
   Object.keys(obj).forEach(key => {
     mapped[key] = mapper(obj[key]);
   });
-  return mapped;
-};
 
-const omitBy = (obj, predicate) => {
-  const mapped = {};
-  Object.keys(obj).forEach(key => {
-    if (predicate(obj[key], key)) {
-      return;
-    }
-    mapped[key] = obj[key];
-  });
   return mapped;
-};
+}
 
-const monorepoAliases = lernaAliases();
-const transpilableAliases = omitBy(monorepoAliases, (_, key) =>
-  key.includes("react-router-native")
-);
+function resolveName(packageName) {
+  switch (process.env.TEST_ENV) {
+    case "cjs":
+      return `<rootDir>/../${packageName}/cjs/${packageName}.js`;
+    case "umd":
+      return `<rootDir>/../${packageName}/umd/${packageName}.js`;
+    case "module":
+    default:
+      return `<rootDir>/../${packageName}/modules/index.js`;
+  }
+}
 
 module.exports = {
   ...preset,
   testRunner: "jest-circus/runner",
   restoreMocks: true,
-  moduleNameMapper: mapValues(transpilableAliases, path =>
-    path.replace("/src/index", `/modules/index`)
-  ),
+  moduleNameMapper: {
+    "^react-router$": resolveName("react-router"),
+    "^react-router-dom$": resolveName("react-router-dom"),
+    "^react-router-config": resolveName("react-router-config")
+  },
   transform: mapValues(preset.transform, transformer =>
     transformer === "babel-jest"
       ? ["babel-jest", { rootMode: "upward" }]

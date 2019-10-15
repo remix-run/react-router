@@ -24,7 +24,6 @@
     "jest": "^24.9.0",
     "jest-circus": "^24.9.0",
     "lerna": "^3.13.4",
-    "lerna-alias": "3.0.3-0",
     "lerna-changelog": "^0.8.2",
     "metro-react-native-babel-preset": "^0.56.0",
     "prettier": "^1.14.3",
