@@ -5,7 +5,7 @@
     "build": "node ./scripts/build.js",
     "clean": "git clean -fdX .",
     "start": "node ./scripts/start.js",
-    "test": "node ./scripts/test.js"
+    "test": "jest --projects ./packages/*/"
   },
   "dependencies": {
     "@babel/core": "^7.5.5",
@@ -24,12 +24,16 @@
     "jest": "^24.9.0",
     "jest-circus": "^24.9.0",
     "lerna": "^3.13.4",
+    "lerna-alias": "3.0.3-0",
     "lerna-changelog": "^0.8.2",
+    "metro-react-native-babel-preset": "^0.56.0",
     "prettier": "^1.14.3",
     "pretty-quick": "^1.4.1",
     "raf": "^3.4.1",
     "react": "^16.9.0",
     "react-dom": "^16.9.0",
+    "react-native": "^0.61.1",
+    "react-test-renderer": "^16.8.3",
     "rollup": "^1.20.3",
     "rollup-plugin-babel": "^4.3.3",
     "rollup-plugin-commonjs": "^10.1.0",
@@ -40,10 +44,6 @@
   "workspaces": {
     "packages": [
       "packages/*"
-    ],
-    "nohoist": [
-      "**/react-native",
-      "**/react-native/**"
     ]
   }
 }
