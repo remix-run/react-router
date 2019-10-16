@@ -41,10 +41,10 @@ jobs:
     script: echo "Deploying website to https://reacttraining.com$PUBLIC_PATH"
     before_deploy:
     - openssl aes-256-cbc -K $encrypted_70c5e56b421c_key -iv $encrypted_70c5e56b421c_iv
-      -in website_deploy_key.enc -out website_deploy_key -d
-    - chmod 600 website_deploy_key
+      -in website-deploy-key.enc -out website-deploy-key -d
+    - chmod 600 website-deploy-key
     - eval $(ssh-agent -s)
-    - ssh-add website_deploy_key
+    - ssh-add website-deploy-key
     deploy:
       provider: script
       script: bash scripts/deploy-website.sh

@@ -7,3 +7,6 @@ lerna-debug.log
 /packages/*/esm/
 /packages/*/umd/
 /website/build/
+
+/website-deploy-key
+/website-deploy-key.pub

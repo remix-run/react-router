@@ -3,7 +3,7 @@
   "private": true,
   "scripts": {
     "build": "node ./scripts/build.js",
-    "clean": "git clean -fdX .",
+    "clean": "git clean -e '!/website-deploy-key' -e '!/website-deploy-key.pub' -fdX .",
     "start": "node ./scripts/start.js",
     "test": "jest --projects ./packages/*/"
   },
