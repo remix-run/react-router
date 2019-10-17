@@ -24,7 +24,7 @@ git commit \
 	--author "Travis CI <travis-ci@reacttraining.com>" \
   -m "Update react-router website
 
-https://travis-ci.org/$TRAVIS_REPO_SLUG/builds/$TRAVIS_BUILD_ID"
+https://travis-ci.com/$TRAVIS_REPO_SLUG/builds/$TRAVIS_BUILD_ID"
 
 # Deploy
 git push origin master
