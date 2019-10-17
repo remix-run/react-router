@@ -15,7 +15,7 @@
 <p align="center">
   <a href="https://www.npmjs.com/package/react-router"><img src="https://img.shields.io/npm/v/react-router.svg?style=flat-square"></a>
   <a href="https://www.npmjs.com/package/react-router"><img src="https://img.shields.io/npm/dm/react-router.svg?style=flat-square"></a>
-  <a href="https://travis-ci.org/ReactTraining/react-router"><img src="https://img.shields.io/travis/ReactTraining/react-router/master.svg?style=flat-square"></a>
+  <a href="https://travis-ci.com/ReactTraining/react-router"><img src="https://travis-ci.com/ReactTraining/react-router.svg?branch=master"></a>
 </p>
 
 ## Docs
