@@ -19,8 +19,7 @@ module.exports = {
   moduleNameMapper: {
     "^react-router$": resolveName("react-router"),
     "^react-router-config$": resolveName("react-router-config"),
-    "^react-router-dom$": resolveName("react-router-dom"),
-    "^react-router-native$": resolveName("react-router-native")
+    "^react-router-dom$": resolveName("react-router-dom")
   },
   setupFiles: ["raf/polyfill"],
   testMatch: ["**/__tests__/**/*-test.js"],
