@@ -112,22 +112,20 @@ branch[0].match.isExact;
 You can use this branch of routes to figure out what is going to be rendered before it actually is rendered. You could do something like this on the server before rendering, or in a lifecycle hook of a component that wraps your entire app
 
 ```js
-const loadBranchData = (location) => {
-  const branch = matchRoutes(routes, location.pathname)
+const loadBranchData = location => {
+  const branch = matchRoutes(routes, location.pathname);
 
   const promises = branch.map(({ route, match }) => {
-    return route.loadData
-      ? route.loadData(match)
-      : Promise.resolve(null)
-  })
+    return route.loadData ? route.loadData(match) : Promise.resolve(null);
+  });
 
-  return Promise.all(promises)
-}
+  return Promise.all(promises);
+};
 
 // useful on the server for preloading data
 loadBranchData(req.url).then(data => {
-  putTheDataSomewhereTheClientCanFindIt(data)
-})
+  putTheDataSomewhereTheClientCanFindIt(data);
+});
 
 // also useful on the client for "pending navigation" where you
 // load up all the data before rendering the next page when
@@ -138,66 +136,63 @@ class PendingNavDataLoader extends Component {
   state = {
     previousLocation: null,
     currentLocation: this.props.location
-  }
+  };
 
   static getDerivedStateFromProps(props, state) {
-    const currentLocation = props.location
-    const previousLocation = state.currentLocation
+    const currentLocation = props.location;
+    const previousLocation = state.currentLocation;
 
-    const navigated = currentLocation !== previousLocation
+    const navigated = currentLocation !== previousLocation;
     if (navigated) {
       // save the location so we can render the old screen
       return {
         previousLocation,
         currentLocation
-      }
+      };
     }
 
-    return null
+    return null;
   }
 
   componentDidUpdate(prevProps) {
-    const navigated = prevProps.location !== this.props.location
+    const navigated = prevProps.location !== this.props.location;
 
     if (navigated) {
       // load data while the old screen remains
       loadNextData(routes, this.props.location).then(data => {
-        putTheDataSomewhereRoutesCanFindIt(data)
+        putTheDataSomewhereRoutesCanFindIt(data);
         // clear previousLocation so the next screen renders
         this.setState({
           previousLocation: null
-        })
-      })
+        });
+      });
     }
   }
 
   render() {
-    const { children, location } = this.props
-    const { previousLocation } = this.state
+    const { children, location } = this.props;
+    const { previousLocation } = this.state;
 
     // use a controlled <Route> to trick all descendants into
     // rendering the old location
     return (
-      <Route
-        location={previousLocation || location}
-        render={() => children}
-      />
-    )
+      <Route location={previousLocation || location} render={() => children} />
+    );
   }
 }
 
 // wrap in withRouter
-export default withRouter(PendingNavDataLoader)
+export default withRouter(PendingNavDataLoader);
 
 /////////////
 // somewhere at the top of your app
-import routes from './routes'
+import routes from "./routes";
 
 <BrowserRouter>
   <PendingNavDataLoader routes={routes}>
     {renderRoutes(routes)}
   </PendingNavDataLoader>
-</BrowserRouter>
+</BrowserRouter>;
 ```
 
 Again, that's all pseudo-code. There are a lot of ways to do server rendering with data and pending navigation and we haven't settled on one. The point here is that `matchRoutes` gives you a chance to match statically outside of the render lifecycle. We'd like to make a demo app of this approach eventually.

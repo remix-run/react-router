@@ -156,9 +156,11 @@ describe("withRouter", () => {
     expect(decorated.foo()).toBe("bar");
   });
 
-  it('does not allow ref forwarding', () => {
-    const WrappedComponent = React.forwardRef((props, ref) => <div {...props} ref={ref} />)
+  it("does not allow ref forwarding", () => {
+    const WrappedComponent = React.forwardRef((props, ref) => (
+      <div {...props} ref={ref} />
+    ));
     const Component = withRouter(WrappedComponent);
     expect(ReactIs.isForwardRef(<Component />)).toBe(false);
-  })
+  });
 });

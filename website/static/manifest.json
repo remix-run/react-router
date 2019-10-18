@@ -3,9 +3,9 @@
   "name": "React Router",
   "icons": [
     {
-      "src": "\/android-chrome-144x144.png",
+      "src": "/android-chrome-144x144.png",
       "sizes": "144x144",
-      "type": "image\/png"
+      "type": "image/png"
     }
   ],
   "theme_color": "#ffffff",
