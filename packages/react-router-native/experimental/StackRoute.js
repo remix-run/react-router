@@ -10,7 +10,7 @@ import { Route, Redirect } from "react-router";
 import { Text, View, Dimensions, Animated, PanResponder } from "react-native";
 import PropTypes from "prop-types";
 
-import Link from "../Link";
+import Link from "../Link.js";
 
 class StackContainer extends Component {
   static contextTypes = {

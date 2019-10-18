@@ -2,7 +2,7 @@ import React from "react";
 import { StaticRouter } from "react-router";
 import { matchRoutes, renderRoutes } from "react-router-config";
 
-import renderToStringStrict from "./utils/renderToStringStrict";
+import renderToStringStrict from "./utils/renderToStringStrict.js";
 
 describe("integration", () => {
   it("generates the same matches in renderRoutes and matchRoutes", () => {

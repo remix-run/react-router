@@ -3,7 +3,7 @@ import ReactDOM from "react-dom";
 import ReactDOMServer from "react-dom/server";
 import { Route, Prompt, Redirect, StaticRouter } from "react-router";
 
-import renderStrict from "./utils/renderStrict";
+import renderStrict from "./utils/renderStrict.js";
 
 describe("A <StaticRouter>", () => {
   const node = document.createElement("div");

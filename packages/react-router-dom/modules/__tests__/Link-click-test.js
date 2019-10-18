@@ -4,7 +4,7 @@ import TestUtils from "react-dom/test-utils";
 import { Router, Link } from "react-router-dom";
 import { createMemoryHistory } from "history";
 
-import renderStrict from "./utils/renderStrict";
+import renderStrict from "./utils/renderStrict.js";
 
 describe("<Link> click events", () => {
   const node = document.createElement("div");

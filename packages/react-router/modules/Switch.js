@@ -3,8 +3,8 @@ import PropTypes from "prop-types";
 import invariant from "tiny-invariant";
 import warning from "tiny-warning";
 
-import RouterContext from "./RouterContext";
-import matchPath from "./matchPath";
+import RouterContext from "./RouterContext.js";
+import matchPath from "./matchPath.js";
 
 /**
  * The public API for rendering the first <Route> that matches.

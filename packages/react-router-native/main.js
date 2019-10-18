@@ -1,9 +1,9 @@
 export * from "react-router";
 
-import BackButton from "./BackButton";
-import DeepLinking from "./DeepLinking";
-import Link from "./Link";
-import NativeRouter from "./NativeRouter";
+import BackButton from "./BackButton.js";
+import DeepLinking from "./DeepLinking.js";
+import Link from "./Link.js";
+import NativeRouter from "./NativeRouter.js";
 
 export {
   BackButton,

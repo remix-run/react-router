@@ -2,8 +2,8 @@ import React from "react";
 import ReactDOM from "react-dom";
 import { MemoryRouter, Route, Redirect, Switch } from "react-router";
 
-import renderStrict from "./utils/renderStrict";
-import waitForRedirects from "./utils/waitForRedirects";
+import renderStrict from "./utils/renderStrict.js";
+import waitForRedirects from "./utils/waitForRedirects.js";
 
 describe("A <Switch>", () => {
   const node = document.createElement("div");

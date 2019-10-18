@@ -3,8 +3,8 @@ import { Text, View, ScrollView } from "react-native";
 
 import { NativeRouter, Link, Route, Redirect } from "react-router-native";
 
-import StackRoute from "../experimental/StackRoute";
-import { TabRoutes, TabRoute } from "../experimental/TabRoutes";
+import StackRoute from "../experimental/StackRoute.js";
+import { TabRoutes, TabRoute } from "../experimental/TabRoutes.js";
 
 const stuff = [
   { path: "one", label: "This is the first one" },

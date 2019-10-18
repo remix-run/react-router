@@ -3,8 +3,8 @@ import { createMemoryHistory as createHistory } from "history";
 import { Router, StaticRouter } from "react-router";
 import { renderRoutes } from "react-router-config";
 
-import renderStrict from "./utils/renderStrict";
-import renderToStringStrict from "./utils/renderToStringStrict";
+import renderStrict from "./utils/renderStrict.js";
+import renderToStringStrict from "./utils/renderToStringStrict.js";
 
 describe("renderRoutes", () => {
   let renderedRoutes;

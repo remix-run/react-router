@@ -1,8 +1,9 @@
 import React from "react";
 import PropTypes from "prop-types";
-import RouterContext from "./RouterContext";
 import hoistStatics from "hoist-non-react-statics";
 import invariant from "tiny-invariant";
+
+import RouterContext from "./RouterContext.js";
 
 /**
  * A public higher-order component to access the imperative API

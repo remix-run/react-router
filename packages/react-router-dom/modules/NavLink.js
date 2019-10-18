@@ -2,8 +2,11 @@ import React from "react";
 import { __RouterContext as RouterContext, matchPath } from "react-router";
 import PropTypes from "prop-types";
 import invariant from "tiny-invariant";
-import Link from "./Link";
-import { resolveToLocation, normalizeToLocation } from "./utils/locationUtils";
+import Link from "./Link.js";
+import {
+  resolveToLocation,
+  normalizeToLocation
+} from "./utils/locationUtils.js";
 
 // React 15 compat
 const forwardRefShim = C => C;

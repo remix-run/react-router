@@ -3,8 +3,8 @@ import { Redirect } from "react-router-dom";
 import { Block } from "jsxstyle";
 import PropTypes from "prop-types";
 
-import ScrollToDoc from "./ScrollToDoc";
-import MarkdownViewer from "./MarkdownViewer";
+import ScrollToDoc from "./ScrollToDoc.js";
+import MarkdownViewer from "./MarkdownViewer.js";
 
 // nearly identical to Guide, haven't taken the time to abstact cause I'm not sure it'll
 // remain so identical ... maybe it will?

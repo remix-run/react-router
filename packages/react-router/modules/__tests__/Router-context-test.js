@@ -3,7 +3,7 @@ import ReactDOM from "react-dom";
 import { createMemoryHistory as createHistory } from "history";
 import { Router, __RouterContext as RouterContext } from "react-router";
 
-import renderStrict from "./utils/renderStrict";
+import renderStrict from "./utils/renderStrict.js";
 
 describe("A <Router>", () => {
   const node = document.createElement("div");

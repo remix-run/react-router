@@ -2,8 +2,8 @@ import React from "react";
 import PropTypes from "prop-types";
 import invariant from "tiny-invariant";
 
-import Lifecycle from "./Lifecycle";
-import RouterContext from "./RouterContext";
+import Lifecycle from "./Lifecycle.js";
+import RouterContext from "./RouterContext.js";
 
 /**
  * The public API for prompting the user before navigating away from a screen.

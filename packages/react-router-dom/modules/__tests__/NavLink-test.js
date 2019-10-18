@@ -2,7 +2,7 @@ import React from "react";
 import ReactDOM from "react-dom";
 import { MemoryRouter, NavLink, withRouter, Route } from "react-router-dom";
 
-import renderStrict from "./utils/renderStrict";
+import renderStrict from "./utils/renderStrict.js";
 
 describe("A <NavLink>", () => {
   const node = document.createElement("div");

@@ -2,7 +2,7 @@ import React from "react";
 import ReactDOM from "react-dom";
 import { MemoryRouter, Route, Switch } from "react-router";
 
-import renderStrict from "./utils/renderStrict";
+import renderStrict from "./utils/renderStrict.js";
 
 describe("A <Switch>", () => {
   const node = document.createElement("div");

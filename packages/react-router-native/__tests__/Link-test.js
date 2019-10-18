@@ -1,7 +1,7 @@
 import React from "react";
 import ShallowRenderer from "react-test-renderer/shallow";
 
-import Link from "../Link";
+import Link from "../Link.js";
 
 function createContext() {
   return {
