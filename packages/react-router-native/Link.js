@@ -4,7 +4,7 @@ import PropTypes from "prop-types";
 
 import { __RouterContext as RouterContext } from "react-router";
 
-class Link extends React.Component {
+export default class Link extends React.Component {
   static defaultProps = {
     component: TouchableHighlight,
     replace: false
@@ -50,5 +50,3 @@ if (__DEV__) {
     to: PropTypes.oneOfType([PropTypes.string, PropTypes.object])
   };
 }
-
-export default Link;

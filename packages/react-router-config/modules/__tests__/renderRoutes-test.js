@@ -9,11 +9,12 @@ import renderToStringStrict from "./utils/renderToStringStrict.js";
 describe("renderRoutes", () => {
   let renderedRoutes;
   let renderedExtraProps;
-  const Comp = ({ route, route: { routes }, ...extraProps }) => (
-    renderedRoutes.push(route),
-    renderedExtraProps.push(extraProps),
-    renderRoutes(routes)
-  );
+
+  function Comp({ route, route: { routes }, ...extraProps }) {
+    renderedRoutes.push(route);
+    renderedExtraProps.push(extraProps);
+    renderRoutes(routes);
+  }
 
   beforeEach(() => {
     renderedRoutes = [];

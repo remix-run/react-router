@@ -1,4 +1,4 @@
-import React, { Component } from "react";
+import React from "react";
 import { Text, View, ScrollView } from "react-native";
 
 import { NativeRouter, Link, Route, Redirect } from "react-router-native";
@@ -67,7 +67,7 @@ function App() {
         <TabRoutes>
           <TabRoute
             path="/home"
-            renderContent={props => <RecursiveItem rootPath="/home" />}
+            renderContent={() => <RecursiveItem rootPath="/home" />}
             renderTab={({ isActive }) => (
               <Text style={{ color: isActive ? blue : null }}>Home</Text>
             )}
@@ -75,7 +75,7 @@ function App() {
 
           <TabRoute
             path="/notifications"
-            renderContent={props => (
+            renderContent={() => (
               <View>
                 <Text style={{ fontSize: 30 }}>Notifications</Text>
               </View>
@@ -89,7 +89,7 @@ function App() {
 
           <TabRoute
             path="/messages"
-            renderContent={props => <RecursiveItem rootPath="/messages" />}
+            renderContent={() => <RecursiveItem rootPath="/messages" />}
             renderTab={({ isActive }) => (
               <Text style={{ color: isActive ? blue : null }}>Messages</Text>
             )}

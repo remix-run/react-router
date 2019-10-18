@@ -9,10 +9,6 @@ import { NativeRouter, Route, Link } from "react-router-native";
 
 ////////////////////////////////////////////////////////////
 // first our route components
-function Main() {
-  return <Text style={styles.header}>Main</Text>;
-}
-
 function Sandwiches() {
   return <Text style={styles.header}>Sandwiches</Text>;
 }

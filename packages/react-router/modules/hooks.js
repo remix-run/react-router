@@ -48,7 +48,8 @@ export function useRouteMatch(path) {
     );
   }
 
-  return path
-    ? matchPath(useLocation().pathname, path)
-    : useContext(Context).match;
+  const location = useLocation();
+  const match = useContext(Context).match;
+
+  return path ? matchPath(location.pathname, path) : match;
 }

@@ -1,28 +1,12 @@
 {
-  "parser": "babel-eslint",
-  "env": {
-    "browser": true,
-    "node": true
+  env: {
+    browser: true,
+    commonjs: true
   },
-  "plugins": ["import", "react"],
-  "extends": [
-    "eslint:recommended",
-    "plugin:import/errors",
-    "plugin:react/recommended"
-  ],
-  "rules": {
-    "no-unused-vars": [2, { "ignoreRestSiblings": true }],
-    "prefer-arrow-callback": 2,
-    "react/display-name": 0,
-    "react/no-children-prop": 0,
-    "react/prop-types": 0
+  globals: {
+    __DEV__: true
   },
-  "globals": {
-    "__DEV__": true
-  },
-  "settings": {
-    "react": {
-      "version": "15"
-    }
+  rules: {
+    strict: 0
   }
 }

@@ -11,17 +11,13 @@ function CustomLink({ children, to, activeOnlyWhenExact }) {
       children={({ match }) => (
         <Link style={styles.navItem} underlayColor="#f0f4f7" to={to}>
           <View style={{ flexDirection: "row" }}>
-            {match && <Text>></Text>}
+            {match && <Text>&gt;</Text>}
             {children}
           </View>
         </Link>
       )}
     />
   );
-}
-
-function Child({ match }) {
-  return <Text>ID: {match.params.id}</Text>;
 }
 
 function App() {

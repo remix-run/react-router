@@ -1,9 +1,6 @@
 {
-  "parser": "babel-eslint",
-  "env": {
-    "node": true
-  },
-  "extends": [
-    "eslint:recommended"
-  ]
+  extends: ["react-app"],
+  rules: {
+    "import/first": 0
+  }
 }

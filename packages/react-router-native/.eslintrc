@@ -1,16 +1,5 @@
 {
-  plugins: ["react"],
-  extends: ["plugin:react/recommended"],
-  rules: {
-    "no-unused-vars": [1, { ignoreRestSiblings: true }],
-    "react/display-name": 0,
-    "react/no-children-prop": 0,
-    "react/no-unescaped-entities": 0,
-    "react/prop-types": 0
-  },
-  settings: {
-    react: {
-      version: "16"
-    }
+  globals: {
+    __DEV__: true
   }
 }

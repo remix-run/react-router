@@ -136,7 +136,7 @@ class AnimatedStack extends React.Component {
             Animated.timing(this.animation, {
               toValue: 0,
               duration: releaseRatio * ANIMATION_DURATION + 2000
-            }).start(({ finished }) => {
+            }).start(() => {
               this.props.onCancelPan();
             });
           }
@@ -147,7 +147,7 @@ class AnimatedStack extends React.Component {
           Animated.timing(this.animation, {
             toValue: width,
             duration: (1 - releaseRatio) * ANIMATION_DURATION + 2000
-          }).start(({ finished }) => {
+          }).start(() => {
             this.setState({
               previousProps: null
             });
@@ -186,7 +186,7 @@ class AnimatedStack extends React.Component {
             Animated.timing(this.animation, {
               toValue: width,
               duration: ANIMATION_DURATION
-            }).start(({ finished }) => {
+            }).start(() => {
               this.setState({ previousProps: null });
             });
           }
@@ -198,7 +198,7 @@ class AnimatedStack extends React.Component {
   render() {
     const { width, height } = Dimensions.get("window");
     const { direction } = this.props;
-    const { previousProps, panDx, panning, panStartLeft } = this.state;
+    const { previousProps, panning, panStartLeft } = this.state;
     const animating = !!previousProps;
     const bothProps = [this.props];
     if (animating) bothProps.push(previousProps);
@@ -229,14 +229,14 @@ class AnimatedStack extends React.Component {
                   opacity: !transitioning
                     ? 1
                     : isParent
-                      ? this.animation.interpolate({
-                          inputRange: [0, width],
-                          outputRange: [0, 1]
-                        })
-                      : this.animation.interpolate({
-                          inputRange: [0, width],
-                          outputRange: [1, 0]
-                        }),
+                    ? this.animation.interpolate({
+                        inputRange: [0, width],
+                        outputRange: [0, 1]
+                      })
+                    : this.animation.interpolate({
+                        inputRange: [0, width],
+                        outputRange: [1, 0]
+                      }),
                   flexDirection: "row",
                   alignItems: "center",
                   position: "absolute",
@@ -272,42 +272,39 @@ class AnimatedStack extends React.Component {
                       translateX: !transitioning
                         ? 0
                         : panning
-                          ? isParent
-                            ? this.animation.interpolate({
-                                inputRange: [0, width],
-                                outputRange: [
-                                  -PARENT_TRAVEL_DISTANCE - panStartLeft,
-                                  -panStartLeft
-                                ]
-                              })
-                            : this.animation.interpolate({
-                                inputRange: [0, width],
-                                outputRange: [
-                                  -panStartLeft,
-                                  width - panStartLeft
-                                ]
-                              })
+                        ? isParent
+                          ? this.animation.interpolate({
+                              inputRange: [0, width],
+                              outputRange: [
+                                -PARENT_TRAVEL_DISTANCE - panStartLeft,
+                                -panStartLeft
+                              ]
+                            })
                           : this.animation.interpolate({
                               inputRange: [0, width],
-                              outputRange: isParent
-                                ? direction === "down"
-                                  ? [width + CARD_SHADOW_RADIUS, 0]
-                                  : [-PARENT_TRAVEL_DISTANCE, 0]
-                                : direction === "down"
-                                  ? [0, -PARENT_TRAVEL_DISTANCE]
-                                  : [0, width + CARD_SHADOW_RADIUS]
+                              outputRange: [-panStartLeft, width - panStartLeft]
                             })
+                        : this.animation.interpolate({
+                            inputRange: [0, width],
+                            outputRange: isParent
+                              ? direction === "down"
+                                ? [width + CARD_SHADOW_RADIUS, 0]
+                                : [-PARENT_TRAVEL_DISTANCE, 0]
+                              : direction === "down"
+                              ? [0, -PARENT_TRAVEL_DISTANCE]
+                              : [0, width + CARD_SHADOW_RADIUS]
+                          })
                     }
                   ],
                   zIndex: !transitioning
                     ? 1
                     : isParent
-                      ? direction === "down"
-                        ? 1
-                        : 0
-                      : direction === "down"
-                        ? 0
-                        : 1,
+                    ? direction === "down"
+                      ? 1
+                      : 0
+                    : direction === "down"
+                    ? 0
+                    : 1,
                   position: "absolute",
                   width,
                   height,
@@ -323,20 +320,20 @@ class AnimatedStack extends React.Component {
                           outputRange: [PARENT_FINAL_OPACITY, 1]
                         })
                     : !transitioning
-                      ? 1
-                      : isParent && "direction" === "down"
-                        ? 1
-                        : this.animation.interpolate({
-                            inputRange: [0, width],
-                            outputRange:
-                              index === 1 && direction === "down"
-                                ? [1, PARENT_FINAL_OPACITY]
-                                : isParent && direction === "up"
-                                  ? [PARENT_FINAL_OPACITY, 1]
-                                  : index === 1 && direction === "up"
-                                    ? [1, 1]
-                                    : [1, 1]
-                          })
+                    ? 1
+                    : isParent && "direction" === "down"
+                    ? 1
+                    : this.animation.interpolate({
+                        inputRange: [0, width],
+                        outputRange:
+                          index === 1 && direction === "down"
+                            ? [1, PARENT_FINAL_OPACITY]
+                            : isParent && direction === "up"
+                            ? [PARENT_FINAL_OPACITY, 1]
+                            : index === 1 && direction === "up"
+                            ? [1, 1]
+                            : [1, 1]
+                      })
                 }}
               >
                 {props.content}

@@ -6,5 +6,5 @@ import Index from "../index.android.js";
 import renderer from "react-test-renderer";
 
 it("renders correctly", () => {
-  const tree = renderer.create(<Index />);
+  renderer.create(<Index />);
 });

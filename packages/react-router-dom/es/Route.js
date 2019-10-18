@@ -1,5 +1,3 @@
-"use strict";
-
 import warnAboutDeprecatedESMImport from "./warnAboutDeprecatedESMImport.js";
 warnAboutDeprecatedESMImport("Route");
 
