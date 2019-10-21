@@ -13,7 +13,7 @@ describe("renderRoutes", () => {
   function Comp({ route, route: { routes }, ...extraProps }) {
     renderedRoutes.push(route);
     renderedExtraProps.push(extraProps);
-    renderRoutes(routes);
+    return renderRoutes(routes);
   }
 
   beforeEach(() => {
