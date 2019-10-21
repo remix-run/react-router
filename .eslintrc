@@ -1,6 +1,6 @@
 {
-  extends: ["react-app"],
-  rules: {
+  "extends": ["react-app"],
+  "rules": {
     "import/first": 0
   }
 }
