@@ -4,10 +4,7 @@
   "description": "React Native bindings for React Router",
   "repository": "ReactTraining/react-router",
   "license": "MIT",
-  "authors": [
-    "Michael Jackson",
-    "Ryan Florence"
-  ],
+  "author": "React Training <hello@reacttraining.com>",
   "main": "main.js",
   "sideEffects": false,
   "scripts": {

@@ -4,9 +4,7 @@
   "description": "Static route config matching for React Router",
   "repository": "ReactTraining/react-router",
   "license": "MIT",
-  "authors": [
-    "Ryan Florence"
-  ],
+  "author": "React Training <hello@reacttraining.com>",
   "files": [
     "cjs",
     "es",

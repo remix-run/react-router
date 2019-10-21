@@ -4,10 +4,7 @@
   "description": "Declarative routing for React",
   "repository": "ReactTraining/react-router",
   "license": "MIT",
-  "authors": [
-    "Michael Jackson",
-    "Ryan Florence"
-  ],
+  "author": "React Training <hello@reacttraining.com>",
   "files": [
     "MemoryRouter.js",
     "Prompt.js",
