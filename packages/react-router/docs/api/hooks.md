@@ -140,3 +140,13 @@ function BlogPost() {
   return <div />;
 }
 ```
+
+The `useRouteMatch` hook takes a single argument, which is identical to [props argument of matchPath](./matchPath.md#props). It can be either a pathname as a string (like the example above) or an object with the matching props that `Route` accepts, like this:
+
+```jsx
+const match = useRouteMatch({
+  path: "/BLOG/:slug/",
+  strict: true,
+  sensitive: true
+});
+```
