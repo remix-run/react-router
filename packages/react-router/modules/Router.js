@@ -7,6 +7,37 @@ import RouterContext from "./RouterContext.js";
 /**
  * The public API for putting history on context.
  */
+export function SuspenseRouter({
+  history,
+  children,
+  staticContext,
+  timeoutMs = 5000
+}) {
+  const [location, setLocation] = React.useState(history.location);
+  const [startTransition, isPending] = React.useTransition({ timeoutMs });
+
+  React.useEffect(() => {
+    return history.listen(() => {
+      startTransition(() => {
+        setLocation(history.location);
+      });
+    });
+  }, [startTransition, history]);
+
+  return (
+    <RouterContext.Provider
+      children={children || null}
+      value={{
+        history: history,
+        location: location,
+        match: Router.computeRootMatch(location.pathname),
+        staticContext: staticContext,
+        isPending
+      }}
+    />
+  );
+}
+
 class Router extends React.Component {
   static computeRootMatch(pathname) {
     return { path: "/", url: "/", params: {}, isExact: pathname === "/" };

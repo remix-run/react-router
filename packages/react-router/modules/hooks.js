@@ -5,6 +5,7 @@ import Context from "./RouterContext.js";
 import matchPath from "./matchPath.js";
 
 const useContext = React.useContext;
+const useTransition = React.useTransition;
 
 export function useHistory() {
   if (__DEV__) {
@@ -52,4 +53,26 @@ export function useRouteMatch(path) {
   const match = useContext(Context).match;
 
   return path ? matchPath(location.pathname, path) : match;
+}
+
+export function useResource() {
+  if (__DEV__) {
+    invariant(
+      typeof useTransition === "function",
+      "You must use react@experimental in order to use useResource()"
+    );
+  }
+
+  return useContext(Context).resource;
+}
+
+export function useResourcesPending() {
+  if (__DEV__) {
+    invariant(
+      typeof useTransition === "function",
+      "You must use react@experimental in order to use useResource()"
+    );
+  }
+
+  return useContext(Context).isPending;
 }

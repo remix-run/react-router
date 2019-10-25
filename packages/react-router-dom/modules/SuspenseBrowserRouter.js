@@ -1,5 +1,5 @@
 import React from "react";
-import { Router, SuspenseRouter } from "react-router";
+import { SuspenseRouter } from "react-router";
 import { createBrowserHistory as createHistory } from "history";
 import PropTypes from "prop-types";
 import warning from "tiny-warning";
@@ -31,14 +31,6 @@ if (__DEV__) {
         "use `import { Router }` instead of `import { BrowserRouter as Router }`."
     );
   };
-}
-
-export function SuspenseBrowserRouter({ children, ...props }) {
-  const ref = React.useRef(null);
-  if (ref.current === null) {
-    ref.current = createHistory(props);
-  }
-  return <SuspenseRouter history={ref.current} children={children} />;
 }
 
 export default BrowserRouter;
