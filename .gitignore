@@ -1,12 +1,9 @@
-node_modules/
 npm-debug.log
 lerna-debug.log
 
-/.changelog/
-/packages/*/cjs/
-/packages/*/esm/
-/packages/*/umd/
+/build/
 /website/build/
+node_modules/
 
 /website-deploy-key
 /website-deploy-key.pub

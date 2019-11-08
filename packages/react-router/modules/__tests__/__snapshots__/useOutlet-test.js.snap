@@ -1,0 +1,7 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`useOutlet when there is a child route returns an element 1`] = `
+<p>
+  Profile
+</p>
+`;

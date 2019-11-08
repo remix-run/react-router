@@ -1,36 +1,33 @@
-import React from "react";
-import ReactDOM from "react-dom";
-import { MemoryRouter, Route, useLocation } from "react-router";
+import React from 'react';
+import { create as createTestRenderer } from 'react-test-renderer';
+import {
+  MemoryRouter as Router,
+  Routes,
+  Route,
+  useLocation
+} from 'react-router';
 
-import renderStrict from "./utils/renderStrict.js";
-
-describe("useLocation", () => {
-  const node = document.createElement("div");
-
-  afterEach(() => {
-    ReactDOM.unmountComponentAtNode(node);
-  });
-
-  it("returns the current location object", () => {
+describe('useLocation', () => {
+  it('returns the current location object', () => {
     let location;
-
-    function HomePage() {
+    function Home() {
       location = useLocation();
-      return null;
+      return <h1>Home</h1>;
     }
 
-    renderStrict(
-      <MemoryRouter initialEntries={["/home"]}>
-        <Route path="/home">
-          <HomePage />
-        </Route>
-      </MemoryRouter>,
-      node
+    createTestRenderer(
+      <Router initialEntries={['/home?the=search#the-hash']}>
+        <Routes>
+          <Route path="/home" element={<Home />} />
+        </Routes>
+      </Router>
     );
 
-    expect(typeof location).toBe("object");
+    expect(typeof location).toBe('object');
     expect(location).toMatchObject({
-      pathname: "/home"
+      pathname: '/home',
+      search: '?the=search',
+      hash: '#the-hash'
     });
   });
 });

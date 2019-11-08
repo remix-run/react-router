@@ -1,65 +1,78 @@
-import React from "react";
-import ReactDOM from "react-dom";
-import { MemoryRouter, Route, useParams, useRouteMatch } from "react-router";
+import React from 'react';
+import { create as createTestRenderer } from 'react-test-renderer';
+import {
+  MemoryRouter as Router,
+  Outlet,
+  Routes,
+  Route,
+  useParams
+} from 'react-router';
 
-import renderStrict from "./utils/renderStrict.js";
-
-describe("useParams", () => {
-  const node = document.createElement("div");
-
-  afterEach(() => {
-    ReactDOM.unmountComponentAtNode(node);
-  });
-
-  describe("when the path has no params", () => {
-    it("returns an empty hash", () => {
+describe('useParams', () => {
+  describe("when the route isn't matched", () => {
+    it('returns an empty object', () => {
       let params;
-
-      function HomePage() {
+      function Home() {
         params = useParams();
         return null;
       }
 
-      renderStrict(
-        <MemoryRouter initialEntries={["/home"]}>
-          <Route path="/home">
-            <HomePage />
-          </Route>
-        </MemoryRouter>,
-        node
+      createTestRenderer(
+        <Router initialEntries={['/home']}>
+          <Home />
+        </Router>
       );
 
-      expect(typeof params).toBe("object");
+      expect(typeof params).toBe('object');
       expect(Object.keys(params)).toHaveLength(0);
     });
   });
 
-  describe("when the path has some params", () => {
-    it("returns a hash of the URL params and their values", () => {
+  describe('when the path has no params', () => {
+    it('returns an empty object', () => {
       let params;
+      function Home() {
+        params = useParams();
+        return null;
+      }
 
+      createTestRenderer(
+        <Router initialEntries={['/home']}>
+          <Routes>
+            <Route path="/home" element={<Home />} />
+          </Routes>
+        </Router>
+      );
+
+      expect(typeof params).toBe('object');
+      expect(Object.keys(params)).toHaveLength(0);
+    });
+  });
+
+  describe('when the path has some params', () => {
+    it('returns an object of the URL params', () => {
+      let params;
       function BlogPost() {
         params = useParams();
         return null;
       }
 
-      renderStrict(
-        <MemoryRouter initialEntries={["/blog/cupcakes"]}>
-          <Route path="/blog/:slug">
-            <BlogPost />
-          </Route>
-        </MemoryRouter>,
-        node
+      createTestRenderer(
+        <Router initialEntries={['/blog/react-router']}>
+          <Routes>
+            <Route path="/blog/:slug" element={<BlogPost />} />
+          </Routes>
+        </Router>
       );
 
-      expect(typeof params).toBe("object");
+      expect(typeof params).toBe('object');
       expect(params).toMatchObject({
-        slug: "cupcakes"
+        slug: 'react-router'
       });
     });
 
-    describe("a child route", () => {
-      it("returns a combined hash of the parent and child params", () => {
+    describe('a child route', () => {
+      it('returns a combined hash of the parent and child params', () => {
         let params;
 
         function Course() {
@@ -67,56 +80,31 @@ describe("useParams", () => {
           return null;
         }
 
-        function Users() {
-          const match = useRouteMatch();
+        function UserDashboard() {
           return (
             <div>
-              <h1>Users</h1>
-              <Route path={`${match.path}/courses/:course`}>
-                <Course />
-              </Route>
+              <h1>User Dashboard</h1>
+              <Outlet />
             </div>
           );
         }
 
-        renderStrict(
-          <MemoryRouter
-            initialEntries={["/users/mjackson/courses/react-router"]}
-          >
-            <Route path="/users/:username">
-              <Users />
-            </Route>
-          </MemoryRouter>,
-          node
+        createTestRenderer(
+          <Router initialEntries={['/users/mjackson/courses/react-router']}>
+            <Routes>
+              <Route path="users/:username" element={<UserDashboard />}>
+                <Route path="courses/:course" element={<Course />} />
+              </Route>
+            </Routes>
+          </Router>
         );
 
-        expect(typeof params).toBe("object");
+        expect(typeof params).toBe('object');
         expect(params).toMatchObject({
-          username: "mjackson",
-          course: "react-router"
+          username: 'mjackson',
+          course: 'react-router'
         });
       });
-    });
-  });
-
-  describe("when the route isn't matched", () => {
-    it("returns empty object", () => {
-      let params;
-
-      function HomePage() {
-        params = useParams();
-        return null;
-      }
-
-      renderStrict(
-        <MemoryRouter initialEntries={["/home"]}>
-          <Route path="/not-the-current-route" children={() => <HomePage />} />
-        </MemoryRouter>,
-        node
-      );
-
-      expect(typeof params).toBe("object");
-      expect(Object.keys(params)).toHaveLength(0);
     });
   });
 });

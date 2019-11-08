@@ -1,8 +1,8 @@
 {
-  env: {
-    commonjs: false
+  "env": {
+    "commonjs": false
   },
-  rules: {
-    strict: 2
+  "globals": {
+    "__DEV__": true
   }
 }

@@ -1,0 +1,117 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`A <Link> press calls the custom onPress handler 1`] = `
+<View>
+  <Text>
+    Home
+  </Text>
+  <View
+    accessible={true}
+    focusable={true}
+    isTVSelectable={true}
+    onClick={[Function]}
+    onResponderGrant={[Function]}
+    onResponderMove={[Function]}
+    onResponderRelease={[Function]}
+    onResponderTerminate={[Function]}
+    onResponderTerminationRequest={[Function]}
+    onStartShouldSetResponder={[Function]}
+    style={null}
+  >
+    <Text
+      style={null}
+    >
+      About
+    </Text>
+  </View>
+</View>
+`;
+
+exports[`A <Link> press navigates to the new view 1`] = `
+<View>
+  <Text>
+    Home
+  </Text>
+  <View
+    accessible={true}
+    focusable={true}
+    isTVSelectable={true}
+    onClick={[Function]}
+    onResponderGrant={[Function]}
+    onResponderMove={[Function]}
+    onResponderRelease={[Function]}
+    onResponderTerminate={[Function]}
+    onResponderTerminationRequest={[Function]}
+    onStartShouldSetResponder={[Function]}
+    style={null}
+  >
+    <Text
+      style={null}
+    >
+      About
+    </Text>
+  </View>
+</View>
+`;
+
+exports[`A <Link> press navigates to the new view 2`] = `
+<View>
+  <Text>
+    About
+  </Text>
+</View>
+`;
+
+exports[`A <Link> press when event.preventDefault() is used in the onPress handler does not navigate to the new view 1`] = `
+<View>
+  <Text>
+    Home
+  </Text>
+  <View
+    accessible={true}
+    focusable={true}
+    isTVSelectable={true}
+    onClick={[Function]}
+    onResponderGrant={[Function]}
+    onResponderMove={[Function]}
+    onResponderRelease={[Function]}
+    onResponderTerminate={[Function]}
+    onResponderTerminationRequest={[Function]}
+    onStartShouldSetResponder={[Function]}
+    style={null}
+  >
+    <Text
+      style={null}
+    >
+      About
+    </Text>
+  </View>
+</View>
+`;
+
+exports[`A <Link> press when event.preventDefault() is used in the onPress handler does not navigate to the new view 2`] = `
+<View>
+  <Text>
+    Home
+  </Text>
+  <View
+    accessible={true}
+    focusable={true}
+    isTVSelectable={true}
+    onClick={[Function]}
+    onResponderGrant={[Function]}
+    onResponderMove={[Function]}
+    onResponderRelease={[Function]}
+    onResponderTerminate={[Function]}
+    onResponderTerminationRequest={[Function]}
+    onStartShouldSetResponder={[Function]}
+    style={null}
+  >
+    <Text
+      style={null}
+    >
+      About
+    </Text>
+  </View>
+</View>
+`;

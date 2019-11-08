@@ -1,8 +1,8 @@
 {
-  env: {
-    jest: true
+  "env": {
+    "jest": true
   },
-  rules: {
+  "rules": {
     "no-console": 0
   }
 }

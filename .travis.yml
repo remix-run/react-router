@@ -4,25 +4,11 @@ cache: yarn
 jobs:
   include:
   - stage: Test
-    env: TEST_ENV=source
-    before_script:
-    # react-router CJS build is imported by react-router-config tests,
-    # so we need to build it before running react-router-config tests
-    - cd packages/react-router && BUILD_ENV=cjs yarn build && cd -
-    script: yarn test
-  - env: TEST_ENV=cjs BUILD_ENV=cjs
     before_script: yarn build
     script: yarn test
-  - env: TEST_ENV=umd BUILD_ENV=umd
-    before_script:
-    # react-router ESM build is imported by react-router-dom UMD,
-    # so we need to build it before building react-router-dom UMD
-    - cd packages/react-router && BUILD_ENV=esm yarn build && cd -
-    - yarn build
-    # react-router CJS build is imported by react-router-config tests,
-    # so we need to build it before running react-router-config tests
-    - cd packages/react-router && BUILD_ENV=cjs yarn build && cd -
-    script: yarn test
+  - stage: Size
+    before_script: yarn build
+    script: yarn size
   - stage: Release
     if: tag =~ ^v[0-9]
     before_script: yarn build

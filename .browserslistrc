@@ -1,7 +1,9 @@
 # Browsers we support
-last 2 versions
 > 0.5%
-ie >= 10
-safari >= 9
-firefox >= 43
-iOS >= 8
+Chrome >= 73
+ChromeAndroid >= 75
+Firefox >= 67
+Edge >= 17
+IE 11
+Safari >= 12.1
+iOS >= 11.3

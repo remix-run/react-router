@@ -1,19 +1,21 @@
-const path = require("path");
-const execSync = require("child_process").execSync;
+const fs = require('fs');
+const path = require('path');
+const execSync = require('child_process').execSync;
 
 function exec(cmd) {
-  execSync(cmd, { stdio: "inherit", env: process.env });
+  execSync(cmd, { env: process.env, stdio: 'inherit' });
 }
 
-const cwd = process.cwd();
+let target = process.argv[2];
+let allPackages = fs.readdirSync(path.resolve(__dirname, '../packages'));
 
-// Note: We don't currently have a build step for react-router-native.
-// Instead, we use the source files directly.
-["react-router", "react-router-dom", "react-router-config"].forEach(
-  packageName => {
-    process.chdir(path.resolve(__dirname, "../packages/" + packageName));
-    exec("yarn build");
-  }
+if (target && !allPackages.includes(target)) {
+  target = undefined;
+}
+
+let config = path.resolve(
+  __dirname,
+  target ? `builds/${target}.js` : 'builds/index.js'
 );
 
-process.chdir(cwd);
+exec(`rollup -c ${config}`);

@@ -1,0 +1,28 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`nested routes gets all params from parent routes 1`] = `
+<div>
+  <h1>
+    Users
+  </h1>
+  <div>
+    <h1>
+      User: 
+      michael
+    </h1>
+    <div>
+      <h1>
+        Courses
+      </h1>
+      <div>
+        <h1>
+          User: 
+          michael
+          , course 
+          routing
+        </h1>
+      </div>
+    </div>
+  </div>
+</div>
+`;

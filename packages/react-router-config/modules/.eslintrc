@@ -1,8 +1,0 @@
-{
-  env: {
-    commonjs: false
-  },
-  rules: {
-    strict: 2
-  }
-}

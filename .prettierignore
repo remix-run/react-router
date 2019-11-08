@@ -16,9 +16,6 @@ package.json
 yarn.lock
 
 node_modules/
-/packages/*/cjs/
-/packages/*/esm/
-/packages/*/umd/
 /packages/react-router-native/android/
 /packages/react-router-native/ios/
 /website/build/
