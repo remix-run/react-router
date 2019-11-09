@@ -11,7 +11,7 @@
   "plugins": [
     "dev-expression",
     [
-      "@babel/proposal-class-properties",
+      "@babel/plugin-proposal-class-properties",
       {
         "loose": true
       }
