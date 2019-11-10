@@ -66,8 +66,13 @@ a {
   float: left;
   clear: right;
   white-space: pre-wrap;
+  max-width: 50%;
 }
 
+/* overide language class */
+.markdown > pre .language-jsx {
+  white-space: pre-wrap;
+}
 /* all the things we render *except* headers and <pre>, add them as needed! */
 .markdown > *:not(pre):not(h1):not(h2) {
   display: block;
@@ -147,6 +152,7 @@ h3 {
     border-radius: 6px;
     overflow: auto;
     width: 100%;
+    max-width: 100%;
   }
 
   .markdown > *:not(pre):not(h1):not(h2) {
