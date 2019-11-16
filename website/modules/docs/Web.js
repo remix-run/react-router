@@ -84,6 +84,16 @@ export default {
       }
     },
     {
+      label: "Third Party Animated Transitions",
+      slug: "third-party-animated-transitions",
+      path: "packages/react-router-dom/examples/ThirdPartyAnimation.js",
+      code: require("!raw-loader!../../../packages/react-router-dom/examples/ThirdPartyAnimation.js"),
+      extraDependencies: {
+        "react-transition-group": "^4.3.0",
+        "react-tiger-transition": "^4.1.0"
+      }
+    },
+    {
       label: "Route Config",
       slug: "route-config",
       path: "packages/react-router-dom/examples/RouteConfig.js",
