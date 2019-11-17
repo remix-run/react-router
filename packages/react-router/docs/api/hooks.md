@@ -150,3 +150,15 @@ const match = useRouteMatch({
   sensitive: true
 });
 ```
+
+### `redirect`
+
+You can use `useRouteMatch` for redirection by using a `*` character. If no other calls to `useRedirect` matches it will match here which will alow you to redirect wherever you want.
+
+```jsx
+const match = useRouteMatch({
+  path: "*"
+});
+```
+
+Keep in mind that the order of calls to `useRouteMatch` does matter, so you should call this hook last.
