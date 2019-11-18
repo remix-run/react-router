@@ -181,4 +181,4 @@ function Topic() {
 
 ## Keep Going!
 
-Hopefully these examples give you a feel for what it's like to create a web app with React Router. Keep reading to learn more about [the primary components](primary-components.md) in React Router!
+Hopefully these examples give you a feel for what it's like to create a web app with React Router. Keep reading to learn more about [the primary components](./primary-components.md) in React Router!
