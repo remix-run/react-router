@@ -20,7 +20,7 @@ The base URL for all locations. A properly formatted basename should have a lead
 
 ```jsx
 <HashRouter basename="/calendar"/>
-<Link to="/today"/> // renders <a href="#/calendar/today">
+<Link to="/today"/> // renders <a href="/calendar/#/today">
 ```
 
 ## getUserConfirmation: func
