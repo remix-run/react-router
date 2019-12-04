@@ -1,7 +1,7 @@
 {
   "name": "@americanexpress/one-app-router",
   "version": "0.0.2-4",
-  "description": "A complete routing library for One App, forked from One App Router",
+  "description": "A complete routing library for One App, forked from React Router",
   "files": [
     "*.md",
     "docs",
