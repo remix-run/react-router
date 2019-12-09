@@ -44,6 +44,8 @@ And if the location of the app is `/news` then the UI hierarchy will be:
 
 The "react-empty" comments are just implementation details of React's `null` rendering. But for our purposes, it is instructive. A Route is always technically "rendered" even though its rendering `null`. When the `<Route>`'s `path` matches the current URL, it renders its `children` (your component).
 
+If the same component is used as children of multiple routes, React will see this as the same component, and the component's state will be preserved between routes. If this isn't desired, a key prop with unique values can be used to indicate that React shouldn't preserve the state between the components.
+
 ## Route render methods
 
 The recommended method of rendering something with a `<Route>` is to use `children` elements, as shown above. There are, however, a few other methods you can use to render something with a `<Route>`. These are provided mostly for supporting apps that were built with earlier versions of the router before hooks were introduced.
