@@ -44,7 +44,7 @@
     "Ryan Florence",
     "Michael Jackson"
   ],
-  "license": "MIT",
+  "license": "APACHE-2.0",
   "dependencies": {
     "history": "^3.0.0",
     "hoist-non-react-statics": "^3.2.1",

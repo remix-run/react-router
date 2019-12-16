@@ -1,5 +1,13 @@
 # Introduction
 
+> Note that as explained in the [Readme file](./README.md) this is a fork of
+[React Router v3](https://github.com/ReactTraining/react-router/tree/v3) tailored to work within the
+One App ecosystem.
+The structure and much of the content of these docs is unchanged from the original [React Router v3](https://github.com/ReactTraining/react-router/tree/v3)
+documentation, however, the examples have been updated to reflect any usage or API changes we have
+made. Further deviation from the original [React Router v3](https://github.com/ReactTraining/react-router/tree/v3)
+API is expected.
+
 One App Router is a powerful routing library built on top of [React](http://facebook.github.io/react/) that helps you add new screens and flows to your application incredibly quickly, all while keeping the URL in sync with what's being displayed on the page.
 
 To illustrate the problems One App Router is going to solve for you, let's build a small application without it. We will be using [ES6/ES2015 syntax and language features](https://github.com/lukehoban/es6features#readme) throughout the documentation for any example code.

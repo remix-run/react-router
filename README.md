@@ -14,7 +14,7 @@
 > loading, dynamic route matching, and location transition handling built right in.
 > Make the URL your first thought, not an after-thought.
 
-> One App Router was forked from [React Router v3](https://github.com/ReactTraining/@americanexpress/one-app-router/tree/v3)
+> One App Router was forked from [React Router v3](https://github.com/ReactTraining/react-router/tree/v3)
 > as it provided the best initial fit. This is not meant to be a generic standalone Routing library but
 > one which will be tailored for use with the One ecosystem.
 
@@ -178,7 +178,7 @@ Please feel free to open pull requests and see [CONTRIBUTING.md](./CONTRIBUTING.
 
 ## 🗝️ License
 
-Any contributions made under this project will be governed by the [MIT License](./LICENSE.md).
+Any contributions made under this project will be governed by the [Apache 2.0 License](LICENSE.txt).
 
 ## 🗣️ Code of Conduct
 
