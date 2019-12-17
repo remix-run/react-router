@@ -29,7 +29,9 @@
     "test": "npm run lint && npm run test-node",
     "test-browser": "cross-env NODE_ENV=test karma start --single-run",
     "test-browser:watch": "cross-env NODE_ENV=test karma start",
-    "test-node": "cross-env NODE_ENV=test mocha --require babel-register tests.node.js"
+    "test-node": "cross-env NODE_ENV=test mocha --require babel-register tests.node.js",
+    "test:git-history": "commitlint --from origin/master --to HEAD",
+    "posttest": "npm run lint && npm run test:git-history"
   },
   "contributors": [
     "Andres Escobar <Andres.Escobar@aexp.com> (https://github.com/anescobar1991)",

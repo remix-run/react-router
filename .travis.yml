@@ -6,6 +6,10 @@ jobs:
       node_js:
         - 10
         - 12
+      before_install:
+      # Create a master branch for commitlint
+      # https://github.com/conventional-changelog/commitlint/issues/6
+      - git remote set-branches origin master && git fetch
       deploy:
         on:
           branch: master
