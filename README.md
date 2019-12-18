@@ -13,9 +13,17 @@
 > loading, dynamic route matching, and location transition handling built right in.
 > Make the URL your first thought, not an after-thought.
 
-> One App Router was forked from [React Router v3](https://github.com/ReactTraining/react-router/tree/v3)
-> as it provided the best initial fit. This is not meant to be a generic standalone Routing library but
-> one which will be tailored for use with the One ecosystem.
+One App Router was forked from [react-router@3](https://github.com/ReactTraining/react-router/tree/v3) and is being uplifted to work with `react@17`.
+
+The reason for forking `react-router@3`, rather than switching to a different router or upgrading to a newer version, is due to the coupling of `react-router@3`'s API with [One App](https://github.com/americanexpress/one-app), [Holocron](https://github.com/americanexpress/holocron) and existing One App modules.
+
+We want to ensure that One App will be compatible with `react@17`, in its current state `react-router@3` relies on React's legacy context API, which will be removed in `react@17`, as well as legacy UNSAFE lifecycle methods.
+
+Updating to the new context API would be considered a breaking change as `react-router` would no longer be compatible with older versions of `react@<16.3.0`. The `react-router` project has already moved to v5 therefore it is not possible to make any breaking changes to `react-router@3`.
+
+We will evaluate moving to `react-router@6` if it matches our use case in the future.
+
+This is not meant to be a generic standalone Routing library but one which will be tailored for use with the One ecosystem.
 
 ## 👩‍💻 Hiring 👨‍💻
 
