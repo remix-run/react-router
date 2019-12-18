@@ -26,11 +26,11 @@
     "prepublish": "npm run build",
     "lint": "eslint examples modules scripts tools *.js",
     "start": "node examples/server.js",
-    "test": "npm run lint && npm run test-node",
+    "test": "npm run lint && npm run test-node && npm run test-browser",
     "test-browser": "cross-env NODE_ENV=test karma start --single-run",
+    "test:git-history": "commitlint --from origin/master --to HEAD",
     "test-browser:watch": "cross-env NODE_ENV=test karma start",
     "test-node": "cross-env NODE_ENV=test mocha --require babel-register tests.node.js",
-    "test:git-history": "commitlint --from origin/master --to HEAD",
     "posttest": "npm run lint && npm run test:git-history"
   },
   "contributors": [
@@ -46,7 +46,7 @@
     "Ryan Florence",
     "Michael Jackson"
   ],
-  "license": "APACHE-2.0",
+  "license": "Apache-2.0",
   "dependencies": {
     "history": "^3.0.0",
     "hoist-non-react-statics": "^3.2.1",
@@ -90,9 +90,10 @@
     "express-urlrewrite": "^1.2.0",
     "gzip-size": "^4.1.0",
     "husky": "^3.0.9",
-    "karma": "^2.0.0",
+    "is-equal": "^1.5.5",
+    "karma": "^2.0.5",
     "karma-browserstack-launcher": "^1.0.1",
-    "karma-chrome-launcher": "^2.0.0",
+    "karma-chrome-launcher": "^2.2.0",
     "karma-coverage": "^1.1.1",
     "karma-mocha": "^1.1.1",
     "karma-mocha-reporter": "^2.0.5",
