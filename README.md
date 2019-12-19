@@ -2,8 +2,7 @@
   <img src='https://github.com/americanexpress/one-app-router/raw/master/one-app-router.png' width='50%'/>
 </h1>
 
-
-[![npm version](https://badge.fury.io/js/one-app-router.svg)](https://badge.fury.io/js/one-app-router)
+[![npm](https://img.shields.io/npm/v/@americanexpress/one-app-router)](https://www.npmjs.com/package/@americanexpress/one-app-router)
 [![Build Status](https://travis-ci.org/americanexpress/one-app-router.svg?branch=master)](https://travis-ci.org/americanexpress/one-app-router)
 
 > One App Router keeps your UI in sync with the URL. It has a simple API with powerful features like lazy code
