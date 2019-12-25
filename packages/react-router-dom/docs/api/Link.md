@@ -1,6 +1,6 @@
 # &lt;Link>
 
-Provides declarative, accessible navigation around your application.
+Provides declarative, accessible navigation around your application. `<Link>` should only be rendered as a descendant of one of the `<Router>` elements.
 
 ```jsx
 <Link to="/about">About</Link>
