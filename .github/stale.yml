@@ -7,7 +7,7 @@ daysUntilStale: 60
 daysUntilClose: 7
 
 # Issues with these labels will never be considered stale
-exemptLabels: []
+exemptLabels: [fresh]
 
 # Label to use when marking an issue as stale
 staleLabel: stale
@@ -16,6 +16,8 @@ staleLabel: stale
 markComment: >
   This issue has been automatically marked as stale because it has not had
   recent activity. It will be closed if no further activity occurs.
+  
+  You can add the `fresh` label to prevent me from taking any action.
 
 # Comment to post when closing a stale issue. Set to `false` to disable
 closeComment: false
