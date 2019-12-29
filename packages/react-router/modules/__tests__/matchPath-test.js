@@ -22,7 +22,7 @@ describe("matchPath", () => {
       const path = "";
       const pathname = "/somewhere/else";
       const match = matchPath(pathname, path);
-      expect(match.url).toBe("");
+      expect(match.url).toBe("/");
     });
   });
 
