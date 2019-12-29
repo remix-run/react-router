@@ -81,13 +81,8 @@ function matchPath(pathname, options = {}, base = null) {
   const paths = [].concat(path);
 
   return paths.reduce((matched, path) => {
-    if (!path) {
-      return null;
-    }
-
-    if (matched) {
-      return matched;
-    }
+    if (!path && path !== "") return null;
+    if (matched) return matched;
 
     path = resolvePath(path, base);
 
@@ -99,16 +94,12 @@ function matchPath(pathname, options = {}, base = null) {
 
     const match = regexp.exec(pathname);
 
-    if (!match) {
-      return null;
-    }
+    if (!match) return null;
 
     const [url, ...values] = match;
     const isExact = pathname === url;
 
-    if (exact && !isExact) {
-      return null;
-    }
+    if (exact && !isExact) return null;
 
     const params = keys.reduce((params, key, index) => {
       params[key.name] = values[index];

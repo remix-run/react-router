@@ -66,10 +66,10 @@ If the `src` of the `<script>` tag that is used to load your application has a r
 
 ```html
 <!-- good -->
-<script src='/static/js/bundle.js'></script>
+<script src="/static/js/bundle.js"></script>
 <!-- bad -->
-<script src='static/js/bundle.js'></script>
-<script src='./static/js/bundle.js'></script>
+<script src="static/js/bundle.js"></script>
+<script src="./static/js/bundle.js"></script>
 ```
 
 ### How do I access the `history` object outside of components?

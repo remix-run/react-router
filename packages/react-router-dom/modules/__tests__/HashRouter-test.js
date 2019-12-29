@@ -2,7 +2,7 @@ import React from "react";
 import ReactDOM from "react-dom";
 import { HashRouter } from "react-router-dom";
 
-import renderStrict from "./utils/renderStrict";
+import renderStrict from "./utils/renderStrict.js";
 
 describe("A <HashRouter>", () => {
   const node = document.createElement("div");

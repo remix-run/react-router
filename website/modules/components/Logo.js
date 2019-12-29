@@ -1,10 +1,10 @@
 import React from "react";
 import { Block, Row } from "jsxstyle";
 
-import { DARK_GRAY } from "../Theme";
+import { DARK_GRAY } from "../Theme.js";
 import LogoImage from "../logo.png";
 
-function Logo({ size = 230, shadow = true }) {
+export default function Logo({ size = 230, shadow = true }) {
   return (
     <Row
       background={DARK_GRAY}
@@ -18,10 +18,8 @@ function Logo({ size = 230, shadow = true }) {
       }
     >
       <Block position="relative" top="-4%" textAlign="center" width="100%">
-        <img src={LogoImage} width="75%" />
+        <img src={LogoImage} alt="React Training" width="75%" />
       </Block>
     </Row>
   );
 }
-
-export default Logo;

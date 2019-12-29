@@ -1,7 +1,7 @@
 import React from "react";
 import { Block } from "jsxstyle";
 
-function Loading() {
+export default function Loading() {
   return (
     <Block
       className="loading"
@@ -13,5 +13,3 @@ function Loading() {
     />
   );
 }
-
-export default Loading;

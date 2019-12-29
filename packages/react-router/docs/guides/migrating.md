@@ -224,7 +224,9 @@ In v3, you could use PatternUtils.formatPattern to generate a valid path from a 
 // v3
 const THING_PATH = "/thing/:id";
 
-<Link to={PatternUtils.formatPattern(THING_PATH, { id: 1 })}>A thing</Link>;
+<Link to={PatternUtils.formatPattern(THING_PATH, { id: 1 })}>
+  A thing
+</Link>;
 ```
 
 In v4, you can achieve the same functionality using the [`compile`](https://github.com/pillarjs/path-to-regexp/tree/v1.7.0#compile-reverse-path-to-regexp) function in [`path-to-regexp@^1.7.0`](https://github.com/pillarjs/path-to-regexp/tree/v1.7.0).
@@ -258,18 +260,14 @@ In v4, you should always provide `to`. In case you are rely on empty `to` you ca
 
 ```jsx
 // v4
-import { Link } from 'react-router-dom'
+import { Link } from "react-router-dom";
 
-const LinkWrapper = (props) => {
-  const Component = props.to ? Link : 'a'
-  return (
-    <Component {...props}>
-      { props.children }
-    </Component>
-  )
-}
+const LinkWrapper = props => {
+  const Component = props.to ? Link : "a";
+  return <Component {...props}>{props.children}</Component>;
+};
 
 <LinkWrapper to={disabled ? null : `/item/${id}`} className="item">
   // item content
-</LinkWrapper>
+</LinkWrapper>;
 ```

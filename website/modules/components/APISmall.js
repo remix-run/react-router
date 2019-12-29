@@ -3,10 +3,10 @@ import { Redirect, Route } from "react-router-dom";
 import { Block } from "jsxstyle";
 import PropTypes from "prop-types";
 
-import ScrollToDoc from "./ScrollToDoc";
-import MarkdownViewer from "./MarkdownViewer";
+import ScrollToDoc from "./ScrollToDoc.js";
+import MarkdownViewer from "./MarkdownViewer.js";
 
-class APISmall extends Component {
+export default class APISmall extends Component {
   static propTypes = {
     match: PropTypes.object,
     data: PropTypes.object
@@ -51,5 +51,3 @@ class APISmall extends Component {
     );
   }
 }
-
-export default APISmall;

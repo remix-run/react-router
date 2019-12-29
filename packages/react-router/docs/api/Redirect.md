@@ -3,15 +3,9 @@
 Rendering a `<Redirect>` will navigate to a new location. The new location will override the current location in the history stack, like server-side redirects (HTTP 3xx) do.
 
 ```jsx
-import { Route, Redirect } from 'react-router'
-
-<Route exact path="/" render={() => (
-  loggedIn ? (
-    <Redirect to="/dashboard"/>
-  ) : (
-    <PublicHomePage/>
-  )
-)}/>
+<Route exact path="/">
+  {loggedIn ? <Redirect to="/dashboard" /> : <PublicHomePage />}
+</Route>
 ```
 
 ## to: string
@@ -52,18 +46,22 @@ When `true`, redirecting will push a new entry onto the history instead of repla
 A pathname to redirect from. Any valid URL path that [`path-to-regexp@^1.7.0`](https://github.com/pillarjs/path-to-regexp/tree/v1.7.0) understands.
 All matched URL parameters are provided to the pattern in `to`. Must contain all parameters that are used in `to`. Additional parameters not used by `to` are ignored.
 
-This can only be used to match a location when rendering a `<Redirect>` inside of a `<Switch>`. See [`<Switch children>`](./Switch.md#children-node) for more details.
+**Note:** This can only be used to match a location when rendering a `<Redirect>` inside of a `<Switch>`. See [`<Switch children>`](./Switch.md#children-node) for more details.
 
 ```jsx
 <Switch>
-  <Redirect from='/old-path' to='/new-path'/>
-  <Route path='/new-path' component={Place}/>
+  <Redirect from='/old-path' to='/new-path' />
+  <Route path='/new-path'>
+    <Place />
+  </Route>
 </Switch>
 
 // Redirect with matched parameters
 <Switch>
   <Redirect from='/users/:id' to='/users/profile/:id'/>
-  <Route path='/users/profile/:id' component={Profile}/>
+  <Route path='/users/profile/:id'>
+    <Profile />
+  </Route>
 </Switch>
 ```
 
@@ -71,9 +69,37 @@ This can only be used to match a location when rendering a `<Redirect>` inside o
 
 Match `from` exactly; equivalent to [Route.exact](./Route.md#exact-bool).
 
+**Note:** This can only be used in conjunction with `from` to exactly match a location when rendering a `<Redirect>` inside of a `<Switch>`. See [`<Switch children>`](./Switch.md#children-node) for more details.
+
+```jsx
+<Switch>
+  <Redirect exact from="/" to="/home" />
+  <Route path="/home">
+    <Home />
+  </Route>
+  <Route path="/about">
+    <About />
+  </Route>
+</Switch>
+```
+
 ## strict: bool
 
 Match `from` strictly; equivalent to [Route.strict](./Route.md#strict-bool).
+
+**Note:** This can only be used in conjunction with `from` to strictly match a location when rendering a `<Redirect>` inside of a `<Switch>`. See [`<Switch children>`](./Switch.md#children-node) for more details.
+
+```jsx
+<Switch>
+  <Redirect strict from="/one/" to="/home" />
+  <Route path="/home">
+    <Home />
+  </Route>
+  <Route path="/about">
+    <About />
+  </Route>
+</Switch>
+```
 
 ## sensitive: bool
 

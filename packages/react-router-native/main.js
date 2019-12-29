@@ -1,14 +1,22 @@
-export * from "react-router";
-
-import BackButton from "./BackButton";
-import DeepLinking from "./DeepLinking";
-import Link from "./Link";
-import NativeRouter from "./NativeRouter";
-
 export {
-  BackButton,
-  BackButton as AndroidBackButton,
-  DeepLinking,
-  Link,
-  NativeRouter
-};
+  MemoryRouter,
+  Prompt,
+  Redirect,
+  Route,
+  Router,
+  StaticRouter,
+  Switch,
+  generatePath,
+  matchPath,
+  withRouter,
+  useHistory,
+  useLocation,
+  useParams,
+  useRouteMatch
+} from "react-router";
+
+export { default as BackButton } from "./BackButton.js";
+export { default as AndroidBackButton } from "./BackButton.js";
+export { default as DeepLinking } from "./DeepLinking.js";
+export { default as Link } from "./Link.js";
+export { default as NativeRouter } from "./NativeRouter.js";

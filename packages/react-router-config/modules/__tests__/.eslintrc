@@ -1,10 +1,8 @@
 {
-  "env": {
-    "jest": true
+  env: {
+    jest: true
   },
-  "rules": {
-    "import/no-unresolved": [2, { "ignore": ["react-router", "react-router-config"] }],
-    "react/display-name": 0,
-    "react/prop-types": 0
+  rules: {
+    "no-console": 0
   }
 }

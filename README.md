@@ -13,9 +13,9 @@
 </p>
 
 <p align="center">
-  <a href="https://www.npmjs.com/package/react-router"><img src="https://img.shields.io/npm/v/react-router.svg?style=flat-square"></a>
-  <a href="https://www.npmjs.com/package/react-router"><img src="https://img.shields.io/npm/dm/react-router.svg?style=flat-square"></a>
-  <a href="https://travis-ci.org/ReactTraining/react-router"><img src="https://img.shields.io/travis/ReactTraining/react-router/master.svg?style=flat-square"></a>
+  <a href="https://www.npmjs.com/package/react-router"><img src="https://img.shields.io/npm/v/react-router?style=flat-square"></a>
+  <a href="https://www.npmjs.com/package/react-router"><img src="https://img.shields.io/npm/dm/react-router?style=flat-square"></a>
+  <a href="https://travis-ci.com/ReactTraining/react-router"><img src="https://img.shields.io/travis/com/ReactTraining/react-router/master?style=flat-square"></a>
 </p>
 
 ## Docs
@@ -46,6 +46,10 @@ This repository is a monorepo that we manage using [Lerna](https://github.com/le
 Detailed release notes for a given version can be found [on our releases page](https://github.com/ReactTraining/react-router/releases).
 
 For change notes prior to version 4, please see [the CHANGES.md file](https://github.com/ReactTraining/react-router/blob/8365d4b2e91084265a1da7de911766169fb9e96e/CHANGES.md).
+
+## Funding
+
+You may provide financial support for this project by donating [via Open Collective](https://opencollective.com/react-router), attending [one of our workshops](https://reacttraining.com/workshops/), or purchasing [one of our online courses](https://reacttraining.com/courses/). Thank you for your support!
 
 ## About
 

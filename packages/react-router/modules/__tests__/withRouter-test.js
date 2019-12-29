@@ -3,7 +3,7 @@ import ReactDOM from "react-dom";
 import * as ReactIs from "react-is";
 import { MemoryRouter, StaticRouter, Route, withRouter } from "react-router";
 
-import renderStrict from "./utils/renderStrict";
+import renderStrict from "./utils/renderStrict.js";
 
 describe("withRouter", () => {
   const node = document.createElement("div");
@@ -156,9 +156,11 @@ describe("withRouter", () => {
     expect(decorated.foo()).toBe("bar");
   });
 
-  it('does not allow ref forwarding', () => {
-    const WrappedComponent = React.forwardRef((props, ref) => <div {...props} ref={ref} />)
+  it("does not allow ref forwarding", () => {
+    const WrappedComponent = React.forwardRef((props, ref) => (
+      <div {...props} ref={ref} />
+    ));
     const Component = withRouter(WrappedComponent);
     expect(ReactIs.isForwardRef(<Component />)).toBe(false);
-  })
+  });
 });

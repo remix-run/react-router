@@ -12,13 +12,8 @@ const cwd = process.cwd();
 ["react-router", "react-router-dom", "react-router-config"].forEach(
   packageName => {
     process.chdir(path.resolve(__dirname, "../packages/" + packageName));
-    exec("npm run build");
+    exec("yarn build");
   }
 );
-
-if (!process.argv.includes("--no-website")) {
-  process.chdir(path.resolve(__dirname, "../website"));
-  exec("npm run build");
-}
 
 process.chdir(cwd);

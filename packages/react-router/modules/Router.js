@@ -2,7 +2,7 @@ import React from "react";
 import PropTypes from "prop-types";
 import warning from "tiny-warning";
 
-import RouterContext from "./RouterContext";
+import RouterContext from "./RouterContext.js";
 
 /**
  * The public API for putting history on context.

@@ -2,10 +2,9 @@ import React from "react";
 import { Link, Route } from "react-router-dom";
 import { Block, Row, Inline, Col } from "jsxstyle";
 import PropTypes from "prop-types";
-import Media from "react-media";
 
-import { LIGHT_GRAY, RED, SMALL_SCREEN } from "../Theme";
-import Logo from "./Logo";
+import { LIGHT_GRAY, RED } from "../Theme.js";
+import Logo from "./Logo.js";
 
 function Tab({ to, ...rest }) {
   return (
@@ -35,19 +34,19 @@ Tab.propTypes = { to: PropTypes.string };
 function Tabs() {
   return (
     <Row boxShadow="0px 1px 1px hsla(0, 0%, 0%, 0.15)" margin="10px">
-      <Tab to="/web" borderTopLeftRadius="3px" borderBottomLeftRadius="3px">
+      <Tab to="/core" borderTopLeftRadius="3px" borderBottomLeftRadius="3px">
+        Core
+      </Tab>
+      <Tab to="/web" marginLeft="-1px">
         Web
       </Tab>
-      <Tab to="/native" marginLeft="-1px">
-        Native
-      </Tab>
       <Tab
-        to="/core"
+        to="/native"
         marginLeft="-1px"
         borderTopRightRadius="3px"
         borderBottomRightRadius="3px"
       >
-        Core
+        Native
       </Tab>
     </Row>
   );
@@ -80,31 +79,11 @@ function Branding() {
   );
 }
 
-function EnvironmentHeader() {
+export default function EnvironmentHeader() {
   return (
     <Block>
-      <Media query={SMALL_SCREEN}>
-        <Block
-          padding="1px"
-          backgroundColor={RED}
-          textAlign="center"
-          color="#fff"
-        >
-          <p>
-            <a
-              href="https://reacttraining.com"
-              style={{ textDecoration: "underline" }}
-            >
-              Attend a React Workshop
-            </a>{" "}
-            in a city near you this Spring!
-          </p>
-        </Block>
-      </Media>
       <Branding />
       <Tabs />
     </Block>
   );
 }
-
-export default EnvironmentHeader;

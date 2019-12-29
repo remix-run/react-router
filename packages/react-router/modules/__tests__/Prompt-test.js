@@ -3,7 +3,7 @@ import ReactDOM from "react-dom";
 import { createMemoryHistory as createHistory } from "history";
 import { MemoryRouter, Prompt, Router } from "react-router";
 
-import renderStrict from "./utils/renderStrict";
+import renderStrict from "./utils/renderStrict.js";
 
 describe("A <Prompt>", () => {
   const node = document.createElement("div");

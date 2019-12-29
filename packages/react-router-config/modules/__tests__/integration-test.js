@@ -2,15 +2,16 @@ import React from "react";
 import { StaticRouter } from "react-router";
 import { matchRoutes, renderRoutes } from "react-router-config";
 
-import renderToStringStrict from "./utils/renderToStringStrict";
+import renderToStringStrict from "./utils/renderToStringStrict.js";
 
 describe("integration", () => {
   it("generates the same matches in renderRoutes and matchRoutes", () => {
     const rendered = [];
 
-    const Comp = ({ match, route: { routes } }) => (
-      rendered.push(match), renderRoutes(routes)
-    );
+    function Comp({ match, route: { routes } }) {
+      rendered.push(match);
+      return renderRoutes(routes);
+    }
 
     const routes = [
       {
@@ -60,9 +61,10 @@ describe("integration", () => {
   it("generates the same matches in renderRoutes and matchRoutes with pathless routes", () => {
     const rendered = [];
 
-    const Comp = ({ match, route: { routes } }) => (
-      rendered.push(match), renderRoutes(routes)
-    );
+    function Comp({ match, route: { routes } }) {
+      rendered.push(match);
+      return renderRoutes(routes);
+    }
 
     const routes = [
       {
@@ -110,9 +112,10 @@ describe("integration", () => {
   it("generates the same matches in renderRoutes and matchRoutes with routes using exact", () => {
     const rendered = [];
 
-    const Comp = ({ match, route: { routes } }) => (
-      rendered.push(match), renderRoutes(routes)
-    );
+    function Comp({ match, route: { routes } }) {
+      rendered.push(match);
+      return renderRoutes(routes);
+    }
 
     const routes = [
       // should skip
@@ -144,9 +147,10 @@ describe("integration", () => {
   it("generates the same matches in renderRoutes and matchRoutes with routes using exact + strict", () => {
     const rendered = [];
 
-    const Comp = ({ match, route: { routes } }) => (
-      rendered.push(match), renderRoutes(routes)
-    );
+    function Comp({ match, route: { routes } }) {
+      rendered.push(match);
+      return renderRoutes(routes);
+    }
 
     const routes = [
       // should match

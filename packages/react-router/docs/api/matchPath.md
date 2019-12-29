@@ -39,14 +39,14 @@ is `"/foobar"`, then the resulting path will be `"/foobar/baz"`.
 
 ## returns
 
-It returns an object when provided pathname does match `path` prop or `null` otherwise.
+It returns an object when provided pathname does match `path` prop.
 
-```
+```js
 matchPath("/users/2", {
-      path: "/users/:id",
-      exact: true,
-      strict: true
-    })
+  path: "/users/:id",
+  exact: true,
+  strict: true
+});
 
 //  {
 //    isExact: true
@@ -58,12 +58,14 @@ matchPath("/users/2", {
 //  }
 ```
 
-```
+It returns `null` when provided pathname does not match `path` prop.
+
+```js
 matchPath("/users", {
-      path: "/users/:id",
-      exact: true,
-      strict: true
-    })
+  path: "/users/:id",
+  exact: true,
+  strict: true
+});
 
 //  null
 ```

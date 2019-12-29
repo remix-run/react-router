@@ -2,7 +2,7 @@ import React from "react";
 import { Route } from "react-router";
 import { View } from "react-native";
 
-import Link from "../Link";
+import Link from "../Link.js";
 
 export class TabRoutes extends React.Component {
   render() {

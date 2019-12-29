@@ -1,5 +1,4 @@
-"use strict";
-
+/* eslint-disable prefer-arrow-callback, no-empty */
 var printWarning = function() {};
 
 if (process.env.NODE_ENV !== "production") {

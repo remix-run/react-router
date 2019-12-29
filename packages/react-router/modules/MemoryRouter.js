@@ -3,7 +3,7 @@ import PropTypes from "prop-types";
 import { createMemoryHistory as createHistory } from "history";
 import warning from "tiny-warning";
 
-import Router from "./Router";
+import Router from "./Router.js";
 
 /**
  * The public API for a <Router> that stores location in memory.

@@ -1,10 +1,10 @@
+const path = require("path");
 const babel = require("rollup-plugin-babel");
 const replace = require("rollup-plugin-replace");
 const commonjs = require("rollup-plugin-commonjs");
 const nodeResolve = require("rollup-plugin-node-resolve");
-const { sizeSnapshot } = require("rollup-plugin-size-snapshot");
 const { uglify } = require("rollup-plugin-uglify");
-const path = require("path");
+
 const pkg = require("./package.json");
 
 function isBareModuleId(id) {
@@ -16,19 +16,24 @@ function isBareModuleId(id) {
 const cjs = [
   {
     input: "modules/index.js",
-    output: { file: `cjs/${pkg.name}.js`, format: "cjs", esModule: false },
+    output: {
+      file: `cjs/${pkg.name}.js`,
+      sourcemap: true,
+      format: "cjs",
+      esModule: false
+    },
     external: isBareModuleId,
     plugins: [
-      babel({ exclude: /node_modules/ }),
+      babel({ exclude: /node_modules/, sourceMaps: true, rootMode: "upward" }),
       replace({ "process.env.NODE_ENV": JSON.stringify("development") })
     ]
   },
   {
     input: "modules/index.js",
-    output: { file: `cjs/${pkg.name}.min.js`, format: "cjs" },
+    output: { file: `cjs/${pkg.name}.min.js`, sourcemap: true, format: "cjs" },
     external: isBareModuleId,
     plugins: [
-      babel({ exclude: /node_modules/ }),
+      babel({ exclude: /node_modules/, sourceMaps: true, rootMode: "upward" }),
       replace({ "process.env.NODE_ENV": JSON.stringify("production") }),
       uglify()
     ]
@@ -38,15 +43,16 @@ const cjs = [
 const esm = [
   {
     input: "modules/index.js",
-    output: { file: `esm/${pkg.name}.js`, format: "esm" },
+    output: { file: `esm/${pkg.name}.js`, sourcemap: true, format: "esm" },
     external: isBareModuleId,
     plugins: [
       babel({
         exclude: /node_modules/,
         runtimeHelpers: true,
-        plugins: [["@babel/transform-runtime", { useESModules: true }]]
-      }),
-      sizeSnapshot()
+        sourceMaps: true,
+        plugins: [["@babel/transform-runtime", { useESModules: true }]],
+        rootMode: "upward"
+      })
     ]
   }
 ];
@@ -58,6 +64,9 @@ const umd = [
     input: "modules/index.js",
     output: {
       file: `umd/${pkg.name}.js`,
+      sourcemap: true,
+      sourcemapPathTransform: relativePath =>
+        relativePath.replace(/^.*?\/node_modules/, "../../node_modules"),
       format: "umd",
       name: "ReactRouterDOM",
       globals
@@ -67,25 +76,29 @@ const umd = [
       babel({
         exclude: /node_modules/,
         runtimeHelpers: true,
-        plugins: [["@babel/transform-runtime", { useESModules: true }]]
+        sourceMaps: true,
+        plugins: [["@babel/transform-runtime", { useESModules: true }]],
+        rootMode: "upward"
       }),
       nodeResolve(),
       commonjs({
         include: /node_modules/,
         namedExports: {
-          "../react-router/node_modules/react-is/index.js": [
-            "isValidElementType"
-          ]
+          "../../node_modules/react-is/index.js": ["isValidElementType"]
         }
       }),
-      replace({ "process.env.NODE_ENV": JSON.stringify("development") }),
-      sizeSnapshot()
+      replace({
+        "process.env.NODE_ENV": JSON.stringify("development")
+      })
     ]
   },
   {
     input: "modules/index.js",
     output: {
       file: `umd/${pkg.name}.min.js`,
+      sourcemap: true,
+      sourcemapPathTransform: relativePath =>
+        relativePath.replace(/^.*?\/node_modules/, "../../node_modules"),
       format: "umd",
       name: "ReactRouterDOM",
       globals
@@ -95,19 +108,20 @@ const umd = [
       babel({
         exclude: /node_modules/,
         runtimeHelpers: true,
-        plugins: [["@babel/transform-runtime", { useESModules: true }]]
+        sourceMaps: true,
+        plugins: [["@babel/transform-runtime", { useESModules: true }]],
+        rootMode: "upward"
       }),
       nodeResolve(),
       commonjs({
         include: /node_modules/,
         namedExports: {
-          "../react-router/node_modules/react-is/index.js": [
-            "isValidElementType"
-          ]
+          "../../node_modules/react-is/index.js": ["isValidElementType"]
         }
       }),
-      replace({ "process.env.NODE_ENV": JSON.stringify("production") }),
-      sizeSnapshot(),
+      replace({
+        "process.env.NODE_ENV": JSON.stringify("production")
+      }),
       uglify()
     ]
   }

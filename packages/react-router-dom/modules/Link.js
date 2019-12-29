@@ -2,20 +2,37 @@ import React from "react";
 import { __RouterContext as RouterContext } from "react-router";
 import PropTypes from "prop-types";
 import invariant from "tiny-invariant";
-import { resolveToLocation, normalizeToLocation } from "./utils/locationUtils";
+import {
+  resolveToLocation,
+  normalizeToLocation
+} from "./utils/locationUtils.js";
+
+// React 15 compat
+const forwardRefShim = C => C;
+let { forwardRef } = React;
+if (typeof forwardRef === "undefined") {
+  forwardRef = forwardRefShim;
+}
 
 function isModifiedEvent(event) {
   return !!(event.metaKey || event.altKey || event.ctrlKey || event.shiftKey);
 }
 
-function LinkAnchor({ innerRef, navigate, onClick, ...rest }) {
-  const { target } = rest;
+const LinkAnchor = forwardRef(
+  (
+    {
+      innerRef, // TODO: deprecate
+      navigate,
+      onClick,
+      ...rest
+    },
+    forwardedRef
+  ) => {
+    const { target } = rest;
 
-  return (
-    <a
-      {...rest}
-      ref={innerRef} // TODO: Use forwardRef instead
-      onClick={event => {
+    let props = {
+      ...rest,
+      onClick: event => {
         try {
           if (onClick) onClick(event);
         } catch (ex) {
@@ -32,43 +49,76 @@ function LinkAnchor({ innerRef, navigate, onClick, ...rest }) {
           event.preventDefault();
           navigate();
         }
-      }}
-    />
-  );
+      }
+    };
+
+    // React 15 compat
+    if (forwardRefShim !== forwardRef) {
+      props.ref = forwardedRef || innerRef;
+    } else {
+      props.ref = innerRef;
+    }
+
+    /* eslint-disable-next-line jsx-a11y/anchor-has-content */
+    return <a {...props} />;
+  }
+);
+
+if (__DEV__) {
+  LinkAnchor.displayName = "LinkAnchor";
 }
 
 /**
  * The public API for rendering a history-aware <a>.
  */
-function Link({ component = LinkAnchor, replace, to, ...rest }) {
-  return (
-    <RouterContext.Consumer>
-      {context => {
-        invariant(context, "You should not use <Link> outside a <Router>");
+const Link = forwardRef(
+  (
+    {
+      component = LinkAnchor,
+      replace,
+      to,
+      innerRef, // TODO: deprecate
+      ...rest
+    },
+    forwardedRef
+  ) => {
+    return (
+      <RouterContext.Consumer>
+        {context => {
+          invariant(context, "You should not use <Link> outside a <Router>");
 
-        const { history } = context;
+          const { history } = context;
 
-        const location = normalizeToLocation(
-          resolveToLocation(to, context.location),
-          context.location
-        );
+          const location = normalizeToLocation(
+            resolveToLocation(to, context.location),
+            context.location
+          );
 
-        const href = location ? history.createHref(location) : "";
+          const href = location ? history.createHref(location) : "";
+          const props = {
+            ...rest,
+            href,
+            navigate() {
+              const location = resolveToLocation(to, context.location);
+              const method = replace ? history.replace : history.push;
 
-        return React.createElement(component, {
-          ...rest,
-          href,
-          navigate() {
-            const location = resolveToLocation(to, context.location);
-            const method = replace ? history.replace : history.push;
+              method(location);
+            }
+          };
 
-            method(location);
+          // React 15 compat
+          if (forwardRefShim !== forwardRef) {
+            props.ref = forwardedRef || innerRef;
+          } else {
+            props.innerRef = innerRef;
           }
-        });
-      }}
-    </RouterContext.Consumer>
-  );
-}
+
+          return React.createElement(component, props);
+        }}
+      </RouterContext.Consumer>
+    );
+  }
+);
 
 if (__DEV__) {
   const toType = PropTypes.oneOfType([
@@ -81,6 +131,8 @@ if (__DEV__) {
     PropTypes.func,
     PropTypes.shape({ current: PropTypes.any })
   ]);
+
+  Link.displayName = "Link";
 
   Link.propTypes = {
     innerRef: refType,

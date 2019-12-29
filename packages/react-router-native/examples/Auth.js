@@ -43,24 +43,23 @@ const fakeAuth = {
   }
 };
 
-const AuthButton = withRouter(
-  ({ history }) =>
-    fakeAuth.isAuthenticated ? (
-      <View>
-        <Text>Welcome!</Text>
-        <TouchableHighlight
-          style={styles.btn}
-          underlayColor="#f0f4f7"
-          onPress={() => {
-            fakeAuth.signout(() => history.push("/"));
-          }}
-        >
-          <Text>Sign out</Text>
-        </TouchableHighlight>
-      </View>
-    ) : (
-      <Text>You are not logged in.</Text>
-    )
+const AuthButton = withRouter(({ history }) =>
+  fakeAuth.isAuthenticated ? (
+    <View>
+      <Text>Welcome!</Text>
+      <TouchableHighlight
+        style={styles.btn}
+        underlayColor="#f0f4f7"
+        onPress={() => {
+          fakeAuth.signout(() => history.push("/"));
+        }}
+      >
+        <Text>Sign out</Text>
+      </TouchableHighlight>
+    </View>
+  ) : (
+    <Text>You are not logged in.</Text>
+  )
 );
 
 function PrivateRoute({ component: Component, ...rest }) {

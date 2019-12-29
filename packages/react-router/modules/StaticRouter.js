@@ -4,7 +4,7 @@ import { createLocation, createPath } from "history";
 import invariant from "tiny-invariant";
 import warning from "tiny-warning";
 
-import Router from "./Router";
+import Router from "./Router.js";
 
 function addLeadingSlash(path) {
   return path.charAt(0) === "/" ? path : "/" + path;

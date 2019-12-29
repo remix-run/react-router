@@ -61,7 +61,9 @@ class Container extends React.Component {
   }
 
   render() {
-    return <MyComponent wrappedComponentRef={c => (this.component = c)} />;
+    return (
+      <MyComponent wrappedComponentRef={c => (this.component = c)} />
+    );
   }
 }
 ```

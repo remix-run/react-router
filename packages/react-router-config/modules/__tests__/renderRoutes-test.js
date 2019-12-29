@@ -3,17 +3,18 @@ import { createMemoryHistory as createHistory } from "history";
 import { Router, StaticRouter } from "react-router";
 import { renderRoutes } from "react-router-config";
 
-import renderStrict from "./utils/renderStrict";
-import renderToStringStrict from "./utils/renderToStringStrict";
+import renderStrict from "./utils/renderStrict.js";
+import renderToStringStrict from "./utils/renderToStringStrict.js";
 
 describe("renderRoutes", () => {
   let renderedRoutes;
   let renderedExtraProps;
-  const Comp = ({ route, route: { routes }, ...extraProps }) => (
-    renderedRoutes.push(route),
-    renderedExtraProps.push(extraProps),
-    renderRoutes(routes)
-  );
+
+  function Comp({ route, route: { routes }, ...extraProps }) {
+    renderedRoutes.push(route);
+    renderedExtraProps.push(extraProps);
+    return renderRoutes(routes);
+  }
 
   beforeEach(() => {
     renderedRoutes = [];

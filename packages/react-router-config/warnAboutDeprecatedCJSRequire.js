@@ -1,3 +1,4 @@
+/* eslint-disable prefer-arrow-callback, no-empty */
 "use strict";
 
 var printWarning = function() {};

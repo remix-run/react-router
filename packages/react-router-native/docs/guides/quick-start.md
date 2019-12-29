@@ -61,7 +61,9 @@ const Topics = ({ match }) => (
     <Route
       exact
       path={match.path}
-      render={() => <Text style={styles.topic}>Please select a topic.</Text>}
+      render={() => (
+        <Text style={styles.topic}>Please select a topic.</Text>
+      )}
     />
   </View>
 );
@@ -73,10 +75,18 @@ const App = () => (
         <Link to="/" underlayColor="#f0f4f7" style={styles.navItem}>
           <Text>Home</Text>
         </Link>
-        <Link to="/about" underlayColor="#f0f4f7" style={styles.navItem}>
+        <Link
+          to="/about"
+          underlayColor="#f0f4f7"
+          style={styles.navItem}
+        >
           <Text>About</Text>
         </Link>
-        <Link to="/topics" underlayColor="#f0f4f7" style={styles.navItem}>
+        <Link
+          to="/topics"
+          underlayColor="#f0f4f7"
+          style={styles.navItem}
+        >
           <Text>Topics</Text>
         </Link>
       </View>

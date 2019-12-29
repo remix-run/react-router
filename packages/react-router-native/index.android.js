@@ -27,7 +27,9 @@ class ReactRouterNative extends React.Component {
                   Welcome to React Router Native!
                 </Text>
                 <Link to="/one">
-                  <Text style={styles.instructions}>Go to "/one"</Text>
+                  <Text style={styles.instructions}>
+                    Go to &quot;/one&quot;
+                  </Text>
                 </Link>
               </View>
             )}

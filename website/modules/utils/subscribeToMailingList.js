@@ -1,7 +1,7 @@
 import fetch from "isomorphic-fetch";
 import qs from "query-string";
 
-function subscribeToMailingList(email) {
+export default function subscribeToMailingList(email) {
   return fetch("https://api.convertkit.com/v3/forms/852704/subscribe", {
     method: "POST",
     mode: "no-cors",
@@ -14,5 +14,3 @@ function subscribeToMailingList(email) {
     })
   });
 }
-
-export default subscribeToMailingList;

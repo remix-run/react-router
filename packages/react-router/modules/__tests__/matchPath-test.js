@@ -9,6 +9,23 @@ describe("matchPath", () => {
     });
   });
 
+  describe('with path=""', () => {
+    it('returns correct url at "/"', () => {
+      const path = "";
+      const pathname = "/";
+      const match = matchPath(pathname, path);
+      // TODO: why is match.url "/" instead of ""?
+      expect(match.url).toBe("/");
+    });
+
+    it('returns correct url at "/somewhere/else"', () => {
+      const path = "";
+      const pathname = "/somewhere/else";
+      const match = matchPath(pathname, path);
+      expect(match.url).toBe("");
+    });
+  });
+
   describe('with path="/"', () => {
     it('returns correct url at "/"', () => {
       const path = "/";

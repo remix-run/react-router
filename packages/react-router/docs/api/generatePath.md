@@ -5,7 +5,10 @@ The `generatePath` function can be used to generate URLs to the routes. Internal
 ```js
 import { generatePath } from "react-router";
 
-generatePath("/user/:id/:entity(posts|comments)", { id: 1, entity: "posts" });
+generatePath("/user/:id/:entity(posts|comments)", {
+  id: 1,
+  entity: "posts"
+});
 // Will return /user/1/posts
 ```
 

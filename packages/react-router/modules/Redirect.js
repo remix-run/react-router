@@ -3,9 +3,9 @@ import PropTypes from "prop-types";
 import { createLocation, locationsAreEqual } from "history";
 import invariant from "tiny-invariant";
 
-import Lifecycle from "./Lifecycle";
-import RouterContext from "./RouterContext";
-import generatePath from "./generatePath";
+import Lifecycle from "./Lifecycle.js";
+import RouterContext from "./RouterContext.js";
+import generatePath from "./generatePath.js";
 
 /**
  * The public API for navigating programmatically with a component.
