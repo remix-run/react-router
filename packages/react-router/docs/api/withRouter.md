@@ -5,7 +5,7 @@ You can get access to the [`history`](./history.md) object's properties and the 
 ```jsx
 import React from "react";
 import PropTypes from "prop-types";
-import { withRouter } from "react-router";
+import { withRouter } from "react-router-dom";
 
 // A simple component that shows the pathname of the current location
 class ShowTheLocation extends React.Component {
