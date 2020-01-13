@@ -17,9 +17,8 @@ import React from 'react'
 import { render, unmountComponentAtNode } from 'react-dom'
 
 import match from '../match'
-import RouterContext from '../RouterContext'
+import RouterContext, { Context } from '../RouterContext'
 import { createRouterObject } from '../RouterUtils'
-import { RouterContext as ProvidableRouterContext } from '../ContextUtils'
 
 describe('RouterContext', () => {
   let node, routes, context, history, transitionManager, router
@@ -55,7 +54,7 @@ describe('RouterContext', () => {
       render() { return null }
     }
 
-    Component.contextType = ProvidableRouterContext
+    Component.contextType = Context
 
     routes = { path: '/', component: Component }
   })

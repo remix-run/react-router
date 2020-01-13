@@ -15,7 +15,7 @@
 import invariant from 'invariant'
 import React from 'react'
 import hoistStatics from 'hoist-non-react-statics'
-import { ContextSubscriber } from './ContextUtils'
+import { Context as RouterContext } from './RouterContext'
 import { routerShape } from './PropTypes'
 
 function getDisplayName(WrappedComponent) {
@@ -25,9 +25,9 @@ function getDisplayName(WrappedComponent) {
 export default function withRouter(WrappedComponent, options) {
   const withRef = options && options.withRef
 
-  class WithRouter extends ContextSubscriber {
+  class WithRouter extends React.Component {
     static displayName = 'WithRouter'
-
+    static contextType = RouterContext
     static propTypes = { router: routerShape }
 
     getWrappedInstance = () => {

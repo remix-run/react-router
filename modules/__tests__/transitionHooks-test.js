@@ -20,7 +20,7 @@ import execSteps from './execSteps'
 import Router from '../Router'
 import Route from '../Route'
 import match from '../match'
-import { RouterContext } from '../ContextUtils'
+import { Context as RouterContext } from '../RouterContext'
 
 describe('When a router enters a branch', function () {
   let

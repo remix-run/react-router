@@ -15,7 +15,7 @@
 import React from 'react'
 import { bool, object, string, func, oneOfType } from 'prop-types'
 import invariant from 'invariant'
-import { ContextSubscriber } from './ContextUtils'
+import { Context as RouterContext } from './RouterContext'
 
 function isLeftClickEvent(event) {
   return event.button === 0
@@ -51,9 +51,9 @@ function resolveToLocation(to, router) {
  *
  *   <Link to={`/posts/${post.id}`} />
  */
-class Link extends ContextSubscriber {
+class Link extends React.Component {
   static displayName = 'Link'
-
+  static contextType = RouterContext
   static propTypes = {
     to: oneOfType([ string, object, func ]),
     activeStyle: object,
