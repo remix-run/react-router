@@ -31,7 +31,8 @@
     "test:git-history": "commitlint --from origin/master --to HEAD",
     "test-browser:watch": "cross-env NODE_ENV=test karma start",
     "test-node": "cross-env NODE_ENV=test mocha --require babel-register tests.node.js",
-    "posttest": "npm run lint && npm run test:git-history"
+    "test:lockfile": "lockfile-lint -p package-lock.json -t npm -a npm -o https: -c -i",
+    "posttest": "npm run lint && npm run test:git-history && npm run test:lockfile"
   },
   "contributors": [
     "Andres Escobar <Andres.Escobar@aexp.com> (https://github.com/anescobar1991)",
@@ -99,6 +100,7 @@
     "karma-mocha-reporter": "^2.0.5",
     "karma-sourcemap-loader": "^0.3.7",
     "karma-webpack": "^2.0.3",
+    "lockfile-lint": "^3.0.8",
     "mocha": "^5.0.4",
     "pretty-bytes": "^4.0.2",
     "qs": "^6.2.1",
