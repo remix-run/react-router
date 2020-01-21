@@ -1,5 +1,5 @@
 import React from "react";
-import { __RouterContext as RouterContext } from "react-router";
+import { __HistoryContext as HistoryContext } from "react-router";
 import PropTypes from "prop-types";
 import invariant from "tiny-invariant";
 import {
@@ -83,11 +83,9 @@ const Link = forwardRef(
     forwardedRef
   ) => {
     return (
-      <RouterContext.Consumer>
-        {context => {
-          invariant(context, "You should not use <Link> outside a <Router>");
-
-          const { history } = context;
+      <HistoryContext.Consumer>
+        {history => {
+          invariant(history, "You should not use <Link> outside a <Router>");
 
           const location = normalizeToLocation(
             resolveToLocation(to, context.location),
@@ -115,7 +113,7 @@ const Link = forwardRef(
 
           return React.createElement(component, props);
         }}
-      </RouterContext.Consumer>
+      </HistoryContext.Consumer>
     );
   }
 );
