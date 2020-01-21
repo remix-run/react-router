@@ -5,8 +5,7 @@ To get started with React Router in a web app, you'll need a React web app. If y
 First, install `create-react-app` and make a new project with it.
 
 ```sh
-npm install -g create-react-app
-create-react-app demo-app
+npx create-react-app demo-app
 cd demo-app
 ```
 
