@@ -1,7 +1,9 @@
 import babel from 'rollup-plugin-babel';
+import commonjs from '@rollup/plugin-commonjs';
 import compiler from '@ampproject/rollup-plugin-closure-compiler';
 import copy from 'rollup-plugin-copy';
 import ignore from 'rollup-plugin-ignore';
+import nodeResolve from '@rollup/plugin-node-resolve';
 import prettier from 'rollup-plugin-prettier';
 import replace from '@rollup/plugin-replace';
 import { terser } from 'rollup-plugin-terser';
@@ -114,13 +116,12 @@ const globals = [
       sourcemap: !PRETTY,
       globals: {
         history: 'HistoryLibrary',
-        'prop-types': 'PropTypes',
         react: 'React',
         'react-router': 'ReactRouter'
       },
       name: 'ReactRouterDOM'
     },
-    external: ['history', 'prop-types', 'react', 'react-router'],
+    external: ['history', 'react', 'react-router'],
     plugins: [
       babel({
         exclude: /node_modules/,
@@ -131,6 +132,8 @@ const globals = [
         plugins: ['babel-plugin-dev-expression']
       }),
       replace({ 'process.env.NODE_ENV': JSON.stringify('development') }),
+      nodeResolve(), // for prop-types
+      commonjs(), // for prop-types
       compiler({
         compilation_level: 'SIMPLE_OPTIMIZATIONS',
         language_in: 'ECMASCRIPT5_STRICT',
