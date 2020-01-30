@@ -42,7 +42,6 @@
     "rollup-plugin-babel": "^4.3.3",
     "rollup-plugin-copy": "^3.1.0",
     "rollup-plugin-ignore": "^1.0.5",
-    "rollup-plugin-node-resolve": "^5.2.0",
     "rollup-plugin-prettier": "^0.6.0",
     "rollup-plugin-terser": "^5.1.2"
   },
@@ -76,7 +75,7 @@
     {
       "path": "build/react-router-dom/umd/react-router-dom.production.min.js",
       "compression": "none",
-      "maxSize": "8 kB"
+      "maxSize": "4.5 kB"
     }
   ]
 }
