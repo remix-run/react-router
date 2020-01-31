@@ -1,6 +1,6 @@
 {
   "name": "react-router-native",
-  "version": "5.1.2",
+  "version": "6.0.0-alpha.0",
   "description": "React Router on React Native",
   "author": "React Training <hello@reacttraining.com>",
   "repository": "ReactTraining/react-router",
@@ -13,7 +13,7 @@
     "history": "5.0.0-beta.3",
     "react": ">=16.8",
     "react-native": ">=0.44",
-    "react-router": "^5.1.2"
+    "react-router": "6.0.0-alpha.0"
   },
   "devDependencies": {
     "react-native": "^0.61.4"

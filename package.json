@@ -1,6 +1,6 @@
 {
   "name": "react-router",
-  "version": "5.1.2",
+  "version": "6.0.0-alpha.0",
   "private": true,
   "scripts": {
     "build": "node ./scripts/build.js",
