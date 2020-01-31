@@ -106,10 +106,7 @@ const globals = [
       file: `${OUTPUT_DIR}/umd/react-router.development.js`,
       format: 'umd',
       sourcemap: !PRETTY,
-      globals: {
-        history: 'HistoryLibrary',
-        react: 'React'
-      },
+      globals: { history: 'HistoryLibrary', react: 'React' },
       name: 'ReactRouter'
     },
     external: ['history', 'react'],
