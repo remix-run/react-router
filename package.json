@@ -1,5 +1,6 @@
 {
-  "name": "react-router-monorepo",
+  "name": "react-router",
+  "version": "5.1.2",
   "private": true,
   "scripts": {
     "build": "node ./scripts/build.js",
@@ -24,6 +25,7 @@
     "@typescript-eslint/parser": "2.x",
     "babel-eslint": "10.x",
     "babel-plugin-dev-expression": "^0.2.2",
+    "chalk": "^3.0.0",
     "eslint": "6.x",
     "eslint-config-react-app": "^5.1.0",
     "eslint-plugin-flowtype": "3.x",
@@ -33,10 +35,12 @@
     "eslint-plugin-react-hooks": "1.x",
     "history": "^5.0.0-beta.4",
     "jest": "^24.9.0",
+    "jsonfile": "^5.0.0",
     "lerna": "^3.13.4",
     "lerna-changelog": "^0.8.2",
     "metro-react-native-babel-preset": "^0.57.0",
     "prettier": "^1.14.3",
+    "prompt-confirm": "^2.0.4",
     "react": "^16.12.0",
     "react-dom": "^16.12.0",
     "react-test-renderer": "^16.12.0",
@@ -45,7 +49,8 @@
     "rollup-plugin-copy": "^3.1.0",
     "rollup-plugin-ignore": "^1.0.5",
     "rollup-plugin-prettier": "^0.6.0",
-    "rollup-plugin-terser": "^5.1.2"
+    "rollup-plugin-terser": "^5.1.2",
+    "semver": "^7.1.2"
   },
   "workspaces": {
     "packages": [
