@@ -1,7 +1,0 @@
-{
-  "extends": "react-app",
-  "rules": {
-    "import/no-webpack-loader-syntax": "off",
-    "react/prop-types": "off"
-  }
-}

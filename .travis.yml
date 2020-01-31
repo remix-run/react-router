@@ -9,31 +9,31 @@ jobs:
   - stage: Size
     before_script: yarn build
     script: yarn size
-  - stage: Release
-    if: tag =~ ^v[0-9]
-    before_script: yarn build
-    script: echo "Publishing $TRAVIS_TAG to npm ..."
-    before_deploy: echo "//registry.npmjs.org/:_authToken=$NPM_TOKEN" > "$HOME/.npmrc"
-    deploy:
-      provider: script
-      skip_cleanup: true
-      script: lerna publish from-git --yes --pre-dist-tag next
-      on:
-        tags: true
-  - stage: Deploy Website
-    if: branch = website
-    env: PUBLIC_PATH=/react-router/
-    before_script: yarn build
-    script: echo "Deploying website to https://reacttraining.com$PUBLIC_PATH"
-    before_deploy:
-    - openssl aes-256-cbc -K $encrypted_70c5e56b421c_key -iv $encrypted_70c5e56b421c_iv
-      -in website-deploy-key.enc -out website-deploy-key -d
-    - chmod 600 website-deploy-key
-    - eval $(ssh-agent -s)
-    - ssh-add website-deploy-key
-    deploy:
-      provider: script
-      script: bash scripts/deploy-website.sh
-      skip_cleanup: true
-      on:
-        branch: website
+  # - stage: Release
+  #   if: tag =~ ^v[0-9]
+  #   before_script: yarn build
+  #   script: echo "Publishing $TRAVIS_TAG to npm ..."
+  #   before_deploy: echo "//registry.npmjs.org/:_authToken=$NPM_TOKEN" > "$HOME/.npmrc"
+  #   deploy:
+  #     provider: script
+  #     skip_cleanup: true
+  #     script: lerna publish from-git --yes --pre-dist-tag next
+  #     on:
+  #       tags: true
+  # - stage: Deploy Website
+  #   if: branch = website
+  #   env: PUBLIC_PATH=/react-router/
+  #   before_script: yarn build
+  #   script: echo "Deploying website to https://reacttraining.com$PUBLIC_PATH"
+  #   before_deploy:
+  #   - openssl aes-256-cbc -K $encrypted_70c5e56b421c_key -iv $encrypted_70c5e56b421c_iv
+  #     -in website-deploy-key.enc -out website-deploy-key -d
+  #   - chmod 600 website-deploy-key
+  #   - eval $(ssh-agent -s)
+  #   - ssh-add website-deploy-key
+  #   deploy:
+  #     provider: script
+  #     script: bash scripts/deploy-website.sh
+  #     skip_cleanup: true
+  #     on:
+  #       branch: website

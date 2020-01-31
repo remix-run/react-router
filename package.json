@@ -7,7 +7,6 @@
     "clean": "git clean -e '!/website-deploy-key' -e '!/website-deploy-key.pub' -fdX .",
     "lint": "eslint .",
     "size": "filesize",
-    "start": "node ./scripts/start.js",
     "test": "node ./scripts/test.js",
     "watch": "node ./scripts/watch.js"
   },
