@@ -79,52 +79,52 @@ async function run() {
 
     // 1. Get the next version number
     let currentVersion = await getRepoVersion();
-    let targetVersion = getTargetVersion(
-      currentVersion,
-      nextVersion,
-      prereleaseId
-    );
+    let version = getTargetVersion(currentVersion, nextVersion, prereleaseId);
 
     // 2. Confirm the next version number
     let answer = await prompt(
-      `Are you sure you want to bump version ${currentVersion} to ${targetVersion}? [Yn] `
+      `Are you sure you want to bump version ${currentVersion} to ${version}? [Yn] `
     );
 
     if (answer === false) return 0;
 
     // 3. Update repo version
     await updateRepoConfig(config => {
-      config.version = targetVersion;
+      config.version = version;
     });
-    console.log(`  Updated react-router repo to version ${targetVersion}`);
+    console.log(chalk.green(`  Updated repo to version ${version}`));
 
     // 4. Update react-router version
     await updatePackageConfig('react-router', config => {
-      config.version = targetVersion;
+      config.version = version;
     });
-    console.log(`  Updated react-router to version ${targetVersion}`);
+    console.log(chalk.green(`  Updated react-router to version ${version}`));
 
     // 5. Update react-router-dom version + react-router peer dep
     await updatePackageConfig('react-router-dom', config => {
-      config.version = targetVersion;
-      config.peerDependencies['react-router'] = targetVersion;
+      config.version = version;
+      config.peerDependencies['react-router'] = version;
     });
-    console.log(`  Updated react-router-dom to version ${targetVersion}`);
+    console.log(
+      chalk.green(`  Updated react-router-dom to version ${version}`)
+    );
 
     // 6. Update react-router-native version + react-router peer dep
     await updatePackageConfig('react-router-native', config => {
-      config.version = targetVersion;
-      config.peerDependencies['react-router'] = targetVersion;
+      config.version = version;
+      config.peerDependencies['react-router'] = version;
     });
-    console.log(`  Updated react-router-native to version ${targetVersion}`);
+    console.log(
+      chalk.green(`  Updated react-router-native to version ${version}`)
+    );
 
     // 7. Commit and tag
-    exec(`git commit --all --message="Version ${targetVersion}"`);
-    exec(`git tag v${targetVersion}`);
-    console.log(`  Committed and tagged version ${targetVersion}`);
+    exec(`git commit --all --message="Version ${version}"`);
+    exec(`git tag v${version}`);
+    console.log(chalk.green(`  Committed and tagged version ${version}`));
   } catch (error) {
     console.log();
-    console.error('  ' + chalk.red(error.message));
+    console.error(chalk.red(`  ${error.message}`));
     console.log();
     return 1;
   }
