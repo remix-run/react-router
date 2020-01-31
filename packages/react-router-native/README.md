@@ -1,29 +1,7 @@
-# react-router-native
+# React Router Native
 
-[React Native](https://facebook.github.io/react-native/) bindings for [React Router](https://reacttraining.com/react-router).
-
-## Installation
-
-Using [npm](https://www.npmjs.com/):
-
-    $ npm install --save react-router-native
-
-Then `import` or `require` as you would anything else:
-
-```js
-// using ES6 modules
-import { NativeRouter, Route, Link } from "react-router-native";
-
-// using CommonJS modules
-var NativeRouter = require("react-router-native").NativeRouter;
-var Route = require("react-router-native").Route;
-var Link = require("react-router-native").Link;
-```
-
-## Issues
-
-If you find a bug, please file an issue on [our issue tracker on GitHub](https://github.com/ReactTraining/react-router/issues).
-
-## Credits
-
-React Router is built and maintained by [React Training](https://reacttraining.com).
+The `react-router-native` package contains bindings for using [React
+Router](https://github.com/ReactTraining/react-router) in [React
+Native](https://facebook.github.io/react-native/) applications. Please see [the
+main README](https://github.com/ReactTraining/react-router/README.md) for more
+information on how to get started with React Router.
