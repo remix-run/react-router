@@ -36,8 +36,6 @@
     "history": "^5.0.0-beta.4",
     "jest": "^24.9.0",
     "jsonfile": "^5.0.0",
-    "lerna": "^3.13.4",
-    "lerna-changelog": "^0.8.2",
     "metro-react-native-babel-preset": "^0.57.0",
     "prettier": "^1.14.3",
     "prompt-confirm": "^2.0.4",
