@@ -1,12 +1,31 @@
 import React from 'react';
+import PropTypes from 'prop-types';
 import { Alert, BackHandler, Linking, TouchableHighlight } from 'react-native';
 import {
+  // components
   MemoryRouter,
+  Navigate,
+  Outlet,
+  Redirect,
+  Route,
+  Router,
+  Routes,
+  // hooks
   useBlocker,
+  useHref,
   useLocation,
-  useNavigate
+  useMatch,
+  useNavigate,
+  useOutlet,
+  useParams,
+  useResolvedLocation,
+  useRoutes,
+  // utils
+  createRoutesFromChildren,
+  matchRoutes,
+  resolveLocation,
+  generatePath
 } from 'react-router';
-import PropTypes from 'prop-types';
 
 ////////////////////////////////////////////////////////////////////////////////
 // RE-EXPORTS
@@ -37,7 +56,7 @@ export {
   matchRoutes,
   resolveLocation,
   generatePath
-} from 'react-router';
+};
 
 ////////////////////////////////////////////////////////////////////////////////
 // COMPONENTS

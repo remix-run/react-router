@@ -1,15 +1,31 @@
 import React from 'react';
+import PropTypes from 'prop-types';
 import { createBrowserHistory, createHashHistory } from 'history';
 import {
+  // components
+  MemoryRouter,
+  Navigate,
+  Outlet,
+  Redirect,
+  Route,
   Router,
+  Routes,
+  // hooks
   useBlocker,
   useHref,
   useLocation,
   useMatch,
   useNavigate,
-  useResolvedLocation
+  useOutlet,
+  useParams,
+  useResolvedLocation,
+  useRoutes,
+  // utils
+  createRoutesFromChildren,
+  matchRoutes,
+  resolveLocation,
+  generatePath
 } from 'react-router';
-import PropTypes from 'prop-types';
 
 ////////////////////////////////////////////////////////////////////////////////
 // RE-EXPORTS
@@ -40,7 +56,7 @@ export {
   matchRoutes,
   resolveLocation,
   generatePath
-} from 'react-router';
+};
 
 ////////////////////////////////////////////////////////////////////////////////
 // COMPONENTS
