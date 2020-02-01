@@ -33,7 +33,7 @@ In general, the process looks like this:
     - Update `<Route path>` patterns
     - Remove `<Route exact>` and `<Route strict>` props
     - Move `<Route sensitive>` to containing `<Routes caseSensitive>`
-    - Consolidate your <Route>s into a nested config (optional)
+    - Consolidate your `<Route>`s into a nested config (optional)
   - Use `navigate` instead of `history`
     - Use `useNavigate` hook instead of `useHistory`
     - Use `<Navigate>` instead of `<Redirect>` (outside of route configs)
