@@ -646,13 +646,16 @@ other libraries in the React ecosystem including styled-components and Reach UI.
 The `StaticRouter` component has moved into a new bundle:
 `react-router-dom/server`.
 
-```js // change import { StaticRouter } from 'react-router-dom'; // to import {
-StaticRouter } from 'react-router-dom/server'; ```
+```js
+// change
+import { StaticRouter } from 'react-router-dom';
+// to
+import { StaticRouter } from 'react-router-dom/server';
+```
 
 This change was made both to follow more closely the convention established by
 the `react-dom` package and to help users understand better what a
 `<StaticRouter>` is for and when it should be used (on the server).
-```
 
 ## What did we miss?
 
