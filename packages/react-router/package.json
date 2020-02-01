@@ -9,10 +9,10 @@
   "module": "react-router.js",
   "unpkg": "umd/react-router.production.min.js",
   "dependencies": {
+    "history": "5.0.0-beta.4",
     "prop-types": "^15.7.2"
   },
   "peerDependencies": {
-    "history": "5.0.0-beta.3",
     "react": ">=16.8"
   },
   "sideEffects": false,

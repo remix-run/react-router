@@ -1,16 +1,16 @@
 {
   "name": "react-router-native",
   "version": "6.0.0-alpha.0",
-  "description": "React Router on React Native",
+  "description": "Declarative routing for React Native applications",
   "author": "React Training <hello@reacttraining.com>",
   "repository": "ReactTraining/react-router",
   "license": "MIT",
   "main": "react-router-native.js",
   "dependencies": {
+    "history": "5.0.0-beta.4",
     "prop-types": "^15.7.2"
   },
   "peerDependencies": {
-    "history": "5.0.0-beta.3",
     "react": ">=16.8",
     "react-native": ">=0.44",
     "react-router": "6.0.0-alpha.0"
