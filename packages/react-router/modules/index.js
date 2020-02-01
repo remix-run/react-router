@@ -319,6 +319,9 @@ export function createRoutesFromChildren(children) {
 export function useBlocker(blocker, when = true) {
   let { history } = React.useContext(LocationContext);
 
+  // TODO: This error is probably because they somehow have
+  // 2 versions of the router loaded. We can help them understand
+  // how to avoid that.
   invariant(
     history != null,
     'navigation blocking may be used only in the context of a <Router> component'
@@ -355,6 +358,9 @@ export function useHref(to) {
   let resolvedLocation = useResolvedLocation(to);
   let { history } = React.useContext(LocationContext);
 
+  // TODO: This error is probably because they somehow have
+  // 2 versions of the router loaded. We can help them understand
+  // how to avoid that.
   invariant(
     history != null,
     'href resolution may be used only in the context of a <Router> component'
@@ -395,6 +401,9 @@ export function useNavigate() {
   let { history, pending } = React.useContext(LocationContext);
   let { pathname } = React.useContext(RouteContext);
 
+  // TODO: This error is probably because they somehow have
+  // 2 versions of the router loaded. We can help them understand
+  // how to avoid that.
   invariant(
     history != null,
     'navigation may be used only in the context of a <Router> component'
@@ -610,13 +619,21 @@ function flattenRoutes(
 }
 
 const paramRe = /^:\w+$/;
+const staticSegmentValue = 10;
+const dynamicSegmentValue = 2;
+const splatSegmentValue = -1;
 
 function computeScore(path) {
   return path
     .split('/')
     .reduce(
       (score, segment) =>
-        score + (paramRe.test(segment) ? 2 : segment === '*' ? -1 : 10),
+        score +
+        (paramRe.test(segment)
+          ? dynamicSegmentValue
+          : segment === '*'
+          ? splatSegmentValue
+          : staticSegmentValue),
       0
     );
 }
