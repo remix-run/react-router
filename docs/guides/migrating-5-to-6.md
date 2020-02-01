@@ -72,16 +72,16 @@ function User({ id }) {
   <Route exact path="/" component={Home} />
   <Route path="/about" component={About} />
   <Route
-    path="/users/:userId"
+    path="/users/:id"
     render={
-      ({ match }) => <User id={match.params.userId} />
+      ({ match }) => <User id={match.params.id} />
     }
   />
 </Switch>
 
 // v5.1 preferred style
 function User() {
-  let { userId } = useParams();
+  let { id } = useParams();
   // ...
 }
 
@@ -89,7 +89,7 @@ function User() {
   <Route exact path="/"><Home /></Route>
   <Route path="/about"><About /></Route>
   {/* Can also use a named `children` prop */}
-  <Route path="/users/:userId" children={<User />} />
+  <Route path="/users/:id" children={<User />} />
 </Switch>
 ```
 
