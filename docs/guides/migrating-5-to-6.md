@@ -22,25 +22,25 @@ are using your app.
 
 In general, the process looks like this:
 
-- Upgrade to React v16.8 or greater
-- Upgrade to React Router v5.1
+- [Upgrade to React v16.8 or greater](#upgrade-to-react-v168)
+- [Upgrade to React Router v5.1](#upgrade-to-react-router-v51)
   - Use `<Route children>` everywhere
   - Use hooks instead of `withRouter` and "floating" `<Route>`s (that aren't
     part of a `<Switch>`)
-- Upgrade to React Router v6
-  - Upgrade all `<Switch>` elements to `<Routes>`
+- [Upgrade to React Router v6](#upgrade-to-react-router-v6)
+  - [Upgrade all `<Switch>` elements to `<Routes>`](#upgrade-all-switch-elements-to-routes)
     - Update `<Link to>` values
     - Update `<Route path>` patterns
     - Remove `<Route exact>` and `<Route strict>` props
     - Move `<Route sensitive>` to containing `<Routes caseSensitive>`
     - Consolidate your `<Route>`s into a nested config (optional)
-  - Use `navigate` instead of `history`
+  - [Use `navigate` instead of `history`](#use-navigate-instead-of-history)
     - Use `useNavigate` hook instead of `useHistory`
     - Use `<Navigate>` instead of `<Redirect>` (outside of route configs)
       - No need to change `<Redirect>` directly inside `<Routes>`
-  - Use `matchRoutes` and/or `useRoutes` instead of `react-router-config`
-  - Rename `<Link component>` to `<Link as>`
-  - Get `StaticRouter` from `react-router-dom/server`
+  - [Use `useRoutes` instead of `react-router-config`](#use-useroutes-instead-of-react-router-config)
+  - [Rename `<Link component>` to `<Link as>`](#rename-link-component-to-link-as)
+  - [Get `StaticRouter` from `react-router-dom/server`](#get-staticrouter-from-react-router-dom-server)
 
 ## Upgrade to React v16.8
 
@@ -124,18 +124,21 @@ In summary, to upgrade from v4/5 to v5.1, you should:
 Again, **once your app is upgraded to v5.1 you should test and deploy it**, and
 pick this guide back up when you're ready to continue.
 
-## Upgrade all `<Switch>` elements to `<Routes>`
+## Upgrade to React Router v6
 
 **Heads up:** This is the biggest step in the migration and will probably take
 the most time and effort.
 
-For this step, you'll need to install React Router v6.
+For this step, you'll need to install React Router v6. If you're managing
+dependencies via npm:
 
 ```
-$ yarn add react-router-dom@6
-# or, for a native app
-$ yarn add react-router-native@6
+$ npm install react-router@6 react-router-dom@6
+# or, for a React Native app
+$ npm install react-router@6 react-router-native@6
 ```
+
+### Upgrade all `<Switch>` elements to `<Routes>`
 
 React Router v6 introduces a `Routes` component that is kind of like `Switch`,
 but a lot more powerful. The main advantages of `Routes` over `Switch` are:
@@ -267,7 +270,7 @@ up with either an API like `<Route component={Profile} passProps={{ animate:
 true }} />` or use a render prop or higher-order component.
 
 Also, I'm not sure if you noticed this but in v4 and v5, `Route`'s rendering API
-just kept growing. It went something like this:
+became rather large. It went something like this:
 
 ```js
 // Ah, this is nice and simple!
@@ -551,11 +554,9 @@ import { useHistory } from 'react-router-dom';
 
 function App() {
   let history = useHistory();
-
   function handleClick() {
     history.push('/home')
   }
-
   return (
     <div>
       <button onClick={handleClick}>go home</button>
@@ -574,11 +575,9 @@ import { useNavigate } from 'react-router-dom';
 
 function App() {
   let navigate = useNavigate();
-
   function handleClick() {
     navigate('/home')
   }
-
   return (
     <div>
       <button onClick={handleClick}>go home</button>
@@ -599,7 +598,7 @@ component), v6 provides a `Navigate` component. Use it like:
 import { Navigate } from 'react-router-dom';
 
 function App() {
-  return <Navigate to="/home" replace state={state} />
+  return <Navigate to="/home" replace state={state} />;
 }
 ```
 
@@ -641,7 +640,7 @@ function SomeForm() {
 This is a simple renaming of a prop to better align with the common practice of
 other libraries in the React ecosystem including styled-components and Reach UI.
 
-## StaticRouter
+## Get `StaticRouter` from `react-router-dom/server`
 
 The `StaticRouter` component has moved into a new bundle:
 `react-router-dom/server`.
