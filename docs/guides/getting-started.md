@@ -199,7 +199,7 @@ function SentInvoices() {
 function App() {
   return (
     <Routes>
-      <Route path="invoices" element={<Invoices />} />
+      <Route path="invoices" element={<Invoices />}>
         <Route path=":invoiceId" element={<IndividualInvoice />} />
         <Route path="sent" element={<SentInvoices />} />
       </Route>
@@ -242,7 +242,7 @@ function Dashboard() {
 function App() {
   return (
     <Routes>
-      <Route path="/" element={<Layout />} />
+      <Route path="/" element={<Layout />}>
         <Route path="invoices" element={<Invoices />} />
         <Route path="dashboard" element={<Dashboard />} />
       </Route>
