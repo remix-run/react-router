@@ -24,11 +24,7 @@ function warning(cond, message) {
 // CONTEXT
 ///////////////////////////////////////////////////////////////////////////////
 
-const LocationContext = React.createContext({
-  history: null,
-  location: { pathname: '/', search: '', hash: '' },
-  pending: false
-});
+const LocationContext = React.createContext();
 
 if (__DEV__) {
   LocationContext.Consumer.displayName = 'Location.Consumer';
@@ -194,9 +190,9 @@ export function Router({ children = null, history, timeout = 2000 }) {
   let listeningRef = React.useRef(false);
 
   invariant(
-    !React.useContext(LocationContext).history,
-    `You rendered a <Router> inside another <Router>` +
-      ` but you should only ever render one in a given app.`
+    !React.useContext(LocationContext),
+    `You cannot render a <Router> inside another <Router>.` +
+      ` You never need more than one.`
   );
 
   if (!listeningRef.current) {
