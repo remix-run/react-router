@@ -21,20 +21,24 @@ async function getRepoVersion() {
   return packageJson.version;
 }
 
-function getTargetVersion(currentVersion, nextVersion, prereleaseId) {
+function getNextVersion(currentVersion, givenVersion, prereleaseId) {
   invariant(
-    nextVersion != null,
+    givenVersion != null,
     `Missing next version. Usage: node version.js [nextVersion] [prereleaseId]`
   );
 
-  if (/^pre/.test(nextVersion)) {
+  if (/^pre/.test(givenVersion)) {
     invariant(
       prereleaseId != null,
       `Missing prerelease id. Usage: node version.js [nextVersion] [prereleaseId]`
     );
   }
 
-  return semver.inc(currentVersion, nextVersion, prereleaseId);
+  let nextVersion = semver.inc(currentVersion, givenVersion, prereleaseId);
+
+  invariant(nextVersion != null, `Invalid version specifier: ${givenVersion}`);
+
+  return nextVersion;
 }
 
 async function prompt(question) {
@@ -71,7 +75,7 @@ function ensureCleanWorkingDirectory() {
 async function run() {
   try {
     let args = process.argv.slice(2);
-    let nextVersion = args[0];
+    let givenVersion = args[0];
     let prereleaseId = args[1];
 
     // 0. Make sure the working directory is clean
@@ -79,7 +83,12 @@ async function run() {
 
     // 1. Get the next version number
     let currentVersion = await getRepoVersion();
-    let version = getTargetVersion(currentVersion, nextVersion, prereleaseId);
+    let version;
+    if (semver.valid(givenVersion)) {
+      version = givenVersion;
+    } else {
+      version = getNextVersion(currentVersion, givenVersion, prereleaseId);
+    }
 
     // 2. Confirm the next version number
     let answer = await prompt(

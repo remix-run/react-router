@@ -58,18 +58,19 @@ async function run() {
       'Missing release version. Run the version script first.'
     );
 
+    // 2. Determine the appropriate npm tag to use
     let tag = semver.prerelease(version) == null ? 'latest' : 'next';
 
     console.log();
     console.log(`  Releasing version ${version} to npm with tag "${tag}"`);
 
-    // 2. Ensure repo and build versions match the release version
+    // 3. Ensure repo and build versions match the release version
     await ensureRepoVersion(version);
     await ensureBuildVersion('react-router', version);
     await ensureBuildVersion('react-router-dom', version);
     await ensureBuildVersion('react-router-native', version);
 
-    // 3. Publish to npm
+    // 4. Publish to npm
     publishBuild('react-router', tag);
     publishBuild('react-router-dom', tag);
     publishBuild('react-router-native', tag);
