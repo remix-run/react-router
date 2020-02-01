@@ -605,7 +605,7 @@ function App() {
 
 Again, one of the main reasons we are moving from using the `history` API
 directly to the `navigate` API is to provide better compatibility with React
-suspense. React Router v6 uses the `useTransition` hook at the root of your
+suspense.  React Router v6 uses the `useTransition` hook at the root of your
 component hierarchy. This lets us provide a smoother experience when user
 interaction needs to interrupt a pending route transition, for example when they
 click a link to another route while a previously-clicked link is still loading.
@@ -616,6 +616,25 @@ up with pages in their history that never actually loaded.
 *Note: You should still use a `<Redirect>` as part of your route config
 (inside a `<Routes>`). This change is only necessary for `<Redirect>`s that are
 used to navigate in response to user interaction.*
+
+Aside from suspense compatibility, `navigate`, like `Link`, supports relative
+navigation. For example:
+
+```jsx
+// assuming we are at `/stuff`
+function SomeForm() {
+  let navigate = useNavigate()
+  return (
+    <form onSubmit={async (event) => {
+      let newRecord = await saveDataFromForm(event.target)
+      // you can build up the URL yourself
+      navigate(`/stuff/${newRecord.id}`)
+      // or navigate relative, just like Link
+      navigate(newRecord.id)
+    }}>{/* ... */}</form>
+  )
+}
+```
 
 ## Rename `<Link component>` to `<Link as>`
 
