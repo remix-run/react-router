@@ -298,6 +298,13 @@ just kept growing. It went something like this:
   )}
 />
 
+// What if I want to get access to the route match, or I need
+// to redirect deeper in the tree?
+function DeepComponent(routeStuff) {
+  // got routeStuff, phew!
+}
+export default withRouter(DeepComponent)
+
 // Well hey, now at least we've covered all our use cases!
 // ... *facepalm*
 ```
@@ -305,7 +312,8 @@ just kept growing. It went something like this:
 At least part of the reason for this API sprawl was that React did not provide
 any way for us to get the information from the `<Route>` to your route element,
 so we had to invent clever ways to get both the route data **and** your own
-custom props through to your elements ... until **hooks** came along!
+custom props through to your elements: `component`, render props, `passProps`
+higher-order-components ... until **hooks** came along!
 
 Now, the conversation above goes like this:
 
@@ -325,14 +333,20 @@ function Profile({ animate }) {
   let location = useLocation();
 }
 
+// But what about components deep in the tree?
+function DeepComponent() {
+  // oh right, same as anywhere else
+  let navigate = useNavigate()
+}
+
 // Aaaaaaaaand we're done here.
 ```
 
 Another important reason for using the `element` prop in v6 is that `<Route
 children>` is reserved for nesting routes. This is one of people's favorite
-features from v3, and we're bringing it back in v6. Taking the code in the
-previous example one step further, we can hoist all `<Route>` elements into a
-single route config:
+features from v3 and @reach/router, and we're bringing it back in v6. Taking
+the code in the previous example one step further, we can hoist all `<Route>`
+elements into a single route config:
 
 ```js
 // This is a React Router v6 app
@@ -371,11 +385,12 @@ apps that don't have thousands of routes.
 Notice how `<Route>` elements nest naturally inside a `<Routes>` element. Nested
 routes build their path by adding to the parent route's path. We didn't need a
 trailing `*` on `<Route path="users">` this time because when the routes are
-defined in one spot the router is able to see all your nested routes. You'll
-only need the trailing `*` when there is another `<Routes>` somewhere in that
-route's descendant tree. In that case, the descendant `<Routes>` will match on
-the portion of the pathname that remains (see the previous example for what this
-looks like in practice).
+defined in one spot the router is able to see all your nested routes.
+
+You'll only need the trailing `*` when there is another `<Routes>` somewhere in
+that route's descendant tree. In that case, the descendant `<Routes>` will match
+on the portion of the pathname that remains (see the previous example for what
+this looks like in practice).
 
 When using a nested config, routes with `children` should render an `<Outlet>`
 in order to render their child routes. This makes it easy to render layouts with
@@ -416,7 +431,8 @@ If you were using any of path-to-regexp's more advanced syntax, you'll have to
 remove it and simplify your route paths. If you were using the RegExp syntax to
 do URL param validation (e.g. to ensure an id is all numeric characters) please
 know that we plan to add some more advanced param validation in v6 at some
-point.
+point. For now, you'll need to move that logic to the component the route
+renders, and let it branch it's rendered tree after you parse the params.
 
 If you were using `<Route sensitive>` you should move it to its containing
 `<Routes caseSensitive>` prop. Either all routes in a `<Routes>` element are
@@ -425,14 +441,14 @@ case-sensitive or they are not.
 One other thing to notice is that all path matching in v6 ignores the trailing
 slash on the URL. In fact, `<Route strict>` has been removed and has no effect
 in v6. **This does not mean that you can't use trailing slashes if you need
-to.** You can still link to URLs with trailing slashes and match those URLs with
-your routes. It just means that you can't render two different UIs *client-side*
-at `<Route path="edit">` and `<Route path="edit/">`. You can still render two
-different UIs at those URLs, but you'll have to do it server-side.
+to.** Your app can decide to use trailing slashes or not, you just can't
+render two different UIs *client-side* at `<Route path="edit">` and
+`<Route path="edit/">`. You can still render two different UIs at those URLs,
+but you'll have to do it server-side.
 
 ### Note on `<Link to>` values
 
-In v5, a `<Link to>` value that does not begin with `/` is ambiguous; it depends
+In v5, a `<Link to>` value that does not begin with `/` was ambiguous; it depends
 on what the current URL is. For example, if the current URL is `/users`, a v5
 `<Link to="me">` would render a `<a href="/me">`. However, if the current URL
 has a trailing slash, like `/users/`, the same `<Link to="me">` would render `<a
@@ -468,6 +484,16 @@ cd ../stats                     // pwd is /app/stats
 cd ../../stats                  // pwd is /stats
 cd ../../../stats               // pwd is /stats
 ```
+
+**Note**: The decision to ignore trailing slashes while matching and creating relative
+paths was not taken lightly by our team. We consulted with a number of
+our friends and clients (who are also our friends!) about it. We found that
+most of us don't even understand how plain HTML relative links are handled
+with the trailing slash. Most people guessed it worked like `cd` on the
+command line. Also, HTML relative links don't have the concept of nested routes,
+they only worked on the URL, so we had to blaze our own trail here a bit.
+@reach/router set this precendent and it has worked out well for a couple of
+years.
 
 ## Use useRoutes instead of react-router-config
 
