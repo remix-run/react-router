@@ -490,8 +490,8 @@ paths was not taken lightly by our team. We consulted with a number of
 our friends and clients (who are also our friends!) about it. We found that
 most of us don't even understand how plain HTML relative links are handled
 with the trailing slash. Most people guessed it worked like `cd` on the
-command line. Also, HTML relative links don't have the concept of nested routes,
-they only worked on the URL, so we had to blaze our own trail here a bit.
+command line (it does not). Also, HTML relative links don't have the concept of nested
+routes, they only worked on the URL, so we had to blaze our own trail here a bit.
 @reach/router set this precendent and it has worked out well for a couple of
 years.
 
