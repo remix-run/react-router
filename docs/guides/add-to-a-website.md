@@ -4,10 +4,10 @@ There are a few different ways to get React Router running on your website,
 depending mostly on what the rest of your stack looks like. This document
 describes the most common ways people use React Router.
 
-- Quick Install
-- create-react-app
-- Parcel
-- Webpack
+- [Quick Install](#quick-install)
+- [create-react-app](#create-react-app)
+- [Webpack](#webpack)
+- [Parcel](#parcel)
 
 React Router has a single dependency, the `history` library, which is developed
 and released alongside the router. All of the following methods will
@@ -76,47 +76,42 @@ describe how to get started using these tools.
 
 ## create-react-app
 
-TODO
+To add React Router to a
+[create-react-app](https://github.com/facebook/create-react-app) project, you
+can use [yarn](https://yarnpkg.com).
+
+```
+$ yarn add react-router@6 react-router-dom@6
+```
+
+Then, in `src/App.js` just import the pieces you need.
+
+```js
+import { BrowserRouter } from 'react-router-dom';
+
+function App() {
+  return (
+    <BrowserRouter>
+      <div>...</div>
+    </BrowserRouter>
+  );
+}
+```
+
+## Webpack
+
+In order to add React Router to a [Webpack](https://webpack.js.org) project,
+you'll first need to install it to your local `node_modules` directory using a
+JavaScript package manager. The following instructions use
+[npm](https://npmjs.org), but [yarn](https://yarnpkg.com) is also a popular
+choice.
+
+```
+$ npm install react-router@6 react-router-dom@6
+```
+
+Then just `import` and use as you would anything else.
 
 ## Parcel
 
 TODO
-
-## Webpack
-
-In order to add React Router to a [Webpack](#) project, you'll first need to install
-it to your local `node_modules` directory using a JavaScript package manager.
-The following instructions use [npm](#), but [yarn](#) is also a popular choice.
-
-```
-$ npm install history@5 react-router@6 react-router-dom@6
-```
-
-Then, somewhere in your code (probably towards the root of your React component tree)
-you'll want to `import` the pieces you need from `react-router-dom`.
-
-```js
-import React from 'react';
-import ReactDOM from 'react-dom';
-import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
-
-function Home() {
-  return <div>This is the home page.</div>;
-}
-
-function App() {
-  return (
-    <Router>
-      <div>
-        <h1>Hello, React Router!</h1>
-
-        <Routes>
-          <Route path="/" element={<Home />} />
-        </Routes>
-      </div>
-    </Router>
-  )
-}
-
-ReactDOM.render(<App />, document.getElementById('root'));
-```
