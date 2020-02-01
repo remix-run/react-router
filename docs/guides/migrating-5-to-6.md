@@ -81,7 +81,7 @@ function User({ id }) {
 
 // v5.1 preferred style
 function User() {
-  let { id } = useParams();
+  let { userId } = useParams();
   // ...
 }
 
