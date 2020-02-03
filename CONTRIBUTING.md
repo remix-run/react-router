@@ -69,6 +69,12 @@ yarn install
 yarn build
 ```
 
+## Online one-click setup
+
+You can use gitpod(a free online VS Code like IDE) for contributing. With a single click it will launch a ready to code workspace with all the dependencies pre-installed, build finished & web server in /site directory running so that you can start coding straight away without wasting time on the setup.
+
+[![Open in Gitpod](https://gitpod.io/button/open-in-gitpod.svg)](https://gitpod.io/#https://github.com/ReactTraining/react-router)
+
 <a name="dev"/></a>
 
 ## Development

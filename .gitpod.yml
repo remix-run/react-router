@@ -1,0 +1,11 @@
+tasks:
+  - init: > 
+      yarn install &&  
+      yarn build &&
+      cd website && 
+      yarn install && 
+      cd .. 
+    command: yarn run start
+ports: 
+  - port: 8080
+    onOpen: open-preview

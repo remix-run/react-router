@@ -144,6 +144,8 @@ module.exports = {
     quiet: false,
     noInfo: false,
     publicPath: "/",
+    host: "0.0.0.0",
+    disableHostCheck: true,
     stats: {
       assets: true,
       version: false,
