@@ -252,6 +252,8 @@ You may have also noticed that all `<Route children>` from the v5 app changed to
 should be as simple as moving your route element from the child position to a
 named `element` prop (TODO: can we provide a codemod here?).
 
+### Advantages of `<Route element>`
+
 In the section about upgrading to v5.1, I promised you we'd discuss the
 advantages of using regular elements instead of components (or element types)
 for rendering. Let's take a quick break from upgrading and talk about that now.
