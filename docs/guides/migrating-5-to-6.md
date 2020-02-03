@@ -306,7 +306,7 @@ became rather large. It went something like this:
 function DeepComponent(routeStuff) {
   // got routeStuff, phew!
 }
-export default withRouter(DeepComponent)
+export default withRouter(DeepComponent);
 
 // Well hey, now at least we've covered all our use cases!
 // ... *facepalm*
@@ -326,7 +326,7 @@ Now, the conversation above goes like this:
 <Route path=":userId" element={<Profile />} />
 
 // But wait, how do I pass custom props to the <Profile>
-// element? Oh, ya. I forgot. It's just an element. Easy.
+// element? Oh ya, it's just an element. Easy.
 <Route path=":userId" element={<Profile animate={true} />} />
 
 // Ok, but how do I access the router's data, like the URL params
@@ -339,7 +339,7 @@ function Profile({ animate }) {
 // But what about components deep in the tree?
 function DeepComponent() {
   // oh right, same as anywhere else
-  let navigate = useNavigate()
+  let navigate = useNavigate();
 }
 
 // Aaaaaaaaand we're done here.
