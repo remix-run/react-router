@@ -11,8 +11,8 @@
     "watch": "node ./scripts/watch.js"
   },
   "dependencies": {
-    "@ampproject/filesize": "^1.0.1",
-    "@ampproject/rollup-plugin-closure-compiler": "^0.13.0",
+    "@ampproject/filesize": "^2.1.1",
+    "@ampproject/rollup-plugin-closure-compiler": "^0.21.0",
     "@babel/core": "^7.7.4",
     "@babel/preset-env": "^7.7.4",
     "@babel/preset-modules": "^0.1.2",
@@ -60,26 +60,18 @@
       "**/react-native/**"
     ]
   },
-  "filesize": [
-    {
-      "path": "build/react-router/react-router.production.min.js",
-      "compression": "none",
-      "maxSize": "5.5 kB"
+  "filesize": {
+    "build/react-router/react-router.production.min.js": {
+      "none": "5.5 kB"
     },
-    {
-      "path": "build/react-router/umd/react-router.production.min.js",
-      "compression": "none",
-      "maxSize": "6 kB"
+    "build/react-router/umd/react-router.production.min.js": {
+      "none": "6 kB"
     },
-    {
-      "path": "build/react-router-dom/react-router-dom.production.min.js",
-      "compression": "none",
-      "maxSize": "2 kB"
+    "build/react-router-dom/react-router-dom.production.min.js": {
+      "none": "2 kB"
     },
-    {
-      "path": "build/react-router-dom/umd/react-router-dom.production.min.js",
-      "compression": "none",
-      "maxSize": "4.5 kB"
+    "build/react-router-dom/umd/react-router-dom.production.min.js": {
+      "none": "4.5 kB"
     }
-  ]
+  }
 }

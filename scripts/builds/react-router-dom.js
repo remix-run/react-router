@@ -31,13 +31,7 @@ const modules = [
         ],
         plugins: ['babel-plugin-dev-expression']
       }),
-      // TODO: Closure compiler complains about duplicate identifiers for stuff
-      // react-router-dom uses that it also re-exports from react-router
-      // compiler({
-      //   compilation_level: 'SIMPLE_OPTIMIZATIONS',
-      //   language_in: 'ECMASCRIPT5_STRICT',
-      //   language_out: 'ECMASCRIPT5_STRICT'
-      // }),
+      compiler(),
       copy({
         targets: [
           { src: `${SOURCE_DIR}/package.json`, dest: OUTPUT_DIR },
@@ -68,14 +62,8 @@ const webModules = [
         presets: ['@babel/preset-modules', '@babel/preset-react'],
         plugins: ['babel-plugin-dev-expression']
       }),
-      replace({ 'process.env.NODE_ENV': JSON.stringify('development') })
-      // TODO: Closure compiler complains about duplicate identifiers for stuff
-      // react-router-dom uses that it also re-exports from react-router
-      // compiler({
-      //   compilation_level: 'SIMPLE_OPTIMIZATIONS',
-      //   language_in: 'ECMASCRIPT_2018',
-      //   language_out: 'ECMASCRIPT_2017'
-      // })
+      replace({ 'process.env.NODE_ENV': JSON.stringify('development') }),
+      compiler()
     ].concat(PRETTY ? prettier({ parser: 'babel' }) : [])
   },
   {
@@ -94,13 +82,7 @@ const webModules = [
         plugins: ['babel-plugin-dev-expression']
       }),
       replace({ 'process.env.NODE_ENV': JSON.stringify('production') }),
-      // TODO: Closure compiler complains about duplicate identifiers for stuff
-      // react-router-dom uses that it also re-exports from react-router
-      // compiler({
-      //   compilation_level: 'SIMPLE_OPTIMIZATIONS',
-      //   language_in: 'ECMASCRIPT_2018',
-      //   language_out: 'ECMASCRIPT_2017'
-      // }),
+      compiler(),
       terser({ ecma: 8, safari10: true })
     ].concat(PRETTY ? prettier({ parser: 'babel' }) : [])
   }
@@ -134,11 +116,7 @@ const globals = [
       replace({ 'process.env.NODE_ENV': JSON.stringify('development') }),
       nodeResolve(), // for prop-types
       commonjs(), // for prop-types
-      compiler({
-        compilation_level: 'SIMPLE_OPTIMIZATIONS',
-        language_in: 'ECMASCRIPT5_STRICT',
-        language_out: 'ECMASCRIPT5_STRICT'
-      })
+      compiler()
     ].concat(PRETTY ? prettier({ parser: 'babel' }) : [])
   },
   {
@@ -166,11 +144,7 @@ const globals = [
         plugins: ['babel-plugin-dev-expression']
       }),
       replace({ 'process.env.NODE_ENV': JSON.stringify('production') }),
-      compiler({
-        compilation_level: 'SIMPLE_OPTIMIZATIONS',
-        language_in: 'ECMASCRIPT5_STRICT',
-        language_out: 'ECMASCRIPT5_STRICT'
-      }),
+      compiler(),
       terser()
     ].concat(PRETTY ? prettier({ parser: 'babel' }) : [])
   }
@@ -185,11 +159,7 @@ const node = [
       format: 'cjs'
     },
     plugins: [
-      compiler({
-        compilation_level: 'SIMPLE_OPTIMIZATIONS',
-        language_in: 'ECMASCRIPT6',
-        language_out: 'ECMASCRIPT5'
-      })
+      compiler()
     ].concat(PRETTY ? prettier({ parser: 'babel' }) : [])
   },
   {
@@ -215,11 +185,7 @@ const node = [
         ],
         plugins: ['babel-plugin-dev-expression']
       }),
-      compiler({
-        compilation_level: 'SIMPLE_OPTIMIZATIONS',
-        language_in: 'ECMASCRIPT6',
-        language_out: 'ECMASCRIPT5'
-      })
+      compiler()
     ].concat(PRETTY ? prettier({ parser: 'babel' }) : [])
   }
 ];

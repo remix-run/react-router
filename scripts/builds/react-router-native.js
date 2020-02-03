@@ -39,13 +39,7 @@ const modules = [
         ],
         plugins: ['babel-plugin-dev-expression']
       }),
-      // TODO: Closure compiler complains about duplicate identifiers for stuff
-      // react-router-native uses that it also re-exports from react-router
-      // compiler({
-      //   compilation_level: 'SIMPLE_OPTIMIZATIONS',
-      //   language_in: 'ECMASCRIPT5_STRICT',
-      //   language_out: 'ECMASCRIPT5_STRICT'
-      // }),
+      compiler(),
       copy({
         targets: [
           { src: `${SOURCE_DIR}/package.json`, dest: OUTPUT_DIR },
