@@ -164,7 +164,7 @@ function App() {
 }
 ```
 
-## Nested Component Paths
+## Nested Routes
 
 Routes may be nested inside one another, and their paths will nest too.
 Components that are used higher in the route hierarchy may render an `<Outlet>`

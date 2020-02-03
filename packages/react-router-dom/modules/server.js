@@ -1,3 +1,6 @@
+import fs from 'fs';
+import path from 'path';
+
 import React from 'react';
 import { Router } from 'react-router-dom';
 import { createPath, parsePath } from 'history';
@@ -79,4 +82,60 @@ if (__DEV__) {
       PropTypes.string
     ])
   };
+}
+
+function byFilesFirst(a, b) {
+  return a.isFile() ? (b.isFile() ? 0 : -1) : b.isFile() ? 1 : 0;
+}
+
+/**
+ * Creates a nested routes object config by recursively scanning the
+ * given directory.
+ */
+export function createRoutesFromFiles(rootDir) {
+  let files = fs.readdirSync(rootDir, { withFileTypes: true });
+
+  // Sort files first so we create all parent routes before their children
+  files.sort(byFilesFirst);
+
+  let routes = [];
+
+  files.forEach(dirent => {
+    let name = dirent.name;
+    let file = path.join(rootDir, name);
+
+    let pathname = path
+      .basename(name, path.extname(name))
+      .replace(/\./g, '/') // convert courses.preview.js to courses/preview
+      .replace(/\$(\w+)/g, ':$1'); // convert courses.$courseId.js to courses/:courseId
+
+    // index.js is the index route. How convenient.
+    if (pathname === 'index') pathname = '/';
+
+    if (dirent.isFile()) {
+      let component = require(file);
+
+      if (component.default) {
+        component = component.default; // JS module
+      }
+
+      let element = React.createElement(component);
+
+      routes.push({ path: pathname, element });
+    } else if (dirent.isDirectory()) {
+      let childRoutes = createRoutesFromFiles(file);
+
+      // The parent route is a file with the same name as this dir
+      // e.g. courses.js is the layout for courses/*.js
+      let parentRoute = routes.find(route => route.path === pathname);
+
+      if (parentRoute) {
+        parentRoute.children = childRoutes;
+      } else {
+        routes.push({ path: pathname, children: childRoutes });
+      }
+    }
+  });
+
+  return routes;
 }

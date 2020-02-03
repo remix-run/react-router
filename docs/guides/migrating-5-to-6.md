@@ -252,6 +252,8 @@ You may have also noticed that all `<Route children>` from the v5 app changed to
 should be as simple as moving your route element from the child position to a
 named `element` prop (TODO: can we provide a codemod here?).
 
+### Advantages of `<Route element>`
+
 In the section about upgrading to v5.1, I promised you we'd discuss the
 advantages of using regular elements instead of components (or element types)
 for rendering. Let's take a quick break from upgrading and talk about that now.
@@ -306,7 +308,7 @@ became rather large. It went something like this:
 function DeepComponent(routeStuff) {
   // got routeStuff, phew!
 }
-export default withRouter(DeepComponent)
+export default withRouter(DeepComponent);
 
 // Well hey, now at least we've covered all our use cases!
 // ... *facepalm*
@@ -326,7 +328,7 @@ Now, the conversation above goes like this:
 <Route path=":userId" element={<Profile />} />
 
 // But wait, how do I pass custom props to the <Profile>
-// element? Oh, ya. I forgot. It's just an element. Easy.
+// element? Oh ya, it's just an element. Easy.
 <Route path=":userId" element={<Profile animate={true} />} />
 
 // Ok, but how do I access the router's data, like the URL params
@@ -339,7 +341,7 @@ function Profile({ animate }) {
 // But what about components deep in the tree?
 function DeepComponent() {
   // oh right, same as anywhere else
-  let navigate = useNavigate()
+  let navigate = useNavigate();
 }
 
 // Aaaaaaaaand we're done here.
