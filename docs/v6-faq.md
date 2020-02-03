@@ -130,3 +130,11 @@ function DeepComponent() {
 Another important reason for using the `element` prop in v6 is that `<Route
 children>` is reserved for nesting routes. You can read more about this in [the
 guide about getting started](guides/getting-started.md#nested-routes) with v6.
+
+## How do I add a No Match (404) Route in react-router v6?
+
+In v4 we would have just left the path prop off a route. In v5 we would have wrapped our 404 element in a Route and used `path="*"`. In v6 use the new element prop, pass `path="*"` instead:
+
+```js
+<Route path="*" element={<NoMatch />} />
+```
