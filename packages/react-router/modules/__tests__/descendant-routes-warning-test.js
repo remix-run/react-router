@@ -46,7 +46,7 @@ describe('Descendant <Routes>', () => {
       );
 
       expect(spy).toHaveBeenCalledWith(
-        expect.stringContaining("child routes won't be able to match")
+        expect.stringContaining('child routes will never render')
       );
 
       spy.mockRestore();

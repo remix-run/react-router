@@ -242,9 +242,13 @@ export function Routes({ basename = '', caseSensitive = false, children }) {
 
   warning(
     !parentRoute || parentRoute.path.endsWith('*'),
-    `You rendered <Routes> at "${parentPathname}" (under route path "${parentPath}")` +
-      ` but the route path has no trailing "*", so the child routes won't be able to match` +
-      ` any part of the URL. You should use route path "${parentPath}/*" instead.`
+    `You rendered descendant <Routes> at "${parentPathname}" (under <Route` +
+      ` path="${parentPath}">) but the parent route path has no trailing "*".` +
+      ` This means if you navigate deeper, the parent won't match anymore and` +
+      ` therefore the child routes will never render.` +
+      `\n\n` +
+      `Please change the parent <Route path="${parentPathname}">` +
+      ` to "<Route path="${parentPath}/*">.`
   );
 
   let routes = createRoutesFromChildren(children);
