@@ -1,14 +1,18 @@
 import React from 'react';
-import { create as createTestRenderer } from 'react-test-renderer';
+import { act, create as createTestRenderer } from 'react-test-renderer';
 import { MemoryRouter as Router, Outlet, Routes, Route } from 'react-router';
 
 describe('Descendant <Routes>', () => {
   describe('when the parent route path does not have a trailing *', () => {
-    it('warns when you visit the parent route', () => {
+    it('warns once when you visit the parent route', () => {
       let spy = jest.spyOn(console, 'warn').mockImplementation();
 
       function ReactFundamentals() {
         return <h1>React Fundamentals</h1>;
+      }
+
+      function AdvancedReact() {
+        return <h1>Advanced React</h1>;
       }
 
       function ReactCourses() {
@@ -21,6 +25,9 @@ describe('Descendant <Routes>', () => {
                 path="react-fundamentals"
                 element={<ReactFundamentals />}
               />
+            </Routes>
+            <Routes>
+              <Route path="advanced-react" element={<AdvancedReact />} />
             </Routes>
           </div>
         );
@@ -35,16 +42,19 @@ describe('Descendant <Routes>', () => {
         );
       }
 
-      createTestRenderer(
-        <Router initialEntries={['/courses/react']}>
-          <Routes>
-            <Route path="courses" element={<Courses />}>
-              <Route path="react" element={<ReactCourses />} />
-            </Route>
-          </Routes>
-        </Router>
-      );
+      act(() => {
+        createTestRenderer(
+          <Router initialEntries={['/courses/react']}>
+            <Routes>
+              <Route path="courses" element={<Courses />}>
+                <Route path="react" element={<ReactCourses />} />
+              </Route>
+            </Routes>
+          </Router>
+        );
+      });
 
+      expect(spy).toHaveBeenCalledTimes(1);
       expect(spy).toHaveBeenCalledWith(
         expect.stringContaining('child routes will never render')
       );
@@ -85,15 +95,17 @@ describe('Descendant <Routes>', () => {
         );
       }
 
-      createTestRenderer(
-        <Router initialEntries={['/courses/react']}>
-          <Routes>
-            <Route path="courses" element={<Courses />}>
-              <Route path="react/*" element={<ReactCourses />} />
-            </Route>
-          </Routes>
-        </Router>
-      );
+      act(() => {
+        createTestRenderer(
+          <Router initialEntries={['/courses/react']}>
+            <Routes>
+              <Route path="courses" element={<Courses />}>
+                <Route path="react/*" element={<ReactCourses />} />
+              </Route>
+            </Routes>
+          </Router>
+        );
+      });
 
       expect(spy).not.toHaveBeenCalled();
 

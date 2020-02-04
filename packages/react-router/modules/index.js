@@ -230,29 +230,11 @@ if (__DEV__) {
 }
 
 /**
- * A replacement for React Router v4/5's <Switch> that follows the new "routes"
- * semantics. Unlike <Switch> however, <Routes> matches its children <Route>s
- * recursively. Also a replacement for @reach/router's <Router>.
+ * A wrapper for useRoutes that treats its children as route and/or redirect
+ * objects.
  */
 export function Routes({ basename = '', caseSensitive = false, children }) {
-  let { pathname: parentPathname, route: parentRoute } = React.useContext(
-    RouteContext
-  );
-  let parentPath = parentRoute && parentRoute.path;
-
-  warning(
-    !parentRoute || parentRoute.path.endsWith('*'),
-    `You rendered descendant <Routes> at "${parentPathname}" (under <Route` +
-      ` path="${parentPath}">) but the parent route path has no trailing "*".` +
-      ` This means if you navigate deeper, the parent won't match anymore and` +
-      ` therefore the child routes will never render.` +
-      `\n\n` +
-      `Please change the parent <Route path="${parentPathname}">` +
-      ` to "<Route path="${parentPath}/*">.`
-  );
-
   let routes = createRoutesFromChildren(children);
-
   return useRoutes(routes, basename, caseSensitive);
 }
 
@@ -456,6 +438,17 @@ export function useResolvedLocation(to) {
   return React.useMemo(() => resolveLocation(to, pathname), [to, pathname]);
 }
 
+let missingTrailingSplatWarnings, warnAboutMissingTrailingSplatAt;
+if (__DEV__) {
+  missingTrailingSplatWarnings = {};
+  warnAboutMissingTrailingSplatAt = (pathname, cond, message) => {
+    if (!cond && !missingTrailingSplatWarnings[pathname]) {
+      missingTrailingSplatWarnings[pathname] = true;
+      warning(false, message);
+    }
+  };
+}
+
 /**
  * Returns the element of the route that matched the current location, prepared
  * with the correct context to render the remainder of the route tree. Route
@@ -471,14 +464,33 @@ export function useResolvedLocation(to) {
  * fact, what am I even doing here. Nobody is ever going to read this.
  */
 export function useRoutes(routes, basename = '', caseSensitive = false) {
-  let location = useLocation();
-  let navigate = useNavigate();
-  let { params: parentParams, pathname: parentPathname } = React.useContext(
-    RouteContext
-  );
+  let {
+    params: parentParams,
+    pathname: parentPathname,
+    route: parentRoute
+  } = React.useContext(RouteContext);
+
+  if (warnAboutMissingTrailingSplatAt) {
+    // You won't get a warning about 2 different <Routes> under a <Route>
+    // without a trailing *, but this is a best-effort warning anyway since
+    // we cannot even give the warning unless they land at the parent route.
+    let parentPath = parentRoute && parentRoute.path;
+    warnAboutMissingTrailingSplatAt(
+      parentPathname,
+      !parentRoute || parentRoute.path.endsWith('*'),
+      `You rendered descendant <Routes> (or called \`useRoutes\`) at "${parentPathname}"` +
+        ` (under <Route path="${parentPath}">) but the parent route path has no trailing "*".` +
+        ` This means if you navigate deeper, the parent won't match anymore and therefore` +
+        ` the child routes will never render.` +
+        `\n\n` +
+        `Please change the parent <Route path="${parentPath}"> to <Route path="${parentPath}/*">.`
+    );
+  }
 
   basename = basename ? joinPaths([parentPathname, basename]) : parentPathname;
 
+  let navigate = useNavigate();
+  let location = useLocation();
   let matches = React.useMemo(
     () => matchRoutes(routes, location, basename, caseSensitive),
     [routes, location, basename, caseSensitive]
