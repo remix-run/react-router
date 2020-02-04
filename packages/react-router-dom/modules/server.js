@@ -107,7 +107,7 @@ export function createRoutesFromFiles(rootDir) {
     let pathname = path
       .basename(name, path.extname(name))
       .replace(/\./g, '/') // convert courses.preview.js to courses/preview
-      .replace(/\$(\w+)/g, ':$1'); // convert courses.$courseId.js to courses/:courseId
+      .replace(/\$(\w+)/g, ':$1'); // convert courses.$id.js to courses/:id
 
     // index.js is the index route. How convenient.
     if (pathname === 'index') pathname = '/';
