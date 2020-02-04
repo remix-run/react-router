@@ -61,7 +61,10 @@ export function StaticRouter({ children, context = {}, location: loc = '/' }) {
       );
     },
     listen() {},
-    block() {}
+    block() {},
+    createHref(location) {
+      return createPath(location);
+    }
   };
 
   return <Router children={children} history={mockHistory} />;
