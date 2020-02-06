@@ -366,6 +366,13 @@ export function useLocation() {
 }
 
 /**
+ * Returns the current pending state from useTransition
+ */
+export function usePending() {
+  return React.useContext(LocationContext).pending;
+}
+
+/**
  * Returns true if the URL for the given "to" value matches the current URL.
  * This is useful for components that need to know "active" state, e.g.
  * <NavLink>.
