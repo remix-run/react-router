@@ -5,7 +5,7 @@
   "author": "React Training <hello@reacttraining.com>",
   "repository": "ReactTraining/react-router",
   "license": "MIT",
-  "main": "node-main.js",
+  "main": "main.js",
   "module": "react-router-dom.js",
   "unpkg": "umd/react-router-dom.production.min.js",
   "dependencies": {

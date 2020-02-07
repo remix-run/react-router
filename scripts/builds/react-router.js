@@ -15,7 +15,7 @@ const OUTPUT_DIR = 'build/react-router';
 // JS modules for bundlers
 const modules = [
   {
-    input: `${SOURCE_DIR}/modules/index.js`,
+    input: `${SOURCE_DIR}/index.js`,
     output: {
       file: `${OUTPUT_DIR}/react-router.js`,
       format: 'esm',
@@ -47,7 +47,7 @@ const modules = [
 // JS modules for <script type=module>
 const webModules = [
   {
-    input: `${SOURCE_DIR}/modules/index.js`,
+    input: `${SOURCE_DIR}/index.js`,
     output: {
       file: `${OUTPUT_DIR}/react-router.development.js`,
       format: 'esm',
@@ -65,7 +65,7 @@ const webModules = [
     ].concat(PRETTY ? prettier({ parser: 'babel' }) : [])
   },
   {
-    input: `${SOURCE_DIR}/modules/index.js`,
+    input: `${SOURCE_DIR}/index.js`,
     output: {
       file: `${OUTPUT_DIR}/react-router.production.min.js`,
       format: 'esm',
@@ -89,7 +89,7 @@ const webModules = [
 // UMD modules for <script> tags and CommonJS (node)
 const globals = [
   {
-    input: `${SOURCE_DIR}/modules/index.js`,
+    input: `${SOURCE_DIR}/index.js`,
     output: {
       file: `${OUTPUT_DIR}/umd/react-router.development.js`,
       format: 'umd',
@@ -114,7 +114,7 @@ const globals = [
     ].concat(PRETTY ? prettier({ parser: 'babel' }) : [])
   },
   {
-    input: `${SOURCE_DIR}/modules/index.js`,
+    input: `${SOURCE_DIR}/index.js`,
     output: {
       file: `${OUTPUT_DIR}/umd/react-router.production.min.js`,
       format: 'umd',
@@ -143,14 +143,12 @@ const globals = [
 // Node entry points
 const node = [
   {
-    input: `${SOURCE_DIR}/modules/node-main.js`,
+    input: `${SOURCE_DIR}/node-main.js`,
     output: {
-      file: `${OUTPUT_DIR}/node-main.js`,
+      file: `${OUTPUT_DIR}/main.js`,
       format: 'cjs'
     },
-    plugins: [
-      compiler()
-    ].concat(PRETTY ? prettier({ parser: 'babel' }) : [])
+    plugins: [compiler()].concat(PRETTY ? prettier({ parser: 'babel' }) : [])
   }
 ];
 

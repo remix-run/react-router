@@ -9,7 +9,7 @@ const OUTPUT_DIR = 'build/react-router-native';
 
 const modules = [
   {
-    input: `${SOURCE_DIR}/modules/index.js`,
+    input: `${SOURCE_DIR}/index.js`,
     output: {
       file: `${OUTPUT_DIR}/react-router-native.js`,
       format: 'esm',
