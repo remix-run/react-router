@@ -378,6 +378,37 @@ export function useMatch(to) {
 }
 
 /**
+ *
+ */
+export function useRouteMatch(to, basename = '', caseSensitive = false) {
+  let {
+    params: parentParams,
+    pathname: parentPathname
+  } = React.useContext(RouteContext);
+  basename = basename ? joinPaths([parentPathname, basename]) : parentPathname;
+  let location = useLocation();
+  const matches = React.useMemo(() => matchRoutes([{
+    path: to,
+    element: null,
+    children: null
+  }], location, basename, caseSensitive), [to, location, basename, caseSensitive]);
+  return React.useMemo(
+    () => {
+      if (!matches || !matches[0]) {
+        return null;
+      }
+      const { pathname, params } = matches[0];
+
+      return {
+        params: readOnly({ ...parentParams, ...params }),
+        pathname: joinPaths([basename, pathname])
+      };
+    },
+    [basename, matches, parentParams]
+  );
+}
+
+/**
  * Returns an imperative method for changing the location. Used by <Link>s, but
  * may also be used by other elements to change the location.
  */
