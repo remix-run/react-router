@@ -631,7 +631,7 @@ function SomeForm() {
       // you can build up the URL yourself
       navigate(`/stuff/${newRecord.id}`)
       // or navigate relative, just like Link
-      navigate(newRecord.id)
+      navigate(`${newRecord.id}`)
     }}>{/* ... */}</form>
   )
 }
