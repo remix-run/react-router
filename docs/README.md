@@ -1,5 +1,10 @@
 # Welcome to React Router
 
+**Please note: These docs are currently very much a work in progress. If you are
+interested in lending a hand, please contact
+[@mjackson](https://twitter.com/mjackson) directly on Twitter or just go ahead
+and find a TODO, complete it, and make a PR. Thanks!**
+
 Welcome to the React Router docs! If you're reading this, you're probably
 browsing [our docs on GitHub](/docs). You're welcome to keep reading here, or
 you may prefer browsing them on [our website](#TODO). Either way, we hope you
