@@ -36,7 +36,8 @@ We mentioned this [in the migration guide from v5 to
 v6](guides/migrating-5-to-6.md#advantages-of-route-element), but it's worth
 repeating here.
 
-In React Router v6 we switched from using v5's `<Route component>` and `<Route render>` APIs to `<Route element>`. Why is that?
+In React Router v6 we switched from using v5's `<Route component>` and `<Route
+render>` APIs to `<Route element>`. Why is that?
 
 For starters, we see React itself taking the lead here with the `<Suspense
 fallback={<Spinner />}>` API. The `fallback` prop takes a React **element**, not
@@ -133,7 +134,9 @@ guide about getting started](guides/getting-started.md#nested-routes) with v6.
 
 ## How do I add a No Match (404) Route in react-router v6?
 
-In v4 we would have just left the path prop off a route. In v5 we would have wrapped our 404 element in a Route and used `path="*"`. In v6 use the new element prop, pass `path="*"` instead:
+In v4 we would have just left the path prop off a route. In v5 we would have
+wrapped our 404 element in a Route and used `path="*"`. In v6 use the new
+element prop, pass `path="*"` instead:
 
 ```js
 <Route path="*" element={<NoMatch />} />
