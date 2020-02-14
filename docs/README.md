@@ -13,7 +13,7 @@ find them useful!
 The docs are currently divided up into the following sections:
 
 - [Installation](installation)
-- [Main Concepts](main-concepts)
+- [Main Concepts](main-concepts.md)
 - [Advanced Guides](advanced-guides)
 - [Tutorial](tutorial)
 - [API Reference](api-reference)
