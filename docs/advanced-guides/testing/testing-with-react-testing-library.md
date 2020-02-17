@@ -14,6 +14,8 @@ To install using **npm**: `npm install -D @testing-library/react`
 
 To install using **yarn**: `yarn add -D @testing-library/react`
 
+You may also want to install `@testing-library/jest-dom` so you can use the custom Jest matchers that have been defined (https://github.com/testing-library/jest-dom#custom-matchers)
+
 ## Testing Routes and Redirects
 
 We have a lot of tests that the routes work when the location changes, so you probably don't need to test this stuff. But if you need to test navigation within your app, you can do so like this:
