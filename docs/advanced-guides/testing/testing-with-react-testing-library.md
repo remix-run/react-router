@@ -6,17 +6,13 @@ To quote their (very excellent) documentation:
 
 > The more your tests resemble the way your software is used, the more confidence they can give you.
 
-[https://testing-library.com/docs/intro]
+https://testing-library.com/docs/intro
 
 ## Getting Setup
 
 To install using **npm**: `npm install -D @testing-library/react`
 
 To install using **yarn**: `yarn add -D @testing-library/react`
-
-Depending on the size of your project, you may decide on different directory structures for your tests' locations.
-
-For small apps, I like to place all of my tests in a `src/__tests__` directory to keep everything in one place.
 
 ## Testing Routes and Redirects
 
@@ -53,7 +49,7 @@ return (
 export default App;
 ```
 
-The first test verifies that the app is rendering in the DOM successfully.
+This test verifies that the app is rendering in the DOM successfully, that the link to the `<About />` works as expected, and that the `<NoMatch />` component is hit when attempting to navigate to a non-existent route.
 
 ```
 // app.test.js
