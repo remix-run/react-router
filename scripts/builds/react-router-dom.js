@@ -11,11 +11,12 @@ import { terser } from 'rollup-plugin-terser';
 const PRETTY = !!process.env.PRETTY;
 const SOURCE_DIR = 'packages/react-router-dom';
 const OUTPUT_DIR = 'build/react-router-dom';
+const extensions = ['.tsx', '.js']
 
 // JS modules for bundlers
 const modules = [
   {
-    input: `${SOURCE_DIR}/index.js`,
+    input: `${SOURCE_DIR}/index.tsx`,
     output: {
       file: `${OUTPUT_DIR}/react-router-dom.js`,
       format: 'esm',
@@ -25,9 +26,11 @@ const modules = [
     plugins: [
       babel({
         exclude: /node_modules/,
+        extensions,
         presets: [
+          '@babel/preset-typescript',
+          '@babel/preset-react',
           ['@babel/preset-env', { loose: true }],
-          '@babel/preset-react'
         ],
         plugins: ['babel-plugin-dev-expression']
       }),
@@ -49,7 +52,7 @@ const modules = [
 // unless you are using a React build with JS modules like es-react.
 const webModules = [
   {
-    input: `${SOURCE_DIR}/index.js`,
+    input: `${SOURCE_DIR}/index.tsx`,
     output: {
       file: `${OUTPUT_DIR}/react-router-dom.development.js`,
       format: 'esm',
@@ -59,15 +62,16 @@ const webModules = [
     plugins: [
       babel({
         exclude: /node_modules/,
-        presets: ['@babel/preset-modules', '@babel/preset-react'],
-        plugins: ['babel-plugin-dev-expression']
+        presets: ['@babel/preset-modules', '@babel/preset-typescript', '@babel/preset-react'],
+        plugins: ['babel-plugin-dev-expression'],
+        extensions,
       }),
       replace({ 'process.env.NODE_ENV': JSON.stringify('development') }),
       compiler()
     ].concat(PRETTY ? prettier({ parser: 'babel' }) : [])
   },
   {
-    input: `${SOURCE_DIR}/index.js`,
+    input: `${SOURCE_DIR}/index.tsx`,
     output: {
       file: `${OUTPUT_DIR}/react-router-dom.production.min.js`,
       format: 'esm',
@@ -78,8 +82,9 @@ const webModules = [
       ignore(['prop-types']),
       babel({
         exclude: /node_modules/,
-        presets: ['@babel/preset-modules', '@babel/preset-react'],
-        plugins: ['babel-plugin-dev-expression']
+        presets: ['@babel/preset-modules', '@babel/preset-typescript','@babel/preset-react'],
+        plugins: ['babel-plugin-dev-expression'],
+        extensions,
       }),
       replace({ 'process.env.NODE_ENV': JSON.stringify('production') }),
       compiler(),
@@ -91,7 +96,7 @@ const webModules = [
 // UMD modules for <script> tags and CommonJS (node)
 const globals = [
   {
-    input: `${SOURCE_DIR}/index.js`,
+    input: `${SOURCE_DIR}/index.tsx`,
     output: {
       file: `${OUTPUT_DIR}/umd/react-router-dom.development.js`,
       format: 'umd',
@@ -109,9 +114,11 @@ const globals = [
         exclude: /node_modules/,
         presets: [
           ['@babel/preset-env', { loose: true }],
+          '@babel/preset-typescript',
           '@babel/preset-react'
         ],
-        plugins: ['babel-plugin-dev-expression']
+        plugins: ['babel-plugin-dev-expression'],
+        extensions,
       }),
       replace({ 'process.env.NODE_ENV': JSON.stringify('development') }),
       nodeResolve(), // for prop-types
@@ -120,7 +127,7 @@ const globals = [
     ].concat(PRETTY ? prettier({ parser: 'babel' }) : [])
   },
   {
-    input: `${SOURCE_DIR}/index.js`,
+    input: `${SOURCE_DIR}/index.tsx`,
     output: {
       file: `${OUTPUT_DIR}/umd/react-router-dom.production.min.js`,
       format: 'umd',
@@ -139,9 +146,11 @@ const globals = [
         exclude: /node_modules/,
         presets: [
           ['@babel/preset-env', { loose: true }],
+          '@babel/preset-typescript',
           '@babel/preset-react'
         ],
-        plugins: ['babel-plugin-dev-expression']
+        plugins: ['babel-plugin-dev-expression'],
+        extensions,
       }),
       replace({ 'process.env.NODE_ENV': JSON.stringify('production') }),
       compiler(),
@@ -181,6 +190,7 @@ const node = [
         exclude: /node_modules/,
         presets: [
           ['@babel/preset-env', { loose: true, targets: { node: '12' } }],
+          '@babel/preset-typescript',
           '@babel/preset-react'
         ],
         plugins: ['babel-plugin-dev-expression']

@@ -19,3 +19,17 @@ let config = path.resolve(
 );
 
 exec(`rollup -c ${config}`);
+
+for (const PACKAGE_NAME of [
+  'react-router',
+  'react-router-dom',
+  'react-router-native'
+]) {
+  try {
+    exec(
+      `tsc --declaration true --emitDeclarationOnly true --jsx preserve --esModuleInterop true --outFile build/${PACKAGE_NAME}/${PACKAGE_NAME}.d.ts packages/${PACKAGE_NAME}/index.tsx global.d.ts`
+    );
+  } catch (error) {
+    console.log(error);
+  }
+}

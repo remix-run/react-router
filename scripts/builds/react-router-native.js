@@ -6,10 +6,11 @@ import prettier from 'rollup-plugin-prettier';
 const PRETTY = !!process.env.PRETTY;
 const SOURCE_DIR = 'packages/react-router-native';
 const OUTPUT_DIR = 'build/react-router-native';
+const extensions = ['.tsx', '.js'];
 
 const modules = [
   {
-    input: `${SOURCE_DIR}/index.js`,
+    input: `${SOURCE_DIR}/index.tsx`,
     output: {
       file: `${OUTPUT_DIR}/react-router-native.js`,
       format: 'esm',
@@ -35,9 +36,11 @@ const modules = [
               disableImportExportTransform: true,
               enableBabelRuntime: false
             }
-          ]
+          ],
+          '@babel/preset-typescript'
         ],
-        plugins: ['babel-plugin-dev-expression']
+        plugins: ['babel-plugin-dev-expression'],
+        extensions
       }),
       compiler(),
       copy({
