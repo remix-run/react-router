@@ -1,6 +1,6 @@
 import React from 'react';
 import PropTypes from 'prop-types';
-import { createMemoryHistory, parsePath } from 'history';
+import { createMemoryHistory, parsePath, History, Location } from 'history';
 
 const readOnly = __DEV__ ? obj => Object.freeze(obj) : obj => obj;
 
@@ -24,11 +24,21 @@ function warning(cond, message) {
 // CONTEXT
 ///////////////////////////////////////////////////////////////////////////////
 
-const LocationContext = React.createContext();
+interface ILocationContext {
+  readonly history: History;
+  readonly location: Location;
+  readonly pending: boolean;
+}
+const LocationContext = React.createContext<ILocationContext>(
+  undefined as ILocationContext
+);
 
 if (__DEV__) {
-  LocationContext.Consumer.displayName = 'Location.Consumer';
-  LocationContext.Provider.displayName = 'Location.Provider';
+  // There is a comment in the types that says that only
+  // the context object itself can have a displayName
+  LocationContext.displayName = 'Location';
+  // LocationContext.Consumer.displayName = 'Location.Consumer';
+  // LocationContext.Provider.displayName = 'Location.Provider';
 }
 
 const RouteContext = React.createContext({
@@ -39,8 +49,11 @@ const RouteContext = React.createContext({
 });
 
 if (__DEV__) {
-  RouteContext.Consumer.displayName = 'Route.Consumer';
-  RouteContext.Provider.displayName = 'Route.Provider';
+  // TODO: there is a comment in the types that says that only
+  // the context object itself can have a displayName
+  RouteContext.displayName = 'Route';
+  // RouteContext.Consumer.displayName = 'Route.Consumer';
+  // RouteContext.Provider.displayName = 'Route.Provider';
 }
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -461,9 +474,33 @@ if (__DEV__) {
  * - { path, redirectTo }
  *
  * We should probably write this up in TypeScript instead of in a comment. In
- * fact, what am I even doing here. Nobody is ever going to read this.
+ * fact, what am I even doing here. Nobody is ever going to read this. => We did :)
  */
-export function useRoutes(routes, basename = '', caseSensitive = false) {
+
+interface RouteWithChildren {
+  readonly path: string;
+  readonly element: React.ReactElement;
+  readonly children: Routes;
+}
+
+interface RouteWithRedirect {
+  readonly path: string;
+  readonly redirectTo: string;
+}
+
+type Route = RouteWithChildren | RouteWithRedirect;
+
+function isRouteWithChildren(route: Route): route is RouteWithChildren {
+  return (route as RouteWithChildren).children !== undefined;
+}
+
+type Routes = ReadonlyArray<Route>;
+
+export function useRoutes(
+  routes: Routes,
+  basename = '',
+  caseSensitive = false
+) {
   let {
     params: parentParams,
     pathname: parentPathname,
@@ -551,7 +588,7 @@ function isRedirectRoute(route) {
  * Matches the given routes to a location and returns the match data.
  */
 export function matchRoutes(
-  routes,
+  routes: Routes,
   location,
   basename = '',
   caseSensitive = false
@@ -611,7 +648,7 @@ export function matchRoutes(
 }
 
 function flattenRoutes(
-  routes,
+  routes: Routes,
   flattenedRoutes = [],
   parentPath = null,
   parentRoutes = [],
@@ -624,7 +661,7 @@ function flattenRoutes(
 
     flattenedRoutes.push([path, routes, indexes]);
 
-    if (route.children) {
+    if (isRouteWithChildren(route)) {
       flattenRoutes(route.children, flattenedRoutes, path, routes, indexes);
     }
   });
@@ -680,7 +717,7 @@ function compareIndexes(a, b) {
     : 0; // It doesn't make sense to rank non-siblings by index, so they sort equal
 }
 
-function compilePath(path, end, caseSensitive) {
+function compilePath(path: string, end: boolean, caseSensitive: boolean) {
   let keys = [];
   let pattern =
     '^(' +
