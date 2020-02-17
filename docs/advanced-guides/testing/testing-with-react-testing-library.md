@@ -49,7 +49,7 @@ return (
 export default App;
 ```
 
-This test verifies that the app is rendering in the DOM successfully, that the link to the `<About />` works as expected, and that the `<NoMatch />` component is hit when attempting to navigate to a non-existent route.
+This test verifies that the app is rendering in the DOM successfully, that the link to the `<About />` component works as expected, and that the `<NoMatch />` component is hit when attempting to navigate to a non-existent route.
 
 ```
 // app.test.js
