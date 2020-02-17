@@ -27,7 +27,7 @@ for (const PACKAGE_NAME of [
 ]) {
   try {
     exec(
-      `tsc --outFile build/${PACKAGE_NAME}/${PACKAGE_NAME}.d.ts packages/${PACKAGE_NAME}/index.tsx global.d.ts`
+      `tsc --declaration true --emitDeclarationOnly true --jsx preserve --esModuleInterop true --outFile build/${PACKAGE_NAME}/${PACKAGE_NAME}.d.ts packages/${PACKAGE_NAME}/index.tsx global.d.ts`
     );
   } catch (error) {
     console.log(error);
