@@ -1,6 +1,12 @@
 import React from 'react';
 import PropTypes from 'prop-types';
-import { createMemoryHistory, parsePath, History, Location } from 'history';
+import {
+  createMemoryHistory,
+  parsePath,
+  History,
+  Location,
+  MemoryHistory
+} from 'history';
 
 const readOnly = __DEV__ ? obj => Object.freeze(obj) : obj => obj;
 
@@ -59,7 +65,12 @@ if (__DEV__) {
 ///////////////////////////////////////////////////////////////////////////////
 // COMPONENTS
 ///////////////////////////////////////////////////////////////////////////////
-
+export interface MemoryRouterProps {
+  readonly children: React.ReactChildren;
+  readonly initialEntries?: any;
+  readonly initialIndex?: number;
+  readonly timeout?: number;
+}
 /**
  * A <Router> that stores all entries in memory.
  */
@@ -68,8 +79,8 @@ export function MemoryRouter({
   initialEntries,
   initialIndex,
   timeout
-}) {
-  let historyRef = React.useRef(null);
+}: MemoryRouterProps) {
+  let historyRef = React.useRef<MemoryHistory>(null);
 
   if (historyRef.current == null) {
     historyRef.current = createMemoryHistory({ initialEntries, initialIndex });
@@ -86,7 +97,7 @@ export function MemoryRouter({
 
 if (__DEV__) {
   MemoryRouter.displayName = 'MemoryRouter';
-  MemoryRouter.propTypes = {
+  /* MemoryRouter.propTypes = {
     children: PropTypes.node,
     timeout: PropTypes.number,
     initialEntries: PropTypes.arrayOf(
@@ -102,7 +113,7 @@ if (__DEV__) {
       ])
     ),
     initialIndex: PropTypes.number
-  };
+  }; */
 }
 
 /**
