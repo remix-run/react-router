@@ -4,8 +4,10 @@
     "build": "node ./scripts/build.js",
     "clean": "git clean -e '!/website-deploy-key' -e '!/website-deploy-key.pub' -fdX .",
     "lint": "eslint .",
+    "publish": "node ./scripts/publish.js",
     "size": "filesize",
     "test": "node ./scripts/test.js",
+    "version": "node ./scripts/version.js",
     "watch": "node ./scripts/watch.js"
   },
   "dependencies": {

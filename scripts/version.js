@@ -61,10 +61,10 @@ async function getPackageVersion(packageName) {
   return json.version;
 }
 
-async function updatePackageConfig(packageName, updater) {
+async function updatePackageConfig(packageName, transform) {
   let file = packageJson(packageName);
   let json = await jsonfile.readFile(file);
-  updater(json);
+  transform(json);
   await jsonfile.writeFile(file, json, { spaces: 2 });
 }
 
