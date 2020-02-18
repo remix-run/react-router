@@ -8,6 +8,10 @@ const semver = require('semver');
 
 const rootDir = path.resolve(__dirname, '..');
 
+function packageJson(packageName) {
+  return path.join(rootDir, 'packages', packageName, 'package.json');
+}
+
 function exec(cmd) {
   return execSync(cmd, { env: process.env }).toString();
 }
@@ -16,9 +20,13 @@ function invariant(cond, message) {
   if (!cond) throw new Error(message);
 }
 
-async function getRepoVersion() {
-  let packageJson = await jsonfile.readFile(path.join(rootDir, 'package.json'));
-  return packageJson.version;
+function ensureCleanWorkingDirectory() {
+  let status = exec(`git status --porcelain`);
+  let lines = status.replace(/\n+$/).split('\n');
+  invariant(
+    lines.every(line => line.startsWith('?')),
+    'Working directory is not clean. Please commit or stash your changes first.'
+  );
 }
 
 function getNextVersion(currentVersion, givenVersion, prereleaseId) {
@@ -47,29 +55,17 @@ async function prompt(question) {
   return answer;
 }
 
-async function updatePackageJson(dir, updater) {
-  let file = path.join(dir, 'package.json');
-  let packageJson = await jsonfile.readFile(file);
-  updater(packageJson);
-  await jsonfile.writeFile(file, packageJson, { spaces: 2 });
-}
-
-async function updateRepoConfig(updater) {
-  return await updatePackageJson(rootDir, updater);
+async function getPackageVersion(packageName) {
+  let file = packageJson(packageName);
+  let json = await jsonfile.readFile(file);
+  return json.version;
 }
 
 async function updatePackageConfig(packageName, updater) {
-  let packageDir = path.join(rootDir, 'packages', packageName);
-  return await updatePackageJson(packageDir, updater);
-}
-
-function ensureCleanWorkingDirectory() {
-  let status = exec(`git status --porcelain`);
-  let lines = status.replace(/\n+$/).split('\n');
-  invariant(
-    lines.every(line => line.startsWith('?')),
-    'Working directory is not clean. Please commit or stash your changes first.'
-  );
+  let file = packageJson(packageName);
+  let json = await jsonfile.readFile(file);
+  updater(json);
+  await jsonfile.writeFile(file, json, { spaces: 2 });
 }
 
 async function run() {
@@ -82,7 +78,7 @@ async function run() {
     ensureCleanWorkingDirectory();
 
     // 1. Get the next version number
-    let currentVersion = await getRepoVersion();
+    let currentVersion = await getPackageVersion('react-router');
     let version;
     if (semver.valid(givenVersion)) {
       version = givenVersion;
@@ -97,19 +93,13 @@ async function run() {
 
     if (answer === false) return 0;
 
-    // 3. Update repo version
-    await updateRepoConfig(config => {
-      config.version = version;
-    });
-    console.log(chalk.green(`  Updated repo to version ${version}`));
-
-    // 4. Update react-router version
+    // 3. Update react-router version
     await updatePackageConfig('react-router', config => {
       config.version = version;
     });
     console.log(chalk.green(`  Updated react-router to version ${version}`));
 
-    // 5. Update react-router-dom version + react-router peer dep
+    // 4. Update react-router-dom version + react-router peer dep
     await updatePackageConfig('react-router-dom', config => {
       config.version = version;
       config.peerDependencies['react-router'] = version;
@@ -118,7 +108,7 @@ async function run() {
       chalk.green(`  Updated react-router-dom to version ${version}`)
     );
 
-    // 6. Update react-router-native version + react-router peer dep
+    // 5. Update react-router-native version + react-router peer dep
     await updatePackageConfig('react-router-native', config => {
       config.version = version;
       config.peerDependencies['react-router'] = version;
@@ -127,7 +117,7 @@ async function run() {
       chalk.green(`  Updated react-router-native to version ${version}`)
     );
 
-    // 7. Commit and tag
+    // 6. Commit and tag
     exec(`git commit --all --message="Version ${version}"`);
     exec(`git tag v${version}`);
     console.log(chalk.green(`  Committed and tagged version ${version}`));
