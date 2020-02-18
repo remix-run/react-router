@@ -5,7 +5,8 @@ import {
   parsePath,
   History,
   Location,
-  MemoryHistory
+  MemoryHistory,
+  LocationState
 } from 'history';
 
 const readOnly = __DEV__ ? obj => Object.freeze(obj) : obj => obj;
@@ -47,7 +48,14 @@ if (__DEV__) {
   // LocationContext.Provider.displayName = 'Location.Provider';
 }
 
-const RouteContext = React.createContext({
+interface IRouteContext {
+  readonly outlet: any;
+  readonly params: any;
+  readonly pathname: string;
+  readonly route: Route;
+}
+
+const RouteContext = React.createContext<IRouteContext>({
   outlet: null,
   params: readOnly({}),
   pathname: '',
@@ -116,18 +124,24 @@ if (__DEV__) {
   }; */
 }
 
+interface NavigateProps {
+  readonly to: any;
+  readonly replace?: boolean;
+  readonly state?: unknown;
+}
+
 /**
  * Navigate programmatically using a component.
  */
-export function Navigate({ to, replace = false, state }) {
+export function Navigate({ to, replace = false, state }: NavigateProps) {
   let navigate = useNavigate();
   navigate(to, { replace, state });
-  return null;
+  return;
 }
 
 if (__DEV__) {
   Navigate.displayName = 'Navigate';
-  Navigate.propTypes = {
+  /* Navigate.propTypes = {
     to: PropTypes.oneOfType([
       PropTypes.string,
       PropTypes.shape({
@@ -138,7 +152,7 @@ if (__DEV__) {
     ]).isRequired,
     replace: PropTypes.bool,
     state: PropTypes.object
-  };
+  }; */
 }
 
 /**
@@ -637,13 +651,17 @@ export function matchRoutes(
     let [path, flatRoutes] = flattenedRoutes[i];
 
     // TODO: Match on search, state too
-    let [matcher] = compilePath(path, /* end */ true, caseSensitive);
+    let { matcher } = compilePath(path, /* end */ true, caseSensitive);
 
     if (matcher.test(target)) {
       return flatRoutes.map((route, index) => {
         let routes = flatRoutes.slice(0, index + 1);
         let path = joinPaths(routes.map(r => r.path));
-        let [matcher, keys] = compilePath(path, /* end */ false, caseSensitive);
+        let { matcher, keys } = compilePath(
+          path,
+          /* end */ false,
+          caseSensitive
+        );
         let match = target.match(matcher);
 
         return {
@@ -729,7 +747,7 @@ function compareIndexes(a, b) {
 }
 
 function compilePath(path: string, end: boolean, caseSensitive: boolean) {
-  let keys = [];
+  let keys: Array<string> = [];
   let pattern =
     '^(' +
     path
@@ -759,7 +777,7 @@ function compilePath(path: string, end: boolean, caseSensitive: boolean) {
   let flags = caseSensitive ? undefined : 'i';
   let matcher = new RegExp(pattern, flags);
 
-  return [matcher, keys];
+  return { matcher, keys };
 }
 
 function createParams(keys, values) {
