@@ -270,8 +270,6 @@ export function createRoutesFromChildren(children) {
 
     path = path || from || '/';
 
-    warning(!path.includes('..'), `A <Route path> cannot use ".."`);
-
     // Components that have a to prop are redirects.
     // All others should use path + element (and maybe children) props.
     let route;
@@ -613,12 +611,12 @@ export function matchRoutes(
 function flattenRoutes(
   routes,
   flattenedRoutes = [],
-  parentPath = null,
+  parentPath = '',
   parentRoutes = [],
   parentIndexes = []
 ) {
   routes.forEach((route, index) => {
-    let path = parentPath ? joinPaths([parentPath, route.path]) : route.path;
+    let path = joinPaths([parentPath, route.path]);
     let routes = parentRoutes.concat(route);
     let indexes = parentIndexes.concat(index);
 
@@ -685,8 +683,8 @@ function compilePath(path, end, caseSensitive) {
   let pattern =
     '^(' +
     path
-      .replace(/^\.?\/*/, '') // Ignore leading . or / or ./
-      .replace(/\*\/|\/\./g, '') // Ignore */ and /. throughout
+      .replace(/^\/+/, '') // Ignore leading /
+      .replace(/\*\//, '') // Ignore */
       .replace(/\/?\*?$/, '') // Ignore trailing /*, we'll handle it below
       .replace(/[\\.*+^$?{}|()[\]]/g, '\\$&') // Escape special regex chars
       .replace(/:(\w+)/g, (_, key) => {

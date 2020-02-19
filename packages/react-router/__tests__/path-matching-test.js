@@ -99,64 +99,6 @@ describe('path matching', () => {
   });
 });
 
-describe('path matching with only a .', () => {
-  it('matches', () => {
-    let routes = [{ path: '.' }];
-    let matches = matchRoutes(routes, { pathname: '/' });
-    expect(matches).not.toBeNull();
-    expect(matches).toMatchObject([
-      { pathname: '/', params: {}, route: routes[0] }
-    ]);
-  });
-
-  describe('when it is nested', () => {
-    it('matches', () => {
-      let routes = [{ path: 'users', children: [{ path: '.' }] }];
-      let matches = matchRoutes(routes, { pathname: '/users' });
-      expect(matches).not.toBeNull();
-      expect(matches).toMatchObject([
-        { pathname: '/users', params: {}, route: routes[0] },
-        { pathname: '/users', params: {}, route: routes[0].children[0] }
-      ]);
-    });
-  });
-});
-
-describe('path matching with a leading .', () => {
-  it('matches', () => {
-    let routes = [{ path: './users/:id' }];
-    let matches = matchRoutes(routes, { pathname: '/users/mj' });
-    expect(matches).not.toBeNull();
-    expect(matches).toMatchObject([
-      {
-        params: { id: 'mj' },
-        pathname: '/users/mj',
-        route: routes[0]
-      }
-    ]);
-  });
-
-  describe('when it is nested', () => {
-    it('matches', () => {
-      let routes = [{ path: 'users', children: [{ path: './:id' }] }];
-      let matches = matchRoutes(routes, { pathname: '/users/mj' });
-      expect(matches).not.toBeNull();
-      expect(matches).toMatchObject([
-        {
-          params: {},
-          pathname: '/users',
-          route: routes[0]
-        },
-        {
-          params: { id: 'mj' },
-          pathname: '/users/mj',
-          route: routes[0].children[0]
-        }
-      ]);
-    });
-  });
-});
-
 describe('path matching with a basename', () => {
   let routes = [
     {
