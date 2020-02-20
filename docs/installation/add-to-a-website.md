@@ -4,10 +4,14 @@ There are a few different ways to get React Router running on your website,
 depending mostly on what the rest of your stack looks like. This document
 describes the most common ways people use React Router.
 
-- [Quick Install](#quick-install)
-- [create-react-app](#create-react-app)
-- [Webpack](#webpack)
-- [Parcel](#parcel)
+- [Add React Router to a Website](#add-react-router-to-a-website)
+	- [Quick Install](#quick-install)
+	- [Install with a Package Manager](#install-with-a-package-manager)
+	- [Create React App](#create-react-app)
+	- [Parcel](#parcel)
+	- [Webpack](#webpack)
+	- [Webpack](#webpack-1)
+	- [Parcel](#parcel-1)
 
 React Router has a single dependency, the `history` library, which is developed
 and released alongside the router. All of the following methods will
@@ -43,6 +47,7 @@ the closing `</body>` tag:
 
   <!-- A simple example app -->
   <script>
+	var e = React.createElement;
   var Router = ReactRouterDOM.BrowserRouter;
   var Routes = ReactRouterDOM.Routes;
   var Route = ReactRouterDOM.Route;
@@ -74,26 +79,279 @@ In order to do this, you'll need to build your website with a JavaScript bundler
 like Webpack or Parcel. The rest of the installation methods on this page
 describe how to get started using these tools.
 
-## create-react-app
+## Install with a Package Manager
 
-To add React Router to a
-[create-react-app](https://github.com/facebook/create-react-app) project, you
-can use [yarn](https://yarnpkg.com).
+Before using a bundler for your project, you'll first need to install React
+Router to your local `node_modules` directory using a JavaScript package
+manager. The following instructions use [npm](https://www.npmjs.com/), but
+[Yarn](https://yarnpkg.com/) is also a popular choice.
+
+```sh
+$ npm install history@5 react-router@6 react-router-dom@6
+```
+
+## Create React App
+
+Follow the instructions in the [React documentation to set up a new project with Create React App](https://reactjs.org/docs/create-a-new-react-app.html#create-react-app), then follow [the instructions above](/#install-with-a-package-manager)
+to install React Router in your project.
+
+Once your project is set up and React Router is installed as a dependency, open
+the `src/index.js` in your text editor. Import `BrowserRouter` from
+`react-router-dom` near the top of your file.
+
+```diff
+import React from 'react';
+import ReactDOM from 'react-dom';
++ import { BrowserRouter as Router } from "react-router-dom";
+import './index.css';
+import App from './App';
+import * as serviceWorker from './serviceWorker';
+```
+
+To make sure your app has the necessary context to handle state and logic
+controlled by React Router, you need to wrap the entire app inside the
+`BrowserRouter` component. Where `ReactDOM.render` is called to
+load your app, update the first argument so that `<App />` is nested
+accordiongly.
+
+```diff
+- ReactDOM.render(<App />, document.getElementById('root'));
++ ReactDOM.render(
++   <Router>
++     <App />
++   </Router>,
++   document.getElementById("root")
++ );
+```
+
+Now you can use React Router anywhere in your app! For a simple example, open
+`src/App.js` and give your app some routes:
+
+```diff
+import React from 'react';
++ import { Routes, Route, Link } from 'react-router-dom';
+import './App.css';
+
+function App() {
+  return (
+    <div className="App">
+      <header className="App-header">
+        <h1>Welcome to React Router!</h1>
+        <a
+          className="App-link"
+          href="https://reactjs.org"
+          target="_blank"
+          rel="noopener noreferrer"
+        >
+          Learn React
+        </a>
+      </header>
++     <Routes>
++       <Route path="/" element={<Home />} />
++       <Route path="about" element={<About />} />
++     </Routes>
+    </div>
+  );
+}
+```
+
+Now create your route components:
+
+```js
+// App.js
+function Home() {
+  return (
+    <React.Fragment>
+      <main>
+        <h2>Welcome to the homepage!</h2>
+        <p>You can do this, I believe in you.</p>
+      </main>
+      <nav>
+        <Link to="/about">About</Link>
+      </nav>
+    </React.Fragment>
+  );
+}
+
+function About() {
+  return (
+    <React.Fragment>
+      <main>
+        <h2>Who are we?</h2>
+        <p>That feels like an existential question, don't you think?</p>
+      </main>
+      <nav>
+        <Link to="/">Home</Link>
+      </nav>
+    </React.Fragment>
+  );
+}
+```
+
+Now start your app by running `npm start`, and you should see the `Home` route
+when your app starts runinng. Click the `About` link to see your `About` route,
+and voila! You successfully set up React Router using Create React App! 🥳
+
+## Parcel
+
+Follow the instructions in the [Parcel documentation to set up a new project](https://parceljs.org/getting_started.html),
+then follow [the instructions above](/#install-with-a-package-manager) to
+install React Router in your project. You will also need to install `react`,
+`react-dom` and `@babel/preset-react`.
+
+```sh
+$ npm install parcel-bundler history@5 react-router@6 react-router-dom@6 react react-dom @babel/preset-react
+```
+
+In your project's `package.json`, add a `start` script so you can open your
+project in a browser during development.
+
+```diff
+"scripts": {
++	"start": "parcel index.html",
+}
+```
+
+Once the project is set up and your dependencies are installed, create a new
+`.babelrc` file at the root of your project:
 
 ```
-$ yarn add react-router@6 react-router-dom@6
+{
+  "presets": ["@babel/preset-react"]
+}
 ```
 
-Then, in `src/App.js` just import the pieces you need.
+Go to the `index.js` file in your project and import the necessary functions
+from `react`, `react-dom`, and `react-router-dom`:
+
+```js
+// index.js
+import React from 'react';
+import ReactDOM from 'react-dom';
+import { BrowserRouter as Router } from 'react-router-dom';
+import App from './App.js';
+```
+
+Now mount a React app in a `div` with the ID of `root`:
+
+```js
+// index.js
+ReactDOM.render(
+  <Router>
+    <App />
+  </Router>,
+  document.getElementById('root')
+);
+```
+
+In your `index.html`, create the root div in the document body above the script
+tag. It's also helpful to provide a `noscript` fallback message for users who
+may disabled JavaScript, unless you plan on server-rendering your app later.
+
+```diff
+<!-- index.html -->
+<body>
++	<noscript>You need to enable JavaScript to run this app.</noscript>
++	<div id="root"></div>
+	<script src="./index.js"></script>
+</body>
+```
+
+Now that React and React Router are set up, create your app component and a few
+routes. Create a new file `App.js` and import the following:
+
+```js
+// App.js
+import React from 'react';
+import { Routes, Route, Link } from 'react-router-dom';
+```
+
+Define your app and route components:
+
+```js
+// App.js
+function App() {
+  return (
+    <div>
+      <header>
+        <h1>Welcome to React Router!</h1>
+      </header>
+      <Routes>
+        <Route path="/" element={<Home />} />
+        <Route path="about" element={<About />} />
+      </Routes>
+    </div>
+  );
+}
+
+function Home() {
+  return (
+    <React.Fragment>
+      <main>
+        <h2>Welcome to the homepage!</h2>
+        <p>You can do this, I believe in you.</p>
+      </main>
+      <nav>
+        <Link to="/about">About</Link>
+      </nav>
+    </React.Fragment>
+  );
+}
+
+function About() {
+  return (
+    <React.Fragment>
+      <main>
+        <h2>Who are we?</h2>
+        <p>That feels like an existential question, don't you think?</p>
+      </main>
+      <nav>
+        <Link to="/">Home</Link>
+      </nav>
+    </React.Fragment>
+  );
+}
+
+export default App;
+```
+
+Now start your app by running `npm start`, and you should see the `Home` route
+when your app starts runinng. Click the `About` link to see your `About` route,
+and voila! You successfully set up React Router using Parcel! 🥳
+
+## Webpack
+
+Follow the instructions in the [webpack documentation to set up a new project](https://webpack.js.org/guides/getting-started/), then follow [the instructions above](/#install-with-a-package-manager) to
+install React Router in your project.
+
+Setting up a new React project in webpack is a bit more involved than Parcel or
+Create React App. Because webpack is a low-level tool that allows you to
+fine-tune your build to your liking, you may want to read the [webpack documentation](https://webpack.js.org/), [explore some online tutorials](https://www.freecodecamp.org/news/part-1-react-app-from-scratch-using-webpack-4-562b1d231e75/), or check out [webpack configurations in other repos](https://github.com/facebook/create-react-app/blob/master/packages/react-scripts/config/webpack.config.js) to understand how to build your own.
+
+Once you have webpack configured and working with React, you can install the
+dependencies needed for React Router:
+
+```sh
+$ npm install history@5 react-router@6 react-router-dom@6
+```
+
+Then, somewhere in your code (probably towards the root of your React component
+tree) you'll want to `import` the pieces you need from `react-router-dom`.
 
 ```js
 import { BrowserRouter } from 'react-router-dom';
 
 function App() {
   return (
-    <BrowserRouter>
-      <div>...</div>
-    </BrowserRouter>
+    <Router>
+      <div>
+        <h1>Hello, React Router!</h1>
+
+        <Routes>
+          <Route path="/" element={<Home />} />
+        </Routes>
+      </div>
+    </Router>
   );
 }
 ```
