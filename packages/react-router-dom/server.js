@@ -22,6 +22,14 @@ export function StaticRouter({ children, context = {}, location: loc = '/' }) {
     key: loc.key || 'default'
   };
 
+  function getNextLocation(to, state) {
+    return {
+      ...location,
+      ...(typeof to === 'string' ? parsePath(to) : to),
+      state
+    };
+  }
+
   let mockHistory = {
     get action() {
       return action;
@@ -29,29 +37,34 @@ export function StaticRouter({ children, context = {}, location: loc = '/' }) {
     get location() {
       return location;
     },
-    push(location, state) {
-      let url = createPath(location);
+    createHref(to) {
+      return typeof to === 'string' ? to : createPath(to);
+    },
+    push(to, state) {
+      let nextLocation = getNextLocation(to, state);
 
       if (__DEV__) {
+        let url = createPath(nextLocation);
+
         // A PUSH is not technically valid in a static context because we can't
         // push a new URL onto the history stack in a stateless environment. They
         // most likely want a regular redirect so just warn them and carry on.
         console.warn(
-          `You cannot perform a PUSH with a static router. You probably want a REPLACE instead.` +
+          `You cannot perform a PUSH with a <StaticRouter>. You probably want a REPLACE instead.` +
             `\n\nTo avoid this warning, find the element that is calling \`navigate("${url}")\`` +
             ` and change it to \`navigate("${url}", { replace: true })\`. This could also be` +
-            ` caused by rendering a \`<Navigate to={"${url}"} />\` on the server. In that` +
-            ` case, just add a \`replace: true\` prop to do a redirect instead.`
+            ` caused by rendering a \`<Navigate to={"${url}"} />\`. In that case, just add a ` +
+            `\`replace={true}\` prop to do a redirect instead.`
         );
       }
 
-      context.url = url;
-      context.state = state;
+      context.url = createPath(nextLocation);
+      context.state = nextLocation.state;
     },
-    replace(location, state) {
-      let url = createPath(location);
-      context.url = url;
-      context.state = state;
+    replace(to, state) {
+      let nextLocation = getNextLocation(to, state);
+      context.url = createPath(nextLocation);
+      context.state = nextLocation.state;
     },
     go(n) {
       throw new Error(
@@ -61,10 +74,7 @@ export function StaticRouter({ children, context = {}, location: loc = '/' }) {
       );
     },
     listen() {},
-    block() {},
-    createHref(location) {
-      return createPath(location);
-    }
+    block() {}
   };
 
   return <Router children={children} history={mockHistory} />;

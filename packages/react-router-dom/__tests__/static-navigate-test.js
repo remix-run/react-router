@@ -52,12 +52,42 @@ describe('A <Navigate> in a <StaticRouter>', () => {
           state: undefined
         });
       });
+
+      it('reuses pieces of the current location that are missing from the to value', () => {
+        let context = {};
+
+        function Home() {
+          // only use search here, so pathname should be reused
+          return <Navigate replace to={{ search: '?the=query' }} />;
+        }
+
+        ReactDOMServer.renderToStaticMarkup(
+          <Router context={context} location="/home">
+            <Routes>
+              <Route path="/home" element={<Home />} />
+            </Routes>
+          </Router>
+        );
+
+        expect(context).toMatchObject({
+          url: '/home?the=query',
+          state: undefined
+        });
+      });
     });
   });
 
   describe('a push navigation', () => {
-    it('issues a warning and mutates the context object', () => {
-      let spy = jest.spyOn(console, 'warn').mockImplementation(() => {});
+    let consoleWarnSpy;
+    beforeEach(() => {
+      consoleWarnSpy = jest.spyOn(console, 'warn').mockImplementation(() => {});
+    });
+
+    afterEach(() => {
+      consoleWarnSpy.mockRestore();
+    });
+
+    it('issues a warning', () => {
       let context = {};
 
       function Home() {
@@ -72,16 +102,80 @@ describe('A <Navigate> in a <StaticRouter>', () => {
         </Router>
       );
 
-      expect(spy).toHaveBeenCalledWith(
-        expect.stringContaining('cannot perform a PUSH with a static router')
+      expect(consoleWarnSpy).toHaveBeenCalledWith(
+        expect.stringContaining('cannot perform a PUSH with a <StaticRouter>')
+      );
+    });
+
+    it('mutates the context object', () => {
+      let context = {};
+
+      function Home() {
+        return <Navigate push to="/somewhere-else?the=query" />;
+      }
+
+      ReactDOMServer.renderToStaticMarkup(
+        <Router context={context} location="/home">
+          <Routes>
+            <Route path="/home" element={<Home />} />
+          </Routes>
+        </Router>
       );
 
       expect(context).toMatchObject({
         url: '/somewhere-else?the=query',
         state: undefined
       });
+    });
 
-      spy.mockRestore();
+    describe('with an object to prop', () => {
+      it('mutates the context object', () => {
+        let context = {};
+
+        function Home() {
+          return (
+            <Navigate
+              push
+              to={{ pathname: '/somewhere-else', search: '?the=query' }}
+            />
+          );
+        }
+
+        ReactDOMServer.renderToStaticMarkup(
+          <Router context={context} location="/home">
+            <Routes>
+              <Route path="/home" element={<Home />} />
+            </Routes>
+          </Router>
+        );
+
+        expect(context).toMatchObject({
+          url: '/somewhere-else?the=query',
+          state: undefined
+        });
+      });
+
+      it('reuses pieces of the current location that are missing from the to value', () => {
+        let context = {};
+
+        function Home() {
+          // only use search here, so pathname should be reused
+          return <Navigate push to={{ search: '?the=query' }} />;
+        }
+
+        ReactDOMServer.renderToStaticMarkup(
+          <Router context={context} location="/home">
+            <Routes>
+              <Route path="/home" element={<Home />} />
+            </Routes>
+          </Router>
+        );
+
+        expect(context).toMatchObject({
+          url: '/home?the=query',
+          state: undefined
+        });
+      });
     });
   });
 });
