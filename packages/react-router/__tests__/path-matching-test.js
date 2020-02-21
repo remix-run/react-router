@@ -59,7 +59,7 @@ describe('path matching', () => {
           {
             path: ':id',
             value: 'Course',
-            children: [{ path: 'subjects', value: 'Coursesubjects' }]
+            children: [{ path: 'subjects', value: 'CourseSubjects' }]
           },
           { path: 'new', value: 'NewCourse' },
           { path: '/', value: 'CoursesIndex' },
@@ -82,7 +82,7 @@ describe('path matching', () => {
     expect(pick(routes, '/courses')).toBe('Courses.CoursesIndex');
     expect(pick(routes, '/courses/routing')).toBe('Courses.Course');
     expect(pick(routes, '/courses/routing/subjects')).toBe(
-      'Courses.Course.Coursesubjects'
+      'Courses.Course.CourseSubjects'
     );
     expect(pick(routes, '/courses/new')).toBe('Courses.NewCourse');
     expect(pick(routes, '/courses/whatever/path')).toBe(
@@ -96,6 +96,19 @@ describe('path matching', () => {
     );
     expect(pick(routes, '/')).toBe('Home');
     expect(pick(routes, '/whatever')).toBe('NotFound');
+  });
+
+  test('nested index route vs sibling static route', () => {
+    let routes = [
+      {
+        path: ':page',
+        value: 'PageLayout',
+        children: [{ path: '/', value: 'PageIndex' }]
+      },
+      { path: 'page', value: 'Page' }
+    ];
+
+    expect(pick(routes, '/page')).toBe('Page');
   });
 });
 

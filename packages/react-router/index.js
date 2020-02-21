@@ -631,23 +631,26 @@ function flattenRoutes(
 }
 
 const paramRe = /^:\w+$/;
-const staticSegmentValue = 10;
 const dynamicSegmentValue = 2;
-const splatSegmentValue = -1;
+const emptySegmentValue = 1;
+const staticSegmentValue = 10;
+const splatSegmentValue = -2;
 
 function computeScore(path) {
-  return path
-    .split('/')
-    .reduce(
-      (score, segment) =>
-        score +
-        (paramRe.test(segment)
-          ? dynamicSegmentValue
-          : segment === '*'
-          ? splatSegmentValue
-          : staticSegmentValue),
-      0
-    );
+  let segments = path.split('/');
+
+  return segments.reduce(
+    (score, segment) =>
+      score +
+      (paramRe.test(segment)
+        ? dynamicSegmentValue
+        : segment === '*'
+        ? splatSegmentValue
+        : segment === ''
+        ? emptySegmentValue
+        : staticSegmentValue),
+    segments.length
+  );
 }
 
 function rankFlattenedRoutes(flattenedRoutes) {
