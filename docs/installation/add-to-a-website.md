@@ -213,7 +213,7 @@ project in a browser during development.
 
 ```diff
 "scripts": {
-+	"start": "parcel index.html",
++  "start": "parcel index.html"
 }
 ```
 
