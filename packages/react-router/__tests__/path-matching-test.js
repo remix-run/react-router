@@ -226,4 +226,25 @@ describe('path matching with splats', () => {
       pathname: '/users/mj/files-secrets.md'
     });
   });
+
+  test('multiple nested routes', () => {
+    let match = matchRoutes(
+      [{ path: '*', children: [{ path: '*', children: [{ path: '*' }] }] }],
+      '/one/two/three'
+    );
+
+    expect(match).not.toBeNull();
+    expect(match[0]).toMatchObject({
+      params: { '*': 'one/two/three' },
+      pathname: '/'
+    });
+    expect(match[1]).toMatchObject({
+      params: { '*': 'one/two/three' },
+      pathname: '/'
+    });
+    expect(match[2]).toMatchObject({
+      params: { '*': 'one/two/three' },
+      pathname: '/'
+    });
+  });
 });

@@ -634,23 +634,28 @@ const paramRe = /^:\w+$/;
 const dynamicSegmentValue = 2;
 const emptySegmentValue = 1;
 const staticSegmentValue = 10;
-const splatSegmentValue = -2;
+const splatPenalty = -2;
+const isSplat = s => s === '*';
 
 function computeScore(path) {
   let segments = path.split('/');
+  let initialScore = segments.length;
+  if (segments.some(isSplat)) {
+    initialScore += splatPenalty;
+  }
 
-  return segments.reduce(
-    (score, segment) =>
-      score +
-      (paramRe.test(segment)
-        ? dynamicSegmentValue
-        : segment === '*'
-        ? splatSegmentValue
-        : segment === ''
-        ? emptySegmentValue
-        : staticSegmentValue),
-    segments.length
-  );
+  return segments
+    .filter(s => !isSplat(s))
+    .reduce(
+      (score, segment) =>
+        score +
+        (paramRe.test(segment)
+          ? dynamicSegmentValue
+          : segment === ''
+          ? emptySegmentValue
+          : staticSegmentValue),
+      initialScore
+    );
 }
 
 function rankFlattenedRoutes(flattenedRoutes) {
@@ -687,7 +692,7 @@ function compilePath(path, end, caseSensitive) {
     '^(' +
     path
       .replace(/^\/+/, '') // Ignore leading /
-      .replace(/\*\//, '') // Ignore */
+      .replace(/\*\//g, '') // Ignore */ (from paths nested under a *)
       .replace(/\/?\*?$/, '') // Ignore trailing /*, we'll handle it below
       .replace(/[\\.*+^$?{}|()[\]]/g, '\\$&') // Escape special regex chars
       .replace(/:(\w+)/g, (_, key) => {
@@ -698,8 +703,7 @@ function compilePath(path, end, caseSensitive) {
 
   if (path.endsWith('*')) {
     if (path.endsWith('/*')) {
-      // Don't include the / in params['*']
-      pattern += '\\/?';
+      pattern += '\\/?'; // Don't include the / in params['*']
     }
     keys.push('*');
     pattern += '(.*)';
