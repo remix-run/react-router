@@ -196,6 +196,11 @@ Now start your app by running `npm start`, and you should see the `Home` route
 when your app starts runinng. Click the `About` link to see your `About` route,
 and voila! You successfully set up React Router using Create React App! 🥳
 
+When it's time to deploy your app to production, be sure to follow [Create React
+App's
+instructions](https://create-react-app.dev/docs/deployment#serving-apps-with-client-side-routing)
+on deploying with React Router to be sure your server is configured correctly.
+
 ## Parcel
 
 Follow the instructions in the [Parcel documentation to set up a new
