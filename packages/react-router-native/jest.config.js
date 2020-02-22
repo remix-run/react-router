@@ -7,7 +7,7 @@ module.exports = {
   globals: {
     __DEV__: true
   },
-  setupFiles: ['<rootDir>/modules/__tests__/setup.js'],
+  setupFiles: ['<rootDir>/__tests__/setup.js'],
   modulePaths: [
     '<rootDir>/node_modules', // for react-native
     '<rootDir>/../../build' // for react-router
@@ -15,5 +15,5 @@ module.exports = {
   // Tests use built files, so ignore source files. This means
   // you have to manually kick off tests again after the build
   // completes because Jest does not watch the build directory
-  watchPathIgnorePatterns: ['<rootDir>/modules/\\w+.js']
+  watchPathIgnorePatterns: ['<rootDir>/\\w+.js']
 };

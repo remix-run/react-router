@@ -1,11 +1,11 @@
 {
   "name": "react-router",
-  "version": "6.0.0-alpha.1",
+  "version": "6.0.0-alpha.2",
   "description": "Declarative routing for React",
   "author": "React Training <hello@reacttraining.com>",
   "repository": "ReactTraining/react-router",
   "license": "MIT",
-  "main": "node-main.js",
+  "main": "main.js",
   "module": "react-router.js",
   "unpkg": "umd/react-router.production.min.js",
   "dependencies": {

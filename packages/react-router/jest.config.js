@@ -11,5 +11,5 @@ module.exports = {
   // Tests use built files, so ignore source files. This means
   // you have to manually kick off tests again after the build
   // completes because Jest does not watch the build directory
-  watchPathIgnorePatterns: ['<rootDir>/modules/\\w+.js']
+  watchPathIgnorePatterns: ['<rootDir>/\\w+.js']
 };

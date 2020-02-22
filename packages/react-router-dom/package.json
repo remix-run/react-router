@@ -1,11 +1,11 @@
 {
   "name": "react-router-dom",
-  "version": "6.0.0-alpha.1",
+  "version": "6.0.0-alpha.2",
   "description": "Declarative routing for React web applications",
   "author": "React Training <hello@reacttraining.com>",
   "repository": "ReactTraining/react-router",
   "license": "MIT",
-  "main": "node-main.js",
+  "main": "main.js",
   "module": "react-router-dom.js",
   "unpkg": "umd/react-router-dom.production.min.js",
   "dependencies": {
@@ -15,7 +15,7 @@
   "peerDependencies": {
     "react": ">=16.8",
     "react-dom": ">=16.8",
-    "react-router": "6.0.0-alpha.1"
+    "react-router": "6.0.0-alpha.2"
   },
   "sideEffects": false,
   "keywords": [

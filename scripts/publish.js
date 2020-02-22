@@ -15,23 +15,12 @@ function getTaggedVersion() {
   return output.replace(/^v|\n+$/g, '');
 }
 
-async function getPackageJson(dir) {
-  return await jsonfile.readFile(path.join(dir, 'package.json'));
-}
-
-async function ensureRepoVersion(version) {
-  let config = await getPackageJson(rootDir);
-  invariant(
-    config.version === version,
-    `Repo is on version ${config.version}, but should be on ${version}`
-  );
-}
-
 async function ensureBuildVersion(packageName, version) {
-  let config = await getPackageJson(path.join(rootDir, 'build', packageName));
+  let file = path.join(rootDir, 'build', packageName, 'package.json');
+  let json = await jsonfile.readFile(file);
   invariant(
-    config.version === version,
-    `Package ${packageName} is on version ${config.version}, but should be on ${version}`
+    json.version === version,
+    `Package ${packageName} is on version ${json.version}, but should be on ${version}`
   );
 }
 
@@ -48,7 +37,7 @@ async function run() {
     // 0. Ensure we are in CI. We don't do this manually
     invariant(
       process.env.CI,
-      `You should always run the release script from the CI environment!`
+      `You should always run the publish script from the CI environment!`
     );
 
     // 1. Get the current tag, which has the release version number
@@ -62,10 +51,9 @@ async function run() {
     let tag = semver.prerelease(version) == null ? 'latest' : 'next';
 
     console.log();
-    console.log(`  Releasing version ${version} to npm with tag "${tag}"`);
+    console.log(`  Publishing version ${version} to npm with tag "${tag}"`);
 
-    // 3. Ensure repo and build versions match the release version
-    await ensureRepoVersion(version);
+    // 3. Ensure build versions match the release version
     await ensureBuildVersion('react-router', version);
     await ensureBuildVersion('react-router-dom', version);
     await ensureBuildVersion('react-router-native', version);

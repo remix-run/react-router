@@ -59,7 +59,7 @@ describe('path matching', () => {
           {
             path: ':id',
             value: 'Course',
-            children: [{ path: 'subjects', value: 'Coursesubjects' }]
+            children: [{ path: 'subjects', value: 'CourseSubjects' }]
           },
           { path: 'new', value: 'NewCourse' },
           { path: '/', value: 'CoursesIndex' },
@@ -82,7 +82,7 @@ describe('path matching', () => {
     expect(pick(routes, '/courses')).toBe('Courses.CoursesIndex');
     expect(pick(routes, '/courses/routing')).toBe('Courses.Course');
     expect(pick(routes, '/courses/routing/subjects')).toBe(
-      'Courses.Course.Coursesubjects'
+      'Courses.Course.CourseSubjects'
     );
     expect(pick(routes, '/courses/new')).toBe('Courses.NewCourse');
     expect(pick(routes, '/courses/whatever/path')).toBe(
@@ -97,63 +97,18 @@ describe('path matching', () => {
     expect(pick(routes, '/')).toBe('Home');
     expect(pick(routes, '/whatever')).toBe('NotFound');
   });
-});
 
-describe('path matching with only a .', () => {
-  it('matches', () => {
-    let routes = [{ path: '.' }];
-    let matches = matchRoutes(routes, { pathname: '/' });
-    expect(matches).not.toBeNull();
-    expect(matches).toMatchObject([
-      { pathname: '/', params: {}, route: routes[0] }
-    ]);
-  });
-
-  describe('when it is nested', () => {
-    it('matches', () => {
-      let routes = [{ path: 'users', children: [{ path: '.' }] }];
-      let matches = matchRoutes(routes, { pathname: '/users' });
-      expect(matches).not.toBeNull();
-      expect(matches).toMatchObject([
-        { pathname: '/users', params: {}, route: routes[0] },
-        { pathname: '/users', params: {}, route: routes[0].children[0] }
-      ]);
-    });
-  });
-});
-
-describe('path matching with a leading .', () => {
-  it('matches', () => {
-    let routes = [{ path: './users/:id' }];
-    let matches = matchRoutes(routes, { pathname: '/users/mj' });
-    expect(matches).not.toBeNull();
-    expect(matches).toMatchObject([
+  test('nested index route vs sibling static route', () => {
+    let routes = [
       {
-        params: { id: 'mj' },
-        pathname: '/users/mj',
-        route: routes[0]
-      }
-    ]);
-  });
+        path: ':page',
+        value: 'PageLayout',
+        children: [{ path: '/', value: 'PageIndex' }]
+      },
+      { path: 'page', value: 'Page' }
+    ];
 
-  describe('when it is nested', () => {
-    it('matches', () => {
-      let routes = [{ path: 'users', children: [{ path: './:id' }] }];
-      let matches = matchRoutes(routes, { pathname: '/users/mj' });
-      expect(matches).not.toBeNull();
-      expect(matches).toMatchObject([
-        {
-          params: {},
-          pathname: '/users',
-          route: routes[0]
-        },
-        {
-          params: { id: 'mj' },
-          pathname: '/users/mj',
-          route: routes[0].children[0]
-        }
-      ]);
-    });
+    expect(pick(routes, '/page')).toBe('Page');
   });
 });
 
@@ -269,6 +224,27 @@ describe('path matching with splats', () => {
     expect(match[1]).toMatchObject({
       params: { id: 'mj' },
       pathname: '/users/mj/files-secrets.md'
+    });
+  });
+
+  test('multiple nested routes', () => {
+    let match = matchRoutes(
+      [{ path: '*', children: [{ path: '*', children: [{ path: '*' }] }] }],
+      '/one/two/three'
+    );
+
+    expect(match).not.toBeNull();
+    expect(match[0]).toMatchObject({
+      params: { '*': 'one/two/three' },
+      pathname: '/'
+    });
+    expect(match[1]).toMatchObject({
+      params: { '*': 'one/two/three' },
+      pathname: '/'
+    });
+    expect(match[2]).toMatchObject({
+      params: { '*': 'one/two/three' },
+      pathname: '/'
     });
   });
 });

@@ -270,8 +270,6 @@ export function createRoutesFromChildren(children) {
 
     path = path || from || '/';
 
-    warning(!path.includes('..'), `A <Route path> cannot use ".."`);
-
     // Components that have a to prop are redirects.
     // All others should use path + element (and maybe children) props.
     let route;
@@ -620,12 +618,12 @@ export function matchRoutes(
 function flattenRoutes(
   routes,
   flattenedRoutes = [],
-  parentPath = null,
+  parentPath = '',
   parentRoutes = [],
   parentIndexes = []
 ) {
   routes.forEach((route, index) => {
-    let path = parentPath ? joinPaths([parentPath, route.path]) : route.path;
+    let path = joinPaths([parentPath, route.path]);
     let routes = parentRoutes.concat(route);
     let indexes = parentIndexes.concat(index);
 
@@ -640,22 +638,30 @@ function flattenRoutes(
 }
 
 const paramRe = /^:\w+$/;
-const staticSegmentValue = 10;
 const dynamicSegmentValue = 2;
-const splatSegmentValue = -1;
+const emptySegmentValue = 1;
+const staticSegmentValue = 10;
+const splatPenalty = -2;
+const isSplat = s => s === '*';
 
 function computeScore(path) {
-  return path
-    .split('/')
+  let segments = path.split('/');
+  let initialScore = segments.length;
+  if (segments.some(isSplat)) {
+    initialScore += splatPenalty;
+  }
+
+  return segments
+    .filter(s => !isSplat(s))
     .reduce(
       (score, segment) =>
         score +
         (paramRe.test(segment)
           ? dynamicSegmentValue
-          : segment === '*'
-          ? splatSegmentValue
+          : segment === ''
+          ? emptySegmentValue
           : staticSegmentValue),
-      0
+      initialScore
     );
 }
 
@@ -692,8 +698,8 @@ function compilePath(path, end, caseSensitive) {
   let pattern =
     '^(' +
     path
-      .replace(/^\.?\/*/, '') // Ignore leading . or / or ./
-      .replace(/\*\/|\/\./g, '') // Ignore */ and /. throughout
+      .replace(/^\/+/, '') // Ignore leading /
+      .replace(/\*\//g, '') // Ignore */ (from paths nested under a *)
       .replace(/\/?\*?$/, '') // Ignore trailing /*, we'll handle it below
       .replace(/[\\.*+^$?{}|()[\]]/g, '\\$&') // Escape special regex chars
       .replace(/:(\w+)/g, (_, key) => {
@@ -704,8 +710,7 @@ function compilePath(path, end, caseSensitive) {
 
   if (path.endsWith('*')) {
     if (path.endsWith('/*')) {
-      // Don't include the / in params['*']
-      pattern += '\\/?';
+      pattern += '\\/?'; // Don't include the / in params['*']
     }
     keys.push('*');
     pattern += '(.*)';
