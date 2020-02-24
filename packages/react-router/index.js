@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useRef } from 'react';
 import PropTypes from 'prop-types';
 import { createMemoryHistory, parsePath } from 'history';
 
@@ -489,6 +489,8 @@ export function useRoutes(routes, basename = '', caseSensitive = false) {
 
   let navigate = useNavigate();
   let location = useLocation();
+  let locationPreloadRef = useRef();
+
   let matches = React.useMemo(
     () => matchRoutes(routes, location, basename, caseSensitive),
     [routes, location, basename, caseSensitive]
@@ -517,7 +519,15 @@ export function useRoutes(routes, basename = '', caseSensitive = false) {
     return null;
   }
 
-  // TODO: Initiate preload sequence here.
+  // only initiate preload sequence if the location changes, otherwise state
+  // updates in a parent would re-call preloads.
+  if (locationPreloadRef.current !== location) {
+    locationPreloadRef.current = location;
+    matches.forEach(
+      ({ route, params }, index) =>
+        route.preload && route.preload(params, location, index)
+    );
+  }
 
   // Otherwise render an element.
   let element = matches.reduceRight((outlet, { params, pathname, route }) => {
