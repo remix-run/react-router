@@ -604,6 +604,49 @@ function App() {
 }
 ```
 
+If you're currently using `go`, `goBack` or `goForward` from `useHistory` to
+navigate backwards and forwards, you should also replace these with `navigate`
+with a numerical argument indicating where to move the pointer in the history
+stack. For example, here is some code using v5's `useHistory` hook:
+
+```js
+// This is a React Router v5 app
+import { useHistory } from 'react-router-dom';
+
+function App() {
+  const { go, goBack, goForward } = useHistory();
+
+  return (
+    <>
+      <button onClick={() => go(-2)}>Go 2 pages back</button>
+      <button onClick={goBack}>Go back</button>
+      <button onClick={goForward}>Go forward</button>
+      <button onClick={() => go(2)}>Go 2 pages forward</button>
+    </>
+  );
+}
+```
+
+Here is the equivalent app with v6:
+
+```js
+// This is a React Router v6 app
+import { useHistory } from 'react-router-dom';
+
+function App() {
+  const navigate = useNavigate();
+
+  return (
+    <>
+      <button onClick={() => navigate(-2)}>Go 2 pages back</button>
+      <button onClick={() => navigate(-1)}>Go back</button>
+      <button onClick={() => navigate(1)}>Go forward</button>
+      <button onClick={() => navigate(2)}>Go 2 pages forward</button>
+    </>
+  );
+}
+```
+
 Again, one of the main reasons we are moving from using the `history` API
 directly to the `navigate` API is to provide better compatibility with React
 suspense.  React Router v6 uses the `useTransition` hook at the root of your
