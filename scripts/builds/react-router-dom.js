@@ -75,11 +75,22 @@ const webModules = [
     },
     external: ['history', 'prop-types', 'react', 'react-router'],
     plugins: [
-      ignore(['prop-types']),
       babel({
         exclude: /node_modules/,
-        presets: ['@babel/preset-modules', '@babel/preset-react'],
-        plugins: ['babel-plugin-dev-expression']
+        presets: [
+          ['@babel/preset-modules', {
+            // Inference of Function.name is not being relied on for Arrow Functions:
+            loose: true
+          }],
+          ['@babel/preset-react', {
+            // compile spread to Object.assign():
+            useBuiltIns: true
+          }]
+        ],
+        plugins: [
+          'babel-plugin-dev-expression',
+          'babel-plugin-transform-react-remove-prop-types'
+        ]
       }),
       replace({ 'process.env.NODE_ENV': JSON.stringify('production') }),
       compiler(),
@@ -134,14 +145,16 @@ const globals = [
     },
     external: ['history', 'react', 'react-router'],
     plugins: [
-      ignore(['prop-types']),
       babel({
         exclude: /node_modules/,
         presets: [
           ['@babel/preset-env', { loose: true }],
           '@babel/preset-react'
         ],
-        plugins: ['babel-plugin-dev-expression']
+        plugins: [
+          'babel-plugin-dev-expression',
+          'babel-plugin-transform-react-remove-prop-types'
+        ]
       }),
       replace({ 'process.env.NODE_ENV': JSON.stringify('production') }),
       compiler(),
