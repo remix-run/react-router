@@ -24,6 +24,7 @@
     "@typescript-eslint/parser": "2.x",
     "babel-eslint": "10.x",
     "babel-plugin-dev-expression": "^0.2.2",
+    "babel-plugin-transform-react-remove-prop-types": "^0.4.24",
     "chalk": "^3.0.0",
     "eslint": "6.x",
     "eslint-config-react-app": "^5.1.0",
