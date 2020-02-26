@@ -1,4 +1,4 @@
-# Testing With React Test Library (RTL)
+# Testing With React Testing Library (RTL)
 
 ## Getting Setup
 
