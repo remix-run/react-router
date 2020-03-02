@@ -168,7 +168,7 @@ put them in the child route's component.
 
 ```js
 // This is a React Router v5 app
-import { BrowserRouter, Switch, Route, Link } from 'react-router-dom';
+import { BrowserRouter, Switch, Route, Link, useRouteMatch } from 'react-router-dom';
 
 function App() {
   return (
@@ -631,7 +631,7 @@ Here is the equivalent app with v6:
 
 ```js
 // This is a React Router v6 app
-import { useHistory } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 
 function App() {
   const navigate = useNavigate();
