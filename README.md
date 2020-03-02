@@ -19,7 +19,7 @@ If you're new to React Router, we recommend you start with [the getting started
 guide](/docs/guides/getting-started.md).
 
 If you're migrating to v6 from v5 (or v4, which is the same as v5), check out
-[the migration guide](/docs/guides/migrating-5-to-6.md).
+[the migration guide](/docs/advanced-guides/migrating-5-to-6.md).
 
 When v6 is stable we will publish the docs on our website.
 
