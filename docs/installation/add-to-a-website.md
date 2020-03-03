@@ -339,9 +339,8 @@ your project.
 Setting up a new React project in webpack is a bit more involved than Parcel or
 Create React App. Because webpack is a low-level tool that allows you to
 fine-tune your build to your liking, you may want to read the [webpack
-documentation](https://webpack.js.org/), [explore some online
-tutorials](https://www.freecodecamp.org/news/part-1-react-app-from-scratch-using-webpack-4-562b1d231e75/),
-or check out [webpack configurations in other
+documentation](https://webpack.js.org/) or check out [webpack configurations in
+other
 repos](https://github.com/facebook/create-react-app/blob/master/packages/react-scripts/config/webpack.config.js)
 to understand how to build your own.
 
