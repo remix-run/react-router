@@ -73,7 +73,7 @@ const webModules = [
       format: 'esm',
       sourcemap: !PRETTY
     },
-    external: ['history', 'prop-types', 'react', 'react-router'],
+    external: ['history', 'react', 'react-router'],
     plugins: [
       ignore(['prop-types']),
       babel({
