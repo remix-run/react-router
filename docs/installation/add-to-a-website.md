@@ -356,7 +356,7 @@ Then, somewhere in your code (probably towards the root of your React component
 tree) you'll want to `import` the pieces you need from `react-router-dom`.
 
 ```js
-import { BrowserRouter } from 'react-router-dom';
+import { BrowserRouter as Router } from 'react-router-dom';
 
 function App() {
   return (
