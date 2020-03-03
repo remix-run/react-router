@@ -36,11 +36,11 @@
   "dependencies": {
     "create-react-class": "^15.5.1",
     "history": "^3.0.0",
-    "hoist-non-react-statics": "^2.3.1",
+    "hoist-non-react-statics": "^3.3.2",
     "invariant": "^2.2.1",
     "loose-envify": "^1.2.0",
     "prop-types": "^15.7.2",
-    "react-is": "^16.8.6",
+    "react-is": "^16.13.0",
     "warning": "^3.0.0"
   },
   "peerDependencies": {
