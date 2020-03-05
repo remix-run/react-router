@@ -14,7 +14,7 @@ A recommended test to ensure basic functionality looks like the following:
 
 ```jsx
 test('renders react router header', () => {
-  render(<Router><App /></Router>);
+  render(<App />, { wrapper: Router });
   const header = screen.getByText('Welcome to React Router!');
   expect(header).toBeInTheDocument();
 });
@@ -30,7 +30,7 @@ This is accomplished like so:
 
 ```jsx
 it('goes to about when link clicked', () => {
-  render(<Router><App /></Router>);
+  render(<App />, { wrapper: Router });
   
   const aboutLink = screen.getByText('About');
   fireEvent.click(aboutLink);
@@ -43,7 +43,7 @@ Since our setup guide then replaces the about link with a link back to the home 
 
 ```jsx
 it('goes to about when link clicked and then back to home when link clicked', () => {
-  render(<Router><App /></Router>);
+  render(<App />, { wrapper: Router });
 
   const aboutLink = screen.getByText('About');
   fireEvent.click(aboutLink);
@@ -72,13 +72,13 @@ beforeEach(() => {
 });
 
 test('renders react router header', () => {
-  render(<Router><App /></Router>);
+  render(<App />, { wrapper: Router });
   const header = screen.getByText('Welcome to React Router!');
   expect(header).toBeInTheDocument();
 });
 
 it('goes to about when link clicked', () => {
-  render(<Router><App /></Router>);
+  render(<App />, { wrapper: Router });
   
   const aboutLink = screen.getByText('About');
   fireEvent.click(aboutLink);
@@ -87,7 +87,7 @@ it('goes to about when link clicked', () => {
 });
 
 it('goes to about when link clicked and then back to home when link clicked', () => {
-  render(<Router><App /></Router>);
+  render(<App />, { wrapper: Router });
 
   const aboutLink = screen.getByText('About');
   fireEvent.click(aboutLink);
