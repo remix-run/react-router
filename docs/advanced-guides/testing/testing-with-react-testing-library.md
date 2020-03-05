@@ -6,11 +6,11 @@ This guide assumes you followed the instructions for [Adding React Router via Cr
 
 ## Basic Test
 
-A basic rendering test can be important to esnure that we have everything installed and set up correctly. Fortunately, this is easy to do with RTL.
+A basic rendering test can be important to esnure that we have everything installed and set up correctly. Fortunately, this is RTL gives us the tools to accomplish this.
 
 Since we've wrapped our `App` component in the `Router` in our `index.js` file, we do have to wrap it in each of our isolated component tests, otherwise `history` will be undefined. If the `Router` had been inside of our `App`, then we would not have to wrap it inside of our tests.
 
-A recommended simple test looks like the following:
+A recommended test to ensure basic functionality looks like the following:
 
 ```jsx
 test('renders react router header', () => {
@@ -22,13 +22,9 @@ test('renders react router header', () => {
 
 This ensures that we can render our `App` component  and that the `h1` we put in during our setup guide is in the document.
 
-## Testing Routes and Redirects
-
-TODO
-
 ## Testing Links and Navigation
 
-Testing a link and the subsequent navigation with React Testing Library is as easy as firing a click event on the link itself and asserting on the window's location to test that it worked.
+Testing a link and the subsequent navigation with React Testing Library can be done by firing a click event on the link itself and asserting on the window's location to test that it worked.
 
 This is accomplished like so:
 
@@ -115,3 +111,7 @@ it('goes to about when link clicked and then back to home when link clicked', ()
 });
 
 ```
+
+## Testing Routes and Redirects
+
+TODO
