@@ -614,14 +614,12 @@ function safelyDecodeURIComponent(value, paramName) {
   try {
     return decodeURIComponent(value.replace(/\+/g, ' '));
   } catch (error) {
-    if (__DEV__) {
-      warning(
-        false,
-        `The value for the URL param "${paramName}" will not be decoded because` +
-          ` the string "${value}" is a malformed URL segment. This is probably` +
-          ` due to a bad percent encoding.`
-      );
-    }
+    warning(
+      false,
+      `The value for the URL param "${paramName}" will not be decoded because` +
+        ` the string "${value}" is a malformed URL segment. This is probably` +
+        ` due to a bad percent encoding (the error message was: ${error.message}).`
+    );
 
     return value;
   }
