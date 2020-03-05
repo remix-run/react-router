@@ -598,7 +598,7 @@ export function matchRoutes(
         let pathname = '/' + match[1];
         let values = match.slice(2);
         let params = keys.reduce((memo, key, index) => {
-          memo[key] = decodeURIComponent(values[index]);
+          memo[key] = safelyDecodeURIComponent(values[index], key);
           return memo;
         }, {});
 
@@ -608,6 +608,23 @@ export function matchRoutes(
   }
 
   return null;
+}
+
+function safelyDecodeURIComponent(value, paramName) {
+  try {
+    return decodeURIComponent(value.replace(/\+/g, ' '));
+  } catch (error) {
+    if (__DEV__) {
+      warning(
+        false,
+        `The value for the URL param "${paramName}" will not be decoded because` +
+          ` the string "${value}" is a malformed URL segment. This is probably` +
+          ` due to a bad percent encoding.`
+      );
+    }
+
+    return value;
+  }
 }
 
 function flattenRoutes(
