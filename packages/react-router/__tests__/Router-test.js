@@ -4,9 +4,16 @@ import { createMemoryHistory } from 'history';
 import { Router } from 'react-router';
 
 describe('A <Router>', () => {
-  it('throws if another <Router> is already in context', () => {
-    let spy = jest.spyOn(console, 'error').mockImplementation(() => {});
+  let consoleError;
+  beforeEach(() => {
+    consoleError = jest.spyOn(console, 'error').mockImplementation(() => {});
+  });
 
+  afterEach(() => {
+    consoleError.mockRestore();
+  });
+
+  it('throws if another <Router> is already in context', () => {
     let history = createMemoryHistory();
 
     expect(() => {
@@ -17,8 +24,6 @@ describe('A <Router>', () => {
       );
     }).toThrow(/cannot render a <Router> inside another <Router>/);
 
-    expect(spy).toHaveBeenCalled();
-
-    spy.mockRestore();
+    expect(consoleError).toHaveBeenCalled();
   });
 });

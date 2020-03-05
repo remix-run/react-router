@@ -155,9 +155,16 @@ describe('useParams', () => {
   });
 
   describe('when the path has a malformed param', () => {
-    it('returns the raw value and warns', () => {
-      let spy = jest.spyOn(console, 'warn').mockImplementation(() => {});
+    let consoleWarn;
+    beforeEach(() => {
+      consoleWarn = jest.spyOn(console, 'warn').mockImplementation(() => {});
+    });
 
+    afterEach(() => {
+      consoleWarn.mockRestore();
+    });
+
+    it('returns the raw value and warns', () => {
       let params;
       function BlogPost() {
         params = useParams();
@@ -177,11 +184,9 @@ describe('useParams', () => {
         slug: 'react%2router'
       });
 
-      expect(spy).toHaveBeenCalledWith(
+      expect(consoleWarn).toHaveBeenCalledWith(
         expect.stringMatching('malformed URL segment')
       );
-
-      spy.mockRestore();
     });
   });
 });

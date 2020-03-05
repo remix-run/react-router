@@ -3,10 +3,17 @@ import { act, create as createTestRenderer } from 'react-test-renderer';
 import { MemoryRouter as Router, Outlet, Routes, Route } from 'react-router';
 
 describe('Descendant <Routes>', () => {
+  let consoleWarn;
+  beforeEach(() => {
+    consoleWarn = jest.spyOn(console, 'warn').mockImplementation();
+  });
+
+  afterEach(() => {
+    consoleWarn.mockRestore();
+  });
+
   describe('when the parent route path does not have a trailing *', () => {
     it('warns once when you visit the parent route', () => {
-      let spy = jest.spyOn(console, 'warn').mockImplementation();
-
       function ReactFundamentals() {
         return <h1>React Fundamentals</h1>;
       }
@@ -54,19 +61,15 @@ describe('Descendant <Routes>', () => {
         );
       });
 
-      expect(spy).toHaveBeenCalledTimes(1);
-      expect(spy).toHaveBeenCalledWith(
+      expect(consoleWarn).toHaveBeenCalledTimes(1);
+      expect(consoleWarn).toHaveBeenCalledWith(
         expect.stringContaining('child routes will never render')
       );
-
-      spy.mockRestore();
     });
   });
 
   describe('when the parent route has a trailing *', () => {
     it('does not warn when you visit the parent route', () => {
-      let spy = jest.spyOn(console, 'warn').mockImplementation();
-
       function ReactFundamentals() {
         return <h1>React Fundamentals</h1>;
       }
@@ -107,9 +110,7 @@ describe('Descendant <Routes>', () => {
         );
       });
 
-      expect(spy).not.toHaveBeenCalled();
-
-      spy.mockRestore();
+      expect(consoleWarn).not.toHaveBeenCalled();
     });
   });
 });

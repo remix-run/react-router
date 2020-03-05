@@ -78,13 +78,13 @@ describe('A <Navigate> in a <StaticRouter>', () => {
   });
 
   describe('a push navigation', () => {
-    let consoleWarnSpy;
+    let consoleWarn;
     beforeEach(() => {
-      consoleWarnSpy = jest.spyOn(console, 'warn').mockImplementation(() => {});
+      consoleWarn = jest.spyOn(console, 'warn').mockImplementation(() => {});
     });
 
     afterEach(() => {
-      consoleWarnSpy.mockRestore();
+      consoleWarn.mockRestore();
     });
 
     it('issues a warning', () => {
@@ -102,7 +102,7 @@ describe('A <Navigate> in a <StaticRouter>', () => {
         </Router>
       );
 
-      expect(consoleWarnSpy).toHaveBeenCalledWith(
+      expect(consoleWarn).toHaveBeenCalledWith(
         expect.stringContaining('cannot perform a PUSH with a <StaticRouter>')
       );
     });
