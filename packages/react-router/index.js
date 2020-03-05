@@ -595,12 +595,14 @@ export function matchRoutes(
         let path = joinPaths(routes.map(r => r.path));
         let [matcher, keys] = compilePath(path, /* end */ false, caseSensitive);
         let match = target.match(matcher);
+        let pathname = '/' + match[1];
+        let values = match.slice(2);
+        let params = keys.reduce((memo, key, index) => {
+          memo[key] = decodeURIComponent(values[index]);
+          return memo;
+        }, {});
 
-        return {
-          params: createParams(keys, match.slice(2)),
-          pathname: '/' + match[1],
-          route
-        };
+        return { params, pathname, route };
       });
     }
   }
@@ -717,14 +719,6 @@ function compilePath(path, end, caseSensitive) {
   let matcher = new RegExp(pattern, flags);
 
   return [matcher, keys];
-}
-
-function createParams(keys, values) {
-  return keys.reduce((params, key, index) => {
-    // TODO: Use decodeURIComponent here to decode values?
-    params[key] = values[index];
-    return params;
-  }, {});
 }
 
 const trimTrailingSlashes = path => path.replace(/\/+$/, '');

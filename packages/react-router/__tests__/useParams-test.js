@@ -107,4 +107,27 @@ describe('useParams', () => {
       });
     });
   });
+
+  describe('when the path has URL-encoded params', () => {
+    it('returns an object of the decoded params', () => {
+      let params;
+      function BlogPost() {
+        params = useParams();
+        return null;
+      }
+
+      createTestRenderer(
+        <Router initialEntries={['/blog/react%20router']}>
+          <Routes>
+            <Route path="/blog/:slug" element={<BlogPost />} />
+          </Routes>
+        </Router>
+      );
+
+      expect(typeof params).toBe('object');
+      expect(params).toMatchObject({
+        slug: 'react router'
+      });
+    });
+  });
 });
