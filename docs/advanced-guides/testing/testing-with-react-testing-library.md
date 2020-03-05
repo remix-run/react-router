@@ -14,8 +14,8 @@ A recommended test to ensure basic functionality looks like the following:
 
 ```jsx
 test('renders react router header', () => {
-  const { getByText } = render(<Router><App /></Router>);
-  const header = getByText('Welcome to React Router!');
+  render(<Router><App /></Router>);
+  const header = screen.getByText('Welcome to React Router!');
   expect(header).toBeInTheDocument();
 });
 ```
@@ -30,12 +30,10 @@ This is accomplished like so:
 
 ```jsx
 it('goes to about when link clicked', () => {
-  const { getByText } = render(<Router><App /></Router>);
+  render(<Router><App /></Router>);
   
-  const aboutLink = getByText('About');
-  act(() => {
-    fireEvent.click(aboutLink);
-  });
+  const aboutLink = screen.getByText('About');
+  fireEvent.click(aboutLink);
 
   expect(window.location.pathname).toBe('/about');
 });
@@ -45,18 +43,16 @@ Since our setup guide then replaces the about link with a link back to the home 
 
 ```jsx
 it('goes to about when link clicked and then back to home when link clicked', () => {
-  const { getByText } = render(<Router><App /></Router>);
+  render(<Router><App /></Router>);
 
-  const aboutLink = getByText('About');
-  act(() => {
-    fireEvent.click(aboutLink);
-  });
+  const aboutLink = screen.getByText('About');
+  fireEvent.click(aboutLink);
+
   expect(window.location.pathname).toBe('/about');
 
-  const homeLink = getByText('Home');
-  act(() => {
-    fireEvent.click(homeLink);
-  });
+  const homeLink = screen.getByText('Home');
+  fireEvent.click(homeLink);
+
   expect(window.location.pathname).toBe('/');
 });
 ```
@@ -67,7 +63,7 @@ Below is the full file to help see all of the tests together:
 
 ```jsx
 import React from 'react';
-import { render, fireEvent, cleanup, act } from '@testing-library/react';
+import { render, fireEvent, screen } from '@testing-library/react';
 import App from './App';
 import { BrowserRouter as Router } from "react-router-dom";
 
@@ -75,38 +71,32 @@ beforeEach(() => {
   window.history.replaceState({}, '', '/');
 });
 
-afterEach(cleanup);
-
 test('renders react router header', () => {
-  const { getByText } = render(<Router><App /></Router>);
-  const header = getByText('Welcome to React Router!');
+  render(<Router><App /></Router>);
+  const header = screen.getByText('Welcome to React Router!');
   expect(header).toBeInTheDocument();
 });
 
 it('goes to about when link clicked', () => {
-  const { getByText } = render(<Router><App /></Router>);
+  render(<Router><App /></Router>);
   
-  const aboutLink = getByText('About');
-  act(() => {
-    fireEvent.click(aboutLink);
-  });
+  const aboutLink = screen.getByText('About');
+  fireEvent.click(aboutLink);
 
   expect(window.location.pathname).toBe('/about');
 });
 
 it('goes to about when link clicked and then back to home when link clicked', () => {
-  const { getByText } = render(<Router><App /></Router>);
+  render(<Router><App /></Router>);
 
-  const aboutLink = getByText('About');
-  act(() => {
-    fireEvent.click(aboutLink);
-  });
+  const aboutLink = screen.getByText('About');
+  fireEvent.click(aboutLink);
+
   expect(window.location.pathname).toBe('/about');
 
-  const homeLink = getByText('Home');
-  act(() => {
-    fireEvent.click(homeLink);
-  });
+  const homeLink = screen.getByText('Home');
+  fireEvent.click(homeLink);
+
   expect(window.location.pathname).toBe('/');
 });
 
