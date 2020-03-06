@@ -164,7 +164,7 @@ if (__DEV__) {
 /**
  * Used in a route config to render an element.
  */
-export function Route({ element }) {
+export function Route({ element = <Outlet /> }) {
   return element;
 }
 

@@ -22,4 +22,26 @@ describe('A <Route>', () => {
       </h1>
     `);
   });
+
+  it('renders its child routes when no `element` prop is given', () => {
+    function Home() {
+      return <h1>Home</h1>;
+    }
+
+    let renderer = createTestRenderer(
+      <Router initialEntries={['/app/home']}>
+        <Routes>
+          <Route path="app">
+            <Route path="home" element={<Home />} />
+          </Route>
+        </Routes>
+      </Router>
+    );
+
+    expect(renderer.toJSON()).toMatchInlineSnapshot(`
+      <h1>
+        Home
+      </h1>
+    `);
+  });
 });
