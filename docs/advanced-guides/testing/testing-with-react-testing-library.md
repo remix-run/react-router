@@ -81,13 +81,13 @@ beforeEach(() => {
   window.history.replaceState({}, '', '/');
 });
 
-test('renders react router header', () => {
+test('<App /> renders successfully', () => {
   render(<App />, { wrapper: Router });
   const header = screen.getByText('Welcome to React Router!');
   expect(header).toBeInTheDocument();
 });
 
-it('goes to about when link clicked', () => {
+it('navigates to /about', () => {
   render(<App />, { wrapper: Router });
 
   const aboutLink = screen.getByText('About');
@@ -96,7 +96,7 @@ it('goes to about when link clicked', () => {
   expect(window.location.pathname).toBe('/about');
 });
 
-it('goes to about when link clicked and then back to home when link clicked', () => {
+it('navigates to /about and back to /', () => {
   render(<App />, { wrapper: Router });
 
   const aboutLink = screen.getByText('About');
