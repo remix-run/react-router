@@ -12,7 +12,7 @@ how to upgrade your v4/5 app to v6 while hopefully being able to ship as often
 as possible as you go.
 
 If you are just getting started with React Router or you'd like to try out v6 in
-a new app, please see [the Getting Started guide](getting-started.md).
+a new app, please see [the Getting Started guide](../installation/getting-started.md).
 
 The examples in this guide will show code samples of how you might have built
 something in a v5 app, followed by how you would accomplish the same thing in
