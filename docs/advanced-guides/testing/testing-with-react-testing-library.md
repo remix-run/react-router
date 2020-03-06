@@ -113,4 +113,41 @@ it('navigates to /about and back to /', () => {
 
 ## Testing Routes and Redirects
 
-TODO
+Let's say that we've built a redirect component that deals with re-routing the user from `/the-old-thing` to `/the-new-thing`
+
+`RedirectHandler.js`
+```jsx
+import React from 'react'
+import {Route, Switch, Redirect} from 'react-router-dom'
+
+const RedirectHandler = props => (
+  <Switch>
+    <Redirect from="/the-old-thing" to="the-new-thing">
+  </Switch>
+)
+
+export default RedirectHandler
+```
+
+And here we have one method of testing that the redirect is behaving as expected.
+
+`RedirectHandler.test.js`
+```jsx
+import React from 'react'
+import {MemoryRouter, Route} from 'react-router-dom'
+import { render, fireEvent, screen } from '@testing-library/react';
+import RedirectHandler from './RedirectHandler'
+
+it('redirects /the-old-thing to /the-new-thing', () => {
+  render(
+    <MemoryRouter initialEntries={["/the-old-thing"]}>
+      <Route component={RedirectHandler}>
+    </MemoryRouter>
+  )
+
+  expect(window.location.pathname).toBe("/the-new-thing")
+})
+
+```
+
+This test initializes the `MemoryRouter` with an initial path of `/the-old-thing` and verifies that the `RedirectHandler` correctly changes the path to `/the-new-thing`
