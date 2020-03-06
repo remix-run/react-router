@@ -22,8 +22,8 @@ build a certain capability or feature of your app with React Router.
 
 ## Useful Techniques
 
+- [Working with the Search/Query String](working-with-the-search-string.md)
 - [Custom Links](#TODO)
-- [Using the Query String](#TODO)
 - [Recursive Paths](#TODO)
 - [Code Splitting](#TODO)
 

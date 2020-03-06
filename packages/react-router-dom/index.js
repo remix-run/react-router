@@ -27,6 +27,18 @@ import {
   generatePath
 } from 'react-router';
 
+function warning(cond, message) {
+  if (!cond) {
+    // eslint-disable-next-line no-console
+    if (typeof console !== 'undefined') console.warn(message);
+
+    try {
+      throw new Error(message);
+      // eslint-disable-next-line no-empty
+    } catch (e) {}
+  }
+}
+
 ////////////////////////////////////////////////////////////////////////////////
 // RE-EXPORTS
 ////////////////////////////////////////////////////////////////////////////////
@@ -297,4 +309,28 @@ export function usePrompt(message, when) {
   );
 
   useBlocker(blocker, when);
+}
+
+/**
+ * A convenient wrapper for accessing individual query parameters via the
+ * URLSearchParams interface.
+ */
+export function useSearchParams() {
+  warning(
+    typeof URLSearchParams !== 'undefined',
+    'You cannot use the `useSearchParams` hook in a browser that does not' +
+      ' support the URLSearchParams API. If you need to support Internet Explorer 11,' +
+      ' we recommend you load a polyfill such as https://github.com/ungap/url-search-params' +
+      '\n\n' +
+      "If you're unsure how to load polyfills, we recommend you check out https://polyfill.io/v3/" +
+      ' which provides some recommendations about how to load polyfills only for users that' +
+      ' need them, instead of for every user.'
+  );
+
+  let location = useLocation();
+  let searchParams = React.useMemo(() => new URLSearchParams(location.search), [
+    location.search
+  ]);
+
+  return searchParams;
 }

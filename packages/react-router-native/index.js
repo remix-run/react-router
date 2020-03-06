@@ -1,6 +1,7 @@
 import React from 'react';
 import PropTypes from 'prop-types';
 import { Alert, BackHandler, Linking, TouchableHighlight } from 'react-native';
+import URLSearchParams from '@ungap/url-search-params';
 import {
   // components
   MemoryRouter,
@@ -229,4 +230,16 @@ export function usePrompt({ message, when = true }) {
   );
 
   useBlocker(blocker, when);
+}
+
+/**
+ * A convenient wrapper for accessing individual query parameters via the
+ * URLSearchParams interface.
+ */
+export function useSearchParams() {
+  let location = useLocation();
+  let searchParams = React.useMemo(() => new URLSearchParams(location.search), [
+    location.search
+  ]);
+  return searchParams;
 }
