@@ -21,6 +21,11 @@ Since we've wrapped our `HomePage` (renamed from `App` after following the afore
 A recommended test to ensure basic functionality looks like the following:
 
 ```jsx
+import React from 'react';
+import { render, screen } from '@testing-library/react';
+import HomePage from './HomePage';
+import { BrowserRouter as Router } from 'react-router-dom';
+
 test('<HomePage /> renders successfully', () => {
   render(<HomePage />, { wrapper: Router });
   const header = screen.getByText('Welcome to React Router!');
@@ -39,6 +44,11 @@ If you need to test navigation within your app, you can do so by firing a click 
 This is accomplished like so:
 
 ```jsx
+import React from 'react';
+import { render, fireEvent, screen } from '@testing-library/react';
+import HomePage from './HomePage';
+import { BrowserRouter as Router } from 'react-router-dom';
+
 it('navigates to /about', () => {
   render(<HomePage />, { wrapper: Router });
 
@@ -52,6 +62,11 @@ it('navigates to /about', () => {
 Since our setup guide then replaces the about link with a link back to the home page, we can test navigating back to the home page by triggering another click, this time on the home link:
 
 ```jsx
+import React from 'react';
+import { render, fireEvent, screen } from '@testing-library/react';
+import HomePage from './HomePage';
+import { BrowserRouter as Router } from 'react-router-dom';
+
 it('navigates to /about and back to /', () => {
   render(<HomePage />, { wrapper: Router });
 
