@@ -86,6 +86,7 @@ This test will initially fail if it is run immediately after the previous test. 
 
 Below is the full file with all of the tests together:
 
+`HomePage.test.js`
 ```jsx
 import React from 'react';
 import { render, fireEvent, screen } from '@testing-library/react';
@@ -133,36 +134,34 @@ Let's say that we've built a redirect component that deals with re-routing the u
 `RedirectHandler.js`
 ```jsx
 import React from 'react'
-import {Route, Switch, Redirect} from 'react-router-dom'
+import { Redirect } from 'react-router-dom'
 
-const RedirectHandler = props => (
-  <Switch>
-    <Redirect from="/the-old-thing" to="the-new-thing">
-  </Switch>
-)
+const RedirectHandler = () => (<Redirect from="/the-old-thing" to="the-new-thing"></Redirect>);
 
-export default RedirectHandler
+export default RedirectHandler;
 ```
 
 And here we have one method of testing that the redirect is behaving as expected.
 
 `RedirectHandler.test.js`
 ```jsx
-import React from 'react'
-import {MemoryRouter, Route} from 'react-router-dom'
-import { render, fireEvent, screen } from '@testing-library/react';
-import RedirectHandler from './RedirectHandler'
+import React from "react";
+import { BrowserRouter } from "react-router-dom";
+import { render } from "@testing-library/react";
+import RedirectHandler from "./RedirectHandler";
 
-it('redirects /the-old-thing to /the-new-thing', () => {
+it("redirects /the-old-thing to /the-new-thing", () => {
+  window.history.pushState({}, "The Old Thing", "/the-new-thing");
+
   render(
-    <MemoryRouter initialEntries={["/the-old-thing"]}>
-      <Route component={RedirectHandler}>
-    </MemoryRouter>
-  )
+    <BrowserRouter>
+      <RedirectHandler />
+    </BrowserRouter>
+  );
 
-  expect(window.location.pathname).toBe("/the-new-thing")
-})
+  expect(window.location.pathname).toBe("/the-new-thing");
+});
 
 ```
 
-This test initializes the `MemoryRouter` with an initial path of `/the-old-thing` and verifies that the `RedirectHandler` correctly changes the path to `/the-new-thing`
+This test initializes the `BrowserRouter` with an initial path of `/the-old-thing` and verifies that the `RedirectHandler` correctly changes the path to `/the-new-thing`.
