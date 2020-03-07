@@ -16,13 +16,13 @@ This guide assumes you followed the instructions for [Adding React Router via Cr
 
 A basic rendering test ensures that we have everything installed and set up correctly. Fortunately, RTL gives us the tools to accomplish this.
 
-Since we've wrapped our `App` component in the `Router` in our `index.js` file, we do have to wrap it around each of our individual component tests, otherwise `history` will be undefined. If the `Router` had been inside of our `App`, then we would not have to wrap it inside of our tests.
+Since we've wrapped our `HomePage` (renamed from `App` after following the aforementioned instructions)  component in the `Router` in our `index.js` file, we do have to wrap it around each of our individual component tests, otherwise `history` will be undefined. If the `Router` had been inside of our `App`, then we would not have to wrap it inside of our tests.
 
 A recommended test to ensure basic functionality looks like the following:
 
 ```jsx
-test('<App /> renders successfully', () => {
-  render(<App />, { wrapper: Router });
+test('<HomePage /> renders successfully', () => {
+  render(<HomePage />, { wrapper: Router });
   const header = screen.getByText('Welcome to React Router!');
   expect(header).toBeInTheDocument();
 });
@@ -40,7 +40,7 @@ This is accomplished like so:
 
 ```jsx
 it('navigates to /about', () => {
-  render(<App />, { wrapper: Router });
+  render(<HomePage />, { wrapper: Router });
 
   const aboutLink = screen.getByText('About');
   fireEvent.click(aboutLink);
@@ -53,7 +53,7 @@ Since our setup guide then replaces the about link with a link back to the home 
 
 ```jsx
 it('navigates to /about and back to /', () => {
-  render(<App />, { wrapper: Router });
+  render(<HomePage />, { wrapper: Router });
 
   const aboutLink = screen.getByText('About');
   fireEvent.click(aboutLink);
@@ -74,21 +74,21 @@ Below is the full file with all of the tests together:
 ```jsx
 import React from 'react';
 import { render, fireEvent, screen } from '@testing-library/react';
-import App from './App';
+import HomePage from './HomePage';
 import { BrowserRouter as Router } from 'react-router-dom';
 
 beforeEach(() => {
   window.history.replaceState({}, '', '/');
 });
 
-test('<App /> renders successfully', () => {
-  render(<App />, { wrapper: Router });
+test('<HomePage /> renders successfully', () => {
+  render(<HomePage />, { wrapper: Router });
   const header = screen.getByText('Welcome to React Router!');
   expect(header).toBeInTheDocument();
 });
 
 it('navigates to /about', () => {
-  render(<App />, { wrapper: Router });
+  render(<HomePage />, { wrapper: Router });
 
   const aboutLink = screen.getByText('About');
   fireEvent.click(aboutLink);
@@ -97,7 +97,7 @@ it('navigates to /about', () => {
 });
 
 it('navigates to /about and back to /', () => {
-  render(<App />, { wrapper: Router });
+  render(<HomePage />, { wrapper: Router });
 
   const aboutLink = screen.getByText('About');
   fireEvent.click(aboutLink);
