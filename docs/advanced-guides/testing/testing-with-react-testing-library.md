@@ -136,7 +136,7 @@ Let's say that we've built a redirect component that deals with re-routing the u
 import React from 'react'
 import { Redirect } from 'react-router-dom'
 
-const RedirectHandler = () => (<Redirect from="/the-old-thing" to="the-new-thing"></Redirect>);
+const RedirectHandler = () => <Redirect from="/the-old-thing" to="the-new-thing" />;
 
 export default RedirectHandler;
 ```
