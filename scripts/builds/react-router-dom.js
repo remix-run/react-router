@@ -78,7 +78,16 @@ const webModules = [
       ignore(['prop-types']),
       babel({
         exclude: /node_modules/,
-        presets: ['@babel/preset-modules', '@babel/preset-react'],
+        presets: [
+          ['@babel/preset-modules', {
+            // Don't spoof `.name` for Arrow Functions, which breaks when minified anyway.
+            loose: true
+          }],
+          ['@babel/preset-react', {
+            // Compile JSX Spread to Object.assign(), which is reliable in ESM browsers.
+            useBuiltIns: true
+          }]
+        ],
         plugins: ['babel-plugin-dev-expression']
       }),
       replace({ 'process.env.NODE_ENV': JSON.stringify('production') }),
