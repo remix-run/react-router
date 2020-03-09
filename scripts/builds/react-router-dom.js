@@ -182,8 +182,6 @@ const node = [
       format: 'cjs'
     },
     external: [
-      'fs',
-      'path',
       'url',
       'history',
       'prop-types',
@@ -195,7 +193,7 @@ const node = [
       babel({
         exclude: /node_modules/,
         presets: [
-          ['@babel/preset-env', { loose: true, targets: { node: '12' } }],
+          ['@babel/preset-env', { loose: true, targets: { node: true } }],
           '@babel/preset-react'
         ],
         plugins: ['babel-plugin-dev-expression']
