@@ -433,4 +433,4 @@ function Invoices() {
 
 And that's just about it! We haven't covered every API here, but these are
 definitely the most common ones you'll use. If you'd like to learn more, go
-ahead and follow [our tutorial](tutorial.md).
+ahead and follow [our tutorial](../tutorial).
