@@ -40,7 +40,7 @@ In general, the process looks like this:
       - No need to change `<Redirect>` directly inside `<Routes>`
   - [Use `useRoutes` instead of `react-router-config`](#use-useroutes-instead-of-react-router-config)
   - [Rename `<Link component>` to `<Link as>`](#rename-link-component-to-link-as)
-  - [Get `StaticRouter` from `react-router-dom/server`](#get-staticrouter-from-react-router-dom-server)
+  - [Get `StaticRouter` from `react-router-dom/server`](#get-staticrouter-from-react-router-domserver)
 
 ## Upgrade to React v16.8
 
