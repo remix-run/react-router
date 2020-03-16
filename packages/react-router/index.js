@@ -187,7 +187,7 @@ const useTransition = React.useTransition || (() => [startTransition, false]);
 export function Router({ children = null, history, timeout = 2000 }) {
   let [location, setLocation] = React.useState(history.location);
   let [startTransition, pending] = useTransition({ timeoutMs: timeout });
-  let listeningRef = React.useRef(false);
+  let unlistenRef = React.useRef(null);
 
   invariant(
     !React.useContext(LocationContext),
@@ -195,14 +195,22 @@ export function Router({ children = null, history, timeout = 2000 }) {
       ` You never need more than one.`
   );
 
-  if (!listeningRef.current) {
-    listeningRef.current = true;
-    history.listen(({ location }) => {
+  if (!unlistenRef.current) {
+    unlistenRef.current = history.listen(({ location }) => {
       startTransition(() => {
         setLocation(location);
       });
     });
   }
+
+  React.useEffect(() => {
+    return () => {
+      if (unlistenRef.current != null) {
+        unlistenRef.current();
+      }
+    };
+  }, []);
+
 
   return (
     <LocationContext.Provider
