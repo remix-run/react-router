@@ -100,7 +100,7 @@
     "karma-mocha-reporter": "^2.0.5",
     "karma-sourcemap-loader": "^0.3.7",
     "karma-webpack": "^2.0.3",
-    "lockfile-lint": "^4.1.0",
+    "lockfile-lint": "^3.0.8",
     "mocha": "^5.0.4",
     "pretty-bytes": "^4.0.2",
     "qs": "^6.2.1",
