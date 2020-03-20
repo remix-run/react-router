@@ -97,7 +97,9 @@ if (__DEV__) {
  */
 export function Navigate({ to, replace = false, state }) {
   let navigate = useNavigate();
-  navigate(to, { replace, state });
+  React.useEffect(() => {
+    navigate(to, { replace, state });
+  }, [navigate, replace, state, to]);
   return null;
 }
 

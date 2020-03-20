@@ -1,5 +1,5 @@
 import React from 'react';
-import ReactDOMServer from 'react-dom/server';
+import { act, create as createTestRenderer } from 'react-test-renderer';
 import { Navigate, Routes, Route } from 'react-router-dom';
 import { StaticRouter as Router } from 'react-router-dom/server';
 
@@ -12,13 +12,15 @@ describe('A <Navigate> in a <StaticRouter>', () => {
         return <Navigate replace to="/somewhere-else?the=query" />;
       }
 
-      ReactDOMServer.renderToStaticMarkup(
-        <Router context={context} location="/home">
-          <Routes>
-            <Route path="/home" element={<Home />} />
-          </Routes>
-        </Router>
-      );
+      act(() => {
+        createTestRenderer(
+          <Router context={context} location="/home">
+            <Routes>
+              <Route path="/home" element={<Home />} />
+            </Routes>
+          </Router>
+        );
+      });
 
       expect(context).toMatchObject({
         url: '/somewhere-else?the=query',
@@ -39,13 +41,15 @@ describe('A <Navigate> in a <StaticRouter>', () => {
           );
         }
 
-        ReactDOMServer.renderToStaticMarkup(
-          <Router context={context} location="/home">
-            <Routes>
-              <Route path="/home" element={<Home />} />
-            </Routes>
-          </Router>
-        );
+        act(() => {
+          createTestRenderer(
+            <Router context={context} location="/home">
+              <Routes>
+                <Route path="/home" element={<Home />} />
+              </Routes>
+            </Router>
+          );
+        });
 
         expect(context).toMatchObject({
           url: '/somewhere-else?the=query',
@@ -61,13 +65,15 @@ describe('A <Navigate> in a <StaticRouter>', () => {
           return <Navigate replace to={{ search: '?the=query' }} />;
         }
 
-        ReactDOMServer.renderToStaticMarkup(
-          <Router context={context} location="/home">
-            <Routes>
-              <Route path="/home" element={<Home />} />
-            </Routes>
-          </Router>
-        );
+        act(() => {
+          createTestRenderer(
+            <Router context={context} location="/home">
+              <Routes>
+                <Route path="/home" element={<Home />} />
+              </Routes>
+            </Router>
+          );
+        });
 
         expect(context).toMatchObject({
           url: '/home?the=query',
@@ -94,13 +100,15 @@ describe('A <Navigate> in a <StaticRouter>', () => {
         return <Navigate push to="/somewhere-else?the=query" />;
       }
 
-      ReactDOMServer.renderToStaticMarkup(
-        <Router context={context} location="/home">
-          <Routes>
-            <Route path="/home" element={<Home />} />
-          </Routes>
-        </Router>
-      );
+      act(() => {
+        createTestRenderer(
+          <Router context={context} location="/home">
+            <Routes>
+              <Route path="/home" element={<Home />} />
+            </Routes>
+          </Router>
+        );
+      });
 
       expect(consoleWarn).toHaveBeenCalledWith(
         expect.stringContaining('cannot perform a PUSH with a <StaticRouter>')
@@ -114,13 +122,15 @@ describe('A <Navigate> in a <StaticRouter>', () => {
         return <Navigate push to="/somewhere-else?the=query" />;
       }
 
-      ReactDOMServer.renderToStaticMarkup(
-        <Router context={context} location="/home">
-          <Routes>
-            <Route path="/home" element={<Home />} />
-          </Routes>
-        </Router>
-      );
+      act(() => {
+        createTestRenderer(
+          <Router context={context} location="/home">
+            <Routes>
+              <Route path="/home" element={<Home />} />
+            </Routes>
+          </Router>
+        );
+      });
 
       expect(context).toMatchObject({
         url: '/somewhere-else?the=query',
@@ -141,13 +151,15 @@ describe('A <Navigate> in a <StaticRouter>', () => {
           );
         }
 
-        ReactDOMServer.renderToStaticMarkup(
-          <Router context={context} location="/home">
-            <Routes>
-              <Route path="/home" element={<Home />} />
-            </Routes>
-          </Router>
-        );
+        act(() => {
+          createTestRenderer(
+            <Router context={context} location="/home">
+              <Routes>
+                <Route path="/home" element={<Home />} />
+              </Routes>
+            </Router>
+          );
+        });
 
         expect(context).toMatchObject({
           url: '/somewhere-else?the=query',
@@ -163,13 +175,15 @@ describe('A <Navigate> in a <StaticRouter>', () => {
           return <Navigate push to={{ search: '?the=query' }} />;
         }
 
-        ReactDOMServer.renderToStaticMarkup(
-          <Router context={context} location="/home">
-            <Routes>
-              <Route path="/home" element={<Home />} />
-            </Routes>
-          </Router>
-        );
+        act(() => {
+          createTestRenderer(
+            <Router context={context} location="/home">
+              <Routes>
+                <Route path="/home" element={<Home />} />
+              </Routes>
+            </Router>
+          );
+        });
 
         expect(context).toMatchObject({
           url: '/home?the=query',
