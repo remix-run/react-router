@@ -1,5 +1,5 @@
 import React from 'react';
-import { create as createTestRenderer } from 'react-test-renderer';
+import { create as createTestRenderer, act } from 'react-test-renderer';
 import {
   Redirect,
   MemoryRouter as Router,
@@ -14,14 +14,17 @@ describe('A <Redirect> in a route config', () => {
       return <h1>About</h1>;
     }
 
-    let renderer = createTestRenderer(
-      <Router initialEntries={['/contact-us']}>
-        <Routes>
-          <Route path="about" element={<About />} />
-          <Redirect from="contact-us" to="about" />
-        </Routes>
-      </Router>
-    );
+    let renderer;
+    act(() => {
+      renderer = createTestRenderer(
+        <Router initialEntries={['/contact-us']}>
+          <Routes>
+            <Route path="about" element={<About />} />
+            <Redirect from="contact-us" to="about" />
+          </Routes>
+        </Router>
+      );
+    });
 
     expect(renderer.toJSON()).toMatchInlineSnapshot(`
       <h1>
@@ -37,14 +40,17 @@ describe('A <Redirect> in a route config', () => {
         return <h1>User {id}</h1>;
       }
 
-      let renderer = createTestRenderer(
-        <Router initialEntries={['/profile/michael']}>
-          <Routes>
-            <Route path="user/:id" element={<User />} />
-            <Redirect from="profile/:id" to="user/:id" />
-          </Routes>
-        </Router>
-      );
+      let renderer;
+      act(() => {
+        renderer = createTestRenderer(
+          <Router initialEntries={['/profile/michael']}>
+            <Routes>
+              <Route path="user/:id" element={<User />} />
+              <Redirect from="profile/:id" to="user/:id" />
+            </Routes>
+          </Router>
+        );
+      });
 
       expect(renderer.toJSON()).toMatchInlineSnapshot(`
         <h1>

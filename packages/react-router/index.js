@@ -494,26 +494,35 @@ export function useRoutes(routes, basename = '', caseSensitive = false) {
     [routes, location, basename, caseSensitive]
   );
 
-  if (!matches) {
-    // TODO: Warn about nothing matching, suggest using a catch-all route.
-    return null;
-  }
-
   // If we matched a redirect, navigate and return null.
-  let redirectMatch = matches.find(match => isRedirectRoute(match.route));
-  if (redirectMatch) {
-    let { params, route } = redirectMatch;
-    let relativeTo = resolveLocation(route.redirectTo, parentPathname);
+  let redirectMatch = matches
+    ? matches.find(match => isRedirectRoute(match.route))
+    : null;
 
-    let { pathname } = relativeTo;
-    if (/:\w+/.test(pathname)) {
-      // Allow param interpolation into <Redirect to>, e.g.
-      // <Redirect from="users/:id" to="profile/:id">
-      relativeTo = { ...relativeTo, pathname: generatePath(pathname, params) };
+  React.useEffect(() => {
+    if (redirectMatch) {
+      let { params, route } = redirectMatch;
+      let relativeTo = resolveLocation(route.redirectTo, parentPathname);
+
+      let { pathname } = relativeTo;
+      if (/:\w+/.test(pathname)) {
+        // Allow param interpolation into <Redirect to>, e.g.
+        // <Redirect from="users/:id" to="profile/:id">
+        relativeTo = {
+          ...relativeTo,
+          pathname: generatePath(pathname, params)
+        };
+      }
+
+      // Navigate will result in a synchronous setState call in render function,
+      // which is not allowed by React
+      navigate(relativeTo, { replace: true });
     }
+  }, [redirectMatch, navigate, parentPathname]);
 
-    navigate(relativeTo, { replace: true });
-
+  // TODO: Warn about nothing matching when matches is null,
+  // suggest using a catch-all route.
+  if (!matches || redirectMatch) {
     return null;
   }
 
