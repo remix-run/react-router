@@ -27,8 +27,7 @@ function warning(cond, message) {
 const LocationContext = React.createContext();
 
 if (__DEV__) {
-  LocationContext.Consumer.displayName = 'Location.Consumer';
-  LocationContext.Provider.displayName = 'Location.Provider';
+  LocationContext.displayName = 'Location';
 }
 
 const RouteContext = React.createContext({
@@ -39,8 +38,7 @@ const RouteContext = React.createContext({
 });
 
 if (__DEV__) {
-  RouteContext.Consumer.displayName = 'Route.Consumer';
-  RouteContext.Provider.displayName = 'Route.Provider';
+  RouteContext.displayName = 'Route';
 }
 
 ///////////////////////////////////////////////////////////////////////////////
