@@ -15,7 +15,7 @@ export interface MemoryRouterProps {
   timeout?: number;
 }
 
-export class MemoryRouter extends React.Componet<MemoryRouterProps, any> {
+export class MemoryRouter extends React.Component<MemoryRouterProps, any> {
 }
 
 export interface NavigateProps extends NavigateOptions {
