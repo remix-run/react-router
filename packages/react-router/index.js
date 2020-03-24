@@ -204,12 +204,11 @@ export function Router({ children = null, history, timeout = 2000 }) {
     });
   }
 
-  return (
-    <LocationContext.Provider
-      children={children}
-      value={{ history, location, pending }}
-    />
-  );
+  let contextVal = React.useMemo(() => {
+    return { history, location, pending };
+  }, [history, location, pending]);
+
+  return <LocationContext.Provider children={children} value={contextVal} />;
 }
 
 if (__DEV__) {
@@ -448,6 +447,28 @@ if (__DEV__) {
 }
 
 /**
+ * Return a context wrapper of the given inputs.
+ * This is a helper component to optimize the context values.
+ */
+function RouterContextWrapper({ outlet, params, pathname, route }) {
+  let {
+    params: parentParams,
+  } = React.useContext(RouteContext);
+  const contextValue = React.useMemo(() => {
+    return {
+      outlet,
+      params: readOnly({ ...parentParams, ...params }),
+      pathname,
+      route
+    };
+  }, [outlet, params, parentParams, pathname, route]);
+
+  return (
+    <RouteContext.Provider children={route.element} value={contextValue} />
+  );
+}
+
+/**
  * Returns the element of the route that matched the current location, prepared
  * with the correct context to render the remainder of the route tree. Route
  * elements in the tree must render an <Outlet> to render their child route's
@@ -522,14 +543,11 @@ export function useRoutes(routes, basename = '', caseSensitive = false) {
   // Otherwise render an element.
   let element = matches.reduceRight((outlet, { params, pathname, route }) => {
     return (
-      <RouteContext.Provider
-        children={route.element}
-        value={{
-          outlet,
-          params: readOnly({ ...parentParams, ...params }),
-          pathname: joinPaths([basename, pathname]),
-          route
-        }}
+      <RouterContextWrapper
+        outlet={outlet}
+        params={params}
+        pathname={joinPaths([basename, pathname])}
+        route={route}
       />
     );
   }, null);
