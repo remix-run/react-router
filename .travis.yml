@@ -3,23 +3,17 @@ node_js: node
 cache: yarn
 jobs:
   include:
-  - stage: Test
-    before_script: yarn build
-    script: yarn test
-  - stage: Size
-    before_script: yarn build
-    script: yarn size
-  # - stage: Release
-  #   if: tag =~ ^v[0-9]
-  #   before_script: yarn build
-  #   script: echo "Publishing $TRAVIS_TAG to npm ..."
-  #   before_deploy: echo "//registry.npmjs.org/:_authToken=$NPM_TOKEN" > "$HOME/.npmrc"
-  #   deploy:
-  #     provider: script
-  #     skip_cleanup: true
-  #     script: lerna publish from-git --yes --pre-dist-tag next
-  #     on:
-  #       tags: true
+    - stage: Test
+      before_script: yarn build
+      script:
+        - yarn test
+        - yarn size
+    - stage: Release
+      if: tag =~ ^v[0-9]
+      before_script: yarn build
+      script:
+        - echo "//registry.npmjs.org/:_authToken=${NPM_TOKEN}" > ~/.npmrc
+        - node scripts/publish.js
   # - stage: Deploy Website
   #   if: branch = website
   #   env: PUBLIC_PATH=/react-router/
