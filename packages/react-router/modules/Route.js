@@ -51,25 +51,41 @@ class Route extends React.Component {
             children = null;
           }
 
+          const renderRouteChild = () => {
+            if (!props.match) {
+              if (typeof children === "function") {
+                return __DEV__
+                  ? evalChildrenDev(children, props, this.props.path)
+                  : children(props);
+              }
+
+              return null;
+            }
+
+            if (children) {
+              if (typeof children === "function") {
+                return __DEV__
+                  ? evalChildrenDev(children, props, this.props.path)
+                  : children(props);
+              } else {
+                return children;
+              }
+            }
+
+            if (component) {
+              return React.createElement(component, props);
+            }
+
+            if (render) {
+              return render(props);
+            }
+
+            return null;
+          };
+
           return (
             <RouterContext.Provider value={props}>
-              {props.match
-                ? children
-                  ? typeof children === "function"
-                    ? __DEV__
-                      ? evalChildrenDev(children, props, this.props.path)
-                      : children(props)
-                    : children
-                  : component
-                  ? React.createElement(component, props)
-                  : render
-                  ? render(props)
-                  : null
-                : typeof children === "function"
-                ? __DEV__
-                  ? evalChildrenDev(children, props, this.props.path)
-                  : children(props)
-                : null}
+              {renderRouteChild()}
             </RouterContext.Provider>
           );
         }}
