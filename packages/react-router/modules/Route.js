@@ -28,6 +28,38 @@ function evalChildrenDev(children, props, path) {
  * The public API for matching a single path and rendering.
  */
 class Route extends React.Component {
+  renderRouteChild(context) {
+    const { props, children, path, component, render } = context;
+    if (!props.match) {
+      if (typeof children === "function") {
+        return __DEV__
+          ? evalChildrenDev(children, props, path)
+          : children(props);
+      }
+
+      return null;
+    }
+
+    if (children) {
+      if (typeof children === "function") {
+        return __DEV__
+          ? evalChildrenDev(children, props, path)
+          : children(props);
+      } else {
+        return children;
+      }
+    }
+
+    if (component) {
+      return React.createElement(component, props);
+    }
+
+    if (render) {
+      return render(props);
+    }
+
+    return null;
+  }
   render() {
     return (
       <RouterContext.Consumer>
@@ -43,7 +75,7 @@ class Route extends React.Component {
 
           const props = { ...context, location, match };
 
-          let { children, component, render } = this.props;
+          let { children, component, render, path } = this.props;
 
           // Preact uses an empty array as children by
           // default, so use null if that's the case.
@@ -51,41 +83,15 @@ class Route extends React.Component {
             children = null;
           }
 
-          const renderRouteChild = () => {
-            if (!props.match) {
-              if (typeof children === "function") {
-                return __DEV__
-                  ? evalChildrenDev(children, props, this.props.path)
-                  : children(props);
-              }
-
-              return null;
-            }
-
-            if (children) {
-              if (typeof children === "function") {
-                return __DEV__
-                  ? evalChildrenDev(children, props, this.props.path)
-                  : children(props);
-              } else {
-                return children;
-              }
-            }
-
-            if (component) {
-              return React.createElement(component, props);
-            }
-
-            if (render) {
-              return render(props);
-            }
-
-            return null;
-          };
-
           return (
             <RouterContext.Provider value={props}>
-              {renderRouteChild()}
+              {this.renderRouteChild({
+                props,
+                children,
+                path,
+                component,
+                render
+              })}
             </RouterContext.Provider>
           );
         }}
