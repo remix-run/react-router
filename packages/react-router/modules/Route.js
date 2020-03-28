@@ -31,23 +31,27 @@ class Route extends React.Component {
   renderRouteChild(context) {
     const { props, children, path, component, render } = context;
     if (!props.match) {
-      if (typeof children === "function") {
-        return __DEV__
-          ? evalChildrenDev(children, props, path)
-          : children(props);
+      if (typeof children !== "function") {
+        return null;
       }
 
-      return null;
+      if (__DEV__) {
+        return evalChildrenDev(children, props, path);
+      }
+
+      return children(props);
     }
 
     if (children) {
-      if (typeof children === "function") {
-        return __DEV__
-          ? evalChildrenDev(children, props, path)
-          : children(props);
-      } else {
+      if (typeof children !== "function") {
         return children;
       }
+
+      if (__DEV__) {
+        return evalChildrenDev(children, props, path);
+      }
+
+      return children(props);
     }
 
     if (component) {
