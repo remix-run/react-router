@@ -24,7 +24,7 @@ function warning(cond, message) {
 // CONTEXT
 ///////////////////////////////////////////////////////////////////////////////
 
-const LocationContext = React.createContext();
+const LocationContext = React.createContext(null);
 
 if (__DEV__) {
   LocationContext.displayName = 'Location';
@@ -93,9 +93,29 @@ if (__DEV__) {
 /**
  * Navigate programmatically using a component.
  */
-export function Navigate({ to, replace = false, state }) {
+export function Navigate({ to, replace, state }) {
   let navigate = useNavigate();
-  navigate(to, { replace, state });
+
+  let locationContext = React.useContext(LocationContext);
+  invariant(
+    locationContext != null,
+    // TODO: This error is probably because they somehow have
+    // 2 versions of the router loaded. We can help them understand
+    // how to avoid that.
+    `<Navigate> may be used only in the context of a <Router> component.`
+  );
+
+  warning(
+    !locationContext.history.static,
+    `<Navigate> may not be rendered on the initial render in a <StaticRouter>. ` +
+      `This is a no-op, but you should modify your code so the <Navigate> is ` +
+      `only ever rendered in response to some user interaction or state change.`
+  );
+
+  React.useEffect(() => {
+    navigate(to, { replace, state });
+  });
+
   return null;
 }
 
@@ -128,38 +148,6 @@ if (__DEV__) {
 }
 
 /**
- * Used in a route config to redirect from one location to another.
- */
-export function Redirect() {
-  return null;
-}
-
-if (__DEV__) {
-  Redirect.displayName = 'Redirect';
-
-  function redirectChildrenType(props, propName, componentName) {
-    if (props[propName] != null) {
-      return new Error(
-        'A <Redirect> should not have child routes; they will never be rendered.'
-      );
-    }
-  }
-
-  Redirect.propTypes = {
-    children: redirectChildrenType,
-    from: PropTypes.string,
-    to: PropTypes.oneOfType([
-      PropTypes.string,
-      PropTypes.shape({
-        pathname: PropTypes.string,
-        search: PropTypes.string,
-        hash: PropTypes.string
-      })
-    ])
-  };
-}
-
-/**
  * Used in a route config to render an element.
  */
 export function Route({ element = <Outlet /> }) {
@@ -185,7 +173,7 @@ const useTransition = React.useTransition || (() => [startTransition, false]);
 export function Router({ children = null, history, timeout = 2000 }) {
   let [location, setLocation] = React.useState(history.location);
   let [startTransition, pending] = useTransition({ timeoutMs: timeout });
-  let listeningRef = React.useRef(false);
+  let shouldListenRef = React.useRef(true);
 
   invariant(
     !React.useContext(LocationContext),
@@ -193,8 +181,8 @@ export function Router({ children = null, history, timeout = 2000 }) {
       ` You never need more than one.`
   );
 
-  if (!listeningRef.current) {
-    listeningRef.current = true;
+  if (shouldListenRef.current) {
+    shouldListenRef.current = false;
     history.listen(({ location }) => {
       startTransition(() => {
         setLocation(location);
@@ -258,7 +246,7 @@ export function createRoutesFromChildren(children) {
     // easily inline conditionals in their route config.
     if (!React.isValidElement(element)) return;
 
-    let { children, from, path, to } = element.props;
+    let { children, path = '/' } = element.props;
 
     // Transparently support React.Fragment and its children.
     if (element.type === React.Fragment) {
@@ -266,20 +254,10 @@ export function createRoutesFromChildren(children) {
       return;
     }
 
-    path = path || from || '/';
-
-    // Components that have a to prop are redirects.
-    // All others should use path + element (and maybe children) props.
-    let route;
-    if (to) {
-      route = { path, redirectTo: to };
-    } else {
-      route = { path, element };
-
-      let childRoutes = createRoutesFromChildren(children);
-      if (childRoutes.length) {
-        route.children = childRoutes;
-      }
+    let route = { path, element };
+    let childRoutes = createRoutesFromChildren(children);
+    if (childRoutes.length) {
+      route.children = childRoutes;
     }
 
     routes.push(route);
@@ -297,15 +275,15 @@ export function createRoutesFromChildren(children) {
  * changing until some condition is met, like saving form data.
  */
 export function useBlocker(blocker, when = true) {
-  let { history } = React.useContext(LocationContext);
-
-  // TODO: This error is probably because they somehow have
-  // 2 versions of the router loaded. We can help them understand
-  // how to avoid that.
+  let locationContext = React.useContext(LocationContext);
   invariant(
-    history != null,
-    'navigation blocking may be used only in the context of a <Router> component'
+    locationContext != null,
+    // TODO: This error is probably because they somehow have
+    // 2 versions of the router loaded. We can help them understand
+    // how to avoid that.
+    `useBlocker() may be used only in the context of a <Router> component.`
   );
+  let { history } = locationContext;
 
   React.useEffect(() => {
     if (when) {
@@ -336,17 +314,17 @@ export function useBlocker(blocker, when = true) {
  */
 export function useHref(to) {
   let resolvedLocation = useResolvedLocation(to);
-  let { history } = React.useContext(LocationContext);
 
-  // TODO: This error is probably because they somehow have
-  // 2 versions of the router loaded. We can help them understand
-  // how to avoid that.
+  let locationContext = React.useContext(LocationContext);
   invariant(
-    history != null,
-    'href resolution may be used only in the context of a <Router> component'
+    locationContext != null,
+    // TODO: This error is probably because they somehow have
+    // 2 versions of the router loaded. We can help them understand
+    // how to avoid that.
+    `useHref() may be used only in the context of a <Router> component.`
   );
 
-  return history.createHref(resolvedLocation);
+  return locationContext.history.createHref(resolvedLocation);
 }
 
 /**
@@ -378,32 +356,45 @@ export function useMatch(to) {
  * may also be used by other elements to change the location.
  */
 export function useNavigate() {
-  let { history, pending } = React.useContext(LocationContext);
   let { pathname } = React.useContext(RouteContext);
 
-  // TODO: This error is probably because they somehow have
-  // 2 versions of the router loaded. We can help them understand
-  // how to avoid that.
+  let locationContext = React.useContext(LocationContext);
   invariant(
-    history != null,
-    'navigation may be used only in the context of a <Router> component'
+    locationContext != null,
+    // TODO: This error is probably because they somehow have
+    // 2 versions of the router loaded. We can help them understand
+    // how to avoid that.
+    `useNavigate() may be used only in the context of a <Router> component.`
   );
+  let { history, pending } = locationContext;
+
+  let activeRef = React.useRef(false);
+  React.useEffect(() => {
+    activeRef.current = true;
+  });
 
   let navigate = React.useCallback(
     (to, { replace, state } = {}) => {
-      if (typeof to === 'number') {
-        history.go(to);
+      if (activeRef.current) {
+        if (typeof to === 'number') {
+          history.go(to);
+        } else {
+          let relativeTo = resolveLocation(to, pathname);
+          // If we are pending transition, use REPLACE instead of PUSH.
+          // This will prevent URLs that we started navigating to but
+          // never fully loaded from appearing in the history stack.
+          let method = !!replace || pending ? 'replace' : 'push';
+          history[method](relativeTo, state);
+        }
       } else {
-        let relativeTo = resolveLocation(to, pathname);
-
-        // If we are pending transition, use REPLACE instead of PUSH.
-        // This will prevent URLs that we started navigating to but
-        // never fully loaded from appearing in the history stack.
-        let method = !!replace || pending ? 'replace' : 'push';
-        history[method](relativeTo, state);
+        warning(
+          false,
+          `You should call navigate() in a useEffect, not when ` +
+            `your component is first rendered.`
+        );
       }
     },
-    [history, pending, pathname]
+    [history, pathname, pending]
   );
 
   return navigate;
@@ -485,7 +476,6 @@ export function useRoutes(routes, basename = '', caseSensitive = false) {
 
   basename = basename ? joinPaths([parentPathname, basename]) : parentPathname;
 
-  let navigate = useNavigate();
   let location = useLocation();
   let matches = React.useMemo(
     () => matchRoutes(routes, location, basename, caseSensitive),
@@ -494,24 +484,6 @@ export function useRoutes(routes, basename = '', caseSensitive = false) {
 
   if (!matches) {
     // TODO: Warn about nothing matching, suggest using a catch-all route.
-    return null;
-  }
-
-  // If we matched a redirect, navigate and return null.
-  let redirectMatch = matches.find(match => isRedirectRoute(match.route));
-  if (redirectMatch) {
-    let { params, route } = redirectMatch;
-    let relativeTo = resolveLocation(route.redirectTo, parentPathname);
-
-    let { pathname } = relativeTo;
-    if (/:\w+/.test(pathname)) {
-      // Allow param interpolation into <Redirect to>, e.g.
-      // <Redirect from="users/:id" to="profile/:id">
-      relativeTo = { ...relativeTo, pathname: generatePath(pathname, params) };
-    }
-
-    navigate(relativeTo, { replace: true });
-
     return null;
   }
 
@@ -533,10 +505,6 @@ export function useRoutes(routes, basename = '', caseSensitive = false) {
   }, null);
 
   return element;
-}
-
-function isRedirectRoute(route) {
-  return route.redirectTo != null;
 }
 
 ///////////////////////////////////////////////////////////////////////////////

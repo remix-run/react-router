@@ -18,6 +18,7 @@ const modules = [
     external: [
       '@babel/runtime/helpers/esm/extends',
       '@babel/runtime/helpers/esm/objectWithoutPropertiesLoose',
+      '@ungap/url-search-params',
       'history',
       'prop-types',
       'react',

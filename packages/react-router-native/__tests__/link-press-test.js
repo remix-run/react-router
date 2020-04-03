@@ -8,7 +8,7 @@ import {
   Route
 } from 'react-router-native';
 
-import { MockEvent } from './utils.js';
+import { press } from './utils.js';
 
 describe('A <Link> press', () => {
   it('navigates to the new view', () => {
@@ -49,7 +49,7 @@ describe('A <Link> press', () => {
     expect(touchable).not.toBeNull();
 
     act(() => {
-      touchable.props.onPress(new MockEvent('press'));
+      press(touchable);
     });
 
     expect(renderer.toJSON()).toMatchSnapshot();
@@ -96,8 +96,7 @@ describe('A <Link> press', () => {
 
     let pressEvent;
     act(() => {
-      pressEvent = new MockEvent('press');
-      touchable.props.onPress(pressEvent);
+      pressEvent = press(touchable);
     });
 
     expect(spy).toHaveBeenCalledWith(pressEvent);
@@ -147,7 +146,7 @@ describe('A <Link> press', () => {
       expect(touchable).not.toBeNull();
 
       act(() => {
-        touchable.props.onPress(new MockEvent('press'));
+        press(touchable);
       });
 
       expect(renderer.toJSON()).toMatchSnapshot();

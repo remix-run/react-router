@@ -4,7 +4,7 @@
 
 TODO
 
-## Testing Routes and Redirects
+## Testing Routes
 
 TODO
 
