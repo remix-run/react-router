@@ -7,7 +7,6 @@ import {
   MemoryRouter,
   Navigate,
   Outlet,
-  Redirect,
   Route,
   Router,
   Routes,
@@ -38,7 +37,6 @@ export {
   MemoryRouter,
   Navigate,
   Outlet,
-  Redirect,
   Route,
   Router,
   Routes,
@@ -139,7 +137,7 @@ if (__DEV__) {
 const HardwareBackPressEventType = 'hardwareBackPress';
 
 /**
- *
+ * Enables support for the hardware back button on Android.
  */
 export function useHardwareBackButton() {
   let location = useLocation();
@@ -180,17 +178,27 @@ export { useHardwareBackButton as useAndroidBackButton };
 
 const URLEventType = 'url';
 
+/**
+ * Enables deep linking, both on the initial app launch and for
+ * subsequent incoming links.
+ */
 export function useDeepLinking() {
   let navigate = useNavigate();
 
   // Get the initial URL
-  let firstRender = React.useRef(true);
-  if (firstRender.current) {
-    firstRender.current = false;
+  React.useEffect(() => {
+    let current = true;
+
     Linking.getInitialURL().then(url => {
-      if (url) navigate(trimScheme(url));
+      if (current) {
+        if (url) navigate(trimScheme(url));
+      }
     });
-  }
+
+    return () => {
+      current = false;
+    };
+  }, [navigate]);
 
   // Listen for URL changes
   React.useEffect(() => {

@@ -22,5 +22,5 @@ function ProductLayout() {
 ```
 
 - Links
-- Redirects (main uses are for preserving old URLs and doing auth)
+- Redirects (after auth)
 - Descendant `<Routes>` (rendered somewhere further down the component tree)

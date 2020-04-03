@@ -36,8 +36,7 @@ In general, the process looks like this:
     - Consolidate your `<Route>`s into a nested config (optional)
   - [Use `navigate` instead of `history`](#use-navigate-instead-of-history)
     - Use `useNavigate` hook instead of `useHistory`
-    - Use `<Navigate>` instead of `<Redirect>` (outside of route configs)
-      - No need to change `<Redirect>` directly inside `<Routes>`
+    - Use `<Navigate>` instead of `<Redirect>`
   - [Use `useRoutes` instead of `react-router-config`](#use-useroutes-instead-of-react-router-config)
   - [Rename `<Link component>` to `<Link as>`](#rename-link-component-to-link-as)
   - [Get `StaticRouter` from `react-router-dom/server`](#get-staticrouter-from-react-router-domserver)
@@ -521,8 +520,6 @@ function App() {
         { path: 'sent', element: <SentInvoices /> }
       ]
     },
-    // Redirects use a redirectTo property to
-    { path: 'home', redirectTo: '/' },
     // Not found routes work as you'd expect
     { path: '*', element: <NotFound /> }
   ]);
@@ -657,9 +654,12 @@ The `navigate` API is aware of the internal pending transition state and will
 do a REPLACE instead of a PUSH onto the history stack, so the user doesn't end
 up with pages in their history that never actually loaded.
 
-*Note: You should still use a `<Redirect>` as part of your route config
-(inside a `<Routes>`). This change is only necessary for `<Redirect>`s that are
-used to navigate in response to user interaction.*
+*Note: The `<Redirect>` element from v5 is no longer supported as part of your
+route config (inside a `<Routes>`). This is due to upcoming changes in React
+that make it unsafe to alter the state of the router during the initial render.
+If you need to redirect immediately, you can either a) do it on your server
+(probably the best solution) or b) render a `<Navigate>` element in your route
+component. However, recognize that the navigation will happen in a `useEffect`.*
 
 Aside from suspense compatibility, `navigate`, like `Link`, supports relative
 navigation. For example:
