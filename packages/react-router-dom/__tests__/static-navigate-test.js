@@ -27,7 +27,7 @@ describe('A <Navigate> in a <StaticRouter>', () => {
     );
 
     expect(consoleWarn).toHaveBeenCalledWith(
-      expect.stringMatching('not be rendered on the initial render')
+      expect.stringMatching('<Navigate> must not be used on the initial render')
     );
   });
 });

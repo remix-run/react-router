@@ -107,7 +107,7 @@ export function Navigate({ to, replace, state }) {
 
   warning(
     !locationContext.history.static,
-    `<Navigate> may not be rendered on the initial render in a <StaticRouter>. ` +
+    `<Navigate> must not be used on the initial render in a <StaticRouter>. ` +
       `This is a no-op, but you should modify your code so the <Navigate> is ` +
       `only ever rendered in response to some user interaction or state change.`
   );
