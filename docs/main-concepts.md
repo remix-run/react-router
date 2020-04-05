@@ -15,7 +15,6 @@ We will cover the following topics:
   - [Params and Search (Query) Strings](#params-and-search-query-strings)
 - [Routing and Navigation](#routing-and-navigation)
   - [Layouts and Nesting](#layouts-and-nesting)
-  - [Redirects](#redirects)
   - [Transitions](#transitions)
   - [Prompts](#prompts)
 
@@ -36,10 +35,6 @@ TODO
 TODO
 
 ### Layouts and Nesting
-
-TODO
-
-### Redirects
 
 TODO
 

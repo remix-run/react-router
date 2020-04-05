@@ -71,7 +71,10 @@ export function StaticRouter({ children, context = {}, location: loc = '/' }) {
       );
     },
     listen() {},
-    block() {}
+    block() {},
+    // This is a clue that lets us warn about using a <Navigate>
+    // on the initial render inside a <StaticRouter>
+    static: true
   };
 
   return <Router children={children} history={mockHistory} />;

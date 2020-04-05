@@ -79,10 +79,8 @@ async function run() {
 
     // 1. Get the next version number
     let currentVersion = await getPackageVersion('react-router');
-    let version;
-    if (semver.valid(givenVersion)) {
-      version = givenVersion;
-    } else {
+    let version = semver.valid(givenVersion);
+    if (version == null) {
       version = getNextVersion(currentVersion, givenVersion, prereleaseId);
     }
 
@@ -119,7 +117,7 @@ async function run() {
 
     // 6. Commit and tag
     exec(`git commit --all --message="Version ${version}"`);
-    exec(`git tag v${version}`);
+    exec(`git tag -a -m "Version ${version}" v${version}`);
     console.log(chalk.green(`  Committed and tagged version ${version}`));
   } catch (error) {
     console.log();
