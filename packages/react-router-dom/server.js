@@ -7,7 +7,7 @@ import PropTypes from 'prop-types';
  * A <Router> that may not transition to any other location. This is useful
  * on the server where there is no stateful UI.
  */
-export function StaticRouter({ children, context = {}, location: loc = '/' }) {
+export function StaticRouter({ children, location: loc = '/' }) {
   if (typeof loc === 'string') loc = parsePath(loc);
 
   let action = 'POP';
@@ -19,15 +19,10 @@ export function StaticRouter({ children, context = {}, location: loc = '/' }) {
     key: loc.key || 'default'
   };
 
-  function getNextLocation(to, state) {
-    return {
-      ...location,
-      ...(typeof to === 'string' ? parsePath(to) : to),
-      state
-    };
-  }
-
   let mockHistory = {
+    // This is a clue that lets us warn about using a <Navigate>
+    // on the initial render inside a <StaticRouter>
+    static: true,
     get action() {
       return action;
     },
@@ -38,43 +33,29 @@ export function StaticRouter({ children, context = {}, location: loc = '/' }) {
       return typeof to === 'string' ? to : createPath(to);
     },
     push(to, state) {
-      let nextLocation = getNextLocation(to, state);
-
-      if (__DEV__) {
-        let url = createPath(nextLocation);
-
-        // A PUSH is not technically valid in a static context because we can't
-        // push a new URL onto the history stack in a stateless environment. They
-        // most likely want a regular redirect so just warn them and carry on.
-        console.warn(
-          `You cannot perform a PUSH with a <StaticRouter>. You probably want a REPLACE instead.` +
-            `\n\nTo avoid this warning, find the element that is calling \`navigate("${url}")\`` +
-            ` and change it to \`navigate("${url}", { replace: true })\`. This could also be` +
-            ` caused by rendering a \`<Navigate to={"${url}"} />\`. In that case, just add a ` +
-            `\`replace={true}\` prop to do a redirect instead.`
-        );
-      }
-
-      context.url = createPath(nextLocation);
-      context.state = nextLocation.state;
+      throw new Error(
+        `You cannot perform a PUSH on the server because it is a stateless ` +
+          `environment. This error was probably triggered when you did a ` +
+          `\`navigate(${JSON.stringify(to)})\` somewhere in your app.`
+      );
     },
-    replace(to, state) {
-      let nextLocation = getNextLocation(to, state);
-      context.url = createPath(nextLocation);
-      context.state = nextLocation.state;
+    replace(to) {
+      throw new Error(
+        `You cannot perform a REPLACE on the server because it is a stateless ` +
+          `environment. This error was probably triggered when you did a ` +
+          `\`navigate(${JSON.stringify(to)}, { replace: true })\` somewhere ` +
+          `in your app.`
+      );
     },
     go(n) {
       throw new Error(
-        `You cannot perform ${n === -1 ? 'GO BACK' : `GO(${n})`} on the ` +
+        `You cannot perform ${n === -1 ? 'GO BACK' : `a GO(${n})`} on the ` +
           `server because it is a stateless environment. This error was probably ` +
           `triggered when you did a \`navigate(${n})\` somewhere in your app.`
       );
     },
     listen() {},
-    block() {},
-    // This is a clue that lets us warn about using a <Navigate>
-    // on the initial render inside a <StaticRouter>
-    static: true
+    block() {}
   };
 
   return <Router children={children} history={mockHistory} />;
