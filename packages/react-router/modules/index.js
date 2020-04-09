@@ -10,10 +10,17 @@ if (__DEV__) {
 
       // TODO: Add link to article that explains in detail how to avoid
       // loading 2 different builds.
+
+      // Some extra clarification when we have "esm" react-router embedded in "umd" react-router-dom
+      const umdEsm =
+        "esm" === process.env.BUILD_FORMAT && global[key] === "umd"
+          ? " As you are using UMD, you only need to load react-router-dom which contains react-router." +
+            " If using a loader, you should map react-router to react-router-dom."
+          : "";
       throw new Error(
         `You are loading the ${secondaryBuildName} build of React Router ` +
           `on a page that is already running the ${initialBuildName} ` +
-          `build, so things won't work right.`
+          `build, so things won't work right.${umdEsm}`
       );
     }
 
