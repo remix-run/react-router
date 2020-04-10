@@ -32,6 +32,7 @@ const NavLink = forwardRef(
       exact,
       isActive: isActiveProp,
       location: locationProp,
+      sensitive,
       strict,
       style: styleProp,
       to,
@@ -59,6 +60,7 @@ const NavLink = forwardRef(
             ? matchPath(currentLocation.pathname, {
                 path: escapedPath,
                 exact,
+                sensitive,
                 strict
               })
             : null;
@@ -114,6 +116,7 @@ if (__DEV__) {
     exact: PropTypes.bool,
     isActive: PropTypes.func,
     location: PropTypes.object,
+    sensitive: PropTypes.bool,
     strict: PropTypes.bool,
     style: PropTypes.object
   };
