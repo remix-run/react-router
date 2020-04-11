@@ -2,11 +2,17 @@ import * as React from 'react';
 import * as History from 'history';
 
 export {
+  // interfaces
+  RouteConfigObject,
+  MemoryRouterProps,
+  NavigateProps,
+  RouteProps,
+  RouterProps,
+  RoutesProps,
   // components
   MemoryRouter,
   Navigate,
   Outlet,
-  Redirect,
   Route,
   Router,
   Routes,

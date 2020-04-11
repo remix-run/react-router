@@ -1,10 +1,8 @@
 import * as React from 'react';
 import * as History from 'history';
 
-interface RouteConfigObject {
+export interface RouteConfigObject {
   path?: string;
-  from?: string;
-  redirectTo?: string;
   element?: React.ReactElement;
   children?: RouteConfigObject[];
 }
@@ -26,14 +24,6 @@ export class Navigate extends React.Component<NavigateProps, any> {
 }
 
 export class Outlet extends React.Component<{}, any> {
-}
-
-export interface RedirectProps {
-  from?: string;
-  to: History.LocationDescriptor;
-}
-
-export class Redirect extends React.Component<RedirectProps, any> {
 }
 
 export interface RouteProps {
