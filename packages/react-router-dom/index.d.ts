@@ -27,7 +27,7 @@ export {
   generatePath
 } from 'react-router';
 
-interface BrowserRouterProps {
+export interface BrowserRouterProps {
   timeout?: number;
   window?: Window;
 }
@@ -35,7 +35,7 @@ interface BrowserRouterProps {
 export class BrowserRouter extends React.Component<BrowserRouterProps, any> {
 }
 
-interface HashRouterProps {
+export interface HashRouterProps {
   timeout?: number;
   window?: Window;
 }
@@ -43,7 +43,7 @@ interface HashRouterProps {
 export class HashRouter extends React.Component<HashRouterProps, any> {
 }
 
-interface LinkProps {
+export interface LinkProps {
   as?: React.ElementType;
   onClick?(event: React.SyntheticEvent): void;
   replace?: boolean;
@@ -55,7 +55,7 @@ interface LinkProps {
 export class Link extends React.Component<LinkProps, any> {
 }
 
-interface NavLinkProps extends LinkProps {
+export interface NavLinkProps extends LinkProps {
   'aria-current'?: 'page' | 'step' | 'location' | 'date' | 'time' | 'true';
   activeClassName?: string;
   activeStyle?: object;
@@ -67,7 +67,7 @@ interface NavLinkProps extends LinkProps {
 export class NavLink extends React.Component<NavLinkProps, any> {
 }
 
-interface PromptProps {
+export interface PromptProps {
   message?: string;
   when?: boolean;
 }
