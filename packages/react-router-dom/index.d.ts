@@ -76,3 +76,5 @@ export class Prompt extends React.Component<PromptProps, any> {
 }
 
 export function usePrompt(message: string, when?: boolean): void;
+
+export function useSearchParams(): URLSearchParams;
