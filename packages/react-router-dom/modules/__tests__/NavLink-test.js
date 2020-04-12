@@ -490,6 +490,68 @@ describe("A <NavLink>", () => {
     });
   });
 
+  describe("with `sensitive=true`", () => {
+    it("applies default activeClassName for sensitive matches", () => {
+      renderStrict(
+        <MemoryRouter initialEntries={["/pizza"]}>
+          <NavLink sensitive to="/pizza">
+            Pizza!
+          </NavLink>
+        </MemoryRouter>,
+        node
+      );
+
+      const a = node.querySelector("a");
+
+      expect(a.className).toContain("active");
+    });
+
+    it("does not apply default activeClassName for non-sensitive matches", () => {
+      renderStrict(
+        <MemoryRouter initialEntries={["/PIZZA"]}>
+          <NavLink sensitive to="/pizza">
+            Pizza!
+          </NavLink>
+        </MemoryRouter>,
+        node
+      );
+
+      const a = node.querySelector("a");
+
+      expect(a.className).not.toContain("active");
+    });
+
+    it("applies custom activeClassName for sensitive matches", () => {
+      renderStrict(
+        <MemoryRouter initialEntries={["/pizza"]}>
+          <NavLink sensitive to="/pizza" activeClassName="selected">
+            Pizza!
+          </NavLink>
+        </MemoryRouter>,
+        node
+      );
+
+      const a = node.querySelector("a");
+
+      expect(a.className).toContain("selected");
+    });
+
+    it("does not apply custom activeClassName for non-sensitive matches", () => {
+      renderStrict(
+        <MemoryRouter initialEntries={["/pizza"]}>
+          <NavLink sensitive to="/PIZZA" activeClassName="selected">
+            Pizza!
+          </NavLink>
+        </MemoryRouter>,
+        node
+      );
+
+      const a = node.querySelector("a");
+
+      expect(a.className).not.toContain("selected");
+    });
+  });
+
   describe("the `location` prop", () => {
     it("overrides the current location", () => {
       renderStrict(
