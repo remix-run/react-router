@@ -3,7 +3,7 @@ import { BackHandler } from "react-native";
 
 import { __RouterContext as RouterContext } from "react-router";
 
-class BackButton extends React.Component {
+class BackButton extends React.PureComponent {
   handleBack = () => {
     if (this.history.index === 0) {
       return false; // home screen

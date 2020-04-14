@@ -9,7 +9,7 @@ import matchPath from "./matchPath.js";
 /**
  * The public API for rendering the first <Route> that matches.
  */
-class Switch extends React.Component {
+class Switch extends React.PureComponent {
   render() {
     return (
       <RouterContext.Consumer>

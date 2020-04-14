@@ -1,6 +1,6 @@
 import React from "react";
 
-class Lifecycle extends React.Component {
+class Lifecycle extends React.PureComponent {
   componentDidMount() {
     if (this.props.onMount) this.props.onMount.call(this, this);
   }

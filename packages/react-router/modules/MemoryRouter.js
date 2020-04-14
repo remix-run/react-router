@@ -8,7 +8,7 @@ import Router from "./Router.js";
 /**
  * The public API for a <Router> that stores location in memory.
  */
-class MemoryRouter extends React.Component {
+class MemoryRouter extends React.PureComponent {
   history = createHistory(this.props);
 
   render() {

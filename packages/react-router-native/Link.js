@@ -4,7 +4,7 @@ import PropTypes from "prop-types";
 
 import { __RouterContext as RouterContext } from "react-router";
 
-export default class Link extends React.Component {
+export default class Link extends React.PureComponent {
   static defaultProps = {
     component: TouchableHighlight,
     replace: false
