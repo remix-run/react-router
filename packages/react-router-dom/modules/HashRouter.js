@@ -7,7 +7,7 @@ import warning from "tiny-warning";
 /**
  * The public API for a <Router> that uses window.location.hash.
  */
-class HashRouter extends React.Component {
+class HashRouter extends React.PureComponent {
   history = createHistory(this.props);
 
   render() {

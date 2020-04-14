@@ -7,7 +7,7 @@ import RouterContext from "./RouterContext.js";
 /**
  * The public API for putting history on context.
  */
-class Router extends React.Component {
+class Router extends React.PureComponent {
   static computeRootMatch(pathname) {
     return { path: "/", url: "/", params: {}, isExact: pathname === "/" };
   }

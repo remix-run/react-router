@@ -76,7 +76,7 @@ const PARENT_TRAVEL_DISTANCE = 100;
 const PARENT_FINAL_OPACITY = 0.25;
 const CARD_SHADOW_RADIUS = 10;
 
-class AnimatedStack extends React.Component {
+class AnimatedStack extends React.PureComponent {
   static propTypes = {
     title: PropTypes.any,
     content: PropTypes.any,

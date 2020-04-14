@@ -4,7 +4,7 @@ import { View } from "react-native";
 
 import Link from "../Link.js";
 
-export class TabRoutes extends React.Component {
+export class TabRoutes extends React.PureComponent {
   render() {
     const { children } = this.props;
     return (
@@ -36,7 +36,7 @@ export class TabRoutes extends React.Component {
   }
 }
 
-export class TabRoute extends React.Component {
+export class TabRoute extends React.PureComponent {
   render() {
     const { renderContent, path } = this.props;
     return <Route path={path} render={renderContent} />;
