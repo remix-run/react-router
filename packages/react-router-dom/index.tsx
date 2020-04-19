@@ -1,6 +1,6 @@
 import React from 'react';
 import PropTypes from 'prop-types';
-import { createBrowserHistory, createHashHistory } from 'history';
+import { createBrowserHistory, createHashHistory, HashHistory, BrowserHistory, PathPieces } from 'history';
 import {
   // components
   MemoryRouter,
@@ -26,7 +26,7 @@ import {
   generatePath
 } from 'react-router';
 
-function warning(cond, message) {
+function warning(cond:boolean, message:string):void {
   if (!cond) {
     // eslint-disable-next-line no-console
     if (typeof console !== 'undefined') console.warn(message);
@@ -72,11 +72,15 @@ export {
 // COMPONENTS
 ////////////////////////////////////////////////////////////////////////////////
 
+export interface BrowserRouterProps {
+  timeout?: number
+  window?: Window
+}
 /**
  * A <Router> for use in web browsers. Provides the cleanest URLs.
  */
-export function BrowserRouter({ children, timeout, window }) {
-  let historyRef = React.useRef(null);
+export const BrowserRouter:React.FC<BrowserRouterProps> = ({ children, timeout, window })=> {
+  let historyRef = React.useRef<null|BrowserHistory>(null);
 
   if (historyRef.current == null) {
     historyRef.current = createBrowserHistory({ window });
@@ -97,15 +101,19 @@ if (__DEV__) {
     children: PropTypes.node,
     timeout: PropTypes.number,
     window: PropTypes.object
-  };
+  } as any;
 }
 
+export interface HashRouterProps {
+  timeout?: number
+  window?: Window
+}
 /**
  * A <Router> for use in web browsers. Stores the location in the hash
  * portion of the URL so it is not sent to the server.
  */
-export function HashRouter({ children, timeout, window }) {
-  let historyRef = React.useRef(null);
+export const HashRouter:React.FC<HashRouterProps> = ({ children, timeout, window }) =>{
+  let historyRef = React.useRef<null|HashHistory>(null);
 
   if (historyRef.current == null) {
     historyRef.current = createHashHistory({ window });
@@ -126,13 +134,35 @@ if (__DEV__) {
     children: PropTypes.node,
     timeout: PropTypes.number,
     window: PropTypes.object
-  };
+  } as any;
 }
 
+export interface LinkComponentProps {
+  readonly href: string
+  onClick(event:React.MouseEvent):void,
+  readonly ref?: React.MutableRefObject<React.ComponentType<LinkComponentProps>> | null, // FIXME: change type
+  readonly target?: string
+  readonly className?: string
+  readonly style?: null | React.CSSProperties
+}
+
+export interface LinkProps {
+  
+  readonly   as?: string | React.ComponentType<LinkComponentProps>,
+  readonly   onClick?:(event:React.MouseEvent)=>void,
+  readonly   replace?: boolean
+  readonly   state?: object
+  readonly   target?: string
+  readonly   to: string | PathPieces
+  readonly className?: string
+  readonly style?: null | React.CSSProperties
+}
+
+// FIXME: React.forwardRef type
 /**
  * The public API for rendering a history-aware <a>.
  */
-export const Link = React.forwardRef(function LinkWithRef(
+export const Link = React.forwardRef<HTMLElement | React.ComponentType,LinkProps>(function LinkWithRef(
   {
     as: Component = 'a',
     onClick,
@@ -149,7 +179,7 @@ export const Link = React.forwardRef(function LinkWithRef(
   let location = useLocation();
   let toLocation = useResolvedLocation(to);
 
-  function handleClick(event) {
+  function handleClick(event: React.MouseEvent) {
     if (onClick) onClick(event);
     if (
       !event.defaultPrevented && // onClick prevented default
@@ -177,7 +207,7 @@ export const Link = React.forwardRef(function LinkWithRef(
       {...rest}
       href={href}
       onClick={handleClick}
-      ref={ref}
+      ref={ref as any}
       target={target}
     />
   );
@@ -199,17 +229,32 @@ if (__DEV__) {
         hash: PropTypes.string
       })
     ]).isRequired
-  };
+  } as any;
 }
 
-function isModifiedEvent(event) {
+function isModifiedEvent(event:React.MouseEvent) {
   return !!(event.metaKey || event.altKey || event.ctrlKey || event.shiftKey);
+}
+
+export interface NavLinkProps {
+  readonly 'aria-current'? : 
+  'page'|
+  'step'|
+  'location'|
+  'date'|
+  'time'|
+  'true'
+  readonly activeClassName?: string
+  readonly activeStyle?: null | React.CSSProperties
+  readonly className?: string 
+  readonly style?: null | React.CSSProperties
+  readonly to: string | PathPieces
 }
 
 /**
  * A <Link> wrapper that knows if it's "active" or not.
  */
-export const NavLink = React.forwardRef(function NavLinkWithRef(
+export const NavLink = React.forwardRef<unknown,NavLinkProps>(function NavLinkWithRef(
   {
     'aria-current': ariaCurrentProp = 'page',
     activeClassName = 'active',
@@ -235,8 +280,8 @@ export const NavLink = React.forwardRef(function NavLinkWithRef(
     <Link
       {...rest}
       aria-current={ariaCurrent}
-      className={className}
-      ref={ref}
+      className={className }
+      ref={ref as any}
       style={style}
       to={to}
     />
@@ -270,6 +315,10 @@ if (__DEV__) {
   };
 }
 
+export interface PromptProps {
+  readonly message?:string,
+  readonly when?:boolean
+}
 /**
  * A declarative interface for showing a window.confirm dialog with the given
  * message when the user tries to navigate away from the current page.
@@ -277,7 +326,7 @@ if (__DEV__) {
  * This also serves as a reference implementation for anyone who wants to
  * create their own custom prompt component.
  */
-export function Prompt({ message, when }) {
+export function Prompt({ message, when }:PromptProps) {
   usePrompt(message, when);
   return null;
 }
@@ -298,7 +347,7 @@ if (__DEV__) {
  * Prevents navigation away from the current page using a window.confirm prompt
  * with the given message.
  */
-export function usePrompt(message, when) {
+export function usePrompt(message?:string, when?:boolean) {
   let blocker = React.useCallback(
     tx => {
       if (window.confirm(message)) tx.retry();

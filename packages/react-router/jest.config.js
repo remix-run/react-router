@@ -1,13 +1,17 @@
 module.exports = {
   testMatch: ['**/__tests__/*-test.js'],
   transform: {
-    '\\.js$': './jest-transformer.js'
+    '\\.(js|ts)$': './jest-transformer.js'
   },
   globals: {
     __DEV__: true
   },
   // Add the build directory so Jest can find the built packages
   modulePaths: ['<rootDir>/../../build'],
+  // Just modulePaths doesn't seem to work, index.tsx still gets picked up
+  moduleNameMapper: {
+    'react-router$': '<rootDir>/../../build/react-router'
+  },
   // Tests use built files, so ignore source files. This means
   // you have to manually kick off tests again after the build
   // completes because Jest does not watch the build directory

@@ -1,0 +1,11 @@
+{
+  "compilerOptions": {
+    "esModuleInterop": true,
+    "declaration": true,
+    "emitDeclarationOnly": true,
+    "strict": true,
+    "jsx": "preserve",
+    "module": "commonjs",
+    "target": "esnext"
+  }
+}

@@ -1,14 +1,19 @@
-import React from 'react';
+// FIXME: add generics for `History<S>`
+
+import React, { ReactNode, ReactElement } from 'react';
 import PropTypes from 'prop-types';
-import { createMemoryHistory, parsePath } from 'history';
+import { createMemoryHistory, parsePath, MemoryHistory,History,Location, PathPieces, Action } from 'history';
 
-const readOnly = __DEV__ ? obj => Object.freeze(obj) : obj => obj;
+type Writable<O> = {
+  -readonly [K in keyof O]: O[K]
+}
+const readOnly: typeof Object.freeze = __DEV__ ? Object.freeze : ((obj:any) => obj);
 
-function invariant(cond, message) {
+function invariant(cond:unknown, message:string): asserts cond {
   if (!cond) throw new Error(message);
 }
 
-function warning(cond, message) {
+function warning(cond:unknown, message:string): void {
   if (!cond) {
     // eslint-disable-next-line no-console
     if (typeof console !== 'undefined') console.warn(message);
@@ -20,17 +25,44 @@ function warning(cond, message) {
   }
 }
 
+type InitialEntry = string | PathPieces;
+
+interface RouteWithChildren {
+  readonly path: string;
+  readonly element: React.ReactElement;
+  readonly children?: Routes;
+}
+
+interface RouteWithRedirect {
+  readonly path: string;
+  readonly redirectTo: string;
+}
+
+type Route = RouteWithChildren | RouteWithRedirect;
+
+type Routes = ReadonlyArray<Route>;
+
 ///////////////////////////////////////////////////////////////////////////////
 // CONTEXT
 ///////////////////////////////////////////////////////////////////////////////
 
-const LocationContext = React.createContext(null);
+type LocationContext = { 
+  readonly history:History, 
+  readonly location:Location,
+  readonly pending:boolean
+}
+const LocationContext = React.createContext<null | LocationContext>(null);
 
 if (__DEV__) {
   LocationContext.displayName = 'Location';
 }
 
-const RouteContext = React.createContext({
+const RouteContext = React.createContext<{
+ readonly outlet: ReactElement | null,
+ readonly params: object,
+ readonly pathname: string,
+ readonly route: null | Route
+}>({
   outlet: null,
   params: readOnly({}),
   pathname: '',
@@ -45,19 +77,27 @@ if (__DEV__) {
 // COMPONENTS
 ///////////////////////////////////////////////////////////////////////////////
 
+export interface MemoryRouterProps {
+ readonly initialEntries?: ReadonlyArray<InitialEntry>;
+ readonly initialIndex?: number;
+ readonly timeout?: number;
+}
 /**
  * A <Router> that stores all entries in memory.
  */
-export function MemoryRouter({
+export const MemoryRouter:React.FC<MemoryRouterProps> = ({
   children,
   initialEntries,
   initialIndex,
   timeout
-}) {
-  let historyRef = React.useRef(null);
+}) => {
+  let historyRef = React.useRef<MemoryHistory | null>(null);
 
   if (historyRef.current == null) {
-    historyRef.current = createMemoryHistory({ initialEntries, initialIndex });
+    historyRef.current = createMemoryHistory({ 
+      initialEntries: initialEntries as InitialEntry[] | undefined, // FIXME: error type here
+      initialIndex
+    });
   }
 
   return (
@@ -72,6 +112,7 @@ export function MemoryRouter({
 if (__DEV__) {
   MemoryRouter.displayName = 'MemoryRouter';
   MemoryRouter.propTypes = {
+    // @ts-ignore
     children: PropTypes.node,
     timeout: PropTypes.number,
     initialEntries: PropTypes.arrayOf(
@@ -85,15 +126,20 @@ if (__DEV__) {
           key: PropTypes.string
         })
       ])
-    ),
+    ) as any,
     initialIndex: PropTypes.number
   };
 }
 
+export type NavigateProps = {
+  readonly to: InitialEntry,
+  readonly replace:boolean
+  readonly state:object
+}
 /**
  * Navigate programmatically using a component.
  */
-export function Navigate({ to, replace, state }) {
+export function Navigate({ to, replace, state }:NavigateProps) {
   let navigate = useNavigate();
 
   let locationContext = React.useContext(LocationContext);
@@ -106,7 +152,7 @@ export function Navigate({ to, replace, state }) {
   );
 
   warning(
-    !locationContext.history.static,
+    (locationContext.history as any).static === true,
     `<Navigate> must not be used on the initial render in a <StaticRouter>. ` +
       `This is a no-op, but you should modify your code so the <Navigate> is ` +
       `only ever rendered in response to some user interaction or state change.`
@@ -164,13 +210,17 @@ if (__DEV__) {
 }
 
 // TODO: Remove once React.useTransition is stable.
-const startTransition = tx => tx();
+const startTransition: React.TransitionStartFunction = tx => tx();
 const useTransition = React.useTransition || (() => [startTransition, false]);
 
+export interface RouterProps {
+  readonly history: History;
+  readonly timeout?: number
+}
 /**
  * The root context provider. There should be only one of these in a given app.
  */
-export function Router({ children = null, history, timeout = 2000 }) {
+export const Router:React.FC<RouterProps> = ({ children = null, history, timeout = 2000 }) =>{
   let [location, setLocation] = React.useState(history.location);
   let [startTransition, pending] = useTransition({ timeoutMs: timeout });
   let shouldListenRef = React.useRef(true);
@@ -212,14 +262,14 @@ if (__DEV__) {
       block: PropTypes.func
     }),
     timeout: PropTypes.number
-  };
+  } as any;
 }
 
 /**
  * A wrapper for useRoutes that treats its children as route and/or redirect
  * objects.
  */
-export function Routes({ basename = '', caseSensitive = false, children }) {
+export const Routes:React.FC<{readonly basename:string,readonly caseSensitive:boolean}> = ({ basename = '', caseSensitive = false, children })=> {
   let routes = createRoutesFromChildren(children);
   return useRoutes(routes, basename, caseSensitive);
 }
@@ -230,7 +280,7 @@ if (__DEV__) {
     basename: PropTypes.string,
     caseSensitive: PropTypes.bool,
     children: PropTypes.node
-  };
+  } as any;
 }
 
 /**
@@ -238,8 +288,8 @@ if (__DEV__) {
  * "children" object, which is usually either a React element or an
  * array of elements.
  */
-export function createRoutesFromChildren(children) {
-  let routes = [];
+export function createRoutesFromChildren(children: ReactNode): Routes {
+  let routes:Array<Route> = [];
 
   React.Children.forEach(children, element => {
     // Ignore non-elements. This allows people to more
@@ -250,11 +300,11 @@ export function createRoutesFromChildren(children) {
 
     // Transparently support React.Fragment and its children.
     if (element.type === React.Fragment) {
-      routes.push.apply(routes, createRoutesFromChildren(children));
+      routes.push(...createRoutesFromChildren(children));
       return;
     }
 
-    let route = { path, element };
+    let route:Writable<RouteWithChildren> = { path, element };
     let childRoutes = createRoutesFromChildren(children);
     if (childRoutes.length) {
       route.children = childRoutes;
@@ -274,7 +324,11 @@ export function createRoutesFromChildren(children) {
  * Blocks all navigation attempts. This is useful for preventing the page from
  * changing until some condition is met, like saving form data.
  */
-export function useBlocker(blocker, when = true) {
+export function useBlocker(blocker:(autoUnblockingTx:{
+  readonly retry: () => void;
+  readonly action: Action;
+  readonly location: Location;
+}) => void, when = true) {
   let locationContext = React.useContext(LocationContext);
   invariant(
     locationContext != null,
@@ -298,7 +352,7 @@ export function useBlocker(blocker, when = true) {
             unblock();
             tx.retry();
           }
-        };
+        } as const;
 
         blocker(autoUnblockingTx);
       });
@@ -312,7 +366,7 @@ export function useBlocker(blocker, when = true) {
  * Returns the full href for the given "to" value. This is useful for building
  * custom links that are also accessible and preserve right-click behavior.
  */
-export function useHref(to) {
+export function useHref(to:InitialEntry) {
   let resolvedLocation = useResolvedLocation(to);
 
   let locationContext = React.useContext(LocationContext);
@@ -336,7 +390,15 @@ export function useHref(to) {
  * provide something higher-level to better suit your needs.
  */
 export function useLocation() {
-  return React.useContext(LocationContext).location;
+  const locationContext = React.useContext(LocationContext);
+  invariant(
+    locationContext != null,
+    // TODO: This error is probably because they somehow have
+    // 2 versions of the router loaded. We can help them understand
+    // how to avoid that.
+    `useLocation() may be used only in the context of a <Router> component.`
+  );
+  return locationContext.location;
 }
 
 /**
@@ -344,7 +406,7 @@ export function useLocation() {
  * This is useful for components that need to know "active" state, e.g.
  * <NavLink>.
  */
-export function useMatch(to) {
+export function useMatch(to:InitialEntry) {
   let location = useLocation();
   let resolvedLocation = useResolvedLocation(to);
   // TODO: Try to match search + hash as well
@@ -374,7 +436,7 @@ export function useNavigate() {
   });
 
   let navigate = React.useCallback(
-    (to, { replace, state } = {}) => {
+    (to:number|InitialEntry, { replace, state } : { replace?:boolean, state?:object} = {}) => {
       if (activeRef.current) {
         if (typeof to === 'number') {
           history.go(to);
@@ -383,7 +445,7 @@ export function useNavigate() {
           // If we are pending transition, use REPLACE instead of PUSH.
           // This will prevent URLs that we started navigating to but
           // never fully loaded from appearing in the history stack.
-          let method = !!replace || pending ? 'replace' : 'push';
+          const method = !!replace || pending ? 'replace' : 'push';
           history[method](relativeTo, state);
         }
       } else {
@@ -420,17 +482,18 @@ export function useParams() {
 /**
  * Returns a fully-resolved location object relative to the current location.
  */
-export function useResolvedLocation(to) {
+export function useResolvedLocation(to:InitialEntry) {
   let { pathname } = React.useContext(RouteContext);
   return React.useMemo(() => resolveLocation(to, pathname), [to, pathname]);
 }
 
-let missingTrailingSplatWarnings, warnAboutMissingTrailingSplatAt;
+let missingTrailingSplatWarnings : undefined | Record<string,true>;
+let warnAboutMissingTrailingSplatAt: undefined | ((pathname:string, cond:boolean, message:string)=>void);
 if (__DEV__) {
   missingTrailingSplatWarnings = {};
   warnAboutMissingTrailingSplatAt = (pathname, cond, message) => {
-    if (!cond && !missingTrailingSplatWarnings[pathname]) {
-      missingTrailingSplatWarnings[pathname] = true;
+    if (!cond && !missingTrailingSplatWarnings![pathname]) {
+      missingTrailingSplatWarnings![pathname] = true;
       warning(false, message);
     }
   };
@@ -450,7 +513,7 @@ if (__DEV__) {
  * We should probably write this up in TypeScript instead of in a comment. In
  * fact, what am I even doing here. Nobody is ever going to read this.
  */
-export function useRoutes(routes, basename = '', caseSensitive = false) {
+export function useRoutes(routes: Routes, basename = '', caseSensitive = false) {
   let {
     params: parentParams,
     pathname: parentPathname,
@@ -493,7 +556,7 @@ export function useRoutes(routes, basename = '', caseSensitive = false) {
   let element = matches.reduceRight((outlet, { params, pathname, route }) => {
     return (
       <RouteContext.Provider
-        children={route.element}
+        children={'element' in route ? route.element : undefined}
         value={{
           outlet,
           params: readOnly({ ...parentParams, ...params }),
@@ -502,7 +565,7 @@ export function useRoutes(routes, basename = '', caseSensitive = false) {
         }}
       />
     );
-  }, null);
+  }, null as ReactElement | null);
 
   return element;
 }
@@ -515,8 +578,8 @@ export function useRoutes(routes, basename = '', caseSensitive = false) {
  * Matches the given routes to a location and returns the match data.
  */
 export function matchRoutes(
-  routes,
-  location,
+  routes:Routes,
+  location:InitialEntry,
   basename = '',
   caseSensitive = false
 ) {
@@ -527,6 +590,7 @@ export function matchRoutes(
   // TODO: Validate location
   // - it should have a pathname
   let base = basename.replace(/^\/+|\/+$/g, '');
+  invariant(location.pathname, 'it should have a pathname');
   let target = location.pathname.slice(1);
 
   if (base) {
@@ -560,13 +624,13 @@ export function matchRoutes(
         let routes = flatRoutes.slice(0, index + 1);
         let path = joinPaths(routes.map(r => r.path));
         let [matcher, keys] = compilePath(path, /* end */ false, caseSensitive);
-        let match = target.match(matcher);
+        let match = target.match(matcher)!;
         let pathname = '/' + match[1];
         let values = match.slice(2);
-        let params = keys.reduce((memo, key, index) => {
+        let params = keys.reduce<Record<string,string>>((memo, key, index) => {
           memo[key] = safelyDecodeURIComponent(values[index], key);
           return memo;
-        }, {});
+        },{});
 
         return { params, pathname, route };
       });
@@ -576,7 +640,7 @@ export function matchRoutes(
   return null;
 }
 
-function safelyDecodeURIComponent(value, paramName) {
+function safelyDecodeURIComponent(value:string, paramName:string) {
   try {
     return decodeURIComponent(value.replace(/\+/g, ' '));
   } catch (error) {
@@ -591,13 +655,16 @@ function safelyDecodeURIComponent(value, paramName) {
   }
 }
 
+type FlattenedRoute = readonly [string, Routes,ReadonlyArray<number>]
+type FlattenedRoutes = Array<FlattenedRoute>
+
 function flattenRoutes(
-  routes,
-  flattenedRoutes = [],
+  routes:Routes,
+  flattenedRoutes:Array<FlattenedRoute> = [],
   parentPath = '',
-  parentRoutes = [],
-  parentIndexes = []
-) {
+  parentRoutes: Routes = [],
+  parentIndexes: ReadonlyArray<number> = []
+): FlattenedRoutes {
   routes.forEach((route, index) => {
     let path = joinPaths([parentPath, route.path]);
     let routes = parentRoutes.concat(route);
@@ -605,7 +672,7 @@ function flattenRoutes(
 
     flattenedRoutes.push([path, routes, indexes]);
 
-    if (route.children) {
+    if ('children' in route && route.children) {
       flattenRoutes(route.children, flattenedRoutes, path, routes, indexes);
     }
   });
@@ -618,9 +685,9 @@ const dynamicSegmentValue = 2;
 const emptySegmentValue = 1;
 const staticSegmentValue = 10;
 const splatPenalty = -2;
-const isSplat = s => s === '*';
+const isSplat = (s:string) => s === '*';
 
-function computeScore(path) {
+function computeScore(path:string) {
   let segments = path.split('/');
   let initialScore = segments.length;
   if (segments.some(isSplat)) {
@@ -641,8 +708,8 @@ function computeScore(path) {
     );
 }
 
-function rankFlattenedRoutes(flattenedRoutes) {
-  let pathScores = flattenedRoutes.reduce((memo, [path]) => {
+function rankFlattenedRoutes(flattenedRoutes:FlattenedRoutes) {
+  let pathScores = flattenedRoutes.reduce<Record<string,number>>((memo, [path]) => {
     memo[path] = computeScore(path);
     return memo;
   }, {});
@@ -660,7 +727,7 @@ function rankFlattenedRoutes(flattenedRoutes) {
   });
 }
 
-function compareIndexes(a, b) {
+function compareIndexes(a: ReadonlyArray<number>, b: ReadonlyArray<number>) {
   let siblings =
     a.length === b.length && a.slice(0, -1).every((n, i) => n === b[i]);
 
@@ -669,8 +736,8 @@ function compareIndexes(a, b) {
     : 0; // It doesn't make sense to rank non-siblings by index, so they sort equal
 }
 
-function compilePath(path, end, caseSensitive) {
-  let keys = [];
+function compilePath(path:string, end:boolean, caseSensitive:boolean) {
+  let keys:string[] = [];
   let pattern =
     '^(' +
     path
@@ -678,7 +745,7 @@ function compilePath(path, end, caseSensitive) {
       .replace(/\*\//g, '') // Ignore */ (from paths nested under a *)
       .replace(/\/?\*?$/, '') // Ignore trailing /*, we'll handle it below
       .replace(/[\\.*+^$?{}|()[\]]/g, '\\$&') // Escape special regex chars
-      .replace(/:(\w+)/g, (_, key) => {
+      .replace(/:(\w+)/g, (_, key:string) => {
         keys.push(key);
         return '([^\\/]+)';
       }) +
@@ -699,15 +766,15 @@ function compilePath(path, end, caseSensitive) {
   let flags = caseSensitive ? undefined : 'i';
   let matcher = new RegExp(pattern, flags);
 
-  return [matcher, keys];
+  return [matcher, keys] as const;
 }
 
-const trimTrailingSlashes = path => path.replace(/\/+$/, '');
-const normalizeSlashes = path => path.replace(/\/\/+/g, '/');
-const joinPaths = paths => normalizeSlashes(paths.join('/'));
-const splitPath = path => normalizeSlashes(path).split('/');
+const trimTrailingSlashes = (path:string) => path.replace(/\/+$/, '');
+const normalizeSlashes = (path:string) => path.replace(/\/\/+/g, '/');
+const joinPaths = (paths:ReadonlyArray<string>) => normalizeSlashes(paths.join('/'));
+const splitPath = (path:string) => normalizeSlashes(path).split('/');
 
-function resolvePathname(toPathname, fromPathname) {
+function resolvePathname(toPathname:string, fromPathname:string) {
   let segments = splitPath(trimTrailingSlashes(fromPathname));
   let relativeSegments = splitPath(toPathname);
 
@@ -726,7 +793,7 @@ function resolvePathname(toPathname, fromPathname) {
 /**
  * Returns a fully resolve location object relative to the given pathname.
  */
-export function resolveLocation(to, fromPathname = '/') {
+export function resolveLocation(to:InitialEntry, fromPathname = '/') {
   let { pathname: toPathname, search = '', hash = '' } =
     typeof to === 'string' ? parsePath(to) : to;
 
@@ -742,8 +809,8 @@ export function resolveLocation(to, fromPathname = '/') {
 /**
  * Creates a path with params interpolated.
  */
-export function generatePath(pathname, params = {}) {
+export function generatePath(pathname:string, params:Record<string,string> = {}) {
   return pathname
-    .replace(/:(\w+)/g, (_, key) => params[key] || `:${key}`)
+    .replace(/:(\w+)/g, (_, key:string) => params[key] || `:${key}`)
     .replace(/\*$/, splat => params[splat] || splat);
 }

@@ -1,3 +1,5 @@
+// @ts-nocheck
+// FIXME: types
 import React from 'react';
 import PropTypes from 'prop-types';
 import { Alert, BackHandler, Linking, TouchableHighlight } from 'react-native';
@@ -64,7 +66,7 @@ export {
 /**
  * A <Router> that runs on React Native.
  */
-export function NativeRouter(props) {
+export const NativeRouter: typeof MemoryRouter = (props)=> {
   return <MemoryRouter {...props} />;
 }
 
