@@ -1,0 +1,27 @@
+{
+  "name": "react-router",
+  "version": "6.0.0-alpha.3",
+  "description": "Declarative routing for React",
+  "author": "React Training <hello@reacttraining.com>",
+  "repository": "ReactTraining/react-router",
+  "license": "MIT",
+  "main": "main.js",
+  "module": "react-router.js",
+  "unpkg": "umd/react-router.production.min.js",
+  "dependencies": {
+    "history": "5.0.0-beta.4",
+    "prop-types": "^15.7.2"
+  },
+  "peerDependencies": {
+    "react": ">=16.8"
+  },
+  "sideEffects": false,
+  "keywords": [
+    "react",
+    "router",
+    "route",
+    "routing",
+    "history",
+    "link"
+  ]
+}

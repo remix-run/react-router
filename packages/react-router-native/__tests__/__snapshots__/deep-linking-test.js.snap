@@ -1,0 +1,33 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`deep linking when a "url" event happens navigates to the matching route 1`] = `
+<View>
+  <Text>
+    Home
+  </Text>
+</View>
+`;
+
+exports[`deep linking when a "url" event happens navigates to the matching route 2`] = `
+<View>
+  <Text>
+    About
+  </Text>
+</View>
+`;
+
+exports[`deep linking when there is an initial URL navigates to the matching route 1`] = `
+<View>
+  <Text>
+    About
+  </Text>
+</View>
+`;
+
+exports[`deep linking when there is no initial URL stays on the initial route 1`] = `
+<View>
+  <Text>
+    Home
+  </Text>
+</View>
+`;

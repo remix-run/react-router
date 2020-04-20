@@ -1,0 +1,17 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`Descendant <Routes> splat matching when the parent route path ends with /* works 1`] = `
+<div>
+  <h1>
+    Courses
+  </h1>
+  <div>
+    <h1>
+      React
+    </h1>
+    <h1>
+      React Fundamentals
+    </h1>
+  </div>
+</div>
+`;

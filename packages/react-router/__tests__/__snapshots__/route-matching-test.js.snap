@@ -1,0 +1,295 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`route matching using <Routes> and the *secret menu* renders the right elements at / 1`] = `
+<p>
+  Home
+</p>
+`;
+
+exports[`route matching using <Routes> and the *secret menu* renders the right elements at /courses 1`] = `
+<div>
+  <h1>
+    Courses
+  </h1>
+  <p>
+    All Courses
+  </p>
+</div>
+`;
+
+exports[`route matching using <Routes> and the *secret menu* renders the right elements at /courses/advanced-react 1`] = `
+<p>
+  <h1>
+    Welcome to React Training
+  </h1>
+  <p>
+    Advanced React
+  </p>
+</p>
+`;
+
+exports[`route matching using <Routes> and the *secret menu* renders the right elements at /courses/new 1`] = `
+<div>
+  <h1>
+    Courses
+  </h1>
+  <p>
+    New Course
+  </p>
+</div>
+`;
+
+exports[`route matching using <Routes> and the *secret menu* renders the right elements at /courses/not/found 1`] = `
+<div>
+  <h1>
+    Courses
+  </h1>
+  <p>
+    Course Not Found
+  </p>
+</div>
+`;
+
+exports[`route matching using <Routes> and the *secret menu* renders the right elements at /courses/react-fundamentals 1`] = `
+<p>
+  <h1>
+    Welcome to React Training
+  </h1>
+  <p>
+    React Fundamentals
+  </p>
+</p>
+`;
+
+exports[`route matching using <Routes> and the *secret menu* renders the right elements at /courses/routing 1`] = `
+<div>
+  <h1>
+    Courses
+  </h1>
+  <div>
+    <h2>
+      Course 
+      routing
+    </h2>
+  </div>
+</div>
+`;
+
+exports[`route matching using <Routes> and the *secret menu* renders the right elements at /courses/routing/grades 1`] = `
+<div>
+  <h1>
+    Courses
+  </h1>
+  <div>
+    <h2>
+      Course 
+      routing
+    </h2>
+    <p>
+      Course Grades
+    </p>
+  </div>
+</div>
+`;
+
+exports[`route matching using <Routes> and the *secret menu* renders the right elements at /not-found 1`] = `
+<p>
+  Not Found
+</p>
+`;
+
+exports[`route matching using <Routes> with <Route> elements renders the right elements at / 1`] = `
+<p>
+  Home
+</p>
+`;
+
+exports[`route matching using <Routes> with <Route> elements renders the right elements at /courses 1`] = `
+<div>
+  <h1>
+    Courses
+  </h1>
+  <p>
+    All Courses
+  </p>
+</div>
+`;
+
+exports[`route matching using <Routes> with <Route> elements renders the right elements at /courses/advanced-react 1`] = `
+<p>
+  <h1>
+    Welcome to React Training
+  </h1>
+  <p>
+    Advanced React
+  </p>
+</p>
+`;
+
+exports[`route matching using <Routes> with <Route> elements renders the right elements at /courses/new 1`] = `
+<div>
+  <h1>
+    Courses
+  </h1>
+  <p>
+    New Course
+  </p>
+</div>
+`;
+
+exports[`route matching using <Routes> with <Route> elements renders the right elements at /courses/not/found 1`] = `
+<div>
+  <h1>
+    Courses
+  </h1>
+  <p>
+    Course Not Found
+  </p>
+</div>
+`;
+
+exports[`route matching using <Routes> with <Route> elements renders the right elements at /courses/react-fundamentals 1`] = `
+<p>
+  <h1>
+    Welcome to React Training
+  </h1>
+  <p>
+    React Fundamentals
+  </p>
+</p>
+`;
+
+exports[`route matching using <Routes> with <Route> elements renders the right elements at /courses/routing 1`] = `
+<div>
+  <h1>
+    Courses
+  </h1>
+  <div>
+    <h2>
+      Course 
+      routing
+    </h2>
+  </div>
+</div>
+`;
+
+exports[`route matching using <Routes> with <Route> elements renders the right elements at /courses/routing/grades 1`] = `
+<div>
+  <h1>
+    Courses
+  </h1>
+  <div>
+    <h2>
+      Course 
+      routing
+    </h2>
+    <p>
+      Course Grades
+    </p>
+  </div>
+</div>
+`;
+
+exports[`route matching using <Routes> with <Route> elements renders the right elements at /not-found 1`] = `
+<p>
+  Not Found
+</p>
+`;
+
+exports[`route matching using a route config object renders the right elements at / 1`] = `
+<p>
+  Home
+</p>
+`;
+
+exports[`route matching using a route config object renders the right elements at /courses 1`] = `
+<div>
+  <h1>
+    Courses
+  </h1>
+  <p>
+    All Courses
+  </p>
+</div>
+`;
+
+exports[`route matching using a route config object renders the right elements at /courses/advanced-react 1`] = `
+<p>
+  <h1>
+    Welcome to React Training
+  </h1>
+  <p>
+    Advanced React
+  </p>
+</p>
+`;
+
+exports[`route matching using a route config object renders the right elements at /courses/new 1`] = `
+<div>
+  <h1>
+    Courses
+  </h1>
+  <p>
+    New Course
+  </p>
+</div>
+`;
+
+exports[`route matching using a route config object renders the right elements at /courses/not/found 1`] = `
+<div>
+  <h1>
+    Courses
+  </h1>
+  <p>
+    Course Not Found
+  </p>
+</div>
+`;
+
+exports[`route matching using a route config object renders the right elements at /courses/react-fundamentals 1`] = `
+<p>
+  <h1>
+    Welcome to React Training
+  </h1>
+  <p>
+    React Fundamentals
+  </p>
+</p>
+`;
+
+exports[`route matching using a route config object renders the right elements at /courses/routing 1`] = `
+<div>
+  <h1>
+    Courses
+  </h1>
+  <div>
+    <h2>
+      Course 
+      routing
+    </h2>
+  </div>
+</div>
+`;
+
+exports[`route matching using a route config object renders the right elements at /courses/routing/grades 1`] = `
+<div>
+  <h1>
+    Courses
+  </h1>
+  <div>
+    <h2>
+      Course 
+      routing
+    </h2>
+    <p>
+      Course Grades
+    </p>
+  </div>
+</div>
+`;
+
+exports[`route matching using a route config object renders the right elements at /not-found 1`] = `
+<p>
+  Not Found
+</p>
+`;

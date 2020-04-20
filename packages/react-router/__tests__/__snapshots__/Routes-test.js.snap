@@ -1,0 +1,25 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`A <Routes> does not render a 2nd route that also matches the URL 1`] = `
+<h1>
+  Home
+</h1>
+`;
+
+exports[`A <Routes> renders the first route that matches the URL 1`] = `
+<h1>
+  Home
+</h1>
+`;
+
+exports[`A <Routes> renders with React.Fragment children 1`] = `
+<h1>
+  Admin
+</h1>
+`;
+
+exports[`A <Routes> renders with non-element children 1`] = `
+<h1>
+  Home
+</h1>
+`;
