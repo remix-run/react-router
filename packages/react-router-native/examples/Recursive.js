@@ -13,7 +13,7 @@ const PEEPS = [
 const find = id => PEEPS.find(p => p.id === id);
 
 function Person({ match }) {
-  const person = find(match.params.id);
+  const person = find(parseInt(match.params.id, 10));
 
   return (
     <ScrollView style={styles.container}>
