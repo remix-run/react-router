@@ -1,4 +1,4 @@
-import React from 'react';
+import * as React from 'react';
 import { View, Text, TouchableHighlight } from 'react-native';
 import { act, create as createTestRenderer } from 'react-test-renderer';
 import {

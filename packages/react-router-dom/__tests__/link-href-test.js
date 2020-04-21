@@ -1,4 +1,4 @@
-import React from 'react';
+import * as React from 'react';
 import { act, create as createTestRenderer } from 'react-test-renderer';
 import { MemoryRouter as Router, Routes, Route, Link } from 'react-router-dom';
 

@@ -1,5 +1,5 @@
-import React from 'react';
-import ReactDOM from 'react-dom';
+import * as React from 'react';
+import * as ReactDOM from 'react-dom';
 import { act } from 'react-dom/test-utils';
 import { Router, Routes, Route, Link } from 'react-router-dom';
 

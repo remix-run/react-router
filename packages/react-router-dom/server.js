@@ -1,4 +1,4 @@
-import React from 'react';
+import * as React from 'react';
 import { Router } from 'react-router-dom';
 import { createPath, parsePath } from 'history';
 import PropTypes from 'prop-types';
