@@ -45,7 +45,7 @@ const __DEV__ = true; // TODO
 if (__DEV__) {
   Link.propTypes = {
     onPress: PropTypes.func,
-    component: PropTypes.func,
+    component: PropTypes.oneOfType([PropTypes.func, PropTypes.instanceOf(React.Component)]),
     replace: PropTypes.bool,
     to: PropTypes.oneOfType([PropTypes.string, PropTypes.object])
   };
