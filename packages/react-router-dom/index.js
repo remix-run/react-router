@@ -12,7 +12,9 @@ import {
   // hooks
   useBlocker,
   useHref,
+  useInRouterContext,
   useLocation,
+  useLocationPending,
   useMatch,
   useNavigate,
   useOutlet,
@@ -54,7 +56,9 @@ export {
   // hooks
   useBlocker,
   useHref,
+  useInRouterContext,
   useLocation,
+  useLocationPending,
   useMatch,
   useNavigate,
   useOutlet,

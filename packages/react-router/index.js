@@ -24,7 +24,11 @@ function warning(cond, message) {
 // CONTEXT
 ///////////////////////////////////////////////////////////////////////////////
 
-const LocationContext = React.createContext(null);
+const LocationContext = React.createContext({
+  history: null,
+  location: null,
+  pending: false
+});
 
 if (__DEV__) {
   LocationContext.displayName = 'Location';
@@ -94,23 +98,24 @@ if (__DEV__) {
  * Navigate programmatically using a component.
  */
 export function Navigate({ to, replace, state }) {
-  let navigate = useNavigate();
-
-  let locationContext = React.useContext(LocationContext);
   invariant(
-    locationContext != null,
+    useInRouterContext(),
     // TODO: This error is probably because they somehow have
     // 2 versions of the router loaded. We can help them understand
     // how to avoid that.
     `<Navigate> may be used only in the context of a <Router> component.`
   );
 
+  let { history } = React.useContext(LocationContext);
+
   warning(
-    !locationContext.history.static,
+    !history.static,
     `<Navigate> must not be used on the initial render in a <StaticRouter>. ` +
       `This is a no-op, but you should modify your code so the <Navigate> is ` +
       `only ever rendered in response to some user interaction or state change.`
   );
+
+  let navigate = useNavigate();
 
   React.useEffect(() => {
     navigate(to, { replace, state });
@@ -171,15 +176,15 @@ const useTransition = React.useTransition || (() => [startTransition, false]);
  * The root context provider. There should be only one of these in a given app.
  */
 export function Router({ children = null, history, timeout = 2000 }) {
-  let [location, setLocation] = React.useState(history.location);
-  let [startTransition, pending] = useTransition({ timeoutMs: timeout });
-  let shouldListenRef = React.useRef(true);
-
   invariant(
-    !React.useContext(LocationContext),
+    !useInRouterContext(),
     `You cannot render a <Router> inside another <Router>.` +
       ` You never need more than one.`
   );
+
+  let [location, setLocation] = React.useState(history.location);
+  let [startTransition, pending] = useTransition({ timeoutMs: timeout });
+  let shouldListenRef = React.useRef(true);
 
   if (shouldListenRef.current) {
     shouldListenRef.current = false;
@@ -275,15 +280,15 @@ export function createRoutesFromChildren(children) {
  * changing until some condition is met, like saving form data.
  */
 export function useBlocker(blocker, when = true) {
-  let locationContext = React.useContext(LocationContext);
   invariant(
-    locationContext != null,
+    useInRouterContext(),
     // TODO: This error is probably because they somehow have
     // 2 versions of the router loaded. We can help them understand
     // how to avoid that.
     `useBlocker() may be used only in the context of a <Router> component.`
   );
-  let { history } = locationContext;
+
+  let { history } = React.useContext(LocationContext);
 
   React.useEffect(() => {
     if (when) {
@@ -313,18 +318,25 @@ export function useBlocker(blocker, when = true) {
  * custom links that are also accessible and preserve right-click behavior.
  */
 export function useHref(to) {
-  let resolvedLocation = useResolvedLocation(to);
-
-  let locationContext = React.useContext(LocationContext);
   invariant(
-    locationContext != null,
+    useInRouterContext(),
     // TODO: This error is probably because they somehow have
     // 2 versions of the router loaded. We can help them understand
     // how to avoid that.
     `useHref() may be used only in the context of a <Router> component.`
   );
 
-  return locationContext.history.createHref(resolvedLocation);
+  let { history } = React.useContext(LocationContext);
+  let resolvedLocation = useResolvedLocation(to);
+
+  return history.createHref(resolvedLocation);
+}
+
+/**
+ * Returns true if this component is a descendant of a <Router>.
+ */
+export function useInRouterContext() {
+  return useLocation() != null;
 }
 
 /**
@@ -337,6 +349,13 @@ export function useHref(to) {
  */
 export function useLocation() {
   return React.useContext(LocationContext).location;
+}
+
+/**
+ * Returns true if the router is pending a location update.
+ */
+export function useLocationPending() {
+  return React.useContext(LocationContext).pending;
 }
 
 /**
@@ -356,17 +375,16 @@ export function useMatch(to) {
  * may also be used by other elements to change the location.
  */
 export function useNavigate() {
-  let { pathname } = React.useContext(RouteContext);
-
-  let locationContext = React.useContext(LocationContext);
   invariant(
-    locationContext != null,
+    useInRouterContext(),
     // TODO: This error is probably because they somehow have
     // 2 versions of the router loaded. We can help them understand
     // how to avoid that.
     `useNavigate() may be used only in the context of a <Router> component.`
   );
-  let { history, pending } = locationContext;
+
+  let { history, pending } = React.useContext(LocationContext);
+  let { pathname } = React.useContext(RouteContext);
 
   let activeRef = React.useRef(false);
   React.useEffect(() => {
