@@ -244,10 +244,72 @@ export function usePrompt({ message, when = true }) {
  * A convenient wrapper for accessing individual query parameters via the
  * URLSearchParams interface.
  */
-export function useSearchParams() {
+export function useSearchParams(defaultInit) {
+  let defaultSearchParamsRef = React.useRef(createSearchParams(defaultInit));
+
   let location = useLocation();
-  let searchParams = React.useMemo(() => new URLSearchParams(location.search), [
-    location.search
-  ]);
-  return searchParams;
+  let searchParams = React.useMemo(() => {
+    let searchParams = createSearchParams(location.search);
+
+    for (let key of defaultSearchParamsRef.current.keys()) {
+      if (!searchParams.has(key)) {
+        defaultSearchParamsRef.current.getAll(key).forEach(value => {
+          searchParams.append(key, value);
+        });
+      }
+    }
+
+    return searchParams;
+  }, [location.search]);
+
+  let navigate = useNavigate();
+  let setSearchParams = React.useCallback(
+    (nextInit, navigateOpts) => {
+      navigate('?' + createSearchParams(nextInit), navigateOpts);
+    },
+    [navigate]
+  );
+
+  return [searchParams, setSearchParams];
+}
+
+/**
+ * Creates a URLSearchParams object using the given initializer.
+ *
+ * This is identical to `new URLSearchParams(init)` except it also
+ * supports arrays as values in the object form of the initializer
+ * instead of just strings. This is convenient when you need multiple
+ * values for a given key, but don't want to use an array initializer.
+ *
+ * For example, instead of:
+ *
+ *   let searchParams = new URLSearchParams([
+ *     ['sort', 'name'],
+ *     ['sort', 'price']
+ *   ]);
+ *
+ * you can do:
+ *
+ *   let searchParams = createSearchParams({
+ *     sort: ['name', 'price']
+ *   });
+ */
+export function createSearchParams(init = '') {
+  if (
+    typeof init !== 'string' &&
+    !Array.isArray(init) &&
+    !(init instanceof URLSearchParams)
+  ) {
+    init = Object.keys(init).reduce((memo, key) => {
+      let value = init[key];
+      if (Array.isArray(value)) {
+        value.forEach(v => memo.push([key, v]));
+      } else {
+        memo.push([key, value]);
+      }
+      return memo;
+    }, []);
+  }
+
+  return new URLSearchParams(init);
 }
