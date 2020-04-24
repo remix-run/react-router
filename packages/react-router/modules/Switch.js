@@ -31,7 +31,7 @@ class Switch extends React.PureComponent {
               const path = child.props.path || child.props.from;
 
               match = path
-                ? matchPath(location.pathname, { ...child.props, path })
+                ? matchPath(location, { ...child.props, path })
                 : context.match;
             }
           });

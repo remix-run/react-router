@@ -1,4 +1,5 @@
-import pathToRegexp from "path-to-regexp";
+import { match } from "path-to-regexp";
+import qs from "qs";
 
 const cache = {};
 const cacheLimit = 10000;
@@ -10,9 +11,8 @@ function compilePath(path, options) {
 
   if (pathCache[path]) return pathCache[path];
 
-  const keys = [];
-  const regexp = pathToRegexp(path, keys, options);
-  const result = { regexp, keys };
+  // match the path to get the regexp function
+  const result = match(path, options);
 
   if (cacheCount < cacheLimit) {
     pathCache[path] = result;
@@ -25,7 +25,7 @@ function compilePath(path, options) {
 /**
  * Public API for matching a URL pathname to a path.
  */
-function matchPath(pathname, options = {}) {
+function matchPath({ pathname, search }, options = {}) {
   if (typeof options === "string" || Array.isArray(options)) {
     options = { path: options };
   }
@@ -38,16 +38,19 @@ function matchPath(pathname, options = {}) {
     if (!path && path !== "") return null;
     if (matched) return matched;
 
-    const { regexp, keys } = compilePath(path, {
+    const regexpFunction = compilePath(path, {
       end: exact,
       strict,
       sensitive
     });
-    const match = regexp.exec(pathname);
+    const match = regexpFunction(pathname);
 
     if (!match) return null;
 
-    const [url, ...values] = match;
+    // transform the location search to query object
+    const query = qs.parse(search, { ignoreQueryPrefix: true });
+
+    const { path: url, params } = match;
     const isExact = pathname === url;
 
     if (exact && !isExact) return null;
@@ -56,10 +59,8 @@ function matchPath(pathname, options = {}) {
       path, // the path used to match
       url: path === "/" && url === "" ? "/" : url, // the matched portion of the URL
       isExact, // whether or not we matched exactly
-      params: keys.reduce((memo, key, index) => {
-        memo[key.name] = values[index];
-        return memo;
-      }, {})
+      params, // path params
+      query // location query
     };
   }, null);
 }

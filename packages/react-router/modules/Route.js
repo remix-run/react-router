@@ -38,7 +38,7 @@ class Route extends React.PureComponent {
           const match = this.props.computedMatch
             ? this.props.computedMatch // <Switch> already computed the match for us
             : this.props.path
-            ? matchPath(location.pathname, this.props)
+            ? matchPath(location, this.props)
             : context.match;
 
           const props = { ...context, location, match };

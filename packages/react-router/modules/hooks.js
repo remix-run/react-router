@@ -51,5 +51,5 @@ export function useRouteMatch(path) {
   const location = useLocation();
   const match = useContext(Context).match;
 
-  return path ? matchPath(location.pathname, path) : match;
+  return path ? matchPath(location, path) : match;
 }

@@ -1,4 +1,4 @@
-import pathToRegexp from "path-to-regexp";
+import { compile } from "path-to-regexp";
 
 const cache = {};
 const cacheLimit = 10000;
@@ -7,7 +7,7 @@ let cacheCount = 0;
 function compilePath(path) {
   if (cache[path]) return cache[path];
 
-  const generator = pathToRegexp.compile(path);
+  const generator = compile(path);
 
   if (cacheCount < cacheLimit) {
     cache[path] = generator;
