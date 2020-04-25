@@ -621,11 +621,14 @@ function flattenRoutes(
     let routes = parentRoutes.concat(route);
     let indexes = parentIndexes.concat(index);
 
-    flattenedRoutes.push([path, routes, indexes]);
-
+    // Add the children before adding this route to the array so we traverse the
+    // route tree depth-first and child routes appear before their parents in
+    // the "flattened" version.
     if (route.children) {
       flattenRoutes(route.children, flattenedRoutes, path, routes, indexes);
     }
+
+    flattenedRoutes.push([path, routes, indexes]);
   });
 
   return flattenedRoutes;
@@ -665,6 +668,11 @@ function rankFlattenedRoutes(flattenedRoutes) {
     return memo;
   }, {});
 
+  // Using this array allows us to do a stable sort even in browsers that don't
+  // support it. We simply sort by a flattened route's original index in the
+  // array if it sorts equal to another one.
+  let clonedRoutes = flattenedRoutes.slice(0);
+
   flattenedRoutes.sort((a, b) => {
     let [aPath, , aIndexes] = a;
     let aScore = pathScores[aPath];
@@ -674,17 +682,30 @@ function rankFlattenedRoutes(flattenedRoutes) {
 
     return aScore !== bScore
       ? bScore - aScore // Higher score first
-      : compareIndexes(aIndexes, bIndexes);
+      : compareIndexes(
+          aIndexes,
+          bIndexes,
+          clonedRoutes.indexOf(a),
+          clonedRoutes.indexOf(b)
+        );
   });
 }
 
-function compareIndexes(a, b) {
+function compareIndexes(a, b, aIndex, bIndex) {
   let siblings =
     a.length === b.length && a.slice(0, -1).every((n, i) => n === b[i]);
 
   return siblings
-    ? a[a.length - 1] - b[b.length - 1] // Earlier siblings come first
-    : 0; // It doesn't make sense to rank non-siblings by index, so they sort equal
+    ? // If two routes are siblings, we should try to match the earlier sibling
+      // first. This allows people to have fine-grained control over the matching
+      // behavior by simply putting routes with identical paths in the order they
+      // want them tried.
+      a[a.length - 1] - b[b.length - 1]
+    : // Otherwise, it doesn't really make sense to rank non-siblings by index,
+      // so they sort equally. However, since JavaScript sort hasn't historically
+      // been stable, instead of returning 0 here we compare the original indexes
+      // of the items so they stay in the same order they were in previously.
+      aIndex - bIndex;
 }
 
 function compilePath(path, end, caseSensitive) {
