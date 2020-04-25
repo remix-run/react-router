@@ -668,12 +668,9 @@ function rankFlattenedRoutes(flattenedRoutes) {
     return memo;
   }, {});
 
-  // Using this array allows us to do a stable sort even in browsers that don't
-  // support it. We simply sort by a flattened route's original index in the
-  // array if it sorts equal to another one.
-  let clonedRoutes = flattenedRoutes.slice(0);
-
-  flattenedRoutes.sort((a, b) => {
+  // Sorting is stable in modern browsers, but we still support IE 11, so we
+  // need this little helper.
+  stableSort(flattenedRoutes, (a, b) => {
     let [aPath, , aIndexes] = a;
     let aScore = pathScores[aPath];
 
@@ -682,16 +679,11 @@ function rankFlattenedRoutes(flattenedRoutes) {
 
     return aScore !== bScore
       ? bScore - aScore // Higher score first
-      : compareIndexes(
-          aIndexes,
-          bIndexes,
-          clonedRoutes.indexOf(a),
-          clonedRoutes.indexOf(b)
-        );
+      : compareIndexes(aIndexes, bIndexes);
   });
 }
 
-function compareIndexes(a, b, aIndex, bIndex) {
+function compareIndexes(a, b) {
   let siblings =
     a.length === b.length && a.slice(0, -1).every((n, i) => n === b[i]);
 
@@ -702,10 +694,15 @@ function compareIndexes(a, b, aIndex, bIndex) {
       // want them tried.
       a[a.length - 1] - b[b.length - 1]
     : // Otherwise, it doesn't really make sense to rank non-siblings by index,
-      // so they sort equally. However, since JavaScript sort hasn't historically
-      // been stable, instead of returning 0 here we compare the original indexes
-      // of the items so they stay in the same order they were in previously.
-      aIndex - bIndex;
+      // so they sort equally.
+      0;
+}
+
+function stableSort(array, compareItems) {
+  // This copy lets us get the original index of an item so we can preserve the
+  // original ordering in the case that they sort equally.
+  let copy = array.slice(0);
+  array.sort((a, b) => compareItems(a, b) || copy.indexOf(a) - copy.indexOf(b));
 }
 
 function compilePath(path, end, caseSensitive) {
