@@ -118,7 +118,7 @@ it("navigates home when you click the logo", async => {
   render(
     <MemoryRouter initialEntries={['/my/initial/route']}>
       <App />
-    <MemoryRouter>,
+    </MemoryRouter>,
     root
   );
 
