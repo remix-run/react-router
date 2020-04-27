@@ -115,13 +115,13 @@ export function useLocationPending(): boolean;
  */
 export function useMatch(to: History.Location): boolean;
 
-export interface NavigateOptions {
+export interface NavigateOptions<TState = any> {
   replace?: boolean;
-  state?: any;
+  state?: TState;
 }
 
 declare function navigate(delta: number): void;
-declare function navigate(to: History.LocationDescriptor, options?: NavigateOptions): void;
+declare function navigate<TState = any>(to: History.LocationDescriptor, options?: NavigateOptions<TState>): void;
 
 /**
  * Returns an imperative method for changing the location. Used by <Link>s, but
@@ -140,7 +140,7 @@ export function useOutlet(): React.ReactElement;
  * This is useful for using ids embedded in the URL to fetch data, but we
  * eventually want to provide something at a higher level for this.
  */
-export function useParams(): object;
+export function useParams<TParams extends object = object>(): TParams;
 
 /**
  * Returns a fully-resolved location object relative to the current location.
