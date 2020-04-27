@@ -33,6 +33,10 @@ export {
   generatePath
 } from 'react-router';
 
+import {
+  NavigateOptions
+} from 'react-router';
+
 export interface BrowserRouterProps {
   timeout?: number;
   window?: Window;
@@ -83,4 +87,18 @@ export class Prompt extends React.Component<PromptProps, any> {
 
 export function usePrompt(message: string, when?: boolean): void;
 
-export function useSearchParams(): URLSearchParams;
+interface SetSearchParams {
+  (nextInit: Parameters<typeof createSearchParams>, navigateOpts?: NavigateOptions);
+}
+
+export function useSearchParams(): [URLSearchParams, SetSearchParams];
+
+/**
+ * Default URLSearchParams constructor parameters
+ */
+export function createSearchParams(init?: string[][] | Record<string, string> | string | URLSearchParams): URLSearchParams;
+
+/**
+ * Additional support for Record<string, string[]>
+ */
+export function createSearchParams(init?: Record<string, string[]>);
