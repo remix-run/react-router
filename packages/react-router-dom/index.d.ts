@@ -44,6 +44,9 @@ export interface BrowserRouterProps {
   window?: Window;
 }
 
+/**
+ * A <Router> for use in web browsers. Provides the cleanest URLs.
+ */
 export class BrowserRouter extends React.Component<BrowserRouterProps, any> {
 }
 
@@ -52,6 +55,10 @@ export interface HashRouterProps {
   window?: Window;
 }
 
+/**
+ * A <Router> for use in web browsers. Stores the location in the hash
+ * portion of the URL so it is not sent to the server.
+ */
 export class HashRouter extends React.Component<HashRouterProps, any> {
 }
 
@@ -64,6 +71,9 @@ export interface LinkProps {
   to: History.LocationDescriptor;
 }
 
+/**
+ * The public API for rendering a history-aware <a>.
+ */
 export class Link extends React.Component<LinkProps, any> {
 }
 
@@ -76,6 +86,9 @@ export interface NavLinkProps extends LinkProps {
   to: History.LocationDescriptor;
 }
 
+/**
+ * A <Link> wrapper that knows if it's "active" or not.
+ */
 export class NavLink extends React.Component<NavLinkProps, any> {
 }
 
@@ -84,15 +97,30 @@ export interface PromptProps {
   when?: boolean;
 }
 
+/**
+ * A declarative interface for showing a window.confirm dialog with the given
+ * message when the user tries to navigate away from the current page.
+ *
+ * This also serves as a reference implementation for anyone who wants to
+ * create their own custom prompt component.
+ */
 export class Prompt extends React.Component<PromptProps, any> {
 }
 
+/**
+ * Prevents navigation away from the current page using a window.confirm prompt
+ * with the given message.
+ */
 export function usePrompt(message: string, when?: boolean): void;
 
 interface SetSearchParams {
   (nextInit: Parameters<typeof createSearchParams>, navigateOpts?: NavigateOptions);
 }
 
+/**
+ * A convenient wrapper for accessing individual query parameters via the
+ * URLSearchParams interface.
+ */
 export function useSearchParams(): [URLSearchParams, SetSearchParams];
 
 /**
