@@ -56,7 +56,17 @@ export function useBlocker(blocker: any, when?: boolean): void;
 
 export function useHref(to: History.LocationDescriptor): History.Href;
 
+/**
+ * Returns true if this component is a descendant of a <Router>.
+ */
+export function useInRouterContext(): boolean;
+
 export function useLocation(): History.Location;
+
+/**
+ * Returns true if the router is pending a location update.
+ */
+export function useLocationPending(): boolean;
 
 export function useMatch(to: History.Location): boolean;
 

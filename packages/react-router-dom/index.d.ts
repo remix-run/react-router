@@ -19,7 +19,9 @@ export {
   // hooks
   useBlocker,
   useHref,
+  useInRouterContext,
   useLocation,
+  useLocationPending,
   useMatch,
   useNavigate,
   useOutlet,
