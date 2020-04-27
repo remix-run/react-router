@@ -1,5 +1,5 @@
-import React from 'react';
-import ReactDOM from 'react-dom';
+import * as React from 'react';
+import * as ReactDOM from 'react-dom';
 import { act } from 'react-dom/test-utils';
 import {
   BrowserRouter as Router,
@@ -25,7 +25,11 @@ describe('navigate with params', () => {
     it('correctly encodes the param in the URL and decodes the param when it is used', () => {
       function Start() {
         let navigate = useNavigate();
-        navigate('/blog/react router');
+
+        React.useEffect(() => {
+          navigate('/blog/react router');
+        });
+
         return null;
       }
 
@@ -55,7 +59,11 @@ describe('navigate with params', () => {
     it('does not alter the param encoding in the URL and decodes the param when it is used', () => {
       function Start() {
         let navigate = useNavigate();
-        navigate('/blog/react+router');
+
+        React.useEffect(() => {
+          navigate('/blog/react+router');
+        });
+
         return null;
       }
 

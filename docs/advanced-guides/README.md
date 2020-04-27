@@ -8,7 +8,6 @@ build a certain capability or feature of your app with React Router.
 - [Using Layouts](#TODO)
 - ["Not Found" Routes (404)](#TODO)
 - [Using Route Config Objects](#TODO)
-- [Using Redirects](#TODO)
 
 ## Common User Flows
 
@@ -22,8 +21,8 @@ build a certain capability or feature of your app with React Router.
 
 ## Useful Techniques
 
+- [Working with the Search/Query String](working-with-the-search-string.md)
 - [Custom Links](#TODO)
-- [Using the Query String](#TODO)
 - [Recursive Paths](#TODO)
 - [Code Splitting](#TODO)
 
@@ -31,7 +30,6 @@ build a certain capability or feature of your app with React Router.
 
 - [Creating Routes from Files](#TODO)
 - [Using `StaticRouter` Directly](#TODO)
-- [Handling Redirects](#TODO)
 
 ## Testing
 

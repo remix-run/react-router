@@ -1,6 +1,6 @@
 {
   "name": "react-router-dom",
-  "version": "6.0.0-alpha.2",
+  "version": "6.0.0-alpha.3",
   "description": "Declarative routing for React web applications",
   "author": "React Training <hello@reacttraining.com>",
   "repository": "ReactTraining/react-router",
@@ -15,7 +15,7 @@
   "peerDependencies": {
     "react": ">=16.8",
     "react-dom": ">=16.8",
-    "react-router": "6.0.0-alpha.2"
+    "react-router": "6.0.0-alpha.3"
   },
   "sideEffects": false,
   "keywords": [

@@ -1,4 +1,4 @@
-import React from 'react';
+import * as React from 'react';
 import PropTypes from 'prop-types';
 import { createMemoryHistory, parsePath } from 'history';
 
@@ -24,11 +24,14 @@ function warning(cond, message) {
 // CONTEXT
 ///////////////////////////////////////////////////////////////////////////////
 
-const LocationContext = React.createContext();
+const LocationContext = React.createContext({
+  history: null,
+  location: null,
+  pending: false
+});
 
 if (__DEV__) {
-  LocationContext.Consumer.displayName = 'Location.Consumer';
-  LocationContext.Provider.displayName = 'Location.Provider';
+  LocationContext.displayName = 'Location';
 }
 
 const RouteContext = React.createContext({
@@ -39,8 +42,7 @@ const RouteContext = React.createContext({
 });
 
 if (__DEV__) {
-  RouteContext.Consumer.displayName = 'Route.Consumer';
-  RouteContext.Provider.displayName = 'Route.Provider';
+  RouteContext.displayName = 'Route';
 }
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -95,9 +97,30 @@ if (__DEV__) {
 /**
  * Navigate programmatically using a component.
  */
-export function Navigate({ to, replace = false, state }) {
+export function Navigate({ to, replace, state }) {
+  invariant(
+    useInRouterContext(),
+    // TODO: This error is probably because they somehow have
+    // 2 versions of the router loaded. We can help them understand
+    // how to avoid that.
+    `<Navigate> may be used only in the context of a <Router> component.`
+  );
+
+  let { history } = React.useContext(LocationContext);
+
+  warning(
+    !history.static,
+    `<Navigate> must not be used on the initial render in a <StaticRouter>. ` +
+      `This is a no-op, but you should modify your code so the <Navigate> is ` +
+      `only ever rendered in response to some user interaction or state change.`
+  );
+
   let navigate = useNavigate();
-  navigate(to, { replace, state });
+
+  React.useEffect(() => {
+    navigate(to, { replace, state });
+  });
+
   return null;
 }
 
@@ -130,38 +153,6 @@ if (__DEV__) {
 }
 
 /**
- * Used in a route config to redirect from one location to another.
- */
-export function Redirect() {
-  return null;
-}
-
-if (__DEV__) {
-  Redirect.displayName = 'Redirect';
-
-  function redirectChildrenType(props, propName, componentName) {
-    if (props[propName] != null) {
-      return new Error(
-        'A <Redirect> should not have child routes; they will never be rendered.'
-      );
-    }
-  }
-
-  Redirect.propTypes = {
-    children: redirectChildrenType,
-    from: PropTypes.string,
-    to: PropTypes.oneOfType([
-      PropTypes.string,
-      PropTypes.shape({
-        pathname: PropTypes.string,
-        search: PropTypes.string,
-        hash: PropTypes.string
-      })
-    ])
-  };
-}
-
-/**
  * Used in a route config to render an element.
  */
 export function Route({ element = <Outlet /> }) {
@@ -185,18 +176,18 @@ const useTransition = React.useTransition || (() => [startTransition, false]);
  * The root context provider. There should be only one of these in a given app.
  */
 export function Router({ children = null, history, timeout = 2000 }) {
-  let [location, setLocation] = React.useState(history.location);
-  let [startTransition, pending] = useTransition({ timeoutMs: timeout });
-  let listeningRef = React.useRef(false);
-
   invariant(
-    !React.useContext(LocationContext),
+    !useInRouterContext(),
     `You cannot render a <Router> inside another <Router>.` +
       ` You never need more than one.`
   );
 
-  if (!listeningRef.current) {
-    listeningRef.current = true;
+  let [location, setLocation] = React.useState(history.location);
+  let [startTransition, pending] = useTransition({ timeoutMs: timeout });
+  let shouldListenRef = React.useRef(true);
+
+  if (shouldListenRef.current) {
+    shouldListenRef.current = false;
     history.listen(({ location }) => {
       startTransition(() => {
         setLocation(location);
@@ -260,7 +251,7 @@ export function createRoutesFromChildren(children) {
     // easily inline conditionals in their route config.
     if (!React.isValidElement(element)) return;
 
-    let { children, from, path, to } = element.props;
+    let { children, path = '/' } = element.props;
 
     // Transparently support React.Fragment and its children.
     if (element.type === React.Fragment) {
@@ -268,20 +259,10 @@ export function createRoutesFromChildren(children) {
       return;
     }
 
-    path = path || from || '/';
-
-    // Components that have a to prop are redirects.
-    // All others should use path + element (and maybe children) props.
-    let route;
-    if (to) {
-      route = { path, redirectTo: to };
-    } else {
-      route = { path, element };
-
-      let childRoutes = createRoutesFromChildren(children);
-      if (childRoutes.length) {
-        route.children = childRoutes;
-      }
+    let route = { path, element };
+    let childRoutes = createRoutesFromChildren(children);
+    if (childRoutes.length) {
+      route.children = childRoutes;
     }
 
     routes.push(route);
@@ -299,15 +280,15 @@ export function createRoutesFromChildren(children) {
  * changing until some condition is met, like saving form data.
  */
 export function useBlocker(blocker, when = true) {
-  let { history } = React.useContext(LocationContext);
-
-  // TODO: This error is probably because they somehow have
-  // 2 versions of the router loaded. We can help them understand
-  // how to avoid that.
   invariant(
-    history != null,
-    'navigation blocking may be used only in the context of a <Router> component'
+    useInRouterContext(),
+    // TODO: This error is probably because they somehow have
+    // 2 versions of the router loaded. We can help them understand
+    // how to avoid that.
+    `useBlocker() may be used only in the context of a <Router> component.`
   );
+
+  let { history } = React.useContext(LocationContext);
 
   React.useEffect(() => {
     if (when) {
@@ -337,18 +318,25 @@ export function useBlocker(blocker, when = true) {
  * custom links that are also accessible and preserve right-click behavior.
  */
 export function useHref(to) {
-  let resolvedLocation = useResolvedLocation(to);
-  let { history } = React.useContext(LocationContext);
-
-  // TODO: This error is probably because they somehow have
-  // 2 versions of the router loaded. We can help them understand
-  // how to avoid that.
   invariant(
-    history != null,
-    'href resolution may be used only in the context of a <Router> component'
+    useInRouterContext(),
+    // TODO: This error is probably because they somehow have
+    // 2 versions of the router loaded. We can help them understand
+    // how to avoid that.
+    `useHref() may be used only in the context of a <Router> component.`
   );
 
+  let { history } = React.useContext(LocationContext);
+  let resolvedLocation = useResolvedLocation(to);
+
   return history.createHref(resolvedLocation);
+}
+
+/**
+ * Returns true if this component is a descendant of a <Router>.
+ */
+export function useInRouterContext() {
+  return useLocation() != null;
 }
 
 /**
@@ -361,6 +349,13 @@ export function useHref(to) {
  */
 export function useLocation() {
   return React.useContext(LocationContext).location;
+}
+
+/**
+ * Returns true if the router is pending a location update.
+ */
+export function useLocationPending() {
+  return React.useContext(LocationContext).pending;
 }
 
 /**
@@ -380,32 +375,44 @@ export function useMatch(to) {
  * may also be used by other elements to change the location.
  */
 export function useNavigate() {
+  invariant(
+    useInRouterContext(),
+    // TODO: This error is probably because they somehow have
+    // 2 versions of the router loaded. We can help them understand
+    // how to avoid that.
+    `useNavigate() may be used only in the context of a <Router> component.`
+  );
+
   let { history, pending } = React.useContext(LocationContext);
   let { pathname } = React.useContext(RouteContext);
 
-  // TODO: This error is probably because they somehow have
-  // 2 versions of the router loaded. We can help them understand
-  // how to avoid that.
-  invariant(
-    history != null,
-    'navigation may be used only in the context of a <Router> component'
-  );
+  let activeRef = React.useRef(false);
+  React.useEffect(() => {
+    activeRef.current = true;
+  });
 
   let navigate = React.useCallback(
     (to, { replace, state } = {}) => {
-      if (typeof to === 'number') {
-        history.go(to);
+      if (activeRef.current) {
+        if (typeof to === 'number') {
+          history.go(to);
+        } else {
+          let relativeTo = resolveLocation(to, pathname);
+          // If we are pending transition, use REPLACE instead of PUSH.
+          // This will prevent URLs that we started navigating to but
+          // never fully loaded from appearing in the history stack.
+          let method = !!replace || pending ? 'replace' : 'push';
+          history[method](relativeTo, state);
+        }
       } else {
-        let relativeTo = resolveLocation(to, pathname);
-
-        // If we are pending transition, use REPLACE instead of PUSH.
-        // This will prevent URLs that we started navigating to but
-        // never fully loaded from appearing in the history stack.
-        let method = !!replace || pending ? 'replace' : 'push';
-        history[method](relativeTo, state);
+        warning(
+          false,
+          `You should call navigate() in a useEffect, not when ` +
+            `your component is first rendered.`
+        );
       }
     },
-    [history, pending, pathname]
+    [history, pathname, pending]
   );
 
   return navigate;
@@ -487,7 +494,6 @@ export function useRoutes(routes, basename = '', caseSensitive = false) {
 
   basename = basename ? joinPaths([parentPathname, basename]) : parentPathname;
 
-  let navigate = useNavigate();
   let location = useLocation();
   let matches = React.useMemo(
     () => matchRoutes(routes, location, basename, caseSensitive),
@@ -496,24 +502,6 @@ export function useRoutes(routes, basename = '', caseSensitive = false) {
 
   if (!matches) {
     // TODO: Warn about nothing matching, suggest using a catch-all route.
-    return null;
-  }
-
-  // If we matched a redirect, navigate and return null.
-  let redirectMatch = matches.find(match => isRedirectRoute(match.route));
-  if (redirectMatch) {
-    let { params, route } = redirectMatch;
-    let relativeTo = resolveLocation(route.redirectTo, parentPathname);
-
-    let { pathname } = relativeTo;
-    if (/:\w+/.test(pathname)) {
-      // Allow param interpolation into <Redirect to>, e.g.
-      // <Redirect from="users/:id" to="profile/:id">
-      relativeTo = { ...relativeTo, pathname: generatePath(pathname, params) };
-    }
-
-    navigate(relativeTo, { replace: true });
-
     return null;
   }
 
@@ -535,10 +523,6 @@ export function useRoutes(routes, basename = '', caseSensitive = false) {
   }, null);
 
   return element;
-}
-
-function isRedirectRoute(route) {
-  return route.redirectTo != null;
 }
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -637,11 +621,14 @@ function flattenRoutes(
     let routes = parentRoutes.concat(route);
     let indexes = parentIndexes.concat(index);
 
-    flattenedRoutes.push([path, routes, indexes]);
-
+    // Add the children before adding this route to the array so we traverse the
+    // route tree depth-first and child routes appear before their parents in
+    // the "flattened" version.
     if (route.children) {
       flattenRoutes(route.children, flattenedRoutes, path, routes, indexes);
     }
+
+    flattenedRoutes.push([path, routes, indexes]);
   });
 
   return flattenedRoutes;
@@ -681,6 +668,11 @@ function rankFlattenedRoutes(flattenedRoutes) {
     return memo;
   }, {});
 
+  // Using this array allows us to do a stable sort even in browsers that don't
+  // support it. We simply sort by a flattened route's original index in the
+  // array if it sorts equal to another one.
+  let clonedRoutes = flattenedRoutes.slice(0);
+
   flattenedRoutes.sort((a, b) => {
     let [aPath, , aIndexes] = a;
     let aScore = pathScores[aPath];
@@ -690,17 +682,30 @@ function rankFlattenedRoutes(flattenedRoutes) {
 
     return aScore !== bScore
       ? bScore - aScore // Higher score first
-      : compareIndexes(aIndexes, bIndexes);
+      : compareIndexes(
+          aIndexes,
+          bIndexes,
+          clonedRoutes.indexOf(a),
+          clonedRoutes.indexOf(b)
+        );
   });
 }
 
-function compareIndexes(a, b) {
+function compareIndexes(a, b, aIndex, bIndex) {
   let siblings =
     a.length === b.length && a.slice(0, -1).every((n, i) => n === b[i]);
 
   return siblings
-    ? a[a.length - 1] - b[b.length - 1] // Earlier siblings come first
-    : 0; // It doesn't make sense to rank non-siblings by index, so they sort equal
+    ? // If two routes are siblings, we should try to match the earlier sibling
+      // first. This allows people to have fine-grained control over the matching
+      // behavior by simply putting routes with identical paths in the order they
+      // want them tried.
+      a[a.length - 1] - b[b.length - 1]
+    : // Otherwise, it doesn't really make sense to rank non-siblings by index,
+      // so they sort equally. However, since JavaScript sort hasn't historically
+      // been stable, instead of returning 0 here we compare the original indexes
+      // of the items so they stay in the same order they were in previously.
+      aIndex - bIndex;
 }
 
 function compilePath(path, end, caseSensitive) {
