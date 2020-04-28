@@ -359,6 +359,20 @@ export function useLocationPending() {
 }
 
 /**
+ * Returns [hash, setHash]
+ */
+export function useHash() {
+  const { hash, ...location } = useLocation();
+  const navigate = useNavigate();
+
+  function setHash(newHash) {
+    navigate({ ...location, hash: newHash });
+  }
+
+  return [hash, setHash];
+}
+
+/**
  * Returns true if the URL for the given "to" value matches the current URL.
  * This is useful for components that need to know "active" state, e.g.
  * <NavLink>.
