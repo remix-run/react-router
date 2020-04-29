@@ -1,14 +1,31 @@
 import * as React from 'react';
 import PropTypes from 'prop-types';
-import { createMemoryHistory, parsePath } from 'history';
+import {
+  // types
+  Path,
+  State,
+  PathPieces,
+  Location,
+  Transition,
+  Blocker,
+  To,
+  History,
+  MemoryHistory,
+  InitialEntry,
+  // utils
+  createMemoryHistory,
+  parsePath
+} from 'history';
 
-const readOnly = __DEV__ ? obj => Object.freeze(obj) : obj => obj;
+const readOnly: (obj: any) => any = __DEV__
+  ? obj => Object.freeze(obj)
+  : obj => obj;
 
-function invariant(cond, message) {
+function invariant(cond: boolean, message: string): void {
   if (!cond) throw new Error(message);
 }
 
-function warning(cond, message) {
+function warning(cond: boolean, message: string): void {
   if (!cond) {
     // eslint-disable-next-line no-console
     if (typeof console !== 'undefined') console.warn(message);
@@ -24,22 +41,37 @@ function warning(cond, message) {
 // CONTEXT
 ///////////////////////////////////////////////////////////////////////////////
 
-const LocationContext = React.createContext({
+const LocationContext = React.createContext<LocationContextObject>({
   history: null,
   location: null,
-  pending: false
+  pending: false,
+  static: false
 });
+
+interface LocationContextObject {
+  history: History | null;
+  location: Location | null;
+  pending: boolean;
+  static: boolean;
+}
 
 if (__DEV__) {
   LocationContext.displayName = 'Location';
 }
 
-const RouteContext = React.createContext({
+const RouteContext = React.createContext<RouteContextObject>({
   outlet: null,
   params: readOnly({}),
   pathname: '',
   route: null
 });
+
+interface RouteContextObject {
+  outlet: React.ReactElement | null;
+  params: Params;
+  pathname: string;
+  route: RouteObject | null;
+}
 
 if (__DEV__) {
   RouteContext.displayName = 'Route';
@@ -57,20 +89,29 @@ export function MemoryRouter({
   initialEntries,
   initialIndex,
   timeout
-}) {
-  let historyRef = React.useRef(null);
+}: MemoryRouterProps): React.ReactElement {
+  let historyRef = React.useRef<MemoryHistory>(null);
 
   if (historyRef.current == null) {
-    historyRef.current = createMemoryHistory({ initialEntries, initialIndex });
+    (historyRef as React.MutableRefObject<
+      MemoryHistory
+    >).current = createMemoryHistory({ initialEntries, initialIndex });
   }
 
   return (
     <Router
       children={children}
-      history={historyRef.current}
+      history={historyRef.current as MemoryHistory}
       timeout={timeout}
     />
   );
+}
+
+export interface MemoryRouterProps {
+  children?: React.ReactNode;
+  initialEntries?: InitialEntry[];
+  initialIndex?: number;
+  timeout?: number;
 }
 
 if (__DEV__) {
@@ -97,19 +138,18 @@ if (__DEV__) {
 /**
  * Navigate programmatically using a component.
  */
-export function Navigate({ to, replace, state }) {
+export function Navigate({ to, replace, state }: NavigateProps): null {
   invariant(
     useInRouterContext(),
-    // TODO: This error is probably because they somehow have
-    // 2 versions of the router loaded. We can help them understand
-    // how to avoid that.
+    // TODO: This error is probably because they somehow have 2 versions of
+    // the router loaded. We can help them understand how to avoid that.
     `<Navigate> may be used only in the context of a <Router> component.`
   );
 
-  let { history } = React.useContext(LocationContext);
+  let locationContext = React.useContext(LocationContext);
 
   warning(
-    !history.static,
+    !locationContext.static,
     `<Navigate> must not be used on the initial render in a <StaticRouter>. ` +
       `This is a no-op, but you should modify your code so the <Navigate> is ` +
       `only ever rendered in response to some user interaction or state change.`
@@ -122,6 +162,12 @@ export function Navigate({ to, replace, state }) {
   });
 
   return null;
+}
+
+export interface NavigateProps {
+  to: To;
+  replace?: boolean;
+  state?: State;
 }
 
 if (__DEV__) {
@@ -143,9 +189,11 @@ if (__DEV__) {
 /**
  * Renders the child route's element, if there is one.
  */
-export function Outlet() {
+export function Outlet(): React.ReactElement | null {
   return useOutlet();
 }
+
+export interface OutletProps {}
 
 if (__DEV__) {
   Outlet.displayName = 'Outlet';
@@ -155,8 +203,16 @@ if (__DEV__) {
 /**
  * Used in a route config to render an element.
  */
-export function Route({ element = <Outlet /> }) {
+export function Route({
+  element = <Outlet />
+}: RouteProps): React.ReactElement | null {
   return element;
+}
+
+export interface RouteProps {
+  children?: React.ReactNode;
+  element?: React.ReactElement | null;
+  path?: string;
 }
 
 if (__DEV__) {
@@ -169,13 +225,19 @@ if (__DEV__) {
 }
 
 // TODO: Remove once React.useTransition is stable.
-const startTransition = tx => tx();
+const startTransition = (tx: Function) => tx();
+// @ts-ignore
 const useTransition = React.useTransition || (() => [startTransition, false]);
 
 /**
  * The root context provider. There should be only one of these in a given app.
  */
-export function Router({ children = null, history, timeout = 2000 }) {
+export function Router({
+  children = null,
+  history,
+  static: staticProp = false,
+  timeout = 2000
+}: RouterProps): React.ReactElement {
   invariant(
     !useInRouterContext(),
     `You cannot render a <Router> inside another <Router>.` +
@@ -184,7 +246,7 @@ export function Router({ children = null, history, timeout = 2000 }) {
 
   let [location, setLocation] = React.useState(history.location);
   let [startTransition, pending] = useTransition({ timeoutMs: timeout });
-  let shouldListenRef = React.useRef(true);
+  let shouldListenRef = React.useRef(!staticProp);
 
   if (shouldListenRef.current) {
     shouldListenRef.current = false;
@@ -198,9 +260,16 @@ export function Router({ children = null, history, timeout = 2000 }) {
   return (
     <LocationContext.Provider
       children={children}
-      value={{ history, location, pending }}
+      value={{ history, location, pending, static: staticProp }}
     />
   );
+}
+
+export interface RouterProps {
+  children?: React.ReactNode;
+  history: History;
+  static?: boolean;
+  timeout?: number;
 }
 
 if (__DEV__) {
@@ -224,9 +293,19 @@ if (__DEV__) {
  * A wrapper for useRoutes that treats its children as route and/or redirect
  * objects.
  */
-export function Routes({ basename = '', caseSensitive = false, children }) {
+export function Routes({
+  basename = '',
+  caseSensitive = false,
+  children
+}: RoutesProps): React.ReactElement | null {
   let routes = createRoutesFromChildren(children);
   return useRoutes(routes, basename, caseSensitive);
+}
+
+export interface RoutesProps {
+  basename?: string;
+  caseSensitive?: boolean;
+  children?: React.ReactNode;
 }
 
 if (__DEV__) {
@@ -238,39 +317,6 @@ if (__DEV__) {
   };
 }
 
-/**
- * Utility function that creates a routes config object from a React
- * "children" object, which is usually either a React element or an
- * array of elements.
- */
-export function createRoutesFromChildren(children) {
-  let routes = [];
-
-  React.Children.forEach(children, element => {
-    // Ignore non-elements. This allows people to more
-    // easily inline conditionals in their route config.
-    if (!React.isValidElement(element)) return;
-
-    let { children, path = '/' } = element.props;
-
-    // Transparently support React.Fragment and its children.
-    if (element.type === React.Fragment) {
-      routes.push.apply(routes, createRoutesFromChildren(children));
-      return;
-    }
-
-    let route = { path, element };
-    let childRoutes = createRoutesFromChildren(children);
-    if (childRoutes.length) {
-      route.children = childRoutes;
-    }
-
-    routes.push(route);
-  });
-
-  return routes;
-}
-
 ///////////////////////////////////////////////////////////////////////////////
 // HOOKS
 ///////////////////////////////////////////////////////////////////////////////
@@ -279,37 +325,35 @@ export function createRoutesFromChildren(children) {
  * Blocks all navigation attempts. This is useful for preventing the page from
  * changing until some condition is met, like saving form data.
  */
-export function useBlocker(blocker, when = true) {
+export function useBlocker(blocker: Blocker, when: boolean = true): void {
   invariant(
     useInRouterContext(),
-    // TODO: This error is probably because they somehow have
-    // 2 versions of the router loaded. We can help them understand
-    // how to avoid that.
+    // TODO: This error is probably because they somehow have 2 versions of the
+    // router loaded. We can help them understand how to avoid that.
     `useBlocker() may be used only in the context of a <Router> component.`
   );
 
-  let { history } = React.useContext(LocationContext);
+  let history = React.useContext(LocationContext).history as History;
 
   React.useEffect(() => {
-    if (when) {
-      let unblock = history.block(tx => {
-        let autoUnblockingTx = {
-          ...tx,
-          retry() {
-            // Automatically unblock the transition so it can
-            // play all the way through before retrying it.
-            // TODO: Figure out how to re-enable this block if the
-            // transition is cancelled for some reason.
-            unblock();
-            tx.retry();
-          }
-        };
+    if (!when) return;
 
-        blocker(autoUnblockingTx);
-      });
+    let unblock = history.block((tx: Transition) => {
+      let autoUnblockingTx = {
+        ...tx,
+        retry() {
+          // Automatically unblock the transition so it can play all the way
+          // through before retrying it. TODO: Figure out how to re-enable
+          // this block if the transition is cancelled for some reason.
+          unblock();
+          tx.retry();
+        }
+      };
 
-      return unblock;
-    }
+      blocker(autoUnblockingTx);
+    });
+
+    return unblock;
   }, [history, when, blocker]);
 }
 
@@ -317,16 +361,15 @@ export function useBlocker(blocker, when = true) {
  * Returns the full href for the given "to" value. This is useful for building
  * custom links that are also accessible and preserve right-click behavior.
  */
-export function useHref(to) {
+export function useHref(to: To): string {
   invariant(
     useInRouterContext(),
-    // TODO: This error is probably because they somehow have
-    // 2 versions of the router loaded. We can help them understand
-    // how to avoid that.
+    // TODO: This error is probably because they somehow have 2 versions of the
+    // router loaded. We can help them understand how to avoid that.
     `useHref() may be used only in the context of a <Router> component.`
   );
 
-  let { history } = React.useContext(LocationContext);
+  let history = React.useContext(LocationContext).history as History;
   let resolvedLocation = useResolvedLocation(to);
 
   return history.createHref(resolvedLocation);
@@ -335,26 +378,34 @@ export function useHref(to) {
 /**
  * Returns true if this component is a descendant of a <Router>.
  */
-export function useInRouterContext() {
-  return useLocation() != null;
+export function useInRouterContext(): boolean {
+  let locationContext = React.useContext(LocationContext);
+  return locationContext.location != null;
 }
 
 /**
  * Returns the current location object, which represents the current URL in web
  * browsers.
  *
- * NOTE: If you're using this it may mean you're doing some of your own "routing"
- * in your app, and we'd like to know what your use case is. We may be able to
- * provide something higher-level to better suit your needs.
+ * NOTE: If you're using this it may mean you're doing some of your own
+ * "routing" in your app, and we'd like to know what your use case is. We may be
+ * able to provide something higher-level to better suit your needs.
  */
-export function useLocation() {
-  return React.useContext(LocationContext).location;
+export function useLocation(): Location {
+  invariant(
+    useInRouterContext(),
+    // TODO: This error is probably because they somehow have 2 versions of the
+    // router loaded. We can help them understand how to avoid that.
+    `useLocation() may be used only in the context of a <Router> component.`
+  );
+
+  return React.useContext(LocationContext).location as Location;
 }
 
 /**
  * Returns true if the router is pending a location update.
  */
-export function useLocationPending() {
+export function useLocationPending(): boolean {
   return React.useContext(LocationContext).pending;
 }
 
@@ -363,27 +414,46 @@ export function useLocationPending() {
  * This is useful for components that need to know "active" state, e.g.
  * <NavLink>.
  */
-export function useMatch(to) {
-  let location = useLocation();
+export function useMatch(to: To): boolean {
+  invariant(
+    useInRouterContext(),
+    // TODO: This error is probably because they somehow have 2 versions of the
+    // router loaded. We can help them understand how to avoid that.
+    `useMatch() may be used only in the context of a <Router> component.`
+  );
+
+  let location = useLocation() as Location;
   let resolvedLocation = useResolvedLocation(to);
+
   // TODO: Try to match search + hash as well
   return location.pathname === resolvedLocation.pathname;
+}
+
+/**
+ * The interface for the navigate() function returned from useNavigate().
+ */
+export interface NavigateFunction {
+  (
+    to: To | number,
+    options?: { replace?: boolean; state?: State | null }
+  ): void;
 }
 
 /**
  * Returns an imperative method for changing the location. Used by <Link>s, but
  * may also be used by other elements to change the location.
  */
-export function useNavigate() {
+export function useNavigate(): NavigateFunction {
   invariant(
     useInRouterContext(),
-    // TODO: This error is probably because they somehow have
-    // 2 versions of the router loaded. We can help them understand
-    // how to avoid that.
+    // TODO: This error is probably because they somehow have 2 versions of the
+    // router loaded. We can help them understand how to avoid that.
     `useNavigate() may be used only in the context of a <Router> component.`
   );
 
-  let { history, pending } = React.useContext(LocationContext);
+  let locationContext = React.useContext(LocationContext);
+  let history = locationContext.history as History;
+  let pending = locationContext.pending;
   let { pathname } = React.useContext(RouteContext);
 
   let activeRef = React.useRef(false);
@@ -391,18 +461,23 @@ export function useNavigate() {
     activeRef.current = true;
   });
 
-  let navigate = React.useCallback(
-    (to, { replace, state } = {}) => {
+  let navigate: NavigateFunction = React.useCallback(
+    (
+      to: To | number,
+      opts: { replace?: boolean; state?: State | null } = {}
+    ) => {
       if (activeRef.current) {
         if (typeof to === 'number') {
           history.go(to);
         } else {
           let relativeTo = resolveLocation(to, pathname);
-          // If we are pending transition, use REPLACE instead of PUSH.
-          // This will prevent URLs that we started navigating to but
-          // never fully loaded from appearing in the history stack.
-          let method = !!replace || pending ? 'replace' : 'push';
-          history[method](relativeTo, state);
+          // If we are pending transition, use REPLACE instead of PUSH. This
+          // will prevent URLs that we started navigating to but never fully
+          // loaded from appearing in the history stack.
+          (!!opts.replace || pending ? history.replace : history.push)(
+            relativeTo,
+            opts.state
+          );
         }
       } else {
         warning(
@@ -422,7 +497,7 @@ export function useNavigate() {
  * Returns the outlet element at this level of the route hierarchy. Used to
  * render child routes.
  */
-export function useOutlet() {
+export function useOutlet(): React.ReactElement | null {
   return React.useContext(RouteContext).outlet;
 }
 
@@ -431,24 +506,33 @@ export function useOutlet() {
  * This is useful for using ids embedded in the URL to fetch data, but we
  * eventually want to provide something at a higher level for this.
  */
-export function useParams() {
+export function useParams(): Params {
   return React.useContext(RouteContext).params;
 }
 
 /**
  * Returns a fully-resolved location object relative to the current location.
  */
-export function useResolvedLocation(to) {
+export function useResolvedLocation(to: To): ResolvedLocation {
   let { pathname } = React.useContext(RouteContext);
   return React.useMemo(() => resolveLocation(to, pathname), [to, pathname]);
 }
 
-let missingTrailingSplatWarnings, warnAboutMissingTrailingSplatAt;
+let missingTrailingSplatWarnings: { [key: string]: boolean } | undefined;
+let warnAboutMissingTrailingSplatAt: (
+  pathname: string,
+  cond: boolean,
+  message: string
+) => void | undefined;
 if (__DEV__) {
   missingTrailingSplatWarnings = {};
-  warnAboutMissingTrailingSplatAt = (pathname, cond, message) => {
-    if (!cond && !missingTrailingSplatWarnings[pathname]) {
-      missingTrailingSplatWarnings[pathname] = true;
+  warnAboutMissingTrailingSplatAt = (
+    pathname: string,
+    cond: boolean,
+    message: string
+  ) => {
+    if (!cond && !missingTrailingSplatWarnings![pathname]) {
+      missingTrailingSplatWarnings![pathname] = true;
       warning(false, message);
     }
   };
@@ -459,16 +543,19 @@ if (__DEV__) {
  * with the correct context to render the remainder of the route tree. Route
  * elements in the tree must render an <Outlet> to render their child route's
  * element.
- *
- * Route objects may take one of 2 forms:
- *
- * - { path, element, children }
- * - { path, redirectTo }
- *
- * We should probably write this up in TypeScript instead of in a comment. In
- * fact, what am I even doing here. Nobody is ever going to read this.
  */
-export function useRoutes(routes, basename = '', caseSensitive = false) {
+export function useRoutes(
+  routes: PartialRouteObject[],
+  basename: string = '',
+  caseSensitive: boolean = false
+): React.ReactElement | null {
+  invariant(
+    useInRouterContext(),
+    // TODO: This error is probably because they somehow have 2 versions of the
+    // router loaded. We can help them understand how to avoid that.
+    `useRoutes() may be used only in the context of a <Router> component.`
+  );
+
   let {
     params: parentParams,
     pathname: parentPathname,
@@ -477,8 +564,8 @@ export function useRoutes(routes, basename = '', caseSensitive = false) {
 
   if (warnAboutMissingTrailingSplatAt) {
     // You won't get a warning about 2 different <Routes> under a <Route>
-    // without a trailing *, but this is a best-effort warning anyway since
-    // we cannot even give the warning unless they land at the parent route.
+    // without a trailing *, but this is a best-effort warning anyway since we
+    // cannot even give the warning unless they land at the parent route.
     let parentPath = parentRoute && parentRoute.path;
     warnAboutMissingTrailingSplatAt(
       parentPathname,
@@ -494,7 +581,7 @@ export function useRoutes(routes, basename = '', caseSensitive = false) {
 
   basename = basename ? joinPaths([parentPathname, basename]) : parentPathname;
 
-  let location = useLocation();
+  let location = useLocation() as Location;
   let matches = React.useMemo(
     () => matchRoutes(routes, location, basename, caseSensitive),
     [routes, location, basename, caseSensitive]
@@ -508,19 +595,22 @@ export function useRoutes(routes, basename = '', caseSensitive = false) {
   // TODO: Initiate preload sequence here.
 
   // Otherwise render an element.
-  let element = matches.reduceRight((outlet, { params, pathname, route }) => {
-    return (
-      <RouteContext.Provider
-        children={route.element}
-        value={{
-          outlet,
-          params: readOnly({ ...parentParams, ...params }),
-          pathname: joinPaths([basename, pathname]),
-          route
-        }}
-      />
-    );
-  }, null);
+  let element = matches.reduceRight(
+    (outlet: React.ReactElement | null, { params, pathname, route }) => {
+      return (
+        <RouteContext.Provider
+          children={route.element}
+          value={{
+            outlet,
+            params: readOnly({ ...parentParams, ...params }),
+            pathname: joinPaths([basename, pathname]),
+            route
+          }}
+        />
+      );
+    },
+    null
+  );
 
   return element;
 }
@@ -530,22 +620,111 @@ export function useRoutes(routes, basename = '', caseSensitive = false) {
 ///////////////////////////////////////////////////////////////////////////////
 
 /**
+ * Utility function that creates a routes config object from an array of
+ * PartialRouteObject objects.
+ */
+export function createRoutesFromArray(
+  array: PartialRouteObject[]
+): RouteObject[] {
+  return array.map(partialRoute => {
+    let route: RouteObject = {
+      ...(partialRoute as any),
+      path: partialRoute.path || '/',
+      element: partialRoute.element || <Outlet />
+    };
+
+    if (partialRoute.children) {
+      route.children = createRoutesFromArray(partialRoute.children);
+    }
+
+    return route;
+  });
+}
+
+/**
+ * Utility function that creates a routes config object from a React "children"
+ * object, which is usually either a <Route> element or an array of them.
+ */
+export function createRoutesFromChildren(
+  children: React.ReactNode
+): RouteObject[] {
+  let routes: RouteObject[] = [];
+
+  React.Children.forEach(children, element => {
+    // Ignore non-elements. This allows people to more
+    // easily inline conditionals in their route config.
+    if (!React.isValidElement(element)) return;
+
+    let { children, path = '/' } = element.props;
+
+    if (element.type === React.Fragment) {
+      // Transparently support React.Fragment and its children.
+      routes.push.apply(routes, createRoutesFromChildren(children));
+    } else {
+      let route: RouteObject = { path, element };
+      let childRoutes = createRoutesFromChildren(children);
+      if (childRoutes.length) {
+        route.children = childRoutes;
+      }
+
+      routes.push(route);
+    }
+  });
+
+  return routes;
+}
+
+/**
+ * A "partial route" object is usually supplied by the user and may omit certain
+ * properties of a real route object such as `path` and `element`, which have
+ * reasonable defaults.
+ */
+export interface PartialRouteObject {
+  path?: string;
+  element?: React.ReactNode;
+  children?: PartialRouteObject[];
+}
+
+/**
+ * A route object represents a logical route, with (optionally) its child routes
+ * organized in a tree-like structure.
+ */
+export interface RouteObject {
+  path: string;
+  element: React.ReactNode;
+  children?: RouteObject[];
+}
+
+/**
+ * Creates a path with params interpolated.
+ */
+export function generatePath(pathname: string, params: Params = {}): string {
+  return pathname
+    .replace(/:(\w+)/g, (_, key) => params[key] || `:${key}`)
+    .replace(/\*$/, splat => params[splat] || splat);
+}
+
+/**
+ * The parameters that were parsed from the URL path.
+ */
+export type Params = Record<string, string>;
+
+/**
  * Matches the given routes to a location and returns the match data.
  */
 export function matchRoutes(
-  routes,
-  location,
-  basename = '',
-  caseSensitive = false
-) {
+  routes: PartialRouteObject[],
+  location: Path | PathPieces,
+  basename: string = '',
+  caseSensitive: boolean = false
+): MatchObject[] | null {
   if (typeof location === 'string') {
     location = parsePath(location);
   }
 
-  // TODO: Validate location
-  // - it should have a pathname
   let base = basename.replace(/^\/+|\/+$/g, '');
-  let target = location.pathname.slice(1);
+  let pathname = location.pathname || '/';
+  let target = pathname.slice(1);
 
   if (base) {
     if (base === target) {
@@ -557,44 +736,45 @@ export function matchRoutes(
     }
   }
 
-  let flattenedRoutes = flattenRoutes(routes);
-
-  // TODO: Validate the routes config
-  // - routes should all have paths and elements
-  // - redirects should have a redirectTo
-  // - redirects should not have children
-  // - warn about unreachable routes
-
+  let flattenedRoutes = flattenRoutes(createRoutesFromArray(routes));
   rankFlattenedRoutes(flattenedRoutes);
 
   for (let i = 0; i < flattenedRoutes.length; ++i) {
     let [path, flatRoutes] = flattenedRoutes[i];
 
     // TODO: Match on search, state too
-    let [matcher] = compilePath(path, /* end */ true, caseSensitive);
+    let [matcher] = compilePath(path, true, caseSensitive);
 
     if (matcher.test(target)) {
-      return flatRoutes.map((route, index) => {
+      let matches: MatchObject[] = flatRoutes.map((route, index: number) => {
         let routes = flatRoutes.slice(0, index + 1);
         let path = joinPaths(routes.map(r => r.path));
-        let [matcher, keys] = compilePath(path, /* end */ false, caseSensitive);
-        let match = target.match(matcher);
+        let [matcher, paramNames] = compilePath(path, false, caseSensitive);
+        let match = target.match(matcher) as string[];
         let pathname = '/' + match[1];
         let values = match.slice(2);
-        let params = keys.reduce((memo, key, index) => {
-          memo[key] = safelyDecodeURIComponent(values[index], key);
+        let params = paramNames.reduce((memo, paramName, index) => {
+          memo[paramName] = safelyDecodeURIComponent(values[index], paramName);
           return memo;
-        }, {});
+        }, {} as Params);
 
         return { params, pathname, route };
       });
+
+      return matches;
     }
   }
 
   return null;
 }
 
-function safelyDecodeURIComponent(value, paramName) {
+export interface MatchObject {
+  params: Params;
+  pathname: string;
+  route: RouteObject;
+}
+
+function safelyDecodeURIComponent(value: string, paramName: string) {
   try {
     return decodeURIComponent(value.replace(/\+/g, ' '));
   } catch (error) {
@@ -610,12 +790,12 @@ function safelyDecodeURIComponent(value, paramName) {
 }
 
 function flattenRoutes(
-  routes,
-  flattenedRoutes = [],
-  parentPath = '',
-  parentRoutes = [],
-  parentIndexes = []
-) {
+  routes: RouteObject[],
+  flattenedRoutes: FlattenedRoute[] = [],
+  parentPath: string = '',
+  parentRoutes: RouteObject[] = [],
+  parentIndexes: number[] = []
+): FlattenedRoute[] {
   routes.forEach((route, index) => {
     let path = joinPaths([parentPath, route.path]);
     let routes = parentRoutes.concat(route);
@@ -634,14 +814,16 @@ function flattenRoutes(
   return flattenedRoutes;
 }
 
+type FlattenedRoute = [string, RouteObject[], number[]];
+
 const paramRe = /^:\w+$/;
 const dynamicSegmentValue = 2;
 const emptySegmentValue = 1;
 const staticSegmentValue = 10;
 const splatPenalty = -2;
-const isSplat = s => s === '*';
+const isSplat = (s: string) => s === '*';
 
-function computeScore(path) {
+function computeScore(path: string): number {
   let segments = path.split('/');
   let initialScore = segments.length;
   if (segments.some(isSplat)) {
@@ -662,11 +844,11 @@ function computeScore(path) {
     );
 }
 
-function rankFlattenedRoutes(flattenedRoutes) {
+function rankFlattenedRoutes(flattenedRoutes: FlattenedRoute[]): void {
   let pathScores = flattenedRoutes.reduce((memo, [path]) => {
     memo[path] = computeScore(path);
     return memo;
-  }, {});
+  }, {} as { [key: string]: number });
 
   // Sorting is stable in modern browsers, but we still support IE 11, so we
   // need this little helper.
@@ -683,7 +865,7 @@ function rankFlattenedRoutes(flattenedRoutes) {
   });
 }
 
-function compareIndexes(a, b) {
+function compareIndexes(a: number[], b: number[]): number {
   let siblings =
     a.length === b.length && a.slice(0, -1).every((n, i) => n === b[i]);
 
@@ -698,15 +880,19 @@ function compareIndexes(a, b) {
       0;
 }
 
-function stableSort(array, compareItems) {
+function stableSort(array: any[], compareItems: (a: any, b: any) => number) {
   // This copy lets us get the original index of an item so we can preserve the
   // original ordering in the case that they sort equally.
   let copy = array.slice(0);
   array.sort((a, b) => compareItems(a, b) || copy.indexOf(a) - copy.indexOf(b));
 }
 
-function compilePath(path, end, caseSensitive) {
-  let keys = [];
+function compilePath(
+  path: string,
+  end: boolean,
+  caseSensitive: boolean
+): [RegExp, string[]] {
+  let keys: string[] = [];
   let pattern =
     '^(' +
     path
@@ -714,7 +900,7 @@ function compilePath(path, end, caseSensitive) {
       .replace(/\*\//g, '') // Ignore */ (from paths nested under a *)
       .replace(/\/?\*?$/, '') // Ignore trailing /*, we'll handle it below
       .replace(/[\\.*+^$?{}|()[\]]/g, '\\$&') // Escape special regex chars
-      .replace(/:(\w+)/g, (_, key) => {
+      .replace(/:(\w+)/g, (_: string, key: string) => {
         keys.push(key);
         return '([^\\/]+)';
       }) +
@@ -738,12 +924,12 @@ function compilePath(path, end, caseSensitive) {
   return [matcher, keys];
 }
 
-const trimTrailingSlashes = path => path.replace(/\/+$/, '');
-const normalizeSlashes = path => path.replace(/\/\/+/g, '/');
-const joinPaths = paths => normalizeSlashes(paths.join('/'));
-const splitPath = path => normalizeSlashes(path).split('/');
+const trimTrailingSlashes = (path: string) => path.replace(/\/+$/, '');
+const normalizeSlashes = (path: string) => path.replace(/\/\/+/g, '/');
+const joinPaths = (paths: string[]) => normalizeSlashes(paths.join('/'));
+const splitPath = (path: string) => normalizeSlashes(path).split('/');
 
-function resolvePathname(toPathname, fromPathname) {
+function resolvePathname(toPathname: string, fromPathname: string): string {
   let segments = splitPath(trimTrailingSlashes(fromPathname));
   let relativeSegments = splitPath(toPathname);
 
@@ -760,9 +946,12 @@ function resolvePathname(toPathname, fromPathname) {
 }
 
 /**
- * Returns a fully resolve location object relative to the given pathname.
+ * Returns a fully resolved location object relative to the given pathname.
  */
-export function resolveLocation(to, fromPathname = '/') {
+export function resolveLocation(
+  to: To,
+  fromPathname: string = '/'
+): ResolvedLocation {
   let { pathname: toPathname, search = '', hash = '' } =
     typeof to === 'string' ? parsePath(to) : to;
 
@@ -775,11 +964,4 @@ export function resolveLocation(to, fromPathname = '/') {
   return { pathname, search, hash };
 }
 
-/**
- * Creates a path with params interpolated.
- */
-export function generatePath(pathname, params = {}) {
-  return pathname
-    .replace(/:(\w+)/g, (_, key) => params[key] || `:${key}`)
-    .replace(/\*$/, splat => params[splat] || splat);
-}
+export type ResolvedLocation = Omit<Location, 'state' | 'key'>;

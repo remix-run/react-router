@@ -1,6 +1,13 @@
 import * as React from 'react';
 import PropTypes from 'prop-types';
-import { createBrowserHistory, createHashHistory } from 'history';
+import {
+  State,
+  To,
+  BrowserHistory,
+  HashHistory,
+  createBrowserHistory,
+  createHashHistory
+} from 'history';
 import {
   // components
   MemoryRouter,
@@ -22,13 +29,14 @@ import {
   useResolvedLocation,
   useRoutes,
   // utils
+  createRoutesFromArray,
   createRoutesFromChildren,
+  generatePath,
   matchRoutes,
-  resolveLocation,
-  generatePath
+  resolveLocation
 } from 'react-router';
 
-function warning(cond, message) {
+function warning(cond: boolean, message: string) {
   if (!cond) {
     // eslint-disable-next-line no-console
     if (typeof console !== 'undefined') console.warn(message);
@@ -66,10 +74,11 @@ export {
   useResolvedLocation,
   useRoutes,
   // utils
+  createRoutesFromArray,
   createRoutesFromChildren,
+  generatePath,
   matchRoutes,
-  resolveLocation,
-  generatePath
+  resolveLocation
 };
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -79,8 +88,12 @@ export {
 /**
  * A <Router> for use in web browsers. Provides the cleanest URLs.
  */
-export function BrowserRouter({ children, timeout, window }) {
-  let historyRef = React.useRef(null);
+export function BrowserRouter({
+  children,
+  timeout,
+  window
+}: BrowserRouterProps) {
+  let historyRef = React.useRef<BrowserHistory | null>(null);
 
   if (historyRef.current == null) {
     historyRef.current = createBrowserHistory({ window });
@@ -93,6 +106,12 @@ export function BrowserRouter({ children, timeout, window }) {
       timeout={timeout}
     />
   );
+}
+
+export interface BrowserRouterProps {
+  children?: React.ReactNode;
+  timeout?: number;
+  window?: Window;
 }
 
 if (__DEV__) {
@@ -108,8 +127,8 @@ if (__DEV__) {
  * A <Router> for use in web browsers. Stores the location in the hash
  * portion of the URL so it is not sent to the server.
  */
-export function HashRouter({ children, timeout, window }) {
-  let historyRef = React.useRef(null);
+export function HashRouter({ children, timeout, window }: HashRouterProps) {
+  let historyRef = React.useRef<HashHistory | null>(null);
 
   if (historyRef.current == null) {
     historyRef.current = createHashHistory({ window });
@@ -124,6 +143,12 @@ export function HashRouter({ children, timeout, window }) {
   );
 }
 
+export interface HashRouterProps {
+  children?: React.ReactNode;
+  timeout?: number;
+  window?: Window;
+}
+
 if (__DEV__) {
   HashRouter.displayName = 'HashRouter';
   HashRouter.propTypes = {
@@ -133,64 +158,69 @@ if (__DEV__) {
   };
 }
 
+function isModifiedEvent(event: React.MouseEvent) {
+  return !!(event.metaKey || event.altKey || event.ctrlKey || event.shiftKey);
+}
+
 /**
  * The public API for rendering a history-aware <a>.
  */
-export const Link = React.forwardRef(function LinkWithRef(
-  {
-    as: Component = 'a',
-    onClick,
-    replace: replaceProp = false,
-    state,
-    target,
-    to,
-    ...rest
-  },
-  ref
-) {
-  let href = useHref(to);
-  let navigate = useNavigate();
-  let location = useLocation();
-  let toLocation = useResolvedLocation(to);
+export const Link = React.forwardRef<HTMLAnchorElement, LinkProps>(
+  function LinkWithRef(
+    { onClick, replace: replaceProp = false, state, target, to, ...rest },
+    ref
+  ) {
+    let href = useHref(to);
+    let navigate = useNavigate();
+    let location = useLocation();
+    let toLocation = useResolvedLocation(to);
 
-  function handleClick(event) {
-    if (onClick) onClick(event);
-    if (
-      !event.defaultPrevented && // onClick prevented default
-      event.button === 0 && // Ignore everything but left clicks
-      (!target || target === '_self') && // Let browser handle "target=_blank" etc.
-      !isModifiedEvent(event) // Ignore clicks with modifier keys
-    ) {
-      event.preventDefault();
+    function handleClick(event: React.MouseEvent<HTMLAnchorElement>) {
+      if (onClick) onClick(event);
+      if (
+        !event.defaultPrevented && // onClick prevented default
+        event.button === 0 && // Ignore everything but left clicks
+        (!target || target === '_self') && // Let browser handle "target=_blank" etc.
+        !isModifiedEvent(event) // Ignore clicks with modifier keys
+      ) {
+        event.preventDefault();
 
-      let isSameLocation =
-        toLocation.pathname === location.pathname &&
-        toLocation.search === location.search &&
-        toLocation.hash === location.hash;
+        let isSameLocation =
+          toLocation.pathname === location.pathname &&
+          toLocation.search === location.search &&
+          toLocation.hash === location.hash;
 
-      // If the pathname, search, and hash haven't changed, a
-      // regular <a> will do a REPLACE instead of a PUSH.
-      let replace = !!replaceProp || isSameLocation;
+        // If the pathname, search, and hash haven't changed, a
+        // regular <a> will do a REPLACE instead of a PUSH.
+        let replace = !!replaceProp || isSameLocation;
 
-      navigate(to, { replace, state });
+        navigate(to, { replace, state });
+      }
     }
-  }
 
-  return (
-    <Component
-      {...rest}
-      href={href}
-      onClick={handleClick}
-      ref={ref}
-      target={target}
-    />
-  );
-});
+    return (
+      // eslint-disable-next-line jsx-a11y/anchor-has-content
+      <a
+        {...rest}
+        href={href}
+        onClick={handleClick}
+        ref={ref}
+        target={target}
+      />
+    );
+  }
+);
+
+export interface LinkProps
+  extends Omit<React.AnchorHTMLAttributes<HTMLAnchorElement>, 'href'> {
+  replace?: boolean;
+  state?: State;
+  to: To;
+}
 
 if (__DEV__) {
   Link.displayName = 'Link';
   Link.propTypes = {
-    as: PropTypes.elementType,
     onClick: PropTypes.func,
     replace: PropTypes.bool,
     state: PropTypes.object,
@@ -206,46 +236,46 @@ if (__DEV__) {
   };
 }
 
-function isModifiedEvent(event) {
-  return !!(event.metaKey || event.altKey || event.ctrlKey || event.shiftKey);
-}
-
 /**
  * A <Link> wrapper that knows if it's "active" or not.
  */
-export const NavLink = React.forwardRef(function NavLinkWithRef(
-  {
-    'aria-current': ariaCurrentProp = 'page',
-    activeClassName = 'active',
-    activeStyle = null,
-    className: classNameProp = '',
-    style: styleProp = null,
-    to,
-    ...rest
-  },
-  ref
-) {
-  let match = useMatch(to);
-  let ariaCurrent = match ? ariaCurrentProp : undefined;
-  let className = [classNameProp, match ? activeClassName : null]
-    .filter(Boolean)
-    .join(' ');
-  let style = {
-    ...styleProp,
-    ...(match ? activeStyle : null)
-  };
+export const NavLink = React.forwardRef<HTMLAnchorElement, NavLinkProps>(
+  function NavLinkWithRef(
+    {
+      'aria-current': ariaCurrentProp = 'page',
+      activeClassName = 'active',
+      activeStyle,
+      className: classNameProp = '',
+      style: styleProp,
+      to,
+      ...rest
+    },
+    ref
+  ) {
+    let match = useMatch(to);
+    let ariaCurrent = match ? ariaCurrentProp : undefined;
+    let className = [classNameProp, match ? activeClassName : null]
+      .filter(Boolean)
+      .join(' ');
+    let style = { ...styleProp, ...(match ? activeStyle : null) };
 
-  return (
-    <Link
-      {...rest}
-      aria-current={ariaCurrent}
-      className={className}
-      ref={ref}
-      style={style}
-      to={to}
-    />
-  );
-});
+    return (
+      <Link
+        {...rest}
+        aria-current={ariaCurrent}
+        className={className}
+        ref={ref}
+        style={style}
+        to={to}
+      />
+    );
+  }
+);
+
+export interface NavLinkProps extends LinkProps {
+  activeClassName?: string;
+  activeStyle?: object;
+}
 
 if (__DEV__) {
   NavLink.displayName = 'NavLink';
@@ -281,9 +311,14 @@ if (__DEV__) {
  * This also serves as a reference implementation for anyone who wants to
  * create their own custom prompt component.
  */
-export function Prompt({ message, when }) {
+export function Prompt({ message, when }: PromptProps) {
   usePrompt(message, when);
   return null;
+}
+
+export interface PromptProps {
+  message: string;
+  when?: boolean;
 }
 
 if (__DEV__) {
@@ -302,7 +337,7 @@ if (__DEV__) {
  * Prevents navigation away from the current page using a window.confirm prompt
  * with the given message.
  */
-export function usePrompt(message, when) {
+export function usePrompt(message: string, when = true) {
   let blocker = React.useCallback(
     tx => {
       if (window.confirm(message)) tx.retry();
@@ -314,10 +349,10 @@ export function usePrompt(message, when) {
 }
 
 /**
- * A convenient wrapper for accessing individual query parameters via the
+ * A convenient wrapper for reading and writing search parameters via the
  * URLSearchParams interface.
  */
-export function useSearchParams(defaultInit) {
+export function useSearchParams(defaultInit: URLSearchParamsInit) {
   warning(
     typeof URLSearchParams !== 'undefined',
     'You cannot use the `useSearchParams` hook in a browser that does not' +
@@ -378,22 +413,26 @@ export function useSearchParams(defaultInit) {
  *     sort: ['name', 'price']
  *   });
  */
-export function createSearchParams(init = '') {
-  if (
-    typeof init !== 'string' &&
-    !Array.isArray(init) &&
-    !(init instanceof URLSearchParams)
-  ) {
-    init = Object.keys(init).reduce((memo, key) => {
-      let value = init[key];
-      if (Array.isArray(value)) {
-        value.forEach(v => memo.push([key, v]));
-      } else {
-        memo.push([key, value]);
-      }
-      return memo;
-    }, []);
-  }
-
-  return new URLSearchParams(init);
+export function createSearchParams(
+  init: URLSearchParamsInit = ''
+): URLSearchParams {
+  return new URLSearchParams(
+    typeof init === 'string' ||
+    Array.isArray(init) ||
+    init instanceof URLSearchParams
+      ? init
+      : Object.keys(init).reduce((memo, key) => {
+          let value = init[key];
+          return memo.concat(
+            Array.isArray(value) ? value.map(v => [key, v]) : [[key, value]]
+          );
+        }, [] as ParamKeyValuePair[])
+  );
 }
+
+export type ParamKeyValuePair = [string, string];
+export type URLSearchParamsInit =
+  | string
+  | ParamKeyValuePair[]
+  | Record<string, string | string[]>
+  | URLSearchParams;

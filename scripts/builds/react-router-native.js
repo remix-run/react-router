@@ -2,6 +2,7 @@ import babel from 'rollup-plugin-babel';
 import compiler from '@ampproject/rollup-plugin-closure-compiler';
 import copy from 'rollup-plugin-copy';
 import prettier from 'rollup-plugin-prettier';
+import typescript from 'rollup-plugin-typescript2';
 
 const PRETTY = !!process.env.PRETTY;
 const SOURCE_DIR = 'packages/react-router-native';
@@ -9,9 +10,9 @@ const OUTPUT_DIR = 'build/react-router-native';
 
 const modules = [
   {
-    input: `${SOURCE_DIR}/index.js`,
+    input: `${SOURCE_DIR}/index.tsx`,
     output: {
-      file: `${OUTPUT_DIR}/react-router-native.js`,
+      file: `${OUTPUT_DIR}/index.js`,
       format: 'esm',
       sourcemap: !PRETTY
     },
@@ -26,8 +27,10 @@ const modules = [
       'react-router'
     ],
     plugins: [
+      typescript(),
       babel({
         exclude: /node_modules/,
+        extensions: ['.tsx'],
         runtimeHelpers: true,
         presets: [
           [

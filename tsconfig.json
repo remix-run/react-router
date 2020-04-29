@@ -1,0 +1,16 @@
+{
+  "include": ["packages", "types"],
+  "compilerOptions": {
+    "lib": ["dom", "dom.iterable", "esnext"],
+    "module": "esnext",
+    "target": "es2018",
+    "moduleResolution": "node",
+    "downlevelIteration": true,
+    "esModuleInterop": true,
+    "strict": true,
+    "noUnusedLocals": true,
+    "noUnusedParameters": true,
+    "noImplicitReturns": true,
+    "jsx": "react"
+  }
+}
