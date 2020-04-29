@@ -1,8 +1,18 @@
 import * as React from 'react';
 import PropTypes from 'prop-types';
-import { Alert, BackHandler, Linking, TouchableHighlight } from 'react-native';
-import URLSearchParams from '@ungap/url-search-params';
 import {
+  // types
+  GestureResponderEvent,
+  TouchableHighlightProps,
+  // modules
+  Alert,
+  BackHandler,
+  Linking,
+  TouchableHighlight
+} from 'react-native';
+import {
+  // types
+  MemoryRouterProps,
   // components
   MemoryRouter,
   Navigate,
@@ -23,11 +33,14 @@ import {
   useResolvedLocation,
   useRoutes,
   // utils
+  createRoutesFromArray,
   createRoutesFromChildren,
+  generatePath,
   matchRoutes,
-  resolveLocation,
-  generatePath
+  resolveLocation
 } from 'react-router';
+import { State, To } from 'history';
+import URLSearchParams from '@ungap/url-search-params';
 
 ////////////////////////////////////////////////////////////////////////////////
 // RE-EXPORTS
@@ -55,10 +68,11 @@ export {
   useResolvedLocation,
   useRoutes,
   // utils
+  createRoutesFromArray,
   createRoutesFromChildren,
+  generatePath,
   matchRoutes,
-  resolveLocation,
-  generatePath
+  resolveLocation
 };
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -68,9 +82,11 @@ export {
 /**
  * A <Router> that runs on React Native.
  */
-export function NativeRouter(props) {
+export function NativeRouter(props: NativeRouterProps) {
   return <MemoryRouter {...props} />;
 }
+
+export interface NativeRouterProps extends MemoryRouterProps {}
 
 if (__DEV__) {
   NativeRouter.displayName = 'NativeRouter';
@@ -81,32 +97,34 @@ if (__DEV__) {
  * A <TouchableHighlight> that navigates to a different URL when touched.
  */
 export function Link({
-  as: Component = TouchableHighlight,
   onPress,
   replace = false,
   state,
   to,
   ...rest
-}) {
+}: LinkProps) {
   let navigate = useNavigate();
 
-  return (
-    <Component
-      {...rest}
-      onPress={event => {
-        if (onPress) onPress(event);
-        if (!event.defaultPrevented) {
-          navigate(to, { replace, state });
-        }
-      }}
-    />
-  );
+  function handlePress(event: GestureResponderEvent) {
+    if (onPress) onPress(event);
+    if (!event.defaultPrevented) {
+      navigate(to, { replace, state });
+    }
+  }
+
+  return <TouchableHighlight {...rest} onPress={handlePress} />;
+}
+
+export interface LinkProps extends TouchableHighlightProps {
+  onPress?: (event: GestureResponderEvent) => void;
+  replace?: boolean;
+  state?: State;
+  to: To;
 }
 
 if (__DEV__) {
   Link.displayName = 'Link';
   Link.propTypes = {
-    as: PropTypes.elementType,
     onPress: PropTypes.func,
     replace: PropTypes.bool,
     state: PropTypes.object,
@@ -121,9 +139,14 @@ if (__DEV__) {
  * This also serves as a reference implementation for anyone who wants
  * to create their own custom prompt component.
  */
-export function Prompt({ message, when = false }) {
+export function Prompt({ message, when }: PromptProps) {
   usePrompt(message, when);
   return null;
+}
+
+export interface PromptProps {
+  message: string;
+  when?: boolean;
 }
 
 if (__DEV__) {
@@ -139,27 +162,20 @@ if (__DEV__) {
 ////////////////////////////////////////////////////////////////////////////////
 
 const HardwareBackPressEventType = 'hardwareBackPress';
+const URLEventType = 'url';
 
 /**
  * Enables support for the hardware back button on Android.
  */
 export function useHardwareBackButton() {
-  let location = useLocation();
-  let navigate = useNavigate();
-
   React.useEffect(() => {
     function handleHardwardBackPress() {
-      if (location.index === 0) {
-        // do nothing, we're already on the home screen
-      } else {
-        navigate(-1);
-      }
-
-      // TODO
-      // if (this.history.index === 0) {
+      return undefined;
+      // TODO: The implementation will be something like this
+      // if (history.index === 0) {
       //   return false; // home screen
       // } else {
-      //   this.history.goBack();
+      //   history.back();
       //   return true;
       // }
     }
@@ -175,12 +191,10 @@ export function useHardwareBackButton() {
         handleHardwardBackPress
       );
     };
-  }, [location.index, navigate]);
+  }, []);
 }
 
 export { useHardwareBackButton as useAndroidBackButton };
-
-const URLEventType = 'url';
 
 /**
  * Enables deep linking, both on the initial app launch and for
@@ -206,7 +220,7 @@ export function useDeepLinking() {
 
   // Listen for URL changes
   React.useEffect(() => {
-    function handleURLChange(event) {
+    function handleURLChange(event: { url: string }) {
       navigate(trimScheme(event.url));
     }
 
@@ -218,14 +232,14 @@ export function useDeepLinking() {
   }, [navigate]);
 }
 
-function trimScheme(url) {
+function trimScheme(url: string) {
   return url.replace(/^.*?:\/\//, '');
 }
 
 /**
  * Prompts the user with an Alert before they leave the current screen.
  */
-export function usePrompt({ message, when = true }) {
+export function usePrompt(message: string, when = true) {
   let blocker = React.useCallback(
     tx => {
       Alert.alert('Confirm', message, [
@@ -248,7 +262,7 @@ export function usePrompt({ message, when = true }) {
  * A convenient wrapper for accessing individual query parameters via the
  * URLSearchParams interface.
  */
-export function useSearchParams(defaultInit) {
+export function useSearchParams(defaultInit: URLSearchParamsInit) {
   let defaultSearchParamsRef = React.useRef(createSearchParams(defaultInit));
 
   let location = useLocation();
@@ -298,22 +312,26 @@ export function useSearchParams(defaultInit) {
  *     sort: ['name', 'price']
  *   });
  */
-export function createSearchParams(init = '') {
-  if (
-    typeof init !== 'string' &&
-    !Array.isArray(init) &&
-    !(init instanceof URLSearchParams)
-  ) {
-    init = Object.keys(init).reduce((memo, key) => {
-      let value = init[key];
-      if (Array.isArray(value)) {
-        value.forEach(v => memo.push([key, v]));
-      } else {
-        memo.push([key, value]);
-      }
-      return memo;
-    }, []);
-  }
-
-  return new URLSearchParams(init);
+export function createSearchParams(
+  init: URLSearchParamsInit = ''
+): URLSearchParams {
+  return new URLSearchParams(
+    typeof init === 'string' ||
+    Array.isArray(init) ||
+    init instanceof URLSearchParams
+      ? init
+      : Object.keys(init).reduce((memo, key) => {
+          let value = init[key];
+          return memo.concat(
+            Array.isArray(value) ? value.map(v => [key, v]) : [[key, value]]
+          );
+        }, [] as ParamKeyValuePair[])
+  );
 }
+
+export type ParamKeyValuePair = [string, string];
+export type URLSearchParamsInit =
+  | string
+  | ParamKeyValuePair[]
+  | Record<string, string | string[]>
+  | URLSearchParams;
