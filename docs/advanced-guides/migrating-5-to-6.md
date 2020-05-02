@@ -132,9 +132,9 @@ For this step, you'll need to install React Router v6. If you're managing
 dependencies via npm:
 
 ```
-$ npm install react-router@6 react-router-dom@6
+$ npm install react-router@next react-router-dom@next
 # or, for a React Native app
-$ npm install react-router@6 react-router-native@6
+$ npm install react-router@next react-router-native@next
 ```
 
 ### Upgrade all `<Switch>` elements to `<Routes>`
