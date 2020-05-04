@@ -2,11 +2,13 @@ import * as React from 'react';
 import PropTypes from 'prop-types';
 import {
   State,
+  LocationPieces,
   To,
   BrowserHistory,
   HashHistory,
   createBrowserHistory,
-  createHashHistory
+  createHashHistory,
+  createPath
 } from 'history';
 import {
   // components
@@ -33,6 +35,7 @@ import {
   createRoutesFromChildren,
   generatePath,
   matchRoutes,
+  matchPath,
   resolveLocation
 } from 'react-router';
 
@@ -78,6 +81,7 @@ export {
   createRoutesFromChildren,
   generatePath,
   matchRoutes,
+  matchPath,
   resolveLocation
 };
 
@@ -162,6 +166,10 @@ function isModifiedEvent(event: React.MouseEvent) {
   return !!(event.metaKey || event.altKey || event.ctrlKey || event.shiftKey);
 }
 
+function locationPathsAreSame(a: LocationPieces, b: LocationPieces) {
+  return createPath(a) === createPath(b);
+}
+
 /**
  * The public API for rendering a history-aware <a>.
  */
@@ -185,14 +193,10 @@ export const Link = React.forwardRef<HTMLAnchorElement, LinkProps>(
       ) {
         event.preventDefault();
 
-        let isSameLocation =
-          toLocation.pathname === location.pathname &&
-          toLocation.search === location.search &&
-          toLocation.hash === location.hash;
-
-        // If the pathname, search, and hash haven't changed, a
-        // regular <a> will do a REPLACE instead of a PUSH.
-        let replace = !!replaceProp || isSameLocation;
+        // If the URL hasn't changed, a regular <a> will do a replace instead of
+        // a push, so follow that lead here.
+        let replace =
+          !!replaceProp || locationPathsAreSame(location, toLocation);
 
         navigate(to, { replace, state });
       }
@@ -252,12 +256,14 @@ export const NavLink = React.forwardRef<HTMLAnchorElement, NavLinkProps>(
     },
     ref
   ) {
-    let match = useMatch(to);
-    let ariaCurrent = match ? ariaCurrentProp : undefined;
-    let className = [classNameProp, match ? activeClassName : null]
+    let location = useLocation();
+    let toLocation = useResolvedLocation(to);
+    let active = locationPathsAreSame(location, toLocation);
+    let ariaCurrent = active ? ariaCurrentProp : undefined;
+    let className = [classNameProp, active ? activeClassName : null]
       .filter(Boolean)
       .join(' ');
-    let style = { ...styleProp, ...(match ? activeStyle : null) };
+    let style = { ...styleProp, ...(active ? activeStyle : null) };
 
     return (
       <Link

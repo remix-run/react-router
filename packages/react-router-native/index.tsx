@@ -37,6 +37,7 @@ import {
   createRoutesFromChildren,
   generatePath,
   matchRoutes,
+  matchPath,
   resolveLocation
 } from 'react-router';
 import { State, To } from 'history';
@@ -72,6 +73,7 @@ export {
   createRoutesFromChildren,
   generatePath,
   matchRoutes,
+  matchPath,
   resolveLocation
 };
 
