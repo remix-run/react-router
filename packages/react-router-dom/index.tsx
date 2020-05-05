@@ -389,13 +389,16 @@ export function useSearchParams(defaultInit: URLSearchParamsInit) {
 
   let navigate = useNavigate();
   let setSearchParams = React.useCallback(
-    (nextInit, navigateOpts) => {
+    (
+      nextInit: URLSearchParamsInit,
+      navigateOpts?: { replace?: boolean; state?: State | null }
+    ) => {
       navigate('?' + createSearchParams(nextInit), navigateOpts);
     },
     [navigate]
   );
 
-  return [searchParams, setSearchParams];
+  return [searchParams, setSearchParams] as const;
 }
 
 /**
