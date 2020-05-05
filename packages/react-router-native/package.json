@@ -1,6 +1,6 @@
 {
   "name": "react-router-native",
-  "version": "6.0.0-alpha.3",
+  "version": "6.0.0-alpha.4",
   "author": "React Training <hello@reacttraining.com>",
   "description": "Declarative routing for React Native applications",
   "repository": "ReactTraining/react-router",
@@ -15,7 +15,7 @@
   "peerDependencies": {
     "react": ">=16.8",
     "react-native": ">=0.44",
-    "react-router": "6.0.0-alpha.3"
+    "react-router": "6.0.0-alpha.4"
   },
   "devDependencies": {
     "react-native": "^0.61.4"
