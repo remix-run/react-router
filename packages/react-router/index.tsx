@@ -431,10 +431,7 @@ type PathPattern =
  * The interface for the navigate() function returned from useNavigate().
  */
 export interface NavigateFunction {
-  (
-    to: To | number,
-    options?: { replace?: boolean; state?: State | null }
-  ): void;
+  (to: To | number, options?: { replace?: boolean; state?: State }): void;
 }
 
 /**
@@ -460,10 +457,7 @@ export function useNavigate(): NavigateFunction {
   });
 
   let navigate: NavigateFunction = React.useCallback(
-    (
-      to: To | number,
-      opts: { replace?: boolean; state?: State | null } = {}
-    ) => {
+    (to: To | number, options: { replace?: boolean; state?: State } = {}) => {
       if (activeRef.current) {
         if (typeof to === 'number') {
           history.go(to);
@@ -472,9 +466,9 @@ export function useNavigate(): NavigateFunction {
           // If we are pending transition, use REPLACE instead of PUSH. This
           // will prevent URLs that we started navigating to but never fully
           // loaded from appearing in the history stack.
-          (!!opts.replace || pending ? history.replace : history.push)(
+          (!!options.replace || pending ? history.replace : history.push)(
             relativeTo,
-            opts.state
+            options.state
           );
         }
       } else {
