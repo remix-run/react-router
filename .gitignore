@@ -8,3 +8,4 @@ coverage
 packages
 website
 *.tgz
+.idea

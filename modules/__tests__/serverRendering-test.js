@@ -7,6 +7,7 @@ import Link from '../Link'
 import match from '../match'
 import Router from '../Router'
 import RouterContext from '../RouterContext'
+import matchPromise from '../matchPromise'
 
 describe('server rendering', function () {
 
@@ -179,6 +180,16 @@ describe('server rendering', function () {
         <RouterContext {...renderProps} />
       )
       expect(string).toMatch(/\/nasebame/)
+      done()
+    })
+  })
+
+  it('works with promises', function (done) {
+    matchPromise({ routes, location: '/Async' }).then(({ renderProps }) => {
+      const string = renderToString(
+        <RouterContext {...renderProps} />
+      )
+      expect(string).toMatch(/Async/)
       done()
     })
   })

@@ -27,6 +27,7 @@
 
 - [Utilities](#utilities)
   - [`match()`](#match-routes-location-history-options--cb)
+  - [`matchPromise()`](#matchpromise-routes-location-history-options-)
   - [`createRoutes()`](#createroutesroutes)
   - [`PropTypes`](#proptypes)
 
@@ -701,6 +702,9 @@ If all three parameters are `undefined`, this means that there was no route foun
 
 *Note: You probably don't want to use this in a browser unless you're doing server-side rendering of async routes.*
 
+### `matchPromise({ routes, location, [history], [...options] })`
+
+This function wraps the [match](#match-routes-location-history-options--cb) function in a promise, useful when using async/await.
 
 ### `createRoutes(routes)`
 
