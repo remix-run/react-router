@@ -431,7 +431,8 @@ type PathPattern =
  * The interface for the navigate() function returned from useNavigate().
  */
 export interface NavigateFunction {
-  (to: To | number, options?: { replace?: boolean; state?: State }): void;
+  (delta: number): void;
+  (to: To, options?: { replace?: boolean; state?: State }): void;
 }
 
 /**
