@@ -718,8 +718,13 @@ export interface RouteObject {
  */
 export function generatePath(pathname: string, params: Params = {}): string {
   return pathname
-    .replace(/:(\w+)/g, (_, key) => params[key] || `:${key}`)
-    .replace(/\*$/, splat => (params[splat] != null ? params[splat] : splat));
+    .replace(/:(\w+)/g, (_, key) => {
+      invariant(params[key] != null, `Missing ":${key}" param`);
+      return params[key];
+    })
+    .replace(/\/*\*$/, _ =>
+      params['*'] == null ? '' : params['*'].replace(/^\/*/, '/')
+    );
 }
 
 /**
