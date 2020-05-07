@@ -700,9 +700,7 @@ export interface RouteObject {
  */
 export function generatePath(pathname: string, params: Params = {}): string {
   return pathname
-    .replace(/:(\w+)/g, (_, key) =>
-      params[key] != undefined ? params[key] : `:${key}`
-    )
+    .replace(/:(\w+)/g, (_, key) => params[key] || `:${key}`)
     .replace(/\*$/, splat =>
       params[splat] != undefined ? params[splat] : splat
     );
