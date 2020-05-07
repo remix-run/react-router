@@ -1,5 +1,5 @@
-import React from 'react';
-import ReactDOM from 'react-dom';
+import * as React from 'react';
+import * as ReactDOM from 'react-dom';
 import { act } from 'react-dom/test-utils';
 import { Router, Routes, Route, Link } from 'react-router-dom';
 
@@ -9,13 +9,15 @@ function createHref({ pathname = '/', search = '', hash = '' }) {
 
 function createMockHistory({ pathname = '/', search = '', hash = '' }) {
   let location = { pathname, search, hash };
-
   return {
-    createHref,
+    action: 'POP',
     location,
+    createHref,
     push() {},
     replace() {},
     go() {},
+    back() {},
+    forward() {},
     listen() {},
     block() {}
   };
@@ -49,7 +51,11 @@ describe('Link push and replace', () => {
 
       act(() => {
         ReactDOM.render(
-          <Router history={history}>
+          <Router
+            action={history.action}
+            location={history.location}
+            navigator={history}
+          >
             <Routes>
               <Route path="home" element={<Home />} />
             </Routes>
@@ -98,7 +104,11 @@ describe('Link push and replace', () => {
 
       act(() => {
         ReactDOM.render(
-          <Router history={history}>
+          <Router
+            action={history.action}
+            location={history.location}
+            navigator={history}
+          >
             <Routes>
               <Route path="home" element={<Home />} />
             </Routes>
@@ -147,7 +157,11 @@ describe('Link push and replace', () => {
 
       act(() => {
         ReactDOM.render(
-          <Router history={history}>
+          <Router
+            action={history.action}
+            location={history.location}
+            navigator={history}
+          >
             <Routes>
               <Route path="home" element={<Home />} />
             </Routes>
@@ -200,7 +214,11 @@ describe('Link push and replace', () => {
 
       act(() => {
         ReactDOM.render(
-          <Router history={history}>
+          <Router
+            action={history.action}
+            location={history.location}
+            navigator={history}
+          >
             <Routes>
               <Route path="home" element={<Home />} />
               <Route path="about" element={<About />} />

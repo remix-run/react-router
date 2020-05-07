@@ -1,4 +1,4 @@
-import React from 'react';
+import * as React from 'react';
 import { create as createTestRenderer } from 'react-test-renderer';
 import { createMemoryHistory } from 'history';
 import { Router } from 'react-router';
@@ -18,8 +18,16 @@ describe('A <Router>', () => {
 
     expect(() => {
       createTestRenderer(
-        <Router history={history}>
-          <Router history={history} />
+        <Router
+          action={history.action}
+          location={history.location}
+          navigator={history}
+        >
+          <Router
+            action={history.action}
+            location={history.location}
+            navigator={history}
+          />
         </Router>
       );
     }).toThrow(/cannot render a <Router> inside another <Router>/);

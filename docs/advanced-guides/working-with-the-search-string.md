@@ -26,51 +26,32 @@ You can use the `useSearchParams` hook anywhere you need to work with the
 search/query parameters.
 
 ```js
+import * as React from 'react';
 import { useSearchParams } from 'react-router-dom';
 
-// Assuming a <SearchResults> element is rendered at a URL like
-// /search?q=some+search+value, you can get the `q` search parameter like this:
-function SearchResults() {
-  let searchParams = useSearchParams();
-  let q = searchParams.get('q');
+function SearchPage() {
+  let queryRef = React.useRef();
+  let [searchParams, setSearchParams] = useSearchParams({ q: '' });
+  let query = searchParams.get('q');
 
-  return (
-    <p>The query is "{q}".</p>
-  );
-}
-```
-
-You can easily re-use all existing search parameters and add more by cloning
-the existing `searchParams` object and appending a new parameter or two. The
-following example creates a few links, each of which append a new value to the
-search string and preserve all existing values.
-
-```js
-import { useSearchParams } from 'react-router-dom';
-
-function ShoeBrandLinks() {
-  let searchParams = useSearchParams();
-
-  function addParam(name, value) {
-    let newParams = new URLSearchParams(searchParams);
-    newParams.append(name, value);
-    return newParams;
+  // Use the form's "submit" event to persist
+  // the query to the browser's address bar
+  function handleSubmit(event) {
+    event.preventDefault();
+    setSearchParams({ q: queryRef.current.value });
   }
 
   return (
     <div>
-      <Link to={{ search: '?' + addParam('brand', 'Nike') }}>Nike</Link>{' '}
-      <Link to={{ search: '?' + addParam('brand', 'Adidas') }}>Adidas</Link>{' '}
-      <Link to={{ search: '?' + addParam('brand', 'Under Armour') }}>Under Armour</Link>
+      <p>The current query is "{query}".</p>
+
+      <form onSubmit={handleSubmit}>
+        <input name="q" defaultValue={query} ref={queryRef} />
+      </form>
     </div>
   );
 }
 ```
-
-Tip: Notice how the `URLSearchParams` object is automatically converted to a
-string when using `'?' + searchParams`. This is a feature of JavaScript objects
-that implement [the `toString`
-method](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Object/toString).
 
 ## Using a Custom Parser
 

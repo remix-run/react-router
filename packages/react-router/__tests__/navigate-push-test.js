@@ -1,14 +1,18 @@
-import React from 'react';
-import ReactDOM from 'react-dom';
+import * as React from 'react';
+import * as ReactDOM from 'react-dom';
 import { act } from 'react-dom/test-utils';
 import { Router, Routes, Route, useNavigate } from 'react-router';
 
 function createMockHistory(initialLocation) {
   return {
+    action: 'POP',
     location: initialLocation,
+    createHref() {},
     push() {},
     replace() {},
     go() {},
+    back() {},
+    forward() {},
     listen() {},
     block() {}
   };
@@ -56,7 +60,11 @@ describe('navigate', () => {
 
       act(() => {
         ReactDOM.render(
-          <Router history={history}>
+          <Router
+            action={history.action}
+            location={history.location}
+            navigator={history}
+          >
             <Routes>
               <Route path="home" element={<Home />} />
               <Route path="about" element={<About />} />
@@ -107,7 +115,11 @@ describe('navigate', () => {
 
       act(() => {
         ReactDOM.render(
-          <Router history={history}>
+          <Router
+            action={history.action}
+            location={history.location}
+            navigator={history}
+          >
             <Routes>
               <Route path="home" element={<Home />} />
               <Route path="about" element={<About />} />

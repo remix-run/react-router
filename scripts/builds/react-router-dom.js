@@ -2,11 +2,11 @@ import babel from 'rollup-plugin-babel';
 import commonjs from '@rollup/plugin-commonjs';
 import compiler from '@ampproject/rollup-plugin-closure-compiler';
 import copy from 'rollup-plugin-copy';
-import ignore from 'rollup-plugin-ignore';
 import nodeResolve from '@rollup/plugin-node-resolve';
 import prettier from 'rollup-plugin-prettier';
 import replace from '@rollup/plugin-replace';
 import { terser } from 'rollup-plugin-terser';
+import typescript from 'rollup-plugin-typescript2';
 
 const PRETTY = !!process.env.PRETTY;
 const SOURCE_DIR = 'packages/react-router-dom';
@@ -15,16 +15,18 @@ const OUTPUT_DIR = 'build/react-router-dom';
 // JS modules for bundlers
 const modules = [
   {
-    input: `${SOURCE_DIR}/index.js`,
+    input: `${SOURCE_DIR}/index.tsx`,
     output: {
-      file: `${OUTPUT_DIR}/react-router-dom.js`,
+      file: `${OUTPUT_DIR}/index.js`,
       format: 'esm',
       sourcemap: !PRETTY
     },
     external: ['history', 'prop-types', 'react', 'react-dom', 'react-router'],
     plugins: [
+      typescript(),
       babel({
         exclude: /node_modules/,
+        extensions: ['.tsx'],
         presets: [
           ['@babel/preset-env', { loose: true }],
           '@babel/preset-react'
@@ -49,7 +51,7 @@ const modules = [
 // unless you are using a React build with JS modules like es-react.
 const webModules = [
   {
-    input: `${SOURCE_DIR}/index.js`,
+    input: `${SOURCE_DIR}/index.tsx`,
     output: {
       file: `${OUTPUT_DIR}/react-router-dom.development.js`,
       format: 'esm',
@@ -57,8 +59,10 @@ const webModules = [
     },
     external: ['history', 'prop-types', 'react', 'react-router'],
     plugins: [
+      typescript(),
       babel({
         exclude: /node_modules/,
+        extensions: ['.tsx'],
         presets: ['@babel/preset-modules', '@babel/preset-react'],
         plugins: ['babel-plugin-dev-expression']
       }),
@@ -67,7 +71,7 @@ const webModules = [
     ].concat(PRETTY ? prettier({ parser: 'babel' }) : [])
   },
   {
-    input: `${SOURCE_DIR}/index.js`,
+    input: `${SOURCE_DIR}/index.tsx`,
     output: {
       file: `${OUTPUT_DIR}/react-router-dom.production.min.js`,
       format: 'esm',
@@ -75,9 +79,10 @@ const webModules = [
     },
     external: ['history', 'react', 'react-router'],
     plugins: [
-      ignore(['prop-types']),
+      typescript(),
       babel({
         exclude: /node_modules/,
+        extensions: ['.tsx'],
         presets: [
           [
             '@babel/preset-modules',
@@ -94,7 +99,15 @@ const webModules = [
             }
           ]
         ],
-        plugins: ['babel-plugin-dev-expression']
+        plugins: [
+          'babel-plugin-dev-expression',
+          [
+            'babel-plugin-transform-remove-imports',
+            {
+              test: /^prop-types$/
+            }
+          ]
+        ]
       }),
       replace({ 'process.env.NODE_ENV': JSON.stringify('production') }),
       compiler(),
@@ -106,7 +119,7 @@ const webModules = [
 // UMD modules for <script> tags and CommonJS (node)
 const globals = [
   {
-    input: `${SOURCE_DIR}/index.js`,
+    input: `${SOURCE_DIR}/index.tsx`,
     output: {
       file: `${OUTPUT_DIR}/umd/react-router-dom.development.js`,
       format: 'umd',
@@ -120,8 +133,10 @@ const globals = [
     },
     external: ['history', 'react', 'react-router'],
     plugins: [
+      typescript(),
       babel({
         exclude: /node_modules/,
+        extensions: ['.tsx'],
         presets: [
           ['@babel/preset-env', { loose: true }],
           '@babel/preset-react'
@@ -135,7 +150,7 @@ const globals = [
     ].concat(PRETTY ? prettier({ parser: 'babel' }) : [])
   },
   {
-    input: `${SOURCE_DIR}/index.js`,
+    input: `${SOURCE_DIR}/index.tsx`,
     output: {
       file: `${OUTPUT_DIR}/umd/react-router-dom.production.min.js`,
       format: 'umd',
@@ -149,14 +164,23 @@ const globals = [
     },
     external: ['history', 'react', 'react-router'],
     plugins: [
-      ignore(['prop-types']),
+      typescript(),
       babel({
         exclude: /node_modules/,
+        extensions: ['.tsx'],
         presets: [
           ['@babel/preset-env', { loose: true }],
           '@babel/preset-react'
         ],
-        plugins: ['babel-plugin-dev-expression']
+        plugins: [
+          'babel-plugin-dev-expression',
+          [
+            'babel-plugin-transform-remove-imports',
+            {
+              test: /^prop-types$/
+            }
+          ]
+        ]
       }),
       replace({ 'process.env.NODE_ENV': JSON.stringify('production') }),
       compiler(),
@@ -176,7 +200,7 @@ const node = [
     plugins: [compiler()].concat(PRETTY ? prettier({ parser: 'babel' }) : [])
   },
   {
-    input: `${SOURCE_DIR}/server.js`,
+    input: `${SOURCE_DIR}/server.tsx`,
     output: {
       file: `${OUTPUT_DIR}/server.js`,
       format: 'cjs'
@@ -190,8 +214,10 @@ const node = [
       'react-router-dom'
     ],
     plugins: [
+      typescript(),
       babel({
         exclude: /node_modules/,
+        extensions: ['.tsx'],
         presets: [
           ['@babel/preset-env', { loose: true, targets: { node: true } }],
           '@babel/preset-react'

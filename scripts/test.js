@@ -6,11 +6,21 @@ function exec(cmd) {
   execSync(cmd, { stdio: 'inherit', env: process.env });
 }
 
-let target = process.argv[2];
+let args = process.argv.slice(2);
+
+let targetPackage = args.find(arg => !arg.startsWith('-'));
 let allPackages = fs.readdirSync(path.resolve(__dirname, '../packages'));
 
-if (!target || !allPackages.includes(target)) {
-  target = '*';
+let jestArgs = ['--projects'];
+
+if (targetPackage && allPackages.includes(targetPackage)) {
+  jestArgs.push(`packages/${targetPackage}`);
+} else {
+  jestArgs.push(`packages/*`);
 }
 
-exec(`jest --projects packages/${target}`);
+if (args.includes('--watch')) {
+  jestArgs.push('--watch');
+}
+
+exec(`jest ${jestArgs.join(' ')}`);

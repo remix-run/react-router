@@ -1,0 +1,39 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`useSearchParams reads and writes the search string 1`] = `
+<View>
+  <Text>
+    The current query is "
+    Michael Jackson
+    ".
+  </Text>
+  <View>
+    <TextInput
+      allowFontScaling={true}
+      onChangeText={[Function]}
+      rejectResponderTermination={true}
+      underlineColorAndroid="transparent"
+      value="Michael Jackson"
+    />
+  </View>
+</View>
+`;
+
+exports[`useSearchParams reads and writes the search string 2`] = `
+<View>
+  <Text>
+    The current query is "
+    Ryan Florence
+    ".
+  </Text>
+  <View>
+    <TextInput
+      allowFontScaling={true}
+      onChangeText={[Function]}
+      rejectResponderTermination={true}
+      underlineColorAndroid="transparent"
+      value="Ryan Florence"
+    />
+  </View>
+</View>
+`;

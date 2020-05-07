@@ -22,23 +22,23 @@ function invariant(cond, message) {
 
 function ensureCleanWorkingDirectory() {
   let status = exec(`git status --porcelain`);
-  let lines = status.replace(/\n+$/).split('\n');
+  let lines = status.trim().split('\n');
   invariant(
-    lines.every(line => line.startsWith('?')),
-    'Working directory is not clean. Please commit or stash your changes first.'
+    lines.every(line => line === '' || line.startsWith('?')),
+    'Working directory is not clean. Please commit or stash your changes.'
   );
 }
 
 function getNextVersion(currentVersion, givenVersion, prereleaseId) {
   invariant(
     givenVersion != null,
-    `Missing next version. Usage: node version.js [nextVersion] [prereleaseId]`
+    `Missing next version. Usage: node version.js [nextVersion]`
   );
 
   if (/^pre/.test(givenVersion)) {
     invariant(
       prereleaseId != null,
-      `Missing prerelease id. Usage: node version.js [nextVersion] [prereleaseId]`
+      `Missing prerelease id. Usage: node version.js ${givenVersion} [prereleaseId]`
     );
   }
 
