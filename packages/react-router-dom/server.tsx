@@ -23,7 +23,6 @@ export function StaticRouter({
     loc = parsePath(loc);
   }
 
-  let action = Action.Pop;
   let location: Location = {
     pathname: loc.pathname || '/',
     search: loc.search || '',
@@ -34,7 +33,7 @@ export function StaticRouter({
 
   let mockHistory = {
     get action() {
-      return action;
+      return Action.Pop;
     },
     get location() {
       return location;
@@ -90,7 +89,14 @@ export function StaticRouter({
     }
   };
 
-  return <Router children={children} history={mockHistory} static={true} />;
+  return (
+    <Router
+      children={children}
+      history={mockHistory}
+      location={location}
+      static={true}
+    />
+  );
 }
 
 export interface StaticRouterProps {
