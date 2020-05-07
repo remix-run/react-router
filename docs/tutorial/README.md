@@ -3,6 +3,7 @@
 Principles we should cover:
 
 - Static paths like `<Route path="home">`
+  - [Static Paths Tutorial](./static-paths.md)
 - Dynamic paths like `<Route path=":id">`
 - Nested paths (and layouts with `<Outlet>`s) like:
 
