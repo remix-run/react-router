@@ -4,6 +4,7 @@ import {
   State,
   LocationPieces,
   To,
+  Update,
   BrowserHistory,
   HashHistory,
   createBrowserHistory,
@@ -99,16 +100,24 @@ export function BrowserRouter({ children, window }: BrowserRouterProps) {
   }
 
   let history = historyRef.current;
-  let [location, setLocation] = React.useState(history.location);
-  React.useLayoutEffect(
-    () =>
-      history.listen(({ location }) => {
-        setLocation(location);
-      }),
-    [history]
+  let [state, dispatch] = React.useReducer(
+    (_: Update, action: Update) => action,
+    {
+      action: history.action,
+      location: history.location
+    }
   );
 
-  return <Router children={children} history={history} location={location} />;
+  React.useLayoutEffect(() => history.listen(dispatch), [history]);
+
+  return (
+    <Router
+      children={children}
+      action={state.action}
+      location={state.location}
+      navigator={history}
+    />
+  );
 }
 
 export interface BrowserRouterProps {
@@ -135,16 +144,24 @@ export function HashRouter({ children, window }: HashRouterProps) {
   }
 
   let history = historyRef.current;
-  let [location, setLocation] = React.useState(history.location);
-  React.useLayoutEffect(
-    () =>
-      history.listen(({ location }) => {
-        setLocation(location);
-      }),
-    [history]
+  let [state, dispatch] = React.useReducer(
+    (_: Update, action: Update) => action,
+    {
+      action: history.action,
+      location: history.location
+    }
   );
 
-  return <Router children={children} history={history} location={location} />;
+  React.useLayoutEffect(() => history.listen(dispatch), [history]);
+
+  return (
+    <Router
+      children={children}
+      action={state.action}
+      location={state.location}
+      navigator={history}
+    />
+  );
 }
 
 export interface HashRouterProps {

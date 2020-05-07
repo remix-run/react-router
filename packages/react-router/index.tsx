@@ -2,10 +2,12 @@ import * as React from 'react';
 import PropTypes from 'prop-types';
 import {
   // types
+  Action,
   Path,
   State,
   LocationPieces,
   Location,
+  Update,
   Transition,
   Blocker,
   To,
@@ -41,14 +43,29 @@ function warning(cond: boolean, message: string): void {
 // CONTEXT
 ///////////////////////////////////////////////////////////////////////////////
 
+/**
+ * A Navigator is a "location changer"; it's how you get to different locations.
+ *
+ * Every history instance conforms to the Navigator interface, but the
+ * distinction is useful primarily when it comes to the low-level <Router> API
+ * where both the location and a navigator must be provided separately in order
+ * to avoid "tearing" that may occur in a suspense-enabled app if the action
+ * and/or location were to be read directly from the history instance.
+ */
+export type Navigator = Omit<
+  History,
+  'action' | 'location' | 'back' | 'forward' | 'listen'
+>;
+
 const LocationContext = React.createContext<LocationContextObject>({
   pending: false,
   static: false
 });
 
 interface LocationContextObject {
-  history?: History;
+  action?: Action;
   location?: Location;
+  navigator?: Navigator;
   pending: boolean;
   static: boolean;
 }
@@ -93,16 +110,24 @@ export function MemoryRouter({
   }
 
   let history = historyRef.current;
-  let [location, setLocation] = React.useState(history.location);
-  React.useLayoutEffect(
-    () =>
-      history.listen(({ location }) => {
-        setLocation(location);
-      }),
-    [history]
+  let [state, dispatch] = React.useReducer(
+    (_: Update, action: Update) => action,
+    {
+      action: history.action,
+      location: history.location
+    }
   );
 
-  return <Router children={children} history={history} location={location} />;
+  React.useLayoutEffect(() => history.listen(dispatch), [history]);
+
+  return (
+    <Router
+      children={children}
+      action={state.action}
+      location={state.location}
+      navigator={history}
+    />
+  );
 }
 
 export interface MemoryRouterProps {
@@ -219,12 +244,16 @@ if (__DEV__) {
 }
 
 /**
- * The root context provider. There should be only one of these in a given app.
+ * The low-level root context provider in a React Router app. You usually won't
+ * render a <Router> directly. Instead, you'll render a router that is more
+ * specific to your environment such as a <BrowserRouter> in web browsers or a
+ * <StaticRouter> for server rendering.
  */
 export function Router({
   children = null,
-  history,
+  action = Action.Pop,
   location,
+  navigator,
   pending = false,
   static: staticProp = false
 }: RouterProps): React.ReactElement {
@@ -237,23 +266,16 @@ export function Router({
   return (
     <LocationContext.Provider
       children={children}
-      value={{
-        history,
-        // Forcing users to provide both a history *and* a location is somewhat
-        // redundant. The main reason we do it is for suspense-enabled apps, so
-        // we can provide a reasonable default here.
-        location: location || history.location,
-        pending,
-        static: staticProp
-      }}
+      value={{ action, location, navigator, pending, static: staticProp }}
     />
   );
 }
 
 export interface RouterProps {
   children?: React.ReactNode;
-  history: History;
-  location?: Location;
+  action?: Action;
+  location: Location;
+  navigator: Navigator;
   pending?: boolean;
   static?: boolean;
 }
@@ -262,27 +284,23 @@ if (__DEV__) {
   Router.displayName = 'Router';
   Router.propTypes = {
     children: PropTypes.node,
-    history: PropTypes.shape({
-      action: PropTypes.string.isRequired,
-      location: PropTypes.object.isRequired,
+    action: PropTypes.oneOf(['POP', 'PUSH', 'REPLACE']),
+    location: PropTypes.object.isRequired,
+    navigator: PropTypes.shape({
       createHref: PropTypes.func.isRequired,
       push: PropTypes.func.isRequired,
       replace: PropTypes.func.isRequired,
       go: PropTypes.func.isRequired,
-      back: PropTypes.func.isRequired,
-      forward: PropTypes.func.isRequired,
-      listen: PropTypes.func.isRequired,
       block: PropTypes.func.isRequired
-    }),
-    location: PropTypes.object,
+    }).isRequired,
     pending: PropTypes.bool,
     static: PropTypes.bool
   };
 }
 
 /**
- * A wrapper for useRoutes that treats its children as route and/or redirect
- * objects.
+ * A container for a nested tree of <Route> elements that renders the branch
+ * that best matches the current location.
  */
 export function Routes({
   basename = '',
@@ -322,12 +340,12 @@ export function useBlocker(blocker: Blocker, when = true): void {
     `useBlocker() may be used only in the context of a <Router> component.`
   );
 
-  let history = React.useContext(LocationContext).history as History;
+  let navigator = React.useContext(LocationContext).navigator as Navigator;
 
   React.useEffect(() => {
     if (!when) return;
 
-    let unblock = history.block((tx: Transition) => {
+    let unblock = navigator.block((tx: Transition) => {
       let autoUnblockingTx = {
         ...tx,
         retry() {
@@ -343,7 +361,7 @@ export function useBlocker(blocker: Blocker, when = true): void {
     });
 
     return unblock;
-  }, [history, blocker, when]);
+  }, [navigator, blocker, when]);
 }
 
 /**
@@ -358,10 +376,10 @@ export function useHref(to: To): string {
     `useHref() may be used only in the context of a <Router> component.`
   );
 
-  let history = React.useContext(LocationContext).history as History;
+  let navigator = React.useContext(LocationContext).navigator as Navigator;
   let resolvedLocation = useResolvedLocation(to);
 
-  return history.createHref(resolvedLocation);
+  return navigator.createHref(resolvedLocation);
 }
 
 /**
@@ -439,7 +457,7 @@ export function useNavigate(): NavigateFunction {
   );
 
   let locationContext = React.useContext(LocationContext);
-  let history = locationContext.history as History;
+  let navigator = locationContext.navigator as Navigator;
   let pending = locationContext.pending;
   let { pathname } = React.useContext(RouteContext);
 
@@ -452,13 +470,13 @@ export function useNavigate(): NavigateFunction {
     (to: To | number, options: { replace?: boolean; state?: State } = {}) => {
       if (activeRef.current) {
         if (typeof to === 'number') {
-          history.go(to);
+          navigator.go(to);
         } else {
           let relativeTo = resolveLocation(to, pathname);
           // If we are pending transition, use REPLACE instead of PUSH. This
           // will prevent URLs that we started navigating to but never fully
           // loaded from appearing in the history stack.
-          (!!options.replace || pending ? history.replace : history.push)(
+          (!!options.replace || pending ? navigator.replace : navigator.push)(
             relativeTo,
             options.state
           );
@@ -471,7 +489,7 @@ export function useNavigate(): NavigateFunction {
         );
       }
     },
-    [history, pathname, pending]
+    [navigator, pathname, pending]
   );
 
   return navigate;
@@ -701,9 +719,7 @@ export interface RouteObject {
 export function generatePath(pathname: string, params: Params = {}): string {
   return pathname
     .replace(/:(\w+)/g, (_, key) => params[key] || `:${key}`)
-    .replace(/\*$/, splat =>
-      params[splat] != undefined ? params[splat] : splat
-    );
+    .replace(/\*$/, splat => (params[splat] != null ? params[splat] : splat));
 }
 
 /**

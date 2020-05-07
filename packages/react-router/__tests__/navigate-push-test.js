@@ -60,7 +60,11 @@ describe('navigate', () => {
 
       act(() => {
         ReactDOM.render(
-          <Router history={history}>
+          <Router
+            action={history.action}
+            location={history.location}
+            navigator={history}
+          >
             <Routes>
               <Route path="home" element={<Home />} />
               <Route path="about" element={<About />} />
@@ -111,7 +115,11 @@ describe('navigate', () => {
 
       act(() => {
         ReactDOM.render(
-          <Router history={history}>
+          <Router
+            action={history.action}
+            location={history.location}
+            navigator={history}
+          >
             <Routes>
               <Route path="home" element={<Home />} />
               <Route path="about" element={<About />} />

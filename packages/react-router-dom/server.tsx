@@ -23,6 +23,7 @@ export function StaticRouter({
     loc = parsePath(loc);
   }
 
+  let action = Action.Pop;
   let location: Location = {
     pathname: loc.pathname || '/',
     search: loc.search || '',
@@ -31,26 +32,20 @@ export function StaticRouter({
     key: loc.key || 'default'
   };
 
-  let mockHistory = {
-    get action() {
-      return Action.Pop;
-    },
-    get location() {
-      return location;
-    },
+  let staticNavigator = {
     createHref(to: To) {
       return typeof to === 'string' ? to : createPath(to);
     },
     push(to: To) {
       throw new Error(
-        `You cannot use history.push() on the server because it is a stateless ` +
+        `You cannot use navigator.push() on the server because it is a stateless ` +
           `environment. This error was probably triggered when you did a ` +
           `\`navigate(${JSON.stringify(to)})\` somewhere in your app.`
       );
     },
     replace(to: To) {
       throw new Error(
-        `You cannot use history.replace() on the server because it is a stateless ` +
+        `You cannot use navigator.replace() on the server because it is a stateless ` +
           `environment. This error was probably triggered when you did a ` +
           `\`navigate(${JSON.stringify(to)}, { replace: true })\` somewhere ` +
           `in your app.`
@@ -58,32 +53,26 @@ export function StaticRouter({
     },
     go(n: number) {
       throw new Error(
-        `You cannot use history.go(${n}) on the server because it is a stateless` +
+        `You cannot use navigator.go(${n}) on the server because it is a stateless` +
           `environment. This error was probably triggered when you did a ` +
           `\`navigate(${n})\` somewhere in your app.`
       );
     },
     back() {
       throw new Error(
-        `You cannot use history.back() on the server because it is a stateless ` +
+        `You cannot use navigator.back() on the server because it is a stateless ` +
           `environment.`
       );
     },
     forward() {
       throw new Error(
-        `You cannot use history.forward() on the server because it is a stateless ` +
-          `environment.`
-      );
-    },
-    listen() {
-      throw new Error(
-        `You cannot use history.listen() on the server because it is a stateless ` +
+        `You cannot use navigator.forward() on the server because it is a stateless ` +
           `environment.`
       );
     },
     block() {
       throw new Error(
-        `You cannot use history.block() on the server because it is a stateless ` +
+        `You cannot use navigator.block() on the server because it is a stateless ` +
           `environment.`
       );
     }
@@ -92,8 +81,9 @@ export function StaticRouter({
   return (
     <Router
       children={children}
-      history={mockHistory}
+      action={action}
       location={location}
+      navigator={staticNavigator}
       static={true}
     />
   );
