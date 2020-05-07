@@ -42,15 +42,13 @@ function warning(cond: boolean, message: string): void {
 ///////////////////////////////////////////////////////////////////////////////
 
 const LocationContext = React.createContext<LocationContextObject>({
-  history: null,
-  location: null,
   pending: false,
   static: false
 });
 
 interface LocationContextObject {
-  history: History | null;
-  location: Location | null;
+  history?: History;
+  location?: Location;
   pending: boolean;
   static: boolean;
 }
@@ -87,31 +85,30 @@ if (__DEV__) {
 export function MemoryRouter({
   children,
   initialEntries,
-  initialIndex,
-  timeout
+  initialIndex
 }: MemoryRouterProps): React.ReactElement {
-  let historyRef = React.useRef<MemoryHistory>(null);
-
+  let historyRef = React.useRef<MemoryHistory>();
   if (historyRef.current == null) {
-    (historyRef as React.MutableRefObject<
-      MemoryHistory
-    >).current = createMemoryHistory({ initialEntries, initialIndex });
+    historyRef.current = createMemoryHistory({ initialEntries, initialIndex });
   }
 
-  return (
-    <Router
-      children={children}
-      history={historyRef.current as MemoryHistory}
-      timeout={timeout}
-    />
+  let history = historyRef.current;
+  let [location, setLocation] = React.useState(history.location);
+  React.useLayoutEffect(
+    () =>
+      history.listen(({ location }) => {
+        setLocation(location);
+      }),
+    [history]
   );
+
+  return <Router children={children} history={history} location={location} />;
 }
 
 export interface MemoryRouterProps {
   children?: React.ReactNode;
   initialEntries?: InitialEntry[];
   initialIndex?: number;
-  timeout?: number;
 }
 
 if (__DEV__) {
@@ -146,10 +143,8 @@ export function Navigate({ to, replace, state }: NavigateProps): null {
     `<Navigate> may be used only in the context of a <Router> component.`
   );
 
-  let locationContext = React.useContext(LocationContext);
-
   warning(
-    !locationContext.static,
+    !React.useContext(LocationContext).static,
     `<Navigate> must not be used on the initial render in a <StaticRouter>. ` +
       `This is a no-op, but you should modify your code so the <Navigate> is ` +
       `only ever rendered in response to some user interaction or state change.`
@@ -223,19 +218,15 @@ if (__DEV__) {
   };
 }
 
-// TODO: Remove once React.useTransition is stable.
-const startTransition = (tx: Function) => tx();
-// @ts-ignore
-const useTransition = React.useTransition || (() => [startTransition, false]);
-
 /**
  * The root context provider. There should be only one of these in a given app.
  */
 export function Router({
   children = null,
   history,
-  static: staticProp = false,
-  timeout = 2000
+  location,
+  pending = false,
+  static: staticProp = false
 }: RouterProps): React.ReactElement {
   invariant(
     !useInRouterContext(),
@@ -243,23 +234,18 @@ export function Router({
       ` You never need more than one.`
   );
 
-  let [location, setLocation] = React.useState(history.location);
-  let [startTransition, pending] = useTransition({ timeoutMs: timeout });
-  let shouldListenRef = React.useRef(!staticProp);
-
-  if (shouldListenRef.current) {
-    shouldListenRef.current = false;
-    history.listen(({ location }) => {
-      startTransition(() => {
-        setLocation(location);
-      });
-    });
-  }
-
   return (
     <LocationContext.Provider
       children={children}
-      value={{ history, location, pending, static: staticProp }}
+      value={{
+        history,
+        // Forcing users to provide both a history *and* a location is somewhat
+        // redundant. The main reason we do it is for suspense-enabled apps, so
+        // we can provide a reasonable default here.
+        location: location || history.location,
+        pending,
+        static: staticProp
+      }}
     />
   );
 }
@@ -267,8 +253,9 @@ export function Router({
 export interface RouterProps {
   children?: React.ReactNode;
   history: History;
+  location?: Location;
+  pending?: boolean;
   static?: boolean;
-  timeout?: number;
 }
 
 if (__DEV__) {
@@ -276,15 +263,20 @@ if (__DEV__) {
   Router.propTypes = {
     children: PropTypes.node,
     history: PropTypes.shape({
-      action: PropTypes.string,
-      location: PropTypes.object,
-      push: PropTypes.func,
-      replace: PropTypes.func,
-      go: PropTypes.func,
-      listen: PropTypes.func,
-      block: PropTypes.func
+      action: PropTypes.string.isRequired,
+      location: PropTypes.object.isRequired,
+      createHref: PropTypes.func.isRequired,
+      push: PropTypes.func.isRequired,
+      replace: PropTypes.func.isRequired,
+      go: PropTypes.func.isRequired,
+      back: PropTypes.func.isRequired,
+      forward: PropTypes.func.isRequired,
+      listen: PropTypes.func.isRequired,
+      block: PropTypes.func.isRequired
     }),
-    timeout: PropTypes.number
+    location: PropTypes.object,
+    pending: PropTypes.bool,
+    static: PropTypes.bool
   };
 }
 
@@ -322,7 +314,7 @@ if (__DEV__) {
  * Blocks all navigation attempts. This is useful for preventing the page from
  * changing until some condition is met, like saving form data.
  */
-export function useBlocker(blocker: Blocker, when: boolean = true): void {
+export function useBlocker(blocker: Blocker, when = true): void {
   invariant(
     useInRouterContext(),
     // TODO: This error is probably because they somehow have 2 versions of the
@@ -351,7 +343,7 @@ export function useBlocker(blocker: Blocker, when: boolean = true): void {
     });
 
     return unblock;
-  }, [history, when, blocker]);
+  }, [history, blocker, when]);
 }
 
 /**
@@ -376,8 +368,7 @@ export function useHref(to: To): string {
  * Returns true if this component is a descendant of a <Router>.
  */
 export function useInRouterContext(): boolean {
-  let locationContext = React.useContext(LocationContext);
-  return locationContext.location != null;
+  return React.useContext(LocationContext).location != null;
 }
 
 /**

@@ -92,29 +92,27 @@ export {
 /**
  * A <Router> for use in web browsers. Provides the cleanest URLs.
  */
-export function BrowserRouter({
-  children,
-  timeout,
-  window
-}: BrowserRouterProps) {
-  let historyRef = React.useRef<BrowserHistory | null>(null);
-
+export function BrowserRouter({ children, window }: BrowserRouterProps) {
+  let historyRef = React.useRef<BrowserHistory>();
   if (historyRef.current == null) {
     historyRef.current = createBrowserHistory({ window });
   }
 
-  return (
-    <Router
-      children={children}
-      history={historyRef.current}
-      timeout={timeout}
-    />
+  let history = historyRef.current;
+  let [location, setLocation] = React.useState(history.location);
+  React.useLayoutEffect(
+    () =>
+      history.listen(({ location }) => {
+        setLocation(location);
+      }),
+    [history]
   );
+
+  return <Router children={children} history={history} location={location} />;
 }
 
 export interface BrowserRouterProps {
   children?: React.ReactNode;
-  timeout?: number;
   window?: Window;
 }
 
@@ -122,7 +120,6 @@ if (__DEV__) {
   BrowserRouter.displayName = 'BrowserRouter';
   BrowserRouter.propTypes = {
     children: PropTypes.node,
-    timeout: PropTypes.number,
     window: PropTypes.object
   };
 }
@@ -131,25 +128,27 @@ if (__DEV__) {
  * A <Router> for use in web browsers. Stores the location in the hash
  * portion of the URL so it is not sent to the server.
  */
-export function HashRouter({ children, timeout, window }: HashRouterProps) {
-  let historyRef = React.useRef<HashHistory | null>(null);
-
+export function HashRouter({ children, window }: HashRouterProps) {
+  let historyRef = React.useRef<HashHistory>();
   if (historyRef.current == null) {
     historyRef.current = createHashHistory({ window });
   }
 
-  return (
-    <Router
-      children={children}
-      history={historyRef.current}
-      timeout={timeout}
-    />
+  let history = historyRef.current;
+  let [location, setLocation] = React.useState(history.location);
+  React.useLayoutEffect(
+    () =>
+      history.listen(({ location }) => {
+        setLocation(location);
+      }),
+    [history]
   );
+
+  return <Router children={children} history={history} location={location} />;
 }
 
 export interface HashRouterProps {
   children?: React.ReactNode;
-  timeout?: number;
   window?: Window;
 }
 
@@ -157,7 +156,6 @@ if (__DEV__) {
   HashRouter.displayName = 'HashRouter';
   HashRouter.propTypes = {
     children: PropTypes.node,
-    timeout: PropTypes.number,
     window: PropTypes.object
   };
 }

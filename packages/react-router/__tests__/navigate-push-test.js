@@ -5,10 +5,14 @@ import { Router, Routes, Route, useNavigate } from 'react-router';
 
 function createMockHistory(initialLocation) {
   return {
+    action: 'POP',
     location: initialLocation,
+    createHref() {},
     push() {},
     replace() {},
     go() {},
+    back() {},
+    forward() {},
     listen() {},
     block() {}
   };
