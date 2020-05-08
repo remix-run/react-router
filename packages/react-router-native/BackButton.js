@@ -1,7 +1,7 @@
 import React from "react";
 import { BackHandler } from "react-native";
 
-import { __RouterContext as RouterContext } from "react-router";
+import { __HistoryContext as HistoryContext } from "react-router";
 
 class BackButton extends React.PureComponent {
   handleBack = () => {
@@ -23,12 +23,12 @@ class BackButton extends React.PureComponent {
 
   render() {
     return (
-      <RouterContext.Consumer>
-        {context => {
-          this.history = context.history;
+      <HistoryContext.Consumer>
+        {history => {
+          this.history = history;
           return this.props.children || null;
         }}
-      </RouterContext.Consumer>
+      </HistoryContext.Consumer>
     );
   }
 }

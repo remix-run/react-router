@@ -2,6 +2,7 @@ import React from "react";
 import PropTypes from "prop-types";
 import warning from "tiny-warning";
 
+import HistoryContext from "./HistoryContext.js";
 import RouterContext from "./RouterContext.js";
 
 /**
@@ -53,14 +54,18 @@ class Router extends React.PureComponent {
   render() {
     return (
       <RouterContext.Provider
-        children={this.props.children || null}
         value={{
           history: this.props.history,
           location: this.state.location,
           match: Router.computeRootMatch(this.state.location.pathname),
           staticContext: this.props.staticContext
         }}
-      />
+      >
+        <HistoryContext.Provider
+          children={this.props.children || null}
+          value={this.props.history}
+        />
+      </RouterContext.Provider>
     );
   }
 }

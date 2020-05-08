@@ -1,7 +1,7 @@
 import React from "react";
 import { Linking } from "react-native";
 
-import { __RouterContext as RouterContext } from "react-router";
+import { __HistoryContext as HistoryContext } from "react-router";
 
 const protocolAndSlashes = /.*?:\/\//g;
 
@@ -27,12 +27,12 @@ class DeepLinking extends React.PureComponent {
 
   render() {
     return (
-      <RouterContext.Consumer>
-        {context => {
-          this.history = context.history;
+      <HistoryContext.Consumer>
+        {history => {
+          this.history = history;
           return this.props.children || null;
         }}
-      </RouterContext.Consumer>
+      </HistoryContext.Consumer>
     );
   }
 }

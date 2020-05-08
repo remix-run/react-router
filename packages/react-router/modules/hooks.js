@@ -2,6 +2,7 @@ import React from "react";
 import invariant from "tiny-invariant";
 
 import Context from "./RouterContext.js";
+import HistoryContext from "./HistoryContext.js";
 import matchPath from "./matchPath.js";
 
 const useContext = React.useContext;
@@ -14,7 +15,7 @@ export function useHistory() {
     );
   }
 
-  return useContext(Context).history;
+  return useContext(HistoryContext);
 }
 
 export function useLocation() {
