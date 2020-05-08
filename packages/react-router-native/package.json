@@ -1,6 +1,6 @@
 {
   "name": "react-router-native",
-  "version": "5.1.2",
+  "version": "5.2.0",
   "description": "React Native bindings for React Router",
   "repository": "ReactTraining/react-router",
   "license": "MIT",
@@ -25,6 +25,6 @@
   },
   "dependencies": {
     "prop-types": "^15.6.1",
-    "react-router": "5.1.2"
+    "react-router": "5.2.0"
   }
 }
