@@ -706,6 +706,19 @@ the `react-dom` package and to help users understand better what a
 
 This is a simple change of moving the prop. The `basename` behavior has remained the same. It is used to indicate the base URL for all locations. 
 
+```jsx
+// change
+<Router basename="/calendar">
+  <Route ... />
+</Router>
+// to
+<Router>
+  <Routes basename="/calendar">
+    <Route ... />
+  </Routes>
+</Router>
+```
+
 ## What did we miss?
 
 Despite my best attempts at being thorough (it took me 2 days to write this) I'm
