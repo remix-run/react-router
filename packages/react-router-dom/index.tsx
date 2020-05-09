@@ -373,7 +373,8 @@ export function usePrompt(message: string, when = true) {
  * A convenient wrapper for reading and writing search parameters via the
  * URLSearchParams interface.
  */
-export function useSearchParams(defaultInit: URLSearchParamsInit) {
+export function useSearchParams(defaultInit?: URLSearchParamsInit): [URLSearchParams, (nextInit: URLSearchParamsInit,
+  navigateOptions?: { replace?: boolean; state?: State }) => void] {
   warning(
     typeof URLSearchParams !== 'undefined',
     'You cannot use the `useSearchParams` hook in a browser that does not' +
@@ -413,7 +414,7 @@ export function useSearchParams(defaultInit: URLSearchParamsInit) {
     [navigate]
   );
 
-  return [searchParams, setSearchParams] as const;
+  return [searchParams, setSearchParams];
 }
 
 /**
