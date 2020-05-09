@@ -40,6 +40,7 @@ In general, the process looks like this:
   - [Use `useRoutes` instead of `react-router-config`](#use-useroutes-instead-of-react-router-config)
   - [Rename `<Link component>` to `<Link as>`](#rename-link-component-to-link-as)
   - [Get `StaticRouter` from `react-router-dom/server`](#get-staticrouter-from-react-router-domserver)
+  - [Move `basename` from `<Router>` to `<Routes>`](#move-basename-from-router-to-routes)
 
 ## Upgrade to React v16.8
 
@@ -700,6 +701,23 @@ import { StaticRouter } from 'react-router-dom/server';
 This change was made both to follow more closely the convention established by
 the `react-dom` package and to help users understand better what a
 `<StaticRouter>` is for and when it should be used (on the server).
+
+## Move `basename` from `<Router>` to `<Routes>`
+
+This is a simple change of moving the prop. The `basename` behavior has remained the same. It is used to indicate the base URL for all locations. 
+
+```jsx
+// change
+<Router basename="/calendar">
+  <Route ... />
+</Router>
+// to
+<Router>
+  <Routes basename="/calendar">
+    <Route ... />
+  </Routes>
+</Router>
+```
 
 ## What did we miss?
 
