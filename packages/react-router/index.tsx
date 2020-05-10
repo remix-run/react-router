@@ -397,7 +397,7 @@ export function useInRouterContext(): boolean {
  * "routing" in your app, and we'd like to know what your use case is. We may be
  * able to provide something higher-level to better suit your needs.
  */
-export function useLocation(): Location {
+export function useLocation<State = {}>(): Location<State> {
   invariant(
     useInRouterContext(),
     // TODO: This error is probably because they somehow have 2 versions of the
@@ -405,7 +405,7 @@ export function useLocation(): Location {
     `useLocation() may be used only in the context of a <Router> component.`
   );
 
-  return React.useContext(LocationContext).location as Location;
+  return React.useContext(LocationContext).location as Location<State>;
 }
 
 /**
