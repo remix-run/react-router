@@ -10,7 +10,7 @@ import {
   Prompt
 } from "react-router-native";
 
-class ReactRouterNative extends React.PureComponent {
+class ReactRouterNative extends React.Component {
   render() {
     return (
       <NativeRouter>

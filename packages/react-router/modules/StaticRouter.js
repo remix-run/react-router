@@ -50,7 +50,7 @@ function noop() {}
  * location changes in a context object. Useful mainly in testing and
  * server-rendering scenarios.
  */
-class StaticRouter extends React.PureComponent {
+class StaticRouter extends React.Component {
   navigateTo(location, action) {
     const { basename = "", context = {} } = this.props;
     context.action = action;

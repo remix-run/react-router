@@ -4,7 +4,7 @@ import PropTypes from "prop-types";
 
 import { __HistoryContext as HistoryContext } from "react-router";
 
-export default class Link extends React.PureComponent {
+export default class Link extends React.Component {
   static defaultProps = {
     component: TouchableHighlight,
     replace: false

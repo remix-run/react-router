@@ -27,7 +27,7 @@ function evalChildrenDev(children, props, path) {
 /**
  * The public API for matching a single path and rendering.
  */
-class Route extends React.PureComponent {
+class Route extends React.Component {
   render() {
     return (
       <RouterContext.Consumer>

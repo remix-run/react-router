@@ -5,7 +5,7 @@ import { __HistoryContext as HistoryContext } from "react-router";
 
 const protocolAndSlashes = /.*?:\/\//g;
 
-class DeepLinking extends React.PureComponent {
+class DeepLinking extends React.Component {
   push(url) {
     const pathname = url.replace(protocolAndSlashes, "");
     this.history.push(pathname);
