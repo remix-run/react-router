@@ -35,7 +35,7 @@ class StackContainer extends Component {
     };
   }
 
-  componentDidMount() {
+  componentWillMount() {
     this.pushToStack("down");
   }
 
@@ -435,7 +435,7 @@ class StackRootContainer extends Component {
 }
 
 class RedirectStack extends Component {
-  componentDidMount() {
+  componentWillMount() {
     delete rootStoredLocations[this.props.path];
   }
 
