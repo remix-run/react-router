@@ -373,7 +373,7 @@ export function usePrompt(message: string, when = true) {
  * A convenient wrapper for reading and writing search parameters via the
  * URLSearchParams interface.
  */
-export function useSearchParams(defaultInit: URLSearchParamsInit) {
+export function useSearchParams(defaultInit?: URLSearchParamsInit) {
   warning(
     typeof URLSearchParams !== 'undefined',
     'You cannot use the `useSearchParams` hook in a browser that does not' +
