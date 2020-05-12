@@ -1,4 +1,4 @@
-import { func, object, arrayOf, oneOfType, element, shape, string } from 'prop-types';
+import { func, object, arrayOf, oneOfType, element, shape, elementType } from 'prop-types';
 
 export function falsy(props, propName, componentName) {
   if (props[propName]) return new Error('<' + componentName + '> should not have a "' + propName + '" prop');
@@ -13,7 +13,7 @@ export var history = shape({
   goForward: func.isRequired
 });
 
-export var component = oneOfType([func, string]);
+export var component = elementType;
 export var components = oneOfType([component, object]);
 export var route = oneOfType([object, element]);
 export var routes = oneOfType([route, arrayOf(route)]);

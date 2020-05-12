@@ -1,3 +1,4 @@
+import React from 'react';
 import PropTypes from 'prop-types';
 
 // Works around issues with context updates failing to propagate.
@@ -14,15 +15,17 @@ function makeContextName(name) {
   return '@@contextSubscriber/' + name;
 }
 
+var prefixUnsafeLifecycleMethods = typeof React.forwardRef !== 'undefined';
+
 export function ContextProvider(name) {
-  var _childContextTypes, _ref2;
+  var _childContextTypes, _config;
 
   var contextName = makeContextName(name);
   var listenersKey = contextName + '/listeners';
   var eventIndexKey = contextName + '/eventIndex';
   var subscribeKey = contextName + '/subscribe';
 
-  return _ref2 = {
+  var config = (_config = {
     childContextTypes: (_childContextTypes = {}, _childContextTypes[contextName] = contextProviderShape.isRequired, _childContextTypes),
 
     getChildContext: function getChildContext() {
@@ -33,10 +36,16 @@ export function ContextProvider(name) {
         subscribe: this[subscribeKey]
       }, _ref;
     },
+
+
+    // this method will be updated to UNSAFE_componentWillMount below for React versions >= 16.3
     componentWillMount: function componentWillMount() {
       this[listenersKey] = [];
       this[eventIndexKey] = 0;
     },
+
+
+    // this method will be updated to UNSAFE_componentWillReceiveProps below for React versions >= 16.3
     componentWillReceiveProps: function componentWillReceiveProps() {
       this[eventIndexKey]++;
     },
@@ -47,7 +56,7 @@ export function ContextProvider(name) {
         return listener(_this[eventIndexKey]);
       });
     }
-  }, _ref2[subscribeKey] = function (listener) {
+  }, _config[subscribeKey] = function (listener) {
     var _this2 = this;
 
     // No need to immediately call listener here.
@@ -58,28 +67,36 @@ export function ContextProvider(name) {
         return item !== listener;
       });
     };
-  }, _ref2;
+  }, _config);
+
+  if (prefixUnsafeLifecycleMethods) {
+    config.UNSAFE_componentWillMount = config.componentWillMount;
+    config.UNSAFE_componentWillReceiveProps = config.componentWillReceiveProps;
+    delete config.componentWillMount;
+    delete config.componentWillReceiveProps;
+  }
+  return config;
 }
 
 export function ContextSubscriber(name) {
-  var _contextTypes, _ref4;
+  var _contextTypes, _config2;
 
   var contextName = makeContextName(name);
   var lastRenderedEventIndexKey = contextName + '/lastRenderedEventIndex';
   var handleContextUpdateKey = contextName + '/handleContextUpdate';
   var unsubscribeKey = contextName + '/unsubscribe';
 
-  return _ref4 = {
+  var config = (_config2 = {
     contextTypes: (_contextTypes = {}, _contextTypes[contextName] = contextProviderShape, _contextTypes),
 
     getInitialState: function getInitialState() {
-      var _ref3;
+      var _ref2;
 
       if (!this.context[contextName]) {
         return {};
       }
 
-      return _ref3 = {}, _ref3[lastRenderedEventIndexKey] = this.context[contextName].eventIndex, _ref3;
+      return _ref2 = {}, _ref2[lastRenderedEventIndexKey] = this.context[contextName].eventIndex, _ref2;
     },
     componentDidMount: function componentDidMount() {
       if (!this.context[contextName]) {
@@ -88,6 +105,9 @@ export function ContextSubscriber(name) {
 
       this[unsubscribeKey] = this.context[contextName].subscribe(this[handleContextUpdateKey]);
     },
+
+
+    // this method will be updated to UNSAFE_componentWillReceiveProps below for React versions >= 16.3
     componentWillReceiveProps: function componentWillReceiveProps() {
       var _setState;
 
@@ -105,11 +125,17 @@ export function ContextSubscriber(name) {
       this[unsubscribeKey]();
       this[unsubscribeKey] = null;
     }
-  }, _ref4[handleContextUpdateKey] = function (eventIndex) {
+  }, _config2[handleContextUpdateKey] = function (eventIndex) {
     if (eventIndex !== this.state[lastRenderedEventIndexKey]) {
       var _setState2;
 
       this.setState((_setState2 = {}, _setState2[lastRenderedEventIndexKey] = eventIndex, _setState2));
     }
-  }, _ref4;
+  }, _config2);
+
+  if (prefixUnsafeLifecycleMethods) {
+    config.UNSAFE_componentWillReceiveProps = config.componentWillReceiveProps;
+    delete config.componentWillReceiveProps;
+  }
+  return config;
 }

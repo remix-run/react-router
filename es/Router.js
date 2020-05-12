@@ -27,6 +27,8 @@ var propTypes = {
   matchContext: object
 };
 
+var prefixUnsafeLifecycleMethods = typeof React.forwardRef !== 'undefined';
+
 /**
  * A <Router> is a high-level API for automatically setting up
  * a router that renders a <RouterContext> with all the props
@@ -88,6 +90,9 @@ var Router = createReactClass({
 
     return _createTransitionManager(history, createRoutes(routes || children));
   },
+
+
+  // this method will be updated to UNSAFE_componentWillMount below for React versions >= 16.3
   componentWillMount: function componentWillMount() {
     var _this = this;
 
@@ -107,6 +112,7 @@ var Router = createReactClass({
   },
 
 
+  // this method will be updated to UNSAFE_componentWillReceiveProps below for React versions >= 16.3
   /* istanbul ignore next: sanity check */
   componentWillReceiveProps: function componentWillReceiveProps(nextProps) {
     process.env.NODE_ENV !== 'production' ? warning(nextProps.history === this.props.history, 'You cannot change <Router history>; it will be ignored') : void 0;
@@ -146,5 +152,12 @@ var Router = createReactClass({
     }));
   }
 });
+
+if (prefixUnsafeLifecycleMethods) {
+  Router.prototype.UNSAFE_componentWillReceiveProps = Router.prototype.componentWillReceiveProps;
+  Router.prototype.UNSAFE_componentWillMount = Router.prototype.componentWillMount;
+  delete Router.prototype.componentWillReceiveProps;
+  delete Router.prototype.componentWillMount;
+}
 
 export default Router;

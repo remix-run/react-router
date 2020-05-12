@@ -4,6 +4,7 @@ var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol
 
 import invariant from 'invariant';
 import React from 'react';
+import { isValidElementType } from 'react-is';
 import createReactClass from 'create-react-class';
 import { array, func, object } from 'prop-types';
 
@@ -83,7 +84,9 @@ var RouterContext = createReactClass({
           }
         }
 
-        if ((typeof components === 'undefined' ? 'undefined' : _typeof(components)) === 'object') {
+        // Handle components is object for { [name]: component } but not valid element
+        // type of react, such as React.memo, React.lazy and so on.
+        if ((typeof components === 'undefined' ? 'undefined' : _typeof(components)) === 'object' && !isValidElementType(components)) {
           var elements = {};
 
           for (var key in components) {
