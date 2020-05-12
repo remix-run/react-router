@@ -264,7 +264,7 @@ export function usePrompt(message: string, when = true) {
  * A convenient wrapper for accessing individual query parameters via the
  * URLSearchParams interface.
  */
-export function useSearchParams(defaultInit: URLSearchParamsInit) {
+export function useSearchParams(defaultInit?: URLSearchParamsInit) {
   let defaultSearchParamsRef = React.useRef(createSearchParams(defaultInit));
 
   let location = useLocation();
