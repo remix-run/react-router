@@ -2,6 +2,7 @@ npm-debug.log
 lerna-debug.log
 
 /build/
+/docs/api/
 /website/build/
 node_modules/
 
