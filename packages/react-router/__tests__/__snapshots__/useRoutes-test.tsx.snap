@@ -1,5 +1,17 @@
 // Jest Snapshot v1, https://goo.gl/fbAQLP
 
+exports[`useRoutes accepts \`basename\` as optional parameter 1`] = `
+<h1>
+  Home
+</h1>
+`;
+
+exports[`useRoutes accepts \`location\` as optional parameter 1`] = `
+<h1>
+  About
+</h1>
+`;
+
 exports[`useRoutes returns the matching element from a route config 1`] = `
 <h1>
   Home

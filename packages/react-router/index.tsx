@@ -260,10 +260,26 @@ export interface RoutesProps {
  */
 export function Routes({
   basename = "",
+  location,
   children
 }: RoutesProps): React.ReactElement | null {
   let routes = createRoutesFromChildren(children);
-  return useRoutes_(routes, basename);
+  return useRoutes_(routes, { basename, location });
+}
+
+export interface RoutesProps {
+  basename?: string;
+  location?: Location;
+  children?: React.ReactNode;
+}
+
+if (__DEV__) {
+  Routes.displayName = "Routes'"
+  Routes.propTypes = {
+    basename: PropTypes.string,
+    caseSensitive: PropTypes.bool,
+    children: PropTypes.node
+  };
 }
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -470,7 +486,12 @@ export function useParams(): Params {
  */
 export function useResolvedPath(to: To): Path {
   let { pathname } = React.useContext(RouteContext);
-  return React.useMemo(() => resolvePath(to, pathname), [to, pathname]);
+  return React.useMemo(() => resolveLocation(to, pathname), [to, pathname]);
+}
+
+interface RoutesOptions {
+  basename?: string;
+  location?: Location;
 }
 
 /**
@@ -483,7 +504,7 @@ export function useResolvedPath(to: To): Path {
  */
 export function useRoutes(
   partialRoutes: PartialRouteObject[],
-  basename = ""
+  { basename = "", location }: RoutesOptions = {}
 ): React.ReactElement | null {
   invariant(
     useInRouterContext(),
@@ -501,7 +522,7 @@ export function useRoutes(
 
 function useRoutes_(
   routes: RouteObject[],
-  basename = ""
+  { basename = "", location }: RoutesOptions = {}
 ): React.ReactElement | null {
   let {
     route: parentRoute,
@@ -529,8 +550,10 @@ function useRoutes_(
 
   basename = basename ? joinPaths([parentPathname, basename]) : parentPathname;
 
-  let location = useLocation() as Location;
-  let matches = React.useMemo(() => matchRoutes(routes, location, basename), [
+  let currentLocation = useLocation() as Location;
+  let usedLocation = location || currentLocation;
+
+  let matches = React.useMemo(() => matchRoutes(routes, usedLocation, basename), [
     location,
     routes,
     basename

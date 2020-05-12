@@ -6,6 +6,18 @@ exports[`A <Routes> does not render a 2nd route that also matches the URL 1`] = 
 </h1>
 `;
 
+exports[`A <Routes> renders route paths prefixed by a basename 1`] = `
+<h1>
+  Home
+</h1>
+`;
+
+exports[`A <Routes> renders routes for a different location 1`] = `
+<h1>
+  Home
+</h1>
+`;
+
 exports[`A <Routes> renders the first route that matches the URL 1`] = `
 <h1>
   Home
