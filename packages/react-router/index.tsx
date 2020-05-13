@@ -864,10 +864,10 @@ function compareIndexes(a: number[], b: number[]): number {
       0;
 }
 
-function stableSort(array: any[], compareItems: (a: any, b: any) => number) {
+function stableSort<T extends unknown>(array: T[], compareItems: (a: T, b: T) => number) {
   // This copy lets us get the original index of an item so we can preserve the
   // original ordering in the case that they sort equally.
-  let copy = array.slice(0);
+  const copy = array.slice(0);
   array.sort((a, b) => compareItems(a, b) || copy.indexOf(a) - copy.indexOf(b));
 }
 
