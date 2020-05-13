@@ -25,6 +25,7 @@ build a certain capability or feature of your app with React Router.
 - [Custom Links](#TODO)
 - [Recursive Paths](#TODO)
 - [Code Splitting](#TODO)
+- [Working with Suspense](working-with-suspense.md)
 
 ## Server Rendering
 
