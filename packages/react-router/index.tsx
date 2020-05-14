@@ -19,7 +19,7 @@ import {
   parsePath
 } from 'history';
 
-const readOnly:<T extends object> (obj: T) => T = __DEV__
+const readOnly: <T extends unknown>(obj: T) => T = __DEV__
   ? obj => Object.freeze(obj)
   : obj => obj;
 
@@ -528,7 +528,7 @@ export function useResolvedLocation(to: To): ResolvedLocation {
  */
 export function useRoutes(
   partialRoutes: PartialRouteObject[],
-  basename: string = ''
+  basename = ''
 ): React.ReactElement | null {
   invariant(
     useInRouterContext(),
@@ -1000,7 +1000,7 @@ function safelyDecodeURIComponent(value: string, paramName: string) {
  */
 export function resolveLocation(
   to: To,
-  fromPathname: string = '/'
+  fromPathname = '/'
 ): ResolvedLocation {
   let { pathname: toPathname, search = '', hash = '' } =
     typeof to === 'string' ? parsePath(to) : to;
