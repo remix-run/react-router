@@ -19,7 +19,7 @@ import {
   parsePath
 } from 'history';
 
-const readOnly: <T extends object>(obj: T) => T = __DEV__
+const readOnly: <T extends unknown>(obj: T) => T = __DEV__
   ? obj => Object.freeze(obj)
   : obj => obj;
 
