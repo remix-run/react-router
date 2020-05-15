@@ -591,6 +591,7 @@ function useRoutes_(
 
   basename = basename ? joinPaths([parentPathname, basename]) : parentPathname;
 
+  let locationPreloadRef = React.useRef<Location>();
   let location = useLocation() as Location;
   let matches = React.useMemo(() => matchRoutes(routes, location, basename), [
     location,
@@ -603,7 +604,15 @@ function useRoutes_(
     return null;
   }
 
-  // TODO: Initiate preload sequence here.
+  // Initiate preload sequence only if the location changes, otherwise state
+  // updates in a parent would re-call preloads.
+  if (locationPreloadRef.current !== location) {
+    locationPreloadRef.current = location;
+    matches.forEach(
+      ({ route, params }, index) =>
+        route.preload && route.preload(params, location, index)
+    );
+  }
 
   // Otherwise render an element.
   let element = matches.reduceRight((outlet, { params, pathname, route }) => {
@@ -638,7 +647,8 @@ export function createRoutesFromArray(
     let route: RouteObject = {
       path: partialRoute.path || '/',
       caseSensitive: partialRoute.caseSensitive === true,
-      element: partialRoute.element || <Outlet />
+      element: partialRoute.element || <Outlet />,
+      preload: partialRoute.preload
     };
 
     if (partialRoute.children) {
@@ -681,7 +691,8 @@ export function createRoutesFromChildren(
       // Default behavior is to just render the element that was given. This
       // permits people to use any element they prefer, not just <Route> (though
       // all our official examples and docs use <Route> for clarity).
-      element
+      element,
+      preload: element.props.preload
     };
 
     if (element.props.children) {
@@ -698,15 +709,27 @@ export function createRoutesFromChildren(
 }
 
 /**
+ * A function that will be called when the router is about to render the
+ * associated route. This function usually kicks off a fetch or similar
+ * operation that primes a local data cache for retrieval while rendering later.
+ */
+type RoutePreloadFunction = (
+  params: Params,
+  location: Location,
+  index: number
+) => void;
+
+/**
  * A "partial route" object is usually supplied by the user and may omit certain
  * properties of a real route object such as `path` and `element`, which have
  * reasonable defaults.
  */
 export interface PartialRouteObject {
-  caseSensitive?: boolean;
-  children?: PartialRouteObject[];
-  element?: React.ReactNode;
   path?: string;
+  caseSensitive?: boolean;
+  element?: React.ReactNode;
+  preload?: RoutePreloadFunction;
+  children?: PartialRouteObject[];
 }
 
 /**
@@ -714,10 +737,11 @@ export interface PartialRouteObject {
  * organized in a tree-like structure.
  */
 export interface RouteObject {
-  caseSensitive: boolean;
-  children?: RouteObject[];
-  element: React.ReactNode;
   path: string;
+  caseSensitive: boolean;
+  element: React.ReactNode;
+  preload?: RoutePreloadFunction;
+  children?: RouteObject[];
 }
 
 /**
