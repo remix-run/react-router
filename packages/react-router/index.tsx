@@ -544,7 +544,7 @@ export function useRoutes(
   return useRoutes_(routes, basename);
 }
 
-let missingTrailingSplatWarnings: { [key: string]: boolean } = {};
+let missingTrailingSplatWarnings: Record<string,boolean> = {};
 function warnAboutMissingTrailingSplatAt(
   pathname: string,
   cond: boolean,
@@ -801,10 +801,10 @@ function flattenRoutes(
 type RouteBranch = [string, RouteObject[], number[]];
 
 function rankRouteBranches(branches: RouteBranch[]): void {
-  let pathScores = branches.reduce((memo, [path]) => {
+  let pathScores = branches.reduce<Record<string, number>>((memo, [path]) => {
     memo[path] = computeScore(path);
     return memo;
-  }, {} as { [key: string]: number });
+  }, {});
 
   // Sorting is stable in modern browsers, but we still support IE 11, so we
   // need this little helper.
