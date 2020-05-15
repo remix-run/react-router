@@ -33,6 +33,11 @@ function warning(cond: boolean, message: string): void {
     if (typeof console !== 'undefined') console.warn(message);
 
     try {
+      // Welcome to debugging React Router!
+      //
+      // This error is thrown as a convenience so you can more easily
+      // find the source for a warning that appears in the console by
+      // enabling "pause on exceptions" in your JavaScript debugger.
       throw new Error(message);
       // eslint-disable-next-line no-empty
     } catch (e) {}
@@ -76,7 +81,7 @@ if (__DEV__) {
 
 const RouteContext = React.createContext<RouteContextObject>({
   outlet: null,
-  params: readOnly({}),
+  params: readOnly<Params>({}),
   pathname: '',
   route: null
 });
@@ -544,7 +549,7 @@ export function useRoutes(
   return useRoutes_(routes, basename);
 }
 
-let missingTrailingSplatWarnings: Record<string,boolean> = {};
+let missingTrailingSplatWarnings: Record<string, boolean> = {};
 function warnAboutMissingTrailingSplatAt(
   pathname: string,
   cond: boolean,
@@ -606,7 +611,7 @@ function useRoutes_(
         children={route.element}
         value={{
           outlet,
-          params: readOnly({ ...parentParams, ...params }),
+          params: readOnly<Params>({ ...parentParams, ...params }),
           pathname: joinPaths([basename, pathname]),
           route
         }}
@@ -630,9 +635,9 @@ export function createRoutesFromArray(
 ): RouteObject[] {
   return array.map(partialRoute => {
     let route: RouteObject = {
+      path: partialRoute.path || '/',
       caseSensitive: partialRoute.caseSensitive === true,
-      element: partialRoute.element || <Outlet />,
-      path: partialRoute.path || '/'
+      element: partialRoute.element || <Outlet />
     };
 
     if (partialRoute.children) {
@@ -669,12 +674,12 @@ export function createRoutesFromChildren(
     }
 
     let route: RouteObject = {
+      path: element.props.path || '/',
       caseSensitive: element.props.caseSensitive === true,
       // Default behavior is to just render the element that was given. This
       // permits people to use any element they prefer, not just <Route> (though
       // all our official examples and docs use <Route> for clarity).
-      element,
-      path: element.props.path || '/'
+      element
     };
 
     if (element.props.children) {
@@ -903,7 +908,7 @@ function matchRouteBranch(
     matches.push({
       route,
       pathname: matchedPathname,
-      params: readOnly(matchedParams)
+      params: readOnly<Params>(matchedParams)
     });
   }
 
@@ -998,10 +1003,7 @@ function safelyDecodeURIComponent(value: string, paramName: string) {
 /**
  * Returns a fully resolved location object relative to the given pathname.
  */
-export function resolveLocation(
-  to: To,
-  fromPathname = '/'
-): ResolvedLocation {
+export function resolveLocation(to: To, fromPathname = '/'): ResolvedLocation {
   let { pathname: toPathname, search = '', hash = '' } =
     typeof to === 'string' ? parsePath(to) : to;
 
