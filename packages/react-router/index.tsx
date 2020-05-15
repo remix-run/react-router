@@ -234,6 +234,7 @@ export function Route({
 }
 
 export interface RouteProps {
+  caseSensitive?: boolean;
   children?: React.ReactNode;
   element?: React.ReactElement | null;
   path?: string;
@@ -242,6 +243,7 @@ export interface RouteProps {
 if (__DEV__) {
   Route.displayName = 'Route';
   Route.propTypes = {
+    caseSensitive: PropTypes.bool,
     children: PropTypes.node,
     element: PropTypes.element,
     path: PropTypes.string
@@ -324,7 +326,6 @@ if (__DEV__) {
   Routes.displayName = 'Routes';
   Routes.propTypes = {
     basename: PropTypes.string,
-    caseSensitive: PropTypes.bool,
     children: PropTypes.node
   };
 }
@@ -627,8 +628,8 @@ function useRoutes_(
 ///////////////////////////////////////////////////////////////////////////////
 
 /**
- * Utility function that creates a routes config object from an array of
- * PartialRouteObject objects.
+ * Creates a routes config object from an array of {@link PartialRouteObject}
+ * objects.
  */
 export function createRoutesFromArray(
   array: PartialRouteObject[]
@@ -649,8 +650,9 @@ export function createRoutesFromArray(
 }
 
 /**
- * Utility function that creates a routes config object from a React "children"
- * object, which is usually either a <Route> element or an array of them.
+ * Creates a routes config object from a React "children" object, which is
+ * usually either a {@link Route | `<Route>`} element (with its children) or an
+ * array of them.
  */
 export function createRoutesFromChildren(
   children: React.ReactNode
