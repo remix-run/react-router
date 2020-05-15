@@ -2,7 +2,6 @@ import * as React from 'react';
 import PropTypes from 'prop-types';
 import {
   State,
-  LocationPieces,
   To,
   Update,
   BrowserHistory,
@@ -40,12 +39,17 @@ import {
   resolveLocation
 } from 'react-router';
 
-function warning(cond: boolean, message: string) {
+function warning(cond: boolean, message: string): void {
   if (!cond) {
     // eslint-disable-next-line no-console
     if (typeof console !== 'undefined') console.warn(message);
 
     try {
+      // Welcome to debugging React Router!
+      //
+      // This error is thrown as a convenience so you can more easily
+      // find the source for a warning that appears in the console by
+      // enabling "pause on exceptions" in your JavaScript debugger.
       throw new Error(message);
       // eslint-disable-next-line no-empty
     } catch (e) {}
@@ -181,10 +185,6 @@ function isModifiedEvent(event: React.MouseEvent) {
   return !!(event.metaKey || event.altKey || event.ctrlKey || event.shiftKey);
 }
 
-function locationPathsAreSame(a: LocationPieces, b: LocationPieces) {
-  return createPath(a) === createPath(b);
-}
-
 /**
  * The public API for rendering a history-aware <a>.
  */
@@ -209,9 +209,9 @@ export const Link = React.forwardRef<HTMLAnchorElement, LinkProps>(
         event.preventDefault();
 
         // If the URL hasn't changed, a regular <a> will do a replace instead of
-        // a push, so follow that lead here.
+        // a push, so do the same here.
         let replace =
-          !!replaceProp || locationPathsAreSame(location, toLocation);
+          !!replaceProp || createPath(location) === createPath(toLocation);
 
         navigate(to, { replace, state });
       }
@@ -264,7 +264,9 @@ export const NavLink = React.forwardRef<HTMLAnchorElement, NavLinkProps>(
       'aria-current': ariaCurrentProp = 'page',
       activeClassName = 'active',
       activeStyle,
+      caseSensitive = false,
       className: classNameProp = '',
+      end = false,
       style: styleProp,
       to,
       ...rest
@@ -273,12 +275,23 @@ export const NavLink = React.forwardRef<HTMLAnchorElement, NavLinkProps>(
   ) {
     let location = useLocation();
     let toLocation = useResolvedLocation(to);
-    let active = locationPathsAreSame(location, toLocation);
-    let ariaCurrent = active ? ariaCurrentProp : undefined;
-    let className = [classNameProp, active ? activeClassName : null]
+
+    let locationPathname = location.pathname;
+    let toLocationPathname = toLocation.pathname;
+    if (!caseSensitive) {
+      locationPathname = locationPathname.toLowerCase();
+      toLocationPathname = toLocationPathname.toLowerCase();
+    }
+
+    let isActive = end
+      ? locationPathname === toLocationPathname
+      : locationPathname.startsWith(toLocationPathname);
+
+    let ariaCurrent = isActive ? ariaCurrentProp : undefined;
+    let className = [classNameProp, isActive ? activeClassName : null]
       .filter(Boolean)
       .join(' ');
-    let style = { ...styleProp, ...(active ? activeStyle : null) };
+    let style = { ...styleProp, ...(isActive ? activeStyle : null) };
 
     return (
       <Link
@@ -296,6 +309,8 @@ export const NavLink = React.forwardRef<HTMLAnchorElement, NavLinkProps>(
 export interface NavLinkProps extends LinkProps {
   activeClassName?: string;
   activeStyle?: object;
+  caseSensitive?: boolean;
+  end?: boolean;
 }
 
 if (__DEV__) {
