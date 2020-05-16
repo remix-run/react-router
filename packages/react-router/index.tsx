@@ -514,7 +514,7 @@ export function useOutlet(): React.ReactElement | null {
  * This is useful for using ids embedded in the URL to fetch data, but we
  * eventually want to provide something at a higher level for this.
  */
-export function useParams<T extends string>(): Params<T> {
+export function useParams<T extends string = string>(): Params<T> {
   return React.useContext(RouteContext).params;
 }
 
@@ -761,7 +761,7 @@ export function generatePath(pathname: string, params: Params = {}): string {
 /**
  * The parameters that were parsed from the URL path.
  */
-export type Params<T extends string> = Record<T, string>;
+export type Params<T extends string = string> = Record<T, string>;
 
 /**
  * Matches the given routes to a location and returns the match data.
