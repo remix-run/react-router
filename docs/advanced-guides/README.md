@@ -22,9 +22,9 @@ build a certain capability or feature of your app with React Router.
 ## Useful Techniques
 
 - [Working with the Search/Query String](working-with-the-search-string.md)
+- [Code Splitting with React.lazy](code-splitting-react-lazy.md)
 - [Custom Links](#TODO)
 - [Recursive Paths](#TODO)
-- [Code Splitting](#TODO)
 
 ## Server Rendering
 
