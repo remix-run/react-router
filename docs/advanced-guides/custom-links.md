@@ -1,7 +1,7 @@
 # Creating your own custom link
 
 Very often you need to track the current active route and apply some styling to show it. 
-With the new `useMatch` hook you can create a component and check whether a given path matches current url.
+With the new `useMatch` hook you can create a component and check whether a given path matches the current url.
 You can use `useMatch` hook anywhere you need to match a given path to url.
 
 
