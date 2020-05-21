@@ -48,7 +48,11 @@ async function run() {
     );
 
     // 2. Determine the appropriate npm tag to use
-    let tag = semver.prerelease(version) == null ? 'latest' : 'next';
+    let tag = version.includes('-experimental-')
+      ? 'experimental'
+      : semver.prerelease(version) == null
+      ? 'latest'
+      : 'next';
 
     console.log();
     console.log(`  Publishing version ${version} to npm with tag "${tag}"`);

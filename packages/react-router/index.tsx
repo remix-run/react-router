@@ -145,7 +145,6 @@ if (__DEV__) {
   MemoryRouter.displayName = 'MemoryRouter';
   MemoryRouter.propTypes = {
     children: PropTypes.node,
-    timeout: PropTypes.number,
     initialEntries: PropTypes.arrayOf(
       PropTypes.oneOfType([
         PropTypes.string,
