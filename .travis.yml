@@ -9,3 +9,10 @@ jobs:
       script:
         - yarn test
         - yarn size
+    - stage: Release
+      if: tag =~ ^v[0-9]
+      install: yarn install --no-lockfile
+      before_script: yarn build
+      script:
+        - echo "//registry.npmjs.org/:_authToken=${NPM_TOKEN}" > ~/.npmrc
+        - node scripts/publish.js

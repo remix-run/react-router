@@ -14,7 +14,7 @@
     "prop-types": "^15.7.2"
   },
   "peerDependencies": {
-    "react": ">=16.8"
+    "react": "0.0.0-experimental-33c3af284"
   },
   "sideEffects": false,
   "keywords": [
