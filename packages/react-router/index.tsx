@@ -19,7 +19,7 @@ import {
   parsePath
 } from 'history';
 
-const readOnly: (obj: any) => any = __DEV__
+const readOnly: <T extends unknown>(obj: T) => T = __DEV__
   ? obj => Object.freeze(obj)
   : obj => obj;
 
@@ -33,6 +33,11 @@ function warning(cond: boolean, message: string): void {
     if (typeof console !== 'undefined') console.warn(message);
 
     try {
+      // Welcome to debugging React Router!
+      //
+      // This error is thrown as a convenience so you can more easily
+      // find the source for a warning that appears in the console by
+      // enabling "pause on exceptions" in your JavaScript debugger.
       throw new Error(message);
       // eslint-disable-next-line no-empty
     } catch (e) {}
@@ -76,7 +81,7 @@ if (__DEV__) {
 
 const RouteContext = React.createContext<RouteContextObject>({
   outlet: null,
-  params: readOnly({}),
+  params: readOnly<Params>({}),
   pathname: '',
   route: null
 });
@@ -229,6 +234,7 @@ export function Route({
 }
 
 export interface RouteProps {
+  caseSensitive?: boolean;
   children?: React.ReactNode;
   element?: React.ReactElement | null;
   path?: string;
@@ -237,6 +243,7 @@ export interface RouteProps {
 if (__DEV__) {
   Route.displayName = 'Route';
   Route.propTypes = {
+    caseSensitive: PropTypes.bool,
     children: PropTypes.node,
     element: PropTypes.element,
     path: PropTypes.string
@@ -319,7 +326,6 @@ if (__DEV__) {
   Routes.displayName = 'Routes';
   Routes.propTypes = {
     basename: PropTypes.string,
-    caseSensitive: PropTypes.bool,
     children: PropTypes.node
   };
 }
@@ -528,7 +534,7 @@ export function useResolvedLocation(to: To): ResolvedLocation {
  */
 export function useRoutes(
   partialRoutes: PartialRouteObject[],
-  basename: string = ''
+  basename = ''
 ): React.ReactElement | null {
   invariant(
     useInRouterContext(),
@@ -544,7 +550,7 @@ export function useRoutes(
   return useRoutes_(routes, basename);
 }
 
-let missingTrailingSplatWarnings: { [key: string]: boolean } = {};
+let missingTrailingSplatWarnings: Record<string, boolean> = {};
 function warnAboutMissingTrailingSplatAt(
   pathname: string,
   cond: boolean,
@@ -585,6 +591,7 @@ function useRoutes_(
 
   basename = basename ? joinPaths([parentPathname, basename]) : parentPathname;
 
+  let locationPreloadRef = React.useRef<Location>();
   let location = useLocation() as Location;
   let matches = React.useMemo(() => matchRoutes(routes, location, basename), [
     location,
@@ -597,7 +604,15 @@ function useRoutes_(
     return null;
   }
 
-  // TODO: Initiate preload sequence here.
+  // Initiate preload sequence only if the location changes, otherwise state
+  // updates in a parent would re-call preloads.
+  if (locationPreloadRef.current !== location) {
+    locationPreloadRef.current = location;
+    matches.forEach(
+      ({ route, params }, index) =>
+        route.preload && route.preload(params, location, index)
+    );
+  }
 
   // Otherwise render an element.
   let element = matches.reduceRight((outlet, { params, pathname, route }) => {
@@ -606,7 +621,7 @@ function useRoutes_(
         children={route.element}
         value={{
           outlet,
-          params: readOnly({ ...parentParams, ...params }),
+          params: readOnly<Params>({ ...parentParams, ...params }),
           pathname: joinPaths([basename, pathname]),
           route
         }}
@@ -622,17 +637,18 @@ function useRoutes_(
 ///////////////////////////////////////////////////////////////////////////////
 
 /**
- * Utility function that creates a routes config object from an array of
- * PartialRouteObject objects.
+ * Creates a routes config object from an array of {@link PartialRouteObject}
+ * objects.
  */
 export function createRoutesFromArray(
   array: PartialRouteObject[]
 ): RouteObject[] {
   return array.map(partialRoute => {
     let route: RouteObject = {
+      path: partialRoute.path || '/',
       caseSensitive: partialRoute.caseSensitive === true,
       element: partialRoute.element || <Outlet />,
-      path: partialRoute.path || '/'
+      preload: partialRoute.preload
     };
 
     if (partialRoute.children) {
@@ -644,8 +660,9 @@ export function createRoutesFromArray(
 }
 
 /**
- * Utility function that creates a routes config object from a React "children"
- * object, which is usually either a <Route> element or an array of them.
+ * Creates a routes config object from a React "children" object, which is
+ * usually either a {@link Route | `<Route>`} element (with its children) or an
+ * array of them.
  */
 export function createRoutesFromChildren(
   children: React.ReactNode
@@ -669,12 +686,13 @@ export function createRoutesFromChildren(
     }
 
     let route: RouteObject = {
+      path: element.props.path || '/',
       caseSensitive: element.props.caseSensitive === true,
       // Default behavior is to just render the element that was given. This
       // permits people to use any element they prefer, not just <Route> (though
       // all our official examples and docs use <Route> for clarity).
       element,
-      path: element.props.path || '/'
+      preload: element.props.preload
     };
 
     if (element.props.children) {
@@ -691,15 +709,27 @@ export function createRoutesFromChildren(
 }
 
 /**
+ * A function that will be called when the router is about to render the
+ * associated route. This function usually kicks off a fetch or similar
+ * operation that primes a local data cache for retrieval while rendering later.
+ */
+type RoutePreloadFunction = (
+  params: Params,
+  location: Location,
+  index: number
+) => void;
+
+/**
  * A "partial route" object is usually supplied by the user and may omit certain
  * properties of a real route object such as `path` and `element`, which have
  * reasonable defaults.
  */
 export interface PartialRouteObject {
-  caseSensitive?: boolean;
-  children?: PartialRouteObject[];
-  element?: React.ReactNode;
   path?: string;
+  caseSensitive?: boolean;
+  element?: React.ReactNode;
+  preload?: RoutePreloadFunction;
+  children?: PartialRouteObject[];
 }
 
 /**
@@ -707,10 +737,11 @@ export interface PartialRouteObject {
  * organized in a tree-like structure.
  */
 export interface RouteObject {
-  caseSensitive: boolean;
-  children?: RouteObject[];
-  element: React.ReactNode;
   path: string;
+  caseSensitive: boolean;
+  element: React.ReactNode;
+  preload?: RoutePreloadFunction;
+  children?: RouteObject[];
 }
 
 /**
@@ -801,10 +832,10 @@ function flattenRoutes(
 type RouteBranch = [string, RouteObject[], number[]];
 
 function rankRouteBranches(branches: RouteBranch[]): void {
-  let pathScores = branches.reduce((memo, [path]) => {
+  let pathScores = branches.reduce<Record<string, number>>((memo, [path]) => {
     memo[path] = computeScore(path);
     return memo;
-  }, {} as { [key: string]: number });
+  }, {});
 
   // Sorting is stable in modern browsers, but we still support IE 11, so we
   // need this little helper.
@@ -903,7 +934,7 @@ function matchRouteBranch(
     matches.push({
       route,
       pathname: matchedPathname,
-      params: readOnly(matchedParams)
+      params: readOnly<Params>(matchedParams)
     });
   }
 
@@ -998,10 +1029,7 @@ function safelyDecodeURIComponent(value: string, paramName: string) {
 /**
  * Returns a fully resolved location object relative to the given pathname.
  */
-export function resolveLocation(
-  to: To,
-  fromPathname: string = '/'
-): ResolvedLocation {
+export function resolveLocation(to: To, fromPathname = '/'): ResolvedLocation {
   let { pathname: toPathname, search = '', hash = '' } =
     typeof to === 'string' ? parsePath(to) : to;
 
