@@ -97,11 +97,19 @@ export {
 /**
  * A <Router> for use in web browsers. Provides the cleanest URLs.
  */
-export function BrowserRouter({ children, window }: BrowserRouterProps) {
+export function BrowserRouter({
+  children,
+  timeoutMs = 5000,
+  window
+}: BrowserRouterProps) {
   let historyRef = React.useRef<BrowserHistory>();
   if (historyRef.current == null) {
     historyRef.current = createBrowserHistory({ window });
   }
+
+  let [startTransition, isPending] = React.unstable_useTransition({
+    timeoutMs
+  });
 
   let history = historyRef.current;
   let [state, dispatch] = React.useReducer(
@@ -112,7 +120,15 @@ export function BrowserRouter({ children, window }: BrowserRouterProps) {
     }
   );
 
-  React.useLayoutEffect(() => history.listen(dispatch), [history]);
+  React.useLayoutEffect(
+    () =>
+      history.listen(update => {
+        startTransition(() => {
+          dispatch(update);
+        });
+      }),
+    [history, startTransition]
+  );
 
   return (
     <Router
@@ -120,12 +136,14 @@ export function BrowserRouter({ children, window }: BrowserRouterProps) {
       action={state.action}
       location={state.location}
       navigator={history}
+      pending={isPending}
     />
   );
 }
 
 export interface BrowserRouterProps {
   children?: React.ReactNode;
+  timeoutMs?: number;
   window?: Window;
 }
 
@@ -133,6 +151,7 @@ if (__DEV__) {
   BrowserRouter.displayName = 'BrowserRouter';
   BrowserRouter.propTypes = {
     children: PropTypes.node,
+    timeoutMs: PropTypes.number,
     window: PropTypes.object
   };
 }
@@ -141,11 +160,19 @@ if (__DEV__) {
  * A <Router> for use in web browsers. Stores the location in the hash
  * portion of the URL so it is not sent to the server.
  */
-export function HashRouter({ children, window }: HashRouterProps) {
+export function HashRouter({
+  children,
+  timeoutMs = 5000,
+  window
+}: HashRouterProps) {
   let historyRef = React.useRef<HashHistory>();
   if (historyRef.current == null) {
     historyRef.current = createHashHistory({ window });
   }
+
+  let [startTransition, isPending] = React.unstable_useTransition({
+    timeoutMs
+  });
 
   let history = historyRef.current;
   let [state, dispatch] = React.useReducer(
@@ -156,7 +183,15 @@ export function HashRouter({ children, window }: HashRouterProps) {
     }
   );
 
-  React.useLayoutEffect(() => history.listen(dispatch), [history]);
+  React.useLayoutEffect(
+    () =>
+      history.listen(update => {
+        startTransition(() => {
+          dispatch(update);
+        });
+      }),
+    [history, startTransition]
+  );
 
   return (
     <Router
@@ -164,12 +199,14 @@ export function HashRouter({ children, window }: HashRouterProps) {
       action={state.action}
       location={state.location}
       navigator={history}
+      pending={isPending}
     />
   );
 }
 
 export interface HashRouterProps {
   children?: React.ReactNode;
+  timeoutMs?: number;
   window?: Window;
 }
 
@@ -177,6 +214,7 @@ if (__DEV__) {
   HashRouter.displayName = 'HashRouter';
   HashRouter.propTypes = {
     children: PropTypes.node,
+    timeoutMs: PropTypes.number,
     window: PropTypes.object
   };
 }

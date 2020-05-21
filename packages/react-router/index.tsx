@@ -107,12 +107,17 @@ if (__DEV__) {
 export function MemoryRouter({
   children,
   initialEntries,
-  initialIndex
+  initialIndex,
+  timeoutMs = 5000
 }: MemoryRouterProps): React.ReactElement {
   let historyRef = React.useRef<MemoryHistory>();
   if (historyRef.current == null) {
     historyRef.current = createMemoryHistory({ initialEntries, initialIndex });
   }
+
+  let [startTransition, isPending] = React.unstable_useTransition({
+    timeoutMs
+  });
 
   let history = historyRef.current;
   let [state, dispatch] = React.useReducer(
@@ -123,7 +128,15 @@ export function MemoryRouter({
     }
   );
 
-  React.useLayoutEffect(() => history.listen(dispatch), [history]);
+  React.useLayoutEffect(
+    () =>
+      history.listen(update => {
+        startTransition(() => {
+          dispatch(update);
+        });
+      }),
+    [history, startTransition]
+  );
 
   return (
     <Router
@@ -131,6 +144,7 @@ export function MemoryRouter({
       action={state.action}
       location={state.location}
       navigator={history}
+      pending={isPending}
     />
   );
 }
@@ -139,6 +153,7 @@ export interface MemoryRouterProps {
   children?: React.ReactNode;
   initialEntries?: InitialEntry[];
   initialIndex?: number;
+  timeoutMs?: number;
 }
 
 if (__DEV__) {
@@ -157,7 +172,8 @@ if (__DEV__) {
         })
       ])
     ),
-    initialIndex: PropTypes.number
+    initialIndex: PropTypes.number,
+    timeoutMs: PropTypes.number
   };
 }
 
