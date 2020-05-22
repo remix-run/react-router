@@ -92,3 +92,15 @@ The value of the `aria-current` attribute used on an active link. Available valu
 Defaults to `"page"`.
 
 Based on [WAI-ARIA 1.1 specifications](https://www.w3.org/TR/wai-aria-1.1/#aria-current)
+
+## children: func
+
+There may be some cases where need to know if the `NavLink` is active to inform props for child components. In
+these case you can use a 'children' render prop which receives `isActive` as an argument. This is especially useful
+when working with component libraries that use props instead of CSS to dictate styles.
+
+```jsx
+<NavLink strict to="/events/">
+  {isActive => <Text color={isActive ? "red" : "blue"}>Link</Text>}
+</NavLink>
+```

@@ -167,6 +167,16 @@ describe("A <NavLink>", () => {
 
       expect(ref instanceof WrappedComponent).toBe(true);
     });
+
+    it("renders children function with true", () => {
+      renderStrict(
+        <MemoryRouter initialEntries={["/pizza"]}>
+          <NavLink to="/pizza">{String}</NavLink>
+        </MemoryRouter>,
+        node
+      );
+      expect(node.textContent).toBe("true");
+    });
   });
 
   describe("when inactive", () => {
@@ -267,6 +277,16 @@ describe("A <NavLink>", () => {
       );
 
       expect(ref instanceof WrappedComponent).toBe(true);
+    });
+
+    it("renders children function with false", () => {
+      renderStrict(
+        <MemoryRouter initialEntries={["/pizza"]}>
+          <NavLink to="/salad">{String}</NavLink>
+        </MemoryRouter>,
+        node
+      );
+      expect(node.textContent).toBe("false");
     });
   });
 

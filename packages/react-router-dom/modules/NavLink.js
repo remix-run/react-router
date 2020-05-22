@@ -37,6 +37,7 @@ const NavLink = forwardRef(
       style: styleProp,
       to,
       innerRef, // TODO: deprecate
+      children,
       ...rest
     },
     forwardedRef
@@ -78,6 +79,8 @@ const NavLink = forwardRef(
             className,
             style,
             to: toLocation,
+            children:
+              typeof children === "function" ? children(isActive) : children,
             ...rest
           };
 
@@ -112,6 +115,7 @@ if (__DEV__) {
     "aria-current": ariaCurrentType,
     activeClassName: PropTypes.string,
     activeStyle: PropTypes.object,
+    children: PropTypes.oneOfType([PropTypes.func, PropTypes.node]),
     className: PropTypes.string,
     exact: PropTypes.bool,
     isActive: PropTypes.func,
