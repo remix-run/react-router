@@ -10,13 +10,14 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-    - uses: actions/stale@v1
+    - uses: actions/stale@v3
       with:
         repo-token: ${{ secrets.GITHUB_TOKEN }}
         stale-issue-message: 'This issue is stale because it has been open 30 days with no activity.'
         stale-pr-message: 'This pull request is stale because it has been open 30 days with no activity.'
         stale-issue-label: 'stale-issue'
-        exempt-issue-label: 'stale-issue'
-        exempt-pr-label: 'stale-pr'
+        exempt-issue-labels: 'enhancement,documentation,good-first-issue,question'
         stale-pr-label: 'stale-pr'
+        exempt-pr-labels: 'work-in-progress'
         days-before-stale: 30
+        days-before-close: -1
