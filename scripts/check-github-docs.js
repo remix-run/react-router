@@ -1,6 +1,6 @@
-const chalk = require('chalk');
-const cheerio = require('cheerio');
-const fetch = require('node-fetch');
+import chalk from 'chalk';
+import cheerio from 'cheerio';
+import fetch from 'node-fetch';
 
 function getPageUrl(url) {
   if (typeof url === 'string') url = new URL(url);

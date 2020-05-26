@@ -1,12 +1,14 @@
-const path = require('path');
-const execSync = require('child_process').execSync;
+import path from 'path';
+import { fileURLToPath } from 'url';
+import { execSync } from 'child_process';
 
-const chalk = require('chalk');
-const Confirm = require('prompt-confirm');
-const jsonfile = require('jsonfile');
-const semver = require('semver');
+import chalk from 'chalk';
+import Confirm from 'prompt-confirm';
+import jsonfile from 'jsonfile';
+import semver from 'semver';
 
-const rootDir = path.resolve(__dirname, '..');
+const dirname = path.dirname(fileURLToPath(import.meta.url));
+const rootDir = path.resolve(dirname, '..');
 
 function packageJson(packageName) {
   return path.join(rootDir, 'packages', packageName, 'package.json');
