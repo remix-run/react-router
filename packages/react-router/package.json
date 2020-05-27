@@ -1,6 +1,6 @@
 {
   "name": "react-router",
-  "version": "6.0.0-alpha.5",
+  "version": "0.0.0-experimental-b1ff171f",
   "author": "React Training <hello@reacttraining.com>",
   "description": "Declarative routing for React",
   "repository": "ReactTraining/react-router",
