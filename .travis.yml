@@ -4,14 +4,14 @@ cache: yarn
 jobs:
   include:
     - stage: Test
-      install: yarn install --no-lockfile
+      install: yarn install --frozen-lockfile
       before_script: yarn build
       script:
         - yarn test
         - yarn size
     - stage: Release
       if: tag =~ ^v[0-9]
-      install: yarn install --no-lockfile
+      install: yarn install --frozen-lockfile
       before_script: yarn build
       script:
         - echo "//registry.npmjs.org/:_authToken=${NPM_TOKEN}" > ~/.npmrc
