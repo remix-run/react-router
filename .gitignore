@@ -1,6 +1,7 @@
 npm-debug.log
 lerna-debug.log
 
+/.tsc-output/
 /build/
 /docs/api/
 /website/build/

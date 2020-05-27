@@ -1,5 +1,4 @@
 {
-  "include": ["packages", "types"],
   "compilerOptions": {
     "lib": ["dom", "dom.iterable", "esnext"],
     "module": "esnext",
@@ -11,6 +10,16 @@
     "noUnusedLocals": true,
     "noUnusedParameters": true,
     "noImplicitReturns": true,
+    "declaration": true,
+    "outDir": ".tsc-output",
+    "skipLibCheck": true,
     "jsx": "react"
-  }
+  },
+  "files": [
+    "packages/react-router/index.tsx",
+    "packages/react-router-dom/index.tsx",
+    "packages/react-router-dom/server.tsx",
+    "packages/react-router-native/index.tsx"
+  ],
+  "include": ["types/global.d.ts"]
 }
