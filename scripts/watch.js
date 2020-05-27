@@ -14,7 +14,7 @@ if (target && !allPackages.includes(target)) {
 
 let config = path.resolve(
   dirname,
-  target ? `builds/${target}.js` : 'builds/index.js'
+  target ? `rollup/${target}.js` : 'rollup/index.js'
 );
 
 execSync(`rollup -c ${config} -w`, {
