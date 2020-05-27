@@ -1,21 +1,23 @@
-const fs = require('fs');
-const path = require('path');
-const execSync = require('child_process').execSync;
+import fs from 'fs';
+import path from 'path';
+import { fileURLToPath } from 'url';
+import { execSync } from 'child_process';
 
-function exec(cmd) {
-  execSync(cmd, { env: process.env, stdio: 'inherit' });
-}
+const dirname = path.dirname(fileURLToPath(import.meta.url));
 
 let target = process.argv[2];
-let allPackages = fs.readdirSync(path.resolve(__dirname, '../packages'));
+let allPackages = fs.readdirSync(path.resolve(dirname, '../packages'));
 
 if (target && !allPackages.includes(target)) {
   target = undefined;
 }
 
 let config = path.resolve(
-  __dirname,
+  dirname,
   target ? `builds/${target}.js` : 'builds/index.js'
 );
 
-exec(`rollup -c ${config}`);
+execSync(`rollup -c ${config}`, {
+  env: process.env,
+  stdio: 'inherit'
+});

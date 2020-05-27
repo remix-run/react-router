@@ -1,15 +1,14 @@
-const fs = require('fs');
-const path = require('path');
-const execSync = require('child_process').execSync;
+import fs from 'fs';
+import path from 'path';
+import { fileURLToPath } from 'url';
+import { execSync } from 'child_process';
 
-function exec(cmd) {
-  execSync(cmd, { stdio: 'inherit', env: process.env });
-}
+const dirname = path.dirname(fileURLToPath(import.meta.url));
 
 let args = process.argv.slice(2);
 
 let targetPackage = args.find(arg => !arg.startsWith('-'));
-let allPackages = fs.readdirSync(path.resolve(__dirname, '../packages'));
+let allPackages = fs.readdirSync(path.resolve(dirname, '../packages'));
 
 let jestArgs = ['--projects'];
 
@@ -23,4 +22,7 @@ if (args.includes('--watch')) {
   jestArgs.push('--watch');
 }
 
-exec(`jest ${jestArgs.join(' ')}`);
+execSync(`jest ${jestArgs.join(' ')}`, {
+  env: process.env,
+  stdio: 'inherit'
+});

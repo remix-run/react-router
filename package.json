@@ -1,5 +1,6 @@
 {
   "private": true,
+  "type": "module",
   "scripts": {
     "build": "node ./scripts/build.js",
     "clean": "git clean -e '!/website-deploy-key' -e '!/website-deploy-key.pub' -fdX .",
