@@ -107,6 +107,7 @@ export function BrowserRouter({
     historyRef.current = createBrowserHistory({ window });
   }
 
+  // @ts-ignore
   let [startTransition, isPending] = React.unstable_useTransition({
     timeoutMs
   });
@@ -170,6 +171,7 @@ export function HashRouter({
     historyRef.current = createHashHistory({ window });
   }
 
+  // @ts-ignore
   let [startTransition, isPending] = React.unstable_useTransition({
     timeoutMs
   });

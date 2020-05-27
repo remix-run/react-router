@@ -115,6 +115,7 @@ export function MemoryRouter({
     historyRef.current = createMemoryHistory({ initialEntries, initialIndex });
   }
 
+  // @ts-ignore
   let [startTransition, isPending] = React.unstable_useTransition({
     timeoutMs
   });
