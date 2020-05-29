@@ -25,7 +25,7 @@ export default function() {
       },
       external: ['history', 'prop-types', 'react', 'react-dom', 'react-router'],
       plugins: [
-        tscPlugin(),
+        tscPlugin({build: true}),
         babel({
           exclude: /node_modules/,
           presets: [
