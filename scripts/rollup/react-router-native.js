@@ -29,7 +29,7 @@ export default function() {
         'react-router'
       ],
       plugins: [
-        tscPlugin({build: true}),
+        tscPlugin({ build: true }),
         babel({
           exclude: /node_modules/,
           runtimeHelpers: true,
