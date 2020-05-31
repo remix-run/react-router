@@ -4,7 +4,6 @@ import {
   // types
   Action,
   Path,
-  State,
   LocationPieces,
   Location,
   Update,
@@ -18,6 +17,8 @@ import {
   createMemoryHistory,
   parsePath
 } from 'history';
+
+type HistoryState = Record<string, any> | null;
 
 const readOnly: <T extends unknown>(obj: T) => T = __DEV__
   ? obj => Object.freeze(obj)
@@ -164,7 +165,11 @@ if (__DEV__) {
 /**
  * Navigate programmatically using a component.
  */
-export function Navigate({ to, replace, state }: NavigateProps): null {
+export function Navigate<State extends HistoryState = HistoryState>({
+  to,
+  replace,
+  state
+}: NavigateProps<State>): null {
   invariant(
     useInRouterContext(),
     // TODO: This error is probably because they somehow have 2 versions of
@@ -187,7 +192,7 @@ export function Navigate({ to, replace, state }: NavigateProps): null {
   return null;
 }
 
-export interface NavigateProps {
+export interface NavigateProps<State extends HistoryState = HistoryState> {
   to: To;
   replace?: boolean;
   state?: State;
@@ -402,7 +407,9 @@ export function useInRouterContext(): boolean {
  * "routing" in your app, and we'd like to know what your use case is. We may be
  * able to provide something higher-level to better suit your needs.
  */
-export function useLocation(): Location {
+export function useLocation<
+  State extends HistoryState = HistoryState
+>(): Location<State> {
   invariant(
     useInRouterContext(),
     // TODO: This error is probably because they somehow have 2 versions of the
@@ -410,7 +417,7 @@ export function useLocation(): Location {
     `useLocation() may be used only in the context of a <Router> component.`
   );
 
-  return React.useContext(LocationContext).location as Location;
+  return React.useContext(LocationContext).location as Location<State>;
 }
 
 /**
@@ -444,7 +451,7 @@ type PathPattern =
 /**
  * The interface for the navigate() function returned from useNavigate().
  */
-export interface NavigateFunction {
+export interface NavigateFunction<State extends HistoryState = HistoryState> {
   (delta: number): void;
   (to: To, options?: { replace?: boolean; state?: State }): void;
 }
@@ -453,7 +460,9 @@ export interface NavigateFunction {
  * Returns an imperative method for changing the location. Used by <Link>s, but
  * may also be used by other elements to change the location.
  */
-export function useNavigate(): NavigateFunction {
+export function useNavigate<
+  State extends HistoryState = HistoryState
+>(): NavigateFunction<State> {
   invariant(
     useInRouterContext(),
     // TODO: This error is probably because they somehow have 2 versions of the
@@ -471,7 +480,7 @@ export function useNavigate(): NavigateFunction {
     activeRef.current = true;
   });
 
-  let navigate: NavigateFunction = React.useCallback(
+  let navigate: NavigateFunction<State> = React.useCallback(
     (to: To | number, options: { replace?: boolean; state?: State } = {}) => {
       if (activeRef.current) {
         if (typeof to === 'number') {
@@ -520,9 +529,14 @@ export function useParams(): Params {
 /**
  * Returns a fully-resolved location object relative to the current location.
  */
-export function useResolvedLocation(to: To): ResolvedLocation {
+export function useResolvedLocation<State extends HistoryState = HistoryState>(
+  to: To
+): ResolvedLocation<State> {
   let { pathname } = React.useContext(RouteContext);
-  return React.useMemo(() => resolveLocation(to, pathname), [to, pathname]);
+  return React.useMemo(() => resolveLocation<State>(to, pathname), [
+    to,
+    pathname
+  ]);
 }
 
 /**
@@ -1028,7 +1042,10 @@ function safelyDecodeURIComponent(value: string, paramName: string) {
 /**
  * Returns a fully resolved location object relative to the given pathname.
  */
-export function resolveLocation(to: To, fromPathname = '/'): ResolvedLocation {
+export function resolveLocation<State extends HistoryState = HistoryState>(
+  to: To,
+  fromPathname = '/'
+): ResolvedLocation<State> {
   let { pathname: toPathname, search = '', hash = '' } =
     typeof to === 'string' ? parsePath(to) : to;
 
@@ -1042,7 +1059,10 @@ export function resolveLocation(to: To, fromPathname = '/'): ResolvedLocation {
   return { pathname, search, hash };
 }
 
-export type ResolvedLocation = Omit<Location, 'state' | 'key'>;
+export type ResolvedLocation<State extends HistoryState = HistoryState> = Omit<
+  Location<State>,
+  'state' | 'key'
+>;
 
 const trimTrailingSlashes = (path: string) => path.replace(/\/+$/, '');
 const normalizeSlashes = (path: string) => path.replace(/\/\/+/g, '/');
