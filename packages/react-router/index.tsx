@@ -44,6 +44,19 @@ function warning(cond: boolean, message: string): void {
   }
 }
 
+const alreadyWarned: Record<string, boolean> = {};
+
+function warningOnce(
+  key: string,
+  cond: boolean,
+  message: string
+) {
+  if (!cond && !alreadyWarned[key]) {
+    alreadyWarned[key] = true;
+    warning(false, message);
+  }
+}
+
 ///////////////////////////////////////////////////////////////////////////////
 // CONTEXT
 ///////////////////////////////////////////////////////////////////////////////
@@ -237,6 +250,7 @@ export interface RouteProps {
   children?: React.ReactNode;
   element?: React.ReactElement | null;
   path?: string;
+  preload?: RoutePreloadFunction;
 }
 
 if (__DEV__) {
@@ -278,8 +292,8 @@ export function Router({
 }
 
 export interface RouterProps {
-  children?: React.ReactNode;
   action?: Action;
+  children?: React.ReactNode;
   location: Location;
   navigator: Navigator;
   pending?: boolean;
@@ -445,8 +459,8 @@ type PathPattern =
  * The interface for the navigate() function returned from useNavigate().
  */
 export interface NavigateFunction {
-  (delta: number): void;
   (to: To, options?: { replace?: boolean; state?: State }): void;
+  (delta: number): void;
 }
 
 /**
@@ -530,6 +544,8 @@ export function useResolvedLocation(to: To): ResolvedLocation {
  * with the correct context to render the remainder of the route tree. Route
  * elements in the tree must render an <Outlet> to render their child route's
  * element.
+ * 
+ * @see https://github.com/ReactTraining/react-router/tree/dev/docs/api-reference.md#useroutes
  */
 export function useRoutes(
   partialRoutes: PartialRouteObject[],
@@ -549,18 +565,6 @@ export function useRoutes(
   return useRoutes_(routes, basename);
 }
 
-let missingTrailingSplatWarnings: Record<string, boolean> = {};
-function warnAboutMissingTrailingSplatAt(
-  pathname: string,
-  cond: boolean,
-  message: string
-) {
-  if (!cond && !missingTrailingSplatWarnings[pathname]) {
-    missingTrailingSplatWarnings![pathname] = true;
-    warning(false, message);
-  }
-}
-
 function useRoutes_(
   routes: RouteObject[],
   basename = ''
@@ -576,7 +580,7 @@ function useRoutes_(
     // without a trailing *, but this is a best-effort warning anyway since we
     // cannot even give the warning unless they land at the parent route.
     let parentPath = parentRoute && parentRoute.path;
-    warnAboutMissingTrailingSplatAt(
+    warningOnce(
       parentPathname,
       !parentRoute || parentRoute.path.endsWith('*'),
       `You rendered descendant <Routes> (or called \`useRoutes\`) at "${parentPathname}"` +
@@ -724,11 +728,11 @@ type RoutePreloadFunction = (
  * reasonable defaults.
  */
 export interface PartialRouteObject {
-  path?: string;
   caseSensitive?: boolean;
-  element?: React.ReactNode;
-  preload?: RoutePreloadFunction;
   children?: PartialRouteObject[];
+  element?: React.ReactNode;
+  path?: string;
+  preload?: RoutePreloadFunction;
 }
 
 /**
@@ -736,11 +740,11 @@ export interface PartialRouteObject {
  * organized in a tree-like structure.
  */
 export interface RouteObject {
-  path: string;
   caseSensitive: boolean;
-  element: React.ReactNode;
-  preload?: RoutePreloadFunction;
   children?: RouteObject[];
+  element: React.ReactNode;
+  path: string;
+  preload?: RoutePreloadFunction;
 }
 
 /**
