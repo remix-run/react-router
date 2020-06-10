@@ -185,12 +185,26 @@ function isModifiedEvent(event: React.MouseEvent) {
   return !!(event.metaKey || event.altKey || event.ctrlKey || event.shiftKey);
 }
 
+const DefaultAnchorLink = React.forwardRef<HTMLAnchorElement, LinkProps>(
+  function DefaultAnchorLinkWithRef(props, ref) {
+    // eslint-disable-next-line jsx-a11y/anchor-has-content
+    return <a {...props} ref={ref} />;
+  }
+);
 /**
  * The public API for rendering a history-aware <a>.
  */
 export const Link = React.forwardRef<HTMLAnchorElement, LinkProps>(
   function LinkWithRef(
-    { onClick, replace: replaceProp = false, state, target, to, ...rest },
+    {
+      onClick,
+      replace: replaceProp = false,
+      state,
+      target,
+      to,
+      as: Component = DefaultAnchorLink,
+      ...rest
+    },
     ref
   ) {
     let href = useHref(to);
@@ -217,16 +231,16 @@ export const Link = React.forwardRef<HTMLAnchorElement, LinkProps>(
       }
     }
 
-    return (
-      // eslint-disable-next-line jsx-a11y/anchor-has-content
-      <a
-        {...rest}
-        href={href}
-        onClick={handleClick}
-        ref={ref}
-        target={target}
-      />
-    );
+    const props = {
+      ...rest,
+      href,
+      onClick: handleClick,
+      ref,
+      target,
+      to
+    };
+
+    return <Component {...props} />;
   }
 );
 
@@ -235,6 +249,7 @@ export interface LinkProps
   replace?: boolean;
   state?: State;
   to: To;
+  as?: React.ComponentType<any>;
 }
 
 if (__DEV__) {

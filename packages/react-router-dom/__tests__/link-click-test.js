@@ -208,6 +208,95 @@ describe('A <Link> click', () => {
     });
   });
 
+  describe('when a custom component is used in the as prop', () => {
+    it('should render that component', () => {
+      function CustomComponent(props) {
+        return <button {...props} />;
+      }
+
+      function Home() {
+        return (
+          <div>
+            <h1>Home</h1>
+            <Link to="../about" as={CustomComponent}>
+              About
+            </Link>
+          </div>
+        );
+      }
+
+      function About() {
+        return <h1>About</h1>;
+      }
+
+      act(() => {
+        ReactDOM.render(
+          <Router initialEntries={['/home']}>
+            <Routes>
+              <Route path="home" element={<Home />} />
+              <Route path="about" element={<About />} />
+            </Routes>
+          </Router>,
+          node
+        );
+      });
+
+      let anchor = node.querySelector('a');
+      expect(anchor).toBeNull();
+
+      let button = node.querySelector('button');
+      expect(button).not.toBeNull();
+    });
+
+    it('should navigate like normal', () => {
+      function CustomComponent(props) {
+        return <button {...props} />;
+      }
+
+      function Home() {
+        return (
+          <div>
+            <h1>Home</h1>
+            <Link to="../about" as={CustomComponent}>
+              About
+            </Link>
+          </div>
+        );
+      }
+
+      function About() {
+        return <h1>About</h1>;
+      }
+
+      act(() => {
+        ReactDOM.render(
+          <Router initialEntries={['/home']}>
+            <Routes>
+              <Route path="home" element={<Home />} />
+              <Route path="about" element={<About />} />
+            </Routes>
+          </Router>,
+          node
+        );
+      });
+
+      let button = node.querySelector('button');
+      act(() => {
+        button.dispatchEvent(
+          new MouseEvent('click', {
+            view: window,
+            bubbles: true,
+            cancelable: true
+          })
+        );
+      });
+
+      let h1 = node.querySelector('h1');
+      expect(h1).not.toBeNull();
+      expect(h1.textContent).toEqual('About');
+    });
+  });
+
   describe('when the modifier keys are used', () => {
     it('stays on the same page', () => {
       function Home() {
