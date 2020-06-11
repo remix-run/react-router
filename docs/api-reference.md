@@ -471,9 +471,9 @@ interface RouterProps {
 
 You probably never need to render a `<Router>` manually. Instead, you should use one of the higher-level routers depending on your environment. You only ever need one router in a given app.
 
-<a name="routes-and-route"></a>
 <a name="routes"></a>
 <a name="route"></a>
+<a name="routes-and-route"></a>
 
 ### `<Routes>` and `<Route>`
 
@@ -551,10 +551,10 @@ interface StaticRouterProps {
 - `<StaticRouter location>` defaults to `"/"`
 
 ```tsx
-import http from 'http';
 import React from 'react';
 import ReactDOMServer from 'react-dom/server';
 import { StaticRouter } from 'react-router-dom/server';
+import http from 'http';
 
 function requestHandler(req, res) {
   let html = ReactDOMServer.renderToString(
@@ -570,6 +570,76 @@ function requestHandler(req, res) {
 http.createServer(requestHandler).listen(3000);
 ```
 
+<a name="createroutesfromarray"></a>
+
+### `createRoutesFromArray`
+
+```tsx
+declare function createRoutesFromArray(array: PartialRouteObject[]): RouteObject[];
+```
+
+TODO
+
+<a name="createroutesfromchildren"></a>
+
+### `createRoutesFromChildren`
+
+```tsx
+declare function createRoutesFromChildren(children: React.ReactNode): RouteObject;
+```
+
+TODO
+
+<a name="generatepath"></a>
+
+### `generatePath`
+
+```tsx
+declare function generatePath(pathname: string, params: Params = {}): string;
+```
+
+TODO
+
+<a name="matchroutes"></a>
+
+### `matchRoutes`
+
+```tsx
+declare function matchRoutes(
+  routes: RouteObject[],
+  location: string | PartialLocation,
+  basename: string = ''
+): string;
+```
+
+TODO
+
+<a name="matchpath"></a>
+
+### `matchPath`
+
+```tsx
+declare function matchPath(
+  pattern: PathPattern,
+  pathname: string
+): PathMatch | null;
+```
+
+TODO
+
+<a name="resolvelocation"></a>
+
+### `resolveLocation`
+
+```tsx
+declare function resolveLocation(
+  to: To,
+  fromPathname = '/'
+): ResolvedLocation;
+```
+
+TODO
+
 <a name="useblocker"></a>
 
 ### `useBlocker`
@@ -580,6 +650,32 @@ declare function useBlocker(blocker: Blocker, when = true): void;
 
 `useBlocker` is a low-level hook that allows you to block navigation away from the current page, i.e. prevent the current location from changing. This is probably something you don't ever want to do unless you also display a confirmation dialog to the user to help them understand why their navigation attempt was blocked. In these cases, you probably want to use [`usePrompt`](#useprompt) or [`<Prompt>`](#prompt) instead.
 
+<a name="usehref"></a>
+
+### `useHref`
+
+```tsx
+declare function useHref(to: To): string;
+```
+
+The `useHref` hook returns a URL that may be used to link to the given `to` location, even outside of React Router.
+
+> [!Tip:]
+>
+> You may be interested in taking a look at the source for the `<Link>`
+> component in `react-router-dom` to see how it uses `useHref` internally to
+> determine its own `href` value.
+
+<a name="useinroutercontext"></a>
+
+### `useInRouterContext`
+
+```tsx
+declare function useInRouterContext(): boolean;
+```
+
+The `useInRouterContext` hooks returns `true` if the component is being rendered in the context of a `<Router>`, `false` otherwise. This can be useful for some 3rd-party extensions that need to know if they are being rendered in the context of a React Router app.
+
 <a name="uselocation"></a>
 
 ### `useLocation`
@@ -588,7 +684,7 @@ declare function useBlocker(blocker: Blocker, when = true): void;
 declare function useLocation(): Location;
 ```
 
-Returns the current [`location`](#location) object. This can be useful if you'd like to perform some side effect whenever the current location changes.
+This hook returns the current [`location`](#location) object. This can be useful if you'd like to perform some side effect whenever the current location changes.
 
 ```tsx
 import React from 'react';
@@ -606,6 +702,36 @@ function App() {
   );
 }
 ```
+
+<a name="uselocationpending"></a>
+
+### `useLocationPending`
+
+```tsx
+declare function useLocationPending(): boolean;
+```
+
+The `useLocationPending` hook returns `true` if a location change is currently pending. This can be useful for showing a loading indicator somewhere in the app.
+
+<a name="usematch"></a>
+
+### `useMatch`
+
+```tsx
+declare function useMatch(path: PathPattern): PathMatch | null;
+
+type PathPattern =
+  | string
+  | { path: string; caseSensitive?: boolean; end?: boolean };
+
+interface PathMatch {
+  path: string;
+  pathname: string;
+  params: Params;
+}
+```
+
+Returns match data about a route at the given path. This is useful any time you need to run the matching algorithm manually.
 
 <a name="usenavigate"></a>
 
@@ -647,6 +773,48 @@ The `navigate` function has two signatures:
 - Either pass a `To` value (same type as `<Link to>`) with an optional second `{ replace, state }` arg or
 - Pass the delta you want to go in the history stack. For example, `navigate(-1)` is equivalent to hitting the back button.
 
+<a name="useoutlet"></a>
+
+### `useOutlet`
+
+```tsx
+declare function useOutlet(): React.ReactElement | null;
+```
+
+Returns the element for the child route at this level of the route hierarchy. This hook is used internally by [`<Outlet>`](#outlet) to render child routes.
+
+<a name="useparams"></a>
+
+### `useParams`
+
+```tsx
+declare function useParams(): Params;
+```
+
+The `useParams` hook returns an object of key/value pairs of the dynamic params from the current URL that were matched by the `<Route path>`. Child routes inherit all params from their parent routes.
+
+```tsx
+import React from 'react';
+import { Routes, Route, useParams } from 'react-router-dom';
+
+function ProfilePage() {
+  // Get the userId param from the URL.
+  let { userId } = useParams();
+  // ...
+}
+
+function App() {
+  return (
+    <Routes>
+      <Route path="users">
+        <Route path=":userId" element={<ProfilePage />} />
+        <Route path="me" element={...} />
+      </Route>
+    </Routes>
+  );
+}
+```
+
 <a name="useprompt"></a>
 
 ### `usePrompt`
@@ -674,6 +842,24 @@ function SignupForm() {
 >
 > If you need a more custom dialog box, you will have to use [`useBlocker`](#useblocker)
 > directly and handle accessibility issues yourself.
+
+<a name="useresolvedlocation"></a>
+
+### `useResolvedLocation`
+
+```tsx
+declare function useResolvedLocation(to: To): ResolvedLocation;
+
+type ResolvedLocation = {
+  pathname: string;
+  search: string;
+  hash: string;
+}
+```
+
+This hook resolves the `pathname` of the location in the given `to` value against the pathname of the current location.
+
+This is useful when building links from relative values. For example, check out the source to [`<NavLink>`](#navlink) which calls `useResolvedLocation` internally to resolve the full pathname of the page being linked to.
 
 <a name="useroutes"></a>
 <a name="partialrouteobject"></a>
