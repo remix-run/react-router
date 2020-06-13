@@ -8,6 +8,7 @@ import {
   Location,
   MemoryHistory,
   PartialLocation,
+  Path,
   State,
   To,
   Transition,
@@ -413,9 +414,9 @@ export function useHref(to: To): string {
   );
 
   let navigator = React.useContext(LocationContext).navigator as Navigator;
-  let resolvedLocation = useResolvedLocation(to);
+  let path = useResolvedPath(to);
 
-  return navigator.createHref(resolvedLocation);
+  return navigator.createHref(path);
 }
 
 /**
@@ -518,12 +519,12 @@ export function useNavigate(): NavigateFunction {
         if (typeof to === 'number') {
           navigator.go(to);
         } else {
-          let relativeTo = resolveLocation(to, pathname);
+          let path = resolvePath(to, pathname);
           // If we are pending transition, use REPLACE instead of PUSH. This
           // will prevent URLs that we started navigating to but never fully
           // loaded from appearing in the history stack.
           (!!options.replace || pending ? navigator.replace : navigator.push)(
-            relativeTo,
+            path,
             options.state
           );
         }
@@ -562,14 +563,13 @@ export function useParams(): Params {
 }
 
 /**
- * Resolves the pathname of the location in the given `to` value against the
- * current location.
+ * Resolves the pathname of the given `to` value against the current location.
  *
- * @see https://reactrouter.com/api/useResolvedLocation
+ * @see https://reactrouter.com/api/useResolvedPath
  */
-export function useResolvedLocation(to: To): ResolvedLocation {
+export function useResolvedPath(to: To): Path {
   let { pathname } = React.useContext(RouteContext);
-  return React.useMemo(() => resolveLocation(to, pathname), [to, pathname]);
+  return React.useMemo(() => resolvePath(to, pathname), [to, pathname]);
 }
 
 /**
@@ -790,8 +790,6 @@ type RoutePreloadFunction = (
   index: number
 ) => void;
 
-
-export type ResolvedLocation = Omit<Location, 'state' | 'key'>;
 
 /**
  * Returns a path with params interpolated.
@@ -1077,11 +1075,11 @@ function safelyDecodeURIComponent(value: string, paramName: string) {
 }
 
 /**
- * Returns a fully resolved location object relative to the given pathname.
+ * Returns a resolved path object relative to the given pathname.
  *
- * @see https://reactrouter.com/api/resolveLocation
+ * @see https://reactrouter.com/api/resolvePath
  */
-export function resolveLocation(to: To, fromPathname = '/'): ResolvedLocation {
+export function resolvePath(to: To, fromPathname = '/'): Path {
   let { pathname: toPathname, search = '', hash = '' } =
     typeof to === 'string' ? parsePath(to) : to;
 

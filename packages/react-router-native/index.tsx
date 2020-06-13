@@ -1,26 +1,27 @@
 import * as React from 'react';
 import PropTypes from 'prop-types';
 import {
-  // types
-  GestureResponderEvent,
-  TouchableHighlightProps,
-  // modules
   Alert,
   BackHandler,
+  GestureResponderEvent,
   Linking,
-  TouchableHighlight
+  TouchableHighlight,
+  TouchableHighlightProps
 } from 'react-native';
 import {
-  // types
-  MemoryRouterProps,
-  // components
   MemoryRouter,
+  MemoryRouterProps,
   Navigate,
   Outlet,
   Route,
   Router,
   Routes,
-  // hooks
+  createRoutesFromArray,
+  createRoutesFromChildren,
+  generatePath,
+  matchRoutes,
+  matchPath,
+  resolvePath,
   useBlocker,
   useHref,
   useInRouterContext,
@@ -30,15 +31,8 @@ import {
   useNavigate,
   useOutlet,
   useParams,
-  useResolvedLocation,
-  useRoutes,
-  // utils
-  createRoutesFromArray,
-  createRoutesFromChildren,
-  generatePath,
-  matchRoutes,
-  matchPath,
-  resolveLocation
+  useResolvedPath,
+  useRoutes
 } from 'react-router';
 import { State, To } from 'history';
 import URLSearchParams from '@ungap/url-search-params';
@@ -49,14 +43,18 @@ import URLSearchParams from '@ungap/url-search-params';
 
 // Note: Keep in sync with react-router exports!
 export {
-  // components
   MemoryRouter,
   Navigate,
   Outlet,
   Route,
   Router,
   Routes,
-  // hooks
+  createRoutesFromArray,
+  createRoutesFromChildren,
+  generatePath,
+  matchRoutes,
+  matchPath,
+  resolvePath,
   useBlocker,
   useHref,
   useInRouterContext,
@@ -66,15 +64,8 @@ export {
   useNavigate,
   useOutlet,
   useParams,
-  useResolvedLocation,
-  useRoutes,
-  // utils
-  createRoutesFromArray,
-  createRoutesFromChildren,
-  generatePath,
-  matchRoutes,
-  matchPath,
-  resolveLocation
+  useResolvedPath,
+  useRoutes
 };
 
 ////////////////////////////////////////////////////////////////////////////////
