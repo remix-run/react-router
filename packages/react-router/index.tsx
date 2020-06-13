@@ -5,10 +5,9 @@ import {
   Blocker,
   History,
   InitialEntry,
-  LocationPieces,
   Location,
   MemoryHistory,
-  Path,
+  PartialLocation,
   State,
   To,
   Transition,
@@ -114,7 +113,7 @@ if (__DEV__) {
 /**
  * A <Router> that stores all entries in memory.
  *
- * @see https://reactrouter.com/api/memoryrouter
+ * @see https://reactrouter.com/api/MemoryRouter
  */
 export function MemoryRouter({
   children,
@@ -817,7 +816,7 @@ export function generatePath(pathname: string, params: Params = {}): string {
  */
 export function matchRoutes(
   routes: RouteObject[],
-  location: Path | LocationPieces,
+  location: string | PartialLocation,
   basename = ''
 ): RouteMatch[] | null {
   if (typeof location === 'string') {
