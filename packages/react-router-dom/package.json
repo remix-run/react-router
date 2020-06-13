@@ -10,13 +10,13 @@
   "types": "index.d.ts",
   "unpkg": "umd/react-router-dom.production.min.js",
   "dependencies": {
-    "prop-types": "^15.7.2"
+    "prop-types": "^15.7.2",
+    "react-router": "6.0.0-alpha.5"
   },
   "peerDependencies": {
     "history": ">=5",
     "react": ">=16.8",
-    "react-dom": ">=16.8",
-    "react-router": "6.0.0-alpha.5"
+    "react-dom": ">=16.8"
   },
   "sideEffects": false,
   "keywords": [

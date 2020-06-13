@@ -9,13 +9,13 @@
   "types": "index.d.ts",
   "dependencies": {
     "@ungap/url-search-params": "^0.1.4",
-    "prop-types": "^15.7.2"
+    "prop-types": "^15.7.2",
+    "react-router": "6.0.0-alpha.5"
   },
   "peerDependencies": {
     "history": ">=5",
     "react": ">=16.8",
-    "react-native": ">=0.44",
-    "react-router": "6.0.0-alpha.5"
+    "react-native": ">=0.44"
   },
   "devDependencies": {
     "react-native": "^0.61.4"
