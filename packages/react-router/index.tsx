@@ -564,6 +564,16 @@ function useRoutes_(
     return null;
   }
 
+  // Initiate preload sequence only if the location changes, otherwise state
+  // updates in a parent would re-call preloads.
+  if (locationPreloadRef.current !== usedLocation) {
+    locationPreloadRef.current = usedLocation;
+    matches.forEach(
+      ({ route, params }, index) =>
+        route.preload && route.preload(params, usedLocation, index)
+    );
+  }
+
   // Otherwise render an element.
   let element = matches.reduceRight((outlet, { params, pathname, route }) => {
     return (
