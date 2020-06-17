@@ -47,7 +47,7 @@ class Route extends React.Component {
 
           // Preact uses an empty array as children by
           // default, so use null if that's the case.
-          if (Array.isArray(children) && children.length === 0) {
+          if (Array.isArray(children) && isEmptyChildren(children)) {
             children = null;
           }
 

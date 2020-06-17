@@ -48,7 +48,11 @@ class Router extends React.Component {
   }
 
   componentWillUnmount() {
-    if (this.unlisten) this.unlisten();
+    if (this.unlisten) {
+      this.unlisten();
+      this._isMounted = true;
+      this._pendingLocation = null;
+    }
   }
 
   render() {
