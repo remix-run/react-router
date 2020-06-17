@@ -87,7 +87,7 @@ If you would like utilize your own navigation component, you can simply do so by
 
 ```jsx
 const FancyLink = React.forwardRef((props, ref) => (
-  <a ref={ref}>💅 {props.children}</a>
+  <a ref={ref} {...props}>💅 {props.children}</a>
 ))
 
 <Link to="/" component={FancyLink} />
