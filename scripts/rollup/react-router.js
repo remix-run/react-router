@@ -7,7 +7,7 @@ import prettier from 'rollup-plugin-prettier';
 import replace from '@rollup/plugin-replace';
 import { terser } from 'rollup-plugin-terser';
 
-import tscPlugin from './tsc-plugin.js';
+import tsc from './tsc-plugin.js';
 
 const PRETTY = !!process.env.PRETTY;
 const SOURCE_DIR = 'packages/react-router';
@@ -25,7 +25,7 @@ export default function({ watch }) {
       },
       external: ['history', 'prop-types', 'react'],
       plugins: [
-        tscPlugin({ build: true, watch }),
+        tsc({ build: true, watch }),
         babel({
           exclude: /node_modules/,
           presets: [
@@ -58,7 +58,7 @@ export default function({ watch }) {
       },
       external: ['history', 'prop-types', 'react'],
       plugins: [
-        tscPlugin(),
+        tsc(),
         babel({
           exclude: /node_modules/,
           presets: ['@babel/preset-modules', '@babel/preset-react'],
@@ -77,7 +77,7 @@ export default function({ watch }) {
       },
       external: ['history', 'prop-types', 'react'],
       plugins: [
-        tscPlugin(),
+        tsc(),
         babel({
           exclude: /node_modules/,
           presets: [
@@ -126,7 +126,7 @@ export default function({ watch }) {
       },
       external: ['history', 'react'],
       plugins: [
-        tscPlugin(),
+        tsc(),
         babel({
           exclude: /node_modules/,
           presets: [
@@ -152,7 +152,7 @@ export default function({ watch }) {
       },
       external: ['history', 'react'],
       plugins: [
-        tscPlugin(),
+        tsc(),
         babel({
           exclude: /node_modules/,
           presets: [

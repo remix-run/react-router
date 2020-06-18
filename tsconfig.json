@@ -12,6 +12,7 @@
     "noImplicitReturns": true,
     "declaration": true,
     "outDir": ".tsc-output",
+    "sourceMap": true,
     "skipLibCheck": true,
     "jsx": "react"
   },
