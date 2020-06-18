@@ -2,9 +2,8 @@ import * as React from 'react';
 import * as PropTypes from 'prop-types';
 import {
   Action,
-  Path,
   Location,
-  LocationPieces,
+  PartialLocation,
   To,
   createPath,
   parsePath
@@ -91,7 +90,7 @@ export function StaticRouter({
 
 export interface StaticRouterProps {
   children?: React.ReactNode;
-  location?: Path | LocationPieces;
+  location?: string | PartialLocation;
 }
 
 if (__DEV__) {
