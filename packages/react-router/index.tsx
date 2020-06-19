@@ -1059,7 +1059,7 @@ function compilePath(
   return [matcher, keys];
 }
 
-function safelyDecodeURIComponent(value: string, paramName: string) {
+function safelyDecodeURIComponent(value: string, paramName: string): string | never {
   try {
     return decodeURIComponent(value.replace(/\+/g, ' '));
   } catch (error) {
@@ -1093,10 +1093,10 @@ export function resolvePath(to: To, fromPathname = '/'): Path {
   return { pathname, search, hash };
 }
 
-const trimTrailingSlashes = (path: string) => path.replace(/\/+$/, '');
-const normalizeSlashes = (path: string) => path.replace(/\/\/+/g, '/');
-const joinPaths = (paths: string[]) => normalizeSlashes(paths.join('/'));
-const splitPath = (path: string) => normalizeSlashes(path).split('/');
+const trimTrailingSlashes = (path: string): string => path.replace(/\/+$/, '');
+const normalizeSlashes = (path: string): string => path.replace(/\/\/+/g, '/');
+const joinPaths = (paths: string[]): string => normalizeSlashes(paths.join('/'));
+const splitPath = (path: string): string[] => normalizeSlashes(path).split('/');
 
 function resolvePathname(toPathname: string, fromPathname: string): string {
   let segments = splitPath(trimTrailingSlashes(fromPathname));
