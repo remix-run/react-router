@@ -105,19 +105,19 @@ async function run() {
     });
     console.log(chalk.green(`  Updated react-router to version ${version}`));
 
-    // 4. Update react-router-dom version + react-router peer dep
+    // 4. Update react-router-dom version + react-router dep
     await updatePackageConfig('react-router-dom', config => {
       config.version = version;
-      config.peerDependencies['react-router'] = version;
+      config.dependencies['react-router'] = version;
     });
     console.log(
       chalk.green(`  Updated react-router-dom to version ${version}`)
     );
 
-    // 5. Update react-router-native version + react-router peer dep
+    // 5. Update react-router-native version + react-router dep
     await updatePackageConfig('react-router-native', config => {
       config.version = version;
-      config.peerDependencies['react-router'] = version;
+      config.dependencies['react-router'] = version;
     });
     console.log(
       chalk.green(`  Updated react-router-native to version ${version}`)

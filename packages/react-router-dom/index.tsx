@@ -1,24 +1,22 @@
 import * as React from 'react';
 import PropTypes from 'prop-types';
 import {
+  BrowserHistory,
+  HashHistory,
   State,
   To,
   Update,
-  BrowserHistory,
-  HashHistory,
   createBrowserHistory,
   createHashHistory,
   createPath
 } from 'history';
 import {
-  // components
   MemoryRouter,
   Navigate,
   Outlet,
   Route,
   Router,
   Routes,
-  // hooks
   useBlocker,
   useHref,
   useInRouterContext,
@@ -28,15 +26,14 @@ import {
   useNavigate,
   useOutlet,
   useParams,
-  useResolvedLocation,
+  useResolvedPath,
   useRoutes,
-  // utils
   createRoutesFromArray,
   createRoutesFromChildren,
   generatePath,
   matchRoutes,
   matchPath,
-  resolveLocation
+  resolvePath
 } from 'react-router';
 
 function warning(cond: boolean, message: string): void {
@@ -62,14 +59,18 @@ function warning(cond: boolean, message: string): void {
 
 // Note: Keep in sync with react-router exports!
 export {
-  // components
   MemoryRouter,
   Navigate,
   Outlet,
   Route,
   Router,
   Routes,
-  // hooks
+  createRoutesFromArray,
+  createRoutesFromChildren,
+  generatePath,
+  matchRoutes,
+  matchPath,
+  resolvePath,
   useBlocker,
   useHref,
   useInRouterContext,
@@ -79,15 +80,8 @@ export {
   useNavigate,
   useOutlet,
   useParams,
-  useResolvedLocation,
-  useRoutes,
-  // utils
-  createRoutesFromArray,
-  createRoutesFromChildren,
-  generatePath,
-  matchRoutes,
-  matchPath,
-  resolveLocation
+  useResolvedPath,
+  useRoutes
 };
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -236,7 +230,7 @@ export const Link = React.forwardRef<HTMLAnchorElement, LinkProps>(
     let href = useHref(to);
     let navigate = useNavigate();
     let location = useLocation();
-    let toLocation = useResolvedLocation(to);
+    let path = useResolvedPath(to);
 
     function handleClick(event: React.MouseEvent<HTMLAnchorElement>) {
       if (onClick) onClick(event);
@@ -251,7 +245,7 @@ export const Link = React.forwardRef<HTMLAnchorElement, LinkProps>(
         // If the URL hasn't changed, a regular <a> will do a replace instead of
         // a push, so do the same here.
         let replace =
-          !!replaceProp || createPath(location) === createPath(toLocation);
+          !!replaceProp || createPath(location) === createPath(path);
 
         navigate(to, { replace, state });
       }
@@ -314,18 +308,18 @@ export const NavLink = React.forwardRef<HTMLAnchorElement, NavLinkProps>(
     ref
   ) {
     let location = useLocation();
-    let toLocation = useResolvedLocation(to);
+    let path = useResolvedPath(to);
 
     let locationPathname = location.pathname;
-    let toLocationPathname = toLocation.pathname;
+    let toPathname = path.pathname;
     if (!caseSensitive) {
       locationPathname = locationPathname.toLowerCase();
-      toLocationPathname = toLocationPathname.toLowerCase();
+      toPathname = toPathname.toLowerCase();
     }
 
     let isActive = end
-      ? locationPathname === toLocationPathname
-      : locationPathname.startsWith(toLocationPathname);
+      ? locationPathname === toPathname
+      : locationPathname.startsWith(toPathname);
 
     let ariaCurrent = isActive ? ariaCurrentProp : undefined;
     let className = [classNameProp, isActive ? activeClassName : null]

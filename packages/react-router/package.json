@@ -10,10 +10,10 @@
   "types": "index.d.ts",
   "unpkg": "umd/react-router.production.min.js",
   "dependencies": {
-    "history": "5.0.0-beta.9",
     "prop-types": "^15.7.2"
   },
   "peerDependencies": {
+    "history": ">=5",
     "react": "0.0.0-experimental-33c3af284"
   },
   "sideEffects": false,

@@ -2,9 +2,8 @@ import * as React from 'react';
 import * as PropTypes from 'prop-types';
 import {
   Action,
-  Path,
   Location,
-  LocationPieces,
+  PartialLocation,
   To,
   createPath,
   parsePath
@@ -51,11 +50,11 @@ export function StaticRouter({
           `in your app.`
       );
     },
-    go(n: number) {
+    go(delta: number) {
       throw new Error(
-        `You cannot use navigator.go(${n}) on the server because it is a stateless` +
+        `You cannot use navigator.go() on the server because it is a stateless ` +
           `environment. This error was probably triggered when you did a ` +
-          `\`navigate(${n})\` somewhere in your app.`
+          `\`navigate(${delta})\` somewhere in your app.`
       );
     },
     back() {
@@ -91,7 +90,7 @@ export function StaticRouter({
 
 export interface StaticRouterProps {
   children?: React.ReactNode;
-  location?: Path | LocationPieces;
+  location?: string | PartialLocation;
 }
 
 if (__DEV__) {

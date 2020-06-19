@@ -40,7 +40,7 @@
     "eslint-plugin-jsx-a11y": "6.x",
     "eslint-plugin-react": "7.x",
     "eslint-plugin-react-hooks": "1.x",
-    "history": "5.0.0-beta.9",
+    "history": "^5.0.0",
     "jest": "^24.9.0",
     "jsonfile": "^5.0.0",
     "metro-react-native-babel-preset": "^0.57.0",

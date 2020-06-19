@@ -3,7 +3,7 @@ import compiler from '@ampproject/rollup-plugin-closure-compiler';
 import copy from 'rollup-plugin-copy';
 import prettier from 'rollup-plugin-prettier';
 
-import tscPlugin from './tsc-plugin.js';
+import tsc from './tsc-plugin.js';
 
 const PRETTY = !!process.env.PRETTY;
 const SOURCE_DIR = 'packages/react-router-native';
@@ -29,7 +29,7 @@ export default function() {
         'react-router'
       ],
       plugins: [
-        tscPlugin(),
+        tsc(),
         babel({
           exclude: /node_modules/,
           runtimeHelpers: true,
