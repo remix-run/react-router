@@ -1,6 +1,6 @@
 {
   "name": "react-router-native",
-  "version": "6.0.0-alpha.5",
+  "version": "6.0.0-beta.0",
   "author": "React Training <hello@reacttraining.com>",
   "description": "Declarative routing for React Native applications",
   "repository": "ReactTraining/react-router",
@@ -10,7 +10,7 @@
   "dependencies": {
     "@ungap/url-search-params": "^0.1.4",
     "prop-types": "^15.7.2",
-    "react-router": "6.0.0-alpha.5"
+    "react-router": "6.0.0-beta.0"
   },
   "peerDependencies": {
     "history": ">=5",
