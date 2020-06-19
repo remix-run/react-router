@@ -522,6 +522,7 @@ interface RouterProps {
   children?: React.ReactNode;
   location: Location;
   navigator: Navigator;
+  pending?: boolean;
   static?: boolean;
 }
 ```
@@ -555,7 +556,14 @@ interface RouteProps {
   children?: React.ReactNode;
   element?: React.ReactElement | null;
   path?: string;
+  preload?: RoutePreloadFunction;
 }
+
+type RoutePreloadFunction = (
+  params: Params,
+  location: Location,
+  index: number
+) => void;
 ```
 </details>
 
@@ -587,6 +595,8 @@ For example, in the following config the parent route renders an `<Outlet>` by d
   <Route path=":id" element={<UserProfile />} />
 </Route>
 ```
+
+The `<Route preload>` prop may be used to specify a function that will be called when a route is about to be rendered. This function usually kicks off a fetch or similar operation that primes a local data cache for retrieval while rendering later.
 
 <a name="staticrouter"></a>
 
@@ -643,6 +653,7 @@ interface PartialRouteObject {
   path?: string;
   caseSensitive?: boolean;
   element?: React.ReactNode;
+  preload?: RoutePreloadFunction;
   children?: PartialRouteObject[];
 }
 
@@ -651,7 +662,14 @@ interface RouteObject {
   children?: RouteObject[];
   element: React.ReactNode;
   path: string;
+  preload?: RoutePreloadFunction;
 }
+
+type RoutePreloadFunction = (
+  params: Params,
+  location: Location,
+  index: number
+) => void;
 ```
 </details>
 
@@ -862,6 +880,20 @@ function App() {
   );
 }
 ```
+
+<a name="uselocationpending"></a>
+
+### `useLocationPending`
+
+<details>
+  <summary>Type declaration</summary>
+
+```tsx
+declare function useLocationPending(): boolean;
+```
+</details>
+
+The `useLocationPending` hook returns `true` if a location change is currently pending. This can be useful for showing a loading indicator somewhere in the app.
 
 <a name="usematch"></a>
 
