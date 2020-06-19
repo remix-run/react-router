@@ -96,6 +96,9 @@ Access to the URL [search parameters](https://developer.mozilla.org/en-US/docs/W
 
 ### `<BrowserRouter>`
 
+<details>
+  <summary>Type declaration</summary>
+
 ```tsx
 declare function BrowserRouter(props: BrowserRouterProps): React.ReactElement;
 
@@ -104,6 +107,7 @@ interface BrowserRouterProps {
   window?: Window;
 }
 ```
+</details>
 
 `<BrowserRouter>` is the recommended interface for running React Router in a web browser. A `<BrowserRouter>` stores the current location in the browser's address bar using clean URLs and navigates using the browser's built-in history stack.
 
@@ -126,6 +130,9 @@ ReactDOM.render(
 
 ### `<HashRouter>`
 
+<details>
+  <summary>Type declaration</summary>
+
 ```tsx
 declare function HashRouter(props: HashRouterProps): React.ReactElement;
 
@@ -134,6 +141,8 @@ interface HashRouterProps {
   window?: Window;
 }
 ```
+</details>
+
 
 `<HashRouter>` is for use in web browsers when the URL should not (or cannot) be sent to the server for some reason. This may happen in some shared hosting scenarios where you do not have full control over the server. In these situations, `<HashRouter>` makes it possible to store the current location in the `hash` portion of the current URL, so it is never sent to the server.
 
@@ -156,6 +165,9 @@ ReactDOM.render(
 
 ### `<NativeRouter>`
 
+<details>
+  <summary>Type declaration</summary>
+
 ```tsx
 declare function NativeRouter(props: NativeRouterProps): React.ReactElement;
 
@@ -165,6 +177,7 @@ interface NativeRouterProps {
   initialIndex?: number;
 }
 ```
+</details>
 
 `<NativeRouter>` is the recommended interface for running React Router in a [React Native](https://reactnative.dev) app.
 
@@ -188,6 +201,9 @@ function App() {
 
 ### `<MemoryRouter>`
 
+<details>
+  <summary>Type declaration</summary>
+
 ```tsx
 declare function MemoryRouter(props: MemoryRouterProps): React.ReactElement;
 
@@ -197,6 +213,7 @@ interface MemoryRouterProps {
   initialIndex?: number;
 }
 ```
+</details>
 
 A `<MemoryRouter>` stores its locations internally in an array. Unlike `<BrowserHistory>` and `<HashHistory>`, it isn't tied to an external source, like the history stack in a browser. This makes it ideal for scenarios where you need complete control over the history stack, like testing.
 
@@ -240,6 +257,9 @@ describe('My app', () => {
 > This is the web version of `<Link>`. For the React Native version,
 > [go here](#link-native).
 
+<details>
+  <summary>Type declaration</summary>
+
 ```tsx
 declare function Link(props: LinkProps): React.ReactElement;
 
@@ -253,6 +273,7 @@ interface LinkProps
 type State = object | null;
 type To = string | PartialLocation;
 ```
+</details>
 
 A `<Link>` is an element that lets the user navigate to another page by clicking or tapping on it. In `react-router-dom`, a `<Link>` renders an accessible `<a>` element with a real `href` that points to the resource it's linking to. This means that things like right-clicking a `<Link>` work as you'd expect.
 
@@ -294,6 +315,9 @@ A relative `<Link to>` value (that does not begin with `/`) resolves relative to
 > This is the React Native version of `<Link>`. For the web version,
 > [go here](#link).
 
+<details>
+  <summary>Type declaration</summary>
+
 ```tsx
 declare function Link(props: LinkProps): React.ReactElement;
 
@@ -304,6 +328,7 @@ interface LinkProps extends TouchableHighlightProps {
   to: To;
 }
 ```
+</details>
 
 A `<Link>` is an element that lets the user navigate to another view by tapping it, similar to how `<a>` elements work in a web app. In `react-router-native`, a `<Link>` renders a `TouchableHighlight`.
 
@@ -312,6 +337,9 @@ TODO: example
 <a name="navlink"></a>
 
 ### `<NavLink>`
+
+<details>
+  <summary>Type declaration</summary>
 
 ```tsx
 declare function NavLink(props: NavLinkProps): React.ReactElement;
@@ -323,6 +351,7 @@ interface NavLinkProps extends LinkProps {
   end?: boolean;
 }
 ```
+</details>
 
 A `<NavLink>` is a special kind of [`<Link>`](#link) that knows whether or not it is "active". This is useful when building a navigation menu such as a breadcrumb or a set of tabs where you'd like to show which of them is currently selected.
 
@@ -358,6 +387,9 @@ function NavList() {
 
 ### `<Navigate>`
 
+<details>
+  <summary>Type declaration</summary>
+
 ```tsx
 declare function Navigate(props: NavigateProps): null;
 
@@ -367,6 +399,7 @@ interface NavigateProps {
   state?: State;
 }
 ```
+</details>
 
 A `<Navigate>` element changes the current location when it is rendered. It's a component wrapper around [`useNavigate`](#usenavigate), and accepts all the same arguments as props.
 
@@ -413,9 +446,13 @@ class LoginForm extends React.Component {
 
 ### `<Outlet>`
 
+<details>
+  <summary>Type declaration</summary>
+
 ```tsx
 declare function Outlet(): React.ReactElement | null;
 ```
+</details>
 
 An `<Outlet>` should be used in parent route elements to render their child route elements. This allows nested UI to show up when child routes are rendered. If the parent route matched exactly, it will render nothing.
 
@@ -449,6 +486,9 @@ function App() {
 
 ### `<Prompt>`
 
+<details>
+  <summary>Type declaration</summary>
+
 ```tsx
 declare function Prompt(props: PromptProps): null;
 
@@ -457,6 +497,7 @@ interface PromptProps {
   when?: boolean;
 }
 ```
+</details>
 
 A `<Prompt>` is the declarative version of [`usePrompt`](#useprompt). It doesn't render anything. It just calls `usePrompt` with its props.
 
@@ -470,6 +511,9 @@ A `<Prompt>` is the declarative version of [`usePrompt`](#useprompt). It doesn't
 
 ### `<Router>`
 
+<details>
+  <summary>Type declaration</summary>
+
 ```tsx
 declare function Router(props: RouterProps): React.ReactElement;
 
@@ -482,6 +526,7 @@ interface RouterProps {
   static?: boolean;
 }
 ```
+</details>
 
 `<Router>` is the low-level interface that is shared by all router components ([`<BrowserRouter>`](#browserrouter), [`<HashRouter>`](#hashrouter), [`<StaticRouter>`](#staticrouter), [`<NativeRouter>`](#nativerouter), and [`<MemoryRouter>`](#memoryrouter)). In terms of React, `<Router>` is a [context provider](https://reactjs.org/docs/context.html#contextprovider) that supplies routing information to the rest of the app.
 
@@ -492,6 +537,9 @@ You probably never need to render a `<Router>` manually. Instead, you should use
 <a name="routes-and-route"></a>
 
 ### `<Routes>` and `<Route>`
+
+<details>
+  <summary>Type declaration</summary>
 
 ```tsx
 declare function Routes(props: RoutesProps): React.ReactElement | null;
@@ -517,6 +565,7 @@ type RoutePreloadFunction = (
   index: number
 ) => void;
 ```
+</details>
 
 `<Routes>` and `<Route>` are the primary ways to render something in React Router based on the current [`location`](#location). You can think about a `<Route>` kind of like an `if` statement; if its `path` matches the current URL, it renders its `element`! The `<Route caseSensitive>` prop determines if the matching should be done in a case-sensitive manner (defaults to `false`).
 
@@ -553,6 +602,9 @@ The `<Route preload>` prop may be used to specify a function that will be called
 
 ### `<StaticRouter>`
 
+<details>
+  <summary>Type declaration</summary>
+
 ```tsx
 declare function StaticRouter(props: StaticRouterProps): React.ReactElement;
 
@@ -561,6 +613,7 @@ interface StaticRouterProps {
   location?: Path | LocationPieces;
 }
 ```
+</details>
 
 `<StaticRouter>` is used to render a React Router web app in [node](https://nodejs.org). Provide the current location via the `location` prop.
 
@@ -590,6 +643,9 @@ http.createServer(requestHandler).listen(3000);
 
 ### `createRoutesFromArray`
 
+<details>
+  <summary>Type declaration</summary>
+
 ```tsx
 declare function createRoutesFromArray(array: PartialRouteObject[]): RouteObject[];
 
@@ -615,16 +671,21 @@ type RoutePreloadFunction = (
   index: number
 ) => void;
 ```
+</details>
 
-`createRoutesFromArray` is a helper that fills in the (potentially) missing pieces in an array of route objects. It is used internally by the `useRoutes` function to create route objects.
+`createRoutesFromArray` is a helper that fills in the (potentially) missing pieces in an array of route objects. It is used internally by [`useRoutes`](#useroutes) to create route objects.
 
 <a name="createroutesfromchildren"></a>
 
 ### `createRoutesFromChildren`
 
+<details>
+  <summary>Type declaration</summary>
+
 ```tsx
 declare function createRoutesFromChildren(children: React.ReactNode): RouteObject[];
 ```
+</details>
 
 `createRoutesFromChildren` is a helper that creates route objects from React elements. It is used internally in a [`<Routes>` element](#routes) to generate a route config from its [`<Route>`](#route) children elements.
 
@@ -634,9 +695,13 @@ See also [`createRoutesFromArray`](#createroutesfromarray).
 
 ### `generatePath`
 
+<details>
+  <summary>Type declaration</summary>
+
 ```tsx
 declare function generatePath(path: string, params: Params = {}): string;
 ```
+</details>
 
 `generatePath` interpolates a set of params into a route path string with `:id` and `*` placeholders. This can be useful when you want to eliminate placeholders from a route path so it matches statically instead of using a dynamic parameter.
 
@@ -662,6 +727,9 @@ The term "location" in React Router refers to [the `Location` interface](https:/
 
 ### `matchRoutes`
 
+<details>
+  <summary>Type declaration</summary>
+
 ```tsx
 declare function matchRoutes(
   routes: RouteObject[],
@@ -675,6 +743,7 @@ interface RouteMatch {
   params: Params;
 }
 ```
+</details>
 
 `matchRoutes` runs the route matching algorithm for a set of routes against a given [`location`](#location) to see which routes (if any) match. If it finds a match, an array of `RouteMatch` objects is returned, one for each route that matched.
 
@@ -683,6 +752,9 @@ This is the heart of React Router's matching algorithm. It is used internally by
 <a name="matchpath"></a>
 
 ### `matchPath`
+
+<details>
+  <summary>Type declaration</summary>
 
 ```tsx
 declare function matchPath(
@@ -700,6 +772,7 @@ interface PathMatch {
   params: Params;
 }
 ```
+</details>
 
 `matchPath` matches a route path pattern against a URL pathname and returns information about the match. This is useful whenever you need to manually run the router's matching algorithm to determine if a route path matches or not. It returns `null` if the pattern does not match the given pathname.
 
@@ -709,11 +782,11 @@ The [`useMatch` hook](#usematch) uses this function internally to match a route 
 
 ### `resolvePath`
 
+<details>
+  <summary>Type declaration</summary>
+
 ```tsx
-declare function resolvePath(
-  to: To,
-  fromPathname = '/'
-): Path;
+declare function resolvePath(to: To, fromPathname = '/'): Path;
 
 type To = string | PartialLocation;
 
@@ -723,6 +796,7 @@ interface Path {
   hash: string;
 }
 ```
+</details>
 
 `resolvePath` resolves a given `To` value into an actual `Path` object with an absolute `pathname`. This is useful whenever you need to know the exact path for a relative `To` value. For example, the `<Link>` component uses this function to know the actual URL it points to.
 
@@ -732,9 +806,13 @@ The [`useResolvedPath` hook](#useresolvedpath) uses `resolvePath` internally to 
 
 ### `useBlocker`
 
+<details>
+  <summary>Type declaration</summary>
+
 ```tsx
 declare function useBlocker(blocker: Blocker, when = true): void;
 ```
+</details>
 
 `useBlocker` is a low-level hook that allows you to block navigation away from the current page, i.e. prevent the current location from changing. This is probably something you don't ever want to do unless you also display a confirmation dialog to the user to help them understand why their navigation attempt was blocked. In these cases, you probably want to use [`usePrompt`](#useprompt) or [`<Prompt>`](#prompt) instead.
 
@@ -742,9 +820,13 @@ declare function useBlocker(blocker: Blocker, when = true): void;
 
 ### `useHref`
 
+<details>
+  <summary>Type declaration</summary>
+
 ```tsx
 declare function useHref(to: To): string;
 ```
+</details>
 
 The `useHref` hook returns a URL that may be used to link to the given `to` location, even outside of React Router.
 
@@ -758,9 +840,13 @@ The `useHref` hook returns a URL that may be used to link to the given `to` loca
 
 ### `useInRouterContext`
 
+<details>
+  <summary>Type declaration</summary>
+
 ```tsx
 declare function useInRouterContext(): boolean;
 ```
+</details>
 
 The `useInRouterContext` hooks returns `true` if the component is being rendered in the context of a `<Router>`, `false` otherwise. This can be useful for some 3rd-party extensions that need to know if they are being rendered in the context of a React Router app.
 
@@ -768,9 +854,13 @@ The `useInRouterContext` hooks returns `true` if the component is being rendered
 
 ### `useLocation`
 
+<details>
+  <summary>Type declaration</summary>
+
 ```tsx
 declare function useLocation(): Location;
 ```
+</details>
 
 This hook returns the current [`location`](#location) object. This can be useful if you'd like to perform some side effect whenever the current location changes.
 
@@ -795,9 +885,13 @@ function App() {
 
 ### `useLocationPending`
 
+<details>
+  <summary>Type declaration</summary>
+
 ```tsx
 declare function useLocationPending(): boolean;
 ```
+</details>
 
 The `useLocationPending` hook returns `true` if a location change is currently pending. This can be useful for showing a loading indicator somewhere in the app.
 
@@ -805,9 +899,13 @@ The `useLocationPending` hook returns `true` if a location change is currently p
 
 ### `useMatch`
 
+<details>
+  <summary>Type declaration</summary>
+
 ```tsx
 declare function useMatch(pattern: PathPattern): PathMatch | null;
 ```
+</details>
 
 Returns match data about a route at the given path relative to the current location.
 
@@ -817,6 +915,9 @@ See [`matchPath`](#matchpath) for more information.
 
 ### `useNavigate`
 
+<details>
+  <summary>Type declaration</summary>
+
 ```tsx
 declare function useNavigate(): NavigateFunction;
 
@@ -825,6 +926,7 @@ interface NavigateFunction {
   (delta: number): void;
 }
 ```
+</details>
 
 The `useNavigate` hook returns a function that lets you navigate programmatically, for example after a form is submitted.
 
@@ -857,9 +959,13 @@ The `navigate` function has two signatures:
 
 ### `useOutlet`
 
+<details>
+  <summary>Type declaration</summary>
+
 ```tsx
 declare function useOutlet(): React.ReactElement | null;
 ```
+</details>
 
 Returns the element for the child route at this level of the route hierarchy. This hook is used internally by [`<Outlet>`](#outlet) to render child routes.
 
@@ -867,9 +973,13 @@ Returns the element for the child route at this level of the route hierarchy. Th
 
 ### `useParams`
 
+<details>
+  <summary>Type declaration</summary>
+
 ```tsx
 declare function useParams(): Params;
 ```
+</details>
 
 The `useParams` hook returns an object of key/value pairs of the dynamic params from the current URL that were matched by the `<Route path>`. Child routes inherit all params from their parent routes.
 
@@ -899,9 +1009,13 @@ function App() {
 
 ### `usePrompt`
 
+<details>
+  <summary>Type declaration</summary>
+
 ```tsx
 declare function usePrompt(message: string, when = true): void;
 ```
+</details>
 
 The `usePrompt` hook may be used to confirm navigation before the user navigates away from the current page. This is useful when someone has entered unsaved data into a form, and you'd like to prompt them before they accidentally leave or close the tab and lose their work.
 
@@ -927,9 +1041,13 @@ function SignupForm() {
 
 ### `useResolvedPath`
 
+<details>
+  <summary>Type declaration</summary>
+
 ```tsx
 declare function useResolvedPath(to: To): Path;
 ```
+</details>
 
 This hook resolves the `pathname` of the location in the given `to` value against the pathname of the current location.
 
@@ -942,12 +1060,16 @@ See [`resolvePath`](#resolvepath) for more information.
 
 ### `useRoutes`
 
+<details>
+  <summary>Type declaration</summary>
+
 ```tsx
 declare function useRoutes(
   routes: PartialRouteObject[],
   basename = ''
 ): React.ReactElement | null;
 ```
+</details>
 
 The `useRoutes` hook is the functional equivalent of [`<Routes>`](#routes), but it uses JavaScript objects instead of `<Route>` elements to define your routes. These objects have the same properties as normal [`<Route>` elements](#route), but they don't require JSX.
 
@@ -976,6 +1098,9 @@ See also [`createRoutesFromArray`](#createroutesfromarray).
 
 ### `useSearchParams`
 
+<details>
+  <summary>Type declaration</summary>
+
 ```tsx
 declare function useSearchParams(defaultInit?: URLSearchParamsInit): [
   URLSearchParams,
@@ -992,6 +1117,7 @@ type URLSearchParamsInit =
   | Record<string, string | string[]>
   | URLSearchParams;
 ```
+</details>
 
 The `useSearchParams` hook is used to read and modify the query string in the URL for the current location. Like React's own [`useState` hook](https://reactjs.org/docs/hooks-reference.html#usestate), `useSearchParams` returns an array of two values: the current location's [search params](https://developer.mozilla.org/en-US/docs/Web/API/URL/searchParams) and a function that may be used to update them.
 
