@@ -41,11 +41,15 @@ export default function tscPlugin({ build, watch } = {}) {
           .replace(/^packages/, tscOutputDir)
           .replace(/\.tsx?$/, '.js');
 
-        // Also emit the .d.ts file
-        let dtsFile = jsFile.replace(/\.js$/, '.d.ts');
-        let fileName = path.basename(dtsFile);
-        let source = await fsp.readFile(dtsFile, 'utf8');
-        this.emitFile({ type: 'asset', fileName, source });
+        try {
+          // Emit the .d.ts file too (if it exists)...
+          let dtsFile = jsFile.replace(/\.js$/, '.d.ts');
+          let fileName = path.basename(dtsFile);
+          let source = await fsp.readFile(dtsFile, 'utf-8');
+          this.emitFile({ type: 'asset', fileName, source });
+        } catch (error) {
+          // No .d.ts file... carry on
+        }
 
         return jsFile;
       }
@@ -55,11 +59,12 @@ export default function tscPlugin({ build, watch } = {}) {
     async load(id) {
       if (id.startsWith(tscOutputDir)) {
         try {
-          // Try to grab the .map too if there is one...
+          // Grab the .map too (if it exists)...
           let map = await fsp.readFile(id + '.map', 'utf-8');
           let code = await fsp.readFile(id, 'utf-8');
           return { code, map };
         } catch (error) {
+          // Defer to normal filesystem loader
           return null;
         }
       }
