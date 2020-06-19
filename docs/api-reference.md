@@ -49,14 +49,27 @@ Routing is the process of deciding which React elements will be rendered on a gi
 - [`<Routes>` and `<Route>`](#routes-and-route) if you're using JSX
 - [`useRoutes`](#useroutes) if you'd prefer a JavaScript object-based config
 
+A few low-level pieces that we use internally are also exposed as public API, in case you need to build your own higher-level interfaces for some reason.
+
+- [`matchPath`](#matchpath) - matches a path pattern against a URL pathname
+- [`matchRoutes`](#matchroutes) - matches a set of routes against a [location](#location)
+- [`createRoutesFromArray`](#createroutesfromarray) - creates a route config from a set of plain JavaScript objects
+- [`createRoutesFromChildren`](#createroutesfromchildren) - creates a route config from a set of React elements (i.e. [`<Route>`](#route) elements)
+
 <a name="navigation"></a>
 
 ### Navigation
 
-React Router's navigation interfaces let you change the currently rendered page by modifying the current [location](#TODO). There are two main interfaces for navigating between pages in your app, depending on what you need.
+React Router's navigation interfaces let you change the currently rendered page by modifying the current [location](#location). There are two main interfaces for navigating between pages in your app, depending on what you need.
 
 - [`<Link>`](#link) and [`<NavLink>`](#navlink) render an accessible `<a>` element, or a `TouchableHighlight` on React Native. This lets the user initiate navigation by clicking or tapping an element on the page.
 - [`useNavigate`](#usenavigate) and [`<Navigate>`](#navigate) let you programmatically navigate, usually in an event handler or in response to some change in state
+
+There are a few low-level APIs that we use internally that may also prove useful when building your own navigation interfaces.
+
+- [`useResolvedPath`](#useresolvedpath) - resolves a relative path against the current [location](#location)
+- [`useHref`](#usehref) - resolves a relative path suitable for use as a `<a href>`
+- [`resolvePath`](#resolvepath) - resolves a relative path against a given URL pathname
 
 <a name="confirming-navigation"></a>
 
@@ -236,6 +249,9 @@ interface LinkProps
   state?: State;
   to: To;
 }
+
+type State = object | null;
+type To = string | PartialLocation;
 ```
 
 A `<Link>` is an element that lets the user navigate to another page by clicking or tapping on it. In `react-router-dom`, a `<Link>` renders an accessible `<a>` element with a real `href` that points to the resource it's linking to. This means that things like right-clicking a `<Link>` work as you'd expect.
@@ -502,7 +518,7 @@ type RoutePreloadFunction = (
 ) => void;
 ```
 
-`<Routes>` and `<Route>` are the primary ways to render something in React Router based on the current [`location`](#TODO). You can think about a `<Route>` kind of like an `if` statement; if its `path` matches the current URL, it renders its `element`! The `<Route caseSensitive>` prop determines if the matching should be done in a case-sensitive manner (defaults to `false`).
+`<Routes>` and `<Route>` are the primary ways to render something in React Router based on the current [`location`](#location). You can think about a `<Route>` kind of like an `if` statement; if its `path` matches the current URL, it renders its `element`! The `<Route caseSensitive>` prop determines if the matching should be done in a case-sensitive manner (defaults to `false`).
 
 Whenever the location changes, `<Routes>` looks through all its `children` `<Route>` elements to find the best match and renders that branch of the UI. `<Route>` elements may be nested to indicate nested UI, which also correspond to nested URL paths. Parent routes render their child routes by rendering an [`<Outlet>`](#outlet).
 
@@ -576,29 +592,71 @@ http.createServer(requestHandler).listen(3000);
 
 ```tsx
 declare function createRoutesFromArray(array: PartialRouteObject[]): RouteObject[];
+
+interface PartialRouteObject {
+  path?: string;
+  caseSensitive?: boolean;
+  element?: React.ReactNode;
+  preload?: RoutePreloadFunction;
+  children?: PartialRouteObject[];
+}
+
+interface RouteObject {
+  caseSensitive: boolean;
+  children?: RouteObject[];
+  element: React.ReactNode;
+  path: string;
+  preload?: RoutePreloadFunction;
+}
+
+type RoutePreloadFunction = (
+  params: Params,
+  location: Location,
+  index: number
+) => void;
 ```
 
-TODO
+`createRoutesFromArray` is a helper that fills in the (potentially) missing pieces in an array of route objects. It is used internally by the `useRoutes` function to create route objects.
 
 <a name="createroutesfromchildren"></a>
 
 ### `createRoutesFromChildren`
 
 ```tsx
-declare function createRoutesFromChildren(children: React.ReactNode): RouteObject;
+declare function createRoutesFromChildren(children: React.ReactNode): RouteObject[];
 ```
 
-TODO
+`createRoutesFromChildren` is a helper that creates route objects from React elements. It is used internally in a [`<Routes>` element](#routes) to generate a route config from its [`<Route>`](#route) children elements.
+
+See also [`createRoutesFromArray`](#createroutesfromarray).
 
 <a name="generatepath"></a>
 
 ### `generatePath`
 
 ```tsx
-declare function generatePath(pathname: string, params: Params = {}): string;
+declare function generatePath(path: string, params: Params = {}): string;
 ```
 
-TODO
+`generatePath` interpolates a set of params into a route path string with `:id` and `*` placeholders. This can be useful when you want to eliminate placeholders from a route path so it matches statically instead of using a dynamic parameter.
+
+```tsx
+generatePath('/users/:id', { id: 42 }); // "/users/42"
+generatePath('/files/:type/*', { type: 'img', '*': 'cat.jpg' }); // "/files/img/cat.jpg"
+```
+
+<a name="location"></a>
+
+### `Location`
+
+The term "location" in React Router refers to [the `Location` interface](https://github.com/ReactTraining/history/blob/master/docs/api-reference.md#location) from  the [history](https://github.com/ReactTraining/history) library.
+
+> [!Note:]
+>
+> The history package is React Router's main dependency and many of the
+> core types in React Router come directly from that library including
+> `Location`, `To`, `Path`, `State`, and others. You can read more about
+> the history library in [its documentation](https://github.com/ReactTraining/history/tree/master/docs).
 
 <a name="matchroutes"></a>
 
@@ -609,10 +667,18 @@ declare function matchRoutes(
   routes: RouteObject[],
   location: string | PartialLocation,
   basename: string = ''
-): string;
+): RouteMatch[] | null;
+
+interface RouteMatch {
+  route: RouteObject;
+  pathname: string;
+  params: Params;
+}
 ```
 
-TODO
+`matchRoutes` runs the route matching algorithm for a set of routes against a given [`location`](#location) to see which routes (if any) match. If it finds a match, an array of `RouteMatch` objects is returned, one for each route that matched.
+
+This is the heart of React Router's matching algorithm. It is used internally by [`useRoutes`](#useroutes) and the [`<Routes>` component](#routes) to determine which routes match the current location. It can also be useful in some situations where you want to manually match a set of routes.
 
 <a name="matchpath"></a>
 
@@ -623,9 +689,21 @@ declare function matchPath(
   pattern: PathPattern,
   pathname: string
 ): PathMatch | null;
+
+type PathPattern =
+  | string
+  | { path: string; caseSensitive?: boolean; end?: boolean };
+
+interface PathMatch {
+  path: string;
+  pathname: string;
+  params: Params;
+}
 ```
 
-TODO
+`matchPath` matches a route path pattern against a URL pathname and returns information about the match. This is useful whenever you need to manually run the router's matching algorithm to determine if a route path matches or not. It returns `null` if the pattern does not match the given pathname.
+
+The [`useMatch` hook](#usematch) uses this function internally to match a route path relative to the current location.
 
 <a name="resolvepath"></a>
 
@@ -636,9 +714,19 @@ declare function resolvePath(
   to: To,
   fromPathname = '/'
 ): Path;
+
+type To = string | PartialLocation;
+
+interface Path {
+  pathname: string;
+  search: string;
+  hash: string;
+}
 ```
 
-TODO
+`resolvePath` resolves a given `To` value into an actual `Path` object with an absolute `pathname`. This is useful whenever you need to know the exact path for a relative `To` value. For example, the `<Link>` component uses this function to know the actual URL it points to.
+
+The [`useResolvedPath` hook](#useresolvedpath) uses `resolvePath` internally to resolve against the current `location.pathname`.
 
 <a name="useblocker"></a>
 
@@ -718,20 +806,12 @@ The `useLocationPending` hook returns `true` if a location change is currently p
 ### `useMatch`
 
 ```tsx
-declare function useMatch(path: PathPattern): PathMatch | null;
-
-type PathPattern =
-  | string
-  | { path: string; caseSensitive?: boolean; end?: boolean };
-
-interface PathMatch {
-  path: string;
-  pathname: string;
-  params: Params;
-}
+declare function useMatch(pattern: PathPattern): PathMatch | null;
 ```
 
-Returns match data about a route at the given path. This is useful any time you need to run the matching algorithm manually.
+Returns match data about a route at the given path relative to the current location.
+
+See [`matchPath`](#matchpath) for more information.
 
 <a name="usenavigate"></a>
 
@@ -855,6 +935,8 @@ This hook resolves the `pathname` of the location in the given `to` value agains
 
 This is useful when building links from relative values. For example, check out the source to [`<NavLink>`](#navlink) which calls `useResolvedPath` internally to resolve the full pathname of the page being linked to.
 
+See [`resolvePath`](#resolvepath) for more information.
+
 <a name="useroutes"></a>
 <a name="partialrouteobject"></a>
 
@@ -862,23 +944,9 @@ This is useful when building links from relative values. For example, check out 
 
 ```tsx
 declare function useRoutes(
-  partialRoutes: PartialRouteObject[],
+  routes: PartialRouteObject[],
   basename = ''
 ): React.ReactElement | null;
-
-interface PartialRouteObject {
-  path?: string;
-  caseSensitive?: boolean;
-  element?: React.ReactNode;
-  preload?: RoutePreloadFunction;
-  children?: PartialRouteObject[];
-}
-
-type RoutePreloadFunction = (
-  params: Params,
-  location: Location,
-  index: number
-) => void;
 ```
 
 The `useRoutes` hook is the functional equivalent of [`<Routes>`](#routes), but it uses JavaScript objects instead of `<Route>` elements to define your routes. These objects have the same properties as normal [`<Route>` elements](#route), but they don't require JSX.
@@ -901,6 +969,8 @@ function App() {
   return element;
 }
 ```
+
+See also [`createRoutesFromArray`](#createroutesfromarray).
 
 <a name="usesearchparams"></a>
 

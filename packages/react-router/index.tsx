@@ -465,7 +465,7 @@ export function useLocationPending(): boolean {
  *
  * @see https://reactrouter.com/api/useMatch
  */
-export function useMatch(path: PathPattern): PathMatch | null {
+export function useMatch(pattern: PathPattern): PathMatch | null {
   invariant(
     useInRouterContext(),
     // TODO: This error is probably because they somehow have 2 versions of the
@@ -474,7 +474,7 @@ export function useMatch(path: PathPattern): PathMatch | null {
   );
 
   let location = useLocation() as Location;
-  return matchPath(path, location.pathname);
+  return matchPath(pattern, location.pathname);
 }
 
 type PathPattern =
@@ -796,8 +796,8 @@ type RoutePreloadFunction = (
  *
  * @see https://reactrouter.com/api/generatePath
  */
-export function generatePath(pathname: string, params: Params = {}): string {
-  return pathname
+export function generatePath(path: string, params: Params = {}): string {
+  return path
     .replace(/:(\w+)/g, (_, key) => {
       invariant(params[key] != null, `Missing ":${key}" param`);
       return params[key];
