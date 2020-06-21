@@ -539,8 +539,8 @@ export function useOutlet(): React.ReactElement | null {
  *
  * @see https://reactrouter.com/api/useParams
  */
-export function useParams(): Params {
-  return React.useContext(RouteContext).params;
+export function useParams<T extends { [key: string]: string; } = Params>(): T {
+  return React.useContext(RouteContext).params as T;
 }
 
 /**
