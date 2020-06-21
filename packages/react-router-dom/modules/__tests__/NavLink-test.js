@@ -149,7 +149,7 @@ describe("A <NavLink>", () => {
     it("renders child components that use withRouter", () => {
       class WrappedComponent extends React.Component {
         render() {
-          return null;
+          return "link";
         }
       }
 
@@ -250,7 +250,7 @@ describe("A <NavLink>", () => {
     it("renders child components that use withRouter", () => {
       class WrappedComponent extends React.Component {
         render() {
-          return null;
+          return "link";
         }
       }
 
@@ -627,7 +627,7 @@ describe("A <NavLink>", () => {
 
     const PropsChecker = withRouter(p => {
       props = p;
-      return null;
+      return "link";
     });
 
     beforeEach(() => {

@@ -174,7 +174,7 @@ describe("A <Link>", () => {
     let linkProps;
     function MyComponent(p) {
       linkProps = p;
-      return null;
+      return "link";
     }
 
     renderStrict(
@@ -234,7 +234,7 @@ describe("A <Link>", () => {
     function createLinkNode(hashType, to) {
       renderStrict(
         <HashRouter hashType={hashType}>
-          <Link to={to} />
+          <Link to={to}>link</Link>
         </HashRouter>,
         node
       );

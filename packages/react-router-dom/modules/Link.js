@@ -59,13 +59,16 @@ const LinkAnchor = forwardRef(
       props.ref = innerRef;
     }
 
-    /* eslint-disable-next-line jsx-a11y/anchor-has-content */
-    return <a {...props} />;
+    return <a {...props}>{props.children}</a>;
   }
 );
 
 if (__DEV__) {
   LinkAnchor.displayName = "LinkAnchor";
+
+  LinkAnchor.propTypes = {
+    children: PropTypes.node.isRequired
+  };
 }
 
 /**
