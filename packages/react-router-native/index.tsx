@@ -24,6 +24,7 @@ import {
   resolvePath,
   useBlocker,
   useHref,
+  useIndex,
   useInRouterContext,
   useLocation,
   useMatch,
@@ -56,6 +57,7 @@ export {
   resolvePath,
   useBlocker,
   useHref,
+  useIndex,
   useInRouterContext,
   useLocation,
   useMatch,
@@ -159,33 +161,38 @@ const URLEventType = 'url';
  * Enables support for the hardware back button on Android.
  */
 export function useHardwareBackButton() {
+  const index = useIndex();
+  const navigate = useNavigate();
+
+  const handleHardwardBackPress = React.useCallback(() => {
+    if (index === 0) {
+      return false; // home screen
+    } else {
+      navigate(-1);
+      return true;
+    }
+  }, [index, navigate]);
+
+  const handleHardwardBackPressRef = React.useRef(handleHardwardBackPress);
+
   React.useEffect(() => {
-    function handleHardwardBackPress() {
-      return undefined;
-      // TODO: The implementation will be something like this
-      // if (history.index === 0) {
-      //   return false; // home screen
-      // } else {
-      //   history.back();
-      //   return true;
-      // }
+    handleHardwardBackPressRef.current = handleHardwardBackPress;
+  }, [handleHardwardBackPress]);
+
+  React.useEffect(() => {
+    function eventHandler() {
+      return handleHardwardBackPressRef.current();
     }
 
-    BackHandler.addEventListener(
-      HardwareBackPressEventType,
-      handleHardwardBackPress
-    );
+    BackHandler.addEventListener(HardwareBackPressEventType, eventHandler);
 
     return () => {
-      BackHandler.removeEventListener(
-        HardwareBackPressEventType,
-        handleHardwardBackPress
-      );
+      BackHandler.removeEventListener(HardwareBackPressEventType, eventHandler);
     };
   }, []);
 }
 
-export { useHardwareBackButton as useAndroidBackButton };
+export const useAndroidBackButton = useHardwareBackButton;
 
 /**
  * Enables deep linking, both on the initial app launch and for

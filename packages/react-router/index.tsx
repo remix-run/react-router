@@ -73,11 +73,13 @@ export type Navigator = Omit<
 >;
 
 const LocationContext = React.createContext<LocationContextObject>({
+  index: null,
   static: false
 });
 
 interface LocationContextObject {
   action?: Action;
+  index: number | null;
   location?: Location;
   navigator?: Navigator;
   static: boolean;
@@ -139,6 +141,7 @@ export function MemoryRouter({
     <Router
       children={children}
       action={state.action}
+      index={history.index}
       location={state.location}
       navigator={history}
     />
@@ -281,6 +284,7 @@ if (__DEV__) {
 export function Router({
   children = null,
   action = Action.Pop,
+  index = null,
   location,
   navigator,
   static: staticProp = false
@@ -294,7 +298,7 @@ export function Router({
   return (
     <LocationContext.Provider
       children={children}
-      value={{ action, location, navigator, static: staticProp }}
+      value={{ action, index, location, navigator, static: staticProp }}
     />
   );
 }
@@ -302,6 +306,7 @@ export function Router({
 export interface RouterProps {
   action?: Action;
   children?: React.ReactNode;
+  index?: number | null;
   location: Location;
   navigator: Navigator;
   static?: boolean;
@@ -411,6 +416,13 @@ export function useHref(to: To): string {
   let path = useResolvedPath(to);
 
   return navigator.createHref(path);
+}
+
+/**
+ * Returns the index of the current location if supported by the used navigator.
+ */
+export function useIndex(): number | null {
+  return React.useContext(LocationContext).index;
 }
 
 /**
