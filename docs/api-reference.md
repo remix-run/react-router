@@ -383,6 +383,12 @@ function NavList() {
 }
 ```
 
+ If the `end` prop is used, it will ensure this component isn't matched as "active" when its descendant paths are matched:
+ 
+ ```
+ <NavLink to="/" end>Home</NavLink>
+ ```
+
 <a name="navigate"></a>
 
 ### `<Navigate>`
