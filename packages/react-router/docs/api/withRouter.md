@@ -26,6 +26,20 @@ class ShowTheLocation extends React.Component {
 // terminology) to the router.
 const ShowTheLocationWithRouter = withRouter(ShowTheLocation);
 ```
+##### Example use within BrowserRouter
+```jsx
+import React from 'react';
+import ReactDOM from 'react-dom';
+import { BrowserRouter, Route } from 'react-router-dom';
+import { ShowTheLocationWithRouter } from './ShowLocation'; // assumes you've exported the const above
+
+ReactDOM.render(
+  <BrowserRouter>
+    <Route path="/location" component={ShowTheLocationWithRouter} />
+  </BrowserRouter>,
+  document.getElementById('root')
+);
+```
 
 #### Important Note
 
