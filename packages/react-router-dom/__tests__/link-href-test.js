@@ -118,4 +118,33 @@ describe('Link href', () => {
       expect(anchor.props.href).toEqual('/about');
     });
   });
+
+  describe('basename', () => {
+    it('is correct', () => {
+      function Home() {
+        return (
+          <div>
+            <h1>Home</h1>
+            <Link to="/about">About</Link>
+          </div>
+        );
+      }
+
+      let renderer;
+      act(() => {
+        renderer = createTestRenderer(
+          <Router initialEntries={['/app/home']}>
+            <Routes basename="/app">
+              <Route path="home" element={<Home />} />
+            </Routes>
+          </Router>
+        );
+      });
+
+      let anchor = renderer.root.findByType('a');
+
+      expect(anchor).not.toBeNull();
+      expect(anchor.props.href).toEqual('/app/about');
+    });
+  });
 });
