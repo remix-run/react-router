@@ -1,4 +1,5 @@
 import React from "react";
+import PropTypes from "prop-types";
 
 class Lifecycle extends React.Component {
   componentDidMount() {
@@ -16,6 +17,14 @@ class Lifecycle extends React.Component {
   render() {
     return null;
   }
+}
+
+if (__DEV__) {
+  Lifecycle.propTypes = {
+    onMount: PropTypes.func,
+    onUpdate: PropTypes.func,
+    onUnmount: PropTypes.func
+  };
 }
 
 export default Lifecycle;
