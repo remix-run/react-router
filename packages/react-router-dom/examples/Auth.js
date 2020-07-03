@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useContext, createContext, useState } from "react";
 import {
   BrowserRouter as Router,
   Switch,
@@ -26,38 +26,40 @@ import {
 
 export default function AuthExample() {
   return (
-    <Router>
-      <div>
-        <AuthButton />
+    <ProvideAuth>
+      <Router>
+        <div>
+          <AuthButton />
 
-        <ul>
-          <li>
-            <Link to="/public">Public Page</Link>
-          </li>
-          <li>
-            <Link to="/protected">Protected Page</Link>
-          </li>
-        </ul>
+          <ul>
+            <li>
+              <Link to="/public">Public Page</Link>
+            </li>
+            <li>
+              <Link to="/protected">Protected Page</Link>
+            </li>
+          </ul>
 
-        <Switch>
-          <Route path="/public">
-            <PublicPage />
-          </Route>
-          <Route path="/login">
-            <LoginPage />
-          </Route>
-          <PrivateRoute path="/protected">
-            <ProtectedPage />
-          </PrivateRoute>
-        </Switch>
-      </div>
-    </Router>
+          <Switch>
+            <Route path="/public">
+              <PublicPage />
+            </Route>
+            <Route path="/login">
+              <LoginPage />
+            </Route>
+            <PrivateRoute path="/protected">
+              <ProtectedPage />
+            </PrivateRoute>
+          </Switch>
+        </div>
+      </Router>
+    </ProvideAuth>
   );
 }
 
 const fakeAuth = {
   isAuthenticated: false,
-  authenticate(cb) {
+  signin(cb) {
     fakeAuth.isAuthenticated = true;
     setTimeout(cb, 100); // fake async
   },
@@ -67,15 +69,59 @@ const fakeAuth = {
   }
 };
 
+/** For more details on
+ * `authContext`, `ProvideAuth`, `useAuth` and `useProvideAuth`
+ * refer to: https://usehooks.com/useAuth/
+ */
+const authContext = createContext();
+
+function ProvideAuth({ children }) {
+  const auth = useProvideAuth();
+  return (
+    <authContext.Provider value={auth}>
+      {children}
+    </authContext.Provider>
+  );
+}
+
+function useAuth() {
+  return useContext(authContext);
+}
+
+function useProvideAuth() {
+  const [user, setUser] = useState(null);
+
+  const signin = cb => {
+    return fakeAuth.signin(() => {
+      setUser("user");
+      cb();
+    });
+  };
+
+  const signout = cb => {
+    return fakeAuth.signout(() => {
+      setUser(null);
+      cb();
+    });
+  };
+
+  return {
+    user,
+    signin,
+    signout
+  };
+}
+
 function AuthButton() {
   let history = useHistory();
+  let auth = useAuth();
 
-  return fakeAuth.isAuthenticated ? (
+  return auth.user ? (
     <p>
       Welcome!{" "}
       <button
         onClick={() => {
-          fakeAuth.signout(() => history.push("/"));
+          auth.signout(() => history.push("/"));
         }}
       >
         Sign out
@@ -89,11 +135,12 @@ function AuthButton() {
 // A wrapper for <Route> that redirects to the login
 // screen if you're not yet authenticated.
 function PrivateRoute({ children, ...rest }) {
+  let auth = useAuth();
   return (
     <Route
       {...rest}
       render={({ location }) =>
-        fakeAuth.isAuthenticated ? (
+        auth.user ? (
           children
         ) : (
           <Redirect
@@ -119,10 +166,11 @@ function ProtectedPage() {
 function LoginPage() {
   let history = useHistory();
   let location = useLocation();
+  let auth = useAuth();
 
   let { from } = location.state || { from: { pathname: "/" } };
   let login = () => {
-    fakeAuth.authenticate(() => {
+    auth.signin(() => {
       history.replace(from);
     });
   };
