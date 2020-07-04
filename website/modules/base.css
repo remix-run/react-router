@@ -107,6 +107,7 @@ a {
   font-size: 1.5em;
   padding-top: 40px;
   position: relative;
+  width: 40%;
 }
 
 .markdown h2:before {
@@ -159,6 +160,10 @@ h3 {
     display: block;
     float: none;
     width: auto;
+  }
+
+  .markdown h2 {
+    width: 100%;
   }
 
   .markdown h2:before {
