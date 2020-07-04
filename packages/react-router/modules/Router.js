@@ -50,7 +50,7 @@ class Router extends React.Component {
   componentWillUnmount() {
     if (this.unlisten) {
       this.unlisten();
-      this._isMounted = true;
+      this._isMounted = false;
       this._pendingLocation = null;
     }
   }
