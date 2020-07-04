@@ -99,9 +99,7 @@ const App = () => (
     />
   </div>
 );
-```
 
-```jsx
 // you can also use a renderer like "@testing-library/react" or "enzyme/mount" here
 import { render, unmountComponentAtNode } from "react-dom";
 import { act } from 'react-dom/test-utils';
