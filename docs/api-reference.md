@@ -846,7 +846,7 @@ The `useInRouterContext` hooks returns `true` if the component is being rendered
   <summary>Type declaration</summary>
 
 ```tsx
-declare function useLocation(): Location;
+declare function useLocation<S extends State = State>(): Location<S>;
 ```
 </details>
 
