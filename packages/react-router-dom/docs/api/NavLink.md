@@ -88,6 +88,7 @@ The value of the `aria-current` attribute used on an active link. Available valu
 - `"date"` - used to indicate the current date within a calendar
 - `"time"` - used to indicate the current time within a timetable
 - `"true"` - used to indicate if the NavLink is active
+- `"false"` - used to prevent assistive technologies from reacting to a current link (a use case would be to prevent multiple aria-current tags on a single page)
 
 Defaults to `"page"`.
 
