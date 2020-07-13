@@ -104,7 +104,8 @@ if (__DEV__) {
     "location",
     "date",
     "time",
-    "true"
+    "true",
+    "false"
   ]);
 
   NavLink.propTypes = {
