@@ -1033,7 +1033,7 @@ function safelyDecodeURIComponent(value: string, paramName: string) {
  * @see https://reactrouter.com/api/resolvePath
  */
 export function resolvePath(to: To, fromPathname = '/'): Path {
-  let { pathname: toPathname, search = '', hash = '' } =
+  let { pathname: toPathname = '', search = '', hash = '' } =
     typeof to === 'string' ? parsePath(to) : to;
 
   let pathname = toPathname
