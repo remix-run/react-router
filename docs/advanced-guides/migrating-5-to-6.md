@@ -38,7 +38,7 @@ In general, the process looks like this:
     - Use `useNavigate` hook instead of `useHistory`
     - Use `<Navigate>` instead of `<Redirect>`
   - [Use `useRoutes` instead of `react-router-config`](#use-useroutes-instead-of-react-router-config)
-  - [Rename `<Link component>` to `<Link as>`](#rename-link-component-to-link-as)
+  - [Rename `<Link component>` to `<Link as>` and `<NavLink exact>` to `<NavLink end>`](#rename-link-component-to-link-as-and-navlink-exact-to-navlink-end)
   - [Get `StaticRouter` from `react-router-dom/server`](#get-staticrouter-from-react-router-domserver)
   - [Move `basename` from `<Router>` to `<Routes>`](#move-basename-from-router-to-routes)
 
@@ -681,7 +681,7 @@ function SomeForm() {
 }
 ```
 
-## Rename `<Link component>` to `<Link as>`
+## Rename `<Link component>` to `<Link as>` and `<NavLink exact>` to `<NavLink end>`
 
 This is a simple renaming of a prop to better align with the common practice of
 other libraries in the React ecosystem including styled-components and Reach UI.
