@@ -119,11 +119,7 @@ module.exports = {
       },
       {
         test: /\.md(\?(.+))?$/,
-        loader: "markdown-loader",
-        options: {
-          basename:
-            process.env.NODE_ENV === "production" ? "/react-router" : undefined
-        }
+        loader: "markdown-loader"
       },
       {
         test: /\.(gif|jpe?g|png|ico)$/,
