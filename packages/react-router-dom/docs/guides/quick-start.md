@@ -61,7 +61,7 @@ export default function App() {
           <Route path="/users">
             <Users />
           </Route>
-          <Route path="/">
+          <Route path="/"> {/* The root route must be the last one, otherwise it will always match. */}
             <Home />
           </Route>
         </Switch>
