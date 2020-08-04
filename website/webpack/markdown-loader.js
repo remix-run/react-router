@@ -150,7 +150,7 @@ const md = markdownIt({
 module.exports = function(content) {
   this.cacheable();
   const options = loaderUtils.getOptions(this);
-  const basename = options.basename || "";
+  const basename = (options && options.basename) || "";
   const markup = md.render(content);
   const $markup = cheerio.load(markup);
   const title = extractHeaders($markup, "h1", this.data.type)[0];
