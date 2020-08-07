@@ -50,16 +50,16 @@ All matched URL parameters are provided to the pattern in `to`. Must contain all
 
 ```jsx
 <Switch>
-  <Redirect from='/old-path' to='/new-path' />
-  <Route path='/new-path'>
+  <Redirect from="/old-path" to="/new-path" />
+  <Route path="/new-path">
     <Place />
   </Route>
 </Switch>
 
 // Redirect with matched parameters
 <Switch>
-  <Redirect from='/users/:id' to='/users/profile/:id'/>
-  <Route path='/users/profile/:id'>
+  <Redirect from="/users/:id" to="/users/profile/:id" />
+  <Route path="/users/profile/:id">
     <Profile />
   </Route>
 </Switch>
