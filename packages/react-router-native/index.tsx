@@ -31,6 +31,7 @@ import {
   useOutlet,
   useParams,
   useResolvedPath,
+  useActivePath,
   useRoutes
 } from 'react-router';
 import { State, To } from 'history';
@@ -63,6 +64,7 @@ export {
   useOutlet,
   useParams,
   useResolvedPath,
+  useActivePath,
   useRoutes
 };
 
