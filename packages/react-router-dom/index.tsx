@@ -80,6 +80,7 @@ export {
   useOutlet,
   useParams,
   useResolvedPath,
+  useActivePath,
   useRoutes
 };
 
