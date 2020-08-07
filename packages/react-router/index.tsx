@@ -554,6 +554,28 @@ export function useResolvedPath(to: To): Path {
 }
 
 /**
+ * Returns if the specified path is currently active
+ * 
+ * @see https://reactrouter.com/api/useActivePath
+ */
+export function useActivePath(to: To, options: { caseSensitive?: boolean, end?: boolean } = {}) {
+  const { caseSensitive = false, end = false } = options;
+  const location = useLocation();
+  const path = useResolvedPath(to);
+
+  let locationPathname = location.pathname;
+  let toPathname = path.pathname;
+  if (!caseSensitive) {
+    locationPathname = locationPathname.toLowerCase();
+    toPathname = toPathname.toLowerCase();
+  }
+
+  return end
+    ? locationPathname === toPathname
+    : locationPathname.startsWith(toPathname);
+}
+
+/**
  * Returns the element of the route that matched the current location, prepared
  * with the correct context to render the remainder of the route tree. Route
  * elements in the tree must render an <Outlet> to render their child route's

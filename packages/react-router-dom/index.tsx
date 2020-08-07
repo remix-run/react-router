@@ -26,6 +26,7 @@ import {
   useOutlet,
   useParams,
   useResolvedPath,
+  useActivePath,
   useRoutes,
   createRoutesFromArray,
   createRoutesFromChildren,
@@ -256,28 +257,16 @@ export const NavLink = React.forwardRef<HTMLAnchorElement, NavLinkProps>(
       'aria-current': ariaCurrentProp = 'page',
       activeClassName = 'active',
       activeStyle,
-      caseSensitive = false,
+      caseSensitive,
       className: classNameProp = '',
-      end = false,
+      end,
       style: styleProp,
       to,
       ...rest
     },
     ref
   ) {
-    let location = useLocation();
-    let path = useResolvedPath(to);
-
-    let locationPathname = location.pathname;
-    let toPathname = path.pathname;
-    if (!caseSensitive) {
-      locationPathname = locationPathname.toLowerCase();
-      toPathname = toPathname.toLowerCase();
-    }
-
-    let isActive = end
-      ? locationPathname === toPathname
-      : locationPathname.startsWith(toPathname);
+    let isActive = useActivePath(to, { caseSensitive, end });
 
     let ariaCurrent = isActive ? ariaCurrentProp : undefined;
     let className = [classNameProp, isActive ? activeClassName : null]
