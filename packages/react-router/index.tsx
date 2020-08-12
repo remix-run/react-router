@@ -486,7 +486,7 @@ export function useParams(): Params {
  */
 export function useResolvedPath(to: To): Path {
   let { pathname } = React.useContext(RouteContext);
-  return React.useMemo(() => resolveLocation(to, pathname), [to, pathname]);
+  return React.useMemo(() => resolvePath(to, pathname), [to, pathname]);
 }
 
 interface RoutesOptions {
@@ -522,7 +522,7 @@ export function useRoutes(
 
 function useRoutes_(
   routes: RouteObject[],
-  { basename = "", location }: RoutesOptions = {}
+  { basename = '', location }: RoutesOptions = {}
 ): React.ReactElement | null {
   let {
     route: parentRoute,
@@ -562,16 +562,6 @@ function useRoutes_(
   if (!matches) {
     // TODO: Warn about nothing matching, suggest using a catch-all route.
     return null;
-  }
-
-  // Initiate preload sequence only if the location changes, otherwise state
-  // updates in a parent would re-call preloads.
-  if (locationPreloadRef.current !== usedLocation) {
-    locationPreloadRef.current = usedLocation;
-    matches.forEach(
-      ({ route, params }, index) =>
-        route.preload && route.preload(params, usedLocation, index)
-    );
   }
 
   // Otherwise render an element.
