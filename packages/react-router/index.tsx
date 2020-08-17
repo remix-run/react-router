@@ -72,7 +72,7 @@ export type Navigator = Omit<
   'action' | 'location' | 'back' | 'forward' | 'listen'
 >;
 
-const LocationContext = React.createContext<LocationContextObject>({
+export const LocationContext = React.createContext<LocationContextObject>({
   static: false
 });
 
@@ -87,7 +87,7 @@ if (__DEV__) {
   LocationContext.displayName = 'Location';
 }
 
-const RouteContext = React.createContext<RouteContextObject>({
+export const RouteContext = React.createContext<RouteContextObject>({
   outlet: null,
   params: readOnly<Params>({}),
   pathname: '',
