@@ -3,17 +3,17 @@ import { create as createTestRenderer } from 'react-test-renderer';
 import { MemoryRouter as Router, useRoutes } from 'react-router';
 
 describe('useRoutes', () => {
+  function Home() {
+    return <h1>Home</h1>;
+  }
+
+  function About() {
+    return <h1>About</h1>;
+  }
+
   it('returns the matching element from a route config', () => {
     function RoutesRenderer({ routes }) {
       return useRoutes(routes);
-    }
-
-    function Home() {
-      return <h1>Home</h1>;
-    }
-
-    function About() {
-      return <h1>About</h1>;
     }
 
     let routes = [
