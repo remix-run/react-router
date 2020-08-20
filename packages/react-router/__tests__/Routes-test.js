@@ -64,4 +64,32 @@ describe('A <Routes>', () => {
 
     expect(renderer.toJSON()).toMatchSnapshot();
   });
+
+  it('renders route paths prefixed by a basename', () => {
+    let renderer = createTestRenderer(
+      <Router initialEntries={['/parent']}>
+        <Routes basename="/parent">
+          <Route path="/" element={<Home />} />
+        </Routes>
+      </Router>
+    );
+
+    expect(renderer.toJSON()).toMatchSnapshot();
+  });
+
+  it('renders routes for a different location', () => {
+    let location = {
+      pathname: '/home'
+    };
+
+    let renderer = createTestRenderer(
+      <Router initialEntries={['/']}>
+        <Routes location={location}>
+          <Route path="/home" element={<Home />} />
+        </Routes>
+      </Router>
+    );
+
+    expect(renderer.toJSON()).toMatchSnapshot();
+  });
 });

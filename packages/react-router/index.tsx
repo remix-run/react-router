@@ -43,11 +43,7 @@ function warning(cond: boolean, message: string): void {
 }
 
 const alreadyWarned: Record<string, boolean> = {};
-function warningOnce(
-  key: string,
-  cond: boolean,
-  message: string
-) {
+function warningOnce(key: string, cond: boolean, message: string) {
   if (!cond && !alreadyWarned[key]) {
     alreadyWarned[key] = true;
     warning(false, message);
@@ -332,14 +328,16 @@ if (__DEV__) {
  */
 export function Routes({
   basename = '',
+  location,
   children
 }: RoutesProps): React.ReactElement | null {
   let routes = createRoutesFromChildren(children);
-  return useRoutes_(routes, basename);
+  return useRoutes_(routes, { basename, location });
 }
 
 export interface RoutesProps {
   basename?: string;
+  location?: Location;
   children?: React.ReactNode;
 }
 
@@ -553,6 +551,11 @@ export function useResolvedPath(to: To): Path {
   return React.useMemo(() => resolvePath(to, pathname), [to, pathname]);
 }
 
+interface RoutesOptions {
+  basename?: string;
+  location?: Location;
+}
+
 /**
  * Returns the element of the route that matched the current location, prepared
  * with the correct context to render the remainder of the route tree. Route
@@ -563,7 +566,7 @@ export function useResolvedPath(to: To): Path {
  */
 export function useRoutes(
   partialRoutes: PartialRouteObject[],
-  basename = ''
+  { basename = '', location }: RoutesOptions = {}
 ): React.ReactElement | null {
   invariant(
     useInRouterContext(),
@@ -576,12 +579,12 @@ export function useRoutes(
     partialRoutes
   ]);
 
-  return useRoutes_(routes, basename);
+  return useRoutes_(routes, { basename, location });
 }
 
 function useRoutes_(
   routes: RouteObject[],
-  basename = ''
+  { basename = '', location }: RoutesOptions = {}
 ): React.ReactElement | null {
   let {
     route: parentRoute,
@@ -608,12 +611,13 @@ function useRoutes_(
 
   basename = basename ? joinPaths([parentPathname, basename]) : parentPathname;
 
-  let location = useLocation() as Location;
-  let matches = React.useMemo(() => matchRoutes(routes, location, basename), [
-    location,
-    routes,
-    basename
-  ]);
+  let currentLocation = useLocation() as Location;
+  let usedLocation = location || currentLocation;
+
+  let matches = React.useMemo(
+    () => matchRoutes(routes, usedLocation, basename),
+    [location, routes, basename]
+  );
 
   if (!matches) {
     // TODO: Warn about nothing matching, suggest using a catch-all route.

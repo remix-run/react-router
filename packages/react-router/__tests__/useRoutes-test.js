@@ -29,4 +29,50 @@ describe('useRoutes', () => {
 
     expect(renderer.toJSON()).toMatchSnapshot();
   });
+
+  it('accepts `basename` as optional parameter', () => {
+    function RoutesRenderer({ routes }) {
+      return useRoutes(routes, {
+        basename: '/parent'
+      });
+    }
+
+    let routes = [
+      { path: 'home', element: <Home /> },
+      { path: 'about', element: <About /> }
+    ];
+
+    let renderer = createTestRenderer(
+      <Router initialEntries={['/parent/home']}>
+        <RoutesRenderer routes={routes} />
+      </Router>
+    );
+
+    expect(renderer.toJSON()).toMatchSnapshot();
+  });
+
+  it('accepts `location` as optional parameter', () => {
+    let location = {
+      pathname: '/about'
+    };
+
+    function RoutesRenderer({ routes }) {
+      return useRoutes(routes, {
+        location: location
+      });
+    }
+
+    let routes = [
+      { path: 'home', element: <Home /> },
+      { path: 'about', element: <About /> }
+    ];
+
+    let renderer = createTestRenderer(
+      <Router initialEntries={['/home']}>
+        <RoutesRenderer routes={routes} />
+      </Router>
+    );
+
+    expect(renderer.toJSON()).toMatchSnapshot();
+  });
 });
