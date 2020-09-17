@@ -279,6 +279,92 @@ describe('NavLink', () => {
     });
   });
 
+  describe('when its matches path that is a part of another link', () => {
+    function Ham({ title }) {
+      return (
+        <section>
+          <div>{title}</div>
+        </section>
+      );
+    }
+
+    function HamDetails({ title }) {
+      return <section>{title} Details</section>;
+    }
+
+    function Home() {
+      return (
+        <div>
+          <NavLink
+            to="/hamburger"
+            data-testid="hamburger"
+            className="link"
+            activeClassName="active"
+          >
+            Hamburger
+          </NavLink>
+          <NavLink
+            to="/ham"
+            data-testid="ham"
+            className="link"
+            activeClassName="active"
+          >
+            Ham
+          </NavLink>
+        </div>
+      );
+    }
+
+    const getRoutes = (initialEntries) => (
+      <Router initialEntries={initialEntries}>
+        <Home />
+        <Routes>
+          <Route path="/hamburger" element={<Ham title="hamburger" />} />
+          <Route
+            path="/hamburger/details"
+            element={<HamDetails title="hamburger" />}
+          />
+          <Route path="/ham" element={<Ham title="ham" />} />
+          <Route path="/ham/details" element={<HamDetails title="ham" />} />
+        </Routes>
+      </Router>
+    );
+
+    it('applies its activeClassName to the underlying <a> that refers to hamburger', () => {
+      let renderer;
+      act(() => {
+        renderer = createTestRenderer(getRoutes(['/hamburger/details']));
+      });
+
+      let anchorHamburger = renderer.root
+        .findByProps({ to: '/hamburger' })
+        .findByType('a');
+      let anchorHam = renderer.root.findByProps({ to: '/ham' }).findByType('a');
+
+      expect(anchorHamburger).not.toBeNull();
+      expect(anchorHamburger.props.className).toMatch('active');
+      expect(anchorHam).not.toBeNull();
+      expect(anchorHam.props.className).not.toMatch('active');
+    });
+
+    it('applies its activeClassName to the underlying <a> that refers to ham', () => {
+      let renderer;
+      act(() => {
+        renderer = createTestRenderer(getRoutes(['/ham/details']));
+      });
+
+      let anchorHamburger = renderer.root
+        .findByProps({ to: '/hamburger' })
+        .findByType('a');
+      let anchorHam = renderer.root.findByProps({ to: '/ham' }).findByType('a');
+
+      expect(anchorHamburger).not.toBeNull();
+      expect(anchorHamburger.props.className).not.toMatch('active');
+      expect(anchorHam).not.toBeNull();
+      expect(anchorHam.props.className).toMatch('active');
+    });
+  });
+
   describe('when it matches without matching case', () => {
     describe('by default', () => {
       it('applies its activeClassName to the underlying <a>', () => {

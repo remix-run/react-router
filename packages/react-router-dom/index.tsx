@@ -268,8 +268,8 @@ export const NavLink = React.forwardRef<HTMLAnchorElement, NavLinkProps>(
     let location = useLocation();
     let path = useResolvedPath(to);
 
-    let locationPathname = location.pathname;
-    let toPathname = path.pathname;
+    let locationPathname = `${location.pathname}/`;
+    let toPathname = `${path.pathname}/`;
     if (!caseSensitive) {
       locationPathname = locationPathname.toLowerCase();
       toPathname = toPathname.toLowerCase();
