@@ -153,3 +153,37 @@ const match = useRouteMatch({
   sensitive: true
 });
 ```
+
+## `useStaticContext`
+
+The `useStaticContext` hook returns the `staticContext` object passed in from the `StaticRouter`'s `context` prop, during a server side render.
+
+Now, instead of
+
+```jsx
+import { Route } from "react-router-dom";
+
+function BlogPost() {
+  return (
+    <Route
+      render={({ staticContext }) => {
+        // Do whatever you want with the staticContext...
+        return <div />;
+      }}
+    />
+  );
+}
+```
+
+you can just
+
+```jsx
+import { useStaticContext } from "react-router-dom";
+
+function BlogPost() {
+  let staticContext = useStaticContext();
+
+  // Do whatever you want with the match...
+  return <div />;
+}
+```

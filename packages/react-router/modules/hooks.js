@@ -53,3 +53,14 @@ export function useRouteMatch(path) {
   const match = useContext(RouterContext).match;
   return path ? matchPath(location.pathname, path) : match;
 }
+
+export function useStaticContext(path) {
+  if (__DEV__) {
+    invariant(
+      typeof useContext === "function",
+      "You must use React >= 16.8 in order to use useRouteMatch()"
+    );
+  }
+
+  return useContext(RouterContext).staticContext;
+}
