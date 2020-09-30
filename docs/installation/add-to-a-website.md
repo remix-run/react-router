@@ -45,8 +45,8 @@ the closing `</body>` tag:
   <script src="https://unpkg.com/history@5/umd/history.development.js" crossorigin></script>
 
   <!-- Load React Router and React Router DOM -->
-  <script src="https://unpkg.com/react-router@6/umd/react-router.development.js" crossorigin></script>
-  <script src="https://unpkg.com/react-router-dom@6/umd/react-router-dom.development.js" crossorigin></script>
+  <script src="https://unpkg.com/react-router@next/umd/react-router.development.js" crossorigin></script>
+  <script src="https://unpkg.com/react-router-dom@next/umd/react-router-dom.development.js" crossorigin></script>
 
   <!-- A simple example app -->
   <script>
@@ -83,7 +83,7 @@ In order to do this, you'll need to build your website with a JavaScript bundler
 Before using a bundler for your project, you'll first need to install React Router to your local `node_modules` directory using a JavaScript package manager. The following instructions use [npm](https://www.npmjs.com/), but [Yarn](https://yarnpkg.com/) is also a popular choice.
 
 ```sh
-$ npm install history@5 react-router-dom@6
+$ npm install history react-router-dom@next
 ```
 
 <a name="create-react-app"></a>
@@ -194,7 +194,7 @@ When it's time to deploy your app to production, be sure to follow [Create React
 Follow the instructions in the [Parcel documentation to set up a new project](https://parceljs.org/getting_started.html), then follow [the instructions above](#install-with-a-package-manager) to install React Router in your project. You will also need to install `react`, `react-dom` and `@babel/preset-react`.
 
 ```sh
-$ npm install parcel-bundler history@5 react-router-dom@6 react react-dom @babel/preset-react
+$ npm install parcel-bundler history react-router-dom@next react react-dom @babel/preset-react
 ```
 
 In your project's `package.json`, add a `start` script so you can open your project in a browser during development.
@@ -316,7 +316,7 @@ Setting up a new React project in webpack is a bit more involved than Parcel or 
 Once you have webpack configured and working with React, you can install the dependencies needed for React Router:
 
 ```sh
-$ npm install history@5 react-router-dom@6
+$ npm install history react-router-dom@next
 ```
 
 Then, somewhere in your code (probably towards the root of your React component tree) you'll want to `import` the pieces you need from `react-router-dom`.
