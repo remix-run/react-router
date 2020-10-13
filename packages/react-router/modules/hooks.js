@@ -53,3 +53,19 @@ export function useRouteMatch(path) {
   const match = useContext(RouterContext).match;
   return path ? matchPath(location.pathname, path) : match;
 }
+
+export function useQueryString() {
+  if (__DEV__) {
+    invariant(
+      typeof useContext === "function",
+      "You must use React >= 16.8 in order to use useQueryString()"
+    );
+  }
+  
+  const url = new URL(location.href);
+  const queryObject = {};
+  url.searchParams.forEach(function (v, k, p) {
+    queryObject[k] = v;
+  });
+  return queryObject;
+}
