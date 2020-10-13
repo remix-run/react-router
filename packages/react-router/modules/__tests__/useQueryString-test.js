@@ -45,7 +45,9 @@ describe("useQueryString", () => {
 
       renderStrict(
         <MemoryRouter initialEntries={["/blog?page=1&pageSize=20"]}>
-          <Route path="/blog?page=1&pageSize=25">
+          <Route
+            location={{ pathname: "/blog", search: "?page=1&pageSize=20" }}
+          >
             <BlogPost />
           </Route>
         </MemoryRouter>,
@@ -55,7 +57,7 @@ describe("useQueryString", () => {
       expect(typeof queryObject).toBe("object");
       expect(queryObject).toMatchObject({
         page: "1",
-        pageSize: "25"
+        pageSize: "20"
       });
     });
   });

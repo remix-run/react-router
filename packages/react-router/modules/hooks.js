@@ -61,10 +61,11 @@ export function useQueryString() {
       "You must use React >= 16.8 in order to use useQueryString()"
     );
   }
-  
-  const url = new URL(location.href);
+
+  const search = useLocation().search;
+  const searchParams = new URLSearchParams(search);
   const queryObject = {};
-  url.searchParams.forEach(function (v, k, p) {
+  searchParams.forEach(function(v, k, p) {
     queryObject[k] = v;
   });
   return queryObject;
