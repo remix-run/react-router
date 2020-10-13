@@ -153,3 +153,38 @@ const match = useRouteMatch({
   sensitive: true
 });
 ```
+
+<a id="useQueryString" />
+
+## `useQueryString`
+
+`useQueryString` returns an object of key/value pairs of URL queryString. Use it to access `location.search` of the current `<Route>`.
+
+```jsx
+import React from "react";
+import ReactDOM from "react-dom";
+import {
+  BrowserRouter as Router,
+  Switch,
+  Route,
+  useQueryString
+} from "react-router-dom";
+
+function BlogPost() {
+  let { page, pageSize } = useQueryString();
+  return <div>Now showing page: {page}, {pageSize}</div>;
+}
+
+ReactDOM.render(
+  <Router>
+    <Switch>
+      <Route exact path="/">
+        <HomePage />
+      </Route>
+      <Route path="/blog?page=1&pageSize=20">
+        <BlogPost />
+      </Route>
+    </Switch>
+  </Router>,
+  node
+);

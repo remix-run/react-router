@@ -12,7 +12,8 @@ export {
   useHistory,
   useLocation,
   useParams,
-  useRouteMatch
+  useRouteMatch,
+  useQueryString
 } from "react-router";
 
 export { default as BrowserRouter } from "./BrowserRouter.js";
