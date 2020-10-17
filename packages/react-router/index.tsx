@@ -956,7 +956,8 @@ export function matchPath(
 
   let { path, caseSensitive = false, end = true } = pattern;
   let [matcher, paramNames] = compilePath(path, caseSensitive, end);
-  let match = pathname.match(matcher);
+  const normalizedPathname = pathname.endsWith('/') ? pathname : `${pathname}/`;
+  let match = normalizedPathname.match(matcher);
 
   if (!match) return null;
 
@@ -996,7 +997,7 @@ function compilePath(
 
   if (path.endsWith('*')) {
     if (path.endsWith('/*')) {
-      source += '\\/?'; // Don't include the / in params['*']
+      source += '\\/+'; // Don't include the / in params['*']
     }
     keys.push('*');
     source += '(.*)';

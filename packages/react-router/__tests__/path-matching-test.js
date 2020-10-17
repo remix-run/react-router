@@ -52,6 +52,7 @@ describe('path matching', () => {
     expect(pickPaths(routes, '/groups/123')).toEqual(['/groups/:groupId']);
     expect(pickPaths(routes, '/groups')).toEqual(['/groups']);
     expect(pickPaths(routes, '/files/some/long/path')).toEqual(['/files/*']);
+    expect(pickPaths(routes, '/files-bar/one')).toEqual(['*']);
     expect(pickPaths(routes, '/files')).toEqual(['/files']);
     expect(pickPaths(routes, '/one/two/three/four/five')).toEqual([
       '/:one/:two/:three/:four/:five'
@@ -184,7 +185,7 @@ describe('path matching with splats', () => {
 
     expect(match).not.toBeNull();
     expect(match[0]).toMatchObject({
-      params: { id: 'mj', '*': 'secrets.md' },
+      params: { id: 'mj', '*': 'secrets.md/' },
       pathname: '/users/mj/files'
     });
   });
@@ -196,7 +197,7 @@ describe('path matching with splats', () => {
     expect(match).not.toBeNull();
     expect(match[0]).toMatchObject({
       pathname: '/users/mj/files-',
-      params: { id: 'mj', '*': 'secrets.md' }
+      params: { id: 'mj', '*': 'secrets.md/' }
     });
   });
 
@@ -209,7 +210,7 @@ describe('path matching with splats', () => {
     expect(match).not.toBeNull();
     expect(match[0]).toMatchObject({
       pathname: '/users/mj/files',
-      params: { id: 'mj', '*': 'secrets.md' }
+      params: { id: 'mj', '*': 'secrets.md/' }
     });
     expect(match[1]).toMatchObject({
       pathname: '/users/mj/files/secrets.md',
@@ -226,15 +227,15 @@ describe('path matching with splats', () => {
     expect(match).not.toBeNull();
     expect(match[0]).toMatchObject({
       pathname: '/',
-      params: { '*': '/one/two/three' }
+      params: { '*': '/one/two/three/' }
     });
     expect(match[1]).toMatchObject({
       pathname: '/',
-      params: { '*': '/one/two/three' }
+      params: { '*': '/one/two/three/' }
     });
     expect(match[2]).toMatchObject({
       pathname: '/',
-      params: { '*': '/one/two/three' }
+      params: { '*': '/one/two/three/' }
     });
   });
 });
