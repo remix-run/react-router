@@ -237,7 +237,7 @@ describe('My app', () => {
       <MemoryRouter initialEntries={['/users/mjackson']}>
         <Routes>
           <Route path="users" element={<Users />}>
-            <Route path=":id" element={<UserProfile />}>
+            <Route path=":id" element={<UserProfile />} />
           </Route>
         </Routes>
       </MemoryRouter>
