@@ -28,7 +28,7 @@
     "start": "node examples/server.js",
     "test": "npm run lint && npm run test-node && npm run test-browser",
     "test-browser": "cross-env NODE_ENV=test karma start --single-run",
-    "test:git-history": "commitlint --from origin/master --to HEAD",
+    "test:git-history": "commitlint --from origin/main --to HEAD",
     "test-browser:watch": "cross-env NODE_ENV=test karma start",
     "test-node": "cross-env NODE_ENV=test mocha --require babel-register tests.node.js",
     "test:lockfile": "lockfile-lint -p package-lock.json -t npm -a npm -o https: -c -i",
@@ -62,11 +62,11 @@
   "devDependencies": {
     "@commitlint/cli": "^8.2.0",
     "@commitlint/config-conventional": "^8.2.0",
-    "@semantic-release/changelog": "^3.0.5",
-    "@semantic-release/commit-analyzer": "^6.3.2",
-    "@semantic-release/git": "^7.0.18",
-    "@semantic-release/npm": "^5.3.4",
-    "@semantic-release/release-notes-generator": "^7.3.2",
+    "@semantic-release/changelog": "^5.0.1",
+    "@semantic-release/commit-analyzer": "^8.0.1",
+    "@semantic-release/git": "^9.0.0",
+    "@semantic-release/npm": "^7.0.6",
+    "@semantic-release/release-notes-generator": "^9.0.1",
     "babel-cli": "^6.11.4",
     "babel-core": "^6.13.2",
     "babel-eslint": "^7.2.1",
@@ -108,7 +108,7 @@
     "react-addons-css-transition-group": "^15.6.0",
     "react-dom": "^16.0.0",
     "rimraf": "^2.5.4",
-    "semantic-release": "^15.13.30",
+    "semantic-release": "^17.2.1",
     "style-loader": "^0.16.1",
     "webpack": "^1.13.1",
     "webpack-dev-middleware": "^1.6.1"
@@ -131,6 +131,20 @@
     "router"
   ],
   "release": {
+    "branches": [
+      "+([0-9])?(.{+([0-9]),x}).x",
+      "main",
+      "next",
+      "next-major",
+      {
+        "name": "beta",
+        "prerelease": true
+      },
+      {
+        "name": "alpha",
+        "prerelease": true
+      }
+    ],
     "plugins": [
       "@semantic-release/commit-analyzer",
       "@semantic-release/release-notes-generator",
@@ -138,8 +152,7 @@
       "@semantic-release/npm",
       "@semantic-release/git",
       "@semantic-release/github"
-    ],
-    "branch": "master"
+    ]
   },
   "husky": {
     "hooks": {
