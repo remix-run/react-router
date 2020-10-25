@@ -2,7 +2,11 @@
   "name": "react-router-config",
   "version": "5.1.1",
   "description": "Static route config matching for React Router",
-  "repository": "ReactTraining/react-router",
+  "repository": {
+    "type": "git",
+    "directory": "packages/react-router-config",
+    "url": "https://github.com/ReactTraining/react-router.git"
+  },
   "license": "MIT",
   "author": "React Training <hello@reacttraining.com>",
   "files": [
