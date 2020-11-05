@@ -36,9 +36,9 @@ jobs:
         tags: true
   - stage: Deploy Website
     if: branch = website
-    env: PUBLIC_PATH=/react-router/
+    env: PUBLIC_PATH=/
     before_script: yarn build
-    script: echo "Deploying website to https://reacttraining.com$PUBLIC_PATH"
+    script: echo "Deploying website to https://reactrouter.com$PUBLIC_PATH"
     before_deploy:
     - openssl aes-256-cbc -K $encrypted_70c5e56b421c_key -iv $encrypted_70c5e56b421c_iv
       -in website-deploy-key.enc -out website-deploy-key -d
