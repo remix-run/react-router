@@ -12,6 +12,7 @@ export default {
     require("../../../packages/react-router/docs/api/Router.md?web"),
     require("../../../packages/react-router/docs/api/StaticRouter.md?web"),
     require("../../../packages/react-router/docs/api/Switch.md?web"),
+    require("../../../packages/react-router/docs/api/generatePath.md?web"),
     require("../../../packages/react-router/docs/api/history.md?web"),
     require("../../../packages/react-router/docs/api/location.md?web"),
     require("../../../packages/react-router/docs/api/match.md?web"),
