@@ -34,7 +34,7 @@ An object that can have any of the following properties:
 />
 ```
 
-## to: function
+## to: func
 
 A function to which current location is passed as an argument and which should return location representation as a string or as an object
 
@@ -54,7 +54,7 @@ When `true`, clicking the link will replace the current entry in the history sta
 <Link to="/courses" replace />
 ```
 
-## innerRef: function
+## innerRef: func
 
 As of React Router 5.1, if you are using React 16 you should not need this prop because we [forward the ref](https://reactjs.org/docs/forwarding-refs.html) to the underlying `<a>`. Use a normal `ref` instead.
 
@@ -81,6 +81,7 @@ let anchorRef = React.createRef()
 
 <Link to="/" innerRef={anchorRef} />
 ```
+
 ## component: React.Component
 
 If you would like utilize your own navigation component, you can simply do so by passing it through the `component` prop.
