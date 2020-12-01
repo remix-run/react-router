@@ -16,7 +16,7 @@ function Button({ to, small, ...props }) {
       component={Link}
       activeBoxShadow="2px 2px 4px rgba(0,0,0,.25)"
       activeTop="5px"
-      background="white"
+      background="black"
       borderRadius="100px"
       boxShadow={
         small
